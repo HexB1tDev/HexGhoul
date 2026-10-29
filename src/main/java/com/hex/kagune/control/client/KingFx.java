@@ -698,6 +698,11 @@ public final class KingFx {
         return com.hex.kagune.control.client.fx.PeaceFx.aims(player, now);
     }
 
+    /** 1.2.8: as above, for the frame {@code partial} of the way to the next tick (where the body is drawn). */
+    public static double[][] peaceAims(net.minecraft.client.player.AbstractClientPlayer player, double now, float partial) {
+        return com.hex.kagune.control.client.fx.PeaceFx.aims(player, now, partial);
+    }
+
     /** A point in a Peace's body pixels out in the world, his feet at {@code feet}, facing {@code yaw} (radians, as the game turns). */
     /** 1.0.26: as below, the point first carried by his torso as posed ({@code a}: {@code BodyFrame.carry}), facing his body's {@code yaw}. */
     static double[] toWorld(double[] px, double[] feet, double yaw, double[] a) {

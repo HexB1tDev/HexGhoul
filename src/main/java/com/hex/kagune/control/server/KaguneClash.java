@@ -246,7 +246,7 @@ public final class KaguneClash {
             float pitch = 1.25F + (1.2F - power) * 0.4F;
             level.m_6263_(null, at.f_82479_, at.f_82480_, at.f_82481_, HexKaguneSounds.KAGUNE_SLAM.get(), SoundSource.PLAYERS, volume, pitch);
             UkakuFire.sound(level, at, "entity.ender_dragon.flap", volume * 1.08F, 1.5F);
-            UkakuFire.sound(level, at, "entity.player.attack.knockback", volume * 0.92F, 0.7F);
+            UkakuFire.sound(level, at, "hexkagune:sfx.clash", volume * 0.92F, 1.0F); // 1.2.8: kagune on kagune: an impact
         }
     }
 }

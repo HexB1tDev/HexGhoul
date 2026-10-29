@@ -182,6 +182,14 @@ public final class PaleRevive {
         shield(player, down, true);
         ReviveForget.forget(player, ReviveForget.RANGE);
         ControlNetwork.broadcast(player, message(player, down, false));
+        // 1.2.8: the kagune breaks with the body (every client shatters what it drew last, KakujaFx.breakApart): put away at once, not
+        // left out hanging in the air over the pieces; it comes back out as the body stands up whole (awaken).
+        if (KaguneProfile.isActive(player)) {
+            KaguneServerController.release(player, false);
+            com.hex.kagune.gameplay.KaguneRuntime.remove(player.m_20148_());
+            KaguneProfile.setActive(player, false);
+            com.hex.kagune.network.KaguneNetwork.broadcast(player);
+        }
         // Burst apart: the wet tearing of it, bones going.
         UkakuFire.sound(level, where.m_82520_(0.0, 1.0, 0.0), "entity.generic.explode", 0.7F, KaguneServerController.vary(player, 1.45F, 0.05F));
         UkakuFire.sound(level, where.m_82520_(0.0, 1.0, 0.0), "entity.slime.squish", 1.2F, KaguneServerController.vary(player, 0.5F, 0.05F));
@@ -251,9 +259,7 @@ public final class PaleRevive {
             // 6.2.0: they have forgotten her; a gust bursts out of her; and she is in her kagune, whatever she went down in.
             ReviveForget.forget(player, ReviveForget.RANGE);
             gust(player);
-            if (!down.wasOut()) {
-                awaken(player);
-            }
+            awaken(player); // (1.2.8: the kagune broke with the body, so it comes back out whether or not it was out)
         }
     }
 

@@ -41,6 +41,13 @@ public final class PeaceFx {
         final int mode;
         double tearAt = Double.NaN;
         double releaseAt = Double.NaN;
+        /**
+         * 1.2.8: his right and ahead, and the way it went in, as they were when it struck (world): a blade in a body stays where it went
+         * in, never turned round it as he looks or walks about after.
+         */
+        double[] right;
+        double[] ahead;
+        double[] inFrom;
 
         Impale(int target, double at, int mode) {
             this.target = target;
@@ -357,10 +364,23 @@ public final class PeaceFx {
      * bodies, then the blades sunk in the ground.
      */
     public static double[][] aims(AbstractClientPlayer player, double now) {
+        return aims(player, now, 1.0F);
+    }
+
+    /**
+     * 1.2.8: the frame's partial tick the aims are worked out for. They are in his body's frame, and the body is drawn where it is
+     * between two ticks, turned as it is between them: taken from where he and his targets were at the last tick, every blade in a body
+     * was flung about by however far he had moved or turned since (the blades jumping off what they were in as he walked or looked
+     * round, in every move of Peace's that sinks them into something).
+     */
+    private static float partial = 1.0F;
+
+    public static double[][] aims(AbstractClientPlayer player, double now, float frame) {
         ClientLevel level = Minecraft.m_91087_().f_91073_;
         if (level == null) {
             return null;
         }
+        partial = Math.max(0.0F, Math.min(1.0F, frame));
         UUID id = player.m_20148_();
         double[][] aims = new double[PeaceMotion.BLADES][];
         boolean any = lanceAims(level, player, now, aims);
@@ -387,12 +407,13 @@ public final class PeaceFx {
      * only his view) sent every blade that far off what it was aimed at.
      */
     static double[] body(AbstractClientPlayer player, double[] world) {
-        double yaw = Math.toRadians(player.f_20883_);
+        double yaw = Math.toRadians(bodyYaw(player));
         double sin = Math.sin(yaw);
         double cos = Math.cos(yaw);
-        double dx = world[0] - player.m_20185_();
-        double dy = world[1] - player.m_20186_();
-        double dz = world[2] - player.m_20189_();
+        double[] feet = feet(player);
+        double dx = world[0] - feet[0];
+        double dy = world[1] - feet[1];
+        double dz = world[2] - feet[2];
         double forward = -dx * sin + dz * cos;
         double left = dx * cos + dz * sin;
         double px = PeaceMotion.BLOCK;
@@ -401,7 +422,7 @@ public final class PeaceFx {
 
     /** A way in the world as {@code player}'s body frame (unit; 1.0.40: the way his body faces, as {@link #body}). */
     static double[] bodyWay(AbstractClientPlayer player, double[] way) {
-        double yaw = Math.toRadians(player.f_20883_);
+        double yaw = Math.toRadians(bodyYaw(player));
         double sin = Math.sin(yaw);
         double cos = Math.cos(yaw);
         double forward = -way[0] * sin + way[2] * cos;
@@ -448,7 +469,19 @@ public final class PeaceFx {
     }
 
     static double[] centre(Entity body, double share) {
-        return new double[] {body.m_20185_(), body.m_20186_() + body.m_20206_() * share, body.m_20189_()};
+        double[] feet = feet(body);
+        return new double[] {feet[0], feet[1] + body.m_20206_() * share, feet[2]};
+    }
+
+    /** 1.2.8: where {@code body}'s feet are drawn this frame ({@link #partial} of the way from the last tick to this one). */
+    static double[] feet(Entity body) {
+        return new double[] {body.f_19790_ + (body.m_20185_() - body.f_19790_) * partial, body.f_19791_ + (body.m_20186_() - body.f_19791_) * partial,
+            body.f_19792_ + (body.m_20189_() - body.f_19792_) * partial};
+    }
+
+    /** 1.2.8: the way his body is drawn turned this frame (degrees). */
+    static double bodyYaw(AbstractClientPlayer player) {
+        return player.f_20884_ + wrap(player.f_20883_ - player.f_20884_) * partial;
     }
 
     private static boolean impaleAims(ClientLevel level, AbstractClientPlayer player, double now, double[][] aims) {
@@ -457,12 +490,16 @@ public final class PeaceFx {
             return false;
         }
         boolean any = false;
-        double[] right = right(player);
         for (int blade = 0; blade < all.length; blade++) {
             Impale impale = all[blade];
             if (impale == null || aims[blade] != null) {
                 continue;
             }
+            if (impale.right == null) {
+                impale.right = right(player);
+                impale.ahead = ahead(player);
+            }
+            double[] right = impale.right;
             double age = now - impale.at;
             if (age < -2.0 || age > 400.0 || !Double.isNaN(impale.releaseAt) && now - impale.releaseAt > 10.0) {
                 all[blade] = null;
@@ -476,7 +513,7 @@ public final class PeaceFx {
             double[] at = centre(body, 0.62 - 0.14 * tier);
             if (impale.mode == 0) {
                 // 1.0.36: each on its own side of it, at its own height (not all into one point).
-                at = PeaceFxModel.waltzEntry(blade, new double[] {body.m_20185_(), body.m_20186_(), body.m_20189_()}, body.m_20205_(), body.m_20206_(), right);
+                at = PeaceFxModel.waltzEntry(blade, feet(body), body.m_20205_(), body.m_20206_(), right);
             }
             double out = smooth(age / impale.reach());
             if (!Double.isNaN(impale.releaseAt)) {
@@ -485,19 +522,21 @@ public final class PeaceFx {
             double[] way = null;
             if (impale.mode == 0) {
                 // 1.0.36: in from its own side, slanting across through it: they cross inside it.
-                double[] to = {at[0] - player.m_20185_(), 0.0, at[2] - player.m_20189_()};
-                double flat = Math.hypot(to[0], to[2]);
-                double[] ahead = flat < 1.0E-3 ? ahead(player) : new double[] {to[0] / flat, 0.0, to[2] / flat};
-                way = PeaceFxModel.waltzWay(blade, ahead, right);
+                if (impale.inFrom == null) {
+                    double[] to = {at[0] - feet(player)[0], 0.0, at[2] - feet(player)[2]};
+                    double flat = Math.hypot(to[0], to[2]);
+                    impale.inFrom = flat < 1.0E-3 ? impale.ahead : new double[] {to[0] / flat, 0.0, to[2] / flat};
+                }
+                way = PeaceFxModel.waltzWay(blade, impale.inFrom, right);
             } else if (impale.mode == 1) {
                 // The Horizon: each in from its own side of it, from above, level and below.
                 double a = Math.toRadians(blade * 60.0 + 30.0);
                 double tilt = Math.toRadians(tier == 0 ? 40.0 : tier == 1 ? 5.0 : -35.0);
                 way = new double[] {-Math.cos(a) * Math.cos(tilt), -Math.sin(tilt), -Math.sin(a) * Math.cos(tilt)};
             } else if (impale.mode == 2) {
-                way = unit(new double[] {ahead(player)[0] * 0.3, 1.0, ahead(player)[2] * 0.3});
+                way = unit(new double[] {impale.ahead[0] * 0.3, 1.0, impale.ahead[2] * 0.3});
             } else if (impale.mode == 3) {
-                way = unit(new double[] {ahead(player)[0] * 0.2, -1.0, ahead(player)[2] * 0.2});
+                way = unit(new double[] {impale.ahead[0] * 0.2, -1.0, impale.ahead[2] * 0.2});
             }
             if (!Double.isNaN(impale.tearAt)) {
                 // Torn out every way at once: each to its own side, up or down as it went in.
@@ -579,6 +618,9 @@ public final class PeaceFx {
         return true;
     }
 
+    /** 1.2.8: each player's Rebirth as it began: {his right, ahead, feet, {when}} (world). */
+    private static final Map<UUID, double[][]> BURIED = new HashMap<>();
+
     private static boolean buryAims(AbstractClientPlayer player, double now, double[][] aims) {
         KingClient.View view = KingClient.get(player);
         if (view == null || view.moveAt(now) != KingMove.REBIRTH) {
@@ -589,9 +631,15 @@ public final class PeaceFx {
         if (out <= 0.0) {
             return false;
         }
-        double[] right = right(player);
-        double[] ahead = ahead(player);
-        double[] feet = {player.m_20185_(), player.m_20186_(), player.m_20189_()};
+        // 1.2.8: sunk where they went in as it began (his right, ahead and feet then), never swung round as he looks about.
+        double[][] frame = BURIED.get(player.m_20148_());
+        if (frame == null || frame[3][0] != view.moveAt()) {
+            frame = new double[][] {right(player), ahead(player), feet(player), {view.moveAt()}};
+            BURIED.put(player.m_20148_(), frame);
+        }
+        double[] right = frame[0];
+        double[] ahead = frame[1];
+        double[] feet = frame[2];
         boolean any = false;
         for (int blade = 0; blade < PeaceMotion.BLADES; blade++) {
             if (aims[blade] != null) {

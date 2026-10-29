@@ -212,7 +212,7 @@ public final class KingServer {
                 UkakuFire.sound(level, at, "hexkagune:sfx.transform.overdrive_awakening", 2.0F, 0.9F);
             }
             if (age == 0L || age == 5L || age == 9L || age == 12L || age == 14L) {
-                UkakuFire.sound(level, at, "hexkagune:sfx.pulse", 2.0F, 0.6F + age * 0.02F);
+                UkakuFire.sound(level, at, "entity.warden.heartbeat", 2.0F, 0.6F + age * 0.02F);
             }
             if (KingTransform.burstNow(form, age)) {
                 UkakuFire.sound(level, at, "hexkagune:sfx.ultimate", 2.4F, 0.9F);
@@ -242,7 +242,7 @@ public final class KingServer {
         net.minecraft.world.phys.Vec3 at = new net.minecraft.world.phys.Vec3(player.m_20185_(), player.m_20186_() + 1.0, player.m_20189_());
         if (form == KingForm.WAR) {
             if (age == 0L) {
-                UkakuFire.sound(level, at, "hexkagune:sfx.pulse", 1.8F, 0.55F);
+                UkakuFire.sound(level, at, "entity.warden.heartbeat", 1.8F, 0.55F);
             }
             if (age == 3L) {
                 UkakuFire.sound(level, at, "hexkagune:sfx.quake", 1.2F, 0.9F);

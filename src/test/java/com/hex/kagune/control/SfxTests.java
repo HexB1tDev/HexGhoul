@@ -16,8 +16,12 @@ import java.util.stream.Stream;
 public final class SfxTests {
     private static int passed;
     private static final List<String> FAILURES = new ArrayList<>();
-    /** The only vanilla sounds still played: the quest journal's own cues (the game's interface, not a fight). */
-    private static final Set<String> KEPT_VANILLA = Set.of("ui.toast.challenge_complete", "entity.player.levelup");
+    /**
+     * The only vanilla sounds still played: the quest journal's own cues (the game's interface, not a fight), and 1.2.8, what the
+     * pack has nothing for: a heartbeat, fire.
+     */
+    private static final Set<String> KEPT_VANILLA = Set.of("ui.toast.challenge_complete", "entity.player.levelup", "entity.warden.heartbeat",
+        "entity.generic.burn", "block.fire.extinguish");
     private static final Path SOUNDS = Path.of("src/main/resources/assets/hexkagune/sounds");
 
     private static void check(boolean condition, String description) {
@@ -86,8 +90,11 @@ public final class SfxTests {
         check(crack.namespace().equals("hexkagune") && Math.abs(blast.pitch() - (1.0F + (0.6F - 1.0F) * Sfx.KEEP)) < 1.0E-6F,
             "the pitch kept only in part: " + blast.pitch());
         check(Sfx.pitch(0.1F) == Sfx.LOWEST && Sfx.pitch(5.0F) == Sfx.HIGHEST && Sfx.pitch(Float.NaN) == 1.0F, "pitches kept in bounds");
-        Sfx.Sound own = Sfx.play("hexkagune:sfx.pulse", 2.0F, 0.6F);
-        check(own.namespace().equals("hexkagune") && own.path().equals("sfx.pulse") && own.pitch() == 0.6F, "a name of the pack's own plays as asked");
+        Sfx.Sound own = Sfx.play("hexkagune:sfx.clash", 2.0F, 0.6F);
+        check(own.namespace().equals("hexkagune") && own.path().equals("sfx.clash") && own.pitch() == 0.6F, "a name of the pack's own plays as asked");
+        // 1.2.8: never metal on a swing, never blood for a heartbeat or fire.
+        check(!Sfx.remapped("entity.warden.heartbeat") && !Sfx.remapped("entity.generic.burn") && !Sfx.remapped("block.fire.extinguish"),
+            "a heartbeat and fire stay vanilla's (the pack has none)");
         Sfx.Sound journal = Sfx.play("ui.toast.challenge_complete", 0.6F, 1.0F);
         check(journal.namespace().equals("minecraft") && journal.pitch() == 1.0F, "the journal's cue stays the game's");
         limit();

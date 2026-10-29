@@ -423,10 +423,13 @@ public final class KakujaFx {
         }
     }
 
-    /** One of the original's tubes was drawn ({@code CentipedeRenderer.emitTube}): kept if it is a kakuja's tentacle. */
+    /**
+     * One of the original's tubes was drawn ({@code CentipedeRenderer.emitTube}): kept in case it breaks (1.2.8: any form's tentacle, not
+     * only a kakuja's, for the death that does not take, {@link #breakApart}).
+     */
     public static void tube(KaguneClientState.View view, int limb, Vec3[] points, long tick) {
         Track track = view == lastView ? lastTrack : null;
-        if (track == null || limb < 0 || limb >= track.tubes.length || !RinkakuForms.kakuja(view.form()) || view.form().limb(limb).segmented()) {
+        if (track == null || limb < 0 || limb >= track.tubes.length || view.form().limb(limb).segmented()) {
             return;
         }
         KaguneForm.LimbLayout layout = view.form().limb(limb);
@@ -435,7 +438,26 @@ public final class KakujaFx {
 
     // ------------------------------------------------------------------------------------------------------- the breaking
 
+    /**
+     * 1.2.8: You Thought You'd Get Rid of Me That Easily?: as his body is torn apart, whatever of his kagune was drawn last breaks with
+     * it, any form of either path (it had stayed out, hanging in the air over the pieces); the server puts it away at once.
+     */
+    public static void breakApart(AbstractClientPlayer player) {
+        double now = player.m_9236_().m_46467_();
+        UkakuTrack wings = UKAKU.get(player.m_36316_().getId());
+        if (wings != null) {
+            shatterUkaku(player, wings, now);
+        }
+        Track track = TRACKS.get(player.m_36316_().getId());
+        if (track != null) {
+            shatter(player, track, track.form, now);
+        }
+    }
+
     private static void shatter(AbstractClientPlayer player, Track track, KaguneForm was, double now) {
+        if (track.shatteredAt == now) {
+            return; // (broken already this tick: the death and the kagune put away arrive together)
+        }
         track.shatteredAt = now;
         track.burstAt = Double.NaN;
         track.maskAt = Double.NaN;
@@ -467,7 +489,9 @@ public final class KakujaFx {
             add(KakujaBurst.shatter(legs, 0.55, body, floor, 1.0, seed));
             add(KakujaBurst.shatter(tubes, 0.45, body, floor, 1.1, seed + 1L));
             add(KakujaBurst.shatter(mask, 0.085, body, floor, 0.55, seed + 2L));
-            glass(player);
+            if (!legs.isEmpty() || !tubes.isEmpty() || !mask.isEmpty()) {
+                glass(player);
+            }
         }
         java.util.Arrays.fill(track.legs, null);
         java.util.Arrays.fill(track.tubes, null);

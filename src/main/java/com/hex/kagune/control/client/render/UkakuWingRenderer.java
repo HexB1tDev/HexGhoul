@@ -201,6 +201,8 @@ public final class UkakuWingRenderer {
                 quads = KakujaFx.ukakuBurst(player, quads, time);
             } else {
                 quads = WingRig.build(input, eye);
+                // 1.2.8: kept too, so the wings break with his body in the death that does not take (KakujaFx.breakApart).
+                KakujaFx.ukakuDrawn(player, quads, x + camera.f_82479_, y + camera.f_82480_, z + camera.f_82481_, yaw, level.m_46467_());
             }
             if (quads.isEmpty()) {
                 continue;

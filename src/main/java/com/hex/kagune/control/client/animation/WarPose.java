@@ -351,9 +351,51 @@ public final class WarPose {
         double strain = beat(age, winding, driven - 3.0) * (1.0 - beat(age, driven - 1.0, driven));
         p.rightArmX += (float)(w * 0.05 * strain * Math.sin(age * 4.7));
         p.headX += (float)(w * 0.04 * strain * Math.sin(age * 5.9 + 1.0));
+        // 1.2.8: the jabs on the ground before the punch that sends it up, and the flurry in the air after the kick: a fist each beat,
+        // left and right in turn, snapped out on its blow and back.
+        int jabsFrom = com.hex.kagune.control.king.WarRules.BLITZ_JABS_FROM;
+        int jabEvery = com.hex.kagune.control.king.WarRules.BLITZ_JAB_EVERY;
+        int flurry = com.hex.kagune.control.king.WarRules.BLITZ_FLURRY;
+        int flurryEvery = com.hex.kagune.control.king.WarRules.BLITZ_FLURRY_EVERY;
+        double ground = beat(age, jabsFrom - 2.0, jabsFrom - 1.0) * (1.0 - beat(age, hit - 1.5, hit - 0.5));
+        fists(p, age, w * ground, jabsFrom, jabEvery, false);
+        double air = beat(age, flurry - 2.0, flurry - 0.5) * (1.0 - beat(age, winding - 0.5, winding + 1.5));
+        fists(p, age, w * air, flurry, flurryEvery, true);
         double held = w * (1.0 - beat(age, end - 10.0, end));
         p.armHold += (float)held;
         p.legHold += (float)held;
+    }
+
+    /**
+     * 1.2.8: a fist each {@code every} ticks from {@code from} on (its blow landing on the beat), left and right in turn, out of a guard;
+     * over what the pose already has, by {@code w}. {@code air}: in the air, the legs drawn up under him.
+     */
+    static void fists(RigPose p, double age, double w, double from, double every, boolean air) {
+        if (w <= 1.0E-4) {
+            return;
+        }
+        RigPose guard = new RigPose();
+        guard.rightArmX = -1.0F; guard.rightElbow = 1.5F; guard.leftArmX = -1.0F; guard.leftElbow = 1.5F; guard.lean = 0.25F; guard.headX = 0.1F;
+        if (air) {
+            guard.rightKnee = 1.1F; guard.leftKnee = 0.7F; guard.leftLegX = -0.45F; guard.rightLegX = 0.2F;
+        } else {
+            guard.drop = 0.6F; guard.leftLegX = -0.3F; guard.rightLegX = 0.25F; guard.leftKnee = 0.4F;
+        }
+        double k = (age - from + 1.0) / every;
+        int n = (int)Math.floor(k);
+        double u = (k - n) * every; // ticks since it began (a tick before its blow)
+        double out = u < 1.0 ? smooth(clamp01(u)) : 1.0 - smooth(clamp01((u - 1.0) / Math.max(1.0, every - 1.0)));
+        RigPose fist = new RigPose().add(guard, 1.0F);
+        if (Math.floorMod(n, 2) == 0) {
+            fist.rightArmX = -1.65F; fist.rightArmY = -0.05F; fist.rightElbow = 0.0F; fist.twist = -0.55F; fist.lunge = 1.4F;
+        } else {
+            fist.leftArmX = -1.65F; fist.leftArmY = 0.05F; fist.leftElbow = 0.0F; fist.twist = 0.55F; fist.lunge = 1.4F;
+        }
+        RigPose now = new RigPose().add(guard, (float)(1.0 - out)).add(fist, (float)out);
+        RigPose kept = p.scale((float)(1.0 - w));
+        p.clear();
+        p.add(kept, 1.0F);
+        p.add(now, (float)w);
     }
 
     /**

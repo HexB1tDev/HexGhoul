@@ -3,20 +3,20 @@
     "subtitle": "subtitles.hexkagune.sfx.blade_swing",
     "sounds": [
       {
-        "name": "hexkagune:sfx/combat/sword_swings/fast_steel_cut",
-        "volume": 0.58
-      },
-      {
-        "name": "hexkagune:sfx/combat/sword_swings/reverse_slash",
-        "volume": 0.35
-      },
-      {
         "name": "hexkagune:sfx/combat/sword_swings/air_tear",
         "volume": 0.6
       },
       {
-        "name": "hexkagune:sfx/combat/sword_swings/rising_blade",
-        "volume": 0.68
+        "name": "hexkagune:sfx/combat/punch_swings/double_feint",
+        "volume": 0.25
+      },
+      {
+        "name": "hexkagune:sfx/combat/punch_swings/spinning_fist",
+        "volume": 0.35
+      },
+      {
+        "name": "hexkagune:sfx/combat/punch_swings/straight_cross",
+        "volume": 0.36
       }
     ]
   },
@@ -24,20 +24,20 @@
     "subtitle": "subtitles.hexkagune.sfx.blade_heavy",
     "sounds": [
       {
-        "name": "hexkagune:sfx/combat/sword_swings/heavy_cleave",
-        "volume": 0.57
+        "name": "hexkagune:sfx/combat/punch_swings/heavy_windup",
+        "volume": 0.31
       },
       {
-        "name": "hexkagune:sfx/combat/sword_swings/wide_saber_sweep",
-        "volume": 0.64
+        "name": "hexkagune:sfx/combat/punch_swings/charged_fist_swing",
+        "volume": 0.55
       },
       {
-        "name": "hexkagune:sfx/combat/sword_swings/spinning_blade",
-        "volume": 0.47
+        "name": "hexkagune:sfx/combat/punch_swings/rising_uppercut",
+        "volume": 0.37
       },
       {
-        "name": "hexkagune:sfx/combat/sword_swings/twin_cuts",
-        "volume": 0.39
+        "name": "hexkagune:sfx/combat/sword_swings/air_tear",
+        "volume": 0.8
       }
     ]
   },
@@ -578,28 +578,6 @@
       }
     ]
   },
-  "sfx.pulse": {
-    "subtitle": "subtitles.hexkagune.sfx.pulse",
-    "sounds": [
-      {
-        "name": "hexkagune:sfx/blood_and_gush/drips_and_pools/thick_double_drop",
-        "volume": 0.68
-      }
-    ]
-  },
-  "sfx.hiss": {
-    "subtitle": "subtitles.hexkagune.sfx.hiss",
-    "sounds": [
-      {
-        "name": "hexkagune:sfx/blood_and_gush/blood_sprays/pressure_spray",
-        "volume": 0.72
-      },
-      {
-        "name": "hexkagune:sfx/blood_and_gush/blood_sprays/sideways_spray",
-        "volume": 0.64
-      }
-    ]
-  },
   "sfx.eat": {
     "subtitle": "subtitles.hexkagune.sfx.eat",
     "sounds": [
@@ -661,12 +639,12 @@
         "volume": 0.55
       },
       {
-        "name": "hexkagune:sfx/combat/sword_swings/wide_saber_sweep",
-        "volume": 0.44
-      },
-      {
         "name": "hexkagune:sfx/combat/punch_swings/double_feint",
         "volume": 0.23
+      },
+      {
+        "name": "hexkagune:sfx/combat/punch_swings/spinning_fist",
+        "volume": 0.32
       }
     ]
   },
@@ -678,8 +656,8 @@
         "volume": 0.65
       },
       {
-        "name": "hexkagune:sfx/combat/sword_swings/fast_steel_cut",
-        "volume": 0.63
+        "name": "hexkagune:sfx/combat/punch_swings/double_feint",
+        "volume": 0.27
       }
     ]
   },

@@ -760,7 +760,7 @@ public final class KingLayer extends RenderLayer<AbstractClientPlayer, EntityMod
         double rise = sway[5] + (sway[6] - sway[5]) * k;
         double cut = view.moveAt() - view.wasAt();
         return new com.hex.kagune.control.king.PeaceMotion.State(move, view.level(), age, pitch,
-            com.hex.kagune.control.client.KingFx.peaceAims(player, at), move == com.hex.kagune.control.king.KingMove.NONE ? com.hex.kagune.control.king.KingMove.NONE
+            com.hex.kagune.control.client.KingFx.peaceAims(player, at, at == time ? partial : 1.0F), move == com.hex.kagune.control.king.KingMove.NONE ? com.hex.kagune.control.king.KingMove.NONE
                 : view.was(), Math.max(0, view.wasLevel()), cut, lag, run, rise);
     }
 

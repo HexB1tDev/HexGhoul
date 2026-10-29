@@ -112,23 +112,35 @@ public final class WarRules {
     /** How far off it may be (blocks). */
     public static final double BLITZ_RANGE = 7.0;
     /**
-     * Its moments (ticks): there; the punch; he blinks up after it; the cut in the air; the kick; the wind-up of the last (slowed);
-     * the blow to the gut; when it is all over at the latest.
+     * Its moments (ticks): there; 1.2.8: the jabs on the ground (from, every, how many); the punch that sends it up; he blinks up after
+     * it; the cut in the air; the kick; 1.2.8: the flurry in the air after it (four seconds of blows from every side, from, every, how
+     * long); the wind-up of the last (slowed); the blow to the gut; when it is all over at the latest.
      */
     public static final int BLITZ_ARRIVE = 2;
-    public static final int BLITZ_PUNCH = 3;
-    public static final int BLITZ_BLINK = 5;
-    public static final int BLITZ_CUT = 7;
-    public static final int BLITZ_KICK = 11;
-    public static final int BLITZ_WIND = 13;
-    public static final int BLITZ_GUT = 27;
-    public static final int BLITZ_TICKS = 48;
-    /** What each blow does; how fast it is driven down; the crater's size round where it lands, what that does, how far the ground shakes. */
-    public static final float BLITZ_PUNCH_DAMAGE = 10.0F;
-    public static final float BLITZ_CUT_DAMAGE = 10.0F;
-    public static final float BLITZ_KICK_DAMAGE = 8.0F;
-    public static final float BLITZ_GUT_DAMAGE = 26.0F;
-    public static final float BLITZ_CRASH_DAMAGE = 12.0F;
+    public static final int BLITZ_JABS_FROM = 3;
+    public static final int BLITZ_JAB_EVERY = 2;
+    public static final int BLITZ_JABS = 4;
+    public static final int BLITZ_PUNCH = 11;
+    public static final int BLITZ_BLINK = 13;
+    public static final int BLITZ_CUT = 15;
+    public static final int BLITZ_KICK = 19;
+    public static final int BLITZ_FLURRY = 22;
+    public static final int BLITZ_FLURRY_EVERY = 3;
+    public static final int BLITZ_FLURRY_TICKS = 81;
+    public static final int BLITZ_WIND = BLITZ_FLURRY + BLITZ_FLURRY_TICKS;
+    public static final int BLITZ_GUT = BLITZ_WIND + 14;
+    public static final int BLITZ_TICKS = BLITZ_GUT + 21;
+    /**
+     * What each blow does (1.2.8: the many small, the last the most of it by far: the gut and the crash are most of the whole); how fast
+     * it is driven down; the crater's size round where it lands, what that does, how far the ground shakes.
+     */
+    public static final float BLITZ_JAB_DAMAGE = 1.0F;
+    public static final float BLITZ_PUNCH_DAMAGE = 3.0F;
+    public static final float BLITZ_CUT_DAMAGE = 3.0F;
+    public static final float BLITZ_KICK_DAMAGE = 2.0F;
+    public static final float BLITZ_FLURRY_DAMAGE = 0.5F;
+    public static final float BLITZ_GUT_DAMAGE = 30.0F;
+    public static final float BLITZ_CRASH_DAMAGE = 10.0F;
     public static final float CRATER_DAMAGE = 10.0F;
     public static final double BLITZ_CRASH_SPEED = 3.2;
     public static final double CRATER_RADIUS = 4.5;
@@ -152,12 +164,49 @@ public final class WarRules {
             double u = (t - BLITZ_CUT) / (BLITZ_KICK - BLITZ_CUT);
             return new double[] {0.0, 3.2 + 0.3 * u, 1.6 + 0.2 * u};
         }
-        if (t < BLITZ_WIND) {
-            double u = ease((t - BLITZ_KICK) / (BLITZ_WIND - BLITZ_KICK));
+        if (t < BLITZ_FLURRY) {
+            double u = ease((t - BLITZ_KICK) / (BLITZ_FLURRY - BLITZ_KICK));
             return new double[] {0.6 * u, 3.5 + 1.1 * u, 1.8 + 1.2 * u};
         }
+        if (t < BLITZ_WIND) {
+            // 1.2.8: held up there through the flurry, rocked a little by every blow, away from the side it came from.
+            double k = (t - BLITZ_FLURRY) / BLITZ_FLURRY_EVERY;
+            int n = (int)Math.floor(k);
+            double rock = 0.1 * Math.exp(-3.0 * (k - n)) * Math.min(1.0, (k - n) * 6.0);
+            double[] from = flurrySide(n);
+            double l = Math.max(1.0E-6, Math.sqrt(from[0] * from[0] + from[1] * from[1] + from[2] * from[2]));
+            double rise = 0.08 * (t - BLITZ_FLURRY) / BLITZ_FLURRY_TICKS;
+            return new double[] {0.6 - from[0] / l * rock, 4.6 + rise - from[1] / l * rock * 0.5, 3.0 - from[2] / l * rock};
+        }
         double u = Math.min(1.0, (t - BLITZ_WIND) / (BLITZ_GUT - BLITZ_WIND));
-        return new double[] {0.6, 4.6 + 0.2 * u, 3.0 + 0.1 * u};
+        return new double[] {0.6, 4.68 + 0.12 * u, 3.0 + 0.1 * u};
+    }
+
+    /**
+     * 1.2.8: which side the flurry's {@code n}th blow comes from (blocks from the body, his frame: x his right, y up, z away from him):
+     * round its front from his far left to his far right, from under it and over it, never twice alike in a row.
+     */
+    public static double[] flurrySide(int n) {
+        double a = Math.toRadians(75.0 * Math.sin(n * 2.4));
+        double y = -0.7 + 1.2 * (n * 0.6180339887 - Math.floor(n * 0.6180339887));
+        double r = 1.45;
+        return new double[] {r * Math.sin(a), y, -r * Math.cos(a)};
+    }
+
+    /** 1.2.8: the flurry's blow at {@code age}, or -1: one every {@link #BLITZ_FLURRY_EVERY} ticks from {@link #BLITZ_FLURRY} on. */
+    public static int flurryHit(long age) {
+        if (age < BLITZ_FLURRY || age >= BLITZ_WIND || (age - BLITZ_FLURRY) % BLITZ_FLURRY_EVERY != 0) {
+            return -1;
+        }
+        return (int)((age - BLITZ_FLURRY) / BLITZ_FLURRY_EVERY);
+    }
+
+    /** 1.2.8: the jab at {@code age} on the ground, or -1. */
+    public static int jab(long age) {
+        if (age < BLITZ_JABS_FROM || (age - BLITZ_JABS_FROM) % BLITZ_JAB_EVERY != 0 || (age - BLITZ_JABS_FROM) / BLITZ_JAB_EVERY >= BLITZ_JABS) {
+            return -1;
+        }
+        return (int)((age - BLITZ_JABS_FROM) / BLITZ_JAB_EVERY);
     }
 
     /** 1.0.28: the highest the blitz has the body (blocks; {@link #blitzBody}'s height at its top), for the room it needs over it. */
@@ -165,7 +214,17 @@ public final class WarRules {
 
     /** Where he is against the body (blocks, the same frame) once he has blinked up to it: just before it, facing it. */
     public static double[] blitzBeside(double t) {
+        if (t >= BLITZ_FLURRY - 1 && t < BLITZ_WIND - 1) {
+            // 1.2.8: the flurry: blinked to its own side a tick before each blow.
+            double[] side = flurrySide((int)Math.floor((t - (BLITZ_FLURRY - 1)) / BLITZ_FLURRY_EVERY));
+            return new double[] {side[0], side[1] - 0.25, side[2]};
+        }
         return t < BLITZ_KICK ? new double[] {-0.2, -0.4, -1.4} : new double[] {-0.4, -0.25, -1.5};
+    }
+
+    /** 1.2.8: whether he blinks to the next side of the flurry at {@code age} (a tick before each of its blows). */
+    public static boolean flurryBlink(long age) {
+        return age >= BLITZ_FLURRY - 1 && age < BLITZ_WIND - 1 && (age - (BLITZ_FLURRY - 1)) % BLITZ_FLURRY_EVERY == 0;
     }
 
     // V: Black Sun (1.0.27: the ultimate, at a body within reach)

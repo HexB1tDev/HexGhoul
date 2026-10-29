@@ -107,6 +107,9 @@ public final class ReviveClient {
         boolean slim = player != null && "slim".equals(player.m_108564_());
         CORPSES.put(message.playerId(), new Corpse(message.playerId(), began, Remains.scatter(message.seed(), message.ground(), slim),
             new Vec3(message.x(), message.y(), message.z()), message.yaw(), message.seed()));
+        if (player != null) {
+            com.hex.kagune.control.client.fx.KakujaFx.breakApart(player); // 1.2.8: his kagune breaks with him
+        }
     }
 
     public static void mutations(S2CPaleMutations message) {

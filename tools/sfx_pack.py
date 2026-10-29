@@ -33,9 +33,9 @@ CLASH = "super_punch_collisions/"
 
 # pool: (gain, [files], subtitle). Frequent sounds get short files and a lower gain; the big ones the long, loud collisions.
 POOLS = {
-    # Kagune and blades cutting the air (every path's M1 swings).
-    "blade_swing": (0.6, [SWORD + "fast_steel_cut", SWORD + "reverse_slash", SWORD + "air_tear", SWORD + "rising_blade"], "Kagune cuts the air"),
-    "blade_heavy": (0.8, [SWORD + "heavy_cleave", SWORD + "wide_saber_sweep", SWORD + "spinning_blade", SWORD + "twin_cuts"], "Kagune cleaves"),
+    # Kagune cutting the air (every path's M1 swings). 1.2.8: air alone, never a sword's ring (the user: no metal on a swing).
+    "blade_swing": (0.6, [SWORD + "air_tear", PSWING + "double_feint", PSWING + "spinning_fist", PSWING + "straight_cross"], "Kagune cuts the air"),
+    "blade_heavy": (0.8, [PSWING + "heavy_windup", PSWING + "charged_fist_swing", PSWING + "rising_uppercut", SWORD + "air_tear"], "Kagune cleaves"),
     "blade_arc": (0.75, [SWORD + "spectral_sword_arc", SWORD + "needle_edge"], "A blade rings"),
     # Fists.
     "punch_swing": (0.6, [PSWING + "short_jab_air", PSWING + "straight_cross", PSWING + "left_hook", PSWING + "right_hook",
@@ -74,16 +74,14 @@ POOLS = {
                                            "long_tapering_gush", "gush_fading_to_drips")], "Blood pours"),
     "drip": (0.5, [DRIP + "single_blood_drop", DRIP + "thick_double_drop", DRIP + "last_two_drops"], "Blood drips"),
     "drips": (0.5, [DRIP + "slow_blood_drips", DRIP + "fast_blood_drips", DRIP + "drips_into_a_pool"], "Blood drips"),
-    "pulse": (0.85, [DRIP + "thick_double_drop"], "A heartbeat"),
-    "hiss": (0.45, [SPRAY + "pressure_spray", SPRAY + "sideways_spray"], "A hiss"),
     "eat": (0.75, [BLOOD + "dense_squelch", BLOOD + "thick_blood_smack"], "Eating"),
     "writhe": (0.3, [FLOW + "thick_blood_flow"], "Kagune writhes"),
     "crush_kill": (0.95, [COMBO + "heavy_hit_and_gush", COMBO + "final_blood_burst"], "Crushed to death"),
     "slash_spray": (0.85, [COMBO + "slash_then_blood_spray"], "A cut sprays blood"),
     "blood_bursts": (0.85, [COMBO + "rapid_blood_bursts"], "Blood bursts"),
     # Air, clashes, the big ones.
-    "whoosh": (0.55, [SWORD + "air_tear", SWORD + "wide_saber_sweep", PSWING + "double_feint"], "A rush of air"),
-    "dash": (0.65, [SWORD + "air_tear", SWORD + "fast_steel_cut"], "A dash"),
+    "whoosh": (0.55, [SWORD + "air_tear", PSWING + "double_feint", PSWING + "spinning_fist"], "A rush of air"),
+    "dash": (0.65, [SWORD + "air_tear", PSWING + "double_feint"], "A dash"),
     "air_burst": (0.75, [CLASH + "heavy_air_burst"], "A burst of air"),
     "clash": (0.85, [CLASH + "fast_counter_clash", CLASH + "close_dry_collision", CLASH + "hit_stop_clash"], "Kagune clash"),
     "clash_big": (0.95, [CLASH + "titan_fist_clash", CLASH + "double_shock_impact", CLASH + "sonic_fist_crash"], "A huge clash"),

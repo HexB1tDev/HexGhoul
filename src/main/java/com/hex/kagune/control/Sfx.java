@@ -9,7 +9,8 @@ import java.util.Map;
  * from the pack's pool that does that job ({@code hexkagune:sfx.<pool>}): the louder calls of a name from its heavier pool where it
  * has one (a little crack and a ground-splitting blast were both "explode"). The pitch a call asks for is drawn most of the way back to
  * the sound's own ({@link #KEEP}): vanilla's were pitched far down or up to make them fit, and the pack's are made to fit as they are.
- * A name with no pool here is played as vanilla's (only the quest journal's own cues, which are the game's interface, not a fight).
+ * A name with no pool here is played as vanilla's: the quest journal's own cues (the game's interface, not a fight), and 1.2.8, what
+ * the pack has nothing for (a heartbeat, fire): its blood drop for a heartbeat and its sprays for fire were the wrong sounds.
  */
 public final class Sfx {
     /** How much of a call's own pitch shift is kept (0: none, the pack's own pitch; 1: all of it). */
@@ -69,8 +70,6 @@ public final class Sfx {
         // Ukaku's fire: shards of RC, thrown.
         two("entity.blaze.shoot", "spike_throw", 0.75F, "spike_heavy");
         one("item.firecharge.use", "spike_heavy");
-        one("entity.generic.burn", "hiss");
-        one("block.fire.extinguish", "hiss");
         one("item.trident.throw", "spike_heavy");
         one("item.trident.return", "spike_throw");
         one("entity.evoker_fangs.attack", "spike_heavy");
@@ -88,7 +87,6 @@ public final class Sfx {
         one("block.honey_block.break", "blood_splat_big");
         one("block.soul_sand.break", "blood_splat");
         one("entity.generic.eat", "eat");
-        one("entity.warden.heartbeat", "pulse");
         one("entity.warden.emerge", "gush_big");
         // Voices and powers rising: the pack's transformations.
         one("entity.warden.roar", "transform.dark_aura_release");

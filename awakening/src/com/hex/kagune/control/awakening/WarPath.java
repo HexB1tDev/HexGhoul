@@ -393,7 +393,7 @@ final class WarPath {
         double w = prey.getBbWidth() * 0.5;
         if (age < WarRules.BLITZ_GUT) {
             V3 at = blitzPlan(b, w, age);
-            if ((age == WarRules.BLITZ_BLINK || age == WarRules.BLITZ_KICK + 1) && open(player.serverLevel(), at)) {
+            if ((age == WarRules.BLITZ_BLINK || age == WarRules.BLITZ_KICK + 1 || WarRules.flurryBlink(age)) && open(player.serverLevel(), at)) {
                 V3 was = new V3(player.getX(), player.getY(), player.getZ());
                 blink(player, at);
                 WarKit.fx(player, S2CKingFx.BLITZ, new int[] {prey.getId()}, was.add(0.0, 1.0, 0.0), at.add(0.0, 1.0, 0.0));
@@ -407,7 +407,19 @@ final class WarPath {
         }
         V3 c = WarKit.center(prey);
         V3 into = b.away.add(0.0, 0.2, 0.0).normalize();
-        if (age == WarRules.BLITZ_PUNCH) {
+        int jab = WarRules.jab(age);
+        int hit = WarRules.flurryHit(age);
+        if (jab >= 0) {
+            // 1.2.8: the jabs on the ground first, left and right, before the punch that sends it up.
+            blow(player, prey, WarRules.BLITZ_JAB_DAMAGE, c, into, 0.55, false);
+            WarKit.vanilla(player, c, jab % 2 == 0 ? "entity.player.attack.strong" : "entity.player.attack.knockback", 0.9F, 1.2F);
+        } else if (hit >= 0) {
+            // 1.2.8: the flurry: a blow from each side he blinks to, four seconds of them, small; the last one is the one that counts.
+            V3 from = c.sub(WarKit.center(player));
+            V3 way = from.length() < 1.0E-3 ? into : from.normalize();
+            blow(player, prey, WarRules.BLITZ_FLURRY_DAMAGE, c, way, 0.6, false);
+            WarKit.vanilla(player, c, hit % 3 == 2 ? "entity.player.attack.knockback" : "entity.player.attack.strong", 0.8F, 1.0F + 0.1F * (hit % 3));
+        } else if (age == WarRules.BLITZ_PUNCH) {
             blow(player, prey, WarRules.BLITZ_PUNCH_DAMAGE, c, into, 1.1, false);
             WarKit.vanilla(player, c, "entity.player.attack.strong", 1.4F, 0.7F);
         } else if (age == WarRules.BLITZ_CUT) {
@@ -480,11 +492,11 @@ final class WarPath {
             WarKit.vanilla(player, c, "entity.player.attack.strong", 1.6F, 0.5F);
             WarKit.vanilla(player, c, "entity.generic.explode", 0.8F, 1.6F);
         } else if (age == WarRules.SUNDER_BESIDE) {
-            WarKit.play(player, c, HexKaguneSounds.KAGUNE_STRAIN, 2.4F, 0.35F);
+            // 1.2.8: the punch drawn back: the user's energy swelling all through the draw (it was a swing's whoosh and a blood drop).
+            WarKit.vanilla(player, c, "hexkagune:sfx.transform.energy_metamorphosis", 2.4F, 1.0F);
             WarKit.vanilla(player, c, "entity.warden.heartbeat", 2.4F, 0.5F);
         } else if (age > WarRules.SUNDER_BESIDE && age < WarRules.SUNDER_PUNCH && (WarRules.SUNDER_PUNCH - age) % 12 == 0) {
-            // The draw goes on: his body creaking under it, a heartbeat at each turn of the screw.
-            WarKit.play(player, c, HexKaguneSounds.KAGUNE_STRAIN, 2.0F, 0.3F + 0.1F * (age - WarRules.SUNDER_BESIDE) / (float) WarRules.SUNDER_PUNCH);
+            // The draw goes on: a heartbeat at each turn of the screw.
             WarKit.vanilla(player, c, "entity.warden.heartbeat", 2.6F, 0.45F);
         } else if (age == WarRules.SUNDER_PUNCH) {
             b.owed += bruise(player, prey, WarRules.SUNDER_PUNCH_DAMAGE, c.sub(b.away));
