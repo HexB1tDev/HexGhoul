@@ -3,6 +3,10 @@ package net.minecraft.client.resources.sounds;
 
 public interface SoundInstance {
     /** createUnseededRandom */ static net.minecraft.util.RandomSource m_235150_() { throw new UnsupportedOperationException(); }
+    /** getLocation (1.2.2) */ default net.minecraft.resources.ResourceLocation m_7904_() { throw new UnsupportedOperationException(); }
+    /** getX (1.2.2) */ default double m_7772_() { throw new UnsupportedOperationException(); }
+    /** getY (1.2.2) */ default double m_7780_() { throw new UnsupportedOperationException(); }
+    /** getZ (1.2.2) */ default double m_7778_() { throw new UnsupportedOperationException(); }
 
     enum Attenuation {
         NONE,

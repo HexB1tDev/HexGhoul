@@ -244,15 +244,29 @@ public final class PeaceRules {
     public static final int HORIZON_DRIVE = 26;
     public static final int HORIZON_LET_GO = 10;
     public static final int HORIZON_TICKS = HORIZON_STRIKE + HORIZON_FALL_MOST + HORIZON_DRIVE + HORIZON_LET_GO + 20;
-    /** How high it is thrown (blocks); how fast the last blade sends it down (blocks a tick). */
-    public static final double HORIZON_UP = 12.0;
-    public static final double HORIZON_DOWN = 2.4;
-    /** 1.0.36: the line it is sent down along (radians below level, away from him), as War's Black Sun: never straight down under him. */
-    public static final double HORIZON_DIVE = Math.toRadians(24.0);
-    /** 1.0.36: on the ground the blades drive it on along a shallower line down through the ground (radians), this fast, this far. */
-    public static final double HORIZON_TUNNEL = Math.toRadians(10.0);
-    public static final double HORIZON_DRIVE_SPEED = 0.9;
-    public static final double HORIZON_DEPTH = 18.0;
+    /**
+     * How high it is thrown (blocks); how fast the blades drive it down (blocks a tick). 1.2.2: half as high as it was (it went far out of
+     * sight above him), and driven down by the blades at a pace they can be seen pushing, not flung.
+     */
+    public static final double HORIZON_UP = 6.0;
+    public static final double HORIZON_DOWN = 1.5;
+    /** 1.2.2: how far on away from him it is carried as it rises (blocks), so it hangs well out in front of him, not over his head. */
+    public static final double HORIZON_DRIFT = 1.5;
+    /**
+     * 1.2.2: where he is through it: as far back from where he struck the uppercut (blocks), and as high (blocks over the ground at the
+     * top of the rise); he stays there through the blow down and the drive: the blades stretch out to it, he never goes after it.
+     */
+    public static final double HORIZON_BACK = 1.8;
+    public static final double HORIZON_LIFT = 2.0;
+    /**
+     * 1.0.36: the line it is driven down along (radians below level, away from him), never straight down under him. 1.2.2: steeper (it
+     * went down a long shallow line far off, which he was carried along after it), so it meets the ground near enough for the blades.
+     */
+    public static final double HORIZON_DIVE = Math.toRadians(50.0);
+    /** 1.0.36: on the ground the blades drive it on along a line down through the ground (radians), this fast, this far. 1.2.2: down into it. */
+    public static final double HORIZON_TUNNEL = Math.toRadians(28.0);
+    public static final double HORIZON_DRIVE_SPEED = 0.6;
+    public static final double HORIZON_DEPTH = 9.0;
     /** What each does: the uppercut, each blade in, the last blade's blow, hitting the ground, the drive (each tick of it), the release. */
     public static final float HORIZON_UPPER_DAMAGE = 10.0F;
     public static final float HORIZON_STAB = 5.0F;
@@ -272,6 +286,11 @@ public final class PeaceRules {
         }
         double u = Math.min(1.0, (t - HORIZON_UPPER) / (HORIZON_APEX - HORIZON_UPPER));
         return HORIZON_UP * (1.0 - Math.pow(1.0 - u, 3.0));
+    }
+
+    /** 1.2.2: how far on away from him the rise has carried it {@code t} ticks in (blocks). */
+    public static double horizonDrift(double t) {
+        return HORIZON_DRIFT * horizonRise(t) / HORIZON_UP;
     }
 
     /** When blade {@code blade} goes into it in the Horizon (ticks in), the great one's blow included; -1 if not. */

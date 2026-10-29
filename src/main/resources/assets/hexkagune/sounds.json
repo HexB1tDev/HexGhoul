@@ -1,10 +1,1100 @@
 {
+  "sfx.blade_swing": {
+    "subtitle": "subtitles.hexkagune.sfx.blade_swing",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/combat/sword_swings/fast_steel_cut",
+        "volume": 0.58
+      },
+      {
+        "name": "hexkagune:sfx/combat/sword_swings/reverse_slash",
+        "volume": 0.35
+      },
+      {
+        "name": "hexkagune:sfx/combat/sword_swings/air_tear",
+        "volume": 0.6
+      },
+      {
+        "name": "hexkagune:sfx/combat/sword_swings/rising_blade",
+        "volume": 0.68
+      }
+    ]
+  },
+  "sfx.blade_heavy": {
+    "subtitle": "subtitles.hexkagune.sfx.blade_heavy",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/combat/sword_swings/heavy_cleave",
+        "volume": 0.57
+      },
+      {
+        "name": "hexkagune:sfx/combat/sword_swings/wide_saber_sweep",
+        "volume": 0.64
+      },
+      {
+        "name": "hexkagune:sfx/combat/sword_swings/spinning_blade",
+        "volume": 0.47
+      },
+      {
+        "name": "hexkagune:sfx/combat/sword_swings/twin_cuts",
+        "volume": 0.39
+      }
+    ]
+  },
+  "sfx.blade_arc": {
+    "subtitle": "subtitles.hexkagune.sfx.blade_arc",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/combat/sword_swings/spectral_sword_arc",
+        "volume": 0.76
+      },
+      {
+        "name": "hexkagune:sfx/combat/sword_swings/needle_edge",
+        "volume": 0.81
+      }
+    ]
+  },
+  "sfx.punch_swing": {
+    "subtitle": "subtitles.hexkagune.sfx.punch_swing",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/combat/punch_swings/short_jab_air",
+        "volume": 0.47
+      },
+      {
+        "name": "hexkagune:sfx/combat/punch_swings/straight_cross",
+        "volume": 0.36
+      },
+      {
+        "name": "hexkagune:sfx/combat/punch_swings/left_hook",
+        "volume": 0.39
+      },
+      {
+        "name": "hexkagune:sfx/combat/punch_swings/right_hook",
+        "volume": 0.37
+      },
+      {
+        "name": "hexkagune:sfx/combat/punch_swings/fast_fist_snap",
+        "volume": 0.58
+      }
+    ]
+  },
+  "sfx.punch_swing_heavy": {
+    "subtitle": "subtitles.hexkagune.sfx.punch_swing_heavy",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/combat/punch_swings/rising_uppercut",
+        "volume": 0.32
+      },
+      {
+        "name": "hexkagune:sfx/combat/punch_swings/heavy_windup",
+        "volume": 0.27
+      },
+      {
+        "name": "hexkagune:sfx/combat/punch_swings/spinning_fist",
+        "volume": 0.41
+      },
+      {
+        "name": "hexkagune:sfx/combat/punch_swings/charged_fist_swing",
+        "volume": 0.48
+      },
+      {
+        "name": "hexkagune:sfx/combat/punch_swings/double_feint",
+        "volume": 0.29
+      }
+    ]
+  },
+  "sfx.punch_hit": {
+    "subtitle": "subtitles.hexkagune.sfx.punch_hit",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/combat/punch_hits/face_smack",
+        "volume": 0.78
+      },
+      {
+        "name": "hexkagune:sfx/combat/punch_hits/short_jab",
+        "volume": 0.9
+      },
+      {
+        "name": "hexkagune:sfx/combat/punch_hits/rib_impact",
+        "volume": 0.75
+      },
+      {
+        "name": "hexkagune:sfx/combat/punch_hits/heavy_uppercut",
+        "volume": 0.74
+      },
+      {
+        "name": "hexkagune:sfx/combat/punch_hits/dry_fist_hit",
+        "volume": 0.38
+      }
+    ]
+  },
+  "sfx.punch_hit_heavy": {
+    "subtitle": "subtitles.hexkagune.sfx.punch_hit_heavy",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/combat/punch_hits/heavy_body_blow",
+        "volume": 0.78
+      },
+      {
+        "name": "hexkagune:sfx/combat/punch_hits/crushing_cross",
+        "volume": 0.89
+      },
+      {
+        "name": "hexkagune:sfx/combat/punch_hits/knuckle_slam",
+        "volume": 0.66
+      },
+      {
+        "name": "hexkagune:sfx/combat/punch_hits/finishing_punch",
+        "volume": 1.0
+      }
+    ]
+  },
+  "sfx.finisher": {
+    "subtitle": "subtitles.hexkagune.sfx.finisher",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/combat/punch_hits/finishing_punch",
+        "volume": 1.0
+      },
+      {
+        "name": "hexkagune:sfx/combat/punch_hits/crushing_cross",
+        "volume": 0.99
+      }
+    ]
+  },
+  "sfx.crunch": {
+    "subtitle": "subtitles.hexkagune.sfx.crunch",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/combat/punch_hits/bone_crack",
+        "volume": 0.92
+      },
+      {
+        "name": "hexkagune:sfx/combat/punch_hits/rib_impact",
+        "volume": 0.64
+      }
+    ]
+  },
+  "sfx.crush": {
+    "subtitle": "subtitles.hexkagune.sfx.crush",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/combat/punch_hits/crushing_cross",
+        "volume": 0.89
+      },
+      {
+        "name": "hexkagune:sfx/combat/punch_hits/bone_crack",
+        "volume": 1.0
+      },
+      {
+        "name": "hexkagune:sfx/blood_and_gush/blood_impacts/dense_squelch",
+        "volume": 0.64
+      }
+    ]
+  },
+  "sfx.footfall": {
+    "subtitle": "subtitles.hexkagune.sfx.footfall",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/combat/running/concrete_footfall",
+        "volume": 0.4
+      },
+      {
+        "name": "hexkagune:sfx/combat/running/leather_footfall",
+        "volume": 0.29
+      },
+      {
+        "name": "hexkagune:sfx/combat/running/cloth_footfall",
+        "volume": 0.35
+      },
+      {
+        "name": "hexkagune:sfx/combat/running/armor_footfall",
+        "volume": 0.44
+      }
+    ]
+  },
+  "sfx.step_heavy": {
+    "subtitle": "subtitles.hexkagune.sfx.step_heavy",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/combat/running/armor_footfall",
+        "volume": 0.48
+      },
+      {
+        "name": "hexkagune:sfx/combat/running/concrete_footfall",
+        "volume": 0.44
+      }
+    ]
+  },
+  "sfx.step_light": {
+    "subtitle": "subtitles.hexkagune.sfx.step_light",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/combat/running/cloth_footfall",
+        "volume": 0.28
+      },
+      {
+        "name": "hexkagune:sfx/combat/running/leather_footfall",
+        "volume": 0.23
+      }
+    ]
+  },
+  "sfx.chitin": {
+    "subtitle": "subtitles.hexkagune.sfx.chitin",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/combat/running/armor_footfall",
+        "volume": 0.4
+      },
+      {
+        "name": "hexkagune:sfx/combat/running/concrete_footfall",
+        "volume": 0.36
+      }
+    ]
+  },
+  "sfx.spike_throw": {
+    "subtitle": "subtitles.hexkagune.sfx.spike_throw",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/combat/spike_throws/needle_flick",
+        "volume": 0.54
+      },
+      {
+        "name": "hexkagune:sfx/combat/spike_throws/steel_spike",
+        "volume": 0.45
+      },
+      {
+        "name": "hexkagune:sfx/combat/spike_throws/fast_dart",
+        "volume": 0.62
+      },
+      {
+        "name": "hexkagune:sfx/combat/spike_throws/spinning_spike",
+        "volume": 0.53
+      }
+    ]
+  },
+  "sfx.spike_heavy": {
+    "subtitle": "subtitles.hexkagune.sfx.spike_heavy",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/combat/spike_throws/heavy_throw",
+        "volume": 0.54
+      },
+      {
+        "name": "hexkagune:sfx/combat/spike_throws/heavy_lance",
+        "volume": 0.74
+      },
+      {
+        "name": "hexkagune:sfx/combat/spike_throws/charged_spike",
+        "volume": 1.0
+      }
+    ]
+  },
+  "sfx.spike_volley": {
+    "subtitle": "subtitles.hexkagune.sfx.spike_volley",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/combat/spike_throws/double_throw",
+        "volume": 0.88
+      },
+      {
+        "name": "hexkagune:sfx/combat/spike_throws/triple_fan",
+        "volume": 0.84
+      },
+      {
+        "name": "hexkagune:sfx/combat/spike_throws/razor_volley",
+        "volume": 1.0
+      }
+    ]
+  },
+  "sfx.stab": {
+    "subtitle": "subtitles.hexkagune.sfx.stab",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/combat/punch_hits/short_jab",
+        "volume": 0.64
+      },
+      {
+        "name": "hexkagune:sfx/combat/punch_hits/rib_impact",
+        "volume": 0.54
+      },
+      {
+        "name": "hexkagune:sfx/combat/spike_throws/needle_flick",
+        "volume": 0.45
+      }
+    ]
+  },
+  "sfx.anchor": {
+    "subtitle": "subtitles.hexkagune.sfx.anchor",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/combat/spike_throws/steel_spike",
+        "volume": 0.52
+      },
+      {
+        "name": "hexkagune:sfx/combat/spike_throws/heavy_lance",
+        "volume": 0.65
+      }
+    ]
+  },
+  "sfx.crystal_form": {
+    "subtitle": "subtitles.hexkagune.sfx.crystal_form",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/combat/spike_throws/charged_spike",
+        "volume": 1.0
+      },
+      {
+        "name": "hexkagune:sfx/combat/spike_throws/steel_spike",
+        "volume": 0.52
+      }
+    ]
+  },
+  "sfx.shatter": {
+    "subtitle": "subtitles.hexkagune.sfx.shatter",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/combat/punch_hits/bone_crack",
+        "volume": 1.0
+      },
+      {
+        "name": "hexkagune:sfx/super_punch_collisions/close_dry_collision",
+        "volume": 0.43
+      },
+      {
+        "name": "hexkagune:sfx/super_punch_collisions/fast_counter_clash",
+        "volume": 0.41
+      }
+    ]
+  },
+  "sfx.cue": {
+    "subtitle": "subtitles.hexkagune.sfx.cue",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/combat/spike_throws/needle_flick",
+        "volume": 0.81
+      }
+    ]
+  },
+  "sfx.blood_splat": {
+    "subtitle": "subtitles.hexkagune.sfx.blood_splat",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/blood_and_gush/blood_impacts/small_wet_splat",
+        "volume": 0.37
+      },
+      {
+        "name": "hexkagune:sfx/blood_and_gush/blood_impacts/thick_blood_smack",
+        "volume": 0.45
+      },
+      {
+        "name": "hexkagune:sfx/blood_and_gush/blood_impacts/heavy_wet_impact",
+        "volume": 0.45
+      },
+      {
+        "name": "hexkagune:sfx/blood_and_gush/blood_impacts/sharp_blood_slap",
+        "volume": 0.45
+      },
+      {
+        "name": "hexkagune:sfx/blood_and_gush/blood_impacts/wide_splatter_hit",
+        "volume": 0.5
+      },
+      {
+        "name": "hexkagune:sfx/blood_and_gush/blood_impacts/sudden_blood_burst",
+        "volume": 0.59
+      }
+    ]
+  },
+  "sfx.blood_splat_big": {
+    "subtitle": "subtitles.hexkagune.sfx.blood_splat_big",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/blood_and_gush/blood_impacts/dense_squelch",
+        "volume": 0.64
+      },
+      {
+        "name": "hexkagune:sfx/blood_and_gush/blood_impacts/big_anime_splat",
+        "volume": 0.98
+      },
+      {
+        "name": "hexkagune:sfx/blood_and_gush/blood_impacts/heavy_wet_impact",
+        "volume": 0.55
+      }
+    ]
+  },
+  "sfx.grab": {
+    "subtitle": "subtitles.hexkagune.sfx.grab",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/blood_and_gush/blood_impacts/thick_blood_smack",
+        "volume": 0.45
+      },
+      {
+        "name": "hexkagune:sfx/blood_and_gush/blood_impacts/sharp_blood_slap",
+        "volume": 0.45
+      }
+    ]
+  },
+  "sfx.blood_spray": {
+    "subtitle": "subtitles.hexkagune.sfx.blood_spray",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/blood_and_gush/blood_sprays/light_blood_spray",
+        "volume": 1.0
+      },
+      {
+        "name": "hexkagune:sfx/blood_and_gush/blood_sprays/sharp_blood_squirt",
+        "volume": 0.99
+      },
+      {
+        "name": "hexkagune:sfx/blood_and_gush/blood_sprays/sideways_spray",
+        "volume": 1.0
+      },
+      {
+        "name": "hexkagune:sfx/blood_and_gush/blood_sprays/heavy_blood_spray",
+        "volume": 1.0
+      },
+      {
+        "name": "hexkagune:sfx/blood_and_gush/blood_sprays/double_spray",
+        "volume": 1.0
+      },
+      {
+        "name": "hexkagune:sfx/blood_and_gush/blood_sprays/triple_spray",
+        "volume": 1.0
+      },
+      {
+        "name": "hexkagune:sfx/blood_and_gush/blood_sprays/pressure_spray",
+        "volume": 1.0
+      },
+      {
+        "name": "hexkagune:sfx/blood_and_gush/blood_sprays/wide_blood_fan",
+        "volume": 1.0
+      }
+    ]
+  },
+  "sfx.gush": {
+    "subtitle": "subtitles.hexkagune.sfx.gush",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/blood_and_gush/gushing_bursts/short_thick_gush",
+        "volume": 1.0
+      },
+      {
+        "name": "hexkagune:sfx/blood_and_gush/gushing_bursts/deep_blood_gush",
+        "volume": 1.0
+      },
+      {
+        "name": "hexkagune:sfx/blood_and_gush/gushing_bursts/pressurized_gush",
+        "volume": 1.0
+      },
+      {
+        "name": "hexkagune:sfx/blood_and_gush/gushing_bursts/double_gush",
+        "volume": 0.88
+      }
+    ]
+  },
+  "sfx.gush_big": {
+    "subtitle": "subtitles.hexkagune.sfx.gush_big",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/blood_and_gush/gushing_bursts/pulsing_gush",
+        "volume": 0.91
+      },
+      {
+        "name": "hexkagune:sfx/blood_and_gush/gushing_bursts/staggered_gush",
+        "volume": 1.0
+      },
+      {
+        "name": "hexkagune:sfx/blood_and_gush/gushing_bursts/rushing_blood_burst",
+        "volume": 1.0
+      },
+      {
+        "name": "hexkagune:sfx/blood_and_gush/gushing_bursts/dramatic_blood_gush",
+        "volume": 1.0
+      }
+    ]
+  },
+  "sfx.gush_long": {
+    "subtitle": "subtitles.hexkagune.sfx.gush_long",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/blood_and_gush/sustained_gushing/continuous_blood_gush",
+        "volume": 0.96
+      },
+      {
+        "name": "hexkagune:sfx/blood_and_gush/sustained_gushing/heavy_continuous_gush",
+        "volume": 0.96
+      },
+      {
+        "name": "hexkagune:sfx/blood_and_gush/sustained_gushing/thick_blood_flow",
+        "volume": 0.96
+      },
+      {
+        "name": "hexkagune:sfx/blood_and_gush/sustained_gushing/pulsing_blood_stream",
+        "volume": 0.96
+      },
+      {
+        "name": "hexkagune:sfx/blood_and_gush/sustained_gushing/long_tapering_gush",
+        "volume": 0.96
+      },
+      {
+        "name": "hexkagune:sfx/blood_and_gush/sustained_gushing/gush_fading_to_drips",
+        "volume": 0.96
+      }
+    ]
+  },
+  "sfx.drip": {
+    "subtitle": "subtitles.hexkagune.sfx.drip",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/blood_and_gush/drips_and_pools/single_blood_drop",
+        "volume": 0.42
+      },
+      {
+        "name": "hexkagune:sfx/blood_and_gush/drips_and_pools/thick_double_drop",
+        "volume": 0.4
+      },
+      {
+        "name": "hexkagune:sfx/blood_and_gush/drips_and_pools/last_two_drops",
+        "volume": 0.59
+      }
+    ]
+  },
+  "sfx.drips": {
+    "subtitle": "subtitles.hexkagune.sfx.drips",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/blood_and_gush/drips_and_pools/slow_blood_drips",
+        "volume": 0.8
+      },
+      {
+        "name": "hexkagune:sfx/blood_and_gush/drips_and_pools/fast_blood_drips",
+        "volume": 0.61
+      },
+      {
+        "name": "hexkagune:sfx/blood_and_gush/drips_and_pools/drips_into_a_pool",
+        "volume": 0.64
+      }
+    ]
+  },
+  "sfx.pulse": {
+    "subtitle": "subtitles.hexkagune.sfx.pulse",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/blood_and_gush/drips_and_pools/thick_double_drop",
+        "volume": 0.68
+      }
+    ]
+  },
+  "sfx.hiss": {
+    "subtitle": "subtitles.hexkagune.sfx.hiss",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/blood_and_gush/blood_sprays/pressure_spray",
+        "volume": 0.72
+      },
+      {
+        "name": "hexkagune:sfx/blood_and_gush/blood_sprays/sideways_spray",
+        "volume": 0.64
+      }
+    ]
+  },
+  "sfx.eat": {
+    "subtitle": "subtitles.hexkagune.sfx.eat",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/blood_and_gush/blood_impacts/dense_squelch",
+        "volume": 0.56
+      },
+      {
+        "name": "hexkagune:sfx/blood_and_gush/blood_impacts/thick_blood_smack",
+        "volume": 0.48
+      }
+    ]
+  },
+  "sfx.writhe": {
+    "subtitle": "subtitles.hexkagune.sfx.writhe",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/blood_and_gush/sustained_gushing/thick_blood_flow",
+        "volume": 0.48
+      }
+    ]
+  },
+  "sfx.crush_kill": {
+    "subtitle": "subtitles.hexkagune.sfx.crush_kill",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/blood_and_gush/dramatic_combos/heavy_hit_and_gush",
+        "volume": 0.85
+      },
+      {
+        "name": "hexkagune:sfx/blood_and_gush/dramatic_combos/final_blood_burst",
+        "volume": 1.0
+      }
+    ]
+  },
+  "sfx.slash_spray": {
+    "subtitle": "subtitles.hexkagune.sfx.slash_spray",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/blood_and_gush/dramatic_combos/slash_then_blood_spray",
+        "volume": 0.82
+      }
+    ]
+  },
+  "sfx.blood_bursts": {
+    "subtitle": "subtitles.hexkagune.sfx.blood_bursts",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/blood_and_gush/dramatic_combos/rapid_blood_bursts",
+        "volume": 0.64
+      }
+    ]
+  },
+  "sfx.whoosh": {
+    "subtitle": "subtitles.hexkagune.sfx.whoosh",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/combat/sword_swings/air_tear",
+        "volume": 0.55
+      },
+      {
+        "name": "hexkagune:sfx/combat/sword_swings/wide_saber_sweep",
+        "volume": 0.44
+      },
+      {
+        "name": "hexkagune:sfx/combat/punch_swings/double_feint",
+        "volume": 0.23
+      }
+    ]
+  },
+  "sfx.dash": {
+    "subtitle": "subtitles.hexkagune.sfx.dash",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/combat/sword_swings/air_tear",
+        "volume": 0.65
+      },
+      {
+        "name": "hexkagune:sfx/combat/sword_swings/fast_steel_cut",
+        "volume": 0.63
+      }
+    ]
+  },
+  "sfx.air_burst": {
+    "subtitle": "subtitles.hexkagune.sfx.air_burst",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/super_punch_collisions/heavy_air_burst",
+        "volume": 0.53
+      }
+    ]
+  },
+  "sfx.clash": {
+    "subtitle": "subtitles.hexkagune.sfx.clash",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/super_punch_collisions/fast_counter_clash",
+        "volume": 0.53
+      },
+      {
+        "name": "hexkagune:sfx/super_punch_collisions/close_dry_collision",
+        "volume": 0.56
+      },
+      {
+        "name": "hexkagune:sfx/super_punch_collisions/hit_stop_clash",
+        "volume": 0.57
+      }
+    ]
+  },
+  "sfx.clash_big": {
+    "subtitle": "subtitles.hexkagune.sfx.clash_big",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/super_punch_collisions/titan_fist_clash",
+        "volume": 0.52
+      },
+      {
+        "name": "hexkagune:sfx/super_punch_collisions/double_shock_impact",
+        "volume": 0.59
+      },
+      {
+        "name": "hexkagune:sfx/super_punch_collisions/sonic_fist_crash",
+        "volume": 0.62
+      }
+    ]
+  },
+  "sfx.burst": {
+    "subtitle": "subtitles.hexkagune.sfx.burst",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/super_punch_collisions/close_dry_collision",
+        "volume": 0.46
+      },
+      {
+        "name": "hexkagune:sfx/super_punch_collisions/fast_counter_clash",
+        "volume": 0.44
+      },
+      {
+        "name": "hexkagune:sfx/super_punch_collisions/heavy_air_burst",
+        "volume": 0.5
+      }
+    ]
+  },
+  "sfx.shockwave": {
+    "subtitle": "subtitles.hexkagune.sfx.shockwave",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/super_punch_collisions/wide_air_shockwave",
+        "volume": 0.55
+      },
+      {
+        "name": "hexkagune:sfx/super_punch_collisions/twin_fist_shockwave",
+        "volume": 0.58
+      },
+      {
+        "name": "hexkagune:sfx/super_punch_collisions/heavy_air_burst",
+        "volume": 0.6
+      },
+      {
+        "name": "hexkagune:sfx/super_punch_collisions/double_shock_impact",
+        "volume": 0.52
+      }
+    ]
+  },
+  "sfx.quake": {
+    "subtitle": "subtitles.hexkagune.sfx.quake",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/super_punch_collisions/ground_shaking_collision",
+        "volume": 1.0
+      },
+      {
+        "name": "hexkagune:sfx/super_punch_collisions/deep_pressure_collision",
+        "volume": 0.76
+      }
+    ]
+  },
+  "sfx.ultimate": {
+    "subtitle": "subtitles.hexkagune.sfx.ultimate",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/super_punch_collisions/ultimate_fist_collision",
+        "volume": 0.9
+      },
+      {
+        "name": "hexkagune:sfx/super_punch_collisions/thunder_punch_collision",
+        "volume": 0.8
+      },
+      {
+        "name": "hexkagune:sfx/super_punch_collisions/sky_splitting_clash",
+        "volume": 0.69
+      },
+      {
+        "name": "hexkagune:sfx/super_punch_collisions/charged_fist_collision",
+        "volume": 0.82
+      }
+    ]
+  },
+  "sfx.thunder": {
+    "subtitle": "subtitles.hexkagune.sfx.thunder",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/super_punch_collisions/thunder_punch_collision",
+        "volume": 0.8
+      }
+    ]
+  },
+  "sfx.windup_clash": {
+    "subtitle": "subtitles.hexkagune.sfx.windup_clash",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/super_punch_collisions/windup_to_massive_clash",
+        "volume": 0.77
+      }
+    ]
+  },
+  "sfx.ground": {
+    "subtitle": "subtitles.hexkagune.sfx.ground",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/super_punch_collisions/close_dry_collision",
+        "volume": 0.36
+      },
+      {
+        "name": "hexkagune:sfx/combat/punch_hits/knuckle_slam",
+        "volume": 0.43
+      }
+    ]
+  },
+  "sfx.transform.pressure_awakening": {
+    "subtitle": "subtitles.hexkagune.sfx.transform",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/combat/transformations/pressure_awakening",
+        "volume": 0.76,
+        "stream": true
+      }
+    ]
+  },
+  "sfx.transform.organic_armor_shift": {
+    "subtitle": "subtitles.hexkagune.sfx.transform",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/combat/transformations/organic_armor_shift",
+        "volume": 0.32,
+        "stream": true
+      }
+    ]
+  },
+  "sfx.transform.spectral_reveal": {
+    "subtitle": "subtitles.hexkagune.sfx.transform",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/combat/transformations/spectral_reveal",
+        "volume": 0.42,
+        "stream": true
+      }
+    ]
+  },
+  "sfx.transform.energy_metamorphosis": {
+    "subtitle": "subtitles.hexkagune.sfx.transform",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/combat/transformations/energy_metamorphosis",
+        "volume": 0.48,
+        "stream": true
+      }
+    ]
+  },
+  "sfx.transform.body_warp": {
+    "subtitle": "subtitles.hexkagune.sfx.transform",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/combat/transformations/body_warp",
+        "volume": 0.44,
+        "stream": true
+      }
+    ]
+  },
+  "sfx.transform.dark_aura_release": {
+    "subtitle": "subtitles.hexkagune.sfx.transform",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/combat/transformations/dark_aura_release",
+        "volume": 0.63,
+        "stream": true
+      }
+    ]
+  },
+  "sfx.transform.heavy_morph": {
+    "subtitle": "subtitles.hexkagune.sfx.transform",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/combat/transformations/heavy_morph",
+        "volume": 0.41,
+        "stream": true
+      }
+    ]
+  },
+  "sfx.transform.overdrive_awakening": {
+    "subtitle": "subtitles.hexkagune.sfx.transform",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/combat/transformations/overdrive_awakening",
+        "volume": 0.46,
+        "stream": true
+      }
+    ]
+  },
+  "sfx.transform.dimensional_shift": {
+    "subtitle": "subtitles.hexkagune.sfx.transform",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/combat/transformations/dimensional_shift",
+        "volume": 0.37,
+        "stream": true
+      }
+    ]
+  },
+  "sfx.transform.final_form": {
+    "subtitle": "subtitles.hexkagune.sfx.transform",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/combat/transformations/final_form",
+        "volume": 0.5,
+        "stream": true
+      }
+    ]
+  },
+  "kagune_whip": {
+    "replace": true,
+    "subtitle": "subtitles.hexkagune.kagune_whip",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx.blade_swing",
+        "type": "event"
+      }
+    ]
+  },
+  "bone_crack": {
+    "replace": true,
+    "subtitle": "subtitles.hexkagune.bone_crack",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx.crunch",
+        "type": "event"
+      }
+    ]
+  },
+  "kagune_slam": {
+    "replace": true,
+    "subtitle": "subtitles.hexkagune.kagune_slam",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx.punch_hit_heavy",
+        "type": "event"
+      }
+    ]
+  },
+  "flesh_impact": {
+    "replace": true,
+    "subtitle": "subtitles.hexkagune.flesh_impact",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx.blood_splat",
+        "type": "event"
+      }
+    ]
+  },
+  "kagune_strain": {
+    "replace": true,
+    "subtitle": "subtitles.hexkagune.kagune_strain",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx.punch_swing_heavy",
+        "type": "event"
+      }
+    ]
+  },
+  "manifest_rip": {
+    "replace": true,
+    "subtitle": "subtitles.hexkagune.manifest_rip",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx.gush",
+        "type": "event"
+      }
+    ]
+  },
+  "kagune_reshape": {
+    "replace": true,
+    "subtitle": "subtitles.hexkagune.kagune_reshape",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx.transform.organic_armor_shift",
+        "type": "event"
+      }
+    ]
+  },
+  "bone_crush": {
+    "replace": true,
+    "subtitle": "subtitles.hexkagune.bone_crush",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx.crush",
+        "type": "event"
+      }
+    ]
+  },
+  "kagune_guard": {
+    "replace": true,
+    "subtitle": "subtitles.hexkagune.kagune_guard",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx.clash",
+        "type": "event"
+      }
+    ]
+  },
+  "centipede_click": {
+    "replace": true,
+    "subtitle": "subtitles.hexkagune.centipede_click",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx.chitin",
+        "type": "event"
+      }
+    ]
+  },
+  "kagune_grab": {
+    "replace": true,
+    "subtitle": "subtitles.hexkagune.kagune_grab",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx.grab",
+        "type": "event"
+      }
+    ]
+  },
+  "kagune_dismiss": {
+    "replace": true,
+    "subtitle": "subtitles.hexkagune.kagune_dismiss",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx.transform.organic_armor_shift",
+        "type": "event"
+      }
+    ]
+  },
+  "shard_launch": {
+    "replace": true,
+    "subtitle": "subtitles.hexkagune.shard_launch",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx.spike_volley",
+        "type": "event"
+      }
+    ]
+  },
+  "crush_kill": {
+    "replace": true,
+    "subtitle": "subtitles.hexkagune.crush_kill",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx.crush_kill",
+        "type": "event"
+      }
+    ]
+  },
+  "kagune_anchor": {
+    "replace": true,
+    "subtitle": "subtitles.hexkagune.kagune_anchor",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx.anchor",
+        "type": "event"
+      }
+    ]
+  },
+  "kagune_idle": {
+    "replace": true,
+    "subtitle": "subtitles.hexkagune.kagune_idle",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx.writhe",
+        "type": "event"
+      }
+    ]
+  },
   "manifest_kaneki": {
     "subtitle": "subtitles.hexkagune.manifest_kaneki",
     "sounds": [
       {
-        "name": "hexkagune:manifest_kaneki",
-        "stream": false
+        "name": "hexkagune:sfx.gush",
+        "type": "event"
       }
     ]
   },
@@ -12,8 +1102,8 @@
     "subtitle": "subtitles.hexkagune.manifest_ayato",
     "sounds": [
       {
-        "name": "hexkagune:manifest_ayato",
-        "stream": false
+        "name": "hexkagune:sfx.transform.spectral_reveal",
+        "type": "event"
       }
     ]
   },

@@ -653,9 +653,11 @@ final class AyatoFire {
 
     /** A vanilla sound by name (heard by everyone near). */
     static void sound(ServerLevel level, Vec3 at, String id, float volume, float pitch) {
-        ResourceLocation location = ResourceLocation.m_214293_("minecraft", id);
+        // 1.2.2: drawn from the user's own pack (Sfx): the name's pool, its pitch drawn back toward the sound's own.
+        com.hex.kagune.control.Sfx.Sound picked = com.hex.kagune.control.Sfx.play(id, volume, pitch);
+        ResourceLocation location = ResourceLocation.m_214293_(picked.namespace(), picked.path());
         if (location != null) {
-            level.m_6263_(null, at.f_82479_, at.f_82480_, at.f_82481_, SoundEvent.m_262824_(location), SoundSource.PLAYERS, volume, pitch);
+            level.m_6263_(null, at.f_82479_, at.f_82480_, at.f_82481_, SoundEvent.m_262824_(location), SoundSource.PLAYERS, picked.volume(), picked.pitch());
         }
     }
 }

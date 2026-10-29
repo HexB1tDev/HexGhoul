@@ -716,6 +716,19 @@ public final class KingTests {
             && com.hex.kagune.control.king.PeaceRules.horizonSent(PeaceMotion.GREAT) > last, "the Horizon's blades go in one at a time, the great one's blow last");
         check(com.hex.kagune.control.king.PeaceRules.horizonRise(com.hex.kagune.control.king.PeaceRules.HORIZON_APEX)
             == com.hex.kagune.control.king.PeaceRules.HORIZON_UP, "the uppercut throws it all the way up by the apex");
+        // 1.2.2: not too high, not on top of him, and he stays put while the blades drive it down near enough for them.
+        double up = com.hex.kagune.control.king.PeaceRules.HORIZON_UP;
+        double drift = com.hex.kagune.control.king.PeaceRules.horizonDrift(com.hex.kagune.control.king.PeaceRules.HORIZON_APEX);
+        double gap = 1.2 + 0.3 + com.hex.kagune.control.king.PeaceRules.HORIZON_BACK + drift; // (a player-sized body: half its width 0.3)
+        check(up >= 4.0 && up <= 7.0, "thrown up a few blocks, not out of sight: " + up);
+        check(gap >= 4.0 && gap <= 7.0, "it hangs well out in front of him at the top: " + gap + " blocks");
+        check(com.hex.kagune.control.king.PeaceRules.HORIZON_LIFT <= up - 3.0, "he rises a little, well below it");
+        double reach = up / Math.tan(com.hex.kagune.control.king.PeaceRules.HORIZON_DIVE);
+        check(reach <= 6.0, "driven down steeply: it meets the ground " + reach + " blocks on, near enough for the blades");
+        double under = com.hex.kagune.control.king.PeaceRules.HORIZON_DEPTH * Math.sin(com.hex.kagune.control.king.PeaceRules.HORIZON_TUNNEL);
+        check(under >= 3.0, "and down into the ground after: " + under + " blocks under");
+        check(com.hex.kagune.control.king.PeaceRules.HORIZON_DOWN * com.hex.kagune.control.king.PeaceRules.HORIZON_FALL_MOST >= up / Math.sin(
+            com.hex.kagune.control.king.PeaceRules.HORIZON_DIVE), "it always reaches the ground before the fall's time is up");
     }
 
     /** 1.0.17: the transformations: War held in until its burst then out at once, Peace growing over him, both done in their time. */

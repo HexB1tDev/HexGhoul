@@ -847,3 +847,11 @@ M net/minecraft/client/renderer/entity/EntityRenderDispatcher m_6213_ (Lnet/mine
 C net/minecraftforge/event/entity/EntityJoinLevelEvent                           # [forge] event/entity/EntityJoinLevelEvent.java (cancelable; posted by ClientLevel.addEntity on the client, as by ServerLevel)
 M net/minecraftforge/event/entity/EntityJoinLevelEvent getLevel ()Lnet/minecraft/world/level/Level;  # [forge] same
 M net/minecraftforge/event/entity/EntityJoinLevelEvent getEntity ()Lnet/minecraft/world/entity/Entity;  # [forge] inherited from EntityEvent.getEntity
+# 1.2.2: the mod's sounds never pile into noise (SfxGuard, SfxLimit): each one about to play on a client is asked first.
+C net/minecraftforge/client/event/sound/PlaySoundEvent                           # [forge] client/event/sound/PlaySoundEvent.java: posted by SoundEngine.play (ForgeHooksClient.playSound); the sound set to null is not played
+M net/minecraftforge/client/event/sound/PlaySoundEvent getSound ()Lnet/minecraft/client/resources/sounds/SoundInstance;  # [forge] same
+M net/minecraftforge/client/event/sound/PlaySoundEvent setSound (Lnet/minecraft/client/resources/sounds/SoundInstance;)V  # [forge] same
+M net/minecraft/client/resources/sounds/SoundInstance m_7904_ ()Lnet/minecraft/resources/ResourceLocation;  # [srg] getLocation: joined.tsrg fxy.a ()Lacq; m_7904_ 7904, intermediary fxy ()Lacq; a method_4775 (yarn SoundInstance.getId)
+M net/minecraft/client/resources/sounds/SoundInstance m_7772_ ()D                  # [srg] getX: joined.tsrg fxy.h ()D m_7772_ 7772, intermediary method_4784
+M net/minecraft/client/resources/sounds/SoundInstance m_7780_ ()D                  # [srg] getY: joined.tsrg fxy.i ()D m_7780_ 7780, intermediary method_4779
+M net/minecraft/client/resources/sounds/SoundInstance m_7778_ ()D                  # [srg] getZ: joined.tsrg fxy.j ()D m_7778_ 7778, intermediary method_4778

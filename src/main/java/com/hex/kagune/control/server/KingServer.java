@@ -200,78 +200,68 @@ public final class KingServer {
 
     /**
      * 1.0.17: its coming, {@code age} ticks in, as the world hears it: War's heart pounding as the darkness gathers, then the burst
-     * (the blast that throws back and blinds all near); Peace's light chiming, its wings beating, the soft light at the end.
+     * (the blast that throws back and blinds all near); Peace's light chiming, its wings beating, the soft light at the end. 1.2.2: in the
+     * user's own pack, one sound to a beat (four or five of vanilla's were layered on some): War's awakening swelling under the heart,
+     * the colossal impact and the blood of it at the burst; Peace revealed, its wings' air, its light.
      */
     static void coming(ServerPlayer player, KingForm form, long age) {
         net.minecraft.server.level.ServerLevel level = player.m_284548_();
         net.minecraft.world.phys.Vec3 at = new net.minecraft.world.phys.Vec3(player.m_20185_(), player.m_20186_() + 1.0, player.m_20189_());
         if (form == KingForm.WAR) {
-            if (age == 0L || age == 5L || age == 9L || age == 12L || age == 14L) {
-                AyatoFire.sound(level, at, "entity.warden.heartbeat", 2.0F + age * 0.05F, 0.7F + age * 0.05F);
+            if (age == 0L) {
+                AyatoFire.sound(level, at, "hexkagune:sfx.transform.overdrive_awakening", 2.0F, 0.9F);
             }
-            if (age == 3L) {
-                AyatoFire.sound(level, at, "block.sculk_catalyst.bloom", 1.6F, 0.5F);
+            if (age == 0L || age == 5L || age == 9L || age == 12L || age == 14L) {
+                AyatoFire.sound(level, at, "hexkagune:sfx.pulse", 2.0F, 0.6F + age * 0.02F);
             }
             if (KingTransform.burstNow(form, age)) {
-                AyatoFire.sound(level, at, "entity.generic.explode", 2.4F, 0.65F);
-                AyatoFire.sound(level, at, "entity.warden.roar", 2.0F, 0.85F);
-                AyatoFire.sound(level, at, "block.honey_block.break", 1.6F, 0.55F);
-                AyatoFire.sound(level, at, "entity.slime.squish", 1.6F, 0.5F);
+                AyatoFire.sound(level, at, "hexkagune:sfx.ultimate", 2.4F, 0.9F);
+                AyatoFire.sound(level, at, "hexkagune:sfx.gush_big", 1.6F, 0.9F);
                 blast(player, level, at);
             }
         } else if (form == KingForm.PEACE) {
             if (age == 0L) {
-                AyatoFire.sound(level, at, "block.beacon.activate", 1.4F, 1.4F);
-            }
-            if (age == 6L || age == 26L) {
-                AyatoFire.sound(level, at, "block.amethyst_block.chime", 1.8F, age == 6L ? 1.2F : 1.5F);
+                AyatoFire.sound(level, at, "hexkagune:sfx.transform.spectral_reveal", 1.6F, 1.0F);
             }
             if (age == 12L || age == 22L) {
-                AyatoFire.sound(level, at, "entity.ender_dragon.flap", 0.7F, 1.45F);
-            }
-            if (age == 34L) {
-                AyatoFire.sound(level, at, "block.amethyst_block.resonate", 1.3F, 1.3F);
+                AyatoFire.sound(level, at, "hexkagune:sfx.whoosh", 0.9F, 1.1F);
             }
             if (age == KingTransform.PEACE_LIGHT) {
-                AyatoFire.sound(level, at, "block.beacon.power_select", 1.3F, 1.6F);
-                AyatoFire.sound(level, at, "entity.player.levelup", 0.6F, 1.7F);
+                AyatoFire.sound(level, at, "hexkagune:sfx.transform.pressure_awakening", 1.4F, 1.1F);
             }
         }
     }
 
     /**
      * 1.0.19: its leaving, {@code age} ticks after it was taken off, as the world hears it: War dying on him (a last heartbeat, then
-     * crumbling like rock, a hiss of ash as the last of it goes); Peace drawn back in (a chime, its wings folding, glass-like breaking as
-     * they wither, the light going out of it).
+     * crumbling like rock, the last of it dripping away); Peace drawn back in (its wings folding, breaking as they wither, the light
+     * going out of it). 1.2.2: the user's own pack.
      */
     static void going(ServerPlayer player, KingForm form, long age) {
         net.minecraft.server.level.ServerLevel level = player.m_284548_();
         net.minecraft.world.phys.Vec3 at = new net.minecraft.world.phys.Vec3(player.m_20185_(), player.m_20186_() + 1.0, player.m_20189_());
         if (form == KingForm.WAR) {
             if (age == 0L) {
-                AyatoFire.sound(level, at, "entity.warden.heartbeat", 1.8F, 0.5F);
+                AyatoFire.sound(level, at, "hexkagune:sfx.pulse", 1.8F, 0.55F);
             }
             if (age == 3L) {
-                AyatoFire.sound(level, at, "block.basalt.break", 1.4F, 0.6F);
+                AyatoFire.sound(level, at, "hexkagune:sfx.quake", 1.2F, 0.9F);
             }
-            if (age == 6L || age == 11L || age == 16L || age == 21L) {
-                AyatoFire.sound(level, at, age % 2L == 0L ? "block.deepslate.break" : "block.soul_sand.break", 1.2F, 0.55F + age * 0.012F);
+            if (age == 8L || age == 16L) {
+                AyatoFire.sound(level, at, "hexkagune:sfx.ground", 1.0F, 0.9F + age * 0.005F);
             }
-            if (age == 24L) {
-                AyatoFire.sound(level, at, "block.fire.extinguish", 0.7F, 0.5F);
+            if (age == 22L) {
+                AyatoFire.sound(level, at, "hexkagune:sfx.drips", 0.8F, 0.9F);
             }
         } else if (form == KingForm.PEACE) {
             if (age == 0L) {
-                AyatoFire.sound(level, at, "block.amethyst_block.chime", 1.4F, 1.0F);
-            }
-            if (age == 6L) {
-                AyatoFire.sound(level, at, "entity.ender_dragon.flap", 0.6F, 1.6F);
+                AyatoFire.sound(level, at, "hexkagune:sfx.whoosh", 0.8F, 0.95F);
             }
             if (age == 12L || age == 18L) {
-                AyatoFire.sound(level, at, "block.amethyst_cluster.break", 0.9F, age == 12L ? 1.3F : 1.5F);
+                AyatoFire.sound(level, at, "hexkagune:sfx.shatter", 0.9F, age == 12L ? 1.0F : 1.1F);
             }
             if (age == 32L) {
-                AyatoFire.sound(level, at, "block.beacon.deactivate", 1.0F, 1.4F);
+                AyatoFire.sound(level, at, "hexkagune:sfx.transform.organic_armor_shift", 1.0F, 1.1F);
             }
         }
     }

@@ -729,8 +729,10 @@ final class WarKit implements KingServer.Kit {
 
     /** 1.0.14: one of vanilla's sounds, by name, at {@code at}. */
     static void vanilla(ServerPlayer player, V3 at, String name, float volume, float pitch) {
-        SoundEvent sound = SoundEvent.createVariableRangeEvent(new ResourceLocation("minecraft", name));
-        player.serverLevel().playSound(null, at.x(), at.y(), at.z(), sound, SoundSource.PLAYERS, volume, pitch);
+        // 1.2.2: drawn from the user's own pack (Sfx): the name's pool, its pitch drawn back toward the sound's own.
+        com.hex.kagune.control.Sfx.Sound picked = com.hex.kagune.control.Sfx.play(name, volume, pitch);
+        SoundEvent sound = SoundEvent.createVariableRangeEvent(new ResourceLocation(picked.namespace(), picked.path()));
+        player.serverLevel().playSound(null, at.x(), at.y(), at.z(), sound, SoundSource.PLAYERS, picked.volume(), picked.pitch());
     }
 
     static void play(ServerPlayer player, V3 at, RegistryObject<?> sound, float volume, float pitch) {

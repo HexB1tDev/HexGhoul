@@ -96,6 +96,8 @@ public final class EtoFleshRenderer {
         }
         float partial = event.getPartialTick();
         double time = EtoClient.clock(partial);
+        // 1.2.2: the final kakujas (KingClient's views) are on the world's clock, not Eto's.
+        double kingTime = com.hex.kagune.control.client.ControlClient.worldTime(partial);
         Vec3 camera = minecraft.f_91063_.m_109153_().m_90583_();
         PoseStack stack = event.getPoseStack();
         Matrix4f matrix = stack.m_85850_().m_252922_();
@@ -127,11 +129,13 @@ public final class EtoFleshRenderer {
             }
             if (firstPerson(minecraft, player) && player.m_6084_()) {
                 // 1.0.16: Peace's blades in first person, wherever they reach out before him (the body is never drawn there). 1.0.26: and
-                // War's rinkaku: all of the kagune each wears, seen from his eyes.
-                peaceBlades(player, partial, time, camera, level, matrix, normals, buffers);
-                warRinkaku(player, partial, time, camera, level, matrix, normals, buffers);
+                // War's rinkaku: all of the kagune each wears, seen from his eyes. 1.2.2: on the world's clock, as the final kakujas are
+                // told and as third person draws them (on Eto's own tick count, which starts at 0 with the game, every one of them was
+                // still to come: nothing of Peace, nor War's rinkaku, was ever drawn in first person in a world older than the session).
+                peaceBlades(player, partial, kingTime, camera, level, matrix, normals, buffers);
+                warRinkaku(player, partial, kingTime, camera, level, matrix, normals, buffers);
             }
-            if (firstPerson(minecraft, player) && player.m_6084_() && warArms(player, partial, time, camera, level, matrix, normals, buffers)) {
+            if (firstPerson(minecraft, player) && player.m_6084_() && warArms(player, partial, kingTime, camera, level, matrix, normals, buffers)) {
                 // 1.0.15: War's own arms in first person through his moves (the M1's blows, the blade, the hand thrown out): on his body
                 // as third person poses it, in his skin and War's armour and blade; vanilla's hands are not drawn meanwhile (ArmHider).
                 ownArms = true;

@@ -23,7 +23,7 @@ import sys
 import zipfile
 
 ROOT = Path(__file__).resolve().parent
-VERSION = "1.2.1"
+VERSION = "1.2.2"
 INPUT = ROOT / "input" / "hexkagune-1.0.0.jar"
 BUILD = Path(os.environ.get("HEXKAGUNE_BUILD_DIR", ROOT / "build"))
 OUTPUT = BUILD / f"hexkagune-{VERSION}.jar"
@@ -99,11 +99,16 @@ def javac(*args):
     run("javac", "-encoding", "UTF-8", "-proc:none", "-nowarn", *args)
 
 
-# 7.0.0: original entries the user asked to rename (the controls: "Ability 1".."Ability 8" and the category "HexKagune").
+# 7.0.0: original entries the user asked to rename (the controls: "Ability 1".."Ability 8" and the category "HexKagune"); 1.2.2: and
+# the original's sounds the user asked to replace with their own.
 RENAMED = {
     LANG: {"key.categories.hexkagune", "key.hexkagune.menu", "key.hexkagune.rapid_strike", "key.hexkagune.slingshot",
            "key.hexkagune.lift", "key.hexkagune.slam", "key.hexkagune.throw", "key.hexkagune.crush", "key.hexkagune.grab",
            "key.hexkagune.guard", "key.hexkagune.cycle_tendrils"},
+    # 1.2.2: every one of the original's sounds the user asked to be replaced by their own pack (tools/sfx_pack.py): each event now
+    # draws from the pack's pools ("replace": true), the original's OGGs left in the jar unplayed.
+    SOUNDS: {"manifest_rip", "kagune_reshape", "kagune_dismiss", "kagune_whip", "flesh_impact", "bone_crack", "bone_crush", "kagune_grab",
+             "kagune_strain", "kagune_slam", "kagune_guard", "kagune_anchor", "centipede_click", "shard_launch", "kagune_idle", "crush_kill"},
 }
 
 

@@ -58,7 +58,8 @@ import org.joml.Matrix4f;
 @Mod.EventBusSubscriber(modid = "hexkagune", value = Dist.CLIENT)
 public final class KakujaFx {
     private static final RenderType TYPE = RenderType.m_110473_(Objects.requireNonNull(KaguneMod.id("textures/misc/ukaku_white.png")));
-    private static final SoundEvent GLASS = SoundEvent.m_262824_(ResourceLocation.m_214293_("minecraft", "block.glass.break"));
+    /** 1.2.2: the user's own pack's shattering (Sfx). */
+    private static final SoundEvent GLASS = SoundEvent.m_262824_(ResourceLocation.m_214293_("hexkagune", "sfx.shatter"));
     private static final int FULL_BRIGHT = 0xF000F0;
     /** A snapshot older than this (ticks) is not shattered (the part wasn't drawn lately). */
     private static final long FRESH = 6L;

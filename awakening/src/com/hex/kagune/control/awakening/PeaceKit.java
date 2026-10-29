@@ -1246,7 +1246,7 @@ final class PeaceKit implements KingServer.Kit {
                 KingEffects.stun(prey, 10);
             } else if (!h.falling && age < PeaceRules.HORIZON_STRIKE) {
                 double up = PeaceRules.horizonRise(age);
-                h.body = h.origin.add(0.0, up, 0.0).add(h.away.scale(0.3 * up / PeaceRules.HORIZON_UP));
+                h.body = h.origin.add(0.0, up, 0.0).add(h.away.scale(PeaceRules.horizonDrift(age)));
                 if (age <= PeaceRules.HORIZON_APEX + 1) {
                     scars.carveSphere(player, h.body.add(0.0, prey.getBbHeight() + 0.9, 0.0), 1.6, h.origin.y() + 0.6);
                     scars.carveSphere(player, h.body.add(0.0, prey.getBbHeight() * 0.5, 0.0), 1.2, h.origin.y() + 0.6);
@@ -1312,23 +1312,17 @@ final class PeaceKit implements KingServer.Kit {
                 release(player, state, h, now);
             }
         }
-        // Him: there in a blink, up after it and under it, held there; then after it a way, over it as the blades drive it on. 1.0.36:
-        // carried along his own planned path (where it has him next tick, and a little of how far off it he is), never chasing where the
-        // server last saw him (what threw him back and forth).
+        // Him: there in a blink, then back a little and up off the ground as it goes up before him, held there. 1.0.36: carried along
+        // his own planned path (where it has him next tick, and a little of how far off it he is), never chasing where the server last
+        // saw him (what threw him back and forth). 1.2.2: and there he stays through the blow down and the drive, held in the air: the
+        // blades stretch out from him to drive it down and on into the ground; he is never carried after it.
         if (age < PeaceRules.HORIZON_STRIKE) {
             if (age >= PeaceRules.HORIZON_UPPER + 2) player.setNoGravity(true);
             glide(player, horizonPlan(h, age, w), horizonPlan(h, age + 1.0, w));
         } else if (h.releasedAt < 0L) {
             player.setNoGravity(true);
             if (h.hover == null) h.hover = horizonPlan(h, PeaceRules.HORIZON_STRIKE - 1.0, w);
-            V3 flat = h.away;
-            double y = Math.max(h.floor + 3.0, (h.landedAt < 0L ? h.body.y() : h.body.y() + h.driven * Math.sin(PeaceRules.HORIZON_TUNNEL)) + 4.0);
-            V3 over = h.body.sub(flat.scale(8.0 + w)).withY(y);
-            V3 step = over.sub(h.hover).scale(0.14);
-            if (step.length() > 1.6) step = step.normalize().scale(1.6);
-            V3 was = h.hover;
-            h.hover = h.hover.add(step);
-            glide(player, was, h.hover);
+            glide(player, h.hover, h.hover);
         }
         // The blades.
         V3 c = center(prey);
@@ -1378,9 +1372,10 @@ final class PeaceKit implements KingServer.Kit {
         if (t <= PeaceRules.HORIZON_UPPER + 2) {
             return front;
         }
+        // 1.2.2: back from where he struck it and a little up off the ground, as far below and before it as it rises: never up under it
+        // (it was lifted right over his head, as high again as it is now).
         double up = PeaceRules.horizonRise(Math.min(t, PeaceRules.HORIZON_STRIKE));
-        V3 body = h.origin.add(0.0, up, 0.0).add(h.away.scale(0.3 * up / PeaceRules.HORIZON_UP));
-        V3 under = body.add(0.0, -2.9, 0.0).sub(h.away.scale(0.7 + w));
+        V3 under = front.sub(h.away.scale(PeaceRules.HORIZON_BACK)).add(0.0, PeaceRules.HORIZON_LIFT * up / PeaceRules.HORIZON_UP, 0.0);
         if (t >= PeaceRules.HORIZON_UNDER) {
             return under;
         }
@@ -1599,8 +1594,10 @@ final class PeaceKit implements KingServer.Kit {
     }
 
     private static void vanilla(ServerPlayer player, V3 at, String name, float volume, float pitch) {
-        SoundEvent sound = SoundEvent.createVariableRangeEvent(new ResourceLocation("minecraft", name));
-        player.serverLevel().playSound(null, at.x(), at.y(), at.z(), sound, SoundSource.PLAYERS, volume, pitch);
+        // 1.2.2: drawn from the user's own pack (Sfx): the name's pool, its pitch drawn back toward the sound's own.
+        com.hex.kagune.control.Sfx.Sound picked = com.hex.kagune.control.Sfx.play(name, volume, pitch);
+        SoundEvent sound = SoundEvent.createVariableRangeEvent(new ResourceLocation(picked.namespace(), picked.path()));
+        player.serverLevel().playSound(null, at.x(), at.y(), at.z(), sound, SoundSource.PLAYERS, picked.volume(), picked.pitch());
     }
 
     private static void play(ServerPlayer player, V3 at, RegistryObject<?> sound, float volume, float pitch) {

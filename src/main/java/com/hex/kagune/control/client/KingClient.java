@@ -189,6 +189,8 @@ public final class KingClient {
                     if (view != null && view.on() && view.moveAt(now) == KingMove.PIERCE) {
                         player.f_20883_ = player.f_20885_;
                     }
+                    // 1.2.2: their runs' footfalls (the user's own pack), on the stride.
+                    KingSteps.tick(player, view != null && view.on() ? view.form() : KingForm.NONE);
                 }
             }
         }

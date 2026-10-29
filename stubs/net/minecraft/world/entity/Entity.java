@@ -2,6 +2,8 @@
 package net.minecraft.world.entity;
 
 public abstract class Entity {
+    /** xo, zo (the position a tick ago; 1.2.2) */ public double f_19854_;
+    public double f_19856_;
     /** spawnAtLocation(stack) (7.0.2) */ public net.minecraft.world.entity.item.ItemEntity m_19983_(net.minecraft.world.item.ItemStack stack) { throw new UnsupportedOperationException(); }
     /** setCustomName (7.0.2) */ public void m_6593_(net.minecraft.network.chat.Component name) { throw new UnsupportedOperationException(); }
     /** moveTo(x, y, z, yaw, pitch) (7.0.2) */ public void m_7678_(double x, double y, double z, float yaw, float pitch) { throw new UnsupportedOperationException(); }

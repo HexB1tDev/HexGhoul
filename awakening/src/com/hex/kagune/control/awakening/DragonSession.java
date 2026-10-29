@@ -129,7 +129,9 @@ final class DragonSession {
     private static final SoundEvent EXPLODE = vanilla("entity.generic.explode");
 
     private static SoundEvent vanilla(String name) {
-        return SoundEvent.createVariableRangeEvent(new ResourceLocation("minecraft", name));
+        // 1.2.2: drawn from the user's own pack (Sfx), as every sound of the mod is.
+        com.hex.kagune.control.Sfx.Sound sound = com.hex.kagune.control.Sfx.play(name, 1.0F, 1.0F);
+        return SoundEvent.createVariableRangeEvent(new ResourceLocation(sound.namespace(), sound.path()));
     }
 
     /**
