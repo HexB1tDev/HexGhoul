@@ -3,6 +3,8 @@ package net.minecraft.client;
 
 public class Minecraft {
     /** player */ public net.minecraft.client.player.LocalPlayer f_91074_;
+    /** getEntityRenderDispatcher (1.2.1) */ public net.minecraft.client.renderer.entity.EntityRenderDispatcher m_91290_() { throw new UnsupportedOperationException(); }
+    /** getResourceManager (1.2.1) */ public net.minecraft.server.packs.resources.ResourceManager m_91098_() { throw new UnsupportedOperationException(); }
     /** level */ public net.minecraft.client.multiplayer.ClientLevel f_91073_;
     /** options */ public net.minecraft.client.Options f_91066_;
     /** screen */ public net.minecraft.client.gui.screens.Screen f_91080_;

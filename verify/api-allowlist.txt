@@ -837,3 +837,13 @@ F net/minecraft/world/entity/LivingEntity f_20911_ Z                            
 F net/minecraft/world/entity/LivingEntity f_20913_ I                                  # [srg] swingTime: joined.tsrg bfz.aI f_20913_ 20913, intermediary bfz I aI field_6279 (yarn handSwingTicks); -1 at the swing, counted up each tick
 # 1.2.0: Ctrl is the Kagune key (ControlKeys.unleashHeld): read straight from the keyboard, as Alt was.
 M net/minecraft/client/gui/screens/Screen m_96637_ ()Z                               # [srg] hasControlDown: joined.tsrg euq.p ()Z m_96637_ 96637, intermediary euq ()Z p method_25441 (yarn hasControlDown); beside hasShiftDown q m_96638_ and hasAltDown r m_96639_
+# 1.2.1: Peace's flesh creatures are never drawn without a renderer (ThrallRenderGuard): looked for as one joins the client's world, mended if missing.
+C net/minecraft/client/renderer/entity/EntityRenderDispatcher                     # [srg] fow C_4330_ 4330, intermediary fow class_898 (yarn EntityRenderDispatcher)
+C net/minecraft/server/packs/resources/ResourceManager                           # [srg] akx C_77_ 77, intermediary akx class_3300 (yarn ResourceManager)
+M net/minecraft/client/Minecraft m_91290_ ()Lnet/minecraft/client/renderer/entity/EntityRenderDispatcher;  # [srg] getEntityRenderDispatcher: joined.tsrg enn.an ()Lfow; m_91290_ 91290, intermediary enn ()Lfow; an method_1561
+M net/minecraft/client/Minecraft m_91098_ ()Lnet/minecraft/server/packs/resources/ResourceManager;  # [srg] getResourceManager: joined.tsrg enn.Y ()Lakx; m_91098_ 91098, intermediary enn ()Lakx; Y method_1478
+M net/minecraft/client/renderer/entity/EntityRenderDispatcher m_114382_ (Lnet/minecraft/world/entity/Entity;)Lnet/minecraft/client/renderer/entity/EntityRenderer;  # [srg] getRenderer: joined.tsrg fow.a (Lbfj;)Lfox; m_114382_ 114382, intermediary fow (Lbfj;)Lfox; a method_3953 (the call the crash reports' dispatcher made, shouldRender's first)
+M net/minecraft/client/renderer/entity/EntityRenderDispatcher m_6213_ (Lnet/minecraft/server/packs/resources/ResourceManager;)V  # [srg] onResourceManagerReload: joined.tsrg fow.a (Lakx;)V m_6213_ 174003 (ResourceManagerReloadListener): makes every entity renderer again from EntityRenderers' providers
+C net/minecraftforge/event/entity/EntityJoinLevelEvent                           # [forge] event/entity/EntityJoinLevelEvent.java (cancelable; posted by ClientLevel.addEntity on the client, as by ServerLevel)
+M net/minecraftforge/event/entity/EntityJoinLevelEvent getLevel ()Lnet/minecraft/world/level/Level;  # [forge] same
+M net/minecraftforge/event/entity/EntityJoinLevelEvent getEntity ()Lnet/minecraft/world/entity/Entity;  # [forge] inherited from EntityEvent.getEntity

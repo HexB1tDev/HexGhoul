@@ -177,6 +177,8 @@ public final class GhoulNpcRenderer extends HumanoidMobRenderer<GhoulNpc, Player
         @SubscribeEvent
         public static void renderers(EntityRenderersEvent.RegisterRenderers event) {
             event.registerEntityRenderer(ControlEntities.GHOUL.get(), GhoulNpcRenderer::new);
+            // 1.2.1: Peace's flesh creatures' too, as FleshThrallRenderer does (in some setups that one was never made): twice can't hurt.
+            event.registerEntityRenderer(ControlEntities.THRALL.get(), net.minecraft.client.renderer.entity.NoopRenderer::new);
         }
     }
 }

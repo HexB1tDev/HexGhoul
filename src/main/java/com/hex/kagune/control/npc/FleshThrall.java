@@ -37,6 +37,12 @@ public class FleshThrall extends PathfinderMob {
 
     @Override
     protected void m_8024_() {
-        FleshThralls.tick(this);
+        // 1.2.1: whatever goes wrong in its mind takes only it, never the world (it is gone, and the error logged).
+        try {
+            FleshThralls.tick(this);
+        } catch (RuntimeException failure) {
+            com.hex.kagune.control.Safety.caught(failure, "a flesh creature's tick");
+            com.hex.kagune.control.Safety.discard(this);
+        }
     }
 }

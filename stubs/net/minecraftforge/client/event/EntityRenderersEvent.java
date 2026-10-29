@@ -3,6 +3,9 @@ package net.minecraftforge.client.event;
 
 public abstract class EntityRenderersEvent extends net.minecraftforge.eventbus.api.Event {
     public static class RegisterRenderers extends EntityRenderersEvent {
+        public RegisterRenderers() {
+        }
+
         public <T extends net.minecraft.world.entity.Entity> void registerEntityRenderer(net.minecraft.world.entity.EntityType<? extends T> type,
             net.minecraft.client.renderer.entity.EntityRendererProvider<T> provider) { throw new UnsupportedOperationException(); }
     }

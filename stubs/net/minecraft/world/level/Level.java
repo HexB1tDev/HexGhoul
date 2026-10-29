@@ -2,6 +2,7 @@
 package net.minecraft.world.level;
 
 public abstract class Level implements LevelAccessor {
+    /** isClientSide (1.2.1) */ public boolean f_46443_;
     /** OVERWORLD */ public static final net.minecraft.resources.ResourceKey<Level> f_46428_ = null;
     /** dimension */ public net.minecraft.resources.ResourceKey<Level> m_46472_() { throw new UnsupportedOperationException(); }
     /** getBlockEntity(pos) */ public net.minecraft.world.level.block.entity.BlockEntity m_7702_(net.minecraft.core.BlockPos pos) { throw new UnsupportedOperationException(); }
