@@ -124,9 +124,11 @@ final class DragonSession {
     /** Vanilla's sounds by name, for the turning (the mod has no scream of its own). */
     private static final SoundEvent SCREAM = vanilla("entity.ghast.scream");
     private static final SoundEvent HURT = vanilla("entity.player.hurt");
-    private static final SoundEvent ROAR = vanilla("entity.warden.roar");
     private static final SoundEvent HEARTBEAT = vanilla("entity.warden.heartbeat");
     private static final SoundEvent EXPLODE = vanilla("entity.generic.explode");
+    /** 1.2.7: the user's own transformations: the world bending as the turning begins, and the Dragon breaking out at the last scream. */
+    private static final SoundEvent TURNING = vanilla("hexkagune:sfx.transform.dimensional_shift");
+    private static final SoundEvent BREAKING_OUT = vanilla("hexkagune:sfx.transform.final_form");
 
     private static SoundEvent vanilla(String name) {
         // 1.2.2: drawn from the user's own pack (Sfx), as every sound of the mod is.
@@ -147,12 +149,13 @@ final class DragonSession {
         if (t % 10 == 0) event(S2CDragonEvent.Kind.PRELUDE, chest, t);
         int beat = Math.max(7, 22 - t / 12);
         if (t % beat == 0) level.playSound(null, chest.x(), chest.y(), chest.z(), HEARTBEAT, SoundSource.PLAYERS, 2.6F, 0.75F + t / 600.0F);
+        if (t == 0) level.playSound(null, chest.x(), chest.y(), chest.z(), TURNING, SoundSource.PLAYERS, 3.0F, 1.0F);
         for (int[] scream : TurningModel.SCREAMS) {
             if (t == scream[0]) {
                 boolean last = scream == TurningModel.SCREAMS[TurningModel.SCREAMS.length - 1];
-                level.playSound(null, chest.x(), chest.y() + 0.5, chest.z(), SCREAM, SoundSource.PLAYERS, 3.0F, last ? 0.45F : 0.6F);
                 level.playSound(null, chest.x(), chest.y() + 0.5, chest.z(), HURT, SoundSource.PLAYERS, 2.5F, 0.5F);
-                if (last) level.playSound(null, chest.x(), chest.y(), chest.z(), ROAR, SoundSource.PLAYERS, 3.0F, 0.7F);
+                // 1.2.7: the last scream is the Dragon breaking out (the user's final form), the others his own screams.
+                level.playSound(null, chest.x(), chest.y() + 0.5, chest.z(), last ? BREAKING_OUT : SCREAM, SoundSource.PLAYERS, 3.0F, last ? 1.0F : 0.6F);
             }
         }
         for (int[] burst : TurningModel.BURSTS) {

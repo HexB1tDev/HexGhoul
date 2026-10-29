@@ -190,6 +190,7 @@ final class WarWyrm {
         play(chest, HexKaguneSounds.MANIFEST_RIP, 3.0F, 0.8F);
         play(chest, HexKaguneSounds.KAGUNE_STRAIN, 2.0F, 0.7F);
         WarKit.vanilla(owner, chest, "entity.generic.explode", 1.2F, 1.4F);
+        WarKit.vanilla(owner, chest, "hexkagune:sfx.transform.body_warp", 2.4F, 1.0F); // 1.2.7: the user's own transformation
     }
 
     /** 1.0.33: rising out of him {@code t} ticks: up over him, the roar at the top, then down onto the ground before him. */

@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.2.7 (HexGhoul): your transformation sounds on every form (kakujas, the Dragon, Centipede Dominion); 1.2.6: War and Peace Z/V fixed (testing)
+
+See `.github/release-notes-1.2.7.md`.
+
 ## 1.2.5 (HexGhoul): the paths are Rinkaku and Ukaku, Furuta DNA no longer pickable, no character names anywhere in the mod (testing; saves reset)
 
 See `.github/release-notes-1.2.5.md`.
