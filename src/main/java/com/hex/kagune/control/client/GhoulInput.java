@@ -13,9 +13,9 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 /**
- * The kagune key (R) since 3.0.0: R alone is ghoul mode (the kakugan opens without the kagune; R again closes it, or puts
- * everything away when the kagune is out), Alt + R unleashes the kagune (Alt is the Unleash key, rebindable in Controls since
- * 5.0.0). Runs before the original's key handling and takes the presses first, so the original never sees them; the server
+ * The kagune key (R) since 3.0.0: R alone is ghoul mode (the kakugan opens without the kagune; R again closes it; 1.2.0: with the
+ * kagune out, back to kakugan mode, the eyes left open), Ctrl + R unleashes the kagune or, out, puts everything away (Ctrl is the
+ * Kagune key since 1.2.0, Alt before; rebindable in Controls since 5.0.0). Runs before the original's key handling and takes the presses first, so the original never sees them; the server
  * decides ({@code GhoulServer}).
  *
  * <p>5.0.3: the key press itself is read from the keyboard ({@link #key}), not only from the key binding's clicks. With Alt held,

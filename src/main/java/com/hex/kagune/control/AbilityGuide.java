@@ -11,7 +11,7 @@ import java.util.Map;
 
 /**
  * What the abilities panel shows (3.1.0, pure, tested): the moves the ghoul has right now with the keys the player bound to
- * them, how to open the eyes and unleash the kagune (R, Alt + R), and how to go into a kakuja (K). Names and colours follow the
+ * them, how to open the eyes and unleash the kagune (R, Ctrl + R), and how to go into a kakuja (K). Names and colours follow the
  * path and the form: Kaneki's combo is named for his form, crimson in the rinkaku forms, plum in the kakuja; Ayato's moves are
  * fire in the wings (vermilion), crystal in the crystal mode (ice), needles in the first kakuja (blood red), needles and fire in
  * the final kakuja (ember). A move his mastery hasn't reached yet is shown dim with the mastery it needs.
@@ -280,7 +280,7 @@ public final class AbilityGuide {
         rows.add(new Row(key(in, Key.SLAM), "Watch This", ETO_FLESH, locked(m, com.hex.kagune.control.eto.EtoRules.WATCH_MASTERY)));
         rows.add(new Row(key(in, Key.THROW) + " tap · hold", "Mutated Arm · Sphere", ETO_FLESH, locked(m, com.hex.kagune.control.eto.ArmRules.MASTERY)));
         rows.add(new Row(key(in, Key.CYCLE) + " tap", "The Owl (kakuja)", ETO_FLESH, locked(m, com.hex.kagune.control.eto.OwlRules.MASTERY)));
-        rows.add(row(in, "Put it all away", DIM, 0, Key.TOGGLE));
+        away(in, rows);
         return new Panel("BASE FORM", "Owl DNA · one-eyed owl", ETO_FLESH, rows);
     }
 
@@ -314,7 +314,7 @@ public final class AbilityGuide {
             rows.add(row(in, name, last ? (peace ? PEACE_RED : WAR_RED) : TEXT, 0, KING_KEYS[i]));
         }
         rows.add(new Row(key(in, Key.CYCLE) + " tap", "Turn back", accent, 0));
-        rows.add(row(in, "Put it all away", DIM, 0, Key.TOGGLE));
+        away(in, rows);
         return new Panel(peace ? "PEACE" : "WAR", peace ? "Kaneki DNA · final kakuja · white wings" : "Kaneki DNA · final kakuja · One-Eyed King",
             accent, rows);
     }
@@ -350,11 +350,11 @@ public final class AbilityGuide {
             rows.add(new Row(key(in, Key.CYCLE) + " tap", "Kakuja", FURUTA_BURN, locked(m, FurutaStage.KAKUJA.mastery())));
             rows.add(new Row(key(in, Key.CYCLE) + " hold", "Next stage", accent, 0));
         }
-        rows.add(row(in, "Put it all away", DIM, 0, Key.TOGGLE));
+        away(in, rows);
         return new Panel(kakuja ? "KAKUJA" : stage.displayName().toUpperCase(java.util.Locale.ROOT), "Furuta DNA · right kakugan", accent, rows);
     }
 
-    /** K into and out of the kakuja (tap: the first, hold: the final, from the first too), and R to put it all away. */
+    /** K into and out of the kakuja (tap: the first, hold: the final, from the first too), R to kakugan mode, Ctrl + R all away. */
     static void transform(Input in, List<Row> rows, boolean kakuja, boolean finalForm, int accent) {
         boolean ayato = in.path() == KagunePath.AYATO;
         if (kakuja) {
@@ -365,7 +365,13 @@ public final class AbilityGuide {
         if (!finalForm) {
             rows.add(new Row(key(in, Key.CYCLE) + " hold", "Final kakuja", ayato ? EMBER : KAKUJA_RED, locked(in.mastery(), FINAL_KAKUJA)));
         }
-        rows.add(row(in, "Put it all away", DIM, 0, Key.TOGGLE));
+        away(in, rows);
+    }
+
+    /** 1.2.0: the kagune out: R back to kakugan mode (the kagune in, the eyes kept), Ctrl + R everything away. */
+    static void away(Input in, List<Row> rows) {
+        rows.add(row(in, "Kakugan mode (eyes stay open)", EYES, 0, Key.TOGGLE));
+        rows.add(new Row(key(in, Key.UNLEASH) + "+" + key(in, Key.TOGGLE), "Put it all away", DIM, 0));
     }
 
     static int locked(int mastery, int needs) {

@@ -1222,7 +1222,7 @@ public final class KingTests {
         // 1.0.22: War's and Peace's panels are the other forms' card: the bound keys, the six abilities in order, K and R to turn back.
         java.util.Map<AbilityGuide.Key, String> bound = new java.util.EnumMap<>(AbilityGuide.Key.class);
         String[][] boundNames = {{"ATTACK", "LMB"}, {"USE", "RMB"}, {"TOGGLE", "R"}, {"CYCLE", "K"}, {"RAPID", "Ctrl+F"}, {"SLINGSHOT", "J"},
-            {"GRAB", "G"}, {"SLAM", "B"}, {"GUARD", "C"}, {"LIFT", "V"}};
+            {"GRAB", "G"}, {"SLAM", "B"}, {"GUARD", "C"}, {"LIFT", "V"}, {"UNLEASH", "LCtrl"}};
         for (String[] name : boundNames) {
             bound.put(AbilityGuide.Key.valueOf(name[0]), name[1]);
         }
@@ -1230,12 +1230,14 @@ public final class KingTests {
             AbilityGuide.Panel panel = AbilityGuide.king(bound, peace);
             java.util.List<AbilityGuide.Row> rows = panel.rows();
             int six = com.hex.kagune.control.king.WarRules.Ability.values().length;
-            check(rows.size() == AbilityGuide.KING_FIRST + six + 2, (peace ? "Peace" : "War") + ": M1, air, heavy, six abilities, K, R");
+            check(rows.size() == AbilityGuide.KING_FIRST + six + 3, (peace ? "Peace" : "War") + ": M1, air, heavy, six abilities, K, R, Ctrl + R");
             check(rows.get(AbilityGuide.KING_FIRST).keys().equals("Ctrl+F") && rows.get(AbilityGuide.KING_FIRST + six - 1).keys().equals("V"),
                 "the abilities on the keys bound in Controls, in order");
             check(rows.get(AbilityGuide.KING_FIRST).name().equals(peace ? com.hex.kagune.control.king.PeaceRules.Ability.WALTZ.displayName()
                 : com.hex.kagune.control.king.WarRules.Ability.EXECUTION.displayName()), "the first ability is its own");
-            check(rows.get(rows.size() - 1).keys().equals("R") && rows.get(rows.size() - 2).keys().startsWith("K"), "K and R turn it back");
+            // 1.2.0: K turns it back, R to kakugan mode (the eyes kept), Ctrl + R puts it all away.
+            check(rows.get(rows.size() - 1).keys().equals("LCtrl+R") && rows.get(rows.size() - 2).keys().equals("R")
+                && rows.get(rows.size() - 3).keys().startsWith("K"), "K turns it back, R to kakugan mode, Ctrl + R all away");
             check(rows.stream().noneMatch(AbilityGuide.Row::locked), "nothing locked in a final kakuja");
         }
         // 1.0.24: the kagune rides the torso as drawn: the carry is nothing at rest, and as one transform it is the point-by-point one.

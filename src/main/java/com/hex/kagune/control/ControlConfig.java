@@ -103,7 +103,7 @@ public final class ControlConfig {
             .define("controlIndicator", true);
         ABILITY_HUD = client
             .comment("A small panel above the chat listing your kagune's moves with the keys you bound to them, and how to open the eyes",
-                "(R) and unleash the kagune (Alt + R). Its moves and colours follow your path and form. Hidden while a screen is open.")
+                "(R) and unleash the kagune (Ctrl + R). Its moves and colours follow your path and form. Hidden while a screen is open.")
             .define("abilityHud", true);
         client.pop();
         CLIENT_SPEC = client.build();

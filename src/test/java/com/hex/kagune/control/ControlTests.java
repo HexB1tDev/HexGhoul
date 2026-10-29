@@ -24,7 +24,7 @@ public final class ControlTests {
     static java.util.Map<AbilityGuide.Key, String> defaultKeys() {
         java.util.Map<AbilityGuide.Key, String> keys = new java.util.EnumMap<>(AbilityGuide.Key.class);
         String[][] names = {{"ATTACK", "LMB"}, {"USE", "RMB"}, {"TOGGLE", "R"}, {"MENU", "P"}, {"GRAB", "G"}, {"THROW", "N"}, {"RAPID", "Z"},
-            {"SLINGSHOT", "J"}, {"CYCLE", "K"}, {"CRUSH", "H"}, {"LIFT", "V"}, {"SLAM", "B"}, {"GUARD", "C"}, {"UNLEASH", "LAlt"}};
+            {"SLINGSHOT", "J"}, {"CYCLE", "K"}, {"CRUSH", "H"}, {"LIFT", "V"}, {"SLAM", "B"}, {"GUARD", "C"}, {"UNLEASH", "LCtrl"}};
         for (String[] name : names) {
             keys.put(AbilityGuide.Key.valueOf(name[0]), name[1]);
         }
@@ -42,7 +42,7 @@ public final class ControlTests {
         AbilityGuide.Panel closed = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.KANEKI, AbilityGuide.State.CLOSED, 0,
             com.hex.kagune.gameplay.KaguneForm.RINKAKU_SEED, twin, false, keys));
         check(find(closed, "Ghoul eyes") != null && find(closed, "Ghoul eyes").keys().equals("R"), "kagune in: R opens the eyes");
-        check(find(closed, "Unleash") != null && find(closed, "Unleash").keys().equals("LAlt+R"), "kagune in: Alt + R unleashes it");
+        check(find(closed, "Unleash") != null && find(closed, "Unleash").keys().equals("LCtrl+R"), "kagune in: Ctrl + R unleashes it");
         java.util.Map<AbilityGuide.Key, String> unleashMoved = defaultKeys();
         unleashMoved.put(AbilityGuide.Key.UNLEASH, AbilityGuide.keyName("key.keyboard.g", "NONE"));
         AbilityGuide.Panel unleashBoard = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.KANEKI, AbilityGuide.State.CLOSED, 0,
@@ -126,7 +126,8 @@ public final class ControlTests {
         AbilityGuide.Panel moved = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.KANEKI, AbilityGuide.State.OUT, 100,
             com.hex.kagune.gameplay.KaguneForm.RINKAKU_SEED, twin, false, rebound));
         check(find(moved, "Rapid Strike").keys().equals("Ctrl+F"), "a rebound key shows as bound: " + find(moved, "Rapid Strike").keys());
-        check(find(moved, "Put it all away").keys().equals("M4"), "a mouse button shows as bound");
+        check(find(moved, "Kakugan mode").keys().equals("M4") && find(moved, "Put it all away").keys().equals("LCtrl+M4"),
+            "a mouse button shows as bound: kakugan mode on it, everything away on Ctrl with it");
         check(AbilityGuide.keyName("key.mouse.left", "NONE").equals("LMB") && AbilityGuide.keyName("key.mouse.right", "NONE").equals("RMB"),
             "mouse buttons");
         check(AbilityGuide.keyName("key.keyboard.r", "ALT").equals("Alt+R") && AbilityGuide.keyName("key.keyboard.unknown", "SHIFT").equals("-"),

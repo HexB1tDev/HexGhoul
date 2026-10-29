@@ -11,6 +11,7 @@ public abstract class Screen extends net.minecraft.client.gui.components.events.
     /** renderBackground */ public void m_280273_(net.minecraft.client.gui.GuiGraphics graphics) { throw new UnsupportedOperationException(); }
     /** onClose */ public void m_7379_() { throw new UnsupportedOperationException(); }
     /** hasAltDown */ public static boolean m_96639_() { throw new UnsupportedOperationException(); }
+    /** hasControlDown (1.2.0) */ public static boolean m_96637_() { throw new UnsupportedOperationException(); }
     /** isPauseScreen */ public boolean m_7043_() { throw new UnsupportedOperationException(); }
     /** keyPressed (Esc closes) */ @Override public boolean m_7933_(int keyCode, int scanCode, int modifiers) { throw new UnsupportedOperationException(); }
 }

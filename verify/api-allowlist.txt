@@ -835,3 +835,5 @@ F net/minecraft/client/renderer/entity/LivingEntityRenderer f_115290_ Lnet/minec
 # 1.0.42: Kaneki's grab is broken by a swing back at him (KanekiGrab): a player's bare swing, seen on the server as it goes.
 F net/minecraft/world/entity/LivingEntity f_20911_ Z                                  # [srg] swinging: joined.tsrg bfz.aG f_20911_ 20911, intermediary bfz Z aG field_6252 (yarn handSwinging); set by swing() as the server handles the arm swing packet
 F net/minecraft/world/entity/LivingEntity f_20913_ I                                  # [srg] swingTime: joined.tsrg bfz.aI f_20913_ 20913, intermediary bfz I aI field_6279 (yarn handSwingTicks); -1 at the swing, counted up each tick
+# 1.2.0: Ctrl is the Kagune key (ControlKeys.unleashHeld): read straight from the keyboard, as Alt was.
+M net/minecraft/client/gui/screens/Screen m_96637_ ()Z                               # [srg] hasControlDown: joined.tsrg euq.p ()Z m_96637_ 96637, intermediary euq ()Z p method_25441 (yarn hasControlDown); beside hasShiftDown q m_96638_ and hasAltDown r m_96639_

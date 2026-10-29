@@ -6,7 +6,7 @@ package com.hex.kagune.control.eto;
  * "unlocks at mastery N" messages always agree with what a key does. 6.2.0: the Owl is her only kakuja (the sealed V2 is gone).
  */
 public enum EtoUnlock {
-    BASE_FORM(0, "Base form (Alt+R): one-eyed kakugan, rising steam"),
+    BASE_FORM(0, "Base form (Ctrl+R): one-eyed kakugan, rising steam"),
     BLITZ(0, "Speed Blitz (M1): jab, cross, hook, liver shot"),
     FLIPS(0, "Flips (right click + W A S D)"),
     BIG_PUNCH(0, "Big Punch! (hold Z, release)"),

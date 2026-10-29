@@ -26,7 +26,7 @@ public final class ControlNetwork {
      * Ghoul Meat and the quests (7.0.1); 32: the final kakujas, War and Peace (1.0.5); 33: War's moves and waits (1.0.6), its rinkaku's own strikes (1.0.7); 34: what War's
      * abilities do out in the world (1.0.13); 35: War's M1, its blows and their effects (1.0.14); 36: the Black Sun out of the ground (1.0.15); 37: Peace playable, its blades' moves and cuts (1.0.16); 38: the transformations, nothing hurts him nor any ability while it comes (1.0.17). 39: Peace's six blades, their numbering and moves (1.0.18). 40: the marks blows leave instead of vanilla particles (1.0.19). 41: the fighting grammar: M1 flags, the heavy, the charge (1.0.20). 42: Peace's blades reach farther, its paths changed (1.0.21).
      */
-    private static final String PROTOCOL = "51";
+    private static final String PROTOCOL = "52";
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
         KaguneMod.id("control"), () -> PROTOCOL, PROTOCOL::equals, PROTOCOL::equals);
     private static boolean initialized;

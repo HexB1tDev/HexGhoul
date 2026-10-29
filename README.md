@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.2.0 (HexGhoul): Ctrl + R brings the kagune out or puts it all away, R switches to kakugan mode without losing the eyes (testing)
+
+See `.github/release-notes-1.2.0.md`. From 1.2.0 on, updates are published from the HexGhoul repository (versions 1.2.x, then 1.3.0 after 1.2.9).
+
 ## 1.0.43 (HexKagunesv2): breaking Kaneki's grab is a timed parry, swatting shards costs your hit (testing)
 
 See `.github/release-notes-1.0.43.md`.

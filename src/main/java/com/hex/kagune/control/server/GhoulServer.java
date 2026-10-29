@@ -27,8 +27,9 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 /**
- * Ghoul mode and the kagune key (3.0.0). R alone opens a ghoul's kakugan without the kagune (ghoul mode) and closes it again;
- * with the kagune out, R puts everything away (the kagune and the eyes). Alt + R unleashes the kagune (the eyes with it). The
+ * Ghoul mode and the kagune key (3.0.0). R alone opens a ghoul's kakugan without the kagune (ghoul mode, 1.2.0: kakugan mode) and
+ * closes it again; with the kagune out, R (1.2.0) puts only the kagune away and leaves the eyes open, back in kakugan mode.
+ * Ctrl + R unleashes the kagune (the eyes with it), and with the kagune out puts everything away ({@link GhoulKey}). The
  * client tells which ({@code C2SGhoulKey}); the original's own manifest and dismiss still do the work ({@link PathServer#toggle},
  * which also asks for a path first). Ghoul mode lasts until it is closed, the player dies or logs out.
  *
@@ -51,7 +52,7 @@ public final class GhoulServer {
         return GHOULS.contains(player.m_20148_());
     }
 
-    /** R ({@code unleash} false) or Alt + R ({@code unleash} true). */
+    /** R ({@code unleash} false) or Ctrl + R ({@code unleash} true). */
     public static void press(ServerPlayer player, boolean unleash) {
         if (!KaguneProfile.isUnlocked(player) || !player.m_6084_()) {
             return;
@@ -67,6 +68,9 @@ public final class GhoulServer {
         }
         if (!result.ghoul()) {
             set(player, false, !out);
+        } else if (out && result.toggleKagune()) {
+            // 1.2.0: from the kagune back to kakugan mode: the eyes stay open.
+            player.m_5661_(Component.m_237115_("message.hexkagune.ghoul.kakugan_mode"), true);
         }
     }
 

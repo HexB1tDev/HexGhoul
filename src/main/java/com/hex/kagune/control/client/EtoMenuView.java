@@ -86,7 +86,7 @@ public final class EtoMenuView {
         });
         c.centered("O N E - E Y E D   O W L", centerX, top + 18, TITLE);
         c.centered("RC CELL / PALE FLESH MATRIX", centerX, top + 34, SUBTITLE);
-        c.centered("Alt+R form  •  M1 blitz  •  RMB flips  •  Z punch  •  J flesh  •  V kicks  •  B watch this  •  N arm  •  K owl", centerX, top + 51,
+        c.centered("Ctrl+R form  •  M1 blitz  •  RMB flips  •  Z punch  •  J flesh  •  V kicks  •  B watch this  •  N arm  •  K owl", centerX, top + 51,
             0xFFA48C84);
 
         identity(c, model, left + 24, top + 68);
@@ -118,7 +118,7 @@ public final class EtoMenuView {
         row(c, "Kagune", "Pale flesh, upper back", x, y + 43);
         row(c, "Stage", EtoUnlock.stageName(mastery), x, y + 61);
         row(c, "Kakugan", eyeText(model.eyes()) + " only", x, y + 79);
-        row(c, "Form", model.active() ? "Base form (out)" : "Base form (Alt+R)", x, y + 97);
+        row(c, "Form", model.active() ? "Base form (out)" : "Base form (Ctrl+R)", x, y + 97);
         row(c, "Blitz", EtoStrike.count(mastery) + " of " + EtoStrike.values().length + " strikes", x, y + 115);
 
         c.text("MASTERY", x, y + 151, HEADER, false);
@@ -154,7 +154,7 @@ public final class EtoMenuView {
                 AyatoMenuView.draw(c, mark);
             }
         });
-        c.centered(model.active() ? "base form / the flesh stirs under her skin" : "sheathed / Alt+R to wake it", x + width / 2, y + height - 40,
+        c.centered(model.active() ? "base form / the flesh stirs under her skin" : "sheathed / Ctrl+R to wake it", x + width / 2, y + height - 40,
             0xFF8E7670);
         c.centered("kakuja: the Owl (K)", x + width / 2, y + height - 26, SEALED);
     }
