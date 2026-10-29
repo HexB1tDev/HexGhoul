@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.2.3 (HexGhoul): Rebirth's flesh men are Steve-shaped (player head, body, arms and legs), same flesh and arm blades (testing)
+
+See `.github/release-notes-1.2.3.md`.
+
 ## 1.2.2 (HexGhoul): every sound is the user's own pack (mono, balanced, spam-guarded), Peace visible in first person, the Final Horizon stays put (testing)
 
 See `.github/release-notes-1.2.2.md`.

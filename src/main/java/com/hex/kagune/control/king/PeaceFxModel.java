@@ -371,13 +371,17 @@ public final class PeaceFxModel {
 
     // ================================================================== Rebirth Instinct's creatures
 
+    /** 1.2.3: a creature's model pixel (blocks): Steve's 32 pixels to its 1.95 blocks. */
+    static final double PX = 1.95 / 32.0;
+
     /**
-     * One of Rebirth Instinct's creatures, a man's height of living flesh and kagune: crimson fibre for muscle, its ribs and its
-     * shoulders white plates, a skull's lump of a head with two red-hot eyes, hunched. At {@code feet} turned {@code yaw} (radians, as the
-     * game turns a body: ahead is (-sin, 0, cos)); walking {@code walking} (0..1) at {@code stride} (radians); {@code blades} (0..1) its
-     * forearms grown out into long curved blades, held up before it; {@code swing} (0..1 through one, NaN: none) a cut of the
-     * {@code side} arm (+1 its right) from high and out across it low; {@code rise} (0..1) climbing up out of the ground (out of a pool of
-     * itself), {@code melt} (0..1) slumping and melting back down into it.
+     * One of Rebirth Instinct's creatures: a man of living flesh and kagune. 1.2.3: in the shape of the player's own model (the user's
+     * ask): Steve's head, body, arms and legs, box for box, each of crimson fibre; its ribs and the tops of its shoulders white plates as
+     * its kagune's, two red-hot eyes where Steve's are. At {@code feet} turned {@code yaw} (radians, as the game turns a body: ahead is
+     * (-sin, 0, cos)); walking {@code walking} (0..1) at {@code stride} (radians), its limbs swinging as a player's do; {@code blades}
+     * (0..1) its forearms grown out into long curved blades, both arms held up before it; {@code swing} (0..1 through one, NaN: none) a
+     * cut of the {@code side} arm (+1 its right) from high over it down and across it low; {@code rise} (0..1) climbing up out of the ground
+     * (out of a pool of itself), {@code melt} (0..1) slumping and melting back down into it.
      */
     public static void thrall(UkakuModel.Sink sink, double[] feet, double yaw, double stride, double walking, double blades, double swing, int side,
                               double rise, double melt, double time, int seed) {
@@ -388,69 +392,143 @@ public final class PeaceFxModel {
         double down = smooth(melt);
         double sunk = (1.0 - up) * 2.15 + down * 1.75;
         double[] base = sub(feet, mul(u, sunk));
-        double swell = 1.0 + 0.45 * down;
-        double hunch = 0.12 + 0.3 * down + 0.06 * (1.0 - up);
-        double breath = 0.015 * Math.sin(time * 0.12 + seed);
-        // (puddle first: a pool of it on the ground it climbs out of, or melts back into)
+        // Melting, it slumps: shorter, wider, bowed over.
+        double squash = 1.0 - 0.35 * down;
+        double swell = 1.0 + 0.3 * down;
+        double hunch = 0.08 + 0.55 * down + 0.1 * (1.0 - up);
+        double breath = 0.012 * Math.sin(time * 0.12 + seed);
         double pool = Math.max(1.0 - up, down);
         if (pool > 0.02) {
             puddle(sink, add(feet, mul(u, 0.03)), 0.35 + 0.65 * pool, time, seed);
         }
-        double[] pelvis = at(base, r, u, f, 0.0, 0.98, 0.0);
-        double[] chest = at(base, r, u, f, 0.0, 1.44 + breath - 0.15 * down, hunch);
-        double[] neck = at(base, r, u, f, 0.0, 1.6 - 0.2 * down, hunch + 0.08);
-        double[] crown = at(base, r, u, f, 0.0, 1.95 - 0.3 * down, hunch + 0.2);
-        // The trunk: hips, a narrow waist, a deep chest, the neck.
-        double[] waist = mix3(pelvis, chest, 0.45);
-        tubeOf(sink, List.of(sub(pelvis, mul(u, 0.08)), waist, chest, neck), new double[] {0.16, 0.13, 0.2, 0.09}, swell, time, seed, 9);
-        // The ribs and the plates over the shoulders, white, as its kagune's.
+        double walk = 0.9 * walking;
+        // Legs: from the hips (12 pixels up), swinging as a player's.
+        double[] hips = at(base, r, u, f, 0.0, 12.0 * PX * squash, 0.0);
+        for (int s2 = -1; s2 <= 1; s2 += 2) {
+            double pitch = walk * Math.sin(stride + (s2 > 0 ? 0.0 : Math.PI)) + 0.25 * down * s2;
+            double[][] axes = limb(r, u, f, pitch, 0.0, 0.0);
+            double[] pivot = add(hips, mul(r, s2 * 2.0 * PX * swell));
+            box(sink, pivot, axes, -2, 2, -12 * squash, 0, -2, 2, swell, time, seed + 5 + s2, 2);
+        }
+        // Body: 8 by 12 by 4, bowed forward from the hips as it hunches.
+        double[][] trunk = limb(r, u, f, -hunch, 0.0, 0.0);
+        double[] chestTop = add(hips, mul(trunk[1], (12.0 + breath / PX) * PX * squash));
+        box(sink, hips, trunk, -4, 4, 0, 12 * squash, -2, 2, swell, time, seed, 2);
+        // Its ribs, white, as its kagune's, across the front of the chest; plates over the shoulders.
         for (int k = 0; k < 3; k++) {
             for (int s2 = -1; s2 <= 1; s2 += 2) {
-                double[] rib = add(mix3(waist, chest, 0.35 + 0.28 * k), add(mul(r, s2 * 0.1), mul(f, 0.16 * swell)));
-                plate(sink, rib, add(mul(r, s2), mul(u, -0.5)), normalize(add(f, mul(r, s2 * 0.5))), 0.2, 0.07);
+                double[] rib = add(hips, add(add(mul(trunk[0], s2 * 2.2 * PX * swell), mul(trunk[1], (5.5 + 1.9 * k) * PX * squash)),
+                    mul(trunk[2], 2.15 * PX * swell)));
+                plate(sink, rib, add(mul(trunk[0], s2), mul(trunk[1], -0.45)), normalize(add(trunk[2], mul(trunk[0], s2 * 0.35))), 0.17, 0.055);
             }
         }
-        // The head: a lump of a skull, the jaw long, two eyes burning in it.
-        tubeOf(sink, List.of(neck, mix3(neck, crown, 0.5), crown), new double[] {0.1, 0.19, 0.06}, swell, time, seed + 3, 8);
-        double[] face = add(mix3(neck, crown, 0.58), mul(f, 0.17));
+        // Head: 8 by 8 by 8 on the neck, two eyes burning in it where Steve's are.
+        double[][] head = limb(r, u, f, -hunch * 0.6 - 0.1 * down, 0.15 * Math.sin(time * 0.03 + seed) * (1.0 - down), 0.0);
+        box(sink, chestTop, head, -4, 4, 0, 8 * squash, -4, 4, swell, time, seed + 3, 2);
         for (int s2 = -1; s2 <= 1; s2 += 2) {
-            double[] eye = add(face, mul(r, s2 * 0.07));
-            double e = 0.032;
-            glow(sink, add(eye, add(mul(r, -e), mul(u, -e * 0.6))), add(eye, add(mul(r, e), mul(u, -e * 0.6))), add(eye, add(mul(r, e), mul(u, e * 0.6))),
-                add(eye, add(mul(r, -e), mul(u, e * 0.6))), PeaceModel.CORE, PeaceModel.CORE, 0xFFFF9AA2, 0xFFFF9AA2);
+            double[] eye = add(chestTop, add(add(mul(head[0], s2 * 2.0 * PX * swell), mul(head[1], 3.5 * PX * squash)), mul(head[2], 4.08 * PX * swell)));
+            double ex = 0.9 * PX;
+            double ey = 0.55 * PX;
+            glow(sink, add(eye, add(mul(head[0], -ex), mul(head[1], -ey))), add(eye, add(mul(head[0], ex), mul(head[1], -ey))),
+                add(eye, add(mul(head[0], ex), mul(head[1], ey))), add(eye, add(mul(head[0], -ex), mul(head[1], ey))), PeaceModel.CORE, PeaceModel.CORE,
+                0xFFFF9AA2, 0xFFFF9AA2);
         }
-        // Legs: walking, bent more as it melts.
-        for (int s2 = -1; s2 <= 1; s2 += 2) {
-            double phase = stride + (s2 > 0 ? 0.0 : Math.PI);
-            double[] hip = at(base, r, u, f, s2 * 0.12, 0.95, 0.0);
-            double[] knee = at(base, r, u, f, s2 * (0.14 + 0.08 * down), 0.5 - 0.1 * down, 0.07 + 0.28 * walking * Math.sin(phase) + 0.2 * down);
-            double[] foot = at(base, r, u, f, s2 * (0.15 + 0.12 * down), 0.05 + 0.1 * walking * Math.max(0.0, -Math.cos(phase)),
-                -0.02 + 0.32 * walking * Math.sin(phase - 0.5));
-            tubeOf(sink, List.of(hip, knee, foot), new double[] {0.12, 0.085, 0.07}, swell, time, seed + 5 + s2, 7);
-        }
-        // Arms: swinging as it walks, up before it with the blades out, the one cutting from high and out to low across.
+        // Arms: from the shoulders (2 pixels under the top of the body), swinging as it walks; with the blades out both held up before it;
+        // the one cutting raised high over it, then down and across it low.
         double guard = smooth(blades);
         for (int s2 = -1; s2 <= 1; s2 += 2) {
-            double phase = stride + (s2 > 0 ? Math.PI : 0.0);
-            double[] shoulder = at(base, r, u, f, s2 * 0.26, 1.46 - 0.15 * down, hunch + 0.02);
-            double[] hang = at(base, r, u, f, s2 * 0.3, 0.92 - 0.25 * down, hunch + 0.08 - 0.18 * walking * Math.sin(phase));
-            double[] held = at(base, r, u, f, s2 * 0.32, 1.32, 0.66);
-            double[] hand = mix3(hang, held, guard);
+            double hang = -walk * Math.sin(stride + (s2 > 0 ? 0.0 : Math.PI)) + 0.3 * down;
+            double pitch = hang + (-1.35 - hang) * guard;
+            double turn = -0.25 * s2 * guard;
+            double roll = 0.06 * s2 * (1.0 - guard);
             if (!Double.isNaN(swing) && s2 == side) {
-                double[] high = at(base, r, u, f, s2 * 0.5, 2.05, 0.02);
-                double[] low = at(base, r, u, f, -s2 * 0.3, 0.8, 0.78);
                 double wind = smooth(swing / 0.3);
                 double cut = smooth((swing - 0.3) / 0.2);
                 double back = smooth((swing - 0.55) / 0.45);
-                hand = mix3(mix3(mix3(hand, high, wind), low, cut), held, back);
+                double high = -2.7;
+                double low = -0.55;
+                pitch = mix1(mix1(mix1(pitch, high, wind), low, cut), pitch, back);
+                turn = mix1(mix1(turn, 0.0, wind), 0.75 * s2, cut) * (1.0 - back) + turn * back;
             }
-            double[] elbow = add(mix3(shoulder, hand, 0.5), add(mul(r, s2 * 0.13), add(mul(u, -0.06), mul(f, -0.08))));
-            tubeOf(sink, List.of(shoulder, elbow, hand), new double[] {0.1, 0.075, 0.06}, swell, time, seed + 9 + s2, 7);
-            plate(sink, add(shoulder, add(mul(u, 0.08), mul(r, s2 * 0.04))), add(mul(r, s2), mul(u, -0.3)), normalize(add(u, mul(r, s2 * 0.6))), 0.24, 0.16);
+            double[][] axes = limb(trunk[0], trunk[1], trunk[2], pitch, turn, roll);
+            double[] shoulder = add(hips, add(mul(trunk[0], s2 * 6.0 * PX * swell), mul(trunk[1], 10.0 * PX * squash)));
+            box(sink, shoulder, axes, -2, 2, -10 * squash, 2, -2, 2, swell, time, seed + 9 + s2, 2);
+            double[] top = add(shoulder, add(mul(axes[1], 2.1 * PX), mul(axes[0], s2 * 0.6 * PX)));
+            plate(sink, top, add(mul(axes[0], s2), mul(axes[1], -0.3)), normalize(add(axes[1], mul(axes[0], s2 * 0.6))), 0.2, 0.13);
             if (blades > 0.02) {
-                armBlade(sink, elbow, hand, mul(r, s2), blades, seed + s2);
+                double[] elbow = add(shoulder, mul(axes[1], -4.5 * PX * squash));
+                double[] hand = add(shoulder, mul(axes[1], -10.0 * PX * squash));
+                // Its edge out and under the forearm: broad to the eye from before it and from the side, held up or cutting.
+                armBlade(sink, elbow, hand, normalize(sub(mul(axes[0], s2), axes[2])), blades, seed + s2);
             }
         }
+    }
+
+    /**
+     * A limb's own axes {right, up (from its end to its pivot), ahead}: hanging down from its pivot, swung forward by {@code pitch} (radians,
+     * + back, - forward and up, as vanilla's xRot), turned {@code turn} about its body's up (+ toward its left), rolled {@code roll} out.
+     */
+    private static double[][] limb(double[] r, double[] u, double[] f, double pitch, double turn, double roll) {
+        // Turned about up, then swung about its right, then rolled about its ahead.
+        double[] r1 = add(mul(r, Math.cos(turn)), mul(f, Math.sin(turn)));
+        double[] f1 = sub(mul(f, Math.cos(turn)), mul(r, Math.sin(turn)));
+        double[] u2 = add(mul(u, Math.cos(pitch)), mul(f1, Math.sin(pitch)));
+        double[] f2 = sub(mul(f1, Math.cos(pitch)), mul(u, Math.sin(pitch)));
+        double[] r3 = add(mul(r1, Math.cos(roll)), mul(u2, Math.sin(roll)));
+        double[] u3 = sub(mul(u2, Math.cos(roll)), mul(r1, Math.sin(roll)));
+        return new double[][] {r3, u3, f2};
+    }
+
+    private static double mix1(double a, double b, double t) {
+        return a + (b - a) * t;
+    }
+
+    /**
+     * A box of its flesh at {@code pivot} in {@code axes} ({right, up, ahead}): from ({@code x0}, {@code y0}, {@code z0}) to ({@code x1},
+     * {@code y1}, {@code z1}) model pixels, widened {@code swell} (not along its length), each face a grid of {@code cell}-pixel cells of
+     * crimson fibre, crawling.
+     */
+    private static void box(UkakuModel.Sink sink, double[] pivot, double[][] axes, double x0, double x1, double y0, double y1, double z0, double z1,
+                            double swell, double time, int seed, int cell) {
+        double[] centre = point(pivot, axes, (x0 + x1) * 0.5, (y0 + y1) * 0.5, (z0 + z1) * 0.5, swell);
+        double[][] lo = {{x0, y0, z0}, {x1, y1, z1}};
+        // Each face: the axis it faces along, which end, and the two axes across it.
+        int[][] faces = {{0, 0, 1, 2}, {0, 1, 1, 2}, {1, 0, 0, 2}, {1, 1, 0, 2}, {2, 0, 0, 1}, {2, 1, 0, 1}};
+        for (int[] face : faces) {
+            int along = face[0];
+            int a = face[2];
+            int b = face[3];
+            double fixed = lo[face[1]][along];
+            double a0 = lo[0][a];
+            double a1 = lo[1][a];
+            double b0 = lo[0][b];
+            double b1 = lo[1][b];
+            int na = Math.max(1, (int)Math.round(Math.abs(a1 - a0) / cell));
+            int nb = Math.max(1, (int)Math.round(Math.abs(b1 - b0) / cell));
+            for (int i = 0; i < na; i++) {
+                for (int j = 0; j < nb; j++) {
+                    double[][] corners = new double[4][];
+                    double[][] uv = {{i, j}, {i + 1, j}, {i + 1, j + 1}, {i, j + 1}};
+                    for (int k = 0; k < 4; k++) {
+                        double[] c = new double[3];
+                        c[along] = fixed;
+                        c[a] = a0 + (a1 - a0) * uv[k][0] / na;
+                        c[b] = b0 + (b1 - b0) * uv[k][1] / nb;
+                        corners[k] = point(pivot, axes, c[0], c[1], c[2], swell);
+                    }
+                    // Its fibre as the old body's: by where on the face, and which face, so each box reads as one muscle.
+                    double s1 = (j + 0.5) / nb;
+                    double s2 = (i + 0.5) / na + along * 1.7 + face[1] * 0.9;
+                    int colour = PeaceModel.flesh(s1 * 0.55, s2 * 2.4 - time * 0.02, seed);
+                    shaded(sink, corners[0], corners[1], corners[2], corners[3], centre, colour, colour, colour, colour);
+                }
+            }
+        }
+    }
+
+    /** ({@code x}, {@code y}, {@code z}) model pixels off {@code pivot} in {@code axes}, widened {@code swell} across. */
+    private static double[] point(double[] pivot, double[][] axes, double x, double y, double z, double swell) {
+        return add(pivot, add(add(mul(axes[0], x * PX * swell), mul(axes[1], y * PX)), mul(axes[2], z * PX * swell)));
     }
 
     /** A point {@code x} to its right, {@code y} up, {@code z} ahead of {@code base}. */
@@ -465,27 +543,6 @@ public final class PeaceFxModel {
     private static double smooth(double x) {
         double t = clamp01(x);
         return t * t * (3.0 - 2.0 * t);
-    }
-
-    /** A length of its flesh along {@code control}, {@code radii} at the control points (blended between), lumpy and crawling. */
-    private static void tubeOf(UkakuModel.Sink sink, List<double[]> control, double[] radii, double swell, double time, int seed, int sides) {
-        KakujaModel.Spine sp = WarModel.spine(new java.util.ArrayList<>(control), 10, new double[] {0.0, 0.0, 1.0});
-        int n = radii.length - 1;
-        FurutaMesh.tube(sink, sp, 0.0, 1.0, 8 + 2 * n, sides, new FurutaMesh.Surface() {
-            @Override
-            public double radius(double s, double a) {
-                double k = s * n;
-                int i = Math.min(n - 1, (int)Math.floor(k));
-                double t = k - i;
-                double r = radii[i] + (radii[i + 1] - radii[i]) * (t * t * (3.0 - 2.0 * t));
-                return r * swell * (1.0 + 0.1 * Math.sin(a * 3.0 + s * 11.0 + seed) + 0.05 * Math.sin(s * 23.0 - time * 0.2 + seed));
-            }
-
-            @Override
-            public int colour(double s, double a) {
-                return PeaceModel.flesh(s, a - time * 0.02, seed);
-            }
-        }, 1.0);
     }
 
     /**

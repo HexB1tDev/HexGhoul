@@ -174,6 +174,9 @@ public final class ArtPreview {
         if (wanted.contains("clash")) {
             clash(new File(out, "kagune-clash.png"));
         }
+        if (wanted.contains("rebirth-thralls")) {
+            rebirthThralls(new File(out, "rebirth-thralls.png"));
+        }
         if (wanted.contains("peace-pierce")) {
             peacePierce(new File(out, "king-peace-pierce.png"));
         }
@@ -3657,6 +3660,38 @@ public final class ArtPreview {
             shots.add(new Shot((String) f[5], posed[0], NO_WINGS, (double[]) f[3], (double[]) f[4], tris));
         }
         sheet(file, "Piercing Salvation (Peace B): the lance", shots, 3, 560, 420);
+    }
+
+    /** Rebirth's flesh men alone: standing, walking, blades up, the cut, coming up out of the ground and melting back, from round them. */
+    static void rebirthThralls(File file) throws Exception {
+        List<Shot> shots = new ArrayList<>();
+        // label, walking, blades, swing, rise, melt, eye
+        Object[][] poses = {
+            {"Standing (front)", 0.0, 0.0, Double.NaN, 1.0, 0.0, new double[] {0.0, 1.4, 3.2}},
+            {"Standing (3/4)", 0.0, 0.0, Double.NaN, 1.0, 0.0, new double[] {-2.4, 1.6, 2.4}},
+            {"Standing (side)", 0.0, 0.0, Double.NaN, 1.0, 0.0, new double[] {-3.4, 1.3, 0.0}},
+            {"Walking", 1.0, 0.0, Double.NaN, 1.0, 0.0, new double[] {-2.6, 1.5, 2.2}},
+            {"Blades out (guard)", 0.0, 1.0, Double.NaN, 1.0, 0.0, new double[] {-2.4, 1.6, 2.6}},
+            {"Blades out, walking", 1.0, 1.0, Double.NaN, 1.0, 0.0, new double[] {-3.0, 1.3, 1.0}},
+            {"The cut: winding up", 0.0, 1.0, 0.15, 1.0, 0.0, new double[] {-2.4, 1.6, 2.6}},
+            {"The cut: through", 0.0, 1.0, 0.5, 1.0, 0.0, new double[] {-2.4, 1.6, 2.6}},
+            {"Back", 0.0, 1.0, Double.NaN, 1.0, 0.0, new double[] {1.8, 1.7, -2.8}},
+            {"Coming up (rise 0.4)", 0.0, 0.0, Double.NaN, 0.4, 0.0, new double[] {-2.4, 1.4, 2.6}},
+            {"Coming up (rise 0.75)", 0.0, 0.0, Double.NaN, 0.75, 0.0, new double[] {-2.4, 1.4, 2.6}},
+            {"Melting (0.5)", 0.0, 0.0, Double.NaN, 1.0, 0.5, new double[] {-2.4, 1.4, 2.6}},
+        };
+        for (Object[] p : poses) {
+            double walking = (Double) p[1];
+            double bladesOut = (Double) p[2];
+            double swing = (Double) p[3];
+            double rise = (Double) p[4];
+            double melt = (Double) p[5];
+            List<WingPreview.Tri> tris = new ArrayList<>(game(sink -> com.hex.kagune.control.king.PeaceFxModel.thrall(sink, new double[] {0.0, 0.0, 0.0}, 0.0,
+                walking > 0 ? 1.1 : 0.0, walking, bladesOut * (1 - melt), swing, 1, rise, melt, 77.0, 13)));
+            tris.addAll(field(0.0, 4.0, null, 0.0, 0.0));
+            shots.add(new Shot((String) p[0], null, NO_WINGS, (double[]) p[6], new double[] {0.0, 1.0, 0.0}, tris));
+        }
+        sheet(file, "Rebirth's flesh men: Steve's shape (8x8x8 head, 8x12x4 body, 4x12x4 limbs), the flesh and the arm blades kept", shots, 4, 420, 460);
     }
 
     static void peaceRework(File file) throws Exception {
