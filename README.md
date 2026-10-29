@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.2.4 (HexGhoul): War's first person cleaned up: vanilla's hand swinging on his blows, the rinkaku kept off the eyes and lined up with the look (testing)
+
+See `.github/release-notes-1.2.4.md`.
+
 ## 1.2.3 (HexGhoul): Rebirth's flesh men are Steve-shaped (player head, body, arms and legs), same flesh and arm blades (testing)
 
 See `.github/release-notes-1.2.3.md`.

@@ -3,19 +3,25 @@ package com.hex.kagune.control.client.render;
 import com.hex.kagune.KaguneMod;
 import com.hex.kagune.control.client.ControlClient;
 import com.hex.kagune.control.client.KingClient;
+import com.hex.kagune.control.client.animation.FirstPersonArms;
 import com.hex.kagune.control.king.KingForm;
+import com.hex.kagune.control.king.KingMove;
 import com.hex.kagune.control.king.WarModel;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.world.InteractionHand;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderArmEvent;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import org.joml.Matrix3f;
@@ -25,8 +31,9 @@ import org.joml.Quaternionf;
 /**
  * 1.0.26: a final kakuja's own arms in first person. Vanilla draws a bare arm for an empty hand, its skin and nothing of War's plates
  * or Peace's white armour; just before it does ({@link RenderArmEvent}), that arm's pieces of the form are drawn on it, from the same
- * model third person draws, where vanilla's model puts that arm (its shoulder, its little sway). Through War's own moves his arms are
- * drawn whole as third person poses them instead ({@link EtoFleshRenderer}); holding something, vanilla draws the item, no arm.
+ * model third person draws, where vanilla's model puts that arm (its shoulder, its little sway); holding something, vanilla draws the
+ * item, no arm. 1.2.4: through War's own moves too (his arms posed as third person poses them, pulled in before the eyes, filled the
+ * view), the hand swinging as each blow of his hands lands ({@link #tick}).
  */
 @Mod.EventBusSubscriber(modid = "hexkagune", value = Dist.CLIENT)
 public final class KingFirstPerson {
@@ -39,7 +46,41 @@ public final class KingFirstPerson {
     static final float SLIM_Y = 2.5F;
     static final float SWAY = 0.1F;
 
+    /** 1.2.4: when the move whose blow last swung this client's hand began (world ticks): one swing a blow. */
+    private static long swungFor = Long.MIN_VALUE;
+
     private KingFirstPerson() {
+    }
+
+    /**
+     * 1.2.4: in first person, War's own hand swings (vanilla's swing, on this client alone: nothing is sent, no one else sees it) as each
+     * blow of his hands lands ({@link FirstPersonArms#swingAt}), once a blow.
+     */
+    @SubscribeEvent
+    public static void tick(TickEvent.ClientTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) {
+            return;
+        }
+        Minecraft minecraft = Minecraft.m_91087_();
+        LocalPlayer player = minecraft.f_91074_;
+        if (player == null || minecraft.m_91104_() || !minecraft.f_91066_.m_92176_().m_90612_()) {
+            return;
+        }
+        KingClient.View view = KingClient.get(player);
+        if (view == null || !view.on() || view.form() != KingForm.WAR) {
+            return;
+        }
+        double now = ControlClient.worldTime(0.0F);
+        KingMove move = view.moveAt(now);
+        long began = view.moveAt();
+        if (move == KingMove.NONE || began == swungFor) {
+            return;
+        }
+        int at = FirstPersonArms.swingAt(move, view.level());
+        if (at >= 0 && now - began >= at) {
+            swungFor = began;
+            ((net.minecraft.world.entity.LivingEntity)player).m_21011_(InteractionHand.MAIN_HAND, false);
+        }
     }
 
     @SubscribeEvent

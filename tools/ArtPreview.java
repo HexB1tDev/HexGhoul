@@ -138,6 +138,9 @@ public final class ArtPreview {
         if (wanted.contains("war-sun")) {
             warSun(new File(out, "king-war-sun.png"));
         }
+        if (wanted.contains("war-fp-view")) {
+            warFirstPersonView(new File(out, "king-war-fp-view.png"));
+        }
         if (wanted.contains("war-fp")) {
             warFirstPersonBlows(new File(out, "king-war-fp.png"));
         }
@@ -3136,34 +3139,92 @@ public final class ArtPreview {
     /**
      * 1.0.33: War's M1 in first person exactly as the game draws it (EtoFleshRenderer.warArms and warRinkaku): his arms posed as third
      * person poses them, pulled in before the eyes ({@code FirstPersonArms}), War's arm pieces on them, the rinkaku; from his eyes, a 70
-     * degree lens. {@code still} the arm pieces as they were drawn (unmoving) or as third person moves them.
+     * degree lens. {@code still} the arm pieces as they were drawn (unmoving) or as third person moves them. 1.2.4: the rinkaku alone,
+     * as first person now draws it (the posed arms are no longer drawn there).
      */
     static List<WingPreview.Tri> warSeen(RigPose pose, com.hex.kagune.control.king.WarModel.Motion motion, double time, boolean still) {
+        return warSeen(pose, motion, 0.0, time);
+    }
+
+    /**
+     * 1.2.4: as the game now draws it (EtoFleshRenderer.warRinkaku: vanilla's own hand, his plates on it, is the game's and not drawn
+     * here), the look {@code pitch} radians down.
+     */
+    static List<WingPreview.Tri> warSeen(RigPose pose, com.hex.kagune.control.king.WarModel.Motion motion, double pitch, double time) {
         double[] eye = {0.0, 1.62, 0.0};
-        double[] shift = com.hex.kagune.control.client.animation.EtoOwnLeg.shift(pose);
+        double[] shift = com.hex.kagune.control.client.animation.FirstPersonArms.neckShift(pose);
         List<WingPreview.Tri> tris = new ArrayList<>();
-        int skin = 0xFFC69C7A;
-        tris.addAll(placedLit(sink -> com.hex.kagune.control.client.animation.EtoOwnArm.both(pose, shift, false, (a, b, c, d, n, uv, trousers) -> {
-            if (!trousers) {
-                sink.quad(com.hex.kagune.control.client.animation.FirstPersonArms.adjust(a, eye, 0.0),
-                    com.hex.kagune.control.client.animation.FirstPersonArms.adjust(b, eye, 0.0), com.hex.kagune.control.client.animation.FirstPersonArms.adjust(c, eye, 0.0),
-                    com.hex.kagune.control.client.animation.FirstPersonArms.adjust(d, eye, 0.0), n, skin, skin, skin, skin);
+        List<WingPreview.Tri> rinkaku = new ArrayList<>();
+        com.hex.kagune.control.king.WarModel.rinkaku((a, b, c, d, n, ca, cb, cc, cd) -> {
+            double[][] corners = new double[4][];
+            double[][] local = {a, b, c, d};
+            for (int k = 0; k < 4; k++) {
+                double[] r = com.hex.kagune.control.client.animation.BodyFrame.world(pose, com.hex.kagune.control.client.animation.BodyFrame.model(pose, "torso", local[k]));
+                corners[k] = new double[] {r[0] + shift[0], r[1] + shift[1], r[2] + shift[2]};
             }
-        }), q -> q));
-        com.hex.kagune.control.king.WarModel.Motion pieces = still ? com.hex.kagune.control.king.WarModel.Motion.STILL : motion;
-        for (com.hex.kagune.control.king.WarModel.Part part : new com.hex.kagune.control.king.WarModel.Part[] {
-            com.hex.kagune.control.king.WarModel.Part.RIGHT_ARM, com.hex.kagune.control.king.WarModel.Part.LEFT_ARM}) {
-            String name = part == com.hex.kagune.control.king.WarModel.Part.RIGHT_ARM ? "rightArm" : "leftArm";
-            tris.addAll(placedLit(sink -> com.hex.kagune.control.king.WarModel.build(sink, part, time, 1.0, 0.0, pieces), q -> {
-                double[] r = com.hex.kagune.control.client.animation.BodyFrame.world(pose, com.hex.kagune.control.client.animation.BodyFrame.model(pose, name, q));
-                return com.hex.kagune.control.client.animation.FirstPersonArms.adjust(new double[] {r[0] + shift[0], r[1] + shift[1], r[2] + shift[2]}, eye, 0.0);
-            }));
-        }
-        tris.addAll(placedLit(sink -> com.hex.kagune.control.king.WarModel.rinkaku(sink, time, 1.0, motion), q -> {
-            double[] r = com.hex.kagune.control.client.animation.BodyFrame.world(pose, com.hex.kagune.control.client.animation.BodyFrame.model(pose, "torso", q));
-            return new double[] {r[0] + shift[0], r[1] + shift[1], r[2] + shift[2]};
-        }));
+            if (com.hex.kagune.control.client.animation.FirstPersonArms.clear(eye, com.hex.kagune.control.client.animation.FirstPersonArms.RINKAKU_CLEAR, corners)) {
+                rinkaku.addAll(placedLit(s2 -> s2.quad(corners[0], corners[1], corners[2], corners[3], n, ca, cb, cc, cd), q -> q));
+            }
+        }, time, 1.0, motion);
+        tris.addAll(rinkaku);
         return seenFrom(tris, eye, 0.2);
+    }
+
+    /** 1.2.4: War in first person as the game now draws it: at rest, through his M1 chain, and through each of his moves. */
+    static void warFirstPersonView(File file) throws Exception {
+        List<Shot> shots = new ArrayList<>();
+        double[] eye = {0.0, 1.62, 0.0};
+        com.hex.kagune.control.king.KingMove none = com.hex.kagune.control.king.KingMove.NONE;
+        com.hex.kagune.control.king.KingMove strike = com.hex.kagune.control.king.KingMove.STRIKE;
+        // label, move, level, age, look pitch (degrees down)
+        List<Object[]> cases = new ArrayList<>();
+        cases.add(new Object[] {"At rest, ahead", none, 0, 0.0, 8.0});
+        cases.add(new Object[] {"At rest, looking down", none, 0, 0.0, 50.0});
+        cases.add(new Object[] {"At rest, looking up", none, 0, 0.0, -45.0});
+        for (com.hex.kagune.control.king.WarStrike blow : com.hex.kagune.control.king.WarStrike.values()) {
+            cases.add(new Object[] {"M1 " + blow.name() + " (landing)", strike, blow.ordinal(), (double)blow.impact, 8.0});
+            if (blow.ordinal() < 2) {
+                cases.add(new Object[] {"M1 " + blow.name() + " (wound up)", strike, blow.ordinal(), blow.impact - 2.0, 8.0});
+            }
+        }
+        com.hex.kagune.control.king.KingMove[] moves = {com.hex.kagune.control.king.KingMove.GRASP, com.hex.kagune.control.king.KingMove.DASH,
+            com.hex.kagune.control.king.KingMove.CLEAVE, com.hex.kagune.control.king.KingMove.SPIRE, com.hex.kagune.control.king.KingMove.COUNTER,
+            com.hex.kagune.control.king.KingMove.COCOON, com.hex.kagune.control.king.KingMove.BURST, com.hex.kagune.control.king.KingMove.SUN,
+            com.hex.kagune.control.king.KingMove.CONE, com.hex.kagune.control.king.KingMove.RISE, com.hex.kagune.control.king.KingMove.BLITZ,
+            com.hex.kagune.control.king.KingMove.SUNDER, com.hex.kagune.control.king.KingMove.REAPER, com.hex.kagune.control.king.KingMove.DEFY};
+        for (com.hex.kagune.control.king.KingMove move : moves) {
+            double length = move.ticks() > 0 ? move.ticks() : 30.0;
+            cases.add(new Object[] {move.name() + " (0.4)", move, 0, length * 0.4, 8.0});
+        }
+        for (Object[] c : cases) {
+            com.hex.kagune.control.king.KingMove move = (com.hex.kagune.control.king.KingMove)c[1];
+            int level = (int)c[2];
+            double age = (double)c[3];
+            double pitch = Math.toRadians((double)c[4]);
+            double time = 100.0 + age;
+            RigPose pose = new RigPose();
+            boolean acting = move != none;
+            com.hex.kagune.control.client.animation.WarPose.apply(pose, time, 7, acting ? 0.5F : 1.0F, 0.0F);
+            if (acting) {
+                RigPose blow = new RigPose();
+                if (move == strike) {
+                    com.hex.kagune.control.client.animation.WarPose.strikes(blow, level, age, -1, 0.0, 1.0F);
+                } else {
+                    com.hex.kagune.control.client.animation.WarPose.act(blow, move, age, level, 1.0F);
+                }
+                pose.add(blow.legs(0.0F, 0.9F), 1.0F);
+            }
+            com.hex.kagune.control.king.WarModel.Motion motion = com.hex.kagune.control.king.WarModel.Motion.of(move, level, move.progress(age, level));
+            if (move == strike) {
+                motion = motion.aiming(com.hex.kagune.control.king.WarModel.strikeAims(level, age, null));
+            }
+            double[] look = {0.0, 1.62 - 6.0 * Math.sin(pitch), 6.0 * Math.cos(pitch)};
+            shots.add(new Shot((String)c[0], null, NO_WINGS, eye, look, warSeen(pose, motion, pitch, time)));
+        }
+        double saved = fov;
+        fov = 70.0;
+        sheet(file, "1.2.4: War in first person, as the game now draws it", shots, 4, 420, 260);
+        fov = saved;
     }
 
     /** 1.0.33: War's M1 blows from his eyes (as the game had them, and as now) beside the same moment in third person. */

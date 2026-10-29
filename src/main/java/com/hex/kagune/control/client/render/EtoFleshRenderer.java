@@ -135,12 +135,6 @@ public final class EtoFleshRenderer {
                 peaceBlades(player, partial, kingTime, camera, level, matrix, normals, buffers);
                 warRinkaku(player, partial, kingTime, camera, level, matrix, normals, buffers);
             }
-            if (firstPerson(minecraft, player) && player.m_6084_() && warArms(player, partial, kingTime, camera, level, matrix, normals, buffers)) {
-                // 1.0.15: War's own arms in first person through his moves (the M1's blows, the blade, the hand thrown out): on his body
-                // as third person poses it, in his skin and War's armour and blade; vanilla's hands are not drawn meanwhile (ArmHider).
-                ownArms = true;
-                continue;
-            }
             if (view.move() == EtoMove.KICK && firstPerson(minecraft, player) && player.m_6084_()) {
                 if (com.hex.kagune.control.client.EtoClient.kickGone(player, partial)) {
                     continue; // 6.2.0: gone in the dash, nothing of her
@@ -920,90 +914,6 @@ public final class EtoFleshRenderer {
     private static final RenderType WAR_SHAPES = RenderType.m_110473_(Objects.requireNonNull(KaguneMod.id("textures/misc/ukaku_white.png")));
     private static final RenderType WAR_LIGHT = RenderType.m_110488_(Objects.requireNonNull(KaguneMod.id("textures/misc/ukaku_white.png")));
 
-    /**
-     * 1.0.15: War's two arms in first person while a move of his has them (not in the small Dragon, whose body is not his): his skin
-     * arms posed as third person poses them this frame, and War's own arm pieces on them (the plates, the bladed arm), seen from where
-     * his head has gone. False when nothing was drawn (vanilla's hands then, as ever).
-     */
-    private static boolean warArms(AbstractClientPlayer player, float partial, double time, Vec3 camera, ClientLevel level, Matrix4f matrix,
-                                   Matrix3f normals, MultiBufferSource.BufferSource buffers) {
-        com.hex.kagune.control.client.KingClient.View king = com.hex.kagune.control.client.KingClient.get(player);
-        if (king == null || king.form() != com.hex.kagune.control.king.KingForm.WAR || !king.on() || king.grow(time) < 0.6) {
-            return false;
-        }
-        com.hex.kagune.control.king.KingMove move = king.moveAt(time);
-        if (move == com.hex.kagune.control.king.KingMove.NONE || move == com.hex.kagune.control.king.KingMove.WYRM) {
-            return false;
-        }
-        RigPose body = KaguneBodyAnimation.current(player, partial);
-        if (body == null) {
-            return false;
-        }
-        float bodyYaw = player.f_20884_ + wrap(player.f_20883_ - player.f_20884_) * partial;
-        double yaw = Math.toRadians(bodyYaw);
-        Frame frame = new Frame(player.f_19790_ + (player.m_20185_() - player.f_19790_) * partial, player.f_19791_ + (player.m_20186_() - player.f_19791_) * partial,
-            player.f_19792_ + (player.m_20189_() - player.f_19792_) * partial, -Math.sin(yaw), Math.cos(yaw), -Math.cos(yaw), -Math.sin(yaw));
-        boolean slim = "slim".equals(player.m_108564_());
-        double[] shift = EtoOwnLeg.shift(body);
-        double[] eyeAt = frame.rig(camera.f_82479_, camera.f_82480_, camera.f_82481_);
-        // Pulled in before the eyes and turned with the look, so the blows are seen (FirstPersonArms).
-        double pitch = Math.toRadians(player.f_19860_ + (player.m_146909_() - player.f_19860_) * partial);
-        limb(sink -> EtoOwnArm.both(body, shift, slim, (a, b, c, d, n, uv, trousers) -> sink.quad(FirstPersonArms.adjust(a, eyeAt, pitch),
-            FirstPersonArms.adjust(b, eyeAt, pitch), FirstPersonArms.adjust(c, eyeAt, pitch), FirstPersonArms.adjust(d, eyeAt, pitch),
-            FirstPersonArms.turn(n, pitch), uv, trousers)), frame, camera, level, player, matrix, normals, buffers);
-        // War's own arm pieces, from the same model third person draws, on the posed arms.
-        double grow = king.grow(time);
-        double[] eye = com.hex.kagune.control.king.WarModel.eyeOn(com.hex.kagune.control.client.KakuganClient.eyes(player));
-        List<double[][]> lit = new ArrayList<>();
-        List<double[][]> glow = new ArrayList<>();
-        Map<Long, Integer> lights = new HashMap<>();
-        for (com.hex.kagune.control.king.WarModel.Part part : new com.hex.kagune.control.king.WarModel.Part[] {
-            com.hex.kagune.control.king.WarModel.Part.RIGHT_ARM, com.hex.kagune.control.king.WarModel.Part.LEFT_ARM}) {
-            String name = part == com.hex.kagune.control.king.WarModel.Part.RIGHT_ARM ? "rightArm" : "leftArm";
-            com.hex.kagune.control.king.WarModel.build((a, b, c, d, n, ca, cb, cc, cd) -> {
-                double[][] corners = new double[4][];
-                double[][] local = {a, b, c, d};
-                for (int k = 0; k < 4; k++) {
-                    double[] r = BodyFrame.world(body, BodyFrame.model(body, name, local[k]));
-                    corners[k] = FirstPersonArms.adjust(new double[] {r[0] + shift[0], r[1] + shift[1], r[2] + shift[2]}, eyeAt, pitch);
-                }
-                if (near(eyeAt, OWN_LEG_CLEARANCE, corners)) {
-                    return;
-                }
-                boolean burns = n[0] == 0.0 && n[1] == 1.0 && n[2] == 0.0;
-                double[] tip = BodyFrame.world(body, BodyFrame.model(body, name, new double[] {a[0] + n[0], a[1] + n[1], a[2] + n[2]}));
-                double[] base = BodyFrame.world(body, BodyFrame.model(body, name, a));
-                double[] rn = {tip[0] - base[0], tip[1] - base[1], tip[2] - base[2]};
-                double[][] q = new double[9][];
-                for (int k = 0; k < 4; k++) {
-                    q[k] = frame.world(corners[k], camera);
-                }
-                q[4] = frame.turn(FirstPersonArms.turn(rn, pitch));
-                q[5] = new double[] {ca, cb, cc, cd};
-                (burns ? glow : lit).add(q);
-            }, part, time, grow, 0.0, KingLayer.warMotion(player, king, time), eye); // 1.0.33: moving as third person moves them
-        }
-        VertexConsumer shapes = buffers.m_6299_(WAR_SHAPES);
-        for (double[][] q : lit) {
-            int light = light(level, lights, (q[0][0] + q[2][0]) * 0.5 + camera.f_82479_, (q[0][1] + q[2][1]) * 0.5 + camera.f_82480_,
-                (q[0][2] + q[2][2]) * 0.5 + camera.f_82481_);
-            for (int k = 0; k < 4; k++) {
-                warVertex(shapes, matrix, normals, q[k], q[4], (int)q[5][k], light);
-            }
-        }
-        buffers.m_109912_(WAR_SHAPES);
-        VertexConsumer burning = buffers.m_6299_(WAR_LIGHT);
-        for (double[][] q : glow) {
-            for (int k = 0; k < 4; k++) {
-                warVertex(burning, matrix, normals, q[k], q[4], premultiplied((int)q[5][k]), 0xF000F0);
-            }
-            for (int k = 3; k >= 0; k--) {
-                warVertex(burning, matrix, normals, q[k], q[4], premultiplied((int)q[5][k]), 0xF000F0);
-            }
-        }
-        buffers.m_109912_(WAR_LIGHT);
-        return true;
-    }
 
     /**
      * 1.0.16: Peace's blades in first person while a move of its has them (1.0.18: six, on their arms): from the model third person
@@ -1080,11 +990,10 @@ public final class EtoFleshRenderer {
         if (body == null) {
             body = standing(king, time, false); // 1.0.36: (as Peace's)
         }
-        float bodyYaw = player.f_20884_ + wrap(player.f_20883_ - player.f_20884_) * partial;
-        double yaw = Math.toRadians(bodyYaw);
-        Frame frame = new Frame(player.f_19790_ + (player.m_20185_() - player.f_19790_) * partial, player.f_19791_ + (player.m_20186_() - player.f_19791_) * partial,
-            player.f_19792_ + (player.m_20189_() - player.f_19792_) * partial, -Math.sin(yaw), Math.cos(yaw), -Math.cos(yaw), -Math.sin(yaw));
-        double[] shift = EtoOwnLeg.shift(body);
+        // 1.2.4: square to the look, as the camera is (his body lags it as he turns: the rinkaku struck off to the side of the view),
+        // the body's lean taken off at the neck, and nothing near the eyes: only what reaches out ahead of him.
+        Frame frame = looking(player, partial);
+        double[] shift = FirstPersonArms.neckShift(body);
         double[] eyeAt = frame.rig(camera.f_82479_, camera.f_82480_, camera.f_82481_);
         List<double[][]> lit = new ArrayList<>();
         List<double[][]> glow = new ArrayList<>();
@@ -1097,7 +1006,7 @@ public final class EtoFleshRenderer {
                 double[] r = affine(torso, local[k]);
                 corners[k] = new double[] {r[0] + shift[0], r[1] + shift[1], r[2] + shift[2]};
             }
-            if (!finite(corners) || near(eyeAt, 0.45, corners)) {
+            if (!finite(corners) || !FirstPersonArms.clear(eyeAt, FirstPersonArms.RINKAKU_CLEAR, corners)) {
                 return; // (1.0.36: nothing not a number ever reaches the buffer)
             }
             boolean burns = n[0] == 0.0 && n[1] == 1.0 && n[2] == 0.0;
@@ -1128,6 +1037,13 @@ public final class EtoFleshRenderer {
             }
         }
         buffers.m_109912_(WAR_LIGHT);
+    }
+
+    /** 1.2.4: {@code player}'s rig frame squared to the camera's look (first person), at his feet. */
+    private static Frame looking(AbstractClientPlayer player, float partial) {
+        double yaw = Math.toRadians(player.f_19859_ + (player.m_146908_() - player.f_19859_) * partial);
+        return new Frame(player.f_19790_ + (player.m_20185_() - player.f_19790_) * partial, player.f_19791_ + (player.m_20186_() - player.f_19791_) * partial,
+            player.f_19792_ + (player.m_20189_() - player.f_19792_) * partial, -Math.sin(yaw), Math.cos(yaw), -Math.cos(yaw), -Math.sin(yaw));
     }
 
     /** 1.0.27: a part-pixel point carried by {@code a} ({@link KingAfterimages#carry}: A p + b), in rig space. */

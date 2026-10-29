@@ -1104,6 +1104,39 @@ public final class KingTests {
             "first person: the jab's fist is out ahead of his eyes, in view: ahead " + ahead + ", across " + across + ", below " + below);
         double[] down = com.hex.kagune.control.client.animation.FirstPersonArms.adjust(new double[] {eyes[0], eyes[1], eyes[2] + 1.0}, eyes, 0.6);
         check(down[1] < eyes[1] - 0.4 && down[2] > 0.6 + eyes[2], "first person: the arms turn down with the look");
+        // 1.2.4: first person: vanilla's hand swings for each blow of a hand (landing as it does), never for a kick; the rinkaku keeps
+        // clear of the eyes; the body's lean is taken off at the neck, its head's own turns never shaking the rest.
+        for (com.hex.kagune.control.king.WarStrike thrown : com.hex.kagune.control.king.WarStrike.values()) {
+            int at = com.hex.kagune.control.client.animation.FirstPersonArms.swingAt(com.hex.kagune.control.king.KingMove.STRIKE, thrown.ordinal());
+            if (thrown.kind == com.hex.kagune.control.king.WarStrike.Kind.KICK) {
+                check(at == -1, "first person: a kick swings no hand: " + thrown);
+            } else {
+                check(at >= 0 && at <= thrown.impact && thrown.impact - at <= com.hex.kagune.control.client.animation.FirstPersonArms.SWING_LEAD,
+                    "first person: the hand swings just before " + thrown + " lands: " + at + " of " + thrown.impact);
+            }
+        }
+        check(com.hex.kagune.control.client.animation.FirstPersonArms.swingAt(com.hex.kagune.control.king.KingMove.NONE, 0) == -1
+            && com.hex.kagune.control.client.animation.FirstPersonArms.swingAt(com.hex.kagune.control.king.KingMove.SPIRE, 0) == -1
+            && com.hex.kagune.control.client.animation.FirstPersonArms.swingAt(com.hex.kagune.control.king.KingMove.GRASP, 0) == 0
+            && com.hex.kagune.control.client.animation.FirstPersonArms.swingAt(com.hex.kagune.control.king.KingMove.SUNDER, 0)
+                == com.hex.kagune.control.king.WarRules.SUNDER_PUNCH - com.hex.kagune.control.client.animation.FirstPersonArms.SWING_LEAD,
+            "first person: only the moves a hand throws swing it, Black Sun's punch as it lands");
+        double[] at0 = {0.0, 1.6, 0.0};
+        check(!com.hex.kagune.control.client.animation.FirstPersonArms.clear(at0, 1.25, new double[] {0.0, 1.6, 3.0}, new double[] {0.0, 1.6, 0.5})
+            && com.hex.kagune.control.client.animation.FirstPersonArms.clear(at0, 1.25, new double[] {0.0, 1.6, 3.0}, new double[] {1.0, 1.6, 1.0})
+            && !com.hex.kagune.control.client.animation.FirstPersonArms.clear(at0, 1.25, new double[] {Double.NaN, 0.0, 0.0}),
+            "first person: a shape with any corner near the eyes (or not a number) is left out");
+        double[] still = com.hex.kagune.control.client.animation.FirstPersonArms.neckShift(new RigPose());
+        check(Math.abs(still[0]) + Math.abs(still[1]) + Math.abs(still[2]) < 1.0E-9, "first person: standing, nothing is moved");
+        RigPose twitch = new RigPose();
+        twitch.headX = 0.4F;
+        twitch.headY = 0.55F;
+        double[] twitched = com.hex.kagune.control.client.animation.FirstPersonArms.neckShift(twitch);
+        check(Math.abs(twitched[0]) + Math.abs(twitched[1]) + Math.abs(twitched[2]) < 1.0E-9, "first person: the head's twitch moves nothing in view");
+        RigPose bowed = new RigPose();
+        bowed.lean = 0.5F;
+        double[] lean = com.hex.kagune.control.client.animation.FirstPersonArms.neckShift(bowed);
+        check(Math.abs(lean[0]) + Math.abs(lean[1]) + Math.abs(lean[2]) > 0.05, "first person: the body's lean is taken off at the neck");
         RigPose kick = new RigPose();
         WarPose.act(kick, com.hex.kagune.control.king.KingMove.STRIKE, com.hex.kagune.control.king.WarStrike.SIDE_KICK.impact, 2, 1.0F);
         check(kick.rightLegZ > 0.9F && kick.spin > 1.0F, "the side kick's foot is out, side-on, on its impact tick");
