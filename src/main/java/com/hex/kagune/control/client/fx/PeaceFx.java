@@ -48,6 +48,8 @@ public final class PeaceFx {
         double[] right;
         double[] ahead;
         double[] inFrom;
+        /** 1.2.8: where it was last in the body (world): held there if the body goes (dies, is gone) before the move lets go. */
+        double[] lastAt;
 
         Impale(int target, double at, int mode) {
             this.target = target;
@@ -450,6 +452,18 @@ public final class PeaceFx {
         double[] p = body(player, at);
         double[] w = way == null ? new double[] {Double.NaN, Double.NaN, Double.NaN} : bodyWay(player, way);
         double[] f = face == null ? new double[] {Double.NaN, Double.NaN, Double.NaN} : bodyWay(player, face);
+        // 1.2.8: the blades are drawn on his torso as it is posed (turned to his look through a move, leaning as he runs): taken back
+        // through that pose, so what a blade is in stays where it is in the world however his chest turns.
+        double[] torso = torso(player);
+        if (torso != null) {
+            p = unposed(torso, p, true);
+            if (way != null) {
+                w = unposed(torso, w, false);
+            }
+            if (face != null) {
+                f = unposed(torso, f, false);
+            }
+        }
         double px = PeaceMotion.BLOCK;
         return new double[] {p[0], p[1], p[2], out, w[0] * px, w[1] * px, w[2] * px, back * px, size, f[0], f[1], f[2], face == null ? 0.0 : 1.0};
     }
@@ -457,6 +471,34 @@ public final class PeaceFx {
     static double smooth(double x) {
         double t = Math.max(0.0, Math.min(1.0, x));
         return t * t * (3.0 - 2.0 * t);
+    }
+
+    /** 1.2.8: how his torso is carried this frame ({@code BodyFrame.carry}: rig p to A p + b), or null when nothing poses it. */
+    private static double[] torso(AbstractClientPlayer player) {
+        com.hex.kagune.control.client.animation.RigPose pose = com.hex.kagune.control.client.animation.KaguneBodyAnimation.current(player, partial);
+        return pose == null ? null : com.hex.kagune.control.client.animation.BodyFrame.carry(pose, "torso");
+    }
+
+    /**
+     * 1.2.8: {@code bp} (body pixels: x his left, y up, z back; a point, or a way when {@code point} is false) as it must be given
+     * for his torso as carried by {@code a} to put it there: back through the carry (rigid, so A's inverse is its transpose).
+     */
+    static double[] unposed(double[] a, double[] bp, boolean point) {
+        double px = PeaceMotion.BLOCK;
+        double k = point ? 1.0 / px : 1.0;
+        double rx = -bp[0] * k;
+        double ry = bp[1] * k;
+        double rz = -bp[2] * k;
+        if (point) {
+            rx -= a[9];
+            ry -= a[10];
+            rz -= a[11];
+        }
+        double ux = a[0] * rx + a[3] * ry + a[6] * rz;
+        double uy = a[1] * rx + a[4] * ry + a[7] * rz;
+        double uz = a[2] * rx + a[5] * ry + a[8] * rz;
+        double back = point ? px : 1.0;
+        return new double[] {-ux * back, uy * back, -uz * back};
     }
 
     static double[] add(double[] a, double[] b, double k) {
@@ -506,14 +548,20 @@ public final class PeaceFx {
                 continue;
             }
             Entity body = level.m_6815_(impale.target);
-            if (body == null) {
+            if (body == null && impale.lastAt == null) {
                 continue;
             }
             int tier = PeaceMotion.tier(blade);
-            double[] at = centre(body, 0.62 - 0.14 * tier);
-            if (impale.mode == 0) {
-                // 1.0.36: each on its own side of it, at its own height (not all into one point).
-                at = PeaceFxModel.waltzEntry(blade, feet(body), body.m_20205_(), body.m_20206_(), right);
+            double[] at;
+            if (body == null) {
+                at = impale.lastAt; // 1.2.8: it stays where it struck till the move is over
+            } else {
+                at = centre(body, 0.62 - 0.14 * tier);
+                if (impale.mode == 0) {
+                    // 1.0.36: each on its own side of it, at its own height (not all into one point).
+                    at = PeaceFxModel.waltzEntry(blade, feet(body), body.m_20205_(), body.m_20206_(), right);
+                }
+                impale.lastAt = at;
             }
             double out = smooth(age / impale.reach());
             if (!Double.isNaN(impale.releaseAt)) {
