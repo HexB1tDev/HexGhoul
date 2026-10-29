@@ -25,7 +25,7 @@ public final class DragonRig {
     /** Body segments that carry a head; head 0 is the front of the body. */
     public static final int[] HEAD_ROOTS = {0, 16, 30, 45, 62};
     public static final int[] TENTACLE_ROOTS = {4, 10, 21, 25, 36, 40, 51, 55, 69, 76};
-    /** The front never strays further than this (horizontally) from where Kaneki fell. */
+    /** The front never strays further than this (horizontally) from where Rinkaku fell. */
     public static final double LEASH = 78.0;
     /** Everything alive this close to the body is hunted. */
     public static final double DETECTION = 96.0;
@@ -235,7 +235,7 @@ public final class DragonRig {
         return values[1];
     }
 
-    /** Where Kaneki emerges from the collapsed body; fixed once the Dragon shatters. */
+    /** Where Rinkaku emerges from the collapsed body; fixed once the Dragon shatters. */
     public V3 emergence(Ground ground) {
         if (emergence != null) return emergence;
         V3 centroid = centroid();

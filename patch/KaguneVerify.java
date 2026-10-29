@@ -125,11 +125,11 @@ public final class KaguneVerify implements Opcodes {
         ClassNode controller = read(jar, CONTROLLER);
         ClassNode state = read(jar, "com/hex/kagune/gameplay/KaguneRuntime$State");
         ClassNode aura = read(jar, "com/hex/kagune/client/KaguneAuraEffects");
-        // 1.2.0: the original grapple body lives in slingshotLegacy behind the Ayato gate (checked in hookChecks).
+        // 1.2.0: the original grapple body lives in slingshotLegacy behind the Ukaku gate (checked in hookChecks).
         MethodNode grapple = method(controller, "slingshotLegacy");
         MethodNode launch = method(controller, "launchSlingshot");
         MethodNode free = method(controller, "freeGrapple");
-        String flight = "com/hex/kagune/control/server/KanekiSlingshot";
+        String flight = "com/hex/kagune/control/server/RinkakuSlingshot";
         check(state.fields.stream().anyMatch(f -> f.name.equals("slingshotCooldownUntil") && f.desc.equals("J")), "missing dedicated cooldown");
         check(field(grapple, "slingshotCooldownUntil") && !field(grapple, "inputCooldownUntil"), "grapple uses global cooldown");
         check(field(launch, "slingshotCooldownUntil") && !field(launch, "inputCooldownUntil"), "launch uses global cooldown");
@@ -194,13 +194,13 @@ public final class KaguneVerify implements Opcodes {
         check(calls(onAction, EXPANSION + "DragonLock", "locked") == 1, "the kagune actions must ask the Dragon's lock first (1.0.4)");
         check(calls(onAction, CONTROLLER, "toggle") == 1 && calls(onAction, CONTROLLER, "toggleLegacy") == 0,
             "TOGGLE must reach the original only through the path gate");
-        // 1.2.0: Rapid Strike goes through the Ayato filter (the Wing Vortex on the Ayato path since 1.3.0); the original runs only from there.
-        checkTrampoline(controller, "startRapidStrike", EXPANSION + "server/AyatoVortex", "startRapidStrike");
+        // 1.2.0: Rapid Strike goes through the Ukaku filter (the Wing Vortex on the Ukaku path since 1.3.0); the original runs only from there.
+        checkTrampoline(controller, "startRapidStrike", EXPANSION + "server/UkakuVortex", "startRapidStrike");
         check(calls(onAction, CONTROLLER, "startRapidStrike") == 1, "RAPID_STRIKE must still call startRapidStrike");
         for (MethodNode body : controller.methods)
             check(calls(body, CONTROLLER, "startRapidStrikeLegacy") == 0, body.name + " bypasses the Rapid Strike filter");
-        // 1.2.0: tendril-only moves go through the Ayato gates, each from exactly its original call site.
-        String gates = EXPANSION + "server/AyatoGates";
+        // 1.2.0: tendril-only moves go through the Ukaku gates, each from exactly its original call site.
+        String gates = EXPANSION + "server/UkakuGates";
         for (String gated : new String[] {"slingshot", "grabOrThrow", "throwHeld", "crush", "lift", "slam", "toggleThreatAutoAttack"}) {
             checkTrampoline(controller, gated, gates, gated);
             check(calls(onAction, CONTROLLER, gated) == 1, "onAction must still call " + gated);
@@ -212,23 +212,23 @@ public final class KaguneVerify implements Opcodes {
         checkTrampoline(controller, "deflectProjectileImpact", EXPANSION + "server/TendrilShieldServer", "deflectProjectileImpact");
         check(calls(method(controller, "tick"), CONTROLLER, "tickAutoProjectile") == 1, "the tick must still run the auto projectile guard");
         check(calls(onAction, CONTROLLER, "toggleGuard") == 1, "TOGGLE_GUARD must still call toggleGuard");
-        checkTrampoline(controller, "cycleTendrils", EXPANSION + "server/AyatoForms", "cycleTendrils");
+        checkTrampoline(controller, "cycleTendrils", EXPANSION + "server/UkakuForms", "cycleTendrils");
         check(calls(onAction, CONTROLLER, "cycleTendrils") == 1, "CYCLE_TENDRILS must still call cycleTendrils");
         // 3.0.3: the crush ends by letting go of what it crushed.
         MethodNode crush = method(controller, "tickCrush");
-        check(calls(crush, EXPANSION + "server/KanekiGrip", "crushDone") == 1 && calls(crush, "com/hex/kagune/gameplay/KaguneRuntime$State", "begin") == 0,
-            "the crush must end through KanekiGrip");
-        checkContiguous(crush, EXPANSION + "server/KanekiGrip", "crushDone", 1);
-        checkTrampoline(controller, "refreshFormEffect", EXPANSION + "server/KanekiFormBuffs", "refreshFormEffect");
+        check(calls(crush, EXPANSION + "server/RinkakuGrip", "crushDone") == 1 && calls(crush, "com/hex/kagune/gameplay/KaguneRuntime$State", "begin") == 0,
+            "the crush must end through RinkakuGrip");
+        checkContiguous(crush, EXPANSION + "server/RinkakuGrip", "crushDone", 1);
+        checkTrampoline(controller, "refreshFormEffect", EXPANSION + "server/RinkakuFormBuffs", "refreshFormEffect");
         check(calls(method(controller, "tickCentipedeFormBuffs"), CONTROLLER, "refreshFormEffect") == 3,
-            "the centipede form buffs must go through KanekiFormBuffs");
+            "the centipede form buffs must go through RinkakuFormBuffs");
         for (MethodNode body : controller.methods)
-            check(calls(body, CONTROLLER, "refreshFormEffectLegacy") == 0, body.name + " bypasses KanekiFormBuffs");
+            check(calls(body, CONTROLLER, "refreshFormEffectLegacy") == 0, body.name + " bypasses RinkakuFormBuffs");
         check(calls(method(controller, "tick"), CONTROLLER, "tryStartFallArrest") == 1, "the tick must still try the fall arrest");
         for (MethodNode body : controller.methods)
             for (String gated : new String[] {"slingshot", "grabOrThrow", "throwHeld", "crush", "lift", "slam", "toggleThreatAutoAttack",
                     "tryStartFallArrest", "toggleGuard", "cycleTendrils", "tickAutoProjectile", "deflectProjectileImpact"})
-                check(calls(body, CONTROLLER, gated + "Legacy") == 0, body.name + " bypasses the Ayato gate on " + gated);
+                check(calls(body, CONTROLLER, gated + "Legacy") == 0, body.name + " bypasses the Ukaku gate on " + gated);
         int activations = 0;
         for (MethodNode body : controller.methods) {
             for (AbstractInsnNode instruction : body.instructions.toArray()) {
@@ -254,9 +254,9 @@ public final class KaguneVerify implements Opcodes {
         String hunt = EXPANSION + "server/CentipedeHunt";
         checkTrampoline(controller, "tickCentipedeAutoAttack", hunt, "tickCentipedeAutoAttack");
         checkTrampoline(controller, "tryCentipedeBlock", hunt, "tryCentipedeBlock");
-        checkTrampoline(controller, "applyCentipedeBleed", EXPANSION + "server/KanekiBleed", "applyCentipedeBleed");
+        checkTrampoline(controller, "applyCentipedeBleed", EXPANSION + "server/RinkakuBleed", "applyCentipedeBleed");
         check(calls(method(controller, "centipedeHit"), CONTROLLER, "applyCentipedeBleed") == 1,
-            "a centipede hit must bleed through the trampoline (Ayato's bleeding)");
+            "a centipede hit must bleed through the trampoline (Ukaku's bleeding)");
         check(calls(tick, CONTROLLER, "tickCentipedeAutoAttack") == 1, "the server tick must still run the centipede hunt");
         MethodNode heldTick = method(controller, "tickHeldEntities");
         check(calls(heldTick, hunt, "hold") == 1 && calls(heldTick, CONTROLLER, "restrainCentipedeTarget") == 0,
@@ -291,8 +291,8 @@ public final class KaguneVerify implements Opcodes {
         String body = EXPANSION + "client/animation/BodyAnimations";
         checkTrampoline(manifest, "playPain", body, "playManifestPain");
         checkTrampoline(manifest, "stopPain", body, "stopManifestPain");
-        checkTrampoline(manifest, "spawnOriginMist", EXPANSION + "client/AyatoClient", "spawnOriginMist");
-        checkTrampoline(manifest, "spawnBlood", EXPANSION + "client/AyatoClient", "spawnManifestBlood");
+        checkTrampoline(manifest, "spawnOriginMist", EXPANSION + "client/UkakuClient", "spawnOriginMist");
+        checkTrampoline(manifest, "spawnBlood", EXPANSION + "client/UkakuClient", "spawnManifestBlood");
         check(isPublic(method(manifest, "bodyEffectLayer")), "bodyEffectLayer not widened");
 
         ClassNode mod = read(jar, MOD);
@@ -304,17 +304,17 @@ public final class KaguneVerify implements Opcodes {
         check(network != null && network.getNext() instanceof VarInsnNode && network.getNext().getNext() instanceof MethodInsnNode next
             && next.owner.equals(EXPANSION + "KaguneControlBootstrap"), "bootstrap must run right after the original network init");
 
-        // 1.2.0: the tendril renderer and the writhing sounds look players up through the Ayato filter (wings are drawn separately).
+        // 1.2.0: the tendril renderer and the writhing sounds look players up through the Ukaku filter (wings are drawn separately).
         for (String[] host : new String[][] {{WORLD_RENDERER, "renderWorld"}, {AMBIENT, "clientTick"}}) {
             MethodNode lookup = method(read(jar, host[0]), host[1]);
-            check(calls(lookup, EXPANSION + "client/AyatoClient", "tendrilView") == 1
-                && calls(lookup, "com/hex/kagune/client/KaguneClientState", "get") == 0, host[0] + "." + host[1] + " must use the Ayato view filter");
+            check(calls(lookup, EXPANSION + "client/UkakuClient", "tendrilView") == 1
+                && calls(lookup, "com/hex/kagune/client/KaguneClientState", "get") == 0, host[0] + "." + host[1] + " must use the Ukaku view filter");
         }
 
         formOrderChecks(jar);
 
-        // 3.0.0: Kaneki's kakuja mask rides the head model part; the world-space one is a trampoline to the layer's no-op.
-        checkTrampoline(read(jar, WORLD_RENDERER), "emitKanekiMask", EXPANSION + "client/render/KanekiMaskLayer", "emitKanekiMask");
+        // 3.0.0: Rinkaku's kakuja mask rides the head model part; the world-space one is a trampoline to the layer's no-op.
+        checkTrampoline(read(jar, WORLD_RENDERER), "emitRinkakuMask", EXPANSION + "client/render/RinkakuMaskLayer", "emitRinkakuMask");
 
         // 3.1.0: the centipede legs are CentipedeRenderer's; every other limb still goes through the original tube.
         ClassNode worldRenderer = read(jar, WORLD_RENDERER);
@@ -323,7 +323,7 @@ public final class KaguneVerify implements Opcodes {
         check(isPublic(method(worldRenderer, "limbDeployment")), "limbDeployment not widened");
         checkTrampoline(worldRenderer, "limbDeployment", EXPANSION + "client/fx/KakujaFx", "limbDeployment");
 
-        // 1.2.0: the unused original spike becomes Ayato's RC needle: only its three model-scale constants change (1.35 -> 0.85, 0.32, 0.32).
+        // 1.2.0: the unused original spike becomes Ukaku's RC needle: only its three model-scale constants change (1.35 -> 0.85, 0.32, 0.32).
         try (ZipFile original = new ZipFile(Path.of(ORIGINAL).toFile())) {
             MethodNode before = method(read(original, SPIKE_RENDERER), "render");
             MethodNode after = method(read(jar, SPIKE_RENDERER), "render");
@@ -344,11 +344,11 @@ public final class KaguneVerify implements Opcodes {
         }
 
         // 1.2.0: only the profile root accessor is widened (for the stored kagune path). 3.0.3: hasMutation is a trampoline to
-        // KanekiMutationsServer (the cut mutations). Nothing else in the profile changes.
+        // RinkakuMutationsServer (the cut mutations). Nothing else in the profile changes.
         ClassNode profile = read(jar, PROFILE);
         MethodNode root = method(profile, "root", "(Lnet/minecraft/server/level/ServerPlayer;)Lnet/minecraft/nbt/CompoundTag;");
         check(isPublic(root) && (root.access & ACC_STATIC) != 0, "profile root not widened");
-        checkTrampoline(profile, "hasMutation", EXPANSION + "server/KanekiMutationsServer", "hasMutation");
+        checkTrampoline(profile, "hasMutation", EXPANSION + "server/RinkakuMutationsServer", "hasMutation");
         // 3.0.3: swipe, crush and slam damage are trampolines to KaguneBalance (DamageBalance).
         Set<String> trampolined = Set.of("hasMutation", "swipeDamage", "crushDamage", "slamDamage", "actionEnergyCost", "energy", "setEnergy",
             "consumeEnergy", "restoreEnergy");
@@ -417,6 +417,7 @@ public final class KaguneVerify implements Opcodes {
 
     /** Every instruction that differs between the original and the patched class, as "method i: was -> now" (same-length methods). */
     private static Set<String> differences(ClassNode before, ClassNode after, Set<String> skip) {
+        KagunePatch.renameOriginal(before); // 1.2.5: the original's names for the show's characters, renamed as the patch does
         check(before.methods.size() == after.methods.size() && before.fields.size() == after.fields.size(), after.name + " gained or lost members");
         Set<String> out = new TreeSet<>();
         for (MethodNode old : before.methods) {
@@ -435,12 +436,12 @@ public final class KaguneVerify implements Opcodes {
     /**
      * 3.0.1: Centipede Form and Partial Kakuja trade places (slot, mastery, armour; ids, names and limbs stay), the damage and
      * hurt-reduction slots follow, and the menu gains the two colour filters and the 750 stage name. 3.0.2: the Partial Kakuja
-     * never unlocks and the form lists players see skip it ({@code KanekiForms.forms}), Twin and Four-Tail move to 250 and 500,
+     * never unlocks and the form lists players see skip it ({@code RinkakuForms.forms}), Twin and Four-Tail move to 250 and 500,
      * and the 450 milestone (menu stage, next milestone, third mutation tier) moves to 500. Nothing else changes.
      */
     private static void formOrderChecks(ZipFile jar) throws Exception {
         String form = "com/hex/kagune/gameplay/KaguneForm";
-        String forms = EXPANSION + "KanekiForms";
+        String forms = EXPANSION + "RinkakuForms";
         String valuesCall = "184 " + form + ".values()[L" + form + ";";
         String formsCall = "184 " + forms + ".forms()[L" + form + ";";
         try (ZipFile original = new ZipFile(Path.of(ORIGINAL).toFile())) {
@@ -483,7 +484,7 @@ public final class KaguneVerify implements Opcodes {
             ClassNode before = read(original, screen);
             ClassNode after = read(jar, screen);
             Set<String> menu = differences(before, after, Set.of("drawPreview"));
-            String nodesCall = "184 " + EXPANSION + "KanekiMutations.nodes()[L" + mutation + ";";
+            String nodesCall = "184 " + EXPANSION + "RinkakuMutations.nodes()[L" + mutation + ";";
             check(menu.size() == 9 && menu.stream().filter(d -> d.startsWith("stageName ") && d.endsWith("-> 18 Centipede Kakuja")).count() == 1
                 && menu.stream().filter(d -> d.endsWith(": 17 450 -> 17 500")).count() == 4
                 && menu.stream().filter(d -> d.startsWith("nextMilestone ")).count() == 2

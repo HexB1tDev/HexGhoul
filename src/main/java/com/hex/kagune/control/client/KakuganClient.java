@@ -75,12 +75,12 @@ public final class KakuganClient {
             return KakuganEyes.DEFAULT;
         }
         KakuganEyes eyes = placedEyes(player);
-        // 6.1.0: Eto is a natural one-eyed ghoul: only one eye ever turns. The one the player chose, or (left on both) her right,
+        // 6.1.0: Pale is a natural one-eyed ghoul: only one eye ever turns. The one the player chose, or (left on both) her right,
         // as she is drawn.
-        if (PathClient.get(player) == com.hex.kagune.control.KagunePath.FURUTA) {
-            return eyes.withGhoul(KakuganEyes.RIGHT); // 7.0.0: Furuta's one kakugan is always the right eye
+        if (PathClient.get(player) == com.hex.kagune.control.KagunePath.GRAFT) {
+            return eyes.withGhoul(KakuganEyes.RIGHT); // 7.0.0: Graft's one kakugan is always the right eye
         }
-        return PathClient.get(player) == com.hex.kagune.control.KagunePath.ETO && !eyes.oneEyed() ? eyes.withGhoul(KakuganEyes.RIGHT) : eyes;
+        return PathClient.get(player) == com.hex.kagune.control.KagunePath.PALE && !eyes.oneEyed() ? eyes.withGhoul(KakuganEyes.RIGHT) : eyes;
     }
 
     /** Where a player placed their kakugan (or where it was found on their skin), before any path's own rule. */

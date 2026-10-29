@@ -1,6 +1,6 @@
 package com.hex.kagune.control.king;
 
-import com.hex.kagune.control.ayato.UkakuModel;
+import com.hex.kagune.control.ukaku.UkakuModel;
 
 /**
  * 1.0.19: the marks a final kakuja's blows leave in the world (pure): what every hit, crush, cut and quake of War and Peace shows instead

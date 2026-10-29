@@ -5,10 +5,10 @@ import com.hex.kagune.client.KaguneClientState;
 import com.hex.kagune.client.render.KaguneWorldRenderer;
 import com.hex.kagune.client.render.TendrilChain;
 import com.hex.kagune.control.KakujaBurst;
-import com.hex.kagune.control.ayato.CentipedeMotion;
-import com.hex.kagune.control.ayato.CentipedeTail;
-import com.hex.kagune.control.ayato.KakujaModel;
-import com.hex.kagune.control.client.AyatoClient;
+import com.hex.kagune.control.ukaku.CentipedeMotion;
+import com.hex.kagune.control.ukaku.CentipedeTail;
+import com.hex.kagune.control.ukaku.KakujaModel;
+import com.hex.kagune.control.client.UkakuClient;
 import com.hex.kagune.control.client.fx.KakujaFx;
 import com.hex.kagune.gameplay.CentipedeTechnique;
 import com.hex.kagune.gameplay.KaguneForm;
@@ -38,7 +38,7 @@ import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 
 /**
- * Kaneki's centipede legs in the world (both kakuja): the plated legs of {@link CentipedeTail}, moved by {@link CentipedeMotion}
+ * Rinkaku's centipede legs in the world (both kakuja): the plated legs of {@link CentipedeTail}, moved by {@link CentipedeMotion}
  * (fixed length, critically damped springs on the player's own clock, poses for rest, rearing, striking, coiling round a held
  * body, guarding). The original still runs everything else (its tendrils, the hunt, the hits); its segmented limb is not drawn
  * any more ({@link #emitTube}, the trampoline target of {@code KaguneWorldRenderer.emitTube}). Runs after the original renderer
@@ -93,7 +93,7 @@ public final class CentipedeRenderer {
         MultiBufferSource.BufferSource buffers = minecraft.m_91269_().m_110104_();
         VertexConsumer consumer = null;
         for (AbstractClientPlayer player : level.m_6907_()) {
-            if (AyatoClient.isAyato(player)) {
+            if (UkakuClient.isUkaku(player)) {
                 continue;
             }
             KakujaFx.Track track = KakujaFx.observe(player);

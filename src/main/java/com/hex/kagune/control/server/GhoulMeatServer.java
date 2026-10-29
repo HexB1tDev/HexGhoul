@@ -69,7 +69,7 @@ public final class GhoulMeatServer {
         player.m_5661_(Component.m_237110_("message.hexkagune.ghoul_meat.eaten", eaten, GhoulMeat.percent(GhoulMeat.strength(eaten)),
             GhoulMeat.times(GhoulMeat.endurance(eaten))), true);
         // The RC taking hold: a heartbeat through the body.
-        AyatoFire.sound(player.m_284548_(), player.m_20182_(), "entity.warden.heartbeat", 0.9F, 0.85F);
+        UkakuFire.sound(player.m_284548_(), player.m_20182_(), "entity.warden.heartbeat", 0.9F, 0.85F);
     }
 
     /** Every blow a ghoul lands, harder with every piece it has eaten. */

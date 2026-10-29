@@ -15,7 +15,7 @@ import net.minecraft.server.level.ServerPlayer;
 
 /**
  * {@code /kagune path} shows your kagune path. Operators can assign one with
- * {@code /kagune path set <player> <kaneki|ayato|furuta|none>}; {@code none} sends the player back to the starting screen.
+ * {@code /kagune path set <player> <rinkaku|ukaku|graft|none>}; {@code none} sends the player back to the starting screen.
  * {@code /kagune reset <player>} (operators, 5.0.2) wipes everything kagune about a player, as if they had never picked one
  * ({@link PathServer#reset}).
  */
@@ -31,7 +31,7 @@ final class PathCommands {
                     .then(Commands.m_82129_("path", StringArgumentType.word())
                         .suggests((context, builder) -> SharedSuggestionProvider.m_82970_(IDS, builder))
                         .executes(PathCommands::set))))
-            // 6.2.0: "/kagune path furuta" (7.0.0; "owl" before): your own path, straight (operators only, as "set" is).
+            // 6.2.0: "/kagune path graft" (7.0.0; "owl" before): your own path, straight (operators only, as "set" is).
             .then(Commands.m_82129_("path", StringArgumentType.word())
                 .suggests((context, builder) -> SharedSuggestionProvider.m_82970_(IDS, builder))
                 .executes(PathCommands::setOwn))));
@@ -59,10 +59,9 @@ final class PathCommands {
     }
 
     /**
-     * The path ids the commands take. 7.0.0: Owl DNA is dormant; its ids ("owl", "eto") still parse, unlisted, and put the player
-     * on Furuta DNA, the path that replaced it.
+     * The path ids the commands take. 7.0.0: Owl DNA is dormant; 1.2.5: and Graft DNA: neither is listed, and naming one is refused.
      */
-    static final List<String> IDS = List.of("kaneki", "ayato", "furuta", "none");
+    static final List<String> IDS = List.of("rinkaku", "ukaku", "none");
 
     private static int setOwn(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         if (!context.getSource().m_6761_(2)) {
@@ -80,7 +79,7 @@ final class PathCommands {
         String id = StringArgumentType.getString(context, "path");
         KagunePath path = KagunePath.fromId(id);
         if (!path.chosen() && !"none".equals(id.trim().toLowerCase(java.util.Locale.ROOT))) {
-            context.getSource().m_81352_(Component.m_237113_("Use kaneki, ayato, furuta or none."));
+            context.getSource().m_81352_(Component.m_237113_("Use rinkaku, ukaku or none."));
             return 0;
         }
         PathServer.setPath(player, path);

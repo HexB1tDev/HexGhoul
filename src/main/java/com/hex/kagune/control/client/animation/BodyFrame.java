@@ -5,7 +5,7 @@ package com.hex.kagune.control.client.animation;
  * 4.0.0 apply to a {@link RigPose} (vanilla PlayerModel pivots and cuboids, the part's position then its rotation Rz Ry Rx as
  * {@code ModelPart.translateAndRotate} does, the elbow or knee bend as bendy-lib bends a cuboid), the same math the off-game
  * previewer draws with. Two uses: a pose can be checked for limbs passing through the body ({@link #clipping}), and anything
- * drawn on the body (Eto's flesh out of her upper back, round her leg) is placed exactly where the posed part is.
+ * drawn on the body (Pale's flesh out of her upper back, round her leg) is placed exactly where the posed part is.
  *
  * <p>Model space: pixels, x to the player's left, y down from the neck, z backward (PlayerModel's own). Rig space: blocks, x to
  * the player's right, y up from the feet, z forward ({@link #rig}).
@@ -429,7 +429,7 @@ public final class BodyFrame {
     /**
      * The whole posed body's surface as the game draws it ({@link #world}: turned, lowered and carried forward with the body), face by
      * face: each part's box, the arms and legs in two halves (above and below the elbow or knee) so a bend shows. For whatever is
-     * drawn as her body without being her model: Eto's afterimages.
+     * drawn as her body without being her model: Pale's afterimages.
      */
     public static void surface(RigPose pose, QuadSink sink) {
         for (String name : PARTS) {

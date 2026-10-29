@@ -25,7 +25,7 @@ import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.registries.RegistryObject;
 
 /**
- * One running Dragon awakening. Owns the rig, holds Kaneki's body in place while the Dragon acts on
+ * One running Dragon awakening. Owns the rig, holds Rinkaku's body in place while the Dragon acts on
  * its own, applies every strike, carves and schedules terrain repair, and streams the pose to clients.
  */
 final class DragonSession {
@@ -58,7 +58,7 @@ final class DragonSession {
         this.owner = owner;
         this.level = owner.serverLevel();
         this.anchor = anchor;
-        // Hold the body at the eruption point (the ground or water surface where Kaneki fell), so the
+        // Hold the body at the eruption point (the ground or water surface where Rinkaku fell), so the
         // owner's screen is never tinted by water, lava or a block while the camera is elsewhere.
         this.pin = anchor.add(0.0, 0.05, 0.0);
         this.ground = new TerrainProbe(level, anchor.y());
@@ -135,7 +135,7 @@ final class DragonSession {
     }
 
     /**
-     * 1.0.11: one tick of Kaneki turning, before the Dragon breaks out of him: held where he fell, whole and untouchable (as all through
+     * 1.0.11: one tick of Rinkaku turning, before the Dragon breaks out of him: held where he fell, whole and untouchable (as all through
      * the Dragon), his heart pounding faster and faster; he screams as the kagune tears out of his chest, and of his head, and at the
      * last; the bursts out of him throw blood and darkness about and everything near him off its feet. Every client is told how far in
      * it is ({@code PRELUDE}), so it draws him turning ({@code TurningModel}).
@@ -194,7 +194,7 @@ final class DragonSession {
         event(S2CDragonEvent.Kind.BURST, from, strength);
     }
 
-    /** Kaneki's human body is gone: keep the player invisible, still and safe inside the Dragon. */
+    /** Rinkaku's human body is gone: keep the player invisible, still and safe inside the Dragon. */
     private void holdOwner() {
         V3 target = emergence != null ? emergence : pin;
         if (owner.isPassenger()) owner.stopRiding();
@@ -224,7 +224,7 @@ final class DragonSession {
         return found;
     }
 
-    /** Every living thing is prey except Kaneki, spectators, creative players and decorations. */
+    /** Every living thing is prey except Rinkaku, spectators, creative players and decorations. */
     private boolean isPrey(LivingEntity entity) {
         if (entity == owner || !entity.isAlive() || entity.isSpectator() || entity.isInvulnerable()) return false;
         if (entity instanceof ArmorStand || entity instanceof FakePlayer) return false;
@@ -474,7 +474,7 @@ final class DragonSession {
         }
     }
 
-    /** Solid footing for Kaneki where the body collapsed, never on top of water or lava. */
+    /** Solid footing for Rinkaku where the body collapsed, never on top of water or lava. */
     private V3 footing() {
         TerrainScars scars = TerrainScars.of(level);
         V3 near = rig.emergence(ground);

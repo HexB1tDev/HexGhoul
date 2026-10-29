@@ -25,7 +25,7 @@ import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 import org.joml.Quaternionf;
 
 /**
- * The layers this mod draws on players (the wounds, the kakugan, the kakuja's armor and half mask, Kaneki's mask), kept on
+ * The layers this mod draws on players (the wounds, the kakugan, the kakuja's armor and half mask, Rinkaku's mask), kept on
  * whatever renderer draws them, on any device (3.0.1). In 3.0.0 they were only added when the renderers were built
  * ({@code EntityRenderersEvent.AddLayers}), and on some setups (the user's phone launcher among them) none of them showed while
  * the kagune did. Now:
@@ -68,17 +68,17 @@ public final class PlayerLayers {
         }
         KakuganLayer kakugan = new KakuganLayer(renderer);
         KakujaArmorLayer armor = new KakujaArmorLayer(renderer);
-        KanekiMaskLayer mask = new KanekiMaskLayer(renderer);
+        RinkakuMaskLayer mask = new RinkakuMaskLayer(renderer);
         renderer.m_115326_(kakugan);
         renderer.m_115326_(armor);
         renderer.m_115326_(mask);
         SteelBladeLayer blade = new SteelBladeLayer(renderer);
         renderer.m_115326_(blade);
-        FurutaArmorLayer furuta = new FurutaArmorLayer(renderer);
-        renderer.m_115326_(furuta);
+        GraftArmorLayer graft = new GraftArmorLayer(renderer);
+        renderer.m_115326_(graft);
         KingLayer king = new KingLayer(renderer);
         renderer.m_115326_(king);
-        List<RenderLayer> ours = List.of(wounds, kakugan, armor, mask, blade, furuta, king);
+        List<RenderLayer> ours = List.of(wounds, kakugan, armor, mask, blade, graft, king);
         ATTACHED.put(renderer, ours);
         return ours;
     }
@@ -87,7 +87,7 @@ public final class PlayerLayers {
      * 5.0.13: turns {@code pose} the way PlayerAnimator turns the head and arms with the upper body's bend (its
      * {@code BipedEntityModelMixin} draws them under {@code IBendHelper.rotateMatrixStack}), before a layer places anything
      * on the head or an arm with the part's own {@code translateAndRotate}, which never carries that turn. Without it a
-     * forward lean (Ayato's kakuja hunch, Kaneki's crouch, running in a kakuja) left the kakugan buried a pixel or more
+     * forward lean (Ukaku's kakuja hunch, Rinkaku's crouch, running in a kakuja) left the kakugan buried a pixel or more
      * inside the head it was drawn on, so the eyes never glowed in those forms, and the masks sank into the face with it.
      */
     static void upperBody(PoseStack pose, AbstractClientPlayer player, float partialTick) {
@@ -164,7 +164,7 @@ public final class PlayerLayers {
     }
 
     /**
-     * 6.0.0: true while {@code player} is vanished by the kakuja's passive: invisible with Ayato's Steel Blade out or in Kaneki's
+     * 6.0.0: true while {@code player} is vanished by the kakuja's passive: invisible with Ukaku's Steel Blade out or in Rinkaku's
      * Full Kakuja (the server gives the invisibility; this tells it from a potion's, which leaves the armour showing).
      */
     public static boolean vanished(AbstractClientPlayer player) {
@@ -172,7 +172,7 @@ public final class PlayerLayers {
             return false;
         }
         com.hex.kagune.client.KaguneClientState.View view = com.hex.kagune.client.KaguneClientState.get(player);
-        return view.active() && (com.hex.kagune.control.client.AyatoClient.blade(player, com.hex.kagune.control.client.ControlClient.worldTime(0.0F)) > 0.0
+        return view.active() && (com.hex.kagune.control.client.UkakuClient.blade(player, com.hex.kagune.control.client.ControlClient.worldTime(0.0F)) > 0.0
             || view.form() == com.hex.kagune.gameplay.KaguneForm.FULL_KAKUJA);
     }
 

@@ -72,7 +72,7 @@ final class AwakeningCommands {
     private static int status(CommandContext<CommandSourceStack> context, ServerPlayer player) {
         AwakeningStage stage = AwakeningProfile.stage(player);
         String text = player.getGameProfile().getName() + ": " + stage.name().toLowerCase()
-                + " | Kaneki DNA " + (AwakeningEvents.kanekiPath(player) ? "yes" : "no") + " | mastery " + KaguneProfile.mastery(player)
+                + " | Rinkaku " + (AwakeningEvents.rinkakuPath(player) ? "yes" : "no") + " | mastery " + KaguneProfile.mastery(player)
                 + " | quest " + AwakeningQuest.TITLE + " " + (AwakeningEvents.gateOpen(player) ? "DONE" : "not done (/kagune quests)")
                 + " | final kakuja " + (FinalKakuja.isUnlocked(player) ? "UNLOCKED" : "locked") + " (" + KingServer.chosen(player).displayName() + ")"
                 + (DragonSessions.isAwakening(player.getUUID()) ? " | dragon tick " + DragonSessions.tickOf(player.getUUID()) : "");
@@ -88,8 +88,8 @@ final class AwakeningCommands {
             context.getSource().sendFailure(Component.literal("The Dragon has already awakened for " + player.getGameProfile().getName()));
             return 0;
         }
-        if (!AwakeningEvents.kanekiPath(player)) {
-            context.getSource().sendFailure(Component.literal(player.getGameProfile().getName() + " is not on Kaneki DNA: the Dragon is Kaneki's"));
+        if (!AwakeningEvents.rinkakuPath(player)) {
+            context.getSource().sendFailure(Component.literal(player.getGameProfile().getName() + " is not on Rinkaku: the Dragon is Rinkaku's"));
             return 0;
         }
         if (!AwakeningEvents.gateOpen(player)) QuestServer.force(player, AwakeningQuest.QUEST_ID);

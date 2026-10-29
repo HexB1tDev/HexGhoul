@@ -1,11 +1,11 @@
 package com.hex.kagune.control.client.fx;
 
-import com.hex.kagune.control.client.EtoClient;
-import com.hex.kagune.control.client.animation.EtoMotions;
+import com.hex.kagune.control.client.PaleClient;
+import com.hex.kagune.control.client.animation.PaleMotions;
 import com.hex.kagune.control.client.animation.RigPose;
-import com.hex.kagune.control.client.render.EtoAfterimages;
-import com.hex.kagune.control.eto.EtoMove;
-import com.hex.kagune.control.eto.EtoRules;
+import com.hex.kagune.control.client.render.PaleAfterimages;
+import com.hex.kagune.control.pale.PaleMove;
+import com.hex.kagune.control.pale.PaleRules;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -71,12 +71,12 @@ public final class KickDust {
             return;
         }
         long now = level.m_46467_();
-        double clock = EtoClient.clock(0.0F);
+        double clock = PaleClient.clock(0.0F);
         Vec3 camera = minecraft.f_91063_.m_109153_().m_90583_();
         boolean firstPersonView = minecraft.f_91066_.m_92176_().m_90612_();
         for (AbstractClientPlayer player : level.m_6907_()) {
-            EtoClient.EtoView view = EtoClient.get(player);
-            if (view.move() != EtoMove.KICK && view.move() != EtoMove.OWL_KICK && view.move() != EtoMove.WITNESS || !player.m_6084_()
+            PaleClient.PaleView view = PaleClient.get(player);
+            if (view.move() != PaleMove.KICK && view.move() != PaleMove.OWL_KICK && view.move() != PaleMove.WITNESS || !player.m_6084_()
                 || player.m_20182_().m_82557_(camera) > RANGE * RANGE) {
                 continue;
             }
@@ -87,9 +87,9 @@ public final class KickDust {
             }
             seen.tick = now;
             Vec3 eye = player == minecraft.f_91074_ && firstPersonView ? player.m_146892_() : null;
-            if (view.move() == EtoMove.WITNESS) {
+            if (view.move() == PaleMove.WITNESS) {
                 witness(player, view, seen.last, view.age(clock), eye, clock);
-            } else if (view.move() == EtoMove.OWL_KICK) {
+            } else if (view.move() == PaleMove.OWL_KICK) {
                 owlDash(player, view, seen.last, view.age(clock), eye, clock);
             } else {
                 throwUp(player, view, seen.last, view.age(clock), eye, clock);
@@ -102,43 +102,43 @@ public final class KickDust {
     }
 
     /** What this tick of her kick throws up, from {@code last} ticks in to {@code age}; {@code eye} hers when it is her own view. */
-    private static void throwUp(AbstractClientPlayer player, EtoClient.EtoView view, double last, double age, Vec3 eye, double clock) {
+    private static void throwUp(AbstractClientPlayer player, PaleClient.PaleView view, double last, double age, Vec3 eye, double clock) {
         int dash = Math.max(1, view.detail());
-        int arrive = EtoRules.kickArrive(dash);
+        int arrive = PaleRules.kickArrive(dash);
         double yaw = Math.toRadians(view.yaw());
         Vec3 facing = new Vec3(-Math.sin(yaw), 0.0, Math.cos(yaw));
         Vec3 right = new Vec3(-facing.f_82481_, 0.0, facing.f_82479_);
         Vec3 was = new Vec3(player.f_19790_, player.f_19791_, player.f_19792_);
         Vec3 here = player.m_20182_();
         // The ground under her: her feet less however far up she is.
-        double lastUp = EtoRules.kickHeight(dash, view.charge(), Math.max(0.0, last));
-        double up = EtoRules.kickHeight(dash, view.charge(), age);
+        double lastUp = PaleRules.kickHeight(dash, view.charge(), Math.max(0.0, last));
+        double up = PaleRules.kickHeight(dash, view.charge(), age);
         Vec3 groundWas = was.m_82520_(0.0, -lastUp, 0.0);
         Vec3 ground = here.m_82520_(0.0, -up, 0.0);
         if (last < 0.0 && age < 1.5) {
             blowOut(groundWas, facing, eye);
         }
-        double burst = EtoRules.KICK_BURST;
+        double burst = PaleRules.KICK_BURST;
         if (last < burst && age >= burst) {
             // Gone: her lunge left behind where she was, the air bursting off it.
-            EtoAfterimages.add(EtoMotions.kickBody(burst - 0.01, dash, 0.0F), was, view.yaw(), clock);
+            PaleAfterimages.add(PaleMotions.kickBody(burst - 0.01, dash, 0.0F), was, view.yaw(), clock);
             vanish(was, facing, eye);
         }
-        if (EtoRules.kickGone(dash, Math.max(0.0, last)) || EtoRules.kickGone(dash, age)) {
+        if (PaleRules.kickGone(dash, Math.max(0.0, last)) || PaleRules.kickGone(dash, age)) {
             wake(groundWas, ground, facing, up, eye);
         }
         if (last < arrive && age >= arrive) {
             appear(here, facing, eye);
         }
-        double contact = arrive + EtoRules.KICK_CONTACT;
+        double contact = arrive + PaleRules.KICK_CONTACT;
         if (last >= 0.0 && last < contact && age >= contact) {
-            double[] flight = EtoRules.kickFlight();
+            double[] flight = PaleRules.kickFlight();
             Vec3 flies = right.m_82490_(flight[0]).m_82549_(facing.m_82490_(flight[1]));
-            Vec3 foot = here.m_82549_(right.m_82490_(EtoRules.KICK_FOOT_X)).m_82549_(facing.m_82490_(EtoRules.KICK_FOOT_Z))
-                .m_82520_(0.0, EtoRules.KICK_FOOT_Y, 0.0);
+            Vec3 foot = here.m_82549_(right.m_82490_(PaleRules.KICK_FOOT_X)).m_82549_(facing.m_82490_(PaleRules.KICK_FOOT_Z))
+                .m_82520_(0.0, PaleRules.KICK_FOOT_Y, 0.0);
             blow(foot, flies, ground.f_82480_, eye);
         }
-        double land = arrive + EtoRules.KICK_LAND;
+        double land = arrive + PaleRules.KICK_LAND;
         if (last >= 0.0 && last < land && age >= land) {
             puffs(here, Vec3.f_82478_, LANDING, 0.12, eye);
         }
@@ -148,15 +148,15 @@ public final class KickDust {
      * 6.2.0, Witness This: each time she blinks to a new place (behind it, every blitz blow, above it) a pale afterimage of her is
      * left where she was, in the pose she was in, and the air cracks where she is.
      */
-    private static void witness(AbstractClientPlayer player, EtoClient.EtoView view, double last, double age, Vec3 eye, double clock) {
+    private static void witness(AbstractClientPlayer player, PaleClient.PaleView view, double last, double age, Vec3 eye, double clock) {
         Vec3 was = new Vec3(player.f_19790_, player.f_19791_, player.f_19792_);
         for (int tick = (int)Math.floor(Math.max(0.0, last)) + 1; tick <= age; tick++) {
-            if (!com.hex.kagune.control.eto.WitnessRules.blinks(tick)) {
+            if (!com.hex.kagune.control.pale.WitnessRules.blinks(tick)) {
                 continue;
             }
-            RigPose pose = EtoMotions.witness(tick - 0.01, null);
+            RigPose pose = PaleMotions.witness(tick - 0.01, null);
             pose.settle(1.0F);
-            EtoAfterimages.add(pose, was, view.yaw(), clock);
+            PaleAfterimages.add(pose, was, view.yaw(), clock);
             Vec3 middle = player.m_20182_().m_82520_(0.0, 0.9, 0.0);
             if (far(middle, eye)) {
                 RcFx.at(RcFx.RING, false, 5, middle).colors(0xCCFFFFFF, RcFx.clear(0xFFE8E4DE)).size(1.4F, 0.2F).bloom(0.0F).spawn();
@@ -200,7 +200,7 @@ public final class KickDust {
      * 6.2.0, the Owl's kick: off the mark the ground blown out; the dash all but unseen, only the wake of it and a trail of her
      * afterimages, close together, along the way; where she plants, the ground blown out again.
      */
-    private static void owlDash(AbstractClientPlayer player, EtoClient.EtoView view, double last, double age, Vec3 eye, double clock) {
+    private static void owlDash(AbstractClientPlayer player, PaleClient.PaleView view, double last, double age, Vec3 eye, double clock) {
         int dash = Math.max(1, view.detail());
         double yaw = Math.toRadians(view.yaw());
         Vec3 facing = new Vec3(-Math.sin(yaw), 0.0, Math.cos(yaw));
@@ -218,9 +218,9 @@ public final class KickDust {
             for (int i = 0; i < images; i++) {
                 double s = i / (double)Math.max(1, images);
                 double at = Math.max(0.0, last) + (age - Math.max(0.0, last)) * s;
-                RigPose pose = com.hex.kagune.control.client.animation.OwlMotions.anyBody(EtoMove.OWL_KICK, at, dash, 0.0F, 0.0F);
+                RigPose pose = com.hex.kagune.control.client.animation.OwlMotions.anyBody(PaleMove.OWL_KICK, at, dash, 0.0F, 0.0F);
                 if (pose != null) {
-                    EtoAfterimages.add(pose, was.m_82549_(way.m_82490_(s)), view.yaw(), clock);
+                    PaleAfterimages.add(pose, was.m_82549_(way.m_82490_(s)), view.yaw(), clock);
                 }
             }
         }

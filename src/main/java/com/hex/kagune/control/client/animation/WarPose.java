@@ -912,7 +912,7 @@ public final class WarPose {
     };
 
     /**
-     * 1.0.11: Kaneki turning into the Dragon ({@code TurningModel}), {@code progress} (0..1) into it at {@code time} (ticks): from beat to
+     * 1.0.11: Rinkaku turning into the Dragon ({@code TurningModel}), {@code progress} (0..1) into it at {@code time} (ticks): from beat to
      * beat of {@link #TURNING}, with a tremor that builds as it takes him, his head shaking as he screams and jolting with every burst.
      */
     public static void turning(RigPose p, double progress, double time, double scream, double burst) {

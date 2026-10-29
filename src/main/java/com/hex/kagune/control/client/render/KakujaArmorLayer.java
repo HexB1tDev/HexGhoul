@@ -1,8 +1,8 @@
 package com.hex.kagune.control.client.render;
 
 import com.hex.kagune.KaguneMod;
-import com.hex.kagune.control.ayato.KakujaModel;
-import com.hex.kagune.control.client.AyatoClient;
+import com.hex.kagune.control.ukaku.KakujaModel;
+import com.hex.kagune.control.client.UkakuClient;
 import com.hex.kagune.control.client.KakuganClient;
 import com.hex.kagune.control.kakugan.KakuganEyes;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -22,7 +22,7 @@ import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 
 /**
- * The armor Ayato's kakuja grows over his body ({@link KakujaModel}): the plated chest with the tentacles' sockets on the back
+ * The armor Ukaku's kakuja grows over his body ({@link KakujaModel}): the plated chest with the tentacles' sockets on the back
  * (the first kakuja's face stays bare since 3.0.0); the final kakuja's chest, and its half mask over the lower face, its top
  * edge under wherever his eyes are, fitted to the face (6.0.2). A layer of the player renderer, so it follows the torso and the
  * head through every animation. Lit by the world like the skin, the sockets' RC glowing.
@@ -61,12 +61,12 @@ public final class KakujaArmorLayer extends RenderLayer<AbstractClientPlayer, En
         if (player.m_20145_() || !(this.m_117386_() instanceof HumanoidModel<?> model)) {
             return;
         }
-        float grow = AyatoClient.kakujaArmor(player, partialTick);
+        float grow = UkakuClient.kakujaArmor(player, partialTick);
         if (grow <= 0.003F) {
             return;
         }
         // The first kakuja is bare-faced (3.0.0): no faceplate and no horns, only the chest armor. The final one wears the half mask.
-        boolean finalForm = AyatoClient.finalKakuja(player);
+        boolean finalForm = UkakuClient.finalKakuja(player);
         List<Piece> chest = new ArrayList<>();
         KakujaModel.chest(collect(chest), grow, 1.0, finalForm);
         VertexConsumer consumer = buffers.m_6299_(TYPE);
@@ -95,7 +95,7 @@ public final class KakujaArmorLayer extends RenderLayer<AbstractClientPlayer, En
         pose.m_85849_();
     }
 
-    private static com.hex.kagune.control.ayato.UkakuModel.Sink collect(List<Piece> out) {
+    private static com.hex.kagune.control.ukaku.UkakuModel.Sink collect(List<Piece> out) {
         return (a, b, c, d, n, ca, cb, cc, cd) -> out.add(new Piece(new double[][] {a, b, c, d}, n, new int[] {ca, cb, cc, cd}));
     }
 

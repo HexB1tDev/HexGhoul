@@ -120,7 +120,7 @@ final class ControlCommands {
         }
         com.hex.kagune.control.npc.NpcIdentity who = new com.hex.kagune.control.npc.NpcIdentity(k, t, tier < 0 ? rolled.tier() : tier, rolled.skin(),
             rolled.name(), rolled.seed());
-        net.minecraft.world.phys.Vec3 ahead = AyatoFire.horizontal(player.m_20154_()).m_82490_(5.0);
+        net.minecraft.world.phys.Vec3 ahead = UkakuFire.horizontal(player.m_20154_()).m_82490_(5.0);
         com.hex.kagune.control.npc.GhoulNpc npc = GhoulNpcSpawner.place(player.m_284548_(), player.m_20185_() + ahead.f_82479_,
             player.m_20189_() + ahead.f_82481_, who);
         String said = npc == null ? "No room for a ghoul there." : "A ghoul: " + who.displayName() + " (" + who.kind().name().toLowerCase(java.util.Locale.ROOT)
@@ -227,7 +227,7 @@ final class ControlCommands {
         float hunger = ControlServer.hunger(player);
         float frenzy = ControlServer.frenzy(player);
         float instinct = ControlMath.instinct(control, hunger, frenzy);
-        ComboStyle style = AyatoServer.isAyato(player) ? AyatoServer.comboStyle(player, player.m_9236_().m_46467_())
+        ComboStyle style = UkakuServer.isUkaku(player) ? UkakuServer.comboStyle(player, player.m_9236_().m_46467_())
             : ComboStyle.forForm(KaguneProfile.form(player));
         String text = String.format(Locale.ROOT,
             "Kagune control %d%% (mastery %d, restraint %d) | hunger %d%% | bloodlust %d%% | instinct %d%%%s | combat style %s",

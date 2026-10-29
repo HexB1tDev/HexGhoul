@@ -9,7 +9,7 @@ import net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket;
 import net.minecraft.server.level.ServerPlayer;
 
 /**
- * Unlock and transition point for the final evolution of the Kaneki path.
+ * Unlock and transition point for the final evolution of the Rinkaku path.
  *
  * <p>The Final Kakuja's appearance, abilities and mechanics are not designed yet, so this class only
  * records the permanent unlock and hands control back. When the form is designed, activate it in
@@ -37,13 +37,13 @@ public final class FinalKakuja {
             player.connection.send(new ClientboundSetTitleTextPacket(Component.literal("§f§lFINAL KAKUJA")));
             player.connection.send(new ClientboundSetSubtitleTextPacket(Component.literal("§cWhat kind of King will you become?")));
         }
-        player.displayClientMessage(Component.literal("§4The Dragon shatters. §fKaneki emerges."), false);
+        player.displayClientMessage(Component.literal("§4The Dragon shatters. §fRinkaku emerges."), false);
         // 1.0.5: the final kakujas: War or Peace, chosen once on the two cards (1.0.10).
         KingServer.awaken(player);
     }
 
     /**
-     * Kaneki stands up out of the fragments, back in his own body, and the player regains control. The final evolution (Peace or
+     * Rinkaku stands up out of the fragments, back in his own body, and the player regains control. The final evolution (Peace or
      * War) is chosen here once it exists; until then nothing is forced on: the kagune stays in, as it was before the death.
      */
     static void emerge(ServerPlayer player, boolean ceremony) {

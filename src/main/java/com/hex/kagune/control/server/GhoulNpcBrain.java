@@ -1,7 +1,7 @@
 package com.hex.kagune.control.server;
 
 import com.hex.kagune.control.ControlItems;
-import com.hex.kagune.control.furuta.FurutaMove;
+import com.hex.kagune.control.graft.GraftMove;
 import com.hex.kagune.control.network.ControlNetwork;
 import com.hex.kagune.control.network.S2CGhoulNpc;
 import com.hex.kagune.control.npc.GhoulNpc;
@@ -66,12 +66,12 @@ public final class GhoulNpcBrain {
         long outAt = Long.MIN_VALUE;
         long foughtAt = Long.MIN_VALUE;
         /** Rinkaku: the lash it is making, when it began, where it was aimed; the last one and when it ended; lashes so far. */
-        FurutaMove move = FurutaMove.NONE;
+        GraftMove move = GraftMove.NONE;
         long moveAt = Long.MIN_VALUE;
         Vec3 point = Vec3.f_82478_;
         /** The way the lash faces (a Minecraft yaw, degrees): at its prey as it began. */
         double yaw;
-        FurutaMove last;
+        GraftMove last;
         long lastEnds = Long.MIN_VALUE;
         int strung;
         final Map<Integer, Set<Integer>> hits = new HashMap<>();
@@ -102,7 +102,7 @@ public final class GhoulNpcBrain {
         /** 7.0.2: sent off (it walks away and is gone), or scared off (it runs a while). */
         long leavingAt = Long.MIN_VALUE;
         long scaredUntil = Long.MIN_VALUE;
-        /** 1.0.41: its flip (an EtoRules.Flip, -1 none), when it took off, its push (renewed the tick after), when it may flip again. */
+        /** 1.0.41: its flip (an PaleRules.Flip, -1 none), when it took off, its push (renewed the tick after), when it may flip again. */
         int flip = -1;
         long flipAt = Long.MIN_VALUE;
         Vec3 flipPush;
@@ -153,7 +153,7 @@ public final class GhoulNpcBrain {
             return;
         }
         GhoulNpcCombat.fly(npc, who, mind, level, now);
-        if (EtoStun.stunned(npc)) {
+        if (PaleStun.stunned(npc)) {
             sync(npc, mind, who);
             return; // reeling: it does nothing until it shakes it off
         }
@@ -401,8 +401,8 @@ public final class GhoulNpcBrain {
 
     /** No fight: whatever it was making ends; a while after its last fight (or at once when it runs) the kagune goes back in. */
     private static void calm(GhoulNpc npc, Mind mind, long now, boolean hide) {
-        if (mind.move != FurutaMove.NONE) {
-            mind.move = FurutaMove.NONE;
+        if (mind.move != GraftMove.NONE) {
+            mind.move = GraftMove.NONE;
             mind.dirty = true;
         }
         mind.strung = 0;
@@ -422,7 +422,7 @@ public final class GhoulNpcBrain {
 
     /** True if it talks to {@code player} now: its temper would, it regards them well enough, and it is not after them. */
     static boolean talks(GhoulNpc npc, NpcIdentity who, Mind mind, ServerPlayer player, long now) {
-        if (mind.prey == player.m_19879_() || mind.leavingAt != Long.MIN_VALUE || EtoStun.stunned(npc)) {
+        if (mind.prey == player.m_19879_() || mind.leavingAt != Long.MIN_VALUE || PaleStun.stunned(npc)) {
             return false;
         }
         Long until = mind.grudges.get(player.m_20148_());
@@ -666,7 +666,7 @@ public final class GhoulNpcBrain {
 
     static S2CGhoulNpc message(GhoulNpc npc, Mind mind, NpcIdentity who) {
         if (mind == null) {
-            return new S2CGhoulNpc(npc.m_19879_(), who.pack(), false, Long.MIN_VALUE, FurutaMove.NONE.ordinal(), Long.MIN_VALUE, 0.0, 0.0, 0.0, 0,
+            return new S2CGhoulNpc(npc.m_19879_(), who.pack(), false, Long.MIN_VALUE, GraftMove.NONE.ordinal(), Long.MIN_VALUE, 0.0, 0.0, 0.0, 0,
                 Long.MIN_VALUE, Long.MIN_VALUE, 1, -1, Long.MIN_VALUE);
         }
         return new S2CGhoulNpc(npc.m_19879_(), who.pack(), mind.out, mind.outAt, mind.move.ordinal(), mind.moveAt, mind.point.f_82479_,

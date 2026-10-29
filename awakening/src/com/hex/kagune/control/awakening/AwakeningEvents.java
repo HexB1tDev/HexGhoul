@@ -33,14 +33,14 @@ public final class AwakeningEvents {
     private AwakeningEvents() {
     }
 
-    /** Kakuja V2 belongs to Kaneki DNA. */
-    static boolean kanekiPath(ServerPlayer player) {
-        return KaguneProfile.isUnlocked(player) && PathServer.path(player) == KagunePath.KANEKI;
+    /** Kakuja V2 belongs to Rinkaku. */
+    static boolean rinkakuPath(ServerPlayer player) {
+        return KaguneProfile.isUnlocked(player) && PathServer.path(player) == KagunePath.RINKAKU;
     }
 
     /** The quest "Kakuja V2: The Dragon" is done: its gate is open (QuestServer.open lets other paths' gates through, so ask the path first). */
     static boolean gateOpen(ServerPlayer player) {
-        return kanekiPath(player) && QuestServer.open(player, Gate.KANEKI_DRAGON);
+        return rinkakuPath(player) && QuestServer.open(player, Gate.RINKAKU_DRAGON);
     }
 
     private static boolean real(Object entity) {
@@ -59,8 +59,8 @@ public final class AwakeningEvents {
             return;
         }
         boolean inVoid = player.getY() < player.serverLevel().getMinBuildHeight();
-        if (!AwakeningQuest.awakensOnDeath(AwakeningProfile.stage(player), kanekiPath(player), gateOpen(player), inVoid)) return;
-        // Instead of dying, Kaneki's body erupts. Cancelling at the highest priority keeps graves,
+        if (!AwakeningQuest.awakensOnDeath(AwakeningProfile.stage(player), rinkakuPath(player), gateOpen(player), inVoid)) return;
+        // Instead of dying, Rinkaku's body erupts. Cancelling at the highest priority keeps graves,
         // drops and death messages from other listeners out of it.
         if (DragonSessions.start(player)) {
             event.setCanceled(true);
@@ -148,7 +148,7 @@ public final class AwakeningEvents {
     static void progress(ServerPlayer player) {
         AwakeningStage before = AwakeningProfile.stage(player);
         if (before == AwakeningStage.DRAGON || before == AwakeningStage.FINAL) return;
-        AwakeningStage after = AwakeningQuest.advance(before, kanekiPath(player), gateOpen(player));
+        AwakeningStage after = AwakeningQuest.advance(before, rinkakuPath(player), gateOpen(player));
         if (after == before) return;
         AwakeningProfile.setStage(player, after);
         if (after == AwakeningStage.ARMED) {
@@ -174,7 +174,7 @@ public final class AwakeningEvents {
         DragonSessions.recover(player);
         AwakeningNetwork.sendStatus(player);
         // 1.0.5: a Dragon spent before the final kakujas existed still leaves its crown.
-        if (FinalKakuja.isUnlocked(player) && kanekiPath(player)) com.hex.kagune.control.server.KingServer.awaken(player);
+        if (FinalKakuja.isUnlocked(player) && rinkakuPath(player)) com.hex.kagune.control.server.KingServer.awaken(player);
     }
 
     @SubscribeEvent

@@ -4,13 +4,13 @@ import com.hex.kagune.control.client.ui.UiCanvas;
 import com.hex.kagune.control.king.KingForm;
 
 /**
- * 1.0.10: the colours of Kaneki's kagune menu (pure), and its marks. Until the final kakuja is chosen it is his crimson over black;
+ * 1.0.10: the colours of Rinkaku's kagune menu (pure), and its marks. Until the final kakuja is chosen it is his crimson over black;
  * War makes it pure black with red veins crawling through it, Peace white with feathers.
  */
 public record KingTheme(int panelFill, int panelEdge, int innerFill, int innerEdge, int vein, int veinBright, int title, int subtitle, int header,
                         int label, int value, int trait, int muted, int faint, int barBack, int bar, int rc, int button, int buttonHover, int owned,
                         int available, int locked, int pending, int quest, int tipFill, int hint, int on, int off, boolean feathers, boolean veins) {
-    public static final KingTheme KANEKI = new KingTheme(0xF3140608, 0xFF6A1620, 0xF20C0507, 0xFF34101A, 0xFF861A22, 0xFF561218, 0xFFF6E0E0, 0xFFC2585E,
+    public static final KingTheme RINKAKU = new KingTheme(0xF3140608, 0xFF6A1620, 0xF20C0507, 0xFF34101A, 0xFF861A22, 0xFF561218, 0xFFF6E0E0, 0xFFC2585E,
         0xFFF0505A, 0xFFA0646A, 0xFFF2DADA, 0xFFE2B8BC, 0xFF9A6A70, 0xFF6E4C52, 0xFF3C1418, 0xFFE0283A, 0xFFB0283A, 0xFF3A1218, 0xFF5E1A24,
         0xFFE83848, 0xFFF0C060, 0xFF4A3036, 0xFF5A3A14, 0xFFE8A040, 0xF0140608, 0xFF9E5A60, 0xFFFF5A64, 0xFFB9454E, false, false);
     public static final KingTheme WAR = new KingTheme(0xF7040304, 0xFF4A0810, 0xF5010101, 0xFF22050A, 0xFF780C18, 0xFF380810, 0xFFF0E4E4, 0xFFB01828,
@@ -22,7 +22,7 @@ public record KingTheme(int panelFill, int panelEdge, int innerFill, int innerEd
 
     /** The theme for what was chosen. */
     public static KingTheme of(KingForm chosen) {
-        return chosen == KingForm.WAR ? WAR : chosen == KingForm.PEACE ? PEACE : KANEKI;
+        return chosen == KingForm.WAR ? WAR : chosen == KingForm.PEACE ? PEACE : RINKAKU;
     }
 
     /** War's veins: red, branching, crawling in from the edges of the board {@code left, top, width, height}, pulsing with {@code time}. */
@@ -37,11 +37,11 @@ public record KingTheme(int panelFill, int panelEdge, int innerFill, int innerEd
             int cx = (x0 + x1) / 2 + r.nextInt(60) - 30;
             int cy = (y0 + y1) / 2 + r.nextInt(60) - 30;
             int colour = (int)(time * 2.0 + i) % 5 == 0 ? vein : bright;
-            AyatoMenuView.drawVein(c, x0, y0, cx, cy, x1, y1, colour, i % 3 == 0 ? 2 : 1);
+            UkakuMenuView.drawVein(c, x0, y0, cx, cy, x1, y1, colour, i % 3 == 0 ? 2 : 1);
             // A branch.
             int bx = (x0 + x1) / 2;
             int by = (y0 + y1) / 2;
-            AyatoMenuView.drawVein(c, bx, by, bx + r.nextInt(40) - 20, by + r.nextInt(40) - 20, bx + r.nextInt(80) - 40, by + r.nextInt(80) - 40, bright, 1);
+            UkakuMenuView.drawVein(c, bx, by, bx + r.nextInt(40) - 20, by + r.nextInt(40) - 20, bx + r.nextInt(80) - 40, by + r.nextInt(80) - 40, bright, 1);
         }
     }
 
@@ -81,7 +81,7 @@ public record KingTheme(int panelFill, int panelEdge, int innerFill, int innerEd
             int j = n * 2 - 1 - i;
             c.polygon(new float[] {xs[i], xs[i + 1], xs[j - 1], xs[j]}, new float[] {ys[i], ys[i + 1], ys[j - 1], ys[j]}, vane);
         }
-        AyatoMenuView.drawSegment(c, (int)Math.round(x), (int)Math.round(y), (int)Math.round(x + dx * length * 0.96), (int)Math.round(y + dy * length * 0.96),
+        UkakuMenuView.drawSegment(c, (int)Math.round(x), (int)Math.round(y), (int)Math.round(x + dx * length * 0.96), (int)Math.round(y + dy * length * 0.96),
             shaft, 0);
     }
 }

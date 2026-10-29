@@ -1,9 +1,9 @@
 package com.hex.kagune.control.client.render;
 
-import com.hex.kagune.control.client.EtoClient;
+import com.hex.kagune.control.client.PaleClient;
 import com.hex.kagune.control.client.OwlClient;
 import com.hex.kagune.control.client.animation.RigPose;
-import com.hex.kagune.control.eto.OwlRules;
+import com.hex.kagune.control.pale.OwlRules;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import net.minecraft.client.model.HumanoidModel;
@@ -18,7 +18,7 @@ import net.minecraftforge.fml.common.Mod;
 /**
  * 6.2.0: in the Owl her arms (and their sleeves) are drawn thicker ({@link RigPose#BULK_ARMS} at the full bulk), as HexHaki's haki
  * physique draws them, by the model's own scale, put back as it was after (her arms are pushed out by the pose, her chest drawn
- * broader by {@link EtoFleshRenderer}).
+ * broader by {@link PaleFleshRenderer}).
  */
 @Mod.EventBusSubscriber(modid = "hexkagune", value = Dist.CLIENT)
 public final class OwlScaler {
@@ -33,7 +33,7 @@ public final class OwlScaler {
         if (!(event.getEntity() instanceof AbstractClientPlayer player) || !(event.getRenderer().m_7200_() instanceof HumanoidModel<?> model)) {
             return;
         }
-        double clock = EtoClient.clock(event.getPartialTick());
+        double clock = PaleClient.clock(event.getPartialTick());
         OwlClient.Owl owl = OwlClient.get(player, clock);
         if (owl == null) {
             return;

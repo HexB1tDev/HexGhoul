@@ -1,6 +1,6 @@
 package com.hex.kagune.control;
 
-import com.hex.kagune.control.ayato.UkakuModel;
+import com.hex.kagune.control.ukaku.UkakuModel;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.SplittableRandom;
 
 /**
- * Kaneki's kakuja coming out of his body and breaking apart (5.0.0), the pure part: the timing of the burst (each centipede leg
+ * Rinkaku's kakuja coming out of his body and breaking apart (5.0.0), the pure part: the timing of the burst (each centipede leg
  * tears out of his back and overshoots its length before it settles, each red tentacle erupts after it, the mask creeps over
  * his face from the lens outward) and the shatter (every leg, tentacle and the mask break into pieces that fly off his body,
  * spin, bounce once on the ground and fade). Ages are in ticks since the burst or the shatter.

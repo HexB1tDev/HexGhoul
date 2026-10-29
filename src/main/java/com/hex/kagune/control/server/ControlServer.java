@@ -79,7 +79,7 @@ public final class ControlServer {
     public static void playerTick(TickEvent.PlayerTickEvent event) {
         if (event.phase == TickEvent.Phase.END && event.player instanceof ServerPlayer player) {
             try {
-                KanekiSlingshot.tick(player);
+                RinkakuSlingshot.tick(player);
                 tick(player);
             } catch (RuntimeException failure) {
                 long now = System.currentTimeMillis();
@@ -107,9 +107,9 @@ public final class ControlServer {
         state.hunger = GhoulReserveServer.hunger(player);
         boolean active = KaguneProfile.isActive(player) && player.m_6084_();
         KaguneRuntime.State runtime = active ? KaguneRuntime.peek(player.m_20148_()) : null;
-        if (!KaguneProfile.isActive(player) && now % 10L == 0L && !AyatoServer.isAyato(player)) {
-            // A Kaneki kakuja K brought out ends when the kagune goes back in.
-            AyatoForms.kagunePutAway(player);
+        if (!KaguneProfile.isActive(player) && now % 10L == 0L && !UkakuServer.isUkaku(player)) {
+            // A Rinkaku kakuja K brought out ends when the kagune goes back in.
+            UkakuForms.kagunePutAway(player);
         }
 
         if (runtime != null && runtime.mode == TendrilMode.MANIFEST && runtime.modeStarted != state.lastManifestStart) {
@@ -147,7 +147,7 @@ public final class ControlServer {
 
         if (runtime != null) {
             KaguneCombat.serverTick(player, runtime, now);
-            KanekiAutonomy.tick(player, runtime, now);
+            RinkakuAutonomy.tick(player, runtime, now);
             KaguneInstinct.tick(player, runtime, state, now);
         } else if (state.urge.severity() > 0) {
             KaguneInstinct.end(player, state, now, false);

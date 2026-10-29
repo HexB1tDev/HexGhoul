@@ -12,23 +12,23 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 
 /**
- * The kagune tearing out, played by every client for every player it sees (the server's old single rip is gone). Kaneki's
- * tendrils each play the tear as they come out, one every few ticks, and each new one cuts the last off; Ayato's wings
+ * The kagune tearing out, played by every client for every player it sees (the server's old single rip is gone). Rinkaku's
+ * tendrils each play the tear as they come out, one every few ticks, and each new one cuts the last off; Ukaku's wings
  * ignite once for both. Driven by the original's own per-limb manifestation pulse ({@code KaguneManifestationEffects}).
  */
 public final class ManifestSounds {
-    private static final SoundEvent KANEKI = SoundEvent.m_262824_(ResourceLocation.m_214293_("hexkagune", "manifest_kaneki"));
-    private static final SoundEvent AYATO = SoundEvent.m_262824_(ResourceLocation.m_214293_("hexkagune", "manifest_ayato"));
+    private static final SoundEvent RINKAKU = SoundEvent.m_262824_(ResourceLocation.m_214293_("hexkagune", "manifest_rinkaku"));
+    private static final SoundEvent UKAKU = SoundEvent.m_262824_(ResourceLocation.m_214293_("hexkagune", "manifest_ukaku"));
     private static final Map<UUID, Tear> PLAYING = new HashMap<>();
 
     private ManifestSounds() {
     }
 
-    /** 6.1.0: the kakugan turning in Eto's one eye as her base form wakes (nothing tears out of her). */
+    /** 6.1.0: the kakugan turning in Pale's one eye as her base form wakes (nothing tears out of her). */
     private static final SoundEvent EYE_OPEN = SoundEvent.m_262824_(ResourceLocation.m_214293_("hexkagune", "eye_open"));
 
-    /** 6.1.0: Eto's base form wakes: her eye turns, with the ghoul mode's own sound, a little softer and lower. */
-    public static void eto(AbstractClientPlayer player) {
+    /** 6.1.0: Pale's base form wakes: her eye turns, with the ghoul mode's own sound, a little softer and lower. */
+    public static void pale(AbstractClientPlayer player) {
         PLAYING.values().removeIf(Tear::m_7801_);
         UUID id = player.m_36316_().getId();
         Tear previous = PLAYING.remove(id);
@@ -41,8 +41,8 @@ public final class ManifestSounds {
     }
 
     /** One limb came out ({@code opening}: the first of this manifestation). */
-    public static void limb(AbstractClientPlayer player, boolean opening, boolean ayato) {
-        if (ayato && !opening) {
+    public static void limb(AbstractClientPlayer player, boolean opening, boolean ukaku) {
+        if (ukaku && !opening) {
             return;
         }
         PLAYING.values().removeIf(Tear::m_7801_);
@@ -52,8 +52,8 @@ public final class ManifestSounds {
             previous.end();
         }
         // A little pitch drift so a fast run of tendrils doesn't sound like one sample on repeat.
-        float pitch = ayato ? 1.0F : 0.94F + 0.12F * player.m_217043_().m_188501_();
-        Tear tear = new Tear(player, ayato ? AYATO : KANEKI, ayato ? 1.0F : 0.95F, pitch);
+        float pitch = ukaku ? 1.0F : 0.94F + 0.12F * player.m_217043_().m_188501_();
+        Tear tear = new Tear(player, ukaku ? UKAKU : RINKAKU, ukaku ? 1.0F : 0.95F, pitch);
         PLAYING.put(id, tear);
         Minecraft.m_91087_().m_91106_().m_120367_(tear);
     }

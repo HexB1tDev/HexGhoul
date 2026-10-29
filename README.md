@@ -9,6 +9,14 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.2.5 (HexGhoul): the paths are Rinkaku and Ukaku, Furuta DNA no longer pickable, no character names anywhere in the mod (testing; saves reset)
+
+See `.github/release-notes-1.2.5.md`.
+
+## 1.2.5 (HexGhoul): the paths are Rinkaku and Ukaku, Furuta DNA no longer pickable, no character names anywhere in the mod (testing; saves reset)
+
+See `.github/release-notes-1.2.5.md`.
+
 ## 1.2.4 (HexGhoul): War's first person cleaned up: vanilla's hand swinging on his blows, the rinkaku kept off the eyes and lined up with the look (testing)
 
 See `.github/release-notes-1.2.4.md`.

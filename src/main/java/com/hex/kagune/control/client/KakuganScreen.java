@@ -37,16 +37,16 @@ public final class KakuganScreen extends Screen {
         this.mirror = this.eyes.mirrored();
     }
 
-    /** 6.1.0: on a path that is one-eyed by nature (Eto's) only one eye ever turns: no way to two, not even by a reset. */
+    /** 6.1.0: on a path that is one-eyed by nature (Pale's) only one eye ever turns: no way to two, not even by a reset. */
     private boolean bothAllowed() {
         LocalPlayer player = Minecraft.m_91087_().f_91074_;
-        return player == null || PathClient.get(player) != com.hex.kagune.control.KagunePath.ETO && !this.rightOnly();
+        return player == null || PathClient.get(player) != com.hex.kagune.control.KagunePath.PALE && !this.rightOnly();
     }
 
-    /** 7.0.0: Furuta DNA's one kakugan is always the right eye: neither the left nor both can be picked. */
+    /** 7.0.0: Graft DNA's one kakugan is always the right eye: neither the left nor both can be picked. */
     private boolean rightOnly() {
         LocalPlayer player = Minecraft.m_91087_().f_91074_;
-        return player != null && PathClient.get(player) == com.hex.kagune.control.KagunePath.FURUTA;
+        return player != null && PathClient.get(player) == com.hex.kagune.control.KagunePath.GRAFT;
     }
 
     /** {@code eyes} as this path allows them: a one-eyed path keeps one eye (the right, if both were set). */

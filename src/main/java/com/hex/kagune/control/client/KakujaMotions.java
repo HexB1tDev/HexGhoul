@@ -4,8 +4,8 @@ import com.hex.kagune.client.KaguneClientState;
 import com.hex.kagune.control.ComboStage;
 import com.hex.kagune.control.ComboStyle;
 import com.hex.kagune.control.StrikePattern;
-import com.hex.kagune.control.ayato.AyatoRules;
-import com.hex.kagune.control.ayato.KakujaRig;
+import com.hex.kagune.control.ukaku.UkakuRules;
+import com.hex.kagune.control.ukaku.KakujaRig;
 import com.hex.kagune.gameplay.TendrilMode;
 
 /**
@@ -20,29 +20,29 @@ final class KakujaMotions {
     private KakujaMotions() {
     }
 
-    static KakujaRig.Action action(KaguneClientState.View view, ControlView control, double time, double[] aim, AyatoClient.AyatoView ayato) {
-        float gun = AyatoRules.gatlingAim(time, ayato.gatling(), ayato.gatlingChangedAt());
+    static KakujaRig.Action action(KaguneClientState.View view, ControlView control, double time, double[] aim, UkakuClient.UkakuView ukaku) {
+        float gun = UkakuRules.gatlingAim(time, ukaku.gatling(), ukaku.gatlingChangedAt());
         if (gun > 0.0F) {
-            return gatling(ayato, time, aim, gun);
+            return gatling(ukaku, time, aim, gun);
         }
-        KakujaRig.Action cyclone = cycloneThrow(ayato, time, aim);
+        KakujaRig.Action cyclone = cycloneThrow(ukaku, time, aim);
         if (cyclone != null) {
             return cyclone;
         }
         float[] amount = new float[KakujaRig.TENTACLES];
         float[] kick = new float[KakujaRig.TENTACLES];
         boolean live = view.mode() == TendrilMode.SWIPE && control.describesSwipe(view.modeStarted());
-        boolean volley = live && control.comboStyle() == ComboStyle.AYATO_KAKUJA && control.stage().pattern() == StrikePattern.NEEDLE_VOLLEY;
-        if (live && control.comboStyle() == ComboStyle.AYATO_KAKUJA_ENDERS) {
+        boolean volley = live && control.comboStyle() == ComboStyle.UKAKU_KAKUJA && control.stage().pattern() == StrikePattern.NEEDLE_VOLLEY;
+        if (live && control.comboStyle() == ComboStyle.UKAKU_KAKUJA_ENDERS) {
             return ender(control, time, aim);
         }
-        if (live && control.comboStyle() == ComboStyle.AYATO_FINAL_ENDERS) {
+        if (live && control.comboStyle() == ComboStyle.UKAKU_FINAL_ENDERS) {
             return finalEnder(control, time, aim);
         }
-        if (live && control.comboStyle() == ComboStyle.AYATO_FINAL_KAKUJA) {
+        if (live && control.comboStyle() == ComboStyle.UKAKU_FINAL_KAKUJA) {
             return finalShot(control, time, aim);
         }
-        if (live && control.comboStyle() == ComboStyle.AYATO_RUSHING_DEATH) {
+        if (live && control.comboStyle() == ComboStyle.UKAKU_RUSHING_DEATH) {
             return rushingDeath(control, time, aim);
         }
         if (volley) {
@@ -54,11 +54,11 @@ final class KakujaMotions {
             float impact = impactTick / (float)duration;
             // On the chain's first volley everything starts from rest; after that from the ready stance.
             float from = control.comboStage() > 0 ? READY : 0.0F;
-            float aimed = AyatoMotions.aimCurve(progress, impact, from, READY);
-            float waiting = from + (READY - from) * AyatoMotions.smooth(progress / 0.4F);
+            float aimed = UkakuMotions.aimCurve(progress, impact, from, READY);
+            float waiting = from + (READY - from) * UkakuMotions.smooth(progress / 0.4F);
             float shot = 0.0F;
-            for (int k = 0; k < AyatoRules.VOLLEY_NEEDLES; k++) {
-                double since = age - (impactTick + k * AyatoRules.NEEDLE_STAGGER);
+            for (int k = 0; k < UkakuRules.VOLLEY_NEEDLES; k++) {
+                double since = age - (impactTick + k * UkakuRules.NEEDLE_STAGGER);
                 if (since >= 0.0) {
                     shot = Math.max(shot, (float)Math.exp(-since * 0.6));
                 }
@@ -79,7 +79,7 @@ final class KakujaMotions {
 
     /**
      * One of the final kakuja's M1 shots: the tentacles that fire turn on the target (the rest wait half turned) and each kicks
-     * as its needles or fire leave it ({@link AyatoRules#finalFireTicks}); the Fire Lash's tendril sweeps across left to right.
+     * as its needles or fire leave it ({@link UkakuRules#finalFireTicks}); the Fire Lash's tendril sweeps across left to right.
      */
     static KakujaRig.Action finalShot(ControlView control, double time, double[] aim) {
         float[] amount = new float[KakujaRig.TENTACLES];
@@ -92,14 +92,14 @@ final class KakujaMotions {
         int impactTick = stage.impactTick(duration);
         float impact = impactTick / (float)duration;
         float from = control.comboStage() > 0 ? READY : 0.0F;
-        float aimed = AyatoMotions.aimCurve(progress, impact, from, READY);
-        float waiting = from + (READY - from) * AyatoMotions.smooth(progress / 0.4F);
+        float aimed = UkakuMotions.aimCurve(progress, impact, from, READY);
+        float waiting = from + (READY - from) * UkakuMotions.smooth(progress / 0.4F);
         int mask = 0;
         for (int i = 0; i < KakujaRig.TENTACLES; i++) {
             mask |= control.comboUsesLimb(20 + i) ? 1 << (20 + i) : 0;
         }
         for (int i = 0; i < KakujaRig.TENTACLES; i++) {
-            int[] ticks = AyatoRules.finalFireTicks(pattern, i, mask);
+            int[] ticks = UkakuRules.finalFireTicks(pattern, i, mask);
             float shot = 0.0F;
             for (int tick : ticks) {
                 double since = age - (impactTick + tick);
@@ -112,8 +112,8 @@ final class KakujaMotions {
         }
         double[] left = null;
         if (pattern == StrikePattern.FIRE_LASH) {
-            double sweep = Math.max(0.0, Math.min(1.0, (age - impactTick) / Math.max(1.0, AyatoRules.LASH_SHARDS - 1.0)));
-            left = turned(aim, -AyatoRules.LASH_HALF_ANGLE + 2.0 * AyatoRules.LASH_HALF_ANGLE * sweep);
+            double sweep = Math.max(0.0, Math.min(1.0, (age - impactTick) / Math.max(1.0, UkakuRules.LASH_SHARDS - 1.0)));
+            left = turned(aim, -UkakuRules.LASH_HALF_ANGLE + 2.0 * UkakuRules.LASH_HALF_ANGLE * sweep);
         }
         return new KakujaRig.Action(aim, amount, kick, 0.0F, left);
     }
@@ -132,7 +132,7 @@ final class KakujaMotions {
         double sinceImpact = age - impactTick;
         float hit = sinceImpact < 0.0 ? 0.0F : (float)Math.exp(-sinceImpact * 0.5);
         boolean afterShots = control.comboStage() > 0;
-        float raise = AyatoMotions.aimCurve(progress, impact, afterShots ? READY : 0.0F, 0.0F);
+        float raise = UkakuMotions.aimCurve(progress, impact, afterShots ? READY : 0.0F, 0.0F);
         double[] look = aim;
         double[] left = null;
         switch (pattern) {
@@ -146,10 +146,10 @@ final class KakujaMotions {
             }
             case TWIN_SERPENTS -> {
                 // The needles sweep from his right across to his left while the fire sweeps the other way.
-                double sweep = Math.max(0.0, Math.min(1.0, sinceImpact / Math.max(1, AyatoRules.SERPENT_SWEEP_TICKS)));
-                look = turned(aim, AyatoRules.SERPENT_NEEDLE_HALF_ANGLE - 2.0 * AyatoRules.SERPENT_NEEDLE_HALF_ANGLE * sweep);
-                left = turned(aim, -AyatoRules.SERPENT_FIRE_HALF_ANGLE + 2.0 * AyatoRules.SERPENT_FIRE_HALF_ANGLE * sweep);
-                boolean sweeping = sinceImpact >= 0.0 && sinceImpact <= AyatoRules.SERPENT_SWEEP_TICKS + 2;
+                double sweep = Math.max(0.0, Math.min(1.0, sinceImpact / Math.max(1, UkakuRules.SERPENT_SWEEP_TICKS)));
+                look = turned(aim, UkakuRules.SERPENT_NEEDLE_HALF_ANGLE - 2.0 * UkakuRules.SERPENT_NEEDLE_HALF_ANGLE * sweep);
+                left = turned(aim, -UkakuRules.SERPENT_FIRE_HALF_ANGLE + 2.0 * UkakuRules.SERPENT_FIRE_HALF_ANGLE * sweep);
+                boolean sweeping = sinceImpact >= 0.0 && sinceImpact <= UkakuRules.SERPENT_SWEEP_TICKS + 2;
                 for (int i = 0; i < KakujaRig.TENTACLES; i++) {
                     amount[i] = Math.max(raise, sweeping ? 0.9F : 0.0F);
                     kick[i] = sweeping ? 0.7F : 0.0F;
@@ -179,7 +179,7 @@ final class KakujaMotions {
             }
         }
         if (afterShots) {
-            float carry = READY * (1.0F - AyatoMotions.smooth(progress / 0.25F));
+            float carry = READY * (1.0F - UkakuMotions.smooth(progress / 0.25F));
             for (int i = 0; i < KakujaRig.TENTACLES; i++) {
                 amount[i] = Math.max(amount[i], carry);
             }
@@ -191,20 +191,20 @@ final class KakujaMotions {
      * The final kakuja throwing its fire cyclone (Z): the fire tendrils coil up and back over his left shoulder through the
      * wind-up, then whip forward onto the target as it leaves them; null when no throw is under way.
      */
-    static KakujaRig.Action cycloneThrow(AyatoClient.AyatoView ayato, double time, double[] aim) {
-        if (!ayato.form().finalKakuja() || ayato.vortexAt() == Long.MIN_VALUE || ayato.vortexSide() >= 0) {
+    static KakujaRig.Action cycloneThrow(UkakuClient.UkakuView ukaku, double time, double[] aim) {
+        if (!ukaku.form().finalKakuja() || ukaku.vortexAt() == Long.MIN_VALUE || ukaku.vortexSide() >= 0) {
             return null;
         }
-        double age = time - (ayato.vortexAt() - AyatoRules.VORTEX_WINDUP);
-        double total = AyatoClient.VORTEX_POSE_TICKS;
+        double age = time - (ukaku.vortexAt() - UkakuRules.VORTEX_WINDUP);
+        double total = UkakuClient.VORTEX_POSE_TICKS;
         if (age < 0.0 || age > total) {
             return null;
         }
         float progress = (float)(age / total);
-        float release = AyatoRules.VORTEX_WINDUP / (float)total;
-        float coil = AyatoMotions.smooth(progress / release) * (1.0F - AyatoMotions.smooth((progress - release) / 0.08F));
-        float snap = AyatoMotions.smooth((progress - release + 0.05F) / 0.06F) * (1.0F - AyatoMotions.smooth((progress - 0.75F) / 0.25F));
-        double since = age - AyatoRules.VORTEX_WINDUP;
+        float release = UkakuRules.VORTEX_WINDUP / (float)total;
+        float coil = UkakuMotions.smooth(progress / release) * (1.0F - UkakuMotions.smooth((progress - release) / 0.08F));
+        float snap = UkakuMotions.smooth((progress - release + 0.05F) / 0.06F) * (1.0F - UkakuMotions.smooth((progress - 0.75F) / 0.25F));
+        double since = age - UkakuRules.VORTEX_WINDUP;
         float kick = since < 0.0 ? 0.0F : (float)Math.exp(-since * 0.45);
         double[] back = {-0.5, 0.75, -0.42};
         double[] left = normalize(new double[] {back[0] + (aim[0] - back[0]) * snap, back[1] + (aim[1] - back[1]) * snap,
@@ -244,19 +244,19 @@ final class KakujaMotions {
         float hit = sinceImpact < 0.0 ? 0.0F : (float)Math.exp(-sinceImpact * 0.5);
         // Enders are indexed by the volleys before them: past Harrow, the chain's ready stance is still up.
         boolean afterShots = control.comboStage() > 0;
-        float raise = AyatoMotions.aimCurve(progress, impact, afterShots ? READY : 0.0F, 0.0F);
+        float raise = UkakuMotions.aimCurve(progress, impact, afterShots ? READY : 0.0F, 0.0F);
         double[] look = aim;
         switch (pattern) {
             case THORN_FAN -> {
                 // The aim sweeps from his left across to his right as the fan leaves; each side's tentacles kick in their half.
-                float half = AyatoRules.THORN_FAN_HALF_ANGLE;
-                double sweep = Math.max(0.0, Math.min(1.0, sinceImpact / Math.max(1, AyatoRules.FAN_SWEEP_TICKS)));
+                float half = UkakuRules.THORN_FAN_HALF_ANGLE;
+                double sweep = Math.max(0.0, Math.min(1.0, sinceImpact / Math.max(1, UkakuRules.FAN_SWEEP_TICKS)));
                 double yaw = Math.toRadians(-half + 2.0 * half * sweep);
                 look = new double[] {aim[0] * Math.cos(yaw) + aim[2] * Math.sin(yaw), aim[1], -aim[0] * Math.sin(yaw) + aim[2] * Math.cos(yaw)};
                 for (int i = 0; i < KakujaRig.TENTACLES; i++) {
                     amount[i] = raise;
                     boolean right = KakujaRig.sideOf(i) > 0;
-                    kick[i] = sinceImpact < 0.0 || sinceImpact > AyatoRules.FAN_SWEEP_TICKS + 3 ? 0.0F : right == yaw >= 0.0 ? 0.8F : 0.15F;
+                    kick[i] = sinceImpact < 0.0 || sinceImpact > UkakuRules.FAN_SWEEP_TICKS + 3 ? 0.0F : right == yaw >= 0.0 ? 0.8F : 0.15F;
                 }
             }
             case HAIL_OF_THORNS -> {
@@ -269,8 +269,8 @@ final class KakujaMotions {
             }
             case SIX_TAIL_BARRAGE -> {
                 // All six held on the target from the impact, two needles a tick round the tentacles.
-                float hang = AyatoMotions.smooth((progress - impact + 0.08F) / 0.08F) * (1.0F - AyatoMotions.smooth((progress - 0.82F) / 0.1F));
-                double shots = Math.max(0.0, sinceImpact) * AyatoRules.SIX_TAIL_PER_TICK;
+                float hang = UkakuMotions.smooth((progress - impact + 0.08F) / 0.08F) * (1.0F - UkakuMotions.smooth((progress - 0.82F) / 0.1F));
+                double shots = Math.max(0.0, sinceImpact) * UkakuRules.SIX_TAIL_PER_TICK;
                 int last = (int)Math.floor(shots);
                 for (int i = 0; i < KakujaRig.TENTACLES; i++) {
                     amount[i] = Math.max(hang, raise);
@@ -281,8 +281,8 @@ final class KakujaMotions {
                         if (shot < 0) {
                             break;
                         }
-                        double ago = (shots - shot) / AyatoRules.SIX_TAIL_PER_TICK;
-                        int index = AyatoRules.sixTailTentacle(shot);
+                        double ago = (shots - shot) / UkakuRules.SIX_TAIL_PER_TICK;
+                        int index = UkakuRules.sixTailTentacle(shot);
                         kick[index] = Math.max(kick[index], hang * (float)Math.exp(-ago * 1.4));
                     }
                 }
@@ -304,7 +304,7 @@ final class KakujaMotions {
         }
         if (afterShots) {
             // They ease out of the chain's ready stance, never snap.
-            float carry = READY * (1.0F - AyatoMotions.smooth(progress / 0.25F));
+            float carry = READY * (1.0F - UkakuMotions.smooth(progress / 0.25F));
             for (int i = 0; i < KakujaRig.TENTACLES; i++) {
                 amount[i] = Math.max(amount[i], carry);
             }
@@ -317,17 +317,17 @@ final class KakujaMotions {
      * at a time round the six in the order the server fires them (the final kakuja's Pyre Gatling: a needle tentacle, then a
      * fire tendril, in turn).
      */
-    static KakujaRig.Action gatling(AyatoClient.AyatoView ayato, double time, double[] aim, float gun) {
+    static KakujaRig.Action gatling(UkakuClient.UkakuView ukaku, double time, double[] aim, float gun) {
         float[] amount = new float[KakujaRig.TENTACLES];
         float[] kick = new float[KakujaRig.TENTACLES];
         for (int i = 0; i < KakujaRig.TENTACLES; i++) {
             amount[i] = gun;
         }
-        if (ayato.gatling() && ayato.gatlingChangedAt() != Long.MIN_VALUE) {
-            double held = time - ayato.gatlingChangedAt();
-            double rate = AyatoRules.needleGatlingRate((long)held);
+        if (ukaku.gatling() && ukaku.gatlingChangedAt() != Long.MIN_VALUE) {
+            double held = time - ukaku.gatlingChangedAt();
+            double rate = UkakuRules.needleGatlingRate((long)held);
             if (rate > 0.0) {
-                double salvos = (held - AyatoRules.GATLING_SPINUP) * rate;
+                double salvos = (held - UkakuRules.GATLING_SPINUP) * rate;
                 int last = (int)Math.floor(salvos);
                 for (int back = 0; back < 4; back++) {
                     int salvo = last - back;
@@ -335,7 +335,7 @@ final class KakujaMotions {
                         break;
                     }
                     double ago = (salvos - salvo) / rate;
-                    int index = ayato.form().finalKakuja() ? AyatoRules.pyreGatlingTentacle(salvo) : AyatoRules.sixTailTentacle(salvo);
+                    int index = ukaku.form().finalKakuja() ? UkakuRules.pyreGatlingTentacle(salvo) : UkakuRules.sixTailTentacle(salvo);
                     kick[index] = Math.max(kick[index], gun * (float)Math.exp(-ago * 0.9));
                 }
             }
@@ -355,8 +355,8 @@ final class KakujaMotions {
         float progress = (float)Math.max(0.0, Math.min(1.0, age / duration));
         int impactTick = control.stage().impactTick(duration);
         float impact = impactTick / (float)duration;
-        float tuck = AyatoMotions.smooth((progress - 0.04F) / 0.08F) * (1.0F - AyatoMotions.smooth((progress - (impact - 0.1F)) / 0.06F));
-        float snap = AyatoMotions.smooth((progress - (impact - 0.08F)) / 0.07F) * (1.0F - AyatoMotions.smooth((progress - 0.7F) / 0.25F));
+        float tuck = UkakuMotions.smooth((progress - 0.04F) / 0.08F) * (1.0F - UkakuMotions.smooth((progress - (impact - 0.1F)) / 0.06F));
+        float snap = UkakuMotions.smooth((progress - (impact - 0.08F)) / 0.07F) * (1.0F - UkakuMotions.smooth((progress - 0.7F) / 0.25F));
         double since = age - impactTick;
         float hit = since < 0.0 ? 0.0F : (float)Math.exp(-since * 0.45);
         for (int i = 0; i < KakujaRig.TENTACLES; i++) {
@@ -368,13 +368,13 @@ final class KakujaMotions {
 
     /** The half-turned ready stance after a volley, while the chain can still go on (fading out over its last ticks). */
     static float ready(ControlView control, double time) {
-        if (control.comboStyle() != ComboStyle.AYATO_KAKUJA && control.comboStyle() != ComboStyle.AYATO_FINAL_KAKUJA || !control.hasCombo()) {
+        if (control.comboStyle() != ComboStyle.UKAKU_KAKUJA && control.comboStyle() != ComboStyle.UKAKU_FINAL_KAKUJA || !control.hasCombo()) {
             return 0.0F;
         }
         double since = time - (control.comboStarted() + control.comboDuration());
-        if (since < 0.0 || since > AyatoRules.ENDER_WINDOW_TICKS) {
+        if (since < 0.0 || since > UkakuRules.ENDER_WINDOW_TICKS) {
             return 0.0F;
         }
-        return READY * (1.0F - AyatoMotions.smooth((float)((since - (AyatoRules.ENDER_WINDOW_TICKS - 8)) / 8.0)));
+        return READY * (1.0F - UkakuMotions.smooth((float)((since - (UkakuRules.ENDER_WINDOW_TICKS - 8)) / 8.0)));
     }
 }

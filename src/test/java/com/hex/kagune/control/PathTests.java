@@ -39,19 +39,20 @@ public final class PathTests {
             check(KagunePath.fromId(" " + path.id().toUpperCase() + " ") == path.active(), "stored ids are read leniently: " + path);
             check(path.id().matches("[a-z]+"), "ids are plain lowercase words (NBT and command friendly): " + path.id());
         }
-        // 7.0.0: Owl DNA is dormant; every way of naming it lands on Furuta DNA, and nothing lists it.
-        check(KagunePath.ETO.dormant() && KagunePath.ETO.active() == KagunePath.FURUTA && !KagunePath.FURUTA.dormant(),
-            "Owl DNA is dormant, Furuta DNA replaces it");
-        check(KagunePath.fromId("owl") == KagunePath.FURUTA && KagunePath.fromId("eto") == KagunePath.FURUTA
-            && KagunePath.fromId("furuta") == KagunePath.FURUTA, "Owl DNA's saved ids read as Furuta DNA");
-        check(!KagunePath.choosable().contains(KagunePath.ETO) && KagunePath.choosable().contains(KagunePath.FURUTA),
-            "the starting screen offers Furuta DNA, never Owl DNA");
-        check(KagunePath.fromId("kaneki") == KagunePath.KANEKI && KagunePath.fromId("ayato") == KagunePath.AYATO,
-            "the saved ids never change (old worlds depend on them)");
+        // 7.0.0: Owl DNA is dormant; 1.2.5: and Graft DNA (never pickable, the user's ask): naming either reads as none (the player
+        // chooses again), and the starting screen lists neither.
+        check(KagunePath.PALE.dormant() && KagunePath.GRAFT.dormant() && KagunePath.PALE.active() == KagunePath.NONE
+            && KagunePath.GRAFT.active() == KagunePath.NONE && !KagunePath.RINKAKU.dormant() && !KagunePath.UKAKU.dormant(),
+            "Owl DNA and Graft DNA are dormant");
+        check(KagunePath.fromId("owl") == KagunePath.NONE && KagunePath.fromId("graft") == KagunePath.NONE, "a dormant path's id reads as none");
+        check(KagunePath.choosable().equals(java.util.List.of(KagunePath.RINKAKU, KagunePath.UKAKU)),
+            "the starting screen offers Rinkaku and Ukaku, never a dormant path");
+        check(KagunePath.fromId("rinkaku") == KagunePath.RINKAKU && KagunePath.fromId("ukaku") == KagunePath.UKAKU,
+            "the saved ids read back (1.2.5: new ids; older saves choose again)");
         check(KagunePath.fromId(null) == KagunePath.NONE, "a missing id means undecided");
         check(KagunePath.fromId("") == KagunePath.NONE, "an empty tag means undecided");
         check(KagunePath.fromId("touka") == KagunePath.NONE, "an id from a newer version asks the player to choose again");
-        check(!KagunePath.NONE.chosen() && KagunePath.KANEKI.chosen() && KagunePath.AYATO.chosen(), "only real paths count as chosen");
+        check(!KagunePath.NONE.chosen() && KagunePath.RINKAKU.chosen() && KagunePath.UKAKU.chosen(), "only real paths count as chosen");
     }
 
     private static void ordinals() {
@@ -66,9 +67,9 @@ public final class PathTests {
     private static void owed() {
         check(KagunePath.choiceOwed(true, KagunePath.NONE), "an unlocked, undecided kagune owes the starting screen");
         check(!KagunePath.choiceOwed(false, KagunePath.NONE), "no kagune, no screen");
-        check(!KagunePath.choiceOwed(true, KagunePath.KANEKI) && !KagunePath.choiceOwed(true, KagunePath.AYATO),
+        check(!KagunePath.choiceOwed(true, KagunePath.RINKAKU) && !KagunePath.choiceOwed(true, KagunePath.UKAKU),
             "a chosen path is never asked again");
-        check(!KagunePath.choiceOwed(false, KagunePath.AYATO), "a locked kagune with a path owes nothing");
+        check(!KagunePath.choiceOwed(false, KagunePath.UKAKU), "a locked kagune with a path owes nothing");
         // Legacy saves: the unmarked-profile rule and the owed rule agree that veterans are never blocked.
         check(!KagunePath.choiceOwed(true, KagunePath.forUnmarkedProfile(true, 300, 0L, false)),
             "a 1.1 veteran can still manifest after updating");
@@ -81,10 +82,10 @@ public final class PathTests {
             "an unlocked but untouched kagune gets the starting screen");
         check(KagunePath.forUnmarkedProfile(false, 0, 0L, true) == KagunePath.NONE,
             "a player without a kagune chooses once it is unlocked");
-        check(KagunePath.forUnmarkedProfile(true, 1, 0L, true) == KagunePath.KANEKI, "any mastery keeps the original path");
-        check(KagunePath.forUnmarkedProfile(true, 0, 1L << 5, true) == KagunePath.KANEKI, "any mutation keeps the original path");
-        check(KagunePath.forUnmarkedProfile(true, 0, 0L, false) == KagunePath.KANEKI, "a grown form keeps the original path");
-        check(KagunePath.forUnmarkedProfile(true, 1000, -1L, false) == KagunePath.KANEKI, "a veteran is never asked");
+        check(KagunePath.forUnmarkedProfile(true, 1, 0L, true) == KagunePath.RINKAKU, "any mastery keeps the original path");
+        check(KagunePath.forUnmarkedProfile(true, 0, 1L << 5, true) == KagunePath.RINKAKU, "any mutation keeps the original path");
+        check(KagunePath.forUnmarkedProfile(true, 0, 0L, false) == KagunePath.RINKAKU, "a grown form keeps the original path");
+        check(KagunePath.forUnmarkedProfile(true, 1000, -1L, false) == KagunePath.RINKAKU, "a veteran is never asked");
         check(KagunePath.forUnmarkedProfile(false, 1000, -1L, false) == KagunePath.NONE,
             "a locked profile is never auto-assigned; it chooses when unlocked again");
     }

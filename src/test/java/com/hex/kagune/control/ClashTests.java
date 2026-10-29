@@ -73,7 +73,7 @@ public final class ClashTests {
         check(!ClashRules.spent(100, 106, 99) && !ClashRules.spent(100, 106, 109), "but only that blow");
     }
 
-    /** 1.0.42: Kaneki's grab, slower and reeling in only at its end, broken by a swing since it set out. */
+    /** 1.0.42: Rinkaku's grab, slower and reeling in only at its end, broken by a swing since it set out. */
     static void grabs() {
         check(GrabRules.reach(9) == 18, "the grab takes twice the original's 9 ticks: " + GrabRules.reach(9));
         check(GrabRules.reelFrom(18) == 12, "it reels in over its last 6 ticks: " + GrabRules.reelFrom(18));

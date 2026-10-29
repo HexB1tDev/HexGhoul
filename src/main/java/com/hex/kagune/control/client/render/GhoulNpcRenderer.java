@@ -1,7 +1,7 @@
 package com.hex.kagune.control.client.render;
 
 import com.hex.kagune.control.ControlEntities;
-import com.hex.kagune.control.client.EtoClient;
+import com.hex.kagune.control.client.PaleClient;
 import com.hex.kagune.control.client.GhoulNpcClient;
 import com.hex.kagune.control.client.animation.BodyFrame;
 import com.hex.kagune.control.client.animation.RigPose;
@@ -35,8 +35,8 @@ import org.joml.Quaternionf;
 
 /**
  * 7.0.2: a ghoul NPC as vanilla draws a player (the player model) in its skin ({@link NpcLook}), with the kakugan opening on its face
- * as its kagune comes out. Its kagune is drawn after entities with the players' ({@link FurutaRenderer} for the tails,
- * {@link AyatoWingRenderer} for the wings): this renderer notes every NPC it draws in a frame ({@link #drawn}), so only the ones in
+ * as its kagune comes out. Its kagune is drawn after entities with the players' ({@link GraftRenderer} for the tails,
+ * {@link UkakuWingRenderer} for the wings): this renderer notes every NPC it draws in a frame ({@link #drawn}), so only the ones in
  * view are drawn. 1.0.41: in its own skin, a girl on the slim arms ({@link GhoulModel} either way), the kakugan on that skin's eyes,
  * and its flips: the whole body turned over about its middle, the limbs posed as a player's are.
  */
@@ -75,7 +75,7 @@ public final class GhoulNpcRenderer extends HumanoidMobRenderer<GhoulNpc, Player
     public void m_7392_(GhoulNpc npc, float yaw, float partial, PoseStack pose, MultiBufferSource buffers, int light) {
         GhoulNpcClient.View view = GhoulNpcClient.get(npc.m_19879_());
         this.f_115290_ = view != null && view.identity().girl() ? this.slim : this.wide;
-        RigPose posed = GhoulNpcClient.flip(view, EtoClient.clock(partial), npc.m_20096_());
+        RigPose posed = GhoulNpcClient.flip(view, PaleClient.clock(partial), npc.m_20096_());
         GhoulModel.pose = posed;
         boolean turned = posed != null && (Math.abs(posed.flip) > 1.0E-3F || Math.abs(posed.roll) > 1.0E-3F);
         try {
@@ -144,7 +144,7 @@ public final class GhoulNpcRenderer extends HumanoidMobRenderer<GhoulNpc, Player
                     DRAWN.add(npc);
                 }
                 GhoulNpcClient.View view = GhoulNpcClient.get(npc.m_19879_());
-                float intensity = GhoulNpcClient.deploy(view, EtoClient.clock(partialTick));
+                float intensity = GhoulNpcClient.deploy(view, PaleClient.clock(partialTick));
                 if (intensity <= 0.003F || npc.m_20145_()) {
                     return;
                 }

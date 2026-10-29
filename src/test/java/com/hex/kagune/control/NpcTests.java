@@ -1,7 +1,7 @@
 package com.hex.kagune.control;
 
-import com.hex.kagune.control.furuta.FurutaMove;
-import com.hex.kagune.control.furuta.FurutaStage;
+import com.hex.kagune.control.graft.GraftMove;
+import com.hex.kagune.control.graft.GraftStage;
 import com.hex.kagune.control.npc.NpcBonds;
 import com.hex.kagune.control.npc.NpcIdentity;
 import com.hex.kagune.control.npc.NpcLook;
@@ -194,18 +194,18 @@ public final class NpcTests {
         }
         check(NpcRules.health(0) > 20.0F, "a ghoul outlasts a player's health");
         for (int tier = 0; tier < NpcIdentity.TIERS; tier++) {
-            int limbs = FurutaStage.TRANSPLANT.limbs(NpcRules.tailMastery(tier));
+            int limbs = GraftStage.TRANSPLANT.limbs(NpcRules.tailMastery(tier));
             check(limbs == (tier == 0 ? 1 : 2), "tier " + tier + ": " + limbs + " tails");
             // One string and the pause after it: the damage a second it averages (before armour and difficulty).
-            FurutaMove move = FurutaMove.firstStrike(FurutaStage.TRANSPLANT);
+            GraftMove move = GraftMove.firstStrike(GraftStage.TRANSPLANT);
             double power = 0.0;
             int ticks = 0;
             for (int i = 0; i < NpcRules.string(tier); i++) {
-                for (FurutaMove.Beat beat : move.beats(limbs)) {
+                for (GraftMove.Beat beat : move.beats(limbs)) {
                     power += beat.power();
                 }
                 ticks += move.ticks();
-                move = FurutaMove.nextStrike(move, FurutaStage.TRANSPLANT);
+                move = GraftMove.nextStrike(move, GraftStage.TRANSPLANT);
             }
             ticks += (NpcRules.PAUSE_LEAST + NpcRules.PAUSE_MOST) / 2;
             double perSecond = power * NpcRules.damage(tier) * 20.0 / ticks;
@@ -358,7 +358,7 @@ public final class NpcTests {
         check(read.quests().contains(favour), "a favour counts like any quest");
         com.hex.kagune.control.quest.Objective asked = favour.objectives().get(0);
         for (int i = 0; i < 40; i++) {
-            read.apply(new QuestEvent(asked.signal(), 1, new java.util.HashSet<>(asked.all())), com.hex.kagune.control.KagunePath.KANEKI, 500);
+            read.apply(new QuestEvent(asked.signal(), 1, new java.util.HashSet<>(asked.all())), com.hex.kagune.control.KagunePath.RINKAKU, 500);
         }
         if (read.met(favour)) {
             read.complete(favour);

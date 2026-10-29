@@ -9,7 +9,7 @@ import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.network.NetworkEvent;
 
 /**
- * 5.0.14: the tentacles a Kaneki player holds up as a guard against incoming shots ({@code TendrilShield}): for each, the limb,
+ * 5.0.14: the tentacles a Rinkaku player holds up as a guard against incoming shots ({@code TendrilShield}): for each, the limb,
  * the world direction the shots come from (yaw and pitch, degrees) and the game tick it went up. Sent to the player and everyone
  * tracking them whenever a guard goes up or comes down; an empty list folds them all back. Purely visual.
  */

@@ -13,7 +13,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 
 /**
  * 1.0.6: what War's blows leave on a body, for its kit ({@code control.awakening.WarKit}, which can't name these itself): the stun
- * every path's stun is ({@code EtoStun}: renewed, capped, and a player held too long breaks free), the mod's bleeding, a slowing.
+ * every path's stun is ({@code PaleStun}: renewed, capped, and a player held too long breaks free), the mod's bleeding, a slowing.
  */
 public final class KingEffects {
     private KingEffects() {
@@ -21,7 +21,7 @@ public final class KingEffects {
 
     /** Stunned for {@code ticks}; false if it broke free or can't be stunned yet. */
     public static boolean stun(LivingEntity body, int ticks) {
-        return EtoStun.stun(body, body.m_9236_().m_46467_(), ticks);
+        return PaleStun.stun(body, body.m_9236_().m_46467_(), ticks);
     }
 
     /** 1.0.20: a guard broken: a raised shield knocked aside and down for a while (as an axe does). */
@@ -79,7 +79,7 @@ public final class KingEffects {
      * (the body twisted, tipped over the way it flies, lying where it comes down, getting up: {@code KickTumble}). Only how it is drawn.
      */
     public static void tumble(ServerPlayer by, LivingEntity body, net.minecraft.world.phys.Vec3 launch) {
-        EtoBlitz.fx(by, com.hex.kagune.control.network.S2CEtoFx.KICKED, body.m_19879_(), body.m_20182_(), launch, 1.0F, 0);
+        PaleBlitz.fx(by, com.hex.kagune.control.network.S2CPaleFx.KICKED, body.m_19879_(), body.m_20182_(), launch, 1.0F, 0);
     }
 
     /**

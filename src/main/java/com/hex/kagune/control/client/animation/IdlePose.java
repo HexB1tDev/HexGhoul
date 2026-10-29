@@ -5,21 +5,21 @@ package com.hex.kagune.control.client.animation;
  * into their path's stance, easing in slowly and out quickly the moment they move.
  *
  * <ul>
- *   <li><b>Ayato, relaxed</b> (reference: Jotaro's stance): tall and leaning back a little, chin up, the right hand
+ *   <li><b>Ukaku, relaxed</b> (reference: Jotaro's stance): tall and leaning back a little, chin up, the right hand
  *       in the trouser pocket with the elbow out behind, the left forearm raised loosely in front at the waist, weight on
  *       the right leg with the left foot set out to the side.</li>
- *   <li><b>Ayato's first kakuja</b> (reference: the masked, horned Ayato of the anime): hunched forward, shoulders up,
+ *   <li><b>Ukaku's first kakuja</b> (reference: the masked, horned Ukaku of the anime): hunched forward, shoulders up,
  *       the arms hanging loose a little out from the body with the elbows soft, the chin down and the eyes up under the
  *       brow, feet planted wide with the left a little ahead, breathing slow and heavy, the head tilting now and then.</li>
- *   <li><b>Kaneki, animalistic</b> (reference: Bakugo's fighting crouch): a wide, low stance on bent knees, the upper
+ *   <li><b>Rinkaku, animalistic</b> (reference: Bakugo's fighting crouch): a wide, low stance on bent knees, the upper
  *       body hunched forward, shoulders up, both elbows bent out to the sides with the hands held forward like claws,
  *       the head pushed forward and up to watch, breathing hard.</li>
  * </ul>
- * Only Kaneki's path is feral; Ayato's is never animalistic, whatever his mastery.
+ * Only Rinkaku's path is feral; Ukaku's is never animalistic, whatever his mastery.
  *
  * <p>6.0.2: where the limbs can't be drawn bent (3D Skin Layers, whose voxel sleeves and trousers are straight boxes on the
- * parts, or no bendy-lib; {@code BodyAnimations.limbsBend}), Kaneki's crouch, all bent knees and elbows, came out as stiff
- * splayed legs in a broken lunge. He then stands in a feral stance built for straight limbs ({@link #kanekiStraight}), and the
+ * parts, or no bendy-lib; {@code BodyAnimations.limbsBend}), Rinkaku's crouch, all bent knees and elbows, came out as stiff
+ * splayed legs in a broken lunge. He then stands in a feral stance built for straight limbs ({@link #rinkakuStraight}), and the
  * other stances drop their small bends with the body set so the soles stay on the ground.
  */
 public final class IdlePose {
@@ -30,9 +30,9 @@ public final class IdlePose {
     public static final float EASE_OUT_PER_TICK = 1.0F / 8.0F;
 
     public enum Style {
-        NONE, AYATO_RELAXED, AYATO_KAKUJA, KANEKI_FERAL,
-        /** 6.1.0: Eto's base form. Its stance and gestures are {@link EtoIdle}'s; this style only carries the blend weight. */
-        ETO_PLAYFUL
+        NONE, UKAKU_RELAXED, UKAKU_KAKUJA, RINKAKU_FERAL,
+        /** 6.1.0: Pale's base form. Its stance and gestures are {@link PaleIdle}'s; this style only carries the blend weight. */
+        PALE_PLAYFUL
     }
 
     private IdlePose() {
@@ -57,17 +57,17 @@ public final class IdlePose {
     /** The stance, {@code bends} false where the limbs can't be drawn bent: straight-limbed stances then. */
     public static RigPose pose(Style style, float weight, double time, boolean bends) {
         RigPose pose = new RigPose();
-        if (style == Style.NONE || style == Style.ETO_PLAYFUL || weight <= 0.0F) {
+        if (style == Style.NONE || style == Style.PALE_PLAYFUL || weight <= 0.0F) {
             return pose;
         }
-        if (style == Style.AYATO_RELAXED) {
-            ayato(pose, time);
-        } else if (style == Style.AYATO_KAKUJA) {
+        if (style == Style.UKAKU_RELAXED) {
+            ukaku(pose, time);
+        } else if (style == Style.UKAKU_KAKUJA) {
             kakuja(pose, time);
         } else if (bends) {
-            kaneki(pose, time);
+            rinkaku(pose, time);
         } else {
-            kanekiStraight(pose, time);
+            rinkakuStraight(pose, time);
         }
         if (!bends) {
             straighten(pose);
@@ -85,7 +85,7 @@ public final class IdlePose {
     }
 
     /** Jotaro's stance: unbothered. */
-    private static void ayato(RigPose p, double time) {
+    private static void ukaku(RigPose p, double time) {
         float breath = (float)Math.sin(time * 1.6);
         float sway = (float)Math.sin(time * 0.55);
         // Upper body: a little back and toward the standing (right) leg, chest turned a touch to his left.
@@ -150,7 +150,7 @@ public final class IdlePose {
      * ahead and the toes turned out, shoulders up and heaving, the head pushed up to watch, both arms reaching forward and out
      * with the hands open in front of him like claws, twitching now and then.
      */
-    static void kanekiStraight(RigPose p, double time) {
+    static void rinkakuStraight(RigPose p, double time) {
         float breath = (float)Math.sin(time * 3.4);
         float flex = (float)Math.pow(Math.max(0.0, Math.sin(time * 0.9)), 6.0);
         p.lean = 0.24F + 0.025F * breath;
@@ -172,7 +172,7 @@ public final class IdlePose {
     }
 
     /** Bakugo's fighting crouch: a predator about to spring. */
-    private static void kaneki(RigPose p, double time) {
+    private static void rinkaku(RigPose p, double time) {
         // Heavy, quick breathing in the shoulders; the hands flex now and then.
         float breath = (float)Math.sin(time * 3.4);
         float flex = (float)Math.pow(Math.max(0.0, Math.sin(time * 0.9)), 6.0);

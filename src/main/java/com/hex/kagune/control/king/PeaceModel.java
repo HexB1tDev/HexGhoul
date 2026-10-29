@@ -1,23 +1,23 @@
 package com.hex.kagune.control.king;
 
-import static com.hex.kagune.control.furuta.FurutaMesh.add;
-import static com.hex.kagune.control.furuta.FurutaMesh.clamp01;
-import static com.hex.kagune.control.furuta.FurutaMesh.cross;
-import static com.hex.kagune.control.furuta.FurutaMesh.dot;
-import static com.hex.kagune.control.furuta.FurutaMesh.lerp;
-import static com.hex.kagune.control.furuta.FurutaMesh.mix;
-import static com.hex.kagune.control.furuta.FurutaMesh.mul;
-import static com.hex.kagune.control.furuta.FurutaMesh.normalize;
-import static com.hex.kagune.control.furuta.FurutaMesh.sub;
+import static com.hex.kagune.control.graft.GraftMesh.add;
+import static com.hex.kagune.control.graft.GraftMesh.clamp01;
+import static com.hex.kagune.control.graft.GraftMesh.cross;
+import static com.hex.kagune.control.graft.GraftMesh.dot;
+import static com.hex.kagune.control.graft.GraftMesh.lerp;
+import static com.hex.kagune.control.graft.GraftMesh.mix;
+import static com.hex.kagune.control.graft.GraftMesh.mul;
+import static com.hex.kagune.control.graft.GraftMesh.normalize;
+import static com.hex.kagune.control.graft.GraftMesh.sub;
 import static com.hex.kagune.control.king.WarModel.v;
 
-import com.hex.kagune.control.ayato.KakujaModel;
-import com.hex.kagune.control.ayato.UkakuModel;
-import com.hex.kagune.control.furuta.FurutaMesh;
+import com.hex.kagune.control.ukaku.KakujaModel;
+import com.hex.kagune.control.ukaku.UkakuModel;
+import com.hex.kagune.control.graft.GraftMesh;
 import java.util.List;
 
 /**
- * Peace, Kaneki :Re (pure; the other final kakuja): clean, elegant and symmetrical, white and pale silver organic
+ * Peace, Rinkaku :Re (pure; the other final kakuja): clean, elegant and symmetrical, white and pale silver organic
  * armour with massive wings of twisted crimson kagune and giant cross blades, after the Peace sheet
  * (tools/kakuja/reference/peace.webp). No mask: his face stays his own (1.0.18: the kakugan open in it).
  *
@@ -114,9 +114,9 @@ public final class PeaceModel {
         }
         WarModel.Body body = new WarModel.Body(sink, part);
         WarModel.Body armour = growth == null ? body : new WarModel.Body(KingGrowth.wrap(sink, part, growth), part);
-        double g = emerging || receding ? 1.0 : FurutaMesh.smooth(clamp01(grow));
-        double wings = emerging ? FurutaMesh.smooth(clamp01((state.age() - KingTransform.PEACE_WINGS_FROM) / 14.0))
-            : receding ? 1.0 - FurutaMesh.smooth(clamp01((state.age() - KingTransform.PEACE_WITHER) / 18.0)) : g;
+        double g = emerging || receding ? 1.0 : GraftMesh.smooth(clamp01(grow));
+        double wings = emerging ? GraftMesh.smooth(clamp01((state.age() - KingTransform.PEACE_WINGS_FROM) / 14.0))
+            : receding ? 1.0 - GraftMesh.smooth(clamp01((state.age() - KingTransform.PEACE_WITHER) / 18.0)) : g;
         double held = held(grow, state);
         if (bladesOnly) {
             if (part == WarModel.Part.TORSO && held > 0.02) {
@@ -172,7 +172,7 @@ public final class PeaceModel {
 
     /** White armour, a little silver in its hollows. */
     static int pale(double[] p, int seed) {
-        return mix(WHITE, SILVER, 0.1 + 0.35 * FurutaMesh.noise(seed, p[0] * 0.5 + p[2] * 0.3, p[1] * 0.5));
+        return mix(WHITE, SILVER, 0.1 + 0.35 * GraftMesh.noise(seed, p[0] * 0.5 + p[2] * 0.3, p[1] * 0.5));
     }
 
     /** Under-armour over the torso, dark where the white leaves it bare (the waist, the sides). */
@@ -242,7 +242,7 @@ public final class PeaceModel {
     /** A white horn along {@code control}: thick at the root to a point, silver beneath, ice at its edge. */
     static void horn(WarModel.Body body, List<double[]> control, double root, double tip) {
         KakujaModel.Spine sp = WarModel.spine(control, 22, v(0, 0, -1));
-        FurutaMesh.tube(new WarModel.SinkAdapter(body), sp, 0.0, 1.0, 22, 8, new FurutaMesh.Surface() {
+        GraftMesh.tube(new WarModel.SinkAdapter(body), sp, 0.0, 1.0, 22, 8, new GraftMesh.Surface() {
             @Override
             public double radius(double s, double a) {
                 return tip + (root - tip) * Math.pow(1.0 - s, 0.8);
@@ -363,7 +363,7 @@ public final class PeaceModel {
             case HORIZON -> clamp01((age - PeaceRules.HORIZON_UPPER) / 8.0)
                 * (1.0 - clamp01((age - (PeaceRules.HORIZON_TICKS - PeaceRules.HORIZON_LET_GO - 20)) / 10.0));
             // 1.0.17: coming over him, the wings open wide as the blades unfurl, and fold again.
-            case EMERGE -> FurutaMesh.smooth(clamp01((age - 8.0) / 10.0)) * (1.0 - FurutaMesh.smooth(clamp01((age - 32.0) / 12.0)));
+            case EMERGE -> GraftMesh.smooth(clamp01((age - 8.0) / 10.0)) * (1.0 - GraftMesh.smooth(clamp01((age - 32.0) / 12.0)));
             // 1.0.19: leaving him, the wings flare once as the blades fold, then close.
             case RECEDE -> 0.35 * Math.sin(Math.PI * clamp01(age / 12.0));
             default -> 0.0;
@@ -379,7 +379,7 @@ public final class PeaceModel {
                                   double crawl) {
         List<double[]> control = List.of(root, add(add(lerp(root, tip, 0.33), mul(bulge, 0.85)), writhe), sub(add(lerp(root, tip, 0.66), bulge), writhe), tip);
         KakujaModel.Spine sp = WarModel.spine(new java.util.ArrayList<>(control), 30, v(0, 0, -1));
-        FurutaMesh.tube(new WarModel.SinkAdapter(body), sp, 0.0, 1.0, 30, 8, new FurutaMesh.Surface() {
+        GraftMesh.tube(new WarModel.SinkAdapter(body), sp, 0.0, 1.0, 30, 8, new GraftMesh.Surface() {
             @Override
             public double radius(double s, double a) {
                 double phase = twist * s * Math.PI * 2.0 + seed + crawl;
@@ -454,7 +454,7 @@ public final class PeaceModel {
         if (receding) {
             return 1.0;
         }
-        return emerging ? FurutaMesh.smooth(clamp01((state.age() - KingTransform.PEACE_WINGS_FROM) / 14.0)) : FurutaMesh.smooth(clamp01(grow));
+        return emerging ? GraftMesh.smooth(clamp01((state.age() - KingTransform.PEACE_WINGS_FROM) / 14.0)) : GraftMesh.smooth(clamp01(grow));
     }
 
     /** The six blades, each on its arm from his back ({@link PeaceMotion}); 1.0.25: each arm as {@link PeaceArms} has it alive, if given. */
@@ -618,7 +618,7 @@ public final class PeaceModel {
         // Thinner with its blade as that sinks back into him (1.0.19), or before it has grown; 1.0.21: thinner stretched out far, its
         // muscle drawn out with it, thicker drawn in.
         double scale = Math.max(0.3, g) * Math.min(1.0, tip.size() / (0.8 * PeaceMotion.size(blade))) * stretch(blade, tip);
-        FurutaMesh.tube(new WarModel.SinkAdapter(body), sp, 0.0, 1.0, samples, 9, new FurutaMesh.Surface() {
+        GraftMesh.tube(new WarModel.SinkAdapter(body), sp, 0.0, 1.0, samples, 9, new GraftMesh.Surface() {
             @Override
             public double radius(double s, double a) {
                 double c = Math.cos(a - (0.8 * s * Math.PI * 2.0 + seed));
@@ -765,7 +765,7 @@ public final class PeaceModel {
             keen[i] = mix(edge, tip, 0.25 * u);
         }
         for (int i = 0; i < stations; i++) {
-            double[] mid = FurutaMesh.lerp(centre[i], centre[i + 1], 0.5);
+            double[] mid = GraftMesh.lerp(centre[i], centre[i + 1], 0.5);
             for (int j = 0; j < 4; j++) {
                 int k = (j + 1) % 4;
                 // The two edges (0, 2) darker steel, the ridge (1, 3) the blade's white.

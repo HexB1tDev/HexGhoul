@@ -1,8 +1,8 @@
 package com.hex.kagune.control.king;
 
 /**
- * 1.0.5: the final kakujas (pure), the King's two answers once the Dragon is spent: War, the One-Eyed King, and Peace, Kaneki :Re. A
- * final kakuja is its own form, never one of Kaneki's kakujas ({@code KanekiForms}, his half kakujas since 1.0.10): its own section
+ * 1.0.5: the final kakujas (pure), the King's two answers once the Dragon is spent: War, the One-Eyed King, and Peace, Rinkaku :Re. A
+ * final kakuja is its own form, never one of Rinkaku's kakujas ({@code RinkakuForms}, his half kakujas since 1.0.10): its own section
  * in the menu, and K held puts it on (1.0.10; a tap is the strongest half kakuja). A ghoul chooses one, once, on the two cards.
  * Peace is shown and can't be chosen until it is built.
  */

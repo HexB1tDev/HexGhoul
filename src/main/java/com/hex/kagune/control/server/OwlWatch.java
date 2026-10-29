@@ -1,12 +1,12 @@
 package com.hex.kagune.control.server;
 
-import com.hex.kagune.control.eto.EtoMove;
-import com.hex.kagune.control.eto.EtoRules;
-import com.hex.kagune.control.eto.OwlLances;
-import com.hex.kagune.control.eto.OwlRules;
-import com.hex.kagune.control.eto.WatchRules;
+import com.hex.kagune.control.pale.PaleMove;
+import com.hex.kagune.control.pale.PaleRules;
+import com.hex.kagune.control.pale.OwlLances;
+import com.hex.kagune.control.pale.OwlRules;
+import com.hex.kagune.control.pale.WatchRules;
 import com.hex.kagune.control.network.ControlNetwork;
-import com.hex.kagune.control.network.S2CEtoFx;
+import com.hex.kagune.control.network.S2CPaleFx;
 import com.hex.kagune.control.network.S2COwlLance;
 import com.hex.kagune.data.KaguneProfile;
 import com.hex.kagune.gameplay.KaguneServerController;
@@ -75,17 +75,17 @@ public final class OwlWatch {
     }
 
     /** B in the Owl: the lances, if she can (her mastery, her RC, not already out, nothing else going on). */
-    static void start(ServerPlayer player, EtoServer.EtoState state, long now) {
-        if (CROWNS.containsKey(player.m_20148_()) || !EtoCancel.allowedOwl(state, now) || now < state.watchReadyAt
-            || EtoServer.locked(player, state, "Watch This", EtoRules.WATCH_MASTERY)) {
+    static void start(ServerPlayer player, PaleServer.PaleState state, long now) {
+        if (CROWNS.containsKey(player.m_20148_()) || !PaleCancel.allowedOwl(state, now) || now < state.watchReadyAt
+            || PaleServer.locked(player, state, "Watch This", PaleRules.WATCH_MASTERY)) {
             return;
         }
         if (!KaguneServerController.useEnergy(player, WatchRules.COST, true)) {
             return;
         }
-        EtoCancel.cut(player, state, now);
+        PaleCancel.cut(player, state, now);
         state.queuedAt = Long.MIN_VALUE;
-        EtoServer.begin(player, state, EtoMove.OWL_WATCH, 0, 0, 0.0F, null, now);
+        PaleServer.begin(player, state, PaleMove.OWL_WATCH, 0, 0, 0.0F, null, now);
         Crown crown = new Crown(now + OwlRules.LANCES_ERUPT_AT);
         CROWNS.put(player.m_20148_(), crown);
         for (Lance lance : crown.lances) {
@@ -111,7 +111,7 @@ public final class OwlWatch {
             ServerLevel level = player.m_284548_();
             KaguneServerController.playSelf(player, HexKaguneSounds.MANIFEST_RIP, 1.0F, KaguneServerController.vary(player, 0.65F, 0.05F));
             KaguneServerController.playSelf(player, HexKaguneSounds.BONE_CRACK, 1.0F, KaguneServerController.vary(player, 0.75F, 0.05F));
-            AyatoFire.sound(level, player.m_20182_(), "entity.slime.squish", 1.2F, KaguneServerController.vary(player, 0.55F, 0.05F));
+            UkakuFire.sound(level, player.m_20182_(), "entity.slime.squish", 1.2F, KaguneServerController.vary(player, 0.55F, 0.05F));
         }
         long end = crown.end;
         if (now >= end) {
@@ -149,7 +149,7 @@ public final class OwlWatch {
                 LivingEntity prey = hunt(player, crown, lance, now);
                 if (prey != null) {
                     lance.targetId = prey.m_19879_();
-                    lance.dive = OwlLances.diveTicks(EtoWatch.chest(prey).m_82554_(EtoWatch.world(player, player.m_146908_(), OwlLances.pivot(lance.index))));
+                    lance.dive = OwlLances.diveTicks(PaleWatch.chest(prey).m_82554_(PaleWatch.world(player, player.m_146908_(), OwlLances.pivot(lance.index))));
                     set(player, lance, OwlLances.Phase.STRIKE, now);
                 }
             }
@@ -157,13 +157,13 @@ public final class OwlWatch {
                 if (age < OwlLances.strikeTicks(lance.dive)) {
                     return;
                 }
-                Vec3 pivot = EtoWatch.world(player, player.m_146908_(), OwlLances.pivot(lance.index));
-                if (target == null || !EtoBlitz.valid(player, target) || EtoWatch.chest(target).m_82554_(pivot) > OwlRules.LANCE_REACH) {
+                Vec3 pivot = PaleWatch.world(player, player.m_146908_(), OwlLances.pivot(lance.index));
+                if (target == null || !PaleBlitz.valid(player, target) || PaleWatch.chest(target).m_82554_(pivot) > OwlRules.LANCE_REACH) {
                     // Gone, or got away: the spear goes into the ground where it was going.
                     Vec3 aim = target == null ? player.m_20182_().m_82549_(player.m_20154_().m_82490_(3.0)) : target.m_20182_();
                     lance.point = aim;
                     set(player, lance, OwlLances.Phase.MISS, now);
-                    AyatoFire.sound(player.m_284548_(), aim, "block.gravel.break", 1.0F, KaguneServerController.vary(player, 0.6F, 0.05F));
+                    UkakuFire.sound(player.m_284548_(), aim, "block.gravel.break", 1.0F, KaguneServerController.vary(player, 0.6F, 0.05F));
                     return;
                 }
                 pin(player, lance, target, now);
@@ -181,12 +181,12 @@ public final class OwlWatch {
             }
             case HOIST -> {
                 if (target == null) {
-                    lance.point = EtoWatch.world(player, lance.yaw, lance.slam);
+                    lance.point = PaleWatch.world(player, lance.yaw, lance.slam);
                     set(player, lance, OwlLances.Phase.RECOVER, now);
                     return;
                 }
                 double u = OwlLances.hoistU(age);
-                hold(player, target, EtoWatch.world(player, lance.yaw, OwlLances.hoist(u, lance.pinned, lance.slam)));
+                hold(player, target, PaleWatch.world(player, lance.yaw, OwlLances.hoist(u, lance.pinned, lance.slam)));
                 if (age >= OwlRules.LANCE_HOIST) {
                     slam(player, crown, lance, target, now);
                 }
@@ -212,9 +212,9 @@ public final class OwlWatch {
      */
     static LivingEntity hunt(ServerPlayer player, Crown crown, Lance lance, long now) {
         ServerLevel level = player.m_284548_();
-        Vec3 from = EtoWatch.chest(player);
+        Vec3 from = PaleWatch.chest(player);
         Vec3 eye = player.m_146892_();
-        Map<Integer, Long> grudges = EtoWatch.grudges(player);
+        Map<Integer, Long> grudges = PaleWatch.grudges(player);
         double yaw = Math.toRadians(player.m_146908_());
         Vec3 ahead = new Vec3(-Math.sin(yaw), 0.0, Math.cos(yaw));
         Vec3 right = new Vec3(-Math.cos(yaw), 0.0, -Math.sin(yaw));
@@ -222,14 +222,14 @@ public final class OwlWatch {
         LivingEntity best = null;
         double bestScore = Double.MAX_VALUE;
         AABB area = player.m_20191_().m_82400_(OwlRules.LANCE_RANGE + 1.0);
-        for (LivingEntity candidate : level.m_6443_(LivingEntity.class, area, entity -> EtoBlitz.valid(player, entity))) {
+        for (LivingEntity candidate : level.m_6443_(LivingEntity.class, area, entity -> PaleBlitz.valid(player, entity))) {
             int id = candidate.m_19879_();
-            if (taken(crown, lance, id) || crown.slammed.containsKey(id) || !EtoWatch.hostile(player, candidate, grudges, now)) {
+            if (taken(crown, lance, id) || crown.slammed.containsKey(id) || !PaleWatch.hostile(player, candidate, grudges, now)) {
                 continue;
             }
-            Vec3 to = EtoWatch.chest(candidate).m_82546_(from);
+            Vec3 to = PaleWatch.chest(candidate).m_82546_(from);
             double distance = to.m_82553_();
-            if (distance > OwlRules.LANCE_RANGE || !EtoMoves.seen(level, player, eye, candidate)) {
+            if (distance > OwlRules.LANCE_RANGE || !PaleMoves.seen(level, player, eye, candidate)) {
                 continue;
             }
             double off = Math.atan2(to.m_82526_(right), to.m_82526_(ahead)) - bearing;
@@ -257,27 +257,27 @@ public final class OwlWatch {
     /** The spear down through it and into the ground: the hurt, a bleed, blood; pinned where it stands. */
     private static void pin(ServerPlayer player, Lance lance, LivingEntity target, long now) {
         ServerLevel level = player.m_284548_();
-        Vec3 chest = EtoWatch.chest(target);
+        Vec3 chest = PaleWatch.chest(target);
         float yaw = player.m_146908_();
-        double[] dir = OwlLances.diveDir(EtoWatch.frame(player, yaw, chest));
-        Vec3 through = EtoWatch.turn(yaw, dir);
+        double[] dir = OwlLances.diveDir(PaleWatch.frame(player, yaw, chest));
+        Vec3 through = PaleWatch.turn(yaw, dir);
         target.f_19802_ = 0;
         WoundHits.expect(target, com.hex.kagune.control.wound.WoundBook.Blow.STAB, chest.m_82546_(through.m_82490_(target.m_20205_() * 0.5)), through, 0.0);
-        float damage = EtoRules.fist(KaguneProfile.mastery(player)) * OwlRules.LANCE_DAMAGE;
+        float damage = PaleRules.fist(KaguneProfile.mastery(player)) * OwlRules.LANCE_DAMAGE;
         if (!target.m_6469_(player.m_269291_().m_269075_(player), damage)) {
             lance.point = target.m_20182_();
             set(player, lance, OwlLances.Phase.MISS, now);
             return;
         }
-        AyatoCrystal.kanekiBleed(target, player, now);
-        EtoStun.stun(target, now, OwlRules.LANCE_PIN + OwlRules.LANCE_HOIST + 4);
-        EtoBlitz.fx(player, S2CEtoFx.IMPALED, target.m_19879_(), chest, through, target.m_20206_(), OwlLances.side(lance.index));
-        AyatoFire.sound(level, chest, "entity.player.attack.strong", 1.0F, KaguneServerController.vary(player, 0.55F, 0.05F));
-        AyatoFire.sound(level, chest, "entity.slime.squish", 1.0F, KaguneServerController.vary(player, 0.65F, 0.05F));
+        UkakuCrystalCombat.rinkakuBleed(target, player, now);
+        PaleStun.stun(target, now, OwlRules.LANCE_PIN + OwlRules.LANCE_HOIST + 4);
+        PaleBlitz.fx(player, S2CPaleFx.IMPALED, target.m_19879_(), chest, through, target.m_20206_(), OwlLances.side(lance.index));
+        UkakuFire.sound(level, chest, "entity.player.attack.strong", 1.0F, KaguneServerController.vary(player, 0.55F, 0.05F));
+        UkakuFire.sound(level, chest, "entity.slime.squish", 1.0F, KaguneServerController.vary(player, 0.65F, 0.05F));
         KaguneServerController.playAt(player, target, HexKaguneSounds.BONE_CRACK, 1.0F, KaguneServerController.vary(player, 0.8F, 0.05F));
         KaguneProfile.addMastery(player, "Swipe", 2);
         KaguneNetwork.broadcast(player);
-        EtoServer.landed(player, 1);
+        PaleServer.landed(player, 1);
         lance.pin = chest;
         set(player, lance, OwlLances.Phase.PIN, now);
         hold(player, target, chest);
@@ -288,26 +288,26 @@ public final class OwlWatch {
         double chestUp = target.m_20206_() * OwlLances.CHEST;
         // From where it is pinned, in her frame as she is now (she may have moved round it meanwhile).
         lance.yaw = player.m_146908_();
-        lance.pinned = EtoWatch.frame(player, lance.yaw, lance.pin);
+        lance.pinned = PaleWatch.frame(player, lance.yaw, lance.pin);
         double[] slam = OwlLances.slamPoint(lance.pinned, chestUp, 0.0);
-        Vec3 over = EtoWatch.world(player, lance.yaw, new double[] {slam[0], 1.5, slam[2]});
+        Vec3 over = PaleWatch.world(player, lance.yaw, new double[] {slam[0], 1.5, slam[2]});
         Vec3 ground = ground(player.m_284548_(), player, over);
         lance.slam = OwlLances.slamPoint(lance.pinned, chestUp, ground.f_82480_ - player.m_20186_());
         set(player, lance, OwlLances.Phase.HOIST, now);
-        AyatoFire.sound(player.m_284548_(), EtoWatch.chest(target), "entity.player.attack.sweep", 1.1F, KaguneServerController.vary(player, 0.45F, 0.05F));
+        UkakuFire.sound(player.m_284548_(), PaleWatch.chest(target), "entity.player.attack.sweep", 1.1F, KaguneServerController.vary(player, 0.45F, 0.05F));
     }
 
     /** Brought down on her far side: hurt again, a crater, stunned hard, a little bounce; the lance tears free. */
     private static void slam(ServerPlayer player, Crown crown, Lance lance, LivingEntity target, long now) {
         ServerLevel level = player.m_284548_();
-        Vec3 chest = EtoWatch.world(player, lance.yaw, lance.slam);
+        Vec3 chest = PaleWatch.world(player, lance.yaw, lance.slam);
         Vec3 feet = chest.m_82520_(0.0, -target.m_20206_() * OwlLances.CHEST, 0.0);
         hold(player, target, chest);
         target.f_19802_ = 0;
-        float damage = EtoRules.fist(KaguneProfile.mastery(player)) * OwlRules.LANCE_SLAM_DAMAGE;
+        float damage = PaleRules.fist(KaguneProfile.mastery(player)) * OwlRules.LANCE_SLAM_DAMAGE;
         if (target.m_6469_(player.m_269291_().m_269075_(player), damage)) {
-            EtoStun.stun(target, now, com.hex.kagune.control.eto.StunRules.HEAVY_TICKS);
-            EtoServer.landed(player, 1);
+            PaleStun.stun(target, now, com.hex.kagune.control.pale.StunRules.HEAVY_TICKS);
+            PaleServer.landed(player, 1);
         }
         Vec3 away = feet.m_82546_(player.m_20182_());
         away = new Vec3(away.f_82479_, 0.0, away.f_82481_);
@@ -315,9 +315,9 @@ public final class OwlWatch {
         target.m_20256_(away.m_82490_(0.25).m_82520_(0.0, 0.32, 0.0));
         target.f_19864_ = true;
         BlockSmash.crater(player, feet.m_82520_(0.0, -0.4, 0.0), OwlRules.LANCE_CRATER);
-        EtoBlitz.fx(player, S2CEtoFx.SHOCKWAVE, 0, feet, away, 1.6F, 0);
-        AyatoFire.sound(level, feet, "entity.generic.explode", 0.7F, KaguneServerController.vary(player, 0.8F, 0.05F));
-        AyatoFire.sound(level, feet, "entity.player.attack.knockback", 1.2F, KaguneServerController.vary(player, 0.55F, 0.05F));
+        PaleBlitz.fx(player, S2CPaleFx.SHOCKWAVE, 0, feet, away, 1.6F, 0);
+        UkakuFire.sound(level, feet, "entity.generic.explode", 0.7F, KaguneServerController.vary(player, 0.8F, 0.05F));
+        UkakuFire.sound(level, feet, "entity.player.attack.knockback", 1.2F, KaguneServerController.vary(player, 0.55F, 0.05F));
         KaguneServerController.playAt(player, target, HexKaguneSounds.BONE_CRACK, 1.0F, KaguneServerController.vary(player, 0.6F, 0.05F));
         crown.slammed.put(target.m_19879_(), now + OwlRules.LANCE_SLAMMED_FREE);
         lance.point = feet;

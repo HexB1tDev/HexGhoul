@@ -16,7 +16,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 /**
- * 5.0.14: Kaneki's tentacles guarding him against incoming shots, as every client draws them (the server decides,
+ * 5.0.14: Rinkaku's tentacles guarding him against incoming shots, as every client draws them (the server decides,
  * {@code TendrilShieldServer}; the rules and the pose are {@link TendrilShield}'s). Each guarding tentacle swings out of its
  * usual path into the guard over {@link TendrilShield#RAISE_TICKS}, holds it across the line the shots come in on, and folds
  * back over {@link TendrilShield#LOWER_TICKS} when the server lowers it. Applied to the tentacle's drawn path in

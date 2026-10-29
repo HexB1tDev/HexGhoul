@@ -2,7 +2,7 @@ package com.hex.kagune.control.king;
 
 /**
  * 1.0.14: War's M1 (pure): six blows chained click by click, fists, feet and the bladed arm, each thrown with the whole body, as
- * Eto's blitz is: a click during a blow is kept and thrown the moment that blow reaches its chain tick; a click after one, within
+ * Pale's blitz is: a click during a blow is kept and thrown the moment that blow reaches its chain tick; a click after one, within
  * {@link #CHAIN_WINDOW}, carries on the chain; later, it starts over with the jab. After the last he needs {@link #RECOVERY} before
  * the next. He locks onto what he clicked (or the nearest body in front within {@link #STEP_IN_RANGE}) and closes the gap in the
  * wind-up, so the blow lands on the impact tick.

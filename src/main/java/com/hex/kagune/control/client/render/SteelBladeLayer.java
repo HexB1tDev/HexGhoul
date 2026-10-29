@@ -1,8 +1,8 @@
 package com.hex.kagune.control.client.render;
 
 import com.hex.kagune.KaguneMod;
-import com.hex.kagune.control.ayato.SteelBlade;
-import com.hex.kagune.control.client.AyatoClient;
+import com.hex.kagune.control.ukaku.SteelBlade;
+import com.hex.kagune.control.client.UkakuClient;
 import com.hex.kagune.control.client.ControlClient;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -60,7 +60,7 @@ public final class SteelBladeLayer extends RenderLayer<AbstractClientPlayer, Ent
                         float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
         try {
             double time = ControlClient.worldTime(partialTick);
-            double formed = AyatoClient.blade(player, time);
+            double formed = UkakuClient.blade(player, time);
             if (formed <= 0.005 || player.m_20145_() || !(this.m_117386_() instanceof HumanoidModel<?> model) || !model.f_102811_.f_104207_) {
                 TRAILS.remove(player.m_20148_());
                 return;
@@ -184,7 +184,7 @@ public final class SteelBladeLayer extends RenderLayer<AbstractClientPlayer, Ent
                 }
                 float partial = event.getPartialTick();
                 double time = ControlClient.worldTime(partial);
-                double formed = AyatoClient.blade(player, time);
+                double formed = UkakuClient.blade(player, time);
                 if (formed <= 0.005) {
                     return;
                 }

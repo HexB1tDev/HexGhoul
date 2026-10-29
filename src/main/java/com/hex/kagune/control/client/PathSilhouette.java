@@ -1,22 +1,22 @@
 package com.hex.kagune.control.client;
 
-import com.hex.kagune.control.ayato.UkakuWing;
+import com.hex.kagune.control.ukaku.UkakuWing;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Pure geometry for the animated silhouettes on the path choice cards: a figure seen from behind, with Kaneki's
- * Rinkaku tendrils from the lower back or Ayato's Ukaku wings from the shoulder blades (docs/AYATO_PATH.md, "Look").
+ * Pure geometry for the animated silhouettes on the path choice cards: a figure seen from behind, with Rinkaku's
+ * Rinkaku tendrils from the lower back or Ukaku's Ukaku wings from the shoulder blades (the Ukaku path notes, "Look").
  *
  * <p>Colours are opaque RGB, already blended against the card background, because the GUI draws strokes as many
  * small overlapping fills and real alpha would darken every overlap. Every mark stays inside the box it was made
  * for (tested), so nothing bleeds out of a card at any GUI size.
  */
 public final class PathSilhouette {
-    /** Kaneki path (Rinkaku): crimson scales with a darker core. */
+    /** Rinkaku path (Rinkaku): crimson scales with a darker core. */
     public static final int RINKAKU = 0xC4162E;
     public static final int RINKAKU_DARK = 0x6E0A1A;
-    /** Ayato path (Ukaku, canon vermilion): body, deep crimson core, hot crystallized edge. */
+    /** Ukaku path (Ukaku, canon vermilion): body, deep crimson core, hot crystallized edge. */
     public static final int UKAKU = 0xE0402A;
     public static final int UKAKU_CORE = 0x5A0A10;
     public static final int UKAKU_EDGE = 0xFFB08A;
@@ -89,8 +89,8 @@ public final class PathSilhouette {
         }
     }
 
-    /** Kaneki path card art: four Rinkaku tendrils from the lower back, writhing. {@code intensity} 0..1 (dim → selected). */
-    public static List<Mark> kaneki(PathChoiceLayout.Box box, double time, float intensity, int bg) {
+    /** Rinkaku path card art: four Rinkaku tendrils from the lower back, writhing. {@code intensity} 0..1 (dim → selected). */
+    public static List<Mark> rinkaku(PathChoiceLayout.Box box, double time, float intensity, int bg) {
         List<Mark> marks = new ArrayList<>();
         Figure f = Figure.in(box);
         figure(marks, f, bg, intensity);
@@ -150,12 +150,12 @@ public final class PathSilhouette {
     }
 
     /**
-     * Ayato path card art: the same Ukaku wings the game draws ({@link UkakuWing}), seen from the front like the anime:
+     * Ukaku path card art: the same Ukaku wings the game draws ({@link UkakuWing}), seen from the front like the anime:
      * both wings behind the figure, flickering flames while gaseous, crystallized blades when the card is selected.
      */
-    public static List<Mark> ayato(PathChoiceLayout.Box box, double time, float intensity, boolean crystallized, int bg) {
+    public static List<Mark> ukaku(PathChoiceLayout.Box box, double time, float intensity, boolean crystallized, int bg) {
         List<Mark> marks = new ArrayList<>();
-        Figure f = Figure.in(box, 0.52F); // Ayato's wings dwarf him, like the anime frame
+        Figure f = Figure.in(box, 0.52F); // Ukaku's wings dwarf him, like the anime frame
         float[] envelope = UkakuWing.envelope(7);
         double rootY = f.shoulderY + f.size * 0.04;
         double rootOffset = f.size * 0.09;
@@ -215,18 +215,18 @@ public final class PathSilhouette {
         return Math.max(0.0F, length);
     }
 
-    /** Eto path (6.1.0): pale living flesh, its folds, a protrusion's darker tip, and the faint steam off her skin. */
+    /** Pale path (6.1.0): pale living flesh, its folds, a protrusion's darker tip, and the faint steam off her skin. */
     public static final int FLESH = 0xEADFD5;
     public static final int FLESH_FOLD = 0xBFA99D;
     public static final int FLESH_DEEP = 0x8F7469;
     public static final int STEAM = 0xDCE0E2;
 
     /**
-     * Eto path card art (6.1.0): her from behind, and out of her upper back a lumpy mass of pale flesh rearing over her right
+     * Pale path card art (6.1.0): her from behind, and out of her upper back a lumpy mass of pale flesh rearing over her right
      * shoulder and curling down into a malformed hand, bulging and folding as it breathes, bony spurs along its back; faint steam
      * rises off her shoulders. Selected, the flesh rears higher and the hand opens.
      */
-    public static List<Mark> eto(PathChoiceLayout.Box box, double time, float intensity, boolean selected, int bg) {
+    public static List<Mark> pale(PathChoiceLayout.Box box, double time, float intensity, boolean selected, int bg) {
         List<Mark> marks = new ArrayList<>();
         Figure f = Figure.in(box, 0.56F);
         figure(marks, f, bg, intensity);
@@ -327,16 +327,16 @@ public final class PathSilhouette {
         return new double[] {dy / length, -dx / length};
     }
 
-    /** Furuta DNA (7.0.0): black-crimson rinkaku muscle, its dark bands, and the glow of the centipede's seams and mouth. */
-    public static final int FURUTA = 0xA8142A;
-    public static final int FURUTA_DARK = 0x3A0710;
-    public static final int FURUTA_GLOW = 0xFF4A3C;
+    /** Graft DNA (7.0.0): black-crimson rinkaku muscle, its dark bands, and the glow of the centipede's seams and mouth. */
+    public static final int GRAFT = 0xA8142A;
+    public static final int GRAFT_DARK = 0x3A0710;
+    public static final int GRAFT_GLOW = 0xFF4A3C;
 
     /**
-     * Furuta DNA card art (7.0.0): him from behind, two thick banded tails from the lower back swinging low and wide; selected, a
+     * Graft DNA card art (7.0.0): him from behind, two thick banded tails from the lower back swinging low and wide; selected, a
      * third, a centipede, rears up between them over his head with its toothed mouth open.
      */
-    public static List<Mark> furuta(PathChoiceLayout.Box box, double time, float intensity, boolean selected, int bg) {
+    public static List<Mark> graft(PathChoiceLayout.Box box, double time, float intensity, boolean selected, int bg) {
         List<Mark> marks = new ArrayList<>();
         Figure f = Figure.in(box, 0.58F);
         figure(marks, f, bg, intensity);
@@ -375,10 +375,10 @@ public final class PathSilhouette {
             for (int k = -1; k <= 1; k += 2) {
                 float jx = hx + (float)(dx / unit * 0.12 + normal[0] * k * 0.07 * open) * length;
                 float jy = hy + (float)(dy / unit * 0.12 + normal[1] * k * 0.07 * open) * length;
-                marks.add(new Stroke(hx, hy, jx, jy, length * 0.045F, length * 0.012F, blend(bg, FURUTA_DARK, strength)));
+                marks.add(new Stroke(hx, hy, jx, jy, length * 0.045F, length * 0.012F, blend(bg, GRAFT_DARK, strength)));
             }
             marks.add(new Disc(hx + (float)(dx / unit) * length * 0.03F, hy + (float)(dy / unit) * length * 0.03F, length * 0.03F * open,
-                blend(bg, FURUTA_GLOW, strength)));
+                blend(bg, GRAFT_GLOW, strength)));
         }
         return marks;
     }
@@ -394,10 +394,10 @@ public final class PathSilhouette {
             float y0 = rootY + curve[s][1] * length;
             float x1 = rootX + curve[s + 1][0] * length;
             float y1 = rootY + curve[s + 1][1] * length;
-            int colour = s % 2 == 0 ? FURUTA : FURUTA_DARK;
+            int colour = s % 2 == 0 ? GRAFT : GRAFT_DARK;
             marks.add(new Stroke(x0, y0, x1, y1, root + (tip - root) * a, root + (tip - root) * b, blend(bg, colour, strength)));
             if (seams && s % 2 == 1) {
-                marks.add(new Disc(x1, y1, Math.max(0.6F, (root + (tip - root) * b) * 0.22F), blend(bg, FURUTA_GLOW, strength * 0.9F)));
+                marks.add(new Disc(x1, y1, Math.max(0.6F, (root + (tip - root) * b) * 0.22F), blend(bg, GRAFT_GLOW, strength * 0.9F)));
             }
         }
     }

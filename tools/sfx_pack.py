@@ -52,7 +52,7 @@ POOLS = {
     "step_heavy": (0.55, [RUN + "armor_footfall", RUN + "concrete_footfall"], "Heavy footsteps"),
     "step_light": (0.4, [RUN + "cloth_footfall", RUN + "leather_footfall"], "Light footsteps"),
     "chitin": (0.45, [RUN + "armor_footfall", RUN + "concrete_footfall"], "Centipede legs click"),
-    # Spikes, shards, needles (Ayato's fire shots too: shards of RC).
+    # Spikes, shards, needles (Ukaku's fire shots too: shards of RC).
     "spike_throw": (0.6, [SPIKE + "needle_flick", SPIKE + "steel_spike", SPIKE + "fast_dart", SPIKE + "spinning_spike"], "A spike flies"),
     "spike_heavy": (0.8, [SPIKE + "heavy_throw", SPIKE + "heavy_lance", SPIKE + "charged_spike"], "A heavy spike flies"),
     "spike_volley": (0.8, [SPIKE + "double_throw", SPIKE + "triple_fan", SPIKE + "razor_volley"], "A volley flies"),
@@ -121,10 +121,10 @@ ORIGINAL = {
     "kagune_anchor": "anchor",
     "kagune_idle": "writhe",
 }
-# The expansion's own: Kaneki's tendrils tearing out one by one (short gushes, each cut off by the next), Ayato's wings igniting.
+# The expansion's own: Rinkaku's tendrils tearing out one by one (short gushes, each cut off by the next), Ukaku's wings igniting.
 EXPANSION = {
-    "manifest_kaneki": "gush",
-    "manifest_ayato": "transform.spectral_reveal",
+    "manifest_rinkaku": "gush",
+    "manifest_ukaku": "transform.spectral_reveal",
 }
 
 

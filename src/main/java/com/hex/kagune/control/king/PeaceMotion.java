@@ -1,13 +1,13 @@
 package com.hex.kagune.control.king;
 
-import static com.hex.kagune.control.furuta.FurutaMesh.add;
-import static com.hex.kagune.control.furuta.FurutaMesh.clamp01;
-import static com.hex.kagune.control.furuta.FurutaMesh.cross;
-import static com.hex.kagune.control.furuta.FurutaMesh.dot;
-import static com.hex.kagune.control.furuta.FurutaMesh.lerp;
-import static com.hex.kagune.control.furuta.FurutaMesh.mul;
-import static com.hex.kagune.control.furuta.FurutaMesh.normalize;
-import static com.hex.kagune.control.furuta.FurutaMesh.sub;
+import static com.hex.kagune.control.graft.GraftMesh.add;
+import static com.hex.kagune.control.graft.GraftMesh.clamp01;
+import static com.hex.kagune.control.graft.GraftMesh.cross;
+import static com.hex.kagune.control.graft.GraftMesh.dot;
+import static com.hex.kagune.control.graft.GraftMesh.lerp;
+import static com.hex.kagune.control.graft.GraftMesh.mul;
+import static com.hex.kagune.control.graft.GraftMesh.normalize;
+import static com.hex.kagune.control.graft.GraftMesh.sub;
 import static com.hex.kagune.control.king.WarModel.v;
 
 /**

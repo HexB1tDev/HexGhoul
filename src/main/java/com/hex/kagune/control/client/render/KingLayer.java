@@ -599,7 +599,7 @@ public final class KingLayer extends RenderLayer<AbstractClientPlayer, EntityMod
     }
 
     /** A sink keeping each quad as {corners, normal, colours, glow} in {@code quads}. */
-    private static com.hex.kagune.control.ayato.UkakuModel.Sink into(List<float[]> quads) {
+    private static com.hex.kagune.control.ukaku.UkakuModel.Sink into(List<float[]> quads) {
         return (a, b, c, d, n, ca, cb, cc, cd) -> {
             if (!Double.isFinite(a[0] + a[1] + a[2] + b[0] + b[1] + b[2] + c[0] + c[1] + c[2] + d[0] + d[1] + d[2])) {
                 return; // 1.0.36: nothing not a number ever reaches the buffer
@@ -798,7 +798,7 @@ public final class KingLayer extends RenderLayer<AbstractClientPlayer, EntityMod
         for (int i = 0; i < parts.length; i++) {
             List<float[]> quads = built.parts[i];
             quads.clear();
-            com.hex.kagune.control.ayato.UkakuModel.Sink sink = into(quads);
+            com.hex.kagune.control.ukaku.UkakuModel.Sink sink = into(quads);
             if (turning >= 0.0) {
                 com.hex.kagune.control.king.TurningModel.build(sink, parts[i], tick, turning, eye);
             } else if (form == KingForm.PEACE) {

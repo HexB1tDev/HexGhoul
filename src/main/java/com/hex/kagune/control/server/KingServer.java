@@ -30,7 +30,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 /**
- * 1.0.5: the final kakujas on the server. The Dragon spent ({@link #awaken}, from {@code control.awakening}), a Kaneki ghoul may
+ * 1.0.5: the final kakujas on the server. The Dragon spent ({@link #awaken}, from {@code control.awakening}), a Rinkaku ghoul may
  * choose one, once, from his menu ({@link #request}); its key then puts it on and takes it off. Worn, it is his body: the kagune
  * stays in and its keys do nothing ({@code DragonLock}), and it gives what the spec gives ({@link KingRules}): melee, speed,
  * attack speed and health as transient modifiers (never saved, so a crash can't leave them on), damage taken off, a slow mend.
@@ -175,9 +175,9 @@ public final class KingServer {
         return KingRules.chosen(saved(player));
     }
 
-    /** The Dragon is spent in {@code player}: a crown waits (called by the Dragon; harmless again). 1.0.11: Kaneki's alone. */
+    /** The Dragon is spent in {@code player}: a crown waits (called by the Dragon; harmless again). 1.0.11: Rinkaku's alone. */
     public static void awaken(ServerPlayer player) {
-        if (awake(player) || PathServer.path(player) != KagunePath.KANEKI) {
+        if (awake(player) || PathServer.path(player) != KagunePath.RINKAKU) {
             return;
         }
         save(player, KingRules.AWAKE);
@@ -209,25 +209,25 @@ public final class KingServer {
         net.minecraft.world.phys.Vec3 at = new net.minecraft.world.phys.Vec3(player.m_20185_(), player.m_20186_() + 1.0, player.m_20189_());
         if (form == KingForm.WAR) {
             if (age == 0L) {
-                AyatoFire.sound(level, at, "hexkagune:sfx.transform.overdrive_awakening", 2.0F, 0.9F);
+                UkakuFire.sound(level, at, "hexkagune:sfx.transform.overdrive_awakening", 2.0F, 0.9F);
             }
             if (age == 0L || age == 5L || age == 9L || age == 12L || age == 14L) {
-                AyatoFire.sound(level, at, "hexkagune:sfx.pulse", 2.0F, 0.6F + age * 0.02F);
+                UkakuFire.sound(level, at, "hexkagune:sfx.pulse", 2.0F, 0.6F + age * 0.02F);
             }
             if (KingTransform.burstNow(form, age)) {
-                AyatoFire.sound(level, at, "hexkagune:sfx.ultimate", 2.4F, 0.9F);
-                AyatoFire.sound(level, at, "hexkagune:sfx.gush_big", 1.6F, 0.9F);
+                UkakuFire.sound(level, at, "hexkagune:sfx.ultimate", 2.4F, 0.9F);
+                UkakuFire.sound(level, at, "hexkagune:sfx.gush_big", 1.6F, 0.9F);
                 blast(player, level, at);
             }
         } else if (form == KingForm.PEACE) {
             if (age == 0L) {
-                AyatoFire.sound(level, at, "hexkagune:sfx.transform.spectral_reveal", 1.6F, 1.0F);
+                UkakuFire.sound(level, at, "hexkagune:sfx.transform.spectral_reveal", 1.6F, 1.0F);
             }
             if (age == 12L || age == 22L) {
-                AyatoFire.sound(level, at, "hexkagune:sfx.whoosh", 0.9F, 1.1F);
+                UkakuFire.sound(level, at, "hexkagune:sfx.whoosh", 0.9F, 1.1F);
             }
             if (age == KingTransform.PEACE_LIGHT) {
-                AyatoFire.sound(level, at, "hexkagune:sfx.transform.pressure_awakening", 1.4F, 1.1F);
+                UkakuFire.sound(level, at, "hexkagune:sfx.transform.pressure_awakening", 1.4F, 1.1F);
             }
         }
     }
@@ -242,26 +242,26 @@ public final class KingServer {
         net.minecraft.world.phys.Vec3 at = new net.minecraft.world.phys.Vec3(player.m_20185_(), player.m_20186_() + 1.0, player.m_20189_());
         if (form == KingForm.WAR) {
             if (age == 0L) {
-                AyatoFire.sound(level, at, "hexkagune:sfx.pulse", 1.8F, 0.55F);
+                UkakuFire.sound(level, at, "hexkagune:sfx.pulse", 1.8F, 0.55F);
             }
             if (age == 3L) {
-                AyatoFire.sound(level, at, "hexkagune:sfx.quake", 1.2F, 0.9F);
+                UkakuFire.sound(level, at, "hexkagune:sfx.quake", 1.2F, 0.9F);
             }
             if (age == 8L || age == 16L) {
-                AyatoFire.sound(level, at, "hexkagune:sfx.ground", 1.0F, 0.9F + age * 0.005F);
+                UkakuFire.sound(level, at, "hexkagune:sfx.ground", 1.0F, 0.9F + age * 0.005F);
             }
             if (age == 22L) {
-                AyatoFire.sound(level, at, "hexkagune:sfx.drips", 0.8F, 0.9F);
+                UkakuFire.sound(level, at, "hexkagune:sfx.drips", 0.8F, 0.9F);
             }
         } else if (form == KingForm.PEACE) {
             if (age == 0L) {
-                AyatoFire.sound(level, at, "hexkagune:sfx.whoosh", 0.8F, 0.95F);
+                UkakuFire.sound(level, at, "hexkagune:sfx.whoosh", 0.8F, 0.95F);
             }
             if (age == 12L || age == 18L) {
-                AyatoFire.sound(level, at, "hexkagune:sfx.shatter", 0.9F, age == 12L ? 1.0F : 1.1F);
+                UkakuFire.sound(level, at, "hexkagune:sfx.shatter", 0.9F, age == 12L ? 1.0F : 1.1F);
             }
             if (age == 32L) {
-                AyatoFire.sound(level, at, "hexkagune:sfx.transform.organic_armor_shift", 1.0F, 1.1F);
+                UkakuFire.sound(level, at, "hexkagune:sfx.transform.organic_armor_shift", 1.0F, 1.1F);
             }
         }
     }
@@ -382,9 +382,9 @@ public final class KingServer {
         }
     }
 
-    /** Chooses {@code form} for good: a Kaneki ghoul the Dragon has been through, who has not chosen yet, and a form that is built. */
+    /** Chooses {@code form} for good: a Rinkaku ghoul the Dragon has been through, who has not chosen yet, and a form that is built. */
     public static boolean choose(ServerPlayer player, KingForm form) {
-        if (PathServer.path(player) != KagunePath.KANEKI || !awake(player)) {
+        if (PathServer.path(player) != KagunePath.RINKAKU || !awake(player)) {
             player.m_5661_(Component.m_237115_("message.hexkagune.king.not_awake"), true);
             return false;
         }
@@ -433,7 +433,7 @@ public final class KingServer {
             player.m_5661_(Component.m_237115_(awake(player) ? "message.hexkagune.king.choose_first" : "message.hexkagune.king.not_awake"), true);
             return;
         }
-        if (PathServer.path(player) != KagunePath.KANEKI || !player.m_6084_()) {
+        if (PathServer.path(player) != KagunePath.RINKAKU || !player.m_6084_()) {
             return;
         }
         // 1.0.23: it runs on RC, as every form does: not while spent, not on an empty bar.
@@ -600,7 +600,7 @@ public final class KingServer {
         if (worn.preview()) {
             return;
         }
-        if (PathServer.path(player) != KagunePath.KANEKI || chosen(player) != worn.form()) {
+        if (PathServer.path(player) != KagunePath.RINKAKU || chosen(player) != worn.form()) {
             off(player, true);
             return;
         }

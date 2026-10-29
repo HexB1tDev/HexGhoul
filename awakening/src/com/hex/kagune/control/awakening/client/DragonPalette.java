@@ -1,6 +1,6 @@
 package com.hex.kagune.control.awakening.client;
 
-/** Black and crimson kagune of Kaneki's Dragon. Colours are 0xRRGGBB. */
+/** Black and crimson kagune of Rinkaku's Dragon. Colours are 0xRRGGBB. */
 final class DragonPalette {
     static final int SHELL = 0x0E0B0D;
     static final int SHELL_EDGE = 0x2A1A1F;
@@ -20,7 +20,7 @@ final class DragonPalette {
     static final int PUPIL = 0x020101;
     static final int CRACK = 0xFF4A1E;
     static final int HAIR = 0x120A0C;
-    // 1.0.31: the Dragon as the source has it: a full centipede, Kaneki's centipede kagune's plates (CentipedeTail) in dark red with
+    // 1.0.31: the Dragon as the source has it: a full centipede, Rinkaku's centipede kagune's plates (CentipedeTail) in dark red with
     // the flesh between them light red and glowing; its heads and tentacles the same dark red flesh.
     /** Its flesh, where it swells into the light, deep in its folds, under it; the light red flesh in its seams. */
     static final int MEAT = 0x5A1018;

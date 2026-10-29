@@ -1,10 +1,10 @@
 package com.hex.kagune.control;
 
-import com.hex.kagune.control.ayato.AyatoRules;
+import com.hex.kagune.control.ukaku.UkakuRules;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Dependency-free tests for Auto Projectile's tentacle guard (5.0.14): its rules, its pose, and that Ayato still beats it. */
+/** Dependency-free tests for Auto Projectile's tentacle guard (5.0.14): its rules, its pose, and that Ukaku still beats it. */
 public final class TendrilShieldTests {
     private static int passed;
     private static final List<String> FAILURES = new ArrayList<>();
@@ -152,7 +152,7 @@ public final class TendrilShieldTests {
         check(near(TendrilShield.cost(0.0F, true, false), 2.0) && near(TendrilShield.cost(0.0F, true, true), 1.36),
             "an arrow costs what the original's deflection did (2, 1.36 with the Reflex Organ)");
         check(near(TendrilShield.cost(4.0F, false, false), 1.0) && near(TendrilShield.cost(0.1F, false, false), 0.15),
-            "Ayato's shots cost by what the guard took, never nothing");
+            "Ukaku's shots cost by what the guard took, never nothing");
         check(near(TendrilShield.guardHealth(0, false, 1.0), 6.0) && near(TendrilShield.guardHealth(1000, false, 1.0), 12.0)
             && near(TendrilShield.guardHealth(1000, true, 1.0), 18.0) && TendrilShield.guardHealth(1000, false, 0.0) == 0.0F
             && near(TendrilShield.guardHealth(500, false, 2.0), 18.0), "guard health by mastery, organ and the server's strength");
@@ -222,38 +222,38 @@ public final class TendrilShieldTests {
     }
 
     /**
-     * The user's rule: a good defence against Ayato, never one that makes him useless. Each of his answers is checked with his
+     * The user's rule: a good defence against Ukaku, never one that makes him useless. Each of his answers is checked with his
      * own numbers at the same mastery, so changing either side's balance re-checks this.
      */
     private static void balance() {
         for (int mastery : new int[] {250, 500, 750, 1000}) {
             float guard = TendrilShield.guardHealth(mastery, false, 1.0);
             float organGuard = TendrilShield.guardHealth(mastery, true, 1.0);
-            float shot = AyatoRules.meleeDamage(mastery) * ComboStyle.AYATO_FIRE.stage(0).damageMul();
+            float shot = UkakuRules.meleeDamage(mastery) * ComboStyle.UKAKU_FIRE.stage(0).damageMul();
             // A guard holds a few of his ordinary shots, not a whole chain.
             int shots = (int)Math.ceil(guard / shot);
             check(shots >= 2 && shots <= 4, "at " + mastery + " a guard breaks after " + shots + " fire shots (2 to 4)");
             boolean organ = mastery >= 750; // the Projectile Reflex Organ's tier
             check(!organ || Math.ceil(organGuard / shot) <= 6, "at " + mastery + " even the Reflex Organ's guard breaks within six shots");
             // The Gatling (from its mastery) at full spin breaks a guard in about a second: its stream is the answer to a guard.
-            double perTick = AyatoRules.GATLING_FULL_RATE * AyatoRules.gatlingDamage(mastery);
-            check(mastery < AyatoRules.GATLING_MASTERY || guard / perTick <= 24.0,
+            double perTick = UkakuRules.GATLING_FULL_RATE * UkakuRules.gatlingDamage(mastery);
+            check(mastery < UkakuRules.GATLING_MASTERY || guard / perTick <= 24.0,
                 "at " + mastery + " the Gatling breaks a guard in " + guard / perTick + " ticks (about a second)");
             check(!organ || organGuard / perTick <= 30.0, "at " + mastery + " the Gatling breaks the Reflex Organ's guard within 1.5 s");
             // A broken tentacle stays aside longer than it took to break it.
-            check(TendrilShield.BREAK_TICKS > AyatoRules.flameCadence(mastery) * (shots - 1),
+            check(TendrilShield.BREAK_TICKS > UkakuRules.flameCadence(mastery) * (shots - 1),
                 "at " + mastery + " a broken tentacle stays aside longer than breaking it took");
             // Close up, his spikes and needles beat a guard that has to come up (it swings in for RAISE_TICKS).
-            double spikeReach = AyatoRules.crystalSpeed(mastery) * TendrilShield.RAISE_TICKS;
-            double needleReach = AyatoRules.needleSpeed(mastery) * TendrilShield.RAISE_TICKS;
+            double spikeReach = UkakuRules.crystalSpeed(mastery) * TendrilShield.RAISE_TICKS;
+            double needleReach = UkakuRules.needleSpeed(mastery) * TendrilShield.RAISE_TICKS;
             check(spikeReach >= 10.0 && needleReach >= 16.0, "at " + mastery + " spikes from within " + spikeReach + " and needles from within "
                 + needleReach + " blocks land before a fresh guard is up");
         }
         // Spikes a guard stops stay in the tentacle: with Bursting Shards each comes back as a blast beside him, more than a third of
         // the hit it would have been (and Crystal Bloom sets them all off at once).
         for (int mastery : new int[] {250, 500, 750, 1000}) {
-            for (float hit : new float[] {AyatoRules.gatlingDamage(mastery), AyatoRules.meleeDamage(mastery) * ComboStyle.AYATO_CRYSTAL.stage(0).damageMul()}) {
-                float blast = AyatoRules.burstDamage(hit) * AyatoRules.BURST_EXPLOSION_SHARE;
+            for (float hit : new float[] {UkakuRules.gatlingDamage(mastery), UkakuRules.meleeDamage(mastery) * ComboStyle.UKAKU_CRYSTAL.stage(0).damageMul()}) {
+                float blast = UkakuRules.burstDamage(hit) * UkakuRules.BURST_EXPLOSION_SHARE;
                 check(blast >= hit / 3.0F, "at " + mastery + " a guarded " + hit + " spike comes back as a " + blast + " blast with Bursting Shards");
             }
         }

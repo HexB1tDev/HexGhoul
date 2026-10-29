@@ -1,6 +1,6 @@
 package com.hex.kagune.control.client.animation;
 
-import com.hex.kagune.control.ayato.BladeCarry;
+import com.hex.kagune.control.ukaku.BladeCarry;
 
 /**
  * One frame of body pose offsets, and the single place that turns them into PlayerAnimator transforms (pure, so the
@@ -63,7 +63,7 @@ public final class RigPose {
     public float rightArmHold;
     /**
      * 6.1.0: how much of both arms' and both legs' own (vanilla) rotation is dropped for the pose here (1: the limbs are all the
-     * move's: no walking swing, no attack swing, no bob), as {@link #rightArmHold} does for the right arm alone. Eto's strikes and
+     * move's: no walking swing, no attack swing, no bob), as {@link #rightArmHold} does for the right arm alone. Pale's strikes and
      * flips hold all four: their keys are solved for exactly the turn they make. Unlike the blade's hold, these are added and
      * scaled like any channel, so a move's limbs blend in and out.
      */
@@ -96,7 +96,7 @@ public final class RigPose {
     public float bladeFit;
     public float bladeReach = 1.0F;
     /**
-     * 6.2.0: 1 on the pose a move starts from when it cut another off mid-way (EtoMotions.Cut): a raised arm, wherever it was, is
+     * 6.2.0: 1 on the pose a move starts from when it cut another off mid-way (PaleMotions.Cut): a raised arm, wherever it was, is
      * brought down outside her head. Drawn as nothing.
      */
     public float cut;

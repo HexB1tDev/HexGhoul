@@ -2,7 +2,7 @@ package com.hex.kagune.control.server;
 
 import com.hex.kagune.control.StrikePattern;
 import com.hex.kagune.control.network.ControlNetwork;
-import com.hex.kagune.control.network.S2CAyatoFx;
+import com.hex.kagune.control.network.S2CUkakuFx;
 import com.hex.kagune.gameplay.KaguneServerController;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
@@ -13,7 +13,7 @@ import net.minecraft.world.phys.Vec3;
 /**
  * 5.0.20: blood from the Steel Blade. Every body its swing lands on is cut where the blade crossed it, the blade going the
  * swing's way (the sweep from his right across to his left, the backhand the other way, the execution down across him), and every
- * client near it is told ({@link S2CAyatoFx#BLADE_HIT}): blood flung along the cut, the blade bloodied, and on a kill a burst,
+ * client near it is told ({@link S2CUkakuFx#BLADE_HIT}): blood flung along the cut, the blade bloodied, and on a kill a burst,
  * gushes from the body as it falls and a pool under it.
  */
 final class BladeBlood {
@@ -25,7 +25,7 @@ final class BladeBlood {
         if (!(target instanceof Mob) && !(target instanceof Player)) {
             return; // an armor stand: wood, nothing in it
         }
-        double[] forward = AyatoCombat.horizontal(direction, player.m_20154_());
+        double[] forward = UkakuCombat.horizontal(direction, player.m_20154_());
         Vec3 ahead = new Vec3(forward[0], 0.0, forward[1]);
         Vec3 right = new Vec3(-forward[1], 0.0, forward[0]);
         Vec3 way = switch (pattern) {
@@ -39,7 +39,7 @@ final class BladeBlood {
         Vec3 at = centre.m_82546_(ahead.m_82490_(target.m_20205_() * 0.45));
         boolean killed = !target.m_6084_();
         float power = Math.max(0.5F, Math.min(2.5F, damage / 5.0F)) * (killed ? 1.4F : 1.0F);
-        ControlNetwork.broadcastAround(target, new S2CAyatoFx(S2CAyatoFx.BLADE_HIT, player.m_19879_(), target.m_19879_(), at.f_82479_, at.f_82480_,
+        ControlNetwork.broadcastAround(target, new S2CUkakuFx(S2CUkakuFx.BLADE_HIT, player.m_19879_(), target.m_19879_(), at.f_82479_, at.f_82480_,
             at.f_82481_, (float)way.f_82479_, (float)way.f_82480_, (float)way.f_82481_, power, killed ? 1 : 0));
     }
 }

@@ -32,7 +32,7 @@ public final class WoundClient {
         return player == null ? null : BOOKS.get(player.m_36316_().getId());
     }
 
-    /** A puncture left by one of Ayato's spikes on a player (see {@code AyatoSpikes}). */
+    /** A puncture left by one of Ukaku's spikes on a player (see {@code UkakuSpikes}). */
     public static void puncture(AbstractClientPlayer player, Wound.Part part, Wound.Face face, double u, double v, int seed) {
         WoundBook book = book(player);
         if (book != null) {
@@ -41,7 +41,7 @@ public final class WoundClient {
     }
 
     /**
-     * A blow from Kaneki's tails is landing on {@code player} (3.0.3): the health it costs opens wounds of its shape, the first at
+     * A blow from Rinkaku's tails is landing on {@code player} (3.0.3): the health it costs opens wounds of its shape, the first at
      * {@code spot} (a slash's gash at {@code angle}).
      */
     public static void blow(AbstractClientPlayer player, WoundBook.Blow blow, WoundBook.Spot spot, double angle) {

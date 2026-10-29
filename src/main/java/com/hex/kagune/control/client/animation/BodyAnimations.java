@@ -95,8 +95,8 @@ public final class BodyAnimations {
     public static void playManifestPain(AbstractClientPlayer player, int duration, int limbs) {
         ModifierLayer<IAnimation> layer = KaguneManifestationEffects.bodyEffectLayer(player);
         KagunePath path = PathClient.get(player);
-        if (layer == null || path == KagunePath.AYATO || path == KagunePath.ETO || path == KagunePath.FURUTA) {
-            // Ayato's wings unfold without the host doubling over: he is never the kagune's victim. Nor is Furuta (7.0.0).
+        if (layer == null || path == KagunePath.UKAKU || path == KagunePath.PALE || path == KagunePath.GRAFT) {
+            // Ukaku's wings unfold without the host doubling over: he is never the kagune's victim. Nor is Graft (7.0.0).
             return;
         }
         float intensity = 1.0F;

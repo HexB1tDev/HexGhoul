@@ -7,7 +7,7 @@ import net.minecraft.client.model.geom.ModelPart;
 
 /**
  * 1.0.41: a ghoul NPC's body: vanilla's player model (wide or slim arms) as it walks and looks, with whatever pose it is in on top
- * ({@link #pose}: its flip, as a player's is posed, {@code EtoMotions.flip}): the head, arms and legs turned by the pose's offsets,
+ * ({@link #pose}: its flip, as a player's is posed, {@code PaleMotions.flip}): the head, arms and legs turned by the pose's offsets,
  * the limbs' own swing dropped as far as the pose holds them, and the skin's second layer carried with them. Elbows and knees do not
  * bend on vanilla's model: the limbs swing whole. The whole body's turn (the flip itself) is the renderer's.
  */

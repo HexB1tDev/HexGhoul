@@ -14,7 +14,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 
-/** Every Dragon currently awake, plus the short grace period after Kaneki emerges. */
+/** Every Dragon currently awake, plus the short grace period after Rinkaku emerges. */
 public final class DragonSessions {
     /** Five seconds of untouchable footing after control returns. */
     static final long GRACE_TICKS = 100L;
@@ -47,11 +47,11 @@ public final class DragonSessions {
 
     /** Turns the player's death into the Dragon. Returns false if it could not begin. */
     static boolean start(ServerPlayer player) {
-        // 1.0.11: Kaneki DNA's alone, whoever asks (the death, or the admin's trigger).
-        if (ACTIVE.containsKey(player.getUUID()) || !AwakeningEvents.kanekiPath(player)) return false;
+        // 1.0.11: Rinkaku's alone, whoever asks (the death, or the admin's trigger).
+        if (ACTIVE.containsKey(player.getUUID()) || !AwakeningEvents.rinkakuPath(player)) return false;
         ServerLevel level = player.serverLevel();
         if (player.getY() < level.getMinBuildHeight()) return false;
-        // Kaneki's existing kagune and everything it holds are consumed by the transformation.
+        // Rinkaku's existing kagune and everything it holds are consumed by the transformation.
         KaguneServerController.release(player, false);
         KaguneProfile.setActive(player, false);
         KaguneRuntime.remove(player.getUUID());

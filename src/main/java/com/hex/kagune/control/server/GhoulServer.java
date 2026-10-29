@@ -2,9 +2,9 @@ package com.hex.kagune.control.server;
 
 import com.hex.kagune.control.GhoulBuffs;
 import com.hex.kagune.control.GhoulKey;
-import com.hex.kagune.control.KanekiForms;
-import com.hex.kagune.control.ayato.AyatoMutation;
-import com.hex.kagune.control.ayato.AyatoRules;
+import com.hex.kagune.control.RinkakuForms;
+import com.hex.kagune.control.ukaku.UkakuMutation;
+import com.hex.kagune.control.ukaku.UkakuRules;
 import com.hex.kagune.control.network.ControlNetwork;
 import com.hex.kagune.control.network.S2CGhoulState;
 import com.hex.kagune.data.KaguneProfile;
@@ -120,14 +120,14 @@ public final class GhoulServer {
         EYES_FORM.add(player.m_20148_());
         KaguneServerController.refreshFormEffect(player, MobEffects.f_19606_, GhoulBuffs.EYES_RESISTANCE);
         KaguneServerController.refreshFormEffect(player, MobEffects.f_19600_, GhoulBuffs.EYES_STRENGTH);
-        if (AyatoServer.isAyato(player)) {
+        if (UkakuServer.isUkaku(player)) {
             int mastery = KaguneProfile.mastery(player);
-            boolean agile = AyatoServer.hasMutation(player, AyatoMutation.AGILITY_BOOST);
-            buff(player, MobEffects.f_19596_, AyatoRules.speedAmplifier(mastery) + (agile ? AyatoRules.AGILITY_SPEED : 0));
-            buff(player, MobEffects.f_19603_, AyatoRules.jumpAmplifier(mastery) + (agile ? AyatoRules.AGILITY_JUMP : 0));
+            boolean agile = UkakuServer.hasMutation(player, UkakuMutation.AGILITY_BOOST);
+            buff(player, MobEffects.f_19596_, UkakuRules.speedAmplifier(mastery) + (agile ? UkakuRules.AGILITY_SPEED : 0));
+            buff(player, MobEffects.f_19603_, UkakuRules.jumpAmplifier(mastery) + (agile ? UkakuRules.AGILITY_JUMP : 0));
         } else if (KaguneProfile.form(player).hasCentipedeLegs()) {
             // The Centipede forms' Speed (KaguneServerController.tickCentipedeFormBuffs); not their Resistance or Health Boost.
-            buff(player, MobEffects.f_19596_, KanekiForms.speed(KaguneProfile.form(player)));
+            buff(player, MobEffects.f_19596_, RinkakuForms.speed(KaguneProfile.form(player)));
         }
     }
 

@@ -1,7 +1,7 @@
 package com.hex.kagune.control.server;
 
 import com.hex.kagune.control.KagunePath;
-import com.hex.kagune.control.network.S2CAyatoFx;
+import com.hex.kagune.control.network.S2CUkakuFx;
 import com.hex.kagune.data.KaguneProfile;
 import com.hex.kagune.gameplay.KaguneForm;
 import java.util.HashMap;
@@ -25,20 +25,20 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 /**
- * 6.0.0: the kakuja's passive and dash, for Ayato's Steel Blade and Kaneki's Full Kakuja.
+ * 6.0.0: the kakuja's passive and dash, for Ukaku's Steel Blade and Rinkaku's Full Kakuja.
  *
  * <p><b>Vanish.</b> Breaking into a sprint, he vanishes in a gust of wind: for five seconds nobody sees him at all (his body,
  * armour, what he holds, his kagune, his name, his shadow: the invisibility here, and the clients skip drawing him) and mobs
  * lose him. It ends early the moment he attacks by any means (a swing, an ability, a shot, any damage he deals) or the form goes
  * (the blade opened, out of the kakuja, the kagune put away, death). Then thirty seconds before it can happen again. While
- * Kaneki is vanished his centipede legs don't hunt ({@link CentipedeHunt}).
+ * Rinkaku is vanished his centipede legs don't hunt ({@link CentipedeHunt}).
  *
- * <p><b>Dash.</b> Right click dashes: forward (W, or no direction), backward (S). Ayato's blade dashes far; Kaneki's kakuja,
+ * <p><b>Dash.</b> Right click dashes: forward (W, or no direction), backward (S). Ukaku's blade dashes far; Rinkaku's kakuja,
  * heavier, far less.
  *
  * <p>6.0.5, true invisibility: vanished, nothing of him is seen, by anyone, himself included in third person ({@code PlayerLayers});
  * no dirt kicked up as he sprints ({@code VanishClient}), no dust where he lands, no tendrils catching his fall
- * ({@link AyatoGates#tryStartFallArrest}, the original's landing burst), no wind or sound when he dashes.
+ * ({@link UkakuGates#tryStartFallArrest}, the original's landing burst), no wind or sound when he dashes.
  */
 @Mod.EventBusSubscriber(modid = "hexkagune")
 public final class KakujaPassive {
@@ -49,7 +49,7 @@ public final class KakujaPassive {
     /** Whose passive: the dash's speed (blocks a tick), how long it pushes (ticks) and its cooldown (ticks). */
     enum Kind {
         BLADE(1.7, 6, 22),
-        KANEKI(0.95, 5, 40);
+        RINKAKU(0.95, 5, 40);
 
         final double dashSpeed;
         final int dashTicks;
@@ -78,16 +78,16 @@ public final class KakujaPassive {
     private KakujaPassive() {
     }
 
-    /** Whose passive he has right now: Ayato with the Steel Blade out, Kaneki in his Full Kakuja; null otherwise. */
+    /** Whose passive he has right now: Ukaku with the Steel Blade out, Rinkaku in his Full Kakuja; null otherwise. */
     static Kind kind(ServerPlayer player) {
         if (!player.m_6084_() || !KaguneProfile.isActive(player)) {
             return null;
         }
-        if (AyatoServer.isAyato(player)) {
-            return AyatoServer.blade(player) ? Kind.BLADE : null;
+        if (UkakuServer.isUkaku(player)) {
+            return UkakuServer.blade(player) ? Kind.BLADE : null;
         }
-        if (PathServer.path(player) == KagunePath.KANEKI && KaguneProfile.form(player) == KaguneForm.FULL_KAKUJA) {
-            return Kind.KANEKI;
+        if (PathServer.path(player) == KagunePath.RINKAKU && KaguneProfile.form(player) == KaguneForm.FULL_KAKUJA) {
+            return Kind.RINKAKU;
         }
         return null;
     }
@@ -133,8 +133,8 @@ public final class KakujaPassive {
         push(player, state);
         if (!vanished(player)) {
             // 6.0.5: vanished, the dash gives nothing away: no rush of wind, no sound.
-            AyatoFire.fx(player, S2CAyatoFx.GUST, 0, player.m_20182_(), state.heading.m_82490_(state.dashSpeed), kind == Kind.BLADE ? 1.0F : 0.6F, 0);
-            AyatoFire.sound(player.m_284548_(), player.m_20182_(), "item.trident.riptide_1", kind == Kind.BLADE ? 0.9F : 0.6F,
+            UkakuFire.fx(player, S2CUkakuFx.GUST, 0, player.m_20182_(), state.heading.m_82490_(state.dashSpeed), kind == Kind.BLADE ? 1.0F : 0.6F, 0);
+            UkakuFire.sound(player.m_284548_(), player.m_20182_(), "item.trident.riptide_1", kind == Kind.BLADE ? 0.9F : 0.6F,
                 kind == Kind.BLADE ? 1.3F : 1.0F);
         }
         return true;
@@ -210,9 +210,9 @@ public final class KakujaPassive {
             mob.m_6710_(null);
         }
         Vec3 at = player.m_20182_();
-        AyatoFire.fx(player, S2CAyatoFx.VANISH, 0, at, Vec3.f_82478_, 1.0F, 0);
-        AyatoFire.sound(player.m_284548_(), at, "entity.illusioner.mirror_move", 1.0F, 0.9F);
-        AyatoFire.sound(player.m_284548_(), at, "entity.ender_dragon.flap", 0.6F, 1.5F);
+        UkakuFire.fx(player, S2CUkakuFx.VANISH, 0, at, Vec3.f_82478_, 1.0F, 0);
+        UkakuFire.sound(player.m_284548_(), at, "entity.illusioner.mirror_move", 1.0F, 0.9F);
+        UkakuFire.sound(player.m_284548_(), at, "entity.ender_dragon.flap", 0.6F, 1.5F);
         player.m_5661_(Component.m_237115_("message.hexkagune.vanish"), true);
     }
 
@@ -224,8 +224,8 @@ public final class KakujaPassive {
         }
         state.ourInvisibility = false;
         Vec3 at = player.m_20182_();
-        AyatoFire.fx(player, S2CAyatoFx.REVEAL, 0, at, Vec3.f_82478_, 0.6F, 0);
-        AyatoFire.sound(player.m_284548_(), at, "entity.illusioner.mirror_move", 0.7F, 1.4F);
+        UkakuFire.fx(player, S2CUkakuFx.REVEAL, 0, at, Vec3.f_82478_, 0.6F, 0);
+        UkakuFire.sound(player.m_284548_(), at, "entity.illusioner.mirror_move", 0.7F, 1.4F);
     }
 
     // ------------------------------------------------------------------ what ends it, and the mobs

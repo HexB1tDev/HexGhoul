@@ -21,7 +21,7 @@ public enum Signal {
     RAMPAGE,
     /** A second spent with the kagune out ({@code kakuja} in a kakuja), or (eyes) with only the eyes open. */
     TIME,
-    /** Kaneki: the kagune's urge restrained (crouching through it). */
+    /** Rinkaku: the kagune's urge restrained (crouching through it). */
     RESTRAIN,
     /** The shared eye-mode fight: a blitz strike landed (1 for each body hit); {@code finisher} for the twin palm. */
     STRIKE,

@@ -1,5 +1,5 @@
-import com.hex.kagune.control.ayato.WingForm;
-import com.hex.kagune.control.ayato.WingRig;
+import com.hex.kagune.control.ukaku.WingForm;
+import com.hex.kagune.control.ukaku.WingRig;
 import com.hex.kagune.control.kakugan.KakuganEyes;
 import com.hex.kagune.control.kakugan.KakuganModel;
 import java.awt.Color;
@@ -14,7 +14,7 @@ import java.util.List;
 import javax.imageio.ImageIO;
 
 /**
- * Off-game 3D renders of Ayato's kagune straight from {@link WingRig} (the same quads the game draws), next to a
+ * Off-game 3D renders of Ukaku's kagune straight from {@link WingRig} (the same quads the game draws), next to a
  * stand-in player. A small software rasterizer: perspective camera, depth buffer, the opaque player first, then the
  * wing quads sorted back to front and alpha-blended (as Minecraft sorts translucent quads), shaded with Minecraft's
  * entity diffuse lighting (two fixed lights, 0.4 ambient) and full brightness. No bloom: what glows in game must glow
@@ -330,7 +330,7 @@ public final class WingPreview {
         return tris;
     }
 
-    /** Steve-proportioned stand-in for Ayato (x right, y up, z forward): black clothes, pale skin, dark navy hair. */
+    /** Steve-proportioned stand-in for Ukaku (x right, y up, z forward): black clothes, pale skin, dark navy hair. */
     static void player(List<Tri> tris, boolean crouch) {
         double drop = crouch ? 0.3 : 0.0;
         int cloth = 0x1C1A22;
@@ -769,7 +769,7 @@ public final class WingPreview {
             double[] closeTarget = {0.12, 1.66, 0.25};
             kakuganSheet(new File(out, "kakugan-close.png"), "Kakugan up close: the veins (stand-in skins; only the eyes and the skin around them change)",
                 new Object[][] {
-                {"Kaneki's kakugan (reference)", "eyes-anime-kaneki-closeup.png"},
+                {"Rinkaku's kakugan (reference)", "eyes-anime-rinkaku-closeup.png"},
                 {"Right eye up close, day", eyes, 1.0F, 1.0, close, false, FACE, 0, closeTarget},
                 {"Right eye up close, night", eyes, 1.0F, 1.0, close, true, FACE, 0, closeTarget},
                 {"Another player's veins (own pattern)", eyes, 1.0F, 1.0, front, false, FACE, 1234567},
@@ -791,7 +791,7 @@ public final class WingPreview {
             }, 3, 520, 400);
             kakuganSheet(new File(out, "kakugan.png"), "Kakugan: the eyes when the kagune is out (stand-in skin)", new Object[][] {
                 {"Anime kakugan (reference)", "eyes-anime-touka.png"},
-                {"Kaneki's kakugan (reference)", "eyes-anime-kaneki-closeup.png"},
+                {"Rinkaku's kakugan (reference)", "eyes-anime-rinkaku-closeup.png"},
                 {"Kakugan off (the skin as it is)", eyes, 0.0F, 1.0, front, false},
                 {"Day, front", eyes, 1.0F, 1.0, front, false},
                 {"Day, 3/4", eyes, 1.0F, 1.0, threeQuarter, false},
@@ -879,7 +879,7 @@ public final class WingPreview {
     }
 
     static void forms(File out, double t, int day, int night) throws Exception {
-        sheet(new File(out, "ayato-wings-forms.png"), "Ayato's kagune by era (renders of the in-game geometry)", new Object[][] {
+        sheet(new File(out, "ukaku-wings-forms.png"), "Ukaku's kagune by era (renders of the in-game geometry)", new Object[][] {
             {"Tokyo Ghoul: gaseous (at rest), back", in(WingForm.TWIN, 0, 1, t, 0, WingRig.Motion.NONE, 0, 0), "back34", 6.0, day},
             {"Tokyo Ghoul: crystallized, back", in(WingForm.TWIN, 300, 1, t, 1, WingRig.Motion.NONE, 0, 0), "back34", 6.0, day},
             {"Tokyo Ghoul: crystallized, front", in(WingForm.TWIN, 300, 1, t, 1, WingRig.Motion.NONE, 0, 0), "front34", 6.0, night},
@@ -893,7 +893,7 @@ public final class WingPreview {
     }
 
     static void actions(File out, double t, int day, int night) throws Exception {
-        sheet(new File(out, "ayato-wings-actions.png"), "Ayato's kagune in action", new Object[][] {
+        sheet(new File(out, "ukaku-wings-actions.png"), "Ukaku's kagune in action", new Object[][] {
             {"Shard Volley, front", in(WingForm.TWIN, 300, 1, t, 1, WingRig.Motion.NONE, 0, 1), "front34", 6.0, night},
             {"Right wing blade, windup", in(WingForm.TWIN, 300, 1, t, 1, WingRig.Motion.SLASH_RIGHT, 0.25F, 0), "back34", 6.0, day},
             {"Right wing blade, impact", in(WingForm.TWIN, 300, 1, t, 1, WingRig.Motion.SLASH_RIGHT, 0.45F, 0), "front34", 6.0, day},
@@ -905,7 +905,7 @@ public final class WingPreview {
     }
 
     static void closeup(File out, double t, int day, int night) throws Exception {
-        sheet(new File(out, "ayato-wings-closeup.png"), "Close-ups", new Object[][] {
+        sheet(new File(out, "ukaku-wings-closeup.png"), "Close-ups", new Object[][] {
             {"Tokyo Ghoul, crystallized", in(WingForm.TWIN, 300, 1, t, 1, WingRig.Motion.NONE, 0, 0), "back34", 4.6, night},
             {":re, crystallized", in(WingForm.TWIN, 800, 1, t, 1, WingRig.Motion.NONE, 0, 0), "back34", 7.0, night},
             {"Tokyo Ghoul, gaseous", in(WingForm.TWIN, 0, 1, t, 0, WingRig.Motion.NONE, 0, 0), "back34", 4.6, night},
@@ -915,7 +915,7 @@ public final class WingPreview {
     }
 
     static void manifest(File out, double t, int day, int night) throws Exception {
-        sheet(new File(out, "ayato-wings-manifest.png"), "Emerging from the shoulder blades, and dissolving back", new Object[][] {
+        sheet(new File(out, "ukaku-wings-manifest.png"), "Emerging from the shoulder blades, and dissolving back", new Object[][] {
             {"deploy 0.15", in(WingForm.TWIN, 300, 0.15F, t, 0, WingRig.Motion.NONE, 0, 0), "back34", 6.0, day},
             {"deploy 0.35", in(WingForm.TWIN, 300, 0.35F, t, 0, WingRig.Motion.NONE, 0, 0), "back34", 6.0, day},
             {"deploy 0.6", in(WingForm.TWIN, 300, 0.6F, t, 0, WingRig.Motion.NONE, 0, 0), "back34", 6.0, day},

@@ -13,9 +13,9 @@ import dev.kosmx.playerAnim.core.util.Vec3f;
  * ({@link RigPose}: the torso, the head and both arms turned together, each through its own pivot and rotation).
  *
  * <p>6.0.2: until now the fold went to PlayerAnimator's body bend, which draws the head and arms under a matrix of its own
- * that their model parts never carry: everything else drawn on the head from its part (the kakugan, Kaneki's mask, the skin's
+ * that their model parts never carry: everything else drawn on the head from its part (the kakugan, Rinkaku's mask, the skin's
  * second layer under 3D Skin Layers) stayed where the face had been as he doubled over, the eyes hanging in front of his chest.
- * Ayato's leans were moved off the body bend the same way in 5.0.19.
+ * Ukaku's leans were moved off the body bend the same way in 5.0.19.
  */
 public final class ControlledManifestAnimation implements IAnimation {
     private final ManifestPainAnimation delegate;

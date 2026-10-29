@@ -1,6 +1,6 @@
 package com.hex.kagune.control.king;
 
-import com.hex.kagune.control.ayato.UkakuModel;
+import com.hex.kagune.control.ukaku.UkakuModel;
 
 /**
  * 1.0.17: a final kakuja growing out of his skin ({@link KingTransform#growth}): every corner of what is built on a body part is let

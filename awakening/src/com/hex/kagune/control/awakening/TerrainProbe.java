@@ -99,7 +99,7 @@ final class TerrainProbe implements DragonRig.Ground {
         return bottom;
     }
 
-    /** Current top of a column, ignoring the cache; used once the ground under Kaneki has been repaired. */
+    /** Current top of a column, ignoring the cache; used once the ground under Rinkaku has been repaired. */
     double rescan(double x, double z) {
         int bx = (int) Math.floor(x);
         int bz = (int) Math.floor(z);

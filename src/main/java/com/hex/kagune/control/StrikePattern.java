@@ -18,19 +18,19 @@ public enum StrikePattern {
     SCISSOR,
     /** Every participating limb spreads wide, then converges into one impaling thrust. */
     IMPALE,
-    /** Ayato: a fast kick (limb 8 = right leg, 9 = left leg). Canon: like Touka, he kicks. */
+    /** Ukaku: a fast kick (limb 8 = right leg, 9 = left leg). Canon: like Touka, he kicks. */
     KICK,
-    /** Ayato: one wing swings across the front as a blade (limb 0 = right wing, 1 = left wing). */
+    /** Ukaku: one wing swings across the front as a blade (limb 0 = right wing, 1 = left wing). */
     WING_SLASH,
-    /** Ayato: both wing blades cut across each other. */
+    /** Ukaku: both wing blades cut across each other. */
     WING_CROSS,
-    /** Ayato: both wings crystallize and fire a point-blank burst of RC shards. */
+    /** Ukaku: both wings crystallize and fire a point-blank burst of RC shards. */
     SHARD_BURST,
-    /** Ayato (:re): the One-Winged Kagune sweeps across from his left to his right. */
+    /** Ukaku (:re): the One-Winged Kagune sweeps across from his left to his right. */
     ONE_WING_SLASH,
-    /** Ayato (:re): the One-Winged Kagune sweeps back from right to left. */
+    /** Ukaku (:re): the One-Winged Kagune sweeps back from right to left. */
     ONE_WING_RETURN,
-    /** Ayato (:re): the One-Winged Kagune rises high and cuts through at neck height (canon: it beheads). */
+    /** Ukaku (:re): the One-Winged Kagune rises high and cuts through at neck height (canon: it beheads). */
     BEHEADING,
     // ---- 5.0.19: the final kakuja's Steel Blade (C), on the right arm.
     /** The blade drawn back to his right, then swept wide across the front to his left at chest height. */
@@ -39,7 +39,7 @@ public enum StrikePattern {
     STEEL_RETURN,
     /** Raised high over his head, then driven down across him on a slant with a lunge. */
     STEEL_EXECUTION,
-    // ---- Ayato's fire (limbs: 0 right wing, 1 left wing, 10 right hand, 11 left hand).
+    // ---- Ukaku's fire (limbs: 0 right wing, 1 left wing, 10 right hand, 11 left hand).
     /** M1: the hand thrusts, the wing on that side curls forward, aims and spits a shard of its own fire. */
     FLAME_SHOT,
     /** Ender after no shots (right click alone): one downbeat of the wings throws him back out of reach. */
@@ -54,7 +54,7 @@ public enum StrikePattern {
     RABBIT_DASH,
     /** Ender after five shots: a backflip high into the air, then a hovering barrage from both wings (the Black Rabbit). */
     BLACK_RABBIT,
-    // ---- Ayato's crystal mode (V): the same hands and wings, firing crystal spikes that stick, bleed and burst.
+    // ---- Ukaku's crystal mode (V): the same hands and wings, firing crystal spikes that stick, bleed and burst.
     /** Crystal M1: the hand thrusts, the crystallized wing on that side curls forward and fires one spike. */
     CRYSTAL_SHOT,
     /** Crystal ender after one shot: both wings fire one long lance that runs through everything in its line. */
@@ -67,7 +67,7 @@ public enum StrikePattern {
     SPIKE_BARRAGE,
     /** Crystal ender after five shots: every spike he has stuck in anyone bursts at once, harder. */
     CRYSTAL_BLOOM,
-    // ---- Ayato's first kakuja (K): six armored tentacles firing needles from their spike rows (limbs 20..25: right upper,
+    // ---- Ukaku's first kakuja (K): six armored tentacles firing needles from their spike rows (limbs 20..25: right upper,
     //      middle, lower, then the left's; 10 and 11 the hands).
     /** Kakuja M1: a pair of tentacles turns its spike rows on the target and fires a volley of needles from many spots. */
     NEEDLE_VOLLEY,
@@ -85,7 +85,7 @@ public enum StrikePattern {
     CRIMSON_BLOOM,
     /** Kakuja Z: a backflip high into the air and well back; at the top all six snap forward and throw twelve needles at once. */
     RUSHING_DEATH,
-    // ---- Ayato's final kakuja (K held): the three armored tentacles on his right (limbs 20..22) fire needles that bleed, the
+    // ---- Ukaku's final kakuja (K held): the three armored tentacles on his right (limbs 20..22) fire needles that bleed, the
     //      three fire tendrils on his left (23..25) breathe RC fire that burns; 10 and 11 the hands. Its M1 alternates the sides.
     /** Final M1 1: two of the right tentacles fire a volley of needles each. */
     NEEDLE_PAIR,
@@ -111,7 +111,7 @@ public enum StrikePattern {
     CRIMSON_PYRE;
 
     /**
-     * True for Ayato's ranged stages, fire or crystal (the M1 shots and the enders): resolved by what they fire, not by a
+     * True for Ukaku's ranged stages, fire or crystal (the M1 shots and the enders): resolved by what they fire, not by a
      * close-range hit volume.
      */
     public boolean flame() {

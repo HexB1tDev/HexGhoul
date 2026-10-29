@@ -3,7 +3,7 @@ package com.hex.kagune.control;
 /**
  * RC, made to last at high mastery (pure, tested; 6.1.0; 1.0.33: far more, and on everything). The bar holds 100 whatever the
  * mastery (the original's HUD, rest-time recovery and checks are built on that), so mastery makes what it pays for cheaper
- * instead: every drain on it (moves, a kakuja's upkeep, healing, the kakugan, Furuta's and Eto's drains) costs
+ * instead: every drain on it (moves, a kakuja's upkeep, healing, the kakugan, Graft's and Pale's drains) costs
  * {@link #costScale} of its price, so a full bar goes {@link #capacity} times as far: twice and a quarter at 500, five times at 1000.
  * The original takes 30% off a move's cost with mastery of its own; {@link #undoOriginal} gives that back, so a move scales by
  * mastery the same as everything else.

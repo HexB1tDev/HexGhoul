@@ -1,11 +1,11 @@
 package com.hex.kagune.control.client.animation;
 
-import com.hex.kagune.control.eto.ReviveRules;
+import com.hex.kagune.control.pale.ReviveRules;
 import com.hex.kagune.control.wound.Wound;
 import java.util.Random;
 
 /**
- * 6.2.0, You Thought You'd Get Rid of Me That Easily? (pure, tested): what is left of Eto when the blow that would have killed her
+ * 6.2.0, You Thought You'd Get Rid of Me That Easily? (pure, tested): what is left of Pale when the blow that would have killed her
  * blows her apart instead, and how it comes back together ({@link ReviveRules} has the timings).
  *
  * <p>Her body comes apart into {@link Piece}s cut out of her own skin: the head torn off at the neck, the torso torn in two at the

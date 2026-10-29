@@ -66,7 +66,7 @@ public final class Sfx {
         // Air: wings beating, dashes, vanishing.
         two("entity.ender_dragon.flap", "whoosh", 0.75F, "air_burst");
         one("entity.illusioner.mirror_move", "dash");
-        // Ayato's fire: shards of RC, thrown.
+        // Ukaku's fire: shards of RC, thrown.
         two("entity.blaze.shoot", "spike_throw", 0.75F, "spike_heavy");
         one("item.firecharge.use", "spike_heavy");
         one("entity.generic.burn", "hiss");
@@ -74,7 +74,7 @@ public final class Sfx {
         one("item.trident.throw", "spike_heavy");
         one("item.trident.return", "spike_throw");
         one("entity.evoker_fangs.attack", "spike_heavy");
-        // Ayato's crystal.
+        // Ukaku's crystal.
         one("block.amethyst_cluster.place", "crystal_form");
         one("block.amethyst_block.chime", "crystal_form");
         one("block.amethyst_cluster.break", "shatter");
@@ -100,7 +100,7 @@ public final class Sfx {
         one("block.beacon.power_select", "transform.spectral_reveal");
         one("block.beacon.deactivate", "transform.organic_armor_shift");
         one("item.armor.equip_iron", "crystal_form");
-        // A cue to be heard (Kaneki's grab's window).
+        // A cue to be heard (Rinkaku's grab's window).
         one("block.note_block.bell", "cue");
     }
 

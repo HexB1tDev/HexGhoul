@@ -1,6 +1,6 @@
 package com.hex.kagune.control.client.animation;
 
-import com.hex.kagune.control.eto.OwlLances;
+import com.hex.kagune.control.pale.OwlLances;
 
 /**
  * 6.2.0, the Owl's Watch This lances on her body as it is drawn (pure, tested): each out of its place on her back ({@link
@@ -22,9 +22,9 @@ public final class OwlLancePose {
     /**
      * 6.2.4: the same out of the Owl's creature ({@code rig}): out of the same place in its back.
      */
-    public static double[][] path(com.hex.kagune.control.eto.OwlCreature.Rig rig, int i, OwlLances.Tip tip) {
+    public static double[][] path(com.hex.kagune.control.pale.OwlCreature.Rig rig, int i, OwlLances.Tip tip) {
         double[] px = OwlLances.px(i);
-        return path(com.hex.kagune.control.eto.OwlCreature.backAt(rig, px), com.hex.kagune.control.eto.OwlCreature.backWay(rig, px), i, tip);
+        return path(com.hex.kagune.control.pale.OwlCreature.backAt(rig, px), com.hex.kagune.control.pale.OwlCreature.backWay(rig, px), i, tip);
     }
 
     /** A lance's path from {@code root} on her, out {@code back} (unit), to its tip. */

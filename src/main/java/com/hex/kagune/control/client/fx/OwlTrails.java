@@ -22,7 +22,7 @@ public final class OwlTrails {
     private static final int EDGE = 0xD8F6F1E6;
     private static final int EDGE_FADE = 0x00E2D8C6;
 
-    /** Each player's blade parts as last drawn ({right point, right edge, left point, left edge}) and when (EtoClient's clock). */
+    /** Each player's blade parts as last drawn ({right point, right edge, left point, left edge}) and when (PaleClient's clock). */
     private static final Map<UUID, double[][]> LAST = new HashMap<>();
     private static final Map<UUID, Double> LAST_AT = new HashMap<>();
     private static final java.util.Random RANDOM = new java.util.Random();

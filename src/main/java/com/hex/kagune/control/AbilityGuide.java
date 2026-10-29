@@ -1,9 +1,9 @@
 package com.hex.kagune.control;
 
-import com.hex.kagune.control.ayato.AyatoRules;
-import com.hex.kagune.control.ayato.WingForm;
-import com.hex.kagune.control.furuta.FurutaMove;
-import com.hex.kagune.control.furuta.FurutaStage;
+import com.hex.kagune.control.ukaku.UkakuRules;
+import com.hex.kagune.control.ukaku.WingForm;
+import com.hex.kagune.control.graft.GraftMove;
+import com.hex.kagune.control.graft.GraftStage;
 import com.hex.kagune.gameplay.KaguneForm;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +12,7 @@ import java.util.Map;
 /**
  * What the abilities panel shows (3.1.0, pure, tested): the moves the ghoul has right now with the keys the player bound to
  * them, how to open the eyes and unleash the kagune (R, Ctrl + R), and how to go into a kakuja (K). Names and colours follow the
- * path and the form: Kaneki's combo is named for his form, crimson in the rinkaku forms, plum in the kakuja; Ayato's moves are
+ * path and the form: Rinkaku's combo is named for his form, crimson in the rinkaku forms, plum in the kakuja; Ukaku's moves are
  * fire in the wings (vermilion), crystal in the crystal mode (ice), needles in the first kakuja (blood red), needles and fire in
  * the final kakuja (ember). A move his mastery hasn't reached yet is shown dim with the mastery it needs.
  */
@@ -44,30 +44,30 @@ public final class AbilityGuide {
      * @param path       the ghoul's path
      * @param state      kagune in, eyes open, or kagune out
      * @param mastery    kagune mastery
-     * @param kaneki     Kaneki's form (ignored on Ayato's path)
-     * @param ayato      Ayato's kagune form: his wings, or a kakuja (ignored on Kaneki's path)
-     * @param crystal    Ayato's wings crystallized
+     * @param rinkaku     Rinkaku's form (ignored on Ukaku's path)
+     * @param ukaku      Ukaku's kagune form: his wings, or a kakuja (ignored on Rinkaku's path)
+     * @param crystal    Ukaku's wings crystallized
      * @param keys       the player's name for each key ("R", "LMB", "Ctrl+G")
      */
-    public record Input(KagunePath path, State state, int mastery, KaguneForm kaneki, WingForm ayato, boolean crystal, Map<Key, String> keys,
-                        boolean blade, FurutaStage furuta, boolean furutaKakuja, java.util.Set<com.hex.kagune.control.quest.Gate> shut) {
+    public record Input(KagunePath path, State state, int mastery, KaguneForm rinkaku, WingForm ukaku, boolean crystal, Map<Key, String> keys,
+                        boolean blade, GraftStage graft, boolean graftKakuja, java.util.Set<com.hex.kagune.control.quest.Gate> shut) {
         public Input {
             shut = shut == null ? java.util.Set.of() : java.util.Set.copyOf(shut);
         }
 
         /** 7.0.1: as below, every gate open (a preview, a test). */
-        public Input(KagunePath path, State state, int mastery, KaguneForm kaneki, WingForm ayato, boolean crystal, Map<Key, String> keys,
-                     boolean blade, FurutaStage furuta, boolean furutaKakuja) {
-            this(path, state, mastery, kaneki, ayato, crystal, keys, blade, furuta, furutaKakuja, java.util.Set.of());
+        public Input(KagunePath path, State state, int mastery, KaguneForm rinkaku, WingForm ukaku, boolean crystal, Map<Key, String> keys,
+                     boolean blade, GraftStage graft, boolean graftKakuja) {
+            this(path, state, mastery, rinkaku, ukaku, crystal, keys, blade, graft, graftKakuja, java.util.Set.of());
         }
 
-        public Input(KagunePath path, State state, int mastery, KaguneForm kaneki, WingForm ayato, boolean crystal, Map<Key, String> keys,
+        public Input(KagunePath path, State state, int mastery, KaguneForm rinkaku, WingForm ukaku, boolean crystal, Map<Key, String> keys,
                      boolean blade) {
-            this(path, state, mastery, kaneki, ayato, crystal, keys, blade, FurutaStage.TRANSPLANT, false);
+            this(path, state, mastery, rinkaku, ukaku, crystal, keys, blade, GraftStage.TRANSPLANT, false);
         }
 
-        public Input(KagunePath path, State state, int mastery, KaguneForm kaneki, WingForm ayato, boolean crystal, Map<Key, String> keys) {
-            this(path, state, mastery, kaneki, ayato, crystal, keys, false);
+        public Input(KagunePath path, State state, int mastery, KaguneForm rinkaku, WingForm ukaku, boolean crystal, Map<Key, String> keys) {
+            this(path, state, mastery, rinkaku, ukaku, crystal, keys, false);
         }
     }
 
@@ -84,13 +84,13 @@ public final class AbilityGuide {
     static final int NEEDLE = 0xFFE8383F;
     static final int EMBER = 0xFFFF6A2A;
     static final int UNDECIDED = 0xFFC9C0B4;
-    /** 6.1.0: Eto's pale flesh, and the red of her one eye. */
-    static final int ETO_FLESH = 0xFFE9BFAE;
-    static final int ETO_EYE = 0xFFFF4A5A;
+    /** 6.1.0: Pale's pale flesh, and the red of her one eye. */
+    static final int PALE_FLESH = 0xFFE9BFAE;
+    static final int PALE_EYE = 0xFFFF4A5A;
 
-    /** 7.0.0: Furuta DNA's crimson, and the kakuja's burning slashes. */
-    static final int FURUTA_RED = 0xFFD8283A;
-    static final int FURUTA_BURN = 0xFFFF5A3C;
+    /** 7.0.0: Graft DNA's crimson, and the kakuja's burning slashes. */
+    static final int GRAFT_RED = 0xFFD8283A;
+    static final int GRAFT_BURN = 0xFFFF5A3C;
 
     /** The kakuja need these. */
     public static final int FIRST_KAKUJA = 750;
@@ -113,67 +113,67 @@ public final class AbilityGuide {
                 rows.add(new Row("eyes", "Resistance I · Strength I · drains RC", EYES, 0));
                 // 7.0.1: the shared eye-mode fight (EyeRules): Owl DNA's body, whatever the path.
                 int m = in.mastery();
-                rows.add(row(in, "Speed Blitz (" + com.hex.kagune.control.eto.EtoStrike.count(m) + " strikes)", EYES, 0, Key.ATTACK));
+                rows.add(row(in, "Speed Blitz (" + com.hex.kagune.control.pale.PaleStrike.count(m) + " strikes)", EYES, 0, Key.ATTACK));
                 rows.add(row(in, "Flips (W A S D)", TEXT, 0, Key.USE));
                 rows.add(new Row(key(in, Key.RAPID) + " hold", "Big Punch!", EYES, 0));
                 // 7.0.1: past its mastery it may still wait for its quest.
-                boolean quest = in.shut().contains(com.hex.kagune.control.quest.Gate.EYES_KICK) && m >= com.hex.kagune.control.eto.EtoRules.KICK_MASTERY;
+                boolean quest = in.shut().contains(com.hex.kagune.control.quest.Gate.EYES_KICK) && m >= com.hex.kagune.control.pale.PaleRules.KICK_MASTERY;
                 rows.add(row(in, quest ? "Speed Kick (needs its quest)" : "Speed Kick", quest ? DIM : TEXT,
-                    locked(m, com.hex.kagune.control.eto.EtoRules.KICK_MASTERY), Key.LIFT));
+                    locked(m, com.hex.kagune.control.pale.PaleRules.KICK_MASTERY), Key.LIFT));
             }
             rows.add(new Row(key(in, Key.UNLEASH) + "+" + key(in, Key.TOGGLE), "Unleash the kagune", accent(in), 0));
             rows.add(row(in, "Kagune menu", CLOSED, 0, Key.MENU));
             rows.add(row(in, "Quests", CLOSED, 0, Key.QUESTS)); // 7.0.1
             String title = switch (in.path()) {
-                case AYATO -> "UKAKU";
-                case ETO -> "ONE-EYED OWL";
-                case FURUTA -> "FURUTA DNA";
+                case UKAKU -> "UKAKU";
+                case PALE -> "ONE-EYED OWL";
+                case GRAFT -> "GRAFT DNA";
                 default -> "RINKAKU";
             };
             return new Panel(title, eyes ? "Ghoul eyes open" : "Kagune sheathed", eyes ? EYES : CLOSED, rows);
         }
         return switch (in.path()) {
-            case AYATO -> ayato(in, rows);
-            case ETO -> eto(in, rows);
-            case FURUTA -> furuta(in, rows);
-            default -> kaneki(in, rows);
+            case UKAKU -> ukaku(in, rows);
+            case PALE -> pale(in, rows);
+            case GRAFT -> graft(in, rows);
+            default -> rinkaku(in, rows);
         };
     }
 
     /** The accent of the form the ghoul would be in. */
     static int accent(Input in) {
-        if (in.path() == KagunePath.ETO) {
-            return ETO_FLESH;
+        if (in.path() == KagunePath.PALE) {
+            return PALE_FLESH;
         }
-        if (in.path() == KagunePath.FURUTA) {
-            return in.furutaKakuja() ? FURUTA_BURN : FURUTA_RED;
+        if (in.path() == KagunePath.GRAFT) {
+            return in.graftKakuja() ? GRAFT_BURN : GRAFT_RED;
         }
-        if (in.path() == KagunePath.AYATO) {
-            WingForm form = in.ayato();
+        if (in.path() == KagunePath.UKAKU) {
+            WingForm form = in.ukaku();
             return form.finalKakuja() ? EMBER : form.kakuja() ? NEEDLE : in.crystal() ? CRYSTAL : FIRE;
         }
-        return in.kaneki().isKakuja() ? KAKUJA_PLUM : RINKAKU;
+        return in.rinkaku().isKakuja() ? KAKUJA_PLUM : RINKAKU;
     }
 
-    static Panel kaneki(Input in, List<Row> rows) {
-        KaguneForm form = in.kaneki();
+    static Panel rinkaku(Input in, List<Row> rows) {
+        KaguneForm form = in.rinkaku();
         int accent = accent(in);
         boolean kakuja = form.isKakuja();
         boolean full = form == KaguneForm.FULL_KAKUJA;
-        if (KanekiForms.autonomous(form)) {
+        if (RinkakuForms.autonomous(form)) {
             // The first kakuja's legs fight on their own; he can only walk (5.0.10). K and R still take him out of it.
             rows.add(new Row("auto", "Centipede legs fight on their own", KAKUJA_PLUM, 0));
             rows.add(new Row("move", "You can only walk", TEXT, 0));
         } else {
             rows.add(row(in, combo(form), full ? KAKUJA_RED : accent, 0, Key.ATTACK));
-            // 6.0.4: each move unlocks with mastery (KanekiUnlocks); a locked one shows dim with the mastery it needs.
+            // 6.0.4: each move unlocks with mastery (RinkakuUnlocks); a locked one shows dim with the mastery it needs.
             int m = in.mastery();
-            rows.add(row(in, kakuja ? "Rapid Strike (legs and tails)" : "Rapid Strike", TEXT, locked(m, KanekiUnlocks.RAPID_STRIKE), Key.RAPID));
-            rows.add(row(in, "Grapple leap", TEXT, locked(m, KanekiUnlocks.GRAPPLE), Key.SLINGSHOT));
-            rows.add(row(in, "Grab · Throw", TEXT, locked(m, KanekiUnlocks.GRAB), Key.GRAB, Key.THROW));
-            rows.add(row(in, "Crush", TEXT, locked(m, KanekiUnlocks.CRUSH), Key.CRUSH));
-            rows.add(row(in, "Lift", TEXT, locked(m, KanekiUnlocks.LIFT), Key.LIFT));
-            rows.add(row(in, "Slam", TEXT, locked(m, KanekiUnlocks.SLAM), Key.SLAM));
+            rows.add(row(in, kakuja ? "Rapid Strike (legs and tails)" : "Rapid Strike", TEXT, locked(m, RinkakuUnlocks.RAPID_STRIKE), Key.RAPID));
+            rows.add(row(in, "Grapple leap", TEXT, locked(m, RinkakuUnlocks.GRAPPLE), Key.SLINGSHOT));
+            rows.add(row(in, "Grab · Throw", TEXT, locked(m, RinkakuUnlocks.GRAB), Key.GRAB, Key.THROW));
+            rows.add(row(in, "Crush", TEXT, locked(m, RinkakuUnlocks.CRUSH), Key.CRUSH));
+            rows.add(row(in, "Lift", TEXT, locked(m, RinkakuUnlocks.LIFT), Key.LIFT));
+            rows.add(row(in, "Slam", TEXT, locked(m, RinkakuUnlocks.SLAM), Key.SLAM));
             rows.add(row(in, "Guard", TEXT, 0, Key.GUARD));
             if (form.hasCentipedeLegs()) {
                 rows.add(new Row("auto", "Centipede legs hunt and grab", KAKUJA_PLUM, 0));
@@ -193,10 +193,10 @@ public final class AbilityGuide {
             case FULL_KAKUJA -> "FULL KAKUJA";
             default -> form.displayName().toUpperCase(java.util.Locale.ROOT);
         };
-        return new Panel(title, kakuja ? (full ? "Kaneki DNA · final kakuja" : "Kaneki DNA · first kakuja") : "Kaneki DNA · kagune out", accent, rows);
+        return new Panel(title, kakuja ? (full ? "Rinkaku · final kakuja" : "Rinkaku · first kakuja") : "Rinkaku · kagune out", accent, rows);
     }
 
-    /** Kaneki's M1 for his form (ComboStyle's stages). */
+    /** Rinkaku's M1 for his form (ComboStyle's stages). */
     static String combo(KaguneForm form) {
         return switch (form) {
             case RINKAKU_SEED -> "Whip: Lash · Whip Crack";
@@ -208,8 +208,8 @@ public final class AbilityGuide {
         };
     }
 
-    static Panel ayato(Input in, List<Row> rows) {
-        WingForm form = in.ayato();
+    static Panel ukaku(Input in, List<Row> rows) {
+        WingForm form = in.ukaku();
         int m = in.mastery();
         int accent = accent(in);
         String title;
@@ -222,7 +222,7 @@ public final class AbilityGuide {
             rows.add(new Row(key(in, Key.SLINGSHOT), "Fireballs", TEXT, 0));
             rows.add(row(in, "Open the wings", TEXT, 0, Key.GUARD));
             title = "STEEL BLADE";
-            subtitle = "Ayato DNA · final kakuja";
+            subtitle = "Ukaku · final kakuja";
         } else if (form.finalKakuja()) {
             rows.add(row(in, "Needles + fire (bleed, burn)", EMBER, 0, Key.ATTACK));
             rows.add(row(in, "Pyre enders", EMBER, 0, Key.USE));
@@ -230,58 +230,58 @@ public final class AbilityGuide {
             rows.add(new Row(key(in, Key.SLINGSHOT) + " hold", "Pyre Gatling", TEXT, 0));
             rows.add(row(in, "Steel Blade", TEXT, 0, Key.GUARD));
             title = "FINAL KAKUJA";
-            subtitle = "Ayato DNA · needles and fire";
+            subtitle = "Ukaku · needles and fire";
         } else if (form.kakuja()) {
             rows.add(row(in, "Needle Storm", NEEDLE, 0, Key.ATTACK));
             rows.add(row(in, "Needle enders", NEEDLE, 0, Key.USE));
-            rows.add(row(in, "Rushing Death", TEXT, locked(m, AyatoRules.RUSH_MASTERY), Key.RAPID));
-            rows.add(new Row(key(in, Key.SLINGSHOT) + " hold", "Needle Gatling", TEXT, locked(m, AyatoRules.NEEDLE_GATLING_MASTERY)));
+            rows.add(row(in, "Rushing Death", TEXT, locked(m, UkakuRules.RUSH_MASTERY), Key.RAPID));
+            rows.add(new Row(key(in, Key.SLINGSHOT) + " hold", "Needle Gatling", TEXT, locked(m, UkakuRules.NEEDLE_GATLING_MASTERY)));
             title = "FIRST KAKUJA";
-            subtitle = "Ayato DNA · six tentacles";
+            subtitle = "Ukaku · six tentacles";
         } else if (in.crystal()) {
             rows.add(row(in, "Crystal spikes (bleed)", CRYSTAL, 0, Key.ATTACK));
             rows.add(row(in, "Crystal enders", CRYSTAL, 0, Key.USE));
-            rows.add(new Row(key(in, Key.SLINGSHOT) + " hold", "Gatling", TEXT, locked(m, AyatoRules.GATLING_MASTERY)));
+            rows.add(new Row(key(in, Key.SLINGSHOT) + " hold", "Gatling", TEXT, locked(m, UkakuRules.GATLING_MASTERY)));
             // 5.0.9: no Wing Vortex here: it is a fire move.
             rows.add(row(in, "Thaw the wings", CRYSTAL, 0, Key.LIFT));
             title = "CRYSTAL WINGS";
-            subtitle = "Ayato DNA · crystal mode";
+            subtitle = "Ukaku · crystal mode";
         } else {
             rows.add(row(in, "Fire shots", FIRE, 0, Key.ATTACK));
             rows.add(row(in, "Fire enders", FIRE, 0, Key.USE));
-            rows.add(row(in, "Wing Vortex", TEXT, locked(m, AyatoRules.VORTEX_MASTERY), Key.RAPID));
-            rows.add(row(in, "Crystal mode", CRYSTAL, locked(m, AyatoRules.CRYSTAL_MASTERY), Key.LIFT));
+            rows.add(row(in, "Wing Vortex", TEXT, locked(m, UkakuRules.VORTEX_MASTERY), Key.RAPID));
+            rows.add(row(in, "Crystal mode", CRYSTAL, locked(m, UkakuRules.CRYSTAL_MASTERY), Key.LIFT));
             title = switch (form) {
-                // The server sends RABBIT for a new Ayato's one wing (WingForm.shown).
+                // The server sends RABBIT for a new Ukaku's one wing (WingForm.shown).
                 case RABBIT -> m < WingForm.TWIN.requiredMastery() ? "ONE WING" : "RABBIT GUISE";
                 case ONE_WING -> "ONE-WINGED KAGUNE";
                 default -> m < WingForm.TWIN.requiredMastery() ? "ONE WING" : "TWIN WINGS";
             };
-            subtitle = "Ayato DNA · fire";
+            subtitle = "Ukaku · fire";
         }
         transform(in, rows, form.kakuja(), form.finalKakuja(), accent);
         return new Panel(title, subtitle, accent, rows);
     }
 
     /**
-     * 6.1.0: Eto's base form: her fists, flips and Big Punch from the start, the pale flesh's sweep, grab and hammer and the speed
+     * 6.1.0: Pale's base form: her fists, flips and Big Punch from the start, the pale flesh's sweep, grab and hammer and the speed
      * kick as her mastery reaches them, and her kakuja, the Owl.
      */
-    static Panel eto(Input in, List<Row> rows) {
+    static Panel pale(Input in, List<Row> rows) {
         int m = in.mastery();
-        rows.add(row(in, "Speed Blitz (" + com.hex.kagune.control.eto.EtoStrike.count(m) + " strikes)", ETO_FLESH, 0, Key.ATTACK));
+        rows.add(row(in, "Speed Blitz (" + com.hex.kagune.control.pale.PaleStrike.count(m) + " strikes)", PALE_FLESH, 0, Key.ATTACK));
         rows.add(row(in, "Flips (W A S D)", TEXT, 0, Key.USE));
-        rows.add(new Row(key(in, Key.RAPID) + " hold", "Big Punch!", ETO_EYE, 0));
-        rows.add(new Row(key(in, Key.SLINGSHOT) + " tap", "Flesh Swipe", ETO_FLESH, locked(m, com.hex.kagune.control.eto.EtoRules.SWIPE_MASTERY)));
-        rows.add(new Row(key(in, Key.SLINGSHOT) + " hold", "Flesh Grab · Throw", ETO_FLESH,
-            locked(m, com.hex.kagune.control.eto.EtoRules.GRAB_MASTERY)));
-        rows.add(new Row(key(in, Key.LIFT) + " tap", "Speed Kick", TEXT, locked(m, com.hex.kagune.control.eto.EtoRules.KICK_MASTERY)));
-        rows.add(new Row(key(in, Key.LIFT) + " hold", "Flesh Hammer", ETO_FLESH, locked(m, com.hex.kagune.control.eto.EtoRules.HAMMER_MASTERY)));
-        rows.add(new Row(key(in, Key.SLAM), "Watch This", ETO_FLESH, locked(m, com.hex.kagune.control.eto.EtoRules.WATCH_MASTERY)));
-        rows.add(new Row(key(in, Key.THROW) + " tap · hold", "Mutated Arm · Sphere", ETO_FLESH, locked(m, com.hex.kagune.control.eto.ArmRules.MASTERY)));
-        rows.add(new Row(key(in, Key.CYCLE) + " tap", "The Owl (kakuja)", ETO_FLESH, locked(m, com.hex.kagune.control.eto.OwlRules.MASTERY)));
+        rows.add(new Row(key(in, Key.RAPID) + " hold", "Big Punch!", PALE_EYE, 0));
+        rows.add(new Row(key(in, Key.SLINGSHOT) + " tap", "Flesh Swipe", PALE_FLESH, locked(m, com.hex.kagune.control.pale.PaleRules.SWIPE_MASTERY)));
+        rows.add(new Row(key(in, Key.SLINGSHOT) + " hold", "Flesh Grab · Throw", PALE_FLESH,
+            locked(m, com.hex.kagune.control.pale.PaleRules.GRAB_MASTERY)));
+        rows.add(new Row(key(in, Key.LIFT) + " tap", "Speed Kick", TEXT, locked(m, com.hex.kagune.control.pale.PaleRules.KICK_MASTERY)));
+        rows.add(new Row(key(in, Key.LIFT) + " hold", "Flesh Hammer", PALE_FLESH, locked(m, com.hex.kagune.control.pale.PaleRules.HAMMER_MASTERY)));
+        rows.add(new Row(key(in, Key.SLAM), "Watch This", PALE_FLESH, locked(m, com.hex.kagune.control.pale.PaleRules.WATCH_MASTERY)));
+        rows.add(new Row(key(in, Key.THROW) + " tap · hold", "Mutated Arm · Sphere", PALE_FLESH, locked(m, com.hex.kagune.control.pale.ArmRules.MASTERY)));
+        rows.add(new Row(key(in, Key.CYCLE) + " tap", "The Owl (kakuja)", PALE_FLESH, locked(m, com.hex.kagune.control.pale.OwlRules.MASTERY)));
         away(in, rows);
-        return new Panel("BASE FORM", "Owl DNA · one-eyed owl", ETO_FLESH, rows);
+        return new Panel("BASE FORM", "Owl DNA · one-eyed owl", PALE_FLESH, rows);
     }
 
     /** 1.0.22: the final kakujas' colours: War's crimson, Peace's white and the red of its last one. */
@@ -299,7 +299,7 @@ public final class AbilityGuide {
      * the six abilities on the keys the player bound (rows {@link #KING_FIRST} on, in their enum's order), and K or R to turn back.
      */
     public static Panel king(Map<Key, String> keys, boolean peace) {
-        Input in = new Input(KagunePath.KANEKI, State.OUT, FINAL_KAKUJA, KaguneForm.FULL_KAKUJA, WingForm.TWIN, false, keys);
+        Input in = new Input(KagunePath.RINKAKU, State.OUT, FINAL_KAKUJA, KaguneForm.FULL_KAKUJA, WingForm.TWIN, false, keys);
         int accent = peace ? PEACE_WHITE : WAR_RED;
         List<Row> rows = new ArrayList<>();
         rows.add(row(in, (peace ? "Blades" : "Fists") + ": chain · Space held: launch", accent, 0, Key.ATTACK));
@@ -315,55 +315,55 @@ public final class AbilityGuide {
         }
         rows.add(new Row(key(in, Key.CYCLE) + " tap", "Turn back", accent, 0));
         away(in, rows);
-        return new Panel(peace ? "PEACE" : "WAR", peace ? "Kaneki DNA · final kakuja · white wings" : "Kaneki DNA · final kakuja · One-Eyed King",
+        return new Panel(peace ? "PEACE" : "WAR", peace ? "Rinkaku · final kakuja · white wings" : "Rinkaku · final kakuja · One-Eyed King",
             accent, rows);
     }
 
-    /** The original's keys each of Furuta's move slots is on. */
-    private static final Object[][] FURUTA_KEYS = {{FurutaMove.Slot.Z, Key.RAPID}, {FurutaMove.Slot.J, Key.SLINGSHOT}, {FurutaMove.Slot.V, Key.LIFT},
-        {FurutaMove.Slot.B, Key.SLAM}, {FurutaMove.Slot.N, Key.THROW}, {FurutaMove.Slot.H, Key.CRUSH}, {FurutaMove.Slot.G, Key.GRAB},
-        {FurutaMove.Slot.C, Key.GUARD}};
+    /** The original's keys each of Graft's move slots is on. */
+    private static final Object[][] GRAFT_KEYS = {{GraftMove.Slot.Z, Key.RAPID}, {GraftMove.Slot.J, Key.SLINGSHOT}, {GraftMove.Slot.V, Key.LIFT},
+        {GraftMove.Slot.B, Key.SLAM}, {GraftMove.Slot.N, Key.THROW}, {GraftMove.Slot.H, Key.CRUSH}, {GraftMove.Slot.G, Key.GRAB},
+        {GraftMove.Slot.C, Key.GUARD}};
 
     /**
-     * 7.0.0: Furuta DNA with the kagune out: the stage's string, the dash, its moves on their keys (dim until the mastery reaches
+     * 7.0.0: Graft DNA with the kagune out: the stage's string, the dash, its moves on their keys (dim until the mastery reaches
      * them), K for the kakuja (tap) or the next stage (hold).
      */
-    static Panel furuta(Input in, List<Row> rows) {
+    static Panel graft(Input in, List<Row> rows) {
         int m = in.mastery();
-        boolean kakuja = in.furutaKakuja();
-        FurutaStage stage = kakuja ? FurutaStage.KAKUJA : in.furuta();
+        boolean kakuja = in.graftKakuja();
+        GraftStage stage = kakuja ? GraftStage.KAKUJA : in.graft();
         int accent = accent(in);
-        FurutaMove first = FurutaMove.firstStrike(stage);
+        GraftMove first = GraftMove.firstStrike(stage);
         rows.add(row(in, first.displayName() + " string", accent, locked(m, first.mastery()), Key.ATTACK));
         rows.add(row(in, "Kagune Step (W A S D)", TEXT, 0, Key.USE));
-        for (Object[] entry : FURUTA_KEYS) {
-            FurutaMove move = FurutaMove.of((FurutaMove.Slot)entry[0], stage);
-            if (move == FurutaMove.NONE) {
+        for (Object[] entry : GRAFT_KEYS) {
+            GraftMove move = GraftMove.of((GraftMove.Slot)entry[0], stage);
+            if (move == GraftMove.NONE) {
                 continue;
             }
             String name = move.hint().isEmpty() ? move.displayName() : move.displayName() + " · " + move.hint();
-            rows.add(row(in, name, move.mastery() >= FurutaStage.KAKUJA.mastery() ? FURUTA_BURN : TEXT, locked(m, move.mastery()), (Key)entry[1]));
+            rows.add(row(in, name, move.mastery() >= GraftStage.KAKUJA.mastery() ? GRAFT_BURN : TEXT, locked(m, move.mastery()), (Key)entry[1]));
         }
         if (kakuja) {
             rows.add(new Row(key(in, Key.CYCLE) + " tap", "Turn back", accent, 0));
         } else {
-            rows.add(new Row(key(in, Key.CYCLE) + " tap", "Kakuja", FURUTA_BURN, locked(m, FurutaStage.KAKUJA.mastery())));
+            rows.add(new Row(key(in, Key.CYCLE) + " tap", "Kakuja", GRAFT_BURN, locked(m, GraftStage.KAKUJA.mastery())));
             rows.add(new Row(key(in, Key.CYCLE) + " hold", "Next stage", accent, 0));
         }
         away(in, rows);
-        return new Panel(kakuja ? "KAKUJA" : stage.displayName().toUpperCase(java.util.Locale.ROOT), "Furuta DNA · right kakugan", accent, rows);
+        return new Panel(kakuja ? "KAKUJA" : stage.displayName().toUpperCase(java.util.Locale.ROOT), "Graft DNA · right kakugan", accent, rows);
     }
 
     /** K into and out of the kakuja (tap: the first, hold: the final, from the first too), R to kakugan mode, Ctrl + R all away. */
     static void transform(Input in, List<Row> rows, boolean kakuja, boolean finalForm, int accent) {
-        boolean ayato = in.path() == KagunePath.AYATO;
+        boolean ukaku = in.path() == KagunePath.UKAKU;
         if (kakuja) {
             rows.add(new Row(key(in, Key.CYCLE) + " tap", "Turn back", accent, 0));
         } else {
-            rows.add(new Row(key(in, Key.CYCLE) + " tap", "First kakuja", ayato ? NEEDLE : KAKUJA_PLUM, locked(in.mastery(), FIRST_KAKUJA)));
+            rows.add(new Row(key(in, Key.CYCLE) + " tap", "First kakuja", ukaku ? NEEDLE : KAKUJA_PLUM, locked(in.mastery(), FIRST_KAKUJA)));
         }
         if (!finalForm) {
-            rows.add(new Row(key(in, Key.CYCLE) + " hold", "Final kakuja", ayato ? EMBER : KAKUJA_RED, locked(in.mastery(), FINAL_KAKUJA)));
+            rows.add(new Row(key(in, Key.CYCLE) + " hold", "Final kakuja", ukaku ? EMBER : KAKUJA_RED, locked(in.mastery(), FINAL_KAKUJA)));
         }
         away(in, rows);
     }

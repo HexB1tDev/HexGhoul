@@ -1,7 +1,7 @@
 package com.hex.kagune.control.client;
 
 import com.hex.kagune.control.client.fx.OwlShardFx;
-import com.hex.kagune.control.eto.OwlShards;
+import com.hex.kagune.control.pale.OwlShards;
 import com.hex.kagune.control.network.S2COwlShard;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,7 +17,7 @@ import net.minecraftforge.fml.common.Mod;
 
 /**
  * 6.2.0: the client's store of every Owl's volley spears ({@link S2COwlShard}): each flown from where and when it was thrown and how
- * fast (on {@link EtoClient#clock}, as every client flies it alike) until the server says where it stuck, then held there until it
+ * fast (on {@link PaleClient#clock}, as every client flies it alike) until the server says where it stuck, then held there until it
  * crumbles.
  */
 @Mod.EventBusSubscriber(modid = "hexkagune", value = Dist.CLIENT)
@@ -74,8 +74,8 @@ public final class OwlShardClient {
             return;
         }
         long behind = minecraft.f_91073_ == null ? 0L : minecraft.f_91073_.m_46467_() - message.tick();
-        double clock = EtoClient.clock(0.0F);
-        double began = clock - (Math.abs(behind) > EtoClient.JUST_BEGUN || behind < 0L ? behind : 0L);
+        double clock = PaleClient.clock(0.0F);
+        double began = clock - (Math.abs(behind) > PaleClient.JUST_BEGUN || behind < 0L ? behind : 0L);
         Map<Integer, Shard> hers = SHARDS.computeIfAbsent(message.playerId(), ignored -> new LinkedHashMap<>());
         double[] at = {message.x(), message.y(), message.z()};
         double[] d = {message.dx(), message.dy(), message.dz()};

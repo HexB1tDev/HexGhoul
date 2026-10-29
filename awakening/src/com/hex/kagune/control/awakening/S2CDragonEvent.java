@@ -10,7 +10,7 @@ import net.minecraftforge.network.NetworkEvent;
 
 /**
  * A discrete moment of the awakening that clients turn into camera shake, flashes and debris. 1.0.11: {@code PRELUDE}, again and again
- * while Kaneki turns (its magnitude: how many ticks in), and {@code BURST}, each violent burst out of him then (how hard, 0..1).
+ * while Rinkaku turns (its magnitude: how many ticks in), and {@code BURST}, each violent burst out of him then (how hard, 0..1).
  */
 public record S2CDragonEvent(UUID owner, Kind kind, double x, double y, double z, float magnitude) {
     public enum Kind { ERUPTION, BITE, LASH, SLAM, GRAB, CRACK, SHATTER, EMERGE, END, PRELUDE, BURST }

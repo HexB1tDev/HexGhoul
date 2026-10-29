@@ -3,7 +3,7 @@ package com.hex.kagune.control;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Kaneki's grapple flight (3.0.0): up, over and down onto the top of the grabbed block, ending exactly on it. */
+/** Rinkaku's grapple flight (3.0.0): up, over and down onto the top of the grabbed block, ending exactly on it. */
 public final class SlingshotTests {
     private static int passed;
     private static final List<String> FAILURES = new ArrayList<>();

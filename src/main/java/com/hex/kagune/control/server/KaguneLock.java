@@ -65,7 +65,7 @@ public final class KaguneLock {
         UNTIL.put(player.m_20148_(), player.m_9236_().m_46467_() + TICKS);
     }
 
-    /** 6.2.0: the wait is over now (Eto standing up in her kagune after her death that does not take). */
+    /** 6.2.0: the wait is over now (Pale standing up in her kagune after her death that does not take). */
     static void clear(ServerPlayer player) {
         UNTIL.remove(player.m_20148_());
     }

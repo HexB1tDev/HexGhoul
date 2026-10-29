@@ -1,6 +1,6 @@
 package com.hex.kagune.control.king;
 
-import com.hex.kagune.control.ayato.UkakuModel;
+import com.hex.kagune.control.ukaku.UkakuModel;
 import java.util.Random;
 
 /**

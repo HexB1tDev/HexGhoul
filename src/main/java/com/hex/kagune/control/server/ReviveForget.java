@@ -20,7 +20,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.ForgeRegistries;
 
 /**
- * 6.2.0: when Eto's death does not take ({@link EtoRevive}), everything acts as if it had: whatever was after her, a zombie, a
+ * 6.2.0: when Pale's death does not take ({@link PaleRevive}), everything acts as if it had: whatever was after her, a zombie, a
  * neutral mob she angered, a piglin, the Warden, the Wither, forgets her. Its target is dropped, its grudge (anger, who hurt it,
  * what its brain was set on) is wiped, the Warden's anger is cleared, the Wither's heads look away; while she is in pieces nothing
  * can take her as a target again (she is invulnerable, which no mob's targeting accepts, and any target change onto her is refused),
@@ -96,7 +96,7 @@ public final class ReviveForget {
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void target(LivingChangeTargetEvent event) {
         LivingEntity target = event.getNewTarget();
-        if (target instanceof ServerPlayer player && EtoRevive.down(player)) {
+        if (target instanceof ServerPlayer player && PaleRevive.down(player)) {
             event.setCanceled(true);
         }
     }

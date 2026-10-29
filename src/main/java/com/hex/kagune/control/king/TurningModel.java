@@ -1,23 +1,23 @@
 package com.hex.kagune.control.king;
 
-import static com.hex.kagune.control.furuta.FurutaMesh.add;
-import static com.hex.kagune.control.furuta.FurutaMesh.clamp01;
-import static com.hex.kagune.control.furuta.FurutaMesh.cross;
-import static com.hex.kagune.control.furuta.FurutaMesh.lerp;
-import static com.hex.kagune.control.furuta.FurutaMesh.mix;
-import static com.hex.kagune.control.furuta.FurutaMesh.mul;
-import static com.hex.kagune.control.furuta.FurutaMesh.normalize;
-import static com.hex.kagune.control.furuta.FurutaMesh.sub;
+import static com.hex.kagune.control.graft.GraftMesh.add;
+import static com.hex.kagune.control.graft.GraftMesh.clamp01;
+import static com.hex.kagune.control.graft.GraftMesh.cross;
+import static com.hex.kagune.control.graft.GraftMesh.lerp;
+import static com.hex.kagune.control.graft.GraftMesh.mix;
+import static com.hex.kagune.control.graft.GraftMesh.mul;
+import static com.hex.kagune.control.graft.GraftMesh.normalize;
+import static com.hex.kagune.control.graft.GraftMesh.sub;
 import static com.hex.kagune.control.king.WarModel.v;
 
-import com.hex.kagune.control.ayato.KakujaModel;
-import com.hex.kagune.control.ayato.UkakuModel;
-import com.hex.kagune.control.furuta.FurutaMesh;
+import com.hex.kagune.control.ukaku.KakujaModel;
+import com.hex.kagune.control.ukaku.UkakuModel;
+import com.hex.kagune.control.graft.GraftMesh;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 1.0.11: Kaneki turning into the Dragon (pure), in the seconds before it erupts out of him: kagune rips out of his chest, then out
+ * 1.0.11: Rinkaku turning into the Dragon (pure), in the seconds before it erupts out of him: kagune rips out of his chest, then out
  * of his head; black centipede plates spread over him from the wound, red cracks running on ahead of them; a segmented tail tears
  * out of his lower back; his one kakugan burns. {@code p} (0..1) is how far it has gone: the prelude's progress, {@link #PRELUDE_TICKS}
  * long. Built in body pixels as {@link WarModel} is (x to the player's left, y up from the feet, z backward).
@@ -96,17 +96,17 @@ public final class TurningModel {
 
     /** {@code since} ticks after a rip: over half out in the first six ticks, the rest over the next three seconds. */
     static double rip(double since) {
-        return 0.6 * FurutaMesh.smooth(clamp01(since / 6.0)) + 0.4 * FurutaMesh.smooth(clamp01((since - 6.0) / 60.0));
+        return 0.6 * GraftMesh.smooth(clamp01(since / 6.0)) + 0.4 * GraftMesh.smooth(clamp01((since - 6.0) / 60.0));
     }
 
     /** How far out of his back the tail is. */
     public static double tail(double p) {
-        return FurutaMesh.smooth(clamp01((p - 0.55) / 0.4));
+        return GraftMesh.smooth(clamp01((p - 0.55) / 0.4));
     }
 
     /** How far from the wound (body pixels) the plates have spread. */
     public static double front(double p) {
-        return REACH * FurutaMesh.smooth(clamp01((p - 0.12) / 0.8));
+        return REACH * GraftMesh.smooth(clamp01((p - 0.12) / 0.8));
     }
 
     /** How hard he is screaming at {@code p} (0..1): up fast, held, and down. */
@@ -168,7 +168,7 @@ public final class TurningModel {
                 plates(body, TORSO_BOX, front, time, 10, 0.0);
                 for (int i = 0; i < CHEST.length; i++) {
                     double[] root = v(CHEST[i][0][0], CHEST[i][0][1], -2.0);
-                    tendril(body, root, CHEST[i], chest(p) * (i < 2 ? 1.0 : FurutaMesh.smooth(clamp01(chest(p) * 1.4 - 0.4))), time, writhe, i, 1.25);
+                    tendril(body, root, CHEST[i], chest(p) * (i < 2 ? 1.0 : GraftMesh.smooth(clamp01(chest(p) * 1.4 - 0.4))), time, writhe, i, 1.25);
                 }
                 tail(body, tail(p), time, writhe);
             }
@@ -201,13 +201,13 @@ public final class TurningModel {
             return;
         }
         double[] n = v(0, 0, -1);
-        double r = 2.6 * FurutaMesh.smooth(clamp01(out * 2.0));
+        double r = 2.6 * GraftMesh.smooth(clamp01(out * 2.0));
         WarModel.disc(body, v(0.0, 19.0, -2.08), n, v(0, 1, 0), 0.0, r, r * 1.25, FLESH, BLOOD, 14, false);
         WarModel.disc(body, v(0.0, 19.0, -2.12), n, v(0, 1, 0), 0.0, r * 0.55, r * 0.7, 0xFF1A0306, FLESH, 12, false);
         // Blood run down from it.
         for (int k = 0; k < 5; k++) {
             double x = -2.0 + k;
-            double length = (2.0 + 3.0 * FurutaMesh.hash(k * 13 + 5)) * clamp01(out * 1.5 - 0.2);
+            double length = (2.0 + 3.0 * GraftMesh.hash(k * 13 + 5)) * clamp01(out * 1.5 - 0.2);
             if (length < 0.2) {
                 continue;
             }
@@ -243,7 +243,7 @@ public final class TurningModel {
                 if (in > 0.02) {
                     double[] base = add(at, mul(out, 0.3));
                     double[] side = normalize(cross(out, v(0, 1, 0)));
-                    double length = (2.5 + 0.3 * FurutaMesh.hash((int)(y * 7) * 31 + k)) * in;
+                    double length = (2.5 + 0.3 * GraftMesh.hash((int)(y * 7) * 31 + k)) * in;
                     // Laid flat over the one below, broad, a scale of a centipede's armour, not a spine.
                     WarModel.shard(body, base, add(v(0, -1, 0), mul(out, 0.12)), out, length, 2.0 * in + 0.2, 0.4, side, SHELL, SHELL_EDGE,
                         k % 3 == 0 ? GROOVE : 0, 3, true);
@@ -255,7 +255,7 @@ public final class TurningModel {
                     double flicker = 0.75 + 0.25 * Math.sin(time * 0.9 + k * 1.7 + y);
                     int c = mix(0xFF200004, CRACK, clamp01(glow) * flicker);
                     double[] skin = add(at, mul(out, 0.12));
-                    double[] along = normalize(add(v(0, 1, 0), mul(cross(out, v(0, 1, 0)), FurutaMesh.hash(k * 7 + (int)y) - 0.5)));
+                    double[] along = normalize(add(v(0, 1, 0), mul(cross(out, v(0, 1, 0)), GraftMesh.hash(k * 7 + (int)y) - 0.5)));
                     double[] across = mul(normalize(cross(out, along)), 0.14);
                     double[] end = add(skin, mul(along, 1.8));
                     body.glow(add(skin, across), add(end, across), sub(end, across), sub(skin, across), c, mix(c, 0xFF200004, 0.6), mix(c, 0xFF200004, 0.6), c);
@@ -277,7 +277,7 @@ public final class TurningModel {
         for (int k = 1; k < shape.length; k++) {
             double u = (double)k / (shape.length - 1);
             double[] full = add(root, v(shape[k][0], shape[k][1], shape[k][2]));
-            double[] p = lerp(root, full, FurutaMesh.smooth(clamp01(out * 1.35 - u * 0.35)));
+            double[] p = lerp(root, full, GraftMesh.smooth(clamp01(out * 1.35 - u * 0.35)));
             double w = Math.pow(u, 1.2) * writhe * out;
             p = add(p, v(Math.sin(time * 0.31 + seed * 1.9 + u * 3.1) * w, Math.sin(time * 0.27 + seed * 2.3 + u * 2.6) * w * 0.8,
                 Math.cos(time * 0.29 + seed * 0.8 + u * 2.9) * w));
@@ -286,7 +286,7 @@ public final class TurningModel {
         KakujaModel.Spine sp = WarModel.spine(pts, 36, v(0, 1, 0));
         double length = Math.max(0.6, sp.length());
         int segments = Math.max(3, (int)Math.round(length / 2.2));
-        FurutaMesh.tube(new WarModel.SinkAdapter(body), sp, 0.0, 1.0, 36, 7, new FurutaMesh.Surface() {
+        GraftMesh.tube(new WarModel.SinkAdapter(body), sp, 0.0, 1.0, 36, 7, new GraftMesh.Surface() {
             @Override
             public double radius(double s, double a) {
                 double seg = (s * segments) % 1.0;
@@ -313,7 +313,7 @@ public final class TurningModel {
             double r = width * (1.0 - 0.6 * s);
             for (int e = -1; e <= 1; e += 2) {
                 double[] flank = add(f[0], mul(f[3], e * r * 0.8));
-                WarModel.shard(body, flank, add(mul(f[3], e), mul(f[2], -0.5)), mul(f[1], -1), (0.9 + 0.5 * FurutaMesh.hash(seed * 41 + k)) * out + 0.2, 0.35, 0.3,
+                WarModel.shard(body, flank, add(mul(f[3], e), mul(f[2], -0.5)), mul(f[1], -1), (0.9 + 0.5 * GraftMesh.hash(seed * 41 + k)) * out + 0.2, 0.35, 0.3,
                     f[2], SHELL, SHELL_EDGE, 0, 2);
             }
         }
@@ -328,13 +328,13 @@ public final class TurningModel {
         List<double[]> pts = new ArrayList<>();
         for (int k = 0; k < TAIL.length; k++) {
             double u = (double)k / (TAIL.length - 1);
-            double[] p = lerp(root, v(TAIL[k][0], TAIL[k][1], TAIL[k][2]), FurutaMesh.smooth(clamp01(out * 1.3 - u * 0.3)));
+            double[] p = lerp(root, v(TAIL[k][0], TAIL[k][1], TAIL[k][2]), GraftMesh.smooth(clamp01(out * 1.3 - u * 0.3)));
             double w = u * writhe * 0.7 * out;
             p = add(p, v(Math.sin(time * 0.21 + u * 2.4) * w * 1.6, Math.sin(time * 0.17 + u * 3.0) * w * 0.5, 0.0));
             pts.add(p);
         }
         KakujaModel.Spine sp = WarModel.spine(pts, 48, v(0, 1, 0));
-        FurutaMesh.tube(new WarModel.SinkAdapter(body), sp, 0.0, 1.0, 48, 8, new FurutaMesh.Surface() {
+        GraftMesh.tube(new WarModel.SinkAdapter(body), sp, 0.0, 1.0, 48, 8, new GraftMesh.Surface() {
             @Override
             public double radius(double s, double a) {
                 double seg = (s * TAIL_SEGMENTS) % 1.0;

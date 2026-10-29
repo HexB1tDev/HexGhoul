@@ -61,7 +61,7 @@ public final class FirstPersonArms {
 
     /**
      * 1.2.4: what to add (rig space, blocks) to anything drawn on {@code body} so its neck is where a standing body's is: as the
-     * camera, which never leans or bobs with the pose. Taken at the neck, not the eyes ({@code EtoOwnLeg#shift}), so the head's own
+     * camera, which never leans or bobs with the pose. Taken at the neck, not the eyes ({@code PaleOwnLeg#shift}), so the head's own
      * turns (War's twitching) do not shake everything else in view.
      */
     public static double[] neckShift(RigPose body) {

@@ -147,7 +147,7 @@ public final class GhoulNpcTalk {
                 ItemStack held = ControlItems.ghoulMeat(player.m_21205_()) ? player.m_21205_() : player.m_21206_();
                 if (ControlItems.ghoulMeat(held)) {
                     held.m_41774_(1);
-                    AyatoFire.sound(level, npc.m_20182_(), "entity.generic.eat", 0.8F, 0.8F);
+                    UkakuFire.sound(level, npc.m_20182_(), "entity.generic.eat", 0.8F, 0.8F);
                 }
             }
             case ALLY -> {

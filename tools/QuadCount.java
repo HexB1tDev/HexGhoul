@@ -1,9 +1,9 @@
-import com.hex.kagune.control.ayato.WingForm;
-import com.hex.kagune.control.ayato.WingRig;
+import com.hex.kagune.control.ukaku.WingForm;
+import com.hex.kagune.control.ukaku.WingRig;
 
 /**
  * Prints how many quads the twin wings build per player at each era and state (full detail and far detail), to keep
- * an eye on the budget AyatoTests enforces (under 3200 at rest, under 6400 mid-crystallization, far under half).
+ * an eye on the budget UkakuTests enforces (under 3200 at rest, under 6400 mid-crystallization, far under half).
  * Usage after tools/preview.sh (or a build): {@code java -cp build/preview-classes:build/classes tools/QuadCount.java}.
  */
 public class QuadCount {

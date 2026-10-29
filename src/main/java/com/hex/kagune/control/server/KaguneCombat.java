@@ -8,8 +8,8 @@ import com.hex.kagune.control.ControlMath;
 import com.hex.kagune.control.HitGeometry;
 import com.hex.kagune.control.HitShape;
 import com.hex.kagune.control.StrikePattern;
-import com.hex.kagune.control.ayato.AyatoMutation;
-import com.hex.kagune.control.ayato.AyatoRules;
+import com.hex.kagune.control.ukaku.UkakuMutation;
+import com.hex.kagune.control.ukaku.UkakuRules;
 import com.hex.kagune.data.KaguneProfile;
 import com.hex.kagune.gameplay.KaguneForm;
 import com.hex.kagune.gameplay.KaguneRuntime;
@@ -37,8 +37,8 @@ import net.minecraft.world.phys.Vec3;
  * Server-authoritative M1 combos. Clicks only ever ask the server to strike; stage choice, timing, the
  * hit volume and damage are all resolved here at the impact tick against server positions, with each
  * entity damaged at most once per strike. Clients receive the stage through {@code S2CControlState}
- * purely to animate it. Ayato-path players fight with kicks and wing strikes instead of tendrils
- * ({@link AyatoRules#style}); everything else about the combo (timing, buffering, hit volumes) is shared.
+ * purely to animate it. Ukaku-path players fight with kicks and wing strikes instead of tendrils
+ * ({@link UkakuRules#style}); everything else about the combo (timing, buffering, hit volumes) is shared.
  */
 public final class KaguneCombat {
     private static final Map<UUID, Combo> COMBOS = new HashMap<>();
@@ -64,12 +64,12 @@ public final class KaguneCombat {
         double range;
         long queuedAt = Long.MIN_VALUE;
         int queuedHintId;
-        /** A right click waiting for the shot in progress to open the chain (Ayato's enders), and whether W was held. */
+        /** A right click waiting for the shot in progress to open the chain (Ukaku's enders), and whether W was held. */
         long queuedEnderAt = Long.MIN_VALUE;
         int queuedEnderHintId;
         boolean queuedEnderForward;
-        /** Game time each ender may next be used (AyatoRules.enderCooldown). */
-        final long[] enderReadyAt = new long[ComboStyle.AYATO_ENDERS.stageCount()];
+        /** Game time each ender may next be used (UkakuRules.enderCooldown). */
+        final long[] enderReadyAt = new long[ComboStyle.UKAKU_ENDERS.stageCount()];
 
         boolean owns(KaguneRuntime.State state) {
             return state.mode == TendrilMode.SWIPE && state.modeStarted == this.startedAt;
@@ -102,31 +102,31 @@ public final class KaguneCombat {
         return COMBOS.computeIfAbsent(player.m_20148_(), ignored -> new Combo());
     }
 
-    /** The combo system runs for this player: always on the Ayato path (its kit is the combo), else per config. */
+    /** The combo system runs for this player: always on the Ukaku path (its kit is the combo), else per config. */
     private static boolean combos(ServerPlayer player) {
-        return ControlConfig.kaguneCombos() || AyatoServer.isAyato(player);
+        return ControlConfig.kaguneCombos() || UkakuServer.isUkaku(player);
     }
 
     /** Replaces {@code KaguneServerController.startSwipe} (bytecode trampoline): every M1 and vanilla-attack swipe lands here. */
     public static void startSwipe(ServerPlayer player, Entity hint) {
         KakujaPassive.attacked(player);
-        if (EtoServer.isEto(player)) {
-            EtoBlitz.click(player, hint); // 6.1.0: Eto fights with her fists (the Speed Blitz)
+        if (PaleServer.isPale(player)) {
+            PaleBlitz.click(player, hint); // 6.1.0: Pale fights with her fists (the Speed Blitz)
             return;
         }
-        if (FurutaServer.isFuruta(player)) {
-            FurutaServer.strike(player, hint); // 7.0.0: Furuta's limbs' string, or his blade and the kagune
+        if (GraftServer.isGraft(player)) {
+            GraftServer.strike(player, hint); // 7.0.0: Graft's limbs' string, or his blade and the kagune
             return;
         }
-        if (KanekiAutonomy.refuse(player)) {
+        if (RinkakuAutonomy.refuse(player)) {
             return; // the first kakuja's legs fight on their own; he has no M1 in it
         }
         if (!combos(player)) {
             KaguneServerController.startSwipeLegacy(player, hint);
             return;
         }
-        if (AyatoGatling.firing(player)) {
-            return; // Ayato's wings are busy firing the Gatling
+        if (UkakuGatling.firing(player)) {
+            return; // Ukaku's wings are busy firing the Gatling
         }
         KaguneRuntime.State state = KaguneRuntime.get(player.m_20148_());
         long now = player.m_9236_().m_46467_();
@@ -142,8 +142,8 @@ public final class KaguneCombat {
 
     /** Instinct-forced strike at {@code prey}. Returns true if the kagune actually lashed out. */
     static boolean startInvoluntary(ServerPlayer player, LivingEntity prey) {
-        if (EtoServer.isEto(player) || FurutaServer.isFuruta(player)) {
-            return false; // 6.1.0: Eto's flesh never lashes out on its own (7.0.0: nor Furuta's limbs: he is in control)
+        if (PaleServer.isPale(player) || GraftServer.isGraft(player)) {
+            return false; // 6.1.0: Pale's flesh never lashes out on its own (7.0.0: nor Graft's limbs: he is in control)
         }
         KaguneRuntime.State state = KaguneRuntime.get(player.m_20148_());
         long now = player.m_9236_().m_46467_();
@@ -158,7 +158,7 @@ public final class KaguneCombat {
     }
 
     /**
-     * Ayato's right click (C2SAyatoAction): the ender for the shots fired so far in this chain ({@link AyatoRules#ender}),
+     * Ukaku's right click (C2SUkakuAction): the ender for the shots fired so far in this chain ({@link UkakuRules#ender}),
      * from the fire's set or, in the crystal mode, the crystal's. Pressed while a shot is still playing, it waits for that
      * shot to open the chain.
      */
@@ -169,14 +169,14 @@ public final class KaguneCombat {
     /** {@link #startEnder(ServerPlayer, Entity)}; {@code forward} when W was held (Fire Dash dashes forward instead of the hop). */
     public static void startEnder(ServerPlayer player, Entity hint, boolean forward) {
         KakujaPassive.attacked(player);
-        if (!AyatoServer.isAyato(player) || !AyatoServer.comboStyle(player, player.m_9236_().m_46467_()).ayatoShots()) {
+        if (!UkakuServer.isUkaku(player) || !UkakuServer.comboStyle(player, player.m_9236_().m_46467_()).ukakuShots()) {
             return;
         }
         KaguneRuntime.State state = KaguneRuntime.get(player.m_20148_());
         long now = player.m_9236_().m_46467_();
         Combo combo = combo(player);
         if (!tryEnder(player, state, combo, hint, now, forward)) {
-            boolean shooting = combo.style.ayatoShots() && combo.owns(state);
+            boolean shooting = combo.style.ukakuShots() && combo.owns(state);
             if (shooting && !state.hasManualHeldEntities()) {
                 combo.queuedEnderAt = now;
                 combo.queuedEnderHintId = hint == null ? 0 : hint.m_19879_();
@@ -194,32 +194,32 @@ public final class KaguneCombat {
 
     /** Starts the ender this chain earned, if it may start now (from the set of the mode he is in now). */
     private static boolean tryEnder(ServerPlayer player, KaguneRuntime.State state, Combo combo, Entity hint, long now, boolean forward) {
-        ComboStyle shooting = AyatoServer.comboStyle(player, now);
-        if (!shooting.ayatoShots()) {
+        ComboStyle shooting = UkakuServer.comboStyle(player, now);
+        if (!shooting.ukakuShots()) {
             return false;
         }
         boolean live = combo.style == shooting && combo.stage >= 0
-            && (combo.owns(state) || now - combo.lastEndAt <= AyatoRules.ENDER_WINDOW_TICKS);
+            && (combo.owns(state) || now - combo.lastEndAt <= UkakuRules.ENDER_WINDOW_TICKS);
         int shots = live ? combo.stage + 1 : 0;
-        int ender = AyatoRules.ender(shots, KaguneProfile.mastery(player), shooting.kakujaShots());
-        if (ender == 0 && forward && !shooting.kakujaShots() && AyatoServer.hasMutation(player, AyatoMutation.FIRE_DASH)) {
+        int ender = UkakuRules.ender(shots, KaguneProfile.mastery(player), shooting.kakujaShots());
+        if (ender == 0 && forward && !shooting.kakujaShots() && UkakuServer.hasMutation(player, UkakuMutation.FIRE_DASH)) {
             // Fire Dash: W and right click, where the hop would throw him back, dashes him forward through everything instead.
             if (now < combo.enderReadyAt[0]) {
                 return false;
             }
-            if (!tryBegin(player, state, combo, hint, now, false, ComboStyle.AYATO_ENDERS, AyatoRules.RABBIT_DASH_ENDER)) {
+            if (!tryBegin(player, state, combo, hint, now, false, ComboStyle.UKAKU_ENDERS, UkakuRules.RABBIT_DASH_ENDER)) {
                 return false;
             }
-            combo.enderReadyAt[0] = now + Cooldowns.of(player, AyatoRules.enderCooldown(AyatoRules.RABBIT_DASH_ENDER));
+            combo.enderReadyAt[0] = now + Cooldowns.of(player, UkakuRules.enderCooldown(UkakuRules.RABBIT_DASH_ENDER));
             return true;
         }
         if (now < combo.enderReadyAt[ender]) {
             return false;
         }
-        if (!tryBegin(player, state, combo, hint, now, false, shooting.ayatoEnders(), ender)) {
+        if (!tryBegin(player, state, combo, hint, now, false, shooting.ukakuEnders(), ender)) {
             return false;
         }
-        combo.enderReadyAt[ender] = now + Cooldowns.of(player, AyatoRules.enderCooldown(ender));
+        combo.enderReadyAt[ender] = now + Cooldowns.of(player, UkakuRules.enderCooldown(ender));
         return true;
     }
 
@@ -230,7 +230,7 @@ public final class KaguneCombat {
             return;
         }
         if (combo.queuedEnderAt != Long.MIN_VALUE) {
-            if (now - combo.queuedEnderAt > AyatoRules.ENDER_WINDOW_TICKS || !AyatoServer.isAyato(player)) {
+            if (now - combo.queuedEnderAt > UkakuRules.ENDER_WINDOW_TICKS || !UkakuServer.isUkaku(player)) {
                 combo.queuedEnderAt = Long.MIN_VALUE;
             } else {
                 Entity hint = combo.queuedEnderHintId > 0 ? player.m_284548_().m_6815_(combo.queuedEnderHintId) : null;
@@ -243,7 +243,7 @@ public final class KaguneCombat {
         if (combo.queuedAt == Long.MIN_VALUE) {
             return;
         }
-        if (now - combo.queuedAt > INPUT_BUFFER_TICKS || !combos(player) || KanekiAutonomy.active(player)) {
+        if (now - combo.queuedAt > INPUT_BUFFER_TICKS || !combos(player) || RinkakuAutonomy.active(player)) {
             combo.queuedAt = Long.MIN_VALUE;
             return;
         }
@@ -266,14 +266,14 @@ public final class KaguneCombat {
         if ((!chaining && KaguneServerController.committed(state.mode)) || now < state.inputCooldownUntil) {
             return false;
         }
-        boolean ayato = AyatoServer.isAyato(player);
-        ComboStyle style = forced != null ? forced : ayato ? AyatoServer.comboStyle(player, now) : ComboStyle.forForm(KaguneProfile.form(player));
+        boolean ukaku = UkakuServer.isUkaku(player);
+        ComboStyle style = forced != null ? forced : ukaku ? UkakuServer.comboStyle(player, now) : ComboStyle.forForm(KaguneProfile.form(player));
         float control = ControlServer.control(player);
         int next = 0;
         if (forced != null) {
             next = Math.max(0, Math.min(style.stageCount() - 1, forcedStage));
         } else if (combo.stage >= 0 && combo.style == style && (chaining || now - combo.lastEndAt <= Math.max(ControlMath.comboWindowTicks(control),
-            style.ayatoShots() ? AyatoRules.ENDER_WINDOW_TICKS : 0))) {
+            style.ukakuShots() ? UkakuRules.ENDER_WINDOW_TICKS : 0))) {
             next = (combo.stage + 1) % style.stageCount();
         }
         ComboStage stage = style.stage(next);
@@ -296,14 +296,14 @@ public final class KaguneCombat {
             targetPosition = block.m_6662_() == HitResult.Type.BLOCK ? block.m_82450_() : eye.m_82549_(player.m_20154_().m_82490_(range));
         }
         int duration = scaledDuration(player, stage, control);
-        // Ayato's low RC supply (canon) makes every strike dearer until :re mastery.
-        float cost = 0.85F * stage.energyMul() * (ayato ? AyatoRules.rcCostMultiplier(KaguneProfile.mastery(player)) : 1.0F);
+        // Ukaku's low RC supply (canon) makes every strike dearer until :re mastery.
+        float cost = 0.85F * stage.energyMul() * (ukaku ? UkakuRules.rcCostMultiplier(KaguneProfile.mastery(player)) : 1.0F);
         if (!KaguneServerController.useEnergy(player, cost, !involuntary)) {
             return false;
         }
 
         int mask;
-        if (ayato) {
+        if (ukaku) {
             // Wings (0 right, 1 left) and legs (8, 9) are always there: no tail cycling, no Centipede legs to share.
             mask = ComboStyle.limbMask(stage, 31, 0);
         } else {
@@ -337,8 +337,8 @@ public final class KaguneCombat {
             combo.lastEndAt = now;
         }
 
-        // The original reads this as a tendril index: an Ayato strike reports its wing (kicks report the right wing).
-        state.actionLimbIndex = ayato ? ComboStyle.firstLimb(mask & 3) : ComboStyle.firstLimb(mask);
+        // The original reads this as a tendril index: an Ukaku strike reports its wing (kicks report the right wing).
+        state.actionLimbIndex = ukaku ? ComboStyle.firstLimb(mask & 3) : ComboStyle.firstLimb(mask);
         state.begin(TendrilMode.SWIPE, now, duration, targetId, targetPosition);
         int impact = stage.impactTick(duration);
         ComboStage following = style.stage(next + 1);
@@ -346,7 +346,7 @@ public final class KaguneCombat {
         // Never let chained impacts land inside the target's 10-tick hurt immunity: no wasted (or exploitable) hits.
         // Shots are bolts and spikes, not blows: their own fast cadence (each ignores hurt immunity); an ender plays out first.
         combo.chainOpenAt = now + (stage.pattern().ender() ? Math.max(impact + 1, duration - 2)
-            : stage.pattern().flame() ? Math.max(impact + 1, AyatoRules.shotCadence(stage.pattern(), KaguneProfile.mastery(player)))
+            : stage.pattern().flame() ? Math.max(impact + 1, UkakuRules.shotCadence(stage.pattern(), KaguneProfile.mastery(player)))
             : ComboStyle.chainOpenOffset(impact, followingImpact));
         state.inputCooldownUntil = combo.chainOpenAt;
         state.guarding = false;
@@ -364,15 +364,15 @@ public final class KaguneCombat {
         combo.queuedEnderAt = Long.MIN_VALUE;
         combo.direction = rotateYaw(aim.m_82541_(), deviation);
         combo.range = range;
-        if (!(ayato && (stage.pattern().flame() || stage.pattern().crystal() || stage.pattern().finalKakuja()))) {
+        if (!(ukaku && (stage.pattern().flame() || stage.pattern().crystal() || stage.pattern().finalKakuja()))) {
             // 1.0.40: a blow (not a shot) on its way: another's M1 landing on him before it lands meets it (KaguneClash), and both stop.
             long began = now;
             KaguneClash.swing(player, now, impact, range, () -> combo.startedAt == began && !combo.impactDone && combo.owns(state),
                 () -> clashed(player, state, combo));
         }
 
-        if (ayato) {
-            AyatoCombat.swing(player, stage);
+        if (ukaku) {
+            UkakuCombat.swing(player, stage);
         } else {
             float pitch = KaguneServerController.formPitch(player) * (1.12F - 0.3F * stage.weight());
             KaguneServerController.playSelf(player, HexKaguneSounds.KAGUNE_WHIP, 0.78F + 0.3F * stage.weight(),
@@ -397,12 +397,12 @@ public final class KaguneCombat {
         }
     }
 
-    /** Reach of one stage: the tendril attack range, or Ayato's leg and wing reach. */
+    /** Reach of one stage: the tendril attack range, or Ukaku's leg and wing reach. */
     private static double range(ServerPlayer player, ComboStyle style, ComboStage stage) {
-        if (style.ayato()) {
+        if (style.ukaku()) {
             // 5.0.18: the Steel Blade reaches as far as it is long.
-            return AyatoServer.blade(player) ? com.hex.kagune.control.ayato.SteelBlade.REACH * stage.rangeMul()
-                : AyatoRules.strikeRange(KaguneProfile.mastery(player), AyatoServer.form(player), stage);
+            return UkakuServer.blade(player) ? com.hex.kagune.control.ukaku.SteelBlade.REACH * stage.rangeMul()
+                : UkakuRules.strikeRange(KaguneProfile.mastery(player), UkakuServer.form(player), stage);
         }
         return Math.min(15.0, KaguneProfile.attackRange(player) * stage.rangeMul());
     }
@@ -436,17 +436,17 @@ public final class KaguneCombat {
 
     private static void resolveStrike(ServerPlayer player, KaguneRuntime.State state, Combo combo) {
         ComboStage stage = combo.style.stage(combo.stage);
-        boolean ayato = combo.style.ayato();
-        if (ayato && stage.pattern().finalKakuja()) {
-            AyatoPyre.resolve(player, state, stage, combo.limbMask, combo.direction, combo.startedAt, combo.duration);
+        boolean ukaku = combo.style.ukaku();
+        if (ukaku && stage.pattern().finalKakuja()) {
+            UkakuPyre.resolve(player, state, stage, combo.limbMask, combo.direction, combo.startedAt, combo.duration);
             return;
         }
-        if (ayato && stage.pattern().crystal()) {
-            AyatoCrystal.resolve(player, state, stage, combo.limbMask, combo.direction, combo.startedAt, combo.duration);
+        if (ukaku && stage.pattern().crystal()) {
+            UkakuCrystalCombat.resolve(player, state, stage, combo.limbMask, combo.direction, combo.startedAt, combo.duration);
             return;
         }
-        if (ayato && stage.pattern().flame()) {
-            AyatoFire.resolve(player, state, stage, combo.limbMask, combo.direction, combo.startedAt, combo.duration);
+        if (ukaku && stage.pattern().flame()) {
+            UkakuFire.resolve(player, state, stage, combo.limbMask, combo.direction, combo.startedAt, combo.duration);
             return;
         }
         double range = combo.range;
@@ -491,24 +491,24 @@ public final class KaguneCombat {
 
         KaguneForm form = KaguneProfile.form(player);
         boolean bleeds = false;
-        for (int limb = 0; limb < 31 && !ayato; limb++) {
+        for (int limb = 0; limb < 31 && !ukaku; limb++) {
             if ((combo.limbMask & 1 << limb) != 0 && form.isCentipedeLimb(limb)) {
                 bleeds = true;
             }
         }
-        // Ayato's damage follows his stages, not Kaneki's forms and mutations.
-        float baseDamage = (ayato ? AyatoRules.meleeDamage(KaguneProfile.mastery(player)) : KaguneProfile.swipeDamage(player)) * stage.damageMul();
-        float knockback = (!ayato && KaguneProfile.hasMutation(player, MutationNode.MASS) ? 0.82F : 0.58F) * stage.knockbackMul();
+        // Ukaku's damage follows his stages, not Rinkaku's forms and mutations.
+        float baseDamage = (ukaku ? UkakuRules.meleeDamage(KaguneProfile.mastery(player)) : KaguneProfile.swipeDamage(player)) * stage.damageMul();
+        float knockback = (!ukaku && KaguneProfile.hasMutation(player, MutationNode.MASS) ? 0.82F : 0.58F) * stage.knockbackMul();
         int landed = 0;
         LivingEntity firstLanded = null;
         float firstDamage = 0.0F;
         for (int index = 0; index < hits.size(); index++) {
             LivingEntity target = hits.get(index);
             float damage = baseDamage * (index == 0 ? 1.0F : 0.7F);
-            if (!ayato && KaguneProfile.hasMutation(player, MutationNode.ARM_WRAP) && target.m_20280_(player) <= 16.0) {
+            if (!ukaku && KaguneProfile.hasMutation(player, MutationNode.ARM_WRAP) && target.m_20280_(player) <= 16.0) {
                 damage *= 1.28F;
             }
-            if (ayato) {
+            if (ukaku) {
                 Vec3 centre = KaguneServerController.center(target);
                 Vec3 toward = centre.m_82546_(player.m_146892_());
                 Vec3 into = toward.m_82556_() < 1.0E-6 ? player.m_20154_() : toward.m_82541_();
@@ -520,7 +520,7 @@ public final class KaguneCombat {
                 continue;
             }
             landed++;
-            if (ayato && com.hex.kagune.control.ayato.SteelSwing.swings(stage.pattern())) {
+            if (ukaku && com.hex.kagune.control.ukaku.SteelSwing.swings(stage.pattern())) {
                 BladeBlood.cut(player, target, stage.pattern(), combo.direction, damage);
             }
             if (firstLanded == null) {
@@ -546,12 +546,12 @@ public final class KaguneCombat {
             KaguneServerController.playAt(player, impactPoint, HexKaguneSounds.KAGUNE_SLAM, 0.75F,
                 KaguneServerController.vary(player, KaguneServerController.formPitch(player), 0.05F));
         }
-        if (ayato) {
-            AyatoCombat.impact(player, stage, combo.direction, impactPoint, range);
+        if (ukaku) {
+            UkakuCombat.impact(player, stage, combo.direction, impactPoint, range);
         }
         if (landed > 0) {
             KaguneProfile.addMastery(player, "Swipe", 1);
-            if (!ayato) {
+            if (!ukaku) {
                 KaguneServerController.multiTendrilFollowUp(player, firstLanded, firstDamage);
             }
             ControlServer.onKaguneHit(player, landed);

@@ -45,7 +45,7 @@ public final class PathServer {
             String stored = root.m_128461_(KEY);
             KagunePath path = KagunePath.fromId(stored);
             if (path.chosen() && !path.id().equals(stored)) {
-                // 7.0.0: a save still naming the dormant Owl DNA (or its older id) is moved onto Furuta DNA for good.
+                // 7.0.0: a save still naming the dormant Owl DNA (or its older id) is moved onto Graft DNA for good.
                 root.m_128359_(KEY, path.id());
             }
             return path;
@@ -58,8 +58,11 @@ public final class PathServer {
 
     /** Stores {@code path} and syncs it. A manifested kagune is put away first so no state from the old path lingers. */
     public static void setPath(ServerPlayer player, KagunePath requested) {
-        // 7.0.0: a dormant path is never stored: asking for Owl DNA puts the player on Furuta DNA.
-        KagunePath path = requested.active();
+        // 7.0.0: a dormant path is never stored (1.2.5: asking for one changes nothing).
+        if (requested.dormant()) {
+            return;
+        }
+        KagunePath path = requested;
         if (path(player) != path && KaguneProfile.isActive(player)) {
             KaguneServerController.release(player, false);
             KaguneRuntime.remove(player.m_20148_());
@@ -68,13 +71,13 @@ public final class PathServer {
         }
         KaguneProfile.root(player).m_128359_(KEY, path.id());
         ControlNetwork.broadcast(player, new S2CPathState(player.m_20148_(), path));
-        AyatoServer.onPathChanged(player);
+        UkakuServer.onPathChanged(player);
     }
 
     /**
      * {@code /kagune reset <player>} (5.0.2): everything kagune about the player is wiped, as if they had never picked one: the
-     * kagune is put away (a Kaneki kakuja shatters on every client), the whole profile goes back to its defaults (path, mastery,
-     * form, both paths' mutations, the kakugan's placement, the flesh reserve, the stash), ghoul mode closes, Ayato's state is
+     * kagune is put away (a Rinkaku kakuja shatters on every client), the whole profile goes back to its defaults (path, mastery,
+     * form, both paths' mutations, the kakugan's placement, the flesh reserve, the stash), ghoul mode closes, Ukaku's state is
      * dropped, and the starting screen is offered again. A ghoul stays a ghoul (unlocked), as the original's {@code /kagune reset}
      * leaves it.
      */

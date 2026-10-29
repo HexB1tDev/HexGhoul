@@ -1,6 +1,6 @@
 package com.hex.kagune.control.client.fx;
 
-import com.hex.kagune.control.ayato.UkakuModel;
+import com.hex.kagune.control.ukaku.UkakuModel;
 import com.hex.kagune.control.client.KingClient;
 import com.hex.kagune.control.king.KingMove;
 import com.hex.kagune.control.king.PeaceFxModel;

@@ -6,7 +6,7 @@ import com.hex.kagune.control.awakening.DragonTimeline;
 import com.hex.kagune.control.awakening.V3;
 
 /**
- * Procedural mesh of Kaneki's Dragon. 1.0.31: as the source has it (Tokyo Ghoul:re), a full centipede: its body Kaneki's own centipede
+ * Procedural mesh of Rinkaku's Dragon. 1.0.31: as the source has it (Tokyo Ghoul:re), a full centipede: its body Rinkaku's own centipede
  * kagune at the Dragon's size ({@code CentipedeTail}: plum armour plates, red flesh glowing between them, a pair of sickle claws off
  * every plate walking), its great round eyes (thick dark rims, pink irises that glow) in a row down its back and here and there on its
  * flanks; the front head a rounded mass of folded flesh over a mouth of teeth, big round eyes in its sides and one small white eye at
@@ -48,7 +48,7 @@ final class DragonSculptor {
     // ---- Body ---------------------------------------------------------------------------------
 
     /**
-     * 1.0.31: its body is Kaneki's centipede kagune ({@code CentipedeTail}, the legs of his centipede form) at the Dragon's size: plate
+     * 1.0.31: its body is Rinkaku's centipede kagune ({@code CentipedeTail}, the legs of his centipede form) at the Dragon's size: plate
      * after plate of the same dusky plum armour with their pale V-notched rims, the glowing red flesh between them, a pair of its black
      * sickle claws off every plate rippling in the walking wave; as thick along it as the Dragon's body is ({@code profile}), and with
      * no fang at its front (its head is the Dragon's own).
@@ -68,7 +68,7 @@ final class DragonSculptor {
             radii[last - i] = pose.radii[i];
         }
         boolean fine = sides >= 20;
-        com.hex.kagune.control.ayato.KakujaModel.Spine spine = com.hex.kagune.control.ayato.CentipedeTail.through(controls, fine ? last * 5 : last * 3, 1,
+        com.hex.kagune.control.ukaku.KakujaModel.Spine spine = com.hex.kagune.control.ukaku.CentipedeTail.through(controls, fine ? last * 5 : last * 3, 1,
                 new double[] {0.0, 1.0, 0.0});
         double top = widest;
         java.util.function.DoubleUnaryOperator profile = u -> {
@@ -77,9 +77,9 @@ final class DragonSculptor {
             double f = x - k;
             return (radii[k] + (radii[k + 1] - radii[k]) * f) / top;
         };
-        com.hex.kagune.control.ayato.CentipedeTail.Look look = new com.hex.kagune.control.ayato.CentipedeTail.Look(widest, plates(last), fine, 1.0, 7, 0.0, 1.0,
+        com.hex.kagune.control.ukaku.CentipedeTail.Look look = new com.hex.kagune.control.ukaku.CentipedeTail.Look(widest, plates(last), fine, 1.0, 7, 0.0, 1.0,
                 0.45, time * 0.35, profile, true, fine);
-        com.hex.kagune.control.ayato.CentipedeTail.tail(redden(DragonMesh.sink(mesh, segmentLights[last / 2])), spine, look);
+        com.hex.kagune.control.ukaku.CentipedeTail.tail(redden(DragonMesh.sink(mesh, segmentLights[last / 2])), spine, look);
     }
 
     /** 1.0.31: its plates: one every {@link #RINGS_PER_PLATE} of its rings (great plates, not a ribbon of thin ones). */
@@ -93,7 +93,7 @@ final class DragonSculptor {
      * 1.0.31: the kagune's colours in the Dragon's: its armour (plum, light to dark) dark red, light to dark as it was; the flesh between
      * its plates (red) light red and hot.
      */
-    private static com.hex.kagune.control.ayato.UkakuModel.Sink redden(com.hex.kagune.control.ayato.UkakuModel.Sink sink) {
+    private static com.hex.kagune.control.ukaku.UkakuModel.Sink redden(com.hex.kagune.control.ukaku.UkakuModel.Sink sink) {
         return (a, b, c, d, n, ca, cb, cc, cd) -> sink.quad(a, b, c, d, n, redden(ca), redden(cb), redden(cc), redden(cd));
     }
 
@@ -188,7 +188,7 @@ final class DragonSculptor {
 
     /**
      * 1.0.31: its eyes: a row of great eyes down its back (a little this side or that of its spine) and here and there on its flanks,
-     * realistic ones, the many-eyed kagune's of Furuta's ({@code FurutaMesh.almond}: a white ball with a pupil ringed in red that rolls
+     * realistic ones, the many-eyed kagune's of Graft's ({@code GraftMesh.almond}: a white ball with a pupil ringed in red that rolls
      * about, a thick rim of flesh round it, lids that blink).
      */
     private static void eyes(DragonMesh mesh, DragonPose pose, double time, double instability, int[] lights, boolean fine) {
@@ -213,7 +213,7 @@ final class DragonSculptor {
             double wander = time * 0.04 + seed;
             V3 look = forward.scale(Math.sin(wander) * 0.8).add(side.scale(Math.cos(wander * 0.7) * 0.6)).add(normal.scale(0.4));
             V3 at = center.add(normal.scale(r * 0.98));
-            com.hex.kagune.control.furuta.FurutaMesh.almond(DragonMesh.sink(mesh, lights[i]), new double[] {at.x(), at.y(), at.z()},
+            com.hex.kagune.control.graft.GraftMesh.almond(DragonMesh.sink(mesh, lights[i]), new double[] {at.x(), at.y(), at.z()},
                     new double[] {normal.x(), normal.y(), normal.z()}, new double[] {forward.x(), forward.y(), forward.z()}, size * 3.0, size * 1.6,
                     new double[] {look.x(), look.y(), look.z()}, 1.0 - blink, 0.3 + 0.5 * instability, EYE_RIM, EYE_RIM_INNER, fine, 1.0);
         }
@@ -237,7 +237,7 @@ final class DragonSculptor {
         V3 control = h == 0
                 ? root.add(pose.forwardAt(0).scale(reach * 0.45))
                 : root.add(pose.upAt(rootSegment).scale(reach * 0.6));
-        // 1.0.31: Furuta's kakuja's colossus head ({@code FurutaModel.colossusHead}: the swell, the toothed maw and its mandibles,
+        // 1.0.31: Graft's kakuja's colossus head ({@code GraftModel.colossusHead}: the swell, the toothed maw and its mandibles,
         // its two eyes) in the Dragon's plum, no bigger than the body it leads (the lesser heads half that); the neck up to it.
         boolean main = h == 0;
         double size = main ? rootRadius * MAIN_HEAD : Math.max(0.5, rootRadius * 0.55);
@@ -264,9 +264,9 @@ final class DragonSculptor {
         }
         V3 past = tip.add(direction.scale(size * 0.8));
         path[4] = new double[] {past.x(), past.y(), past.z()};
-        com.hex.kagune.control.ayato.KakujaModel.Spine spine = com.hex.kagune.control.ayato.CentipedeTail.through(path, 24, 1, new double[] {0.0, 1.0, 0.0});
-        com.hex.kagune.control.furuta.FurutaModel.colossusHead(plum(DragonMesh.sink(mesh, headLight)), spine,
-                new com.hex.kagune.control.furuta.FurutaModel.Look(size, true, 1.0, 11 + h * 7, pose.jaws[h], 1.0, 0.5, true, time + h * 17.0, null));
+        com.hex.kagune.control.ukaku.KakujaModel.Spine spine = com.hex.kagune.control.ukaku.CentipedeTail.through(path, 24, 1, new double[] {0.0, 1.0, 0.0});
+        com.hex.kagune.control.graft.GraftModel.colossusHead(plum(DragonMesh.sink(mesh, headLight)), spine,
+                new com.hex.kagune.control.graft.GraftModel.Look(size, true, 1.0, 11 + h * 7, pose.jaws[h], 1.0, 0.5, true, time + h * 17.0, null));
         if (main) {
             // Its one small white eye, at the very front of it, over the mouth.
             double[][] f = spine.at(0.3);
@@ -278,10 +278,10 @@ final class DragonSculptor {
     }
 
     /**
-     * 1.0.31: Furuta's colours in the Dragon's: his black shell the kagune's plum (light to dark as it was), what is red (its flesh, its
+     * 1.0.31: Graft's colours in the Dragon's: his black shell the kagune's plum (light to dark as it was), what is red (its flesh, its
      * gums, its eyes) and what is pale (its teeth) left as they are.
      */
-    private static com.hex.kagune.control.ayato.UkakuModel.Sink plum(com.hex.kagune.control.ayato.UkakuModel.Sink sink) {
+    private static com.hex.kagune.control.ukaku.UkakuModel.Sink plum(com.hex.kagune.control.ukaku.UkakuModel.Sink sink) {
         return (a, b, c, d, n, ca, cb, cc, cd) -> sink.quad(a, b, c, d, n, plum(ca), plum(cb), plum(cc), plum(cd));
     }
 
@@ -396,7 +396,7 @@ final class DragonSculptor {
 
     // ---- Eruption, cracks, shatter ----------------------------------------------------------------
 
-    /** The first seconds: a rapidly expanding knot of black and crimson tendrils tears out of Kaneki. */
+    /** The first seconds: a rapidly expanding knot of black and crimson tendrils tears out of Rinkaku. */
     private static void eruption(DragonMesh mesh, DragonPose pose, double time, int[] lights) {
         double t = pose.tick;
         double grow = DragonTimeline.smooth(t / 26.0) * (1.0 - DragonTimeline.smooth((t - DragonTimeline.RAMPAGE_START - 10) / 20.0));

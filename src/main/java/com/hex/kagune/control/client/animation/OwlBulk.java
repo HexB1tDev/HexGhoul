@@ -16,7 +16,7 @@ public final class OwlBulk {
     }
 
     /** The chest on {@code body} at its bulk ({@code body.bulk}): its skin, then the jacket layer over it. */
-    public static void chest(RigPose body, EtoOwnLeg.Sink sink) {
+    public static void chest(RigPose body, PaleOwnLeg.Sink sink) {
         double b = Float.isFinite(body.bulk) ? Math.max(0.0, Math.min(1.0, body.bulk)) : 0.0;
         double sx = 1.0 + RigPose.BULK_CHEST * b;
         double sz = 1.0 + RigPose.BULK_CHEST_DEPTH * b;
@@ -28,7 +28,7 @@ public final class OwlBulk {
      * The chest's box grown {@code grow} pixels each way and scaled ({@code sx} across, {@code sz} front to back) about her middle,
      * its skin at ({@code u}, {@code v}) (a 64x64 skin; the torso's 8x12x4 box, its top six rows).
      */
-    static void box(RigPose body, double sx, double sz, double grow, double u, double v, boolean jacket, EtoOwnLeg.Sink sink) {
+    static void box(RigPose body, double sx, double sz, double grow, double u, double v, boolean jacket, PaleOwnLeg.Sink sink) {
         double x0 = (-4.0 - grow) * sx;
         double x1 = (4.0 + grow) * sx;
         double z0 = (-2.0 - grow) * sz;
@@ -56,7 +56,7 @@ public final class OwlBulk {
     }
 
     /** One quad of the chest (torso pixels) posed into rig space; its normal away from the chest's middle; {@code uv} in texture pixels. */
-    static void face(RigPose body, EtoOwnLeg.Sink sink, boolean jacket, double[][] local, double[] uv) {
+    static void face(RigPose body, PaleOwnLeg.Sink sink, boolean jacket, double[][] local, double[] uv) {
         double[][] p = new double[4][];
         for (int i = 0; i < 4; i++) {
             p[i] = BodyFrame.world(body, BodyFrame.model(body, "torso", local[i]));

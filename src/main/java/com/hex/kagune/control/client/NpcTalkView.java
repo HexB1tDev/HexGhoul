@@ -14,8 +14,8 @@ import java.util.Map;
  * enemy to friend), what it says, and the answers, numbered (a click or the number key picks one).
  */
 public final class NpcTalkView {
-    public static final int UI_WIDTH = AyatoMenuView.UI_WIDTH;
-    public static final int UI_HEIGHT = AyatoMenuView.UI_HEIGHT;
+    public static final int UI_WIDTH = UkakuMenuView.UI_WIDTH;
+    public static final int UI_HEIGHT = UkakuMenuView.UI_HEIGHT;
     /** The board (an oval) and the content laid inside it, a rectangle whose corners stay within the oval. */
     static final int BOX_WIDTH = 940;
     static final int BOX_HEIGHT = 300;
@@ -33,8 +33,8 @@ public final class NpcTalkView {
     }
 
     /** Draws the conversation and returns its clickable areas: "choice:N". */
-    public static Map<String, AyatoMenuView.Rect> draw(UiCanvas c, Model model, double mouseX, double mouseY, double time) {
-        Map<String, AyatoMenuView.Rect> hits = new LinkedHashMap<>();
+    public static Map<String, UkakuMenuView.Rect> draw(UiCanvas c, Model model, double mouseX, double mouseY, double time) {
+        Map<String, UkakuMenuView.Rect> hits = new LinkedHashMap<>();
         int centerX = UI_WIDTH / 2;
         int centerY = UI_HEIGHT - 8 - BOX_HEIGHT / 2;
         int left = centerX - CONTENT_WIDTH / 2;
@@ -42,9 +42,9 @@ public final class NpcTalkView {
         int top = centerY - CONTENT_HEIGHT / 2;
         int bottom = centerY + CONTENT_HEIGHT / 2;
         c.batch(() -> {
-            AyatoMenuView.organicPanel(c, centerX, centerY, BOX_WIDTH / 2, BOX_HEIGHT / 2, FurutaMenuView.PANEL_FILL, FurutaMenuView.PANEL_EDGE);
-            AyatoMenuView.organicPanel(c, centerX, centerY, BOX_WIDTH / 2 - 5, BOX_HEIGHT / 2 - 5, FurutaMenuView.INNER_FILL, FurutaMenuView.INNER_EDGE);
-            AyatoMenuView.drawVein(c, left - 30, top + 96, centerX, top + 84, right + 30, top + 96, FurutaMenuView.VEIN, 1);
+            UkakuMenuView.organicPanel(c, centerX, centerY, BOX_WIDTH / 2, BOX_HEIGHT / 2, GraftMenuView.PANEL_FILL, GraftMenuView.PANEL_EDGE);
+            UkakuMenuView.organicPanel(c, centerX, centerY, BOX_WIDTH / 2 - 5, BOX_HEIGHT / 2 - 5, GraftMenuView.INNER_FILL, GraftMenuView.INNER_EDGE);
+            UkakuMenuView.drawVein(c, left - 30, top + 96, centerX, top + 84, right + 30, top + 96, GraftMenuView.VEIN, 1);
         });
         // The face, framed in flesh.
         int faceX = left + 4;
@@ -82,7 +82,7 @@ public final class NpcTalkView {
             int row = two ? i % rows : i;
             int x = left + column * (columnWidth + 8);
             int rowY = choicesTop + row * 19;
-            AyatoMenuView.Rect rect = new AyatoMenuView.Rect(x, rowY, columnWidth, 17);
+            UkakuMenuView.Rect rect = new UkakuMenuView.Rect(x, rowY, columnWidth, 17);
             boolean hover = rect.contains(mouseX, mouseY);
             NpcTalk.Choice choice = choices.get(i);
             boolean hostile = choice == NpcTalk.Choice.INSULT || choice == NpcTalk.Choice.PART;

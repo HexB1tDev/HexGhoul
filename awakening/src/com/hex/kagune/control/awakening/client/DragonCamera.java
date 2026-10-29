@@ -23,7 +23,7 @@ import net.minecraft.world.phys.Vec3;
  * Cinematic third-person camera for the owner of a Dragon. The view is moved to a private, never
  * ticked camera entity that orbits the creature, scales its distance and height to the body's size,
  * climbs over terrain and the body itself when they block the view, and finally settles back into
- * Kaneki's eyes as he emerges.
+ * Rinkaku's eyes as he emerges.
  *
  * <p>Every frame the final camera position, after smoothing, shake and the release, is pushed out
  * of the Dragon's body and out of solid blocks ({@link #safe}). A camera inside either renders the
@@ -180,7 +180,7 @@ final class DragonCamera {
             Vec3 eyes = player.getEyePosition(partialTick);
             Vec3 look = player.getViewVector(partialTick);
             double k = DragonTimeline.smooth(release);
-            // Settle at Kaneki's feet: once the view returns to the player it rises to eye level,
+            // Settle at Rinkaku's feet: once the view returns to the player it rises to eye level,
             // so the hand-off reads as him standing up out of the fragments rather than a cut.
             V3 home = new V3(player.getX(), player.getY(), player.getZ());
             shot = position.lerp(home, k);

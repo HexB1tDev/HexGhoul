@@ -5,7 +5,7 @@ import com.hex.kagune.client.KaguneKeys;
 import com.hex.kagune.control.AbilityGuide;
 import com.hex.kagune.control.ControlConfig;
 import com.hex.kagune.control.KagunePath;
-import com.hex.kagune.control.ayato.WingForm;
+import com.hex.kagune.control.ukaku.WingForm;
 import com.hex.kagune.control.client.ui.GuiCanvas;
 import java.util.EnumMap;
 import java.util.Map;
@@ -62,10 +62,10 @@ public final class AbilityHud {
         KagunePath path = PathClient.self();
         AbilityGuide.State state = view.active() ? AbilityGuide.State.OUT
             : KakuganClient.ghoul(player) ? AbilityGuide.State.EYES : AbilityGuide.State.CLOSED;
-        WingForm wings = path == KagunePath.AYATO ? AyatoClient.get(player).form().shown(view.mastery()) : WingForm.TWIN;
-        boolean crystal = path == KagunePath.AYATO && AyatoClient.crystalMode(player);
-        boolean blade = path == KagunePath.AYATO && AyatoClient.blade(player, ControlClient.worldTime(0.0F)) > 0.5;
-        FurutaClient.View furuta = FurutaClient.get(player);
+        WingForm wings = path == KagunePath.UKAKU ? UkakuClient.get(player).form().shown(view.mastery()) : WingForm.TWIN;
+        boolean crystal = path == KagunePath.UKAKU && UkakuClient.crystalMode(player);
+        boolean blade = path == KagunePath.UKAKU && UkakuClient.blade(player, ControlClient.worldTime(0.0F)) > 0.5;
+        GraftClient.View graft = GraftClient.get(player);
         java.util.Set<com.hex.kagune.control.quest.Gate> shut = java.util.EnumSet.noneOf(com.hex.kagune.control.quest.Gate.class);
         for (com.hex.kagune.control.quest.Gate gate : com.hex.kagune.control.quest.Gate.values()) {
             if (!QuestClient.open(gate)) {
@@ -73,7 +73,7 @@ public final class AbilityHud {
             }
         }
         AbilityGuide.Input input = new AbilityGuide.Input(path, state, view.mastery(), view.form(), wings, crystal, keys, blade,
-            furuta.stage(), path == KagunePath.FURUTA && furuta.kakuja(), shut);
+            graft.stage(), path == KagunePath.GRAFT && graft.kakuja(), shut);
         GuiCanvas canvas = new GuiCanvas(event.getGuiGraphics(), minecraft.f_91062_, null);
         if (!input.equals(shown) || layout == null) {
             layout = AbilityHudView.layout(canvas, AbilityGuide.panel(input));

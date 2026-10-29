@@ -2,9 +2,9 @@ package com.hex.kagune.control.server;
 
 import com.hex.kagune.KaguneMod;
 import com.hex.kagune.control.ControlConfig;
-import com.hex.kagune.control.eto.EtoRules;
-import com.hex.kagune.control.eto.OwlRules;
-import com.hex.kagune.control.network.S2CEtoFx;
+import com.hex.kagune.control.pale.PaleRules;
+import com.hex.kagune.control.pale.OwlRules;
+import com.hex.kagune.control.network.S2CPaleFx;
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
@@ -40,7 +40,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 /**
- * Bodies Eto launches smash through weak blocks (6.1.0): shared by every move that launches (Big Punch, the flesh's throw; 6.2.0:
+ * Bodies Pale launches smash through weak blocks (6.1.0): shared by every move that launches (Big Punch, the flesh's throw; 6.2.0:
  * the speed kick carries its body through far more, {@link #kick}). While a launched body flies fast, the weak blocks in its way this tick (dirt, sand, gravel, wood, glass, leaves,
  * wool: nothing a pickaxe is needed for, nothing unbreakable, nothing tougher than wood) are broken out of its path before it
  * moves, each slowing it a little; anything stronger stops it, and slamming into it hurts.
@@ -168,11 +168,11 @@ public final class BlockSmash {
 
     /**
      * 6.2.0, the Speed Kick: {@code target} sent off along {@code line} (level: straight away from her) at {@code speed} (blocks a
-     * tick) and {@code up}. The kick carries it: no air drag, only {@link EtoRules#KICK_CARRY} of its speed lost a tick and
-     * {@link EtoRules#KICK_PER_BLOCK} a block it breaks, gravity bringing it down, until it is down on the ground (vanilla's friction
+     * tick) and {@code up}. The kick carries it: no air drag, only {@link PaleRules#KICK_CARRY} of its speed lost a tick and
+     * {@link PaleRules#KICK_PER_BLOCK} a block it breaks, gravity bringing it down, until it is down on the ground (vanilla's friction
      * skids it to a stop), spent, or stopped dead by something it can't break. On the way it smashes through anything up to
-     * {@link EtoRules#KICK_HARDEST} (each block put back exactly later) and bowls over what it flies into ({@code damage} x
-     * {@link EtoRules#KICK_BOWLED}). It can do nothing while it flies (stunned).
+     * {@link PaleRules#KICK_HARDEST} (each block put back exactly later) and bowls over what it flies into ({@code damage} x
+     * {@link PaleRules#KICK_BOWLED}). It can do nothing while it flies (stunned).
      */
     public static void kick(ServerPlayer owner, LivingEntity target, Vec3 line, double speed, double up, float damage) {
         Vec3 level = new Vec3(line.f_82479_, 0.0, line.f_82481_);
@@ -180,7 +180,7 @@ public final class BlockSmash {
             return;
         }
         level = level.m_82541_();
-        Launch launch = new Launch(target.m_19879_(), owner.m_20148_(), EtoRules.KICK_FLIGHT_TICKS);
+        Launch launch = new Launch(target.m_19879_(), owner.m_20148_(), PaleRules.KICK_FLIGHT_TICKS);
         launch.carry = level;
         launch.sent = speed;
         launch.speed = speed;
@@ -286,8 +286,8 @@ public final class BlockSmash {
                 body.m_6469_(owner.m_269291_().m_269075_(owner), damage);
             }
             Vec3 at = body.m_20182_().m_82549_(velocity.m_82541_().m_82490_(body.m_20205_() * 0.5)).m_82520_(0.0, body.m_20206_() * 0.5, 0.0);
-            EtoBlitz.fxAround(body, owner == null ? 0 : owner.m_19879_(), S2CEtoFx.CRASH, at, velocity, (float)speed, 0);
-            AyatoFire.sound(level, at, "entity.generic.big_fall", 1.0F, 0.8F);
+            PaleBlitz.fxAround(body, owner == null ? 0 : owner.m_19879_(), S2CPaleFx.CRASH, at, velocity, (float)speed, 0);
+            UkakuFire.sound(level, at, "entity.generic.big_fall", 1.0F, 0.8F);
         }
         return true;
     }
@@ -355,7 +355,7 @@ public final class BlockSmash {
         if (broke > 0) {
             // The debris thrown on along its line, the dust and the crack of it, for everyone who sees it.
             Vec3 front = body.m_20182_().m_82549_(launch.line.m_82490_(body.m_20205_() * 0.5 + step * 0.5)).m_82520_(0.0, body.m_20206_() * 0.5, 0.0);
-            EtoBlitz.fxAround(body, owner == null ? 0 : owner.m_19879_(), S2CEtoFx.SMASH, front, velocity, broke, firstState);
+            PaleBlitz.fxAround(body, owner == null ? 0 : owner.m_19879_(), S2CPaleFx.SMASH, front, velocity, broke, firstState);
         }
         if (blocked) {
             // Into something that holds (too hard, or past its reach): stopped dead, and it hurts.
@@ -369,16 +369,16 @@ public final class BlockSmash {
                 }
             }
             Vec3 at = hitAt == null ? body.m_20182_().m_82520_(0.0, body.m_20206_() * 0.5, 0.0) : hitAt.m_82546_(launch.line.m_82490_(0.5));
-            EtoBlitz.fxAround(body, owner == null ? 0 : owner.m_19879_(), S2CEtoFx.CRASH, at, velocity, (float)speed, 0);
-            AyatoFire.sound(level, at, "entity.generic.big_fall", 1.2F, 0.7F);
-            AyatoFire.sound(level, at, "entity.generic.explode", 0.6F, 1.3F);
+            PaleBlitz.fxAround(body, owner == null ? 0 : owner.m_19879_(), S2CPaleFx.CRASH, at, velocity, (float)speed, 0);
+            UkakuFire.sound(level, at, "entity.generic.big_fall", 1.2F, 0.7F);
+            UkakuFire.sound(level, at, "entity.generic.explode", 0.6F, 1.3F);
             return false;
         }
         body.m_20256_(velocity);
         body.f_19864_ = true;
         body.f_19812_ = true;
         body.f_19789_ = 0.0F;
-        EtoStun.stun(body, now, 3);
+        PaleStun.stun(body, now, 3);
         launch.travelled += step;
         launch.speed = OwlRules.slowed(launch.speed * kept, launch.decel);
         if (owner != null) {
@@ -395,7 +395,7 @@ public final class BlockSmash {
         ServerPlayer owner = level.m_7654_().m_6846_().m_11259_(launch.owner);
         long now = level.m_46467_();
         launch.flown++;
-        double speed = EtoRules.kickCarried(launch.sent, launch.flown, launch.broken);
+        double speed = PaleRules.kickCarried(launch.sent, launch.flown, launch.broken);
         if ((launch.flown > 2 && body.m_20096_()) || speed < SMASH_SPEED) {
             // Down (it skids to a stop on the ground, vanilla's friction), or its force spent: an ordinary body again.
             return false;
@@ -421,8 +421,8 @@ public final class BlockSmash {
                     if (state.m_60795_() || !inPath(level, pos, state, path) || floor(body, y, velocity)) {
                         continue;
                     }
-                    if (owner != null && launch.broken < EtoRules.KICK_MOST_BLOCKS && ControlConfig.blockSmash()
-                        && breakable(level, pos, state, EtoRules.KICK_HARDEST) && smash(level, owner, pos, state, velocity)) {
+                    if (owner != null && launch.broken < PaleRules.KICK_MOST_BLOCKS && ControlConfig.blockSmash()
+                        && breakable(level, pos, state, PaleRules.KICK_HARDEST) && smash(level, owner, pos, state, velocity)) {
                         if (broke == 0) {
                             firstState = Block.m_49956_(state);
                         }
@@ -440,7 +440,7 @@ public final class BlockSmash {
         if (broke > 0) {
             // The debris thrown on along its line, the dust and the crack of it, for everyone who sees it.
             Vec3 front = body.m_20182_().m_82549_(launch.carry.m_82490_(body.m_20205_() * 0.5 + speed * 0.5)).m_82520_(0.0, body.m_20206_() * 0.5, 0.0);
-            EtoBlitz.fxAround(body, owner == null ? 0 : owner.m_19879_(), S2CEtoFx.SMASH, front, velocity, broke, firstState);
+            PaleBlitz.fxAround(body, owner == null ? 0 : owner.m_19879_(), S2CPaleFx.SMASH, front, velocity, broke, firstState);
         }
         if (blocked) {
             // Into something that holds: stopped dead, and it hurts.
@@ -453,9 +453,9 @@ public final class BlockSmash {
                 }
             }
             Vec3 at = hitAt == null ? body.m_20182_().m_82520_(0.0, body.m_20206_() * 0.5, 0.0) : hitAt.m_82546_(launch.carry.m_82490_(0.5));
-            EtoBlitz.fxAround(body, owner == null ? 0 : owner.m_19879_(), S2CEtoFx.CRASH, at, velocity, (float)speed, 0);
-            AyatoFire.sound(level, at, "entity.generic.big_fall", 1.2F, 0.7F);
-            AyatoFire.sound(level, at, "entity.generic.explode", 0.6F, 1.3F);
+            PaleBlitz.fxAround(body, owner == null ? 0 : owner.m_19879_(), S2CPaleFx.CRASH, at, velocity, (float)speed, 0);
+            UkakuFire.sound(level, at, "entity.generic.big_fall", 1.2F, 0.7F);
+            UkakuFire.sound(level, at, "entity.generic.explode", 0.6F, 1.3F);
             return false;
         }
         launch.speed = speed;
@@ -463,9 +463,9 @@ public final class BlockSmash {
         body.f_19864_ = true;
         body.f_19812_ = true;
         body.f_19789_ = 0.0F;
-        EtoStun.stun(body, now, 3);
+        PaleStun.stun(body, now, 3);
         if (owner != null) {
-            bowl(level, owner, launch, body, path, launch.carry, EtoRules.KICK_BOWLED);
+            bowl(level, owner, launch, body, path, launch.carry, PaleRules.KICK_BOWLED);
         }
         return true;
     }
@@ -478,7 +478,7 @@ public final class BlockSmash {
     /** ...along {@code line}, each hurt by {@code share} of the blow. */
     private static void bowl(ServerLevel level, ServerPlayer owner, Launch launch, LivingEntity body, AABB path, Vec3 line, float share) {
         for (LivingEntity other : level.m_6443_(LivingEntity.class, path.m_82400_(0.3), entity -> entity.m_6084_() && !launch.bowled.contains(entity.m_19879_())
-            && EtoBlitz.valid(owner, entity))) {
+            && PaleBlitz.valid(owner, entity))) {
             launch.bowled.add(other.m_19879_());
             Vec3 off = other.m_20182_().m_82546_(body.m_20182_());
             Vec3 side = new Vec3(-line.f_82481_, 0.0, line.f_82479_);
@@ -487,8 +487,8 @@ public final class BlockSmash {
             if (other.m_6469_(owner.m_269291_().m_269075_(owner), launch.damage * share)) {
                 Vec3 thrown = side.m_82490_(which * 1.1).m_82549_(line.m_82490_(Math.min(1.6, launch.speed * 0.45))).m_82520_(0.0, 0.35, 0.0);
                 launch(owner, other, thrown, 20);
-                EtoBlitz.fxAround(other, owner.m_19879_(), S2CEtoFx.IMPACT, other.m_20182_().m_82520_(0.0, other.m_20206_() * 0.5, 0.0), thrown, 1.4F,
-                    S2CEtoFx.BIG_PUNCH);
+                PaleBlitz.fxAround(other, owner.m_19879_(), S2CPaleFx.IMPACT, other.m_20182_().m_82520_(0.0, other.m_20206_() * 0.5, 0.0), thrown, 1.4F,
+                    S2CPaleFx.BIG_PUNCH);
             }
         }
     }
@@ -665,7 +665,7 @@ public final class BlockSmash {
                 }
             }
             Vec3 at = Vec3.m_82512_(smashed.pos());
-            EtoBlitz.fxNear(level, S2CEtoFx.REGROW, at, 1.0F, Block.m_49956_(smashed.state()));
+            PaleBlitz.fxNear(level, S2CPaleFx.REGROW, at, 1.0F, Block.m_49956_(smashed.state()));
         }
 
         @Override

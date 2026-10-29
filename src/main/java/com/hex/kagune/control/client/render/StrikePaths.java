@@ -48,7 +48,7 @@ public final class StrikePaths {
     /**
      * 3.0.0: runs on every drawn limb path ({@code TendrilChain.renderPath}, right after it is resampled) and keeps it out of
      * its owner's body ({@link BodyClearance}): an M1 at something in front of him no longer draws the tentacle through his
-     * torso. The original's own routing for held and grappling limbs still runs after this. 3.1.0: Kaneki's tentacles are also
+     * torso. The original's own routing for held and grappling limbs still runs after this. 3.1.0: Rinkaku's tentacles are also
      * smoothed here first ({@link PathSmoother}): quick in a strike, calm at rest.
      */
     /** Ticks to settle most of the way: calm at rest, quick enough in a strike that a hit still lands with the tip. */
@@ -82,7 +82,7 @@ public final class StrikePaths {
 
     /**
      * 1.0.24: a limb's drawn path (world, root first) carried with {@code player}'s torso as the body layer drew it this frame
-     * ({@link com.hex.kagune.control.client.animation.FurutaPose#ride}: the root in his back, the carry fading out along the limb);
+     * ({@link com.hex.kagune.control.client.animation.GraftPose#ride}: the root in his back, the carry fading out along the limb);
      * false, untouched, when nothing poses him (the model not drawn lately: first person).
      */
     static boolean ride(double[][] path, AbstractClientPlayer player, double[] feet, double yaw, float partialTick) {
@@ -101,7 +101,7 @@ public final class StrikePaths {
             double dz = path[i][2] - feet[2];
             rig[i] = new double[] {dx * rx + dz * rz, path[i][1] - feet[1], dx * fx + dz * fz};
         }
-        double[][] carried = com.hex.kagune.control.client.animation.FurutaPose.ride(pose, rig);
+        double[][] carried = com.hex.kagune.control.client.animation.GraftPose.ride(pose, rig);
         if (carried == rig) {
             return false;
         }
@@ -150,10 +150,10 @@ public final class StrikePaths {
             }
         }
         boolean moved = BodyClearance.clear(path, feet, -Math.sin(yaw), Math.cos(yaw), player.m_20205_(), player.m_20206_(), radius, side);
-        // 1.0.24: the roots ride his body as it is drawn (a lean, a lunge, a drop, a flip, a roll), as Furuta's do: before, a body
+        // 1.0.24: the roots ride his body as it is drawn (a lean, a lunge, a drop, a flip, a roll), as Graft's do: before, a body
         // animation left them hanging where his hips would be standing still.
         boolean ridden = ride(path, player, feet, yaw, partialTick);
-        // 5.0.14: kept, so spikes stuck in this tentacle ride it (TendrilPaths, AyatoSpikes.place).
+        // 5.0.14: kept, so spikes stuck in this tentacle ride it (TendrilPaths, UkakuSpikes.place).
         TendrilPaths.record(player.m_36316_().getId(), limb, path, com.hex.kagune.control.client.ControlClient.worldTime(partialTick));
         if (!moved && !smoothed && !guarding && !ridden) {
             return points;

@@ -5,7 +5,7 @@ import com.hex.kagune.control.kakugan.KakuganEyes;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Kaneki's kakuja bursting out and shattering (5.0.0): the timing curves, the leg's extrusion, the mask's growth, the pieces. */
+/** Rinkaku's kakuja bursting out and shattering (5.0.0): the timing curves, the leg's extrusion, the mask's growth, the pieces. */
 public final class KakujaBurstTests {
     private static int passed;
     private static final List<String> FAILURES = new ArrayList<>();

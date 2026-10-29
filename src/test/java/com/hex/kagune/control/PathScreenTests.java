@@ -10,7 +10,7 @@ import java.util.List;
 
 /**
  * Dependency-free tests for the path choice screen's geometry: layout at every GUI size Minecraft can produce,
- * hit testing, and the animated silhouettes staying inside their cards. Also checks the Ayato stage table.
+ * hit testing, and the animated silhouettes staying inside their cards. Also checks the Ukaku stage table.
  */
 public final class PathScreenTests {
     private static int passed;
@@ -117,14 +117,18 @@ public final class PathScreenTests {
             }
         }
         PathChoiceLayout common = PathChoiceLayout.of(480, 270);
-        // 6.1.0: three paths at 1080p, GUI scale 4: stacked bands, each with its silhouette, name, type and bullets.
-        check(common.stacked && common.card(common.cards.get(0)).maxBullets() >= 2 && common.card(common.cards.get(0)).textWidth() >= 200,
+        // 6.1.0: at 1080p, GUI scale 4, each path with its silhouette, name, type and bullets (1.2.5: the two pickable paths, side by
+        // side; three would stack in bands).
+        check(common.card(common.cards.get(0)).maxBullets() >= 2 && common.card(common.cards.get(1)).maxBullets() >= 2,
             "1080p at GUI scale 4 shows every path with room for bullets");
+        PathChoiceLayout three = PathChoiceLayout.of(480, 270, 3);
+        check(three.stacked && three.card(three.cards.get(0)).maxBullets() >= 2 && three.card(three.cards.get(0)).textWidth() >= 200,
+            "three paths at 1080p, GUI scale 4, stack in bands with room for bullets");
         PathChoiceLayout wide = PathChoiceLayout.of(640, 360);
-        check(!wide.stacked, "1080p at GUI scale 3 shows the three cards side by side");
+        check(!wide.stacked, "1080p at GUI scale 3 shows the cards side by side");
         PathChoiceLayout roomy = PathChoiceLayout.of(640, 360);
         check(roomy.card(roomy.cards.get(1)).maxBullets() >= 5 && roomy.card(roomy.cards.get(1)).stripY() >= 0,
-            "1080p at GUI scale 3 fits every Ayato bullet and the progression strip");
+            "1080p at GUI scale 3 fits every Ukaku bullet and the progression strip");
     }
 
     private static void hitTesting() {
@@ -159,14 +163,14 @@ public final class PathScreenTests {
             for (double time = 0.0; time < 20.0; time += 0.173) {
                 for (float intensity : new float[] {0.0F, 0.5F, 1.0F}) {
                     String at = " in " + box + " t=" + time;
-                    List<PathSilhouette.Mark> kaneki = PathSilhouette.kaneki(box, time, intensity, bg);
-                    List<PathSilhouette.Mark> gaseous = PathSilhouette.ayato(box, time, intensity, false, bg);
-                    List<PathSilhouette.Mark> crystal = PathSilhouette.ayato(box, time, intensity, true, bg);
-                    List<PathSilhouette.Mark> eto = PathSilhouette.eto(box, time, intensity, false, bg);
-                    List<PathSilhouette.Mark> etoOut = PathSilhouette.eto(box, time, intensity, true, bg);
-                    check(!kaneki.isEmpty() && !gaseous.isEmpty() && !crystal.isEmpty() && !eto.isEmpty() && !etoOut.isEmpty(),
+                    List<PathSilhouette.Mark> rinkaku = PathSilhouette.rinkaku(box, time, intensity, bg);
+                    List<PathSilhouette.Mark> gaseous = PathSilhouette.ukaku(box, time, intensity, false, bg);
+                    List<PathSilhouette.Mark> crystal = PathSilhouette.ukaku(box, time, intensity, true, bg);
+                    List<PathSilhouette.Mark> pale = PathSilhouette.pale(box, time, intensity, false, bg);
+                    List<PathSilhouette.Mark> paleOut = PathSilhouette.pale(box, time, intensity, true, bg);
+                    check(!rinkaku.isEmpty() && !gaseous.isEmpty() && !crystal.isEmpty() && !pale.isEmpty() && !paleOut.isEmpty(),
                         "silhouettes draw something" + at);
-                    for (List<PathSilhouette.Mark> marks : List.of(kaneki, gaseous, crystal, eto, etoOut)) {
+                    for (List<PathSilhouette.Mark> marks : List.of(rinkaku, gaseous, crystal, pale, paleOut)) {
                         for (PathSilhouette.Mark mark : marks) {
                             check(inside(mark, box), "mark stays inside its card: " + mark + at);
                             check(color(mark) >= 0 && color(mark) <= 0xFFFFFF, "colours are opaque RGB" + at);
@@ -176,16 +180,16 @@ public final class PathScreenTests {
             }
         }
         Box card = new Box(0, 0, 200, 72);
-        check(PathSilhouette.ayato(card, 1.0, 1.0F, true, bg).equals(PathSilhouette.ayato(card, 1.0, 1.0F, true, bg)),
+        check(PathSilhouette.ukaku(card, 1.0, 1.0F, true, bg).equals(PathSilhouette.ukaku(card, 1.0, 1.0F, true, bg)),
             "silhouettes are deterministic (no per-frame randomness)");
-        check(PathSilhouette.ayato(card, 1.0, 1.0F, true, bg).equals(PathSilhouette.ayato(card, 9.0, 1.0F, true, bg)),
+        check(PathSilhouette.ukaku(card, 1.0, 1.0F, true, bg).equals(PathSilhouette.ukaku(card, 9.0, 1.0F, true, bg)),
             "crystallized wings hold still");
-        check(!PathSilhouette.ayato(card, 1.0, 1.0F, false, bg).equals(PathSilhouette.ayato(card, 1.4, 1.0F, false, bg)),
+        check(!PathSilhouette.ukaku(card, 1.0, 1.0F, false, bg).equals(PathSilhouette.ukaku(card, 1.4, 1.0F, false, bg)),
             "gaseous wings flicker");
-        check(!PathSilhouette.kaneki(card, 1.0, 1.0F, bg).equals(PathSilhouette.kaneki(card, 1.4, 1.0F, bg)), "tendrils writhe");
+        check(!PathSilhouette.rinkaku(card, 1.0, 1.0F, bg).equals(PathSilhouette.rinkaku(card, 1.4, 1.0F, bg)), "tendrils writhe");
         float left = 0.0F;
         float right = 0.0F;
-        for (PathSilhouette.Mark mark : PathSilhouette.ayato(card, 0.0, 1.0F, true, bg)) {
+        for (PathSilhouette.Mark mark : PathSilhouette.ukaku(card, 0.0, 1.0F, true, bg)) {
             if (mark instanceof PathSilhouette.Shape shape) {
                 for (float x : shape.x()) {
                     left = Math.min(left, x - 100.0F);
@@ -195,7 +199,7 @@ public final class PathScreenTests {
         }
         check(right > 15.0F && Math.abs(left + right) < 1.0F, "crystallized wings are mirror images (" + left + ", " + right + ")");
         boolean shapesBehindFigure = false;
-        List<PathSilhouette.Mark> front = PathSilhouette.ayato(card, 0.0, 1.0F, false, bg);
+        List<PathSilhouette.Mark> front = PathSilhouette.ukaku(card, 0.0, 1.0F, false, bg);
         for (int i = 0; i < front.size(); i++) {
             if (front.get(i) instanceof PathSilhouette.Stroke) {
                 shapesBehindFigure = front.subList(i, front.size()).stream().noneMatch(m -> m instanceof PathSilhouette.Shape);
@@ -235,26 +239,26 @@ public final class PathScreenTests {
 
     private static void stages() {
         int previous = -1;
-        for (AyatoStage stage : AyatoStage.values()) {
-            check(stage.requiredMastery() > previous, "Ayato stages unlock in order: " + stage);
+        for (UkakuStage stage : UkakuStage.values()) {
+            check(stage.requiredMastery() > previous, "Ukaku stages unlock in order: " + stage);
             check(stage.shortName().length() <= 9, "stage short names fit the card strip: " + stage);
             previous = stage.requiredMastery();
             if (!stage.comingSoon()) {
-                check(AyatoStage.forMastery(stage.requiredMastery()) == stage, "reaching a threshold unlocks its stage: " + stage);
+                check(UkakuStage.forMastery(stage.requiredMastery()) == stage, "reaching a threshold unlocks its stage: " + stage);
             }
         }
-        check(AyatoStage.values()[0] == AyatoStage.ONE_WING && AyatoStage.ONE_WING.requiredMastery() == 0 && AyatoStage.forMastery(-5) == AyatoStage.ONE_WING,
-            "a new Ayato starts with one small wing");
-        check(AyatoStage.TWIN_WINGS.requiredMastery() == 100 && AyatoStage.forMastery(99) == AyatoStage.ONE_WING
-            && AyatoStage.forMastery(100) == AyatoStage.TWIN_WINGS, "two small wings come next, at mastery 100");
-        check(AyatoStage.FULL_WINGS.requiredMastery() == 500 && AyatoStage.FULL_SIZE_MASTERY == 500, "the wings reach full size at mastery 500");
-        check(AyatoStage.growth(100) == 0.0F && AyatoStage.growth(500) == 1.0F && AyatoStage.growth(300) > 0.4F && AyatoStage.growth(300) < 0.6F
-            && AyatoStage.growth(9000) == 1.0F, "the wings grow steadily from 100 to 500, then stop");
-        check(!AyatoStage.KAKUJA_I.comingSoon() && !AyatoStage.KAKUJA_II.comingSoon() && !AyatoStage.FULL_WINGS.comingSoon(),
+        check(UkakuStage.values()[0] == UkakuStage.ONE_WING && UkakuStage.ONE_WING.requiredMastery() == 0 && UkakuStage.forMastery(-5) == UkakuStage.ONE_WING,
+            "a new Ukaku starts with one small wing");
+        check(UkakuStage.TWIN_WINGS.requiredMastery() == 100 && UkakuStage.forMastery(99) == UkakuStage.ONE_WING
+            && UkakuStage.forMastery(100) == UkakuStage.TWIN_WINGS, "two small wings come next, at mastery 100");
+        check(UkakuStage.FULL_WINGS.requiredMastery() == 500 && UkakuStage.FULL_SIZE_MASTERY == 500, "the wings reach full size at mastery 500");
+        check(UkakuStage.growth(100) == 0.0F && UkakuStage.growth(500) == 1.0F && UkakuStage.growth(300) > 0.4F && UkakuStage.growth(300) < 0.6F
+            && UkakuStage.growth(9000) == 1.0F, "the wings grow steadily from 100 to 500, then stop");
+        check(!UkakuStage.KAKUJA_I.comingSoon() && !UkakuStage.KAKUJA_II.comingSoon() && !UkakuStage.FULL_WINGS.comingSoon(),
             "both kakuja are built");
-        check(AyatoStage.forMastery(749) == AyatoStage.FULL_WINGS && AyatoStage.forMastery(750) == AyatoStage.KAKUJA_I, "the first kakuja is reached at 750");
-        check(AyatoStage.forMastery(999) == AyatoStage.KAKUJA_I && AyatoStage.forMastery(1000) == AyatoStage.KAKUJA_II, "the final kakuja is reached at 1000");
-        check(!AyatoStage.forMastery(499).reEra() && AyatoStage.forMastery(500).reEra(), "the full :re shape comes with full size");
+        check(UkakuStage.forMastery(749) == UkakuStage.FULL_WINGS && UkakuStage.forMastery(750) == UkakuStage.KAKUJA_I, "the first kakuja is reached at 750");
+        check(UkakuStage.forMastery(999) == UkakuStage.KAKUJA_I && UkakuStage.forMastery(1000) == UkakuStage.KAKUJA_II, "the final kakuja is reached at 1000");
+        check(!UkakuStage.forMastery(499).reEra() && UkakuStage.forMastery(500).reEra(), "the full :re shape comes with full size");
     }
 
     /** Room for future kagunes: the starting screen lays out any number of cards, and every path has a consistent card. */
@@ -300,12 +304,12 @@ public final class PathScreenTests {
         }
         check(PathCards.choosable().size() == KagunePath.choosable().size() && !KagunePath.choosable().contains(KagunePath.NONE),
             "the starting screen offers every real path and never 'undecided'");
-        KaguneForm[] forms = KanekiForms.forms();
-        PathCards.Card kaneki = PathCards.of(KagunePath.KANEKI);
-        check(kaneki.stageNames().size() == forms.length, "the Kaneki strip lists every form a player can have");
-        for (int i = 0; i < Math.min(forms.length, kaneki.stageNames().size()); i++) {
-            check(kaneki.stageNames().get(i).equals(forms[i].displayName()) && kaneki.stageMastery().get(i) == forms[i].requiredMastery(),
-                "the Kaneki strip matches the original form " + forms[i]);
+        KaguneForm[] forms = RinkakuForms.forms();
+        PathCards.Card rinkaku = PathCards.of(KagunePath.RINKAKU);
+        check(rinkaku.stageNames().size() == forms.length, "the Rinkaku strip lists every form a player can have");
+        for (int i = 0; i < Math.min(forms.length, rinkaku.stageNames().size()); i++) {
+            check(rinkaku.stageNames().get(i).equals(forms[i].displayName()) && rinkaku.stageMastery().get(i) == forms[i].requiredMastery(),
+                "the Rinkaku strip matches the original form " + forms[i]);
         }
     }
 }

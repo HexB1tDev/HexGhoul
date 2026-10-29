@@ -76,7 +76,7 @@ public final class QuestTests {
             check(!QuestBook.openersText(gate).isBlank(), gate.id() + ": names its quests");
             check(Gate.fromId(gate.id()) == gate, gate.id() + ": found by id");
         }
-        for (KagunePath path : new KagunePath[] {KagunePath.KANEKI, KagunePath.AYATO, KagunePath.FURUTA}) {
+        for (KagunePath path : new KagunePath[] {KagunePath.RINKAKU, KagunePath.UKAKU, KagunePath.GRAFT}) {
             long own = QuestBook.all().stream().filter(quest -> quest.path() == path).count();
             check(own >= 6, path + ": a line of its own (" + own + " quests)");
             long gates = java.util.Arrays.stream(Gate.values()).filter(gate -> gate.path() == path).count();
@@ -98,40 +98,40 @@ public final class QuestTests {
     static void states() {
         QuestLog log = new QuestLog();
         Quest gift = QuestBook.get("rizes_gift");
-        check(log.state(gift, KagunePath.AYATO, 1000) == QuestLog.State.LOCKED, "another path's quest is locked");
-        check(log.state(gift, KagunePath.KANEKI, gift.mastery() - 1) == QuestLog.State.LOCKED, "locked below its mastery");
-        check(log.state(gift, KagunePath.KANEKI, gift.mastery()) == QuestLog.State.OPEN, "open at its mastery");
+        check(log.state(gift, KagunePath.UKAKU, 1000) == QuestLog.State.LOCKED, "another path's quest is locked");
+        check(log.state(gift, KagunePath.RINKAKU, gift.mastery() - 1) == QuestLog.State.LOCKED, "locked below its mastery");
+        check(log.state(gift, KagunePath.RINKAKU, gift.mastery()) == QuestLog.State.OPEN, "open at its mastery");
         // Locked quests do not count.
-        log.apply(QuestEvent.of(Signal.KILL, 1, Tags.KAGUNE), KagunePath.KANEKI, 0);
+        log.apply(QuestEvent.of(Signal.KILL, 1, Tags.KAGUNE), KagunePath.RINKAKU, 0);
         check(log.progress(gift, 0) == 0, "a locked quest doesn't count");
         for (int i = 0; i < 20; i++) {
-            log.apply(QuestEvent.of(Signal.KILL, 1, Tags.KAGUNE, Tags.HOSTILE), KagunePath.KANEKI, 300);
+            log.apply(QuestEvent.of(Signal.KILL, 1, Tags.KAGUNE, Tags.HOSTILE), KagunePath.RINKAKU, 300);
         }
         check(log.progress(gift, 0) == gift.objectives().get(0).count(), "counts up to its objective and no further");
         check(!log.met(gift), "not met with an objective left");
-        log.apply(QuestEvent.of(Signal.EAT, 1, Tags.item("minecraft:bread")), KagunePath.KANEKI, 300);
+        log.apply(QuestEvent.of(Signal.EAT, 1, Tags.item("minecraft:bread")), KagunePath.RINKAKU, 300);
         check(log.progress(gift, 1) == 0, "an event without the tag doesn't count");
         for (int i = 0; i < 5; i++) {
-            log.apply(QuestEvent.of(Signal.EAT, 1, Tags.FLESH), KagunePath.KANEKI, 300);
+            log.apply(QuestEvent.of(Signal.EAT, 1, Tags.FLESH), KagunePath.RINKAKU, 300);
         }
         check(log.met(gift), "met with every objective");
-        check(!log.open(Gate.KANEKI_TWIN), "the gate stays shut until it is paid");
+        check(!log.open(Gate.RINKAKU_TWIN), "the gate stays shut until it is paid");
         log.complete(gift);
-        check(log.state(gift, KagunePath.KANEKI, 300) == QuestLog.State.DONE && log.open(Gate.KANEKI_TWIN), "done, and its gate open");
+        check(log.state(gift, KagunePath.RINKAKU, 300) == QuestLog.State.DONE && log.open(Gate.RINKAKU_TWIN), "done, and its gate open");
         int before = log.progress(gift, 0);
-        log.apply(QuestEvent.of(Signal.KILL, 1, Tags.KAGUNE), KagunePath.KANEKI, 300);
+        log.apply(QuestEvent.of(Signal.KILL, 1, Tags.KAGUNE), KagunePath.RINKAKU, 300);
         check(log.progress(gift, 0) == before, "a done quest counts no more");
         // A quest that comes after another waits for it.
         Quest soar = QuestBook.get("up_we_go");
-        check(log.state(soar, KagunePath.KANEKI, 1000) == QuestLog.State.LOCKED, "waits for the quest it comes after");
+        check(log.state(soar, KagunePath.RINKAKU, 1000) == QuestLog.State.LOCKED, "waits for the quest it comes after");
         log.complete(QuestBook.get("light_feet"));
-        check(log.state(soar, KagunePath.KANEKI, 1000) == QuestLog.State.OPEN, "open once that one is done");
+        check(log.state(soar, KagunePath.RINKAKU, 1000) == QuestLog.State.OPEN, "open once that one is done");
         // Best-of objectives keep the highest amount.
         Quest rampage = QuestBook.get("rampage");
-        log.apply(QuestEvent.of(Signal.RAMPAGE, 3), KagunePath.KANEKI, 1000);
-        log.apply(QuestEvent.of(Signal.RAMPAGE, 2), KagunePath.KANEKI, 1000);
+        log.apply(QuestEvent.of(Signal.RAMPAGE, 3), KagunePath.RINKAKU, 1000);
+        log.apply(QuestEvent.of(Signal.RAMPAGE, 2), KagunePath.RINKAKU, 1000);
         check(log.progress(rampage, 0) == 3, "a rampage objective keeps its best streak");
-        log.apply(QuestEvent.of(Signal.RAMPAGE, 9), KagunePath.KANEKI, 1000);
+        log.apply(QuestEvent.of(Signal.RAMPAGE, 9), KagunePath.RINKAKU, 1000);
         check(log.progress(rampage, 0) == 5 && log.met(rampage), "and caps at its count");
         // Points and sides.
         log.complete(QuestBook.get("die_hard"));
@@ -145,9 +145,9 @@ public final class QuestTests {
         Quest pack = QuestBook.get("pack");
         List<Quest> closed = log.complete(pack);
         check(closed.contains(anteiku), "taking the Pack's way closes Anteiku's");
-        check(log.state(anteiku, KagunePath.KANEKI, 1000) == QuestLog.State.CLOSED, "closed for good");
+        check(log.state(anteiku, KagunePath.RINKAKU, 1000) == QuestLog.State.CLOSED, "closed for good");
         check(log.side(QuestBook.PACK) == 1 && log.side(QuestBook.ANTEIKU) == 0, "the side taken is remembered");
-        log.apply(QuestEvent.of(Signal.RESTRAIN, 1), KagunePath.KANEKI, 1000);
+        log.apply(QuestEvent.of(Signal.RESTRAIN, 1), KagunePath.RINKAKU, 1000);
         check(log.progress(anteiku, 0) == 0, "a closed quest counts no more");
     }
 
@@ -164,20 +164,20 @@ public final class QuestTests {
         QuestLog log = new QuestLog();
         log.migrate(gate -> gate == Gate.EYES_KICK);
         for (int i = 0; i < 7; i++) {
-            log.apply(QuestEvent.of(Signal.KILL, 1, Tags.KAGUNE), KagunePath.KANEKI, 300);
+            log.apply(QuestEvent.of(Signal.KILL, 1, Tags.KAGUNE), KagunePath.RINKAKU, 300);
         }
         log.complete(QuestBook.get("pack"));
         log.complete(QuestBook.get("cannibal"));
         Hunts.Spec spec = new Hunts.Spec(0, 4, 3, Hunts.PAY_MEAT, 1);
         log.startHunt(spec, 12345L);
-        log.apply(QuestEvent.of(Signal.KILL, 1, Tags.mob("minecraft:witch")), KagunePath.KANEKI, 300);
+        log.apply(QuestEvent.of(Signal.KILL, 1, Tags.mob("minecraft:witch")), KagunePath.RINKAKU, 300);
         log.nextHuntAt(99L);
         QuestLog back = QuestLog.load(log.save());
         Quest gift = QuestBook.get("rizes_gift");
         check(back.progress(gift, 0) == 7, "progress survives the save");
-        check(back.state(QuestBook.get("pack"), KagunePath.KANEKI, 1000) == QuestLog.State.DONE, "done survives");
-        check(back.state(QuestBook.get("anteiku"), KagunePath.KANEKI, 1000) == QuestLog.State.CLOSED, "closed survives");
-        check(back.open(Gate.EYES_KICK) && back.open(Gate.KANEKI_FOUR), "gates survive");
+        check(back.state(QuestBook.get("pack"), KagunePath.RINKAKU, 1000) == QuestLog.State.DONE, "done survives");
+        check(back.state(QuestBook.get("anteiku"), KagunePath.RINKAKU, 1000) == QuestLog.State.CLOSED, "closed survives");
+        check(back.open(Gate.EYES_KICK) && back.open(Gate.RINKAKU_FOUR), "gates survive");
         check(back.points() == 1 && back.side(QuestBook.PACK) == 1, "points and sides survive");
         check(back.migrated() == QuestLog.VERSION && back.nextHuntAt() == 99L, "the version and the hunt clock survive");
         check(back.hunts().size() == 1 && back.hunts().get(0).endsAt() == 12345L, "the hunt survives");
@@ -193,55 +193,55 @@ public final class QuestTests {
     static void migration() {
         QuestLog log = new QuestLog();
         log.migrate(gate -> !gate.mutation() && gate.mastery() <= 500);
-        check(log.open(Gate.KANEKI_TWIN) && log.open(Gate.KANEKI_FOUR) && !log.open(Gate.KANEKI_CENTIPEDE), "what was reached stays open");
+        check(log.open(Gate.RINKAKU_TWIN) && log.open(Gate.RINKAKU_FOUR) && !log.open(Gate.RINKAKU_CENTIPEDE), "what was reached stays open");
         log.migrate(gate -> true);
-        check(!log.open(Gate.KANEKI_CENTIPEDE), "migration happens once");
+        check(!log.open(Gate.RINKAKU_CENTIPEDE), "migration happens once");
         log.reset();
         check(log.gates().isEmpty() && log.migrated() == QuestLog.VERSION, "a reset forgets everything and never migrates again");
     }
 
     /** Which gate each form, stage and mutation is behind, and the stages a gate leaves usable. */
     static void gates() {
-        check(com.hex.kagune.control.quest.Gates.kaneki(com.hex.kagune.gameplay.KaguneForm.RINKAKU_SEED) == null, "the seed is never gated");
-        check(com.hex.kagune.control.quest.Gates.kaneki(com.hex.kagune.gameplay.KaguneForm.RINKAKU_DUAL) == Gate.KANEKI_TWIN
-            && com.hex.kagune.control.quest.Gates.kaneki(com.hex.kagune.gameplay.KaguneForm.RINKAKU_QUAD) == Gate.KANEKI_FOUR
-            && com.hex.kagune.control.quest.Gates.kaneki(com.hex.kagune.gameplay.KaguneForm.CENTIPEDE) == Gate.KANEKI_CENTIPEDE
-            && com.hex.kagune.control.quest.Gates.kaneki(com.hex.kagune.gameplay.KaguneForm.FULL_KAKUJA) == Gate.KANEKI_FULL_KAKUJA,
-            "every Kaneki form past the seed has its gate");
-        check(com.hex.kagune.control.quest.Gates.furuta(com.hex.kagune.control.furuta.FurutaStage.TRANSPLANT) == null, "the transplant is never gated");
-        for (com.hex.kagune.control.furuta.FurutaStage stage : com.hex.kagune.control.furuta.FurutaStage.values()) {
-            Gate gate = com.hex.kagune.control.quest.Gates.furuta(stage);
-            check(stage == com.hex.kagune.control.furuta.FurutaStage.TRANSPLANT || gate != null && gate.path() == KagunePath.FURUTA
+        check(com.hex.kagune.control.quest.Gates.rinkaku(com.hex.kagune.gameplay.KaguneForm.RINKAKU_SEED) == null, "the seed is never gated");
+        check(com.hex.kagune.control.quest.Gates.rinkaku(com.hex.kagune.gameplay.KaguneForm.RINKAKU_DUAL) == Gate.RINKAKU_TWIN
+            && com.hex.kagune.control.quest.Gates.rinkaku(com.hex.kagune.gameplay.KaguneForm.RINKAKU_QUAD) == Gate.RINKAKU_FOUR
+            && com.hex.kagune.control.quest.Gates.rinkaku(com.hex.kagune.gameplay.KaguneForm.CENTIPEDE) == Gate.RINKAKU_CENTIPEDE
+            && com.hex.kagune.control.quest.Gates.rinkaku(com.hex.kagune.gameplay.KaguneForm.FULL_KAKUJA) == Gate.RINKAKU_FULL_KAKUJA,
+            "every Rinkaku form past the seed has its gate");
+        check(com.hex.kagune.control.quest.Gates.graft(com.hex.kagune.control.graft.GraftStage.TRANSPLANT) == null, "the transplant is never gated");
+        for (com.hex.kagune.control.graft.GraftStage stage : com.hex.kagune.control.graft.GraftStage.values()) {
+            Gate gate = com.hex.kagune.control.quest.Gates.graft(stage);
+            check(stage == com.hex.kagune.control.graft.GraftStage.TRANSPLANT || gate != null && gate.path() == KagunePath.GRAFT
                 && gate.mastery() == stage.mastery(), stage + ": its gate, at its mastery");
         }
-        java.util.function.Predicate<Gate> onlyCentipede = gate -> gate == Gate.FURUTA_CENTIPEDE;
-        check(com.hex.kagune.control.quest.Gates.furutaUsable(com.hex.kagune.control.furuta.FurutaStage.DRAGON, 1000, onlyCentipede)
-            == com.hex.kagune.control.furuta.FurutaStage.CENTIPEDE, "a stage whose quest isn't done falls back to the highest that is open");
-        check(com.hex.kagune.control.quest.Gates.furutaUsable(com.hex.kagune.control.furuta.FurutaStage.THORNS, 1000, gate -> false)
-            == com.hex.kagune.control.furuta.FurutaStage.TRANSPLANT, "nothing open: the transplant");
-        check(com.hex.kagune.control.quest.Gates.furutaUsable(com.hex.kagune.control.furuta.FurutaStage.DRAGON, 1000, gate -> true)
-            == com.hex.kagune.control.furuta.FurutaStage.DRAGON, "everything open: what was picked");
-        check(com.hex.kagune.control.quest.Gates.furutaNext(com.hex.kagune.control.furuta.FurutaStage.CENTIPEDE, 1000, onlyCentipede)
-            == com.hex.kagune.control.furuta.FurutaStage.TRANSPLANT, "K held skips the stages waiting for quests");
-        check(com.hex.kagune.control.quest.Gates.furuta(com.hex.kagune.control.furuta.FurutaMutation.RIZES_APPETITE) == Gate.FURUTA_APPETITE
-            && com.hex.kagune.control.quest.Gates.furuta(com.hex.kagune.control.furuta.FurutaMutation.WASHUU_BLOOD) == null
-            && com.hex.kagune.control.quest.Gates.ayato(com.hex.kagune.control.ayato.AyatoMutation.BURSTING_SHARDS) == Gate.AYATO_BURSTING_SHARDS
-            && com.hex.kagune.control.quest.Gates.ayato(com.hex.kagune.control.ayato.AyatoMutation.NOT_THAT_EASILY) == Gate.AYATO_NOT_THAT_EASILY
-            && com.hex.kagune.control.quest.Gates.kaneki(com.hex.kagune.gameplay.MutationNode.CENTIPEDE_BODY) == null,
-            "the gated mutations (1.0.41: the Kaneki path has none left)");
-        // 1.0.41: Furuta's revive on every path that has it, behind the same quest: the same objectives, the same mastery.
-        Quest furuta = QuestBook.get("not_that_easily");
-        for (String id : new String[] {"kaneki_not_that_easily", "ayato_not_that_easily"}) {
+        java.util.function.Predicate<Gate> onlyCentipede = gate -> gate == Gate.GRAFT_CENTIPEDE;
+        check(com.hex.kagune.control.quest.Gates.graftUsable(com.hex.kagune.control.graft.GraftStage.DRAGON, 1000, onlyCentipede)
+            == com.hex.kagune.control.graft.GraftStage.CENTIPEDE, "a stage whose quest isn't done falls back to the highest that is open");
+        check(com.hex.kagune.control.quest.Gates.graftUsable(com.hex.kagune.control.graft.GraftStage.THORNS, 1000, gate -> false)
+            == com.hex.kagune.control.graft.GraftStage.TRANSPLANT, "nothing open: the transplant");
+        check(com.hex.kagune.control.quest.Gates.graftUsable(com.hex.kagune.control.graft.GraftStage.DRAGON, 1000, gate -> true)
+            == com.hex.kagune.control.graft.GraftStage.DRAGON, "everything open: what was picked");
+        check(com.hex.kagune.control.quest.Gates.graftNext(com.hex.kagune.control.graft.GraftStage.CENTIPEDE, 1000, onlyCentipede)
+            == com.hex.kagune.control.graft.GraftStage.TRANSPLANT, "K held skips the stages waiting for quests");
+        check(com.hex.kagune.control.quest.Gates.graft(com.hex.kagune.control.graft.GraftMutation.RIZES_APPETITE) == Gate.GRAFT_APPETITE
+            && com.hex.kagune.control.quest.Gates.graft(com.hex.kagune.control.graft.GraftMutation.WASHUU_BLOOD) == null
+            && com.hex.kagune.control.quest.Gates.ukaku(com.hex.kagune.control.ukaku.UkakuMutation.BURSTING_SHARDS) == Gate.UKAKU_BURSTING_SHARDS
+            && com.hex.kagune.control.quest.Gates.ukaku(com.hex.kagune.control.ukaku.UkakuMutation.NOT_THAT_EASILY) == Gate.UKAKU_NOT_THAT_EASILY
+            && com.hex.kagune.control.quest.Gates.rinkaku(com.hex.kagune.gameplay.MutationNode.CENTIPEDE_BODY) == null,
+            "the gated mutations (1.0.41: the Rinkaku path has none left)");
+        // 1.0.41: Graft's revive on every path that has it, behind the same quest: the same objectives, the same mastery.
+        Quest graft = QuestBook.get("not_that_easily");
+        for (String id : new String[] {"rinkaku_not_that_easily", "ukaku_not_that_easily"}) {
             Quest copy = QuestBook.get(id);
-            check(copy != null && copy.mastery() == furuta.mastery() && copy.title().equals(furuta.title())
-                && copy.objectives().equals(furuta.objectives()), id + ": Furuta's quest, objective for objective");
+            check(copy != null && copy.mastery() == graft.mastery() && copy.title().equals(graft.title())
+                && copy.objectives().equals(graft.objectives()), id + ": Graft's quest, objective for objective");
         }
-        check(QuestBook.get("arrow_eater") == null && QuestBook.openers(Gate.KANEKI_NOT_THAT_EASILY).size() == 1
-            && QuestBook.openers(Gate.AYATO_NOT_THAT_EASILY).size() == 1, "the Kaneki path's mutation quest is gone; the revive's quests open it");
+        check(QuestBook.get("arrow_eater") == null && QuestBook.openers(Gate.RINKAKU_NOT_THAT_EASILY).size() == 1
+            && QuestBook.openers(Gate.UKAKU_NOT_THAT_EASILY).size() == 1, "the Rinkaku path's mutation quest is gone; the revive's quests open it");
         // Quest points add to the milestones' (and never go below zero).
-        check(com.hex.kagune.control.furuta.FurutaMutation.available(0, 0, 2) == 2
-            && com.hex.kagune.control.furuta.FurutaMutation.available(500, 0, 0) == 1
-            && com.hex.kagune.control.ayato.AyatoMutation.available(0, 0, -3) == 0, "quest points count with the milestones'");
+        check(com.hex.kagune.control.graft.GraftMutation.available(0, 0, 2) == 2
+            && com.hex.kagune.control.graft.GraftMutation.available(500, 0, 0) == 1
+            && com.hex.kagune.control.ukaku.UkakuMutation.available(0, 0, -3) == 0, "quest points count with the milestones'");
     }
 
     static void hunts() {

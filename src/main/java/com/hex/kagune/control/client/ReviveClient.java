@@ -1,12 +1,12 @@
 package com.hex.kagune.control.client;
 
 import com.hex.kagune.control.client.animation.Remains;
-import com.hex.kagune.control.client.fx.AyatoBlood;
+import com.hex.kagune.control.client.fx.UkakuBlood;
 import com.hex.kagune.control.client.fx.RcFx;
 import com.hex.kagune.control.client.render.BloodStains;
-import com.hex.kagune.control.eto.ReviveRules;
-import com.hex.kagune.control.network.S2CEtoMutations;
-import com.hex.kagune.control.network.S2CEtoRevive;
+import com.hex.kagune.control.pale.ReviveRules;
+import com.hex.kagune.control.network.S2CPaleMutations;
+import com.hex.kagune.control.network.S2CPaleRevive;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -31,14 +31,14 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 /**
- * 6.2.0, You Thought You'd Get Rid of Me That Easily?, on every client (fed by {@link S2CEtoRevive}): which Eto players are in
- * pieces, since when (on {@link EtoClient#clock}), and how they came apart ({@link Remains#scatter}, worked out once, the same
+ * 6.2.0, You Thought You'd Get Rid of Me That Easily?, on every client (fed by {@link S2CPaleRevive}): which Pale players are in
+ * pieces, since when (on {@link PaleClient#clock}), and how they came apart ({@link Remains#scatter}, worked out once, the same
  * on every client). While she is in pieces her body is not drawn (the pieces are: {@code RemainsRenderer}), nor her hand in first
  * person, and her keys don't move her. The blood is the explosion's alone: three gushes as she comes apart, sprayed off every piece
  * as it flies, pooling where each comes down and round her; then none while she lies there or pulls back together, and the gust as
  * she stands.
  *
- * <p>Also her own mutations, for her menu ({@link S2CEtoMutations}).
+ * <p>Also her own mutations, for her menu ({@link S2CPaleMutations}).
  */
 @Mod.EventBusSubscriber(modid = "hexkagune", value = Dist.CLIENT)
 public final class ReviveClient {
@@ -47,7 +47,7 @@ public final class ReviveClient {
     /** Beyond this (blocks from the camera) no blood is thrown. */
     static final double RANGE = 64.0;
 
-    /** One Eto player in pieces: since when (EtoClient's clock), how she came apart, where she stood and faced. */
+    /** One Pale player in pieces: since when (PaleClient's clock), how she came apart, where she stood and faced. */
     public static final class Corpse {
         public final UUID player;
         public final double began;
@@ -83,7 +83,7 @@ public final class ReviveClient {
     }
 
     private static final Map<UUID, Corpse> CORPSES = new HashMap<>();
-    /** Her own mutations (a bitmask of EtoMutation) and when her death that does not take is ready again (game time). */
+    /** Her own mutations (a bitmask of PaleMutation) and when her death that does not take is ready again (game time). */
     private static int mask;
     private static long readyAt;
     private static final Random RANDOM = new Random();
@@ -91,14 +91,14 @@ public final class ReviveClient {
     private ReviveClient() {
     }
 
-    public static void accept(S2CEtoRevive message) {
+    public static void accept(S2CPaleRevive message) {
         if (message.over()) {
             CORPSES.remove(message.playerId());
             return;
         }
         Minecraft minecraft = Minecraft.m_91087_();
         long behind = minecraft.f_91073_ == null ? 0L : minecraft.f_91073_.m_46467_() - message.startedAt();
-        double began = EtoClient.clock(0.0F) - (behind > JUST_BEGUN ? behind : 0L);
+        double began = PaleClient.clock(0.0F) - (behind > JUST_BEGUN ? behind : 0L);
         Corpse was = CORPSES.get(message.playerId());
         if (was != null && was.seed == message.seed()) {
             return; // told again (someone came into sight of her): it runs on
@@ -109,12 +109,12 @@ public final class ReviveClient {
             new Vec3(message.x(), message.y(), message.z()), message.yaw(), message.seed()));
     }
 
-    public static void mutations(S2CEtoMutations message) {
+    public static void mutations(S2CPaleMutations message) {
         mask = message.mask();
         readyAt = message.reviveReadyAt();
     }
 
-    /** Her own unlocked mutations (a bitmask of EtoMutation). */
+    /** Her own unlocked mutations (a bitmask of PaleMutation). */
     public static int mask() {
         return mask;
     }
@@ -150,7 +150,7 @@ public final class ReviveClient {
     /** Whether {@code player} is in pieces this frame ({@code partial} of the way through the tick): her body is not drawn. */
     public static boolean apart(Player player, float partial) {
         Corpse corpse = get(player);
-        return corpse != null && ReviveRules.apart(corpse.age(EtoClient.clock(partial)));
+        return corpse != null && ReviveRules.apart(corpse.age(PaleClient.clock(partial)));
     }
 
     @SubscribeEvent
@@ -188,7 +188,7 @@ public final class ReviveClient {
             CORPSES.clear();
             return;
         }
-        double clock = EtoClient.clock(0.0F);
+        double clock = PaleClient.clock(0.0F);
         Vec3 camera = minecraft.f_91063_ == null ? null : minecraft.f_91063_.m_109153_().m_90583_();
         CORPSES.values().removeIf(corpse -> corpse.age(clock) > ReviveRules.WHOLE + 40.0);
         for (Corpse corpse : CORPSES.values()) {
@@ -230,7 +230,7 @@ public final class ReviveClient {
             if (age < track.landed()) {
                 // Blood thrown off it as it flies, every tick.
                 Vec3 was = corpse.world(Remains.place(scatter, piece, Math.max(0.0, age - 1.0)).at());
-                AyatoBlood.spurt(level, at, at.m_82546_(was).m_82520_(0.0, 0.05, 0.0), 0.5F, null);
+                UkakuBlood.spurt(level, at, at.m_82546_(was).m_82520_(0.0, 0.05, 0.0), 0.5F, null);
             }
             if (crossed(last, age, track.landed())) {
                 // Down: a pool where it lies (and no more blood out of it after).
@@ -254,11 +254,11 @@ public final class ReviveClient {
         float power = beat == 0 ? 2.5F : beat == 1 ? 2.0F : 1.5F;
         for (int i = 0; i < around; i++) {
             double angle = (i + 0.5 * beat) * Math.PI * 2.0 / around + RANDOM.nextDouble() * 0.4;
-            AyatoBlood.spurt(level, middle, new Vec3(Math.cos(angle), 0.25 + RANDOM.nextDouble() * 0.6, Math.sin(angle)), power, null);
+            UkakuBlood.spurt(level, middle, new Vec3(Math.cos(angle), 0.25 + RANDOM.nextDouble() * 0.6, Math.sin(angle)), power, null);
         }
         // Down onto the ground round her feet, and a fountain up out of her.
-        AyatoBlood.spurt(level, middle, new Vec3(RANDOM.nextGaussian() * 0.3, -1.0, RANDOM.nextGaussian() * 0.3), power * 0.8F, null);
-        AyatoBlood.spurt(level, middle, new Vec3(RANDOM.nextGaussian() * 0.2, 1.0, RANDOM.nextGaussian() * 0.2), power * 0.7F, null);
+        UkakuBlood.spurt(level, middle, new Vec3(RANDOM.nextGaussian() * 0.3, -1.0, RANDOM.nextGaussian() * 0.3), power * 0.8F, null);
+        UkakuBlood.spurt(level, middle, new Vec3(RANDOM.nextGaussian() * 0.2, 1.0, RANDOM.nextGaussian() * 0.2), power * 0.7F, null);
         mist(middle, beat == 0 ? 44.0F : 20.0F, 0.3, 1.5);
         if (beat == 0) {
             Remains.Scatter scatter = corpse.scatter;

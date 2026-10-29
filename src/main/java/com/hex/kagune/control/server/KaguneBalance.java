@@ -6,8 +6,8 @@ import com.hex.kagune.data.KaguneProfile;
 import net.minecraft.server.level.ServerPlayer;
 
 /**
- * Kaneki's damage, brought down ({@link DamageBalance}, 3.0.3): the original's swipe, crush and slam damage are trampolines
- * here, so every Kaneki hit (combos, the Centipede legs, Threat Auto Attack, crush and slam) is scaled the same way.
+ * Rinkaku's damage, brought down ({@link DamageBalance}, 3.0.3): the original's swipe, crush and slam damage are trampolines
+ * here, so every Rinkaku hit (combos, the Centipede legs, Threat Auto Attack, crush and slam) is scaled the same way.
  */
 public final class KaguneBalance {
     private KaguneBalance() {

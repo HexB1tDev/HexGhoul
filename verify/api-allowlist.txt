@@ -141,7 +141,7 @@ C net/minecraftforge/client/event/ScreenEvent$Opening                           
 M net/minecraftforge/client/event/ScreenEvent$Opening getNewScreen ()Lnet/minecraft/client/gui/screens/Screen;  # [forge] same
 M net/minecraftforge/client/event/ScreenEvent$Opening setNewScreen (Lnet/minecraft/client/gui/screens/Screen;)V  # [forge] same
 
-# --- 1.2.0 Ayato kit -----------------------------------------------------------------------------------------
+# --- 1.2.0 Ukaku kit -----------------------------------------------------------------------------------------
 M net/minecraft/world/entity/Entity m_6047_ ()Z                                      # [srg] isCrouching (bfj.bU, yarn isInSneakingPose)
 F net/minecraft/world/effect/MobEffects f_19603_ Lnet/minecraft/world/effect/MobEffect;  # [order] JUMP: 8th field 'h' (speed=f_19596_ 'a' ... hunger=f_19612_ 'q', health_boost=f_19616_ 'u' as the original uses); Ukaku agility
 
@@ -169,10 +169,10 @@ M net/minecraftforge/client/event/EntityRenderersEvent$AddLayers getSkins ()Ljav
 M net/minecraftforge/client/event/EntityRenderersEvent$AddLayers getSkin (Ljava/lang/String;)Lnet/minecraft/client/renderer/entity/LivingEntityRenderer;  # [forge] same (erasure of <R extends LivingEntityRenderer<...>> R)
 # Clearing the skin's outer layer around the eyes (glasses): hide the hat part for one frame and redraw it with a hole.
 F net/minecraft/client/model/HumanoidModel f_102810_ Lnet/minecraft/client/model/geom/ModelPart;  # [srg] body, fbs.m Lfee; (yarn body field_3391)
-# --- K: the kakuja transformation (the Kaneki form it came from, cleared when it ends) --------------------
+# --- K: the kakuja transformation (the Rinkaku form it came from, cleared when it ends) --------------------
 M net/minecraft/nbt/CompoundTag m_128473_ (Ljava/lang/String;)V                       # [srg] remove, qr.r (yarn NbtCompound.remove)
 
-# --- 1.2.0 Ayato menu ------------------------------------------------------------------------------------
+# --- 1.2.0 Ukaku menu ------------------------------------------------------------------------------------
 M net/minecraft/client/gui/screens/Screen m_7379_ ()V                                # [srg] onClose, euq.aw_()V (yarn close method_25419); the original menu calls it too
 M net/minecraft/client/gui/screens/Screen m_280273_ (Lnet/minecraft/client/gui/GuiGraphics;)V  # [srg] renderBackground, euq.a(Leox;)V (yarn method_25420); the original menu calls it too
 
@@ -182,7 +182,7 @@ M net/minecraft/world/entity/Entity m_20254_ (I)V                               
 # --- poses: PlayerAnimator transform kinds -------------------------------------------------------------------
 F dev/kosmx/playerAnim/api/TransformType POSITION Ldev/kosmx/playerAnim/api/TransformType;  # [lib] PlayerAnimator 1.0.2-rc1 coreLib api/TransformType.java (POSITION, ROTATION, BEND); AnimationApplier.updatePart reads POSITION first
 
-# --- Ayato's fire: Photon particles (client/fx/RcFx, ported from Hex God of Death's DeathFx) ---------------------
+# --- Ukaku's fire: Photon particles (client/fx/RcFx, ported from Hex God of Death's DeathFx) ---------------------
 C com/lowdragmc/photon/client/gameobject/particle/TileParticle                     # [photon] gameobject/particle/TileParticle.java
 C com/lowdragmc/photon/client/gameobject/particle/IParticle                        # [photon] gameobject/particle/IParticle.java
 C com/lowdragmc/photon/client/gameobject/emitter/IParticleEmitter                 # [photon] gameobject/emitter/IParticleEmitter.java
@@ -226,7 +226,7 @@ C org/joml/Vector4f                                                             
 M org/joml/Vector4f <init> (FFFF)V                                                  # [lib]
 M net/minecraft/client/Options m_231929_ ()Lnet/minecraft/client/OptionInstance;   # [srg] particles, enr.am (yarn getParticles); read as an Enum's ordinal (ALL, DECREASED, MINIMAL)
 
-# --- Ayato's fire: network, input and the server's fire ---------------------------------------------------------------
+# --- Ukaku's fire: network, input and the server's fire ---------------------------------------------------------------
 M net/minecraft/network/FriendlyByteBuf writeShort (I)Lio/netty/buffer/ByteBuf;    # [lib]+[srg] FriendlyByteBuf delegates every Netty ByteBuf method
 M net/minecraft/network/FriendlyByteBuf readShort ()S                               # [lib]+[srg] same
 M net/minecraftforge/client/event/InputEvent$InteractionKeyMappingTriggered isUseItem ()Z  # [forge] client/event/InputEvent.java (isAttack/isUseItem/isPickBlock)
@@ -434,13 +434,13 @@ F net/minecraft/world/entity/Entity f_19859_ F                                  
 # --- 6.1.0 ghoul eyes: Resistance I and Strength I while only the kakugan is open ----------------------------
 F net/minecraft/world/effect/MobEffects f_19600_ Lnet/minecraft/world/effect/MobEffect;  # [order] DAMAGE_BOOST (Strength): 5th field 'e' of bfc (speed=f_19596_ 'a', jump=f_19603_ 'h', resistance=f_19606_ 'k' as the original uses); joined.tsrg bfc e f_19600_, intermediary field_5910 (yarn StatusEffects.STRENGTH)
 
-# --- 6.1.0 Eto's base form: steam wisps drawn as three crossed planes (client/fx/EtoSteam) ---------------------
-M com/lowdragmc/photon/client/gameobject/particle/TileParticle renderInternal (Lcom/mojang/blaze3d/vertex/VertexConsumer;Lnet/minecraft/client/Camera;F)V  # [photon] public void renderInternal(@Nonnull VertexConsumer buffer, Camera camera, float partialTicks): overridden by EtoSteam.Wisp (Photon's own render calls it when the particle is visible and not delayed)
+# --- 6.1.0 Pale's base form: steam wisps drawn as three crossed planes (client/fx/PaleSteam) ---------------------
+M com/lowdragmc/photon/client/gameobject/particle/TileParticle renderInternal (Lcom/mojang/blaze3d/vertex/VertexConsumer;Lnet/minecraft/client/Camera;F)V  # [photon] public void renderInternal(@Nonnull VertexConsumer buffer, Camera camera, float partialTicks): overridden by PaleSteam.Wisp (Photon's own render calls it when the particle is visible and not delayed)
 M com/lowdragmc/photon/client/gameobject/particle/TileParticle getWorldPos (F)Lorg/joml/Vector3f;  # [photon] public Vector3f getWorldPos(float partialTicks): local position interpolated, through the emitter's space transform
 M com/lowdragmc/photon/client/gameobject/particle/TileParticle getRealLight (F)I   # [photon] public int getRealLight(float partialTicks): the light Photon samples at the particle (updateLight)
 M com/mojang/blaze3d/vertex/VertexConsumer m_5483_ (DDD)Lcom/mojang/blaze3d/vertex/VertexConsumer;  # [srg] vertex(double, double, double): joined.tsrg ein a (DDD)Lein; m_5483_, intermediary method_22912, yarn VertexConsumer.vertex (Photon's renderInternal makes the same call)
 
-# --- 6.1.0: Eto's speed blitz -------------------------------------------------------------------------
+# --- 6.1.0: Pale's speed blitz -------------------------------------------------------------------------
 C net/minecraft/world/entity/ai/attributes/Attributes                                # [srg] bhg (yarn EntityAttributes, intermediary class_5134): the vanilla attributes
 C net/minecraft/world/entity/ai/attributes/Attribute                                 # [srg] bhb (yarn EntityAttribute, intermediary class_1320), the type of every Attributes field
 F net/minecraft/world/entity/ai/attributes/Attributes f_22278_ Lnet/minecraft/world/entity/ai/attributes/Attribute;  # [order] KNOCKBACK_RESISTANCE: 3rd field 'c' of bhg (MAX_HEALTH a, FOLLOW_RANGE b, KNOCKBACK_RESISTANCE c, MOVEMENT_SPEED d); joined.tsrg bhg c f_22278_: heavy bodies are pushed less by her blows
@@ -454,9 +454,9 @@ M net/minecraftforge/client/event/RenderLivingEvent getRenderer ()Lnet/minecraft
 M net/minecraftforge/client/event/RenderLivingEvent getMultiBufferSource ()Lnet/minecraft/client/renderer/MultiBufferSource;  # [forge] same: public MultiBufferSource getMultiBufferSource()
 M net/minecraftforge/client/event/RenderLivingEvent getPackedLight ()I              # [forge] same: public int getPackedLight()
 M net/minecraft/client/renderer/entity/LivingEntityRenderer m_7392_ (Lnet/minecraft/world/entity/LivingEntity;FFLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V  # [srg] render: joined.tsrg fpz.a (Lbfz;FFLeij;Lfjx;I)V m_7392_ (bfz LivingEntity, eij PoseStack, fjx MultiBufferSource; the Entity bridge is fpz.a (Lbfj;...)); yarn names it render on EntityRenderer (class_897), overridden by class_922
-F net/minecraft/client/player/LocalPlayer f_108618_ Lnet/minecraft/client/player/Input;  # [srg] input: yarn ClientPlayerEntity.input field_3913, obf fiy.cm Lfiw;: Eto's flip goes the way she is moving (W S A D)
+F net/minecraft/client/player/LocalPlayer f_108618_ Lnet/minecraft/client/player/Input;  # [srg] input: yarn ClientPlayerEntity.input field_3913, obf fiy.cm Lfiw;: Pale's flip goes the way she is moving (W S A D)
 
-# --- 6.1.0: Eto's launched bodies smash weak blocks; they grow back (BlockSmash) -----------------------
+# --- 6.1.0: Pale's launched bodies smash weak blocks; they grow back (BlockSmash) -----------------------
 # BlockSmash takes a block out as /setblock does (Clearable.tryClear, setBlock flags 2|16), keeps its state and block-entity NBT
 # in SavedData, and puts both back. Evidence: joined.tsrg owner + descriptor, intermediary, yarn (scratch lookups).
 C net/minecraft/core/Vec3i                                                          # [srg] hz (class_2382 Vec3i): BlockPos's superclass
@@ -540,7 +540,7 @@ M net/minecraft/world/entity/Entity m_20096_ ()Z                                
 C net/minecraft/client/model/PlayerModel                                               # [srg] joined.tsrg fck C_3853_, intermediary class_591, yarn PlayerEntityModel
 F net/minecraft/client/model/PlayerModel f_103375_ Lnet/minecraft/client/model/geom/ModelPart; # [srg] rightSleeve: joined.tsrg fck.w, intermediary field_3486, yarn rightSleeve
 M net/minecraft/world/phys/HitResult m_82450_ ()Lnet/minecraft/world/phys/Vec3;        # [srg] getLocation: joined.tsrg eeg.e ()Leei;, intermediary method_17784, yarn getPos
-# --- 6.2.0, the Owl (Eto's first kakuja): her arms and sleeves drawn thicker in it (HexHaki's haki physique), by the model part's
+# --- 6.2.0, the Owl (Pale's first kakuja): her arms and sleeves drawn thicker in it (HexHaki's haki physique), by the model part's
 # --- own scale, put back after. Joined as above (fee = ModelPart, fck = PlayerModel).
 F net/minecraft/client/model/geom/ModelPart f_233553_ F                               # [srg] xScale: joined.tsrg fee.h, intermediary field_37938, yarn xScale
 F net/minecraft/client/model/geom/ModelPart f_233555_ F                               # [srg] zScale: joined.tsrg fee.j, intermediary field_37940, yarn zScale
@@ -570,7 +570,7 @@ M net/minecraft/world/entity/boss/wither/WitherBoss m_31454_ (II)V              
 F net/minecraftforge/registries/ForgeRegistries MEMORY_MODULE_TYPES Lnet/minecraftforge/registries/IForgeRegistry; # [forge] 1.20.1 registries/ForgeRegistries.java:89
 M net/minecraftforge/registries/IForgeRegistry getValue (Lnet/minecraft/resources/ResourceLocation;)Ljava/lang/Object; # [forge] 1.20.1 registries/IForgeRegistry.java:43
 
-# --- 7.0.0, Furuta DNA: with a sword or an axe in hand his M1 is his own blade, swung and landed as Minecraft does it (its damage,
+# --- 7.0.0, Graft DNA: with a sword or an axe in hand his M1 is his own blade, swung and landed as Minecraft does it (its damage,
 # --- enchantments, sweep, cooldown), the kagune following through; the kakuja's claws swing the arms. Joined on the obfuscated name
 # --- across MCPConfig 1.20.1 joined.tsrg and Fabric intermediary 1.20.1.tiny (byo = Player, bfz = LivingEntity, bfj = Entity,
 # --- bdw = InteractionHand).
@@ -832,7 +832,7 @@ F net/minecraft/client/model/PlayerModel f_103376_ Lnet/minecraft/client/model/g
 F net/minecraft/client/model/PlayerModel f_103377_ Lnet/minecraft/client/model/geom/ModelPart;  # [srg] rightPants: joined.tsrg fck.y f_103377_, intermediary field_3479 (yarn rightPants)
 F net/minecraft/client/model/PlayerModel f_103378_ Lnet/minecraft/client/model/geom/ModelPart;  # [srg] jacket: joined.tsrg fck.z f_103378_, intermediary field_3483 (yarn jacket)
 F net/minecraft/client/renderer/entity/LivingEntityRenderer f_115290_ Lnet/minecraft/client/model/EntityModel;  # [srg] model: joined.tsrg fpz.f f_115290_ (fpz class_922, Lfbf; EntityModel), intermediary field_4737 (yarn model)
-# 1.0.42: Kaneki's grab is broken by a swing back at him (KanekiGrab): a player's bare swing, seen on the server as it goes.
+# 1.0.42: Rinkaku's grab is broken by a swing back at him (RinkakuGrab): a player's bare swing, seen on the server as it goes.
 F net/minecraft/world/entity/LivingEntity f_20911_ Z                                  # [srg] swinging: joined.tsrg bfz.aG f_20911_ 20911, intermediary bfz Z aG field_6252 (yarn handSwinging); set by swing() as the server handles the arm swing packet
 F net/minecraft/world/entity/LivingEntity f_20913_ I                                  # [srg] swingTime: joined.tsrg bfz.aI f_20913_ 20913, intermediary bfz I aI field_6279 (yarn handSwingTicks); -1 at the swing, counted up each tick
 # 1.2.0: Ctrl is the Kagune key (ControlKeys.unleashHeld): read straight from the keyboard, as Alt was.

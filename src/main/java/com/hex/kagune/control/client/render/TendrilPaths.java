@@ -7,7 +7,7 @@ import net.minecraft.world.phys.Vec3;
 
 /**
  * 5.0.14: where each player's tentacles were last drawn (world points from the root to the tip, as {@link StrikePaths#clearOwner}
- * leaves them), so what is stuck in a tentacle rides it: the spikes a Kaneki guard stopped ({@code AyatoSpikes.place}).
+ * leaves them), so what is stuck in a tentacle rides it: the spikes a Rinkaku guard stopped ({@code UkakuSpikes.place}).
  */
 public final class TendrilPaths {
     /** One tentacle's drawn path and the world time (ticks, partial included) it was drawn at. */

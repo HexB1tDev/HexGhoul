@@ -1,17 +1,17 @@
 package com.hex.kagune.control.king;
 
-import static com.hex.kagune.control.furuta.FurutaMesh.add;
-import static com.hex.kagune.control.furuta.FurutaMesh.clamp01;
-import static com.hex.kagune.control.furuta.FurutaMesh.cross;
-import static com.hex.kagune.control.furuta.FurutaMesh.dot;
-import static com.hex.kagune.control.furuta.FurutaMesh.mix;
-import static com.hex.kagune.control.furuta.FurutaMesh.mul;
-import static com.hex.kagune.control.furuta.FurutaMesh.normalize;
-import static com.hex.kagune.control.furuta.FurutaMesh.sub;
+import static com.hex.kagune.control.graft.GraftMesh.add;
+import static com.hex.kagune.control.graft.GraftMesh.clamp01;
+import static com.hex.kagune.control.graft.GraftMesh.cross;
+import static com.hex.kagune.control.graft.GraftMesh.dot;
+import static com.hex.kagune.control.graft.GraftMesh.mix;
+import static com.hex.kagune.control.graft.GraftMesh.mul;
+import static com.hex.kagune.control.graft.GraftMesh.normalize;
+import static com.hex.kagune.control.graft.GraftMesh.sub;
 
-import com.hex.kagune.control.ayato.KakujaModel;
-import com.hex.kagune.control.ayato.UkakuModel;
-import com.hex.kagune.control.furuta.FurutaMesh;
+import com.hex.kagune.control.ukaku.KakujaModel;
+import com.hex.kagune.control.ukaku.UkakuModel;
+import com.hex.kagune.control.graft.GraftMesh;
 import java.util.List;
 
 /**
@@ -66,7 +66,7 @@ public final class PeaceFxModel {
         KakujaModel.Spine sp = WarModel.spine(new java.util.ArrayList<>(control), 24, new double[] {0.0, 1.0, 0.0});
         double end = clamp01(grow);
         double crawl = time * 0.06;
-        FurutaMesh.tube(sink, sp, 0.0, end, Math.max(6, (int)Math.round(22 * end)), sides, new FurutaMesh.Surface() {
+        GraftMesh.tube(sink, sp, 0.0, end, Math.max(6, (int)Math.round(22 * end)), sides, new GraftMesh.Surface() {
             @Override
             public double radius(double s, double a) {
                 double t = s / Math.max(1.0E-6, end);
@@ -352,7 +352,7 @@ public final class PeaceFxModel {
         List<double[]> control = new java.util.ArrayList<>(java.util.Arrays.asList(p));
         KakujaModel.Spine sp = WarModel.spine(control, 20, new double[] {1.0, 0.0, 0.0});
         double end = clamp01(grow);
-        FurutaMesh.tube(sink, sp, 0.0, end, Math.max(4, (int)Math.round(18 * end)), sides, new FurutaMesh.Surface() {
+        GraftMesh.tube(sink, sp, 0.0, end, Math.max(4, (int)Math.round(18 * end)), sides, new GraftMesh.Surface() {
             @Override
             public double radius(double s, double a) {
                 double t = s / Math.max(1.0E-6, end);

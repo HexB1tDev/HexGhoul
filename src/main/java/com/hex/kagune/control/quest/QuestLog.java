@@ -395,7 +395,7 @@ public final class QuestLog {
     // ------------------------------------------------------------------ the save: one string
 
     /**
-     * "v=1;pts=2;hunt@=123;side.anteiku=1;gate=eyes_kick,kaneki_twin;done=first_meal,...;closed=pack;p.light_feet=12,5;
+     * "v=1;pts=2;hunt@=123;side.anteiku=1;gate=eyes_kick,rinkaku_twin;done=first_meal,...;closed=pack;p.light_feet=12,5;
      * h.0=kill_mob:3:5:120000:1". Unknown quests and gates in an old save are dropped quietly.
      */
     public String save() {

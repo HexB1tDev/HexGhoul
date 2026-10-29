@@ -44,15 +44,15 @@ public final class KakuganServer {
     }
 
     /**
-     * The player's own placement from the kakugan screen (validated: an eye can only ever land on the face; on Eto's path, one
+     * The player's own placement from the kakugan screen (validated: an eye can only ever land on the face; on Pale's path, one
      * eye only, whatever a client sends).
      */
     public static void place(ServerPlayer player, KakuganEyes eyes) {
-        if (PathServer.path(player) == com.hex.kagune.control.KagunePath.ETO && !eyes.oneEyed()) {
+        if (PathServer.path(player) == com.hex.kagune.control.KagunePath.PALE && !eyes.oneEyed()) {
             eyes = eyes.withGhoul(KakuganEyes.RIGHT);
         }
-        if (PathServer.path(player) == com.hex.kagune.control.KagunePath.FURUTA) {
-            eyes = eyes.withGhoul(KakuganEyes.RIGHT); // 7.0.0: Furuta's one kakugan is always the right eye
+        if (PathServer.path(player) == com.hex.kagune.control.KagunePath.GRAFT) {
+            eyes = eyes.withGhoul(KakuganEyes.RIGHT); // 7.0.0: Graft's one kakugan is always the right eye
         }
         KaguneProfile.root(player).m_128405_(KEY, eyes.validated().pack());
         ASKED.add(player.m_20148_());

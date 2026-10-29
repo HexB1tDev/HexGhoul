@@ -1,5 +1,5 @@
-import com.hex.kagune.control.ayato.WingForm;
-import com.hex.kagune.control.ayato.WingRig;
+import com.hex.kagune.control.ukaku.WingForm;
+import com.hex.kagune.control.ukaku.WingRig;
 import com.hex.kagune.control.client.animation.IdlePose;
 import com.hex.kagune.control.client.animation.RigPose;
 import java.awt.Color;
@@ -13,7 +13,7 @@ import java.util.List;
 import javax.imageio.ImageIO;
 
 /**
- * Ayato's moves off-game: the body posed through the game's exact PlayerAnimator/bendy-lib transforms ({@link PoseRender})
+ * Ukaku's moves off-game: the body posed through the game's exact PlayerAnimator/bendy-lib transforms ({@link PoseRender})
  * with the wings from {@link WingRig}, in {@link WingPreview}'s translucent rasterizer. Rig space throughout (x to the
  * player's right, y up from the feet, z forward). Usage: {@code ArtPreview <out-dir> [sheet ...]}; sheets: aim, shot, moves,
  * crystal, spikes, vortex, gatling, kakuja.
@@ -28,88 +28,88 @@ public final class ArtPreview {
         out.mkdirs();
         java.util.Set<String> wanted = new java.util.HashSet<>(java.util.Arrays.asList(args).subList(Math.min(1, args.length), args.length));
         if (wanted.isEmpty() || wanted.contains("aim")) {
-            aim(new File(out, "ayato-aim.png"));
+            aim(new File(out, "ukaku-aim.png"));
         }
         if (wanted.isEmpty() || wanted.contains("shot")) {
-            shot(new File(out, "ayato-shot.png"));
+            shot(new File(out, "ukaku-shot.png"));
         }
         if (wanted.isEmpty() || wanted.contains("moves")) {
-            moves(new File(out, "ayato-moves.png"));
+            moves(new File(out, "ukaku-moves.png"));
         }
         if (wanted.isEmpty() || wanted.contains("crystal")) {
-            crystal(new File(out, "ayato-crystal.png"));
+            crystal(new File(out, "ukaku-crystal.png"));
         }
         if (wanted.isEmpty() || wanted.contains("spikes")) {
-            spikes(new File(out, "ayato-spikes.png"));
+            spikes(new File(out, "ukaku-spikes.png"));
         }
         if (wanted.isEmpty() || wanted.contains("vortex")) {
-            vortex(new File(out, "ayato-vortex.png"));
+            vortex(new File(out, "ukaku-vortex.png"));
         }
         if (wanted.isEmpty() || wanted.contains("gatling")) {
-            gatling(new File(out, "ayato-gatling.png"));
+            gatling(new File(out, "ukaku-gatling.png"));
         }
         if (wanted.isEmpty() || wanted.contains("kakuja")) {
-            kakuja(new File(out, "ayato-kakuja.png"));
+            kakuja(new File(out, "ukaku-kakuja.png"));
         }
         if (wanted.isEmpty() || wanted.contains("kakuja-aim")) {
-            kakujaAim(new File(out, "ayato-kakuja-aim.png"));
+            kakujaAim(new File(out, "ukaku-kakuja-aim.png"));
         }
         if (wanted.isEmpty() || wanted.contains("kakuja-kit")) {
-            kakujaKit(new File(out, "ayato-kakuja-kit.png"));
+            kakujaKit(new File(out, "ukaku-kakuja-kit.png"));
         }
         if (wanted.isEmpty() || wanted.contains("kakuja-motion")) {
-            kakujaMotion(new File(out, "ayato-kakuja-motion.png"));
+            kakujaMotion(new File(out, "ukaku-kakuja-motion.png"));
         }
         if (wanted.isEmpty() || wanted.contains("kakuja-final")) {
-            kakujaFinal(new File(out, "ayato-kakuja-final.png"));
+            kakujaFinal(new File(out, "ukaku-kakuja-final.png"));
         }
         if (wanted.isEmpty() || wanted.contains("kakuja-final-kit")) {
-            kakujaFinalKit(new File(out, "ayato-kakuja-final-kit.png"));
+            kakujaFinalKit(new File(out, "ukaku-kakuja-final-kit.png"));
         }
         if (wanted.isEmpty() || wanted.contains("wounds")) {
             wounds(new File(out, "wounds.png"));
         }
         if (wanted.isEmpty() || wanted.contains("centipede")) {
-            centipede(new File(out, "kaneki-centipede.png"));
+            centipede(new File(out, "rinkaku-centipede.png"));
         }
         if (wanted.isEmpty() || wanted.contains("centipede-grab")) {
-            centipedeGrab(new File(out, "kaneki-centipede-grab.png"));
+            centipedeGrab(new File(out, "rinkaku-centipede-grab.png"));
         }
-        if (wanted.isEmpty() || wanted.contains("kaneki-kakuja")) {
-            kanekiKakuja(new File(out, "kaneki-kakuja-forms.png"));
+        if (wanted.isEmpty() || wanted.contains("rinkaku-kakuja")) {
+            rinkakuKakuja(new File(out, "rinkaku-kakuja-forms.png"));
         }
         if (wanted.isEmpty() || wanted.contains("kakuja-burst")) {
-            kakujaBurst(new File(out, "kaneki-kakuja-burst.png"));
+            kakujaBurst(new File(out, "rinkaku-kakuja-burst.png"));
         }
         if (wanted.isEmpty() || wanted.contains("centipede-game")) {
-            centipedeInGame(new File(out, "kaneki-centipede-ingame.png"));
+            centipedeInGame(new File(out, "rinkaku-centipede-ingame.png"));
         }
         if (wanted.isEmpty() || wanted.contains("final-legs")) {
-            finalLegs(new File(out, "kaneki-final-legs.png"));
+            finalLegs(new File(out, "rinkaku-final-legs.png"));
         }
         if (wanted.isEmpty() || wanted.contains("centipede-mask")) {
-            centipedeMask(new File(out, "kaneki-mask-centipede.png"));
+            centipedeMask(new File(out, "rinkaku-mask-centipede.png"));
         }
-        if (wanted.isEmpty() || wanted.contains("kaneki-mask")) {
-            kanekiMask(new File(out, "kaneki-mask.png"));
+        if (wanted.isEmpty() || wanted.contains("rinkaku-mask")) {
+            rinkakuMask(new File(out, "rinkaku-mask.png"));
         }
         if (wanted.isEmpty() || wanted.contains("kakugan-lean")) {
             kakuganLean(new File(out, "kakugan-lean.png"));
         }
         if (wanted.isEmpty() || wanted.contains("tendril-guard")) {
-            tendrilGuard(new File(out, "kaneki-tendril-guard.png"));
+            tendrilGuard(new File(out, "rinkaku-tendril-guard.png"));
         }
         if (wanted.isEmpty() || wanted.contains("steel-blade")) {
-            steelBlade(new File(out, "ayato-steel-blade.png"));
+            steelBlade(new File(out, "ukaku-steel-blade.png"));
         }
         if (wanted.isEmpty() || wanted.contains("steel-blade-detail")) {
-            steelBladeDetail(new File(out, "ayato-steel-blade-detail.png"));
+            steelBladeDetail(new File(out, "ukaku-steel-blade-detail.png"));
         }
         if (wanted.isEmpty() || wanted.contains("wounds-anatomy")) {
             woundsAnatomy(new File(out, "wounds-anatomy.png"));
         }
         if (wanted.isEmpty() || wanted.contains("crystal-thorns")) {
-            crystalThorns(new File(out, "ayato-crystal-thorns.png"));
+            crystalThorns(new File(out, "ukaku-crystal-thorns.png"));
         }
         if (wanted.contains("war")) {
             war(new File(out, "king-war.png"));
@@ -204,14 +204,14 @@ public final class ArtPreview {
     }
 
     /**
-     * 5.0.15: the crystal thorns (CrystalThorns, the game's own layout and growth, each a CrystalSpike as AyatoWingRenderer
-     * draws it) breaking out of an Ayato in the crystal mode through a Kaneki tail wrapped round him; a second later it lets go.
+     * 5.0.15: the crystal thorns (CrystalThorns, the game's own layout and growth, each a CrystalSpike as UkakuWingRenderer
+     * draws it) breaking out of an Ukaku in the crystal mode through a Rinkaku tail wrapped round him; a second later it lets go.
      */
     static void crystalThorns(File file) throws Exception {
         RigPose still = new RigPose();
-        com.hex.kagune.control.ayato.CrystalThorns.Thorn[] thorns = com.hex.kagune.control.ayato.CrystalThorns.thorns(4242,
-            com.hex.kagune.control.ayato.CrystalThorns.COUNT);
-        // A Kaneki tail coming in from his right front and wrapping round his chest (preview tentacle, not the game's path).
+        com.hex.kagune.control.ukaku.CrystalThorns.Thorn[] thorns = com.hex.kagune.control.ukaku.CrystalThorns.thorns(4242,
+            com.hex.kagune.control.ukaku.CrystalThorns.COUNT);
+        // A Rinkaku tail coming in from his right front and wrapping round his chest (preview tentacle, not the game's path).
         List<double[]> coil = new ArrayList<>();
         coil.add(new double[] {-6.0, 2.6, 4.0});
         coil.add(new double[] {-3.2, 1.9, 2.0});
@@ -242,13 +242,13 @@ public final class ArtPreview {
                 tris.addAll(rinkaku(tail, 0.2, 0xA50F37, 0x18030B));
             }
             double glow = 0.15 + 0.6 * Math.max(0.0, 1.0 - age / 10.0);
-            for (com.hex.kagune.control.ayato.CrystalThorns.Thorn thorn : thorns) {
-                double out = com.hex.kagune.control.ayato.CrystalThorns.out(thorn, age, sunk);
+            for (com.hex.kagune.control.ukaku.CrystalThorns.Thorn thorn : thorns) {
+                double out = com.hex.kagune.control.ukaku.CrystalThorns.out(thorn, age, sunk);
                 if (out <= 0.001) {
                     continue;
                 }
-                tris.addAll(spike(com.hex.kagune.control.ayato.CrystalThorns.tip(thorn, out), thorn.direction(),
-                    com.hex.kagune.control.ayato.CrystalThorns.drawnSize(thorn, out), eye, glow, 0.0, thorn.seed()));
+                tris.addAll(spike(com.hex.kagune.control.ukaku.CrystalThorns.tip(thorn, out), thorn.direction(),
+                    com.hex.kagune.control.ukaku.CrystalThorns.drawnSize(thorn, out), eye, glow, 0.0, thorn.seed()));
             }
             shots.add(new Shot((String)c[0], still, crystalWings(300, 1.0F, 0, 0, WingRig.FORWARD, 0, 1.3), eye, look, tris));
         }
@@ -334,7 +334,7 @@ public final class ArtPreview {
      */
     static void kakuganLean(File file) throws Exception {
         List<Shot> shots = new ArrayList<>();
-        Object[][] stances = {{"Ayato's kakuja stance", IdlePose.Style.AYATO_KAKUJA}, {"Kaneki's crouch", IdlePose.Style.KANEKI_FERAL}};
+        Object[][] stances = {{"Ukaku's kakuja stance", IdlePose.Style.UKAKU_KAKUJA}, {"Rinkaku's crouch", IdlePose.Style.RINKAKU_FERAL}};
         for (Object[] stance : stances) {
             RigPose pose = IdlePose.pose((IdlePose.Style)stance[1], 1.0F, 0.4);
             RigPose unbent = new RigPose().add(pose, 1.0F);
@@ -356,9 +356,9 @@ public final class ArtPreview {
         double[][] right = CENTIPEDE_RIGHT;
         double[][] left = {{-0.12, 1.05, -0.2}, {-0.5, 1.25, -0.75}, {-1.3, 1.95, -1.05}, {-2.35, 2.5, -0.85}, {-3.25, 2.35, -0.25}, {-3.7, 1.6, 0.3}};
         List<WingPreview.Tri> out = new ArrayList<>();
-        out.addAll(centipedeLeg(right, 1, new double[] {1.0, 0.0, 0.0}, new com.hex.kagune.control.ayato.CentipedeTail.Look(0.3, 7, fine, 1.0, 1,
+        out.addAll(centipedeLeg(right, 1, new double[] {1.0, 0.0, 0.0}, new com.hex.kagune.control.ukaku.CentipedeTail.Look(0.3, 7, fine, 1.0, 1,
             jaw, flare, ripple, phase)));
-        out.addAll(centipedeLeg(left, -1, new double[] {0.0, 0.0, -1.0}, new com.hex.kagune.control.ayato.CentipedeTail.Look(0.3, 7, fine, 1.0, 2,
+        out.addAll(centipedeLeg(left, -1, new double[] {0.0, 0.0, -1.0}, new com.hex.kagune.control.ukaku.CentipedeTail.Look(0.3, 7, fine, 1.0, 2,
             jaw, flare, ripple, phase + 1.3)));
         return out;
     }
@@ -373,19 +373,19 @@ public final class ArtPreview {
             for (int i = 0; i < right.length; i++) {
                 c[i] = new double[] {right[i][0] * side, right[i][1], right[i][2]};
             }
-            out.addAll(centipedeLeg(c, side, new double[] {0.0, 0.0, -1.0}, new com.hex.kagune.control.ayato.CentipedeTail.Look(0.3, 7, true, 1.0,
+            out.addAll(centipedeLeg(c, side, new double[] {0.0, 0.0, -1.0}, new com.hex.kagune.control.ukaku.CentipedeTail.Look(0.3, 7, true, 1.0,
                 side > 0 ? 1 : 2)));
         }
         return out;
     }
 
-    static List<WingPreview.Tri> centipedeLeg(double[][] controls, int side, double[] dorsal, com.hex.kagune.control.ayato.CentipedeTail.Look look) {
-        com.hex.kagune.control.ayato.KakujaModel.Spine spine = com.hex.kagune.control.ayato.CentipedeTail.through(controls, 120, side, dorsal);
-        return placed(sink -> com.hex.kagune.control.ayato.CentipedeTail.tail(sink, spine, look), q -> q);
+    static List<WingPreview.Tri> centipedeLeg(double[][] controls, int side, double[] dorsal, com.hex.kagune.control.ukaku.CentipedeTail.Look look) {
+        com.hex.kagune.control.ukaku.KakujaModel.Spine spine = com.hex.kagune.control.ukaku.CentipedeTail.through(controls, 120, side, dorsal);
+        return placed(sink -> com.hex.kagune.control.ukaku.CentipedeTail.tail(sink, spine, look), q -> q);
     }
 
     /**
-     * A rinkaku tentacle for previews (an approximation of how the game draws Kaneki's tendrils, not the game's code): a
+     * A rinkaku tentacle for previews (an approximation of how the game draws Rinkaku's tendrils, not the game's code): a
      * twelve-sided tube through {@code controls}, grown out of the back, swelling a little in the middle and tapering to a point,
      * crimson with dark vein lanes.
      */
@@ -475,7 +475,7 @@ public final class ArtPreview {
     }
 
     /** The final kakuja's four rinkaku tentacles (default kagune colours): two rising high behind him, two sweeping out low. */
-    static List<WingPreview.Tri> kanekiTentacles() {
+    static List<WingPreview.Tri> rinkakuTentacles() {
         // The final kakuja's four tentacles at rest, as the original lays them out (TendrilChain: the cubic from the pelvis
         // through its two controls to restTarget; mastery 1000, default appearance): the upper pair (fan 1.88, height 1.72,
         // back 0.5, length 1.2) and the lower pair (2.34, -0.44, 0.72, 1.34).
@@ -512,26 +512,26 @@ public final class ArtPreview {
     }
 
     /** A leg as the game draws it (3.1.0): CentipedeMotion's springs, CentipedeTail's plates, at {@code mastery}. */
-    static List<WingPreview.Tri> gameLeg(com.hex.kagune.control.ayato.CentipedeMotion.Leg leg, int side, int mastery) {
-        double length = com.hex.kagune.control.ayato.CentipedeMotion.length(mastery);
-        double width = com.hex.kagune.control.ayato.CentipedeMotion.width(length);
-        int plates = com.hex.kagune.control.ayato.CentipedeMotion.plates(length, width);
-        com.hex.kagune.control.ayato.KakujaModel.Spine spine = com.hex.kagune.control.ayato.CentipedeTail.through(leg.points(), 64, side, leg.dorsal());
-        return placed(sink -> com.hex.kagune.control.ayato.CentipedeTail.tail(sink, spine, new com.hex.kagune.control.ayato.CentipedeTail.Look(width,
+    static List<WingPreview.Tri> gameLeg(com.hex.kagune.control.ukaku.CentipedeMotion.Leg leg, int side, int mastery) {
+        double length = com.hex.kagune.control.ukaku.CentipedeMotion.length(mastery);
+        double width = com.hex.kagune.control.ukaku.CentipedeMotion.width(length);
+        int plates = com.hex.kagune.control.ukaku.CentipedeMotion.plates(length, width);
+        com.hex.kagune.control.ukaku.KakujaModel.Spine spine = com.hex.kagune.control.ukaku.CentipedeTail.through(leg.points(), 64, side, leg.dorsal());
+        return placed(sink -> com.hex.kagune.control.ukaku.CentipedeTail.tail(sink, spine, new com.hex.kagune.control.ukaku.CentipedeTail.Look(width,
             plates, true, 1.0, side > 0 ? 1 : 2, leg.jaw(), leg.flare(), 0.35, leg.phase())), q -> q);
     }
 
-    static com.hex.kagune.control.ayato.CentipedeMotion.Input motionInput(int side, boolean finalForm, int mastery,
-                                                                          com.hex.kagune.control.ayato.CentipedeMotion.Act act, double[] target,
+    static com.hex.kagune.control.ukaku.CentipedeMotion.Input motionInput(int side, boolean finalForm, int mastery,
+                                                                          com.hex.kagune.control.ukaku.CentipedeMotion.Act act, double[] target,
                                                                           double radius, boolean grab, double time) {
-        return new com.hex.kagune.control.ayato.CentipedeMotion.Input(side, finalForm, com.hex.kagune.control.ayato.CentipedeMotion.length(mastery), 0.99,
+        return new com.hex.kagune.control.ukaku.CentipedeMotion.Input(side, finalForm, com.hex.kagune.control.ukaku.CentipedeMotion.length(mastery), 0.99,
             act, target, radius, grab, 0.0, 0.0, 0.0, time);
     }
 
     /** A leg settled in a pose. */
-    static com.hex.kagune.control.ayato.CentipedeMotion.Leg settled(com.hex.kagune.control.ayato.CentipedeMotion.Input input) {
-        com.hex.kagune.control.ayato.CentipedeMotion.Leg leg = new com.hex.kagune.control.ayato.CentipedeMotion.Leg();
-        leg.follow(com.hex.kagune.control.ayato.CentipedeMotion.pose(input), input.time(), 0.0);
+    static com.hex.kagune.control.ukaku.CentipedeMotion.Leg settled(com.hex.kagune.control.ukaku.CentipedeMotion.Input input) {
+        com.hex.kagune.control.ukaku.CentipedeMotion.Leg leg = new com.hex.kagune.control.ukaku.CentipedeMotion.Leg();
+        leg.follow(com.hex.kagune.control.ukaku.CentipedeMotion.pose(input), input.time(), 0.0);
         return leg;
     }
 
@@ -544,10 +544,10 @@ public final class ArtPreview {
         dangling.rightArmZ = 0.45F;
         dangling.leftArmZ = -0.45F;
         dangling.settle(1.0F);
-        com.hex.kagune.control.ayato.CentipedeMotion.Act rest = com.hex.kagune.control.ayato.CentipedeMotion.Act.REST;
-        com.hex.kagune.control.ayato.CentipedeMotion.Act lock = com.hex.kagune.control.ayato.CentipedeMotion.Act.LOCK;
-        com.hex.kagune.control.ayato.CentipedeMotion.Act strike = com.hex.kagune.control.ayato.CentipedeMotion.Act.STRIKE;
-        com.hex.kagune.control.ayato.CentipedeMotion.Act coil = com.hex.kagune.control.ayato.CentipedeMotion.Act.COIL;
+        com.hex.kagune.control.ukaku.CentipedeMotion.Act rest = com.hex.kagune.control.ukaku.CentipedeMotion.Act.REST;
+        com.hex.kagune.control.ukaku.CentipedeMotion.Act lock = com.hex.kagune.control.ukaku.CentipedeMotion.Act.LOCK;
+        com.hex.kagune.control.ukaku.CentipedeMotion.Act strike = com.hex.kagune.control.ukaku.CentipedeMotion.Act.STRIKE;
+        com.hex.kagune.control.ukaku.CentipedeMotion.Act coil = com.hex.kagune.control.ukaku.CentipedeMotion.Act.COIL;
         List<Shot> shots = new ArrayList<>();
         List<WingPreview.Tri> first = new ArrayList<>(maskTris(still));
         for (int side = -1; side <= 1; side += 2) {
@@ -559,26 +559,26 @@ public final class ArtPreview {
         for (int side = -1; side <= 1; side += 2) {
             last.addAll(gameLeg(settled(motionInput(side, true, 1000, rest, null, 0.3, false, 0.0)), side, 1000));
         }
-        last.addAll(kanekiTentacles());
+        last.addAll(rinkakuTentacles());
         shots.add(new Shot("Final kakuja at rest (1000, 7.5-block legs; tentacles approximated)", still, NO_WINGS, new double[] {0.0, 3.0, 12.5},
             new double[] {0.0, 2.6, -0.6}, last));
-        double length = com.hex.kagune.control.ayato.CentipedeMotion.length(750);
-        double reach = com.hex.kagune.control.ayato.CentipedeMotion.reach(length);
+        double length = com.hex.kagune.control.ukaku.CentipedeMotion.length(750);
+        double reach = com.hex.kagune.control.ukaku.CentipedeMotion.reach(length);
         // The strike: the nearest threat at the edge of reach, rear back to tick 3, the hit on tick 5.
         double[] prey = {Math.sin(0.45) * reach * 0.95, 1.1, Math.cos(0.45) * reach * 0.95};
         double[] preyFeet = {prey[0], prey[1] - 0.94 + 1.0, prey[2]};
         double[][] frames = {{1.5, 0}, {3.5, 0}, {5.0, 0}};
         String[] labels = {"Strike, tick 1.5: rearing back", "Strike, tick 3.5: the arc comes over",
             String.format("Strike, tick 5: the hit lands (reach %.1f blocks)", reach)};
-        com.hex.kagune.control.ayato.CentipedeMotion.Leg right = settled(motionInput(1, false, 750, rest, null, 0.3, false, 0.0));
-        com.hex.kagune.control.ayato.CentipedeMotion.Leg left = settled(motionInput(-1, false, 750, rest, null, 0.3, false, 0.0));
+        com.hex.kagune.control.ukaku.CentipedeMotion.Leg right = settled(motionInput(1, false, 750, rest, null, 0.3, false, 0.0));
+        com.hex.kagune.control.ukaku.CentipedeMotion.Leg left = settled(motionInput(-1, false, 750, rest, null, 0.3, false, 0.0));
         double time = 0.0;
         for (int f = 0; f < frames.length; f++) {
             while (time < frames[f][0] - 1.0E-9) {
                 time = Math.min(frames[f][0], time + 0.25);
-                right.follow(com.hex.kagune.control.ayato.CentipedeMotion.pose(motionInput(1, false, 750, time < 3.0 ? lock : strike, prey, 0.3, false,
+                right.follow(com.hex.kagune.control.ukaku.CentipedeMotion.pose(motionInput(1, false, 750, time < 3.0 ? lock : strike, prey, 0.3, false,
                     time)), time, 0.0);
-                left.follow(com.hex.kagune.control.ayato.CentipedeMotion.pose(motionInput(-1, false, 750, rest, null, 0.3, false, time)), time, 0.0);
+                left.follow(com.hex.kagune.control.ukaku.CentipedeMotion.pose(motionInput(-1, false, 750, rest, null, 0.3, false, time)), time, 0.0);
             }
             List<WingPreview.Tri> tris = new ArrayList<>(maskTris(still));
             tris.addAll(gameLeg(right, 1, 750));
@@ -587,8 +587,8 @@ public final class ArtPreview {
             shots.add(new Shot(labels[f], still, NO_WINGS, new double[] {6.6, 3.3, 8.8}, new double[] {1.0, 1.9, 1.6}, tris));
         }
         // The grab: rear to tick 4, strike, the bite on 7, hoisted over to beside him by 13, crushed there, then slammed.
-        double[] held = com.hex.kagune.control.ayato.CentipedeMotion.holdPoint(1, length);
-        double radius = 0.3 + com.hex.kagune.control.ayato.CentipedeMotion.width(length) * 0.85;
+        double[] held = com.hex.kagune.control.ukaku.CentipedeMotion.holdPoint(1, length);
+        double radius = 0.3 + com.hex.kagune.control.ukaku.CentipedeMotion.width(length) * 0.85;
         right = settled(motionInput(1, false, 750, rest, null, 0.3, false, 0.0));
         left = settled(motionInput(-1, false, 750, rest, null, 0.3, true, 0.0));
         time = 0.0;
@@ -601,9 +601,9 @@ public final class ArtPreview {
                 double hoist = smoothstep((time - 7.0) / 6.0);
                 body = time < 7.0 ? prey : new double[] {prey[0] + (held[0] - prey[0]) * hoist, prey[1] + (held[1] - prey[1]) * hoist,
                     prey[2] + (held[2] - prey[2]) * hoist};
-                com.hex.kagune.control.ayato.CentipedeMotion.Act act = time < 4.0 ? lock : time < 7.0 ? strike : coil;
-                right.follow(com.hex.kagune.control.ayato.CentipedeMotion.pose(motionInput(1, false, 750, act, body, radius, true, time)), time, 0.0);
-                left.follow(com.hex.kagune.control.ayato.CentipedeMotion.pose(motionInput(-1, false, 750, rest, null, 0.3, false, time)), time, 0.0);
+                com.hex.kagune.control.ukaku.CentipedeMotion.Act act = time < 4.0 ? lock : time < 7.0 ? strike : coil;
+                right.follow(com.hex.kagune.control.ukaku.CentipedeMotion.pose(motionInput(1, false, 750, act, body, radius, true, time)), time, 0.0);
+                left.follow(com.hex.kagune.control.ukaku.CentipedeMotion.pose(motionInput(-1, false, 750, rest, null, 0.3, false, time)), time, 0.0);
             }
             List<WingPreview.Tri> tris = new ArrayList<>(maskTris(still));
             tris.addAll(gameLeg(right, 1, 750));
@@ -620,12 +620,12 @@ public final class ArtPreview {
      */
     static void finalLegs(File file) throws Exception {
         RigPose still = new RigPose();
-        com.hex.kagune.control.ayato.CentipedeMotion.Act rest = com.hex.kagune.control.ayato.CentipedeMotion.Act.REST;
+        com.hex.kagune.control.ukaku.CentipedeMotion.Act rest = com.hex.kagune.control.ukaku.CentipedeMotion.Act.REST;
         List<WingPreview.Tri> tris = new ArrayList<>(maskTris(still));
         for (int side = -1; side <= 1; side += 2) {
             tris.addAll(gameLeg(settled(motionInput(side, true, 1000, rest, null, 0.3, false, 0.0)), side, 1000));
         }
-        tris.addAll(kanekiTentacles());
+        tris.addAll(rinkakuTentacles());
         double[] at = {0.0, 1.6, 0.0};
         List<Shot> shots = new ArrayList<>();
         shots.add(new Shot("Third person (behind, above)", still, NO_WINGS, new double[] {1.4, 6.2, -13.5}, at, tris));
@@ -635,17 +635,17 @@ public final class ArtPreview {
         sheet(file, "Final kakuja at rest (1000, 7.5-block legs): the legs between the upper and lower tentacles", shots, 2, 600, 470);
     }
 
-    /** Both of Kaneki's kakuja with the new legs and mask: the first (750) and the final (1000). */
-    static void kanekiKakuja(File file) throws Exception {
+    /** Both of Rinkaku's kakuja with the new legs and mask: the first (750) and the final (1000). */
+    static void rinkakuKakuja(File file) throws Exception {
         RigPose still = new RigPose();
-        com.hex.kagune.control.ayato.CentipedeMotion.Act rest = com.hex.kagune.control.ayato.CentipedeMotion.Act.REST;
+        com.hex.kagune.control.ukaku.CentipedeMotion.Act rest = com.hex.kagune.control.ukaku.CentipedeMotion.Act.REST;
         List<WingPreview.Tri> first = new ArrayList<>(maskTris(still));
         List<WingPreview.Tri> last = new ArrayList<>(maskTris(still));
         for (int side = -1; side <= 1; side += 2) {
             first.addAll(gameLeg(settled(motionInput(side, false, 750, rest, null, 0.3, false, 0.0)), side, 750));
             last.addAll(gameLeg(settled(motionInput(side, true, 1000, rest, null, 0.3, false, 0.0)), side, 1000));
         }
-        last.addAll(kanekiTentacles());
+        last.addAll(rinkakuTentacles());
         double[] face = {0.0, 1.55, 0.0};
         List<Shot> shots = new ArrayList<>();
         shots.add(new Shot("First kakuja (Centipede Form, 750): front, three quarters", still, NO_WINGS, new double[] {4.5, 3.0, 9.0},
@@ -655,18 +655,18 @@ public final class ArtPreview {
         shots.add(new Shot("Final kakuja (Full Kakuja, 1000): front", still, NO_WINGS, new double[] {0.0, 2.6, 15.0}, new double[] {0.0, 1.8, -0.3}, last));
         shots.add(new Shot("Final kakuja: back, three quarters", still, NO_WINGS, new double[] {-8.5, 5.5, -11.5}, new double[] {0.0, 1.8, -0.3}, last));
         shots.add(new Shot("Final kakuja: front, three quarters", still, NO_WINGS, new double[] {9.5, 3.4, 12.0}, new double[] {0.0, 1.8, -0.3}, last));
-        sheet(file, "Kaneki's kakuja in game (3.1.0): first kakuja (top), final kakuja with its legs between the tentacles (bottom)", shots, 3, 600,
+        sheet(file, "Rinkaku's kakuja in game (3.1.0): first kakuja (top), final kakuja with its legs between the tentacles (bottom)", shots, 3, 600,
             470);
     }
 
     /**
-     * 5.0.0: Kaneki's final kakuja bursting out of his back (the legs tear out one after the other and overshoot, the tentacles
+     * 5.0.0: Rinkaku's final kakuja bursting out of his back (the legs tear out one after the other and overshoot, the tentacles
      * erupt, the mask creeps over his face from the lens) and shattering (legs, tentacles and mask break into pieces that fly off
      * him, bounce and fade), with the game's own timing ({@code KakujaBurst}).
      */
     static void kakujaBurst(File file) throws Exception {
         RigPose still = new RigPose();
-        com.hex.kagune.control.ayato.CentipedeMotion.Act rest = com.hex.kagune.control.ayato.CentipedeMotion.Act.REST;
+        com.hex.kagune.control.ukaku.CentipedeMotion.Act rest = com.hex.kagune.control.ukaku.CentipedeMotion.Act.REST;
         double[][] upper = gameTentacle(1.88, 1.72, 0.5, 1.2, 1);
         double[][] lower = gameTentacle(2.34, -0.44, 0.72, 1.34, -1);
         double[][][] tentacles = {upper, mirrored(upper), lower, mirrored(lower)};
@@ -696,12 +696,12 @@ public final class ArtPreview {
             q -> onPart(still, "head", q)));
         for (int s = -1; s <= 1; s += 2) {
             int side = s;
-            com.hex.kagune.control.ayato.CentipedeMotion.Leg leg = settled(motionInput(side, true, 1000, rest, null, 0.3, false, 0.0));
-            double length = com.hex.kagune.control.ayato.CentipedeMotion.length(1000);
-            double width = com.hex.kagune.control.ayato.CentipedeMotion.width(length);
-            int plates = com.hex.kagune.control.ayato.CentipedeMotion.plates(length, width);
-            com.hex.kagune.control.ayato.KakujaModel.Spine spine = com.hex.kagune.control.ayato.CentipedeTail.through(leg.points(), 40, side, leg.dorsal());
-            whole.addAll(quads(sink -> com.hex.kagune.control.ayato.CentipedeTail.tail(sink, spine, new com.hex.kagune.control.ayato.CentipedeTail.Look(
+            com.hex.kagune.control.ukaku.CentipedeMotion.Leg leg = settled(motionInput(side, true, 1000, rest, null, 0.3, false, 0.0));
+            double length = com.hex.kagune.control.ukaku.CentipedeMotion.length(1000);
+            double width = com.hex.kagune.control.ukaku.CentipedeMotion.width(length);
+            int plates = com.hex.kagune.control.ukaku.CentipedeMotion.plates(length, width);
+            com.hex.kagune.control.ukaku.KakujaModel.Spine spine = com.hex.kagune.control.ukaku.CentipedeTail.through(leg.points(), 40, side, leg.dorsal());
+            whole.addAll(quads(sink -> com.hex.kagune.control.ukaku.CentipedeTail.tail(sink, spine, new com.hex.kagune.control.ukaku.CentipedeTail.Look(
                 width, plates, false, 1.0, side > 0 ? 1 : 2, 0.0, 1.0, 0.35, 0.0)), q -> q));
         }
         List<com.hex.kagune.control.KakujaBurst.Quad> tubes = new ArrayList<>();
@@ -732,26 +732,26 @@ public final class ArtPreview {
             }
             shots.add(new Shot("Shatter, tick " + at, still, NO_WINGS, new double[] {7.5, 4.2, 10.5}, new double[] {0.0, 1.6, 0.0}, shardTris(shards)));
         }
-        sheet(file, "Kaneki's final kakuja (5.0.0): bursting out of his back (top), the mask growing in (middle), shattering (bottom)", shots, 6,
+        sheet(file, "Rinkaku's final kakuja (5.0.0): bursting out of his back (top), the mask growing in (middle), shattering (bottom)", shots, 6,
             420, 360);
     }
 
     /** One leg tearing out at {@code age} ticks into the burst (CentipedeRenderer's own steps). */
-    static List<WingPreview.Tri> burstLeg(com.hex.kagune.control.ayato.CentipedeMotion.Leg leg, int side, int order, double age) {
+    static List<WingPreview.Tri> burstLeg(com.hex.kagune.control.ukaku.CentipedeMotion.Leg leg, int side, int order, double age) {
         double out = com.hex.kagune.control.KakujaBurst.legOut(age, order);
         if (out <= 0.01) {
             return List.of();
         }
-        double length = com.hex.kagune.control.ayato.CentipedeMotion.length(1000);
-        double width = com.hex.kagune.control.ayato.CentipedeMotion.width(length);
-        int plates = com.hex.kagune.control.ayato.CentipedeMotion.plates(length, width);
+        double length = com.hex.kagune.control.ukaku.CentipedeMotion.length(1000);
+        double width = com.hex.kagune.control.ukaku.CentipedeMotion.width(length);
+        int plates = com.hex.kagune.control.ukaku.CentipedeMotion.plates(length, width);
         double[][] points = com.hex.kagune.control.KakujaBurst.extrude(leg.points(), out, com.hex.kagune.control.KakujaBurst.legStretch(age, order));
-        com.hex.kagune.control.ayato.KakujaModel.Spine spine = com.hex.kagune.control.ayato.CentipedeTail.through(points, 64, side, leg.dorsal());
+        com.hex.kagune.control.ukaku.KakujaModel.Spine spine = com.hex.kagune.control.ukaku.CentipedeTail.through(points, 64, side, leg.dorsal());
         double swell = com.hex.kagune.control.KakujaBurst.legSwell(age, order);
         double jaw = Math.max(leg.jaw(), com.hex.kagune.control.KakujaBurst.legJaw(age, order));
         double flare = Math.max(leg.flare(), 1.0 + 0.5 * (1.0 - out));
         int shown = Math.max(2, (int)Math.round(plates * out));
-        return placed(sink -> com.hex.kagune.control.ayato.CentipedeTail.tail(sink, spine, new com.hex.kagune.control.ayato.CentipedeTail.Look(
+        return placed(sink -> com.hex.kagune.control.ukaku.CentipedeTail.tail(sink, spine, new com.hex.kagune.control.ukaku.CentipedeTail.Look(
             width * swell, shown, true, 1.0, side > 0 ? 1 : 2, jaw, flare, 0.35, leg.phase())), q -> q);
     }
 
@@ -765,7 +765,7 @@ public final class ArtPreview {
     }
 
     /** Quads (placed) for the shatter. */
-    static List<com.hex.kagune.control.KakujaBurst.Quad> quads(java.util.function.Consumer<com.hex.kagune.control.ayato.UkakuModel.Sink> build,
+    static List<com.hex.kagune.control.KakujaBurst.Quad> quads(java.util.function.Consumer<com.hex.kagune.control.ukaku.UkakuModel.Sink> build,
                                                                java.util.function.UnaryOperator<double[]> place) {
         List<com.hex.kagune.control.KakujaBurst.Quad> out = new ArrayList<>();
         build.accept((a, b, c, d, n, ca, cb, cc, cd) -> {
@@ -853,11 +853,11 @@ public final class ArtPreview {
 
     /** One leg with the plate count following its length (plates keep their size however it is posed). */
     static List<WingPreview.Tri> posedLeg(double[][] controls, int side, double[] dorsal, int seed, double jaw, double flare) {
-        com.hex.kagune.control.ayato.KakujaModel.Spine spine = com.hex.kagune.control.ayato.CentipedeTail.through(controls, 140, side, dorsal);
+        com.hex.kagune.control.ukaku.KakujaModel.Spine spine = com.hex.kagune.control.ukaku.CentipedeTail.through(controls, 140, side, dorsal);
         int plates = (int)Math.max(5, Math.round(spine.length() / 0.8));
         System.out.printf("  leg %d: %.2f blocks, %d plates%n", seed, spine.length(), plates);
-        return placed(sink -> com.hex.kagune.control.ayato.CentipedeTail.tail(sink, spine,
-            new com.hex.kagune.control.ayato.CentipedeTail.Look(0.3, plates, true, 1.0, seed, jaw, flare, 0.0, 0.0)), q -> q);
+        return placed(sink -> com.hex.kagune.control.ukaku.CentipedeTail.tail(sink, spine,
+            new com.hex.kagune.control.ukaku.CentipedeTail.Look(0.3, plates, true, 1.0, seed, jaw, flare, 0.0, 0.0)), q -> q);
     }
 
     /** The left leg at rest through the whole grab (only the right one hunts). */
@@ -920,7 +920,7 @@ public final class ArtPreview {
         sheet(file, "CONCEPT: the centipede grab, key poses (right leg hunts, the left stays at rest)", shots, 3, 600, 470);
     }
 
-    /** Concept sheet: Kaneki's centipede legs rebuilt after the user's reference. */
+    /** Concept sheet: Rinkaku's centipede legs rebuilt after the user's reference. */
     static void centipede(File file) throws Exception {
         RigPose still = new RigPose();
         double[] look = {-0.9, 2.2, -0.3};
@@ -931,8 +931,8 @@ public final class ArtPreview {
         shots.add(new Shot("Side", still, NO_WINGS, new double[] {10.0, 2.6, 0.0}, look, rest));
         shots.add(new Shot("Plates up close: rims, flesh, one claw pair a plate", still, NO_WINGS, new double[] {-2.9, 1.7, 1.6},
             new double[] {-1.7, 2.2, -0.9}, rest));
-        double[][] head = com.hex.kagune.control.ayato.CentipedeTail.head(com.hex.kagune.control.ayato.CentipedeTail.through(CENTIPEDE_RIGHT, 120, 1,
-            new double[] {1.0, 0.0, 0.0}), new com.hex.kagune.control.ayato.CentipedeTail.Look(0.3, 7, true, 1.0, 1));
+        double[][] head = com.hex.kagune.control.ukaku.CentipedeTail.head(com.hex.kagune.control.ukaku.CentipedeTail.through(CENTIPEDE_RIGHT, 120, 1,
+            new double[] {1.0, 0.0, 0.0}), new com.hex.kagune.control.ukaku.CentipedeTail.Look(0.3, 7, true, 1.0, 1));
         // Looking at the curl's face, from a little behind the point.
         double[] headEye = {head[0][0] + head[2][0] * 3.8 - head[1][0] * 0.6, head[0][1] + head[2][1] * 3.8 - head[1][1] * 0.6 + 0.4,
             head[0][2] + head[2][2] * 3.8 - head[1][2] * 0.6};
@@ -944,11 +944,11 @@ public final class ArtPreview {
             new double[] {-2.2, 2.2, -0.6}, centipedeTris(true, 0.0, 1.0, 0.55, 0.0)));
         shots.add(new Shot("Far (low detail)", still, NO_WINGS, new double[] {6.0, 4.0, 13.0}, look, centipedeTris(false, 0.0, 1.0, 0.0, 0.0)));
         System.out.println("centipede quads: " + rest.size() / 2 + " fine, " + centipedeTris(false, 0.0, 1.0, 0.0, 0.0).size() / 2 + " far");
-        sheet(file, "CONCEPT: Kaneki's centipede legs after your reference (one sickle claw pair a plate, boxy rimmed plates, fang + jaw)", shots,
+        sheet(file, "CONCEPT: Rinkaku's centipede legs after your reference (one sickle claw pair a plate, boxy rimmed plates, fang + jaw)", shots,
             3, 600, 470);
     }
 
-    /** Concept sheet: Kaneki's kakuja mask after the user's reference (one eye bare), in the centipede legs' colours. */
+    /** Concept sheet: Rinkaku's kakuja mask after the user's reference (one eye bare), in the centipede legs' colours. */
     static void centipedeMask(File file) throws Exception {
         RigPose still = new RigPose();
         RigPose turned = new RigPose();
@@ -977,9 +977,9 @@ public final class ArtPreview {
         shots.add(new Shot("With the legs up like your accessory picture", still, NO_WINGS, new double[] {0.0, 2.3, 6.8}, new double[] {0.0, 2.1, -0.3},
             whole));
         shots.add(new Shot("Before: the original's patch and beak", still, NO_WINGS, new double[] {0.0, 1.75, 2.2}, new double[] {0.0, 1.55, 0.0},
-            placed(sink -> com.hex.kagune.control.kakugan.KanekiMask.build(sink, com.hex.kagune.control.kakugan.KakuganEyes.DEFAULT, 0xA51B37, 0x18030B),
+            placed(sink -> com.hex.kagune.control.kakugan.RinkakuMask.build(sink, com.hex.kagune.control.kakugan.KakuganEyes.DEFAULT, 0xA51B37, 0x18030B),
                 q -> onPart(still, "head", q))));
-        sheet(file, "CONCEPT: Kaneki's mask after your reference: one eye bare, a lens over the other, the centipede's plum", shots, 3, 460, 430);
+        sheet(file, "CONCEPT: Rinkaku's mask after your reference: one eye bare, a lens over the other, the centipede's plum", shots, 3, 460, 430);
     }
 
     static List<WingPreview.Tri> maskTris(RigPose pose) {
@@ -987,8 +987,8 @@ public final class ArtPreview {
             q -> onPart(pose, "head", q));
     }
 
-    /** Kaneki's kakuja mask on the head model part (3.0.0): it stays on his face through leans, turns and nods. */
-    static void kanekiMask(File file) throws Exception {
+    /** Rinkaku's kakuja mask on the head model part (3.0.0): it stays on his face through leans, turns and nods. */
+    static void rinkakuMask(File file) throws Exception {
         List<Shot> shots = new ArrayList<>();
         RigPose still = new RigPose();
         RigPose lean = new RigPose();
@@ -1019,14 +1019,14 @@ public final class ArtPreview {
         for (Object[] view : views) {
             RigPose pose = (RigPose)view[1];
             shots.add(new Shot((String)view[0], pose, NO_WINGS, (double[])view[2], (double[])view[3],
-                placed(sink -> com.hex.kagune.control.kakugan.KanekiMask.build(sink, com.hex.kagune.control.kakugan.KakuganEyes.DEFAULT, 0xA51B37,
+                placed(sink -> com.hex.kagune.control.kakugan.RinkakuMask.build(sink, com.hex.kagune.control.kakugan.KakuganEyes.DEFAULT, 0xA51B37,
                     0x18030B), q -> onPart(pose, "head", q))));
         }
-        sheet(file, "Kaneki's kakuja mask on the head model: it rides every lean, turn and swing", shots, 3, 460, 400);
+        sheet(file, "Rinkaku's kakuja mask on the head model: it rides every lean, turn and swing", shots, 3, 460, 400);
     }
 
     static RigPose braced(float amount, double time) {
-        com.hex.kagune.control.ayato.AyatoBody.Pose pose = com.hex.kagune.control.ayato.AyatoBody.gatling(amount, time);
+        com.hex.kagune.control.ukaku.UkakuBody.Pose pose = com.hex.kagune.control.ukaku.UkakuBody.gatling(amount, time);
         RigPose p = new RigPose();
         p.headX = pose.headX - 0.6F * pose.torsoX;
         p.lean = pose.torsoX;
@@ -1049,7 +1049,7 @@ public final class ArtPreview {
         false);
 
     /** Quads from a model sink as preview triangles, each corner sent through {@code place} (and its normal with it). */
-    static List<WingPreview.Tri> placed(java.util.function.Consumer<com.hex.kagune.control.ayato.UkakuModel.Sink> build,
+    static List<WingPreview.Tri> placed(java.util.function.Consumer<com.hex.kagune.control.ukaku.UkakuModel.Sink> build,
                                         java.util.function.UnaryOperator<double[]> place) {
         List<WingPreview.Tri> out = new ArrayList<>();
         build.accept((a, b, c, d, n, ca, cb, cc, cd) -> {
@@ -1063,7 +1063,7 @@ public final class ArtPreview {
     }
 
     /** {@link #placed}, the glowing quads drawn as the game's layers draw them: added on at full brightness (the eyes type). */
-    static List<WingPreview.Tri> placedLit(java.util.function.Consumer<com.hex.kagune.control.ayato.UkakuModel.Sink> build,
+    static List<WingPreview.Tri> placedLit(java.util.function.Consumer<com.hex.kagune.control.ukaku.UkakuModel.Sink> build,
                                            java.util.function.UnaryOperator<double[]> place) {
         List<WingPreview.Tri> out = new ArrayList<>();
         build.accept((a, b, c, d, n, ca, cb, cc, cd) -> {
@@ -1088,7 +1088,7 @@ public final class ArtPreview {
         WingRig.Input in = new WingRig.Input(WingForm.TWIN, mastery, deploy, time, 0, 0, WingRig.Motion.NONE, 0, 0.4F, 0, 0, false, detail, 1,
             false);
         List<WingPreview.Tri> out = new ArrayList<>();
-        for (WingRig.Quad q : com.hex.kagune.control.ayato.KakujaRig.build(in, eye)) {
+        for (WingRig.Quad q : com.hex.kagune.control.ukaku.KakujaRig.build(in, eye)) {
             float[] v = q.xyz();
             double[] n = {q.nx(), q.ny(), q.nz()};
             double[][] c = new double[4][];
@@ -1100,18 +1100,18 @@ public final class ArtPreview {
             out.add(new WingPreview.Tri(new double[][] {c[0], c[2], c[3]}, new int[] {a[0], a[2], a[3]}, n, false));
         }
         double grow = Math.min(1.0, deploy * 1.4);
-        out.addAll(placed(sink -> com.hex.kagune.control.ayato.KakujaModel.chest(sink, grow, 1.0), q -> onPart(pose, "torso", q)));
+        out.addAll(placed(sink -> com.hex.kagune.control.ukaku.KakujaModel.chest(sink, grow, 1.0), q -> onPart(pose, "torso", q)));
         return out;
     }
 
     /** The kakuja's tentacles for one frame of a moving body: pose, spring lag (world), back to rig space. */
-    static List<WingPreview.Tri> livingTentacles(com.hex.kagune.control.ayato.KakujaMotion motion, com.hex.kagune.control.ayato.KakujaRig.Body body,
+    static List<WingPreview.Tri> livingTentacles(com.hex.kagune.control.ukaku.KakujaMotion motion, com.hex.kagune.control.ukaku.KakujaRig.Body body,
                                                  double[] position, double yaw, double ticks, double[] eye) {
         WingRig.Input in = new WingRig.Input(WingForm.TWIN, 500, 1.0F, ticks / 20.0, 0, 0, WingRig.Motion.NONE, 0, 0.4F, 0, 0, false, 1.0F, 1,
             false);
-        com.hex.kagune.control.ayato.KakujaRig.Limb[] limbs = com.hex.kagune.control.ayato.KakujaRig.pose(in, body);
-        com.hex.kagune.control.ayato.KakujaModel.Spine[] spines = com.hex.kagune.control.ayato.KakujaRig.spines(in, body, limbs);
-        double[][][] nodes = com.hex.kagune.control.ayato.KakujaRig.nodes(spines);
+        com.hex.kagune.control.ukaku.KakujaRig.Limb[] limbs = com.hex.kagune.control.ukaku.KakujaRig.pose(in, body);
+        com.hex.kagune.control.ukaku.KakujaModel.Spine[] spines = com.hex.kagune.control.ukaku.KakujaRig.spines(in, body, limbs);
+        double[][][] nodes = com.hex.kagune.control.ukaku.KakujaRig.nodes(spines);
         double c = Math.cos(yaw), sn = Math.sin(yaw);
         // Rig x right, z forward; the body faces +z turned by yaw (radians, + turns right).
         double[][][] world = new double[nodes.length][][];
@@ -1138,7 +1138,7 @@ public final class ArtPreview {
             }
         }
         List<WingRig.Quad> quads = new ArrayList<>();
-        com.hex.kagune.control.ayato.KakujaRig.draw(quads, in, spines, limbs, offsets, !body.airborne());
+        com.hex.kagune.control.ukaku.KakujaRig.draw(quads, in, spines, limbs, offsets, !body.airborne());
         List<WingPreview.Tri> out = new ArrayList<>();
         for (WingRig.Quad q : quads) {
             float[] v = q.xyz();
@@ -1159,7 +1159,7 @@ public final class ArtPreview {
      * round, jump), with frames picked out where the motion shows.
      */
     static void kakujaMotion(File file) throws Exception {
-        com.hex.kagune.control.ayato.KakujaMotion motion = new com.hex.kagune.control.ayato.KakujaMotion();
+        com.hex.kagune.control.ukaku.KakujaMotion motion = new com.hex.kagune.control.ukaku.KakujaMotion();
         double[] position = {0.0, 0.0, 0.0};
         double yaw = 0.0;
         double velocity = 0.0;
@@ -1220,9 +1220,9 @@ public final class ArtPreview {
             // The body as the game's body layer moves it in the kakuja (KakujaBody on top of vanilla's walk), and the tentacles riding it.
             float swing = (float)Math.min(1.0, velocity * 4.0);
             float sprint = (float)Math.max(0.0, Math.min(1.0, (velocity - 0.17) / 0.11));
-            com.hex.kagune.control.ayato.KakujaBody.Pose kb = com.hex.kagune.control.ayato.KakujaBody.pose(new com.hex.kagune.control.ayato.KakujaBody.Motion(
+            com.hex.kagune.control.ukaku.KakujaBody.Pose kb = com.hex.kagune.control.ukaku.KakujaBody.pose(new com.hex.kagune.control.ukaku.KakujaBody.Motion(
                 (float)stride, swing, sprint, inAir, (float)vertical, tick - landedAt, landSpeed));
-            com.hex.kagune.control.ayato.KakujaRig.Body body = new com.hex.kagune.control.ayato.KakujaRig.Body(kb.lean, 0.0F, kb.twist,
+            com.hex.kagune.control.ukaku.KakujaRig.Body body = new com.hex.kagune.control.ukaku.KakujaRig.Body(kb.lean, 0.0F, kb.twist,
                 kb.drop / 16.0F * 0.9375F, run, (float)stride, (float)vertical, inAir);
             int frame = (int)wanted[next][0];
             double ticks = tick;
@@ -1258,7 +1258,7 @@ public final class ArtPreview {
                     lifted.add(new WingPreview.Tri(p, t.argb(), t.n(), t.opaque()));
                 }
                 // The chest is placed on the posed body, which is already raised by the jump.
-                lifted.addAll(placed(sink -> com.hex.kagune.control.ayato.KakujaModel.chest(sink, 1.0, 1.0), q -> onPart(pose, "torso", q)));
+                lifted.addAll(placed(sink -> com.hex.kagune.control.ukaku.KakujaModel.chest(sink, 1.0, 1.0), q -> onPart(pose, "torso", q)));
                 shots.add(new Shot((String)wanted[next][1], pose, NO_WINGS, eye, new double[] {0.0, 2.0 + position[1] * 0.5, -0.4}, lifted));
                 next++;
             } else {
@@ -1289,14 +1289,14 @@ public final class ArtPreview {
     /** Needles in flight from tentacle {@code index}'s muzzles toward {@code target}, {@code travel} blocks out. */
     static List<WingPreview.Tri> needles(int index, double[] aim, double[] target, double travel, double[] eye, int count) {
         List<WingPreview.Tri> out = new ArrayList<>();
-        double[][] from = com.hex.kagune.control.ayato.KakujaRig.muzzles(index, aim, false, count);
+        double[][] from = com.hex.kagune.control.ukaku.KakujaRig.muzzles(index, aim, false, count);
         for (int i = 0; i < from.length; i++) {
             double[] d = {target[0] - from[i][0], target[1] - from[i][1], target[2] - from[i][2]};
             double l = Math.sqrt(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]);
             double[] u = {d[0] / l, d[1] / l, d[2] / l};
             double go = travel * (0.75 + 0.5 * (i % 3) / 2.0);
             double[] tip = {from[i][0] + u[0] * go, from[i][1] + u[1] * go, from[i][2] + u[2] * go};
-            com.hex.kagune.control.ayato.KakujaNeedle.build((a, b, c, e, ca, cb, cc, ce) -> {
+            com.hex.kagune.control.ukaku.KakujaNeedle.build((a, b, c, e, ca, cb, cc, ce) -> {
                 out.add(new WingPreview.Tri(new double[][] {a, b, c}, new int[] {ca, cb, cc}, new double[] {0, 1, 0}, false));
                 out.add(new WingPreview.Tri(new double[][] {a, c, e}, new int[] {ca, cc, ce}, new double[] {0, 1, 0}, false));
             }, tip, u, 1.0, eye, 1.0, 0.0, 1.0, index * 7 + i, true, 1.0);
@@ -1336,8 +1336,8 @@ public final class ArtPreview {
                 extra.addAll(needles(3, look, target, 3.0, eye, 3));
             }
             WingRig.Input in = new WingRig.Input(WingForm.KAKUJA, 800, 1.0F, 1.3, 0, 0, WingRig.Motion.NONE, 0, 0.4F, 0, 0, false, 1.0F, 1, false);
-            com.hex.kagune.control.ayato.KakujaRig.Action action = new com.hex.kagune.control.ayato.KakujaRig.Action(look, amount, kick);
-            extra.addAll(tris(com.hex.kagune.control.ayato.KakujaRig.build(in, eye, com.hex.kagune.control.ayato.KakujaRig.Body.STILL, action, null)));
+            com.hex.kagune.control.ukaku.KakujaRig.Action action = new com.hex.kagune.control.ukaku.KakujaRig.Action(look, amount, kick);
+            extra.addAll(tris(com.hex.kagune.control.ukaku.KakujaRig.build(in, eye, com.hex.kagune.control.ukaku.KakujaRig.Body.STILL, action, null)));
             shots.add(new Shot((String)views[v][0], still, NO_WINGS, eye, (double[])views[v][2], extra));
         }
         sheet(file, "Kakuja firing pose: the tentacles roll so their spike rows face the aim; needles leave from the rows", shots, 3, 600, 470);
@@ -1348,8 +1348,8 @@ public final class ArtPreview {
         return new double[] {v[0] / l, v[1] / l, v[2] / l};
     }
 
-    /** An Ayato body pose as a RigPose (the body layer's way of adding it). */
-    static RigPose posed(com.hex.kagune.control.ayato.AyatoBody.Pose pose) {
+    /** An Ukaku body pose as a RigPose (the body layer's way of adding it). */
+    static RigPose posed(com.hex.kagune.control.ukaku.UkakuBody.Pose pose) {
         RigPose p = new RigPose();
         p.twist = pose.twist;
         p.headX = pose.headX - 0.6F * (pose.torsoX + pose.torsoBend);
@@ -1386,35 +1386,35 @@ public final class ArtPreview {
         float[] kick = new float[6];
         kick[1] = 0.9F;
         kick[3] = 0.4F;
-        List<WingPreview.Tri> gun = new ArrayList<>(tris(com.hex.kagune.control.ayato.KakujaRig.build(in, eye, com.hex.kagune.control.ayato.KakujaRig.Body.STILL,
-            new com.hex.kagune.control.ayato.KakujaRig.Action(ahead, all, kick), null)));
+        List<WingPreview.Tri> gun = new ArrayList<>(tris(com.hex.kagune.control.ukaku.KakujaRig.build(in, eye, com.hex.kagune.control.ukaku.KakujaRig.Body.STILL,
+            new com.hex.kagune.control.ukaku.KakujaRig.Action(ahead, all, kick), null)));
         gun.addAll(needles(1, ahead, target, 2.5, eye, 2));
         gun.addAll(needles(3, ahead, target, 5.5, eye, 2));
         gun.addAll(needles(0, ahead, target, 8.5, eye, 2));
         shots.add(new Shot("J held: the Needle Gatling (two a salvo, round the six)", braced(1.0F, 10.0), NO_WINGS, eye, look, gun));
         // Z: Rushing Death at the top of the jump, the flip done, all six snapping forward and throwing.
         float[] snapKick = {1, 1, 1, 1, 1, 1};
-        RigPose thrown = posed(com.hex.kagune.control.ayato.AyatoBody.pose(com.hex.kagune.control.StrikePattern.RUSHING_DEATH, true, true, 0.45F, 0.42F));
-        List<WingPreview.Tri> rush = new ArrayList<>(tris(com.hex.kagune.control.ayato.KakujaRig.build(in, eye,
-            com.hex.kagune.control.ayato.KakujaRig.Body.STILL, new com.hex.kagune.control.ayato.KakujaRig.Action(norm3(new double[] {0.0, -0.35, 0.94}),
+        RigPose thrown = posed(com.hex.kagune.control.ukaku.UkakuBody.pose(com.hex.kagune.control.StrikePattern.RUSHING_DEATH, true, true, 0.45F, 0.42F));
+        List<WingPreview.Tri> rush = new ArrayList<>(tris(com.hex.kagune.control.ukaku.KakujaRig.build(in, eye,
+            com.hex.kagune.control.ukaku.KakujaRig.Body.STILL, new com.hex.kagune.control.ukaku.KakujaRig.Action(norm3(new double[] {0.0, -0.35, 0.94}),
             all, snapKick), null)));
         double[] below = {0.0, -3.5, 12.0};
         for (int i = 0; i < 6; i++) {
             rush.addAll(needles(i, norm3(new double[] {0.0, -0.35, 0.94}), below, 2.0 + 0.4 * i, eye, 2));
         }
         shots.add(new Shot("Z: Rushing Death, the throw at the top (12 needles)", thrown, NO_WINGS, eye, look, rush));
-        RigPose tucked = posed(com.hex.kagune.control.ayato.AyatoBody.pose(com.hex.kagune.control.StrikePattern.RUSHING_DEATH, true, true, 0.2F, 0.42F));
-        shots.add(new Shot("Z: tucked through the backflip", tucked, NO_WINGS, eye, look, tris(com.hex.kagune.control.ayato.KakujaRig.build(in, eye,
-            com.hex.kagune.control.ayato.KakujaRig.Body.STILL, new com.hex.kagune.control.ayato.KakujaRig.Action(ahead, new float[6], new float[6], 1.0F),
+        RigPose tucked = posed(com.hex.kagune.control.ukaku.UkakuBody.pose(com.hex.kagune.control.StrikePattern.RUSHING_DEATH, true, true, 0.2F, 0.42F));
+        shots.add(new Shot("Z: tucked through the backflip", tucked, NO_WINGS, eye, look, tris(com.hex.kagune.control.ukaku.KakujaRig.build(in, eye,
+            com.hex.kagune.control.ukaku.KakujaRig.Body.STILL, new com.hex.kagune.control.ukaku.KakujaRig.Action(ahead, new float[6], new float[6], 1.0F),
             null))));
         // R: Harrow, a point-blank cone.
-        List<WingPreview.Tri> harrow = new ArrayList<>(tris(com.hex.kagune.control.ayato.KakujaRig.build(in, eye,
-            com.hex.kagune.control.ayato.KakujaRig.Body.STILL, new com.hex.kagune.control.ayato.KakujaRig.Action(ahead, all, snapKick), null)));
+        List<WingPreview.Tri> harrow = new ArrayList<>(tris(com.hex.kagune.control.ukaku.KakujaRig.build(in, eye,
+            com.hex.kagune.control.ukaku.KakujaRig.Body.STILL, new com.hex.kagune.control.ukaku.KakujaRig.Action(ahead, all, snapKick), null)));
         for (int i = 0; i < 6; i++) {
             double[] spreadTarget = {(i - 2.5) * 1.6, 1.6 + (i % 3 - 1) * 1.2, 9.0};
             harrow.addAll(needles(i, ahead, spreadTarget, 2.2 + 0.3 * i, eye, 3));
         }
-        RigPose open = posed(com.hex.kagune.control.ayato.AyatoBody.pose(com.hex.kagune.control.StrikePattern.HARROW, true, true, 0.4F, 0.35F));
+        RigPose open = posed(com.hex.kagune.control.ukaku.UkakuBody.pose(com.hex.kagune.control.StrikePattern.HARROW, true, true, 0.4F, 0.35F));
         shots.add(new Shot("R: Harrow (a point-blank cone that shoves)", open, NO_WINGS, eye, look, harrow));
         sheet(file, "First kakuja: the Needle Gatling (J), Rushing Death (Z), Harrow (R)", shots, 2, 640, 470);
     }
@@ -1440,8 +1440,8 @@ public final class ArtPreview {
             float deploy = i == views.length - 1 ? 0.5F : 1.0F;
             shots.add(new Shot((String)views[i][0], still, NO_WINGS, eye, (double[])views[i][2], kakujaTris(still, 500, 1.3 + i * 0.37, eye, deploy, 1.0F)));
         }
-        System.out.println("kakuja quads: " + com.hex.kagune.control.ayato.KakujaRig.build(new WingRig.Input(WingForm.TWIN, 500, 1.0F, 1.3, 0, 0, WingRig.Motion.NONE, 0, 0.4F, 0, 0, false, 1, 1, false), null).size()
-            + " fine, " + com.hex.kagune.control.ayato.KakujaRig.build(new WingRig.Input(WingForm.TWIN, 500, 1.0F, 1.3, 0, 0, WingRig.Motion.NONE, 0, 0.4F, 0, 0, false, 0.3F, 1, false), null).size() + " far");
+        System.out.println("kakuja quads: " + com.hex.kagune.control.ukaku.KakujaRig.build(new WingRig.Input(WingForm.TWIN, 500, 1.0F, 1.3, 0, 0, WingRig.Motion.NONE, 0, 0.4F, 0, 0, false, 1, 1, false), null).size()
+            + " fine, " + com.hex.kagune.control.ukaku.KakujaRig.build(new WingRig.Input(WingForm.TWIN, 500, 1.0F, 1.3, 0, 0, WingRig.Motion.NONE, 0, 0.4F, 0, 0, false, 0.3F, 1, false), null).size() + " far");
         sheet(file, "First kakuja (mastery 500): six armored tentacles, spike rows on the belly, plated chest, bare face", shots, 3, 600, 470);
     }
 
@@ -1449,15 +1449,15 @@ public final class ArtPreview {
     static List<WingPreview.Tri> finalKakujaTris(RigPose pose, int mastery, double time, double[] eye, float deploy, float detail) {
         WingRig.Input in = new WingRig.Input(WingForm.TWIN, mastery, deploy, time, 0, 0, WingRig.Motion.NONE, 0, 0.4F, 0, 0, false, detail, 1,
             false);
-        List<WingPreview.Tri> out = new ArrayList<>(tris(com.hex.kagune.control.ayato.KakujaRig.build(in, eye,
-            com.hex.kagune.control.ayato.KakujaRig.Body.STILL, com.hex.kagune.control.ayato.KakujaRig.Action.NONE, null, true)));
+        List<WingPreview.Tri> out = new ArrayList<>(tris(com.hex.kagune.control.ukaku.KakujaRig.build(in, eye,
+            com.hex.kagune.control.ukaku.KakujaRig.Body.STILL, com.hex.kagune.control.ukaku.KakujaRig.Action.NONE, null, true)));
         double grow = Math.min(1.0, deploy * 1.4);
-        out.addAll(placed(sink -> com.hex.kagune.control.ayato.KakujaModel.halfMask(sink, new int[] {1, 4, 5, 4}, grow, 1.0), q -> onPart(pose, "head", q)));
-        out.addAll(placed(sink -> com.hex.kagune.control.ayato.KakujaModel.chest(sink, grow, 1.0, true), q -> onPart(pose, "torso", q)));
+        out.addAll(placed(sink -> com.hex.kagune.control.ukaku.KakujaModel.halfMask(sink, new int[] {1, 4, 5, 4}, grow, 1.0), q -> onPart(pose, "head", q)));
+        out.addAll(placed(sink -> com.hex.kagune.control.ukaku.KakujaModel.chest(sink, grow, 1.0, true), q -> onPart(pose, "torso", q)));
         return out;
     }
 
-    /** The final kakuja (for approval before its combat): half armored spike tentacles, half fire tendrils, Ayato's half mask. */
+    /** The final kakuja (for approval before its combat): half armored spike tentacles, half fire tendrils, Ukaku's half mask. */
     static void kakujaFinal(File file) throws Exception {
         RigPose still = new RigPose();
         double[] look = {0.0, 2.0, -0.3};
@@ -1481,26 +1481,26 @@ public final class ArtPreview {
         }
         WingRig.Input fine = new WingRig.Input(WingForm.TWIN, 1000, 1.0F, 1.3, 0, 0, WingRig.Motion.NONE, 0, 0.4F, 0, 0, false, 1, 1, false);
         WingRig.Input far = new WingRig.Input(WingForm.TWIN, 1000, 1.0F, 1.3, 0, 0, WingRig.Motion.NONE, 0, 0.4F, 0, 0, false, 0.3F, 1, false);
-        System.out.println("final kakuja quads: " + com.hex.kagune.control.ayato.KakujaRig.build(fine, new double[] {0, 2, 8},
-            com.hex.kagune.control.ayato.KakujaRig.Body.STILL, com.hex.kagune.control.ayato.KakujaRig.Action.NONE, null, true).size() + " fine, "
-            + com.hex.kagune.control.ayato.KakujaRig.build(far, new double[] {0, 2, 8}, com.hex.kagune.control.ayato.KakujaRig.Body.STILL,
-            com.hex.kagune.control.ayato.KakujaRig.Action.NONE, null, true).size() + " far");
-        sheet(file, "Final kakuja (mastery 1000): three armored spike tentacles, three fire tendrils, Ayato's half mask", shots, 3, 600, 470);
+        System.out.println("final kakuja quads: " + com.hex.kagune.control.ukaku.KakujaRig.build(fine, new double[] {0, 2, 8},
+            com.hex.kagune.control.ukaku.KakujaRig.Body.STILL, com.hex.kagune.control.ukaku.KakujaRig.Action.NONE, null, true).size() + " fine, "
+            + com.hex.kagune.control.ukaku.KakujaRig.build(far, new double[] {0, 2, 8}, com.hex.kagune.control.ukaku.KakujaRig.Body.STILL,
+            com.hex.kagune.control.ukaku.KakujaRig.Action.NONE, null, true).size() + " far");
+        sheet(file, "Final kakuja (mastery 1000): three armored spike tentacles, three fire tendrils, Ukaku's half mask", shots, 3, 600, 470);
     }
 
     /** The final kakuja on a posed body doing {@code action}: tentacles and tendrils, the half mask and the chest. */
-    static List<WingPreview.Tri> finalKit(RigPose pose, double[] eye, com.hex.kagune.control.ayato.KakujaRig.Action action) {
+    static List<WingPreview.Tri> finalKit(RigPose pose, double[] eye, com.hex.kagune.control.ukaku.KakujaRig.Action action) {
         WingRig.Input in = new WingRig.Input(WingForm.TWIN, 1000, 1.0F, 1.3, 0, 0, WingRig.Motion.NONE, 0, 0.4F, 0, 0, false, 1.0F, 1, false);
-        List<WingPreview.Tri> out = new ArrayList<>(tris(com.hex.kagune.control.ayato.KakujaRig.build(in, eye,
-            com.hex.kagune.control.ayato.KakujaRig.Body.STILL, action, null, true)));
-        out.addAll(placed(sink -> com.hex.kagune.control.ayato.KakujaModel.halfMask(sink, new int[] {1, 4, 5, 4}, 1.0, 1.0), q -> onPart(pose, "head", q)));
-        out.addAll(placed(sink -> com.hex.kagune.control.ayato.KakujaModel.chest(sink, 1.0, 1.0, true), q -> onPart(pose, "torso", q)));
+        List<WingPreview.Tri> out = new ArrayList<>(tris(com.hex.kagune.control.ukaku.KakujaRig.build(in, eye,
+            com.hex.kagune.control.ukaku.KakujaRig.Body.STILL, action, null, true)));
+        out.addAll(placed(sink -> com.hex.kagune.control.ukaku.KakujaModel.halfMask(sink, new int[] {1, 4, 5, 4}, 1.0, 1.0), q -> onPart(pose, "head", q)));
+        out.addAll(placed(sink -> com.hex.kagune.control.ukaku.KakujaModel.chest(sink, 1.0, 1.0, true), q -> onPart(pose, "torso", q)));
         return out;
     }
 
     /** Fire shards (RcShard) leaving fire tendril {@code index}'s mouth toward {@code target}, {@code distances} blocks out. */
     static List<WingPreview.Tri> fireFrom(int index, double[] aim, double[] target, double size, double[] eye, double... distances) {
-        double[] from = com.hex.kagune.control.ayato.KakujaRig.mouth(index, aim, false);
+        double[] from = com.hex.kagune.control.ukaku.KakujaRig.mouth(index, aim, false);
         double[] u = norm3(new double[] {target[0] - from[0], target[1] - from[1], target[2] - from[2]});
         List<WingPreview.Tri> out = new ArrayList<>();
         for (int i = 0; i < distances.length; i++) {
@@ -1513,7 +1513,7 @@ public final class ArtPreview {
     /** {@link #needles} wrapped in flame: a small fire shard riding each needle (the game wraps them in Photon fire). */
     static List<WingPreview.Tri> burningNeedles(int index, double[] aim, double[] target, double travel, double[] eye, int count) {
         List<WingPreview.Tri> out = new ArrayList<>(needles(index, aim, target, travel, eye, count));
-        double[][] from = com.hex.kagune.control.ayato.KakujaRig.muzzles(index, aim, false, count);
+        double[][] from = com.hex.kagune.control.ukaku.KakujaRig.muzzles(index, aim, false, count);
         for (int i = 0; i < from.length; i++) {
             double[] u = norm3(new double[] {target[0] - from[i][0], target[1] - from[i][1], target[2] - from[i][2]});
             double go = travel * (0.75 + 0.5 * (i % 3) / 2.0) - 0.25;
@@ -1542,17 +1542,17 @@ public final class ArtPreview {
         // 1: Needle Pair (the upper two right tentacles).
         float[] pairAmount = {1, 1, 0.35F, 0.35F, 0.35F, 0.35F};
         float[] pairKick = {0.8F, 0.8F, 0, 0, 0, 0};
-        List<WingPreview.Tri> pair = finalKit(posed(com.hex.kagune.control.ayato.AyatoBody.pose(com.hex.kagune.control.StrikePattern.NEEDLE_PAIR, true,
-            false, 0.4F, 0.3F)), eye, new com.hex.kagune.control.ayato.KakujaRig.Action(ahead, pairAmount, pairKick));
+        List<WingPreview.Tri> pair = finalKit(posed(com.hex.kagune.control.ukaku.UkakuBody.pose(com.hex.kagune.control.StrikePattern.NEEDLE_PAIR, true,
+            false, 0.4F, 0.3F)), eye, new com.hex.kagune.control.ukaku.KakujaRig.Action(ahead, pairAmount, pairKick));
         pair.addAll(needles(0, ahead, target, 3.5, eye, 3));
         pair.addAll(needles(1, ahead, target, 2.5, eye, 3));
-        shots.add(new Shot("M1 1: Needle Pair (bleed)", posed(com.hex.kagune.control.ayato.AyatoBody.pose(com.hex.kagune.control.StrikePattern.NEEDLE_PAIR,
+        shots.add(new Shot("M1 1: Needle Pair (bleed)", posed(com.hex.kagune.control.ukaku.UkakuBody.pose(com.hex.kagune.control.StrikePattern.NEEDLE_PAIR,
             true, false, 0.4F, 0.3F)), NO_WINGS, eye, look, pair));
         // 2: Fire Lash (the upper fire tendril whipping three shards across, mid sweep).
         float[] lashAmount = {0.35F, 0.35F, 0.35F, 1, 0.35F, 0.35F};
         float[] lashKick = {0, 0, 0, 0.8F, 0, 0};
-        RigPose lashBody = posed(com.hex.kagune.control.ayato.AyatoBody.pose(com.hex.kagune.control.StrikePattern.FIRE_LASH, false, false, 0.45F, 0.35F));
-        List<WingPreview.Tri> lash = finalKit(lashBody, left, new com.hex.kagune.control.ayato.KakujaRig.Action(ahead, lashAmount, lashKick, 0.0F,
+        RigPose lashBody = posed(com.hex.kagune.control.ukaku.UkakuBody.pose(com.hex.kagune.control.StrikePattern.FIRE_LASH, false, false, 0.45F, 0.35F));
+        List<WingPreview.Tri> lash = finalKit(lashBody, left, new com.hex.kagune.control.ukaku.KakujaRig.Action(ahead, lashAmount, lashKick, 0.0F,
             turned(ahead, 0.0)));
         lash.addAll(fireFrom(3, ahead, new double[] {-2.2, 1.6, 14.0}, 1.0, left, 6.0));
         lash.addAll(fireFrom(3, ahead, new double[] {0.0, 1.6, 14.0}, 1.0, left, 3.5));
@@ -1561,20 +1561,20 @@ public final class ArtPreview {
         // 4: Fireball (from between the upper two tendrils).
         float[] ballAmount = {0.35F, 0.35F, 0.35F, 1, 1, 0.35F};
         float[] ballKick = {0, 0, 0, 1, 1, 0};
-        RigPose ballBody = posed(com.hex.kagune.control.ayato.AyatoBody.pose(com.hex.kagune.control.StrikePattern.FIREBALL, false, false, 0.5F, 0.4F));
-        List<WingPreview.Tri> ball = finalKit(ballBody, left, new com.hex.kagune.control.ayato.KakujaRig.Action(ahead, ballAmount, ballKick));
-        double[] m3 = com.hex.kagune.control.ayato.KakujaRig.mouth(3, ahead, false);
-        double[] m4 = com.hex.kagune.control.ayato.KakujaRig.mouth(4, ahead, false);
+        RigPose ballBody = posed(com.hex.kagune.control.ukaku.UkakuBody.pose(com.hex.kagune.control.StrikePattern.FIREBALL, false, false, 0.5F, 0.4F));
+        List<WingPreview.Tri> ball = finalKit(ballBody, left, new com.hex.kagune.control.ukaku.KakujaRig.Action(ahead, ballAmount, ballKick));
+        double[] m3 = com.hex.kagune.control.ukaku.KakujaRig.mouth(3, ahead, false);
+        double[] m4 = com.hex.kagune.control.ukaku.KakujaRig.mouth(4, ahead, false);
         double[] between = {(m3[0] + m4[0]) * 0.5, (m3[1] + m4[1]) * 0.5, (m3[2] + m4[2]) * 0.5};
         double[] ballDir = norm3(new double[] {target[0] - between[0], target[1] - between[1], target[2] - between[2]});
         ball.addAll(shard(new double[] {between[0] + ballDir[0] * 6.5, between[1] + ballDir[1] * 6.5, between[2] + ballDir[2] * 6.5}, ballDir,
-            2.2 * com.hex.kagune.control.ayato.AyatoRules.FIREBALL_SIZE * 1.2, 1.7, 11, left));
+            2.2 * com.hex.kagune.control.ukaku.UkakuRules.FIREBALL_SIZE * 1.2, 1.7, 11, left));
         shots.add(new Shot("M1 4: Fireball (bursts, leaves the ground burning)", ballBody, NO_WINGS, left, leftLook, ball));
         // 5: Crossfire (burning needles from the right, fire from the left, crossing on the target).
         double[] close = {0.0, 1.6, 9.0};
         float[] crossKick = {0.8F, 0.8F, 0.8F, 0.8F, 0.8F, 0.8F};
-        RigPose crossBody = posed(com.hex.kagune.control.ayato.AyatoBody.pose(com.hex.kagune.control.StrikePattern.CROSSFIRE, true, true, 0.45F, 0.4F));
-        List<WingPreview.Tri> cross = finalKit(crossBody, eye, new com.hex.kagune.control.ayato.KakujaRig.Action(ahead, all, crossKick));
+        RigPose crossBody = posed(com.hex.kagune.control.ukaku.UkakuBody.pose(com.hex.kagune.control.StrikePattern.CROSSFIRE, true, true, 0.45F, 0.4F));
+        List<WingPreview.Tri> cross = finalKit(crossBody, eye, new com.hex.kagune.control.ukaku.KakujaRig.Action(ahead, all, crossKick));
         for (int i = 0; i < 3; i++) {
             cross.addAll(burningNeedles(i, ahead, close, 3.0 + i, eye, 2));
             cross.addAll(fireFrom(3 + i, ahead, close, 1.0, eye, 2.5 + i * 1.2));
@@ -1583,9 +1583,9 @@ public final class ArtPreview {
         // M2: Twin Serpents, mid sweep: needles sweeping right to left, fire left to right.
         double[] needleWay = turned(ahead, 25.0);
         double[] fireWay = turned(ahead, -20.0);
-        RigPose serpentBody = posed(com.hex.kagune.control.ayato.AyatoBody.pose(com.hex.kagune.control.StrikePattern.TWIN_SERPENTS, true, true, 0.5F,
+        RigPose serpentBody = posed(com.hex.kagune.control.ukaku.UkakuBody.pose(com.hex.kagune.control.StrikePattern.TWIN_SERPENTS, true, true, 0.5F,
             0.35F));
-        List<WingPreview.Tri> serpents = finalKit(serpentBody, eye, new com.hex.kagune.control.ayato.KakujaRig.Action(needleWay, all,
+        List<WingPreview.Tri> serpents = finalKit(serpentBody, eye, new com.hex.kagune.control.ukaku.KakujaRig.Action(needleWay, all,
             new float[] {0.7F, 0.7F, 0.7F, 0.7F, 0.7F, 0.7F}, 0.0F, fireWay));
         for (int k = 0; k < 6; k++) {
             double yaw = 60.0 - 14.0 * k;
@@ -1599,9 +1599,9 @@ public final class ArtPreview {
         }
         shots.add(new Shot("M2 after 2: Twin Serpents (two fans sweeping opposite ways)", serpentBody, NO_WINGS, eye, look, serpents));
         // M2: Ember Hop: the fire tendrils beat down and throw him back.
-        RigPose hopBody = posed(com.hex.kagune.control.ayato.AyatoBody.pose(com.hex.kagune.control.StrikePattern.EMBER_HOP, true, true, 0.3F, 0.2F));
+        RigPose hopBody = posed(com.hex.kagune.control.ukaku.UkakuBody.pose(com.hex.kagune.control.StrikePattern.EMBER_HOP, true, true, 0.3F, 0.2F));
         float[] beat = {0, 0, 0, 1, 1, 1};
-        List<WingPreview.Tri> hop = finalKit(hopBody, left, new com.hex.kagune.control.ayato.KakujaRig.Action(ahead, beat, beat, 0.0F,
+        List<WingPreview.Tri> hop = finalKit(hopBody, left, new com.hex.kagune.control.ukaku.KakujaRig.Action(ahead, beat, beat, 0.0F,
             norm3(new double[] {0.0, -0.92, 0.38})));
         for (int k = 0; k < 5; k++) {
             double a = Math.PI * 2.0 * k / 5.0;
@@ -1611,8 +1611,8 @@ public final class ArtPreview {
         shots.add(new Shot("M2 first: Ember Hop (tendrils beat down, burst of fire)", hopBody, NO_WINGS, left, leftLook, hop));
         // M2: Hellrain, thrown up: needles and fireballs both going up.
         double[] up = norm3(new double[] {0.0, 0.85, 0.5});
-        RigPose rainBody = posed(com.hex.kagune.control.ayato.AyatoBody.pose(com.hex.kagune.control.StrikePattern.HELLRAIN, true, true, 0.45F, 0.4F));
-        List<WingPreview.Tri> rain = finalKit(rainBody, eye, new com.hex.kagune.control.ayato.KakujaRig.Action(up, all, all));
+        RigPose rainBody = posed(com.hex.kagune.control.ukaku.UkakuBody.pose(com.hex.kagune.control.StrikePattern.HELLRAIN, true, true, 0.45F, 0.4F));
+        List<WingPreview.Tri> rain = finalKit(rainBody, eye, new com.hex.kagune.control.ukaku.KakujaRig.Action(up, all, all));
         double[] sky = {0.0, 12.0, 4.0};
         for (int i = 0; i < 3; i++) {
             rain.addAll(needles(i, up, sky, 2.5 + i, eye, 2));
@@ -1620,9 +1620,9 @@ public final class ArtPreview {
         }
         shots.add(new Shot("M2 after 4: Hellrain (all thrown up, then down on them)", rainBody, NO_WINGS, eye, look, rain));
         // Z: the fire cyclone leaving the fire side, the tendrils whipped forward.
-        float release = com.hex.kagune.control.ayato.AyatoRules.VORTEX_WINDUP / (float)(com.hex.kagune.control.ayato.AyatoRules.VORTEX_WINDUP + 12);
-        com.hex.kagune.control.ayato.AyatoBody.Pose throwPose = com.hex.kagune.control.ayato.AyatoBody.vortex(false,
-            release + com.hex.kagune.control.ayato.AyatoBody.VORTEX_FOLLOW, release);
+        float release = com.hex.kagune.control.ukaku.UkakuRules.VORTEX_WINDUP / (float)(com.hex.kagune.control.ukaku.UkakuRules.VORTEX_WINDUP + 12);
+        com.hex.kagune.control.ukaku.UkakuBody.Pose throwPose = com.hex.kagune.control.ukaku.UkakuBody.vortex(false,
+            release + com.hex.kagune.control.ukaku.UkakuBody.VORTEX_FOLLOW, release);
         RigPose throwBody = new RigPose();
         throwBody.twist = throwPose.twist;
         throwBody.headX = throwPose.headX - 0.6F * (throwPose.torsoX + throwPose.torsoBend);
@@ -1641,13 +1641,13 @@ public final class ArtPreview {
         throwBody.settle(1.0F);
         float[] whip = {0, 0, 0, 1, 1, 1};
         double[] vortexEye = {-9.0, 4.8, -7.5};
-        List<WingPreview.Tri> cyclone = finalKit(throwBody, vortexEye, new com.hex.kagune.control.ayato.KakujaRig.Action(ahead, whip, whip));
+        List<WingPreview.Tri> cyclone = finalKit(throwBody, vortexEye, new com.hex.kagune.control.ukaku.KakujaRig.Action(ahead, whip, whip));
         cyclone.addAll(vortexTris(new double[] {-WingRig.ROOT_X, WingRig.ROOT_Y, WingRig.ROOT_Z}, new double[] {-0.6, 2.0, 7.0}, 1.3, vortexEye, 0.0, 1.0,
             1.4));
         shots.add(new Shot("Z: the fire cyclone, thrown from the fire side", throwBody, NO_WINGS, vortexEye, new double[] {-0.3, 2.0, 2.5}, cyclone));
         // J: the Pyre Gatling: a needle salvo, then a fireball, in turn.
         float[] gunKick = {0, 0.9F, 0, 0, 0.6F, 0};
-        List<WingPreview.Tri> gun = finalKit(braced(1.0F, 10.0), eye, new com.hex.kagune.control.ayato.KakujaRig.Action(ahead, all, gunKick));
+        List<WingPreview.Tri> gun = finalKit(braced(1.0F, 10.0), eye, new com.hex.kagune.control.ukaku.KakujaRig.Action(ahead, all, gunKick));
         gun.addAll(needles(1, ahead, target, 2.5, eye, 2));
         gun.addAll(needles(0, ahead, target, 7.5, eye, 2));
         gun.addAll(fireFrom(4, ahead, target, 1.5, eye, 4.5));
@@ -1689,7 +1689,7 @@ public final class ArtPreview {
 
     static List<WingPreview.Tri> vortexTris(double[] root, double[] head, double size, double[] eye, double unwind, double dusk, double time) {
         List<WingPreview.Tri> out = new ArrayList<>();
-        com.hex.kagune.control.ayato.WingVortex.build((a, b, c, d, ca, cb, cc, cd) -> {
+        com.hex.kagune.control.ukaku.WingVortex.build((a, b, c, d, ca, cb, cc, cd) -> {
             out.add(new WingPreview.Tri(new double[][] {a, b, c}, new int[] {ca, cb, cc}, new double[] {0, 1, 0}, false));
             out.add(new WingPreview.Tri(new double[][] {a, c, d}, new int[] {ca, cc, cd}, new double[] {0, 1, 0}, false));
         }, root, head, size, time, 5, eye, 1.0, unwind, dusk, true);
@@ -1702,8 +1702,8 @@ public final class ArtPreview {
     }
 
     static RigPose throwing(float progress) {
-        float release = com.hex.kagune.control.ayato.AyatoRules.VORTEX_WINDUP / (float)(com.hex.kagune.control.ayato.AyatoRules.VORTEX_WINDUP + 12);
-        com.hex.kagune.control.ayato.AyatoBody.Pose pose = com.hex.kagune.control.ayato.AyatoBody.vortex(true, progress * release, release);
+        float release = com.hex.kagune.control.ukaku.UkakuRules.VORTEX_WINDUP / (float)(com.hex.kagune.control.ukaku.UkakuRules.VORTEX_WINDUP + 12);
+        com.hex.kagune.control.ukaku.UkakuBody.Pose pose = com.hex.kagune.control.ukaku.UkakuBody.vortex(true, progress * release, release);
         RigPose p = new RigPose();
         p.twist = pose.twist;
         p.headX = pose.headX - 0.6F * (pose.torsoX + pose.torsoBend);
@@ -1727,8 +1727,8 @@ public final class ArtPreview {
     static void vortex(File file) throws Exception {
         double[] eye = {7.5, 4.2, -6.5};
         double[] look = {0.3, 2.0, 2.5};
-        float release = com.hex.kagune.control.ayato.AyatoRules.VORTEX_WINDUP / (float)(com.hex.kagune.control.ayato.AyatoRules.VORTEX_WINDUP + 12);
-        float follow = (release + com.hex.kagune.control.ayato.AyatoBody.VORTEX_FOLLOW) / release;
+        float release = com.hex.kagune.control.ukaku.UkakuRules.VORTEX_WINDUP / (float)(com.hex.kagune.control.ukaku.UkakuRules.VORTEX_WINDUP + 12);
+        float follow = (release + com.hex.kagune.control.ukaku.UkakuBody.VORTEX_FOLLOW) / release;
         double[] root = rightRoot();
         List<Shot> shots = new ArrayList<>();
         shots.add(new Shot("Z: the right wing twirls up (wind-up)", throwing(0.6F), thrownWings(300, 0.55F, 1.0F), eye, look, null));
@@ -1791,17 +1791,17 @@ public final class ArtPreview {
 
     static List<WingPreview.Tri> spike(double[] tip, double[] dir, double size, double[] eye, double glow, double heat, int seed) {
         List<WingPreview.Tri> out = new ArrayList<>();
-        com.hex.kagune.control.ayato.CrystalSpike.build((a, b, c, d, ca, cb, cc, cd) -> {
+        com.hex.kagune.control.ukaku.CrystalSpike.build((a, b, c, d, ca, cb, cc, cd) -> {
             out.add(new WingPreview.Tri(new double[][] {a, b, c}, new int[] {ca, cb, cc}, new double[] {0, 1, 0}, false));
             out.add(new WingPreview.Tri(new double[][] {a, c, d}, new int[] {ca, cc, cd}, new double[] {0, 1, 0}, false));
         }, tip, dir, size, eye, glow, heat, 1.0, seed, true, 1.0);
         return out;
     }
 
-    /** How deep a stuck spike's point sits in the body (blocks), as AyatoWingRenderer draws it. */
-    static final double STUCK = com.hex.kagune.control.ayato.CrystalSpike.LENGTH * 1.25 * 0.2;
+    /** How deep a stuck spike's point sits in the body (blocks), as UkakuWingRenderer draws it. */
+    static final double STUCK = com.hex.kagune.control.ukaku.CrystalSpike.LENGTH * 1.25 * 0.2;
 
-    /** A standing body (the same player model) {@code ahead} blocks in front, facing back toward Ayato. */
+    /** A standing body (the same player model) {@code ahead} blocks in front, facing back toward Ukaku. */
     static List<WingPreview.Tri> target(double ahead) {
         List<WingPreview.Tri> out = new ArrayList<>();
         for (WingPreview.Tri t : body(new RigPose())) {
@@ -1828,7 +1828,7 @@ public final class ArtPreview {
         List<WingPreview.Tri> lanceTris = spike(new double[] {0.0, 2.2, 5.5}, WingRig.FORWARD, 2.2, eye, 1.0, 0.0, 9);
         shots.add(new Shot("L + R: Crystal Lance (runs through everything in its line)", lance, crystalWings(300, 1.0F, 1, 1, ahead, 0.6F, 1.3), eye,
             look, lanceTris));
-        // Stuck spikes in a body six blocks ahead: points inside it, the backs sticking out toward Ayato.
+        // Stuck spikes in a body six blocks ahead: points inside it, the backs sticking out toward Ukaku.
         double[] near = {3.6, 2.4, 3.2};
         double[] onTarget = {0.0, 1.3, 6.0};
         List<WingPreview.Tri> stuck = new ArrayList<>(target(6.0));
@@ -1903,7 +1903,7 @@ public final class ArtPreview {
         shots.add(new Shot("Full wings (500), right aiming, top", still, aiming(500, 1, 0, ahead, 0), top, topTarget, tip(500, 1, ahead)));
         shots.add(new Shot("Full wings (500), right aiming, side", still, aiming(500, 1, 0, ahead, 0), side, head, tip(500, 1, ahead)));
         shots.add(new Shot("Full wings (500), both aiming", still, aiming(500, 1, 1, ahead, 0), front34, head, null));
-        sheet(file, "Ayato M1: the wing keeps its size and spread and curls until its tip points forward", shots, 3, 420, 380);
+        sheet(file, "Ukaku M1: the wing keeps its size and spread and curls until its tip points forward", shots, 3, 420, 380);
     }
 
     /** Fire shards (RcShard) at {@code distances} blocks along the shot from the muzzle of wing {@code side}. */
@@ -1920,7 +1920,7 @@ public final class ArtPreview {
 
     static List<WingPreview.Tri> shard(double[] head, double[] dir, double size, double time, int seed, double[] eye) {
         List<WingPreview.Tri> out = new ArrayList<>();
-        com.hex.kagune.control.ayato.RcShard.build((a, b, c, d, ca, cb, cc, cd) -> {
+        com.hex.kagune.control.ukaku.RcShard.build((a, b, c, d, ca, cb, cc, cd) -> {
             out.add(new WingPreview.Tri(new double[][] {a, b, c}, new int[] {ca, cb, cc}, new double[] {0, 1, 0}, false));
             out.add(new WingPreview.Tri(new double[][] {a, c, d}, new int[] {ca, cc, cd}, new double[] {0, 1, 0}, false));
         }, head, dir, size, time, seed, eye, 1.0);
@@ -1942,12 +1942,12 @@ public final class ArtPreview {
             shard(new double[] {1.2, 1.7, 3.0}, new double[] {-0.15, -0.05, 1.0}, 1.0, 2.0, 5, new double[] {2.2, 2.0, 2.0})));
         shots.add(new Shot("Flare fireball (size 2.2)", null, aiming(300, 0, 0, ahead, 0), new double[] {2.6, 2.0, 1.4}, near,
             shard(new double[] {1.2, 1.7, 3.0}, new double[] {-0.15, -0.05, 1.0}, 2.2, 2.0, 9, new double[] {2.6, 2.0, 1.4})));
-        sheet(file, "Ayato M1: shards of the wing's fire", shots, 2, 520, 420);
+        sheet(file, "Ukaku M1: shards of the wing's fire", shots, 2, 520, 420);
     }
 
-    /** The body for an Ayato strike frame, mapped exactly as KaguneBodyAnimation.ayatoStrike does. */
+    /** The body for an Ukaku strike frame, mapped exactly as KaguneBodyAnimation.ukakuStrike does. */
     static RigPose body(com.hex.kagune.control.StrikePattern pattern, boolean right, boolean both, float progress, float impact, float weight) {
-        com.hex.kagune.control.ayato.AyatoBody.Pose pose = com.hex.kagune.control.ayato.AyatoBody.pose(pattern, right, both, progress, impact);
+        com.hex.kagune.control.ukaku.UkakuBody.Pose pose = com.hex.kagune.control.ukaku.UkakuBody.pose(pattern, right, both, progress, impact);
         float amp = 0.92F + 0.16F * weight;
         RigPose p = new RigPose();
         p.twist = pose.twist * amp;
@@ -2017,14 +2017,14 @@ public final class ArtPreview {
             }
             shots.add(new Shot(f.label(), f.pose(), f.wings(), eye, target, extra));
         }
-        sheetFlipped(file, "Ayato: the M1 chain and the right-click enders (body through PlayerAnimator's real transforms)", shots, frames, 3, 420, 400);
+        sheetFlipped(file, "Ukaku: the M1 chain and the right-click enders (body through PlayerAnimator's real transforms)", shots, frames, 3, 420, 400);
     }
 
     static List<WingPreview.Tri> shardAhead(double z, double y, double size) {
         return shard(new double[] {0.0, y - 0.9, z + 1.5}, WingRig.FORWARD, size, 1.0, 4, new double[] {4.6, 2.6, 3.4});
     }
 
-    /** Like {@link #sheet} but turning each frame's wings with the body's flip, as AyatoWingRenderer does. */
+    /** Like {@link #sheet} but turning each frame's wings with the body's flip, as UkakuWingRenderer does. */
     static void sheetFlipped(File file, String title, List<Shot> shots, List<Frame> frames, int columns, int pw, int ph) throws Exception {
         List<Shot> turned = new ArrayList<>();
         for (int i = 0; i < shots.size(); i++) {
@@ -2225,8 +2225,8 @@ public final class ArtPreview {
         shots.add(wounded("Badly hurt, back", still, hurt, back, look, 1.0));
         shots.add(wounded("Up close: tears down to the muscle, cuts", still, hurt, close, closeLook, 1.0));
         shots.add(wounded("Regenerating: the newest wounds close first, pink", still, closing, front, look, 1.0));
-        shots.add(wounded("Ayato's spikes: deep punctures", still, spiked, close, closeLook, 1.0));
-        // 3.0.3: Kaneki's tails shape the wounds: a lash's gash where it struck, a thrust's hole, a crush, a slam.
+        shots.add(wounded("Ukaku's spikes: deep punctures", still, spiked, close, closeLook, 1.0));
+        // 3.0.3: Rinkaku's tails shape the wounds: a lash's gash where it struck, a thrust's hole, a crush, a slam.
         com.hex.kagune.control.wound.WoundBook.Spot chest = new com.hex.kagune.control.wound.WoundBook.Spot(
             com.hex.kagune.control.wound.Wound.Part.BODY, com.hex.kagune.control.wound.Wound.Face.FRONT, 4.0, 5.0);
         com.hex.kagune.control.wound.WoundBook lashed = blown(com.hex.kagune.control.wound.WoundBook.Blow.SLASH, chest, 0.35, 14);
@@ -2235,11 +2235,11 @@ public final class ArtPreview {
             3.2, 6.0), 0.0, 14);
         com.hex.kagune.control.wound.WoundBook crushed = blown(com.hex.kagune.control.wound.WoundBook.Blow.CRUSH, null, 0.0, 13);
         com.hex.kagune.control.wound.WoundBook slammed = blown(com.hex.kagune.control.wound.WoundBook.Blow.SLAM, null, 0.0, 11);
-        shots.add(wounded("Kaneki's lash: a gash where the tail struck", still, lashed, close, closeLook, 1.0));
-        shots.add(wounded("Kaneki's thrust: a hole", still, stabbed, close, closeLook, 1.0));
-        shots.add(wounded("Kaneki's crush: tears round the torso and arms", still, crushed, front, look, 1.0));
-        shots.add(wounded("Kaneki's crush, from behind", still, crushed, back, look, 1.0));
-        shots.add(wounded("Kaneki's slam: big tears down the back", still, slammed, back, look, 1.0));
+        shots.add(wounded("Rinkaku's lash: a gash where the tail struck", still, lashed, close, closeLook, 1.0));
+        shots.add(wounded("Rinkaku's thrust: a hole", still, stabbed, close, closeLook, 1.0));
+        shots.add(wounded("Rinkaku's crush: tears round the torso and arms", still, crushed, front, look, 1.0));
+        shots.add(wounded("Rinkaku's crush, from behind", still, crushed, back, look, 1.0));
+        shots.add(wounded("Rinkaku's slam: big tears down the back", still, slammed, back, look, 1.0));
         sheet(file, "Wounds: torn open by every hit, carved into the body, closing as a ghoul regenerates", shots, 3, 460, 430);
     }
 
@@ -2248,25 +2248,25 @@ public final class ArtPreview {
      * en garde as far as it is {@code formed} and not taken by a {@code swing}, and guarded off the ground.
      */
     static RigPose carried(RigPose p, float formed, float time) {
-        return carried(p, formed, com.hex.kagune.control.ayato.SteelSwing.hold(time, 0.0, 0.0, 0.0));
+        return carried(p, formed, com.hex.kagune.control.ukaku.SteelSwing.hold(time, 0.0, 0.0, 0.0));
     }
 
     /** The Steel Blade arm turned {@code arm} (SteelSwing's, chest frame) on {@code p}, as KaguneBodyAnimation.carry puts it. */
     static RigPose carried(RigPose p, float formed, double[] arm) {
-        float[] turn = com.hex.kagune.control.ayato.SteelSwing.euler(arm);
+        float[] turn = com.hex.kagune.control.ukaku.SteelSwing.euler(arm);
         p.rightArmHold = formed;
         p.rightArmX += formed * turn[0];
         p.rightArmY += formed * turn[1];
         p.rightArmZ += formed * turn[2];
         p.rightElbow *= 1.0F - formed;
-        p.blade = (float)com.hex.kagune.control.ayato.SteelBlade.extend(formed);
+        p.blade = (float)com.hex.kagune.control.ukaku.SteelBlade.extend(formed);
         return p;
     }
 
     /** A Steel Blade swing at {@code progress} as the game poses it: the body's part, and the blade arm from the hold back to it. */
     static RigPose steelSwing(com.hex.kagune.control.StrikePattern pattern, float progress, float impact) {
-        double[] hold = com.hex.kagune.control.ayato.SteelSwing.hold(0.0, 0.0, 0.0, 0.0);
-        com.hex.kagune.control.ayato.SteelSwing.Pose s = com.hex.kagune.control.ayato.SteelSwing.swing(pattern, progress, impact, hold, hold);
+        double[] hold = com.hex.kagune.control.ukaku.SteelSwing.hold(0.0, 0.0, 0.0, 0.0);
+        com.hex.kagune.control.ukaku.SteelSwing.Pose s = com.hex.kagune.control.ukaku.SteelSwing.swing(pattern, progress, impact, hold, hold);
         RigPose p = new RigPose();
         p.twist = s.twist;
         p.lean = s.torsoX;
@@ -2287,7 +2287,7 @@ public final class ArtPreview {
     /** 5.0.18: the final kakuja's Steel Blade (SteelBlade, the game's own model) on the posed right arm. */
     static List<WingPreview.Tri> blade(RigPose pose, double formed, double time) {
         List<WingPreview.Tri> out = new ArrayList<>();
-        for (com.hex.kagune.control.ayato.SteelBlade.Quad q : com.hex.kagune.control.ayato.SteelBlade.build(formed, time, false)) {
+        for (com.hex.kagune.control.ukaku.SteelBlade.Quad q : com.hex.kagune.control.ukaku.SteelBlade.build(formed, time, false)) {
             double[][] c = new double[4][];
             double[][] n = new double[4][];
             for (int k = 0; k < 4; k++) {
@@ -2323,20 +2323,20 @@ public final class ArtPreview {
     /** The final kakuja with its steel tentacles drawn back {@code fold} of the way (the Steel Blade), the half mask and the chest. */
     static List<WingPreview.Tri> finalKitBlade(RigPose pose, double[] eye, double fold, double time) {
         WingRig.Input in = new WingRig.Input(WingForm.TWIN, 1000, 1.0F, time, 0, 0, WingRig.Motion.NONE, 0, 0.4F, 0, 0, false, 1.0F, 1, false);
-        com.hex.kagune.control.ayato.KakujaRig.Body body = com.hex.kagune.control.ayato.KakujaRig.Body.STILL;
-        com.hex.kagune.control.ayato.KakujaRig.Limb[] limbs = com.hex.kagune.control.ayato.KakujaRig.pose(in, body,
-            com.hex.kagune.control.ayato.KakujaRig.Action.NONE);
+        com.hex.kagune.control.ukaku.KakujaRig.Body body = com.hex.kagune.control.ukaku.KakujaRig.Body.STILL;
+        com.hex.kagune.control.ukaku.KakujaRig.Limb[] limbs = com.hex.kagune.control.ukaku.KakujaRig.pose(in, body,
+            com.hex.kagune.control.ukaku.KakujaRig.Action.NONE);
         for (int i = 0; i < limbs.length; i++) {
             if (limbs[i].side() > 0) {
-                limbs[i] = com.hex.kagune.control.ayato.KakujaRig.folded(limbs[i], fold);
+                limbs[i] = com.hex.kagune.control.ukaku.KakujaRig.folded(limbs[i], fold);
             }
         }
         List<WingRig.Quad> quads = new ArrayList<>();
-        com.hex.kagune.control.ayato.KakujaRig.draw(quads, in, com.hex.kagune.control.ayato.KakujaRig.spines(in, body, limbs), limbs, null, true, eye,
+        com.hex.kagune.control.ukaku.KakujaRig.draw(quads, in, com.hex.kagune.control.ukaku.KakujaRig.spines(in, body, limbs), limbs, null, true, eye,
             true);
         List<WingPreview.Tri> out = new ArrayList<>(tris(quads));
-        out.addAll(placed(sink -> com.hex.kagune.control.ayato.KakujaModel.halfMask(sink, new int[] {1, 4, 5, 4}, 1.0, 1.0), q -> onPart(pose, "head", q)));
-        out.addAll(placed(sink -> com.hex.kagune.control.ayato.KakujaModel.chest(sink, 1.0, 1.0, true), q -> onPart(pose, "torso", q)));
+        out.addAll(placed(sink -> com.hex.kagune.control.ukaku.KakujaModel.halfMask(sink, new int[] {1, 4, 5, 4}, 1.0, 1.0), q -> onPart(pose, "head", q)));
+        out.addAll(placed(sink -> com.hex.kagune.control.ukaku.KakujaModel.chest(sink, 1.0, 1.0, true), q -> onPart(pose, "torso", q)));
         return out;
     }
 
@@ -2360,7 +2360,7 @@ public final class ArtPreview {
         double[] wideLook = {-0.3, 1.5, 0.4};
         List<Shot> shots = new ArrayList<>();
         for (double formed : new double[] {0.12, 0.3, 0.5, 0.68, 0.84, 1.0}) {
-            double fold = com.hex.kagune.control.ayato.SteelBlade.fold(formed);
+            double fold = com.hex.kagune.control.ukaku.SteelBlade.fold(formed);
             RigPose forming = carried(new RigPose(), (float)formed, 0.0F);
             shots.add(new Shot("C: forming (" + Math.round(formed * 100) + "%)", forming, NO_WINGS, wideFront, wideLook,
                 with(blade(forming, formed, 0.0), finalKitBlade(forming, wideFront, fold, 1.3))));
@@ -2374,7 +2374,7 @@ public final class ArtPreview {
         shots.add(new Shot("Up close: the swallowed arm and the pauldron", stance, NO_WINGS, new double[] {1.9, 2.5, -1.6},
             new double[] {0.5, 1.55, 0.3}, blade(stance, 1.0, 1.2)));
         // The hold: relaxed, low at his right side; and running, trailing behind him.
-        RigPose running = carried(new RigPose(), 1.0F, com.hex.kagune.control.ayato.SteelSwing.hold(0.0, 1.0, 1.2, 1.0));
+        RigPose running = carried(new RigPose(), 1.0F, com.hex.kagune.control.ukaku.SteelSwing.hold(0.0, 1.0, 1.2, 1.0));
         shots.add(new Shot("The hold, side on: relaxed, its point just off the ground", stance, NO_WINGS, new double[] {4.6, 1.6, 0.9},
             new double[] {0.6, 0.85, -0.2}, with(blade(stance, 1.0, 0.4), ground())));
         shots.add(new Shot("Running: it trails behind him", running, NO_WINGS, new double[] {4.6, 1.6, 0.9}, new double[] {0.6, 0.85, -0.3},
@@ -2521,7 +2521,7 @@ public final class ArtPreview {
         sheet(file, "Wounds 5.0.17: bigger, where each hit landed, down to the bone", shots, 3, 460, 430);
     }
 
-    /** A body hit once by one of Kaneki's blows, down to {@code health} of 20. */
+    /** A body hit once by one of Rinkaku's blows, down to {@code health} of 20. */
     static com.hex.kagune.control.wound.WoundBook blown(com.hex.kagune.control.wound.WoundBook.Blow blow,
                                                        com.hex.kagune.control.wound.WoundBook.Spot spot, double angle, double health) {
         com.hex.kagune.control.wound.WoundBook book = new com.hex.kagune.control.wound.WoundBook();
@@ -3137,7 +3137,7 @@ public final class ArtPreview {
     }
 
     /**
-     * 1.0.33: War's M1 in first person exactly as the game draws it (EtoFleshRenderer.warArms and warRinkaku): his arms posed as third
+     * 1.0.33: War's M1 in first person exactly as the game draws it (PaleFleshRenderer.warArms and warRinkaku): his arms posed as third
      * person poses them, pulled in before the eyes ({@code FirstPersonArms}), War's arm pieces on them, the rinkaku; from his eyes, a 70
      * degree lens. {@code still} the arm pieces as they were drawn (unmoving) or as third person moves them. 1.2.4: the rinkaku alone,
      * as first person now draws it (the posed arms are no longer drawn there).
@@ -3147,7 +3147,7 @@ public final class ArtPreview {
     }
 
     /**
-     * 1.2.4: as the game now draws it (EtoFleshRenderer.warRinkaku: vanilla's own hand, his plates on it, is the game's and not drawn
+     * 1.2.4: as the game now draws it (PaleFleshRenderer.warRinkaku: vanilla's own hand, his plates on it, is the game's and not drawn
      * here), the look {@code pitch} radians down.
      */
     static List<WingPreview.Tri> warSeen(RigPose pose, com.hex.kagune.control.king.WarModel.Motion motion, double pitch, double time) {
@@ -3461,7 +3461,7 @@ public final class ArtPreview {
         sheet(file, "War's eye on the kakugan (1.0.12)", shots, 2, 560, 560);
     }
 
-    /** 1.0.11: Kaneki turning into the Dragon ({@code TurningModel}) on his body, posed as the game poses it ({@code WarPose.turning}). */
+    /** 1.0.11: Rinkaku turning into the Dragon ({@code TurningModel}) on his body, posed as the game poses it ({@code WarPose.turning}). */
     static void turning(File file) throws Exception {
         Object[][] beats = {
             {0.07, "Clutching his chest (0.4 s)"},
@@ -3501,7 +3501,7 @@ public final class ArtPreview {
             quads += n[0];
         }
         System.out.println("turning: " + quads + " quads at 0.95");
-        sheet(file, "The Dragon coming: Kaneki turning (1.0.11, nine seconds, immortal)", shots, 3, 560, 470);
+        sheet(file, "The Dragon coming: Rinkaku turning (1.0.11, nine seconds, immortal)", shots, 3, 560, 470);
     }
 
     /**
@@ -3594,7 +3594,7 @@ public final class ArtPreview {
     }
 
     /** World shapes (the game's frame, him at the origin facing +z: his right is -x) into the preview's frame (his right is +x). */
-    static List<WingPreview.Tri> game(java.util.function.Consumer<com.hex.kagune.control.ayato.UkakuModel.Sink> build) {
+    static List<WingPreview.Tri> game(java.util.function.Consumer<com.hex.kagune.control.ukaku.UkakuModel.Sink> build) {
         return placedLit(build, q -> new double[] {-q[0], q[1], q[2]});
     }
 
@@ -4653,7 +4653,7 @@ public final class ArtPreview {
             quads += n[0];
         }
         System.out.println("peace: " + quads + " quads");
-        sheet(file, "Peace, Kaneki :Re (the other final kakuja): after the reference sheet", shots, 3, 600, 520);
+        sheet(file, "Peace, Rinkaku :Re (the other final kakuja): after the reference sheet", shots, 3, 600, 520);
     }
 
     static void sheet(File file, String title, List<Shot> shots, int columns, int pw, int ph) throws Exception {

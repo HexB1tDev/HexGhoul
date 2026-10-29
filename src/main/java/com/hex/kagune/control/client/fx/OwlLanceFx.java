@@ -1,9 +1,9 @@
 package com.hex.kagune.control.client.fx;
 
-import com.hex.kagune.control.client.EtoCamera;
-import com.hex.kagune.control.client.EtoClient;
+import com.hex.kagune.control.client.PaleCamera;
+import com.hex.kagune.control.client.PaleClient;
 import com.hex.kagune.control.client.OwlLanceClient;
-import com.hex.kagune.control.eto.OwlLances;
+import com.hex.kagune.control.pale.OwlLances;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -48,7 +48,7 @@ public final class OwlLanceFx {
             return;
         }
         Vec3 camera = minecraft.f_91063_.m_109153_().m_90583_();
-        double clock = EtoClient.clock(0.0F);
+        double clock = PaleClient.clock(0.0F);
         for (AbstractClientPlayer player : level.m_6907_()) {
             if (!OwlLanceClient.out(player) || !player.m_6084_() || player.m_20182_().m_82557_(camera) > RANGE * RANGE) {
                 SEEN.remove(player.m_20148_());
@@ -74,7 +74,7 @@ public final class OwlLanceFx {
             if (burst && minecraft.f_91074_ != null) {
                 double away = minecraft.f_91074_.m_20182_().m_82554_(player.m_20182_());
                 if (away < 10.0) {
-                    EtoCamera.kick((float)(0.6 * (1.0 - away / 10.0)), clock);
+                    PaleCamera.kick((float)(0.6 * (1.0 - away / 10.0)), clock);
                 }
             }
         }

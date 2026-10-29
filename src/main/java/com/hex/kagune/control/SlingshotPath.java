@@ -1,7 +1,7 @@
 package com.hex.kagune.control;
 
 /**
- * Kaneki's grapple flight (J, 3.0.0; pure, tested): the tendril hauls him up and over onto the top of the block it grabbed,
+ * Rinkaku's grapple flight (J, 3.0.0; pure, tested): the tendril hauls him up and over onto the top of the block it grabbed,
  * and sets him down on it. Three overlapping moves: he rises fast out of the launch to an apex clear above both ends, crosses
  * over once he is high enough not to clip what is in front of him, and comes down onto the top from straight above, easing
  * into the landing. Each move takes a share of the flight as long as its stretch of the way.

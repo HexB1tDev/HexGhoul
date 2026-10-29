@@ -21,8 +21,8 @@ import java.util.Map;
  * for. At the bottom of the path's tab, what is still locked and which quests open it.
  */
 public final class QuestJournalView {
-    public static final int UI_WIDTH = AyatoMenuView.UI_WIDTH;
-    public static final int UI_HEIGHT = AyatoMenuView.UI_HEIGHT;
+    public static final int UI_WIDTH = UkakuMenuView.UI_WIDTH;
+    public static final int UI_HEIGHT = UkakuMenuView.UI_HEIGHT;
 
     static final int TITLE = 0xFFF4DADA;
     static final int SUBTITLE = 0xFFB83A44;
@@ -96,8 +96,8 @@ public final class QuestJournalView {
     }
 
     /** Draws the journal and returns its clickable areas: "tab:NAME", "quest:ID". */
-    public static Map<String, AyatoMenuView.Rect> draw(UiCanvas c, Model model, double mouseX, double mouseY, double time) {
-        Map<String, AyatoMenuView.Rect> hits = new LinkedHashMap<>();
+    public static Map<String, UkakuMenuView.Rect> draw(UiCanvas c, Model model, double mouseX, double mouseY, double time) {
+        Map<String, UkakuMenuView.Rect> hits = new LinkedHashMap<>();
         int panelWidth = 930;
         int panelHeight = 500;
         int centerX = UI_WIDTH / 2;
@@ -105,10 +105,10 @@ public final class QuestJournalView {
         int left = centerX - panelWidth / 2;
         int top = centerY - panelHeight / 2;
         c.batch(() -> {
-            AyatoMenuView.organicPanel(c, centerX, centerY, panelWidth / 2, panelHeight / 2, FurutaMenuView.PANEL_FILL, FurutaMenuView.PANEL_EDGE);
-            AyatoMenuView.organicPanel(c, centerX, centerY, panelWidth / 2 - 5, panelHeight / 2 - 5, FurutaMenuView.INNER_FILL, FurutaMenuView.INNER_EDGE);
-            AyatoMenuView.drawVein(c, left + 18, top + 74, centerX, top + 32, left + panelWidth - 18, top + 74, FurutaMenuView.VEIN_BRIGHT, 2);
-            AyatoMenuView.drawVein(c, left + 342, top + 96, left + 352, centerY, left + 338, top + panelHeight - 30, FurutaMenuView.VEIN, 2);
+            UkakuMenuView.organicPanel(c, centerX, centerY, panelWidth / 2, panelHeight / 2, GraftMenuView.PANEL_FILL, GraftMenuView.PANEL_EDGE);
+            UkakuMenuView.organicPanel(c, centerX, centerY, panelWidth / 2 - 5, panelHeight / 2 - 5, GraftMenuView.INNER_FILL, GraftMenuView.INNER_EDGE);
+            UkakuMenuView.drawVein(c, left + 18, top + 74, centerX, top + 32, left + panelWidth - 18, top + 74, GraftMenuView.VEIN_BRIGHT, 2);
+            UkakuMenuView.drawVein(c, left + 342, top + 96, left + 352, centerY, left + 338, top + panelHeight - 30, GraftMenuView.VEIN, 2);
         });
         QuestLog log = model.log();
         c.centered("Q U E S T S", centerX, top + 18, TITLE);
@@ -130,7 +130,7 @@ public final class QuestJournalView {
             int count = (int)listed(model, tab).stream().filter(q -> tab == Tab.DONE || log.state(q, model.path(), model.mastery()) == QuestLog.State.OPEN).count();
             String label = tab.label + (count > 0 ? "  " + count : "");
             int width = c.width(label) + 16;
-            AyatoMenuView.Rect rect = new AyatoMenuView.Rect(tabX, top + 70, width, 16);
+            UkakuMenuView.Rect rect = new UkakuMenuView.Rect(tabX, top + 70, width, 16);
             boolean picked = tab == model.tab();
             boolean hover = rect.contains(mouseX, mouseY);
             c.fill(rect.x(), rect.y(), rect.x() + rect.width(), rect.y() + rect.height(), picked ? ROW_PICKED : hover ? ROW_HOVER : ROW);
@@ -153,14 +153,14 @@ public final class QuestJournalView {
         return hits;
     }
 
-    private static void list(UiCanvas c, Model model, Map<String, AyatoMenuView.Rect> hits, double mouseX, double mouseY, Quest picked, int x, int y) {
+    private static void list(UiCanvas c, Model model, Map<String, UkakuMenuView.Rect> hits, double mouseX, double mouseY, Quest picked, int x, int y) {
         int rowY = y;
         for (Quest quest : listed(model, model.tab())) {
             if (rowY > y + 360) {
                 break;
             }
             QuestLog.State state = model.log().state(quest, model.path(), model.mastery());
-            AyatoMenuView.Rect rect = new AyatoMenuView.Rect(x, rowY, 310, 28);
+            UkakuMenuView.Rect rect = new UkakuMenuView.Rect(x, rowY, 310, 28);
             boolean hover = rect.contains(mouseX, mouseY);
             c.fill(rect.x(), rect.y(), rect.x() + rect.width(), rect.y() + rect.height(), quest == picked ? ROW_PICKED : hover ? ROW_HOVER : ROW);
             int colour = switch (state) {
@@ -175,9 +175,9 @@ public final class QuestJournalView {
             int barX = x + 240;
             int barY = rowY + 11;
             c.batch(() -> {
-                AyatoMenuView.capsule(c, barX, barY, 60, 3, BAR_BACK);
+                UkakuMenuView.capsule(c, barX, barY, 60, 3, BAR_BACK);
                 if (share > 0.0F) {
-                    AyatoMenuView.capsule(c, barX, barY, Math.max(3, Math.round(60 * share)), 3, state == QuestLog.State.DONE ? BAR_DONE : BAR);
+                    UkakuMenuView.capsule(c, barX, barY, Math.max(3, Math.round(60 * share)), 3, state == QuestLog.State.DONE ? BAR_DONE : BAR);
                 }
             });
             hits.put("quest:" + quest.id(), rect);
@@ -197,7 +197,7 @@ public final class QuestJournalView {
         };
         c.text(line, x + width - c.width(line), y, MUTED, false);
         int rowY = y + 18;
-        for (String row : AyatoMenuView.wrap(c, quest.story(), width)) {
+        for (String row : UkakuMenuView.wrap(c, quest.story(), width)) {
             c.text(row, x, rowY, 0xFFDCAEB2, false);
             rowY += 12;
         }
@@ -214,9 +214,9 @@ public final class QuestJournalView {
             int barY = rowY + 12;
             float share = Math.min(1.0F, have / (float)objective.count());
             c.batch(() -> {
-                AyatoMenuView.capsule(c, x, barY, width, 3, BAR_BACK);
+                UkakuMenuView.capsule(c, x, barY, width, 3, BAR_BACK);
                 if (share > 0.0F) {
-                    AyatoMenuView.capsule(c, x, barY, Math.max(3, Math.round(width * share)), 3, met ? BAR_DONE : BAR);
+                    UkakuMenuView.capsule(c, x, barY, Math.max(3, Math.round(width * share)), 3, met ? BAR_DONE : BAR);
                 }
             });
             rowY += 24;
@@ -335,8 +335,8 @@ public final class QuestJournalView {
         Reward reward = quest.reward();
         List<String> parts = new ArrayList<>();
         int mastery = reward.mastery();
-        if (reward.points() > 0 && model.path() == KagunePath.KANEKI) {
-            mastery += reward.points() * Reward.KANEKI_POINT_MASTERY;
+        if (reward.points() > 0 && model.path() == KagunePath.RINKAKU) {
+            mastery += reward.points() * Reward.RINKAKU_POINT_MASTERY;
         } else if (reward.points() > 0) {
             parts.add(reward.points() + " mutation point" + (reward.points() == 1 ? "" : "s"));
         }

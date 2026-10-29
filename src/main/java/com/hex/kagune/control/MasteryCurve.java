@@ -2,7 +2,7 @@ package com.hex.kagune.control;
 
 /**
  * 6.0.4: how mastery is earned (pure, tested). Gameplay earns raw points (the original's: 4 a kill, 1 a hit, a grapple, a guard
- * held, a hunt; Ayato's shots and the restraint the same way), and each point of mastery costs more raw the higher it is: the
+ * held, a hunt; Ukaku's shots and the restraint the same way), and each point of mastery costs more raw the higher it is: the
  * first costs one, a point at 100 two, at 500 six, at 900 ten. Reaching 1000 takes 5995 raw where it took 1000: the first
  * kills come as fast as ever, the kakuja take hundreds. Progress toward the next point carries over (in thousandths, exactly).
  */

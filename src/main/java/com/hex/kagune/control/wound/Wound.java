@@ -14,7 +14,7 @@ public record Wound(Part part, Face face, Kind kind, double u, double v, double 
         CUT,
         /** A torn opening down to the muscle. */
         TEAR,
-        /** A deep round puncture: one of Ayato's spikes or needles, pulled out or burst, an arrow, a stab. */
+        /** A deep round puncture: one of Ukaku's spikes or needles, pulled out or burst, an arrow, a stab. */
         HOLE,
         /** 5.0.17: a long, deep, wide-open laceration (a sword, a lash) down to whatever bone lies along it. */
         GASH,

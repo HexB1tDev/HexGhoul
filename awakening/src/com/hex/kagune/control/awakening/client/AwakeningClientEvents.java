@@ -122,7 +122,7 @@ public final class AwakeningClientEvents {
         if (DragonCamera.active()) event.setCanceled(true);
     }
 
-    /** Kaneki's human form is gone while the Dragon exists, for every viewer. */
+    /** Rinkaku's human form is gone while the Dragon exists, for every viewer. */
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void hideBody(RenderPlayerEvent.Pre event) {
         if (DragonClient.hidden(event.getEntity().getUUID())) event.setCanceled(true);
@@ -187,7 +187,7 @@ public final class AwakeningClientEvents {
         if (!recent && !KaguneClientState.self().active()) return;
         int x = 6;
         int y = 6;
-        // The quest's own progress is in the journal; this only reminds an armed Kaneki what his next death means.
+        // The quest's own progress is in the journal; this only reminds an armed Rinkaku what his next death means.
         graphics.drawString(minecraft.font, "\u00a7c\u00a7lTHE DRAGON SLEEPS", x, y, 0xFFFFFFFF, true);
         graphics.drawString(minecraft.font, "\u00a77Your next death will awaken it.", x, y + 11, 0xFFFFFFFF, true);
     }

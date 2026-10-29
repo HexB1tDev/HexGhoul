@@ -3,7 +3,7 @@ package net.minecraft.world.phys;
 
 public class AABB {
     // Blank finals, never initialised to constants: a constant would be inlined into the expansion's bytecode (it was, in 1.3.0,
-    // and AyatoCrystal's hit point clamped to 0.0 instead of the hitbox).
+    // and UkakuCrystalCombat's hit point clamped to 0.0 instead of the hitbox).
     /** minX */ public final double f_82288_;
     /** minY */ public final double f_82289_;
     /** minZ */ public final double f_82290_;

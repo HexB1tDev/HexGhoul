@@ -9,9 +9,9 @@ import net.minecraftforge.network.NetworkEvent;
 
 /**
  * 7.0.2: a ghoul NPC as its clients draw it: who it is ({@code identity}, {@code NpcIdentity.pack}), its kagune out or not and since
- * when, the rinkaku lash it is making (a {@code FurutaMove}, when it began, the point it was aimed at), what it goes for, and the
+ * when, the rinkaku lash it is making (a {@code GraftMove}, when it began, the point it was aimed at), what it goes for, and the
  * ukaku's volley (when its wings curled to aim, its last shot and the wing it came from). Game ticks throughout. 1.0.41: and its flip
- * (an {@code EtoRules.Flip}, -1 none, and when it took off).
+ * (an {@code PaleRules.Flip}, -1 none, and when it took off).
  */
 public record S2CGhoulNpc(int id, long identity, boolean out, long outAt, int move, long moveAt, double x, double y, double z, int prey, long volleyAt,
                           long shotAt, int shotSide, int flip, long flipAt) {

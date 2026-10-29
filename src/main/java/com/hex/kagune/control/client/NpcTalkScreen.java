@@ -20,7 +20,7 @@ public final class NpcTalkScreen extends Screen {
     final int npc;
     private final ResourceLocation skin;
     private NpcTalkView.Model model;
-    private Map<String, AyatoMenuView.Rect> hits = Map.of();
+    private Map<String, UkakuMenuView.Rect> hits = Map.of();
     private float scale = 1.0F;
     private float originX;
     private float originY;
@@ -60,7 +60,7 @@ public final class NpcTalkScreen extends Screen {
         }
         double x = (mouseX - this.originX) / this.scale;
         double y = (mouseY - this.originY) / this.scale;
-        for (Map.Entry<String, AyatoMenuView.Rect> entry : this.hits.entrySet()) {
+        for (Map.Entry<String, UkakuMenuView.Rect> entry : this.hits.entrySet()) {
             if (entry.getValue().contains(x, y) && entry.getKey().startsWith("choice:")) {
                 this.pick(Integer.parseInt(entry.getKey().substring(7)));
                 return true;

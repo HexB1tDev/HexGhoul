@@ -1089,8 +1089,8 @@
       }
     ]
   },
-  "manifest_kaneki": {
-    "subtitle": "subtitles.hexkagune.manifest_kaneki",
+  "manifest_rinkaku": {
+    "subtitle": "subtitles.hexkagune.manifest_rinkaku",
     "sounds": [
       {
         "name": "hexkagune:sfx.gush",
@@ -1098,8 +1098,8 @@
       }
     ]
   },
-  "manifest_ayato": {
-    "subtitle": "subtitles.hexkagune.manifest_ayato",
+  "manifest_ukaku": {
+    "subtitle": "subtitles.hexkagune.manifest_ukaku",
     "sounds": [
       {
         "name": "hexkagune:sfx.transform.spectral_reveal",

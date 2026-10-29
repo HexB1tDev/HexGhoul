@@ -77,118 +77,118 @@ public final class QuestBook {
             List.of(of("Have a ghoul walk with you", Signal.BEFRIEND, 1, Tags.ALLY), of("Kill hostiles with your ally near", Signal.KILL, 10, Tags.HOSTILE,
                 Tags.ALLY)), Reward.mastery(50).meat(2)));
 
-        // ------------------------------------------------------------------ Kaneki DNA: the one-eyed king
-        add(new Quest("rizes_gift", Line.PATH, KagunePath.KANEKI, "Rize's Gift",
+        // ------------------------------------------------------------------ Rinkaku: the one-eyed king
+        add(new Quest("rizes_gift", Line.PATH, KagunePath.RINKAKU, "Rize's Gift",
             "Her kakuhou beats under your ribs. Let it out and let it feed.", 200, null, null,
             List.of(of("Kill with the kagune out", Signal.KILL, 15, Tags.KAGUNE), of("Eat raw flesh", Signal.EAT, 5, Tags.FLESH)),
-            Reward.mastery(20).opens(Gate.KANEKI_TWIN)));
-        add(new Quest("say_no", Line.PATH, KagunePath.KANEKI, "Learning to Say No",
+            Reward.mastery(20).opens(Gate.RINKAKU_TWIN)));
+        add(new Quest("say_no", Line.PATH, KagunePath.RINKAKU, "Learning to Say No",
             "The kagune wants. You decide. Prove it.", 200, null, null,
             List.of(of("Restrain the kagune's urge (crouch)", Signal.RESTRAIN, 5), of("Seconds with only the eyes open", Signal.TIME, 300, Tags.EYES)),
-            Reward.mastery(20).opens(Gate.KANEKI_TWIN)));
-        add(new Quest("anteiku", Line.PATH, KagunePath.KANEKI, "Anteiku's Way",
-            "Coffee, restraint, and a hand that only kills when it must. The old man is watching.", 450, null, "kaneki_four",
+            Reward.mastery(20).opens(Gate.RINKAKU_TWIN)));
+        add(new Quest("anteiku", Line.PATH, KagunePath.RINKAKU, "Anteiku's Way",
+            "Coffee, restraint, and a hand that only kills when it must. The old man is watching.", 450, null, "rinkaku_four",
             List.of(of("Restrain the kagune's urge", Signal.RESTRAIN, 10), of("Live through the brink", Signal.BRINK, 2),
                 of("Kill hostiles, eyes open", Signal.KILL, 20, Tags.HOSTILE, Tags.EYES)),
-            Reward.mastery(40).opens(Gate.KANEKI_FOUR).side(ANTEIKU)));
-        add(new Quest("pack", Line.PATH, KagunePath.KANEKI, "The Pack's Way",
-            "The Pack takes the strong and eats the weak. Show them which you are.", 450, null, "kaneki_four",
+            Reward.mastery(40).opens(Gate.RINKAKU_FOUR).side(ANTEIKU)));
+        add(new Quest("pack", Line.PATH, KagunePath.RINKAKU, "The Pack's Way",
+            "The Pack takes the strong and eats the weak. Show them which you are.", 450, null, "rinkaku_four",
             List.of(of("Kill ghouls", Signal.KILL, 3, Tags.GHOUL), of("Kill with the kagune out", Signal.KILL, 30, Tags.KAGUNE, Tags.HOSTILE)),
-            Reward.mastery(40).opens(Gate.KANEKI_FOUR).side(PACK)));
-        add(new Quest("thousand_minus_seven", Line.PATH, KagunePath.KANEKI, "1000 Minus 7",
+            Reward.mastery(40).opens(Gate.RINKAKU_FOUR).side(PACK)));
+        add(new Quest("thousand_minus_seven", Line.PATH, KagunePath.RINKAKU, "1000 Minus 7",
             "993. 986. 979... Count while it hurts. Something white grows out of the pain.", 700, null, null,
             List.of(of("Live through the brink", Signal.BRINK, 7), of("Die", Signal.DIE, 3)),
-            Reward.mastery(50).opens(Gate.KANEKI_CENTIPEDE)));
-        add(new Quest("ghoul_eats_ghoul", Line.PATH, KagunePath.KANEKI, "Ghoul Eats Ghoul",
+            Reward.mastery(50).opens(Gate.RINKAKU_CENTIPEDE)));
+        add(new Quest("ghoul_eats_ghoul", Line.PATH, KagunePath.RINKAKU, "Ghoul Eats Ghoul",
             "A kakuja is what grows in a ghoul that eats its own kind.", 700, null, null,
             List.of(of("Eat Ghoul Meat", Signal.EAT, 8, Tags.GHOUL_MEAT), of("Kill ghouls", Signal.KILL, 5, Tags.GHOUL)),
-            Reward.mastery(50).opens(Gate.KANEKI_CENTIPEDE)));
-        // 1.0.41: Furuta's revive, the Kaneki path's one passive now, behind the very quest Furuta does for it.
-        add(new Quest("kaneki_not_that_easily", Line.PATH, KagunePath.KANEKI, "You Thought You'd Get Rid of Me?",
+            Reward.mastery(50).opens(Gate.RINKAKU_CENTIPEDE)));
+        // 1.0.41: Graft's revive, the Rinkaku path's one passive now, behind the very quest Graft does for it.
+        add(new Quest("rinkaku_not_that_easily", Line.PATH, KagunePath.RINKAKU, "You Thought You'd Get Rid of Me?",
             "Die, and die again, until dying stops working.", 450, null, null,
-            List.of(of("Die", Signal.DIE, 5), of("Live through the brink", Signal.BRINK, 3)), Reward.mastery(20).opens(Gate.KANEKI_NOT_THAT_EASILY)));
-        add(new Quest("one_eyed_king", Line.PATH, KagunePath.KANEKI, "The One-Eyed King",
+            List.of(of("Die", Signal.DIE, 5), of("Live through the brink", Signal.BRINK, 3)), Reward.mastery(20).opens(Gate.RINKAKU_NOT_THAT_EASILY)));
+        add(new Quest("one_eyed_king", Line.PATH, KagunePath.RINKAKU, "The One-Eyed King",
             "Eat until there's nothing human left to eat. Then be king of what remains.", 950, null, null,
             List.of(of("Eat Ghoul Meat", Signal.EAT, 15, Tags.GHOUL_MEAT), of("Kill a boss in a kakuja", Signal.KILL, 1, Tags.BOSS, Tags.KAKUJA)),
-            Reward.mastery(80).opens(Gate.KANEKI_FULL_KAKUJA)));
-        add(new Quest("centipede_feast", Line.PATH, KagunePath.KANEKI, "The Centipede's Feast",
+            Reward.mastery(80).opens(Gate.RINKAKU_FULL_KAKUJA)));
+        add(new Quest("centipede_feast", Line.PATH, KagunePath.RINKAKU, "The Centipede's Feast",
             "Stay in the kakuja until it stops feeling like a cage.", 950, null, null,
             List.of(of("Seconds in a kakuja", Signal.TIME, 600, Tags.KAKUJA), of("Kill ghouls in a kakuja", Signal.KILL, 10, Tags.GHOUL, Tags.KAKUJA)),
-            Reward.mastery(80).opens(Gate.KANEKI_FULL_KAKUJA)));
+            Reward.mastery(80).opens(Gate.RINKAKU_FULL_KAKUJA)));
         // 1.0.4: Kakuja V2. Only kills in the Full Kakuja count, so it follows either way to it; done, the next death is the Dragon's.
-        add(new Quest("the_dragon", Line.PATH, KagunePath.KANEKI, "Kakuja V2: The Dragon",
+        add(new Quest("the_dragon", Line.PATH, KagunePath.RINKAKU, "Kakuja V2: The Dragon",
             "Something enormous coils under your skin and waits. Feed it, bleed for it, and the next death will not be yours.", 1000, null, null,
             List.of(of("Kill in the Full Kakuja", Signal.KILL, 100, Tags.form(com.hex.kagune.gameplay.KaguneForm.FULL_KAKUJA.id())),
                 of("Live through the brink in a kakuja", Signal.BRINK, 7, Tags.KAKUJA)),
-            Reward.NONE.opens(Gate.KANEKI_DRAGON)));
+            Reward.NONE.opens(Gate.RINKAKU_DRAGON)));
 
-        // ------------------------------------------------------------------ Ayato DNA: the black rabbit
-        add(new Quest("crystal_rain", Line.PATH, KagunePath.AYATO, "Crystal Rain",
+        // ------------------------------------------------------------------ Ukaku: the black rabbit
+        add(new Quest("crystal_rain", Line.PATH, KagunePath.UKAKU, "Crystal Rain",
             "Ukaku burns out fast. Make every shard count.", 350, null, null,
-            List.of(of("Kill with shots", Signal.KILL, 25, Tags.RANGED, Tags.KAGUNE)), Reward.mastery(25).opens(Gate.AYATO_GATLING)));
-        add(new Quest("black_rabbit", Line.PATH, KagunePath.AYATO, "The Black Rabbit",
+            List.of(of("Kill with shots", Signal.KILL, 25, Tags.RANGED, Tags.KAGUNE)), Reward.mastery(25).opens(Gate.UKAKU_GATLING)));
+        add(new Quest("black_rabbit", Line.PATH, KagunePath.UKAKU, "The Black Rabbit",
             "They never see a rabbit coming from above.", 350, null, null,
-            List.of(of("Kill in mid-air, kagune out", Signal.KILL, 12, Tags.AIRBORNE, Tags.KAGUNE)), Reward.mastery(25).opens(Gate.AYATO_GATLING)));
-        add(new Quest("bursting", Line.PATH, KagunePath.AYATO, "Bursting",
+            List.of(of("Kill in mid-air, kagune out", Signal.KILL, 12, Tags.AIRBORNE, Tags.KAGUNE)), Reward.mastery(25).opens(Gate.UKAKU_GATLING)));
+        add(new Quest("bursting", Line.PATH, KagunePath.UKAKU, "Bursting",
             "Shards that stick are shards wasted. Make them burst.", 400, null, null,
             List.of(of("Deal damage, kagune out", Signal.DEAL, 600, Tags.KAGUNE), of("Kill in a rampage of 4", Signal.RAMPAGE, 4)),
-            Reward.mastery(20).opens(Gate.AYATO_BURSTING_SHARDS)));
-        // 1.0.41: Furuta's revive as Ayato's fifth mutation, behind the very quest Furuta does for it.
-        add(new Quest("ayato_not_that_easily", Line.PATH, KagunePath.AYATO, "You Thought You'd Get Rid of Me?",
+            Reward.mastery(20).opens(Gate.UKAKU_BURSTING_SHARDS)));
+        // 1.0.41: Graft's revive as Ukaku's fifth mutation, behind the very quest Graft does for it.
+        add(new Quest("ukaku_not_that_easily", Line.PATH, KagunePath.UKAKU, "You Thought You'd Get Rid of Me?",
             "Die, and die again, until dying stops working.", 450, null, null,
-            List.of(of("Die", Signal.DIE, 5), of("Live through the brink", Signal.BRINK, 3)), Reward.mastery(20).opens(Gate.AYATO_NOT_THAT_EASILY)));
-        add(new Quest("packs_rabbit", Line.PATH, KagunePath.AYATO, "The Pack's Rabbit",
-            "The Pack gave you a place. Earn it in blood, theirs or anyone's.", 700, null, "ayato_kakuja",
+            List.of(of("Die", Signal.DIE, 5), of("Live through the brink", Signal.BRINK, 3)), Reward.mastery(20).opens(Gate.UKAKU_NOT_THAT_EASILY)));
+        add(new Quest("packs_rabbit", Line.PATH, KagunePath.UKAKU, "The Pack's Rabbit",
+            "The Pack gave you a place. Earn it in blood, theirs or anyone's.", 700, null, "ukaku_kakuja",
             List.of(of("Kill ghouls", Signal.KILL, 3, Tags.GHOUL), of("Eat Ghoul Meat", Signal.EAT, 5, Tags.GHOUL_MEAT)),
-            Reward.mastery(50).opens(Gate.AYATO_KAKUJA).side(PACK)));
-        add(new Quest("sisters_shadow", Line.PATH, KagunePath.AYATO, "Touka's Shadow",
-            "Your sister never needed anyone. Neither do you. Survive like she did.", 700, null, "ayato_kakuja",
+            Reward.mastery(50).opens(Gate.UKAKU_KAKUJA).side(PACK)));
+        add(new Quest("sisters_shadow", Line.PATH, KagunePath.UKAKU, "Touka's Shadow",
+            "Your sister never needed anyone. Neither do you. Survive like she did.", 700, null, "ukaku_kakuja",
             List.of(of("Live through the brink", Signal.BRINK, 5), of("Kill in a rampage of 4", Signal.RAMPAGE, 4)),
-            Reward.mastery(50).opens(Gate.AYATO_KAKUJA).side(ANTEIKU)));
-        add(new Quest("rabbit_unbound", Line.PATH, KagunePath.AYATO, "Rabbit Unbound",
+            Reward.mastery(50).opens(Gate.UKAKU_KAKUJA).side(ANTEIKU)));
+        add(new Quest("rabbit_unbound", Line.PATH, KagunePath.UKAKU, "Rabbit Unbound",
             "The first kakuja was armour. The last one is a storm.", 950, null, null,
             List.of(of("Eat Ghoul Meat", Signal.EAT, 15, Tags.GHOUL_MEAT), of("Kill a boss in a kakuja", Signal.KILL, 1, Tags.BOSS, Tags.KAKUJA)),
-            Reward.mastery(80).opens(Gate.AYATO_FINAL_KAKUJA)));
-        add(new Quest("storm", Line.PATH, KagunePath.AYATO, "Eye of the Storm",
+            Reward.mastery(80).opens(Gate.UKAKU_FINAL_KAKUJA)));
+        add(new Quest("storm", Line.PATH, KagunePath.UKAKU, "Eye of the Storm",
             "A hundred shots, a thousand feathers, ten minutes of fire.", 950, null, null,
             List.of(of("Kill with shots", Signal.KILL, 100, Tags.RANGED), of("Seconds in a kakuja", Signal.TIME, 600, Tags.KAKUJA)),
-            Reward.mastery(80).opens(Gate.AYATO_FINAL_KAKUJA)));
+            Reward.mastery(80).opens(Gate.UKAKU_FINAL_KAKUJA)));
 
-        // ------------------------------------------------------------------ Furuta DNA: the Washuu experiment
-        add(new Quest("rejection", Line.PATH, KagunePath.FURUTA, "Rejection",
+        // ------------------------------------------------------------------ Graft DNA: the Washuu experiment
+        add(new Quest("rejection", Line.PATH, KagunePath.GRAFT, "Rejection",
             "Rize's kakuhou is fighting your body for control. Feed it, or let it kill you until it learns.", 200, null, null,
-            List.of(of("Die", Signal.DIE, 2), of("Eat raw flesh", Signal.EAT, 10, Tags.FLESH)), Reward.mastery(20).opens(Gate.FURUTA_CENTIPEDE)));
-        add(new Quest("clowns_game", Line.PATH, KagunePath.FURUTA, "The Clowns' Game",
+            List.of(of("Die", Signal.DIE, 2), of("Eat raw flesh", Signal.EAT, 10, Tags.FLESH)), Reward.mastery(20).opens(Gate.GRAFT_CENTIPEDE)));
+        add(new Quest("clowns_game", Line.PATH, KagunePath.GRAFT, "The Clowns' Game",
             "Play with them in the dark, without the kagune. Clowns laugh at fair fights.", 200, null, null,
-            List.of(of("Kill at night, eyes open", Signal.KILL, 15, Tags.NIGHT, Tags.EYES)), Reward.mastery(20).opens(Gate.FURUTA_CENTIPEDE)));
-        add(new Quest("four_thorns", Line.PATH, KagunePath.FURUTA, "Four Thorns",
+            List.of(of("Kill at night, eyes open", Signal.KILL, 15, Tags.NIGHT, Tags.EYES)), Reward.mastery(20).opens(Gate.GRAFT_CENTIPEDE)));
+        add(new Quest("four_thorns", Line.PATH, KagunePath.GRAFT, "Four Thorns",
             "The centipede is a draft. Wear it out, and the thorns come next.", 400, null, null,
             List.of(of("Kill as the Centipede Rinkaku", Signal.KILL, 20, Tags.form("centipede")), of("Deal damage, kagune out", Signal.DEAL, 400,
                 Tags.KAGUNE)),
-            Reward.mastery(30).opens(Gate.FURUTA_THORNS)));
-        add(new Quest("appetite", Line.PATH, KagunePath.FURUTA, "Rize's Appetite",
+            Reward.mastery(30).opens(Gate.GRAFT_THORNS)));
+        add(new Quest("appetite", Line.PATH, KagunePath.GRAFT, "Rize's Appetite",
             "She was a binge eater. So are you now.", 450, null, null,
-            List.of(of("Eat Ghoul Meat", Signal.EAT, 12, Tags.GHOUL_MEAT)), Reward.mastery(20).opens(Gate.FURUTA_APPETITE)));
-        add(new Quest("not_that_easily", Line.PATH, KagunePath.FURUTA, "You Thought You'd Get Rid of Me?",
+            List.of(of("Eat Ghoul Meat", Signal.EAT, 12, Tags.GHOUL_MEAT)), Reward.mastery(20).opens(Gate.GRAFT_APPETITE)));
+        add(new Quest("not_that_easily", Line.PATH, KagunePath.GRAFT, "You Thought You'd Get Rid of Me?",
             "Die, and die again, until dying stops working.", 450, null, null,
-            List.of(of("Die", Signal.DIE, 5), of("Live through the brink", Signal.BRINK, 3)), Reward.mastery(20).opens(Gate.FURUTA_NOT_THAT_EASILY)));
-        add(new Quest("lets_play_house", Line.PATH, KagunePath.FURUTA, "Let's Play House",
+            List.of(of("Die", Signal.DIE, 5), of("Live through the brink", Signal.BRINK, 3)), Reward.mastery(20).opens(Gate.GRAFT_NOT_THAT_EASILY)));
+        add(new Quest("lets_play_house", Line.PATH, KagunePath.GRAFT, "Let's Play House",
             "Bring the family home. Eat the ones who won't come.", 650, null, null,
             List.of(of("Eat Ghoul Meat", Signal.EAT, 5, Tags.GHOUL_MEAT), of("Kill ghouls", Signal.KILL, 5, Tags.GHOUL)),
-            Reward.mastery(40).opens(Gate.FURUTA_DRAGON)));
-        add(new Quest("rizes_nursery", Line.PATH, KagunePath.FURUTA, "Rize's Nursery",
+            Reward.mastery(40).opens(Gate.GRAFT_DRAGON)));
+        add(new Quest("rizes_nursery", Line.PATH, KagunePath.GRAFT, "Rize's Nursery",
             "Grow the kagune out until the eyes open on it.", 650, null, null,
             List.of(of("Live through the brink", Signal.BRINK, 5), of("Seconds with the kagune out", Signal.TIME, 900, Tags.KAGUNE)),
-            Reward.mastery(40).opens(Gate.FURUTA_DRAGON)));
-        add(new Quest("dragon", Line.PATH, KagunePath.FURUTA, "The Dragon",
+            Reward.mastery(40).opens(Gate.GRAFT_DRAGON)));
+        add(new Quest("dragon", Line.PATH, KagunePath.GRAFT, "The Dragon",
             "Washuu built you to become something that eats cities. Start with something big.", 850, null, null,
             List.of(of("Eat Ghoul Meat", Signal.EAT, 15, Tags.GHOUL_MEAT), of("Kill a boss", Signal.KILL, 1, Tags.BOSS)),
-            Reward.mastery(70).opens(Gate.FURUTA_KAKUJA)));
-        add(new Quest("washuu_heir", Line.PATH, KagunePath.FURUTA, "Washuu's Heir",
+            Reward.mastery(70).opens(Gate.GRAFT_KAKUJA)));
+        add(new Quest("washuu_heir", Line.PATH, KagunePath.GRAFT, "Washuu's Heir",
             "The clan's blood, the clan's methods. Cull the ghouls in your way.", 850, null, null,
             List.of(of("Kill ghouls as the Many-Eyed Kagune", Signal.KILL, 10, Tags.GHOUL, Tags.form("dragon")),
                 of("Kill in a rampage of 6", Signal.RAMPAGE, 6)),
-            Reward.mastery(70).opens(Gate.FURUTA_KAKUJA)));
+            Reward.mastery(70).opens(Gate.GRAFT_KAKUJA)));
     }
 
     private QuestBook() {

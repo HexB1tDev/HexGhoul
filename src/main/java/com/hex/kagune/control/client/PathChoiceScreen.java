@@ -15,7 +15,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
 /**
- * The starting screen: choose a kagune path, one card per choosable path ({@link PathCards}; docs/AYATO_PATH.md,
+ * The starting screen: choose a kagune path, one card per choosable path ({@link PathCards}; the Ukaku path notes,
  * "Starting GUI"). Pick a card with the mouse or arrow keys, then hold the Awaken button (or Enter) to confirm,
  * because the choice is permanent. The client only asks; the server checks and stores the choice.
  */

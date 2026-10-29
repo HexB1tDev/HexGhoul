@@ -1,11 +1,11 @@
 package com.hex.kagune.control.server;
 
-import com.hex.kagune.control.eto.ArmRules;
-import com.hex.kagune.control.eto.EtoMove;
-import com.hex.kagune.control.eto.EtoRules;
-import com.hex.kagune.control.eto.OwlShards;
+import com.hex.kagune.control.pale.ArmRules;
+import com.hex.kagune.control.pale.PaleMove;
+import com.hex.kagune.control.pale.PaleRules;
+import com.hex.kagune.control.pale.OwlShards;
 import com.hex.kagune.control.network.ControlNetwork;
-import com.hex.kagune.control.network.S2CEtoFx;
+import com.hex.kagune.control.network.S2CPaleFx;
 import com.hex.kagune.control.network.S2COwlShard;
 import com.hex.kagune.data.KaguneProfile;
 import com.hex.kagune.gameplay.KaguneServerController;
@@ -79,17 +79,17 @@ final class OwlVolley {
     }
 
     /** N tapped ({@code held} false) or held in the Owl: the volley begins, if she can (her mastery, her RC, the arm's cooldown). */
-    static void start(ServerPlayer player, EtoServer.EtoState state, boolean held, long now) {
-        if (state.move == EtoMove.OWL_VOLLEY || !EtoCancel.allowedOwl(state, now) || now < state.grabReadyAt
-            || EtoServer.locked(player, state, "Flesh Grab", EtoRules.GRAB_MASTERY)) {
+    static void start(ServerPlayer player, PaleServer.PaleState state, boolean held, long now) {
+        if (state.move == PaleMove.OWL_VOLLEY || !PaleCancel.allowedOwl(state, now) || now < state.grabReadyAt
+            || PaleServer.locked(player, state, "Flesh Grab", PaleRules.GRAB_MASTERY)) {
             return;
         }
         if (!KaguneServerController.useEnergy(player, ArmRules.COST, true)) {
             return;
         }
-        EtoCancel.cut(player, state, now);
+        PaleCancel.cut(player, state, now);
         state.queuedAt = Long.MIN_VALUE;
-        EtoServer.begin(player, state, EtoMove.OWL_VOLLEY, held ? 1 : 0, 0, 0.0F, null, now);
+        PaleServer.begin(player, state, PaleMove.OWL_VOLLEY, held ? 1 : 0, 0, 0.0F, null, now);
         Volley volley = VOLLEYS.computeIfAbsent(player.m_20148_(), ignored -> new Volley());
         volley.throwsDone = 0;
         volley.heardAt = now;
@@ -97,8 +97,8 @@ final class OwlVolley {
     }
 
     /** N held: {@code 2} as the hold starts (the storm begins), {@code 1} still down, {@code 0} let go. */
-    static void key(ServerPlayer player, EtoServer.EtoState state, int down, long now) {
-        if (state.move != EtoMove.OWL_VOLLEY) {
+    static void key(ServerPlayer player, PaleServer.PaleState state, int down, long now) {
+        if (state.move != PaleMove.OWL_VOLLEY) {
             if (down == 2) {
                 start(player, state, true, now);
             }
@@ -113,19 +113,19 @@ final class OwlVolley {
     }
 
     /** The storm is let go (or she can throw no more): the throw under way is the last, and every client is told when. */
-    private static void letGo(ServerPlayer player, EtoServer.EtoState state, long now) {
-        if (state.move == EtoMove.OWL_VOLLEY && state.detail == 1 && state.charge <= 0.0F) {
+    private static void letGo(ServerPlayer player, PaleServer.PaleState state, long now) {
+        if (state.move == PaleMove.OWL_VOLLEY && state.detail == 1 && state.charge <= 0.0F) {
             state.charge = Math.max(1.0F, now - state.startedAt);
-            EtoServer.broadcast(player, state);
+            PaleServer.broadcast(player, state);
         }
     }
 
     /** Her move, each tick: the throws let go as they come (the storm's while it is held and her RC lasts); then she is her own again. */
-    static void tickMove(ServerPlayer player, EtoServer.EtoState state, long now) {
+    static void tickMove(ServerPlayer player, PaleServer.PaleState state, long now) {
         Volley volley = VOLLEYS.computeIfAbsent(player.m_20148_(), ignored -> new Volley());
         long age = now - state.startedAt;
         boolean held = state.detail == 1;
-        if (held && state.charge <= 0.0F && now - volley.heardAt > EtoRules.HOLD_TIMEOUT) {
+        if (held && state.charge <= 0.0F && now - volley.heardAt > PaleRules.HOLD_TIMEOUT) {
             letGo(player, state, now);
         }
         while (volley.throwsDone < OwlShards.throwsMade(held, state.charge) && OwlShards.throwAt(volley.throwsDone) <= age) {
@@ -139,14 +139,14 @@ final class OwlVolley {
         }
         if (age >= OwlShards.ends(held, state.charge)) {
             state.grabReadyAt = now + Cooldowns.of(player, ArmRules.COOLDOWN);
-            EtoServer.end(player, state);
+            PaleServer.end(player, state);
         }
     }
 
     /** Throw {@code k}: its fan of spears ripped off the blade and hurled at what she looks at. */
     private static void hurl(ServerPlayer player, Volley volley, int k, long now) {
         ServerLevel level = player.m_284548_();
-        Vec3 from = EtoWatch.world(player, player.m_146908_(), OwlShards.release(k));
+        Vec3 from = PaleWatch.world(player, player.m_146908_(), OwlShards.release(k));
         Vec3 at = aim(level, player);
         for (int j = 0; j < OwlShards.spears(k); j++) {
             double[] d = OwlShards.direction(new double[] {from.f_82479_, from.f_82480_, from.f_82481_}, new double[] {at.f_82479_, at.f_82480_, at.f_82481_}, k, j);
@@ -155,7 +155,7 @@ final class OwlVolley {
             ControlNetwork.broadcast(player, new S2COwlShard(player.m_20148_(), spear.id, S2COwlShard.THROWN, now, from.f_82479_, from.f_82480_,
                 from.f_82481_, (float)spear.speed.f_82479_, (float)spear.speed.f_82480_, (float)spear.speed.f_82481_, 0));
         }
-        AyatoFire.sound(level, from, "entity.player.attack.sweep", 1.0F, KaguneServerController.vary(player, 0.6F, 0.06F));
+        UkakuFire.sound(level, from, "entity.player.attack.sweep", 1.0F, KaguneServerController.vary(player, 0.6F, 0.06F));
         KaguneServerController.playSelf(player, HexKaguneSounds.BONE_CRACK, 0.7F, KaguneServerController.vary(player, 1.1F, 0.08F));
     }
 
@@ -171,7 +171,7 @@ final class OwlVolley {
         Vec3 aimed = to;
         AABB around = new AABB(Math.min(eye.f_82479_, to.f_82479_), Math.min(eye.f_82480_, to.f_82480_), Math.min(eye.f_82481_, to.f_82481_),
             Math.max(eye.f_82479_, to.f_82479_), Math.max(eye.f_82480_, to.f_82480_), Math.max(eye.f_82481_, to.f_82481_)).m_82400_(1.0);
-        for (LivingEntity body : level.m_6443_(LivingEntity.class, around, entity -> EtoBlitz.valid(player, entity))) {
+        for (LivingEntity body : level.m_6443_(LivingEntity.class, around, entity -> PaleBlitz.valid(player, entity))) {
             double t = enter(body.m_20191_().m_82400_(0.3), eye, to);
             if (t >= 0.0 && t < best) {
                 best = t;
@@ -182,7 +182,7 @@ final class OwlVolley {
     }
 
     /** Each tick of hers: every spear flies on, runs through, carries, pins, sticks and crumbles; what they pin is held there. */
-    static void tick(ServerPlayer player, EtoServer.EtoState state, long now) {
+    static void tick(ServerPlayer player, PaleServer.PaleState state, long now) {
         Volley volley = VOLLEYS.get(player.m_20148_());
         if (volley == null) {
             return;
@@ -212,7 +212,7 @@ final class OwlVolley {
             }
             CentipedeHunt.place(player, body, pin.feet());
         }
-        if (volley.spears.isEmpty() && volley.pins.isEmpty() && state.move != EtoMove.OWL_VOLLEY) {
+        if (volley.spears.isEmpty() && volley.pins.isEmpty() && state.move != PaleMove.OWL_VOLLEY) {
             VOLLEYS.remove(player.m_20148_());
         }
     }
@@ -232,7 +232,7 @@ final class OwlVolley {
             double hitAt = Math.min(1.0, wallAt);
             AABB around = new AABB(Math.min(from.f_82479_, to.f_82479_), Math.min(from.f_82480_, to.f_82480_), Math.min(from.f_82481_, to.f_82481_),
                 Math.max(from.f_82479_, to.f_82479_), Math.max(from.f_82480_, to.f_82480_), Math.max(from.f_82481_, to.f_82481_)).m_82400_(1.0);
-            for (LivingEntity body : level.m_6443_(LivingEntity.class, around, entity -> EtoBlitz.valid(player, entity))) {
+            for (LivingEntity body : level.m_6443_(LivingEntity.class, around, entity -> PaleBlitz.valid(player, entity))) {
                 double t = enter(body.m_20191_().m_82400_(0.15), from, to);
                 if (t >= 0.0 && t <= hitAt) {
                     hitAt = t;
@@ -264,7 +264,7 @@ final class OwlVolley {
                 pinned = carried.m_19879_();
             }
             send(player, spear, S2COwlShard.STUCK, now, point, dir, pinned);
-            AyatoFire.sound(level, point, "block.stone.hit", 1.0F, KaguneServerController.vary(player, 0.7F, 0.08F));
+            UkakuFire.sound(level, point, "block.stone.hit", 1.0F, KaguneServerController.vary(player, 0.7F, 0.08F));
             return;
         }
         spear.last = to;
@@ -278,7 +278,7 @@ final class OwlVolley {
                 spear.last = point;
                 spear.stuckUntil = now + OwlShards.STUCK;
                 send(player, spear, S2COwlShard.STUCK, now, point, down, carried.m_19879_());
-                AyatoFire.sound(level, ground, "block.gravel.break", 1.2F, KaguneServerController.vary(player, 0.6F, 0.05F));
+                UkakuFire.sound(level, ground, "block.gravel.break", 1.2F, KaguneServerController.vary(player, 0.6F, 0.05F));
                 return;
             }
             // On the spear: its middle just behind the point, carried along.
@@ -292,17 +292,17 @@ final class OwlVolley {
         Vec3 centre = KaguneServerController.center(body);
         body.f_19802_ = 0;
         WoundHits.expect(body, com.hex.kagune.control.wound.WoundBook.Blow.STAB, centre.m_82546_(dir.m_82490_(body.m_20205_() * 0.5)), dir, 0.0);
-        if (!body.m_6469_(player.m_269291_().m_269075_(player), EtoRules.fist(KaguneProfile.mastery(player)) * OwlShards.DAMAGE)) {
+        if (!body.m_6469_(player.m_269291_().m_269075_(player), PaleRules.fist(KaguneProfile.mastery(player)) * OwlShards.DAMAGE)) {
             return false;
         }
-        AyatoCrystal.kanekiBleed(body, player, now);
-        EtoStun.stun(body, now, OwlShards.PINNED + 10);
-        EtoBlitz.fx(player, S2CEtoFx.IMPALED, body.m_19879_(), centre, dir, body.m_20206_(), 1);
+        UkakuCrystalCombat.rinkakuBleed(body, player, now);
+        PaleStun.stun(body, now, OwlShards.PINNED + 10);
+        PaleBlitz.fx(player, S2CPaleFx.IMPALED, body.m_19879_(), centre, dir, body.m_20206_(), 1);
         KaguneServerController.playAt(player, body, HexKaguneSounds.BONE_CRACK, 0.7F, KaguneServerController.vary(player, 1.0F, 0.08F));
-        AyatoFire.sound(level, centre, "entity.player.attack.strong", 0.8F, KaguneServerController.vary(player, 0.8F, 0.05F));
+        UkakuFire.sound(level, centre, "entity.player.attack.strong", 0.8F, KaguneServerController.vary(player, 0.8F, 0.05F));
         KaguneProfile.addMastery(player, "Swipe", 1);
         KaguneNetwork.broadcast(player);
-        EtoServer.landed(player, 1);
+        PaleServer.landed(player, 1);
         return true;
     }
 
@@ -310,7 +310,7 @@ final class OwlVolley {
     private static void pin(ServerPlayer player, Volley volley, LivingEntity body, Vec3 feet, long now) {
         volley.pins.removeIf(pin -> pin.body() == body.m_19879_());
         volley.pins.add(new Pin(body.m_19879_(), feet, now + OwlShards.PINNED));
-        EtoStun.stun(body, now, OwlShards.PINNED);
+        PaleStun.stun(body, now, OwlShards.PINNED);
         CentipedeHunt.place(player, body, feet);
     }
 

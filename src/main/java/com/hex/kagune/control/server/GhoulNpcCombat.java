@@ -1,13 +1,13 @@
 package com.hex.kagune.control.server;
 
-import com.hex.kagune.control.ayato.WingForm;
-import com.hex.kagune.control.ayato.WingRig;
-import com.hex.kagune.control.furuta.FurutaMove;
-import com.hex.kagune.control.furuta.FurutaRules;
-import com.hex.kagune.control.furuta.FurutaStage;
+import com.hex.kagune.control.ukaku.WingForm;
+import com.hex.kagune.control.ukaku.WingRig;
+import com.hex.kagune.control.graft.GraftMove;
+import com.hex.kagune.control.graft.GraftRules;
+import com.hex.kagune.control.graft.GraftStage;
 import com.hex.kagune.control.network.ControlNetwork;
-import com.hex.kagune.control.network.S2CAyatoFx;
-import com.hex.kagune.control.network.S2CEtoFx;
+import com.hex.kagune.control.network.S2CUkakuFx;
+import com.hex.kagune.control.network.S2CPaleFx;
 import com.hex.kagune.control.npc.GhoulNpc;
 import com.hex.kagune.control.npc.NpcIdentity;
 import com.hex.kagune.control.npc.NpcRules;
@@ -31,11 +31,11 @@ import net.minecraft.world.phys.Vec3;
 /**
  * 7.0.2: how a ghoul NPC fights, on the server: only its kagune's M1, reusing what the players' kagunes already have.
  * <ul>
- *   <li>Rinkaku: the transplant's string ({@link FurutaMove#LASH_1} on: the rising lash, the backhand, the twin skewer, the gutting
- *       upper, the guillotine), each move's {@link FurutaMove.Beat}s on the very ticks every client draws them, a few lashes a string
+ *   <li>Rinkaku: the transplant's string ({@link GraftMove#LASH_1} on: the rising lash, the backhand, the twin skewer, the gutting
+ *       upper, the guillotine), each move's {@link GraftMove.Beat}s on the very ticks every client draws them, a few lashes a string
  *       (more the stronger it is), then it circles and sizes its prey up.</li>
- *   <li>Ukaku: the twin wings' fire shots, as Ayato's M1: from the tip of the wing it aims, flown here a tick at a time, hitting the
- *       first body in their way and setting it alight; every client draws them as his ({@code S2CAyatoFx}). It keeps its distance
+ *   <li>Ukaku: the twin wings' fire shots, as Ukaku's M1: from the tip of the wing it aims, flown here a tick at a time, hitting the
+ *       first body in their way and setting it alight; every client draws them as his ({@code S2CUkakuFx}). It keeps its distance
  *       and shoots in volleys, the wings taking turns.</li>
  * </ul>
  * Every blow is a mob's attack (scaled by the difficulty as every mob's is); none breaks blocks. 1.0.41: they move like ghouls (front
@@ -43,7 +43,7 @@ import net.minecraft.world.phys.Vec3;
  * their tails (the lancers) and with Owl's Execution for their heavy, the ukaku from far off (the snipers) and with a feather storm.
  */
 final class GhoulNpcCombat {
-    /** Shot ids well clear of the players' ({@code AyatoFire} counts up from 1). */
+    /** Shot ids well clear of the players' ({@code UkakuFire} counts up from 1). */
     private static int nextBolt = 1 << 30;
 
     /** A fire shot in flight. */
@@ -63,11 +63,11 @@ final class GhoulNpcCombat {
 
     static void lash(GhoulNpc npc, NpcIdentity who, GhoulNpcBrain.Mind mind, LivingEntity prey, ServerLevel level, long now) {
         int limbs = limbs(who);
-        if (mind.move != FurutaMove.NONE) {
-            FurutaMove move = mind.move;
+        if (mind.move != GraftMove.NONE) {
+            GraftMove move = mind.move;
             long age = now - mind.moveAt;
             npc.m_21573_().m_26573_(); // planted while the tails strike
-            List<FurutaMove.Beat> beats = move.beats(limbs);
+            List<GraftMove.Beat> beats = move.beats(limbs);
             for (int i = 0; i < beats.size(); i++) {
                 beat(npc, who, mind, beats.get(i), i, age, level, now);
                 if (mind.move != move) {
@@ -79,47 +79,47 @@ final class GhoulNpcCombat {
             }
             mind.last = move;
             mind.lastEnds = now;
-            mind.move = FurutaMove.NONE;
+            mind.move = GraftMove.NONE;
             mind.dirty = true;
         }
-        double reach = FurutaCombat.reach(FurutaMove.LASH_1, limbs);
+        double reach = GraftCombat.reach(GraftMove.LASH_1, limbs);
         // 1.0.41: the skewer's reach: its tails' full length.
-        double full = FurutaCombat.reach(FurutaMove.LASH_3, limbs);
+        double full = GraftCombat.reach(GraftMove.LASH_3, limbs);
         double distance = Math.sqrt(prey.m_20280_(npc));
         boolean sight = npc.m_142582_(prey);
         if (now < mind.readyAt) {
             circle(npc, mind, prey, preferred(who) + 1.0, now);
             return;
         }
-        boolean chained = mind.strung > 0 && mind.last != null && now <= mind.lastEnds + FurutaRules.CHAIN_WINDOW;
+        boolean chained = mind.strung > 0 && mind.last != null && now <= mind.lastEnds + GraftRules.CHAIN_WINDOW;
         // 1.0.41: its heavy, its right click: Owl's Execution, a flurry of lashes and the skewer, on prey close enough.
         if (!chained && sight && distance <= NpcRules.HEAVY_REACH && now >= mind.heavyReadyAt && npc.m_217043_().m_188500_() < 0.5) {
-            begin(npc, who, mind, prey, FurutaMove.OWLS_EXECUTION, level, now);
+            begin(npc, who, mind, prey, GraftMove.OWLS_EXECUTION, level, now);
             mind.strung = 0;
             mind.heavyReadyAt = now + NpcRules.heavyEvery(who.tier());
-            mind.readyAt = now + FurutaMove.OWLS_EXECUTION.ticks() + pause(npc);
+            mind.readyAt = now + GraftMove.OWLS_EXECUTION.ticks() + pause(npc);
             sound(level, npc.m_20182_(), HexKaguneSounds.KAGUNE_STRAIN.get(), 0.9F, 0.75F);
             return;
         }
         // 1.0.41: a lancer opens from the full length of its tails, with the skewer.
         if (!chained && sight && NpcRules.lancer(who.seed()) && distance > reach - 0.4 && distance <= full - 0.2) {
-            string(npc, who, mind, prey, FurutaMove.LASH_3, false, level, now);
+            string(npc, who, mind, prey, GraftMove.LASH_3, false, level, now);
             return;
         }
         if (distance > reach - 0.4 || !sight) {
             npc.m_21573_().m_5624_(prey, 1.15);
             return;
         }
-        FurutaMove move = chained ? FurutaMove.nextStrike(mind.last, FurutaStage.TRANSPLANT) : FurutaMove.firstStrike(FurutaStage.TRANSPLANT);
+        GraftMove move = chained ? GraftMove.nextStrike(mind.last, GraftStage.TRANSPLANT) : GraftMove.firstStrike(GraftStage.TRANSPLANT);
         string(npc, who, mind, prey, move, chained, level, now);
     }
 
     /** One lash of its string, begun now ({@code chained}: out of the last one's hold). */
-    private static void string(GhoulNpc npc, NpcIdentity who, GhoulNpcBrain.Mind mind, LivingEntity prey, FurutaMove move, boolean chained, ServerLevel level,
+    private static void string(GhoulNpc npc, NpcIdentity who, GhoulNpcBrain.Mind mind, LivingEntity prey, GraftMove move, boolean chained, ServerLevel level,
                                long now) {
         begin(npc, who, mind, prey, move, level, now);
         mind.strung = chained ? mind.strung + 1 : 1;
-        if (mind.strung >= NpcRules.string(who.tier()) || move == FurutaMove.LASH_5) {
+        if (mind.strung >= NpcRules.string(who.tier()) || move == GraftMove.LASH_5) {
             mind.strung = 0;
             mind.readyAt = now + move.ticks() + pause(npc);
         }
@@ -129,7 +129,7 @@ final class GhoulNpcCombat {
      * {@code move} begun now at {@code prey}: aimed at its middle, every client told; 1.0.41: and on its way (KaguneClash), so a blow
      * of its prey's landing first meets it, and it meets a blow of its prey's still coming.
      */
-    private static void begin(GhoulNpc npc, NpcIdentity who, GhoulNpcBrain.Mind mind, LivingEntity prey, FurutaMove move, ServerLevel level, long now) {
+    private static void begin(GhoulNpc npc, NpcIdentity who, GhoulNpcBrain.Mind mind, LivingEntity prey, GraftMove move, ServerLevel level, long now) {
         mind.move = move;
         mind.moveAt = now;
         mind.point = GhoulNpcBrain.centre(prey);
@@ -140,18 +140,18 @@ final class GhoulNpcCombat {
         sound(level, npc.m_20182_(), HexKaguneSounds.KAGUNE_WHIP.get(), 0.6F, 0.95F + 0.1F * (float)npc.m_217043_().m_188500_());
         int limbs = limbs(who);
         int lands = move.ticks();
-        for (FurutaMove.Beat beat : move.beats(limbs)) {
+        for (GraftMove.Beat beat : move.beats(limbs)) {
             lands = Math.min(lands, beat.land());
         }
         long began = now;
-        KaguneClash.swing(npc, now, lands + 1, FurutaCombat.reach(move, limbs), flat(facing), prey.m_19879_(),
+        KaguneClash.swing(npc, now, lands + 1, GraftCombat.reach(move, limbs), flat(facing), prey.m_19879_(),
             () -> mind.move == move && mind.moveAt == began, () -> cut(npc, mind));
     }
 
     /** 1.0.41: its lash met a blow coming back (KaguneClash): cut off, the string with it, a moment before the next. */
     private static void cut(GhoulNpc npc, GhoulNpcBrain.Mind mind) {
         long now = npc.m_9236_().m_46467_();
-        mind.move = FurutaMove.NONE;
+        mind.move = GraftMove.NONE;
         mind.last = null;
         mind.lastEnds = now;
         mind.strung = 0;
@@ -161,19 +161,19 @@ final class GhoulNpcCombat {
 
     /** 1.0.41: how many tails it has out. */
     private static int limbs(NpcIdentity who) {
-        return FurutaStage.TRANSPLANT.limbs(who.lookMastery());
+        return GraftStage.TRANSPLANT.limbs(who.lookMastery());
     }
 
     /** 1.0.41: how far off it likes its prey: a lancer at the full length of its tails, the others at a lash's reach. */
     static double preferred(NpcIdentity who) {
         int limbs = limbs(who);
-        return NpcRules.lancer(who.seed()) ? FurutaCombat.reach(FurutaMove.LASH_3, limbs) - 0.6 : FurutaCombat.reach(FurutaMove.LASH_1, limbs) - 0.8;
+        return NpcRules.lancer(who.seed()) ? GraftCombat.reach(GraftMove.LASH_3, limbs) - 0.6 : GraftCombat.reach(GraftMove.LASH_1, limbs) - 0.8;
     }
 
     /** One beat at {@code age} ticks into its move: it lands on the tick every client shows it landing. */
-    private static void beat(GhoulNpc npc, NpcIdentity who, GhoulNpcBrain.Mind mind, FurutaMove.Beat beat, int index, long age, ServerLevel level,
+    private static void beat(GhoulNpc npc, NpcIdentity who, GhoulNpcBrain.Mind mind, GraftMove.Beat beat, int index, long age, ServerLevel level,
                              long now) {
-        boolean sweeping = beat.kind() == FurutaMove.Kind.SWEEP;
+        boolean sweeping = beat.kind() == GraftMove.Kind.SWEEP;
         if (sweeping ? age < beat.land() || age > beat.end() : age != beat.land()) {
             return;
         }
@@ -185,11 +185,11 @@ final class GhoulNpcCombat {
         switch (beat.kind()) {
             case SWEEP -> {
                 // The tail swept round at its reach from one side of its aim to the other, as every client draws it (and as a
-                // player's, FurutaCombat.sweep): what it passes through this tick is struck and thrown on round.
+                // player's, GraftCombat.sweep): what it passes through this tick is struck and thrown on round.
                 double span = Math.max(1, beat.end() - beat.land());
                 double before = age == beat.land() ? beat.from()
-                    : beat.from() + (beat.to() - beat.from()) * FurutaCombat.smooth((age - 1 - beat.land()) / span);
-                double after = beat.from() + (beat.to() - beat.from()) * FurutaCombat.smooth((age - beat.land()) / span);
+                    : beat.from() + (beat.to() - beat.from()) * GraftCombat.smooth((age - 1 - beat.land()) / span);
+                double after = beat.from() + (beat.to() - beat.from()) * GraftCombat.smooth((age - beat.land()) / span);
                 double low = Math.min(before, after) - 12.0;
                 double high = Math.max(before, after) + 12.0;
                 double sign = Math.signum(beat.to() - beat.from());
@@ -202,7 +202,7 @@ final class GhoulNpcCombat {
                     }
                     hit.add(body.m_19879_());
                     Vec3 across = new Vec3(-to.f_82481_ * sign, 0.0, to.f_82479_ * sign);
-                    if (strike(npc, who, body, beat, across.m_82549_(to.m_82490_(0.3)), now, WoundBook.Blow.SLASH, S2CEtoFx.IMPACT)) {
+                    if (strike(npc, who, body, beat, across.m_82549_(to.m_82490_(0.3)), now, WoundBook.Blow.SLASH, S2CPaleFx.IMPACT)) {
                         return;
                     }
                 }
@@ -216,9 +216,9 @@ final class GhoulNpcCombat {
                     if (along < 0.5 || closest.m_82554_(centre) > body.m_20205_() * 0.5 + 0.8 || !hit.add(body.m_19879_())) {
                         continue;
                     }
-                    boolean upper = beat.kind() == FurutaMove.Kind.UPPER;
+                    boolean upper = beat.kind() == GraftMove.Kind.UPPER;
                     if (strike(npc, who, body, beat, upper ? new Vec3(dir.f_82479_ * 0.25, 0.0, dir.f_82481_ * 0.25) : dir, now, WoundBook.Blow.STAB,
-                        S2CEtoFx.IMPALED)) {
+                        S2CPaleFx.IMPALED)) {
                         return;
                     }
                     if (upper) {
@@ -239,13 +239,13 @@ final class GhoulNpcCombat {
                         continue;
                     }
                     float share = distance <= 2.1 ? 1.0F : 0.5F;
-                    if (strike(npc, who, body, new FurutaMove.Beat(beat.limb(), beat.kind(), beat.start(), beat.land(), beat.end(), beat.reach(), 0.0, 0.0, 0.0,
-                        beat.power() * share, beat.flags()), flat(centre.m_82546_(down)).m_82490_(0.7), now, WoundBook.Blow.SLAM, S2CEtoFx.CRUSHED)) {
+                    if (strike(npc, who, body, new GraftMove.Beat(beat.limb(), beat.kind(), beat.start(), beat.land(), beat.end(), beat.reach(), 0.0, 0.0, 0.0,
+                        beat.power() * share, beat.flags()), flat(centre.m_82546_(down)).m_82490_(0.7), now, WoundBook.Blow.SLAM, S2CPaleFx.CRUSHED)) {
                         return;
                     }
                 }
                 BlockPos below = BlockPos.m_274561_(down.f_82479_, down.f_82480_ - 0.01, down.f_82481_);
-                EtoBlitz.fxAround(npc, npc.m_19879_(), S2CEtoFx.SHOCKWAVE, down, flat(dir), 3.0F, Block.m_49956_(level.m_8055_(below)));
+                PaleBlitz.fxAround(npc, npc.m_19879_(), S2CPaleFx.SHOCKWAVE, down, flat(dir), 3.0F, Block.m_49956_(level.m_8055_(below)));
                 sound(level, down, HexKaguneSounds.KAGUNE_SLAM.get(), 0.9F, 0.8F);
             }
             default -> {
@@ -257,7 +257,7 @@ final class GhoulNpcCombat {
      * One blow of a beat on {@code body}: hurt (a mob's attack), wounded where it was struck, thrown along {@code push}. 1.0.41: unless
      * it meets a blow of {@code body}'s coming back (KaguneClash): then neither lands, and true.
      */
-    private static boolean strike(GhoulNpc npc, NpcIdentity who, LivingEntity body, FurutaMove.Beat beat, Vec3 push, long now, WoundBook.Blow blow,
+    private static boolean strike(GhoulNpc npc, NpcIdentity who, LivingEntity body, GraftMove.Beat beat, Vec3 push, long now, WoundBook.Blow blow,
                                   int fx) {
         if (KaguneClash.meets(npc, body, now)) {
             return true;
@@ -270,17 +270,17 @@ final class GhoulNpcCombat {
             return false;
         }
         KaguneClash.landed(npc);
-        double heavy = beat.has(FurutaMove.HEAVY) ? 1.4 : 1.0;
+        double heavy = beat.has(GraftMove.HEAVY) ? 1.4 : 1.0;
         Vec3 shove = new Vec3(push.f_82479_, 0.0, push.f_82481_).m_82490_(0.45 * heavy);
-        double up = beat.has(FurutaMove.KNOCK_UP) ? 0.5 * heavy : 0.15;
+        double up = beat.has(GraftMove.KNOCK_UP) ? 0.5 * heavy : 0.15;
         body.m_20256_(body.m_20184_().m_82490_(0.3).m_82549_(shove).m_82520_(0.0, up, 0.0));
         body.f_19864_ = true;
-        EtoBlitz.fxAround(body, npc.m_19879_(), fx, centre, into, fx == S2CEtoFx.IMPALED ? body.m_20206_() : 1.0F, fx == S2CEtoFx.IMPACT ? S2CEtoFx.BONE : 0);
+        PaleBlitz.fxAround(body, npc.m_19879_(), fx, centre, into, fx == S2CPaleFx.IMPALED ? body.m_20206_() : 1.0F, fx == S2CPaleFx.IMPACT ? S2CPaleFx.BONE : 0);
         sound((ServerLevel)npc.m_9236_(), centre, HexKaguneSounds.FLESH_IMPACT.get(), 0.8F, 0.9F + 0.2F * (float)npc.m_217043_().m_188500_());
         return false;
     }
 
-    /** The bearing of {@code body} from it, degrees from the way the lash faces (plus to its right), as {@code FurutaCombat.bearing}. */
+    /** The bearing of {@code body} from it, degrees from the way the lash faces (plus to its right), as {@code GraftCombat.bearing}. */
     private static double bearing(GhoulNpc npc, GhoulNpcBrain.Mind mind, LivingEntity body) {
         Vec3 to = GhoulNpcBrain.centre(body).m_82546_(npc.m_20182_());
         double rel = Math.toDegrees(Math.atan2(-to.f_82479_, to.f_82481_)) - mind.yaw;
@@ -366,8 +366,8 @@ final class GhoulNpcCombat {
         mind.heavyReadyAt = now + NpcRules.heavyEvery(who.tier());
         mind.readyAt = now + 24L + pause(npc);
         mind.dirty = true;
-        AyatoFire.sound(level, npc.m_20182_().m_82520_(0.0, 1.4, 0.0), "entity.ender_dragon.flap", 0.9F, 1.6F);
-        AyatoFire.sound(level, npc.m_20182_().m_82520_(0.0, 1.4, 0.0), "entity.blaze.shoot", 1.0F, 0.8F);
+        UkakuFire.sound(level, npc.m_20182_().m_82520_(0.0, 1.4, 0.0), "entity.ender_dragon.flap", 0.9F, 1.6F);
+        UkakuFire.sound(level, npc.m_20182_().m_82520_(0.0, 1.4, 0.0), "entity.blaze.shoot", 1.0F, 0.8F);
     }
 
     /**
@@ -390,11 +390,11 @@ final class GhoulNpcCombat {
         bolt.life = (int)Math.ceil(range / speed);
         bolt.damage = NpcRules.damage(who.tier()) * harder;
         mind.bolts.add(bolt);
-        fx(npc, S2CAyatoFx.BOLT, bolt.id, from, bolt.velocity, 1.0F, bolt.life);
-        AyatoFire.sound(level, from, "entity.blaze.shoot", 0.5F, 1.35F + 0.1F * (float)npc.m_217043_().m_188500_());
+        fx(npc, S2CUkakuFx.BOLT, bolt.id, from, bolt.velocity, 1.0F, bolt.life);
+        UkakuFire.sound(level, from, "entity.blaze.shoot", 0.5F, 1.35F + 0.1F * (float)npc.m_217043_().m_188500_());
     }
 
-    /** Where a wing's shot leaves: its tip as the wing curls to aim ({@link WingRig#aimTip}), as Ayato's. */
+    /** Where a wing's shot leaves: its tip as the wing curls to aim ({@link WingRig#aimTip}), as Ukaku's. */
     static Vec3 tip(GhoulNpc npc, NpcIdentity who, int side, Vec3 aim) {
         double yaw = Math.toRadians(npc.f_20883_);
         double forwardX = -Math.sin(yaw);
@@ -424,7 +424,7 @@ final class GhoulNpcCombat {
         BlockHitResult block = level.m_45547_(new ClipContext(from, to, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, npc));
         boolean wall = block.m_6662_() == HitResult.Type.BLOCK;
         Vec3 end = wall ? block.m_82450_() : to;
-        // 1.0.42: a kagune M1 on its way meets a shard coming at its owner first, as Ayato's are (KaguneClash): it bursts there.
+        // 1.0.42: a kagune M1 on its way meets a shard coming at its owner first, as Ukaku's are (KaguneClash): it bursts there.
         Vec3 met = KaguneClash.swat(npc, level, from, end, now);
         if (met != null) {
             end = met;
@@ -442,17 +442,17 @@ final class GhoulNpcCombat {
                 }
                 bolt.hit.add(body.m_19879_());
                 burn(npc, body, bolt);
-                fx(npc, S2CAyatoFx.IMPACT, bolt.id, point, bolt.velocity, 1.0F, 0);
+                fx(npc, S2CUkakuFx.IMPACT, bolt.id, point, bolt.velocity, 1.0F, 0);
                 return false;
             }
         }
         if (met != null || wall) {
-            fx(npc, S2CAyatoFx.IMPACT, bolt.id, end, bolt.velocity, 0.0F, 0);
+            fx(npc, S2CUkakuFx.IMPACT, bolt.id, end, bolt.velocity, 0.0F, 0);
             return false;
         }
         bolt.position = to;
         if (--bolt.life <= 0) {
-            fx(npc, S2CAyatoFx.FIZZLE, bolt.id, to, bolt.velocity, 1.0F, 0);
+            fx(npc, S2CUkakuFx.FIZZLE, bolt.id, to, bolt.velocity, 1.0F, 0);
             return false;
         }
         return true;
@@ -471,19 +471,19 @@ final class GhoulNpcCombat {
         if (bolt.velocity.m_165925_() > 1.0E-6) {
             body.m_147240_(0.2, -bolt.velocity.f_82479_, -bolt.velocity.f_82481_);
         }
-        AyatoFire.sound((ServerLevel)npc.m_9236_(), centre, "entity.generic.burn", 0.5F, 1.2F);
+        UkakuFire.sound((ServerLevel)npc.m_9236_(), centre, "entity.generic.burn", 0.5F, 1.2F);
     }
 
     /** Its shots in flight put out (it died, or left): every client stops drawing them. */
     static void fizzleAll(GhoulNpc npc, GhoulNpcBrain.Mind mind) {
         for (Bolt bolt : mind.bolts) {
-            fx(npc, S2CAyatoFx.FIZZLE, bolt.id, bolt.position, bolt.velocity, 1.0F, 0);
+            fx(npc, S2CUkakuFx.FIZZLE, bolt.id, bolt.position, bolt.velocity, 1.0F, 0);
         }
         mind.bolts.clear();
     }
 
     private static void fx(GhoulNpc npc, int kind, int id, Vec3 at, Vec3 velocity, float size, int extra) {
-        ControlNetwork.broadcastAround(npc, new S2CAyatoFx(kind, npc.m_19879_(), id, at.f_82479_, at.f_82480_, at.f_82481_, (float)velocity.f_82479_,
+        ControlNetwork.broadcastAround(npc, new S2CUkakuFx(kind, npc.m_19879_(), id, at.f_82479_, at.f_82480_, at.f_82481_, (float)velocity.f_82479_,
             (float)velocity.f_82480_, (float)velocity.f_82481_, size, extra));
     }
 
@@ -522,20 +522,20 @@ final class GhoulNpcCombat {
             mind.answered = threat.began();
             double roll = npc.m_217043_().m_188500_();
             int limbs = limbs(who);
-            if (rinkaku && threat.who() == prey && mind.move == FurutaMove.NONE && distance <= FurutaCombat.reach(FurutaMove.LASH_3, limbs) + 0.3
+            if (rinkaku && threat.who() == prey && mind.move == GraftMove.NONE && distance <= GraftCombat.reach(GraftMove.LASH_3, limbs) + 0.3
                 && roll < NpcRules.counter(who.tier())) {
                 // Met with its own: the skewer straight back at it (the two meet, KaguneClash).
-                begin(npc, who, mind, prey, FurutaMove.LASH_3, level, now);
+                begin(npc, who, mind, prey, GraftMove.LASH_3, level, now);
                 mind.strung = 1;
                 return false;
             }
             if (ready && roll < NpcRules.dodge(who.tier()) + (rinkaku ? 0.0 : 0.15)) {
-                flip(npc, who, mind, com.hex.kagune.control.eto.EtoRules.Flip.BACK, flat(npc.m_20182_().m_82546_(threat.who().m_20182_())),
+                flip(npc, who, mind, com.hex.kagune.control.pale.PaleRules.Flip.BACK, flat(npc.m_20182_().m_82546_(threat.who().m_20182_())),
                     NpcRules.FLIP_BACK_SPEED, NpcRules.FLIP_BACK_UP, threat.who(), level, now);
                 return true;
             }
         }
-        if (!ready || mind.move != FurutaMove.NONE || mind.volleyAt != Long.MIN_VALUE || npc.m_217043_().m_188500_() > NpcRules.FLIP_CHANCE) {
+        if (!ready || mind.move != GraftMove.NONE || mind.volleyAt != Long.MIN_VALUE || npc.m_217043_().m_188500_() > NpcRules.FLIP_CHANCE) {
             return false;
         }
         boolean sniper = NpcRules.sniper(who.seed());
@@ -543,13 +543,13 @@ final class GhoulNpcCombat {
         double want = rinkaku ? preferred(who) : sniper ? (NpcRules.SNIPE_NEAREST + NpcRules.SNIPE_FARTHEST) / 2.0
             : (NpcRules.SHOOT_NEAREST + NpcRules.SHOOT_FARTHEST) / 2.0;
         if (distance < near) {
-            flip(npc, who, mind, com.hex.kagune.control.eto.EtoRules.Flip.BACK, flat(npc.m_20182_().m_82546_(prey.m_20182_())), NpcRules.FLIP_BACK_SPEED,
+            flip(npc, who, mind, com.hex.kagune.control.pale.PaleRules.Flip.BACK, flat(npc.m_20182_().m_82546_(prey.m_20182_())), NpcRules.FLIP_BACK_SPEED,
                 NpcRules.FLIP_BACK_UP, prey, level, now);
             return true;
         }
         double most = rinkaku ? NpcRules.CLOSE_IN_MOST : want + 2.0 * NpcRules.CLOSE_IN + 4.0;
         if (distance > want + NpcRules.CLOSE_IN && distance < most && npc.m_142582_(prey)) {
-            flip(npc, who, mind, com.hex.kagune.control.eto.EtoRules.Flip.FORWARD, flat(prey.m_20182_().m_82546_(npc.m_20182_())),
+            flip(npc, who, mind, com.hex.kagune.control.pale.PaleRules.Flip.FORWARD, flat(prey.m_20182_().m_82546_(npc.m_20182_())),
                 NpcRules.flipSpeed(distance - want), NpcRules.FLIP_FORWARD_UP, prey, level, now);
             return true;
         }
@@ -560,7 +560,7 @@ final class GhoulNpcCombat {
      * A flip ({@code kind}) along {@code way} (level, unit), {@code speed} blocks a tick along and {@code up} up, facing {@code facing}
      * as it goes over; whatever it was making stops, and every client sees it go.
      */
-    static void flip(GhoulNpc npc, NpcIdentity who, GhoulNpcBrain.Mind mind, com.hex.kagune.control.eto.EtoRules.Flip kind, Vec3 way, double speed,
+    static void flip(GhoulNpc npc, NpcIdentity who, GhoulNpcBrain.Mind mind, com.hex.kagune.control.pale.PaleRules.Flip kind, Vec3 way, double speed,
                      double up, LivingEntity facing, ServerLevel level, long now) {
         npc.m_21573_().m_26573_();
         Vec3 push = new Vec3(way.f_82479_ * speed, up, way.f_82481_ * speed);
@@ -571,8 +571,8 @@ final class GhoulNpcCombat {
         mind.flip = kind.ordinal();
         mind.flipAt = now;
         mind.flipReadyAt = now + NpcRules.flipEvery(who.tier());
-        if (mind.move != FurutaMove.NONE) {
-            mind.move = FurutaMove.NONE;
+        if (mind.move != GraftMove.NONE) {
+            mind.move = GraftMove.NONE;
             mind.strung = 0;
         }
         if (mind.volleyAt != Long.MIN_VALUE) {
@@ -588,7 +588,7 @@ final class GhoulNpcCombat {
         }
         mind.dirty = true;
         sound(level, npc.m_20182_(), HexKaguneSounds.KAGUNE_WHIP.get(), 0.5F, 0.85F);
-        AyatoFire.sound(level, npc.m_20182_(), "entity.player.attack.sweep", 0.35F, 0.7F);
+        UkakuFire.sound(level, npc.m_20182_(), "entity.player.attack.sweep", 0.35F, 0.7F);
     }
 
     // ---------------------------------------------------------------- moving and the rest
@@ -613,7 +613,7 @@ final class GhoulNpcCombat {
     }
 
     static Vec3 flat(Vec3 direction) {
-        return AyatoFire.horizontal(direction);
+        return UkakuFire.horizontal(direction);
     }
 
     private static void sound(ServerLevel level, Vec3 at, net.minecraft.sounds.SoundEvent sound, float volume, float pitch) {

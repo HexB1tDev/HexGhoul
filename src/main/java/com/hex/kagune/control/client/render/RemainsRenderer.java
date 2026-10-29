@@ -1,10 +1,10 @@
 package com.hex.kagune.control.client.render;
 
 import com.hex.kagune.KaguneMod;
-import com.hex.kagune.control.client.EtoClient;
+import com.hex.kagune.control.client.PaleClient;
 import com.hex.kagune.control.client.ReviveClient;
 import com.hex.kagune.control.client.animation.Remains;
-import com.hex.kagune.control.eto.ReviveRules;
+import com.hex.kagune.control.pale.ReviveRules;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import java.util.ArrayList;
@@ -29,7 +29,7 @@ import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 
 /**
- * 6.2.0, You Thought You'd Get Rid of Me That Easily?: what is left of an Eto player in pieces ({@link ReviveClient},
+ * 6.2.0, You Thought You'd Get Rid of Me That Easily?: what is left of an Pale player in pieces ({@link ReviveClient},
  * {@link Remains}), drawn in the world in her own skin: every piece where it is this frame (flying, lying where it fell, hauled
  * back), its torn ends raw; her guts in ropes out of both halves of her torso; and, once the five seconds are up, the flesh lines
  * running out of her chest to every piece and hauling them in. The world's light falls on all of it.
@@ -66,7 +66,7 @@ public final class RemainsRenderer {
             return;
         }
         float partial = event.getPartialTick();
-        double clock = EtoClient.clock(partial);
+        double clock = PaleClient.clock(partial);
         Vec3 camera = minecraft.f_91063_.m_109153_().m_90583_();
         PoseStack stack = event.getPoseStack();
         Matrix4f matrix = stack.m_85850_().m_252922_();
@@ -103,7 +103,7 @@ public final class RemainsRenderer {
         for (Remains.Piece piece : Remains.Piece.values()) {
             Remains.Placed placed = Remains.place(scatter, piece, age);
             Vec3 middle = corpse.world(placed.at());
-            int light = EtoFleshRenderer.light(level, lights, middle.f_82479_, middle.f_82480_ + 0.2, middle.f_82481_);
+            int light = PaleFleshRenderer.light(level, lights, middle.f_82479_, middle.f_82480_ + 0.2, middle.f_82481_);
             for (Quad quad : meshes.get(piece.ordinal())) {
                 if (quad.uv() == null) {
                     continue;
@@ -123,7 +123,7 @@ public final class RemainsRenderer {
         for (Remains.Piece piece : Remains.Piece.values()) {
             Remains.Placed placed = Remains.place(scatter, piece, age);
             Vec3 middle = corpse.world(placed.at());
-            int light = EtoFleshRenderer.light(level, lights, middle.f_82479_, middle.f_82480_ + 0.2, middle.f_82481_);
+            int light = PaleFleshRenderer.light(level, lights, middle.f_82479_, middle.f_82480_ + 0.2, middle.f_82481_);
             for (Quad quad : meshes.get(piece.ordinal())) {
                 if (quad.argb() == null) {
                     continue;
@@ -239,7 +239,7 @@ public final class RemainsRenderer {
             int c = colour.applyAsInt(s);
             if (previous != null) {
                 Vec3 at = corpse.world(path[i]);
-                int light = EtoFleshRenderer.light(level, lights, at.f_82479_, at.f_82480_ + 0.1, at.f_82481_);
+                int light = PaleFleshRenderer.light(level, lights, at.f_82479_, at.f_82480_ + 0.1, at.f_82481_);
                 for (int k = 0; k < sides; k++) {
                     vertex(out, matrix, normals, previous[k], previousNormals[k], previousColour, light);
                     vertex(out, matrix, normals, previous[k + 1], previousNormals[k + 1], previousColour, light);

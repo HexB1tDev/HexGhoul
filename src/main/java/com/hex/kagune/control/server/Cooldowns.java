@@ -58,11 +58,11 @@ public final class Cooldowns {
     /** Every running cooldown of {@code player}'s, over now (the menus told). */
     static void clear(ServerPlayer player) {
         long now = player.m_9236_().m_46467_();
-        EtoServer.clearCooldowns(player);
-        FurutaServer.clearCooldowns(player);
-        EtoRevive.clearCooldown(player);
-        AyatoServer.clearCooldowns(player);
-        AyatoRush.forget(player);
+        PaleServer.clearCooldowns(player);
+        GraftServer.clearCooldowns(player);
+        PaleRevive.clearCooldown(player);
+        UkakuServer.clearCooldowns(player);
+        UkakuRush.forget(player);
         KaguneCombat.clearCooldowns(player);
         KakujaPassive.clearCooldowns(player);
         KingServer.clearCooldowns(player);
@@ -70,7 +70,7 @@ public final class Cooldowns {
     }
 
     /**
-     * The original's own cooldowns (Kaneki's crush, his slingshot, the fall arrest): its code sets them, so while cooldowns are off
+     * The original's own cooldowns (Rinkaku's crush, his slingshot, the fall arrest): its code sets them, so while cooldowns are off
      * they are ended every tick. Its input lock is not one: it is how long a move takes.
      */
     private static void original(ServerPlayer player, long now) {

@@ -1,8 +1,8 @@
-"""Generate Eto's steam wisp texture (stdlib only, deterministic). Run: python3 tools/gen_steam_texture.py
+"""Generate Pale's steam wisp texture (stdlib only, deterministic). Run: python3 tools/gen_steam_texture.py
 
 A 64 x 64 soft wisp: white, the shape all in the alpha. A radial falloff broken up by domain-warped value noise so the
 edge is ragged and curling, never a disc, with a few thinner tendrils of vapour trailing off it. The steam particle
-(client/fx/EtoSteam) draws it on three crossed planes at very low opacity, so what reads in game is a soft, lumpy volume.
+(client/fx/PaleSteam) draws it on three crossed planes at very low opacity, so what reads in game is a soft, lumpy volume.
 """
 import math
 import random

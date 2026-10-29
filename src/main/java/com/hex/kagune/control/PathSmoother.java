@@ -1,7 +1,7 @@
 package com.hex.kagune.control;
 
 /**
- * Kaneki's tentacles drawn smooth and controlled (3.1.0, pure, tested). The original simulates each tentacle (inertia, reach,
+ * Rinkaku's tentacles drawn smooth and controlled (3.1.0, pure, tested). The original simulates each tentacle (inertia, reach,
  * constraint passes, block collisions, pushes out of his body) and draws the result as it comes, so every correction shows as
  * a jolt and every swing wobbles on. This follows the simulated path with critically damped springs per point, in the player's
  * own frame (root at the origin, x to his right, z forward): his walking and turning carry the tentacles exactly as before, only

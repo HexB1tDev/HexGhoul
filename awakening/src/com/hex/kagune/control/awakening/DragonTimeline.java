@@ -12,13 +12,13 @@ package com.hex.kagune.control.awakening;
  */
 public final class DragonTimeline {
     public static final int TICKS_PER_SECOND = 20;
-    /** Kaneki's body erupts into the expanding mass. */
+    /** Rinkaku's body erupts into the expanding mass. */
     public static final int ERUPTION_TICKS = 40;
     /** The autonomous rampage: exactly sixty seconds. */
     public static final int RAMPAGE_TICKS = 60 * TICKS_PER_SECOND;
     /** The body cracks, sags and collapses before it shatters. */
     public static final int DESTABILIZE_TICKS = 70;
-    /** Fragments clear and Kaneki stands in the final form before control returns. */
+    /** Fragments clear and Rinkaku stands in the final form before control returns. */
     public static final int EMERGENCE_TICKS = 50;
 
     public static final int RAMPAGE_START = ERUPTION_TICKS;

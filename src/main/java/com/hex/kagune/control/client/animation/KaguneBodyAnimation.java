@@ -6,12 +6,12 @@ import com.hex.kagune.control.ControlConfig;
 import com.hex.kagune.control.KagunePath;
 import com.hex.kagune.control.StrikePattern;
 import com.hex.kagune.control.UrgeType;
-import com.hex.kagune.control.ayato.AyatoBody;
-import com.hex.kagune.control.ayato.BladeCarry;
-import com.hex.kagune.control.ayato.KakujaBody;
-import com.hex.kagune.control.ayato.SteelBlade;
-import com.hex.kagune.control.ayato.SteelSwing;
-import com.hex.kagune.control.client.AyatoClient;
+import com.hex.kagune.control.ukaku.UkakuBody;
+import com.hex.kagune.control.ukaku.BladeCarry;
+import com.hex.kagune.control.ukaku.KakujaBody;
+import com.hex.kagune.control.ukaku.SteelBlade;
+import com.hex.kagune.control.ukaku.SteelSwing;
+import com.hex.kagune.control.client.UkakuClient;
 import com.hex.kagune.control.client.ControlClient;
 import com.hex.kagune.control.client.ControlView;
 import com.hex.kagune.control.client.PathClient;
@@ -31,9 +31,9 @@ import java.util.WeakHashMap;
 
 /**
  * Continuous, additive kagune body layer (PlayerAnimator priority 60), and the only writer of the upper-body bend.
- * On the Kaneki path everything scales smoothly with the server's control/hunger/frenzy: an untrained ghoul pants,
+ * On the Rinkaku path everything scales smoothly with the server's control/hunger/frenzy: an untrained ghoul pants,
  * trembles, spasms, clutches the wound the kagune tears out of and stumbles; a master stands in a calm predator stance.
- * Ayato is never feral, whatever his mastery: none of that plays on his path. Both paths settle into their ambient
+ * Ukaku is never feral, whatever his mastery: none of that plays on his path. Both paths settle into their ambient
  * stance when standing still ({@link IdleStance}), and combo strikes are driven by the torso, shoulders, arms and legs in
  * sync with the server's impact tick. The pose is computed once per frame in {@link #setupAnim} into a {@link RigPose},
  * which owns the conversion to PlayerAnimator's (easy to get backwards) conventions.
@@ -49,19 +49,19 @@ public final class KaguneBodyAnimation implements IAnimation {
 
     private final AbstractClientPlayer player;
     private final IdleStance idle;
-    /** 6.1.0: Eto's playful stance and gestures, and how much she is walking with nothing else going on (eased). */
-    private final EtoIdle etoIdle;
+    /** 6.1.0: Pale's playful stance and gestures, and how much she is walking with nothing else going on (eased). */
+    private final PaleIdle paleIdle;
     /** Ticks she has stood still (not moving from where she is), and how many before her idle play may start. */
-    private int etoStillTicks;
-    static final int ETO_STILL_TICKS = 20;
-    /** 6.1.0: Eto's strikes and flips on her body. */
-    private final EtoAnimator etoMoves = new EtoAnimator();
-    /** 6.2.0: when (EtoClient's clock) her move was last put on the body; NaN when the last set-up put none on. */
-    private double etoPosedAt = Double.NaN;
+    private int paleStillTicks;
+    static final int PALE_STILL_TICKS = 20;
+    /** 6.1.0: Pale's strikes and flips on her body. */
+    private final PaleAnimator paleMoves = new PaleAnimator();
+    /** 6.2.0: when (PaleClient's clock) her move was last put on the body; NaN when the last set-up put none on. */
+    private double palePosedAt = Double.NaN;
     /** 1.0.15: when the body was last posed (world ticks with the frame's share), whatever path. */
     private double posedAt = Double.NaN;
-    private float etoStrolling;
-    private float lastEtoStrolling;
+    private float paleStrolling;
+    private float lastPaleStrolling;
     private final RigPose p = new RigPose();
     private long seed;
     private int age;
@@ -127,7 +127,7 @@ public final class KaguneBodyAnimation implements IAnimation {
         LAYERS.removeIf(ref -> ref.get() == null);
         LAYERS.add(new WeakReference<>(this));
         this.idle = new IdleStance(player);
-        this.etoIdle = new EtoIdle(player.m_19879_());
+        this.paleIdle = new PaleIdle(player.m_19879_());
         this.seed = player.m_19879_() * 0x9E3779B97F4A7C15L + 0x2545F4914F6CDD1DL;
     }
 
@@ -136,11 +136,11 @@ public final class KaguneBodyAnimation implements IAnimation {
         return (this.seed >>> 40) / (float)(1L << 24);
     }
 
-    /** True on the Kaneki path (and before a path is known): the kagune's hold on the body shows. Ayato is always in control. */
+    /** True on the Rinkaku path (and before a path is known): the kagune's hold on the body shows. Ukaku is always in control. */
     private boolean feral() {
-        // 6.1.0: nor is Eto: her base form is all play and control. 7.0.0: nor Furuta, whose kakuhou was put in him to be used.
+        // 6.1.0: nor is Pale: her base form is all play and control. 7.0.0: nor Graft, whose kakuhou was put in him to be used.
         KagunePath path = PathClient.get(this.player);
-        return path != KagunePath.AYATO && path != KagunePath.ETO && path != KagunePath.FURUTA;
+        return path != KagunePath.UKAKU && path != KagunePath.PALE && path != KagunePath.GRAFT;
     }
 
     /**
@@ -159,7 +159,7 @@ public final class KaguneBodyAnimation implements IAnimation {
     public void tick() {
         this.age++;
         this.idle.tick();
-        this.tickEto();
+        this.tickPale();
         boolean airborne = !this.player.m_20096_();
         float vertical = (float)(this.player.m_20186_() - this.player.f_19791_);
         if (this.wasAirborne && !airborne) {
@@ -285,26 +285,26 @@ public final class KaguneBodyAnimation implements IAnimation {
         return degrees - 360.0F * (float)Math.floor((degrees + 180.0F) / 360.0F);
     }
 
-    /** 6.1.0: Eto's idle play: a gesture now and then once she has stood still a second, none on the move. */
-    private void tickEto() {
-        this.lastEtoStrolling = this.etoStrolling;
-        if (PathClient.get(this.player) != KagunePath.ETO) {
-            this.etoStrolling = 0.0F;
+    /** 6.1.0: Pale's idle play: a gesture now and then once she has stood still a second, none on the move. */
+    private void tickPale() {
+        this.lastPaleStrolling = this.paleStrolling;
+        if (PathClient.get(this.player) != KagunePath.PALE) {
+            this.paleStrolling = 0.0F;
             return;
         }
-        boolean free = com.hex.kagune.control.client.EtoClient.get(this.player).move() == com.hex.kagune.control.eto.EtoMove.NONE
-            && !this.etoMoves.busy(com.hex.kagune.control.client.EtoClient.clock(0.0F)) && this.player.m_20096_() && !this.player.m_20159_() && !this.player.m_6069_() && !this.player.m_5803_();
+        boolean free = com.hex.kagune.control.client.PaleClient.get(this.player).move() == com.hex.kagune.control.pale.PaleMove.NONE
+            && !this.paleMoves.busy(com.hex.kagune.control.client.PaleClient.clock(0.0F)) && this.player.m_20096_() && !this.player.m_20159_() && !this.player.m_6069_() && !this.player.m_5803_();
         boolean strolling = free && this.player.f_267362_.m_267711_(1.0F) > 0.05F;
-        this.etoStrolling += ((strolling ? 1.0F : 0.0F) - this.etoStrolling) * 0.15F;
+        this.paleStrolling += ((strolling ? 1.0F : 0.0F) - this.paleStrolling) * 0.15F;
         // Her idle play only once she has stood still a second: not moving from where she is (looking round is fine), on the
         // ground, nothing else going on. Moving at all ends it.
         double dx = this.player.m_20185_() - this.player.f_19790_;
         double dy = this.player.m_20186_() - this.player.f_19791_;
         double dz = this.player.m_20189_() - this.player.f_19792_;
         boolean moved = dx * dx + dy * dy + dz * dz > 1.0E-6 || strolling || !free;
-        this.etoStillTicks = moved ? 0 : this.etoStillTicks + 1;
-        boolean still = this.etoStillTicks >= ETO_STILL_TICKS && this.idle.style() == IdlePose.Style.ETO_PLAYFUL && this.idle.weight(1.0F) > 0.6F;
-        this.etoIdle.tick(still, false);
+        this.paleStillTicks = moved ? 0 : this.paleStillTicks + 1;
+        boolean still = this.paleStillTicks >= PALE_STILL_TICKS && this.idle.style() == IdlePose.Style.PALE_PLAYFUL && this.idle.weight(1.0F) > 0.6F;
+        this.paleIdle.tick(still, false);
     }
 
     @Override
@@ -314,7 +314,7 @@ public final class KaguneBodyAnimation implements IAnimation {
     }
 
     private boolean wants() {
-        if (com.hex.kagune.control.client.EtoClient.eyes(this.player)) {
+        if (com.hex.kagune.control.client.PaleClient.eyes(this.player)) {
             return this.player.m_6084_() && ControlConfig.bodyAnimations(); // 7.0.1: the eyes alone fight with the body
         }
         if (this.king() > 0.0F || this.turning() >= 0.0) {
@@ -343,7 +343,7 @@ public final class KaguneBodyAnimation implements IAnimation {
 
     /** 5.0.19: the Steel Blade is out (or forming): its carry runs even with the body animations turned off. */
     private boolean bladeOut() {
-        return AyatoClient.blade(this.player, ControlClient.worldTime(0.0F)) > 0.0;
+        return UkakuClient.blade(this.player, ControlClient.worldTime(0.0F)) > 0.0;
     }
 
     /** {@code player}'s body layer (by identity), or null when it has none. */
@@ -415,20 +415,20 @@ public final class KaguneBodyAnimation implements IAnimation {
     /** 6.2.0: the body pose {@code player} is drawn in this very frame (a copy), whatever she is doing; null when it isn't. */
     public static RigPose drawnNow(AbstractClientPlayer player, double time) {
         KaguneBodyAnimation layer = layer(player);
-        if (layer == null || layer.fade <= 0.0F || !(Math.abs(time - layer.etoPosedAt) < 0.01)) {
+        if (layer == null || layer.fade <= 0.0F || !(Math.abs(time - layer.palePosedAt) < 0.01)) {
             return null;
         }
         return new RigPose().add(layer.p, 1.0F);
     }
 
     /**
-     * 6.2.0: the body pose {@code player} is drawn in this very frame ({@code time}, EtoClient's clock) with her {@code move} on it (a
+     * 6.2.0: the body pose {@code player} is drawn in this very frame ({@code time}, PaleClient's clock) with her {@code move} on it (a
      * copy); null when it isn't: the model wasn't set up this frame (in first person it never is, and the pose last drawn is stale),
      * or the layer isn't putting that move on her (the body animations off).
      */
-    public static RigPose drawn(AbstractClientPlayer player, com.hex.kagune.control.eto.EtoMove move, double time) {
+    public static RigPose drawn(AbstractClientPlayer player, com.hex.kagune.control.pale.PaleMove move, double time) {
         KaguneBodyAnimation layer = layer(player);
-        if (layer == null || layer.fade <= 0.0F || !(Math.abs(time - layer.etoPosedAt) < 0.01) || layer.etoMoves.posing() != move) {
+        if (layer == null || layer.fade <= 0.0F || !(Math.abs(time - layer.palePosedAt) < 0.01) || layer.paleMoves.posing() != move) {
             return null;
         }
         return new RigPose().add(layer.p, 1.0F);
@@ -443,10 +443,10 @@ public final class KaguneBodyAnimation implements IAnimation {
         if (layer == null || layer.fade <= 0.0F) {
             return null;
         }
-        if (!(Math.abs(time - layer.etoPosedAt) < 0.01)) {
+        if (!(Math.abs(time - layer.palePosedAt) < 0.01)) {
             layer.setupAnim(tickDelta);
         }
-        if (!(Math.abs(time - layer.etoPosedAt) < 0.01)) {
+        if (!(Math.abs(time - layer.palePosedAt) < 0.01)) {
             return null;
         }
         return new RigPose().add(layer.p, 1.0F);
@@ -463,10 +463,10 @@ public final class KaguneBodyAnimation implements IAnimation {
         if (layer == null || layer.fade <= 0.0F) {
             return null;
         }
-        if (!(Math.abs(time - layer.etoPosedAt) < 0.01)) {
+        if (!(Math.abs(time - layer.palePosedAt) < 0.01)) {
             layer.setupAnim(tickDelta);
         }
-        if (!(Math.abs(time - layer.etoPosedAt) < 0.01) || !layer.etoMoves.arms(time)) {
+        if (!(Math.abs(time - layer.palePosedAt) < 0.01) || !layer.paleMoves.arms(time)) {
             return null;
         }
         return new RigPose().add(layer.p, 1.0F);
@@ -484,16 +484,16 @@ public final class KaguneBodyAnimation implements IAnimation {
     @Override
     public void setupAnim(float tickDelta) {
         RigPose p = this.p.clear();
-        this.etoPosedAt = Double.NaN;
+        this.palePosedAt = Double.NaN;
         this.pose(tickDelta);
         // 6.2.0: just whole again after her death that did not take, she stands as the pieces went back together and eases into it.
-        float risen = com.hex.kagune.control.client.ReviveClient.risen(this.player, com.hex.kagune.control.client.EtoClient.clock(tickDelta));
+        float risen = com.hex.kagune.control.client.ReviveClient.risen(this.player, com.hex.kagune.control.client.PaleClient.clock(tickDelta));
         if (risen < 1.0F) {
             RigPose eased = p.scale(risen);
             p.clear().add(eased, 1.0F);
         }
-        if (PathClient.get(this.player) == KagunePath.ETO || com.hex.kagune.control.client.EtoClient.eyes(this.player)) {
-            this.etoMoves.shown(p); // a strike or a flip starts from exactly this
+        if (PathClient.get(this.player) == KagunePath.PALE || com.hex.kagune.control.client.PaleClient.eyes(this.player)) {
+            this.paleMoves.shown(p); // a strike or a flip starts from exactly this
         }
         TORSO.put(this.player, new double[] {p.lean, p.side, p.twist, p.drop, ControlClient.worldTime(tickDelta)});
         this.posedAt = ControlClient.worldTime(tickDelta);
@@ -532,13 +532,13 @@ public final class KaguneBodyAnimation implements IAnimation {
         float stance = this.idle.weight(tickDelta);
         // 5.0.19: the Steel Blade arm holds its own pose ({@link #carry}), whatever else the body does; with the body animations
         // turned off, that is all there is (without it the blade would hang into the ground).
-        float steel = (float)AyatoClient.blade(this.player, time);
+        float steel = (float)UkakuClient.blade(this.player, time);
         this.steelArm = null;
         if (!ControlConfig.bodyAnimations()) {
             this.finish(steel, time, tickDelta);
             return;
         }
-        // 1.0.7: War's body is his own: none of Kaneki's animal stance, spasms or urges under it. 1.0.15: ahead of the eyes' own moves,
+        // 1.0.7: War's body is his own: none of Rinkaku's animal stance, spasms or urges under it. 1.0.15: ahead of the eyes' own moves,
         // or a final kakuja with the eyes open lost its every pose.
         float war = this.king();
         if (war > 0.0F) {
@@ -546,7 +546,7 @@ public final class KaguneBodyAnimation implements IAnimation {
             this.finish(steel, time, tickDelta);
             return;
         }
-        if (com.hex.kagune.control.client.EtoClient.eyes(this.player)) {
+        if (com.hex.kagune.control.client.PaleClient.eyes(this.player)) {
             // 7.0.1: the eyes alone (the shared eye-mode fight): her body's moves on it, nothing of any kagune's.
             this.eyeMoves(tickDelta, now);
             this.finish(steel, time, tickDelta);
@@ -560,15 +560,15 @@ public final class KaguneBodyAnimation implements IAnimation {
             this.finish(steel, time, tickDelta);
             return;
         }
-        // The ambient stance (Ayato relaxed, Kaneki animalistic) when standing still.
+        // The ambient stance (Ukaku relaxed, Rinkaku animalistic) when standing still.
         p.add(this.idle.pose(tickDelta), 1.0F);
-        if (PathClient.get(this.player) == KagunePath.ETO) {
-            // 6.1.0: Eto at play: hip-shot, gestures now and then, and a loose saunter when she walks (6.2.0: none of it in the Owl).
-            double owlClock = com.hex.kagune.control.client.EtoClient.clock(tickDelta);
+        if (PathClient.get(this.player) == KagunePath.PALE) {
+            // 6.1.0: Pale at play: hip-shot, gestures now and then, and a loose saunter when she walks (6.2.0: none of it in the Owl).
+            double owlClock = com.hex.kagune.control.client.PaleClient.clock(tickDelta);
             com.hex.kagune.control.client.OwlClient.Owl owl = com.hex.kagune.control.client.OwlClient.get(this.player, owlClock);
             float play = owl == null ? 1.0F : (float)(1.0 - OwlPose.weight(owl.on(), owl.age(owlClock)));
-            float strolling = this.lastEtoStrolling + (this.etoStrolling - this.lastEtoStrolling) * tickDelta;
-            p.add(this.etoIdle.pose(tickDelta, stance, strolling, BodyAnimations.limbsBend()), play);
+            float strolling = this.lastPaleStrolling + (this.paleStrolling - this.lastPaleStrolling) * tickDelta;
+            p.add(this.paleIdle.pose(tickDelta, stance, strolling, BodyAnimations.limbsBend()), play);
             if (strolling > 0.0F) {
                 float stride = this.player.f_267362_.m_267590_(tickDelta) * 0.6662F;
                 float walk = Math.min(1.0F, this.player.f_267362_.m_267711_(tickDelta) * 1.4F) * strolling;
@@ -577,17 +577,17 @@ public final class KaguneBodyAnimation implements IAnimation {
                 p.leftArmZ -= 0.06F * walk;
             }
             // Her strikes and flips take the body over, from this very pose, and give it back.
-            com.hex.kagune.control.client.EtoClient.EtoView move = com.hex.kagune.control.client.EtoClient.get(this.player);
+            com.hex.kagune.control.client.PaleClient.PaleView move = com.hex.kagune.control.client.PaleClient.get(this.player);
             float bodyYaw = this.player.f_20884_ + wrapDegrees(this.player.f_20883_ - this.player.f_20884_) * tickDelta;
             float turn = (float)Math.toRadians(wrapDegrees(move.yaw() - bodyYaw));
-            double clock = com.hex.kagune.control.client.EtoClient.clock(tickDelta);
+            double clock = com.hex.kagune.control.client.PaleClient.clock(tickDelta);
             // 6.2.0: the Owl growing on her, in it, or going: under its own moves (they take its stance over and give it back), over
             // anything else (a strike's guard as she grows it is taken over by it).
-            boolean owlMove = move.move().owl() || this.etoMoves.owlPosing(clock);
+            boolean owlMove = move.move().owl() || this.paleMoves.owlPosing(clock);
             if (owl != null && owlMove) {
                 OwlPose.body(p, owl.on(), owl.age(clock), clock);
             }
-            this.etoMoves.apply(p, move, clock, now, this.landedAt, turn);
+            this.paleMoves.apply(p, move, clock, now, this.landedAt, turn);
             if (owl != null && !owlMove) {
                 OwlPose.body(p, owl.on(), owl.age(clock), clock);
             }
@@ -605,21 +605,21 @@ public final class KaguneBodyAnimation implements IAnimation {
                 OwlPose.neck(p, Math.toRadians(wrapDegrees(headYaw - bodyYaw)), Math.toRadians(this.player.m_146909_()),
                     OwlPose.weight(owl.on(), owl.age(clock)));
             }
-            this.etoPosedAt = clock;
+            this.palePosedAt = clock;
         }
-        if (PathClient.get(this.player) == KagunePath.FURUTA) {
-            // 7.0.0: Furuta DNA: the kakuja's predator stance, and his body behind every blow (FurutaPose).
-            double clock = com.hex.kagune.control.client.EtoClient.clock(tickDelta);
-            com.hex.kagune.control.client.FurutaClient.View furuta = com.hex.kagune.control.client.FurutaClient.get(this.player);
-            boolean kakujaMove = furuta.move().stage() == com.hex.kagune.control.furuta.FurutaStage.KAKUJA;
-            com.hex.kagune.control.furuta.FurutaStage stage = kakujaMove ? com.hex.kagune.control.furuta.FurutaStage.KAKUJA : furuta.stage();
+        if (PathClient.get(this.player) == KagunePath.GRAFT) {
+            // 7.0.0: Graft DNA: the kakuja's predator stance, and his body behind every blow (GraftPose).
+            double clock = com.hex.kagune.control.client.PaleClient.clock(tickDelta);
+            com.hex.kagune.control.client.GraftClient.View graft = com.hex.kagune.control.client.GraftClient.get(this.player);
+            boolean kakujaMove = graft.move().stage() == com.hex.kagune.control.graft.GraftStage.KAKUJA;
+            com.hex.kagune.control.graft.GraftStage stage = kakujaMove ? com.hex.kagune.control.graft.GraftStage.KAKUJA : graft.stage();
             // 7.0.2: and the job running alongside, if it is this kagune's (the kakuja's jobs while he is in it).
-            com.hex.kagune.control.furuta.FurutaMove job = furuta.job();
-            boolean ours = job.stage() == stage || furuta.kakuja() && job.stage() == com.hex.kagune.control.furuta.FurutaStage.KAKUJA;
-            FurutaPose.body(p, stage, stage.limbs(view.mastery()), furuta.move(), furuta.age(clock), ours ? job : com.hex.kagune.control.furuta.FurutaMove.NONE,
-                furuta.jobAge(clock), com.hex.kagune.control.client.FurutaClient.hide(furuta, clock), clock);
+            com.hex.kagune.control.graft.GraftMove job = graft.job();
+            boolean ours = job.stage() == stage || graft.kakuja() && job.stage() == com.hex.kagune.control.graft.GraftStage.KAKUJA;
+            GraftPose.body(p, stage, stage.limbs(view.mastery()), graft.move(), graft.age(clock), ours ? job : com.hex.kagune.control.graft.GraftMove.NONE,
+                graft.jobAge(clock), com.hex.kagune.control.client.GraftClient.hide(graft, clock), clock);
         }
-        if (AyatoClient.kakuja(this.player)) {
+        if (UkakuClient.kakuja(this.player)) {
             // In a kakuja he moves like a fighter: knees driving, arms pumping, tucking in the air and soaking up landings.
             this.kakujaLocomotion(tickDelta, view.mode() == TendrilMode.SWIPE ? 0.3F : 1.0F, steel);
         }
@@ -743,21 +743,21 @@ public final class KaguneBodyAnimation implements IAnimation {
             p.leftArmY += 0.5F;
             p.lean += 0.1F;
         }
-        // Ayato's Wing Vortex: the body coils, then the arm on the thrown wing's side whips it forward in a spiral.
-        float[] vortex = AyatoClient.vortexPose(this.player, time);
+        // Ukaku's Wing Vortex: the body coils, then the arm on the thrown wing's side whips it forward in a spiral.
+        float[] vortex = UkakuClient.vortexPose(this.player, time);
         if (vortex != null) {
-            AyatoBody.Pose pose = AyatoBody.vortex(vortex[1] > 0.0F, vortex[0], AyatoClient.vortexRelease());
+            UkakuBody.Pose pose = UkakuBody.vortex(vortex[1] > 0.0F, vortex[0], UkakuClient.vortexRelease());
             p.twist += pose.twist;
-            this.addAyato(pose, 1.0F, 0.0F);
+            this.addUkaku(pose, 1.0F, 0.0F);
         }
-        // Ayato's Gatling: both palms out at the target, braced against the stream.
-        float gun = AyatoClient.gatlingAmount(this.player, time);
+        // Ukaku's Gatling: both palms out at the target, braced against the stream.
+        float gun = UkakuClient.gatlingAmount(this.player, time);
         if (gun > 0.0F) {
-            AyatoBody.Pose pose = AyatoBody.gatling(gun, time);
+            UkakuBody.Pose pose = UkakuBody.gatling(gun, time);
             p.twist += pose.twist;
-            this.addAyato(pose, 1.0F, 0.0F);
+            this.addUkaku(pose, 1.0F, 0.0F);
         }
-        if (PathClient.get(this.player) != KagunePath.ETO && this.etoMoves.busy(com.hex.kagune.control.client.EtoClient.clock(tickDelta))) {
+        if (PathClient.get(this.player) != KagunePath.PALE && this.paleMoves.busy(com.hex.kagune.control.client.PaleClient.clock(tickDelta))) {
             // 7.0.1: a move of the eyes alone cut off by the kagune coming out: blended out over whatever the kagune does.
             this.eyeMoves(tickDelta, now);
         }
@@ -851,14 +851,14 @@ public final class KaguneBodyAnimation implements IAnimation {
     /** 1.0.26: how far a blow's turn of the whole body may turn the chest instead, on the ground (radians). */
     static final float BLOW_TWIST = 0.9F;
 
-    /** 7.0.1: the shared eye-mode fight's move on the body, out of the pose so far and back to it, as Eto's are put on hers. */
+    /** 7.0.1: the shared eye-mode fight's move on the body, out of the pose so far and back to it, as Pale's are put on hers. */
     private void eyeMoves(float tickDelta, float now) {
-        com.hex.kagune.control.client.EtoClient.EtoView move = com.hex.kagune.control.client.EtoClient.get(this.player);
+        com.hex.kagune.control.client.PaleClient.PaleView move = com.hex.kagune.control.client.PaleClient.get(this.player);
         float bodyYaw = this.player.f_20884_ + wrapDegrees(this.player.f_20883_ - this.player.f_20884_) * tickDelta;
         float turn = (float)Math.toRadians(wrapDegrees(move.yaw() - bodyYaw));
-        double clock = com.hex.kagune.control.client.EtoClient.clock(tickDelta);
-        this.etoMoves.apply(this.p, move, clock, now, this.landedAt, turn);
-        this.etoPosedAt = clock;
+        double clock = com.hex.kagune.control.client.PaleClient.clock(tickDelta);
+        this.paleMoves.apply(this.p, move, clock, now, this.landedAt, turn);
+        this.palePosedAt = clock;
     }
 
     /**
@@ -944,7 +944,7 @@ public final class KaguneBodyAnimation implements IAnimation {
     }
 
     /**
-     * Ayato's kakuja locomotion ({@link KakujaBody}) on top of vanilla's walk; the arms at {@code arms} while a strike has them,
+     * Ukaku's kakuja locomotion ({@link KakujaBody}) on top of vanilla's walk; the arms at {@code arms} while a strike has them,
      * the right one left alone as far as the Steel Blade is out ({@code steel}: it holds the blade).
      */
     private void kakujaLocomotion(float tickDelta, float arms, float steel) {
@@ -1020,8 +1020,8 @@ public final class KaguneBodyAnimation implements IAnimation {
             this.steelStrike(stage, view.modeStarted(), progress, impact, time, tickDelta);
             return;
         }
-        if (AyatoBody.poses(stage.pattern())) {
-            this.ayatoStrike(stage, control, progress, impact, time, low);
+        if (UkakuBody.poses(stage.pattern())) {
+            this.ukakuStrike(stage, control, progress, impact, time, low);
             return;
         }
         float side = strikeSide(view, control);
@@ -1100,14 +1100,14 @@ public final class KaguneBodyAnimation implements IAnimation {
         }
     }
 
-    /** Ayato's kicks and wing strikes (poses in {@link AyatoBody}). */
-    private void ayatoStrike(ComboStage stage, ControlView control, float progress, float impact, double time, float low) {
+    /** Ukaku's kicks and wing strikes (poses in {@link UkakuBody}). */
+    private void ukakuStrike(ComboStage stage, ControlView control, float progress, float impact, double time, float low) {
         RigPose p = this.p;
         // Flame bursts follow the swiping hand (10 right, 11 left), not the wing that fires.
         boolean flame = stage.pattern().flame();
         boolean right = flame ? control.comboUsesLimb(10) : control.comboUsesLimb(0) || control.comboUsesLimb(8);
         boolean left = flame ? control.comboUsesLimb(11) : control.comboUsesLimb(1) || control.comboUsesLimb(9);
-        AyatoBody.Pose pose = AyatoBody.pose(stage.pattern(), right || !left, right && left, progress, impact);
+        UkakuBody.Pose pose = UkakuBody.pose(stage.pattern(), right || !left, right && left, progress, impact);
         float amp = 0.92F + 0.16F * stage.weight();
         float twist = pose.twist * amp;
         float head = 0.0F;
@@ -1116,7 +1116,7 @@ public final class KaguneBodyAnimation implements IAnimation {
             twist *= 1.3F;
         }
         p.twist += twist;
-        this.addAyato(pose, amp, head);
+        this.addUkaku(pose, amp, head);
     }
 
     /**
@@ -1151,8 +1151,8 @@ public final class KaguneBodyAnimation implements IAnimation {
         this.steelArm = pose.arm;
     }
 
-    /** Adds an Ayato pose (everything but its twist) at strength {@code amp}, with {@code head} extra on the head's pitch. */
-    private void addAyato(AyatoBody.Pose pose, float amp, float head) {
+    /** Adds an Ukaku pose (everything but its twist) at strength {@code amp}, with {@code head} extra on the head's pitch. */
+    private void addUkaku(UkakuBody.Pose pose, float amp, float head) {
         RigPose p = this.p;
         p.headX += pose.headX * amp + head - 0.6F * (pose.torsoX + pose.torsoBend) * amp;
         p.headY += pose.headY * amp;
@@ -1230,7 +1230,7 @@ public final class KaguneBodyAnimation implements IAnimation {
         }
         p.headY += relative * 0.7F * envelope;
         if (!feral) {
-            return; // Ayato only looks.
+            return; // Ukaku only looks.
         }
         p.headX -= 0.15F * envelope;
         p.twist += relative * 0.3F * envelope;

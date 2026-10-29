@@ -34,7 +34,7 @@ public final class WoundTests {
         System.out.println("Wound tests: " + passed + " checks passed");
     }
 
-    /** 3.0.3: Kaneki's tails shape the wounds their hits open. */
+    /** 3.0.3: Rinkaku's tails shape the wounds their hits open. */
     private static void blows() {
         WoundBook.Spot chest = new WoundBook.Spot(Wound.Part.BODY, Wound.Face.FRONT, 4.0, 5.0);
         WoundBook slash = new WoundBook();

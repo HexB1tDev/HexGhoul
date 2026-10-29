@@ -100,7 +100,7 @@ public final class KingFirstPerson {
             boolean slim = "slim".equals(player.m_108564_());
             WarModel.Part part = right ? WarModel.Part.RIGHT_ARM : WarModel.Part.LEFT_ARM;
             List<float[]> quads = new ArrayList<>();
-            com.hex.kagune.control.ayato.UkakuModel.Sink sink = (a, b, c, d, n, ca, cb, cc, cd) -> quads.add(new float[] {(float)a[0], (float)a[1],
+            com.hex.kagune.control.ukaku.UkakuModel.Sink sink = (a, b, c, d, n, ca, cb, cc, cd) -> quads.add(new float[] {(float)a[0], (float)a[1],
                 (float)a[2], (float)b[0], (float)b[1], (float)b[2], (float)c[0], (float)c[1], (float)c[2], (float)d[0], (float)d[1], (float)d[2], (float)n[0],
                 (float)n[1], (float)n[2], ca, cb, cc, cd, n[0] == 0.0 && n[1] == 1.0 && n[2] == 0.0 ? 1.0F : 0.0F});
             if (view.form() == KingForm.WAR) {

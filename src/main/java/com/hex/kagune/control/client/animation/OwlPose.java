@@ -1,12 +1,12 @@
 package com.hex.kagune.control.client.animation;
 
-import com.hex.kagune.control.eto.OwlActs;
-import com.hex.kagune.control.eto.OwlModel;
-import com.hex.kagune.control.eto.OwlRules;
+import com.hex.kagune.control.pale.OwlActs;
+import com.hex.kagune.control.pale.OwlModel;
+import com.hex.kagune.control.pale.OwlRules;
 import com.hex.kagune.control.kakugan.KakuganEyes;
 
 /**
- * 6.2.0: the Owl (Eto's first kakuja) placed on her posed body (pure, tested): the mask on her head as the game draws it, the
+ * 6.2.0: the Owl (Pale's first kakuja) placed on her posed body (pure, tested): the mask on her head as the game draws it, the
  * muscle and spikes on her torso, and the two giant arms swung from her shoulders ({@link Swing}).
  */
 public final class OwlPose {
@@ -260,11 +260,11 @@ public final class OwlPose {
     }
 
     /**
-     * 6.2.4: her body as posed ({@code pose}, settled), as the creature is carried over from it ({@link com.hex.kagune.control.eto.OwlCreature}):
+     * 6.2.4: her body as posed ({@code pose}, settled), as the creature is carried over from it ({@link com.hex.kagune.control.pale.OwlCreature}):
      * her torso and head, the way each upper arm and forearm goes, each hand, each foot; walking {@code walk} (0..1) {@code stride}
      * into her stride, off the ground or not, at {@code time}, the Owl grown {@code grown}.
      */
-    public static com.hex.kagune.control.eto.OwlCreature.Source source(RigPose pose, double walk, double stride, boolean airborne, double time,
+    public static com.hex.kagune.control.pale.OwlCreature.Source source(RigPose pose, double walk, double stride, boolean airborne, double time,
                                                                        double grown) {
         double[][] arms = new double[4][];
         int i = 0;
@@ -276,7 +276,7 @@ public final class OwlPose {
             arms[i++] = normalize(sub(elbow, shoulder));
             arms[i++] = normalize(sub(hand, elbow));
         }
-        return new com.hex.kagune.control.eto.OwlCreature.Source(frame(pose, "torso"), frame(pose, "head"), arms[0], arms[1], arms[2], arms[3],
+        return new com.hex.kagune.control.pale.OwlCreature.Source(frame(pose, "torso"), frame(pose, "head"), arms[0], arms[1], arms[2], arms[3],
             frameAt(pose, "rightArm", -1.0, 10.0, 0.0, 1.0), frameAt(pose, "leftArm", 1.0, 10.0, 0.0, 1.0),
             BodyFrame.world(pose, BodyFrame.model(pose, "rightLeg", new double[] {0.0, 12.0, 0.0})),
             BodyFrame.world(pose, BodyFrame.model(pose, "leftLeg", new double[] {0.0, 12.0, 0.0})), walk, stride, airborne, time, grown);
@@ -284,15 +284,15 @@ public final class OwlPose {
 
     /**
      * 6.2.4: the kagune and the mask on the creature ({@code rig}): the four limbs swung {@code right} and {@code left} the ways
-     * they are off her torso (the frame turned as hers is, {@link com.hex.kagune.control.eto.OwlCreature.Rig#kagune}), each out of
+     * they are off her torso (the frame turned as hers is, {@link com.hex.kagune.control.pale.OwlCreature.Rig#kagune}), each out of
      * its own root on the creature's yoke; the mask on its head. Nothing of her own body: the creature is drawn in its place.
      */
-    public static OwlModel.Look look(com.hex.kagune.control.eto.OwlCreature.Rig rig, Swing right, Swing left, double time, double grown) {
+    public static OwlModel.Look look(com.hex.kagune.control.pale.OwlCreature.Rig rig, Swing right, Swing left, double time, double grown) {
         return look(rig, right, left, time, grown, null);
     }
 
     /** The same through the creature's act ({@code act}, null: none): driving its points in, its inner limbs drive in with the outer. */
-    public static OwlModel.Look look(com.hex.kagune.control.eto.OwlCreature.Rig rig, Swing right, Swing left, double time, double grown,
+    public static OwlModel.Look look(com.hex.kagune.control.pale.OwlCreature.Rig rig, Swing right, Swing left, double time, double grown,
                                      OwlActs.Act act) {
         OwlModel.Frame k = rig.kagune();
         OwlModel.Arm outerRight = held(k, arm(k, right, 1, rig.rootRight()), right, 1, false);
@@ -520,7 +520,7 @@ public final class OwlPose {
      * 6.2.0: where one of the Owl's bone spikes grows out of {@code body} as posed and the way it goes ({root, way}, rig space; the way
      * turned as the move faces, {@code facingSpin} radians + to her left from her body's facing): out of her back as drawn.
      */
-    public static double[][] spike(RigPose body, com.hex.kagune.control.eto.OwlSpikes.Spike spike, double facingSpin) {
+    public static double[][] spike(RigPose body, com.hex.kagune.control.pale.OwlSpikes.Spike spike, double facingSpin) {
         double[] root = BodyFrame.world(body, BodyFrame.model(body, "torso", spike.px()));
         double[] d = spike.dir();
         double c = Math.cos(facingSpin);

@@ -1,7 +1,7 @@
 package com.hex.kagune.control;
 
 /**
- * 1.0.42: Kaneki's grab (G), slower and breakable (pure). The tendril takes {@link #SLOWER} times the original's time to reach,
+ * 1.0.42: Rinkaku's grab (G), slower and breakable (pure). The tendril takes {@link #SLOWER} times the original's time to reach,
  * and reels its catch in only over the last {@link #REEL} ticks of it. 1.0.43: a parry, not a button to mash: only the first swing
  * at him the one it reaches for makes after it sets out is judged, and it breaks the grab only in the last {@link #WINDOW} ticks before it
  * holds ({@link #inWindow}). Too early and that was the one chance. Broken, the tendril goes back and he waits {@link #STAGGER} ticks.

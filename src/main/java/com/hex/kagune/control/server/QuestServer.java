@@ -3,7 +3,7 @@ package com.hex.kagune.control.server;
 import com.hex.kagune.control.ControlItems;
 import com.hex.kagune.control.FoodClassifier;
 import com.hex.kagune.control.KagunePath;
-import com.hex.kagune.control.KanekiForms;
+import com.hex.kagune.control.RinkakuForms;
 import com.hex.kagune.control.network.ControlNetwork;
 import com.hex.kagune.control.network.S2CQuests;
 import com.hex.kagune.control.quest.Gate;
@@ -119,7 +119,7 @@ public final class QuestServer {
      * mastery it had reached on its path, a mutation it had taken.
      */
     static boolean had(ServerPlayer player, Gate gate) {
-        if (gate == Gate.KANEKI_DRAGON) {
+        if (gate == Gate.RINKAKU_DRAGON) {
             return false; // 1.0.4: the Dragon is earned by its quest, whatever the mastery
         }
         KagunePath path = PathServer.path(player);
@@ -130,10 +130,10 @@ public final class QuestServer {
             return KaguneProfile.mastery(player) >= gate.mastery();
         }
         return switch (gate) {
-            case AYATO_NOT_THAT_EASILY -> AyatoServer.hasMutation(player, com.hex.kagune.control.ayato.AyatoMutation.NOT_THAT_EASILY);
-            case AYATO_BURSTING_SHARDS -> AyatoServer.hasMutation(player, com.hex.kagune.control.ayato.AyatoMutation.BURSTING_SHARDS);
-            case FURUTA_APPETITE -> FurutaServer.hasMutation(player, com.hex.kagune.control.furuta.FurutaMutation.RIZES_APPETITE);
-            case FURUTA_NOT_THAT_EASILY -> FurutaServer.hasMutation(player, com.hex.kagune.control.furuta.FurutaMutation.NOT_THAT_EASILY);
+            case UKAKU_NOT_THAT_EASILY -> UkakuServer.hasMutation(player, com.hex.kagune.control.ukaku.UkakuMutation.NOT_THAT_EASILY);
+            case UKAKU_BURSTING_SHARDS -> UkakuServer.hasMutation(player, com.hex.kagune.control.ukaku.UkakuMutation.BURSTING_SHARDS);
+            case GRAFT_APPETITE -> GraftServer.hasMutation(player, com.hex.kagune.control.graft.GraftMutation.RIZES_APPETITE);
+            case GRAFT_NOT_THAT_EASILY -> GraftServer.hasMutation(player, com.hex.kagune.control.graft.GraftMutation.NOT_THAT_EASILY);
             default -> false;
         };
     }
@@ -222,21 +222,21 @@ public final class QuestServer {
         KagunePath path = PathServer.path(player);
         tags.add(Tags.path(path.id()));
         boolean out = KaguneProfile.isActive(player);
-        if (EtoServer.eyes(player)) {
+        if (PaleServer.eyes(player)) {
             tags.add(Tags.EYES);
         }
         if (out) {
             tags.add(Tags.KAGUNE);
             String form = switch (path) {
-                case AYATO -> AyatoServer.form(player).id();
-                case FURUTA -> FurutaServer.stage(player).id();
+                case UKAKU -> UkakuServer.form(player).id();
+                case GRAFT -> GraftServer.stage(player).id();
                 default -> KaguneProfile.form(player).id();
             };
             tags.add(Tags.form(form));
             boolean kakuja = switch (path) {
-                case AYATO -> AyatoServer.form(player).kakuja();
-                case FURUTA -> FurutaServer.kakuja(player);
-                default -> KanekiForms.kakuja(KaguneProfile.form(player));
+                case UKAKU -> UkakuServer.form(player).kakuja();
+                case GRAFT -> GraftServer.kakuja(player);
+                default -> RinkakuForms.kakuja(KaguneProfile.form(player));
             };
             if (kakuja) {
                 tags.add(Tags.KAKUJA);
@@ -400,12 +400,12 @@ public final class QuestServer {
             cached.brinkAt = Long.MIN_VALUE;
             feed(player, new QuestEvent(Signal.BRINK, 1, context(player)));
         }
-        if (EtoServer.eyes(player) || KaguneProfile.isActive(player)) {
+        if (PaleServer.eyes(player) || KaguneProfile.isActive(player)) {
             feed(player, new QuestEvent(Signal.TIME, 1, context(player)));
         }
         hunts(player, cached, now);
         opened(player, cached);
-        enforceKaneki(player);
+        enforceRinkaku(player);
         if (cached.dirty) {
             cached.dirty = false;
             sync(player);
@@ -413,23 +413,23 @@ public final class QuestServer {
     }
 
     /**
-     * Kaneki's base forms are picked in the original's own menu: one whose quest isn't done (a save reset, a menu out of step) is
+     * Rinkaku's base forms are picked in the original's own menu: one whose quest isn't done (a save reset, a menu out of step) is
      * taken back to the strongest form that is open, and he is told why.
      */
-    private static void enforceKaneki(ServerPlayer player) {
-        if (PathServer.path(player) != KagunePath.KANEKI) {
+    private static void enforceRinkaku(ServerPlayer player) {
+        if (PathServer.path(player) != KagunePath.RINKAKU) {
             return;
         }
         com.hex.kagune.gameplay.KaguneForm form = KaguneProfile.form(player);
-        Gate gate = com.hex.kagune.control.quest.Gates.kaneki(form);
+        Gate gate = com.hex.kagune.control.quest.Gates.rinkaku(form);
         if (gate == null || open(player, gate)) {
             return;
         }
         int mastery = KaguneProfile.mastery(player);
         com.hex.kagune.gameplay.KaguneForm best = com.hex.kagune.gameplay.KaguneForm.RINKAKU_SEED;
-        for (com.hex.kagune.gameplay.KaguneForm option : KanekiForms.forms()) {
-            if (!KanekiForms.kakuja(option) && option.isUnlocked(mastery) && option.requiredMastery() >= best.requiredMastery()
-                && com.hex.kagune.control.quest.Gates.passes(com.hex.kagune.control.quest.Gates.kaneki(option), g -> open(player, g))) {
+        for (com.hex.kagune.gameplay.KaguneForm option : RinkakuForms.forms()) {
+            if (!RinkakuForms.kakuja(option) && option.isUnlocked(mastery) && option.requiredMastery() >= best.requiredMastery()
+                && com.hex.kagune.control.quest.Gates.passes(com.hex.kagune.control.quest.Gates.rinkaku(option), g -> open(player, g))) {
                 best = option;
             }
         }
@@ -470,7 +470,7 @@ public final class QuestServer {
         Quest quest = Hunts.quest(spec);
         player.m_5661_(Component.m_237110_("message.hexkagune.quest.hunt", quest.title(), quest.objectives().get(0).text(),
             quest.objectives().get(0).count(), Hunts.payText(spec)), false);
-        AyatoFire.sound(player.m_284548_(), player.m_20182_(), "entity.wolf.howl", 0.5F, 0.6F);
+        UkakuFire.sound(player.m_284548_(), player.m_20182_(), "entity.wolf.howl", 0.5F, 0.6F);
     }
 
     // ------------------------------------------------------------------ telling and paying
@@ -514,8 +514,8 @@ public final class QuestServer {
         Reward reward = quest.reward();
         int mastery = reward.mastery();
         int points = reward.points();
-        if (points > 0 && PathServer.path(player) == KagunePath.KANEKI) {
-            mastery += points * Reward.KANEKI_POINT_MASTERY; // his mutations come with mastery tiers, not points
+        if (points > 0 && PathServer.path(player) == KagunePath.RINKAKU) {
+            mastery += points * Reward.RINKAKU_POINT_MASTERY; // his mutations come with mastery tiers, not points
         }
         if (mastery > 0) {
             KaguneProfile.addMastery(player, mastery);
@@ -531,7 +531,7 @@ public final class QuestServer {
         if (mastery > 0) {
             pays.append(mastery).append(" mastery");
         }
-        if (points > 0 && PathServer.path(player) != KagunePath.KANEKI) {
+        if (points > 0 && PathServer.path(player) != KagunePath.RINKAKU) {
             pays.append(pays.length() > 0 ? ", " : "").append(points).append(" mutation point").append(points == 1 ? "" : "s");
         }
         if (reward.ghoulMeat() > 0) {
@@ -544,7 +544,7 @@ public final class QuestServer {
         for (Quest rival : closed) {
             player.m_5661_(Component.m_237110_("message.hexkagune.quest.closed", rival.title()), false);
         }
-        AyatoFire.sound(player.m_284548_(), player.m_20182_(), "ui.toast.challenge_complete", 0.6F, 1.0F);
+        UkakuFire.sound(player.m_284548_(), player.m_20182_(), "ui.toast.challenge_complete", 0.6F, 1.0F);
         cached.dirty = true;
     }
 

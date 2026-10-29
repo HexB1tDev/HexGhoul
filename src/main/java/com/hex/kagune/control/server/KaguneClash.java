@@ -23,8 +23,8 @@ import net.minecraft.world.phys.Vec3;
  * the moment one lands on a body whose own M1 is still on its way back at the striker ({@link ClashRules}), the two meet
  * ({@link #meets}): both blows are stopped (their own {@code stop}), neither hurts, the two are thrown apart, and every client near
  * sees and hears the wind of it blow out between them ({@link KingMarkFx#CLASH}). 1.0.41: the wild ghouls' lashes too, and a ghoul
- * can see a blow coming at it ({@link #threat}). 1.0.42: a blow on its way meets Ayato's shards flying at its owner ({@link #swat}),
- * and a blow swung since Kaneki's grab set out breaks it ({@link #lastSwing}).
+ * can see a blow coming at it ({@link #threat}). 1.0.42: a blow on its way meets Ukaku's shards flying at its owner ({@link #swat}),
+ * and a blow swung since Rinkaku's grab set out breaks it ({@link #lastSwing}).
  */
 public final class KaguneClash {
     /**
@@ -36,7 +36,7 @@ public final class KaguneClash {
     }
 
     private static final Map<UUID, Swing> SWINGS = new HashMap<>();
-    /** 1.0.42: when each body's last blow set out (kept after it lands: Kaneki's grab asks whether one was swung since it set out). */
+    /** 1.0.42: when each body's last blow set out (kept after it lands: Rinkaku's grab asks whether one was swung since it set out). */
     private static final Map<UUID, Long> LAST = new HashMap<>();
     /** Blows long gone are let go of this many ticks after they could have landed. */
     private static final long FORGET = 200L;
@@ -245,8 +245,8 @@ public final class KaguneClash {
         if (near.m_9236_() instanceof ServerLevel level) {
             float pitch = 1.25F + (1.2F - power) * 0.4F;
             level.m_6263_(null, at.f_82479_, at.f_82480_, at.f_82481_, HexKaguneSounds.KAGUNE_SLAM.get(), SoundSource.PLAYERS, volume, pitch);
-            AyatoFire.sound(level, at, "entity.ender_dragon.flap", volume * 1.08F, 1.5F);
-            AyatoFire.sound(level, at, "entity.player.attack.knockback", volume * 0.92F, 0.7F);
+            UkakuFire.sound(level, at, "entity.ender_dragon.flap", volume * 1.08F, 1.5F);
+            UkakuFire.sound(level, at, "entity.player.attack.knockback", volume * 0.92F, 0.7F);
         }
     }
 }

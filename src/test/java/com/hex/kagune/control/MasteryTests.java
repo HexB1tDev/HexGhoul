@@ -3,7 +3,7 @@ package com.hex.kagune.control;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Dependency-free tests for 6.0.4's mastery curve and Kaneki's unlocks. */
+/** Dependency-free tests for 6.0.4's mastery curve and Rinkaku's unlocks. */
 public final class MasteryTests {
     private static int passed;
     private static final List<String> FAILURES = new ArrayList<>();
@@ -59,16 +59,16 @@ public final class MasteryTests {
         check(carried[0] == 101 && carried[1] == 500, "progress toward the next point carries over (1.5 + 1 at 100: one point, 0.5 left)");
     }
 
-    /** Kaneki's moves unlock one by one, in a sensible order, all before the kakuja. */
+    /** Rinkaku's moves unlock one by one, in a sensible order, all before the kakuja. */
     private static void unlocks() {
-        int[] order = {KanekiUnlocks.GRAPPLE, KanekiUnlocks.RAPID_STRIKE, KanekiUnlocks.GRAB, KanekiUnlocks.CRUSH, KanekiUnlocks.LIFT,
-            KanekiUnlocks.SLAM};
+        int[] order = {RinkakuUnlocks.GRAPPLE, RinkakuUnlocks.RAPID_STRIKE, RinkakuUnlocks.GRAB, RinkakuUnlocks.CRUSH, RinkakuUnlocks.LIFT,
+            RinkakuUnlocks.SLAM};
         check(order[0] > 0, "the seed doesn't start with them");
         for (int i = 1; i < order.length; i++) {
             check(order[i] > order[i - 1], "each unlocks after the one before (" + order[i] + ")");
         }
-        check(KanekiUnlocks.SLAM <= 500, "the four tails have every move, long before the kakuja");
-        check(!KanekiUnlocks.unlocked(KanekiUnlocks.GRAB - 1, KanekiUnlocks.GRAB) && KanekiUnlocks.unlocked(KanekiUnlocks.GRAB, KanekiUnlocks.GRAB),
+        check(RinkakuUnlocks.SLAM <= 500, "the four tails have every move, long before the kakuja");
+        check(!RinkakuUnlocks.unlocked(RinkakuUnlocks.GRAB - 1, RinkakuUnlocks.GRAB) && RinkakuUnlocks.unlocked(RinkakuUnlocks.GRAB, RinkakuUnlocks.GRAB),
             "a move unlocks exactly at its mastery");
     }
 }

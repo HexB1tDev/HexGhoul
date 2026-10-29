@@ -2,14 +2,14 @@ package com.hex.kagune.control.client.render;
 
 import com.hex.kagune.control.client.animation.BodyFrame;
 import com.hex.kagune.control.client.animation.RigPose;
-import com.hex.kagune.control.eto.EtoFleshModel;
-import com.hex.kagune.control.eto.FleshPhysics;
+import com.hex.kagune.control.pale.PaleFleshModel;
+import com.hex.kagune.control.pale.FleshPhysics;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
 /**
- * 6.2.0: every length of Eto's flesh in the world carrying its own weight ({@link FleshPhysics}): for each Eto and each of her
+ * 6.2.0: every length of Pale's flesh in the world carrying its own weight ({@link FleshPhysics}): for each Pale and each of her
  * lengths of flesh (the one out of her back, the club, each tentacle, the arm), a chain that follows the path the move gives it,
  * frame by frame, in the world: so when she moves, it trails after her, and when the move swings it, the heavy end lags, whips
  * through and swings back. A new move starts it afresh.
@@ -43,16 +43,16 @@ final class FleshMotion {
 
     /**
      * {@code pose}'s flesh as it carries itself: entity {@code entity}'s length of flesh number {@code slot}, the move begun at
-     * {@code startedAt} ({@code move} its kind), at {@code time} (EtoClient's clock); {@code body} her body as drawn (kept clear of
+     * {@code startedAt} ({@code move} its kind), at {@code time} (PaleClient's clock); {@code body} her body as drawn (kept clear of
      * it). Null when none is out (and then the chain is let go).
      */
-    static EtoFleshModel.Pose carried(int entity, int slot, long startedAt, int move, EtoFleshModel.Pose pose, Space space, double time,
+    static PaleFleshModel.Pose carried(int entity, int slot, long startedAt, int move, PaleFleshModel.Pose pose, Space space, double time,
                                       FleshPhysics.Feel feel, RigPose body) {
         return carried(entity, slot, startedAt, move, pose, space, time, feel, body, true);
     }
 
     /** As above; {@code rightArm} false: her own right arm is not drawn (the Mutated Arm is in its place), so nothing is kept off it. */
-    static EtoFleshModel.Pose carried(int entity, int slot, long startedAt, int move, EtoFleshModel.Pose pose, Space space, double time,
+    static PaleFleshModel.Pose carried(int entity, int slot, long startedAt, int move, PaleFleshModel.Pose pose, Space space, double time,
                                       FleshPhysics.Feel feel, RigPose body, boolean rightArm) {
         long key = (long)entity * 16L + slot;
         State state = CHAINS.computeIfAbsent(key, ignored -> new State());
@@ -85,7 +85,7 @@ final class FleshMotion {
                 rig[i] = solid.pushOut(rig[i], CLEAR);
             }
         }
-        return new EtoFleshModel.Pose(rig, pose.up(), pose.axis(), pose.grown(), pose.shape(), pose.grip(), pose.time(), pose.seed(), pose.keep());
+        return new PaleFleshModel.Pose(rig, pose.up(), pose.axis(), pose.grown(), pose.shape(), pose.grip(), pose.time(), pose.seed(), pose.keep());
     }
 
     /** Forgets the chains not drawn for a while (bodies gone out of sight, moves long over). */

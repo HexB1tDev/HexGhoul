@@ -22,7 +22,7 @@ import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 
 /**
- * Blood on the ground from Ayato's crystal spikes, ported from Hex God of Time ({@code client/BloodStains}, with its
+ * Blood on the ground from Ukaku's crystal spikes, ported from Hex God of Time ({@code client/BloodStains}, with its
  * textures): puddles that spread, run together and dry, and the marks drops leave where they land.
  *
  * <p>A puddle is fed rather than stacked: blood running into a puddle that is already there widens it, so a body bleeding

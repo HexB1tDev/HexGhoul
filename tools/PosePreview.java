@@ -28,15 +28,15 @@ public final class PosePreview {
             idle(new File(out, "idle-poses.png"));
         }
         if (wanted.contains("closeup")) {
-            RigPose ayato = IdlePose.pose(IdlePose.Style.AYATO_RELAXED, 1.0F, 0.0);
-            RigPose kaneki = IdlePose.pose(IdlePose.Style.KANEKI_FERAL, 1.0F, 0.0);
+            RigPose ukaku = IdlePose.pose(IdlePose.Style.UKAKU_RELAXED, 1.0F, 0.0);
+            RigPose rinkaku = IdlePose.pose(IdlePose.Style.RINKAKU_FERAL, 1.0F, 0.0);
             List<Panel> panels = new ArrayList<>();
             panels.add(reference("Jotaro", "jotaro.png"));
-            panels.add(close("Ayato, front", ayato, 0, 6));
-            panels.add(close("Ayato, three-quarter", ayato, -30, 8));
+            panels.add(close("Ukaku, front", ukaku, 0, 6));
+            panels.add(close("Ukaku, three-quarter", ukaku, -30, 8));
             panels.add(reference("Bakugo", "bakugo.png"));
-            panels.add(close("Kaneki, front", kaneki, 0, 6));
-            panels.add(close("Kaneki, three-quarter", kaneki, 30, 8));
+            panels.add(close("Rinkaku, front", rinkaku, 0, 6));
+            panels.add(close("Rinkaku, three-quarter", rinkaku, 30, 8));
             sheet(new File(out, "idle-closeup.png"), "Close-ups beside the references", panels, 3, 420, 520);
         }
     }
@@ -47,27 +47,27 @@ public final class PosePreview {
     }
 
     static void idle(File file) throws Exception {
-        RigPose ayato = IdlePose.pose(IdlePose.Style.AYATO_RELAXED, 1.0F, 0.0);
-        RigPose kaneki = IdlePose.pose(IdlePose.Style.KANEKI_FERAL, 1.0F, 0.0);
-        report("Ayato", ayato);
-        report("Kaneki", kaneki);
+        RigPose ukaku = IdlePose.pose(IdlePose.Style.UKAKU_RELAXED, 1.0F, 0.0);
+        RigPose rinkaku = IdlePose.pose(IdlePose.Style.RINKAKU_FERAL, 1.0F, 0.0);
+        report("Ukaku", ukaku);
+        report("Rinkaku", rinkaku);
         List<Panel> panels = new ArrayList<>();
-        if (references()) panels.add(reference("Reference: Jotaro (Ayato's stance)", "jotaro.png"));
-        panels.add(view("Ayato relaxed, front", ayato, 0, 8));
-        panels.add(view("Ayato relaxed, three-quarter", ayato, 35, 10));
-        panels.add(view("Ayato relaxed, side (his left)", ayato, 90, 6));
-        panels.add(view("Ayato relaxed, other side", ayato, -70, 8));
-        panels.add(view("Ayato relaxed, from behind (F5)", ayato, 180, 22));
-        if (references()) panels.add(reference("Reference: Bakugo (Kaneki's stance)", "bakugo.png"));
-        panels.add(view("Kaneki animalistic, front", kaneki, 0, 8));
-        panels.add(view("Kaneki animalistic, three-quarter", kaneki, 35, 10));
-        panels.add(view("Kaneki animalistic, side", kaneki, 90, 6));
-        panels.add(view("Kaneki animalistic, other side", kaneki, -60, 12));
-        panels.add(view("Kaneki animalistic, from behind (F5)", kaneki, 180, 22));
+        if (references()) panels.add(reference("Reference: Jotaro (Ukaku's stance)", "jotaro.png"));
+        panels.add(view("Ukaku relaxed, front", ukaku, 0, 8));
+        panels.add(view("Ukaku relaxed, three-quarter", ukaku, 35, 10));
+        panels.add(view("Ukaku relaxed, side (his left)", ukaku, 90, 6));
+        panels.add(view("Ukaku relaxed, other side", ukaku, -70, 8));
+        panels.add(view("Ukaku relaxed, from behind (F5)", ukaku, 180, 22));
+        if (references()) panels.add(reference("Reference: Bakugo (Rinkaku's stance)", "bakugo.png"));
+        panels.add(view("Rinkaku animalistic, front", rinkaku, 0, 8));
+        panels.add(view("Rinkaku animalistic, three-quarter", rinkaku, 35, 10));
+        panels.add(view("Rinkaku animalistic, side", rinkaku, 90, 6));
+        panels.add(view("Rinkaku animalistic, other side", rinkaku, -60, 12));
+        panels.add(view("Rinkaku animalistic, from behind (F5)", rinkaku, 180, 22));
         if (references()) {
             panels.add(view("Standing (no pose), front", new RigPose(), 0, 8));
-            panels.add(view("Ayato, easing in halfway", IdlePose.pose(IdlePose.Style.AYATO_RELAXED, 0.5F, 0.0), 30, 10));
-            panels.add(view("Kaneki, easing in halfway", IdlePose.pose(IdlePose.Style.KANEKI_FERAL, 0.5F, 0.0), 30, 10));
+            panels.add(view("Ukaku, easing in halfway", IdlePose.pose(IdlePose.Style.UKAKU_RELAXED, 0.5F, 0.0), 30, 10));
+            panels.add(view("Rinkaku, easing in halfway", IdlePose.pose(IdlePose.Style.RINKAKU_FERAL, 0.5F, 0.0), 30, 10));
         }
         sheet(file, "Ambient idle stances (exact PlayerAnimator + bendy-lib transforms)", panels, 3, 360, 440);
     }

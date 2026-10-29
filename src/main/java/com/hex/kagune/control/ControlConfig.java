@@ -62,11 +62,11 @@ public final class ControlConfig {
             .comment("Form-specific M1 combo chains with authoritative multi-target hit shapes. false restores the original single swipe.")
             .define("kaguneCombos", true);
         TENDRIL_GUARD_STRENGTH = server
-            .comment("Auto Projectile (Kaneki): how much damage each tentacle's guard holds before it breaks, as a multiplier",
+            .comment("Auto Projectile (Rinkaku): how much damage each tentacle's guard holds before it breaks, as a multiplier",
                 "(1 = 6 at mastery 0 to 12 at 1000, half as much again with the Projectile Reflex Organ). 0 turns the guard off.")
             .defineInRange("tendrilGuardStrength", 1.0, 0.0, 4.0);
         TENDRIL_GUARD_MAX = server
-            .comment("Auto Projectile (Kaneki): how many tentacles may guard at once, each against shots from its own direction.")
+            .comment("Auto Projectile (Rinkaku): how many tentacles may guard at once, each against shots from its own direction.")
             .defineInRange("tendrilGuardMax", 2.0, 1.0, 8.0);
         BLOCK_SMASH = server
             .comment("Owl DNA: bodies her blows launch smash through weak blocks (dirt, sand, wood, glass, leaves: nothing that needs a pickaxe),",

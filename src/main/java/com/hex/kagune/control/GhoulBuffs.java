@@ -3,7 +3,7 @@ package com.hex.kagune.control;
 /**
  * What a ghoul keeps of the kagune's buffs with only the kakugan open (ghoul mode, R; pure, tested; 3.0.3): the movement buffs at
  * half their level (never below level I while the kagune would give any), and none of the defensive ones (the Centipede forms'
- * Resistance and Health Boost belong to the kagune's armor). Ayato's Speed and Jump Boost (with Agility Boost's on top) and
+ * Resistance and Health Boost belong to the kagune's armor). Ukaku's Speed and Jump Boost (with Agility Boost's on top) and
  * the Centipede forms' Speed carry over this way.
  *
  * <p>6.1.0: the open eyes are a form of their own. They give a small Resistance and a modest melee boost (Resistance I and

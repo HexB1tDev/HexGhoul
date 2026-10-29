@@ -1,10 +1,10 @@
 package com.hex.kagune.control.client.animation;
 
-import com.hex.kagune.control.eto.EtoFleshModel;
-import com.hex.kagune.control.eto.WatchRules;
+import com.hex.kagune.control.pale.PaleFleshModel;
+import com.hex.kagune.control.pale.WatchRules;
 
 /**
- * 6.2.0, Watch This (pure, tested): where one of Eto's two tentacles is this frame. Rig space throughout (blocks; x to her right,
+ * 6.2.0, Watch This (pure, tested): where one of Pale's two tentacles is this frame. Rig space throughout (blocks; x to her right,
  * y up from her feet, z forward), on the body as it is drawn. A tentacle is poised over its shoulder like a scorpion's tail, its
  * beak down at what is ahead, never still; it rears back to strike (the beak already on its mark) and lunges, faster and faster,
  * driving the beak through the chest; it holds what it impaled on the beak, the beak through it and out of its back, wherever the
@@ -113,24 +113,24 @@ public final class WatchPose {
     }
 
     /** The tentacle on {@code side} out of {@code body}'s back to {@code tip}, kept off her body; null when none is out. */
-    public static EtoFleshModel.Pose pose(RigPose body, int side, Tip tip, double time, int seed) {
+    public static PaleFleshModel.Pose pose(RigPose body, int side, Tip tip, double time, int seed) {
         if (tip.grown() <= 0.0) {
             return null;
         }
         double[] rootPx = {ROOT_RIGHT[0] * side, ROOT_RIGHT[1], ROOT_RIGHT[2]};
         double[] root = BodyFrame.world(body, BodyFrame.model(body, "torso", rootPx));
-        double[] back = EtoFleshPose.normalize(EtoFleshPose.sub(BodyFrame.world(body, BodyFrame.model(body, "torso", new double[] {rootPx[0], rootPx[1], rootPx[2] + 1.0})), root));
-        double[] up = EtoFleshPose.normalize(EtoFleshPose.sub(BodyFrame.world(body, BodyFrame.model(body, "torso", new double[] {rootPx[0], rootPx[1] - 1.0, rootPx[2]})), root));
+        double[] back = PaleFleshPose.normalize(PaleFleshPose.sub(BodyFrame.world(body, BodyFrame.model(body, "torso", new double[] {rootPx[0], rootPx[1], rootPx[2] + 1.0})), root));
+        double[] up = PaleFleshPose.normalize(PaleFleshPose.sub(BodyFrame.world(body, BodyFrame.model(body, "torso", new double[] {rootPx[0], rootPx[1] - 1.0, rootPx[2]})), root));
         double[] shoulder = BodyFrame.world(body, BodyFrame.model(body, "torso", new double[] {SHOULDER_RIGHT[0] * side, SHOULDER_RIGHT[1], SHOULDER_RIGHT[2]}));
         BodyFrame.Solid solid = new BodyFrame.Solid(body);
-        double[][] path = EtoFleshModel.tentaclePath(root, back, shoulder, up, tip.knot(), tip.dir());
-        double need = EtoFleshModel.knotRadius(1.0) * 0.5 * EtoFleshPose.LUMPS + EtoFleshPose.MARGIN;
+        double[][] path = PaleFleshModel.tentaclePath(root, back, shoulder, up, tip.knot(), tip.dir());
+        double need = PaleFleshModel.knotRadius(1.0) * 0.5 * PaleFleshPose.LUMPS + PaleFleshPose.MARGIN;
         int last = path.length - 1;
         path[last] = solid.pushOut(path[last], need);
-        path = EtoFleshPose.clear(solid, path, up, root, need);
-        double[][] grown = EtoFleshModel.grownAlong(path, up, tip.grown());
-        return grown == null ? null : new EtoFleshModel.Pose(grown, up, solid.axis(), tip.grown(), EtoFleshModel.Shape.BEAK, 0.0, time, seed,
-            EtoFleshPose.keep(solid));
+        path = PaleFleshPose.clear(solid, path, up, root, need);
+        double[][] grown = PaleFleshModel.grownAlong(path, up, tip.grown());
+        return grown == null ? null : new PaleFleshModel.Pose(grown, up, solid.axis(), tip.grown(), PaleFleshModel.Shape.BEAK, 0.0, time, seed,
+            PaleFleshPose.keep(solid));
     }
 
     /** The quadratic curve from {@code a} through toward {@code b} to {@code c}, {@code t} of the way. */

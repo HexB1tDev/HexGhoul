@@ -1,7 +1,7 @@
 package com.hex.kagune.control.client;
 
 import com.hex.kagune.client.KaguneKeys;
-import com.hex.kagune.control.eto.EyeRules;
+import com.hex.kagune.control.pale.EyeRules;
 import com.hex.kagune.control.king.KingForm;
 import com.hex.kagune.control.king.WarRules;
 import com.hex.kagune.control.network.C2SKingAction;

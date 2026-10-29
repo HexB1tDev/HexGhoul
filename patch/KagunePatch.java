@@ -8,6 +8,7 @@ import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 import jdk.internal.org.objectweb.asm.ClassReader;
 import jdk.internal.org.objectweb.asm.ClassWriter;
+import jdk.internal.org.objectweb.asm.Handle;
 import jdk.internal.org.objectweb.asm.Opcodes;
 import jdk.internal.org.objectweb.asm.tree.AbstractInsnNode;
 import jdk.internal.org.objectweb.asm.tree.ClassNode;
@@ -15,6 +16,7 @@ import jdk.internal.org.objectweb.asm.tree.FieldInsnNode;
 import jdk.internal.org.objectweb.asm.tree.FieldNode;
 import jdk.internal.org.objectweb.asm.tree.InsnNode;
 import jdk.internal.org.objectweb.asm.tree.IntInsnNode;
+import jdk.internal.org.objectweb.asm.tree.InvokeDynamicInsnNode;
 import jdk.internal.org.objectweb.asm.tree.LdcInsnNode;
 import jdk.internal.org.objectweb.asm.tree.MethodInsnNode;
 import jdk.internal.org.objectweb.asm.tree.MethodNode;
@@ -37,8 +39,8 @@ public final class KagunePatch implements Opcodes {
     private static final String AURA = "com/hex/kagune/client/KaguneAuraEffects";
     private static final String COOLDOWN = "slingshotCooldownUntil";
     /** 3.0.0: the grapple's flight onto the grabbed block. */
-    static final String SLINGSHOT = "com/hex/kagune/control/server/KanekiSlingshot";
-    static final String VERSION = "1.2.4";
+    static final String SLINGSHOT = "com/hex/kagune/control/server/RinkakuSlingshot";
+    static final String VERSION = "1.2.5";
     private static final String PLAYER = "net/minecraft/server/level/ServerPlayer";
     private static final String VECTOR = "net/minecraft/world/phys/Vec3";
     // 1.1.0 kagune control expansion hooks
@@ -48,7 +50,7 @@ public final class KagunePatch implements Opcodes {
     private static final String HUNT = "com/hex/kagune/control/server/CentipedeHunt";
     private static final String AMBIENT = "com/hex/kagune/client/KaguneAmbientSounds";
     private static final String CLIENT_STATE = "com/hex/kagune/client/KaguneClientState";
-    private static final String AYATO_CLIENT = "com/hex/kagune/control/client/AyatoClient";
+    private static final String UKAKU_CLIENT = "com/hex/kagune/control/client/UkakuClient";
     static final String VIEW_LOOKUP = "(Lnet/minecraft/world/entity/player/Player;)Lcom/hex/kagune/client/KaguneClientState$View;";
     private static final String NETWORK = "com/hex/kagune/network/KaguneNetwork";
     private static final String TENDRIL = "com/hex/kagune/client/render/TendrilChain";
@@ -59,18 +61,18 @@ public final class KagunePatch implements Opcodes {
     private static final String BOOTSTRAP = "com/hex/kagune/control/KaguneControlBootstrap";
     private static final String COMBAT = "com/hex/kagune/control/server/KaguneCombat";
     private static final String PATHS = "com/hex/kagune/control/server/PathServer";
-    private static final String VORTEX = "com/hex/kagune/control/server/AyatoVortex";
-    private static final String GATES = "com/hex/kagune/control/server/AyatoGates";
+    private static final String VORTEX = "com/hex/kagune/control/server/UkakuVortex";
+    private static final String GATES = "com/hex/kagune/control/server/UkakuGates";
     private static final String SHIELD = "com/hex/kagune/control/server/TendrilShieldServer";
-    private static final String FORMS = "com/hex/kagune/control/server/AyatoForms";
+    private static final String FORMS = "com/hex/kagune/control/server/UkakuForms";
     static final String FORM = "com/hex/kagune/gameplay/KaguneForm";
     static final String EVENTS_SWITCH = "com/hex/kagune/gameplay/KaguneEvents$1";
     static final String MUTATION = "com/hex/kagune/gameplay/MutationNode";
     static final String SCREEN = "com/hex/kagune/client/screen/KaguneScreen";
-    static final String KANEKI_FORMS = "com/hex/kagune/control/KanekiForms";
+    static final String RINKAKU_FORMS = "com/hex/kagune/control/RinkakuForms";
     static final String SPIKE_RENDERER = "com/hex/kagune/client/render/KaguneSpikeRenderer";
     static final String ENERGY_HUD = "com/hex/kagune/client/KaguneEnergyHud";
-    /** The original spike's model scale, and the long thin RC needle it becomes for Ayato's Shard Volley (length, then girth x2). */
+    /** The original spike's model scale, and the long thin RC needle it becomes for Ukaku's Shard Volley (length, then girth x2). */
     static final float SPIKE_SCALE = 1.35F;
     static final float[] SHARD_SCALE = {0.85F, 0.32F, 0.32F};
     private static final String STRIKES = "com/hex/kagune/control/client/render/StrikePaths";
@@ -82,10 +84,67 @@ public final class KagunePatch implements Opcodes {
         "interruptCentipedeIfUsingLimb", "committed", "beginRetract", "isHostileTo", "refreshFormEffect", "releaseHeldSlot",
         "returnToHoldingOrRetract", "centipedeHit", "centipedeCrushHit", "captureAutonomousCentipedeTarget", "syncKaguneHeldPlayer"
     };
-    /** 1.2.0: tendril-only moves the Ayato path refuses (AyatoGates); everyone else still runs the original. */
-    static final String[] AYATO_GATED = {
+    /** 1.2.0: tendril-only moves the Ukaku path refuses (UkakuGates); everyone else still runs the original. */
+    static final String[] UKAKU_GATED = {
         "slingshot", "grabOrThrow", "throwHeld", "crush", "lift", "slam", "toggleThreatAutoAttack", "tryStartFallArrest"
     };
+
+    /**
+     * 1.2.5: what the original 1.0.0 jar calls its own members and text, and what the mod is built with instead: no character of the
+     * show is named anywhere in the mod (the kakuja mask's method on the form and on the world renderer, and the menu's line on it).
+     * The old names are written here only to be found in the original jar; the build checks none reaches the mod's jar.
+     */
+    static final String[][] ORIGINAL_NAMES = {{"emitKanekiMask", "emitRinkakuMask"}, {"hasKanekiMask", "hasRinkakuMask"}};
+    static final String[][] ORIGINAL_TEXT = {{"Kaneki mask / ordered limbs", "Rinkaku mask / ordered limbs"}};
+
+    private static String renamedMember(String name) {
+        for (String[] pair : ORIGINAL_NAMES) {
+            if (pair[0].equals(name)) {
+                return pair[1];
+            }
+        }
+        return null;
+    }
+
+    private static String renamedText(String text) {
+        for (String[] pair : ORIGINAL_TEXT) {
+            text = text.replace(pair[0], pair[1]);
+        }
+        return text;
+    }
+
+    /** 1.2.5: {@link #ORIGINAL_NAMES} and {@link #ORIGINAL_TEXT} renamed through {@code node}; true if anything was. */
+    static boolean renameOriginal(ClassNode node) {
+        boolean changed = false;
+        for (MethodNode method : node.methods) {
+            String to = renamedMember(method.name);
+            if (to != null) {
+                method.name = to;
+                changed = true;
+            }
+            for (AbstractInsnNode instruction : method.instructions.toArray()) {
+                if (instruction instanceof MethodInsnNode call && (to = renamedMember(call.name)) != null) {
+                    call.name = to;
+                    changed = true;
+                } else if (instruction instanceof LdcInsnNode constant && constant.cst instanceof String text && !renamedText(text).equals(text)) {
+                    constant.cst = renamedText(text);
+                    changed = true;
+                } else if (instruction instanceof InvokeDynamicInsnNode dynamic) {
+                    for (int k = 0; k < dynamic.bsmArgs.length; k++) {
+                        Object arg = dynamic.bsmArgs[k];
+                        if (arg instanceof String text && !renamedText(text).equals(text)) {
+                            dynamic.bsmArgs[k] = renamedText(text);
+                            changed = true;
+                        } else if (arg instanceof Handle handle && (to = renamedMember(handle.getName())) != null) {
+                            dynamic.bsmArgs[k] = new Handle(handle.getTag(), handle.getOwner(), to, handle.getDesc(), handle.isInterface());
+                            changed = true;
+                        }
+                    }
+                }
+            }
+        }
+        return changed;
+    }
 
     private static ClassNode read(byte[] bytes) {
         ClassNode node = new ClassNode();
@@ -161,7 +220,7 @@ public final class KagunePatch implements Opcodes {
         int clearPriorBoost = 0;
         for (AbstractInsnNode instruction : grapple.instructions.toArray()) {
             if (instruction instanceof MethodInsnNode call && call.owner.equals(STATE) && call.name.equals("begin")) {
-                // 3.0.0: a new grapple ends a flight still under way (KanekiSlingshot).
+                // 3.0.0: a new grapple ends a flight still under way (RinkakuSlingshot).
                 InsnList clear = new InsnList();
                 clear.add(new VarInsnNode(ALOAD, 0)); // player; local 0 in slingshot
                 clear.add(new MethodInsnNode(INVOKESTATIC, SLINGSHOT, "cancel", "(L" + PLAYER + ";)V", false));
@@ -182,7 +241,7 @@ public final class KagunePatch implements Opcodes {
         for (AbstractInsnNode instruction : launch.instructions.toArray()) {
             if (instruction instanceof MethodInsnNode call && call.owner.equals(PLAYER)
                     && call.name.equals("m_20256_") && call.desc.equals("(L" + VECTOR + ";)V")) {
-                // 3.0.0: the tendril hauls him onto the top of the grabbed block (KanekiSlingshot flies him there).
+                // 3.0.0: the tendril hauls him onto the top of the grabbed block (RinkakuSlingshot flies him there).
                 InsnList extra = new InsnList();
                 extra.add(new VarInsnNode(ALOAD, 1)); // State
                 extra.add(new VarInsnNode(ALOAD, 5)); // launchTarget (the block's centre, 8 up)
@@ -306,30 +365,30 @@ public final class KagunePatch implements Opcodes {
         expect(rips, 1, "manifest rip redirect");
         // 1.2.0: manifesting (the only place the kagune turns active) waits until a path is chosen.
         trampoline(node, "toggle", PATHS, "toggle");
-        // 1.2.0: on the Ayato path the Rapid Strike key is his own move (the Wing Vortex since 1.3.0).
+        // 1.2.0: on the Ukaku path the Rapid Strike key is his own move (the Wing Vortex since 1.3.0).
         trampoline(node, "startRapidStrike", VORTEX, "startRapidStrike");
-        for (String gated : AYATO_GATED) trampoline(node, gated, GATES, gated);
-        // 1.2.0: the Guard key goes through the Ayato gate (the Wing Block until 5.0.13; since then nothing on the Ayato path).
+        for (String gated : UKAKU_GATED) trampoline(node, gated, GATES, gated);
+        // 1.2.0: the Guard key goes through the Ukaku gate (the Wing Block until 5.0.13; since then nothing on the Ukaku path).
         trampoline(node, "toggleGuard", GATES, "toggleGuard");
-        // 1.2.0: on the Ayato path the tail-cycle key switches wing form.
+        // 1.2.0: on the Ukaku path the tail-cycle key switches wing form.
         trampoline(node, "cycleTendrils", FORMS, "cycleTendrils");
-        // 3.0.3: a crush is once: when it ends, what it crushed is let go (KanekiGrip) instead of held for the next one.
+        // 3.0.3: a crush is once: when it ends, what it crushed is let go (RinkakuGrip) instead of held for the next one.
         MethodNode crush = method(node, "tickCrush");
         int ends = 0;
         for (AbstractInsnNode instruction : crush.instructions.toArray()) {
             if (instruction instanceof MethodInsnNode call && call.getOpcode() == INVOKEVIRTUAL && call.owner.equals(STATE) && call.name.equals("begin")) {
                 crush.instructions.insertBefore(call, new VarInsnNode(ALOAD, 0));
-                crush.instructions.set(call, new MethodInsnNode(INVOKESTATIC, "com/hex/kagune/control/server/KanekiGrip", "crushDone",
+                crush.instructions.set(call, new MethodInsnNode(INVOKESTATIC, "com/hex/kagune/control/server/RinkakuGrip", "crushDone",
                     "(L" + STATE + ";Lcom/hex/kagune/gameplay/TendrilMode;JIILnet/minecraft/world/phys/Vec3;Lnet/minecraft/server/level/ServerPlayer;)V",
                     false));
                 ends++;
             }
         }
         expect(ends, 1, "crush end");
-        // 1.0.42: Kaneki's grab is slower and can be broken (KanekiGrab): first thing every tick of its reach, a swing back at him by
+        // 1.0.42: Rinkaku's grab is slower and can be broken (RinkakuGrab): first thing every tick of its reach, a swing back at him by
         // the one it reaches for breaks it; and it reels its catch in only over the reach's last ticks, not from its 3rd.
         MethodNode reach = method(node, "tickReachEntity");
-        String grab = "com/hex/kagune/control/server/KanekiGrab";
+        String grab = "com/hex/kagune/control/server/RinkakuGrab";
         LabelNode reaching = new LabelNode();
         InsnList broken = new InsnList();
         broken.add(new VarInsnNode(ALOAD, 0));
@@ -357,8 +416,8 @@ public final class KagunePatch implements Opcodes {
         // 5.0.14: Auto Projectile is a guard: tentacles held across incoming shots (TendrilShieldServer), not one swing at them.
         trampoline(node, "tickAutoProjectile", SHIELD, "tickAutoProjectile");
         trampoline(node, "deflectProjectileImpact", SHIELD, "deflectProjectileImpact");
-        // 3.1.0: the centipede legs bleed a body exactly as Ayato's spikes do (KanekiBleed -> AyatoCrystal's bleeding and blood).
-        trampoline(node, "applyCentipedeBleed", "com/hex/kagune/control/server/KanekiBleed", "applyCentipedeBleed");
+        // 3.1.0: the centipede legs bleed a body exactly as Ukaku's spikes do (RinkakuBleed -> UkakuCrystalCombat's bleeding and blood).
+        trampoline(node, "applyCentipedeBleed", "com/hex/kagune/control/server/RinkakuBleed", "applyCentipedeBleed");
         MethodNode held = method(node, "tickHeldEntities");
         String restrain = "(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/world/entity/LivingEntity;IJ)V";
         int restraints = 0;
@@ -371,8 +430,8 @@ public final class KagunePatch implements Opcodes {
             }
         }
         expect(restraints, 1, "centipede hold redirect");
-        // 3.0.2: re-adding the centipede forms' Health Boost no longer cuts the health down every few ticks (KanekiFormBuffs).
-        trampoline(node, "refreshFormEffect", "com/hex/kagune/control/server/KanekiFormBuffs", "refreshFormEffect");
+        // 3.0.2: re-adding the centipede forms' Health Boost no longer cuts the health down every few ticks (RinkakuFormBuffs).
+        trampoline(node, "refreshFormEffect", "com/hex/kagune/control/server/RinkakuFormBuffs", "refreshFormEffect");
         MethodNode tick = method(node, "tick");
         int redirected = 0;
         for (AbstractInsnNode instruction : tick.instructions.toArray()) {
@@ -475,10 +534,10 @@ public final class KagunePatch implements Opcodes {
         widen(node, "bodyEffectLayer");
         trampoline(node, "playPain", BODY, "playManifestPain");
         trampoline(node, "stopPain", BODY, "stopManifestPain");
-        // 1.2.0: Ayato's wings bring their own eruption; Kaneki's origin mist and blood (vanilla poof clouds without
-        // Photon) stay on the Kaneki path.
-        trampoline(node, "spawnOriginMist", AYATO_CLIENT, "spawnOriginMist");
-        trampoline(node, "spawnBlood", AYATO_CLIENT, "spawnManifestBlood");
+        // 1.2.0: Ukaku's wings bring their own eruption; Rinkaku's origin mist and blood (vanilla poof clouds without
+        // Photon) stay on the Rinkaku path.
+        trampoline(node, "spawnOriginMist", UKAKU_CLIENT, "spawnOriginMist");
+        trampoline(node, "spawnBlood", UKAKU_CLIENT, "spawnManifestBlood");
     }
 
     private static void patchModConstructor(ClassNode node) {
@@ -497,14 +556,14 @@ public final class KagunePatch implements Opcodes {
         expect(hooks, 1, "control bootstrap hook");
     }
 
-    /** 1.2.0: Ayato players' kagune is wings, so the tendril renderer and writhing sounds read them as having no tendrils out. */
+    /** 1.2.0: Ukaku players' kagune is wings, so the tendril renderer and writhing sounds read them as having no tendrils out. */
     private static void redirectTendrilView(ClassNode node, String methodName) {
         MethodNode method = method(node, methodName);
         int redirected = 0;
         for (AbstractInsnNode instruction : method.instructions.toArray()) {
             if (instruction instanceof MethodInsnNode call && call.getOpcode() == INVOKESTATIC && call.owner.equals(CLIENT_STATE)
                     && call.name.equals("get") && call.desc.equals(VIEW_LOOKUP)) {
-                call.owner = AYATO_CLIENT;
+                call.owner = UKAKU_CLIENT;
                 call.name = "tendrilView";
                 redirected++;
             }
@@ -513,7 +572,7 @@ public final class KagunePatch implements Opcodes {
     }
 
     /**
-     * 1.2.0: the original spike projectile (registered but never spawned by the 1.0.0 code) becomes Ayato's RC shard; only
+     * 1.2.0: the original spike projectile (registered but never spawned by the 1.0.0 code) becomes Ukaku's RC shard; only
      * its three model-scale constants (x = length, y and z = girth) change, from a stubby 1.6-block javelin to a thin
      * 1-block crystal needle like the shards in the anime.
      */
@@ -592,13 +651,13 @@ public final class KagunePatch implements Opcodes {
         return replaced;
     }
 
-    /** Points every {@code KaguneForm.values()} in {@code method} at {@code KanekiForms.forms()} (the forms a player can have). */
+    /** Points every {@code KaguneForm.values()} in {@code method} at {@code RinkakuForms.forms()} (the forms a player can have). */
     private static int redirectValues(MethodNode method) {
         int redirected = 0;
         for (AbstractInsnNode instruction : method.instructions.toArray()) {
             if (instruction instanceof MethodInsnNode call && call.getOpcode() == INVOKESTATIC && call.owner.equals(FORM)
                     && call.name.equals("values")) {
-                call.owner = KANEKI_FORMS;
+                call.owner = RINKAKU_FORMS;
                 call.name = "forms";
                 redirected++;
             }
@@ -606,13 +665,13 @@ public final class KagunePatch implements Opcodes {
         return redirected;
     }
 
-    /** Points every {@code MutationNode.values()} in {@code method} at {@code KanekiMutations.nodes()}; returns how many changed. */
+    /** Points every {@code MutationNode.values()} in {@code method} at {@code RinkakuMutations.nodes()}; returns how many changed. */
     private static int redirectMutations(MethodNode method) {
         int redirected = 0;
         for (AbstractInsnNode instruction : method.instructions.toArray()) {
             if (instruction instanceof MethodInsnNode call && call.getOpcode() == INVOKESTATIC && call.owner.equals(MUTATION)
                     && call.name.equals("values")) {
-                call.owner = "com/hex/kagune/control/KanekiMutations";
+                call.owner = "com/hex/kagune/control/RinkakuMutations";
                 call.name = "nodes";
                 redirected++;
             }
@@ -620,13 +679,13 @@ public final class KagunePatch implements Opcodes {
         return redirected;
     }
 
-    /** 3.0.3: the mutations the user cut (KanekiMutations), with the mastery each one had. */
+    /** 3.0.3: the mutations the user cut (RinkakuMutations), with the mastery each one had. */
     static final String[] CUT_MUTATIONS = {"MASS", "AGILITY", "ARM_WRAP", "GUARD_MEMBRANE", "MULTI_CONTROL", "REGEN_RESERVOIR", "PARTIAL_ARMOR",
         "GRAPPLER_FRAME", "FULL_MASS", "FULL_GRAPPLER"};
     static final int[] CUT_MASTERY = {100, 100, 250, 250, 450, 450, 750, 750, 1000, 1000};
 
     /**
-     * 3.0.2: the third mutation tier moves from 450 to 500 with the Four-Tail Rinkaku. 3.0.3: Kaneki keeps five mutations, one a
+     * 3.0.2: the third mutation tier moves from 450 to 500 with the Four-Tail Rinkaku. 3.0.3: Rinkaku keeps five mutations, one a
      * tier, and can take all of them: the ten cut ones never unlock, no pick locks out another and none needs one before it.
      */
     private static void patchMutationTiers(ClassNode mutation) {
@@ -682,7 +741,7 @@ public final class KagunePatch implements Opcodes {
     }
 
     /**
-     * 3.0.1: the Centipede Form and the Partial Kakuja trade places, so Kaneki's last two forms are always his kakuja: Rinkaku
+     * 3.0.1: the Centipede Form and the Partial Kakuja trade places, so Rinkaku's last two forms are always his kakuja: Rinkaku
      * Seed 0, Twin 100, Four-Tail 250, Partial Kakuja 450, Centipede Form 750 (first kakuja), Full Kakuja 1000 (final kakuja).
      * Slot (ordinal and {@code values()} order, which the menu draws in), required mastery and armour level ({@code isKakuja} is
      * armour 2+) move; ids, names, limbs and combos stay with each form, so stored forms load as before. The damage multiplier
@@ -693,7 +752,7 @@ public final class KagunePatch implements Opcodes {
         reslotForm(init, "CENTIPEDE", 3, 4, 450, 750, 1, 2);
         reslotForm(init, "PARTIAL_KAKUJA", 4, 3, 750, 450, 2, 1);
         // 3.0.2: the Partial Kakuja is gone. It stays an enum constant (switch maps, saves and packets index forms by ordinal) but
-        // never unlocks, and the lists players see (the menu, /kagune form, stored ids) skip it (KanekiForms.forms). The forms
+        // never unlocks, and the lists players see (the menu, /kagune form, stored ids) skip it (RinkakuForms.forms). The forms
         // left come every 250 mastery: Seed 0, Twin 250, Four-Tail 500, the first kakuja 750, the final kakuja 1000.
         setMastery(init, "PARTIAL_KAKUJA", 450, Integer.MAX_VALUE);
         setMastery(init, "RINKAKU_DUAL", 100, 250);
@@ -720,7 +779,7 @@ public final class KagunePatch implements Opcodes {
         LdcInsnNode stage = (LdcInsnNode)onlyLdc(method(screen, "stageName"), "Partial Kakuja");
         stage.cst = "Centipede Kakuja";
         MethodNode draw = method(screen, "drawPreview");
-        // 3.0.3: the board and the identity panel list only the five mutations Kaneki keeps, all of which can be taken.
+        // 3.0.3: the board and the identity panel list only the five mutations Rinkaku keeps, all of which can be taken.
         expect(redirectMutations(method(screen, "drawMutationTree")), 2, "board mutation lists");
         expect(redirectMutations(method(screen, "drawIdentity")), 1, "identity mutation list");
         ((LdcInsnNode)onlyLdc(method(screen, "drawMutationTree"), "Tier choice locks its siblings. /kagune reset starts over.")).cst =
@@ -755,7 +814,7 @@ public final class KagunePatch implements Opcodes {
         fill.add(new VarInsnNode(ALOAD, formVar));
         fill.add(new VarInsnNode(ILOAD, selectedLoad.var));
         fill.add(new VarInsnNode(ILOAD, unlockedLoad.var));
-        fill.add(new MethodInsnNode(INVOKESTATIC, KANEKI_FORMS, "buttonColor", "(IL" + FORM + ";ZZ)I", false));
+        fill.add(new MethodInsnNode(INVOKESTATIC, RINKAKU_FORMS, "buttonColor", "(IL" + FORM + ";ZZ)I", false));
         draw.instructions.insertBefore(store, fill);
         // label colour = unlocked ? 0xFFF6DDE4 : 0xFF705860, handed straight to drawCenteredString
         AbstractInsnNode labelDraw = next(onlyLdc(draw, 0xFF705860));
@@ -764,7 +823,7 @@ public final class KagunePatch implements Opcodes {
         InsnList label = new InsnList();
         label.add(new VarInsnNode(ALOAD, formVar));
         label.add(new VarInsnNode(ILOAD, unlockedLoad.var));
-        label.add(new MethodInsnNode(INVOKESTATIC, KANEKI_FORMS, "labelColor", "(IL" + FORM + ";Z)I", false));
+        label.add(new MethodInsnNode(INVOKESTATIC, RINKAKU_FORMS, "labelColor", "(IL" + FORM + ";Z)I", false));
         draw.instructions.insertBefore(labelDraw, label);
     }
 
@@ -785,6 +844,18 @@ public final class KagunePatch implements Opcodes {
                 entries.put(entry.getName(), input.getInputStream(entry).readAllBytes());
             }
         }
+        // 1.2.5: first, the original's own names for the show's characters (ORIGINAL_NAMES), in every class that has them.
+        int renamedClasses = 0;
+        for (var entry : entries.entrySet()) {
+            if (entry.getKey().endsWith(".class")) {
+                ClassNode node = read(entry.getValue());
+                if (renameOriginal(node)) {
+                    entry.setValue(write(node));
+                    renamedClasses++;
+                }
+            }
+        }
+        expect(renamedClasses, 3, "original classes renamed (the form, the world renderer, the menu)");
         ClassNode controller = read(entries.get(CONTROLLER + ".class"));
         ClassNode state = read(entries.get(STATE + ".class"));
         ClassNode aura = read(entries.get(AURA + ".class"));
@@ -804,9 +875,9 @@ public final class KagunePatch implements Opcodes {
         ClassNode profile = read(entries.get(PROFILE + ".class"));
         // 1.2.0: the chosen path lives inside the profile root, so death-cloning carries it and /kagune reset clears it.
         expect(widen(profile, "root"), 1, "profile root widening");
-        // 3.0.3: a cut mutation never counts and the guard is everyone's (KanekiMutationsServer).
-        trampoline(profile, "hasMutation", "com/hex/kagune/control/server/KanekiMutationsServer", "hasMutation");
-        // 3.0.3: every Kaneki hit is brought down with Ayato's (DamageBalance).
+        // 3.0.3: a cut mutation never counts and the guard is everyone's (RinkakuMutationsServer).
+        trampoline(profile, "hasMutation", "com/hex/kagune/control/server/RinkakuMutationsServer", "hasMutation");
+        // 3.0.3: every Rinkaku hit is brought down with Ukaku's (DamageBalance).
         for (String damage : new String[] {"swipeDamage", "crushDamage", "slamDamage"})
             trampoline(profile, damage, "com/hex/kagune/control/server/KaguneBalance", damage);
         // 6.0.4: what gameplay earns goes up the mastery curve (MasteryGain); the command's own adds stay exact.
@@ -826,13 +897,13 @@ public final class KagunePatch implements Opcodes {
         ClassNode worldRenderer = read(entries.get(WORLD_RENDERER + ".class"));
         ClassNode ambient = read(entries.get(AMBIENT + ".class"));
         redirectTendrilView(worldRenderer, "renderWorld");
-        // 3.0.0: Kaneki's kakuja mask is drawn on the head model part (KanekiMaskLayer), not in the world beside it.
-        trampoline(worldRenderer, "emitKanekiMask", "com/hex/kagune/control/client/render/KanekiMaskLayer", "emitKanekiMask");
-        // 3.1.0: Kaneki's centipede legs are drawn by CentipedeRenderer (plated legs on their own springs); the original's tube
+        // 3.0.0: Rinkaku's kakuja mask is drawn on the head model part (RinkakuMaskLayer), not in the world beside it.
+        trampoline(worldRenderer, "emitRinkakuMask", "com/hex/kagune/control/client/render/RinkakuMaskLayer", "emitRinkakuMask");
+        // 3.1.0: Rinkaku's centipede legs are drawn by CentipedeRenderer (plated legs on their own springs); the original's tube
         // still draws every other limb. Its limb deployment (manifest/dismiss/reshape timing) is shared.
         trampoline(worldRenderer, "emitTube", "com/hex/kagune/control/client/render/CentipedeRenderer", "emitTube");
         expect(widen(worldRenderer, "limbDeployment"), 1, "limb deployment widening");
-        // 5.0.0: Kaneki's kakuja burst out of his body and shatter (KakujaFx): the limb deployment goes through it.
+        // 5.0.0: Rinkaku's kakuja burst out of his body and shatter (KakujaFx): the limb deployment goes through it.
         trampoline(worldRenderer, "limbDeployment", "com/hex/kagune/control/client/fx/KakujaFx", "limbDeployment");
         redirectTendrilView(ambient, "clientTick");
         entries.put(WORLD_RENDERER + ".class", write(worldRenderer));

@@ -1,14 +1,14 @@
 package com.hex.kagune.control.client.animation;
 
-import com.hex.kagune.control.eto.EtoMove;
-import com.hex.kagune.control.eto.EtoRules;
-import com.hex.kagune.control.eto.OwlRules;
-import com.hex.kagune.control.eto.OwlShards;
-import com.hex.kagune.control.eto.OwlSpikes;
+import com.hex.kagune.control.pale.PaleMove;
+import com.hex.kagune.control.pale.PaleRules;
+import com.hex.kagune.control.pale.OwlRules;
+import com.hex.kagune.control.pale.OwlShards;
+import com.hex.kagune.control.pale.OwlSpikes;
 
 /**
- * 6.2.0: the Owl's own moves (Eto's first kakuja; pure, tested): her body ({@link #body}) and the two giant arms ({@link #swing}),
- * every client posing them from the move the server began and how long ago, as her base moves are ({@link EtoMotions}).
+ * 6.2.0: the Owl's own moves (Pale's first kakuja; pure, tested): her body ({@link #body}) and the two giant arms ({@link #swing}),
+ * every client posing them from the move the server began and how long ago, as her base moves are ({@link PaleMotions}).
  *
  * <p>The giant arms are heavy: each is keyed where its upper arm and its blade go, and what is drawn follows the keys with its
  * weight ({@link #heavy}): the upper arm a little behind what drives it, the blade, heavier at its end, a touch further behind, so
@@ -37,15 +37,15 @@ public final class OwlMotions {
     public static final float BODY_OUT = 6.0F;
 
     /** A giant arm's key: {@code at} ticks into the move, swung {@code swing} (null: as it began), eased into as {@code ease} says. */
-    record ArmKey(float at, OwlPose.Swing swing, EtoMotions.Ease ease) {
-        static final ArmKey START = new ArmKey(0.0F, null, EtoMotions.Ease.SMOOTH);
+    record ArmKey(float at, OwlPose.Swing swing, PaleMotions.Ease ease) {
+        static final ArmKey START = new ArmKey(0.0F, null, PaleMotions.Ease.SMOOTH);
     }
 
     /** True for the moves whose giant arms are keyed here (the rest leave them to her idle). */
-    public static boolean armed(EtoMove move) {
-        return move == EtoMove.OWL_PUNCH_CHARGE || move == EtoMove.OWL_PUNCH || move == EtoMove.OWL_KICK || move == EtoMove.OWL_SPIKES
-            || move == EtoMove.OWL_STRIKE || move == EtoMove.OWL_WHIRL || move == EtoMove.OWL_LEAP || move == EtoMove.OWL_FISSURE_CHARGE
-            || move == EtoMove.OWL_FISSURE || move == EtoMove.OWL_WATCH || move == EtoMove.OWL_VOLLEY;
+    public static boolean armed(PaleMove move) {
+        return move == PaleMove.OWL_PUNCH_CHARGE || move == PaleMove.OWL_PUNCH || move == PaleMove.OWL_KICK || move == PaleMove.OWL_SPIKES
+            || move == PaleMove.OWL_STRIKE || move == PaleMove.OWL_WHIRL || move == PaleMove.OWL_LEAP || move == PaleMove.OWL_FISSURE_CHARGE
+            || move == PaleMove.OWL_FISSURE || move == PaleMove.OWL_WATCH || move == PaleMove.OWL_VOLLEY;
     }
 
     /**
@@ -53,11 +53,11 @@ public final class OwlMotions {
      * it begins (the arms whirl round with her; before it, the blade stays in what it skewered whatever her hips do); everything
      * else stays keyed to the way she faces (so the punch lands where she aims).
      */
-    static double followsSpin(EtoMove move, double age, int detail) {
-        if (move == EtoMove.OWL_WHIRL) {
+    static double followsSpin(PaleMove move, double age, int detail) {
+        if (move == PaleMove.OWL_WHIRL) {
             return 1.0; // round with her, all of it
         }
-        if (move != EtoMove.OWL_KICK) {
+        if (move != PaleMove.OWL_KICK) {
             return 0.0;
         }
         return OwlPose.smooth((age - Math.max(1, detail) - KICK_FOLLOW_FROM) / KICK_FOLLOW_OVER);
@@ -82,7 +82,7 @@ public final class OwlMotions {
      * Her body in the Owl's {@code move}, {@code age} ticks in (its detail and charge as sent), out of {@code from} (the pose she was
      * drawn in when it began; null: the Owl's stance): bulked up under the kakuja throughout. Null for any other move.
      */
-    public static RigPose body(EtoMove move, double age, int detail, float charge, RigPose from) {
+    public static RigPose body(PaleMove move, double age, int detail, float charge, RigPose from) {
         RigPose pose = switch (move) {
             case OWL_PUNCH_CHARGE -> punchCharge(age, from);
             case OWL_PUNCH -> punch(age, from);
@@ -106,15 +106,15 @@ public final class OwlMotions {
 
     /**
      * Her body in the Owl's {@code move} as the move alone poses it (out of the Owl's stance), turned {@code turn} as
-     * {@link EtoMotions#fleshBody} is, settled: what is put on her when her body isn't drawn this frame (first person). Null for any
+     * {@link PaleMotions#fleshBody} is, settled: what is put on her when her body isn't drawn this frame (first person). Null for any
      * other move.
      */
-    public static RigPose anyBody(EtoMove move, double age, int detail, float charge, float turn) {
+    public static RigPose anyBody(PaleMove move, double age, int detail, float charge, float turn) {
         RigPose pose = body(move, age, detail, charge, null);
         if (pose == null) {
             return null;
         }
-        if (!EtoMotions.facesLook(move)) {
+        if (!PaleMotions.facesLook(move)) {
             pose.spin -= turn;
             pose.headY -= turn;
         }
@@ -131,10 +131,10 @@ public final class OwlMotions {
 
     /** A move's start: what was drawn (its whole-body turns as the nearest angle), or the Owl's stance. */
     static RigPose start(RigPose from) {
-        RigPose start = from == null ? stance() : EtoMotions.copy(from);
-        start.spin = EtoMotions.wrap(start.spin);
-        start.flip = EtoMotions.wrap(start.flip);
-        start.roll = EtoMotions.wrap(start.roll);
+        RigPose start = from == null ? stance() : PaleMotions.copy(from);
+        start.spin = PaleMotions.wrap(start.spin);
+        start.flip = PaleMotions.wrap(start.flip);
+        start.roll = PaleMotions.wrap(start.roll);
         return start;
     }
 
@@ -148,8 +148,8 @@ public final class OwlMotions {
      * weight, hunched over her knees, wound further round.
      */
     static RigPose punchCoil(float charge) {
-        RigPose coil = EtoStrikePoses.punchCoil0().scale(1.0F - charge);
-        coil.add(EtoStrikePoses.punchCoil1(), charge);
+        RigPose coil = PaleStrikePoses.punchCoil0().scale(1.0F - charge);
+        coil.add(PaleStrikePoses.punchCoil1(), charge);
         coil.lean += 0.12F + 0.12F * charge;
         coil.headX -= 0.08F + 0.06F * charge;
         coil.twist += 0.1F * charge;
@@ -165,9 +165,9 @@ public final class OwlMotions {
      * full, the whole of her trembles with it.
      */
     static RigPose punchCharge(double age, RigPose from) {
-        float charge = EtoMotions.smooth01((float)(age / EtoRules.PUNCH_CHARGE_TICKS));
+        float charge = PaleMotions.smooth01((float)(age / PaleRules.PUNCH_CHARGE_TICKS));
         RigPose coil = punchCoil(charge);
-        float tremble = EtoMotions.smooth01((float)((age - EtoRules.PUNCH_CHARGE_TICKS * 0.6) / (EtoRules.PUNCH_CHARGE_TICKS * 0.4)));
+        float tremble = PaleMotions.smooth01((float)((age - PaleRules.PUNCH_CHARGE_TICKS * 0.6) / (PaleRules.PUNCH_CHARGE_TICKS * 0.4)));
         if (tremble > 0.0F) {
             float a = 0.04F * tremble;
             coil.rightArmX += a * (float)Math.sin(age * 7.3);
@@ -177,13 +177,13 @@ public final class OwlMotions {
         }
         if (age < PUNCH_INTO) {
             RigPose start = start(from);
-            float u = EtoMotions.smooth01((float)(age / PUNCH_INTO));
-            RigPose blended = EtoMotions.copy(start).scale(1.0F - u);
+            float u = PaleMotions.smooth01((float)(age / PUNCH_INTO));
+            RigPose blended = PaleMotions.copy(start).scale(1.0F - u);
             blended.add(coil, u);
-            EtoMotions.overhead(blended, start, punchCoil(0.0F), u);
+            PaleMotions.overhead(blended, start, punchCoil(0.0F), u);
             coil = blended;
         }
-        EtoMotions.grounded(coil);
+        PaleMotions.grounded(coil);
         return coil;
     }
 
@@ -192,13 +192,13 @@ public final class OwlMotions {
      * drive, heavier, the lunge longer, the weight thrown in behind it.
      */
     static RigPose punch(double age, RigPose from) {
-        RigPose pose = EtoMotions.punch(age, from == null ? punchCoil(1.0F) : from);
+        RigPose pose = PaleMotions.punch(age, from == null ? punchCoil(1.0F) : from);
         // The weight behind it: sunk a little deeper, leaning further into the blow, then easing up out of it.
-        float into = EtoMotions.smooth01((float)(age / EtoRules.PUNCH_IMPACT)) * (1.0F - EtoMotions.smooth01((float)((age - 9.0) / 9.0)));
+        float into = PaleMotions.smooth01((float)(age / PaleRules.PUNCH_IMPACT)) * (1.0F - PaleMotions.smooth01((float)((age - 9.0) / 9.0)));
         pose.lean += 0.05F * into;
         pose.lunge += 1.0F * into;
         pose.leftKnee += 0.1F * into;
-        EtoMotions.grounded(pose);
+        PaleMotions.grounded(pose);
         return pose;
     }
 
@@ -322,18 +322,18 @@ public final class OwlMotions {
     }
 
     /** The kick's keys after the dash (ticks after it). */
-    static EtoMotions.Key[] kickKeys() {
-        return new EtoMotions.Key[] {EtoMotions.Key.START,
-            new EtoMotions.Key(1.5F, kickSkewer(), EtoMotions.Ease.IN),
-            new EtoMotions.Key(3.6F, kickWind(), EtoMotions.Ease.SMOOTH),
-            new EtoMotions.Key((float)OwlRules.KICK_SLASH, kickSlash(), EtoMotions.Ease.IN),
-            new EtoMotions.Key(6.2F, kickFollow(), EtoMotions.Ease.OUT),
-            new EtoMotions.Key(7.6F, kickChamber(), EtoMotions.Ease.SMOOTH),
-            new EtoMotions.Key(8.9F, kickSpin(), EtoMotions.Ease.SMOOTH),
-            new EtoMotions.Key((float)OwlRules.KICK_BLOW, kickHeel(), EtoMotions.Ease.SMOOTH),
-            new EtoMotions.Key(11.6F, kickThrough(), EtoMotions.Ease.OUT),
-            new EtoMotions.Key(13.6F, kickLand(), EtoMotions.Ease.SMOOTH),
-            new EtoMotions.Key((float)OwlRules.KICK_TICKS, kickEnd(), EtoMotions.Ease.SMOOTH)};
+    static PaleMotions.Key[] kickKeys() {
+        return new PaleMotions.Key[] {PaleMotions.Key.START,
+            new PaleMotions.Key(1.5F, kickSkewer(), PaleMotions.Ease.IN),
+            new PaleMotions.Key(3.6F, kickWind(), PaleMotions.Ease.SMOOTH),
+            new PaleMotions.Key((float)OwlRules.KICK_SLASH, kickSlash(), PaleMotions.Ease.IN),
+            new PaleMotions.Key(6.2F, kickFollow(), PaleMotions.Ease.OUT),
+            new PaleMotions.Key(7.6F, kickChamber(), PaleMotions.Ease.SMOOTH),
+            new PaleMotions.Key(8.9F, kickSpin(), PaleMotions.Ease.SMOOTH),
+            new PaleMotions.Key((float)OwlRules.KICK_BLOW, kickHeel(), PaleMotions.Ease.SMOOTH),
+            new PaleMotions.Key(11.6F, kickThrough(), PaleMotions.Ease.OUT),
+            new PaleMotions.Key(13.6F, kickLand(), PaleMotions.Ease.SMOOTH),
+            new PaleMotions.Key((float)OwlRules.KICK_TICKS, kickEnd(), PaleMotions.Ease.SMOOTH)};
     }
 
     /**
@@ -344,17 +344,17 @@ public final class OwlMotions {
     static RigPose kick(double age, int dash, RigPose from) {
         int ticks = Math.max(1, dash);
         RigPose start = start(from);
-        EtoMotions.Key[] rush = {EtoMotions.Key.START, new EtoMotions.Key((float)Math.min(1.2, ticks * 0.6), kickRush(), EtoMotions.Ease.SMOOTH)};
+        PaleMotions.Key[] rush = {PaleMotions.Key.START, new PaleMotions.Key((float)Math.min(1.2, ticks * 0.6), kickRush(), PaleMotions.Ease.SMOOTH)};
         RigPose pose;
         if (age < ticks) {
-            pose = EtoMotions.sample(rush, (float)age, start);
+            pose = PaleMotions.sample(rush, (float)age, start);
             if (age < rush[1].at()) {
-                EtoMotions.overhead(pose, start, rush[1].pose(), (float)(age / rush[1].at()));
+                PaleMotions.overhead(pose, start, rush[1].pose(), (float)(age / rush[1].at()));
             }
         } else {
-            pose = EtoMotions.sample(kickKeys(), (float)(age - ticks), EtoMotions.sample(rush, ticks, start));
+            pose = PaleMotions.sample(kickKeys(), (float)(age - ticks), PaleMotions.sample(rush, ticks, start));
         }
-        EtoMotions.grounded(pose);
+        PaleMotions.grounded(pose);
         return pose;
     }
 
@@ -371,98 +371,98 @@ public final class OwlMotions {
     }
 
     /** The keys of cut {@code stage}: the wind-up, the cut (accelerating into the impact tick), the follow-through, back to her stance. */
-    static EtoMotions.Key[] rendKeys(int stage) {
+    static PaleMotions.Key[] rendKeys(int stage) {
         RigPose guard = rendGuard();
         return switch (stage) {
-            case 0 -> new EtoMotions.Key[] {EtoMotions.Key.START,
-                new EtoMotions.Key(2.0F, key(p -> {
+            case 0 -> new PaleMotions.Key[] {PaleMotions.Key.START,
+                new PaleMotions.Key(2.0F, key(p -> {
                     // Wound up to her right, the right side reared back.
                     p.lean = 0.15F; p.twist = 0.55F; p.spin = -0.15F; p.headX = -0.15F;
                     p.rightLegX = -0.35F; p.rightKnee = 0.7F; p.rightLegZ = 0.12F; p.leftLegX = 0.2F; p.leftKnee = 0.5F; p.leftLegZ = -0.12F;
                     p.rightArmX = -1.5F; p.rightArmZ = 0.65F; p.rightElbow = 0.9F; p.leftArmX = -0.6F; p.leftArmZ = -0.4F; p.leftElbow = 1.0F;
-                }), EtoMotions.Ease.SMOOTH),
-                new EtoMotions.Key((float)OwlRules.REND_IMPACT[0], key(p -> {
+                }), PaleMotions.Ease.SMOOTH),
+                new PaleMotions.Key((float)OwlRules.REND_IMPACT[0], key(p -> {
                     // Down across her: unwound to her left, lunging into it.
                     p.lean = 0.38F; p.twist = -0.45F; p.spin = 0.15F; p.lunge = 1.5F;
                     p.rightLegX = -0.6F; p.rightKnee = 1.0F; p.rightLegZ = 0.12F; p.leftLegX = 0.4F; p.leftKnee = 0.4F; p.leftLegZ = -0.12F;
                     p.rightArmX = -0.45F; p.rightArmZ = 0.3F; p.rightElbow = 0.35F; p.leftArmX = 0.2F; p.leftArmZ = -0.3F; p.leftElbow = 1.2F;
-                }), EtoMotions.Ease.IN),
-                new EtoMotions.Key(6.0F, key(p -> {
+                }), PaleMotions.Ease.IN),
+                new PaleMotions.Key(6.0F, key(p -> {
                     p.lean = 0.32F; p.twist = -0.6F; p.spin = 0.2F; p.lunge = 1.0F;
                     p.rightLegX = -0.55F; p.rightKnee = 0.95F; p.rightLegZ = 0.12F; p.leftLegX = 0.35F; p.leftKnee = 0.45F; p.leftLegZ = -0.12F;
                     p.rightArmX = -0.3F; p.rightArmZ = 0.3F; p.rightElbow = 0.5F; p.leftArmX = 0.25F; p.leftArmZ = -0.3F; p.leftElbow = 1.2F;
-                }), EtoMotions.Ease.OUT),
-                new EtoMotions.Key((float)OwlRules.REND_TICKS[0], guard, EtoMotions.Ease.SMOOTH)};
-            case 1 -> new EtoMotions.Key[] {EtoMotions.Key.START,
-                new EtoMotions.Key(2.0F, key(p -> {
+                }), PaleMotions.Ease.OUT),
+                new PaleMotions.Key((float)OwlRules.REND_TICKS[0], guard, PaleMotions.Ease.SMOOTH)};
+            case 1 -> new PaleMotions.Key[] {PaleMotions.Key.START,
+                new PaleMotions.Key(2.0F, key(p -> {
                     // Wound up to her left, the left side drawn back.
                     p.lean = 0.2F; p.twist = -0.65F; p.spin = 0.15F; p.headX = -0.12F;
                     p.rightLegX = -0.3F; p.rightKnee = 0.75F; p.rightLegZ = 0.12F; p.leftLegX = 0.15F; p.leftKnee = 0.5F; p.leftLegZ = -0.12F;
                     p.rightArmX = -0.8F; p.rightArmZ = 0.4F; p.rightElbow = 1.1F; p.leftArmX = 0.4F; p.leftArmZ = -0.7F; p.leftElbow = 0.8F;
-                }), EtoMotions.Ease.SMOOTH),
-                new EtoMotions.Key((float)OwlRules.REND_IMPACT[1], key(p -> {
+                }), PaleMotions.Ease.SMOOTH),
+                new PaleMotions.Key((float)OwlRules.REND_IMPACT[1], key(p -> {
                     // Across her from the left: unwound hard to her right.
                     p.lean = 0.3F; p.twist = 0.5F; p.spin = -0.15F; p.lunge = 1.3F;
                     p.rightLegX = -0.55F; p.rightKnee = 0.95F; p.rightLegZ = 0.12F; p.leftLegX = 0.35F; p.leftKnee = 0.45F; p.leftLegZ = -0.12F;
                     p.rightArmX = -0.5F; p.rightArmZ = 0.35F; p.rightElbow = 1.1F; p.leftArmX = -1.2F; p.leftArmZ = -0.45F; p.leftElbow = 0.4F;
-                }), EtoMotions.Ease.IN),
-                new EtoMotions.Key(6.0F, key(p -> {
+                }), PaleMotions.Ease.IN),
+                new PaleMotions.Key(6.0F, key(p -> {
                     p.lean = 0.28F; p.twist = 0.65F; p.spin = -0.2F; p.lunge = 0.9F;
                     p.rightLegX = -0.5F; p.rightKnee = 0.9F; p.rightLegZ = 0.12F; p.leftLegX = 0.3F; p.leftKnee = 0.45F; p.leftLegZ = -0.12F;
                     p.rightArmX = -0.45F; p.rightArmZ = 0.4F; p.rightElbow = 1.1F; p.leftArmX = -0.9F; p.leftArmZ = -0.55F; p.leftElbow = 0.5F;
-                }), EtoMotions.Ease.OUT),
-                new EtoMotions.Key((float)OwlRules.REND_TICKS[1], guard, EtoMotions.Ease.SMOOTH)};
-            case 2 -> new EtoMotions.Key[] {EtoMotions.Key.START,
-                new EtoMotions.Key(2.5F, key(p -> {
+                }), PaleMotions.Ease.OUT),
+                new PaleMotions.Key((float)OwlRules.REND_TICKS[1], guard, PaleMotions.Ease.SMOOTH)};
+            case 2 -> new PaleMotions.Key[] {PaleMotions.Key.START,
+                new PaleMotions.Key(2.5F, key(p -> {
                     // Opened right up: her chest out, both arms flung wide.
                     p.lean = 0.08F; p.headX = -0.2F;
                     p.rightLegX = -0.3F; p.rightKnee = 0.6F; p.rightLegZ = 0.15F; p.leftLegX = 0.1F; p.leftKnee = 0.5F; p.leftLegZ = -0.15F;
                     p.rightArmX = -0.6F; p.rightArmZ = 1.1F; p.rightElbow = 0.4F; p.leftArmX = -0.6F; p.leftArmZ = -1.1F; p.leftElbow = 0.4F;
-                }), EtoMotions.Ease.SMOOTH),
-                new EtoMotions.Key((float)OwlRules.REND_IMPACT[2], key(p -> {
+                }), PaleMotions.Ease.SMOOTH),
+                new PaleMotions.Key((float)OwlRules.REND_IMPACT[2], key(p -> {
                     // Closed: thrown forward into the scissor, her arms swept in.
                     p.lean = 0.36F; p.headX = -0.05F; p.lunge = 1.5F;
                     p.rightLegX = -0.6F; p.rightKnee = 1.0F; p.rightLegZ = 0.12F; p.leftLegX = 0.35F; p.leftKnee = 0.45F; p.leftLegZ = -0.12F;
                     p.rightArmX = -1.0F; p.rightArmZ = 0.3F; p.rightElbow = 0.7F; p.leftArmX = -1.0F; p.leftArmZ = -0.3F; p.leftElbow = 0.7F;
-                }), EtoMotions.Ease.IN),
-                new EtoMotions.Key(6.6F, key(p -> {
+                }), PaleMotions.Ease.IN),
+                new PaleMotions.Key(6.6F, key(p -> {
                     p.lean = 0.3F; p.lunge = 1.0F;
                     p.rightLegX = -0.55F; p.rightKnee = 0.95F; p.rightLegZ = 0.12F; p.leftLegX = 0.3F; p.leftKnee = 0.45F; p.leftLegZ = -0.12F;
                     p.rightArmX = -0.8F; p.rightArmZ = 0.35F; p.rightElbow = 0.9F; p.leftArmX = -0.8F; p.leftArmZ = -0.35F; p.leftElbow = 0.9F;
-                }), EtoMotions.Ease.OUT),
-                new EtoMotions.Key((float)OwlRules.REND_TICKS[2], guard, EtoMotions.Ease.SMOOTH)};
-            default -> new EtoMotions.Key[] {EtoMotions.Key.START,
-                new EtoMotions.Key(4.0F, key(p -> {
+                }), PaleMotions.Ease.OUT),
+                new PaleMotions.Key((float)OwlRules.REND_TICKS[2], guard, PaleMotions.Ease.SMOOTH)};
+            default -> new PaleMotions.Key[] {PaleMotions.Key.START,
+                new PaleMotions.Key(4.0F, key(p -> {
                     // Up on her toes, risen tall and straight, both arms raised over her head with the blades.
                     p.lean = 0.04F; p.headX = -0.08F;
                     p.rightLegX = -0.15F; p.rightKnee = 0.25F; p.rightLegZ = 0.12F; p.leftLegX = 0.05F; p.leftKnee = 0.2F; p.leftLegZ = -0.12F;
                     p.rightArmX = -2.6F; p.rightArmZ = 0.3F; p.rightElbow = 0.5F; p.leftArmX = -2.6F; p.leftArmZ = -0.3F; p.leftElbow = 0.5F;
-                }), EtoMotions.Ease.SMOOTH),
-                new EtoMotions.Key((float)OwlRules.REND_IMPACT[3], key(p -> {
+                }), PaleMotions.Ease.SMOOTH),
+                new PaleMotions.Key((float)OwlRules.REND_IMPACT[3], key(p -> {
                     // Brought down with all her weight, sunk deep behind it.
                     p.lean = 0.72F; p.headX = 0.2F; p.lunge = 2.0F;
                     p.rightLegX = -0.65F; p.rightKnee = 1.25F; p.rightLegZ = 0.16F; p.leftLegX = 0.2F; p.leftKnee = 1.1F; p.leftLegZ = -0.16F;
                     p.rightArmX = -0.75F; p.rightArmZ = 0.3F; p.rightElbow = 0.25F; p.leftArmX = -0.75F; p.leftArmZ = -0.3F; p.leftElbow = 0.25F;
-                }), EtoMotions.Ease.IN),
-                new EtoMotions.Key(10.0F, key(p -> {
+                }), PaleMotions.Ease.IN),
+                new PaleMotions.Key(10.0F, key(p -> {
                     p.lean = 0.66F; p.headX = 0.12F; p.lunge = 1.8F;
                     p.rightLegX = -0.62F; p.rightKnee = 1.2F; p.rightLegZ = 0.16F; p.leftLegX = 0.2F; p.leftKnee = 1.05F; p.leftLegZ = -0.16F;
                     p.rightArmX = -0.7F; p.rightArmZ = 0.3F; p.rightElbow = 0.3F; p.leftArmX = -0.7F; p.leftArmZ = -0.3F; p.leftElbow = 0.3F;
-                }), EtoMotions.Ease.SMOOTH),
-                new EtoMotions.Key((float)OwlRules.REND_TICKS[3], stance(), EtoMotions.Ease.SMOOTH)};
+                }), PaleMotions.Ease.SMOOTH),
+                new PaleMotions.Key((float)OwlRules.REND_TICKS[3], stance(), PaleMotions.Ease.SMOOTH)};
         };
     }
 
     /** Cut {@code stage} of the Rend {@code age} ticks in, out of {@code from} (the last cut's follow-through, as drawn). */
     static RigPose rend(double age, int stage, RigPose from) {
         int at = Math.max(0, Math.min(OwlRules.REND_STAGES - 1, stage));
-        EtoMotions.Key[] keys = rendKeys(at);
+        PaleMotions.Key[] keys = rendKeys(at);
         RigPose start = start(from);
-        RigPose pose = EtoMotions.sample(keys, (float)age, start);
+        RigPose pose = PaleMotions.sample(keys, (float)age, start);
         if (age < keys[1].at()) {
-            EtoMotions.overhead(pose, start, keys[1].pose(), (float)(age / keys[1].at()));
+            PaleMotions.overhead(pose, start, keys[1].pose(), (float)(age / keys[1].at()));
         }
-        EtoMotions.grounded(pose);
+        PaleMotions.grounded(pose);
         return pose;
     }
 
@@ -474,27 +474,27 @@ public final class OwlMotions {
         boolean right = side > 0;
         return switch (stage) {
             case 0 -> right ? new ArmKey[] {ArmKey.START,
-                new ArmKey(2.0F, new OwlPose.Swing(0.79, 3.51, 0.55, 2.86, 0.3), EtoMotions.Ease.SMOOTH),
-                new ArmKey(3.9F, new OwlPose.Swing(0.04, 1.62, -0.58, 1.39, 0.3), EtoMotions.Ease.IN),
-                new ArmKey(5.6F, new OwlPose.Swing(-0.57, 1.29, -1.06, 0.63, 0.28), EtoMotions.Ease.OUT),
-                new ArmKey((float)OwlRules.REND_TICKS[0], REND_GUARD, EtoMotions.Ease.SMOOTH)}
-                : new ArmKey[] {ArmKey.START, new ArmKey(3.0F, REND_GUARD, EtoMotions.Ease.SMOOTH)};
-            case 1 -> right ? new ArmKey[] {ArmKey.START, new ArmKey(3.0F, REND_GUARD, EtoMotions.Ease.SMOOTH)}
+                new ArmKey(2.0F, new OwlPose.Swing(0.79, 3.51, 0.55, 2.86, 0.3), PaleMotions.Ease.SMOOTH),
+                new ArmKey(3.9F, new OwlPose.Swing(0.04, 1.62, -0.58, 1.39, 0.3), PaleMotions.Ease.IN),
+                new ArmKey(5.6F, new OwlPose.Swing(-0.57, 1.29, -1.06, 0.63, 0.28), PaleMotions.Ease.OUT),
+                new ArmKey((float)OwlRules.REND_TICKS[0], REND_GUARD, PaleMotions.Ease.SMOOTH)}
+                : new ArmKey[] {ArmKey.START, new ArmKey(3.0F, REND_GUARD, PaleMotions.Ease.SMOOTH)};
+            case 1 -> right ? new ArmKey[] {ArmKey.START, new ArmKey(3.0F, REND_GUARD, PaleMotions.Ease.SMOOTH)}
                 : new ArmKey[] {ArmKey.START,
-                    new ArmKey(1.8F, new OwlPose.Swing(1.21, -0.18, 1.09, 1.28, 0.26), EtoMotions.Ease.SMOOTH),
-                    new ArmKey(3.9F, new OwlPose.Swing(0.1, 1.93, -0.4, 1.69, 0.3), EtoMotions.Ease.IN),
-                    new ArmKey(5.5F, new OwlPose.Swing(-0.66, 1.98, -1.04, 1.35, 0.3), EtoMotions.Ease.OUT),
-                    new ArmKey((float)OwlRules.REND_TICKS[1], REND_GUARD, EtoMotions.Ease.SMOOTH)};
+                    new ArmKey(1.8F, new OwlPose.Swing(1.21, -0.18, 1.09, 1.28, 0.26), PaleMotions.Ease.SMOOTH),
+                    new ArmKey(3.9F, new OwlPose.Swing(0.1, 1.93, -0.4, 1.69, 0.3), PaleMotions.Ease.IN),
+                    new ArmKey(5.5F, new OwlPose.Swing(-0.66, 1.98, -1.04, 1.35, 0.3), PaleMotions.Ease.OUT),
+                    new ArmKey((float)OwlRules.REND_TICKS[1], REND_GUARD, PaleMotions.Ease.SMOOTH)};
             case 2 -> new ArmKey[] {ArmKey.START,
-                new ArmKey(2.5F, new OwlPose.Swing(1.48, 1.21, 0.94, 1.71, 0.3), EtoMotions.Ease.SMOOTH),
-                new ArmKey(4.9F, right ? new OwlPose.Swing(-0.4, 1.92, -0.85, 1.51, 0.3) : new OwlPose.Swing(-0.33, 1.69, -0.89, 1.25, 0.3), EtoMotions.Ease.IN),
-                new ArmKey(6.5F, right ? new OwlPose.Swing(-0.67, 1.93, -1.06, 1.28, 0.28) : new OwlPose.Swing(-0.67, 1.71, -1.06, 1.07, 0.28), EtoMotions.Ease.OUT),
-                new ArmKey((float)OwlRules.REND_TICKS[2], REND_GUARD, EtoMotions.Ease.SMOOTH)};
+                new ArmKey(2.5F, new OwlPose.Swing(1.48, 1.21, 0.94, 1.71, 0.3), PaleMotions.Ease.SMOOTH),
+                new ArmKey(4.9F, right ? new OwlPose.Swing(-0.4, 1.92, -0.85, 1.51, 0.3) : new OwlPose.Swing(-0.33, 1.69, -0.89, 1.25, 0.3), PaleMotions.Ease.IN),
+                new ArmKey(6.5F, right ? new OwlPose.Swing(-0.67, 1.93, -1.06, 1.28, 0.28) : new OwlPose.Swing(-0.67, 1.71, -1.06, 1.07, 0.28), PaleMotions.Ease.OUT),
+                new ArmKey((float)OwlRules.REND_TICKS[2], REND_GUARD, PaleMotions.Ease.SMOOTH)};
             default -> new ArmKey[] {ArmKey.START,
-                new ArmKey(4.0F, new OwlPose.Swing(0.37, 3.83, 0.22, 3.27, 0.34), EtoMotions.Ease.SMOOTH),
-                new ArmKey(6.8F, new OwlPose.Swing(0.29, 1.01, -0.34, 1.08, 0.26), EtoMotions.Ease.IN),
-                new ArmKey(10.0F, new OwlPose.Swing(0.3, 0.98, -0.33, 1.07, 0.24), EtoMotions.Ease.SMOOTH),
-                new ArmKey((float)OwlRules.REND_TICKS[3], OwlPose.REST, EtoMotions.Ease.SMOOTH)};
+                new ArmKey(4.0F, new OwlPose.Swing(0.37, 3.83, 0.22, 3.27, 0.34), PaleMotions.Ease.SMOOTH),
+                new ArmKey(6.8F, new OwlPose.Swing(0.29, 1.01, -0.34, 1.08, 0.26), PaleMotions.Ease.IN),
+                new ArmKey(10.0F, new OwlPose.Swing(0.3, 0.98, -0.33, 1.07, 0.24), PaleMotions.Ease.SMOOTH),
+                new ArmKey((float)OwlRules.REND_TICKS[3], OwlPose.REST, PaleMotions.Ease.SMOOTH)};
         };
     }
 
@@ -514,9 +514,9 @@ public final class OwlMotions {
 
     /** V held {@code age} ticks in the Owl, out of {@code from}: rearing up as it charges, trembling once it is nearly full. */
     static RigPose fissureCharge(double age, RigPose from) {
-        float charge = EtoMotions.smooth01((float)(age / EtoRules.HAMMER_GROW_TICKS));
+        float charge = PaleMotions.smooth01((float)(age / PaleRules.HAMMER_GROW_TICKS));
         RigPose pose = fissureRear(charge);
-        float tremble = EtoMotions.smooth01((float)((age - EtoRules.HAMMER_GROW_TICKS * 0.6) / (EtoRules.HAMMER_GROW_TICKS * 0.4)));
+        float tremble = PaleMotions.smooth01((float)((age - PaleRules.HAMMER_GROW_TICKS * 0.6) / (PaleRules.HAMMER_GROW_TICKS * 0.4)));
         if (tremble > 0.0F) {
             float a = 0.035F * tremble;
             pose.lean += a * (float)Math.sin(age * 7.9);
@@ -525,34 +525,34 @@ public final class OwlMotions {
         }
         if (age < PUNCH_INTO) {
             RigPose start = start(from);
-            float u = EtoMotions.smooth01((float)(age / PUNCH_INTO));
-            RigPose blended = EtoMotions.copy(start).scale(1.0F - u);
+            float u = PaleMotions.smooth01((float)(age / PUNCH_INTO));
+            RigPose blended = PaleMotions.copy(start).scale(1.0F - u);
             blended.add(pose, u);
-            EtoMotions.overhead(blended, start, fissureRear(0.0F), u);
+            PaleMotions.overhead(blended, start, fissureRear(0.0F), u);
             pose = blended;
         }
-        EtoMotions.grounded(pose);
+        PaleMotions.grounded(pose);
         return pose;
     }
 
     /** Let go {@code age} ticks ago, out of {@code from} (reared as drawn): the last of the wind-up, everything brought down, held, up again. */
     static RigPose fissure(double age, RigPose from) {
-        EtoMotions.Key[] keys = {EtoMotions.Key.START,
-            new EtoMotions.Key(2.0F, fissureRear(1.0F), EtoMotions.Ease.SMOOTH),
-            new EtoMotions.Key((float)OwlRules.FISSURE_IMPACT, key(p -> {
+        PaleMotions.Key[] keys = {PaleMotions.Key.START,
+            new PaleMotions.Key(2.0F, fissureRear(1.0F), PaleMotions.Ease.SMOOTH),
+            new PaleMotions.Key((float)OwlRules.FISSURE_IMPACT, key(p -> {
                 p.lean = 0.78F; p.headX = 0.2F; p.lunge = 2.2F;
                 p.rightLegX = -0.7F; p.rightKnee = 1.3F; p.rightLegZ = 0.18F; p.leftLegX = 0.2F; p.leftKnee = 1.15F; p.leftLegZ = -0.18F;
                 p.rightArmX = -0.8F; p.rightArmZ = 0.28F; p.rightElbow = 0.2F; p.leftArmX = -0.8F; p.leftArmZ = -0.28F; p.leftElbow = 0.2F;
-            }), EtoMotions.Ease.IN),
-            new EtoMotions.Key(12.0F, key(p -> {
+            }), PaleMotions.Ease.IN),
+            new PaleMotions.Key(12.0F, key(p -> {
                 p.lean = 0.72F; p.headX = 0.1F; p.lunge = 2.0F;
                 p.rightLegX = -0.66F; p.rightKnee = 1.25F; p.rightLegZ = 0.18F; p.leftLegX = 0.2F; p.leftKnee = 1.1F; p.leftLegZ = -0.18F;
                 p.rightArmX = -0.75F; p.rightArmZ = 0.28F; p.rightElbow = 0.25F; p.leftArmX = -0.75F; p.leftArmZ = -0.28F; p.leftElbow = 0.25F;
-            }), EtoMotions.Ease.SMOOTH),
-            new EtoMotions.Key((float)OwlRules.FISSURE_TICKS, stance(), EtoMotions.Ease.SMOOTH)};
+            }), PaleMotions.Ease.SMOOTH),
+            new PaleMotions.Key((float)OwlRules.FISSURE_TICKS, stance(), PaleMotions.Ease.SMOOTH)};
         RigPose start = from == null ? fissureRear(1.0F) : start(from);
-        RigPose pose = EtoMotions.sample(keys, (float)age, start);
-        EtoMotions.grounded(pose);
+        RigPose pose = PaleMotions.sample(keys, (float)age, start);
+        PaleMotions.grounded(pose);
         return pose;
     }
 
@@ -561,10 +561,10 @@ public final class OwlMotions {
 
     /** Both giant arms reared up over her as she rears (the blades hooked forward over her head), trembling with the charge. */
     static OwlPose.Swing fissureCrossed(int side, double age) {
-        float charge = EtoMotions.smooth01((float)(age / EtoRules.HAMMER_GROW_TICKS));
+        float charge = PaleMotions.smooth01((float)(age / PaleRules.HAMMER_GROW_TICKS));
         // Reared up and back like great wings over her, the blades carried up on them, hooked forward over her head.
         OwlPose.Swing crossed = OwlPose.carry(0.3 + 0.08 * charge, 3.45 + 0.12 * charge, FISSURE_BENT, OwlPose.REST_ELBOW[1], 0.34, 2.8);
-        float tremble = EtoMotions.smooth01((float)((age - EtoRules.HAMMER_GROW_TICKS * 0.6) / (EtoRules.HAMMER_GROW_TICKS * 0.4)));
+        float tremble = PaleMotions.smooth01((float)((age - PaleRules.HAMMER_GROW_TICKS * 0.6) / (PaleRules.HAMMER_GROW_TICKS * 0.4)));
         if (tremble > 0.0F) {
             // The muscle shakes with it; the blade, carried on it, shakes with it.
             double a = 0.03 * tremble;
@@ -581,48 +581,48 @@ public final class OwlMotions {
         OwlPose.Swing pulled = OwlPose.carry(0.28, 3.75, FISSURE_BENT + 0.05, OwlPose.REST_ELBOW[1], 0.36, 3.0);
         OwlPose.Swing down = new OwlPose.Swing(0.03, 1.07, -0.61, 1.01, 0.26);
         return new ArmKey[] {ArmKey.START,
-            new ArmKey(2.0F, pulled, EtoMotions.Ease.SMOOTH),
-            new ArmKey((float)OwlRules.FISSURE_IMPACT - 0.2F, down, EtoMotions.Ease.IN),
-            new ArmKey(12.0F, down, EtoMotions.Ease.SMOOTH),
-            new ArmKey((float)OwlRules.FISSURE_TICKS, OwlPose.REST, EtoMotions.Ease.SMOOTH)};
+            new ArmKey(2.0F, pulled, PaleMotions.Ease.SMOOTH),
+            new ArmKey((float)OwlRules.FISSURE_IMPACT - 0.2F, down, PaleMotions.Ease.IN),
+            new ArmKey(12.0F, down, PaleMotions.Ease.SMOOTH),
+            new ArmKey((float)OwlRules.FISSURE_TICKS, OwlPose.REST, PaleMotions.Ease.SMOOTH)};
     }
 
     // ------------------------------------------------------------------ its Pounce (M2)
 
     /** The pounce until she lands: sunk down to spring, the bound itself stretched out, then tucked in the air with the blades up. */
-    static EtoMotions.Key[] pounceKeys() {
-        return new EtoMotions.Key[] {EtoMotions.Key.START,
-            new EtoMotions.Key((float)OwlRules.LEAP_CROUCH, key(p -> {
+    static PaleMotions.Key[] pounceKeys() {
+        return new PaleMotions.Key[] {PaleMotions.Key.START,
+            new PaleMotions.Key((float)OwlRules.LEAP_CROUCH, key(p -> {
                 p.lean = 0.5F; p.headX = -0.3F;
                 p.rightLegX = -0.75F; p.rightKnee = 1.5F; p.rightLegZ = 0.15F; p.leftLegX = -0.6F; p.leftKnee = 1.45F; p.leftLegZ = -0.15F;
                 p.rightArmX = 0.6F; p.rightArmZ = 0.25F; p.rightElbow = 0.5F; p.leftArmX = 0.6F; p.leftArmZ = -0.25F; p.leftElbow = 0.5F;
-            }), EtoMotions.Ease.SMOOTH),
-            new EtoMotions.Key((float)(OwlRules.LEAP_CROUCH + 1.5), key(p -> {
+            }), PaleMotions.Ease.SMOOTH),
+            new PaleMotions.Key((float)(OwlRules.LEAP_CROUCH + 1.5), key(p -> {
                 p.lean = 0.2F; p.headX = -0.2F;
                 p.rightLegX = 0.3F; p.rightKnee = 0.2F; p.rightLegZ = 0.08F; p.leftLegX = 0.5F; p.leftKnee = 0.3F; p.leftLegZ = -0.08F;
                 p.rightArmX = -2.2F; p.rightArmZ = 0.35F; p.rightElbow = 0.4F; p.leftArmX = -2.2F; p.leftArmZ = -0.35F; p.leftElbow = 0.4F;
-            }), EtoMotions.Ease.OUT),
-            new EtoMotions.Key((float)(OwlRules.LEAP_CROUCH + 5.0), key(p -> {
+            }), PaleMotions.Ease.OUT),
+            new PaleMotions.Key((float)(OwlRules.LEAP_CROUCH + 5.0), key(p -> {
                 p.lean = 0.1F; p.headX = -0.15F;
                 p.rightLegX = -1.2F; p.rightKnee = 1.6F; p.rightLegZ = 0.12F; p.leftLegX = -0.9F; p.leftKnee = 1.4F; p.leftLegZ = -0.12F;
                 p.rightArmX = -2.4F; p.rightArmZ = 0.35F; p.rightElbow = 0.45F; p.leftArmX = -2.4F; p.leftArmZ = -0.35F; p.leftElbow = 0.45F;
-            }), EtoMotions.Ease.SMOOTH)};
+            }), PaleMotions.Ease.SMOOTH)};
     }
 
     /** The slam as she lands (ticks after touchdown): brought down with both blades, sunk deep behind them; up again into the Owl's stance. */
-    static EtoMotions.Key[] slamKeys() {
-        return new EtoMotions.Key[] {EtoMotions.Key.START,
-            new EtoMotions.Key((float)OwlRules.LEAP_SLAM_AFTER, key(p -> {
+    static PaleMotions.Key[] slamKeys() {
+        return new PaleMotions.Key[] {PaleMotions.Key.START,
+            new PaleMotions.Key((float)OwlRules.LEAP_SLAM_AFTER, key(p -> {
                 p.lean = 0.75F; p.headX = 0.2F; p.lunge = 1.6F;
                 p.rightLegX = -0.65F; p.rightKnee = 1.35F; p.rightLegZ = 0.16F; p.leftLegX = 0.2F; p.leftKnee = 1.2F; p.leftLegZ = -0.16F;
                 p.rightArmX = -0.75F; p.rightArmZ = 0.3F; p.rightElbow = 0.25F; p.leftArmX = -0.75F; p.leftArmZ = -0.3F; p.leftElbow = 0.25F;
-            }), EtoMotions.Ease.IN),
-            new EtoMotions.Key(5.0F, key(p -> {
+            }), PaleMotions.Ease.IN),
+            new PaleMotions.Key(5.0F, key(p -> {
                 p.lean = 0.7F; p.headX = 0.12F; p.lunge = 1.5F;
                 p.rightLegX = -0.62F; p.rightKnee = 1.3F; p.rightLegZ = 0.16F; p.leftLegX = 0.2F; p.leftKnee = 1.15F; p.leftLegZ = -0.16F;
                 p.rightArmX = -0.7F; p.rightArmZ = 0.3F; p.rightElbow = 0.3F; p.leftArmX = -0.7F; p.leftArmZ = -0.3F; p.leftElbow = 0.3F;
-            }), EtoMotions.Ease.SMOOTH),
-            new EtoMotions.Key((float)OwlRules.LEAP_RECOVER, stance(), EtoMotions.Ease.SMOOTH)};
+            }), PaleMotions.Ease.SMOOTH),
+            new PaleMotions.Key((float)OwlRules.LEAP_RECOVER, stance(), PaleMotions.Ease.SMOOTH)};
     }
 
     /**
@@ -631,17 +631,17 @@ public final class OwlMotions {
      */
     static RigPose pounce(double age, float landed, RigPose from) {
         RigPose start = start(from);
-        EtoMotions.Key[] keys = pounceKeys();
+        PaleMotions.Key[] keys = pounceKeys();
         boolean down = landed > 0.0F && age >= landed;
         double air = down ? landed : age;
-        RigPose pose = EtoMotions.sample(keys, (float)air, start);
+        RigPose pose = PaleMotions.sample(keys, (float)air, start);
         if (air < keys[1].at()) {
-            EtoMotions.overhead(pose, start, keys[1].pose(), (float)(air / keys[1].at()));
+            PaleMotions.overhead(pose, start, keys[1].pose(), (float)(air / keys[1].at()));
         }
         if (down) {
-            pose = EtoMotions.sample(slamKeys(), (float)(age - landed), pose);
+            pose = PaleMotions.sample(slamKeys(), (float)(age - landed), pose);
         }
-        EtoMotions.grounded(pose);
+        PaleMotions.grounded(pose);
         return pose;
     }
 
@@ -650,14 +650,14 @@ public final class OwlMotions {
         OwlPose.Swing reared = new OwlPose.Swing(0.42, 3.88, 0.3, 3.29, 0.32);
         OwlPose.Swing over = new OwlPose.Swing(0.36, 3.35, 0.04, 2.81, 0.34);
         OwlPose.Swing chop = new OwlPose.Swing(0.29, 1.01, -0.34, 1.08, 0.26);
-        ArmKey[] air = {ArmKey.START, new ArmKey((float)OwlRules.LEAP_CROUCH, reared, EtoMotions.Ease.SMOOTH),
-            new ArmKey((float)(OwlRules.LEAP_CROUCH + 4.0), over, EtoMotions.Ease.SMOOTH)};
+        ArmKey[] air = {ArmKey.START, new ArmKey((float)OwlRules.LEAP_CROUCH, reared, PaleMotions.Ease.SMOOTH),
+            new ArmKey((float)(OwlRules.LEAP_CROUCH + 4.0), over, PaleMotions.Ease.SMOOTH)};
         if (!(landed > 0.0F) || t < landed) {
             return sample(air, t, OwlPose.REST);
         }
         OwlPose.Swing atLanding = sample(air, landed, OwlPose.REST);
-        ArmKey[] slam = {ArmKey.START, new ArmKey((float)OwlRules.LEAP_SLAM_AFTER - 0.2F, chop, EtoMotions.Ease.IN), new ArmKey(5.0F, chop, EtoMotions.Ease.SMOOTH),
-            new ArmKey((float)OwlRules.LEAP_RECOVER, OwlPose.REST, EtoMotions.Ease.SMOOTH)};
+        ArmKey[] slam = {ArmKey.START, new ArmKey((float)OwlRules.LEAP_SLAM_AFTER - 0.2F, chop, PaleMotions.Ease.IN), new ArmKey(5.0F, chop, PaleMotions.Ease.SMOOTH),
+            new ArmKey((float)OwlRules.LEAP_RECOVER, OwlPose.REST, PaleMotions.Ease.SMOOTH)};
         return sample(slam, t - landed, atLanding);
     }
 
@@ -669,35 +669,35 @@ public final class OwlMotions {
      * into it and dragged after; on round a hair, and back into her stance.
      */
     static RigPose whirl(double age, RigPose from) {
-        EtoMotions.Key[] keys = {EtoMotions.Key.START,
-            new EtoMotions.Key((float)OwlRules.WHIRL_WIND, key(p -> {
+        PaleMotions.Key[] keys = {PaleMotions.Key.START,
+            new PaleMotions.Key((float)OwlRules.WHIRL_WIND, key(p -> {
                 p.lean = 0.3F; p.twist = 0.75F; p.headX = -0.1F;
                 p.rightLegX = -0.4F; p.rightKnee = 1.0F; p.rightLegZ = 0.18F; p.leftLegX = 0.15F; p.leftKnee = 0.9F; p.leftLegZ = -0.18F;
                 p.rightArmX = 0.45F; p.rightArmZ = 0.7F; p.rightElbow = 0.4F; p.leftArmX = -1.0F; p.leftArmZ = -0.25F; p.leftElbow = 0.9F;
-            }), EtoMotions.Ease.SMOOTH),
-            new EtoMotions.Key((float)(OwlRules.WHIRL_START + 2.0), key(p -> {
+            }), PaleMotions.Ease.SMOOTH),
+            new PaleMotions.Key((float)(OwlRules.WHIRL_START + 2.0), key(p -> {
                 p.lean = 0.2F; p.twist = -0.1F;
                 p.rightLegX = -0.25F; p.rightKnee = 0.65F; p.rightLegZ = 0.15F; p.leftLegX = -0.05F; p.leftKnee = 0.6F; p.leftLegZ = -0.15F;
                 p.rightArmX = -0.3F; p.rightArmZ = 1.35F; p.rightElbow = 0.25F; p.leftArmX = -0.3F; p.leftArmZ = -1.35F; p.leftElbow = 0.25F;
-            }), EtoMotions.Ease.SMOOTH),
-            new EtoMotions.Key((float)OwlRules.WHIRL_END, key(p -> {
+            }), PaleMotions.Ease.SMOOTH),
+            new PaleMotions.Key((float)OwlRules.WHIRL_END, key(p -> {
                 p.lean = 0.18F; p.twist = -0.3F;
                 p.rightLegX = -0.25F; p.rightKnee = 0.6F; p.rightLegZ = 0.15F; p.leftLegX = -0.05F; p.leftKnee = 0.6F; p.leftLegZ = -0.15F;
                 p.rightArmX = -0.3F; p.rightArmZ = 1.3F; p.rightElbow = 0.3F; p.leftArmX = -0.3F; p.leftArmZ = -1.3F; p.leftElbow = 0.3F;
-            }), EtoMotions.Ease.SMOOTH),
-            new EtoMotions.Key((float)(OwlRules.WHIRL_END + 2.0), key(p -> {
+            }), PaleMotions.Ease.SMOOTH),
+            new PaleMotions.Key((float)(OwlRules.WHIRL_END + 2.0), key(p -> {
                 p.lean = 0.2F; p.twist = -0.4F;
                 p.rightLegX = -0.3F; p.rightKnee = 0.65F; p.rightLegZ = 0.15F; p.leftLegX = -0.1F; p.leftKnee = 0.6F; p.leftLegZ = -0.15F;
                 p.rightArmX = -0.4F; p.rightArmZ = 0.9F; p.rightElbow = 0.6F; p.leftArmX = -0.4F; p.leftArmZ = -0.9F; p.leftElbow = 0.6F;
-            }), EtoMotions.Ease.OUT),
-            new EtoMotions.Key((float)OwlRules.WHIRL_TICKS, stance(), EtoMotions.Ease.SMOOTH)};
+            }), PaleMotions.Ease.OUT),
+            new PaleMotions.Key((float)OwlRules.WHIRL_TICKS, stance(), PaleMotions.Ease.SMOOTH)};
         RigPose start = start(from);
-        RigPose pose = EtoMotions.sample(keys, (float)age, start);
+        RigPose pose = PaleMotions.sample(keys, (float)age, start);
         if (age < keys[1].at()) {
-            EtoMotions.overhead(pose, start, keys[1].pose(), (float)(age / keys[1].at()));
+            PaleMotions.overhead(pose, start, keys[1].pose(), (float)(age / keys[1].at()));
         }
         pose.spin += (float)OwlRules.whirlTurn(age);
-        EtoMotions.grounded(pose);
+        PaleMotions.grounded(pose);
         return pose;
     }
 
@@ -707,10 +707,10 @@ public final class OwlMotions {
         OwlPose.Swing coiled = right ? new OwlPose.Swing(0.77, -0.71, 1.18, 0.01, 0.26) : new OwlPose.Swing(0.64, 1.44, 0.08, 1.45, 0.26);
         OwlPose.Swing out = right ? new OwlPose.Swing(1.49, 1.38, 0.93, 1.72, 0.32) : new OwlPose.Swing(1.49, 1.39, 0.94, 1.76, 0.32);
         return new ArmKey[] {ArmKey.START,
-            new ArmKey((float)OwlRules.WHIRL_WIND, coiled, EtoMotions.Ease.SMOOTH),
-            new ArmKey((float)(OwlRules.WHIRL_START + 2.0), out, EtoMotions.Ease.SMOOTH),
-            new ArmKey((float)OwlRules.WHIRL_END, out, EtoMotions.Ease.SMOOTH),
-            new ArmKey((float)OwlRules.WHIRL_TICKS, OwlPose.REST, EtoMotions.Ease.SMOOTH)};
+            new ArmKey((float)OwlRules.WHIRL_WIND, coiled, PaleMotions.Ease.SMOOTH),
+            new ArmKey((float)(OwlRules.WHIRL_START + 2.0), out, PaleMotions.Ease.SMOOTH),
+            new ArmKey((float)OwlRules.WHIRL_END, out, PaleMotions.Ease.SMOOTH),
+            new ArmKey((float)OwlRules.WHIRL_TICKS, OwlPose.REST, PaleMotions.Ease.SMOOTH)};
     }
 
     // ------------------------------------------------------------------ its bone spikes (J held)
@@ -756,14 +756,14 @@ public final class OwlMotions {
     static RigPose spikes(double age, int seed, float letGo, RigPose from) {
         OwlSpikes.Spike[] spikes = OwlSpikes.of(seed);
         double allOut = OwlSpikes.allOut(spikes);
-        EtoMotions.Key[] keys = {EtoMotions.Key.START,
-            new EtoMotions.Key((float)(OwlRules.SPIKES_HUNCH - 0.5), spikesHunch(), EtoMotions.Ease.SMOOTH),
-            new EtoMotions.Key((float)(OwlSpikes.FIRST + 1.2), spikesBurst(), EtoMotions.Ease.OUT),
-            new EtoMotions.Key((float)(allOut + 1.0), spikesHeld(), EtoMotions.Ease.SMOOTH)};
+        PaleMotions.Key[] keys = {PaleMotions.Key.START,
+            new PaleMotions.Key((float)(OwlRules.SPIKES_HUNCH - 0.5), spikesHunch(), PaleMotions.Ease.SMOOTH),
+            new PaleMotions.Key((float)(OwlSpikes.FIRST + 1.2), spikesBurst(), PaleMotions.Ease.OUT),
+            new PaleMotions.Key((float)(allOut + 1.0), spikesHeld(), PaleMotions.Ease.SMOOTH)};
         double held = letGo > 0.0F ? Math.min(age, letGo) : age;
-        RigPose pose = EtoMotions.sample(keys, (float)held, start(from));
+        RigPose pose = PaleMotions.sample(keys, (float)held, start(from));
         if (held < keys[1].at()) {
-            EtoMotions.overhead(pose, start(from), keys[1].pose(), (float)(held / keys[1].at()));
+            PaleMotions.overhead(pose, start(from), keys[1].pose(), (float)(held / keys[1].at()));
         }
         // Every spike tearing out of her jolts her the way it went.
         for (OwlSpikes.Spike spike : spikes) {
@@ -785,38 +785,38 @@ public final class OwlMotions {
         }
         if (letGo > 0.0F && age > letGo) {
             // Straightening back up as they go back in.
-            float u = EtoMotions.smooth01((float)((age - letGo) / SPIKES_RISE));
-            RigPose risen = EtoMotions.copy(pose).scale(1.0F - u);
+            float u = PaleMotions.smooth01((float)((age - letGo) / SPIKES_RISE));
+            RigPose risen = PaleMotions.copy(pose).scale(1.0F - u);
             risen.add(stance(), u);
             pose = risen;
         }
-        EtoMotions.grounded(pose);
+        PaleMotions.grounded(pose);
         return pose;
     }
 
     // ------------------------------------------------------------------ its Watch This (B): the lances
 
     /**
-     * Her body as the lances burst out of her ({@link com.hex.kagune.control.eto.OwlLances}): hunched over, gathering herself, then
+     * Her body as the lances burst out of her ({@link com.hex.kagune.control.pale.OwlLances}): hunched over, gathering herself, then
      * reared up tall as they tear out of her back (jolted by it), chest out, her own arms flung out wide, braced; held a moment,
      * then back into the Owl's stance while they hunt on.
      */
     static RigPose watch(double age, RigPose from) {
-        EtoMotions.Key[] keys = {EtoMotions.Key.START,
-            new EtoMotions.Key(4.0F, key(p -> {
+        PaleMotions.Key[] keys = {PaleMotions.Key.START,
+            new PaleMotions.Key(4.0F, key(p -> {
                 p.lean = 0.62F; p.headX = 0.3F;
                 p.rightLegX = -0.45F; p.rightKnee = 0.9F; p.rightLegZ = 0.16F; p.leftLegX = -0.45F; p.leftKnee = 0.9F; p.leftLegZ = -0.16F;
                 p.rightArmX = -0.4F; p.rightArmZ = 0.22F; p.rightElbow = 0.9F; p.leftArmX = -0.4F; p.leftArmZ = -0.22F; p.leftElbow = 0.9F;
-            }), EtoMotions.Ease.SMOOTH),
-            new EtoMotions.Key((float)(OwlRules.LANCES_ERUPT_AT + 1.5), watchReared(), EtoMotions.Ease.OUT),
-            new EtoMotions.Key(15.0F, key(p -> {
+            }), PaleMotions.Ease.SMOOTH),
+            new PaleMotions.Key((float)(OwlRules.LANCES_ERUPT_AT + 1.5), watchReared(), PaleMotions.Ease.OUT),
+            new PaleMotions.Key(15.0F, key(p -> {
                 p.lean = 0.14F; p.headX = -0.04F;
                 p.rightLegX = -0.12F; p.rightKnee = 0.3F; p.rightLegZ = 0.2F; p.leftLegX = -0.08F; p.leftKnee = 0.28F; p.leftLegZ = -0.2F;
                 p.rightArmX = -0.1F; p.rightArmZ = 0.85F; p.rightElbow = 0.3F; p.leftArmX = -0.1F; p.leftArmZ = -0.85F; p.leftElbow = 0.3F;
-            }), EtoMotions.Ease.SMOOTH),
-            new EtoMotions.Key((float)OwlRules.LANCES_POSE_TICKS, stance(), EtoMotions.Ease.SMOOTH)};
+            }), PaleMotions.Ease.SMOOTH),
+            new PaleMotions.Key((float)OwlRules.LANCES_POSE_TICKS, stance(), PaleMotions.Ease.SMOOTH)};
         RigPose start = start(from);
-        RigPose pose = EtoMotions.sample(keys, (float)age, start);
+        RigPose pose = PaleMotions.sample(keys, (float)age, start);
         // The lances tearing out of her back jolt her forward and down, a beat.
         double since = age - OwlRules.LANCES_ERUPT_AT;
         if (since > 0.0 && since < 3.0) {
@@ -824,7 +824,7 @@ public final class OwlMotions {
             pose.lean += (float)(0.09 * jolt);
             pose.headX += (float)(0.05 * jolt);
         }
-        EtoMotions.grounded(pose);
+        PaleMotions.grounded(pose);
         return pose;
     }
 
@@ -845,10 +845,10 @@ public final class OwlMotions {
         double bent = OwlPose.REST_ELBOW[0];
         double way = OwlPose.REST_ELBOW[1];
         return new ArmKey[] {ArmKey.START,
-            new ArmKey(4.0F, OwlPose.carry(0.72, 0.62, bent - 0.08, way, 0.24, 1.2), EtoMotions.Ease.SMOOTH),
-            new ArmKey((float)(OwlRules.LANCES_ERUPT_AT + 1.5), OwlPose.carry(1.22, 2.15, bent - 0.12, way, 0.3, 2.4), EtoMotions.Ease.OUT),
-            new ArmKey(15.0F, OwlPose.carry(1.12, 1.85, bent - 0.06, way, 0.28, 2.2), EtoMotions.Ease.SMOOTH),
-            new ArmKey((float)OwlRules.LANCES_POSE_TICKS, OwlPose.REST, EtoMotions.Ease.SMOOTH)};
+            new ArmKey(4.0F, OwlPose.carry(0.72, 0.62, bent - 0.08, way, 0.24, 1.2), PaleMotions.Ease.SMOOTH),
+            new ArmKey((float)(OwlRules.LANCES_ERUPT_AT + 1.5), OwlPose.carry(1.22, 2.15, bent - 0.12, way, 0.3, 2.4), PaleMotions.Ease.OUT),
+            new ArmKey(15.0F, OwlPose.carry(1.12, 1.85, bent - 0.06, way, 0.28, 2.2), PaleMotions.Ease.SMOOTH),
+            new ArmKey((float)OwlRules.LANCES_POSE_TICKS, OwlPose.REST, PaleMotions.Ease.SMOOTH)};
     }
 
     // ------------------------------------------------------------------ its blade volley (N)
@@ -865,19 +865,19 @@ public final class OwlMotions {
             p.rightLegX = -0.32F; p.rightKnee = 0.55F; p.rightLegZ = 0.2F; p.leftLegX = 0.12F; p.leftKnee = 0.4F; p.leftLegZ = -0.2F;
             p.rightArmX = -0.35F; p.rightArmZ = 0.45F; p.rightElbow = 0.6F; p.leftArmX = -0.35F; p.leftArmZ = -0.45F; p.leftElbow = 0.6F;
         });
-        EtoMotions.Key[] keys = {EtoMotions.Key.START, new EtoMotions.Key(3.0F, brace, EtoMotions.Ease.SMOOTH),
-            new EtoMotions.Key(braced, brace, EtoMotions.Ease.SMOOTH), new EtoMotions.Key(Math.max(braced + 0.5F, end), stance(), EtoMotions.Ease.SMOOTH)};
+        PaleMotions.Key[] keys = {PaleMotions.Key.START, new PaleMotions.Key(3.0F, brace, PaleMotions.Ease.SMOOTH),
+            new PaleMotions.Key(braced, brace, PaleMotions.Ease.SMOOTH), new PaleMotions.Key(Math.max(braced + 0.5F, end), stance(), PaleMotions.Ease.SMOOTH)};
         // (6.2.4: the spikes fly off the creature's crest, OwlActs: her body under it only braced, never twisting after them.)
-        RigPose pose = EtoMotions.sample(keys, (float)age, start(from));
-        EtoMotions.grounded(pose);
+        RigPose pose = PaleMotions.sample(keys, (float)age, start(from));
+        PaleMotions.grounded(pose);
         return pose;
     }
 
     /** 6.2.4: through its great hand's moves her body is only the Owl's stance (the creature acts, OwlActs): eased into it. */
     static RigPose grab(double age, RigPose from) {
-        EtoMotions.Key[] keys = {EtoMotions.Key.START, new EtoMotions.Key(4.0F, stance(), EtoMotions.Ease.SMOOTH)};
-        RigPose pose = EtoMotions.sample(keys, (float)age, start(from));
-        EtoMotions.grounded(pose);
+        PaleMotions.Key[] keys = {PaleMotions.Key.START, new PaleMotions.Key(4.0F, stance(), PaleMotions.Ease.SMOOTH)};
+        RigPose pose = PaleMotions.sample(keys, (float)age, start(from));
+        PaleMotions.grounded(pose);
         return pose;
     }
 
@@ -894,11 +894,11 @@ public final class OwlMotions {
             return VOLLEY_READY;
         }
         float at = OwlShards.throwAt(k);
-        ArmKey[] keys = {new ArmKey((float)(at + OwlShards.WIND_FROM), VOLLEY_READY, EtoMotions.Ease.SMOOTH),
-            new ArmKey((float)(at + OwlShards.WOUND), VOLLEY_WOUND, EtoMotions.Ease.SMOOTH),
-            new ArmKey(at, VOLLEY_RELEASE, EtoMotions.Ease.SMOOTH),
-            new ArmKey((float)(at + OwlShards.THROUGH), VOLLEY_THROUGH, EtoMotions.Ease.OUT),
-            new ArmKey((float)(at + OwlShards.READY), VOLLEY_READY, EtoMotions.Ease.SMOOTH)};
+        ArmKey[] keys = {new ArmKey((float)(at + OwlShards.WIND_FROM), VOLLEY_READY, PaleMotions.Ease.SMOOTH),
+            new ArmKey((float)(at + OwlShards.WOUND), VOLLEY_WOUND, PaleMotions.Ease.SMOOTH),
+            new ArmKey(at, VOLLEY_RELEASE, PaleMotions.Ease.SMOOTH),
+            new ArmKey((float)(at + OwlShards.THROUGH), VOLLEY_THROUGH, PaleMotions.Ease.OUT),
+            new ArmKey((float)(at + OwlShards.READY), VOLLEY_READY, PaleMotions.Ease.SMOOTH)};
         return sample(keys, t, VOLLEY_READY);
     }
 
@@ -956,29 +956,29 @@ public final class OwlMotions {
     static ArmKey[] kickRight(int dash) {
         float d = Math.max(1, dash);
         return new ArmKey[] {ArmKey.START,
-            new ArmKey(Math.min(1.2F, d * 0.6F), KICK_SWEPT, EtoMotions.Ease.SMOOTH),
-            new ArmKey(d + 0.3F, KICK_COCK, EtoMotions.Ease.SMOOTH),
-            new ArmKey(d + 1.7F, KICK_THRUST, EtoMotions.Ease.SMOOTH),
-            new ArmKey(d + 6.2F, KICK_HOLD, EtoMotions.Ease.SMOOTH),
-            new ArmKey(d + 7.0F, KICK_PULLED, EtoMotions.Ease.SMOOTH),
-            new ArmKey(d + 7.9F, KICK_WHIRL, EtoMotions.Ease.SMOOTH),
-            new ArmKey(d + 10.4F, KICK_WHIRL, EtoMotions.Ease.SMOOTH),
-            new ArmKey(d + 12.4F, KICK_WHIRLED, EtoMotions.Ease.SMOOTH),
-            new ArmKey(d + 15.0F, OwlPose.REST, EtoMotions.Ease.SMOOTH)};
+            new ArmKey(Math.min(1.2F, d * 0.6F), KICK_SWEPT, PaleMotions.Ease.SMOOTH),
+            new ArmKey(d + 0.3F, KICK_COCK, PaleMotions.Ease.SMOOTH),
+            new ArmKey(d + 1.7F, KICK_THRUST, PaleMotions.Ease.SMOOTH),
+            new ArmKey(d + 6.2F, KICK_HOLD, PaleMotions.Ease.SMOOTH),
+            new ArmKey(d + 7.0F, KICK_PULLED, PaleMotions.Ease.SMOOTH),
+            new ArmKey(d + 7.9F, KICK_WHIRL, PaleMotions.Ease.SMOOTH),
+            new ArmKey(d + 10.4F, KICK_WHIRL, PaleMotions.Ease.SMOOTH),
+            new ArmKey(d + 12.4F, KICK_WHIRLED, PaleMotions.Ease.SMOOTH),
+            new ArmKey(d + 15.0F, OwlPose.REST, PaleMotions.Ease.SMOOTH)};
     }
 
     static ArmKey[] kickLeft(int dash) {
         float d = Math.max(1, dash);
         return new ArmKey[] {ArmKey.START,
-            new ArmKey(Math.min(1.2F, d * 0.6F), KICK_SWEPT, EtoMotions.Ease.SMOOTH),
-            new ArmKey(d + 1.2F, KICK_WIND, EtoMotions.Ease.SMOOTH),
-            new ArmKey(d + 3.3F, KICK_WOUND, EtoMotions.Ease.SMOOTH),
-            new ArmKey(d + 4.6F, KICK_CUT, EtoMotions.Ease.SMOOTH),
-            new ArmKey(d + 5.6F, KICK_ACROSS, EtoMotions.Ease.OUT),
-            new ArmKey(d + 7.9F, KICK_WHIRL, EtoMotions.Ease.SMOOTH),
-            new ArmKey(d + 10.4F, KICK_WHIRL, EtoMotions.Ease.SMOOTH),
-            new ArmKey(d + 12.4F, KICK_WHIRLED, EtoMotions.Ease.SMOOTH),
-            new ArmKey(d + 15.0F, OwlPose.REST, EtoMotions.Ease.SMOOTH)};
+            new ArmKey(Math.min(1.2F, d * 0.6F), KICK_SWEPT, PaleMotions.Ease.SMOOTH),
+            new ArmKey(d + 1.2F, KICK_WIND, PaleMotions.Ease.SMOOTH),
+            new ArmKey(d + 3.3F, KICK_WOUND, PaleMotions.Ease.SMOOTH),
+            new ArmKey(d + 4.6F, KICK_CUT, PaleMotions.Ease.SMOOTH),
+            new ArmKey(d + 5.6F, KICK_ACROSS, PaleMotions.Ease.OUT),
+            new ArmKey(d + 7.9F, KICK_WHIRL, PaleMotions.Ease.SMOOTH),
+            new ArmKey(d + 10.4F, KICK_WHIRL, PaleMotions.Ease.SMOOTH),
+            new ArmKey(d + 12.4F, KICK_WHIRLED, PaleMotions.Ease.SMOOTH),
+            new ArmKey(d + 15.0F, OwlPose.REST, PaleMotions.Ease.SMOOTH)};
     }
 
     /** Both giant arms braced on the ground at her sides through the spikes (a second pair of legs under her), flaring as they burst. */
@@ -991,9 +991,9 @@ public final class OwlMotions {
     static OwlPose.Swing spikesArm(double t, int seed, float letGo, int side) {
         double allOut = OwlSpikes.allOut(OwlSpikes.of(seed));
         ArmKey[] keys = {ArmKey.START,
-            new ArmKey((float)(OwlRules.SPIKES_HUNCH - 1.0), SPIKES_BRACE, EtoMotions.Ease.SMOOTH),
-            new ArmKey((float)(OwlSpikes.FIRST + 1.4), SPIKES_FLARE, EtoMotions.Ease.OUT),
-            new ArmKey((float)(allOut + 1.5), SPIKES_BRACE, EtoMotions.Ease.SMOOTH)};
+            new ArmKey((float)(OwlRules.SPIKES_HUNCH - 1.0), SPIKES_BRACE, PaleMotions.Ease.SMOOTH),
+            new ArmKey((float)(OwlSpikes.FIRST + 1.4), SPIKES_FLARE, PaleMotions.Ease.OUT),
+            new ArmKey((float)(allOut + 1.5), SPIKES_BRACE, PaleMotions.Ease.SMOOTH)};
         double held = letGo > 0.0F ? Math.min(t, letGo) : t;
         OwlPose.Swing swing = sample(keys, held, OwlPose.REST);
         if (letGo > 0.0F && t > letGo) {
@@ -1023,7 +1023,7 @@ public final class OwlMotions {
      * what the move was thrown at), eased in from {@code start} (that arm as it was drawn when the move began). Null when the move
      * doesn't key the giant arms.
      */
-    public static OwlPose.Swing swing(EtoMove move, int side, double age, int detail, float charge, OwlPose.Swing start, RigPose body, float turn) {
+    public static OwlPose.Swing swing(PaleMove move, int side, double age, int detail, float charge, OwlPose.Swing start, RigPose body, float turn) {
         Track track = track(move, side, detail, charge);
         if (track == null) {
             return null;
@@ -1032,14 +1032,14 @@ public final class OwlMotions {
         // Keyed to the way she faces; for a move that spins her, to her whole body's own turn as well.
         double follow = followsSpin(move, age, detail);
         double frameSpin = -turn + (follow > 0.0 ? follow * body(move, Math.max(0.0, age), detail, charge, null).spin : 0.0);
-        double in = move == EtoMove.OWL_KICK ? KICK_ARMS_IN : ARMS_IN;
+        double in = move == PaleMove.OWL_KICK ? KICK_ARMS_IN : ARMS_IN;
         if (start != null && age < in) {
             // Out of what was drawn (as it is off her torso now, in the frame of the way she faces, where the keys bend the blade):
             // the upper arm turned the shortest way round to where the move has it, the blade carried on it, its bend eased.
             keyed = blend(OwlPose.fromTorso(body, start, side, frameSpin), keyed, OwlPose.smooth(age / in), side);
         }
         OwlPose.Swing posed = OwlPose.toTorso(body, keyed, side, frameSpin);
-        if (move == EtoMove.OWL_KICK && side > 0) {
+        if (move == PaleMove.OWL_KICK && side > 0) {
             // Through it and held there: the blade pivots on what it skewered (its middle, where she aimed) as her body twists round.
             double k = age - Math.max(1, detail);
             double held = OwlPose.smooth((k - KICK_AIM_FROM) / 0.5) * (1.0 - OwlPose.smooth((k - KICK_AIM_UNTIL) / KICK_AIM_OUT));
@@ -1132,24 +1132,24 @@ public final class OwlMotions {
     }
 
     /** One giant arm's keyed swing in {@code move} at {@code age}, unweighted, in the frame of the way she faces (null: none keyed). */
-    public static OwlPose.Swing keyed(EtoMove move, int side, double age, int detail, float charge) {
+    public static OwlPose.Swing keyed(PaleMove move, int side, double age, int detail, float charge) {
         Track track = track(move, side, detail, charge);
         return track == null ? null : track.at(Math.max(0.0, age));
     }
 
     /** The same with its weight ({@link #heavy}), still in the frame of the way she faces. */
-    public static OwlPose.Swing weighted(EtoMove move, int side, double age, int detail, float charge) {
+    public static OwlPose.Swing weighted(PaleMove move, int side, double age, int detail, float charge) {
         Track track = track(move, side, detail, charge);
         return track == null ? null : heavy(track, age, track.at(0.0));
     }
 
     /** The keys of one giant arm through {@code move} (unweighted, in the frame of the way she faces); null when it keys none. */
-    static Track track(EtoMove move, int side, int detail, float charge) {
+    static Track track(PaleMove move, int side, int detail, float charge) {
         return switch (move) {
             case OWL_PUNCH_CHARGE -> t -> punchChargeArm(side, t);
             case OWL_PUNCH -> {
                 ArmKey[] keys = side > 0 ? punchRight() : punchLeft();
-                OwlPose.Swing first = punchChargeArm(side, EtoRules.PUNCH_CHARGE_TICKS * Math.max(0.15, charge));
+                OwlPose.Swing first = punchChargeArm(side, PaleRules.PUNCH_CHARGE_TICKS * Math.max(0.15, charge));
                 yield t -> sample(keys, t, first);
             }
             case OWL_KICK -> {
@@ -1174,7 +1174,7 @@ public final class OwlMotions {
             case OWL_FISSURE_CHARGE -> t -> fissureCrossed(side, t);
             case OWL_FISSURE -> {
                 ArmKey[] keys = fissureArm(side);
-                yield t -> sample(keys, t, fissureCrossed(side, EtoRules.HAMMER_GROW_TICKS));
+                yield t -> sample(keys, t, fissureCrossed(side, PaleRules.HAMMER_GROW_TICKS));
             }
             default -> null;
         };
@@ -1182,9 +1182,9 @@ public final class OwlMotions {
 
     /** A giant arm through the charge, {@code age} ticks in: reared and braced as the charge builds; nearly full, trembling with it. */
     static OwlPose.Swing punchChargeArm(int side, double age) {
-        float charge = EtoMotions.smooth01((float)(age / EtoRules.PUNCH_CHARGE_TICKS));
+        float charge = PaleMotions.smooth01((float)(age / PaleRules.PUNCH_CHARGE_TICKS));
         OwlPose.Swing held = side > 0 ? lerp(PUNCH_REAR0, PUNCH_REAR1, charge) : PUNCH_BRACE;
-        float tremble = EtoMotions.smooth01((float)((age - EtoRules.PUNCH_CHARGE_TICKS * 0.6) / (EtoRules.PUNCH_CHARGE_TICKS * 0.4)));
+        float tremble = PaleMotions.smooth01((float)((age - PaleRules.PUNCH_CHARGE_TICKS * 0.6) / (PaleRules.PUNCH_CHARGE_TICKS * 0.4)));
         if (side > 0 && tremble > 0.0F) {
             // The muscle shakes with it; the blade, carried on it, shakes with it.
             double a = 0.035 * tremble;
@@ -1198,20 +1198,20 @@ public final class OwlMotions {
 
     static ArmKey[] punchRight() {
         return new ArmKey[] {ArmKey.START,
-            new ArmKey(1.2F, PUNCH_PULL, EtoMotions.Ease.SMOOTH),
-            new ArmKey(4.0F, PUNCH_DRIVE, EtoMotions.Ease.IN),
-            new ArmKey(4.8F, PUNCH_THROUGH, EtoMotions.Ease.OUT),
-            new ArmKey(9.0F, PUNCH_HELD, EtoMotions.Ease.SMOOTH),
-            new ArmKey((float)EtoRules.PUNCH_TICKS, OwlPose.REST, EtoMotions.Ease.SMOOTH)};
+            new ArmKey(1.2F, PUNCH_PULL, PaleMotions.Ease.SMOOTH),
+            new ArmKey(4.0F, PUNCH_DRIVE, PaleMotions.Ease.IN),
+            new ArmKey(4.8F, PUNCH_THROUGH, PaleMotions.Ease.OUT),
+            new ArmKey(9.0F, PUNCH_HELD, PaleMotions.Ease.SMOOTH),
+            new ArmKey((float)PaleRules.PUNCH_TICKS, OwlPose.REST, PaleMotions.Ease.SMOOTH)};
     }
 
     static ArmKey[] punchLeft() {
         return new ArmKey[] {ArmKey.START,
-            new ArmKey(2.0F, PUNCH_UNBRACE, EtoMotions.Ease.SMOOTH),
-            new ArmKey(3.1F, PUNCH_FLING, EtoMotions.Ease.SMOOTH),
-            new ArmKey(4.4F, PUNCH_BACK, EtoMotions.Ease.SMOOTH),
-            new ArmKey(10.0F, PUNCH_SETTLE, EtoMotions.Ease.SMOOTH),
-            new ArmKey((float)EtoRules.PUNCH_TICKS, OwlPose.REST, EtoMotions.Ease.SMOOTH)};
+            new ArmKey(2.0F, PUNCH_UNBRACE, PaleMotions.Ease.SMOOTH),
+            new ArmKey(3.1F, PUNCH_FLING, PaleMotions.Ease.SMOOTH),
+            new ArmKey(4.4F, PUNCH_BACK, PaleMotions.Ease.SMOOTH),
+            new ArmKey(10.0F, PUNCH_SETTLE, PaleMotions.Ease.SMOOTH),
+            new ArmKey((float)PaleRules.PUNCH_TICKS, OwlPose.REST, PaleMotions.Ease.SMOOTH)};
     }
 
     // ------------------------------------------------------------------ weight

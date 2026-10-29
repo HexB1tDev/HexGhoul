@@ -90,8 +90,8 @@ final class DragonMesh {
         }
     }
 
-    /** 1.0.29: the expansion's shapes ({@code UkakuModel.Sink} quads, as Furuta's and War's are built) into this mesh: what burns at full light. */
-    static com.hex.kagune.control.ayato.UkakuModel.Sink sink(DragonMesh mesh, int light) {
+    /** 1.0.29: the expansion's shapes ({@code UkakuModel.Sink} quads, as Graft's and War's are built) into this mesh: what burns at full light. */
+    static com.hex.kagune.control.ukaku.UkakuModel.Sink sink(DragonMesh mesh, int light) {
         return (a, b, c, d, n, ca, cb, cc, cd) -> {
             boolean glow = n[0] == 0.0 && n[1] == 1.0 && n[2] == 0.0;
             int l = glow ? FULL_BRIGHT : light;

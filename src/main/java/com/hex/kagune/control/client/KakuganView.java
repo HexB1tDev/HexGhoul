@@ -29,7 +29,7 @@ public final class KakuganView {
      * What the screen shows this frame. {@code hovered} is the control or eye under the mouse ("mirror", "right", ...), or
      * null; {@code covered} the face cells the skin's second layer covers ({@code glass}: the see-through ones); {@code canFind}
      * whether eyes were found on the skin; {@code choosing} the "which eye?" box is open (its buttons hover as "pick-right",
-     * "pick-left", "pick-both"); {@code bothAllowed} false on a path that is one-eyed by nature (Eto's): no "Both eyes".
+     * "pick-left", "pick-both"); {@code bothAllowed} false on a path that is one-eyed by nature (Pale's): no "Both eyes".
      */
     public record State(KakuganEyes eyes, int seed, boolean mirror, boolean selectedRight, String hovered, boolean dragging, double time,
                         long covered, long glass, boolean canFind, boolean choosing, boolean bothAllowed) {

@@ -13,7 +13,7 @@ import net.minecraft.network.chat.Component;
 /** 7.0.1: the quest journal (the Quests key, U by default), drawn by {@link QuestJournalView}; tabs and quests picked by click. */
 public final class QuestScreen extends Screen {
     private final long openedAt = System.currentTimeMillis();
-    private Map<String, AyatoMenuView.Rect> hits = Map.of();
+    private Map<String, UkakuMenuView.Rect> hits = Map.of();
     private float scale = 1.0F;
     private float originX;
     private float originY;
@@ -62,7 +62,7 @@ public final class QuestScreen extends Screen {
         }
         double x = (mouseX - this.originX) / this.scale;
         double y = (mouseY - this.originY) / this.scale;
-        for (Map.Entry<String, AyatoMenuView.Rect> entry : this.hits.entrySet()) {
+        for (Map.Entry<String, UkakuMenuView.Rect> entry : this.hits.entrySet()) {
             if (!entry.getValue().contains(x, y)) {
                 continue;
             }

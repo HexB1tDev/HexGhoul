@@ -1,7 +1,7 @@
 package com.hex.kagune.control.client;
 
 import com.hex.kagune.KaguneMod;
-import com.hex.kagune.control.ayato.UkakuModel;
+import com.hex.kagune.control.ukaku.UkakuModel;
 import com.hex.kagune.control.client.fx.RcFx;
 import com.hex.kagune.control.king.KingFxModel;
 import com.hex.kagune.control.king.WarRules;
@@ -136,7 +136,7 @@ public final class KingFx {
                 }
                 LocalPlayer self = minecraft.f_91074_;
                 if (self != null && self.m_20148_().equals(message.playerId()) && fx.data().length >= 3) {
-                    EtoCamera.kick(0.25F, EtoClient.clock(0.0F)); // 1.0.20: his own blades landing, felt
+                    PaleCamera.kick(0.25F, PaleClient.clock(0.0F)); // 1.0.20: his own blades landing, felt
                 }
             }
 
@@ -176,11 +176,11 @@ public final class KingFx {
             if (self != null) {
                 double away = self.m_20182_().m_82554_(ground);
                 if (self.m_20148_().equals(fx.owner()) || away < 10.0) {
-                    EtoCamera.kick(self.m_20148_().equals(fx.owner()) ? 0.9F : (float)(0.8 * (1.0 - away / 10.0)), EtoClient.clock(0.0F));
+                    PaleCamera.kick(self.m_20148_().equals(fx.owner()) ? 0.9F : (float)(0.8 * (1.0 - away / 10.0)), PaleClient.clock(0.0F));
                 }
             }
         } else if (hits > 0 && blow.heavy() && self != null && self.m_20148_().equals(fx.owner())) {
-            EtoCamera.kick(0.35F, EtoClient.clock(0.0F));
+            PaleCamera.kick(0.35F, PaleClient.clock(0.0F));
         }
     }
 
@@ -449,7 +449,7 @@ public final class KingFx {
                     if (self != null) {
                         double away = self.m_20182_().m_82554_(chest);
                         if (away < 14.0) {
-                            EtoCamera.kick(self == player ? 1.0F : (float)(0.9 * (1.0 - away / 14.0)), EtoClient.clock(0.0F));
+                            PaleCamera.kick(self == player ? 1.0F : (float)(0.9 * (1.0 - away / 14.0)), PaleClient.clock(0.0F));
                         }
                     }
                 }

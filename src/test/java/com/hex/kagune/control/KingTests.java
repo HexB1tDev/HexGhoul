@@ -758,7 +758,7 @@ public final class KingTests {
         check(com.hex.kagune.control.king.KingTransform.growth(peace, true, com.hex.kagune.control.king.KingTransform.PEACE_TICKS + 1) == null, "after, nothing is held in");
         // The growth: a plate on the chest comes out of the skin as the front passes it, and is all there after.
         List<double[][]> quads = new ArrayList<>();
-        com.hex.kagune.control.ayato.UkakuModel.Sink sink = (a, b, c, d, n, ca, cb, cc, cd) -> quads.add(new double[][] {a, b, c, d});
+        com.hex.kagune.control.ukaku.UkakuModel.Sink sink = (a, b, c, d, n, ca, cb, cc, cd) -> quads.add(new double[][] {a, b, c, d});
         double[] plate = {0.5, 5.0, -4.0}; // torso pixels: 2 px out in front of the chest
         com.hex.kagune.control.king.KingGrowth.wrap(sink, WarModel.Part.TORSO, new double[] {0.0, 0.0, 0.0}).quad(plate, plate, plate, plate, new double[] {0, 0, -1}, 0, 0, 0, 0);
         check(quads.isEmpty(), "before the growth reaches it, nothing of a plate is drawn");
@@ -773,7 +773,7 @@ public final class KingTests {
         for (int t = 0; t <= com.hex.kagune.control.king.KingComingFx.WAR_LASTS; t += 2) {
             double[] count = {0};
             boolean[] ok = {true};
-            com.hex.kagune.control.ayato.UkakuModel.Sink check = (a, b, c, d, n, ca, cb, cc, cd) -> {
+            com.hex.kagune.control.ukaku.UkakuModel.Sink check = (a, b, c, d, n, ca, cb, cc, cd) -> {
                 count[0]++;
                 for (double[] p : new double[][] {a, b, c, d, n}) {
                     ok[0] &= Double.isFinite(p[0]) && Double.isFinite(p[1]) && Double.isFinite(p[2]);
@@ -1089,7 +1089,7 @@ public final class KingTests {
         WarPose.act(jab, com.hex.kagune.control.king.KingMove.STRIKE, com.hex.kagune.control.king.WarStrike.JAB.impact, 0, 1.0F);
         check(jab.leftArmX < -1.4F, "the jab's fist is out on its impact tick: " + jab.leftArmX);
         // 1.0.15: in first person, the jab's fist is out in front of his eyes, where he looks (the arms drawn on the pose third person shows).
-        double[] shift = com.hex.kagune.control.client.animation.EtoOwnLeg.shift(jab);
+        double[] shift = com.hex.kagune.control.client.animation.PaleOwnLeg.shift(jab);
         double[] fist = com.hex.kagune.control.client.animation.BodyFrame.world(jab,
             com.hex.kagune.control.client.animation.BodyFrame.model(jab, "leftArm", new double[] {1.0, 10.0, 0.0}));
         double[] eyes = com.hex.kagune.control.client.animation.BodyFrame.world(new RigPose(),
@@ -1152,7 +1152,7 @@ public final class KingTests {
         check(Math.abs(heel.spin) < 1.0F, "the heel's turn is never unwound handing off: " + heel.spin);
         // The shapes: the arcs and shocks are drawn, finite.
         List<double[]> quads = new ArrayList<>();
-        com.hex.kagune.control.ayato.UkakuModel.Sink sink = (a, b, c, d, n, ca, cb, cc, cd) -> {
+        com.hex.kagune.control.ukaku.UkakuModel.Sink sink = (a, b, c, d, n, ca, cb, cc, cd) -> {
             quads.add(a);
             quads.add(c);
         };
@@ -1311,7 +1311,7 @@ public final class KingTests {
         check(Math.abs(direct[0] - root[0]) + Math.abs(direct[1] - root[1]) + Math.abs(direct[2] - root[2]) > 0.3,
             "flipped, leaning and lunging, the kagune's root goes with the hips");
         double[][] tail = {root, {0.1, 1.2, -1.2}, {0.1, 1.6, -2.4}, {0.1, 1.9, -3.6}};
-        double[][] ridden = com.hex.kagune.control.client.animation.FurutaPose.ride(tumbling, tail);
+        double[][] ridden = com.hex.kagune.control.client.animation.GraftPose.ride(tumbling, tail);
         check(Math.abs(ridden[0][1] - direct[1]) < 1.0E-6 && Math.abs(ridden[3][1] - tail[3][1]) < 1.0E-6,
             "the root rides the body, the far end stays where it is");
         // The shapes out in the world: finite, and the centipedes black where the Centipede Form is plum.
@@ -1422,7 +1422,7 @@ public final class KingTests {
         check(p.rightArmZ > 0.1F && p.leftArmZ < -0.1F && Math.abs(p.headZ) < 1.0E-6F, "Peace stands serene: arms a little open, the head level, no twitch");
     }
 
-    /** 1.0.11: Kaneki turning into the Dragon: its beats, its shapes (finite, near him, within budget), his body flung about by it. */
+    /** 1.0.11: Rinkaku turning into the Dragon: its beats, its shapes (finite, near him, within budget), his body flung about by it. */
     private static void turning() {
         int ticks = com.hex.kagune.control.king.TurningModel.PRELUDE_TICKS;
         java.util.function.DoubleUnaryOperator at = tick -> tick / ticks;

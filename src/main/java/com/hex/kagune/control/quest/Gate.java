@@ -12,32 +12,32 @@ public enum Gate {
     EYES_KICK("eyes_kick", null, "Speed Kick", 250, false),
     EYES_SOAR("eyes_soar", null, "Up We Go (soaring flips)", 400, false),
     EYES_WITNESS("eyes_witness", null, "Witness This (the full Big Punch's combo)", 600, false),
-    // Kaneki DNA.
-    KANEKI_TWIN("kaneki_twin", KagunePath.KANEKI, "Twin Rinkaku", 250, false),
-    KANEKI_FOUR("kaneki_four", KagunePath.KANEKI, "Four-Tail Rinkaku", 500, false),
-    KANEKI_CENTIPEDE("kaneki_centipede", KagunePath.KANEKI, "Centipede Form (first kakuja)", 750, false),
-    KANEKI_FULL_KAKUJA("kaneki_full_kakuja", KagunePath.KANEKI, "Full Kakuja", 1000, false),
+    // Rinkaku.
+    RINKAKU_TWIN("rinkaku_twin", KagunePath.RINKAKU, "Twin Rinkaku", 250, false),
+    RINKAKU_FOUR("rinkaku_four", KagunePath.RINKAKU, "Four-Tail Rinkaku", 500, false),
+    RINKAKU_CENTIPEDE("rinkaku_centipede", KagunePath.RINKAKU, "Centipede Form (first kakuja)", 750, false),
+    RINKAKU_FULL_KAKUJA("rinkaku_full_kakuja", KagunePath.RINKAKU, "Full Kakuja", 1000, false),
     /** 1.0.4: Kakuja V2, the Dragon: open, the next death wakes it instead (control/awakening). Never grandfathered. */
-    KANEKI_DRAGON("kaneki_dragon", KagunePath.KANEKI, "Kakuja V2: the Dragon", 1000, false),
+    RINKAKU_DRAGON("rinkaku_dragon", KagunePath.RINKAKU, "Kakuja V2: the Dragon", 1000, false),
     /**
-     * 1.0.41: You Thought You'd Get Rid of Me That Easily?, the Kaneki path's one passive (no mutations of its own any more): its quest
+     * 1.0.41: You Thought You'd Get Rid of Me That Easily?, the Rinkaku path's one passive (no mutations of its own any more): its quest
      * is all it takes. A mutation's gate as far as saves go (never opened for an old save's mastery).
      */
-    KANEKI_NOT_THAT_EASILY("kaneki_not_that_easily", KagunePath.KANEKI, "You Thought You'd Get Rid of Me That Easily? (passive)", 0, true),
-    // Ayato DNA.
-    AYATO_GATLING("ayato_gatling", KagunePath.AYATO, "Gatling", 400, false),
-    AYATO_KAKUJA("ayato_kakuja", KagunePath.AYATO, "First Kakuja", 750, false),
-    AYATO_FINAL_KAKUJA("ayato_final_kakuja", KagunePath.AYATO, "Final Kakuja", 1000, false),
-    AYATO_BURSTING_SHARDS("ayato_bursting_shards", KagunePath.AYATO, "Bursting Shards (mutation)", 0, true),
-    /** 1.0.41: Furuta's revive as Ayato's fifth mutation, behind the same quest. */
-    AYATO_NOT_THAT_EASILY("ayato_not_that_easily", KagunePath.AYATO, "You Thought You'd Get Rid of Me That Easily? (mutation)", 0, true),
-    // Furuta DNA.
-    FURUTA_CENTIPEDE("furuta_centipede", KagunePath.FURUTA, "Centipede Rinkaku", 250, false),
-    FURUTA_THORNS("furuta_thorns", KagunePath.FURUTA, "Four Thorns", 450, false),
-    FURUTA_DRAGON("furuta_dragon", KagunePath.FURUTA, "Many-Eyed Kagune", 700, false),
-    FURUTA_KAKUJA("furuta_kakuja", KagunePath.FURUTA, "Kakuja", 900, false),
-    FURUTA_APPETITE("furuta_appetite", KagunePath.FURUTA, "Rize's Appetite (mutation)", 0, true),
-    FURUTA_NOT_THAT_EASILY("furuta_not_that_easily", KagunePath.FURUTA, "You Thought You'd Get Rid of Me That Easily? (mutation)", 0, true);
+    RINKAKU_NOT_THAT_EASILY("rinkaku_not_that_easily", KagunePath.RINKAKU, "You Thought You'd Get Rid of Me That Easily? (passive)", 0, true),
+    // Ukaku.
+    UKAKU_GATLING("ukaku_gatling", KagunePath.UKAKU, "Gatling", 400, false),
+    UKAKU_KAKUJA("ukaku_kakuja", KagunePath.UKAKU, "First Kakuja", 750, false),
+    UKAKU_FINAL_KAKUJA("ukaku_final_kakuja", KagunePath.UKAKU, "Final Kakuja", 1000, false),
+    UKAKU_BURSTING_SHARDS("ukaku_bursting_shards", KagunePath.UKAKU, "Bursting Shards (mutation)", 0, true),
+    /** 1.0.41: Graft's revive as Ukaku's fifth mutation, behind the same quest. */
+    UKAKU_NOT_THAT_EASILY("ukaku_not_that_easily", KagunePath.UKAKU, "You Thought You'd Get Rid of Me That Easily? (mutation)", 0, true),
+    // Graft DNA.
+    GRAFT_CENTIPEDE("graft_centipede", KagunePath.GRAFT, "Centipede Rinkaku", 250, false),
+    GRAFT_THORNS("graft_thorns", KagunePath.GRAFT, "Four Thorns", 450, false),
+    GRAFT_DRAGON("graft_dragon", KagunePath.GRAFT, "Many-Eyed Kagune", 700, false),
+    GRAFT_KAKUJA("graft_kakuja", KagunePath.GRAFT, "Kakuja", 900, false),
+    GRAFT_APPETITE("graft_appetite", KagunePath.GRAFT, "Rize's Appetite (mutation)", 0, true),
+    GRAFT_NOT_THAT_EASILY("graft_not_that_easily", KagunePath.GRAFT, "You Thought You'd Get Rid of Me That Easily? (mutation)", 0, true);
 
     private final String id;
     private final KagunePath path;

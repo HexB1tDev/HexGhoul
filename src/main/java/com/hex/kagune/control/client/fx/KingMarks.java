@@ -1,10 +1,10 @@
 package com.hex.kagune.control.client.fx;
 
-import com.hex.kagune.control.client.EtoCamera;
-import com.hex.kagune.control.client.EtoClient;
+import com.hex.kagune.control.client.PaleCamera;
+import com.hex.kagune.control.client.PaleClient;
 import com.hex.kagune.control.king.KingMarkFx;
 import com.hex.kagune.control.king.WarRules;
-import com.hex.kagune.control.ayato.UkakuModel;
+import com.hex.kagune.control.ukaku.UkakuModel;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -15,7 +15,7 @@ import net.minecraft.world.phys.Vec3;
 
 /**
  * 1.0.19: the motes of a final kakuja's marks on this client ({@link KingMarkFx} draws their shapes): real drops of blood thrown along
- * the blow that fall and stain where they land ({@link AyatoBlood}), black smoke and ash, dust and earth thrown up from the ground,
+ * the blow that fall and stain where they land ({@link UkakuBlood}), black smoke and ash, dust and earth thrown up from the ground,
  * embers, pale motes; the view kicked by what lands near. And War's RC spikes in flight, homing on their prey as the server flies them.
  * None of the game's own particles.
  */
@@ -59,12 +59,12 @@ public final class KingMarks {
         Vec3 along = way.m_82556_() < 1.0E-6 ? new Vec3(Math.random() - 0.5, 0.6, Math.random() - 0.5).m_82541_() : way.m_82541_();
         switch (style) {
             case KingMarkFx.BLOOD -> {
-                AyatoBlood.spurt(level, at, along, p, body);
+                UkakuBlood.spurt(level, at, along, p, body);
                 mist(at, along, p, 0xB0700812);
             }
             case KingMarkFx.GORE -> {
-                AyatoBlood.spurt(level, at, along, 1.8F * p, body);
-                AyatoBlood.spurt(level, at, along.m_82490_(-0.6).m_82520_(0.0, 0.8, 0.0), p, body);
+                UkakuBlood.spurt(level, at, along, 1.8F * p, body);
+                UkakuBlood.spurt(level, at, along.m_82490_(-0.6).m_82520_(0.0, 0.8, 0.0), p, body);
                 mist(at, along, 1.6F * p, 0xC0700812);
                 kick(at, 0.45F * p, 10.0);
             }
@@ -180,7 +180,7 @@ public final class KingMarks {
         }
         double away = self.m_20182_().m_82554_(at);
         if (away < reach) {
-            EtoCamera.kick((float)Math.min(1.0, strength * (1.0 - away / reach)), EtoClient.clock(0.0F));
+            PaleCamera.kick((float)Math.min(1.0, strength * (1.0 - away / reach)), PaleClient.clock(0.0F));
         }
     }
 

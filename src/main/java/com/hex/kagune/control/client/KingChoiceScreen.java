@@ -16,7 +16,7 @@ import net.minecraft.network.chat.Component;
 public final class KingChoiceScreen extends Screen {
     private static final long HOLD_MILLIS = 1200L;
     private final long openedAt = System.currentTimeMillis();
-    private Map<String, AyatoMenuView.Rect> hits = Map.of();
+    private Map<String, UkakuMenuView.Rect> hits = Map.of();
     private float scale = 1.0F;
     private float originX;
     private float originY;
@@ -56,7 +56,7 @@ public final class KingChoiceScreen extends Screen {
     private String at(double mouseX, double mouseY) {
         double x = (mouseX - this.originX) / this.scale;
         double y = (mouseY - this.originY) / this.scale;
-        for (Map.Entry<String, AyatoMenuView.Rect> entry : this.hits.entrySet()) {
+        for (Map.Entry<String, UkakuMenuView.Rect> entry : this.hits.entrySet()) {
             if (entry.getValue().contains(x, y)) {
                 return entry.getKey();
             }

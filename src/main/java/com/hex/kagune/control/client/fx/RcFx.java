@@ -41,7 +41,7 @@ public final class RcFx {
     public static final ResourceLocation SLASH = KaguneMod.id("textures/particle/slash.png");
     public static final ResourceLocation SPARK = KaguneMod.id("textures/particle/spark.png");
 
-    // Ayato's RC flame, the same palette the wings are drawn in (UkakuFlame): white-hot core, molten orange, red, crimson,
+    // Ukaku's RC flame, the same palette the wings are drawn in (UkakuFlame): white-hot core, molten orange, red, crimson,
     // the pink aura at the rim, and the dark red-black of its smoke.
     public static final int CORE = 0xFFFFF0D8, MOLTEN = 0xFFFFB02A, FIRE = 0xFFFF3C12, RED = 0xFFE8121C, CRIMSON = 0xFF8E0A1E,
         AURA = 0xFFF2A2F0, PINK = 0xFFFF86C4, SMOKE = 0xB0240812, VEIN = 0xFFFF2236;

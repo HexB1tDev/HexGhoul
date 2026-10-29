@@ -70,25 +70,25 @@ public final class GhoulRegen {
         int mastery = KaguneProfile.mastery(player);
         boolean reservoir = KaguneProfile.hasMutation(player, MutationNode.REGEN_RESERVOIR);
         long since = now - hurt[0];
-        // 7.0.0: Furuta DNA's body heals far faster with the kagune out (far faster still in the kakuja), the speed paid in RC; run
+        // 7.0.0: Graft DNA's body heals far faster with the kagune out (far faster still in the kakuja), the speed paid in RC; run
         // dry, it heals as any ghoul's.
-        boolean kakuja = FurutaServer.kakuja(player);
-        boolean furuta = FurutaServer.ready(player) && KaguneProfile.energy(player) > 1.0F;
+        boolean kakuja = GraftServer.kakuja(player);
+        boolean graft = GraftServer.ready(player) && KaguneProfile.energy(player) > 1.0F;
         int wait = Regeneration.waitTicks(mastery, reservoir);
         int heal = Regeneration.healTicks(mastery);
-        if (furuta) {
-            double overdrive = FurutaServer.hasMutation(player, com.hex.kagune.control.furuta.FurutaMutation.KAKUHOU_OVERDRIVE)
-                ? com.hex.kagune.control.furuta.FurutaMutation.OVERDRIVE_SHARE : 1.0;
-            wait = (int)Math.round(wait * com.hex.kagune.control.furuta.FurutaRules.waitShare(mastery, kakuja) * overdrive);
-            heal = Math.max(1, (int)Math.round(heal * com.hex.kagune.control.furuta.FurutaRules.healShare(mastery, kakuja) * overdrive));
+        if (graft) {
+            double overdrive = GraftServer.hasMutation(player, com.hex.kagune.control.graft.GraftMutation.KAKUHOU_OVERDRIVE)
+                ? com.hex.kagune.control.graft.GraftMutation.OVERDRIVE_SHARE : 1.0;
+            wait = (int)Math.round(wait * com.hex.kagune.control.graft.GraftRules.waitShare(mastery, kakuja) * overdrive);
+            heal = Math.max(1, (int)Math.round(heal * com.hex.kagune.control.graft.GraftRules.healShare(mastery, kakuja) * overdrive));
         }
         if (since < wait) {
             return;
         }
         float[] missing = MISSING.computeIfAbsent(id, ignored -> new float[] {max - health});
         float amount = Math.min(max - health, missing[0] / heal);
-        if (furuta && amount > 0.0F) {
-            KaguneProfile.consumeEnergy(player, amount * com.hex.kagune.control.furuta.FurutaRules.REGEN_COST);
+        if (graft && amount > 0.0F) {
+            KaguneProfile.consumeEnergy(player, amount * com.hex.kagune.control.graft.GraftRules.REGEN_COST);
             if (diet) {
                 reserve = GhoulReserveServer.get(player); // 7.0.0: that RC came off the same bar
             }

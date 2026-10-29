@@ -32,9 +32,9 @@ final class IdleStance {
         this.previousBlend = this.blend;
         KaguneClientState.View view = KaguneClientState.get(this.player);
         KagunePath path = PathClient.get(this.player);
-        IdlePose.Style wanted = path == KagunePath.AYATO ? (com.hex.kagune.control.client.AyatoClient.kakuja(this.player) ? IdlePose.Style.AYATO_KAKUJA
-            : IdlePose.Style.AYATO_RELAXED) : path == KagunePath.KANEKI ? IdlePose.Style.KANEKI_FERAL
-            : path == KagunePath.ETO ? IdlePose.Style.ETO_PLAYFUL : IdlePose.Style.NONE;
+        IdlePose.Style wanted = path == KagunePath.UKAKU ? (com.hex.kagune.control.client.UkakuClient.kakuja(this.player) ? IdlePose.Style.UKAKU_KAKUJA
+            : IdlePose.Style.UKAKU_RELAXED) : path == KagunePath.RINKAKU ? IdlePose.Style.RINKAKU_FERAL
+            : path == KagunePath.PALE ? IdlePose.Style.PALE_PLAYFUL : IdlePose.Style.NONE;
         double x = this.player.m_20185_();
         double z = this.player.m_20189_();
         boolean moved = !Double.isNaN(this.lastX) && ((x - this.lastX) * (x - this.lastX) + (z - this.lastZ) * (z - this.lastZ)) > 1.0E-4;
@@ -44,7 +44,7 @@ final class IdleStance {
             && !this.player.m_6047_() && !this.player.m_6069_() && !this.player.m_20159_() && !this.player.m_5803_() && !this.player.m_21255_()
             && !this.player.m_6117_() && view.mode() == TendrilMode.IDLE && !view.guarding()
             && !ControlClient.get(this.player).comboPlaying(ControlClient.worldTime(0.0F)) && ControlConfig.bodyAnimations()
-            && com.hex.kagune.control.client.EtoClient.get(this.player).move() == com.hex.kagune.control.eto.EtoMove.NONE;
+            && com.hex.kagune.control.client.PaleClient.get(this.player).move() == com.hex.kagune.control.pale.PaleMove.NONE;
         this.stillTicks = calm ? this.stillTicks + 1 : 0;
         if (wanted != this.style && this.blend <= 0.0F) {
             this.style = wanted;
@@ -63,7 +63,7 @@ final class IdleStance {
         return IdlePose.ease(this.previousBlend + (this.blend - this.previousBlend) * tickDelta);
     }
 
-    /** 6.1.0: the style the stance is in (Eto's is drawn by {@link EtoIdle} with this stance's weight). */
+    /** 6.1.0: the style the stance is in (Pale's is drawn by {@link PaleIdle} with this stance's weight). */
     IdlePose.Style style() {
         return this.style;
     }

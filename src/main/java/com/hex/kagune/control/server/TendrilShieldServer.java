@@ -35,11 +35,11 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 /**
- * Auto Projectile (and the Projectile Reflex Organ) on the server, 5.0.14: Kaneki's tentacles guard him against incoming shots
+ * Auto Projectile (and the Projectile Reflex Organ) on the server, 5.0.14: Rinkaku's tentacles guard him against incoming shots
  * ({@link TendrilShield} has the rules). Replaces the original's deflection through two bytecode trampolines:
  * {@code KaguneServerController.tickAutoProjectile} (every tick: see what is coming and raise a free tentacle toward it) and
- * {@code deflectProjectileImpact} (a projectile entity about to hit him: it bounces off a guard that is in place). Ayato's shots
- * are not entities; his fire ({@link AyatoFire}) and crystal ({@link AyatoCrystal}) ask {@link #guard} at the moment they would
+ * {@code deflectProjectileImpact} (a projectile entity about to hit him: it bounces off a guard that is in place). Ukaku's shots
+ * are not entities; his fire ({@link UkakuFire}) and crystal ({@link UkakuCrystalCombat}) ask {@link #guard} at the moment they would
  * hit, and end on the tentacle (or go on, weaker, through a guard they break).
  *
  * <p>6.0.9: arrows are seen far enough out to be stopped. They are followed along their real flight (arc and all) from
@@ -53,7 +53,7 @@ public final class TendrilShieldServer {
         void shot(UUID owner, ServerLevel level, Vec3 position, Vec3 velocity, float radius);
     }
 
-    /** What a guard did to one of Ayato's shots: where it struck which tentacle, and the damage that still goes into the body. */
+    /** What a guard did to one of Ukaku's shots: where it struck which tentacle, and the damage that still goes into the body. */
     record Guarded(Vec3 at, float through, int limb) {
     }
 
@@ -96,7 +96,7 @@ public final class TendrilShieldServer {
 
     /** True while this player's tentacles may guard: the kagune out and at rest, the mutation, and the guard switched on. */
     static boolean ready(ServerPlayer player, KaguneRuntime.State state) {
-        if (state == null || !KaguneProfile.isActive(player) || !player.m_6084_() || AyatoServer.isAyato(player)
+        if (state == null || !KaguneProfile.isActive(player) || !player.m_6084_() || UkakuServer.isUkaku(player)
             || ControlConfig.tendrilGuardStrength() <= 0.0) {
             return false;
         }
@@ -237,7 +237,7 @@ public final class TendrilShieldServer {
                 cover(player, state, wall, TendrilShield.from(vec(shooter.m_146892_()), new double[3], centre), now, raised);
             }
         }
-        // Ayato's fire and crystal (simulated, not entities).
+        // Ukaku's fire and crystal (simulated, not entities).
         Shots seen = (owner, world, position, velocity, radius) -> {
             if (owner.equals(id) || world != level || position.m_82557_(middle) > TendrilShield.SHOT_SCAN * TendrilShield.SHOT_SCAN) {
                 return;
@@ -248,8 +248,8 @@ public final class TendrilShieldServer {
                 cover(player, state, wall, TendrilShield.from(p, v, centre), now, raised);
             }
         };
-        AyatoFire.shots(seen);
-        AyatoCrystal.shots(seen);
+        UkakuFire.shots(seen);
+        UkakuCrystalCombat.shots(seen);
         if (changed || raised[0]) {
             sync(player, wall);
         }
@@ -286,8 +286,8 @@ public final class TendrilShieldServer {
     }
 
     /**
-     * One of Ayato's shots, fired from {@code from} at {@code velocity} a tick, is about to hit {@code target} at {@code hit} for
-     * {@code damage}. If a Kaneki guard in place covers it, the guard takes what it can: the shot strikes the tentacle at the
+     * One of Ukaku's shots, fired from {@code from} at {@code velocity} a tick, is about to hit {@code target} at {@code hit} for
+     * {@code damage}. If a Rinkaku guard in place covers it, the guard takes what it can: the shot strikes the tentacle at the
      * returned point, and only {@link Guarded#through} (0 when it held) goes on into the body. Null: no guard, it hits as ever.
      */
     static Guarded guard(LivingEntity target, Vec3 from, Vec3 velocity, Vec3 hit, float damage, long now) {

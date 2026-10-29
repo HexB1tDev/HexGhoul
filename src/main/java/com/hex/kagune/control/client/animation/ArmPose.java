@@ -1,7 +1,7 @@
 package com.hex.kagune.control.client.animation;
 
-import com.hex.kagune.control.eto.ArmRules;
-import com.hex.kagune.control.eto.EtoFleshModel;
+import com.hex.kagune.control.pale.ArmRules;
+import com.hex.kagune.control.pale.PaleFleshModel;
 
 /**
  * 6.2.0, the Mutated Arm (pure, tested): where her right arm of flesh is this frame. Rig space throughout (blocks; x to her right,
@@ -17,7 +17,7 @@ public final class ArmPose {
      */
     static final double[] SHOULDER = {-6.5, 2.5, 0.0};
     /**
-     * Where it bursts out of her (arm pixels): all round her right arm from just above her elbow ({@link EtoFleshModel#ARM_SHEATH})
+     * Where it bursts out of her (arm pixels): all round her right arm from just above her elbow ({@link PaleFleshModel#ARM_SHEATH})
      * down to the end of her fist, and on out of it; her elbow (the way her forearm points).
      */
     static final double[] SHEATH = {-1.0, 3.0, 0.0};
@@ -36,7 +36,7 @@ public final class ArmPose {
     }
 
     /** How far out it is ({@code length}, blocks), how thick ({@code girth}), and its hand (open, shut on what it holds, a fist). */
-    public record Reach(double length, double girth, EtoFleshModel.Shape hand) {
+    public record Reach(double length, double girth, PaleFleshModel.Shape hand) {
     }
 
     /**
@@ -56,19 +56,19 @@ public final class ArmPose {
                 yield new Reach(ArmRules.reach(c), ArmRules.girth(c), hand(holding));
             }
             case DRAG -> new Reach(ArmRules.dragged(age, from, charge), ArmRules.girth(charge), hand(holding));
-            case SPHERE -> new Reach(from, ArmRules.girth(1.0), EtoFleshModel.Shape.ARM_FIST); // its claws folded in, inside it
+            case SPHERE -> new Reach(from, ArmRules.girth(1.0), PaleFleshModel.Shape.ARM_FIST); // its claws folded in, inside it
             case RETRACT -> {
                 double ticks = afterSphere ? ArmRules.RETRACT_TICKS : ArmRules.RETRACT_QUICK;
                 double was = ArmRules.girth(afterSphere ? 1.0 : charge);
                 // Its claws folded back in as it goes.
-                yield new Reach(ArmRules.retracted(age, from, ticks), ArmRules.unswollen(age, was, ticks), EtoFleshModel.Shape.ARM_FIST);
+                yield new Reach(ArmRules.retracted(age, from, ticks), ArmRules.unswollen(age, was, ticks), PaleFleshModel.Shape.ARM_FIST);
             }
-            default -> new Reach(ArmRules.ARM, ArmRules.girth(0.0) * 0.6, EtoFleshModel.Shape.ARM_FIST);
+            default -> new Reach(ArmRules.ARM, ArmRules.girth(0.0) * 0.6, PaleFleshModel.Shape.ARM_FIST);
         };
     }
 
-    static EtoFleshModel.Shape hand(boolean holding) {
-        return holding ? EtoFleshModel.Shape.ARM_SHUT : EtoFleshModel.Shape.ARM_OPEN;
+    static PaleFleshModel.Shape hand(boolean holding) {
+        return holding ? PaleFleshModel.Shape.ARM_SHUT : PaleFleshModel.Shape.ARM_OPEN;
     }
 
     /**
@@ -167,7 +167,7 @@ public final class ArmPose {
         if (phase == ArmRules.Phase.RETRACT) {
             double home = smooth(age / ((afterSphere ? ArmRules.RETRACT_TICKS : ArmRules.RETRACT_QUICK) * 0.5));
             double facing = -p.spin;
-            pointed = EtoFleshPose.normalize(new double[] {aim[0] + (Math.sin(facing) - aim[0]) * home, aim[1] * (1.0 - home),
+            pointed = PaleFleshPose.normalize(new double[] {aim[0] + (Math.sin(facing) - aim[0]) * home, aim[1] * (1.0 - home),
                 aim[2] + (Math.cos(facing) - aim[2]) * home});
         }
         point(p, pointed, pointing(phase, age, afterSphere));
@@ -288,7 +288,7 @@ public final class ArmPose {
         p.rightArmY = (float)v[1];
         double[] top = BodyFrame.world(p, BodyFrame.model(p, "rightArm", ARM_TOP));
         double[] hand = BodyFrame.world(p, BodyFrame.model(p, "rightArm", HAND));
-        double[] way = EtoFleshPose.normalize(EtoFleshPose.sub(hand, top));
+        double[] way = PaleFleshPose.normalize(PaleFleshPose.sub(hand, top));
         double inside = Math.max(0.0, FACE_CLEAR - distance(hand, head));
         double sheathed = sheathDepth(solid, BodyFrame.world(p, BodyFrame.model(p, "rightArm", SHEATH)), hand, 0.0);
         return new double[] {way[0] - aim[0], way[1] - aim[1], way[2] - aim[2], 6.0 * inside, 8.0 * sheathed};
@@ -304,7 +304,7 @@ public final class ArmPose {
         for (int i = 0; i <= 6; i++) {
             double t = i / 6.0;
             double[] at = {root[0] + (fist[0] - root[0]) * t, root[1] + (fist[1] - root[1]) * t, root[2] + (fist[2] - root[2]) * t};
-            double need = EtoFleshModel.sheathRadius(t * length) * SHEATH_LUMPS + SHEATH_MARGIN + spare;
+            double need = PaleFleshModel.sheathRadius(t * length) * SHEATH_LUMPS + SHEATH_MARGIN + spare;
             deepest = Math.max(deepest, solid.depth(at, need) * BodyFrame.SCALE / 16.0);
         }
         return deepest;
@@ -334,7 +334,7 @@ public final class ArmPose {
     public static double[] way(RigPose p) {
         double[] top = BodyFrame.world(p, BodyFrame.model(p, "rightArm", ARM_TOP));
         double[] hand = BodyFrame.world(p, BodyFrame.model(p, "rightArm", HAND));
-        return EtoFleshPose.normalize(EtoFleshPose.sub(hand, top));
+        return PaleFleshPose.normalize(PaleFleshPose.sub(hand, top));
     }
 
     static double dot(double[] a, double[] b) {
@@ -383,7 +383,7 @@ public final class ArmPose {
     /** The way her right forearm points on {@code body} (rig space, a unit vector): the way the flesh leaves her hand. */
     public static double[] forearm(RigPose body) {
         double[] elbow = BodyFrame.world(body, BodyFrame.model(body, "rightArm", ELBOW));
-        return EtoFleshPose.normalize(EtoFleshPose.sub(fist(body), elbow));
+        return PaleFleshPose.normalize(PaleFleshPose.sub(fist(body), elbow));
     }
 
     /** Where it bursts out of {@code body} (rig space): round her right arm, just above her elbow. */
@@ -408,7 +408,7 @@ public final class ArmPose {
 
     /** Where the arm ends holding what has its middle at {@code at}: its hand round it, from {@code root} ({@code girth} thick). */
     public static double[] holding(double[] root, double[] at, double girth) {
-        double[] way = EtoFleshPose.normalize(EtoFleshPose.sub(at, root));
+        double[] way = PaleFleshPose.normalize(PaleFleshPose.sub(at, root));
         double back = handBack(girth);
         return new double[] {at[0] - way[0] * back, at[1] - way[1] * back, at[2] - way[2] * back};
     }
@@ -442,7 +442,7 @@ public final class ArmPose {
         if (u <= 0.0) {
             return aim;
         }
-        return EtoFleshPose.normalize(new double[] {aim[0] + (along[0] - aim[0]) * u, aim[1] + (along[1] - aim[1]) * u,
+        return PaleFleshPose.normalize(new double[] {aim[0] + (along[0] - aim[0]) * u, aim[1] + (along[1] - aim[1]) * u,
             aim[2] + (along[2] - aim[2]) * u});
     }
 
@@ -461,7 +461,7 @@ public final class ArmPose {
 
     /** The way back to {@code root} from the sphere's middle {@code centre} (a unit vector): where the arm joins it. */
     public static double[] back(double[] root, double[] centre) {
-        return EtoFleshPose.normalize(EtoFleshPose.sub(root, centre));
+        return PaleFleshPose.normalize(PaleFleshPose.sub(root, centre));
     }
 
     /** Where the arm ends on the sphere round {@code centre}, {@code radius} big: just inside it, the flesh it grew into. */
@@ -474,7 +474,7 @@ public final class ArmPose {
      * The arm on {@code body} out to {@code end} (rig space: where the arm ends, its hand beyond), {@code girth} thick, with its
      * {@code hand}.
      */
-    public static EtoFleshModel.Pose pose(RigPose body, double[] end, double girth, EtoFleshModel.Shape hand, double time, int seed) {
+    public static PaleFleshModel.Pose pose(RigPose body, double[] end, double girth, PaleFleshModel.Shape hand, double time, int seed) {
         double[] root = root(body);
         double[] fist = fist(body);
         double[] exit = forearm(body);
@@ -527,13 +527,13 @@ public final class ArmPose {
         }
         BodyFrame.Solid solid = new BodyFrame.Solid(body, false);
         double[] up = {0.0, 1.0, 0.0};
-        path = EtoFleshPose.clear(solid, path, up, root, girth * 1.5, (s, total) -> EtoFleshModel.armRadius(s, girth, total));
+        path = PaleFleshPose.clear(solid, path, up, root, girth * 1.5, (s, total) -> PaleFleshModel.armRadius(s, girth, total));
         // Evenly along it again: its thickness is laid along it by length.
-        path = EtoFleshModel.grownAlong(path, up, 1.0);
+        path = PaleFleshModel.grownAlong(path, up, 1.0);
         if (path == null) {
             return null;
         }
-        return new EtoFleshModel.Pose(path, up, solid.axis(), 1.0, hand, girth, time, seed,
-            EtoFleshPose.keep(solid));
+        return new PaleFleshModel.Pose(path, up, solid.axis(), 1.0, hand, girth, time, seed,
+            PaleFleshPose.keep(solid));
     }
 }

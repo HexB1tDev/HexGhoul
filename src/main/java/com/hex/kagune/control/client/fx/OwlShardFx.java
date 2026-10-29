@@ -1,6 +1,6 @@
 package com.hex.kagune.control.client.fx;
 
-import com.hex.kagune.control.eto.OwlShards;
+import com.hex.kagune.control.pale.OwlShards;
 import net.minecraft.world.phys.Vec3;
 
 /**

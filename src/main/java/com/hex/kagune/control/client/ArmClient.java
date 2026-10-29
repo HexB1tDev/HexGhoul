@@ -1,8 +1,8 @@
 package com.hex.kagune.control.client;
 
 import com.hex.kagune.control.client.animation.ArmPose;
-import com.hex.kagune.control.eto.ArmRules;
-import com.hex.kagune.control.network.S2CEtoArm;
+import com.hex.kagune.control.pale.ArmRules;
+import com.hex.kagune.control.network.S2CPaleArm;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -16,15 +16,15 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 /**
- * 6.2.0: the client's store of every Eto player's Mutated Arm (fed only by the server, {@link S2CEtoArm}), timed on
- * {@link EtoClient#clock}; and each tick, the way each arm points turned after where its player looks, lagging as the server's
+ * 6.2.0: the client's store of every Pale player's Mutated Arm (fed only by the server, {@link S2CPaleArm}), timed on
+ * {@link PaleClient#clock}; and each tick, the way each arm points turned after where its player looks, lagging as the server's
  * does ({@link ArmRules#follow}), so every client swings it alike.
  */
 @Mod.EventBusSubscriber(modid = "hexkagune", value = Dist.CLIENT)
 public final class ArmClient {
     /** One arm as the server last said, the clock when that began here, and the way it points now (and a tick ago). */
     public static final class Arm {
-        public final S2CEtoArm said;
+        public final S2CPaleArm said;
         public final ArmRules.Phase phase;
         public final double began;
         /** Ticks the charge had counted when this began. */
@@ -32,7 +32,7 @@ public final class ArmClient {
         double[] aim;
         double[] lastAim;
 
-        Arm(S2CEtoArm said, double began, double heldBefore) {
+        Arm(S2CPaleArm said, double began, double heldBefore) {
             this.said = said;
             this.phase = ArmRules.Phase.byOrdinal(said.phase());
             this.began = began;
@@ -71,7 +71,7 @@ public final class ArmClient {
     private ArmClient() {
     }
 
-    public static void accept(S2CEtoArm message) {
+    public static void accept(S2CPaleArm message) {
         Minecraft minecraft = Minecraft.m_91087_();
         if (message.phase() == ArmRules.Phase.NONE.ordinal()) {
             ARMS.remove(message.playerId());
@@ -79,7 +79,7 @@ public final class ArmClient {
         }
         long now = minecraft.f_91073_ == null ? message.startedAt() : minecraft.f_91073_.m_46467_();
         long behind = now - message.startedAt();
-        double began = EtoClient.clock(0.0F) - (behind > EtoClient.JUST_BEGUN || behind < 0L ? behind : 0L);
+        double began = PaleClient.clock(0.0F) - (behind > PaleClient.JUST_BEGUN || behind < 0L ? behind : 0L);
         Arm before = ARMS.get(message.playerId());
         Arm arm = new Arm(message, began, message.startedAt() - message.downAt());
         if (before != null && before.said.startedAt() == message.startedAt() && before.said.phase() == message.phase()) {

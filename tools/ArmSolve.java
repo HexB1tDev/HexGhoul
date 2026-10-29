@@ -5,11 +5,11 @@ import java.util.Random;
 /**
  * Finds arm angles that put a hand and an elbow where a reference picture has them, through the game's own transforms
  * ({@link PoseRender#point}). Targets are world blocks with the player at the origin facing +z (the player's right is
- * -x). Usage (dev only): {@code ArmSolve <ayato|kaneki> <right|left> hx hy hz ex ey ez}.
+ * -x). Usage (dev only): {@code ArmSolve <ukaku|rinkaku> <right|left> hx hy hz ex ey ez}.
  */
 public final class ArmSolve {
     public static void main(String[] args) {
-        IdlePose.Style style = args[0].equals("ayato") ? IdlePose.Style.AYATO_RELAXED : IdlePose.Style.KANEKI_FERAL;
+        IdlePose.Style style = args[0].equals("ukaku") ? IdlePose.Style.UKAKU_RELAXED : IdlePose.Style.RINKAKU_FERAL;
         if (args[1].endsWith("Leg")) {
             leg(style, args);
             return;

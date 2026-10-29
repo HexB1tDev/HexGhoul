@@ -38,27 +38,27 @@ public final class ControlTests {
     /** 3.1.0: the abilities panel: the moves of the path and form, in its colours, with the player's own keys. */
     static void abilityGuide() {
         java.util.Map<AbilityGuide.Key, String> keys = defaultKeys();
-        com.hex.kagune.control.ayato.WingForm twin = com.hex.kagune.control.ayato.WingForm.TWIN;
-        AbilityGuide.Panel closed = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.KANEKI, AbilityGuide.State.CLOSED, 0,
+        com.hex.kagune.control.ukaku.WingForm twin = com.hex.kagune.control.ukaku.WingForm.TWIN;
+        AbilityGuide.Panel closed = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.RINKAKU, AbilityGuide.State.CLOSED, 0,
             com.hex.kagune.gameplay.KaguneForm.RINKAKU_SEED, twin, false, keys));
         check(find(closed, "Ghoul eyes") != null && find(closed, "Ghoul eyes").keys().equals("R"), "kagune in: R opens the eyes");
         check(find(closed, "Unleash") != null && find(closed, "Unleash").keys().equals("LCtrl+R"), "kagune in: Ctrl + R unleashes it");
         java.util.Map<AbilityGuide.Key, String> unleashMoved = defaultKeys();
         unleashMoved.put(AbilityGuide.Key.UNLEASH, AbilityGuide.keyName("key.keyboard.g", "NONE"));
-        AbilityGuide.Panel unleashBoard = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.KANEKI, AbilityGuide.State.CLOSED, 0,
-            com.hex.kagune.gameplay.KaguneForm.RINKAKU_SEED, com.hex.kagune.control.ayato.WingForm.TWIN, false, unleashMoved));
+        AbilityGuide.Panel unleashBoard = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.RINKAKU, AbilityGuide.State.CLOSED, 0,
+            com.hex.kagune.gameplay.KaguneForm.RINKAKU_SEED, com.hex.kagune.control.ukaku.WingForm.TWIN, false, unleashMoved));
         check(find(unleashBoard, "Unleash").keys().equals("G+R"), "the unleash key rebound in Controls shows on the board");
-        AbilityGuide.Panel eyes = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.AYATO, AbilityGuide.State.EYES, 0,
+        AbilityGuide.Panel eyes = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.UKAKU, AbilityGuide.State.EYES, 0,
             com.hex.kagune.gameplay.KaguneForm.RINKAKU_SEED, twin, false, keys));
         check(find(eyes, "Close the kakugan") != null && eyes.subtitle().contains("eyes"), "eyes open: R closes them");
         check(find(eyes, "Resistance") != null, "6.1.0: the eyes' own buffs and their RC cost are on the board");
-        // Kaneki: the combo is named for the form, crimson in the rinkaku forms, plum in the kakuja.
+        // Rinkaku: the combo is named for the form, crimson in the rinkaku forms, plum in the kakuja.
         String[] combos = {"Whip", "Scissor", "Flurry", "Heavy", "Predator"};
         com.hex.kagune.gameplay.KaguneForm[] forms = {com.hex.kagune.gameplay.KaguneForm.RINKAKU_SEED, com.hex.kagune.gameplay.KaguneForm.RINKAKU_DUAL,
             com.hex.kagune.gameplay.KaguneForm.RINKAKU_QUAD, com.hex.kagune.gameplay.KaguneForm.CENTIPEDE, com.hex.kagune.gameplay.KaguneForm.FULL_KAKUJA};
         java.util.Set<Integer> accents = new java.util.HashSet<>();
         for (int i = 0; i < forms.length; i++) {
-            AbilityGuide.Panel panel = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.KANEKI, AbilityGuide.State.OUT, 800, forms[i], twin, false, keys));
+            AbilityGuide.Panel panel = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.RINKAKU, AbilityGuide.State.OUT, 800, forms[i], twin, false, keys));
             AbilityGuide.Row combo = find(panel, combos[i]);
             if (forms[i] == com.hex.kagune.gameplay.KaguneForm.CENTIPEDE) {
                 // 5.0.10: the first kakuja's legs fight on their own and he can only walk: no move key on the board but K and R.
@@ -80,50 +80,50 @@ public final class ControlTests {
             check((find(panel, "Centipede legs") != null) == forms[i].hasCentipedeLegs(), forms[i] + ": the legs' hunt only with legs");
             accents.add(panel.accent());
         }
-        check(accents.size() == 2, "Kaneki: one colour for the rinkaku forms, another for the kakuja");
-        AbilityGuide.Panel centipede = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.KANEKI, AbilityGuide.State.OUT, 800,
+        check(accents.size() == 2, "Rinkaku: one colour for the rinkaku forms, another for the kakuja");
+        AbilityGuide.Panel centipede = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.RINKAKU, AbilityGuide.State.OUT, 800,
             com.hex.kagune.gameplay.KaguneForm.CENTIPEDE, twin, false, keys));
         check(centipede.title().equals("CENTIPEDE KAKUJA"), "the first kakuja's title");
         check(find(centipede, "Turn back") != null && find(centipede, "Final kakuja").needs() == 1000, "in the first kakuja: K back, hold K at 1000");
-        AbilityGuide.Panel full = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.KANEKI, AbilityGuide.State.OUT, 1000,
+        AbilityGuide.Panel full = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.RINKAKU, AbilityGuide.State.OUT, 1000,
             com.hex.kagune.gameplay.KaguneForm.FULL_KAKUJA, twin, false, keys));
         check(find(full, "Final kakuja") == null && find(full, "Turn back") != null, "in the final kakuja: only the way back");
-        AbilityGuide.Panel seed = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.KANEKI, AbilityGuide.State.OUT, 300,
+        AbilityGuide.Panel seed = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.RINKAKU, AbilityGuide.State.OUT, 300,
             com.hex.kagune.gameplay.KaguneForm.RINKAKU_SEED, twin, false, keys));
         check(find(seed, "First kakuja").needs() == 750 && find(seed, "Final kakuja").needs() == 1000, "kakuja locked below 750 and 1000");
-        // Ayato: the moves and their colour change with the form and the crystal mode; locked moves say when they come.
-        AbilityGuide.Panel fire = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.AYATO, AbilityGuide.State.OUT, 120,
+        // Ukaku: the moves and their colour change with the form and the crystal mode; locked moves say when they come.
+        AbilityGuide.Panel fire = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.UKAKU, AbilityGuide.State.OUT, 120,
             com.hex.kagune.gameplay.KaguneForm.RINKAKU_SEED, twin, false, keys));
-        check(find(fire, "Fire shots") != null && find(fire, "Fire enders").keys().equals("RMB"), "Ayato's wings: fire on both buttons");
-        check(find(fire, "Wing Vortex").needs() == 150 && find(fire, "Crystal mode").needs() == 200, "Ayato at 120: Vortex at 150, crystal at 200");
-        AbilityGuide.Panel crystal = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.AYATO, AbilityGuide.State.OUT, 300,
+        check(find(fire, "Fire shots") != null && find(fire, "Fire enders").keys().equals("RMB"), "Ukaku's wings: fire on both buttons");
+        check(find(fire, "Wing Vortex").needs() == 150 && find(fire, "Crystal mode").needs() == 200, "Ukaku at 120: Vortex at 150, crystal at 200");
+        AbilityGuide.Panel crystal = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.UKAKU, AbilityGuide.State.OUT, 300,
             com.hex.kagune.gameplay.KaguneForm.RINKAKU_SEED, twin, true, keys));
         check(find(crystal, "Crystal spikes") != null && find(crystal, "Gatling").needs() == 400 && find(crystal, "Gatling").keys().equals("J hold"),
             "crystal mode: spikes, the Gatling held on J from 400");
         check(find(crystal, "Wing Vortex") == null && find(fire, "Wing Vortex") != null, "the Wing Vortex is the fire wings' alone, not the crystal's");
-        AbilityGuide.Panel first = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.AYATO, AbilityGuide.State.OUT, 760,
-            com.hex.kagune.gameplay.KaguneForm.RINKAKU_SEED, com.hex.kagune.control.ayato.WingForm.KAKUJA, false, keys));
+        AbilityGuide.Panel first = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.UKAKU, AbilityGuide.State.OUT, 760,
+            com.hex.kagune.gameplay.KaguneForm.RINKAKU_SEED, com.hex.kagune.control.ukaku.WingForm.KAKUJA, false, keys));
         check(find(first, "Needle Storm") != null && find(first, "Rushing Death").needs() == 800, "first kakuja: needles, Rushing Death at 800");
-        AbilityGuide.Panel last = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.AYATO, AbilityGuide.State.OUT, 1000,
-            com.hex.kagune.gameplay.KaguneForm.RINKAKU_SEED, com.hex.kagune.control.ayato.WingForm.FINAL_KAKUJA, false, keys));
+        AbilityGuide.Panel last = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.UKAKU, AbilityGuide.State.OUT, 1000,
+            com.hex.kagune.gameplay.KaguneForm.RINKAKU_SEED, com.hex.kagune.control.ukaku.WingForm.FINAL_KAKUJA, false, keys));
         check(find(last, "Needles + fire") != null && find(last, "Fire cyclone") != null, "final kakuja: needles and fire, the cyclone");
         check(java.util.stream.Stream.of(fire, crystal, first, last).map(AbilityGuide.Panel::accent).distinct().count() == 4,
-            "Ayato: each form its own colour");
-        // 5.0.13: the Wing Block is gone: no Ayato form shows a move on C (the Guard key), but for the final kakuja's Steel Blade
+            "Ukaku: each form its own colour");
+        // 5.0.13: the Wing Block is gone: no Ukaku form shows a move on C (the Guard key), but for the final kakuja's Steel Blade
         // (5.0.17) on it.
         check(java.util.stream.Stream.of(fire, crystal, first).flatMap(panel -> panel.rows().stream()).noneMatch(row -> row.keys().equals("C"))
             && last.rows().stream().filter(row -> row.keys().equals("C")).allMatch(row -> row.name().contains("Steel Blade")),
-            "no Ayato move on the Guard key but the final kakuja's Steel Blade");
+            "no Ukaku move on the Guard key but the final kakuja's Steel Blade");
         // 6.0.0: with the blade out, its swings, the dash, the vanish and the fireballs.
-        AbilityGuide.Panel blade = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.AYATO, AbilityGuide.State.OUT, 1000,
-            com.hex.kagune.gameplay.KaguneForm.RINKAKU_SEED, com.hex.kagune.control.ayato.WingForm.FINAL_KAKUJA, false, keys, true));
+        AbilityGuide.Panel blade = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.UKAKU, AbilityGuide.State.OUT, 1000,
+            com.hex.kagune.gameplay.KaguneForm.RINKAKU_SEED, com.hex.kagune.control.ukaku.WingForm.FINAL_KAKUJA, false, keys, true));
         check(find(blade, "Steel Blade:") != null && find(blade, "Dash") != null && find(blade, "Vanish") != null && find(blade, "Fireballs") != null,
             "the Steel Blade's board: swings, dash, vanish, fireballs");
         // The player's own keys.
         java.util.Map<AbilityGuide.Key, String> rebound = defaultKeys();
         rebound.put(AbilityGuide.Key.RAPID, AbilityGuide.keyName("key.keyboard.f", "CONTROL"));
         rebound.put(AbilityGuide.Key.TOGGLE, AbilityGuide.keyName("key.mouse.4", "NONE"));
-        AbilityGuide.Panel moved = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.KANEKI, AbilityGuide.State.OUT, 100,
+        AbilityGuide.Panel moved = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.RINKAKU, AbilityGuide.State.OUT, 100,
             com.hex.kagune.gameplay.KaguneForm.RINKAKU_SEED, twin, false, rebound));
         check(find(moved, "Rapid Strike").keys().equals("Ctrl+F"), "a rebound key shows as bound: " + find(moved, "Rapid Strike").keys());
         check(find(moved, "Kakugan mode").keys().equals("M4") && find(moved, "Put it all away").keys().equals("LCtrl+M4"),
@@ -139,7 +139,7 @@ public final class ControlTests {
         check(find(none, "Choose") != null && find(none, "Choose").keys().equals("P"), "undecided: the menu picks a path");
     }
 
-    /** 3.1.0: Kaneki's tentacles drawn through critically damped springs: exact at any frame rate, root fixed, calm, no overshoot. */
+    /** 3.1.0: Rinkaku's tentacles drawn through critically damped springs: exact at any frame rate, root fixed, calm, no overshoot. */
     static void pathSmoother() {
         // At rest the original's slow sway is cut to about a third round the calm shape.
         PathSmoother resting = new PathSmoother();
@@ -206,10 +206,10 @@ public final class ControlTests {
         food();
         comboTables();
         comboPacing();
-        kanekiForms();
+        rinkakuForms();
         pathSmoother();
         abilityGuide();
-        kanekiMutations();
+        rinkakuMutations();
         damageBalance();
         ghoulBuffs();
         if (!FAILURES.isEmpty()) {
@@ -345,7 +345,7 @@ public final class ControlTests {
         check(actual == expected, "food '" + path + "' (meat=" + meat + ") should be " + expected + " but was " + actual);
     }
 
-    /** 3.0.1: the build swaps the Centipede Form and the Partial Kakuja so the last two forms are Kaneki's two kakuja. */
+    /** 3.0.1: the build swaps the Centipede Form and the Partial Kakuja so the last two forms are Rinkaku's two kakuja. */
     /** 3.0.3: with only the eyes open, the kagune's movement buffs at half their level, never below I. */
     private static void ghoulBuffs() {
         check(GhoulBuffs.eyes(-1) == -1, "no kagune buff, nothing in ghoul mode");
@@ -383,24 +383,24 @@ public final class ControlTests {
         }
     }
 
-    /** 1.0.41: the Kaneki path has no mutations at all: none shown, none counts (an old save's least of all); the guard stays everyone's. */
-    private static void kanekiMutations() {
-        check(KanekiMutations.nodes().length == 0, "none kept");
+    /** 1.0.41: the Rinkaku path has no mutations at all: none shown, none counts (an old save's least of all); the guard stays everyone's. */
+    private static void rinkakuMutations() {
+        check(RinkakuMutations.nodes().length == 0, "none kept");
         int cut = 0;
         for (com.hex.kagune.gameplay.MutationNode node : com.hex.kagune.gameplay.MutationNode.values()) {
-            check(KanekiMutations.removed(node), node + " is cut");
+            check(RinkakuMutations.removed(node), node + " is cut");
             cut++;
-            boolean counts = KanekiMutations.has(-1L, node);
+            boolean counts = RinkakuMutations.has(-1L, node);
             check(counts == (node == com.hex.kagune.gameplay.MutationNode.GUARD_MEMBRANE), node + (counts ? " counts" : " never counts, even from an old save"));
         }
         check(cut == com.hex.kagune.gameplay.MutationNode.values().length, "every one cut");
-        check(KanekiMutations.has(0L, com.hex.kagune.gameplay.MutationNode.GUARD_MEMBRANE), "the guard is everyone's");
+        check(RinkakuMutations.has(0L, com.hex.kagune.gameplay.MutationNode.GUARD_MEMBRANE), "the guard is everyone's");
         long old = com.hex.kagune.gameplay.MutationNode.MASS.bit() | com.hex.kagune.gameplay.MutationNode.REACH.bit()
             | com.hex.kagune.gameplay.MutationNode.FULL_HUNTER.bit();
-        check(KanekiMutations.strip(old) == 0L, "an old save keeps none of them");
+        check(RinkakuMutations.strip(old) == 0L, "an old save keeps none of them");
     }
 
-    private static void kanekiForms() {
+    private static void rinkakuForms() {
         KaguneForm[] all = KaguneForm.values();
         check(java.util.Arrays.equals(all, new KaguneForm[] {KaguneForm.RINKAKU_SEED, KaguneForm.RINKAKU_DUAL, KaguneForm.RINKAKU_QUAD,
             KaguneForm.PARTIAL_KAKUJA, KaguneForm.CENTIPEDE, KaguneForm.FULL_KAKUJA}), "enum slots stay (ordinals travel): " + java.util.Arrays.toString(all));
@@ -408,21 +408,21 @@ public final class ControlTests {
             check(all[i].ordinal() == i, all[i] + " ordinal matches its slot");
         }
         // 3.0.2: the Partial Kakuja is gone from everything a player sees, and the forms left come every 250 mastery.
-        KaguneForm[] forms = KanekiForms.forms();
+        KaguneForm[] forms = RinkakuForms.forms();
         check(java.util.Arrays.equals(forms, new KaguneForm[] {KaguneForm.RINKAKU_SEED, KaguneForm.RINKAKU_DUAL, KaguneForm.RINKAKU_QUAD,
-            KaguneForm.CENTIPEDE, KaguneForm.FULL_KAKUJA}), "Kaneki's forms: " + java.util.Arrays.toString(forms));
+            KaguneForm.CENTIPEDE, KaguneForm.FULL_KAKUJA}), "Rinkaku's forms: " + java.util.Arrays.toString(forms));
         int[] mastery = {0, 250, 500, 750, 1000};
         float previousDamage = 0.0F;
         for (int i = 0; i < forms.length; i++) {
             check(forms[i].requiredMastery() == mastery[i], forms[i] + " unlocks at " + mastery[i]);
-            check(KanekiForms.kakuja(forms[i]) == (i >= forms.length - 2), forms[i] + " is a kakuja only in the last two slots");
-            check(forms[i].isKakuja() == KanekiForms.kakuja(forms[i]), forms[i] + " the original's kakuja check (armour 2+) agrees");
+            check(RinkakuForms.kakuja(forms[i]) == (i >= forms.length - 2), forms[i] + " is a kakuja only in the last two slots");
+            check(forms[i].isKakuja() == RinkakuForms.kakuja(forms[i]), forms[i] + " the original's kakuja check (armour 2+) agrees");
             check(forms[i].damageMultiplier() > previousDamage, forms[i] + " hits harder than the form before it");
             previousDamage = forms[i].damageMultiplier();
             check(KaguneForm.fromId(forms[i].id()) == forms[i] && KaguneForm.find(forms[i].name()) == forms[i], forms[i] + " stored id still loads");
         }
         KaguneForm removed = KaguneForm.PARTIAL_KAKUJA;
-        check(KanekiForms.REMOVED == removed && !KanekiForms.kakuja(removed), "the removed form is the Partial Kakuja");
+        check(RinkakuForms.REMOVED == removed && !RinkakuForms.kakuja(removed), "the removed form is the Partial Kakuja");
         for (int m = 0; m <= 1000; m += 10) {
             check(!removed.isUnlocked(m), "the Partial Kakuja never unlocks (" + m + ")");
         }
@@ -431,57 +431,57 @@ public final class ControlTests {
         check(!java.util.Arrays.asList(KaguneForm.ids()).contains("partial") && KaguneForm.ids().length == 5, "the form ids list skips it");
         check(KaguneForm.fromId("centipede") == KaguneForm.CENTIPEDE && KaguneForm.CENTIPEDE.displayName().equals("Centipede Form"),
             "ids and names stay with their forms (old saves)");
-        check(KanekiForms.autonomous(KaguneForm.CENTIPEDE) && !KanekiForms.autonomous(KaguneForm.FULL_KAKUJA)
-            && !KanekiForms.autonomous(KaguneForm.RINKAKU_QUAD) && !KanekiForms.autonomous(null),
+        check(RinkakuForms.autonomous(KaguneForm.CENTIPEDE) && !RinkakuForms.autonomous(KaguneForm.FULL_KAKUJA)
+            && !RinkakuForms.autonomous(KaguneForm.RINKAKU_QUAD) && !RinkakuForms.autonomous(null),
             "only the first kakuja fights on its own (he can only walk in it)");
-        check(KanekiForms.speed(KaguneForm.CENTIPEDE) > KanekiForms.speed(KaguneForm.FULL_KAKUJA)
-            && KanekiForms.speed(KaguneForm.FULL_KAKUJA) == 2 && KanekiForms.speed(KaguneForm.RINKAKU_SEED) == -1,
+        check(RinkakuForms.speed(KaguneForm.CENTIPEDE) > RinkakuForms.speed(KaguneForm.FULL_KAKUJA)
+            && RinkakuForms.speed(KaguneForm.FULL_KAKUJA) == 2 && RinkakuForms.speed(KaguneForm.RINKAKU_SEED) == -1,
             "5.0.9: the first kakuja runs faster than the final one's Speed III; the rinkaku forms get none");
-        check(KanekiForms.firstKakuja() == KaguneForm.CENTIPEDE && KaguneForm.CENTIPEDE.limbCount() == 2
+        check(RinkakuForms.firstKakuja() == KaguneForm.CENTIPEDE && KaguneForm.CENTIPEDE.limbCount() == 2
             && KaguneForm.CENTIPEDE.isCentipedeLimb(0) && KaguneForm.CENTIPEDE.isCentipedeLimb(1), "the first kakuja: the two centipede legs");
         boolean legsAndTails = false;
         for (int limb = 0; limb < KaguneForm.FULL_KAKUJA.limbCount(); limb++) {
             legsAndTails |= !KaguneForm.FULL_KAKUJA.isCentipedeLimb(limb);
         }
-        check(KanekiForms.finalKakuja() == KaguneForm.FULL_KAKUJA && KaguneForm.FULL_KAKUJA.hasCentipedeLegs() && legsAndTails,
+        check(RinkakuForms.finalKakuja() == KaguneForm.FULL_KAKUJA && KaguneForm.FULL_KAKUJA.hasCentipedeLegs() && legsAndTails,
             "the final kakuja: centipede legs and tentacles together");
-        check(KanekiForms.firstKakuja().requiredMastery() == com.hex.kagune.control.server.AyatoForms.KAKUJA_MASTERY,
+        check(RinkakuForms.firstKakuja().requiredMastery() == com.hex.kagune.control.server.UkakuForms.KAKUJA_MASTERY,
             "K unlocks with the first kakuja");
         check(ComboStyle.forForm(KaguneForm.CENTIPEDE) == ComboStyle.HEAVY && ComboStyle.forForm(KaguneForm.FULL_KAKUJA) == ComboStyle.PREDATOR,
             "combos follow each form's limbs");
         for (int m = 0; m <= 1000; m += 50) {
-            KaguneForm base = KanekiForms.strongestBase(m);
-            check(!KanekiForms.kakuja(base) && base != removed && base.isUnlocked(m), "the fallback at " + m + " is an unlocked non-kakuja form");
+            KaguneForm base = RinkakuForms.strongestBase(m);
+            check(!RinkakuForms.kakuja(base) && base != removed && base.isUnlocked(m), "the fallback at " + m + " is an unlocked non-kakuja form");
         }
-        check(KanekiForms.strongestBase(1000) == KaguneForm.RINKAKU_QUAD && KanekiForms.strongestBase(300) == KaguneForm.RINKAKU_DUAL
-            && KanekiForms.strongestBase(249) == KaguneForm.RINKAKU_SEED, "the fallback is the strongest form below the kakuja");
+        check(RinkakuForms.strongestBase(1000) == KaguneForm.RINKAKU_QUAD && RinkakuForms.strongestBase(300) == KaguneForm.RINKAKU_DUAL
+            && RinkakuForms.strongestBase(249) == KaguneForm.RINKAKU_SEED, "the fallback is the strongest form below the kakuja");
         // K: a tap brings out the first kakuja or goes back; a hold (from 1000) the final one or back; never lands on a kakuja going back.
         KaguneForm quad = KaguneForm.RINKAKU_QUAD;
         KaguneForm first = KaguneForm.CENTIPEDE;
         KaguneForm last = KaguneForm.FULL_KAKUJA;
-        check(KanekiForms.afterKey(quad, null, 749, false) == null && KanekiForms.afterKey(quad, null, 749, true) == null, "K is locked below 750");
-        check(KanekiForms.afterKey(quad, null, 750, false) == first, "tap at 750: the first kakuja");
-        check(KanekiForms.afterKey(quad, null, 900, true) == first, "below 1000 a hold is a tap");
-        check(KanekiForms.afterKey(first, quad, 800, false) == quad && KanekiForms.afterKey(first, quad, 800, true) == quad,
+        check(RinkakuForms.afterKey(quad, null, 749, false) == null && RinkakuForms.afterKey(quad, null, 749, true) == null, "K is locked below 750");
+        check(RinkakuForms.afterKey(quad, null, 750, false) == first, "tap at 750: the first kakuja");
+        check(RinkakuForms.afterKey(quad, null, 900, true) == first, "below 1000 a hold is a tap");
+        check(RinkakuForms.afterKey(first, quad, 800, false) == quad && RinkakuForms.afterKey(first, quad, 800, true) == quad,
             "tap (or a hold below 1000) again goes back to where it came from");
-        check(KanekiForms.afterKey(quad, null, 1000, false) == first && KanekiForms.afterKey(quad, null, 1000, true) == last,
+        check(RinkakuForms.afterKey(quad, null, 1000, false) == first && RinkakuForms.afterKey(quad, null, 1000, true) == last,
             "at 1000: tap for the first kakuja, hold for the final one");
-        check(KanekiForms.afterKey(first, quad, 1000, true) == last, "hold from the first kakuja: the final one");
-        check(KanekiForms.afterKey(last, quad, 1000, true) == quad && KanekiForms.afterKey(last, quad, 1000, false) == quad,
+        check(RinkakuForms.afterKey(first, quad, 1000, true) == last, "hold from the first kakuja: the final one");
+        check(RinkakuForms.afterKey(last, quad, 1000, true) == quad && RinkakuForms.afterKey(last, quad, 1000, false) == quad,
             "tap or hold in the final kakuja goes back");
-        check(KanekiForms.afterKey(last, first, 1000, false) == quad
-            && KanekiForms.afterKey(first, null, 1000, false) == quad, "going back never lands on a kakuja");
-        check(KanekiForms.afterKey(first, KaguneForm.FULL_KAKUJA, 760, false) == quad
-            && KanekiForms.afterKey(first, removed, 1000, false) == quad,
+        check(RinkakuForms.afterKey(last, first, 1000, false) == quad
+            && RinkakuForms.afterKey(first, null, 1000, false) == quad, "going back never lands on a kakuja");
+        check(RinkakuForms.afterKey(first, KaguneForm.FULL_KAKUJA, 760, false) == quad
+            && RinkakuForms.afterKey(first, removed, 1000, false) == quad,
             "a stored base that is a kakuja, locked or removed falls back to the strongest base");
         // The menu: purple only for the two kakuja.
         int crimson = 0xFFB51E46;
-        check(KanekiForms.buttonColor(crimson, quad, true, true) == crimson && KanekiForms.labelColor(0xFFF6DDE4, quad, true) == 0xFFF6DDE4,
+        check(RinkakuForms.buttonColor(crimson, quad, true, true) == crimson && RinkakuForms.labelColor(0xFFF6DDE4, quad, true) == 0xFFF6DDE4,
             "base forms keep the original buttons");
-        check(KanekiForms.buttonColor(crimson, first, true, true) == KanekiForms.KAKUJA_SELECTED
-            && KanekiForms.buttonColor(0xFF5D1830, last, false, true) == KanekiForms.KAKUJA_UNLOCKED
-            && KanekiForms.buttonColor(0xFF2E2228, last, false, false) == KanekiForms.KAKUJA_LOCKED
-            && KanekiForms.labelColor(0xFF705860, last, false) == KanekiForms.KAKUJA_LABEL_LOCKED, "kakuja buttons are purple");
+        check(RinkakuForms.buttonColor(crimson, first, true, true) == RinkakuForms.KAKUJA_SELECTED
+            && RinkakuForms.buttonColor(0xFF5D1830, last, false, true) == RinkakuForms.KAKUJA_UNLOCKED
+            && RinkakuForms.buttonColor(0xFF2E2228, last, false, false) == RinkakuForms.KAKUJA_LOCKED
+            && RinkakuForms.labelColor(0xFF705860, last, false) == RinkakuForms.KAKUJA_LABEL_LOCKED, "kakuja buttons are purple");
     }
 
     private static void comboTables() {
@@ -528,7 +528,7 @@ public final class ControlTests {
 
     /** Fire shots at their cadence (KaguneCombat): ranged, so a little under the original melee pace, never far off it. */
     private static void flamePacing(ComboStyle style) {
-        if (style != ComboStyle.AYATO_FIRE) {
+        if (style != ComboStyle.UKAKU_FIRE) {
             return; // the enders end a chain; they are not a chain of their own
         }
         for (int mastery = 0; mastery <= 1000; mastery += 50) {
@@ -538,7 +538,7 @@ public final class ControlTests {
                 ComboStage stage = style.stage(index);
                 int impact = stage.impactTick(Math.max(8, stage.baseDuration()));
                 damage += stage.damageMul();
-                time += Math.max(impact + 1, com.hex.kagune.control.ayato.AyatoRules.flameCadence(mastery));
+                time += Math.max(impact + 1, com.hex.kagune.control.ukaku.UkakuRules.flameCadence(mastery));
             }
             double ratio = damage / (time + 1.0) / (1.0 / 12.0);
             check(ratio > 0.6 && ratio < 1.4, style + " fire pace vs the original swipe at mastery " + mastery + ": " + ratio);
@@ -551,7 +551,7 @@ public final class ControlTests {
         for (ComboStyle style : ComboStyle.values()) {
             if (style.stage(0).pattern().flame()) {
                 flamePacing(style);
-                continue; // bolts keep their own cadence and ignore hurt immunity (AyatoFire)
+                continue; // bolts keep their own cadence and ignore hurt immunity (UkakuFire)
             }
             for (float control : new float[] {0.0F, 0.5F, 1.0F}) {
                 for (float multiplier : mutationMultipliers) {

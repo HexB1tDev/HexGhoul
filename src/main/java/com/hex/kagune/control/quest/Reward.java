@@ -4,13 +4,13 @@ import java.util.List;
 
 /**
  * 7.0.1: what a quest pays (pure): mastery (raw, as the commands add it), mutation points (spent in the path's menu like the
- * milestones'; Kaneki's mutations come with mastery tiers, so his are paid as {@link #KANEKI_POINT_MASTERY} mastery each), pieces
+ * milestones'; Rinkaku's mutations come with mastery tiers, so his are paid as {@link #RINKAKU_POINT_MASTERY} mastery each), pieces
  * of Ghoul Meat, the gates it opens, and the side it puts the ghoul on ({@code anteiku} or {@code pack}; ghoul NPCs remember).
  */
 public record Reward(int mastery, int points, int ghoulMeat, List<Gate> gates, String side) {
     public static final Reward NONE = new Reward(0, 0, 0, List.of(), null);
-    /** What a mutation point is worth to a Kaneki ghoul, in mastery. */
-    public static final int KANEKI_POINT_MASTERY = 60;
+    /** What a mutation point is worth to a Rinkaku ghoul, in mastery. */
+    public static final int RINKAKU_POINT_MASTERY = 60;
 
     public Reward {
         gates = gates == null ? List.of() : List.copyOf(gates);

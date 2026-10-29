@@ -20,8 +20,8 @@ import net.minecraftforge.fml.common.Mod;
 
 /**
  * 1.0.5: the final kakujas on the client, fed only by the server ({@code S2CKingState}): who wears what, since when, and this
- * player's own crown (for the menu and the cards). 1.0.10: K held puts it on and takes it off ({@code AyatoInput}'s K, the server's
- * {@code AyatoForms.kanekiKey}); the cards ({@link KingChoiceScreen}) come up after the Dragon until it is chosen.
+ * player's own crown (for the menu and the cards). 1.0.10: K held puts it on and takes it off ({@code UkakuInput}'s K, the server's
+ * {@code UkakuForms.rinkakuKey}); the cards ({@link KingChoiceScreen}) come up after the Dragon until it is chosen.
  */
 @Mod.EventBusSubscriber(modid = "hexkagune", value = Dist.CLIENT)
 public final class KingClient {

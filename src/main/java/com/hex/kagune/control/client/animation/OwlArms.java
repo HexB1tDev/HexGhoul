@@ -1,7 +1,7 @@
 package com.hex.kagune.control.client.animation;
 
-import com.hex.kagune.control.eto.EtoMove;
-import com.hex.kagune.control.eto.OwlActs;
+import com.hex.kagune.control.pale.PaleMove;
+import com.hex.kagune.control.pale.OwlActs;
 
 /**
  * 6.2.0: one player's two giant arms between the Owl's moves and her idle ({@link OwlMotions#swing}, {@link OwlPose#swing}): a move
@@ -12,7 +12,7 @@ public final class OwlArms {
     /** After a move, how long (ticks) the arms take to ease back into her idle. */
     static final double OUT = 7.0;
 
-    private EtoMove move = EtoMove.NONE;
+    private PaleMove move = PaleMove.NONE;
     /** Whether the arms were the move's, the frame before (keyed for it, or held by the creature's act). */
     private boolean armed;
     private long startedAt = Long.MIN_VALUE;
@@ -33,13 +33,13 @@ public final class OwlArms {
      * radians, + to her right, from her body's facing), else her idle ({@code idleRight}, {@code idleLeft}), eased into from a move
      * just over.
      */
-    public OwlPose.Swing[] swing(EtoMove move, long startedAt, int detail, double age, float charge, double time, OwlPose.Swing idleRight,
+    public OwlPose.Swing[] swing(PaleMove move, long startedAt, int detail, double age, float charge, double time, OwlPose.Swing idleRight,
                                  OwlPose.Swing idleLeft, RigPose body, float turn) {
         return this.swing(move, startedAt, detail, age, charge, time, idleRight, idleLeft, body, turn, null);
     }
 
     /** 6.2.4: the same through the creature's act ({@code act}, null: none), the kagune held, driven in or spread as it has them. */
-    public OwlPose.Swing[] swing(EtoMove move, long startedAt, int detail, double age, float charge, double time, OwlPose.Swing idleRight,
+    public OwlPose.Swing[] swing(PaleMove move, long startedAt, int detail, double age, float charge, double time, OwlPose.Swing idleRight,
                                  OwlPose.Swing idleLeft, RigPose body, float turn, OwlActs.Act act) {
         boolean keyed = OwlMotions.armed(move);
         boolean armed = keyed || act != null;

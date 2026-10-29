@@ -1,11 +1,11 @@
 package com.hex.kagune.control.client.fx;
 
-import com.hex.kagune.control.network.S2CAyatoFx;
+import com.hex.kagune.control.network.S2CUkakuFx;
 import java.util.Random;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 6.0.0: the kakuja's wind ({@link S2CAyatoFx#VANISH}, {@link S2CAyatoFx#REVEAL}, {@link S2CAyatoFx#GUST}): he vanishes in a
+ * 6.0.0: the kakuja's wind ({@link S2CUkakuFx#VANISH}, {@link S2CUkakuFx#REVEAL}, {@link S2CUkakuFx#GUST}): he vanishes in a
  * whirl of wind spiralling up round him, comes back out of a smaller one, and every dash tears a rush of wind behind him.
  */
 final class VanishFx {
@@ -15,11 +15,11 @@ final class VanishFx {
     private VanishFx() {
     }
 
-    static void accept(S2CAyatoFx message, Vec3 at, Vec3 velocity) {
-        if (message.kind() == S2CAyatoFx.GUST) {
+    static void accept(S2CUkakuFx message, Vec3 at, Vec3 velocity) {
+        if (message.kind() == S2CUkakuFx.GUST) {
             gust(at, velocity, message.size());
         } else {
-            whirl(at, message.kind() == S2CAyatoFx.VANISH ? 1.0F : 0.55F);
+            whirl(at, message.kind() == S2CUkakuFx.VANISH ? 1.0F : 0.55F);
         }
     }
 

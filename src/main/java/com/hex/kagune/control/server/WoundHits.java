@@ -1,7 +1,7 @@
 package com.hex.kagune.control.server;
 
 import com.hex.kagune.control.network.ControlNetwork;
-import com.hex.kagune.control.network.S2CAyatoFx;
+import com.hex.kagune.control.network.S2CUkakuFx;
 import com.hex.kagune.control.wound.WoundBook;
 import java.util.Set;
 import net.minecraft.server.level.ServerPlayer;
@@ -21,12 +21,12 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 /**
- * 5.0.17: every hit on a player wounds him where it landed, the way it was dealt. Before, only Kaneki's tails
- * ({@link KanekiWounds}) and Ayato's spikes said where they struck; every other loss of health tore wounds open anywhere. Now
+ * 5.0.17: every hit on a player wounds him where it landed, the way it was dealt. Before, only Rinkaku's tails
+ * ({@link RinkakuWounds}) and Ukaku's spikes said where they struck; every other loss of health tore wounds open anywhere. Now
  * each hit is read as the server sees it ({@link #hurt}): a sword's gash where the swing met him, an arrow's hole where it went
  * in, a fist's bruise, a beast's claws, an explosion tearing the side that faced it, a fall breaking the shins, fire burning
  * where it touched, and nothing for poison, hunger, drowning or bleeding. Every client near him is told
- * ({@link S2CAyatoFx#HIT}), and the health it costs opens that wound there ({@link WoundBook#blow}). The mod's own moves say
+ * ({@link S2CUkakuFx#HIT}), and the health it costs opens that wound there ({@link WoundBook#blow}). The mod's own moves say
  * exactly where they struck before they deal their damage ({@link #expect}).
  */
 @Mod.EventBusSubscriber(modid = "hexkagune")
@@ -66,7 +66,7 @@ public final class WoundHits {
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void hurt(LivingHurtEvent event) {
-        if (!(event.getEntity() instanceof ServerPlayer victim) || event.getAmount() <= 0.0F || KanekiWounds.tails(victim, event.getSource())) {
+        if (!(event.getEntity() instanceof ServerPlayer victim) || event.getAmount() <= 0.0F || RinkakuWounds.tails(victim, event.getSource())) {
             return;
         }
         long now = victim.m_9236_().m_46467_();
@@ -82,7 +82,7 @@ public final class WoundHits {
         int extra = hit.blow().ordinal() + 16 * Math.max(0, Math.min(360, degrees));
         Vec3 at = hit.at() == null ? victim.m_20182_() : hit.at();
         Vec3 into = hit.into() == null ? Vec3.f_82478_ : hit.into();
-        ControlNetwork.broadcastAround(victim, new S2CAyatoFx(S2CAyatoFx.HIT, attacker == null ? victim.m_19879_() : attacker.m_19879_(),
+        ControlNetwork.broadcastAround(victim, new S2CUkakuFx(S2CUkakuFx.HIT, attacker == null ? victim.m_19879_() : attacker.m_19879_(),
             victim.m_19879_(), at.f_82479_, at.f_82480_, at.f_82481_, (float)into.f_82479_, (float)into.f_82480_, (float)into.f_82481_, power, extra));
     }
 

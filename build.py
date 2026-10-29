@@ -17,13 +17,14 @@ from pathlib import Path
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
 import zipfile
 
 ROOT = Path(__file__).resolve().parent
-VERSION = "1.2.4"
+VERSION = "1.2.5"
 INPUT = ROOT / "input" / "hexkagune-1.0.0.jar"
 BUILD = Path(os.environ.get("HEXKAGUNE_BUILD_DIR", ROOT / "build"))
 OUTPUT = BUILD / f"hexkagune-{VERSION}.jar"
@@ -153,6 +154,28 @@ def assemble():
             out.writestr(name, data)
 
 
+# 1.2.5: no character of the show is named anywhere in the mod's jar (the user's ask): not in a class, a text, a resource or a file
+# name. These are the only places the names are written (to be looked for); the original jar's own are renamed by KagunePatch.
+FORBIDDEN = re.compile(rb"Kaneki|KANEKI|kaneki|Ayato|AYATO|ayato|Furuta|FURUTA|furuta|Eto(?![a-z])|(?<![A-Za-z])ETO(?![A-Za-z])"
+                       rb"|(?<![A-Za-z])eto(?![a-z])")
+
+
+def check_names():
+    found = []
+    with zipfile.ZipFile(OUTPUT) as jar:
+        for name in jar.namelist():
+            looked = [(name + " (its name)", name.encode("utf-8"))]
+            if not name.endswith((".png", ".ogg", ".bin")):
+                looked.append((name, jar.read(name)))
+            for where, data in looked:
+                hit = FORBIDDEN.search(data)
+                if hit:
+                    found.append(f"{where}: {hit.group(0).decode('utf-8', 'replace')}")
+    if found:
+        raise RuntimeError(f"A character's name is in the jar ({len(found)}): {found[:20]}")
+    return len(found)
+
+
 def check_archive_scope():
     with zipfile.ZipFile(INPUT) as before, zipfile.ZipFile(OUTPUT) as after:
         old = set(before.namelist())
@@ -235,6 +258,7 @@ def main():
     run("java", *EXPORTS, "-cp", TOOLS, "KaguneGuard", OUTPUT, report)
     check_guarded_scope(report)
     run("java", *EXPORTS, "-cp", TOOLS, "KaguneServerCheck", OUTPUT, STUBS)
+    check_names()
 
     javac("--release", "17", "-cp", os.pathsep.join(map(str, (CLASSES, BASE, STUBS))), "-d", TEST_CLASSES, *sources("src/test/java"))
     suites = sorted(p.relative_to(ROOT / "src/test/java").with_suffix("").as_posix().replace("/", ".")

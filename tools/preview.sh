@@ -1,5 +1,5 @@
 #!/bin/bash
-# Fast look iteration for the kagune visuals: recompiles only the pure wing and kakugan packages (control.ayato, control.kakugan) over
+# Fast look iteration for the kagune visuals: recompiles only the pure wing and kakugan packages (control.ukaku, control.kakugan) over
 # the last full build, then renders preview sheets from the exact quads the game draws (tools/WingPreview.java).
 # Run `python3 build.py` once first (it produces build/classes).
 #
@@ -13,5 +13,5 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 CLASSES="$ROOT/build/preview-classes"
 rm -rf "$CLASSES"
 mkdir -p "$CLASSES"
-javac -nowarn -encoding UTF-8 --release 17 -cp "$ROOT/build/classes" -d "$CLASSES" "$ROOT"/src/main/java/com/hex/kagune/control/ayato/*.java "$ROOT"/src/main/java/com/hex/kagune/control/kakugan/*.java
+javac -nowarn -encoding UTF-8 --release 17 -cp "$ROOT/build/classes" -d "$CLASSES" "$ROOT"/src/main/java/com/hex/kagune/control/ukaku/*.java "$ROOT"/src/main/java/com/hex/kagune/control/kakugan/*.java
 java -Djava.awt.headless=true -Dref="${REF_DIR:-$ROOT/docs/reference}" -cp "$CLASSES:$ROOT/build/classes" "$ROOT/tools/WingPreview.java" "$@"

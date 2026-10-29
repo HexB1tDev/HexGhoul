@@ -1,6 +1,6 @@
 package com.hex.kagune.control.server;
 
-import com.hex.kagune.control.ayato.CentipedeMotion;
+import com.hex.kagune.control.ukaku.CentipedeMotion;
 import com.hex.kagune.data.KaguneProfile;
 import com.hex.kagune.gameplay.CentipedeTechnique;
 import com.hex.kagune.gameplay.KaguneForm;
@@ -22,7 +22,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * Kaneki's centipede legs hunt (3.1.0), replacing the original's autonomous attack ({@code tickCentipedeAutoAttack}, a
+ * Rinkaku's centipede legs hunt (3.1.0), replacing the original's autonomous attack ({@code tickCentipedeAutoAttack}, a
  * trampoline). The legs go after the nearest body that is hostile to him (it attacked him or is after him), only within what a
  * leg really reaches ({@link CentipedeMotion#reach}), with the leg on its side; one leg at a time, and it keeps its target.
  * Everything rides the original's synced centipede fields (technique, start, duration, limb, target), so every client animates

@@ -1,12 +1,12 @@
 package com.hex.kagune.control.awakening;
 
-/** Persistent progress of the Kaneki path towards its final evolution. Ordinals are stored in NBT. */
+/** Persistent progress of the Rinkaku path towards its final evolution. Ordinals are stored in NBT. */
 public enum AwakeningStage {
     /** Below the mastery threshold. */
     DORMANT,
     /** The awakening quest is underway. */
     QUEST,
-    /** The quest is complete: the next death awakens the Dragon instead of killing Kaneki. */
+    /** The quest is complete: the next death awakens the Dragon instead of killing Rinkaku. */
     ARMED,
     /** The Dragon is rampaging right now. */
     DRAGON,

@@ -52,7 +52,7 @@ public final class NpcRules {
     public static final int SHOT_BURN = 2;
 
     /**
-     * 1.0.41: flips, a player's base ones ({@code EtoRules.Flip}, never Up We Go's soaring launch), a little shorter: a front flip in on
+     * 1.0.41: flips, a player's base ones ({@code PaleRules.Flip}, never Up We Go's soaring launch), a little shorter: a front flip in on
      * prey too far off (as fast along as it needs to land where it wants to be, within these), a back flip clear of prey too close.
      */
     public static final double FLIP_FORWARD_LEAST = 0.45;

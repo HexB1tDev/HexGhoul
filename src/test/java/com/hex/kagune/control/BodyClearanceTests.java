@@ -3,7 +3,7 @@ package com.hex.kagune.control;
 import java.util.ArrayList;
 import java.util.List;
 
-/** 3.0.0: drawn kagune limbs never pass through their owner's body (Kaneki's M1s drew tentacles through his torso). */
+/** 3.0.0: drawn kagune limbs never pass through their owner's body (Rinkaku's M1s drew tentacles through his torso). */
 public final class BodyClearanceTests {
     private static int passed;
     private static final List<String> FAILURES = new ArrayList<>();

@@ -18,7 +18,7 @@ public class PathScreenPreview {
     static Graphics2D g; static Font font;
 
     public static void main(String[] a) throws Exception {
-        render(480, 270, 3, "AYATO", 1.25, a[0] + "/path-choice-1080p.png");
+        render(480, 270, 3, "UKAKU", 1.25, a[0] + "/path-choice-1080p.png");
         render(320, 240, 3, "NONE", 0.4, a[0] + "/path-choice-smallest.png");
     }
 

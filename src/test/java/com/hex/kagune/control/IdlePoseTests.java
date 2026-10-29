@@ -50,7 +50,7 @@ public final class IdlePoseTests {
 
     /** {@code p} (model pixels from the neck) where the lean the kakuja's tentacles ride puts it: turned about the hips. */
     static double[] leaned(RigPose pose, double[] p) {
-        double[] b = com.hex.kagune.control.ayato.KakujaRig.bendModel(new double[] {p[0], p[1] - RigPose.HIP_Y, p[2]}, pose.lean, pose.side);
+        double[] b = com.hex.kagune.control.ukaku.KakujaRig.bendModel(new double[] {p[0], p[1] - RigPose.HIP_Y, p[2]}, pose.lean, pose.side);
         return new double[] {b[0], b[1] + RigPose.HIP_Y, b[2]};
     }
 
@@ -90,15 +90,15 @@ public final class IdlePoseTests {
         // The kakugan and the masks are drawn on the head part's own transform, the same one the head (and its second layer) is
         // drawn with: a hunch moves the face forward, and everything drawn on it moves with it.
         double glowLift = 5 * com.hex.kagune.control.kakugan.KakuganModel.layerFor(1.0E9);
-        for (IdlePose.Style style : new IdlePose.Style[] {IdlePose.Style.AYATO_KAKUJA, IdlePose.Style.KANEKI_FERAL}) {
+        for (IdlePose.Style style : new IdlePose.Style[] {IdlePose.Style.UKAKU_KAKUJA, IdlePose.Style.RINKAKU_FERAL}) {
             for (double time = 0.0; time < 20.0; time += 0.37) {
                 RigPose stance = IdlePose.pose(style, 1.0F, time);
                 double forward = eye[2] - onPart(stance, "head", new double[] {0, 0, 0}, eye)[2];
                 check(forward > 3.0 * glowLift, style + ": the hunched face is " + forward + " px forward, and the layers on it with it");
             }
         }
-        RigPose relaxed = IdlePose.pose(IdlePose.Style.AYATO_RELAXED, 1.0F, 0.0);
-        check(eye[2] - onPart(relaxed, "head", new double[] {0, 0, 0}, eye)[2] < -glowLift, "Ayato's relaxed stance leans the face back");
+        RigPose relaxed = IdlePose.pose(IdlePose.Style.UKAKU_RELAXED, 1.0F, 0.0);
+        check(eye[2] - onPart(relaxed, "head", new double[] {0, 0, 0}, eye)[2] < -glowLift, "Ukaku's relaxed stance leans the face back");
     }
 
     /**
@@ -121,17 +121,17 @@ public final class IdlePoseTests {
                             pose.rightArmX = armX;
                             pose.rightArmZ = armZ;
                             pose.blade = 1.0F;
-                            pose.ground = crouch ? com.hex.kagune.control.ayato.BladeCarry.CROUCH_GROUND : com.hex.kagune.control.ayato.BladeCarry.GROUND;
-                            pose.shoulderY = crouch ? com.hex.kagune.control.ayato.BladeCarry.CROUCH_SHOULDER : com.hex.kagune.control.ayato.BladeCarry.SHOULDER;
+                            pose.ground = crouch ? com.hex.kagune.control.ukaku.BladeCarry.CROUCH_GROUND : com.hex.kagune.control.ukaku.BladeCarry.GROUND;
+                            pose.shoulderY = crouch ? com.hex.kagune.control.ukaku.BladeCarry.CROUCH_SHOULDER : com.hex.kagune.control.ukaku.BladeCarry.SHOULDER;
                             // Vanilla's walking swing and crouch on the arm: dropped.
                             float[] r = pose.transform("rightArm", RigPose.ROTATION, 0.8F, 0.1F, 0.05F);
                             float[] still = pose.transform("rightArm", RigPose.ROTATION, -0.6F, 0.0F, -0.1F);
                             own &= r[0] == still[0] && r[1] == still[1] && r[2] == still[2];
                             float[] pivot = pose.transform("rightArm", RigPose.POSITION, -5.0F, pose.shoulderY, 0.0F);
-                            double low = com.hex.kagune.control.ayato.BladeCarry.lowest(com.hex.kagune.control.ayato.BladeCarry.zyx(r[0], r[1], r[2]),
+                            double low = com.hex.kagune.control.ukaku.BladeCarry.lowest(com.hex.kagune.control.ukaku.BladeCarry.zyx(r[0], r[1], r[2]),
                                 pivot, 1.0, false);
                             double ground = pose.ground - drop / 0.9375F;
-                            if (low > ground - com.hex.kagune.control.ayato.BladeCarry.CLEARANCE + 1.0E-3) {
+                            if (low > ground - com.hex.kagune.control.ukaku.BladeCarry.CLEARANCE + 1.0E-3) {
                                 clear = false;
                                 failure = lean + "/" + drop + "/" + crouch + "/" + armX + "/" + armZ + ": " + low + " vs " + ground;
                             }
@@ -148,10 +148,10 @@ public final class IdlePoseTests {
         rest.blade = 1.0F;
         rest.bladeFit = 1.0F;
         float[] hung = rest.transform("rightArm", RigPose.ROTATION, 0.0F, 0.0F, 0.0F);
-        double hungLow = com.hex.kagune.control.ayato.BladeCarry.lowest(com.hex.kagune.control.ayato.BladeCarry.zyx(hung[0], hung[1], hung[2]),
+        double hungLow = com.hex.kagune.control.ukaku.BladeCarry.lowest(com.hex.kagune.control.ukaku.BladeCarry.zyx(hung[0], hung[1], hung[2]),
             new float[] {-5.0F, rest.shoulderY, 0.0F}, rest.bladeReach, false);
         check(Math.abs(hung[2] - 0.55F) < 1.0E-4F && rest.bladeReach < 0.8F && rest.bladeReach > 0.3F
-            && hungLow <= com.hex.kagune.control.ayato.BladeCarry.GROUND - com.hex.kagune.control.ayato.BladeCarry.CLEARANCE + 1.0E-3,
+            && hungLow <= com.hex.kagune.control.ukaku.BladeCarry.GROUND - com.hex.kagune.control.ukaku.BladeCarry.CLEARANCE + 1.0E-3,
             "resting, the hanging blade draws in to clear the ground and the arm stays where it hangs (reach " + rest.bladeReach + ")");
         check(clear, "the blade never goes into the ground, whatever the arm, lean, drop or crouch (" + failure + ")");
         // And without the blade the arm is vanilla's plus the offsets, as ever.
@@ -196,22 +196,22 @@ public final class IdlePoseTests {
         for (IdlePose.Style style : IdlePose.Style.values()) {
             check(IdlePose.pose(style, 0.0F, 3.0).isZero(), "no weight, no pose: " + style);
         }
-        RigPose ayato = IdlePose.pose(IdlePose.Style.AYATO_RELAXED, 1.0F, 0.0);
-        RigPose kaneki = IdlePose.pose(IdlePose.Style.KANEKI_FERAL, 1.0F, 0.0);
-        // Ayato (Jotaro's stance): leaning back, the right hand in the pocket (upper arm back, elbow folded), the left forearm up.
-        check(ayato.lean < 0.0F, "Ayato leans back a little, never hunches");
-        check(ayato.rightArmX > 0.2F && ayato.rightElbow > 0.4F, "Ayato: the right arm hangs back with the forearm folded into the pocket");
-        check(ayato.leftElbow > 0.5F, "Ayato: the left forearm is raised");
-        check(ayato.rightKnee < 0.2F && ayato.leftKnee < 0.3F, "Ayato stands tall (no crouch)");
-        // Kaneki (Bakugo's crouch): hunched, head up, elbows out and bent, hands forward, wide bent-knee stance.
-        check(kaneki.lean > 0.2F && kaneki.headX < -0.2F, "Kaneki: hunched forward, head up to watch");
-        check(kaneki.rightArmZ > 0.3F && kaneki.leftArmZ < -0.3F && kaneki.rightElbow > 1.0F && kaneki.leftElbow > 1.0F,
-            "Kaneki: elbows out to the sides, forearms bent forward like claws");
-        check(Math.abs(kaneki.rightArmZ + kaneki.leftArmZ) < 0.05F, "Kaneki's arms are symmetrical");
-        check(kaneki.rightLegZ > 0.2F && kaneki.leftLegZ < -0.2F && kaneki.rightKnee > 0.5F && kaneki.leftKnee > 0.5F && kaneki.drop > 1.0F,
-            "Kaneki: a wide stance on bent knees, the body sunk");
+        RigPose ukaku = IdlePose.pose(IdlePose.Style.UKAKU_RELAXED, 1.0F, 0.0);
+        RigPose rinkaku = IdlePose.pose(IdlePose.Style.RINKAKU_FERAL, 1.0F, 0.0);
+        // Ukaku (Jotaro's stance): leaning back, the right hand in the pocket (upper arm back, elbow folded), the left forearm up.
+        check(ukaku.lean < 0.0F, "Ukaku leans back a little, never hunches");
+        check(ukaku.rightArmX > 0.2F && ukaku.rightElbow > 0.4F, "Ukaku: the right arm hangs back with the forearm folded into the pocket");
+        check(ukaku.leftElbow > 0.5F, "Ukaku: the left forearm is raised");
+        check(ukaku.rightKnee < 0.2F && ukaku.leftKnee < 0.3F, "Ukaku stands tall (no crouch)");
+        // Rinkaku (Bakugo's crouch): hunched, head up, elbows out and bent, hands forward, wide bent-knee stance.
+        check(rinkaku.lean > 0.2F && rinkaku.headX < -0.2F, "Rinkaku: hunched forward, head up to watch");
+        check(rinkaku.rightArmZ > 0.3F && rinkaku.leftArmZ < -0.3F && rinkaku.rightElbow > 1.0F && rinkaku.leftElbow > 1.0F,
+            "Rinkaku: elbows out to the sides, forearms bent forward like claws");
+        check(Math.abs(rinkaku.rightArmZ + rinkaku.leftArmZ) < 0.05F, "Rinkaku's arms are symmetrical");
+        check(rinkaku.rightLegZ > 0.2F && rinkaku.leftLegZ < -0.2F && rinkaku.rightKnee > 0.5F && rinkaku.leftKnee > 0.5F && rinkaku.drop > 1.0F,
+            "Rinkaku: a wide stance on bent knees, the body sunk");
         // Bent legs and the body drop agree: both soles stay on the ground (within less than half a pixel).
-        for (RigPose pose : new RigPose[] {ayato, kaneki}) {
+        for (RigPose pose : new RigPose[] {ukaku, rinkaku}) {
             for (int side = -1; side <= 1; side += 2) {
                 double sole = soleHeight(pose, side);
                 check(Math.abs(sole) < 0.4, "the soles stay on the ground (" + sole + " px)");
@@ -220,20 +220,20 @@ public final class IdlePoseTests {
         // 6.0.2: where limbs can't be drawn bent (3D Skin Layers, no bendy-lib), a stance built for straight limbs: no bends at all,
         // still hunched and watching, arms reaching forward and out like claws, feet wide, soles on the ground.
         for (double t = 0.0; t < 12.0; t += 0.41) {
-            RigPose straight = IdlePose.pose(IdlePose.Style.KANEKI_FERAL, 1.0F, t, false);
+            RigPose straight = IdlePose.pose(IdlePose.Style.RINKAKU_FERAL, 1.0F, t, false);
             check(straight.rightKnee == 0.0F && straight.leftKnee == 0.0F && straight.rightElbow == 0.0F && straight.leftElbow == 0.0F,
-                "Kaneki on straight limbs: nothing bent");
-            check(straight.lean > 0.15F && straight.headX < -0.2F, "Kaneki on straight limbs: hunched forward, head up to watch");
+                "Rinkaku on straight limbs: nothing bent");
+            check(straight.lean > 0.15F && straight.headX < -0.2F, "Rinkaku on straight limbs: hunched forward, head up to watch");
             check(straight.rightArmX < -0.3F && straight.leftArmX < -0.3F && straight.rightArmZ > 0.2F && straight.leftArmZ < -0.2F
-                && Math.abs(straight.rightArmZ + straight.leftArmZ) < 0.05F, "Kaneki on straight limbs: both arms reach forward and out, alike");
+                && Math.abs(straight.rightArmZ + straight.leftArmZ) < 0.05F, "Rinkaku on straight limbs: both arms reach forward and out, alike");
             check(straight.rightLegZ > 0.15F && straight.leftLegZ < -0.15F && straight.leftLegX < straight.rightLegX,
-                "Kaneki on straight limbs: feet wide, the left a little ahead");
+                "Rinkaku on straight limbs: feet wide, the left a little ahead");
             for (int side = -1; side <= 1; side += 2) {
                 double sole = soleHeight(straight, side);
-                check(Math.abs(sole) < 0.4, "Kaneki on straight limbs: the soles stay on the ground (" + sole + " px)");
+                check(Math.abs(sole) < 0.4, "Rinkaku on straight limbs: the soles stay on the ground (" + sole + " px)");
             }
         }
-        for (IdlePose.Style style : new IdlePose.Style[] {IdlePose.Style.AYATO_RELAXED, IdlePose.Style.AYATO_KAKUJA}) {
+        for (IdlePose.Style style : new IdlePose.Style[] {IdlePose.Style.UKAKU_RELAXED, IdlePose.Style.UKAKU_KAKUJA}) {
             RigPose straight = IdlePose.pose(style, 1.0F, 0.0, false);
             boolean planted = true;
             for (int side = -1; side <= 1; side += 2) {
@@ -243,12 +243,12 @@ public final class IdlePoseTests {
             check(planted && straight.rightKnee == 0.0F && straight.leftKnee == 0.0F && straight.rightElbow == 0.0F && straight.leftElbow == 0.0F,
                 style + " on straight limbs: nothing bent, both soles on the ground");
         }
-        RigPose half = IdlePose.pose(IdlePose.Style.KANEKI_FERAL, 0.5F, 0.0);
-        check(Math.abs(half.lean - kaneki.lean * 0.5F) < 1.0E-5F, "halfway in, halfway posed");
+        RigPose half = IdlePose.pose(IdlePose.Style.RINKAKU_FERAL, 0.5F, 0.0);
+        check(Math.abs(half.lean - rinkaku.lean * 0.5F) < 1.0E-5F, "halfway in, halfway posed");
         for (double t = 0.0; t < 30.0; t += 0.37) {
-            RigPose a = IdlePose.pose(IdlePose.Style.AYATO_RELAXED, 1.0F, t);
-            RigPose k = IdlePose.pose(IdlePose.Style.KANEKI_FERAL, 1.0F, t);
-            check(Math.abs(a.lean - ayato.lean) < 0.05F && Math.abs(k.lean - kaneki.lean) < 0.06F, "the stances breathe but stay put");
+            RigPose a = IdlePose.pose(IdlePose.Style.UKAKU_RELAXED, 1.0F, t);
+            RigPose k = IdlePose.pose(IdlePose.Style.RINKAKU_FERAL, 1.0F, t);
+            check(Math.abs(a.lean - ukaku.lean) < 0.05F && Math.abs(k.lean - rinkaku.lean) < 0.06F, "the stances breathe but stay put");
         }
 
         // PlayerAnimator conventions (the 1.2.2 poses got every one of these backwards):

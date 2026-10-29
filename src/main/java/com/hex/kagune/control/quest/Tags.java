@@ -3,7 +3,7 @@ package com.hex.kagune.control.quest;
 /**
  * 7.0.1: the words a {@link QuestEvent} is tagged with (pure). Context of the player: {@link #EYES} (only the eyes open),
  * {@link #KAGUNE} (the kagune out), {@link #KAKUJA}, {@link #NIGHT}, {@link #AIRBORNE}, {@link #LOW} (at a third of their
- * health or less), {@link #path}, the form ({@link #form}: a Kaneki form, an Ayato wing form, a Furuta stage). Of what was
+ * health or less), {@link #path}, the form ({@link #form}: a Rinkaku form, an Ukaku wing form, a Graft stage). Of what was
  * hit or killed: {@link #mob}, {@link #HOSTILE}, {@link #GHOUL} (a ghoul NPC or a ghoul player), {@link #NPC}, {@link #PLAYER},
  * {@link #BOSS}, a ghoul NPC's {@link #temper}; of how: {@link #RANGED} (a projectile). Of what was eaten: {@link #item}, {@link #FLESH},
  * {@link #GHOUL_MEAT}. 7.0.2, with ghoul NPCs: {@link #FIRST} (a first word), {@link #ALLY} (one walks with the player, or is near).

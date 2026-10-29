@@ -7,7 +7,7 @@ import java.util.List;
 /**
  * A player's wounds (pure, tested; 3.0.0), following their health: every loss of health tears new wounds open, more and
  * bigger the harder the hit; as health comes back they close again, the newest first, and are gone once healed. So a player
- * looks as hurt as they are, and a ghoul's regeneration visibly knits them shut. Ayato's spikes add punctures where they sat
+ * looks as hurt as they are, and a ghoul's regeneration visibly knits them shut. Ukaku's spikes add punctures where they sat
  * ({@link #puncture}), which close the same way.
  */
 public final class WoundBook {
@@ -19,7 +19,7 @@ public final class WoundBook {
     static final double VISIBLE = 0.7;
 
     /**
-     * How a blow that is about to land is dealt, and so what it leaves: Kaneki's tails (3.0.3: a slash's long gash where it struck,
+     * How a blow that is about to land is dealt, and so what it leaves: Rinkaku's tails (3.0.3: a slash's long gash where it struck,
      * along the swing; a stab's deep hole; a crush's tears round the torso and arms, where the tail squeezed; a slam's down the back
      * and legs, where the ground met him), and since 5.0.17 every other hit on a player, as the server saw it land
      * ({@code WoundHits}). New blows go at the end: the network sends them by their place in this list.
@@ -28,7 +28,7 @@ public final class WoundBook {
         SLASH, STAB, CRUSH, SLAM,
         /** A blunt blow (a fist, a club): a bruise, the skin split when it is hard, a bone broken when it is very hard. */
         BLUNT,
-        /** Fire, lava, a fireball, Ayato's fire: burns. */
+        /** Fire, lava, a fireball, Ukaku's fire: burns. */
         BURN,
         /** An explosion: flesh torn out on the side facing it, shrapnel holes, more tears round it. */
         BLAST,
@@ -36,7 +36,7 @@ public final class WoundBook {
         FALL,
         /** Thorns, a cactus, a berry bush: scratches. */
         SCRATCH,
-        /** One of Ayato's spikes bursting out of the body: a crater where it sat. */
+        /** One of Ukaku's spikes bursting out of the body: a crater where it sat. */
         BURST,
         /** Poison, hunger, drowning, magic, bleeding: nothing to see. */
         INTERNAL,

@@ -4,10 +4,10 @@ import com.hex.kagune.KaguneMod;
 import com.hex.kagune.client.KaguneClientState;
 import com.hex.kagune.client.render.KaguneWorldRenderer;
 import com.hex.kagune.control.KakujaBurst;
-import com.hex.kagune.control.KanekiForms;
-import com.hex.kagune.control.ayato.CentipedeTail;
-import com.hex.kagune.control.ayato.WingRig;
-import com.hex.kagune.control.client.AyatoClient;
+import com.hex.kagune.control.RinkakuForms;
+import com.hex.kagune.control.ukaku.CentipedeTail;
+import com.hex.kagune.control.ukaku.WingRig;
+import com.hex.kagune.control.client.UkakuClient;
 import com.hex.kagune.control.client.KakuganClient;
 import com.hex.kagune.control.client.animation.BodyAnimations;
 import com.hex.kagune.control.kakugan.CentipedeMask;
@@ -47,7 +47,7 @@ import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 
 /**
- * Kaneki's kakuja bursting out of his body and shattering (5.0.0), on every client for every Kaneki player it sees. Each client
+ * Rinkaku's kakuja bursting out of his body and shattering (5.0.0), on every client for every Rinkaku player it sees. Each client
  * watches the synced state ({@link #observe}): when a player goes into a kakuja (K, or the kagune coming out in one) his legs
  * tear out of his back one after the other and overshoot before they settle, his tentacles erupt after them, his manifestation
  * blood and tear sound go with each, and the mask creeps over his face from the lens. When he leaves it (K again, putting the
@@ -111,12 +111,12 @@ public final class KakujaFx {
 
         /** True when the kakuja has broken but the server is still putting the kagune away: nothing of it may be drawn. */
         public boolean broken() {
-            return !Double.isNaN(this.shatteredAt) && this.view != null && this.view.active() && KanekiForms.kakuja(this.view.form());
+            return !Double.isNaN(this.shatteredAt) && this.view != null && this.view.active() && RinkakuForms.kakuja(this.view.form());
         }
     }
 
-    /** Ayato's kakuja (5.0.5): when it burst out, when the final one's fire lit, and what was drawn last (rig quads and where). */
-    private static final class AyatoTrack {
+    /** Ukaku's kakuja (5.0.5): when it burst out, when the final one's fire lit, and what was drawn last (rig quads and where). */
+    private static final class UkakuTrack {
         boolean seen;
         boolean in;
         boolean fin;
@@ -130,24 +130,24 @@ public final class KakujaFx {
         long drawnAt = Long.MIN_VALUE;
     }
 
-    private static final Map<UUID, AyatoTrack> AYATO = new HashMap<>();
+    private static final Map<UUID, UkakuTrack> UKAKU = new HashMap<>();
     /** Where his tentacles leave his back (rig space), what the burst grows out from. */
-    private static final double[] AYATO_ROOT = {0.0, 1.3, -0.25};
+    private static final double[] UKAKU_ROOT = {0.0, 1.3, -0.25};
     /** How far the burst's front has to run to reach every tip (blocks), and how wide its hot edge is. */
-    private static final double AYATO_REACH = 7.0;
-    private static final double AYATO_EDGE = 0.7;
-    private static final double AYATO_STEEL_TICKS = 22.0;
-    private static final double AYATO_FIRE_DELAY = 10.0;
-    private static final double AYATO_FIRE_TICKS = 20.0;
+    private static final double UKAKU_REACH = 7.0;
+    private static final double UKAKU_EDGE = 0.7;
+    private static final double UKAKU_STEEL_TICKS = 22.0;
+    private static final double UKAKU_FIRE_DELAY = 10.0;
+    private static final double UKAKU_FIRE_TICKS = 20.0;
     private static final int STEEL_HOT = 0xFFF2E6;
     private static final int FIRE_HOT = 0xFFF0A0;
 
-    /** Ayato's kakuja coming out, lighting or going: watched like Kaneki's ({@link #observe}), from the synced form. */
-    public static void observeAyato(AbstractClientPlayer player) {
-        AyatoTrack track = AYATO.computeIfAbsent(player.m_36316_().getId(), id -> new AyatoTrack());
+    /** Ukaku's kakuja coming out, lighting or going: watched like Rinkaku's ({@link #observe}), from the synced form. */
+    public static void observeUkaku(AbstractClientPlayer player) {
+        UkakuTrack track = UKAKU.computeIfAbsent(player.m_36316_().getId(), id -> new UkakuTrack());
         KaguneClientState.View view = KaguneClientState.get(player);
-        boolean in = view.active() && player.m_6084_() && AyatoClient.kakuja(player);
-        boolean fin = in && AyatoClient.finalKakuja(player);
+        boolean in = view.active() && player.m_6084_() && UkakuClient.kakuja(player);
+        boolean fin = in && UkakuClient.finalKakuja(player);
         if (!track.seen) {
             track.seen = true;
             track.in = in;
@@ -157,21 +157,21 @@ public final class KakujaFx {
         double now = player.m_9236_().m_46467_();
         if (in && !track.in) {
             track.burstAt = now;
-            track.fireAt = fin ? now + AYATO_FIRE_DELAY : Double.NaN;
-            AyatoClient.spawnManifestBlood(player, true);
+            track.fireAt = fin ? now + UKAKU_FIRE_DELAY : Double.NaN;
+            UkakuClient.spawnManifestBlood(player, true);
         } else if (fin && !track.fin) {
             // The first kakuja's left side burns into the final one's fire.
             track.fireAt = now;
         } else if (!in && track.in) {
-            shatterAyato(player, track, now);
+            shatterUkaku(player, track, now);
         }
         track.in = in;
         track.fin = fin;
     }
 
     /** The kakuja's quads as drawn this frame (rig space, the feet at {@code x, y, z} in the world, turned by {@code yaw}). */
-    public static void ayatoDrawn(AbstractClientPlayer player, List<WingRig.Quad> quads, double x, double y, double z, double yaw, long tick) {
-        AyatoTrack track = AYATO.get(player.m_36316_().getId());
+    public static void ukakuDrawn(AbstractClientPlayer player, List<WingRig.Quad> quads, double x, double y, double z, double yaw, long tick) {
+        UkakuTrack track = UKAKU.get(player.m_36316_().getId());
         if (track != null) {
             track.quads = quads;
             track.x = x;
@@ -186,14 +186,14 @@ public final class KakujaFx {
      * The kakuja bursting out: only what the front has reached from his back is drawn. The steel tentacles forge out white-hot
      * at their growing edge; the final kakuja's fire (his left) ignites a beat later, flaring yellow-white as it catches.
      */
-    public static List<WingRig.Quad> ayatoBurst(AbstractClientPlayer player, List<WingRig.Quad> quads, double time) {
-        AyatoTrack track = AYATO.get(player.m_36316_().getId());
+    public static List<WingRig.Quad> ukakuBurst(AbstractClientPlayer player, List<WingRig.Quad> quads, double time) {
+        UkakuTrack track = UKAKU.get(player.m_36316_().getId());
         if (track == null) {
             return quads;
         }
-        double steel = Double.isNaN(track.burstAt) ? Double.POSITIVE_INFINITY : front(time - track.burstAt, AYATO_STEEL_TICKS);
-        double fire = Double.isNaN(track.fireAt) ? steel : front(time - track.fireAt, AYATO_FIRE_TICKS);
-        if (steel >= AYATO_REACH + AYATO_EDGE && fire >= AYATO_REACH + AYATO_EDGE) {
+        double steel = Double.isNaN(track.burstAt) ? Double.POSITIVE_INFINITY : front(time - track.burstAt, UKAKU_STEEL_TICKS);
+        double fire = Double.isNaN(track.fireAt) ? steel : front(time - track.fireAt, UKAKU_FIRE_TICKS);
+        if (steel >= UKAKU_REACH + UKAKU_EDGE && fire >= UKAKU_REACH + UKAKU_EDGE) {
             return quads;
         }
         boolean fin = track.fin;
@@ -205,9 +205,9 @@ public final class KakujaFx {
             double cz = (xyz[2] + xyz[5] + xyz[8] + xyz[11]) * 0.25;
             boolean burning = fin && cx < 0.0;
             double reach = burning ? fire : steel;
-            double d = Math.sqrt((cx - AYATO_ROOT[0]) * (cx - AYATO_ROOT[0]) + (cy - AYATO_ROOT[1]) * (cy - AYATO_ROOT[1])
-                + (cz - AYATO_ROOT[2]) * (cz - AYATO_ROOT[2]));
-            double grown = Math.max(0.0, Math.min(1.0, (reach - d) / AYATO_EDGE));
+            double d = Math.sqrt((cx - UKAKU_ROOT[0]) * (cx - UKAKU_ROOT[0]) + (cy - UKAKU_ROOT[1]) * (cy - UKAKU_ROOT[1])
+                + (cz - UKAKU_ROOT[2]) * (cz - UKAKU_ROOT[2]));
+            double grown = Math.max(0.0, Math.min(1.0, (reach - d) / UKAKU_EDGE));
             if (grown <= 0.0) {
                 continue;
             }
@@ -237,7 +237,7 @@ public final class KakujaFx {
 
     private static double front(double age, double ticks) {
         double t = Math.max(0.0, Math.min(1.0, age / ticks));
-        return (AYATO_REACH + AYATO_EDGE) * (1.0 - (1.0 - t) * (1.0 - t) * (1.0 - t));
+        return (UKAKU_REACH + UKAKU_EDGE) * (1.0 - (1.0 - t) * (1.0 - t) * (1.0 - t));
     }
 
     private static int mix(int rgb, int hot, double t) {
@@ -247,8 +247,8 @@ public final class KakujaFx {
         return r << 16 | g << 8 | b;
     }
 
-    /** Ayato's kakuja breaking the way Kaneki's does: every tentacle, steel and fire, into flying pieces, with the glass. */
-    private static void shatterAyato(AbstractClientPlayer player, AyatoTrack track, double now) {
+    /** Ukaku's kakuja breaking the way Rinkaku's does: every tentacle, steel and fire, into flying pieces, with the glass. */
+    private static void shatterUkaku(AbstractClientPlayer player, UkakuTrack track, double now) {
         track.burstAt = Double.NaN;
         track.fireAt = Double.NaN;
         List<WingRig.Quad> drawn = track.quads;
@@ -294,7 +294,7 @@ public final class KakujaFx {
 
     /**
      * Looks at {@code player}'s synced state and plays what changed: a burst into a kakuja, the final kakuja growing out of the
-     * first, or the kakuja breaking. Cheap when nothing changed. Called by {@code AyatoClient.tendrilView} (the original renderer
+     * first, or the kakuja breaking. Cheap when nothing changed. Called by {@code UkakuClient.tendrilView} (the original renderer
      * asks for every player every frame) and by our renderers.
      */
     public static Track observe(Player player) {
@@ -308,11 +308,11 @@ public final class KakujaFx {
         }
         track.view = view;
         track.alive = alive;
-        if (AyatoClient.isAyato(player)) {
+        if (UkakuClient.isUkaku(player)) {
             track.seen = false;
             return track;
         }
-        boolean in = view.active() && alive && KanekiForms.kakuja(view.form()) && view.mode() != TendrilMode.DISMISS;
+        boolean in = view.active() && alive && RinkakuForms.kakuja(view.form()) && view.mode() != TendrilMode.DISMISS;
         KaguneForm before = track.form;
         track.form = view.form();
         if (!track.seen) {
@@ -329,7 +329,7 @@ public final class KakujaFx {
             }
         } else if (in && before != view.form()) {
             // The final kakuja out of the first: the legs stay, the tentacles burst out.
-            burst(track, view, now, before == null || !before.hasCentipedeLegs(), before == null || !before.hasKanekiMask());
+            burst(track, view, now, before == null || !before.hasCentipedeLegs(), before == null || !before.hasRinkakuMask());
         } else if (!in && track.kakuja && player instanceof AbstractClientPlayer client) {
             shatter(client, track, before, now);
         }
@@ -341,7 +341,7 @@ public final class KakujaFx {
         // Straight out in a kakuja (the kagune coming out): the burst runs on the manifestation's own clock.
         track.burstAt = view.mode() == TendrilMode.MANIFEST ? Math.min(now, view.modeStarted()) : now;
         track.legsBurst = legs;
-        track.maskAt = mask && view.form().hasKanekiMask() ? track.burstAt : Double.NaN;
+        track.maskAt = mask && view.form().hasRinkakuMask() ? track.burstAt : Double.NaN;
         track.shatteredAt = Double.NaN;
         track.torn = 0;
     }
@@ -354,7 +354,7 @@ public final class KakujaFx {
             return legacy;
         }
         KaguneForm form = view.form();
-        if (KanekiForms.kakuja(form)) {
+        if (RinkakuForms.kakuja(form)) {
             if (track.broken()) {
                 return 0.0F;
             }
@@ -426,7 +426,7 @@ public final class KakujaFx {
     /** One of the original's tubes was drawn ({@code CentipedeRenderer.emitTube}): kept if it is a kakuja's tentacle. */
     public static void tube(KaguneClientState.View view, int limb, Vec3[] points, long tick) {
         Track track = view == lastView ? lastTrack : null;
-        if (track == null || limb < 0 || limb >= track.tubes.length || !KanekiForms.kakuja(view.form()) || view.form().limb(limb).segmented()) {
+        if (track == null || limb < 0 || limb >= track.tubes.length || !RinkakuForms.kakuja(view.form()) || view.form().limb(limb).segmented()) {
             return;
         }
         KaguneForm.LimbLayout layout = view.form().limb(limb);
@@ -461,7 +461,7 @@ public final class KakujaFx {
                 }
             }
             boolean firstPerson = player == minecraft.f_91074_ && minecraft.f_91066_.m_92176_().m_90612_();
-            if (!firstPerson && was != null && was.hasKanekiMask() && tick - track.legsDrawnAt <= FRESH) {
+            if (!firstPerson && was != null && was.hasRinkakuMask() && tick - track.legsDrawnAt <= FRESH) {
                 maskQuads(player, mask);
             }
             add(KakujaBurst.shatter(legs, 0.55, body, floor, 1.0, seed));
@@ -597,7 +597,7 @@ public final class KakujaFx {
         if (level != trackedLevel) {
             trackedLevel = level;
             TRACKS.clear();
-            AYATO.clear();
+            UKAKU.clear();
             SHARDS.clear();
             lastView = null;
             lastTrack = null;
@@ -610,20 +610,20 @@ public final class KakujaFx {
         for (AbstractClientPlayer player : level.m_6907_()) {
             Track track = observe(player);
             tear(player, track, now);
-            if (AyatoClient.isAyato(player)) {
-                observeAyato(player);
-                AyatoTrack ayato = AYATO.get(player.m_36316_().getId());
-                if (ayato != null) {
-                    ayatoTick(player, ayato, now);
+            if (UkakuClient.isUkaku(player)) {
+                observeUkaku(player);
+                UkakuTrack ukaku = UKAKU.get(player.m_36316_().getId());
+                if (ukaku != null) {
+                    ukakuTick(player, ukaku, now);
                 }
             } else {
-                AYATO.remove(player.m_36316_().getId());
+                UKAKU.remove(player.m_36316_().getId());
             }
             present.add(player.m_36316_().getId());
         }
         // A player out of sight is forgotten at once: when he is seen again, whatever he is in is already out.
         TRACKS.keySet().retainAll(present);
-        AYATO.keySet().retainAll(present);
+        UKAKU.keySet().retainAll(present);
         if (lastTrack != null && !TRACKS.containsValue(lastTrack)) {
             lastView = null;
             lastTrack = null;
@@ -657,7 +657,7 @@ public final class KakujaFx {
         while (track.torn < due && track.torn < 6) {
             if (!manifesting) {
                 // A manifestation plays its own blood and tear per limb; a K transformation has only these.
-                AyatoClient.spawnManifestBlood(player, track.torn == 0);
+                UkakuClient.spawnManifestBlood(player, track.torn == 0);
             }
             gush(player, track.torn % 2 == 0 ? 1 : -1, track.torn == 0 ? 2.2F : 1.4F);
             track.torn++;
@@ -675,7 +675,7 @@ public final class KakujaFx {
             new Vec3(rightX * dx + forwardX * dz, dy, rightZ * dx + forwardZ * dz)};
     }
 
-    /** A limb tearing out of Kaneki's back on {@code side}: blood gushing back and up out of the wound, scraps of flesh. */
+    /** A limb tearing out of Rinkaku's back on {@code side}: blood gushing back and up out of the wound, scraps of flesh. */
     private static void gush(AbstractClientPlayer player, int side, float power) {
         Vec3[] root = onBody(player, 0.14 * side, 1.1, -0.22, 0.45 * side, 0.55, -1.0);
         if (!RcFx.near(root[0], 48.0) || !(player.m_9236_() instanceof ClientLevel level)) {
@@ -684,7 +684,7 @@ public final class KakujaFx {
         for (int i = 0; i < 3; i++) {
             Vec3 way = root[1].m_82520_((RANDOM.nextFloat() - 0.5) * 0.6, (RANDOM.nextFloat() - 0.2) * 0.5,
                 (RANDOM.nextFloat() - 0.5) * 0.6);
-            AyatoBlood.spurt(level, root[0], way, power, player);
+            UkakuBlood.spurt(level, root[0], way, power, player);
         }
         for (int i = 0; i < RcFx.count(14.0F); i++) {
             Vec3 velocity = root[1].m_82490_(0.12 + 0.18 * RANDOM.nextFloat()).m_82520_((RANDOM.nextFloat() - 0.5) * 0.16,
@@ -695,15 +695,15 @@ public final class KakujaFx {
     }
 
     /**
-     * Ayato's kakuja coming out, every tick of it: steel sparks spraying from where his armored tentacles force out of his back,
+     * Ukaku's kakuja coming out, every tick of it: steel sparks spraying from where his armored tentacles force out of his back,
      * and on the final kakuja fire bursting into flame where his left side ignites, licking out along it.
      */
-    private static void ayatoTick(AbstractClientPlayer player, AyatoTrack track, double now) {
+    private static void ukakuTick(AbstractClientPlayer player, UkakuTrack track, double now) {
         if (!track.in || !RcFx.near(player.m_20182_(), 48.0) || !(player.m_9236_() instanceof ClientLevel level)) {
             return;
         }
         double steel = now - track.burstAt;
-        if (!Double.isNaN(track.burstAt) && steel >= 0.0 && steel < AYATO_STEEL_TICKS) {
+        if (!Double.isNaN(track.burstAt) && steel >= 0.0 && steel < UKAKU_STEEL_TICKS) {
             for (int side = track.fin ? 1 : -1; side <= 1; side += 2) {
                 Vec3[] root = onBody(player, 0.21 * side, 1.24, -0.2, 0.7 * side, 0.45, -0.8);
                 for (int i = 0; i < RcFx.count(5.0F); i++) {
@@ -718,9 +718,9 @@ public final class KakujaFx {
             }
         }
         double fire = now - track.fireAt;
-        if (!Double.isNaN(track.fireAt) && fire >= 0.0 && fire < AYATO_FIRE_TICKS) {
+        if (!Double.isNaN(track.fireAt) && fire >= 0.0 && fire < UKAKU_FIRE_TICKS) {
             Vec3[] root = onBody(player, -0.21, 1.24, -0.2, -0.75, 0.5, -0.7);
-            double reach = 0.4 + 3.0 * (fire / AYATO_FIRE_TICKS);
+            double reach = 0.4 + 3.0 * (fire / UKAKU_FIRE_TICKS);
             for (int i = 0; i < RcFx.count(9.0F); i++) {
                 double along = reach * RANDOM.nextFloat();
                 Vec3 at = root[0].m_82549_(root[1].m_82541_().m_82490_(along)).m_82520_((RANDOM.nextFloat() - 0.5) * 0.5,
@@ -787,7 +787,7 @@ public final class KakujaFx {
     @SubscribeEvent
     public static void loggedOut(ClientPlayerNetworkEvent.LoggingOut event) {
         TRACKS.clear();
-        AYATO.clear();
+        UKAKU.clear();
         SHARDS.clear();
         lastView = null;
         lastTrack = null;

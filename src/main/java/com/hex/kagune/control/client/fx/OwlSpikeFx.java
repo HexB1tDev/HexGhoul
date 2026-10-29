@@ -1,9 +1,9 @@
 package com.hex.kagune.control.client.fx;
 
-import com.hex.kagune.control.client.EtoCamera;
-import com.hex.kagune.control.client.EtoClient;
-import com.hex.kagune.control.eto.EtoMove;
-import com.hex.kagune.control.eto.OwlSpikes;
+import com.hex.kagune.control.client.PaleCamera;
+import com.hex.kagune.control.client.PaleClient;
+import com.hex.kagune.control.pale.PaleMove;
+import com.hex.kagune.control.pale.OwlSpikes;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -57,11 +57,11 @@ public final class OwlSpikeFx {
             return;
         }
         long now = level.m_46467_();
-        double clock = EtoClient.clock(0.0F);
+        double clock = PaleClient.clock(0.0F);
         Vec3 camera = minecraft.f_91063_.m_109153_().m_90583_();
         for (AbstractClientPlayer player : level.m_6907_()) {
-            EtoClient.EtoView view = EtoClient.get(player);
-            if (view.move() != EtoMove.OWL_SPIKES || !player.m_6084_() || player.m_20182_().m_82557_(camera) > RANGE * RANGE) {
+            PaleClient.PaleView view = PaleClient.get(player);
+            if (view.move() != PaleMove.OWL_SPIKES || !player.m_6084_() || player.m_20182_().m_82557_(camera) > RANGE * RANGE) {
                 continue;
             }
             Seen seen = SEEN.computeIfAbsent(player.m_20148_(), id -> new Seen());
@@ -80,7 +80,7 @@ public final class OwlSpikeFx {
     }
 
     /** What this tick of the burst throws, from {@code last} ticks in to {@code age}. */
-    private static void burst(Minecraft minecraft, AbstractClientPlayer player, EtoClient.EtoView view, double last, double age, double clock) {
+    private static void burst(Minecraft minecraft, AbstractClientPlayer player, PaleClient.PaleView view, double last, double age, double clock) {
         double yaw = Math.toRadians(view.yaw());
         Vec3 facing = new Vec3(-Math.sin(yaw), 0.0, Math.cos(yaw));
         Vec3 right = new Vec3(-facing.f_82481_, 0.0, facing.f_82479_);
@@ -102,7 +102,7 @@ public final class OwlSpikeFx {
             if (minecraft.f_91074_ != null) {
                 double away = minecraft.f_91074_.m_20182_().m_82554_(feet);
                 if (away < 10.0) {
-                    EtoCamera.kick((float)(0.7 * (1.0 - away / 10.0)), clock);
+                    PaleCamera.kick((float)(0.7 * (1.0 - away / 10.0)), clock);
                 }
             }
         }

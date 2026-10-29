@@ -219,7 +219,7 @@ public final class TerrainScars {
         }
     }
 
-    /** Immediately closes every hole within the radius, lowest blocks first, so Kaneki lands on intact ground. */
+    /** Immediately closes every hole within the radius, lowest blocks first, so Rinkaku lands on intact ground. */
     void restoreNear(V3 center, double radius) {
         List<ScarLedger.Scar<BlockState>> close = new ArrayList<>();
         double limit = radius * radius;

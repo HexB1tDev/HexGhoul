@@ -1,28 +1,28 @@
 package com.hex.kagune.control.king;
 
-import static com.hex.kagune.control.furuta.FurutaMesh.add;
-import static com.hex.kagune.control.furuta.FurutaMesh.argb;
-import static com.hex.kagune.control.furuta.FurutaMesh.clamp01;
-import static com.hex.kagune.control.furuta.FurutaMesh.cross;
-import static com.hex.kagune.control.furuta.FurutaMesh.dot;
-import static com.hex.kagune.control.furuta.FurutaMesh.hash;
-import static com.hex.kagune.control.furuta.FurutaMesh.lerp;
-import static com.hex.kagune.control.furuta.FurutaMesh.mix;
-import static com.hex.kagune.control.furuta.FurutaMesh.mul;
-import static com.hex.kagune.control.furuta.FurutaMesh.noise;
-import static com.hex.kagune.control.furuta.FurutaMesh.normalize;
-import static com.hex.kagune.control.furuta.FurutaMesh.perpendicular;
-import static com.hex.kagune.control.furuta.FurutaMesh.sub;
+import static com.hex.kagune.control.graft.GraftMesh.add;
+import static com.hex.kagune.control.graft.GraftMesh.argb;
+import static com.hex.kagune.control.graft.GraftMesh.clamp01;
+import static com.hex.kagune.control.graft.GraftMesh.cross;
+import static com.hex.kagune.control.graft.GraftMesh.dot;
+import static com.hex.kagune.control.graft.GraftMesh.hash;
+import static com.hex.kagune.control.graft.GraftMesh.lerp;
+import static com.hex.kagune.control.graft.GraftMesh.mix;
+import static com.hex.kagune.control.graft.GraftMesh.mul;
+import static com.hex.kagune.control.graft.GraftMesh.noise;
+import static com.hex.kagune.control.graft.GraftMesh.normalize;
+import static com.hex.kagune.control.graft.GraftMesh.perpendicular;
+import static com.hex.kagune.control.graft.GraftMesh.sub;
 
-import com.hex.kagune.control.ayato.KakujaModel;
-import com.hex.kagune.control.ayato.UkakuModel;
-import com.hex.kagune.control.furuta.FurutaMesh;
+import com.hex.kagune.control.ukaku.KakujaModel;
+import com.hex.kagune.control.ukaku.UkakuModel;
+import com.hex.kagune.control.graft.GraftMesh;
 import com.hex.kagune.control.kakugan.KakuganEyes;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * War, the One-Eyed King (pure; the final evolution's evil path): Kaneki's last kakuja as the mod draws every kagune, smooth
+ * War, the One-Eyed King (pure; the final evolution's evil path): Rinkaku's last kakuja as the mod draws every kagune, smooth
  * living shapes in black and crimson, after the War sheet (tools/kakuja/reference/war.webp), measured on it with a pixel grid.
  *
  * <p>Built in body pixels (x to the player's left, y up from the feet, z backward: the player stands in x -4..4, y 0..32,
@@ -140,8 +140,8 @@ public final class WarModel {
          */
         public static Motion of(KingMove move, int level, double progress) {
             if (move == KingMove.STRIKE) {
-                double in = FurutaMesh.smooth(clamp01(progress * 2.5));
-                double out = 1.0 - FurutaMesh.smooth(clamp01((progress - 0.7) * 3.3));
+                double in = GraftMesh.smooth(clamp01(progress * 2.5));
+                double out = 1.0 - GraftMesh.smooth(clamp01((progress - 0.7) * 3.3));
                 return switch (WarStrike.byOrdinal(level)) {
                     case HEEL -> new Motion(0.0, 0.0, 0.45 * in * out, 1.2);
                     case VERDICT -> new Motion(0.9 * in * out, 1.0, 0.0, 1.0);
@@ -155,8 +155,8 @@ public final class WarModel {
                     default -> new Motion(0.0, 0.0, 0.1, 0.9);
                 };
             }
-            double in = FurutaMesh.smooth(clamp01(progress * 3.0));
-            double out = 1.0 - FurutaMesh.smooth(clamp01((progress - 0.75) * 4.0));
+            double in = GraftMesh.smooth(clamp01(progress * 3.0));
+            double out = 1.0 - GraftMesh.smooth(clamp01((progress - 0.75) * 4.0));
             return switch (move) {
                 case GRASP -> new Motion(0.0, 0.0, 0.1, 0.5);
                 case DASH -> new Motion(0.0, 0.0, 0.1, 0.6);
@@ -165,7 +165,7 @@ public final class WarModel {
                 case SPIRE -> new Motion(0.85 * in * out, 1.0, 0.0, 0.6);
                 case DEFIANCE -> new Motion(0.0, 0.0, 0.25, 0.3);
                 case COUNTER -> new Motion(0.6 * in * out, 0.0, 0.0, 1.0);
-                case COCOON -> new Motion(0.0, 0.0, 0.0, 0.2, FurutaMesh.smooth(clamp01(progress * 6.0)), null);
+                case COCOON -> new Motion(0.0, 0.0, 0.0, 0.2, GraftMesh.smooth(clamp01(progress * 6.0)), null);
                 case BURST -> new Motion(0.0, 0.0, out, 2.0);
                 // 1.0.15: down into the ground with his hand, then thrashing as what they hold is lifted.
                 case SUN -> new Motion(0.6 * in * out, 1.0, 0.3 * in * out, 1.4);
@@ -192,12 +192,12 @@ public final class WarModel {
         double[] t = at != null ? at : v(0.0, 22.0, -blow.reach * 0.85 * PIXELS);
         double impact = blow.impact;
         double lead = Math.max(2.0, impact);
-        double w = age <= impact ? FurutaMesh.smooth(clamp01((age - (impact - lead)) / lead))
-            : 1.0 - FurutaMesh.smooth(clamp01((age - impact - 1.5) / 4.0));
+        double w = age <= impact ? GraftMesh.smooth(clamp01((age - (impact - lead)) / lead))
+            : 1.0 - GraftMesh.smooth(clamp01((age - impact - 1.5) / 4.0));
         if (w <= 0.0) {
             return null;
         }
-        double sweep = FurutaMesh.smooth(clamp01((age - (impact - 2.0)) / 4.0));
+        double sweep = GraftMesh.smooth(clamp01((age - (impact - 2.0)) / 4.0));
         double[][] aims = new double[TENDRILS.length * 2][];
         switch (blow) {
             case JAB -> {
@@ -207,7 +207,7 @@ public final class WarModel {
             case REAP -> {
                 // From his right across to his left (x is his left), the second a beat behind the first.
                 aims[2] = new double[] {t[0] - 30.0 + 60.0 * sweep, t[1], t[2] + 6.0, w};
-                double late = FurutaMesh.smooth(clamp01((age - (impact - 1.0)) / 4.0));
+                double late = GraftMesh.smooth(clamp01((age - (impact - 1.0)) / 4.0));
                 aims[0] = new double[] {t[0] - 26.0 + 52.0 * late, t[1] + 6.0, t[2] + 8.0, 0.8 * w};
             }
             case SIDE_KICK -> {
@@ -333,7 +333,7 @@ public final class WarModel {
             this.quads++;
         }
 
-        /** {@link FurutaMesh#mix} gives colours without alpha: War is opaque. */
+        /** {@link GraftMesh#mix} gives colours without alpha: War is opaque. */
         static int solid(int colour) {
             return colour >>> 24 == 0 ? colour | 0xFF000000 : colour;
         }
@@ -657,7 +657,7 @@ public final class WarModel {
         vein(body, add(eye, v(-0.15, -0.65, -0.02)), tear, 0.13, BLOOD, RED);
         vein(body, tear, v(ex - 0.1, Math.max(24.2, ey - 2.8), -4.0 - out - 0.1), 0.1, RED, CRIMSON);
         // The crown: shards from the top and the sides of the helmet, up, out and back.
-        double reach = FurutaMesh.smooth(clamp01(grow * 1.4 - 0.2));
+        double reach = GraftMesh.smooth(clamp01(grow * 1.4 - 0.2));
         List<double[]> crown = crownSpikes();
         for (int k = 0; k < crown.size(); k++) {
             double[] s = crown.get(k);
@@ -874,7 +874,7 @@ public final class WarModel {
 
     static double tendrilRadius(double s) {
         double seg = (s * SEGMENTS) % 1.0;
-        return (TENDRIL_ROOT * Math.pow(1.0 - s, 0.65) + 0.12) * (1.1 - 0.24 * FurutaMesh.smooth(seg));
+        return (TENDRIL_ROOT * Math.pow(1.0 - s, 0.65) + 0.12) * (1.1 - 0.24 * GraftMesh.smooth(seg));
     }
 
     static void tendrils(Body body, double time, double grow, Motion motion) {
@@ -893,7 +893,7 @@ public final class WarModel {
                     // Out of the back as it grows; then alive: a writhe that grows toward the tip.
                     double[] root = v(sx * cp[0][0], cp[0][1], cp[0][2]);
                     double[] p = add(root, mul(sub(v(sx * cp[k][0], cp[k][1], cp[k][2]), root), TENDRIL_SCALE));
-                    p = lerp(root, p, FurutaMesh.smooth(clamp01(grow * 1.3 - u * 0.3)));
+                    p = lerp(root, p, GraftMesh.smooth(clamp01(grow * 1.3 - u * 0.3)));
                     double w = Math.pow(u, 1.3) * (1.3 + jolt) * (1.0 + 1.6 * motion.frenzy());
                     double pace = 1.0 + 1.5 * motion.frenzy();
                     p = add(p, v(Math.sin(time * 0.07 * pace + seed * 1.3 + u * 3.0) * w, Math.sin(time * 0.06 * pace + seed * 2.1 + u * 2.4) * w * 0.8,
@@ -914,7 +914,7 @@ public final class WarModel {
                         double a = sx * (u * Math.PI * 6.0 + level * 2.1) + time * 0.03;
                         double radius = 5.4 + 0.5 * level + 0.3 * Math.sin(u * 9.0 + seed);
                         double[] coil = v(Math.sin(a) * radius, 35.0 - u * 34.0 + level * 0.9, Math.cos(a) * radius * 0.8);
-                        p = lerp(p, coil, motion.cocoon() * FurutaMesh.smooth(clamp01(u * 1.6)));
+                        p = lerp(p, coil, motion.cocoon() * GraftMesh.smooth(clamp01(u * 1.6)));
                     }
                     // 1.0.28: King's Defiance: wound round him into a sphere, each rinkaku a band of it from its crown to under his
                     // feet, the bands crossing (the right ones one way, the left ones the other), breathing slowly.
@@ -923,7 +923,7 @@ public final class WarModel {
                         double a = sx * (u * Math.PI * 2.6 + level * 1.05) + sx * time * 0.015 + (sx > 0 ? 0.5 : 0.0);
                         double r = ORB_RADIUS * (1.0 + 0.03 * Math.sin(time * 0.11 + seed) + 0.04 * Math.sin(u * 11.0 + seed * 2.0));
                         double[] ball = v(Math.sin(a) * Math.sin(lat) * r, ORB_CENTRE + Math.cos(lat) * r, Math.cos(a) * Math.sin(lat) * r);
-                        p = lerp(p, ball, motion.orb() * FurutaMesh.smooth(clamp01(u * 2.2)));
+                        p = lerp(p, ball, motion.orb() * GraftMesh.smooth(clamp01(u * 2.2)));
                     }
                     // 1.0.7: its own strike, at what it hunts.
                     double[][] aims = motion.aims();
@@ -934,7 +934,7 @@ public final class WarModel {
                     pts.add(p);
                 }
                 KakujaModel.Spine sp = spine(pts, 56, v(0, 1, 0));
-                FurutaMesh.tube(new SinkAdapter(body), sp, 0.0, 0.97, 56, 6, new FurutaMesh.Surface() {
+                GraftMesh.tube(new SinkAdapter(body), sp, 0.0, 0.97, 56, 6, new GraftMesh.Surface() {
                     @Override
                     public double radius(double s, double a) {
                         // A blade-like ridge down the back, flatter across.
@@ -989,7 +989,7 @@ public final class WarModel {
         }
     }
 
-    /** {@link FurutaMesh}'s shapes drawn into a body-pixel sink. */
+    /** {@link GraftMesh}'s shapes drawn into a body-pixel sink. */
     static final class SinkAdapter implements UkakuModel.Sink {
         final Body body;
 
@@ -1013,7 +1013,7 @@ public final class WarModel {
         if (grow <= 0.02) {
             return;
         }
-        double g = FurutaMesh.smooth(clamp01(grow));
+        double g = GraftMesh.smooth(clamp01(grow));
         // The arm's own sleeve of plates, so no skin shows under the kakuja.
         shell(body, v(-6.0, 18.2, 0.0), v(2.55, 6.3, 2.55), 8.0, 16, 24, p -> p[1] > 11.6, p -> mottle(p, BLACK, CHAR_L, 41));
         // The pauldron: plates rising up and out over the shoulder.
@@ -1153,7 +1153,7 @@ public final class WarModel {
         if (grow <= 0.02) {
             return;
         }
-        double g = FurutaMesh.smooth(clamp01(grow));
+        double g = GraftMesh.smooth(clamp01(grow));
         for (int k = 0; k < 5; k++) {
             double[] base = v(4.6 + 0.9 * k, 25.0 - 0.75 * k, -2.4 + 0.2 * k);
             shard(body, base, v(1.0, -0.55 - 0.15 * k, 0.0), v(0, -1, 0), (4.2 - 0.3 * k) * g, 5.4 - 0.4 * k, 0.95, v(0, 0, 1), k % 2 == 0 ? BLACK : CHAR, CHAR_L,

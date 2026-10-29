@@ -1,9 +1,9 @@
 package com.hex.kagune.control.client.fx;
 
-import com.hex.kagune.control.ayato.UkakuModel;
+import com.hex.kagune.control.ukaku.UkakuModel;
 import com.hex.kagune.control.client.ControlClient;
-import com.hex.kagune.control.client.EtoCamera;
-import com.hex.kagune.control.client.EtoClient;
+import com.hex.kagune.control.client.PaleCamera;
+import com.hex.kagune.control.client.PaleClient;
 import com.hex.kagune.control.client.KingClient;
 import com.hex.kagune.control.king.KingFxModel;
 import com.hex.kagune.control.king.KingMarkFx;
@@ -356,9 +356,9 @@ public final class WarPathFx {
             return;
         }
         float k = (float)(strength * (1.0 - away / reach));
-        double clock = EtoClient.clock(0.0F);
-        EtoCamera.kick(Math.max(0.2F, k), clock);
-        EtoCamera.rumble(k, ticks, clock);
+        double clock = PaleClient.clock(0.0F);
+        PaleCamera.kick(Math.max(0.2F, k), clock);
+        PaleCamera.rumble(k, ticks, clock);
     }
 
     /** The blitz's dash or blink: a black-crimson streak along it. */

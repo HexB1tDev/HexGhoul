@@ -12,7 +12,7 @@ public final class KingRules {
     /** Ticks a final kakuja takes to grow over him (and to go). */
     public static final int GROW_TICKS = 24;
     /**
-     * 1.0.23: the RC a worn final kakuja burns each tick (Furuta's kakuja's rate: a full bar lasts about two minutes); none comes back
+     * 1.0.23: the RC a worn final kakuja burns each tick (Graft's kakuja's rate: a full bar lasts about two minutes); none comes back
      * while it is worn, and run dry it falls away from him. It takes this much to call one out (the original's to bring out the kagune).
      */
     public static final float UPKEEP = 0.04F;

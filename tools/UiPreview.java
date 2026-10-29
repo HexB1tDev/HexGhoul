@@ -1,6 +1,6 @@
 import com.hex.kagune.control.KagunePath;
-import com.hex.kagune.control.ayato.WingForm;
-import com.hex.kagune.control.client.AyatoMenuView;
+import com.hex.kagune.control.ukaku.WingForm;
+import com.hex.kagune.control.client.UkakuMenuView;
 import com.hex.kagune.control.client.KakuganScreenLayout;
 import com.hex.kagune.control.client.KakuganView;
 import com.hex.kagune.control.client.ui.UiCanvas;
@@ -17,7 +17,7 @@ import java.util.Deque;
 import javax.imageio.ImageIO;
 
 /**
- * Off-game renders of the new screens (the Ayato menu and the kakugan screen) from the exact drawing code the game
+ * Off-game renders of the new screens (the Ukaku menu and the kakugan screen) from the exact drawing code the game
  * runs (their views draw on a UiCanvas; here the canvas is an image). Only the font is a stand-in.
  * Usage after {@code python3 build.py}: {@code java -cp build/classes:build/base.jar tools/UiPreview.java <out-dir>}
  */
@@ -156,7 +156,7 @@ public class UiPreview {
         return g;
     }
 
-    /** The Ayato menu as it fits a 1080p window at GUI scale 2 (960 x 540), at a given mastery. */
+    /** The Ukaku menu as it fits a 1080p window at GUI scale 2 (960 x 540), at a given mastery. */
     static void menu(File out, int mastery, WingForm form, double mouseX, double mouseY) throws Exception {
         int w = 960;
         int h = 540;
@@ -164,102 +164,102 @@ public class UiPreview {
         Graphics2D g = graphics(image, 2);
         ImageCanvas c = new ImageCanvas(g, false);
         c.gradient(0, 0, w, h, 0xE8070A08, 0xF0160A0B);
-        float scale = Math.min(1.0F, Math.min((w - 12.0F) / AyatoMenuView.UI_WIDTH, (h - 12.0F) / AyatoMenuView.UI_HEIGHT));
-        float ox = (w - AyatoMenuView.UI_WIDTH * scale) * 0.5F;
-        float oy = (h - AyatoMenuView.UI_HEIGHT * scale) * 0.5F;
+        float scale = Math.min(1.0F, Math.min((w - 12.0F) / UkakuMenuView.UI_WIDTH, (h - 12.0F) / UkakuMenuView.UI_HEIGHT));
+        float ox = (w - UkakuMenuView.UI_WIDTH * scale) * 0.5F;
+        float oy = (h - UkakuMenuView.UI_HEIGHT * scale) * 0.5F;
         c.push();
         c.translate(ox, oy);
         c.scale(scale);
-        AyatoMenuView.draw(c, new AyatoMenuView.Model(mastery, true, form, KakuganEyes.DEFAULT, MUTATIONS), mouseX, mouseY, 1.3);
+        UkakuMenuView.draw(c, new UkakuMenuView.Model(mastery, true, form, KakuganEyes.DEFAULT, MUTATIONS), mouseX, mouseY, 1.3);
         c.pop();
         ImageIO.write(image, "png", out);
         System.out.println("wrote " + out);
     }
 
-    /** 6.1.0: the Eto menu (960 x 540 at 2x), at {@code mastery}, her base form out or in, the mouse at ({@code mouseX}, {@code mouseY}). */
-    static void etoMenu(File out, int mastery, boolean active, double mouseX, double mouseY) throws Exception {
+    /** 6.1.0: the Pale menu (960 x 540 at 2x), at {@code mastery}, her base form out or in, the mouse at ({@code mouseX}, {@code mouseY}). */
+    static void paleMenu(File out, int mastery, boolean active, double mouseX, double mouseY) throws Exception {
         int w = 960;
         int h = 540;
         BufferedImage image = new BufferedImage(w * 2, h * 2, BufferedImage.TYPE_INT_RGB);
         Graphics2D g = graphics(image, 2);
         ImageCanvas c = new ImageCanvas(g, false);
         c.gradient(0, 0, w, h, 0xE8080709, 0xF0120E10);
-        float scale = Math.min(1.0F, Math.min((w - 12.0F) / com.hex.kagune.control.client.EtoMenuView.UI_WIDTH,
-            (h - 12.0F) / com.hex.kagune.control.client.EtoMenuView.UI_HEIGHT));
-        float ox = (w - com.hex.kagune.control.client.EtoMenuView.UI_WIDTH * scale) * 0.5F;
-        float oy = (h - com.hex.kagune.control.client.EtoMenuView.UI_HEIGHT * scale) * 0.5F;
+        float scale = Math.min(1.0F, Math.min((w - 12.0F) / com.hex.kagune.control.client.PaleMenuView.UI_WIDTH,
+            (h - 12.0F) / com.hex.kagune.control.client.PaleMenuView.UI_HEIGHT));
+        float ox = (w - com.hex.kagune.control.client.PaleMenuView.UI_WIDTH * scale) * 0.5F;
+        float oy = (h - com.hex.kagune.control.client.PaleMenuView.UI_HEIGHT * scale) * 0.5F;
         c.push();
         c.translate(ox, oy);
         c.scale(scale);
-        com.hex.kagune.control.client.EtoMenuView.draw(c, new com.hex.kagune.control.client.EtoMenuView.Model(mastery, active,
-            KakuganEyes.DEFAULT.withGhoul(KakuganEyes.RIGHT), ETO_MUTATIONS, ETO_REVIVE_IN), mouseX, mouseY, 1.3);
+        com.hex.kagune.control.client.PaleMenuView.draw(c, new com.hex.kagune.control.client.PaleMenuView.Model(mastery, active,
+            KakuganEyes.DEFAULT.withGhoul(KakuganEyes.RIGHT), PALE_MUTATIONS, PALE_REVIVE_IN), mouseX, mouseY, 1.3);
         c.pop();
         ImageIO.write(image, "png", out);
         System.out.println("wrote " + out);
     }
 
-    /** 7.0.0: the Furuta DNA menu (960 x 540 at 2x), at {@code mastery} with {@code mutations} taken, the mouse at ({@code mouseX}, {@code mouseY}). */
-    static void furutaMenu(File out, int mastery, int mutations, double mouseX, double mouseY) throws Exception {
+    /** 7.0.0: the Graft DNA menu (960 x 540 at 2x), at {@code mastery} with {@code mutations} taken, the mouse at ({@code mouseX}, {@code mouseY}). */
+    static void graftMenu(File out, int mastery, int mutations, double mouseX, double mouseY) throws Exception {
         int w = 960;
         int h = 540;
         BufferedImage image = new BufferedImage(w * 2, h * 2, BufferedImage.TYPE_INT_RGB);
         Graphics2D g = graphics(image, 2);
         ImageCanvas c = new ImageCanvas(g, false);
         c.gradient(0, 0, w, h, 0xE8080506, 0xF0180608);
-        float scale = Math.min(1.0F, Math.min((w - 12.0F) / com.hex.kagune.control.client.FurutaMenuView.UI_WIDTH,
-            (h - 12.0F) / com.hex.kagune.control.client.FurutaMenuView.UI_HEIGHT));
-        float ox = (w - com.hex.kagune.control.client.FurutaMenuView.UI_WIDTH * scale) * 0.5F;
-        float oy = (h - com.hex.kagune.control.client.FurutaMenuView.UI_HEIGHT * scale) * 0.5F;
+        float scale = Math.min(1.0F, Math.min((w - 12.0F) / com.hex.kagune.control.client.GraftMenuView.UI_WIDTH,
+            (h - 12.0F) / com.hex.kagune.control.client.GraftMenuView.UI_HEIGHT));
+        float ox = (w - com.hex.kagune.control.client.GraftMenuView.UI_WIDTH * scale) * 0.5F;
+        float oy = (h - com.hex.kagune.control.client.GraftMenuView.UI_HEIGHT * scale) * 0.5F;
         c.push();
         c.translate(ox, oy);
         c.scale(scale);
-        com.hex.kagune.control.client.FurutaMenuView.draw(c, new com.hex.kagune.control.client.FurutaMenuView.Model(mastery, true,
-            com.hex.kagune.control.furuta.FurutaStage.highest(mastery), false, 64.0F, 100.0F, mutations), mouseX, mouseY, 1.3);
+        com.hex.kagune.control.client.GraftMenuView.draw(c, new com.hex.kagune.control.client.GraftMenuView.Model(mastery, true,
+            com.hex.kagune.control.graft.GraftStage.highest(mastery), false, 64.0F, 100.0F, mutations), mouseX, mouseY, 1.3);
         c.pop();
         ImageIO.write(image, "png", out);
         System.out.println("wrote " + out);
     }
 
     /**
-     * 7.0.1: the quest journal in its states, from the exact view the game draws: a new Kaneki ghoul's path (one quest under way, the
+     * 7.0.1: the quest journal in its states, from the exact view the game draws: a new Rinkaku ghoul's path (one quest under way, the
      * rest waiting for mastery, what is still locked), the rival ways once one is taken, a hunt on tonight, the ghoul's way, and the
-     * Furuta menu with stages waiting for their quests.
+     * Graft menu with stages waiting for their quests.
      */
     static void quests(File dir) throws Exception {
         com.hex.kagune.control.quest.QuestLog fresh = new com.hex.kagune.control.quest.QuestLog();
         fresh.migrate(gate -> false);
         for (int i = 0; i < 9; i++) {
             fresh.apply(com.hex.kagune.control.quest.QuestEvent.of(com.hex.kagune.control.quest.Signal.KILL, 1, com.hex.kagune.control.quest.Tags.KAGUNE,
-                com.hex.kagune.control.quest.Tags.HOSTILE), KagunePath.KANEKI, 300);
+                com.hex.kagune.control.quest.Tags.HOSTILE), KagunePath.RINKAKU, 300);
         }
         for (int i = 0; i < 2; i++) {
-            fresh.apply(com.hex.kagune.control.quest.QuestEvent.of(com.hex.kagune.control.quest.Signal.RESTRAIN, 1), KagunePath.KANEKI, 300);
+            fresh.apply(com.hex.kagune.control.quest.QuestEvent.of(com.hex.kagune.control.quest.Signal.RESTRAIN, 1), KagunePath.RINKAKU, 300);
         }
-        journal(new File(dir, "quests-kaneki-path.png"), KagunePath.KANEKI, 300, fresh, com.hex.kagune.control.client.QuestJournalView.Tab.PATH,
+        journal(new File(dir, "quests-rinkaku-path.png"), KagunePath.RINKAKU, 300, fresh, com.hex.kagune.control.client.QuestJournalView.Tab.PATH,
             "rizes_gift", 0L);
         com.hex.kagune.control.quest.QuestLog chose = com.hex.kagune.control.quest.QuestLog.load(fresh.save());
         chose.complete(com.hex.kagune.control.quest.QuestBook.get("rizes_gift"));
         chose.complete(com.hex.kagune.control.quest.QuestBook.get("pack"));
-        journal(new File(dir, "quests-kaneki-done.png"), KagunePath.KANEKI, 520, chose, com.hex.kagune.control.client.QuestJournalView.Tab.DONE,
+        journal(new File(dir, "quests-rinkaku-done.png"), KagunePath.RINKAKU, 520, chose, com.hex.kagune.control.client.QuestJournalView.Tab.DONE,
             "anteiku", 0L);
         com.hex.kagune.control.quest.QuestLog hunting = com.hex.kagune.control.quest.QuestLog.load(chose.save());
         com.hex.kagune.control.quest.Hunts.Spec spec = new com.hex.kagune.control.quest.Hunts.Spec(0, 4, 3, com.hex.kagune.control.quest.Hunts.PAY_MEAT, 1);
         hunting.startHunt(spec, 9000L);
         hunting.apply(com.hex.kagune.control.quest.QuestEvent.of(com.hex.kagune.control.quest.Signal.KILL, 1,
-            com.hex.kagune.control.quest.Tags.mob("minecraft:witch")), KagunePath.KANEKI, 520);
-        journal(new File(dir, "quests-hunt.png"), KagunePath.KANEKI, 520, hunting, com.hex.kagune.control.client.QuestJournalView.Tab.HUNTS, null, 1800L);
+            com.hex.kagune.control.quest.Tags.mob("minecraft:witch")), KagunePath.RINKAKU, 520);
+        journal(new File(dir, "quests-hunt.png"), KagunePath.RINKAKU, 520, hunting, com.hex.kagune.control.client.QuestJournalView.Tab.HUNTS, null, 1800L);
         com.hex.kagune.control.quest.QuestLog ghoul = new com.hex.kagune.control.quest.QuestLog();
         for (int i = 0; i < 37; i++) {
-            ghoul.apply(com.hex.kagune.control.quest.QuestEvent.of(com.hex.kagune.control.quest.Signal.STRIKE, 1), KagunePath.FURUTA, 400);
+            ghoul.apply(com.hex.kagune.control.quest.QuestEvent.of(com.hex.kagune.control.quest.Signal.STRIKE, 1), KagunePath.GRAFT, 400);
         }
         for (int i = 0; i < 15; i++) {
-            ghoul.apply(com.hex.kagune.control.quest.QuestEvent.of(com.hex.kagune.control.quest.Signal.FLIP, 1), KagunePath.FURUTA, 400);
+            ghoul.apply(com.hex.kagune.control.quest.QuestEvent.of(com.hex.kagune.control.quest.Signal.FLIP, 1), KagunePath.GRAFT, 400);
         }
-        journal(new File(dir, "quests-ghoul.png"), KagunePath.FURUTA, 400, ghoul, com.hex.kagune.control.client.QuestJournalView.Tab.GHOUL, "light_feet",
+        journal(new File(dir, "quests-ghoul.png"), KagunePath.GRAFT, 400, ghoul, com.hex.kagune.control.client.QuestJournalView.Tab.GHOUL, "light_feet",
             0L);
-        // The Furuta menu at 760 mastery with only the transplant's and the centipede's quests done: thorns and the many-eyed wait.
-        java.util.Set<com.hex.kagune.control.quest.Gate> open = java.util.EnumSet.of(com.hex.kagune.control.quest.Gate.FURUTA_CENTIPEDE);
-        File out = new File(dir, "quests-furuta-menu.png");
+        // The Graft menu at 760 mastery with only the transplant's and the centipede's quests done: thorns and the many-eyed wait.
+        java.util.Set<com.hex.kagune.control.quest.Gate> open = java.util.EnumSet.of(com.hex.kagune.control.quest.Gate.GRAFT_CENTIPEDE);
+        File out = new File(dir, "quests-graft-menu.png");
         int w = 960;
         int h = 540;
         BufferedImage image = new BufferedImage(w * 2, h * 2, BufferedImage.TYPE_INT_RGB);
@@ -268,8 +268,8 @@ public class UiPreview {
         c.gradient(0, 0, w, h, 0xE8080506, 0xF0180608);
         c.push();
         c.translate(0, 10);
-        com.hex.kagune.control.client.FurutaMenuView.draw(c, new com.hex.kagune.control.client.FurutaMenuView.Model(760, true,
-            com.hex.kagune.control.furuta.FurutaStage.CENTIPEDE, false, 64.0F, 100.0F, 0, new com.hex.kagune.control.client.QuestLocks(open::contains, 1)), 0, 0,
+        com.hex.kagune.control.client.GraftMenuView.draw(c, new com.hex.kagune.control.client.GraftMenuView.Model(760, true,
+            com.hex.kagune.control.graft.GraftStage.CENTIPEDE, false, 64.0F, 100.0F, 0, new com.hex.kagune.control.client.QuestLocks(open::contains, 1)), 0, 0,
             1.3);
         c.pop();
         ImageIO.write(image, "png", out);
@@ -298,7 +298,7 @@ public class UiPreview {
 
     /**
      * 7.0.2: talking with ghoul NPCs, as the talk screen draws it over the world at 1080p, GUI scale 2 (960 x 540): over a scene of
-     * the ghoul if one is given ({@code -Dtalk.scene}, a 960 x 540 render: tools/furuta-preview.sh npc-scene), and its face from its
+     * the ghoul if one is given ({@code -Dtalk.scene}, a 960 x 540 render: tools/graft-preview.sh npc-scene), and its face from its
      * skin ({@code -Dtalk.skins}, vanilla's wide skins: build/skins).
      */
     static void talk(File dir) throws Exception {
@@ -346,9 +346,9 @@ public class UiPreview {
 
     /** Mutations shown unlocked in the next menu drawn. */
     static int MUTATIONS;
-    /** 6.2.0: Eto's mutations shown unlocked in the next Eto menu drawn, and how long until her revive is ready (ticks). */
-    static int ETO_MUTATIONS;
-    static long ETO_REVIVE_IN;
+    /** 6.2.0: Pale's mutations shown unlocked in the next Pale menu drawn, and how long until her revive is ready (ticks). */
+    static int PALE_MUTATIONS;
+    static long PALE_REVIVE_IN;
 
     /** The kakugan screen at 1080p, GUI scale 4 (480 x 270). */
     static void kakugan(File out, KakuganEyes eyes, boolean glasses) throws Exception {
@@ -397,34 +397,34 @@ public class UiPreview {
             abilities(new File(dir, "abilities-hud.png"));
             return;
         }
-        if (args.length > 1 && args[1].equals("furuta")) {
-            furutaMenu(new File(dir, "furuta-menu-300.png"), 300, 0, 0, 0);
-            furutaMenu(new File(dir, "furuta-menu-900.png"), 900, com.hex.kagune.control.furuta.FurutaMutation.NOT_THAT_EASILY.bit(), 400, 300);
+        if (args.length > 1 && args[1].equals("graft")) {
+            graftMenu(new File(dir, "graft-menu-300.png"), 300, 0, 0, 0);
+            graftMenu(new File(dir, "graft-menu-900.png"), 900, com.hex.kagune.control.graft.GraftMutation.NOT_THAT_EASILY.bit(), 400, 300);
             return;
         }
-        menu(new File(dir, "ayato-menu-0.png"), 0, WingForm.TWIN, 0, 0);
-        menu(new File(dir, "ayato-menu-300.png"), 300, WingForm.TWIN, 330, 248);
-        menu(new File(dir, "ayato-menu-600.png"), 600, WingForm.TWIN, 410, 248);
-        MUTATIONS = com.hex.kagune.control.ayato.AyatoMutation.FIRE_DASH.bit();
-        menu(new File(dir, "ayato-menu-mutations.png"), 760, WingForm.TWIN, 700, 410);
+        menu(new File(dir, "ukaku-menu-0.png"), 0, WingForm.TWIN, 0, 0);
+        menu(new File(dir, "ukaku-menu-300.png"), 300, WingForm.TWIN, 330, 248);
+        menu(new File(dir, "ukaku-menu-600.png"), 600, WingForm.TWIN, 410, 248);
+        MUTATIONS = com.hex.kagune.control.ukaku.UkakuMutation.FIRE_DASH.bit();
+        menu(new File(dir, "ukaku-menu-mutations.png"), 760, WingForm.TWIN, 700, 410);
         MUTATIONS = 0;
-        etoMenu(new File(dir, "eto-menu-0.png"), 0, false, 0, 0);
-        etoMenu(new File(dir, "eto-menu-480.png"), 480, true, 700, 420);
-        etoMenu(new File(dir, "eto-menu-520.png"), 520, true, 700, 460);
-        ETO_MUTATIONS = com.hex.kagune.control.eto.EtoMutation.NOT_THAT_EASILY.bit();
-        ETO_REVIVE_IN = 3745L;
-        etoMenu(new File(dir, "eto-menu-mutation.png"), 800, true, 700, 118);
-        ETO_MUTATIONS = com.hex.kagune.control.eto.EtoMutation.NOT_THAT_EASILY.bit() | com.hex.kagune.control.eto.EtoMutation.UP_WE_GO.bit();
-        etoMenu(new File(dir, "eto-menu-mutations.png"), 900, true, 700, 176);
-        ETO_MUTATIONS = 0;
-        ETO_REVIVE_IN = 0L;
+        paleMenu(new File(dir, "pale-menu-0.png"), 0, false, 0, 0);
+        paleMenu(new File(dir, "pale-menu-480.png"), 480, true, 700, 420);
+        paleMenu(new File(dir, "pale-menu-520.png"), 520, true, 700, 460);
+        PALE_MUTATIONS = com.hex.kagune.control.pale.PaleMutation.NOT_THAT_EASILY.bit();
+        PALE_REVIVE_IN = 3745L;
+        paleMenu(new File(dir, "pale-menu-mutation.png"), 800, true, 700, 118);
+        PALE_MUTATIONS = com.hex.kagune.control.pale.PaleMutation.NOT_THAT_EASILY.bit() | com.hex.kagune.control.pale.PaleMutation.UP_WE_GO.bit();
+        paleMenu(new File(dir, "pale-menu-mutations.png"), 900, true, 700, 176);
+        PALE_MUTATIONS = 0;
+        PALE_REVIVE_IN = 0L;
         kakugan(new File(dir, "kakugan-screen.png"), KakuganEyes.DEFAULT, false);
         kakugan(new File(dir, "kakugan-screen-glasses.png"), KakuganEyes.DEFAULT, true);
         kakugan(new File(dir, "kakugan-one-eyed-pick.png"), KakuganEyes.DEFAULT, false, "pick-left", true);
         kakugan(new File(dir, "kakugan-one-eyed.png"), KakuganEyes.DEFAULT.withGhoul(KakuganEyes.LEFT), false, "one", false);
-        kanekiForms(new File(dir, "kaneki-forms.png"));
-        kanekiMutations(new File(dir, "kaneki-mutations.png"));
-        kanekiMutationsAfter(new File(dir, "kaneki-mutations-after.png"));
+        rinkakuForms(new File(dir, "rinkaku-forms.png"));
+        rinkakuMutations(new File(dir, "rinkaku-mutations.png"));
+        rinkakuMutationsAfter(new File(dir, "rinkaku-mutations-after.png"));
         reserveBar(new File(dir, "reserve-bar.png"));
         abilities(new File(dir, "abilities-hud.png"));
     }
@@ -451,19 +451,19 @@ public class UiPreview {
         rebound.put(com.hex.kagune.control.AbilityGuide.Key.GUARD, com.hex.kagune.control.AbilityGuide.keyName("key.keyboard.left.alt", "NONE"));
         com.hex.kagune.control.AbilityGuide.State unleashed = com.hex.kagune.control.AbilityGuide.State.OUT;
         Object[][] tiles = {
-            {"Kaneki, kagune in", new com.hex.kagune.control.AbilityGuide.Input(KagunePath.KANEKI, com.hex.kagune.control.AbilityGuide.State.CLOSED, 300, seed, twin, false, keys)},
-            {"Kaneki, ghoul eyes (R)", new com.hex.kagune.control.AbilityGuide.Input(KagunePath.KANEKI, com.hex.kagune.control.AbilityGuide.State.EYES, 300, seed, twin, false, keys)},
-            {"Kaneki, Rinkaku Seed (300)", new com.hex.kagune.control.AbilityGuide.Input(KagunePath.KANEKI, unleashed, 300, seed, twin, false, keys)},
-            {"Kaneki, Four-Tail (600)", new com.hex.kagune.control.AbilityGuide.Input(KagunePath.KANEKI, unleashed, 600, com.hex.kagune.gameplay.KaguneForm.RINKAKU_QUAD, twin, false, keys)},
-            {"Kaneki, first kakuja (800)", new com.hex.kagune.control.AbilityGuide.Input(KagunePath.KANEKI, unleashed, 800, com.hex.kagune.gameplay.KaguneForm.CENTIPEDE, twin, false, keys)},
-            {"Kaneki, final kakuja (1000)", new com.hex.kagune.control.AbilityGuide.Input(KagunePath.KANEKI, unleashed, 1000, com.hex.kagune.gameplay.KaguneForm.FULL_KAKUJA, twin, false, keys)},
-            {"Ayato, fire wings (120)", new com.hex.kagune.control.AbilityGuide.Input(KagunePath.AYATO, unleashed, 120, seed, twin, false, keys)},
-            {"Ayato, crystal mode (450)", new com.hex.kagune.control.AbilityGuide.Input(KagunePath.AYATO, unleashed, 450, seed, twin, true, keys)},
-            {"Ayato, first kakuja (820)", new com.hex.kagune.control.AbilityGuide.Input(KagunePath.AYATO, unleashed, 820, seed, WingForm.KAKUJA, false, keys)},
-            {"Ayato, final kakuja (1000)", new com.hex.kagune.control.AbilityGuide.Input(KagunePath.AYATO, unleashed, 1000, seed, WingForm.FINAL_KAKUJA, false, keys)},
-            {"Furuta, two tails (200)", new com.hex.kagune.control.AbilityGuide.Input(KagunePath.FURUTA, unleashed, 200, seed, twin, false, keys, false,
-                com.hex.kagune.control.furuta.FurutaStage.TRANSPLANT, false)},
-            {"Rebound keys follow Controls (Ctrl+F, M4, LAlt)", new com.hex.kagune.control.AbilityGuide.Input(KagunePath.KANEKI, unleashed, 300, seed, twin, false, rebound)},
+            {"Rinkaku, kagune in", new com.hex.kagune.control.AbilityGuide.Input(KagunePath.RINKAKU, com.hex.kagune.control.AbilityGuide.State.CLOSED, 300, seed, twin, false, keys)},
+            {"Rinkaku, ghoul eyes (R)", new com.hex.kagune.control.AbilityGuide.Input(KagunePath.RINKAKU, com.hex.kagune.control.AbilityGuide.State.EYES, 300, seed, twin, false, keys)},
+            {"Rinkaku, Rinkaku Seed (300)", new com.hex.kagune.control.AbilityGuide.Input(KagunePath.RINKAKU, unleashed, 300, seed, twin, false, keys)},
+            {"Rinkaku, Four-Tail (600)", new com.hex.kagune.control.AbilityGuide.Input(KagunePath.RINKAKU, unleashed, 600, com.hex.kagune.gameplay.KaguneForm.RINKAKU_QUAD, twin, false, keys)},
+            {"Rinkaku, first kakuja (800)", new com.hex.kagune.control.AbilityGuide.Input(KagunePath.RINKAKU, unleashed, 800, com.hex.kagune.gameplay.KaguneForm.CENTIPEDE, twin, false, keys)},
+            {"Rinkaku, final kakuja (1000)", new com.hex.kagune.control.AbilityGuide.Input(KagunePath.RINKAKU, unleashed, 1000, com.hex.kagune.gameplay.KaguneForm.FULL_KAKUJA, twin, false, keys)},
+            {"Ukaku, fire wings (120)", new com.hex.kagune.control.AbilityGuide.Input(KagunePath.UKAKU, unleashed, 120, seed, twin, false, keys)},
+            {"Ukaku, crystal mode (450)", new com.hex.kagune.control.AbilityGuide.Input(KagunePath.UKAKU, unleashed, 450, seed, twin, true, keys)},
+            {"Ukaku, first kakuja (820)", new com.hex.kagune.control.AbilityGuide.Input(KagunePath.UKAKU, unleashed, 820, seed, WingForm.KAKUJA, false, keys)},
+            {"Ukaku, final kakuja (1000)", new com.hex.kagune.control.AbilityGuide.Input(KagunePath.UKAKU, unleashed, 1000, seed, WingForm.FINAL_KAKUJA, false, keys)},
+            {"Graft, two tails (200)", new com.hex.kagune.control.AbilityGuide.Input(KagunePath.GRAFT, unleashed, 200, seed, twin, false, keys, false,
+                com.hex.kagune.control.graft.GraftStage.TRANSPLANT, false)},
+            {"Rebound keys follow Controls (Ctrl+F, M4, LAlt)", new com.hex.kagune.control.AbilityGuide.Input(KagunePath.RINKAKU, unleashed, 300, seed, twin, false, rebound)},
             {"Undecided path", new com.hex.kagune.control.AbilityGuide.Input(KagunePath.NONE, com.hex.kagune.control.AbilityGuide.State.CLOSED, 0, seed, twin, false, keys)},
             // 1.0.22: War and Peace on the same card, two abilities recharging.
             {"War (J, V recharging)", com.hex.kagune.control.AbilityGuide.king(keys, false),
@@ -607,10 +607,10 @@ public class UiPreview {
     }
 
     /**
-     * The form buttons of the original Kaneki menu (KaguneScreen draws them itself, so this copies its geometry and colours: 32 x 15
-     * boxes 35 px apart, the id's first three letters) with the build's colour filters ({@code KanekiForms}) applied.
+     * The form buttons of the original Rinkaku menu (KaguneScreen draws them itself, so this copies its geometry and colours: 32 x 15
+     * boxes 35 px apart, the id's first three letters) with the build's colour filters ({@code RinkakuForms}) applied.
      */
-    /** 1.0.10: the final kakuja's two cards after the Dragon, and the Kaneki menu in each theme (Kaneki, War, Peace). */
+    /** 1.0.10: the final kakuja's two cards after the Dragon, and the Rinkaku menu in each theme (Rinkaku, War, Peace). */
     static void king(File dir) throws Exception {
         com.hex.kagune.control.king.KingForm none = com.hex.kagune.control.king.KingForm.NONE;
         com.hex.kagune.control.king.KingForm war = com.hex.kagune.control.king.KingForm.WAR;
@@ -629,17 +629,17 @@ public class UiPreview {
             ImageIO.write(image, "png", out);
             System.out.println("wrote " + out);
         }
-        Object[][] menus = {{"king-menu-kaneki.png", none, none}, {"king-menu-war.png", war, war}, {"king-menu-peace.png", peace, none}};
+        Object[][] menus = {{"king-menu-rinkaku.png", none, none}, {"king-menu-war.png", war, war}, {"king-menu-peace.png", peace, none}};
         for (Object[] shot : menus) {
-            int w = com.hex.kagune.control.client.KanekiMenuView.UI_WIDTH;
-            int h = com.hex.kagune.control.client.KanekiMenuView.UI_HEIGHT;
+            int w = com.hex.kagune.control.client.RinkakuMenuView.UI_WIDTH;
+            int h = com.hex.kagune.control.client.RinkakuMenuView.UI_HEIGHT;
             BufferedImage image = new BufferedImage(w * 2, h * 2, BufferedImage.TYPE_INT_RGB);
             ImageCanvas c = new ImageCanvas(graphics(image, 2), false);
             com.hex.kagune.control.king.KingForm chosen = (com.hex.kagune.control.king.KingForm)shot[1];
             c.fill(0, 0, w, h, chosen == peace ? 0xFFD8DCE2 : 0xFF10080A);
-            com.hex.kagune.control.client.KanekiMenuView.draw(c, new com.hex.kagune.control.client.KanekiMenuView.Model(1000, true,
+            com.hex.kagune.control.client.RinkakuMenuView.draw(c, new com.hex.kagune.control.client.RinkakuMenuView.Model(1000, true,
                 com.hex.kagune.gameplay.KaguneForm.FULL_KAKUJA, 70.0F, 100.0F, 0L, null, com.hex.kagune.control.client.QuestLocks.ALL,
-                new com.hex.kagune.control.client.KanekiMenuView.King(true, chosen, (com.hex.kagune.control.king.KingForm)shot[2], none)), 0.0, 0.0,
+                new com.hex.kagune.control.client.RinkakuMenuView.King(true, chosen, (com.hex.kagune.control.king.KingForm)shot[2], none)), 0.0, 0.0,
                 1.7);
             File out = new File(dir, (String)shot[0]);
             ImageIO.write(image, "png", out);
@@ -647,14 +647,14 @@ public class UiPreview {
         }
     }
 
-    static void kanekiForms(File out) throws Exception {
+    static void rinkakuForms(File out) throws Exception {
         int w = 228;
         int h = 178;
         BufferedImage image = new BufferedImage(w * 4, h * 4, BufferedImage.TYPE_INT_RGB);
         Graphics2D g = graphics(image, 4);
         ImageCanvas c = new ImageCanvas(g, false);
         c.fill(0, 0, w, h, 0xFF120814);
-        c.text("KANEKI FORMS (menu buttons, in order)", 8, 6, 0xFFF0784A, false);
+        c.text("RINKAKU FORMS (menu buttons, in order)", 8, 6, 0xFFF0784A, false);
         Object[][] rows = {{250, com.hex.kagune.gameplay.KaguneForm.RINKAKU_DUAL}, {500, com.hex.kagune.gameplay.KaguneForm.RINKAKU_QUAD},
             {800, com.hex.kagune.gameplay.KaguneForm.CENTIPEDE}, {1000, com.hex.kagune.gameplay.KaguneForm.FULL_KAKUJA}};
         for (int r = 0; r < rows.length; r++) {
@@ -663,18 +663,18 @@ public class UiPreview {
             int y = 26 + r * 34;
             c.text("mastery " + mastery + ", in " + current.displayName(), 8, y, 0xFF9E6A5C, false);
             int i = 0;
-            for (com.hex.kagune.gameplay.KaguneForm form : com.hex.kagune.control.KanekiForms.forms()) {
+            for (com.hex.kagune.gameplay.KaguneForm form : com.hex.kagune.control.RinkakuForms.forms()) {
                 int x = 8 + i++ * 35;
                 boolean unlocked = form.isUnlocked(mastery);
                 boolean selected = form == current;
-                int fill = com.hex.kagune.control.KanekiForms.buttonColor(selected ? 0xFFB51E46 : unlocked ? 0xFF5D1830 : 0xFF2E2228, form, selected, unlocked);
+                int fill = com.hex.kagune.control.RinkakuForms.buttonColor(selected ? 0xFFB51E46 : unlocked ? 0xFF5D1830 : 0xFF2E2228, form, selected, unlocked);
                 c.fill(x, y + 12, x + 32, y + 27, fill);
-                int label = com.hex.kagune.control.KanekiForms.labelColor(unlocked ? 0xFFF6DDE4 : 0xFF705860, form, unlocked);
+                int label = com.hex.kagune.control.RinkakuForms.labelColor(unlocked ? 0xFFF6DDE4 : 0xFF705860, form, unlocked);
                 c.centered(form.id().substring(0, Math.min(3, form.id().length())).toUpperCase(), x + 16, y + 15, label);
             }
         }
         StringBuilder ladder = new StringBuilder();
-        for (com.hex.kagune.gameplay.KaguneForm form : com.hex.kagune.control.KanekiForms.forms()) {
+        for (com.hex.kagune.gameplay.KaguneForm form : com.hex.kagune.control.RinkakuForms.forms()) {
             ladder.append(ladder.length() == 0 ? "" : "  ").append(form.id().substring(0, 3).toUpperCase()).append(' ').append(form.requiredMastery());
         }
         c.text(ladder.toString(), 8, h - 14, 0xFFB8A0C8, false);
@@ -682,7 +682,7 @@ public class UiPreview {
         System.out.println("wrote " + out);
     }
 
-    /** What each of Kaneki's mutations really does in the code (the board's own descriptions are vaguer). */
+    /** What each of Rinkaku's mutations really does in the code (the board's own descriptions are vaguer). */
     static final java.util.Map<String, String> MUTATION_EFFECTS = java.util.Map.ofEntries(
         java.util.Map.entry("MASS", "+20% swipe & slam, +16% crush, thicker, heavier knockback"),
         java.util.Map.entry("REACH", "+2 grab range, +1.5 reach, longer tails, -10% RC cost, calmer"),
@@ -701,12 +701,12 @@ public class UiPreview {
         java.util.Map.entry("FULL_GRAPPLER", "+2 grab range, +8% swipe, +35% slam, +25% crush, -4% damage taken"));
 
     /**
-     * Kaneki's mutation board as the original menu draws it (KaguneScreen.drawMutationTree: three 106 x 38 nodes a tier, 113 px
+     * Rinkaku's mutation board as the original menu draws it (KaguneScreen.drawMutationTree: three 106 x 38 nodes a tier, 113 px
      * apart, 68 px between tiers, its own colours; one pick per tier locks the other two, each tier needs a pick from the one
      * before), for a sample player at mastery 600 who took Mass & Impact, Guard Membrane and the Reservoir; beside it, what each
      * one really does.
      */
-    static void kanekiMutations(File out) throws Exception {
+    static void rinkakuMutations(File out) throws Exception {
         int w = 760;
         int h = 430;
         BufferedImage image = new BufferedImage(w * 2, h * 2, BufferedImage.TYPE_INT_RGB);
@@ -755,7 +755,7 @@ public class UiPreview {
         }
         c.text("Tier choice locks its siblings. /kagune reset starts over.", left, top + 371, -7907227, false);
         c.text("Sample: mastery 600 with Mass & Impact, Guard Membrane and the Reservoir.", left, top + 386, 0xFF9E8A94, false);
-        c.text("A Kaneki ends with 5 of the 15; the other 10 stay locked for good.", left, top + 398, 0xFF9E8A94, false);
+        c.text("A Rinkaku ends with 5 of the 15; the other 10 stay locked for good.", left, top + 398, 0xFF9E8A94, false);
         // What each one really does.
         int x = left + 3 * 113 + 14;
         c.text("WHAT EACH ONE REALLY DOES (from the code)", x, top, 0xFFF0784A, false);
@@ -777,10 +777,10 @@ public class UiPreview {
     }
 
     /**
-     * Kaneki's board after the cut (3.0.3), as the patched menu draws it: only the five kept (KanekiMutations.nodes), one a
+     * Rinkaku's board after the cut (3.0.3), as the patched menu draws it: only the five kept (RinkakuMutations.nodes), one a
      * tier; nothing locks anything out, so each is available once its mastery is reached. A sample player at mastery 800.
      */
-    static void kanekiMutationsAfter(File out) throws Exception {
+    static void rinkakuMutationsAfter(File out) throws Exception {
         int w = 640;
         int h = 430;
         BufferedImage image = new BufferedImage(w * 2, h * 2, BufferedImage.TYPE_INT_RGB);
@@ -793,7 +793,7 @@ public class UiPreview {
         java.util.Set<String> owned = java.util.Set.of("REACH", "CENTIPEDE_BODY");
         c.text("MUTATION PATHS", left, top, -1676152, false);
         c.text("Permanent \u00b7 click twice to commit", left + 104, top, -6592908, false);
-        com.hex.kagune.gameplay.MutationNode[] nodes = com.hex.kagune.control.KanekiMutations.nodes();
+        com.hex.kagune.gameplay.MutationNode[] nodes = com.hex.kagune.control.RinkakuMutations.nodes();
         for (int tier = 1; tier <= 5; tier++) {
             int y = top + 29 + (tier - 1) * 68;
             int index = 0;

@@ -6,7 +6,7 @@ package com.hex.kagune.control;
  * shots come in on, between them and its owner, and the shots stop on it: one tentacle for each direction they come from
  * ({@link #covers}: within {@link #COVER_DEGREES} of a raised one it is already covered).
  *
- * <p>It is a guard, not a wall, so Ayato keeps every answer to it:
+ * <p>It is a guard, not a wall, so Ukaku keeps every answer to it:
  * <ul>
  *   <li>a tentacle needs {@link #RAISE_TICKS} to swing into place before it stops anything: spikes and needles fired from close
  *       up arrive first;</li>
@@ -42,7 +42,7 @@ public final class TendrilShield {
     public static final double MOB_RANGE = 24.0;
     public static final double AIM_RANGE = 48.0;
     public static final double AIM_DEGREES = 15.0;
-    /** Ayato's shots (simulated, not entities): seen this many ticks before they would hit, and this far away at most. */
+    /** Ukaku's shots (simulated, not entities): seen this many ticks before they would hit, and this far away at most. */
     public static final double SHOT_LOOKAHEAD = 10.0;
     public static final double SHOT_SCAN = 64.0;
     /** A shot passing this close to the body's middle (plus its own radius) counts as incoming, as the original. */
@@ -67,7 +67,7 @@ public final class TendrilShield {
     public static final double HALF_WIDTH = 0.8;
     /** A projectile entity bounced off a tentacle isn't stopped again by the same player for this many ticks. */
     public static final int REBLOCK_TICKS = 10;
-    /** RC: a projectile entity costs what the original's deflection did; Ayato's shots by how much the guard took. */
+    /** RC: a projectile entity costs what the original's deflection did; Ukaku's shots by how much the guard took. */
     public static final float ARROW_COST = 2.0F;
     public static final float SHOT_COST = 0.15F;
     public static final float SHOT_COST_PER_DAMAGE = 0.25F;
@@ -79,14 +79,14 @@ public final class TendrilShield {
     private TendrilShield() {
     }
 
-    /** RC one stopped shot costs: a projectile entity, or one of Ayato's shots the guard took {@code absorbed} of. */
+    /** RC one stopped shot costs: a projectile entity, or one of Ukaku's shots the guard took {@code absorbed} of. */
     public static float cost(float absorbed, boolean entity, boolean organ) {
         float base = entity ? ARROW_COST : Math.max(SHOT_COST, SHOT_COST_PER_DAMAGE * Math.max(0.0F, absorbed));
         return base * (organ ? ORGAN_COST : 1.0F);
     }
 
     /**
-     * How much damage one tentacle's guard holds before it breaks: 6 at mastery 0 to 12 at 1000 (about three of Ayato's shots
+     * How much damage one tentacle's guard holds before it breaks: 6 at mastery 0 to 12 at 1000 (about three of Ukaku's shots
      * at the same mastery), half as much again with the Projectile Reflex Organ, times the server's {@code strength}.
      */
     public static float guardHealth(int mastery, boolean organ, double strength) {

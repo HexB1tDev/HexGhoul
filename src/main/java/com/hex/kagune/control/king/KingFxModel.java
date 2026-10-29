@@ -1,20 +1,20 @@
 package com.hex.kagune.control.king;
 
-import static com.hex.kagune.control.furuta.FurutaMesh.add;
-import static com.hex.kagune.control.furuta.FurutaMesh.clamp01;
-import static com.hex.kagune.control.furuta.FurutaMesh.cross;
-import static com.hex.kagune.control.furuta.FurutaMesh.dot;
-import static com.hex.kagune.control.furuta.FurutaMesh.lerp;
-import static com.hex.kagune.control.furuta.FurutaMesh.mix;
-import static com.hex.kagune.control.furuta.FurutaMesh.mul;
-import static com.hex.kagune.control.furuta.FurutaMesh.normalize;
-import static com.hex.kagune.control.furuta.FurutaMesh.sub;
+import static com.hex.kagune.control.graft.GraftMesh.add;
+import static com.hex.kagune.control.graft.GraftMesh.clamp01;
+import static com.hex.kagune.control.graft.GraftMesh.cross;
+import static com.hex.kagune.control.graft.GraftMesh.dot;
+import static com.hex.kagune.control.graft.GraftMesh.lerp;
+import static com.hex.kagune.control.graft.GraftMesh.mix;
+import static com.hex.kagune.control.graft.GraftMesh.mul;
+import static com.hex.kagune.control.graft.GraftMesh.normalize;
+import static com.hex.kagune.control.graft.GraftMesh.sub;
 import static com.hex.kagune.control.king.WarModel.v;
 
-import com.hex.kagune.control.ayato.CentipedeTail;
-import com.hex.kagune.control.ayato.KakujaModel;
-import com.hex.kagune.control.ayato.UkakuModel;
-import com.hex.kagune.control.furuta.FurutaMesh;
+import com.hex.kagune.control.ukaku.CentipedeTail;
+import com.hex.kagune.control.ukaku.KakujaModel;
+import com.hex.kagune.control.ukaku.UkakuModel;
+import com.hex.kagune.control.graft.GraftMesh;
 
 /**
  * 1.0.13: what War's abilities put out into the world (pure, in blocks, wherever the caller sets the origin): the black centipedes
@@ -113,7 +113,7 @@ public final class KingFxModel {
      * when all out, leaning off upright by {@code lean} (blocks at the top), its head the point.
      */
     public static double[][] spire(double[] base, double[] lean, double height, double out, double time, int seed) {
-        double h = height * FurutaMesh.smooth(clamp01(out));
+        double h = height * GraftMesh.smooth(clamp01(out));
         double sway = 0.08 * Math.sin(time * 0.3 + seed);
         return new double[][] {
             sub(base, v(0, 1.4, 0)),
@@ -219,7 +219,7 @@ public final class KingFxModel {
         }
         int segments = Math.max(4, Math.min(18, (int)Math.round(sp.length() / (width * 2.2))));
         int a = (int)Math.round(clamp01(alpha) * 255.0) << 24;
-        FurutaMesh.tube(sink, sp, 0.0, 0.96, 40, 7, new FurutaMesh.Surface() {
+        GraftMesh.tube(sink, sp, 0.0, 0.96, 40, 7, new GraftMesh.Surface() {
             @Override
             public double radius(double s, double around) {
                 double seg = (s * segments) % 1.0;
@@ -255,7 +255,7 @@ public final class KingFxModel {
             double[][] f = sp.at(s);
             double r = spikeRadius(width, s);
             double[] ridge = add(f[0], mul(f[2], r * 1.2));
-            barb(sink, ridge, add(f[2], mul(f[1], -0.6)), f[3], (0.9 + 0.6 * FurutaMesh.hash(seed * 31 + k)) * r * 2.4, r * 0.8, a);
+            barb(sink, ridge, add(f[2], mul(f[1], -0.6)), f[3], (0.9 + 0.6 * GraftMesh.hash(seed * 31 + k)) * r * 2.4, r * 0.8, a);
         }
         // The claw at the end.
         double[][] tip = sp.at(0.96);
@@ -294,13 +294,13 @@ public final class KingFxModel {
      */
     public static double[] spireAt(int step, int k) {
         double side = step % 2 == 0 ? 1.0 : -1.0;
-        double h = FurutaMesh.hash(step * 7 + 3);
+        double h = GraftMesh.hash(step * 7 + 3);
         if (k == 0) {
-            return new double[] {side * (0.25 + 0.2 * h), 0.0, side * (0.5 + 0.5 * h), 0.35 + 0.3 * FurutaMesh.hash(step * 5 + 1), 2.6 + 1.3 * h,
+            return new double[] {side * (0.25 + 0.2 * h), 0.0, side * (0.5 + 0.5 * h), 0.35 + 0.3 * GraftMesh.hash(step * 5 + 1), 2.6 + 1.3 * h,
                 0.38 + 0.06 * h};
         }
         if (k == 1 && step % 2 == 1) {
-            return new double[] {-side * 0.55, 0.4, -side * 0.9, 0.2, 1.4 + 0.7 * FurutaMesh.hash(step * 11 + 2), 0.27};
+            return new double[] {-side * 0.55, 0.4, -side * 0.9, 0.2, 1.4 + 0.7 * GraftMesh.hash(step * 11 + 2), 0.27};
         }
         return null;
     }
@@ -578,8 +578,8 @@ public final class KingFxModel {
         }
         double big = blow.kind == WarStrike.Kind.KICK ? 1.7 : 1.0;
         double fade = clamp01(1.0 - age / 7.0);
-        double grow = FurutaMesh.smooth(clamp01(age / 4.0));
-        double lag = FurutaMesh.smooth(clamp01((age - 1.0) / 4.0));
+        double grow = GraftMesh.smooth(clamp01(age / 4.0));
+        double lag = GraftMesh.smooth(clamp01((age - 1.0) / 4.0));
         shock(sink, at, facing, big * (0.25 + 0.75 * grow), 0.12 * big, 0.95 * fade);
         shock(sink, add(at, mul(facing, 0.25 * big)), facing, big * (0.15 + 0.55 * lag), 0.08 * big, 0.6 * fade);
     }
@@ -601,7 +601,7 @@ public final class KingFxModel {
             double[] lean = mul(side, -1.5);
             spike(sink, spire(base, lean, 2.5, out, time, 90 + k), 0.26, 90 + k, time, 1.0);
         }
-        double ring = WarStrike.VERDICT_RADIUS * 1.25 * FurutaMesh.smooth(clamp01(age / 5.0));
+        double ring = WarStrike.VERDICT_RADIUS * 1.25 * GraftMesh.smooth(clamp01(age / 5.0));
         crescent(sink, ground, ring, 0.55, 0.85 * clamp01(1.0 - age / 12.0), time);
     }
 
@@ -614,7 +614,7 @@ public final class KingFxModel {
      */
     public static double[][] seize(double[] base, double[] body, double radius, double height, double out, double time, int seed) {
         java.util.List<double[]> points = new java.util.ArrayList<>();
-        double turn = FurutaMesh.hash(seed * 7 + 3) * Math.PI * 2.0;
+        double turn = GraftMesh.hash(seed * 7 + 3) * Math.PI * 2.0;
         double r = radius + 0.32;
         double[] bottom = v(body[0] + Math.cos(turn) * r, body[1] - height * 0.5 - 0.2, body[2] + Math.sin(turn) * r);
         double[] root = sub(base, v(0, 1.4, 0));

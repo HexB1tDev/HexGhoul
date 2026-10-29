@@ -1,11 +1,11 @@
 package com.hex.kagune.control.kakugan;
 
-import com.hex.kagune.control.ayato.UkakuModel;
+import com.hex.kagune.control.ukaku.UkakuModel;
 
 /**
- * Kaneki's kakuja mask (3.1.0) in the centipede legs' colours: a crumpled, glossy plum shell over the forehead and his right
+ * Rinkaku's kakuja mask (3.1.0) in the centipede legs' colours: a crumpled, glossy plum shell over the forehead and his right
  * eye, its edge rippling in petals; a round black lens with a red pupil where his right eye is; his left eye left bare in a
- * window of skin; and a long ridged beak from the bridge of the nose down past his chin. Same space as {@link KanekiMask}
+ * window of skin; and a long ridged beak from the bridge of the nose down past his chin. Same space as {@link RinkakuMask}
  * (head pixels: x to the player's left, y down from the neck, z backward, the face at z = -4); the lens and the window follow
  * the player's own eyes, and a player whose one ghoul eye is the right one wears it mirrored, so the window is always round
  * the eye that turns.
