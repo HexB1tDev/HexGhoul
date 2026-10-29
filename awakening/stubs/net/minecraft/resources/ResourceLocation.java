@@ -1,0 +1,5 @@
+package net.minecraft.resources;
+
+public class ResourceLocation {
+    public ResourceLocation(String namespace, String path) {}
+}

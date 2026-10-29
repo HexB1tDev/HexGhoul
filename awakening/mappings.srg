@@ -1,0 +1,269 @@
+# Mojang (official) names used by awakening/src -> Forge 1.20.1 runtime (SRG) names.
+#
+# The build remaps every obfuscated member reference through this table and fails on anything
+# missing. tools/check_mappings.py proves each line against MCPConfig 1.20.1 (SRG id, declaring
+# class, descriptor) and against Fabric intermediary + Yarn 1.20.1 (an independent name for the same
+# obfuscated member), so a wrong id cannot be shipped by accident.
+#
+# C <official class> <yarn class>
+# M|F <stub owner> <name> <descriptor> <srg> <declaring official class> <yarn name>
+#
+# A Yarn name of "-" marks a member Yarn only names on a supertype; those must instead be proven by
+# an identical SRG reference in the original, working input JAR.
+
+C net/minecraft/world/entity/Entity net/minecraft/entity/Entity
+C net/minecraft/world/entity/LivingEntity net/minecraft/entity/LivingEntity
+C net/minecraft/world/entity/Mob net/minecraft/entity/mob/MobEntity
+C net/minecraft/world/entity/monster/Creeper net/minecraft/entity/mob/CreeperEntity
+C net/minecraft/world/entity/player/Player net/minecraft/entity/player/PlayerEntity
+C net/minecraft/world/entity/MoverType net/minecraft/entity/MovementType
+C net/minecraft/server/level/ServerPlayer net/minecraft/server/network/ServerPlayerEntity
+C net/minecraft/server/network/ServerGamePacketListenerImpl net/minecraft/server/network/ServerPlayNetworkHandler
+C net/minecraft/world/damagesource/DamageSource net/minecraft/entity/damage/DamageSource
+C net/minecraft/world/damagesource/DamageSources net/minecraft/entity/damage/DamageSources
+C net/minecraft/world/level/Level net/minecraft/world/World
+C net/minecraft/world/level/LevelWriter net/minecraft/world/ModifiableWorld
+C net/minecraft/world/level/LevelReader net/minecraft/world/WorldView
+C net/minecraft/world/level/LevelAccessor net/minecraft/world/WorldAccess
+C net/minecraft/world/level/LevelHeightAccessor net/minecraft/world/HeightLimitView
+C net/minecraft/world/level/BlockGetter net/minecraft/world/BlockView
+C net/minecraft/world/level/BlockAndTintGetter net/minecraft/world/BlockRenderView
+C net/minecraft/world/level/EntityGetter net/minecraft/world/EntityView
+C net/minecraft/world/level/ClipContext net/minecraft/world/RaycastContext
+C net/minecraft/server/level/ServerLevel net/minecraft/server/world/ServerWorld
+C net/minecraft/client/multiplayer/ClientLevel net/minecraft/client/world/ClientWorld
+C net/minecraft/world/level/block/state/BlockBehaviour$BlockStateBase net/minecraft/block/AbstractBlock$AbstractBlockState
+C net/minecraft/world/level/block/state/BlockState net/minecraft/block/BlockState
+C net/minecraft/world/level/block/Block net/minecraft/block/Block
+C net/minecraft/world/level/block/Blocks net/minecraft/block/Blocks
+C net/minecraft/world/level/material/FluidState net/minecraft/fluid/FluidState
+C net/minecraft/world/phys/shapes/VoxelShape net/minecraft/util/shape/VoxelShape
+C net/minecraft/world/phys/Vec3 net/minecraft/util/math/Vec3d
+C net/minecraft/world/phys/AABB net/minecraft/util/math/Box
+C net/minecraft/world/phys/HitResult net/minecraft/util/hit/HitResult
+C net/minecraft/world/phys/HitResult$Type net/minecraft/util/hit/HitResult$Type
+C net/minecraft/world/phys/BlockHitResult net/minecraft/util/hit/BlockHitResult
+C net/minecraft/core/Vec3i net/minecraft/util/math/Vec3i
+C net/minecraft/core/BlockPos net/minecraft/util/math/BlockPos
+C net/minecraft/core/particles/ParticleOptions net/minecraft/particle/ParticleEffect
+C net/minecraft/nbt/Tag net/minecraft/nbt/NbtElement
+C net/minecraft/nbt/CompoundTag net/minecraft/nbt/NbtCompound
+C net/minecraft/network/FriendlyByteBuf net/minecraft/network/PacketByteBuf
+C net/minecraft/network/protocol/Packet net/minecraft/network/packet/Packet
+C net/minecraft/network/chat/Component net/minecraft/text/Text
+C net/minecraft/network/chat/MutableComponent net/minecraft/text/MutableText
+C net/minecraft/sounds/SoundEvent net/minecraft/sound/SoundEvent
+C net/minecraft/sounds/SoundSource net/minecraft/sound/SoundCategory
+C net/minecraft/commands/CommandSourceStack net/minecraft/server/command/ServerCommandSource
+C net/minecraft/commands/Commands net/minecraft/server/command/CommandManager
+C net/minecraft/commands/arguments/EntityArgument net/minecraft/command/argument/EntityArgumentType
+C net/minecraft/client/Minecraft net/minecraft/client/MinecraftClient
+C net/minecraft/client/Options net/minecraft/client/option/GameOptions
+C net/minecraft/client/CameraType net/minecraft/client/option/Perspective
+C net/minecraft/client/KeyMapping net/minecraft/client/option/KeyBinding
+C net/minecraft/client/Camera net/minecraft/client/render/Camera
+C net/minecraft/client/gui/Font net/minecraft/client/font/TextRenderer
+C net/minecraft/client/gui/GuiGraphics net/minecraft/client/gui/DrawContext
+C net/minecraft/client/gui/screens/Screen net/minecraft/client/gui/screen/Screen
+C net/minecraft/client/player/LocalPlayer net/minecraft/client/network/ClientPlayerEntity
+C net/minecraft/client/renderer/GameRenderer net/minecraft/client/render/GameRenderer
+C net/minecraft/client/renderer/LevelRenderer net/minecraft/client/render/WorldRenderer
+C net/minecraft/client/renderer/RenderType net/minecraft/client/render/RenderLayer
+C net/minecraft/client/renderer/RenderBuffers net/minecraft/client/render/BufferBuilderStorage
+C net/minecraft/client/renderer/MultiBufferSource net/minecraft/client/render/VertexConsumerProvider
+C net/minecraft/client/renderer/MultiBufferSource$BufferSource net/minecraft/client/render/VertexConsumerProvider$Immediate
+C net/minecraft/resources/ResourceLocation net/minecraft/util/Identifier
+C com/mojang/blaze3d/platform/Window net/minecraft/client/util/Window
+C com/mojang/blaze3d/vertex/PoseStack net/minecraft/client/util/math/MatrixStack
+C com/mojang/blaze3d/vertex/PoseStack$Pose net/minecraft/client/util/math/MatrixStack$Entry
+C com/mojang/blaze3d/vertex/VertexConsumer net/minecraft/client/render/VertexConsumer
+
+# Entities
+F net/minecraft/world/entity/Entity xo D f_19854_ net/minecraft/world/entity/Entity prevX
+F net/minecraft/world/entity/Entity yo D f_19855_ net/minecraft/world/entity/Entity prevY
+F net/minecraft/world/entity/Entity zo D f_19856_ net/minecraft/world/entity/Entity prevZ
+F net/minecraft/world/entity/Entity xOld D f_19790_ net/minecraft/world/entity/Entity lastRenderX
+F net/minecraft/world/entity/Entity yOld D f_19791_ net/minecraft/world/entity/Entity lastRenderY
+F net/minecraft/world/entity/Entity zOld D f_19792_ net/minecraft/world/entity/Entity lastRenderZ
+F net/minecraft/world/entity/Entity yRotO F f_19859_ net/minecraft/world/entity/Entity prevYaw
+F net/minecraft/world/entity/Entity xRotO F f_19860_ net/minecraft/world/entity/Entity prevPitch
+F net/minecraft/world/entity/Entity fallDistance F f_19789_ net/minecraft/world/entity/Entity fallDistance
+F net/minecraft/world/entity/Entity invulnerableTime I f_19802_ net/minecraft/world/entity/Entity timeUntilRegen
+F net/minecraft/world/entity/Entity hurtMarked Z f_19864_ net/minecraft/world/entity/Entity velocityModified
+F net/minecraft/world/entity/Entity hasImpulse Z f_19812_ net/minecraft/world/entity/Entity velocityDirty
+F net/minecraft/world/entity/Entity tickCount I f_19797_ net/minecraft/world/entity/Entity age
+M net/minecraft/world/entity/Entity getUUID ()Ljava/util/UUID; m_20148_ net/minecraft/world/entity/Entity -
+M net/minecraft/world/entity/Entity getId ()I m_19879_ net/minecraft/world/entity/Entity -
+M net/minecraft/world/entity/Entity getX ()D m_20185_ net/minecraft/world/entity/Entity getX
+M net/minecraft/world/entity/Entity getY ()D m_20186_ net/minecraft/world/entity/Entity getY
+M net/minecraft/world/entity/Entity getZ ()D m_20189_ net/minecraft/world/entity/Entity getZ
+M net/minecraft/world/entity/Entity isRemoved ()Z m_213877_ net/minecraft/world/entity/Entity isRemoved
+M net/minecraft/world/entity/Entity isPassenger ()Z m_20159_ net/minecraft/world/entity/Entity hasVehicle
+M net/minecraft/world/entity/Entity stopRiding ()V m_8127_ net/minecraft/world/entity/Entity stopRiding
+M net/minecraft/world/entity/Entity setNoGravity (Z)V m_20242_ net/minecraft/world/entity/Entity setNoGravity
+M net/minecraft/world/entity/Entity isNoGravity ()Z m_20068_ net/minecraft/world/entity/Entity hasNoGravity
+M net/minecraft/world/entity/Entity setDeltaMovement (Lnet/minecraft/world/phys/Vec3;)V m_20256_ net/minecraft/world/entity/Entity setVelocity
+M net/minecraft/world/entity/Entity setDeltaMovement (DDD)V m_20334_ net/minecraft/world/entity/Entity setVelocity
+M net/minecraft/world/entity/Entity getDeltaMovement ()Lnet/minecraft/world/phys/Vec3; m_20184_ net/minecraft/world/entity/Entity getVelocity
+M net/minecraft/world/entity/Entity clearFire ()V m_20095_ net/minecraft/world/entity/Entity extinguish
+M net/minecraft/world/entity/Entity isInLava ()Z m_20077_ net/minecraft/world/entity/Entity isInLava
+M net/minecraft/world/entity/Entity teleportTo (DDD)V m_6021_ net/minecraft/world/entity/Entity requestTeleport
+M net/minecraft/world/entity/Entity getBbWidth ()F m_20205_ net/minecraft/world/entity/Entity getWidth
+M net/minecraft/world/entity/Entity getBbHeight ()F m_20206_ net/minecraft/world/entity/Entity getHeight
+M net/minecraft/world/entity/Entity isAlive ()Z m_6084_ net/minecraft/world/entity/Entity isAlive
+M net/minecraft/world/entity/Entity isSpectator ()Z m_5833_ net/minecraft/world/entity/Entity isSpectator
+M net/minecraft/world/entity/Entity isInvulnerable ()Z m_20147_ net/minecraft/world/entity/Entity isInvulnerable
+M net/minecraft/world/entity/Entity level ()Lnet/minecraft/world/level/Level; m_9236_ net/minecraft/world/entity/Entity getWorld
+M net/minecraft/world/entity/Entity move (Lnet/minecraft/world/entity/MoverType;Lnet/minecraft/world/phys/Vec3;)V m_6478_ net/minecraft/world/entity/Entity move
+M net/minecraft/world/entity/Entity damageSources ()Lnet/minecraft/world/damagesource/DamageSources; m_269291_ net/minecraft/world/entity/Entity getDamageSources
+M net/minecraft/world/entity/Entity hurt (Lnet/minecraft/world/damagesource/DamageSource;F)Z m_6469_ net/minecraft/world/entity/Entity damage
+M net/minecraft/world/entity/Entity getEyePosition (F)Lnet/minecraft/world/phys/Vec3; m_20299_ net/minecraft/world/entity/Entity getCameraPosVec
+M net/minecraft/world/entity/Entity getViewVector (F)Lnet/minecraft/world/phys/Vec3; m_20252_ net/minecraft/world/entity/Entity getRotationVec
+M net/minecraft/world/entity/Entity getYRot ()F m_146908_ net/minecraft/world/entity/Entity getYaw
+M net/minecraft/world/entity/Entity getXRot ()F m_146909_ net/minecraft/world/entity/Entity getPitch
+M net/minecraft/world/entity/Entity setYRot (F)V m_146922_ net/minecraft/world/entity/Entity setYaw
+M net/minecraft/world/entity/Entity setXRot (F)V m_146926_ net/minecraft/world/entity/Entity setPitch
+M net/minecraft/world/entity/Entity setPos (DDD)V m_6034_ net/minecraft/world/entity/Entity setPosition
+M net/minecraft/world/entity/LivingEntity getHealth ()F m_21223_ net/minecraft/world/entity/LivingEntity getHealth
+M net/minecraft/world/entity/LivingEntity getMaxHealth ()F m_21233_ net/minecraft/world/entity/LivingEntity getMaxHealth
+M net/minecraft/world/entity/LivingEntity setHealth (F)V m_21153_ net/minecraft/world/entity/LivingEntity setHealth
+M net/minecraft/world/entity/LivingEntity isSleeping ()Z m_5803_ net/minecraft/world/entity/LivingEntity isSleeping
+M net/minecraft/world/entity/LivingEntity stopSleeping ()V m_5796_ net/minecraft/world/entity/LivingEntity wakeUp
+M net/minecraft/world/entity/Mob isNoAi ()Z m_21525_ net/minecraft/world/entity/Mob isAiDisabled
+M net/minecraft/world/entity/Mob setNoAi (Z)V m_21557_ net/minecraft/world/entity/Mob setAiDisabled
+M net/minecraft/world/entity/monster/Creeper setSwellDir (I)V m_32283_ net/minecraft/world/entity/monster/Creeper setFuseSpeed
+M net/minecraft/world/entity/player/Player isCreative ()Z m_7500_ net/minecraft/world/entity/player/Player isCreative
+M net/minecraft/world/entity/player/Player getGameProfile ()Lcom/mojang/authlib/GameProfile; m_36316_ net/minecraft/world/entity/player/Player getGameProfile
+M net/minecraft/world/entity/player/Player displayClientMessage (Lnet/minecraft/network/chat/Component;Z)V m_5661_ net/minecraft/world/entity/player/Player sendMessage
+M net/minecraft/server/level/ServerPlayer serverLevel ()Lnet/minecraft/server/level/ServerLevel; m_284548_ net/minecraft/server/level/ServerPlayer getServerWorld
+F net/minecraft/server/level/ServerPlayer connection Lnet/minecraft/server/network/ServerGamePacketListenerImpl; f_8906_ net/minecraft/server/level/ServerPlayer networkHandler
+M net/minecraft/server/network/ServerGamePacketListenerImpl send (Lnet/minecraft/network/protocol/Packet;)V m_9829_ net/minecraft/server/network/ServerGamePacketListenerImpl -
+M net/minecraft/server/network/ServerGamePacketListenerImpl teleport (DDDFF)V m_9774_ net/minecraft/server/network/ServerGamePacketListenerImpl requestTeleport
+M net/minecraft/world/damagesource/DamageSources playerAttack (Lnet/minecraft/world/entity/player/Player;)Lnet/minecraft/world/damagesource/DamageSource; m_269075_ net/minecraft/world/damagesource/DamageSources playerAttack
+M net/minecraft/world/damagesource/DamageSource getEntity ()Lnet/minecraft/world/entity/Entity; m_7639_ net/minecraft/world/damagesource/DamageSource getAttacker
+
+# Levels and blocks
+M net/minecraft/world/level/Level getGameTime ()J m_46467_ net/minecraft/world/level/Level getTime
+M net/minecraft/world/level/Level playSound (Lnet/minecraft/world/entity/player/Player;DDDLnet/minecraft/sounds/SoundEvent;Lnet/minecraft/sounds/SoundSource;FF)V m_6263_ net/minecraft/world/level/Level playSound
+M net/minecraft/sounds/SoundEvent createVariableRangeEvent (Lnet/minecraft/resources/ResourceLocation;)Lnet/minecraft/sounds/SoundEvent; m_262824_ net/minecraft/sounds/SoundEvent of
+M net/minecraft/world/level/Level mayInteract (Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/core/BlockPos;)Z m_7966_ net/minecraft/world/level/Level canPlayerModifyAt
+M net/minecraft/world/level/Level setBlock (Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z m_7731_ net/minecraft/world/level/LevelWriter setBlockState
+M net/minecraft/world/level/Level isLoaded (Lnet/minecraft/core/BlockPos;)Z m_46805_ net/minecraft/world/level/LevelReader isChunkLoaded
+M net/minecraft/world/level/Level levelEvent (Lnet/minecraft/world/entity/player/Player;ILnet/minecraft/core/BlockPos;I)V m_5898_ net/minecraft/world/level/LevelAccessor syncWorldEvent
+M net/minecraft/world/level/Level getEntitiesOfClass (Ljava/lang/Class;Lnet/minecraft/world/phys/AABB;Ljava/util/function/Predicate;)Ljava/util/List; m_6443_ net/minecraft/world/level/EntityGetter getEntitiesByClass
+M net/minecraft/world/level/Level getMinBuildHeight ()I m_141937_ net/minecraft/world/level/LevelHeightAccessor getBottomY
+M net/minecraft/world/level/Level getMaxBuildHeight ()I m_151558_ net/minecraft/world/level/LevelHeightAccessor getTopY
+M net/minecraft/world/level/Level addParticle (Lnet/minecraft/core/particles/ParticleOptions;DDDDDD)V m_7106_ net/minecraft/world/level/Level -
+M net/minecraft/world/level/BlockGetter getBlockState (Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/block/state/BlockState; m_8055_ net/minecraft/world/level/BlockGetter getBlockState
+M net/minecraft/world/level/BlockGetter clip (Lnet/minecraft/world/level/ClipContext;)Lnet/minecraft/world/phys/BlockHitResult; m_45547_ net/minecraft/world/level/BlockGetter raycast
+M net/minecraft/server/level/ServerLevel sendParticles (Lnet/minecraft/core/particles/ParticleOptions;DDDIDDDD)I m_8767_ net/minecraft/server/level/ServerLevel spawnParticles
+M net/minecraft/world/level/block/state/BlockState isAir ()Z m_60795_ net/minecraft/world/level/block/state/BlockBehaviour$BlockStateBase isAir
+M net/minecraft/world/level/block/state/BlockState getFluidState ()Lnet/minecraft/world/level/material/FluidState; m_60819_ net/minecraft/world/level/block/state/BlockBehaviour$BlockStateBase getFluidState
+M net/minecraft/world/level/block/state/BlockState hasBlockEntity ()Z m_155947_ net/minecraft/world/level/block/state/BlockBehaviour$BlockStateBase hasBlockEntity
+M net/minecraft/world/level/block/state/BlockState getDestroySpeed (Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;)F m_60800_ net/minecraft/world/level/block/state/BlockBehaviour$BlockStateBase getHardness
+M net/minecraft/world/level/block/state/BlockState getBlock ()Lnet/minecraft/world/level/block/Block; m_60734_ net/minecraft/world/level/block/state/BlockBehaviour$BlockStateBase getBlock
+M net/minecraft/world/level/block/state/BlockState getCollisionShape (Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/phys/shapes/VoxelShape; m_60812_ net/minecraft/world/level/block/state/BlockBehaviour$BlockStateBase getCollisionShape
+M net/minecraft/world/level/block/state/BlockState ignitedByLava ()Z m_278200_ net/minecraft/world/level/block/state/BlockBehaviour$BlockStateBase isBurnable
+M net/minecraft/world/level/material/FluidState isEmpty ()Z m_76178_ net/minecraft/world/level/material/FluidState isEmpty
+M net/minecraft/world/phys/shapes/VoxelShape isEmpty ()Z m_83281_ net/minecraft/world/phys/shapes/VoxelShape isEmpty
+M net/minecraft/world/level/block/Block defaultBlockState ()Lnet/minecraft/world/level/block/state/BlockState; m_49966_ net/minecraft/world/level/block/Block getDefaultState
+M net/minecraft/world/level/block/Block getId (Lnet/minecraft/world/level/block/state/BlockState;)I m_49956_ net/minecraft/world/level/block/Block getRawIdFromState
+F net/minecraft/world/level/block/Blocks AIR Lnet/minecraft/world/level/block/Block; f_50016_ net/minecraft/world/level/block/Blocks field_10124
+F net/minecraft/world/level/block/Blocks LAVA Lnet/minecraft/world/level/block/Block; f_49991_ net/minecraft/world/level/block/Blocks field_10164
+
+# Positions and vectors
+M net/minecraft/core/BlockPos asLong ()J m_121878_ net/minecraft/core/BlockPos asLong
+M net/minecraft/core/BlockPos of (J)Lnet/minecraft/core/BlockPos; m_122022_ net/minecraft/core/BlockPos fromLong
+M net/minecraft/core/BlockPos containing (DDD)Lnet/minecraft/core/BlockPos; m_274561_ net/minecraft/core/BlockPos ofFloored
+M net/minecraft/core/BlockPos below ()Lnet/minecraft/core/BlockPos; m_7495_ net/minecraft/core/BlockPos method_10074
+M net/minecraft/core/Vec3i getX ()I m_123341_ net/minecraft/core/Vec3i getX
+M net/minecraft/core/Vec3i getY ()I m_123342_ net/minecraft/core/Vec3i getY
+M net/minecraft/core/Vec3i getZ ()I m_123343_ net/minecraft/core/Vec3i getZ
+F net/minecraft/world/phys/Vec3 x D f_82479_ net/minecraft/world/phys/Vec3 x
+F net/minecraft/world/phys/Vec3 y D f_82480_ net/minecraft/world/phys/Vec3 y
+F net/minecraft/world/phys/Vec3 z D f_82481_ net/minecraft/world/phys/Vec3 z
+F net/minecraft/world/phys/Vec3 ZERO Lnet/minecraft/world/phys/Vec3; f_82478_ net/minecraft/world/phys/Vec3 ZERO
+M net/minecraft/world/phys/HitResult getType ()Lnet/minecraft/world/phys/HitResult$Type; m_6662_ net/minecraft/world/phys/HitResult getType
+M net/minecraft/world/phys/HitResult getLocation ()Lnet/minecraft/world/phys/Vec3; m_82450_ net/minecraft/world/phys/HitResult getPos
+
+# Data, network, chat, commands
+M net/minecraft/nbt/CompoundTag contains (Ljava/lang/String;I)Z m_128425_ net/minecraft/nbt/CompoundTag contains
+M net/minecraft/nbt/CompoundTag contains (Ljava/lang/String;)Z m_128441_ net/minecraft/nbt/CompoundTag contains
+M net/minecraft/nbt/CompoundTag put (Ljava/lang/String;Lnet/minecraft/nbt/Tag;)Lnet/minecraft/nbt/Tag; m_128365_ net/minecraft/nbt/CompoundTag put
+M net/minecraft/nbt/CompoundTag getCompound (Ljava/lang/String;)Lnet/minecraft/nbt/CompoundTag; m_128469_ net/minecraft/nbt/CompoundTag getCompound
+M net/minecraft/nbt/CompoundTag getInt (Ljava/lang/String;)I m_128451_ net/minecraft/nbt/CompoundTag getInt
+M net/minecraft/nbt/CompoundTag putInt (Ljava/lang/String;I)V m_128405_ net/minecraft/nbt/CompoundTag putInt
+M net/minecraft/nbt/CompoundTag getLong (Ljava/lang/String;)J m_128454_ net/minecraft/nbt/CompoundTag getLong
+M net/minecraft/nbt/CompoundTag putLong (Ljava/lang/String;J)V m_128356_ net/minecraft/nbt/CompoundTag putLong
+M net/minecraft/nbt/CompoundTag getBoolean (Ljava/lang/String;)Z m_128471_ net/minecraft/nbt/CompoundTag getBoolean
+M net/minecraft/nbt/CompoundTag putBoolean (Ljava/lang/String;Z)V m_128379_ net/minecraft/nbt/CompoundTag putBoolean
+M net/minecraft/nbt/CompoundTag getDouble (Ljava/lang/String;)D m_128459_ net/minecraft/nbt/CompoundTag getDouble
+M net/minecraft/nbt/CompoundTag putDouble (Ljava/lang/String;D)V m_128347_ net/minecraft/nbt/CompoundTag putDouble
+M net/minecraft/nbt/CompoundTag remove (Ljava/lang/String;)V m_128473_ net/minecraft/nbt/CompoundTag remove
+M net/minecraft/nbt/CompoundTag copy ()Lnet/minecraft/nbt/CompoundTag; m_6426_ net/minecraft/nbt/CompoundTag method_10553
+M net/minecraft/network/FriendlyByteBuf writeUUID (Ljava/util/UUID;)Lnet/minecraft/network/FriendlyByteBuf; m_130077_ net/minecraft/network/FriendlyByteBuf writeUuid
+M net/minecraft/network/FriendlyByteBuf readUUID ()Ljava/util/UUID; m_130259_ net/minecraft/network/FriendlyByteBuf readUuid
+M net/minecraft/network/FriendlyByteBuf writeVarInt (I)Lnet/minecraft/network/FriendlyByteBuf; m_130130_ net/minecraft/network/FriendlyByteBuf writeVarInt
+M net/minecraft/network/FriendlyByteBuf readVarInt ()I m_130242_ net/minecraft/network/FriendlyByteBuf readVarInt
+M net/minecraft/network/FriendlyByteBuf writeEnum (Ljava/lang/Enum;)Lnet/minecraft/network/FriendlyByteBuf; m_130068_ net/minecraft/network/FriendlyByteBuf writeEnumConstant
+M net/minecraft/network/FriendlyByteBuf readEnum (Ljava/lang/Class;)Ljava/lang/Enum; m_130066_ net/minecraft/network/FriendlyByteBuf readEnumConstant
+M net/minecraft/network/chat/Component literal (Ljava/lang/String;)Lnet/minecraft/network/chat/MutableComponent; m_237113_ net/minecraft/network/chat/Component literal
+M net/minecraft/commands/CommandSourceStack getPlayerOrException ()Lnet/minecraft/server/level/ServerPlayer; m_81375_ net/minecraft/commands/CommandSourceStack getPlayerOrThrow
+M net/minecraft/commands/CommandSourceStack sendSuccess (Ljava/util/function/Supplier;Z)V m_288197_ net/minecraft/commands/CommandSourceStack sendFeedback
+M net/minecraft/commands/CommandSourceStack sendFailure (Lnet/minecraft/network/chat/Component;)V m_81352_ net/minecraft/commands/CommandSourceStack sendError
+M net/minecraft/commands/CommandSourceStack hasPermission (I)Z m_6761_ net/minecraft/commands/CommandSourceStack -
+M net/minecraft/commands/Commands literal (Ljava/lang/String;)Lcom/mojang/brigadier/builder/LiteralArgumentBuilder; m_82127_ net/minecraft/commands/Commands literal
+M net/minecraft/commands/Commands argument (Ljava/lang/String;Lcom/mojang/brigadier/arguments/ArgumentType;)Lcom/mojang/brigadier/builder/RequiredArgumentBuilder; m_82129_ net/minecraft/commands/Commands argument
+M net/minecraft/commands/arguments/EntityArgument player ()Lnet/minecraft/commands/arguments/EntityArgument; m_91466_ net/minecraft/commands/arguments/EntityArgument player
+M net/minecraft/commands/arguments/EntityArgument getPlayer (Lcom/mojang/brigadier/context/CommandContext;Ljava/lang/String;)Lnet/minecraft/server/level/ServerPlayer; m_91474_ net/minecraft/commands/arguments/EntityArgument getPlayer
+
+# Client
+F net/minecraft/client/Minecraft player Lnet/minecraft/client/player/LocalPlayer; f_91074_ net/minecraft/client/Minecraft player
+F net/minecraft/client/Minecraft level Lnet/minecraft/client/multiplayer/ClientLevel; f_91073_ net/minecraft/client/Minecraft world
+F net/minecraft/client/Minecraft options Lnet/minecraft/client/Options; f_91066_ net/minecraft/client/Minecraft options
+F net/minecraft/client/Minecraft gameRenderer Lnet/minecraft/client/renderer/GameRenderer; f_91063_ net/minecraft/client/Minecraft gameRenderer
+F net/minecraft/client/Minecraft screen Lnet/minecraft/client/gui/screens/Screen; f_91080_ net/minecraft/client/Minecraft currentScreen
+F net/minecraft/client/Minecraft font Lnet/minecraft/client/gui/Font; f_91062_ net/minecraft/client/Minecraft textRenderer
+M net/minecraft/client/Minecraft getInstance ()Lnet/minecraft/client/Minecraft; m_91087_ net/minecraft/client/Minecraft getInstance
+M net/minecraft/client/Minecraft setScreen (Lnet/minecraft/client/gui/screens/Screen;)V m_91152_ net/minecraft/client/Minecraft setScreen
+M net/minecraft/client/Minecraft renderBuffers ()Lnet/minecraft/client/renderer/RenderBuffers; m_91269_ net/minecraft/client/Minecraft getBufferBuilders
+M net/minecraft/client/Minecraft setCameraEntity (Lnet/minecraft/world/entity/Entity;)V m_91118_ net/minecraft/client/Minecraft setCameraEntity
+F net/minecraft/client/Options keyAttack Lnet/minecraft/client/KeyMapping; f_92096_ net/minecraft/client/Options attackKey
+F net/minecraft/client/Options keyUse Lnet/minecraft/client/KeyMapping; f_92095_ net/minecraft/client/Options useKey
+F net/minecraft/client/Options keyPickItem Lnet/minecraft/client/KeyMapping; f_92097_ net/minecraft/client/Options pickItemKey
+F net/minecraft/client/Options keyDrop Lnet/minecraft/client/KeyMapping; f_92094_ net/minecraft/client/Options dropKey
+F net/minecraft/client/Options keySwapOffhand Lnet/minecraft/client/KeyMapping; f_92093_ net/minecraft/client/Options swapHandsKey
+F net/minecraft/client/Options keyInventory Lnet/minecraft/client/KeyMapping; f_92092_ net/minecraft/client/Options inventoryKey
+F net/minecraft/client/Options keyTogglePerspective Lnet/minecraft/client/KeyMapping; f_92103_ net/minecraft/client/Options togglePerspectiveKey
+F net/minecraft/client/Options keyHotbarSlots [Lnet/minecraft/client/KeyMapping; f_92056_ net/minecraft/client/Options hotbarKeys
+M net/minecraft/client/Options getCameraType ()Lnet/minecraft/client/CameraType; m_92176_ net/minecraft/client/Options getPerspective
+M net/minecraft/client/Options setCameraType (Lnet/minecraft/client/CameraType;)V m_92157_ net/minecraft/client/Options setPerspective
+M net/minecraft/client/KeyMapping consumeClick ()Z m_90859_ net/minecraft/client/KeyMapping wasPressed
+M net/minecraft/client/KeyMapping setDown (Z)V m_7249_ net/minecraft/client/KeyMapping setPressed
+M net/minecraft/client/Camera getPosition ()Lnet/minecraft/world/phys/Vec3; m_90583_ net/minecraft/client/Camera getPos
+M net/minecraft/client/renderer/GameRenderer getMainCamera ()Lnet/minecraft/client/Camera; m_109153_ net/minecraft/client/renderer/GameRenderer getCamera
+M net/minecraft/client/renderer/RenderType entityTranslucent (Lnet/minecraft/resources/ResourceLocation;)Lnet/minecraft/client/renderer/RenderType; m_110473_ net/minecraft/client/renderer/RenderType getEntityTranslucent
+M net/minecraft/client/renderer/MultiBufferSource$BufferSource getBuffer (Lnet/minecraft/client/renderer/RenderType;)Lcom/mojang/blaze3d/vertex/VertexConsumer; m_6299_ net/minecraft/client/renderer/MultiBufferSource$BufferSource -
+M net/minecraft/client/renderer/MultiBufferSource$BufferSource endBatch (Lnet/minecraft/client/renderer/RenderType;)V m_109912_ net/minecraft/client/renderer/MultiBufferSource$BufferSource draw
+M net/minecraft/client/renderer/RenderBuffers bufferSource ()Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource; m_110104_ net/minecraft/client/renderer/RenderBuffers getEntityVertexConsumers
+M net/minecraft/client/renderer/LevelRenderer getLightColor (Lnet/minecraft/world/level/BlockAndTintGetter;Lnet/minecraft/core/BlockPos;)I m_109541_ net/minecraft/client/renderer/LevelRenderer getLightmapCoordinates
+M net/minecraft/client/gui/GuiGraphics fill (IIIII)V m_280509_ net/minecraft/client/gui/GuiGraphics fill
+M net/minecraft/client/gui/GuiGraphics pose ()Lcom/mojang/blaze3d/vertex/PoseStack; m_280168_ net/minecraft/client/gui/GuiGraphics getMatrices
+M net/minecraft/client/gui/GuiGraphics drawCenteredString (Lnet/minecraft/client/gui/Font;Ljava/lang/String;III)V m_280137_ net/minecraft/client/gui/GuiGraphics drawCenteredTextWithShadow
+M net/minecraft/client/gui/GuiGraphics drawString (Lnet/minecraft/client/gui/Font;Ljava/lang/String;IIIZ)I m_280056_ net/minecraft/client/gui/GuiGraphics drawText
+M com/mojang/blaze3d/platform/Window getGuiScaledWidth ()I m_85445_ com/mojang/blaze3d/platform/Window getScaledWidth
+M com/mojang/blaze3d/platform/Window getGuiScaledHeight ()I m_85446_ com/mojang/blaze3d/platform/Window getScaledHeight
+M com/mojang/blaze3d/vertex/PoseStack pushPose ()V m_85836_ com/mojang/blaze3d/vertex/PoseStack push
+M com/mojang/blaze3d/vertex/PoseStack popPose ()V m_85849_ com/mojang/blaze3d/vertex/PoseStack pop
+M com/mojang/blaze3d/vertex/PoseStack translate (DDD)V m_85837_ com/mojang/blaze3d/vertex/PoseStack translate
+M com/mojang/blaze3d/vertex/PoseStack scale (FFF)V m_85841_ com/mojang/blaze3d/vertex/PoseStack scale
+M com/mojang/blaze3d/vertex/PoseStack last ()Lcom/mojang/blaze3d/vertex/PoseStack$Pose; m_85850_ com/mojang/blaze3d/vertex/PoseStack peek
+M com/mojang/blaze3d/vertex/PoseStack$Pose pose ()Lorg/joml/Matrix4f; m_252922_ com/mojang/blaze3d/vertex/PoseStack$Pose getPositionMatrix
+M com/mojang/blaze3d/vertex/PoseStack$Pose normal ()Lorg/joml/Matrix3f; m_252943_ com/mojang/blaze3d/vertex/PoseStack$Pose getNormalMatrix
+M com/mojang/blaze3d/vertex/VertexConsumer vertex (Lorg/joml/Matrix4f;FFF)Lcom/mojang/blaze3d/vertex/VertexConsumer; m_252986_ com/mojang/blaze3d/vertex/VertexConsumer vertex
+M com/mojang/blaze3d/vertex/VertexConsumer color (IIII)Lcom/mojang/blaze3d/vertex/VertexConsumer; m_6122_ com/mojang/blaze3d/vertex/VertexConsumer color
+M com/mojang/blaze3d/vertex/VertexConsumer uv (FF)Lcom/mojang/blaze3d/vertex/VertexConsumer; m_7421_ com/mojang/blaze3d/vertex/VertexConsumer texture
+M com/mojang/blaze3d/vertex/VertexConsumer overlayCoords (I)Lcom/mojang/blaze3d/vertex/VertexConsumer; m_86008_ com/mojang/blaze3d/vertex/VertexConsumer overlay
+M com/mojang/blaze3d/vertex/VertexConsumer uv2 (I)Lcom/mojang/blaze3d/vertex/VertexConsumer; m_85969_ com/mojang/blaze3d/vertex/VertexConsumer light
+M com/mojang/blaze3d/vertex/VertexConsumer normal (Lorg/joml/Matrix3f;FFF)Lcom/mojang/blaze3d/vertex/VertexConsumer; m_252939_ com/mojang/blaze3d/vertex/VertexConsumer normal
+M com/mojang/blaze3d/vertex/VertexConsumer endVertex ()V m_5752_ com/mojang/blaze3d/vertex/VertexConsumer next

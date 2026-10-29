@@ -1,0 +1,55 @@
+name: Build HexKagune
+
+on:
+  push:
+    branches: [main, 'claude/**']
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      # write: publishes the built JAR as a per-branch pre-release (see the last step)
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Compile patch and verify mod JAR
+        id: build
+        run: |
+          python3 build.py
+          jar=$(ls build/hexkagune-*.jar)
+          echo "jar=$jar" >> "$GITHUB_OUTPUT"
+          echo "name=$(basename "$jar" .jar)" >> "$GITHUB_OUTPUT"
+      # Actions artifact storage has a quota; when it is full the upload fails but the build does not,
+      # and the JAR is still published as a release below.
+      - uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: ${{ steps.build.outputs.name }}
+          path: ${{ steps.build.outputs.jar }}
+          if-no-files-found: error
+          retention-days: 5
+      # One rolling pre-release per branch (tag build-<branch>), replaced on every push. Release assets
+      # do not count against the Actions artifact quota.
+      - name: Publish JAR as a pre-release
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          JAR: ${{ steps.build.outputs.jar }}
+        run: |
+          tag="build-${GITHUB_REF_NAME//\//-}"
+          subject=$(git log -1 --format=%s)
+          gh release delete "$tag" --yes --cleanup-tag 2>/dev/null || true
+          gh release create "$tag" "$JAR" --target "$GITHUB_SHA" --prerelease --latest=false \
+            --title "$(basename "$JAR" .jar) ($GITHUB_REF_NAME)" \
+            --notes "Automatic build of \`$GITHUB_REF_NAME\` at ${GITHUB_SHA::7}: $subject"

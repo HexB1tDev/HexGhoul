@@ -1,0 +1,6 @@
+build/
+*.class
+__pycache__/
+.claude/
+previews/
+docs/reference/

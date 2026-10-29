@@ -1,0 +1,53 @@
+{
+  "replace": false,
+  "values": [
+    "hexkagune:ghoul_meat",
+    "minecraft:beef",
+    "minecraft:porkchop",
+    "minecraft:chicken",
+    "minecraft:mutton",
+    "minecraft:rabbit",
+    "minecraft:cod",
+    "minecraft:salmon",
+    "minecraft:tropical_fish",
+    "minecraft:pufferfish",
+    "minecraft:rotten_flesh",
+    "minecraft:spider_eye",
+    {
+      "id": "#forge:raw_meats",
+      "required": false
+    },
+    {
+      "id": "#forge:raw_fishes",
+      "required": false
+    },
+    {
+      "id": "#forge:raw_beef",
+      "required": false
+    },
+    {
+      "id": "#forge:raw_pork",
+      "required": false
+    },
+    {
+      "id": "#forge:raw_chicken",
+      "required": false
+    },
+    {
+      "id": "#forge:raw_mutton",
+      "required": false
+    },
+    {
+      "id": "#forge:raw_bacon",
+      "required": false
+    },
+    {
+      "id": "#forge:raw_rabbit",
+      "required": false
+    },
+    {
+      "id": "#forge:raw_fish",
+      "required": false
+    }
+  ]
+}

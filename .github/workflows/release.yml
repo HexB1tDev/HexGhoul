@@ -1,0 +1,41 @@
+name: Release HexKagune
+
+# Pushing a new or changed .github/release-notes-<version>.md builds the mod and publishes it as the latest release
+# v<version> (the tag is created on the pushed commit; a version already released is left alone).
+on:
+  push:
+    branches: [main, 'claude/**']
+    paths: ['.github/release-notes-*.md']
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Build and verify the mod JAR
+        id: build
+        run: |
+          python3 build.py
+          jar=$(ls build/hexkagune-*.jar)
+          echo "jar=$jar" >> "$GITHUB_OUTPUT"
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          JAR: ${{ steps.build.outputs.jar }}
+        run: |
+          name=$(basename "$JAR" .jar)
+          version="${name#hexkagune-}"
+          notes=".github/release-notes-$version.md"
+          if gh release view "v$version" >/dev/null 2>&1; then
+            echo "v$version is already released"
+            exit 0
+          fi
+          [ -f "$notes" ] || echo "HexKagune $version" > "$notes"
+          gh release create "v$version" "$JAR" --target "$GITHUB_SHA" --latest --title "HexKagune $version" --notes-file "$notes"

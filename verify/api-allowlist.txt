@@ -1,0 +1,837 @@
+# External API surface used by the 1.1.0 expansion that the original 1.0.0 JAR does not already link.
+# References already made by the original JAR are accepted automatically (they are proven at runtime).
+# Each entry names the DECLARING class; a reference through a subclass is accepted via the stub hierarchy.
+# Evidence keys:
+#   [srg]   MCPConfig 1.20.1 joined.tsrg + Fabric intermediary + Yarn 1.20.1 joined on the obfuscated name
+#           (declaring class, SRG name and descriptor all checked), e.g. Player.getFoodData = m_36324_.
+#   [order] registry declaration order in joined.tsrg, cross-checked against the 5 MobEffects the original uses.
+#   [forge] MinecraftForge 1.20.1 branch sources/patches (src/main/java, fmlcore, patches/minecraft).
+#   [lib]   public library API (Brigadier 1.1.8, SLF4J 2, Netty ByteBuf delegated by FriendlyByteBuf, JOML 1.10).
+#   [photon] Photon 1.1.17 sources (Low-Drag-MC/Photon, branch 1.20.1 at the v1.1.17 commit 507499f, common/src/main/java;
+#           Lombok @Getter/@Setter generate the accessors named below). Photon's own members keep their names in its Forge
+#           jar; members it overrides from Minecraft's Particle are reobfuscated to SRG (setPos, isAlive). Hex God of Death's
+#           client/fx/DeathFx.java makes the same calls against photon-forge-1.20.1:1.1.17 in its CI build.
+# The build fails if an entry is missing for a new reference, or if an entry is no longer used.
+
+# --- ghoul diet: food and effects -------------------------------------------------------------------
+C net/minecraft/world/food/FoodData                                                  # [forge] patches/.../world/food/FoodData.java.patch
+C net/minecraft/world/food/FoodProperties                                            # [forge] imported by Forge ItemStack/IForgeItem
+M net/minecraft/world/entity/player/Player m_36324_ ()Lnet/minecraft/world/food/FoodData;   # [srg] getFoodData (yarn getHungerManager)
+M net/minecraft/world/entity/player/Player m_7500_ ()Z                               # [srg] isCreative
+M net/minecraft/world/food/FoodData m_38702_ ()I                                     # [srg] getFoodLevel
+M net/minecraft/world/food/FoodData m_38722_ ()F                                     # [srg] getSaturationLevel
+M net/minecraft/world/food/FoodData m_38705_ (I)V                                    # [srg] setFoodLevel
+M net/minecraft/world/food/FoodData m_38717_ (F)V                                    # [srg] setSaturation
+M net/minecraft/world/food/FoodProperties m_38744_ ()I                               # [srg] getNutrition (yarn getHunger)
+M net/minecraft/world/food/FoodProperties m_38746_ ()Z                               # [srg] isMeat
+M net/minecraft/world/item/ItemStack m_41614_ ()Z                                    # [srg] isEdible (yarn isFood)
+M net/minecraft/world/item/ItemStack m_204117_ (Lnet/minecraft/tags/TagKey;)Z          # [srg] is(TagKey) (yarn isIn; obf anl = TagKey)
+M net/minecraft/world/item/ItemStack getFoodProperties (Lnet/minecraft/world/entity/LivingEntity;)Lnet/minecraft/world/food/FoodProperties;  # [forge] IForgeItemStack default; ItemStack implements it (ItemStack.java.patch)
+M net/minecraft/world/entity/LivingEntity m_21195_ (Lnet/minecraft/world/effect/MobEffect;)Z  # [srg] removeEffect (yarn removeStatusEffect)
+F net/minecraft/world/effect/MobEffects f_19612_ Lnet/minecraft/world/effect/MobEffect;  # [order] HUNGER: 17th field 'q' (speed=f_19596_ ... health_boost=f_19616_ as the original uses)
+C net/minecraft/tags/ItemTags                                                        # [forge] patches/.../tags/ItemTags.java.patch
+M net/minecraft/tags/ItemTags create (Lnet/minecraft/resources/ResourceLocation;)Lnet/minecraft/tags/TagKey;  # [forge] added by ItemTags.java.patch
+M net/minecraft/resources/ResourceLocation m_135815_ ()Ljava/lang/String;            # [srg] getPath
+F net/minecraftforge/registries/ForgeRegistries ITEMS Lnet/minecraftforge/registries/IForgeRegistry;  # [forge] ForgeRegistries.java
+M net/minecraftforge/registries/IForgeRegistry getKey (Ljava/lang/Object;)Lnet/minecraft/resources/ResourceLocation;  # [forge] IForgeRegistry.java
+C net/minecraftforge/event/entity/living/LivingEntityUseItemEvent$Start              # [forge] LivingEntityUseItemEvent.java
+C net/minecraftforge/event/entity/living/LivingEntityUseItemEvent$Tick               # [forge] LivingEntityUseItemEvent.java
+C net/minecraftforge/event/entity/living/LivingEntityUseItemEvent$Finish             # [forge] fired with a copy of the used stack (LivingEntity.java.patch)
+M net/minecraftforge/event/entity/living/LivingEntityUseItemEvent getItem ()Lnet/minecraft/world/item/ItemStack;  # [forge]
+M net/minecraftforge/eventbus/api/Event setCanceled (Z)V                            # [forge] eventbus Event.setCanceled; LivingEntityUseItemEvent.Start is @Cancelable (ForgeEventFactory.onItemUseStart returns -1, startUsingItem returns), as are AppleSkin's HUDOverlayEvent subclasses
+C net/minecraftforge/eventbus/api/Event                                             # [forge] eventbus 6.0 Event (Class literal for asSubclass and addListener)
+F net/minecraftforge/eventbus/api/EventPriority HIGHEST Lnet/minecraftforge/eventbus/api/EventPriority;  # [forge] eventbus 6.0 EventPriority
+C net/minecraftforge/common/MinecraftForge                                          # [forge] common/MinecraftForge.java
+F net/minecraftforge/common/MinecraftForge EVENT_BUS Lnet/minecraftforge/eventbus/api/IEventBus;  # [forge] MinecraftForge.java
+C net/minecraftforge/eventbus/api/IEventBus                                         # [forge] eventbus 6.0 IEventBus
+M net/minecraftforge/eventbus/api/IEventBus addListener (Lnet/minecraftforge/eventbus/api/EventPriority;ZLjava/lang/Class;Ljava/util/function/Consumer;)V  # [forge] eventbus 6.0 IEventBus.addListener(priority, receiveCancelled, eventType, consumer)
+M net/minecraftforge/event/entity/living/LivingEvent getEntity ()Lnet/minecraft/world/entity/LivingEntity;  # [forge] LivingEvent.java
+
+# --- instinct: prey classification and restraint ----------------------------------------------------
+C net/minecraft/world/entity/animal/Animal                                           # [forge] patches/.../world/entity/animal/Animal.java.patch
+C net/minecraft/world/entity/npc/AbstractVillager                                    # [forge] patches/.../world/entity/npc/AbstractVillager.java.patch
+M net/minecraft/world/entity/TamableAnimal m_21824_ ()Z                              # [srg] isTame (yarn TameableEntity.isTamed)
+M net/minecraft/world/entity/Entity m_8077_ ()Z                                      # [srg] hasCustomName (declared on Entity, from Nameable)
+M net/minecraft/world/entity/Entity m_6144_ ()Z                                      # [srg] isShiftKeyDown (yarn isSneaking); also LocalPlayer.java.patch context
+M net/minecraft/world/entity/LivingEntity m_5803_ ()Z                                # [srg] isSleeping
+
+# --- configuration -----------------------------------------------------------------------------------
+C net/minecraftforge/common/ForgeConfigSpec                                          # [forge] common/ForgeConfigSpec.java
+C net/minecraftforge/common/ForgeConfigSpec$Builder                                  # [forge]
+C net/minecraftforge/common/ForgeConfigSpec$BooleanValue                             # [forge] extends ConfigValue<Boolean> implements Supplier
+C net/minecraftforge/common/ForgeConfigSpec$DoubleValue                              # [forge] extends ConfigValue<Double> implements Supplier
+M net/minecraftforge/common/ForgeConfigSpec$Builder define (Ljava/lang/String;Z)Lnet/minecraftforge/common/ForgeConfigSpec$BooleanValue;  # [forge]
+M net/minecraftforge/common/ForgeConfigSpec$Builder defineInRange (Ljava/lang/String;DDD)Lnet/minecraftforge/common/ForgeConfigSpec$DoubleValue;  # [forge]
+M net/minecraftforge/common/ForgeConfigSpec$Builder comment ([Ljava/lang/String;)Lnet/minecraftforge/common/ForgeConfigSpec$Builder;  # [forge]
+M net/minecraftforge/common/ForgeConfigSpec$Builder push (Ljava/lang/String;)Lnet/minecraftforge/common/ForgeConfigSpec$Builder;  # [forge]
+M net/minecraftforge/common/ForgeConfigSpec$Builder pop ()Lnet/minecraftforge/common/ForgeConfigSpec$Builder;  # [forge]
+M net/minecraftforge/common/ForgeConfigSpec$Builder build ()Lnet/minecraftforge/common/ForgeConfigSpec;  # [forge]
+C net/minecraftforge/fml/ModLoadingContext                                           # [forge] fmlcore ModLoadingContext.java
+M net/minecraftforge/fml/ModLoadingContext get ()Lnet/minecraftforge/fml/ModLoadingContext;  # [forge]
+M net/minecraftforge/fml/ModLoadingContext registerConfig (Lnet/minecraftforge/fml/config/ModConfig$Type;Lnet/minecraftforge/fml/config/IConfigSpec;Ljava/lang/String;)V  # [forge]
+C net/minecraftforge/fml/config/IConfigSpec                                          # [forge] fmlcore config package
+C net/minecraftforge/fml/config/ModConfig$Type                                       # [forge] fmlcore ModConfig.java
+F net/minecraftforge/fml/config/ModConfig$Type SERVER Lnet/minecraftforge/fml/config/ModConfig$Type;  # [forge]
+F net/minecraftforge/fml/config/ModConfig$Type CLIENT Lnet/minecraftforge/fml/config/ModConfig$Type;  # [forge]
+C net/minecraftforge/eventbus/api/EventPriority                                      # [forge] e.g. ForgeHooks: @SubscribeEvent(priority = EventPriority.HIGH)
+
+# --- network and commands ----------------------------------------------------------------------------
+M net/minecraft/network/FriendlyByteBuf writeByte (I)Lio/netty/buffer/ByteBuf;      # [lib]+[srg] FriendlyByteBuf (obf sf) declares the Netty delegate
+M net/minecraft/network/FriendlyByteBuf readByte ()B                                 # [lib]+[srg] same
+C com/mojang/brigadier/arguments/FloatArgumentType                                   # [lib] Brigadier
+M com/mojang/brigadier/arguments/FloatArgumentType floatArg (FF)Lcom/mojang/brigadier/arguments/FloatArgumentType;  # [lib]
+M com/mojang/brigadier/arguments/FloatArgumentType getFloat (Lcom/mojang/brigadier/context/CommandContext;Ljava/lang/String;)F  # [lib]
+M org/slf4j/Logger error (Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)V    # [lib] SLF4J
+
+# --- client: body animation, overlay, camera, urge input ---------------------------------------------
+M net/minecraft/world/entity/Entity m_20159_ ()Z                                     # [srg] isPassenger (yarn hasVehicle)
+M net/minecraft/world/entity/Entity m_6069_ ()Z                                      # [srg] isSwimming
+M net/minecraft/world/entity/Entity m_146908_ ()F                                    # [srg] getYRot (yarn getYaw)
+M net/minecraft/world/entity/Entity m_19884_ (DD)V                                   # [srg] turn(yaw, pitch) in mouse units (yarn changeLookDirection)
+M net/minecraft/world/entity/LivingEntity m_21255_ ()Z                               # [srg] isFallFlying
+M net/minecraft/world/entity/LivingEntity m_6117_ ()Z                                # [srg] isUsingItem
+M net/minecraft/world/entity/WalkAnimationState m_267711_ (F)F                      # [srg] speed(partialTick) (yarn LimbAnimator.getSpeed)
+M net/minecraft/client/Minecraft m_91104_ ()Z                                        # [srg] isPaused
+M net/minecraft/client/Options m_231924_ ()Lnet/minecraft/client/OptionInstance;      # [srg] screenEffectScale (yarn getDistortionEffectScale)
+C net/minecraft/client/OptionInstance                                                # [forge] Options.java.patch references OptionInstance
+M net/minecraft/client/OptionInstance m_231551_ ()Ljava/lang/Object;                 # [srg] get (yarn SimpleOption.getValue); GameRenderer.java.patch uses it
+C net/minecraft/client/player/Input                                                  # [forge] MovementInputUpdateEvent imports net.minecraft.client.player.Input
+F net/minecraft/client/player/Input f_108567_ F                                       # [srg] forwardImpulse (yarn movementForward)
+F net/minecraft/client/player/Input f_108566_ F                                       # [srg] leftImpulse (yarn movementSideways); LocalPlayer.java.patch context
+F net/minecraft/client/player/Input f_108573_ Z                                       # [srg] shiftKeyDown (yarn sneaking)
+F net/minecraft/client/player/Input f_108572_ Z                                       # [srg] jumping: joined.tsrg fiw g f_108572_, intermediary field_3904 (yarn jumping): Centipede Dominion holds his own body still
+M net/minecraft/client/gui/GuiGraphics m_280411_ (Lnet/minecraft/resources/ResourceLocation;IIIIFFIIII)V  # [srg] blit(tex,x,y,w,h,u,v,uW,vH,texW,texH) (yarn drawTexture)
+C com/mojang/blaze3d/systems/RenderSystem                                             # [srg] unobfuscated in 1.20.1 (tsrg maps it to itself)
+M com/mojang/blaze3d/systems/RenderSystem enableBlend ()V                            # [srg] listed by name in tsrg
+M com/mojang/blaze3d/systems/RenderSystem disableBlend ()V                           # [srg]
+M com/mojang/blaze3d/systems/RenderSystem defaultBlendFunc ()V                       # [srg]
+M com/mojang/blaze3d/systems/RenderSystem depthMask (Z)V                             # [srg]
+M com/mojang/blaze3d/systems/RenderSystem disableDepthTest ()V                       # [srg]
+M com/mojang/blaze3d/systems/RenderSystem enableDepthTest ()V                        # [srg]
+M com/mojang/blaze3d/systems/RenderSystem setShaderColor (FFFF)V                     # [srg] tsrg lists lambda$setShaderColor$32 (FFFF)V of this public method
+F net/minecraftforge/event/TickEvent phase Lnet/minecraftforge/event/TickEvent$Phase; # [forge] TickEvent.java (field declared on TickEvent)
+F net/minecraftforge/event/TickEvent$Phase START Lnet/minecraftforge/event/TickEvent$Phase;  # [forge]
+F net/minecraftforge/event/TickEvent$RenderTickEvent renderTickTime F               # [forge]
+C net/minecraftforge/event/TickEvent$RenderTickEvent                                 # [forge]
+C net/minecraftforge/client/event/ViewportEvent$ComputeCameraAngles                  # [forge] ViewportEvent.java
+M net/minecraftforge/client/event/ViewportEvent getPartialTick ()D                   # [forge]
+M net/minecraftforge/client/event/ViewportEvent$ComputeCameraAngles getPitch ()F    # [forge]
+M net/minecraftforge/client/event/ViewportEvent$ComputeCameraAngles setPitch (F)V   # [forge]
+M net/minecraftforge/client/event/ViewportEvent$ComputeCameraAngles getRoll ()F     # [forge]
+M net/minecraftforge/client/event/ViewportEvent$ComputeCameraAngles setRoll (F)V    # [forge]
+C net/minecraftforge/client/event/MovementInputUpdateEvent                           # [forge] fired from LocalPlayer.aiStep after input.tick (LocalPlayer.java.patch)
+M net/minecraftforge/client/event/MovementInputUpdateEvent getInput ()Lnet/minecraft/client/player/Input;  # [forge]
+M net/minecraftforge/event/entity/player/PlayerEvent getEntity ()Lnet/minecraft/world/entity/player/Player;  # [forge] PlayerEvent.java
+C net/minecraftforge/client/event/RegisterGuiOverlaysEvent                           # [forge] mod-bus event
+M net/minecraftforge/client/event/RegisterGuiOverlaysEvent registerBelowAll (Ljava/lang/String;Lnet/minecraftforge/client/gui/overlay/IGuiOverlay;)V  # [forge]
+C net/minecraftforge/client/gui/overlay/IGuiOverlay                                  # [forge]
+M net/minecraftforge/client/gui/overlay/IGuiOverlay render (Lnet/minecraftforge/client/gui/overlay/ForgeGui;Lnet/minecraft/client/gui/GuiGraphics;FII)V  # [forge]
+C net/minecraftforge/client/gui/overlay/ForgeGui                                     # [forge]
+
+# --- 1.2.0 path choice screen -----------------------------------------------------------------------
+# [srg] entries below were re-checked by joining MCPConfig 1.20.1 joined.tsrg, Fabric intermediary 1.20.1 and
+# Yarn 1.20.1 on the obfuscated name (euq = Screen, eqt = GuiEventListener, eov = Font).
+F net/minecraft/client/gui/screens/Screen f_96543_ I                                 # [srg] width (euq.g, yarn width)
+F net/minecraft/client/gui/screens/Screen f_96544_ I                                 # [srg] height (euq.h, yarn height)
+M net/minecraft/client/gui/components/events/GuiEventListener m_6348_ (DDI)Z         # [srg] mouseReleased (eqt.b, yarn Element.mouseReleased)
+M net/minecraft/client/gui/components/events/GuiEventListener m_7920_ (III)Z         # [srg] keyReleased (eqt.b, yarn Element.keyReleased)
+M net/minecraft/client/gui/GuiGraphics m_286007_ (Ljava/lang/Runnable;)V             # [srg] drawManaged (eox.a, yarn DrawContext.draw(Runnable))
+M net/minecraft/client/gui/Font m_92895_ (Ljava/lang/String;)I                       # [srg] width(String) (eov.b, yarn TextRenderer.getWidth)
+C net/minecraftforge/client/event/ScreenEvent$Opening                                # [forge] 1.20.1 client/event/ScreenEvent.java (Opening)
+M net/minecraftforge/client/event/ScreenEvent$Opening getNewScreen ()Lnet/minecraft/client/gui/screens/Screen;  # [forge] same
+M net/minecraftforge/client/event/ScreenEvent$Opening setNewScreen (Lnet/minecraft/client/gui/screens/Screen;)V  # [forge] same
+
+# --- 1.2.0 Ayato kit -----------------------------------------------------------------------------------------
+M net/minecraft/world/entity/Entity m_6047_ ()Z                                      # [srg] isCrouching (bfj.bU, yarn isInSneakingPose)
+F net/minecraft/world/effect/MobEffects f_19603_ Lnet/minecraft/world/effect/MobEffect;  # [order] JUMP: 8th field 'h' (speed=f_19596_ 'a' ... hunger=f_19612_ 'q', health_boost=f_19616_ 'u' as the original uses); Ukaku agility
+
+# --- 1.2.0 kakugan: a render layer on the player's head, the skin face in the GUI ---------------------------
+# [srg] entries below were checked by joining MCPConfig 1.20.1 joined.tsrg, Fabric intermediary 1.20.1 and Yarn 1.20.1
+# on the obfuscated name (ftg = RenderLayer/FeatureRenderer, fqt = RenderLayerParent/FeatureRendererContext,
+# fpz = LivingEntityRenderer, fbf = EntityModel, fbs = HumanoidModel/BipedEntityModel, fee = ModelPart,
+# fkf = RenderType/RenderLayer, fiv = AbstractClientPlayer).
+C net/minecraft/client/renderer/entity/layers/RenderLayer                           # [srg] ftg (yarn FeatureRenderer, class_3887)
+M net/minecraft/client/renderer/entity/layers/RenderLayer <init> (Lnet/minecraft/client/renderer/entity/RenderLayerParent;)V  # [srg] ftg.<init>(Lfqt;)V (yarn FeatureRenderer(FeatureRendererContext))
+M net/minecraft/client/renderer/entity/layers/RenderLayer m_6494_ (Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;ILnet/minecraft/world/entity/Entity;FFFFFF)V  # [srg] render, ftg.a(Leij;Lfjx;ILbfj;FFFFFF)V (yarn method_4199 render)
+M net/minecraft/client/renderer/entity/layers/RenderLayer m_117386_ ()Lnet/minecraft/client/model/EntityModel;  # [srg] getParentModel, ftg.c()Lfbf; (yarn getContextModel method_17165)
+C net/minecraft/client/renderer/entity/RenderLayerParent                            # [srg] fqt (yarn FeatureRendererContext, class_3883)
+C net/minecraft/client/renderer/entity/LivingEntityRenderer                         # [srg] fpz (yarn LivingEntityRenderer, class_922)
+M net/minecraft/client/renderer/entity/LivingEntityRenderer m_115326_ (Lnet/minecraft/client/renderer/entity/layers/RenderLayer;)Z  # [srg] addLayer, fpz.a(Lftg;)Z (yarn addFeature method_4046)
+C net/minecraft/client/model/EntityModel                                            # [srg] fbf (yarn EntityModel, class_583)
+C net/minecraft/client/model/HumanoidModel                                          # [srg] fbs (yarn BipedEntityModel, class_572)
+F net/minecraft/client/model/HumanoidModel f_102808_ Lnet/minecraft/client/model/geom/ModelPart;  # [srg] head, fbs.k Lfee; (yarn head field_3398)
+C net/minecraft/client/model/geom/ModelPart                                         # [srg] fee (yarn ModelPart, class_630)
+M net/minecraft/client/model/geom/ModelPart m_104299_ (Lcom/mojang/blaze3d/vertex/PoseStack;)V  # [srg] translateAndRotate, fee.a(Leij;)V (yarn rotate(MatrixStack) method_22703)
+M net/minecraft/client/renderer/RenderType m_110488_ (Lnet/minecraft/resources/ResourceLocation;)Lnet/minecraft/client/renderer/RenderType;  # [srg] eyes, fkf.o(Lacq;)Lfkf; (yarn getEyes method_23026)
+M net/minecraft/client/player/AbstractClientPlayer m_108560_ ()Lnet/minecraft/resources/ResourceLocation;  # [srg] getSkinTextureLocation, fiv.d()Lacq; (yarn getSkinTexture method_3117)
+C net/minecraftforge/client/event/EntityRenderersEvent$AddLayers                     # [forge] 1.20.1 client/event/EntityRenderersEvent.java (mod-bus event)
+M net/minecraftforge/client/event/EntityRenderersEvent$AddLayers getSkins ()Ljava/util/Set;  # [forge] same
+M net/minecraftforge/client/event/EntityRenderersEvent$AddLayers getSkin (Ljava/lang/String;)Lnet/minecraft/client/renderer/entity/LivingEntityRenderer;  # [forge] same (erasure of <R extends LivingEntityRenderer<...>> R)
+# Clearing the skin's outer layer around the eyes (glasses): hide the hat part for one frame and redraw it with a hole.
+F net/minecraft/client/model/HumanoidModel f_102810_ Lnet/minecraft/client/model/geom/ModelPart;  # [srg] body, fbs.m Lfee; (yarn body field_3391)
+# --- K: the kakuja transformation (the Kaneki form it came from, cleared when it ends) --------------------
+M net/minecraft/nbt/CompoundTag m_128473_ (Ljava/lang/String;)V                       # [srg] remove, qr.r (yarn NbtCompound.remove)
+
+# --- 1.2.0 Ayato menu ------------------------------------------------------------------------------------
+M net/minecraft/client/gui/screens/Screen m_7379_ ()V                                # [srg] onClose, euq.aw_()V (yarn close method_25419); the original menu calls it too
+M net/minecraft/client/gui/screens/Screen m_280273_ (Lnet/minecraft/client/gui/GuiGraphics;)V  # [srg] renderBackground, euq.a(Leox;)V (yarn method_25420); the original menu calls it too
+
+F net/minecraft/world/entity/Entity f_19802_ I                                        # [srg] invulnerableTime (yarn timeUntilRegen field_6008, obf ak)
+M net/minecraft/world/entity/Entity m_20254_ (I)V                                     # [srg] setSecondsOnFire (yarn setOnFireFor method_5639, obf g)
+
+# --- poses: PlayerAnimator transform kinds -------------------------------------------------------------------
+F dev/kosmx/playerAnim/api/TransformType POSITION Ldev/kosmx/playerAnim/api/TransformType;  # [lib] PlayerAnimator 1.0.2-rc1 coreLib api/TransformType.java (POSITION, ROTATION, BEND); AnimationApplier.updatePart reads POSITION first
+
+# --- Ayato's fire: Photon particles (client/fx/RcFx, ported from Hex God of Death's DeathFx) ---------------------
+C com/lowdragmc/photon/client/gameobject/particle/TileParticle                     # [photon] gameobject/particle/TileParticle.java
+C com/lowdragmc/photon/client/gameobject/particle/IParticle                        # [photon] gameobject/particle/IParticle.java
+C com/lowdragmc/photon/client/gameobject/emitter/IParticleEmitter                 # [photon] gameobject/emitter/IParticleEmitter.java
+C com/lowdragmc/photon/client/gameobject/emitter/data/RendererSetting$Cull        # [photon] emitter/data/RendererSetting.java (static class Cull extends ToggleGroup)
+C com/lowdragmc/photon/client/gameobject/emitter/data/material/BlendMode          # [photon] emitter/data/material/BlendMode.java
+M com/lowdragmc/photon/client/gameobject/particle/TileParticle <init> (Lcom/lowdragmc/photon/client/gameobject/emitter/IParticleEmitter;Lcom/lowdragmc/photon/client/gameobject/emitter/particle/ParticleConfig;Lnet/minecraft/util/RandomSource;)V  # [photon] TileParticle(IParticleEmitter, ParticleConfig, RandomSource)
+M com/lowdragmc/photon/client/gameobject/particle/TileParticle update ()V          # [photon] protected void update() (overridden by RcFx.Mote, as DeathFx.Mote does)
+M com/lowdragmc/photon/client/gameobject/particle/TileParticle setLocalPos (Lorg/joml/Vector3f;Z)V  # [photon] public void setLocalPos(Vector3f, boolean)
+M com/lowdragmc/photon/client/gameobject/particle/TileParticle setInternalVelocity (Lorg/joml/Vector3f;)V  # [photon]
+M com/lowdragmc/photon/client/gameobject/particle/TileParticle setSize (Lorg/joml/Vector3f;)V  # [photon]
+M com/lowdragmc/photon/client/gameobject/particle/TileParticle setARGBColor (I)V  # [photon]
+M com/lowdragmc/photon/client/gameobject/particle/TileParticle setColor (Lorg/joml/Vector4f;)V  # [photon]
+M com/lowdragmc/photon/client/gameobject/particle/TileParticle setLifetime (I)V    # [photon] Lombok @Setter on int lifetime
+F com/lowdragmc/photon/client/gameobject/particle/TileParticle velocityX F         # [photon] protected float velocityX, velocityY, velocityZ
+F com/lowdragmc/photon/client/gameobject/particle/TileParticle velocityY F         # [photon]
+F com/lowdragmc/photon/client/gameobject/particle/TileParticle velocityZ F         # [photon]
+F com/lowdragmc/photon/client/gameobject/particle/TileParticle age I               # [photon] protected int age (Lombok @Getter/@Setter)
+F com/lowdragmc/photon/client/gameobject/particle/TileParticle lifetime I          # [photon] protected int lifetime
+F com/lowdragmc/photon/client/gameobject/particle/TileParticle randomSource Lnet/minecraft/util/RandomSource;  # [photon] public RandomSource randomSource
+M com/lowdragmc/photon/client/gameobject/emitter/particle/ParticleEmitter emitParticle (Lcom/lowdragmc/photon/client/gameobject/particle/IParticle;)V  # [photon] ParticleEmitter.java
+M com/lowdragmc/photon/client/gameobject/emitter/Emitter getRandomSource ()Lnet/minecraft/util/RandomSource;  # [photon] Emitter.java
+M com/lowdragmc/photon/client/gameobject/FXObject setLevel (Lnet/minecraft/world/level/Level;)V  # [photon] FXObject.java (IFXObject)
+M com/lowdragmc/photon/client/gameobject/FXObject remove (Z)V                       # [photon] FXObject.java, overridden by ParticleEmitter (IFXObject.remove(boolean))
+M net/minecraft/client/particle/Particle m_107264_ (DDD)V                           # [srg] setPos, fhm.c (yarn setPos); overridden by Photon's Emitter
+M net/minecraft/client/particle/Particle m_107276_ ()Z                              # [srg] isAlive, fhm.m (yarn isAlive); overridden by Photon's FXObject/Emitter
+C net/minecraft/client/particle/Particle                                            # [srg] fhm net/minecraft/client/particle/Particle
+C net/minecraft/client/particle/ParticleEngine                                      # [srg] fho (yarn ParticleManager)
+M net/minecraft/client/particle/ParticleEngine m_107344_ (Lnet/minecraft/client/particle/Particle;)V  # [srg] add(Particle), fho.a (yarn addParticle(Particle))
+F net/minecraft/client/Minecraft f_91061_ Lnet/minecraft/client/particle/ParticleEngine;  # [srg] particleEngine, enn.g (yarn particleManager)
+M com/lowdragmc/photon/client/gameobject/emitter/particle/ParticleConfig setParallelUpdate (Z)V    # [photon] Lombok @Setter boolean parallelUpdate
+M com/lowdragmc/photon/client/gameobject/emitter/particle/ParticleConfig setParallelRendering (Z)V # [photon] Lombok @Setter boolean parallelRendering
+M com/lowdragmc/photon/client/gameobject/emitter/data/MaterialSetting setDepthTest (Z)V  # [photon] class-level Lombok @Getter @Setter
+M com/lowdragmc/photon/client/gameobject/emitter/data/MaterialSetting getBlendMode ()Lcom/lowdragmc/photon/client/gameobject/emitter/data/material/BlendMode;  # [photon] same
+M com/lowdragmc/photon/client/gameobject/emitter/data/material/BlendMode setDstColorFactor (Lcom/mojang/blaze3d/platform/GlStateManager$DestFactor;)V  # [photon] @Getter @Setter DestFactor dstColorFactor
+M com/lowdragmc/photon/client/gameobject/emitter/data/RendererSetting setBloomEffect (Z)V  # [photon] class-level Lombok @Setter (boolean bloomEffect)
+M com/lowdragmc/photon/client/gameobject/emitter/data/RendererSetting getCull ()Lcom/lowdragmc/photon/client/gameobject/emitter/data/RendererSetting$Cull;  # [photon] class-level @Getter (final Cull cull)
+M com/lowdragmc/photon/client/gameobject/emitter/data/ToggleGroup setEnable (Z)V  # [photon] ToggleGroup.java @Setter boolean enable
+C com/mojang/blaze3d/platform/GlStateManager$DestFactor                              # [srg] unobfuscated in 1.20.1 (tsrg maps it to itself)
+F com/mojang/blaze3d/platform/GlStateManager$DestFactor ONE Lcom/mojang/blaze3d/platform/GlStateManager$DestFactor;  # [srg] listed by name in tsrg (ONE ONE 84636)
+C org/joml/Vector4f                                                                 # [lib] JOML 1.10 (bundled with 1.20.1)
+M org/joml/Vector4f <init> (FFFF)V                                                  # [lib]
+M net/minecraft/client/Options m_231929_ ()Lnet/minecraft/client/OptionInstance;   # [srg] particles, enr.am (yarn getParticles); read as an Enum's ordinal (ALL, DECREASED, MINIMAL)
+
+# --- Ayato's fire: network, input and the server's fire ---------------------------------------------------------------
+M net/minecraft/network/FriendlyByteBuf writeShort (I)Lio/netty/buffer/ByteBuf;    # [lib]+[srg] FriendlyByteBuf delegates every Netty ByteBuf method
+M net/minecraft/network/FriendlyByteBuf readShort ()S                               # [lib]+[srg] same
+M net/minecraftforge/client/event/InputEvent$InteractionKeyMappingTriggered isUseItem ()Z  # [forge] client/event/InputEvent.java (isAttack/isUseItem/isPickBlock)
+M net/minecraftforge/client/event/InputEvent$InteractionKeyMappingTriggered getHand ()Lnet/minecraft/world/InteractionHand;  # [forge] client/event/InputEvent.java (InteractionKeyMappingTriggered.getHand; fired once per hand, main first, in Minecraft.startUseItem)
+F net/minecraft/client/Options f_92095_ Lnet/minecraft/client/KeyMapping;            # [srg] keyUse, enr.H (yarn useKey)
+F net/minecraft/client/Options f_92089_ Lnet/minecraft/client/KeyMapping;            # [srg] keyJump: joined.tsrg enr.B f_92089_, intermediary field_1903, yarn jumpKey
+F net/minecraft/client/Options f_92085_ Lnet/minecraft/client/KeyMapping;            # [srg] keyUp, enr.x (yarn forwardKey): W held with a right click (Fire Dash)
+M net/minecraft/client/KeyMapping m_90857_ ()Z                                      # [srg] isDown, enl.e (yarn isPressed)
+M net/minecraft/world/entity/LivingEntity m_21205_ ()Lnet/minecraft/world/item/ItemStack;  # [srg] getMainHandItem, bfz.eO (yarn getMainHandStack)
+M net/minecraft/world/entity/LivingEntity m_21206_ ()Lnet/minecraft/world/item/ItemStack;  # [srg] getOffhandItem, bfz.eP (yarn getOffHandStack)
+M net/minecraft/world/item/ItemStack m_41779_ ()I                                   # [srg] getUseDuration, cfz.r (yarn getMaxUseTime)
+M net/minecraft/world/entity/Entity m_20184_ ()Lnet/minecraft/world/phys/Vec3;       # [srg] getDeltaMovement, bfj (yarn getVelocity); thrown targets and the hover
+F net/minecraft/world/entity/Entity f_19864_ Z                                      # [srg] hurtMarked, bfj.S (yarn velocityModified): the motion is sent to the client
+M net/minecraft/world/entity/Entity m_20256_ (Lnet/minecraft/world/phys/Vec3;)V       # [srg] setDeltaMovement, bfj.f (yarn setVelocity): a body the flesh lets go of stops
+F net/minecraft/world/entity/Entity f_19789_ F                                      # [srg] fallDistance, bfj.aa (yarn fallDistance): a held body's fall is forgotten
+M net/minecraft/world/phys/AABB <init> (DDDDDD)V                                    # [srg] AABB(minX..maxZ) (yarn Box(DDDDDD)), the Rising Flame's column
+
+# --- manifestation sounds (client, per limb; the original's KaguneAmbientSounds$WritheSound uses the same members) ----
+F net/minecraft/client/resources/sounds/AbstractSoundInstance f_119573_ F           # [srg] volume (fxg.d)
+F net/minecraft/client/resources/sounds/AbstractSoundInstance f_119574_ F           # [srg] pitch (fxg.e)
+F net/minecraft/client/resources/sounds/AbstractSoundInstance f_119575_ D           # [srg] x (fxg.f)
+F net/minecraft/client/resources/sounds/AbstractSoundInstance f_119576_ D           # [srg] y (fxg.g)
+F net/minecraft/client/resources/sounds/AbstractSoundInstance f_119577_ D           # [srg] z (fxg.h)
+F net/minecraft/client/resources/sounds/AbstractSoundInstance f_119578_ Z           # [srg] looping (yarn repeat, fxg.i)
+F net/minecraft/client/resources/sounds/AbstractSoundInstance f_119579_ I           # [srg] delay (yarn repeatDelay, fxg.j)
+F net/minecraft/client/resources/sounds/AbstractSoundInstance f_119580_ Lnet/minecraft/client/resources/sounds/SoundInstance$Attenuation;  # [srg] attenuation (fxg.k)
+M net/minecraft/client/resources/sounds/AbstractTickableSoundInstance m_119609_ ()V  # [srg] stop (yarn MovingSoundInstance.setDone, fxh.n)
+M net/minecraft/client/resources/sounds/AbstractTickableSoundInstance m_7801_ ()Z    # [srg] isStopped (declared on fxh, yarn isDone)
+M net/minecraft/world/entity/LivingEntity m_217043_ ()Lnet/minecraft/util/RandomSource;  # [srg] getRandom (declared on bfz = LivingEntity; the original calls it through ServerPlayer)
+
+# --- 1.3.0 crystal mode: stuck spikes follow the body, blood is left to Hex God of Time when it is installed --------
+F net/minecraft/world/entity/LivingEntity f_20883_ F                                  # [srg] yBodyRot: joined.tsrg bfz.aV (bfz also declares m_21023_ hasEffect and m_147207_ addEffect, which the original links on LivingEntity); the original reads it through ServerPlayer and AbstractClientPlayer
+F net/minecraft/world/entity/LivingEntity f_20884_ F                                  # [srg] yBodyRotO: joined.tsrg bfz.aW, next to yBodyRot; the original reads it through AbstractClientPlayer
+C net/minecraftforge/fml/ModList                                                     # [forge] fmlcore/src/main/java/net/minecraftforge/fml/ModList.java (1.20.1 branch)
+M net/minecraftforge/fml/ModList get ()Lnet/minecraftforge/fml/ModList;              # [forge] ModList.java: public static ModList get()
+M net/minecraftforge/fml/ModList isLoaded (Ljava/lang/String;)Z                      # [forge] ModList.java: public boolean isLoaded(String modTarget)
+
+# --- 3.0.0 kakugan: the skin is read back from the graphics card (SkinReader) -----------------------------------------
+# Resolved: yarn 1.20.1 named -> FabricMC intermediary 1.20.1 -> MCPConfig joined.tsrg (obf -> srg); blaze3d's RenderSystem
+# and GlStateManager are unobfuscated (tsrg maps their members to themselves).
+C com/mojang/blaze3d/platform/NativeImage                                            # [srg] unobfuscated class name in 1.20.1 (yarn class_1011 NativeImage, obf ehk)
+M com/mojang/blaze3d/platform/NativeImage <init> (IIZ)V                              # [srg] NativeImage(width, height, useCalloc), yarn <init>(IIZ)V
+M com/mojang/blaze3d/platform/NativeImage m_85045_ (IZ)V                             # [srg] downloadTexture: yarn method_4327 loadFromTextureImage, obf ehk.a(IZ)V, tsrg 85045
+M com/mojang/blaze3d/platform/NativeImage m_84985_ (II)I                             # [srg] getPixelRGBA: yarn method_4315 getColor, obf ehk.a(II)I, tsrg 84985
+M com/mojang/blaze3d/platform/NativeImage close ()V                                  # [srg] AutoCloseable.close, not renamed
+C net/minecraft/client/renderer/texture/AbstractTexture                              # [srg] C_4468_ (yarn class_1044 AbstractTexture, obf fug)
+M net/minecraft/client/renderer/texture/AbstractTexture m_117963_ ()I               # [srg] getId: yarn method_4624 getGlId, obf fug.a()I, tsrg 117963
+C net/minecraft/client/renderer/texture/TextureManager                               # [srg] C_4490_ (yarn class_1060 TextureManager, obf fuw)
+M net/minecraft/client/renderer/texture/TextureManager m_118506_ (Lnet/minecraft/resources/ResourceLocation;)Lnet/minecraft/client/renderer/texture/AbstractTexture;  # [srg] getTexture: yarn method_4619, obf fuw.b(Lacq;)Lfug;, tsrg 118506
+M net/minecraft/client/Minecraft m_91097_ ()Lnet/minecraft/client/renderer/texture/TextureManager;  # [srg] getTextureManager: yarn method_1531, obf enn.X()Lfuw;, tsrg 91097
+M com/mojang/blaze3d/systems/RenderSystem bindTexture (I)V                           # [srg] listed by name in tsrg (id 69396)
+C com/mojang/blaze3d/platform/GlStateManager                                         # [srg] unobfuscated in 1.20.1 (tsrg maps it to itself)
+M com/mojang/blaze3d/platform/GlStateManager _getTexLevelParameter (III)I            # [srg] listed by name in tsrg (id 84384)
+
+# --- kakugan behind see-through glass: the second layer is held back and drawn after the kakugan (back since 3.0.0) -----
+C net/minecraftforge/client/event/RenderPlayerEvent$Pre                              # [forge] 1.20.1 client/event/RenderPlayerEvent.java; posted after setModelProperties (PlayerRenderer.java.patch)
+C net/minecraftforge/client/event/RenderPlayerEvent$Post                             # [forge] same; posted after the player is rendered
+M net/minecraftforge/client/event/RenderPlayerEvent getRenderer ()Lnet/minecraft/client/renderer/entity/player/PlayerRenderer;  # [forge] same
+M net/minecraftforge/client/event/RenderPlayerEvent getPartialTick ()F            # [forge] same
+M net/minecraftforge/client/event/RenderPlayerEvent getPoseStack ()Lcom/mojang/blaze3d/vertex/PoseStack;  # [forge] same (field poseStack); 3.0.1 player layers drawn after the player when the renderer skipped them
+M net/minecraftforge/client/event/RenderPlayerEvent getMultiBufferSource ()Lnet/minecraft/client/renderer/MultiBufferSource;  # [forge] same (field multiBufferSource)
+M net/minecraftforge/client/event/RenderPlayerEvent getPackedLight ()I           # [forge] same (field packedLight)
+F net/minecraft/world/entity/Entity f_19797_ I                                     # [srg] tickCount: joined.tsrg bfj.ag (bfj = Entity, as in RenderLayer.render's descriptor); the original reads it through its own KaguneSpikeEntity
+C net/minecraft/client/renderer/entity/player/PlayerRenderer                        # [forge] imported by RenderPlayerEvent.java (PlayerRenderer.java.patch)
+M net/minecraft/client/renderer/entity/LivingEntityRenderer m_7200_ ()Lnet/minecraft/client/model/EntityModel;  # [srg] getModel, fpz.a()Lfbf; (from fqt; yarn FeatureRendererContext.getModel method_4038)
+F net/minecraft/client/model/HumanoidModel f_102809_ Lnet/minecraft/client/model/geom/ModelPart;  # [srg] hat, fbs.l Lfee; (yarn hat field_3394)
+F net/minecraft/client/model/geom/ModelPart f_104207_ Z                              # [srg] visible, fee.k Z (yarn visible field_3665)
+
+# --- 3.0.0 ghoul mode: R alone or with Alt ------------------------------------------------------------------------------
+M net/minecraft/client/gui/screens/Screen m_96639_ ()Z                               # [srg] hasAltDown: yarn class_437.method_25443, obf euq.r()Z, tsrg 96639
+C net/minecraftforge/client/event/InputEvent$Key                                   # [forge] client/event/InputEvent.java (Key: fired for every keyboard key in KeyboardHandler.keyPress, ForgeHooksClient.onKeyInput)
+M net/minecraftforge/client/event/InputEvent$Key getKey ()I                       # [forge] client/event/InputEvent.java (the GLFW key code)
+M net/minecraftforge/client/event/InputEvent$Key getScanCode ()I                  # [forge] client/event/InputEvent.java
+M net/minecraftforge/client/event/InputEvent$Key getAction ()I                    # [forge] client/event/InputEvent.java (GLFW_PRESS 1, GLFW_RELEASE 0, GLFW_REPEAT 2)
+
+# --- 3.0.0 wounds and ghoul regeneration ------------------------------------------------------------------------------
+# Resolved: yarn 1.20.1 named -> FabricMC intermediary 1.20.1 -> MCPConfig joined.tsrg (obf -> srg); blaze3d's RenderSystem keeps its
+# member names (tsrg maps them to themselves); enum constants keep their names.
+C net/minecraftforge/event/entity/living/LivingHealEvent                             # [forge] event/entity/living/LivingHealEvent.java (cancelable)
+M net/minecraftforge/event/entity/living/LivingHealEvent getAmount ()F                # [forge] same
+M net/minecraftforge/event/entity/living/LivingHealEvent setCanceled (Z)V             # [forge] eventbus Event.setCanceled, the event is @Cancelable
+F net/minecraft/world/effect/MobEffects f_19605_ Lnet/minecraft/world/effect/MobEffect;  # [srg] REGENERATION: yarn StatusEffects.field_5924, obf bfc.j, tsrg 19605
+M net/minecraft/world/entity/LivingEntity m_21223_ ()F                               # [srg] getHealth (declared on bfz; the original calls it through ServerPlayer)
+M net/minecraft/world/entity/LivingEntity m_21233_ ()F                               # [srg] getMaxHealth (same)
+M net/minecraft/world/entity/LivingEntity m_21153_ (F)V                              # [srg] setHealth: obf bfz.t (F)V, intermediary method_6033 (yarn setHealth), tsrg 21153
+M net/minecraft/client/player/AbstractClientPlayer m_108564_ ()Ljava/lang/String;   # [srg] getModelName: yarn method_3121 getModel, obf fiv.j()Ljava/lang/String;, tsrg 108564
+F net/minecraft/client/model/HumanoidModel f_102811_ Lnet/minecraft/client/model/geom/ModelPart;  # [srg] rightArm: yarn field_3401, obf fbs.n, tsrg 102811
+F net/minecraft/client/model/HumanoidModel f_102812_ Lnet/minecraft/client/model/geom/ModelPart;  # [srg] leftArm: yarn field_27433, obf fbs.o, tsrg 102812
+F net/minecraft/client/model/HumanoidModel f_102813_ Lnet/minecraft/client/model/geom/ModelPart;  # [srg] rightLeg: yarn field_3392, obf fbs.p, tsrg 102813
+F net/minecraft/client/model/HumanoidModel f_102814_ Lnet/minecraft/client/model/geom/ModelPart;  # [srg] leftLeg: yarn field_3397, obf fbs.q, tsrg 102814
+M net/minecraft/client/multiplayer/ClientLevel m_104805_ (F)F                         # [srg] getSkyDarken: yarn ClientWorld.method_23783 getSkyBrightness, obf few.g(F)F, tsrg 104805
+C net/minecraftforge/fml/util/ObfuscationReflectionHelper                            # [forge] fmlcore/src/main/java/net/minecraftforge/fml/util/ObfuscationReflectionHelper.java
+M net/minecraftforge/fml/util/ObfuscationReflectionHelper getPrivateValue (Ljava/lang/Class;Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/Object;  # [forge] same; field LivingEntityRenderer.layers = f_115291_ (yarn class_922.field_4738 features, obf fpz.g, tsrg 115291)
+M net/minecraftforge/fml/util/ObfuscationReflectionHelper findMethod (Ljava/lang/Class;Ljava/lang/String;[Ljava/lang/Class;)Ljava/lang/reflect/Method;  # [forge] fmlcore .../fml/util/ObfuscationReflectionHelper.java findMethod(Class, String, Class...); used for Entity.setSharedFlag = m_20115_ (bfj.b (IZ)V, yarn method_5729 setFlag)
+C com/mojang/blaze3d/vertex/Tesselator                                               # [srg] yarn class_289 Tessellator, obf eil
+M com/mojang/blaze3d/vertex/Tesselator m_85913_ ()Lcom/mojang/blaze3d/vertex/Tesselator;  # [srg] getInstance: yarn method_1348, obf eil.a()Leil;, tsrg 85913
+M com/mojang/blaze3d/vertex/Tesselator m_85915_ ()Lcom/mojang/blaze3d/vertex/BufferBuilder;  # [srg] getBuilder: yarn method_1349 getBuffer, obf eil.c()Leie;, tsrg 85915
+C com/mojang/blaze3d/vertex/BufferBuilder                                            # [srg] yarn class_287, obf eie
+C com/mojang/blaze3d/vertex/BufferBuilder$RenderedBuffer                             # [srg] yarn class_287$class_7433 BuiltBuffer, obf eie$b
+M com/mojang/blaze3d/vertex/BufferBuilder m_166779_ (Lcom/mojang/blaze3d/vertex/VertexFormat$Mode;Lcom/mojang/blaze3d/vertex/VertexFormat;)V  # [srg] begin: yarn method_1328, obf eie.a(Leio$b;Leio;)V, tsrg 166779
+M com/mojang/blaze3d/vertex/BufferBuilder m_231175_ ()Lcom/mojang/blaze3d/vertex/BufferBuilder$RenderedBuffer;  # [srg] end: yarn method_1326, obf eie.d()Leie$b;, tsrg 231175
+C com/mojang/blaze3d/vertex/BufferUploader                                           # [srg] yarn class_286 BufferRenderer, obf eif
+M com/mojang/blaze3d/vertex/BufferUploader m_231202_ (Lcom/mojang/blaze3d/vertex/BufferBuilder$RenderedBuffer;)V  # [srg] drawWithShader: yarn method_43433 drawWithGlobalProgram, obf eif.a(Leie$b;)V, tsrg 231202
+C com/mojang/blaze3d/vertex/VertexFormat                                             # [srg] yarn class_293, obf eio
+C com/mojang/blaze3d/vertex/VertexFormat$Mode                                       # [srg] yarn class_293$class_5596 DrawMode, obf eio$b
+F com/mojang/blaze3d/vertex/VertexFormat$Mode TRIANGLES Lcom/mojang/blaze3d/vertex/VertexFormat$Mode;  # [srg] enum constant, tsrg keeps its name (yarn field_27379)
+C com/mojang/blaze3d/vertex/DefaultVertexFormat                                     # [srg] yarn class_290 VertexFormats, obf eih
+F com/mojang/blaze3d/vertex/DefaultVertexFormat f_85815_ Lcom/mojang/blaze3d/vertex/VertexFormat;  # [srg] POSITION_COLOR: yarn field_1576, obf eih.n, tsrg 85815
+M net/minecraft/client/renderer/GameRenderer m_172811_ ()Lnet/minecraft/client/renderer/ShaderInstance;  # [srg] getPositionColorShader: yarn method_34540 getPositionColorProgram, obf fjq.q()Lfki;, tsrg 172811
+M com/mojang/blaze3d/systems/RenderSystem colorMask (ZZZZ)V                          # [srg] listed by name in tsrg (id 69444)
+M com/mojang/blaze3d/systems/RenderSystem depthFunc (I)V                             # [srg] listed by name in tsrg (id 69456)
+M com/mojang/blaze3d/systems/RenderSystem disableCull ()V                            # [srg] listed by name in tsrg (id 69464)
+M com/mojang/blaze3d/systems/RenderSystem enableCull ()V                             # [srg] listed by name in tsrg (id 69481)
+M com/mojang/blaze3d/systems/RenderSystem setShader (Ljava/util/function/Supplier;)V  # [srg] listed by name in tsrg (id 157427)
+C org/joml/Matrix4fc                                                                 # [lib] JOML 1.10
+C org/joml/Matrix3fc                                                                 # [lib] JOML 1.10
+M org/joml/Matrix4f <init> (Lorg/joml/Matrix4fc;)V                                   # [lib] JOML 1.10 copy constructor
+M org/joml/Matrix3f <init> (Lorg/joml/Matrix3fc;)V                                   # [lib] JOML 1.10 copy constructor
+M org/joml/Matrix4f transformPosition (Lorg/joml/Vector3f;)Lorg/joml/Vector3f;      # [lib] JOML 1.10
+M org/joml/Vector3f set (FFF)Lorg/joml/Vector3f;                                     # [lib] JOML 1.10
+F org/joml/Vector3f x F                                                              # [lib] JOML 1.10
+F org/joml/Vector3f y F                                                              # [lib] JOML 1.10
+F org/joml/Vector3f z F                                                              # [lib] JOML 1.10
+M net/minecraft/world/entity/Entity m_6060_ ()Z                                     # [srg] isOnFire: joined.tsrg bfj.bL()Z m_6060_; intermediary bfj bL = method_5809 (class_1297 = Entity); yarn Entity.mapping method_5809 isOnFire. 3.0.1 Scorched wounds
+
+# --- flesh reserve (3.0.3): the food overlay's icons moved off screen under the reserve -------------
+C net/minecraftforge/client/event/RenderGuiOverlayEvent$Pre                          # [forge] RenderGuiOverlayEvent.java (@Cancelable Pre, posted by ForgeGui before each overlay renders; Post after)
+M net/minecraftforge/client/event/RenderGuiOverlayEvent getGuiGraphics ()Lnet/minecraft/client/gui/GuiGraphics;  # [forge] RenderGuiOverlayEvent.java (declared on the base, as the original's Post calls prove)
+M net/minecraftforge/client/event/RenderGuiOverlayEvent getOverlay ()Lnet/minecraftforge/client/gui/overlay/NamedGuiOverlay;  # [forge] RenderGuiOverlayEvent.java
+
+# --- 3.1.0: the centipede legs hold what they catch ---------------------------------------------
+M net/minecraft/world/entity/Entity m_6021_ (DDD)V                                 # [srg] teleportTo: joined.tsrg bfj.b (DDD)V (bfj = C_507_ Entity; aig ServerPlayer overrides it, the original links that), intermediary method_5859, yarn requestTeleport ("for other entities, this just sets the position"); CentipedeHunt holds a caught body where the leg coils
+
+# --- 3.1.0: the abilities panel above the chat (the player's own keys) --------------------------------
+M net/minecraft/client/KeyMapping m_90865_ ()Ljava/lang/String;                    # [srg] saveString: joined.tsrg enl.m (enl = C_3387_ KeyMapping), intermediary method_1428, yarn getBoundKeyTranslationKey ("key.keyboard.r")
+M net/minecraft/client/KeyMapping getKeyModifier ()Lnet/minecraftforge/client/settings/KeyModifier;  # [forge] patches/minecraft/net/minecraft/client/KeyMapping.java.patch (IForgeKeyMapping.getKeyModifier, the modifier bound in Controls)
+C net/minecraftforge/client/settings/KeyModifier                                     # [forge] client/settings/KeyModifier.java (CONTROL, SHIFT, ALT, NONE)
+F net/minecraft/client/Options f_92096_ Lnet/minecraft/client/KeyMapping;            # [srg] keyAttack: joined.tsrg enr.I (enr = C_3401_ Options), intermediary field_1886, yarn attackKey
+F net/minecraft/client/Minecraft f_91065_ Lnet/minecraft/client/gui/Gui;             # [srg] gui: joined.tsrg enn.l (enn = C_3391_ Minecraft), intermediary field_1705, yarn inGameHud
+C net/minecraft/client/gui/Gui                                                       # [srg] eow = C_3431_ (yarn InGameHud)
+M net/minecraft/client/gui/Gui m_93076_ ()Lnet/minecraft/client/gui/components/ChatComponent;  # [srg] getChat: joined.tsrg eow.d ()Lepj;, intermediary method_1743, yarn getChatHud
+C net/minecraft/client/gui/components/ChatComponent                                  # [srg] epj = C_3454_ (yarn ChatHud)
+M net/minecraft/client/gui/components/ChatComponent m_93814_ ()I                     # [srg] getHeight: joined.tsrg epj.f ()I, intermediary method_1810, yarn getHeight (epj.e m_93813_ is getWidth)
+M net/minecraft/client/gui/components/ChatComponent m_93815_ ()D                     # [srg] getScale: joined.tsrg epj.g ()D, intermediary method_1814, yarn getChatScale
+F net/minecraftforge/client/gui/overlay/VanillaGuiOverlay CHAT_PANEL Lnet/minecraftforge/client/gui/overlay/VanillaGuiOverlay;  # [forge] client/gui/overlay/VanillaGuiOverlay.java (CHAT_PANEL, "chat_panel")
+M net/minecraftforge/common/ForgeConfigSpec$ConfigValue set (Ljava/lang/Object;)V    # [forge] common/ForgeConfigSpec.java ConfigValue.set: /kagune hud toggle keeps the board's state in the client config
+M net/minecraftforge/common/ForgeConfigSpec$ConfigValue save ()V                     # [forge] common/ForgeConfigSpec.java ConfigValue.save (writes the config file)
+
+# --- 5.0.13: layers on the head and arms turn with the upper body's bend, as PlayerAnimator draws those parts ---------
+# PlayerAnimator 1.0.2-rc1 (KosmX/minecraftPlayerAnimator, branch 1.20 at b9f6beb "1.20 update", mod_version=1.0.2-rc1):
+# BipedEntityModelMixin.renderToBuffer draws the upper parts under IBendHelper.rotateMatrixStack(getBend("body")), which is
+# translate(0, 0.375, 0), mulPose(new Quaternionf().rotateAxis(bend, cos(-axis), 0, sin(-axis))), translate back.
+M dev/kosmx/playerAnim/minecraftApi/PlayerAnimationAccess getPlayerAnimLayer (Lnet/minecraft/client/player/AbstractClientPlayer;)Ldev/kosmx/playerAnim/api/layered/AnimationStack;  # [lib] minecraftApi/PlayerAnimationAccess.java: public static AnimationStack getPlayerAnimLayer(AbstractClientPlayer)
+C dev/kosmx/playerAnim/api/layered/AnimationStack                                    # [lib] coreLib api/layered/AnimationStack.java: public class AnimationStack implements IAnimation
+M dev/kosmx/playerAnim/api/layered/AnimationStack isActive ()Z                       # [lib] AnimationStack.isActive (any layer active); AnimationProcessor.isActive delegates to it
+M dev/kosmx/playerAnim/api/layered/AnimationStack get3DTransform (Ljava/lang/String;Ldev/kosmx/playerAnim/api/TransformType;FLdev/kosmx/playerAnim/core/util/Vec3f;)Ldev/kosmx/playerAnim/core/util/Vec3f;  # [lib] AnimationStack.get3DTransform; AnimationProcessor.getBend calls it with BEND and Vec3f.ZERO
+M org/joml/Quaternionf rotateAxis (FFFF)Lorg/joml/Quaternionf;                       # [lib] JOML 1.10 Quaternionf.rotateAxis(float angle, float axisX, float axisY, float axisZ)
+# --- 5.0.17: every hit on a player wounds him where it landed, the way it was dealt (server/WoundHits) -------------------------
+# Joined on the obfuscated names: MCPConfig 1.20.1 joined.tsrg, Fabric intermediary 1.20.1.tiny, Yarn 1.20.1 (the same chain
+# gives DamageSource.is(TagKey) = m_269533_, which the original JAR already links).
+M net/minecraft/world/damagesource/DamageSource m_19385_ ()Ljava/lang/String;        # [srg] getMsgId, ben.e = method_5525 (yarn getName)
+M net/minecraft/world/damagesource/DamageSource m_7270_ ()Lnet/minecraft/world/phys/Vec3;  # [srg] getSourcePosition, ben.h = method_5510 (yarn getPosition)
+C net/minecraft/world/item/SwordItem                                                 # [forge] patches/minecraft/net/minecraft/world/item/SwordItem.java.patch
+C net/minecraft/world/item/CrossbowItem  # [srg] ceh (yarn class_1764 CrossbowItem): 6.0.9 the auto block guards against a loaded crossbow aimed at him
+M net/minecraft/world/item/CrossbowItem m_40932_ (Lnet/minecraft/world/item/ItemStack;)Z  # [srg] isCharged, ceh.d (Lcfz;)Z (yarn method_7781 isCharged)
+C net/minecraft/world/entity/monster/RangedAttackMob  # [srg] bwg (yarn class_1603 RangedAttackMob): skeletons, pillagers, drowned, witches
+C net/minecraft/world/item/AxeItem                                                   # [forge] patches/minecraft/net/minecraft/world/item/AxeItem.java.patch
+M net/minecraft/world/entity/Entity m_146892_ ()Lnet/minecraft/world/phys/Vec3;        # [srg] getEyePosition, declared on Entity (the original links it through ServerPlayer): a mob's eye
+M net/minecraft/world/entity/Entity m_20154_ ()Lnet/minecraft/world/phys/Vec3;         # [srg] getLookAngle, declared on Entity (the original links it through ServerPlayer): a mob's aim
+
+
+# --- 6.0.0: the kakuja's passive (vanish, dash; server/KakujaPassive), a spent kagune (server/KaguneLock) ---------------------
+C net/minecraftforge/event/entity/living/LivingChangeTargetEvent                    # [forge] 1.20.1 event/entity/living/LivingChangeTargetEvent.java (@Cancelable, extends LivingEvent)
+M net/minecraftforge/event/entity/living/LivingChangeTargetEvent getNewTarget ()Lnet/minecraft/world/entity/LivingEntity;  # [forge] LivingChangeTargetEvent.getNewTarget
+M net/minecraftforge/event/entity/living/LivingChangeTargetEvent setNewTarget (Lnet/minecraft/world/entity/LivingEntity;)V  # [forge] LivingChangeTargetEvent.setNewTarget
+C net/minecraftforge/event/entity/player/AttackEntityEvent                           # [forge] 1.20.1 event/entity/player/AttackEntityEvent.java (extends PlayerEvent)
+C net/minecraftforge/event/entity/player/ArrowLooseEvent                            # [forge] 1.20.1 event/entity/player/ArrowLooseEvent.java (extends PlayerEvent)
+F net/minecraft/world/effect/MobEffects f_19609_ Lnet/minecraft/world/effect/MobEffect;  # [order] INVISIBILITY: 14th field 'n' (speed=f_19596_ 'a', jump=f_19603_ 'h'); yarn StatusEffects field_5905
+M net/minecraft/world/entity/Mob m_6710_ (Lnet/minecraft/world/entity/LivingEntity;)V  # [srg] setTarget: joined.tsrg bgb.h (Lbfz;)V (bgb = class_1308 Mob, bfz = LivingEntity)
+F net/minecraft/client/Options f_92087_ Lnet/minecraft/client/KeyMapping;            # [srg] keyDown, enr.z (yarn backKey field_1881): S held with a right click (the kakuja's dash back)
+F net/minecraft/client/Options f_92091_ Lnet/minecraft/client/KeyMapping;            # [srg] keySprint, enr.D: joined.tsrg f_92091_, intermediary field_1867, yarn sprintKey: Centipede Dominion rushes
+M net/minecraftforge/client/event/RenderPlayerEvent$Pre setCanceled (Z)V             # [forge] eventbus Event.setCanceled; RenderPlayerEvent.Pre is @Cancelable (PlayerRenderer.render returns before drawing)
+M net/minecraft/world/entity/Entity m_20142_ ()Z                                      # [srg] isSprinting, joined.tsrg bfj.bV (bfj = class_1297 Entity): the kakuja's vanish starts as he breaks into a sprint
+M net/minecraft/world/entity/Entity m_20069_ ()Z  # [srg] isInWater, bfj.aV (yarn method_5799 isTouchingWater)
+M net/minecraft/world/entity/Entity m_146870_ ()V  # [srg] discard, bfj.ai (yarn method_31472 discard): 6.0.10 a spike whose tick failed is removed (Safety)
+C net/minecraftforge/client/event/RenderHandEvent                                   # [forge] 1.20.1 client/event/RenderHandEvent.java (@Cancelable; posted by ForgeHooksClient.renderSpecificFirstPersonHand before each hand)
+M net/minecraftforge/client/event/RenderHandEvent getHand ()Lnet/minecraft/world/InteractionHand;  # [forge] RenderHandEvent.getHand
+M net/minecraftforge/client/event/RenderHandEvent getPoseStack ()Lcom/mojang/blaze3d/vertex/PoseStack;  # [forge] RenderHandEvent.getPoseStack
+M net/minecraftforge/client/event/RenderHandEvent getMultiBufferSource ()Lnet/minecraft/client/renderer/MultiBufferSource;  # [forge] RenderHandEvent.getMultiBufferSource
+C net/minecraftforge/client/event/RenderBlockScreenEffectEvent                       # [forge] 1.20.1 client/event/RenderBlockScreenEffectEvent.java (@Cancelable; posted by ForgeHooksClient.renderBlockOverlay/renderWaterOverlay/renderFireOverlay from ScreenEffectRenderer.java.patch for the player's own head; 1.0.11)
+M net/minecraftforge/client/event/RenderHandEvent getPackedLight ()I                 # [forge] RenderHandEvent.getPackedLight
+M net/minecraftforge/client/event/RenderHandEvent getPartialTick ()F                 # [forge] RenderHandEvent.getPartialTick
+M net/minecraftforge/client/event/RenderHandEvent getInterpolatedPitch ()F          # [forge] RenderHandEvent.getInterpolatedPitch (the camera's pitch, degrees)
+M net/minecraftforge/client/event/RenderHandEvent getItemStack ()Lnet/minecraft/world/item/ItemStack;  # [forge] RenderHandEvent.getItemStack
+M net/minecraftforge/client/event/RenderHandEvent setCanceled (Z)V                   # [forge] eventbus Event.setCanceled; RenderHandEvent is @Cancelable
+C net/minecraft/world/entity/HumanoidArm                                            # [srg] bft (yarn class_1306 Arm; joined.tsrg C_520_): LEFT, RIGHT, RenderArmEvent.getArm's type (read only as an Enum's ordinal)
+C net/minecraftforge/client/event/RenderArmEvent                                    # [forge] 1.20.1 client/event/RenderArmEvent.java (@Cancelable; posted by ForgeHooksClient.renderSpecificFirstPersonArm from ItemInHandRenderer.renderPlayerArm, before an empty hand's arm)
+M net/minecraftforge/client/event/RenderArmEvent getArm ()Lnet/minecraft/world/entity/HumanoidArm;  # [forge] RenderArmEvent.getArm
+M net/minecraftforge/client/event/RenderArmEvent getPoseStack ()Lcom/mojang/blaze3d/vertex/PoseStack;  # [forge] RenderArmEvent.getPoseStack
+M net/minecraftforge/client/event/RenderArmEvent getMultiBufferSource ()Lnet/minecraft/client/renderer/MultiBufferSource;  # [forge] RenderArmEvent.getMultiBufferSource
+M net/minecraftforge/client/event/RenderArmEvent getPackedLight ()I                  # [forge] RenderArmEvent.getPackedLight
+M net/minecraftforge/client/event/RenderArmEvent getPlayer ()Lnet/minecraft/client/player/AbstractClientPlayer;  # [forge] RenderArmEvent.getPlayer
+F net/minecraft/world/entity/Entity f_19859_ F                                      # [srg] yRotO: joined.tsrg bfj.M (yarn prevYaw field_5982); the original reads it too: the first-person blade's head turn
+
+# --- 6.1.0 ghoul eyes: Resistance I and Strength I while only the kakugan is open ----------------------------
+F net/minecraft/world/effect/MobEffects f_19600_ Lnet/minecraft/world/effect/MobEffect;  # [order] DAMAGE_BOOST (Strength): 5th field 'e' of bfc (speed=f_19596_ 'a', jump=f_19603_ 'h', resistance=f_19606_ 'k' as the original uses); joined.tsrg bfc e f_19600_, intermediary field_5910 (yarn StatusEffects.STRENGTH)
+
+# --- 6.1.0 Eto's base form: steam wisps drawn as three crossed planes (client/fx/EtoSteam) ---------------------
+M com/lowdragmc/photon/client/gameobject/particle/TileParticle renderInternal (Lcom/mojang/blaze3d/vertex/VertexConsumer;Lnet/minecraft/client/Camera;F)V  # [photon] public void renderInternal(@Nonnull VertexConsumer buffer, Camera camera, float partialTicks): overridden by EtoSteam.Wisp (Photon's own render calls it when the particle is visible and not delayed)
+M com/lowdragmc/photon/client/gameobject/particle/TileParticle getWorldPos (F)Lorg/joml/Vector3f;  # [photon] public Vector3f getWorldPos(float partialTicks): local position interpolated, through the emitter's space transform
+M com/lowdragmc/photon/client/gameobject/particle/TileParticle getRealLight (F)I   # [photon] public int getRealLight(float partialTicks): the light Photon samples at the particle (updateLight)
+M com/mojang/blaze3d/vertex/VertexConsumer m_5483_ (DDD)Lcom/mojang/blaze3d/vertex/VertexConsumer;  # [srg] vertex(double, double, double): joined.tsrg ein a (DDD)Lein; m_5483_, intermediary method_22912, yarn VertexConsumer.vertex (Photon's renderInternal makes the same call)
+
+# --- 6.1.0: Eto's speed blitz -------------------------------------------------------------------------
+C net/minecraft/world/entity/ai/attributes/Attributes                                # [srg] bhg (yarn EntityAttributes, intermediary class_5134): the vanilla attributes
+C net/minecraft/world/entity/ai/attributes/Attribute                                 # [srg] bhb (yarn EntityAttribute, intermediary class_1320), the type of every Attributes field
+F net/minecraft/world/entity/ai/attributes/Attributes f_22278_ Lnet/minecraft/world/entity/ai/attributes/Attribute;  # [order] KNOCKBACK_RESISTANCE: 3rd field 'c' of bhg (MAX_HEALTH a, FOLLOW_RANGE b, KNOCKBACK_RESISTANCE c, MOVEMENT_SPEED d); joined.tsrg bhg c f_22278_: heavy bodies are pushed less by her blows
+M net/minecraft/world/entity/LivingEntity m_21133_ (Lnet/minecraft/world/entity/ai/attributes/Attribute;)D  # [srg] getAttributeValue: yarn method_26825, obf bfz.b (Lbhb;)D, tsrg m_21133_
+C net/minecraftforge/client/event/RenderLivingEvent$Pre                              # [forge] 1.20.1 client/event/RenderLivingEvent.java; posted first in LivingEntityRenderer.render, before its pushPose (LivingEntityRenderer.java.patch): a struck body reels
+C net/minecraftforge/client/event/RenderLivingEvent$Post                             # [forge] same; posted last in LivingEntityRenderer.render, after its popPose and the name tag
+M net/minecraftforge/client/event/RenderLivingEvent getEntity ()Lnet/minecraft/world/entity/LivingEntity;  # [forge] same (field entity; T extends LivingEntity erases to it)
+M net/minecraftforge/client/event/RenderLivingEvent getPartialTick ()F             # [forge] same (field partialTick)
+M net/minecraftforge/client/event/RenderLivingEvent getPoseStack ()Lcom/mojang/blaze3d/vertex/PoseStack;  # [forge] same (field poseStack)
+M net/minecraftforge/client/event/RenderLivingEvent getRenderer ()Lnet/minecraft/client/renderer/entity/LivingEntityRenderer;  # [forge] 1.20.1 RenderLivingEvent.java: public LivingEntityRenderer<T, M> getRenderer() (field renderer); 1.0.13 a body cut in half is drawn twice
+M net/minecraftforge/client/event/RenderLivingEvent getMultiBufferSource ()Lnet/minecraft/client/renderer/MultiBufferSource;  # [forge] same: public MultiBufferSource getMultiBufferSource()
+M net/minecraftforge/client/event/RenderLivingEvent getPackedLight ()I              # [forge] same: public int getPackedLight()
+M net/minecraft/client/renderer/entity/LivingEntityRenderer m_7392_ (Lnet/minecraft/world/entity/LivingEntity;FFLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V  # [srg] render: joined.tsrg fpz.a (Lbfz;FFLeij;Lfjx;I)V m_7392_ (bfz LivingEntity, eij PoseStack, fjx MultiBufferSource; the Entity bridge is fpz.a (Lbfj;...)); yarn names it render on EntityRenderer (class_897), overridden by class_922
+F net/minecraft/client/player/LocalPlayer f_108618_ Lnet/minecraft/client/player/Input;  # [srg] input: yarn ClientPlayerEntity.input field_3913, obf fiy.cm Lfiw;: Eto's flip goes the way she is moving (W S A D)
+
+# --- 6.1.0: Eto's launched bodies smash weak blocks; they grow back (BlockSmash) -----------------------
+# BlockSmash takes a block out as /setblock does (Clearable.tryClear, setBlock flags 2|16), keeps its state and block-entity NBT
+# in SavedData, and puts both back. Evidence: joined.tsrg owner + descriptor, intermediary, yarn (scratch lookups).
+C net/minecraft/core/Vec3i                                                          # [srg] hz (class_2382 Vec3i): BlockPos's superclass
+M net/minecraft/core/Vec3i m_123342_ ()I                                             # [srg] getY, hz.v ()I (yarn Vec3i.getY method_10264): smashed blocks grow back lowest first
+M net/minecraft/core/BlockPos <init> (III)V                                         # [srg] gu(int, int, int) (yarn BlockPos(int, int, int))
+C net/minecraft/core/HolderGetter                                                   # [srg] hf (class_7871 RegistryEntryLookup)
+C net/minecraft/core/HolderLookup                                                   # [srg] hg (class_7225 RegistryWrapper), extends hf
+C net/minecraft/core/registries/Registries                                          # [srg] jc (class_7924 RegistryKeys)
+F net/minecraft/core/registries/Registries f_256747_ Lnet/minecraft/resources/ResourceKey;  # [srg] BLOCK, jc.e (yarn RegistryKeys.BLOCK)
+M net/minecraft/world/level/LevelReader m_246945_ (Lnet/minecraft/resources/ResourceKey;)Lnet/minecraft/core/HolderLookup;  # [srg] holderLookup, cmp.a (Lacp;)Lhg; (yarn WorldView.createCommandRegistryWrapper method_45448)
+M net/minecraft/world/level/LevelAccessor m_46796_ (ILnet/minecraft/core/BlockPos;I)V  # [srg] levelEvent(type, pos, data), cmn.c (ILgu;I)V (yarn WorldAccess.syncWorldEvent method_20290): 2001 = block break particles and sound
+M net/minecraft/world/level/Level m_7702_ (Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/block/entity/BlockEntity;  # [srg] getBlockEntity, cmm.c_ (Lgu;)Lczn;
+M net/minecraft/world/level/Level m_7731_ (Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z  # [srg] setBlock(pos, state, flags), cmm.a (Lgu;Ldcb;I)Z
+M net/minecraft/world/level/Level m_7966_ (Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/core/BlockPos;)Z  # [srg] mayInteract, cmm.a (Lbyo;Lgu;)Z (yarn World.canPlayerModifyAt method_8505): spawn protection
+M net/minecraft/server/level/ServerLevel m_8895_ ()Lnet/minecraft/world/level/storage/DimensionDataStorage;  # [srg] getDataStorage, aif.s ()Ldyu; (yarn ServerWorld.getPersistentStateManager method_17983)
+M net/minecraft/server/level/ServerLevel m_6907_ ()Ljava/util/List;               # [srg] players, aif.v ()Ljava/util/List; (yarn ServerWorld.getPlayers method_18456)
+C net/minecraft/world/level/storage/DimensionDataStorage                             # [srg] dyu (class_26 PersistentStateManager)
+M net/minecraft/world/level/storage/DimensionDataStorage m_164861_ (Ljava/util/function/Function;Ljava/util/function/Supplier;Ljava/lang/String;)Lnet/minecraft/world/level/saveddata/SavedData;  # [srg] computeIfAbsent(load, create, name), dyu.a (Function;Supplier;String)Ldyj; (yarn getOrCreate method_17924)
+C net/minecraft/world/level/saveddata/SavedData                                      # [srg] dyj (class_18 PersistentState)
+M net/minecraft/world/level/saveddata/SavedData m_7176_ (Lnet/minecraft/nbt/CompoundTag;)Lnet/minecraft/nbt/CompoundTag;  # [srg] save, dyj.a (Lqr;)Lqr; (yarn PersistentState.writeNbt method_75); overridden
+M net/minecraft/world/level/saveddata/SavedData m_77762_ ()V                         # [srg] setDirty, dyj.b ()V (yarn PersistentState.markDirty method_80)
+C net/minecraft/nbt/ListTag                                                          # [srg] qx (class_2499 NbtList), an AbstractList<Tag>
+M net/minecraft/nbt/ListTag m_128728_ (I)Lnet/minecraft/nbt/CompoundTag;              # [srg] getCompound(index), qx.a (I)Lqr; (yarn NbtList.getCompound method_10602)
+M net/minecraft/nbt/CompoundTag m_128437_ (Ljava/lang/String;I)Lnet/minecraft/nbt/ListTag;  # [srg] getList(key, type), qr.c (Ljava/lang/String;I)Lqx; (yarn NbtCompound.getList method_10554)
+C net/minecraft/nbt/NbtUtils                                                        # [srg] rd (class_2512 NbtHelper)
+M net/minecraft/nbt/NbtUtils m_129224_ (Lnet/minecraft/core/BlockPos;)Lnet/minecraft/nbt/CompoundTag;  # [srg] writeBlockPos, rd.a (Lgu;)Lqr; (yarn NbtHelper.fromBlockPos method_10692)
+M net/minecraft/nbt/NbtUtils m_129239_ (Lnet/minecraft/nbt/CompoundTag;)Lnet/minecraft/core/BlockPos;  # [srg] readBlockPos, rd.b (Lqr;)Lgu; (yarn NbtHelper.toBlockPos method_10691)
+M net/minecraft/nbt/NbtUtils m_129202_ (Lnet/minecraft/world/level/block/state/BlockState;)Lnet/minecraft/nbt/CompoundTag;  # [srg] writeBlockState, rd.a (Ldcb;)Lqr; (yarn NbtHelper.fromBlockState method_10686)
+M net/minecraft/nbt/NbtUtils m_247651_ (Lnet/minecraft/core/HolderGetter;Lnet/minecraft/nbt/CompoundTag;)Lnet/minecraft/world/level/block/state/BlockState;  # [srg] readBlockState(blocks, tag), rd.a (Lhf;Lqr;)Ldcb; (yarn NbtHelper.toBlockState method_10681)
+C net/minecraft/tags/BlockTags                                                      # [srg] amw (class_3481 BlockTags)
+F net/minecraft/tags/BlockTags f_144282_ Lnet/minecraft/tags/TagKey;                  # [order] MINEABLE_WITH_PICKAXE: amw.bz, intermediary field_33715 (yarn PICKAXE_MINEABLE), between f_144281_ hoe and f_144283_ shovel in declaration order
+C net/minecraft/world/Clearable                                                     # [srg] bdo (class_3829 Clearable)
+M net/minecraft/world/Clearable m_18908_ (Ljava/lang/Object;)V                       # [srg] tryClear(object), bdo.a_ (Ljava/lang/Object;)V (yarn static Clearable.clear method_16825), as /setblock clears a block entity
+C net/minecraft/world/level/block/Block                                             # [srg] cpn (class_2248 Block)
+M net/minecraft/world/level/block/Block m_49956_ (Lnet/minecraft/world/level/block/state/BlockState;)I  # [srg] getId(state), cpn.i (Ldcb;)I (yarn getRawIdFromState method_9507)
+M net/minecraft/world/level/block/Block m_49966_ ()Lnet/minecraft/world/level/block/state/BlockState;  # [srg] defaultBlockState, cpn.n ()Ldcb; (yarn getDefaultState method_9564)
+C net/minecraft/world/level/block/Blocks                                            # [srg] cpo (class_2246 Blocks)
+F net/minecraft/world/level/block/Blocks f_50016_ Lnet/minecraft/world/level/block/Block;  # [order] AIR: cpo.a, the first field (intermediary field_10124)
+C net/minecraft/world/level/block/LiquidBlock                                       # [srg] cua (class_2404 FluidBlock)
+C net/minecraft/world/level/block/entity/BlockEntity                                # [srg] czn (class_2586 BlockEntity)
+M net/minecraft/world/level/block/entity/BlockEntity m_187480_ ()Lnet/minecraft/nbt/CompoundTag;  # [srg] saveWithFullMetadata, czn.m ()Lqr; (yarn createNbtWithIdentifyingData method_38242)
+M net/minecraft/world/level/block/entity/BlockEntity m_142466_ (Lnet/minecraft/nbt/CompoundTag;)V  # [srg] load, czn.a (Lqr;)V (yarn readNbt method_11014)
+M net/minecraft/world/level/block/entity/BlockEntity m_6596_ ()V                       # [srg] setChanged, czn.e ()V (yarn markDirty method_5431)
+M net/minecraft/world/level/block/entity/BlockEntity m_58903_ ()Lnet/minecraft/world/level/block/entity/BlockEntityType;  # [srg] getType, czn.u ()Lczp; (yarn getType method_11017)
+C net/minecraft/world/level/block/entity/BlockEntityType                            # [srg] czp (class_2591 BlockEntityType)
+M net/minecraft/world/level/block/entity/BlockEntityType m_58954_ (Lnet/minecraft/world/level/block/entity/BlockEntityType;)Lnet/minecraft/resources/ResourceLocation;  # [srg] getKey(type), czp.a (Lczp;)Lacq; (yarn getId method_11033)
+M net/minecraft/world/level/block/state/BlockBehaviour$BlockStateBase m_60795_ ()Z  # [srg] isAir, dca$a.i ()Z (class_4970$class_4971 AbstractBlockState)
+M net/minecraft/world/level/block/state/BlockBehaviour$BlockStateBase m_60800_ (Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;)F  # [srg] getDestroySpeed, dca$a.h (Lcls;Lgu;)F
+M net/minecraft/world/level/block/state/BlockBehaviour$BlockStateBase m_204336_ (Lnet/minecraft/tags/TagKey;)Z  # [srg] is(tag), dca$a.a (Lanl;)Z
+M net/minecraft/world/level/block/state/BlockBehaviour$BlockStateBase m_60834_ ()Z  # [srg] requiresCorrectToolForDrops, dca$a.y ()Z
+M net/minecraft/world/level/block/state/BlockBehaviour$BlockStateBase m_60734_ ()Lnet/minecraft/world/level/block/Block;  # [srg] getBlock, dca$a.b ()Lcpn;
+M net/minecraft/world/level/block/state/BlockBehaviour$BlockStateBase m_60819_ ()Lnet/minecraft/world/level/material/FluidState;  # [srg] getFluidState, dca$a.u ()Ldxe;
+C net/minecraft/world/level/material/FluidState                                     # [srg] dxe (class_3610 FluidState)
+M net/minecraft/world/level/material/FluidState m_76170_ ()Z                          # [srg] isSource, dxe.b ()Z (yarn FluidState.isStill method_15771)
+M net/minecraft/world/phys/AABB m_82381_ (Lnet/minecraft/world/phys/AABB;)Z           # [srg] intersects(other), eed.c (Leed;)Z (yarn Box.intersects method_994)
+M net/minecraft/world/entity/player/Player m_36326_ ()Z                               # [srg] mayBuild, byo.fZ ()Z (yarn PlayerEntity.canModifyBlocks method_7294): not in adventure mode
+M net/minecraft/world/entity/Entity m_20238_ (Lnet/minecraft/world/phys/Vec3;)D       # [srg] distanceToSqr(point), bfj.e (Leei;)D (yarn Entity.squaredDistanceTo method_5707)
+M net/minecraft/server/players/PlayerList m_11259_ (Ljava/util/UUID;)Lnet/minecraft/server/level/ServerPlayer;  # [srg] getPlayer(uuid), alk.a (Ljava/util/UUID;)Laig; (yarn PlayerManager.getPlayer method_14602)
+M net/minecraft/resources/ResourceLocation m_135827_ ()Ljava/lang/String;           # [srg] getNamespace, acq.b ()Ljava/lang/String; (yarn Identifier.getNamespace method_12836)
+C net/minecraftforge/event/TickEvent$LevelTickEvent                                 # [forge] 1.20.1 event/TickEvent.java: LevelTickEvent, START and END around each level's tick
+F net/minecraftforge/event/TickEvent$LevelTickEvent level Lnet/minecraft/world/level/Level;  # [forge] 1.20.1 event/TickEvent.java LevelTickEvent (public final Level level), posted around each level's tick
+C net/minecraftforge/event/level/BlockEvent$BreakEvent                              # [forge] 1.20.1 event/level/BlockEvent.java; claim and protection mods cancel it (ServerPlayerGameMode posts it before every break)
+M net/minecraftforge/event/level/BlockEvent$BreakEvent <init> (Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/entity/player/Player;)V  # [forge] same, BreakEvent(Level, BlockPos, BlockState, Player)
+M net/minecraftforge/eventbus/api/IEventBus post (Lnet/minecraftforge/eventbus/api/Event;)Z  # [forge] eventbus 6.0 IEventBus.post: true when cancelled
+C net/minecraftforge/event/server/ServerStoppingEvent                               # [forge] 1.20.1 event/server/ServerStoppingEvent.java, posted before the levels' final save
+M net/minecraftforge/event/server/ServerLifecycleEvent getServer ()Lnet/minecraft/server/MinecraftServer;  # [forge] event/server/ServerLifecycleEvent.java
+
+
+# --- 6.2.0, the Speed Kick: a kicked body's head snaps round (its own head turn and pitch, put on for the frame it is drawn), and it
+# --- is down from the tick it touches the ground (client and server alike). Joined on the obfuscated name across MCPConfig 1.20.1
+# --- joined.tsrg, Fabric intermediary 1.20.1.tiny and Yarn 1.20.1 (bfj = Entity, bfz = LivingEntity).
+F net/minecraft/world/entity/LivingEntity f_20885_ F                                  # [srg] yHeadRot: joined.tsrg bfz.aX, intermediary field_6241, yarn headYaw
+F net/minecraft/world/entity/LivingEntity f_20886_ F                                  # [srg] yHeadRotO: joined.tsrg bfz.aY, intermediary field_6259, yarn prevHeadYaw
+F net/minecraft/world/entity/Entity f_19860_ F                                        # [srg] xRotO: joined.tsrg bfj.N, intermediary field_6004, yarn prevPitch
+M net/minecraft/world/entity/Entity m_146909_ ()F                                     # [srg] getXRot: joined.tsrg bfj.dA ()F, intermediary method_36455, yarn getPitch
+M net/minecraft/world/entity/Entity m_146926_ (F)V                                    # [srg] setXRot: joined.tsrg bfj.b_ (F)V, intermediary method_36457, yarn setPitch
+M net/minecraft/world/entity/Entity m_20096_ ()Z                                      # [srg] onGround: joined.tsrg bfj.ay ()Z, intermediary method_24828, yarn isOnGround
+# --- 6.2.0, the Mutated Arm: her own right arm and its sleeve are not drawn while the flesh is in their place (put back as they
+# --- were), and the arm stops short of anything solid along it. Joined on the obfuscated name across MCPConfig 1.20.1 joined.tsrg,
+# --- Fabric intermediary 1.20.1.tiny and Yarn 1.20.1 (fck = PlayerModel, eeg = HitResult).
+C net/minecraft/client/model/PlayerModel                                               # [srg] joined.tsrg fck C_3853_, intermediary class_591, yarn PlayerEntityModel
+F net/minecraft/client/model/PlayerModel f_103375_ Lnet/minecraft/client/model/geom/ModelPart; # [srg] rightSleeve: joined.tsrg fck.w, intermediary field_3486, yarn rightSleeve
+M net/minecraft/world/phys/HitResult m_82450_ ()Lnet/minecraft/world/phys/Vec3;        # [srg] getLocation: joined.tsrg eeg.e ()Leei;, intermediary method_17784, yarn getPos
+# --- 6.2.0, the Owl (Eto's first kakuja): her arms and sleeves drawn thicker in it (HexHaki's haki physique), by the model part's
+# --- own scale, put back after. Joined as above (fee = ModelPart, fck = PlayerModel).
+F net/minecraft/client/model/geom/ModelPart f_233553_ F                               # [srg] xScale: joined.tsrg fee.h, intermediary field_37938, yarn xScale
+F net/minecraft/client/model/geom/ModelPart f_233555_ F                               # [srg] zScale: joined.tsrg fee.j, intermediary field_37940, yarn zScale
+F net/minecraft/client/model/PlayerModel f_103374_ Lnet/minecraft/client/model/geom/ModelPart; # [srg] leftSleeve: joined.tsrg fck.b, intermediary field_3484, yarn leftSleeve
+# --- 6.2.0, You Thought You'd Get Rid of Me That Easily?: everything acts as if she died. While she is in pieces she is made
+# --- invulnerable (no mob's targeting takes her), and every mob that was after her forgets her: its target and who hurt it, a
+# --- neutral mob's anger, its brain's memories of her, the Warden's anger, the Wither's heads. Joined on the obfuscated name across
+# --- MCPConfig 1.20.1 joined.tsrg, Fabric intermediary 1.20.1.tiny and Yarn 1.20.1 (bfj = Entity, bfz = LivingEntity,
+# --- bgg = NeutralMob, bha = Brain, bpb = MemoryModuleType, bxs = Warden, buv = WitherBoss).
+M net/minecraft/world/entity/Entity m_20331_ (Z)V                                     # [srg] setInvulnerable: joined.tsrg bfj.m (Z)V, intermediary method_5684, yarn setInvulnerable
+M net/minecraft/world/entity/Entity m_20147_ ()Z                                      # [srg] isInvulnerable: joined.tsrg bfj.co ()Z, intermediary method_5655, yarn isInvulnerable
+M net/minecraft/world/entity/LivingEntity m_6274_ ()Lnet/minecraft/world/entity/ai/Brain; # [srg] getBrain: joined.tsrg bfz.dK ()Lbha;, intermediary method_18868, yarn getBrain
+M net/minecraft/world/entity/LivingEntity m_21188_ ()Lnet/minecraft/world/entity/LivingEntity; # [srg] getLastHurtByMob: joined.tsrg bfz.ed ()Lbfz;, intermediary method_6065, yarn getAttacker
+M net/minecraft/world/entity/LivingEntity m_6703_ (Lnet/minecraft/world/entity/LivingEntity;)V # [srg] setLastHurtByMob: joined.tsrg bfz.a (Lbfz;)V, intermediary method_6015, yarn setAttacker
+C net/minecraft/world/entity/NeutralMob                                                # [srg] joined.tsrg bgg C_532_, intermediary class_5354, yarn Angerable
+M net/minecraft/world/entity/NeutralMob m_6120_ ()Ljava/util/UUID;                    # [srg] getPersistentAngerTarget: joined.tsrg bgg.b ()Ljava/util/UUID;, intermediary method_29508, yarn getAngryAt
+M net/minecraft/world/entity/NeutralMob m_21662_ ()V                                  # [srg] stopBeingAngry: joined.tsrg bgg.O_ ()V, intermediary method_29922, yarn stopAnger
+C net/minecraft/world/entity/ai/Brain                                                  # [srg] joined.tsrg bha C_548_, intermediary class_4095, yarn Brain
+M net/minecraft/world/entity/ai/Brain m_21936_ (Lnet/minecraft/world/entity/ai/memory/MemoryModuleType;)V # [srg] eraseMemory: joined.tsrg bha.b (Lbpb;)V, intermediary method_18875, yarn forget
+M net/minecraft/world/entity/ai/Brain m_257414_ (Lnet/minecraft/world/entity/ai/memory/MemoryModuleType;)Ljava/util/Optional; # [srg] getMemoryInternal (null when unregistered): joined.tsrg bha.d (Lbpb;)Ljava/util/Optional;, intermediary method_46873, yarn getOptionalMemory
+C net/minecraft/world/entity/ai/memory/MemoryModuleType                                # [srg] joined.tsrg bpb C_753_, intermediary class_4140, yarn MemoryModuleType
+C net/minecraft/world/entity/monster/warden/Warden                                    # [srg] joined.tsrg bxs C_213061_, intermediary class_7260, yarn WardenEntity
+M net/minecraft/world/entity/monster/warden/Warden m_219428_ (Lnet/minecraft/world/entity/Entity;)V # [srg] clearAnger: joined.tsrg bxs.b (Lbfj;)V, intermediary method_42211, yarn removeSuspect
+C net/minecraft/world/entity/boss/wither/WitherBoss                                    # [srg] joined.tsrg buv C_964_, intermediary class_1528, yarn WitherEntity
+M net/minecraft/world/entity/boss/wither/WitherBoss m_31512_ (I)I                     # [srg] getAlternativeTarget: joined.tsrg buv.t (I)I, intermediary method_6882, yarn getTrackedEntityId
+M net/minecraft/world/entity/boss/wither/WitherBoss m_31454_ (II)V                    # [srg] setAlternativeTarget: joined.tsrg buv.a (II)V, intermediary method_6876, yarn setTrackedEntityId
+F net/minecraftforge/registries/ForgeRegistries MEMORY_MODULE_TYPES Lnet/minecraftforge/registries/IForgeRegistry; # [forge] 1.20.1 registries/ForgeRegistries.java:89
+M net/minecraftforge/registries/IForgeRegistry getValue (Lnet/minecraft/resources/ResourceLocation;)Ljava/lang/Object; # [forge] 1.20.1 registries/IForgeRegistry.java:43
+
+# --- 7.0.0, Furuta DNA: with a sword or an axe in hand his M1 is his own blade, swung and landed as Minecraft does it (its damage,
+# --- enchantments, sweep, cooldown), the kagune following through; the kakuja's claws swing the arms. Joined on the obfuscated name
+# --- across MCPConfig 1.20.1 joined.tsrg and Fabric intermediary 1.20.1.tiny (byo = Player, bfz = LivingEntity, bfj = Entity,
+# --- bdw = InteractionHand).
+M net/minecraft/world/entity/player/Player m_5706_ (Lnet/minecraft/world/entity/Entity;)V # [srg] attack: joined.tsrg byo.d (Lbfj;)V, intermediary method_7324, yarn attack
+M net/minecraft/world/entity/LivingEntity m_21011_ (Lnet/minecraft/world/InteractionHand;Z)V # [srg] swing(hand, sendToSwingingEntity): joined.tsrg bfz.a (Lbdw;Z)V, intermediary method_23667, yarn swingHand
+
+# --- 7.0.1: Ghoul Meat (an item of the expansion's own; eaten for permanent strength and RC endurance) --------------------------
+C net/minecraft/world/item/Item$Properties                                           # [srg] cfu$a = C_1381_$C_1383_ (yarn Item$Settings, intermediary class_1792$class_1793)
+M net/minecraft/world/item/Item <init> (Lnet/minecraft/world/item/Item$Properties;)V  # [srg] cfu.<init>(Lcfu$a;)V (yarn Item(Item.Settings))
+M net/minecraft/world/item/Item$Properties m_41489_ (Lnet/minecraft/world/food/FoodProperties;)Lnet/minecraft/world/item/Item$Properties;  # [srg] food: cfu$a.a(Lcbc;)Lcfu$a; (intermediary method_19265, yarn food)
+C net/minecraft/world/food/FoodProperties$Builder                                    # [srg] cbc$a = C_1220_$C_1222_ (yarn FoodComponent$Builder, intermediary class_4174$class_4175)
+M net/minecraft/world/food/FoodProperties$Builder m_38760_ (I)Lnet/minecraft/world/food/FoodProperties$Builder;  # [srg] nutrition: cbc$a.a(I) (intermediary method_19238, yarn hunger)
+M net/minecraft/world/food/FoodProperties$Builder m_38758_ (F)Lnet/minecraft/world/food/FoodProperties$Builder;  # [srg] saturationMod: cbc$a.a(F) (intermediary method_19237, yarn saturationModifier)
+M net/minecraft/world/food/FoodProperties$Builder m_38757_ ()Lnet/minecraft/world/food/FoodProperties$Builder;  # [srg] meat: cbc$a.a() (intermediary method_19236, yarn meat)
+M net/minecraft/world/food/FoodProperties$Builder m_38765_ ()Lnet/minecraft/world/food/FoodProperties$Builder;  # [srg] alwaysEat: cbc$a.b() (intermediary method_19240, yarn alwaysEdible)
+M net/minecraft/world/food/FoodProperties$Builder m_38767_ ()Lnet/minecraft/world/food/FoodProperties;  # [srg] build: cbc$a.d() (intermediary method_19242, yarn build)
+C net/minecraft/world/item/CreativeModeTabs                                          # [srg] ceg = C_243506_ (yarn ItemGroups, intermediary class_7706)
+F net/minecraft/world/item/CreativeModeTabs f_256839_ Lnet/minecraft/resources/ResourceKey;  # [srg] FOOD_AND_DRINKS: ceg.j (intermediary field_41061, yarn FOOD_AND_DRINK)
+C net/minecraftforge/event/BuildCreativeModeTabContentsEvent                         # [forge] 1.20.1 event/BuildCreativeModeTabContentsEvent.java (mod bus)
+M net/minecraftforge/event/BuildCreativeModeTabContentsEvent getTabKey ()Lnet/minecraft/resources/ResourceKey;  # [forge] BuildCreativeModeTabContentsEvent.java:56
+M net/minecraftforge/event/BuildCreativeModeTabContentsEvent accept (Ljava/util/function/Supplier;)V  # [forge] BuildCreativeModeTabContentsEvent.java:85 accept(Supplier<? extends ItemLike>)
+C net/minecraftforge/event/entity/player/ItemTooltipEvent                             # [forge] 1.20.1 event/entity/player/ItemTooltipEvent.java
+M net/minecraftforge/event/entity/player/ItemTooltipEvent getItemStack ()Lnet/minecraft/world/item/ItemStack;  # [forge] ItemTooltipEvent.java:49
+M net/minecraftforge/event/entity/player/ItemTooltipEvent getToolTip ()Ljava/util/List;  # [forge] ItemTooltipEvent.java:57
+F net/minecraft/world/effect/MobEffects f_19614_ Lnet/minecraft/world/effect/MobEffect;  # [order] POISON: 19th field 's' (hunger=f_19612_ 'q', weakness 'r')
+C com/mojang/brigadier/arguments/IntegerArgumentType                                 # [lib] Brigadier
+
+# --- 7.0.1: the quests (kills, meals, damage and the brink counted; rewards given; the day's hours for hunts) ------------------------
+M net/minecraft/world/entity/player/Player m_36356_ (Lnet/minecraft/world/item/ItemStack;)Z  # [srg] addItem: byo.i (Lcfz;)Z (intermediary method_7270, yarn giveItemStack)
+M net/minecraft/world/entity/player/Player m_36176_ (Lnet/minecraft/world/item/ItemStack;Z)Lnet/minecraft/world/entity/item/ItemEntity;  # [srg] drop(stack, thrower): byo.a (Lcfz;Z)Lbvh; (intermediary method_7328, yarn dropItem)
+M net/minecraft/world/entity/Entity m_6095_ ()Lnet/minecraft/world/entity/EntityType;  # [srg] getType: bfj.ae ()Lbfn; (intermediary method_5864, yarn getType)
+M net/minecraft/world/item/ItemStack <init> (Lnet/minecraft/world/level/ItemLike;I)V   # [srg] cfz.<init>(Lcmd;I)V (yarn ItemStack(ItemConvertible, int), intermediary class_1935)
+C net/minecraft/world/level/ItemLike                                                  # [srg] intermediary class_1935 (yarn ItemConvertible), implemented by Item
+M net/minecraft/world/level/Level m_46468_ ()J                                      # [srg] getDayTime: cmm.W ()J (intermediary method_8532, yarn getTimeOfDay)
+C net/minecraftforge/event/entity/living/LivingDamageEvent                           # [forge] 1.20.1 event/entity/living/LivingDamageEvent.java (fired after armor and effects)
+M net/minecraftforge/event/entity/living/LivingDamageEvent getSource ()Lnet/minecraft/world/damagesource/DamageSource;  # [forge] LivingDamageEvent.java:44
+M net/minecraftforge/event/entity/living/LivingDamageEvent getAmount ()F           # [forge] LivingDamageEvent.java:46
+
+# --- 7.0.2: the ghoul NPCs. Joined as above (MCPConfig joined.tsrg + Fabric intermediary 1.20.1 + yarn 1.20.1, from
+# --- raw.githubusercontent.com): bgi = PathfinderMob (class_1314 PathAwareEntity), bgb = Mob (class_1308), bfz = LivingEntity,
+# --- bfj = Entity, bfn = EntityType, cmm = Level (World), cmp = LevelReader (WorldView), clw = CollisionGetter (CollisionView),
+# --- cmu = LevelWriter (ModifiableWorld). Constructors keep <init>: class and descriptor joined the same way.
+C net/minecraft/world/entity/PathfinderMob                                           # [srg] bgi C_533_ (intermediary class_1314, yarn PathAwareEntity)
+M net/minecraft/world/entity/PathfinderMob <init> (Lnet/minecraft/world/entity/EntityType;Lnet/minecraft/world/level/Level;)V  # [srg] bgi.<init>(Lbfn;Lcmm;)V (yarn PathAwareEntity(EntityType, World), protected)
+M net/minecraft/world/entity/Mob m_8099_ ()V                                         # [srg] registerGoals: bgb.x ()V (intermediary method_5959, yarn initGoals)
+M net/minecraft/world/entity/Mob m_8024_ ()V                                         # [srg] customServerAiStep: bgb.W ()V (method_5958, yarn mobTick)
+M net/minecraft/world/entity/Mob m_21552_ ()Lnet/minecraft/world/entity/ai/attributes/AttributeSupplier$Builder;  # [srg] createMobAttributes: bgb.y ()Lbhf$a; (method_26828)
+M net/minecraft/world/entity/Mob m_21532_ ()Z                                        # [srg] isPersistenceRequired: bgb.fH ()Z (method_5947, yarn isPersistent)
+M net/minecraft/world/entity/Mob m_21530_ ()V                                       # [srg] setPersistenceRequired: bgb.fF ()V (method_5971, yarn setPersistent): an ally never despawns
+M net/minecraft/world/entity/Mob m_21573_ ()Lnet/minecraft/world/entity/ai/navigation/PathNavigation;  # [srg] getNavigation: bgb.J ()Lbpj; (method_5942)
+M net/minecraft/world/entity/Mob m_21563_ ()Lnet/minecraft/world/entity/ai/control/LookControl;  # [srg] getLookControl: bgb.E ()Lblx; (method_5988)
+F net/minecraft/world/entity/Mob f_21345_ Lnet/minecraft/world/entity/ai/goal/GoalSelector;  # [srg] goalSelector: bgb.bO (intermediary field_6201, yarn goalSelector)
+M net/minecraft/world/entity/LivingEntity m_7472_ (Lnet/minecraft/world/damagesource/DamageSource;IZ)V  # [srg] dropCustomDeathLoot: bfz.a (Lben;IZ)V (method_6099, yarn dropEquipment)
+M net/minecraft/world/entity/LivingEntity m_21051_ (Lnet/minecraft/world/entity/ai/attributes/Attribute;)Lnet/minecraft/world/entity/ai/attributes/AttributeInstance;  # [srg] getAttribute: bfz.a (Lbhb;)Lbhc; (method_5996, yarn getAttributeInstance)
+M net/minecraft/world/entity/LivingEntity m_142582_ (Lnet/minecraft/world/entity/Entity;)Z  # [srg] hasLineOfSight: bfz.B (Lbfj;)Z (method_6057, yarn canSee)
+M net/minecraft/world/entity/LivingEntity m_5634_ (F)V                               # [srg] heal: bfz.s (F)V (method_6025)
+M net/minecraft/world/entity/Entity m_19983_ (Lnet/minecraft/world/item/ItemStack;)Lnet/minecraft/world/entity/item/ItemEntity;  # [srg] spawnAtLocation: bfj.b (Lcfz;)Lbvh; (method_5775, yarn dropStack)
+M net/minecraft/world/entity/Entity m_6593_ (Lnet/minecraft/network/chat/Component;)V  # [srg] setCustomName: bfj.b (Lsw;)V (method_5665)
+M net/minecraft/world/entity/Entity m_7678_ (DDDFF)V                                 # [srg] moveTo(x, y, z, yaw, pitch): bfj.b (DDDFF)V (method_5808, yarn refreshPositionAndAngles)
+M net/minecraft/world/entity/Entity m_20145_ ()Z                                     # [srg] isInvisible: bfj.cb ()Z (method_5767)
+M net/minecraft/world/entity/EntityType m_20615_ (Lnet/minecraft/world/level/Level;)Lnet/minecraft/world/entity/Entity;  # [srg] create(level): bfn.a (Lcmm;)Lbfj; (method_5883)
+F net/minecraft/world/entity/MobCategory MONSTER Lnet/minecraft/world/entity/MobCategory;  # [srg] bgc.a MONSTER (enum constants keep their names; the original uses bgc.h MISC)
+C net/minecraft/world/entity/ai/goal/Goal                                            # [srg] bmv C_688_ (class_1352 Goal)
+C net/minecraft/world/entity/ai/goal/GoalSelector                                    # [srg] bmw C_690_ (class_1355 GoalSelector)
+M net/minecraft/world/entity/ai/goal/GoalSelector m_25352_ (ILnet/minecraft/world/entity/ai/goal/Goal;)V  # [srg] addGoal: bmw.a (ILbmv;)V (method_6277, yarn add)
+C net/minecraft/world/entity/ai/goal/FloatGoal                                       # [srg] bmp C_682_ (class_1347, yarn SwimGoal)
+M net/minecraft/world/entity/ai/goal/FloatGoal <init> (Lnet/minecraft/world/entity/Mob;)V  # [srg] bmp.<init>(Lbgb;)V (yarn SwimGoal(MobEntity))
+C net/minecraft/world/entity/ai/goal/RandomLookAroundGoal                            # [srg] bnq C_714_ (class_1376, yarn LookAroundGoal)
+M net/minecraft/world/entity/ai/goal/RandomLookAroundGoal <init> (Lnet/minecraft/world/entity/Mob;)V  # [srg] bnq.<init>(Lbgb;)V (yarn LookAroundGoal(MobEntity))
+C net/minecraft/world/entity/ai/goal/LookAtPlayerGoal                                # [srg] bnd C_701_ (class_1361, yarn LookAtEntityGoal)
+M net/minecraft/world/entity/ai/goal/LookAtPlayerGoal <init> (Lnet/minecraft/world/entity/Mob;Ljava/lang/Class;F)V  # [srg] bnd.<init>(Lbgb;Ljava/lang/Class;F)V (yarn LookAtEntityGoal(MobEntity, Class, float))
+C net/minecraft/world/entity/ai/navigation/PathNavigation                            # [srg] bpj C_758_ (class_1408, yarn EntityNavigation)
+M net/minecraft/world/entity/ai/navigation/PathNavigation m_5624_ (Lnet/minecraft/world/entity/Entity;D)Z  # [srg] moveTo(entity, speed): bpj.a (Lbfj;D)Z (method_6335, yarn startMovingTo)
+M net/minecraft/world/entity/ai/navigation/PathNavigation m_26519_ (DDDD)Z           # [srg] moveTo(x, y, z, speed): bpj.a (DDDD)Z (method_6337, yarn startMovingTo)
+M net/minecraft/world/entity/ai/navigation/PathNavigation m_26573_ ()V                # [srg] stop: bpj.n ()V (method_6340)
+M net/minecraft/world/entity/ai/navigation/PathNavigation m_26571_ ()Z                # [srg] isDone: bpj.l ()Z (method_6357, yarn isIdle)
+C net/minecraft/world/entity/ai/control/LookControl                                 # [srg] blx C_667_ (class_1333 LookControl)
+M net/minecraft/world/entity/ai/control/LookControl m_24960_ (Lnet/minecraft/world/entity/Entity;FF)V  # [srg] setLookAt(entity, yaw, pitch): blx.a (Lbfj;FF)V (method_6226, yarn lookAt)
+C net/minecraft/world/entity/ai/attributes/AttributeSupplier                          # [srg] bhf C_557_ (class_5132, yarn DefaultAttributeContainer)
+C net/minecraft/world/entity/ai/attributes/AttributeSupplier$Builder                  # [srg] bhf$a C_557_$C_558_ (class_5132$class_5133, yarn DefaultAttributeContainer$Builder)
+M net/minecraft/world/entity/ai/attributes/AttributeSupplier$Builder m_22268_ (Lnet/minecraft/world/entity/ai/attributes/Attribute;D)Lnet/minecraft/world/entity/ai/attributes/AttributeSupplier$Builder;  # [srg] add(attribute, value): bhf$a.a (Lbhb;D)Lbhf$a; (method_26868)
+M net/minecraft/world/entity/ai/attributes/AttributeSupplier$Builder m_22265_ ()Lnet/minecraft/world/entity/ai/attributes/AttributeSupplier;  # [srg] build: bhf$a.a ()Lbhf; (method_26866)
+C net/minecraft/world/entity/ai/attributes/AttributeInstance                          # [srg] bhc C_553_ (class_1324, yarn EntityAttributeInstance)
+M net/minecraft/world/entity/ai/attributes/AttributeInstance m_22100_ (D)V            # [srg] setBaseValue: bhc.a (D)V (method_6192)
+F net/minecraft/world/entity/ai/attributes/Attributes f_22276_ Lnet/minecraft/world/entity/ai/attributes/Attribute;  # [order] MAX_HEALTH: 1st field 'a' of bhg (as KNOCKBACK_RESISTANCE above)
+F net/minecraft/world/entity/ai/attributes/Attributes f_22277_ Lnet/minecraft/world/entity/ai/attributes/Attribute;  # [order] FOLLOW_RANGE: 2nd field 'b' of bhg
+F net/minecraft/world/entity/ai/attributes/Attributes f_22279_ Lnet/minecraft/world/entity/ai/attributes/Attribute;  # [order] MOVEMENT_SPEED: 4th field 'd' of bhg
+F net/minecraft/world/entity/ai/attributes/Attributes f_22284_ Lnet/minecraft/world/entity/ai/attributes/Attribute;  # [order] ARMOR: 9th field 'i' of bhg (FLYING_SPEED e, ATTACK_DAMAGE f, ATTACK_KNOCKBACK g, ATTACK_SPEED h)
+M net/minecraft/world/damagesource/DamageSources m_269333_ (Lnet/minecraft/world/entity/LivingEntity;)Lnet/minecraft/world/damagesource/DamageSource;  # [srg] mobAttack: beo.b (Lbfz;)Lben; (method_48812)
+M net/minecraft/world/level/Level m_46472_ ()Lnet/minecraft/resources/ResourceKey;      # [srg] dimension: cmm.ac ()Lacp; (method_27983, yarn getRegistryKey)
+F net/minecraft/world/level/Level f_46428_ Lnet/minecraft/resources/ResourceKey;        # [srg] OVERWORLD: cmm.h (field_25179)
+M net/minecraft/world/level/LevelReader m_6924_ (Lnet/minecraft/world/level/levelgen/Heightmap$Types;II)I  # [srg] getHeight(type, x, z): cmp.a (Ldhk$a;II)I (method_8624, yarn getTopY)
+M net/minecraft/world/level/CollisionGetter m_45786_ (Lnet/minecraft/world/entity/Entity;)Z  # [srg] noCollision(entity): clw.g (Lbfj;)Z (method_17892, yarn isSpaceEmpty)
+M net/minecraft/world/level/LevelWriter m_7967_ (Lnet/minecraft/world/entity/Entity;)Z  # [srg] addFreshEntity: cmu.b (Lbfj;)Z (method_8649, yarn ModifiableWorld.spawnEntity)
+C net/minecraft/world/level/levelgen/Heightmap$Types                                  # [srg] dhk$a C_2190_$C_2191_ (class_2902$class_2903, yarn Heightmap$Type)
+F net/minecraft/world/level/levelgen/Heightmap$Types MOTION_BLOCKING_NO_LEAVES Lnet/minecraft/world/level/levelgen/Heightmap$Types;  # [srg] dhk$a.f MOTION_BLOCKING_NO_LEAVES (enum constants keep their names)
+M net/minecraft/world/level/material/FluidState m_76178_ ()Z                          # [srg] isEmpty: dxe.c ()Z (method_15769)
+F net/minecraft/sounds/SoundSource HOSTILE Lnet/minecraft/sounds/SoundSource;          # [srg] ami.f HOSTILE (enum constants keep their names; the original uses ami.h PLAYERS)
+C net/minecraftforge/event/entity/EntityAttributeCreationEvent                        # [forge] src/main/java/net/minecraftforge/event/entity/EntityAttributeCreationEvent.java (an IModBusEvent)
+M net/minecraftforge/event/entity/EntityAttributeCreationEvent put (Lnet/minecraft/world/entity/EntityType;Lnet/minecraft/world/entity/ai/attributes/AttributeSupplier;)V  # [forge] put(EntityType<? extends LivingEntity>, AttributeSupplier)
+# The renderer (fpp = HumanoidMobRenderer, class_4346 BipedEntityRenderer; foy$a = EntityRendererProvider$Context; fbs = HumanoidModel; fck =
+# PlayerModel; fee = ModelPart; fec = ModelLayerLocation; fed = ModelLayers, its fields unnamed in yarn).
+C net/minecraft/client/renderer/entity/HumanoidMobRenderer                            # [srg] fpp C_4346_ (class_4346, yarn BipedEntityRenderer)
+M net/minecraft/client/renderer/entity/HumanoidMobRenderer <init> (Lnet/minecraft/client/renderer/entity/EntityRendererProvider$Context;Lnet/minecraft/client/model/HumanoidModel;F)V  # [srg] fpp.<init>(Lfoy$a;Lfbs;F)V (yarn BipedEntityRenderer(Context, BipedEntityModel, shadowRadius))
+M net/minecraft/client/renderer/entity/EntityRendererProvider$Context m_174023_ (Lnet/minecraft/client/model/geom/ModelLayerLocation;)Lnet/minecraft/client/model/geom/ModelPart;  # [srg] bakeLayer: foy$a.a (Lfec;)Lfee; (method_32167, yarn getPart)
+M net/minecraft/client/model/PlayerModel <init> (Lnet/minecraft/client/model/geom/ModelPart;Z)V  # [srg] fck.<init>(Lfee;Z)V (yarn PlayerEntityModel(ModelPart, thinArms))
+C net/minecraft/client/model/geom/ModelLayerLocation                                   # [srg] fec C_141655_ (class_5601, yarn EntityModelLayer)
+C net/minecraft/client/model/geom/ModelLayers                                         # [srg] fed C_141656_ (class_5602, yarn EntityModelLayers)
+F net/minecraft/client/model/geom/ModelLayers f_171162_ Lnet/minecraft/client/model/geom/ModelLayerLocation;  # [order] PLAYER: fed.aM (field_27577), then PLAYER_HEAD aN, the armour aO aP, PLAYER_SLIM aQ (f_171166_)
+# 7.0.2: talking to a ghoul NPC (right click), giving it Ghoul Meat from the hand.
+C net/minecraftforge/event/entity/player/PlayerInteractEvent$EntityInteract           # [forge] PlayerInteractEvent.EntityInteract, @Cancelable, fired in Player.interactOn (Player.java.patch) on both sides
+M net/minecraftforge/event/entity/player/PlayerInteractEvent$EntityInteract getTarget ()Lnet/minecraft/world/entity/Entity;  # [forge] EntityInteract.getTarget
+M net/minecraftforge/event/entity/player/PlayerInteractEvent getHand ()Lnet/minecraft/world/InteractionHand;  # [forge] PlayerInteractEvent.getHand
+M net/minecraftforge/event/entity/player/PlayerInteractEvent setCancellationResult (Lnet/minecraft/world/InteractionResult;)V  # [forge] PlayerInteractEvent.setCancellationResult
+C net/minecraft/world/InteractionResult                                                # [srg] bdx C_471_ (class_1269, yarn ActionResult)
+F net/minecraft/world/InteractionResult SUCCESS Lnet/minecraft/world/InteractionResult;  # [srg] bdx.a SUCCESS (enum constants keep their names)
+M net/minecraft/world/item/ItemStack m_41774_ (I)V                                     # [srg] shrink: cfz.h (I)V (method_7934, yarn decrement)
+# 7.0.2: the two tails' rework: Owl's Execution's last blow breaks through a raised shield.
+M net/minecraft/world/entity/LivingEntity m_21254_ ()Z                                 # [srg] isBlocking: bfz.fp ()Z (method_6039)
+M net/minecraft/world/entity/player/Player m_36384_ (Z)V                              # [srg] disableShield(becauseOfAxe): byo.s (Z)V (method_7284)
+
+# --- 1.0.4: the Dragon (Kakuja V2, control/awakening), remapped from Mojang names (tools/dragon_allowlist.py) -----------
+C net/minecraft/client/gui/screens/ChatScreen                                                                                                   # [srg] yarn net/minecraft/client/gui/screen/ChatScreen; used in game by the 1.0.0-1.0.3 Dragon
+C net/minecraft/client/gui/screens/PauseScreen                                                                                                  # [srg] yarn net/minecraft/client/gui/screen/GameMenuScreen; used in game by the 1.0.0-1.0.3 Dragon
+C net/minecraft/network/protocol/game/ClientboundSetSubtitleTextPacket                                                                          # [srg] yarn net/minecraft/network/packet/s2c/play/SubtitleS2CPacket; used in game by the 1.0.0-1.0.3 Dragon
+C net/minecraft/network/protocol/game/ClientboundSetTitleTextPacket                                                                             # [srg] yarn net/minecraft/network/packet/s2c/play/TitleS2CPacket; used in game by the 1.0.0-1.0.3 Dragon
+C net/minecraft/network/protocol/game/ClientboundSetTitlesAnimationPacket                                                                       # [srg] yarn net/minecraft/network/packet/s2c/play/TitleFadeS2CPacket; used in game by the 1.0.0-1.0.3 Dragon
+C net/minecraft/world/entity/decoration/ArmorStand                                                                                              # [srg] yarn net/minecraft/entity/decoration/ArmorStandEntity; used in game by the 1.0.0-1.0.3 Dragon
+C net/minecraft/world/entity/decoration/HangingEntity                                                                                           # [srg] yarn net/minecraft/entity/decoration/AbstractDecorationEntity; used in game by the 1.0.0-1.0.3 Dragon
+C net/minecraft/world/level/LevelAccessor                                                                                                       # [srg] yarn net/minecraft/world/WorldAccess; used in game by the 1.0.0-1.0.3 Dragon
+C net/minecraft/world/level/block/BaseFireBlock                                                                                                 # [srg] yarn net/minecraft/block/AbstractFireBlock; used in game by the 1.0.0-1.0.3 Dragon
+C net/minecraft/world/level/block/BasePressurePlateBlock                                                                                        # [srg] yarn net/minecraft/block/AbstractPressurePlateBlock; used in game by the 1.0.0-1.0.3 Dragon
+C net/minecraft/world/level/block/BaseRailBlock                                                                                                 # [srg] yarn net/minecraft/block/AbstractRailBlock; used in game by the 1.0.0-1.0.3 Dragon
+C net/minecraft/world/level/block/ButtonBlock                                                                                                   # [srg] yarn net/minecraft/block/ButtonBlock; used in game by the 1.0.0-1.0.3 Dragon
+C net/minecraft/world/level/block/DiodeBlock                                                                                                    # [srg] yarn net/minecraft/block/AbstractRedstoneGateBlock; used in game by the 1.0.0-1.0.3 Dragon
+C net/minecraft/world/level/block/DoorBlock                                                                                                     # [srg] yarn net/minecraft/block/DoorBlock; used in game by the 1.0.0-1.0.3 Dragon
+C net/minecraft/world/level/block/FallingBlock                                                                                                  # [srg] yarn net/minecraft/block/FallingBlock; used in game by the 1.0.0-1.0.3 Dragon
+C net/minecraft/world/level/block/LeavesBlock                                                                                                   # [srg] yarn net/minecraft/block/LeavesBlock; used in game by the 1.0.0-1.0.3 Dragon
+C net/minecraft/world/level/block/LeverBlock                                                                                                    # [srg] yarn net/minecraft/block/LeverBlock; used in game by the 1.0.0-1.0.3 Dragon
+C net/minecraft/world/level/block/NetherPortalBlock                                                                                             # [srg] yarn net/minecraft/block/NetherPortalBlock; used in game by the 1.0.0-1.0.3 Dragon
+C net/minecraft/world/level/block/ObserverBlock                                                                                                 # [srg] yarn net/minecraft/block/ObserverBlock; used in game by the 1.0.0-1.0.3 Dragon
+C net/minecraft/world/level/block/RedStoneWireBlock                                                                                             # [srg] yarn net/minecraft/block/RedstoneWireBlock; used in game by the 1.0.0-1.0.3 Dragon
+C net/minecraft/world/level/block/RedstoneTorchBlock                                                                                            # [srg] yarn net/minecraft/block/RedstoneTorchBlock; used in game by the 1.0.0-1.0.3 Dragon
+C net/minecraft/world/level/block/RotatedPillarBlock                                                                                            # [srg] yarn net/minecraft/block/PillarBlock; used in game by the 1.0.0-1.0.3 Dragon
+C net/minecraft/world/level/block/ScaffoldingBlock                                                                                              # [srg] yarn net/minecraft/block/ScaffoldingBlock; used in game by the 1.0.0-1.0.3 Dragon
+C net/minecraft/world/level/block/TntBlock                                                                                                      # [srg] yarn net/minecraft/block/TntBlock; used in game by the 1.0.0-1.0.3 Dragon
+C net/minecraft/world/level/block/piston/PistonBaseBlock                                                                                        # [srg] yarn net/minecraft/block/PistonBlock; used in game by the 1.0.0-1.0.3 Dragon
+C net/minecraft/world/level/block/piston/PistonHeadBlock                                                                                        # [srg] yarn net/minecraft/block/PistonHeadBlock; used in game by the 1.0.0-1.0.3 Dragon
+C net/minecraftforge/client/event/RenderGuiEvent$Post                                                                                           # [forge] client/event/RenderGuiEvent.java (Post extends RenderGuiEvent)
+C net/minecraftforge/client/event/ViewportEvent$ComputeFov                                                                                      # [forge] client/event/ViewportEvent.java (ComputeFov)
+C net/minecraftforge/common/util/FakePlayer                                                                                                     # [forge] common/util/FakePlayer.java (extends ServerPlayer)
+C net/minecraftforge/event/TickEvent$ServerTickEvent                                                                                            # [forge] event/TickEvent.java (ServerTickEvent extends TickEvent)
+C net/minecraftforge/event/entity/EntityTravelToDimensionEvent                                                                                  # [forge] event/entity/EntityTravelToDimensionEvent.java (extends EntityEvent, @Cancelable)
+C net/minecraftforge/event/entity/player/PlayerInteractEvent$EntityInteractSpecific                                                             # [forge] event/entity/player/PlayerInteractEvent.java (EntityInteractSpecific)
+C net/minecraftforge/event/entity/player/PlayerInteractEvent$LeftClickBlock                                                                     # [forge] event/entity/player/PlayerInteractEvent.java (LeftClickBlock)
+C net/minecraftforge/event/entity/player/PlayerInteractEvent$RightClickBlock                                                                    # [forge] event/entity/player/PlayerInteractEvent.java (RightClickBlock)
+C net/minecraftforge/event/entity/player/PlayerInteractEvent$RightClickItem                                                                     # [forge] event/entity/player/PlayerInteractEvent.java (RightClickItem)
+C net/minecraftforge/event/level/LevelEvent$Unload                                                                                              # [forge] event/level/LevelEvent.java (Unload extends LevelEvent)
+C net/minecraftforge/fml/event/lifecycle/FMLCommonSetupEvent                                                                                    # [forge] src/fmlcommon/java/.../fml/event/lifecycle/FMLCommonSetupEvent.java
+F net/minecraft/client/CameraType FIRST_PERSON Lnet/minecraft/client/CameraType;                                                                # [srg] enum constants keep their names (as the original's HitResult$Type.BLOCK); yarn net/minecraft/client/option/Perspective.FIRST_PERSON
+F net/minecraft/client/Options f_92056_ [Lnet/minecraft/client/KeyMapping;                                                                      # [srg] keyHotbarSlots (yarn hotbarKeys; awakening/mappings.srg, tools/check_mappings.py)
+F net/minecraft/client/Options f_92092_ Lnet/minecraft/client/KeyMapping;                                                                       # [srg] keyInventory (yarn inventoryKey; awakening/mappings.srg, tools/check_mappings.py)
+F net/minecraft/client/Options f_92093_ Lnet/minecraft/client/KeyMapping;                                                                       # [srg] keySwapOffhand (yarn swapHandsKey; awakening/mappings.srg, tools/check_mappings.py)
+F net/minecraft/client/Options f_92094_ Lnet/minecraft/client/KeyMapping;                                                                       # [srg] keyDrop (yarn dropKey; awakening/mappings.srg, tools/check_mappings.py)
+F net/minecraft/client/Options f_92097_ Lnet/minecraft/client/KeyMapping;                                                                       # [srg] keyPickItem (yarn pickItemKey; awakening/mappings.srg, tools/check_mappings.py)
+F net/minecraft/client/Options f_92103_ Lnet/minecraft/client/KeyMapping;                                                                       # [srg] keyTogglePerspective (yarn togglePerspectiveKey; awakening/mappings.srg, tools/check_mappings.py)
+F net/minecraft/world/entity/Entity f_19854_ D                                                                                                  # [srg] xo (yarn prevX; awakening/mappings.srg, tools/check_mappings.py)
+F net/minecraft/world/entity/Entity f_19855_ D                                                                                                  # [srg] yo (yarn prevY; awakening/mappings.srg, tools/check_mappings.py)
+F net/minecraft/world/entity/Entity f_19856_ D                                                                                                  # [srg] zo (yarn prevZ; awakening/mappings.srg, tools/check_mappings.py)
+F net/minecraftforge/event/TickEvent$ServerTickEvent phase Lnet/minecraftforge/event/TickEvent$Phase;                                           # [forge] TickEvent.phase (public final Phase)
+M com/mojang/brigadier/builder/RequiredArgumentBuilder requires (Ljava/util/function/Predicate;)Lcom/mojang/brigadier/builder/ArgumentBuilder;  # [lib] Brigadier 1.1.8 ArgumentBuilder.requires (inherited by RequiredArgumentBuilder)
+M net/minecraft/client/KeyMapping m_7249_ (Z)V                                                                                                  # [srg] setDown (yarn setPressed; awakening/mappings.srg, tools/check_mappings.py)
+M net/minecraft/client/Minecraft m_91118_ (Lnet/minecraft/world/entity/Entity;)V                                                                # [srg] setCameraEntity (yarn setCameraEntity; awakening/mappings.srg, tools/check_mappings.py)
+M net/minecraft/client/Options m_92157_ (Lnet/minecraft/client/CameraType;)V                                                                    # [srg] setCameraType (yarn setPerspective; awakening/mappings.srg, tools/check_mappings.py)
+M net/minecraft/client/multiplayer/ClientLevel m_141937_ ()I                                                                                    # [srg] getMinBuildHeight (yarn getBottomY; awakening/mappings.srg, tools/check_mappings.py)
+M net/minecraft/core/BlockPos m_121878_ ()J                                                                                                     # [srg] asLong (yarn asLong; awakening/mappings.srg, tools/check_mappings.py)
+M net/minecraft/core/BlockPos m_122022_ (J)Lnet/minecraft/core/BlockPos;                                                                        # [srg] of (yarn fromLong; awakening/mappings.srg, tools/check_mappings.py)
+M net/minecraft/core/BlockPos m_123341_ ()I                                                                                                     # [srg] getX (yarn getX; awakening/mappings.srg, tools/check_mappings.py)
+M net/minecraft/core/BlockPos m_123343_ ()I                                                                                                     # [srg] getZ (yarn getZ; awakening/mappings.srg, tools/check_mappings.py)
+M net/minecraft/core/BlockPos m_7495_ ()Lnet/minecraft/core/BlockPos;                                                                           # [srg] below (yarn method_10074; awakening/mappings.srg, tools/check_mappings.py)
+M net/minecraft/nbt/CompoundTag m_128347_ (Ljava/lang/String;D)V                                                                                # [srg] putDouble (yarn putDouble; awakening/mappings.srg, tools/check_mappings.py)
+M net/minecraft/nbt/CompoundTag m_128459_ (Ljava/lang/String;)D                                                                                 # [srg] getDouble (yarn getDouble; awakening/mappings.srg, tools/check_mappings.py)
+M net/minecraft/network/protocol/game/ClientboundSetSubtitleTextPacket <init> (Lnet/minecraft/network/chat/Component;)V                         # [srg] constructor of yarn net/minecraft/network/packet/s2c/play/SubtitleS2CPacket; used in game by the 1.0.0-1.0.3 Dragon
+M net/minecraft/network/protocol/game/ClientboundSetTitleTextPacket <init> (Lnet/minecraft/network/chat/Component;)V                            # [srg] constructor of yarn net/minecraft/network/packet/s2c/play/TitleS2CPacket; used in game by the 1.0.0-1.0.3 Dragon
+M net/minecraft/network/protocol/game/ClientboundSetTitlesAnimationPacket <init> (III)V                                                         # [srg] constructor of yarn net/minecraft/network/packet/s2c/play/TitleFadeS2CPacket; used in game by the 1.0.0-1.0.3 Dragon
+M net/minecraft/resources/ResourceLocation <init> (Ljava/lang/String;Ljava/lang/String;)V                                                       # [srg] constructor of yarn net/minecraft/util/Identifier; used in game by the 1.0.0-1.0.3 Dragon
+M net/minecraft/server/level/ServerLevel m_141937_ ()I                                                                                          # [srg] getMinBuildHeight (yarn getBottomY; awakening/mappings.srg, tools/check_mappings.py)
+M net/minecraft/server/level/ServerLevel m_151558_ ()I                                                                                          # [srg] getMaxBuildHeight (yarn getTopY; awakening/mappings.srg, tools/check_mappings.py)
+M net/minecraft/server/level/ServerLevel m_5898_ (Lnet/minecraft/world/entity/player/Player;ILnet/minecraft/core/BlockPos;I)V                   # [srg] levelEvent (yarn syncWorldEvent; awakening/mappings.srg, tools/check_mappings.py)
+M net/minecraft/server/level/ServerPlayer m_20095_ ()V                                                                                          # [srg] clearFire (yarn extinguish; awakening/mappings.srg, tools/check_mappings.py)
+M net/minecraft/server/level/ServerPlayer m_5796_ ()V                                                                                           # [srg] stopSleeping (yarn wakeUp; awakening/mappings.srg, tools/check_mappings.py)
+M net/minecraft/server/level/ServerPlayer m_8127_ ()V                                                                                           # [srg] stopRiding (yarn stopRiding; awakening/mappings.srg, tools/check_mappings.py)
+M net/minecraft/world/entity/Entity m_146922_ (F)V                                                                                              # [srg] setYRot (yarn setYaw; awakening/mappings.srg, tools/check_mappings.py)
+M net/minecraft/world/entity/Entity m_6034_ (DDD)V                                                                                              # [srg] setPos (yarn setPosition; awakening/mappings.srg, tools/check_mappings.py)
+M net/minecraft/world/entity/Entity m_9236_ ()Lnet/minecraft/world/level/Level;                                                                 # [srg] level (yarn getWorld; awakening/mappings.srg, tools/check_mappings.py)
+M net/minecraft/world/entity/LivingEntity m_213877_ ()Z                                                                                         # [srg] isRemoved (yarn isRemoved; awakening/mappings.srg, tools/check_mappings.py)
+M net/minecraft/world/entity/decoration/HangingEntity m_20185_ ()D                                                                              # [srg] getX (yarn getX; awakening/mappings.srg, tools/check_mappings.py)
+M net/minecraft/world/entity/decoration/HangingEntity m_20186_ ()D                                                                              # [srg] getY (yarn getY; awakening/mappings.srg, tools/check_mappings.py)
+M net/minecraft/world/entity/decoration/HangingEntity m_20189_ ()D                                                                              # [srg] getZ (yarn getZ; awakening/mappings.srg, tools/check_mappings.py)
+M net/minecraft/world/level/block/state/BlockState m_155947_ ()Z                                                                                # [srg] hasBlockEntity (yarn hasBlockEntity; awakening/mappings.srg, tools/check_mappings.py)
+M net/minecraft/world/level/block/state/BlockState m_278200_ ()Z                                                                                # [srg] ignitedByLava (yarn isBurnable; awakening/mappings.srg, tools/check_mappings.py)
+M net/minecraftforge/client/event/RenderGuiEvent$Post getGuiGraphics ()Lnet/minecraft/client/gui/GuiGraphics;                                   # [forge] RenderGuiEvent.getGuiGraphics
+M net/minecraftforge/client/event/RenderGuiEvent$Post getWindow ()Lcom/mojang/blaze3d/platform/Window;                                          # [forge] RenderGuiEvent.getWindow
+M net/minecraftforge/client/event/ViewportEvent$ComputeCameraAngles getYaw ()F                                                                  # [forge] ViewportEvent.ComputeCameraAngles.getYaw
+M net/minecraftforge/client/event/ViewportEvent$ComputeCameraAngles setYaw (F)V                                                                 # [forge] ViewportEvent.ComputeCameraAngles.setYaw
+M net/minecraftforge/client/event/ViewportEvent$ComputeFov getFOV ()D                                                                           # [forge] ViewportEvent.ComputeFov.getFOV
+M net/minecraftforge/client/event/ViewportEvent$ComputeFov setFOV (D)V                                                                          # [forge] ViewportEvent.ComputeFov.setFOV
+M net/minecraftforge/event/entity/EntityTravelToDimensionEvent getEntity ()Lnet/minecraft/world/entity/Entity;                                  # [forge] PlayerEvent.getEntity / EntityEvent.getEntity
+M net/minecraftforge/event/entity/EntityTravelToDimensionEvent setCanceled (Z)V                                                                 # [forge] eventbus Event.setCanceled (the event is @Cancelable)
+M net/minecraftforge/event/entity/player/PlayerInteractEvent$EntityInteractSpecific getEntity ()Lnet/minecraft/world/entity/player/Player;      # [forge] PlayerEvent.getEntity / EntityEvent.getEntity
+M net/minecraftforge/event/entity/player/PlayerInteractEvent$EntityInteractSpecific setCanceled (Z)V                                            # [forge] eventbus Event.setCanceled (the event is @Cancelable)
+M net/minecraftforge/event/entity/player/PlayerInteractEvent$LeftClickBlock getEntity ()Lnet/minecraft/world/entity/player/Player;              # [forge] PlayerEvent.getEntity / EntityEvent.getEntity
+M net/minecraftforge/event/entity/player/PlayerInteractEvent$LeftClickBlock setCanceled (Z)V                                                    # [forge] eventbus Event.setCanceled (the event is @Cancelable)
+M net/minecraftforge/event/entity/player/PlayerInteractEvent$RightClickBlock getEntity ()Lnet/minecraft/world/entity/player/Player;             # [forge] PlayerEvent.getEntity / EntityEvent.getEntity
+M net/minecraftforge/event/entity/player/PlayerInteractEvent$RightClickBlock setCanceled (Z)V                                                   # [forge] eventbus Event.setCanceled (the event is @Cancelable)
+M net/minecraftforge/event/entity/player/PlayerInteractEvent$RightClickItem getEntity ()Lnet/minecraft/world/entity/player/Player;              # [forge] PlayerEvent.getEntity / EntityEvent.getEntity
+M net/minecraftforge/event/entity/player/PlayerInteractEvent$RightClickItem setCanceled (Z)V                                                    # [forge] eventbus Event.setCanceled (the event is @Cancelable)
+M net/minecraftforge/event/level/BlockEvent$BreakEvent getPlayer ()Lnet/minecraft/world/entity/player/Player;                                   # [forge] BlockEvent.BreakEvent.getPlayer
+M net/minecraftforge/event/level/LevelEvent$Unload getLevel ()Lnet/minecraft/world/level/LevelAccessor;                                         # [forge] LevelEvent.getLevel
+
+# --- 1.0.5: the half kakujas (control/king, KingServer, KingLayer): War's stats as transient attribute modifiers, the night on his skin
+C net/minecraft/world/entity/ai/attributes/AttributeModifier                          # [srg] bhe C_555_ (class_1322, yarn EntityAttributeModifier): War's transient boosts
+C net/minecraft/world/entity/ai/attributes/AttributeModifier$Operation                # [srg] bhe$a C_555_$C_556_ (class_1322$class_1323, yarn EntityAttributeModifier$Operation)
+F net/minecraft/world/entity/ai/attributes/AttributeModifier$Operation MULTIPLY_BASE Lnet/minecraft/world/entity/ai/attributes/AttributeModifier$Operation;  # [srg] enum constant kept by name: joined.tsrg bhe$a b MULTIPLY_BASE (yarn MULTIPLY_BASE)
+M net/minecraft/world/entity/ai/attributes/AttributeModifier <init> (Ljava/util/UUID;Ljava/lang/String;DLnet/minecraft/world/entity/ai/attributes/AttributeModifier$Operation;)V  # [srg] joined.tsrg bhe <init> (Ljava/util/UUID;Ljava/lang/String;DLbhe$a;)V 22199
+M net/minecraft/world/entity/ai/attributes/AttributeInstance m_22111_ (Ljava/util/UUID;)Lnet/minecraft/world/entity/ai/attributes/AttributeModifier;  # [srg] getModifier: bhc.a (Ljava/util/UUID;)Lbhe; (yarn getModifier)
+M net/minecraft/world/entity/ai/attributes/AttributeInstance m_22118_ (Lnet/minecraft/world/entity/ai/attributes/AttributeModifier;)V  # [srg] addTransientModifier: bhc.b (Lbhe;)V (yarn addTemporaryModifier)
+M net/minecraft/world/entity/ai/attributes/AttributeInstance m_22120_ (Ljava/util/UUID;)V  # [srg] removeModifier: bhc.b (Ljava/util/UUID;)V (yarn removeModifier)
+F net/minecraft/world/entity/ai/attributes/Attributes f_22281_ Lnet/minecraft/world/entity/ai/attributes/Attribute;  # [order] ATTACK_DAMAGE: 6th field 'f' of bhg (joined.tsrg bhg f f_22281_; as ARMOR above)
+F net/minecraft/world/entity/ai/attributes/Attributes f_22283_ Lnet/minecraft/world/entity/ai/attributes/Attribute;  # [order] ATTACK_SPEED: 8th field 'h' of bhg (joined.tsrg bhg h f_22283_)
+M net/minecraft/client/model/EntityModel m_7695_ (Lcom/mojang/blaze3d/vertex/PoseStack;Lcom/mojang/blaze3d/vertex/VertexConsumer;IIFFFF)V  # [srg] renderToBuffer, declared on Model fcb.a (Leij;Lein;IIFFFF)V m_7695_ (yarn Model.render): his skin drawn again in black by night
+
+# --- 1.0.6: War's abilities (control/awakening/WarKit), remapped from Mojang names (tools/dragon_allowlist.py)
+M net/minecraft/world/entity/Entity m_20252_ (F)Lnet/minecraft/world/phys/Vec3;  # [srg] getViewVector (yarn getRotationVec; awakening/mappings.srg, tools/check_mappings.py)
+M net/minecraft/world/entity/Entity m_20299_ (F)Lnet/minecraft/world/phys/Vec3;  # [srg] getEyePosition (yarn getCameraPosVec; awakening/mappings.srg, tools/check_mappings.py)
+F net/minecraft/world/entity/ai/attributes/AttributeModifier$Operation ADDITION Lnet/minecraft/world/entity/ai/attributes/AttributeModifier$Operation;  # [srg] enum constant kept by name: joined.tsrg bhe$a a ADDITION (yarn ADDITION): 1.0.7, War can't be knocked back
+M net/minecraft/server/network/ServerGamePacketListenerImpl m_9774_ (DDDFF)V     # [srg] teleport: joined.tsrg aiy.a (DDDFF)V m_9774_ (yarn ServerPlayNetworkHandler.requestTeleport(DDDFF)); 1.0.13 King's Defiance turns him to face the back he blinks behind
+M net/minecraft/world/entity/LivingEntity m_21230_ ()I  # [srg] getArmorValue: joined.tsrg bfz eF ()I m_21230_ 21230; 1.0.16, Peace's Piercing Salvation goes through armour
+F net/minecraft/world/effect/MobEffects f_19615_ Lnet/minecraft/world/effect/MobEffect;  # [srg] WITHER: joined.tsrg bfc t f_19615_ 19615 (POISON f_19614_ is s); 1.0.16, Rebirth cleanses it
+F net/minecraft/world/effect/MobEffects f_19591_ Lnet/minecraft/world/effect/MobEffect;  # [order] SLOW_FALLING: 28th field 'B' of bfc (unluck 'A' f_19590_, conduit 'C' f_19592_; poison 's' f_19614_, wither 't' f_19615_ as above); 1.0.16, Peace's glide
+F net/minecraft/world/effect/MobEffects f_19610_ Lnet/minecraft/world/effect/MobEffect;  # [order] BLINDNESS: 15th field 'o' of bfc (invisibility 'n' f_19609_ as above, night vision 'p' f_19611_); 1.0.17, War's burst
+
+# --- 1.0.34: Peace reworked (control/awakening/PeaceKit, control/server/FleshThralls, client/fx/PeaceFx)
+F net/minecraft/world/level/block/Blocks f_49991_ Lnet/minecraft/world/level/block/Block;  # [order] LAVA: joined.tsrg cpo H f_49991_ (AIR 'a' f_50016_ as above, WATER 'G' f_49990_), intermediary cpo.H field_10164; awakening/mappings.srg, tools/check_mappings.py: the Aegis pushes him off it
+M net/minecraft/world/entity/Entity m_20077_ ()Z  # [srg] isInLava: joined.tsrg bfj m_20077_ ()Z (yarn isInLava; awakening/mappings.srg, tools/check_mappings.py): the Aegis hauls him out of it
+M net/minecraft/world/entity/Mob m_21569_ ()Lnet/minecraft/world/entity/ai/control/JumpControl;  # [srg] getJumpControl: bgb.F ()Lblw; m_21569_ (yarn MobEntity.getJumpControl): a flesh creature stuck jumps
+C net/minecraft/world/entity/ai/control/JumpControl                                 # [srg] blw (class_1334 JumpControl)
+M net/minecraft/world/entity/ai/control/JumpControl m_24901_ ()V  # [srg] jump: blw m_24901_ ()V (yarn setActive)
+F net/minecraft/world/entity/LivingEntity f_267362_ Lnet/minecraft/world/entity/WalkAnimationState;  # [srg] walkAnimation: joined.tsrg bfz f_267362_ (yarn limbAnimator, class_8080): a flesh creature's stride
+C net/minecraft/client/renderer/entity/NoopRenderer                                # [srg] fqg C_141748_ (class_6344, yarn EmptyEntityRenderer): 1.0.38, Peace's flesh creatures are drawn by PeaceFx
+# 1.0.41: the wild ghouls' bodies (GhoulModel, GhoulNpcRenderer): a girl on the slim arms, a flip posed on vanilla's player model.
+F net/minecraft/client/model/geom/ModelLayers f_171166_ Lnet/minecraft/client/model/geom/ModelLayerLocation;  # [order] PLAYER_SLIM: joined.tsrg fed.aQ f_171166_ 171166, after PLAYER aM (f_171162_), PLAYER_HEAD aN, the armour aO aP
+F net/minecraft/client/model/geom/ModelPart f_104203_ F                                  # [srg] xRot: joined.tsrg fee.e f_104203_, intermediary field_3654 (yarn pitch); fee.b c d are the pivot f_104200_..02
+F net/minecraft/client/model/geom/ModelPart f_104204_ F                                  # [srg] yRot: joined.tsrg fee.f f_104204_, intermediary field_3675 (yarn yaw)
+F net/minecraft/client/model/geom/ModelPart f_104205_ F                                  # [srg] zRot: joined.tsrg fee.g f_104205_, intermediary field_3674 (yarn roll)
+M net/minecraft/client/model/geom/ModelPart m_104315_ (Lnet/minecraft/client/model/geom/ModelPart;)V  # [srg] copyFrom: joined.tsrg fee.a (Lfee;)V m_104315_ 104315 (yarn copyTransform)
+M net/minecraft/client/model/PlayerModel m_6973_ (Lnet/minecraft/world/entity/LivingEntity;FFFFF)V  # [srg] setupAnim: joined.tsrg fck.a (Lbfz;FFFFF)V m_6973_ 103394 (fck PlayerModel class_591, bfz LivingEntity; its Entity bridge fck.a (Lbfj;FFFFF)V)
+F net/minecraft/client/model/PlayerModel f_103376_ Lnet/minecraft/client/model/geom/ModelPart;  # [srg] leftPants: joined.tsrg fck.x f_103376_, intermediary field_3482 (yarn leftPants)
+F net/minecraft/client/model/PlayerModel f_103377_ Lnet/minecraft/client/model/geom/ModelPart;  # [srg] rightPants: joined.tsrg fck.y f_103377_, intermediary field_3479 (yarn rightPants)
+F net/minecraft/client/model/PlayerModel f_103378_ Lnet/minecraft/client/model/geom/ModelPart;  # [srg] jacket: joined.tsrg fck.z f_103378_, intermediary field_3483 (yarn jacket)
+F net/minecraft/client/renderer/entity/LivingEntityRenderer f_115290_ Lnet/minecraft/client/model/EntityModel;  # [srg] model: joined.tsrg fpz.f f_115290_ (fpz class_922, Lfbf; EntityModel), intermediary field_4737 (yarn model)
+# 1.0.42: Kaneki's grab is broken by a swing back at him (KanekiGrab): a player's bare swing, seen on the server as it goes.
+F net/minecraft/world/entity/LivingEntity f_20911_ Z                                  # [srg] swinging: joined.tsrg bfz.aG f_20911_ 20911, intermediary bfz Z aG field_6252 (yarn handSwinging); set by swing() as the server handles the arm swing packet
+F net/minecraft/world/entity/LivingEntity f_20913_ I                                  # [srg] swingTime: joined.tsrg bfz.aI f_20913_ 20913, intermediary bfz I aI field_6279 (yarn handSwingTicks); -1 at the swing, counted up each tick

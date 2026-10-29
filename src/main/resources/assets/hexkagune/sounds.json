@@ -1,0 +1,29 @@
+{
+  "manifest_kaneki": {
+    "subtitle": "subtitles.hexkagune.manifest_kaneki",
+    "sounds": [
+      {
+        "name": "hexkagune:manifest_kaneki",
+        "stream": false
+      }
+    ]
+  },
+  "manifest_ayato": {
+    "subtitle": "subtitles.hexkagune.manifest_ayato",
+    "sounds": [
+      {
+        "name": "hexkagune:manifest_ayato",
+        "stream": false
+      }
+    ]
+  },
+  "eye_open": {
+    "subtitle": "subtitles.hexkagune.eye_open",
+    "sounds": [
+      {
+        "name": "hexkagune:eye_open",
+        "stream": false
+      }
+    ]
+  }
+}

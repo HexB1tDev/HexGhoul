@@ -1,0 +1,8 @@
+package net.minecraftforge.event.entity.living;
+
+import net.minecraft.world.damagesource.DamageSource;
+
+public class LivingDamageEvent extends LivingEvent {
+    public DamageSource getSource() { throw null; }
+    public float getAmount() { throw null; }
+}

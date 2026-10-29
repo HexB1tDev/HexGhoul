@@ -1,0 +1,7 @@
+{
+  "replace": false,
+  "values": [
+    { "id": "#forge:coffee", "required": false },
+    { "id": "#forge:drinks/coffee", "required": false }
+  ]
+}
