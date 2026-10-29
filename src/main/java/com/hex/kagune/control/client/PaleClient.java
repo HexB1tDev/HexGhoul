@@ -249,7 +249,17 @@ public final class PaleClient {
      */
     public static boolean eyes(Player player) {
         return player instanceof AbstractClientPlayer client && PathClient.get(client) != KagunePath.PALE && KakuganClient.ghoul(client)
-            && !com.hex.kagune.client.KaguneClientState.get(client).active();
+            && !com.hex.kagune.client.KaguneClientState.get(client).active() && !king(client);
+    }
+
+    /**
+     * 1.2.6: a final kakuja (War, Peace) has the body: its keys are its own. The original's kagune reads as put away under it, so
+     * with the kakugan open the eye-mode fight took Z and V first (the Big Punch, the Speed Kick, refused there) and War's and
+     * Peace's Z and V did nothing, now and then, as the eyes came and went.
+     */
+    static boolean king(AbstractClientPlayer player) {
+        KingClient.View view = KingClient.get(player);
+        return view != null && view.on() && !view.preview();
     }
 
     /** 7.0.1: whether {@code player}'s body is hers now: Owl DNA with the base form out, or the eyes alone ({@link #eyes}). */

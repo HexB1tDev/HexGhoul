@@ -146,7 +146,8 @@ public final class PaleServer {
      * with her body: the Speed Blitz, the flips, the Big Punch and the Speed Kick, never the flesh.
      */
     public static boolean eyes(ServerPlayer player) {
-        return !isPale(player) && KaguneProfile.isUnlocked(player) && GhoulServer.ghoul(player) && !KaguneProfile.isActive(player);
+        return !isPale(player) && KaguneProfile.isUnlocked(player) && GhoulServer.ghoul(player) && !KaguneProfile.isActive(player)
+            && KingServer.wearing(player) == com.hex.kagune.control.king.KingForm.NONE; // 1.2.6: a final kakuja's keys are its own
     }
 
     /** 7.0.1: how hard her body hits: all of it in her base form; the eyes alone, more the more mastered ({@link EyeRules#power}). */
