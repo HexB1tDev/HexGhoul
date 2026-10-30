@@ -285,8 +285,14 @@ public final class EtoTests {
             }
         }
         RigPose kiss = EtoPose.gesture(EtoGesture.KISS, 30);
-        check(kiss.flip < -0.2F && Math.abs(kiss.rightLegX - kiss.flip) < 1.0E-4F && kiss.rightArmX > 0.3F && kiss.leftArmX > 0.3F,
-            "the kiss: her top half leans in, the legs stay under her, hands behind her back");
+        check(kiss.lean > 0.2F && kiss.flip == 0.0F && kiss.rightLegX == 0.0F && kiss.leftLegX == 0.0F && kiss.drop == 0.0F && kiss.rightArmX > 0.3F
+            && kiss.leftArmX > 0.3F, "the kiss: her top half bends in at the hips, her feet flat where they stand, hands behind her back");
+        float turn = (float)(Math.PI * 2.0);
+        boolean onward = true;
+        for (int t = 24; t < EtoGesture.TWIRL.ticks; t++) {
+            onward &= Math.abs(EtoPose.gesture(EtoGesture.TWIRL, t).spin - turn) < 1.0E-3F;
+        }
+        check(onward, "her twirl ends a whole turn round, never spun back as it fades");
         check(EtoPose.gesture(EtoGesture.WAVE, 0).rightArmX == 0.0F && EtoPose.gesture(EtoGesture.WAVE, EtoGesture.WAVE.ticks).rightArmX == 0.0F,
             "an idle one eases in and out");
         for (EtoRules.Move move : EtoRules.Move.values()) {
