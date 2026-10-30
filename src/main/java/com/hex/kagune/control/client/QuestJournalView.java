@@ -307,7 +307,9 @@ public final class QuestJournalView {
             }
             case DONE -> "done";
             case CLOSED -> "closed: the other way";
-            default -> model.mastery() < quest.mastery() ? "at mastery " + quest.mastery() : "after another quest";
+            default -> com.hex.kagune.control.npc.EtoRules.lessonFlag(quest.id()) != 0
+                && !model.log().bond(com.hex.kagune.control.npc.EtoRules.KEY).has(com.hex.kagune.control.npc.EtoRules.lessonFlag(quest.id()))
+                ? "Eto teaches it at the Library" : model.mastery() < quest.mastery() ? "at mastery " + quest.mastery() : "after another quest";
         };
     }
 

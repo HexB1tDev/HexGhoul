@@ -1,6 +1,7 @@
 package com.hex.kagune.control;
 
 import com.hex.kagune.KaguneMod;
+import com.hex.kagune.control.npc.EtoNpc;
 import com.hex.kagune.control.npc.FleshThrall;
 import com.hex.kagune.control.npc.GhoulNpc;
 import net.minecraft.world.entity.EntityType;
@@ -15,7 +16,7 @@ import net.minecraftforge.registries.RegistryObject;
 
 /**
  * 7.0.2: the expansion's entities, registered on the mod bus ({@link KaguneControlBootstrap}) as the original registers its spike:
- * the ghoul NPC, a monster (so it goes as monsters do when no one is near), a player's size; 1.0.34: Peace's flesh creatures.
+ * the ghoul NPC, a monster (so it goes as monsters do when no one is near), a player's size; 1.0.34: Peace's flesh creatures; 1.3.0: Eto.
  */
 public final class ControlEntities {
     private static final DeferredRegister<EntityType<?>> ENTITIES = DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, "hexkagune");
@@ -24,6 +25,10 @@ public final class ControlEntities {
     /** 1.0.34: Peace's flesh creatures (Rebirth Instinct): belonging to no wild kind, so the world never spawns or keeps them on its own. */
     public static final RegistryObject<EntityType<FleshThrall>> THRALL = ENTITIES.register("flesh_thrall", () -> EntityType.Builder.<FleshThrall>m_20704_(
         FleshThrall::new, MobCategory.MISC).m_20699_(0.6F, 1.95F).m_20702_(8).m_20717_(2).m_20712_(KaguneMod.id("flesh_thrall").toString()));
+
+    /** 1.3.0: Eto, who lives in the Library: a creature, not a monster, so peaceful never takes her; a player's size. */
+    public static final RegistryObject<EntityType<EtoNpc>> ETO = ENTITIES.register("eto", () -> EntityType.Builder.<EtoNpc>m_20704_(EtoNpc::new,
+        MobCategory.CREATURE).m_20699_(0.6F, 1.8F).m_20702_(10).m_20717_(3).m_20712_(KaguneMod.id("eto").toString()));
 
     private ControlEntities() {
     }
@@ -41,6 +46,7 @@ public final class ControlEntities {
         public static void attributes(EntityAttributeCreationEvent event) {
             event.put(GHOUL.get(), GhoulNpc.attributes().m_22265_());
             event.put(THRALL.get(), FleshThrall.attributes().m_22265_());
+            event.put(ETO.get(), EtoNpc.attributes().m_22265_());
         }
     }
 }

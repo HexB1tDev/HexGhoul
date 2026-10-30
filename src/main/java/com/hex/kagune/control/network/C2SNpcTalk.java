@@ -22,7 +22,13 @@ public record C2SNpcTalk(int npc, int choice) {
         ServerPlayer sender = context.getSender();
         if (sender != null) {
             context.enqueueWork(() -> {
-                if (!com.hex.kagune.control.DragonLock.locked(sender)) {
+                if (com.hex.kagune.control.DragonLock.locked(sender)) {
+                    return;
+                }
+                // 1.3.0: Eto talks on the same screen.
+                if (sender.m_284548_().m_6815_(message.npc) instanceof com.hex.kagune.control.npc.EtoNpc) {
+                    com.hex.kagune.control.server.EtoServer.heard(sender, message.npc, message.choice);
+                } else {
                     GhoulNpcTalk.heard(sender, message.npc, message.choice);
                 }
             });

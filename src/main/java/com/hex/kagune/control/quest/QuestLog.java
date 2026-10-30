@@ -98,6 +98,11 @@ public final class QuestLog {
         if (!quest.on(path) || mastery < quest.mastery()) {
             return State.LOCKED;
         }
+        // 1.3.0: one of Eto's lessons waits for her to teach it.
+        int lesson = com.hex.kagune.control.npc.EtoRules.lessonFlag(quest.id());
+        if (lesson != 0 && !this.bond(com.hex.kagune.control.npc.EtoRules.KEY).has(lesson)) {
+            return State.LOCKED;
+        }
         for (String before : quest.after()) {
             if (this.ended.get(before) != State.DONE) {
                 return State.LOCKED;
@@ -258,6 +263,11 @@ public final class QuestLog {
             Bond bond = this.bond(favour.giver());
             this.bond(favour.giver(), bond.regard(bond.regard() + NpcBonds.FAVOUR_DONE).favourDone());
         }
+        if (com.hex.kagune.control.npc.EtoRules.lesson(quest.id()) != null) {
+            // 1.3.0: a lesson of Eto's practised: she thinks the better of them for it.
+            Bond eto = this.bond(com.hex.kagune.control.npc.EtoRules.KEY);
+            this.bond(com.hex.kagune.control.npc.EtoRules.KEY, eto.regard(eto.regard() + com.hex.kagune.control.npc.EtoRules.LESSON_DONE));
+        }
         List<Quest> closed = new ArrayList<>();
         if (quest.exclusive() != null) {
             for (Quest rival : QuestBook.all()) {
@@ -310,7 +320,10 @@ public final class QuestLog {
         return true;
     }
 
-    /** 7.0.2: how the ghoul stands with {@code npc} now (forgetting the faintest bond, never an ally's, past {@link NpcBonds#REMEMBERED}). */
+    /**
+     * 7.0.2: how the ghoul stands with {@code npc} now (forgetting the faintest bond, never an ally's, past {@link NpcBonds#REMEMBERED});
+     * 1.3.0: nor Eto's.
+     */
     public void bond(String npc, Bond bond) {
         this.bonds.put(npc, bond);
         while (this.bonds.size() > NpcBonds.REMEMBERED) {
@@ -318,7 +331,8 @@ public final class QuestLog {
             int least = Integer.MAX_VALUE;
             for (Map.Entry<String, Bond> entry : this.bonds.entrySet()) {
                 int strength = Math.abs(entry.getValue().regard());
-                if (!entry.getValue().has(NpcBonds.ALLY) && !entry.getKey().equals(npc) && strength < least) {
+                if (!entry.getValue().has(NpcBonds.ALLY) && !entry.getKey().equals(npc) && !entry.getKey().equals(com.hex.kagune.control.npc.EtoRules.KEY)
+                    && strength < least) {
                     least = strength;
                     faintest = entry.getKey();
                 }

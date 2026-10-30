@@ -2,6 +2,7 @@
 package net.minecraft.core.particles;
 
 public class ParticleTypes {
+    /** HEART (1.3.0; the original uses it too) */ public static final SimpleParticleType f_123750_ = null;
     /** FLAME */ public static final SimpleParticleType f_123744_ = null;
     /** LARGE_SMOKE */ public static final SimpleParticleType f_123755_ = null;
     /** LAVA */ public static final SimpleParticleType f_123756_ = null;

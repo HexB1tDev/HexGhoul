@@ -29,10 +29,16 @@ public final class KakuganView {
      * What the screen shows this frame. {@code hovered} is the control or eye under the mouse ("mirror", "right", ...), or
      * null; {@code covered} the face cells the skin's second layer covers ({@code glass}: the see-through ones); {@code canFind}
      * whether eyes were found on the skin; {@code choosing} the "which eye?" box is open (its buttons hover as "pick-right",
-     * "pick-left", "pick-both"); {@code bothAllowed} false on a path that is one-eyed by nature (Pale's): no "Both eyes".
+     * "pick-left", "pick-both"); {@code bothAllowed} false on a path that is one-eyed by nature (Pale's): no "Both eyes"; 1.3.0:
+     * {@code oneAllowed} false until Eto has made them like her: no "One eyed".
      */
     public record State(KakuganEyes eyes, int seed, boolean mirror, boolean selectedRight, String hovered, boolean dragging, double time,
-                        long covered, long glass, boolean canFind, boolean choosing, boolean bothAllowed) {
+                        long covered, long glass, boolean canFind, boolean choosing, boolean bothAllowed, boolean oneAllowed) {
+        public State(KakuganEyes eyes, int seed, boolean mirror, boolean selectedRight, String hovered, boolean dragging, double time,
+                     long covered, long glass, boolean canFind, boolean choosing, boolean bothAllowed) {
+            this(eyes, seed, mirror, selectedRight, hovered, dragging, time, covered, glass, canFind, choosing, bothAllowed, true);
+        }
+
         public State(KakuganEyes eyes, int seed, boolean mirror, boolean selectedRight, String hovered, boolean dragging, double time,
                      long covered, long glass, boolean canFind, boolean choosing) {
             this(eyes, seed, mirror, selectedRight, hovered, dragging, time, covered, glass, canFind, choosing, true);
@@ -102,7 +108,11 @@ public final class KakuganView {
         button(c, layout.iris, "Iris: " + (state.eyes().irisInside() ? "inner side" : "outer side"), false, "iris".equals(state.hovered()));
         KakuganEyes eyes = state.eyes();
         String one = !eyes.oneEyed() ? "OFF" : eyes.ghoul() == KakuganEyes.LEFT ? "left eye" : "right eye";
-        button(c, layout.oneEye, "One eyed: " + one, eyes.oneEyed(), "one".equals(state.hovered()));
+        if (state.oneAllowed()) {
+            button(c, layout.oneEye, "One eyed: " + one, eyes.oneEyed(), "one".equals(state.hovered()));
+        } else {
+            button(c, layout.oneEye, "One eyed: Eto only", false, false);
+        }
         button(c, layout.outer, state.canFind() ? "Find my eyes" : "No eyes found on skin", false, state.canFind() && "outer".equals(state.hovered()));
         button(c, layout.reset, "Reset", false, "reset".equals(state.hovered()));
         button(c, layout.done, "Done", true, "done".equals(state.hovered()));
@@ -123,7 +133,7 @@ public final class KakuganView {
         }
         int ghoul = "pick-right".equals(hovered) ? KakuganEyes.RIGHT : "pick-left".equals(hovered) ? KakuganEyes.LEFT : KakuganEyes.BOTH;
         return new State(s.eyes().withGhoul(ghoul), s.seed(), s.mirror(), s.selectedRight(), hovered, s.dragging(), s.time(), s.covered(),
-            s.glass(), s.canFind(), true, s.bothAllowed());
+            s.glass(), s.canFind(), true, s.bothAllowed(), s.oneAllowed());
     }
 
     /**

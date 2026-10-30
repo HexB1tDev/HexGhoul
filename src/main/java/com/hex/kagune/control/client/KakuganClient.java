@@ -57,7 +57,21 @@ public final class KakuganClient {
         return player != null && GHOULS.contains(player.m_36316_().getId());
     }
 
+    /** 1.3.0: the players Eto made like her (they may wear one kakugan). */
+    private static final java.util.Set<UUID> GRANTED = new java.util.HashSet<>();
+
+    /** 1.3.0: true if this client's own player may wear one kakugan. */
+    public static boolean selfGranted() {
+        Minecraft minecraft = Minecraft.m_91087_();
+        return minecraft.f_91074_ != null && GRANTED.contains(minecraft.f_91074_.m_36316_().getId());
+    }
+
     public static void accept(S2CKakuganState message) {
+        if (message.granted()) {
+            GRANTED.add(message.playerId());
+        } else {
+            GRANTED.remove(message.playerId());
+        }
         EYES.put(message.playerId(), message.eyes());
         if (message.placed()) {
             PLACED.put(message.playerId(), message.eyes());

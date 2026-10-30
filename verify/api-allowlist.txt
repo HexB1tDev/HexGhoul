@@ -855,3 +855,12 @@ M net/minecraft/client/resources/sounds/SoundInstance m_7904_ ()Lnet/minecraft/r
 M net/minecraft/client/resources/sounds/SoundInstance m_7772_ ()D                  # [srg] getX: joined.tsrg fxy.h ()D m_7772_ 7772, intermediary method_4784
 M net/minecraft/client/resources/sounds/SoundInstance m_7780_ ()D                  # [srg] getY: joined.tsrg fxy.i ()D m_7780_ 7780, intermediary method_4779
 M net/minecraft/client/resources/sounds/SoundInstance m_7778_ ()D                  # [srg] getZ: joined.tsrg fxy.j ()D m_7778_ 7778, intermediary method_4778
+
+# --- 1.3.0: Eto, who lives in the Library (bgb = Mob, bgc = MobCategory, iv = ParticleTypes, bns = RandomStrollGoal/WanderAroundGoal,
+# --- bnj = MoveTowardsRestrictionGoal/GoToWalkTargetGoal, bgi = PathfinderMob; all from joined.tsrg and intermediary 1.20.1).
+F net/minecraft/world/entity/MobCategory CREATURE Lnet/minecraft/world/entity/MobCategory;  # [srg] bgc.b CREATURE (intermediary field_6294; enum constants keep their names)
+M net/minecraft/world/entity/Mob m_21446_ (Lnet/minecraft/core/BlockPos;I)V  # [srg] restrictTo: bgb.a (Lgu;I)V m_21446_ (intermediary method_18408, yarn setPositionTarget)
+C net/minecraft/world/entity/ai/goal/RandomStrollGoal                                # [srg] bns C_715_ (class_1379, yarn WanderAroundGoal)
+M net/minecraft/world/entity/ai/goal/RandomStrollGoal <init> (Lnet/minecraft/world/entity/PathfinderMob;D)V  # [srg] bns.<init>(Lbgi;D)V 25733 (yarn WanderAroundGoal(PathAwareEntity, double))
+C net/minecraft/world/entity/ai/goal/MoveTowardsRestrictionGoal                      # [srg] bnj C_707_ (class_1370, yarn GoToWalkTargetGoal)
+M net/minecraft/world/entity/ai/goal/MoveTowardsRestrictionGoal <init> (Lnet/minecraft/world/entity/PathfinderMob;D)V  # [srg] bnj.<init>(Lbgi;D)V 25632 (yarn GoToWalkTargetGoal(PathAwareEntity, double))

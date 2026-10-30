@@ -77,6 +77,20 @@ public final class QuestBook {
             List.of(of("Have a ghoul walk with you", Signal.BEFRIEND, 1, Tags.ALLY), of("Kill hostiles with your ally near", Signal.KILL, 10, Tags.HOSTILE,
                 Tags.ALLY)), Reward.mastery(50).meat(2)));
 
+        // 1.3.0: Eto's lessons, a third way to the eye-mode fight's gates: each locked until she teaches it at the Library
+        // (QuestLog.state, EtoRules.Lesson), in order.
+        add(new Quest("eto_kick", Line.GHOUL, null, "Eto's Lesson: Light Feet",
+            "Strike, strike, flip away, then all your weight through one kick. She'll want to see it.", 0, null, null,
+            List.of(of("Land blitz strikes", Signal.STRIKE, 40), of("Flip", Signal.FLIP, 12)), Reward.mastery(25).opens(Gate.EYES_KICK)));
+        add(new Quest("eto_soar", Line.GHOUL, null, "Eto's Lesson: Up We Go",
+            "The ground is for people who are tired. Kill them before you land.", 0, List.of("eto_kick"), null,
+            List.of(of("Land Speed Kicks", Signal.KICK, 12), of("Kill in mid-air, eyes open", Signal.KILL, 5, Tags.EYES, Tags.AIRBORNE)),
+            Reward.mastery(40).opens(Gate.EYES_SOAR)));
+        add(new Quest("eto_witness", Line.GHOUL, null, "Eto's Lesson: Witness This",
+            "One punch is rude. Wind it all the way back, and make them watch.", 0, List.of("eto_soar"), null,
+            List.of(of("Land full-charge Big Punches", Signal.PUNCH, 8, Tags.FULL), of("Flip", Signal.FLIP, 30)),
+            Reward.mastery(50).opens(Gate.EYES_WITNESS)));
+
         // ------------------------------------------------------------------ Rinkaku: the one-eyed king
         add(new Quest("rizes_gift", Line.PATH, KagunePath.RINKAKU, "Rize's Gift",
             "Her kakuhou beats under your ribs. Let it out and let it feed.", 200, null, null,

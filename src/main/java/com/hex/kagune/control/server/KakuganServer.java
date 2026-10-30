@@ -48,6 +48,8 @@ public final class KakuganServer {
      * eye only, whatever a client sends).
      */
     public static void place(ServerPlayer player, KakuganEyes eyes) {
+        // 1.3.0: one kakugan only once Eto has made them like her (or on a path that is one-eyed by nature, below).
+        eyes = com.hex.kagune.control.npc.EtoRules.allowed(eyes, granted(player), PathServer.path(player));
         if (PathServer.path(player) == com.hex.kagune.control.KagunePath.PALE && !eyes.oneEyed()) {
             eyes = eyes.withGhoul(KakuganEyes.RIGHT);
         }
@@ -60,7 +62,30 @@ public final class KakuganServer {
     }
 
     static S2CKakuganState state(ServerPlayer player) {
-        return new S2CKakuganState(player.m_20148_(), eyes(player), placed(player));
+        return new S2CKakuganState(player.m_20148_(), eyes(player), placed(player), granted(player));
+    }
+
+    /**
+     * 1.3.0: true if the player may wear one kakugan (Eto made them like her). The first look under 1.3.0 keeps one eye for a player
+     * who had already placed theirs so (on a path where it was a choice); every look after reads what was kept.
+     */
+    public static boolean granted(ServerPlayer player) {
+        net.minecraft.nbt.CompoundTag root = KaguneProfile.root(player);
+        String key = com.hex.kagune.control.npc.EtoRules.GRANT;
+        if (!root.m_128441_(key)) {
+            root.m_128379_(key, com.hex.kagune.control.npc.EtoRules.grandfathered(placed(player), eyes(player), PathServer.path(player)));
+        }
+        return root.m_128471_(key);
+    }
+
+    /** 1.3.0: Eto's surgery: they may wear one kakugan from now on, and a ghoul's turns one-eyed (the right) at once. */
+    public static void grant(ServerPlayer player) {
+        KaguneProfile.root(player).m_128379_(com.hex.kagune.control.npc.EtoRules.GRANT, true);
+        if (KaguneProfile.isUnlocked(player)) {
+            place(player, eyes(player).withGhoul(KakuganEyes.RIGHT));
+        } else {
+            ControlNetwork.broadcast(player, state(player));
+        }
     }
 
     /** After a reset: the eyes were never placed; every client hears so, and the player is asked again once they pick a path. */

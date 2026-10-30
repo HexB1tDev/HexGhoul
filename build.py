@@ -24,7 +24,7 @@ import sys
 import zipfile
 
 ROOT = Path(__file__).resolve().parent
-VERSION = "1.2.9"
+VERSION = "1.3.0"
 INPUT = ROOT / "input" / "hexkagune-1.0.0.jar"
 BUILD = Path(os.environ.get("HEXKAGUNE_BUILD_DIR", ROOT / "build"))
 OUTPUT = BUILD / f"hexkagune-{VERSION}.jar"
@@ -156,8 +156,8 @@ def assemble():
 
 # 1.2.5: no character of the show is named anywhere in the mod's jar (the user's ask): not in a class, a text, a resource or a file
 # name. These are the only places the names are written (to be looked for); the original jar's own are renamed by KagunePatch.
-FORBIDDEN = re.compile(rb"Kaneki|KANEKI|kaneki|Ayato|AYATO|ayato|Furuta|FURUTA|furuta|Eto(?![a-z])|(?<![A-Za-z])ETO(?![A-Za-z])"
-                       rb"|(?<![A-Za-z])eto(?![a-z])")
+# 1.3.0: the user allowed "Eto" (the Library's NPC), so her name is no longer looked for.
+FORBIDDEN = re.compile(rb"Kaneki|KANEKI|kaneki|Ayato|AYATO|ayato|Furuta|FURUTA|furuta")
 
 
 def check_names():

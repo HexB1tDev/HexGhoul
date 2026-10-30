@@ -1,0 +1,243 @@
+package com.hex.kagune.control.client.render;
+
+import com.hex.kagune.control.ControlEntities;
+import com.hex.kagune.control.client.EtoClient;
+import com.hex.kagune.control.client.PaleClient;
+import com.hex.kagune.control.client.animation.BodyFrame;
+import com.hex.kagune.control.client.animation.EtoPose;
+import com.hex.kagune.control.client.animation.RigPose;
+import com.hex.kagune.control.npc.EtoGesture;
+import com.hex.kagune.control.npc.EtoNpc;
+import com.hex.kagune.control.npc.EtoRules;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import java.util.Objects;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.model.PlayerModel;
+import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
+import net.minecraft.client.renderer.entity.RenderLayerParent;
+import net.minecraft.client.renderer.entity.layers.RenderLayer;
+import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.EntityRenderersEvent;
+import net.minecraftforge.client.event.RenderLevelStageEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+import org.joml.Matrix3f;
+import org.joml.Matrix4f;
+import org.joml.Quaternionf;
+
+/**
+ * 1.3.0: Eto as vanilla draws a player, on the slim arms in her own skin ({@code tools/eto_textures.py}), her figure ({@link EtoModel}:
+ * wider hips, and a bust drawn on her torso here), posed as she is ({@link EtoPose}: her gestures, her moves, her flips). Over the skin:
+ * her kakugan (the right eye turned, veins and all) fading in at night and in a fight with its iris glowing, her eyes shut "- -" when she
+ * blinks or leans in for a kiss, her cheeks pink when she blushes, and the anger mark over her head when she was left hanging.
+ */
+public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<EtoNpc>> {
+    static final ResourceLocation SKIN = texture("eto");
+    static final ResourceLocation KAKUGAN = texture("eto_kakugan");
+    static final ResourceLocation GLOW = texture("eto_kakugan_glow");
+    static final ResourceLocation CLOSED = texture("eto_closed");
+    static final ResourceLocation BLUSH = texture("eto_blush");
+    static final ResourceLocation ANGRY = texture("eto_angry");
+
+    private static ResourceLocation texture(String name) {
+        return Objects.requireNonNull(ResourceLocation.m_214293_("hexkagune", "textures/entity/eto/" + name + ".png"));
+    }
+
+    public EtoRenderer(EntityRendererProvider.Context context) {
+        super(context, new EtoModel(context.m_174023_(ModelLayers.f_171166_)), 0.5F);
+        this.m_115326_(new Face(this));
+    }
+
+    /** Her pose this frame: a flip, else her move, else her gesture (null: none). */
+    static RigPose pose(EtoNpc npc, EtoClient.View view, double clock) {
+        if (view == null) {
+            return null;
+        }
+        RigPose flip = EtoClient.flip(view, clock, npc.m_20096_());
+        if (flip != null) {
+            return flip;
+        }
+        RigPose move = EtoPose.move(view.move(), view.moveAge(clock));
+        return move != null ? move : EtoPose.gesture(view.gesture(), view.gestureAge(clock));
+    }
+
+    @Override
+    public void m_7392_(EtoNpc npc, float yaw, float partial, PoseStack pose, MultiBufferSource buffers, int light) {
+        EtoClient.View view = EtoClient.get(npc.m_19879_());
+        double clock = PaleClient.clock(partial);
+        RigPose posed = pose(npc, view, clock);
+        EtoModel.pose = posed;
+        boolean turned = posed != null && (Math.abs(posed.flip) > 1.0E-3F || Math.abs(posed.roll) > 1.0E-3F || Math.abs(posed.spin) > 1.0E-3F
+            || Math.abs(posed.drop) > 1.0E-3F);
+        try {
+            if (turned) {
+                float delta = ((npc.f_20883_ - npc.f_20884_) % 360.0F + 540.0F) % 360.0F - 180.0F;
+                double body = Math.toRadians(npc.f_20884_ + delta * partial);
+                float rightX = (float)-Math.cos(body);
+                float rightZ = (float)-Math.sin(body);
+                pose.m_85836_();
+                pose.m_85837_(0.0, -posed.drop / 16.0 + BodyFrame.TURN_PIVOT, 0.0);
+                pose.m_252781_(new Quaternionf().rotateAxis(-posed.spin, 0.0F, 1.0F, 0.0F));
+                pose.m_252781_(new Quaternionf().rotateAxis(posed.flip, rightX, 0.0F, rightZ));
+                pose.m_252781_(new Quaternionf().rotateAxis(-posed.roll, rightZ, 0.0F, -rightX));
+                pose.m_85837_(0.0, -BodyFrame.TURN_PIVOT, 0.0);
+            }
+            super.m_7392_(npc, yaw, partial, pose, buffers, light);
+        } finally {
+            if (turned) {
+                pose.m_85849_();
+            }
+            EtoModel.pose = null;
+        }
+        if (view != null && view.gesture() == EtoGesture.ANGRY && !npc.m_20145_()) {
+            angry(npc, view.gestureAge(clock), pose, buffers);
+        }
+    }
+
+    @Override
+    public ResourceLocation m_5478_(EtoNpc npc) {
+        return SKIN;
+    }
+
+    /** The anger mark over her head, to her right, popping in and throbbing, turned to the camera. */
+    private static void angry(EtoNpc npc, double age, PoseStack pose, MultiBufferSource buffers) {
+        int ticks = EtoGesture.ANGRY.ticks;
+        if (age >= ticks) {
+            return;
+        }
+        float pop = age < 4.0 ? (float)(age / 4.0) * 1.25F : age < 7.0 ? 1.25F - 0.25F * (float)((age - 4.0) / 3.0) : 1.0F;
+        float fade = age > ticks - 8 ? (float)((ticks - age) / 8.0) : 1.0F;
+        float throb = 1.0F + 0.08F * (float)Math.sin(age * 0.9);
+        float size = 0.36F * pop * throb;
+        Vec3 camera = Minecraft.m_91087_().f_91063_.m_109153_().m_90583_();
+        double dx = camera.f_82479_ - npc.m_20185_();
+        double dz = camera.f_82481_ - npc.m_20189_();
+        float toward = (float)Math.atan2(dx, dz);
+        pose.m_85836_();
+        pose.m_85837_(0.0, npc.m_20206_() + 0.32, 0.0);
+        pose.m_252781_(new Quaternionf().rotateAxis(toward, 0.0F, 1.0F, 0.0F));
+        pose.m_85837_(-0.28, 0.0, 0.0);
+        Matrix4f matrix = pose.m_85850_().m_252922_();
+        Matrix3f normals = pose.m_85850_().m_252943_();
+        VertexConsumer consumer = buffers.m_6299_(RenderType.m_110473_(ANGRY));
+        int alpha = Math.round(255 * Math.max(0.0F, Math.min(1.0F, fade)));
+        float[][] corners = {{-size, -size, 0.0F, 1.0F}, {size, -size, 1.0F, 1.0F}, {size, size, 1.0F, 0.0F}, {-size, size, 0.0F, 0.0F}};
+        for (float[] c : corners) {
+            consumer.m_252986_(matrix, c[0], c[1], 0.0F).m_6122_(255, 255, 255, alpha).m_7421_(c[2], c[3]).m_86008_(OverlayTexture.f_118083_)
+                .m_85969_(0xF000F0).m_252939_(normals, 0.0F, 0.0F, 1.0F).m_5752_();
+        }
+        pose.m_85849_();
+    }
+
+    /**
+     * Her face and figure over the skin: the bust on her torso, the kakugan (the eye open by its fade; its iris glowing), her eyes shut
+     * (a blink, or a gesture that shuts them), her blush.
+     */
+    static final class Face extends RenderLayer<EtoNpc, PlayerModel<EtoNpc>> {
+        Face(RenderLayerParent<EtoNpc, PlayerModel<EtoNpc>> parent) {
+            super(parent);
+        }
+
+        @Override
+        public void m_6494_(PoseStack pose, MultiBufferSource buffers, int light, EtoNpc npc, float limbSwing, float limbSwingAmount, float partialTick,
+                            float ageInTicks, float netHeadYaw, float headPitch) {
+            if (npc.m_20145_()) {
+                return;
+            }
+            try {
+                PlayerModel<EtoNpc> model = this.m_117386_();
+                bust(model, pose, buffers.m_6299_(RenderType.m_110473_(SKIN)), light);
+                EtoClient.View view = EtoClient.get(npc.m_19879_());
+                double clock = PaleClient.clock(partialTick);
+                EtoGesture gesture = view == null ? EtoGesture.NONE : view.gesture();
+                boolean shut = gesture.eyesClosed || EtoRules.blink(npc.m_19879_() * 31 + 7, ageInTicks);
+                float eye = EtoClient.eye(npc.m_19879_(), view, npc.m_9236_().m_46468_(), clock);
+                if (!shut && eye > 0.003F) {
+                    model.m_7695_(pose, buffers.m_6299_(RenderType.m_110473_(KAKUGAN)), light, OverlayTexture.f_118083_, 1.0F, 1.0F, 1.0F, eye);
+                    model.m_7695_(pose, buffers.m_6299_(RenderType.m_110488_(GLOW)), 0xF000F0, OverlayTexture.f_118083_, eye, eye, eye, 1.0F);
+                }
+                if (shut) {
+                    model.m_7695_(pose, buffers.m_6299_(RenderType.m_110473_(CLOSED)), light, OverlayTexture.f_118083_, 1.0F, 1.0F, 1.0F, 1.0F);
+                }
+                if (gesture.blush) {
+                    float blush = (float)Math.min(1.0, (view == null ? 0.0 : view.gestureAge(clock)) / 8.0);
+                    model.m_7695_(pose, buffers.m_6299_(RenderType.m_110473_(BLUSH)), light, OverlayTexture.f_118083_, 1.0F, 1.0F, 1.0F, blush);
+                }
+            } catch (RuntimeException failure) {
+                PlayerLayers.failed("Eto's face", failure);
+            }
+        }
+    }
+
+    /**
+     * Her bust: a wedge on the front of her torso (model pixels: x -2.5..2.5, from 2 down, out to 1.3 in front at 4.5, back in at 5.5),
+     * painted with the torso's own front (the skin's texels for the rows it covers), turned with the torso.
+     */
+    static void bust(PlayerModel<EtoNpc> model, PoseStack pose, VertexConsumer consumer, int light) {
+        pose.m_85836_();
+        model.f_102810_.m_104299_(pose);
+        Matrix4f m = pose.m_85850_().m_252922_();
+        Matrix3f n = pose.m_85850_().m_252943_();
+        float x0 = -2.5F;
+        float x1 = 2.5F;
+        float top = 2.0F;
+        float tip = 4.5F;
+        float bottom = 5.5F;
+        float front = -2.0F;
+        float out = -3.3F;
+        // The upper slope, then the underside (each a quad), then the two sides (a triangle each, as a quad with a repeated corner).
+        quad(consumer, m, n, light, new float[][] {{x0, top, front}, {x1, top, front}, {x1, tip, out}, {x0, tip, out}}, 0.0F, -0.8F, -1.0F);
+        quad(consumer, m, n, light, new float[][] {{x0, tip, out}, {x1, tip, out}, {x1, bottom, front}, {x0, bottom, front}}, 0.0F, 0.6F, -1.0F);
+        for (float x : new float[] {x0, x1}) {
+            quad(consumer, m, n, light, new float[][] {{x, top, front}, {x, tip, out}, {x, bottom, front}, {x, bottom, front}}, Math.signum(x), 0.0F, 0.0F);
+        }
+        pose.m_85849_();
+    }
+
+    /** One face of the bust, each corner painted with the torso front's texel at its own place (its x across, its y down). */
+    private static void quad(VertexConsumer consumer, Matrix4f m, Matrix3f n, int light, float[][] corners, float nx, float ny, float nz) {
+        for (float[] c : corners) {
+            // A side's corners sit on the torso's edge: pulled a quarter pixel in, onto the edge column's texels.
+            float u = (24.0F + c[0] - (nx != 0.0F ? Math.signum(c[0]) * 0.25F : 0.0F)) / 64.0F;
+            float v = (20.0F + c[1]) / 64.0F;
+            consumer.m_252986_(m, c[0] / 16.0F, c[1] / 16.0F, c[2] / 16.0F).m_6122_(255, 255, 255, 255).m_7421_(u, v).m_86008_(OverlayTexture.f_118083_)
+                .m_85969_(light).m_252939_(n, nx, ny, nz).m_5752_();
+        }
+    }
+
+    @Mod.EventBusSubscriber(modid = "hexkagune", value = Dist.CLIENT)
+    public static final class Frame {
+        private Frame() {
+        }
+
+        @SubscribeEvent
+        public static void after(RenderLevelStageEvent event) {
+            if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_ENTITIES) {
+                return;
+            }
+            Minecraft minecraft = Minecraft.m_91087_();
+            if (minecraft.f_91073_ != null && minecraft.f_91073_.m_46467_() % 100L == 50L) {
+                EtoClient.prune(minecraft.f_91073_);
+            }
+        }
+    }
+
+    @Mod.EventBusSubscriber(modid = "hexkagune", bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+    public static final class Registration {
+        private Registration() {
+        }
+
+        @SubscribeEvent
+        public static void renderers(EntityRenderersEvent.RegisterRenderers event) {
+            event.registerEntityRenderer(ControlEntities.ETO.get(), EtoRenderer::new);
+        }
+    }
+}

@@ -12,5 +12,6 @@ public abstract class Mob extends LivingEntity {
     /** isPersistenceRequired */ public boolean m_21532_() { throw new UnsupportedOperationException(); }
     /** createMobAttributes */ public static net.minecraft.world.entity.ai.attributes.AttributeSupplier.Builder m_21552_() { throw new UnsupportedOperationException(); }
     /** getTarget */ public LivingEntity m_5448_() { throw new UnsupportedOperationException(); }
+    /** restrictTo(center, radius) (1.3.0) */ public void m_21446_(net.minecraft.core.BlockPos center, int radius) { throw new UnsupportedOperationException(); }
     /** setTarget */ public void m_6710_(LivingEntity target) { throw new UnsupportedOperationException(); }
 }

@@ -49,10 +49,18 @@ public final class KakuganScreen extends Screen {
         return player != null && PathClient.get(player) == com.hex.kagune.control.KagunePath.GRAFT;
     }
 
-    /** {@code eyes} as this path allows them: a one-eyed path keeps one eye (the right, if both were set). */
+    /** 1.3.0: one kakugan can be picked: on a one-eyed path, or once Eto made them like her. */
+    private boolean oneAllowed() {
+        return !this.bothAllowed() || KakuganClient.selfGranted();
+    }
+
+    /** {@code eyes} as this path allows them: a one-eyed path keeps one eye (the right, if both were set); 1.3.0: both without her grant. */
     private KakuganEyes oneEyed(KakuganEyes eyes) {
         if (this.rightOnly()) {
             return eyes.withGhoul(KakuganEyes.RIGHT);
+        }
+        if (!this.oneAllowed()) {
+            return eyes.withGhoul(KakuganEyes.BOTH);
         }
         return this.bothAllowed() || eyes.oneEyed() ? eyes : eyes.withGhoul(KakuganEyes.RIGHT);
     }
@@ -78,7 +86,7 @@ public final class KakuganScreen extends Screen {
         double time = (System.currentTimeMillis() - this.openedAt) / 1000.0;
         KakuganView.draw(canvas, layout, new KakuganView.State(this.eyes, seed, this.mirror, this.selectedRight, this.hovered(layout, mouseX, mouseY),
             this.dragging, time, KakuganClient.selfCovered(), KakuganClient.selfGlass(), KakuganClient.selfDetected() != null, this.choosing,
-            this.bothAllowed()));
+            this.bothAllowed(), this.oneAllowed()));
     }
 
     /** What is under the mouse: an eye ("right", "left") or a control; only the box's buttons while it is open. */
@@ -156,7 +164,7 @@ public final class KakuganScreen extends Screen {
             }
             case "height" -> this.eyes = this.eyes.withHeight(this.eyes.height() == 2 ? 1 : 2);
             case "iris" -> this.eyes = this.eyes.withIrisInside(!this.eyes.irisInside());
-            case "one" -> this.choosing = true;
+            case "one" -> this.choosing = this.oneAllowed();
             case "outer" -> {
                 KakuganEyes found = KakuganClient.selfDetected();
                 if (found != null) {

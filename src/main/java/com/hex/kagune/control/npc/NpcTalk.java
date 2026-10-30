@@ -24,7 +24,15 @@ public final class NpcTalk {
         STAY("Wait here."),
         PART("Go your own way."),
         INSULT("Get out of my sight."),
-        LEAVE("Leave.");
+        LEAVE("Leave."),
+        // 1.3.0: Eto's (new ones go at the end: the talk is sent by ordinal).
+        BOOK("I brought you a book. (give the book in your hand)"),
+        FLOWER("I picked this for you. (give the flower in your hand)"),
+        LESSON("Teach me something."),
+        ASK_OUT("Go out with me."),
+        KISS("Kiss her."),
+        HUG("Hug her."),
+        SURGERY("Make me like you.");
 
         private final String text;
 
@@ -135,6 +143,8 @@ public final class NpcTalk {
                 Effect.NONE);
             case INSULT -> insult(c);
             case LEAVE -> new Reply("", 0, Effect.CLOSE);
+            // 1.3.0: Eto's alone (EtoTalk); never offered by a ghoul NPC.
+            case BOOK, FLOWER, LESSON, ASK_OUT, KISS, HUG, SURGERY -> new Reply("", 0, Effect.CLOSE);
         };
     }
 
