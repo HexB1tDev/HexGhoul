@@ -179,6 +179,8 @@ public final class GhoulNpcRenderer extends HumanoidMobRenderer<GhoulNpc, Player
             event.registerEntityRenderer(ControlEntities.GHOUL.get(), GhoulNpcRenderer::new);
             // 1.2.1: Peace's flesh creatures' too, as FleshThrallRenderer does (in some setups that one was never made): twice can't hurt.
             event.registerEntityRenderer(ControlEntities.THRALL.get(), net.minecraft.client.renderer.entity.NoopRenderer::new);
+            // 1.3.1: Eto's too, as EtoRenderer does (the owner's crash: she had none); ThrallRenderGuard mends it if still none.
+            event.registerEntityRenderer(ControlEntities.ETO.get(), EtoRenderer::new);
         }
     }
 }

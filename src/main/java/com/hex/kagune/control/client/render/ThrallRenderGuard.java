@@ -2,10 +2,12 @@ package com.hex.kagune.control.client.render;
 
 import com.hex.kagune.control.ControlEntities;
 import com.hex.kagune.control.Safety;
+import com.hex.kagune.control.npc.EtoNpc;
 import com.hex.kagune.control.npc.FleshThrall;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.NoopRenderer;
+import net.minecraft.world.entity.Entity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
@@ -20,6 +22,7 @@ import net.minecraftforge.fml.common.Mod;
  * world, the renderer is looked for: none, and it is registered once more and every entity renderer made again from the registered
  * ones (as a resource reload does), before the creature is ever drawn; if there is still none, the creature is kept out of this
  * client's world (the server keeps it, and it still fights), never drawn without one. What happened is logged once.
+ * 1.3.1: Eto too (the owner's crash report: the same null renderer as the Library came into view).
  */
 @Mod.EventBusSubscriber(modid = "hexkagune", value = Dist.CLIENT)
 public final class ThrallRenderGuard {
@@ -31,27 +34,31 @@ public final class ThrallRenderGuard {
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void join(EntityJoinLevelEvent event) {
-        if (!(event.getEntity() instanceof FleshThrall thrall) || !event.getLevel().f_46443_) {
+        Entity entity = event.getEntity();
+        if (!(entity instanceof FleshThrall || entity instanceof EtoNpc) || !event.getLevel().f_46443_) {
             return;
         }
+        String who = entity instanceof EtoNpc ? "Eto" : "Peace's flesh creatures";
         EntityRenderDispatcher dispatcher = Minecraft.m_91087_().m_91290_();
-        if (dispatcher.m_114382_(thrall) != null) {
+        if (dispatcher.m_114382_(entity) != null) {
             return;
         }
         if (!mended) {
             mended = true;
             try {
-                new EntityRenderersEvent.RegisterRenderers().registerEntityRenderer(ControlEntities.THRALL.get(), NoopRenderer::new);
+                EntityRenderersEvent.RegisterRenderers again = new EntityRenderersEvent.RegisterRenderers();
+                again.registerEntityRenderer(ControlEntities.THRALL.get(), NoopRenderer::new);
+                again.registerEntityRenderer(ControlEntities.ETO.get(), EtoRenderer::new);
                 dispatcher.m_6213_(Minecraft.m_91087_().m_91098_());
             } catch (Throwable failure) {
-                Safety.caught(failure, "making the flesh creatures' renderer again");
+                Safety.caught(failure, "making " + who + "'s renderer again");
             }
-            boolean fixed = dispatcher.m_114382_(thrall) != null;
-            Safety.caught(new IllegalStateException("Peace's flesh creatures came into this client's world with no renderer: "
+            boolean fixed = dispatcher.m_114382_(entity) != null;
+            Safety.caught(new IllegalStateException(who + " came into this client's world with no renderer: "
                 + (fixed ? "it was registered again and the entity renderers made again" : "still none after making them again, so they are kept out "
-                + "of this client's world")), "the flesh creatures' renderer");
+                + "of this client's world")), who + "'s renderer");
         }
-        if (dispatcher.m_114382_(thrall) == null) {
+        if (dispatcher.m_114382_(entity) == null) {
             event.setCanceled(true);
         }
     }
