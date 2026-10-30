@@ -92,6 +92,30 @@ public final class EtoBrain {
         if (home == null) {
             home = npc.settle();
         }
+        // 1.3.1: following a player, her home goes with her (never pulled back to the Library); she keeps up, or is put by them if far behind.
+        java.util.UUID leaderId = npc.following();
+        if (leaderId != null) {
+            ServerPlayer leader = null;
+            for (ServerPlayer player : level.m_6907_()) {
+                if (player.m_20148_().equals(leaderId)) {
+                    leader = player;
+                }
+            }
+            if (now % 20L == 0L || leader != null && mind.target == 0) {
+                home = npc.settle();
+            }
+            if (leader != null && mind.target == 0) {
+                Vec3 at = leader.m_20182_();
+                double far = npc.m_20238_(at);
+                if (far > 24.0 * 24.0) {
+                    npc.m_6021_(at.f_82479_, at.f_82480_, at.f_82481_);
+                    npc.m_21573_().m_26573_();
+                    home = npc.settle();
+                } else if (far > 9.0 && now % 10L == 0L) {
+                    npc.m_21573_().m_5624_(leader, 1.1);
+                }
+            }
+        }
         double[] feet = npc.homeFeet();
         Vec3 homeAt = new Vec3(feet[0], feet[1], feet[2]);
         if (npc.m_20238_(homeAt) > EtoRules.LOST * EtoRules.LOST) {

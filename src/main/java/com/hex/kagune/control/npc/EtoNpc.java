@@ -25,6 +25,8 @@ import net.minecraft.world.level.Level;
 public class EtoNpc extends PathfinderMob {
     /** Where her home is kept in her saved data (a block: where she first stood, one up). */
     static final String HOME = "HexEtoHome";
+    /** 1.3.1: the player she follows (her saved data), if any. */
+    static final String FOLLOW = "HexEtoFollow";
 
     /** The server's state for her (her fight, her gesture); null on clients and until her first tick. */
     public EtoBrain.Mind mind;
@@ -65,6 +67,22 @@ public class EtoNpc extends PathfinderMob {
         tag.m_128405_(HOME + "Z", z);
         this.home = new BlockPos(x, y, z);
         return this.home;
+    }
+
+    /** 1.3.1: the player she follows (kept in her saved data), or null: she keeps to her home. */
+    public java.util.UUID following() {
+        CompoundTag tag = this.getPersistentData();
+        return tag.m_128403_(FOLLOW) ? tag.m_128342_(FOLLOW) : null;
+    }
+
+    /** 1.3.1: she follows this player from now on (null: no one). */
+    public void follow(java.util.UUID player) {
+        CompoundTag tag = this.getPersistentData();
+        if (player == null) {
+            tag.m_128473_(FOLLOW);
+        } else {
+            tag.m_128362_(FOLLOW, player);
+        }
     }
 
     /** Where her home's floor is, in the middle of its block (x, feet y, z). */

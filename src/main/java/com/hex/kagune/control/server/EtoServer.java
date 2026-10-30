@@ -144,6 +144,11 @@ public final class EtoServer {
             case KISS -> EtoBrain.walkUp(npc, npc.mind, player, EtoGesture.KISS, now);
             case HUG -> EtoBrain.walkUp(npc, npc.mind, player, EtoGesture.HUG, now);
             case ANGER -> npc.mind.grudges.put(player.m_20148_(), now + 400L);
+            case FOLLOW -> npc.follow(player.m_20148_());
+            case STAY -> {
+                npc.follow(null);
+                npc.settle();
+            }
             default -> {
             }
         }

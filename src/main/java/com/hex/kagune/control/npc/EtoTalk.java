@@ -13,7 +13,7 @@ import java.util.List;
 public final class EtoTalk {
     /** What the server does after an answer. */
     public enum Effect {
-        NONE, CLOSE, BOOK, FLOWER, TEACH, BEGIN, DATE, KISS, HUG, OFFER, SURGERY, ANGER
+        NONE, CLOSE, BOOK, FLOWER, TEACH, BEGIN, DATE, KISS, HUG, OFFER, SURGERY, ANGER, FOLLOW, STAY
     }
 
     /**
@@ -69,6 +69,9 @@ public final class EtoTalk {
         if (step == EtoRules.Step.ASK) {
             out.add(NpcTalk.Choice.ASK_OUT);
         }
+        // 1.3.1: she comes along (her home goes where she is), or stays put where she stands.
+        out.add(NpcTalk.Choice.FOLLOW);
+        out.add(NpcTalk.Choice.STAY);
         if (c.dating()) {
             out.add(NpcTalk.Choice.KISS);
             out.add(NpcTalk.Choice.HUG);
@@ -129,6 +132,8 @@ public final class EtoTalk {
             case KISS -> c.dating() ? new Reply("Mm. That'll do. For now.", 0, Effect.KISS) : new Reply("Bold. Buy me a book first.", 0, Effect.NONE);
             case HUG -> c.dating() ? new Reply("Tighter. I won't break, I promise.", 0, Effect.HUG) : new Reply("Hands where I can see them.", 0, Effect.NONE);
             case SURGERY -> surgery(c);
+            case FOLLOW -> new Reply("Finally, some fresh air. Lead the way.", 0, Effect.FOLLOW);
+            case STAY -> new Reply("Here? ...Okay. This is home now.", 0, Effect.STAY);
             case ACCEPT -> c.dating() && !c.granted() ? new Reply("Shh. Close your eyes. I'll be right here when you wake up.", 0, Effect.SURGERY)
                 : new Reply("Another time.", 0, Effect.NONE);
             case DECLINE -> new Reply("Another time, then. The offer stands.", 0, Effect.NONE);
