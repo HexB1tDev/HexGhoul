@@ -83,6 +83,11 @@ final class ControlCommands {
                 QuestServer.hunt(context.getSource().m_81375_());
                 return 1;
             }))));
+        // 1.3.1: Eto's regard for a player set to the most (a testing shortcut for operators).
+        dispatcher.register(Commands.m_82127_("kagune").then(Commands.m_82127_("eto").requires(source -> source.m_6761_(2))
+            .then(Commands.m_82127_("max").executes(context -> maxEto(context, context.getSource().m_81375_()))
+                .then(Commands.m_82129_("player", EntityArgument.m_91466_())
+                    .executes(context -> maxEto(context, EntityArgument.m_91474_(context, "player")))))));
         // 7.0.1: Ghoul Meat devoured: what it gives now; an operator can set the count.
         dispatcher.register(Commands.m_82127_("kagune").then(Commands.m_82127_("ghoulmeat")
             .executes(ControlCommands::reportGhoulMeat)
@@ -267,6 +272,19 @@ final class ControlCommands {
         }
         String name = type.name().toLowerCase(Locale.ROOT);
         context.getSource().m_288197_(() -> Component.m_237113_("Forced a " + name + " instinct urge toward the nearest prey"), false);
+        return 1;
+    }
+
+    /** Eto's regard for the player at the most, met (any grudge from killing her forgotten): only with her within 10 blocks of them. */
+    private static int maxEto(CommandContext<CommandSourceStack> context, ServerPlayer player) {
+        if (player.m_9236_().m_6443_(com.hex.kagune.control.npc.EtoNpc.class, player.m_20191_().m_82400_(10.0), eto -> eto.m_6084_()).isEmpty()) {
+            context.getSource().m_81352_(Component.m_237113_("No Eto within 10 blocks."));
+            return 0;
+        }
+        com.hex.kagune.control.quest.QuestLog.Bond bond = QuestServer.bond(player, com.hex.kagune.control.npc.EtoRules.KEY);
+        QuestServer.bond(player, com.hex.kagune.control.npc.EtoRules.KEY,
+            bond.regard(com.hex.kagune.control.npc.NpcBonds.MOST).with(com.hex.kagune.control.npc.NpcBonds.MET, true));
+        context.getSource().m_288197_(() -> Component.m_237113_("Eto's regard is at the most (100)."), false);
         return 1;
     }
 }
