@@ -22,6 +22,40 @@ public final class EtoRules {
     public static final String GRANT = "HexEtoGrant";
 
     public static final float HEALTH = 150.0F;
+    /** 1.3.1: how much smaller than a player she is: drawn and boxed (a little shorter than one). */
+    public static final float SIZE = 0.93F;
+
+    /** 1.3.1: her bust's bounce, a damped spring (per tick squared, per tick) lagging her body's height, and at most how far it lags. */
+    public static final double JIGGLE_STIFF = 0.9;
+    public static final double JIGGLE_DAMP = 0.35;
+    public static final double JIGGLE_MOST = 0.075;
+
+    /**
+     * Her bust's bounce carried on over {@code ticks} as her body moved {@code moved} blocks up ({@code state}: how far it lags her body,
+     * blocks, and how fast that changes): it stays where it was as she moves, then springs back, overshooting and settling. A move of
+     * more than a block (a teleport) starts it still.
+     */
+    public static void jiggle(double[] state, double moved, double ticks) {
+        if (Math.abs(moved) > 1.0 || !(ticks > 0.0)) {
+            if (Math.abs(moved) > 1.0) {
+                state[0] = 0.0;
+                state[1] = 0.0;
+            }
+            return;
+        }
+        state[0] = Math.max(-JIGGLE_MOST, Math.min(JIGGLE_MOST, state[0] - moved));
+        int steps = (int)Math.ceil(Math.min(ticks, 4.0) / 0.25);
+        double h = Math.min(ticks, 4.0) / steps;
+        for (int i = 0; i < steps; i++) {
+            state[1] += (-JIGGLE_STIFF * state[0] - JIGGLE_DAMP * state[1]) * h;
+            state[0] = Math.max(-JIGGLE_MOST, Math.min(JIGGLE_MOST, state[0] + state[1] * h));
+        }
+    }
+
+    /** How far (model pixels, up) her bust's tip is drawn off its rest for a lag of {@code lag} blocks. */
+    public static float jigglePixels(double lag) {
+        return (float)(lag * 16.0);
+    }
     /** How far from home she wanders (blocks), how far she chases before she goes back, how far off she is put back home. */
     public static final int HOME_RADIUS = 4;
     public static final int LEASH = HOME_RADIUS + 3;

@@ -28,7 +28,7 @@ public final class ControlEntities {
 
     /** 1.3.0: Eto, who lives in the Library: a creature, not a monster, so peaceful never takes her; a player's size. */
     public static final RegistryObject<EntityType<EtoNpc>> ETO = ENTITIES.register("eto", () -> EntityType.Builder.<EtoNpc>m_20704_(EtoNpc::new,
-        MobCategory.CREATURE).m_20699_(0.6F, 1.8F).m_20702_(10).m_20717_(3).m_20712_(KaguneMod.id("eto").toString()));
+        MobCategory.CREATURE).m_20699_(0.6F * com.hex.kagune.control.npc.EtoRules.SIZE, 1.8F * com.hex.kagune.control.npc.EtoRules.SIZE).m_20702_(10).m_20717_(3).m_20712_(KaguneMod.id("eto").toString()));
 
     private ControlEntities() {
     }

@@ -39,6 +39,8 @@ public final class EtoClient {
 
     private static final Map<Integer, View> VIEWS = new HashMap<>();
     private static final Map<Integer, Eye> EYES = new HashMap<>();
+    /** 1.3.1: her bust's bounce: how far it lags, how fast, her height and the clock when last carried on. */
+    private static final Map<Integer, double[]> JIGGLES = new HashMap<>();
 
     private EtoClient() {
     }
@@ -89,6 +91,21 @@ public final class EtoClient {
         return EtoRules.eye(eye.on, eye.from, (float)(clock - eye.since));
     }
 
+    /** 1.3.1: how far (model pixels, up) her bust's tip is off its rest this frame, her body at height {@code y} (blocks). */
+    public static float jiggle(int id, double y, double clock) {
+        double[] state = JIGGLES.get(id);
+        if (state == null) {
+            JIGGLES.put(id, new double[] {0.0, 0.0, y, clock});
+            return 0.0F;
+        }
+        if (clock > state[3]) {
+            EtoRules.jiggle(state, y - state[2], clock - state[3]);
+            state[2] = y;
+            state[3] = clock;
+        }
+        return EtoRules.jigglePixels(state[0]);
+    }
+
     /** Her flip this frame, posed as a player's is, or null. */
     public static com.hex.kagune.control.client.animation.RigPose flip(View view, double clock, boolean onGround) {
         if (view == null || view.flip() < 0 || view.flipAt() == Long.MIN_VALUE) {
@@ -105,11 +122,13 @@ public final class EtoClient {
     public static void prune(net.minecraft.client.multiplayer.ClientLevel level) {
         VIEWS.keySet().removeIf(id -> level.m_6815_(id) == null);
         EYES.keySet().removeIf(id -> level.m_6815_(id) == null);
+        JIGGLES.keySet().removeIf(id -> level.m_6815_(id) == null);
     }
 
     @SubscribeEvent
     public static void loggingOut(ClientPlayerNetworkEvent.LoggingOut event) {
         VIEWS.clear();
         EYES.clear();
+        JIGGLES.clear();
     }
 }

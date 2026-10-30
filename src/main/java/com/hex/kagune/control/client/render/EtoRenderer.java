@@ -52,7 +52,7 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
     }
 
     public EtoRenderer(EntityRendererProvider.Context context) {
-        super(context, new EtoModel(context.m_174023_(ModelLayers.f_171166_)), 0.5F);
+        super(context, new EtoModel(context.m_174023_(ModelLayers.f_171166_)), 0.5F * EtoRules.SIZE);
         this.m_115326_(new Face(this));
     }
 
@@ -77,6 +77,9 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
         EtoModel.pose = posed;
         boolean turned = posed != null && (Math.abs(posed.flip) > 1.0E-3F || Math.abs(posed.roll) > 1.0E-3F || Math.abs(posed.spin) > 1.0E-3F
             || Math.abs(posed.drop) > 1.0E-3F);
+        // 1.3.1: a little smaller than a player (her box is too, EtoRules.SIZE).
+        pose.m_85836_();
+        pose.m_85841_(EtoRules.SIZE, EtoRules.SIZE, EtoRules.SIZE);
         try {
             if (turned) {
                 float delta = ((npc.f_20883_ - npc.f_20884_) % 360.0F + 540.0F) % 360.0F - 180.0F;
@@ -95,6 +98,7 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
             if (turned) {
                 pose.m_85849_();
             }
+            pose.m_85849_();
             EtoModel.pose = null;
         }
         if (view != null && view.gesture() == EtoGesture.ANGRY && !npc.m_20145_()) {
@@ -154,7 +158,11 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
             }
             try {
                 PlayerModel<EtoNpc> model = this.m_117386_();
-                bust(model, pose, buffers.m_6299_(RenderType.m_110473_(SKIN)), light);
+                // 1.3.1: her bust bounces as she jumps and lands (her height as drawn: a hop's lift too).
+                RigPose posed = EtoModel.pose;
+                double y = npc.f_19791_ + (npc.m_20186_() - npc.f_19791_) * partialTick - (posed == null ? 0.0 : posed.drop / 16.0);
+                float bounce = EtoClient.jiggle(npc.m_19879_(), y, PaleClient.clock(partialTick));
+                bust(model, pose, buffers.m_6299_(RenderType.m_110473_(SKIN)), light, bounce);
                 EtoClient.View view = EtoClient.get(npc.m_19879_());
                 double clock = PaleClient.clock(partialTick);
                 EtoGesture gesture = view == null ? EtoGesture.NONE : view.gesture();
@@ -178,21 +186,22 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
     }
 
     /**
-     * Her bust: a wedge on the front of her torso (model pixels: x -2.5..2.5, from 2 down, out to 1.3 in front at 4.5, back in at 5.5),
-     * painted with the torso's own front (the skin's texels for the rows it covers), turned with the torso.
+     * Her bust: a wedge on the front of her torso (model pixels: 1.3.1, the torso's whole width, x -4..4, from 1.5 down, out to 1.6 in
+     * front at 4.5, back in at 6), painted with the torso's own front (the skin's texels for the rows it covers), turned with the torso.
+     * Its tip is drawn {@code bounce} pixels up off its rest (EtoClient.jiggle).
      */
-    static void bust(PlayerModel<EtoNpc> model, PoseStack pose, VertexConsumer consumer, int light) {
+    static void bust(PlayerModel<EtoNpc> model, PoseStack pose, VertexConsumer consumer, int light, float bounce) {
         pose.m_85836_();
         model.f_102810_.m_104299_(pose);
         Matrix4f m = pose.m_85850_().m_252922_();
         Matrix3f n = pose.m_85850_().m_252943_();
-        float x0 = -2.5F;
-        float x1 = 2.5F;
-        float top = 2.0F;
-        float tip = 4.5F;
-        float bottom = 5.5F;
+        float x0 = -4.0F;
+        float x1 = 4.0F;
+        float top = 1.5F;
+        float tip = 4.5F - bounce;
+        float bottom = 6.0F;
         float front = -2.0F;
-        float out = -3.3F;
+        float out = -3.6F;
         // The upper slope, then the underside (each a quad), then the two sides (a triangle each, as a quad with a repeated corner).
         quad(consumer, m, n, light, new float[][] {{x0, top, front}, {x1, top, front}, {x1, tip, out}, {x0, tip, out}}, 0.0F, -0.8F, -1.0F);
         quad(consumer, m, n, light, new float[][] {{x0, tip, out}, {x1, tip, out}, {x1, bottom, front}, {x0, bottom, front}}, 0.0F, 0.6F, -1.0F);

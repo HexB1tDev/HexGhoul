@@ -54,6 +54,22 @@ public final class EtoTests {
         check(!EtoRules.night(6000L) && !EtoRules.night(12000L) && !EtoRules.night(EtoRules.NIGHT_FROM - 1), "her eye stays shut by day and at dusk");
         check(EtoRules.night(EtoRules.NIGHT_FROM) && EtoRules.night(18000L) && EtoRules.night(EtoRules.NIGHT_TO), "and opens through the night");
         check(!EtoRules.night(EtoRules.NIGHT_TO + 1) && EtoRules.night(24000L * 7 + 18000L) && !EtoRules.night(-12000L), "any day, dawn shuts it");
+        double[] bounce = {0.0, 0.0};
+        double most = 0.0;
+        double up = 0.42;
+        for (int tick = 0; tick < 12; tick++) {
+            EtoRules.jiggle(bounce, up, 1.0);
+            up -= 0.08;
+            most = Math.max(most, Math.abs(bounce[0]));
+        }
+        EtoRules.jiggle(bounce, 0.0, 1.0);
+        check(most > 0.02 && most <= EtoRules.JIGGLE_MOST + 1.0E-9, "her bust lags a jump, never past its most");
+        for (int tick = 0; tick < 60; tick++) {
+            EtoRules.jiggle(bounce, 0.0, 1.0);
+        }
+        check(Math.abs(bounce[0]) < 0.002 && Math.abs(bounce[1]) < 0.002, "and settles once she stands still");
+        EtoRules.jiggle(bounce, 30.0, 1.0);
+        check(bounce[0] == 0.0 && bounce[1] == 0.0, "a teleport starts it still");
         check(EtoRules.eye(true, 0.0F, 0.0F) == 0.0F && EtoRules.eye(true, 0.0F, EtoRules.FADE_TICKS) == 1.0F
             && EtoRules.eye(true, 0.0F, EtoRules.FADE_TICKS / 2) > 0.4F && EtoRules.eye(true, 0.0F, EtoRules.FADE_TICKS / 2) < 0.6F,
             "it fades in over about a second");
