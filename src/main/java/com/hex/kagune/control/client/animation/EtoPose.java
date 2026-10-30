@@ -120,9 +120,7 @@ public final class EtoPose {
                 p.leftArmX = -1.4F;
                 p.rightArmZ = -0.55F;
                 p.leftArmZ = 0.55F;
-                p.flip = -0.12F;
-                p.rightLegX = -0.12F;
-                p.leftLegX = -0.12F;
+                p.lean = 0.12F;
                 p.headX = -0.1F;
                 p.headZ = 0.2F;
             }
@@ -141,7 +139,12 @@ public final class EtoPose {
             default -> {
             }
         }
-        return p.scale(in);
+        RigPose out = p.scale(in);
+        if (gesture == EtoGesture.TWIRL) {
+            // 1.3.1: the turn is never faded with the rest (scaled back to 0 it spun her backwards a whole turn as it ended).
+            out.spin = p.spin;
+        }
+        return out;
     }
 
     /** Waiting for a kiss: hands behind her back, her top half leaning in by {@code lean}, chin up, on her toes, swaying a little. */
@@ -150,12 +153,10 @@ public final class EtoPose {
         p.leftArmX = 0.55F;
         p.rightArmZ = -0.22F;
         p.leftArmZ = 0.22F;
-        p.flip = -lean;
-        p.rightLegX = -lean;
-        p.leftLegX = -lean;
+        // 1.3.1: bent at the hips, her feet flat where she stands (tipping her whole body over lifted her feet off the ground).
+        p.lean = lean;
         p.headX = -0.32F;
-        p.drop = -0.6F;
-        p.roll = 0.035F * (float)Math.sin(t * 0.12);
+        p.headZ = 0.06F * (float)Math.sin(t * 0.12);
     }
 
     /** Her pose for {@code move} {@code age} ticks in, or null for none. */

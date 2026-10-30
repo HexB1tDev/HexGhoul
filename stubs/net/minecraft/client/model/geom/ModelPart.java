@@ -8,6 +8,8 @@ public final class ModelPart {
     public float f_104205_;
     /** copyFrom */ public void m_104315_(ModelPart other) { throw new UnsupportedOperationException(); }
     /** x (the pivot, model pixels) */ public float f_104200_;
+    /** y (the pivot) */ public float f_104201_;
+    /** z (the pivot) */ public float f_104202_;
     /** xScale */ public float f_233553_;
     /** zScale */ public float f_233555_;
     /** translateAndRotate */ public void m_104299_(com.mojang.blaze3d.vertex.PoseStack pose) { throw new UnsupportedOperationException(); }

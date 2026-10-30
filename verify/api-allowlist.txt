@@ -865,3 +865,5 @@ M net/minecraft/world/entity/ai/goal/RandomStrollGoal <init> (Lnet/minecraft/wor
 C net/minecraft/world/entity/ai/goal/MoveTowardsRestrictionGoal                      # [srg] bnj C_707_ (class_1370, yarn GoToWalkTargetGoal)
 M net/minecraft/world/entity/ai/goal/MoveTowardsRestrictionGoal <init> (Lnet/minecraft/world/entity/PathfinderMob;D)V  # [srg] bnj.<init>(Lbgi;D)V 25632 (yarn GoToWalkTargetGoal(PathAwareEntity, double))
 F net/minecraft/client/model/geom/ModelPart f_104200_ F                                  # [srg] x: joined.tsrg fee.b f_104200_, intermediary field_3657 (yarn pivotX)
+F net/minecraft/client/model/geom/ModelPart f_104201_ F                                  # [srg] y: joined.tsrg fee.c f_104201_, intermediary field_3656 (yarn pivotY)
+F net/minecraft/client/model/geom/ModelPart f_104202_ F                                  # [srg] z: joined.tsrg fee.d f_104202_, intermediary field_3655 (yarn pivotZ)

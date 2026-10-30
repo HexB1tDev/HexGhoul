@@ -37,6 +37,12 @@ final class EtoModel extends PlayerModel<EtoNpc> {
             turn(this.f_102812_, arms, p.leftArmX, p.leftArmY, p.leftArmZ);
             turn(this.f_102813_, legs, p.rightLegX, p.rightLegY, p.rightLegZ);
             turn(this.f_102814_, legs, p.leftLegX, p.leftLegY, p.leftLegZ);
+            if (Math.abs(p.lean) > 1.0E-4F) {
+                // 1.3.1: her top half (head, torso, arms) bent forward about her hips, as vanilla's crouch leans the body.
+                for (ModelPart part : new ModelPart[] {this.f_102808_, this.f_102810_, this.f_102811_, this.f_102812_}) {
+                    lean(part, p.lean);
+                }
+            }
             this.f_102809_.m_104315_(this.f_102808_);
             this.f_103375_.m_104315_(this.f_102811_);
             this.f_103374_.m_104315_(this.f_102812_);
@@ -49,6 +55,17 @@ final class EtoModel extends PlayerModel<EtoNpc> {
             leg.f_233555_ = THIGHS;
             leg.f_104200_ = leg == this.f_102813_ || leg == this.f_103377_ ? -LEG_X : LEG_X;
         }
+    }
+
+    /** {@code part} turned forward by {@code lean} (radians) about her hips (model y 12, z 0): its pivot carried round, and itself tipped. */
+    private static void lean(ModelPart part, float lean) {
+        float dy = part.f_104201_ - 12.0F;
+        float dz = part.f_104202_;
+        float cos = (float)Math.cos(lean);
+        float sin = (float)Math.sin(lean);
+        part.f_104201_ = 12.0F + dy * cos - dz * sin;
+        part.f_104202_ = dy * sin + dz * cos;
+        part.f_104203_ += lean;
     }
 
     private static void turn(ModelPart part, float keep, float x, float y, float z) {
