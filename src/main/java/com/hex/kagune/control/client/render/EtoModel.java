@@ -12,8 +12,10 @@ import net.minecraft.client.model.geom.ModelPart;
  */
 final class EtoModel extends PlayerModel<EtoNpc> {
     /** How much wider (across) and deeper (front to back) her legs are drawn. */
-    static final float HIPS = 1.13F;
-    static final float THIGHS = 1.06F;
+    static final float HIPS = 1.25F;
+    static final float THIGHS = 1.1F;
+    /** 1.3.1: each leg's pivot moved out so the wider legs meet at the middle (as vanilla's do, 0.1 pixel over) rather than overlap. */
+    static final float LEG_X = 2.0F * HIPS - 0.1F;
 
     /** The pose of the Eto being drawn now (the render thread's alone), or null. */
     static RigPose pose;
@@ -45,6 +47,7 @@ final class EtoModel extends PlayerModel<EtoNpc> {
         for (ModelPart leg : new ModelPart[] {this.f_102813_, this.f_102814_, this.f_103377_, this.f_103376_}) {
             leg.f_233553_ = HIPS;
             leg.f_233555_ = THIGHS;
+            leg.f_104200_ = leg == this.f_102813_ || leg == this.f_103377_ ? -LEG_X : LEG_X;
         }
     }
 
