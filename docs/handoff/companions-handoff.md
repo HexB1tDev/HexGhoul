@@ -13,6 +13,14 @@ pregnancy, children and reactions: read its sections 1, 2 and 4). Everything her
   skins**: the tool copies the skin as it is and only recolours the detected eye pixels for overlays. The owner noticed the stand-ins I
   painted before the files arrived (a mouth, plain brows) and was not happy. Ask for files when you can't read an image.
 
+**1.3.15 (after the above):** the owner's crash on 1.3.12 (a newborn child drawn with no entity renderer: their modpack, which runs
+ModernFix among ~200 mods, loses this mod's renderers, as happened before for the flesh creatures and Eto). `client/render/ThrallRenderGuard`
+now covers every body the mod adds and re-registers all of the mod's renderers (`registerAll`) once per kind; still none, the body is kept
+out of the client's world. **Any new entity type must be added to `ThrallRenderGuard.ours` and `registerAll`.** Touka is Eto's female
+body, a little skinnier (`Persona.curves` 0.65, `build` 0.94; the owner: "she's just a little skinnier than Eto"); the preview tool does
+not draw the female figure (no hips or bust), so say so when sending pose previews. Animated previews: `CompanionPreview <out> frames`
+then `python3 tools/companion-gifs.py <out>`.
+
 ## 1. What the owner asked for (their words, condensed)
 
 - Hands held: "more lively... swing a little more... not the run swing... a nice wobble... let her go a little further and the hand follows
