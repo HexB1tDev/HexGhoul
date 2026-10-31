@@ -114,6 +114,40 @@ public final class FemaleFigure {
         pose.m_85849_();
     }
 
+    /**
+     * 1.3.10: her belly carrying a child: a gentle rounded swell on the lower torso's front, {@code swell} (0..1) of its fullest
+     * ({@code Pregnancy.BELLY_OUT} pixels out), painted with the torso front (and, {@code jacket}, its second layer over it).
+     */
+    public static void belly(ModelPart torso, PoseStack pose, VertexConsumer consumer, int light, float swell, boolean jacket) {
+        if (!(swell > 0.01F)) {
+            return;
+        }
+        pose.m_85836_();
+        torso.m_104299_(pose);
+        Matrix4f m = pose.m_85850_().m_252922_();
+        Matrix3f n = pose.m_85850_().m_252943_();
+        float grow = jacket ? 0.25F : 0.0F;
+        float x0 = -3.6F - grow;
+        float x1 = 3.6F + grow;
+        float front = -2.0F - grow;
+        float out = com.hex.kagune.control.family.Pregnancy.BELLY_OUT * swell;
+        float v0 = jacket ? 36.0F : 20.0F;
+        // Its profile down the torso (y down, how far out): rounded, fullest a little below the middle.
+        float[][] profile = {{5.4F, 0.0F}, {7.0F, 0.8F * out}, {8.8F, out}, {10.5F, 0.78F * out}, {11.8F, 0.0F}};
+        for (int i = 0; i + 1 < profile.length; i++) {
+            float ya = profile[i][0];
+            float za = front - profile[i][1] - (profile[i][1] > 0.0F ? grow : 0.0F);
+            float yb = profile[i + 1][0];
+            float zb = front - profile[i + 1][1] - (profile[i + 1][1] > 0.0F ? grow : 0.0F);
+            float ny = (zb - za) / Math.max(0.01F, yb - ya);
+            quad(consumer, m, n, light, v0, new float[][] {{x0, ya, za}, {x1, ya, za}, {x1, yb, zb}, {x0, yb, zb}}, 0.0F, ny, -1.0F);
+            for (float x : new float[] {x0, x1}) {
+                quad(consumer, m, n, light, v0, new float[][] {{x, ya, front}, {x, ya, za}, {x, yb, zb}, {x, yb, front}}, Math.signum(x), 0.0F, 0.0F);
+            }
+        }
+        pose.m_85849_();
+    }
+
     /** One face of the bust, each corner painted with the torso front's texel at its own place (its x across, its y down from {@code v0}). */
     private static void quad(VertexConsumer consumer, Matrix4f m, Matrix3f n, int light, float v0, float[][] corners, float nx, float ny, float nz) {
         for (float[] c : corners) {

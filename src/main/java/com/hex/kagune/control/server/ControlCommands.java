@@ -88,6 +88,9 @@ final class ControlCommands {
             .then(Commands.m_82127_("max").executes(context -> maxEto(context, context.getSource().m_81375_()))
                 .then(Commands.m_82129_("player", EntityArgument.m_91466_())
                     .executes(context -> maxEto(context, EntityArgument.m_91474_(context, "player")))))));
+        // 1.3.10: a testing shortcut for operators: every pregnancy the player is part of brought to ten seconds before the birth.
+        dispatcher.register(Commands.m_82127_("kagune").then(Commands.m_82127_("family").requires(source -> source.m_6761_(2))
+            .then(Commands.m_82127_("soon").executes(context -> familySoon(context, context.getSource().m_81375_())))));
         // 7.0.1: Ghoul Meat devoured: what it gives now; an operator can set the count.
         dispatcher.register(Commands.m_82127_("kagune").then(Commands.m_82127_("ghoulmeat")
             .executes(ControlCommands::reportGhoulMeat)
@@ -276,6 +279,16 @@ final class ControlCommands {
     }
 
     /** Eto's regard for the player at the most, met (any grudge from killing her forgotten): only with her within 10 blocks of them. */
+    private static int familySoon(CommandContext<CommandSourceStack> context, ServerPlayer player) {
+        int hurried = Pregnancies.hurry(player.m_284548_(), Pregnancies.player(player.m_20148_()), 200L);
+        if (hurried == 0) {
+            context.getSource().m_81352_(Component.m_237113_("No one is carrying your child, and you aren't carrying one."));
+            return 0;
+        }
+        context.getSource().m_288197_(() -> Component.m_237113_("The birth is ten seconds away."), false);
+        return 1;
+    }
+
     private static int maxEto(CommandContext<CommandSourceStack> context, ServerPlayer player) {
         if (player.m_9236_().m_6443_(com.hex.kagune.control.npc.EtoNpc.class, player.m_20191_().m_82400_(10.0), eto -> eto.m_6084_()).isEmpty()) {
             context.getSource().m_81352_(Component.m_237113_("No Eto within 10 blocks."));

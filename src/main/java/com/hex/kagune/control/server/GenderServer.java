@@ -45,6 +45,9 @@ public final class GenderServer {
 
     /** Why {@code player} may not become {@code gender} now (null: they may). Hooks for what a body carries (1.3.10: a child). */
     static String refusal(ServerPlayer player, Gender gender) {
+        if (!gender.female() && Pregnancies.pregnant(player.m_284548_(), Pregnancies.player(player.m_20148_()))) {
+            return "Not while you're carrying a child.";
+        }
         return null;
     }
 

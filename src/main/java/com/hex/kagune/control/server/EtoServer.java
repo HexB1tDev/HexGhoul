@@ -372,6 +372,11 @@ public final class EtoServer {
                 night(player, npc, c);
                 return;
             }
+            case BABY -> {
+                // 1.3.10: asked for: the next night it comes.
+                NpcMemoryServer.set(player, EtoRules.KEY, NpcMemory.BABY, 1L);
+                EtoBrain.hearts(player.m_284548_(), npc, player, 6);
+            }
             case OFFER -> next = Kind.OFFER;
             case SURGERY -> {
                 QuestServer.bond(player, EtoRules.KEY, bond);
@@ -476,7 +481,9 @@ public final class EtoServer {
         EtoBrain.listen(npc, null, now);
         NpcMemoryServer.of(player).add(EtoRules.KEY, NpcMemory.NIGHTS, 1L).set(EtoRules.KEY, NpcMemory.NIGHT_DAY, day(level));
         NpcMemoryServer.save(player);
-        ControlNetwork.sendTo(player, new S2CCutscene(S2CCutscene.NIGHT, EtoLines.morning(c)));
+        // 1.3.10: asked for a baby, married, not already carrying: tonight she conceives.
+        boolean conceived = conceive(level, player, c);
+        ControlNetwork.sendTo(player, new S2CCutscene(S2CCutscene.NIGHT, conceived ? EtoLines.conceived(c) : EtoLines.morning(c)));
         player.m_7292_(new MobEffectInstance(MobEffects.f_19605_, 1200, 1, false, true, true));
         player.m_7292_(new MobEffectInstance(MobEffects.f_19606_, 2400, 0, false, true, true));
         EtoBrain.giddy(npc, player, now);
@@ -485,6 +492,22 @@ public final class EtoServer {
         EtoBrain.hearts(level, npc, player, 12);
         QuestLog.Bond bond = QuestServer.bond(player, EtoRules.KEY);
         QuestServer.bond(player, EtoRules.KEY, bond.regard(bond.regard() + 5));
+    }
+
+    /** 1.3.10: if they asked for a baby and are married, she conceives tonight (the child decided now); true if she did. */
+    private static boolean conceive(ServerLevel level, ServerPlayer player, EtoTalk.Context c) {
+        String mother = Pregnancies.npc(EtoRules.KEY);
+        if (!c.married() || !c.family().wantsBaby() || Pregnancies.pregnant(level, mother)) {
+            return false;
+        }
+        NpcMemoryServer.of(player).forget(EtoRules.KEY, NpcMemory.BABY);
+        NpcMemoryServer.save(player);
+        com.hex.kagune.control.family.Genome.Parent her = new com.hex.kagune.control.family.Genome.Parent(EtoRules.HAIR, EtoRules.EYES, EtoRules.SKIN,
+            true, true);
+        com.hex.kagune.control.family.Genome genome = com.hex.kagune.control.family.Genome.of(her, Looks.parent(player),
+            new java.util.Random(level.m_46467_() ^ player.m_20148_().getLeastSignificantBits()));
+        Pregnancies.conceive(level, mother, EtoRules.NAME, Pregnancies.player(player.m_20148_()), player.m_36316_().getName(), genome);
+        return true;
     }
 
     // ---------------------------------------------------------------- what is brought
@@ -547,6 +570,15 @@ public final class EtoServer {
     // ---------------------------------------------------------------- what a page depends on
 
     /** What the next page depends on, as it stands now. */
+    /** 1.3.10: their family as she talks of it: carrying their child (how far along), asked for one, how many they have. */
+    static com.hex.kagune.control.family.FamilyView family(ServerLevel level, ServerPlayer player, NpcMemory memory) {
+        Pregnancies.Carried carried = Pregnancies.get(level, Pregnancies.npc(EtoRules.KEY));
+        double along = carried != null && carried.father.equals(Pregnancies.player(player.m_20148_()))
+            ? com.hex.kagune.control.family.Pregnancy.progress(carried.conceived, level.m_46467_()) : -1.0;
+        return new com.hex.kagune.control.family.FamilyView(along, memory.get(EtoRules.KEY, NpcMemory.BABY, 0L) == 1L,
+            (int)memory.get(EtoRules.KEY, NpcMemory.CHILDREN, 0L));
+    }
+
     static EtoTalk.Context context(ServerPlayer player, EtoNpc npc) {
         ServerLevel level = player.m_284548_();
         long now = level.m_46467_();
@@ -581,7 +613,7 @@ public final class EtoServer {
             puppy == null ? null : kind(puppy), hasRing(player), ControlItems.ghoulMeat(player.m_21205_()) || ControlItems.ghoulMeat(player.m_21206_()),
             holds(player, EtoRules::letter), pact, (int)memory.get(EtoRules.KEY, NpcMemory.TRIAL_COUNT, 0L), trialDone,
             memory.get(EtoRules.KEY, NpcMemory.NIGHT_DAY, -1L) == day, player.m_36316_().getName(),
-            UniqueNpcs.spouseOf(level, player, EtoRules.KEY) != null);
+            UniqueNpcs.spouseOf(level, player, EtoRules.KEY) != null, family(level, player, memory));
     }
 
     private static void show(ServerPlayer player, EtoNpc npc, EtoTalk.Context context, EtoTalk.Page page, Kind kind) {

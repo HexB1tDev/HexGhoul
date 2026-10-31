@@ -20,7 +20,9 @@ public final class EtoTalk {
     public enum Effect {
         NONE, CLOSE, BOOK, FLOWER, TEACH, BEGIN, DATE, KISS, HUG, OFFER, SURGERY, ANGER, FOLLOW, STAY,
         // 1.3.2
-        TALK, SWEET, MAIN, GIFTS, PUPPY, PROPOSE, NIGHT, PACT, MEAT, LETTER, CLING, FORGIVE, TRIAL, HAND
+        TALK, SWEET, MAIN, GIFTS, PUPPY, PROPOSE, NIGHT, PACT, MEAT, LETTER, CLING, FORGIVE, TRIAL, HAND,
+        // 1.3.10: they asked each other for a baby (the next night it comes)
+        BABY
     }
 
     /**
@@ -36,7 +38,18 @@ public final class EtoTalk {
                           EtoRules.Lesson next, boolean beforeDone, boolean granted, int seed,
                           Romance.Stage stage, String claimedBy, boolean following, long dayTime, EtoMood mood, long daysTogether, long daysAway,
                           String puppy, boolean ring, boolean meat, boolean letter, EtoRules.Pact pact, int pactCount, boolean trialDone,
-                          boolean nightUsed, String name, boolean spouseElsewhere) {
+                          boolean nightUsed, String name, boolean spouseElsewhere, com.hex.kagune.control.family.FamilyView family) {
+        /** As 1.3.2 made one: no family yet. */
+        public Context(int regard, int flags, int count, boolean ghoul, boolean chattedToday, boolean giftedToday, boolean book, boolean flower,
+                       EtoRules.Lesson next, boolean beforeDone, boolean granted, int seed,
+                       Romance.Stage stage, String claimedBy, boolean following, long dayTime, EtoMood mood, long daysTogether, long daysAway,
+                       String puppy, boolean ring, boolean meat, boolean letter, EtoRules.Pact pact, int pactCount, boolean trialDone,
+                       boolean nightUsed, String name, boolean spouseElsewhere) {
+            this(regard, flags, count, ghoul, chattedToday, giftedToday, book, flower, next, beforeDone, granted, seed, stage, claimedBy, following, dayTime,
+                mood, daysTogether, daysAway, puppy, ring, meat, letter, pact, pactCount, trialDone, nightUsed, name, spouseElsewhere,
+                com.hex.kagune.control.family.FamilyView.NONE);
+        }
+
         /** As 1.3.0 made one: dating read from the bond's flag, daytime, nothing in hand. */
         public Context(int regard, int flags, int count, boolean ghoul, boolean chattedToday, boolean giftedToday, boolean book, boolean flower,
                        EtoRules.Lesson next, boolean beforeDone, boolean granted, int seed) {
@@ -79,7 +92,13 @@ public final class EtoTalk {
         public Context reseed(int seed) {
             return new Context(this.regard, this.flags, this.count, this.ghoul, this.chattedToday, this.giftedToday, this.book, this.flower, this.next,
                 this.beforeDone, this.granted, seed, this.stage, this.claimedBy, this.following, this.dayTime, this.mood, this.daysTogether, this.daysAway,
-                this.puppy, this.ring, this.meat, this.letter, this.pact, this.pactCount, this.trialDone, this.nightUsed, this.name, this.spouseElsewhere);
+                this.puppy, this.ring, this.meat, this.letter, this.pact, this.pactCount, this.trialDone, this.nightUsed, this.name, this.spouseElsewhere,
+                this.family);
+        }
+
+        /** 1.3.10: she is carrying their child. */
+        public boolean pregnant() {
+            return this.family.pregnant();
         }
     }
 
@@ -227,13 +246,22 @@ public final class EtoTalk {
 
     /** The topics page: what they could bring up (at most {@link NpcTalk.Choice#SAYS}'s worth), a different handful each time. */
     public static Page talk(Context c, String line) {
-        List<EtoTopics.Topic> open = EtoTopics.open(c);
+        List<EtoTopics.Topic> open = new ArrayList<>(EtoTopics.open(c));
         List<Option> out = new ArrayList<>();
         int room = NpcTalk.Choice.SAYS.length;
+        // 1.3.10: what matters most right now always comes first (the baby she carries), the rest by turns.
+        List<EtoTopics.Topic> pinned = new ArrayList<>();
+        open.removeIf(topic -> EtoTopics.pinned(topic) && pinned.add(topic));
         int start = open.isEmpty() ? 0 : Math.floorMod(c.seed(), open.size());
-        for (int i = 0; i < Math.min(room, open.size()); i++) {
+        int said = 0;
+        for (EtoTopics.Topic topic : pinned) {
+            if (said < room) {
+                out.add(new Option(NpcTalk.Choice.SAYS[said++], topic.prompt().apply(c), "topic:" + topic.id()));
+            }
+        }
+        for (int i = 0; i < open.size() && said < room; i++) {
             EtoTopics.Topic topic = open.get((start + i) % open.size());
-            out.add(new Option(NpcTalk.Choice.SAYS[i], topic.prompt().apply(c), "topic:" + topic.id()));
+            out.add(new Option(NpcTalk.Choice.SAYS[said++], topic.prompt().apply(c), "topic:" + topic.id()));
         }
         out.add(Option.of(NpcTalk.Choice.BACK));
         return new Page(line, out);

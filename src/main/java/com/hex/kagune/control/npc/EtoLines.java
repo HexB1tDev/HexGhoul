@@ -341,6 +341,26 @@ public final class EtoLines {
             c.married() ? "Good morning, spouse. I could get used to this. I have." : "...So. That happened. Good. Very good."));
     }
 
+    /** 1.3.10: the morning after the night she conceived. */
+    public static String conceived(EtoTalk.Context c) {
+        return fill(c, one(c.seed(), "...Something changed last night. Don't ask me how I know. I know.",
+            "Morning, {name}. ...I think we're going to need a smaller bookshelf. For small hands.",
+            "Stay in bed a little longer. ...I want to remember this morning exactly."));
+    }
+
+    /** 1.3.10: what she says, unasked, while carrying their child, by how far along she is. */
+    public static String pregnant(com.hex.kagune.control.family.Pregnancy.Stage stage, int seed) {
+        return switch (stage) {
+            case EARLY -> one(seed, "I can't stand the smell of ink this morning. Ink. Me.", "I'm starving. Feed me. Don't ask what I want, guess.",
+                "...I keep putting my hand here. Habit. A new one.");
+            case ALONG -> one(seed, "It kicked. Right in the middle of a sentence. Rude. Like you.", "Come here. Put your hand there. ...Feel it?",
+                "I've started reading to it. It prefers poetry. We're doomed.");
+            case LATE -> one(seed, "Help me up. Don't laugh.", "I can't see my feet. I've decided they're still there.",
+                "Sit with me. The baby likes it when you're near.");
+            case DUE -> one(seed, "It's soon. Don't go far.", "Stay. Today, stay.", "...Hold my hand. Just in case.");
+        };
+    }
+
     // ---------------------------------------------------------------- one eye
 
     public static String surgeryWords(EtoTalk.Context c) {

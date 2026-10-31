@@ -57,6 +57,18 @@ public final class CutsceneOverlay {
         {4.6, 7.0, "Her hand finds yours in the dark."},
         {7.2, 9.4, "...Later."}}, 9.6);
 
+    /** 1.3.10: a birth: the dark, "9 months later...", a heartbeat, a small cry, and who was born. */
+    static final Script BIRTH = new Script(13.0, 1.4, 11.0, new Object[][] {
+        {2.0, "minecraft", "entity.warden.heartbeat", 0.4F, 0.9F},
+        {3.0, "minecraft", "entity.warden.heartbeat", 0.4F, 0.95F},
+        {4.6, "minecraft", "block.wool.step", 0.5F, 0.8F},
+        {5.8, "minecraft", "entity.warden.heartbeat", 0.45F, 1.3F},
+        {6.3, "minecraft", "entity.warden.heartbeat", 0.45F, 1.4F},
+        {7.2, "minecraft", "entity.cat.ambient", 0.35F, 1.9F},
+        {7.9, "minecraft", "block.amethyst_block.chime", 0.6F, 1.2F}}, new Object[][] {
+        {1.6, 4.6, "9 months later..."},
+        {5.0, 7.6, "A small cry in the dark."}}, 8.2);
+
     private static Script playing;
     private static String words = "";
     private static long began = Long.MIN_VALUE;
@@ -66,7 +78,7 @@ public final class CutsceneOverlay {
     }
 
     public static void begin(int script, String said) {
-        playing = script == S2CCutscene.NIGHT ? NIGHT : SURGERY;
+        playing = script == S2CCutscene.NIGHT ? NIGHT : script == S2CCutscene.BIRTH ? BIRTH : SURGERY;
         words = said == null ? "" : said;
         began = System.nanoTime();
         played = 0;

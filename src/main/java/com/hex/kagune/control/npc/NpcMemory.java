@@ -16,6 +16,10 @@ public final class NpcMemory {
     public static final String SEEN = "seen";
     public static final String KISSES = "kisses";
     public static final String NIGHTS = "nights";
+    /** 1.3.10: they asked each other for a baby (1): the next night it comes. */
+    public static final String BABY = "baby";
+    /** 1.3.10: how many children they have together. */
+    public static final String CHILDREN = "children";
     public static final String NIGHT_DAY = "nightday";
     public static final String JEALOUS = "jealous";
     public static final String PUPPY_DAY = "pupday";

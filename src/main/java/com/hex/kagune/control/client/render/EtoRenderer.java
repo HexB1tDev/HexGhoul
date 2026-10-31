@@ -252,6 +252,9 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
                 double y = npc.f_19791_ + (npc.m_20186_() - npc.f_19791_) * partialTick - (posed == null ? 0.0 : posed.drop / 16.0);
                 float bounce = EtoClient.jiggle(npc.m_19879_(), y, PaleClient.clock(partialTick));
                 bust(model, pose, buffers.m_6299_(RenderType.m_110473_(SKIN)), light, bounce);
+                // 1.3.10: carrying a child, her belly (the shared female body's).
+                FemaleFigure.belly(model.f_102810_, pose, buffers.m_6299_(RenderType.m_110473_(SKIN)), light,
+                    com.hex.kagune.control.client.PregnancyClient.belly(npc, partialTick), false);
                 EtoClient.View view = EtoClient.get(npc.m_19879_());
                 double clock = PaleClient.clock(partialTick);
                 EtoGesture gesture = view == null ? EtoGesture.NONE : view.gesture();

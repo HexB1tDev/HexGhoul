@@ -256,8 +256,38 @@ public final class EtoTopics {
                 new Follow("Are you seeing anyone else?", c -> !c.married(), c -> r("Who else would put up with me? Who else would I put up with?", 1)),
                 new Follow("Tell me about our wedding.", EtoTalk.Context::married, c -> r("You were shaking. I pretended not to notice. I was shaking too.", 3,
                     EtoGesture.HAIR)),
-                new Follow("Do you want a family someday?", EtoTalk.Context::married,
-                    c -> r("...With you? Ask me again some night. Maybe I'll say yes.", 2, EtoGesture.HAIR)))),
+                new Follow("Do you want a family someday?", c -> c.married() && !c.family().wantsBaby() && !c.pregnant(),
+                    c -> r("...With you? Ask me again some night. Maybe I'll say yes.", 2, EtoGesture.HAIR)),
+                // 1.3.10: asked for, the next night it comes.
+                new Follow("Let's have a baby.", c -> c.married() && !c.family().wantsBaby() && !c.pregnant(),
+                    c -> new EtoTalk.Reply(EtoLines.one(c.seed(), "...Yes. Tonight, then. Don't make me wait.",
+                        "A baby. Ours. ...I've thought about it more than I'd admit. Yes. Come to me tonight.",
+                        "You'd be a good father. Annoyingly good. ...Yes. Tonight."), 6, EtoTalk.Effect.BABY, EtoGesture.HAIR)),
+                new Follow("About tonight...", c -> c.married() && c.family().wantsBaby() && !c.pregnant(),
+                    c -> r(EtoLines.one(c.seed(), "I haven't forgotten. I've been thinking about nothing else. Wait for the dark.",
+                        "Tonight. I said tonight. Don't look at me like that in front of the books."), 2, EtoGesture.GIGGLE)))),
+
+        // 1.3.10: carrying their child.
+        new Topic("baby", EtoTalk.Context::pregnant, c -> "How's the baby?",
+            c -> switch (c.family().stage()) {
+                case EARLY -> EtoLines.one(c.seed(), "Sick in the mornings. Starving at night. Don't make that face, you did this.",
+                    "Fine. Strange. Like there's a secret in me that I haven't read yet.");
+                case ALONG -> EtoLines.one(c.seed(), "Heavier. It moves when I read out loud. It likes the sad parts. Like its mother.",
+                    "It kicks when you're near. Traitor. It already likes you better.");
+                case LATE -> EtoLines.one(c.seed(), "Like I swallowed a moon. Sit with me. Don't talk. Just sit.",
+                    "Tired. Huge. Happy. Don't tell anyone I said happy.");
+                case DUE -> EtoLines.one(c.seed(), "Any day now. Any hour. Stay close. ...Please.", "Soon. I can feel it. Don't you dare wander off.");
+            },
+            List.of(
+                new Follow("Can I feel the baby?", c -> c.family().stage() != com.hex.kagune.control.family.Pregnancy.Stage.EARLY,
+                    c -> r(EtoLines.one(c.seed(), "Here. Your hand. ...There. Did you feel that? That's ours.",
+                        "Gently. ...It's turning over. It knows your voice."), 5, EtoTalk.Effect.HUG, EtoGesture.HUG)),
+                new Follow("Do you need anything?", c -> r(EtoLines.one(c.seed(), "Something sour. And something sweet. And you, not wandering off.",
+                    "Pickles. Honey. A blanket. A foot rub. In that order.", "Quiet. A book. You, reading it to me."), 3, EtoGesture.HAIR)),
+                new Follow("Boy or girl, do you think?", c -> r(EtoLines.one(c.seed(), "I'll tell you when it tells me. It's very secretive. Gets that from me.",
+                    "A girl. Or a boy. I've decided not to have an opinion. ...A girl.", "Whatever it is, it's going to bite."), 2, EtoGesture.GIGGLE)),
+                new Follow("Are you scared?", c -> r(EtoLines.one(c.seed(), "Of course. Of everything. ...Not of you, though. Never of you.",
+                    "Terrified. Ask me again and I'll bite you."), 4, EtoTalk.Effect.CLING, EtoGesture.CLING)))),
 
         new Topic("past", c -> !c.claimed() && c.regard() >= NpcBonds.FRIENDLY, c -> "Where did you come from?",
             c -> together(c) ? "From somewhere dark. You don't need the map. You're the part after."
@@ -286,6 +316,11 @@ public final class EtoTopics {
             }
         }
         return out;
+    }
+
+    /** 1.3.10: whether {@code topic} is always offered first (the baby she carries, their children). */
+    public static boolean pinned(Topic topic) {
+        return topic.id().equals("baby") || topic.id().equals("children");
     }
 
     public static Topic get(String id) {

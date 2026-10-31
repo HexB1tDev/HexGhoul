@@ -36,8 +36,12 @@ public final class FigureLayer extends RenderLayer<AbstractClientPlayer, EntityM
             PlayerLayers.upperBody(pose, player, partialTick);
             RenderType skin = RenderType.m_110473_(player.m_108560_());
             FemaleFigure.bust(model.f_102810_, pose, buffers.m_6299_(skin), light, bounce, false);
+            // 1.3.10: carrying a child, her belly.
+            float swell = com.hex.kagune.control.client.PregnancyClient.belly(player, partialTick);
+            FemaleFigure.belly(model.f_102810_, pose, buffers.m_6299_(skin), light, swell, false);
             if (model.f_103378_.f_104207_) {
                 FemaleFigure.bust(model.f_102810_, pose, buffers.m_6299_(skin), light, bounce, true);
+                FemaleFigure.belly(model.f_102810_, pose, buffers.m_6299_(skin), light, swell, true);
             }
             pose.m_85849_();
         } catch (RuntimeException failure) {

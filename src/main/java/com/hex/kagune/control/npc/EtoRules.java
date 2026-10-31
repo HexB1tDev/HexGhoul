@@ -27,6 +27,14 @@ public final class EtoRules {
     /** 1.3.1: how much smaller than a player she is: drawn and boxed. 1.3.9: the one female body's ({@code FemaleBody}), shared. */
     public static final float SIZE = com.hex.kagune.control.FemaleBody.SIZE;
 
+    /**
+     * 1.3.10: her colours as a mother passes them on (read off her skin, art/eto_skin.png: the teal on the top of her head, her pale
+     * skin, her own dark eye), and she is a one-eyed ghoul.
+     */
+    public static final int HAIR = 0x78C0A8;
+    public static final int SKIN = 0xEBE0E0;
+    public static final int EYES = 0x3E333D;
+
     /** 1.3.1: her bust's bounce (1.3.9: the shared female body's, {@code FemaleBody}). */
     public static final double JIGGLE_STIFF = com.hex.kagune.control.FemaleBody.JIGGLE_STIFF;
     public static final double JIGGLE_DAMP = com.hex.kagune.control.FemaleBody.JIGGLE_DAMP;
