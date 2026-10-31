@@ -256,6 +256,10 @@ public final class UkakuServer {
             player.m_5661_(Component.m_237110_(key, new Object[] {UkakuRules.CRYSTAL_MASTERY}), true);
             return;
         }
+        // 1.3.14: crystallizing the wings is Touka's to teach (Teaching): the mastery, then her.
+        if (!state.crystalMode && !QuestServer.pass(player, com.hex.kagune.control.quest.Gate.UKAKU_CRYSTAL)) {
+            return;
+        }
         if (state.crystalChangedAt != Long.MIN_VALUE && now - state.crystalChangedAt < UkakuRules.CRYSTAL_TOGGLE_TICKS
             && now >= state.crystalChangedAt) {
             return;

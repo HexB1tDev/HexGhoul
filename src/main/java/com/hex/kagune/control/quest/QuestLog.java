@@ -24,7 +24,8 @@ public final class QuestLog {
     /** A kill this soon (ticks) after the last one carries the rampage on. */
     public static final int RAMPAGE_TICKS = 200;
     /** The newest save format; {@link #migrated} below it means the old progression was never looked at. */
-    public static final int VERSION = 1;
+    /** 1.3.14: 2, Crystal Wings gated (Touka teaches it): a save at 1 keeps it if its mastery was already reached, nothing else. */
+    public static final int VERSION = 2;
 
     public enum State {
         LOCKED, OPEN, DONE, CLOSED
@@ -340,7 +341,7 @@ public final class QuestLog {
             int least = Integer.MAX_VALUE;
             for (Map.Entry<String, Bond> entry : this.bonds.entrySet()) {
                 int strength = Math.abs(entry.getValue().regard());
-                if (!entry.getValue().has(NpcBonds.ALLY) && !entry.getKey().equals(npc) && !entry.getKey().equals(com.hex.kagune.control.npc.EtoRules.KEY)
+                if (!entry.getValue().has(NpcBonds.ALLY) && !entry.getKey().equals(npc) && !com.hex.kagune.control.npc.Persona.known(entry.getKey())
                     && strength < least) {
                     least = strength;
                     faintest = entry.getKey();
@@ -376,7 +377,8 @@ public final class QuestLog {
             return;
         }
         for (Gate gate : Gate.values()) {
-            if (had.test(gate)) {
+            boolean fresh = this.migrated < 1 || gate == Gate.UKAKU_CRYSTAL;
+            if (fresh && had.test(gate)) {
                 this.gates.add(gate);
             }
         }

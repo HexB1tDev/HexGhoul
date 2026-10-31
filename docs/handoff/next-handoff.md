@@ -1,3 +1,6 @@
+> **Superseded:** start from `companions-handoff.md` (1.3.14: Touka, Ken, teaching, hands held alive). This file is still right about
+> the project's basics and everything up to 1.3.12.
+
 # Handoff: HexKagune 1.3.12 (Eto's full Owl DNA kit, genders, pregnancy, children, reactions), for the next agent
 
 Read this whole file first. It is the current state and replaces `family-handoff.md` as the place to start (that file's sections 0 to 3

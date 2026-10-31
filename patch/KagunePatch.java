@@ -40,7 +40,7 @@ public final class KagunePatch implements Opcodes {
     private static final String COOLDOWN = "slingshotCooldownUntil";
     /** 3.0.0: the grapple's flight onto the grabbed block. */
     static final String SLINGSHOT = "com/hex/kagune/control/server/RinkakuSlingshot";
-    static final String VERSION = "1.3.13";
+    static final String VERSION = "1.3.14";
     private static final String PLAYER = "net/minecraft/server/level/ServerPlayer";
     private static final String VECTOR = "net/minecraft/world/phys/Vec3";
     // 1.1.0 kagune control expansion hooks
@@ -462,6 +462,28 @@ public final class KagunePatch implements Opcodes {
         onAction.instructions.insert(guard);
     }
 
+    /**
+     * 1.3.14: a companion holding the player's hand (or clinging to them, hugging them, kissing them) is never one of their targets: the
+     * original's target checks ({@code isHostileTo}, {@code validSwipeTarget}) say no at once while {@code EtoBrain.spared} says so.
+     */
+    private static void patchSpared(ClassNode node, String name) {
+        MethodNode check = node.methods.stream()
+            .filter(m -> m.name.equals(name) && m.desc.equals("(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/world/entity/LivingEntity;)Z"))
+            .findFirst().orElseThrow(() -> new IllegalStateException("Missing " + name + "(ServerPlayer, LivingEntity)"));
+        LabelNode proceed = new LabelNode();
+        InsnList guard = new InsnList();
+        guard.add(new VarInsnNode(ALOAD, 0));
+        guard.add(new VarInsnNode(ALOAD, 1));
+        guard.add(new MethodInsnNode(INVOKESTATIC, "com/hex/kagune/control/server/EtoBrain", "spared",
+            "(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/world/entity/LivingEntity;)Z", false));
+        guard.add(new JumpInsnNode(IFEQ, proceed));
+        guard.add(new InsnNode(ICONST_0));
+        guard.add(new InsnNode(IRETURN));
+        guard.add(proceed);
+        guard.add(new FrameNode(F_SAME, 0, null, 0, null));
+        check.instructions.insert(guard);
+    }
+
     private static void patchTendrilChain(ClassNode node) {
         widen(node, "thrustTarget");
         widen(node, "isActionLimb");
@@ -865,6 +887,8 @@ public final class KagunePatch implements Opcodes {
         patchController(controller);
         patchControllerForControl(controller);
         patchDragonLock(controller);
+        patchSpared(controller, "isHostileTo");
+        patchSpared(controller, "validSwipeTarget");
         patchAura(aura);
         ClassNode tendril = read(entries.get(TENDRIL + ".class"));
         ClassNode manifest = read(entries.get(MANIFEST + ".class"));

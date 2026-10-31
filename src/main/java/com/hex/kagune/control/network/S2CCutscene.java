@@ -17,6 +17,8 @@ public record S2CCutscene(int script, String words) {
     public static final int NIGHT = 1;
     /** 1.3.10: a birth: "9 months later...", a cry in the dark, who was born. */
     public static final int BIRTH = 2;
+    /** 1.3.14: Ken's trial: the torture he lived through, lived through ({@code CutsceneOverlay.TORTURE}). */
+    public static final int TORTURE = 3;
 
     public static void encode(S2CCutscene message, FriendlyByteBuf buffer) {
         buffer.writeByte(message.script);

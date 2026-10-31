@@ -215,6 +215,13 @@ public final class QuestBook {
     }
 
     private static void add(Quest quest) {
+        // 1.3.14: a gate a companion teaches (Teaching) is no longer opened by its quests: they still pay their mastery and side.
+        List<Gate> kept = quest.reward().gates().stream().filter(gate -> !com.hex.kagune.control.npc.Teaching.taught(gate)).toList();
+        if (kept.size() != quest.reward().gates().size()) {
+            Reward r = quest.reward();
+            quest = new Quest(quest.id(), quest.line(), quest.path(), quest.title(), quest.story(), quest.mastery(), quest.after(), quest.exclusive(),
+                quest.objectives(), new Reward(r.mastery(), r.points(), r.ghoulMeat(), kept, r.side()));
+        }
         if (QUESTS.put(quest.id(), quest) != null) {
             throw new IllegalStateException("two quests named " + quest.id());
         }

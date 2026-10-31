@@ -22,7 +22,9 @@ public final class EtoTalk {
         // 1.3.2
         TALK, SWEET, MAIN, GIFTS, PUPPY, PROPOSE, NIGHT, PACT, MEAT, LETTER, CLING, FORGIVE, TRIAL, HAND,
         // 1.3.10: they asked each other for a baby (the next night it comes)
-        BABY
+        BABY,
+        // 1.3.14: a companion's lesson taught ({@link Teaching}: its gate opens), or lived through first (the torture, then the gate)
+        LEARN, TORTURE
     }
 
     /**
@@ -38,7 +40,22 @@ public final class EtoTalk {
                           EtoRules.Lesson next, boolean beforeDone, boolean granted, int seed,
                           Romance.Stage stage, String claimedBy, boolean following, long dayTime, EtoMood mood, long daysTogether, long daysAway,
                           String puppy, boolean ring, boolean meat, boolean letter, EtoRules.Pact pact, int pactCount, boolean trialDone,
-                          boolean nightUsed, String name, boolean spouseElsewhere, com.hex.kagune.control.family.FamilyView family) {
+                          boolean nightUsed, String name, boolean spouseElsewhere, com.hex.kagune.control.family.FamilyView family,
+                          Teaching.View teaching, boolean mixed) {
+        /**
+         * 1.3.14: as 1.3.10 made one: nothing taught ({@code teaching}: what a companion who teaches could teach them now), and a couple
+         * who could have a child ({@code mixed}: one of them a woman, the other a man).
+         */
+        public Context(int regard, int flags, int count, boolean ghoul, boolean chattedToday, boolean giftedToday, boolean book, boolean flower,
+                       EtoRules.Lesson next, boolean beforeDone, boolean granted, int seed,
+                       Romance.Stage stage, String claimedBy, boolean following, long dayTime, EtoMood mood, long daysTogether, long daysAway,
+                       String puppy, boolean ring, boolean meat, boolean letter, EtoRules.Pact pact, int pactCount, boolean trialDone,
+                       boolean nightUsed, String name, boolean spouseElsewhere, com.hex.kagune.control.family.FamilyView family) {
+            this(regard, flags, count, ghoul, chattedToday, giftedToday, book, flower, next, beforeDone, granted, seed, stage, claimedBy, following, dayTime,
+                mood, daysTogether, daysAway, puppy, ring, meat, letter, pact, pactCount, trialDone, nightUsed, name, spouseElsewhere, family,
+                Teaching.View.NONE, true);
+        }
+
         /** As 1.3.2 made one: no family yet. */
         public Context(int regard, int flags, int count, boolean ghoul, boolean chattedToday, boolean giftedToday, boolean book, boolean flower,
                        EtoRules.Lesson next, boolean beforeDone, boolean granted, int seed,
@@ -93,7 +110,12 @@ public final class EtoTalk {
             return new Context(this.regard, this.flags, this.count, this.ghoul, this.chattedToday, this.giftedToday, this.book, this.flower, this.next,
                 this.beforeDone, this.granted, seed, this.stage, this.claimedBy, this.following, this.dayTime, this.mood, this.daysTogether, this.daysAway,
                 this.puppy, this.ring, this.meat, this.letter, this.pact, this.pactCount, this.trialDone, this.nightUsed, this.name, this.spouseElsewhere,
-                this.family);
+                this.family, this.teaching, this.mixed);
+        }
+
+        /** 1.3.14: they could have a child together: married, opposite genders, not carrying one already, not asked yet. */
+        public boolean babyOpen() {
+            return this.married() && this.mixed && !this.family.wantsBaby() && !this.pregnant();
         }
 
         /** 1.3.10: she is carrying their child. */

@@ -23,6 +23,103 @@ public final class EtoPose {
     private EtoPose() {
     }
 
+    /**
+     * 1.3.14: the pose for {@code gesture}, {@code leads}: a man's way of holding someone (Ken's: {@link #led}) where he has one, else the
+     * same as everyone's.
+     */
+    public static RigPose gesture(EtoGesture gesture, double age, boolean leads) {
+        if (leads && gesture != null) {
+            RigPose led = led(gesture, (float)age);
+            if (led != null) {
+                return led;
+            }
+        }
+        return gesture(gesture, age);
+    }
+
+    /**
+     * 1.3.14: Ken's: he leans down to a kiss, a hand cupping their cheek and the other at their waist (held, a little further in); making
+     * out, both arms round their waist pulling them in, head tilted; his own quick kiss on their forehead, hands on their shoulders; a hug
+     * that wraps them up, his head resting on theirs; an arm round their shoulders where she would cling to an arm; and after a kiss, a
+     * sheepish hand to the back of his neck. Null for anything else (the same as everyone's).
+     */
+    static RigPose led(EtoGesture gesture, float t) {
+        RigPose p = new RigPose();
+        float in = gesture.held() ? ease(t / 6.0F) : envelope(t, gesture.ticks, 5.0F, 6.0F);
+        float sway = (float)Math.sin(t * 0.08);
+        switch (gesture) {
+            case KISS, BLUSH -> {
+                float lean = gesture == EtoGesture.BLUSH ? 0.27F : 0.18F;
+                p.lean = lean;
+                p.headX = 0.22F;
+                p.headZ = 0.12F;
+                p.rightArmX = -1.75F;
+                p.rightArmY = -0.38F;
+                p.rightArmZ = 0.02F;
+                p.leftArmX = -1.0F;
+                p.leftArmY = 0.18F;
+                p.leftArmZ = -0.04F;
+                p.roll = 0.015F * sway;
+            }
+            case PULL -> {
+                // Round their waist, not his own: the arms reach forward and stay a body's width apart, the hands at their back.
+                p.lean = 0.16F;
+                p.headX = 0.26F;
+                p.headZ = 0.18F;
+                p.rightArmX = -1.3F;
+                p.leftArmX = -1.3F;
+                p.rightArmY = -0.1F;
+                p.leftArmY = 0.1F;
+                p.rightArmZ = 0.05F;
+                p.leftArmZ = -0.05F;
+                p.roll = 0.02F * sway;
+            }
+            case PECK -> {
+                float close = (float)Math.sin(Math.min(1.0, t / (double)EtoGesture.PECK.ticks) * Math.PI);
+                p.rightArmX = -1.45F;
+                p.leftArmX = -1.45F;
+                p.rightArmY = -0.25F;
+                p.leftArmY = 0.25F;
+                p.lean = 0.33F * close;
+                p.headX = 0.45F * close;
+            }
+            case HUG -> {
+                // Round their shoulders, a body's width apart, his head resting on theirs.
+                p.rightArmX = -1.5F;
+                p.leftArmX = -1.5F;
+                p.rightArmY = -0.14F;
+                p.leftArmY = 0.14F;
+                p.rightArmZ = 0.05F;
+                p.leftArmZ = -0.05F;
+                p.lean = 0.1F;
+                p.headX = 0.32F;
+                p.headZ = 0.25F;
+            }
+            case CLING -> {
+                // His arm round their shoulders (they are at his left), his head tipped toward theirs.
+                p.leftArmX = -0.55F;
+                p.leftArmZ = -1.3F;
+                p.leftArmY = 0.6F;
+                p.headZ = -0.22F;
+                p.headX = 0.08F;
+                p.rightArmZ = 0.05F;
+            }
+            case KISSED -> {
+                // A hand to the back of his neck, head down, a small smile: sheepish.
+                p.rightArmX = -3.3F;
+                p.rightArmY = 0.0F;
+                p.rightArmZ = -0.55F;
+                p.headX = 0.22F;
+                p.headZ = -0.12F;
+                p.leftArmZ = -0.06F;
+            }
+            default -> {
+                return null;
+            }
+        }
+        return p.scale(in);
+    }
+
     /** Her pose for {@code gesture} {@code age} ticks in, or null for none. */
     public static RigPose gesture(EtoGesture gesture, double age) {
         if (gesture == null || gesture == EtoGesture.NONE) {
@@ -339,6 +436,130 @@ public final class EtoPose {
                 p.leftArmX = -0.4F;
                 p.drop = 0.3F * shake;
             }
+            // 1.3.14: Touka's (strict, pouty) and Ken's (quiet, a little eerie).
+            case CROSS -> {
+                // Arms folded tight, weight on one leg (a hip out), chin turned a little away; now and then a glance back.
+                float glance = (float)Math.max(0.0, Math.sin(t * 0.07 - 1.2));
+                folded(p);
+                p.headY = 0.45F - 0.5F * glance;
+                p.headX = -0.08F;
+                p.roll = 0.05F;
+                p.rightLegZ = 0.06F;
+                p.leftLegZ = 0.02F;
+            }
+            case TAP -> {
+                // Hands on her hips, one foot tapping, looking right at them.
+                hips(p);
+                float tap = (float)Math.abs(Math.sin(t * Math.PI / 7.0));
+                p.rightLegX = -0.22F * tap;
+                p.headX = 0.1F;
+                p.headZ = -0.08F;
+            }
+            case HUFF -> {
+                // Shoulders up on the breath in, dropped on the huff, head snapped away.
+                float breath = t < 10.0F ? ease(t / 10.0F) : 1.0F - ease(Math.min(1.0F, (t - 10.0F) / 6.0F));
+                folded(p);
+                p.drop = -0.6F * breath;
+                p.headY = t < 10.0F ? 0.0F : -0.7F * ease(Math.min(1.0F, (t - 10.0F) / 5.0F));
+                p.headX = -0.15F;
+            }
+            case SIP -> {
+                // The cup in both hands at her chest; up to her lips every few seconds.
+                float sip = (float)Math.max(0.0, Math.sin(t * Math.PI / 50.0 - 0.6));
+                p.rightArmX = -1.05F - 0.55F * sip;
+                p.leftArmX = -0.95F - 0.4F * sip;
+                p.rightArmY = -0.42F;
+                p.leftArmY = 0.48F;
+                p.rightArmZ = -0.05F;
+                p.leftArmZ = 0.05F;
+                p.headX = 0.22F - 0.32F * sip;
+            }
+            case WIPE -> {
+                // The cup in her left hand, the cloth in her right going round and round it.
+                float round = t * 0.42F;
+                p.leftArmX = -0.95F;
+                p.leftArmY = 0.45F;
+                p.rightArmX = -1.0F + 0.12F * (float)Math.sin(round);
+                p.rightArmY = -0.35F + 0.14F * (float)Math.cos(round);
+                p.rightArmZ = -0.06F;
+                p.headX = 0.38F;
+            }
+            case KICKS -> {
+                // A practice kick: weight back, the right leg snapped up high, held a beat, down; arms out for balance; a shrug after.
+                float kick = t < 6.0F ? ease(t / 6.0F) : t < 14.0F ? 1.0F : 1.0F - ease(Math.min(1.0F, (t - 14.0F) / 8.0F));
+                p.rightLegX = -1.45F * kick;
+                p.leftLegX = 0.12F * kick;
+                p.rightArmZ = 0.55F * kick;
+                p.leftArmZ = -0.75F * kick;
+                p.rightArmX = 0.35F * kick;
+                p.leftArmX = -0.35F * kick;
+                p.lean = -0.18F * kick;
+                p.legHold = kick;
+                float shrug = t > 26.0F ? (float)Math.sin(Math.min(1.0, (t - 26.0) / 10.0) * Math.PI) : 0.0F;
+                p.drop = -0.4F * shrug;
+            }
+            case SCOLD -> {
+                // Left hand on her hip, leaning in, a finger wagged at them.
+                p.leftArmX = 0.35F;
+                p.leftArmZ = -0.5F;
+                p.leftArmY = 0.35F;
+                p.rightArmX = -1.55F;
+                p.rightArmY = 0.12F * (float)Math.sin(t * 1.3);
+                p.rightArmZ = -0.08F;
+                p.lean = 0.14F;
+                p.headX = 0.08F;
+                p.headZ = 0.06F * (float)Math.sin(t * 1.3);
+            }
+            case SHY -> {
+                // Turned half away, arms crossed, cheeks pink, a glance back and away again.
+                folded(p);
+                float glance = (float)Math.max(0.0, Math.sin(t * 0.09 - 0.8));
+                p.twist = -0.35F;
+                p.headY = -0.55F + 0.6F * glance;
+                p.headX = 0.2F;
+                p.roll = -0.03F;
+            }
+            case CHIN -> {
+                // A hand to the chin, the other arm across under it, head tipped: thinking (or hiding something).
+                p.rightArmX = -2.05F;
+                p.rightArmY = -0.6F;
+                p.rightArmZ = 0.12F;
+                p.leftArmX = -0.8F;
+                p.leftArmY = 0.7F;
+                p.leftArmZ = -0.05F;
+                p.headZ = 0.12F;
+                p.headX = 0.1F + 0.05F * (float)Math.sin(t * 0.06);
+            }
+            case CRACK -> {
+                // The right hand up at the chest, the thumb pressed into a finger; at the crack, a tilt of the head.
+                float press = t < 18.0F ? ease(t / 18.0F) : 1.0F;
+                float crack = t >= 18.0F && t < 30.0F ? (float)Math.sin((t - 18.0F) / 12.0F * Math.PI) : 0.0F;
+                p.rightArmX = -1.25F * press;
+                p.rightArmY = -0.6F * press;
+                p.rightArmZ = 0.1F * press;
+                p.headZ = 0.32F * crack;
+                p.headX = 0.12F * press;
+                p.leftArmZ = -0.08F;
+            }
+            case PECK -> {
+                // In fast, up on her toes, hands behind her back; a beat; back down.
+                float close = (float)Math.sin(Math.min(1.0, t / (double)EtoGesture.PECK.ticks) * Math.PI);
+                p.lean = 0.32F * close;
+                p.headX = -0.22F * close;
+                p.drop = -0.7F * close;
+                p.rightArmX = 0.55F;
+                p.leftArmX = 0.55F;
+                p.rightArmZ = -0.22F;
+                p.leftArmZ = 0.22F;
+            }
+            case BOW -> {
+                // A small, polite bow from the hips, hands at the sides.
+                float bow = (float)Math.sin(Math.min(1.0, t / (double)EtoGesture.BOW.ticks) * Math.PI);
+                p.lean = 0.48F * bow;
+                p.headX = 0.25F * bow;
+                p.rightArmZ = 0.05F;
+                p.leftArmZ = -0.05F;
+            }
             default -> {
             }
         }
@@ -348,6 +569,26 @@ public final class EtoPose {
             out.spin = p.spin;
         }
         return out;
+    }
+
+    /** 1.3.14: arms folded tight across the chest. */
+    private static void folded(RigPose p) {
+        p.rightArmX = -1.05F;
+        p.leftArmX = -1.05F;
+        p.rightArmZ = -0.85F;
+        p.leftArmZ = 0.85F;
+        p.rightArmY = 0.3F;
+        p.leftArmY = -0.3F;
+    }
+
+    /** 1.3.14: hands on the hips, elbows out. */
+    private static void hips(RigPose p) {
+        p.rightArmX = 0.3F;
+        p.leftArmX = 0.3F;
+        p.rightArmZ = 0.55F;
+        p.leftArmZ = -0.55F;
+        p.rightArmY = -0.35F;
+        p.leftArmY = 0.35F;
     }
 
     /** Waiting for a kiss: hands behind her back, her top half leaning in by {@code lean}, chin up, on her toes, swaying a little. */

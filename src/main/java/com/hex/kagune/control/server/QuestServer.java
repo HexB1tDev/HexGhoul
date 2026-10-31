@@ -148,6 +148,13 @@ public final class QuestServer {
         if (open(player, gate)) {
             return true;
         }
+        // 1.3.14: a gate a companion teaches: who to go and ask.
+        com.hex.kagune.control.npc.Teaching.Lesson lesson = com.hex.kagune.control.npc.Teaching.teaching(gate);
+        if (lesson != null) {
+            notice(player, Component.m_237113_(com.hex.kagune.control.npc.Teaching.gatedText(gate,
+                com.hex.kagune.control.npc.Persona.of(lesson.teacher()).name())));
+            return false;
+        }
         notice(player, Component.m_237110_("message.hexkagune.quest.gated", gate.displayName(), QuestBook.openersText(gate)));
         return false;
     }

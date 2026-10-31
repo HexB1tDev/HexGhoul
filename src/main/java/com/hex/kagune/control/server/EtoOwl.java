@@ -103,7 +103,7 @@ final class EtoOwl {
             EtoOwlForm.fight(npc, mind, f, target, level, now, phase);
             return;
         }
-        if (EtoRules.owlNow(share(npc), f.owl, now, f.owlReady)) {
+        if (npc.persona().owlKit() && EtoRules.owlNow(share(npc), f.owl, now, f.owlReady)) {
             face(npc, target);
             EtoOwlForm.grow(npc, f, level, now);
             return;
@@ -116,8 +116,10 @@ final class EtoOwl {
             npc.m_21573_().m_5624_(target, phase.chase * 0.8);
             return;
         }
-        EtoRules.Act act = EtoRules.choose(distance, sees, npc.m_20096_(), share(npc), now, new EtoRules.Ready(f.punchReady, f.kickReady, f.flipReady,
-            f.swipeReady, f.grabReady, f.hammerReady, EtoWatch.out(npc) ? Long.MAX_VALUE : f.watchReady, f.armReady), npc.m_217043_().m_188500_());
+        // 1.3.14: the Owl DNA kit is Eto's alone; every other companion fights with what every ghoul's eyes give (strikes, the kick, flips).
+        EtoRules.Ready ready = npc.persona().owlKit() ? new EtoRules.Ready(f.punchReady, f.kickReady, f.flipReady, f.swipeReady, f.grabReady, f.hammerReady,
+            EtoWatch.out(npc) ? Long.MAX_VALUE : f.watchReady, f.armReady) : EtoRules.Ready.only(f.punchReady, f.kickReady, f.flipReady);
+        EtoRules.Act act = EtoRules.choose(distance, sees, npc.m_20096_(), share(npc), now, ready, npc.m_217043_().m_188500_());
         face(npc, target);
         switch (act) {
             case SWIPE -> EtoFlesh.swipe(npc, f, target, level, now, phase);

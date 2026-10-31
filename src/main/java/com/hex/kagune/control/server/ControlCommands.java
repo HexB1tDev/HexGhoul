@@ -83,14 +83,21 @@ final class ControlCommands {
                 QuestServer.hunt(context.getSource().m_81375_());
                 return 1;
             }))));
-        // 1.3.1: Eto's regard for a player set to the most (a testing shortcut for operators).
-        dispatcher.register(Commands.m_82127_("kagune").then(Commands.m_82127_("eto").requires(source -> source.m_6761_(2))
-            .then(Commands.m_82127_("max").executes(context -> maxEto(context, context.getSource().m_81375_()))
-                .then(Commands.m_82129_("player", EntityArgument.m_91466_())
-                    .executes(context -> maxEto(context, EntityArgument.m_91474_(context, "player")))))));
+        // 1.3.1: Eto's regard for a player set to the most (a testing shortcut for operators). 1.3.14: Touka's and Ken's too.
+        for (com.hex.kagune.control.npc.Persona persona : com.hex.kagune.control.npc.Persona.ALL) {
+            dispatcher.register(Commands.m_82127_("kagune").then(Commands.m_82127_(persona.key()).requires(source -> source.m_6761_(2))
+                .then(Commands.m_82127_("here").executes(context -> companionHere(context, persona)))
+                .then(Commands.m_82127_("max").executes(context -> maxEto(context, context.getSource().m_81375_(), persona))
+                    .then(Commands.m_82129_("player", EntityArgument.m_91466_())
+                        .executes(context -> maxEto(context, EntityArgument.m_91474_(context, "player"), persona))))));
+        }
         // 1.3.10: a testing shortcut for operators: every pregnancy the player is part of brought to ten seconds before the birth.
         dispatcher.register(Commands.m_82127_("kagune").then(Commands.m_82127_("family").requires(source -> source.m_6761_(2))
             .then(Commands.m_82127_("soon").executes(context -> familySoon(context, context.getSource().m_81375_())))
+            // 1.3.14: any point of it (percent), to see the belly at each stage; time goes on from there as it always does.
+            .then(Commands.m_82127_("at").then(Commands.m_82129_("percent", com.mojang.brigadier.arguments.IntegerArgumentType.integer(0, 99))
+                .executes(context -> familyAt(context, context.getSource().m_81375_(),
+                    com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "percent")))))
             .then(Commands.m_82127_("grow").executes(context -> familyGrow(context, context.getSource().m_81375_())))));
         // 7.0.1: Ghoul Meat devoured: what it gives now; an operator can set the count.
         dispatcher.register(Commands.m_82127_("kagune").then(Commands.m_82127_("ghoulmeat")
@@ -303,6 +310,18 @@ final class ControlCommands {
         return 0;
     }
 
+    private static int familyAt(CommandContext<CommandSourceStack> context, ServerPlayer player, int percent) {
+        long left = Math.round(com.hex.kagune.control.family.Pregnancy.TERM * (1.0 - percent / 100.0));
+        int moved = Pregnancies.hurry(player.m_284548_(), Pregnancies.player(player.m_20148_()), left);
+        if (moved == 0) {
+            context.getSource().m_81352_(Component.m_237113_("No one is carrying your child, and you aren't carrying one."));
+            return 0;
+        }
+        context.getSource().m_288197_(() -> Component.m_237113_("The pregnancy is " + percent + "% along (the belly shows from "
+            + Math.round(com.hex.kagune.control.family.Pregnancy.SHOWS * 100) + "%)."), false);
+        return 1;
+    }
+
     private static int familySoon(CommandContext<CommandSourceStack> context, ServerPlayer player) {
         int hurried = Pregnancies.hurry(player.m_284548_(), Pregnancies.player(player.m_20148_()), 200L);
         if (hurried == 0) {
@@ -313,15 +332,49 @@ final class ControlCommands {
         return 1;
     }
 
-    private static int maxEto(CommandContext<CommandSourceStack> context, ServerPlayer player) {
-        if (player.m_9236_().m_6443_(com.hex.kagune.control.npc.EtoNpc.class, player.m_20191_().m_82400_(10.0), eto -> eto.m_6084_()).isEmpty()) {
-            context.getSource().m_81352_(Component.m_237113_("No Eto within 10 blocks."));
+    /**
+     * 1.3.14: {@code /kagune <companion> here}: the one of them there is comes to where the player stands and makes it home (made here if
+     * none can be found loaded): until their own places are built, this is where they live. Whoever they are with stays.
+     */
+    private static int companionHere(CommandContext<CommandSourceStack> context, com.hex.kagune.control.npc.Persona persona) throws CommandSyntaxException {
+        ServerPlayer player = context.getSource().m_81375_();
+        net.minecraft.server.level.ServerLevel level = player.m_284548_();
+        com.hex.kagune.control.npc.UniqueNpc known = UniqueNpcs.get(level, persona.key());
+        com.hex.kagune.control.npc.EtoNpc body = known.body != null && level.m_8791_(known.body) instanceof com.hex.kagune.control.npc.EtoNpc there
+            && there.m_6084_() ? there : null;
+        if (body == null) {
+            net.minecraft.world.entity.EntityType<? extends com.hex.kagune.control.npc.EtoNpc> type = persona == com.hex.kagune.control.npc.Persona.TOUKA
+                ? com.hex.kagune.control.ControlEntities.TOUKA.get() : persona == com.hex.kagune.control.npc.Persona.KEN
+                ? com.hex.kagune.control.ControlEntities.KEN.get() : com.hex.kagune.control.ControlEntities.ETO.get();
+            body = type.m_20615_(level);
+            if (body == null) {
+                context.getSource().m_81352_(Component.m_237113_("Couldn't make " + persona.name() + " here."));
+                return 0;
+            }
+            body.m_7678_(player.m_20185_(), player.m_20186_(), player.m_20189_(), player.m_146908_(), 0.0F);
+            body.rehome();
+            UniqueNpcs.adopt(level, persona.key(), body, body.home());
+            level.m_7967_(body);
+        } else {
+            body.m_6021_(player.m_20185_(), player.m_20186_(), player.m_20189_());
+            body.m_21573_().m_26573_();
+            body.rehome();
+            UniqueNpcs.adopt(level, persona.key(), body, body.home());
+        }
+        String name = body.displayName();
+        context.getSource().m_288197_(() -> Component.m_237113_(name + " lives here now."), false);
+        return 1;
+    }
+
+    private static int maxEto(CommandContext<CommandSourceStack> context, ServerPlayer player, com.hex.kagune.control.npc.Persona persona) {
+        if (player.m_9236_().m_6443_(com.hex.kagune.control.npc.EtoNpc.class, player.m_20191_().m_82400_(10.0),
+            npc -> npc.m_6084_() && npc.persona() == persona).isEmpty()) {
+            context.getSource().m_81352_(Component.m_237113_("No " + persona.name() + " within 10 blocks."));
             return 0;
         }
-        com.hex.kagune.control.quest.QuestLog.Bond bond = QuestServer.bond(player, com.hex.kagune.control.npc.EtoRules.KEY);
-        QuestServer.bond(player, com.hex.kagune.control.npc.EtoRules.KEY,
-            bond.regard(com.hex.kagune.control.npc.NpcBonds.MOST).with(com.hex.kagune.control.npc.NpcBonds.MET, true));
-        context.getSource().m_288197_(() -> Component.m_237113_("Eto's regard is at the most (100)."), false);
+        com.hex.kagune.control.quest.QuestLog.Bond bond = QuestServer.bond(player, persona.key());
+        QuestServer.bond(player, persona.key(), bond.regard(com.hex.kagune.control.npc.NpcBonds.MOST).with(com.hex.kagune.control.npc.NpcBonds.MET, true));
+        context.getSource().m_288197_(() -> Component.m_237113_(persona.name() + "'s regard is at the most (100)."), false);
         return 1;
     }
 }

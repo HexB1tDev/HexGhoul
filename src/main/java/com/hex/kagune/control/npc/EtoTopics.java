@@ -256,10 +256,10 @@ public final class EtoTopics {
                 new Follow("Are you seeing anyone else?", c -> !c.married(), c -> r("Who else would put up with me? Who else would I put up with?", 1)),
                 new Follow("Tell me about our wedding.", EtoTalk.Context::married, c -> r("You were shaking. I pretended not to notice. I was shaking too.", 3,
                     EtoGesture.HAIR)),
-                new Follow("Do you want a family someday?", c -> c.married() && !c.family().wantsBaby() && !c.pregnant(),
+                new Follow("Do you want a family someday?", c -> c.babyOpen(),
                     c -> r("...With you? Ask me again some night. Maybe I'll say yes.", 2, EtoGesture.HAIR)),
                 // 1.3.10: asked for, the next night it comes.
-                new Follow("Let's have a baby.", c -> c.married() && !c.family().wantsBaby() && !c.pregnant(),
+                new Follow("Let's have a baby.", c -> c.babyOpen(),
                     c -> new EtoTalk.Reply(EtoLines.one(c.seed(), "...Yes. Tonight, then. Don't make me wait.",
                         "A baby. Ours. ...I've thought about it more than I'd admit. Yes. Come to me tonight.",
                         "You'd be a good father. Annoyingly good. ...Yes. Tonight."), 6, EtoTalk.Effect.BABY, EtoGesture.HAIR)),

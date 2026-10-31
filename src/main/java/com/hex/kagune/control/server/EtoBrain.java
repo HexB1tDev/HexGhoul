@@ -126,6 +126,9 @@ public final class EtoBrain {
         /** 1.3.3: whose hand she holds (she walks at their side), and whether their shift was down last tick (a tap lets go). */
         UUID holding;
         boolean holdShift;
+        /** 1.3.14: the partner she is coming to for the night they asked for a baby (null none), and when she may next try. */
+        UUID babyNight;
+        long nextBabyNight;
     }
 
     /** Every Eto ticking on this server (one, unless another has yet to be sent away). */
@@ -143,7 +146,7 @@ public final class EtoBrain {
         if (mind == null) {
             // 1.3.2: only one of her lives; any other body leaves on its first tick.
             BlockPos first = npc.home() != null ? npc.home() : npc.settle();
-            if (!UniqueNpcs.claim(level, EtoRules.KEY, npc.m_20148_(), first)) {
+            if (!UniqueNpcs.claim(level, npc.persona().key(), npc.m_20148_(), first)) {
                 npc.m_146870_();
                 return;
             }
@@ -151,7 +154,7 @@ public final class EtoBrain {
             npc.mind = mind;
             mind.nextGestureAt = now + 100L + npc.m_217043_().m_188503_(200);
             mind.nextSeek = now + 1200L;
-            UniqueNpc known = UniqueNpcs.get(level, EtoRules.KEY);
+            UniqueNpc known = UniqueNpcs.get(level, npc.persona().key());
             mind.company = known.company != Long.MIN_VALUE ? known.company : now;
             npc.origin();
             npc.m_21530_();
@@ -163,7 +166,7 @@ public final class EtoBrain {
         if (home == null) {
             home = npc.settle();
         }
-        if (now % 200L == 7L && !UniqueNpcs.claim(level, EtoRules.KEY, npc.m_20148_(), home)) {
+        if (now % 200L == 7L && !UniqueNpcs.claim(level, npc.persona().key(), npc.m_20148_(), home)) {
             npc.m_146870_();
             return;
         }
@@ -175,16 +178,17 @@ public final class EtoBrain {
             BlockPos origin = npc.origin();
             boolean away = origin != null && Math.pow(origin.m_123341_() - home.m_123341_(), 2) + Math.pow(origin.m_123342_() - home.m_123342_(), 2)
                 + Math.pow(origin.m_123343_() - home.m_123343_(), 2) > 6.0 * 6.0;
-            UniqueNpcs.report(level, EtoRules.KEY, origin, away, mind.company);
+            UniqueNpcs.report(level, npc.persona().key(), origin, away, mind.company);
             if (away && mind.target == 0 && now - mind.company >= UniqueNpc.GOES_HOME) {
                 letGo(npc, mind, level, now, false);
                 npc.goHome();
                 home = npc.home();
                 mind.company = now;
-                UniqueNpcs.report(level, EtoRules.KEY, origin, false, now);
+                UniqueNpcs.report(level, npc.persona().key(), origin, false, now);
                 ServerPlayer partner = player(level, mind.partner);
                 if (partner != null) {
-                    partner.m_5661_(Component.m_237113_("\u00a7d" + EtoRules.NAME + " got tired of waiting and went home to the Library."), false);
+                    partner.m_5661_(Component.m_237113_(npc.persona().colour() + npc.displayName() + " got tired of waiting and went home to "
+                        + npc.persona().home() + "."), false);
                 }
             }
         }
@@ -263,7 +267,7 @@ public final class EtoBrain {
 
     /** Her partner, as the world remembers it: the line over her head follows. */
     private static void partner(EtoNpc npc, Mind mind, ServerLevel level) {
-        UniqueNpc unique = UniqueNpcs.get(level, EtoRules.KEY);
+        UniqueNpc unique = UniqueNpcs.get(level, npc.persona().key());
         UUID partner = unique.stage.together() ? unique.partner : null;
         String tag = unique.tag();
         mind.partner = partner;
@@ -285,18 +289,18 @@ public final class EtoBrain {
     public static EtoMood mood(EtoNpc npc, ServerPlayer player, long now) {
         Mind mind = npc.mind;
         ServerLevel level = (ServerLevel)npc.m_9236_();
-        UniqueNpc unique = UniqueNpcs.get(level, EtoRules.KEY);
+        UniqueNpc unique = UniqueNpcs.get(level, npc.persona().key());
         UUID id = player.m_20148_();
         NpcMemory memory = NpcMemoryServer.of(player);
-        long seen = memory.get(EtoRules.KEY, NpcMemory.SEEN, Long.MIN_VALUE);
+        long seen = memory.get(npc.persona().key(), NpcMemory.SEEN, Long.MIN_VALUE);
         long daysAway = seen == Long.MIN_VALUE ? 0L : Math.max(0L, (now - seen) / 24000L);
         boolean sulking = mind != null && (until(mind.ignoring, id) > now || until(mind.sulk, id) > now);
-        boolean jealous = memory.get(EtoRules.KEY, NpcMemory.JEALOUS, Long.MIN_VALUE) > now;
+        boolean jealous = memory.get(npc.persona().key(), NpcMemory.JEALOUS, Long.MIN_VALUE) > now;
         boolean giddy = mind != null && until(mind.giddy, id) > now;
         Long since = mind == null ? null : mind.nearSince.get(id);
         boolean near = since != null && now - since > 600L;
         double roll = Math.floorMod((id.hashCode() * 31L + now / 3000L) * 0x9E3779B1L, 1000L) / 1000.0;
-        return EtoMood.of(unique.stageOf(id), unique.claimedFrom(id), QuestServer.bond(player, EtoRules.KEY).regard(), level.m_46468_(), daysAway, sulking,
+        return EtoMood.of(unique.stageOf(id), unique.claimedFrom(id), QuestServer.bond(player, npc.persona().key()).regard(), level.m_46468_(), daysAway, sulking,
             jealous, giddy, near, roll);
     }
 
@@ -320,7 +324,7 @@ public final class EtoBrain {
         if (id != mind.target) {
             if (id == 0 && mind.target != 0) {
                 if (mind.phase == EtoRules.Phase.MANIAC) {
-                    bark(npc, level, EtoLines.won(npc.m_217043_().m_188503_(100)));
+                    bark(npc, level, npc.persona().script().won(npc.m_217043_().m_188503_(100)));
                 }
             }
             mind.target = id;
@@ -342,7 +346,7 @@ public final class EtoBrain {
             if (living instanceof ServerPlayer player) {
                 // 1.3.2: her partner, never; whatever they did.
                 fights = !player.m_7500_() && !player.m_5833_() && !partnerOf(mind, player) && (mind.grudges.containsKey(player.m_20148_())
-                    || QuestServer.bond(player, EtoRules.KEY).regard() <= NpcBonds.ENEMY);
+                    || QuestServer.bond(player, npc.persona().key()).regard() <= NpcBonds.ENEMY);
             } else {
                 fights = living instanceof Enemy && distance <= (EtoRules.STRIKE_REACH + 0.5) * (EtoRules.STRIKE_REACH + 0.5);
             }
@@ -379,18 +383,18 @@ public final class EtoBrain {
             return;
         }
         if (attacker instanceof ServerPlayer player) {
-            QuestLog.Bond bond = QuestServer.bond(player, EtoRules.KEY);
+            QuestLog.Bond bond = QuestServer.bond(player, npc.persona().key());
             if (partnerOf(mind, player)) {
-                QuestServer.bond(player, EtoRules.KEY, bond.regard(bond.regard() + Romance.PARTNER_BLOW));
+                QuestServer.bond(player, npc.persona().key(), bond.regard(bond.regard() + Romance.PARTNER_BLOW));
                 if (until(mind.sulk, player.m_20148_()) < now) {
-                    say(player, EtoLines.partnerHit(npc.m_217043_().m_188503_(100), mind.stage == Romance.Stage.MARRIED));
+                    say(npc, player, npc.persona().script().partnerHit(npc.m_217043_().m_188503_(100), mind.stage == Romance.Stage.MARRIED));
                     gesture(mind, EtoGesture.POUT, now);
                 }
                 mind.sulk.put(player.m_20148_(), now + Romance.PARTNER_SULK);
                 endKiss(npc, mind, null, now);
                 return;
             }
-            QuestServer.bond(player, EtoRules.KEY, bond.regard(bond.regard() + EtoRules.BLOW));
+            QuestServer.bond(player, npc.persona().key(), bond.regard(bond.regard() + EtoRules.BLOW));
             mind.grudges.put(player.m_20148_(), now + 400L);
             if (player.m_20148_().equals(mind.talking)) {
                 mind.talking = null;
@@ -402,12 +406,44 @@ public final class EtoBrain {
         }
     }
 
-    /** 1.3.4: nothing hurts her through the Speed Kick's lunge and dash (as a Pale player's). */
+    /**
+     * 1.3.4: nothing hurts her through the Speed Kick's lunge and dash (as a Pale player's). 1.3.14: nor does anything the one whose hand
+     * she holds does (or the one she clings to, hugs, kisses): their kagune out, their fists, their shots, whatever they swing.
+     */
     @SubscribeEvent
     public static void attacked(net.minecraftforge.event.entity.living.LivingAttackEvent event) {
-        if (event.getEntity() instanceof EtoNpc npc && npc.mind != null && EtoOwl.untouchable(npc.mind.owl, npc.m_9236_().m_46467_())) {
+        if (!(event.getEntity() instanceof EtoNpc npc) || npc.mind == null) {
+            return;
+        }
+        if (EtoOwl.untouchable(npc.mind.owl, npc.m_9236_().m_46467_())) {
+            event.setCanceled(true);
+            return;
+        }
+        DamageSource source = event.getSource();
+        if (source != null && (source.m_7639_() instanceof ServerPlayer by && spared(by, npc)
+            || source.m_7640_() instanceof ServerPlayer direct && spared(direct, npc))) {
             event.setCanceled(true);
         }
+    }
+
+    /**
+     * 1.3.14: true if {@code body} is a companion holding {@code player}'s hand (or clinging to them, hugging them, kissing them): nothing
+     * they do may touch her. The original kagune's own target checks ask this too (KagunePatch), so its tails and swipes pass her by.
+     */
+    public static boolean spared(ServerPlayer player, LivingEntity body) {
+        try {
+            if (player == null || !(body instanceof EtoNpc npc) || npc.mind == null) {
+                return false;
+            }
+            Mind mind = npc.mind;
+            return player.m_20148_().equals(mind.holding) || mind.with != 0 && mind.with == player.m_19879_();
+        } catch (RuntimeException failure) {
+            return false;
+        }
+    }
+
+    static String capital(String word) {
+        return word == null || word.isEmpty() ? "" : Character.toUpperCase(word.charAt(0)) + word.substring(1);
     }
 
     /** 1.3.2: her partner (or the one she walks with) hurt where she can see who did it: she goes for them. */
@@ -430,7 +466,7 @@ public final class EtoBrain {
             endKiss(npc, mind, null, now);
             if (now - mind.protectedAt > 200L) {
                 mind.protectedAt = now;
-                bark(npc, (ServerLevel)npc.m_9236_(), EtoLines.protect(context(npc, victim)));
+                bark(npc, (ServerLevel)npc.m_9236_(), npc.persona().script().protect(context(npc, victim)));
             }
         }
     }
@@ -444,7 +480,7 @@ public final class EtoBrain {
         EtoRules.Phase phase = EtoRules.Phase.of(health);
         if (phase.ordinal() > mind.phase.ordinal()) {
             int seed = npc.m_217043_().m_188503_(100);
-            bark(npc, level, phase == EtoRules.Phase.MANIAC ? EtoLines.maniac(seed) : EtoLines.serious(seed));
+            bark(npc, level, phase == EtoRules.Phase.MANIAC ? npc.persona().script().maniac(seed) : npc.persona().script().serious(seed));
             if (phase == EtoRules.Phase.MANIAC) {
                 gesture(mind, EtoGesture.LAUGH, now);
             }
@@ -511,10 +547,11 @@ public final class EtoBrain {
         if (now >= mind.nextGestureAt && mind.gesture == EtoGesture.NONE) {
             EtoMood mood = partner != null ? mood(npc, partner, now)
                 : EtoMood.of(Romance.Stage.NONE, false, NpcBonds.FRIENDLY, level.m_46468_(), 0L, false, false, false, false, npc.m_217043_().m_188500_());
-            EtoGesture[] idle = mood.idles();
-            // Her mood's first, mostly; now and then anything at all.
+            EtoGesture[] idle = npc.persona().idles(mood);
+            EtoGesture[] any = npc.persona().anyIdle();
+            // Her mood's first, mostly; now and then anything at all (1.3.14: each companion's own).
             EtoGesture pick = npc.m_217043_().m_188500_() < 0.8 ? idle[npc.m_217043_().m_188503_(idle.length)]
-                : EtoGesture.IDLE[npc.m_217043_().m_188503_(EtoGesture.IDLE.length)];
+                : any[npc.m_217043_().m_188503_(any.length)];
             gesture(mind, pick, now);
             if (pick.still()) {
                 npc.m_21573_().m_26573_();
@@ -536,7 +573,7 @@ public final class EtoBrain {
             if (near) {
                 mind.nearSince.putIfAbsent(id, now);
                 if (now % 600L == 11L) {
-                    NpcMemoryServer.set(player, EtoRules.KEY, NpcMemory.SEEN, now);
+                    NpcMemoryServer.set(player, npc.persona().key(), NpcMemory.SEEN, now);
                 }
             } else {
                 mind.nearSince.remove(id);
@@ -546,13 +583,13 @@ public final class EtoBrain {
         if (near && !mind.partnerNear) {
             if (mind.partnerNearAt != Long.MIN_VALUE && now - mind.partnerNearAt >= 6000L && mind.target == 0 && mind.kiss == null) {
                 EtoTalk.Context c = context(npc, partner);
-                say(partner, EtoLines.welcome(c));
-                alert(partner, Romance.Want.MISSED, "");
+                say(npc, partner, npc.persona().script().welcome(c));
+                alert(npc, partner, Romance.Want.MISSED, "");
                 if (reachable(npc, partner)) {
                     walkUp(npc, mind, partner, EtoGesture.HUG, now);
                 }
             }
-            NpcMemoryServer.set(partner, EtoRules.KEY, NpcMemory.SEEN, now);
+            NpcMemoryServer.set(partner, npc.persona().key(), NpcMemory.SEEN, now);
         }
         mind.partnerNear = near;
         if (near) {
@@ -575,12 +612,24 @@ public final class EtoBrain {
         if (!reach) {
             return false;
         }
+        // 1.3.14: they asked for a baby: once it is dark she comes to them herself, and the night (and the child) follows.
+        if (now % 40L == 17L && now >= mind.nextBabyNight && distance < 16.0) {
+            EtoTalk.Context c = context(npc, partner);
+            if (c.night() && !c.nightUsed() && c.married() && c.mixed() && c.family().wantsBaby() && !c.pregnant()) {
+                mind.nextBabyNight = now + 1200L;
+                mind.babyNight = partner.m_20148_();
+                say(npc, partner, npc.persona().script().babyNight(c));
+                alert(npc, partner, Romance.Want.NIGHT, "");
+                walkUp(npc, mind, partner, EtoGesture.CLING, now);
+                return true;
+            }
+        }
         if (mood == EtoMood.AFFECTIONATE && now >= mind.nextNightAsk && distance < 12.0) {
             mind.nextNightAsk = now + 24000L;
             EtoTalk.Context c = context(npc, partner);
             if (!c.nightUsed()) {
-                say(partner, EtoLines.approach(c));
-                alert(partner, Romance.Want.NIGHT, "");
+                say(npc, partner, npc.persona().script().approach(c));
+                alert(npc, partner, Romance.Want.NIGHT, "");
                 walkUp(npc, mind, partner, EtoGesture.CLING, now);
                 return true;
             }
@@ -588,12 +637,12 @@ public final class EtoBrain {
         // 1.3.12: unasked, she does something with them: their hand, their arm, a hug, a lean, a song, a page, a dance.
         if (now % 20L == 5L && mind.gesture != EtoGesture.CLING) {
             com.hex.kagune.control.npc.EtoInitiative.Act act = com.hex.kagune.control.npc.EtoInitiative.pick(mood, distance, mind.holding != null,
-                now - mind.initiativeAt, npc.m_217043_().m_188500_(), npc.m_217043_().m_188500_());
+                now - mind.initiativeAt, npc.m_217043_().m_188500_() / Math.max(0.05, npc.persona().forward()), npc.m_217043_().m_188500_());
             if (act != com.hex.kagune.control.npc.EtoInitiative.Act.NONE) {
                 mind.initiativeAt = now;
-                say(partner, com.hex.kagune.control.npc.EtoInitiative.line(act, npc.m_217043_().m_188503_(1000)));
+                say(npc, partner, npc.persona().script().initiative(act, npc.m_217043_().m_188503_(1000)));
                 if (act == com.hex.kagune.control.npc.EtoInitiative.Act.HAND) {
-                    alert(partner, Romance.Want.TALK, "takes your hand.");
+                    alert(npc, partner, Romance.Want.TALK, "takes your hand.");
                 }
                 walkUp(npc, mind, partner, act.gesture, now);
                 return true;
@@ -604,8 +653,8 @@ public final class EtoBrain {
         if (every > 0L && now >= mind.nextSeek && distance < 16.0) {
             mind.nextSeek = now + every + npc.m_217043_().m_188503_((int)Math.max(1L, every / 2L));
             EtoTalk.Context c = context(npc, partner);
-            say(partner, EtoLines.approach(c));
-            alert(partner, Romance.Want.TALK, "");
+            say(npc, partner, npc.persona().script().approach(c));
+            alert(npc, partner, Romance.Want.TALK, "");
             walkUp(npc, mind, partner, clingy ? EtoGesture.CLING : EtoGesture.WAVE, now);
             return true;
         }
@@ -625,22 +674,22 @@ public final class EtoBrain {
         int seed = npc.m_217043_().m_188503_(1000);
         boolean raining = level.m_46471_();
         if (raining && !mind.rained) {
-            say(partner, com.hex.kagune.control.npc.EtoInitiative.moment(com.hex.kagune.control.npc.EtoInitiative.Moment.RAIN, true, seed));
+            say(npc, partner, npc.persona().script().moment(com.hex.kagune.control.npc.EtoInitiative.Moment.RAIN, true, seed));
         }
         mind.rained = raining;
         long time = Math.floorMod(level.m_46468_(), 24000L);
         long day = Math.floorDiv(level.m_46468_(), 24000L);
         if (time >= 12000L && time < 13000L && mind.duskDay != day) {
             mind.duskDay = day;
-            say(partner, com.hex.kagune.control.npc.EtoInitiative.moment(com.hex.kagune.control.npc.EtoInitiative.Moment.DUSK, true, seed));
+            say(npc, partner, npc.persona().script().moment(com.hex.kagune.control.npc.EtoInitiative.Moment.DUSK, true, seed));
         }
         if (time >= 23000L && mind.dawnDay != day) {
             mind.dawnDay = day;
-            say(partner, com.hex.kagune.control.npc.EtoInitiative.moment(com.hex.kagune.control.npc.EtoInitiative.Moment.DAWN, true, seed));
+            say(npc, partner, npc.persona().script().moment(com.hex.kagune.control.npc.EtoInitiative.Moment.DAWN, true, seed));
         }
         if (partner.m_21223_() < partner.m_21233_() * 0.4F && now - mind.hurtSaid > 1200L && distance < 12.0) {
             mind.hurtSaid = now;
-            say(partner, com.hex.kagune.control.npc.EtoInitiative.moment(com.hex.kagune.control.npc.EtoInitiative.Moment.HURT, true, seed));
+            say(npc, partner, npc.persona().script().moment(com.hex.kagune.control.npc.EtoInitiative.Moment.HURT, true, seed));
             if (mind.gesture == EtoGesture.NONE && mind.holding == null) {
                 walkUp(npc, mind, partner, EtoGesture.HUG, now);
             }
@@ -661,7 +710,7 @@ public final class EtoBrain {
                 continue;
             }
             mind.killSaid = now;
-            say(killer, com.hex.kagune.control.npc.EtoInitiative.moment(com.hex.kagune.control.npc.EtoInitiative.Moment.KILL, partnerOf(mind, killer),
+            say(npc, killer, npc.persona().script().moment(com.hex.kagune.control.npc.EtoInitiative.Moment.KILL, partnerOf(mind, killer),
                 npc.m_217043_().m_188503_(1000)));
         }
     }
@@ -687,10 +736,16 @@ public final class EtoBrain {
             || now < mind.nextAsk.getOrDefault(player.m_20148_(), Long.MIN_VALUE)) {
             return;
         }
-        double chance = mood(npc, player, now) == EtoMood.AFFECTIONATE ? EtoRules.KISS_ASK_CHANCE * 2.0 : EtoRules.KISS_ASK_CHANCE;
+        double chance = (mood(npc, player, now) == EtoMood.AFFECTIONATE ? EtoRules.KISS_ASK_CHANCE * 2.0 : EtoRules.KISS_ASK_CHANCE) * npc.persona().kissing();
         if (npc.m_217043_().m_188500_() < chance) {
             mind.nextAsk.put(player.m_20148_(), now + EtoRules.KISS_ASK_EVERY);
-            alert(player, Romance.Want.KISS, "");
+            // 1.3.14: Touka and Ken, more often than not, just walk up and give a quick one themselves.
+            if (npc.persona().pecks() && npc.m_217043_().m_188500_() < 0.65) {
+                walkUp(npc, mind, player, EtoGesture.PECK, now);
+                return;
+            }
+            alert(npc, player, Romance.Want.KISS, "");
+            say(npc, player, npc.persona().script().kissHint(npc.m_217043_().m_188503_(1000)));
             walkUp(npc, mind, player, EtoGesture.KISS, now);
         }
     }
@@ -776,7 +831,7 @@ public final class EtoBrain {
                     gesture(mind, EtoGesture.HUG, now);
                     mind.with = player.m_19879_();
                     hearts(level, npc, player, 6);
-                    say(player, EtoLines.hugged(seed));
+                    say(npc, player, npc.persona().script().hugged(seed));
                     giddy(npc, player, now);
                     mind.toward = null;
                     return;
@@ -787,6 +842,24 @@ public final class EtoBrain {
                     hearts(level, npc, player, 3);
                     giddy(npc, player, now);
                     mind.toward = null;
+                    if (player.m_20148_().equals(mind.babyNight)) {
+                        // 1.3.14: the night they asked for: the dark, and in the morning, maybe, a child on the way.
+                        mind.babyNight = null;
+                        EtoServer.night(player, npc, context(npc, player));
+                    }
+                    return;
+                }
+                case PECK -> {
+                    // 1.3.14: a quick kiss of her own: in, out, a word, pink.
+                    gesture(mind, EtoGesture.PECK, now);
+                    mind.with = 0;
+                    hearts(level, npc, player, 5);
+                    say(npc, player, npc.persona().script().peck(seed));
+                    NpcMemoryServer.add(player, npc.persona().key(), NpcMemory.KISSES, 1L);
+                    giddy(npc, player, now);
+                    RomanceServer.romanced(player, npc.persona().key());
+                    mind.toward = null;
+                    mind.dirty = true;
                     return;
                 }
                 case HAND -> {
@@ -798,8 +871,8 @@ public final class EtoBrain {
                     gesture(mind, EtoGesture.HAND, now);
                     hearts(level, npc, player, 4);
                     giddy(npc, player, now);
-                    say(player, EtoLines.handTaken(seed));
-                    player.m_5661_(Component.m_237113_("\u00a7d\u2764 Holding hands with " + EtoRules.NAME + " \u00a77(tap Shift to let go)"), true);
+                    say(npc, player, npc.persona().script().handTaken(seed));
+                    player.m_5661_(Component.m_237113_("\u00a7d\u2764 Holding hands with " + npc.displayName() + " \u00a77(tap Shift to let go)"), true);
                     return;
                 }
                 case KISS -> {
@@ -808,7 +881,8 @@ public final class EtoBrain {
                     mind.held = 0;
                     mind.with = player.m_19879_();
                     gesture(mind, EtoGesture.KISS, now);
-                    player.m_5661_(Component.m_237113_("§d❤ " + EtoRules.NAME + " leans in, eyes closed... §7(tap or hold Shift)"), true);
+                    player.m_5661_(Component.m_237113_(npc.persona().colour() + "\u2764 " + npc.persona().script().kissWaiting(npc.displayName())
+                        + " \u00a77(tap or hold Shift)"), true);
                     return;
                 }
                 default -> {
@@ -849,12 +923,12 @@ public final class EtoBrain {
                 pullIn(npc, player, level, now);
             }
             case KISSED -> {
-                String line = before == EtoRules.Kiss.PULL ? EtoLines.pulled(seed) : before == EtoRules.Kiss.BLUSH ? EtoLines.held(seed)
-                    : EtoLines.kissed(seed, mind.stage == Romance.Stage.MARRIED);
-                say(player, line);
-                NpcMemoryServer.add(player, EtoRules.KEY, NpcMemory.KISSES, 1L);
+                String line = before == EtoRules.Kiss.PULL ? npc.persona().script().pulled(seed) : before == EtoRules.Kiss.BLUSH ? npc.persona().script().held(seed)
+                    : npc.persona().script().kissed(seed, mind.stage == Romance.Stage.MARRIED);
+                say(npc, player, line);
+                NpcMemoryServer.add(player, npc.persona().key(), NpcMemory.KISSES, 1L);
                 giddy(npc, player, now);
-                RomanceServer.romanced(player, EtoRules.KEY);
+                RomanceServer.romanced(player, npc.persona().key());
                 if (before == EtoRules.Kiss.PULL) {
                     hearts(level, npc, player, 14);
                 }
@@ -866,8 +940,8 @@ public final class EtoBrain {
                 mind.toward = null;
                 mind.ignoring.put(player.m_20148_(), now + EtoRules.IGNORE_TICKS);
                 gesture(mind, EtoGesture.ANGRY, now);
-                say(player, EtoLines.hanging(seed));
-                player.m_5661_(Component.m_237113_(EtoRules.NAME + " is cross with you. She'll ignore you for a while."), true);
+                say(npc, player, npc.persona().script().hanging(seed));
+                player.m_5661_(Component.m_237113_(npc.displayName() + " is cross with you. " + capital(npc.persona().she()) + "'ll ignore you for a while."), true);
             }
         }
     }
@@ -955,7 +1029,7 @@ public final class EtoBrain {
             npc.settle();
         }
         if (said && player != null) {
-            say(player, EtoLines.handLet(npc.m_217043_().m_188503_(100)));
+            say(npc, player, npc.persona().script().handLet(npc.m_217043_().m_188503_(100)));
         }
         mind.dirty = true;
     }
@@ -1008,7 +1082,7 @@ public final class EtoBrain {
     static void hearts(ServerLevel level, EtoNpc npc, LivingEntity other, int count) {
         Vec3 a = npc.m_20182_();
         Vec3 b = other.m_20182_();
-        level.m_8767_(ParticleTypes.f_123750_, (a.f_82479_ + b.f_82479_) * 0.5, a.f_82480_ + 1.6 * EtoRules.SIZE, (a.f_82481_ + b.f_82481_) * 0.5, count, 0.3,
+        level.m_8767_(ParticleTypes.f_123750_, (a.f_82479_ + b.f_82479_) * 0.5, a.f_82480_ + 1.6 * npc.persona().size(), (a.f_82481_ + b.f_82481_) * 0.5, count, 0.3,
             0.25, 0.3, 0.02);
     }
 
@@ -1059,7 +1133,7 @@ public final class EtoBrain {
         }
         npc.m_21008_(InteractionHand.MAIN_HAND, stack(null));
         npc.m_21008_(InteractionHand.OFF_HAND, stack(null));
-        UniqueNpcs.died(level, EtoRules.KEY, npc.m_20148_());
+        UniqueNpcs.died(level, npc.persona().key(), npc.m_20148_());
         // 1.3.6: her tentacles go with her, and whatever her flesh held is let go.
         EtoWatch.forget(npc);
         EtoArm.forget(npc);
@@ -1091,9 +1165,9 @@ public final class EtoBrain {
     }
 
     /** Her words to {@code player} alone, in their chat. */
-    static void say(ServerPlayer player, String line) {
+    static void say(EtoNpc npc, ServerPlayer player, String line) {
         if (line != null && !line.isEmpty()) {
-            player.m_5661_(Component.m_237113_("§d<" + EtoRules.NAME + ">§r " + line), false);
+            player.m_5661_(Component.m_237113_(npc.persona().colour() + "<" + npc.displayName() + ">\u00a7r " + line), false);
         }
     }
 
@@ -1101,14 +1175,14 @@ public final class EtoBrain {
     static void bark(EtoNpc npc, ServerLevel level, String line) {
         for (ServerPlayer player : level.m_6907_()) {
             if (player.m_20280_(npc) <= 24.0 * 24.0) {
-                say(player, line);
+                say(npc, player, line);
             }
         }
     }
 
     /** A private word to her partner: a banner and a chime only they get. */
-    static void alert(ServerPlayer player, Romance.Want want, String text) {
-        ControlNetwork.sendTo(player, new S2CNpcAlert(EtoRules.NAME, want.ordinal(), text));
+    static void alert(EtoNpc npc, ServerPlayer player, Romance.Want want, String text) {
+        ControlNetwork.sendTo(player, new S2CNpcAlert(npc.displayName(), want.ordinal(), text));
     }
 
     /** 1.3.11: who last showed her what (by player), and when: she reacts once in a while, not at every flicker. */
@@ -1132,9 +1206,9 @@ public final class EtoBrain {
         com.hex.kagune.control.npc.EtoVoice voice = com.hex.kagune.control.npc.EtoVoice.of(c);
         BlockPos origin = npc.origin();
         boolean library = origin != null && npc.m_20238_(new Vec3(origin.m_123341_() + 0.5, origin.m_123342_(), origin.m_123343_() + 0.5)) < 28.0 * 28.0;
-        String line = EtoLines.saw(shown, voice, library, npc.m_217043_().m_188503_(1000));
+        String line = npc.persona().script().saw(shown, voice, library, npc.m_217043_().m_188503_(1000));
         if (!line.isEmpty()) {
-            say(player, line);
+            say(npc, player, line);
         }
         boolean ours = voice.together();
         EtoGesture gesture;

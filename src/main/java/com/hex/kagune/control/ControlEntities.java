@@ -30,6 +30,16 @@ public final class ControlEntities {
     public static final RegistryObject<EntityType<EtoNpc>> ETO = ENTITIES.register("eto", () -> EntityType.Builder.<EtoNpc>m_20704_(EtoNpc::new,
         MobCategory.CREATURE).m_20699_(0.6F * com.hex.kagune.control.npc.EtoRules.SIZE, 1.8F * com.hex.kagune.control.npc.EtoRules.SIZE).m_20702_(10).m_20717_(1).m_20712_(KaguneMod.id("eto").toString()));
 
+    /** 1.3.14: Touka and Ken, companions after Eto: creatures (never despawned), each their persona's size. */
+    public static final RegistryObject<EntityType<com.hex.kagune.control.npc.ToukaNpc>> TOUKA = ENTITIES.register("touka",
+        () -> EntityType.Builder.<com.hex.kagune.control.npc.ToukaNpc>m_20704_(com.hex.kagune.control.npc.ToukaNpc::new, MobCategory.CREATURE)
+            .m_20699_(0.6F * com.hex.kagune.control.npc.Persona.TOUKA.size(), 1.8F * com.hex.kagune.control.npc.Persona.TOUKA.size()).m_20702_(10).m_20717_(1)
+            .m_20712_(KaguneMod.id("touka").toString()));
+    public static final RegistryObject<EntityType<com.hex.kagune.control.npc.KenNpc>> KEN = ENTITIES.register("ken",
+        () -> EntityType.Builder.<com.hex.kagune.control.npc.KenNpc>m_20704_(com.hex.kagune.control.npc.KenNpc::new, MobCategory.CREATURE)
+            .m_20699_(0.6F * com.hex.kagune.control.npc.Persona.KEN.size(), 1.8F * com.hex.kagune.control.npc.Persona.KEN.size()).m_20702_(10).m_20717_(1)
+            .m_20712_(KaguneMod.id("ken").toString()));
+
     /**
      * 1.3.10: a child: a creature (never despawned), boxed as a player and shrunk to its stage by the size event ({@code Genders}); its
      * looks made on each client from what it inherited.
@@ -45,6 +55,9 @@ public final class ControlEntities {
         ENTITIES.register(modBus);
         // 1.3.2: one of her in a world, made again at her home some days after she is killed.
         com.hex.kagune.control.server.UniqueNpcs.kind(com.hex.kagune.control.npc.EtoRules.KEY, ETO);
+        // 1.3.14: and Touka, and Ken: one each.
+        com.hex.kagune.control.server.UniqueNpcs.kind(com.hex.kagune.control.npc.Persona.TOUKA.key(), TOUKA);
+        com.hex.kagune.control.server.UniqueNpcs.kind(com.hex.kagune.control.npc.Persona.KEN.key(), KEN);
         // 1.3.10: births make children; each one's body made again at its home a day after it dies.
         com.hex.kagune.control.server.Children.init();
     }
@@ -59,6 +72,8 @@ public final class ControlEntities {
             event.put(GHOUL.get(), GhoulNpc.attributes().m_22265_());
             event.put(THRALL.get(), FleshThrall.attributes().m_22265_());
             event.put(ETO.get(), EtoNpc.attributes().m_22265_());
+            event.put(TOUKA.get(), EtoNpc.attributes(com.hex.kagune.control.npc.Persona.TOUKA).m_22265_());
+            event.put(KEN.get(), EtoNpc.attributes(com.hex.kagune.control.npc.Persona.KEN).m_22265_());
             event.put(CHILD.get(), com.hex.kagune.control.npc.ChildNpc.attributes().m_22265_());
         }
     }

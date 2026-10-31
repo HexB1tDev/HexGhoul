@@ -37,7 +37,9 @@ public enum Gate {
     GRAFT_DRAGON("graft_dragon", KagunePath.GRAFT, "Many-Eyed Kagune", 700, false),
     GRAFT_KAKUJA("graft_kakuja", KagunePath.GRAFT, "Kakuja", 900, false),
     GRAFT_APPETITE("graft_appetite", KagunePath.GRAFT, "Rize's Appetite (mutation)", 0, true),
-    GRAFT_NOT_THAT_EASILY("graft_not_that_easily", KagunePath.GRAFT, "You Thought You'd Get Rid of Me That Easily? (mutation)", 0, true);
+    GRAFT_NOT_THAT_EASILY("graft_not_that_easily", KagunePath.GRAFT, "You Thought You'd Get Rid of Me That Easily? (mutation)", 0, true),
+    /** 1.3.14: Crystal mode (V crystallizes the wings): Touka teaches it ({@code Teaching}); kept for saves already past its mastery. */
+    UKAKU_CRYSTAL("ukaku_crystal", KagunePath.UKAKU, "Crystal Wings (crystal mode)", com.hex.kagune.control.ukaku.UkakuRules.CRYSTAL_MASTERY, false);
 
     private final String id;
     private final KagunePath path;

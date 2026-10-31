@@ -19,8 +19,16 @@ final class EtoModel extends PlayerModel<EtoNpc> {
     /** The pose of the Eto being drawn now (the render thread's alone), or null. */
     static RigPose pose;
 
+    /** 1.3.14: a woman's figure (Eto, Touka) or not (Ken). */
+    private final boolean female;
+
     EtoModel(ModelPart root) {
-        super(root, true);
+        this(root, true, true);
+    }
+
+    EtoModel(ModelPart root, boolean slim, boolean female) {
+        super(root, slim);
+        this.female = female;
     }
 
     @Override
@@ -42,6 +50,9 @@ final class EtoModel extends PlayerModel<EtoNpc> {
             this.f_103377_.m_104315_(this.f_102813_);
             this.f_103376_.m_104315_(this.f_102814_);
             this.f_103378_.m_104315_(this.f_102810_);
+        }
+        if (!this.female) {
+            return;
         }
         // 1.3.9: the shared female figure's legs (FemaleFigure): wider, deeper, meeting at the middle.
         for (ModelPart leg : new ModelPart[] {this.f_102813_, this.f_102814_, this.f_103377_, this.f_103376_}) {

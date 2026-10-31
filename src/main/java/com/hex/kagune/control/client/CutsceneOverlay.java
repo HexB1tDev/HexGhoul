@@ -26,7 +26,10 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = "hexkagune", value = Dist.CLIENT)
 public final class CutsceneOverlay {
     /** One script: how long it runs (seconds), when it is all black and when it starts to clear, its cues and its captions. */
-    record Script(double length, double dark, double wake, Object[][] cues, Object[][] captions, double wordsAt) {
+    record Script(double length, double dark, double wake, Object[][] cues, Object[][] captions, double wordsAt, double fade, double[] flashes) {
+        Script(double length, double dark, double wake, Object[][] cues, Object[][] captions, double wordsAt) {
+            this(length, dark, wake, cues, captions, wordsAt, 0.8, new double[0]);
+        }
     }
 
     static final Script SURGERY = new Script(10.0, 1.5, 8.5, new Object[][] {
@@ -69,6 +72,60 @@ public final class CutsceneOverlay {
         {1.6, 4.6, "9 months later..."},
         {5.0, 7.6, "A small cry in the dark."}}, 8.2);
 
+    /**
+     * 1.3.14: Ken's trial: what was done to him, done to them. Ten days in the dark: the pliers, the fingers growing back, the count down
+     * from a thousand by sevens, the thing in the ear, the choice; then what grows out of it. A red flash at every break.
+     */
+    static final Script TORTURE = new Script(46.0, 1.6, 43.0, new Object[][] {
+        {2.2, "minecraft", "entity.warden.heartbeat", 0.6F, 0.85F},
+        {3.4, "minecraft", "entity.warden.heartbeat", 0.6F, 0.85F},
+        {5.0, "hexkagune", "sfx.crunch", 1.0F, 0.9F},
+        {5.3, "hexkagune", "bone_crack", 0.9F, 1.1F},
+        {7.4, "hexkagune", "sfx.writhe", 0.7F, 1.2F},
+        {9.8, "hexkagune", "sfx.crunch", 1.0F, 0.85F},
+        {10.4, "hexkagune", "sfx.crunch", 1.0F, 0.95F},
+        {10.9, "hexkagune", "bone_crush", 0.9F, 1.0F},
+        {12.0, "hexkagune", "sfx.crunch", 1.0F, 0.9F},
+        {12.5, "hexkagune", "bone_crack", 1.0F, 1.2F},
+        {14.0, "minecraft", "entity.warden.heartbeat", 0.7F, 1.0F},
+        {16.3, "minecraft", "entity.warden.heartbeat", 0.7F, 1.1F},
+        {17.1, "minecraft", "entity.warden.heartbeat", 0.7F, 1.2F},
+        {17.9, "hexkagune", "sfx.crunch", 0.8F, 1.0F},
+        {18.7, "minecraft", "entity.warden.heartbeat", 0.75F, 1.3F},
+        {19.4, "minecraft", "entity.warden.heartbeat", 0.75F, 1.4F},
+        {20.0, "hexkagune", "bone_crack", 0.9F, 1.3F},
+        {20.6, "minecraft", "entity.warden.heartbeat", 0.8F, 1.5F},
+        {21.2, "minecraft", "entity.warden.heartbeat", 0.8F, 1.55F},
+        {21.7, "minecraft", "entity.warden.heartbeat", 0.85F, 1.6F},
+        {22.2, "hexkagune", "sfx.crunch", 1.0F, 0.8F},
+        {23.4, "hexkagune", "sfx.writhe", 0.9F, 1.5F},
+        {24.1, "hexkagune", "sfx.drips", 0.7F, 1.4F},
+        {24.8, "hexkagune", "sfx.writhe", 0.9F, 1.7F},
+        {26.8, "hexkagune", "sfx.stab", 1.0F, 0.9F},
+        {27.2, "hexkagune", "sfx.gush", 0.9F, 1.0F},
+        {29.5, "minecraft", "entity.warden.heartbeat", 0.5F, 0.8F},
+        {31.0, "minecraft", "entity.warden.heartbeat", 0.45F, 0.75F},
+        {32.6, "minecraft", "entity.warden.heartbeat", 0.4F, 0.7F},
+        {34.4, "hexkagune", "manifest_rip", 1.0F, 0.8F},
+        {35.0, "hexkagune", "bone_crack", 1.0F, 0.7F},
+        {35.4, "hexkagune", "sfx.gush_long", 0.8F, 0.9F},
+        {38.0, "hexkagune", "bone_crack", 0.6F, 1.5F}}, new Object[][] {
+        {1.8, 4.0, "Ten days."},
+        {4.2, 6.6, "Pliers. A finger."},
+        {6.8, 8.8, "It grows back."},
+        {9.0, 11.2, "So he does it again."},
+        {11.4, 13.2, "And again."},
+        {13.4, 16.0, "\"What's a thousand minus seven?\""},
+        {16.2, 17.0, "993"}, {17.0, 17.8, "986"}, {17.8, 18.6, "979"}, {18.6, 19.4, "972"}, {19.4, 20.0, "965"}, {20.0, 20.6, "958"},
+        {20.6, 21.2, "951"}, {21.2, 21.7, "944"}, {21.7, 22.2, "937"}, {22.2, 22.8, "930..."},
+        {23.0, 25.6, "Something crawls into your ear."},
+        {25.8, 28.6, "You choose who dies. Either way, someone does."},
+        {28.8, 31.4, "It's not the one who is killed who's in the wrong."},
+        {31.6, 33.6, "It's the one who kills."},
+        {33.8, 36.4, "Something white grows out of the pain."},
+        {36.6, 39.4, "You crack a finger with your thumb. You don't remember starting."}}, 39.8, 0.3,
+        new double[] {5.0, 9.8, 10.4, 10.9, 12.0, 17.9, 22.2, 26.8, 34.4});
+
     private static Script playing;
     private static String words = "";
     private static long began = Long.MIN_VALUE;
@@ -78,7 +135,7 @@ public final class CutsceneOverlay {
     }
 
     public static void begin(int script, String said) {
-        playing = script == S2CCutscene.NIGHT ? NIGHT : script == S2CCutscene.BIRTH ? BIRTH : SURGERY;
+        playing = script == S2CCutscene.NIGHT ? NIGHT : script == S2CCutscene.BIRTH ? BIRTH : script == S2CCutscene.TORTURE ? TORTURE : SURGERY;
         words = said == null ? "" : said;
         began = System.nanoTime();
         played = 0;
@@ -98,10 +155,27 @@ public final class CutsceneOverlay {
 
     /** How clear a line shown from {@code from} to {@code to} is (0..1) {@code t} seconds in. */
     static float clear(double t, double from, double to) {
+        return clear(t, from, to, 0.8);
+    }
+
+    /** 1.3.14: the same, fading in and out over {@code fade} seconds. */
+    static float clear(double t, double from, double to, double fade) {
         if (t < from || t >= to) {
             return 0.0F;
         }
-        return (float)Math.min(1.0, Math.min((t - from) / 0.8, (to - t) / 0.8));
+        return (float)Math.min(1.0, Math.min((t - from) / fade, (to - t) / fade));
+    }
+
+    /** 1.3.14: how red the screen flashes (0..1) {@code t} seconds into {@code script}: a pulse at each of its flashes, gone in a third of a second. */
+    static float flash(Script script, double t) {
+        float most = 0.0F;
+        for (double at : script.flashes()) {
+            double since = t - at;
+            if (since >= 0.0 && since < 0.35) {
+                most = Math.max(most, (float)(1.0 - since / 0.35));
+            }
+        }
+        return most;
     }
 
     @SubscribeEvent
@@ -128,8 +202,12 @@ public final class CutsceneOverlay {
         if (alpha > 0) {
             graphics.m_280509_(0, 0, width, height, alpha << 24);
         }
+        int red = Math.round(150 * flash(script, t));
+        if (red > 0) {
+            graphics.m_280509_(0, 0, width, height, red << 24 | 0x8A0010);
+        }
         for (Object[] caption : script.captions()) {
-            float shown = clear(t, (Double)caption[0], (Double)caption[1]);
+            float shown = clear(t, (Double)caption[0], (Double)caption[1], script.fade());
             if (shown > 0.02F) {
                 int a = Math.max(5, Math.round(255 * shown));
                 graphics.m_280137_(minecraft.f_91062_, (String)caption[2], width / 2, height / 2 - 4, a << 24 | 0xB8A8B0);

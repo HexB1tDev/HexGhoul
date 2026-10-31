@@ -898,3 +898,6 @@ M net/minecraft/client/renderer/texture/DynamicTexture <init> (Lcom/mojang/blaze
 M net/minecraft/client/renderer/texture/TextureManager m_118495_ (Lnet/minecraft/resources/ResourceLocation;Lnet/minecraft/client/renderer/texture/AbstractTexture;)V  # [srg] register: fuw.m_118495_ (Lacq;Lfug;)V (yarn TextureManager.registerTexture)
 # 1.3.12: Eto's moments (the rain starting)
 M net/minecraft/world/level/Level m_46471_ ()Z  # [srg] isRaining: cmm.m_46471_ ()Z (yarn World.isRaining)
+# 1.3.14: a companion's name tag renames it everywhere (the name filter keeps some names out of the mod itself)
+M net/minecraft/world/entity/Entity m_7770_ ()Lnet/minecraft/network/chat/Component;  # [srg] getCustomName: bfj.m_7770_ ()Lsw; (declared on Entity, from Nameable; yarn Entity.getCustomName)
+M net/minecraft/network/chat/Component getString ()Ljava/lang/String;  # [srg] getString: ta.getString ()Ljava/lang/String; (FormattedText, which Component extends: never obfuscated)

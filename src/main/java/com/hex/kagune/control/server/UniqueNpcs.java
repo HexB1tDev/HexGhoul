@@ -75,6 +75,31 @@ public final class UniqueNpcs {
         }
     }
 
+    /**
+     * 1.3.14: {@code body} is {@code key}'s from now on (a command made it where the old one could not be found): whoever it is with and
+     * everything the world remembers of it stay; the old body, if it ever loads again, is sent away.
+     */
+    public static void adopt(ServerLevel level, String key, Mob body, BlockPos home) {
+        UniqueNpc npc = get(level, key);
+        long now = level.m_46467_();
+        npc.body = body.m_20148_();
+        npc.alive = true;
+        npc.seen = now;
+        npc.diedAt = Long.MIN_VALUE;
+        npc.away = false;
+        npc.company = now;
+        npc.homeX = home.m_123341_();
+        npc.homeY = home.m_123342_();
+        npc.homeZ = home.m_123343_();
+        npc.homed = true;
+        npc.originX = home.m_123341_();
+        npc.originY = home.m_123342_();
+        npc.originZ = home.m_123343_();
+        npc.origined = true;
+        TICKING.put(key, now);
+        changed(level);
+    }
+
     /** 1.3.10: {@code key} is no more (forgotten by the world: nothing of it comes back). */
     public static void forget(ServerLevel level, String key) {
         if (data(level).all.remove(key) != null) {

@@ -56,6 +56,7 @@ public abstract class Entity {
     /** isShiftKeyDown */ public boolean m_6144_() { throw new UnsupportedOperationException(); }
     /** isAlliedTo */ public boolean m_7307_(Entity other) { throw new UnsupportedOperationException(); }
     /** hasCustomName */ public boolean m_8077_() { throw new UnsupportedOperationException(); }
+    /** getCustomName */ public net.minecraft.network.chat.Component m_7770_() { throw new UnsupportedOperationException(); }
     /** hurt */ public boolean m_6469_(net.minecraft.world.damagesource.DamageSource source, float amount) { throw new UnsupportedOperationException(); }
     /** damageSources */ public net.minecraft.world.damagesource.DamageSources m_269291_() { throw new UnsupportedOperationException(); }
     /** getYRot */ public float m_146908_() { throw new UnsupportedOperationException(); }

@@ -31,8 +31,16 @@ public final class NpcTalkClient {
             return;
         }
         // 1.3.0: skin -1 is Eto's own (128 pixels: the face is drawn by its share of the texture, so it fits).
-        String texture = message.skin() == -1 ? "textures/entity/eto/eto.png" : NpcLook.texture(message.skin());
+        // 1.3.14: -1, -2, -3...: each companion's own, in Persona's order (Eto, Touka, Ken).
+        String texture = message.skin() < 0 ? companion(-message.skin() - 1) : NpcLook.texture(message.skin());
         ResourceLocation skin = Objects.requireNonNull(ResourceLocation.m_214293_("hexkagune", texture));
         minecraft.m_91152_(new NpcTalkScreen(message.npc(), skin, model));
+    }
+
+    /** 1.3.14: the companion {@code index}'s skin (Persona's order). */
+    static String companion(int index) {
+        java.util.List<com.hex.kagune.control.npc.Persona> all = com.hex.kagune.control.npc.Persona.ALL;
+        String key = all.get(Math.max(0, Math.min(all.size() - 1, index))).key();
+        return "textures/entity/" + key + "/" + key + ".png";
     }
 }

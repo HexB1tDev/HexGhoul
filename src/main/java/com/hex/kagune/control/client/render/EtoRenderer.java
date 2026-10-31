@@ -43,19 +43,36 @@ import org.joml.Quaternionf;
  * blinks or leans in for a kiss, her cheeks pink when she blushes, and the anger mark over her head when she was left hanging.
  */
 public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<EtoNpc>> {
-    static final ResourceLocation SKIN = texture("eto");
-    static final ResourceLocation KAKUGAN = texture("eto_kakugan");
-    static final ResourceLocation GLOW = texture("eto_kakugan_glow");
-    static final ResourceLocation CLOSED = texture("eto_closed");
-    static final ResourceLocation BLUSH = texture("eto_blush");
-    static final ResourceLocation ANGRY = texture("eto_angry");
+    /** 1.3.14: the anger mark, the same for every companion. */
+    static final ResourceLocation ANGRY = texture("eto", "eto_angry");
 
-    private static ResourceLocation texture(String name) {
-        return Objects.requireNonNull(ResourceLocation.m_214293_("hexkagune", "textures/entity/eto/" + name + ".png"));
+    /** 1.3.14: whose body this renderer draws, and its textures ({@code textures/entity/<key>/<key>...}). */
+    final com.hex.kagune.control.npc.Persona persona;
+    final ResourceLocation skin;
+    final ResourceLocation kakugan;
+    final ResourceLocation glow;
+    final ResourceLocation closed;
+    final ResourceLocation blush;
+
+    private static ResourceLocation texture(String folder, String name) {
+        return Objects.requireNonNull(ResourceLocation.m_214293_("hexkagune", "textures/entity/" + folder + "/" + name + ".png"));
     }
 
     public EtoRenderer(EntityRendererProvider.Context context) {
-        super(context, new EtoModel(context.m_174023_(ModelLayers.f_171166_)), 0.5F * EtoRules.SIZE);
+        this(context, com.hex.kagune.control.npc.Persona.ETO);
+    }
+
+    /** 1.3.14: any companion: a woman's figure on the slim arms, or a man's on the wide ones. */
+    public EtoRenderer(EntityRendererProvider.Context context, com.hex.kagune.control.npc.Persona persona) {
+        super(context, new EtoModel(context.m_174023_(persona.slim() ? ModelLayers.f_171166_ : ModelLayers.f_171162_), persona.slim(), persona.female()),
+            0.5F * persona.size());
+        this.persona = persona;
+        String key = persona.key();
+        this.skin = texture(key, key);
+        this.kakugan = texture(key, key + "_kakugan");
+        this.glow = texture(key, key + "_kakugan_glow");
+        this.closed = texture(key, key + "_closed");
+        this.blush = texture(key, key + "_blush");
         this.m_115326_(new Face(this));
     }
 
@@ -64,7 +81,8 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
         if (view == null) {
             return null;
         }
-        return EtoFight.pose(npc, view.fight(), alive(npc, view, EtoPose.gesture(view.gesture(), view.gestureAge(clock)), partial), clock, partial);
+        return EtoFight.pose(npc, view.fight(), alive(npc, view, EtoPose.gesture(view.gesture(), view.gestureAge(clock),
+            npc.persona().leads()), partial), clock, partial);
     }
 
     /**
@@ -78,7 +96,7 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
         }
         double trail = sway.trail(partial);
         float[] arm = com.hex.kagune.control.npc.HandSway.arm(trail, sway.out(partial), com.hex.kagune.control.client.HandClient.clock(sway, partial), false,
-            EtoRules.SIZE);
+            npc.persona().size());
         gesture.leftArmX += arm[0];
         gesture.leftArmZ -= arm[1];
         gesture.lean += (float)com.hex.kagune.control.npc.HandSway.pulled(trail);
@@ -170,7 +188,7 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
                 || npc.m_20280_(minecraft.f_91074_) > range * range) {
                 continue;
             }
-            drew |= kit.draw(npc, view.fight(), drawn(id, clock), EtoRules.SIZE);
+            drew |= kit.draw(npc, view.fight(), drawn(id, clock), npc.persona().size());
         }
         return drew;
     }
@@ -185,7 +203,8 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
             || Math.abs(posed.drop) > 1.0E-3F || Math.abs(posed.lunge) > 1.0E-3F);
         // 1.3.1: a little smaller than a player (her box is too, EtoRules.SIZE).
         pose.m_85836_();
-        pose.m_85841_(EtoRules.SIZE, EtoRules.SIZE, EtoRules.SIZE);
+        float size = this.persona.size();
+        pose.m_85841_(size, size, size);
         try {
             if (turned) {
                 float delta = ((npc.f_20883_ - npc.f_20884_) % 360.0F + 540.0F) % 360.0F - 180.0F;
@@ -214,17 +233,17 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
         }
         // 1.3.2: taken, she says so over her head: her name, and under it whose she is.
         if (view != null && !view.tag().isEmpty() && !npc.m_20145_()) {
-            this.m_7649_(npc, Component.m_237113_("\u00a7d\u2764 \u00a7f" + view.tag()), pose, buffers, light);
+            this.m_7649_(npc, Component.m_237113_(this.persona.colour() + "\u2764 \u00a7f" + view.tag()), pose, buffers, light);
             pose.m_85836_();
             pose.m_85837_(0.0, 0.26, 0.0);
-            this.m_7649_(npc, Component.m_237113_("\u00a7d" + EtoRules.NAME), pose, buffers, light);
+            this.m_7649_(npc, Component.m_237113_(this.persona.colour() + npc.displayName()), pose, buffers, light);
             pose.m_85849_();
         }
     }
 
     @Override
     public ResourceLocation m_5478_(EtoNpc npc) {
-        return SKIN;
+        return this.skin;
     }
 
     /** The anger mark over her head, to her right, popping in and throbbing, turned to the camera. */
@@ -262,8 +281,11 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
      * (a blink, or a gesture that shuts them), her blush.
      */
     static final class Face extends RenderLayer<EtoNpc, PlayerModel<EtoNpc>> {
-        Face(RenderLayerParent<EtoNpc, PlayerModel<EtoNpc>> parent) {
+        private final EtoRenderer renderer;
+
+        Face(EtoRenderer parent) {
             super(parent);
+            this.renderer = parent;
         }
 
         @Override
@@ -278,28 +300,31 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
                 RigPose posed = EtoModel.pose;
                 double y = npc.f_19791_ + (npc.m_20186_() - npc.f_19791_) * partialTick - (posed == null ? 0.0 : posed.drop / 16.0);
                 float bounce = EtoClient.jiggle(npc.m_19879_(), y, PaleClient.clock(partialTick));
-                bust(model, pose, buffers.m_6299_(RenderType.m_110473_(SKIN)), light, bounce);
-                // 1.3.10: carrying a child, her belly (the shared female body's).
-                FemaleFigure.belly(model.f_102810_, pose, buffers.m_6299_(RenderType.m_110473_(SKIN)), light,
-                    com.hex.kagune.control.client.PregnancyClient.belly(npc, partialTick), false);
+                EtoRenderer r = this.renderer;
+                if (r.persona.female()) {
+                    bust(model, pose, buffers.m_6299_(RenderType.m_110473_(r.skin)), light, bounce);
+                    // 1.3.10: carrying a child, her belly (the shared female body's).
+                    FemaleFigure.belly(model.f_102810_, pose, buffers.m_6299_(RenderType.m_110473_(r.skin)), light,
+                        com.hex.kagune.control.client.PregnancyClient.belly(npc, partialTick), false);
+                }
                 EtoClient.View view = EtoClient.get(npc.m_19879_());
                 double clock = PaleClient.clock(partialTick);
                 EtoGesture gesture = view == null ? EtoGesture.NONE : view.gesture();
                 boolean shut = gesture.eyesClosed || EtoRules.blink(npc.m_19879_() * 31 + 7, ageInTicks);
                 float eye = EtoClient.eye(npc.m_19879_(), view, npc.m_9236_().m_46468_(), clock);
                 if (!shut && eye > 0.003F) {
-                    model.m_7695_(pose, buffers.m_6299_(RenderType.m_110473_(KAKUGAN)), light, OverlayTexture.f_118083_, 1.0F, 1.0F, 1.0F, eye);
-                    model.m_7695_(pose, buffers.m_6299_(RenderType.m_110488_(GLOW)), 0xF000F0, OverlayTexture.f_118083_, eye, eye, eye, 1.0F);
+                    model.m_7695_(pose, buffers.m_6299_(RenderType.m_110473_(r.kakugan)), light, OverlayTexture.f_118083_, 1.0F, 1.0F, 1.0F, eye);
+                    model.m_7695_(pose, buffers.m_6299_(RenderType.m_110488_(r.glow)), 0xF000F0, OverlayTexture.f_118083_, eye, eye, eye, 1.0F);
                 }
                 if (shut) {
-                    model.m_7695_(pose, buffers.m_6299_(RenderType.m_110473_(CLOSED)), light, OverlayTexture.f_118083_, 1.0F, 1.0F, 1.0F, 1.0F);
+                    model.m_7695_(pose, buffers.m_6299_(RenderType.m_110473_(r.closed)), light, OverlayTexture.f_118083_, 1.0F, 1.0F, 1.0F, 1.0F);
                 }
-                if (gesture.blush) {
+                if (r.persona.blushes(gesture)) {
                     float blush = (float)Math.min(1.0, (view == null ? 0.0 : view.gestureAge(clock)) / 8.0);
-                    model.m_7695_(pose, buffers.m_6299_(RenderType.m_110473_(BLUSH)), light, OverlayTexture.f_118083_, 1.0F, 1.0F, 1.0F, blush);
+                    model.m_7695_(pose, buffers.m_6299_(RenderType.m_110473_(r.blush)), light, OverlayTexture.f_118083_, 1.0F, 1.0F, 1.0F, blush);
                 }
             } catch (RuntimeException failure) {
-                PlayerLayers.failed("Eto's face", failure);
+                PlayerLayers.failed(npc.persona().name() + "'s face", failure);
             }
         }
     }
@@ -337,6 +362,9 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
         @SubscribeEvent
         public static void renderers(EntityRenderersEvent.RegisterRenderers event) {
             event.registerEntityRenderer(ControlEntities.ETO.get(), EtoRenderer::new);
+            // 1.3.14: Touka and Ken, each in their own skin and body.
+            event.registerEntityRenderer(ControlEntities.TOUKA.get(), context -> new EtoRenderer(context, com.hex.kagune.control.npc.Persona.TOUKA));
+            event.registerEntityRenderer(ControlEntities.KEN.get(), context -> new EtoRenderer(context, com.hex.kagune.control.npc.Persona.KEN));
         }
     }
 }

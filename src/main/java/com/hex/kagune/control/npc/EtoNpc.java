@@ -39,12 +39,38 @@ public class EtoNpc extends PathfinderMob implements UniqueBody {
     }
 
     public static AttributeSupplier.Builder attributes() {
+        return attributes(Persona.ETO);
+    }
+
+    /** 1.3.14: any companion's: its health and armour, a player's speed. */
+    public static AttributeSupplier.Builder attributes(Persona persona) {
         return Mob.m_21552_()
-            .m_22268_(Attributes.f_22276_, EtoRules.HEALTH)
+            .m_22268_(Attributes.f_22276_, persona.health())
             .m_22268_(Attributes.f_22279_, 0.32)
             .m_22268_(Attributes.f_22277_, 32.0)
-            .m_22268_(Attributes.f_22284_, EtoRules.ARMOR)
+            .m_22268_(Attributes.f_22284_, persona.armor())
             .m_22268_(Attributes.f_22278_, 0.6);
+    }
+
+    /** 1.3.14: who this body is (Eto's; Touka's and Ken's bodies say otherwise). */
+    public Persona persona() {
+        return Persona.ETO;
+    }
+
+    /** 1.3.14: what it is called: its name tag's name, or its own. */
+    public String displayName() {
+        try {
+            net.minecraft.world.entity.Entity self = this;
+            if (self.m_8077_() && self.m_7770_() != null) {
+                String tagged = self.m_7770_().getString();
+                if (tagged != null && !tagged.isBlank()) {
+                    return tagged.length() > 24 ? tagged.substring(0, 24) : tagged;
+                }
+            }
+        } catch (RuntimeException ignored) {
+            // its own name, then
+        }
+        return this.persona().name();
     }
 
     /** Her home (a block: where she first stood, one up), set on her first tick and kept from then on; null before. */
@@ -89,7 +115,7 @@ public class EtoNpc extends PathfinderMob implements UniqueBody {
 
     @Override
     public String uniqueKey() {
-        return EtoRules.KEY;
+        return this.persona().key();
     }
 
     /** 1.3.3: where she belongs: her first home (kept the first time she has one), or null before her first tick. */
@@ -106,6 +132,16 @@ public class EtoNpc extends PathfinderMob implements UniqueBody {
             tag.m_128405_(ORIGIN + "Z", home.m_123343_());
         }
         return new BlockPos(tag.m_128451_(ORIGIN + "X"), tag.m_128451_(ORIGIN + "Y"), tag.m_128451_(ORIGIN + "Z"));
+    }
+
+    /** 1.3.14: where she stands is her home and where she belongs from now on (moved by command: until her own place is built). */
+    public void rehome() {
+        this.follow(null);
+        BlockPos at = this.settle();
+        CompoundTag tag = this.getPersistentData();
+        tag.m_128405_(ORIGIN + "X", at.m_123341_());
+        tag.m_128405_(ORIGIN + "Y", at.m_123342_());
+        tag.m_128405_(ORIGIN + "Z", at.m_123343_());
     }
 
     /** 1.3.3: home again: following no one, back on her own floor, settled there. */
@@ -150,7 +186,7 @@ public class EtoNpc extends PathfinderMob implements UniqueBody {
         try {
             EtoBrain.tick(this);
         } catch (RuntimeException failure) {
-            com.hex.kagune.control.Safety.caught(failure, "Eto's tick");
+            com.hex.kagune.control.Safety.caught(failure, this.persona().name() + "'s tick");
         }
     }
 }

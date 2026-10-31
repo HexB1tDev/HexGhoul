@@ -56,7 +56,32 @@ public enum EtoGesture {
     /** Her laugh in a fight gone bad for someone: head back, arms wide. */
     LAUGH(44, false, false),
     /** 1.3.3: hand in hand: her hand out to the one at her side, walking with them. */
-    HAND(0, false, true);
+    HAND(0, false, true),
+    // 1.3.14: Touka's and Ken's
+    /** Arms folded tight, weight on one leg, chin turned a little away: unimpressed. */
+    CROSS(120, false, false),
+    /** Hands on her hips, one foot tapping: waiting, and not patiently. */
+    TAP(80, false, false),
+    /** A sharp breath out through the nose, shoulders up and dropped, head turned away. */
+    HUFF(36, false, false),
+    /** A cup held in both hands, a sip, a sigh. */
+    SIP(100, false, false, "minecraft:flower_pot", null),
+    /** Drying a cup with a cloth, round and round. */
+    WIPE(120, false, false, "minecraft:paper", "minecraft:flower_pot"),
+    /** A practice kick, high and fast, then the leg down and a shake of the shoulders. */
+    KICKS(40, false, false),
+    /** Hands on hips, leaning in, a finger wagged: a telling-off. */
+    SCOLD(64, false, false),
+    /** Turned half away, arms crossed, cheeks pink, a glance back: it's not like that. */
+    SHY(90, false, true),
+    /** A hand to the chin, head tipped: thinking. Or hiding something. */
+    CHIN(96, false, false),
+    /** A thumb pressed to a finger until it cracks; the head tilts with it. */
+    CRACK(44, false, false),
+    /** A small, polite bow. */
+    BOW(36, false, false),
+    /** A quick little kiss, given unasked: up on her toes, in, out, eyes shut and pink. */
+    PECK(30, true, true);
 
     public final int ticks;
     public final boolean eyesClosed;
@@ -96,6 +121,7 @@ public enum EtoGesture {
 
     /** True if she stands still for it (a prop in her hands, a lean, a sulk). */
     public boolean still() {
-        return this.mainHand != null || this == LEAN || this == STRETCH || this == POUT || this == YAWN || this == PET || this == LOOK;
+        return this.mainHand != null || this == LEAN || this == STRETCH || this == POUT || this == YAWN || this == PET || this == LOOK || this == CROSS
+            || this == TAP || this == SCOLD || this == SHY || this == CHIN || this == CRACK || this == BOW || this == KICKS;
     }
 }

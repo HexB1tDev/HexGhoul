@@ -68,12 +68,14 @@ public final class QuestTests {
         }
         for (Gate gate : Gate.values()) {
             List<Quest> openers = QuestBook.openers(gate);
-            check(!openers.isEmpty(), gate.id() + ": some quest opens it");
+            // 1.3.14: a gate a companion teaches has no quest opening it: its teacher does.
+            boolean taught = com.hex.kagune.control.npc.Teaching.taught(gate);
+            check(taught ? openers.isEmpty() : !openers.isEmpty(), gate.id() + ": some quest opens it, or its teacher does (never both)");
             for (Quest opener : openers) {
                 check(opener.path() == gate.path() || opener.path() == null, gate.id() + ": opened on its own path by " + opener.id());
                 check(gate.mutation() ? gate.mastery() == 0 : opener.mastery() <= gate.mastery(), gate.id() + ": " + opener.id() + " starts before the gate's mastery");
             }
-            check(!QuestBook.openersText(gate).isBlank(), gate.id() + ": names its quests");
+            check(taught || !QuestBook.openersText(gate).isBlank(), gate.id() + ": names its quests");
             check(Gate.fromId(gate.id()) == gate, gate.id() + ": found by id");
         }
         for (KagunePath path : new KagunePath[] {KagunePath.RINKAKU, KagunePath.UKAKU, KagunePath.GRAFT}) {
@@ -86,12 +88,12 @@ public final class QuestTests {
         int two = 0;
         int pathGates = 0;
         for (Gate gate : Gate.values()) {
-            if (gate.path() != null) {
+            if (gate.path() != null && !gate.mutation() && !com.hex.kagune.control.npc.Teaching.taught(gate)) {
                 pathGates++;
                 two += QuestBook.openers(gate).size() >= 2 ? 1 : 0;
             }
         }
-        check(two * 2 >= pathGates, "most path gates have two ways in (" + two + " of " + pathGates + ")");
+        check(two * 2 >= pathGates, "most path gates opened by quests have two ways in (" + two + " of " + pathGates + ")");
     }
 
     /** Locked until the path and mastery fit, open while counting, met when every objective is, done once paid. */
