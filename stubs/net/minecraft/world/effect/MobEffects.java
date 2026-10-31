@@ -12,6 +12,7 @@ public final class MobEffects {
     /** POISON */ public static final MobEffect f_19614_ = null;
     /** WITHER */ public static final MobEffect f_19615_ = null;
     /** SLOW_FALLING */ public static final MobEffect f_19591_ = null;
+    /** GLOWING (1.3.15) */ public static final MobEffect f_19619_ = null;
     /** REGENERATION */ public static final MobEffect f_19605_ = null;
     /** DAMAGE_RESISTANCE */ public static final MobEffect f_19606_ = null;
     /** DAMAGE_BOOST (Strength) */ public static final MobEffect f_19600_ = null;

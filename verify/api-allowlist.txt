@@ -901,3 +901,10 @@ M net/minecraft/world/level/Level m_46471_ ()Z  # [srg] isRaining: cmm.m_46471_ 
 # 1.3.14: a companion's name tag renames it everywhere (the name filter keeps some names out of the mod itself)
 M net/minecraft/world/entity/Entity m_7770_ ()Lnet/minecraft/network/chat/Component;  # [srg] getCustomName: bfj.m_7770_ ()Lsw; (declared on Entity, from Nameable; yarn Entity.getCustomName)
 M net/minecraft/network/chat/Component getString ()Ljava/lang/String;  # [srg] getString: ta.getString ()Ljava/lang/String; (FormattedText, which Component extends: never obfuscated)
+# 1.3.15: children: carried, no gravity and no pushing (they shoved their carrier and fell between ticks); drawn on a little one's own
+# proportions (vanilla's young model off, each part scaled); found with /kagune children (they glow a while)
+M net/minecraft/world/entity/LivingEntity m_6138_ ()V  # [srg] pushEntities: bfz.m_6138_ ()V (yarn LivingEntity.tickCramming)
+F net/minecraft/client/model/EntityModel f_102610_ Z  # [srg] young: fbf.f_102610_ Z (yarn EntityModel.child)
+F net/minecraft/client/model/geom/ModelPart f_233554_ F  # [srg] yScale: fee yScale f_233554_ (intermediary field_37939, yarn yScale)
+F net/minecraft/world/effect/MobEffects f_19619_ Lnet/minecraft/world/effect/MobEffect;  # [order] GLOWING: 24th field 'x' (speed=f_19596_ 'a', jump=f_19603_ 'h', regeneration=f_19605_ 'j', invisibility=f_19609_ 'n', hunger=f_19612_ 'q')
+M net/minecraft/world/entity/Entity m_6094_ ()Z  # [srg] isPushable: bfj.m_6094_ ()Z (yarn Entity.isPushable); a carried child is not

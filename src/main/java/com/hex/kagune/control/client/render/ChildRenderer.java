@@ -39,14 +39,25 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
         super(context, new Model(context.m_174023_(ModelLayers.f_171162_)), 0.25F);
     }
 
-    /** The model, sitting where its stage or its parent's arms have it sit. */
+    /**
+     * The model, sitting where its stage or its parent's arms have it sit. 1.3.15: a baby and a toddler on a little one's proportions of its
+     * own (the owner: vanilla's young model read as a shrunken adult): a full-size head on a body, arms and legs half as big, stacked so its
+     * feet stay on the ground ({@link #little}); anyone older on a player's.
+     */
     static final class Model extends PlayerModel<ChildNpc> {
+        /** A little one's head against its body (both against a player's). */
+        static final float HEAD = 1.0F;
+        static final float BODY = 0.5F;
+
         Model(ModelPart root) {
             super(root, false);
         }
 
         @Override
         public void m_6973_(ChildNpc child, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
+            boolean young = this.f_102610_;
+            // Its own proportions below, never vanilla's young ones on top of them.
+            this.f_102610_ = false;
             super.m_6973_(child, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
             ChildClient.View view = ChildClient.get(child.m_19879_());
             if (view != null && (view.stage().sits() || view.carrier() != 0)) {
@@ -59,11 +70,61 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
                 this.f_102814_.f_104205_ = -0.07853982F;
                 this.f_102811_.f_104203_ += -0.5F;
                 this.f_102812_.f_104203_ += -0.5F;
-                this.f_103377_.m_104315_(this.f_102813_);
-                this.f_103376_.m_104315_(this.f_102814_);
-                this.f_103375_.m_104315_(this.f_102811_);
-                this.f_103374_.m_104315_(this.f_102812_);
             }
+            little(young);
+            this.f_102809_.m_104315_(this.f_102808_);
+            this.f_103378_.m_104315_(this.f_102810_);
+            this.f_103377_.m_104315_(this.f_102813_);
+            this.f_103376_.m_104315_(this.f_102814_);
+            this.f_103375_.m_104315_(this.f_102811_);
+            this.f_103374_.m_104315_(this.f_102812_);
+            for (ModelPart part : new ModelPart[] {this.f_102809_, this.f_103378_, this.f_103377_, this.f_103376_, this.f_103375_, this.f_103374_}) {
+                ModelPart from = part == this.f_102809_ ? this.f_102808_ : part == this.f_103378_ ? this.f_102810_ : part == this.f_103377_ ? this.f_102813_
+                    : part == this.f_103376_ ? this.f_102814_ : part == this.f_103375_ ? this.f_102811_ : this.f_102812_;
+                part.f_233553_ = from.f_233553_;
+                part.f_233554_ = from.f_233554_;
+                part.f_233555_ = from.f_233555_;
+            }
+        }
+
+        /**
+         * A little one's layout (model pixels, y down, the feet at 24): the head full size on a neck at 12, the body, arms and legs half
+         * size below it (the arms at the body's sides, the legs from 18); or a player's own, for an older child.
+         */
+        private void little(boolean on) {
+            float body = on ? BODY : 1.0F;
+            float head = on ? HEAD : 1.0F;
+            scale(this.f_102808_, head);
+            scale(this.f_102810_, body);
+            scale(this.f_102811_, body);
+            scale(this.f_102812_, body);
+            scale(this.f_102813_, body);
+            scale(this.f_102814_, body);
+            if (on) {
+                this.f_102808_.f_104201_ = 12.0F;
+                this.f_102810_.f_104201_ = 12.0F;
+                this.f_102811_.f_104200_ = -2.5F;
+                this.f_102812_.f_104200_ = 2.5F;
+                this.f_102811_.f_104201_ = 13.0F;
+                this.f_102812_.f_104201_ = 13.0F;
+                this.f_102813_.f_104200_ = -0.95F;
+                this.f_102814_.f_104200_ = 0.95F;
+                this.f_102813_.f_104201_ = 18.0F;
+                this.f_102814_.f_104201_ = 18.0F;
+                this.f_102813_.f_104202_ = 0.05F;
+                this.f_102814_.f_104202_ = 0.05F;
+            } else {
+                this.f_102811_.f_104200_ = -5.0F;
+                this.f_102812_.f_104200_ = 5.0F;
+                this.f_102813_.f_104200_ = -1.9F;
+                this.f_102814_.f_104200_ = 1.9F;
+            }
+        }
+
+        private static void scale(ModelPart part, float k) {
+            part.f_233553_ = k;
+            part.f_233554_ = k;
+            part.f_233555_ = k;
         }
     }
 
@@ -71,6 +132,7 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
     public void m_7392_(ChildNpc child, float yaw, float partial, PoseStack pose, MultiBufferSource buffers, int light) {
         ChildClient.View view = ChildClient.get(child.m_19879_());
         ChildStage stage = view == null ? child.stage : view.stage();
+        child.carriedBy = view == null ? 0 : view.carrier();
         pose.m_85836_();
         try {
             glue(child, view, partial, pose);
@@ -85,25 +147,30 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
         }
     }
 
-    /** A carried child, drawn at its parent's chest as they are drawn this frame (whatever lag its own position has). */
+    /**
+     * A carried child, drawn in its parent's arms as they are drawn this frame (whatever lag its own position has): sitting on their
+     * forearms at their chest, facing them (1.3.15: it was at their hip, facing away, drawn by their feet in first person).
+     */
     private static void glue(ChildNpc child, ChildClient.View view, float partial, PoseStack pose) {
         if (view == null || view.carrier() == 0 || !(child.m_9236_().m_6815_(view.carrier()) instanceof net.minecraft.world.entity.LivingEntity carrier)) {
             return;
         }
         float turn = ((carrier.f_20883_ - carrier.f_20884_) % 360.0F + 540.0F) % 360.0F - 180.0F;
         float bodyYaw = carrier.f_20884_ + turn * partial;
-        double scale = com.hex.kagune.control.Genders.female(carrier) ? com.hex.kagune.control.FemaleBody.SIZE : 1.0;
+        double scale = ChildNpc.carrySize(carrier);
         double yaw = Math.toRadians(bodyYaw);
         double ahead = ChildRules.CARRY_AHEAD * scale;
         double cx = carrier.f_19790_ + (carrier.m_20185_() - carrier.f_19790_) * partial - Math.sin(yaw) * ahead;
-        double cy = carrier.f_19791_ + (carrier.m_20186_() - carrier.f_19791_) * partial + ChildRules.CARRY_UP * scale - child.m_20206_() * 0.35;
+        double cy = carrier.f_19791_ + (carrier.m_20186_() - carrier.f_19791_) * partial + ChildRules.CARRY_UP * scale;
         double cz = carrier.f_19792_ + (carrier.m_20189_() - carrier.f_19792_) * partial + Math.cos(yaw) * ahead;
         double ex = child.f_19790_ + (child.m_20185_() - child.f_19790_) * partial;
         double ey = child.f_19791_ + (child.m_20186_() - child.f_19791_) * partial;
         double ez = child.f_19792_ + (child.m_20189_() - child.f_19792_) * partial;
         pose.m_85837_(cx - ex, cy - ey, cz - ez);
-        child.f_20883_ = bodyYaw;
-        child.f_20884_ = bodyYaw;
+        child.f_20883_ = bodyYaw + 180.0F;
+        child.f_20884_ = bodyYaw + 180.0F;
+        child.f_20885_ = bodyYaw + 180.0F;
+        child.f_20886_ = bodyYaw + 180.0F;
     }
 
     @Override

@@ -31,9 +31,13 @@ public final class ChildClient {
         ChildStage stage = ChildStage.byOrdinal(message.stage());
         VIEWS.put(message.id(), new View(message.name(), genome, stage, message.carrier(), message.turned()));
         Minecraft minecraft = Minecraft.m_91087_();
-        if (minecraft.f_91073_ != null && minecraft.f_91073_.m_6815_(message.id()) instanceof ChildNpc child && child.stage != stage) {
-            child.stage = stage;
-            child.m_6210_(); // its box, its stage's
+        if (minecraft.f_91073_ != null && minecraft.f_91073_.m_6815_(message.id()) instanceof ChildNpc child) {
+            // 1.3.15: carried, it neither pushes nor is pushed on this side either (the local player's own pushing is the client's).
+            child.carriedBy = message.carrier();
+            if (child.stage != stage) {
+                child.stage = stage;
+                child.m_6210_(); // its box, its stage's
+            }
         }
     }
 

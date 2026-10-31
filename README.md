@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.16 (HexGhoul): carrying a child fixed, little ones on little proportions and bigger, /kagune children, NPC parents (testing)
+
+See `.github/release-notes-1.3.16.md`.
+
 ## 1.3.15 (HexGhoul): crash fix (a child with no renderer), Touka a little skinnier, Ken's embrace loosened (testing)
 
 See `.github/release-notes-1.3.15.md`.

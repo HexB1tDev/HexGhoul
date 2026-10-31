@@ -128,6 +128,34 @@ public class ChildNpc extends PathfinderMob implements UniqueBody {
         this.home = origin;
     }
 
+    /**
+     * 1.3.15: the entity id of whoever carries it now (0: no one), on both sides (the server's brain sets it; a client, from {@code S2CChild}).
+     * Carried, it neither pushes its carrier nor is pushed (it shoved them back and forth, held in their box).
+     */
+    public int carriedBy;
+
+    /** 1.3.15: how big {@code carrier} is against a player (where its arms are): a woman's body, a companion's size. */
+    public static double carrySize(net.minecraft.world.entity.LivingEntity carrier) {
+        if (carrier instanceof EtoNpc npc) {
+            return npc.persona().size();
+        }
+        return com.hex.kagune.control.Genders.female(carrier) ? com.hex.kagune.control.FemaleBody.SIZE : 1.0;
+    }
+
+    /** isPushable: not while it is carried. */
+    @Override
+    public boolean m_6094_() {
+        return this.carriedBy == 0 && this.m_6084_();
+    }
+
+    /** pushEntities: not while it is carried. */
+    @Override
+    protected void m_6138_() {
+        if (this.carriedBy == 0) {
+            super.m_6138_();
+        }
+    }
+
     /** A baby or a toddler is drawn on a little one's proportions (the model's own: a big head, a short body). */
     @Override
     public boolean m_6162_() {

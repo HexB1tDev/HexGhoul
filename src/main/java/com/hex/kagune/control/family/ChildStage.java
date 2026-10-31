@@ -6,8 +6,9 @@ package com.hex.kagune.control.family;
  * it is drawn ({@link #draw}; babies and toddlers on a little one's proportions, a big head, {@link #young}). Never the adult female body.
  */
 public enum ChildStage {
-    BABY(0.0, 0.3F, 0.47F, true, 6.0F),
-    TODDLER(2.0, 0.47F, 0.72F, true, 10.0F),
+    // 1.3.15: a baby and a toddler bigger (the owner lost one: too small to find), on their own little-one proportions.
+    BABY(0.0, 0.38F, 0.6F, true, 6.0F),
+    TODDLER(2.0, 0.5F, 0.8F, true, 10.0F),
     CHILD(5.0, 0.7F, 0.7F, false, 16.0F),
     TEEN(9.0, 0.88F, 0.88F, false, 24.0F);
 

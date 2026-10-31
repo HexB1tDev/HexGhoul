@@ -91,6 +91,9 @@ final class ControlCommands {
                     .then(Commands.m_82129_("player", EntityArgument.m_91466_())
                         .executes(context -> maxEto(context, EntityArgument.m_91474_(context, "player"), persona))))));
         }
+        // 1.3.15: where each of your children is (anyone's command): which way, how far, and they glow a while so you can spot them.
+        dispatcher.register(Commands.m_82127_("kagune").then(Commands.m_82127_("children").executes(context -> children(context,
+            context.getSource().m_81375_()))));
         // 1.3.10: a testing shortcut for operators: every pregnancy the player is part of brought to ten seconds before the birth.
         dispatcher.register(Commands.m_82127_("kagune").then(Commands.m_82127_("family").requires(source -> source.m_6761_(2))
             .then(Commands.m_82127_("soon").executes(context -> familySoon(context, context.getSource().m_81375_())))
@@ -308,6 +311,52 @@ final class ControlCommands {
         }
         context.getSource().m_81352_(Component.m_237113_("None of your children within 16 blocks."));
         return 0;
+    }
+
+    /** 1.3.15: each of {@code player}'s children: where it is, how far and which way, glowing 15 seconds; or home, or coming back. */
+    private static int children(CommandContext<CommandSourceStack> context, ServerPlayer player) {
+        net.minecraft.server.level.ServerLevel level = player.m_284548_();
+        java.util.List<Children.Child> kids = Children.of(level, Pregnancies.player(player.m_20148_()));
+        if (kids.isEmpty()) {
+            context.getSource().m_81352_(Component.m_237113_("You don't have any children."));
+            return 0;
+        }
+        for (Children.Child kid : kids) {
+            com.hex.kagune.control.npc.UniqueNpc known = UniqueNpcs.get(level, "child:" + kid.id);
+            net.minecraft.world.entity.Entity body = null;
+            if (known.body != null && level.m_7654_() != null) {
+                for (net.minecraft.server.level.ServerLevel each : level.m_7654_().m_129785_()) {
+                    net.minecraft.world.entity.Entity found = each.m_8791_(known.body);
+                    if (found != null && found.m_6084_()) {
+                        body = found;
+                    }
+                }
+            }
+            String stage = kid.stage(level.m_46467_()).name().toLowerCase(java.util.Locale.ROOT);
+            String line;
+            if (body instanceof net.minecraft.world.entity.LivingEntity living && body.m_9236_() == player.m_9236_()) {
+                double dx = body.m_20185_() - player.m_20185_();
+                double dz = body.m_20189_() - player.m_20189_();
+                int far = (int)Math.round(Math.sqrt(dx * dx + dz * dz));
+                String[] ways = {"south", "south-west", "west", "north-west", "north", "north-east", "east", "south-east"};
+                String way = ways[Math.floorMod((int)Math.round(Math.toDegrees(Math.atan2(-dx, dz)) / 45.0), 8)];
+                living.m_7292_(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.f_19619_, 300, 0, false, false, false));
+                line = "\u00a7b" + kid.name + "\u00a7r (" + stage + "): " + (far < 2 ? "right here" : far + " blocks " + way) + ", at "
+                    + (int)Math.floor(body.m_20185_()) + " " + (int)Math.floor(body.m_20186_()) + " " + (int)Math.floor(body.m_20189_())
+                    + " \u00a77(glowing for 15 seconds)";
+            } else if (body != null) {
+                line = "\u00a7b" + kid.name + "\u00a7r (" + stage + "): in another dimension.";
+            } else if (!known.alive && known.body != null) {
+                line = "\u00a7b" + kid.name + "\u00a7r (" + stage + "): hurt badly; comes back home a day after.";
+            } else if (known.homed) {
+                line = "\u00a7b" + kid.name + "\u00a7r (" + stage + "): not loaded; home is at " + known.homeX + " " + (known.homeY - 1) + " " + known.homeZ + ".";
+            } else {
+                line = "\u00a7b" + kid.name + "\u00a7r (" + stage + "): nowhere loaded.";
+            }
+            String said = line;
+            context.getSource().m_288197_(() -> Component.m_237113_(said), false);
+        }
+        return kids.size();
     }
 
     private static int familyAt(CommandContext<CommandSourceStack> context, ServerPlayer player, int percent) {

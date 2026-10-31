@@ -22,6 +22,7 @@ public abstract class LivingEntity extends Entity {
     /** heal */ public void m_5634_(float amount) { throw new UnsupportedOperationException(); }
     /** getHealth */ public float m_21223_() { throw new UnsupportedOperationException(); }
     /** getMaxHealth */ public float m_21233_() { throw new UnsupportedOperationException(); }
+    /** pushEntities (yarn tickCramming; 1.3.15) */ protected void m_6138_() { throw new UnsupportedOperationException(); }
     /** setHealth */ public void m_21153_(float health) { throw new UnsupportedOperationException(); }
     /** hasEffect */ public boolean m_21023_(net.minecraft.world.effect.MobEffect effect) { throw new UnsupportedOperationException(); }
     /** removeEffect */ public boolean m_21195_(net.minecraft.world.effect.MobEffect effect) { throw new UnsupportedOperationException(); }

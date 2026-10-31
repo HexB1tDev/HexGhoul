@@ -126,6 +126,10 @@ public final class EtoBrain {
         /** 1.3.3: whose hand she holds (she walks at their side), and whether their shift was down last tick (a tap lets go). */
         UUID holding;
         boolean holdShift;
+        /** 1.3.15: the child she holds in her arms (null none), until when, and when she may pick one up again ({@link ParentCare}). */
+        UUID cradling;
+        long cradleUntil;
+        long nextCradle;
         /** 1.3.14: the partner she is coming to for the night they asked for a baby (null none), and when she may next try. */
         UUID babyNight;
         long nextBabyNight;
@@ -233,6 +237,7 @@ public final class EtoBrain {
         if (target != null) {
             endKiss(npc, mind, null, now);
             letGo(npc, mind, level, now, false);
+            ParentCare.drop(npc, mind, level, now);
             if (mind.gesture != EtoGesture.NONE && mind.gesture != EtoGesture.LAUGH) {
                 gesture(mind, EtoGesture.NONE, now);
             }
@@ -355,7 +360,8 @@ public final class EtoBrain {
                 best = living;
             }
         }
-        return best;
+        // 1.3.15: anything hostile near one of her children (or after one) is hers to deal with.
+        return best != null ? best : ParentCare.threat(npc, level);
     }
 
     /**
@@ -366,6 +372,10 @@ public final class EtoBrain {
     public static void hurt(net.minecraftforge.event.entity.living.LivingHurtEvent event) {
         if (event.getEntity() instanceof ServerPlayer victim) {
             protect(victim, event.getSource());
+            return;
+        }
+        if (event.getEntity() instanceof com.hex.kagune.control.npc.ChildNpc child) {
+            childHurt(child, event.getSource());
             return;
         }
         if (!(event.getEntity() instanceof EtoNpc npc)) {
@@ -471,6 +481,30 @@ public final class EtoBrain {
         }
     }
 
+    /** 1.3.15: one of her children hurt: whoever did it is hers, now, wherever she can see them (a parent's partner never hurts it). */
+    private static void childHurt(com.hex.kagune.control.npc.ChildNpc child, DamageSource source) {
+        if (!(source.m_7639_() instanceof LivingEntity attacker) || attacker instanceof EtoNpc || !(child.m_9236_() instanceof ServerLevel level)) {
+            return;
+        }
+        for (EtoNpc npc : LIVE) {
+            Mind mind = npc.mind;
+            if (mind == null || npc.m_213877_() || npc.m_9236_() != level || npc.m_20280_(child) > ParentCare.LOOKS * ParentCare.LOOKS
+                || !ParentCare.parentOf(npc, child, level) || attacker instanceof ServerPlayer player && partnerOf(mind, player)) {
+                continue;
+            }
+            long now = level.m_46467_();
+            mind.target = attacker.m_19879_();
+            mind.dirty = true;
+            if (attacker instanceof ServerPlayer player) {
+                mind.grudges.put(player.m_20148_(), now + 1200L);
+            }
+            if (now - mind.protectedAt > 200L) {
+                mind.protectedAt = now;
+                bark(npc, level, npc.persona().female() ? "Get AWAY from my child!" : "Touch my child again. I dare you.");
+            }
+        }
+    }
+
     // ---------------------------------------------------------------- her fight
 
     private static void fight(EtoNpc npc, Mind mind, LivingEntity target, ServerLevel level, long now) {
@@ -536,6 +570,10 @@ public final class EtoBrain {
             return;
         }
         if (partner != null && together(npc, mind, level, partner, now)) {
+            return;
+        }
+        // 1.3.15: her children, while they are still children: she keeps close, and holds the little ones now and then.
+        if (ParentCare.tend(npc, mind, level, partner, now)) {
             return;
         }
         if (now % 100L == 37L) {
@@ -783,6 +821,9 @@ public final class EtoBrain {
     /** She walks up to {@code player} for {@code what} (a kiss, a hug, to cling, to wave). */
     public static void walkUp(EtoNpc npc, Mind mind, ServerPlayer player, EtoGesture what, long now) {
         endKiss(npc, mind, null, now);
+        if (npc.m_9236_() instanceof ServerLevel level) {
+            ParentCare.drop(npc, mind, level, now);
+        }
         mind.toward = player.m_20148_();
         mind.towardFor = what;
         mind.towardSince = now;

@@ -12,9 +12,12 @@ public final class ChildRules {
     public static final double FOLLOW_FROM = 4.0;
     public static final double FOLLOW_TELEPORT = 24.0;
     public static final double FOLLOW_STOP = 2.0;
-    /** Where a carried child is held: ahead of the chest, up from the feet (blocks, a player's size), and its yaw turned to lie across. */
-    public static final double CARRY_AHEAD = 0.42;
-    public static final double CARRY_UP = 0.92;
+    /**
+     * Where a carried child is held: ahead of the chest, and how high its hips sit (blocks up from the carrier's feet, a player's size).
+     * 1.3.15: up at the chest on their forearms (it was held at the hip, drawn by their feet in first person), closer in.
+     */
+    public static final double CARRY_AHEAD = 0.34;
+    public static final double CARRY_UP = 1.02;
     /** How far it goes for something hostile to its family (blocks), and how close it must be to hit. */
     public static final double GUARD = 10.0;
     public static final double REACH = 1.6;

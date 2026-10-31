@@ -94,14 +94,14 @@ public final class ChildBrain {
                 npc.m_21153_(stage.health);
             }
             if (!stage.carried()) {
-                mind.carrier = null;
+                putDown(npc, mind);
             }
             if (!first) {
                 tellParents(level, child, "§b" + ChildLines.grown(stage, child.name));
             }
             mind.dirty = true;
         }
-        ServerPlayer carrier = mind.carrier == null ? null : player(level, mind.carrier);
+        LivingEntity carrier = mind.carrier == null ? null : carrierOf(level, mind.carrier);
         if (mind.carrier != null && (carrier == null || !carrier.m_6084_() || carrier.m_9236_() != level || carrier.m_20280_(npc) > 16.0 * 16.0)) {
             putDown(npc, mind);
             carrier = null;
@@ -148,23 +148,40 @@ public final class ChildBrain {
 
     // ---------------------------------------------------------------- carried
 
-    /** Held in front of the carrier's chest, lying across their arms (a toddler on a hip), facing the way they face. */
-    private static void carry(ChildNpc npc, ServerPlayer carrier) {
-        double scale = com.hex.kagune.control.Genders.female(carrier) ? com.hex.kagune.control.FemaleBody.SIZE : 1.0;
+    /**
+     * Held in the carrier's arms: sitting on their forearms at their chest ({@link ChildRules#CARRY_UP}, its hips there), facing them, a
+     * little in front ({@link ChildRules#CARRY_AHEAD}). 1.3.15: no gravity while held (it fell between ticks, and was drawn by their feet),
+     * and it neither pushes nor is pushed ({@code ChildNpc.carriedBy}); any living carrier (a player, or its NPC parent).
+     */
+    private static void carry(ChildNpc npc, LivingEntity carrier) {
+        double scale = ChildNpc.carrySize(carrier);
         double yaw = Math.toRadians(carrier.f_20883_);
         double ahead = ChildRules.CARRY_AHEAD * scale;
-        Vec3 at = carrier.m_20182_().m_82520_(-Math.sin(yaw) * ahead, ChildRules.CARRY_UP * scale - npc.m_20206_() * 0.35, Math.cos(yaw) * ahead);
+        Vec3 at = carrier.m_20182_().m_82520_(-Math.sin(yaw) * ahead, ChildRules.CARRY_UP * scale, Math.cos(yaw) * ahead);
         npc.m_21573_().m_26573_();
+        npc.m_20242_(true);
+        npc.carriedBy = carrier.m_19879_();
         npc.m_6021_(at.f_82479_, at.f_82480_, at.f_82481_);
         npc.m_20256_(Vec3.f_82478_);
         npc.f_19789_ = 0.0F;
-        npc.m_146922_(carrier.f_20883_);
-        npc.f_20883_ = carrier.f_20883_;
+        float facing = carrier.f_20883_ + 180.0F;
+        npc.m_146922_(facing);
+        npc.f_20883_ = facing;
+        npc.f_20885_ = facing;
     }
 
-    static void pickUp(ChildNpc npc, ServerPlayer player) {
+    /** The one {@code id} names: a player, or (1.3.15) any living body in the world (its NPC parent). */
+    static LivingEntity carrierOf(ServerLevel level, UUID id) {
+        ServerPlayer player = player(level, id);
+        if (player != null) {
+            return player;
+        }
+        return level.m_8791_(id) instanceof LivingEntity living ? living : null;
+    }
+
+    static void pickUp(ChildNpc npc, LivingEntity carrier) {
         if (npc.mind != null) {
-            npc.mind.carrier = player.m_20148_();
+            npc.mind.carrier = carrier.m_20148_();
             npc.mind.dirty = true;
         }
     }
@@ -175,6 +192,8 @@ public final class ChildBrain {
             mind.dirty = true;
             npc.settle();
         }
+        npc.m_20242_(false);
+        npc.carriedBy = 0;
     }
 
     static boolean carried(ChildNpc npc) {
@@ -298,7 +317,7 @@ public final class ChildBrain {
     }
 
     static S2CChild message(ChildNpc npc, Mind mind, Children.Child child) {
-        ServerPlayer carrier = mind == null || mind.carrier == null ? null : player((ServerLevel)npc.m_9236_(), mind.carrier);
+        LivingEntity carrier = mind == null || mind.carrier == null ? null : carrierOf((ServerLevel)npc.m_9236_(), mind.carrier);
         return new S2CChild(npc.m_19879_(), child.name, child.genome, (mind == null || mind.stage == null ? child.stage(npc.m_9236_().m_46467_()) : mind.stage)
             .ordinal(), carrier == null ? 0 : carrier.m_19879_(), mind != null && mind.turned);
     }

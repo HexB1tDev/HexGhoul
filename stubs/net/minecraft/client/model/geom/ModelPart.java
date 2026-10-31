@@ -11,6 +11,7 @@ public final class ModelPart {
     /** y (the pivot) */ public float f_104201_;
     /** z (the pivot) */ public float f_104202_;
     /** xScale */ public float f_233553_;
+    /** yScale (1.3.15) */ public float f_233554_;
     /** zScale */ public float f_233555_;
     /** translateAndRotate */ public void m_104299_(com.mojang.blaze3d.vertex.PoseStack pose) { throw new UnsupportedOperationException(); }
 }
