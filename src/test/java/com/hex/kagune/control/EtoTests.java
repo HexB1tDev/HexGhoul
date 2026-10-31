@@ -541,22 +541,22 @@ public final class EtoTests {
         check(EtoRules.choose(30.0, true, true, 1.0F, 100, never, never, never, 0.1) == EtoRules.Act.CHASE, "too far for anything: she runs at it");
         check(EtoRules.choose(10.0, true, false, 1.0F, 100, never, never, never, 0.1) != EtoRules.Act.KICK, "never a kick from the air");
         // 1.3.6: the rest of her Owl DNA kit: the flesh, the hammer, Watch This.
-        EtoRules.Ready all = new EtoRules.Ready(never, never, never, never, never, never, never);
-        EtoRules.Ready spent = new EtoRules.Ready(later, later, later, later, later, later, later);
+        EtoRules.Ready all = new EtoRules.Ready(never, never, never, never, never, never, never, never);
+        EtoRules.Ready spent = new EtoRules.Ready(later, later, later, later, later, later, later, later);
         check(EtoRules.choose(5.0, true, true, 0.5F, 100, all, 0.9) == EtoRules.Act.WATCH, "serious, something close: Watch This the moment it is back");
         check(EtoRules.choose(5.0, true, true, 1.0F, 100, all, 0.9) != EtoRules.Act.WATCH, "calm, never Watch This");
         check(EtoRules.choose(20.0, true, true, 0.2F, 100, all, 0.1) != EtoRules.Act.WATCH, "nothing close: no Watch This");
-        check(EtoRules.choose(7.0, true, true, 0.5F, 100, new EtoRules.Ready(never, later, never, never, never, never, later), 0.3) == EtoRules.Act.GRAB,
+        check(EtoRules.choose(7.0, true, true, 0.5F, 100, new EtoRules.Ready(never, later, never, never, never, never, later, later), 0.3) == EtoRules.Act.GRAB,
             "serious, mid range, the kick spent: the flesh grabs it");
-        check(EtoRules.choose(7.0, true, true, 1.0F, 100, new EtoRules.Ready(later, later, later, later, never, later, later), 0.3) != EtoRules.Act.GRAB,
+        check(EtoRules.choose(7.0, true, true, 1.0F, 100, new EtoRules.Ready(later, later, later, later, never, later, later, later), 0.3) != EtoRules.Act.GRAB,
             "calm: no grab");
-        check(EtoRules.choose(2.0, true, true, 0.2F, 100, new EtoRules.Ready(later, later, later, later, later, never, later), 0.5) == EtoRules.Act.HAMMER,
+        check(EtoRules.choose(2.0, true, true, 0.2F, 100, new EtoRules.Ready(later, later, later, later, later, never, later, later), 0.5) == EtoRules.Act.HAMMER,
             "maniac, up close: the Flesh Hammer");
-        check(EtoRules.choose(2.0, true, false, 0.2F, 100, new EtoRules.Ready(later, later, later, later, later, never, later), 0.5) != EtoRules.Act.HAMMER,
+        check(EtoRules.choose(2.0, true, false, 0.2F, 100, new EtoRules.Ready(later, later, later, later, later, never, later, later), 0.5) != EtoRules.Act.HAMMER,
             "never the hammer from the air");
-        check(EtoRules.choose(3.0, true, true, 1.0F, 100, new EtoRules.Ready(later, later, later, never, later, later, later), 0.1) == EtoRules.Act.SWIPE,
+        check(EtoRules.choose(3.0, true, true, 1.0F, 100, new EtoRules.Ready(later, later, later, never, later, later, later, later), 0.1) == EtoRules.Act.SWIPE,
             "calm, now and then the swipe");
-        check(EtoRules.choose(3.0, true, true, 1.0F, 100, new EtoRules.Ready(later, later, later, never, later, later, later), 0.5) != EtoRules.Act.SWIPE,
+        check(EtoRules.choose(3.0, true, true, 1.0F, 100, new EtoRules.Ready(later, later, later, never, later, later, later, later), 0.5) != EtoRules.Act.SWIPE,
             "calm, mostly not");
         check(EtoRules.choose(2.0, true, true, 1.0F, 100, spent, 0.6) == EtoRules.Act.STRIKE && EtoRules.choose(30.0, true, true, 0.2F, 100, spent, 0.1)
             == EtoRules.Act.CHASE, "everything spent: the blitz up close, the chase from afar");
@@ -570,6 +570,16 @@ public final class EtoTests {
             holds &= h >= raise && h <= grow;
         }
         check(holds, "the hammer's club: the leg up at least, fully grown at most; the maniac's always fully grown");
+        // 1.3.7: the Mutated Arm.
+        EtoRules.Ready armOnly = new EtoRules.Ready(later, later, later, later, later, later, later, never);
+        check(EtoRules.choose(10.0, true, true, 0.5F, 100, armOnly, 0.2) == EtoRules.Act.ARM, "serious, from range: the Mutated Arm shot out at it");
+        check(EtoRules.choose(10.0, true, true, 1.0F, 100, armOnly, 0.2) != EtoRules.Act.ARM, "calm: never the arm");
+        check(EtoRules.choose(3.0, true, true, 0.2F, 100, armOnly, 0.2) != EtoRules.Act.ARM, "too close for the arm");
+        check(EtoRules.choose(10.0, false, true, 0.2F, 100, armOnly, 0.2) != EtoRules.Act.ARM, "never at what she cannot see");
+        check(!EtoRules.armHeld(EtoRules.Phase.CALM, 0.0) && EtoRules.armHeld(EtoRules.Phase.MANIAC, 0.1) && !EtoRules.armHeld(EtoRules.Phase.MANIAC, 0.9),
+            "held to the sphere: the maniac mostly, never calm");
+        check(EtoRules.ARM_TO < com.hex.kagune.control.pale.ArmRules.TAP_REACH * EtoRules.SIZE && EtoRules.ARM_FROM > EtoRules.HAMMER_TO,
+            "the arm thrown only as far as it reaches on her");
         check(EtoRules.punchHold(EtoRules.Phase.MANIAC, 0.9) == com.hex.kagune.control.pale.PaleRules.PUNCH_CHARGE_TICKS
             && EtoRules.punchHold(EtoRules.Phase.SERIOUS, 0.1) == com.hex.kagune.control.pale.PaleRules.PUNCH_CHARGE_TICKS
             && EtoRules.punchHold(EtoRules.Phase.CALM, 0.9) < com.hex.kagune.control.pale.PaleRules.PUNCH_CHARGE_TICKS,

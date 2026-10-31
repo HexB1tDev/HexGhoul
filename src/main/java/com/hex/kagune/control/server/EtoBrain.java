@@ -238,6 +238,8 @@ public final class EtoBrain {
         }
         // 1.3.6: her Watch This tentacles hunt on their own, whatever she is doing, until their ten seconds are up.
         EtoWatch.tick(npc, mind, level, now);
+        // 1.3.7: and her Mutated Arm, out until it is back in her.
+        EtoArm.tick(npc, mind, level, now);
         if (mind.gesture.over(now - mind.gestureAt) && mind.gesture != EtoGesture.NONE && !mind.gesture.held()) {
             gesture(mind, EtoGesture.NONE, now);
         }
@@ -986,6 +988,7 @@ public final class EtoBrain {
         UniqueNpcs.died(level, EtoRules.KEY, npc.m_20148_());
         // 1.3.6: her tentacles go with her, and whatever her flesh held is let go.
         EtoWatch.forget(npc);
+        EtoArm.forget(npc);
         if (npc.mind != null) {
             EtoFlesh.release(level, npc.mind.owl);
         }
@@ -1076,6 +1079,7 @@ public final class EtoBrain {
     public static void startTracking(PlayerEvent.StartTracking event) {
         if (event.getTarget() instanceof EtoNpc npc && event.getEntity() instanceof ServerPlayer player) {
             ControlNetwork.sendTo(player, message(npc, npc.mind));
+            EtoArm.tracked(player, npc);
         }
     }
 }

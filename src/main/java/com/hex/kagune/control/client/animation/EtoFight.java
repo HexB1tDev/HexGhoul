@@ -37,10 +37,18 @@ public final class EtoFight {
         body.airborne = air;
         body.seen = npc.f_19797_;
         RigPose p = under == null ? new RigPose() : new RigPose().add(under, 1.0F);
+        float bodyYaw = npc.f_20884_ + wrap(npc.f_20883_ - npc.f_20884_) * partial;
         if (fight != null) {
-            float bodyYaw = npc.f_20884_ + wrap(npc.f_20883_ - npc.f_20884_) * partial;
             float turn = (float)Math.toRadians(wrap(fight.yaw() - bodyYaw));
             body.animator.apply(p, fight, clock, age, body.landed, turn);
+        }
+        // 1.3.7: her Mutated Arm's weight on her, whatever she is doing (as a player's, KaguneBodyAnimation).
+        com.hex.kagune.control.client.ArmClient.Arm arm = com.hex.kagune.control.client.ArmClient.get(npc);
+        if (arm != null) {
+            double[] look = arm.aim(partial);
+            double yaw = Math.toRadians(bodyYaw);
+            double[] aim = {-look[0] * Math.cos(yaw) - look[2] * Math.sin(yaw), look[1], -look[0] * Math.sin(yaw) + look[2] * Math.cos(yaw)};
+            ArmPose.body(p, arm.phase, arm.age(clock), arm.reach(clock), aim, arm.afterSphere(), clock);
         }
         body.animator.shown(p);
         return under == null && p.isZero() ? null : p;

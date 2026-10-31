@@ -95,12 +95,12 @@ public final class ArmClient {
         ARMS.put(message.playerId(), arm);
     }
 
-    /** {@code player}'s arm, or null when it is in her. */
-    public static Arm get(Player player) {
-        return player == null ? null : ARMS.get(player.m_36316_().getId());
+    /** {@code player}'s arm, or null when it is in her. 1.3.6: anyone's, by their UUID (a player's is their profile's; Eto's is hers). */
+    public static Arm get(net.minecraft.world.entity.Entity player) {
+        return player == null ? null : ARMS.get(player.m_20148_());
     }
 
-    public static boolean out(Player player) {
+    public static boolean out(net.minecraft.world.entity.Entity player) {
         return get(player) != null;
     }
 
@@ -123,6 +123,19 @@ public final class ArmClient {
             if (arm.phase != ArmRules.Phase.RETRACT) {
                 // Its weight squares her body up to it (her head looks where she likes).
                 player.f_20883_ = ArmPose.squared(player.f_20883_, arm.aim);
+            }
+        }
+        // 1.3.7: Eto's arm swings after where she looks, as a player's does.
+        for (int id : EtoClient.ids()) {
+            net.minecraft.world.entity.Entity her = minecraft.f_91073_.m_6815_(id);
+            Arm arm = her == null ? null : ARMS.get(her.m_20148_());
+            if (arm == null) {
+                continue;
+            }
+            arm.lastAim = arm.aim;
+            if (arm.phase == ArmRules.Phase.SHOOT || arm.phase == ArmRules.Phase.HOLD || arm.phase == ArmRules.Phase.DRAG) {
+                Vec3 look = her.m_20154_();
+                arm.aim = ArmRules.follow(arm.aim, new double[] {look.f_82479_, look.f_82480_, look.f_82481_});
             }
         }
     }

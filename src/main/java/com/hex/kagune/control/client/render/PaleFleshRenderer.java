@@ -111,7 +111,7 @@ public final class PaleFleshRenderer {
                 drew |= tentacles(player, view, KaguneBodyAnimation.drawnNow(player, time), 1.0, time, partial, level, minecraft, camera, matrix, normals, buffers);
             }
             if (ArmClient.out(player) && player.m_6084_() && !player.m_20145_() && player.m_20280_(minecraft.f_91074_) <= (RANGE + 40.0) * (RANGE + 40.0)) {
-                drew |= arm(player, view, time, partial, level, minecraft, camera, matrix, normals, buffers);
+                drew |= arm(player, view, KaguneBodyAnimation.drawnNow(player, time), 1.0, time, partial, level, minecraft, camera, matrix, normals, buffers);
             }
             OwlClient.Owl owl = OwlClient.get(player, time);
             if (owl != null && player.m_6084_() && !player.m_20145_() && player.m_20280_(minecraft.f_91074_) <= RANGE * RANGE) {
@@ -162,6 +162,9 @@ public final class PaleFleshRenderer {
             }
             if (view.move().flesh()) {
                 any |= flesh(who, view, drawn, scale, time, partial, level, minecraft, camera, matrix, normals, buffers);
+            }
+            if (ArmClient.out(who)) {
+                any |= arm(who, view, drawn, scale, time, partial, level, minecraft, camera, matrix, normals, buffers);
             }
             return any;
         }, level, minecraft, time, RANGE);
@@ -329,23 +332,23 @@ public final class PaleFleshRenderer {
      * 6.2.0: her Mutated Arm ({@link ArmPose}) out of her right shoulder as her body is drawn this frame (or as her move alone poses
      * it), carrying its weight, the hand right on what it holds where that is drawn this frame; and the sphere it folds into.
      */
-    private static boolean arm(AbstractClientPlayer player, PaleClient.PaleView view, double time, float partial, ClientLevel level, Minecraft minecraft,
-                               Vec3 camera, Matrix4f matrix, Matrix3f normals, MultiBufferSource.BufferSource buffers) {
+    private static boolean arm(LivingEntity player, PaleClient.PaleView view, RigPose drawn, double scale, double time, float partial, ClientLevel level,
+                               Minecraft minecraft, Vec3 camera, Matrix4f matrix, Matrix3f normals, MultiBufferSource.BufferSource buffers) {
         ArmClient.Arm arm = ArmClient.get(player);
         float bodyYaw = player.f_20884_ + wrap(player.f_20883_ - player.f_20884_) * partial;
         double yaw = Math.toRadians(bodyYaw);
         Frame frame = new Frame(player.f_19790_ + (player.m_20185_() - player.f_19790_) * partial, player.f_19791_ + (player.m_20186_() - player.f_19791_) * partial,
-            player.f_19792_ + (player.m_20189_() - player.f_19792_) * partial, -Math.sin(yaw), Math.cos(yaw), -Math.cos(yaw), -Math.sin(yaw));
+            player.f_19792_ + (player.m_20189_() - player.f_19792_) * partial, -Math.sin(yaw), Math.cos(yaw), -Math.cos(yaw), -Math.sin(yaw), scale);
         double age = arm.age(time);
         ArmPose.Reach reach = arm.reach(time);
-        RigPose body = KaguneBodyAnimation.drawnNow(player, time);
+        RigPose body = drawn;
         if (body == null) {
             // Not drawn this frame (first person): her body as the move poses it, under the arm's weight, the arm pointed out.
             body = PaleMotions.anyBody(view.move(), view.age(time), view.detail(), view.charge(), (float)Math.toRadians(wrap(view.yaw() - bodyYaw)));
             ArmPose.body(body, arm.phase, age, reach, frame.turnBack(arm.aim(partial)), arm.afterSphere(), time);
             body.settle(1.0F);
         }
-        boolean own = firstPerson(minecraft, player);
+        boolean own = firstPerson(minecraft, player) && player instanceof AbstractClientPlayer;
         double[] shift = own ? PaleOwnLeg.shift(body) : NO_SHIFT;
         FleshMotion.Space space = new FleshMotion.Space() {
             @Override
@@ -382,14 +385,14 @@ public final class PaleFleshRenderer {
             hold = 1.0;
         } else {
             // As far out as it is, short of anything solid.
-            double length = Math.min(reach.length(), clear(level, player, frame.world(shoulder, Vec3.f_82478_), aimWorld, reach.length()));
+            double length = Math.min(reach.length(), clear(level, player, frame.world(shoulder, Vec3.f_82478_), aimWorld, reach.length() * scale) / scale);
             girth = ArmPose.girth(reach.girth(), length);
             end = ArmPose.out(shoulder, aim, length, girth);
         }
         boolean drew = false;
         if (own && ArmPose.pointing(arm.phase, age, arm.afterSphere()) > 0.0) {
             // 6.2.0: in first person her own arm, pointed out, the flesh coming out of her hand (vanilla's hand is not drawn).
-            ownArm(body, shift, frame, camera, level, player, matrix, normals, buffers);
+            ownArm(body, shift, frame, camera, level, (AbstractClientPlayer)player, matrix, normals, buffers);
             drew = true;
         }
         PaleFleshModel.Pose pose = FleshMotion.carried(player.m_19879_(), 3, arm.said.downAt(), FAMILY_ARM,

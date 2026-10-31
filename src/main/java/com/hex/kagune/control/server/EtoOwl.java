@@ -60,6 +60,8 @@ final class EtoOwl {
         long grabReady = Long.MIN_VALUE;
         long hammerReady = Long.MIN_VALUE;
         long watchReady = Long.MIN_VALUE;
+        /** 1.3.7: her Mutated Arm, when it is back. */
+        long armReady = Long.MIN_VALUE;
         /** 1.3.6: what the swipe has cut this time (entity ids), what the flesh holds (0 none), where the throw began (her frame). */
         final java.util.Set<Integer> hit = new java.util.HashSet<>();
         int heldId;
@@ -89,14 +91,21 @@ final class EtoOwl {
         }
         double distance = gap(npc, target);
         boolean sees = npc.m_142582_(target);
+        if (EtoArm.out(npc)) {
+            // 1.3.7: her Mutated Arm out: she walks on at it (as a player walks with hers out), nothing else thrown meanwhile.
+            face(npc, target);
+            npc.m_21573_().m_5624_(target, phase.chase * 0.8);
+            return;
+        }
         EtoRules.Act act = EtoRules.choose(distance, sees, npc.m_20096_(), share(npc), now, new EtoRules.Ready(f.punchReady, f.kickReady, f.flipReady,
-            f.swipeReady, f.grabReady, f.hammerReady, EtoWatch.out(npc) ? Long.MAX_VALUE : f.watchReady), npc.m_217043_().m_188500_());
+            f.swipeReady, f.grabReady, f.hammerReady, EtoWatch.out(npc) ? Long.MAX_VALUE : f.watchReady, f.armReady), npc.m_217043_().m_188500_());
         face(npc, target);
         switch (act) {
             case SWIPE -> EtoFlesh.swipe(npc, f, target, level, now, phase);
             case GRAB -> EtoFlesh.grab(npc, f, target, level, now, phase);
             case HAMMER -> EtoFlesh.hammer(npc, f, target, level, now, phase);
             case WATCH -> EtoWatch.start(npc, f, level, now, phase);
+            case ARM -> EtoArm.start(npc, f, target, level, now, phase);
             case KICK -> {
                 if (!kick(npc, f, target, level, now, phase)) {
                     npc.m_21573_().m_5624_(target, phase.chase);

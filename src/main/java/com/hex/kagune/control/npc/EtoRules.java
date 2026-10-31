@@ -453,7 +453,9 @@ public final class EtoRules {
         /** 1.3.6: the Flesh Hammer: the club grown round her raised leg, the axe kick slamming it down. */
         HAMMER,
         /** 1.3.6: Watch This: her arms out in a cross, two tentacles out of her back hunting on their own for ten seconds. */
-        WATCH
+        WATCH,
+        /** 1.3.7: the Mutated Arm: her right arm turned to flesh and shot out at it, catching what it meets. */
+        ARM
     }
 
     /** The mastery her moves are thrown at (the most there is: her fists as hard as a master's). */
@@ -493,10 +495,20 @@ public final class EtoRules {
     public static final double SWIPE_TO = com.hex.kagune.control.pale.PaleRules.SWIPE_REACH * SIZE - 1.0;
 
     /** 1.3.6: when each of her moves is ready again (game ticks; {@code Long.MAX_VALUE}: not hers to throw). */
-    public record Ready(long punch, long kick, long flip, long swipe, long grab, long hammer, long watch) {
+    public record Ready(long punch, long kick, long flip, long swipe, long grab, long hammer, long watch, long arm) {
         public static Ready only(long punch, long kick, long flip) {
-            return new Ready(punch, kick, flip, Long.MAX_VALUE, Long.MAX_VALUE, Long.MAX_VALUE, Long.MAX_VALUE);
+            return new Ready(punch, kick, flip, Long.MAX_VALUE, Long.MAX_VALUE, Long.MAX_VALUE, Long.MAX_VALUE, Long.MAX_VALUE);
         }
+    }
+
+    /** 1.3.7: how often the Mutated Arm comes back (ticks, before her phase cuts it down), and from how far to how far she throws it. */
+    public static final int ARM_EVERY = 180;
+    public static final double ARM_FROM = 6.0;
+    public static final double ARM_TO = com.hex.kagune.control.pale.ArmRules.TAP_REACH * SIZE * 0.9;
+
+    /** 1.3.7: whether she holds the Mutated Arm out to charge it (the maniac, mostly: whatever it caught crushed in the sphere). */
+    public static boolean armHeld(Phase phase, double roll) {
+        return phase == Phase.MANIAC ? roll < 0.75 : phase == Phase.SERIOUS && roll < 0.25;
     }
 
     /**
@@ -518,6 +530,9 @@ public final class EtoRules {
         }
         if (serious && sees && grounded && now >= ready.grab() && distance >= GRAB_FROM && distance <= GRAB_TO && roll < (maniac ? 0.8 : 0.5)) {
             return Act.GRAB;
+        }
+        if (serious && sees && now >= ready.arm() && distance >= ARM_FROM && distance <= ARM_TO && roll < (maniac ? 0.5 : 0.3)) {
+            return Act.ARM;
         }
         if (serious && sees && grounded && now >= ready.hammer() && distance <= HAMMER_TO && roll < (maniac ? 0.6 : 0.35)) {
             return Act.HAMMER;
