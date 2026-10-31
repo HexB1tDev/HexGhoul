@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.15 (HexGhoul): crash fix (a child with no renderer), Touka a little skinnier, Ken's embrace loosened (testing)
+
+See `.github/release-notes-1.3.15.md`.
+
 ## 1.3.14 (HexGhoul): Touka and Ken: companions who teach the wings and the kakujas; Ken's trial; your partner is never hurt by you (testing)
 
 See `.github/release-notes-1.3.14.md`.

@@ -31,6 +31,18 @@ public abstract class Persona {
     /** True for a woman (the one female body: hips, bust; she can carry a child). */
     public abstract boolean female();
 
+    /**
+     * 1.3.14: how much of the female figure's curves it has (1: Eto's, every woman's; Touka a little skinnier), and how wide its whole
+     * body is drawn against a player's (Touka a touch narrower).
+     */
+    public float curves() {
+        return 1.0F;
+    }
+
+    public float build() {
+        return 1.0F;
+    }
+
     /** True if drawn on the slim arms. */
     public boolean slim() {
         return this.female();
@@ -244,6 +256,17 @@ public abstract class Persona {
 
     private static final class Touka extends Persona {
         private Script script;
+
+        /** A little skinnier than Eto: two thirds of her hips and bust, and a touch narrower all over. */
+        @Override
+        public float curves() {
+            return 0.65F;
+        }
+
+        @Override
+        public float build() {
+            return 0.94F;
+        }
 
         /** She goes pink at anything sweet: a kiss she's waiting on, a hand, a hug, being leaned on, a dance. Composure: gone. */
         @Override

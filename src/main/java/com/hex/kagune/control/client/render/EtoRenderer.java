@@ -64,7 +64,8 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
 
     /** 1.3.14: any companion: a woman's figure on the slim arms, or a man's on the wide ones. */
     public EtoRenderer(EntityRendererProvider.Context context, com.hex.kagune.control.npc.Persona persona) {
-        super(context, new EtoModel(context.m_174023_(persona.slim() ? ModelLayers.f_171166_ : ModelLayers.f_171162_), persona.slim(), persona.female()),
+        super(context, new EtoModel(context.m_174023_(persona.slim() ? ModelLayers.f_171166_ : ModelLayers.f_171162_), persona.slim(), persona.female(),
+            persona.curves()),
             0.5F * persona.size());
         this.persona = persona;
         String key = persona.key();
@@ -204,7 +205,8 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
         // 1.3.1: a little smaller than a player (her box is too, EtoRules.SIZE).
         pose.m_85836_();
         float size = this.persona.size();
-        pose.m_85841_(size, size, size);
+        float wide = size * this.persona.build();
+        pose.m_85841_(wide, size, wide);
         try {
             if (turned) {
                 float delta = ((npc.f_20883_ - npc.f_20884_) % 360.0F + 540.0F) % 360.0F - 180.0F;
@@ -302,7 +304,7 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
                 float bounce = EtoClient.jiggle(npc.m_19879_(), y, PaleClient.clock(partialTick));
                 EtoRenderer r = this.renderer;
                 if (r.persona.female()) {
-                    bust(model, pose, buffers.m_6299_(RenderType.m_110473_(r.skin)), light, bounce);
+                    FemaleFigure.bust(model.f_102810_, pose, buffers.m_6299_(RenderType.m_110473_(r.skin)), light, bounce, false, r.persona.curves());
                     // 1.3.10: carrying a child, her belly (the shared female body's).
                     FemaleFigure.belly(model.f_102810_, pose, buffers.m_6299_(RenderType.m_110473_(r.skin)), light,
                         com.hex.kagune.control.client.PregnancyClient.belly(npc, partialTick), false);

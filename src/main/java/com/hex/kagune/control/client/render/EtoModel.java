@@ -21,14 +21,17 @@ final class EtoModel extends PlayerModel<EtoNpc> {
 
     /** 1.3.14: a woman's figure (Eto, Touka) or not (Ken). */
     private final boolean female;
+    /** 1.3.14: how much of the figure's curves (Touka's are a little less than Eto's). */
+    private final float curves;
 
     EtoModel(ModelPart root) {
-        this(root, true, true);
+        this(root, true, true, 1.0F);
     }
 
-    EtoModel(ModelPart root, boolean slim, boolean female) {
+    EtoModel(ModelPart root, boolean slim, boolean female, float curves) {
         super(root, slim);
         this.female = female;
+        this.curves = curves;
     }
 
     @Override
@@ -59,8 +62,8 @@ final class EtoModel extends PlayerModel<EtoNpc> {
             leg.f_233553_ = 1.0F;
             leg.f_233555_ = 1.0F;
         }
-        FemaleFigure.shapeLegs(this);
-        FemaleFigure.spreadLegs(this);
+        FemaleFigure.shapeLegs(this, this.curves);
+        FemaleFigure.spreadLegs(this, this.curves);
     }
 
     /** {@code part} (PlayerAnimator's name {@code name}) moved and turned as the pose has it, from where vanilla put it. */

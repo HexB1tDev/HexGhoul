@@ -27,6 +27,10 @@ public final class CompanionPreview {
     public static void main(String[] args) throws Exception {
         File out = new File(args.length > 0 ? args[0] : "build/preview");
         out.mkdirs();
+        if (args.length > 1 && args[1].equals("frames")) {
+            frames(out);
+            return;
+        }
         String textures = "src/main/resources/assets/hexkagune/textures/entity/";
         List<Shot> touka = new ArrayList<>();
         for (Object[] g : new Object[][] {{EtoGesture.CROSS, 40.0}, {EtoGesture.TAP, 20.0}, {EtoGesture.HUFF, 14.0}, {EtoGesture.SIP, 50.0},
@@ -48,6 +52,55 @@ public final class CompanionPreview {
             ken.add(new Shot((String)g[2] + ", side", EtoPose.gesture((EtoGesture)g[0], (Double)g[1], true), 80.0));
         }
         sheet(new File(out, "ken-poses.png"), "Ken", textures + "ken/ken.png", true, ken);
+    }
+
+    /**
+     * Animation frames (every other tick, ten a second): each gesture looping as it plays, one sheet per frame per companion; a GIF is made
+     * of them by {@code tools/companion-gifs.py}.
+     */
+    static void frames(File out) throws Exception {
+        String textures = "src/main/resources/assets/hexkagune/textures/entity/";
+        Object[][] touka = {{EtoGesture.CROSS, "arms folded"}, {EtoGesture.TAP, "foot tapping"}, {EtoGesture.HUFF, "huff"},
+            {EtoGesture.SIP, "sipping coffee"}, {EtoGesture.WIPE, "drying a cup"}, {EtoGesture.KICKS, "practice kick"}, {EtoGesture.SCOLD, "telling you off"},
+            {EtoGesture.SHY, "shy, turned away"}, {EtoGesture.PECK, "a quick kiss"}, {EtoGesture.KISS, "waiting for a kiss"}};
+        Object[][] ken = {{EtoGesture.CHIN, "hand to chin"}, {EtoGesture.CRACK, "cracking a finger"}, {EtoGesture.BOW, "a bow"},
+            {EtoGesture.READ, "reading"}, {EtoGesture.SIP, "coffee"}, {EtoGesture.KISS, "kiss (waiting)"}, {EtoGesture.PULL, "making out"},
+            {EtoGesture.PECK, "forehead kiss"}, {EtoGesture.HUG, "hug"}, {EtoGesture.KISSED, "after a kiss"}};
+        frames(new File(out, "touka-frames"), textures + "touka/touka.png", false, touka);
+        frames(new File(out, "ken-frames"), textures + "ken/ken.png", true, ken);
+    }
+
+    static void frames(File folder, String skin, boolean leads, Object[][] gestures) throws Exception {
+        folder.mkdirs();
+        PoseRender.skin = ImageIO.read(new File(skin));
+        PoseRender.slim = true;
+        PoseRender.stiff = true;
+        int w = 200;
+        int h = 260;
+        int columns = 5;
+        int rows = (gestures.length + columns - 1) / columns;
+        for (int frame = 0; frame < 60; frame++) {
+            double tick = frame * 2.0;
+            BufferedImage sheet = new BufferedImage(columns * w, rows * (h + 20), BufferedImage.TYPE_INT_RGB);
+            Graphics2D g = sheet.createGraphics();
+            g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+            g.setColor(new Color(34, 34, 40));
+            g.fillRect(0, 0, sheet.getWidth(), sheet.getHeight());
+            for (int i = 0; i < gestures.length; i++) {
+                EtoGesture gesture = (EtoGesture)gestures[i][0];
+                double length = gesture.held() ? 120.0 : gesture.ticks + 10.0;
+                RigPose pose = EtoPose.gesture(gesture, tick % length, leads);
+                BufferedImage image = PoseRender.render(pose == null ? new RigPose() : pose, PoseRender.orbit(22.0, 8.0, 4.4, 0.95), w, h, null);
+                int x = i % columns * w;
+                int y = i / columns * (h + 20);
+                g.drawImage(image, x, y, null);
+                g.setColor(Color.WHITE);
+                g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
+                g.drawString((String)gestures[i][1], x + 8, y + h + 15);
+            }
+            g.dispose();
+            ImageIO.write(sheet, "png", new File(folder, String.format("frame_%03d.png", frame)));
+        }
     }
 
     static void sheet(File file, String title, String skin, boolean slim, List<Shot> shots) throws Exception {

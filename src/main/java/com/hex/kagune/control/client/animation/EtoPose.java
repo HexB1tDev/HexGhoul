@@ -448,12 +448,14 @@ public final class EtoPose {
                 p.leftLegZ = 0.02F;
             }
             case TAP -> {
-                // Hands on her hips, one foot tapping, looking right at them.
-                hips(p);
+                // Arms folded tight, one foot tapping, looking right at them, head tipped: well?
+                folded(p);
                 float tap = (float)Math.abs(Math.sin(t * Math.PI / 7.0));
                 p.rightLegX = -0.22F * tap;
+                p.legHold = 1.0F;
                 p.headX = 0.1F;
-                p.headZ = -0.08F;
+                p.headZ = -0.12F;
+                p.roll = 0.03F;
             }
             case HUFF -> {
                 // Shoulders up on the breath in, dropped on the huff, head snapped away.
@@ -499,10 +501,10 @@ public final class EtoPose {
                 p.drop = -0.4F * shrug;
             }
             case SCOLD -> {
-                // Left hand on her hip, leaning in, a finger wagged at them.
-                p.leftArmX = 0.35F;
-                p.leftArmZ = -0.5F;
-                p.leftArmY = 0.35F;
+                // Leaning in, a finger wagged at them, the other arm stiff at her side.
+                p.leftArmX = 0.2F;
+                p.leftArmZ = -0.1F;
+                p.leftArmY = 0.0F;
                 p.rightArmX = -1.55F;
                 p.rightArmY = 0.12F * (float)Math.sin(t * 1.3);
                 p.rightArmZ = -0.08F;
@@ -579,16 +581,6 @@ public final class EtoPose {
         p.leftArmZ = 0.85F;
         p.rightArmY = 0.3F;
         p.leftArmY = -0.3F;
-    }
-
-    /** 1.3.14: hands on the hips, elbows out. */
-    private static void hips(RigPose p) {
-        p.rightArmX = 0.3F;
-        p.leftArmX = 0.3F;
-        p.rightArmZ = 0.55F;
-        p.leftArmZ = -0.55F;
-        p.rightArmY = -0.35F;
-        p.leftArmY = 0.35F;
     }
 
     /** Waiting for a kiss: hands behind her back, her top half leaning in by {@code lean}, chin up, on her toes, swaying a little. */

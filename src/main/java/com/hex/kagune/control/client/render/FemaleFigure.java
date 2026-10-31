@@ -26,10 +26,15 @@ public final class FemaleFigure {
 
     /** Her legs (and a player model's trousers) drawn wider and deeper; undone by {@link #unshape}. Pivots are moved where they are set. */
     static void shapeLegs(HumanoidModel<?> model) {
+        shapeLegs(model, 1.0F);
+    }
+
+    /** 1.3.14: the same with {@code curves} of the figure's extra width and depth (1: the full figure; Touka is slimmer). */
+    static void shapeLegs(HumanoidModel<?> model, float curves) {
         for (ModelPart leg : legs(model)) {
             if (leg != null) {
-                leg.f_233553_ *= FemaleBody.HIPS;
-                leg.f_233555_ *= FemaleBody.THIGHS;
+                leg.f_233553_ *= 1.0F + (FemaleBody.HIPS - 1.0F) * curves;
+                leg.f_233555_ *= 1.0F + (FemaleBody.THIGHS - 1.0F) * curves;
             }
         }
     }
@@ -62,10 +67,16 @@ public final class FemaleFigure {
 
     /** Her legs' pivots out so the wider legs meet at the middle (where nothing else sets them every frame: an NPC's model). */
     static void spreadLegs(HumanoidModel<?> model) {
+        spreadLegs(model, 1.0F);
+    }
+
+    /** 1.3.14: the same for legs shaped with {@code curves} of the figure (they still meet at the middle). */
+    static void spreadLegs(HumanoidModel<?> model, float curves) {
+        float x = 2.0F * (1.0F + (FemaleBody.HIPS - 1.0F) * curves) - 0.1F;
         ModelPart[] legs = legs(model);
         for (int i = 0; i < legs.length; i++) {
             if (legs[i] != null) {
-                legs[i].f_104200_ = i % 2 == 0 ? -FemaleBody.LEG_X : FemaleBody.LEG_X;
+                legs[i].f_104200_ = i % 2 == 0 ? -x : x;
             }
         }
     }
@@ -91,6 +102,11 @@ public final class FemaleFigure {
      * texels cut out, as the jacket's are).
      */
     public static void bust(ModelPart torso, PoseStack pose, VertexConsumer consumer, int light, float bounce, boolean jacket) {
+        bust(torso, pose, consumer, light, bounce, jacket, 1.0F);
+    }
+
+    /** 1.3.14: the same, standing out {@code curves} as far as the full figure's. */
+    public static void bust(ModelPart torso, PoseStack pose, VertexConsumer consumer, int light, float bounce, boolean jacket, float curves) {
         pose.m_85836_();
         torso.m_104299_(pose);
         Matrix4f m = pose.m_85850_().m_252922_();
@@ -102,7 +118,7 @@ public final class FemaleFigure {
         float tip = FemaleBody.BUST_TIP - bounce;
         float bottom = FemaleBody.BUST_BOTTOM;
         float front = FemaleBody.BUST_FRONT - grow;
-        float out = FemaleBody.BUST_OUT - grow;
+        float out = FemaleBody.BUST_FRONT + (FemaleBody.BUST_OUT - FemaleBody.BUST_FRONT) * curves - grow;
         float v0 = jacket ? 36.0F : 20.0F;
         // The upper slope, then the underside (each a quad), then the two sides (a triangle each, as a quad with a repeated corner).
         quad(consumer, m, n, light, v0, new float[][] {{x0, top, front}, {x1, top, front}, {x1, tip, out}, {x0, tip, out}}, 0.0F, -0.8F, -1.0F);
