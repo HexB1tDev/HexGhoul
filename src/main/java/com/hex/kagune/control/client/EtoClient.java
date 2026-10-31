@@ -20,7 +20,7 @@ import net.minecraftforge.fml.common.Mod;
 public final class EtoClient {
     /** Her as the server last said; {@code ...Began} are client clock times. */
     public record View(EtoGesture gesture, long gestureAt, double gestureBegan, EtoRules.Move move, long moveAt, double moveBegan, int flip, long flipAt,
-                       double flipBegan, boolean turned) {
+                       double flipBegan, boolean turned, int with, String tag) {
         public double gestureAge(double clock) {
             return Math.max(0.0, clock - this.gestureBegan);
         }
@@ -55,7 +55,7 @@ public final class EtoClient {
         double moveBegan = began(world, clock, message.moveAt(), before == null ? Long.MIN_VALUE : before.moveAt(), before == null ? 0.0 : before.moveBegan());
         double flipBegan = began(world, clock, message.flipAt(), before == null ? Long.MIN_VALUE : before.flipAt(), before == null ? 0.0 : before.flipBegan());
         VIEWS.put(message.id(), new View(EtoGesture.byOrdinal(message.gesture()), message.gestureAt(), gestureBegan, EtoRules.Move.byOrdinal(message.move()),
-            message.moveAt(), moveBegan, message.flip(), message.flipAt(), flipBegan, message.turned()));
+            message.moveAt(), moveBegan, message.flip(), message.flipAt(), flipBegan, message.turned(), message.with(), message.tag()));
     }
 
     private static double began(long world, double clock, long at, long was, double wasBegan) {
@@ -123,6 +123,41 @@ public final class EtoClient {
         VIEWS.keySet().removeIf(id -> level.m_6815_(id) == null);
         EYES.keySet().removeIf(id -> level.m_6815_(id) == null);
         JIGGLES.keySet().removeIf(id -> level.m_6815_(id) == null);
+    }
+
+    /**
+     * 1.3.2: a kiss held long enough that she pulls this player in: their view is drawn to her face, a little more each frame, until
+     * she lets go (called each frame before the world is drawn).
+     */
+    public static void pull() {
+        Minecraft minecraft = Minecraft.m_91087_();
+        if (minecraft.f_91073_ == null || minecraft.f_91074_ == null) {
+            return;
+        }
+        int me = minecraft.f_91074_.m_19879_();
+        for (Map.Entry<Integer, View> entry : VIEWS.entrySet()) {
+            View view = entry.getValue();
+            if (view.with() != me || view.gesture() != EtoGesture.PULL) {
+                continue;
+            }
+            net.minecraft.world.entity.Entity her = minecraft.f_91073_.m_6815_(entry.getKey());
+            if (her == null) {
+                continue;
+            }
+            double dx = her.m_20185_() - minecraft.f_91074_.m_20185_();
+            double dy = her.m_20186_() + her.m_20206_() * 0.86 - (minecraft.f_91074_.m_20186_() + minecraft.f_91074_.m_20206_() * 0.9);
+            double dz = her.m_20189_() - minecraft.f_91074_.m_20189_();
+            double flat = Math.sqrt(dx * dx + dz * dz);
+            if (flat < 1.0E-3) {
+                continue;
+            }
+            float yaw = (float)Math.toDegrees(Math.atan2(-dx, dz));
+            float pitch = (float)-Math.toDegrees(Math.atan2(dy, flat));
+            float turn = ((yaw - minecraft.f_91074_.m_146908_()) % 360.0F + 540.0F) % 360.0F - 180.0F;
+            minecraft.f_91074_.m_146922_(minecraft.f_91074_.m_146908_() + turn * 0.12F);
+            minecraft.f_91074_.m_146926_(minecraft.f_91074_.m_146909_() + (pitch - minecraft.f_91074_.m_146909_()) * 0.12F);
+            return;
+        }
     }
 
     @SubscribeEvent

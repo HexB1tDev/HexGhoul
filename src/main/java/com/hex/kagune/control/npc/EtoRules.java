@@ -21,9 +21,11 @@ public final class EtoRules {
     /** Whether a player may wear one kakugan: kept in their profile root once she has made them like her (or they already were). */
     public static final String GRANT = "HexEtoGrant";
 
-    public static final float HEALTH = 150.0F;
-    /** 1.3.1: how much smaller than a player she is: drawn and boxed (a little shorter than one). */
-    public static final float SIZE = 0.93F;
+    /** 1.3.2: stacked: twice the health she had, and her skin hard as armour. */
+    public static final float HEALTH = 300.0F;
+    public static final double ARMOR = 14.0;
+    /** 1.3.1: how much smaller than a player she is: drawn and boxed (1.3.2: smaller again, a head under most players). */
+    public static final float SIZE = 0.86F;
 
     /** 1.3.1: her bust's bounce, a damped spring (per tick squared, per tick) lagging her body's height, and at most how far it lags. */
     public static final double JIGGLE_STIFF = 0.9;
@@ -83,22 +85,26 @@ public final class EtoRules {
     public static final int HUNT_DONE = 512;
     public static final int FLOWER_DONE = 1024;
     public static final int DATING = 2048;
+    /** 1.3.2: her last lesson taught (its quest, {@code eto_one_eye}, is open). */
+    public static final int TAUGHT_TRIAL = 4096;
 
-    /** The three lessons, in the order she teaches them: the quest each opens, the gate it leads to, the regard it waits for. */
+    /**
+     * Her lessons, in the order she teaches them: the quest each opens and the gate it leads to (1.3.2: to anyone who isn't her enemy;
+     * no friendship needed). The last, her trial, opens no gate: done, she makes them one-eyed.
+     */
     public enum Lesson {
-        KICK("eto_kick", Gate.EYES_KICK, 20, TAUGHT_KICK),
-        SOAR("eto_soar", Gate.EYES_SOAR, 40, TAUGHT_SOAR),
-        WITNESS("eto_witness", Gate.EYES_WITNESS, 60, TAUGHT_WITNESS);
+        KICK("eto_kick", Gate.EYES_KICK, TAUGHT_KICK),
+        SOAR("eto_soar", Gate.EYES_SOAR, TAUGHT_SOAR),
+        WITNESS("eto_witness", Gate.EYES_WITNESS, TAUGHT_WITNESS),
+        TRIAL("eto_one_eye", null, TAUGHT_TRIAL);
 
         public final String quest;
         public final Gate gate;
-        public final int regard;
         public final int flag;
 
-        Lesson(String quest, Gate gate, int regard, int flag) {
+        Lesson(String quest, Gate gate, int flag) {
             this.quest = quest;
             this.gate = gate;
-            this.regard = regard;
             this.flag = flag;
         }
 
@@ -119,8 +125,8 @@ public final class EtoRules {
         }
     }
 
-    /** What she makes of a book or a flower held out to her (by item id). */
-    static final Set<String> BOOKS = Set.of("minecraft:book", "minecraft:writable_book", "minecraft:written_book", "minecraft:enchanted_book",
+    /** What she makes of a book or a flower held out to her (by item id). 1.3.2: a written book is a letter ({@link #letter}), not a book. */
+    static final Set<String> BOOKS = Set.of("minecraft:book", "minecraft:writable_book", "minecraft:enchanted_book",
         "minecraft:knowledge_book");
     static final Set<String> FLOWERS = Set.of("minecraft:dandelion", "minecraft:poppy", "minecraft:blue_orchid", "minecraft:allium",
         "minecraft:azure_bluet", "minecraft:red_tulip", "minecraft:orange_tulip", "minecraft:white_tulip", "minecraft:pink_tulip", "minecraft:oxeye_daisy",
@@ -168,6 +174,8 @@ public final class EtoRules {
     public static final int KISS_WAIT = 160;
     public static final int KISS_TAP = 8;
     public static final int KISS_HOLD_MOST = 600;
+    /** 1.3.2: held this long (ticks), she pulls them in: her arms round their head. */
+    public static final int KISS_PULL = 50;
     /** She stops this close to them; farther off than {@link #KISS_AWAY} while she waits, they left her hanging. */
     public static final double KISS_NEAR = 1.3;
     public static final double KISS_AWAY = 4.0;
@@ -176,7 +184,7 @@ public final class EtoRules {
 
     /** Where a kiss is. */
     public enum Kiss {
-        WAIT, BLUSH, KISSED, HANGING
+        WAIT, BLUSH, KISSED, HANGING, PULL
     }
 
     /**
@@ -193,14 +201,17 @@ public final class EtoRules {
             }
             return distance > KISS_AWAY || waited >= KISS_WAIT && !shift ? Kiss.HANGING : Kiss.WAIT;
         }
-        if (now == Kiss.BLUSH) {
+        if (now == Kiss.BLUSH || now == Kiss.PULL) {
             if (!shift) {
                 return Kiss.KISSED;
             }
             if (distance > KISS_AWAY) {
                 return Kiss.HANGING;
             }
-            return waited >= KISS_HOLD_MOST ? Kiss.KISSED : Kiss.BLUSH;
+            if (waited >= KISS_HOLD_MOST) {
+                return Kiss.KISSED;
+            }
+            return now == Kiss.BLUSH && held >= KISS_PULL ? Kiss.PULL : now;
         }
         return now;
     }
@@ -223,33 +234,73 @@ public final class EtoRules {
         return lesson == null ? 0 : lesson.flag;
     }
 
-    /** The next lesson she has to teach (null: all three taught). */
+    /** The next lesson she has to teach (null: all taught). */
     public static Lesson next(QuestLog.Bond bond) {
+        return next(bond, lesson -> false);
+    }
+
+    /**
+     * 1.3.2: the next lesson she has to teach, skipping any already known some other way ({@code known}: its quest done, or the gate
+     * it leads to already open): nobody is sent on a quest they have already finished.
+     */
+    public static Lesson next(QuestLog.Bond bond, java.util.function.Predicate<Lesson> known) {
         for (Lesson lesson : Lesson.values()) {
-            if (!bond.has(lesson.flag)) {
+            if (!bond.has(lesson.flag) && !known.test(lesson)) {
                 return lesson;
             }
         }
         return null;
     }
 
-    /** Why she would not teach {@code lesson} now, or null if she will. {@code beforeDone}: the lesson before it practised (its quest done). */
-    public static Refusal refusal(Lesson lesson, int regard, boolean ghoul, boolean beforeDone) {
+    /**
+     * Why she would not teach {@code lesson} now, or null if she will. {@code beforeDone}: the lesson before it practised (its quest
+     * done, or known already). 1.3.2: no friendship is asked for: anyone she talks to can learn.
+     */
+    public static Refusal refusal(Lesson lesson, boolean ghoul, boolean beforeDone) {
         if (lesson == null) {
             return Refusal.ALL_TAUGHT;
         }
         if (!ghoul) {
             return Refusal.HUMAN;
         }
-        if (lesson.before() != null && !beforeDone) {
-            return Refusal.PRACTISE;
-        }
-        return regard < lesson.regard ? Refusal.NOT_CLOSE : null;
+        return lesson.before() != null && !beforeDone ? Refusal.PRACTISE : null;
     }
 
     /** Why a lesson is refused. */
     public enum Refusal {
-        ALL_TAUGHT, HUMAN, PRACTISE, NOT_CLOSE
+        ALL_TAUGHT, HUMAN, PRACTISE
+    }
+
+    // ---------------------------------------------------------------- 1.3.2: a human's way to one eye
+
+    /** What she asks of a human who wants to be like her, in order, and how many of each: then the surgery. */
+    public enum Pact {
+        NONE(0), HUNT(12), GHOUL(1), MEAT(1), READY(0);
+
+        public final int need;
+
+        Pact(int need) {
+            this.need = need;
+        }
+
+        public static Pact byOrdinal(long ordinal) {
+            Pact[] all = values();
+            return ordinal >= 0 && ordinal < all.length ? all[(int)ordinal] : NONE;
+        }
+
+        /** The step after this one is done. */
+        public Pact then() {
+            return this == READY ? READY : values()[this.ordinal() + 1];
+        }
+    }
+
+    /** {@code amount} more of {@code step} with {@code count} done: the step and count after (the next step, its count from 0, once met). */
+    public static long[] pact(Pact step, int count, Pact doing, int amount) {
+        if (step != doing || step.need <= 0 || amount <= 0) {
+            return new long[] {step.ordinal(), count};
+        }
+        int done = count + amount;
+        return done >= step.need ? new long[] {step.then().ordinal(), 0} : new long[] {step.ordinal(), done};
     }
 
     // ---------------------------------------------------------------- her errands
@@ -331,9 +382,15 @@ public final class EtoRules {
         return step(bond) == Step.ASK ? bond.with(DATING, true) : bond;
     }
 
-    /** Killed by them: she remembers nothing kind of them, only that they are her enemy (her lessons and errands with it). */
+    /** The lesson flags, kept whatever else is forgotten (what was taught stays taught). */
+    static final int TAUGHT = TAUGHT_KICK | TAUGHT_SOAR | TAUGHT_WITNESS | TAUGHT_TRIAL;
+
+    /**
+     * Killed by them: she remembers nothing kind of them, only that they are her enemy (her errands and any dating with it). 1.3.2: what
+     * she taught stays taught: a lesson is never asked for twice.
+     */
     public static QuestLog.Bond killedBy(QuestLog.Bond bond) {
-        return new QuestLog.Bond(NpcBonds.LEAST, bond.chatted(), bond.flags() & NpcBonds.MET, 0);
+        return new QuestLog.Bond(NpcBonds.LEAST, bond.chatted(), bond.flags() & (NpcBonds.MET | NpcBonds.ASKED | TAUGHT), 0);
     }
 
     // ---------------------------------------------------------------- what she is given
@@ -344,6 +401,11 @@ public final class EtoRules {
 
     public static boolean flower(String item) {
         return item != null && FLOWERS.contains(item);
+    }
+
+    /** 1.3.2: a letter (a written book): an apology, or just a letter. */
+    public static boolean letter(String item) {
+        return "minecraft:written_book".equals(item);
     }
 
     // ---------------------------------------------------------------- one eye
@@ -395,10 +457,54 @@ public final class EtoRules {
     public static final float BLITZ_DAMAGE = 7.0F;
     public static final float PUNCH_DAMAGE = 14.0F;
     public static final float KICK_DAMAGE = 8.0F;
-    /** Below this share of her health she transforms: her eye open, faster, harder. */
-    public static final float TRANSFORM_AT = 0.5F;
-    public static final float TRANSFORM_SPEED = 1.3F;
-    public static final float TRANSFORM_POWER = 1.35F;
+    /** Below this share of her health she transforms: her eye open, faster, harder (1.3.2: she gets serious, {@link Phase}). */
+    public static final float TRANSFORM_AT = 0.6F;
+
+    /**
+     * 1.3.2: how seriously she takes a fight, by what is left of her health. Calm, she plays with them. Serious, her eye opens, her
+     * kagune comes out (shards at range), she is faster, harder to hurt, and her moves come back sooner. Maniac, below a third, she
+     * laughs, and stops holding anything back: storms of shards, her moves on top of each other, hard as stone.
+     */
+    public enum Phase {
+        CALM(1.0F, 1.0F, -1, -1, 1.05),
+        SERIOUS(1.4F, 0.6F, 0, 0, 1.3),
+        MANIAC(1.8F, 0.35F, 1, 1, 1.5);
+
+        /** What her blows deal, times. */
+        public final float power;
+        /** Her moves' cooldowns, times. */
+        public final float cooldowns;
+        /** The speed and resistance she has (effect levels; -1 none). */
+        public final int speed;
+        public final int resistance;
+        /** How fast she chases. */
+        public final double chase;
+
+        Phase(float power, float cooldowns, int speed, int resistance, double chase) {
+            this.power = power;
+            this.cooldowns = cooldowns;
+            this.speed = speed;
+            this.resistance = resistance;
+            this.chase = chase;
+        }
+
+        public static Phase of(float health) {
+            return health < MANIAC_AT ? MANIAC : health < TRANSFORM_AT ? SERIOUS : CALM;
+        }
+    }
+
+    public static final float MANIAC_AT = 0.3F;
+    /** Her shards (serious and on): how far they reach, how fast they fly, how often a volley, how many a volley, what each deals. */
+    public static final double SHARD_RANGE = 18.0;
+    public static final double SHARD_NEAREST = 3.5;
+    public static final double SHARD_SPEED = 1.6;
+    public static final int SHARD_EVERY = 44;
+    public static final int SHARDS = 4;
+    public static final float SHARD_DAMAGE = 5.0F;
+    /** Maniac: a storm, a fan of shards from both shoulders, this often. */
+    public static final int STORM_EVERY = 120;
+    public static final int STORM_SHOTS = 11;
+    public static final double STORM_SPREAD = 32.0;
     /** Out of a fight this long (ticks), she heals this much a second. */
     public static final long CALM_TICKS = 100L;
     public static final float HEAL_PER_SECOND = 2.0F;
@@ -409,14 +515,23 @@ public final class EtoRules {
 
         /** As now, {@code move} used at {@code now}. */
         public Ready used(Move move, long now) {
+            return this.used(move, now, 1.0F);
+        }
+
+        /** As now, {@code move} used at {@code now}, its cooldown {@code factor} times as long (1.3.2: shorter as she gets serious). */
+        public Ready used(Move move, long now, float factor) {
             return switch (move) {
-                case STRIKE -> new Ready(now + STRIKE_EVERY, this.blitz, this.punch, this.kick, this.flip);
-                case BLITZ -> new Ready(now + STRIKE_EVERY, now + BLITZ_EVERY, this.punch, this.kick, this.flip);
-                case PUNCH -> new Ready(now + STRIKE_EVERY + PUNCH_TICKS, this.blitz, now + PUNCH_EVERY, this.kick, this.flip);
-                case KICK -> new Ready(now + STRIKE_EVERY, this.blitz, this.punch, now + KICK_EVERY, this.flip);
-                case FLIP_FORWARD, FLIP_BACK -> new Ready(this.strike, this.blitz, this.punch, this.kick, now + FLIP_EVERY);
+                case STRIKE -> new Ready(now + scaled(STRIKE_EVERY, factor), this.blitz, this.punch, this.kick, this.flip);
+                case BLITZ -> new Ready(now + scaled(STRIKE_EVERY, factor), now + scaled(BLITZ_EVERY, factor), this.punch, this.kick, this.flip);
+                case PUNCH -> new Ready(now + scaled(STRIKE_EVERY, factor) + PUNCH_TICKS, this.blitz, now + scaled(PUNCH_EVERY, factor), this.kick, this.flip);
+                case KICK -> new Ready(now + scaled(STRIKE_EVERY, factor), this.blitz, this.punch, now + scaled(KICK_EVERY, factor), this.flip);
+                case FLIP_FORWARD, FLIP_BACK -> new Ready(this.strike, this.blitz, this.punch, this.kick, now + scaled(FLIP_EVERY, factor));
                 default -> this;
             };
+        }
+
+        private static long scaled(int ticks, float factor) {
+            return Math.max(2L, Math.round(ticks * factor));
         }
     }
 
@@ -440,6 +555,10 @@ public final class EtoRules {
         if (flip && transformed && roll < 0.2) {
             return Move.FLIP_BACK;
         }
+        // 1.3.2: maniac, a Speed Blitz straight into whatever is close again, as soon as it is back.
+        if (Phase.of(health) == Phase.MANIAC && now >= ready.blitz() && sees && roll < 0.3) {
+            return Move.BLITZ;
+        }
         if (now >= ready.punch() && (tough || transformed || roll < 0.35)) {
             return Move.PUNCH;
         }
@@ -449,8 +568,8 @@ public final class EtoRules {
         return distance <= STRIKE_REACH + 0.3 && now >= ready.strike() ? Move.STRIKE : Move.NONE;
     }
 
-    /** What a blow of hers deals: {@code base}, more once she has transformed. */
+    /** What a blow of hers deals: {@code base}, more the more serious she is ({@link Phase#power}). */
     public static float damage(float base, float health) {
-        return health < TRANSFORM_AT ? base * TRANSFORM_POWER : base;
+        return base * Phase.of(health).power;
     }
 }

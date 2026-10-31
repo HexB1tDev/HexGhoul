@@ -90,6 +90,12 @@ public final class QuestBook {
             "One punch is rude. Wind it all the way back, and make them watch.", 0, List.of("eto_soar"), null,
             List.of(of("Land full-charge Big Punches", Signal.PUNCH, 8, Tags.FULL), of("Flip", Signal.FLIP, 30)),
             Reward.mastery(50).opens(Gate.EYES_WITNESS)));
+        // 1.3.2: her last lesson; done, she makes them one-eyed (EtoServer), whoever they are to her.
+        add(new Quest("eto_one_eye", Line.GHOUL, null, "Eto's Lesson: One Eye",
+            "Kill in the dark with your eye open until the dark feels like home. Bleed until it stops scaring you. Then come back and lie down.",
+            0, List.of("eto_witness"), null,
+            List.of(of("Kill at night, your eye open", Signal.KILL, 15, Tags.EYES, Tags.NIGHT), of("Live through the brink", Signal.BRINK, 3)),
+            Reward.mastery(60)));
 
         // ------------------------------------------------------------------ Rinkaku: the one-eyed king
         add(new Quest("rizes_gift", Line.PATH, KagunePath.RINKAKU, "Rize's Gift",

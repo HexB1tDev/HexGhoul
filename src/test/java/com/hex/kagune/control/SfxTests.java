@@ -21,7 +21,10 @@ public final class SfxTests {
      * pack has nothing for: a heartbeat, fire.
      */
     private static final Set<String> KEPT_VANILLA = Set.of("ui.toast.challenge_complete", "entity.player.levelup", "entity.warden.heartbeat",
-        "entity.generic.burn", "block.fire.extinguish");
+        "entity.generic.burn", "block.fire.extinguish",
+        // 1.3.2: a partner's private chimes (interface cues, as the journal's) and the night's cutscene (a candle, the sheets, a rooster).
+        "entity.experience_orb.pickup", "block.note_block.chime", "block.note_block.harp", "block.bell.use", "block.candle.extinguish",
+        "block.wool.step", "entity.chicken.ambient");
     private static final Path SOUNDS = Path.of("src/main/resources/assets/hexkagune/sounds");
 
     private static void check(boolean condition, String description) {

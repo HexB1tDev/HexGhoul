@@ -13,5 +13,6 @@ public class Item implements net.minecraft.world.level.ItemLike {
         }
 
         /** food */ public Properties m_41489_(net.minecraft.world.food.FoodProperties food) { throw new UnsupportedOperationException(); }
+        /** stacksTo (1.3.2) */ public Properties m_41487_(int count) { throw new UnsupportedOperationException(); }
     }
 }

@@ -98,17 +98,26 @@ public final class QuestLog {
         if (!quest.on(path) || mastery < quest.mastery()) {
             return State.LOCKED;
         }
+        // 1.3.2: a quest whose every gate is already open (another way led there first) is done: never asked of them again.
+        if (this.learned(quest)) {
+            return State.DONE;
+        }
         // 1.3.0: one of Eto's lessons waits for her to teach it.
         int lesson = com.hex.kagune.control.npc.EtoRules.lessonFlag(quest.id());
         if (lesson != 0 && !this.bond(com.hex.kagune.control.npc.EtoRules.KEY).has(lesson)) {
             return State.LOCKED;
         }
         for (String before : quest.after()) {
-            if (this.ended.get(before) != State.DONE) {
+            if (this.ended.get(before) != State.DONE && !this.learned(QuestBook.get(before))) {
                 return State.LOCKED;
             }
         }
         return State.OPEN;
+    }
+
+    /** 1.3.2: true if {@code quest} opens gates and every one of them is open already. */
+    boolean learned(Quest quest) {
+        return quest != null && !quest.reward().gates().isEmpty() && this.gates.containsAll(quest.reward().gates());
     }
 
     /** Progress on {@code quest}'s objective {@code index}. */

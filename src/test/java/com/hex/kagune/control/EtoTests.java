@@ -4,10 +4,16 @@ import com.hex.kagune.control.client.animation.EtoPose;
 import com.hex.kagune.control.client.animation.RigPose;
 import com.hex.kagune.control.kakugan.KakuganEyes;
 import com.hex.kagune.control.npc.EtoGesture;
+import com.hex.kagune.control.npc.EtoLines;
+import com.hex.kagune.control.npc.EtoMood;
 import com.hex.kagune.control.npc.EtoRules;
 import com.hex.kagune.control.npc.EtoTalk;
+import com.hex.kagune.control.npc.EtoTopics;
 import com.hex.kagune.control.npc.NpcBonds;
+import com.hex.kagune.control.npc.NpcMemory;
 import com.hex.kagune.control.npc.NpcTalk;
+import com.hex.kagune.control.npc.Romance;
+import com.hex.kagune.control.npc.UniqueNpc;
 import com.hex.kagune.control.quest.Gate;
 import com.hex.kagune.control.quest.Quest;
 import com.hex.kagune.control.quest.QuestBook;
@@ -19,7 +25,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-/** 1.3.0: Eto: her eye's night, her blinks, her lessons, her errands, a kiss, her talk, the one-eye grant, her fight. */
+/**
+ * 1.3.0: Eto: her eye's night, her blinks, her lessons, her errands, a kiss, her talk, the one-eye grant, her fight. 1.3.2: whose she is,
+ * her pact and trial, her topics, love and rings, what players and NPCs remember, one of her in a world, her moods, her fight's phases.
+ */
 public final class EtoTests {
     static int passed;
     static final List<String> FAILURES = new ArrayList<>();
@@ -42,6 +51,11 @@ public final class EtoTests {
         grant();
         fight();
         poses();
+        romance();
+        memory();
+        unique();
+        moods();
+        phases();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -95,19 +109,36 @@ public final class EtoTests {
         QuestLog log = new QuestLog();
         for (EtoRules.Lesson lesson : EtoRules.Lesson.values()) {
             Quest quest = QuestBook.get(lesson.quest);
-            check(quest != null && quest.opens(lesson.gate) && EtoRules.lessonFlag(lesson.quest) == lesson.flag, lesson + ": its quest opens its gate");
+            check(quest != null && (lesson.gate == null ? quest.reward().gates().isEmpty() : quest.opens(lesson.gate))
+                && EtoRules.lessonFlag(lesson.quest) == lesson.flag, lesson + ": its quest opens its gate (her trial, none)");
             check(log.state(quest, KagunePath.RINKAKU, 1000) == QuestLog.State.LOCKED, lesson + ": locked until she teaches it, whatever the mastery");
         }
         check(EtoRules.lessonFlag("light_feet") == 0 && QuestBook.openers(Gate.EYES_KICK).size() >= 3, "the old ways in stay; hers is one more");
         QuestLog.Bond bond = QuestLog.Bond.NONE;
         check(EtoRules.next(bond) == EtoRules.Lesson.KICK, "the Speed Kick first");
-        check(EtoRules.refusal(EtoRules.Lesson.KICK, 19, true, true) == EtoRules.Refusal.NOT_CLOSE
-            && EtoRules.refusal(EtoRules.Lesson.KICK, 20, true, true) == null, "taught at 20");
-        check(EtoRules.refusal(EtoRules.Lesson.KICK, 100, false, true) == EtoRules.Refusal.HUMAN, "never to a human");
-        check(EtoRules.refusal(EtoRules.Lesson.SOAR, 39, true, true) == EtoRules.Refusal.NOT_CLOSE && EtoRules.refusal(EtoRules.Lesson.SOAR, 40, true, true) == null
-            && EtoRules.refusal(EtoRules.Lesson.WITNESS, 60, true, true) == null, "then at 40 and 60");
-        check(EtoRules.refusal(EtoRules.Lesson.SOAR, 100, true, false) == EtoRules.Refusal.PRACTISE, "not before the last one is practised");
-        check(EtoRules.refusal(null, 100, true, true) == EtoRules.Refusal.ALL_TAUGHT, "three lessons, no more");
+        check(EtoRules.refusal(EtoRules.Lesson.KICK, true, true) == null && EtoRules.refusal(EtoRules.Lesson.WITNESS, true, true) == null,
+            "taught to anyone she talks to: no friendship needed");
+        check(EtoRules.refusal(EtoRules.Lesson.KICK, false, true) == EtoRules.Refusal.HUMAN, "never to a human (a human has her pact)");
+        check(EtoRules.refusal(EtoRules.Lesson.SOAR, true, false) == EtoRules.Refusal.PRACTISE, "not before the last one is practised");
+        check(EtoRules.refusal(null, true, true) == EtoRules.Refusal.ALL_TAUGHT, "four lessons, no more");
+        check(EtoRules.next(bond, lesson -> lesson == EtoRules.Lesson.KICK) == EtoRules.Lesson.SOAR
+            && EtoRules.next(bond, lesson -> lesson != EtoRules.Lesson.TRIAL) == EtoRules.Lesson.TRIAL && EtoRules.next(bond, lesson -> true) == null,
+            "a lesson already known some other way is never taught again");
+        QuestLog elsewhere = new QuestLog();
+        Quest other = null;
+        for (Quest opener : QuestBook.openers(Gate.EYES_KICK)) {
+            if (EtoRules.lesson(opener.id()) == null && opener.on(KagunePath.RINKAKU)) {
+                other = opener;
+            }
+        }
+        check(other != null, "another way to the Speed Kick");
+        if (other != null) {
+            elsewhere.complete(other);
+            check(elsewhere.state(QuestBook.get("eto_kick"), KagunePath.RINKAKU, 0) == QuestLog.State.DONE,
+                "its gate open another way, her lesson's quest is done: never asked of them");
+            elsewhere.bond(EtoRules.KEY, QuestLog.Bond.NONE.with(EtoRules.TAUGHT_SOAR, true));
+            check(elsewhere.state(QuestBook.get("eto_soar"), KagunePath.RINKAKU, 0) == QuestLog.State.OPEN, "and the one after it opens as if it were done");
+        }
         log.bond(EtoRules.KEY, bond.with(EtoRules.TAUGHT_KICK, true).regard(20));
         Quest kick = QuestBook.get("eto_kick");
         Quest soar = QuestBook.get("eto_soar");
@@ -160,8 +191,11 @@ public final class EtoTests {
         QuestLog.Bond killed = EtoRules.killedBy(bond);
         check(killed.regard() <= NpcBonds.ENEMY && !killed.has(EtoRules.DATING) && !killed.has(EtoRules.LINE_ON) && killed.has(NpcBonds.MET)
             && !EtoTalk.talks(killed.regard()), "killed by them: her enemy, all of it gone");
-        check(EtoRules.book("minecraft:book") && EtoRules.book("minecraft:written_book") && !EtoRules.book("minecraft:paper") && !EtoRules.book(null),
+        check(EtoRules.killedBy(bond.with(EtoRules.TAUGHT_KICK, true).with(EtoRules.TAUGHT_SOAR, true)).has(EtoRules.TAUGHT_SOAR),
+            "what she taught stays taught: no lesson asked for twice");
+        check(EtoRules.book("minecraft:book") && !EtoRules.book("minecraft:written_book") && !EtoRules.book("minecraft:paper") && !EtoRules.book(null),
             "books are books");
+        check(EtoRules.letter("minecraft:written_book") && !EtoRules.letter("minecraft:book"), "a written book is a letter");
         check(EtoRules.flower("minecraft:poppy") && EtoRules.flower("minecraft:cornflower") && !EtoRules.flower("minecraft:oak_sapling"), "flowers are flowers");
         long far = 9_000_000L;
         check(EtoRules.giftedOn(EtoRules.gifted(QuestLog.Bond.NONE, far), far) && EtoRules.giftDay(QuestLog.Bond.NONE) == -1L, "any day fits");
@@ -179,7 +213,12 @@ public final class EtoTests {
         check(EtoRules.kiss(wait, 5, false, 0, 3, 1.0) == EtoRules.Kiss.KISSED, "a tap of shift: a kiss");
         check(EtoRules.kiss(wait, 5, true, EtoRules.KISS_TAP - 1, 0, 1.0) == EtoRules.Kiss.WAIT, "a short hold is still a tap so far");
         check(EtoRules.kiss(wait, 5, true, EtoRules.KISS_TAP, 0, 1.0) == EtoRules.Kiss.BLUSH, "held: she blushes");
-        check(EtoRules.kiss(EtoRules.Kiss.BLUSH, 100, true, 100, 0, 1.0) == EtoRules.Kiss.BLUSH, "and stays while it is held");
+        check(EtoRules.kiss(EtoRules.Kiss.BLUSH, 100, true, EtoRules.KISS_PULL - 1, 0, 1.0) == EtoRules.Kiss.BLUSH, "and stays while it is held");
+        check(EtoRules.kiss(EtoRules.Kiss.BLUSH, 100, true, EtoRules.KISS_PULL, 0, 1.0) == EtoRules.Kiss.PULL
+            && EtoRules.kiss(EtoRules.Kiss.PULL, 200, true, 300, 0, 1.0) == EtoRules.Kiss.PULL, "held long enough, she pulls them in, and holds on");
+        check(EtoRules.kiss(EtoRules.Kiss.PULL, 200, false, 0, 300, 1.0) == EtoRules.Kiss.KISSED
+            && EtoRules.kiss(EtoRules.Kiss.PULL, EtoRules.KISS_HOLD_MOST, true, 900, 0, 1.0) == EtoRules.Kiss.KISSED
+            && EtoRules.kiss(EtoRules.Kiss.PULL, 200, true, 300, 0, EtoRules.KISS_AWAY + 1.0) == EtoRules.Kiss.HANGING, "let go, or too long: kissed; gone: hanging");
         check(EtoRules.kiss(EtoRules.Kiss.BLUSH, 100, false, 0, 100, 1.0) == EtoRules.Kiss.KISSED, "let go: kissed");
         check(EtoRules.kiss(EtoRules.Kiss.BLUSH, EtoRules.KISS_HOLD_MOST, true, 600, 0, 1.0) == EtoRules.Kiss.KISSED, "never forever");
         check(EtoRules.kiss(wait, EtoRules.KISS_WAIT, false, 0, 0, 1.0) == EtoRules.Kiss.HANGING, "nothing: left hanging");
@@ -197,13 +236,14 @@ public final class EtoTests {
         EtoTalk.Context stranger = context(0, 0, 0, false, false, false, EtoRules.Lesson.KICK, false);
         List<NpcTalk.Choice> choices = EtoTalk.choices(stranger);
         check(choices.contains(NpcTalk.Choice.WHO) && choices.contains(NpcTalk.Choice.CHAT) && choices.contains(NpcTalk.Choice.LEAVE)
-            && !choices.contains(NpcTalk.Choice.LESSON) && !choices.contains(NpcTalk.Choice.KISS) && !choices.contains(NpcTalk.Choice.FAVOUR),
-            "a human stranger: who, chat, leave; no lessons, no kisses, no errands");
+            && choices.contains(NpcTalk.Choice.LESSON) && !choices.contains(NpcTalk.Choice.SWEET) && !choices.contains(NpcTalk.Choice.FAVOUR),
+            "a human stranger: who, chat, her pact, leave; nothing sweet, no errands");
+        check(EtoTalk.answer(stranger, NpcTalk.Choice.LESSON).effect() == EtoTalk.Effect.PACT, "a human asking to learn is told her price");
         EtoTalk.Context ghoul = context(25, 0, 0, true, true, false, EtoRules.Lesson.KICK, false);
         check(EtoTalk.choices(ghoul).contains(NpcTalk.Choice.LESSON) && EtoTalk.choices(ghoul).contains(NpcTalk.Choice.BOOK), "a ghoul with a book");
         check(EtoTalk.answer(ghoul, NpcTalk.Choice.LESSON).effect() == EtoTalk.Effect.TEACH, "she teaches at 25");
-        check(EtoTalk.answer(context(10, 0, 0, true, false, false, EtoRules.Lesson.KICK, false), NpcTalk.Choice.LESSON).effect() == EtoTalk.Effect.NONE,
-            "not at 10");
+        check(EtoTalk.answer(context(10, 0, 0, true, false, false, EtoRules.Lesson.KICK, false), NpcTalk.Choice.LESSON).effect() == EtoTalk.Effect.TEACH,
+            "and at 10: no friendship needed");
         check(EtoTalk.answer(ghoul, NpcTalk.Choice.BOOK).regard() == EtoRules.GIFT && EtoTalk.answer(ghoul, NpcTalk.Choice.BOOK).effect() == EtoTalk.Effect.BOOK,
             "a book raises her regard");
         EtoTalk.Context gifted = new EtoTalk.Context(25, 0, 0, true, true, true, true, false, null, true, false, 3);
@@ -220,14 +260,16 @@ public final class EtoTests {
         int dating = EtoRules.LINE_ON | EtoRules.BOOKS_DONE | EtoRules.HUNT_DONE | EtoRules.FLOWER_DONE | EtoRules.DATING;
         EtoTalk.Context date = context(100, dating, 0, false, false, false, null, false);
         List<NpcTalk.Choice> dated = EtoTalk.choices(date);
-        check(dated.contains(NpcTalk.Choice.KISS) && dated.contains(NpcTalk.Choice.HUG) && dated.contains(NpcTalk.Choice.SURGERY)
-            && !dated.contains(NpcTalk.Choice.INSULT) && dated.size() <= 12, "dating: kiss, hug, the surgery");
+        List<NpcTalk.Choice> sweet = EtoTalk.sweet(date, "").choices();
+        check(dated.contains(NpcTalk.Choice.SWEET) && !dated.contains(NpcTalk.Choice.INSULT) && dated.contains(NpcTalk.Choice.TEASE) && dated.size() <= 12
+            && sweet.contains(NpcTalk.Choice.KISS) && sweet.contains(NpcTalk.Choice.HUG) && sweet.contains(NpcTalk.Choice.SURGERY) && sweet.size() <= 12,
+            "dating: her sweet side (kiss, hug, the surgery) on a page of its own");
         check(EtoTalk.answer(date, NpcTalk.Choice.KISS).effect() == EtoTalk.Effect.KISS && EtoTalk.answer(date, NpcTalk.Choice.HUG).effect() == EtoTalk.Effect.HUG,
             "a kiss and a hug from the menu");
         check(EtoTalk.answer(date, NpcTalk.Choice.SURGERY).effect() == EtoTalk.Effect.OFFER && EtoTalk.offer().contains(NpcTalk.Choice.ACCEPT)
             && EtoTalk.answer(date, NpcTalk.Choice.ACCEPT).effect() == EtoTalk.Effect.SURGERY, "the surgery is offered, then done");
         EtoTalk.Context done = context(100, dating, 0, true, false, false, null, true);
-        check(!EtoTalk.choices(done).contains(NpcTalk.Choice.SURGERY) && EtoTalk.answer(done, NpcTalk.Choice.ACCEPT).effect() == EtoTalk.Effect.NONE,
+        check(!EtoTalk.sweet(done, "").choices().contains(NpcTalk.Choice.SURGERY) && EtoTalk.answer(done, NpcTalk.Choice.SURGERY).effect() == EtoTalk.Effect.NONE,
             "once only");
         check(EtoTalk.answer(context(-30, 0, 0, false, false, false, null, false), NpcTalk.Choice.INSULT).effect() == EtoTalk.Effect.ANGER
             && EtoTalk.answer(stranger, NpcTalk.Choice.INSULT).effect() == EtoTalk.Effect.CLOSE, "an insult: cold, or a fight");
@@ -243,7 +285,190 @@ public final class EtoTests {
         for (NpcTalk.Choice choice : NpcTalk.Choice.values()) {
             check(EtoTalk.answer(date, choice) != null, "an answer to everything: " + choice);
         }
-        check(NpcTalk.Choice.byOrdinal(11) == NpcTalk.Choice.LEAVE && NpcTalk.Choice.values().length == 19, "her choices are at the end, the old ordinals kept");
+        check(NpcTalk.Choice.byOrdinal(11) == NpcTalk.Choice.LEAVE && NpcTalk.Choice.byOrdinal(18) == NpcTalk.Choice.SURGERY
+            && NpcTalk.Choice.values().length == 35 && NpcTalk.Choice.SAY_3.say() == 2 && NpcTalk.Choice.LEAVE.say() == -1,
+            "new choices at the end, the old ordinals kept");
+        claimed();
+        student();
+        topics();
+    }
+
+    /** A full context, as the server makes one. */
+    static EtoTalk.Context full(int regard, int flags, boolean ghoul, Romance.Stage stage, String claimedBy, long dayTime, EtoMood mood, boolean ring,
+                                EtoRules.Pact pact, boolean trialDone, boolean granted, EtoRules.Lesson next, int seed) {
+        return new EtoTalk.Context(regard, flags, 0, ghoul, false, false, true, true, next, true, granted, seed, stage, claimedBy, false, dayTime, mood, 3L,
+            0L, "wolf", ring, true, true, pact, 0, trialDone, false, "Steve", false);
+    }
+
+    static void claimed() {
+        EtoTalk.Context other = full(100, NpcBonds.MET, true, Romance.Stage.NONE, "Alex", 6000L, EtoMood.CLAIMED, true, EtoRules.Pact.NONE, false, false,
+            EtoRules.Lesson.KICK, 4);
+        List<NpcTalk.Choice> cold = EtoTalk.choices(other);
+        check(cold.contains(NpcTalk.Choice.LESSON) && !cold.contains(NpcTalk.Choice.BOOK) && !cold.contains(NpcTalk.Choice.FLOWER)
+            && !cold.contains(NpcTalk.Choice.PUPPY) && !cold.contains(NpcTalk.Choice.SWEET) && !cold.contains(NpcTalk.Choice.FAVOUR)
+            && !cold.contains(NpcTalk.Choice.FOLLOW) && !cold.contains(NpcTalk.Choice.SAY_8), "someone else's: lessons only, no gifts, nothing sweet");
+        check(EtoTalk.greeting(other).contains("Alex") || EtoTalk.greeting(other.reseed(5)).contains("Alex") || EtoTalk.greeting(other.reseed(6)).contains("Alex"),
+            "she says whose she is");
+        check(EtoTalk.answer(other, NpcTalk.Choice.ASK_OUT).effect() == EtoTalk.Effect.NONE && EtoTalk.answer(other, NpcTalk.Choice.FAVOUR).effect()
+            == EtoTalk.Effect.NONE, "and is not asked out");
+        check(EtoTalk.answer(other, NpcTalk.Choice.LESSON).effect() == EtoTalk.Effect.TEACH, "but still teaches");
+        EtoTalk.Context wife = full(100, EtoRules.DATING, true, Romance.Stage.MARRIED, null, 18000L, EtoMood.HAPPY, true, EtoRules.Pact.NONE, false, false,
+            null, 2);
+        check(!EtoTalk.sweet(wife, "").choices().contains(NpcTalk.Choice.PROPOSE) && EtoTalk.sweet(wife, "").choices().contains(NpcTalk.Choice.NIGHT)
+            && EtoTalk.answer(wife, NpcTalk.Choice.NIGHT).effect() == EtoTalk.Effect.NIGHT, "married: no ring twice; the night, at night");
+        EtoTalk.Context dating = full(100, EtoRules.DATING, true, Romance.Stage.DATING, null, 6000L, EtoMood.HAPPY, true, EtoRules.Pact.NONE, false, false,
+            null, 2);
+        check(EtoTalk.sweet(dating, "").choices().contains(NpcTalk.Choice.PROPOSE) && !EtoTalk.sweet(dating, "").choices().contains(NpcTalk.Choice.NIGHT)
+            && EtoTalk.answer(dating, NpcTalk.Choice.NIGHT).effect() == EtoTalk.Effect.NONE, "dating with a ring: the proposal; by day, no night");
+        check(EtoTalk.choices(dating).contains(NpcTalk.Choice.SAY_8), "many gifts at once: a page of their own");
+        check(!EtoTalk.choices(full(100, NpcBonds.ASKED, true, Romance.Stage.NONE, null, 6000L, EtoMood.HAPPY, false, EtoRules.Pact.NONE, false, false,
+            null, 1)).contains(NpcTalk.Choice.WHO), "'Who are you?' once: she's told them");
+        check(!EtoLines.surgeryWords(dating).equals(EtoLines.surgeryWords(other)) && EtoLines.surgeryWords(other.reseed(0)).contains("crying"),
+            "the surgery: warm for hers, cold for anyone else");
+        for (EtoMood mood : EtoMood.values()) {
+            for (int seed = 0; seed < 8; seed++) {
+                for (Romance.Stage stage : Romance.Stage.values()) {
+                    EtoTalk.Context c = full(stage.together() ? 100 : 30, 0, seed % 2 == 0, stage, null, seed * 3000L, mood, false, EtoRules.Pact.NONE, false,
+                        false, null, seed);
+                    String hello = EtoTalk.greeting(c);
+                    check(!hello.isEmpty() && !hello.contains("{") && hello.getBytes(java.nio.charset.StandardCharsets.UTF_8).length < 1024,
+                        "a greeting for every mood and stage: " + mood + " " + stage);
+                    check(!EtoLines.approach(c).contains("{") && !EtoLines.welcome(c).contains("{"), "her words come with names: " + mood);
+                }
+            }
+        }
+    }
+
+    static void student() {
+        EtoTalk.Context human = full(0, 0, false, Romance.Stage.NONE, null, 6000L, EtoMood.WARY, false, EtoRules.Pact.READY, false, false, null, 1);
+        check(EtoTalk.choices(human).contains(NpcTalk.Choice.TRIAL) && EtoTalk.answer(human, NpcTalk.Choice.TRIAL).effect() == EtoTalk.Effect.OFFER,
+            "a human who paid her price: the one eye offered");
+        EtoTalk.Context ghoul = full(0, 0, true, Romance.Stage.NONE, null, 6000L, EtoMood.WARY, false, EtoRules.Pact.NONE, true, false, null, 1);
+        check(EtoTalk.choices(ghoul).contains(NpcTalk.Choice.TRIAL) && EtoTalk.answer(ghoul, NpcTalk.Choice.TRIAL).effect() == EtoTalk.Effect.OFFER,
+            "a ghoul who passed her trial: the one eye offered");
+        check(!EtoTalk.choices(full(0, 0, true, Romance.Stage.NONE, null, 6000L, EtoMood.WARY, false, EtoRules.Pact.NONE, true, true, null, 1))
+            .contains(NpcTalk.Choice.TRIAL), "once made one-eyed, never again");
+        long[] step = EtoRules.pact(EtoRules.Pact.HUNT, 11, EtoRules.Pact.HUNT, 1);
+        check(step[0] == EtoRules.Pact.GHOUL.ordinal() && step[1] == 0, "twelve at night: then a ghoul");
+        check(EtoRules.pact(EtoRules.Pact.HUNT, 3, EtoRules.Pact.GHOUL, 1)[1] == 3 && EtoRules.pact(EtoRules.Pact.MEAT, 0, EtoRules.Pact.MEAT, 1)[0]
+            == EtoRules.Pact.READY.ordinal() && EtoRules.Pact.READY.then() == EtoRules.Pact.READY, "only the step on counts; then she's ready for them");
+        Quest trial = QuestBook.get("eto_one_eye");
+        check(trial != null && trial.after().contains("eto_witness") && EtoRules.lessonFlag("eto_one_eye") == EtoRules.TAUGHT_TRIAL,
+            "her last lesson comes after the third, taught like the rest");
+    }
+
+    static void topics() {
+        for (Romance.Stage stage : Romance.Stage.values()) {
+            for (EtoMood mood : EtoMood.values()) {
+                for (int seed = 0; seed < 6; seed++) {
+                    for (boolean ghoul : new boolean[] {false, true}) {
+                        String claimedBy = seed == 5 && !stage.together() ? "Alex" : null;
+                        EtoTalk.Context c = full(stage.together() ? 100 : seed * 20, 0, ghoul, stage, claimedBy, 3000L + seed * 4000L, mood, false,
+                            EtoRules.Pact.NONE, false, false, null, seed);
+                        EtoTalk.Page talk = EtoTalk.talk(c, "");
+                        check(talk.options().size() <= 12 && talk.options().size() >= 4, "a handful of topics to talk about: " + stage + " " + mood);
+                        for (EtoTopics.Topic topic : EtoTopics.open(c)) {
+                            EtoTalk.Page page = EtoTalk.topic(c, topic);
+                            check(!page.line().isEmpty() && !page.line().contains("{") && page.options().size() <= 12 && page.options().size() >= 2,
+                                topic.id() + ": an answer and something to say back (" + stage + " " + mood + ")");
+                            for (int i = 0; i < topic.open(c).size(); i++) {
+                                EtoTalk.Reply reply = EtoTalk.follow(c, topic, i);
+                                check(reply != null && !reply.line().isEmpty() && !reply.line().contains("{")
+                                    && reply.line().getBytes(java.nio.charset.StandardCharsets.UTF_8).length < 1024, topic.id() + " reply " + i);
+                            }
+                        }
+                        if (stage.together()) {
+                            for (String[] say : EtoTalk.SWEET_SAYS) {
+                                check(!EtoTalk.sweetly(c, say[1]).line().isEmpty(), "a sweet word answered: " + say[1]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    static void romance() {
+        check(Romance.propose(Romance.Stage.NONE, false, false, 9, 100) == Romance.Refusal.NOT_DATING
+            && Romance.propose(Romance.Stage.DATING, false, false, 0, 100) == Romance.Refusal.TOO_SOON
+            && Romance.propose(Romance.Stage.DATING, false, false, 1, 80) == Romance.Refusal.NOT_CLOSE
+            && Romance.propose(Romance.Stage.DATING, false, false, 1, 95) == null
+            && Romance.propose(Romance.Stage.DATING, false, true, 5, 100) == Romance.Refusal.MARRIED_ELSEWHERE
+            && Romance.propose(Romance.Stage.NONE, true, false, 5, 100) == Romance.Refusal.CLAIMED
+            && Romance.propose(Romance.Stage.MARRIED, false, false, 5, 100) == Romance.Refusal.ALREADY, "a ring is taken only when it should be");
+        check(Romance.tag(Romance.Stage.DATING, "Steve").equals("Dating Steve") && Romance.tag(Romance.Stage.MARRIED, "Steve").equals("Married to Steve")
+            && Romance.tag(Romance.Stage.NONE, "Steve").isEmpty(), "the line over her head");
+        check(Romance.jealousy(Romance.Stage.NONE, true) == 0 && Romance.jealousy(Romance.Stage.DATING, false) < 0
+            && Romance.jealousy(Romance.Stage.DATING, true) < Romance.jealousy(Romance.Stage.DATING, false)
+            && Romance.jealousy(Romance.Stage.MARRIED, true) < Romance.jealousy(Romance.Stage.DATING, true), "jealousy: worse seen, worse married");
+        check(!Romance.mayDate(true, false) && !Romance.mayDate(false, true) && Romance.mayDate(false, false), "one partner each, for good");
+        check(Romance.days(3, 10) == 7 && Romance.days(-1, 10) == 0 && Romance.days(12, 10) == 0, "days together");
+    }
+
+    static void memory() {
+        NpcMemory memory = new NpcMemory().set("eto", NpcMemory.SINCE, 12).add("eto", NpcMemory.KISSES, 3).add("eto", NpcMemory.KISSES, 2)
+            .set("toka", NpcMemory.SEEN, -5).set("Bad Key", "x", 1);
+        NpcMemory back = NpcMemory.load(memory.save());
+        check(back.get("eto", NpcMemory.SINCE, 0) == 12 && back.get("eto", NpcMemory.KISSES, 0) == 5 && back.get("toka", NpcMemory.SEEN, 0) == -5
+            && !back.knows("Bad Key", "x") && back.get("eto", "nothing", 7) == 7, "what a player and the NPCs remember of each other, saved");
+        check(NpcMemory.load("eto{a=1,b=x,=3};{c=1};junk").get("eto", "a", 0) == 1 && NpcMemory.load(null).save().isEmpty(), "a broken save reads what it can");
+        back.forget("eto", NpcMemory.SINCE).forgetAll("toka");
+        check(!back.knows("eto", NpcMemory.SINCE) && back.knows("eto", NpcMemory.KISSES) && !back.knows("toka", NpcMemory.SEEN), "forgotten when it should be");
+    }
+
+    static void unique() {
+        UniqueNpc eto = new UniqueNpc();
+        java.util.UUID first = new java.util.UUID(1, 1);
+        java.util.UUID second = new java.util.UUID(2, 2);
+        check(eto.claim(first, 100) && !eto.claim(second, 200) && eto.claim(first, 300), "only one of her lives; the same body ticks on");
+        check(eto.claim(second, 300 + UniqueNpc.GONE_QUIET), "gone quiet for days, a new body may take her place");
+        eto.homeX = 5;
+        eto.homeY = 64;
+        eto.homeZ = -7;
+        eto.homed = true;
+        eto.died(first, 10);
+        check(eto.alive, "the old body dying changes nothing");
+        eto.died(second, 1000);
+        check(!eto.alive && !eto.dueBack(1000 + UniqueNpc.COMES_BACK - 1) && eto.dueBack(1000 + UniqueNpc.COMES_BACK), "dead: back home a couple of days later");
+        java.util.UUID steve = new java.util.UUID(3, 3);
+        eto.pair(steve, "Steve", Romance.Stage.MARRIED);
+        check(eto.stageOf(steve) == Romance.Stage.MARRIED && eto.stageOf(first) == Romance.Stage.NONE && eto.claimedFrom(first) && !eto.claimedFrom(steve)
+            && eto.tag().equals("Married to Steve"), "her partner, and everyone else");
+        java.util.Map<String, UniqueNpc> all = new java.util.LinkedHashMap<>();
+        all.put("eto", eto);
+        UniqueNpc back = UniqueNpc.loadAll(UniqueNpc.saveAll(all)).get("eto");
+        check(back != null && back.stageOf(steve) == Romance.Stage.MARRIED && back.homeZ == -7 && back.homed && !back.alive && back.diedAt == 1000
+            && second.equals(back.body), "kept with the world");
+        eto.pair(null, "", Romance.Stage.NONE);
+        check(eto.tag().isEmpty() && !eto.claimedFrom(steve), "free again (only when her partner kills her)");
+        check(UniqueNpc.loadAll("eto|x|y\nbad").isEmpty(), "a broken line is dropped");
+    }
+
+    static void moods() {
+        check(EtoMood.of(Romance.Stage.MARRIED, false, 100, 6000L, 0L, true, false, false, false, 0.5) == EtoMood.SULKY, "cross first");
+        check(EtoMood.of(Romance.Stage.NONE, true, 100, 6000L, 0L, false, false, false, false, 0.5) == EtoMood.CLAIMED, "someone else's");
+        check(EtoMood.of(Romance.Stage.DATING, false, 100, 6000L, 0L, false, true, false, false, 0.5) == EtoMood.JEALOUS
+            && EtoMood.of(Romance.Stage.DATING, false, 100, 6000L, 0L, false, false, true, false, 0.5) == EtoMood.GIDDY
+            && EtoMood.of(Romance.Stage.DATING, false, 100, 6000L, 3L, false, false, false, false, 0.5) == EtoMood.LONELY
+            && EtoMood.of(Romance.Stage.MARRIED, false, 100, 18000L, 0L, false, false, false, false, 0.1) == EtoMood.AFFECTIONATE,
+            "her partner: jealous, giddy, lonely, late at night wanting them");
+        check(EtoMood.of(Romance.Stage.NONE, false, -10, 6000L, 0L, false, false, false, false, 0.5) == EtoMood.WARY
+            && EtoMood.of(Romance.Stage.NONE, false, 50, 6000L, 9L, false, false, false, false, 0.5) == EtoMood.BORED, "anyone else: wary, or bored of waiting");
+        for (EtoMood mood : EtoMood.values()) {
+            check(mood.idles().length > 0 && !mood.word().isEmpty() && mood.seeks() >= 0L, mood + ": something to do with her hands");
+        }
+    }
+
+    static void phases() {
+        check(EtoRules.Phase.of(1.0F) == EtoRules.Phase.CALM && EtoRules.Phase.of(0.5F) == EtoRules.Phase.SERIOUS && EtoRules.Phase.of(0.2F)
+            == EtoRules.Phase.MANIAC, "calm, serious, maniac as her health goes");
+        check(EtoRules.damage(10.0F, 0.2F) > EtoRules.damage(10.0F, 0.5F) && EtoRules.damage(10.0F, 0.5F) > EtoRules.damage(10.0F, 1.0F),
+            "the worse it gets for her, the harder she hits");
+        EtoRules.Ready slow = EtoRules.Ready.NOW.used(EtoRules.Move.PUNCH, 100, 1.0F);
+        EtoRules.Ready fast = EtoRules.Ready.NOW.used(EtoRules.Move.PUNCH, 100, EtoRules.Phase.MANIAC.cooldowns);
+        check(fast.punch() < slow.punch() && EtoRules.Phase.MANIAC.resistance > EtoRules.Phase.SERIOUS.resistance
+            && EtoRules.Phase.SERIOUS.speed >= 0 && EtoRules.Phase.CALM.speed < 0, "her moves come back sooner, and she gets faster and harder to hurt");
+        check(EtoRules.HEALTH >= 300.0F && EtoRules.SIZE < 0.9F, "stacked, and a head shorter than most");
     }
 
     static void grant() {
@@ -271,7 +496,7 @@ public final class EtoTests {
         EtoRules.Ready spent = punched.used(EtoRules.Move.KICK, 140);
         check(EtoRules.choose(2.0, 160, spent, true, true, 1.0F, true, 0.9) == EtoRules.Move.STRIKE, "both spent: plain strikes");
         check(EtoRules.choose(2.0, 100, ready, true, true, 0.3F, false, 0.1) == EtoRules.Move.FLIP_BACK, "hurt and pressed: a flip clear");
-        check(EtoRules.damage(10.0F, 0.4F) > EtoRules.damage(10.0F, 0.9F), "transformed below half, she hits harder");
+        check(EtoRules.damage(10.0F, 0.4F) > EtoRules.damage(10.0F, 0.9F), "transformed, she hits harder");
         check(EtoRules.LEASH == EtoRules.HOME_RADIUS + 3 && EtoRules.LOST > EtoRules.LEASH, "she chases a little past home, never far");
     }
 

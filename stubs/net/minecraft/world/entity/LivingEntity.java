@@ -36,4 +36,6 @@ public abstract class LivingEntity extends Entity {
     /** getLastHurtByMob (6.2.0) */ public LivingEntity m_21188_() { throw new UnsupportedOperationException(); }
     /** swing(hand, sendToSwingingEntity) (7.0.0) */ public void m_21011_(net.minecraft.world.InteractionHand hand, boolean send) { throw new UnsupportedOperationException(); }
     /** setLastHurtByMob (6.2.0) */ public void m_6703_(LivingEntity entity) { throw new UnsupportedOperationException(); }
+    /** isBaby (1.3.2) */ public boolean m_6162_() { throw new UnsupportedOperationException(); }
+    /** setItemInHand (1.3.2) */ public void m_21008_(net.minecraft.world.InteractionHand hand, net.minecraft.world.item.ItemStack stack) { throw new UnsupportedOperationException(); }
 }

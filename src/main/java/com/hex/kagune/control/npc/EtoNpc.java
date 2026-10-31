@@ -41,7 +41,7 @@ public class EtoNpc extends PathfinderMob {
             .m_22268_(Attributes.f_22276_, EtoRules.HEALTH)
             .m_22268_(Attributes.f_22279_, 0.32)
             .m_22268_(Attributes.f_22277_, 32.0)
-            .m_22268_(Attributes.f_22284_, 8.0)
+            .m_22268_(Attributes.f_22284_, EtoRules.ARMOR)
             .m_22268_(Attributes.f_22278_, 0.6);
     }
 

@@ -35,6 +35,8 @@ public final class ControlEntities {
 
     static void register(IEventBus modBus) {
         ENTITIES.register(modBus);
+        // 1.3.2: one of her in a world, made again at her home some days after she is killed.
+        com.hex.kagune.control.server.UniqueNpcs.kind(com.hex.kagune.control.npc.EtoRules.KEY, ETO);
     }
 
     @Mod.EventBusSubscriber(modid = "hexkagune", bus = Mod.EventBusSubscriber.Bus.MOD)

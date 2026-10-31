@@ -32,7 +32,32 @@ public final class NpcTalk {
         ASK_OUT("Go out with me."),
         KISS("Kiss her."),
         HUG("Hug her."),
-        SURGERY("Make me like you.");
+        SURGERY("Make me like you."),
+        // 1.3.2: the one-of-a-kind NPCs' (Eto's first). SAY_1..SAY_8 carry the words the page gives them (a topic, a reply).
+        SAY_1("..."),
+        SAY_2("..."),
+        SAY_3("..."),
+        SAY_4("..."),
+        SAY_5("..."),
+        SAY_6("..."),
+        SAY_7("..."),
+        SAY_8("..."),
+        SWEET("Be sweet to her."),
+        PUPPY("I brought you a little someone. (the baby animal on your lead)"),
+        PROPOSE("Marry me. (offer the ring)"),
+        NIGHT("Come to bed."),
+        TRIAL("I'm ready. Make me one-eyed."),
+        TEASE("Tease her."),
+        LETTER("I wrote you something. (give the written book)"),
+        BACK("Back.");
+
+        /** The reply slots, in order. */
+        public static final Choice[] SAYS = {SAY_1, SAY_2, SAY_3, SAY_4, SAY_5, SAY_6, SAY_7, SAY_8};
+
+        /** The slot this is (0..7), or -1. */
+        public int say() {
+            return this.ordinal() >= SAY_1.ordinal() && this.ordinal() <= SAY_8.ordinal() ? this.ordinal() - SAY_1.ordinal() : -1;
+        }
 
         private final String text;
 
@@ -144,7 +169,8 @@ public final class NpcTalk {
             case INSULT -> insult(c);
             case LEAVE -> new Reply("", 0, Effect.CLOSE);
             // 1.3.0: Eto's alone (EtoTalk); never offered by a ghoul NPC.
-            case BOOK, FLOWER, LESSON, ASK_OUT, KISS, HUG, SURGERY -> new Reply("", 0, Effect.CLOSE);
+            case BOOK, FLOWER, LESSON, ASK_OUT, KISS, HUG, SURGERY, SAY_1, SAY_2, SAY_3, SAY_4, SAY_5, SAY_6, SAY_7, SAY_8, SWEET, PUPPY, PROPOSE,
+                NIGHT, TRIAL, TEASE, LETTER, BACK -> new Reply("", 0, Effect.CLOSE);
         };
     }
 

@@ -14,4 +14,7 @@ public abstract class Mob extends LivingEntity {
     /** getTarget */ public LivingEntity m_5448_() { throw new UnsupportedOperationException(); }
     /** restrictTo(center, radius) (1.3.0) */ public void m_21446_(net.minecraft.core.BlockPos center, int radius) { throw new UnsupportedOperationException(); }
     /** setTarget */ public void m_6710_(LivingEntity target) { throw new UnsupportedOperationException(); }
+    /** getLeashHolder (1.3.2) */ public net.minecraft.world.entity.Entity m_21524_() { throw new UnsupportedOperationException(); }
+    /** isLeashed (1.3.2) */ public boolean m_21523_() { throw new UnsupportedOperationException(); }
+    /** dropLeash(broadcast, dropItem) (1.3.2) */ public void m_21455_(boolean broadcast, boolean dropItem) { throw new UnsupportedOperationException(); }
 }

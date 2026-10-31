@@ -136,6 +136,194 @@ public final class EtoPose {
                 p.headX = -0.18F;
                 p.drop = t < 6.0F ? -1.0F * (float)Math.sin(Math.PI * t / 6.0) : 0.0F;
             }
+            // 1.3.2: her idle life, her clinging, the pull of a long kiss, the ring, a puppy, her laugh.
+            case READ -> {
+                // Both hands round an open book at her chest, head bowed over it; a page turned every couple of seconds.
+                float turn = page(t, 46.0F);
+                p.rightArmX = -0.85F - 0.12F * turn;
+                p.leftArmX = -0.85F;
+                p.rightArmY = -0.38F + 0.3F * turn;
+                p.leftArmY = 0.38F;
+                p.rightArmZ = -0.08F;
+                p.leftArmZ = 0.08F;
+                p.headX = 0.45F;
+                p.headZ = 0.06F * (float)Math.sin(t * 0.05);
+            }
+            case WRITE -> {
+                // The pocket book low in her left hand, the quill's small loops in her right, head down.
+                p.leftArmX = -0.8F;
+                p.leftArmY = 0.5F;
+                p.leftArmZ = 0.1F;
+                p.rightArmX = -0.95F + 0.05F * (float)Math.sin(t * 2.3);
+                p.rightArmY = -0.45F + 0.1F * (float)Math.sin(t * 1.15);
+                p.rightArmZ = -0.05F + 0.05F * (float)Math.cos(t * 2.3);
+                p.headX = 0.52F;
+                p.headY = 0.08F;
+                // A pause to think now and then: the quill to her lips.
+                float think = page(t, 60.0F);
+                p.rightArmX -= 0.7F * think;
+                p.rightArmY += 0.55F * think;
+                p.headX -= 0.4F * think;
+            }
+            case SWEEP -> {
+                // Bent a little over the brush, sweeping side to side.
+                float stroke = (float)Math.sin(t * 0.3);
+                p.lean = 0.16F;
+                p.rightArmX = -0.62F;
+                p.leftArmX = -0.5F;
+                p.rightArmY = -0.25F + 0.45F * stroke;
+                p.leftArmY = 0.35F + 0.45F * stroke;
+                p.rightArmZ = -0.12F;
+                p.leftArmZ = 0.12F;
+                p.headX = 0.3F;
+                p.headY = 0.12F * stroke;
+                p.roll = 0.03F * stroke;
+            }
+            case HAIR -> {
+                // A lock of hair round her finger, head tipped into it.
+                p.rightArmX = -2.45F;
+                p.rightArmY = 0.18F;
+                p.rightArmZ = -0.12F + 0.14F * (float)Math.sin(t * 0.55);
+                p.headZ = -0.24F;
+                p.headX = 0.06F;
+                p.leftArmZ = -0.1F;
+                p.roll = -0.03F;
+            }
+            case HUM -> {
+                // Hands behind her back, swaying to a song only she knows.
+                float sway = (float)Math.sin(t * 0.17);
+                p.rightArmX = 0.45F;
+                p.leftArmX = 0.45F;
+                p.rightArmZ = -0.2F;
+                p.leftArmZ = 0.2F;
+                p.roll = 0.07F * sway;
+                p.headZ = 0.2F * (float)Math.sin(t * 0.17 + 0.5);
+                p.headX = -0.06F;
+                p.drop = 0.25F * (float)Math.abs(Math.sin(t * 0.34));
+            }
+            case LOOK -> {
+                // A hand shading her eyes, looking one way, then the other.
+                p.rightArmX = -2.2F;
+                p.rightArmY = -0.55F;
+                p.rightArmZ = -0.12F;
+                p.headY = 0.65F * (float)Math.sin(t * 0.1);
+                p.headX = -0.06F;
+                p.leftArmZ = -0.2F;
+            }
+            case DANCE -> {
+                // Arms up in turn, a bounce on every beat.
+                int beat = (int)Math.floor(t / 8.0F) % 4;
+                float up = (float)Math.abs(Math.sin(t * Math.PI / 8.0));
+                p.rightArmX = beat % 2 == 0 ? -2.7F * up : -0.3F;
+                p.leftArmX = beat % 2 == 1 ? -2.7F * up : -0.3F;
+                p.rightArmZ = 0.25F;
+                p.leftArmZ = -0.25F;
+                p.drop = -1.1F * up;
+                p.roll = 0.08F * (float)Math.sin(t * Math.PI / 16.0);
+                p.headZ = beat % 2 == 0 ? 0.2F : -0.2F;
+                p.rightLegX = beat == 1 ? -0.35F * up : 0.0F;
+                p.leftLegX = beat == 3 ? -0.35F * up : 0.0F;
+            }
+            case POUT -> {
+                // Arms crossed, chin down, turned half away. No mark: just a sulk.
+                p.rightArmX = -1.05F;
+                p.leftArmX = -1.05F;
+                p.rightArmZ = -0.85F;
+                p.leftArmZ = 0.85F;
+                p.rightArmY = 0.3F;
+                p.leftArmY = -0.3F;
+                p.headX = 0.28F;
+                p.headY = -0.5F;
+                p.roll = 0.02F * (float)Math.sin(t * 0.09);
+            }
+            case YAWN -> {
+                // A hand to her mouth, head back; then a shudder of a stretch.
+                float yawn = (float)Math.sin(Math.min(1.0, t / 24.0) * Math.PI);
+                p.rightArmX = -1.85F;
+                p.rightArmY = 0.55F;
+                p.rightArmZ = -0.2F;
+                p.headX = -0.32F * yawn;
+                p.leftArmX = -2.4F * (t > 20.0F ? ease((t - 20.0F) / 8.0F) : 0.0F);
+                p.leftArmZ = -0.25F;
+                p.drop = -0.4F * yawn;
+            }
+            case LICK -> {
+                // A finger at her lips, head tipped, the other hand on her hip.
+                p.rightArmX = -1.75F;
+                p.rightArmY = 0.5F;
+                p.rightArmZ = -0.25F;
+                p.headZ = 0.2F;
+                p.headX = -0.08F;
+                p.leftArmZ = -0.45F;
+                p.leftArmX = 0.2F;
+            }
+            case CLING -> {
+                // Arms wound round her partner's arm, cheek on their shoulder.
+                p.rightArmX = -0.95F;
+                p.leftArmX = -1.15F;
+                p.rightArmY = -0.6F;
+                p.leftArmY = 0.5F;
+                p.rightArmZ = -0.25F;
+                p.leftArmZ = 0.3F;
+                p.headZ = 0.32F;
+                p.headX = 0.1F;
+                p.lean = 0.08F;
+                p.roll = -0.04F + 0.015F * (float)Math.sin(t * 0.08);
+            }
+            case PULL -> {
+                // The kiss held: her arms up round their head, pulling them down to her, chin up.
+                p.rightArmX = -2.25F;
+                p.leftArmX = -2.25F;
+                p.rightArmY = -0.6F;
+                p.leftArmY = 0.6F;
+                p.rightArmZ = -0.1F;
+                p.leftArmZ = 0.1F;
+                p.headX = -0.36F;
+                p.headZ = 0.2F + 0.05F * (float)Math.sin(t * 0.1);
+                p.lean = 0.38F;
+            }
+            case RING -> {
+                if (t < 30.0F) {
+                    // Hands over her mouth.
+                    p.rightArmX = -1.85F;
+                    p.leftArmX = -1.85F;
+                    p.rightArmY = 0.55F;
+                    p.leftArmY = -0.55F;
+                    p.rightArmZ = -0.2F;
+                    p.leftArmZ = 0.2F;
+                    p.headX = 0.12F;
+                } else {
+                    // Then she jumps.
+                    float hop = (float)Math.sin(Math.min(1.0, (t - 30.0) / 14.0) * Math.PI);
+                    p.rightArmX = -2.8F * hop;
+                    p.leftArmX = -2.8F * hop;
+                    p.rightArmZ = 0.3F;
+                    p.leftArmZ = -0.3F;
+                    p.drop = -3.0F * hop;
+                    p.headX = -0.25F * hop;
+                }
+            }
+            case PET -> {
+                // Something small cuddled to her chest, rocked side to side.
+                float rock = (float)Math.sin(t * 0.14);
+                p.rightArmX = -1.0F;
+                p.leftArmX = -1.0F;
+                p.rightArmY = -0.75F;
+                p.leftArmY = 0.75F;
+                p.headX = 0.35F;
+                p.headZ = 0.15F * rock;
+                p.roll = 0.05F * rock;
+            }
+            case LAUGH -> {
+                // Head back, arms wide, shaking with it.
+                float shake = (float)Math.sin(t * 2.2);
+                p.headX = -0.5F + 0.05F * shake;
+                p.rightArmZ = 1.1F;
+                p.leftArmZ = -1.1F;
+                p.rightArmX = -0.4F;
+                p.leftArmX = -0.4F;
+                p.drop = 0.3F * shake;
+            }
             default -> {
             }
         }
@@ -214,6 +402,12 @@ public final class EtoPose {
             }
         }
         return p;
+    }
+
+    /** A short motion once every {@code every} ticks (a page turned, a pause to think): 0, up to 1 and back over 10 ticks. */
+    static float page(float t, float every) {
+        float into = t % every;
+        return into > every - 10.0F ? (float)Math.sin((into - (every - 10.0F)) / 10.0F * Math.PI) : 0.0F;
     }
 
     /** 0 to 1 over {@code rise} ticks, held, back to 0 over the last {@code fall} of {@code length}. */

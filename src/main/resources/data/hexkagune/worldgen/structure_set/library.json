@@ -6,9 +6,11 @@
     }
   ],
   "placement": {
-    "type": "minecraft:random_spread",
-    "spacing": 34,
-    "separation": 8,
-    "salt": 1300741852
+    "type": "minecraft:concentric_rings",
+    "salt": 1300741852,
+    "distance": 4,
+    "spread": 1,
+    "count": 1,
+    "preferred_biomes": "#hexkagune:has_structure/library"
   }
 }

@@ -10,11 +10,23 @@ import net.minecraftforge.network.NetworkEvent;
 /**
  * 7.0.2: a page of a conversation with a ghoul NPC ({@code NpcTalk}): who is talking (the NPC's id, name, temper, its regard for the
  * player, whether it walks with them), what it says, and the answers ({@code NpcTalk.Choice} ordinals). Opens the talk screen, or
- * turns its page.
+ * turns its page. 1.3.2: each answer may carry words of its own ({@code labels}, "" for the answer's own), so a page can offer any
+ * reply (a topic, what to say back), and the NPC's line can run longer.
  */
-public record S2CNpcTalk(int npc, String name, String temper, int regard, boolean ally, int skin, String line, int[] choices) {
+public record S2CNpcTalk(int npc, String name, String temper, int regard, boolean ally, int skin, String line, int[] choices, String[] labels) {
     /** Longest text sent (UTF-8 bytes). */
     private static final int MAX_TEXT = 1024;
+    /** Most answers on a page. */
+    public static final int MOST = 12;
+
+    public S2CNpcTalk(int npc, String name, String temper, int regard, boolean ally, int skin, String line, int[] choices) {
+        this(npc, name, temper, regard, ally, skin, line, choices, new String[0]);
+    }
+
+    /** The words shown for answer {@code i}: its own, or "" for the answer's usual ones. */
+    public String label(int i) {
+        return i < this.labels.length && this.labels[i] != null ? this.labels[i] : "";
+    }
 
     public static void encode(S2CNpcTalk message, FriendlyByteBuf buffer) {
         buffer.writeInt(message.npc);
@@ -24,9 +36,11 @@ public record S2CNpcTalk(int npc, String name, String temper, int regard, boolea
         buffer.writeBoolean(message.ally);
         buffer.writeByte(message.skin);
         text(buffer, message.line);
-        buffer.writeByte(Math.min(message.choices.length, 12));
-        for (int i = 0; i < Math.min(message.choices.length, 12); i++) {
+        int count = Math.min(message.choices.length, MOST);
+        buffer.writeByte(count);
+        for (int i = 0; i < count; i++) {
             buffer.writeByte(message.choices[i]);
+            text(buffer, message.label(i));
         }
     }
 
@@ -38,12 +52,14 @@ public record S2CNpcTalk(int npc, String name, String temper, int regard, boolea
         boolean ally = buffer.readBoolean();
         int skin = buffer.readByte();
         String line = text(buffer);
-        int count = Math.max(0, Math.min(12, buffer.readByte()));
+        int count = Math.max(0, Math.min(MOST, buffer.readByte()));
         int[] choices = new int[count];
+        String[] labels = new String[count];
         for (int i = 0; i < count; i++) {
             choices[i] = buffer.readByte();
+            labels[i] = text(buffer);
         }
-        return new S2CNpcTalk(npc, name, temper, regard, ally, skin, line, choices);
+        return new S2CNpcTalk(npc, name, temper, regard, ally, skin, line, choices, labels);
     }
 
     static void text(FriendlyByteBuf buffer, String text) {

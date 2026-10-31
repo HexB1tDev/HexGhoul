@@ -17,10 +17,15 @@ public final class NpcTalkClient {
     public static void accept(S2CNpcTalk message) {
         Minecraft minecraft = Minecraft.m_91087_();
         List<NpcTalk.Choice> choices = new ArrayList<>();
-        for (int ordinal : message.choices()) {
-            choices.add(NpcTalk.Choice.byOrdinal(ordinal));
+        List<String> labels = new ArrayList<>();
+        for (int i = 0; i < message.choices().length; i++) {
+            NpcTalk.Choice choice = NpcTalk.Choice.byOrdinal(message.choices()[i]);
+            choices.add(choice);
+            String label = message.label(i);
+            labels.add(label.isEmpty() ? choice.text() : label);
         }
-        NpcTalkView.Model model = new NpcTalkView.Model(message.name(), message.temper(), message.regard(), message.ally(), message.line(), choices);
+        NpcTalkView.Model model = new NpcTalkView.Model(message.name(), message.temper(), message.regard(), message.ally(), message.line(), choices,
+            labels);
         if (minecraft.f_91080_ instanceof NpcTalkScreen screen && screen.npc == message.npc()) {
             screen.page(model);
             return;

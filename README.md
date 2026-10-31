@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.2 (HexGhoul): Eto reworked: one of her per world, talk by who you are to her, moods, marriage with a ring, her kagune in a fight (testing)
+
+See `.github/release-notes-1.3.2.md`.
+
 ## 1.2.7 (HexGhoul): your transformation sounds on every form (kakujas, the Dragon, Centipede Dominion); 1.2.6: War and Peace Z/V fixed (testing)
 
 See `.github/release-notes-1.2.7.md`.

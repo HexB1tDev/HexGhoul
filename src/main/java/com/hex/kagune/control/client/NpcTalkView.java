@@ -26,7 +26,15 @@ public final class NpcTalkView {
     static final int FRIEND = 0xFF3FA052;
 
     /** What is shown: who is talking, how it stands with the player, what it says, the answers. */
-    public record Model(String name, String temper, int regard, boolean ally, String line, List<NpcTalk.Choice> choices) {
+    public record Model(String name, String temper, int regard, boolean ally, String line, List<NpcTalk.Choice> choices, List<String> labels) {
+        public Model(String name, String temper, int regard, boolean ally, String line, List<NpcTalk.Choice> choices) {
+            this(name, temper, regard, ally, line, choices, choices.stream().map(NpcTalk.Choice::text).toList());
+        }
+
+        /** The words shown for answer {@code i}. */
+        public String label(int i) {
+            return i < this.labels.size() ? this.labels.get(i) : this.choices.get(i).text();
+        }
     }
 
     private NpcTalkView() {
@@ -63,20 +71,25 @@ public final class NpcTalkView {
         c.text(model.temper().toUpperCase(java.util.Locale.ROOT) + "  /  " + standing, textX, top + 17, QuestJournalView.SUBTITLE, false);
         regard(c, textX, top + 32, textWidth, model.regard());
 
-        // What it says.
-        int y = top + 46;
-        List<String> lines = wrap(c, model.line(), textWidth);
-        for (int i = 0; i < Math.min(3, lines.size()); i++) {
-            c.text(lines.get(i), textX, y, QuestJournalView.VALUE, false);
-            y += 12;
-        }
-
         // The answers: one column, or two when there are many.
         List<NpcTalk.Choice> choices = model.choices();
         boolean two = choices.size() > 4;
         int rows = two ? (choices.size() + 1) / 2 : choices.size();
         int columnWidth = two ? (CONTENT_WIDTH - 8) / 2 : CONTENT_WIDTH;
         int choicesTop = bottom - rows * 19;
+
+        // What it says: 1.3.2, as many lines as fit above the answers (the face's side first, then under the face too).
+        int y = top + 46;
+        List<String> lines = wrap(c, model.line(), textWidth);
+        int fit = Math.max(3, (choicesTop - 4 - y) / 12);
+        for (int i = 0; i < Math.min(fit, lines.size()); i++) {
+            String shown = lines.get(i);
+            if (i == fit - 1 && lines.size() > fit) {
+                shown = c.fit(shown + " ...", textWidth);
+            }
+            c.text(shown, textX, y, QuestJournalView.VALUE, false);
+            y += 12;
+        }
         for (int i = 0; i < choices.size(); i++) {
             int column = two ? i / rows : 0;
             int row = two ? i % rows : i;
@@ -89,7 +102,7 @@ public final class NpcTalkView {
             c.fill(rect.x(), rect.y(), rect.x() + rect.width(), rect.y() + rect.height(), hover ? QuestJournalView.ROW_PICKED : QuestJournalView.ROW);
             c.text(String.valueOf(i + 1), x + 7, rowY + 5, hover ? QuestJournalView.HEADER : QuestJournalView.MUTED, false);
             int colour = hover ? QuestJournalView.VALUE : hostile ? 0xFFB06070 : choice == NpcTalk.Choice.LEAVE ? QuestJournalView.MUTED : 0xFFD8B8B8;
-            c.text(c.fit(choice.text(), columnWidth - 30), x + 22, rowY + 5, colour, false);
+            c.text(c.fit(model.label(i), columnWidth - 30), x + 22, rowY + 5, colour, false);
             hits.put("choice:" + i, rect);
         }
         return hits;

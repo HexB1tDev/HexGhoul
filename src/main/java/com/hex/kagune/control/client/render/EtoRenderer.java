@@ -22,6 +22,7 @@ import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
@@ -103,6 +104,14 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
         }
         if (view != null && view.gesture() == EtoGesture.ANGRY && !npc.m_20145_()) {
             angry(npc, view.gestureAge(clock), pose, buffers);
+        }
+        // 1.3.2: taken, she says so over her head: her name, and under it whose she is.
+        if (view != null && !view.tag().isEmpty() && !npc.m_20145_()) {
+            this.m_7649_(npc, Component.m_237113_("\u00a7d\u2764 \u00a7f" + view.tag()), pose, buffers, light);
+            pose.m_85836_();
+            pose.m_85837_(0.0, 0.26, 0.0);
+            this.m_7649_(npc, Component.m_237113_("\u00a7d" + EtoRules.NAME), pose, buffers, light);
+            pose.m_85849_();
         }
     }
 
@@ -236,6 +245,7 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
             if (minecraft.f_91073_ != null && minecraft.f_91073_.m_46467_() % 100L == 50L) {
                 EtoClient.prune(minecraft.f_91073_);
             }
+            EtoClient.pull();
         }
     }
 
