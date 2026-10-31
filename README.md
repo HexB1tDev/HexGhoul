@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.20 (HexGhoul): moments with your kids: hugs, head pats, high fives, tickles, peekaboo, tosses, airplane spins, shoulder rides (testing)
+
+See `.github/release-notes-1.3.20.md`.
+
 ## 1.3.19 (HexGhoul): Ken fights in Peace, every move of it; Touka's crystal wings (testing)
 
 See `.github/release-notes-1.3.19.md`.

@@ -316,7 +316,7 @@ public final class KaguneBodyAnimation implements IAnimation {
     private boolean wants() {
         // 1.3.3: holding Eto's hand, the arm reaches out to her (whatever else the body is doing).
         if (com.hex.kagune.control.client.EtoClient.handHeld(this.player.m_19879_()) > 0.0F
-            || com.hex.kagune.control.client.ChildClient.carrying(this.player.m_19879_())) {
+            || com.hex.kagune.control.client.ChildClient.busy(this.player.m_19879_())) {
             return this.player.m_6084_() && ControlConfig.bodyAnimations();
         }
         if (com.hex.kagune.control.client.PaleClient.eyes(this.player)) {
@@ -517,6 +517,18 @@ public final class KaguneBodyAnimation implements IAnimation {
             p.leftArmZ = 0.0F;
             p.armHold = Math.max(p.armHold, this.fade);
         }
+        // 1.3.20: a child up on the shoulders (hands up holding its shins), and a moment with one (a hug, a toss, a spin...).
+        double childClock = com.hex.kagune.control.client.PaleClient.clock(tickDelta);
+        com.hex.kagune.control.client.ChildClient.View riding = com.hex.kagune.control.client.ChildClient.held(this.player.m_19879_());
+        if (riding != null && riding.ride() == com.hex.kagune.control.family.ChildRules.RIDE_SHOULDERS) {
+            ChildMomentPose.blend(p, ChildMomentPose.shouldersParent(), this.fade);
+        }
+        com.hex.kagune.control.client.ChildClient.View moment = com.hex.kagune.control.client.ChildClient.partnered(this.player.m_19879_(), childClock);
+        if (moment != null) {
+            double age = moment.momentAge(childClock);
+            ChildMomentPose.blend(p, ChildMomentPose.parent(moment.moment(), age, moment.stage(), true),
+                this.fade * (float)com.hex.kagune.control.family.ChildMoment.weight(moment.moment(), age));
+        }
         // 6.2.0: just whole again after her death that did not take, she stands as the pieces went back together and eases into it.
         float risen = com.hex.kagune.control.client.ReviveClient.risen(this.player, com.hex.kagune.control.client.PaleClient.clock(tickDelta));
         if (risen < 1.0F) {
@@ -573,7 +585,7 @@ public final class KaguneBodyAnimation implements IAnimation {
         if (!view.active() && !com.hex.kagune.control.client.PaleClient.eyes(this.player) && this.king() <= 0.0F
             && com.hex.kagune.control.client.TurningClient.progress(this.player, time) < 0.0
             && (com.hex.kagune.control.client.EtoClient.handHeld(this.player.m_19879_()) > 0.0F
-            || com.hex.kagune.control.client.ChildClient.carrying(this.player.m_19879_()))) {
+            || com.hex.kagune.control.client.ChildClient.busy(this.player.m_19879_()))) {
             this.finish(steel, time, tickDelta);
             return;
         }

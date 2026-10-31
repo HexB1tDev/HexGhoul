@@ -113,6 +113,28 @@ public final class ChildLines {
         };
     }
 
+    /** 1.3.20: what it says as a moment with a parent begins ({@code parent}: what it calls them). */
+    public static String moment(ChildMoment moment, ChildStage stage, String parent, int seed) {
+        boolean baby = stage == ChildStage.BABY;
+        boolean teen = stage == ChildStage.TEEN;
+        return switch (moment) {
+            case HUG -> teen ? pick(seed, "Ugh, fine. ...*hugs you back, tight*", "...Okay. Just one. *doesn't let go*")
+                : pick(seed, "*runs into your arms* " + parent + "!", "*squeezes you as hard as it can*", "Biggest hug! The BIGGEST!");
+            case PAT -> baby ? pick(seed, "*coos*", "*grabs your fingers*") : teen ? pick(seed, "Hey, the hair! ...*smiles anyway*", "I'm not a kid anymore. ...Do it again.")
+                : pick(seed, "*beams up at you*", "Hehe. Again!", "*leans into your hand*");
+            case HIGH_FIVE -> teen ? pick(seed, "Nice.", "Up top. ...Too slow!") : pick(seed, "High five! Ow, hehe.", "Up high! Down low!");
+            case TICKLE -> baby ? pick(seed, "*shrieks with laughter*", "*kicks and giggles*") : pick(seed, "No— hahaha— stop! Don't stop!", "*squirms, giggling* Not fair!");
+            case PEEKABOO -> baby ? pick(seed, "*gasps* ...*giggles*", "*squeals and claps*") : pick(seed, "Again! Do peekaboo again!", "I saw you! Hehe!");
+            case TOSS -> baby ? pick(seed, "*shrieks with delight*", "*giggles all the way up*") : pick(seed, "Wheee! Higher!", "Again! Again! AGAIN!");
+            case SPIN -> pick(seed, "I'm flyiiing!", "Faster! Faster!", "Wheee! *arms out like wings*");
+            case ARMS_UP -> pick(seed, "Up! " + parent + ", up!", "Uppy! Pleeease?", "*reaches up at you with both arms*");
+            case WAVE -> teen ? pick(seed, "*nods at you*", "Hey.") : pick(seed, "Hi " + parent + "! *waves*", "*waves with its whole arm*");
+            case CLAP -> baby ? pick(seed, "*claps its tiny hands*", "*bounces and claps*") : pick(seed, "Yay! *claps*", "*claps and laughs*");
+            case FLOWER -> pick(seed, "I found this for you! It's the prettiest one.", parent + ", look! A flower! It's yours.", "*holds out a flower, very proud*");
+            default -> "";
+        };
+    }
+
     static String pick(int seed, String... lines) {
         return lines[Math.floorMod(seed, lines.length)];
     }

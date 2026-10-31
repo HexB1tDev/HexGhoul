@@ -36,6 +36,7 @@ public final class FamilyTests {
         children();
         looks();
         ownerSkins();
+        moments();
         reactions();
         initiative();
         if (!FAILURES.isEmpty()) {
@@ -323,6 +324,98 @@ public final class FamilyTests {
             }
         }
         check(darkNear, "a darker couple's children wear the darkest skins there are (none further than the nearest by more than the spread)");
+    }
+
+    /** 1.3.20: a child's moments with its parents: who can have which, their shapes over time, both bodies' poses. */
+    static void moments() {
+        com.hex.kagune.control.family.ChildMoment[] all = com.hex.kagune.control.family.ChildMoment.values();
+        check(all[0] == com.hex.kagune.control.family.ChildMoment.NONE && com.hex.kagune.control.family.ChildMoment.byOrdinal(99)
+            == com.hex.kagune.control.family.ChildMoment.NONE, "moments go by ordinal (NONE first; a bad one is none)");
+        for (com.hex.kagune.control.family.ChildStage stage : com.hex.kagune.control.family.ChildStage.values()) {
+            int play = 0;
+            for (com.hex.kagune.control.family.ChildMoment m : com.hex.kagune.control.family.ChildMoment.PLAY) {
+                if (m.fits(stage)) {
+                    play++;
+                    check(!m.label().isEmpty(), "every play choice has its words (" + m + ")");
+                }
+            }
+            int page = play + (com.hex.kagune.control.family.ChildRules.shoulders(stage) ? 1 : 0) + 1;
+            check(play >= 3 && page <= com.hex.kagune.control.npc.NpcTalk.Choice.SAYS.length, "the play page fits the talk screen at " + stage + " (" + page + ")");
+            boolean own = false;
+            for (com.hex.kagune.control.family.ChildMoment m : com.hex.kagune.control.family.ChildMoment.OWN) {
+                own |= m.fits(stage);
+            }
+            check(own, "a " + stage + " has a moment of its own it starts");
+        }
+        check(com.hex.kagune.control.family.ChildMoment.TOSS.held && com.hex.kagune.control.family.ChildMoment.SPIN.held
+            && !com.hex.kagune.control.family.ChildMoment.TOSS.fits(com.hex.kagune.control.family.ChildStage.TEEN)
+            && !com.hex.kagune.control.family.ChildMoment.HUG.fits(com.hex.kagune.control.family.ChildStage.BABY),
+            "a teen is never tossed; a baby isn't hugged standing (it sits): only what each can do");
+        check(com.hex.kagune.control.family.ChildRules.shoulders(com.hex.kagune.control.family.ChildStage.TODDLER)
+            && !com.hex.kagune.control.family.ChildRules.shoulders(com.hex.kagune.control.family.ChildStage.BABY)
+            && !com.hex.kagune.control.family.ChildRules.shoulders(com.hex.kagune.control.family.ChildStage.TEEN), "toddlers and children ride on shoulders");
+        double high = 0.0;
+        boolean grounded = true;
+        boolean smoothToss = true;
+        double was = 0.0;
+        for (double a = 0.0; a <= com.hex.kagune.control.family.ChildMoment.TOSS.ticks; a += 0.25) {
+            double lift = com.hex.kagune.control.family.ChildMoment.tossLift(a);
+            high = Math.max(high, lift);
+            smoothToss &= Math.abs(lift - was) < 0.12;
+            was = lift;
+        }
+        grounded &= Math.abs(com.hex.kagune.control.family.ChildMoment.tossLift(0.0)) < 0.07
+            && Math.abs(com.hex.kagune.control.family.ChildMoment.tossLift(com.hex.kagune.control.family.ChildMoment.TOSS.ticks)) < 0.07;
+        check(high > 0.8 && high < 1.2 && grounded && smoothToss, "a toss goes up about a block and comes back down into the arms, smoothly");
+        double turned = com.hex.kagune.control.family.ChildMoment.spinAngle(com.hex.kagune.control.family.ChildMoment.SPIN.ticks);
+        boolean onward = true;
+        double angle = 0.0;
+        for (double a = 0.0; a <= com.hex.kagune.control.family.ChildMoment.SPIN.ticks; a += 1.0) {
+            double next = com.hex.kagune.control.family.ChildMoment.spinAngle(a);
+            onward &= next >= angle - 1.0E-9;
+            angle = next;
+        }
+        check(Math.abs(turned - 4.0 * Math.PI) < 1.0E-6 && onward, "a spin goes round twice, never back");
+        boolean finite = true;
+        boolean easedOut = true;
+        for (com.hex.kagune.control.family.ChildMoment m : all) {
+            if (m == com.hex.kagune.control.family.ChildMoment.NONE) {
+                continue;
+            }
+            easedOut &= com.hex.kagune.control.family.ChildMoment.weight(m, 0.0) == 0.0 && com.hex.kagune.control.family.ChildMoment.weight(m, m.ticks) == 0.0;
+            for (com.hex.kagune.control.family.ChildStage stage : com.hex.kagune.control.family.ChildStage.values()) {
+                if (!m.fits(stage)) {
+                    continue;
+                }
+                for (double a = 0.0; a < m.ticks; a += 1.5) {
+                    com.hex.kagune.control.client.animation.RigPose parent = com.hex.kagune.control.client.animation.ChildMomentPose.parent(m, a, stage, true);
+                    com.hex.kagune.control.client.animation.RigPose npc = com.hex.kagune.control.client.animation.ChildMomentPose.parent(m, a, stage, false);
+                    com.hex.kagune.control.client.animation.RigPose child = com.hex.kagune.control.client.animation.ChildMomentPose.child(m, a, stage);
+                    com.hex.kagune.control.client.animation.RigPose into = new com.hex.kagune.control.client.animation.RigPose();
+                    com.hex.kagune.control.client.animation.ChildMomentPose.blend(into, parent, 0.7F);
+                    com.hex.kagune.control.client.animation.ChildMomentPose.blend(into, child, 0.4F);
+                    finite &= child != null && ok(parent) && ok(npc) && ok(child) && ok(into);
+                    // An NPC parent's model bends no knees: it never sinks into the ground crouching.
+                    finite &= npc.drop <= 1.0F;
+                }
+            }
+        }
+        check(finite, "every moment poses both bodies, every tick, at every stage it fits (an NPC parent leans, never sinks)");
+        check(easedOut, "every moment eases in from nothing and back out to nothing");
+        com.hex.kagune.control.client.animation.RigPose shoulders = com.hex.kagune.control.client.animation.ChildMomentPose.shouldersChild(10.0);
+        check(shoulders.legHold > 0.0F && shoulders.rightLegX < -0.5F && ok(com.hex.kagune.control.client.animation.ChildMomentPose.shouldersParent()),
+            "on the shoulders, its legs down the front, their hands up holding them");
+    }
+
+    private static boolean ok(com.hex.kagune.control.client.animation.RigPose p) {
+        float[] all = {p.headX, p.headY, p.headZ, p.lean, p.drop, p.roll, p.flip, p.spin, p.rightArmX, p.rightArmY, p.rightArmZ, p.leftArmX, p.leftArmY,
+            p.leftArmZ, p.rightLegX, p.leftLegX, p.rightKnee, p.leftKnee};
+        for (float f : all) {
+            if (!Float.isFinite(f) || Math.abs(f) > 13.0F) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static double lum(int rgb) {

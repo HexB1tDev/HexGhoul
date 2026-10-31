@@ -18,6 +18,23 @@ public final class ChildRules {
      */
     public static final double CARRY_AHEAD = 0.34;
     public static final double CARRY_UP = 1.02;
+    /**
+     * 1.3.20: how it is held: in their arms ({@link #RIDE_ARMS}), up on their shoulders ({@link #RIDE_SHOULDERS}: a toddler or a child, its
+     * hips at the top of their back, its legs down their front), or held out at arm's length to be spun ({@link #RIDE_SPIN}).
+     */
+    public static final int RIDE_ARMS = 0;
+    public static final int RIDE_SHOULDERS = 1;
+    public static final int RIDE_SPIN = 2;
+    public static final double SHOULDERS_UP = 1.42;
+    public static final double SHOULDERS_BACK = 0.24;
+    public static final double SPIN_AHEAD = 0.82;
+    public static final double SPIN_UP = 1.02;
+
+    /** True if a child at {@code stage} can ride on a parent's shoulders. */
+    public static boolean shoulders(ChildStage stage) {
+        return stage == ChildStage.TODDLER || stage == ChildStage.CHILD;
+    }
+
     /** How far it goes for something hostile to its family (blocks), and how close it must be to hit. */
     public static final double GUARD = 10.0;
     public static final double REACH = 1.6;

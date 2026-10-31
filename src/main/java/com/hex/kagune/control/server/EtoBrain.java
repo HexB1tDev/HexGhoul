@@ -134,6 +134,9 @@ public final class EtoBrain {
         UUID cradling;
         long cradleUntil;
         long nextCradle;
+        /** 1.3.20: the child it is having a moment with (a hug, a toss...), and when it may start another. */
+        UUID momentChild;
+        long nextMoment;
         /** 1.3.14: the partner she is coming to for the night they asked for a baby (null none), and when she may next try. */
         UUID babyNight;
         long nextBabyNight;
@@ -1200,7 +1203,7 @@ public final class EtoBrain {
         npc.m_21008_(InteractionHand.OFF_HAND, stack(now.offHand));
     }
 
-    private static ItemStack stack(String id) {
+    static ItemStack stack(String id) {
         Item item = ForgeRegistries.ITEMS.getValue(ResourceLocation.m_214293_("minecraft", id == null ? "air" : id.substring(id.indexOf(':') + 1)));
         if (item == null) {
             item = ForgeRegistries.ITEMS.getValue(ResourceLocation.m_214293_("minecraft", "air"));

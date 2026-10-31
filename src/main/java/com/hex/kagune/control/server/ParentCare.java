@@ -86,8 +86,68 @@ final class ParentCare {
         }
     }
 
+    /** 1.3.20: how often it starts a moment with a child of its own (ticks, at least and more), and its chance each second when it may. */
+    static final long MOMENTS = 900L;
+    static final long MOMENTS_MORE = 1500L;
+    static final double MOMENT_CHANCE = 0.06;
+
+    /**
+     * 1.3.20: a moment with one of its children under way: it stands to it and faces it while it lasts (true: that took it this tick).
+     * The child's side of it is the child's (ChildBrain), the poses both bodies' (ChildMomentPose).
+     */
+    static boolean moment(EtoNpc npc, EtoBrain.Mind mind, ServerLevel level, long now) {
+        if (mind.momentChild == null) {
+            return false;
+        }
+        if (!(level.m_8791_(mind.momentChild) instanceof ChildNpc child) || !child.m_6084_() || !ChildBrain.withPartner(child, npc, now)) {
+            mind.momentChild = null;
+            return false;
+        }
+        if (ChildBrain.carried(child)) {
+            npc.m_21573_().m_26573_(); // in its arms (a toss, a spin): it stands where it is
+        } else if (child.m_20280_(npc) > 3.0 * 3.0) {
+            npc.m_21573_().m_5624_(child, 0.8);
+        } else {
+            npc.m_21573_().m_26573_();
+            EtoOwl.face(npc, child);
+        }
+        return true;
+    }
+
+    /** 1.3.20: {@code moment} with {@code child} begun by it (a line to its partner, near); true if it began. */
+    private static boolean startMoment(EtoNpc npc, EtoBrain.Mind mind, ChildNpc child, com.hex.kagune.control.family.ChildMoment moment, ServerLevel level,
+                                       ServerPlayer partner, long now) {
+        if (!ChildBrain.start(child, moment, npc, now)) {
+            return false;
+        }
+        mind.momentChild = child.m_20148_();
+        mind.nextMoment = now + MOMENTS + npc.m_217043_().m_188503_((int)MOMENTS_MORE);
+        if (partner != null && partner.m_20280_(npc) < 24.0 * 24.0 && npc.m_217043_().m_188500_() < 0.5) {
+            Children.Child known = Children.get(level, child.childId());
+            String name = known == null ? "the little one" : known.name;
+            boolean her = npc.persona().female();
+            String line = switch (moment) {
+                case HUG -> "*kneels and pulls " + name + " into a hug*";
+                case PAT -> "*ruffles " + name + "'s hair*";
+                case TICKLE -> "*tickles " + name + " until they shriek*";
+                case PEEKABOO -> "*hides " + (her ? "her" : "his") + " face, then peeks out at " + name + "* Boo.";
+                case SPIN -> "*swings " + name + " round and round*";
+                case HIGH_FIVE -> "*high-fives " + name + "*";
+                case TOSS -> "*tosses " + name + " up and catches them*";
+                default -> "";
+            };
+            if (!line.isEmpty()) {
+                EtoBrain.say(npc, partner, line);
+            }
+        }
+        return true;
+    }
+
     /** Calm: it holds its child a while, or goes to it, or picks it up. True if that took it this tick. */
     static boolean tend(EtoNpc npc, EtoBrain.Mind mind, ServerLevel level, ServerPlayer partner, long now) {
+        if (moment(npc, mind, level, now)) {
+            return true;
+        }
         ChildNpc holding = held(npc, mind, level);
         if (mind.cradling != null && holding == null) {
             mind.cradling = null; // put down by someone else, or gone
@@ -99,6 +159,11 @@ final class ParentCare {
             }
             if (mind.gesture != EtoGesture.PET) {
                 EtoBrain.gesture(mind, EtoGesture.PET, now);
+            }
+            // 1.3.20: now and then, up into the air and caught.
+            if (now >= mind.nextMoment && now % 20L == 3L && npc.m_217043_().m_188500_() < MOMENT_CHANCE * 2.0
+                && startMoment(npc, mind, holding, com.hex.kagune.control.family.ChildMoment.TOSS, level, partner, now)) {
+                return true;
             }
             if (now % 10L == 0L && partner != null && partner.m_20280_(npc) > 4.0 * 4.0 && partner.m_20280_(npc) < 16.0 * 16.0) {
                 npc.m_21573_().m_5624_(partner, 0.8); // carries the child over to its other parent
@@ -123,6 +188,15 @@ final class ParentCare {
             return false;
         }
         double distance = Math.sqrt(best);
+        // 1.3.20: near it, now and then a moment of their own: a hug, a pat, tickles, peekaboo, a spin, a high five.
+        if (distance < 3.5 && now >= mind.nextMoment && npc.m_217043_().m_188500_() < MOMENT_CHANCE && nearest.mind != null
+            && !ChildBrain.carried(nearest)) {
+            com.hex.kagune.control.family.ChildMoment[] all = com.hex.kagune.control.family.ChildMoment.NPC;
+            com.hex.kagune.control.family.ChildMoment pick = all[npc.m_217043_().m_188503_(all.length)];
+            if (pick.fits(nearest.stage) && startMoment(npc, mind, nearest, pick, level, partner, now)) {
+                return true;
+            }
+        }
         if (distance > KEEPS) {
             npc.m_21573_().m_5624_(nearest, 0.9);
             return true;

@@ -1,4 +1,4 @@
-# START HERE (state after 1.3.19)
+# START HERE (state after 1.3.20)
 
 - Branch **`claude/relaxed-carson-4y0frw`** at **1.3.19**, protocol **61**, built green (exit 0) and pushed. Built on `claude/relaxed-turing-r5599k`
   (1.3.17). `main` is still 1.3.0. **Nothing from 1.3.13 on has been tried in game.**
@@ -13,6 +13,11 @@
   (holds and lets go the lance, the burial and the heavy; slams from the Ascent; recalls the lance; benches an ability that won't start).
 - **1.3.19 Touka's wings:** `npc/WingRules`, `server/NpcWings`, `network/S2CNpcWings` (id 45), `client/NpcWingsClient`, drawn in
   `UkakuWingRenderer` at her size on her posed torso. Persona flags: `finalKakuja()`, `wings()`.
+- **1.3.20 parent-child moments** (protocol 62): `family/ChildMoment` (pure: which stage, how long, how far it stands, toss/spin shapes),
+  `client/animation/ChildMomentPose` (both bodies; players crouch on bent knees, NPC parents lean), `ChildBrain.start/moments/stand`
+  (walks up first; babies stay put), ride modes `ChildRules.RIDE_*` (shoulders, spin), the Play page in `ChildTalk` (a moment starts when the
+  talk closes), NPC parents in `ParentCare.moment/startMoment`. Previews: `tools/MomentPreview.java` (the child drawn as a scaled player:
+  PoseRender has no little-one proportions).
 - Riskiest, untested: Peace drawn on Ken's slim-armed EtoModel (armour built for player arms; Ken is 0.94 size while the server cuts at
   player size), the client's `KingClient.BODIES` lookup for effects, Ken's navigation vs the Ascent's lift.
 - The owner wrote "a halfway version of the Rinkaku" for Touka; she was given Ukaku wings (her kagune, and what they described: wings

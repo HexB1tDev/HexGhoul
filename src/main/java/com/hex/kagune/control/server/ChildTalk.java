@@ -28,7 +28,8 @@ import net.minecraftforge.fml.common.Mod;
  */
 @Mod.EventBusSubscriber(modid = "hexkagune")
 public final class ChildTalk {
-    private record Talk(int npc, List<String> keys) {
+    /** 1.3.20: the page open (its keys), and a moment chosen on it that begins once the talk is closed (so it is seen). */
+    private record Talk(int npc, List<String> keys, com.hex.kagune.control.family.ChildMoment queued) {
     }
 
     private static final Map<UUID, Talk> TALKS = new HashMap<>();
@@ -61,6 +62,14 @@ public final class ChildTalk {
 
     /** The page: what it says ({@code line}, or a greeting), and what can be done with it. */
     static void open(ServerPlayer player, ChildNpc npc, String line) {
+        open(player, npc, line, false, null);
+    }
+
+    /**
+     * 1.3.20: the main page, or the play page ({@code play}: the moments its stage can have, its shoulders, back); {@code queued}: a moment
+     * chosen, to begin once the talk closes (the page then has only its line and goodbye).
+     */
+    static void open(ServerPlayer player, ChildNpc npc, String line, boolean play, com.hex.kagune.control.family.ChildMoment queued) {
         ServerLevel level = player.m_284548_();
         Children.Child child = Children.get(level, npc.childId());
         if (child == null) {
@@ -72,9 +81,22 @@ public final class ChildTalk {
         int seed = npc.m_217043_().m_188503_(1000);
         List<String> keys = new ArrayList<>();
         List<String> labels = new ArrayList<>();
-        if (parent) {
-            if (stage.carried()) {
-                boolean carrying = player.m_20148_().equals(npc.mind.carrier);
+        boolean carrying = player.m_20148_().equals(npc.mind.carrier);
+        if (queued != null) {
+            // Chosen: its line, then goodbye; the moment begins as the talk closes.
+        } else if (parent && play) {
+            for (com.hex.kagune.control.family.ChildMoment moment : com.hex.kagune.control.family.ChildMoment.PLAY) {
+                if (moment.fits(stage)) {
+                    add(keys, labels, "m:" + moment.name(), moment.label());
+                }
+            }
+            if (com.hex.kagune.control.family.ChildRules.shoulders(stage)) {
+                boolean riding = carrying && npc.mind.ride == com.hex.kagune.control.family.ChildRules.RIDE_SHOULDERS;
+                add(keys, labels, riding ? "down" : "shoulders", riding ? "Down you get." : "Up on my shoulders!");
+            }
+            add(keys, labels, "back", "...");
+        } else if (parent) {
+            if (stage.carried() || carrying) {
                 add(keys, labels, carrying ? "down" : "up", carrying ? "Put you down." : "Pick up.");
             }
             add(keys, labels, "play", stage == ChildStage.TEEN ? "Want to hang out?" : "Let's play!");
@@ -89,7 +111,7 @@ public final class ChildTalk {
         } else {
             add(keys, labels, "hi", "Hello there.");
         }
-        TALKS.put(player.m_20148_(), new Talk(npc.m_19879_(), keys));
+        TALKS.put(player.m_20148_(), new Talk(npc.m_19879_(), keys, queued));
         int[] choices = new int[keys.size() + 1];
         String[] shown = new String[keys.size() + 1];
         for (int i = 0; i < keys.size(); i++) {
@@ -132,6 +154,13 @@ public final class ChildTalk {
         ServerLevel level = player.m_284548_();
         if (choice == NpcTalk.Choice.LEAVE || !(level.m_6815_(npcId) instanceof ChildNpc npc) || npc.mind == null || npc.m_20280_(player) > 8.0 * 8.0) {
             TALKS.remove(player.m_20148_());
+            // 1.3.20: a moment chosen begins now the talk is closed.
+            if (talk.queued() != null && level.m_6815_(npcId) instanceof ChildNpc chosen && chosen.mind != null && chosen.m_20280_(player) <= 12.0 * 12.0) {
+                ChildBrain.start(chosen, talk.queued(), player, level.m_46467_());
+            }
+            return;
+        }
+        if (talk.queued() != null) {
             return;
         }
         int index = -1;
@@ -157,7 +186,19 @@ public final class ChildTalk {
                 ChildBrain.putDown(npc, npc.mind);
                 reply = ChildLines.down(stage, seed);
             }
-            case "play" -> reply = ChildLines.play(stage, seed);
+            case "play" -> {
+                open(player, npc, ChildLines.play(stage, seed), true, null);
+                return;
+            }
+            case "back" -> {
+                open(player, npc, null, false, null);
+                return;
+            }
+            case "shoulders" -> {
+                ChildBrain.pickUp(npc, player, com.hex.kagune.control.family.ChildRules.RIDE_SHOULDERS);
+                open(player, npc, stage == ChildStage.TODDLER ? "Wheee! I'm so tall!" : "Whoa! I can see everything from up here!", true, null);
+                return;
+            }
             case "teach" -> {
                 if (ChildRules.teachable(stage, child.skill, child.lesson, now)) {
                     child.skill++;
@@ -178,7 +219,19 @@ public final class ChildTalk {
                 reply = ChildLines.stay(stage, seed);
             }
             case "talk" -> reply = ChildLines.idle(stage, ChildLines.call(stage, ChildBrain.isMother(child, player)), seed);
-            default -> reply = stage == ChildStage.TEEN ? "...Hey." : "*hides shyly*";
+            default -> {
+                String key = talk.keys().get(index);
+                if (key.startsWith("m:")) {
+                    com.hex.kagune.control.family.ChildMoment moment = com.hex.kagune.control.family.ChildMoment.valueOf(key.substring(2));
+                    if (moment.fits(stage)) {
+                        // Its eager line now; the moment itself once the talk closes.
+                        open(player, npc, moment == com.hex.kagune.control.family.ChildMoment.HUG ? "*holds its arms out wide*"
+                            : stage == ChildStage.BABY ? "*wriggles, excited*" : "Yes! Yes yes yes!", false, moment);
+                        return;
+                    }
+                }
+                reply = stage == ChildStage.TEEN ? "...Hey." : "*hides shyly*";
+            }
         }
         open(player, npc, reply);
     }

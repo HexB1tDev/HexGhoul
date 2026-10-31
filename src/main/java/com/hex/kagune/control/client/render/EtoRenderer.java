@@ -103,8 +103,21 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
         if (view == null) {
             return null;
         }
-        return EtoFight.pose(npc, view.fight(), alive(npc, view, EtoPose.gesture(view.gesture(), view.gestureAge(clock),
-            npc.persona().leads()), partial), clock, partial);
+        return EtoFight.pose(npc, view.fight(), moment(npc, alive(npc, view, EtoPose.gesture(view.gesture(), view.gestureAge(clock),
+            npc.persona().leads()), partial), clock), clock, partial);
+    }
+
+    /** 1.3.20: a moment with one of its children (a hug, a toss, a spin...) over its gesture: its parent's side of it. */
+    static RigPose moment(EtoNpc npc, RigPose under, double clock) {
+        com.hex.kagune.control.client.ChildClient.View child = com.hex.kagune.control.client.ChildClient.partnered(npc.m_19879_(), clock);
+        if (child == null) {
+            return under;
+        }
+        RigPose p = under == null ? new RigPose() : under;
+        double age = child.momentAge(clock);
+        com.hex.kagune.control.client.animation.ChildMomentPose.blend(p, com.hex.kagune.control.client.animation.ChildMomentPose.parent(child.moment(),
+            age, child.stage(), false), (float)com.hex.kagune.control.family.ChildMoment.weight(child.moment(), age));
+        return p;
     }
 
     /**
