@@ -4,6 +4,7 @@ import com.hex.kagune.control.network.ControlNetwork;
 import com.hex.kagune.control.network.S2CEto;
 import com.hex.kagune.control.network.S2CNpcAlert;
 import com.hex.kagune.control.npc.EtoGesture;
+import com.hex.kagune.control.npc.EtoHand;
 import com.hex.kagune.control.npc.EtoLines;
 import com.hex.kagune.control.npc.EtoMood;
 import com.hex.kagune.control.npc.EtoNpc;
@@ -844,8 +845,8 @@ public final class EtoBrain {
         // there too, EtoRenderer); only where there is no room beside them does she walk to catch up.
         float yaw = player.f_20883_;
         Vec3 spot = HAND.spot(player.m_20185_(), player.m_20186_(), player.m_20189_(), yaw);
-        Vec3 shift = spot.m_82546_(npc.m_20182_());
-        if (level.m_45756_(npc, npc.m_20191_().m_82386_(shift.f_82479_, shift.f_82480_, shift.f_82481_))) {
+        Vec3 move = spot.m_82546_(npc.m_20182_());
+        if (level.m_45756_(npc, npc.m_20191_().m_82386_(move.f_82479_, move.f_82480_, move.f_82481_))) {
             npc.m_21573_().m_26573_();
             npc.m_6021_(spot.f_82479_, spot.f_82480_, spot.f_82481_);
             npc.m_20256_(player.m_20184_());
