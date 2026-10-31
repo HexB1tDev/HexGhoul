@@ -69,6 +69,11 @@ public final class RigPose {
      */
     public float armHold, legHold;
     /**
+     * 1.3.5: how much of the left arm's own (vanilla) rotation is dropped (1: no walking swing, no bob): a hand held still while the
+     * body walks (Eto's, hand in hand). Added and scaled like any channel, so it blends in and out with the pose that sets it.
+     */
+    public float leftArmHold;
+    /**
      * 6.2.2: how much of the head's own (vanilla, camera) turn is dropped (1: the head is the move's alone, square on her body).
      * Witness This turns and tips her whole body every blow; the camera's look on top of that threw her head about.
      */
@@ -111,6 +116,7 @@ public final class RigPose {
         this.rightKneeTurn = this.leftKneeTurn = 0.0F;
         this.rightArmHold = this.blade = 0.0F;
         this.armHold = this.legHold = 0.0F;
+        this.leftArmHold = 0.0F;
         this.headHold = 0.0F;
         this.bulk = 0.0F;
         this.cut = 0.0F;
@@ -158,6 +164,7 @@ public final class RigPose {
         this.rightKneeTurn += other.rightKneeTurn * weight;
         this.leftKneeTurn += other.leftKneeTurn * weight;
         this.armHold += other.armHold * weight;
+        this.leftArmHold += other.leftArmHold * weight;
         this.headHold += other.headHold * weight;
         this.legHold += other.legHold * weight;
         this.bulk += other.bulk * weight;
@@ -244,6 +251,7 @@ public final class RigPose {
         this.leftElbow = Math.max(-0.1F, this.leftElbow);
         this.rightArmHold = Float.isFinite(this.rightArmHold) ? Math.max(0.0F, Math.min(1.0F, this.rightArmHold)) : 0.0F;
         this.armHold = Float.isFinite(this.armHold) ? Math.max(0.0F, Math.min(1.0F, this.armHold * damp)) : 0.0F;
+        this.leftArmHold = Float.isFinite(this.leftArmHold) ? Math.max(0.0F, Math.min(1.0F, this.leftArmHold * damp)) : 0.0F;
         this.legHold = Float.isFinite(this.legHold) ? Math.max(0.0F, Math.min(1.0F, this.legHold * damp)) : 0.0F;
         this.headHold = Float.isFinite(this.headHold) ? Math.max(0.0F, Math.min(1.0F, this.headHold * damp)) : 0.0F;
         this.bulk = Float.isFinite(this.bulk) ? Math.max(0.0F, Math.min(1.0F, this.bulk)) : 0.0F;
@@ -259,7 +267,7 @@ public final class RigPose {
             && this.leftShoulderY == 0 && this.leftShoulderZ == 0 && this.rightLegX == 0 && this.rightLegY == 0 && this.rightLegZ == 0
             && this.rightKnee == 0 && this.leftLegX == 0 && this.leftLegY == 0 && this.leftLegZ == 0 && this.leftKnee == 0
             && this.rightKneeTurn == 0 && this.leftKneeTurn == 0
-            && this.armHold == 0 && this.legHold == 0 && this.headHold == 0 && this.bulk == 0;
+            && this.armHold == 0 && this.legHold == 0 && this.leftArmHold == 0 && this.headHold == 0 && this.bulk == 0;
     }
 
     /**
@@ -419,7 +427,8 @@ public final class RigPose {
         if (type == ROTATION) {
             float both = Float.isFinite(this.armHold) ? Math.max(0.0F, Math.min(1.0F, this.armHold)) : 0.0F;
             if (!right) {
-                return this.heldArm(x, y, z, this.leftArmX, this.leftArmY, this.leftArmZ, 1.0F - both);
+                float left = Float.isFinite(this.leftArmHold) ? Math.max(0.0F, Math.min(1.0F, this.leftArmHold)) : 0.0F;
+                return this.heldArm(x, y, z, this.leftArmX, this.leftArmY, this.leftArmZ, 1.0F - Math.max(both, left));
             }
             float own = 1.0F - Math.max(both, Math.max(0.0F, Math.min(1.0F, this.rightArmHold)));
             float[] turned = this.heldArm(x, y, z, this.rightArmX, this.rightArmY, this.rightArmZ, own);

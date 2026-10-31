@@ -321,9 +321,10 @@ public final class EtoPose {
             }
             case HAND -> {
                 // 1.3.3: her left hand out to the one at her left, holding theirs, a little shy. 1.3.4: just out from her side, to meet theirs
-                // where it hangs (EtoHand), not reaching past it.
+                // where it hangs (EtoHand), not reaching past it. 1.3.5: held still as she walks (none of the walk's swing on it).
                 p.leftArmZ = -EtoHand.ARM;
-                p.leftArmX = -0.12F;
+                p.leftArmX = -EtoHand.FORWARD;
+                p.leftArmHold = 1.0F;
                 p.leftArmY = 0.1F;
                 p.headX = 0.08F;
                 p.rightArmZ = 0.06F;

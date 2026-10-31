@@ -574,8 +574,23 @@ public final class EtoTests {
             "hand in hand: her left hand out to the one at her side, held until she lets go");
         double theirs = 0.375 + 0.75 * Math.sin(com.hex.kagune.control.npc.EtoHand.ARM);
         double hers = (0.34 + 0.75 * Math.sin(com.hex.kagune.control.npc.EtoHand.ARM)) * EtoRules.SIZE;
-        check(Math.abs(theirs + hers - com.hex.kagune.control.npc.EtoHand.OUT) < 1.0E-9 && com.hex.kagune.control.npc.EtoHand.OUT > 0.6
-            && com.hex.kagune.control.npc.EtoHand.OUT < 0.95, "their hands meet: she stands just as far off as both hands hang out");
+        check(Math.abs(theirs + hers - com.hex.kagune.control.npc.EtoHand.OUT) < 1.0E-9 && com.hex.kagune.control.npc.EtoHand.OUT > 0.95
+            && com.hex.kagune.control.npc.EtoHand.OUT < 1.2, "their hands meet: she stands just as far off as both hands hang out, about a block (1.3.5: stretched)");
+        // 1.3.5: the held hand doesn't swing as they walk: whatever vanilla's walk does to her left arm, it is the pose's alone.
+        float[] still = hand.transform("leftArm", RigPose.ROTATION, 0.0F, 0.0F, 0.0F);
+        float[] walking = hand.transform("leftArm", RigPose.ROTATION, 0.9F, 0.0F, -0.05F);
+        RigPose swing = new RigPose();
+        float[] free = swing.transform("leftArm", RigPose.ROTATION, 0.9F, 0.0F, 0.0F);
+        check(hand.leftArmHold >= 0.999F && Math.abs(still[0] - walking[0]) < 1.0E-5F && Math.abs(still[1] - walking[1]) < 1.0E-5F
+            && Math.abs(still[2] - walking[2]) < 1.0E-5F && Math.abs(free[0] - 0.9F) < 1.0E-5F,
+            "hand in hand: her held arm stays where the pose puts it while she walks (the free arm still swings)");
+        RigPose theirsHeld = new RigPose();
+        theirsHeld.rightArmHold = 1.0F;
+        theirsHeld.rightArmZ = com.hex.kagune.control.npc.EtoHand.ARM;
+        float[] stand = theirsHeld.transform("rightArm", RigPose.ROTATION, 0.0F, 0.0F, 0.0F);
+        float[] stride = theirsHeld.transform("rightArm", RigPose.ROTATION, -0.9F, 0.0F, 0.05F);
+        check(Math.abs(stand[0] - stride[0]) < 1.0E-5F && Math.abs(stand[2] - stride[2]) < 1.0E-5F,
+            "hand in hand: the player's held arm stays put through their stride too");
         RigPose write = EtoPose.gesture(EtoGesture.WRITE, 20);
         RigPose writing = EtoPose.gesture(EtoGesture.WRITE, 21);
         check(write.leftArmX == writing.leftArmX && write.rightArmX != writing.rightArmX && EtoGesture.WRITE.mainHand.endsWith("feather")

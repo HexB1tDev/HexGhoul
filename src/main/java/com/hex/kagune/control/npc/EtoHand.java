@@ -8,8 +8,12 @@ import net.minecraft.world.phys.Vec3;
  * {@code (0.34 + 0.75 sin ARM) * SIZE} from hers (a slim one): {@link #OUT} apart, the two meet.
  */
 public final class EtoHand {
-    /** How far out from their sides both hands are turned (radians), and how far apart the two of them stand (blocks). */
-    public static final float ARM = 0.1F;
+    /**
+     * How far out from their sides both hands are turned (radians), how far forward (radians), and how far apart the two of them stand
+     * (blocks). 1.3.5: stretched out further (they stood too close), about 15 degrees each, a block apart.
+     */
+    public static final float ARM = 0.26F;
+    public static final float FORWARD = 0.12F;
     public static final double OUT = 0.375 + 0.75 * Math.sin(ARM) + (0.34 + 0.75 * Math.sin(ARM)) * EtoRules.SIZE;
 
     /** Where she stands for {@code x, y, z} facing {@code bodyYaw} (degrees): {@link #OUT} to their right. */
