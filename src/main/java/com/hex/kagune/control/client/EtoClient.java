@@ -151,6 +151,7 @@ public final class EtoClient {
     @SubscribeEvent
     public static void loggingOut(ClientPlayerNetworkEvent.LoggingOut event) {
         VIEWS.clear();
+        NpcWingsClient.clear(); // 1.3.19
         EYES.clear();
         com.hex.kagune.control.client.render.FemaleFigure.clear();
     }

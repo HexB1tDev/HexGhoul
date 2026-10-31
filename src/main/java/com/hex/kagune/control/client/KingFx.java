@@ -316,7 +316,7 @@ public final class KingFx {
         }, partial, camera, now);
         // (1.0.16 drew Peace's blades thin trails along the paths they cut; 1.0.34: gone, the user's call: added over the ground they read
         // as yellow streaks.)
-        for (net.minecraft.client.player.AbstractClientPlayer player : level.m_6907_()) {
+        for (net.minecraft.world.entity.LivingEntity player : KingClient.wearers(level)) {
             if (player.m_20182_().m_82557_(camera) > FAR * FAR) {
                 continue;
             }
@@ -331,7 +331,9 @@ public final class KingFx {
             };
             coming(both, player, partial, now, camera);
             // 1.0.28: what War's held moves put out of his body (Black Reaper's centipedes, the Spire Wave's round his arm).
-            com.hex.kagune.control.client.fx.WarHoldFx.player(both, player, partial, now, camera);
+            if (player instanceof net.minecraft.client.player.AbstractClientPlayer warrior) {
+                com.hex.kagune.control.client.fx.WarHoldFx.player(both, warrior, partial, now, camera);
+            }
             // 1.0.34: what Peace's moves grow out of his back (the Aegis's shields, the Ascent's two tendrils).
             com.hex.kagune.control.client.fx.PeaceFx.player(both, player, partial, now, camera);
         }
@@ -369,7 +371,7 @@ public final class KingFx {
     private static final Map<UUID, double[]> COMING_AT = new HashMap<>();
 
     /** {@code player}'s final kakuja coming over him, if it is (or what it left is still there), drawn {@code now}. */
-    private static void coming(UkakuModel.Sink sink, net.minecraft.client.player.AbstractClientPlayer player, float partial, double now, Vec3 camera) {
+    private static void coming(UkakuModel.Sink sink, net.minecraft.world.entity.LivingEntity player, float partial, double now, Vec3 camera) {
         KingClient.View view = KingClient.get(player);
         if (view == null || !view.on()) {
             return;
@@ -414,7 +416,7 @@ public final class KingFx {
         }
         long tick = level.m_46467_();
         Entity self = minecraft.f_91074_;
-        for (net.minecraft.client.player.AbstractClientPlayer player : level.m_6907_()) {
+        for (net.minecraft.world.entity.LivingEntity player : KingClient.wearers(level)) {
             KingClient.View view = KingClient.get(player);
             if (view == null || !view.on()) {
                 continue;
@@ -482,7 +484,7 @@ public final class KingFx {
             return;
         }
         long tick = level.m_46467_();
-        for (net.minecraft.client.player.AbstractClientPlayer player : level.m_6907_()) {
+        for (net.minecraft.world.entity.LivingEntity player : KingClient.wearers(level)) {
             KingClient.View view = KingClient.get(player);
             if (view == null || view.on()) {
                 continue;
@@ -694,12 +696,12 @@ public final class KingFx {
      * {@code player}'s blades sent at things now, per blade (as {@link com.hex.kagune.control.king.PeaceMotion.State} takes them), or
      * null for none. 1.0.34: Peace's reworked moves' ({@link com.hex.kagune.control.client.fx.PeaceFx#aims}).
      */
-    public static double[][] peaceAims(net.minecraft.client.player.AbstractClientPlayer player, double now) {
+    public static double[][] peaceAims(net.minecraft.world.entity.LivingEntity player, double now) {
         return com.hex.kagune.control.client.fx.PeaceFx.aims(player, now);
     }
 
     /** 1.2.8: as above, for the frame {@code partial} of the way to the next tick (where the body is drawn). */
-    public static double[][] peaceAims(net.minecraft.client.player.AbstractClientPlayer player, double now, float partial) {
+    public static double[][] peaceAims(net.minecraft.world.entity.LivingEntity player, double now, float partial) {
         return com.hex.kagune.control.client.fx.PeaceFx.aims(player, now, partial);
     }
 
@@ -723,12 +725,7 @@ public final class KingFx {
 
     /** The player {@code id} in {@code level}, or null. */
     static Entity player(ClientLevel level, UUID id) {
-        for (net.minecraft.client.player.AbstractClientPlayer p : level.m_6907_()) {
-            if (p.m_20148_().equals(id)) {
-                return p;
-            }
-        }
-        return null;
+        return KingClient.find(level, id); // 1.3.19: or a body that is no player (Ken in Peace)
     }
 
     /** Where {@code owner}'s free hand is, thrown out in front of him (the left arm, at the shoulder's height). */

@@ -21,6 +21,7 @@ import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
@@ -74,7 +75,7 @@ public final class KingLayer extends RenderLayer<AbstractClientPlayer, EntityMod
         return parts;
     }
 
-    private static final Map<AbstractClientPlayer, Built> BUILT = new WeakHashMap<>();
+    private static final Map<LivingEntity, Built> BUILT = new WeakHashMap<>();
     /**
      * 1.0.28: War built at two ticks, the one now and the next, and every frame drawn between the two, corner by corner (as Peace's
      * kagune is, {@link Living}): his rinkaku writhe every frame, not in steps twenty times a second. Each tick only the next one is
@@ -104,7 +105,7 @@ public final class KingLayer extends RenderLayer<AbstractClientPlayer, EntityMod
         Built next = new Built();
     }
 
-    private static final Map<AbstractClientPlayer, Living> LIVING = new WeakHashMap<>();
+    private static final Map<LivingEntity, Living> LIVING = new WeakHashMap<>();
     /** 1.0.18: past this far from the camera (blocks) Peace's kagune is built every four ticks (still drawn between), not every tick. */
     private static final double LIVING_NEAR = 28.0;
 
@@ -295,6 +296,84 @@ public final class KingLayer extends RenderLayer<AbstractClientPlayer, EntityMod
         }
         if (war && !shedding && matrices[0] != null) {
             bloom(lights, matrices[0], normals[0], player, partial, grow, night, eye);
+        }
+    }
+
+    /**
+     * 1.3.19: Peace on a body that is no player (Ken): its armour (built once a tick; every frame while it swells out of him) and its living
+     * kagune (every frame near the camera), on the body's posed parts, exactly as on a player. Nothing of War's here.
+     */
+    public static void drawPeaceBody(PoseStack pose, MultiBufferSource buffers, int light, LivingEntity body, HumanoidModel<?> model, float partial) {
+        if (body.m_20145_()) {
+            return;
+        }
+        KingClient.View view = KingClient.get(body);
+        if (view == null || view.form() != KingForm.PEACE) {
+            return;
+        }
+        double time = ControlClient.worldTime(partial);
+        double grow = view.grow(time);
+        if (grow <= 0.003) {
+            return;
+        }
+        double[] growth = KingTransform.growth(view.form(), view.on(), time - view.since());
+        com.hex.kagune.control.king.PeaceMotion.State peace = peaceState(body, partial, time);
+        long key = (long)Math.floor(time);
+        double at = key;
+        if (growth != null) {
+            key = (long)Math.floor(time * 60.0) | Long.MIN_VALUE;
+            at = time;
+        }
+        Built built = built(body, KingForm.PEACE, key, at, grow, 0.0, WarModel.Motion.STILL, -1.0, null, peace, growth, false,
+            com.hex.kagune.control.king.PeaceModel.ARMOUR);
+        boolean near = body.m_20238_(Minecraft.m_91087_().f_91063_.m_109153_().m_90583_()) < LIVING_NEAR * LIVING_NEAR;
+        Living living = living(body, view, partial, time, near ? 1 : 4);
+        float between = (float)Math.max(0.0, Math.min(1.0, (time - living.from) / living.step));
+        float[] scratch = new float[20];
+        ModelPart[] parts = {model.f_102808_, model.f_102810_, model.f_102811_, model.f_102812_, model.f_102813_, model.f_102814_};
+        Matrix4f[] matrices = new Matrix4f[parts.length];
+        Matrix3f[] normals = new Matrix3f[parts.length];
+        VertexConsumer shapes = buffers.m_6299_(SHAPES);
+        for (int i = 0; i < parts.length; i++) {
+            ModelPart part = parts[i];
+            if (part == null || !part.f_104207_) {
+                continue;
+            }
+            pose.m_85836_();
+            part.m_104299_(pose);
+            matrices[i] = new Matrix4f(pose.m_85850_().m_252922_());
+            normals[i] = new Matrix3f(pose.m_85850_().m_252943_());
+            pose.m_85849_();
+            bodyQuads(shapes, matrices[i], normals[i], built.parts[i], null, 0.0F, scratch, false, light);
+            bodyQuads(shapes, matrices[i], normals[i], living.next.parts[i], living.was.parts[i], between, scratch, false, light);
+        }
+        VertexConsumer lights = buffers.m_6299_(LIGHT);
+        for (int i = 0; i < parts.length; i++) {
+            if (matrices[i] == null) {
+                continue;
+            }
+            bodyQuads(lights, matrices[i], normals[i], built.parts[i], null, 0.0F, scratch, true, light);
+            bodyQuads(lights, matrices[i], normals[i], living.next.parts[i], living.was.parts[i], between, scratch, true, light);
+        }
+    }
+
+    /** 1.3.19: one part's shapes (or, {@code glow}, its burning ones), each between {@code was} and it by {@code k} if they pair. */
+    private static void bodyQuads(VertexConsumer consumer, Matrix4f matrix, Matrix3f normals, List<float[]> now, List<float[]> was, float k, float[] scratch,
+                                  boolean glow, int light) {
+        boolean paired = was != null && was.size() == now.size();
+        for (int n = 0; n < now.size(); n++) {
+            float[] q = now.get(n);
+            if ((q[19] != 0.0F) != glow) {
+                continue;
+            }
+            float[] s = paired ? between(was.get(n), q, k, scratch) : q;
+            for (int c = 0; c < 4; c++) {
+                if (glow) {
+                    shape(consumer, matrix, normals, s, c, premultiplied((int)s[15 + c]), FULL_BRIGHT);
+                } else {
+                    shape(consumer, matrix, normals, s, c, (int)s[15 + c], light);
+                }
+            }
         }
     }
 
@@ -549,7 +628,7 @@ public final class KingLayer extends RenderLayer<AbstractClientPlayer, EntityMod
      * 1.0.18: {@code player}'s living Peace kagune for this frame: built for the step it is in and the next ({@code step} ticks apart),
      * moved on a step when the time comes (the next becoming what it was), all built again when its move or its wearing changes.
      */
-    private static Living living(AbstractClientPlayer player, KingClient.View view, float partial, double time, int step) {
+    private static Living living(LivingEntity player, KingClient.View view, float partial, double time, int step) {
         Living living = LIVING.computeIfAbsent(player, p -> new Living());
         long from = (long)Math.floor(time / step) * step;
         boolean same = living.step == step && living.move == view.move() && living.moveAt == view.moveAt() && living.level == view.level()
@@ -576,7 +655,7 @@ public final class KingLayer extends RenderLayer<AbstractClientPlayer, EntityMod
     }
 
     /** {@code built} filled with {@code player}'s Peace kagune as it is at {@code at} (ticks). */
-    private static void fill(Built built, AbstractClientPlayer player, KingClient.View view, float partial, double time, double at) {
+    private static void fill(Built built, LivingEntity player, KingClient.View view, float partial, double time, double at) {
         com.hex.kagune.control.king.PeaceMotion.State state = alive(player, view, partial, time, peaceState(player, partial, time, at), at);
         double grow = view.grow(at);
         WarModel.Part[] parts = WarModel.Part.values();
@@ -615,7 +694,7 @@ public final class KingLayer extends RenderLayer<AbstractClientPlayer, EntityMod
      * step), each with its body part (0 head, 1 torso, 2 right arm, 3 left arm, 4 right leg, 5 left leg): what its afterimages are made of
      * ({@link KingAfterimages}). The shapes are the layer's own (corners in the part's model pixels, normal, colours, glow): not to be kept.
      */
-    public static void quads(AbstractClientPlayer player, java.util.function.ObjIntConsumer<float[]> out) {
+    public static void quads(LivingEntity player, java.util.function.ObjIntConsumer<float[]> out) {
         Pair pair = PAIRS.get(player);
         Built built = pair != null ? pair.next : BUILT.get(player);
         Living living = LIVING.get(player);
@@ -671,16 +750,16 @@ public final class KingLayer extends RenderLayer<AbstractClientPlayer, EntityMod
     }
 
     /** 1.0.25: each Peace's six arms alive (PeaceArms), per player. */
-    private static final Map<AbstractClientPlayer, com.hex.kagune.control.king.PeaceArms> ARMS = new WeakHashMap<>();
+    private static final Map<LivingEntity, com.hex.kagune.control.king.PeaceArms> ARMS = new WeakHashMap<>();
 
     /** 1.0.25: {@code state} with {@code player}'s living arms in it as they are at {@code at} (ticks; between two, between them). */
-    public static com.hex.kagune.control.king.PeaceMotion.State alive(AbstractClientPlayer player, float partial, double time,
+    public static com.hex.kagune.control.king.PeaceMotion.State alive(LivingEntity player, float partial, double time,
                                                                        com.hex.kagune.control.king.PeaceMotion.State state, double at) {
         KingClient.View view = KingClient.get(player);
         return view == null ? state : alive(player, view, partial, time, state, at);
     }
 
-    private static com.hex.kagune.control.king.PeaceMotion.State alive(AbstractClientPlayer player, KingClient.View view, float partial, double time,
+    private static com.hex.kagune.control.king.PeaceMotion.State alive(LivingEntity player, KingClient.View view, float partial, double time,
                                                                         com.hex.kagune.control.king.PeaceMotion.State state, double at) {
         com.hex.kagune.control.king.PeaceArms arms = ARMS.computeIfAbsent(player,
             p -> new com.hex.kagune.control.king.PeaceArms(p.m_20148_().getLeastSignificantBits()));
@@ -701,7 +780,7 @@ public final class KingLayer extends RenderLayer<AbstractClientPlayer, EntityMod
     }
 
     /** 1.0.25: how {@code player}'s body moved this tick: {turn (radians, + to his right), blocks to his right, up, ahead}. */
-    private static double[] motion(AbstractClientPlayer player) {
+    private static double[] motion(LivingEntity player) {
         double yaw = Math.toRadians(player.f_20883_);
         double d = player.f_20883_ - player.f_20884_;
         double turn = Math.toRadians(d - 360.0 * Math.floor((d + 180.0) / 360.0));
@@ -711,19 +790,19 @@ public final class KingLayer extends RenderLayer<AbstractClientPlayer, EntityMod
     }
 
     /** 1.0.16: how far each Peace's turning leaves its blades behind, and how fast it runs, eased (per player). */
-    private static final Map<AbstractClientPlayer, double[]> SWAY = new WeakHashMap<>();
+    private static final Map<LivingEntity, double[]> SWAY = new WeakHashMap<>();
 
     /**
      * 1.0.16: what {@code player}'s Peace blades are doing this frame: the move (and the one it cut off), the look's pitch, the blades
      * sent out on their own at bodies ({@link com.hex.kagune.control.client.KingFx#peaceAims}), how far its turning leaves them
      * behind and how fast it runs.
      */
-    public static com.hex.kagune.control.king.PeaceMotion.State peaceState(AbstractClientPlayer player, float partial, double time) {
+    public static com.hex.kagune.control.king.PeaceMotion.State peaceState(LivingEntity player, float partial, double time) {
         return peaceState(player, partial, time, time);
     }
 
     /** 1.0.18: as above, as it will be at {@code at} (ticks; its turning, running and rising as they are now). */
-    static com.hex.kagune.control.king.PeaceMotion.State peaceState(AbstractClientPlayer player, float partial, double time, double at) {
+    static com.hex.kagune.control.king.PeaceMotion.State peaceState(LivingEntity player, float partial, double time, double at) {
         KingClient.View view = KingClient.get(player);
         if (view == null) {
             return com.hex.kagune.control.king.PeaceMotion.State.REST;
@@ -773,7 +852,7 @@ public final class KingLayer extends RenderLayer<AbstractClientPlayer, EntityMod
      * The player's kakuja for this tick, built again only when the tick, the growth or the night has moved on; 1.0.11: or how far
      * they have turned into the Dragon ({@code turning}, -1: not turning).
      */
-    private static Built built(AbstractClientPlayer player, KingForm form, long tick, double at, double grow, double night, WarModel.Motion motion,
+    private static Built built(LivingEntity player, KingForm form, long tick, double at, double grow, double night, WarModel.Motion motion,
                                double turning, double[] eye, com.hex.kagune.control.king.PeaceMotion.State peace, double[] growth, boolean clothed, int what) {
         return buildInto(BUILT.computeIfAbsent(player, p -> new Built()), form, tick, at, grow, night, motion, turning, eye, peace, growth, clothed, what);
     }

@@ -74,6 +74,10 @@ public final class EtoBrain {
         final Map<UUID, Long> grudges = new HashMap<>();
         /** 1.3.4: her Owl DNA kit's moves ({@link EtoOwl}). */
         final EtoOwl.Fight owl = new EtoOwl.Fight();
+        /** 1.3.19: Ken's side of Peace ({@link KenPeace}). */
+        final KenPeace.State peace = new KenPeace.State();
+        /** 1.3.19: Touka's wings ({@link NpcWings}). */
+        final NpcWings.State wings = new NpcWings.State();
         EtoGesture gesture = EtoGesture.NONE;
         long gestureAt = Long.MIN_VALUE;
         long nextGestureAt;
@@ -227,6 +231,10 @@ public final class EtoBrain {
             mind.target = 0;
         }
         LivingEntity target = target(npc, mind, level, homeAt, now);
+        // 1.3.19: his final kakuja's kit (Ken's Peace), every tick; it goes back into him once the fight is long over.
+        KenPeace.tick(npc, mind, target, level, now);
+        // 1.3.19: her wings' spikes in flight, and the wings going back in once the fight is long over (Touka's).
+        NpcWings.tick(npc, mind, level, now);
         // Her partner about, she may wander as far as her leash to be near them.
         npc.m_21446_(home, target != null || mind.partnerNear ? EtoRules.LEASH : EtoRules.HOME_RADIUS);
         boolean turned = target != null;
@@ -338,6 +346,30 @@ public final class EtoBrain {
         return current;
     }
 
+    /**
+     * 1.3.19: whether {@code body} is a foe of this companion's (what its final kakuja's blades, shields and flesh go for): what it fights,
+     * a monster, what hurt it or is out for it; a player only if fought or held a grudge against, never its partner; never a child, another
+     * companion, a villager or a beast minding its own business.
+     */
+    public static boolean foe(EtoNpc npc, LivingEntity body) {
+        Mind mind = npc.mind;
+        if (body == npc || !body.m_6084_() || mind == null) {
+            return false;
+        }
+        if (body instanceof EtoNpc || body instanceof com.hex.kagune.control.npc.ChildNpc) {
+            return false;
+        }
+        if (body instanceof ServerPlayer player) {
+            return !player.m_7500_() && !player.m_5833_() && !partnerOf(mind, player) && !spared(player, npc)
+                && (mind.target == player.m_19879_() || mind.grudges.containsKey(player.m_20148_()));
+        }
+        if (com.hex.kagune.control.server.FleshThralls.ownedBy(body, npc)) {
+            return false;
+        }
+        return body.m_19879_() == mind.target || body instanceof Enemy || npc.m_21188_() == body || body instanceof net.minecraft.world.entity.Mob mob
+            && mob.m_5448_() == npc;
+    }
+
     /** Something to fight: a hostile within reach of her, a player she holds a grudge against or who is her enemy, near her home. */
     private static LivingEntity seek(EtoNpc npc, Mind mind, ServerLevel level, Vec3 home, long now) {
         mind.grudges.values().removeIf(until -> until < now);
@@ -388,6 +420,10 @@ public final class EtoBrain {
         }
         long now = level.m_46467_();
         mind.hurtAt = now;
+        if (KenPeace.wears(npc)) {
+            // 1.3.19: in Peace: its shields take what they meet, and it takes off a share of the rest (nothing while it comes over him).
+            event.setAmount(KenPeace.hurt(npc, source.m_7639_(), source.m_7640_(), event.getAmount()));
+        }
         Entity cause = source.m_7639_();
         if (!(cause instanceof LivingEntity attacker) || attacker == npc) {
             return;
@@ -529,6 +565,12 @@ public final class EtoBrain {
             }
         }
         npc.m_21563_().m_24960_(target, 30.0F, 30.0F);
+        if (NpcWings.fight(npc, mind, target, level, now)) {
+            return; // 1.3.19: Touka's crystal spikes
+        }
+        if (KenPeace.fight(npc, mind, target, level, now, phase)) {
+            return; // 1.3.19: Ken in Peace
+        }
         EtoOwl.tick(npc, mind, target, level, now, phase);
     }
 
@@ -1179,6 +1221,8 @@ public final class EtoBrain {
         EtoWatch.forget(npc);
         EtoArm.forget(npc);
         EtoOwlForm.forget(npc);
+        KenPeace.forget(npc);
+        NpcWings.forget(npc, npc.mind);
         if (npc.mind != null) {
             EtoFlesh.release(level, npc.mind.owl);
         }
@@ -1313,6 +1357,7 @@ public final class EtoBrain {
             ControlNetwork.sendTo(player, message(npc, npc.mind));
             EtoArm.tracked(player, npc);
             EtoOwlForm.tracked(player, npc);
+            NpcWings.tracked(player, npc);
         }
     }
 }

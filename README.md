@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.19 (HexGhoul): Ken fights in Peace, every move of it; Touka's crystal wings (testing)
+
+See `.github/release-notes-1.3.19.md`.
+
 ## 1.3.18 (HexGhoul): the owner's skins for sons and daughters, with real kakugan; Touka's legs a touch slimmer (testing)
 
 See `.github/release-notes-1.3.18.md`.

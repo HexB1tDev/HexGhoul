@@ -47,12 +47,84 @@ public final class CompanionTests {
         lessons();
         talk();
         poses();
+        ken();
+        touka();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
             System.exit(1);
         }
         System.out.println("Companion tests: " + passed + " checks passed");
+    }
+
+    /** 1.3.19: Ken fights in Peace, every one of its moves his, with Eto's fists, kick, flips and a dash; Touka and Eto never wear it. */
+    static void ken() {
+        check(com.hex.kagune.control.npc.Persona.KEN.finalKakuja() == com.hex.kagune.control.king.KingForm.PEACE, "Ken fights in Peace");
+        check(com.hex.kagune.control.npc.Persona.ETO.finalKakuja() == com.hex.kagune.control.king.KingForm.NONE
+            && com.hex.kagune.control.npc.Persona.TOUKA.finalKakuja() == com.hex.kagune.control.king.KingForm.NONE, "nobody else wears a final kakuja");
+        check(com.hex.kagune.control.npc.Persona.KEN.health() > com.hex.kagune.control.npc.Persona.ETO.health(), "Ken is the strongest of them");
+        for (int slot = 0; slot < 6; slot++) {
+            com.hex.kagune.control.npc.KenRules.Act act = com.hex.kagune.control.npc.KenRules.ability(slot);
+            check(act != null && com.hex.kagune.control.npc.KenRules.slot(act) == slot, "Peace's key " + slot + " is one of his acts and back");
+            int ticks = com.hex.kagune.control.king.PeaceRules.Ability.bySlot(slot).cooldown();
+            check(com.hex.kagune.control.npc.KenRules.cooldown(ticks) < ticks, "his wait for key " + slot + " is shorter than a player's");
+        }
+        // Over many fights, every move of his comes up.
+        java.util.EnumSet<com.hex.kagune.control.npc.KenRules.Act> seen = java.util.EnumSet.noneOf(com.hex.kagune.control.npc.KenRules.Act.class);
+        java.util.Random random = new java.util.Random(19);
+        long now = 10_000L;
+        for (int i = 0; i < 20_000; i++) {
+            long[] w = new long[11];
+            for (int k = 0; k < w.length; k++) {
+                w[k] = random.nextDouble() < 0.5 ? 0L : now + 100L;
+            }
+            com.hex.kagune.control.npc.KenRules.Ready ready = new com.hex.kagune.control.npc.KenRules.Ready(w[0], w[1], w[2], w[3], w[4], w[5], w[6], w[7],
+                w[8], w[9], w[10]);
+            double gap = random.nextDouble() * 24.0;
+            com.hex.kagune.control.npc.KenRules.Act act = com.hex.kagune.control.npc.KenRules.choose(gap, random.nextDouble() < 0.9,
+                random.nextDouble() < 0.85, (float)random.nextDouble(), random.nextBoolean(), random.nextInt(4), now, ready, random.nextDouble());
+            seen.add(act);
+            int slot = com.hex.kagune.control.npc.KenRules.slot(act);
+            check(slot < 0 || w[slot] <= now, "he never throws an ability that isn't ready (" + act + ")");
+            check(act != com.hex.kagune.control.npc.KenRules.Act.STRIKE || gap <= com.hex.kagune.control.npc.KenRules.REACH,
+                "his blades' chain only in reach");
+            check(act != com.hex.kagune.control.npc.KenRules.Act.HORIZON || gap <= com.hex.kagune.control.king.PeaceRules.HORIZON_RANGE,
+                "the Final Horizon only on what is in its reach");
+            check(act != com.hex.kagune.control.npc.KenRules.Act.WALTZ || gap <= com.hex.kagune.control.king.PeaceRules.WALTZ_RANGE,
+                "the Waltz only on what is in its reach");
+        }
+        check(seen.size() == com.hex.kagune.control.npc.KenRules.Act.values().length, "every one of his moves comes up in his fights (" + seen + ")");
+        // Peace comes over him at once: the very first thing in a fight, whatever the distance (his server side wears it before any act).
+        check(com.hex.kagune.control.npc.KenRules.OFF_AFTER >= 100L, "it stays on him a while after a fight, never flickering off between blows");
+    }
+
+    /** 1.3.19: Touka's wings: a lesser pair, crystal spikes (a volley, a fan, the barrage), her fists up close; only hers. */
+    static void touka() {
+        check(com.hex.kagune.control.npc.Persona.TOUKA.wings() && !com.hex.kagune.control.npc.Persona.ETO.wings()
+            && !com.hex.kagune.control.npc.Persona.KEN.wings(), "only Touka fights with wings of her own");
+        check(com.hex.kagune.control.npc.WingRules.MASTERY < com.hex.kagune.control.ukaku.WingForm.KAKUJA.requiredMastery()
+            && com.hex.kagune.control.npc.WingRules.MASTERY > com.hex.kagune.control.ukaku.WingForm.TWIN.requiredMastery(), "her wings are a lesser pair, about halfway");
+        check(com.hex.kagune.control.npc.WingRules.SHOT < 6.0F && com.hex.kagune.control.npc.WingRules.BARRAGE < com.hex.kagune.control.npc.WingRules.SHOT,
+            "her spikes sting; nowhere near Ken's blades");
+        java.util.EnumSet<com.hex.kagune.control.npc.WingRules.Act> seen = java.util.EnumSet.noneOf(com.hex.kagune.control.npc.WingRules.Act.class);
+        java.util.Random random = new java.util.Random(7);
+        long now = 5_000L;
+        for (int i = 0; i < 5_000; i++) {
+            double gap = random.nextDouble() * 26.0;
+            boolean sees = random.nextDouble() < 0.9;
+            long shot = random.nextBoolean() ? 0L : now + 5L;
+            long fan = random.nextBoolean() ? 0L : now + 50L;
+            long barrage = random.nextBoolean() ? 0L : now + 90L;
+            com.hex.kagune.control.npc.WingRules.Act act = com.hex.kagune.control.npc.WingRules.choose(gap, sees, now, shot, fan, barrage, random.nextDouble());
+            seen.add(act);
+            check(act == com.hex.kagune.control.npc.WingRules.Act.NONE || gap >= com.hex.kagune.control.npc.WingRules.NEAR && sees,
+                "her spikes only at what she sees, never point blank (her fists there)");
+            check(act != com.hex.kagune.control.npc.WingRules.Act.BARRAGE || barrage <= now, "the barrage only when it is ready");
+            check(act != com.hex.kagune.control.npc.WingRules.Act.FAN || fan <= now, "the fan only when it is ready");
+        }
+        check(seen.size() == com.hex.kagune.control.npc.WingRules.Act.values().length, "every one of her wing moves comes up (" + seen + ")");
+        check(Math.abs(com.hex.kagune.control.npc.WingRules.fan(0, 5) + com.hex.kagune.control.npc.WingRules.FAN_SPREAD) < 1.0E-9
+            && Math.abs(com.hex.kagune.control.npc.WingRules.fan(2, 5)) < 1.0E-9, "the fan spreads evenly about her aim");
     }
 
     static void hands() {

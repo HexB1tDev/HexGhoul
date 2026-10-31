@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.UUID;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 
@@ -365,7 +365,7 @@ public final class PeaceFx {
      * (NaN: from its root), how far short its heart stops, its size}, or null; null for none at all. The lance first, then the blades in
      * bodies, then the blades sunk in the ground.
      */
-    public static double[][] aims(AbstractClientPlayer player, double now) {
+    public static double[][] aims(LivingEntity player, double now) {
         return aims(player, now, 1.0F);
     }
 
@@ -377,7 +377,7 @@ public final class PeaceFx {
      */
     private static float partial = 1.0F;
 
-    public static double[][] aims(AbstractClientPlayer player, double now, float frame) {
+    public static double[][] aims(LivingEntity player, double now, float frame) {
         ClientLevel level = Minecraft.m_91087_().f_91073_;
         if (level == null) {
             return null;
@@ -408,7 +408,7 @@ public final class PeaceFx {
      * body faces, not his head: the blades are drawn off his body, and a body left up to 50 degrees behind his head (standing, turning
      * only his view) sent every blade that far off what it was aimed at.
      */
-    static double[] body(AbstractClientPlayer player, double[] world) {
+    static double[] body(LivingEntity player, double[] world) {
         double yaw = Math.toRadians(bodyYaw(player));
         double sin = Math.sin(yaw);
         double cos = Math.cos(yaw);
@@ -423,7 +423,7 @@ public final class PeaceFx {
     }
 
     /** A way in the world as {@code player}'s body frame (unit; 1.0.40: the way his body faces, as {@link #body}). */
-    static double[] bodyWay(AbstractClientPlayer player, double[] way) {
+    static double[] bodyWay(LivingEntity player, double[] way) {
         double yaw = Math.toRadians(bodyYaw(player));
         double sin = Math.sin(yaw);
         double cos = Math.cos(yaw);
@@ -433,22 +433,22 @@ public final class PeaceFx {
     }
 
     /** His right and ahead in the world (level). */
-    static double[] right(AbstractClientPlayer player) {
+    static double[] right(LivingEntity player) {
         double yaw = Math.toRadians(player.f_20885_);
         return new double[] {-Math.cos(yaw), 0.0, -Math.sin(yaw)};
     }
 
-    static double[] ahead(AbstractClientPlayer player) {
+    static double[] ahead(LivingEntity player) {
         double yaw = Math.toRadians(player.f_20885_);
         return new double[] {-Math.sin(yaw), 0.0, Math.cos(yaw)};
     }
 
-    private static double[] aim(AbstractClientPlayer player, double[] at, double out, double[] way, double back, double size) {
+    private static double[] aim(LivingEntity player, double[] at, double out, double[] way, double back, double size) {
         return aim(player, at, out, way, back, size, null);
     }
 
     /** 1.0.36: as above, the blade's face turned to {@code face} (world, unit; null: as its way has it). */
-    private static double[] aim(AbstractClientPlayer player, double[] at, double out, double[] way, double back, double size, double[] face) {
+    private static double[] aim(LivingEntity player, double[] at, double out, double[] way, double back, double size, double[] face) {
         double[] p = body(player, at);
         double[] w = way == null ? new double[] {Double.NaN, Double.NaN, Double.NaN} : bodyWay(player, way);
         double[] f = face == null ? new double[] {Double.NaN, Double.NaN, Double.NaN} : bodyWay(player, face);
@@ -474,8 +474,10 @@ public final class PeaceFx {
     }
 
     /** 1.2.8: how his torso is carried this frame ({@code BodyFrame.carry}: rig p to A p + b), or null when nothing poses it. */
-    private static double[] torso(AbstractClientPlayer player) {
-        com.hex.kagune.control.client.animation.RigPose pose = com.hex.kagune.control.client.animation.KaguneBodyAnimation.current(player, partial);
+    private static double[] torso(LivingEntity player) {
+        com.hex.kagune.control.client.animation.RigPose pose = player instanceof net.minecraft.client.player.AbstractClientPlayer p
+            ? com.hex.kagune.control.client.animation.KaguneBodyAnimation.current(p, partial)
+            : com.hex.kagune.control.client.render.EtoRenderer.lastPose(player.m_19879_()); // 1.3.19: Ken, as last drawn
         return pose == null ? null : com.hex.kagune.control.client.animation.BodyFrame.carry(pose, "torso");
     }
 
@@ -522,11 +524,11 @@ public final class PeaceFx {
     }
 
     /** 1.2.8: the way his body is drawn turned this frame (degrees). */
-    static double bodyYaw(AbstractClientPlayer player) {
+    static double bodyYaw(LivingEntity player) {
         return player.f_20884_ + wrap(player.f_20883_ - player.f_20884_) * partial;
     }
 
-    private static boolean impaleAims(ClientLevel level, AbstractClientPlayer player, double now, double[][] aims) {
+    private static boolean impaleAims(ClientLevel level, LivingEntity player, double now, double[][] aims) {
         Impale[] all = IMPALES.get(player.m_20148_());
         if (all == null) {
             return false;
@@ -617,7 +619,7 @@ public final class PeaceFx {
         return add(lance.from, lance.dir, gone);
     }
 
-    private static boolean lanceAims(ClientLevel level, AbstractClientPlayer player, double now, double[][] aims) {
+    private static boolean lanceAims(ClientLevel level, LivingEntity player, double now, double[][] aims) {
         Lance lance = LANCES.get(player.m_20148_());
         if (lance == null) {
             return false;
@@ -669,7 +671,7 @@ public final class PeaceFx {
     /** 1.2.8: each player's Rebirth as it began: {his right, ahead, feet, {when}} (world). */
     private static final Map<UUID, double[][]> BURIED = new HashMap<>();
 
-    private static boolean buryAims(AbstractClientPlayer player, double now, double[][] aims) {
+    private static boolean buryAims(LivingEntity player, double now, double[][] aims) {
         KingClient.View view = KingClient.get(player);
         if (view == null || view.moveAt(now) != KingMove.REBIRTH) {
             return false;
@@ -707,7 +709,7 @@ public final class PeaceFx {
     // ------------------------------------------------------------------ out of his back, and out of the ground
 
     /** What grows out of {@code player}'s back this frame (the Aegis's shields, the Ascent's tendrils), into {@code sink} (world). */
-    public static void player(UkakuModel.Sink sink, AbstractClientPlayer player, float partial, double now, Vec3 camera) {
+    public static void player(UkakuModel.Sink sink, LivingEntity player, float partial, double now, Vec3 camera) {
         UUID id = player.m_20148_();
         Aegis aegis = AEGIS.get(id);
         Lift lift = LIFTS.get(id);

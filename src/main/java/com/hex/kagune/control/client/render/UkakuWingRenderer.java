@@ -276,6 +276,63 @@ public final class UkakuWingRenderer {
             com.hex.kagune.control.client.animation.RigPose flipping = com.hex.kagune.control.client.GhoulNpcClient.flip(seen, clock, npc.m_20096_());
             emit(consumer, matrix, normals, quads, x, y, z, yaw, flipping == null ? 0.0F : flipping.flip);
         }
+        // 1.3.19: a companion's wings (Touka's): a lesser pair at her size, riding her torso as it was drawn, crystal as she throws.
+        for (int id : com.hex.kagune.control.client.NpcWingsClient.ids()) {
+            com.hex.kagune.control.client.NpcWingsClient.View wings = com.hex.kagune.control.client.NpcWingsClient.get(id);
+            if (!(level.m_6815_(id) instanceof com.hex.kagune.control.npc.EtoNpc npc) || !npc.m_6084_() || npc.m_20145_()) {
+                continue;
+            }
+            float deploy = com.hex.kagune.control.client.NpcWingsClient.deploy(wings, clock);
+            double distance = npc.m_20280_(self);
+            if (deploy <= 0.005F || distance > MAX_DISTANCE_SQR) {
+                continue;
+            }
+            double size = npc.persona().size();
+            double x = npc.f_19790_ + (npc.m_20185_() - npc.f_19790_) * partial - camera.f_82479_;
+            double y = npc.f_19791_ + (npc.m_20186_() - npc.f_19791_) * partial - camera.f_82480_;
+            double z = npc.f_19792_ + (npc.m_20189_() - npc.f_19792_) * partial - camera.f_82481_;
+            float yawDelta = ((npc.f_20883_ - npc.f_20884_) % 360.0F + 540.0F) % 360.0F - 180.0F;
+            double yaw = Math.toRadians(npc.f_20884_ + yawDelta * partial);
+            double forwardX = -Math.sin(yaw);
+            double forwardZ = Math.cos(yaw);
+            double rightX = -Math.cos(yaw);
+            double rightZ = -Math.sin(yaw);
+            double[] eye = {-(rightX * x + rightZ * z) / size, -y / size, -(forwardX * x + forwardZ * z) / size};
+            double[] aim = WingRig.FORWARD;
+            net.minecraft.world.entity.Entity prey = wings.prey() == 0 ? null : level.m_6815_(wings.prey());
+            if (prey != null) {
+                double px = prey.f_19790_ + (prey.m_20185_() - prey.f_19790_) * partial - camera.f_82479_ - x;
+                double py = prey.f_19791_ + (prey.m_20186_() - prey.f_19791_) * partial + prey.m_20206_() * 0.52 - camera.f_82480_ - y - WingRig.ROOT_Y * size;
+                double pz = prey.f_19792_ + (prey.m_20189_() - prey.f_19792_) * partial - camera.f_82481_ - z;
+                double[] rig = {px * rightX + pz * rightZ, py, px * forwardX + pz * forwardZ};
+                double length = Math.sqrt(rig[0] * rig[0] + rig[1] * rig[1] + rig[2] * rig[2]);
+                if (length > 1.0E-3) {
+                    aim = new double[] {rig[0] / length, rig[1] / length, rig[2] / length};
+                }
+            }
+            float aimed = com.hex.kagune.control.client.NpcWingsClient.aim(wings, clock);
+            float crystal = com.hex.kagune.control.client.NpcWingsClient.crystal(wings, clock);
+            WingRig.Input input = new WingRig.Input(com.hex.kagune.control.ukaku.WingForm.TWIN, com.hex.kagune.control.npc.WingRules.MASTERY, deploy,
+                time / 20.0, crystal, crystal, WingRig.Motion.NONE, 0.0F, 0.4F, 0.0F, 0.0F, false, distance > DETAIL_DISTANCE_SQR ? 0.3F : 1.0F, 1.0F,
+                !wings.out(), aimed, aimed, aim, com.hex.kagune.control.client.NpcWingsClient.kick(wings, 1, clock),
+                com.hex.kagune.control.client.NpcWingsClient.kick(wings, -1, clock), 0.0F, 0.0F, 0.0F, 0.0F);
+            List<WingRig.Quad> quads = WingRig.build(input, eye);
+            if (quads.isEmpty()) {
+                continue;
+            }
+            if (consumer == null) {
+                consumer = buffers.m_6299_(TYPE);
+            }
+            // Her torso as drawn this frame (her lean, her flips), and her size: the wings ride both.
+            com.hex.kagune.control.client.animation.RigPose drawn = EtoRenderer.lastPose(id);
+            double[] carry = drawn == null ? new double[] {1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0}
+                : com.hex.kagune.control.client.animation.BodyFrame.carry(drawn, "torso");
+            double[] scaled = new double[12];
+            for (int k = 0; k < 12; k++) {
+                scaled[k] = carry[k] * size;
+            }
+            emit(consumer, matrix, normals, quads, x, y, z, yaw, scaled);
+        }
         // Shards of Ukaku's fire and crystal spikes in flight (camera-relative, facing the camera).
         double[] eye = {0.0, 0.0, 0.0};
         for (UkakuFx.Bolt bolt : UkakuFx.bolts()) {

@@ -49,7 +49,7 @@ import net.minecraftforge.registries.RegistryObject;
  * client is told what to draw of it ({@link S2CKingFx}'s PEACE_* kinds: the blades into bodies and out, the shields, the lifting
  * tendrils, the flesh torn up, the lance, the creatures).
  */
-final class PeaceKit implements KingServer.Kit {
+final class PeaceKit implements KingServer.Kit, KingServer.BodyKit {
     static final PeaceKit INSTANCE = new PeaceKit();
 
     /** Blocks round a blade's line that it cuts. */
@@ -178,14 +178,14 @@ final class PeaceKit implements KingServer.Kit {
     private PeaceKit() {
     }
 
-    private State state(ServerPlayer player) {
+    private State state(LivingEntity player) {
         return states.computeIfAbsent(player.getUUID(), id -> new State());
     }
 
     // ------------------------------------------------------------------ the body's move
 
-    private void move(ServerPlayer player, State state, KingMove move, int level) {
-        long now = player.serverLevel().getGameTime();
+    private void move(LivingEntity player, State state, KingMove move, int level) {
+        long now = level(player).getGameTime();
         state.move = move;
         state.level = level;
         state.moveAt = now;
@@ -199,7 +199,7 @@ final class PeaceKit implements KingServer.Kit {
         KingServer.move(player, move, level, 0);
     }
 
-    private void still(ServerPlayer player, State state) {
+    private void still(LivingEntity player, State state) {
         state.move = KingMove.NONE;
         KingServer.move(player, KingMove.NONE, 0, 0);
     }
@@ -208,10 +208,15 @@ final class PeaceKit implements KingServer.Kit {
 
     @Override
     public void key(ServerPlayer player, int slot, int action, int target) {
+        this.keyOf(player, slot, action, target);
+    }
+
+    /** 1.3.19: the same for any body that wears Peace (Ken, the NPC, as much as a player). */
+    public void keyOf(LivingEntity player, int slot, int action, int target) {
         PeaceRules.Ability ability = PeaceRules.Ability.bySlot(slot);
         if (ability == null) return;
         State state = state(player);
-        long now = player.serverLevel().getGameTime();
+        long now = level(player).getGameTime();
         if (action == WarRules.RELEASE) {
             // The held two go when their key is let go.
             if (ability == PeaceRules.Ability.PIERCE && state.lance != null && state.lance.firedAt < 0L) fire(player, state, now);
@@ -235,7 +240,7 @@ final class PeaceKit implements KingServer.Kit {
             double range = ability == PeaceRules.Ability.WALTZ ? PeaceRules.WALTZ_RANGE : PeaceRules.HORIZON_RANGE;
             prey = WarPath.aimed(player, target, range);
             if (prey == null || !valid(player, prey)) {
-                player.displayClientMessage(Component.literal("§f" + ability.displayName() + "§7: no one in reach"), true);
+                tell(player, Component.literal("§f" + ability.displayName() + "§7: no one in reach"), true);
                 return;
             }
         }
@@ -253,16 +258,40 @@ final class PeaceKit implements KingServer.Kit {
         }
     }
 
+    /** 1.3.19: whether {@code body}'s blades are taken (an ability, a blow, a charge): an NPC's mind waits for them. */
+    public boolean busyOf(LivingEntity body) {
+        State state = states.get(body.getUUID());
+        return state != null && (busy(state) || state.strike != null || state.chargeAt >= 0L);
+    }
+
+    /** 1.3.19: whether {@code body} is holding a charge (the heavy, the lance, the burial): an NPC lets it go when it means to. */
+    public boolean holdingOf(LivingEntity body, int slot) {
+        State state = states.get(body.getUUID());
+        if (state == null) return false;
+        return switch (slot) {
+            case -1 -> state.chargeAt >= 0L;
+            case 3 -> state.lance != null && state.lance.firedAt < 0L;
+            case 4 -> state.rebirthAt >= 0L;
+            default -> false;
+        };
+    }
+
+    /** 1.3.19: whether {@code body} is up on the White Wing Ascent (and how high over where it rose from), NaN if not. */
+    public double risenOf(LivingEntity body) {
+        State state = states.get(body.getUUID());
+        return state == null || state.lift == null || state.lift.phase == 1 ? Double.NaN : body.getY() - state.lift.from.y();
+    }
+
     /** True while an ability has the blades (no other, and no M1). The Aegis's shields are their own: it leaves them free. */
     private static boolean busy(State state) {
         return state.waltz != null || state.lift != null || state.lance != null || state.rebirthAt >= 0L || state.rebornAt >= 0L || state.horizon != null
                 || state.move == KingMove.LANDING;
     }
 
-    private static boolean ready(ServerPlayer player, PeaceRules.Ability ability, long now) {
+    private static boolean ready(LivingEntity player, PeaceRules.Ability ability, long now) {
         long at = KingServer.ready(player, ability.ordinal());
         if (at <= now) return true;
-        player.displayClientMessage(Component.literal("§f" + ability.displayName() + "§7: " + String.format(java.util.Locale.ROOT, "%.1f", (at - now) / 20.0) + " s"), true);
+        tell(player, Component.literal("§f" + ability.displayName() + "§7: " + String.format(java.util.Locale.ROOT, "%.1f", (at - now) / 20.0) + " s"), true);
         return false;
     }
 
@@ -270,14 +299,24 @@ final class PeaceKit implements KingServer.Kit {
 
     @Override
     public void strike(ServerPlayer player, int target) {
-        this.strike(player, target, 0);
+        this.strikeOf(player, target);
+    }
+
+    /** 1.3.19: the same for any body that wears Peace (Ken, the NPC, as much as a player). */
+    public void strikeOf(LivingEntity player, int target) {
+        this.strikeOf(player, target, 0);
     }
 
     /** 1.0.20: an M1 with its flags (KingCombo): the chain's next blow, the launcher, an air blow or the spike. */
     @Override
     public void strike(ServerPlayer player, int target, int flags) {
+        this.strikeOf(player, target, flags);
+    }
+
+    /** 1.3.19: the same for any body that wears Peace (Ken, the NPC, as much as a player). */
+    public void strikeOf(LivingEntity player, int target, int flags) {
         State state = state(player);
-        long now = player.serverLevel().getGameTime();
+        long now = level(player).getGameTime();
         if (busy(state) || state.chargeAt >= 0L) return;
         if (state.strike != null) {
             state.queuedAt = now;
@@ -294,8 +333,13 @@ final class PeaceKit implements KingServer.Kit {
      */
     @Override
     public void heavy(ServerPlayer player, int flags, int target) {
+        this.heavyOf(player, flags, target);
+    }
+
+    /** 1.3.19: the same for any body that wears Peace (Ken, the NPC, as much as a player). */
+    public void heavyOf(LivingEntity player, int flags, int target) {
         State state = state(player);
-        long now = player.serverLevel().getGameTime();
+        long now = level(player).getGameTime();
         if (busy(state)) return;
         boolean press = (flags & com.hex.kagune.control.king.KingCombo.PRESS) != 0;
         if (!press) {
@@ -328,7 +372,7 @@ final class PeaceKit implements KingServer.Kit {
     }
 
     /** The heavy let go (or held to the end): Cross Cleave, or the Seraph Thrust if it was held long enough. */
-    private void release(ServerPlayer player, State state, long now) {
+    private void release(LivingEntity player, State state, long now) {
         long held = now - state.chargeAt;
         state.chargeAt = -1L;
         com.hex.kagune.control.king.KingCombo.Heavy heavy = com.hex.kagune.control.king.KingCombo.heavy(false, false, 0, -1L, held);
@@ -336,7 +380,7 @@ final class PeaceKit implements KingServer.Kit {
     }
 
     /** The next blow by the fighting grammar (KingCombo): the chain's (or the Lance, gone cold), the launcher, an air blow, the spike. */
-    private void begin(ServerPlayer player, State state, long now, int flags) {
+    private void begin(LivingEntity player, State state, long now, int flags) {
         boolean air = !KingEffects.grounded(player) || now < state.chaseUntil;
         if (now - state.strikeEnded > com.hex.kagune.control.king.WarStrike.CHAIN_WINDOW) state.chained = 0;
         if (!air) state.airHits = 0;
@@ -355,7 +399,7 @@ final class PeaceKit implements KingServer.Kit {
     }
 
     /** Blow {@code blow} begun now ({@code air}: thrown in the air: he hangs there for it). */
-    private void start(ServerPlayer player, State state, PeaceStrike blow, long now, boolean air) {
+    private void start(LivingEntity player, State state, PeaceStrike blow, long now, boolean air) {
         state.strike = blow;
         state.strikeAt = now;
         state.strikeAir = air;
@@ -363,7 +407,7 @@ final class PeaceKit implements KingServer.Kit {
         state.queuedAt = Long.MIN_VALUE;
         move(player, state, KingMove.BLADES, blow.ordinal());
         // 1.0.40: on its way: another's M1 landing on him before his blades cut meets it (KaguneClash), and both stop.
-        com.hex.kagune.control.server.KaguneClash.swing(player, now, blow.impact + CLASH_LATE, CLASH_REACH, () -> state.strike == blow && state.strikeAt == now,
+        com.hex.kagune.control.server.KaguneClash.swing(player, now, blow.impact + CLASH_LATE, CLASH_REACH, null, 0, () -> state.strike == blow && state.strikeAt == now,
                 () -> clashed(player, state));
         play(player, center(player), HexKaguneSounds.KAGUNE_WHIP, 0.7F, blow == PeaceStrike.CRUCIFIX || blow.special() ? 0.8F : 1.3F);
         if (air) {
@@ -378,8 +422,8 @@ final class PeaceKit implements KingServer.Kit {
     private static final int CLASH_LATE = 4;
 
     /** 1.0.40: his blow met another's coming back (KaguneClash): cut off, nothing queued after it, a moment before he can strike again. */
-    private void clashed(ServerPlayer player, State state) {
-        long now = player.serverLevel().getGameTime();
+    private void clashed(LivingEntity player, State state) {
+        long now = level(player).getGameTime();
         state.strike = null;
         state.queuedAt = Long.MIN_VALUE;
         state.strikeEnded = now;
@@ -389,7 +433,7 @@ final class PeaceKit implements KingServer.Kit {
         move(player, state, KingMove.NONE, 0);
     }
 
-    private void striking(ServerPlayer player, State state, long now) {
+    private void striking(LivingEntity player, State state, long now) {
         PeaceStrike blow = state.strike;
         if (blow == null) return;
         long age = now - state.strikeAt;
@@ -417,7 +461,7 @@ final class PeaceKit implements KingServer.Kit {
      * 1.0.20: the heavy charging (held to the end, it goes off by itself; pale light gathering on the blades); whatever he spiked that
      * lands breaks the ground there, and what is round it.
      */
-    private void combos(ServerPlayer player, State state, long now) {
+    private void combos(LivingEntity player, State state, long now) {
         if (state.chargeAt >= 0L && now - state.chargeAt >= com.hex.kagune.control.king.KingCombo.CHARGE_MAX) release(player, state, now);
         if (state.chargeAt >= 0L && (now - state.chargeAt) % 6 == 0) {
             mark(player, com.hex.kagune.control.king.KingMarkFx.GLINT, center(player).add(0.0, 0.6, 0.0).sub(facing(player).scale(0.8)), V3.ZERO,
@@ -440,7 +484,7 @@ final class PeaceKit implements KingServer.Kit {
     // ------------------------------------------------------------------ the M1's cuts, along the blades' own paths
 
     /** Each blade cutting now sweeps from where it was to where it is: what that sweep passes through is struck, once a cut. */
-    private void cutting(ServerPlayer player, State state, long now) {
+    private void cutting(LivingEntity player, State state, long now) {
         if (state.move == KingMove.NONE) return;
         double age = now - state.moveAt;
         double pitch = -Math.toRadians(player.getXRot());
@@ -473,7 +517,7 @@ final class PeaceKit implements KingServer.Kit {
             V3 high = new V3(Math.max(Math.max(heart.x(), point.x()), Math.max(lastHeart.x(), lastPoint.x())),
                     Math.max(Math.max(heart.y(), point.y()), Math.max(lastHeart.y(), lastPoint.y())),
                     Math.max(Math.max(heart.z(), point.z()), Math.max(lastHeart.z(), lastPoint.z())));
-            for (LivingEntity body : player.serverLevel().getEntitiesOfClass(LivingEntity.class,
+            for (LivingEntity body : level(player).getEntitiesOfClass(LivingEntity.class,
                     new AABB(low.x() - 2.0, low.y() - 2.5, low.z() - 2.0, high.x() + 2.0, high.y() + 1.0, high.z() + 2.0), b -> valid(player, b))) {
                 if (state.cut.get(blade).contains(body.getId())) continue;
                 // A blow strikes each body once between all its blades.
@@ -503,7 +547,7 @@ final class PeaceKit implements KingServer.Kit {
     }
 
     /** One body cut by blade {@code blade} in a blow of the M1, {@code age} ticks in, the blade going {@code along}. */
-    private boolean strike(ServerPlayer player, State state, LivingEntity body, int blade, double age, V3 along) {
+    private boolean strike(LivingEntity player, State state, LivingEntity body, int blade, double age, V3 along) {
         if (state.move != KingMove.BLADES) return false;
         V3 push = along.withY(0.0).length() > 1.0E-4 ? along.withY(0.0).normalize().scale(0.45) : V3.ZERO;
         double lift = 0.12;
@@ -527,7 +571,7 @@ final class PeaceKit implements KingServer.Kit {
         if (body.isAlive() && (blow == PeaceStrike.ASCEND || blow == PeaceStrike.JUDGMENT || state.strikeAir)) {
             // 1.0.20: the launcher throws it up (and him after it), the spike drives it down, an air blow keeps it floating before him.
             V3 facing = KingCombos.toward(player, body, facing(player));
-            long now = player.serverLevel().getGameTime();
+            long now = level(player).getGameTime();
             if (blow == PeaceStrike.ASCEND) {
                 KingCombos.launch(player, body, facing);
                 state.chaseUntil = now + com.hex.kagune.control.king.KingCombo.CHASE_TICKS;
@@ -553,7 +597,7 @@ final class PeaceKit implements KingServer.Kit {
 
     // ------------------------------------------------------------------ Z: Crossblade Waltz
 
-    private void waltz(ServerPlayer player, State state, LivingEntity prey, long now) {
+    private void waltz(LivingEntity player, State state, LivingEntity prey, long now) {
         Waltz w = new Waltz();
         w.prey = prey;
         w.at = now;
@@ -567,7 +611,7 @@ final class PeaceKit implements KingServer.Kit {
      * tear out of it together, blood thrown every way; then home. Its wounds never kill it on the way: what would have is paid as they
      * tear out.
      */
-    private void waltzing(ServerPlayer player, State state, long now) {
+    private void waltzing(LivingEntity player, State state, long now) {
         Waltz w = state.waltz;
         if (w == null) return;
         long age = now - w.at;
@@ -619,7 +663,7 @@ final class PeaceKit implements KingServer.Kit {
 
     // ------------------------------------------------------------------ J: Aegis of :Re
 
-    private void aegis(ServerPlayer player, State state, long now) {
+    private void aegis(LivingEntity player, State state, long now) {
         state.aegisAt = now;
         state.lastY = Double.NaN;
         fx(player, S2CKingFx.PEACE_AEGIS, new int[] {1});
@@ -632,7 +676,7 @@ final class PeaceKit implements KingServer.Kit {
      * reached for and he hauled out onto it; a fall that would hurt caught on them near the ground. (Every harm is taken on them:
      * {@link #hurt}; every shot sent back: {@link #deflect}.)
      */
-    private void shielding(ServerPlayer player, State state, long now) {
+    private void shielding(LivingEntity player, State state, long now) {
         if (state.aegisAt < 0L) return;
         long age = now - state.aegisAt;
         if (age >= PeaceRules.AEGIS_TICKS) {
@@ -641,7 +685,7 @@ final class PeaceKit implements KingServer.Kit {
             play(player, center(player), HexKaguneSounds.KAGUNE_RESHAPE, 1.2F, 1.1F);
             return;
         }
-        ServerLevel level = player.serverLevel();
+        ServerLevel level = level(player);
         V3 c = center(player);
         V3 feet = feet(player);
         if (age % PeaceRules.AEGIS_SHOVE_EVERY == 0) {
@@ -693,7 +737,7 @@ final class PeaceKit implements KingServer.Kit {
     }
 
     /** Shield {@code i} sent to do {@code action} at {@code at} (not again before it has held: {@code force} for what cannot wait). */
-    private static boolean shield(ServerPlayer player, State state, int i, int action, V3 at, long now, boolean force) {
+    private static boolean shield(LivingEntity player, State state, int i, int action, V3 at, long now, boolean force) {
         if (!force && now - state.shieldAt[i] < PeaceRules.SHIELD_HOLD) return false;
         state.shieldAt[i] = now;
         fx(player, S2CKingFx.PEACE_SHIELD, new int[] {i, action}, at);
@@ -701,7 +745,7 @@ final class PeaceKit implements KingServer.Kit {
     }
 
     /** The shield best placed to meet what comes from {@code at}. */
-    private static int shieldToward(ServerPlayer player, V3 at) {
+    private static int shieldToward(LivingEntity player, V3 at) {
         V3 d = at.sub(center(player));
         V3 ahead = facing(player);
         V3 right = new V3(-ahead.z(), 0.0, ahead.x());
@@ -768,8 +812,8 @@ final class PeaceKit implements KingServer.Kit {
 
     // ------------------------------------------------------------------ G: White Wing Ascent
 
-    private void ascend(ServerPlayer player, State state, long now) {
-        ServerLevel level = player.serverLevel();
+    private void ascend(LivingEntity player, State state, long now) {
+        ServerLevel level = level(player);
         V3 from = feet(player);
         V3 ahead = facing(player);
         V3 right = new V3(-ahead.z(), 0.0, ahead.x());
@@ -795,7 +839,7 @@ final class PeaceKit implements KingServer.Kit {
     }
 
     /** Up on the two tendrils, held there, then let down gently; or wrenched down (G again) into the landing. */
-    private void lifting(ServerPlayer player, State state, long now) {
+    private void lifting(LivingEntity player, State state, long now) {
         Lift lift = state.lift;
         if (lift == null) return;
         player.fallDistance = 0.0F;
@@ -816,7 +860,7 @@ final class PeaceKit implements KingServer.Kit {
             case 2 -> {
                 long t = now - lift.phaseAt;
                 double y = lift.from.y() + PeaceRules.lowered(t, lift.phaseFrom);
-                double ground = WarPath.ground(player.serverLevel(), player.getX(), player.getZ(), player.getY());
+                double ground = WarPath.ground(level(player), player.getX(), player.getZ(), player.getY());
                 if (t >= PeaceRules.ASCENT_LOWER || t > 4 && (KingEffects.grounded(player) || !Double.isNaN(ground) && player.getY() - ground < 0.2)) {
                     state.lift = null;
                     player.setNoGravity(false);
@@ -830,7 +874,7 @@ final class PeaceKit implements KingServer.Kit {
             }
             case 1 -> {
                 long t = now - lift.phaseAt;
-                double ground = WarPath.ground(player.serverLevel(), player.getX(), player.getZ(), player.getY());
+                double ground = WarPath.ground(level(player), player.getX(), player.getZ(), player.getY());
                 boolean down = t > 1 && (KingEffects.grounded(player) || !Double.isNaN(ground) && player.getY() - ground <= PeaceRules.SLAM_SPEED * 0.5);
                 if (down || t > 40) {
                     land(player, state, now, Double.isNaN(ground) ? player.getY() : ground);
@@ -846,7 +890,7 @@ final class PeaceKit implements KingServer.Kit {
     }
 
     /** G again up there: the tendrils wrench him down. */
-    private void slam(ServerPlayer player, State state, long now) {
+    private void slam(LivingEntity player, State state, long now) {
         Lift lift = state.lift;
         lift.phase = 1;
         lift.phaseAt = now;
@@ -858,14 +902,14 @@ final class PeaceKit implements KingServer.Kit {
     }
 
     /** Down: the landing, the ground torn open all round and the flesh up out of it ({@link #erupting}). */
-    private void land(ServerPlayer player, State state, long now, double ground) {
+    private void land(LivingEntity player, State state, long now, double ground) {
         state.lift = null;
         player.setNoGravity(false);
         player.fallDistance = 0.0F;
         KingCombos.motion(player, 0.0, -0.1, 0.0);
         fx(player, S2CKingFx.PEACE_LIFT, new int[] {3});
         move(player, state, KingMove.LANDING, 0);
-        ServerLevel level = player.serverLevel();
+        ServerLevel level = level(player);
         V3 at = new V3(player.getX(), ground, player.getZ());
         Erupt e = new Erupt();
         e.seed = (int) (WarPath.noise(now * 31L + player.getId(), 7) * Integer.MAX_VALUE);
@@ -889,7 +933,7 @@ final class PeaceKit implements KingServer.Kit {
             data[5 + i] = Double.isNaN(y) ? Float.NaN : (float) y;
         }
         state.erupt = e;
-        ControlNetwork.broadcast(player, new S2CKingFx(player.getUUID(), S2CKingFx.PEACE_ERUPT, new int[] {e.seed}, data));
+        ControlNetwork.broadcastAround(player, new S2CKingFx(player.getUUID(), S2CKingFx.PEACE_ERUPT, new int[] {e.seed}, data));
         mark(player, KingMarkFx.QUAKE, at, V3.ZERO, 2.6, null);
         play(player, at, HexKaguneSounds.KAGUNE_SLAM, 3.0F, 0.5F);
         play(player, at, HexKaguneSounds.MANIFEST_RIP, 2.4F, 0.6F);
@@ -911,7 +955,7 @@ final class PeaceKit implements KingServer.Kit {
      * The flesh up out of the ground: each tendril as it comes up (spreading out from where he landed) strikes what it comes up through
      * or beside; while they stand, they lash out at what is hostile within their reach; then they sink back.
      */
-    private void erupting(ServerPlayer player, State state, long now) {
+    private void erupting(LivingEntity player, State state, long now) {
         Erupt e = state.erupt;
         if (e == null) return;
         long age = now - e.at;
@@ -987,7 +1031,7 @@ final class PeaceKit implements KingServer.Kit {
 
     // ------------------------------------------------------------------ B: Piercing Salvation
 
-    private void gather(ServerPlayer player, State state, long now) {
+    private void gather(LivingEntity player, State state, long now) {
         Lance lance = new Lance();
         lance.chargeAt = now;
         state.lance = lance;
@@ -998,7 +1042,7 @@ final class PeaceKit implements KingServer.Kit {
     }
 
     /** Let go: the lance driven out from where it gathered, along his look, as long and as hard as it was held for. */
-    private void fire(ServerPlayer player, State state, long now) {
+    private void fire(LivingEntity player, State state, long now) {
         Lance lance = state.lance;
         lance.k = PeaceRules.charge(now - lance.chargeAt);
         lance.length = PeaceRules.lance(lance.k);
@@ -1017,7 +1061,7 @@ final class PeaceKit implements KingServer.Kit {
      * The lance: gathering (held; let go of itself at last); out, through the first body in its way; carrying it on, up to its reach,
      * or pinning it to the wall it meets; back. Its point is {@code from} on along {@code dir} by {@code gone}, as every client has it.
      */
-    private void piercing(ServerPlayer player, State state, long now) {
+    private void piercing(LivingEntity player, State state, long now) {
         Lance lance = state.lance;
         if (lance == null) return;
         if (lance.backAt >= 0L) {
@@ -1033,7 +1077,7 @@ final class PeaceKit implements KingServer.Kit {
             else if (held % 10 == 0) play(player, center(player), HexKaguneSounds.KAGUNE_STRAIN, 0.8F, 0.8F + 0.6F * (float) PeaceRules.charge(held));
             return;
         }
-        ServerLevel level = player.serverLevel();
+        ServerLevel level = level(player);
         LivingEntity prey = lance.prey;
         if (prey != null && (!prey.isAlive() || prey.isRemoved() || prey.level() != level)) {
             recall(player, state, now);
@@ -1120,7 +1164,7 @@ final class PeaceKit implements KingServer.Kit {
     }
 
     /** The lance called back (its course run, or B again): whatever it held let go. */
-    private void recall(ServerPlayer player, State state, long now) {
+    private void recall(LivingEntity player, State state, long now) {
         Lance lance = state.lance;
         if (lance == null || lance.backAt >= 0L) return;
         lance.backAt = now;
@@ -1137,7 +1181,7 @@ final class PeaceKit implements KingServer.Kit {
 
     // ------------------------------------------------------------------ C: Rebirth Instinct
 
-    private void bury(ServerPlayer player, State state, long now) {
+    private void bury(LivingEntity player, State state, long now) {
         state.rebirthAt = now;
         move(player, state, KingMove.REBIRTH, 0);
         play(player, center(player), HexKaguneSounds.KAGUNE_RESHAPE, 1.6F, 0.7F);
@@ -1145,7 +1189,7 @@ final class PeaceKit implements KingServer.Kit {
     }
 
     /** Held: the blades in the ground, the ground stirring before him more the longer; at the full hold they come of themselves. */
-    private void burying(ServerPlayer player, State state, long now) {
+    private void burying(LivingEntity player, State state, long now) {
         if (state.rebornAt >= 0L && now - state.rebornAt >= PeaceRules.REBIRTH_BACK) {
             state.rebornAt = -1L;
             if (state.move == KingMove.REBIRTH) still(player, state);
@@ -1162,14 +1206,14 @@ final class PeaceKit implements KingServer.Kit {
     }
 
     /** Let go: two to four of them up out of the ground before him, each in its own place, apart, on open ground. */
-    private void reborn(ServerPlayer player, State state, long now) {
+    private void reborn(LivingEntity player, State state, long now) {
         long held = now - state.rebirthAt;
         state.rebirthAt = -1L;
         state.rebornAt = now;
         move(player, state, KingMove.REBIRTH, 1);
         FleshThralls.dismiss(player);
         int count = PeaceRules.thralls(held);
-        ServerLevel level = player.serverLevel();
+        ServerLevel level = level(player);
         V3 feet = feet(player);
         double yaw = Math.toRadians(player.getYRot());
         List<V3> spots = new ArrayList<>();
@@ -1200,7 +1244,7 @@ final class PeaceKit implements KingServer.Kit {
 
     // ------------------------------------------------------------------ V: The Final Horizon
 
-    private void horizon(ServerPlayer player, State state, LivingEntity prey, long now) {
+    private void horizon(LivingEntity player, State state, LivingEntity prey, long now) {
         Horizon h = new Horizon();
         h.prey = prey;
         h.at = now;
@@ -1210,7 +1254,7 @@ final class PeaceKit implements KingServer.Kit {
         h.away = to.length() < 1.0E-3 ? facing(player) : to.normalize();
         h.right = new V3(-h.away.z(), 0.0, h.away.x());
         h.body = h.origin;
-        double floor = WarPath.ground(player.serverLevel(), h.origin.x(), h.origin.z(), h.origin.y() + 1.0);
+        double floor = WarPath.ground(level(player), h.origin.x(), h.origin.z(), h.origin.y() + 1.0);
         h.floor = Double.isNaN(floor) ? h.origin.y() : floor;
         // 1.0.36: held in the air by the blades, not falling between their holds (what made it shake).
         h.fell = !prey.isNoGravity();
@@ -1227,12 +1271,12 @@ final class PeaceKit implements KingServer.Kit {
      * it down; on the ground, the blades in it drive it on down through the ground, layer after layer, before they draw out of it. Its
      * wounds never kill it on the way: what would have is paid as they let it go.
      */
-    private void horizoning(ServerPlayer player, State state, long now) {
+    private void horizoning(LivingEntity player, State state, long now) {
         Horizon h = state.horizon;
         if (h == null) return;
         long age = now - h.at;
         LivingEntity prey = h.prey;
-        ServerLevel level = player.serverLevel();
+        ServerLevel level = level(player);
         TerrainScars scars = TerrainScars.of(level);
         if ((!prey.isAlive() || prey.isRemoved() || prey.level() != level) && h.releasedAt < 0L) {
             release(player, state, h, now);
@@ -1248,8 +1292,8 @@ final class PeaceKit implements KingServer.Kit {
                 double up = PeaceRules.horizonRise(age);
                 h.body = h.origin.add(0.0, up, 0.0).add(h.away.scale(PeaceRules.horizonDrift(age)));
                 if (age <= PeaceRules.HORIZON_APEX + 1) {
-                    scars.carveSphere(player, h.body.add(0.0, prey.getBbHeight() + 0.9, 0.0), 1.6, h.origin.y() + 0.6);
-                    scars.carveSphere(player, h.body.add(0.0, prey.getBbHeight() * 0.5, 0.0), 1.2, h.origin.y() + 0.6);
+                    if (player instanceof ServerPlayer carver) scars.carveSphere(carver, h.body.add(0.0, prey.getBbHeight() + 0.9, 0.0), 1.6, h.origin.y() + 0.6); // 1.3.19: an NPC (Ken) never breaks the ground
+                    if (player instanceof ServerPlayer carver) scars.carveSphere(carver, h.body.add(0.0, prey.getBbHeight() * 0.5, 0.0), 1.2, h.origin.y() + 0.6); // 1.3.19: an NPC (Ken) never breaks the ground
                 }
                 hold(prey, h.body);
                 KingEffects.stun(prey, 10);
@@ -1275,13 +1319,13 @@ final class PeaceKit implements KingServer.Kit {
                     hold(prey, h.body);
                     h.owed += bruise(player, prey, PeaceRules.HORIZON_GROUND);
                     fx(player, S2CKingFx.CRATER, new int[] {prey.getId()}, h.body, new V3(2.6, WarRules.SHAKE_RADIUS, 0.0));
-                    scars.carveSphere(player, h.body.add(0.0, 1.0, 0.0), 1.6, h.body.y());
+                    if (player instanceof ServerPlayer carver) scars.carveSphere(carver, h.body.add(0.0, 1.0, 0.0), 1.6, h.body.y()); // 1.3.19: an NPC (Ken) never breaks the ground
                     mark(player, KingMarkFx.QUAKE, h.body, V3.ZERO, 2.2, null);
                     play(player, h.body, HexKaguneSounds.KAGUNE_SLAM, 3.0F, 0.4F);
                     vanilla(player, h.body, "entity.generic.explode", 2.0F, 0.6F);
                 } else {
                     double under = Double.isNaN(floor) ? next.y() - 2.0 : floor;
-                    scars.carveSphere(player, next.add(0.0, 0.8, 0.0), 1.35, Math.max(under, next.y() - 0.2));
+                    if (player instanceof ServerPlayer carver) scars.carveSphere(carver, next.add(0.0, 0.8, 0.0), 1.35, Math.max(under, next.y() - 0.2)); // 1.3.19: an NPC (Ken) never breaks the ground
                     h.body = next;
                     hold(prey, h.body);
                     if (now % 2 == 0) mark(player, KingMarkFx.SOOT, center(prey), fall.scale(-1.0), 0.7, null);
@@ -1292,7 +1336,7 @@ final class PeaceKit implements KingServer.Kit {
                 long driving = now - h.landedAt;
                 V3 tunnel = h.away.scale(Math.cos(PeaceRules.HORIZON_TUNNEL)).add(0.0, -Math.sin(PeaceRules.HORIZON_TUNNEL), 0.0);
                 V3 next = h.body.add(tunnel.scale(PeaceRules.HORIZON_DRIVE_SPEED));
-                scars.carveSphere(player, next.add(0.0, prey.getBbHeight() * 0.5, 0.0), Math.max(1.05, w + 0.55), next.y() - 0.3);
+                if (player instanceof ServerPlayer carver) scars.carveSphere(carver, next.add(0.0, prey.getBbHeight() * 0.5, 0.0), Math.max(1.05, w + 0.55), next.y() - 0.3); // 1.3.19: an NPC (Ken) never breaks the ground
                 boolean blocked = WarPath.solid(level, next.x(), next.y() + 0.1, next.z()) || WarPath.solid(level, next.x(), next.y() + prey.getBbHeight() * 0.6, next.z());
                 if (blocked || h.driven >= PeaceRules.HORIZON_DEPTH || driving >= PeaceRules.HORIZON_DRIVE) {
                     h.stopped = true; // as far as it goes (or what is in its way would not break)
@@ -1384,14 +1428,14 @@ final class PeaceKit implements KingServer.Kit {
     }
 
     /** 1.0.36: him carried from {@code was} to {@code to} over this tick: that step, and a third of how far off {@code was} he is. */
-    private static void glide(ServerPlayer player, V3 was, V3 to) {
+    private static void glide(LivingEntity player, V3 was, V3 to) {
         V3 step = to.sub(was).add(was.sub(feet(player)).scale(0.33));
         KingCombos.motion(player, step.x(), step.y() + (player.isNoGravity() ? 0.0 : 0.08), step.z());
         player.fallDistance = 0.0F;
     }
 
     /** The Horizon's end: the blades drawn out of it, what its blows owed it paid; what it broke grows back sooner. */
-    private void release(ServerPlayer player, State state, Horizon h, long now) {
+    private void release(LivingEntity player, State state, Horizon h, long now) {
         h.releasedAt = now;
         LivingEntity prey = h.prey;
         if (h.fell) prey.setNoGravity(false);
@@ -1407,11 +1451,11 @@ final class PeaceKit implements KingServer.Kit {
             }
         }
         h.owed = 0.0F;
-        TerrainScars.of(player.serverLevel()).hastenAll(160L);
+        TerrainScars.of(level(player)).hastenAll(160L);
     }
 
     /** After the Horizon: hanging in the air a moment, then let go to fall on his own (nothing of it hurts him). */
-    private static void hang(ServerPlayer player, State state, long now) {
+    private static void hang(LivingEntity player, State state, long now) {
         if (state.hangUntil == Long.MIN_VALUE) return;
         player.fallDistance = 0.0F;
         if (now < state.hangUntil) {
@@ -1427,6 +1471,11 @@ final class PeaceKit implements KingServer.Kit {
 
     @Override
     public void tick(ServerPlayer player, long now) {
+        this.tickOf(player, now);
+    }
+
+    /** 1.3.19: the same for any body that wears Peace (Ken, the NPC, as much as a player). */
+    public void tickOf(LivingEntity player, long now) {
         State state = states.get(player.getUUID());
         if (state == null) return;
         striking(player, state, now);
@@ -1445,15 +1494,25 @@ final class PeaceKit implements KingServer.Kit {
 
     @Override
     public float hurt(ServerPlayer player, Entity attacker, float amount) {
-        return hurt(player, attacker, null, amount);
+        return this.hurtOf(player, attacker, amount);
+    }
+
+    /** 1.3.19: the same for any body that wears Peace (Ken, the NPC, as much as a player). */
+    public float hurtOf(LivingEntity player, Entity attacker, float amount) {
+        return hurtOf(player, attacker, null, amount);
     }
 
     /** 1.0.34: under the Aegis, nothing reaches him: every harm is met on a shield (the one nearest where it came from). */
     @Override
     public float hurt(ServerPlayer player, Entity attacker, Entity direct, float amount) {
+        return this.hurtOf(player, attacker, direct, amount);
+    }
+
+    /** 1.3.19: the same for any body that wears Peace (Ken, the NPC, as much as a player). */
+    public float hurtOf(LivingEntity player, Entity attacker, Entity direct, float amount) {
         State state = states.get(player.getUUID());
         if (state == null || state.aegisAt < 0L) return amount;
-        long now = player.serverLevel().getGameTime();
+        long now = level(player).getGameTime();
         Entity source = direct != null ? direct : attacker;
         if (source != null) {
             V3 from = center(source);
@@ -1469,9 +1528,14 @@ final class PeaceKit implements KingServer.Kit {
     /** 1.0.34: under the Aegis, a shot is met on a shield and sent back at who shot it. */
     @Override
     public double[] deflect(ServerPlayer player, Projectile projectile) {
+        return this.deflectOf(player, projectile);
+    }
+
+    /** 1.3.19: the same for any body that wears Peace (Ken, the NPC, as much as a player). */
+    public double[] deflectOf(LivingEntity player, Projectile projectile) {
         State state = states.get(player.getUUID());
         if (state == null || state.aegisAt < 0L) return null;
-        long now = player.serverLevel().getGameTime();
+        long now = level(player).getGameTime();
         V3 c = center(player);
         V3 from = new V3(projectile.getX(), projectile.getY(), projectile.getZ());
         V3 at = c.add(from.sub(c).length() < 1.0E-3 ? facing(player) : from.sub(c).normalize().scale(1.4));
@@ -1481,6 +1545,11 @@ final class PeaceKit implements KingServer.Kit {
 
     @Override
     public void off(ServerPlayer player) {
+        this.offOf(player);
+    }
+
+    /** 1.3.19: the same for any body that wears Peace (Ken, the NPC, as much as a player). */
+    public void offOf(LivingEntity player) {
         State state = states.remove(player.getUUID());
         KingCombos.forget(player);
         FleshThralls.dismiss(player);
@@ -1506,15 +1575,15 @@ final class PeaceKit implements KingServer.Kit {
         return feet.add(left.scale(px[0] * k)).add(0.0, px[1] * k, 0.0).add(forward.scale(-px[2] * k));
     }
 
-    private static boolean valid(ServerPlayer player, LivingEntity body) {
+    private static boolean valid(LivingEntity player, LivingEntity body) {
         return body != player && body.isAlive() && !body.isSpectator() && !(body instanceof ArmorStand) && !FleshThralls.ownedBy(body, player)
-                && KaguneServerController.validSwipeTarget(player, body);
+                && KingEffects.valid(player, body);
     }
 
-    private static boolean hurt(ServerPlayer player, LivingEntity target, float amount) {
+    private static boolean hurt(LivingEntity player, LivingEntity target, float amount) {
         if (!target.isAlive()) return false;
         target.invulnerableTime = 0;
-        if (!target.hurt(player.damageSources().playerAttack(player), amount)) return false;
+        if (!target.hurt(player instanceof net.minecraft.world.entity.player.Player by ? player.damageSources().playerAttack(by) : KingEffects.source(player), amount)) return false;
         if (!target.isAlive()) {
             V3 c = center(target);
             mark(player, KingMarkFx.GORE, c, c.sub(center(player)).withY(0.0).normalize().add(0.0, 0.5, 0.0), 1.2, null);
@@ -1523,7 +1592,7 @@ final class PeaceKit implements KingServer.Kit {
     }
 
     /** As much of {@code amount} as leaves it alive (one health at least); the rest owed, paid when the move lets it go. */
-    private static float bruise(ServerPlayer player, LivingEntity prey, float amount) {
+    private static float bruise(LivingEntity player, LivingEntity prey, float amount) {
         float now = Math.min(amount, Math.max(0.0F, prey.getHealth() - 1.0F));
         if (now > 0.0F) hurt(player, prey, now);
         return amount - now;
@@ -1538,34 +1607,44 @@ final class PeaceKit implements KingServer.Kit {
     }
 
 
-    private static BlockHitResult clip(ServerPlayer player, V3 from, V3 to) {
-        return player.serverLevel().clip(new ClipContext(new Vec3(from.x(), from.y(), from.z()), new Vec3(to.x(), to.y(), to.z()), ClipContext.Block.COLLIDER,
+    private static BlockHitResult clip(LivingEntity player, V3 from, V3 to) {
+        return level(player).clip(new ClipContext(new Vec3(from.x(), from.y(), from.z()), new Vec3(to.x(), to.y(), to.z()), ClipContext.Block.COLLIDER,
                 ClipContext.Fluid.NONE, player));
     }
 
     /** 1.0.19: a mark a blow leaves (KingMarkFx: blood, gore, quake, glint), {@code power} strong, on {@code body} if any. */
-    private static void mark(ServerPlayer player, int style, V3 at, V3 way, double power, Entity body) {
+    private static void mark(LivingEntity player, int style, V3 at, V3 way, double power, Entity body) {
         fx(player, S2CKingFx.MARK, new int[] {style, body == null ? 0 : body.getId()}, at, way, new V3(power, 0.0, 0.0));
     }
 
-    private static void fx(ServerPlayer player, int kind, int[] ids, V3... points) {
+    private static void fx(LivingEntity player, int kind, int[] ids, V3... points) {
         float[] data = new float[points.length * 3];
         for (int i = 0; i < points.length; i++) {
             data[i * 3] = (float) points[i].x();
             data[i * 3 + 1] = (float) points[i].y();
             data[i * 3 + 2] = (float) points[i].z();
         }
-        ControlNetwork.broadcast(player, new S2CKingFx(player.getUUID(), kind, ids, data));
+        ControlNetwork.broadcastAround(player, new S2CKingFx(player.getUUID(), kind, ids, data));
     }
 
-    private static List<LivingEntity> near(ServerPlayer player, double radius) {
+    private static List<LivingEntity> near(LivingEntity player, double radius) {
         return near(player, center(player), radius);
     }
 
-    private static List<LivingEntity> near(ServerPlayer player, V3 at, double radius) {
-        return player.serverLevel().getEntitiesOfClass(LivingEntity.class,
+    private static List<LivingEntity> near(LivingEntity player, V3 at, double radius) {
+        return level(player).getEntitiesOfClass(LivingEntity.class,
                 new AABB(at.x() - radius, at.y() - radius, at.z() - radius, at.x() + radius, at.y() + radius, at.z() + radius),
                 body -> body != player && body.isAlive() && !body.isSpectator() && !(body instanceof ArmorStand));
+    }
+
+    /** 1.3.19: the level a body is in, on the server. */
+    private static ServerLevel level(Entity body) {
+        return (ServerLevel) body.level();
+    }
+
+    /** 1.3.19: a line on a player's screen (a body that is no player is told nothing). */
+    private static void tell(LivingEntity body, Component line, boolean bar) {
+        if (body instanceof ServerPlayer player) player.displayClientMessage(line, bar);
     }
 
     private static V3 center(Entity entity) {
@@ -1576,31 +1655,31 @@ final class PeaceKit implements KingServer.Kit {
         return new V3(entity.getX(), entity.getY(), entity.getZ());
     }
 
-    private static V3 eye(ServerPlayer player) {
+    private static V3 eye(LivingEntity player) {
         Entity body = player;
         Vec3 eye = body.getEyePosition(1.0F);
         return new V3(eye.x, eye.y, eye.z);
     }
 
-    private static V3 look(ServerPlayer player) {
+    private static V3 look(LivingEntity player) {
         Entity body = player;
         Vec3 view = body.getViewVector(1.0F);
         return new V3(view.x, view.y, view.z).normalize();
     }
 
-    private static V3 facing(ServerPlayer player) {
+    private static V3 facing(LivingEntity player) {
         double yaw = Math.toRadians(player.getYRot());
         return new V3(-Math.sin(yaw), 0.0, Math.cos(yaw));
     }
 
-    private static void vanilla(ServerPlayer player, V3 at, String name, float volume, float pitch) {
+    private static void vanilla(LivingEntity player, V3 at, String name, float volume, float pitch) {
         // 1.2.2: drawn from the user's own pack (Sfx): the name's pool, its pitch drawn back toward the sound's own.
         com.hex.kagune.control.Sfx.Sound picked = com.hex.kagune.control.Sfx.play(name, volume, pitch);
         SoundEvent sound = SoundEvent.createVariableRangeEvent(new ResourceLocation(picked.namespace(), picked.path()));
-        player.serverLevel().playSound(null, at.x(), at.y(), at.z(), sound, SoundSource.PLAYERS, picked.volume(), picked.pitch());
+        level(player).playSound(null, at.x(), at.y(), at.z(), sound, SoundSource.PLAYERS, picked.volume(), picked.pitch());
     }
 
-    private static void play(ServerPlayer player, V3 at, RegistryObject<?> sound, float volume, float pitch) {
-        player.serverLevel().playSound(null, at.x(), at.y(), at.z(), (SoundEvent) sound.get(), SoundSource.PLAYERS, volume, pitch);
+    private static void play(LivingEntity player, V3 at, RegistryObject<?> sound, float volume, float pitch) {
+        level(player).playSound(null, at.x(), at.y(), at.z(), (SoundEvent) sound.get(), SoundSource.PLAYERS, volume, pitch);
     }
 }

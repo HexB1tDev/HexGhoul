@@ -27,7 +27,7 @@ import net.minecraft.world.phys.Vec3;
 public final class FleshThralls {
     /** What one of them is about: whose, which of how many, born when, its prey, its timers. */
     static final class Mind {
-        final ServerPlayer owner;
+        final LivingEntity owner;
         final int index;
         final int count;
         final long born;
@@ -47,7 +47,7 @@ public final class FleshThralls {
         int stuck;
         double detour;
 
-        Mind(ServerPlayer owner, int index, int count, long born, int life, double pace) {
+        Mind(LivingEntity owner, int index, int count, long born, int life, double pace) {
             this.owner = owner;
             this.index = index;
             this.count = count;
@@ -65,7 +65,7 @@ public final class FleshThralls {
     }
 
     /** One brought up at {@code x, y, z} facing {@code yaw}, the {@code index}th of {@code count}, for {@code owner}; its id, or 0. */
-    public static int summon(ServerPlayer owner, double x, double y, double z, float yaw, int index, int count) {
+    public static int summon(LivingEntity owner, double x, double y, double z, float yaw, int index, int count) {
         ServerLevel level = (ServerLevel)owner.m_9236_();
         FleshThrall thrall = ControlEntities.THRALL.get().m_20615_(level);
         if (thrall == null) {
@@ -83,7 +83,7 @@ public final class FleshThralls {
     }
 
     /** Every one of {@code owner}'s made to start melting now (a new Rebirth calls up new ones). */
-    public static void dismiss(ServerPlayer owner) {
+    public static void dismiss(LivingEntity owner) {
         for (Map.Entry<FleshThrall, Mind> e : new ArrayList<>(MINDS.entrySet())) {
             Mind mind = e.getValue();
             if (mind.owner == owner && !mind.melting) {
@@ -93,7 +93,7 @@ public final class FleshThralls {
     }
 
     /** True if {@code body} is one of {@code owner}'s (what his own blows and shields leave alone). */
-    public static boolean ownedBy(LivingEntity body, ServerPlayer owner) {
+    public static boolean ownedBy(LivingEntity body, LivingEntity owner) {
         if (!(body instanceof FleshThrall thrall)) {
             return false;
         }
@@ -125,7 +125,7 @@ public final class FleshThralls {
             thrall.m_20334_(0.0, Math.min(0.0, thrall.m_20184_().f_82480_), 0.0);
             return;
         }
-        ServerPlayer owner = mind.owner;
+        LivingEntity owner = mind.owner;
         apart(thrall, mind);
         double far = thrall.m_20280_(owner);
         if (far > LEASH * LEASH) {
@@ -142,7 +142,7 @@ public final class FleshThralls {
     }
 
     /** Its own place by him: one of a fan round behind him, wider the more there are, the odd ones a little further out. */
-    static Vec3 slot(ServerPlayer owner, Mind mind) {
+    static Vec3 slot(LivingEntity owner, Mind mind) {
         double yaw = Math.toRadians(owner.m_146908_());
         double spread = Math.toRadians(mind.count <= 2 ? 70.0 : 52.0);
         double a = yaw + Math.PI + (mind.index - (mind.count - 1) * 0.5) * spread + mind.detour;
@@ -373,7 +373,7 @@ public final class FleshThralls {
     }
 
     /** What every client near is told of it: 0 born (its life), 1 its blades out (at whom), 2 in again, 3 a swing (at whom), 4 melting. */
-    private static void fx(ServerPlayer owner, FleshThrall thrall, int what, int arg) {
+    private static void fx(LivingEntity owner, FleshThrall thrall, int what, int arg) {
         ControlNetwork.broadcastAround(thrall, new S2CKingFx(owner.m_20148_(), S2CKingFx.PEACE_THRALL, new int[] {thrall.m_19879_(), what, arg}, new float[0]));
     }
 }

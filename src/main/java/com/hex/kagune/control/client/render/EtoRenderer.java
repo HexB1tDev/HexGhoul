@@ -75,6 +75,27 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
         this.closed = texture(key, key + "_closed");
         this.blush = texture(key, key + "_blush");
         this.m_115326_(new Face(this));
+        this.m_115326_(new Kakuja(this));
+    }
+
+    /** 1.3.19: a final kakuja worn (Ken's Peace) on the body's posed parts, as a player's is drawn. */
+    static final class Kakuja extends RenderLayer<EtoNpc, PlayerModel<EtoNpc>> {
+        Kakuja(EtoRenderer parent) {
+            super(parent);
+        }
+
+        @Override
+        public void m_6494_(PoseStack pose, MultiBufferSource buffers, int light, EtoNpc npc, float limbSwing, float limbSwingAmount, float partialTick,
+                            float ageInTicks, float netHeadYaw, float headPitch) {
+            if (com.hex.kagune.control.client.KingClient.get(npc) == null) {
+                return;
+            }
+            try {
+                KingLayer.drawPeaceBody(pose, buffers, light, npc, this.m_117386_(), partialTick);
+            } catch (RuntimeException failure) {
+                com.hex.kagune.control.Safety.caught(failure, "a companion's final kakuja");
+            }
+        }
     }
 
     /** Her pose this frame: her gesture, with her fight's move (1.3.4: a Pale player's, by its own animator) over it (null: none). */
@@ -172,6 +193,11 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
     private static final java.util.Map<Integer, RigPose> DRAWN = new java.util.HashMap<>();
     private static final java.util.Map<Integer, Double> DRAWN_AT = new java.util.HashMap<>();
 
+    /** 1.3.19: the body {@code id} as it was last drawn (whenever that was), or null. */
+    public static RigPose lastPose(int id) {
+        return DRAWN.get(id);
+    }
+
     /** 1.3.6: her body as drawn on {@code clock} (this frame), or null if it wasn't. */
     static RigPose drawn(int id, double clock) {
         Double at = DRAWN_AT.get(id);
@@ -199,6 +225,7 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
         RigPose posed = pose(npc, view, clock, partial);
         DRAWN.put(npc.m_19879_(), posed == null ? null : new RigPose().add(posed, 1.0F));
         DRAWN_AT.put(npc.m_19879_(), clock);
+        com.hex.kagune.control.client.KingClient.seen(npc); // 1.3.19: Peace's effects find him
         EtoModel.pose = posed;
         boolean turned = posed != null && (Math.abs(posed.flip) > 1.0E-3F || Math.abs(posed.roll) > 1.0E-3F || Math.abs(posed.spin) > 1.0E-3F
             || Math.abs(posed.drop) > 1.0E-3F || Math.abs(posed.lunge) > 1.0E-3F);

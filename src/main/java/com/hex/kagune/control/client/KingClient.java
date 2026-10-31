@@ -140,6 +140,46 @@ public final class KingClient {
         return player == null ? null : VIEWS.get(player.m_20148_());
     }
 
+    /** 1.3.19: what any body wears (Ken in Peace as much as a player), or null. */
+    public static View get(net.minecraft.world.entity.Entity body) {
+        return body == null ? null : VIEWS.get(body.m_20148_());
+    }
+
+    /** 1.3.19: the bodies that are no player seen wearing one lately (drawn this session), by id: what effects find them by. */
+    private static final Map<UUID, java.lang.ref.WeakReference<net.minecraft.world.entity.LivingEntity>> BODIES = new HashMap<>();
+
+    /** 1.3.19: {@code body} (no player) drawn now: effects sent for it can find it. */
+    public static void seen(net.minecraft.world.entity.LivingEntity body) {
+        if (VIEWS.containsKey(body.m_20148_())) {
+            BODIES.put(body.m_20148_(), new java.lang.ref.WeakReference<>(body));
+        }
+    }
+
+    /** 1.3.19: the wearer {@code id} in {@code level}: a player, or a body seen wearing one; null if none. */
+    public static net.minecraft.world.entity.LivingEntity find(net.minecraft.client.multiplayer.ClientLevel level, UUID id) {
+        for (AbstractClientPlayer p : level.m_6907_()) {
+            if (p.m_20148_().equals(id)) {
+                return p;
+            }
+        }
+        java.lang.ref.WeakReference<net.minecraft.world.entity.LivingEntity> ref = BODIES.get(id);
+        net.minecraft.world.entity.LivingEntity body = ref == null ? null : ref.get();
+        return body != null && body.m_9236_() == level && !body.m_213877_() ? body : null;
+    }
+
+    /** 1.3.19: every wearer there may be in {@code level}: its players and the bodies seen wearing one. */
+    public static java.util.List<net.minecraft.world.entity.LivingEntity> wearers(net.minecraft.client.multiplayer.ClientLevel level) {
+        java.util.List<net.minecraft.world.entity.LivingEntity> all = new java.util.ArrayList<>(level.m_6907_());
+        BODIES.values().removeIf(ref -> ref.get() == null || ref.get().m_213877_());
+        for (java.lang.ref.WeakReference<net.minecraft.world.entity.LivingEntity> ref : BODIES.values()) {
+            net.minecraft.world.entity.LivingEntity body = ref.get();
+            if (body != null && body.m_9236_() == level) {
+                all.add(body);
+            }
+        }
+        return all;
+    }
+
     /** The final kakuja {@code player} shows at {@code time}, or NONE once it is all gone. */
     public static KingForm shown(AbstractClientPlayer player, double time) {
         View view = get(player);
@@ -206,6 +246,7 @@ public final class KingClient {
     @SubscribeEvent
     public static void loggingOut(ClientPlayerNetworkEvent.LoggingOut event) {
         VIEWS.clear();
+        BODIES.clear();
         LASHES.clear();
         crown = -1;
         promptIn = 0;

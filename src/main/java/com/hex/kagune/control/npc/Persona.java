@@ -43,6 +43,16 @@ public abstract class Persona {
         return 1.0F;
     }
 
+    /** 1.3.19: whether it fights with Ukaku wings of its own (Touka: a lesser pair, crystal spikes), drawn on its back in a fight. */
+    public boolean wings() {
+        return false;
+    }
+
+    /** 1.3.19: the final kakuja it fights in, worn the moment a fight finds it (Ken: Peace), or NONE. */
+    public com.hex.kagune.control.king.KingForm finalKakuja() {
+        return com.hex.kagune.control.king.KingForm.NONE;
+    }
+
     /** 1.3.18: how much of the figure's extra width and depth its legs have (its curves unless said otherwise: Touka's a touch less). */
     public float legs() {
         return this.curves();
@@ -273,6 +283,12 @@ public abstract class Persona {
             return 1.0F;
         }
 
+        /** 1.3.19: the owner: "a lesser, halfway" kagune of her own, crystal spikes, the barrage; simple, nowhere near Ken or Eto. */
+        @Override
+        public boolean wings() {
+            return true;
+        }
+
         /** 1.3.18: the owner: her legs "a bit too thick", "just a little bit" thinner: a touch less of the figure's leg width than her curves. */
         @Override
         public float legs() {
@@ -433,6 +449,12 @@ public abstract class Persona {
         @Override
         public float health() {
             return 340.0F;
+        }
+
+        /** 1.3.19: the owner: the strongest of them all; in a fight, Peace (the final kakuja) at once, every one of its moves his. */
+        @Override
+        public com.hex.kagune.control.king.KingForm finalKakuja() {
+            return com.hex.kagune.control.king.KingForm.PEACE;
         }
 
         @Override

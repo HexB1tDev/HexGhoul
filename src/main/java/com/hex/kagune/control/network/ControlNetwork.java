@@ -27,7 +27,7 @@ public final class ControlNetwork {
      * abilities do out in the world (1.0.13); 35: War's M1, its blows and their effects (1.0.14); 36: the Black Sun out of the ground (1.0.15); 37: Peace playable, its blades' moves and cuts (1.0.16); 38: the transformations, nothing hurts him nor any ability while it comes (1.0.17). 39: Peace's six blades, their numbering and moves (1.0.18). 40: the marks blows leave instead of vanilla particles (1.0.19). 41: the fighting grammar: M1 flags, the heavy, the charge (1.0.20). 42: Peace's blades reach farther, its paths changed (1.0.21).
      * 54: Eto (1.3.0): her state and surgery, her talk choices, the one-eye grant in the kakugan state. 58: genders (1.3.9). 59: pregnancy, children (1.3.10).
      */
-    private static final String PROTOCOL = "60";
+    private static final String PROTOCOL = "61"; // 61 (1.3.19): S2CNpcWings, a companion's Ukaku wings
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
         KaguneMod.id("control"), () -> PROTOCOL, PROTOCOL::equals, PROTOCOL::equals);
     private static boolean initialized;
@@ -89,6 +89,7 @@ public final class ControlNetwork {
         // 1.3.10: children as they are drawn; each player's hair colour off their own skin.
         CHANNEL.registerMessage(43, S2CChild.class, S2CChild::encode, S2CChild::decode, S2CChild::handle);
         CHANNEL.registerMessage(44, C2SLooks.class, C2SLooks::encode, C2SLooks::decode, C2SLooks::handle);
+        CHANNEL.registerMessage(45, S2CNpcWings.class, S2CNpcWings::encode, S2CNpcWings::decode, S2CNpcWings::handle);
     }
 
     /** To the subject and every client tracking them. */

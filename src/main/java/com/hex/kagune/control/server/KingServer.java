@@ -15,6 +15,7 @@ import java.util.UUID;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.ai.attributes.Attribute;
@@ -105,6 +106,133 @@ public final class KingServer {
 
         /** It came off: whatever it was doing ends. */
         void off(ServerPlayer player);
+    }
+
+    /**
+     * 1.3.19: a final kakuja's kit on a body that is no player (Ken wears Peace): its mind presses its keys, throws its blows, holds and
+     * lets go its charges, and asks what is under way. The same moves, on the same ticks, as a player's.
+     */
+    public interface BodyKit {
+        void keyOf(LivingEntity body, int slot, int action, int target);
+
+        void strikeOf(LivingEntity body, int target, int flags);
+
+        void heavyOf(LivingEntity body, int flags, int target);
+
+        void tickOf(LivingEntity body, long now);
+
+        float hurtOf(LivingEntity body, net.minecraft.world.entity.Entity attacker, net.minecraft.world.entity.Entity direct, float amount);
+
+        double[] deflectOf(LivingEntity body, net.minecraft.world.entity.projectile.Projectile projectile);
+
+        void offOf(LivingEntity body);
+
+        /** Its blades taken (an ability, a blow, a charge). */
+        boolean busyOf(LivingEntity body);
+
+        /** Holding a charge: -1 the heavy, else that ability's slot. */
+        boolean holdingOf(LivingEntity body, int slot);
+
+        /** Up on a lift (how high over where it rose from), NaN if not. */
+        double risenOf(LivingEntity body);
+    }
+
+    /** 1.3.19: each final kakuja's kit for bodies that are no player, by form. */
+    private static final Map<KingForm, BodyKit> BODY_KITS = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /** 1.3.19: {@code form}'s kit for bodies that are no player. */
+    public static void installBodyKit(KingForm form, BodyKit kit) {
+        BODY_KITS.put(form, kit);
+    }
+
+    /** 1.3.19: the kit {@code body} (no player) wears now, or null. */
+    public static BodyKit bodyKit(LivingEntity body) {
+        Worn worn = WORN.get(body.m_20148_());
+        return worn == null || !worn.on() || body instanceof ServerPlayer ? null : BODY_KITS.get(worn.form());
+    }
+
+    /** 1.3.19: what {@code body} (no player) wears, or null. */
+    public static Worn wornBy(LivingEntity body) {
+        return WORN.get(body.m_20148_());
+    }
+
+    /**
+     * 1.3.19: {@code form} comes over {@code body} (no player: Ken) now: drawn coming over it on every client, its kit its own. Its waits
+     * kept from the last time.
+     */
+    public static void wear(LivingEntity body, KingForm form) {
+        if (body instanceof ServerPlayer || form == null || form == KingForm.NONE) {
+            return;
+        }
+        Worn worn = WORN.get(body.m_20148_());
+        if (worn != null && worn.on() && worn.form() == form) {
+            return;
+        }
+        long now = body.m_9236_().m_46467_();
+        WORN.put(body.m_20148_(), new Worn(form, true, now, false));
+        MOTIONS.remove(body.m_20148_());
+        body.m_9236_().m_6263_(null, body.m_20185_(), body.m_146892_().f_82480_, body.m_20189_(), EYE_OPEN, SoundSource.HOSTILE, 1.4F, 0.55F);
+        broadcast(body);
+    }
+
+    /** 1.3.19: it leaves {@code body} (no player): drawn going back into it ({@code shown}), or simply gone. */
+    public static void unwear(LivingEntity body, boolean shown) {
+        Worn worn = WORN.get(body.m_20148_());
+        if (worn == null || body instanceof ServerPlayer) {
+            return;
+        }
+        BodyKit kit = BODY_KITS.get(worn.form());
+        if (worn.on() && kit != null) {
+            kit.offOf(body);
+        }
+        MOTIONS.remove(body.m_20148_());
+        if (shown && worn.on()) {
+            WORN.put(body.m_20148_(), new Worn(worn.form(), false, body.m_9236_().m_46467_(), false));
+        } else {
+            WORN.remove(body.m_20148_());
+        }
+        broadcast(body);
+    }
+
+    /** 1.3.19: a tick of what {@code body} (no player) wears: its kit's moves; gone back into it after it is taken off. */
+    public static void bodyTick(LivingEntity body, long now) {
+        Worn worn = WORN.get(body.m_20148_());
+        if (worn == null || body instanceof ServerPlayer) {
+            return;
+        }
+        if (!worn.on()) {
+            if (now - worn.since() > Math.max(KingRules.GROW_TICKS * 2L, KingTransform.leave(worn.form()) + 12L)) {
+                WORN.remove(body.m_20148_());
+                }
+            return;
+        }
+        BodyKit kit = BODY_KITS.get(worn.form());
+        if (kit != null) {
+            kit.tickOf(body, now);
+            body.f_19789_ = 0.0F;
+        }
+    }
+
+    /** 1.3.19: true while what {@code body} (no player) wears is still coming over it. */
+    public static boolean bodyComing(LivingEntity body) {
+        Worn worn = WORN.get(body.m_20148_());
+        return worn != null && KingTransform.coming(worn.form(), worn.on(), body.m_9236_().m_46467_() - worn.since());
+    }
+
+    /** 1.3.19: a blow on {@code body} (no player) wearing one: what its kit leaves of it. */
+    public static float bodyHurt(LivingEntity body, net.minecraft.world.entity.Entity attacker, net.minecraft.world.entity.Entity direct, float amount) {
+        BodyKit kit = bodyKit(body);
+        return kit == null ? amount : kit.hurtOf(body, attacker, direct, amount);
+    }
+
+    /** 1.3.19: the body (no player) gone from the world: what it wore is forgotten. */
+    public static void forgetBody(LivingEntity body) {
+        Worn worn = WORN.remove(body.m_20148_());
+        MOTIONS.remove(body.m_20148_());
+        BodyKit kit = worn == null ? null : BODY_KITS.get(worn.form());
+        if (kit != null && worn.on()) {
+            kit.offOf(body);
+        }
     }
 
     /** What a final kakuja's body is doing now: the move, since when, at what level, at whom. */
@@ -324,7 +452,7 @@ public final class KingServer {
     // ------------------------------------------------------------------ the kit's side
 
     /** The kit's body moves: {@code move} from now, at {@code level}, at {@code target} (0: none); every client draws it. */
-    public static void move(ServerPlayer player, KingMove move, int level, int target) {
+    public static void move(LivingEntity player, KingMove move, int level, int target) {
         MOTIONS.put(player.m_20148_(), move == KingMove.NONE ? Motion.IDLE : new Motion(move, player.m_9236_().m_46467_(), level, target));
         broadcast(player);
     }
@@ -340,11 +468,18 @@ public final class KingServer {
     }
 
     /** 1.0.35: {@code player}'s waits for the final kakuja he wears (or chose), made if {@code make}; else null if there are none. */
-    private static long[] waits(ServerPlayer player, boolean make) {
-        KingForm form = wearing(player);
-        if (form == KingForm.NONE) {
-            form = chosen(player);
+    private static long[] waits(LivingEntity body, boolean make) {
+        KingForm form;
+        if (body instanceof ServerPlayer player) {
+            form = wearing(player);
+            if (form == KingForm.NONE) {
+                form = chosen(player);
+            }
+        } else {
+            Worn worn = WORN.get(body.m_20148_());
+            form = worn == null ? KingForm.NONE : worn.form();
         }
+        LivingEntity player = body;
         Map<KingForm, long[]> all = make ? READY.computeIfAbsent(player.m_20148_(), id -> new java.util.EnumMap<>(KingForm.class))
             : READY.get(player.m_20148_());
         if (all == null) {
@@ -354,7 +489,7 @@ public final class KingServer {
     }
 
     /** When ability {@code slot} of the final kakuja {@code player} wears is ready again (game ticks). */
-    public static long ready(ServerPlayer player, int slot) {
+    public static long ready(LivingEntity player, int slot) {
         long[] ready = waits(player, false);
         return ready == null || slot < 0 || slot >= ready.length ? 0L : ready[slot];
     }
@@ -363,10 +498,10 @@ public final class KingServer {
      * Ability {@code slot} is ready again at {@code at} (game ticks); the HUD shows it. (1.0.33: at once while cooldowns are off,
      * {@link Cooldowns#off}: switched off, or in creative; a move still cannot start over itself, its kit's busy.)
      */
-    public static void cooldown(ServerPlayer player, int slot, long at) {
+    public static void cooldown(LivingEntity player, int slot, long at) {
         long[] ready = waits(player, true);
         if (slot >= 0 && slot < ready.length) {
-            ready[slot] = Cooldowns.off(player) ? Math.min(at, player.m_9236_().m_46467_()) : at;
+            ready[slot] = player instanceof ServerPlayer p && Cooldowns.off(p) ? Math.min(at, player.m_9236_().m_46467_()) : at;
             broadcast(player);
         }
     }
@@ -565,6 +700,26 @@ public final class KingServer {
         ControlNetwork.broadcast(player, snapshot(player));
     }
 
+    /** 1.3.19: any wearer's state to every client about it (a player's own crown and waits go with theirs). */
+    static void broadcast(LivingEntity body) {
+        if (body instanceof ServerPlayer player) {
+            broadcast(player);
+            return;
+        }
+        ControlNetwork.broadcastAround(body, bodySnapshot(body));
+    }
+
+    /** 1.3.19: what a body that is no player wears, as every client draws it. */
+    static S2CKingState bodySnapshot(LivingEntity body) {
+        Worn worn = WORN.get(body.m_20148_());
+        Motion motion = MOTIONS.getOrDefault(body.m_20148_(), Motion.IDLE);
+        long[] waits = waits(body, false);
+        long[] ready = waits == null ? new long[S2CKingState.ABILITIES] : waits.clone();
+        return worn == null ? new S2CKingState(body.m_20148_(), -1, KingForm.NONE.ordinal(), false, 0L, false, 0, 0L, 0, 0, ready)
+            : new S2CKingState(body.m_20148_(), -1, worn.form().ordinal(), worn.on(), worn.since(), false, motion.move().ordinal(), motion.at(),
+                motion.level(), motion.target(), ready);
+    }
+
     // ------------------------------------------------------------------ events
 
     @SubscribeEvent
@@ -693,6 +848,10 @@ public final class KingServer {
 
     @SubscribeEvent
     public static void startTracking(PlayerEvent.StartTracking event) {
+        if (event.getEntity() instanceof ServerPlayer viewer && event.getTarget() instanceof LivingEntity body && !(body instanceof ServerPlayer)
+            && WORN.containsKey(body.m_20148_())) {
+            ControlNetwork.sendTo(viewer, bodySnapshot(body)); // 1.3.19: Ken in Peace, seen from afar coming near
+        }
         if (event.getEntity() instanceof ServerPlayer viewer && event.getTarget() instanceof ServerPlayer subject && WORN.containsKey(subject.m_20148_())) {
             ControlNetwork.sendTo(viewer, snapshot(subject));
         }

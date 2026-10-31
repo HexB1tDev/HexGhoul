@@ -120,6 +120,12 @@ final class EtoOwl {
         EtoRules.Ready ready = npc.persona().owlKit() ? new EtoRules.Ready(f.punchReady, f.kickReady, f.flipReady, f.swipeReady, f.grabReady, f.hammerReady,
             EtoWatch.out(npc) ? Long.MAX_VALUE : f.watchReady, f.armReady) : EtoRules.Ready.only(f.punchReady, f.kickReady, f.flipReady);
         EtoRules.Act act = EtoRules.choose(distance, sees, npc.m_20096_(), share(npc), now, ready, npc.m_217043_().m_188500_());
+        perform(npc, mind, target, level, now, phase, act);
+    }
+
+    /** 1.3.19: one of her moves thrown now at {@code target}, as her choice has it (Ken's mind throws them on his own, in Peace too). */
+    static void perform(EtoNpc npc, EtoBrain.Mind mind, LivingEntity target, ServerLevel level, long now, EtoRules.Phase phase, EtoRules.Act act) {
+        Fight f = mind.owl;
         face(npc, target);
         switch (act) {
             case SWIPE -> EtoFlesh.swipe(npc, f, target, level, now, phase);
