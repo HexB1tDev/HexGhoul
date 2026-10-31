@@ -29,20 +29,14 @@ final class EtoModel extends PlayerModel<EtoNpc> {
         super.m_6973_(npc, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
         RigPose p = pose;
         if (p != null) {
-            float arms = 1.0F - Math.max(0.0F, Math.min(1.0F, p.armHold));
-            float legs = 1.0F - Math.max(0.0F, Math.min(1.0F, p.legHold));
-            float head = 1.0F - Math.max(0.0F, Math.min(1.0F, p.headHold));
-            turn(this.f_102808_, head, p.headX, p.headY, p.headZ);
-            turn(this.f_102811_, arms, p.rightArmX, p.rightArmY, p.rightArmZ);
-            turn(this.f_102812_, arms, p.leftArmX, p.leftArmY, p.leftArmZ);
-            turn(this.f_102813_, legs, p.rightLegX, p.rightLegY, p.rightLegZ);
-            turn(this.f_102814_, legs, p.leftLegX, p.leftLegY, p.leftLegZ);
-            if (Math.abs(p.lean) > 1.0E-4F) {
-                // 1.3.1: her top half (head, torso, arms) bent forward about her hips, as vanilla's crouch leans the body.
-                for (ModelPart part : new ModelPart[] {this.f_102808_, this.f_102810_, this.f_102811_, this.f_102812_}) {
-                    lean(part, p.lean);
-                }
-            }
+            // 1.3.4: each part posed exactly as a player's is under the same pose (RigPose.transform: PlayerAnimator's own conversion):
+            // the head, the chest's lean, side and twist (the arms' pivots carried round with it), the arms and legs with their holds.
+            apply("head", this.f_102808_, p);
+            apply("torso", this.f_102810_, p);
+            apply("rightArm", this.f_102811_, p);
+            apply("leftArm", this.f_102812_, p);
+            apply("rightLeg", this.f_102813_, p);
+            apply("leftLeg", this.f_102814_, p);
             this.f_102809_.m_104315_(this.f_102808_);
             this.f_103375_.m_104315_(this.f_102811_);
             this.f_103374_.m_104315_(this.f_102812_);
@@ -57,20 +51,15 @@ final class EtoModel extends PlayerModel<EtoNpc> {
         }
     }
 
-    /** {@code part} turned forward by {@code lean} (radians) about her hips (model y 12, z 0): its pivot carried round, and itself tipped. */
-    private static void lean(ModelPart part, float lean) {
-        float dy = part.f_104201_ - 12.0F;
-        float dz = part.f_104202_;
-        float cos = (float)Math.cos(lean);
-        float sin = (float)Math.sin(lean);
-        part.f_104201_ = 12.0F + dy * cos - dz * sin;
-        part.f_104202_ = dy * sin + dz * cos;
-        part.f_104203_ += lean;
-    }
-
-    private static void turn(ModelPart part, float keep, float x, float y, float z) {
-        part.f_104203_ = part.f_104203_ * keep + x;
-        part.f_104204_ = part.f_104204_ * keep + y;
-        part.f_104205_ = part.f_104205_ * keep + z;
+    /** {@code part} (PlayerAnimator's name {@code name}) moved and turned as the pose has it, from where vanilla put it. */
+    private static void apply(String name, ModelPart part, RigPose p) {
+        float[] at = p.transform(name, RigPose.POSITION, part.f_104200_, part.f_104201_, part.f_104202_);
+        float[] turn = p.transform(name, RigPose.ROTATION, part.f_104203_, part.f_104204_, part.f_104205_);
+        part.f_104200_ = at[0];
+        part.f_104201_ = at[1];
+        part.f_104202_ = at[2];
+        part.f_104203_ = turn[0];
+        part.f_104204_ = turn[1];
+        part.f_104205_ = turn[2];
     }
 }

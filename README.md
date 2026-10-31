@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.4 (HexGhoul): Eto fights with the Owl DNA kit (Speed Blitz, Big Punch into Witness This, Speed Kick), hand in hand for real (testing)
+
+See `.github/release-notes-1.3.4.md`.
+
 ## 1.3.3 (HexGhoul): a living talk screen, holding hands with Eto, she clings to your arm, no fall damage, she always finds her way home (testing)
 
 See `.github/release-notes-1.3.3.md`.

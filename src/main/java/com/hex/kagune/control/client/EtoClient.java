@@ -12,21 +12,16 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 /**
- * 1.3.0: the client's store of every Eto it can see (fed only by the server, {@code S2CEto}): her gesture, her move, her flip, her eye
- * open for a fight. Times are turned onto the client's own clock ({@link PaleClient#clock}) as they arrive, as {@link GhoulNpcClient}
+ * 1.3.0: the client's store of every Eto it can see (fed only by the server, {@code S2CEto}): her gesture, her fight's move (1.3.4: a Pale
+ * player's, {@link PaleClient.PaleView}), her eye open for a fight. Times are turned onto the client's own clock ({@link PaleClient#clock}) as they arrive, as {@link GhoulNpcClient}
  * does; her eye's fade is followed here, from whatever it was when it was last told to open or close.
  */
 @Mod.EventBusSubscriber(modid = "hexkagune", value = Dist.CLIENT)
 public final class EtoClient {
     /** Her as the server last said; {@code ...Began} are client clock times. */
-    public record View(EtoGesture gesture, long gestureAt, double gestureBegan, EtoRules.Move move, long moveAt, double moveBegan, int flip, long flipAt,
-                       double flipBegan, boolean turned, int with, String tag) {
+    public record View(EtoGesture gesture, long gestureAt, double gestureBegan, PaleClient.PaleView fight, boolean turned, int with, String tag) {
         public double gestureAge(double clock) {
             return Math.max(0.0, clock - this.gestureBegan);
-        }
-
-        public double moveAge(double clock) {
-            return this.move == EtoRules.Move.NONE ? Double.MAX_VALUE : Math.max(0.0, clock - this.moveBegan);
         }
     }
 
@@ -52,10 +47,13 @@ public final class EtoClient {
         View before = VIEWS.get(message.id());
         double gestureBegan = began(world, clock, message.gestureAt(), before == null ? Long.MIN_VALUE : before.gestureAt(),
             before == null ? 0.0 : before.gestureBegan());
-        double moveBegan = began(world, clock, message.moveAt(), before == null ? Long.MIN_VALUE : before.moveAt(), before == null ? 0.0 : before.moveBegan());
-        double flipBegan = began(world, clock, message.flipAt(), before == null ? Long.MIN_VALUE : before.flipAt(), before == null ? 0.0 : before.flipBegan());
-        VIEWS.put(message.id(), new View(EtoGesture.byOrdinal(message.gesture()), message.gestureAt(), gestureBegan, EtoRules.Move.byOrdinal(message.move()),
-            message.moveAt(), moveBegan, message.flip(), message.flipAt(), flipBegan, message.turned(), message.with(), message.tag()));
+        // 1.3.4: her fight's move, as a Pale player's is held (PaleClient), on this client's clock.
+        PaleClient.PaleView was = before == null ? PaleClient.PaleView.NONE : before.fight();
+        double moveBegan = began(world, clock, message.moveAt(), was.startedAt(), was.began());
+        PaleClient.PaleView fight = new PaleClient.PaleView(com.hex.kagune.control.pale.PaleMove.byOrdinal(message.move()), message.detail(), message.moveAt(),
+            message.target(), message.charge(), message.yaw(), message.x(), message.y(), message.z(), moveBegan);
+        VIEWS.put(message.id(), new View(EtoGesture.byOrdinal(message.gesture()), message.gestureAt(), gestureBegan, fight, message.turned(), message.with(),
+            message.tag()));
     }
 
     private static double began(long world, double clock, long at, long was, double wasBegan) {
@@ -104,19 +102,6 @@ public final class EtoClient {
             state[3] = clock;
         }
         return EtoRules.jigglePixels(state[0]);
-    }
-
-    /** Her flip this frame, posed as a player's is, or null. */
-    public static com.hex.kagune.control.client.animation.RigPose flip(View view, double clock, boolean onGround) {
-        if (view == null || view.flip() < 0 || view.flipAt() == Long.MIN_VALUE) {
-            return null;
-        }
-        double age = clock - view.flipBegan();
-        if (age < 0.0 || age > com.hex.kagune.control.npc.NpcRules.FLIP_POSED) {
-            return null;
-        }
-        double landed = onGround && age > 4.0 ? age - 4.0 : -1.0;
-        return com.hex.kagune.control.client.animation.PaleMotions.flip(com.hex.kagune.control.pale.PaleRules.Flip.byOrdinal(view.flip()), age, landed);
     }
 
     public static void prune(net.minecraft.client.multiplayer.ClientLevel level) {

@@ -493,8 +493,8 @@ public final class KaguneBodyAnimation implements IAnimation {
         // 1.3.3: hand in hand with Eto (she walks at their right): the right arm out to her side, a little forward.
         float hand = com.hex.kagune.control.client.EtoClient.handHeld(this.player.m_19879_()) * this.fade;
         if (hand > 0.0F) {
-            p.rightArmZ += 0.36F * hand;
-            p.rightArmX -= 0.18F * hand;
+            p.rightArmZ += com.hex.kagune.control.npc.EtoHand.ARM * hand;
+            p.rightArmX -= 0.12F * hand;
         }
         // 6.2.0: just whole again after her death that did not take, she stands as the pieces went back together and eases into it.
         float risen = com.hex.kagune.control.client.ReviveClient.risen(this.player, com.hex.kagune.control.client.PaleClient.clock(tickDelta));

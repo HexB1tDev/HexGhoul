@@ -1,12 +1,13 @@
 package com.hex.kagune.control.client.animation;
 
 import com.hex.kagune.control.npc.EtoGesture;
+import com.hex.kagune.control.npc.EtoHand;
 import com.hex.kagune.control.npc.EtoRules;
 
 /**
  * 1.3.0: Eto's body language (pure, previewed by {@code tools/ArtPreview} sheet {@code eto}): her goofy idle gestures, the kiss (hands
  * behind her back, her top half leaning in, on her toes), the blush, the hug, the cross arms of a girl left hanging, and her moves in a
- * fight. Only what vanilla's player model can show: the head, the arms and the legs turned whole, and the whole body turned ({@code flip},
+ * fight (1.3.4: her fight is a Pale player's own moves, posed by their animator, EtoFight). Only what vanilla's player model can show: the head, the arms and the legs turned whole, and the whole body turned ({@code flip},
  * {@code roll}, {@code spin}) and lifted ({@code drop}, - up) by her renderer. A lean of her top half is the whole body tipped forward
  * ({@code flip} -) with the legs swung back under her by as much ({@code legX} the same), so only what is above them leans.
  */
@@ -319,9 +320,10 @@ public final class EtoPose {
                 p.roll = 0.05F * rock;
             }
             case HAND -> {
-                // 1.3.3: her left hand out to the one at her left, holding theirs, a little shy.
-                p.leftArmZ = -0.36F;
-                p.leftArmX = -0.18F;
+                // 1.3.3: her left hand out to the one at her left, holding theirs, a little shy. 1.3.4: just out from her side, to meet theirs
+                // where it hangs (EtoHand), not reaching past it.
+                p.leftArmZ = -EtoHand.ARM;
+                p.leftArmX = -0.12F;
                 p.leftArmY = 0.1F;
                 p.headX = 0.08F;
                 p.rightArmZ = 0.06F;
@@ -358,63 +360,6 @@ public final class EtoPose {
         p.lean = lean;
         p.headX = -lean - 0.04F;
         p.headZ = 0.06F * (float)Math.sin(t * 0.12);
-    }
-
-    /** Her pose for {@code move} {@code age} ticks in, or null for none. */
-    public static RigPose move(EtoRules.Move move, double age) {
-        if (move == null || move == EtoRules.Move.NONE || move == EtoRules.Move.FLIP_FORWARD || move == EtoRules.Move.FLIP_BACK) {
-            return null;
-        }
-        RigPose p = new RigPose();
-        float t = (float)age;
-        switch (move) {
-            case STRIKE -> {
-                float k = envelope(t, 6, 1.5F, 3.0F);
-                p.rightArmX = -1.55F * k;
-                p.rightArmY = 0.2F * k;
-                p.flip = -0.1F * k;
-                p.rightLegX = -0.1F * k;
-                p.leftLegX = -0.1F * k;
-            }
-            case BLITZ -> {
-                float k = envelope(t, EtoRules.BLITZ_TICKS, 1.0F, 2.0F);
-                p.rightArmX = -1.65F * k;
-                p.leftArmX = 0.6F * k;
-                p.flip = -0.22F * k;
-                p.rightLegX = -0.6F * k;
-                p.leftLegX = 0.35F * k;
-            }
-            case PUNCH -> {
-                if (t < EtoRules.PUNCH_WINDUP) {
-                    float k = ease(t / EtoRules.PUNCH_WINDUP);
-                    p.rightArmX = 0.95F * k;
-                    p.rightArmZ = 0.35F * k;
-                    p.leftArmX = -0.8F * k;
-                    p.flip = 0.08F * k;
-                    p.rightLegX = 0.08F * k;
-                    p.leftLegX = 0.08F * k;
-                } else {
-                    float k = envelope(t - EtoRules.PUNCH_WINDUP, EtoRules.PUNCH_TICKS - EtoRules.PUNCH_WINDUP, 1.0F, 4.0F);
-                    p.rightArmX = -1.72F * k;
-                    p.leftArmX = 0.7F * k;
-                    p.flip = -0.26F * k;
-                    p.rightLegX = -0.5F * k;
-                    p.leftLegX = 0.24F * k;
-                }
-            }
-            case KICK -> {
-                float k = envelope(t, EtoRules.KICK_TICKS, 2.0F, 3.0F);
-                p.rightLegX = -1.65F * k;
-                p.rightArmZ = 0.7F * k;
-                p.leftArmZ = -0.7F * k;
-                p.flip = 0.12F * k;
-                p.leftLegX = 0.12F * k;
-            }
-            default -> {
-                return null;
-            }
-        }
-        return p;
     }
 
     /** A short motion once every {@code every} ticks (a page turned, a pause to think): 0, up to 1 and back over 10 ticks. */

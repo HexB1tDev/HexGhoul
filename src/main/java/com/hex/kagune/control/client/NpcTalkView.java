@@ -124,12 +124,15 @@ public final class NpcTalkView {
         boolean two = choices.size() > 4;
         int rows = two ? (choices.size() + 1) / 2 : choices.size();
         int columnWidth = two ? (CONTENT_WIDTH - 8) / 2 : CONTENT_WIDTH;
-        int choicesTop = bottom - rows * 19;
+        int lowest = bottom - rows * 19;
 
         // What it says, typed out: as many lines as fit above the answers.
         int y = top + 40;
         List<String> lines = wrap(c, text, textWidth);
-        int fit = Math.max(3, (choicesTop - 4 - y) / 12);
+        int fit = Math.max(3, (lowest - 4 - y) / 12);
+        // 1.3.4: the answers in the middle of the room left under the words (not down against the board's edge).
+        int saidTo = y + Math.min(fit, lines.size()) * 12;
+        int choicesTop = Math.max(saidTo + 10, Math.min(lowest, saidTo + (bottom - saidTo - rows * 19) / 2));
         int left0 = shown;
         for (int i = 0; i < Math.min(fit, lines.size()) && left0 > 0; i++) {
             String line = lines.get(i);

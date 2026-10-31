@@ -58,7 +58,8 @@ import net.minecraftforge.registries.ForgeRegistries;
  * is never fought, whatever they do to her (she sulks instead), is protected when she sees them hurt, is clung to, greeted when they come
  * home, gone looking for and talked to, and warned privately ({@code S2CNpcAlert}) when she wants a kiss, a hug or them. A kiss held long
  * enough, she pulls them in. Her idle hands follow her mood ({@link EtoMood}), with a book, a quill, a brush in them. In a fight she gets
- * serious, then maniac ({@link EtoRules.Phase}): faster, harder to hurt, her kagune out ({@link EtoKagune}).
+ * serious, then maniac ({@link EtoRules.Phase}): faster, harder to hurt. 1.3.4: her fight is her Owl DNA kit, a Pale player's own moves
+ * ({@link EtoOwl}).
  */
 @Mod.EventBusSubscriber(modid = "hexkagune")
 public final class EtoBrain {
@@ -70,13 +71,8 @@ public final class EtoBrain {
         long hurtAt = Long.MIN_VALUE;
         /** Players who hurt her, until when she holds it against them. */
         final Map<UUID, Long> grudges = new HashMap<>();
-        EtoRules.Ready ready = EtoRules.Ready.NOW;
-        EtoRules.Move move = EtoRules.Move.NONE;
-        long moveAt = Long.MIN_VALUE;
-        boolean landed;
-        int flip = -1;
-        long flipAt = Long.MIN_VALUE;
-        Vec3 flipPush;
+        /** 1.3.4: her Owl DNA kit's moves ({@link EtoOwl}). */
+        final EtoOwl.Fight owl = new EtoOwl.Fight();
         EtoGesture gesture = EtoGesture.NONE;
         long gestureAt = Long.MIN_VALUE;
         long nextGestureAt;
@@ -103,9 +99,8 @@ public final class EtoBrain {
         String tag = "";
         /** Who she holds on to now (an entity id; 0 none), for every client. */
         int with;
-        /** How seriously she takes the fight, and her kagune. */
+        /** How seriously she takes the fight. */
         EtoRules.Phase phase = EtoRules.Phase.CALM;
-        final EtoKagune.Wings wings = new EtoKagune.Wings();
         /** Per player: smiling since a kiss or a hug, until; cross after a hit, until; close since; next she goes looking for them. */
         final Map<UUID, Long> giddy = new HashMap<>();
         final Map<UUID, Long> sulk = new HashMap<>();
@@ -210,7 +205,7 @@ public final class EtoBrain {
         }
         double[] feet = npc.homeFeet();
         Vec3 homeAt = new Vec3(feet[0], feet[1], feet[2]);
-        if (npc.m_20238_(homeAt) > EtoRules.LOST * EtoRules.LOST) {
+        if (npc.m_20238_(homeAt) > EtoRules.LOST * EtoRules.LOST && !EtoOwl.carried(mind.owl)) {
             npc.m_6021_(homeAt.f_82479_, homeAt.f_82480_, homeAt.f_82481_);
             npc.m_21573_().m_26573_();
             mind.target = 0;
@@ -230,18 +225,16 @@ public final class EtoBrain {
                 gesture(mind, EtoGesture.NONE, now);
             }
             fight(npc, mind, target, level, now);
+        } else if (mind.owl.busy()) {
+            // What it was fighting is gone: the move under way plays out (a kick lands on nothing, Witness This drops out).
+            EtoOwl.tick(npc, mind, null, level, now, mind.phase);
         } else {
-            if (mind.move != EtoRules.Move.NONE && now - mind.moveAt > EtoRules.PUNCH_TICKS) {
-                mind.move = EtoRules.Move.NONE;
-                mind.dirty = true;
-            }
             if (mind.phase != EtoRules.Phase.CALM && now - mind.foughtAt > 60L) {
                 mind.phase = EtoRules.Phase.CALM;
             }
             calm(npc, mind, level, now);
             heal(npc, mind, now);
         }
-        EtoKagune.fly(npc, mind.wings, level, now, mind.target, mind.partner);
         if (mind.gesture.over(now - mind.gestureAt) && mind.gesture != EtoGesture.NONE && !mind.gesture.held()) {
             gesture(mind, EtoGesture.NONE, now);
         }
@@ -312,7 +305,6 @@ public final class EtoBrain {
         int id = current == null ? 0 : current.m_19879_();
         if (id != mind.target) {
             if (id == 0 && mind.target != 0) {
-                EtoKagune.fizzleAll(npc, mind.wings);
                 if (mind.phase == EtoRules.Phase.MANIAC) {
                     bark(npc, level, EtoLines.won(npc.m_217043_().m_188503_(100)));
                 }
@@ -396,6 +388,14 @@ public final class EtoBrain {
         }
     }
 
+    /** 1.3.4: nothing hurts her through the Speed Kick's lunge and dash (as a Pale player's). */
+    @SubscribeEvent
+    public static void attacked(net.minecraftforge.event.entity.living.LivingAttackEvent event) {
+        if (event.getEntity() instanceof EtoNpc npc && npc.mind != null && EtoOwl.untouchable(npc.mind.owl, npc.m_9236_().m_46467_())) {
+            event.setCanceled(true);
+        }
+    }
+
     /** 1.3.2: her partner (or the one she walks with) hurt where she can see who did it: she goes for them. */
     private static void protect(ServerPlayer victim, DamageSource source) {
         if (!(source.m_7639_() instanceof LivingEntity attacker) || attacker == victim || attacker instanceof EtoNpc) {
@@ -444,169 +444,8 @@ public final class EtoBrain {
                 npc.m_7292_(new MobEffectInstance(MobEffects.f_19606_, 60, phase.resistance, false, false, false));
             }
         }
-        face(npc, target);
         npc.m_21563_().m_24960_(target, 30.0F, 30.0F);
-        if (flipping(npc, mind, now)) {
-            return;
-        }
-        double distance = Math.sqrt(target.m_20280_(npc));
-        if (mind.move != EtoRules.Move.NONE && carry(npc, mind, target, level, now, distance, health)) {
-            return;
-        }
-        boolean sees = npc.m_142582_(target);
-        EtoKagune.fire(npc, mind.wings, target, level, now, phase, distance, sees);
-        boolean tough = target.m_21223_() >= 30.0F;
-        EtoRules.Move move = EtoRules.choose(distance, now, mind.ready, npc.m_20096_(), sees, health, tough, npc.m_217043_().m_188500_());
-        switch (move) {
-            case NONE -> npc.m_21573_().m_5624_(target, phase.chase);
-            case FLIP_FORWARD, FLIP_BACK -> flip(npc, mind, move, target, level, now);
-            default -> begin(npc, mind, move, level, now);
-        }
-    }
-
-    private static void begin(EtoNpc npc, Mind mind, EtoRules.Move move, ServerLevel level, long now) {
-        npc.m_21573_().m_26573_();
-        mind.move = move;
-        mind.moveAt = now;
-        mind.landed = false;
-        mind.ready = mind.ready.used(move, now, mind.phase.cooldowns);
-        mind.dirty = true;
-        if (move == EtoRules.Move.PUNCH) {
-            UkakuFire.sound(level, npc.m_20182_(), "entity.player.attack.nodamage", 0.8F, 0.7F);
-        }
-    }
-
-    /** The move she is making, one tick on: true while it holds her (nothing else this tick). */
-    private static boolean carry(EtoNpc npc, Mind mind, LivingEntity target, ServerLevel level, long now, double distance, float health) {
-        long age = now - mind.moveAt;
-        switch (mind.move) {
-            case STRIKE -> {
-                if (!mind.landed) {
-                    mind.landed = true;
-                    if (distance <= EtoRules.STRIKE_REACH + 0.6) {
-                        hit(npc, target, EtoRules.damage(EtoRules.STRIKE_DAMAGE, health), 0.35, 0.1, level, "entity.player.attack.sweep");
-                    }
-                }
-                if (age >= 6L) {
-                    mind.move = EtoRules.Move.NONE;
-                }
-                return false;
-            }
-            case BLITZ -> {
-                if (age == 1L) {
-                    // A blink in front of it, already striking.
-                    Vec3 from = target.m_20182_().m_82546_(npc.m_20182_());
-                    Vec3 way = new Vec3(from.f_82479_, 0.0, from.f_82481_);
-                    if (way.m_82553_() > 1.0E-3) {
-                        way = way.m_82541_();
-                        Vec3 to = target.m_20182_().m_82546_(way.m_82490_(1.3));
-                        Vec3 shift = to.m_82546_(npc.m_20182_());
-                        if (level.m_45756_(npc, npc.m_20191_().m_82386_(shift.f_82479_, shift.f_82480_, shift.f_82481_))) {
-                            npc.m_6021_(to.f_82479_, to.f_82480_, to.f_82481_);
-                        } else {
-                            npc.m_20256_(way.m_82490_(1.1).m_82520_(0.0, 0.1, 0.0));
-                            npc.f_19864_ = true;
-                        }
-                    }
-                    UkakuFire.sound(level, npc.m_20182_(), "entity.player.attack.sweep", 0.9F, 1.3F);
-                }
-                if (age >= 2L && !mind.landed && Math.sqrt(target.m_20280_(npc)) <= EtoRules.CLOSE_REACH + 0.5) {
-                    mind.landed = true;
-                    hit(npc, target, EtoRules.damage(EtoRules.BLITZ_DAMAGE, health), 0.5, 0.15, level, "entity.player.attack.strong");
-                }
-                if (age >= EtoRules.BLITZ_TICKS) {
-                    mind.move = EtoRules.Move.NONE;
-                    mind.dirty = true;
-                }
-                return true;
-            }
-            case PUNCH -> {
-                npc.m_21573_().m_26573_();
-                if (age >= EtoRules.PUNCH_WINDUP && !mind.landed) {
-                    mind.landed = true;
-                    if (distance <= EtoRules.CLOSE_REACH + 0.7) {
-                        hit(npc, target, EtoRules.damage(EtoRules.PUNCH_DAMAGE, health), 1.6, 0.5, level, "entity.player.attack.knockback");
-                        level.m_8767_(ParticleTypes.f_123797_, target.m_20185_(), target.m_20186_() + target.m_20206_() * 0.5, target.m_20189_(), 6, 0.2, 0.2, 0.2,
-                            0.1);
-                    }
-                }
-                if (age >= EtoRules.PUNCH_TICKS) {
-                    mind.move = EtoRules.Move.NONE;
-                    mind.dirty = true;
-                }
-                return true;
-            }
-            case KICK -> {
-                npc.m_21573_().m_26573_();
-                if (age >= 3L && !mind.landed) {
-                    mind.landed = true;
-                    if (distance <= EtoRules.CLOSE_REACH + 0.5) {
-                        hit(npc, target, EtoRules.damage(EtoRules.KICK_DAMAGE, health), 0.4, 0.95, level, "entity.player.attack.strong");
-                    }
-                }
-                if (age >= EtoRules.KICK_TICKS) {
-                    mind.move = EtoRules.Move.NONE;
-                    mind.dirty = true;
-                }
-                return true;
-            }
-            default -> {
-                mind.move = EtoRules.Move.NONE;
-                return false;
-            }
-        }
-    }
-
-    /** A blow of hers on {@code body}: {@code damage}, thrown {@code away} from her and {@code up}. */
-    private static void hit(EtoNpc npc, LivingEntity body, float damage, double away, double up, ServerLevel level, String sound) {
-        if (!body.m_6469_(npc.m_269291_().m_269333_(npc), damage)) {
-            return;
-        }
-        Vec3 from = body.m_20182_().m_82546_(npc.m_20182_());
-        Vec3 way = new Vec3(from.f_82479_, 0.0, from.f_82481_);
-        way = way.m_82553_() < 1.0E-3 ? npc.m_20154_() : way.m_82541_();
-        body.m_20256_(body.m_20184_().m_82490_(0.3).m_82549_(way.m_82490_(away)).m_82520_(0.0, up, 0.0));
-        body.f_19864_ = true;
-        UkakuFire.sound(level, body.m_20182_(), sound, 0.9F, 1.0F);
-    }
-
-    private static boolean flipping(EtoNpc npc, Mind mind, long now) {
-        if (mind.flipAt == Long.MIN_VALUE) {
-            return false;
-        }
-        long age = now - mind.flipAt;
-        if (age == 1L && mind.flipPush != null) {
-            npc.m_20256_(mind.flipPush);
-            npc.f_19864_ = true;
-        }
-        boolean busy = age < NpcRules.FLIP_BUSY || age < NpcRules.FLIP_POSED && !npc.m_20096_();
-        if (busy) {
-            npc.m_21573_().m_26573_();
-        }
-        return busy;
-    }
-
-    /** A flip, as a ghoul NPC's ({@code GhoulNpcCombat.flip}): in over the gap, or back clear of it. */
-    private static void flip(EtoNpc npc, Mind mind, EtoRules.Move move, LivingEntity target, ServerLevel level, long now) {
-        boolean forward = move == EtoRules.Move.FLIP_FORWARD;
-        Vec3 to = target.m_20182_().m_82546_(npc.m_20182_());
-        Vec3 way = new Vec3(to.f_82479_, 0.0, to.f_82481_);
-        way = way.m_82553_() < 1.0E-3 ? npc.m_20154_() : way.m_82541_();
-        if (!forward) {
-            way = way.m_82490_(-1.0);
-        }
-        double speed = forward ? NpcRules.flipSpeed(Math.sqrt(target.m_20280_(npc)) - EtoRules.CLOSE_REACH) : NpcRules.FLIP_BACK_SPEED;
-        Vec3 push = new Vec3(way.f_82479_ * speed, forward ? NpcRules.FLIP_FORWARD_UP : NpcRules.FLIP_BACK_UP, way.f_82481_ * speed);
-        npc.m_21573_().m_26573_();
-        npc.m_20256_(push);
-        npc.f_19864_ = true;
-        npc.f_19789_ = 0.0F;
-        mind.flipPush = push;
-        mind.flip = (forward ? PaleRules.Flip.FORWARD : PaleRules.Flip.BACK).ordinal();
-        mind.flipAt = now;
-        mind.ready = mind.ready.used(move, now, mind.phase.cooldowns);
-        mind.dirty = true;
-        UkakuFire.sound(level, npc.m_20182_(), "entity.player.attack.sweep", 0.35F, 0.7F);
+        EtoOwl.tick(npc, mind, target, level, now, phase);
     }
 
     // ---------------------------------------------------------------- calm
@@ -957,7 +796,8 @@ public final class EtoBrain {
 
     /** How far to their right she stands to cling to their arm, and to hold their hand. */
     static final double CLING_OUT = 0.55;
-    static final double HAND_OUT = 0.8;
+    static final double HAND_OUT = EtoHand.OUT;
+    private static final EtoHand HAND = new EtoHand();
 
     /** The spot {@code out} blocks to {@code player}'s right, level with them. */
     private static Vec3 beside(ServerPlayer player, double out) {
@@ -1000,14 +840,21 @@ public final class EtoBrain {
             gesture(mind, EtoGesture.HAND, now);
         }
         mind.with = player.m_19879_();
-        stayBeside(npc, player, HAND_OUT, now);
-        Vec3 spot = beside(player, HAND_OUT);
-        if (Math.pow(spot.f_82479_ - npc.m_20185_(), 2) + Math.pow(spot.f_82481_ - npc.m_20189_(), 2) < 0.8 * 0.8) {
-            float yaw = player.m_146908_();
-            npc.m_146922_(yaw);
-            npc.f_20883_ = yaw;
-            npc.f_20885_ = yaw;
+        // 1.3.4: hand in hand, as one: kept at their side, every tick, facing the way their body faces (every client draws her glued
+        // there too, EtoRenderer); only where there is no room beside them does she walk to catch up.
+        float yaw = player.f_20883_;
+        Vec3 spot = HAND.spot(player.m_20185_(), player.m_20186_(), player.m_20189_(), yaw);
+        Vec3 shift = spot.m_82546_(npc.m_20182_());
+        if (level.m_45756_(npc, npc.m_20191_().m_82386_(shift.f_82479_, shift.f_82480_, shift.f_82481_))) {
+            npc.m_21573_().m_26573_();
+            npc.m_6021_(spot.f_82479_, spot.f_82480_, spot.f_82481_);
+            npc.m_20256_(player.m_20184_());
+        } else {
+            stayBeside(npc, player, HAND_OUT, now);
         }
+        npc.m_146922_(yaw);
+        npc.f_20883_ = yaw;
+        npc.f_20885_ = yaw;
         if (now % 80L == 0L) {
             hearts(level, npc, player, 1);
         }
@@ -1133,9 +980,6 @@ public final class EtoBrain {
         }
         npc.m_21008_(InteractionHand.MAIN_HAND, stack(null));
         npc.m_21008_(InteractionHand.OFF_HAND, stack(null));
-        if (npc.mind != null) {
-            EtoKagune.fizzleAll(npc, npc.mind.wings);
-        }
         UniqueNpcs.died(level, EtoRules.KEY, npc.m_20148_());
         LIVE.remove(npc);
     }
@@ -1199,6 +1043,10 @@ public final class EtoBrain {
     }
 
     private static void sync(EtoNpc npc, Mind mind) {
+        if (mind.owl.dirty) {
+            mind.owl.dirty = false;
+            mind.dirty = true;
+        }
         if (!mind.dirty) {
             return;
         }
@@ -1208,10 +1056,11 @@ public final class EtoBrain {
 
     static S2CEto message(EtoNpc npc, Mind mind) {
         if (mind == null) {
-            return new S2CEto(npc.m_19879_(), 0, Long.MIN_VALUE, 0, Long.MIN_VALUE, -1, Long.MIN_VALUE, false, 0, "");
+            return new S2CEto(npc.m_19879_(), 0, Long.MIN_VALUE, 0, 0, Long.MIN_VALUE, 0, 0.0F, 0.0F, 0.0, 0.0, 0.0, false, 0, "");
         }
-        return new S2CEto(npc.m_19879_(), mind.gesture.ordinal(), mind.gestureAt, mind.move.ordinal(), mind.moveAt, mind.flip, mind.flipAt, mind.turned,
-            mind.with, mind.tag);
+        EtoOwl.Fight f = mind.owl;
+        return new S2CEto(npc.m_19879_(), mind.gesture.ordinal(), mind.gestureAt, f.move.ordinal(), f.detail, f.at, f.target, f.charge, f.yaw,
+            f.point.f_82479_, f.point.f_82480_, f.point.f_82481_, mind.turned, mind.with, mind.tag);
     }
 
     /** A player starts seeing her: they are told what she is doing. */

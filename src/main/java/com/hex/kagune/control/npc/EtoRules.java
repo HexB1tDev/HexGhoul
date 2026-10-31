@@ -425,50 +425,99 @@ public final class EtoRules {
         return granted || oneEyedPath(path) || !eyes.oneEyed() ? eyes : eyes.withGhoul(KakuganEyes.BOTH);
     }
 
-    // ---------------------------------------------------------------- her fight
-
-    /** What she does next in a fight. */
-    public enum Move {
-        NONE, STRIKE, BLITZ, PUNCH, KICK, FLIP_FORWARD, FLIP_BACK;
-
-        public static Move byOrdinal(int ordinal) {
-            Move[] all = values();
-            return ordinal >= 0 && ordinal < all.length ? all[ordinal] : NONE;
-        }
-    }
-
-    /** Reach and timing (ticks) of each move; damage before she transforms. */
-    public static final double STRIKE_REACH = 2.0;
-    public static final double BLITZ_FROM = 3.0;
-    public static final double BLITZ_TO = 7.0;
-    public static final double CLOSE_REACH = 2.6;
-    public static final double FLIP_IN_FROM = 7.0;
-    public static final double FLIP_IN_TO = 12.0;
-    public static final int STRIKE_EVERY = 12;
-    public static final int BLITZ_EVERY = 50;
-    public static final int PUNCH_EVERY = 110;
-    public static final int KICK_EVERY = 70;
-    public static final int FLIP_EVERY = 60;
-    public static final int BLITZ_TICKS = 6;
-    public static final int PUNCH_WINDUP = 12;
-    public static final int PUNCH_TICKS = 20;
-    public static final int KICK_TICKS = 10;
-    public static final float STRIKE_DAMAGE = 5.0F;
-    public static final float BLITZ_DAMAGE = 7.0F;
-    public static final float PUNCH_DAMAGE = 14.0F;
-    public static final float KICK_DAMAGE = 8.0F;
-    /** Below this share of her health she transforms: her eye open, faster, harder (1.3.2: she gets serious, {@link Phase}). */
-    public static final float TRANSFORM_AT = 0.6F;
+    // ---------------------------------------------------------------- her fight (1.3.4: the Owl DNA kit, the player's own moves)
 
     /**
-     * 1.3.2: how seriously she takes a fight, by what is left of her health. Calm, she plays with them. Serious, her eye opens, her
-     * kagune comes out (shards at range), she is faster, harder to hurt, and her moves come back sooner. Maniac, below a third, she
-     * laughs, and stops holding anything back: storms of shards, her moves on top of each other, hard as stone.
+     * What she does next in a fight: her Owl DNA moves, the very ones a Pale player throws ({@code PaleMove}): the Speed Blitz's
+     * strikes chained (blinks, the backfist, the twin palm finisher), the Big Punch charged and let go (her blink in front of it; at the
+     * full charge, landed, Witness This), the Speed Kick (gone, there, the heel through it), and her flips.
+     */
+    public enum Act {
+        /** Run at it. */
+        CHASE,
+        /** Close enough to step in and strike. */
+        STEP_IN,
+        /** The next strike of the blitz. */
+        STRIKE,
+        /** Wind up the Big Punch. */
+        PUNCH,
+        /** The Speed Kick. */
+        KICK,
+        /** A front flip in over the gap, or a back flip clear. */
+        FLIP_IN,
+        FLIP_BACK
+    }
+
+    /** The mastery her moves are thrown at (the most there is: her fists as hard as a master's). */
+    public static final int MASTERY = 1000;
+    /** Close enough to strike (blocks, centre to centre, less half its width); the front flip's range in; the kick's nearest. */
+    public static final double STRIKE_REACH = 2.6;
+    public static final double FLIP_IN_FROM = 8.0;
+    public static final double FLIP_IN_TO = 13.0;
+    public static final double KICK_FROM = 4.0;
+    /** How often a flip, the Big Punch and the Speed Kick come back (ticks, before her phase cuts them down). */
+    public static final int FLIP_EVERY = 50;
+    public static final int PUNCH_EVERY = 70;
+    public static final int KICK_EVERY = 80;
+
+    /**
+     * Her pick (pure). {@code distance}: to its near side; {@code sees} it; {@code grounded}; {@code health} her share left; when each
+     * of her big moves is ready again; {@code roll} in [0, 1) so she is never quite predictable. The Speed Kick from range when it is
+     * ready (always, once she is serious), the Big Punch from mid range or up close, a flip in over a gap, the blitz up close (a flip
+     * clear now and then once she is serious), a step in from just out of reach, else she runs at it.
+     */
+    public static Act choose(double distance, boolean sees, boolean grounded, float health, long now, long punchReady, long kickReady, long flipReady,
+                             double roll) {
+        Phase phase = Phase.of(health);
+        boolean serious = phase != Phase.CALM;
+        if (sees && grounded && now >= kickReady && distance >= KICK_FROM && distance <= com.hex.kagune.control.pale.PaleRules.KICK_RANGE
+            && (serious || roll < 0.55)) {
+            return Act.KICK;
+        }
+        if (sees && grounded && now >= punchReady && (distance >= 2.0 && distance <= 10.0 && (serious || roll < 0.45)
+            || distance < 2.0 && roll < (serious ? 0.5 : 0.3))) {
+            return Act.PUNCH;
+        }
+        boolean flip = grounded && now >= flipReady;
+        if (flip && sees && distance > FLIP_IN_FROM && distance < FLIP_IN_TO) {
+            return Act.FLIP_IN;
+        }
+        if (distance <= STRIKE_REACH) {
+            return flip && serious && roll > 0.9 ? Act.FLIP_BACK : Act.STRIKE;
+        }
+        return sees && distance <= com.hex.kagune.control.pale.PaleRules.STEP_IN_RANGE ? Act.STEP_IN : Act.CHASE;
+    }
+
+    /**
+     * How long she winds the Big Punch up (ticks): calm, mostly a quick one, now and then the full charge; serious, the full charge
+     * more often than not; maniac, always (a full charge that lands is Witness This).
+     */
+    public static int punchHold(Phase phase, double roll) {
+        int full = com.hex.kagune.control.pale.PaleRules.PUNCH_CHARGE_TICKS;
+        return switch (phase) {
+            case MANIAC -> full;
+            case SERIOUS -> roll < 0.65 ? full : 14 + (int)(roll * 12.0);
+            default -> roll < 0.25 ? full : 8 + (int)(roll * 14.0);
+        };
+    }
+
+    /** A cooldown of {@code ticks}, cut down as she gets serious. */
+    public static long cooldown(int ticks, Phase phase) {
+        return Math.max(4L, Math.round(ticks * phase.cooldowns));
+    }
+
+    /** Below this share of her health she gets serious: her eye open, faster, harder ({@link Phase}). */
+    public static final float TRANSFORM_AT = 0.6F;
+    public static final float MANIAC_AT = 0.3F;
+
+    /**
+     * 1.3.2: how seriously she takes a fight, by what is left of her health. Calm, she plays with them. Serious, her eye opens, she
+     * is faster, harder to hurt, and her moves come back sooner. Maniac, below a third, she laughs and stops holding anything back.
      */
     public enum Phase {
-        CALM(1.0F, 1.0F, -1, -1, 1.05),
-        SERIOUS(1.4F, 0.6F, 0, 0, 1.3),
-        MANIAC(1.8F, 0.35F, 1, 1, 1.5);
+        CALM(1.0F, 1.0F, -1, -1, 1.1),
+        SERIOUS(1.4F, 0.6F, 0, 0, 1.35),
+        MANIAC(1.8F, 0.35F, 1, 1, 1.55);
 
         /** What her blows deal, times. */
         public final float power;
@@ -493,82 +542,11 @@ public final class EtoRules {
         }
     }
 
-    public static final float MANIAC_AT = 0.3F;
-    /** Her shards (serious and on): how far they reach, how fast they fly, how often a volley, how many a volley, what each deals. */
-    public static final double SHARD_RANGE = 18.0;
-    public static final double SHARD_NEAREST = 3.5;
-    public static final double SHARD_SPEED = 1.6;
-    public static final int SHARD_EVERY = 44;
-    public static final int SHARDS = 4;
-    public static final float SHARD_DAMAGE = 5.0F;
-    /** Maniac: a storm, a fan of shards from both shoulders, this often. */
-    public static final int STORM_EVERY = 120;
-    public static final int STORM_SHOTS = 11;
-    public static final double STORM_SPREAD = 32.0;
     /** Out of a fight this long (ticks), she heals this much a second. */
     public static final long CALM_TICKS = 100L;
     public static final float HEAL_PER_SECOND = 2.0F;
 
-    /** When each move is ready again (game ticks; anything at or before {@code now} is ready). */
-    public record Ready(long strike, long blitz, long punch, long kick, long flip) {
-        public static final Ready NOW = new Ready(Long.MIN_VALUE, Long.MIN_VALUE, Long.MIN_VALUE, Long.MIN_VALUE, Long.MIN_VALUE);
-
-        /** As now, {@code move} used at {@code now}. */
-        public Ready used(Move move, long now) {
-            return this.used(move, now, 1.0F);
-        }
-
-        /** As now, {@code move} used at {@code now}, its cooldown {@code factor} times as long (1.3.2: shorter as she gets serious). */
-        public Ready used(Move move, long now, float factor) {
-            return switch (move) {
-                case STRIKE -> new Ready(now + scaled(STRIKE_EVERY, factor), this.blitz, this.punch, this.kick, this.flip);
-                case BLITZ -> new Ready(now + scaled(STRIKE_EVERY, factor), now + scaled(BLITZ_EVERY, factor), this.punch, this.kick, this.flip);
-                case PUNCH -> new Ready(now + scaled(STRIKE_EVERY, factor) + PUNCH_TICKS, this.blitz, now + scaled(PUNCH_EVERY, factor), this.kick, this.flip);
-                case KICK -> new Ready(now + scaled(STRIKE_EVERY, factor), this.blitz, this.punch, now + scaled(KICK_EVERY, factor), this.flip);
-                case FLIP_FORWARD, FLIP_BACK -> new Ready(this.strike, this.blitz, this.punch, this.kick, now + scaled(FLIP_EVERY, factor));
-                default -> this;
-            };
-        }
-
-        private static long scaled(int ticks, float factor) {
-            return Math.max(2L, Math.round(ticks * factor));
-        }
-    }
-
-    /**
-     * Her pick (pure): far but in sight, a front flip in; at blitz range, the Speed Blitz; up close the Big Punch on something tough
-     * or when she is transformed, the Speed Kick to launch it, else a plain strike, and hurt and pressed, a back flip clear. {@code roll}
-     * in [0, 1) keeps her from being too predictable; {@code tough}: the target has a lot of health left.
-     */
-    public static Move choose(double distance, long now, Ready ready, boolean grounded, boolean sees, float health, boolean tough, double roll) {
-        boolean flip = grounded && now >= ready.flip();
-        if (distance > FLIP_IN_FROM && distance < FLIP_IN_TO && flip && sees) {
-            return Move.FLIP_FORWARD;
-        }
-        if (distance >= BLITZ_FROM && distance <= BLITZ_TO && now >= ready.blitz() && sees) {
-            return Move.BLITZ;
-        }
-        if (distance > CLOSE_REACH) {
-            return Move.NONE;
-        }
-        boolean transformed = health < TRANSFORM_AT;
-        if (flip && transformed && roll < 0.2) {
-            return Move.FLIP_BACK;
-        }
-        // 1.3.2: maniac, a Speed Blitz straight into whatever is close again, as soon as it is back.
-        if (Phase.of(health) == Phase.MANIAC && now >= ready.blitz() && sees && roll < 0.3) {
-            return Move.BLITZ;
-        }
-        if (now >= ready.punch() && (tough || transformed || roll < 0.35)) {
-            return Move.PUNCH;
-        }
-        if (now >= ready.kick() && roll < 0.7) {
-            return Move.KICK;
-        }
-        return distance <= STRIKE_REACH + 0.3 && now >= ready.strike() ? Move.STRIKE : Move.NONE;
-    }
-
-    /** What a blow of hers deals: {@code base}, more the more serious she is ({@link Phase#power}). */
+    /** What a blow of hers deals: {@code base} (a Pale player's at her mastery), more the more serious she is ({@link Phase#power}). */
     public static float damage(float base, float health) {
         return base * Phase.of(health).power;
     }

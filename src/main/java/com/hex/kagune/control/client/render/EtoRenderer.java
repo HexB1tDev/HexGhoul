@@ -4,9 +4,11 @@ import com.hex.kagune.control.ControlEntities;
 import com.hex.kagune.control.client.EtoClient;
 import com.hex.kagune.control.client.PaleClient;
 import com.hex.kagune.control.client.animation.BodyFrame;
+import com.hex.kagune.control.client.animation.EtoFight;
 import com.hex.kagune.control.client.animation.EtoPose;
 import com.hex.kagune.control.client.animation.RigPose;
 import com.hex.kagune.control.npc.EtoGesture;
+import com.hex.kagune.control.npc.EtoHand;
 import com.hex.kagune.control.npc.EtoNpc;
 import com.hex.kagune.control.npc.EtoRules;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -57,27 +59,58 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
         this.m_115326_(new Face(this));
     }
 
-    /** Her pose this frame: a flip, else her move, else her gesture (null: none). */
-    static RigPose pose(EtoNpc npc, EtoClient.View view, double clock) {
+    /** Her pose this frame: her gesture, with her fight's move (1.3.4: a Pale player's, by its own animator) over it (null: none). */
+    static RigPose pose(EtoNpc npc, EtoClient.View view, double clock, float partial) {
         if (view == null) {
             return null;
         }
-        RigPose flip = EtoClient.flip(view, clock, npc.m_20096_());
-        if (flip != null) {
-            return flip;
-        }
-        RigPose move = EtoPose.move(view.move(), view.moveAge(clock));
-        return move != null ? move : EtoPose.gesture(view.gesture(), view.gestureAge(clock));
+        return EtoFight.pose(npc, view.fight(), EtoPose.gesture(view.gesture(), view.gestureAge(clock)), clock, partial);
     }
 
     @Override
     public void m_7392_(EtoNpc npc, float yaw, float partial, PoseStack pose, MultiBufferSource buffers, int light) {
         EtoClient.View view = EtoClient.get(npc.m_19879_());
+        boolean glued = glue(npc, view, partial, pose);
+        try {
+            this.draw(npc, yaw, partial, pose, buffers, light, view);
+        } finally {
+            if (glued) {
+                pose.m_85849_();
+            }
+        }
+    }
+
+    /**
+     * 1.3.4: hand in hand, she is drawn glued at the side of the one whose hand she holds (where EtoHand puts her, as they are drawn
+     * this frame), facing the way they face: they walk as one, whatever lag her own position has. True if she was moved (a pose pushed).
+     */
+    static boolean glue(EtoNpc npc, EtoClient.View view, float partial, PoseStack pose) {
+        if (view == null || view.gesture() != EtoGesture.HAND || view.with() == 0
+            || !(npc.m_9236_().m_6815_(view.with()) instanceof net.minecraft.world.entity.LivingEntity holder)) {
+            return false;
+        }
+        float turn = ((holder.f_20883_ - holder.f_20884_) % 360.0F + 540.0F) % 360.0F - 180.0F;
+        float bodyYaw = holder.f_20884_ + turn * partial;
+        double[] off = EtoHand.offset(bodyYaw);
+        double hx = holder.f_19790_ + (holder.m_20185_() - holder.f_19790_) * partial;
+        double hy = holder.f_19791_ + (holder.m_20186_() - holder.f_19791_) * partial;
+        double hz = holder.f_19792_ + (holder.m_20189_() - holder.f_19792_) * partial;
+        double ex = npc.f_19790_ + (npc.m_20185_() - npc.f_19790_) * partial;
+        double ey = npc.f_19791_ + (npc.m_20186_() - npc.f_19791_) * partial;
+        double ez = npc.f_19792_ + (npc.m_20189_() - npc.f_19792_) * partial;
+        pose.m_85836_();
+        pose.m_85837_(hx + off[0] - ex, hy - ey, hz + off[1] - ez);
+        npc.f_20883_ = bodyYaw;
+        npc.f_20884_ = bodyYaw;
+        return true;
+    }
+
+    private void draw(EtoNpc npc, float yaw, float partial, PoseStack pose, MultiBufferSource buffers, int light, EtoClient.View view) {
         double clock = PaleClient.clock(partial);
-        RigPose posed = pose(npc, view, clock);
+        RigPose posed = pose(npc, view, clock, partial);
         EtoModel.pose = posed;
         boolean turned = posed != null && (Math.abs(posed.flip) > 1.0E-3F || Math.abs(posed.roll) > 1.0E-3F || Math.abs(posed.spin) > 1.0E-3F
-            || Math.abs(posed.drop) > 1.0E-3F);
+            || Math.abs(posed.drop) > 1.0E-3F || Math.abs(posed.lunge) > 1.0E-3F);
         // 1.3.1: a little smaller than a player (her box is too, EtoRules.SIZE).
         pose.m_85836_();
         pose.m_85841_(EtoRules.SIZE, EtoRules.SIZE, EtoRules.SIZE);
@@ -88,6 +121,8 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
                 float rightX = (float)-Math.cos(body);
                 float rightZ = (float)-Math.sin(body);
                 pose.m_85836_();
+                // 1.3.4: a lunge carries the whole of her forward (model pixels), as a Pale player's.
+                pose.m_85837_(-Math.sin(body) * posed.lunge / 16.0, 0.0, Math.cos(body) * posed.lunge / 16.0);
                 pose.m_85837_(0.0, -posed.drop / 16.0 + BodyFrame.TURN_PIVOT, 0.0);
                 pose.m_252781_(new Quaternionf().rotateAxis(-posed.spin, 0.0F, 1.0F, 0.0F));
                 pose.m_252781_(new Quaternionf().rotateAxis(posed.flip, rightX, 0.0F, rightZ));
@@ -244,6 +279,7 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
             Minecraft minecraft = Minecraft.m_91087_();
             if (minecraft.f_91073_ != null && minecraft.f_91073_.m_46467_() % 100L == 50L) {
                 EtoClient.prune(minecraft.f_91073_);
+                EtoFight.prune(id -> minecraft.f_91073_.m_6815_(id) == null);
             }
             EtoClient.pull();
         }

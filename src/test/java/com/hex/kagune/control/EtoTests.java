@@ -509,9 +509,8 @@ public final class EtoTests {
             == EtoRules.Phase.MANIAC, "calm, serious, maniac as her health goes");
         check(EtoRules.damage(10.0F, 0.2F) > EtoRules.damage(10.0F, 0.5F) && EtoRules.damage(10.0F, 0.5F) > EtoRules.damage(10.0F, 1.0F),
             "the worse it gets for her, the harder she hits");
-        EtoRules.Ready slow = EtoRules.Ready.NOW.used(EtoRules.Move.PUNCH, 100, 1.0F);
-        EtoRules.Ready fast = EtoRules.Ready.NOW.used(EtoRules.Move.PUNCH, 100, EtoRules.Phase.MANIAC.cooldowns);
-        check(fast.punch() < slow.punch() && EtoRules.Phase.MANIAC.resistance > EtoRules.Phase.SERIOUS.resistance
+        check(EtoRules.cooldown(EtoRules.PUNCH_EVERY, EtoRules.Phase.MANIAC) < EtoRules.cooldown(EtoRules.PUNCH_EVERY, EtoRules.Phase.CALM)
+            && EtoRules.Phase.MANIAC.resistance > EtoRules.Phase.SERIOUS.resistance
             && EtoRules.Phase.SERIOUS.speed >= 0 && EtoRules.Phase.CALM.speed < 0, "her moves come back sooner, and she gets faster and harder to hurt");
         check(EtoRules.HEALTH >= 300.0F && EtoRules.SIZE < 0.9F, "stacked, and a head shorter than most");
     }
@@ -529,19 +528,29 @@ public final class EtoTests {
     }
 
     static void fight() {
-        EtoRules.Ready ready = EtoRules.Ready.NOW;
-        check(EtoRules.choose(9.0, 100, ready, true, true, 1.0F, false, 0.5) == EtoRules.Move.FLIP_FORWARD, "far: a front flip in");
-        check(EtoRules.choose(9.0, 100, ready, true, false, 1.0F, false, 0.5) == EtoRules.Move.NONE, "not at what she cannot see");
-        check(EtoRules.choose(5.0, 100, ready, true, true, 1.0F, false, 0.5) == EtoRules.Move.BLITZ, "blitz range: the Speed Blitz");
-        check(EtoRules.choose(2.0, 100, ready, true, true, 1.0F, true, 0.9) == EtoRules.Move.PUNCH, "up close on something tough: the Big Punch");
-        EtoRules.Ready punched = ready.used(EtoRules.Move.PUNCH, 100);
-        check(EtoRules.choose(2.0, 101, punched, true, true, 1.0F, true, 0.9) == EtoRules.Move.NONE, "nothing while the punch plays out");
-        check(EtoRules.choose(2.0, 100 + EtoRules.PUNCH_TICKS + EtoRules.STRIKE_EVERY, punched, true, true, 1.0F, true, 0.5) == EtoRules.Move.KICK,
-            "the punch spent: the Speed Kick");
-        EtoRules.Ready spent = punched.used(EtoRules.Move.KICK, 140);
-        check(EtoRules.choose(2.0, 160, spent, true, true, 1.0F, true, 0.9) == EtoRules.Move.STRIKE, "both spent: plain strikes");
-        check(EtoRules.choose(2.0, 100, ready, true, true, 0.3F, false, 0.1) == EtoRules.Move.FLIP_BACK, "hurt and pressed: a flip clear");
-        check(EtoRules.damage(10.0F, 0.4F) > EtoRules.damage(10.0F, 0.9F), "transformed, she hits harder");
+        long never = Long.MIN_VALUE;
+        long later = 1000L;
+        check(EtoRules.choose(10.0, true, true, 1.0F, 100, never, never, never, 0.1) == EtoRules.Act.KICK, "in sight from range: the Speed Kick");
+        check(EtoRules.choose(10.0, false, true, 1.0F, 100, never, never, never, 0.1) == EtoRules.Act.CHASE, "nothing thrown at what she cannot see");
+        check(EtoRules.choose(10.0, true, true, 0.5F, 100, never, never, never, 0.99) == EtoRules.Act.KICK, "serious, the kick whenever it is back");
+        check(EtoRules.choose(6.0, true, true, 1.0F, 100, never, later, never, 0.2) == EtoRules.Act.PUNCH, "mid range: the Big Punch (its blink closes in)");
+        check(EtoRules.choose(10.0, true, true, 1.0F, 100, later, later, never, 0.5) == EtoRules.Act.FLIP_IN, "both spent, a gap: a front flip in");
+        check(EtoRules.choose(2.0, true, true, 1.0F, 100, later, later, later, 0.6) == EtoRules.Act.STRIKE, "up close: the blitz");
+        check(EtoRules.choose(2.0, true, true, 0.4F, 100, later, later, never, 0.95) == EtoRules.Act.FLIP_BACK, "serious and pressed: now and then a flip clear");
+        check(EtoRules.choose(5.0, true, true, 1.0F, 100, later, later, later, 0.5) == EtoRules.Act.STEP_IN, "just out of reach: a step in");
+        check(EtoRules.choose(30.0, true, true, 1.0F, 100, never, never, never, 0.1) == EtoRules.Act.CHASE, "too far for anything: she runs at it");
+        check(EtoRules.choose(10.0, true, false, 1.0F, 100, never, never, never, 0.1) != EtoRules.Act.KICK, "never a kick from the air");
+        check(EtoRules.punchHold(EtoRules.Phase.MANIAC, 0.9) == com.hex.kagune.control.pale.PaleRules.PUNCH_CHARGE_TICKS
+            && EtoRules.punchHold(EtoRules.Phase.SERIOUS, 0.1) == com.hex.kagune.control.pale.PaleRules.PUNCH_CHARGE_TICKS
+            && EtoRules.punchHold(EtoRules.Phase.CALM, 0.9) < com.hex.kagune.control.pale.PaleRules.PUNCH_CHARGE_TICKS,
+            "the Big Punch at the full charge (Witness This when it lands): always maniac, mostly serious, now and then calm");
+        int full = 0;
+        for (int i = 0; i < 100; i++) {
+            full += EtoRules.punchHold(EtoRules.Phase.CALM, i / 100.0) >= com.hex.kagune.control.pale.PaleRules.PUNCH_CHARGE_TICKS ? 1 : 0;
+        }
+        check(full > 10 && full < 50, "calm, a full charge now and then: " + full + "%");
+        check(com.hex.kagune.control.pale.PaleRules.fist(EtoRules.MASTERY) >= 4.4F, "her fists are a master's");
+        check(EtoRules.damage(10.0F, 0.4F) > EtoRules.damage(10.0F, 0.9F), "serious, she hits harder");
         check(EtoRules.LEASH == EtoRules.HOME_RADIUS + 3 && EtoRules.LOST > EtoRules.LEASH, "she chases a little past home, never far");
     }
 
@@ -561,8 +570,12 @@ public final class EtoTests {
         check(pull.rightArmX + pull.lean > -1.75F && pull.rightArmX + pull.lean < -1.2F && Math.abs(pull.rightArmY) < 0.45F && pull.drop == 0.0F,
             "pulling them in: her arms level with their shoulders (not closing on their face), her feet on the ground");
         RigPose hand = EtoPose.gesture(EtoGesture.HAND, 40);
-        check(EtoGesture.HAND.held() && hand.leftArmZ < -0.2F && Math.abs(hand.rightArmZ) < 0.2F && hand.lean == 0.0F,
+        check(EtoGesture.HAND.held() && hand.leftArmZ < -0.05F && Math.abs(hand.rightArmZ) < 0.2F && hand.lean == 0.0F,
             "hand in hand: her left hand out to the one at her side, held until she lets go");
+        double theirs = 0.375 + 0.75 * Math.sin(com.hex.kagune.control.npc.EtoHand.ARM);
+        double hers = (0.34 + 0.75 * Math.sin(com.hex.kagune.control.npc.EtoHand.ARM)) * EtoRules.SIZE;
+        check(Math.abs(theirs + hers - com.hex.kagune.control.npc.EtoHand.OUT) < 1.0E-9 && com.hex.kagune.control.npc.EtoHand.OUT > 0.6
+            && com.hex.kagune.control.npc.EtoHand.OUT < 0.95, "their hands meet: she stands just as far off as both hands hang out");
         RigPose write = EtoPose.gesture(EtoGesture.WRITE, 20);
         RigPose writing = EtoPose.gesture(EtoGesture.WRITE, 21);
         check(write.leftArmX == writing.leftArmX && write.rightArmX != writing.rightArmX && EtoGesture.WRITE.mainHand.endsWith("feather")
@@ -575,11 +588,5 @@ public final class EtoTests {
         check(onward, "her twirl ends a whole turn round, never spun back as it fades");
         check(EtoPose.gesture(EtoGesture.WAVE, 0).rightArmX == 0.0F && EtoPose.gesture(EtoGesture.WAVE, EtoGesture.WAVE.ticks).rightArmX == 0.0F,
             "an idle one eases in and out");
-        for (EtoRules.Move move : EtoRules.Move.values()) {
-            for (int t = 0; t < 24; t++) {
-                RigPose p = EtoPose.move(move, t);
-                check(p == null || Float.isFinite(p.rightArmX) && Float.isFinite(p.rightLegX), move + " at " + t);
-            }
-        }
     }
 }
