@@ -100,7 +100,7 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
         }
         float turn = ((holder.f_20883_ - holder.f_20884_) % 360.0F + 540.0F) % 360.0F - 180.0F;
         float bodyYaw = holder.f_20884_ + turn * partial;
-        double[] off = EtoHand.offset(bodyYaw);
+        double[] off = EtoHand.offset(bodyYaw, com.hex.kagune.control.Genders.female(holder));
         double hx = holder.f_19790_ + (holder.m_20185_() - holder.f_19790_) * partial;
         double hy = holder.f_19791_ + (holder.m_20186_() - holder.f_19791_) * partial;
         double hz = holder.f_19792_ + (holder.m_20189_() - holder.f_19792_) * partial;
@@ -274,41 +274,9 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
         }
     }
 
-    /**
-     * Her bust: a wedge on the front of her torso (model pixels: 1.3.1, the torso's whole width, x -4..4, from 1.5 down, out to 1.6 in
-     * front at 4.5, back in at 6), painted with the torso's own front (the skin's texels for the rows it covers), turned with the torso.
-     * Its tip is drawn {@code bounce} pixels up off its rest (EtoClient.jiggle).
-     */
+    /** Her bust (1.3.9: the shared female body's, {@link FemaleFigure#bust}), on her torso, its tip {@code bounce} pixels up off its rest. */
     static void bust(PlayerModel<EtoNpc> model, PoseStack pose, VertexConsumer consumer, int light, float bounce) {
-        pose.m_85836_();
-        model.f_102810_.m_104299_(pose);
-        Matrix4f m = pose.m_85850_().m_252922_();
-        Matrix3f n = pose.m_85850_().m_252943_();
-        float x0 = -4.0F;
-        float x1 = 4.0F;
-        float top = 1.5F;
-        float tip = 4.5F - bounce;
-        float bottom = 6.0F;
-        float front = -2.0F;
-        float out = -3.6F;
-        // The upper slope, then the underside (each a quad), then the two sides (a triangle each, as a quad with a repeated corner).
-        quad(consumer, m, n, light, new float[][] {{x0, top, front}, {x1, top, front}, {x1, tip, out}, {x0, tip, out}}, 0.0F, -0.8F, -1.0F);
-        quad(consumer, m, n, light, new float[][] {{x0, tip, out}, {x1, tip, out}, {x1, bottom, front}, {x0, bottom, front}}, 0.0F, 0.6F, -1.0F);
-        for (float x : new float[] {x0, x1}) {
-            quad(consumer, m, n, light, new float[][] {{x, top, front}, {x, tip, out}, {x, bottom, front}, {x, bottom, front}}, Math.signum(x), 0.0F, 0.0F);
-        }
-        pose.m_85849_();
-    }
-
-    /** One face of the bust, each corner painted with the torso front's texel at its own place (its x across, its y down). */
-    private static void quad(VertexConsumer consumer, Matrix4f m, Matrix3f n, int light, float[][] corners, float nx, float ny, float nz) {
-        for (float[] c : corners) {
-            // A side's corners sit on the torso's edge: pulled a quarter pixel in, onto the edge column's texels.
-            float u = (24.0F + c[0] - (nx != 0.0F ? Math.signum(c[0]) * 0.25F : 0.0F)) / 64.0F;
-            float v = (20.0F + c[1]) / 64.0F;
-            consumer.m_252986_(m, c[0] / 16.0F, c[1] / 16.0F, c[2] / 16.0F).m_6122_(255, 255, 255, 255).m_7421_(u, v).m_86008_(OverlayTexture.f_118083_)
-                .m_85969_(light).m_252939_(n, nx, ny, nz).m_5752_();
-        }
+        FemaleFigure.bust(model.f_102810_, pose, consumer, light, bounce, false);
     }
 
     @Mod.EventBusSubscriber(modid = "hexkagune", value = Dist.CLIENT)

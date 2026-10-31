@@ -78,7 +78,10 @@ public final class PlayerLayers {
         renderer.m_115326_(graft);
         KingLayer king = new KingLayer(renderer);
         renderer.m_115326_(king);
-        List<RenderLayer> ours = List.of(wounds, kakugan, armor, mask, blade, graft, king);
+        // 1.3.9: a woman's figure (her bust).
+        FigureLayer figure = new FigureLayer(renderer);
+        renderer.m_115326_(figure);
+        List<RenderLayer> ours = List.of(wounds, kakugan, armor, mask, blade, graft, king, figure);
         ATTACHED.put(renderer, ours);
         return ours;
     }

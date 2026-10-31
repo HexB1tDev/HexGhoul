@@ -16,15 +16,28 @@ public final class EtoHand {
     public static final float FORWARD = 0.12F;
     public static final double OUT = 0.375 + 0.75 * Math.sin(ARM) + (0.34 + 0.75 * Math.sin(ARM)) * EtoRules.SIZE;
 
-    /** Where she stands for {@code x, y, z} facing {@code bodyYaw} (degrees): {@link #OUT} to their right. */
-    public Vec3 spot(double x, double y, double z, float bodyYaw) {
+    /**
+     * 1.3.9: as far apart as a woman's hand (the one female body's: a slim arm, her size) and hers hang out: a woman holding her hand stands
+     * that much closer.
+     */
+    public static final double OUT_FEMALE = (0.34 + 0.75 * Math.sin(ARM)) * EtoRules.SIZE * 2.0;
+
+    /** How far apart they stand: {@link #OUT}, or {@link #OUT_FEMALE} when the one whose hand she holds is a woman. */
+    public static double out(boolean woman) {
+        return woman ? OUT_FEMALE : OUT;
+    }
+
+    /** Where she stands for {@code x, y, z} facing {@code bodyYaw} (degrees): {@link #out} to their right. */
+    public Vec3 spot(double x, double y, double z, float bodyYaw, boolean woman) {
         double yaw = Math.toRadians(bodyYaw);
-        return new Vec3(x - Math.cos(yaw) * OUT, y, z - Math.sin(yaw) * OUT);
+        double out = out(woman);
+        return new Vec3(x - Math.cos(yaw) * out, y, z - Math.sin(yaw) * out);
     }
 
     /** The same as offsets {x, z} (for a client gluing her there). */
-    public static double[] offset(float bodyYaw) {
+    public static double[] offset(float bodyYaw, boolean woman) {
         double yaw = Math.toRadians(bodyYaw);
-        return new double[] {-Math.cos(yaw) * OUT, -Math.sin(yaw) * OUT};
+        double out = out(woman);
+        return new double[] {-Math.cos(yaw) * out, -Math.sin(yaw) * out};
     }
 }

@@ -25,9 +25,9 @@ public final class ControlNetwork {
      * Graft DNA (7.0.0: a fifth path ordinal replacing the dormant Owl DNA, its state and actions); 27: the eye-mode fight's M1,
      * Ghoul Meat and the quests (7.0.1); 32: the final kakujas, War and Peace (1.0.5); 33: War's moves and waits (1.0.6), its rinkaku's own strikes (1.0.7); 34: what War's
      * abilities do out in the world (1.0.13); 35: War's M1, its blows and their effects (1.0.14); 36: the Black Sun out of the ground (1.0.15); 37: Peace playable, its blades' moves and cuts (1.0.16); 38: the transformations, nothing hurts him nor any ability while it comes (1.0.17). 39: Peace's six blades, their numbering and moves (1.0.18). 40: the marks blows leave instead of vanilla particles (1.0.19). 41: the fighting grammar: M1 flags, the heavy, the charge (1.0.20). 42: Peace's blades reach farther, its paths changed (1.0.21).
-     * 54: Eto (1.3.0): her state and surgery, her talk choices, the one-eye grant in the kakugan state.
+     * 54: Eto (1.3.0): her state and surgery, her talk choices, the one-eye grant in the kakugan state. 58: genders (1.3.9).
      */
-    private static final String PROTOCOL = "57";
+    private static final String PROTOCOL = "58";
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
         KaguneMod.id("control"), () -> PROTOCOL, PROTOCOL::equals, PROTOCOL::equals);
     private static boolean initialized;
@@ -81,6 +81,9 @@ public final class ControlNetwork {
         // 1.3.2: the surgery's packet made any NPC's cutscene; a private word from a partner.
         CHANNEL.registerMessage(38, S2CCutscene.class, S2CCutscene::encode, S2CCutscene::decode, S2CCutscene::handle);
         CHANNEL.registerMessage(39, S2CNpcAlert.class, S2CNpcAlert::encode, S2CNpcAlert::decode, S2CNpcAlert::handle);
+        // 1.3.9: genders: the pick, and everyone's as they are seen.
+        CHANNEL.registerMessage(40, C2SGender.class, C2SGender::encode, C2SGender::decode, C2SGender::handle);
+        CHANNEL.registerMessage(41, S2CGender.class, S2CGender::encode, S2CGender::decode, S2CGender::handle);
     }
 
     /** To the subject and every client tracking them. */

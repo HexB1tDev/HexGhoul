@@ -424,9 +424,25 @@ public class UiPreview {
         System.out.println("wrote " + out);
     }
 
+    /** 1.3.9: the gender screen at a GUI size, with a pick and the mouse over something. */
+    static void gender(File out, int w, int h, com.hex.kagune.control.Gender picked, String hovered) throws Exception {
+        BufferedImage image = new BufferedImage(w * 2, h * 2, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = graphics(image, 2);
+        ImageCanvas c = new ImageCanvas(g, false);
+        com.hex.kagune.control.client.GenderView.draw(c, new com.hex.kagune.control.client.GenderView.Layout(w, h), picked, hovered, 0.4);
+        ImageIO.write(image, "png", out);
+        System.out.println("wrote " + out);
+    }
+
     public static void main(String[] args) throws Exception {
         File dir = new File(args.length > 0 ? args[0] : ".");
         dir.mkdirs();
+        if (args.length > 1 && args[1].equals("gender")) {
+            gender(new File(dir, "gender-unpicked.png"), 480, 270, com.hex.kagune.control.Gender.UNSET, "male");
+            gender(new File(dir, "gender-female.png"), 480, 270, com.hex.kagune.control.Gender.FEMALE, "done");
+            gender(new File(dir, "gender-small.png"), 320, 200, com.hex.kagune.control.Gender.MALE, null);
+            return;
+        }
         if (args.length > 1 && args[1].equals("quests")) {
             quests(dir);
             return;

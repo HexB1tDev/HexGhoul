@@ -310,7 +310,7 @@ public final class KaguneBodyAnimation implements IAnimation {
     @Override
     public boolean isActive() {
         // PlayerAnimator only ticks layers that already report active, so this must not depend on tick() having run.
-        return this.fade > 0.002F || this.wants() || this.idle.showing();
+        return this.fade > 0.002F || this.wants() || this.idle.showing() || com.hex.kagune.control.Genders.female(this.player);
     }
 
     private boolean wants() {
@@ -1282,6 +1282,17 @@ public final class KaguneBodyAnimation implements IAnimation {
 
     @Override
     public Vec3f get3DTransform(String modelName, TransformType type, float tickDelta, Vec3f value0) {
+        Vec3f shaped = this.transform(modelName, type, tickDelta, value0);
+        if (type == TransformType.POSITION && ("rightLeg".equals(modelName) || "leftLeg".equals(modelName))
+            && com.hex.kagune.control.Genders.female(this.player)) {
+            // 1.3.9: a woman's wider legs, their pivots spread so they meet at the middle (PlayerAnimator puts them back every frame).
+            float shift = com.hex.kagune.control.FemaleBody.legShift() * ("rightLeg".equals(modelName) ? -1.0F : 1.0F);
+            return new Vec3f(shaped.getX() + shift, shaped.getY(), shaped.getZ());
+        }
+        return shaped;
+    }
+
+    private Vec3f transform(String modelName, TransformType type, float tickDelta, Vec3f value0) {
         if (this.fade <= 0.0F && !this.idle.showing()) {
             return value0;
         }

@@ -20,6 +20,7 @@ public abstract class Entity {
     /** yo */ public double f_19791_;
     /** zo */ public double f_19792_;
     /** getUUID */ public java.util.UUID m_20148_() { throw new UnsupportedOperationException(); }
+    /** refreshDimensions */ public void m_6210_() { throw new UnsupportedOperationException(); }
     /** getId */ public int m_19879_() { throw new UnsupportedOperationException(); }
     /** level */ public net.minecraft.world.level.Level m_9236_() { throw new UnsupportedOperationException(); }
     /** position */ public net.minecraft.world.phys.Vec3 m_20182_() { throw new UnsupportedOperationException(); }

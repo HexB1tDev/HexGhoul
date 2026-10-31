@@ -878,3 +878,16 @@ M net/minecraft/world/item/Item$Properties m_41487_ (I)Lnet/minecraft/world/item
 M net/minecraft/core/Vec3i m_123343_ ()I  # [srg] getZ, hz.m_123343_ ()I (yarn Vec3i.getZ)
 M net/minecraft/world/entity/LivingEntity m_7292_ (Lnet/minecraft/world/effect/MobEffectInstance;)Z  # [srg] addEffect: bfz.m_7292_ (Lbfa;)Z (yarn LivingEntity.addStatusEffect): Eto's speed and resistance as she gets serious
 M net/minecraft/world/entity/Mob m_21559_ (Z)V  # [srg] setLeftHanded: bgb.m_21559_ (Z)V (yarn MobEntity.setLeftHanded): Eto's quill always in her right hand, the one that writes
+# 1.3.9: genders: a woman's box and eyes a woman's size (Forge's size event), refreshed when she picks (bfk = EntityDimensions)
+C net/minecraftforge/event/entity/EntityEvent$Size  # [forge] 47.x event/entity/EntityEvent.java (nested Size, fired by Entity.refreshDimensions)
+M net/minecraftforge/event/entity/EntityEvent$Size getNewSize ()Lnet/minecraft/world/entity/EntityDimensions;  # [forge] EntityEvent.Size.getNewSize
+M net/minecraftforge/event/entity/EntityEvent$Size setNewSize (Lnet/minecraft/world/entity/EntityDimensions;Z)V  # [forge] EntityEvent.Size.setNewSize(EntityDimensions, boolean updateEyeHeight)
+M net/minecraftforge/event/entity/EntityEvent$Size getNewEyeHeight ()F  # [forge] EntityEvent.Size.getNewEyeHeight
+M net/minecraftforge/event/entity/EntityEvent$Size setNewEyeHeight (F)V  # [forge] EntityEvent.Size.setNewEyeHeight
+M net/minecraft/world/entity/EntityDimensions m_20388_ (F)Lnet/minecraft/world/entity/EntityDimensions;  # [srg] scale: bfk.m_20388_ (F)Lbfk; (intermediary class_4048, yarn EntityDimensions.scaled)
+M net/minecraft/world/entity/Entity m_6210_ ()V  # [srg] refreshDimensions: bfj.m_6210_ ()V (yarn Entity.calculateDimensions)
+M net/minecraft/world/entity/LivingEntity m_6844_ (Lnet/minecraft/world/entity/EquipmentSlot;)Lnet/minecraft/world/item/ItemStack;  # [srg] getItemBySlot: bfz.m_6844_ (Lbfo;)Lcfz; (yarn LivingEntity.getEquippedStack): no bust drawn through a chestplate
+F net/minecraft/world/entity/EquipmentSlot CHEST Lnet/minecraft/world/entity/EquipmentSlot;  # [srg] bfo CHEST (intermediary class_1304; enum constants keep their names)
+M net/minecraftforge/event/entity/EntityEvent$Size getEntity ()Lnet/minecraft/world/entity/Entity;  # [forge] inherited from EntityEvent.getEntity
+C net/minecraft/world/entity/EntityDimensions  # [srg] bfk C_4048_ (intermediary class_4048, yarn EntityDimensions)
+C net/minecraft/world/entity/EquipmentSlot  # [srg] bfo (intermediary class_1304, yarn EquipmentSlot)

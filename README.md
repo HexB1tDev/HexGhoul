@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.9 (HexGhoul): pick your gender after your eyes; female players get Eto's body and size (testing)
+
+See `.github/release-notes-1.3.9.md`.
+
 ## 1.3.8 (HexGhoul): Eto's Owl kakuja, her last resort (testing)
 
 See `.github/release-notes-1.3.8.md`.

@@ -115,7 +115,7 @@ public final class KakuganView {
         }
         button(c, layout.outer, state.canFind() ? "Find my eyes" : "No eyes found on skin", false, state.canFind() && "outer".equals(state.hovered()));
         button(c, layout.reset, "Reset", false, "reset".equals(state.hovered()));
-        button(c, layout.done, "Done", true, "done".equals(state.hovered()));
+        button(c, layout.done, "Next", true, "done".equals(state.hovered()));
         button(c, layout.later, "Later", false, "later".equals(state.hovered()));
         if (layout.hintY >= 0) {
             c.centered(c.fit(HINT, width - 2 * KakuganScreenLayout.MARGIN), width / 2, layout.hintY, opaque(blend(BACKGROUND, MUTED, 0.7F)));

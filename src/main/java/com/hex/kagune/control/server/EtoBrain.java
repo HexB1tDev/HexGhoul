@@ -678,7 +678,7 @@ public final class EtoBrain {
             boolean side = mind.towardFor == EtoGesture.CLING || mind.towardFor == EtoGesture.HAND;
             if (side) {
                 // 1.3.3: to their side, close enough to take their arm (or their hand), not a grab at the air from a step away.
-                Vec3 spot = beside(player, mind.towardFor == EtoGesture.HAND ? HAND_OUT : CLING_OUT);
+                Vec3 spot = beside(player, mind.towardFor == EtoGesture.HAND ? EtoHand.out(com.hex.kagune.control.Genders.female(player)) : CLING_OUT);
                 double off = Math.sqrt(Math.pow(spot.f_82479_ - npc.m_20185_(), 2) + Math.pow(spot.f_82481_ - npc.m_20189_(), 2));
                 if (off > 0.45 || distance > 1.25) {
                     if (now - mind.towardSince > 240L || distance > EtoRules.LEASH + 12.0) {
@@ -850,14 +850,15 @@ public final class EtoBrain {
         // 1.3.4: hand in hand, as one: kept at their side, every tick, facing the way their body faces (every client draws her glued
         // there too, EtoRenderer); only where there is no room beside them does she walk to catch up.
         float yaw = player.f_20883_;
-        Vec3 spot = HAND.spot(player.m_20185_(), player.m_20186_(), player.m_20189_(), yaw);
+        boolean woman = com.hex.kagune.control.Genders.female(player);
+        Vec3 spot = HAND.spot(player.m_20185_(), player.m_20186_(), player.m_20189_(), yaw, woman);
         Vec3 move = spot.m_82546_(npc.m_20182_());
         if (level.m_45756_(npc, npc.m_20191_().m_82386_(move.f_82479_, move.f_82480_, move.f_82481_))) {
             npc.m_21573_().m_26573_();
             npc.m_6021_(spot.f_82479_, spot.f_82480_, spot.f_82481_);
             npc.m_20256_(player.m_20184_());
         } else {
-            stayBeside(npc, player, HAND_OUT, now);
+            stayBeside(npc, player, EtoHand.out(woman), now);
         }
         npc.m_146922_(yaw);
         npc.f_20883_ = yaw;
