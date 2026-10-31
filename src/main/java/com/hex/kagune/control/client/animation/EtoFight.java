@@ -38,9 +38,22 @@ public final class EtoFight {
         body.seen = npc.f_19797_;
         RigPose p = under == null ? new RigPose() : new RigPose().add(under, 1.0F);
         float bodyYaw = npc.f_20884_ + wrap(npc.f_20883_ - npc.f_20884_) * partial;
+        // 1.3.8: the Owl growing on her, in it, or going: under its own moves, over anything else (as a player's, KaguneBodyAnimation).
+        com.hex.kagune.control.client.OwlClient.Owl owl = com.hex.kagune.control.client.OwlClient.get(npc, clock);
+        boolean owlMove = fight != null && (fight.move().owl() || body.animator.owlPosing(clock));
+        if (owl != null && owlMove) {
+            OwlPose.body(p, owl.on(), owl.age(clock), clock);
+        }
         if (fight != null) {
             float turn = (float)Math.toRadians(wrap(fight.yaw() - bodyYaw));
             body.animator.apply(p, fight, clock, age, body.landed, turn);
+        }
+        if (owl != null && !owlMove) {
+            OwlPose.body(p, owl.on(), owl.age(clock), clock);
+        }
+        if (owl != null) {
+            float headYaw = npc.f_20886_ + wrap(npc.f_20885_ - npc.f_20886_) * partial;
+            OwlPose.neck(p, Math.toRadians(wrap(headYaw - bodyYaw)), Math.toRadians(npc.m_146909_()), OwlPose.weight(owl.on(), owl.age(clock)));
         }
         // 1.3.7: her Mutated Arm's weight on her, whatever she is doing (as a player's, KaguneBodyAnimation).
         com.hex.kagune.control.client.ArmClient.Arm arm = com.hex.kagune.control.client.ArmClient.get(npc);

@@ -115,7 +115,8 @@ public final class PaleFleshRenderer {
             }
             OwlClient.Owl owl = OwlClient.get(player, time);
             if (owl != null && player.m_6084_() && !player.m_20145_() && player.m_20280_(minecraft.f_91074_) <= RANGE * RANGE) {
-                drew |= owl(player, owl, time, partial, level, minecraft, camera, matrix, normals, buffers);
+                drew |= owl(player, owl, view, KaguneBodyAnimation.posed(player, partial, time), 1.0, time, partial, level, minecraft, camera, matrix, normals,
+                    buffers);
             }
             if (OwlLanceClient.out(player) && player.m_6084_() && !player.m_20145_() && player.m_20280_(minecraft.f_91074_) <= RANGE * RANGE) {
                 drew |= lances(player, owl, view, time, partial, level, minecraft, camera, matrix, normals, buffers);
@@ -165,6 +166,11 @@ public final class PaleFleshRenderer {
             }
             if (ArmClient.out(who)) {
                 any |= arm(who, view, drawn, scale, time, partial, level, minecraft, camera, matrix, normals, buffers);
+            }
+            // 1.3.8: her Owl, the whole creature in her place, as big as anyone's.
+            OwlClient.Owl owl = OwlClient.get(who, time);
+            if (owl != null) {
+                any |= owl(who, owl, view, drawn, 1.0, time, partial, level, minecraft, camera, matrix, normals, buffers);
             }
             return any;
         }, level, minecraft, time, RANGE);
@@ -430,8 +436,8 @@ public final class PaleFleshRenderer {
      * grows; the bone spikes out of its back; the blades' trails. In first person she sees out of its eye (the creature is moved so its
      * eye is where hers is), its head left out.
      */
-    private static boolean owl(AbstractClientPlayer player, OwlClient.Owl owl, double time, float partial, ClientLevel level, Minecraft minecraft,
-                               Vec3 camera, Matrix4f matrix, Matrix3f normals, MultiBufferSource.BufferSource buffers) {
+    private static boolean owl(LivingEntity player, OwlClient.Owl owl, PaleClient.PaleView view, RigPose posed, double scale, double time, float partial,
+                               ClientLevel level, Minecraft minecraft, Vec3 camera, Matrix4f matrix, Matrix3f normals, MultiBufferSource.BufferSource buffers) {
         double age = owl.age(time);
         double grown = owl.grown(time);
         if (!(grown > OwlClient.SHOWN)) {
@@ -445,8 +451,7 @@ public final class PaleFleshRenderer {
         float headYaw = player.f_20886_ + wrap(player.f_20885_ - player.f_20886_) * partial;
         double lookYaw = Math.toRadians(wrap(headYaw - bodyYaw));
         double lookPitch = Math.toRadians(player.m_146909_());
-        PaleClient.PaleView view = PaleClient.get(player);
-        RigPose body = KaguneBodyAnimation.posed(player, partial, time);
+        RigPose body = posed == null ? null : new RigPose().add(posed, 1.0F);
         if (body == null) {
             // No layer to pose her: as the Owl's move alone poses her, or the Owl alone.
             body = view.move().owl() ? OwlMotions.anyBody(view.move(), view.age(time), view.detail(), view.charge(),
@@ -462,7 +467,7 @@ public final class PaleFleshRenderer {
         body.headY += (float)lookYaw;
         body.headX += (float)lookPitch;
         Frame frame = new Frame(player.f_19790_ + (player.m_20185_() - player.f_19790_) * partial, player.f_19791_ + (player.m_20186_() - player.f_19791_) * partial,
-            player.f_19792_ + (player.m_20189_() - player.f_19792_) * partial, -Math.sin(yaw), Math.cos(yaw), -Math.cos(yaw), -Math.sin(yaw));
+            player.f_19792_ + (player.m_20189_() - player.f_19792_) * partial, -Math.sin(yaw), Math.cos(yaw), -Math.cos(yaw), -Math.sin(yaw), scale);
         boolean firstPerson = firstPerson(minecraft, player);
         double[] eye = frame.rig(camera.f_82479_, camera.f_82480_, camera.f_82481_);
         // Alive: breathing, swaying, flicking, striding as she walks (each Pale on her own clock, so two are never in step).

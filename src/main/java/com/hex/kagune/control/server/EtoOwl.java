@@ -62,6 +62,15 @@ final class EtoOwl {
         long watchReady = Long.MIN_VALUE;
         /** 1.3.7: her Mutated Arm, when it is back. */
         long armReady = Long.MIN_VALUE;
+        /** 1.3.8: the Owl: whether she is in it, since when, when it comes back; its Rend's last cut and end; its moves' cooldowns. */
+        boolean owl;
+        long owlAt = Long.MIN_VALUE;
+        long owlReady = Long.MIN_VALUE;
+        int rend = -1;
+        long rendEndsAt = Long.MIN_VALUE;
+        long whirlReady = Long.MIN_VALUE;
+        long leapReady = Long.MIN_VALUE;
+        long landedAt = Long.MIN_VALUE;
         /** 1.3.6: what the swipe has cut this time (entity ids), what the flesh holds (0 none), where the throw began (her frame). */
         final java.util.Set<Integer> hit = new java.util.HashSet<>();
         int heldId;
@@ -87,6 +96,16 @@ final class EtoOwl {
             return;
         }
         if (target == null) {
+            return;
+        }
+        // 1.3.8: in the Owl, its own moves; hurt far enough, she grows it (her last resort).
+        if (f.owl) {
+            EtoOwlForm.fight(npc, mind, f, target, level, now, phase);
+            return;
+        }
+        if (EtoRules.owlNow(share(npc), f.owl, now, f.owlReady)) {
+            face(npc, target);
+            EtoOwlForm.grow(npc, f, level, now);
             return;
         }
         double distance = gap(npc, target);
@@ -158,6 +177,7 @@ final class EtoOwl {
             case KICK -> tickKick(npc, f, target, level, now, age, phase);
             case WITNESS -> tickWitness(npc, mind, f, target, level, now, age, phase);
             case SWIPE, GRAB_REACH, GRAB_HOLD, GRAB_THROW, GRAB_MISS, HAMMER_CHARGE, HAMMER -> EtoFlesh.tick(npc, mind, f, target, level, now, age, phase);
+            case OWL_STRIKE, OWL_WHIRL, OWL_LEAP -> EtoOwlForm.tick(npc, mind, f, target, level, now, age, phase);
             case WATCH -> {
                 npc.m_21573_().m_26573_();
                 if (age >= com.hex.kagune.control.pale.WatchRules.POSE_TICKS) {

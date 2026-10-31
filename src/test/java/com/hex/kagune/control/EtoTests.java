@@ -580,6 +580,17 @@ public final class EtoTests {
             "held to the sphere: the maniac mostly, never calm");
         check(EtoRules.ARM_TO < com.hex.kagune.control.pale.ArmRules.TAP_REACH * EtoRules.SIZE && EtoRules.ARM_FROM > EtoRules.HAMMER_TO,
             "the arm thrown only as far as it reaches on her");
+        // 1.3.8: the Owl, her last resort.
+        check(EtoRules.owlNow(0.2F, false, 100, never) && !EtoRules.owlNow(0.5F, false, 100, never) && !EtoRules.owlNow(0.2F, true, 100, never)
+            && !EtoRules.owlNow(0.2F, false, 100, later), "the Owl: grown only hurt far enough, not in it already, and once it is back");
+        check(EtoRules.OWL_AT < EtoRules.MANIAC_AT && EtoRules.OWL_TAKEN > 0.0F && EtoRules.OWL_TAKEN < 1.0F,
+            "the Owl comes after the maniac, and takes part of every blow, never all of it nor none");
+        check(EtoRules.chooseOwl(8.0, true, true, 100, never, never, 1, 0.9) == EtoRules.Act.OWL_LEAP, "in the Owl, mid range: the Pounce");
+        check(EtoRules.chooseOwl(8.0, true, false, 100, never, never, 1, 0.9) != EtoRules.Act.OWL_LEAP, "never a Pounce from the air");
+        check(EtoRules.chooseOwl(2.0, true, true, 100, never, later, 3, 0.9) == EtoRules.Act.OWL_WHIRL, "in the Owl, crowded: the Reaping Whirl");
+        check(EtoRules.chooseOwl(2.0, true, true, 100, never, later, 1, 0.9) == EtoRules.Act.OWL_REND, "in the Owl, one up close: the Rend");
+        check(EtoRules.chooseOwl(2.0, true, true, 100, later, later, 5, 0.1) == EtoRules.Act.OWL_REND, "the whirl spent: the Rend");
+        check(EtoRules.chooseOwl(20.0, true, true, 100, later, later, 0, 0.1) == EtoRules.Act.CHASE, "in the Owl, far off: after it");
         check(EtoRules.punchHold(EtoRules.Phase.MANIAC, 0.9) == com.hex.kagune.control.pale.PaleRules.PUNCH_CHARGE_TICKS
             && EtoRules.punchHold(EtoRules.Phase.SERIOUS, 0.1) == com.hex.kagune.control.pale.PaleRules.PUNCH_CHARGE_TICKS
             && EtoRules.punchHold(EtoRules.Phase.CALM, 0.9) < com.hex.kagune.control.pale.PaleRules.PUNCH_CHARGE_TICKS,

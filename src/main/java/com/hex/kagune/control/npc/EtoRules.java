@@ -455,7 +455,15 @@ public final class EtoRules {
         /** 1.3.6: Watch This: her arms out in a cross, two tentacles out of her back hunting on their own for ten seconds. */
         WATCH,
         /** 1.3.7: the Mutated Arm: her right arm turned to flesh and shot out at it, catching what it meets. */
-        ARM
+        ARM,
+        /** 1.3.8: the Owl, her kakuja, grown out of her: her last resort. */
+        OWL,
+        /** 1.3.8, in the Owl: its Rend, the four cuts of the giant blades, the last its jaws. */
+        OWL_REND,
+        /** 1.3.8, in the Owl: its Reaping Whirl, a whole turn with both giant arms out. */
+        OWL_WHIRL,
+        /** 1.3.8, in the Owl: its Pounce, the bound and both blades driven into the ground as it lands. */
+        OWL_LEAP
     }
 
     /** The mastery her moves are thrown at (the most there is: her fists as hard as a master's). */
@@ -505,6 +513,42 @@ public final class EtoRules {
     public static final int ARM_EVERY = 180;
     public static final double ARM_FROM = 6.0;
     public static final double ARM_TO = com.hex.kagune.control.pale.ArmRules.TAP_REACH * SIZE * 0.9;
+
+    /**
+     * 1.3.8: the Owl, her kakuja and her last resort: below this share of her health she grows it (when it is back); in it she takes
+     * this share of every blow; out of a fight this long (ticks) she sheds it; it comes back this long after she shed it.
+     */
+    public static final float OWL_AT = 0.25F;
+    public static final float OWL_TAKEN = 0.5F;
+    public static final long OWL_SHED_AFTER = 120L;
+    public static final int OWL_EVERY = 1200;
+    /** 1.3.8: how often its Reaping Whirl and its Pounce come back (ticks); the Pounce from this far to this far. */
+    public static final int WHIRL_EVERY = 60;
+    public static final int LEAP_EVERY = 50;
+    public static final double LEAP_FROM = 4.5;
+    public static final double LEAP_TO = 12.0;
+
+    /** 1.3.8: whether she grows the Owl now: hurt far enough, not in it already, and it is back. */
+    public static boolean owlNow(float health, boolean inOwl, long now, long owlReady) {
+        return !inOwl && health < OWL_AT && now >= owlReady;
+    }
+
+    /**
+     * 1.3.8: her pick in the Owl (pure): the Pounce onto it from mid range, the Reaping Whirl with more than one about her (or now and
+     * then), the Rend up close (its four cuts chained), else after it.
+     */
+    public static Act chooseOwl(double distance, boolean sees, boolean grounded, long now, long whirlReady, long leapReady, int around, double roll) {
+        if (sees && grounded && now >= leapReady && distance >= LEAP_FROM && distance <= LEAP_TO) {
+            return Act.OWL_LEAP;
+        }
+        if (grounded && now >= whirlReady && distance <= com.hex.kagune.control.pale.OwlRules.WHIRL_REACH && (around >= 2 || roll < 0.25)) {
+            return Act.OWL_WHIRL;
+        }
+        if (distance <= com.hex.kagune.control.pale.OwlRules.REND_REACH[0] - 0.4) {
+            return Act.OWL_REND;
+        }
+        return Act.CHASE;
+    }
 
     /** 1.3.7: whether she holds the Mutated Arm out to charge it (the maniac, mostly: whatever it caught crushed in the sphere). */
     public static boolean armHeld(Phase phase, double roll) {

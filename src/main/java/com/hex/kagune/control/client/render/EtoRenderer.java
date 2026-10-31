@@ -70,6 +70,15 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
     @Override
     public void m_7392_(EtoNpc npc, float yaw, float partial, PoseStack pose, MultiBufferSource buffers, int light) {
         EtoClient.View view = EtoClient.get(npc.m_19879_());
+        double now = PaleClient.clock(partial);
+        if (com.hex.kagune.control.client.OwlClient.creature(npc, now)) {
+            // 1.3.8: the Owl's creature is drawn in her place (PaleFleshRenderer), carried over from her body as posed this frame: posed,
+            // never drawn.
+            RigPose posed = pose(npc, view, now, partial);
+            DRAWN.put(npc.m_19879_(), posed == null ? new RigPose() : new RigPose().add(posed, 1.0F));
+            DRAWN_AT.put(npc.m_19879_(), now);
+            return;
+        }
         boolean glued = glue(npc, view, partial, pose);
         try {
             this.draw(npc, yaw, partial, pose, buffers, light, view);

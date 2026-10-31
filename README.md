@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.8 (HexGhoul): Eto's Owl kakuja, her last resort (testing)
+
+See `.github/release-notes-1.3.8.md`.
+
 ## 1.3.7 (HexGhoul): Eto's Mutated Arm (testing)
 
 See `.github/release-notes-1.3.7.md`.
