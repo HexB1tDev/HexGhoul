@@ -39,6 +39,7 @@ public final class FamilyTests {
         moments();
         home();
         might();
+        hands();
         reactions();
         initiative();
         if (!FAILURES.isEmpty()) {
@@ -474,6 +475,60 @@ public final class FamilyTests {
             && com.hex.kagune.control.family.ChildRules.playerMight(true, 1000, true) <= 1.0F, "a player's might: a ghoul by mastery, more with a final kakuja");
         check(com.hex.kagune.control.npc.Persona.KEN.might() > com.hex.kagune.control.npc.Persona.ETO.might()
             && com.hex.kagune.control.npc.Persona.ETO.might() > com.hex.kagune.control.npc.Persona.TOUKA.might(), "Ken's children strongest, then Eto's, then Touka's");
+    }
+
+    /** A model point turned as a ModelPart turns it (x, then z), pixels, y down: worked out here apart from ChildRules. */
+    private static double[] turned(double[] q, double x, double z) {
+        double y1 = q[1] * Math.cos(x) - q[2] * Math.sin(x);
+        double z1 = q[1] * Math.sin(x) + q[2] * Math.cos(x);
+        return new double[] {q[0] * Math.cos(z) - y1 * Math.sin(z), q[0] * Math.sin(z) + y1 * Math.cos(z), z1};
+    }
+
+    /**
+     * 1.3.21: hand in hand (the owner: "clearly not right"): on the real models (a player's arm at a man's, a woman's and Ken's size; the
+     * child's at its stage's size and layout, wide and slim arms) the two hands meet, its body clears their arm, a toddler's big head
+     * clears their hand, and every turn is the short way round.
+     */
+    static void hands() {
+        for (com.hex.kagune.control.family.ChildStage stage : new com.hex.kagune.control.family.ChildStage[] {
+            com.hex.kagune.control.family.ChildStage.TODDLER, com.hex.kagune.control.family.ChildStage.CHILD, com.hex.kagune.control.family.ChildStage.TEEN}) {
+            for (double size : new double[] {1.0, 0.86, 0.94}) {
+                for (boolean slim : new boolean[] {false, true}) {
+                    String what = stage + " at a " + size + " parent's side" + (slim ? " (slim)" : "");
+                    com.hex.kagune.control.family.ChildRules.Hand hand = com.hex.kagune.control.family.ChildRules.hand(stage, size, slim);
+                    float parentZ = com.hex.kagune.control.family.ChildRules.handParentZ(stage, size);
+                    double sp = 0.9375 / 16.0 * size;
+                    double[] p = turned(new double[] {1.0, 10.0, 0.0}, com.hex.kagune.control.family.ChildRules.handParentX(stage), parentZ);
+                    double[] theirs = {(5.0 + p[0]) * sp, (22.0 - p[1]) * sp, -p[2] * sp};
+                    boolean little = stage.young;
+                    double part = little ? 0.5 : 1.0;
+                    double k = stage.draw / 16.0;
+                    double pivotX = little ? -2.5 : -5.0;
+                    double pivotY = little ? 13.0 : slim ? 2.5 : 2.0;
+                    double[] q = turned(new double[] {(slim ? -0.5 : -1.0) * part, 10.0 * part, 0.0}, hand.armX(), hand.armZ());
+                    double[] its = {hand.side() + (pivotX + q[0]) * k, (24.0 - pivotY - q[1]) * k, -q[2] * k};
+                    double miss = Math.sqrt(Math.pow(theirs[0] - its[0], 2) + Math.pow(theirs[1] - its[1], 2) + Math.pow(theirs[2] - its[2], 2));
+                    check(miss < 0.01, what + ": the hands meet (" + miss + " apart)");
+                    double body = (little ? 2.0 : 4.0) * k;
+                    check(hand.side() - body - (theirs[0] + 2.0 * sp) > 0.04, what + ": its body clears their arm");
+                    check(Math.abs(hand.armZ()) <= Math.PI && hand.side() > 0.6 && hand.side() < 1.3 && parentZ < 0.0F && parentZ > -0.6F,
+                        what + ": a sane arm and place (" + hand.armZ() + ", " + hand.side() + ", their arm " + parentZ + ")");
+                    if (little) {
+                        // Its head (half a block at a toddler's size, its neck 0.6 up), tipped away 0.4 (handChild), its hair a little out.
+                        double above = Math.max(0.0, theirs[1] - 0.03 - stage.draw * 12.0 / 16.0);
+                        double near = hand.side() - 4.0 * k * Math.cos(0.4) + above * Math.sin(0.4) - 0.5 * k;
+                        check(near > theirs[0] + 2.0 * sp, what + ": its head clears their hand");
+                        check(hand.armZ() > 1.5F, what + ": a toddler reaches up to their hand");
+                    }
+                }
+            }
+        }
+        com.hex.kagune.control.client.animation.RigPose toddler = com.hex.kagune.control.client.animation.ChildMomentPose.handChild(
+            com.hex.kagune.control.family.ChildStage.TODDLER, 1.0, false);
+        com.hex.kagune.control.client.animation.RigPose teen = com.hex.kagune.control.client.animation.ChildMomentPose.handChild(
+            com.hex.kagune.control.family.ChildStage.TEEN, 1.0, false);
+        check(toddler.headZ > 0.3F && Math.abs(toddler.headY) < 0.01F && teen.headY > 0.0F && ok(toddler) && ok(teen),
+            "hand in hand: a toddler's head tipped away from them, a teen's turned to them (its right)");
     }
 
     private static boolean ok(com.hex.kagune.control.client.animation.RigPose p) {

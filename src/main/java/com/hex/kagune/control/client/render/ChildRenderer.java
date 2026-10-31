@@ -102,7 +102,7 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
                 this.f_102812_.f_104203_ += -0.5F;
             }
             // 1.3.20: its moment with a parent, or its ride on their shoulders (arms, legs, head; the body's hop and tip are the renderer's).
-            com.hex.kagune.control.client.animation.RigPose posed = asleep ? null : posed(view, ageInTicks);
+            com.hex.kagune.control.client.animation.RigPose posed = asleep ? null : posed(child, view, ageInTicks);
             if (posed != null) {
                 turn(this.f_102808_, posed.headX, posed.headY, posed.headZ, posed.headHold);
                 turn(this.f_102811_, posed.rightArmX, posed.rightArmY, posed.rightArmZ, Math.max(posed.armHold, posed.rightArmHold));
@@ -176,7 +176,7 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
     }
 
     /** 1.3.20: how its moment (or its ride) poses it now ({@code ageInTicks}: its own clock, for looking about), or null. */
-    static com.hex.kagune.control.client.animation.RigPose posed(ChildClient.View view, float ageInTicks) {
+    static com.hex.kagune.control.client.animation.RigPose posed(ChildNpc child, ChildClient.View view, float ageInTicks) {
         if (view == null) {
             return null;
         }
@@ -196,7 +196,13 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
                 return out;
             }
         }
-        return view.carrier() != 0 ? com.hex.kagune.control.client.animation.ChildMomentPose.ride(view.ride(), view.stage(), ageInTicks) : null;
+        if (view.carrier() == 0) {
+            return null;
+        }
+        // 1.3.21: hand in hand, its arm to the hand of whoever holds it, by their size.
+        double size = child.m_9236_().m_6815_(view.carrier()) instanceof net.minecraft.world.entity.LivingEntity carrier ? ChildNpc.carrySize(carrier) : 1.0;
+        ChildSkins.Skin skin = skin(view);
+        return com.hex.kagune.control.client.animation.ChildMomentPose.ride(view.ride(), view.stage(), ageInTicks, size, skin != null && skin.slim());
     }
 
     @Override
@@ -219,7 +225,7 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
             }
             pose.m_85841_(stage.draw, stage.draw, stage.draw);
             // 1.3.20: its moment's hop, sway and tip, about its middle.
-            com.hex.kagune.control.client.animation.RigPose body = asleep ? null : posed(view, child.f_19797_ + partial);
+            com.hex.kagune.control.client.animation.RigPose body = asleep ? null : posed(child, view, child.f_19797_ + partial);
             if (body != null && (body.drop != 0.0F || body.roll != 0.0F || body.flip != 0.0F)) {
                 float delta = ((child.f_20883_ - child.f_20884_) % 360.0F + 540.0F) % 360.0F - 180.0F;
                 double turn = Math.toRadians(child.f_20884_ + delta * partial);
@@ -268,7 +274,8 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
         if (view.moment() == com.hex.kagune.control.family.ChildMoment.TOSS && view.inMoment(clock)) {
             up += com.hex.kagune.control.family.ChildMoment.tossLift(age);
         }
-        double left = ride == ChildRules.RIDE_HAND ? ChildRules.HAND_SIDE * scale : 0.0;
+        ChildSkins.Skin skin = skin(view);
+        double left = ride == ChildRules.RIDE_HAND ? ChildRules.hand(view.stage(), scale, skin != null && skin.slim()).side() : 0.0;
         double cx = carrier.f_19790_ + (carrier.m_20185_() - carrier.f_19790_) * partial - Math.sin(yaw) * ahead + Math.cos(yaw) * left;
         double cy = carrier.f_19791_ + (carrier.m_20186_() - carrier.f_19791_) * partial + up * scale;
         double cz = carrier.f_19792_ + (carrier.m_20189_() - carrier.f_19792_) * partial + Math.cos(yaw) * ahead + Math.sin(yaw) * left;

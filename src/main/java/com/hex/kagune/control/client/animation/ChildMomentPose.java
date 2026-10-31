@@ -167,25 +167,45 @@ public final class ChildMomentPose {
         return p;
     }
 
-    /** 1.3.21: hand in hand: the parent's left hand down and out to its own (lower for a little one), held still as they walk. */
-    public static RigPose handParent(ChildStage stage) {
+    /**
+     * 1.3.21: hand in hand: the parent's left arm a little out and forward to its child's hand, held still as they walk. Solved with
+     * {@link #handChild} and {@code ChildRules.handSide} on the real models (a player's arm; the child's at its stage's size and layout, a
+     * toddler's half size) so the two hands meet: a toddler reaching up to it, a child and a teen down and out to it.
+     */
+    public static RigPose handParent(ChildStage stage, double size) {
         RigPose p = new RigPose();
-        float low = stage == ChildStage.TODDLER ? 1.0F : stage == ChildStage.CHILD ? 0.6F : 0.3F;
-        p.leftArmZ = -0.2F - 0.12F * low;
-        p.leftArmX = -0.08F;
-        p.side = 0.06F * low;
+        p.leftArmZ = ChildRules.handParentZ(stage, size);
+        p.leftArmX = ChildRules.handParentX(stage);
         p.leftArmHold = 1.0F;
         return p;
     }
 
-    /** 1.3.21: hand in hand: the child's right hand up and out to its parent's (higher for a little one), swinging a little as it walks. */
-    public static RigPose handChild(ChildStage stage, double time) {
+    /**
+     * 1.3.21: hand in hand: the child's right arm to its parent's hand ({@link #handParent}), looking up at them. A toddler's arm is
+     * short and its head big: its arm straight up to the hand by its head, the head tipped away and up (so it clears their hand), not
+     * turned; a child and a teen turn their heads to them (to its right: y+).
+     */
+    public static RigPose handChild(ChildStage stage, double parent, boolean slim) {
         RigPose p = new RigPose();
-        float up = stage == ChildStage.TODDLER ? 1.0F : stage == ChildStage.CHILD ? 0.55F : 0.2F;
-        p.rightArmZ = 0.35F + 0.75F * up;
-        p.rightArmX = -0.12F - 0.25F * up + 0.06F * sin(time * 0.2);
-        p.headY = -0.12F;
+        ChildRules.Hand hand = ChildRules.hand(stage, parent, slim);
+        p.rightArmZ = hand.armZ();
+        p.rightArmX = hand.armX();
+        switch (stage) {
+            case BABY, TODDLER -> {
+                p.headX = -0.2F;
+                p.headZ = 0.4F;
+            }
+            case CHILD -> {
+                p.headX = -0.15F;
+                p.headY = 0.3F;
+            }
+            case TEEN -> {
+                p.headX = -0.05F;
+                p.headY = 0.25F;
+            }
+        }
         p.rightArmHold = 1.0F;
+        p.headHold = 1.0F;
         return p;
     }
 
@@ -410,9 +430,9 @@ public final class ChildMomentPose {
         return ride == ChildRules.RIDE_SHOULDERS ? shouldersChild(time) : null;
     }
 
-    /** 1.3.21: as above, knowing its stage (hand in hand, its arm up to their hand by its height). */
-    public static RigPose ride(int ride, ChildStage stage, double time) {
-        return ride == ChildRules.RIDE_HAND ? handChild(stage, time) : ride(ride, time);
+    /** 1.3.21: as above, knowing its stage and its parent's size (hand in hand: its arm to their hand), and its skin's arms. */
+    public static RigPose ride(int ride, ChildStage stage, double time, double parent, boolean slim) {
+        return ride == ChildRules.RIDE_HAND ? handChild(stage, parent, slim) : ride(ride, time);
     }
 
     // ---------------------------------------------------------------- blending

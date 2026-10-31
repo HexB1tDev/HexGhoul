@@ -523,7 +523,8 @@ public final class KaguneBodyAnimation implements IAnimation {
         if (riding != null && riding.ride() == com.hex.kagune.control.family.ChildRules.RIDE_SHOULDERS) {
             ChildMomentPose.blend(p, ChildMomentPose.shouldersParent(), this.fade);
         } else if (riding != null && riding.ride() == com.hex.kagune.control.family.ChildRules.RIDE_HAND) {
-            ChildMomentPose.blend(p, ChildMomentPose.handParent(riding.stage()), this.fade); // 1.3.21: hand in hand
+            // 1.3.21: hand in hand (its arm by their size: a smaller parent's hand a little higher for a teen to reach)
+            ChildMomentPose.blend(p, ChildMomentPose.handParent(riding.stage(), com.hex.kagune.control.npc.ChildNpc.carrySize(this.player)), this.fade);
         }
         com.hex.kagune.control.client.ChildClient.View moment = com.hex.kagune.control.client.ChildClient.partnered(this.player.m_19879_(), childClock);
         if (moment != null) {

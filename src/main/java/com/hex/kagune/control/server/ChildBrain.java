@@ -203,7 +203,8 @@ public final class ChildBrain {
         double up = (ride == ChildRules.RIDE_SHOULDERS ? ChildRules.SHOULDERS_UP : ride == ChildRules.RIDE_SPIN ? ChildRules.SPIN_UP
             : ride == ChildRules.RIDE_HAND ? 0.0 : ChildRules.CARRY_UP) * scale;
         // 1.3.21: hand in hand, at their left on its own feet.
-        double left = ride == ChildRules.RIDE_HAND ? ChildRules.HAND_SIDE * scale : 0.0;
+        double left = ride == ChildRules.RIDE_HAND ? ChildRules.hand(npc.mind == null || npc.mind.stage == null ? ChildStage.CHILD : npc.mind.stage, scale, false)
+            .side() : 0.0;
         Vec3 at = carrier.m_20182_().m_82520_(-Math.sin(yaw) * ahead + Math.cos(yaw) * left, up, Math.cos(yaw) * ahead + Math.sin(yaw) * left);
         npc.m_21573_().m_26573_();
         npc.m_20242_(true);

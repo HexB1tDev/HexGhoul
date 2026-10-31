@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.22 (HexGhoul): holding hands fixed: the hands actually meet now (testing)
+
+See `.github/release-notes-1.3.22.md`.
+
 ## 1.3.21 (HexGhoul): a family home: beds at night, doors, hand in hand, tucked in, fed; kids die for good; companions never hit their kids; strong parents, strong kids (testing)
 
 See `.github/release-notes-1.3.21.md`.

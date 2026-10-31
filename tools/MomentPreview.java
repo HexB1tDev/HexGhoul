@@ -53,6 +53,7 @@ public final class MomentPreview {
             new Shot("a flower for you", ChildMoment.FLOWER, ChildStage.CHILD, 20, -1, 65),
             new Shot("hand in hand (toddler)", ChildMoment.NONE, ChildStage.TODDLER, 0, ChildRules.RIDE_HAND, 20),
             new Shot("hand in hand (child)", ChildMoment.NONE, ChildStage.CHILD, 0, ChildRules.RIDE_HAND, 20),
+            new Shot("hand in hand (teen)", ChildMoment.NONE, ChildStage.TEEN, 0, ChildRules.RIDE_HAND, 20),
             new Shot("tucked in", ChildMoment.TUCK, ChildStage.CHILD, 24, -2, 70),
             new Shot("feeding (toddler)", ChildMoment.FEED, ChildStage.TODDLER, 12, -1, 60),
             new Shot("feeding (teen, eating)", ChildMoment.FEED, ChildStage.TEEN, 34, -1, 60));
@@ -67,7 +68,7 @@ public final class MomentPreview {
         g.fillRect(0, 0, sheet.getWidth(), sheet.getHeight());
         g.setColor(Color.WHITE);
         g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 18));
-        g.drawString("Parent and child moments (the parent a stand-in player; the child a scaled player in a kid's skin)", 10, 24);
+        g.drawString("Parent and child moments (the parent a stand-in player; the child on its in-game proportions)", 10, 24);
         for (int i = 0; i < shots.size(); i++) {
             Shot shot = shots.get(i);
             BufferedImage image = render(shot, kidSkin, w, h);
@@ -80,6 +81,71 @@ public final class MomentPreview {
         }
         g.dispose();
         ImageIO.write(sheet, "png", new File(out, "moments.png"));
+    }
+
+    /** Vanilla's player model drawn this much smaller than a block per pixel (PlayerRenderer.scale): the parent's size here. */
+    static final double PLAYER = 0.9375;
+
+    /**
+     * The child exactly as ChildRenderer draws it: vanilla's player model on its stage's layout (a baby and a toddler on a little one's:
+     * a full-size head on a neck at 12, the body, arms and legs half size, ChildRenderer.Model.little), its pose put straight onto the
+     * parts as ChildRenderer.Model.turn does (held parts take the pose; the rest add it to vanilla's idle), at its stage's size, against
+     * a parent drawn here at a player's (so divided by {@link #PLAYER}). Blocks; its feet at 0, x to its left, z ahead; sitting not
+     * applied (the caller drops it).
+     */
+    static List<PoseRender.Tri> kid(RigPose p, ChildStage stage, boolean slim, boolean sitting) {
+        boolean little = stage.young;
+        double part = little ? 0.5 : 1.0;
+        double px = stage.draw / PLAYER / 16.0;
+        // name, pivot (model pixels), scale, rotation, box, skin u/v, second layer u/v, its grow.
+        double rightArmX = p.rightArmX + 0.0 * (1.0 - hold(p.armHold, p.rightArmHold)) + (sitting ? -0.5 * (1.0 - hold(p.armHold, p.rightArmHold)) : 0.0);
+        double leftArmX = p.leftArmX + (sitting ? -0.5 * (1.0 - hold(p.armHold, p.leftArmHold)) : 0.0);
+        double rightArmZ = p.rightArmZ + 0.05 * (1.0 - hold(p.armHold, p.rightArmHold));
+        double leftArmZ = p.leftArmZ - 0.05 * (1.0 - hold(p.armHold, p.leftArmHold));
+        double legOwn = 1.0 - Math.max(0.0, Math.min(1.0, p.legHold));
+        double rightLegX = p.rightLegX + (sitting ? -1.4137167 * legOwn : 0.0);
+        double leftLegX = p.leftLegX + (sitting ? -1.4137167 * legOwn : 0.0);
+        double rightLegY = p.rightLegY + (sitting ? 0.31415927 * legOwn : 0.0);
+        double leftLegY = p.leftLegY + (sitting ? -0.31415927 * legOwn : 0.0);
+        double rightLegZ = p.rightLegZ + (sitting ? 0.07853982 * legOwn : 0.0);
+        double leftLegZ = p.leftLegZ + (sitting ? -0.07853982 * legOwn : 0.0);
+        Object[][] parts = {
+            {new double[] {0, little ? 12 : 0, 0}, 1.0, new double[] {p.headX, p.headY, p.headZ}, new double[] {-4, -8, -4}, new double[] {4, 0, 4}, 0, 0, 32, 0, 0.5},
+            {new double[] {0, little ? 12 : 0, 0}, part, new double[] {0, 0, 0}, new double[] {-4, 0, -2}, new double[] {4, 12, 2}, 16, 16, 16, 32, 0.25},
+            {new double[] {little ? -2.5 : -5, little ? 13 : slim ? 2.5 : 2, 0}, part, new double[] {rightArmX, p.rightArmY, rightArmZ},
+                new double[] {slim ? -2 : -3, -2, -2}, new double[] {1, 10, 2}, 40, 16, 40, 32, 0.25},
+            {new double[] {little ? 2.5 : 5, little ? 13 : slim ? 2.5 : 2, 0}, part, new double[] {leftArmX, p.leftArmY, leftArmZ},
+                new double[] {-1, -2, -2}, new double[] {slim ? 2 : 3, 10, 2}, 32, 48, 48, 48, 0.25},
+            {new double[] {little ? -0.95 : -1.9, little ? 18 : 12, little ? 0.05 : 0}, part, new double[] {rightLegX, rightLegY, rightLegZ},
+                new double[] {-2, 0, -2}, new double[] {2, 12, 2}, 0, 16, 0, 32, 0.25},
+            {new double[] {little ? 0.95 : 1.9, little ? 18 : 12, little ? 0.05 : 0}, part, new double[] {leftLegX, leftLegY, leftLegZ},
+                new double[] {-2, 0, -2}, new double[] {2, 12, 2}, 16, 48, 0, 48, 0.25}};
+        List<PoseRender.Tri> tris = new ArrayList<>();
+        for (Object[] q : parts) {
+            double[] pivot = (double[])q[0];
+            double scale = (Double)q[1];
+            double[] r = (double[])q[2];
+            double[] mn = (double[])q[3];
+            double[] mx = (double[])q[4];
+            PoseRender.Part at = new PoseRender.Part();
+            at.rx = r[0];
+            at.ry = r[1];
+            at.rz = r[2];
+            int w = (int)Math.round(mx[0] - mn[0]);
+            int h = (int)Math.round(mx[1] - mn[1]);
+            int d = (int)Math.round(mx[2] - mn[2]);
+            // ModelPart: its pivot, turned, then scaled (uniformly: the same as scaled about the pivot after the turn).
+            java.util.function.UnaryOperator<double[]> world = v -> new double[] {(pivot[0] + scale * v[0]) * px, (24.0 - pivot[1] - scale * v[1]) * px,
+                -(pivot[2] + scale * v[2]) * px};
+            PoseRender.cube(tris, new PoseRender.Cube(mn, mx, 0, PoseRender.textured((Integer)q[5], (Integer)q[6], w, h, d, false)), at, v -> v, world);
+            PoseRender.cube(tris, new PoseRender.Cube(mn, mx, 0, PoseRender.textured((Integer)q[7], (Integer)q[8], w, h, d, true)), at, v -> v, world,
+                1.0, 1.0, (Double)q[9]);
+        }
+        return tris;
+    }
+
+    static double hold(float all, float one) {
+        return Math.max(0.0, Math.min(1.0, Math.max(all, one)));
     }
 
     static BufferedImage small(BufferedImage hd) {
@@ -99,7 +165,7 @@ public final class MomentPreview {
         if (shot.ride() == ChildRules.RIDE_SHOULDERS) {
             ChildMomentPose.blend(parent, ChildMomentPose.shouldersParent(), 1.0F);
         } else if (shot.ride() == ChildRules.RIDE_HAND) {
-            ChildMomentPose.blend(parent, ChildMomentPose.handParent(shot.stage()), 1.0F);
+            ChildMomentPose.blend(parent, ChildMomentPose.handParent(shot.stage(), 1.0), 1.0F);
         } else if (shot.ride() == ChildRules.RIDE_ARMS) {
             parent.rightArmX = -0.95F;
             parent.leftArmX = -0.95F;
@@ -119,19 +185,20 @@ public final class MomentPreview {
             child.leftLegY = -0.31F;
             child.legHold = 1.0F;
         }
-        RigPose moment = shot.moment() == ChildMoment.NONE ? ChildMomentPose.ride(shot.ride(), shot.stage(), 40.0)
+        RigPose moment = shot.moment() == ChildMoment.NONE ? ChildMomentPose.ride(shot.ride(), shot.stage(), 40.0, 1.0, false)
             : ChildMomentPose.child(shot.moment(), shot.age(), shot.stage());
         if (moment != null) {
             ChildMomentPose.blend(child, moment, 1.0F);
         }
+        boolean sitting = (shot.ride() >= 0 && shot.ride() != ChildRules.RIDE_HAND) || shot.stage().sits() && shot.ride() != -2;
         java.awt.image.BufferedImage parentSkin = PoseRender.skin;
         PoseRender.skin = kidSkin;
-        PoseRender.slim = false;
-        List<PoseRender.Tri> kid = PoseRender.model(child);
+        List<PoseRender.Tri> kid = kid(child, shot.stage(), false, sitting);
         PoseRender.skin = parentSkin;
-        // Where the child is: facing the parent its stand away, or held (in the arms, on the shoulders, out spinning, thrown up).
+        // Where the child is (blocks in game, below turned to this drawing's player-sized parent): facing the parent its stand away, or
+        // held (in the arms, on the shoulders, out spinning, thrown up), or at their side holding their hand.
         double k = height(shot.stage());
-        double sat = (shot.ride() >= 0 && shot.ride() != ChildRules.RIDE_HAND) || shot.stage().sits() && shot.ride() != -2 ? 0.75 * k : 0.0;
+        double sat = sitting ? 0.75 * shot.stage().draw * (shot.stage().young ? 0.5 : 1.0) : 0.0;
         boolean lying = shot.ride() == -2;
         double[] at;
         double turn;
@@ -146,15 +213,18 @@ public final class MomentPreview {
             at = new double[] {0.0, ChildRules.CARRY_UP + ChildMoment.tossLift(shot.age()) - sat, ChildRules.CARRY_AHEAD};
             turn = Math.PI;
         } else if (shot.ride() == ChildRules.RIDE_HAND) {
-            at = new double[] {ChildRules.HAND_SIDE, 0.0, 0.0};
+            at = new double[] {ChildRules.handSide(shot.stage()), 0.0, 0.0};
             turn = 0.0;
         } else if (lying) {
-            at = new double[] {-k, 0.58, 0.95};
+            at = new double[] {-k * PLAYER, 0.58, 0.95};
             turn = 0.0;
         } else {
             double stand = shot.moment().stand > 0.0 ? shot.moment().stand : 1.1;
             at = new double[] {0.0, -sat, stand};
             turn = Math.PI;
+        }
+        for (int i = 0; i < 3; i++) {
+            at[i] /= PLAYER;
         }
         List<PoseRender.Tri> placed = new ArrayList<>();
         double cos = Math.cos(turn);
@@ -163,9 +233,9 @@ public final class MomentPreview {
             double[][] v = new double[t.v().length][];
             for (int i = 0; i < v.length; i++) {
                 double[] q = t.v()[i];
-                double x = q[0] * k;
-                double y = q[1] * k;
-                double z = q[2] * k;
+                double x = q[0];
+                double y = q[1];
+                double z = q[2];
                 if (lying) {
                     // On its back in bed across in front of them (they stand at its bedside): head to their left, face up.
                     double lx = y;
