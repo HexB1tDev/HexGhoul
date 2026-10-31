@@ -28,10 +28,15 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = "hexkagune", value = Dist.CLIENT)
 public final class SkinReader {
     /** What a skin says: the face cells its second layer covers (and which of those are glass), and the eyes found on it (or null). */
-    public record Skin(long covered, long glass, KakuganEyes eyes) {
+    public record Skin(long covered, long glass, KakuganEyes eyes, int hair, int tone) {
+        Skin(long covered, long glass, KakuganEyes eyes) {
+            this(covered, glass, eyes, -1, -1);
+        }
     }
 
     static final Skin NOTHING = new Skin(0L, 0L, null);
+    /** 1.3.10: the skin this player's looks (hair, skin tone) were last sent from, this session. */
+    private static ResourceLocation sentLooks;
     private static final int TEXTURE_2D = 3553;
     private static final int TEXTURE_WIDTH = 4096;
     private static final int TEXTURE_HEIGHT = 4097;
@@ -56,6 +61,13 @@ public final class SkinReader {
         if (level == null) {
             return;
         }
+        // 1.3.10: this player's own hair and skin tone, once their skin is read, sent to the server (a child of theirs takes after them).
+        AbstractClientPlayer self = Minecraft.m_91087_().f_91074_;
+        if (self != null && self.m_108560_() != null && !self.m_108560_().equals(sentLooks) && SKINS.containsKey(self.m_108560_())) {
+            Skin own = SKINS.get(self.m_108560_());
+            sentLooks = self.m_108560_();
+            com.hex.kagune.control.network.ControlNetwork.CHANNEL.sendToServer(new com.hex.kagune.control.network.C2SLooks(own.hair(), own.tone()));
+        }
         int reads = 0;
         for (AbstractClientPlayer player : level.m_6907_()) {
             ResourceLocation skin = player.m_108560_();
@@ -72,6 +84,7 @@ public final class SkinReader {
     @SubscribeEvent
     public static void loggingOut(ClientPlayerNetworkEvent.LoggingOut event) {
         SKINS.clear();
+        sentLooks = null;
     }
 
     /** One skin from the graphics card, scaled to the 64-pixel layout. */
@@ -108,7 +121,8 @@ public final class SkinReader {
                 }
                 return NOTHING;
             }
-            return new Skin(KakuganSkin.covered(pixels, 64), KakuganSkin.glass(pixels, 64), KakuganSkin.detect(pixels, 64));
+            return new Skin(KakuganSkin.covered(pixels, 64), KakuganSkin.glass(pixels, 64), KakuganSkin.detect(pixels, 64),
+                com.hex.kagune.control.family.HairColour.of(pixels, 64), com.hex.kagune.control.family.SkinTone.of(pixels, 64));
         } catch (RuntimeException failure) {
             KaguneMod.LOGGER.info("HexKagune could not read skin " + location + " for the kakugan: " + failure);
             return NOTHING;

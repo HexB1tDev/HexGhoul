@@ -90,7 +90,8 @@ final class ControlCommands {
                     .executes(context -> maxEto(context, EntityArgument.m_91474_(context, "player")))))));
         // 1.3.10: a testing shortcut for operators: every pregnancy the player is part of brought to ten seconds before the birth.
         dispatcher.register(Commands.m_82127_("kagune").then(Commands.m_82127_("family").requires(source -> source.m_6761_(2))
-            .then(Commands.m_82127_("soon").executes(context -> familySoon(context, context.getSource().m_81375_())))));
+            .then(Commands.m_82127_("soon").executes(context -> familySoon(context, context.getSource().m_81375_())))
+            .then(Commands.m_82127_("grow").executes(context -> familyGrow(context, context.getSource().m_81375_())))));
         // 7.0.1: Ghoul Meat devoured: what it gives now; an operator can set the count.
         dispatcher.register(Commands.m_82127_("kagune").then(Commands.m_82127_("ghoulmeat")
             .executes(ControlCommands::reportGhoulMeat)
@@ -279,6 +280,29 @@ final class ControlCommands {
     }
 
     /** Eto's regard for the player at the most, met (any grudge from killing her forgotten): only with her within 10 blocks of them. */
+    /** 1.3.10, for testing: the nearest of the player's children (within 16 blocks) grown into its next stage. */
+    private static int familyGrow(CommandContext<CommandSourceStack> context, ServerPlayer player) {
+        net.minecraft.server.level.ServerLevel level = player.m_284548_();
+        String me = Pregnancies.player(player.m_20148_());
+        for (com.hex.kagune.control.npc.ChildNpc npc : level.m_6443_(com.hex.kagune.control.npc.ChildNpc.class, player.m_20191_().m_82400_(16.0),
+            child -> child.m_6084_())) {
+            Children.Child child = Children.get(level, npc.childId());
+            if (child != null && child.parent(me)) {
+                com.hex.kagune.control.family.ChildStage stage = child.stage(level.m_46467_());
+                if (stage == com.hex.kagune.control.family.ChildStage.TEEN) {
+                    context.getSource().m_81352_(Component.m_237113_(child.name + " is as grown as a child gets."));
+                    return 0;
+                }
+                long into = (long)(stage.next().fromDays * com.hex.kagune.control.family.ChildStage.DAY) - (level.m_46467_() - child.born) + 1L;
+                Children.age(level, child, into);
+                context.getSource().m_288197_(() -> Component.m_237113_(child.name + " is a " + stage.next().name().toLowerCase() + " now."), false);
+                return 1;
+            }
+        }
+        context.getSource().m_81352_(Component.m_237113_("None of your children within 16 blocks."));
+        return 0;
+    }
+
     private static int familySoon(CommandContext<CommandSourceStack> context, ServerPlayer player) {
         int hurried = Pregnancies.hurry(player.m_284548_(), Pregnancies.player(player.m_20148_()), 200L);
         if (hurried == 0) {

@@ -9,6 +9,11 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.10 (HexGhoul): pregnancy and children: married to Eto, ask for a baby; two days later, "9 months later..." (testing)
+
+See `.github/release-notes-1.3.10.md`. The child skins are made from CC BY-SA parts of the edit_skin mod (credits:
+`src/main/resources/assets/hexkagune/textures/entity/child/CREDITS.txt`).
+
 ## 1.3.9 (HexGhoul): pick your gender after your eyes; female players get Eto's body and size (testing)
 
 See `.github/release-notes-1.3.9.md`.

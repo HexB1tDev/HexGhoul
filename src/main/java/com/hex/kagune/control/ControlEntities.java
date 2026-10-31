@@ -30,6 +30,14 @@ public final class ControlEntities {
     public static final RegistryObject<EntityType<EtoNpc>> ETO = ENTITIES.register("eto", () -> EntityType.Builder.<EtoNpc>m_20704_(EtoNpc::new,
         MobCategory.CREATURE).m_20699_(0.6F * com.hex.kagune.control.npc.EtoRules.SIZE, 1.8F * com.hex.kagune.control.npc.EtoRules.SIZE).m_20702_(10).m_20717_(1).m_20712_(KaguneMod.id("eto").toString()));
 
+    /**
+     * 1.3.10: a child: a creature (never despawned), boxed as a player and shrunk to its stage by the size event ({@code Genders}); its
+     * looks made on each client from what it inherited.
+     */
+    public static final RegistryObject<EntityType<com.hex.kagune.control.npc.ChildNpc>> CHILD = ENTITIES.register("child",
+        () -> EntityType.Builder.<com.hex.kagune.control.npc.ChildNpc>m_20704_(com.hex.kagune.control.npc.ChildNpc::new, MobCategory.CREATURE)
+            .m_20699_(0.6F, 1.8F).m_20702_(10).m_20717_(1).m_20712_(KaguneMod.id("child").toString()));
+
     private ControlEntities() {
     }
 
@@ -37,6 +45,8 @@ public final class ControlEntities {
         ENTITIES.register(modBus);
         // 1.3.2: one of her in a world, made again at her home some days after she is killed.
         com.hex.kagune.control.server.UniqueNpcs.kind(com.hex.kagune.control.npc.EtoRules.KEY, ETO);
+        // 1.3.10: births make children; each one's body made again at its home a day after it dies.
+        com.hex.kagune.control.server.Children.init();
     }
 
     @Mod.EventBusSubscriber(modid = "hexkagune", bus = Mod.EventBusSubscriber.Bus.MOD)
@@ -49,6 +59,7 @@ public final class ControlEntities {
             event.put(GHOUL.get(), GhoulNpc.attributes().m_22265_());
             event.put(THRALL.get(), FleshThrall.attributes().m_22265_());
             event.put(ETO.get(), EtoNpc.attributes().m_22265_());
+            event.put(CHILD.get(), com.hex.kagune.control.npc.ChildNpc.attributes().m_22265_());
         }
     }
 }

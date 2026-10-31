@@ -33,6 +33,8 @@ public final class FamilyTests {
         pregnancy();
         genome();
         talk();
+        children();
+        looks();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -205,5 +207,138 @@ public final class FamilyTests {
         return new EtoTalk.Context(c.regard(), c.flags(), c.count(), c.ghoul(), c.chattedToday(), c.giftedToday(), c.book(), c.flower(), c.next(),
             c.beforeDone(), c.granted(), c.seed(), c.stage(), c.claimedBy(), c.following(), c.dayTime(), c.mood(), c.daysTogether(), c.daysAway(),
             c.puppy(), c.ring(), c.meat(), c.letter(), c.pact(), c.pactCount(), c.trialDone(), c.nightUsed(), c.name(), c.spouseElsewhere(), family);
+    }
+
+    static void children() {
+        com.hex.kagune.control.family.ChildStage baby = com.hex.kagune.control.family.ChildStage.BABY;
+        com.hex.kagune.control.family.ChildStage teen = com.hex.kagune.control.family.ChildStage.TEEN;
+        check(com.hex.kagune.control.family.ChildStage.of(0.0) == baby && com.hex.kagune.control.family.ChildStage.of(2.5)
+            == com.hex.kagune.control.family.ChildStage.TODDLER && com.hex.kagune.control.family.ChildStage.of(6.0)
+            == com.hex.kagune.control.family.ChildStage.CHILD && com.hex.kagune.control.family.ChildStage.of(50.0) == teen,
+            "a baby, a toddler, a child, a teen, by its age in days");
+        float last = 0.0F;
+        boolean growing = true;
+        for (com.hex.kagune.control.family.ChildStage stage : com.hex.kagune.control.family.ChildStage.values()) {
+            growing &= stage.box > last && stage.box < 1.0F && stage.health > 0.0F;
+            last = stage.box;
+        }
+        check(growing, "each stage bigger than the last, all smaller than a grown player");
+        check(baby.sits() && baby.carried() && !baby.walks() && !baby.learns() && com.hex.kagune.control.family.ChildStage.TODDLER.carried()
+            && com.hex.kagune.control.family.ChildStage.TODDLER.walks() && !com.hex.kagune.control.family.ChildStage.CHILD.carried()
+            && com.hex.kagune.control.family.ChildStage.CHILD.learns() && teen.learns() && teen.next() == teen,
+            "a baby sits and is carried; a toddler walks and can still be carried; a child and a teen can be taught");
+        check(com.hex.kagune.control.family.ChildStage.days(0L, 48000L) == 2.0, "days from the birth");
+        check(!com.hex.kagune.control.family.ChildRules.teachable(baby, 0, Long.MIN_VALUE, 0L)
+            && com.hex.kagune.control.family.ChildRules.teachable(teen, 0, Long.MIN_VALUE, 0L)
+            && !com.hex.kagune.control.family.ChildRules.teachable(teen, 1, 100L, 200L)
+            && com.hex.kagune.control.family.ChildRules.teachable(teen, 1, 100L, 100L + com.hex.kagune.control.family.ChildStage.DAY)
+            && !com.hex.kagune.control.family.ChildRules.teachable(teen, com.hex.kagune.control.family.ChildRules.SKILL_MOST, Long.MIN_VALUE, 0L),
+            "taught a lesson a day, child and teen only, up to the most");
+        check(!com.hex.kagune.control.family.ChildRules.fights(teen, 0) && com.hex.kagune.control.family.ChildRules.fights(teen, 1)
+            && com.hex.kagune.control.family.ChildRules.damage(baby, 5, true) == 0.0F
+            && com.hex.kagune.control.family.ChildRules.damage(teen, 3, false) > com.hex.kagune.control.family.ChildRules.damage(
+                com.hex.kagune.control.family.ChildStage.CHILD, 3, false)
+            && com.hex.kagune.control.family.ChildRules.damage(teen, 3, true) > com.hex.kagune.control.family.ChildRules.damage(teen, 3, false),
+            "it fights only once taught; a teen hits harder than a child, a ghoul harder still; a baby never");
+        boolean said = true;
+        for (com.hex.kagune.control.family.ChildStage stage : com.hex.kagune.control.family.ChildStage.values()) {
+            for (int seed = 0; seed < 6; seed++) {
+                String call = com.hex.kagune.control.family.ChildLines.call(stage, seed % 2 == 0);
+                for (String line : new String[] {com.hex.kagune.control.family.ChildLines.idle(stage, call, seed),
+                    com.hex.kagune.control.family.ChildLines.greet(stage, call, seed), com.hex.kagune.control.family.ChildLines.up(stage, seed),
+                    com.hex.kagune.control.family.ChildLines.down(stage, seed), com.hex.kagune.control.family.ChildLines.play(stage, seed),
+                    com.hex.kagune.control.family.ChildLines.lesson(stage, seed % 6, seed), com.hex.kagune.control.family.ChildLines.follow(stage, seed),
+                    com.hex.kagune.control.family.ChildLines.stay(stage, seed), com.hex.kagune.control.family.ChildLines.fight(stage, seed),
+                    com.hex.kagune.control.family.ChildLines.scared(stage, call, seed), com.hex.kagune.control.family.ChildLines.grown(stage, "Hana")}) {
+                    said &= line != null && !line.isEmpty();
+                }
+            }
+        }
+        check(said, "something to say in every stage, every time");
+        check(com.hex.kagune.control.family.ChildLines.call(teen, true).equals("Mom") && com.hex.kagune.control.family.ChildLines.call(baby, false)
+            .equals("Papa"), "Mama and Papa, Mom and Dad");
+    }
+
+    static int[] part(String name) {
+        try (java.io.InputStream in = new java.io.FileInputStream("src/main/resources/assets/hexkagune/textures/entity/child/" + name + ".png")) {
+            return com.hex.kagune.control.family.Png.read(in).pixels();
+        } catch (java.io.IOException missing) {
+            return null;
+        }
+    }
+
+    static void looks() {
+        int[] base = part("base_1");
+        check(base != null && base.length == 64 * 32, "a skin part reads (64 x 32, by the mod's own PNG reader)");
+        java.io.File dir = new java.io.File("src/main/resources/assets/hexkagune/textures/entity/child");
+        String credits = "";
+        try {
+            credits = java.nio.file.Files.readString(new java.io.File(dir, "CREDITS.txt").toPath());
+        } catch (java.io.IOException missing) {
+            credits = "";
+        }
+        boolean credited = true;
+        for (String name : dir.list()) {
+            if (name.endsWith(".png") && !name.endsWith("_mask.png")) {
+                credited &= credits.contains("\n" + name + "\n") || credits.startsWith(name + "\n");
+            }
+        }
+        check(credited && credits.contains("CC BY-SA"), "every skin part is credited, with its licence");
+        com.hex.kagune.control.family.Genome.Parent light = new com.hex.kagune.control.family.Genome.Parent(0x6B4423, 0x3A6EA5, 0xF0D0B8, false, false);
+        com.hex.kagune.control.family.Genome.Parent eto = new com.hex.kagune.control.family.Genome.Parent(EtoRules.HAIR, EtoRules.EYES, EtoRules.SKIN, true,
+            true);
+        java.util.Random random = new java.util.Random(5);
+        boolean lightKids = true;
+        boolean drawn = true;
+        boolean noBeard = true;
+        boolean kakuganShows = true;
+        for (int i = 0; i < 60; i++) {
+            com.hex.kagune.control.family.Genome child = com.hex.kagune.control.family.Genome.of(eto, light, random);
+            int skin = child.skin();
+            lightKids &= ((skin >> 16) & 255) >= 0xEB - 1 - 40 && ((skin >> 8) & 255) >= 0xD0 - 40 && (skin & 255) >= 0xB8 - 40;
+            com.hex.kagune.control.family.ChildStage stage = com.hex.kagune.control.family.ChildStage.values()[i % 4];
+            int[] px = com.hex.kagune.control.family.ChildSkin.paint(child, stage, false, FamilyTests::part);
+            drawn &= px.length == 64 * 64 && (px[2 * 64 + 11] >>> 24) == 255 && (px[60 * 64 + 22] >>> 24) == 255;
+            for (int v = 12; v < 16; v++) {
+                for (int u = 9; u < 15; u++) {
+                    noBeard &= !near(px[v * 64 + u], child.hair(), 18) || near(px[v * 64 + u], child.skin(), 30);
+                }
+            }
+            if (child.kakugan() != com.hex.kagune.control.family.Genome.NONE) {
+                int[] turned = com.hex.kagune.control.family.ChildSkin.paint(child, stage, true, FamilyTests::part);
+                boolean red = false;
+                for (int v = 8; v < 16; v++) {
+                    for (int u = 8; u < 16; u++) {
+                        red |= turned[v * 64 + u] == 0xFFE0302A;
+                    }
+                }
+                kakuganShows &= red;
+            }
+        }
+        check(lightKids, "two light-skinned parents: light-skinned children, never darker than the darker parent");
+        check(drawn, "a whole skin, the top of the head and the legs painted, at every stage");
+        check(noBeard, "no child has a beard: nothing of the hair on the middle of the lower face");
+        check(kakuganShows, "its kakugan shows red when it fights");
+        int[] skinPx = new int[64 * 64];
+        java.util.Arrays.fill(skinPx, 0);
+        for (int v = 0; v < 10; v++) {
+            for (int u = 8; u < 16; u++) {
+                skinPx[v * 64 + u] = 0xFF5A3A22;
+            }
+        }
+        for (int v = 10; v < 16; v++) {
+            for (int u = 8; u < 16; u++) {
+                skinPx[v * 64 + u] = 0xFFF0D0B8;
+            }
+        }
+        check(near(0xFF000000 | com.hex.kagune.control.family.HairColour.of(skinPx, 64), 0x5A3A22, 20), "the hair read off the top of the head");
+        check(near(0xFF000000 | com.hex.kagune.control.family.SkinTone.of(skinPx, 64), 0xF0D0B8, 24), "the skin tone read off the lower face");
+        check(com.hex.kagune.control.family.HairColour.of(new int[64 * 64], 64) == -1 && com.hex.kagune.control.family.SkinTone.of(new int[64 * 64], 64) == -1,
+            "a blank skin tells nothing (the usual colours are kept)");
+    }
+
+    static boolean near(int argb, int rgb, int by) {
+        return Math.abs(((argb >> 16) & 255) - ((rgb >> 16) & 255)) <= by && Math.abs(((argb >> 8) & 255) - ((rgb >> 8) & 255)) <= by
+            && Math.abs((argb & 255) - (rgb & 255)) <= by;
     }
 }

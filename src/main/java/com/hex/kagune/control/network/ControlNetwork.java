@@ -86,6 +86,9 @@ public final class ControlNetwork {
         CHANNEL.registerMessage(41, S2CGender.class, S2CGender::encode, S2CGender::decode, S2CGender::handle);
         // 1.3.10: who is carrying a child (her belly).
         CHANNEL.registerMessage(42, S2CPregnancy.class, S2CPregnancy::encode, S2CPregnancy::decode, S2CPregnancy::handle);
+        // 1.3.10: children as they are drawn; each player's hair colour off their own skin.
+        CHANNEL.registerMessage(43, S2CChild.class, S2CChild::encode, S2CChild::decode, S2CChild::handle);
+        CHANNEL.registerMessage(44, C2SLooks.class, C2SLooks::encode, C2SLooks::decode, C2SLooks::handle);
     }
 
     /** To the subject and every client tracking them. */

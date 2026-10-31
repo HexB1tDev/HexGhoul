@@ -891,3 +891,8 @@ F net/minecraft/world/entity/EquipmentSlot CHEST Lnet/minecraft/world/entity/Equ
 M net/minecraftforge/event/entity/EntityEvent$Size getEntity ()Lnet/minecraft/world/entity/Entity;  # [forge] inherited from EntityEvent.getEntity
 C net/minecraft/world/entity/EntityDimensions  # [srg] bfk C_4048_ (intermediary class_4048, yarn EntityDimensions)
 C net/minecraft/world/entity/EquipmentSlot  # [srg] bfo (intermediary class_1304, yarn EquipmentSlot)
+# 1.3.10: children: each child's skin made on the client from what it inherited (ehk = NativeImage, fui = DynamicTexture, fuw = TextureManager)
+M com/mojang/blaze3d/platform/NativeImage m_84988_ (III)V  # [srg] setPixelRGBA: ehk.m_84988_ (III)V (yarn NativeImage.setColor)
+C net/minecraft/client/renderer/texture/DynamicTexture  # [srg] fui (intermediary class_1043, yarn NativeImageBackedTexture)
+M net/minecraft/client/renderer/texture/DynamicTexture <init> (Lcom/mojang/blaze3d/platform/NativeImage;)V  # [srg] fui.<init> (Lehk;)V (yarn NativeImageBackedTexture(NativeImage))
+M net/minecraft/client/renderer/texture/TextureManager m_118495_ (Lnet/minecraft/resources/ResourceLocation;Lnet/minecraft/client/renderer/texture/AbstractTexture;)V  # [srg] register: fuw.m_118495_ (Lacq;Lfug;)V (yarn TextureManager.registerTexture)

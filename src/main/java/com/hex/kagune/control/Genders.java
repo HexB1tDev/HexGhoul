@@ -49,6 +49,12 @@ public final class Genders {
     /** A woman's box and eyes, a woman's size (every pose: standing, crouching, swimming...). */
     @SubscribeEvent
     public static void size(EntityEvent.Size event) {
+        // 1.3.10: a child's box is its stage's (a baby's tiny, a teen's nearly grown).
+        if (event.getEntity() instanceof com.hex.kagune.control.npc.ChildNpc child && child.stage != null) {
+            event.setNewSize(event.getNewSize().m_20388_(child.stage.box), false);
+            event.setNewEyeHeight(event.getNewEyeHeight() * child.stage.box);
+            return;
+        }
         if (female(event.getEntity())) {
             event.setNewSize(event.getNewSize().m_20388_(FemaleBody.SIZE), false);
             event.setNewEyeHeight(event.getNewEyeHeight() * FemaleBody.SIZE);

@@ -295,6 +295,7 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
             Minecraft minecraft = Minecraft.m_91087_();
             if (minecraft.f_91073_ != null && minecraft.f_91073_.m_46467_() % 100L == 50L) {
                 EtoClient.prune(minecraft.f_91073_);
+                com.hex.kagune.control.client.ChildClient.prune(minecraft.f_91073_);
                 EtoFight.prune(id -> minecraft.f_91073_.m_6815_(id) == null);
             }
             EtoClient.pull();

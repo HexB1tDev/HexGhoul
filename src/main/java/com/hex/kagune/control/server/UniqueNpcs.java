@@ -44,6 +44,44 @@ public final class UniqueNpcs {
         KINDS.put(key, type);
     }
 
+    /** 1.3.10: every one-of-a-kind NPC whose key starts with {@code prefix} ("child:") is made of {@code type}, then {@code made} with its key. */
+    private static final Map<String, Supplier<? extends EntityType<? extends Mob>>> PREFIXES = new LinkedHashMap<>();
+    private static final Map<String, java.util.function.BiConsumer<Mob, String>> MADE = new java.util.HashMap<>();
+
+    public static void kinds(String prefix, Supplier<? extends EntityType<? extends Mob>> type, java.util.function.BiConsumer<Mob, String> made) {
+        PREFIXES.put(prefix, type);
+        MADE.put(prefix, made);
+    }
+
+    /** What {@code key} is made of (its own kind, or its prefix's), and what is done to a new body of it; null if nothing. */
+    private static Supplier<? extends EntityType<? extends Mob>> kindOf(String key) {
+        Supplier<? extends EntityType<? extends Mob>> kind = KINDS.get(key);
+        if (kind != null) {
+            return kind;
+        }
+        for (Map.Entry<String, Supplier<? extends EntityType<? extends Mob>>> prefix : PREFIXES.entrySet()) {
+            if (key.startsWith(prefix.getKey())) {
+                return prefix.getValue();
+            }
+        }
+        return null;
+    }
+
+    private static void made(Mob body, String key) {
+        for (Map.Entry<String, java.util.function.BiConsumer<Mob, String>> prefix : MADE.entrySet()) {
+            if (key.startsWith(prefix.getKey())) {
+                prefix.getValue().accept(body, key);
+            }
+        }
+    }
+
+    /** 1.3.10: {@code key} is no more (forgotten by the world: nothing of it comes back). */
+    public static void forget(ServerLevel level, String key) {
+        if (data(level).all.remove(key) != null) {
+            changed(level);
+        }
+    }
+
     static final class Data extends SavedData {
         final Map<String, UniqueNpc> all;
 
@@ -191,7 +229,7 @@ public final class UniqueNpcs {
         long now = level.m_46467_();
         for (Map.Entry<String, UniqueNpc> entry : data(level).all.entrySet()) {
             UniqueNpc npc = entry.getValue();
-            Supplier<? extends EntityType<? extends Mob>> kind = KINDS.get(entry.getKey());
+            Supplier<? extends EntityType<? extends Mob>> kind = kindOf(entry.getKey());
             Long ticked = TICKING.get(entry.getKey());
             // Dead long enough; or left away a day and her body not about to go home itself (it lies in unloaded ground).
             boolean recall = npc.dueHome(now) && (ticked == null || now - ticked > 400L);
@@ -208,6 +246,7 @@ public final class UniqueNpcs {
                 continue;
             }
             body.m_7678_(spawn[0] + 0.5, spawn[1] - 1.0, spawn[2] + 0.5, 0.0F, 0.0F);
+            made(body, entry.getKey());
             npc.body = body.m_20148_();
             npc.alive = true;
             npc.seen = now;

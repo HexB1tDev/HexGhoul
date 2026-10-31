@@ -315,7 +315,8 @@ public final class KaguneBodyAnimation implements IAnimation {
 
     private boolean wants() {
         // 1.3.3: holding Eto's hand, the arm reaches out to her (whatever else the body is doing).
-        if (com.hex.kagune.control.client.EtoClient.handHeld(this.player.m_19879_()) > 0.0F) {
+        if (com.hex.kagune.control.client.EtoClient.handHeld(this.player.m_19879_()) > 0.0F
+            || com.hex.kagune.control.client.ChildClient.carrying(this.player.m_19879_())) {
             return this.player.m_6084_() && ControlConfig.bodyAnimations();
         }
         if (com.hex.kagune.control.client.PaleClient.eyes(this.player)) {
@@ -498,6 +499,16 @@ public final class KaguneBodyAnimation implements IAnimation {
             p.rightArmX -= com.hex.kagune.control.npc.EtoHand.FORWARD * hand;
             p.rightArmHold = Math.max(p.rightArmHold, hand);
         }
+        // 1.3.10: carrying a child: both arms in front, cradling it at the chest, held still.
+        if (com.hex.kagune.control.client.ChildClient.carrying(this.player.m_19879_())) {
+            p.rightArmX = -0.95F * this.fade;
+            p.leftArmX = -0.95F * this.fade;
+            p.rightArmY = -0.45F * this.fade;
+            p.leftArmY = 0.45F * this.fade;
+            p.rightArmZ = 0.0F;
+            p.leftArmZ = 0.0F;
+            p.armHold = Math.max(p.armHold, this.fade);
+        }
         // 6.2.0: just whole again after her death that did not take, she stands as the pieces went back together and eases into it.
         float risen = com.hex.kagune.control.client.ReviveClient.risen(this.player, com.hex.kagune.control.client.PaleClient.clock(tickDelta));
         if (risen < 1.0F) {
@@ -553,7 +564,8 @@ public final class KaguneBodyAnimation implements IAnimation {
         // 1.3.3: only holding Eto's hand (no kagune, no eyes, nothing turning): nothing more on the body than the arm (setupAnim's).
         if (!view.active() && !com.hex.kagune.control.client.PaleClient.eyes(this.player) && this.king() <= 0.0F
             && com.hex.kagune.control.client.TurningClient.progress(this.player, time) < 0.0
-            && com.hex.kagune.control.client.EtoClient.handHeld(this.player.m_19879_()) > 0.0F) {
+            && (com.hex.kagune.control.client.EtoClient.handHeld(this.player.m_19879_()) > 0.0F
+            || com.hex.kagune.control.client.ChildClient.carrying(this.player.m_19879_()))) {
             this.finish(steel, time, tickDelta);
             return;
         }

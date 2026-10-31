@@ -1,0 +1,82 @@
+The child skins in this folder are composed at runtime from parts of the edit_skin mod for Minetest/Luanti
+(https://github.com/MrRar/edit_skin, by MrRar), converted to RGBA and renamed (edit_skin_<part>.png -> <part>.png).
+Each part keeps its own licence, as below (Creative Commons Attribution-ShareAlike); the skins made from them are shared
+under the same licences. Masks (<part>_mask.png) go with their part.
+
+base_1.png
+footwear_3.png
+mouth_2.png
+mouth_3.png
+mouth_5.png
+top_2.png
+top_5.png
+eye_5.png
+top_6.png
+bottom_3.png
+eye_7.png
+mouth_7.png
+eye_6.png
+top_11.png
+top_12.png
+top_13.png
+bottom_5.png
+hair_12.png
+top_17.png
+Original work by MrRar
+License: CC BY-SA 4.0
+
+top_1.png
+mouth_1.png
+hair_1.png
+eye_1.png
+eye_2.png
+footwear_1.png
+mouth_1.png
+top_1.png
+mouth_2.png
+Name: Pixel Perfection resource pack for Minecraft 1.11
+Author: XSSheep. Adapted for edit_skin by MrRar.
+License: CC BY-SA 4.0
+Source: https://www.planetminecraft.com/texture_pack/131pixel-perfection/
+
+hair_3.png
+eye_3.png
+footwear_2.png
+Name: the 10the doctor
+Author: lovehart. Adapted for edit_skin by MrRar.
+License: CC BY-SA 3.0
+Source: http://minetest.fensta.bplaced.net/#!page:1,filtertype:Id,filter:367
+
+hair_4.png
+Blonde Girl
+Author: Rin. Adapted for edit_skin by MrRar.
+License: CC BY-SA 3.0
+Source: http://minetest.fensta.bplaced.net/#id=918
+
+hair_5.png
+Name: hobbit from lottmob
+Author: lovehart. Adapted for edit_skin by MrRar.
+License: CC BY-SA 3.0
+Source: http://minetest.fensta.bplaced.net/#id=336
+
+top_4.png
+Name: Oliver_MV
+Author: hansuke123. Adapted for edit_skin by MrRar.
+License: CC BY-SA 3.0
+Source: http://minetest.fensta.bplaced.net/#!page:1,filtertype:Id,filter:291
+
+eye_4.png
+Name: lisa
+Author: hansuke123
+License: CC BY-SA 3.0
+Source: http://minetest.fensta.bplaced.net/#!page:1,filtertype:Id,filter:88
+
+bottom_4.png
+top_9.png
+top_10.png
+hair_10.png
+hair_11.png
+Name: Pixel Perfection Legacy 1.19
+Author: Nova_Wostra. Adapted for edit_skin by MrRar.
+License: CC BY-SA 4.0
+Source: https://www.planetminecraft.com/texture-pack/pixel-perfection-chorus-edit/
