@@ -125,6 +125,9 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
     /** Its skin made and uploaded as a texture of its own. */
     private static ResourceLocation make(ChildClient.View view, boolean kakugan, int n) {
         try {
+            if (ChildSkin.part("base_1") == null) {
+                return FALLBACK; // the parts can't be read here: a plain skin rather than an invisible child
+            }
             int[] px = ChildSkin.paint(view.genome(), view.stage(), kakugan, ChildSkin::part);
             NativeImage image = new NativeImage(ChildSkin.SIZE, ChildSkin.SIZE, true);
             for (int y = 0; y < ChildSkin.SIZE; y++) {

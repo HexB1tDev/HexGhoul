@@ -1,3 +1,5 @@
+> **Superseded (1.3.12):** start from `docs/handoff/next-handoff.md` (the current state after this plan was carried out).
+
 # Handoff: Eto 1.3.4 → genders, pregnancy, children, reactions (HexKagune), for the next agent
 
 Read this whole file, then `docs/handoff/eto-handoff.md` sections 1 to 4 (what the project is, how it builds, the release rules,
