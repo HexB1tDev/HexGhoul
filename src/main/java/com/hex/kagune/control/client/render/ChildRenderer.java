@@ -88,7 +88,9 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
             this.f_102610_ = false;
             super.m_6973_(child, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
             ChildClient.View view = ChildClient.get(child.m_19879_());
-            if (view != null && (view.stage().sits() || view.carrier() != 0)) {
+            boolean asleep = child.m_5803_();
+            boolean walking = view != null && view.ride() == ChildRules.RIDE_HAND;
+            if (view != null && !asleep && !walking && (view.stage().sits() || view.carrier() != 0)) {
                 // Sitting: legs out in front, a little apart (vanilla's riding pose), hands in its lap.
                 this.f_102813_.f_104203_ = -1.4137167F;
                 this.f_102813_.f_104204_ = 0.31415927F;
@@ -100,7 +102,7 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
                 this.f_102812_.f_104203_ += -0.5F;
             }
             // 1.3.20: its moment with a parent, or its ride on their shoulders (arms, legs, head; the body's hop and tip are the renderer's).
-            com.hex.kagune.control.client.animation.RigPose posed = posed(view, ageInTicks);
+            com.hex.kagune.control.client.animation.RigPose posed = asleep ? null : posed(view, ageInTicks);
             if (posed != null) {
                 turn(this.f_102808_, posed.headX, posed.headY, posed.headZ, posed.headHold);
                 turn(this.f_102811_, posed.rightArmX, posed.rightArmY, posed.rightArmZ, Math.max(posed.armHold, posed.rightArmHold));
@@ -194,7 +196,7 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
                 return out;
             }
         }
-        return view.carrier() != 0 ? com.hex.kagune.control.client.animation.ChildMomentPose.ride(view.ride(), ageInTicks) : null;
+        return view.carrier() != 0 ? com.hex.kagune.control.client.animation.ChildMomentPose.ride(view.ride(), view.stage(), ageInTicks) : null;
     }
 
     @Override
@@ -206,14 +208,18 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
         this.f_115290_ = skin != null && skin.slim() ? this.slim : this.wide;
         pose.m_85836_();
         try {
-            glue(child, view, partial, pose);
-            if (view != null && (stage.sits() || view.carrier() != 0) && view.ride() != com.hex.kagune.control.family.ChildRules.RIDE_SPIN) {
+            boolean asleep = child.m_5803_();
+            if (!asleep) {
+                glue(child, view, partial, pose);
+            }
+            if (view != null && !asleep && (stage.sits() || view.carrier() != 0) && view.ride() != com.hex.kagune.control.family.ChildRules.RIDE_SPIN
+                && view.ride() != ChildRules.RIDE_HAND) {
                 // Sat down: its legs (a little one's are half as long) out in front, not under it.
                 pose.m_85837_(0.0, -0.75 * stage.draw * (stage.young ? 0.5 : 1.0), 0.0);
             }
             pose.m_85841_(stage.draw, stage.draw, stage.draw);
             // 1.3.20: its moment's hop, sway and tip, about its middle.
-            com.hex.kagune.control.client.animation.RigPose body = posed(view, child.f_19797_ + partial);
+            com.hex.kagune.control.client.animation.RigPose body = asleep ? null : posed(view, child.f_19797_ + partial);
             if (body != null && (body.drop != 0.0F || body.roll != 0.0F || body.flip != 0.0F)) {
                 float delta = ((child.f_20883_ - child.f_20884_) % 360.0F + 540.0F) % 360.0F - 180.0F;
                 double turn = Math.toRadians(child.f_20884_ + delta * partial);
@@ -254,14 +260,19 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
         double yaw = Math.toRadians(bodyYaw);
         double ahead = (ride == ChildRules.RIDE_SHOULDERS ? -ChildRules.SHOULDERS_BACK : ride == ChildRules.RIDE_SPIN ? ChildRules.SPIN_AHEAD
             : ChildRules.CARRY_AHEAD) * scale;
-        double up = ride == ChildRules.RIDE_SHOULDERS ? ChildRules.SHOULDERS_UP : ride == ChildRules.RIDE_SPIN ? ChildRules.SPIN_UP : ChildRules.CARRY_UP;
+        double up = ride == ChildRules.RIDE_SHOULDERS ? ChildRules.SHOULDERS_UP : ride == ChildRules.RIDE_SPIN ? ChildRules.SPIN_UP
+            : ride == ChildRules.RIDE_HAND ? 0.0 : ChildRules.CARRY_UP;
+        if (ride == ChildRules.RIDE_HAND) {
+            ahead = 0.0; // hand in hand: at their left, on the ground (below)
+        }
         if (view.moment() == com.hex.kagune.control.family.ChildMoment.TOSS && view.inMoment(clock)) {
             up += com.hex.kagune.control.family.ChildMoment.tossLift(age);
         }
-        double cx = carrier.f_19790_ + (carrier.m_20185_() - carrier.f_19790_) * partial - Math.sin(yaw) * ahead;
+        double left = ride == ChildRules.RIDE_HAND ? ChildRules.HAND_SIDE * scale : 0.0;
+        double cx = carrier.f_19790_ + (carrier.m_20185_() - carrier.f_19790_) * partial - Math.sin(yaw) * ahead + Math.cos(yaw) * left;
         double cy = carrier.f_19791_ + (carrier.m_20186_() - carrier.f_19791_) * partial + up * scale;
-        double cz = carrier.f_19792_ + (carrier.m_20189_() - carrier.f_19792_) * partial + Math.cos(yaw) * ahead;
-        if (ride == ChildRules.RIDE_SHOULDERS) {
+        double cz = carrier.f_19792_ + (carrier.m_20189_() - carrier.f_19792_) * partial + Math.cos(yaw) * ahead + Math.sin(yaw) * left;
+        if (ride == ChildRules.RIDE_SHOULDERS || ride == ChildRules.RIDE_HAND) {
             bodyYaw -= 180.0F; // facing their way, not them
         }
         double ex = child.f_19790_ + (child.m_20185_() - child.f_19790_) * partial;

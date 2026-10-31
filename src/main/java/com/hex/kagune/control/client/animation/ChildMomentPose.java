@@ -131,9 +131,61 @@ public final class ChildMomentPose {
                 p.armHold = 1.0F;
             }
             case SPIN -> spinning(p, age);
+            case TUCK -> {
+                // Bent over its bed: the covers smoothed (both hands, side to side), then a hand on its head, a last look.
+                bend(p, knees, ChildStage.TODDLER);
+                float smooth = 1.0F - smooth((t - 46.0) / 8.0);
+                p.rightArmX = -0.85F - 0.15F * (1.0F - smooth);
+                p.leftArmX = -0.85F * smooth;
+                p.rightArmY = 0.3F * sin(t * 0.5) * smooth;
+                p.leftArmY = -0.3F * sin(t * 0.5 + 1.2) * smooth;
+                p.rightArmZ = -0.15F;
+                p.leftArmZ = 0.15F * smooth;
+                p.headX = 0.55F;
+                p.armHold = 1.0F;
+            }
+            case FEED -> {
+                // The food held out to it (down low to a little one), a little patient bob.
+                float reach = switch (stage) {
+                    case BABY -> -0.7F;
+                    case TODDLER -> -0.95F;
+                    case CHILD -> -1.2F;
+                    case TEEN -> -1.35F;
+                };
+                if (stage == ChildStage.BABY || stage == ChildStage.TODDLER) {
+                    bend(p, knees, stage);
+                }
+                float give = smooth(t / 6.0) * (1.0F - smooth((t - 18.0) / 8.0));
+                p.rightArmX = reach * give;
+                p.rightArmZ = -0.1F * give;
+                p.headX = 0.35F;
+                p.rightArmHold = give;
+            }
             default -> {
             }
         }
+        return p;
+    }
+
+    /** 1.3.21: hand in hand: the parent's left hand down and out to its own (lower for a little one), held still as they walk. */
+    public static RigPose handParent(ChildStage stage) {
+        RigPose p = new RigPose();
+        float low = stage == ChildStage.TODDLER ? 1.0F : stage == ChildStage.CHILD ? 0.6F : 0.3F;
+        p.leftArmZ = -0.2F - 0.12F * low;
+        p.leftArmX = -0.08F;
+        p.side = 0.06F * low;
+        p.leftArmHold = 1.0F;
+        return p;
+    }
+
+    /** 1.3.21: hand in hand: the child's right hand up and out to its parent's (higher for a little one), swinging a little as it walks. */
+    public static RigPose handChild(ChildStage stage, double time) {
+        RigPose p = new RigPose();
+        float up = stage == ChildStage.TODDLER ? 1.0F : stage == ChildStage.CHILD ? 0.55F : 0.2F;
+        p.rightArmZ = 0.35F + 0.75F * up;
+        p.rightArmX = -0.12F - 0.25F * up + 0.06F * sin(time * 0.2);
+        p.headY = -0.12F;
+        p.rightArmHold = 1.0F;
         return p;
     }
 
@@ -304,6 +356,19 @@ public final class ChildMomentPose {
                 p.drop = -0.7F * Math.abs(sin(t * 0.62));
                 p.armHold = 1.0F;
             }
+            case FEED -> {
+                // Taken from their hand, then up to its mouth (in, across its face, as a horn is held) and munched, its head bobbing as it chews.
+                float bite = 0.5F + 0.5F * sin(t * 0.8);
+                float up = smooth((t - 8.0) / 5.0) * (1.0F - smooth((t - 50.0) / 8.0));
+                p.rightArmX = (-1.4F - 0.22F * bite) * up;
+                p.rightArmY = -0.55F * up;
+                p.rightArmZ = 0.0F;
+                p.headX = 0.12F + 0.1F * up * sin(t * 1.6);
+                p.rightArmHold = up;
+            }
+            case TUCK -> {
+                return null; // asleep: lying in its bed as the game lays it
+            }
             case FLOWER -> {
                 // Held up to them, proud, then given (the arm stays out a moment, then down).
                 float out = smooth(t / 8.0) * (1.0F - smooth((t - 44.0) / 10.0));
@@ -343,6 +408,11 @@ public final class ChildMomentPose {
     /** How a child held {@code ride} is drawn ({@code ChildRules.RIDE_*}) when no moment poses it: null for in the arms (its own sitting). */
     public static RigPose ride(int ride, double time) {
         return ride == ChildRules.RIDE_SHOULDERS ? shouldersChild(time) : null;
+    }
+
+    /** 1.3.21: as above, knowing its stage (hand in hand, its arm up to their hand by its height). */
+    public static RigPose ride(int ride, ChildStage stage, double time) {
+        return ride == ChildRules.RIDE_HAND ? handChild(stage, time) : ride(ride, time);
     }
 
     // ---------------------------------------------------------------- blending

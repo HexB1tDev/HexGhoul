@@ -43,6 +43,11 @@ public abstract class Persona {
         return 1.0F;
     }
 
+    /** 1.3.21: how strong it is as a parent (0..1): its children are born the stronger for it (ChildRules.might). */
+    public float might() {
+        return 0.5F;
+    }
+
     /** 1.3.19: whether it fights with Ukaku wings of its own (Touka: a lesser pair, crystal spikes), drawn on its back in a fight. */
     public boolean wings() {
         return false;
@@ -206,6 +211,12 @@ public abstract class Persona {
             return EtoRules.HEALTH;
         }
 
+        /** 1.3.21: the Owl: second only to Ken. */
+        @Override
+        public float might() {
+            return 0.95F;
+        }
+
         @Override
         public double armor() {
             return EtoRules.ARMOR;
@@ -334,6 +345,12 @@ public abstract class Persona {
             return 260.0F;
         }
 
+        /** 1.3.21: strong, nowhere near Eto or Ken. */
+        @Override
+        public float might() {
+            return 0.6F;
+        }
+
         @Override
         public double armor() {
             return 12.0;
@@ -449,6 +466,12 @@ public abstract class Persona {
         @Override
         public float health() {
             return 340.0F;
+        }
+
+        /** 1.3.21: the strongest of them all: his children are born the strongest. */
+        @Override
+        public float might() {
+            return 1.0F;
         }
 
         /** 1.3.19: the owner: the strongest of them all; in a fight, Peace (the final kakuja) at once, every one of its moves his. */

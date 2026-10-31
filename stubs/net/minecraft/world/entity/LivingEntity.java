@@ -17,6 +17,9 @@ public abstract class LivingEntity extends Entity {
     /** hasLineOfSight */ public boolean m_142582_(Entity entity) { throw new UnsupportedOperationException(); }
     /** onClimbable */ public boolean m_6147_() { throw new UnsupportedOperationException(); }
     /** isSleeping */ public boolean m_5803_() { throw new UnsupportedOperationException(); }
+    /** startSleeping(bedPos) (1.3.21: companions and children lie down in their beds at home) */ public void m_5802_(net.minecraft.core.BlockPos pos) { throw new UnsupportedOperationException(); }
+    /** stopSleeping (yarn wakeUp) (1.3.21) */ public void m_5796_() { throw new UnsupportedOperationException(); }
+    /** isImmobile (1.3.21: overridden, asleep in bed) */ protected boolean m_6107_() { throw new UnsupportedOperationException(); }
     /** isBlocking (7.0.2) */ public boolean m_21254_() { throw new UnsupportedOperationException(); }
     /** isUsingItem */ public boolean m_6117_() { throw new UnsupportedOperationException(); }
     /** heal */ public void m_5634_(float amount) { throw new UnsupportedOperationException(); }

@@ -36,6 +36,10 @@ public class EtoNpc extends PathfinderMob implements UniqueBody {
 
     public EtoNpc(EntityType<? extends EtoNpc> type, Level level) {
         super(type, level);
+        // 1.3.21: she opens doors (and closes them behind her), to roam her home's rooms.
+        if (this.m_21573_() instanceof net.minecraft.world.entity.ai.navigation.GroundPathNavigation ground) {
+            ground.m_26477_(true);
+        }
     }
 
     public static AttributeSupplier.Builder attributes() {
@@ -144,6 +148,19 @@ public class EtoNpc extends PathfinderMob implements UniqueBody {
         tag.m_128405_(ORIGIN + "Z", at.m_123343_());
     }
 
+    /** 1.3.21: her home is {@code at} from now on (the home shared with her spouse), where she belongs too. */
+    public void homeAt(BlockPos at) {
+        this.follow(null);
+        CompoundTag tag = this.getPersistentData();
+        tag.m_128405_(HOME + "X", at.m_123341_());
+        tag.m_128405_(HOME + "Y", at.m_123342_());
+        tag.m_128405_(HOME + "Z", at.m_123343_());
+        tag.m_128405_(ORIGIN + "X", at.m_123341_());
+        tag.m_128405_(ORIGIN + "Y", at.m_123342_());
+        tag.m_128405_(ORIGIN + "Z", at.m_123343_());
+        this.home = at;
+    }
+
     /** 1.3.3: home again: following no one, back on her own floor, settled there. */
     @Override
     public void goHome() {
@@ -171,9 +188,16 @@ public class EtoNpc extends PathfinderMob implements UniqueBody {
         return new double[] {tag.m_128451_(HOME + "X") + 0.5, tag.m_128451_(HOME + "Y") - 1.0, tag.m_128451_(HOME + "Z") + 0.5};
     }
 
+    /** isImmobile: 1.3.21: lying asleep in her bed, she doesn't move (her own goals wait till she gets up). */
+    @Override
+    protected boolean m_6107_() {
+        return this.m_21223_() <= 0.0F || this.m_5803_();
+    }
+
     @Override
     protected void m_8099_() {
         this.f_21345_.m_25352_(0, new FloatGoal(this));
+        this.f_21345_.m_25352_(2, new net.minecraft.world.entity.ai.goal.OpenDoorGoal(this, true));
         this.f_21345_.m_25352_(4, new MoveTowardsRestrictionGoal(this, 1.0));
         this.f_21345_.m_25352_(6, new RandomStrollGoal(this, 0.6));
         this.f_21345_.m_25352_(7, new LookAtPlayerGoal(this, Player.class, 8.0F));

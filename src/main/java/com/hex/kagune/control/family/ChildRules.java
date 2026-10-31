@@ -25,10 +25,18 @@ public final class ChildRules {
     public static final int RIDE_ARMS = 0;
     public static final int RIDE_SHOULDERS = 1;
     public static final int RIDE_SPIN = 2;
+    /** 1.3.21: hand in hand, walking at their left (on its own feet; its hand in theirs). */
+    public static final int RIDE_HAND = 3;
+    public static final double HAND_SIDE = 0.62;
     public static final double SHOULDERS_UP = 1.42;
     public static final double SHOULDERS_BACK = 0.24;
     public static final double SPIN_AHEAD = 0.82;
     public static final double SPIN_UP = 1.02;
+
+    /** 1.3.21: true if a child at {@code stage} can walk hand in hand (a baby can't walk). */
+    public static boolean hand(ChildStage stage) {
+        return stage != ChildStage.BABY;
+    }
 
     /** True if a child at {@code stage} can ride on a parent's shoulders. */
     public static boolean shoulders(ChildStage stage) {
@@ -59,6 +67,38 @@ public final class ChildRules {
         }
         float base = stage == ChildStage.TEEN ? 3.0F + 1.4F * skill : 1.5F + 0.8F * skill;
         return ghoul ? base * 1.5F : base;
+    }
+
+    /**
+     * 1.3.21: the owner: "the stronger the father or the mother, the stronger the child". How strong it is born (0 a weak couple's .. 1 the
+     * strongest's), from its parents' own strength (each 0..1): the stronger parent counts most, the other still counts.
+     */
+    public static float might(float mother, float father) {
+        float strong = Math.max(mother, father);
+        float weak = Math.min(mother, father);
+        return Math.max(0.0F, Math.min(1.0F, 0.65F * strong + 0.35F * weak));
+    }
+
+    /** 1.3.21: its health at {@code stage}, born {@code might} strong (up to two and a half times a weak couple's child's). */
+    public static float health(ChildStage stage, float might) {
+        return stage.health * (1.0F + 1.5F * Math.max(0.0F, Math.min(1.0F, might)));
+    }
+
+    /** 1.3.21: what its blow deals, born {@code might} strong (up to more than twice as hard). */
+    public static float damage(ChildStage stage, int skill, boolean ghoul, float might) {
+        return damage(stage, skill, ghoul) * (1.0F + 1.25F * Math.max(0.0F, Math.min(1.0F, might)));
+    }
+
+    /**
+     * 1.3.21: how strong a player is as a parent (0..1): their kagune's mastery (out of 1000), more for a final kakuja chosen; a human with
+     * no kagune is weak.
+     */
+    public static float playerMight(boolean ghoul, int mastery, boolean finalKakuja) {
+        if (!ghoul) {
+            return 0.15F;
+        }
+        float m = 0.2F + 0.6F * Math.max(0.0F, Math.min(1.0F, mastery / 1000.0F));
+        return Math.min(1.0F, m + (finalKakuja ? 0.2F : 0.0F));
     }
 
     /** Ticks between its blows. */

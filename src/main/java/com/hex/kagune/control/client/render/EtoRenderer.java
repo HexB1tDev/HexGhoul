@@ -150,7 +150,7 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
             DRAWN_AT.put(npc.m_19879_(), now);
             return;
         }
-        boolean glued = glue(npc, view, partial, pose);
+        boolean glued = !npc.m_5803_() && glue(npc, view, partial, pose); // 1.3.21: asleep in her bed, where the bed lays her
         try {
             this.draw(npc, yaw, partial, pose, buffers, light, view);
         } finally {
@@ -235,7 +235,7 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
 
     private void draw(EtoNpc npc, float yaw, float partial, PoseStack pose, MultiBufferSource buffers, int light, EtoClient.View view) {
         double clock = PaleClient.clock(partial);
-        RigPose posed = pose(npc, view, clock, partial);
+        RigPose posed = npc.m_5803_() ? null : pose(npc, view, clock, partial); // 1.3.21: asleep: lying still
         DRAWN.put(npc.m_19879_(), posed == null ? null : new RigPose().add(posed, 1.0F));
         DRAWN_AT.put(npc.m_19879_(), clock);
         com.hex.kagune.control.client.KingClient.seen(npc); // 1.3.19: Peace's effects find him
@@ -352,7 +352,7 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
                 EtoClient.View view = EtoClient.get(npc.m_19879_());
                 double clock = PaleClient.clock(partialTick);
                 EtoGesture gesture = view == null ? EtoGesture.NONE : view.gesture();
-                boolean shut = gesture.eyesClosed || EtoRules.blink(npc.m_19879_() * 31 + 7, ageInTicks);
+                boolean shut = gesture.eyesClosed || npc.m_5803_() || EtoRules.blink(npc.m_19879_() * 31 + 7, ageInTicks);
                 float eye = EtoClient.eye(npc.m_19879_(), view, npc.m_9236_().m_46468_(), clock);
                 if (!shut && eye > 0.003F) {
                     model.m_7695_(pose, buffers.m_6299_(RenderType.m_110473_(r.kakugan)), light, OverlayTexture.f_118083_, 1.0F, 1.0F, 1.0F, eye);

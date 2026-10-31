@@ -27,6 +27,7 @@ public class ChildNpc extends PathfinderMob implements UniqueBody {
     static final String HOME = "HexChildHome";
     static final String ORIGIN = "HexChildOrigin";
     static final String FOLLOW = "HexChildFollow";
+    static final String WAIT = "HexChildWait";
 
     /** The server's state for it; null on clients and until its first tick. */
     public ChildBrain.Mind mind;
@@ -37,6 +38,16 @@ public class ChildNpc extends PathfinderMob implements UniqueBody {
     public ChildNpc(EntityType<? extends ChildNpc> type, Level level) {
         super(type, level);
         this.m_21530_();
+        // 1.3.21: it opens doors (and closes them behind it), to roam its home's rooms.
+        if (this.m_21573_() instanceof net.minecraft.world.entity.ai.navigation.GroundPathNavigation ground) {
+            ground.m_26477_(true);
+        }
+    }
+
+    /** isImmobile: 1.3.21: lying asleep in its bed, it doesn't move (its own goals wait till it gets up). */
+    @Override
+    protected boolean m_6107_() {
+        return this.m_21223_() <= 0.0F || this.m_5803_();
     }
 
     public static AttributeSupplier.Builder attributes() {
@@ -90,6 +101,27 @@ public class ChildNpc extends PathfinderMob implements UniqueBody {
         } else {
             tag.m_128362_(FOLLOW, player);
         }
+    }
+
+    /** 1.3.21: told to wait somewhere other than home (its home there until told to go home or to follow). */
+    public boolean waiting() {
+        return this.getPersistentData().m_128471_(WAIT);
+    }
+
+    public void waiting(boolean on) {
+        this.getPersistentData().m_128379_(WAIT, on);
+    }
+
+    /** 1.3.21: its home made {@code at} (its family's), where it belongs from now on too. */
+    public void homeAt(BlockPos at) {
+        CompoundTag tag = this.getPersistentData();
+        tag.m_128405_(HOME + "X", at.m_123341_());
+        tag.m_128405_(HOME + "Y", at.m_123342_());
+        tag.m_128405_(HOME + "Z", at.m_123343_());
+        tag.m_128405_(ORIGIN + "X", at.m_123341_());
+        tag.m_128405_(ORIGIN + "Y", at.m_123342_());
+        tag.m_128405_(ORIGIN + "Z", at.m_123343_());
+        this.home = at;
     }
 
     @Override
@@ -165,6 +197,7 @@ public class ChildNpc extends PathfinderMob implements UniqueBody {
     @Override
     protected void m_8099_() {
         this.f_21345_.m_25352_(0, new FloatGoal(this));
+        this.f_21345_.m_25352_(2, new net.minecraft.world.entity.ai.goal.OpenDoorGoal(this, true));
         this.f_21345_.m_25352_(4, new MoveTowardsRestrictionGoal(this, 1.0));
         this.f_21345_.m_25352_(6, new RandomStrollGoal(this, 0.55));
         this.f_21345_.m_25352_(7, new LookAtPlayerGoal(this, Player.class, 8.0F));

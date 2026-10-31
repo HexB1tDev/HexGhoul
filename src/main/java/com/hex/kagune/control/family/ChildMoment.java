@@ -29,7 +29,11 @@ public enum ChildMoment {
     /** A happy clap (a baby's, a toddler's). */
     CLAP(36, mask(ChildStage.BABY, ChildStage.TODDLER), false, true, 0.0),
     /** A flower it found, held up to them, and given. */
-    FLOWER(56, mask(ChildStage.TODDLER, ChildStage.CHILD), false, true, 0.85);
+    FLOWER(56, mask(ChildStage.TODDLER, ChildStage.CHILD), false, true, 0.85),
+    /** 1.3.21: tucked into its bed: they lean over it, smooth its covers, a hand on its head. */
+    TUCK(80, mask(ChildStage.BABY, ChildStage.TODDLER, ChildStage.CHILD, ChildStage.TEEN), false, false, 0.0),
+    /** 1.3.21: fed from their hand: it eats, munching. */
+    FEED(60, mask(ChildStage.BABY, ChildStage.TODDLER, ChildStage.CHILD, ChildStage.TEEN), false, false, 0.85);
 
     public final int ticks;
     private final int stages;
@@ -76,7 +80,7 @@ public enum ChildMoment {
     /** What a child starts on its own, near a parent, now and then. */
     public static final ChildMoment[] OWN = {ARMS_UP, WAVE, CLAP, FLOWER, HUG};
     /** What an NPC parent starts with its child on its own (not in its arms: in its arms, it tosses it). */
-    public static final ChildMoment[] NPC = {HUG, PAT, TICKLE, PEEKABOO, SPIN, HIGH_FIVE};
+    public static final ChildMoment[] NPC = {HUG, PAT, TICKLE, PEEKABOO, SPIN, HIGH_FIVE, FEED};
 
     /** The play page's words for it. */
     public String label() {

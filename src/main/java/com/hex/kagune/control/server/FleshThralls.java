@@ -92,6 +92,12 @@ public final class FleshThralls {
         }
     }
 
+    /** 1.3.21: whose {@code thrall} is (null: no one's now). */
+    public static LivingEntity owner(FleshThrall thrall) {
+        Mind mind = MINDS.get(thrall);
+        return mind == null ? null : mind.owner;
+    }
+
     /** True if {@code body} is one of {@code owner}'s (what his own blows and shields leave alone). */
     public static boolean ownedBy(LivingEntity body, LivingEntity owner) {
         if (!(body instanceof FleshThrall thrall)) {

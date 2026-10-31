@@ -135,6 +135,8 @@ final class KenScript extends CompanionScript {
                 : one(seed, "It's still light out. Read with me instead?", "Not tonight. Hold my hand?"), 0,
                 c.night() && !c.nightUsed() ? EtoTalk.Effect.NIGHT : EtoTalk.Effect.NONE);
             case PROPOSE -> new EtoTalk.Reply("", 0, EtoTalk.Effect.PROPOSE);
+            case HOME -> c.stage() == Romance.Stage.MARRIED ? new EtoTalk.Reply(one(seed, "Home. Ours. ...I didn't think I'd ever have one again.", "Then this is where I'll come back to. Every time."), 2, EtoTalk.Effect.HOME)
+                : new EtoTalk.Reply("Ours? We're not married.", 0, EtoTalk.Effect.NONE);
             case FOLLOW -> new EtoTalk.Reply(voice.together() ? one(seed, "Wherever you're going.", "Lead the way. I'll keep up.")
                 : one(seed, "Alright. I'll watch your back.", "Okay. Stay where I can see you."), 0, EtoTalk.Effect.FOLLOW);
             case STAY -> new EtoTalk.Reply(voice.together() ? one(seed, "Here? ...It's nice. I'll make it ours.", "Okay. I'll be right here. Come back.")

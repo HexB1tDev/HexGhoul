@@ -198,6 +198,9 @@ abstract class CompanionScript implements Script {
         if (c.ring() && !c.married()) {
             out.add(EtoTalk.Option.of(NpcTalk.Choice.PROPOSE));
         }
+        if (c.stage() == Romance.Stage.MARRIED) {
+            out.add(EtoTalk.Option.of(NpcTalk.Choice.HOME)); // 1.3.21
+        }
         out.add(EtoTalk.Option.of(NpcTalk.Choice.BACK));
         return new EtoTalk.Page(line, out);
     }

@@ -382,6 +382,15 @@ public final class EtoServer {
                 npc.follow(null);
                 npc.settle();
             }
+            case HOME -> {
+                // 1.3.21: their home is here (where the player stands): hers from now on, and their children's.
+                net.minecraft.core.BlockPos at = new net.minecraft.core.BlockPos((int)Math.floor(player.m_20185_()), (int)Math.floor(player.m_20186_()),
+                    (int)Math.floor(player.m_20189_()));
+                Households.Home home = Households.set(player.m_284548_(), player, at);
+                npc.homeAt(home.pos());
+                player.m_5661_(net.minecraft.network.chat.Component.m_237113_("§d\u2302 This is your home now: " + npc.displayName()
+                    + " and your children live here (about " + home.radius() + " blocks round). Beds: the double bed is your spouse's, single beds the children's."), false);
+            }
             case FORGIVE -> {
                 EtoBrain.forgive(npc, player);
                 NpcMemoryServer.of(player).forget(npc.persona().key(), NpcMemory.JEALOUS);

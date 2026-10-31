@@ -7,6 +7,7 @@ import com.hex.kagune.control.family.ChildStage;
 import com.hex.kagune.control.network.ControlNetwork;
 import com.hex.kagune.control.network.S2CChild;
 import com.hex.kagune.control.npc.ChildNpc;
+import com.hex.kagune.control.npc.EtoNpc;
 import com.hex.kagune.control.npc.UniqueNpc;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
@@ -51,6 +52,13 @@ public final class ChildBrain {
         long pendingUntil = Long.MIN_VALUE;
         /** When it may next start a moment of its own. */
         long nextOwn = Long.MIN_VALUE;
+        /** 1.3.21: when it was last hurt (it wakes), the bed it lies in (or goes to), a nap's end, who sent it to bed (to tuck it in). */
+        long hurtAt = Long.MIN_VALUE;
+        BlockPos bed;
+        long napUntil = Long.MIN_VALUE;
+        UUID tuckBy;
+        /** 1.3.21: the food it is given (eaten through its FEED moment). */
+        net.minecraft.world.item.ItemStack food;
     }
 
     private ChildBrain() {
@@ -80,6 +88,20 @@ public final class ChildBrain {
             mind.company = now;
         }
         BlockPos home = npc.home() == null ? npc.settle() : npc.home();
+        // 1.3.21: its family's home is its home (unless it follows someone, or was told to wait elsewhere): it roams all of it.
+        Households.Home house = Households.forChild(level, child);
+        if (house != null && npc.following() == null && !npc.waiting() && mind.carrier == null && !house.at(home)) {
+            npc.homeAt(house.pos());
+            home = house.pos();
+            UniqueNpcs.claim(level, key, npc.m_20148_(), home);
+        }
+        boolean atHouse = house != null && house.at(home);
+        if (npc.following() == null && mind.carrier == null) {
+            npc.m_21446_(home, atHouse ? house.radius() - 2 : 8);
+            if (atHouse && npc.m_20238_(new Vec3(home.m_123341_() + 0.5, home.m_123342_() - 1.0, home.m_123343_() + 0.5)) > Households.LOST * Households.LOST) {
+                npc.goHome(); // far beyond its home (lost, left behind): brought back
+            }
+        }
         if (now % 200L == 11L) {
             if (!UniqueNpcs.claim(level, key, npc.m_20148_(), home)) {
                 npc.m_146870_();
@@ -101,10 +123,11 @@ public final class ChildBrain {
             mind.stage = stage;
             npc.stage = stage;
             npc.m_6210_();
-            npc.m_21051_(net.minecraft.world.entity.ai.attributes.Attributes.f_22276_).m_22100_(stage.health);
-            if (npc.m_21223_() > stage.health) {
-                npc.m_21153_(stage.health);
-            }
+            // 1.3.21: as strong as its parents: their might makes its health.
+            float most = ChildRules.health(stage, Children.might(level, child));
+            npc.m_21051_(net.minecraft.world.entity.ai.attributes.Attributes.f_22276_).m_22100_(most);
+            // Grown into a new stage: its new health whole; its first tick: what it had (no more than it may).
+            npc.m_21153_(first ? Math.min(Math.max(npc.m_21223_(), 1.0F), most) : most);
             if (!stage.carried()) {
                 putDown(npc, mind);
             }
@@ -152,6 +175,8 @@ public final class ChildBrain {
                 } else if (leader != null && leader.m_9236_() == level) {
                     follow(npc, leader);
                     mind.company = now;
+                } else if (atHouse && !npc.waiting()) {
+                    toBed(npc, mind, child, house, level, now, stage);
                 }
             }
         }
@@ -174,17 +199,19 @@ public final class ChildBrain {
         double yaw = Math.toRadians(carrier.f_20883_);
         // 1.3.20: up on their shoulders (facing their way), or held out ahead at arm's length to be spun.
         double ahead = (ride == ChildRules.RIDE_SHOULDERS ? -ChildRules.SHOULDERS_BACK : ride == ChildRules.RIDE_SPIN ? ChildRules.SPIN_AHEAD
-            : ChildRules.CARRY_AHEAD) * scale;
-        double up = (ride == ChildRules.RIDE_SHOULDERS ? ChildRules.SHOULDERS_UP : ride == ChildRules.RIDE_SPIN ? ChildRules.SPIN_UP : ChildRules.CARRY_UP)
-            * scale;
-        Vec3 at = carrier.m_20182_().m_82520_(-Math.sin(yaw) * ahead, up, Math.cos(yaw) * ahead);
+            : ride == ChildRules.RIDE_HAND ? 0.0 : ChildRules.CARRY_AHEAD) * scale;
+        double up = (ride == ChildRules.RIDE_SHOULDERS ? ChildRules.SHOULDERS_UP : ride == ChildRules.RIDE_SPIN ? ChildRules.SPIN_UP
+            : ride == ChildRules.RIDE_HAND ? 0.0 : ChildRules.CARRY_UP) * scale;
+        // 1.3.21: hand in hand, at their left on its own feet.
+        double left = ride == ChildRules.RIDE_HAND ? ChildRules.HAND_SIDE * scale : 0.0;
+        Vec3 at = carrier.m_20182_().m_82520_(-Math.sin(yaw) * ahead + Math.cos(yaw) * left, up, Math.cos(yaw) * ahead + Math.sin(yaw) * left);
         npc.m_21573_().m_26573_();
         npc.m_20242_(true);
         npc.carriedBy = carrier.m_19879_();
         npc.m_6021_(at.f_82479_, at.f_82480_, at.f_82481_);
         npc.m_20256_(Vec3.f_82478_);
         npc.f_19789_ = 0.0F;
-        float facing = carrier.f_20883_ + (ride == ChildRules.RIDE_SHOULDERS ? 0.0F : 180.0F);
+        float facing = carrier.f_20883_ + (ride == ChildRules.RIDE_SHOULDERS || ride == ChildRules.RIDE_HAND ? 0.0F : 180.0F);
         npc.m_146922_(facing);
         npc.f_20883_ = facing;
         npc.f_20885_ = facing;
@@ -205,6 +232,7 @@ public final class ChildBrain {
 
     /** 1.3.20: held by {@code carrier} as {@code ride} has it (in their arms, on their shoulders, held out to spin). */
     static void pickUp(ChildNpc npc, LivingEntity carrier, int ride) {
+        HomeLife.wake(npc); // 1.3.21: picked up, it wakes
         if (npc.mind != null) {
             npc.mind.carrier = carrier.m_20148_();
             npc.mind.ride = ride;
@@ -218,6 +246,12 @@ public final class ChildBrain {
             mind.ride = ChildRules.RIDE_ARMS;
             mind.dirty = true;
             npc.settle();
+            // 1.3.21: set down away from its family's home, it waits right there (never whisked back home); at home, it lives in it.
+            if (npc.m_9236_() instanceof ServerLevel level) {
+                Households.Home house = Households.forChild(level, Children.get(level, npc.childId()));
+                boolean inside = house != null && npc.m_20238_(new Vec3(house.x() + 0.5, house.y() - 1.0, house.z() + 0.5)) <= house.radius() * house.radius();
+                npc.waiting(house != null && !inside);
+            }
         }
         npc.m_20242_(false);
         npc.carriedBy = 0;
@@ -239,6 +273,12 @@ public final class ChildBrain {
         if (mind == null || mind.stage == null || !moment.fits(mind.stage) || mind.target != 0 || busy(mind, now) || !partner.m_6084_()) {
             return false;
         }
+        if (npc.m_5803_() != (moment == ChildMoment.TUCK)) {
+            return false; // asleep, only tucked in; tucked in, only asleep
+        }
+        if (moment == ChildMoment.FEED && (mind.food == null || mind.food.m_41619_())) {
+            return false;
+        }
         boolean holds = partner.m_20148_().equals(mind.carrier);
         if (moment == ChildMoment.TOSS) {
             if (mind.carrier != null && !holds) {
@@ -257,6 +297,13 @@ public final class ChildBrain {
             putDown(npc, mind); // held, it can be patted; for the rest it is set down on its feet first
         }
         // A baby can't walk: it stays where it sits (turned to them) and they come to it.
+        if (moment == ChildMoment.TUCK && Math.sqrt(npc.m_20280_(partner)) > TUCK_NEAR) {
+            // 1.3.21: asleep, it can't walk to them: it waits for them to come up to its bed (HomeLife ticks it while it sleeps: sleeping()).
+            mind.pending = moment;
+            mind.pendingWith = partner.m_20148_();
+            mind.pendingUntil = now + 300L;
+            return true;
+        }
         if (moment.stand > 0.0 && mind.carrier == null && !mind.stage.sits()
             && Math.sqrt(npc.m_20280_(partner)) > moment.stand * ChildNpc.carrySize(partner) + 0.9) {
             mind.pending = moment;
@@ -282,11 +329,56 @@ public final class ChildBrain {
                     npc.m_217043_().m_188503_(1000)));
             }
         }
+        if (moment == ChildMoment.FEED && mind.food != null) {
+            npc.m_21008_(net.minecraft.world.InteractionHand.MAIN_HAND, mind.food);
+        }
         if (moment == ChildMoment.FLOWER) {
             // A flower in its hand to show them; given a little later (moments()).
             String[] flowers = {"minecraft:poppy", "minecraft:dandelion", "minecraft:cornflower", "minecraft:oxeye_daisy", "minecraft:azure_bluet",
                 "minecraft:allium", "minecraft:pink_tulip", "minecraft:lily_of_the_valley"};
             npc.m_21008_(net.minecraft.world.InteractionHand.MAIN_HAND, EtoBrain.stack(flowers[npc.m_217043_().m_188503_(flowers.length)]));
+        }
+    }
+
+    /** 1.3.21: how close to a sleeping child its parent must come for its tuck-in (blocks, to where it lies). */
+    static final double TUCK_NEAR = 2.6;
+
+    /** 1.3.21: a tuck-in waiting on its parent to come up to its bed (its parent walks up: an NPC parent, ParentCare). */
+    static boolean tuckPending(ChildNpc npc) {
+        return npc.mind != null && npc.mind.pending == ChildMoment.TUCK;
+    }
+
+    /**
+     * 1.3.21: each tick it lies asleep (its mind is still: its body can't move): a tuck-in waiting on its parent begun once they are close,
+     * given up if they are gone, too far, or too long.
+     */
+    static void sleeping(ChildNpc npc, ServerLevel level, long now) {
+        Mind mind = npc.mind;
+        if (mind == null) {
+            return;
+        }
+        if (mind.pending == ChildMoment.TUCK) {
+            LivingEntity partner = mind.pendingWith == null ? null : carrierOf(level, mind.pendingWith);
+            if (partner == null || !partner.m_6084_() || now > mind.pendingUntil || partner.m_20280_(npc) > 24.0 * 24.0) {
+                mind.pending = ChildMoment.NONE;
+                mind.pendingWith = null;
+            } else if (Math.sqrt(npc.m_20280_(partner)) <= TUCK_NEAR) {
+                begin(npc, mind, ChildMoment.TUCK, partner, now);
+            }
+        }
+        // Its own tick (where this is sent) is still while it sleeps: a tuck-in begun now is shown from here.
+        Children.Child child = mind.dirty ? Children.get(level, npc.childId()) : null;
+        if (child != null) {
+            mind.dirty = false;
+            ControlNetwork.broadcastAround(npc, message(npc, mind, child));
+        }
+    }
+
+    /** It got up: a tuck-in still waiting is dropped (only for one asleep). */
+    static void woke(ChildNpc npc) {
+        if (tuckPending(npc)) {
+            npc.mind.pending = ChildMoment.NONE;
+            npc.mind.pendingWith = null;
         }
     }
 
@@ -308,6 +400,9 @@ public final class ChildBrain {
 
     /** Each tick: the walk up to a moment, the moment's end; and now and then one of its own, near a parent. */
     private static void moments(ChildNpc npc, Mind mind, Children.Child child, ServerLevel level, long now, ChildStage stage) {
+        if (mind.pending == ChildMoment.TUCK && !npc.m_5803_()) {
+            woke(npc); // awake again before its parent came: no tuck-in now
+        }
         if (mind.pending != ChildMoment.NONE) {
             LivingEntity partner = mind.pendingWith == null ? null : carrierOf(level, mind.pendingWith);
             if (partner == null || !partner.m_6084_() || now > mind.pendingUntil || mind.target != 0 || partner.m_20280_(npc) > 24.0 * 24.0) {
@@ -325,10 +420,20 @@ public final class ChildBrain {
             if (was == ChildMoment.FLOWER && !npc.m_21205_().m_41619_()) {
                 gift(npc, mind.partner == null ? null : carrierOf(level, mind.partner));
             }
+            if (was == ChildMoment.FEED) {
+                fed(npc, mind);
+            }
             if (was == ChildMoment.SPIN) {
                 putDown(npc, mind); // set back down on its feet
             }
             return;
+        }
+        if (mind.moment == ChildMoment.FEED) {
+            long age = now - mind.momentAt;
+            if (age >= 8L && age <= 48L && age % 4L == 0L) {
+                UkakuFire.sound(level, npc.m_20182_().m_82520_(0.0, npc.m_20206_() * 0.8, 0.0), "entity.generic.eat", 0.5F,
+                    1.3F + 0.2F * npc.m_217043_().m_188501_());
+            }
         }
         if (mind.moment == ChildMoment.FLOWER && now - mind.momentAt >= 30L && !npc.m_21205_().m_41619_()) {
             LivingEntity to = mind.partner == null ? null : carrierOf(level, mind.partner);
@@ -342,6 +447,9 @@ public final class ChildBrain {
                 }
                 if (mind.moment == ChildMoment.FLOWER) {
                     gift(npc, null); // they went off: it keeps its flower to itself (its hand empty again)
+                }
+                if (mind.moment == ChildMoment.FEED) {
+                    fed(npc, mind); // it finishes it anyway
                 }
                 mind.moment = ChildMoment.NONE;
                 mind.dirty = true;
@@ -439,6 +547,135 @@ public final class ChildBrain {
         }
     }
 
+    // ---------------------------------------------------------------- 1.3.21: home life
+
+    /** FEED's end: the food eaten (its hand empty again), a little health back. */
+    private static void fed(ChildNpc npc, Mind mind) {
+        npc.m_21008_(net.minecraft.world.InteractionHand.MAIN_HAND, EtoBrain.stack(null));
+        mind.food = null;
+        npc.m_5634_(4.0F);
+    }
+
+    /**
+     * {@code food} given to it by {@code partner} (a parent): eaten through its FEED moment if it can eat it (a ghoul child only a ghoul's
+     * food, a human child only a human's), true; false if it won't (said so) or can't now.
+     */
+    public static boolean feed(ChildNpc npc, LivingEntity partner, net.minecraft.world.item.ItemStack food, long now) {
+        Mind mind = npc.mind;
+        if (mind == null || food == null || food.m_41619_()) {
+            return false;
+        }
+        mind.food = food;
+        if (!start(npc, ChildMoment.FEED, partner, now)) {
+            mind.food = null;
+            return false;
+        }
+        return true;
+    }
+
+    /** True if a child (a ghoul, or not) can eat {@code food}. */
+    public static boolean eats(boolean ghoul, net.minecraft.world.item.ItemStack food) {
+        if (food == null || food.m_41619_()) {
+            return false;
+        }
+        boolean meat = com.hex.kagune.control.ControlItems.ghoulMeat(food);
+        return ghoul ? meat : !meat && food.m_41614_();
+    }
+
+    /**
+     * Its night at home: to its own bed (a single bed; never the double), and lying down in it; tucked in by whoever sent it to bed (or an NPC
+     * parent near). Only from its bedtime (or a parent's "Bedtime"), never a baby on its own (it can't walk: a parent puts it to bed).
+     */
+    private static void toBed(ChildNpc npc, Mind mind, Children.Child child, Households.Home house, ServerLevel level, long now, ChildStage stage) {
+        boolean asked = mind.tuckBy != null;
+        if (stage.sits() || mind.target != 0 || busy(mind, now) || !HomeLife.night(level.m_46468_(), true) && now >= mind.napUntil && !asked) {
+            if (!HomeLife.night(level.m_46468_(), true)) {
+                mind.tuckBy = null;
+            }
+            return;
+        }
+        BlockPos bed = HomeLife.childBed(level, house, child, now);
+        if (bed == null || !HomeLife.free(level, bed)) {
+            mind.bed = null;
+            return;
+        }
+        mind.bed = bed;
+        HomeLife.toBed(npc, bed, 0.8);
+        if (npc.m_5803_()) {
+            asleep(npc, mind, child, level, now);
+        }
+    }
+
+    /** It just lay down: tucked in by whoever sent it (near), else by an NPC parent near; its line to them. */
+    private static void asleep(ChildNpc npc, Mind mind, Children.Child child, ServerLevel level, long now) {
+        LivingEntity by = mind.tuckBy == null ? null : player(level, mind.tuckBy);
+        mind.tuckBy = null;
+        if (by == null || by.m_20280_(npc) > 12.0 * 12.0) {
+            by = null;
+            for (EtoNpc parent : EtoBrain.live()) {
+                if (parent.m_9236_() == level && parent.mind != null && !parent.m_5803_() && parent.m_20280_(npc) < 12.0 * 12.0
+                    && Households.parentOf(level, parent, npc)) {
+                    by = parent;
+                    break;
+                }
+            }
+        }
+        if (by != null && start(npc, ChildMoment.TUCK, by, now)) {
+            if (by instanceof EtoNpc parent && parent.mind != null) {
+                parent.mind.momentChild = npc.m_20148_();
+            } else if (by instanceof ServerPlayer player && mind.pending == ChildMoment.TUCK && mind.stage != null && !mind.stage.sits()) {
+                say(player, child, ChildLines.tuckMe(mind.stage, ChildLines.call(mind.stage, isMother(child, player)), npc.m_217043_().m_188503_(100)));
+            }
+        }
+    }
+
+    /** "Bedtime." from a parent: off to its bed now (a baby carried or near is laid in its bed); false if it has no bed at home. */
+    public static boolean bedtime(ChildNpc npc, ServerPlayer parent, long now) {
+        Mind mind = npc.mind;
+        ServerLevel level = (ServerLevel)npc.m_9236_();
+        Children.Child child = Children.get(level, npc.childId());
+        Households.Home house = Households.forChild(level, child);
+        if (mind == null || child == null || house == null || mind.stage == null) {
+            return false;
+        }
+        BlockPos bed = HomeLife.childBed(level, house, child, now);
+        if (bed == null || !HomeLife.free(level, bed)) {
+            return false;
+        }
+        npc.follow(null);
+        npc.waiting(false);
+        npc.homeAt(house.pos());
+        mind.tuckBy = parent.m_20148_();
+        mind.napUntil = HomeLife.night(level.m_46468_(), true) ? Long.MIN_VALUE : now + 2400L;
+        if (mind.stage.sits()) {
+            // A baby can't walk: laid in its bed (from their arms, or where it sat).
+            putDown(npc, mind);
+            npc.m_6021_(bed.m_123341_() + 0.5, bed.m_123342_() + 0.6, bed.m_123343_() + 0.5);
+            mind.bed = bed;
+            npc.m_5802_(bed);
+            asleep(npc, mind, child, level, now);
+        } else {
+            putDown(npc, mind);
+        }
+        return true;
+    }
+
+    /** "Go home." from a parent: it stops following or waiting elsewhere and goes back to its family's home (walking). */
+    public static boolean goHome(ChildNpc npc, ServerLevel level) {
+        Children.Child child = Children.get(level, npc.childId());
+        Households.Home house = Households.forChild(level, child);
+        if (house == null) {
+            return false;
+        }
+        npc.follow(null);
+        npc.waiting(false);
+        npc.homeAt(house.pos());
+        if (npc.mind != null) {
+            putDown(npc, npc.mind);
+        }
+        return true;
+    }
+
     // ---------------------------------------------------------------- following
 
     private static void follow(ChildNpc npc, ServerPlayer leader) {
@@ -495,7 +732,7 @@ public final class ChildBrain {
         if (mind.lastHit == Long.MIN_VALUE || now - mind.lastHit >= ChildRules.cooldown(child.skill)) {
             mind.lastHit = now;
             npc.m_21011_(net.minecraft.world.InteractionHand.MAIN_HAND, true);
-            threat.m_6469_(npc.m_269291_().m_269333_(npc), ChildRules.damage(mind.stage, child.skill, ghoul));
+            threat.m_6469_(npc.m_269291_().m_269333_(npc), ChildRules.damage(mind.stage, child.skill, ghoul, Children.might(level, child)));
         }
     }
 
@@ -576,11 +813,23 @@ public final class ChildBrain {
         }
     }
 
-    /** A parent's blow (a swing, a kagune's sweep) never lands on their own child. */
+    /**
+     * A parent's blow (a swing, a kagune's sweep) never lands on their own child. 1.3.21: and nothing a companion does ever touches a child
+     * (the owner: a mother's attack caught her child by accident and killed it): not Eto's fists or flesh, Touka's spikes, Ken's blades or his
+     * flesh creatures, whatever they were aiming at.
+     */
     @SubscribeEvent
     public static void attacked(net.minecraftforge.event.entity.living.LivingAttackEvent event) {
-        if (event.getEntity() instanceof ChildNpc npc && event.getSource() != null && event.getSource().m_7639_() instanceof ServerPlayer player
-            && npc.m_9236_() instanceof ServerLevel level) {
+        if (!(event.getEntity() instanceof ChildNpc npc) || event.getSource() == null || !(npc.m_9236_() instanceof ServerLevel level)) {
+            return;
+        }
+        net.minecraft.world.entity.Entity by = event.getSource().m_7639_();
+        net.minecraft.world.entity.Entity direct = event.getSource().m_7640_();
+        if (companion(by) || companion(direct)) {
+            event.setCanceled(true);
+            return;
+        }
+        if (by instanceof ServerPlayer player) {
             Children.Child child = Children.get(level, npc.childId());
             if (child != null && child.parent(Pregnancies.player(player.m_20148_()))) {
                 event.setCanceled(true);
@@ -588,15 +837,28 @@ public final class ChildBrain {
         }
     }
 
+    /** 1.3.21: a companion, or something of one's (its flesh creatures): never a child's harm. */
+    static boolean companion(net.minecraft.world.entity.Entity body) {
+        if (body instanceof EtoNpc) {
+            return true;
+        }
+        return body instanceof com.hex.kagune.control.npc.FleshThrall thrall && FleshThralls.owner(thrall) instanceof EtoNpc;
+    }
+
     /** It died: the world remembers (its body comes back home a day later), its parents are told. */
     @SubscribeEvent
     public static void died(LivingDeathEvent event) {
         if (event.getEntity() instanceof ChildNpc npc && npc.m_9236_() instanceof ServerLevel level) {
-            UniqueNpcs.died(level, npc.uniqueKey(), npc.m_20148_());
             Children.Child child = Children.get(level, npc.childId());
             if (child != null) {
-                tellParents(level, child, "§c" + child.name + " was hurt badly. They'll be back home tomorrow.");
+                tellParents(level, child, "§c" + child.name + " is gone. They won't be coming back.");
             }
+            // 1.3.21: the owner: "when they die, that's it". Forgotten by the world: never remade.
+            HomeLife.wake(npc);
+            if (npc.mind != null && npc.mind.food != null) {
+                npc.mind.food = null;
+            }
+            UniqueNpcs.perished(level, npc.uniqueKey());
         }
     }
 }

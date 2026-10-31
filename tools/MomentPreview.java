@@ -50,7 +50,12 @@ public final class MomentPreview {
             new Shot("arms up: pick me up!", ChildMoment.ARMS_UP, ChildStage.TODDLER, 20, -1, 65),
             new Shot("wave (child)", ChildMoment.WAVE, ChildStage.CHILD, 14, -1, 60),
             new Shot("clap (baby)", ChildMoment.CLAP, ChildStage.BABY, 9, -1, 60),
-            new Shot("a flower for you", ChildMoment.FLOWER, ChildStage.CHILD, 20, -1, 65));
+            new Shot("a flower for you", ChildMoment.FLOWER, ChildStage.CHILD, 20, -1, 65),
+            new Shot("hand in hand (toddler)", ChildMoment.NONE, ChildStage.TODDLER, 0, ChildRules.RIDE_HAND, 20),
+            new Shot("hand in hand (child)", ChildMoment.NONE, ChildStage.CHILD, 0, ChildRules.RIDE_HAND, 20),
+            new Shot("tucked in", ChildMoment.TUCK, ChildStage.CHILD, 24, -2, 70),
+            new Shot("feeding (toddler)", ChildMoment.FEED, ChildStage.TODDLER, 12, -1, 60),
+            new Shot("feeding (teen, eating)", ChildMoment.FEED, ChildStage.TEEN, 34, -1, 60));
         int w = 300;
         int h = 340;
         int columns = 5;
@@ -93,6 +98,8 @@ public final class MomentPreview {
         RigPose parent = new RigPose();
         if (shot.ride() == ChildRules.RIDE_SHOULDERS) {
             ChildMomentPose.blend(parent, ChildMomentPose.shouldersParent(), 1.0F);
+        } else if (shot.ride() == ChildRules.RIDE_HAND) {
+            ChildMomentPose.blend(parent, ChildMomentPose.handParent(shot.stage()), 1.0F);
         } else if (shot.ride() == ChildRules.RIDE_ARMS) {
             parent.rightArmX = -0.95F;
             parent.leftArmX = -0.95F;
@@ -112,7 +119,7 @@ public final class MomentPreview {
             child.leftLegY = -0.31F;
             child.legHold = 1.0F;
         }
-        RigPose moment = shot.moment() == ChildMoment.NONE ? ChildMomentPose.ride(shot.ride(), 40.0)
+        RigPose moment = shot.moment() == ChildMoment.NONE ? ChildMomentPose.ride(shot.ride(), shot.stage(), 40.0)
             : ChildMomentPose.child(shot.moment(), shot.age(), shot.stage());
         if (moment != null) {
             ChildMomentPose.blend(child, moment, 1.0F);
@@ -124,7 +131,8 @@ public final class MomentPreview {
         PoseRender.skin = parentSkin;
         // Where the child is: facing the parent its stand away, or held (in the arms, on the shoulders, out spinning, thrown up).
         double k = height(shot.stage());
-        double sat = shot.ride() >= 0 || shot.stage().sits() ? 0.75 * k : 0.0;
+        double sat = (shot.ride() >= 0 && shot.ride() != ChildRules.RIDE_HAND) || shot.stage().sits() && shot.ride() != -2 ? 0.75 * k : 0.0;
+        boolean lying = shot.ride() == -2;
         double[] at;
         double turn;
         if (shot.ride() == ChildRules.RIDE_SHOULDERS) {
@@ -137,6 +145,12 @@ public final class MomentPreview {
         } else if (shot.ride() == ChildRules.RIDE_ARMS) {
             at = new double[] {0.0, ChildRules.CARRY_UP + ChildMoment.tossLift(shot.age()) - sat, ChildRules.CARRY_AHEAD};
             turn = Math.PI;
+        } else if (shot.ride() == ChildRules.RIDE_HAND) {
+            at = new double[] {ChildRules.HAND_SIDE, 0.0, 0.0};
+            turn = 0.0;
+        } else if (lying) {
+            at = new double[] {-k, 0.58, 0.95};
+            turn = 0.0;
         } else {
             double stand = shot.moment().stand > 0.0 ? shot.moment().stand : 1.1;
             at = new double[] {0.0, -sat, stand};
@@ -152,10 +166,18 @@ public final class MomentPreview {
                 double x = q[0] * k;
                 double y = q[1] * k;
                 double z = q[2] * k;
+                if (lying) {
+                    // On its back in bed across in front of them (they stand at its bedside): head to their left, face up.
+                    double lx = y;
+                    y = z;
+                    z = x;
+                    x = lx;
+                }
                 v[i] = new double[] {x * cos + z * sin + at[0], y + at[1], -x * sin + z * cos + at[2]};
             }
             double[] n = t.n();
-            double[] nn = n == null ? null : new double[] {n[0] * cos + n[2] * sin, n[1], -n[0] * sin + n[2] * cos};
+            double[] m = n == null ? null : lying ? new double[] {n[1], n[2], n[0]} : n;
+            double[] nn = m == null ? null : new double[] {m[0] * cos + m[2] * sin, m[1], -m[0] * sin + m[2] * cos};
             placed.add(new PoseRender.Tri(v, t.rgb(), nn));
         }
         return PoseRender.render(parent, PoseRender.orbit(shot.camYaw(), 12.0, 4.6, 0.95), w, h, placed);

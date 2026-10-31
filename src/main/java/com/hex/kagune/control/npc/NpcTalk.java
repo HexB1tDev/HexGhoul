@@ -49,7 +49,9 @@ public final class NpcTalk {
         TRIAL("I'm ready. Make me one-eyed."),
         TEASE("Tease her."),
         LETTER("I wrote you something. (give the written book)"),
-        BACK("Back.");
+        BACK("Back."),
+        // 1.3.21: to a spouse: the home they share (sent by ordinal: new ones at the end).
+        HOME("This is our home now.");
 
         /** The reply slots, in order. */
         public static final Choice[] SAYS = {SAY_1, SAY_2, SAY_3, SAY_4, SAY_5, SAY_6, SAY_7, SAY_8};
@@ -170,7 +172,7 @@ public final class NpcTalk {
             case LEAVE -> new Reply("", 0, Effect.CLOSE);
             // 1.3.0: Eto's alone (EtoTalk); never offered by a ghoul NPC.
             case BOOK, FLOWER, LESSON, ASK_OUT, KISS, HUG, SURGERY, SAY_1, SAY_2, SAY_3, SAY_4, SAY_5, SAY_6, SAY_7, SAY_8, SWEET, PUPPY, PROPOSE,
-                NIGHT, TRIAL, TEASE, LETTER, BACK -> new Reply("", 0, Effect.CLOSE);
+                NIGHT, TRIAL, TEASE, LETTER, BACK, HOME -> new Reply("", 0, Effect.CLOSE);
         };
     }
 

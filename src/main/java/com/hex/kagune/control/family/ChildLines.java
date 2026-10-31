@@ -131,9 +131,50 @@ public final class ChildLines {
             case WAVE -> teen ? pick(seed, "*nods at you*", "Hey.") : pick(seed, "Hi " + parent + "! *waves*", "*waves with its whole arm*");
             case CLAP -> baby ? pick(seed, "*claps its tiny hands*", "*bounces and claps*") : pick(seed, "Yay! *claps*", "*claps and laughs*");
             case FLOWER -> pick(seed, "I found this for you! It's the prettiest one.", parent + ", look! A flower! It's yours.", "*holds out a flower, very proud*");
+            case TUCK -> baby ? pick(seed, "*yawns a tiny yawn*", "*sighs and curls up*") : teen ? pick(seed, "Night, " + parent + ". ...Thanks.", "I'm too old for this. ...Stay a bit?")
+                : pick(seed, "Night night, " + parent + ".", "Will you check for monsters? ...Okay. Night.", "*yawns* Love you, " + parent + ".");
+            case FEED -> baby ? pick(seed, "*munches happily*", "*grabs at the food, gurgling*") : pick(seed, "Yummy! Thank you, " + parent + "!", "*munch munch* So good!",
+                "Mmm! Can I have another?");
             default -> "";
         };
     }
+
+    /** 1.3.21: a ghoul child given human food, or a human child given a ghoul's: it won't. */
+    public static String wontEat(ChildStage stage, boolean ghoul, int seed) {
+        if (stage == ChildStage.BABY) {
+            return "*turns its face away and fusses*";
+        }
+        return ghoul ? pick(seed, "Bleh! It tastes like dirt... I want the other kind.", "*spits it out* That's yucky! You know I can't eat that.")
+            : pick(seed, "Ew! That's... meat? I don't like that kind.", "*makes a face* No thank you.");
+    }
+
+    /** 1.3.21: bedtime, asked (it goes off to bed), and when it has no bed of its own at home. */
+    public static String bedtime(ChildStage stage, int seed) {
+        return stage == ChildStage.TEEN ? pick(seed, "Ugh, fine. ...Night.", "It's not even late. ...Okay.") : pick(seed, "Five more minutes? ...Okay.", "*yawns* Okay, " +
+            "I'm going.", "Will you tuck me in?");
+    }
+
+    /** 1.3.21: in bed, calling for its parent to come tuck it in. */
+    public static String tuckMe(ChildStage stage, String parent, int seed) {
+        return stage == ChildStage.TEEN ? pick(seed, "...You can say goodnight, " + parent + ". If you want.", "Night, " + parent + "? ...You coming?")
+            : pick(seed, parent + "! Come tuck me in!", "I'm in bed, " + parent + "! Tuck me in?", parent + "? Are you coming to say night night?");
+    }
+
+    public static String noBed(ChildStage stage, int seed) {
+        return stage == ChildStage.TEEN ? "I don't have a bed here. ...I'll crash wherever." : pick(seed, "But I don't have a bed...", "Where do I sleep?");
+    }
+
+    /** 1.3.21: walking hand in hand, and let go of. */
+    public static String hand(ChildStage stage, int seed) {
+        return stage == ChildStage.TEEN ? pick(seed, "In public? ...Fine. Don't tell anyone.", "*takes your hand, grumbling, and doesn't let go*")
+            : pick(seed, "*grabs your hand tight*", "Hand! Let's go!", "*swings your hand happily*");
+    }
+
+    /** It is gone home (told to). */
+    public static String home(ChildStage stage, int seed) {
+        return stage == ChildStage.TEEN ? "Heading home. See you there." : pick(seed, "Going home! Race you!", "Okay! Home!");
+    }
+
 
     static String pick(int seed, String... lines) {
         return lines[Math.floorMod(seed, lines.length)];

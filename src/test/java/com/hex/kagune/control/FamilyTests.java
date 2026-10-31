@@ -37,6 +37,8 @@ public final class FamilyTests {
         looks();
         ownerSkins();
         moments();
+        home();
+        might();
         reactions();
         initiative();
         if (!FAILURES.isEmpty()) {
@@ -394,7 +396,8 @@ public final class FamilyTests {
                     com.hex.kagune.control.client.animation.RigPose into = new com.hex.kagune.control.client.animation.RigPose();
                     com.hex.kagune.control.client.animation.ChildMomentPose.blend(into, parent, 0.7F);
                     com.hex.kagune.control.client.animation.ChildMomentPose.blend(into, child, 0.4F);
-                    finite &= child != null && ok(parent) && ok(npc) && ok(child) && ok(into);
+                    boolean asleep = m == com.hex.kagune.control.family.ChildMoment.TUCK; // tucked in, it lies as the game lays it (no pose)
+                    finite &= (child != null || asleep) && ok(parent) && ok(npc) && (asleep || ok(child)) && ok(into);
                     // An NPC parent's model bends no knees: it never sinks into the ground crouching.
                     finite &= npc.drop <= 1.0F;
                 }
@@ -405,6 +408,72 @@ public final class FamilyTests {
         com.hex.kagune.control.client.animation.RigPose shoulders = com.hex.kagune.control.client.animation.ChildMomentPose.shouldersChild(10.0);
         check(shoulders.legHold > 0.0F && shoulders.rightLegX < -0.5F && ok(com.hex.kagune.control.client.animation.ChildMomentPose.shouldersParent()),
             "on the shoulders, its legs down the front, their hands up holding them");
+    }
+
+    /** 1.3.21: a family's home: when each goes to bed, and whose bed is whose (the double bed the spouse's, single beds the children's). */
+    static void home() {
+        check(!com.hex.kagune.control.family.HomeRules.night(6000L, true) && com.hex.kagune.control.family.HomeRules.night(13000L, true)
+            && !com.hex.kagune.control.family.HomeRules.night(13000L, false) && com.hex.kagune.control.family.HomeRules.night(14000L, false)
+            && !com.hex.kagune.control.family.HomeRules.night(23500L, true) && com.hex.kagune.control.family.HomeRules.night(24000L * 3 + 18000L, false),
+            "children go to bed first, their parent after; everyone is up by morning, whatever the day");
+        check(com.hex.kagune.control.family.HomeRules.bedBlock("Block{minecraft:red_bed}") && !com.hex.kagune.control.family.HomeRules.bedBlock("Block{minecraft:bedrock}")
+            && com.hex.kagune.control.family.HomeRules.facing("Block{minecraft:red_bed}[facing=east,occupied=false,part=head]") == 1
+            && com.hex.kagune.control.family.HomeRules.head("Block{minecraft:red_bed}[facing=east,occupied=false,part=head]")
+            && !com.hex.kagune.control.family.HomeRules.head("Block{minecraft:red_bed}[facing=east,occupied=false,part=foot]")
+            && com.hex.kagune.control.family.HomeRules.occupied("Block{minecraft:red_bed}[facing=east,occupied=true,part=head]"),
+            "a bed, which way it faces, its head and whether someone lies in it, read off its state");
+        java.util.List<com.hex.kagune.control.family.HomeRules.Head> heads = new java.util.ArrayList<>();
+        // A double bed facing north (two heads side by side along x), a single facing east, and three in a row facing south.
+        heads.add(new com.hex.kagune.control.family.HomeRules.Head(0, 64, 0, 0));
+        heads.add(new com.hex.kagune.control.family.HomeRules.Head(1, 64, 0, 0));
+        heads.add(new com.hex.kagune.control.family.HomeRules.Head(5, 64, 5, 1));
+        heads.add(new com.hex.kagune.control.family.HomeRules.Head(10, 64, 0, 2));
+        heads.add(new com.hex.kagune.control.family.HomeRules.Head(11, 64, 0, 2));
+        heads.add(new com.hex.kagune.control.family.HomeRules.Head(12, 64, 0, 2));
+        // Side by side but facing different ways: two singles, never a double.
+        heads.add(new com.hex.kagune.control.family.HomeRules.Head(0, 64, 8, 0));
+        heads.add(new com.hex.kagune.control.family.HomeRules.Head(1, 64, 8, 2));
+        com.hex.kagune.control.family.HomeRules.Plan plan = com.hex.kagune.control.family.HomeRules.pair(heads, 0, 65, 0);
+        check(plan.doubles().size() == 2 && plan.singles().size() == 4, "two heads side by side facing the same way are a double bed; the rest single ("
+            + plan.doubles().size() + " doubles, " + plan.singles().size() + " singles)");
+        boolean noDoubleForKids = true;
+        java.util.Set<String> given = new java.util.HashSet<>();
+        for (int i = 0; i < 6; i++) {
+            com.hex.kagune.control.family.HomeRules.Head bed = com.hex.kagune.control.family.HomeRules.childBed(plan, i);
+            if (bed == null) {
+                continue;
+            }
+            for (com.hex.kagune.control.family.HomeRules.Bed d : plan.doubles()) {
+                noDoubleForKids &= !bed.equals(d.head()) && !bed.equals(d.pair());
+            }
+            noDoubleForKids &= given.add(bed.x() + "," + bed.y() + "," + bed.z());
+        }
+        check(noDoubleForKids && com.hex.kagune.control.family.HomeRules.childBed(plan, 4) == null,
+            "each child its own single bed (never the double bed), and none for a child past the last bed");
+        check(plan.doubles().get(0).head().x() <= 1, "the double bed nearest home first");
+    }
+
+    /** 1.3.21: the stronger its parents, the stronger the child: more health, harder blows. */
+    static void might() {
+        float weak = com.hex.kagune.control.family.ChildRules.might(0.15F, 0.15F);
+        float strong = com.hex.kagune.control.family.ChildRules.might(1.0F, 0.95F);
+        float mixed = com.hex.kagune.control.family.ChildRules.might(1.0F, 0.15F);
+        check(weak < mixed && mixed < strong && strong <= 1.0F && weak >= 0.0F, "the stronger the parents, the stronger the child");
+        check(com.hex.kagune.control.family.ChildRules.might(0.2F, 0.9F) == com.hex.kagune.control.family.ChildRules.might(0.9F, 0.2F),
+            "a mother's strength counts as a father's");
+        for (com.hex.kagune.control.family.ChildStage stage : com.hex.kagune.control.family.ChildStage.values()) {
+            check(com.hex.kagune.control.family.ChildRules.health(stage, strong) > com.hex.kagune.control.family.ChildRules.health(stage, weak)
+                && com.hex.kagune.control.family.ChildRules.health(stage, 0.0F) == stage.health, "a strong couple's " + stage + " has more health");
+        }
+        check(com.hex.kagune.control.family.ChildRules.damage(com.hex.kagune.control.family.ChildStage.TEEN, 3, true, strong)
+            > com.hex.kagune.control.family.ChildRules.damage(com.hex.kagune.control.family.ChildStage.TEEN, 3, true, weak)
+            && com.hex.kagune.control.family.ChildRules.damage(com.hex.kagune.control.family.ChildStage.BABY, 0, true, 1.0F) == 0.0F,
+            "a strong couple's child hits harder (a baby still doesn't hit)");
+        check(com.hex.kagune.control.family.ChildRules.playerMight(false, 1000, true) < com.hex.kagune.control.family.ChildRules.playerMight(true, 100, false)
+            && com.hex.kagune.control.family.ChildRules.playerMight(true, 1000, false) < com.hex.kagune.control.family.ChildRules.playerMight(true, 1000, true)
+            && com.hex.kagune.control.family.ChildRules.playerMight(true, 1000, true) <= 1.0F, "a player's might: a ghoul by mastery, more with a final kakuja");
+        check(com.hex.kagune.control.npc.Persona.KEN.might() > com.hex.kagune.control.npc.Persona.ETO.might()
+            && com.hex.kagune.control.npc.Persona.ETO.might() > com.hex.kagune.control.npc.Persona.TOUKA.might(), "Ken's children strongest, then Eto's, then Touka's");
     }
 
     private static boolean ok(com.hex.kagune.control.client.animation.RigPose p) {

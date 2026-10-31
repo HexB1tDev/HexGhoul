@@ -49,6 +49,11 @@ public final class ChildTalk {
             || npc.mind == null) {
             return;
         }
+        if (npc.m_5803_()) {
+            // 1.3.21: fast asleep in its bed: not woken by a word (hurt, picked up, or the morning wakes it); a parent can tuck it in.
+            asleep(player, npc, "*fast asleep, breathing softly*", null);
+            return;
+        }
         if (player.m_6047_() && player.m_20148_().equals(npc.mind.carrier)) {
             ChildBrain.putDown(npc, npc.mind);
             Children.Child child = Children.get(player.m_284548_(), npc.childId());
@@ -108,6 +113,21 @@ public final class ChildTalk {
                 boolean following = player.m_20148_().equals(npc.following());
                 add(keys, labels, following ? "stay" : "follow", following ? "Wait here." : "Follow me.");
             }
+            // 1.3.21: hand in hand; fed; to bed; home.
+            boolean handed = carrying && npc.mind.ride == com.hex.kagune.control.family.ChildRules.RIDE_HAND;
+            if (com.hex.kagune.control.family.ChildRules.hand(stage) && (!carrying || handed)) {
+                add(keys, labels, handed ? "down" : "hand", handed ? "Let go." : "Hold my hand.");
+            }
+            if (!player.m_21205_().m_41619_() && (player.m_21205_().m_41614_() || com.hex.kagune.control.ControlItems.ghoulMeat(player.m_21205_()))) {
+                add(keys, labels, "feed", "Here, eat this. (the food in your hand)");
+            }
+            Households.Home house = Households.forChild(level, child);
+            if (house != null && HomeLife.night(level.m_46468_(), true) && !npc.m_5803_()) {
+                add(keys, labels, "bed", "Bedtime.");
+            }
+            if (house != null && (npc.following() != null || npc.waiting()) && !house.at(npc.home())) {
+                add(keys, labels, "home", "Go home.");
+            }
         } else {
             add(keys, labels, "hi", "Hello there.");
         }
@@ -122,6 +142,27 @@ public final class ChildTalk {
         shown[keys.size()] = "";
         String said = line != null ? line : parent ? ChildLines.greet(stage, call, seed) : stage == ChildStage.BABY ? "*stares at you*" : "...Hi.";
         ControlNetwork.sendTo(player, new S2CNpcTalk(npc.m_19879_(), child.name, title(child, stage, player), parent ? 100 : 30, parent, -1, said, choices, shown));
+    }
+
+    /**
+     * 1.3.21: the page of a child asleep in its bed: only its parents may tuck it in ({@code queued}: chosen, done once the talk closes,
+     * the page then only its goodbye).
+     */
+    private static void asleep(ServerPlayer player, ChildNpc npc, String line, com.hex.kagune.control.family.ChildMoment queued) {
+        ServerLevel level = player.m_284548_();
+        Children.Child child = Children.get(level, npc.childId());
+        if (child == null) {
+            return;
+        }
+        List<String> keys = new ArrayList<>();
+        if (queued == null && child.parent(Pregnancies.player(player.m_20148_())) && !ChildBrain.busy(npc.mind, level.m_46467_())) {
+            keys.add("tuck");
+        }
+        TALKS.put(player.m_20148_(), new Talk(npc.m_19879_(), keys, queued));
+        int[] choices = keys.isEmpty() ? new int[] {NpcTalk.Choice.LEAVE.ordinal()}
+            : new int[] {NpcTalk.Choice.SAYS[0].ordinal(), NpcTalk.Choice.LEAVE.ordinal()};
+        String[] shown = keys.isEmpty() ? new String[] {""} : new String[] {"*tuck them in*", ""};
+        ControlNetwork.sendTo(player, new S2CNpcTalk(npc.m_19879_(), child.name, "Asleep", 100, true, -1, line, choices, shown));
     }
 
     private static void add(List<String> keys, List<String> labels, String key, String label) {
@@ -155,8 +196,16 @@ public final class ChildTalk {
         if (choice == NpcTalk.Choice.LEAVE || !(level.m_6815_(npcId) instanceof ChildNpc npc) || npc.mind == null || npc.m_20280_(player) > 8.0 * 8.0) {
             TALKS.remove(player.m_20148_());
             // 1.3.20: a moment chosen begins now the talk is closed.
-            if (talk.queued() != null && level.m_6815_(npcId) instanceof ChildNpc chosen && chosen.mind != null && chosen.m_20280_(player) <= 12.0 * 12.0) {
-                ChildBrain.start(chosen, talk.queued(), player, level.m_46467_());
+            if (talk.queued() != null && level.m_6815_(npcId) instanceof ChildNpc chosen && chosen.mind != null) {
+                boolean began = chosen.m_20280_(player) <= 12.0 * 12.0 && ChildBrain.start(chosen, talk.queued(), player, level.m_46467_());
+                if (!began && talk.queued() == com.hex.kagune.control.family.ChildMoment.FEED && chosen.mind.food != null) {
+                    // It couldn't eat it now: the food back in their hands.
+                    net.minecraft.world.item.ItemStack back = chosen.mind.food;
+                    chosen.mind.food = null;
+                    if (!player.m_36356_(back)) {
+                        player.m_36176_(back, false);
+                    }
+                }
             }
             return;
         }
@@ -171,6 +220,19 @@ public final class ChildTalk {
         }
         Children.Child child = Children.get(level, npc.childId());
         if (index < 0 || index >= talk.keys().size() || child == null) {
+            return;
+        }
+        if ("tuck".equals(talk.keys().get(index))) {
+            // Asleep: the covers smoothed once the talk closes (awake again meanwhile: its own page).
+            if (npc.m_5803_()) {
+                asleep(player, npc, "*stirs, mumbling, and snuggles in*", com.hex.kagune.control.family.ChildMoment.TUCK);
+            } else {
+                open(player, npc, null);
+            }
+            return;
+        }
+        if (npc.m_5803_()) {
+            asleep(player, npc, "*fast asleep, breathing softly*", null); // it fell asleep while they talked
             return;
         }
         long now = level.m_46467_();
@@ -211,13 +273,40 @@ public final class ChildTalk {
             }
             case "follow" -> {
                 npc.follow(player.m_20148_());
+                npc.waiting(false);
                 reply = ChildLines.follow(stage, seed);
             }
             case "stay" -> {
                 npc.follow(null);
                 npc.settle();
+                npc.waiting(true); // 1.3.21: waits there, not at home, till told
                 reply = ChildLines.stay(stage, seed);
             }
+            case "hand" -> {
+                ChildBrain.pickUp(npc, player, com.hex.kagune.control.family.ChildRules.RIDE_HAND);
+                reply = ChildLines.hand(stage, seed);
+            }
+            case "feed" -> {
+                net.minecraft.world.item.ItemStack held = player.m_21205_();
+                boolean ghoul = child.genome().ghoul();
+                if (held.m_41619_()) {
+                    reply = "*looks at your empty hand*";
+                } else if (!ChildBrain.eats(ghoul, held)) {
+                    reply = ChildLines.wontEat(stage, ghoul, seed);
+                } else {
+                    // Taken now; eaten once the talk closes (so it is seen), given back if it can't be.
+                    net.minecraft.world.item.ItemStack one = new net.minecraft.world.item.ItemStack(held.m_41720_(), 1);
+                    if (!player.m_7500_()) {
+                        held.m_41774_(1);
+                    }
+                    npc.mind.food = one;
+                    open(player, npc, stage == ChildStage.BABY ? "*opens its mouth wide*" : "Ooh! For me?", false,
+                        com.hex.kagune.control.family.ChildMoment.FEED);
+                    return;
+                }
+            }
+            case "bed" -> reply = ChildBrain.bedtime(npc, player, now) ? ChildLines.bedtime(stage, seed) : ChildLines.noBed(stage, seed);
+            case "home" -> reply = ChildBrain.goHome(npc, level) ? ChildLines.home(stage, seed) : "Home? Where's home?";
             case "talk" -> reply = ChildLines.idle(stage, ChildLines.call(stage, ChildBrain.isMother(child, player)), seed);
             default -> {
                 String key = talk.keys().get(index);

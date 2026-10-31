@@ -137,6 +137,8 @@ public final class EtoBrain {
         /** 1.3.20: the child it is having a moment with (a hug, a toss...), and when it may start another. */
         UUID momentChild;
         long nextMoment;
+        /** 1.3.21: the bed it lies in (or is on its way to), at home; null: none tonight. */
+        BlockPos bed;
         /** 1.3.14: the partner she is coming to for the night they asked for a baby (null none), and when she may next try. */
         UUID babyNight;
         long nextBabyNight;
@@ -144,6 +146,11 @@ public final class EtoBrain {
 
     /** Every Eto ticking on this server (one, unless another has yet to be sent away). */
     private static final Set<EtoNpc> LIVE = Collections.newSetFromMap(new WeakHashMap<>());
+
+    /** 1.3.21: every companion's body ticking now (a copy). */
+    static java.util.List<EtoNpc> live() {
+        return new java.util.ArrayList<>(LIVE);
+    }
 
     private EtoBrain() {
     }
@@ -228,7 +235,11 @@ public final class EtoBrain {
         }
         double[] feet = npc.homeFeet();
         Vec3 homeAt = new Vec3(feet[0], feet[1], feet[2]);
-        if (npc.m_20238_(homeAt) > EtoRules.LOST * EtoRules.LOST && !EtoOwl.carried(mind.owl)) {
+        // 1.3.21: at the home shared with their spouse, she roams all of it, walks back on her own when she strays (her restriction), and is
+        // brought back only from far beyond it.
+        Households.Home house = npc.following() == null ? Households.forCompanion(level, npc) : null;
+        double lost = house != null ? Households.LOST : EtoRules.LOST;
+        if (npc.m_20238_(homeAt) > lost * lost && !EtoOwl.carried(mind.owl)) {
             npc.m_6021_(homeAt.f_82479_, homeAt.f_82480_, homeAt.f_82481_);
             npc.m_21573_().m_26573_();
             mind.target = 0;
@@ -239,7 +250,7 @@ public final class EtoBrain {
         // 1.3.19: her wings' spikes in flight, and the wings going back in once the fight is long over (Touka's).
         NpcWings.tick(npc, mind, level, now);
         // Her partner about, she may wander as far as her leash to be near them.
-        npc.m_21446_(home, target != null || mind.partnerNear ? EtoRules.LEASH : EtoRules.HOME_RADIUS);
+        npc.m_21446_(home, house != null ? house.radius() : target != null || mind.partnerNear ? EtoRules.LEASH : EtoRules.HOME_RADIUS);
         boolean turned = target != null;
         if (turned != mind.turned) {
             mind.turned = turned;
@@ -260,7 +271,10 @@ public final class EtoBrain {
             if (mind.phase != EtoRules.Phase.CALM && now - mind.foughtAt > 60L) {
                 mind.phase = EtoRules.Phase.CALM;
             }
-            calm(npc, mind, level, now);
+            // 1.3.21: at night at home, to her bed (the double bed's free half); else her calm.
+            if (!toBed(npc, mind, house, level, now)) {
+                calm(npc, mind, level, now);
+            }
             heal(npc, mind, now);
         }
         // 1.3.6: her Watch This tentacles hunt on their own, whatever she is doing, until their ten seconds are up.
@@ -371,6 +385,47 @@ public final class EtoBrain {
         }
         return body.m_19879_() == mind.target || body instanceof Enemy || npc.m_21188_() == body || body instanceof net.minecraft.world.entity.Mob mob
             && mob.m_5448_() == npc;
+    }
+
+    /**
+     * 1.3.21: her night at the home she shares with her spouse: to the double bed (its free half; theirs is the other), lying down in it.
+     * Not while she is with someone (a hand, a kiss, a hug, a child in her arms or a moment with one, a talk). True while it has her.
+     */
+    private static boolean toBed(EtoNpc npc, Mind mind, Households.Home house, ServerLevel level, long now) {
+        if (house == null || !HomeLife.night(level.m_46468_(), false) || mind.holding != null || mind.kiss != null || mind.toward != null
+            || mind.cradling != null || mind.momentChild != null || mind.talking != null || mind.with != 0) {
+            mind.bed = null;
+            return false;
+        }
+        if (mind.bed == null || !HomeLife.free(level, mind.bed)) {
+            mind.bed = HomeLife.spouseBed(level, house, now);
+        }
+        if (mind.bed == null) {
+            return false;
+        }
+        if (mind.gesture != EtoGesture.NONE) {
+            gesture(mind, EtoGesture.NONE, now);
+        }
+        HomeLife.toBed(npc, mind.bed, 0.75);
+        if (npc.m_5803_()) {
+            ServerPlayer partner = player(level, mind.partner);
+            if (partner != null && partner.m_20280_(npc) < 16.0 * 16.0) {
+                String line = switch (npc.persona().key()) {
+                    case "touka" -> "*gets into bed and pulls the covers up* ...You coming or what?";
+                    case "ken" -> "*lies down on his side of the bed* I kept your side warm.";
+                    default -> "*curls up on her side of the bed* Come to bed, love. Don't make me wait.";
+                };
+                say(npc, partner, line);
+            }
+            mind.dirty = true;
+        }
+        return true;
+    }
+
+    /** 1.3.21: the player this companion is married to (null: none). */
+    public static UUID spouse(EtoNpc npc) {
+        Mind mind = npc.mind;
+        return mind != null && mind.stage == Romance.Stage.MARRIED ? mind.partner : null;
     }
 
     /** Something to fight: a hostile within reach of her, a player she holds a grudge against or who is her enemy, near her home. */
@@ -522,6 +577,9 @@ public final class EtoBrain {
 
     /** 1.3.15: one of her children hurt: whoever did it is hers, now, wherever she can see them (a parent's partner never hurts it). */
     private static void childHurt(com.hex.kagune.control.npc.ChildNpc child, DamageSource source) {
+        if (child.mind != null && child.m_9236_() instanceof ServerLevel hurtIn) {
+            child.mind.hurtAt = hurtIn.m_46467_(); // 1.3.21: it wakes
+        }
         if (!(source.m_7639_() instanceof LivingEntity attacker) || attacker instanceof EtoNpc || !(child.m_9236_() instanceof ServerLevel level)) {
             return;
         }

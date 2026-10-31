@@ -37,8 +37,8 @@ final class ParentCare {
     static java.util.List<ChildNpc> children(EtoNpc npc, ServerLevel level) {
         String key = Pregnancies.npc(npc.persona().key());
         return level.m_6443_(ChildNpc.class, npc.m_20191_().m_82400_(LOOKS), child -> {
-            if (!child.m_6084_() || child.stage == ChildStage.TEEN) {
-                return false;
+            if (!child.m_6084_() || child.stage == ChildStage.TEEN || child.m_5803_()) {
+                return false; // 1.3.21: a sleeping child is left to sleep
             }
             Children.Child known = Children.get(level, child.childId());
             return known != null && known.parent(key);
@@ -103,9 +103,11 @@ final class ParentCare {
             mind.momentChild = null;
             return false;
         }
+        // 1.3.21: to a sleeping child's bedside (its tuck-in waits on it to come up close), else a few steps off it.
+        double near = !child.m_5803_() ? 3.0 : ChildBrain.tuckPending(child) ? 1.6 : ChildBrain.TUCK_NEAR;
         if (ChildBrain.carried(child)) {
             npc.m_21573_().m_26573_(); // in its arms (a toss, a spin): it stands where it is
-        } else if (child.m_20280_(npc) > 3.0 * 3.0) {
+        } else if (child.m_20280_(npc) > near * near) {
             npc.m_21573_().m_5624_(child, 0.8);
         } else {
             npc.m_21573_().m_26573_();
@@ -117,7 +119,18 @@ final class ParentCare {
     /** 1.3.20: {@code moment} with {@code child} begun by it (a line to its partner, near); true if it began. */
     private static boolean startMoment(EtoNpc npc, EtoBrain.Mind mind, ChildNpc child, com.hex.kagune.control.family.ChildMoment moment, ServerLevel level,
                                        ServerPlayer partner, long now) {
-        if (!ChildBrain.start(child, moment, npc, now)) {
+        boolean began;
+        if (moment == com.hex.kagune.control.family.ChildMoment.FEED) {
+            // 1.3.21: something to eat for it: a ghoul child a ghoul's food, a human child bread or an apple.
+            Children.Child known = Children.get(level, child.childId());
+            boolean ghoul = known != null && known.genome().ghoul();
+            net.minecraft.world.item.ItemStack food = ghoul ? new net.minecraft.world.item.ItemStack(com.hex.kagune.control.ControlItems.GHOUL_MEAT.get(), 1)
+                : EtoBrain.stack(npc.m_217043_().m_188499_() ? "minecraft:bread" : "minecraft:apple");
+            began = ChildBrain.feed(child, npc, food, now);
+        } else {
+            began = ChildBrain.start(child, moment, npc, now);
+        }
+        if (!began) {
             return false;
         }
         mind.momentChild = child.m_20148_();
@@ -134,6 +147,7 @@ final class ParentCare {
                 case SPIN -> "*swings " + name + " round and round*";
                 case HIGH_FIVE -> "*high-fives " + name + "*";
                 case TOSS -> "*tosses " + name + " up and catches them*";
+                case FEED -> "*feeds " + name + " a bite, wiping " + "their mouth after*";
                 default -> "";
             };
             if (!line.isEmpty()) {

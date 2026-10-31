@@ -1,5 +1,11 @@
 package com.hex.kagune.control.server;
 
+import com.hex.kagune.control.king.KingForm;
+
+import com.hex.kagune.control.npc.Persona;
+
+import com.hex.kagune.control.family.ChildRules;
+
 import com.hex.kagune.control.ControlEntities;
 import com.hex.kagune.control.family.ChildStage;
 import com.hex.kagune.control.family.Genome;
@@ -36,6 +42,8 @@ public final class Children {
         public long born;
         public int skill;
         public long lesson = Long.MIN_VALUE;
+        /** 1.3.21: how strong it was born (0..1, ChildRules.might); -1 not known yet (a child from before: worked out when it next thinks). */
+        public float might = -1.0F;
 
         public Genome genome() {
             Genome g = Genome.load(this.genome);
@@ -54,12 +62,12 @@ public final class Children {
 
         String save() {
             return String.join("\t", this.id, this.name, this.genome, this.mother, this.motherName, this.father, this.fatherName, Long.toString(this.born),
-                Integer.toString(this.skill), Long.toString(this.lesson));
+                Integer.toString(this.skill), Long.toString(this.lesson), Float.toString(this.might));
         }
 
         static Child load(String line) {
             String[] p = line.split("\t", -1);
-            if (p.length != 10) {
+            if (p.length != 10 && p.length != 11) {
                 return null;
             }
             Child c = new Child();
@@ -74,6 +82,7 @@ public final class Children {
                 c.born = Long.parseLong(p[7]);
                 c.skill = Integer.parseInt(p[8]);
                 c.lesson = Long.parseLong(p[9]);
+                c.might = p.length > 10 ? Float.parseFloat(p[10]) : -1.0F;
             } catch (NumberFormatException bad) {
                 return null;
             }
@@ -121,10 +130,24 @@ public final class Children {
                 child.setChild(key.substring("child:".length()));
             }
         });
+        // 1.3.21: the owner: "when they die, that's it". A child dead (now, or before this) never comes back.
+        UniqueNpcs.mortal("child:", (level, key) -> remove(level, key.substring("child:".length())));
     }
 
     private static Data data(ServerLevel level) {
         return UniqueNpcs.overworld(level).m_8895_().m_164861_(Data::load, () -> new Data(new LinkedHashMap<>()), NAME);
+    }
+
+    /** 1.3.21: every child the world knows (a copy). */
+    public static List<Child> all(ServerLevel level) {
+        return new ArrayList<>(data(level).all.values());
+    }
+
+    /** 1.3.21: {@code id} is gone for good (it died): nothing of it is kept, and it never comes back. */
+    public static void remove(ServerLevel level, String id) {
+        if (id != null && data(level).all.remove(id) != null) {
+            changed(level);
+        }
     }
 
     public static Child get(ServerLevel level, String id) {
@@ -157,6 +180,7 @@ public final class Children {
         child.father = carried.father;
         child.fatherName = carried.fatherName;
         child.born = level.m_46467_();
+        child.might = ChildRules.might(might(level, child.mother), might(level, child.father)); // 1.3.21: as strong as its parents
         data(level).all.put(child.id, child);
         changed(level);
         ChildNpc body = ControlEntities.CHILD.get().m_20615_(level);
@@ -175,6 +199,35 @@ public final class Children {
                 NpcMemoryServer.add(player, other.substring(4), NpcMemory.CHILDREN, 1L);
             }
         }
+    }
+
+    /**
+     * 1.3.21: how strong a parent is ({@code key}: {@code "player:<uuid>"} or {@code "npc:<key>"}): a companion's own might; a player's from
+     * their kagune (online), or middling if they are away.
+     */
+    static float might(ServerLevel level, String key) {
+        if (key == null) {
+            return 0.3F;
+        }
+        if (key.startsWith("npc:")) {
+            Persona persona = Persona.of(key.substring(4));
+            return persona == null ? 0.5F : persona.might();
+        }
+        ServerPlayer player = Pregnancies.playerOf(level, key);
+        if (player == null) {
+            return 0.4F;
+        }
+        boolean ghoul = PathServer.path(player) != com.hex.kagune.control.KagunePath.NONE;
+        return ChildRules.playerMight(ghoul, com.hex.kagune.data.KaguneProfile.mastery(player), KingServer.chosen(player) != KingForm.NONE);
+    }
+
+    /** 1.3.21: {@code child}'s might, worked out now if it is not known yet (a child from before this), and kept. */
+    public static float might(ServerLevel level, Child child) {
+        if (child.might < 0.0F) {
+            child.might = ChildRules.might(might(level, child.mother), might(level, child.father));
+            changed(level);
+        }
+        return child.might;
     }
 
     /** 1.3.10, for testing: a child {@code ticks} older. */

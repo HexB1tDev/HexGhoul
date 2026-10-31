@@ -1,0 +1,14 @@
+## 1.3.21 (HexGhoul): a family home: beds at night, doors, hand in hand, tucked in, fed; kids die for good; companions never hit their kids; strong parents, strong kids (testing)
+HexKagune 1.3.21 for Forge 1.20.1. Install on client and server (**protocol 63**: update both). Testing build: compiled, tests pass, not tried in game.
+
+- **"This is our home now."** A new line for your spouse (married only, on the sweet page). Wherever you stand becomes the family home: your spouse lives there and roams 20 blocks around it, walking back on their own if they wander off. Your children live there too, unless you told them to follow you or to wait somewhere. Say it again somewhere else to move the home.
+- **Doors:** your spouse and kids open and walk through wooden doors now (iron doors still stop them).
+- **Beds at night:** the kids go to bed around dusk and your spouse a bit later. Everyone gets up at dawn. Two beds side by side facing the same way count as **the double bed**: your spouse takes one half and leaves the other for you. Every other bed is **a single bed**, and the kids get one each, oldest first, nearest the home spot first. A kid never takes the double bed. No bed for a kid means it stays up. A sleeper wakes when hurt, picked up, its bed is broken, or (spouse) when you talk to them.
+- **"Bedtime."** on your kid's page at night sends it to its bed right away. A baby gets laid in its bed, since it can't walk.
+- **Tucked in:** when a kid lies down, it calls you over ("Come tuck me in!"). Walk up to its bed and you bend over it, smooth the covers and put a hand on its head. Eto, Touka or Ken walk up and do it themselves if they're home. You can also right-click a sleeping kid and pick *tuck them in*.
+- **Hand in hand:** "Hold my hand." (toddlers and children). The kid walks at your left holding your hand. "Let go." to stop.
+- **Feeding:** hold food and pick "Here, eat this." The kid takes it from your hand, eats it, munching, and heals a little. A ghoul kid only eats ghoul food and a human kid only human food (it tells you if it won't). Eto, Touka and Ken feed their kids now and then too.
+- **"Go home."** sends a kid that was following you or waiting back home.
+- **Kids are mortal and don't come back.** When a child dies it's gone for good: "<name> is gone. They won't be coming back." You can have another, but that child is gone.
+- **Companions never hurt kids:** no hit from Eto, Touka or Ken (or Eto's thralls) can damage a child, accidental or not. Your own hits never hurt your kids either (as before).
+- **Strong parents make strong kids:** a child's health and damage grow with its parents' strength. Ken is the strongest, then Eto, then Touka. A player counts for more as a ghoul, with kagune mastery, and with a final kakuja. Up to 2.5x health and 2.25x damage from two of the strongest parents.

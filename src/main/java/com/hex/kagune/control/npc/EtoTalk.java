@@ -24,7 +24,9 @@ public final class EtoTalk {
         // 1.3.10: they asked each other for a baby (the next night it comes)
         BABY,
         // 1.3.14: a companion's lesson taught ({@link Teaching}: its gate opens), or lived through first (the torture, then the gate)
-        LEARN, TORTURE
+        LEARN, TORTURE,
+        // 1.3.21: "This is our home now." (a spouse): the home they share is where the player stands
+        HOME
     }
 
     /**
@@ -338,6 +340,9 @@ public final class EtoTalk {
         if (!c.granted()) {
             out.add(Option.of(NpcTalk.Choice.SURGERY));
         }
+        if (c.stage() == Romance.Stage.MARRIED) {
+            out.add(Option.of(NpcTalk.Choice.HOME)); // 1.3.21
+        }
         out.add(Option.of(NpcTalk.Choice.BACK));
         return new Page(line, out);
     }
@@ -416,6 +421,9 @@ public final class EtoTalk {
             case PROPOSE -> new Reply("", 0, Effect.PROPOSE);
             case SURGERY -> surgery(c);
             case FOLLOW -> new Reply(EtoLines.follow(c), 0, Effect.FOLLOW);
+            case HOME -> c.stage() == Romance.Stage.MARRIED ? new Reply(EtoLines.one(seed, "Ours. ...I'm filling every wall with books. You've been warned.",
+                "Home. With you. ...Say it again, I like how it sounds.", "Then this is where I'll be. Every night. Get used to me."), 2, Effect.HOME)
+                : new Reply("Ours? We're not there yet.", 0, Effect.NONE);
             case STAY -> new Reply(EtoLines.stay(c), 0, Effect.STAY);
             case ACCEPT -> new Reply("Shh. Close your eyes. I'll be right here when you wake up.", 0, Effect.SURGERY);
             case DECLINE -> new Reply(voice.together() ? "Another time, then. The offer stands. It always will." : "Then stop wasting my time.", 0, Effect.NONE);

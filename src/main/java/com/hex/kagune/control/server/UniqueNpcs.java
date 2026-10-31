@@ -100,6 +100,31 @@ public final class UniqueNpcs {
         changed(level);
     }
 
+    /** 1.3.21: kinds that die for good (by key prefix): never brought back; {@code gone} told (once) as each is forgotten. */
+    private static final Map<String, java.util.function.BiConsumer<ServerLevel, String>> MORTAL = new LinkedHashMap<>();
+
+    public static void mortal(String prefix, java.util.function.BiConsumer<ServerLevel, String> gone) {
+        MORTAL.put(prefix, gone);
+    }
+
+    private static java.util.function.BiConsumer<ServerLevel, String> mortalOf(String key) {
+        for (Map.Entry<String, java.util.function.BiConsumer<ServerLevel, String>> e : MORTAL.entrySet()) {
+            if (key.startsWith(e.getKey())) {
+                return e.getValue();
+            }
+        }
+        return null;
+    }
+
+    /** 1.3.21: {@code key} died for good (a mortal kind): forgotten by the world, and whatever keeps the rest of it told. */
+    public static void perished(ServerLevel level, String key) {
+        java.util.function.BiConsumer<ServerLevel, String> gone = mortalOf(key);
+        forget(level, key);
+        if (gone != null) {
+            gone.accept(level, key);
+        }
+    }
+
     /** 1.3.10: {@code key} is no more (forgotten by the world: nothing of it comes back). */
     public static void forget(ServerLevel level, String key) {
         if (data(level).all.remove(key) != null) {
@@ -252,6 +277,16 @@ public final class UniqueNpcs {
             return;
         }
         long now = level.m_46467_();
+        // 1.3.21: the mortal ones dead (before this rule, too) are forgotten for good, never brought back.
+        java.util.List<String> perished = new java.util.ArrayList<>();
+        for (Map.Entry<String, UniqueNpc> entry : data(level).all.entrySet()) {
+            if (!entry.getValue().alive && entry.getValue().diedAt != Long.MIN_VALUE && mortalOf(entry.getKey()) != null) {
+                perished.add(entry.getKey());
+            }
+        }
+        for (String key : perished) {
+            perished(level, key);
+        }
         for (Map.Entry<String, UniqueNpc> entry : data(level).all.entrySet()) {
             UniqueNpc npc = entry.getValue();
             Supplier<? extends EntityType<? extends Mob>> kind = kindOf(entry.getKey());

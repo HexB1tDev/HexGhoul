@@ -132,6 +132,8 @@ final class ToukaScript extends CompanionScript {
                 : one(seed, "Not tonight. I'm tired. Hold my hand instead.", "It's not even dark, idiot."), 0,
                 c.night() && !c.nightUsed() ? EtoTalk.Effect.NIGHT : EtoTalk.Effect.NONE);
             case PROPOSE -> new EtoTalk.Reply("", 0, EtoTalk.Effect.PROPOSE);
+            case HOME -> c.stage() == Romance.Stage.MARRIED ? new EtoTalk.Reply(one(seed, "Ours. ...Fine. I'm picking the curtains. Don't argue.", "Home. ...Don't make that face. I'm not crying, idiot."), 2, EtoTalk.Effect.HOME)
+                : new EtoTalk.Reply("Ours? We're not married.", 0, EtoTalk.Effect.NONE);
             case FOLLOW -> new EtoTalk.Reply(voice.together() ? one(seed, "Fine. Walk slower. ...Not that slow.", "Where are we going? ...Okay. Lead.")
                 : one(seed, "Fine. Don't get us killed.", "I'll come. Not because you asked."), 0, EtoTalk.Effect.FOLLOW);
             case STAY -> new EtoTalk.Reply(voice.together() ? one(seed, "Here? Fine. I'll make this place less ugly.", "Okay. This is home now. Don't take forever.")

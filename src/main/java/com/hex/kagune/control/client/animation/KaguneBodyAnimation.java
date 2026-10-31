@@ -522,6 +522,8 @@ public final class KaguneBodyAnimation implements IAnimation {
         com.hex.kagune.control.client.ChildClient.View riding = com.hex.kagune.control.client.ChildClient.held(this.player.m_19879_());
         if (riding != null && riding.ride() == com.hex.kagune.control.family.ChildRules.RIDE_SHOULDERS) {
             ChildMomentPose.blend(p, ChildMomentPose.shouldersParent(), this.fade);
+        } else if (riding != null && riding.ride() == com.hex.kagune.control.family.ChildRules.RIDE_HAND) {
+            ChildMomentPose.blend(p, ChildMomentPose.handParent(riding.stage()), this.fade); // 1.3.21: hand in hand
         }
         com.hex.kagune.control.client.ChildClient.View moment = com.hex.kagune.control.client.ChildClient.partnered(this.player.m_19879_(), childClock);
         if (moment != null) {

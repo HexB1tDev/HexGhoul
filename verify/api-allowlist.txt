@@ -908,3 +908,12 @@ F net/minecraft/client/model/geom/ModelPart f_233554_ F  # [srg] yScale: fee ySc
 F net/minecraft/world/effect/MobEffects f_19619_ Lnet/minecraft/world/effect/MobEffect;  # [order] GLOWING: 24th field 'x' (speed=f_19596_ 'a', jump=f_19603_ 'h', regeneration=f_19605_ 'j', invisibility=f_19609_ 'n', hunger=f_19612_ 'q')
 M net/minecraft/world/entity/Entity m_6094_ ()Z  # [srg] isPushable: bfj.m_6094_ ()Z (yarn Entity.isPushable); a carried child is not
 M net/minecraft/world/entity/LivingEntity m_20095_ ()V  # [srg] clearFire: bfj.m_20095_ ()V (yarn Entity.extinguish; awakening/mappings.srg); 1.3.19 Peace's Aegis on any wearer (Ken)
+# --- 1.3.21: a family's home: spouses and children sleep in their beds at night, open doors to roam its rooms ---------------------------
+M net/minecraft/world/entity/LivingEntity m_5802_ (Lnet/minecraft/core/BlockPos;)V  # [srg] startSleeping: bfz.m_5802_ (yarn LivingEntity.sleep, method_18403)
+M net/minecraft/world/entity/LivingEntity m_5796_ ()V  # [srg] stopSleeping: bfz.m_5796_ (yarn LivingEntity.wakeUp, method_18400)
+M net/minecraft/world/entity/LivingEntity m_6107_ ()Z  # [srg] isImmobile: bfz.m_6107_ (yarn LivingEntity.isImmobile); overridden: lying asleep, it doesn't move
+C net/minecraft/world/entity/ai/goal/OpenDoorGoal  # [srg] (yarn LongDoorInteractGoal, class_1344)
+M net/minecraft/world/entity/ai/goal/OpenDoorGoal <init> (Lnet/minecraft/world/entity/Mob;Z)V  # [srg] OpenDoorGoal(Mob, closeDoor) (yarn LongDoorInteractGoal(MobEntity, boolean))
+C net/minecraft/world/entity/ai/navigation/GroundPathNavigation  # [srg] (yarn MobNavigation, class_1409)
+M net/minecraft/world/entity/ai/navigation/GroundPathNavigation m_26477_ (Z)V  # [srg] setCanOpenDoors (yarn MobNavigation.setCanPathThroughDoors, method_6363)
+C net/minecraftforge/event/entity/living/LivingEvent$LivingTickEvent  # [forge] LivingEvent.java: fired each tick of every living entity (ForgeHooks.onLivingTick)
