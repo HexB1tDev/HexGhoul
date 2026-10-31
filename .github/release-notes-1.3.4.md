@@ -8,3 +8,4 @@ HexKagune 1.3.4 for Forge 1.20.1. Install on client and server (protocol 57). Te
 - She uses them far more: the kick whenever it's ready once she's serious, the Big Punch at full charge most of the time when serious and always when maniac, and much shorter cooldowns as she gets hurt.
 - Holding hands: she stays glued to your side and walks as one with you (facing your way), and your hands meet instead of reaching past each other.
 - Talk screen: the answers sit in the middle of the space under her line instead of down at the edge of the board.
+- Speed Kick and Witness This keep her moving every tick, so she's now synced to clients every tick (smoother on screen).
