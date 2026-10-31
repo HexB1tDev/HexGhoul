@@ -142,8 +142,8 @@ public final class CompanionTests {
             "the order the talk screen's faces are sent by (-1, -2, -3) never changes");
         check(Persona.of("nobody") == Persona.ETO && !Persona.known("nobody"), "an unknown key falls back to Eto and is not a companion");
         check(Persona.ETO.owlKit() && !Persona.TOUKA.owlKit() && !Persona.KEN.owlKit(), "only Eto fights with the Owl DNA kit");
-        check(Persona.ETO.curves() == 1.0F && Persona.ETO.build() == 1.0F && Persona.TOUKA.curves() > 0.5F && Persona.TOUKA.curves() < 1.0F
-            && Persona.TOUKA.build() > 0.9F && Persona.TOUKA.build() < 1.0F, "Touka on the same female body as Eto, a little skinnier; Eto as she was");
+        check(Persona.ETO.curves() == 1.0F && Persona.ETO.build() == 1.0F && Persona.TOUKA.curves() > 1.2F && Persona.TOUKA.curves() < 1.6F
+            && Persona.TOUKA.build() == 1.0F, "Touka on the same female body as Eto, curvier (1.3.17: legs and chest bigger); Eto as she was");
         check(Persona.ETO.female() && Persona.TOUKA.female() && !Persona.KEN.female() && Persona.TOUKA.slim() && Persona.KEN.slim(),
             "Eto and Touka on the female body, Ken a man's; all on the slim arms their skins are made for");
         check(!Persona.ETO.pecks() && Persona.TOUKA.pecks() && Persona.KEN.pecks(), "Touka and Ken give a quick kiss of their own; Eto waits for hers");

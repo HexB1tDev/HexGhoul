@@ -31,12 +31,17 @@ OUT = ROOT / "src" / "main" / "resources" / "assets" / "hexkagune" / "textures" 
 
 # Which eyes turn: the character's right (the viewer's left on the face), left, or both.
 COMPANIONS = {
-    "touka": {"turns": ("right", "left"), "slim": True},
+    # 1.3.17: her skin's right eye is painted as a ghoul's: by day it is the mirror of her left (as Eto's is), turning only as a kakugan.
+    "touka": {"turns": ("right", "left"), "slim": True, "mirror": True},
     "ken": {"turns": ("left",), "slim": True},
 }
 # Eye pixels by hand, if detection is wrong for a skin: {key: {"right": [(x, y), ...], "left": [...], "white": [...]}} in 64px face
 # coordinates (0..7 across the face front, 0..7 down).
-EYES = {}
+EYES = {
+    # 1.3.17: the owner's second Touka skin: her right eye painted dark (no white to find), her left lavender with a white corner.
+    "touka": {"right": [(1, 5), (2, 5), (1, 6), (2, 6)], "left": [(5, 5), (6, 5), (5, 6), (6, 6)], "white": [(1, 5), (1, 6), (6, 5), (6, 6)],
+              "lash": [(1, 4), (2, 4), (5, 4), (6, 4)]},
+}
 
 BLACK = (12, 4, 8, 255)
 DEEP = (150, 10, 24, 255)
@@ -139,6 +144,15 @@ def build(key, config, preview):
         print(f"{key}: no art/{key}_skin.png yet; using the stand-in {source.relative_to(ROOT)}")
     skin = Image.open(source).convert("RGBA")
     assert skin.size in ((64, 64), (128, 128)), f"{source} is {skin.size}, not a 64x64 (or 128x128) skin"
+    if config.get("mirror"):
+        # The right eye (the viewer's left, columns 1-2) made the mirror of the left (columns 5-6), lashes and all, on the face only
+        # (the outer layer's hair stays as it is drawn).
+        day = skin.copy()
+        source_face = Face(skin)
+        for y in range(3, 8):
+            for x in (5, 6):
+                source_face.put(day, 7 - x, y, source_face.at(x, y))
+        skin = day
     face = Face(skin)
     if key in EYES:
         eyes = {"right": EYES[key]["right"], "left": EYES[key]["left"], "white": set(EYES[key].get("white", [])), "lash": EYES[key].get("lash", [])}
@@ -177,7 +191,8 @@ def build(key, config, preview):
         lashes = [p for p in eyes.get("lash", []) if p[0] in {x for x, y in pixels}]
         lash = face.at(*lashes[0]) if lashes else tuple(max(0, int(v * 0.35)) for v in tone) + (255,)
         for x, y in pixels:
-            face.put(closed, x, y, lash if y == top else tone + (255,))
+            # The skin's own lashes over the eye are the closed eye's line (1.3.17: a second dark row read too heavy); with none, the top row.
+            face.put(closed, x, y, lash if y == top and not lashes else tone + (255,))
         # Blush: just under the eye.
         cheek = min(7, bottom + 1)
         for x in sorted({x for x, y in pixels}):

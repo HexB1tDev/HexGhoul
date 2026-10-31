@@ -257,15 +257,15 @@ public abstract class Persona {
     private static final class Touka extends Persona {
         private Script script;
 
-        /** A little skinnier than Eto: two thirds of her hips and bust, and a touch narrower all over. */
+        /** 1.3.17: the owner: her legs and chest "bigger by quite a bit": more hips, thighs and bust than Eto's, at a woman's full width. */
         @Override
         public float curves() {
-            return 0.65F;
+            return 1.4F;
         }
 
         @Override
         public float build() {
-            return 0.94F;
+            return 1.0F;
         }
 
         /** She goes pink at anything sweet: a kiss she's waiting on, a hand, a hug, being leaned on, a dance. Composure: gone. */

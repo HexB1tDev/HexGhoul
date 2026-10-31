@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.17 (HexGhoul): Touka reskinned (slim arms), curvier (testing)
+
+See `.github/release-notes-1.3.17.md`.
+
 ## 1.3.16 (HexGhoul): carrying a child fixed, little ones on little proportions and bigger, /kagune children, NPC parents (testing)
 
 See `.github/release-notes-1.3.16.md`.
