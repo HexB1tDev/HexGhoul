@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.23 (HexGhoul): Ken's kakugan iris fixed (testing)
+
+See `.github/release-notes-1.3.23.md`.
+
 ## 1.3.22 (HexGhoul): holding hands fixed: the hands actually meet now (testing)
 
 See `.github/release-notes-1.3.22.md`.

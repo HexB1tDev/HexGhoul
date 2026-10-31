@@ -41,6 +41,11 @@ EYES = {
     # 1.3.17: the owner's second Touka skin: her right eye painted dark (no white to find), her left lavender with a white corner.
     "touka": {"right": [(1, 5), (2, 5), (1, 6), (2, 6)], "left": [(5, 5), (6, 5), (5, 6), (6, 6)], "white": [(1, 5), (1, 6), (6, 5), (6, 6)],
               "lash": [(1, 4), (2, 4), (5, 4), (6, 4)]},
+    # 1.3.22: the owner: "Kaneki's eye's iris is wrong". Detection read his eyes by rows (the grey top row as iris, the pale bottom row
+    # as white: a red bar over a black one). They are columns, as Touka's: the inner one his grey iris (dark grey over light grey), the
+    # outer one the white (shadowed by the lid over bright white); the near-black pixel over the iris, under his bangs, is the lash.
+    "ken": {"right": [(1, 5), (2, 5), (1, 6), (2, 6)], "left": [(5, 5), (6, 5), (5, 6), (6, 6)], "white": [(1, 5), (1, 6), (6, 5), (6, 6)],
+            "lash": [(2, 4), (5, 4)]},
 }
 
 BLACK = (12, 4, 8, 255)
