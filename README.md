@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.13 (HexGhoul): holding hands is alive: she trails as you pull her, swings out on turns, the hands sway (testing)
+
+See `.github/release-notes-1.3.13.md`.
+
 ## 1.3.12 (HexGhoul): Eto takes your hand on her own, hugs, leans, hums, reads, dances; many more lines (testing)
 
 See `.github/release-notes-1.3.12.md`.

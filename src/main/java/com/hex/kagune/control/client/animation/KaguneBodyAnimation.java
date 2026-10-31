@@ -498,6 +498,14 @@ public final class KaguneBodyAnimation implements IAnimation {
             p.rightArmZ += com.hex.kagune.control.npc.EtoHand.ARM * hand;
             p.rightArmX -= com.hex.kagune.control.npc.EtoHand.FORWARD * hand;
             p.rightArmHold = Math.max(p.rightArmHold, hand);
+            // 1.3.13: alive (HandSway): back toward her as she trails, out as she swings wide, swaying with hers on its own clock.
+            com.hex.kagune.control.npc.HandSway sway = com.hex.kagune.control.client.HandClient.held(this.player.m_19879_());
+            if (sway != null) {
+                float[] arm = com.hex.kagune.control.npc.HandSway.arm(sway.trail(tickDelta), sway.out(tickDelta),
+                    com.hex.kagune.control.client.HandClient.clock(sway, tickDelta), true, 1.0);
+                p.rightArmX += arm[0] * hand;
+                p.rightArmZ += arm[1] * hand;
+            }
         }
         // 1.3.10: carrying a child: both arms in front, cradling it at the chest, held still.
         if (com.hex.kagune.control.client.ChildClient.carrying(this.player.m_19879_())) {

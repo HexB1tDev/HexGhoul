@@ -64,7 +64,25 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
         if (view == null) {
             return null;
         }
-        return EtoFight.pose(npc, view.fight(), EtoPose.gesture(view.gesture(), view.gestureAge(clock)), clock, partial);
+        return EtoFight.pose(npc, view.fight(), alive(npc, view, EtoPose.gesture(view.gesture(), view.gestureAge(clock)), partial), clock, partial);
+    }
+
+    /**
+     * 1.3.13: hand in hand, her held arm alive ({@link com.hex.kagune.control.npc.HandSway}): it reaches forward to their hand as she
+     * trails, out as she swings wide, and sways with theirs on its own slow clock; pulled along, she leans into it a little.
+     */
+    static RigPose alive(EtoNpc npc, EtoClient.View view, RigPose gesture, float partial) {
+        com.hex.kagune.control.npc.HandSway sway = view.gesture() == EtoGesture.HAND ? com.hex.kagune.control.client.HandClient.of(npc.m_19879_()) : null;
+        if (gesture == null || sway == null) {
+            return gesture;
+        }
+        double trail = sway.trail(partial);
+        float[] arm = com.hex.kagune.control.npc.HandSway.arm(trail, sway.out(partial), com.hex.kagune.control.client.HandClient.clock(sway, partial), false,
+            EtoRules.SIZE);
+        gesture.leftArmX += arm[0];
+        gesture.leftArmZ -= arm[1];
+        gesture.lean += (float)com.hex.kagune.control.npc.HandSway.pulled(trail);
+        return gesture;
     }
 
     @Override
@@ -101,6 +119,15 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
         float turn = ((holder.f_20883_ - holder.f_20884_) % 360.0F + 540.0F) % 360.0F - 180.0F;
         float bodyYaw = holder.f_20884_ + turn * partial;
         double[] off = EtoHand.offset(bodyYaw, com.hex.kagune.control.Genders.female(holder));
+        // 1.3.13: on her spring from that spot: a little behind as they pull her along, out and in as they turn.
+        com.hex.kagune.control.npc.HandSway sway = com.hex.kagune.control.client.HandClient.of(npc.m_19879_());
+        if (sway != null) {
+            double yaw = Math.toRadians(bodyYaw);
+            double trail = sway.trail(partial);
+            double out = sway.out(partial);
+            off[0] += Math.sin(yaw) * trail - Math.cos(yaw) * out;
+            off[1] += -Math.cos(yaw) * trail - Math.sin(yaw) * out;
+        }
         double hx = holder.f_19790_ + (holder.m_20185_() - holder.f_19790_) * partial;
         double hy = holder.f_19791_ + (holder.m_20186_() - holder.f_19791_) * partial;
         double hz = holder.f_19792_ + (holder.m_20189_() - holder.f_19792_) * partial;
