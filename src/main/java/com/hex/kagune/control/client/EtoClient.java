@@ -160,6 +160,16 @@ public final class EtoClient {
         }
     }
 
+    /** 1.3.3: 1 if an Eto holds the hand of the player {@code id} (their own arm reaches out to her), else 0. */
+    public static float handHeld(int id) {
+        for (View view : VIEWS.values()) {
+            if (view.with() == id && view.gesture() == EtoGesture.HAND) {
+                return 1.0F;
+            }
+        }
+        return 0.0F;
+    }
+
     @SubscribeEvent
     public static void loggingOut(ClientPlayerNetworkEvent.LoggingOut event) {
         VIEWS.clear();

@@ -11,9 +11,13 @@ import com.hex.kagune.control.npc.EtoRules;
  * ({@code flip} -) with the legs swung back under her by as much ({@code legX} the same), so only what is above them leans.
  */
 public final class EtoPose {
-    /** How far her top half leans in for a kiss, and blushing (radians). */
-    static final float KISS_LEAN = 0.34F;
-    static final float BLUSH_LEAN = 0.4F;
+    /**
+     * How far her top half leans in for a kiss, and blushing (radians). 1.3.3: down to the height of a crouching player's face (the
+     * shift held for a kiss crouches them), so she never stands over them.
+     */
+    static final float KISS_LEAN = 0.5F;
+    static final float BLUSH_LEAN = 0.55F;
+    static final float PULL_LEAN = 0.52F;
 
     private EtoPose() {
     }
@@ -154,9 +158,9 @@ public final class EtoPose {
                 p.leftArmX = -0.8F;
                 p.leftArmY = 0.5F;
                 p.leftArmZ = 0.1F;
-                p.rightArmX = -0.95F + 0.05F * (float)Math.sin(t * 2.3);
-                p.rightArmY = -0.45F + 0.1F * (float)Math.sin(t * 1.15);
-                p.rightArmZ = -0.05F + 0.05F * (float)Math.cos(t * 2.3);
+                p.rightArmX = -0.95F + 0.09F * (float)Math.sin(t * 2.6);
+                p.rightArmY = -0.45F + 0.16F * (float)Math.sin(t * 0.9);
+                p.rightArmZ = -0.05F + 0.07F * (float)Math.cos(t * 2.6);
                 p.headX = 0.52F;
                 p.headY = 0.08F;
                 // A pause to think now and then: the quill to her lips.
@@ -271,16 +275,16 @@ public final class EtoPose {
                 p.roll = -0.04F + 0.015F * (float)Math.sin(t * 0.08);
             }
             case PULL -> {
-                // The kiss held: her arms up round their head, pulling them down to her, chin up.
-                p.rightArmX = -2.25F;
-                p.leftArmX = -2.25F;
-                p.rightArmY = -0.6F;
-                p.leftArmY = 0.6F;
-                p.rightArmZ = -0.1F;
-                p.leftArmZ = 0.1F;
-                p.headX = -0.36F;
+                // 1.3.3: the kiss held: her arms over their shoulders (level with them, a little round their neck), pulling them in, her face up to theirs.
+                p.lean = PULL_LEAN;
+                p.rightArmX = -1.95F;
+                p.leftArmX = -1.95F;
+                p.rightArmY = -0.32F;
+                p.leftArmY = 0.32F;
+                p.rightArmZ = 0.04F;
+                p.leftArmZ = -0.04F;
+                p.headX = -PULL_LEAN - 0.06F;
                 p.headZ = 0.2F + 0.05F * (float)Math.sin(t * 0.1);
-                p.lean = 0.38F;
             }
             case RING -> {
                 if (t < 30.0F) {
@@ -314,6 +318,14 @@ public final class EtoPose {
                 p.headZ = 0.15F * rock;
                 p.roll = 0.05F * rock;
             }
+            case HAND -> {
+                // 1.3.3: her left hand out to the one at her left, holding theirs, a little shy.
+                p.leftArmZ = -0.36F;
+                p.leftArmX = -0.18F;
+                p.leftArmY = 0.1F;
+                p.headX = 0.08F;
+                p.rightArmZ = 0.06F;
+            }
             case LAUGH -> {
                 // Head back, arms wide, shaking with it.
                 float shake = (float)Math.sin(t * 2.2);
@@ -341,9 +353,10 @@ public final class EtoPose {
         p.leftArmX = 0.55F;
         p.rightArmZ = -0.22F;
         p.leftArmZ = 0.22F;
-        // 1.3.1: bent at the hips, her feet flat where she stands (tipping her whole body over lifted her feet off the ground).
+        // 1.3.1: bent at the hips, her feet flat where she stands (tipping her whole body over lifted her feet off the ground). 1.3.3: her
+        // face level with theirs (the head turned back up by the lean, a touch more).
         p.lean = lean;
-        p.headX = -0.32F;
+        p.headX = -lean - 0.04F;
         p.headZ = 0.06F * (float)Math.sin(t * 0.12);
     }
 

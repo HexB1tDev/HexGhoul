@@ -20,7 +20,7 @@ public final class EtoTalk {
     public enum Effect {
         NONE, CLOSE, BOOK, FLOWER, TEACH, BEGIN, DATE, KISS, HUG, OFFER, SURGERY, ANGER, FOLLOW, STAY,
         // 1.3.2
-        TALK, SWEET, MAIN, GIFTS, PUPPY, PROPOSE, NIGHT, PACT, MEAT, LETTER, CLING, FORGIVE, TRIAL
+        TALK, SWEET, MAIN, GIFTS, PUPPY, PROPOSE, NIGHT, PACT, MEAT, LETTER, CLING, FORGIVE, TRIAL, HAND
     }
 
     /**
@@ -273,10 +273,11 @@ public final class EtoTalk {
         out.add(Option.of(NpcTalk.Choice.KISS));
         out.add(Option.of(NpcTalk.Choice.HUG));
         out.add(new Option(NpcTalk.Choice.SAY_1, "Hold me.", "sweet:cling"));
+        out.add(new Option(NpcTalk.Choice.SAY_2, "Hold my hand.", "sweet:hand"));
         int start = Math.floorMod(c.seed(), SWEET_SAYS.length);
         for (int i = 0; i < 3; i++) {
             String[] say = SWEET_SAYS[(start + i) % SWEET_SAYS.length];
-            out.add(new Option(NpcTalk.Choice.SAYS[i + 1], say[0], "sweet:" + say[1]));
+            out.add(new Option(NpcTalk.Choice.SAYS[i + 2], say[0], "sweet:" + say[1]));
         }
         if (c.night()) {
             out.add(Option.of(NpcTalk.Choice.NIGHT));
@@ -296,7 +297,8 @@ public final class EtoTalk {
         int seed = c.seed();
         boolean married = c.married();
         Reply reply = switch (what) {
-            case "cling" -> new Reply(EtoLines.clung(seed), 2, Effect.CLING, EtoGesture.CLING);
+            case "cling" -> new Reply(EtoLines.clung(seed), 2, Effect.CLING, EtoGesture.NONE);
+            case "hand" -> new Reply(EtoLines.one(seed, "My hand? ...Fine. Come here.", "Finally. I thought you'd never ask."), 1, Effect.HAND, EtoGesture.NONE);
             case "hold" -> new Reply(EtoLines.one(seed, "...Say it slower.", "I know. Say it again anyway.", "Stop it. ...Don't stop it."), 2, Effect.NONE,
                 EtoGesture.HAIR);
             case "love" -> married ? new Reply(EtoLines.one(seed, "I know. I love you more. Don't argue, I've read more books.",

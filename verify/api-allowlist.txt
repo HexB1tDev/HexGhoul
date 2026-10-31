@@ -877,3 +877,4 @@ M net/minecraft/server/players/PlayerList m_240416_ (Lnet/minecraft/network/chat
 M net/minecraft/world/item/Item$Properties m_41487_ (I)Lnet/minecraft/world/item/Item$Properties;  # [srg] stacksTo: cfu$a.m_41487_ (I)Lcfu$a; (yarn Item.Settings.maxCount)
 M net/minecraft/core/Vec3i m_123343_ ()I  # [srg] getZ, hz.m_123343_ ()I (yarn Vec3i.getZ)
 M net/minecraft/world/entity/LivingEntity m_7292_ (Lnet/minecraft/world/effect/MobEffectInstance;)Z  # [srg] addEffect: bfz.m_7292_ (Lbfa;)Z (yarn LivingEntity.addStatusEffect): Eto's speed and resistance as she gets serious
+M net/minecraft/world/entity/Mob m_21559_ (Z)V  # [srg] setLeftHanded: bgb.m_21559_ (Z)V (yarn MobEntity.setLeftHanded): Eto's quill always in her right hand, the one that writes

@@ -17,4 +17,5 @@ public abstract class Mob extends LivingEntity {
     /** getLeashHolder (1.3.2) */ public net.minecraft.world.entity.Entity m_21524_() { throw new UnsupportedOperationException(); }
     /** isLeashed (1.3.2) */ public boolean m_21523_() { throw new UnsupportedOperationException(); }
     /** dropLeash(broadcast, dropItem) (1.3.2) */ public void m_21455_(boolean broadcast, boolean dropItem) { throw new UnsupportedOperationException(); }
+    /** setLeftHanded (1.3.3) */ public void m_21559_(boolean left) { throw new UnsupportedOperationException(); }
 }

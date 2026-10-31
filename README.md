@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.3 (HexGhoul): a living talk screen, holding hands with Eto, she clings to your arm, no fall damage, she always finds her way home (testing)
+
+See `.github/release-notes-1.3.3.md`.
+
 ## 1.3.2 (HexGhoul): Eto reworked: one of her per world, talk by who you are to her, moods, marriage with a ring, her kagune in a fight (testing)
 
 See `.github/release-notes-1.3.2.md`.

@@ -754,6 +754,14 @@ public final class KaguneVerify implements Opcodes {
     }
 
     private static boolean resolvesInternally(Map<String, ClassNode> classes, String kind, String owner, String name, String desc) {
+        return resolvesInternally(classes, kind, owner, name, desc, false);
+    }
+
+    /**
+     * {@code viaInterface}: looked for in an interface the class implements (1.3.3): found only if declared there (or in what it
+     * extends); an interface's superclass is Object, and reaching Object through one must not count as resolving everything.
+     */
+    private static boolean resolvesInternally(Map<String, ClassNode> classes, String kind, String owner, String name, String desc, boolean viaInterface) {
         if (PROVEN.contains(kind + " " + owner + " " + name + " " + desc)) return true; // the original JAR links it already
         String cursor = owner;
         while (cursor != null && cursor.startsWith("com/hex/kagune/")) {
@@ -761,11 +769,11 @@ public final class KaguneVerify implements Opcodes {
             if (node == null) return false;
             if (kind.equals("F") && node.fields.stream().anyMatch(f -> f.name.equals(name) && f.desc.equals(desc))) return true;
             if (kind.equals("M") && node.methods.stream().anyMatch(m -> m.name.equals(name) && m.desc.equals(desc))) return true;
-            for (String each : node.interfaces) if (resolvesInternally(classes, kind, each, name, desc)) return true;
+            for (String each : node.interfaces) if (resolvesInternally(classes, kind, each, name, desc, true)) return true;
             cursor = node.superName;
         }
         return cursor != null && memberKnown(kind, cursor, name, desc)
-            || cursor != null && (cursor.equals("java/lang/Object") || cursor.equals("java/lang/Enum") || cursor.equals("java/lang/Record"));
+            || !viaInterface && cursor != null && (cursor.equals("java/lang/Object") || cursor.equals("java/lang/Enum") || cursor.equals("java/lang/Record"));
     }
 
     private static void audit(Map<String, ClassNode> classes, Set<String> audited, Path allowlist) {

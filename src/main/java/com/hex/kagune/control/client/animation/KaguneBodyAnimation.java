@@ -314,6 +314,10 @@ public final class KaguneBodyAnimation implements IAnimation {
     }
 
     private boolean wants() {
+        // 1.3.3: holding Eto's hand, the arm reaches out to her (whatever else the body is doing).
+        if (com.hex.kagune.control.client.EtoClient.handHeld(this.player.m_19879_()) > 0.0F) {
+            return this.player.m_6084_() && ControlConfig.bodyAnimations();
+        }
         if (com.hex.kagune.control.client.PaleClient.eyes(this.player)) {
             return this.player.m_6084_() && ControlConfig.bodyAnimations(); // 7.0.1: the eyes alone fight with the body
         }
@@ -486,6 +490,12 @@ public final class KaguneBodyAnimation implements IAnimation {
         RigPose p = this.p.clear();
         this.palePosedAt = Double.NaN;
         this.pose(tickDelta);
+        // 1.3.3: hand in hand with Eto (she walks at their right): the right arm out to her side, a little forward.
+        float hand = com.hex.kagune.control.client.EtoClient.handHeld(this.player.m_19879_()) * this.fade;
+        if (hand > 0.0F) {
+            p.rightArmZ += 0.36F * hand;
+            p.rightArmX -= 0.18F * hand;
+        }
         // 6.2.0: just whole again after her death that did not take, she stands as the pieces went back together and eases into it.
         float risen = com.hex.kagune.control.client.ReviveClient.risen(this.player, com.hex.kagune.control.client.PaleClient.clock(tickDelta));
         if (risen < 1.0F) {
@@ -535,6 +545,13 @@ public final class KaguneBodyAnimation implements IAnimation {
         float steel = (float)UkakuClient.blade(this.player, time);
         this.steelArm = null;
         if (!ControlConfig.bodyAnimations()) {
+            this.finish(steel, time, tickDelta);
+            return;
+        }
+        // 1.3.3: only holding Eto's hand (no kagune, no eyes, nothing turning): nothing more on the body than the arm (setupAnim's).
+        if (!view.active() && !com.hex.kagune.control.client.PaleClient.eyes(this.player) && this.king() <= 0.0F
+            && com.hex.kagune.control.client.TurningClient.progress(this.player, time) < 0.0
+            && com.hex.kagune.control.client.EtoClient.handHeld(this.player.m_19879_()) > 0.0F) {
             this.finish(steel, time, tickDelta);
             return;
         }

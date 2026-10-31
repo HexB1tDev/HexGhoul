@@ -1,6 +1,7 @@
 package com.hex.kagune.control.server;
 
 import com.hex.kagune.control.npc.Romance;
+import com.hex.kagune.control.npc.UniqueBody;
 import com.hex.kagune.control.npc.UniqueNpc;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -23,13 +24,17 @@ import net.minecraftforge.fml.common.Mod;
  * 1.3.2: the one-of-a-kind NPCs of a world ({@link UniqueNpc}), kept with the overworld: only one body of each lives (any other that
  * turns up, a second structure's, a summoned one, is sent away on its first tick), her partner for good, and her coming back to her
  * home a couple of days after she was killed (ghouls heal), once a player is near enough for the place to be loaded. Each kind of NPC
- * says how it is made again ({@link #kind}).
+ * says how it is made again ({@link #kind}). 1.3.3: her home is where she was made (her origin, {@link UniqueBody}): she comes back there
+ * a day after she dies, and, left away from it a day with no one about, she goes back (herself if she is ticking; if her body lies in
+ * unloaded ground, a new one is made at home and the old sent away when it loads). She never takes fall damage.
  */
 @Mod.EventBusSubscriber(modid = "hexkagune")
 public final class UniqueNpcs {
     static final String NAME = "hexkagune_unique_npcs";
     /** How each one is made again, by key. */
     private static final Map<String, Supplier<? extends EntityType<? extends Mob>>> KINDS = new LinkedHashMap<>();
+    /** 1.3.3: when each last ticked (this server's run only): one ticking recently goes home herself. */
+    private static final Map<String, Long> TICKING = new java.util.HashMap<>();
 
     private UniqueNpcs() {
     }
@@ -88,6 +93,7 @@ public final class UniqueNpcs {
     public static boolean claim(ServerLevel level, String key, UUID body, BlockPos home) {
         UniqueNpc npc = get(level, key);
         long now = level.m_46467_();
+        TICKING.put(key, now);
         boolean wasHers = body.equals(npc.body) && npc.alive;
         long seenBefore = npc.seen;
         if (!npc.claim(body, now)) {
@@ -106,6 +112,33 @@ public final class UniqueNpcs {
             npc.seen = seenBefore;
         }
         return true;
+    }
+
+    /**
+     * 1.3.3: how she is now: where she belongs (kept the first time it is known), whether she is away from it, and when she last had
+     * company. Saved when it matters (not every time she has company).
+     */
+    public static void report(ServerLevel level, String key, BlockPos origin, boolean away, long company) {
+        UniqueNpc npc = get(level, key);
+        boolean changed = false;
+        if (!npc.origined && origin != null) {
+            npc.originX = origin.m_123341_();
+            npc.originY = origin.m_123342_();
+            npc.originZ = origin.m_123343_();
+            npc.origined = true;
+            changed = true;
+        }
+        if (npc.away != away) {
+            npc.away = away;
+            changed = true;
+        }
+        if (company != Long.MIN_VALUE && (npc.company == Long.MIN_VALUE || company - npc.company >= 1200L)) {
+            npc.company = company;
+            changed = true;
+        }
+        if (changed) {
+            changed(level);
+        }
     }
 
     /** {@code key}'s body died. */
@@ -159,10 +192,14 @@ public final class UniqueNpcs {
         for (Map.Entry<String, UniqueNpc> entry : data(level).all.entrySet()) {
             UniqueNpc npc = entry.getValue();
             Supplier<? extends EntityType<? extends Mob>> kind = KINDS.get(entry.getKey());
-            if (kind == null || !npc.dueBack(now)) {
+            Long ticked = TICKING.get(entry.getKey());
+            // Dead long enough; or left away a day and her body not about to go home itself (it lies in unloaded ground).
+            boolean recall = npc.dueHome(now) && (ticked == null || now - ticked > 400L);
+            if (kind == null || !npc.dueBack(now) && !recall) {
                 continue;
             }
-            BlockPos home = new BlockPos(npc.homeX, npc.homeY, npc.homeZ);
+            int[] spawn = npc.spawn();
+            BlockPos home = new BlockPos(spawn[0], spawn[1], spawn[2]);
             if (!level.m_46805_(home) || !someoneNear(level, home)) {
                 continue;
             }
@@ -170,13 +207,28 @@ public final class UniqueNpcs {
             if (body == null) {
                 continue;
             }
-            body.m_7678_(npc.homeX + 0.5, npc.homeY - 1.0, npc.homeZ + 0.5, 0.0F, 0.0F);
+            body.m_7678_(spawn[0] + 0.5, spawn[1] - 1.0, spawn[2] + 0.5, 0.0F, 0.0F);
             npc.body = body.m_20148_();
             npc.alive = true;
             npc.seen = now;
             npc.diedAt = Long.MIN_VALUE;
+            npc.away = false;
+            npc.company = now;
+            npc.homeX = spawn[0];
+            npc.homeY = spawn[1];
+            npc.homeZ = spawn[2];
+            npc.homed = true;
             level.m_7967_(body);
+            TICKING.put(entry.getKey(), now);
             changed(level);
+        }
+    }
+
+    /** 1.3.3: a one-of-a-kind NPC never takes fall damage. */
+    @SubscribeEvent
+    public static void attacked(net.minecraftforge.event.entity.living.LivingAttackEvent event) {
+        if (event.getEntity() instanceof UniqueBody && event.getSource() != null && "fall".equals(event.getSource().m_19385_())) {
+            event.setCanceled(true);
         }
     }
 

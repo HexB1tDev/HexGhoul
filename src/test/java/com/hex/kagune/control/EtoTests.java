@@ -291,6 +291,7 @@ public final class EtoTests {
         claimed();
         student();
         topics();
+        typing();
     }
 
     /** A full context, as the server makes one. */
@@ -318,6 +319,10 @@ public final class EtoTests {
             && EtoTalk.answer(wife, NpcTalk.Choice.NIGHT).effect() == EtoTalk.Effect.NIGHT, "married: no ring twice; the night, at night");
         EtoTalk.Context dating = full(100, EtoRules.DATING, true, Romance.Stage.DATING, null, 6000L, EtoMood.HAPPY, true, EtoRules.Pact.NONE, false, false,
             null, 2);
+        EtoTalk.Option hand = EtoTalk.sweet(dating, "").options().stream().filter(o -> o.key().equals("sweet:hand")).findFirst().orElse(null);
+        check(hand != null && hand.label().equals("Hold my hand.") && EtoTalk.sweetly(dating, "hand").effect() == EtoTalk.Effect.HAND
+            && EtoTalk.sweetly(dating, "cling").effect() == EtoTalk.Effect.CLING && EtoTalk.sweetly(dating, "cling").gesture() == EtoGesture.NONE,
+            "her hand, and her arm round theirs, asked for (she comes to them for it)");
         check(EtoTalk.sweet(dating, "").choices().contains(NpcTalk.Choice.PROPOSE) && !EtoTalk.sweet(dating, "").choices().contains(NpcTalk.Choice.NIGHT)
             && EtoTalk.answer(dating, NpcTalk.Choice.NIGHT).effect() == EtoTalk.Effect.NONE, "dating with a ring: the proposal; by day, no night");
         check(EtoTalk.choices(dating).contains(NpcTalk.Choice.SAY_8), "many gifts at once: a page of their own");
@@ -355,6 +360,24 @@ public final class EtoTests {
         Quest trial = QuestBook.get("eto_one_eye");
         check(trial != null && trial.after().contains("eto_witness") && EtoRules.lessonFlag("eto_one_eye") == EtoRules.TAUGHT_TRIAL,
             "her last lesson comes after the third, taught like the rest");
+    }
+
+    static void typing() {
+        String line = "Hi. There, you... come here.";
+        double all = com.hex.kagune.control.client.NpcTalkView.duration(line);
+        int last = -1;
+        boolean onward = true;
+        for (double s = 0.0; s <= all + 0.1; s += 0.01) {
+            int now = com.hex.kagune.control.client.NpcTalkView.revealed(line, s);
+            onward &= now >= last;
+            last = now;
+        }
+        check(onward && com.hex.kagune.control.client.NpcTalkView.revealed(line, 0.0) == 0
+            && com.hex.kagune.control.client.NpcTalkView.revealed(line, all + 0.01) == line.length()
+            && com.hex.kagune.control.client.NpcTalkView.revealed(line, Double.POSITIVE_INFINITY) == line.length(), "her words come out in order, all of them");
+        check(com.hex.kagune.control.client.NpcTalkView.duration("Yes. No.") > com.hex.kagune.control.client.NpcTalkView.duration("Yes, No.")
+            && com.hex.kagune.control.client.NpcTalkView.duration("Yes, No.") > com.hex.kagune.control.client.NpcTalkView.duration("Yes  No.")
+            && all < 3.0, "a pause at a comma, a longer one at a sentence's end; never long");
     }
 
     static void topics() {
@@ -442,6 +465,28 @@ public final class EtoTests {
         eto.pair(null, "", Romance.Stage.NONE);
         check(eto.tag().isEmpty() && !eto.claimedFrom(steve), "free again (only when her partner kills her)");
         check(UniqueNpc.loadAll("eto|x|y\nbad").isEmpty(), "a broken line is dropped");
+        UniqueNpc home = new UniqueNpc();
+        home.claim(first, 0);
+        home.originX = 10;
+        home.originY = 70;
+        home.originZ = 20;
+        home.origined = true;
+        home.homeX = 400;
+        home.homeY = 64;
+        home.homeZ = 400;
+        home.homed = true;
+        home.away = true;
+        home.company = 1000;
+        check(!home.dueHome(1000 + UniqueNpc.GOES_HOME - 1) && home.dueHome(1000 + UniqueNpc.GOES_HOME), "left away a day with no one about: she goes home");
+        home.away = false;
+        check(!home.dueHome(9_999_999L), "at home, she stays");
+        check(home.spawn()[0] == 10 && home.spawn()[2] == 20, "she comes back where she belongs, not where she was left");
+        home.died(first, 5000);
+        check(home.dueBack(5000 + UniqueNpc.COMES_BACK) && UniqueNpc.COMES_BACK <= 24000L, "and a day after she dies");
+        all.put("eto", home);
+        UniqueNpc kept = UniqueNpc.loadAll(UniqueNpc.saveAll(all)).get("eto");
+        check(kept != null && kept.origined && kept.originY == 70 && kept.company == 1000, "her home kept with the world");
+        check(UniqueNpc.loadAll("eto|-|1|5|-9223372036854775808|1,2,3|-|-|0").get("eto").homeX == 1, "a save from before her own home reads");
     }
 
     static void moods() {
@@ -512,6 +557,16 @@ public final class EtoTests {
         RigPose kiss = EtoPose.gesture(EtoGesture.KISS, 30);
         check(kiss.lean > 0.2F && kiss.flip == 0.0F && kiss.rightLegX == 0.0F && kiss.leftLegX == 0.0F && kiss.drop == 0.0F && kiss.rightArmX > 0.3F
             && kiss.leftArmX > 0.3F, "the kiss: her top half bends in at the hips, her feet flat where they stand, hands behind her back");
+        RigPose pull = EtoPose.gesture(EtoGesture.PULL, 30);
+        check(pull.rightArmX + pull.lean > -1.75F && pull.rightArmX + pull.lean < -1.2F && Math.abs(pull.rightArmY) < 0.45F && pull.drop == 0.0F,
+            "pulling them in: her arms level with their shoulders (not closing on their face), her feet on the ground");
+        RigPose hand = EtoPose.gesture(EtoGesture.HAND, 40);
+        check(EtoGesture.HAND.held() && hand.leftArmZ < -0.2F && Math.abs(hand.rightArmZ) < 0.2F && hand.lean == 0.0F,
+            "hand in hand: her left hand out to the one at her side, held until she lets go");
+        RigPose write = EtoPose.gesture(EtoGesture.WRITE, 20);
+        RigPose writing = EtoPose.gesture(EtoGesture.WRITE, 21);
+        check(write.leftArmX == writing.leftArmX && write.rightArmX != writing.rightArmX && EtoGesture.WRITE.mainHand.endsWith("feather")
+            && EtoGesture.WRITE.offHand.endsWith("writable_book"), "writing: the quill hand moves, the book hand holds still");
         float turn = (float)(Math.PI * 2.0);
         boolean onward = true;
         for (int t = 24; t < EtoGesture.TWIRL.ticks; t++) {

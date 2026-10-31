@@ -118,6 +118,11 @@ public final class EtoBrain {
         /** The gesture her hands were last dressed for. */
         EtoGesture props = EtoGesture.NONE;
         long protectedAt = Long.MIN_VALUE;
+        /** 1.3.3: when a player was last about her (away from home a day without one, she goes back). */
+        long company = Long.MIN_VALUE;
+        /** 1.3.3: whose hand she holds (she walks at their side), and whether their shift was down last tick (a tap lets go). */
+        UUID holding;
+        boolean holdShift;
     }
 
     /** Every Eto ticking on this server (one, unless another has yet to be sent away). */
@@ -143,7 +148,12 @@ public final class EtoBrain {
             npc.mind = mind;
             mind.nextGestureAt = now + 100L + npc.m_217043_().m_188503_(200);
             mind.nextSeek = now + 1200L;
+            UniqueNpc known = UniqueNpcs.get(level, EtoRules.KEY);
+            mind.company = known.company != Long.MIN_VALUE ? known.company : now;
+            npc.origin();
             npc.m_21530_();
+            // 1.3.3: right-handed always (a left-handed one held the pocket book in the hand that writes).
+            npc.m_21559_(false);
             LIVE.add(npc);
         }
         BlockPos home = npc.home();
@@ -154,11 +164,33 @@ public final class EtoBrain {
             npc.m_146870_();
             return;
         }
+        if (now % 20L == 13L && someoneAbout(npc, level)) {
+            mind.company = now;
+        }
+        if (now % 200L == 7L) {
+            // 1.3.3: away from her own floor a day with no one about (waiting, following, lost), she goes home.
+            BlockPos origin = npc.origin();
+            boolean away = origin != null && Math.pow(origin.m_123341_() - home.m_123341_(), 2) + Math.pow(origin.m_123342_() - home.m_123342_(), 2)
+                + Math.pow(origin.m_123343_() - home.m_123343_(), 2) > 6.0 * 6.0;
+            UniqueNpcs.report(level, EtoRules.KEY, origin, away, mind.company);
+            if (away && mind.target == 0 && now - mind.company >= UniqueNpc.GOES_HOME) {
+                letGo(npc, mind, level, now, false);
+                npc.goHome();
+                home = npc.home();
+                mind.company = now;
+                UniqueNpcs.report(level, EtoRules.KEY, origin, false, now);
+                ServerPlayer partner = player(level, mind.partner);
+                if (partner != null) {
+                    partner.m_5661_(Component.m_237113_("\u00a7d" + EtoRules.NAME + " got tired of waiting and went home to the Library."), false);
+                }
+            }
+        }
         if (now % 20L == 3L) {
             partner(npc, mind, level);
         }
         // 1.3.1: following a player, her home goes with her (never pulled back to the Library); she keeps up, or is put by them if far behind.
-        UUID leaderId = npc.following();
+        // 1.3.3: holding someone's hand, the same, at their side.
+        UUID leaderId = mind.holding != null ? mind.holding : npc.following();
         if (leaderId != null) {
             ServerPlayer leader = player(level, leaderId);
             if (now % 20L == 0L || leader != null && mind.target == 0) {
@@ -171,7 +203,7 @@ public final class EtoBrain {
                     npc.m_6021_(at.f_82479_, at.f_82480_, at.f_82481_);
                     npc.m_21573_().m_26573_();
                     home = npc.settle();
-                } else if (far > 9.0 && now % 10L == 0L && mind.toward == null && mind.kiss == null) {
+                } else if (far > 9.0 && now % 10L == 0L && mind.toward == null && mind.kiss == null && mind.holding == null) {
                     npc.m_21573_().m_5624_(leader, 1.1);
                 }
             }
@@ -193,6 +225,7 @@ public final class EtoBrain {
         }
         if (target != null) {
             endKiss(npc, mind, null, now);
+            letGo(npc, mind, level, now, false);
             if (mind.gesture != EtoGesture.NONE && mind.gesture != EtoGesture.LAUGH) {
                 gesture(mind, EtoGesture.NONE, now);
             }
@@ -213,7 +246,7 @@ public final class EtoBrain {
             gesture(mind, EtoGesture.NONE, now);
         }
         if (mind.with != 0 && mind.gesture != EtoGesture.PULL && mind.gesture != EtoGesture.CLING && mind.gesture != EtoGesture.HUG
-            && mind.kiss == null) {
+            && mind.gesture != EtoGesture.HAND && mind.kiss == null) {
             mind.with = 0;
             mind.dirty = true;
         }
@@ -587,9 +620,24 @@ public final class EtoBrain {
             partner = null;
         }
         nearness(npc, mind, level, partner, now);
+        if (mind.holding != null) {
+            holdHands(npc, mind, level, now);
+            return;
+        }
         if (mind.toward != null || mind.kiss != null) {
             closeIn(npc, mind, level, now);
             return;
+        }
+        if (mind.gesture == EtoGesture.CLING && mind.with != 0) {
+            // 1.3.3: wound round their arm: she stays at their side while she clings; walked off, she lets go.
+            if (level.m_6815_(mind.with) instanceof ServerPlayer held && held.m_6084_() && held.m_20280_(npc) < 2.4 * 2.4) {
+                stayBeside(npc, held, CLING_OUT, now);
+                face(npc, held);
+                npc.m_21563_().m_24960_(held, 30.0F, 30.0F);
+                return;
+            }
+            gesture(mind, EtoGesture.NONE, now);
+            mind.with = 0;
         }
         ServerPlayer talker = player(level, mind.talking);
         if (talker != null) {
@@ -694,12 +742,8 @@ public final class EtoBrain {
             return true;
         }
         Long since = mind.nearSince.get(partner.m_20148_());
-        if (clingy && distance < 2.6 && since != null && now - since > 200L && mind.gesture == EtoGesture.NONE
-            && partner.m_20184_().m_165925_() < 0.003 && npc.m_217043_().m_188500_() < 0.01) {
-            npc.m_21573_().m_26573_();
-            face(npc, partner);
-            gesture(mind, EtoGesture.CLING, now);
-            mind.with = partner.m_19879_();
+        if (clingy && distance < 4.0 && since != null && now - since > 200L && mind.gesture == EtoGesture.NONE && npc.m_217043_().m_188500_() < 0.01) {
+            walkUp(npc, mind, partner, EtoGesture.CLING, now);
             return true;
         }
         return false;
@@ -785,7 +829,22 @@ public final class EtoBrain {
         face(npc, player);
         npc.m_21563_().m_24960_(player, 30.0F, 30.0F);
         if (mind.kiss == null) {
-            if (distance > EtoRules.KISS_NEAR) {
+            boolean side = mind.towardFor == EtoGesture.CLING || mind.towardFor == EtoGesture.HAND;
+            if (side) {
+                // 1.3.3: to their side, close enough to take their arm (or their hand), not a grab at the air from a step away.
+                Vec3 spot = beside(player, mind.towardFor == EtoGesture.HAND ? HAND_OUT : CLING_OUT);
+                double off = Math.sqrt(Math.pow(spot.f_82479_ - npc.m_20185_(), 2) + Math.pow(spot.f_82481_ - npc.m_20189_(), 2));
+                if (off > 0.45 || distance > 1.25) {
+                    if (now - mind.towardSince > 240L || distance > EtoRules.LEASH + 12.0) {
+                        endKiss(npc, mind, null, now);
+                        return;
+                    }
+                    if (now % 4L == 0L) {
+                        npc.m_21573_().m_26519_(spot.f_82479_, spot.f_82480_, spot.f_82481_, 1.0);
+                    }
+                    return;
+                }
+            } else if (distance > EtoRules.KISS_NEAR) {
                 if (now - mind.towardSince > 200L || distance > EtoRules.LEASH + 12.0) {
                     endKiss(npc, mind, null, now);
                     return;
@@ -811,6 +870,19 @@ public final class EtoBrain {
                     hearts(level, npc, player, 3);
                     giddy(npc, player, now);
                     mind.toward = null;
+                    return;
+                }
+                case HAND -> {
+                    // 1.3.3: her hand in theirs; she walks at their side until a tap of shift lets go.
+                    mind.toward = null;
+                    mind.holding = player.m_20148_();
+                    mind.holdShift = player.m_6047_();
+                    mind.with = player.m_19879_();
+                    gesture(mind, EtoGesture.HAND, now);
+                    hearts(level, npc, player, 4);
+                    giddy(npc, player, now);
+                    say(player, EtoLines.handTaken(seed));
+                    player.m_5661_(Component.m_237113_("\u00a7d\u2764 Holding hands with " + EtoRules.NAME + " \u00a77(tap Shift to let go)"), true);
                     return;
                 }
                 case KISS -> {
@@ -881,6 +953,95 @@ public final class EtoBrain {
                 player.m_5661_(Component.m_237113_(EtoRules.NAME + " is cross with you. She'll ignore you for a while."), true);
             }
         }
+    }
+
+    /** How far to their right she stands to cling to their arm, and to hold their hand. */
+    static final double CLING_OUT = 0.55;
+    static final double HAND_OUT = 0.8;
+
+    /** The spot {@code out} blocks to {@code player}'s right, level with them. */
+    private static Vec3 beside(ServerPlayer player, double out) {
+        double yaw = Math.toRadians(player.m_146908_());
+        return new Vec3(player.m_20185_() - Math.cos(yaw) * out, player.m_20186_(), player.m_20189_() - Math.sin(yaw) * out);
+    }
+
+    /** She keeps to the spot {@code out} to {@code player}'s right: walking there, or put there if left far behind. */
+    private static void stayBeside(EtoNpc npc, ServerPlayer player, double out, long now) {
+        Vec3 spot = beside(player, out);
+        double dx = spot.f_82479_ - npc.m_20185_();
+        double dz = spot.f_82481_ - npc.m_20189_();
+        double off = Math.sqrt(dx * dx + dz * dz);
+        if (off > 5.0 || Math.abs(spot.f_82480_ - npc.m_20186_()) > 3.0) {
+            npc.m_21573_().m_26573_();
+            npc.m_6021_(spot.f_82479_, spot.f_82480_, spot.f_82481_);
+        } else if (off > 0.3) {
+            if (now % 3L == 0L) {
+                npc.m_21573_().m_26519_(spot.f_82479_, spot.f_82480_, spot.f_82481_, Math.min(1.7, 0.9 + off * 0.35));
+            }
+        } else {
+            npc.m_21573_().m_26573_();
+        }
+    }
+
+    /** 1.3.3: walking hand in hand: at their side, facing the way they face; a tap of shift (or them gone) lets go. */
+    private static void holdHands(EtoNpc npc, Mind mind, ServerLevel level, long now) {
+        ServerPlayer player = player(level, mind.holding);
+        if (player == null || !player.m_6084_() || player.m_5833_() || player.m_20280_(npc) > 12.0 * 12.0) {
+            letGo(npc, mind, level, now, false);
+            return;
+        }
+        boolean shift = player.m_6047_();
+        if (shift && !mind.holdShift) {
+            letGo(npc, mind, level, now, true);
+            return;
+        }
+        mind.holdShift = shift;
+        if (mind.gesture != EtoGesture.HAND) {
+            gesture(mind, EtoGesture.HAND, now);
+        }
+        mind.with = player.m_19879_();
+        stayBeside(npc, player, HAND_OUT, now);
+        Vec3 spot = beside(player, HAND_OUT);
+        if (Math.pow(spot.f_82479_ - npc.m_20185_(), 2) + Math.pow(spot.f_82481_ - npc.m_20189_(), 2) < 0.8 * 0.8) {
+            float yaw = player.m_146908_();
+            npc.m_146922_(yaw);
+            npc.f_20883_ = yaw;
+            npc.f_20885_ = yaw;
+        }
+        if (now % 80L == 0L) {
+            hearts(level, npc, player, 1);
+        }
+    }
+
+    /** She lets go of their hand ({@code said}: they let go, and she says something about it). */
+    private static void letGo(EtoNpc npc, Mind mind, ServerLevel level, long now, boolean said) {
+        if (mind.holding == null) {
+            return;
+        }
+        ServerPlayer player = player(level, mind.holding);
+        mind.holding = null;
+        mind.with = 0;
+        if (mind.gesture == EtoGesture.HAND) {
+            gesture(mind, EtoGesture.NONE, now);
+        }
+        npc.m_21573_().m_26573_();
+        if (npc.following() == null) {
+            npc.settle();
+        }
+        if (said && player != null) {
+            say(player, EtoLines.handLet(npc.m_217043_().m_188503_(100)));
+        }
+        mind.dirty = true;
+    }
+
+    /** True if a player is about her (company: no reason to go home). */
+    private static boolean someoneAbout(EtoNpc npc, ServerLevel level) {
+        for (ServerPlayer player : level.m_6907_()) {
+            if (!player.m_5833_() && player.m_20280_(npc) <= 24.0 * 24.0) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** Pulled in: they are drawn to just in front of her face (their view is turned to hers on their client). */

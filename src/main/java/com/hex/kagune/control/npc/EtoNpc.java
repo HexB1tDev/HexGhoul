@@ -22,11 +22,13 @@ import net.minecraft.world.level.Level;
  * saved data): vanilla's goals walk her about inside it and back into it; everything else, the fight, the talk, her gestures, is decided
  * on the server ({@link EtoBrain}) and every client is told what it needs to draw her ({@code S2CEto}). She is never despawned.
  */
-public class EtoNpc extends PathfinderMob {
+public class EtoNpc extends PathfinderMob implements UniqueBody {
     /** Where her home is kept in her saved data (a block: where she first stood, one up). */
     static final String HOME = "HexEtoHome";
     /** 1.3.1: the player she follows (her saved data), if any. */
     static final String FOLLOW = "HexEtoFollow";
+    /** 1.3.3: where she belongs (her first home, the Library's floor), kept for good. */
+    static final String ORIGIN = "HexEtoOrigin";
 
     /** The server's state for her (her fight, her gesture); null on clients and until her first tick. */
     public EtoBrain.Mind mind;
@@ -83,6 +85,44 @@ public class EtoNpc extends PathfinderMob {
         } else {
             tag.m_128362_(FOLLOW, player);
         }
+    }
+
+    @Override
+    public String uniqueKey() {
+        return EtoRules.KEY;
+    }
+
+    /** 1.3.3: where she belongs: her first home (kept the first time she has one), or null before her first tick. */
+    @Override
+    public BlockPos origin() {
+        CompoundTag tag = this.getPersistentData();
+        if (!tag.m_128441_(ORIGIN + "X")) {
+            BlockPos home = this.home();
+            if (home == null) {
+                return null;
+            }
+            tag.m_128405_(ORIGIN + "X", home.m_123341_());
+            tag.m_128405_(ORIGIN + "Y", home.m_123342_());
+            tag.m_128405_(ORIGIN + "Z", home.m_123343_());
+        }
+        return new BlockPos(tag.m_128451_(ORIGIN + "X"), tag.m_128451_(ORIGIN + "Y"), tag.m_128451_(ORIGIN + "Z"));
+    }
+
+    /** 1.3.3: home again: following no one, back on her own floor, settled there. */
+    @Override
+    public void goHome() {
+        BlockPos origin = this.origin();
+        this.follow(null);
+        if (origin == null) {
+            return;
+        }
+        this.m_21573_().m_26573_();
+        this.m_6021_(origin.m_123341_() + 0.5, origin.m_123342_() - 1.0, origin.m_123343_() + 0.5);
+        CompoundTag tag = this.getPersistentData();
+        tag.m_128405_(HOME + "X", origin.m_123341_());
+        tag.m_128405_(HOME + "Y", origin.m_123342_());
+        tag.m_128405_(HOME + "Z", origin.m_123343_());
+        this.home = origin;
     }
 
     /** Where her home's floor is, in the middle of its block (x, feet y, z). */

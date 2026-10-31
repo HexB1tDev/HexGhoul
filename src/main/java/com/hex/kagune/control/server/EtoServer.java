@@ -275,11 +275,11 @@ public final class EtoServer {
         if (choice == NpcTalk.Choice.CHAT && !c.chattedToday()) {
             bond = bond.chatted(day);
         }
-        if (reply.gesture() != EtoGesture.NONE) {
+        if (reply.gesture() == EtoGesture.HUG || reply.gesture() == EtoGesture.CLING) {
+            // 1.3.3: a hug or her arm round theirs: she comes to them for it (never a grab at the air from across the room).
+            EtoBrain.walkUp(npc, npc.mind, player, reply.gesture(), now);
+        } else if (reply.gesture() != EtoGesture.NONE) {
             EtoBrain.gesture(npc.mind, reply.gesture(), now);
-            if (reply.gesture() == EtoGesture.HUG || reply.gesture() == EtoGesture.CLING) {
-                npc.mind.with = player.m_19879_();
-            }
         }
         if (reply.regard() >= 3 && c.dating()) {
             EtoBrain.giddy(npc, player, now);
@@ -351,6 +351,7 @@ public final class EtoServer {
             case KISS -> EtoBrain.walkUp(npc, npc.mind, player, EtoGesture.KISS, now);
             case HUG -> EtoBrain.walkUp(npc, npc.mind, player, EtoGesture.HUG, now);
             case CLING -> EtoBrain.walkUp(npc, npc.mind, player, EtoGesture.CLING, now);
+            case HAND -> EtoBrain.walkUp(npc, npc.mind, player, EtoGesture.HAND, now);
             case ANGER -> {
                 if (!EtoBrain.partnerOf(npc.mind, player)) {
                     npc.mind.grudges.put(player.m_20148_(), now + 400L);
@@ -388,7 +389,7 @@ public final class EtoServer {
             }
         }
         if (reply.effect() == EtoTalk.Effect.CLOSE || reply.effect() == EtoTalk.Effect.ANGER || reply.effect() == EtoTalk.Effect.KISS
-            || reply.effect() == EtoTalk.Effect.HUG || reply.effect() == EtoTalk.Effect.CLING) {
+            || reply.effect() == EtoTalk.Effect.HUG || reply.effect() == EtoTalk.Effect.CLING || reply.effect() == EtoTalk.Effect.HAND) {
             next = Kind.CLOSED;
         }
         if (choice == NpcTalk.Choice.DECLINE) {

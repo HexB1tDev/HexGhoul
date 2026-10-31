@@ -11,8 +11,10 @@ import java.util.UUID;
  * dating or married ({@link Romance.Stage}), by id and by name (for the line over her head). Kept with the world ({@code UniqueNpcs}).
  */
 public final class UniqueNpc {
-    /** Dead this long (game ticks: two days), she comes back to her home once a player is near it. */
-    public static final long COMES_BACK = 48000L;
+    /** Dead this long (game ticks: 1.3.3, a day), she comes back to her home once a player is near it. */
+    public static final long COMES_BACK = 24000L;
+    /** 1.3.3: away from home (waiting somewhere, following, lost) with no one about this long (a day), she goes back home. */
+    public static final long GOES_HOME = 24000L;
     /** Unseen this long (game ticks: five days) while thought alive, a new body of hers may take her place. */
     public static final long GONE_QUIET = 120000L;
 
@@ -27,6 +29,13 @@ public final class UniqueNpc {
     public UUID partner;
     public String partnerName = "";
     public Romance.Stage stage = Romance.Stage.NONE;
+    /** 1.3.3: where she belongs (made there, back there after she dies or is left too long), whether she is away from it, and when she last had company. */
+    public int originX;
+    public int originY;
+    public int originZ;
+    public boolean origined;
+    public boolean away;
+    public long company = Long.MIN_VALUE;
 
     /** Whether {@code body}, ticking at {@code now}, may live: hers, or none of hers lives (or hers has gone quiet), and it takes her place. */
     public boolean claim(UUID body, long now) {
@@ -56,7 +65,17 @@ public final class UniqueNpc {
 
     /** True if she is dead and has been long enough to come back. */
     public boolean dueBack(long now) {
-        return !this.alive && this.homed && this.diedAt != Long.MIN_VALUE && now - this.diedAt >= COMES_BACK;
+        return !this.alive && (this.origined || this.homed) && this.diedAt != Long.MIN_VALUE && now - this.diedAt >= COMES_BACK;
+    }
+
+    /** 1.3.3: true if she is alive, away from home, and has had no one about for {@link #GOES_HOME}. */
+    public boolean dueHome(long now) {
+        return this.alive && this.away && this.origined && this.company != Long.MIN_VALUE && now - this.company >= GOES_HOME;
+    }
+
+    /** Where she comes back to: her origin (her home before 1.3.3 kept it). */
+    public int[] spawn() {
+        return this.origined ? new int[] {this.originX, this.originY, this.originZ} : new int[] {this.homeX, this.homeY, this.homeZ};
     }
 
     /** The partner as the line over her head reads. */
@@ -85,7 +104,8 @@ public final class UniqueNpc {
     String save(String key) {
         return String.join("|", key, this.body == null ? "-" : this.body.toString(), this.alive ? "1" : "0", Long.toString(this.seen),
             Long.toString(this.diedAt), this.homed ? this.homeX + "," + this.homeY + "," + this.homeZ : "-",
-            this.partner == null ? "-" : this.partner.toString(), this.partnerName.isEmpty() ? "-" : this.partnerName, Integer.toString(this.stage.ordinal()));
+            this.partner == null ? "-" : this.partner.toString(), this.partnerName.isEmpty() ? "-" : this.partnerName, Integer.toString(this.stage.ordinal()),
+            this.origined ? this.originX + "," + this.originY + "," + this.originZ : "-", this.away ? "1" : "0", Long.toString(this.company));
     }
 
     /** Every NPC as one string, a line each. */
@@ -108,7 +128,7 @@ public final class UniqueNpc {
         }
         for (String line : saved.split("\n")) {
             String[] parts = line.split("\\|", -1);
-            if (parts.length != 9 || parts[0].isEmpty()) {
+            if (parts.length != 9 && parts.length != 12 || parts[0].isEmpty()) {
                 continue;
             }
             try {
@@ -129,6 +149,17 @@ public final class UniqueNpc {
                 npc.stage = Romance.Stage.byOrdinal(Integer.parseInt(parts[8]));
                 if (npc.partner == null) {
                     npc.stage = Romance.Stage.NONE;
+                }
+                if (parts.length == 12) {
+                    if (!parts[9].equals("-")) {
+                        String[] origin = parts[9].split(",");
+                        npc.originX = Integer.parseInt(origin[0]);
+                        npc.originY = Integer.parseInt(origin[1]);
+                        npc.originZ = Integer.parseInt(origin[2]);
+                        npc.origined = true;
+                    }
+                    npc.away = parts[10].equals("1");
+                    npc.company = Long.parseLong(parts[11]);
                 }
                 all.put(parts[0], npc);
             } catch (RuntimeException ignored) {

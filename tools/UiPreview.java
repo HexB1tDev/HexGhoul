@@ -322,6 +322,52 @@ public class UiPreview {
                 com.hex.kagune.control.npc.NpcTalk.Choice.LEAVE)), 0, 0);
     }
 
+    /**
+     * 1.3.3: Eto's talk screen as it moves: her words half typed (the meter's heart gliding, what changed floating up), then all said
+     * with the answers coming in, then all in place. Her face from her own skin (128 pixels, read at half size).
+     */
+    static void etoTalk(File dir) throws Exception {
+        BufferedImage big = ImageIO.read(new File("src/main/resources/assets/hexkagune/textures/entity/eto/eto.png"));
+        BufferedImage half = new BufferedImage(64, 64, BufferedImage.TYPE_INT_ARGB);
+        half.getGraphics().drawImage(big, 0, 0, 64, 64, null);
+        java.util.List<com.hex.kagune.control.npc.NpcTalk.Choice> choices = java.util.List.of(com.hex.kagune.control.npc.NpcTalk.Choice.CHAT,
+            com.hex.kagune.control.npc.NpcTalk.Choice.SWEET, com.hex.kagune.control.npc.NpcTalk.Choice.BOOK, com.hex.kagune.control.npc.NpcTalk.Choice.LESSON,
+            com.hex.kagune.control.npc.NpcTalk.Choice.STAY, com.hex.kagune.control.npc.NpcTalk.Choice.TEASE, com.hex.kagune.control.npc.NpcTalk.Choice.LEAVE);
+        java.util.List<String> labels = java.util.List.of("Talk to me.", "Be sweet to her.", "I brought you a book. (give the book in your hand)",
+            "Teach me something.", "Wait here.", "Tease her.", "Leave.");
+        String line = "Stop looking at me like that. ...No, keep doing it. You know what, come here. Closer. I have a rule about you being more than an "
+            + "arm away.";
+        com.hex.kagune.control.client.NpcTalkView.Model model = new com.hex.kagune.control.client.NpcTalkView.Model("Eto", "Your date - giddy", 86, false,
+            line, choices, labels);
+        double done = com.hex.kagune.control.client.NpcTalkView.duration(line);
+        etoFrame(new File(dir, "eto-talk-1-typing.png"), half, model, new com.hex.kagune.control.client.NpcTalkView.Motion(2.0, done * 0.45, 78.0F, 3, 0.35));
+        etoFrame(new File(dir, "eto-talk-2-answers.png"), half, model, new com.hex.kagune.control.client.NpcTalkView.Motion(4.0, done + 0.16, 86.0F, 3, 1.1));
+        etoFrame(new File(dir, "eto-talk-3-still.png"), half, model, com.hex.kagune.control.client.NpcTalkView.Motion.still(86));
+        com.hex.kagune.control.client.NpcTalkView.Model cold = new com.hex.kagune.control.client.NpcTalkView.Model("Eto", "Taken - cold", 12, false,
+            "Mm? Oh. You. If it's lessons, fine. If it's anything else, I'm Steve's. Don't get funny ideas.",
+            java.util.List.of(com.hex.kagune.control.npc.NpcTalk.Choice.CHAT, com.hex.kagune.control.npc.NpcTalk.Choice.LESSON,
+                com.hex.kagune.control.npc.NpcTalk.Choice.INSULT, com.hex.kagune.control.npc.NpcTalk.Choice.LEAVE));
+        etoFrame(new File(dir, "eto-talk-4-claimed.png"), half, cold, new com.hex.kagune.control.client.NpcTalkView.Motion(3.0, 99.0, 12.0F, -8, 0.5));
+    }
+
+    static void etoFrame(File out, BufferedImage face, com.hex.kagune.control.client.NpcTalkView.Model model,
+                         com.hex.kagune.control.client.NpcTalkView.Motion motion) throws Exception {
+        int w = 960;
+        int h = 540;
+        BufferedImage image = new BufferedImage(w * 2, h * 2, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = graphics(image, 2);
+        new ImageCanvas(g, false).gradient(0, 0, w, h, 0xFF2A3A26, 0xFF101810);
+        SKIN = face;
+        ImageCanvas c = new ImageCanvas(g, false);
+        c.push();
+        c.translate(0, h - com.hex.kagune.control.client.NpcTalkView.UI_HEIGHT);
+        com.hex.kagune.control.client.NpcTalkView.draw(c, model, 300, 470, 1.3, motion);
+        c.pop();
+        SKIN = null;
+        ImageIO.write(image, "png", out);
+        System.out.println("wrote " + out);
+    }
+
     static void talkPage(File out, String skin, com.hex.kagune.control.client.NpcTalkView.Model model, double mouseX, double mouseY) throws Exception {
         int w = 960;
         int h = 540;
@@ -387,6 +433,10 @@ public class UiPreview {
         }
         if (args.length > 1 && args[1].equals("talk")) {
             talk(dir);
+            return;
+        }
+        if (args.length > 1 && args[1].equals("eto-talk")) {
+            etoTalk(dir);
             return;
         }
         if (args.length > 1 && args[1].equals("king")) {

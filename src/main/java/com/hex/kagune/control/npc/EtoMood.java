@@ -27,7 +27,7 @@ public enum EtoMood {
     /** Nobody's been by in ages. */
     BORED("bored"),
     /** Someone else's partner talking to her: polite at best. */
-    CLAIMED("taken"),
+    CLAIMED("cold"),
     /** A stranger, or someone she doesn't like much. */
     WARY("wary");
 

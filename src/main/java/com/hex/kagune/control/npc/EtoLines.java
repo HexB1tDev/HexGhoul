@@ -217,6 +217,18 @@ public final class EtoLines {
             "You're warm. That's the only reason I'm doing this. Shut up.");
     }
 
+    /** 1.3.3: her hand in theirs. */
+    public static String handTaken(int seed) {
+        return one(seed, "Here. ...Don't make it weird. It's already weird. Walk.", "Your hand's warm. I'm keeping it.",
+            "Lead on. If you let go, I'll know it was on purpose.", "Hold it properly. Like you mean it. ...There.");
+    }
+
+    /** 1.3.3: they let go. */
+    public static String handLet(int seed) {
+        return one(seed, "Fine. ...My hand's cold now. Thanks.", "Okay. But I'm taking it back later.", "Hmph. That was a good walk.",
+            "You let go first. I'm writing that down.");
+    }
+
     public static String clung(int seed) {
         return one(seed, "Come here. ...Don't move. This is my spot.", "I'm not clingy. I'm attached. There's a difference.",
             "Your arm's mine now. You can have it back later. Maybe.");

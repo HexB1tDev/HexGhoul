@@ -54,7 +54,9 @@ public enum EtoGesture {
     /** A puppy (or kitten, or whatever was brought) cuddled to her chest. */
     PET(96, true, true),
     /** Her laugh in a fight gone bad for someone: head back, arms wide. */
-    LAUGH(44, false, false);
+    LAUGH(44, false, false),
+    /** 1.3.3: hand in hand: her hand out to the one at her side, walking with them. */
+    HAND(0, false, true);
 
     public final int ticks;
     public final boolean eyesClosed;

@@ -24,7 +24,9 @@ public final class SfxTests {
         "entity.generic.burn", "block.fire.extinguish",
         // 1.3.2: a partner's private chimes (interface cues, as the journal's) and the night's cutscene (a candle, the sheets, a rooster).
         "entity.experience_orb.pickup", "block.note_block.chime", "block.note_block.harp", "block.bell.use", "block.candle.extinguish",
-        "block.wool.step", "entity.chicken.ambient");
+        "block.wool.step", "entity.chicken.ambient",
+        // 1.3.3: the talk screen's voice, a soft blip as the words come.
+        "block.note_block.bit");
     private static final Path SOUNDS = Path.of("src/main/resources/assets/hexkagune/sounds");
 
     private static void check(boolean condition, String description) {
