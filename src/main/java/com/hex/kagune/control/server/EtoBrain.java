@@ -1040,6 +1040,48 @@ public final class EtoBrain {
         ControlNetwork.sendTo(player, new S2CNpcAlert(EtoRules.NAME, want.ordinal(), text));
     }
 
+    /** 1.3.11: who last showed her what (by player), and when: she reacts once in a while, not at every flicker. */
+    private static final Map<UUID, Long> SEEN = new HashMap<>();
+
+    /**
+     * 1.3.11: {@code player} shows her what they are ({@link com.hex.kagune.control.npc.Display}): a word by who they are to her and where
+     * she is (her Library), and what she does: amused, annoyed among her books, impressed, worried for her partner as it gets worse.
+     */
+    static void saw(EtoNpc npc, ServerPlayer player, com.hex.kagune.control.npc.Display shown, ServerLevel level, long now) {
+        Mind mind = npc.mind;
+        if (mind == null || mind.target == player.m_19879_() || shown == com.hex.kagune.control.npc.Display.NONE) {
+            return;
+        }
+        Long last = SEEN.get(player.m_20148_());
+        if (last != null && now - last < 600L && shown != com.hex.kagune.control.npc.Display.DREAD) {
+            return;
+        }
+        SEEN.put(player.m_20148_(), now);
+        EtoTalk.Context c = EtoServer.context(player, npc);
+        com.hex.kagune.control.npc.EtoVoice voice = com.hex.kagune.control.npc.EtoVoice.of(c);
+        BlockPos origin = npc.origin();
+        boolean library = origin != null && npc.m_20238_(new Vec3(origin.m_123341_() + 0.5, origin.m_123342_(), origin.m_123343_() + 0.5)) < 28.0 * 28.0;
+        String line = EtoLines.saw(shown, voice, library, npc.m_217043_().m_188503_(1000));
+        if (!line.isEmpty()) {
+            say(player, line);
+        }
+        boolean ours = voice.together();
+        EtoGesture gesture;
+        switch (shown) {
+            case EYES -> gesture = ours ? EtoGesture.BLUSH : EtoGesture.LOOK;
+            case KAGUNE -> gesture = ours ? EtoGesture.GIGGLE : library ? EtoGesture.ANGRY : EtoGesture.LAUGH;
+            case KAKUJA -> gesture = ours ? EtoGesture.CLING : EtoGesture.LOOK;
+            default -> gesture = ours ? EtoGesture.HUG : EtoGesture.LOOK;
+        }
+        if (mind.target == 0 && mind.kiss == null && mind.holding == null) {
+            face(npc, player);
+            gesture(mind, gesture, now);
+        }
+        if (ours && shown == com.hex.kagune.control.npc.Display.KAGUNE) {
+            hearts(level, npc, player, 3);
+        }
+    }
+
     static void gesture(Mind mind, EtoGesture gesture, long now) {
         mind.gesture = gesture;
         mind.gestureAt = now;

@@ -341,6 +341,29 @@ public final class EtoLines {
             c.married() ? "Good morning, spouse. I could get used to this. I have." : "...So. That happened. Good. Very good."));
     }
 
+    /**
+     * 1.3.11: what she says as she sees {@code shown} on someone she is {@code voice} to ({@code library}: in her Library, among her books).
+     * A stranger's kagune in her Library annoys her; a kakuja interests her; on her partner, she is impressed, then worried as it gets worse.
+     */
+    public static String saw(Display shown, EtoVoice voice, boolean library, int seed) {
+        boolean ours = voice.together();
+        boolean close = voice == EtoVoice.CLOSE;
+        return switch (shown) {
+            case EYES -> ours ? one(seed, "Your eyes... red suits you. Don't tell anyone I said that.", "There they are. My favourite colour on you.")
+                : one(seed, "Red eyes. How quaint.", library ? "Hungry? Not here. The books don't taste good, I've tried." : "Oh? Hungry already?");
+            case KAGUNE -> ours ? one(seed, "Show-off. ...A beautiful show-off.", "Careful with that thing near me. ...Or don't.")
+                : library ? one(seed, "Not near my books. I mean it.", "Put that away in my Library or lose it.", "If one page tears, you're next.")
+                : close ? one(seed, "Ooh. Let me see. ...Hm. Not bad.", "Is that meant to impress me? It's working a little.")
+                : one(seed, "Cute. Is that everything?", "Waving that around won't make me like you.");
+            case KAKUJA -> ours ? one(seed, "Hey. Hey. Come back to me. Don't lose yourself in that.", "You're eating yourself to get there. I know. Just... come back.")
+                : one(seed, "Now that's interesting. A kakuja. You've been busy.", "Ah. One of us, then. A proper monster.",
+                    library ? "A kakuja. In my Library. ...You have nerve. I almost like it." : "How far will you go, I wonder?");
+            case DREAD -> ours ? one(seed, "Stop. Please. Look at me. ...You're still in there. I know you are.", "That's enough. Come back. Now.")
+                : one(seed, "...Well. That's new. Even I haven't read about that.", "Hm. So the stories were true. Stay away from my shelves.");
+            default -> "";
+        };
+    }
+
     /** 1.3.10: the morning after the night she conceived. */
     public static String conceived(EtoTalk.Context c) {
         return fill(c, one(c.seed(), "...Something changed last night. Don't ask me how I know. I know.",

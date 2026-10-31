@@ -35,6 +35,7 @@ public final class FamilyTests {
         talk();
         children();
         looks();
+        reactions();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -340,5 +341,30 @@ public final class FamilyTests {
     static boolean near(int argb, int rgb, int by) {
         return Math.abs(((argb >> 16) & 255) - ((rgb >> 16) & 255)) <= by && Math.abs(((argb >> 8) & 255) - ((rgb >> 8) & 255)) <= by
             && Math.abs((argb & 255) - (rgb & 255)) <= by;
+    }
+
+    static void reactions() {
+        com.hex.kagune.control.npc.Display none = com.hex.kagune.control.npc.Display.NONE;
+        com.hex.kagune.control.npc.Display eyes = com.hex.kagune.control.npc.Display.EYES;
+        com.hex.kagune.control.npc.Display kagune = com.hex.kagune.control.npc.Display.KAGUNE;
+        com.hex.kagune.control.npc.Display kakuja = com.hex.kagune.control.npc.Display.KAKUJA;
+        com.hex.kagune.control.npc.Display dread = com.hex.kagune.control.npc.Display.DREAD;
+        check(kagune.rose(eyes) && kakuja.rose(none) && !eyes.rose(kagune) && !kagune.rose(kagune) && eyes.rose(null) && !none.rose(null),
+            "noticed only as it rises: more than before");
+        check(!eyes.frightening() && !kagune.frightening() && kakuja.frightening() && dread.frightening(), "a kakuja and worse frighten a stranger");
+        boolean said = true;
+        for (com.hex.kagune.control.npc.Display shown : new com.hex.kagune.control.npc.Display[] {eyes, kagune, kakuja, dread}) {
+            for (com.hex.kagune.control.npc.EtoVoice voice : com.hex.kagune.control.npc.EtoVoice.values()) {
+                for (boolean library : new boolean[] {true, false}) {
+                    said &= !EtoLines.saw(shown, voice, library, 7).isEmpty();
+                }
+            }
+            said &= !com.hex.kagune.control.npc.ReactionLines.stranger(shown, 3).isEmpty() && !com.hex.kagune.control.npc.ReactionLines.ally(shown, 3).isEmpty();
+            for (com.hex.kagune.control.family.ChildStage stage : com.hex.kagune.control.family.ChildStage.values()) {
+                said &= !com.hex.kagune.control.npc.ReactionLines.child(stage, "Papa", shown, 2).isEmpty();
+            }
+        }
+        check(said, "Eto, ghouls and children each have something to say at every sight, whoever they are to them");
+        check(EtoLines.saw(none, com.hex.kagune.control.npc.EtoVoice.FRIENDLY, false, 1).isEmpty(), "nothing shown, nothing said");
     }
 }
