@@ -260,7 +260,7 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
         double clock = com.hex.kagune.control.client.PaleClient.clock(partial);
         double age = view.momentAge(clock);
         if (ride == ChildRules.RIDE_SPIN && view.moment() == com.hex.kagune.control.family.ChildMoment.SPIN && view.inMoment(clock)) {
-            bodyYaw += (float)Math.toDegrees(com.hex.kagune.control.family.ChildMoment.spinAngle(age)
+            bodyYaw += (float)Math.toDegrees(com.hex.kagune.control.family.ChildMoment.spinTurn(age)
                 * com.hex.kagune.control.family.ChildMoment.weight(com.hex.kagune.control.family.ChildMoment.SPIN, age));
         }
         double yaw = Math.toRadians(bodyYaw);

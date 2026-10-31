@@ -40,6 +40,8 @@ public final class FamilyTests {
         home();
         might();
         hands();
+        spin();
+        fights();
         reactions();
         initiative();
         if (!FAILURES.isEmpty()) {
@@ -475,6 +477,63 @@ public final class FamilyTests {
             && com.hex.kagune.control.family.ChildRules.playerMight(true, 1000, true) <= 1.0F, "a player's might: a ghoul by mastery, more with a final kakuja");
         check(com.hex.kagune.control.npc.Persona.KEN.might() > com.hex.kagune.control.npc.Persona.ETO.might()
             && com.hex.kagune.control.npc.Persona.ETO.might() > com.hex.kagune.control.npc.Persona.TOUKA.might(), "Ken's children strongest, then Eto's, then Touka's");
+    }
+
+    /**
+     * 1.3.24: the airplane spin (the owner: it spun "in the opposite direction, and after it's done it spins all the way back"): the
+     * parent's body turns the way the child is carried (right: a pose's spin + is left, so negative), smoothly, never past the pose's
+     * one-turn limit, and it ends facing the way it began with nothing left to unwind.
+     */
+    static void spin() {
+        com.hex.kagune.control.family.ChildMoment spin = com.hex.kagune.control.family.ChildMoment.SPIN;
+        double biggestStep = 0.0;
+        boolean sameWay = true;
+        boolean withinTurn = true;
+        for (double age = 0.0; age <= spin.ticks; age += 0.5) {
+            double turn = com.hex.kagune.control.family.ChildMoment.spinTurn(age);
+            double next = com.hex.kagune.control.family.ChildMoment.spinTurn(age + 0.5);
+            double step = Math.atan2(Math.sin(next - turn), Math.cos(next - turn));
+            biggestStep = Math.max(biggestStep, Math.abs(step));
+            com.hex.kagune.control.client.animation.RigPose parent = com.hex.kagune.control.client.animation.ChildMomentPose.parent(spin, age,
+                com.hex.kagune.control.family.ChildStage.TODDLER, true);
+            if (parent != null) {
+                withinTurn &= Math.abs(parent.spin) <= Math.PI + 1.0E-4;
+                if (Math.abs(turn) > 0.05 && Math.abs(turn) < Math.PI - 0.05) {
+                    sameWay &= Math.signum(parent.spin) == -Math.signum(turn);
+                }
+            }
+        }
+        check(sameWay, "the airplane: the parent turns the way the child is carried round (to their right)");
+        check(withinTurn, "the airplane: the parent's spin never reaches the pose's one-turn limit");
+        check(biggestStep < 0.5, "the airplane: no jump in the turn (" + biggestStep + " in half a tick)");
+        check(Math.abs(com.hex.kagune.control.family.ChildMoment.spinTurn(0.0)) < 1.0E-9
+            && Math.abs(com.hex.kagune.control.family.ChildMoment.spinTurn(spin.ticks)) < 1.0E-6
+            && Math.abs(com.hex.kagune.control.family.ChildMoment.spinTurn(spin.ticks - 6.0)) < 0.5,
+            "the airplane: it ends facing the way it began, nearly there as it eases out (nothing to unwind)");
+    }
+
+    /**
+     * 1.3.24: the owner: "NPCs will now attack hostile mobs in a 5 block radius, once starting to attack a hostile mob, they will not stop
+     * until it's dead, or gone far away enough". Taken on within five blocks; kept while it is near, however long the fight, while it is
+     * being got at; let go far off, chased too far from home, or out of reach a long while; a child's chase shorter.
+     */
+    static void fights() {
+        check(com.hex.kagune.control.npc.FightRules.notices(5.0) && !com.hex.kagune.control.npc.FightRules.notices(5.2)
+            && com.hex.kagune.control.npc.FightRules.notices(3.5), "a hostile mob within five blocks is taken on, not one further");
+        check(com.hex.kagune.control.npc.FightRules.keeps(12.0, 20.0, 0L, false) && com.hex.kagune.control.npc.FightRules.keeps(20.0, 30.0, 500L, false),
+            "a mob backing off out of the old leash (twelve, twenty blocks) is still fought");
+        check(!com.hex.kagune.control.npc.FightRules.keeps(25.0, 10.0, 0L, false), "a mob gone far off is let go");
+        check(!com.hex.kagune.control.npc.FightRules.keeps(10.0, 33.0, 0L, false), "a companion chases no further than its chase from home");
+        check(!com.hex.kagune.control.npc.FightRules.keeps(6.0, 6.0, com.hex.kagune.control.npc.FightRules.STUCK + 1L, false)
+            && com.hex.kagune.control.npc.FightRules.keeps(6.0, 6.0, com.hex.kagune.control.npc.FightRules.STUCK, false),
+            "a mob it can't get at (up a cliff, behind a wall) is let go after a long while, not for ever stared at");
+        check(com.hex.kagune.control.npc.FightRules.keeps(15.0, -1.0, 0L, true) && !com.hex.kagune.control.npc.FightRules.keeps(17.0, -1.0, 0L, true)
+            && com.hex.kagune.control.npc.FightRules.keeps(17.0, -1.0, 0L, false), "a child chases a shorter way than a companion; no home asked of it");
+        long now = 100000L;
+        check(com.hex.kagune.control.npc.FightRules.since(now, Long.MIN_VALUE) == Long.MAX_VALUE
+            && !com.hex.kagune.control.npc.FightRules.keeps(1.0, 1.0, com.hex.kagune.control.npc.FightRules.since(now, Long.MIN_VALUE), false)
+            && com.hex.kagune.control.npc.FightRules.since(now, now + 50L) == 0L && com.hex.kagune.control.npc.FightRules.since(now, now - 30L) == 30L,
+            "the time since it got at it never overflows (never: no fight kept on it)");
     }
 
     /** A model point turned as a ModelPart turns it (x, then z), pixels, y down: worked out here apart from ChildRules. */

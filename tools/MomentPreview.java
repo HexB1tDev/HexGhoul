@@ -45,7 +45,8 @@ public final class MomentPreview {
             new Shot("peekaboo: boo!", ChildMoment.PEEKABOO, ChildStage.BABY, 28, -1, 60),
             new Shot("toss: thrown up", ChildMoment.TOSS, ChildStage.TODDLER, 11, ChildRules.RIDE_ARMS, 70),
             new Shot("toss: caught", ChildMoment.TOSS, ChildStage.TODDLER, 21, ChildRules.RIDE_ARMS, 70),
-            new Shot("airplane spin", ChildMoment.SPIN, ChildStage.TODDLER, 32, ChildRules.RIDE_SPIN, 60),
+            new Shot("airplane spin: a quarter in", ChildMoment.SPIN, ChildStage.TODDLER, 20, ChildRules.RIDE_SPIN, 60),
+            new Shot("airplane spin: nearly done", ChildMoment.SPIN, ChildStage.TODDLER, 50, ChildRules.RIDE_SPIN, 60),
             new Shot("on the shoulders", ChildMoment.NONE, ChildStage.CHILD, 0, ChildRules.RIDE_SHOULDERS, 25),
             new Shot("arms up: pick me up!", ChildMoment.ARMS_UP, ChildStage.TODDLER, 20, -1, 65),
             new Shot("wave (child)", ChildMoment.WAVE, ChildStage.CHILD, 14, -1, 60),
@@ -206,7 +207,7 @@ public final class MomentPreview {
             at = new double[] {0.0, ChildRules.SHOULDERS_UP - sat, -ChildRules.SHOULDERS_BACK};
             turn = 0.0;
         } else if (shot.ride() == ChildRules.RIDE_SPIN) {
-            double a = ChildMoment.spinAngle(shot.age());
+            double a = ChildMoment.spinTurn(shot.age());
             at = new double[] {-Math.sin(a) * ChildRules.SPIN_AHEAD, ChildRules.SPIN_UP - 0.45 * k, Math.cos(a) * ChildRules.SPIN_AHEAD};
             turn = Math.PI - a;
         } else if (shot.ride() == ChildRules.RIDE_ARMS) {

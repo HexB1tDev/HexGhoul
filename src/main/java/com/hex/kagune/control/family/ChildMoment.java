@@ -124,6 +124,16 @@ public enum ChildMoment {
         return eased * Math.PI * 4.0;
     }
 
+    /**
+     * 1.3.24: SPIN: which way round they face now (radians, + to their right, -pi..pi): {@link #spinAngle} wrapped. Two whole turns end
+     * facing the way they began, so as the moment eases out nothing unwinds (the owner: it "spins all the way back"), and a body's spin
+     * never reaches the pose's one-turn limit (RigPose.settle) and stops halfway.
+     */
+    public static double spinTurn(double age) {
+        double a = spinAngle(age);
+        return Math.atan2(Math.sin(a), Math.cos(a));
+    }
+
     /** How far into it a pose has come (0..1): eased in over the first few ticks and out over the last few. */
     public static double weight(ChildMoment moment, double age) {
         if (!moment.running(age)) {

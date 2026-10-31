@@ -389,7 +389,7 @@ public abstract class Persona {
 
         @Override
         public String home() {
-            return "her spot";
+            return "Anteiku"; // 1.3.24: the café she works at (her structure)
         }
 
         @Override
@@ -518,7 +518,7 @@ public abstract class Persona {
 
         @Override
         public String home() {
-            return "his spot";
+            return "his tower"; // 1.3.24: the top of the tower (his structure)
         }
 
         @Override

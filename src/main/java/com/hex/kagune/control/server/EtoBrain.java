@@ -70,6 +70,8 @@ public final class EtoBrain {
         int target;
         long foughtAt = Long.MIN_VALUE;
         long hurtAt = Long.MIN_VALUE;
+        /** 1.3.24: when she last got at what she fights (close to it, or a blow landed on it): given up only after a long while without. */
+        long reachedAt = Long.MIN_VALUE;
         /** Players who hurt her, until when she holds it against them. */
         final Map<UUID, Long> grudges = new HashMap<>();
         /** 1.3.4: her Owl DNA kit's moves ({@link EtoOwl}). */
@@ -239,6 +241,9 @@ public final class EtoBrain {
         // brought back only from far beyond it.
         Households.Home house = npc.following() == null ? Households.forCompanion(level, npc) : null;
         double lost = house != null ? Households.LOST : EtoRules.LOST;
+        if (mind.target != 0) {
+            lost = Math.max(lost, com.hex.kagune.control.npc.FightRules.CHASE + 8.0); // 1.3.24: a chase is not being lost
+        }
         if (npc.m_20238_(homeAt) > lost * lost && !EtoOwl.carried(mind.owl)) {
             npc.m_6021_(homeAt.f_82479_, homeAt.f_82480_, homeAt.f_82481_);
             npc.m_21573_().m_26573_();
@@ -250,7 +255,10 @@ public final class EtoBrain {
         // 1.3.19: her wings' spikes in flight, and the wings going back in once the fight is long over (Touka's).
         NpcWings.tick(npc, mind, level, now);
         // Her partner about, she may wander as far as her leash to be near them.
-        npc.m_21446_(home, house != null ? house.radius() : target != null || mind.partnerNear ? EtoRules.LEASH : EtoRules.HOME_RADIUS);
+        // 1.3.24: fighting, as far as the chase goes (it keeps after what it fights till it is dead or gone).
+        int chase = (int)com.hex.kagune.control.npc.FightRules.CHASE;
+        npc.m_21446_(home, house != null ? Math.max(house.radius(), target != null ? chase : 0) : target != null ? chase
+            : mind.partnerNear ? EtoRules.LEASH : EtoRules.HOME_RADIUS);
         boolean turned = target != null;
         if (turned != mind.turned) {
             mind.turned = turned;
@@ -343,12 +351,21 @@ public final class EtoBrain {
 
     private static LivingEntity target(EtoNpc npc, Mind mind, ServerLevel level, Vec3 home, long now) {
         LivingEntity current = mind.target == 0 ? null : level.m_6815_(mind.target) instanceof LivingEntity living ? living : null;
-        if (current != null && (!current.m_6084_() || current.m_20238_(home) > (EtoRules.LEASH + 2.0) * (EtoRules.LEASH + 2.0)
+        if (current != null && current.m_20280_(npc) <= com.hex.kagune.control.npc.FightRules.REACHED * com.hex.kagune.control.npc.FightRules.REACHED) {
+            mind.reachedAt = now;
+        }
+        // 1.3.24: what it fights it keeps till it is dead, or gone far off, or chased too far from home, or out of its reach a long while.
+        if (current != null && (!current.m_6084_() || current.m_9236_() != level
+            || !com.hex.kagune.control.npc.FightRules.keeps(Math.sqrt(current.m_20280_(npc)), Math.sqrt(current.m_20238_(home)),
+                com.hex.kagune.control.npc.FightRules.since(now, mind.reachedAt), false)
             || current instanceof ServerPlayer player && (player.m_7500_() || player.m_5833_() || partnerOf(mind, player)))) {
             current = null;
         }
         if (current == null && now % 5L == 0L) {
             current = seek(npc, mind, level, home, now);
+            if (current != null) {
+                mind.reachedAt = now; // a fresh fight: its time to get at it starts now
+            }
         }
         int id = current == null ? 0 : current.m_19879_();
         if (id != mind.target) {
@@ -422,6 +439,17 @@ public final class EtoBrain {
         return true;
     }
 
+    /**
+     * 1.3.24: a hostile mob to take on: a monster; a neutral one (an enderman, a zombified piglin, a spider by day) only once it is after
+     * someone (never one minding its own business: a whole swarm would come).
+     */
+    static boolean hostile(LivingEntity living) {
+        if (!(living instanceof Enemy)) {
+            return false;
+        }
+        return !(living instanceof net.minecraft.world.entity.NeutralMob) || living instanceof net.minecraft.world.entity.Mob mob && mob.m_5448_() != null;
+    }
+
     /** 1.3.21: the player this companion is married to (null: none). */
     public static UUID spouse(EtoNpc npc) {
         Mind mind = npc.mind;
@@ -435,17 +463,23 @@ public final class EtoBrain {
             home.f_82480_ + 4.0, home.f_82481_ + EtoRules.LEASH);
         LivingEntity best = null;
         double nearest = Double.MAX_VALUE;
-        for (LivingEntity living : level.m_6443_(LivingEntity.class, around, living -> living != npc && living.m_6084_())) {
+        for (LivingEntity living : level.m_6443_(LivingEntity.class, around, living -> living instanceof ServerPlayer && living.m_6084_())) {
             double distance = living.m_20280_(npc);
-            boolean fights;
-            if (living instanceof ServerPlayer player) {
-                // 1.3.2: her partner, never; whatever they did.
-                fights = !player.m_7500_() && !player.m_5833_() && !partnerOf(mind, player) && (mind.grudges.containsKey(player.m_20148_())
-                    || QuestServer.bond(player, npc.persona().key()).regard() <= NpcBonds.ENEMY);
-            } else {
-                fights = living instanceof Enemy && distance <= (EtoRules.STRIKE_REACH + 0.5) * (EtoRules.STRIKE_REACH + 0.5);
-            }
+            ServerPlayer player = (ServerPlayer)living;
+            // 1.3.2: her partner, never; whatever they did.
+            boolean fights = !player.m_7500_() && !player.m_5833_() && !partnerOf(mind, player) && (mind.grudges.containsKey(player.m_20148_())
+                || QuestServer.bond(player, npc.persona().key()).regard() <= NpcBonds.ENEMY);
             if (fights && distance < nearest) {
+                nearest = distance;
+                best = living;
+            }
+        }
+        // 1.3.24: a hostile mob within five blocks of her (it was three: she let them come right up to her).
+        double notice = com.hex.kagune.control.npc.FightRules.NOTICE;
+        for (LivingEntity living : level.m_6443_(LivingEntity.class, npc.m_20191_().m_82400_(notice), living -> living != npc && living.m_6084_()
+            && hostile(living))) {
+            double distance = living.m_20280_(npc);
+            if (com.hex.kagune.control.npc.FightRules.notices(Math.sqrt(distance)) && distance < nearest) {
                 nearest = distance;
                 best = living;
             }
@@ -460,6 +494,12 @@ public final class EtoBrain {
      */
     @SubscribeEvent
     public static void hurt(net.minecraftforge.event.entity.living.LivingHurtEvent event) {
+        // 1.3.24: a blow she landed on what she fights (her spikes, her kagune from afar): she is getting at it, she keeps at it.
+        Entity by = event.getSource() == null ? null : event.getSource().m_7639_();
+        if (by instanceof EtoNpc fighter && fighter.mind != null && fighter.mind.target == event.getEntity().m_19879_()
+            && fighter.m_9236_() instanceof ServerLevel at) {
+            fighter.mind.reachedAt = at.m_46467_();
+        }
         if (event.getEntity() instanceof ServerPlayer victim) {
             protect(victim, event.getSource());
             return;
@@ -506,6 +546,7 @@ public final class EtoBrain {
         }
         if (mind.target == 0) {
             mind.target = attacker.m_19879_();
+            mind.reachedAt = now; // 1.3.24: a fresh fight
             mind.dirty = true;
         }
     }
@@ -566,6 +607,7 @@ public final class EtoBrain {
             }
             long now = npc.m_9236_().m_46467_();
             mind.target = attacker.m_19879_();
+            mind.reachedAt = now; // 1.3.24: a fresh fight
             mind.dirty = true;
             endKiss(npc, mind, null, now);
             if (now - mind.protectedAt > 200L) {
@@ -591,6 +633,7 @@ public final class EtoBrain {
             }
             long now = level.m_46467_();
             mind.target = attacker.m_19879_();
+            mind.reachedAt = now; // 1.3.24: a fresh fight
             mind.dirty = true;
             if (attacker instanceof ServerPlayer player) {
                 mind.grudges.put(player.m_20148_(), now + 1200L);

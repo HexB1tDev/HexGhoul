@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.24 (HexGhoul): Touka lives at Anteiku, Ken on top of the tower; NPCs fight to the end; the airplane spin fixed (testing)
+
+See `.github/release-notes-1.3.24.md`.
+
 ## 1.3.23 (HexGhoul): Ken's kakugan iris fixed (testing)
 
 See `.github/release-notes-1.3.23.md`.

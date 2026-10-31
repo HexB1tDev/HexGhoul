@@ -240,7 +240,8 @@ public final class ChildMomentPose {
         p.leftArmY = 0.18F;
         p.lean = -0.14F;
         p.headX = 0.1F;
-        p.spin = (float)ChildMoment.spinAngle(age);
+        // 1.3.24: to their right, the way the child is carried round (a pose's spin + turns it left: it turned the other way).
+        p.spin = (float)-ChildMoment.spinTurn(age);
         p.armHold = 1.0F;
     }
 

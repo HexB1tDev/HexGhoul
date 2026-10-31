@@ -1,0 +1,16 @@
+{
+  "structures": [
+    {
+      "structure": "hexkagune:anteiku",
+      "weight": 1
+    }
+  ],
+  "placement": {
+    "type": "minecraft:concentric_rings",
+    "salt": 1324066190,
+    "distance": 10,
+    "spread": 1,
+    "count": 1,
+    "preferred_biomes": "#hexkagune:prefers/anteiku"
+  }
+}
