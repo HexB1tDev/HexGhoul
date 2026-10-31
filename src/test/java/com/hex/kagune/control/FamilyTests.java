@@ -35,6 +35,7 @@ public final class FamilyTests {
         talk();
         children();
         looks();
+        ownerSkins();
         reactions();
         initiative();
         if (!FAILURES.isEmpty()) {
@@ -267,6 +268,65 @@ public final class FamilyTests {
         } catch (java.io.IOException missing) {
             return null;
         }
+    }
+
+    /** 1.3.18: the owner's skins for sons and daughters: all there, each sex its own, picked near the child's tone, the same all its life. */
+    static void ownerSkins() {
+        java.util.List<com.hex.kagune.control.family.ChildSkins.Skin> sons = com.hex.kagune.control.family.ChildSkins.of(false);
+        java.util.List<com.hex.kagune.control.family.ChildSkins.Skin> daughters = com.hex.kagune.control.family.ChildSkins.of(true);
+        check(sons.size() >= 10 && daughters.size() >= 10, "the owner's skins: sons' and daughters' both there");
+        boolean files = true;
+        for (com.hex.kagune.control.family.ChildSkins.Skin skin : com.hex.kagune.control.family.ChildSkins.ALL) {
+            for (String suffix : new String[] {"", "_kr", "_kl", "_gr", "_gl"}) {
+                files &= new java.io.File("src/main/resources/assets/hexkagune/textures/entity/child/skins/" + skin.key() + suffix + ".png").isFile();
+            }
+            files &= skin.key().matches("[a-z0-9_]+");
+        }
+        check(files, "every skin has its texture and its four eye overlays, under a name a texture can have");
+        com.hex.kagune.control.family.Genome.Parent light = new com.hex.kagune.control.family.Genome.Parent(0x6B4423, 0x3A6EA5, 0xF0D0B8, false, false);
+        com.hex.kagune.control.family.Genome.Parent lightGhoul = new com.hex.kagune.control.family.Genome.Parent(0x202020, 0x3A6EA5, 0xF6DCC8, true, true);
+        com.hex.kagune.control.family.Genome.Parent dark = new com.hex.kagune.control.family.Genome.Parent(0x101010, 0x40281A, 0x6E4A34, false, false);
+        java.util.Random random = new java.util.Random(11);
+        java.util.Set<String> lightBoys = new java.util.HashSet<>();
+        java.util.Set<String> lightGirls = new java.util.HashSet<>();
+        boolean sexes = true;
+        boolean steady = true;
+        boolean neverDark = true;
+        int darkest = 0xFFFFFF;
+        for (com.hex.kagune.control.family.ChildSkins.Skin skin : com.hex.kagune.control.family.ChildSkins.ALL) {
+            if (lum(skin.tone()) < lum(darkest)) {
+                darkest = skin.tone();
+            }
+        }
+        for (int i = 0; i < 400; i++) {
+            com.hex.kagune.control.family.Genome child = com.hex.kagune.control.family.Genome.of(lightGhoul, light, random);
+            com.hex.kagune.control.family.ChildSkins.Skin skin = com.hex.kagune.control.family.ChildSkins.pick(child);
+            sexes &= skin != null && skin.girl() == child.gender().female();
+            steady &= skin == com.hex.kagune.control.family.ChildSkins.pick(com.hex.kagune.control.family.Genome.load(child.save()));
+            neverDark &= skin != null && lum(skin.tone()) > lum(darkest) + 20;
+            if (skin != null) {
+                (skin.girl() ? lightGirls : lightBoys).add(skin.key());
+            }
+        }
+        check(sexes, "a son wears a son's skin, a daughter a daughter's");
+        check(steady, "a child's skin is the same every time it is drawn (from its genome, kept in its save)");
+        check(neverDark, "light-skinned parents' children are never given the darkest skins");
+        check(lightBoys.size() >= 4 && lightGirls.size() >= 4, "a light-skinned couple's children still come in many looks (" + lightBoys.size() + " boys', "
+            + lightGirls.size() + " girls')");
+        boolean darkNear = true;
+        for (int i = 0; i < 100; i++) {
+            com.hex.kagune.control.family.Genome child = com.hex.kagune.control.family.Genome.of(dark, dark, random);
+            com.hex.kagune.control.family.ChildSkins.Skin skin = com.hex.kagune.control.family.ChildSkins.pick(child);
+            double mine = com.hex.kagune.control.family.ChildSkins.distance(skin.tone(), child.skin());
+            for (com.hex.kagune.control.family.ChildSkins.Skin other : com.hex.kagune.control.family.ChildSkins.of(skin.girl())) {
+                darkNear &= mine <= com.hex.kagune.control.family.ChildSkins.distance(other.tone(), child.skin()) + com.hex.kagune.control.family.ChildSkins.SPREAD;
+            }
+        }
+        check(darkNear, "a darker couple's children wear the darkest skins there are (none further than the nearest by more than the spread)");
+    }
+
+    private static double lum(int rgb) {
+        return 0.299 * ((rgb >> 16) & 255) + 0.587 * ((rgb >> 8) & 255) + 0.114 * (rgb & 255);
     }
 
     static void looks() {

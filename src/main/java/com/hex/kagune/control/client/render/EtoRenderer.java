@@ -65,7 +65,7 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
     /** 1.3.14: any companion: a woman's figure on the slim arms, or a man's on the wide ones. */
     public EtoRenderer(EntityRendererProvider.Context context, com.hex.kagune.control.npc.Persona persona) {
         super(context, new EtoModel(context.m_174023_(persona.slim() ? ModelLayers.f_171166_ : ModelLayers.f_171162_), persona.slim(), persona.female(),
-            persona.curves()),
+            persona.legs()),
             0.5F * persona.size());
         this.persona = persona;
         String key = persona.key();

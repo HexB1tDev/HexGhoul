@@ -21,7 +21,7 @@ final class EtoModel extends PlayerModel<EtoNpc> {
 
     /** 1.3.14: a woman's figure (Eto, Touka) or not (Ken). */
     private final boolean female;
-    /** 1.3.14: how much of the figure's curves (Touka's are a little less than Eto's). */
+    /** 1.3.14: how much of the figure's curves its legs have (1.3.18: {@code Persona.legs}, Touka's a touch less than her curves). */
     private final float curves;
 
     EtoModel(ModelPart root) {

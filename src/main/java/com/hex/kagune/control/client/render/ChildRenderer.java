@@ -6,6 +6,8 @@ import com.hex.kagune.control.family.ChildRules;
 import com.hex.kagune.control.family.ChildSkin;
 import com.hex.kagune.control.family.ChildStage;
 import com.hex.kagune.control.npc.ChildNpc;
+import com.hex.kagune.control.family.ChildSkins;
+import com.hex.kagune.control.family.Genome;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.util.HashMap;
@@ -18,6 +20,9 @@ import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.entity.layers.RenderLayer;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
@@ -29,14 +34,37 @@ import net.minecraftforge.fml.common.Mod;
  * 1.3.10: a child as vanilla draws a player, on its own skin made from what it inherited ({@link ChildSkin}, its kakugan's version while it
  * fights), as big as its stage ({@link ChildStage#draw}; a baby and a toddler on the model's little-one proportions); a baby sitting, and a
  * carried child sitting on its parent's arm, glued in front of their chest as they are drawn this frame. Never the adult female body.
+ * 1.3.18: on one of the owner's own skins for sons and daughters ({@link ChildSkins}: its sex's, near its tone), on the slim arms or the wide
+ * ones as that skin is painted for, its kakugan laid over the eye or eyes it has as it fights (the iris glowing); the old made skin only if
+ * there were none.
  */
 public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerModel<ChildNpc>> {
     private static final ResourceLocation FALLBACK = Objects.requireNonNull(ResourceLocation.m_214293_("minecraft", "textures/entity/player/wide/steve.png"));
     /** Each skin made (by the child's looks, stage and kakugan), and its texture's name. */
     private static final Map<String, ResourceLocation> MADE = new HashMap<>();
 
+    /** 1.3.18: the model on wide arms and on slim ones, worn as its skin is painted. */
+    private final Model wide;
+    private final Model slim;
+
     public ChildRenderer(EntityRendererProvider.Context context) {
-        super(context, new Model(context.m_174023_(ModelLayers.f_171162_)), 0.25F);
+        this(context, new Model(context.m_174023_(ModelLayers.f_171162_), false), new Model(context.m_174023_(ModelLayers.f_171166_), true));
+    }
+
+    private ChildRenderer(EntityRendererProvider.Context context, Model wide, Model slim) {
+        super(context, wide, 0.25F);
+        this.wide = wide;
+        this.slim = slim;
+        this.m_115326_(new Kakugan(this));
+    }
+
+    /** 1.3.18: the owner's skin a child wears (null: none for its sex, or no view yet). */
+    static ChildSkins.Skin skin(ChildClient.View view) {
+        return view == null ? null : ChildSkins.pick(view.genome());
+    }
+
+    private static ResourceLocation texture(String name) {
+        return Objects.requireNonNull(ResourceLocation.m_214293_("hexkagune", "textures/entity/child/skins/" + name + ".png"));
     }
 
     /**
@@ -49,8 +77,8 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
         static final float HEAD = 1.0F;
         static final float BODY = 0.5F;
 
-        Model(ModelPart root) {
-            super(root, false);
+        Model(ModelPart root, boolean slim) {
+            super(root, slim);
         }
 
         @Override
@@ -133,6 +161,8 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
         ChildClient.View view = ChildClient.get(child.m_19879_());
         ChildStage stage = view == null ? child.stage : view.stage();
         child.carriedBy = view == null ? 0 : view.carrier();
+        ChildSkins.Skin skin = skin(view);
+        this.f_115290_ = skin != null && skin.slim() ? this.slim : this.wide;
         pose.m_85836_();
         try {
             glue(child, view, partial, pose);
@@ -179,6 +209,10 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
         if (view == null) {
             return FALLBACK;
         }
+        ChildSkins.Skin skin = skin(view);
+        if (skin != null) {
+            return texture(skin.key());
+        }
         boolean kakugan = view.turned() && view.genome().kakugan() != com.hex.kagune.control.family.Genome.NONE;
         String key = view.genome().save() + "|" + view.stage().ordinal() + "|" + kakugan;
         ResourceLocation made = MADE.get(key);
@@ -210,6 +244,45 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
         } catch (RuntimeException failure) {
             com.hex.kagune.control.Safety.caught(failure, "a child's skin");
             return FALLBACK;
+        }
+    }
+
+    /**
+     * 1.3.18: a ghoul child's kakugan as it fights, on the owner's skin it wears: the eye or eyes it has turned (only those pixels, laid over
+     * the skin), their irises drawn full bright.
+     */
+    static final class Kakugan extends RenderLayer<ChildNpc, PlayerModel<ChildNpc>> {
+        Kakugan(ChildRenderer parent) {
+            super(parent);
+        }
+
+        @Override
+        public void m_6494_(PoseStack pose, MultiBufferSource buffers, int light, ChildNpc child, float limbSwing, float limbSwingAmount,
+                            float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
+            if (child.m_20145_()) {
+                return;
+            }
+            try {
+                ChildClient.View view = ChildClient.get(child.m_19879_());
+                ChildSkins.Skin skin = skin(view);
+                if (skin == null || !view.turned()) {
+                    return;
+                }
+                int eyes = view.genome().kakugan();
+                PlayerModel<ChildNpc> model = this.m_117386_();
+                for (String side : new String[] {"r", "l"}) {
+                    boolean has = eyes == Genome.BOTH || eyes == (side.equals("r") ? Genome.RIGHT : Genome.LEFT);
+                    if (!has) {
+                        continue;
+                    }
+                    model.m_7695_(pose, buffers.m_6299_(RenderType.m_110473_(texture(skin.key() + "_k" + side))), light, OverlayTexture.f_118083_,
+                        1.0F, 1.0F, 1.0F, 1.0F);
+                    model.m_7695_(pose, buffers.m_6299_(RenderType.m_110488_(texture(skin.key() + "_g" + side))), 0xF000F0, OverlayTexture.f_118083_,
+                        0.8F, 0.8F, 0.8F, 1.0F);
+                }
+            } catch (RuntimeException failure) {
+                com.hex.kagune.control.Safety.caught(failure, "a child's kakugan");
+            }
         }
     }
 

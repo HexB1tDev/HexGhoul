@@ -43,6 +43,11 @@ public abstract class Persona {
         return 1.0F;
     }
 
+    /** 1.3.18: how much of the figure's extra width and depth its legs have (its curves unless said otherwise: Touka's a touch less). */
+    public float legs() {
+        return this.curves();
+    }
+
     /** True if drawn on the slim arms. */
     public boolean slim() {
         return this.female();
@@ -266,6 +271,12 @@ public abstract class Persona {
         @Override
         public float build() {
             return 1.0F;
+        }
+
+        /** 1.3.18: the owner: her legs "a bit too thick", "just a little bit" thinner: a touch less of the figure's leg width than her curves. */
+        @Override
+        public float legs() {
+            return 1.2F;
         }
 
         /** She goes pink at anything sweet: a kiss she's waiting on, a hand, a hug, being leaned on, a dance. Composure: gone. */
