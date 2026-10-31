@@ -896,3 +896,5 @@ M com/mojang/blaze3d/platform/NativeImage m_84988_ (III)V  # [srg] setPixelRGBA:
 C net/minecraft/client/renderer/texture/DynamicTexture  # [srg] fui (intermediary class_1043, yarn NativeImageBackedTexture)
 M net/minecraft/client/renderer/texture/DynamicTexture <init> (Lcom/mojang/blaze3d/platform/NativeImage;)V  # [srg] fui.<init> (Lehk;)V (yarn NativeImageBackedTexture(NativeImage))
 M net/minecraft/client/renderer/texture/TextureManager m_118495_ (Lnet/minecraft/resources/ResourceLocation;Lnet/minecraft/client/renderer/texture/AbstractTexture;)V  # [srg] register: fuw.m_118495_ (Lacq;Lfug;)V (yarn TextureManager.registerTexture)
+# 1.3.12: Eto's moments (the rain starting)
+M net/minecraft/world/level/Level m_46471_ ()Z  # [srg] isRaining: cmm.m_46471_ ()Z (yarn World.isRaining)

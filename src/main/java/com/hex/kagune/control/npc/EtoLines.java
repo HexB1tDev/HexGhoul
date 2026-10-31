@@ -149,6 +149,10 @@ public final class EtoLines {
     public static String approach(EtoTalk.Context c) {
         EtoVoice voice = EtoVoice.of(c);
         int seed = c.seed();
+        // 1.3.12: carrying their child, half the time it's all she can talk about.
+        if (voice.together() && c.pregnant() && Math.floorMod(seed, 2) == 0) {
+            return fill(c, pregnant(c.family().stage(), seed / 2));
+        }
         if (!voice.together()) {
             return fill(c, one(seed, "Oh! {name}. Come here, I found a book you'd hate.",
                 "You. Yes, you. You looked bored. Come be bored near me.",
@@ -156,19 +160,27 @@ public final class EtoLines {
         }
         String line = switch (c.mood()) {
             case LONELY -> one(seed, "You're back. You're back, you're back— ahem. Hello.",
-                "Where were you? No. Don't answer. Just stand there and be here.");
+                "Where were you? No. Don't answer. Just stand there and be here.",
+                "The Library's very big when you're not in it. I measured.", "I talked to the books about you. They're sick of it.",
+                "Sit with me. Don't talk. Just exist, near me, loudly.");
             case AFFECTIONATE -> one(seed, "It's late, {name}. Come to bed.",
-                "The candle's lit. The book's closed. Guess what that means.");
+                "The candle's lit. The book's closed. Guess what that means.",
+                "Come here. I want to look at you up close. ...Closer.", "You have a little something— no. You don't. I just wanted you near.");
             case JEALOUS -> one(seed, "Who was that? ...Never mind. Don't tell me. Tell me.",
-                "I'm not jealous. I'm a ghoul. Ghouls don't get jealous, they get even.");
+                "I'm not jealous. I'm a ghoul. Ghouls don't get jealous, they get even.",
+                "You smell like someone else's library. Explain.", "I'm writing a story about a woman who eats her rivals. Unrelated.");
             case BLOODTHIRSTY -> one(seed, "I'm hungry. Not for you. ...Probably.",
-                "Walk with me tonight. If we see anything ugly, it's mine.");
+                "Walk with me tonight. If we see anything ugly, it's mine.",
+                "My eye won't close today. Stay where I can see you. For your sake.", "Hunt with me. I'll let you have the second bite.");
             case SLEEPY -> one(seed, "Carry me. I'm too tired to be scary.",
-                "Mm. Let me lean on you. Just... lean.");
+                "Mm. Let me lean on you. Just... lean.",
+                "*yawns* I read until sunrise. Worth it. Don't scold me.", "Five more minutes. With you. Then the world.");
             case GIDDY -> one(seed, "I keep smiling. It's your fault. Fix it. No, don't.",
-                "Guess who's in a good mood. Wrong. It's me. Because of you.");
+                "Guess who's in a good mood. Wrong. It's me. Because of you.",
+                "I finished a chapter and it's about you and it's GOOD. Don't read it.", "Spin me. No— again. Again!");
             case CLINGY -> one(seed, "Your arm. Give it. ...Thank you. I'm keeping it.",
-                "Don't go anywhere. I've decided you live here now.");
+                "Don't go anywhere. I've decided you live here now.",
+                "Hold my hand. Because. That's the reason. Because.", "If you leave, I'm coming with you. That's not a question.");
             default -> c.married() ? one(seed, "Hey, spouse. Pay attention to me. ...That's it. That's the whole request.",
                 "I wrote about you today. It was disgustingly sweet. I'm burning it.",
                 "Come here a second. ...No reason. I just like you here.")
@@ -187,7 +199,8 @@ public final class EtoLines {
             "You're home. Good. Hold me before you do anything else.")
             : one(c.seed(), "There you are! I was about to come find you. With teeth.",
             "You came back. Of course you came back. I knew. I wasn't worried. Hug me.",
-            "Oh! It's you! I mean. Oh. It's you. Hello."));
+            "Oh! It's you! I mean. Oh. It's you. Hello.", "Back so soon? ...Not soon. It was forever. Hello.",
+            "I saved you a chair. And a book. And a glare, for being gone so long."));
     }
 
     // ---------------------------------------------------------------- kisses and hugs
@@ -214,13 +227,16 @@ public final class EtoLines {
 
     public static String hugged(int seed) {
         return one(seed, "Tighter. I won't break, I promise.", "Don't let go yet. Ten more seconds. Twenty.",
-            "You're warm. That's the only reason I'm doing this. Shut up.");
+            "You're warm. That's the only reason I'm doing this. Shut up.", "Mm. You fit. Annoyingly well.",
+            "If anyone asks, you hugged me. I resisted. Heroically.", "Stay. The world can wait a minute. Two.");
     }
 
     /** 1.3.3: her hand in theirs. */
     public static String handTaken(int seed) {
         return one(seed, "Here. ...Don't make it weird. It's already weird. Walk.", "Your hand's warm. I'm keeping it.",
-            "Lead on. If you let go, I'll know it was on purpose.", "Hold it properly. Like you mean it. ...There.");
+            "Lead on. If you let go, I'll know it was on purpose.", "Hold it properly. Like you mean it. ...There.",
+            "Our hands match. Don't ask me how. They just do.", "Walk slower. I want this walk to be long.",
+            "People are looking. Good. Let them.");
     }
 
     /** 1.3.3: they let go. */
@@ -231,7 +247,8 @@ public final class EtoLines {
 
     public static String clung(int seed) {
         return one(seed, "Come here. ...Don't move. This is my spot.", "I'm not clingy. I'm attached. There's a difference.",
-            "Your arm's mine now. You can have it back later. Maybe.");
+            "Your arm's mine now. You can have it back later. Maybe.", "I'm cold. That's my excuse. I have others.",
+            "Mm. Better. Much better.");
     }
 
     /** Her partner hit her: she never hits back. */
@@ -245,12 +262,19 @@ public final class EtoLines {
 
     public static String serious(int seed) {
         return one(seed, "Oh. You're actually trying. Fine.", "Okay. No more playing.", "You made my eye open. That was a mistake.",
-            "Let me show you what I keep in the back.");
+            "Let me show you what I keep in the back.", "Now I'm interested. That's bad news for you.", "Hm. You bruised me. Rude.");
     }
 
     public static String maniac(int seed) {
         return one(seed, "Ahahaha! Come on, come on, COME ON!", "You made me bleed on the books. You're going to pay for the books.",
-            "This is my favourite chapter! Everybody dies in it!", "Stop moving. I want to see your face when it happens.");
+            "This is my favourite chapter! Everybody dies in it!", "Stop moving. I want to see your face when it happens.",
+            "More! Give me more! I'm not done reading you!", "Look at all this red. It's like a book cover.");
+    }
+
+    /** 1.3.12: as she grows the Owl, her last resort. */
+    public static String owl(int seed) {
+        return one(seed, "You want to see what I really am? ...Fine. Look.", "Close your eyes. No? Your loss.",
+            "This is the last page. Read it carefully.", "Hoo. Hoo. ...That's a joke. Laugh before you die.");
     }
 
     public static String protect(EtoTalk.Context c) {
@@ -259,7 +283,8 @@ public final class EtoLines {
     }
 
     public static String won(int seed) {
-        return one(seed, "...Look at the mess. Someone's cleaning that, and it isn't me.", "Hm. Shorter than I hoped.", "Next chapter.");
+        return one(seed, "...Look at the mess. Someone's cleaning that, and it isn't me.", "Hm. Shorter than I hoped.", "Next chapter.",
+            "Is that all? I didn't even get my coat dirty.", "Sweet dreams. Ugly ones.", "That's what happens when you interrupt my reading.");
     }
 
     // ---------------------------------------------------------------- gifts and apologies

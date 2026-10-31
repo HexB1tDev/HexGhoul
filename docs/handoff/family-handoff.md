@@ -182,3 +182,48 @@ The owner plans teachers who unlock abilities, and more partners. Everything abo
 - They type fast, by voice: read for intent. Keep replies short; say plainly what was and wasn't tested.
 - Push when a step is done (after a green local build). Release notes one line per item.
 - When something visual changes, render a preview (`tools/UiPreview.java`, `tools/art-preview.sh`) and look at it yourself.
+
+
+## 4. Done since (1.3.5 to 1.3.12, branch `claude/festive-cray-l5b2pb`): compiled, tests pass, NOT tried in game
+
+The owner's answers to the open questions: **a female player's hitbox and eyes shrink for real** (Forge's size event, both sides);
+**a pregnancy is asked for, then the next night** (married couples only: "Let's have a baby." in Eto's "us" topic); **female players
+wait for male NPCs** (the system carries any mother, but no one can father a female player's child yet; no player-player marriage);
+**children respawn at home** a day after dying. Also: **children's skin tone comes only from their parents' real skin** (read off each
+player's skin), never at random; the owner rejected hand-painted child skins: they are now built from CC BY-SA parts (below).
+
+| Release | What | Where |
+|---|---|---|
+| 1.3.5 | Holding hands: both held arms drop vanilla's swing (`RigPose.leftArmHold`, the player's `rightArmHold`), stretched to ~15 degrees | `npc/EtoHand.java`, `client/animation/EtoPose.java`, `KaguneBodyAnimation` |
+| 1.3.6 | Eto's flesh arm (swipe, grab), flesh leg (Flesh Hammer), Watch This | `server/EtoFlesh.java`, `server/EtoWatch.java`, `EtoRules.choose(..., Ready, ...)` |
+| 1.3.7 | Eto's Mutated Arm | `server/EtoArm.java` |
+| 1.3.8 | Eto's Owl kakuja below 25% health (Rend, Reaping Whirl, Pounce; half damage taken) | `server/EtoOwlForm.java` |
+| 1.3.6-8 | The Owl DNA renderers draw on any body: `Frame` has a scale; `WatchClient`, `ArmClient`, `OwlClient` keyed by entity UUID; `EtoRenderer.kit` hands over each Eto's drawn pose | `client/render/PaleFleshRenderer.java`, `EtoRenderer`, `EtoFight` |
+| 1.3.9 | Gender screen after the eyes (Done is Next); one shared female body (`FemaleBody`, `FemaleFigure`): Eto and female players (0.86, slim arms, hips, bust layer); real shrink | `client/GenderView.java`, `GenderScreen`, `Genders`, `server/GenderServer`, `client/render/FemalePlayers`, `FigureLayer` |
+| 1.3.10 | Pregnancy (`family/Pregnancy`, `server/Pregnancies`: any mother "player:<uuid>" or "npc:<key>"), belly, alerts, the birth cutscene ("9 months later..."); children (`npc/ChildNpc`, `server/Children`, `ChildBrain`, `ChildTalk`, `family/ChildStage`, `ChildRules`, `ChildLines`, `Genome`) | protocol 59 |
+| 1.3.10 | Child looks: hair and skin tone read off each player's own skin (`family/HairColour`, `SkinTone`, `SkinReader`, `C2SLooks`); skins composed on the client from edit_skin parts (`family/ChildSkin`, `family/Png`) | parts and CREDITS in `resources/assets/hexkagune/textures/entity/child/` |
+| 1.3.11 | NPCs react to what a player shows (`npc/Display`: eyes, kagune, kakuja, dread) | `server/Sightings.java` (one hook: `Sightings.watch`), `EtoBrain.saw`, `npc/ReactionLines` |
+| 1.3.12 | Eto starts things herself (hand, cling, hug, lean, hum, read, dance) and remarks on moments (rain, dusk, dawn, your wound, a kill) | `npc/EtoInitiative.java`, `EtoBrain.together/moments/killedNear` |
+
+Testing shortcuts (operators): `/kagune family soon` (a pregnancy you are part of: the birth in ten seconds), `/kagune family grow`
+(your nearest child: the next stage), `/kagune eto max`.
+
+### Riskiest, untried in game (check first)
+
+1. **Female players**: drawn scaled in `RenderPlayerEvent.Pre/Post` (LOWEST; a pose pushed and popped); the legs' pivots spread through
+   `KaguneBodyAnimation.get3DTransform` (PlayerAnimator resets them each frame), which makes that layer always active for women; the
+   bust as `FigureLayer` with the upper body's bend. The hitbox change runs on both sides (desync if a client misses `S2CGender`).
+2. **Children**: carried by teleporting each tick on the server and glued in front of the carrier on clients; the size event per stage;
+   `UniqueNpcs` prefix kinds remake a dead child's body at home; the skin made with `NativeImage` + `DynamicTexture` on the client
+   (parts read by the mod's own PNG reader through `getResourceAsStream`). A baby sits by holding its navigation still each tick.
+3. **Eto's new moves on an NPC body**: the grab and the arm carry players by velocity each tick; the Owl creature drawn in her place
+   while her model is posed but not drawn.
+4. **Hair/skin read**: phones that can't read textures back (SkinReader says so in the log) fall back to brown hair, light skin.
+
+### Not done (next)
+
+- The Owl on Eto lacks its Big Punch, Speed Kick, bone spikes, Fissure, volley, lances and great hand (players' Owl has them).
+- No player-player marriage (so no pregnancy for a female player until a male NPC partner exists). Children of two players: the
+  system supports it (keys), nothing triggers it.
+- Children never become adults (teen is the last stage). No child names chosen by the parents (picked from the seed).
+- First-person: a female player's own hands are not slimmed.

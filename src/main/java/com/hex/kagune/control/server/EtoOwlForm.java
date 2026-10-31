@@ -50,6 +50,7 @@ public final class EtoOwlForm {
         EtoWatch.forget(npc);
         npc.m_21573_().m_26573_();
         set(npc, f, true, now);
+        EtoBrain.bark(npc, level, com.hex.kagune.control.npc.EtoLines.owl(npc.m_217043_().m_188503_(1000)));
         UkakuFire.sound(level, npc.m_20182_(), "hexkagune:kagune_strain", 1.0F, 0.55F);
         UkakuFire.sound(level, npc.m_20182_(), "hexkagune:manifest_rip", 1.0F, 0.6F);
     }

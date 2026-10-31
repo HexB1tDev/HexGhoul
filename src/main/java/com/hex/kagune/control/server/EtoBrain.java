@@ -108,6 +108,13 @@ public final class EtoBrain {
         final Map<UUID, Long> nearSince = new HashMap<>();
         long nextSeek;
         long nextNightAsk;
+        /** 1.3.12: when she last started something herself; what she last remarked on (the rain, dusk and dawn by day, a wound). */
+        long initiativeAt;
+        boolean rained;
+        long duskDay = -1L;
+        long dawnDay = -1L;
+        long hurtSaid;
+        long killSaid;
         /** Her partner last near her (game time), and whether they are near now: back after a while, she greets them. */
         long partnerNearAt = Long.MIN_VALUE;
         boolean partnerNear;
@@ -578,6 +585,21 @@ public final class EtoBrain {
                 return true;
             }
         }
+        // 1.3.12: unasked, she does something with them: their hand, their arm, a hug, a lean, a song, a page, a dance.
+        if (now % 20L == 5L && mind.gesture != EtoGesture.CLING) {
+            com.hex.kagune.control.npc.EtoInitiative.Act act = com.hex.kagune.control.npc.EtoInitiative.pick(mood, distance, mind.holding != null,
+                now - mind.initiativeAt, npc.m_217043_().m_188500_(), npc.m_217043_().m_188500_());
+            if (act != com.hex.kagune.control.npc.EtoInitiative.Act.NONE) {
+                mind.initiativeAt = now;
+                say(partner, com.hex.kagune.control.npc.EtoInitiative.line(act, npc.m_217043_().m_188503_(1000)));
+                if (act == com.hex.kagune.control.npc.EtoInitiative.Act.HAND) {
+                    alert(partner, Romance.Want.TALK, "takes your hand.");
+                }
+                walkUp(npc, mind, partner, act.gesture, now);
+                return true;
+            }
+        }
+        moments(npc, mind, level, partner, distance, now);
         long every = mood.seeks();
         if (every > 0L && now >= mind.nextSeek && distance < 16.0) {
             mind.nextSeek = now + every + npc.m_217043_().m_188503_((int)Math.max(1L, every / 2L));
@@ -593,6 +615,55 @@ public final class EtoBrain {
             return true;
         }
         return false;
+    }
+
+    /** 1.3.12: what she remarks on, unasked, with her partner near: the rain starting, dusk and dawn (once a day each), their wound. */
+    private static void moments(EtoNpc npc, Mind mind, ServerLevel level, ServerPlayer partner, double distance, long now) {
+        if (now % 40L != 9L || distance > 16.0) {
+            return;
+        }
+        int seed = npc.m_217043_().m_188503_(1000);
+        boolean raining = level.m_46471_();
+        if (raining && !mind.rained) {
+            say(partner, com.hex.kagune.control.npc.EtoInitiative.moment(com.hex.kagune.control.npc.EtoInitiative.Moment.RAIN, true, seed));
+        }
+        mind.rained = raining;
+        long time = Math.floorMod(level.m_46468_(), 24000L);
+        long day = Math.floorDiv(level.m_46468_(), 24000L);
+        if (time >= 12000L && time < 13000L && mind.duskDay != day) {
+            mind.duskDay = day;
+            say(partner, com.hex.kagune.control.npc.EtoInitiative.moment(com.hex.kagune.control.npc.EtoInitiative.Moment.DUSK, true, seed));
+        }
+        if (time >= 23000L && mind.dawnDay != day) {
+            mind.dawnDay = day;
+            say(partner, com.hex.kagune.control.npc.EtoInitiative.moment(com.hex.kagune.control.npc.EtoInitiative.Moment.DAWN, true, seed));
+        }
+        if (partner.m_21223_() < partner.m_21233_() * 0.4F && now - mind.hurtSaid > 1200L && distance < 12.0) {
+            mind.hurtSaid = now;
+            say(partner, com.hex.kagune.control.npc.EtoInitiative.moment(com.hex.kagune.control.npc.EtoInitiative.Moment.HURT, true, seed));
+            if (mind.gesture == EtoGesture.NONE && mind.holding == null) {
+                walkUp(npc, mind, partner, EtoGesture.HUG, now);
+            }
+        }
+    }
+
+    /** 1.3.12: something killed near her by a player she can see: she has a word for it (her partner's kill, warmer), once a minute. */
+    @SubscribeEvent
+    public static void killedNear(LivingDeathEvent event) {
+        if (!(event.getSource().m_7639_() instanceof ServerPlayer killer) || event.getEntity() instanceof EtoNpc || !(killer.m_9236_() instanceof ServerLevel level)) {
+            return;
+        }
+        long now = level.m_46467_();
+        for (EtoNpc npc : LIVE) {
+            Mind mind = npc.mind;
+            if (mind == null || npc.m_9236_() != level || npc.m_20280_(event.getEntity()) > 16.0 * 16.0 || mind.target != 0 || now - mind.killSaid < 1200L
+                || !npc.m_142582_(event.getEntity())) {
+                continue;
+            }
+            mind.killSaid = now;
+            say(killer, com.hex.kagune.control.npc.EtoInitiative.moment(com.hex.kagune.control.npc.EtoInitiative.Moment.KILL, partnerOf(mind, killer),
+                npc.m_217043_().m_188503_(1000)));
+        }
     }
 
     /** True if she can go to {@code player} without leaving home too far behind (or she follows them anyway). */

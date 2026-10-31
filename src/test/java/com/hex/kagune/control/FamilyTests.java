@@ -36,6 +36,7 @@ public final class FamilyTests {
         children();
         looks();
         reactions();
+        initiative();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -366,5 +367,30 @@ public final class FamilyTests {
         }
         check(said, "Eto, ghouls and children each have something to say at every sight, whoever they are to them");
         check(EtoLines.saw(none, com.hex.kagune.control.npc.EtoVoice.FRIENDLY, false, 1).isEmpty(), "nothing shown, nothing said");
+    }
+
+    static void initiative() {
+        long every = com.hex.kagune.control.npc.EtoInitiative.EVERY;
+        com.hex.kagune.control.npc.EtoInitiative.Act none = com.hex.kagune.control.npc.EtoInitiative.Act.NONE;
+        check(com.hex.kagune.control.npc.EtoInitiative.pick(EtoMood.CLINGY, 3.0, true, every * 2, 0.0, 0.0) == none
+            && com.hex.kagune.control.npc.EtoInitiative.pick(EtoMood.CLINGY, 30.0, false, every * 2, 0.0, 0.0) == none
+            && com.hex.kagune.control.npc.EtoInitiative.pick(EtoMood.CLINGY, 3.0, false, every - 1, 0.0, 0.0) == none,
+            "nothing started while she already holds on, from afar, or too soon after the last");
+        check(com.hex.kagune.control.npc.EtoInitiative.pick(EtoMood.CLINGY, 3.0, false, every, 0.0, 0.0)
+            == com.hex.kagune.control.npc.EtoInitiative.Act.HAND, "clingy, close, unasked: she takes your hand");
+        check(com.hex.kagune.control.npc.EtoInitiative.pick(EtoMood.SULKY, 3.0, false, every, 0.0, 0.0) == none
+            && com.hex.kagune.control.npc.EtoInitiative.pick(EtoMood.CLAIMED, 3.0, false, every, 0.0, 0.0) == none,
+            "sulking (or someone else's), she starts nothing");
+        check(com.hex.kagune.control.npc.EtoInitiative.pick(EtoMood.HAPPY, 3.0, false, every, 0.5, 0.0) == none,
+            "most moments, nothing: it stays a surprise");
+        boolean lines = true;
+        for (com.hex.kagune.control.npc.EtoInitiative.Act act : com.hex.kagune.control.npc.EtoInitiative.Act.values()) {
+            lines &= act == none || !com.hex.kagune.control.npc.EtoInitiative.line(act, 5).isEmpty();
+        }
+        for (com.hex.kagune.control.npc.EtoInitiative.Moment moment : com.hex.kagune.control.npc.EtoInitiative.Moment.values()) {
+            lines &= !com.hex.kagune.control.npc.EtoInitiative.moment(moment, true, 3).isEmpty()
+                && !com.hex.kagune.control.npc.EtoInitiative.moment(moment, false, 3).isEmpty();
+        }
+        check(lines && !EtoLines.owl(2).isEmpty(), "a word for everything she starts and every moment she remarks on");
     }
 }

@@ -13,6 +13,7 @@ public abstract class Level implements LevelAccessor {
     /** getDayTime */ public long m_46468_() { throw new UnsupportedOperationException(); }
     /** getEntity(int) */ public net.minecraft.world.entity.Entity m_6815_(int id) { throw new UnsupportedOperationException(); }
     /** clip */ public net.minecraft.world.phys.BlockHitResult m_45547_(ClipContext context) { throw new UnsupportedOperationException(); }
+    /** isRaining */ public boolean m_46471_() { throw new UnsupportedOperationException(); }
     /** addFreshEntity */ public boolean m_7967_(net.minecraft.world.entity.Entity entity) { throw new UnsupportedOperationException(); }
     /** getEntitiesOfClass */ public <T extends net.minecraft.world.entity.Entity> java.util.List<T> m_6443_(Class<T> type, net.minecraft.world.phys.AABB box, java.util.function.Predicate<? super T> filter) { throw new UnsupportedOperationException(); }
 }
