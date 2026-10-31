@@ -108,7 +108,7 @@ public final class PaleFleshRenderer {
         for (AbstractClientPlayer player : level.m_6907_()) {
             PaleClient.PaleView view = PaleClient.get(player);
             if (WatchClient.out(player) && player.m_6084_() && !player.m_20145_() && player.m_20280_(minecraft.f_91074_) <= RANGE * RANGE) {
-                drew |= tentacles(player, view, time, partial, level, minecraft, camera, matrix, normals, buffers);
+                drew |= tentacles(player, view, KaguneBodyAnimation.drawnNow(player, time), 1.0, time, partial, level, minecraft, camera, matrix, normals, buffers);
             }
             if (ArmClient.out(player) && player.m_6084_() && !player.m_20145_() && player.m_20280_(minecraft.f_91074_) <= (RANGE + 40.0) * (RANGE + 40.0)) {
                 drew |= arm(player, view, time, partial, level, minecraft, camera, matrix, normals, buffers);
@@ -151,81 +151,20 @@ public final class PaleFleshRenderer {
             if (!view.move().flesh() || !player.m_6084_() || player.m_20145_() || player.m_20280_(minecraft.f_91074_) > RANGE * RANGE) {
                 continue;
             }
-            double age = view.age(time);
-            double feetX = player.f_19790_ + (player.m_20185_() - player.f_19790_) * partial;
-            double feetY = player.f_19791_ + (player.m_20186_() - player.f_19791_) * partial;
-            double feetZ = player.f_19792_ + (player.m_20189_() - player.f_19792_) * partial;
-            float bodyYaw = player.f_20884_ + wrap(player.f_20883_ - player.f_20884_) * partial;
-            double yaw = Math.toRadians(bodyYaw);
-            double turn = Math.toRadians(wrap(view.yaw() - bodyYaw));
-            // On her body as drawn this frame; when it isn't (first person: the model is never set up, and what it was last drawn in
-            // is stale), on the body as the move alone poses it, so the flesh is where it would be seen from outside.
-            RigPose body = KaguneBodyAnimation.drawn(player, view.move(), time);
-            if (body == null) {
-                body = PaleMotions.fleshBody(view.move(), age, view.charge(), (float)turn);
-            }
-            if (body == null) {
-                body = new RigPose();
-            }
-            Frame frame = new Frame(feetX, feetY, feetZ, -Math.sin(yaw), Math.cos(yaw), -Math.cos(yaw), -Math.sin(yaw));
-            double[] tip;
-            double grip = 0.5;
-            Entity target = view.targetId() == 0 ? null : level.m_6815_(view.targetId());
-            FleshMotion.Space space = new FleshMotion.Space() {
-                @Override
-                public double[] world(double[] rig) {
-                    return frame.world(rig, Vec3.f_82478_);
-                }
-
-                @Override
-                public double[] rig(double[] world) {
-                    return frame.rig(world[0], world[1], world[2]);
-                }
-            };
-            if (view.move() == PaleMove.HAMMER_CHARGE || view.move() == PaleMove.HAMMER) {
-                // The hammer's club, round her leg.
-                // 6.2.0: True Anonymity's club (detail 1): grown on past its full size, spiked.
-                boolean huge = view.detail() == 1;
-                float charge = view.move() == PaleMove.HAMMER ? view.charge() : PaleRules.hammerCharge(age, huge);
-                PaleFleshModel.Pose club = FleshMotion.carried(player.m_19879_(), 0, 0L, FAMILY_HAMMER,
-                    PaleFleshPose.club(body, view.move(), age, charge, time, player.m_19879_(), huge), space, time, FleshPhysics.CLUB, body);
-                // In first person she sees her own leg swing up in front of her and the club grow round it, as from where her head
-                // has gone (the camera doesn't tip back with her).
-                boolean own = firstPerson(minecraft, player);
-                double[] shift = own ? PaleOwnLeg.shift(body) : NO_SHIFT;
-                drew |= draw(club, frame, camera, level, minecraft, player, matrix, normals, buffers, shift, own ? OWN_LEG_CLEARANCE : EYE_CLEARANCE);
-                if (own) {
-                    leg(body, shift, frame, camera, level, player, matrix, normals, buffers);
-                }
-                continue;
-            }
-            boolean flung = view.move() == PaleMove.GRAB_THROW && age > PaleRules.grabRelease();
-            if (view.move() == PaleMove.SWIPE) {
-                tip = PaleFleshPose.turned(PaleFleshPose.swipeTip(age), turn);
-            } else if (flung) {
-                // Let go: it draws back in from where it let go.
-                tip = PaleFleshPose.turned(PaleRules.GRAB_FLING.clone(), turn);
-            } else if (target != null && view.move() != PaleMove.GRAB_MISS) {
-                double tx = target.f_19790_ + (target.m_20185_() - target.f_19790_) * partial;
-                double ty = target.f_19791_ + (target.m_20186_() - target.f_19791_) * partial + target.m_20206_() * 0.5;
-                double tz = target.f_19792_ + (target.m_20189_() - target.f_19792_) * partial;
-                tip = frame.rig(tx, ty, tz);
-                grip = Math.max(0.3, Math.max(target.m_20205_(), target.m_20206_() * 0.45) * 0.6);
-            } else {
-                tip = frame.rig(view.x(), view.y(), view.z());
-            }
-            // The flesh carries its own weight: the swipe's heavy end whips through; what it holds stays held at its tip.
-            FleshPhysics.Feel feel = switch (view.move()) {
-                case SWIPE -> FleshPhysics.WHIP;
-                case GRAB_HOLD -> FleshPhysics.REACH.held(true);
-                case GRAB_THROW -> FleshPhysics.REACH.held(!flung);
-                default -> FleshPhysics.REACH;
-            };
-            int family = view.move() == PaleMove.SWIPE ? FAMILY_SWIPE : FAMILY_GRAB;
-            PaleFleshModel.Pose flesh = FleshMotion.carried(player.m_19879_(), 0, family == FAMILY_SWIPE ? view.startedAt() : 0L, family,
-                PaleFleshPose.of(body, view.move(), age, tip, grip, view.charge(), time, player.m_19879_()), space, time, feel, body);
-            drew |= draw(flesh, frame, camera, level, minecraft, player, matrix, normals, buffers, NO_SHIFT, EYE_CLEARANCE);
+            drew |= flesh(player, view, KaguneBodyAnimation.drawn(player, view.move(), time), 1.0, time, partial, level, minecraft, camera, matrix, normals,
+                buffers);
         }
+        // 1.3.6: every Eto fighting with the Owl DNA kit: her flesh, her Watch This tentacles, as a player's, on her smaller body.
+        drew |= EtoRenderer.kit((who, view, drawn, scale) -> {
+            boolean any = false;
+            if (WatchClient.out(who)) {
+                any |= tentacles(who, view, drawn, scale, time, partial, level, minecraft, camera, matrix, normals, buffers);
+            }
+            if (view.move().flesh()) {
+                any |= flesh(who, view, drawn, scale, time, partial, level, minecraft, camera, matrix, normals, buffers);
+            }
+            return any;
+        }, level, minecraft, time, RANGE);
         drew |= punctures(level, partial, time, camera, matrix, normals, buffers);
         FleshMotion.forget(time);
         if (OwlShardClient.any()) {
@@ -234,6 +173,91 @@ public final class PaleFleshRenderer {
         if (drew) {
             buffers.m_109912_(TYPE);
         }
+    }
+
+    /**
+     * The flesh (6.1.0) of one body whose move has it out: out of the back as the body is drawn this frame ({@code drawn}; null: as the
+     * move alone poses it), the swipe raking across, the grab reaching, holding and flinging, the hammer's club round the leg. 1.3.6: any
+     * body (a player, Eto), {@code scale} its size.
+     */
+    private static boolean flesh(LivingEntity player, PaleClient.PaleView view, RigPose drawn, double scale, double time, float partial, ClientLevel level,
+                                 Minecraft minecraft, Vec3 camera, Matrix4f matrix, Matrix3f normals, MultiBufferSource.BufferSource buffers) {
+        boolean drew = false;
+        double age = view.age(time);
+        double feetX = player.f_19790_ + (player.m_20185_() - player.f_19790_) * partial;
+        double feetY = player.f_19791_ + (player.m_20186_() - player.f_19791_) * partial;
+        double feetZ = player.f_19792_ + (player.m_20189_() - player.f_19792_) * partial;
+        float bodyYaw = player.f_20884_ + wrap(player.f_20883_ - player.f_20884_) * partial;
+        double yaw = Math.toRadians(bodyYaw);
+        double turn = Math.toRadians(wrap(view.yaw() - bodyYaw));
+        // On her body as drawn this frame; when it isn't (first person: the model is never set up, and what it was last drawn in
+        // is stale), on the body as the move alone poses it, so the flesh is where it would be seen from outside.
+        RigPose body = drawn;
+        if (body == null) {
+            body = PaleMotions.fleshBody(view.move(), age, view.charge(), (float)turn);
+        }
+        if (body == null) {
+            body = new RigPose();
+        }
+        Frame frame = new Frame(feetX, feetY, feetZ, -Math.sin(yaw), Math.cos(yaw), -Math.cos(yaw), -Math.sin(yaw), scale);
+        double[] tip;
+        double grip = 0.5;
+        Entity target = view.targetId() == 0 ? null : level.m_6815_(view.targetId());
+        FleshMotion.Space space = new FleshMotion.Space() {
+            @Override
+            public double[] world(double[] rig) {
+                return frame.world(rig, Vec3.f_82478_);
+            }
+
+            @Override
+            public double[] rig(double[] world) {
+                return frame.rig(world[0], world[1], world[2]);
+            }
+        };
+        if (view.move() == PaleMove.HAMMER_CHARGE || view.move() == PaleMove.HAMMER) {
+            // The hammer's club, round her leg.
+            // 6.2.0: True Anonymity's club (detail 1): grown on past its full size, spiked.
+            boolean huge = view.detail() == 1;
+            float charge = view.move() == PaleMove.HAMMER ? view.charge() : PaleRules.hammerCharge(age, huge);
+            PaleFleshModel.Pose club = FleshMotion.carried(player.m_19879_(), 0, 0L, FAMILY_HAMMER,
+                PaleFleshPose.club(body, view.move(), age, charge, time, player.m_19879_(), huge), space, time, FleshPhysics.CLUB, body);
+            // In first person she sees her own leg swing up in front of her and the club grow round it, as from where her head
+            // has gone (the camera doesn't tip back with her).
+            boolean own = firstPerson(minecraft, player) && player instanceof AbstractClientPlayer;
+            double[] shift = own ? PaleOwnLeg.shift(body) : NO_SHIFT;
+            drew |= draw(club, frame, camera, level, minecraft, player, matrix, normals, buffers, shift, own ? OWN_LEG_CLEARANCE : EYE_CLEARANCE);
+            if (own) {
+                leg(body, shift, frame, camera, level, (AbstractClientPlayer)player, matrix, normals, buffers);
+            }
+            return drew;
+        }
+        boolean flung = view.move() == PaleMove.GRAB_THROW && age > PaleRules.grabRelease();
+        if (view.move() == PaleMove.SWIPE) {
+            tip = PaleFleshPose.turned(PaleFleshPose.swipeTip(age), turn);
+        } else if (flung) {
+            // Let go: it draws back in from where it let go.
+            tip = PaleFleshPose.turned(PaleRules.GRAB_FLING.clone(), turn);
+        } else if (target != null && view.move() != PaleMove.GRAB_MISS) {
+            double tx = target.f_19790_ + (target.m_20185_() - target.f_19790_) * partial;
+            double ty = target.f_19791_ + (target.m_20186_() - target.f_19791_) * partial + target.m_20206_() * 0.5;
+            double tz = target.f_19792_ + (target.m_20189_() - target.f_19792_) * partial;
+            tip = frame.rig(tx, ty, tz);
+            grip = Math.max(0.3, Math.max(target.m_20205_(), target.m_20206_() * 0.45) * 0.6);
+        } else {
+            tip = frame.rig(view.x(), view.y(), view.z());
+        }
+        // The flesh carries its own weight: the swipe's heavy end whips through; what it holds stays held at its tip.
+        FleshPhysics.Feel feel = switch (view.move()) {
+            case SWIPE -> FleshPhysics.WHIP;
+            case GRAB_HOLD -> FleshPhysics.REACH.held(true);
+            case GRAB_THROW -> FleshPhysics.REACH.held(!flung);
+            default -> FleshPhysics.REACH;
+        };
+        int family = view.move() == PaleMove.SWIPE ? FAMILY_SWIPE : FAMILY_GRAB;
+        PaleFleshModel.Pose flesh = FleshMotion.carried(player.m_19879_(), 0, family == FAMILY_SWIPE ? view.startedAt() : 0L, family,
+            PaleFleshPose.of(body, view.move(), age, tip, grip, view.charge(), time, player.m_19879_()), space, time, feel, body);
+        drew |= draw(flesh, frame, camera, level, minecraft, player, matrix, normals, buffers, NO_SHIFT, EYE_CLEARANCE);
+        return drew;
     }
 
     /** 6.2.0: every Owl's volley spears out in the world ({@link OwlShards}): in flight, or stuck where they hit. */
@@ -716,16 +740,16 @@ public final class PaleFleshRenderer {
      * 6.2.0: her Watch This tentacles ({@link WatchPose}), out of her back as her body is drawn this frame (or as her move alone
      * poses it), each carrying its own weight; what one strikes or carries is where it is drawn this frame, so the beak is in it.
      */
-    private static boolean tentacles(AbstractClientPlayer player, PaleClient.PaleView view, double time, float partial, ClientLevel level, Minecraft minecraft,
-                                     Vec3 camera, Matrix4f matrix, Matrix3f normals, MultiBufferSource.BufferSource buffers) {
+    private static boolean tentacles(LivingEntity player, PaleClient.PaleView view, RigPose drawn, double scale, double time, float partial, ClientLevel level,
+                                     Minecraft minecraft, Vec3 camera, Matrix4f matrix, Matrix3f normals, MultiBufferSource.BufferSource buffers) {
         float bodyYaw = player.f_20884_ + wrap(player.f_20883_ - player.f_20884_) * partial;
         double yaw = Math.toRadians(bodyYaw);
-        RigPose body = KaguneBodyAnimation.drawnNow(player, time);
+        RigPose body = drawn;
         if (body == null) {
             body = PaleMotions.anyBody(view.move(), view.age(time), view.detail(), view.charge(), (float)Math.toRadians(wrap(view.yaw() - bodyYaw)));
         }
         Frame frame = new Frame(player.f_19790_ + (player.m_20185_() - player.f_19790_) * partial, player.f_19791_ + (player.m_20186_() - player.f_19791_) * partial,
-            player.f_19792_ + (player.m_20189_() - player.f_19792_) * partial, -Math.sin(yaw), Math.cos(yaw), -Math.cos(yaw), -Math.sin(yaw));
+            player.f_19792_ + (player.m_20189_() - player.f_19792_) * partial, -Math.sin(yaw), Math.cos(yaw), -Math.cos(yaw), -Math.sin(yaw), scale);
         FleshMotion.Space space = new FleshMotion.Space() {
             @Override
             public double[] world(double[] rig) {
@@ -837,7 +861,7 @@ public final class PaleFleshRenderer {
     }
 
     /** Whether {@code player} is this client's, seen in first person. */
-    static boolean firstPerson(Minecraft minecraft, AbstractClientPlayer player) {
+    static boolean firstPerson(Minecraft minecraft, Entity player) {
         return player == minecraft.f_91074_ && minecraft.f_91066_.m_92176_().m_90612_();
     }
 
@@ -845,7 +869,7 @@ public final class PaleFleshRenderer {
      * One player's flesh into the world's light, moved by {@code shift} (rig space, blocks), its quads within {@code clearance} of
      * the eyes left out in first person; false when there is none.
      */
-    private static boolean draw(PaleFleshModel.Pose pose, Frame frame, Vec3 camera, ClientLevel level, Minecraft minecraft, AbstractClientPlayer player,
+    private static boolean draw(PaleFleshModel.Pose pose, Frame frame, Vec3 camera, ClientLevel level, Minecraft minecraft, Entity player,
                                 Matrix4f matrix, Matrix3f normals, MultiBufferSource.BufferSource buffers, double[] shift, double clearance) {
         if (pose == null) {
             return false;
@@ -1114,11 +1138,19 @@ public final class PaleFleshRenderer {
         return by == NO_SHIFT ? p : new double[] {p[0] + by[0], p[1] + by[1], p[2] + by[2]};
     }
 
-    /** Her feet and facing: rig space (x her right, y up, z forward) to the world and back. */
-    record Frame(double x, double y, double z, double fx, double fz, double rx, double rz) {
+    /**
+     * Her feet and facing: rig space (x her right, y up, z forward) to the world and back. 1.3.6: and how big the body is ({@code scale}:
+     * 1 a player's; a smaller NPC's, such as Eto's, shrinks the whole rig and all that grows out of it, about her feet).
+     */
+    record Frame(double x, double y, double z, double fx, double fz, double rx, double rz, double scale) {
+        Frame(double x, double y, double z, double fx, double fz, double rx, double rz) {
+            this(x, y, z, fx, fz, rx, rz, 1.0);
+        }
+
         double[] world(double[] rig, Vec3 camera) {
-            return new double[] {this.x + this.rx * rig[0] + this.fx * rig[2] - camera.f_82479_, this.y + rig[1] - camera.f_82480_,
-                this.z + this.rz * rig[0] + this.fz * rig[2] - camera.f_82481_};
+            double k = this.scale;
+            return new double[] {this.x + k * (this.rx * rig[0] + this.fx * rig[2]) - camera.f_82479_, this.y + k * rig[1] - camera.f_82480_,
+                this.z + k * (this.rz * rig[0] + this.fz * rig[2]) - camera.f_82481_};
         }
 
         double[] turn(double[] rig) {
@@ -1131,9 +1163,10 @@ public final class PaleFleshRenderer {
         }
 
         double[] rig(double wx, double wy, double wz) {
-            double dx = wx - this.x;
-            double dz = wz - this.z;
-            return new double[] {dx * this.rx + dz * this.rz, wy - this.y, dx * this.fx + dz * this.fz};
+            double k = this.scale;
+            double dx = (wx - this.x) / k;
+            double dz = (wz - this.z) / k;
+            return new double[] {dx * this.rx + dz * this.rz, (wy - this.y) / k, dx * this.fx + dz * this.fz};
         }
     }
 

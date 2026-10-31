@@ -71,6 +71,11 @@ public final class EtoClient {
         return VIEWS.get(id);
     }
 
+    /** 1.3.6: every Eto this client knows of (entity ids; a copy). */
+    public static int[] ids() {
+        return VIEWS.keySet().stream().mapToInt(Integer::intValue).toArray();
+    }
+
     /** How open her kakugan is (0..1): at night or in a fight, faded in and out over {@link EtoRules#FADE_TICKS}. */
     public static float eye(int id, View view, long dayTime, double clock) {
         boolean on = EtoRules.night(dayTime) || view != null && view.turned();

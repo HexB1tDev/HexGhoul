@@ -105,9 +105,45 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
         return true;
     }
 
+    /**
+     * 1.3.6: what draws the Owl DNA kit on a body ({@link PaleFleshRenderer}'s flesh, tentacles...): who, her move, her body as it was
+     * drawn this frame (null: not drawn, the move alone poses it), and her size against a player's.
+     */
+    interface Kit {
+        boolean draw(net.minecraft.world.entity.LivingEntity who, PaleClient.PaleView view, RigPose drawn, double scale);
+    }
+
+    /** 1.3.6: each Eto's body as it was last drawn, and on what clock. */
+    private static final java.util.Map<Integer, RigPose> DRAWN = new java.util.HashMap<>();
+    private static final java.util.Map<Integer, Double> DRAWN_AT = new java.util.HashMap<>();
+
+    /** 1.3.6: her body as drawn on {@code clock} (this frame), or null if it wasn't. */
+    static RigPose drawn(int id, double clock) {
+        Double at = DRAWN_AT.get(id);
+        return at != null && Math.abs(at - clock) < 1.0E-3 ? DRAWN.get(id) : null;
+    }
+
+    /** 1.3.6: {@code kit} run for every Eto in sight within {@code range} of this client's player; true if anything was drawn. */
+    static boolean kit(Kit kit, net.minecraft.client.multiplayer.ClientLevel level, net.minecraft.client.Minecraft minecraft, double clock, double range) {
+        DRAWN.keySet().removeIf(id -> level.m_6815_(id) == null);
+        DRAWN_AT.keySet().removeIf(id -> level.m_6815_(id) == null);
+        boolean drew = false;
+        for (int id : EtoClient.ids()) {
+            EtoClient.View view = EtoClient.get(id);
+            if (view == null || !(level.m_6815_(id) instanceof EtoNpc npc) || !npc.m_6084_() || npc.m_20145_()
+                || npc.m_20280_(minecraft.f_91074_) > range * range) {
+                continue;
+            }
+            drew |= kit.draw(npc, view.fight(), drawn(id, clock), EtoRules.SIZE);
+        }
+        return drew;
+    }
+
     private void draw(EtoNpc npc, float yaw, float partial, PoseStack pose, MultiBufferSource buffers, int light, EtoClient.View view) {
         double clock = PaleClient.clock(partial);
         RigPose posed = pose(npc, view, clock, partial);
+        DRAWN.put(npc.m_19879_(), posed == null ? null : new RigPose().add(posed, 1.0F));
+        DRAWN_AT.put(npc.m_19879_(), clock);
         EtoModel.pose = posed;
         boolean turned = posed != null && (Math.abs(posed.flip) > 1.0E-3F || Math.abs(posed.roll) > 1.0E-3F || Math.abs(posed.spin) > 1.0E-3F
             || Math.abs(posed.drop) > 1.0E-3F || Math.abs(posed.lunge) > 1.0E-3F);

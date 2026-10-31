@@ -55,6 +55,15 @@ final class EtoOwl {
         long punchReady = Long.MIN_VALUE;
         long kickReady = Long.MIN_VALUE;
         long flipReady = Long.MIN_VALUE;
+        /** 1.3.6: her flesh moves and Watch This, when each is back. */
+        long swipeReady = Long.MIN_VALUE;
+        long grabReady = Long.MIN_VALUE;
+        long hammerReady = Long.MIN_VALUE;
+        long watchReady = Long.MIN_VALUE;
+        /** 1.3.6: what the swipe has cut this time (entity ids), what the flesh holds (0 none), where the throw began (her frame). */
+        final java.util.Set<Integer> hit = new java.util.HashSet<>();
+        int heldId;
+        double[] thrownFrom = new double[3];
         Vec3 flipPush;
         boolean dirty = true;
 
@@ -80,10 +89,14 @@ final class EtoOwl {
         }
         double distance = gap(npc, target);
         boolean sees = npc.m_142582_(target);
-        EtoRules.Act act = EtoRules.choose(distance, sees, npc.m_20096_(), share(npc), now, f.punchReady, f.kickReady, f.flipReady,
-            npc.m_217043_().m_188500_());
+        EtoRules.Act act = EtoRules.choose(distance, sees, npc.m_20096_(), share(npc), now, new EtoRules.Ready(f.punchReady, f.kickReady, f.flipReady,
+            f.swipeReady, f.grabReady, f.hammerReady, EtoWatch.out(npc) ? Long.MAX_VALUE : f.watchReady), npc.m_217043_().m_188500_());
         face(npc, target);
         switch (act) {
+            case SWIPE -> EtoFlesh.swipe(npc, f, target, level, now, phase);
+            case GRAB -> EtoFlesh.grab(npc, f, target, level, now, phase);
+            case HAMMER -> EtoFlesh.hammer(npc, f, target, level, now, phase);
+            case WATCH -> EtoWatch.start(npc, f, level, now, phase);
             case KICK -> {
                 if (!kick(npc, f, target, level, now, phase)) {
                     npc.m_21573_().m_5624_(target, phase.chase);
@@ -135,6 +148,13 @@ final class EtoOwl {
             case PUNCH -> tickPunch(npc, mind, f, target, level, now, age, phase);
             case KICK -> tickKick(npc, f, target, level, now, age, phase);
             case WITNESS -> tickWitness(npc, mind, f, target, level, now, age, phase);
+            case SWIPE, GRAB_REACH, GRAB_HOLD, GRAB_THROW, GRAB_MISS, HAMMER_CHARGE, HAMMER -> EtoFlesh.tick(npc, mind, f, target, level, now, age, phase);
+            case WATCH -> {
+                npc.m_21573_().m_26573_();
+                if (age >= com.hex.kagune.control.pale.WatchRules.POSE_TICKS) {
+                    end(f);
+                }
+            }
             case FLIP -> {
                 if (age == 1L && f.flipPush != null) {
                     npc.m_20256_(f.flipPush);
@@ -554,7 +574,7 @@ final class EtoOwl {
 
     // ---------------------------------------------------------------- helpers
 
-    private static void begin(EtoNpc npc, Fight f, PaleMove move, int detail, int target, float charge, Vec3 point, long now) {
+    static void begin(EtoNpc npc, Fight f, PaleMove move, int detail, int target, float charge, Vec3 point, long now) {
         f.move = move;
         f.detail = detail;
         f.at = now;
@@ -574,14 +594,14 @@ final class EtoOwl {
     }
 
     /** Her blow on {@code body}: the hurt, a bruise where it landed; true if it took it. */
-    private static boolean hurt(EtoNpc npc, LivingEntity body, float damage, Vec3 at, Vec3 way) {
+    static boolean hurt(EtoNpc npc, LivingEntity body, float damage, Vec3 at, Vec3 way) {
         body.f_19802_ = 0;
         WoundHits.expect(body, com.hex.kagune.control.wound.WoundBook.Blow.BLUNT, at, way, 0.0);
         return body.m_6469_(npc.m_269291_().m_269333_(npc), damage);
     }
 
     /** What her blows may catch besides what she fights: anything hostile; never her partner, never a player she isn't fighting. */
-    private static boolean fair(EtoNpc npc, EtoBrain.Mind mind, LivingEntity body) {
+    static boolean fair(EtoNpc npc, EtoBrain.Mind mind, LivingEntity body) {
         if (body == npc || !body.m_6084_() || EtoBrain.partnerOf(mind, body)) {
             return false;
         }
@@ -599,11 +619,11 @@ final class EtoOwl {
         return npc.m_21223_() / Math.max(1.0F, npc.m_21233_());
     }
 
-    private static double resist(LivingEntity body) {
+    static double resist(LivingEntity body) {
         return Math.max(0.0, Math.min(1.0, body.m_21133_(net.minecraft.world.entity.ai.attributes.Attributes.f_22278_)));
     }
 
-    private static void face(EtoNpc npc, LivingEntity other) {
+    static void face(EtoNpc npc, LivingEntity other) {
         Vec3 to = other.m_20182_().m_82546_(npc.m_20182_());
         if (to.f_82479_ * to.f_82479_ + to.f_82481_ * to.f_82481_ < 1.0E-4) {
             return;
@@ -615,14 +635,14 @@ final class EtoOwl {
     }
 
     /** A point in the move's frame (x to her right as she faced, y up, z the way she faced) as a world offset. */
-    private static Vec3 local(Fight f, double x, double y, double z) {
+    static Vec3 local(Fight f, double x, double y, double z) {
         double yaw = Math.toRadians(f.yaw);
         Vec3 facing = new Vec3(-Math.sin(yaw), 0.0, Math.cos(yaw));
         Vec3 right = new Vec3(-facing.f_82481_, 0.0, facing.f_82479_);
         return right.m_82490_(x).m_82549_(facing.m_82490_(z)).m_82520_(0.0, y, 0.0);
     }
 
-    private static void fx(EtoNpc npc, int kind, int target, Vec3 at, Vec3 velocity, float size, int extra) {
+    static void fx(EtoNpc npc, int kind, int target, Vec3 at, Vec3 velocity, float size, int extra) {
         ControlNetwork.broadcastAround(npc, PaleBlitz.packet(kind, npc.m_19879_(), target, at, velocity, size, extra));
     }
 }

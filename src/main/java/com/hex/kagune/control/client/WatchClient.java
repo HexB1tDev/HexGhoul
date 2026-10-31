@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import net.minecraft.client.Minecraft;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.Entity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -52,15 +52,18 @@ public final class WatchClient {
         }
     }
 
-    /** {@code player}'s tentacle on {@code side} (1 her right, -1 her left). */
-    public static Tentacle get(Player player, int side) {
-        Tentacle[] both = player == null ? null : TENTACLES.get(player.m_36316_().getId());
+    /**
+     * {@code player}'s tentacle on {@code side} (1 her right, -1 her left). 1.3.6: anyone's, by their UUID (a player's is their
+     * profile's; an NPC with the kit, Eto, is sent by hers).
+     */
+    public static Tentacle get(Entity player, int side) {
+        Tentacle[] both = player == null ? null : TENTACLES.get(player.m_20148_());
         return both == null ? Tentacle.NONE : both[side > 0 ? 0 : 1];
     }
 
     /** Whether {@code player} has her tentacles out at all. */
-    public static boolean out(Player player) {
-        return player != null && TENTACLES.containsKey(player.m_36316_().getId());
+    public static boolean out(Entity player) {
+        return player != null && TENTACLES.containsKey(player.m_20148_());
     }
 
     @SubscribeEvent

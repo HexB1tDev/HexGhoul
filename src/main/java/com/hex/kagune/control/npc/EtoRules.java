@@ -445,7 +445,15 @@ public final class EtoRules {
         KICK,
         /** A front flip in over the gap, or a back flip clear. */
         FLIP_IN,
-        FLIP_BACK
+        FLIP_BACK,
+        /** 1.3.6: the flesh out of her back raking across everything in front of her. */
+        SWIPE,
+        /** 1.3.6: the flesh reaching for it, holding it up, hauling it over her and flinging it. */
+        GRAB,
+        /** 1.3.6: the Flesh Hammer: the club grown round her raised leg, the axe kick slamming it down. */
+        HAMMER,
+        /** 1.3.6: Watch This: her arms out in a cross, two tentacles out of her back hunting on their own for ten seconds. */
+        WATCH
     }
 
     /** The mastery her moves are thrown at (the most there is: her fists as hard as a master's). */
@@ -468,12 +476,57 @@ public final class EtoRules {
      */
     public static Act choose(double distance, boolean sees, boolean grounded, float health, long now, long punchReady, long kickReady, long flipReady,
                              double roll) {
+        return choose(distance, sees, grounded, health, now, Ready.only(punchReady, kickReady, flipReady), roll);
+    }
+
+    /** 1.3.6: how often her flesh moves and Watch This come back (ticks, before her phase cuts them down). */
+    public static final int SWIPE_EVERY = 70;
+    public static final int GRAB_EVERY = 150;
+    public static final int HAMMER_EVERY = 120;
+    public static final int WATCH_EVERY = 520;
+    /** 1.3.6: Watch This once something is this close (blocks); the grab from this far to as far as the flesh reaches on her; the hammer this close. */
+    public static final double WATCH_FROM = 8.0;
+    public static final double GRAB_FROM = 4.5;
+    public static final double GRAB_TO = com.hex.kagune.control.pale.PaleRules.GRAB_RANGE * SIZE;
+    public static final double HAMMER_TO = 3.2;
+    /** 1.3.6: the swipe's reach on her (blocks): the flesh is as much smaller as she is. */
+    public static final double SWIPE_TO = com.hex.kagune.control.pale.PaleRules.SWIPE_REACH * SIZE - 1.0;
+
+    /** 1.3.6: when each of her moves is ready again (game ticks; {@code Long.MAX_VALUE}: not hers to throw). */
+    public record Ready(long punch, long kick, long flip, long swipe, long grab, long hammer, long watch) {
+        public static Ready only(long punch, long kick, long flip) {
+            return new Ready(punch, kick, flip, Long.MAX_VALUE, Long.MAX_VALUE, Long.MAX_VALUE, Long.MAX_VALUE);
+        }
+    }
+
+    /**
+     * 1.3.6: her pick with the whole Owl DNA kit (pure). Once she is serious: Watch This the moment it is back with something close
+     * (the tentacles hunt on their own while she fights on); the grab from mid range; the Flesh Hammer up close (the maniac most of
+     * all). The swipe at any time, now and then when calm, often once serious. Otherwise as before: the kick, the Big Punch, the flips,
+     * the blitz, a step in, the chase.
+     */
+    public static Act choose(double distance, boolean sees, boolean grounded, float health, long now, Ready ready, double roll) {
         Phase phase = Phase.of(health);
         boolean serious = phase != Phase.CALM;
-        if (sees && grounded && now >= kickReady && distance >= KICK_FROM && distance <= com.hex.kagune.control.pale.PaleRules.KICK_RANGE
+        boolean maniac = phase == Phase.MANIAC;
+        if (serious && sees && grounded && now >= ready.watch() && distance <= WATCH_FROM) {
+            return Act.WATCH;
+        }
+        if (sees && grounded && now >= ready.kick() && distance >= KICK_FROM && distance <= com.hex.kagune.control.pale.PaleRules.KICK_RANGE
             && (serious || roll < 0.55)) {
             return Act.KICK;
         }
+        if (serious && sees && grounded && now >= ready.grab() && distance >= GRAB_FROM && distance <= GRAB_TO && roll < (maniac ? 0.8 : 0.5)) {
+            return Act.GRAB;
+        }
+        if (serious && sees && grounded && now >= ready.hammer() && distance <= HAMMER_TO && roll < (maniac ? 0.6 : 0.35)) {
+            return Act.HAMMER;
+        }
+        if (sees && grounded && now >= ready.swipe() && distance >= 1.0 && distance <= SWIPE_TO && roll < (serious ? 0.45 : 0.15)) {
+            return Act.SWIPE;
+        }
+        long punchReady = ready.punch();
+        long flipReady = ready.flip();
         if (sees && grounded && now >= punchReady && (distance >= 2.0 && distance <= 10.0 && (serious || roll < 0.45)
             || distance < 2.0 && roll < (serious ? 0.5 : 0.3))) {
             return Act.PUNCH;
@@ -499,6 +552,16 @@ public final class EtoRules {
             case SERIOUS -> roll < 0.65 ? full : 14 + (int)(roll * 12.0);
             default -> roll < 0.25 ? full : 8 + (int)(roll * 14.0);
         };
+    }
+
+    /**
+     * 1.3.6: how long she lets the Flesh Hammer's club grow round her raised leg (ticks): anything from the leg just up to the club
+     * fully grown; the maniac always lets it grow all the way (hers is True Anonymity's, grown on past that).
+     */
+    public static int hammerHold(Phase phase, double roll) {
+        int raise = com.hex.kagune.control.pale.PaleRules.HAMMER_RAISE_TICKS;
+        int grow = com.hex.kagune.control.pale.PaleRules.HAMMER_GROW_TICKS;
+        return phase == Phase.MANIAC ? grow : raise + (int)Math.round(Math.max(0.0, Math.min(1.0, roll)) * (grow - raise));
     }
 
     /** A cooldown of {@code ticks}, cut down as she gets serious. */

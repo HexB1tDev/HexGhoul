@@ -236,6 +236,8 @@ public final class EtoBrain {
             calm(npc, mind, level, now);
             heal(npc, mind, now);
         }
+        // 1.3.6: her Watch This tentacles hunt on their own, whatever she is doing, until their ten seconds are up.
+        EtoWatch.tick(npc, mind, level, now);
         if (mind.gesture.over(now - mind.gestureAt) && mind.gesture != EtoGesture.NONE && !mind.gesture.held()) {
             gesture(mind, EtoGesture.NONE, now);
         }
@@ -982,6 +984,11 @@ public final class EtoBrain {
         npc.m_21008_(InteractionHand.MAIN_HAND, stack(null));
         npc.m_21008_(InteractionHand.OFF_HAND, stack(null));
         UniqueNpcs.died(level, EtoRules.KEY, npc.m_20148_());
+        // 1.3.6: her tentacles go with her, and whatever her flesh held is let go.
+        EtoWatch.forget(npc);
+        if (npc.mind != null) {
+            EtoFlesh.release(level, npc.mind.owl);
+        }
         LIVE.remove(npc);
     }
 

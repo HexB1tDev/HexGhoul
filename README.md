@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.6 (HexGhoul): Eto's Owl DNA flesh: the swipe, the grab and throw, the Flesh Hammer, Watch This (testing)
+
+See `.github/release-notes-1.3.6.md`.
+
 ## 1.3.5 (HexGhoul): holding hands: the held hands stay still as you walk, arms stretched further apart (testing)
 
 See `.github/release-notes-1.3.5.md`.
