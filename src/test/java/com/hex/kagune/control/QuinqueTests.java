@@ -64,9 +64,38 @@ public final class QuinqueTests {
     static void kinds() {
         check(Math.abs(Quinque.BLADE.attackDamage() - 8.0F) < 1.0E-4F && Math.abs(Quinque.BLADE.attacksPerSecond() - 1.6F) < 1.0E-4F,
             "the Bikaku blade: 8 damage, 1.6 swings a second (a netherite sword's)");
-        check(Math.abs(Quinque.SPEAR.attackDamage() - 10.0F) < 1.0E-4F && Math.abs(Quinque.SPEAR.attacksPerSecond() - 1.1F) < 1.0E-4F,
-            "the Koukaku spear: 10 damage, 1.1 swings a second (heavy)");
-        check(Quinque.SPEAR.reach > 1.0 && Quinque.BLADE.reach == 0.0, "only the spear reaches further");
+        check(Math.abs(Quinque.SPEAR.attackDamage() - 8.0F) < 1.0E-4F && Quinque.SPEAR.attacksPerSecond() > Quinque.BLADE.attacksPerSecond(),
+            "1.3.26: the Koukaku spear is agile: 8 damage, the quickest swing");
+        check(Quinque.SPEAR.reach >= 2.0 && Quinque.BLADE.reach == 0.0 && Quinque.SPEAR.reach > Quinque.KATANA.reach, "the spear reaches furthest");
+        check(Quinque.MACE.attackDamage() > Quinque.KATANA.attackDamage() && Quinque.MACE.attacksPerSecond() < 1.0F,
+            "the mace is the heaviest and slowest");
+        check(Quinque.SPEAR.twoHanded && Quinque.KATANA.twoHanded && Quinque.MACE.twoHanded && !Quinque.BLADE.twoHanded,
+            "the spear, katana and mace are held in both hands");
+        check(Quinque.LAUNCHER.ranged && !Quinque.KATANA.ranged, "only the launcher fires");
+        // 1.3.26: a string of three M1s, the third the finisher; a pause starts it again.
+        check(Quinque.next(-1, 0L) == 0 && Quinque.next(0, 10L) == 1 && Quinque.next(1, 10L) == 2 && Quinque.next(2, 10L) == 0
+            && Quinque.next(1, Quinque.COMBO + 1) == 0 && Quinque.next(0, Long.MAX_VALUE) == 0, "three M1s to a string, a pause starts again");
+        for (Quinque q : Quinque.values()) {
+            check(q.weight(0) == 1.0F && q.weight(1) == 1.0F && (q.ranged || q.weight(Quinque.FINISHER) > 1.0F), q + ": only its third blow is heavier");
+        }
+        check(Quinque.KATANA.sweep(Quinque.FINISHER) > 0.0 && Quinque.MACE.sweep(Quinque.FINISHER) > 0.0 && Quinque.SPEAR.sweep(Quinque.FINISHER) > 0.0
+            && Quinque.BLADE.sweep(Quinque.FINISHER) == 0.0 && Quinque.KATANA.sweep(0) == 0.0, "the katana's, mace's and spear's finishers reach others");
+        int heat = 0;
+        int shots = 0;
+        while (heat < Quinque.HEAT_MOST && shots < 1000) {
+            heat = Quinque.heated(heat, 4L);
+            shots++;
+        }
+        check(shots >= 25 && shots <= 40, "held down (a shard every four ticks) it overheats after a few seconds of fire: " + shots + " shards");
+        heat = 0;
+        for (int burst = 0; burst < 20; burst++) {
+            for (int shot = 0; shot < 5; shot++) {
+                heat = Quinque.heated(heat, 4L);
+            }
+            heat = Quinque.heated(heat, 60L) - 1; // a breath between bursts
+        }
+        check(heat < Quinque.HEAT_MOST, "fired in bursts it never overheats");
+        check(Quinque.heated(29, Long.MAX_VALUE) == 1, "long left it is cold (no overflow)");
         for (Quinque q : Quinque.values()) {
             check(q.ghoul > 1.0F && q.suppress > 0, q + " cuts a ghoul deeper and holds its regeneration back");
             check(Quinque.byId(q.caseId) == q && Quinque.byId("hexkagune:" + q.weaponId) == q, q + " is found by its case's and weapon's ids");
@@ -110,9 +139,7 @@ public final class QuinqueTests {
                 check(parent.find() && read("assets/hexkagune/models/" + parent.group(1) + ".json") != null, item + ": its shut case model exists");
                 check(lang != null && lang.contains("\"item.hexkagune." + item + "\""), item + " has a name");
             }
-            String recipe = read("data/hexkagune/recipes/" + q.caseId + ".json");
-            check(recipe != null && recipe.contains("\"hexkagune:" + q.caseId + "\""), q + "'s case can be crafted");
-            check(lang != null && lang.contains("item.hexkagune.quinque." + q.type + ".lore"), q + " has its lore line");
+            check(lang != null && lang.contains("item.hexkagune.quinque." + q.model + ".lore"), q + " has its lore line");
         }
         check(lang != null && lang.contains("item.hexkagune.quinque.open") && lang.contains("item.hexkagune.quinque.close")
             && lang.contains("item.hexkagune.quinque.ghoul"), "the quinques' use lines are named");

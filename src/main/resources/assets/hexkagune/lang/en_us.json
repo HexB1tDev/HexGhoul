@@ -156,9 +156,20 @@
   "item.hexkagune.quinque_bikaku_blade": "Bikaku Quinque Blade",
   "item.hexkagune.quinque_case_koukaku": "Quinque Case (Koukaku)",
   "item.hexkagune.quinque_koukaku_spear": "Koukaku Quinque Spear",
-  "item.hexkagune.quinque.bikaku.lore": "§7§oA blade grown from a Bikaku kakuhou: balanced, segmented, sharp",
-  "item.hexkagune.quinque.koukaku.lore": "§7§oA lance hardened from a Koukaku kakuhou: heavy, long, hard as armor",
   "item.hexkagune.quinque.ghoul": "§cCuts ghouls deep and stops their regeneration a while",
   "item.hexkagune.quinque.open": "§8Use: release the quinque",
-  "item.hexkagune.quinque.close": "§8Sneak + use: fold it back into its case"
+  "item.hexkagune.quinque.close": "§8Sneak + use: fold it back into its case",
+  "item.hexkagune.quinque_case_katana": "Quinque Case (Katana)",
+  "item.hexkagune.quinque_katana": "Bikaku Quinque Katana",
+  "item.hexkagune.quinque_case_mace": "Quinque Case (Mace)",
+  "item.hexkagune.quinque_flesh_mace": "Rinkaku Flesh Mace",
+  "item.hexkagune.quinque_case_launcher": "Quinque Case (Launcher)",
+  "item.hexkagune.quinque_crystal_launcher": "Ukaku Crystal Launcher",
+  "item.hexkagune.quinque.bikaku.lore": "§7§oA blade grown from a Bikaku kakuhou: balanced, segmented, sharp",
+  "item.hexkagune.quinque.koukaku.lore": "§7§oA great spear hardened from a Koukaku kakuhou: long, quick, gripped in both hands",
+  "item.hexkagune.quinque.katana.lore": "§7§oA katana drawn from a Bikaku kakuhou: two hands, one clean cut",
+  "item.hexkagune.quinque.mace.lore": "§7§oA Rinkaku kakuhou left to grow: a lump of living flesh on a long handle",
+  "item.hexkagune.quinque.launcher.lore": "§7§oAn Ukaku kakuhou caged in steel: it spits crystal",
+  "item.hexkagune.quinque.combo": "§8Third hit in a row: a finisher",
+  "item.hexkagune.quinque.fire": "§8Use (hold): fire crystal shards · Sneak + use: fold it back into its case"
 }

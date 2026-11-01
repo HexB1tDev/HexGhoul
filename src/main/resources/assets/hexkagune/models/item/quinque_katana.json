@@ -1,0 +1,29 @@
+{
+ "parent": "hexkagune:item/quinque/katana_case_closed",
+ "overrides": [
+  {
+   "predicate": {
+    "hexkagune:deploy": 0.2
+   },
+   "model": "hexkagune:item/quinque/katana_case_open"
+  },
+  {
+   "predicate": {
+    "hexkagune:deploy": 0.45
+   },
+   "model": "hexkagune:item/quinque/katana_half"
+  },
+  {
+   "predicate": {
+    "hexkagune:deploy": 0.7
+   },
+   "model": "hexkagune:item/quinque/katana_nearly"
+  },
+  {
+   "predicate": {
+    "hexkagune:deploy": 0.95
+   },
+   "model": "hexkagune:item/quinque/katana_full"
+  }
+ ]
+}

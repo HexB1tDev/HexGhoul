@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.26 (HexGhoul): Touka's wings show again; quinques reworked: a bigger mid-grip spear, a two-handed katana, a flesh mace, a crystal launcher, custom M1s (testing)
+
+See `.github/release-notes-1.3.26.md`.
+
 ## 1.3.25 (HexGhoul): the CCG's quinques: briefcases that open into a Bikaku blade and a Koukaku spear (testing)
 
 See `.github/release-notes-1.3.25.md`.

@@ -492,5 +492,7 @@ public final class ChildMomentPose {
         p.roll += m.roll * w;
         p.flip += m.flip * w;
         p.spin += m.spin * w;
+        p.twist += m.twist * w; // 1.3.26: a quinque's swing turns the chest and steps in
+        p.lunge += m.lunge * w;
     }
 }

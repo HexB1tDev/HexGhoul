@@ -312,10 +312,10 @@ public final class UkakuWingRenderer {
             }
             float aimed = com.hex.kagune.control.client.NpcWingsClient.aim(wings, clock);
             float crystal = com.hex.kagune.control.client.NpcWingsClient.crystal(wings, clock);
-            WingRig.Input input = new WingRig.Input(com.hex.kagune.control.ukaku.WingForm.TWIN, com.hex.kagune.control.npc.WingRules.MASTERY, deploy,
-                time / 20.0, crystal, crystal, WingRig.Motion.NONE, 0.0F, 0.4F, 0.0F, 0.0F, false, distance > DETAIL_DISTANCE_SQR ? 0.3F : 1.0F, 1.0F,
-                !wings.out(), aimed, aimed, aim, com.hex.kagune.control.client.NpcWingsClient.kick(wings, 1, clock),
-                com.hex.kagune.control.client.NpcWingsClient.kick(wings, -1, clock), 0.0F, 0.0F, 0.0F, 0.0F);
+            // 1.3.26: through WingRules.companion (the owner: "she's not manifesting at all": both wings were passed as thrown, so none drew).
+            WingRig.Input input = com.hex.kagune.control.npc.WingRules.companion(deploy, time / 20.0, crystal, !wings.out(), aimed, aim,
+                com.hex.kagune.control.client.NpcWingsClient.kick(wings, 1, clock), com.hex.kagune.control.client.NpcWingsClient.kick(wings, -1, clock),
+                distance > DETAIL_DISTANCE_SQR ? 0.3F : 1.0F);
             List<WingRig.Quad> quads = WingRig.build(input, eye);
             if (quads.isEmpty()) {
                 continue;

@@ -314,9 +314,10 @@ public final class KaguneBodyAnimation implements IAnimation {
     }
 
     private boolean wants() {
-        // 1.3.3: holding Eto's hand, the arm reaches out to her (whatever else the body is doing).
+        // 1.3.3: holding Eto's hand, the arm reaches out to her (whatever else the body is doing). 1.3.26: or a quinque (its stance, its M1s).
         if (com.hex.kagune.control.client.EtoClient.handHeld(this.player.m_19879_()) > 0.0F
-            || com.hex.kagune.control.client.ChildClient.busy(this.player.m_19879_())) {
+            || com.hex.kagune.control.client.ChildClient.busy(this.player.m_19879_())
+            || com.hex.kagune.control.client.QuinqueClient.posing(this.player)) {
             return this.player.m_6084_() && ControlConfig.bodyAnimations();
         }
         if (com.hex.kagune.control.client.PaleClient.eyes(this.player)) {
@@ -532,6 +533,11 @@ public final class KaguneBodyAnimation implements IAnimation {
             ChildMomentPose.blend(p, ChildMomentPose.parent(moment.moment(), age, moment.stage(), true),
                 this.fade * (float)com.hex.kagune.control.family.ChildMoment.weight(moment.moment(), age));
         }
+        // 1.3.26: a quinque in hand: its stance (both hands on a two-handed one), its M1s, the case opening into it.
+        RigPose quinque = com.hex.kagune.control.client.QuinqueClient.pose(this.player, tickDelta);
+        if (quinque != null) {
+            ChildMomentPose.blend(p, quinque, this.fade);
+        }
         // 6.2.0: just whole again after her death that did not take, she stands as the pieces went back together and eases into it.
         float risen = com.hex.kagune.control.client.ReviveClient.risen(this.player, com.hex.kagune.control.client.PaleClient.clock(tickDelta));
         if (risen < 1.0F) {
@@ -588,7 +594,8 @@ public final class KaguneBodyAnimation implements IAnimation {
         if (!view.active() && !com.hex.kagune.control.client.PaleClient.eyes(this.player) && this.king() <= 0.0F
             && com.hex.kagune.control.client.TurningClient.progress(this.player, time) < 0.0
             && (com.hex.kagune.control.client.EtoClient.handHeld(this.player.m_19879_()) > 0.0F
-            || com.hex.kagune.control.client.ChildClient.busy(this.player.m_19879_()))) {
+            || com.hex.kagune.control.client.ChildClient.busy(this.player.m_19879_())
+            || com.hex.kagune.control.client.QuinqueClient.posing(this.player))) {
             this.finish(steel, time, tickDelta);
             return;
         }

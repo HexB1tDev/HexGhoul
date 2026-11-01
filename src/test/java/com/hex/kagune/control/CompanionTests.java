@@ -49,6 +49,7 @@ public final class CompanionTests {
         poses();
         ken();
         touka();
+        toukaWingsShow();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -413,5 +414,19 @@ public final class CompanionTests {
         check(peck.headX > 0.3F && peck.lean > 0.2F, "Ken's quick kiss: down to their forehead");
         RigPose hand = EtoPose.gesture(EtoGesture.HAND, 40, true);
         check(hand.leftArmHold >= 0.999F, "holding hands is the same for everyone (no led pose of its own)");
+    }
+
+    /** 1.3.26: the owner: Touka "attacks properly but she's not manifesting at all": her wings drew nothing (both passed as thrown). */
+    static void toukaWingsShow() {
+        double[] eye = {0.0, -1.5, -4.0};
+        for (float deploy : new float[] {0.3F, 1.0F}) {
+            for (float crystal : new float[] {0.0F, 1.0F}) {
+                int quads = com.hex.kagune.control.ukaku.WingRig.build(com.hex.kagune.control.npc.WingRules.companion(deploy, 5.0, crystal, false, 0.0F,
+                    com.hex.kagune.control.ukaku.WingRig.FORWARD, 0.0F, 0.0F, 1.0F), eye).size();
+                check(quads > 50, "Touka's wings are drawn as they come out (deploy " + deploy + ", crystal " + crystal + "): " + quads + " quads");
+            }
+        }
+        check(com.hex.kagune.control.ukaku.WingRig.build(com.hex.kagune.control.npc.WingRules.companion(0.0F, 5.0, 0.0F, true, 0.0F,
+            com.hex.kagune.control.ukaku.WingRig.FORWARD, 0.0F, 0.0F, 1.0F), eye).isEmpty(), "put away, none are drawn");
     }
 }

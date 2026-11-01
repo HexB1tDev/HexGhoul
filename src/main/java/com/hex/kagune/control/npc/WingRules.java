@@ -74,4 +74,14 @@ public final class WingRules {
     public static double fan(int i, int count) {
         return count <= 1 ? 0.0 : FAN_SPREAD * (2.0 * i / (count - 1) - 1.0);
     }
+
+    /**
+     * 1.3.26: a companion's wings (Touka's) as the rig draws them: a twin pair at {@link #MASTERY}, both on her back (none thrown as a
+     * vortex: passing 0 there drew nothing at all, the owner's "not manifesting"), crystal as she throws, aiming as she shoots.
+     */
+    public static com.hex.kagune.control.ukaku.WingRig.Input companion(float deploy, double time, float crystal, boolean dissolving, float aim,
+                                                                       double[] at, float kickRight, float kickLeft, float detail) {
+        return new com.hex.kagune.control.ukaku.WingRig.Input(com.hex.kagune.control.ukaku.WingForm.TWIN, MASTERY, deploy, time, crystal, crystal,
+            com.hex.kagune.control.ukaku.WingRig.Motion.NONE, 0.0F, 0.4F, 0.0F, 0.0F, false, detail, 1.0F, dissolving, aim, aim, at, kickRight, kickLeft);
+    }
 }
