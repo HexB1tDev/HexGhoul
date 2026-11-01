@@ -56,6 +56,14 @@ public final class ControlEntities {
         () -> EntityType.Builder.<com.hex.kagune.control.npc.CcgAgent>m_20704_(com.hex.kagune.control.npc.CcgAgent::new, MobCategory.MISC)
             .m_20699_(0.6F, 1.8F).m_20702_(10).m_20717_(2).m_20712_(KaguneMod.id("ccg_investigator").toString()));
 
+    /**
+     * Home Living (1.3.40): The Human: a person (a creature, a player's size), made only by command for now (no wild kind spawns it); it
+     * runs from ghouls and leaves Human Meat.
+     */
+    public static final RegistryObject<EntityType<com.hex.kagune.control.npc.HumanNpc>> HUMAN = ENTITIES.register("human",
+        () -> EntityType.Builder.<com.hex.kagune.control.npc.HumanNpc>m_20704_(com.hex.kagune.control.npc.HumanNpc::new, MobCategory.CREATURE)
+            .m_20699_(0.6F, 1.8F).m_20702_(10).m_20717_(3).m_20712_(KaguneMod.id("human").toString()));
+
     private ControlEntities() {
     }
 
@@ -84,6 +92,7 @@ public final class ControlEntities {
             event.put(KEN.get(), EtoNpc.attributes(com.hex.kagune.control.npc.Persona.KEN).m_22265_());
             event.put(CHILD.get(), com.hex.kagune.control.npc.ChildNpc.attributes().m_22265_());
             event.put(AGENT.get(), com.hex.kagune.control.npc.CcgAgent.attributes().m_22265_());
+            event.put(HUMAN.get(), com.hex.kagune.control.npc.HumanNpc.attributes().m_22265_());
         }
     }
 }

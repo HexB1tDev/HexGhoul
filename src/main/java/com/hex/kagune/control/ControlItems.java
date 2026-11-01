@@ -19,7 +19,9 @@ import net.minecraftforge.registries.RegistryObject;
  * ghoul leaves when it dies, eaten for good (raw meat, edible even on a full reserve); in the creative Food and Drinks tab. 1.3.2: the
  * Gold Ring (crafted from gold and a diamond), offered to the NPC one is dating to marry her. 1.3.25: the CCG's quinques
  * ({@link com.hex.kagune.control.quinque.Quinque}): each an attaché case and the weapon it opens into (a Bikaku blade, a Koukaku spear;
- * netherite-tier swords, so they sweep, wear and take a sword's enchantments), in the Combat tab.
+ * netherite-tier swords, so they sweep, wear and take a sword's enchantments), in the Combat tab. Home Living (1.3.40): the ghoul
+ * kitchen ({@link com.hex.kagune.control.kitchen.Menu}): human meat and every dish made with it or with ghoul meat, each a
+ * {@link com.hex.kagune.control.kitchen.DishItem}, in the Food and Drinks tab after Ghoul Meat; and the kitchen's four effects.
  */
 public final class ControlItems {
     private static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, "hexkagune");
@@ -42,7 +44,79 @@ public final class ControlItems {
         }
     }
 
+    /** Home Living (1.3.40): the kitchen's dishes, by their item path, in the cookbook's order. */
+    private static final java.util.Map<String, RegistryObject<Item>> DISHES = new java.util.LinkedHashMap<>();
+    /** And its own effects, by key. */
+    private static final DeferredRegister<net.minecraft.world.effect.MobEffect> EFFECTS = DeferredRegister.create(ForgeRegistries.MOB_EFFECTS,
+        "hexkagune");
+    private static final java.util.Map<String, RegistryObject<net.minecraft.world.effect.MobEffect>> KITCHEN_EFFECTS = new java.util.HashMap<>();
+
+    static {
+        for (com.hex.kagune.control.kitchen.Dish dish : com.hex.kagune.control.kitchen.Menu.DISHES) {
+            DISHES.put(dish.id(), ITEMS.register(dish.id(), () -> new com.hex.kagune.control.kitchen.DishItem(dish, dishProperties(dish))));
+        }
+        for (com.hex.kagune.control.kitchen.Menu.Kitchen effect : com.hex.kagune.control.kitchen.Menu.EFFECTS) {
+            KITCHEN_EFFECTS.put(effect.key(), EFFECTS.register(effect.key(), () -> new com.hex.kagune.control.kitchen.KitchenEffect(effect.colour())));
+        }
+    }
+
     private ControlItems() {
+    }
+
+    /**
+     * A dish's item properties: its food (meat if there is meat in it; a drink or a snack on a full stomach too), its stack, and for a
+     * bottled one the bottle given back when it is cooked with (as vanilla's honey bottle).
+     */
+    private static Item.Properties dishProperties(com.hex.kagune.control.kitchen.Dish dish) {
+        FoodProperties.Builder food = new FoodProperties.Builder().m_38760_(dish.nutrition()).m_38758_(dish.saturation());
+        if ((dish.humanMeat() || dish.ghoulMeat() > 0) && dish.kind() != com.hex.kagune.control.kitchen.Dish.Kind.DRINK) {
+            food = food.m_38757_();
+        }
+        if (dish.alwaysEdible()) {
+            food = food.m_38765_();
+        }
+        Item.Properties properties = new Item.Properties().m_41489_(food.m_38767_()).m_41487_(dish.stack());
+        if (dish.kind() == com.hex.kagune.control.kitchen.Dish.Kind.DRINK && dish.container() != null) {
+            Item bottle = vanilla(dish.container());
+            if (bottle != null) {
+                properties = properties.m_41495_(bottle);
+            }
+        }
+        return properties;
+    }
+
+    /** A vanilla (or any) item by its id ("minecraft:bowl"), or null. */
+    public static Item vanilla(String id) {
+        int colon = id.indexOf(':');
+        net.minecraft.resources.ResourceLocation key = net.minecraft.resources.ResourceLocation.m_214293_(id.substring(0, colon), id.substring(colon + 1));
+        return key == null ? null : ForgeRegistries.ITEMS.getValue(key);
+    }
+
+    /** Home Living (1.3.40): the dish {@code stack} is, or null. */
+    public static com.hex.kagune.control.kitchen.Dish dish(ItemStack stack) {
+        return stack != null && !stack.m_41619_() && stack.m_41720_() instanceof com.hex.kagune.control.kitchen.DishItem item ? item.dish() : null;
+    }
+
+    /** A dish's item by its path ("human_meat"), or null. */
+    public static Item dishItem(String id) {
+        RegistryObject<Item> item = DISHES.get(id);
+        return item == null ? null : item.get();
+    }
+
+    /** One of the kitchen's own effects by key, or null. */
+    public static net.minecraft.world.effect.MobEffect kitchenEffect(String key) {
+        RegistryObject<net.minecraft.world.effect.MobEffect> effect = KITCHEN_EFFECTS.get(key);
+        return effect == null ? null : effect.get();
+    }
+
+    /** An effect a dish gives, by key: the kitchen's own, or vanilla's by its path ("strength"); null if there is no such effect. */
+    public static net.minecraft.world.effect.MobEffect effect(String key) {
+        net.minecraft.world.effect.MobEffect own = kitchenEffect(key);
+        if (own != null) {
+            return own;
+        }
+        net.minecraft.resources.ResourceLocation id = net.minecraft.resources.ResourceLocation.m_214293_("minecraft", key);
+        return id == null ? null : ForgeRegistries.MOB_EFFECTS.getValue(id);
     }
 
     /** 1.3.25: a quinque's case item. */
@@ -90,6 +164,7 @@ public final class ControlItems {
 
     static void register(IEventBus modBus) {
         ITEMS.register(modBus);
+        EFFECTS.register(modBus);
     }
 
     /** True for a stack of Ghoul Meat. */
@@ -106,6 +181,10 @@ public final class ControlItems {
         public static void tabs(BuildCreativeModeTabContentsEvent event) {
             if (event.getTabKey() == CreativeModeTabs.f_256839_) {
                 event.accept(GHOUL_MEAT);
+                // 1.3.40: the kitchen, in the cookbook's order.
+                for (RegistryObject<Item> dish : DISHES.values()) {
+                    event.accept(dish);
+                }
             }
             if (event.getTabKey() == CreativeModeTabs.f_256797_) {
                 // 1.3.25: the quinques, each case and its weapon.

@@ -163,7 +163,8 @@ public final class QuinqueTests {
         // 1.3.27: the owner: "a suitcase you can't [craft], definitely": no recipe makes any of them.
         Path recipes = RESOURCES.resolve("data/hexkagune/recipes");
         if (Files.isDirectory(recipes)) {
-            try (java.util.stream.Stream<Path> all = Files.list(recipes)) {
+            // 1.3.40: every recipe, the kitchen's folder of them included.
+            try (java.util.stream.Stream<Path> all = Files.walk(recipes).filter(Files::isRegularFile)) {
                 for (Path recipe : (Iterable<Path>)all::iterator) {
                     String text = Files.readString(recipe);
                     for (Quinque q : Quinque.values()) {

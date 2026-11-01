@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "minecraft:bread"
+    },
+    {
+      "item": "hexkagune:cooked_ghoul_meat"
+    },
+    {
+      "item": "hexkagune:cooked_human_meat"
+    },
+    {
+      "item": "minecraft:beetroot"
+    }
+  ],
+  "result": {
+    "item": "hexkagune:kakuja_burger",
+    "count": 1
+  }
+}

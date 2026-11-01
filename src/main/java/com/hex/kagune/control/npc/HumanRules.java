@@ -1,0 +1,70 @@
+package com.hex.kagune.control.npc;
+
+/**
+ * Home Living (1.3.40): The Human (pure, tested): an ordinary person, made only by command for now ({@code /summon hexkagune:human}). It
+ * wanders; it knows a ghoul when one shows itself ({@link #NOTICE} blocks off with its kagune out, or {@link #CLOSE} with it hidden, or
+ * anyone who has hurt it) and runs, at a person's pace: about a player's walk ({@link #SPEED} times {@link #RUN}), so a ghoul who
+ * sprints catches it. Its looks are vanilla's own default skins ({@link #LOOKS}); its arms go up as it runs. It leaves
+ * {@link #meat} pieces of Human Meat.
+ */
+public final class HumanRules {
+    public static final double HEALTH = 20.0;
+    /** Its movement speed attribute: a mob's ground speed goes as the square of it (0.3 at {@link #RUN} is a player's walk). */
+    public static final double SPEED = 0.3;
+    public static final double WALK = 0.6;
+    public static final double RUN = 1.05;
+    /** How far off it sees a ghoul with its kagune out, and how near a hidden one has to come before it feels it. */
+    public static final double NOTICE = 16.0;
+    public static final double CLOSE = 6.0;
+    /** How far it runs before it stops to look back, and how long (ticks) it stays frightened after. */
+    public static final double SAFE = 24.0;
+    public static final int SHAKEN = 80;
+    /** How long (ticks) it keeps running from whoever hurt it. */
+    public static final int HURT_MEMORY = 600;
+
+    /** Vanilla's default skins: (path, slim arms). */
+    public static final String[] LOOKS = {"steve", "alex", "ari", "efe", "kai", "makena", "noor", "sunny", "zuri"};
+
+    private HumanRules() {
+    }
+
+    /** The skin's texture path for look {@code look} (0 .. 2 * LOOKS.length - 1: the wide ones, then the slim). */
+    public static String skin(int look) {
+        int n = Math.floorMod(look, LOOKS.length * 2);
+        return "textures/entity/player/" + (slim(n) ? "slim/" : "wide/") + LOOKS[n % LOOKS.length] + ".png";
+    }
+
+    public static boolean slim(int look) {
+        return Math.floorMod(look, LOOKS.length * 2) >= LOOKS.length;
+    }
+
+    /** How many pieces of Human Meat it leaves ({@code roll} 0..1, the killer's {@code looting}): one to three, one more a level. */
+    public static int meat(double roll, int looting) {
+        return 1 + (int)Math.floor(Math.max(0.0, Math.min(0.999, roll)) * 3.0) + Math.max(0, looting);
+    }
+
+    /**
+     * True if it sees a ghoul {@code distance} blocks off as one: with its kagune out within {@link #NOTICE}, hidden only within
+     * {@link #CLOSE}.
+     */
+    public static boolean notices(double distance, boolean kaguneOut) {
+        return distance <= (kaguneOut ? NOTICE : CLOSE);
+    }
+
+    /** Where it runs to: {@code away} (x, z) from the danger, turned by {@code turn} radians (when the straight way is blocked). */
+    public static double[] fleeStep(double fromX, double fromZ, double dangerX, double dangerZ, double turn, double length) {
+        double dx = fromX - dangerX;
+        double dz = fromZ - dangerZ;
+        double d = Math.sqrt(dx * dx + dz * dz);
+        if (d < 1.0E-4) {
+            dx = 1.0;
+            dz = 0.0;
+            d = 1.0;
+        }
+        dx /= d;
+        dz /= d;
+        double c = Math.cos(turn);
+        double s = Math.sin(turn);
+        return new double[] {fromX + (dx * c - dz * s) * length, fromZ + (dx * s + dz * c) * length};
+    }
+}

@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "minecraft:bread"
+    },
+    {
+      "item": "hexkagune:cooked_human_meat"
+    }
+  ],
+  "result": {
+    "item": "hexkagune:seared_sandwich",
+    "count": 1
+  }
+}

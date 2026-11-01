@@ -3,7 +3,7 @@ package com.hex.kagune.control;
 import java.util.ArrayList;
 import java.util.List;
 
-/** 7.0.1: Ghoul Meat: every piece adds strength and RC endurance, less each time but never nothing, toward a fixed limit. */
+/** 7.0.1: Ghoul Meat: every piece adds strength and RC endurance, less each time but never nothing; 1.3.40: with no limit. */
 public final class GhoulMeatTests {
     static int passed;
     static final List<String> FAILURES = new ArrayList<>();
@@ -34,22 +34,29 @@ public final class GhoulMeatTests {
         float lastStrength = 1.0F;
         float lastEndurance = 1.0F;
         double lastStep = Double.MAX_VALUE;
-        for (int n = 1; n <= 400; n++) {
+        for (int n = 1; n <= 4000; n++) {
             float strength = GhoulMeat.strength(n);
             float endurance = GhoulMeat.endurance(n);
-            check(strength > lastStrength && endurance > lastEndurance, "piece " + n + " adds to both");
-            double step = GhoulMeat.share(n) - GhoulMeat.share(n - 1);
-            check(step < lastStep, "piece " + n + " adds less than the one before");
-            check(strength < 1.0F + GhoulMeat.STRENGTH_MAX + 1.0E-6F && endurance < 1.0F + GhoulMeat.ENDURANCE_MAX + 1.0E-6F, "piece " + n + " stays under the limit");
+            check(strength >= lastStrength && endurance > lastEndurance, "piece " + n + " adds to both");
+            double step = GhoulMeat.growth(n) - GhoulMeat.growth(n - 1);
+            check(step > 0.0 && step < lastStep, "piece " + n + " adds something, and less than the one before");
             lastStrength = strength;
             lastEndurance = endurance;
             lastStep = step;
         }
-        // The pace: a first kill shows; ten are a real edge; a long hunt nears the limit.
-        check(GhoulMeat.strength(1) >= 1.009F, "one piece: about +1% strength");
-        check(GhoulMeat.strength(10) > 1.08F && GhoulMeat.strength(10) < 1.10F, "ten pieces: about +9% strength: " + GhoulMeat.strength(10));
-        check(GhoulMeat.endurance(10) > 1.2F && GhoulMeat.endurance(10) < 1.25F, "ten pieces: RC lasts about x1.22: " + GhoulMeat.endurance(10));
-        check(GhoulMeat.strength(100) > 1.36F && GhoulMeat.endurance(100) > 1.9F, "a hundred pieces: near +40% and x2");
+        // 1.3.40: endless, gentle: no ceiling, a first piece barely shows, a hundred a real edge, a thousand twice the RC.
+        check(GhoulMeat.strength(1) > 1.004F && GhoulMeat.strength(1) < 1.01F, "one piece: under +1% strength: " + GhoulMeat.strength(1));
+        check(GhoulMeat.strength(100) > 1.20F && GhoulMeat.strength(100) < 1.23F, "a hundred pieces: about +21%: " + GhoulMeat.strength(100));
+        check(GhoulMeat.endurance(100) > 1.43F && GhoulMeat.endurance(100) < 1.47F, "a hundred pieces: RC x1.45: " + GhoulMeat.endurance(100));
+        check(GhoulMeat.strength(1000) > 1.45F && GhoulMeat.endurance(1000) > 1.95F, "a thousand: about +47% and x1.98");
+        check(GhoulMeat.strength(100000) > GhoulMeat.strength(10000) && GhoulMeat.strength(100000) > 2.0F, "it never stops growing");
+        check(GhoulMeat.strength(40) < 1.0F + 0.4F * (1.0F - (float)Math.exp(-1.0)), "gentler than before 1.3.40 at forty pieces");
+        // A mutant (Eto's one-eyed): harder blows, RC lasting longer, more from every bite.
+        check(Mutant.strength(true, 1.0F) == Mutant.STRENGTH && Mutant.strength(false, 1.1F) == 1.1F, "a mutant hits harder");
+        check(Math.abs(Mutant.endurance(true, GhoulMeat.endurance(100)) - GhoulMeat.endurance(100) * Mutant.ENDURANCE) < 1.0E-5F,
+            "a mutant's RC lasts longer, on top of the meat");
+        check(Mutant.feed(true, 8) == 12 && Mutant.feed(false, 8) == 8, "a mutant gets more from a meal");
+        check(Mutant.STRENGTH > 1.0F && Mutant.ENDURANCE >= 1.5F && Mutant.FEED > 1.0F, "every mutant bonus is a bonus");
     }
 
     static void food() {

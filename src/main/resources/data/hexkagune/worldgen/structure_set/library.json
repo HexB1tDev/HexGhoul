@@ -9,8 +9,8 @@
     "type": "minecraft:concentric_rings",
     "salt": 1300741852,
     "distance": 4,
-    "spread": 1,
-    "count": 1,
+    "spread": 3,
+    "count": 3,
     "preferred_biomes": "#hexkagune:has_structure/library"
   }
 }

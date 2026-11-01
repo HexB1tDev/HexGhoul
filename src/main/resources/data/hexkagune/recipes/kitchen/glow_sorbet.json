@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "minecraft:glow_berries"
+    },
+    {
+      "item": "minecraft:glow_berries"
+    },
+    {
+      "item": "minecraft:snowball"
+    },
+    {
+      "item": "hexkagune:blood_bottle"
+    }
+  ],
+  "result": {
+    "item": "hexkagune:glow_sorbet",
+    "count": 2
+  }
+}

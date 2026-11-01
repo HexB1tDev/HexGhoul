@@ -171,6 +171,11 @@ public final class QuestServer {
     /** 7.0.2: how the player stands with {@code npc} now (saved, and sent to their journal). */
     public static void bond(ServerPlayer player, String npc, QuestLog.Bond bond) {
         Cached cached = cached(player);
+        // 1.3.40: Content (the kitchen's): the ones you love warm to you faster.
+        int before = cached.log.bond(npc).regard();
+        if (bond.regard() > before) {
+            bond = bond.regard(before + KitchenServer.warmth(player, bond.regard() - before));
+        }
         cached.log.bond(npc, bond);
         write(player, cached);
     }

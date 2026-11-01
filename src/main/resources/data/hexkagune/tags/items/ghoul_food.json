@@ -2,6 +2,7 @@
   "replace": false,
   "values": [
     "hexkagune:ghoul_meat",
+    "#hexkagune:dishes",
     "minecraft:beef",
     "minecraft:porkchop",
     "minecraft:chicken",

@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.40 (HexGhoul): Home Living, part 1: the ghoul kitchen (66 foods with their own icons, recipes and effects), The Human, mutants, endless ghoul-meat growth, homes by biome (testing)
+
+See `.github/release-notes-1.3.40.md`.
+
 ## 1.3.39 (HexGhoul): fixes: NPCs stay put while you talk to them; nobody suffocates in blocks while holding your hand; wild ghouls fight back in creative, so their kagune shows (testing)
 
 See `.github/release-notes-1.3.39.md`.

@@ -12,4 +12,11 @@ public abstract class ViewportEvent extends net.minecraftforge.eventbus.api.Even
         public float getRoll() { throw new UnsupportedOperationException(); }
         public void setRoll(float roll) { throw new UnsupportedOperationException(); }
     }
+
+    /** 1.3.40: Clear Sight pushes the fog back (cancelled for the change to take). */
+    public static class RenderFog extends ViewportEvent {
+        public net.minecraft.world.level.material.FogType getType() { throw new UnsupportedOperationException(); }
+        public float getFarPlaneDistance() { throw new UnsupportedOperationException(); }
+        public void setFarPlaneDistance(float distance) { throw new UnsupportedOperationException(); }
+    }
 }
