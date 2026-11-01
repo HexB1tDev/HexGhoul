@@ -1,3 +1,5 @@
+> **Superseded: read `docs/handoff/next-ai-1.3.33.md` instead** (state after 1.3.32). This file is kept for the record.
+
 # HANDOFF: HexGhoul 1.3.29 (work in progress). Read this first.
 
 Branch **`claude/relaxed-carson-4y0frw`**, last commit `2dc5226`. Never push to `main`. No PR unless the owner asks.
