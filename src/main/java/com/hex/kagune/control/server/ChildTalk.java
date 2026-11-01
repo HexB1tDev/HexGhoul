@@ -52,7 +52,8 @@ public final class ChildTalk {
         }
         if (npc.m_5803_()) {
             // 1.3.21: fast asleep in its bed: not woken by a word (hurt, picked up, or the morning wakes it); a parent can tuck it in.
-            asleep(player, npc, "*fast asleep, breathing softly*", null);
+            // 1.3.37: a hand on it half wakes it, drowsy, by its age.
+            asleep(player, npc, drowsyLine(player, npc), null);
             return;
         }
         if (player.m_6047_() && player.m_20148_().equals(npc.mind.carrier)) {
@@ -172,14 +173,37 @@ public final class ChildTalk {
             return;
         }
         List<String> keys = new ArrayList<>();
-        if (queued == null && child.parent(Pregnancies.player(player.m_20148_())) && !ChildBrain.busy(npc.mind, level.m_46467_())) {
-            keys.add("tuck");
+        List<String> labels = new ArrayList<>();
+        boolean parent = child.parent(Pregnancies.player(player.m_20148_()));
+        if (queued == null && parent && !ChildBrain.busy(npc.mind, level.m_46467_())) {
+            add(keys, labels, "tuck", "*tuck them in*");
+        }
+        if (queued == null) {
+            // 1.3.37: a hand on their hair, or a word to go back to sleep.
+            if (parent) {
+                add(keys, labels, "stroke", "*stroke their hair*");
+            }
+            add(keys, labels, "back", "Go back to sleep.");
         }
         TALKS.put(player.m_20148_(), new Talk(npc.m_19879_(), keys, queued));
-        int[] choices = keys.isEmpty() ? new int[] {NpcTalk.Choice.LEAVE.ordinal()}
-            : new int[] {NpcTalk.Choice.SAYS[0].ordinal(), NpcTalk.Choice.LEAVE.ordinal()};
-        String[] shown = keys.isEmpty() ? new String[] {""} : new String[] {"*tuck them in*", ""};
+        int[] choices = new int[keys.size() + 1];
+        String[] shown = new String[keys.size() + 1];
+        for (int i = 0; i < keys.size(); i++) {
+            choices[i] = NpcTalk.Choice.SAYS[i].ordinal();
+            shown[i] = labels.get(i);
+        }
+        choices[keys.size()] = NpcTalk.Choice.LEAVE.ordinal();
+        shown[keys.size()] = "";
         ControlNetwork.sendTo(player, new S2CNpcTalk(npc.m_19879_(), child.name, "Asleep", 100, true, -1, line, choices, shown));
+    }
+
+    /** 1.3.37: what a sleeping child mumbles, half woken (a baby sleeps on). */
+    private static String drowsyLine(ServerPlayer player, ChildNpc npc) {
+        Children.Child child = Children.get(player.m_284548_(), npc.childId());
+        if (child == null) {
+            return "*fast asleep, breathing softly*";
+        }
+        return com.hex.kagune.control.family.Drowsy.child(child.stage(player.m_284548_().m_46467_()), npc.m_217043_().m_188503_(100));
     }
 
     private static void add(List<String> keys, List<String> labels, String key, String label) {
@@ -251,6 +275,16 @@ public final class ChildTalk {
         }
         Children.Child child = Children.get(level, npc.childId());
         if (index < 0 || index >= talk.keys().size() || child == null) {
+            return;
+        }
+        if ("back".equals(talk.keys().get(index)) || "stroke".equals(talk.keys().get(index))) {
+            // 1.3.37: settled back to sleep (stroked: a parent's hand on their hair, and it eases them).
+            boolean stroked = "stroke".equals(talk.keys().get(index));
+            TALKS.remove(player.m_20148_());
+            if (npc.m_5803_()) {
+                String line = com.hex.kagune.control.family.Drowsy.childSettles(child.stage(level.m_46467_()), stroked, npc.m_217043_().m_188503_(100));
+                ChildBrain.say(player, npc, child, line);
+            }
             return;
         }
         if ("tuck".equals(talk.keys().get(index))) {

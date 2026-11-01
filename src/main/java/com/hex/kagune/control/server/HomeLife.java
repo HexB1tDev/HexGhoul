@@ -209,8 +209,9 @@ public final class HomeLife {
                 net.minecraft.world.entity.LivingEntity threat = house != null && now % 20L == Math.floorMod(npc.m_19879_(), 20)
                     ? EtoBrain.guard(npc, mind, level, house) : null;
                 boolean danger = threat != null && threat.m_20280_(npc) < 14.0 * 14.0;
-                boolean up = !night(day, false) || now - mind.hurtAt < 3L || mind.talking != null || !bedAt(level, mind.bed)
-                    || house == null || danger;
+                // 1.3.37: a hand on her shoulder only half wakes her (EtoServer's drowsy page): up only if asked to get up.
+                boolean talked = mind.talking != null && now >= mind.drowsyUntil;
+                boolean up = !night(day, false) || now - mind.hurtAt < 3L || talked || !bedAt(level, mind.bed) || house == null || danger;
                 if (up) {
                     wake(npc);
                     mind.bed = null;

@@ -141,6 +141,8 @@ public final class EtoBrain {
         long nextMoment;
         /** 1.3.21: the bed it lies in (or is on its way to), at home; null: none tonight. */
         BlockPos bed;
+        /** 1.3.37: half woken in the night by someone's hand: until this tick their talk doesn't get her up (HomeLife). */
+        long drowsyUntil = Long.MIN_VALUE;
         /** 1.3.14: the partner she is coming to for the night they asked for a baby (null none), and when she may next try. */
         UUID babyNight;
         long nextBabyNight;
@@ -575,7 +577,10 @@ public final class EtoBrain {
         ServerPlayer partner = player(level, mind.partner);
         LivingEntity best = null;
         double nearest = Double.MAX_VALUE;
-        for (LivingEntity body : level.m_6443_(LivingEntity.class, ground, body -> body.m_6084_() && body instanceof Enemy && hostile(body))) {
+        // 1.3.37: and a CCG investigator anywhere near the house: a ghoul's home has no worse a threat (the owner: "if it senses a mob or
+        // a CCG agent nearby, it will get up to fight").
+        for (LivingEntity body : level.m_6443_(LivingEntity.class, ground, body -> body.m_6084_()
+            && (body instanceof Enemy && hostile(body) || body instanceof com.hex.kagune.control.npc.CcgAgent))) {
             double toHouse = body.m_20238_(new Vec3(c.m_123341_() + 0.5, c.m_123342_(), c.m_123343_() + 0.5));
             boolean after = body instanceof net.minecraft.world.entity.Mob mob && mob.m_5448_() != null
                 && (mob.m_5448_() == partner || mob.m_5448_() instanceof com.hex.kagune.control.npc.ChildNpc || mob.m_5448_() == npc);

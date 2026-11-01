@@ -152,6 +152,14 @@ public final class EtoServer {
             QuestServer.bond(player, npc.persona().key(), bond.with(NpcBonds.MET, true));
         }
         migrate(player, npc);
+        if (npc.m_5803_() && mind.bed != null) {
+            // 1.3.37: asleep in her bed at night: a hand on her shoulder only half wakes her, drowsy (HomeLife leaves her lying there).
+            mind.drowsyUntil = now + DROWSY;
+            EtoBrain.listen(npc, player, now);
+            EtoTalk.Context sleepy = context(player, npc);
+            show(player, npc, sleepy, drowsy(player, npc), Kind.MAIN);
+            return;
+        }
         EtoBrain.listen(npc, player, now);
         EtoTalk.Context context = context(player, npc);
         NpcMemoryServer.set(player, npc.persona().key(), NpcMemory.SEEN, now);
@@ -161,6 +169,22 @@ public final class EtoServer {
             return;
         }
         show(player, npc, context, script.main(context, line != null ? line : script.greeting(context)), Kind.MAIN);
+    }
+
+    /** 1.3.37: how long a half-woken sleeper waits on a word before the talk would get them up (ticks). */
+    static final long DROWSY = 600L;
+
+    /** 1.3.37: the page of a sleeper half woken: what they mumble, and back to sleep, a goodnight kiss (their partner), or up. */
+    private static EtoTalk.Page drowsy(ServerPlayer player, EtoNpc npc) {
+        String persona = npc.persona().key();
+        List<EtoTalk.Option> options = new java.util.ArrayList<>();
+        options.add(new EtoTalk.Option(NpcTalk.Choice.SAY_1, "Sorry. Go back to sleep.", "sleep:back"));
+        if (player.m_20148_().equals(npc.mind.partner)) {
+            options.add(new EtoTalk.Option(NpcTalk.Choice.SAY_2, "*kiss them goodnight*", "sleep:kiss"));
+        }
+        options.add(new EtoTalk.Option(NpcTalk.Choice.SAY_3, "Wake up. I need you.", "sleep:up"));
+        options.add(new EtoTalk.Option(NpcTalk.Choice.LEAVE, "", ""));
+        return new EtoTalk.Page(com.hex.kagune.control.family.Drowsy.spouse(persona, npc.m_217043_().m_188503_(100)), options);
     }
 
     /** 1.3.29: the scene she came up to {@code player} with, opened (true), if she is still waiting on them. */
@@ -312,6 +336,20 @@ public final class EtoServer {
             SceneServer.Answer answer = SceneServer.answer(player, npc, c, key, level.m_46467_());
             if (answer != null) {
                 carry(player, npc, c, choice, answer.reply(), answer.topic() ? Kind.TALK : Kind.MAIN, answer.next());
+            }
+            return;
+        }
+        if (key.startsWith("sleep:")) {
+            // 1.3.37: half woken: back to sleep, kissed goodnight, or up properly (HomeLife gets her up once she is no longer drowsy).
+            String persona = npc.persona().key();
+            int seed = npc.m_217043_().m_188503_(100);
+            if (key.equals("sleep:up")) {
+                npc.mind.drowsyUntil = Long.MIN_VALUE;
+                show(player, npc, c, script.main(c, com.hex.kagune.control.family.Drowsy.roused(persona, seed)), Kind.MAIN);
+            } else if (key.equals("sleep:kiss")) {
+                carry(player, npc, c, choice, new EtoTalk.Reply(com.hex.kagune.control.family.Drowsy.kissed(persona, seed), 1, EtoTalk.Effect.CLOSE), Kind.MAIN);
+            } else {
+                carry(player, npc, c, choice, new EtoTalk.Reply(com.hex.kagune.control.family.Drowsy.settle(persona, seed), 0, EtoTalk.Effect.CLOSE), Kind.MAIN);
             }
             return;
         }

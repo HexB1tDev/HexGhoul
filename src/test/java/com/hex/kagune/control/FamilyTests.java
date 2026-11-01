@@ -27,7 +27,7 @@ public final class FamilyTests {
         }
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws java.io.IOException {
         genders();
         body();
         screen();
@@ -49,6 +49,7 @@ public final class FamilyTests {
         fights();
         reactions();
         initiative();
+        drowsy();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -1025,5 +1026,38 @@ public final class FamilyTests {
                 && !com.hex.kagune.control.npc.EtoInitiative.moment(moment, false, 3).isEmpty();
         }
         check(lines && !EtoLines.owl(2).isEmpty(), "a word for everything she starts and every moment she remarks on");
+    }
+
+    /**
+     * 1.3.37: a sleeper woken in the night only half wakes: every spouse and every child has drowsy words (a baby only sleeps on); the
+     * page's answers each have their reply; a hand on the shoulder doesn't get a spouse up unless asked (HomeLife reads drowsyUntil),
+     * and a CCG investigator by the house is a threat a parent gets up for (EtoBrain.guard).
+     */
+    static void drowsy() throws java.io.IOException {
+        for (String persona : new String[] {"eto", "touka", "ken"}) {
+            for (int seed = 0; seed < 12; seed++) {
+                for (String line : new String[] {com.hex.kagune.control.family.Drowsy.spouse(persona, seed),
+                    com.hex.kagune.control.family.Drowsy.settle(persona, seed), com.hex.kagune.control.family.Drowsy.kissed(persona, seed),
+                    com.hex.kagune.control.family.Drowsy.roused(persona, seed)}) {
+                    check(line != null && !line.isBlank() && !line.contains("Kaneki") && !line.contains("Takatsuki"), persona + " says something, drowsy: " + line);
+                }
+            }
+        }
+        for (com.hex.kagune.control.family.ChildStage stage : com.hex.kagune.control.family.ChildStage.values()) {
+            for (int seed = 0; seed < 8; seed++) {
+                String line = com.hex.kagune.control.family.Drowsy.child(stage, seed);
+                check(line != null && !line.isBlank(), stage + " stirs");
+                if (stage == com.hex.kagune.control.family.ChildStage.BABY) {
+                    check(line.startsWith("*") && line.endsWith("*"), "a baby sleeps on (no words): " + line);
+                }
+                check(!com.hex.kagune.control.family.Drowsy.childSettles(stage, seed % 2 == 0, seed).isBlank(), stage + " settles back");
+            }
+        }
+        String life = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/HomeLife.java"));
+        check(life.contains("mind.talking != null && now >= mind.drowsyUntil"), "a hand on her shoulder only half wakes her");
+        String brain = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/EtoBrain.java"));
+        check(brain.contains("body instanceof com.hex.kagune.control.npc.CcgAgent"), "an investigator by the house is a threat a parent gets up for");
+        String server = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/EtoServer.java"));
+        check(server.contains("\"sleep:back\"") && server.contains("\"sleep:kiss\"") && server.contains("\"sleep:up\""), "the drowsy page's three answers");
     }
 }
