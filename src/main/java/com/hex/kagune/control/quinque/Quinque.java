@@ -6,8 +6,8 @@ package com.hex.kagune.control.quinque;
  * from: a Bikaku blade (balanced, a sword), a Koukaku spear (hard and heavy, a long reach). A quinque cuts a ghoul as nothing else
  * does ({@link #ghoul}: more damage) and holds its regeneration back a while ({@link #suppress}: RC suppression).
  *
- * <p>In the hand: a right click on the case opens it (the case item becomes the weapon item); Shift + right click on the weapon shuts
- * it. The stack carries {@link #AT}: when it last opened or shut, so its model is drawn moving between the two for {@link #UNFOLD}
+ * <p>In the hand: a right click on the case opens it (the case item becomes the weapon item); 1.3.33 a tap of right click on a melee
+ * weapon shuts it (Shift + right click on the launcher, which fires on right click). The stack carries {@link #AT}: when it last opened or shut, so its model is drawn moving between the two for {@link #UNFOLD}
  * ticks ({@link #shown}), and it can't be turned again until it is done.
  */
 public enum Quinque {
@@ -156,15 +156,20 @@ public enum Quinque {
         };
     }
 
-    /** The launcher: a shard each this many ticks held (use repeats every four), this much each, this fast, this far. */
-    public static final float SHARD_DAMAGE = 3.5F;
-    public static final double SHARD_SPEED = 2.2;
+    /**
+     * The launcher: 1.3.33 a shard every {@link #SHOT_EVERY} ticks held (use repeats every four: each pull fires two, the second
+     * {@link #SHOT_EVERY} on), this much each, this fast, this far. The owner: "the gun that shoots spikes is really slow when it comes
+     * to shooting". Ten a second at 2 is a little more than five at 3.5 was, each shard lighter.
+     */
+    public static final int SHOT_EVERY = 2;
+    public static final float SHARD_DAMAGE = 2.0F;
+    public static final double SHARD_SPEED = 2.8;
     public static final double SHARD_RANGE = 40.0;
     /**
      * It heats a shard at a time and cools one every {@link #COOLS_EVERY} ticks; at {@link #HEAT_MOST} it overheats and won't fire for
-     * {@link #COOL} ticks: held down (a shard every four ticks) about six seconds of fire, then three to cool; bursts never overheat.
+     * {@link #COOL} ticks: held down (a shard every two ticks) about six seconds of fire, then three to cool; bursts never overheat.
      */
-    public static final int HEAT_MOST = 30;
+    public static final int HEAT_MOST = 48;
     public static final long COOL = 60L;
     public static final long COOLS_EVERY = 8L;
 

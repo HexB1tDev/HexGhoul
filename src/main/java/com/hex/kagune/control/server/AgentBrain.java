@@ -735,6 +735,28 @@ public final class AgentBrain {
             dash(agent, mind, left ? side : side.m_82490_(-1.0), left ? 2 : 3, level, now);
             return true;
         }
+        // 1.3.33: quick on its feet. In close it slips left and right between blows (never into a wall or off a ledge it can see);
+        // a shooter strafes the same way between bursts; prey just out of reach it closes on in one push.
+        double chance = agent.m_217043_().m_188500_();
+        boolean between = q.ranged ? now < mind.nextShot || now < mind.burstReadyAt : now < mind.readyAt - 3L;
+        boolean near = q.ranged ? distance <= AgentRules.SHOOT_FARTHEST : distance <= reach + 3.0;
+        if (dashes && !mind.rounding && between && near && chance < AgentRules.SIDE_DASH && agent.m_142582_(prey)) {
+            Vec3 side = new Vec3(-toward.f_82481_, 0.0, toward.f_82479_);
+            boolean left = agent.m_217043_().m_188500_() < 0.5;
+            if (!clear(agent, level, left ? side : side.m_82490_(-1.0))) {
+                left = !left;
+            }
+            Vec3 way = left ? side : side.m_82490_(-1.0);
+            if (clear(agent, level, way)) {
+                dash(agent, mind, way, left ? 2 : 3, level, now);
+                return true;
+            }
+        }
+        if (dashes && !q.ranged && !mind.rounding && distance > reach + 0.8 && distance < reach + 4.5 && now >= mind.readyAt - 2L
+            && chance > 1.0 - AgentRules.DASH_IN && agent.m_142582_(prey) && clear(agent, level, toward)) {
+            dash(agent, mind, toward, 0, level, now);
+            return true;
+        }
         return false;
     }
 
@@ -773,6 +795,31 @@ public final class AgentBrain {
         }
         agent.flip(kind.ordinal(), now);
         UkakuFire.sound(level, agent.m_20182_(), "entity.player.attack.sweep", 0.4F, 0.75F);
+    }
+
+    /**
+     * 1.3.33: room for a dash along {@code way} (level, unit): the blocks at its feet and head two and three blocks along are open, and
+     * there is ground under where it lands.
+     */
+    private static boolean clear(CcgAgent agent, ServerLevel level, Vec3 way) {
+        for (double along : new double[] {1.5, 3.0}) {
+            double x = agent.m_20185_() + way.f_82479_ * along;
+            double y = agent.m_20186_();
+            double z = agent.m_20189_() + way.f_82481_ * along;
+            if (!open(level, x, y + 0.2, z) || !open(level, x, y + 1.2, z)) {
+                return false;
+            }
+            if (along > 2.0 && open(level, x, y - 0.8, z) && open(level, x, y - 1.8, z)) {
+                return false; // a drop of two or more
+            }
+        }
+        return true;
+    }
+
+    /** True if nothing solid is in the block at (x, y, z). */
+    private static boolean open(ServerLevel level, double x, double y, double z) {
+        net.minecraft.core.BlockPos at = net.minecraft.core.BlockPos.m_274561_(x, y, z);
+        return level.m_8055_(at).m_60812_(level, at).m_83281_();
     }
 
     /** A dash along {@code way} (level, unit; {@code which} 0 forward, 1 back, 2 left, 3 right): low and fast, a few ticks. */

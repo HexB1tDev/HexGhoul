@@ -66,9 +66,8 @@ public final class AgentPose {
                 p.rightArmZ = 0.08F * k;
             }
             case BLADE -> {
-                p.rightArmX = (0.6F + 0.08F * s) * k;
-                p.rightArmY = 0.15F * k;
-                p.rightArmZ = 0.32F * k;
+                // 1.3.33: swung back and down, the thumb turned back, so the blade (held off the forearm's line) trails level behind.
+                QuinqueGrip.aimRight(p, (0.55F + 0.08F * s) * k, 0.15F * k, (float)Math.PI * k);
             }
             case STANCE -> {
                 // (the stance's arms are put on by whoever asked: see stanceRun)
@@ -83,21 +82,27 @@ public final class AgentPose {
         return p;
     }
 
-    /** A two-handed stance carried on the run: both arms its stance's, a little lowered, bobbing with each stride. */
-    public static void stanceRun(RigPose run, RigPose stance, double phase, float amount) {
-        if (stance == null || amount <= 0.0F) {
+    /**
+     * A two-handed stance carried on the run ({@code q}'s, put on {@code run}): the chest turned half its stance's way (the weapon carried
+     * across the body, as one runs with a rifle), lowered, bobbing with each stride; the left hand is put back on its grip by
+     * QuinqueGrip.reach after everything else (AgentClient).
+     */
+    public static void stanceRun(RigPose run, Quinque q, double phase, float amount) {
+        QuinqueHolds.Hold h = QuinqueHolds.of(q);
+        if (h == null || amount <= 0.0F) {
             return;
         }
         float k = Math.max(0.0F, Math.min(1.0F, amount));
         float bob = 0.06F * (float)Math.sin(phase * 2.0) * k;
-        run.rightArmX = stance.rightArmX + STANCE_LOWER * k + bob;
-        run.rightArmY = stance.rightArmY;
-        run.rightArmZ = stance.rightArmZ;
-        run.leftArmX = stance.leftArmX + STANCE_LOWER * k + bob;
-        run.leftArmY = stance.leftArmY;
-        run.leftArmZ = stance.leftArmZ;
-        run.armHold = 1.0F;
         run.twist *= 0.4F; // the weapon steadies the shoulders
+        run.twist += h.twist() * (1.0F - 0.5F * k);
+        QuinqueGrip.aimRight(run, h.pitch(), h.yaw(), h.roll());
+        // Lowered about the level line across the chest as it now faces.
+        QuinquePose.pitchBy(run, q, STANCE_LOWER * k + bob);
+        run.leftArmX = h.left()[0];
+        run.leftArmY = h.left()[1];
+        run.leftArmZ = h.left()[2];
+        run.armHold = 1.0F;
     }
 
     /** How long its parry is drawn (ticks). */
@@ -119,25 +124,21 @@ public final class AgentPose {
 
     /**
      * Its parry {@code t} through (0..1 over {@link #PARRY_TICKS}): from its stance (or a held blade) the weapon whipped up and across
-     * the body to meet the blow (both arms for a two-handed one), the shoulders turning into it.
+     * the body to meet the blow (the right arm raised and swung in, the shoulders turning into it; a two-handed one's left hand follows
+     * on its grip by QuinqueGrip.reach).
      */
     public static RigPose parry(Quinque q, double t) {
         float k = snap(t);
-        RigPose base = QuinquePose.hold(q);
-        RigPose p = new RigPose();
-        float[] right = base == null ? QuinquePose.HELD : new float[] {base.rightArmX, base.rightArmY, base.rightArmZ};
-        p.rightArmX = right[0] - 0.85F * k;
-        p.rightArmY = right[1] - 0.6F * k;
-        p.rightArmZ = right[2] - 0.2F * k;
-        p.rightArmHold = 1.0F;
-        if (base != null) {
-            p.leftArmX = base.leftArmX - 0.85F * k;
-            p.leftArmY = base.leftArmY - 0.6F * k;
-            p.leftArmZ = base.leftArmZ;
-            p.leftArmHold = 1.0F;
+        QuinqueHolds.Hold h = QuinqueHolds.of(q);
+        RigPose p = QuinquePose.hold(q);
+        if (q.twoHanded) {
+            QuinqueGrip.aimRight(p, h.pitch() - 0.6F * k, h.yaw() - 0.3F * k, h.roll() - 0.25F * k);
+        } else {
+            // The blade up and across, its flat turned to take the blow.
+            QuinqueGrip.aimRight(p, h.pitch() - 0.85F * k, h.yaw() - 0.5F * k, h.roll() + 1.2F * k);
         }
-        p.twist = -0.35F * k;
-        p.lean = -0.08F * k;
+        p.twist -= 0.35F * k;
+        p.lean -= 0.08F * k;
         return p;
     }
 

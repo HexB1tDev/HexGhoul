@@ -27,47 +27,121 @@ public final class QuinquePreview {
     static final File MODELS = new File("src/main/resources/assets/hexkagune/models/item/quinque");
     static final File TEXTURES = new File("src/main/resources/assets/hexkagune/textures/item");
 
-    record Element(double[] from, double[] to, int rgb) {
+    /** An element: its box, its colour (its north face's patch) and its own turn (angle degrees about axis x/y/z through origin). */
+    record Element(double[] from, double[] to, int rgb, double angle, char axis, double[] origin) {
     }
 
     record Model(List<Element> elements, double[] rotation, double[] translation, double scale) {
     }
 
-    static double[] nums(String text) {
-        String[] parts = text.split(",");
-        double[] out = new double[parts.length];
-        for (int i = 0; i < parts.length; i++) {
-            out[i] = Double.parseDouble(parts[i].trim());
+    /** A small JSON reader (objects as maps, arrays as lists, numbers as doubles): enough for a model file. */
+    static final class Json {
+        final String s;
+        int i;
+
+        Json(String s) {
+            this.s = s;
+        }
+
+        Object value() {
+            skip();
+            char c = this.s.charAt(this.i);
+            if (c == '{') {
+                java.util.Map<String, Object> map = new java.util.LinkedHashMap<>();
+                this.i++;
+                skip();
+                if (this.s.charAt(this.i) == '}') {
+                    this.i++;
+                    return map;
+                }
+                while (true) {
+                    skip();
+                    String key = (String)value();
+                    skip();
+                    this.i++; // :
+                    map.put(key, value());
+                    skip();
+                    if (this.s.charAt(this.i++) == '}') {
+                        return map;
+                    }
+                }
+            }
+            if (c == '[') {
+                List<Object> list = new ArrayList<>();
+                this.i++;
+                skip();
+                if (this.s.charAt(this.i) == ']') {
+                    this.i++;
+                    return list;
+                }
+                while (true) {
+                    list.add(value());
+                    skip();
+                    if (this.s.charAt(this.i++) == ']') {
+                        return list;
+                    }
+                }
+            }
+            if (c == '"') {
+                int end = this.s.indexOf('"', this.i + 1);
+                String text = this.s.substring(this.i + 1, end);
+                this.i = end + 1;
+                return text;
+            }
+            int start = this.i;
+            while (this.i < this.s.length() && "-+.eE0123456789truefalsn".indexOf(this.s.charAt(this.i)) >= 0) {
+                this.i++;
+            }
+            String word = this.s.substring(start, this.i);
+            return word.equals("true") || word.equals("false") ? (Object)Boolean.valueOf(word) : (Object)Double.valueOf(word);
+        }
+
+        void skip() {
+            while (this.i < this.s.length() && Character.isWhitespace(this.s.charAt(this.i))) {
+                this.i++;
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    static double[] nums(Object list) {
+        List<Object> l = (List<Object>)list;
+        double[] out = new double[l.size()];
+        for (int k = 0; k < out.length; k++) {
+            out[k] = (Double)l.get(k);
         }
         return out;
     }
 
+    @SuppressWarnings("unchecked")
     static Model load(String kind, String texture) throws Exception {
-        String json = Files.readString(new File(MODELS, kind + "_full.json").toPath());
+        java.util.Map<String, Object> json = (java.util.Map<String, Object>)new Json(Files.readString(new File(MODELS, kind + "_full.json").toPath())).value();
         BufferedImage tex = ImageIO.read(new File(TEXTURES, "quinque_" + texture + ".png"));
         List<Element> elements = new ArrayList<>();
-        Matcher m = Pattern.compile("\"from\":\\s*\\[([^\\]]*)\\],\\s*\"to\":\\s*\\[([^\\]]*)\\],\\s*\"faces\":\\s*\\{\\s*\"north\":\\s*\\{\\s*\"uv\":\\s*\\[([^\\]]*)\\]")
-            .matcher(json);
-        while (m.find()) {
-            double[] uv = nums(m.group(3));
+        for (Object o : (List<Object>)json.get("elements")) {
+            java.util.Map<String, Object> e = (java.util.Map<String, Object>)o;
+            double[] uv = nums(((java.util.Map<String, Object>)((java.util.Map<String, Object>)e.get("faces")).get("north")).get("uv"));
             int u = (int)((uv[0] + 1.0) / 16.0 * tex.getWidth());
             int v = (int)((uv[1] + 1.0) / 16.0 * tex.getHeight());
-            elements.add(new Element(nums(m.group(1)), nums(m.group(2)), tex.getRGB(Math.min(tex.getWidth() - 1, u), Math.min(tex.getHeight() - 1, v)) & 0xFFFFFF));
+            int rgb = tex.getRGB(Math.min(tex.getWidth() - 1, u), Math.min(tex.getHeight() - 1, v)) & 0xFFFFFF;
+            java.util.Map<String, Object> r = (java.util.Map<String, Object>)e.get("rotation");
+            double angle = r == null ? 0.0 : (Double)r.get("angle");
+            char axis = r == null ? 'z' : ((String)r.get("axis")).charAt(0);
+            double[] origin = r == null ? new double[] {8, 8, 8} : nums(r.get("origin"));
+            elements.add(new Element(nums(e.get("from")), nums(e.get("to")), rgb, angle, axis, origin));
         }
-        Matcher t = Pattern.compile("\"thirdperson_righthand\":\\s*\\{\\s*\"rotation\":\\s*\\[([^\\]]*)\\],\\s*\"translation\":\\s*\\[([^\\]]*)\\],\\s*\"scale\":\\s*\\[([^\\]]*)\\]")
-            .matcher(json);
-        if (!t.find()) {
-            throw new IllegalStateException("no third person transform in " + kind);
-        }
-        return new Model(elements, nums(t.group(1)), nums(t.group(2)), nums(t.group(3))[0]);
+        java.util.Map<String, Object> third = (java.util.Map<String, Object>)((java.util.Map<String, Object>)json.get("display")).get("thirdperson_righthand");
+        return new Model(elements, nums(third.get("rotation")), nums(third.get("translation")), nums(third.get("scale"))[0]);
     }
 
     /** An item model point (pixels, 0..16) to the right arm's own frame (pixels), as the game carries it. */
-    static double[] toArm(Model model, double[] v, boolean slim) {
-        // The element's own turn: -45 degrees about z through (8, 8, 8).
-        double a = Math.toRadians(-45.0);
-        double x = v[0] - 8.0, y = v[1] - 8.0;
-        double[] p = {8.0 + x * Math.cos(a) - y * Math.sin(a), 8.0 + x * Math.sin(a) + y * Math.cos(a), v[2]};
+    static double[] toArm(Model model, Element e, double[] v, boolean slim) {
+        // The element's own turn.
+        double a = Math.toRadians(e.angle());
+        double[] o = e.origin();
+        double[] q = {v[0] - o[0], v[1] - o[1], v[2] - o[2]};
+        q = e.axis() == 'x' ? rx(q, a) : e.axis() == 'y' ? ry(q, a) : rz(q, a);
+        double[] p = {q[0] + o[0], q[1] + o[1], q[2] + o[2]};
         // The model's -0.5 shift, in blocks.
         p = new double[] {p[0] / 16.0 - 0.5, p[1] / 16.0 - 0.5, p[2] / 16.0 - 0.5};
         // ItemTransform: translate, rotationXYZ (Rx Ry Rz: Rz first), scale.
@@ -80,11 +154,7 @@ public final class QuinquePreview {
         p = add(p, new double[] {1.0 / 16.0, 0.125, -0.625});
         p = ry(p, Math.toRadians(180.0));
         p = rx(p, Math.toRadians(-90.0));
-        double[] px = scale(p, 16.0);
-        if (slim) {
-            px[0] += 0.5; // translateToHand moves a slim arm's pivot half a pixel (the part's own frame, near enough at the hand)
-        }
-        return px;
+        return scale(p, 16.0);
     }
 
     static double[] rx(double[] p, double a) {
@@ -114,7 +184,7 @@ public final class QuinquePreview {
             double[][] c = new double[8][];
             for (int i = 0; i < 8; i++) {
                 double[] v = {(i & 1) == 0 ? e.from()[0] : e.to()[0], (i & 2) == 0 ? e.from()[1] : e.to()[1], (i & 4) == 0 ? e.from()[2] : e.to()[2]};
-                c[i] = PoseRender.point(pose, "rightArm", toArm(model, v, false));
+                c[i] = PoseRender.point(pose, "rightArm", toArm(model, e, v, false));
             }
             box(tris, c, e.rgb());
         }
@@ -149,47 +219,90 @@ public final class QuinquePreview {
         box(tris, c, rgb);
     }
 
+    static final double[] TIMES = {0.3, 0.42, 0.5, 0.6, 0.75};
     static final String[][] KINDS = {{"koukaku", "koukaku"}, {"katana", "katana"}, {"mace", "mace"}, {"launcher", "launcher"}, {"bikaku", "bikaku"}};
     static final Quinque[] QUINQUES = {Quinque.SPEAR, Quinque.KATANA, Quinque.MACE, Quinque.LAUNCHER, Quinque.BLADE};
 
+    /**
+     * Writes, per quinque, quinque-KIND.png (its stance and every swing in a row, three views), and for a closer look
+     * quinque-KIND-stance.png and quinque-KIND-m1..m3.png (larger, two views). An optional second argument picks one kind.
+     */
     public static void main(String[] args) throws Exception {
         File dir = new File(args.length > 0 ? args[0] : ".");
+        String only = args.length > 1 ? args[1] : null;
         dir.mkdirs();
         PoseRender.stiff = true;
-        double[][] views = {{-40, 12}, {-90, 5}, {200, 15}};
-        int cell = 300;
         for (int k = 0; k < KINDS.length; k++) {
+            if (only != null && !only.equals(KINDS[k][0])) {
+                continue;
+            }
             Model model = load(KINDS[k][0], KINDS[k][1]);
             Quinque q = QUINQUES[k];
-            // Columns: the stance, then each of its three swings at its windup, its cut and its follow through.
-            List<RigPose> poses = new ArrayList<>();
-            List<String> labels = new ArrayList<>();
+            List<List<RigPose>> rows = new ArrayList<>();
+            List<List<String>> names = new ArrayList<>();
             RigPose hold = QuinquePose.hold(q);
-            poses.add(hold == null ? QuinquePose.swing(q, 0, 0.0) : hold);
-            labels.add("stance");
+            rows.add(new ArrayList<>(List.of(hold == null ? QuinquePose.swing(q, 0, 0.0) : hold)));
+            names.add(new ArrayList<>(List.of("stance")));
+            if (q == Quinque.LAUNCHER) {
+                RigPose kick = QuinquePose.hold(q);
+                QuinquePose.recoil(kick, q, 1.0F);
+                rows.get(0).add(kick);
+                names.get(0).add("recoil");
+            }
             for (int step = 0; step < 3; step++) {
-                for (double t : new double[] {0.35, 0.55, 0.8}) {
-                    poses.add(QuinquePose.swing(q, step, t));
-                    labels.add("M1 " + (step + 1) + " t" + t);
+                List<RigPose> row = new ArrayList<>();
+                List<String> label = new ArrayList<>();
+                for (double t : TIMES) {
+                    row.add(QuinquePose.swing(q, step, t));
+                    label.add("M1 " + (step + 1) + " t" + t);
+                }
+                rows.add(row);
+                names.add(label);
+                if (q == Quinque.LAUNCHER) {
+                    break;
                 }
             }
-            BufferedImage sheet = new BufferedImage(cell * poses.size(), cell * views.length, BufferedImage.TYPE_INT_RGB);
-            Graphics2D g = sheet.createGraphics();
-            for (int i = 0; i < poses.size(); i++) {
-                RigPose pose = poses.get(i);
-                List<PoseRender.Tri> extra = item(pose, model);
-                for (int v = 0; v < views.length; v++) {
-                    PoseRender.Camera cam = PoseRender.orbit(views[v][0], views[v][1], 4.4, 1.0);
-                    g.drawImage(PoseRender.render(pose, cam, cell, cell, extra), i * cell, v * cell, null);
+            float worst = 0.0F;
+            for (int r = 0; r < rows.size(); r++) {
+                for (int i = 0; i < rows.get(r).size(); i++) {
+                    float miss = q.twoHanded ? com.hex.kagune.control.client.animation.QuinqueGrip.reach(rows.get(r).get(i), q, false) : 0.0F;
+                    worst = Math.max(worst, Math.abs(miss));
+                    if (Math.abs(miss) > 0.05F) {
+                        names.get(r).set(i, names.get(r).get(i) + String.format(" miss %+.1f", miss));
+                    }
                 }
-                g.setColor(Color.WHITE);
-                g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 14));
-                g.drawString(KINDS[k][0] + " " + labels.get(i), i * cell + 6, 16);
             }
-            g.dispose();
-            File out = new File(dir, "quinque-" + KINDS[k][0] + ".png");
-            ImageIO.write(sheet, "png", out);
-            System.out.println("wrote " + out);
+            System.out.println(q + ": the left fist misses its grip by at most " + worst + " px (the shoulder reaching 1.5 of it)");
+            for (int r = 0; r < rows.size(); r++) {
+                String name = r == 0 ? "stance" : "m" + r;
+                double[][] views = r == 0 ? new double[][] {{-35, 8}, {-100, 4}, {60, 10}, {200, 15}} : new double[][] {{-35, 10}, {-95, 4}, {40, 10}};
+                sheet(new File(dir, "quinque-" + KINDS[k][0] + "-" + name + ".png"), KINDS[k][0], q, model, rows.get(r), names.get(r), views, 300);
+            }
         }
+    }
+
+    static void sheet(File out, String kind, Quinque q, Model model, List<RigPose> poses, List<String> labels, double[][] views, int cell)
+        throws Exception {
+        BufferedImage sheet = new BufferedImage(cell * poses.size(), cell * views.length, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = sheet.createGraphics();
+        for (int i = 0; i < poses.size(); i++) {
+            RigPose pose = poses.get(i);
+            List<PoseRender.Tri> extra = item(pose, model);
+            double[] grip = q.twoHanded ? com.hex.kagune.control.client.animation.QuinqueGrip.leftGrip(pose, q, false) : null;
+            if (grip != null) {
+                mark(extra, PoseRender.world(pose, grip), 0xFF30FF);
+                mark(extra, PoseRender.world(pose, com.hex.kagune.control.client.animation.QuinqueGrip.fist(pose, false, false)), 0xFFE020);
+            }
+            for (int v = 0; v < views.length; v++) {
+                PoseRender.Camera cam = PoseRender.orbit(views[v][0], views[v][1], 5.0, 1.05);
+                g.drawImage(PoseRender.render(pose, cam, cell, cell, extra), i * cell, v * cell, null);
+            }
+            g.setColor(Color.WHITE);
+            g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 13));
+            g.drawString(kind + " " + labels.get(i), i * cell + 6, 16);
+        }
+        g.dispose();
+        ImageIO.write(sheet, "png", out);
+        System.out.println("wrote " + out);
     }
 }

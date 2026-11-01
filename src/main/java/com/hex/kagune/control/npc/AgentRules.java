@@ -218,6 +218,13 @@ public final class AgentRules {
     /** Not another flip or dash for this long after one (ticks). */
     public static final int FLIP_EVERY = 34;
     public static final int DASH_EVERY = 22;
+    /**
+     * 1.3.33: the chance each tick it may that it slips aside, left or right, mid-fight (between blows, or as it shoots): about one
+     * every two seconds. The owner: "not as agile as expected... a dash animation, like dash left, right".
+     */
+    public static final double SIDE_DASH = 0.05;
+    /** 1.3.33: the chance each tick that it dashes in on prey just out of its reach. */
+    public static final double DASH_IN = 0.06;
     /** A dash: how hard it pushes off (blocks a tick), and how long the push lasts (renewed against the ground's grip). */
     public static final double DASH_SPEED = 0.8;
     public static final int DASH_TICKS = 4;
@@ -230,8 +237,9 @@ public final class AgentRules {
     /** The launcher: where it likes to stand from its prey (blocks), a burst of shards, the gap between shards and between bursts. */
     public static final double SHOOT_NEAREST = 7.0;
     public static final double SHOOT_FARTHEST = 16.0;
-    public static final int BURST = 5;
-    public static final int SHOT_GAP = 4;
+    public static final int BURST = 8;
+    /** 1.3.33: as fast as a player's (Quinque.SHOT_EVERY). */
+    public static final int SHOT_GAP = Quinque.SHOT_EVERY;
     public static final int BURST_GAP = 30;
     /** Its shard's damage against a player's (a little less: a pair of them fires a lot). */
     public static final float SHARD_DAMAGE = Quinque.SHARD_DAMAGE * 0.8F;

@@ -70,6 +70,11 @@ public final class AgentRenderer extends HumanoidMobRenderer<CcgAgent, PlayerMod
             posed = null;
         }
         AgentModel.pose = posed;
+        try {
+            AgentClient.afterimages(agent, posed, partial);
+        } catch (RuntimeException failure) {
+            PlayerLayers.failed("an investigator's afterimage", failure);
+        }
         boolean turned = posed != null && (Math.abs(posed.flip) > 1.0E-3F || Math.abs(posed.roll) > 1.0E-3F || Math.abs(posed.spin) > 1.0E-3F
             || Math.abs(posed.drop) > 1.0E-3F || Math.abs(posed.lunge) > 1.0E-3F);
         float size = AgentRules.size(look);

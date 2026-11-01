@@ -3,8 +3,10 @@ package com.hex.kagune.control.client;
 import com.hex.kagune.control.ControlItems;
 import com.hex.kagune.control.client.animation.AgentPose;
 import com.hex.kagune.control.client.animation.PaleMotions;
+import com.hex.kagune.control.client.animation.QuinqueGrip;
 import com.hex.kagune.control.client.animation.QuinquePose;
 import com.hex.kagune.control.client.animation.RigPose;
+import com.hex.kagune.control.npc.AgentRules;
 import com.hex.kagune.control.npc.CcgAgent;
 import com.hex.kagune.control.npc.NpcRules;
 import com.hex.kagune.control.pale.PaleRules;
@@ -57,7 +59,7 @@ public final class AgentClient {
             if (out < 1.0F) {
                 arms = QuinquePose.unfolding(weapon, out);
             } else if (weapon.twoHanded && run > 0.0F) {
-                AgentPose.stanceRun(p, QuinquePose.hold(weapon), phase, run);
+                AgentPose.stanceRun(p, weapon, phase, run);
                 posed = true;
             } else {
                 arms = QuinquePose.hold(weapon);
@@ -80,9 +82,16 @@ public final class AgentClient {
             posed = true;
         }
         if (weapon != null && weapon.ranged) {
+            // 1.3.33: the gun along its look, up or down with its head, while it is not clubbing with it.
+            boolean clubbing = swing >= 0 && swing < CcgAgent.PARRY && swingAge >= 0.0 && swingAge < weapon.swing;
+            if (!clubbing && QuinqueClient.shown(held, true) >= 1.0F) {
+                float pitch = (float)Math.toRadians(Math.max(-60.0F, Math.min(60.0F, agent.m_146909_())));
+                QuinquePose.pitchBy(p, weapon, pitch * (run > 0.0F ? 0.5F : 1.0F));
+                posed = true;
+            }
             double shot = CcgAgent.since(now, agent.shotAt()) + partial;
-            if (shot >= 0.0 && shot < 5.0) {
-                QuinquePose.recoil(p, (float)(1.0 - shot / 5.0));
+            if (shot >= 0.0 && shot < QuinquePose.KICK_TICKS) {
+                QuinquePose.recoil(p, weapon, (float)(1.0 - shot / QuinquePose.KICK_TICKS));
                 posed = true;
             }
         }
@@ -96,10 +105,57 @@ public final class AgentClient {
             AgentPose.carry(p, AgentPose.sway(phase, (float)Math.min(1.0, speed / 0.1), run));
             posed = true;
         }
+        // 1.3.33: both hands on a two-handed quinque, whatever moved the body and the right arm (last of all).
+        if (weapon != null && weapon.twoHanded && QuinquePose.gripped(QuinqueClient.shown(held, true))) {
+            AgentRules.Look look = agent.look();
+            QuinqueGrip.reach(p, weapon, look.slim() || look.female());
+        }
         return posed ? p : null;
     }
 
-    /** The quinque's arms over the run's (its body's turn, lean, lunge and drop added to the run's). */
+    /** 1.3.33: a dash's afterimages: how long each lasts (ticks), how see-through it starts, its colour (a cold white), how often one. */
+    static final double GHOST_LIFE = 6.0;
+    static final float GHOST_ALPHA = 0.34F;
+    static final int GHOST_COLOUR = 0xC8D6E6;
+    static final double GHOST_EVERY = 1.0;
+    /** Each investigator's last afterimage (PaleClient's clock), by entity id. */
+    private static final java.util.Map<Integer, Double> GHOSTED = new java.util.HashMap<>();
+
+    /**
+     * 1.3.33: while {@code agent} dashes, a brief afterimage of it left behind every tick of the push (frozen in the pose it was in, a
+     * cold white, gone in a third of a second). The owner: "dash left, right, with some afterimages maybe, just very briefly".
+     */
+    public static void afterimages(CcgAgent agent, RigPose posed, float partial) {
+        if (agent.m_9236_() == null || posed == null) {
+            return;
+        }
+        double age = CcgAgent.since(agent.m_9236_().m_46467_(), agent.dashAt()) + partial;
+        if (!(age >= 0.5 && age <= AgentRules.DASH_TICKS + 0.5)) {
+            return;
+        }
+        double clock = PaleClient.clock(partial);
+        Double last = GHOSTED.get(agent.m_19879_());
+        if (last != null && clock - last < GHOST_EVERY && clock >= last) {
+            return;
+        }
+        if (GHOSTED.size() > 256) {
+            GHOSTED.clear();
+        }
+        GHOSTED.put(agent.m_19879_(), clock);
+        double x = agent.f_19790_ + (agent.m_20185_() - agent.f_19790_) * partial;
+        double y = agent.f_19791_ + (agent.m_20186_() - agent.f_19791_) * partial;
+        double z = agent.f_19792_ + (agent.m_20189_() - agent.f_19792_) * partial;
+        float yaw = agent.f_20884_ + (agent.f_20883_ - agent.f_20884_) * partial;
+        AgentRules.Look look = agent.look();
+        float size = AgentRules.size(look);
+        com.hex.kagune.control.client.render.PaleAfterimages.add(new RigPose().add(posed, 1.0F), new net.minecraft.world.phys.Vec3(x, y, z), yaw, clock,
+            GHOST_COLOUR, GHOST_LIFE, GHOST_ALPHA, size * AgentRules.build(look), size);
+    }
+
+    /**
+     * The quinque's arms over the run's (its body's turn, lean, lunge and drop added to the run's; 1.3.33: its spin and its head's turn
+     * against it, and its step's legs over the run's as far as it holds them).
+     */
     static void take(RigPose p, RigPose arms) {
         if (arms.armHold > 0.0F || arms.rightArmHold > 0.0F) {
             p.rightArmX = arms.rightArmX;
@@ -122,5 +178,17 @@ public final class AgentClient {
         p.lean += arms.lean;
         p.lunge += arms.lunge;
         p.drop += arms.drop;
+        p.spin += arms.spin;
+        p.headX += arms.headX;
+        p.headY += arms.headY;
+        p.headZ += arms.headZ;
+        if (arms.legHold > 0.0F) {
+            float k = Math.min(1.0F, arms.legHold);
+            p.rightLegX += (arms.rightLegX - p.rightLegX) * k;
+            p.leftLegX += (arms.leftLegX - p.leftLegX) * k;
+            p.rightLegZ += (arms.rightLegZ - p.rightLegZ) * k;
+            p.leftLegZ += (arms.leftLegZ - p.leftLegZ) * k;
+            p.legHold = Math.max(p.legHold, k);
+        }
     }
 }

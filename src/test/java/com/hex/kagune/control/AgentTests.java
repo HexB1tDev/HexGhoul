@@ -200,22 +200,35 @@ public final class AgentTests {
             check(p.drop >= 0.0F && p.drop <= 1.0F, "a little bounce (" + phase + ")");
             check(p.armHold == 1.0F && p.legHold == 1.0F, "all the run at a sprint");
             RigPose blade = AgentPose.run(phase, 1.0F, AgentPose.Carry.BLADE);
-            check(blade.rightArmX > 0.4F && blade.rightArmZ > 0.2F, "a blade trailed low behind, out from the body (" + phase + ")");
+            // 1.3.33: the blade (held off the forearm's line) trails level behind, its point clear of the ground.
+            com.hex.kagune.control.client.animation.QuinqueHolds.Hold h = com.hex.kagune.control.client.animation.QuinqueHolds.of(Quinque.BLADE);
+            double[] grip = com.hex.kagune.control.client.animation.QuinqueGrip.held(blade, h, false, standing(5.0));
+            double[] tip = com.hex.kagune.control.client.animation.QuinqueGrip.held(blade, h, false, standing(31.0));
+            check(tip[2] > grip[2] + 10.0 && tip[1] < 23.0, "a blade trailed behind, off the ground (" + phase + ")");
         }
         RigPose half = AgentPose.run(1.0, 0.5F, AgentPose.Carry.CASE);
         RigPose full = AgentPose.run(1.0, 1.0F, AgentPose.Carry.CASE);
         check(Math.abs(half.lean - full.lean / 2.0F) < 1.0E-5F && half.legHold == 0.5F, "blended in by how fast it goes");
-        // A two-handed stance carried on the run, lowered; a parry snaps in and out; a dash leans into it.
+        // A two-handed stance carried on the run, lowered (both hands on it); a parry snaps in and out; a dash leans into it.
         RigPose stance = com.hex.kagune.control.client.animation.QuinquePose.hold(Quinque.KATANA);
         RigPose carried = AgentPose.run(0.7, 1.0F, AgentPose.Carry.STANCE);
-        AgentPose.stanceRun(carried, stance, 0.7, 1.0F);
-        check(carried.rightArmX > stance.rightArmX && carried.leftArmX > stance.leftArmX && carried.leftArmZ == stance.leftArmZ, "the katana kept in both hands, lowered");
+        AgentPose.stanceRun(carried, Quinque.KATANA, 0.7, 1.0F);
+        double[] held = com.hex.kagune.control.client.animation.QuinqueGrip.fist(stance, true, false);
+        double[] low = com.hex.kagune.control.client.animation.QuinqueGrip.fist(carried, true, false);
+        float miss = com.hex.kagune.control.client.animation.QuinqueGrip.reach(carried, Quinque.KATANA, false);
+        check(low[1] > held[1] + 1.0 && Math.abs(miss) < 2.5F, "the katana kept in both hands on the run, lowered (" + miss + ")");
         for (Quinque q : Quinque.values()) {
             RigPose start = AgentPose.parry(q, 0.0);
             RigPose mid = AgentPose.parry(q, 0.45);
-            check(mid.rightArmX < start.rightArmX - 0.5F && mid.twist < 0.0F, q + ": the parry whips the weapon up and across");
-            check(Math.abs(AgentPose.parry(q, 0.999).rightArmX - start.rightArmX) < 0.05F, q + ": and back");
-            check(q.twoHanded == (mid.leftArmHold > 0.0F), q + ": both hands on a two-handed one");
+            double[] from = com.hex.kagune.control.client.animation.QuinqueGrip.fist(start, true, false);
+            double[] up = com.hex.kagune.control.client.animation.QuinqueGrip.fist(mid, true, false);
+            check(up[1] < from[1] - 2.0 && mid.twist < start.twist, q + ": the parry whips the weapon up and across");
+            double[] back = com.hex.kagune.control.client.animation.QuinqueGrip.fist(AgentPose.parry(q, 0.999), true, false);
+            check(Math.abs(back[1] - from[1]) < 0.3, q + ": and back");
+            if (q.twoHanded) {
+                float off = com.hex.kagune.control.client.animation.QuinqueGrip.reach(mid, q, false);
+                check(Math.abs(off) < 3.0F && mid.leftArmHold == 1.0F, q + ": both hands on a two-handed one through the parry (" + off + ")");
+            }
         }
         RigPose dash = new RigPose();
         AgentPose.dash(dash, 0, 0.4);
@@ -521,5 +534,11 @@ public final class AgentTests {
 
     static double sq(double v) {
         return v * v;
+    }
+
+    /** A point on a standing quinque's line at height {@code y}, where its -45 degree turn puts it (model pixels). */
+    static float[] standing(double y) {
+        double k = Math.sqrt(0.5) * (y - 8.0);
+        return new float[] {(float)(8.0 + k), (float)(8.0 + k), 8.0F};
     }
 }

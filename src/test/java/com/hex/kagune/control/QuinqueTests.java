@@ -32,6 +32,7 @@ public final class QuinqueTests {
         turning();
         kinds();
         files();
+        holds();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -84,14 +85,16 @@ public final class QuinqueTests {
         int heat = 0;
         int shots = 0;
         while (heat < Quinque.HEAT_MOST && shots < 1000) {
-            heat = Quinque.heated(heat, 4L);
+            heat = Quinque.heated(heat, Quinque.SHOT_EVERY);
             shots++;
         }
-        check(shots >= 25 && shots <= 40, "held down (a shard every four ticks) it overheats after a few seconds of fire: " + shots + " shards");
+        double seconds = shots * Quinque.SHOT_EVERY / 20.0;
+        check(seconds >= 4.5 && seconds <= 8.0, "held down (1.3.33: a shard every two ticks) it overheats after about six seconds of fire: " + seconds);
+        check(Quinque.SHOT_EVERY == 2 && 20.0 / Quinque.SHOT_EVERY * Quinque.SHARD_DAMAGE >= 17.5, "ten a second, no weaker than five of the old");
         heat = 0;
         for (int burst = 0; burst < 20; burst++) {
-            for (int shot = 0; shot < 5; shot++) {
-                heat = Quinque.heated(heat, 4L);
+            for (int shot = 0; shot < 8; shot++) {
+                heat = Quinque.heated(heat, Quinque.SHOT_EVERY);
             }
             heat = Quinque.heated(heat, 60L) - 1; // a breath between bursts
         }
@@ -171,5 +174,131 @@ public final class QuinqueTests {
             }
         }
         check(lang != null && lang.contains("entity.hexkagune.ccg_investigator"), "the investigator has a name");
+    }
+
+    // ---------------------------------------------------------------- 1.3.33: how each is held and swung
+
+    /** The model file's third person transform (rotation, translation, scale) for {@code frame}. */
+    static double[] third(String frame) throws IOException {
+        String json = read("assets/hexkagune/models/item/quinque/" + frame + ".json");
+        Matcher m = Pattern.compile("\"thirdperson_righthand\"\\s*:\\s*\\{\\s*\"rotation\"\\s*:\\s*\\[([^\\]]*)\\]\\s*,"
+            + "\\s*\"translation\"\\s*:\\s*\\[([^\\]]*)\\]\\s*,\\s*\"scale\"\\s*:\\s*\\[([^\\]]*)\\]").matcher(json == null ? "" : json);
+        if (!m.find()) {
+            return null;
+        }
+        double[] out = new double[7];
+        int i = 0;
+        for (int g = 1; g <= 3; g++) {
+            String[] parts = m.group(g).split(",");
+            for (int k = 0; k < (g == 3 ? 1 : 3); k++) {
+                out[i++] = Double.parseDouble(parts[k].trim());
+            }
+        }
+        return out;
+    }
+
+    /** How far {@code p} is from the segment {@code a}..{@code b}. */
+    static double toSegment(double[] p, double[] a, double[] b) {
+        double[] ab = {b[0] - a[0], b[1] - a[1], b[2] - a[2]};
+        double len2 = ab[0] * ab[0] + ab[1] * ab[1] + ab[2] * ab[2];
+        double t = len2 < 1.0E-9 ? 0.0 : Math.max(0.0, Math.min(1.0, ((p[0] - a[0]) * ab[0] + (p[1] - a[1]) * ab[1] + (p[2] - a[2]) * ab[2]) / len2));
+        return distance(p, new double[] {a[0] + ab[0] * t, a[1] + ab[1] * t, a[2] + ab[2] * t});
+    }
+
+    static double distance(double[] a, double[] b) {
+        return Math.sqrt((a[0] - b[0]) * (a[0] - b[0]) + (a[1] - b[1]) * (a[1] - b[1]) + (a[2] - b[2]) * (a[2] - b[2]));
+    }
+
+    /**
+     * Each quinque's hold (QuinqueHolds, solved by tools/quinque_models.py) is the one its model is drawn with; its right grip sits in the
+     * fist; a two-handed one's left hand is on its grip in its stance and stays near it through every swing (QuinqueGrip.reach); the
+     * launcher's barrel lies along the look; the blade comes out of the fist, never along the arm; melee quinques fold at a tap.
+     */
+    static void holds() throws IOException {
+        for (Quinque q : Quinque.values()) {
+            com.hex.kagune.control.client.animation.QuinqueHolds.Hold h = com.hex.kagune.control.client.animation.QuinqueHolds.of(q);
+            check(h != null, q + " has a hold");
+            if (h == null) {
+                continue;
+            }
+            for (String frame : new String[] {"full", "nearly", "half"}) {
+                double[] d = third(q.model + "_" + frame);
+                boolean same = d != null;
+                for (int i = 0; same && i < 3; i++) {
+                    same = Math.abs(d[i] - h.rotation()[i]) < 1.0E-3 && Math.abs(d[3 + i] - h.translation()[i]) < 1.0E-3;
+                }
+                check(same && Math.abs(d[6] - h.scale()) < 1.0E-3, q + ": its " + frame + " frame is drawn with the hold's transform");
+            }
+            com.hex.kagune.control.client.animation.RigPose stance = com.hex.kagune.control.client.animation.QuinquePose.hold(q);
+            for (boolean slim : new boolean[] {false, true}) {
+                double[] fist = com.hex.kagune.control.client.animation.QuinqueGrip.fist(stance, true, slim);
+                double[] grip = com.hex.kagune.control.client.animation.QuinqueGrip.held(stance, h, slim, h.rightGrip());
+                check(distance(fist, grip) < 0.5, q + ": the right grip in the middle of the fist (" + distance(fist, grip) + " px, slim " + slim + ")");
+            }
+            if (q.twoHanded) {
+                com.hex.kagune.control.client.animation.RigPose p = com.hex.kagune.control.client.animation.QuinquePose.hold(q);
+                float miss = com.hex.kagune.control.client.animation.QuinqueGrip.reach(p, q, false);
+                double[] left = com.hex.kagune.control.client.animation.QuinqueGrip.fist(p, false, false);
+                double[] a = com.hex.kagune.control.client.animation.QuinqueGrip.held(p, h, false, h.slideFrom());
+                double[] b = com.hex.kagune.control.client.animation.QuinqueGrip.held(p, h, false, h.slideTo());
+                double off = toSegment(left, a, b);
+                check(Math.abs(miss) < 0.6F && off < 0.8, q + ": in its stance the left hand is on its grip (" + off + " px)");
+                float worst = 0.0F;
+                for (int step = 0; step < 3; step++) {
+                    for (double t = 0.0; t <= 1.0; t += 0.05) {
+                        com.hex.kagune.control.client.animation.RigPose swing = com.hex.kagune.control.client.animation.QuinquePose.swing(q, step, t);
+                        worst = Math.max(worst, Math.abs(com.hex.kagune.control.client.animation.QuinqueGrip.reach(swing, q, false)));
+                    }
+                }
+                check(worst < 3.0F, q + ": through every swing the left hand stays within a fist's half of its grip (" + worst + " px)");
+            }
+            // Every swing leaves the stance and comes back to it.
+            for (int step = 0; step < 3; step++) {
+                com.hex.kagune.control.client.animation.RigPose a = com.hex.kagune.control.client.animation.QuinquePose.swing(q, step, 0.0);
+                com.hex.kagune.control.client.animation.RigPose m = com.hex.kagune.control.client.animation.QuinquePose.swing(q, step, 0.5);
+                com.hex.kagune.control.client.animation.RigPose b = com.hex.kagune.control.client.animation.QuinquePose.swing(q, step, 1.0);
+                double moved = distance(com.hex.kagune.control.client.animation.QuinqueGrip.fist(m, true, false),
+                    com.hex.kagune.control.client.animation.QuinqueGrip.fist(stance, true, false)) + Math.abs(m.twist - stance.twist) * 8.0 + Math.abs(m.lunge);
+                check(moved > 2.0, q + ": swing " + (step + 1) + " moves");
+                check(distance(com.hex.kagune.control.client.animation.QuinqueGrip.fist(a, true, false), com.hex.kagune.control.client.animation.QuinqueGrip.fist(stance, true, false)) < 0.05
+                    && distance(com.hex.kagune.control.client.animation.QuinqueGrip.fist(b, true, false), com.hex.kagune.control.client.animation.QuinqueGrip.fist(stance, true, false)) < 0.05,
+                    q + ": swing " + (step + 1) + " starts and ends in the stance");
+            }
+        }
+        // The launcher: a rifle. Its barrel along the look (the chest's turn taken out), level, the muzzle well out in front.
+        com.hex.kagune.control.client.animation.QuinqueHolds.Hold gun = com.hex.kagune.control.client.animation.QuinqueHolds.of(Quinque.LAUNCHER);
+        com.hex.kagune.control.client.animation.RigPose aim = com.hex.kagune.control.client.animation.QuinquePose.hold(Quinque.LAUNCHER);
+        aim.spin = 0.0F; // (the whole body's share of the turn: undone here so the look is the model's -z)
+        aim.twist = gun.twist();
+        aim.headY = 0.0F;
+        double[] breech = com.hex.kagune.control.client.animation.QuinqueGrip.held(aim, gun, false, new float[] {1.5F, 9.8F, 8.0F});
+        double[] muzzle = com.hex.kagune.control.client.animation.QuinqueGrip.held(aim, gun, false, new float[] {31.0F, 9.8F, 8.0F});
+        double length = distance(breech, muzzle);
+        check(length > 15.0 && Math.abs(muzzle[0] - breech[0]) < 0.12 * length && Math.abs(muzzle[1] - breech[1]) < 0.12 * length
+            && muzzle[2] < breech[2] - 0.9 * length, "the launcher's barrel lies along the look, level, at the target");
+        double[] stock = com.hex.kagune.control.client.animation.QuinqueGrip.held(aim, gun, false, new float[] {-6.0F, 9.0F, 8.0F});
+        check(stock[1] > -2.0 && stock[1] < 6.0, "its stock at the height of the shoulder (" + stock[1] + ")");
+        // The blade: its point out of the fist, never back along the arm (the owner: "who grabs a sword by the tip of it").
+        com.hex.kagune.control.client.animation.QuinqueHolds.Hold blade = com.hex.kagune.control.client.animation.QuinqueHolds.of(Quinque.BLADE);
+        for (int step = 0; step < 3; step++) {
+            for (double t = 0.0; t <= 1.0; t += 0.1) {
+                com.hex.kagune.control.client.animation.RigPose p = com.hex.kagune.control.client.animation.QuinquePose.swing(Quinque.BLADE, step, t);
+                double[] fist = com.hex.kagune.control.client.animation.QuinqueGrip.fist(p, true, false);
+                double[] tip = com.hex.kagune.control.client.animation.QuinqueGrip.held(p, blade, false, new float[] {(float)(8 + 23 * Math.sqrt(0.5)), (float)(8 + 23 * Math.sqrt(0.5)), 8F});
+                float[] turn = p.transform("rightArm", com.hex.kagune.control.client.animation.RigPose.ROTATION, 0, 0, 0);
+                double cx = Math.cos(turn[0]), sx = Math.sin(turn[0]), cy = Math.cos(turn[1]), sy = Math.sin(turn[1]), cz = Math.cos(turn[2]), sz = Math.sin(turn[2]);
+                // The arm's own length (Rz Ry Rx of +y).
+                double[] along = {cz * sy * sx - sz * cx, sz * sy * sx + cz * cx, cy * sx};
+                double[] out = {tip[0] - fist[0], tip[1] - fist[1], tip[2] - fist[2]};
+                double n = Math.sqrt(out[0] * out[0] + out[1] * out[1] + out[2] * out[2]);
+                double cos = (out[0] * along[0] + out[1] * along[1] + out[2] * along[2]) / n;
+                check(cos > Math.cos(Math.toRadians(75.0)) && cos < Math.cos(Math.toRadians(25.0)),
+                    "the blade leaves the fist 25..75 degrees off the forearm's line (swing " + (step + 1) + " at " + t + ")");
+            }
+        }
+        // A tap folds a melee quinque; the launcher fires on it and folds on Shift.
+        String server = Files.readString(Path.of("src/main/java/com/hex/kagune/control/server/QuinqueServer.java"));
+        check(server.contains("boolean folds = open != null && (!open.ranged || player.m_6047_())") && server.contains("tapped("),
+            "a tap of right click folds a melee quinque (held down, it never flips back)");
     }
 }

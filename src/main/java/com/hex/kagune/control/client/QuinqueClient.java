@@ -120,9 +120,27 @@ public final class QuinqueClient {
                 : com.hex.kagune.control.client.animation.QuinquePose.hold(weapon);
         }
         if (p != null && weapon.ranged) {
-            com.hex.kagune.control.client.animation.QuinquePose.recoil(p, (float)Math.max(0.0, 1.0 - (clock - swing.shot) / 5.0));
+            // 1.3.33: the gun along the look (up or down with the head) unless it is clubbing; a kick for each shard of the pair a
+            // pull fires (QuinqueServer.fire: one now, one two ticks on).
+            if (!(t >= 0.0 && t < 1.0) && shown(held, true) >= 1.0F) {
+                float pitch = (float)Math.toRadians(Math.max(-60.0F, Math.min(60.0F, body.m_146909_())));
+                com.hex.kagune.control.client.animation.QuinquePose.pitchBy(p, weapon, pitch);
+            }
+            double since = clock - swing.shot;
+            double kick = Math.max(kick(since), kick(since - Quinque.SHOT_EVERY));
+            com.hex.kagune.control.client.animation.QuinquePose.recoil(p, weapon, (float)kick);
+        }
+        // 1.3.33: both hands on a two-handed quinque, whatever moved the right arm (the left put on its grip, last).
+        if (p != null && weapon.twoHanded && shown(held, true) >= 1.0F) {
+            boolean slim = body instanceof net.minecraft.client.player.AbstractClientPlayer player && "slim".equals(player.m_108564_());
+            com.hex.kagune.control.client.animation.QuinqueGrip.reach(p, weapon, slim);
         }
         return p;
+    }
+
+    /** A kick {@code since} ticks after its shot: sharp, gone in QuinquePose.KICK_TICKS. */
+    static double kick(double since) {
+        return since < 0.0 ? 0.0 : Math.max(0.0, 1.0 - since / com.hex.kagune.control.client.animation.QuinquePose.KICK_TICKS);
     }
 
     /** 1.3.26: the launcher fired in this player's own hand (the server fires it): their arms kick. */

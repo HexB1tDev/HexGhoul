@@ -54,8 +54,11 @@ public final class QuinqueServer {
         Quinque shut = ControlItems.quinqueCase(held);
         Quinque open = shut == null ? ControlItems.quinqueWeapon(held) : null;
         boolean fires = open != null && open.ranged && !player.m_6047_();
-        if (shut == null && !fires && (open == null || !player.m_6047_())) {
-            return; // not a quinque; or a blade used without Shift (it is a blade, nothing more)
+        // 1.3.33: a melee quinque folds back into its case at a tap of right click (the owner's ask); the launcher fires on right
+        // click, so it still shuts on Shift + right click.
+        boolean folds = open != null && (!open.ranged || player.m_6047_());
+        if (shut == null && !fires && !folds) {
+            return; // not a quinque
         }
         event.setCanceled(true);
         event.setCancellationResult(InteractionResult.SUCCESS);
@@ -65,7 +68,8 @@ public final class QuinqueServer {
         try {
             if (fires) {
                 fire(server, level, held, open);
-            } else {
+                SECOND.put(server.m_20148_(), level.m_46467_() + Quinque.SHOT_EVERY);
+            } else if (tapped(server, level.m_46467_())) {
                 turn(server, level, held, shut != null ? shut : open, shut != null);
             }
         } catch (RuntimeException failure) {
@@ -73,14 +77,32 @@ public final class QuinqueServer {
         }
     }
 
+    /** 1.3.33: each player's last right click on a quinque that turns it (game time), to tell a tap from the button held down. */
+    private static final java.util.Map<UUID, Long> USED = new java.util.HashMap<>();
+    /** Vanilla repeats a held right click every four ticks: one this soon after the last is the button still held, not a new tap. */
+    static final long HELD_REPEAT = 5L;
+
+    /**
+     * True for a fresh tap of right click, false for vanilla's repeat of one held down (so holding the button opens a case once and
+     * never folds the weapon straight back).
+     */
+    static boolean tapped(ServerPlayer player, long now) {
+        Long last = USED.put(player.m_20148_(), now);
+        return last == null || now - last > HELD_REPEAT || now < last;
+    }
+
     // ---------------------------------------------------------------- 1.3.26: the launcher
+
+    /** 1.3.33: the second shard of each pull's pair, due at this game time (fired from the player's tick). */
+    private static final java.util.Map<UUID, Long> SECOND = new java.util.HashMap<>();
 
     /** Each player's launcher: its heat, its last shot, when it is cool enough again after overheating. */
     private static final java.util.Map<UUID, long[]> HEAT = new java.util.HashMap<>();
 
     /**
-     * A shard from the launcher in {@code player}'s hand (use held repeats every four ticks: five a second): from its muzzle along their
-     * aim, a little spread; it heats a shard at a time and cools a shard a tick, and at its most it overheats and won't fire a while.
+     * A shard from the launcher in {@code player}'s hand (use held repeats every four ticks; 1.3.33: each pull fires a second shard two
+     * ticks on, ten a second): from its muzzle along their aim, a little spread; it heats a shard at a time and cools as it rests, and at
+     * its most it overheats and won't fire a while.
      */
     static void fire(ServerPlayer player, ServerLevel level, ItemStack held, Quinque quinque) {
         long now = level.m_46467_();
@@ -270,6 +292,18 @@ public final class QuinqueServer {
             return;
         }
         Quinque out = ControlItems.quinqueWeapon(player.m_21205_());
+        // 1.3.33: the second shard of the pull, if the launcher is still out in the hand and not being shut.
+        Long due = SECOND.isEmpty() ? null : SECOND.get(player.m_20148_());
+        if (due != null && player.m_9236_() instanceof ServerLevel level && level.m_46467_() >= due) {
+            SECOND.remove(player.m_20148_());
+            if (out != null && out.ranged && !player.m_6047_() && player.m_6084_() && level.m_46467_() - due < 4L) {
+                try {
+                    fire(player, level, player.m_21205_(), out);
+                } catch (RuntimeException failure) {
+                    com.hex.kagune.control.Safety.caught(failure, "a quinque firing");
+                }
+            }
+        }
         double reach = out == null ? 0.0 : out.reach;
         AttributeInstance instance = player.m_21051_(net.minecraftforge.common.ForgeMod.ENTITY_REACH.get());
         if (instance == null) {
