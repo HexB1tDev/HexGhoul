@@ -40,6 +40,7 @@ public final class FamilyTests {
         moments();
         home();
         chores();
+        speech();
         might();
         hands();
         spin();
@@ -416,6 +417,31 @@ public final class FamilyTests {
     }
 
     /** 1.3.21: a family's home: when each goes to bed, and whose bed is whose (the double bed the spouse's, single beds the children's). */
+    /** 1.3.30: what NPCs say goes into a bubble over their heads (never the chat): wrapped, timed, actions told apart. */
+    static void speech() {
+        String[] samples = {"...That didn't happen. Don't look at me.", "*picks Mei up and holds them close, rocking them*",
+            "*her hand on your cheek, a kiss before you can blink* ...Don't. Say. Anything. I mean it.", "Boo.", "",
+            "A-very-long-word-with-no-spaces-at-all-that-goes-on-and-on-and-on-and-on", Chores.start("eto", Chores.Kind.TIDY, 0)};
+        for (String text : samples) {
+            List<String> lines = com.hex.kagune.control.npc.Speech.wrap(text);
+            check(lines.size() <= com.hex.kagune.control.npc.Speech.LINES, "a bubble is a few lines at most: " + text);
+            for (String line : lines) {
+                check(line.length() <= com.hex.kagune.control.npc.Speech.WIDTH && !line.isEmpty(), "each line short enough to read over a head: " + line);
+            }
+            if (!text.isBlank() && text.length() <= com.hex.kagune.control.npc.Speech.WIDTH * 2) {
+                check(String.join(" ", lines).replace(" ", "").equals(text.replace(" ", "")), "nothing of a short line is lost: " + text);
+            }
+            int ticks = com.hex.kagune.control.npc.Speech.ticks(text);
+            check(ticks >= com.hex.kagune.control.npc.Speech.LEAST && ticks <= com.hex.kagune.control.npc.Speech.MOST, "up long enough to read, not forever");
+        }
+        check(com.hex.kagune.control.npc.Speech.wrap(null).isEmpty() && com.hex.kagune.control.npc.Speech.wrap("   ").isEmpty(), "nothing said, no bubble");
+        check(com.hex.kagune.control.npc.Speech.ticks("Boo.") < com.hex.kagune.control.npc.Speech.ticks(samples[2]), "more words stay up longer");
+        check(com.hex.kagune.control.npc.Speech.action("*bounces and claps*") && !com.hex.kagune.control.npc.Speech.action("Shut up.")
+            && !com.hex.kagune.control.npc.Speech.action(samples[2]), "an action alone is shown as one (grey, slanted)");
+        check(com.hex.kagune.control.npc.Speech.styled("\u00a7dhi", false).equals("\u00a7fhi") && com.hex.kagune.control.npc.Speech.styled("waves", true).startsWith("\u00a77\u00a7o"),
+            "a bubble's own look, whatever colour codes came with the words");
+    }
+
     /** 1.3.29: a spouse's chores at home (HomeChores' rules): what each block is for, which chore next, a chest put in order, its words. */
     static void chores() {
         java.util.function.Function<String, String> block = id -> "Block{minecraft:" + id + "}";
@@ -457,7 +483,8 @@ public final class FamilyTests {
         for (double roll = 0.0; roll <= 1.0; roll += 0.1) {
             long alone = Chores.gap(false, roll);
             long with = Chores.gap(true, roll);
-            check(alone >= 400L && alone <= 1300L && with >= 1100L && with <= 2500L && alone < with, "home alone it keeps house more often than with its spouse about");
+            check(alone >= 300L && alone <= 700L && with >= 400L && with <= 900L && alone < with,
+                "busy about the house: a chore every half minute or so, a little less often with its spouse about");
         }
         int[] none = new int[Chores.Kind.values().length];
         check(Chores.pick(none, null, false, 0.5) == null && Chores.pick(null, null, false, 0.5) == null, "nothing in the home: no chore");

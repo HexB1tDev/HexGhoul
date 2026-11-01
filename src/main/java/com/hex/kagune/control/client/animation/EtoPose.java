@@ -57,33 +57,40 @@ public final class EtoPose {
         float in = gesture.held() ? ease(t / 6.0F) : envelope(t, gesture.ticks, 5.0F, 6.0F);
         int v = Math.floorMod(variant, 3);
         switch (gesture) {
-            case KISS, BLUSH -> {
-                float lean = gesture == EtoGesture.BLUSH ? 0.5F : 0.4F;
-                p.lean = lean;
-                p.headX = -lean - 0.06F;
+            case KISS -> {
+                // 1.3.30 (the owner: no arm thrown forward the moment a kiss is asked): waiting for it she only leans in, eyes shut, her
+                // arms as they are, loose at her sides.
+                p.lean = 0.4F;
+                p.headX = -0.46F;
                 p.headZ = (v == 2 ? -0.1F : 0.08F) + 0.04F * (float)Math.sin(t * 0.1);
-                // One hand up to them: their head (0), their cheek (1), the back of their neck (2).
-                p.rightArmX = v == 0 ? -2.55F : v == 1 ? -1.95F : -2.25F;
-                p.rightArmY = v == 0 ? -0.2F : v == 1 ? -0.42F : -0.6F;
-                p.rightArmZ = 0.08F;
-                p.rightArmHold = 1.0F;
-                // The other stiff at her side, a fist.
-                p.leftArmX = 0.12F;
-                p.leftArmZ = -0.06F;
+                p.rightArmX = 0.08F;
+                p.leftArmX = 0.08F;
+                p.rightArmZ = 0.05F;
+                p.leftArmZ = -0.05F;
+            }
+            case BLUSH -> {
+                // Kissed: only now does one hand come up to them (their head, their cheek, the back of their neck by the variant), over
+                // a moment; the lean she already had is kept (never dropped and leant into again).
+                toukaKissed(p, v, t, ease(t / 8.0F));
+                return p;
             }
             case PULL -> {
-                // Pulling them in: one hand behind their head, the other flat against their chest; still only the one reaching up.
+                // Pulling them in: the hand she had up goes behind their head, the other flat against their chest; still only the one
+                // reaching up. From the kiss she was in, never from nothing.
+                float k = ease(t / 8.0F);
+                toukaKissed(p, v, t, 1.0F - k);
                 p.lean = 0.5F;
                 p.headX = -0.56F;
                 p.headZ = 0.16F + 0.05F * (float)Math.sin(t * 0.09);
-                p.rightArmX = -2.4F;
-                p.rightArmY = -0.5F;
-                p.rightArmZ = 0.1F;
-                p.leftArmX = -1.25F;
-                p.leftArmY = 0.2F;
-                p.leftArmZ = -0.05F;
+                p.rightArmX += -2.4F * k;
+                p.rightArmY += -0.5F * k;
+                p.rightArmZ += 0.1F * k;
+                p.leftArmX = 0.12F + (-1.25F - 0.12F) * k;
+                p.leftArmY = 0.2F * k;
+                p.leftArmZ = -0.06F + 0.01F * k;
                 p.rightArmHold = 1.0F;
-                p.leftArmHold = 1.0F;
+                p.leftArmHold = Math.max(k, 0.0F);
+                return p;
             }
             case PECK -> {
                 float close = (float)Math.sin(Math.min(1.0, t / (double)EtoGesture.PECK.ticks) * Math.PI);
@@ -140,6 +147,24 @@ public final class EtoPose {
             }
         }
         return p.scale(in);
+    }
+
+    /**
+     * 1.3.30: Touka kissed and holding it: leant in (fully, as she was), her one hand {@code up} of the way to them (0 at her side, 1 there:
+     * their head, cheek or neck by {@code v}), the other stiff at her side.
+     */
+    private static void toukaKissed(RigPose p, int v, float t, float up) {
+        p.lean = 0.5F;
+        p.headX = -0.56F;
+        p.headZ = (v == 2 ? -0.1F : 0.08F) + 0.04F * (float)Math.sin(t * 0.1);
+        float x = v == 0 ? -2.55F : v == 1 ? -1.95F : -2.25F;
+        float y = v == 0 ? -0.2F : v == 1 ? -0.42F : -0.6F;
+        p.rightArmX = 0.08F + (x - 0.08F) * up;
+        p.rightArmY = y * up;
+        p.rightArmZ = 0.05F + 0.03F * up;
+        p.rightArmHold = 1.0F;
+        p.leftArmX = 0.12F;
+        p.leftArmZ = -0.06F;
     }
 
     /**
@@ -226,6 +251,24 @@ public final class EtoPose {
     }
 
     /** Her pose for {@code gesture} {@code age} ticks in, or null for none. */
+    /**
+     * 1.3.30: a child held in the arms, the whole time it is held: the cradle (PET's arms) at full, easing in over its first moments once it
+     * is picked up ({@code since}: ticks since; anything long ago is held), rocked on its own clock ({@code clock}).
+     */
+    public static RigPose cradle(double since, double clock) {
+        RigPose p = new RigPose();
+        float rock = (float)Math.sin(clock * 0.14);
+        p.rightArmX = -1.0F;
+        p.leftArmX = -1.0F;
+        p.rightArmY = -0.75F;
+        p.leftArmY = 0.75F;
+        p.headX = 0.35F;
+        p.headZ = 0.15F * rock;
+        p.roll = 0.05F * rock;
+        float in = since >= 5.0 || !Double.isFinite(since) ? 1.0F : ease((float)Math.max(0.0, since) / 5.0F);
+        return p.scale(in);
+    }
+
     public static RigPose gesture(EtoGesture gesture, double age) {
         if (gesture == null || gesture == EtoGesture.NONE) {
             return null;

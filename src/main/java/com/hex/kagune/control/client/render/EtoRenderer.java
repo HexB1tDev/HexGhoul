@@ -104,8 +104,13 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
             return null;
         }
         // 1.3.29: each her own way (Persona.style), and a kiss not the same kiss every time (by when it began).
-        return EtoFight.pose(npc, view.fight(), moment(npc, alive(npc, view, EtoPose.gesture(view.gesture(), view.gestureAge(clock),
-            npc.persona().style(), (int)Math.floorMod(view.gestureAt(), 3L)), partial), clock), clock, partial);
+        RigPose own = EtoPose.gesture(view.gesture(), view.gestureAge(clock), npc.persona().style(), (int)Math.floorMod(view.gestureAt(), 3L));
+        // 1.3.30: a child in its arms: cradled the whole time it is held (never faded out with its gesture's time), easing in as it is picked up.
+        if (com.hex.kagune.control.client.ChildClient.carrying(npc.m_19879_())) {
+            double age = view.gesture() == com.hex.kagune.control.npc.EtoGesture.PET ? view.gestureAge(clock) : Double.MAX_VALUE;
+            own = EtoPose.cradle(age, view.gestureAge(clock));
+        }
+        return EtoFight.pose(npc, view.fight(), moment(npc, alive(npc, view, own, partial), clock), clock, partial);
     }
 
     /** 1.3.20: a moment with one of its children (a hug, a toss, a spin...) over its gesture: its parent's side of it. */
@@ -275,18 +280,33 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
             angry(npc, view.gestureAge(clock), pose, buffers);
         }
         // 1.3.2: taken, she says so over her head: her name, and under it whose she is.
-        if (view != null && !view.tag().isEmpty() && !npc.m_20145_()) {
+        boolean tagged = view != null && !view.tag().isEmpty() && !npc.m_20145_();
+        if (tagged) {
             this.m_7649_(npc, Component.m_237113_(this.persona.colour() + "\u2764 \u00a7f" + view.tag()), pose, buffers, light);
             pose.m_85836_();
             pose.m_85837_(0.0, 0.26, 0.0);
             this.m_7649_(npc, Component.m_237113_(this.persona.colour() + npc.displayName()), pose, buffers, light);
             pose.m_85849_();
         }
+        // 1.3.30: what she says, in a bubble over all of that (never the chat).
+        if (!npc.m_20145_()) {
+            bubble(npc, com.hex.kagune.control.client.NpcSpeech.lines(npc.m_19879_()), tagged ? 0.56 : 0.3, pose, buffers, light);
+        }
     }
 
     @Override
     public ResourceLocation m_5478_(EtoNpc npc) {
         return this.skin;
+    }
+
+    /** 1.3.30: {@code lines} (top first) in a bubble {@code base} blocks over its name tag's place, a line each, the last at the bottom. */
+    private void bubble(EtoNpc npc, java.util.List<String> lines, double base, PoseStack pose, MultiBufferSource buffers, int light) {
+        for (int i = 0; i < lines.size(); i++) {
+            pose.m_85836_();
+            pose.m_85837_(0.0, base + (lines.size() - 1 - i) * 0.25, 0.0);
+            this.m_7649_(npc, Component.m_237113_(lines.get(i)), pose, buffers, light);
+            pose.m_85849_();
+        }
     }
 
     /** The anger mark over her head, to her right, popping in and throbbing, turned to the camera. */

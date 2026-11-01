@@ -59,7 +59,7 @@ public final class ChildTalk {
             ChildBrain.putDown(npc, npc.mind);
             Children.Child child = Children.get(player.m_284548_(), npc.childId());
             if (child != null) {
-                ChildBrain.say(player, child, ChildLines.down(npc.mind.stage, npc.m_217043_().m_188503_(100)));
+                ChildBrain.say(player, npc, child, ChildLines.down(npc.mind.stage, npc.m_217043_().m_188503_(100)));
             }
             return;
         }

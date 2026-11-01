@@ -27,7 +27,7 @@ public final class ControlNetwork {
      * abilities do out in the world (1.0.13); 35: War's M1, its blows and their effects (1.0.14); 36: the Black Sun out of the ground (1.0.15); 37: Peace playable, its blades' moves and cuts (1.0.16); 38: the transformations, nothing hurts him nor any ability while it comes (1.0.17). 39: Peace's six blades, their numbering and moves (1.0.18). 40: the marks blows leave instead of vanilla particles (1.0.19). 41: the fighting grammar: M1 flags, the heavy, the charge (1.0.20). 42: Peace's blades reach farther, its paths changed (1.0.21).
      * 54: Eto (1.3.0): her state and surgery, her talk choices, the one-eye grant in the kakugan state. 58: genders (1.3.9). 59: pregnancy, children (1.3.10).
      */
-    private static final String PROTOCOL = "65"; // 61 (1.3.19): S2CNpcWings; 62 (1.3.20): S2CChild's ride and moment; 63 (1.3.21): HOME, hand, tuck, feed; 64 (1.3.29): S2CNpcApproach, ANSWER; 65 (1.3.29): S2CQuests carries the romance cards
+    private static final String PROTOCOL = "66"; // 61 (1.3.19): S2CNpcWings; 62 (1.3.20): S2CChild's ride and moment; 63 (1.3.21): HOME, hand, tuck, feed; 64 (1.3.29): S2CNpcApproach, ANSWER; 65 (1.3.29): S2CQuests carries the romance cards; 66 (1.3.30): S2CNpcSay
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
         KaguneMod.id("control"), () -> PROTOCOL, PROTOCOL::equals, PROTOCOL::equals);
     private static boolean initialized;
@@ -92,6 +92,7 @@ public final class ControlNetwork {
         CHANNEL.registerMessage(45, S2CNpcWings.class, S2CNpcWings::encode, S2CNpcWings::decode, S2CNpcWings::handle);
         // 1.3.29: someone comes up to the player with something to say (a prompt; the Answer key opens it).
         CHANNEL.registerMessage(46, S2CNpcApproach.class, S2CNpcApproach::encode, S2CNpcApproach::decode, S2CNpcApproach::handle);
+        CHANNEL.registerMessage(47, S2CNpcSay.class, S2CNpcSay::encode, S2CNpcSay::decode, S2CNpcSay::handle); // 1.3.30: speech bubbles
     }
 
     /** To the subject and every client tracking them. */

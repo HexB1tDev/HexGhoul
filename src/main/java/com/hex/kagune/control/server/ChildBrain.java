@@ -176,7 +176,7 @@ public final class ChildBrain {
                         npc.m_21573_().m_5624_(parent, 1.3);
                     }
                     if (now % 60L == 0L && parent != null) {
-                        say(parent, child, ChildLines.scared(stage, ChildLines.call(stage, isMother(child, parent)), npc.m_217043_().m_188503_(100)));
+                        say(parent, npc, child, ChildLines.scared(stage, ChildLines.call(stage, isMother(child, parent)), npc.m_217043_().m_188503_(100)));
                     }
                 } else if (leader != null && leader.m_9236_() == level) {
                     follow(npc, leader);
@@ -332,7 +332,7 @@ public final class ChildBrain {
         if (partner instanceof ServerPlayer player && npc.m_9236_() instanceof ServerLevel level) {
             Children.Child child = Children.get(level, npc.childId());
             if (child != null) {
-                say(player, child, ChildLines.moment(moment, mind.stage, ChildLines.call(mind.stage, isMother(child, player)),
+                say(player, npc, child, ChildLines.moment(moment, mind.stage, ChildLines.call(mind.stage, isMother(child, player)),
                     npc.m_217043_().m_188503_(1000)));
             }
         }
@@ -631,7 +631,7 @@ public final class ChildBrain {
             if (by instanceof EtoNpc parent && parent.mind != null) {
                 parent.mind.momentChild = npc.m_20148_();
             } else if (by instanceof ServerPlayer player && mind.pending == ChildMoment.TUCK && mind.stage != null && !mind.stage.sits()) {
-                say(player, child, ChildLines.tuckMe(mind.stage, ChildLines.call(mind.stage, isMother(child, player)), npc.m_217043_().m_188503_(100)));
+                say(player, npc, child, ChildLines.tuckMe(mind.stage, ChildLines.call(mind.stage, isMother(child, player)), npc.m_217043_().m_188503_(100)));
             }
         }
     }
@@ -744,7 +744,7 @@ public final class ChildBrain {
             mind.dirty = true;
             ServerPlayer parent = nearestParent(npc, child, level, 16.0);
             if (parent != null) {
-                say(parent, child, ChildLines.fight(mind.stage, npc.m_217043_().m_188503_(100)));
+                say(parent, npc, child, ChildLines.fight(mind.stage, npc.m_217043_().m_188503_(100)));
             }
         }
         npc.m_21563_().m_24960_(threat, 30.0F, 30.0F);
@@ -778,7 +778,7 @@ public final class ChildBrain {
             mind.reunited = now; // 1.3.29: away a long while: it missed them
         }
         if (mind.parentAway != Long.MIN_VALUE && now - mind.parentAway >= 1200L) {
-            say(parent, child, ChildLines.greet(stage, call, seed));
+            say(parent, npc, child, ChildLines.greet(stage, call, seed));
             mind.nextLine = now + 600L + npc.m_217043_().m_188503_(900);
             welcome(npc, mind, parent, now); // 1.3.20: it runs to them
         }
@@ -789,13 +789,16 @@ public final class ChildBrain {
             return;
         }
         if (now >= mind.nextLine && mind.target == 0) {
-            say(parent, child, ChildLines.idle(stage, call, seed));
+            say(parent, npc, child, ChildLines.idle(stage, call, seed));
             mind.nextLine = now + 900L + npc.m_217043_().m_188503_(1500);
         }
     }
 
-    static void say(ServerPlayer player, Children.Child child, String line) {
-        player.m_5661_(Component.m_237113_("§b" + child.name + "§r: " + line), false);
+    /** 1.3.30: its words to {@code player}, in a bubble over its head ({@code npc}) that only they see (never the chat). */
+    static void say(ServerPlayer player, ChildNpc npc, Children.Child child, String line) {
+        if (line != null && !line.isEmpty() && npc != null) {
+            com.hex.kagune.control.network.ControlNetwork.sendTo(player, new com.hex.kagune.control.network.S2CNpcSay(npc.m_19879_(), line));
+        }
     }
 
     private static void tellParents(ServerLevel level, Children.Child child, String text) {

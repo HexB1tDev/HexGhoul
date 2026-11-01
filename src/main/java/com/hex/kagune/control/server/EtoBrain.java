@@ -341,7 +341,10 @@ public final class EtoBrain {
         EtoArm.tick(npc, mind, level, now);
         // 1.3.8: the Owl's burst, and shedding it once the fight is long over.
         EtoOwlForm.tick(npc, mind, level, now);
-        if (mind.gesture.over(now - mind.gestureAt) && mind.gesture != EtoGesture.NONE && !mind.gesture.held()) {
+        // 1.3.30: a child in her arms is held the whole time (its cradle, PET, never runs out under it: it ran out and was begun again,
+        // the arms dropping and coming back).
+        boolean cradles = mind.cradling != null && mind.gesture == EtoGesture.PET;
+        if (mind.gesture.over(now - mind.gestureAt) && mind.gesture != EtoGesture.NONE && !mind.gesture.held() && !cradles) {
             gesture(mind, EtoGesture.NONE, now);
         }
         if (mind.with != 0 && mind.gesture != EtoGesture.PULL && mind.gesture != EtoGesture.CLING && mind.gesture != EtoGesture.HUG
@@ -854,7 +857,14 @@ public final class EtoBrain {
         double distance = Math.sqrt(partner.m_20280_(npc));
         boolean clingy = mood == EtoMood.CLINGY || mood == EtoMood.AFFECTIONATE || mood == EtoMood.LONELY || mood == EtoMood.GIDDY;
         boolean reach = reachable(npc, partner);
-        if (clingy && reach && distance > 3.5 && now % 15L == 0L && !mind.gesture.still() && mind.chore == null) {
+        // 1.3.30 (the owner: at home the spouse never stopped following them, dropping everything): at the home they share it keeps to
+        // its own day (its chores) and never trails them about; in the middle of a chore it starts nothing with them (they can still
+        // talk to it, ask for a kiss, a hug, its hand).
+        boolean home = npc.following() == null && Households.forCompanion(level, npc) != null;
+        if (home && mind.chore != null) {
+            return false;
+        }
+        if (clingy && reach && distance > 3.5 && now % 15L == 0L && !mind.gesture.still() && mind.chore == null && !home) {
             npc.m_21573_().m_5624_(partner, 1.0);
         }
         if (!reach) {
@@ -1452,10 +1462,10 @@ public final class EtoBrain {
         return EtoServer.context(player, npc);
     }
 
-    /** Her words to {@code player} alone, in their chat. */
+    /** Her words to {@code player} alone: 1.3.30, in a bubble over her head that only they see (the chat was spammed with them). */
     static void say(EtoNpc npc, ServerPlayer player, String line) {
         if (line != null && !line.isEmpty()) {
-            player.m_5661_(Component.m_237113_(npc.persona().colour() + "<" + npc.displayName() + ">\u00a7r " + line), false);
+            ControlNetwork.sendTo(player, new com.hex.kagune.control.network.S2CNpcSay(npc.m_19879_(), line));
         }
     }
 

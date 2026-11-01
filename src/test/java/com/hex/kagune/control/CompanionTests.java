@@ -239,14 +239,28 @@ public final class CompanionTests {
         check(Persona.TOUKA.unasked(EtoGesture.CLING) == EtoGesture.PECK && Persona.TOUKA.unasked(EtoGesture.DANCE) == EtoGesture.STEAL
             && Persona.ETO.unasked(EtoGesture.CLING) == EtoGesture.CLING, "unasked, Touka kisses a cheek or steals a kiss; Eto clings");
         check(Persona.ETO.style() == 0 && Persona.KEN.style() == 1 && Persona.TOUKA.style() == 2, "each holds someone their own way");
+        // 1.3.30: a child in the arms is cradled the whole time it is held (it faded out with its gesture's time, then came back).
+        for (double held = 5.0; held < 4000.0; held += 37.0) {
+            com.hex.kagune.control.client.animation.RigPose cradle = com.hex.kagune.control.client.animation.EtoPose.cradle(held, held);
+            check(cradle.rightArmX < -0.9F && cradle.leftArmX < -0.9F, "still cradling the child after " + held + " ticks");
+        }
+        check(com.hex.kagune.control.client.animation.EtoPose.cradle(Double.MAX_VALUE, 3.0).rightArmX < -0.9F, "cradling a child picked up long ago");
+        check(com.hex.kagune.control.client.animation.EtoPose.cradle(0.0, 0.0).rightArmX > -0.1F, "picked up: the arms ease into it");
         for (int variant = 0; variant < 3; variant++) {
-            com.hex.kagune.control.client.animation.RigPose kiss = com.hex.kagune.control.client.animation.EtoPose.gesture(EtoGesture.KISS, 20.0, 2, variant);
-            check(kiss != null && kiss.rightArmX < -1.5F && kiss.leftArmX > -0.5F, "Touka's kiss: one hand up to them, the other at her side (" + variant + ")");
+            // 1.3.30 (the owner): waiting for the kiss she only leans in, her arms as they are; the hand comes up once she is kissed.
+            com.hex.kagune.control.client.animation.RigPose waiting = com.hex.kagune.control.client.animation.EtoPose.gesture(EtoGesture.KISS, 20.0, 2, variant);
+            check(waiting != null && waiting.lean > 0.3F && Math.abs(waiting.rightArmX) < 0.3F && Math.abs(waiting.leftArmX) < 0.3F
+                && waiting.rightArmHold == 0.0F && waiting.leftArmHold == 0.0F, "Touka waiting for a kiss: leaning in, no arm thrown forward (" + variant + ")");
+            com.hex.kagune.control.client.animation.RigPose kissed = com.hex.kagune.control.client.animation.EtoPose.gesture(EtoGesture.BLUSH, 20.0, 2, variant);
+            check(kissed != null && kissed.rightArmX < -1.5F && kissed.leftArmX > -0.5F && kissed.lean > 0.3F,
+                "Touka kissed: one hand up to them, the other at her side, still leaning in (" + variant + ")");
+            com.hex.kagune.control.client.animation.RigPose first = com.hex.kagune.control.client.animation.EtoPose.gesture(EtoGesture.BLUSH, 0.0, 2, variant);
+            check(first != null && first.rightArmX > -0.3F && first.lean >= 0.4F, "the moment she is kissed: her lean kept, her hand not up yet (" + variant + ")");
             com.hex.kagune.control.client.animation.RigPose eto = com.hex.kagune.control.client.animation.EtoPose.gesture(EtoGesture.KISS, 20.0, 0, variant);
             check(eto != null && eto.rightArmX > 0.0F && eto.leftArmX > 0.0F, "Eto's kiss: hands behind her back (" + variant + ")");
         }
-        com.hex.kagune.control.client.animation.RigPose a = com.hex.kagune.control.client.animation.EtoPose.gesture(EtoGesture.KISS, 20.0, 2, 0);
-        com.hex.kagune.control.client.animation.RigPose b = com.hex.kagune.control.client.animation.EtoPose.gesture(EtoGesture.KISS, 20.0, 2, 1);
+        com.hex.kagune.control.client.animation.RigPose a = com.hex.kagune.control.client.animation.EtoPose.gesture(EtoGesture.BLUSH, 20.0, 2, 0);
+        com.hex.kagune.control.client.animation.RigPose b = com.hex.kagune.control.client.animation.EtoPose.gesture(EtoGesture.BLUSH, 20.0, 2, 1);
         check(a.rightArmX != b.rightArmX, "her kiss not the same every time");
         com.hex.kagune.control.client.animation.RigPose stealIn = com.hex.kagune.control.client.animation.EtoPose.gesture(EtoGesture.STEAL, 12.0, 2, 0);
         com.hex.kagune.control.client.animation.RigPose stealOut = com.hex.kagune.control.client.animation.EtoPose.gesture(EtoGesture.STEAL, 50.0, 2, 0);

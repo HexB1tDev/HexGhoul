@@ -116,9 +116,9 @@ public final class Sightings {
             }
             if (!told && npc.m_20280_(player) <= 12.0 * 12.0 && (ally || shown != Display.EYES)) {
                 told = true;
-                String name = npc.identity() == null ? "Ghoul" : npc.identity().displayName();
-                player.m_5661_(Component.m_237113_("§7" + name + ": " + (ally ? ReactionLines.ally(shown, (int)(now / 10L))
-                    : ReactionLines.stranger(shown, (int)(now / 10L)))), false);
+                // 1.3.30: in a bubble over its head, not the chat.
+                com.hex.kagune.control.network.ControlNetwork.sendTo(player, new com.hex.kagune.control.network.S2CNpcSay(npc.m_19879_(),
+                    ally ? ReactionLines.ally(shown, (int)(now / 10L)) : ReactionLines.stranger(shown, (int)(now / 10L))));
             }
         }
     }
@@ -131,7 +131,7 @@ public final class Sightings {
                 continue;
             }
             ChildStage stage = child.stage(now);
-            ChildBrain.say(player, child, ReactionLines.child(stage, com.hex.kagune.control.family.ChildLines.call(stage, ChildBrain.isMother(child, player)), shown,
+            ChildBrain.say(player, npc, child, ReactionLines.child(stage, com.hex.kagune.control.family.ChildLines.call(stage, ChildBrain.isMother(child, player)), shown,
                 npc.m_217043_().m_188503_(100)));
         }
     }

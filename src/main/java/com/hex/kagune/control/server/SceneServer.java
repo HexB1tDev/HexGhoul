@@ -870,7 +870,7 @@ public final class SceneServer {
             if (child != null && body instanceof ChildNpc npc) {
                 SceneContext sc = context(player, npc, child, now);
                 String line = scene != null && !scene.ignored().isEmpty() ? SceneBook.fill(SceneBook.one(scene.ignored(), seed), sc) : ignored("child", seed);
-                ChildBrain.say(player, child, line);
+                ChildBrain.say(player, npc, child, line);
             }
             return;
         }
@@ -878,7 +878,7 @@ public final class SceneServer {
             if (body instanceof com.hex.kagune.control.npc.GhoulNpc ghoul && ghoul.identity() != null) {
                 SceneContext sc = context(player, ghoul, now);
                 String line = scene != null && !scene.ignored().isEmpty() ? SceneBook.fill(SceneBook.one(scene.ignored(), seed), sc) : "...";
-                player.m_5661_(Component.m_237113_("\u00a77" + ghoul.identity().displayName() + ": \u00a7r" + line), false);
+                ControlNetwork.sendTo(player, new com.hex.kagune.control.network.S2CNpcSay(ghoul.m_19879_(), line)); // 1.3.30: a bubble, not the chat
             }
             return;
         }

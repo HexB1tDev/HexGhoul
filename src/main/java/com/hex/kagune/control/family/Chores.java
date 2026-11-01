@@ -138,10 +138,13 @@ public final class Chores {
         return of(blockText) == Kind.TIDY && path.endsWith("chest") && id(blockText).startsWith("minecraft:");
     }
 
-    /** How long until the next chore (ticks): sooner when it is home alone, later with its spouse about (it has them to be with). */
+    /**
+     * How long until the next chore (ticks): 15 to 35 seconds home alone; 20 to 45 with its spouse about (1.3.30, the owner: it should be
+     * busy about the house, not hanging on them).
+     */
     public static long gap(boolean partnerNear, double roll) {
         double r = Math.max(0.0, Math.min(1.0, roll));
-        return partnerNear ? 1200L + (long)(r * 1200.0) : 500L + (long)(r * 700.0);
+        return partnerNear ? 400L + (long)(r * 500.0) : 300L + (long)(r * 400.0);
     }
 
     /**

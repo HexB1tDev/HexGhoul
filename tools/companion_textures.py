@@ -10,7 +10,8 @@ src/main/resources/assets/hexkagune/textures/entity/<key>/:
   <key>_kakugan.png       the eyes turned (only these pixels, laid over the skin as they turn): each eye's white black, its iris red,
                           a thin vein at the outer corner. Touka turns both eyes; Ken only his left (the one-eyed king)
   <key>_kakugan_glow.png  the red irises alone, drawn full bright
-  <key>_closed.png        the eyes shut for blinks and kisses: the eye painted over in the skin's own colour, a lash line along its foot
+  <key>_closed.png        the eyes shut for blinks and kisses: the skin's lashes kept, the row under them in the skin's own colour, a black
+                          line one pixel lower, the rest of the eye skin too (1.3.30, as the owner marked it)
   <key>_blush.png         pink across the cheeks, under each eye
 
 The eyes are found on the face (columns 8-15, rows 8-15 of a 64px skin): in its middle rows, the pixels that are neither skin nor hair;
@@ -49,6 +50,7 @@ EYES = {
 }
 
 BLACK = (12, 4, 8, 255)
+LID = (14, 12, 16, 255)  # 1.3.30: the shut lid's line, black
 DEEP = (150, 10, 24, 255)
 RED = (206, 18, 34, 255)
 LIGHT = (240, 52, 62, 255)
@@ -190,14 +192,13 @@ def build(key, config, preview):
             if bottom + 1 <= 7:
                 face.put(kakugan, outer, bottom + 1, VEIN)
             face.put(kakugan, vx, bottom, VEIN)
-        # Shut, "- -": the lid down under the skin's own lashes (never painted over): the eye's top row in the lash colour, the rest skin.
+        # Shut (1.3.30, where the owner marked it): the skin's own lashes kept as they are, the row under them skin, and one black line a
+        # pixel lower (the shut lid); the rest of the eye painted over in skin.
         bottom = max(y for x, y in pixels)
         top = min(y for x, y in pixels)
-        lashes = [p for p in eyes.get("lash", []) if p[0] in {x for x, y in pixels}]
-        lash = face.at(*lashes[0]) if lashes else tuple(max(0, int(v * 0.35)) for v in tone) + (255,)
+        line = min(top + 1, bottom)
         for x, y in pixels:
-            # The skin's own lashes over the eye are the closed eye's line (1.3.17: a second dark row read too heavy); with none, the top row.
-            face.put(closed, x, y, lash if y == top and not lashes else tone + (255,))
+            face.put(closed, x, y, LID if y == line else tone + (255,))
         # Blush: just under the eye.
         cheek = min(7, bottom + 1)
         for x in sorted({x for x, y in pixels}):

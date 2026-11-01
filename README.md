@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.30 (HexGhoul): NPCs talk in speech bubbles over their heads (not the chat); the spouse keeps house instead of following you about; Touka leans in for a kiss; shut eyes show a line; a parent holds a baby the whole time (testing)
+
+See `.github/release-notes-1.3.30.md`.
+
 ## 1.3.29 (HexGhoul): companions, children and allies come up to you with something to say (the Answer key); a spouse keeps house at home (chests sorted, the floor swept into a chest, flowers watered); "Go home, please."; quests only from whoever gives them, feats, hunts on request, a Romance tab; Touka her own way (testing)
 
 See `.github/release-notes-1.3.29.md`.
