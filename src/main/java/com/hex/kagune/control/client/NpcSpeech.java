@@ -44,6 +44,19 @@ public final class NpcSpeech {
         BUBBLES.put(npc, new Bubble(List.copyOf(lines), now() + Speech.ticks(text)));
     }
 
+    /**
+     * 1.3.31: the bubble over {@code body} as this player sees it: none through a wall (only what it says in their sight is shown, as only
+     * that is sent).
+     */
+    public static List<String> lines(net.minecraft.world.entity.LivingEntity body) {
+        Minecraft minecraft = Minecraft.m_91087_();
+        List<String> lines = lines(body.m_19879_());
+        if (lines.isEmpty() || minecraft.f_91074_ == null || !body.m_142582_(minecraft.f_91074_)) {
+            return List.of();
+        }
+        return lines;
+    }
+
     /** The bubble's lines over {@code npc} now, top first (empty: nothing said lately). */
     public static List<String> lines(int npc) {
         Bubble bubble = BUBBLES.get(npc);

@@ -243,7 +243,7 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
             pose.m_85849_();
         }
         // 1.3.30: what it says, in a bubble over its head (never the chat).
-        java.util.List<String> said = com.hex.kagune.control.client.NpcSpeech.lines(child.m_19879_());
+        java.util.List<String> said = com.hex.kagune.control.client.NpcSpeech.lines(child);
         for (int i = 0; i < said.size() && !child.m_20145_(); i++) {
             pose.m_85836_();
             pose.m_85837_(0.0, 0.3 + (said.size() - 1 - i) * 0.25, 0.0);

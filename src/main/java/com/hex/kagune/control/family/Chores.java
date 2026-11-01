@@ -22,7 +22,13 @@ public final class Chores {
         WIPE(EtoGesture.WIPE, 2.3),
         WATER(EtoGesture.WATER, 2.6),
         READ(EtoGesture.READ, 2.5),
-        LOOK(EtoGesture.LOOK, 2.2);
+        LOOK(EtoGesture.LOOK, 2.2),
+        /** 1.3.31: cooking at the stove (Kitchen): raw food from the chests cooked, a meal kept for its spouse. */
+        COOK(EtoGesture.COOK, 2.3),
+        /** 1.3.31: smelting at the furnace: ores, sand, cobblestone from the chests, the ingots and glass put away. */
+        SMELT(EtoGesture.TIDY, 2.3),
+        /** 1.3.31: ripe crops picked (the plants left to grow again), what they give put away. */
+        HARVEST(EtoGesture.TIDY, 1.9);
 
         public final EtoGesture gesture;
         public final double reach;
@@ -92,6 +98,9 @@ public final class Chores {
         if (path.endsWith("glass_pane")) {
             return Kind.LOOK;
         }
+        if (path.equals("furnace") || path.equals("smoker") || path.equals("blast_furnace") || path.endsWith("campfire")) {
+            return Kind.COOK; // 1.3.31: a station (cooking and smelting both look for them here)
+        }
         if (path.equals("flower_pot")) {
             return null; // an empty pot: nothing in it to water
         }
@@ -158,11 +167,14 @@ public final class Chores {
             int count = counts == null || kind.ordinal() >= counts.length ? 0 : counts[kind.ordinal()];
             double w = switch (kind) {
                 case TIDY -> count > 0 ? 3.0 : 0.0;
-                case SWEEP -> items ? 6.0 : count > 0 ? 2.5 : 0.0;
+                case SWEEP -> items ? 9.0 : count > 0 ? 2.5 : 0.0;
                 case WIPE -> count > 0 ? 2.0 : 0.0;
                 case WATER -> count > 0 ? 3.5 : 0.0;
                 case READ -> count > 0 ? 1.0 : 0.0;
                 case LOOK -> count > 0 ? 0.8 : 0.0;
+                case COOK -> count > 0 ? 4.0 : 0.0;
+                case SMELT -> count > 0 ? 3.5 : 0.0;
+                case HARVEST -> count > 0 ? 5.0 : 0.0;
             };
             if (kind == last && !(kind == Kind.SWEEP && items)) {
                 w *= 0.25;
@@ -263,6 +275,9 @@ public final class Chores {
                     "*tips the bucket over the flowers* Don't look at me like that. I like flowers. So what."};
                 case READ -> new String[] {"*takes a book off the shelf* ...It's for studying. Shut up.", "*pulls out a book* Don't talk to me for ten minutes."};
                 case LOOK -> new String[] {"*looks out the window* ...Just checking nobody's out there.", "*stares out the window* Quiet. Too quiet. ...I'm fine."};
+                case COOK -> new String[] {"*ties her hair back and lights the stove* Don't hover.", "*at the stove* I can't taste it. I just watch it. Shut up."};
+                case SMELT -> new String[] {"*loads the furnace* Who leaves raw ore lying in a chest for a week?", "*feeds the furnace* Fine. I'll do it."};
+                case HARVEST -> new String[] {"*crouches in the field* These are ready. Of course nobody noticed.", "*picks the crops* Hand me a basket. ...Never mind."};
             };
             case "ken" -> switch (kind) {
                 case TIDY -> new String[] {"*opens the chest* I'll sort this out. ...Do you mind if I put the books together?",
@@ -275,6 +290,9 @@ public final class Chores {
                     "*runs a finger along the shelf* So many I haven't read yet."};
                 case LOOK -> new String[] {"*looks out the window* It's peaceful here. I didn't think I'd ever have that.",
                     "*watches the sky through the glass* ...Sorry. I was miles away."};
+                case COOK -> new String[] {"*at the stove* I'll make something. You should eat properly.", "*stirs the pot* I used to watch my mother do this."};
+                case SMELT -> new String[] {"*loads the furnace* I'll smelt this ore for you. It's no trouble.", "*feeds the furnace with coal* Almost meditative."};
+                case HARVEST -> new String[] {"*kneels in the field* These are ripe. I'll bring them in.", "*picks the crops carefully* Look how well they grew."};
             };
             default -> switch (kind) {
                 case TIDY -> new String[] {"*opens the chest* ...Who puts rotten flesh next to the bread? A monster. You. You're the monster.",
@@ -289,6 +307,9 @@ public final class Chores {
                     "*takes down a book* Your shelf is a crime. Half of these are unread. Tragic."};
                 case LOOK -> new String[] {"*looks out the window* Quiet out there today. I like it. Don't tell anyone I like quiet.",
                     "*leans on the window* Somebody's out there. ...No. Just a cow. Disappointing."};
+                case COOK -> new String[] {"*at the stove* Cooking. For you. Write this day down.", "*stirs something* I read twelve cookbooks. Theory is everything."};
+                case SMELT -> new String[] {"*loads the furnace* Ore in a chest is a crime against productivity.", "*feeds the furnace* Burn, little rocks."};
+                case HARVEST -> new String[] {"*in the field* Ripe. Mine now. Well, ours.", "*picks the crops* Farming. Me. If my readers could see me."};
             };
         };
         return lines[Math.floorMod(seed, lines.length)];

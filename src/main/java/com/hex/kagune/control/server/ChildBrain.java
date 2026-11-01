@@ -796,7 +796,8 @@ public final class ChildBrain {
 
     /** 1.3.30: its words to {@code player}, in a bubble over its head ({@code npc}) that only they see (never the chat). */
     static void say(ServerPlayer player, ChildNpc npc, Children.Child child, String line) {
-        if (line != null && !line.isEmpty() && npc != null) {
+        // 1.3.31: only when it can see them, near enough (never through a wall).
+        if (line != null && !line.isEmpty() && npc != null && SceneServer.sees(npc, player, 16.0)) {
             com.hex.kagune.control.network.ControlNetwork.sendTo(player, new com.hex.kagune.control.network.S2CNpcSay(npc.m_19879_(), line));
         }
     }

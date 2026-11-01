@@ -150,6 +150,10 @@ public final class EtoBrain {
         com.hex.kagune.control.family.Chores.Kind lastChore;
         long choreSaid = Long.MIN_VALUE;
         long noSweepUntil;
+        /** 1.3.31: her partner came back after a while (when): she greets them once she sees them; MIN_VALUE: no one to greet. */
+        long welcomeFrom = Long.MIN_VALUE;
+        /** 1.3.31: when she last said the stove had nothing to burn. */
+        long noFuelSaid = Long.MIN_VALUE / 2;
         /** 1.3.29: her walk at home last checked: where she was, when, how many checks in a row she got nowhere. */
         double stuckX;
         double stuckZ;
@@ -538,7 +542,42 @@ public final class EtoBrain {
             }
         }
         // 1.3.15: anything hostile near one of her children (or after one) is hers to deal with.
-        return best != null ? best : ParentCare.threat(npc, level);
+        if (best == null) {
+            best = ParentCare.threat(npc, level);
+        }
+        // 1.3.31: at the home she shares with her spouse, anything hostile on its ground is too (in her sight, close by the house, or
+        // after one of hers).
+        if (best == null && npc.following() == null) {
+            Households.Home house = Households.forCompanion(level, npc);
+            if (house != null) {
+                best = guard(npc, mind, level, house);
+            }
+        }
+        return best;
+    }
+
+    /** 1.3.31: the hostile on her home's ground she should see to (the nearest to her), or null. */
+    static LivingEntity guard(EtoNpc npc, Mind mind, ServerLevel level, Households.Home house) {
+        BlockPos c = house.pos();
+        int r = house.radius();
+        AABB ground = new AABB(c.m_123341_() - r, c.m_123342_() - 5, c.m_123343_() - r, c.m_123341_() + r + 1, c.m_123342_() + 7, c.m_123343_() + r + 1);
+        ServerPlayer partner = player(level, mind.partner);
+        LivingEntity best = null;
+        double nearest = Double.MAX_VALUE;
+        for (LivingEntity body : level.m_6443_(LivingEntity.class, ground, body -> body.m_6084_() && body instanceof Enemy && hostile(body))) {
+            double toHouse = body.m_20238_(new Vec3(c.m_123341_() + 0.5, c.m_123342_(), c.m_123343_() + 0.5));
+            boolean after = body instanceof net.minecraft.world.entity.Mob mob && mob.m_5448_() != null
+                && (mob.m_5448_() == partner || mob.m_5448_() instanceof com.hex.kagune.control.npc.ChildNpc || mob.m_5448_() == npc);
+            if (!(after || toHouse < 10.0 * 10.0 || npc.m_142582_(body))) {
+                continue;
+            }
+            double distance = body.m_20280_(npc);
+            if (distance < nearest) {
+                nearest = distance;
+                best = body;
+            }
+        }
+        return best;
     }
 
     /**
@@ -780,13 +819,19 @@ public final class EtoBrain {
                 }
             }
         }
+        // 1.3.29: at the home she shares with her spouse, by day, she keeps house (HomeChores). 1.3.31 (the owner: she only ever held the
+        // child and talked): the house comes before an idle cuddle: a chore due, she puts the child down and gets on with it.
+        Households.Home house = npc.following() == null ? Households.forCompanion(level, npc) : null;
+        if (house != null && !HomeLife.night(level.m_46468_(), false)) {
+            if (mind.cradling != null && mind.chore == null && now >= mind.nextChore && mind.momentChild == null) {
+                ParentCare.drop(npc, mind, level, now);
+            }
+            if (mind.cradling == null && HomeChores.tick(npc, mind, house, level, partner, now)) {
+                return;
+            }
+        }
         // 1.3.15: her children, while they are still children: she keeps close, and holds the little ones now and then.
         if (ParentCare.tend(npc, mind, level, partner, now)) {
-            return;
-        }
-        // 1.3.29: at the home she shares with her spouse, by day, she keeps house (HomeChores): a chest, the floor, a table, the flowers.
-        Households.Home house = npc.following() == null ? Households.forCompanion(level, npc) : null;
-        if (house != null && !HomeLife.night(level.m_46468_(), false) && HomeChores.tick(npc, mind, house, level, partner, now)) {
             return;
         }
         if (now % 100L == 37L) {
@@ -832,15 +877,28 @@ public final class EtoBrain {
         }
         boolean near = partner != null && partner.m_20280_(npc) <= 16.0 * 16.0;
         if (near && !mind.partnerNear) {
-            if (mind.partnerNearAt != Long.MIN_VALUE && now - mind.partnerNearAt >= 6000L && mind.target == 0 && mind.kiss == null) {
-                EtoTalk.Context c = context(npc, partner);
-                say(npc, partner, npc.persona().script().welcome(c));
-                alert(npc, partner, Romance.Want.MISSED, "");
-                if (reachable(npc, partner)) {
-                    walkUp(npc, mind, partner, EtoGesture.HUG, now);
-                }
+            if (mind.partnerNearAt != Long.MIN_VALUE && now - mind.partnerNearAt >= 6000L) {
+                // 1.3.31: back after a while: she greets them once she actually sees them come in (never through a wall, never from
+                // outside the house), within the next minute.
+                mind.welcomeFrom = now;
             }
             NpcMemoryServer.set(partner, npc.persona().key(), NpcMemory.SEEN, now);
+        }
+        if (mind.welcomeFrom != Long.MIN_VALUE && (now - mind.welcomeFrom > 1200L || now < mind.welcomeFrom)) {
+            mind.welcomeFrom = Long.MIN_VALUE;
+        }
+        if (mind.welcomeFrom != Long.MIN_VALUE && partner != null && mind.target == 0 && mind.kiss == null && mind.holding == null
+            && SceneServer.sees(npc, partner, 12.0)) {
+            mind.welcomeFrom = Long.MIN_VALUE;
+            HomeChores.stop(npc, mind, level);
+            EtoTalk.Context c = context(npc, partner);
+            // 1.3.31: and if she cooked while they were out, she hands them the meal.
+            String served = HomeKitchen.serve(npc, partner, level);
+            say(npc, partner, served != null ? served : npc.persona().script().welcome(c));
+            alert(npc, partner, Romance.Want.MISSED, "");
+            if (reachable(npc, partner)) {
+                walkUp(npc, mind, partner, EtoGesture.HUG, now);
+            }
         }
         mind.partnerNear = near;
         if (near) {
@@ -862,6 +920,10 @@ public final class EtoBrain {
         // talk to it, ask for a kiss, a hug, its hand).
         boolean home = npc.following() == null && Households.forCompanion(level, npc) != null;
         if (home && mind.chore != null) {
+            return false;
+        }
+        // 1.3.31: nothing started with them that she can't see (through a wall, round a corner, from outside the house).
+        if (!npc.m_142582_(partner)) {
             return false;
         }
         if (clingy && reach && distance > 3.5 && now % 15L == 0L && !mind.gesture.still() && mind.chore == null && !home) {
@@ -1002,7 +1064,7 @@ public final class EtoBrain {
         mind.ignoring.values().removeIf(until -> until < now);
         ServerPlayer player = player(level, mind.partner);
         if (player == null || player.m_20280_(npc) > EtoRules.KISS_ASK_NEAR * EtoRules.KISS_ASK_NEAR || !player.m_6084_() || player.m_5833_()
-            || !reachable(npc, player)
+            || !reachable(npc, player) || !npc.m_142582_(player)
             || mind.ignoring.containsKey(player.m_20148_()) || until(mind.sulk, player.m_20148_()) > now
             || now < mind.nextAsk.getOrDefault(player.m_20148_(), Long.MIN_VALUE)) {
             return;
@@ -1462,9 +1524,12 @@ public final class EtoBrain {
         return EtoServer.context(player, npc);
     }
 
-    /** Her words to {@code player} alone: 1.3.30, in a bubble over her head that only they see (the chat was spammed with them). */
+    /**
+     * Her words to {@code player} alone: 1.3.30, in a bubble over her head that only they see (the chat was spammed with them); 1.3.31,
+     * only when she can see them, near enough to be heard (never through a wall, never from across the world).
+     */
     static void say(EtoNpc npc, ServerPlayer player, String line) {
-        if (line != null && !line.isEmpty()) {
+        if (line != null && !line.isEmpty() && SceneServer.sees(npc, player, 16.0)) {
             ControlNetwork.sendTo(player, new com.hex.kagune.control.network.S2CNpcSay(npc.m_19879_(), line));
         }
     }

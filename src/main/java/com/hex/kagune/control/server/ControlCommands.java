@@ -91,6 +91,23 @@ final class ControlCommands {
                     .then(Commands.m_82129_("player", EntityArgument.m_91466_())
                         .executes(context -> maxEto(context, EntityArgument.m_91474_(context, "player"), persona))))));
         }
+        // 1.3.31: what your spouse makes of your home (anyone's command): what it found, what it can do, what it's doing, the meal it keeps.
+        dispatcher.register(Commands.m_82127_("kagune").then(Commands.m_82127_("home").executes(context -> {
+            ServerPlayer player = context.getSource().m_81375_();
+            boolean any = false;
+            for (com.hex.kagune.control.npc.EtoNpc npc : EtoBrain.live()) {
+                if (npc.m_9236_() == player.m_9236_() && player.m_20148_().equals(EtoBrain.spouse(npc))) {
+                    any = true;
+                    for (String line : HomeChores.status(npc, player.m_284548_())) {
+                        context.getSource().m_288197_(() -> Component.m_237113_(line), false);
+                    }
+                }
+            }
+            if (!any) {
+                context.getSource().m_81352_(Component.m_237113_("No spouse of yours in this world right now (married, and loaded nearby)."));
+            }
+            return any ? 1 : 0;
+        })));
         // 1.3.15: where each of your children is (anyone's command): which way, how far, and they glow a while so you can spot them.
         dispatcher.register(Commands.m_82127_("kagune").then(Commands.m_82127_("children").executes(context -> children(context,
             context.getSource().m_81375_()))));

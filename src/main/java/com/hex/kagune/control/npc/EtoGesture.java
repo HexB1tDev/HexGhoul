@@ -90,7 +90,9 @@ public enum EtoGesture {
     /** 1.3.29: watering the flowers round the house (a bucket in her hand, tipped over them). */
     WATER(120, false, false, "minecraft:water_bucket", null),
     /** 1.3.29: tidying a chest (bent over it, putting things where they go). */
-    TIDY(140, false, false);
+    TIDY(140, false, false),
+    /** 1.3.31: cooking at the stove (a bowl in her off hand, stirring with the other, her head down to the fire). */
+    COOK(160, false, false, "minecraft:wooden_shovel", "minecraft:bowl");
 
     public final int ticks;
     public final boolean eyesClosed;
@@ -131,6 +133,7 @@ public enum EtoGesture {
     /** True if she stands still for it (a prop in her hands, a lean, a sulk). */
     public boolean still() {
         return this.mainHand != null || this == LEAN || this == STRETCH || this == POUT || this == YAWN || this == PET || this == LOOK || this == CROSS
-            || this == TAP || this == SCOLD || this == SHY || this == CHIN || this == CRACK || this == BOW || this == KICKS || this == STEAL || this == TIDY;
+            || this == TAP || this == SCOLD || this == SHY || this == CHIN || this == CRACK || this == BOW || this == KICKS || this == STEAL || this == TIDY
+            || this == COOK;
     }
 }

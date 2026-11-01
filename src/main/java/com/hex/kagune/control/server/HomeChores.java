@@ -78,15 +78,40 @@ public final class HomeChores {
         int box = -1;
         boolean items;
 
+        /** 1.3.31: what each block of the round is expected to be (null: a spot of floor) and what its hands do there. */
+        final List<Chores.Kind> expects;
+        final List<EtoGesture> doings;
+        /** 1.3.31: the home's chests as the chore began, and whether its spouse is a ghoul (their meal kept raw). */
+        List<BlockPos> chests = List.of();
+        boolean ghoul;
+
         Job(Chores.Kind kind, List<BlockPos> round, long now) {
+            this(kind, round, null, null, now);
+        }
+
+        Job(Chores.Kind kind, List<BlockPos> round, List<Chores.Kind> expects, List<EtoGesture> doings, long now) {
             this.kind = kind;
             this.round = round;
             this.walkSince = now;
             this.fromAt = now;
+            this.expects = new ArrayList<>();
+            this.doings = new ArrayList<>();
+            for (int i = 0; i < round.size(); i++) {
+                this.expects.add(expects != null && i < expects.size() ? expects.get(i) : kind == Chores.Kind.SWEEP ? null : kind);
+                this.doings.add(doings != null && i < doings.size() ? doings.get(i) : kind.gesture);
+            }
         }
 
         BlockPos at() {
             return this.index < this.round.size() ? this.round.get(this.index) : null;
+        }
+
+        Chores.Kind expect() {
+            return this.index < this.expects.size() ? this.expects.get(this.index) : null;
+        }
+
+        boolean last() {
+            return this.index == this.round.size() - 1;
         }
     }
 
@@ -131,11 +156,11 @@ public final class HomeChores {
                 next(job, now); // nothing was swept up: no chest to go to
                 return true;
             }
-            if (!still(level, at, job.kind)) {
+            if (!still(level, at, job.expect())) {
                 next(job, now);
                 return true;
             }
-            if (close(npc, at, job.index == job.box ? Chores.Kind.TIDY : job.kind)) {
+            if (close(npc, at, job.expect() == null ? job.kind : job.expect())) {
                 work(npc, mind, job, level, at, now);
             } else {
                 walk(npc, mind, job, house, level, at, now);
@@ -146,8 +171,8 @@ public final class HomeChores {
         npc.m_21573_().m_26573_();
         face(npc, at);
         long age = now - job.workSince;
-        if (age % 10L == 0L && job.doing == job.kind.gesture) {
-            particles(level, job.kind, at);
+        if (age % 10L == 0L && (job.doing == job.kind.gesture || job.expect() == Chores.Kind.COOK)) {
+            particles(level, job.expect() == Chores.Kind.COOK ? Chores.Kind.COOK : job.kind, at);
         }
         if (mind.gesture != job.doing) {
             shut(level, job);
@@ -174,6 +199,60 @@ public final class HomeChores {
         }
         mind.chore = null;
         mind.lastChore = job.kind;
+    }
+
+    /**
+     * 1.3.31: what {@code npc} makes of the home it shares with its spouse, for {@code /kagune home}: whether it is at it, what it found
+     * there (chests, stations, plants, tables...), what the chests hold that it can use, what it is doing, the meal it keeps.
+     */
+    static List<String> status(EtoNpc npc, ServerLevel level) {
+        List<String> out = new ArrayList<>();
+        String name = npc.displayName();
+        EtoBrain.Mind mind = npc.mind;
+        Households.Home house = npc.following() == null ? Households.forCompanion(level, npc) : null;
+        if (mind == null || house == null) {
+            out.add(name + " isn't at your home" + (npc.following() != null ? " (following someone)." : ". Marry, then tell them \"This is our home now.\" where you live."));
+            return out;
+        }
+        long now = level.m_46467_();
+        Found found = found(level, house, now);
+        StringBuilder seen = new StringBuilder();
+        for (Chores.Kind kind : Chores.Kind.values()) {
+            int n = found.blocks().getOrDefault(kind, List.of()).size();
+            if (n > 0) {
+                seen.append(seen.length() == 0 ? "" : ", ").append(n).append(' ').append(switch (kind) {
+                    case TIDY -> "chests";
+                    case WIPE -> "tables";
+                    case WATER -> "plants";
+                    case READ -> "shelves";
+                    case LOOK -> "windows";
+                    case COOK -> "stoves";
+                    default -> kind.name().toLowerCase(java.util.Locale.ROOT);
+                });
+            }
+        }
+        out.add(name + " at home (" + house.radius() + " blocks round): " + (seen.length() == 0 ? "found nothing to look after" : seen));
+        List<BlockPos> chests = HomeKitchen.chests(level, found);
+        ServerPlayer partner = EtoBrain.player(level, EtoBrain.spouse(npc));
+        boolean ghoul = HomeKitchen.ghoulSpouse(npc, partner);
+        HomeKitchen.Plan plan = chests.isEmpty() ? HomeKitchen.Plan.NONE : HomeKitchen.plan(level, found, chests, ghoul,
+            com.hex.kagune.control.family.Kitchen.MEAL - com.hex.kagune.control.family.Kitchen.portions(HomeKitchen.meal(npc)));
+        out.add("Can do now: " + (plan.cookAt() != null ? (ghoul ? "set aside raw cuts for you" : "cook") + ", " : "")
+            + (plan.smeltAt() != null ? "smelt, " : "") + HomeKitchen.ripe(level, found, 64).size() + " ripe crops to pick"
+            + (plan.noFuel() ? "; out of fuel (coal, charcoal, wood in a chest)" : "") + (chests.isEmpty() ? "; no plain chest or barrel to use" : ""));
+        Job job = mind.chore;
+        out.add("Doing: " + (job == null ? (HomeLife.night(level.m_46468_(), false) ? "resting (night)" : "nothing right now (next chore in "
+            + Math.max(0L, (mind.nextChore - now) / 20L) + " s)") : job.kind.name().toLowerCase(java.util.Locale.ROOT) + ", step " + (job.index + 1) + " of "
+            + job.round.size()));
+        List<Chores.Pile> meal = HomeKitchen.meal(npc);
+        if (!meal.isEmpty()) {
+            StringBuilder m = new StringBuilder();
+            for (Chores.Pile pile : meal) {
+                m.append(m.length() == 0 ? "" : ", ").append(pile.count()).append(' ').append(com.hex.kagune.control.family.Kitchen.name(pile.key()));
+            }
+            out.add("Keeping for you: " + m + " (handed over when you come home)");
+        }
+        return out;
     }
 
     /** True if a chore has it now (vanilla's strolling waits meanwhile). */
@@ -231,9 +310,56 @@ public final class HomeChores {
         if (level.m_46471_()) {
             counts[Chores.Kind.WATER.ordinal()] = 0; // the rain waters the garden
         }
+        // 1.3.31: real help: what the chests hold to cook or smelt, and the ripe crops.
+        ServerPlayer partner = EtoBrain.player(level, EtoBrain.spouse(npc));
+        boolean ghoul = HomeKitchen.ghoulSpouse(npc, partner);
+        List<BlockPos> chests = HomeKitchen.chests(level, found);
+        int mealRoom = com.hex.kagune.control.family.Kitchen.MEAL - com.hex.kagune.control.family.Kitchen.portions(HomeKitchen.meal(npc));
+        HomeKitchen.Plan plan = chests.isEmpty() ? HomeKitchen.Plan.NONE : HomeKitchen.plan(level, found, chests, ghoul, mealRoom);
+        List<BlockPos> ripe = chests.isEmpty() ? List.of() : HomeKitchen.ripe(level, found, 4);
+        counts[Chores.Kind.COOK.ordinal()] = plan.cookAt() != null ? 1 : 0;
+        counts[Chores.Kind.SMELT.ordinal()] = plan.smeltAt() != null ? 1 : 0;
+        counts[Chores.Kind.HARVEST.ordinal()] = ripe.size();
+        if (plan.noFuel() && partner != null && now - mind.noFuelSaid > 24000L && SceneServer.sees(npc, partner, 12.0)) {
+            mind.noFuelSaid = now;
+            EtoBrain.say(npc, partner, com.hex.kagune.control.family.Kitchen.noFuel(npc.persona().key(), npc.m_217043_().m_188503_(1000)));
+        }
         Chores.Kind kind = Chores.pick(counts, mind.lastChore, !items.isEmpty(), npc.m_217043_().m_188500_());
         if (kind == null) {
             return null;
+        }
+        if (kind == Chores.Kind.COOK || kind == Chores.Kind.SMELT) {
+            // Fetched from the chest, then done at the stove.
+            boolean cook = kind == Chores.Kind.COOK;
+            BlockPos from = cook ? plan.cookChest() : plan.smeltChest();
+            BlockPos at = cook ? plan.cookAt() : plan.smeltAt();
+            List<BlockPos> steps = new ArrayList<>(from.equals(at) ? List.of(at) : List.of(from, at));
+            Chores.Kind atKind = kind(level.m_8055_(at).m_60734_());
+            List<Chores.Kind> expects = steps.size() == 1 ? List.of(Chores.Kind.TIDY) : List.of(Chores.Kind.TIDY, atKind);
+            List<EtoGesture> doings = steps.size() == 1 ? List.of(cook ? EtoGesture.COOK : EtoGesture.TIDY)
+                : List.of(EtoGesture.TIDY, cook ? EtoGesture.COOK : EtoGesture.TIDY);
+            Job job = new Job(kind, steps, expects, doings, now);
+            job.chests = chests;
+            job.ghoul = ghoul;
+            return job;
+        }
+        if (kind == Chores.Kind.HARVEST) {
+            List<BlockPos> steps = new ArrayList<>(ripe);
+            List<Chores.Kind> expects = new ArrayList<>();
+            List<EtoGesture> doings = new ArrayList<>();
+            for (int i = 0; i < steps.size(); i++) {
+                expects.add(Chores.Kind.WATER);
+                doings.add(EtoGesture.TIDY);
+            }
+            BlockPos box = HomeKitchen.nearest(chests, steps.get(steps.size() - 1));
+            if (box != null) {
+                steps.add(box);
+                expects.add(Chores.Kind.TIDY);
+                doings.add(EtoGesture.TIDY);
+            }
+            Job job = new Job(kind, steps, expects, doings, now);
+            job.chests = chests;
+            return job;
         }
         List<BlockPos> round = new ArrayList<>();
         if (kind == Chores.Kind.SWEEP) {
@@ -300,7 +426,10 @@ public final class HomeChores {
         job.items = kind == Chores.Kind.SWEEP && !items.isEmpty();
         if (kind == Chores.Kind.SWEEP && !items.isEmpty() && ordered.size() > 1 && kind(level.m_8055_(ordered.get(ordered.size() - 1)).m_60734_()) == Chores.Kind.TIDY) {
             job.box = ordered.size() - 1;
+            job.expects.set(job.box, Chores.Kind.TIDY);
+            job.doings.set(job.box, EtoGesture.TIDY);
         }
+        job.chests = chests;
         return job;
     }
 
@@ -411,9 +540,9 @@ public final class HomeChores {
         return dx * dx + dy * dy + dz * dz;
     }
 
-    /** True if {@code at} is still something this chore is for (a swept spot always is). */
+    /** True if {@code at} is still what this step of the chore is for (a spot of floor always is). */
     private static boolean still(ServerLevel level, BlockPos at, Chores.Kind kind) {
-        if (kind == Chores.Kind.SWEEP) {
+        if (kind == null || kind == Chores.Kind.SWEEP) {
             return true;
         }
         if (!level.m_46805_(at)) {
@@ -506,7 +635,7 @@ public final class HomeChores {
     private static void work(EtoNpc npc, EtoBrain.Mind mind, Job job, ServerLevel level, BlockPos at, long now) {
         npc.m_21573_().m_26573_();
         face(npc, at);
-        job.doing = job.index == job.box ? EtoGesture.TIDY : job.kind.gesture;
+        job.doing = job.index < job.doings.size() ? job.doings.get(job.index) : job.kind.gesture;
         EtoBrain.gesture(mind, job.doing, now);
         job.workSince = now;
         job.worked++;
@@ -552,6 +681,10 @@ public final class HomeChores {
                 level.m_8767_(ParticleTypes.f_123769_, x, y + 0.7, z, 8, 0.35, 0.1, 0.35, 0.05);
                 level.m_8767_(ParticleTypes.f_123804_, x, y + 1.2, z, 3, 0.25, 0.05, 0.25, 0.0);
             }
+            case COOK -> {
+                level.m_8767_(ParticleTypes.f_123762_, x, y + 1.15, z, 2, 0.15, 0.05, 0.15, 0.01);
+                level.m_8767_(ParticleTypes.f_175834_, x, y + 0.45, z, 1, 0.2, 0.05, 0.2, 0.0);
+            }
             default -> {
             }
         }
@@ -584,6 +717,33 @@ public final class HomeChores {
             case WIPE -> {
                 level.m_8767_(ParticleTypes.f_123748_, x, y + 1.05, z, 6, 0.3, 0.05, 0.3, 0.0);
                 return false;
+            }
+            case COOK -> {
+                // 1.3.31: the chest it fetched from first, then the stove (or a table, a ghoul's meal): it cooks there.
+                if (!job.last()) {
+                    return false;
+                }
+                boolean made = HomeKitchen.cook(npc, level, job.chests, at, job.ghoul);
+                if (made) {
+                    ServerPlayer partner = EtoBrain.player(level, EtoBrain.spouse(npc));
+                    if (partner != null && SceneServer.sees(npc, partner, 12.0)) {
+                        String served = HomeKitchen.serve(npc, partner, level); // they're here: handed over warm
+                        if (served != null) {
+                            EtoBrain.say(npc, partner, served);
+                        }
+                    }
+                }
+                return made;
+            }
+            case SMELT -> {
+                return job.last() && HomeKitchen.smelt(npc, level, job.chests, at);
+            }
+            case HARVEST -> {
+                if (job.expect() == Chores.Kind.TIDY) {
+                    sort(level, at); // the chest the crops went into, put in order while it is open
+                    return false;
+                }
+                return HomeKitchen.harvest(npc, level, job.chests, at, npc.m_217043_().m_188500_(), npc.m_217043_().m_188500_());
             }
             case WATER -> {
                 boolean grew = false;

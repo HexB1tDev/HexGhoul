@@ -204,8 +204,13 @@ public final class HomeLife {
             }
             if (body instanceof EtoNpc npc && npc.mind != null) {
                 EtoBrain.Mind mind = npc.mind;
+                Households.Home house = Households.forCompanion(level, npc);
+                // 1.3.31: something hostile by the house (or after one of hers) gets her up to deal with it.
+                net.minecraft.world.entity.LivingEntity threat = house != null && now % 20L == Math.floorMod(npc.m_19879_(), 20)
+                    ? EtoBrain.guard(npc, mind, level, house) : null;
+                boolean danger = threat != null && threat.m_20280_(npc) < 14.0 * 14.0;
                 boolean up = !night(day, false) || now - mind.hurtAt < 3L || mind.talking != null || !bedAt(level, mind.bed)
-                    || Households.forCompanion(level, npc) == null;
+                    || house == null || danger;
                 if (up) {
                     wake(npc);
                     mind.bed = null;

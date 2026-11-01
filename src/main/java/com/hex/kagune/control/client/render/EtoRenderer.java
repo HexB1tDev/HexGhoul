@@ -290,7 +290,7 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
         }
         // 1.3.30: what she says, in a bubble over all of that (never the chat).
         if (!npc.m_20145_()) {
-            bubble(npc, com.hex.kagune.control.client.NpcSpeech.lines(npc.m_19879_()), tagged ? 0.56 : 0.3, pose, buffers, light);
+            bubble(npc, com.hex.kagune.control.client.NpcSpeech.lines(npc), tagged ? 0.56 : 0.3, pose, buffers, light);
         }
     }
 

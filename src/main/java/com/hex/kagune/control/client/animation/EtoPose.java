@@ -713,6 +713,18 @@ public final class EtoPose {
                 p.headX = 0.42F;
                 p.headY = 0.12F * tip;
             }
+            case COOK -> {
+                // 1.3.31: at the stove: the bowl held low in the left hand, the right stirring round and round, her head down to the fire.
+                float round = (float)(t * 0.35);
+                p.lean = 0.25F;
+                p.headX = 0.45F;
+                p.rightArmX = -1.05F + 0.18F * (float)Math.sin(round);
+                p.rightArmY = -0.25F + 0.2F * (float)Math.cos(round);
+                p.rightArmZ = 0.08F;
+                p.leftArmX = -0.85F;
+                p.leftArmY = 0.35F;
+                p.leftArmZ = -0.05F;
+            }
             case TIDY -> {
                 // 1.3.29: bent over a chest, one hand then the other putting things where they go.
                 float a = (float)Math.sin(t * 0.22);

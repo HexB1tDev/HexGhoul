@@ -236,9 +236,20 @@ public final class SceneServer {
         return approach(npc, friend, now);
     }
 
+    /** How near (blocks) and in sight someone must be for anyone to come up to them unasked (1.3.30: never through walls). */
+    static final double SEES = 12.0;
+
+    /**
+     * 1.3.30 (the owner: they greeted and talked to them through walls, from outside the house): true if {@code body} can see
+     * {@code player}, near enough to have noticed them.
+     */
+    static boolean sees(net.minecraft.world.entity.LivingEntity body, ServerPlayer player, double near) {
+        return body.m_9236_() == player.m_9236_() && body.m_20280_(player) <= near * near && body.m_142582_(player);
+    }
+
     /** She comes up to {@code player} with something to say (a scene that fits them both now). False if nothing fits. */
     static boolean approach(EtoNpc npc, ServerPlayer player, long now) {
-        if (npc.mind == null || !free(player, now)) {
+        if (npc.mind == null || !free(player, now) || !sees(npc, player, SEES)) {
             return false;
         }
         EtoTalk.Context c = EtoServer.context(player, npc);
@@ -524,7 +535,7 @@ public final class SceneServer {
 
     /** The child comes up to its parent with something. */
     static boolean approach(ChildNpc npc, Children.Child child, ServerPlayer parent, long now) {
-        if (npc.mind == null || !free(parent, now) || npc.m_5803_()) {
+        if (npc.mind == null || !free(parent, now) || npc.m_5803_() || !sees(npc, parent, SEES)) {
             return false;
         }
         SceneContext sc = context(parent, npc, child, now);
@@ -683,7 +694,7 @@ public final class SceneServer {
     /** The ally comes up to its player with something. */
     static boolean approach(com.hex.kagune.control.npc.GhoulNpc npc, ServerPlayer player, long now) {
         com.hex.kagune.control.npc.NpcIdentity who = npc.identity();
-        if (npc.mind == null || who == null || !free(player, now)) {
+        if (npc.mind == null || who == null || !free(player, now) || !sees(npc, player, SEES)) {
             return false;
         }
         SceneContext sc = context(player, npc, now);

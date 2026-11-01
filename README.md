@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.31 (HexGhoul): a spouse who actually helps at home: cooks (and keeps you a meal), smelts, harvests and replants, guards the house and the kids; nobody greets or talks to you through walls; /kagune home (testing)
+
+See `.github/release-notes-1.3.31.md`.
+
 ## 1.3.30 (HexGhoul): NPCs talk in speech bubbles over their heads (not the chat); the spouse keeps house instead of following you about; Touka leans in for a kiss; shut eyes show a line; a parent holds a baby the whole time (testing)
 
 See `.github/release-notes-1.3.30.md`.

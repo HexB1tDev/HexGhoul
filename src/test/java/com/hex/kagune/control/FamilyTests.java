@@ -41,6 +41,7 @@ public final class FamilyTests {
         home();
         chores();
         speech();
+        kitchen();
         might();
         hands();
         spin();
@@ -417,6 +418,88 @@ public final class FamilyTests {
     }
 
     /** 1.3.21: a family's home: when each goes to bed, and whose bed is whose (the double bed the spouse's, single beds the children's). */
+    /** 1.3.31: the spouse's real help: cooking, a ghoul's raw meal, smelting with fuel, ripe crops, the meal kept for its spouse. */
+    static void kitchen() {
+        java.util.function.Function<String, String> block = id -> "Block{minecraft:" + id + "}";
+        check(com.hex.kagune.control.family.Kitchen.cooked("minecraft:beef").equals("minecraft:cooked_beef")
+            && com.hex.kagune.control.family.Kitchen.cooked("minecraft:potato").equals("minecraft:baked_potato")
+            && com.hex.kagune.control.family.Kitchen.cooked("minecraft:cooked_beef") == null && com.hex.kagune.control.family.Kitchen.cooked("minecraft:stone") == null
+            && com.hex.kagune.control.family.Kitchen.cooked(null) == null, "raw food cooks; cooked food and stone don't");
+        for (String raw : new String[] {"beef", "porkchop", "chicken", "mutton", "rabbit", "cod", "salmon"}) {
+            String cooked = com.hex.kagune.control.family.Kitchen.cooked("minecraft:" + raw);
+            check(cooked != null && FoodClassifier.classify(cooked.substring(10), true) == FoodClassifier.Diet.HUMAN_FOOD,
+                raw + " cooks into human food (a ghoul can't eat it: its meal is kept raw)");
+            check(com.hex.kagune.control.family.Kitchen.flesh("minecraft:" + raw) && !com.hex.kagune.control.family.Kitchen.flesh(cooked), raw + " is a ghoul's raw cut, cooked it isn't");
+        }
+        check(com.hex.kagune.control.family.Kitchen.smelted("minecraft:raw_iron").equals("minecraft:iron_ingot")
+            && com.hex.kagune.control.family.Kitchen.smelted("minecraft:sand").equals("minecraft:glass")
+            && com.hex.kagune.control.family.Kitchen.smelted("minecraft:oak_log").equals("minecraft:charcoal")
+            && com.hex.kagune.control.family.Kitchen.smelted("minecraft:stripped_oak_log") == null
+            && com.hex.kagune.control.family.Kitchen.smelted("minecraft:crimson_stem") == null
+            && com.hex.kagune.control.family.Kitchen.smelted("minecraft:iron_ingot") == null, "ores, sand, logs smelt; ingots don't");
+        check(com.hex.kagune.control.family.Kitchen.fuel("minecraft:coal") == 16 && com.hex.kagune.control.family.Kitchen.fuel("minecraft:charcoal") == 16
+            && com.hex.kagune.control.family.Kitchen.fuel("minecraft:oak_planks") == 3 && com.hex.kagune.control.family.Kitchen.fuel("minecraft:stick") == 1
+            && com.hex.kagune.control.family.Kitchen.fuel("minecraft:stone") == 0 && com.hex.kagune.control.family.Kitchen.fuel("minecraft:coal") / com.hex.kagune.control.family.Kitchen.PER_ITEM == 8,
+            "a coal cooks eight, as a furnace's does; stone doesn't burn");
+        check(Chores.of(block.apply("furnace")) == Chores.Kind.COOK && Chores.of(block.apply("smoker")) == Chores.Kind.COOK
+            && Chores.of(block.apply("campfire")) == Chores.Kind.COOK && Chores.of(block.apply("blast_furnace")) == Chores.Kind.COOK, "the stoves are found");
+        check(com.hex.kagune.control.family.Kitchen.station(block.apply("furnace"), false) && com.hex.kagune.control.family.Kitchen.station(block.apply("furnace"), true)
+            && com.hex.kagune.control.family.Kitchen.station(block.apply("smoker"), false) && !com.hex.kagune.control.family.Kitchen.station(block.apply("smoker"), true)
+            && !com.hex.kagune.control.family.Kitchen.station(block.apply("blast_furnace"), false) && com.hex.kagune.control.family.Kitchen.station(block.apply("blast_furnace"), true)
+            && com.hex.kagune.control.family.Kitchen.free(block.apply("campfire")) && !com.hex.kagune.control.family.Kitchen.free(block.apply("furnace")),
+            "a furnace cooks and smelts, a smoker cooks, a blast furnace smelts; a campfire needs no fuel");
+        check(com.hex.kagune.control.family.Kitchen.ripe("Block{minecraft:wheat}[age=7]") && !com.hex.kagune.control.family.Kitchen.ripe("Block{minecraft:wheat}[age=6]")
+            && com.hex.kagune.control.family.Kitchen.ripe("Block{minecraft:beetroots}[age=3]") && !com.hex.kagune.control.family.Kitchen.ripe("Block{minecraft:beetroots}[age=2]")
+            && com.hex.kagune.control.family.Kitchen.ripe("Block{minecraft:potatoes}[age=7]") && !com.hex.kagune.control.family.Kitchen.ripe("Block{minecraft:oak_sapling}[stage=1]")
+            && !com.hex.kagune.control.family.Kitchen.ripe("Block{minecraft:poppy}") && !com.hex.kagune.control.family.Kitchen.ripe(null), "only ripe crops are picked");
+        for (String crop : new String[] {"wheat", "carrots", "potatoes", "beetroots"}) {
+            for (double roll = 0.0; roll < 1.0; roll += 0.1) {
+                List<Chores.Pile> gives = com.hex.kagune.control.family.Kitchen.harvest(block.apply(crop), roll, 0.5);
+                int total = gives.stream().mapToInt(Chores.Pile::count).sum();
+                check(!gives.isEmpty() && total >= 1 && total <= 4, crop + " gives a little (" + total + ")");
+            }
+        }
+        check(com.hex.kagune.control.family.Kitchen.harvest(block.apply("poppy"), 0.5, 0.5).isEmpty(), "a flower is never picked");
+        List<Chores.Pile> meal = new ArrayList<>();
+        int[] took = new int[1];
+        meal = com.hex.kagune.control.family.Kitchen.add(meal, "minecraft:cooked_beef", 4, took);
+        check(took[0] == 4 && com.hex.kagune.control.family.Kitchen.portions(meal) == 4, "a meal kept");
+        meal = com.hex.kagune.control.family.Kitchen.add(meal, "minecraft:baked_potato", 9, took);
+        check(took[0] == com.hex.kagune.control.family.Kitchen.MEAL - 4 && com.hex.kagune.control.family.Kitchen.portions(meal) == com.hex.kagune.control.family.Kitchen.MEAL,
+            "never more than a meal's worth kept (the rest is put away)");
+        meal = com.hex.kagune.control.family.Kitchen.add(meal, "minecraft:cooked_beef", 3, took);
+        check(took[0] == 0, "a full meal takes no more");
+        List<Chores.Pile> back = com.hex.kagune.control.family.Kitchen.load(com.hex.kagune.control.family.Kitchen.save(meal));
+        check(back.equals(meal), "the meal survives its saved data");
+        check(com.hex.kagune.control.family.Kitchen.load("bad;minecraft:x*;*3;minecraft:cooked_cod*2").size() == 1
+            && com.hex.kagune.control.family.Kitchen.load(null).isEmpty() && com.hex.kagune.control.family.Kitchen.load("").isEmpty(), "a bad part is left out");
+        check(com.hex.kagune.control.family.Kitchen.name("minecraft:cooked_beef").equals("cooked beef"), "named as it is said");
+        String[] banned = {"kaneki", "ayato", "furuta", "takatsuki", "aogiri", "yoshimura"};
+        for (String key : new String[] {"eto", "touka", "ken"}) {
+            for (int seed = 0; seed < 4; seed++) {
+                for (String line : new String[] {com.hex.kagune.control.family.Kitchen.served(key, true, "raw beef", seed),
+                    com.hex.kagune.control.family.Kitchen.served(key, false, "cooked beef", seed), com.hex.kagune.control.family.Kitchen.noFuel(key, seed)}) {
+                    check(line != null && !line.isBlank(), key + " has words for the kitchen");
+                    for (String name : banned) {
+                        check(!line.toLowerCase(java.util.Locale.ROOT).contains(name), key + "'s kitchen words never name " + name);
+                    }
+                }
+                check(com.hex.kagune.control.family.Kitchen.served(key, true, "raw beef", seed).toLowerCase(java.util.Locale.ROOT).contains("raw"),
+                    key + " knows a ghoul's meal is raw");
+            }
+        }
+        int[] counts = new int[Chores.Kind.values().length];
+        counts[Chores.Kind.HARVEST.ordinal()] = 3;
+        counts[Chores.Kind.TIDY.ordinal()] = 3;
+        int harvests = 0;
+        for (int i = 0; i < 100; i++) {
+            if (Chores.pick(counts, null, false, i / 100.0) == Chores.Kind.HARVEST) {
+                harvests++;
+            }
+        }
+        check(harvests > 50, "ripe crops come first more often than not (" + harvests + ")");
+    }
+
     /** 1.3.30: what NPCs say goes into a bubble over their heads (never the chat): wrapped, timed, actions told apart. */
     static void speech() {
         String[] samples = {"...That didn't happen. Don't look at me.", "*picks Mei up and holds them close, rocking them*",
