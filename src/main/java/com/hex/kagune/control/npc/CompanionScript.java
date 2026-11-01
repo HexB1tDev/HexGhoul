@@ -79,11 +79,12 @@ abstract class CompanionScript implements Script {
         return new EtoTalk.Page(line, out);
     }
 
-    /** A lesson, unless there is nothing left it could ever teach them. */
+    /**
+     * A lesson. 1.3.29: always offered (everything taught, or known some other way, they say so: "You already know..."), so asking for
+     * what they know already is answered, never hidden.
+     */
     private void lesson(EtoTalk.Context c, List<EtoTalk.Option> out) {
-        if (c.teaching().refusal() != Teaching.Refusal.ALL_TAUGHT || c.teaching().next() != null) {
-            out.add(new EtoTalk.Option(NpcTalk.Choice.LESSON, this.lessonLabel(c), ""));
-        }
+        out.add(new EtoTalk.Option(NpcTalk.Choice.LESSON, this.lessonLabel(c), ""));
     }
 
     private List<EtoTalk.Option> giftOptions(EtoTalk.Context c) {

@@ -64,7 +64,6 @@ public final class QuestServer {
     private static final float BOSS_HEALTH = 150.0F;
     /** Dusk and dawn, in the day's ticks. */
     private static final long DUSK = 12000L;
-    private static final long DUSK_END = 13000L;
     private static final long DAWN = 23500L;
     private static final long NOTICE_TICKS = 40L;
 
@@ -454,18 +453,37 @@ public final class QuestServer {
             player.m_5661_(Component.m_237110_("message.hexkagune.quest.hunt_over", gone.title()), false);
             write(player, cached);
         }
+        // 1.3.29: no hunt comes by itself any more (the owner: no quest given at random): a ghoul asked at night gives one (huntable).
+    }
+
+    /** 1.3.29: true if a ghoul asked now would give {@code player} a hunt: night, a path chosen, room for one, none asked for yet tonight. */
+    static boolean huntable(ServerPlayer player) {
+        if (!KaguneProfile.isUnlocked(player) || !PathServer.path(player).chosen()) {
+            return false;
+        }
+        Cached cached = cached(player);
+        long now = player.m_9236_().m_46467_();
         long day = Math.floorMod(player.m_9236_().m_46468_(), 24000L);
-        if (day < DUSK || day >= DUSK_END || now < cached.log.nextHuntAt() || cached.log.hunts().size() >= Hunts.MAX_ON
-            || !PathServer.path(player).chosen()) {
-            return;
+        return day >= DUSK && day < DAWN && now >= cached.log.nextHuntAt() && cached.log.hunts().size() < Hunts.MAX_ON;
+    }
+
+    /** 1.3.29: asked of a ghoul at night: tonight's hunt for {@code player} (till dawn), or null if there is none to give. */
+    static Quest askHunt(ServerPlayer player) {
+        if (!huntable(player)) {
+            return null;
         }
+        Cached cached = cached(player);
+        long now = player.m_9236_().m_46467_();
+        long day = Math.floorMod(player.m_9236_().m_46468_(), 24000L);
         Random random = new Random(now * 31L + player.m_20148_().getLeastSignificantBits());
-        // Whether one comes or not, the next chance is a night or two away: hunts never come on a timetable.
-        cached.log.nextHuntAt(now + 24000L - (day - DUSK) + (random.nextBoolean() ? 0L : 24000L));
-        if (random.nextDouble() < Hunts.OFFER_CHANCE) {
-            offerHunt(player, cached, random, now);
-        }
+        offerHunt(player, cached, random, now);
+        // One asked for a night: the next can be had from the next dusk.
+        long untilDusk = day >= DUSK ? 24000L - day + DUSK : DUSK - day;
+        cached.log.nextHuntAt(now + untilDusk);
         write(player, cached);
+        cached.dirty = true;
+        List<QuestLog.Hunt> on = cached.log.hunts();
+        return on.isEmpty() ? null : on.get(on.size() - 1).quest();
     }
 
     /** A hunt for tonight: on until dawn. */
@@ -488,7 +506,8 @@ public final class QuestServer {
         int mastery = KaguneProfile.mastery(player);
         Set<String> open = new HashSet<>();
         for (Quest quest : QuestBook.all()) {
-            if (cached.log.state(quest, path, mastery) == QuestLog.State.OPEN) {
+            // 1.3.29: only what has been given and is listed (a feat counts by itself, unannounced: it shows once it is done).
+            if (cached.log.state(quest, path, mastery) == QuestLog.State.OPEN && cached.log.shown(quest, QuestLog.State.OPEN)) {
                 open.add(quest.id());
             }
         }
@@ -544,7 +563,12 @@ public final class QuestServer {
         if (reward.ghoulMeat() > 0) {
             pays.append(pays.length() > 0 ? ", " : "").append(reward.ghoulMeat()).append(" Ghoul Meat");
         }
-        player.m_5661_(Component.m_237110_("message.hexkagune.quest.done", quest.title(), pays.length() == 0 ? "-" : pays.toString()), false);
+        if (QuestBook.giver(quest) == QuestBook.Giver.FEAT) {
+            // 1.3.29: a feat: never handed out, only told once it is done.
+            player.m_5661_(Component.m_237113_("\u00a76\u2726 Feat: \u00a7f" + quest.title() + " \u00a77(" + (pays.length() == 0 ? "-" : pays.toString()) + ")"), false);
+        } else {
+            player.m_5661_(Component.m_237110_("message.hexkagune.quest.done", quest.title(), pays.length() == 0 ? "-" : pays.toString()), false);
+        }
         for (Gate gate : reward.gates()) {
             player.m_5661_(Component.m_237110_("message.hexkagune.quest.unlocked", gate.displayName()), false);
         }
@@ -569,7 +593,7 @@ public final class QuestServer {
     }
 
     static void sync(ServerPlayer player) {
-        ControlNetwork.sendTo(player, new S2CQuests(log(player).save()));
+        ControlNetwork.sendTo(player, new S2CQuests(log(player).save(), com.hex.kagune.control.npc.RomanceCard.save(RomanceServer.cards(player))));
     }
 
     // ------------------------------------------------------------------ commands

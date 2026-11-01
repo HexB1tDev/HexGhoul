@@ -103,6 +103,10 @@ public final class QuestLog {
         if (this.learned(quest)) {
             return State.DONE;
         }
+        // 1.3.29: a quest nobody has given them yet waits (no quest comes by itself unless the path needs it: QuestBook.giver).
+        if (!this.given(quest)) {
+            return State.LOCKED;
+        }
         // 1.3.0: one of Eto's lessons waits for her to teach it.
         int lesson = com.hex.kagune.control.npc.EtoRules.lessonFlag(quest.id());
         if (lesson != 0 && !this.bond(com.hex.kagune.control.npc.EtoRules.KEY).has(lesson)) {
@@ -114,6 +118,61 @@ public final class QuestLog {
             }
         }
         return State.OPEN;
+    }
+
+    /**
+     * 1.3.29: true if {@code quest} has been given to them ({@link QuestBook#giver}): the path's own, a feat, a favour or a hunt always;
+     * Eto's lesson once she has taught it; a teacher's practice once its lesson is taught (its gate open); the ghouls' once one has been
+     * talked to; a retired one never. Begun or ended, a quest is always given (no save loses its work).
+     */
+    public boolean given(Quest quest) {
+        if (quest == null) {
+            return false;
+        }
+        if (this.ended.containsKey(quest.id()) || this.started(quest)) {
+            return true;
+        }
+        return switch (QuestBook.giver(quest)) {
+            case PATH, FEAT, ASKED -> true;
+            case ETO -> {
+                int flag = com.hex.kagune.control.npc.EtoRules.lessonFlag(quest.id());
+                yield flag != 0 && this.bond(com.hex.kagune.control.npc.EtoRules.KEY).has(flag);
+            }
+            case TEACHER -> {
+                com.hex.kagune.control.npc.Teaching.Lesson lesson = QuestBook.lesson(quest);
+                yield lesson != null && this.gates.contains(lesson.gate());
+            }
+            case GHOULS -> this.metGhoul();
+            case RETIRED -> false;
+        };
+    }
+
+    /** 1.3.29: true if {@code quest} ({@code state} now) is listed in the journal: given, and a feat only once it is done. */
+    public boolean shown(Quest quest, State state) {
+        return this.given(quest) && (QuestBook.giver(quest) != QuestBook.Giver.FEAT || state == State.DONE);
+    }
+
+    /** 1.3.29: true if anything of {@code quest}'s has been counted. */
+    boolean started(Quest quest) {
+        int[] values = this.progress.get(quest.id());
+        if (values != null) {
+            for (int value : values) {
+                if (value > 0) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /** 1.3.29: true once a ghoul of the night (not a companion) has been talked to. */
+    boolean metGhoul() {
+        for (Map.Entry<String, Bond> e : this.bonds.entrySet()) {
+            if (e.getValue().has(NpcBonds.MET) && !com.hex.kagune.control.npc.Persona.known(e.getKey())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** 1.3.2: true if {@code quest} opens gates and every one of them is open already. */

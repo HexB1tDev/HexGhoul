@@ -40,7 +40,13 @@ Everything since 1.3.28 is **compiled and unit tested, never tried in game**. Ne
 6. New gestures appended: `STEAL`, `WATER` (bucket in hand), `TIDY` (bent over a chest). Poses exist in `EtoPose` (WATER, TIDY for
    everyone). **Nothing uses WATER/TIDY yet** (see 7).
 
-## Not done (the owner's list, in their words; do these next)
+## Update: items 7, 8 and 9 are DONE (1.3.29 released on the branch)
+
+Chores and "Go home, please." (7), the quests rework, Romance tab, hunts on request and "you already know this" (8), release notes,
+README and `companions-handoff.md` (9) are written and pass the full build. Read the top section of `docs/handoff/companions-handoff.md`
+for where everything lives. Protocol is now **"65"**. The original list is kept below for the record.
+
+## Was not done (the owner's list, in their words)
 
 7. **Spouse home life** (task in progress, nothing written yet). The owner: at a declared home the spouse "just goes to the door and
    instantly returns" (that is vanilla `RandomStrollGoal` in `EtoNpc.m_8099_` inside the small home restriction set in `EtoBrain.tick`).

@@ -337,6 +337,16 @@ public final class EtoServer {
             return;
         }
         Kind after = talk.kind() == Kind.SWEET || talk.kind() == Kind.TALK ? talk.kind() : Kind.MAIN;
+        if (choice == NpcTalk.Choice.LESSON) {
+            // 1.3.29: asked for what they know already (a command, an old quest): "You already know...", and on to the next thing.
+            String known = alreadyKnown(player, npc, c.seed());
+            if (known != null) {
+                EtoTalk.Context fresh = context(player, npc);
+                EtoTalk.Reply reply = script.answer(fresh, choice);
+                carry(player, npc, fresh, choice, new EtoTalk.Reply(known + " " + reply.line(), reply.regard(), reply.effect(), reply.gesture()), after);
+                return;
+            }
+        }
         carry(player, npc, c, choice, script.answer(c, choice), after);
     }
 
@@ -774,6 +784,76 @@ public final class EtoServer {
             persona.female() != com.hex.kagune.control.Genders.female(player));
     }
 
+    /**
+     * 1.3.29: the lessons {@code npc} would teach {@code player} that they know already some other way (a command, an old quest): marked as
+     * told (Eto's as taught), and her words for it; null if there are none.
+     */
+    private static String alreadyKnown(ServerPlayer player, EtoNpc npc, int seed) {
+        List<String> names = knownLessons(player, npc, true);
+        return names.isEmpty() ? null : com.hex.kagune.control.npc.Teaching.alreadyKnown(npc.persona().key(), names, seed);
+    }
+
+    /** 1.3.29: the names of the lessons {@code npc} has for {@code player} that they know some other way ({@code mark}: and mark them told). */
+    private static List<String> knownLessons(ServerPlayer player, EtoNpc npc, boolean mark) {
+        List<String> names = new java.util.ArrayList<>();
+        if (!KaguneProfile.isUnlocked(player)) {
+            return names;
+        }
+        QuestLog log = QuestServer.log(player);
+        com.hex.kagune.control.KagunePath path = PathServer.path(player);
+        int mastery = KaguneProfile.mastery(player);
+        String key = npc.persona().key();
+        if (npc.persona() == com.hex.kagune.control.npc.Persona.ETO) {
+            QuestLog.Bond bond = log.bond(key);
+            QuestLog.Bond marked = bond;
+            for (EtoRules.Lesson lesson : EtoRules.Lesson.values()) {
+                Quest quest = QuestBook.get(lesson.quest);
+                boolean known = quest != null && log.state(quest, path, mastery) == QuestLog.State.DONE || lesson.gate != null && log.open(lesson.gate);
+                if (!bond.has(lesson.flag) && known) {
+                    names.add(quest != null ? quest.title() : lesson.name());
+                    marked = marked.with(lesson.flag, true);
+                }
+            }
+            if (mark && marked != bond) {
+                QuestServer.bond(player, key, marked);
+            }
+            return names;
+        }
+        NpcMemory memory = NpcMemoryServer.of(player);
+        long told = memory.get(key, NpcMemory.TAUGHT, 0L);
+        for (com.hex.kagune.control.npc.Teaching.Lesson lesson : com.hex.kagune.control.npc.Teaching.knownElsewhere(key, path, log::open, told)) {
+            names.add(lesson.name());
+            told |= com.hex.kagune.control.npc.Teaching.bit(lesson);
+        }
+        if (mark && !names.isEmpty()) {
+            NpcMemoryServer.set(player, key, NpcMemory.TAUGHT, told);
+        }
+        return names;
+    }
+
+    /** 1.3.29: Eto's first page offers her lesson when there is one they know already (she says so, then goes on). */
+    private static EtoTalk.Page withLesson(ServerPlayer player, EtoNpc npc, EtoTalk.Page page) {
+        if (npc.persona() != com.hex.kagune.control.npc.Persona.ETO || page.options().size() >= S2CNpcTalk.MOST) {
+            return page;
+        }
+        int leave = -1;
+        for (int i = 0; i < page.options().size(); i++) {
+            NpcTalk.Choice choice = page.options().get(i).choice();
+            if (choice == NpcTalk.Choice.LESSON || choice == NpcTalk.Choice.TRIAL) {
+                return page;
+            }
+            if (choice == NpcTalk.Choice.LEAVE) {
+                leave = i;
+            }
+        }
+        if (leave < 0 || knownLessons(player, npc, false).isEmpty()) {
+            return page;
+        }
+        List<EtoTalk.Option> out = new java.util.ArrayList<>(page.options());
+        out.add(Math.max(0, leave - 1), new EtoTalk.Option(NpcTalk.Choice.LESSON, "", ""));
+        return new EtoTalk.Page(page.line(), out);
+    }
+
     /** 1.3.29: where "Go home, please." sends her: the home she shares with her spouse ({@code shared}), or where she belongs. */
     record Going(net.minecraft.core.BlockPos at, boolean shared) {
     }
@@ -829,6 +909,7 @@ public final class EtoServer {
     private static void show(ServerPlayer player, EtoNpc npc, EtoTalk.Context context, EtoTalk.Page page, Kind kind) {
         if (kind == Kind.MAIN) {
             page = withHome(player, npc, page);
+            page = withLesson(player, npc, page);
         }
         List<EtoTalk.Option> options = page.options().size() > S2CNpcTalk.MOST ? page.options().subList(0, S2CNpcTalk.MOST) : page.options();
         TALKS.put(player.m_20148_(), new Talk(npc.m_19879_(), List.copyOf(options), kind));
@@ -859,6 +940,9 @@ public final class EtoServer {
             return;
         }
         QuestServer.grant(player, lesson.gate());
+        // 1.3.29: remembered as this teacher's (asked again, they never say it was known some other way).
+        long told = NpcMemoryServer.of(player).get(persona.key(), NpcMemory.TAUGHT, 0L);
+        NpcMemoryServer.set(player, persona.key(), NpcMemory.TAUGHT, told | com.hex.kagune.control.npc.Teaching.bit(lesson));
         ServerLevel level = player.m_284548_();
         UkakuFire.sound(level, player.m_20182_(), "entity.player.levelup", 0.8F, 0.8F);
         player.m_5661_(Component.m_237113_(persona.colour() + name + " taught you: \u00a7f" + lesson.name() + " \u00a77("

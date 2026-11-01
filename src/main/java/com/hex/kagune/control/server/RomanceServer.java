@@ -1,8 +1,15 @@
 package com.hex.kagune.control.server;
 
+import com.hex.kagune.control.npc.EtoRules;
+import com.hex.kagune.control.npc.NpcBonds;
 import com.hex.kagune.control.npc.NpcMemory;
+import com.hex.kagune.control.npc.Persona;
 import com.hex.kagune.control.npc.Romance;
+import com.hex.kagune.control.npc.RomanceCard;
+import com.hex.kagune.control.npc.UniqueNpc;
 import com.hex.kagune.control.quest.QuestLog;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -17,6 +24,31 @@ public final class RomanceServer {
     static final long JEALOUS_FOR = 24000L;
 
     private RomanceServer() {
+    }
+
+    /**
+     * 1.3.29: the journal's Romance tab: how {@code player} stands with each companion (met, stage, regard, errands, days together, the home,
+     * children, a child on the way), sent with their quest log.
+     */
+    public static List<RomanceCard> cards(ServerPlayer player) {
+        ServerLevel level = player.m_284548_();
+        long day = Math.floorDiv(level.m_46468_(), 24000L);
+        boolean woman = com.hex.kagune.control.Genders.female(player);
+        NpcMemory memory = NpcMemoryServer.of(player);
+        List<RomanceCard> out = new ArrayList<>();
+        for (Persona persona : Persona.ALL) {
+            String key = persona.key();
+            QuestLog.Bond bond = QuestServer.bond(player, key);
+            UniqueNpc unique = UniqueNpcs.get(level, key);
+            Romance.Stage stage = unique.stageOf(player.m_20148_());
+            String claimedBy = unique.claimedFrom(player.m_20148_()) ? unique.partnerName : null;
+            long since = memory.get(key, stage == Romance.Stage.MARRIED ? NpcMemory.WED : NpcMemory.SINCE, -1L);
+            com.hex.kagune.control.family.FamilyView family = EtoServer.family(level, player, memory, persona);
+            boolean home = stage == Romance.Stage.MARRIED && Households.of(level, player.m_20148_()) != null;
+            out.add(new RomanceCard(key, bond.has(NpcBonds.MET), stage, bond.regard(), persona.likes(woman), claimedBy, EtoRules.step(bond),
+                EtoRules.count(bond), stage.together() ? Romance.days(since, day) : 0L, family.children(), home, family.carrying() >= 0.0));
+        }
+        return out;
     }
 
     /** {@code player} was sweet on the NPC {@code key}: the others they are together with take it badly. */

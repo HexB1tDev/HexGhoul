@@ -109,20 +109,29 @@ public final class GhoulNpcTalk {
     private static void main(ServerPlayer player, GhoulNpc npc, NpcIdentity who, NpcTalk.Context context, String line) {
         List<NpcTalk.Choice> choices = new java.util.ArrayList<>(NpcTalk.choices(context));
         List<String> labels = new java.util.ArrayList<>();
-        List<String> keys = new java.util.ArrayList<>();
+        String[] keys = new String[NpcTalk.Choice.SAYS.length];
+        java.util.Arrays.fill(keys, "");
         for (int i = 0; i < choices.size(); i++) {
             labels.add("");
+        }
+        // 1.3.29: hunts come only when asked for (never at random at dusk): a ghoul who talks to them knows where the prey is tonight.
+        if (QuestServer.huntable(player) && !choices.contains(NpcTalk.Choice.SAY_7)) {
+            int at = Math.max(0, choices.indexOf(NpcTalk.Choice.LEAVE));
+            choices.add(at, NpcTalk.Choice.SAY_7);
+            labels.add(at, "Any prey out tonight?");
+            keys[6] = "hunt";
         }
         if (context.ally() && !SceneServer.allyTopics(player, npc, player.m_9236_().m_46467_()).isEmpty()) {
             int at = Math.max(0, choices.indexOf(NpcTalk.Choice.LEAVE));
             choices.add(at, NpcTalk.Choice.SAY_8);
             labels.add(at, "Let's talk.");
-            while (keys.size() < 7) {
-                keys.add("");
-            }
-            keys.add("topics");
+            keys[7] = "topics";
         }
-        send(player, npc, who, context, line, choices, labels, keys);
+        boolean any = false;
+        for (String key : keys) {
+            any |= !key.isEmpty();
+        }
+        send(player, npc, who, context, line, choices, labels, any ? java.util.Arrays.asList(keys) : List.of());
     }
 
     /** 1.3.29: a scene's page ({@code line}: what it says; null, the page's own), each answer keyed to it; a topic's has "back". */
@@ -197,6 +206,14 @@ public final class GhoulNpcTalk {
         }
         if (key.equals("back")) {
             main(player, npc, who, context, "...");
+            return;
+        }
+        if (key.equals("hunt")) {
+            // 1.3.29: tonight's hunt, asked for.
+            com.hex.kagune.control.quest.Quest hunt = QuestServer.askHunt(player);
+            String said = hunt == null ? "Nothing worth the trouble tonight. Ask me another night."
+                : "Tonight? " + hunt.title() + ". " + hunt.objectives().get(0).text() + ", " + hunt.objectives().get(0).count() + " of them. Before dawn. Don't get greedy.";
+            main(player, npc, who, context(player, npc, who), said);
             return;
         }
         if (key.startsWith("t:")) {

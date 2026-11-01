@@ -42,9 +42,9 @@ public final class QuestJournalView {
     /** Where a detail row's value starts after its label. */
     static final int LABEL_WIDTH = 90;
 
-    /** The tabs: the path's quests, any ghoul's, the hunts on, what is over. */
+    /** The tabs: the path's quests, any ghoul's, the hunts on, 1.3.29: the companions (romance), what is over. */
     public enum Tab {
-        PATH("YOUR PATH"), GHOUL("THE GHOUL'S WAY"), HUNTS("HUNTS"), DONE("DONE");
+        PATH("YOUR PATH"), GHOUL("THE GHOUL'S WAY"), HUNTS("HUNTS"), ROMANCE("ROMANCE"), DONE("DONE");
 
         final String label;
 
@@ -53,8 +53,15 @@ public final class QuestJournalView {
         }
     }
 
-    /** What the journal shows: whose it is, the log, the game time (a hunt's clock), the tab and the quest picked (null: the first). */
-    public record Model(KagunePath path, int mastery, QuestLog log, long time, Tab tab, String picked) {
+    /**
+     * What the journal shows: whose it is, the log, the game time (a hunt's clock), the tab and the quest picked (null: the first); 1.3.29:
+     * how they stand with each companion (the Romance tab; "romance:KEY" is picked there).
+     */
+    public record Model(KagunePath path, int mastery, QuestLog log, long time, Tab tab, String picked,
+                        List<com.hex.kagune.control.npc.RomanceCard> romance) {
+        public Model(KagunePath path, int mastery, QuestLog log, long time, Tab tab, String picked) {
+            this(path, mastery, log, time, tab, picked, List.of());
+        }
     }
 
     private QuestJournalView() {
@@ -69,11 +76,15 @@ public final class QuestJournalView {
                 continue;
             }
             QuestLog.State state = model.log().state(quest, model.path(), model.mastery());
+            if (!model.log().shown(quest, state)) {
+                continue; // 1.3.29: not given yet (a teacher's, the ghouls'), a feat not done, a retired one: not listed
+            }
             boolean over = state == QuestLog.State.DONE || state == QuestLog.State.CLOSED;
             boolean fits = switch (tab) {
                 case PATH -> !over && quest.line() == Quest.Line.PATH;
                 case GHOUL -> !over && (quest.line() == Quest.Line.GHOUL || quest.line() == Quest.Line.FAVOUR);
                 case HUNTS -> !over && quest.line() == Quest.Line.HUNT;
+                case ROMANCE -> false;
                 case DONE -> over;
             };
             if (fits) {
@@ -122,12 +133,13 @@ public final class QuestJournalView {
             sub.append("  /  ").append(anteiku >= pack ? "ANTEIKU'S SIDE" : "THE PACK'S SIDE");
         }
         c.centered(sub.toString(), centerX, top + 34, SUBTITLE);
-        c.centered("Mastery opens a quest; the quest opens the transformation. Some ways close others.", centerX, top + 51, 0xFF94505A);
+        c.centered("Your path's quests open with mastery; a teacher gives theirs when asked. Some ways close others.", centerX, top + 51, 0xFF94505A);
 
         // The tabs.
         int tabX = left + 24;
         for (Tab tab : Tab.values()) {
-            int count = (int)listed(model, tab).stream().filter(q -> tab == Tab.DONE || log.state(q, model.path(), model.mastery()) == QuestLog.State.OPEN).count();
+            int count = tab == Tab.ROMANCE ? (int)model.romance().stream().filter(card -> card.stage().together()).count()
+                : (int)listed(model, tab).stream().filter(q -> tab == Tab.DONE || log.state(q, model.path(), model.mastery()) == QuestLog.State.OPEN).count();
             String label = tab.label + (count > 0 ? "  " + count : "");
             int width = c.width(label) + 16;
             UkakuMenuView.Rect rect = new UkakuMenuView.Rect(tabX, top + 70, width, 16);
@@ -139,11 +151,16 @@ public final class QuestJournalView {
             tabX += width + 6;
         }
 
+        if (model.tab() == Tab.ROMANCE) {
+            romance(c, model, hits, mouseX, mouseY, left + 24, top + 96);
+            return hits;
+        }
         Quest picked = picked(model);
         list(c, model, hits, mouseX, mouseY, picked, left + 24, top + 96);
         if (picked == null) {
-            c.text(model.tab() == Tab.HUNTS ? "No hunt tonight. Hunts come at dusk, now and then, and end at dawn." : "Nothing here yet.", left + 360,
-                top + 100, MUTED, false);
+            c.text(model.tab() == Tab.HUNTS ? "No hunt on. Ask a ghoul at night if there's prey out; a hunt ends at dawn."
+                : model.tab() == Tab.GHOUL ? "Nothing given yet. Teachers give their lessons when asked; the ghouls of the night, when talked to."
+                : "Nothing here yet.", left + 360, top + 100, MUTED, false);
         } else {
             detail(c, model, picked, left + 360, top + 96, 545);
         }
@@ -197,6 +214,11 @@ public final class QuestJournalView {
         };
         c.text(line, x + width - c.width(line), y, MUTED, false);
         int rowY = y + 18;
+        String from = QuestBook.from(quest);
+        if (!from.isEmpty()) {
+            c.text(from, x, rowY, OPEN, false);
+            rowY += 14;
+        }
         for (String row : UkakuMenuView.wrap(c, quest.story(), width)) {
             c.text(row, x, rowY, 0xFFDCAEB2, false);
             rowY += 12;
@@ -271,6 +293,92 @@ public final class QuestJournalView {
         }
     }
 
+    /**
+     * 1.3.29: the Romance tab: each companion on the left (who, the stage), the one picked on the right: the stage, the regard, the errands,
+     * days together, the home, the children, and what to do next.
+     */
+    private static void romance(UiCanvas c, Model model, Map<String, UkakuMenuView.Rect> hits, double mouseX, double mouseY, int x, int y) {
+        List<com.hex.kagune.control.npc.RomanceCard> cards = model.romance();
+        if (cards.isEmpty()) {
+            c.text("Nothing known yet.", x + 336, y + 4, MUTED, false);
+            return;
+        }
+        com.hex.kagune.control.npc.RomanceCard picked = cards.get(0);
+        for (com.hex.kagune.control.npc.RomanceCard card : cards) {
+            if (("romance:" + card.key()).equals(model.picked())) {
+                picked = card;
+            }
+        }
+        int rowY = y;
+        for (com.hex.kagune.control.npc.RomanceCard card : cards) {
+            UkakuMenuView.Rect rect = new UkakuMenuView.Rect(x, rowY, 310, 28);
+            boolean hover = rect.contains(mouseX, mouseY);
+            c.fill(rect.x(), rect.y(), rect.x() + rect.width(), rect.y() + rect.height(), card == picked ? ROW_PICKED : hover ? ROW_HOVER : ROW);
+            c.text(card.persona().name(), x + 8, rowY + 4, card.met() ? VALUE : MUTED, false);
+            c.text(c.fit(card.stageText(), 220), x + 8, rowY + 16, card.stage().together() ? DONE : card.met() ? OPEN : FAINT, false);
+            if (card.met()) {
+                float share = card.regardShare();
+                int barX = x + 240;
+                int barY = rowY + 11;
+                c.batch(() -> {
+                    UkakuMenuView.capsule(c, barX, barY, 60, 3, BAR_BACK);
+                    UkakuMenuView.capsule(c, barX, barY, Math.max(3, Math.round(60 * share)), 3, card.regard() < 0 ? BAR : BAR_DONE);
+                });
+            }
+            hits.put("romance:" + card.key(), rect);
+            rowY += 31;
+        }
+        int dx = x + 336;
+        int width = 545;
+        int dy = y;
+        com.hex.kagune.control.npc.RomanceCard card = picked;
+        c.text(card.persona().name().toUpperCase(java.util.Locale.ROOT), dx, dy, HEADER, false);
+        String stage = card.stageText();
+        c.text(stage, dx + width - c.width(stage), dy, card.stage().together() ? DONE : MUTED, false);
+        dy += 20;
+        if (!card.met()) {
+            c.text(card.next(), dx, dy, VALUE, false);
+            return;
+        }
+        c.text("REGARD", dx, dy, HEADER, false);
+        String regard = card.regard() + " (" + com.hex.kagune.control.npc.NpcBonds.band(card.regard()).label() + ")";
+        c.text(regard, dx + LABEL_WIDTH, dy, VALUE, false);
+        int barY = dy + 12;
+        float share = card.regardShare();
+        int barX = dx;
+        c.batch(() -> {
+            UkakuMenuView.capsule(c, barX, barY, width, 3, BAR_BACK);
+            UkakuMenuView.capsule(c, barX, barY, Math.max(3, Math.round(width * share)), 3, card.regard() < 0 ? BAR : BAR_DONE);
+        });
+        dy += 24;
+        if (!card.stage().together() && card.likes()) {
+            c.text("ERRANDS", dx, dy, HEADER, false);
+            c.text(c.fit(card.errands(), width - LABEL_WIDTH), dx + LABEL_WIDTH, dy, VALUE, false);
+            dy += 16;
+        }
+        if (card.stage().together()) {
+            c.text("TOGETHER", dx, dy, HEADER, false);
+            c.text(card.days() + (card.days() == 1L ? " day" : " days") + (card.stage() == com.hex.kagune.control.npc.Romance.Stage.MARRIED ? " married" : " dating"),
+                dx + LABEL_WIDTH, dy, VALUE, false);
+            dy += 16;
+        }
+        if (card.stage() == com.hex.kagune.control.npc.Romance.Stage.MARRIED) {
+            c.text("HOME", dx, dy, HEADER, false);
+            c.text(card.home() ? "Set: " + card.persona().she() + " keeps house there by day" : "Not set yet", dx + LABEL_WIDTH, dy, card.home() ? DONE : MUTED, false);
+            dy += 16;
+            c.text("CHILDREN", dx, dy, HEADER, false);
+            c.text(card.children() + (card.expecting() ? ", one on the way" : ""), dx + LABEL_WIDTH, dy, VALUE, false);
+            dy += 16;
+        }
+        dy += 6;
+        c.text("NEXT", dx, dy, HEADER, false);
+        dy += 14;
+        for (String row : UkakuMenuView.wrap(c, card.next(), width)) {
+            c.text(row, dx, dy, 0xFFDCAEB2, false);
+            dy += 12;
+        }
+    }
+
     /** The path's gates still shut, and the quests that open each. */
     private static void gates(UiCanvas c, Model model, int x, int y, int width) {
         List<Gate> shut = new ArrayList<>();
@@ -290,7 +398,9 @@ public final class QuestJournalView {
                 c.text("...", x, rowY, FAINT, false);
                 break;
             }
-            String text = gate.displayName() + ": " + QuestBook.openersText(gate);
+            com.hex.kagune.control.npc.Teaching.Lesson lesson = com.hex.kagune.control.npc.Teaching.teaching(gate);
+            String text = lesson != null ? com.hex.kagune.control.npc.Teaching.gatedText(gate, com.hex.kagune.control.npc.Persona.of(lesson.teacher()).name())
+                : gate.displayName() + ": " + QuestBook.openersText(gate);
             c.text(c.fit(text, width), x, rowY, MUTED, false);
             rowY += 12;
         }

@@ -19,6 +19,36 @@ public final class QuestBook {
     public static final String PACK = "pack";
 
     private static final Map<String, Quest> QUESTS = new LinkedHashMap<>();
+    /** 1.3.29: the quests whose gate a companion now teaches, and the lesson each one follows (given once it is taught). */
+    private static final Map<String, com.hex.kagune.control.npc.Teaching.Lesson> TAUGHT_BY = new java.util.HashMap<>();
+    /** 1.3.29: the ghoul's own feats: counted by themselves, never handed out or listed: they show (and pay) once done. */
+    private static final java.util.Set<String> FEATS = java.util.Set.of("first_meal", "night_stalker", "the_brink", "rampage", "die_hard", "cannibal",
+        "ghoul_eater");
+    /** 1.3.29: the ghouls of the night's: given once a ghoul has been talked to. */
+    private static final java.util.Set<String> GHOULS = java.util.Set.of("among_our_own", "a_friend", "cold_blood", "errands", "side_by_side");
+    /** 1.3.29: Eto's lessons teach the same (and only she gives them): these never come by themselves again; a save's work on one is kept. */
+    private static final java.util.Set<String> RETIRED = java.util.Set.of("light_feet", "up_we_go", "witness_this");
+
+    /**
+     * 1.3.29: who gives a quest (the owner: no quest comes by itself unless the path needs it; a teacher's only from the teacher). A quest
+     * not yet given is locked and not listed ({@link QuestLog#given}).
+     */
+    public enum Giver {
+        /** The path's own way on: it opens with the mastery. */
+        PATH,
+        /** A feat: counted by itself, shown once done. */
+        FEAT,
+        /** Eto: one of her lessons, once she has taught it. */
+        ETO,
+        /** A companion who teaches its gate now ({@code Teaching}): practice, given once that lesson is taught. */
+        TEACHER,
+        /** The ghouls of the night: once one has been talked to. */
+        GHOULS,
+        /** A ghoul's favour, or tonight's hunt: given by whoever was asked. */
+        ASKED,
+        /** Taught by Eto now: never given again. */
+        RETIRED
+    }
 
     static {
         // ------------------------------------------------------------------ any ghoul: the ghoul's life, the eye-mode fight
@@ -78,20 +108,21 @@ public final class QuestBook {
                 Tags.ALLY)), Reward.mastery(50).meat(2)));
 
         // 1.3.0: Eto's lessons, a third way to the eye-mode fight's gates: each locked until she teaches it at the Library
-        // (QuestLog.state, EtoRules.Lesson), in order.
-        add(new Quest("eto_kick", Line.GHOUL, null, "Eto's Lesson: Light Feet",
+        // (QuestLog.state, EtoRules.Lesson), in order. 1.3.29: the only way now (the three above are retired: Giver.RETIRED), named as
+        // they were; the journal says they are hers.
+        add(new Quest("eto_kick", Line.GHOUL, null, "Light on Your Feet",
             "Strike, strike, flip away, then all your weight through one kick. She'll want to see it.", 0, null, null,
             List.of(of("Land blitz strikes", Signal.STRIKE, 40), of("Flip", Signal.FLIP, 12)), Reward.mastery(25).opens(Gate.EYES_KICK)));
-        add(new Quest("eto_soar", Line.GHOUL, null, "Eto's Lesson: Up We Go",
+        add(new Quest("eto_soar", Line.GHOUL, null, "Up We Go!",
             "The ground is for people who are tired. Kill them before you land.", 0, List.of("eto_kick"), null,
             List.of(of("Land Speed Kicks", Signal.KICK, 12), of("Kill in mid-air, eyes open", Signal.KILL, 5, Tags.EYES, Tags.AIRBORNE)),
             Reward.mastery(40).opens(Gate.EYES_SOAR)));
-        add(new Quest("eto_witness", Line.GHOUL, null, "Eto's Lesson: Witness This",
+        add(new Quest("eto_witness", Line.GHOUL, null, "Witness This",
             "One punch is rude. Wind it all the way back, and make them watch.", 0, List.of("eto_soar"), null,
             List.of(of("Land full-charge Big Punches", Signal.PUNCH, 8, Tags.FULL), of("Flip", Signal.FLIP, 30)),
             Reward.mastery(50).opens(Gate.EYES_WITNESS)));
         // 1.3.2: her last lesson; done, she makes them one-eyed (EtoServer), whoever they are to her.
-        add(new Quest("eto_one_eye", Line.GHOUL, null, "Eto's Lesson: One Eye",
+        add(new Quest("eto_one_eye", Line.GHOUL, null, "One Eye",
             "Kill in the dark with your eye open until the dark feels like home. Bleed until it stops scaring you. Then come back and lie down.",
             0, List.of("eto_witness"), null,
             List.of(of("Kill at night, your eye open", Signal.KILL, 15, Tags.EYES, Tags.NIGHT), of("Live through the brink", Signal.BRINK, 3)),
@@ -217,6 +248,11 @@ public final class QuestBook {
     private static void add(Quest quest) {
         // 1.3.14: a gate a companion teaches (Teaching) is no longer opened by its quests: they still pay their mastery and side.
         List<Gate> kept = quest.reward().gates().stream().filter(gate -> !com.hex.kagune.control.npc.Teaching.taught(gate)).toList();
+        for (Gate gate : quest.reward().gates()) {
+            if (com.hex.kagune.control.npc.Teaching.taught(gate)) {
+                TAUGHT_BY.putIfAbsent(quest.id(), com.hex.kagune.control.npc.Teaching.teaching(gate));
+            }
+        }
         if (kept.size() != quest.reward().gates().size()) {
             Reward r = quest.reward();
             quest = new Quest(quest.id(), quest.line(), quest.path(), quest.title(), quest.story(), quest.mastery(), quest.after(), quest.exclusive(),
@@ -225,6 +261,52 @@ public final class QuestBook {
         if (QUESTS.put(quest.id(), quest) != null) {
             throw new IllegalStateException("two quests named " + quest.id());
         }
+    }
+
+    /** 1.3.29: who gives {@code quest}. */
+    public static Giver giver(Quest quest) {
+        if (quest == null) {
+            return Giver.PATH;
+        }
+        if (quest.line() == Quest.Line.HUNT || quest.line() == Quest.Line.FAVOUR) {
+            return Giver.ASKED;
+        }
+        String id = quest.id();
+        if (RETIRED.contains(id)) {
+            return Giver.RETIRED;
+        }
+        if (FEATS.contains(id)) {
+            return Giver.FEAT;
+        }
+        if (GHOULS.contains(id)) {
+            return Giver.GHOULS;
+        }
+        if (com.hex.kagune.control.npc.EtoRules.lessonFlag(id) != 0) {
+            return Giver.ETO;
+        }
+        return TAUGHT_BY.containsKey(id) ? Giver.TEACHER : Giver.PATH;
+    }
+
+    /** 1.3.29: the lesson a teacher's quest follows (its gate, which the teacher teaches now), or null. */
+    public static com.hex.kagune.control.npc.Teaching.Lesson lesson(Quest quest) {
+        return quest == null ? null : TAUGHT_BY.get(quest.id());
+    }
+
+    /** 1.3.29: "Given by Eto", "Practice from Touka"...: who it is from, for the journal ("" for the path's own). */
+    public static String from(Quest quest) {
+        return switch (giver(quest)) {
+            case FEAT -> "A feat of your own";
+            case ETO -> "Eto's lesson";
+            case TEACHER -> {
+                com.hex.kagune.control.npc.Teaching.Lesson lesson = lesson(quest);
+                com.hex.kagune.control.npc.Persona teacher = lesson == null ? null : com.hex.kagune.control.npc.Persona.of(lesson.teacher());
+                yield teacher == null ? "A teacher's practice" : "Practice from " + teacher.name() + " (after " + lesson.name() + ")";
+            }
+            case GHOULS -> "The ghouls of the night";
+            case ASKED -> quest.line() == Quest.Line.HUNT ? "Tonight's hunt (asked of a ghoul)" : "A ghoul's favour";
+            case RETIRED -> "Eto teaches this now";
+            default -> "";
+        };
     }
 
     /** Every quest in the book, in its order. */
@@ -249,7 +331,8 @@ public final class QuestBook {
 
     /** "Rize's Gift or Learning to Say No": the quests that open {@code gate}, by title. */
     public static String openersText(Gate gate) {
-        List<Quest> openers = openers(gate);
+        List<Quest> openers = new ArrayList<>(openers(gate));
+        openers.removeIf(quest -> giver(quest) == Giver.RETIRED); // 1.3.29: never given again
         StringBuilder text = new StringBuilder();
         for (int i = 0; i < openers.size(); i++) {
             if (i > 0) {

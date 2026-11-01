@@ -37,6 +37,9 @@ public final class QuestTests {
         migration();
         hunts();
         gates();
+        givers();
+        taughtAlready();
+        romance();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -123,11 +126,12 @@ public final class QuestTests {
         int before = log.progress(gift, 0);
         log.apply(QuestEvent.of(Signal.KILL, 1, Tags.KAGUNE), KagunePath.RINKAKU, 300);
         check(log.progress(gift, 0) == before, "a done quest counts no more");
-        // A quest that comes after another waits for it.
-        Quest soar = QuestBook.get("up_we_go");
-        check(log.state(soar, KagunePath.RINKAKU, 1000) == QuestLog.State.LOCKED, "waits for the quest it comes after");
-        log.complete(QuestBook.get("light_feet"));
-        check(log.state(soar, KagunePath.RINKAKU, 1000) == QuestLog.State.OPEN, "open once that one is done");
+        // A quest that comes after another waits for it (1.3.29: the ghouls' chain, once a ghoul has been talked to).
+        log.bond("a-ghoul-of-the-night", QuestLog.Bond.NONE.with(com.hex.kagune.control.npc.NpcBonds.MET, true));
+        Quest errands = QuestBook.get("errands");
+        check(log.state(errands, KagunePath.RINKAKU, 1000) == QuestLog.State.LOCKED, "waits for the quest it comes after");
+        log.complete(QuestBook.get("a_friend"));
+        check(log.state(errands, KagunePath.RINKAKU, 1000) == QuestLog.State.OPEN, "open once that one is done");
         // Best-of objectives keep the highest amount.
         Quest rampage = QuestBook.get("rampage");
         log.apply(QuestEvent.of(Signal.RAMPAGE, 3), KagunePath.RINKAKU, 1000);
@@ -269,5 +273,128 @@ public final class QuestTests {
         log.startHunt(spec, 100L);
         check(log.expire(99L).isEmpty() && log.hunts().size() == 1, "on until its time");
         check(log.expire(100L).size() == 1 && log.hunts().isEmpty(), "gone at dawn");
+    }
+
+    /** 1.3.29: no quest comes by itself unless the path needs it; a teacher's only from the teacher; feats show once done. */
+    static void givers() {
+        check(QuestBook.giver(QuestBook.get("rizes_gift")) == QuestBook.Giver.PATH && QuestBook.giver(QuestBook.get("anteiku")) == QuestBook.Giver.PATH,
+            "the path's own ways on are the path's");
+        for (String id : new String[] {"light_feet", "up_we_go", "witness_this"}) {
+            check(QuestBook.giver(QuestBook.get(id)) == QuestBook.Giver.RETIRED, id + " is retired: Eto's lesson teaches the same");
+        }
+        for (String id : new String[] {"first_meal", "night_stalker", "the_brink", "rampage", "die_hard", "cannibal", "ghoul_eater"}) {
+            check(QuestBook.giver(QuestBook.get(id)) == QuestBook.Giver.FEAT, id + " is a feat");
+        }
+        for (String id : new String[] {"among_our_own", "a_friend", "cold_blood", "errands", "side_by_side"}) {
+            check(QuestBook.giver(QuestBook.get(id)) == QuestBook.Giver.GHOULS, id + " is the ghouls'");
+        }
+        for (com.hex.kagune.control.npc.EtoRules.Lesson lesson : com.hex.kagune.control.npc.EtoRules.Lesson.values()) {
+            check(QuestBook.giver(QuestBook.get(lesson.quest)) == QuestBook.Giver.ETO, lesson + "'s quest is Eto's to give");
+        }
+        check(QuestBook.giver(Hunts.quest(new Hunts.Spec(0, 4, 3, Hunts.PAY_MEAT, 1))) == QuestBook.Giver.ASKED, "a hunt is given when asked for");
+        int teachers = 0;
+        for (Quest quest : QuestBook.all()) {
+            QuestBook.Giver giver = QuestBook.giver(quest);
+            check(!QuestBook.from(quest).isEmpty() || giver == QuestBook.Giver.PATH, quest.id() + ": the journal says who it is from");
+            if (giver == QuestBook.Giver.TEACHER) {
+                teachers++;
+                com.hex.kagune.control.npc.Teaching.Lesson lesson = QuestBook.lesson(quest);
+                check(lesson != null && !quest.opens(lesson.gate()) && QuestBook.from(quest).contains(com.hex.kagune.control.npc.Persona.of(lesson.teacher()).name()),
+                    quest.id() + ": a teacher's practice, after their lesson (which opens the gate, not the quest)");
+            }
+            if (giver == QuestBook.Giver.PATH) {
+                check(new QuestLog().given(quest), quest.id() + ": the path's own quests need no one to give them (the way on is never hidden)");
+            }
+        }
+        check(teachers >= 8 && QuestBook.lesson(QuestBook.get("crystal_rain")) == com.hex.kagune.control.npc.Teaching.byId("touka_gatling")
+            && QuestBook.lesson(QuestBook.get("thousand_minus_seven")) == com.hex.kagune.control.npc.Teaching.byId("ken_centipede"),
+            "the quests whose gates the companions teach are theirs");
+        QuestLog log = new QuestLog();
+        Quest feet = QuestBook.get("light_feet");
+        check(log.state(feet, KagunePath.RINKAKU, 1000) == QuestLog.State.LOCKED && !log.shown(feet, QuestLog.State.LOCKED),
+            "Light on Your Feet never comes by itself any more");
+        log.apply(QuestEvent.of(Signal.FLIP, 1), KagunePath.RINKAKU, 1000);
+        check(log.progress(feet, 1) == 0, "nor counts");
+        Quest kick = QuestBook.get("eto_kick");
+        check(log.state(kick, KagunePath.RINKAKU, 1000) == QuestLog.State.LOCKED && !log.shown(kick, QuestLog.State.LOCKED), "Eto's waits for her, unlisted");
+        log.bond(com.hex.kagune.control.npc.EtoRules.KEY, QuestLog.Bond.NONE.with(com.hex.kagune.control.npc.EtoRules.TAUGHT_KICK, true));
+        check(log.state(kick, KagunePath.RINKAKU, 0) == QuestLog.State.OPEN && log.shown(kick, QuestLog.State.OPEN) && kick.title().equals("Light on Your Feet"),
+            "asked of Eto, Light on Your Feet is given (hers)");
+        check(QuestBook.openersText(Gate.EYES_KICK).split("Light on Your Feet", -1).length == 2, "the gate's ways name the lesson once (not the retired one)");
+        Quest meal = QuestBook.get("first_meal");
+        check(log.state(meal, KagunePath.RINKAKU, 0) == QuestLog.State.OPEN && !log.shown(meal, QuestLog.State.OPEN), "a feat counts unlisted");
+        log.complete(meal);
+        check(log.shown(meal, log.state(meal, KagunePath.RINKAKU, 0)), "and shows once done");
+        Quest among = QuestBook.get("among_our_own");
+        log.bond("eto", log.bond("eto").with(com.hex.kagune.control.npc.NpcBonds.MET, true));
+        check(log.state(among, KagunePath.RINKAKU, 0) == QuestLog.State.LOCKED, "the ghouls' quests wait for a ghoul (a companion met is not one)");
+        log.bond("9f3c2a7e-0000-4000-8000-000000000001", QuestLog.Bond.NONE.with(com.hex.kagune.control.npc.NpcBonds.MET, true));
+        check(log.state(among, KagunePath.RINKAKU, 0) == QuestLog.State.OPEN, "talked to a ghoul of the night, they give theirs");
+        Quest rain = QuestBook.get("crystal_rain");
+        QuestLog ukaku = new QuestLog();
+        check(ukaku.state(rain, KagunePath.UKAKU, 1000) == QuestLog.State.LOCKED, "a teacher's practice waits for the teacher");
+        ukaku.grant(Gate.UKAKU_GATLING);
+        check(ukaku.state(rain, KagunePath.UKAKU, 1000) == QuestLog.State.OPEN, "taught, the practice is given");
+        QuestLog old = QuestLog.load("v=2;p.light_feet=12,3");
+        check(old.state(feet, KagunePath.RINKAKU, 1000) == QuestLog.State.OPEN && old.shown(feet, QuestLog.State.OPEN),
+            "a retired quest already begun is kept going (no save loses its work)");
+    }
+
+    /** 1.3.29: asked for what they know already, a teacher says so and moves on. */
+    static void taughtAlready() {
+        java.util.function.Predicate<Gate> open = gate -> gate == Gate.UKAKU_CRYSTAL || gate == Gate.UKAKU_GATLING;
+        List<com.hex.kagune.control.npc.Teaching.Lesson> known = com.hex.kagune.control.npc.Teaching.knownElsewhere("touka", KagunePath.UKAKU, open, 0L);
+        check(known.size() == 2 && known.get(0).id().equals("touka_crystal"), "the gates open some other way are the ones known");
+        long told = com.hex.kagune.control.npc.Teaching.bit(known.get(0));
+        check(com.hex.kagune.control.npc.Teaching.knownElsewhere("touka", KagunePath.UKAKU, open, told).size() == 1, "told once, never told again");
+        check(com.hex.kagune.control.npc.Teaching.knownElsewhere("touka", KagunePath.RINKAKU, open, 0L).isEmpty(), "only the lessons for their path");
+        Set<Long> bits = new HashSet<>();
+        for (com.hex.kagune.control.npc.Teaching.Lesson lesson : com.hex.kagune.control.npc.Teaching.ALL) {
+            long bit = com.hex.kagune.control.npc.Teaching.bit(lesson);
+            check(bit != 0L, lesson.id() + " has a bit");
+            bits.add(bit * 31L + lesson.teacher().hashCode());
+        }
+        check(bits.size() == com.hex.kagune.control.npc.Teaching.ALL.size(), "each lesson its own bit (per teacher)");
+        check(com.hex.kagune.control.npc.Teaching.names(List.of("A")).equals("A") && com.hex.kagune.control.npc.Teaching.names(List.of("A", "B")).equals("A and B")
+            && com.hex.kagune.control.npc.Teaching.names(List.of("A", "B", "C")).equals("A, B and C"), "names run on as a sentence");
+        for (String teacher : new String[] {"eto", "touka", "ken"}) {
+            for (int seed = 0; seed < 4; seed++) {
+                String line = com.hex.kagune.control.npc.Teaching.alreadyKnown(teacher, List.of("Gatling"), seed);
+                check(line.contains("Gatling") && line.toLowerCase(java.util.Locale.ROOT).contains("already"), teacher + " says it is already known");
+            }
+        }
+    }
+
+    /** 1.3.29: the journal's Romance tab: each companion's card, sent with the log. */
+    static void romance() {
+        List<com.hex.kagune.control.npc.RomanceCard> cards = new ArrayList<>();
+        com.hex.kagune.control.npc.Romance.Stage[] stages = com.hex.kagune.control.npc.Romance.Stage.values();
+        com.hex.kagune.control.npc.EtoRules.Step[] steps = com.hex.kagune.control.npc.EtoRules.Step.values();
+        String[] banned = {"kaneki", "ayato", "furuta", "takatsuki", "aogiri", "yoshimura"};
+        Random random = new Random(1329);
+        for (int i = 0; i < 400; i++) {
+            String key = new String[] {"eto", "touka", "ken"}[i % 3];
+            com.hex.kagune.control.npc.RomanceCard card = new com.hex.kagune.control.npc.RomanceCard(key, random.nextInt(5) > 0, stages[random.nextInt(stages.length)],
+                random.nextInt(201) - 100, random.nextBoolean(), random.nextInt(4) == 0 ? "Somebody" : null, steps[random.nextInt(steps.length)],
+                random.nextInt(11), random.nextInt(9), random.nextInt(4), random.nextBoolean(), random.nextBoolean());
+            cards.add(card);
+            String next = card.next();
+            String stage = card.stageText();
+            check(next != null && !next.isBlank() && stage != null && !stage.isBlank() && !card.errands().isBlank(), key + ": every card says where it stands and what's next");
+            check(card.regardShare() >= 0.0F && card.regardShare() <= 1.0F, "the regard bar stays in its box");
+            for (String name : banned) {
+                check(!(next + stage + card.errands()).toLowerCase(java.util.Locale.ROOT).contains(name), "a card never names " + name);
+            }
+            if (!card.met()) {
+                check(next.contains(card.persona().home()), "not met: where to find them");
+            }
+            if (card.met() && card.stage() == com.hex.kagune.control.npc.Romance.Stage.MARRIED && !card.home()) {
+                check(next.contains("This is our home now."), "married with no home: how to make one");
+            }
+        }
+        List<com.hex.kagune.control.npc.RomanceCard> back = com.hex.kagune.control.npc.RomanceCard.load(com.hex.kagune.control.npc.RomanceCard.save(cards));
+        check(back.equals(cards), "the cards come through the packet as they were");
+        check(com.hex.kagune.control.npc.RomanceCard.load("bad\nnobody\t1\n").isEmpty() && com.hex.kagune.control.npc.RomanceCard.load(null).isEmpty(),
+            "a bad card is left out");
     }
 }

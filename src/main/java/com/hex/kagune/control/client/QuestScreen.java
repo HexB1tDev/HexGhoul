@@ -33,7 +33,7 @@ public final class QuestScreen extends Screen {
         LocalPlayer player = minecraft.f_91074_;
         KagunePath path = player == null ? KagunePath.NONE : PathClient.get(player);
         long time = minecraft.f_91073_ == null ? 0L : minecraft.f_91073_.m_46467_();
-        return new QuestJournalView.Model(path, KaguneClientState.self().mastery(), QuestClient.log(), time, this.tab, this.picked);
+        return new QuestJournalView.Model(path, KaguneClientState.self().mastery(), QuestClient.log(), time, this.tab, this.picked, QuestClient.romance());
     }
 
     @Override
@@ -72,6 +72,8 @@ public final class QuestScreen extends Screen {
                 this.picked = null;
             } else if (key.startsWith("quest:")) {
                 this.picked = key.substring(6);
+            } else if (key.startsWith("romance:")) {
+                this.picked = key; // 1.3.29: a companion on the Romance tab
             }
             return true;
         }

@@ -152,6 +152,49 @@ public final class Teaching {
         return new View(null, knows ? Refusal.ALL_TAUGHT : Refusal.WRONG_PATH, 0, null);
     }
 
+    /** 1.3.29: {@code lesson}'s bit among its teacher's (kept per player: taught, or told it was known). */
+    public static long bit(Lesson lesson) {
+        int index = of(lesson.teacher()).indexOf(lesson);
+        return index < 0 ? 0L : 1L << index;
+    }
+
+    /**
+     * 1.3.29: the lessons of {@code teacher} for a ghoul on {@code path} who has their gate open already ({@code open}) but was never taught
+     * them by this teacher nor told so ({@code told}: their bits): known some other way (a command, an old quest). In order.
+     */
+    public static List<Lesson> knownElsewhere(String teacher, KagunePath path, Predicate<Gate> open, long told) {
+        return of(teacher).stream().filter(lesson -> lesson.path() == path && open.test(lesson.gate()) && (told & bit(lesson)) == 0L).toList();
+    }
+
+    /** 1.3.29: "A", "A and B", "A, B and C". */
+    public static String names(List<String> names) {
+        if (names.isEmpty()) {
+            return "";
+        }
+        if (names.size() == 1) {
+            return names.get(0);
+        }
+        return String.join(", ", names.subList(0, names.size() - 1)) + " and " + names.get(names.size() - 1);
+    }
+
+    /**
+     * 1.3.29: what a teacher ({@code teacher}: a companion's key; Eto too) says when asked for something they already know ({@code names}),
+     * before going on to the next thing (taught, or why not).
+     */
+    public static String alreadyKnown(String teacher, List<String> names, int seed) {
+        String what = names(names);
+        boolean one = names.size() <= 1;
+        String[] lines = switch (teacher) {
+            case TOUKA -> new String[] {"You already know " + what + ". Don't waste my time. ...Fine. Next.",
+                what + "? You've got " + (one ? "that one" : "those") + " already. I'm not saying it twice."};
+            case KEN -> new String[] {"You already know " + what + ". You don't need me for " + (one ? "that one" : "those") + ". Let's move on.",
+                "You know " + what + " already. ...You learned it somewhere harder than here, didn't you."};
+            default -> new String[] {"You already know " + what + ". Don't look so smug. Next.",
+                what + "? You know " + (one ? "that one" : "those") + " already. I don't repeat myself. Moving on."};
+        };
+        return lines[Math.floorMod(seed, lines.length)];
+    }
+
     /** "Touka teaches it (mastery 400)": what the game says when a taught gate stands in the way. */
     public static String gatedText(Gate gate, String teacherName) {
         Lesson lesson = teaching(gate);

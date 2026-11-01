@@ -249,14 +249,29 @@ public class UiPreview {
             com.hex.kagune.control.quest.Tags.mob("minecraft:witch")), KagunePath.RINKAKU, 520);
         journal(new File(dir, "quests-hunt.png"), KagunePath.RINKAKU, 520, hunting, com.hex.kagune.control.client.QuestJournalView.Tab.HUNTS, null, 1800L);
         com.hex.kagune.control.quest.QuestLog ghoul = new com.hex.kagune.control.quest.QuestLog();
+        // 1.3.29: the ghoul's way holds only what was given: Eto's first lesson (asked of her) and the ghouls' first (one talked to).
+        ghoul.bond(com.hex.kagune.control.npc.EtoRules.KEY, com.hex.kagune.control.quest.QuestLog.Bond.NONE.with(com.hex.kagune.control.npc.EtoRules.TAUGHT_KICK, true));
+        ghoul.bond("a-ghoul", com.hex.kagune.control.quest.QuestLog.Bond.NONE.with(com.hex.kagune.control.npc.NpcBonds.MET, true));
         for (int i = 0; i < 37; i++) {
             ghoul.apply(com.hex.kagune.control.quest.QuestEvent.of(com.hex.kagune.control.quest.Signal.STRIKE, 1), KagunePath.GRAFT, 400);
         }
         for (int i = 0; i < 15; i++) {
             ghoul.apply(com.hex.kagune.control.quest.QuestEvent.of(com.hex.kagune.control.quest.Signal.FLIP, 1), KagunePath.GRAFT, 400);
         }
-        journal(new File(dir, "quests-ghoul.png"), KagunePath.GRAFT, 400, ghoul, com.hex.kagune.control.client.QuestJournalView.Tab.GHOUL, "light_feet",
+        journal(new File(dir, "quests-ghoul.png"), KagunePath.GRAFT, 400, ghoul, com.hex.kagune.control.client.QuestJournalView.Tab.GHOUL, "eto_kick",
             0L);
+        // 1.3.29: the Romance tab: married to Eto (home set, a child), Touka's errands half done, Ken not met.
+        java.util.List<com.hex.kagune.control.npc.RomanceCard> cards = java.util.List.of(
+            new com.hex.kagune.control.npc.RomanceCard("eto", true, com.hex.kagune.control.npc.Romance.Stage.MARRIED, 96, true, null,
+                com.hex.kagune.control.npc.EtoRules.Step.DATING, 0, 12L, 1, true, false),
+            new com.hex.kagune.control.npc.RomanceCard("touka", true, com.hex.kagune.control.npc.Romance.Stage.NONE, 100, true, null,
+                com.hex.kagune.control.npc.EtoRules.Step.BOOKS, 2, 0L, 0, false, false),
+            new com.hex.kagune.control.npc.RomanceCard("ken", false, com.hex.kagune.control.npc.Romance.Stage.NONE, 0, true, null,
+                com.hex.kagune.control.npc.EtoRules.Step.NONE, 0, 0L, 0, false, false));
+        journal(new File(dir, "quests-romance.png"), KagunePath.RINKAKU, 520, chose, com.hex.kagune.control.client.QuestJournalView.Tab.ROMANCE, "romance:eto",
+            0L, cards);
+        journal(new File(dir, "quests-romance-touka.png"), KagunePath.RINKAKU, 520, chose, com.hex.kagune.control.client.QuestJournalView.Tab.ROMANCE,
+            "romance:touka", 0L, cards);
         // The Graft menu at 760 mastery with only the transplant's and the centipede's quests done: thorns and the many-eyed wait.
         java.util.Set<com.hex.kagune.control.quest.Gate> open = java.util.EnumSet.of(com.hex.kagune.control.quest.Gate.GRAFT_CENTIPEDE);
         File out = new File(dir, "quests-graft-menu.png");
@@ -278,6 +293,11 @@ public class UiPreview {
 
     static void journal(File out, KagunePath path, int mastery, com.hex.kagune.control.quest.QuestLog log, com.hex.kagune.control.client.QuestJournalView.Tab tab,
                         String picked, long time) throws Exception {
+        journal(out, path, mastery, log, tab, picked, time, java.util.List.of());
+    }
+
+    static void journal(File out, KagunePath path, int mastery, com.hex.kagune.control.quest.QuestLog log, com.hex.kagune.control.client.QuestJournalView.Tab tab,
+                        String picked, long time, java.util.List<com.hex.kagune.control.npc.RomanceCard> cards) throws Exception {
         int w = 960;
         int h = 540;
         BufferedImage image = new BufferedImage(w * 2, h * 2, BufferedImage.TYPE_INT_RGB);
@@ -286,8 +306,8 @@ public class UiPreview {
         c.gradient(0, 0, w, h, 0xE8080506, 0xF0180608);
         c.push();
         c.translate(0, 10);
-        com.hex.kagune.control.client.QuestJournalView.draw(c, new com.hex.kagune.control.client.QuestJournalView.Model(path, mastery, log, time, tab, picked),
-            0, 0, 1.0);
+        com.hex.kagune.control.client.QuestJournalView.draw(c, new com.hex.kagune.control.client.QuestJournalView.Model(path, mastery, log, time, tab, picked,
+            cards), 0, 0, 1.0);
         c.pop();
         ImageIO.write(image, "png", out);
         System.out.println("wrote " + out);

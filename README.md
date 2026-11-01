@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.29 (HexGhoul): companions, children and allies come up to you with something to say (the Answer key); a spouse keeps house at home (chests sorted, the floor swept into a chest, flowers watered); "Go home, please."; quests only from whoever gives them, feats, hunts on request, a Romance tab; Touka her own way (testing)
+
+See `.github/release-notes-1.3.29.md`.
+
 ## 1.3.28 (HexGhoul): investigators carry their case by the handle, fight as a pair (one in front, one round the back), idle at ease; the quinque case's own mechanical sound (testing)
 
 See `.github/release-notes-1.3.28.md`.

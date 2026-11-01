@@ -7,13 +7,26 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.network.NetworkEvent;
 
-/** 7.0.1: the owner's quest log, as saved ({@code QuestLog.save}): the journal and the menus' quest locks read it. */
-public record S2CQuests(String saved) {
+/**
+ * 7.0.1: the owner's quest log, as saved ({@code QuestLog.save}): the journal and the menus' quest locks read it. 1.3.29: and how they stand
+ * with each companion ({@code RomanceCard.save}: the journal's Romance tab).
+ */
+public record S2CQuests(String saved, String romance) {
     /** Longest log sent (UTF-8 bytes); a log is a few hundred. */
     private static final int MAX_BYTES = 65536;
 
     public static void encode(S2CQuests message, FriendlyByteBuf buffer) {
-        byte[] bytes = message.saved.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        write(buffer, message.saved);
+        write(buffer, message.romance == null ? "" : message.romance);
+    }
+
+    public static S2CQuests decode(FriendlyByteBuf buffer) {
+        String saved = read(buffer);
+        return new S2CQuests(saved, read(buffer));
+    }
+
+    private static void write(FriendlyByteBuf buffer, String text) {
+        byte[] bytes = text.getBytes(java.nio.charset.StandardCharsets.UTF_8);
         int length = Math.min(bytes.length, MAX_BYTES);
         buffer.m_130130_(length);
         for (int i = 0; i < length; i++) {
@@ -21,18 +34,18 @@ public record S2CQuests(String saved) {
         }
     }
 
-    public static S2CQuests decode(FriendlyByteBuf buffer) {
+    private static String read(FriendlyByteBuf buffer) {
         int length = Math.max(0, Math.min(MAX_BYTES, buffer.m_130242_()));
         byte[] bytes = new byte[length];
         for (int i = 0; i < length; i++) {
             bytes[i] = buffer.readByte();
         }
-        return new S2CQuests(new String(bytes, java.nio.charset.StandardCharsets.UTF_8));
+        return new String(bytes, java.nio.charset.StandardCharsets.UTF_8);
     }
 
     public static void handle(S2CQuests message, Supplier<NetworkEvent.Context> supplier) {
         NetworkEvent.Context context = supplier.get();
-        context.enqueueWork(() -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> QuestClient.accept(message.saved())));
+        context.enqueueWork(() -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> QuestClient.accept(message.saved(), message.romance())));
         context.setPacketHandled(true);
     }
 }
