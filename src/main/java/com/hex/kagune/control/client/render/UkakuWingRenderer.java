@@ -65,7 +65,7 @@ public final class UkakuWingRenderer {
      * turned {@code yaw} (radians, the body's), the whole turned {@code flip} about the hips (the Black Rabbit's backflip).
      */
     private static void emit(VertexConsumer consumer, Matrix4f matrix, Matrix3f normals, List<WingRig.Quad> quads, double x, double y, double z, double yaw,
-                             float flip) {
+                             float flip, int tint) {
         double forwardX = -Math.sin(yaw);
         double forwardZ = Math.cos(yaw);
         double rightX = -Math.cos(yaw);
@@ -74,7 +74,7 @@ public final class UkakuWingRenderer {
         double flipSin = Math.sin(-flip);
         for (WingRig.Quad quad : quads) {
             float[] xyz = quad.xyz();
-            int[] argb = quad.argb();
+            int[] argb = com.hex.kagune.control.KaguneTint.recolour(quad.argb(), tint); // 1.3.35: in its owner's colour
             double qy = quad.ny();
             double qz = quad.nz();
             if (flip != 0.0F) {
@@ -110,7 +110,7 @@ public final class UkakuWingRenderer {
      * com.hex.kagune.control.client.animation.BodyFrame#carry}: the posed torso's rigid transform).
      */
     private static void emit(VertexConsumer consumer, Matrix4f matrix, Matrix3f normals, List<WingRig.Quad> quads, double x, double y, double z, double yaw,
-                             double[] carry) {
+                             double[] carry, int tint) {
         double forwardX = -Math.sin(yaw);
         double forwardZ = Math.cos(yaw);
         double rightX = -Math.cos(yaw);
@@ -118,7 +118,7 @@ public final class UkakuWingRenderer {
         double[] a = carry;
         for (WingRig.Quad quad : quads) {
             float[] xyz = quad.xyz();
-            int[] argb = quad.argb();
+            int[] argb = com.hex.kagune.control.KaguneTint.recolour(quad.argb(), tint); // 1.3.35: in its owner's colour
             double qx = a[0] * quad.nx() + a[1] * quad.ny() + a[2] * quad.nz();
             double qy = a[3] * quad.nx() + a[4] * quad.ny() + a[5] * quad.nz();
             double qz = a[6] * quad.nx() + a[7] * quad.ny() + a[8] * quad.nz();
@@ -220,10 +220,11 @@ public final class UkakuWingRenderer {
             if (consumer == null) {
                 consumer = buffers.m_6299_(TYPE);
             }
+            int tint = view.color(); // 1.3.35: the player's own kagune colour (KaguneColours), its wings and crystals turned to it
             if (carry != null) {
-                emit(consumer, matrix, normals, quads, x, y, z, yaw, carry);
+                emit(consumer, matrix, normals, quads, x, y, z, yaw, carry, tint);
             } else {
-                emit(consumer, matrix, normals, quads, x, y, z, yaw, flip);
+                emit(consumer, matrix, normals, quads, x, y, z, yaw, flip, tint);
             }
         }
         // 7.0.2: the ukaku ghoul NPCs in view: the twin wings, as Ukaku's, aiming as they shoot.
@@ -274,7 +275,8 @@ public final class UkakuWingRenderer {
             }
             // 1.0.41: its wings turned over with it as it flips.
             com.hex.kagune.control.client.animation.RigPose flipping = com.hex.kagune.control.client.GhoulNpcClient.flip(seen, clock, npc.m_20096_());
-            emit(consumer, matrix, normals, quads, x, y, z, yaw, flipping == null ? 0.0F : flipping.flip);
+            emit(consumer, matrix, normals, quads, x, y, z, yaw, flipping == null ? 0.0F : flipping.flip,
+                com.hex.kagune.control.KaguneTint.wild(seen.identity().seed()));
         }
         // 1.3.19: a companion's wings (Touka's): a lesser pair at her size, riding her torso as it was drawn, crystal as she throws.
         for (int id : com.hex.kagune.control.client.NpcWingsClient.ids()) {
@@ -331,7 +333,7 @@ public final class UkakuWingRenderer {
             for (int k = 0; k < 12; k++) {
                 scaled[k] = carry[k] * size;
             }
-            emit(consumer, matrix, normals, quads, x, y, z, yaw, scaled);
+            emit(consumer, matrix, normals, quads, x, y, z, yaw, scaled, com.hex.kagune.control.KaguneColours.DEFAULT); // (hers stay hers)
         }
         // Shards of Ukaku's fire and crystal spikes in flight (camera-relative, facing the camera).
         double[] eye = {0.0, 0.0, 0.0};
@@ -347,7 +349,7 @@ public final class UkakuWingRenderer {
             if (consumer == null) {
                 consumer = buffers.m_6299_(TYPE);
             }
-            RcShard.Sink sink = glowing(consumer, matrix, normals);
+            RcShard.Sink sink = tinted(glowing(consumer, matrix, normals), com.hex.kagune.control.client.KaguneTints.of(bolt.shooter()));
             double age = time - bolt.born();
             float fade = (float)Math.max(0.0, Math.min(1.0, Math.min((age + 1.0) / 1.5, bolt.life() + 1.0 - age)));
             double[] heading = {bolt.velocity().f_82479_, bolt.velocity().f_82480_, bolt.velocity().f_82481_};
@@ -387,7 +389,8 @@ public final class UkakuWingRenderer {
                 dusk = Math.max(0.0, Math.min(1.0, (KaguneClientState.get(shooter).mastery() - 250) / 200.0));
                 dusk = dusk * dusk * (3.0 - 2.0 * dusk);
             }
-            WingVortex.build(glowing(consumer, matrix, normals), new double[] {root.f_82479_, root.f_82480_, root.f_82481_},
+            WingVortex.build(tinted(glowing(consumer, matrix, normals), com.hex.kagune.control.client.KaguneTints.of(vortex.shooter())),
+                new double[] {root.f_82479_, root.f_82480_, root.f_82481_},
                 new double[] {head.f_82479_, head.f_82480_, head.f_82481_}, vortex.size(), time / 20.0, vortex.seed(), eye, fade, unwind, dusk,
                 away < DETAIL_DISTANCE_SQR);
         }
@@ -422,12 +425,13 @@ public final class UkakuWingRenderer {
                 double settle = Math.max(0.0, Math.min(1.0, (time - spike.stuckAt()) / 3.0));
                 double[] at = {tip.f_82479_, tip.f_82480_, tip.f_82481_};
                 double[] pointing = {dir.f_82479_, dir.f_82480_, dir.f_82481_};
+                // 1.3.35: in the colour of whoever shot it (remembered from its flight).
+                RcShard.Sink stuck = tinted(glowing(consumer, matrix, normals), com.hex.kagune.control.client.KaguneTints.of(UkakuFx.shooter(spike.id())));
                 if (needle) {
-                    KakujaNeedle.build(glowing(consumer, matrix, normals), at, pointing, size, eye, 0.0, heat * heat, time / 20.0, spike.id() & 0xFFFF,
-                        away < DETAIL_DISTANCE_SQR, 1.0);
+                    KakujaNeedle.build(stuck, at, pointing, size, eye, 0.0, heat * heat, time / 20.0, spike.id() & 0xFFFF, away < DETAIL_DISTANCE_SQR, 1.0);
                 } else {
-                    CrystalSpike.build(glowing(consumer, matrix, normals), at, pointing, size, eye, 0.3 * (1.0 - settle), heat * heat, time / 20.0,
-                        spike.id() & 0xFFFF, away < DETAIL_DISTANCE_SQR, 1.0);
+                    CrystalSpike.build(stuck, at, pointing, size, eye, 0.3 * (1.0 - settle), heat * heat, time / 20.0, spike.id() & 0xFFFF,
+                        away < DETAIL_DISTANCE_SQR, 1.0);
                 }
             }
         }
@@ -460,7 +464,8 @@ public final class UkakuWingRenderer {
                     consumer = buffers.m_6299_(TYPE);
                 }
                 Vec3 dir = UkakuThorns.world(body, thorn.direction(), partial, true);
-                CrystalSpike.build(glowing(consumer, matrix, normals), new double[] {tip.f_82479_, tip.f_82480_, tip.f_82481_},
+                CrystalSpike.build(tinted(glowing(consumer, matrix, normals), com.hex.kagune.control.client.KaguneTints.of(body)),
+                    new double[] {tip.f_82479_, tip.f_82480_, tip.f_82481_},
                     new double[] {dir.f_82479_, dir.f_82480_, dir.f_82481_}, CrystalThorns.drawnSize(thorn, out) * scale, eye, glow, 0.0, time / 20.0,
                     thorn.seed(), away < DETAIL_DISTANCE_SQR, 1.0);
             }
@@ -522,6 +527,16 @@ public final class UkakuWingRenderer {
         Vec3 up = Math.abs(dir.f_82480_) < 0.9 ? new Vec3(0.0, 1.0, 0.0) : new Vec3(1.0, 0.0, 0.0);
         Vec3 side = dir.m_82537_(up).m_82541_();
         return dir.m_82549_(side.m_82490_(amount)).m_82541_();
+    }
+
+    /** 1.3.35: {@code sink} with every colour turned to {@code tint} (KaguneTint; the original crimson passes as it is). */
+    private static RcShard.Sink tinted(RcShard.Sink sink, int tint) {
+        if ((tint & 0xFFFFFF) == com.hex.kagune.control.KaguneColours.DEFAULT) {
+            return sink;
+        }
+        return (a, b, c, d, ca, cb, cc, cd) -> sink.quad(a, b, c, d, com.hex.kagune.control.KaguneTint.recolour(ca, tint),
+            com.hex.kagune.control.KaguneTint.recolour(cb, tint), com.hex.kagune.control.KaguneTint.recolour(cc, tint),
+            com.hex.kagune.control.KaguneTint.recolour(cd, tint));
     }
 
     /** A sink that writes glowing quads (full bright, lit from above) in camera-relative blocks. */

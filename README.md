@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.35 (HexGhoul): random colours for every path: Ukaku's wings, their crystal forms and every shard in your kagune's colour; wild ghouls get random kagune colours too (testing)
+
+See `.github/release-notes-1.3.35.md`.
+
 ## 1.3.34 (HexGhoul): every Rinkaku kagune gets a random colour of its own; /kagune color reroll for another (testing)
 
 See `.github/release-notes-1.3.34.md`.

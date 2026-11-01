@@ -6,6 +6,8 @@ import java.util.function.DoubleSupplier;
  * 1.3.34: a Rinkaku kagune's colour, rolled at random (pure, tested). The owner: "the normal tendrils that are by default red to be a
  * random color, literally a random color... whenever the player spawns, you get assigned a random color and a command to re-roll it".
  *
+ * <p>1.3.35: every path's kagune is drawn in it (Ukaku's wings and their crystals too, KaguneTint); the roll is wider.
+ *
  * <p>The colour is the original's own (KaguneProfile's appearance: a primary colour the tendrils, the mask and the shards are drawn in,
  * and a vein colour the dark ribbing between their plates), so everything already drawn in it follows. A roll is any hue, kept clear
  * of muddy greys and of black-on-black (saturated enough, light enough); its veins are the same hue, much darker. Now and then it is one
@@ -38,9 +40,10 @@ public final class KaguneColours {
         if (rare < RARE * 2.0) {
             return new Pick(BONE, BONE_VEIN);
         }
+        // 1.3.35: wider (the owner: "fully randomly generated"): softer and darker ones too, never a muddy grey or an unseen black.
         double hue = random.getAsDouble();
-        double saturation = 0.55 + 0.45 * random.getAsDouble();
-        double value = 0.42 + 0.5 * random.getAsDouble();
+        double saturation = 0.4 + 0.6 * random.getAsDouble();
+        double value = 0.36 + 0.6 * random.getAsDouble();
         return new Pick(hsv(hue, saturation, value), hsv(hue, Math.min(1.0, saturation + 0.1), Math.max(0.06, value * 0.17)));
     }
 

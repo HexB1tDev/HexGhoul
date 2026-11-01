@@ -138,6 +138,21 @@ public final class UkakuFx {
     }
 
     private static final Map<Integer, Bolt> BOLTS = new HashMap<>();
+    /** 1.3.35: who shot each shard lately (its id), so one stuck in a body is drawn in its shooter's colour. */
+    private static final Map<Integer, Integer> SHOOTERS = new HashMap<>();
+
+    private static void remember(int id, int shooter) {
+        if (SHOOTERS.size() > 1024) {
+            SHOOTERS.clear();
+        }
+        SHOOTERS.put(id, shooter);
+    }
+
+    /** 1.3.35: who shot shard {@code id} (an entity id), or -1 if it was never seen in flight. */
+    public static int shooter(int id) {
+        Integer who = SHOOTERS.get(id);
+        return who == null ? -1 : who;
+    }
     private static final Map<Integer, Vortex> VORTICES = new HashMap<>();
     private static final List<Lasting> LASTING = new ArrayList<>();
     private static final Random RANDOM = new Random();
@@ -169,6 +184,7 @@ public final class UkakuFx {
         int kind = message.kind();
         if (kind >= S2CUkakuFx.BOLT && kind < S2CUkakuFx.BOLT + 4) {
             if (BOLTS.size() < MAX_BOLTS) {
+                remember(message.id(), message.shooter());
                 BOLTS.put(message.id(), new Bolt(message.id(), kind - S2CUkakuFx.BOLT, message.shooter(), at, velocity, now, Math.max(1, message.extra()),
                     message.size(), RANDOM.nextInt(1000), false, false));
             }
@@ -180,6 +196,7 @@ public final class UkakuFx {
         if (kind == S2CUkakuFx.NEEDLE || kind == S2CUkakuFx.FLAME_NEEDLE) {
             boolean burning = kind == S2CUkakuFx.FLAME_NEEDLE;
             if (BOLTS.size() < MAX_BOLTS) {
+                remember(message.id(), message.shooter());
                 BOLTS.put(message.id(), new Bolt(message.id(), NEEDLE_KIND, message.shooter(), at, velocity, now, Math.max(1, message.extra()), message.size(),
                     RANDOM.nextInt(1000), true, burning));
             }
@@ -193,6 +210,7 @@ public final class UkakuFx {
         }
         if (kind >= S2CUkakuFx.SPIKE && kind < S2CUkakuFx.SPIKE + 5) {
             if (BOLTS.size() < MAX_BOLTS) {
+                remember(message.id(), message.shooter());
                 BOLTS.put(message.id(), new Bolt(message.id(), kind - S2CUkakuFx.SPIKE, message.shooter(), at, velocity, now, Math.max(1, message.extra()),
                     message.size(), RANDOM.nextInt(1000), true, false));
             }

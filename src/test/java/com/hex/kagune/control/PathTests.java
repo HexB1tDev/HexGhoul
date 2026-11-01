@@ -24,6 +24,7 @@ public final class PathTests {
         unmarkedProfiles();
         owed();
         colours();
+        tints();
         if (!FAILURES.isEmpty()) {
             FAILURES.forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -107,7 +108,7 @@ public final class PathTests {
             }
             double[] hsv = KaguneColours.toHsv(pick.colour());
             double[] vein = KaguneColours.toHsv(pick.vein());
-            check(hsv[1] >= 0.5 && hsv[2] >= 0.4, "a rolled colour is vivid and light enough to see: " + KaguneColours.hex(pick.colour()));
+            check(hsv[1] >= 0.38 && hsv[2] >= 0.34, "a rolled colour is vivid and light enough to see: " + KaguneColours.hex(pick.colour()));
             double apart = Math.abs(vein[0] - hsv[0]);
             check(vein[2] < hsv[2] * 0.3 && (apart < 0.05 || apart > 0.95),
                 "its veins are its own hue, much darker: " + KaguneColours.hex(pick.vein()));
@@ -122,5 +123,43 @@ public final class PathTests {
             && KaguneColours.name(KaguneColours.hsv(0.75, 0.9, 0.9)).contains("violet") && KaguneColours.name(KaguneColours.BONE).equals("bone white"),
             "a colour's name and hex");
         check(KaguneColours.hsv(0.0, 1.0, 1.0) == 0xFF0000 && KaguneColours.hsv(1.0 / 3.0, 1.0, 1.0) == 0x00FF00, "hsv round trips");
+    }
+
+    /**
+     * 1.3.35: Ukaku's red palette turned to a kagune's colour: the crimson leaves it as it is; another turns its heart to that hue and
+     * keeps its depths deeper and its rims lighter; the near-black is black with a red glow; alpha kept; a wild ghoul's colour is fixed
+     * by its seed, varied across seeds, sometimes the crimson.
+     */
+    private static void tints() {
+        int heart = 0xE3161C;   // the wings' red
+        int depth = 0x1B1031;   // the crystal's dark
+        int rim = 0xF5C4E6;     // a rim
+        check(KaguneTint.recolour(0x80123456, KaguneColours.DEFAULT) == 0x80123456, "the crimson draws the palette as it always was");
+        for (int target : new int[] {0x1F8A7A, 0x6A2BC9, 0xD9A21A, 0x2E5FD6, 0x3FAF3A}) {
+            int h = KaguneTint.recolour(0xFF000000 | heart, target);
+            double[] got = KaguneColours.toHsv(h & 0xFFFFFF);
+            double[] want = KaguneColours.toHsv(target);
+            double apart = Math.abs(got[0] - want[0]);
+            check(Math.min(apart, 1.0 - apart) < 0.03, "the heart turns to " + KaguneColours.hex(target) + " (" + KaguneColours.hex(h) + ")");
+            check((h >>> 24) == 0xFF && (KaguneTint.recolour(0x40000000 | heart, target) >>> 24) == 0x40, "alpha kept");
+            double d = KaguneColours.toHsv(KaguneTint.recolour(depth, target) & 0xFFFFFF)[2];
+            double r = KaguneColours.toHsv(KaguneTint.recolour(rim, target) & 0xFFFFFF)[2];
+            check(d < got[2] && r > d, "the depths stay deeper than the heart, the rims lighter (" + KaguneColours.hex(target) + ")");
+        }
+        double[] black = KaguneColours.toHsv(KaguneTint.recolour(depth, KaguneColours.BLACK) & 0xFFFFFF);
+        double[] blackRim = KaguneColours.toHsv(KaguneTint.recolour(rim, KaguneColours.BLACK) & 0xFFFFFF);
+        double[] blackGlow = KaguneColours.toHsv(KaguneTint.recolour(heart, KaguneColours.BLACK) & 0xFFFFFF);
+        check(black[2] < 0.1 && blackRim[2] < 0.3 && blackGlow[1] > 0.6 && blackGlow[2] > 0.7, "the near-black: black, its glow still red");
+        double[] bone = KaguneColours.toHsv(KaguneTint.recolour(heart, KaguneColours.BONE) & 0xFFFFFF);
+        check(bone[1] < 0.2 && bone[2] > 0.6, "bone white: pale and nearly colourless");
+        check(KaguneTint.wild(1234) == KaguneTint.wild(1234), "a wild ghoul's colour is its own, every time");
+        java.util.Set<Integer> seen = new java.util.HashSet<>();
+        int crimson = 0;
+        for (int seed = 0; seed < 400; seed++) {
+            int c = KaguneTint.wild(seed);
+            seen.add(c);
+            crimson += c == KaguneColours.DEFAULT ? 1 : 0;
+        }
+        check(seen.size() > 300 && crimson > 25 && crimson < 110, "wild ghouls vary, the crimson now and then (" + seen.size() + ", " + crimson + ")");
     }
 }

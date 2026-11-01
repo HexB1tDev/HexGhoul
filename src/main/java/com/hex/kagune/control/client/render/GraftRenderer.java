@@ -166,10 +166,15 @@ public final class GraftRenderer {
             Frame frame = Frame.of(npc, partial);
             GraftRig.Body body = body(npc, partial, clock, frame, prey(level, npc, limbs, partial, frame));
             VertexConsumer out = consumer[0] == null ? (consumer[0] = buffers.m_6299_(TYPE)) : consumer[0];
-            // 1.0.41: its tails turned over with it as it flips (carried on its torso, as a player's are).
-            drawSet(out, matrix, normals, level, npc, view, GraftStage.TRANSPLANT, limbs.base, deploy, view, body, frame, camera, clock, partial,
-                seen.identity().lookMastery(), distance <= DETAIL_DISTANCE_SQR, null,
-                com.hex.kagune.control.client.GhoulNpcClient.flip(seen, clock, npc.m_20096_()));
+            // 1.0.41: its tails turned over with it as it flips (carried on its torso, as a player's are). 1.3.35: in its own colour.
+            tint = com.hex.kagune.control.KaguneTint.wild(seen.identity().seed());
+            try {
+                drawSet(out, matrix, normals, level, npc, view, GraftStage.TRANSPLANT, limbs.base, deploy, view, body, frame, camera, clock, partial,
+                    seen.identity().lookMastery(), distance <= DETAIL_DISTANCE_SQR, null,
+                    com.hex.kagune.control.client.GhoulNpcClient.flip(seen, clock, npc.m_20096_()));
+            } finally {
+                tint = com.hex.kagune.control.KaguneColours.DEFAULT;
+            }
         }
         if (consumer[0] != null) {
             buffers.m_109912_(TYPE);
@@ -375,7 +380,11 @@ public final class GraftRenderer {
         vertex(out, matrix, normals, d, n, cd, lit);
     }
 
-    private static void vertex(VertexConsumer consumer, Matrix4f matrix, Matrix3f normals, double[] p, double[] n, int colour, int light) {
+    /** 1.3.35: the colour the limbs being drawn now are turned to (a wild ghoul's own, KaguneTint.wild; the render thread's alone). */
+    private static int tint = com.hex.kagune.control.KaguneColours.DEFAULT;
+
+    private static void vertex(VertexConsumer consumer, Matrix4f matrix, Matrix3f normals, double[] p, double[] n, int argb, int light) {
+        int colour = com.hex.kagune.control.KaguneTint.recolour(argb, tint);
         consumer.m_252986_(matrix, (float)p[0], (float)p[1], (float)p[2])
             .m_6122_((colour >> 16) & 0xFF, (colour >> 8) & 0xFF, colour & 0xFF, colour >>> 24)
             .m_7421_(0.5F, 0.5F)
