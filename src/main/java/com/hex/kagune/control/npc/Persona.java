@@ -131,6 +131,24 @@ public abstract class Persona {
         return !this.owlKit();
     }
 
+    /** 1.3.29: how its body holds someone (EtoPose.Style): Eto's own, Ken's (he leads), Touka's (one hand, serious, flustered after). */
+    public int style() {
+        return this.leads() ? 1 : 0;
+    }
+
+    /** 1.3.29: true if it winds round its partner's arm (Eto); false, it never would (Touka: a hug if asked to hold them). */
+    public boolean clings() {
+        return true;
+    }
+
+    /**
+     * 1.3.29: what it does unasked instead of {@code gesture}, its own way (Touka: never an arm, a quick kiss on the cheek; never a dance
+     * or a song, a kiss stolen when they least expect it). {@code gesture} itself if it has no other way.
+     */
+    public EtoGesture unasked(EtoGesture gesture) {
+        return gesture;
+    }
+
     /** Where it goes home to, as a line says it. */
     public abstract String home();
 
@@ -312,6 +330,28 @@ public abstract class Persona {
             return gesture.blush || switch (gesture) {
                 case KISS, HAND, CLING, LEAN, HAIR, DANCE, HUM, PET, RING -> true;
                 default -> false;
+            };
+        }
+
+        /** 1.3.29: the owner: her own way, not Eto's: one hand to their head for a kiss, serious, flustered after. */
+        @Override
+        public int style() {
+            return 2;
+        }
+
+        /** 1.3.29: the owner: "she would definitely never grab your arm like Eto does". */
+        @Override
+        public boolean clings() {
+            return false;
+        }
+
+        /** 1.3.29: a kiss on the cheek out of nowhere, or their face turned to hers and a kiss on the lips, and then a complaint. */
+        @Override
+        public EtoGesture unasked(EtoGesture gesture) {
+            return switch (gesture) {
+                case CLING, HUM -> EtoGesture.PECK;
+                case DANCE, READ -> EtoGesture.STEAL;
+                default -> gesture;
             };
         }
 

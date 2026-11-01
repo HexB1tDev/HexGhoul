@@ -267,6 +267,17 @@ final class ToukaScript extends CompanionScript {
             "Don't make that face. ...I'll do it again.");
     }
 
+    /** 1.3.29: a kiss she stole (their face turned to hers first), and then a complaint, because she's Touka. */
+    @Override
+    public String stolen(int seed) {
+        return one(seed, "*she turns your face to hers and kisses you* ...What. You were staring. It was annoying. Problem solved.",
+            "*her hand on your cheek, a kiss before you can blink* ...Don't. Say. Anything. I mean it.",
+            "*she pulls your face down to hers, kisses you, and lets go* ...You had something on your lips. It's gone now. You're welcome.",
+            "*a quick, hard kiss, then she's looking at the wall* ...I don't know why I did that. Stop smiling. I'm leaving.",
+            "*she turns you round by the chin and kisses you* ...Ugh. You were taking too long. Somebody had to.",
+            "*she kisses you before you see it coming* ...That's for earlier. Don't ask what earlier. Just accept it.");
+    }
+
     @Override
     public String kissWaiting(String name) {
         return name + " goes red to the ears, squeezes her eyes shut and leans in...";

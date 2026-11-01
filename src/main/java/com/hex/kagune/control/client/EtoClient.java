@@ -115,7 +115,9 @@ public final class EtoClient {
         int me = minecraft.f_91074_.m_19879_();
         for (Map.Entry<Integer, View> entry : VIEWS.entrySet()) {
             View view = entry.getValue();
-            if (view.with() != me || view.gesture() != EtoGesture.PULL) {
+            // 1.3.29: a kiss stolen (Touka) turns their face to hers too, quickly, for the first part of it.
+            boolean steal = view.gesture() == EtoGesture.STEAL && view.gestureAge(com.hex.kagune.control.client.PaleClient.clock(0.0F)) < 26.0;
+            if (view.with() != me || view.gesture() != EtoGesture.PULL && !steal) {
                 continue;
             }
             net.minecraft.world.entity.Entity her = minecraft.f_91073_.m_6815_(entry.getKey());
@@ -132,8 +134,9 @@ public final class EtoClient {
             float yaw = (float)Math.toDegrees(Math.atan2(-dx, dz));
             float pitch = (float)-Math.toDegrees(Math.atan2(dy, flat));
             float turn = ((yaw - minecraft.f_91074_.m_146908_()) % 360.0F + 540.0F) % 360.0F - 180.0F;
-            minecraft.f_91074_.m_146922_(minecraft.f_91074_.m_146908_() + turn * 0.12F);
-            minecraft.f_91074_.m_146926_(minecraft.f_91074_.m_146909_() + (pitch - minecraft.f_91074_.m_146909_()) * 0.12F);
+            float pull = steal ? 0.3F : 0.12F;
+            minecraft.f_91074_.m_146922_(minecraft.f_91074_.m_146908_() + turn * pull);
+            minecraft.f_91074_.m_146926_(minecraft.f_91074_.m_146909_() + (pitch - minecraft.f_91074_.m_146909_()) * pull);
             return;
         }
     }

@@ -218,8 +218,8 @@ final class NpcWings {
 
     /** A crystal spike from the tip of the next wing at {@code target}'s middle, turned {@code spread} degrees off it. */
     private static void throwSpike(EtoNpc npc, State st, LivingEntity target, ServerLevel level, long now, int kind, double spread, float damage) {
-        int side = st.side;
-        st.side = -st.side;
+        int side = WingRules.SIDE; // 1.3.29: her one wing
+        st.side = side;
         Vec3 aim = GhoulNpcBrain.centre(target);
         Vec3 from = tip(npc, side, aim);
         Vec3 way = aim.m_82546_(from);

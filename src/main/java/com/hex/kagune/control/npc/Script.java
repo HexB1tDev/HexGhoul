@@ -112,6 +112,11 @@ public interface Script {
         return this.kissed(seed, false);
     }
 
+    /** 1.3.29: after a kiss it stole (their face turned to its own first). */
+    default String stolen(int seed) {
+        return this.peck(seed);
+    }
+
     /** 1.3.14: the line on screen while it waits on a kiss ({@code name}: what it is called). */
     default String kissWaiting(String name) {
         return name + " leans in, eyes closed...";

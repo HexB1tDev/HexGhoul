@@ -103,8 +103,9 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
         if (view == null) {
             return null;
         }
+        // 1.3.29: each her own way (Persona.style), and a kiss not the same kiss every time (by when it began).
         return EtoFight.pose(npc, view.fight(), moment(npc, alive(npc, view, EtoPose.gesture(view.gesture(), view.gestureAge(clock),
-            npc.persona().leads()), partial), clock), clock, partial);
+            npc.persona().style(), (int)Math.floorMod(view.gestureAt(), 3L)), partial), clock), clock, partial);
     }
 
     /** 1.3.20: a moment with one of its children (a hug, a toss, a spin...) over its gesture: its parent's side of it. */

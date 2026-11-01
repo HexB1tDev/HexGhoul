@@ -1,16 +1,19 @@
 package com.hex.kagune.control.npc;
 
 /**
- * 1.3.19: Touka's wings in a fight (pure): her own little thing, nowhere near Ken or Eto. A lesser pair (Ukaku about halfway grown) out
- * of her back the moment a fight finds her, turned to crystal, throwing crystal spikes: a volley of three, a fan of five, now and then
- * the barrage (both wings in turn, fast). Up close she fights with what her eyes give her (strikes, the kick, flips).
+ * 1.3.19: Touka's wings in a fight (pure): her own little thing, nowhere near Ken or Eto. 1.3.29: the owner: "only one wing, not two, and
+ * it should be smaller": one small wing ({@link #SIDE}, Ukaku not long grown, {@link #MASTERY}) out of her back the moment a fight finds
+ * her, turned to crystal, throwing crystal spikes from it: a volley of three, a fan of five, now and then the barrage. Up close she
+ * fights with what her eyes give her (strikes, the kick, flips).
  */
 public final class WingRules {
     private WingRules() {
     }
 
-    /** How grown her wings are drawn (Ukaku mastery): about halfway, a lesser pair. */
-    public static final int MASTERY = 380;
+    /** How grown her wing is drawn (Ukaku mastery): just past the first wings, small. */
+    public static final int MASTERY = 170;
+    /** Her one wing: on her right (+1); every spike leaves from it. */
+    public static final int SIDE = 1;
     /** Out over, crystal after (ticks). */
     public static final int DEPLOY_TICKS = 10;
     public static final int CRYSTAL_AFTER = 12;
@@ -76,12 +79,13 @@ public final class WingRules {
     }
 
     /**
-     * 1.3.26: a companion's wings (Touka's) as the rig draws them: a twin pair at {@link #MASTERY}, both on her back (none thrown as a
-     * vortex: passing 0 there drew nothing at all, the owner's "not manifesting"), crystal as she throws, aiming as she shoots.
+     * 1.3.26: a companion's wings (Touka's) as the rig draws them at {@link #MASTERY}, crystal as she throws, aiming as she shoots. 1.3.29:
+     * one wing alone, on {@link #SIDE} (the other shoulder blade's grown to nothing: the rig draws nothing there).
      */
     public static com.hex.kagune.control.ukaku.WingRig.Input companion(float deploy, double time, float crystal, boolean dissolving, float aim,
                                                                        double[] at, float kickRight, float kickLeft, float detail) {
         return new com.hex.kagune.control.ukaku.WingRig.Input(com.hex.kagune.control.ukaku.WingForm.TWIN, MASTERY, deploy, time, crystal, crystal,
-            com.hex.kagune.control.ukaku.WingRig.Motion.NONE, 0.0F, 0.4F, 0.0F, 0.0F, false, detail, 1.0F, dissolving, aim, aim, at, kickRight, kickLeft);
+            com.hex.kagune.control.ukaku.WingRig.Motion.NONE, 0.0F, 0.4F, 0.0F, 0.0F, false, detail, 1.0F, dissolving, aim, aim, at, kickRight, kickLeft,
+            0.0F, 0.0F, SIDE > 0 ? 1.0F : 0.0F, SIDE > 0 ? 0.0F : 1.0F);
     }
 }

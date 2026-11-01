@@ -28,13 +28,118 @@ public final class EtoPose {
      * same as everyone's.
      */
     public static RigPose gesture(EtoGesture gesture, double age, boolean leads) {
-        if (leads && gesture != null) {
-            RigPose led = led(gesture, (float)age);
-            if (led != null) {
-                return led;
+        return gesture(gesture, age, leads ? 1 : 0, 0);
+    }
+
+    /**
+     * 1.3.29: the pose for {@code gesture} in {@code style} (Persona.style: 0 Eto's, 1 Ken's {@link #led}, 2 Touka's {@link #touka}),
+     * {@code variant} (0..2: which of its ways this time, so a kiss is not the same kiss every time).
+     */
+    public static RigPose gesture(EtoGesture gesture, double age, int style, int variant) {
+        if (gesture != null) {
+            RigPose own = style == 1 ? led(gesture, (float)age) : style == 2 ? touka(gesture, (float)age, variant) : null;
+            if (own != null) {
+                return own;
             }
         }
         return gesture(gesture, age);
+    }
+
+    /**
+     * 1.3.29: Touka's, not Eto's (the owner: "she's more serious"): for a kiss she reaches up with ONE hand, to their head, their cheek or
+     * the back of their neck (by {@code variant}), the other hand stiff at her side; a quick kiss is on the cheek, her head turned, a hand
+     * on their shoulder; a kiss she steals turns their face to hers with a hand on their cheek, then she pulls back, arms crossed, looking
+     * anywhere else; after a kiss she doesn't bounce, she crosses her arms and looks away; a hug is a proper one, stiff, her face turned
+     * aside. Null for anything else (everyone's).
+     */
+    static RigPose touka(EtoGesture gesture, float t, int variant) {
+        RigPose p = new RigPose();
+        float in = gesture.held() ? ease(t / 6.0F) : envelope(t, gesture.ticks, 5.0F, 6.0F);
+        int v = Math.floorMod(variant, 3);
+        switch (gesture) {
+            case KISS, BLUSH -> {
+                float lean = gesture == EtoGesture.BLUSH ? 0.5F : 0.4F;
+                p.lean = lean;
+                p.headX = -lean - 0.06F;
+                p.headZ = (v == 2 ? -0.1F : 0.08F) + 0.04F * (float)Math.sin(t * 0.1);
+                // One hand up to them: their head (0), their cheek (1), the back of their neck (2).
+                p.rightArmX = v == 0 ? -2.55F : v == 1 ? -1.95F : -2.25F;
+                p.rightArmY = v == 0 ? -0.2F : v == 1 ? -0.42F : -0.6F;
+                p.rightArmZ = 0.08F;
+                p.rightArmHold = 1.0F;
+                // The other stiff at her side, a fist.
+                p.leftArmX = 0.12F;
+                p.leftArmZ = -0.06F;
+            }
+            case PULL -> {
+                // Pulling them in: one hand behind their head, the other flat against their chest; still only the one reaching up.
+                p.lean = 0.5F;
+                p.headX = -0.56F;
+                p.headZ = 0.16F + 0.05F * (float)Math.sin(t * 0.09);
+                p.rightArmX = -2.4F;
+                p.rightArmY = -0.5F;
+                p.rightArmZ = 0.1F;
+                p.leftArmX = -1.25F;
+                p.leftArmY = 0.2F;
+                p.leftArmZ = -0.05F;
+                p.rightArmHold = 1.0F;
+                p.leftArmHold = 1.0F;
+            }
+            case PECK -> {
+                float close = (float)Math.sin(Math.min(1.0, t / (double)EtoGesture.PECK.ticks) * Math.PI);
+                p.lean = 0.36F * close;
+                p.headX = -0.2F * close;
+                p.headY = (v == 1 ? -0.55F : 0.55F) * close; // to their cheek, not their lips
+                p.drop = -0.6F * close;
+                p.rightArmX = -1.35F;
+                p.rightArmY = -0.3F;
+                p.rightArmZ = 0.05F;
+                p.leftArmX = 0.1F;
+            }
+            case STEAL -> {
+                float steal = (float)Math.min(1.0, t / 8.0);
+                float back = t < 26.0F ? 0.0F : ease((t - 26.0F) / 10.0F);
+                float kiss = steal * (1.0F - back);
+                p.lean = 0.46F * kiss;
+                p.headX = -0.5F * kiss + 0.18F * back;
+                p.drop = -0.7F * kiss;
+                p.rightArmX = -1.95F * kiss + -1.05F * back;
+                p.rightArmY = -0.45F * kiss + -0.85F * back;
+                p.rightArmZ = 0.08F * kiss + 0.85F * back;
+                p.leftArmX = 0.12F * kiss + -1.05F * back;
+                p.leftArmY = 0.85F * back;
+                p.leftArmZ = -0.85F * back;
+                p.headY = 0.6F * back;
+                p.rightArmHold = 1.0F;
+                p.leftArmHold = 1.0F;
+                return p; // its own envelope (no fade: the cross is held to the end)
+            }
+            case KISSED -> {
+                // Arms crossed, chin tucked, looking away. Flustered, not giddy.
+                p.rightArmX = -1.05F;
+                p.leftArmX = -1.05F;
+                p.rightArmZ = -0.85F;
+                p.leftArmZ = 0.85F;
+                p.rightArmY = 0.3F;
+                p.leftArmY = -0.3F;
+                p.headY = v == 1 ? -0.55F : 0.55F;
+                p.headX = 0.18F;
+            }
+            case HUG -> {
+                // A proper hug, stiff; her face turned aside so they can't see it.
+                p.rightArmX = -1.45F;
+                p.leftArmX = -1.45F;
+                p.rightArmZ = -0.5F;
+                p.leftArmZ = 0.5F;
+                p.lean = 0.08F;
+                p.headY = v == 2 ? 0.5F : -0.5F;
+                p.headX = 0.1F;
+            }
+            default -> {
+                return null;
+            }
+        }
+        return p.scale(in);
     }
 
     /**
@@ -553,6 +658,29 @@ public final class EtoPose {
                 p.leftArmX = 0.55F;
                 p.rightArmZ = -0.22F;
                 p.leftArmZ = 0.22F;
+            }
+            case WATER -> {
+                // 1.3.29: the bucket held out over the flowers and tipped, slowly, side to side.
+                float tip = (float)Math.sin(t * 0.09);
+                p.rightArmX = -1.2F + 0.15F * tip;
+                p.rightArmY = -0.2F;
+                p.rightArmZ = 0.25F + 0.12F * tip;
+                p.leftArmX = -0.4F;
+                p.lean = 0.22F;
+                p.headX = 0.42F;
+                p.headY = 0.12F * tip;
+            }
+            case TIDY -> {
+                // 1.3.29: bent over a chest, one hand then the other putting things where they go.
+                float a = (float)Math.sin(t * 0.22);
+                float b = (float)Math.sin(t * 0.22 + Math.PI);
+                p.lean = 0.55F;
+                p.headX = 0.35F;
+                p.rightArmX = -1.15F + 0.35F * a;
+                p.leftArmX = -1.15F + 0.35F * b;
+                p.rightArmZ = 0.12F;
+                p.leftArmZ = -0.12F;
+                p.headY = 0.15F * (float)Math.sin(t * 0.05);
             }
             case BOW -> {
                 // A small, polite bow from the hips, hands at the sides.

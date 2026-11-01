@@ -586,7 +586,7 @@ say: Where have you been? ...No. Don't explain. I don't care. ...I care. Just st
 say: You were gone so long I almost texted you. I don't text people. You've ruined me.
 > I missed you. | +3 hug
   - ...I missed you too. Idiot. Don't make me say it again.
-> I'm sorry I was gone. | +3 cling forgive
+> I'm sorry I was gone. | +3 lean forgive
   - Don't be sorry. Just... stay. Here. Okay? Just for a while.
 > I was busy. | -1 pout
   - Busy. Right. Me too. Busy missing you. Ugh, forget I said that.
@@ -596,7 +596,7 @@ scene couple_lonely_window
 who: together
 mood: lonely clingy
 say: I kept the window seat. Every day. In case. ...Sit. It's yours.
-> Sit with her. | +3 cling
+> Sit with her. | +3 lean
   - ...Good. Don't go anywhere. I'll get you coffee in a minute. In a minute.
 > You kept it every day? | +2 shy
   - Don't look at me like that. It's a good seat. That's all.
@@ -608,7 +608,7 @@ scene couple_lonely_sleep
 who: together
 mood: lonely sleepy
 say: I couldn't sleep while you were gone. Not because of you. Because of... the noises. The noises sounded like you not being here.
-> Sleep now. I'm here. | +3 cling yawn
+> Sleep now. I'm here. | +3 lean yawn
   - ...Okay. Don't leave while I'm asleep. Promise.
 > That's sweet. | +2 shy
   - It's not sweet, it's insomnia.
@@ -616,17 +616,18 @@ say: I couldn't sleep while you were gone. Not because of you. Because of... the
   - I'm a GHOUL. Milk tastes like chalk. Idiot.
 ignored: Another night of noises, then.
 
-scene couple_clingy_arm
+scene couple_clingy_peck
 who: together
-mood: clingy
-say: Don't move. I'm cold. I'm using your arm. It's not a hug. It's an arm.
-> Let her. | +2 cling
-  - ...Good arm. Okay. Walk slow.
-> It's definitely a hug. | +2 shy
-  - It's an ARM. ...Fine. Hug. Shut up.
-> I need my arm back. | -1 pout
-  - You have two. Use the other one.
-ignored: Fine. I'll be cold. Forever. Because of you.
+mood: clingy giddy happy
+say: Hold still. You've got something on your face. ...*a quick kiss on your cheek* ...There. Gone. Don't look at me.
+say: Turn around. ...*she kisses your cheek, fast, and looks away* ...What. You had a bug. On your face. I got it.
+> Kiss her cheek back. | +3 shy giddy
+  - Wh— ...You can't just— ...Ugh. Fine. We're even. Stop smiling.
+> There wasn't anything on my face. | +2 shy
+  - There WAS. It was... a feeling. On your face. Shut up.
+> Do that again. | +2 peck
+  - ...Fine. ONE more. Then I'm going back to work. Don't tell anyone.
+ignored: Forget it. It didn't happen.
 
 scene couple_clingy_follow
 who: together
@@ -644,7 +645,7 @@ scene couple_clingy_lean
 who: together
 mood: clingy sleepy affectionate
 say: I'm leaning on you. You're sturdy. Like a wall. A warm, annoying wall.
-> Let her lean. | +2 cling lean
+> Let her lean. | +2 lean
   - ...Don't talk. Talking moves you.
 > Put an arm around her. | +3 hug shy
   - ...Okay. That's fine. That's allowed.
@@ -661,7 +662,7 @@ say: Five more minutes. Then I'm kicking you out of bed. Then I'm pulling you ba
   - ...You're useful. Sometimes. This is one of the times.
 > Fix her hair. | +3 hair shy
   - Don't— ...fine. Gently. ...You're good at that. Weird.
-> Five more minutes. | +2 cling
+> Five more minutes. | +2 lean
   - Ten. ...Fifteen.
 ignored: *falls back asleep, grumbling*
 
@@ -682,7 +683,7 @@ who: together
 mood: sleepy
 when: dawn
 say: The sun's coming up. I hate the sun. Stand in front of it. Block it. You're good for something.
-> Block the sun. | +2 cling
+> Block the sun. | +2 lean
   - ...Good. Stay like that. Forever. Or ten minutes.
 > Come inside. | +2
   - Fine. Carry me. ...Kidding. Mostly kidding.
@@ -748,7 +749,7 @@ who: together
 mood: affectionate giddy
 when: night
 say: Can I... sit closer? I mean. I'm going to sit closer. I'm not asking.
-> Pull her close. | +3 cling shy
+> Pull her close. | +3 lean shy
   - ...Oh. Okay. Yeah. That's... that's nice. Don't say anything.
 > Of course. | +2 shy
   - ...You don't have to say "of course" like that. All soft. Ugh. Say it again.
@@ -761,7 +762,7 @@ who: together
 mood: affectionate happy
 when: night !rain
 say: Look up. ...No, not at me. Up. The sky. It's clear. We never get clear skies in the ward.
-> Look at the stars with her. | +3 cling
+> Look at the stars with her. | +3 lean
   - ...Nice, right? Don't say anything. Just look.
 > I'd rather look at you. | +3 shy hearts
   - Shut UP. ...You're so embarrassing. ...Keep looking, then.
@@ -777,7 +778,7 @@ when: rain
 mood: happy clingy affectionate lonely bored giddy sleepy sulky
 say: It's raining. ...Share my umbrella. It's small. We'll have to stand close. That's not why I'm offering.
 say: Rain. Good. The cafe's empty. Sit by the window with me. Don't talk. Just... sit.
-> Share the umbrella. | +3 cling shy
+> Share the umbrella. | +3 lean shy
   - ...You're getting wet on purpose so you can stand closer. I know your tricks. ...Fine.
 > Sit by the window. | +2 sip
   - Here. Coffee. Listen to the rain. ...Nice, right?
@@ -824,7 +825,7 @@ say: Don't do that to me again. I thought... I thought I'd have to bury you. Don
   - You're not FINE. Stop saying fine.
 page bury
 say: In the nicest spot. Under a tree. I'd visit every day. ...I'd hate it. I'd hate every day. So don't.
-> I won't. | +3 cling
+> I won't. | +3 lean
   - Promise. Say promise.
 > That's weirdly sweet. | +2 shy
   - Shut up. Don't die.
@@ -836,7 +837,7 @@ when: dusk
 say: Night's coming. My eye always itches at dusk. ...Walk with me while it's still light? I like the last bit of light.
 > Walk with her. | +2 follow hand
   - ...Slow. Walk slow. The light goes fast.
-> Watch the sunset here. | +2 cling
+> Watch the sunset here. | +2 lean
   - ...It's pretty. Don't tell anyone I said pretty.
 > I need to go. | -1 pout
   - Of course you do. Go, then.
@@ -885,7 +886,7 @@ when: pregnant
 say: Doves have been close lately. If anything happens, you take the baby and you run. Don't argue. Promise me.
 > I promise. | +3 hug
   - ...Good. ...Okay. Good.
-> I'm not leaving you. | +3 cling hearts
+> I'm not leaving you. | +3 lean hearts
   - Idiot. ...Stupid idiot. ...Okay. Then we both run.
 > Nothing's going to happen. | +1
   - You don't know that. Promise anyway.
@@ -964,7 +965,7 @@ mood: sleepy sulky bored lonely
 say: {kids} asked me nine hundred questions today. Why is the sky. Why are wings. Why can't we eat cake. I'm done. I'm DONE.
 > I'll take the next round. | +3 hug
   - Promise? ...You'll last ten minutes. I'll watch. With coffee.
-> Rest with me. | +2 cling
+> Rest with me. | +2 lean
   - Five minutes. Then they find us. They always find us.
 > You love it. | +2 shy
   - ...Shut up. Yes. Don't tell them.
@@ -1023,7 +1024,7 @@ scene couple_home_night
 who: wife
 when: home night
 say: The kids are asleep. The cafe's closed. It's just us. ...What do we even do when it's just us?
-> Sit together. | +3 cling
+> Sit together. | +3 lean
   - ...Oh. Yeah. This. This is good.
 > Anything you want. | +3 shy -> want
 > Sleep. | +1 yawn
@@ -1095,7 +1096,7 @@ who: together
 when: human
 mood: happy affectionate clingy giddy
 say: You're warm. Humans are always so warm. It's annoying. Stay still.
-> Let her warm up. | +3 cling
+> Let her warm up. | +3 lean
   - ...Okay. This is fine. Don't make it weird.
 > Does it bother you, the smell? | +1 -> smell
 > You're always cold. | +1 shy
@@ -1335,7 +1336,7 @@ who: together
 say: Losing things. People. I've lost a lot. I don't plan on losing you. So don't be stupid.
 > You won't lose me. | +3 hug
   - You can't promise that. ...Promise anyway.
-> Me too. | +2 cling
+> Me too. | +2 lean
   - Then we'll hold on. Tight. Ugh, that sounded soft. Forget it.
 
 topic together_hair
@@ -1417,3 +1418,129 @@ say: I haven't eaten in days. Don't tell me to eat. I know. I'm just... I don't 
 > You need to eat. | +1 huff
   - I KNOW. I said don't tell me. Ugh. Fine. Tomorrow.
 ignored: I'll go tomorrow. Probably.
+
+# =====================================================================================================================================
+# HER PAST WITH KEN (1.3.29): she ended it; he never wanted to be touched, not by her, not by anyone. She hates talking about it, and
+# it still slips out now and then, to a friend or to her partner. Once she's married, never again.
+# =====================================================================================================================================
+
+topic past_ken
+prompt: Were you and Ken ever together?
+who: friend partner
+say: ...Who told you that? ...Yeah. A while. It didn't work. Don't make that face. It's old news.
+> What happened? | +1 -> happened
+> You don't have to talk about it. | +2 shy
+  - ...Thanks. I don't. ...Maybe one day.
+> Do you still love him? | -1 -> still
+page happened
+say: He never wanted to be touched. Not by me. Not by anyone. I'd reach for his hand and he'd pull away like I'd burned him. ...So I stopped reaching. Then I stopped altogether.
+> That must have hurt. | +2 shy
+  - It did. It doesn't now. ...Mostly doesn't. Drop it.
+> It wasn't your fault. | +3 shy hearts
+  - I know that. ...It's nice to hear anyway. Shut up.
+> Maybe he was scared. | +1 cross
+  - Of course he was scared. I'm not stupid. Scared isn't the same as wanting me. ...Forget it.
+page still
+say: No. ...I care what happens to him. That's different. He's an idiot I used to know. That's all he is.
+> Okay. | +1
+  - Okay. Good. We're done talking about him.
+> That's not all he is, is it? | -1 huff
+  - Drop it. I mean it.
+
+topic past_ken_partner
+prompt: Does it bother you, Ken being around?
+who: partner
+say: Him? No. ...A little. He's a good teacher. He was a terrible boyfriend. He'd flinch if I so much as brushed his sleeve.
+> I'm glad I'm not him. | +2 shy
+  - You're nothing like him. You hold my hand like it's nothing. ...It's not nothing. You know what I mean.
+> Want me to talk to him? | -1 kicks
+  - NO. Absolutely not. You'll make it weird. Leave it.
+> You deserve someone who wants you close. | +3 shy hearts
+  - ...I know. I've got one now. Don't let it go to your head.
+
+scene past_ken_hand
+who: partner
+mood: happy clingy giddy affectionate
+weight: 1
+say: ...You don't pull away. When I take your hand. You just... don't. I keep waiting for it.
+> I'll never pull away. | +3 hand shy
+  - ...Okay. Don't. ...Idiot. Thanks.
+> Who pulled away? | +1 -> who
+> Why would I? | +2 shy
+  - Some people do. Forget it. I'm glad you don't.
+page who
+say: ...Ken. Back when we were... whatever we were. He'd flinch. Every time. I got tired of being flinched at.
+> I'm not him. | +3 hug shy
+  - I know. That's why I'm still holding on. Don't say anything else.
+> That's his loss. | +2 shy
+  - ...Yeah. It is. ...Shut up, I'm not smiling.
+ignored: Never mind. Stupid thing to say.
+
+scene past_ken_sighting
+who: friend partner
+mood: happy bored sulky
+weight: 1
+say: I saw Ken today. At the cafe. He ordered the same thing he always did. We said hi. That's it. That's the whole story. ...Why are you looking at me?
+> Are you okay? | +2 -> okay
+> That's it? | +1
+  - That's it. We're fine. We're polite. Polite is fine.
+> Did it bother you? | +1 cross
+  - It doesn't bother me. Stop asking if it bothers me.
+page okay
+say: ...Yeah. It's just strange. You spend months reaching for someone who keeps stepping back, and then one day you just... stop. And he doesn't even notice you stopped.
+> He noticed. He just didn't say. | +2 shy
+  - Maybe. Doesn't matter now. ...Thanks, though.
+> I'd notice. | +3 shy hearts
+  - ...I know you would. You notice everything. It's annoying. ...Don't stop.
+ignored: Forget I said anything.
+
+scene past_ken_friend
+who: close
+mood: happy bored sulky sleepy
+weight: 1
+say: Can I tell you something stupid? ...I used to think something was wrong with me. Because the person I was with never wanted me to touch him.
+> Nothing's wrong with you. | +3 shy
+  - I know that now. It took a long time. ...Don't tell anyone I told you.
+> Was that Ken? | +1 -> ken
+> That's awful. | +2
+  - It wasn't awful. It was just... lonely. Together and lonely. That's the worst kind.
+page ken
+say: ...Yeah. Don't say anything to him. He's not a bad person. He just couldn't. And I couldn't keep being the only one who wanted to.
+> You did the right thing. | +3 shy
+  - ...I know. Thanks. It's nice when someone else says it.
+> I won't say anything. | +2
+  - Good. ...Thanks for listening. Don't make it a habit.
+ignored: Never mind. Stupid thing.
+
+# ---------------------------------------------------------------------------------------------------- her own ways (1.3.29)
+
+scene couple_steal
+who: together
+mood: happy giddy clingy affectionate
+say: You're doing the face again. The stupid one. Where you look at me like I'm... ugh. Come here. Closer.
+say: Hold still. Don't turn around. ...I said don't turn around.
+> Come closer. | +3 steal
+  - Don't move. Don't say anything. Just— ...there.
+> What face? | +1 -> face
+> I'm not doing anything. | +1 shy
+  - You're doing it RIGHT NOW. Stop it. ...Don't stop it.
+page face
+say: That one. The soft one. It's unbearable. I'm going to do something about it.
+> Do something about it, then. | +3 steal
+  - Fine. You asked for it.
+> I'll stop. | 0 pout
+  - ...You don't have to stop. Idiot.
+ignored: Forget it. Your face is fine. Annoying, but fine.
+
+scene couple_cheek
+who: together
+mood: happy giddy clingy sleepy
+say: *she walks past you and, without looking, kisses your cheek* ...What? I was going that way anyway.
+say: *a quick kiss on your cheek, and she's already walking off* ...Don't follow me. Okay, follow me.
+> Kiss her cheek back. | +3 shy giddy
+  - ...You can't just— in public. ...There's nobody here. Fine. We're even.
+> Catch her hand. | +2 hand
+  - Hey— ...Okay. Fine. Walk with me, then.
+> Pretend nothing happened. | +1
+  - Good. Nothing happened. ...Nothing happened twice, later.
+ignored: Nothing happened. Got it? Nothing.

@@ -399,6 +399,13 @@ public final class SceneServer {
                         effect = EtoTalk.Effect.CLOSE;
                     }
                 }
+                case "steal" -> {
+                    // (a kiss stolen: their face turned to hers first; Touka's)
+                    if (together) {
+                        EtoBrain.walkUp(npc, npc.mind, player, EtoGesture.STEAL, now);
+                        effect = EtoTalk.Effect.CLOSE;
+                    }
+                }
                 case "sulk" -> npc.mind.sulk.put(player.m_20148_(), now + 2400L);
                 case "giddy" -> EtoBrain.giddy(npc, player, now);
                 case "hearts" -> EtoBrain.hearts(player.m_284548_(), npc, player, 5);

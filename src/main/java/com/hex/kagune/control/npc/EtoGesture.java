@@ -81,7 +81,16 @@ public enum EtoGesture {
     /** A small, polite bow. */
     BOW(36, false, false),
     /** A quick little kiss, given unasked: up on her toes, in, out, eyes shut and pink. */
-    PECK(30, true, true);
+    PECK(30, true, true),
+    /**
+     * 1.3.29 (Touka): a kiss stolen: she turns their face to hers (their view drawn to her while it lasts), kisses them before they know
+     * it, then pulls back, arms crossed, looking anywhere else.
+     */
+    STEAL(60, true, true),
+    /** 1.3.29: watering the flowers round the house (a bucket in her hand, tipped over them). */
+    WATER(120, false, false, "minecraft:water_bucket", null),
+    /** 1.3.29: tidying a chest (bent over it, putting things where they go). */
+    TIDY(140, false, false);
 
     public final int ticks;
     public final boolean eyesClosed;
@@ -122,6 +131,6 @@ public enum EtoGesture {
     /** True if she stands still for it (a prop in her hands, a lean, a sulk). */
     public boolean still() {
         return this.mainHand != null || this == LEAN || this == STRETCH || this == POUT || this == YAWN || this == PET || this == LOOK || this == CROSS
-            || this == TAP || this == SCOLD || this == SHY || this == CHIN || this == CRACK || this == BOW || this == KICKS;
+            || this == TAP || this == SCOLD || this == SHY || this == CHIN || this == CRACK || this == BOW || this == KICKS || this == STEAL || this == TIDY;
     }
 }

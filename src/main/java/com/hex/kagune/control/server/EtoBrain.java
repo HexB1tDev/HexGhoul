@@ -295,7 +295,7 @@ public final class EtoBrain {
             gesture(mind, EtoGesture.NONE, now);
         }
         if (mind.with != 0 && mind.gesture != EtoGesture.PULL && mind.gesture != EtoGesture.CLING && mind.gesture != EtoGesture.HUG
-            && mind.gesture != EtoGesture.HAND && mind.kiss == null) {
+            && mind.gesture != EtoGesture.HAND && mind.gesture != EtoGesture.STEAL && mind.kiss == null) {
             mind.with = 0;
             mind.dirty = true;
         }
@@ -840,11 +840,15 @@ public final class EtoBrain {
                 now - mind.initiativeAt, npc.m_217043_().m_188500_() / Math.max(0.05, npc.persona().forward()), npc.m_217043_().m_188500_());
             if (act != com.hex.kagune.control.npc.EtoInitiative.Act.NONE) {
                 mind.initiativeAt = now;
-                say(npc, partner, npc.persona().script().initiative(act, npc.m_217043_().m_188503_(1000)));
-                if (act == com.hex.kagune.control.npc.EtoInitiative.Act.HAND) {
+                // 1.3.29: each her own way (Touka: a kiss on the cheek, a kiss stolen; their own words as it lands).
+                EtoGesture does = npc.persona().unasked(act.gesture);
+                if (does == act.gesture) {
+                    say(npc, partner, npc.persona().script().initiative(act, npc.m_217043_().m_188503_(1000)));
+                }
+                if (does == EtoGesture.HAND) {
                     alert(npc, partner, Romance.Want.TALK, "takes your hand.");
                 }
-                walkUp(npc, mind, partner, act.gesture, now);
+                walkUp(npc, mind, partner, does, now);
                 return true;
             }
         }
@@ -855,12 +859,14 @@ public final class EtoBrain {
             EtoTalk.Context c = context(npc, partner);
             say(npc, partner, npc.persona().script().approach(c));
             alert(npc, partner, Romance.Want.TALK, "");
-            walkUp(npc, mind, partner, clingy ? EtoGesture.CLING : EtoGesture.WAVE, now);
+            walkUp(npc, mind, partner, clingy ? npc.persona().unasked(EtoGesture.CLING) : EtoGesture.WAVE, now);
             return true;
         }
         Long since = mind.nearSince.get(partner.m_20148_());
         if (clingy && distance < 4.0 && since != null && now - since > 200L && mind.gesture == EtoGesture.NONE && npc.m_217043_().m_188500_() < 0.01) {
-            walkUp(npc, mind, partner, EtoGesture.CLING, now);
+            // 1.3.29: Touka's way: a kiss on the cheek, now and then their face turned to hers and a kiss stolen.
+            EtoGesture does = npc.persona().unasked(npc.m_217043_().m_188500_() < 0.3 ? EtoGesture.DANCE : EtoGesture.CLING);
+            walkUp(npc, mind, partner, does == EtoGesture.DANCE ? EtoGesture.CLING : does, now);
             return true;
         }
         return false;
@@ -982,6 +988,9 @@ public final class EtoBrain {
 
     /** She walks up to {@code player} for {@code what} (a kiss, a hug, to cling, to wave). */
     public static void walkUp(EtoNpc npc, Mind mind, ServerPlayer player, EtoGesture what, long now) {
+        if (what == EtoGesture.CLING && !npc.persona().clings()) {
+            what = EtoGesture.HUG; // 1.3.29: one who never winds round an arm (Touka) holds them properly instead
+        }
         endKiss(npc, mind, null, now);
         if (npc.m_9236_() instanceof ServerLevel level) {
             ParentCare.drop(npc, mind, level, now);
@@ -1037,6 +1046,24 @@ public final class EtoBrain {
                     say(npc, player, npc.persona().script().hugged(seed));
                     giddy(npc, player, now);
                     mind.toward = null;
+                    if (player.m_20148_().equals(mind.babyNight)) {
+                        // 1.3.29: one who never clings (Touka) comes for the night they asked for with a hug instead.
+                        mind.babyNight = null;
+                        EtoServer.night(player, npc, context(npc, player));
+                    }
+                    return;
+                }
+                case STEAL -> {
+                    // 1.3.29 (Touka): their face turned to hers (their view drawn to her while it lasts), a kiss, then a complaint.
+                    gesture(mind, EtoGesture.STEAL, now);
+                    mind.with = player.m_19879_();
+                    hearts(level, npc, player, 6);
+                    say(npc, player, npc.persona().script().stolen(seed));
+                    NpcMemoryServer.add(player, npc.persona().key(), NpcMemory.KISSES, 1L);
+                    giddy(npc, player, now);
+                    RomanceServer.romanced(player, npc.persona().key());
+                    mind.toward = null;
+                    mind.dirty = true;
                     return;
                 }
                 case CLING -> {

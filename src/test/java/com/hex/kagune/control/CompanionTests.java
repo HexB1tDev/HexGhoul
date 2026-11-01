@@ -104,7 +104,7 @@ public final class CompanionTests {
         check(com.hex.kagune.control.npc.Persona.TOUKA.wings() && !com.hex.kagune.control.npc.Persona.ETO.wings()
             && !com.hex.kagune.control.npc.Persona.KEN.wings(), "only Touka fights with wings of her own");
         check(com.hex.kagune.control.npc.WingRules.MASTERY < com.hex.kagune.control.ukaku.WingForm.KAKUJA.requiredMastery()
-            && com.hex.kagune.control.npc.WingRules.MASTERY > com.hex.kagune.control.ukaku.WingForm.TWIN.requiredMastery(), "her wings are a lesser pair, about halfway");
+            && com.hex.kagune.control.npc.WingRules.MASTERY > com.hex.kagune.control.ukaku.WingForm.TWIN.requiredMastery(), "her wing is a lesser one");
         check(com.hex.kagune.control.npc.WingRules.SHOT < 6.0F && com.hex.kagune.control.npc.WingRules.BARRAGE < com.hex.kagune.control.npc.WingRules.SHOT,
             "her spikes sting; nowhere near Ken's blades");
         java.util.EnumSet<com.hex.kagune.control.npc.WingRules.Act> seen = java.util.EnumSet.noneOf(com.hex.kagune.control.npc.WingRules.Act.class);
@@ -231,8 +231,27 @@ public final class CompanionTests {
             && Persona.ETO.errandItem("minecraft:book"), "their first errands: beans for Touka, books for Ken and Eto");
         check(Persona.TOUKA.flower("minecraft:rabbit_foot") && !Persona.TOUKA.flower("minecraft:poppy") && Persona.KEN.flower("minecraft:white_tulip")
             && !Persona.KEN.flower("minecraft:poppy") && Persona.ETO.flower("minecraft:poppy"), "their last gifts: a rabbit's foot, a white flower, any flower");
-        check(EtoGesture.CROSS.ordinal() == EtoGesture.HAND.ordinal() + 1 && EtoGesture.HAND.ordinal() > EtoGesture.LAUGH.ordinal() && EtoGesture.PECK.ordinal() == EtoGesture.values().length - 1,
+        check(EtoGesture.CROSS.ordinal() == EtoGesture.HAND.ordinal() + 1 && EtoGesture.HAND.ordinal() > EtoGesture.LAUGH.ordinal()
+            && EtoGesture.STEAL.ordinal() == EtoGesture.PECK.ordinal() + 1 && EtoGesture.TIDY.ordinal() == EtoGesture.values().length - 1,
             "new gestures only ever at the end (sent by ordinal)");
+        // 1.3.29: Touka's own ways: never round an arm; a kiss on the cheek or a kiss stolen instead; her own poses, not Eto's.
+        check(Persona.ETO.clings() && Persona.KEN.clings() && !Persona.TOUKA.clings(), "Touka never winds round an arm");
+        check(Persona.TOUKA.unasked(EtoGesture.CLING) == EtoGesture.PECK && Persona.TOUKA.unasked(EtoGesture.DANCE) == EtoGesture.STEAL
+            && Persona.ETO.unasked(EtoGesture.CLING) == EtoGesture.CLING, "unasked, Touka kisses a cheek or steals a kiss; Eto clings");
+        check(Persona.ETO.style() == 0 && Persona.KEN.style() == 1 && Persona.TOUKA.style() == 2, "each holds someone their own way");
+        for (int variant = 0; variant < 3; variant++) {
+            com.hex.kagune.control.client.animation.RigPose kiss = com.hex.kagune.control.client.animation.EtoPose.gesture(EtoGesture.KISS, 20.0, 2, variant);
+            check(kiss != null && kiss.rightArmX < -1.5F && kiss.leftArmX > -0.5F, "Touka's kiss: one hand up to them, the other at her side (" + variant + ")");
+            com.hex.kagune.control.client.animation.RigPose eto = com.hex.kagune.control.client.animation.EtoPose.gesture(EtoGesture.KISS, 20.0, 0, variant);
+            check(eto != null && eto.rightArmX > 0.0F && eto.leftArmX > 0.0F, "Eto's kiss: hands behind her back (" + variant + ")");
+        }
+        com.hex.kagune.control.client.animation.RigPose a = com.hex.kagune.control.client.animation.EtoPose.gesture(EtoGesture.KISS, 20.0, 2, 0);
+        com.hex.kagune.control.client.animation.RigPose b = com.hex.kagune.control.client.animation.EtoPose.gesture(EtoGesture.KISS, 20.0, 2, 1);
+        check(a.rightArmX != b.rightArmX, "her kiss not the same every time");
+        com.hex.kagune.control.client.animation.RigPose stealIn = com.hex.kagune.control.client.animation.EtoPose.gesture(EtoGesture.STEAL, 12.0, 2, 0);
+        com.hex.kagune.control.client.animation.RigPose stealOut = com.hex.kagune.control.client.animation.EtoPose.gesture(EtoGesture.STEAL, 50.0, 2, 0);
+        check(stealIn.lean > 0.3F && stealOut.rightArmZ > 0.6F && stealOut.leftArmZ < -0.6F && Math.abs(stealOut.headY) > 0.4F,
+            "a kiss stolen: in close, then arms crossed, looking away");
     }
 
     static void lessons() {
@@ -428,5 +447,17 @@ public final class CompanionTests {
         }
         check(com.hex.kagune.control.ukaku.WingRig.build(com.hex.kagune.control.npc.WingRules.companion(0.0F, 5.0, 0.0F, true, 0.0F,
             com.hex.kagune.control.ukaku.WingRig.FORWARD, 0.0F, 0.0F, 1.0F), eye).isEmpty(), "put away, none are drawn");
+        // 1.3.29: the owner: "only one wing, not two, and it should be smaller".
+        com.hex.kagune.control.ukaku.WingRig.Input one = com.hex.kagune.control.npc.WingRules.companion(1.0F, 5.0, 1.0F, false, 0.0F,
+            com.hex.kagune.control.ukaku.WingRig.FORWARD, 0.0F, 0.0F, 1.0F);
+        com.hex.kagune.control.ukaku.WingRig.Input two = new com.hex.kagune.control.ukaku.WingRig.Input(one.form(), one.mastery(), one.deploy(), one.time(),
+            one.crystalRight(), one.crystalLeft(), one.motion(), one.progress(), one.impact(), one.volley(), one.recoil(), one.crouching(), one.detail(),
+            one.alpha(), one.dissolving(), one.aimRight(), one.aimLeft(), one.aim(), one.kickRight(), one.kickLeft(), 0.0F, 0.0F, 1.0F, 1.0F);
+        int alone = com.hex.kagune.control.ukaku.WingRig.build(one, eye).size();
+        int pair = com.hex.kagune.control.ukaku.WingRig.build(two, eye).size();
+        check(alone > 50 && alone < pair * 0.65, "Touka's kagune: one wing, not two (" + alone + " quads against a pair's " + pair + ")");
+        check(one.growRight() + one.growLeft() == 1.0F && com.hex.kagune.control.npc.WingRules.SIDE != 0, "one shoulder blade, every spike from it");
+        check(com.hex.kagune.control.ukaku.UkakuRules.wingLength(com.hex.kagune.control.npc.WingRules.MASTERY, com.hex.kagune.control.ukaku.WingForm.TWIN)
+            < com.hex.kagune.control.ukaku.UkakuRules.wingLength(380, com.hex.kagune.control.ukaku.WingForm.TWIN), "and smaller than it was");
     }
 }
