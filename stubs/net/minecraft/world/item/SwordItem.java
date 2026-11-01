@@ -2,4 +2,7 @@
 package net.minecraft.world.item;
 
 public class SwordItem extends Item {
+    /** 1.3.25: SwordItem(tier, attackDamageModifier, attackSpeedModifier, properties) */
+    public SwordItem(Tier tier, int damage, float speed, Item.Properties properties) {
+    }
 }

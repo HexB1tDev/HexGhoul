@@ -11,6 +11,8 @@ public final class ItemStack {
 
     /** is(TagKey) */ public boolean m_204117_(net.minecraft.tags.TagKey<Item> tag) { throw new UnsupportedOperationException(); }
     /** getItem */ public Item m_41720_() { throw new UnsupportedOperationException(); }
+    /** getTag (1.3.25) */ public net.minecraft.nbt.CompoundTag m_41783_() { throw new UnsupportedOperationException(); }
+    /** setTag (1.3.25) */ public void m_41751_(net.minecraft.nbt.CompoundTag tag) { throw new UnsupportedOperationException(); }
     /** isEmpty */ public boolean m_41619_() { throw new UnsupportedOperationException(); }
     /** getUseDuration */ public int m_41779_() { throw new UnsupportedOperationException(); }
     /** isEdible */ public boolean m_41614_() { throw new UnsupportedOperationException(); }

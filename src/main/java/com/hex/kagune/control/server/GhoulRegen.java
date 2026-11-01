@@ -26,6 +26,8 @@ import net.minecraftforge.fml.common.Mod;
 public final class GhoulRegen {
     private static final Map<UUID, long[]> HURT = new HashMap<>(); // {tick of the last hit}
     private static final Map<UUID, float[]> MISSING = new HashMap<>(); // {health missing when regeneration began}
+    /** 1.3.25: until when a quinque's cut holds a ghoul's regeneration back (RC suppression), by player. */
+    private static final Map<UUID, Long> SUPPRESSED = new HashMap<>();
     private static boolean healing;
 
     private GhoulRegen() {
@@ -37,6 +39,11 @@ public final class GhoulRegen {
             HURT.put(player.m_20148_(), new long[] {player.m_9236_().m_46467_()});
             MISSING.remove(player.m_20148_());
         }
+    }
+
+    /** 1.3.25: a quinque cut {@code player}: their regeneration holds back until {@code until} (game time); the later of two cuts. */
+    public static void suppress(ServerPlayer player, long until) {
+        SUPPRESSED.merge(player.m_20148_(), until, Math::max);
     }
 
     @SubscribeEvent
@@ -61,6 +68,14 @@ public final class GhoulRegen {
             return;
         }
         long now = player.m_9236_().m_46467_();
+        Long held = SUPPRESSED.get(id);
+        if (held != null) {
+            if (now < held) {
+                return; // 1.3.25: a quinque's cut: nothing grows back yet
+            }
+            SUPPRESSED.remove(id);
+            HURT.put(id, new long[] {now}); // and then the usual wait, from when it wears off
+        }
         long[] hurt = HURT.computeIfAbsent(id, ignored -> new long[] {now});
         boolean diet = GhoulReserveServer.applies(player);
         float reserve = diet ? GhoulReserveServer.get(player) : 0.0F;

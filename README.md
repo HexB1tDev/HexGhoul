@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.25 (HexGhoul): the CCG's quinques: briefcases that open into a Bikaku blade and a Koukaku spear (testing)
+
+See `.github/release-notes-1.3.25.md`.
+
 ## 1.3.24 (HexGhoul): Touka lives at Anteiku, Ken on top of the tower; NPCs fight to the end; the airplane spin fixed (testing)
 
 See `.github/release-notes-1.3.24.md`.

@@ -151,5 +151,14 @@
   "subtitles.hexkagune.sfx.thunder": "Thunder",
   "subtitles.hexkagune.sfx.windup_clash": "A massive clash",
   "subtitles.hexkagune.sfx.ground": "Stone breaks",
-  "subtitles.hexkagune.sfx.transform": "Kagune transforms"
+  "subtitles.hexkagune.sfx.transform": "Kagune transforms",
+  "item.hexkagune.quinque_case_bikaku": "Quinque Case (Bikaku)",
+  "item.hexkagune.quinque_bikaku_blade": "Bikaku Quinque Blade",
+  "item.hexkagune.quinque_case_koukaku": "Quinque Case (Koukaku)",
+  "item.hexkagune.quinque_koukaku_spear": "Koukaku Quinque Spear",
+  "item.hexkagune.quinque.bikaku.lore": "§7§oA blade grown from a Bikaku kakuhou: balanced, segmented, sharp",
+  "item.hexkagune.quinque.koukaku.lore": "§7§oA lance hardened from a Koukaku kakuhou: heavy, long, hard as armor",
+  "item.hexkagune.quinque.ghoul": "§cCuts ghouls deep and stops their regeneration a while",
+  "item.hexkagune.quinque.open": "§8Use: release the quinque",
+  "item.hexkagune.quinque.close": "§8Sneak + use: fold it back into its case"
 }

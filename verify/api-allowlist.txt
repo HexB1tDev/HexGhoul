@@ -917,3 +917,19 @@ M net/minecraft/world/entity/ai/goal/OpenDoorGoal <init> (Lnet/minecraft/world/e
 C net/minecraft/world/entity/ai/navigation/GroundPathNavigation  # [srg] (yarn MobNavigation, class_1409)
 M net/minecraft/world/entity/ai/navigation/GroundPathNavigation m_26477_ (Z)V  # [srg] setCanOpenDoors (yarn MobNavigation.setCanPathThroughDoors, method_6363)
 C net/minecraftforge/event/entity/living/LivingEvent$LivingTickEvent  # [forge] LivingEvent.java: fired each tick of every living entity (ForgeHooks.onLivingTick)
+
+# --- 1.3.25: the CCG's quinques (cases that open into a Bikaku blade and a Koukaku spear) ------------------------------------------
+M net/minecraft/world/item/ItemStack m_41783_ ()Lnet/minecraft/nbt/CompoundTag;  # [srg] getTag: joined.tsrg cfz v ()Lqr; -> m_41783_ (intermediary method_7969, yarn getNbt)
+M net/minecraft/world/item/ItemStack m_41751_ (Lnet/minecraft/nbt/CompoundTag;)V  # [srg] setTag: joined.tsrg cfz c (Lqr;)V -> m_41751_ (intermediary method_7980, yarn setNbt)
+C net/minecraft/world/item/Tier  # [srg] chm (class_1832, yarn ToolMaterial): the tier a SwordItem is made with
+C net/minecraft/world/item/Tiers  # [srg] cho C_1429_ (class_1834, yarn ToolMaterials)
+F net/minecraft/world/item/Tiers NETHERITE Lnet/minecraft/world/item/Tiers;  # [srg] enum constant kept by name: joined.tsrg cho f NETHERITE (yarn NETHERITE, field_22033)
+M net/minecraft/world/item/SwordItem <init> (Lnet/minecraft/world/item/Tier;IFLnet/minecraft/world/item/Item$Properties;)V  # [forge] SwordItem(Tier, int, float, Properties) (yarn chk.<init>(class_1832, I, F, class_1792$class_1793))
+F net/minecraft/world/item/CreativeModeTabs f_256797_ Lnet/minecraft/resources/ResourceKey;  # [srg] COMBAT: joined.tsrg ceg i -> f_256797_ (intermediary field_40202, yarn COMBAT)
+C net/minecraft/client/renderer/item/ItemProperties  # [srg] fuc C_4463_ (class_5272, yarn ModelPredicateProviderRegistry)
+M net/minecraft/client/renderer/item/ItemProperties m_174570_ (Lnet/minecraft/world/item/Item;Lnet/minecraft/resources/ResourceLocation;Lnet/minecraft/client/renderer/item/ClampedItemPropertyFunction;)V  # [srg] register(item, id, fn): joined.tsrg fuc a (Lcfu;Lacq;Lfua;)V -> m_174570_ (method_27879)
+C net/minecraft/client/renderer/item/ClampedItemPropertyFunction  # [srg] fua C_141753_ (class_6395, yarn ClampedModelPredicateProvider)
+M net/minecraft/client/renderer/item/ClampedItemPropertyFunction m_142187_ (Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/client/multiplayer/ClientLevel;Lnet/minecraft/world/entity/LivingEntity;I)F  # [srg] unclampedCall: joined.tsrg fua unclampedCall (Lcfz;Lfew;Lbfz;I)F -> m_142187_ (a lambda's method)
+C net/minecraftforge/common/ForgeMod  # [forge] common/ForgeMod.java
+F net/minecraftforge/common/ForgeMod ENTITY_REACH Lnet/minecraftforge/registries/RegistryObject;  # [forge] ForgeMod.ENTITY_REACH (1.20.1: RangedAttribute "forge.entity_reach", syncable): the Koukaku spear's reach
+M net/minecraftforge/fml/event/lifecycle/ParallelDispatchEvent enqueueWork (Ljava/lang/Runnable;)Ljava/util/concurrent/CompletableFuture;  # [forge] ParallelDispatchEvent.enqueueWork: work for the game's thread

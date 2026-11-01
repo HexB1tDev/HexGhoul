@@ -6,6 +6,10 @@ public class PlayerInteractEvent extends PlayerEvent {
 
     public void setCancellationResult(net.minecraft.world.InteractionResult result) { throw new UnsupportedOperationException(); }
 
+    /** 1.3.25: an item used in the air (the quinque cases open on it). */
+    public static class RightClickItem extends PlayerInteractEvent {
+    }
+
     public static class EntityInteract extends PlayerInteractEvent {
         public net.minecraft.world.entity.Entity getTarget() { throw new UnsupportedOperationException(); }
     }

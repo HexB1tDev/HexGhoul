@@ -9,6 +9,7 @@ public class CompoundTag implements Tag {
     }
 
     /** contains(key) */ public boolean m_128441_(String key) { throw new UnsupportedOperationException(); }
+    /** copy (1.3.25; the original JAR calls it too) */ public CompoundTag m_6426_() { throw new UnsupportedOperationException(); }
     /** remove(key) */ public void m_128473_(String key) { throw new UnsupportedOperationException(); }
     /** getString */ public String m_128461_(String key) { throw new UnsupportedOperationException(); }
     /** putString */ public void m_128359_(String key, String value) { throw new UnsupportedOperationException(); }
