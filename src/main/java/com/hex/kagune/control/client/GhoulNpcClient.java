@@ -24,7 +24,7 @@ public final class GhoulNpcClient {
     /** One NPC as the server last said; {@code ...Began} are client clock times, {@code ...At} the server's game ticks. */
     public record View(NpcIdentity identity, boolean out, long outAt, double outBegan, GraftMove move, long moveAt, double moveBegan, double x, double y,
                        double z, int prey, long volleyAt, double volleyBegan, long shotAt, double shotBegan, int shotSide, int flip, long flipAt,
-                       double flipBegan) {
+                       double flipBegan, int raw) {
         /** Ticks since the lash began (huge with none). */
         public double age(double clock) {
             return this.move == GraftMove.NONE ? Double.MAX_VALUE : Math.max(0.0, clock - this.moveBegan);
@@ -50,7 +50,7 @@ public final class GhoulNpcClient {
         double flipBegan = began(world, clock, message.flipAt(), before == null ? Long.MIN_VALUE : before.flipAt(), before == null ? 0.0 : before.flipBegan());
         VIEWS.put(message.id(), new View(NpcIdentity.unpack(message.identity()), message.out(), message.outAt(), outBegan, GraftMove.byOrdinal(message.move()),
             message.moveAt(), moveBegan, message.x(), message.y(), message.z(), message.prey(), message.volleyAt(), volleyBegan, message.shotAt(),
-            shotBegan, message.shotSide(), message.flip(), message.flipAt(), flipBegan));
+            shotBegan, message.shotSide(), message.flip(), message.flipAt(), flipBegan, message.move()));
     }
 
     /** When something the server began at tick {@code at} began on the client clock: told again, as before; fresh, now; old, as long ago. */
@@ -123,6 +123,50 @@ public final class GhoulNpcClient {
         }
         double landed = onGround && age > 4.0 ? age - 4.0 : -1.0;
         return com.hex.kagune.control.client.animation.PaleMotions.flip(com.hex.kagune.control.pale.PaleRules.Flip.byOrdinal(view.flip()), age, landed);
+    }
+
+    // ---------------------------------------------------------------- 1.3.36: the arm blade
+
+    /**
+     * How far an arm blade is wound out (0 none .. 1 its blade full): winding down the arm over BladeArm.WRAP_TICKS as it comes out,
+     * drawn back in a third of a second as it goes; 0 for any other kagune.
+     */
+    public static float wrap(View view, double clock) {
+        if (view == null || view.identity().kind() != com.hex.kagune.control.npc.NpcIdentity.Kind.KOUKAKU) {
+            return 0.0F;
+        }
+        double since = clock - view.outBegan();
+        if (view.out()) {
+            return (float)Math.max(0.0, Math.min(1.0, since / com.hex.kagune.control.npc.BladeArm.WRAP_TICKS));
+        }
+        return (float)Math.max(0.0, Math.min(1.0, 1.0 - since / 7.0));
+    }
+
+    /**
+     * An arm blade ghoul's pose this frame ({@code speed}: blocks a tick along the ground, {@code phase}: its stride), or null: a cut under
+     * way, its kagune winding out, its sprint with the blade trailing, or its guard; nothing with the kagune away.
+     */
+    public static com.hex.kagune.control.client.animation.RigPose blade(View view, double clock, double speed, double phase) {
+        if (view == null || view.identity().kind() != com.hex.kagune.control.npc.NpcIdentity.Kind.KOUKAKU || !view.out()) {
+            return null;
+        }
+        int step = view.raw();
+        if (step >= 0 && step < com.hex.kagune.control.npc.BladeArm.STEPS) {
+            double age = clock - view.moveBegan();
+            int ticks = com.hex.kagune.control.npc.BladeArm.ticks(step);
+            if (age >= 0.0 && age < ticks) {
+                return com.hex.kagune.control.client.animation.BladeArmPose.swing(step, age / ticks);
+            }
+        }
+        float wound = wrap(view, clock);
+        if (wound < 1.0F) {
+            return com.hex.kagune.control.client.animation.BladeArmPose.wrap(wound);
+        }
+        float run = com.hex.kagune.control.client.animation.AgentPose.running(speed);
+        if (run > 0.05F) {
+            return com.hex.kagune.control.client.animation.BladeArmPose.run(phase, run);
+        }
+        return com.hex.kagune.control.client.animation.BladeArmPose.guard();
     }
 
     /** Forgets the NPCs no longer in {@code level} (dead, gone, out of range). */

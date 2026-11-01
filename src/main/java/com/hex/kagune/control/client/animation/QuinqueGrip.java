@@ -218,6 +218,42 @@ public final class QuinqueGrip {
             {z * x * t - y * s, z * y * t + x * s, c + z * z * t}};
     }
 
+    /**
+     * 1.3.36: {@code p}'s left arm pointed so its fist takes hold of a point on the right arm ({@code onRight}: the right arm's own frame,
+     * pixels), {@code weight} of the way from where it was (a hand on the other forearm).
+     */
+    public static void reachLeftTo(RigPose p, double[] onRight, float weight) {
+        if (weight <= 0.0F) {
+            return;
+        }
+        double[] o = pivot(p, true);
+        double[] d = apply(armTurn(p, true), onRight);
+        double[] target = {o[0] + d[0], o[1] + d[1], o[2] + d[2]};
+        float[] was = {p.leftArmX, p.leftArmY, p.leftArmZ};
+        float hold = p.leftArmHold;
+        p.leftArmHold = 1.0F;
+        double[] fist = {1.0, FIST_Y, 0.0};
+        double[] from = pivot(p, false);
+        double[] to = {target[0] - from[0], target[1] - from[1], target[2] - from[2]};
+        double far = length(to);
+        if (!(far > 1.0E-6)) {
+            p.leftArmHold = hold;
+            return;
+        }
+        double[][] had = armTurn(p, false);
+        double[] d0 = apply(had, fist);
+        double n0 = length(d0);
+        double[][] turn = RigPose.multiply(between(new double[] {d0[0] / n0, d0[1] / n0, d0[2] / n0}, new double[] {to[0] / far, to[1] / far, to[2] / far}),
+            had);
+        double[][] lean = p.leanTurn();
+        double[][] chest = lean == null ? turn : RigPose.multiply(transpose(lean), turn);
+        float[] own = angles(RigPose.multiply(RigPose.zyx(0.0, -p.twist, 0.0), chest));
+        p.leftArmX = was[0] + (own[0] - was[0]) * weight;
+        p.leftArmY = was[1] + (own[1] - was[1]) * weight;
+        p.leftArmZ = was[2] + (own[2] - was[2]) * weight;
+        p.leftArmHold = Math.max(hold, weight);
+    }
+
     /** The least turn taking unit {@code a} to unit {@code b}. */
     static double[][] between(double[] a, double[] b) {
         double[] axis = {a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]};

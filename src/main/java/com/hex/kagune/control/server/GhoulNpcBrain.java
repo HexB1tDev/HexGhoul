@@ -90,6 +90,17 @@ public final class GhoulNpcBrain {
         double circle = 1.0;
         long circleAt = Long.MIN_VALUE;
         boolean fleeing;
+        /**
+         * 1.3.36: the arm blade (BladeArm): the cut it is making (-1 none), when it began, whether it has yet to land, at whom; the
+         * last one and when it ended; a token that tells a met cut (KaguneClash) from a later one.
+         */
+        int blade = -1;
+        long bladeAt = Long.MIN_VALUE;
+        boolean bladeStriking;
+        int bladeTarget;
+        int bladeLast = -1;
+        long bladeEnds = Long.MIN_VALUE;
+        int bladeToken;
         /** Something every client should be told. */
         boolean dirty = true;
         /** 7.0.2: the player it is talking to (an entity id, 0 none) and until when it waits on them. */
@@ -345,6 +356,8 @@ public final class GhoulNpcBrain {
         }
         if (who.kind() == NpcIdentity.Kind.RINKAKU) {
             GhoulNpcCombat.lash(npc, who, mind, prey, level, now);
+        } else if (who.kind() == NpcIdentity.Kind.KOUKAKU) {
+            GhoulNpcCombat.slash(npc, who, mind, prey, level, now);
         } else {
             GhoulNpcCombat.shoot(npc, who, mind, prey, level, now);
         }
@@ -678,7 +691,10 @@ public final class GhoulNpcBrain {
             return new S2CGhoulNpc(npc.m_19879_(), who.pack(), false, Long.MIN_VALUE, GraftMove.NONE.ordinal(), Long.MIN_VALUE, 0.0, 0.0, 0.0, 0,
                 Long.MIN_VALUE, Long.MIN_VALUE, 1, -1, Long.MIN_VALUE);
         }
-        return new S2CGhoulNpc(npc.m_19879_(), who.pack(), mind.out, mind.outAt, mind.move.ordinal(), mind.moveAt, mind.point.f_82479_,
+        // 1.3.36: an arm blade's cut goes where a lash would (its clients read it by its kind).
+        boolean blade = who.kind() == NpcIdentity.Kind.KOUKAKU;
+        return new S2CGhoulNpc(npc.m_19879_(), who.pack(), mind.out, mind.outAt, blade ? mind.blade : mind.move.ordinal(), blade ? mind.bladeAt : mind.moveAt,
+            mind.point.f_82479_,
             mind.point.f_82480_, mind.point.f_82481_, mind.prey, mind.volleyAt, mind.shotAt, mind.shotSide, mind.flip, mind.flipAt);
     }
 

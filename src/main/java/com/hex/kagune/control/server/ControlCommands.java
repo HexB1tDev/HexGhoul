@@ -144,7 +144,9 @@ final class ControlCommands {
             () -> player.m_217043_().m_188500_());
         com.hex.kagune.control.npc.NpcIdentity.Kind k = rolled.kind();
         if (kind != null) {
-            k = kind.equalsIgnoreCase("ukaku") ? com.hex.kagune.control.npc.NpcIdentity.Kind.UKAKU : com.hex.kagune.control.npc.NpcIdentity.Kind.RINKAKU;
+            k = kind.equalsIgnoreCase("ukaku") ? com.hex.kagune.control.npc.NpcIdentity.Kind.UKAKU
+                : kind.equalsIgnoreCase("koukaku") || kind.equalsIgnoreCase("blade") ? com.hex.kagune.control.npc.NpcIdentity.Kind.KOUKAKU
+                : com.hex.kagune.control.npc.NpcIdentity.Kind.RINKAKU;
         }
         com.hex.kagune.control.npc.NpcTemper t = rolled.temper();
         if (temper != null) {

@@ -37,6 +37,7 @@ public final class NpcTests {
 
     public static void main(String[] args) {
         identity();
+        blades();
         tempers();
         spawning();
         strength();
@@ -103,10 +104,12 @@ public final class NpcTests {
         Random random = new Random(7);
         Map<NpcTemper, Integer> seen = new EnumMap<>(NpcTemper.class);
         int ukaku = 0;
+        int blades = 0;
         for (int i = 0; i < 20000; i++) {
             NpcIdentity who = NpcIdentity.roll(500, random::nextDouble);
             seen.merge(who.temper(), 1, Integer::sum);
             ukaku += who.kind() == NpcIdentity.Kind.UKAKU ? 1 : 0;
+            blades += who.kind() == NpcIdentity.Kind.KOUKAKU ? 1 : 0;
             check(NpcIdentity.unpack(who.pack()).equals(who), "a rolled one round trips");
         }
         int total = 0;
@@ -117,7 +120,15 @@ public final class NpcTests {
             double share = seen.getOrDefault(temper, 0) / 20000.0;
             check(Math.abs(share - temper.weight() / (double)total) < 0.02, temper + " turns up by its weight: " + share);
         }
-        check(Math.abs(ukaku / 20000.0 - 0.5) < 0.02, "ukaku and rinkaku even: " + ukaku);
+        // 1.3.36: the arm blade (an NPC-only koukaku) a little over a quarter, ukaku and rinkaku about even in the rest.
+        check(Math.abs(ukaku / 20000.0 - 0.35) < 0.02 && Math.abs(blades / 20000.0 - 0.28) < 0.02, "rinkaku, ukaku and the arm blade by their odds: "
+            + ukaku + ", " + blades);
+        check(NpcIdentity.Kind.values()[2] == NpcIdentity.Kind.KOUKAKU && NpcIdentity.Kind.byOrdinal(2) == NpcIdentity.Kind.KOUKAKU
+            && NpcIdentity.Kind.byOrdinal(9) == NpcIdentity.Kind.RINKAKU, "the arm blade appended (sent by ordinal)");
+        // A ghoul saved before 1.3.36 (bit 36 clear) reads as it was.
+        long older = 1L | 2L << 1 | 1L << 4 | 3L << 6 | 17L << 10 | 4242L << 18 | 1L << 35;
+        check(NpcIdentity.unpack(older).kind() == NpcIdentity.Kind.UKAKU && NpcIdentity.unpack(older & ~1L).kind() == NpcIdentity.Kind.RINKAKU,
+            "an older save keeps its kagune");
         check(NpcTemper.pick(0.0) == NpcTemper.FERAL && NpcTemper.pick(0.999999) == NpcTemper.ANTEIKU && NpcTemper.pick(1.5) == NpcTemper.ANTEIKU,
             "the ends of the roll");
     }
@@ -428,5 +439,77 @@ public final class NpcTests {
         check(NpcTalk.answer(c, NpcTalk.Choice.ACCEPT).effect() == NpcTalk.Effect.START_FAVOUR, "and it is taken on");
         check(NpcTalk.answer(c, NpcTalk.Choice.INSULT).effect() == NpcTalk.Effect.FLEE, "an insulted scavenger runs");
         check(NpcTalk.answer(c, NpcTalk.Choice.GIFT).effect() == NpcTalk.Effect.NONE, "no gift without meat in hand");
+    }
+
+    /**
+     * 1.3.36: the arm blade (an NPC-only koukaku): three cuts to a string, chained only close together; each lands before it ends; the
+     * thrust reaches furthest and hits hardest; the spiral winds shoulder to wrist before the blade grows; its shape stays on the arm; its
+     * poses hold the blade arm and keep the free hand on the forearm while it winds.
+     */
+    static void blades() {
+        check(com.hex.kagune.control.npc.BladeArm.next(-1, 0L) == 0 && com.hex.kagune.control.npc.BladeArm.next(0, 3L) == 1
+            && com.hex.kagune.control.npc.BladeArm.next(1, 3L) == 2 && com.hex.kagune.control.npc.BladeArm.next(2, 3L) == 0
+            && com.hex.kagune.control.npc.BladeArm.next(1, com.hex.kagune.control.npc.BladeArm.CHAIN + 1) == 0
+            && com.hex.kagune.control.npc.BladeArm.next(0, -5L) == 0, "three cuts to a string, chained only close together");
+        for (int step = 0; step < com.hex.kagune.control.npc.BladeArm.STEPS; step++) {
+            check(com.hex.kagune.control.npc.BladeArm.lands(step) > 1 && com.hex.kagune.control.npc.BladeArm.lands(step)
+                < com.hex.kagune.control.npc.BladeArm.ticks(step), "cut " + step + " lands partway through");
+        }
+        check(com.hex.kagune.control.npc.BladeArm.reach(1, 2) > com.hex.kagune.control.npc.BladeArm.reach(1, 0)
+            && com.hex.kagune.control.npc.BladeArm.weight(2) > com.hex.kagune.control.npc.BladeArm.weight(0)
+            && com.hex.kagune.control.npc.BladeArm.reach(2) > com.hex.kagune.control.npc.BladeArm.reach(0), "the thrust furthest and hardest; stronger, longer");
+        double last = 1.0;
+        for (int i = 0; i < com.hex.kagune.control.npc.BladeArm.PLATES; i++) {
+            double at = com.hex.kagune.control.npc.BladeArm.plate(i, 0.3);
+            check(at <= last + 1.0E-9, "the spiral winds from the shoulder down (" + i + ")");
+            last = at;
+            check(com.hex.kagune.control.npc.BladeArm.plate(i, 0.0) == 0.0 && com.hex.kagune.control.npc.BladeArm.plate(i, 0.8) == 1.0,
+                "plate " + i + " none at first, grown before the blade is done");
+        }
+        check(com.hex.kagune.control.npc.BladeArm.blade(0.5) == 0.0 && com.hex.kagune.control.npc.BladeArm.blade(1.0) == 1.0
+            && com.hex.kagune.control.npc.BladeArm.blade(0.8) > 0.0, "the blade grows once the spiral reaches the wrist");
+        int[] quads = {0};
+        double[] most = {0.0, -99.0, 0.0, 99.0};
+        for (boolean slim : new boolean[] {false, true}) {
+            com.hex.kagune.control.npc.BladeArmModel.build(1.0, slim, 0x7A1E5C, (a, b, c, d, n, ca, cb, cc, cd) -> {
+                quads[0]++;
+                for (double[] p : new double[][] {a, b, c, d}) {
+                    most[0] = Math.max(most[0], Math.max(Math.abs(p[0] + 1.0), Math.abs(p[2])));
+                    most[1] = Math.max(most[1], p[1]);
+                    most[3] = Math.min(most[3], p[1]);
+                    check(Double.isFinite(p[0]) && Double.isFinite(p[1]) && Double.isFinite(p[2]) && (ca >>> 24) == 0xFF, "a finite, opaque corner");
+                }
+            });
+        }
+        check(quads[0] > 100 && most[0] < 7.0 && most[1] > 24.0 && most[1] < 30.0 && most[3] > -8.0,
+            "the blade on the arm: close round it, its point well past the fist (" + quads[0] + " quads, " + most[0] + ", " + most[3] + ".." + most[1] + ")");
+        int[] none = {0};
+        com.hex.kagune.control.npc.BladeArmModel.build(0.0, false, 0x7A1E5C, (a, b, c, d, n, ca, cb, cc, cd) -> none[0]++);
+        check(none[0] == 0, "nothing before it winds out");
+        com.hex.kagune.control.client.animation.RigPose guard = com.hex.kagune.control.client.animation.BladeArmPose.guard();
+        check(guard.rightArmHold == 1.0F && guard.twist < 0.0F, "its guard: the blade arm held, the right shoulder forward");
+        for (int step = 0; step < 3; step++) {
+            for (double t = 0.0; t <= 1.0; t += 0.1) {
+                com.hex.kagune.control.client.animation.RigPose p = com.hex.kagune.control.client.animation.BladeArmPose.swing(step, t);
+                check(Float.isFinite(p.rightArmX) && Float.isFinite(p.rightArmY) && Float.isFinite(p.rightArmZ) && Math.abs(p.lunge) <= 8.0F,
+                    "cut " + step + " at " + t + " is a sane pose");
+            }
+        }
+        com.hex.kagune.control.client.animation.RigPose winding = com.hex.kagune.control.client.animation.BladeArmPose.wrap(0.5);
+        double[] left = com.hex.kagune.control.client.animation.QuinqueGrip.fist(winding, false, false);
+        float[] turn = winding.transform("rightArm", com.hex.kagune.control.client.animation.RigPose.ROTATION, 0, 0, 0);
+        float[] pivot = winding.transform("rightArm", com.hex.kagune.control.client.animation.RigPose.POSITION, -5, 2, 0);
+        double cx = Math.cos(turn[0]), sx = Math.sin(turn[0]), cy = Math.cos(turn[1]), sy = Math.sin(turn[1]), cz = Math.cos(turn[2]), sz = Math.sin(turn[2]);
+        double[] local = {-1.0, 6.5, -0.5};
+        // Rz Ry Rx of the forearm point.
+        double y1 = local[1] * cx - local[2] * sx;
+        double z1 = local[1] * sx + local[2] * cx;
+        double x2 = local[0] * cy + z1 * sy;
+        double z2 = -local[0] * sy + z1 * cy;
+        double[] forearm = {pivot[0] + x2 * cz - y1 * sz, pivot[1] + x2 * sz + y1 * cz, pivot[2] + z2};
+        double off = Math.sqrt(Math.pow(left[0] - forearm[0], 2) + Math.pow(left[1] - forearm[1], 2) + Math.pow(left[2] - forearm[2], 2));
+        check(off < 3.0, "winding out, its free hand grips the forearm (" + off + " px)");
+        com.hex.kagune.control.client.animation.RigPose run = com.hex.kagune.control.client.animation.BladeArmPose.run(0.5, 1.0F);
+        check(run.lean > 0.3F && run.rightArmHold == 1.0F, "its sprint: pitched forward, the blade arm swept back");
     }
 }

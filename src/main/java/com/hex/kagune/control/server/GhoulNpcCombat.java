@@ -8,6 +8,7 @@ import com.hex.kagune.control.graft.GraftStage;
 import com.hex.kagune.control.network.ControlNetwork;
 import com.hex.kagune.control.network.S2CUkakuFx;
 import com.hex.kagune.control.network.S2CPaleFx;
+import com.hex.kagune.control.npc.BladeArm;
 import com.hex.kagune.control.npc.GhoulNpc;
 import com.hex.kagune.control.npc.NpcIdentity;
 import com.hex.kagune.control.npc.NpcRules;
@@ -20,6 +21,7 @@ import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.block.Block;
@@ -57,6 +59,111 @@ final class GhoulNpcCombat {
     }
 
     private GhoulNpcCombat() {
+    }
+
+    // ---------------------------------------------------------------- 1.3.36: the arm blade (an NPC-only koukaku)
+
+    /**
+     * It closes in and cuts with the blade on its arm ({@link BladeArm}): three to a string, each landing partway through (it can be met:
+     * KaguneClash), the thrust last and furthest; then a breath, circling its prey with the blade low.
+     */
+    static void slash(GhoulNpc npc, NpcIdentity who, GhoulNpcBrain.Mind mind, LivingEntity prey, ServerLevel level, long now) {
+        double distance = Math.sqrt(prey.m_20280_(npc));
+        boolean sight = npc.m_142582_(prey);
+        if (mind.blade >= 0) {
+            npc.m_21573_().m_26573_(); // planted while it cuts
+            long age = now - mind.bladeAt;
+            if (mind.bladeStriking && age >= BladeArm.lands(mind.blade)) {
+                bladeLand(npc, who, mind, level, now);
+            }
+            if (age < BladeArm.ticks(mind.blade)) {
+                return;
+            }
+            mind.bladeLast = mind.blade;
+            mind.bladeEnds = now;
+            mind.blade = -1;
+            mind.dirty = true;
+            if (mind.bladeLast == BladeArm.FINISHER) {
+                mind.readyAt = now + BladeArm.pause(npc.m_217043_().m_188500_());
+            }
+        }
+        double reach = BladeArm.reach(who.tier());
+        if (now < mind.readyAt) {
+            circle(npc, mind, prey, reach + 1.0, now);
+            return;
+        }
+        int step = BladeArm.next(mind.bladeLast, mind.bladeEnds == Long.MIN_VALUE ? Long.MAX_VALUE : now - mind.bladeEnds);
+        if (!sight || distance > BladeArm.reach(who.tier(), step) - 0.35) {
+            npc.m_21573_().m_5624_(prey, 1.2);
+            return;
+        }
+        bladeBegin(npc, who, mind, prey, step, level, now);
+    }
+
+    /** One cut of its string, begun now at {@code prey}: faced, stepped into, registered as a blow on its way. */
+    private static void bladeBegin(GhoulNpc npc, NpcIdentity who, GhoulNpcBrain.Mind mind, LivingEntity prey, int step, ServerLevel level, long now) {
+        mind.blade = step;
+        mind.bladeAt = now;
+        mind.bladeStriking = true;
+        mind.bladeTarget = prey.m_19879_();
+        mind.point = GhoulNpcBrain.centre(prey);
+        mind.dirty = true;
+        int token = ++mind.bladeToken;
+        Vec3 aim = flat(prey.m_20182_().m_82546_(npc.m_20182_()));
+        if (aim.m_165925_() > 1.0E-6) {
+            float yaw = (float)Math.toDegrees(Math.atan2(-aim.f_82479_, aim.f_82481_));
+            npc.m_146922_(yaw);
+            npc.f_20883_ = yaw;
+            npc.f_20885_ = yaw;
+        }
+        KaguneClash.swing(npc, now, BladeArm.lands(step), BladeArm.reach(who.tier(), step) + 0.5, aim, prey.m_19879_(),
+            () -> mind.bladeToken == token && mind.bladeStriking, () -> bladeMet(npc, mind, token));
+        double push = BladeArm.lunge(step);
+        Vec3 velocity = npc.m_20184_();
+        npc.m_20256_(new Vec3(aim.f_82479_ * push, velocity.f_82480_, aim.f_82481_ * push));
+        UkakuFire.sound(level, npc.m_20182_().m_82520_(0.0, 1.2, 0.0), step == BladeArm.FINISHER ? "hexkagune:sfx.blade_heavy" : "hexkagune:sfx.blade_arc",
+            0.7F, 0.9F + 0.2F * (float)npc.m_217043_().m_188500_());
+    }
+
+    /** Its cut met a blow coming back (KaguneClash): nothing lands, the string broken, a moment before the next. */
+    private static void bladeMet(GhoulNpc npc, GhoulNpcBrain.Mind mind, int token) {
+        if (mind.bladeToken != token) {
+            return;
+        }
+        long now = npc.m_9236_().m_46467_();
+        mind.bladeStriking = false;
+        mind.bladeLast = -1;
+        mind.readyAt = now + com.hex.kagune.control.ClashRules.STAGGER + 6L;
+    }
+
+    /** The cut lands: unless it met a blow of theirs, it cuts whoever is still in reach before it (the thrust drives them back). */
+    private static void bladeLand(GhoulNpc npc, NpcIdentity who, GhoulNpcBrain.Mind mind, ServerLevel level, long now) {
+        mind.bladeStriking = false;
+        int step = mind.blade;
+        Entity found = level.m_6815_(mind.bladeTarget);
+        if (!(found instanceof LivingEntity prey) || !prey.m_6084_()) {
+            KaguneClash.landed(npc);
+            return;
+        }
+        if (KaguneClash.meets(npc, prey, now)) {
+            mind.readyAt = now + 10L; // met: both thrown apart, nothing hurt
+            return;
+        }
+        KaguneClash.landed(npc);
+        Vec3 to = prey.m_20182_().m_82546_(npc.m_20182_());
+        double distance = Math.sqrt(to.m_165925_());
+        Vec3 look = flat(npc.m_20154_());
+        Vec3 way = flat(to);
+        if (distance > BladeArm.reach(who.tier(), step) + prey.m_20205_() * 0.5 + 0.5 || Math.abs(to.f_82480_) > 2.5 || way.m_82526_(look) < 0.2) {
+            return; // it slipped the cut
+        }
+        Vec3 centre = GhoulNpcBrain.centre(prey);
+        WoundHits.expect(prey, step == BladeArm.FINISHER ? WoundBook.Blow.STAB : WoundBook.Blow.SLASH, centre.m_82546_(way.m_82490_(0.3)), way, 0.0);
+        prey.f_19802_ = 0;
+        if (prey.m_6469_(npc.m_269291_().m_269333_(npc), NpcRules.damage(who.tier()) * BladeArm.weight(step)) && step == BladeArm.FINISHER) {
+            prey.m_147240_(0.7, -way.f_82479_, -way.f_82481_);
+        }
+        UkakuFire.sound(level, centre, "hexkagune:sfx.blade_heavy", step == BladeArm.FINISHER ? 0.8F : 0.45F, 1.15F);
     }
 
     // ---------------------------------------------------------------- rinkaku: the transplant's string
@@ -515,6 +622,9 @@ final class GhoulNpcCombat {
             }
         }
         boolean rinkaku = who.kind() == NpcIdentity.Kind.RINKAKU;
+        // 1.3.36: the arm blade fights close, as the tails do.
+        boolean bladed = who.kind() == NpcIdentity.Kind.KOUKAKU;
+        boolean close = rinkaku || bladed;
         double distance = Math.sqrt(prey.m_20280_(npc));
         boolean ready = npc.m_20096_() && now >= mind.flipReadyAt;
         KaguneClash.Threat threat = KaguneClash.threat(npc, now);
@@ -529,25 +639,31 @@ final class GhoulNpcCombat {
                 mind.strung = 1;
                 return false;
             }
-            if (ready && roll < NpcRules.dodge(who.tier()) + (rinkaku ? 0.0 : 0.15)) {
+            if (bladed && threat.who() == prey && mind.blade < 0 && distance <= BladeArm.reach(who.tier()) + 0.5 && roll < NpcRules.counter(who.tier())) {
+                // 1.3.36: met with its own: a cut straight back at it.
+                bladeBegin(npc, who, mind, prey, 0, level, now);
+                return false;
+            }
+            if (ready && roll < NpcRules.dodge(who.tier()) + (close ? 0.0 : 0.15)) {
                 flip(npc, who, mind, com.hex.kagune.control.pale.PaleRules.Flip.BACK, flat(npc.m_20182_().m_82546_(threat.who().m_20182_())),
                     NpcRules.FLIP_BACK_SPEED, NpcRules.FLIP_BACK_UP, threat.who(), level, now);
                 return true;
             }
         }
-        if (!ready || mind.move != GraftMove.NONE || mind.volleyAt != Long.MIN_VALUE || npc.m_217043_().m_188500_() > NpcRules.FLIP_CHANCE) {
+        if (!ready || mind.move != GraftMove.NONE || mind.blade >= 0 || mind.volleyAt != Long.MIN_VALUE
+            || npc.m_217043_().m_188500_() > NpcRules.FLIP_CHANCE) {
             return false;
         }
         boolean sniper = NpcRules.sniper(who.seed());
-        double near = rinkaku ? NpcRules.CROWDED : (sniper ? NpcRules.SNIPE_NEAREST : NpcRules.SHOOT_NEAREST) - 1.0;
-        double want = rinkaku ? preferred(who) : sniper ? (NpcRules.SNIPE_NEAREST + NpcRules.SNIPE_FARTHEST) / 2.0
+        double near = close ? NpcRules.CROWDED : (sniper ? NpcRules.SNIPE_NEAREST : NpcRules.SHOOT_NEAREST) - 1.0;
+        double want = bladed ? BladeArm.reach(who.tier()) - 0.5 : rinkaku ? preferred(who) : sniper ? (NpcRules.SNIPE_NEAREST + NpcRules.SNIPE_FARTHEST) / 2.0
             : (NpcRules.SHOOT_NEAREST + NpcRules.SHOOT_FARTHEST) / 2.0;
         if (distance < near) {
             flip(npc, who, mind, com.hex.kagune.control.pale.PaleRules.Flip.BACK, flat(npc.m_20182_().m_82546_(prey.m_20182_())), NpcRules.FLIP_BACK_SPEED,
                 NpcRules.FLIP_BACK_UP, prey, level, now);
             return true;
         }
-        double most = rinkaku ? NpcRules.CLOSE_IN_MOST : want + 2.0 * NpcRules.CLOSE_IN + 4.0;
+        double most = close ? NpcRules.CLOSE_IN_MOST : want + 2.0 * NpcRules.CLOSE_IN + 4.0;
         if (distance > want + NpcRules.CLOSE_IN && distance < most && npc.m_142582_(prey)) {
             flip(npc, who, mind, com.hex.kagune.control.pale.PaleRules.Flip.FORWARD, flat(prey.m_20182_().m_82546_(npc.m_20182_())),
                 NpcRules.flipSpeed(distance - want), NpcRules.FLIP_FORWARD_UP, prey, level, now);

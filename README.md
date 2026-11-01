@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.36 (HexGhoul): a new kagune only wild ghouls have: the arm blade, a Koukaku that spirals down the arm into a blade, with its own wind-up, three-cut string, guard and sprint (testing)
+
+See `.github/release-notes-1.3.36.md`.
+
 ## 1.3.35 (HexGhoul): random colours for every path: Ukaku's wings, their crystal forms and every shard in your kagune's colour; wild ghouls get random kagune colours too (testing)
 
 See `.github/release-notes-1.3.35.md`.
