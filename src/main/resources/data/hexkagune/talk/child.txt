@@ -1,9 +1,443 @@
-# The children's scenes and topics (1.3.29): every age, every temperament, every mood. {call} is what it calls the one it talks to.
+# The children's scenes and topics (1.3.29). Read by SceneBook (see its comment for the form; SceneWords for every word allowed).
+# Every child is its own: its age (baby, toddler, child, teen), its temperament for life (sunny, shy, bold, curious, mischief, gentle,
+# serious) and its mood now (happy, sleepy, scared, missed, bored, proud, sad, hurt). {call} is what it calls the parent it talks to
+# (Mama, Papa; a teen's Mom, Dad), {other} the other parent, {othername} their name, {me} its own name, {sib} a brother or sister.
+# A baby doesn't talk: it babbles, reaches, giggles; what the parent does is the answer.
+
+# =====================================================================================================================================
+# BABY
+# =====================================================================================================================================
+
+scene baby_reach
+who: baby
+mood: happy missed bored
+say: *reaches up at you with both tiny arms, opening and closing its hands*
+say: *spots you and kicks its legs, babbling excitedly* Ba! Ba-ba!
+> Pick the baby up. | +1 up
+  - *snuggles into your neck and sighs, very content*
+  - *grabs a fistful of your hair and won't let go, delighted*
+> Tickle its tummy. | +1 tickle
+  - *shrieks with laughter, kicking*
+> Not right now, little one. | sad
+  - *its lip wobbles*
+ignored: *keeps reaching for a while, then gives up and chews its fist*
+
+scene baby_peekaboo
+who: baby
+mood: happy bored
+say: *hides its face behind its tiny hands, then peeks out at you*
+say: *pulls a blanket over its head and goes very still, waiting*
+> Peekaboo! | +1 peekaboo
+  - *squeals and does it again. And again. And again.*
+> Where's the baby? | +1 -> where
+> Not now. | sad
+  - *peeks out, sees you leaving, and pulls the blanket back down*
+page where
+say: *wriggles under the blanket, giggling, very obviously right there*
+> There you are! | +1 peekaboo
+  - *explodes into giggles*
+> Pick the blanket up. | +1 up
+  - *blinks up at you, then laughs and reaches for your face*
+ignored: *peekaboos at nobody*
+
+scene baby_babble
+who: baby
+mood: happy
+say: Ba... ba-ba... da! *looks at you very seriously, as if it's said something important*
+say: *babbles a long, earnest speech at you, with gestures*
+> Babble back. | +1 pat
+  - *listens very carefully, then answers at length. You are having a conversation.*
+> Was that "{call}"? | +1 -> word
+> Clap for the baby. | +1 clap
+  - *claps too, mostly missing*
+page word
+say: *stares at you, concentrating very hard* ...{call}. ...{call}!
+> Pick the baby up and spin. | +2 toss
+  - *squeals {call} over and over, like it's the best word in the world*
+> Cry a little. Quietly. | +2 up
+  - *pats your wet face with a tiny hand*
+ignored: *babbles the important thing to a pillow instead*
+
+scene baby_sleepy
+who: baby
+mood: sleepy
+say: *rubs its eyes with tiny fists and fusses*
+say: *yawns so big its whole face disappears, then blinks at you*
+> Rock it to sleep. | +1 up
+  - *its eyes slip shut against your chest. It's very warm.*
+> Sing a lullaby. | +1 pat
+  - *stares at you, eyes getting heavier... heavier... asleep.*
+> Put it to bed. | bed
+  - *grumbles, then sighs and settles*
+ignored: *falls asleep where it is, mid-fuss*
+
+scene baby_sleepy_fuss
+who: baby
+mood: sleepy sad
+say: *fusses and squirms, too tired to sleep, too tired to be awake*
+> Hum to it softly. | +1 pat
+  - *the fussing slows... stops... a tiny snore*
+> Walk it around. | +1 up
+  - *watches the world go past, blinking slower and slower*
+> Let it cry it out. | sad
+  - *cries harder, then wears itself out*
+ignored: *cries itself to sleep, eventually*
+
+scene baby_scared
+who: baby
+mood: scared
+say: *its face crumples and it starts to wail*
+say: *jumps at a noise and holds its arms up to you, crying*
+> Pick it up and hold it close. | +2 up
+  - *the wailing turns into hiccups, then into quiet, its face pressed against you*
+> Shh, shh. You're safe. | +1 pat
+  - *sniffles and stares at you, wide-eyed, calming*
+> It's just a noise. | sad
+  - *cries harder*
+ignored: *cries for a long time, alone*
+
+scene baby_scared_dark
+who: baby
+mood: scared sleepy
+when: night
+say: *whimpers at the dark, looking for you*
+> Hold it till it sleeps. | +2 up
+  - *clutches your shirt, and slowly, slowly, lets go into sleep*
+> Light a candle near it. | +1 pat
+  - *stares at the little flame, calming, its fist in its mouth*
+> Go to sleep, little one. | bed
+  - *whimpers once more, then quiets*
+ignored: *whimpers at the dark*
+
+scene baby_missed
+who: baby
+mood: missed
+say: *sees you and bursts into tears and laughter at the same time, reaching*
+say: *goes absolutely still, stares, then shrieks your name the only way it knows how: a happy scream*
+> Scoop it up. | +2 up
+  - *clings to you like a little koala and won't let go*
+> I missed you too. | +2 toss
+  - *flies up and down, screaming with joy*
+> Wave hello. | +1 clap
+  - *claps wildly, missing completely*
+ignored: *reaches and reaches, then cries*
+
+scene baby_missed_quiet
+who: baby
+mood: missed sad
+say: *looks at you for a long moment, lip wobbling, as if deciding whether to forgive you for being gone*
+> Pick it up gently. | +2 up
+  - *decides to forgive you. Buries its face in your shoulder.*
+> Tickle it till it smiles. | +1 tickle
+  - *tries to stay serious, fails, giggles*
+> Make a funny face. | +1 peekaboo
+  - *stares... stares... bursts into laughter*
+ignored: *turns its face away*
+
+scene baby_bored
+who: baby
+mood: bored
+say: *throws its toy on the floor, looks at you, and waits*
+say: *makes a loud, demanding noise at you. It has needs. You're the needs person.*
+> Give the toy back. | +1 pat
+  - *throws it again immediately. This is the game now.*
+> Toss it up in the air. | +2 toss
+  - *flies up, comes down, screams for more*
+> Play peekaboo. | +1 peekaboo
+  - *delighted. Boredom cured.*
+ignored: *throws something else on the floor, louder*
+
+scene baby_bored_grab
+who: baby
+mood: bored happy
+say: *grabs your finger and tries to eat it*
+> Let it. | +1 pat
+  - *gums your finger very seriously, then laughs*
+> Tickle its feet. | +1 tickle
+  - *kicks and squeals*
+> Pick it up and walk around. | +1 up
+  - *points at everything. Everything is amazing.*
+ignored: *eats its own foot instead*
+
+scene baby_proud_stand
+who: baby
+mood: proud happy
+say: *pulls itself up on your leg, wobbles, and stands there looking extremely pleased with itself*
+say: *rolls over all by itself and looks at you like it just won a war*
+> Clap for the baby! | +2 clap proud
+  - *claps too, falls over, laughs, does it again*
+> You did it! | +2 toss proud
+  - *shrieks in triumph as you lift it up*
+> Careful, now. | +1 pat
+  - *wobbles, plops down, beams anyway*
+ignored: *stands there proudly for nobody, then sits down hard*
+
+scene baby_proud_sound
+who: baby
+mood: proud
+say: *bangs two blocks together, looks at you, bangs them again. It has discovered music.*
+> Clap along. | +2 clap proud
+  - *bangs harder. A true artist.*
+> Bang a block too. | +2 pat proud
+  - *watches, delighted, then copies you exactly*
+> That's loud. | sad
+  - *stops. Looks at the blocks. Looks at you. Lip wobbles.*
+ignored: *keeps banging, louder, for the audience that isn't there*
+
+scene baby_sad
+who: baby
+mood: sad
+say: *sits very still with its lip stuck out, not crying, just sad*
+say: *whimpers softly and won't look at you*
+> Pick it up. | +2 up
+  - *melts into you. All forgiven.*
+> Make silly noises. | +1 tickle
+  - *tries very hard to stay sad. Fails. Giggles.*
+> Leave it be a while. | 0 pat
+  - *sniffles, then crawls after you*
+ignored: *keeps sitting there, sad and small*
+
+scene baby_hurt
+who: baby
+mood: hurt
+say: *bumped its head and is screaming about it*
+say: *holds up a tiny bumped hand and cries, showing you*
+> Kiss it better. | +2 up
+  - *sniff... sniff... it's better. It's all better.*
+> Hold it and rock. | +2 up
+  - *the screaming slows into hiccuping sobs, then quiet*
+> Check the bump. | +1 pat
+  - *lets you look, still crying, then stops to watch your face*
+ignored: *cries for a long time*
+
+scene baby_hurt_sad
+who: baby
+mood: hurt sad
+say: *crawls to you crying, holding out the arm it bumped*
+> Scoop it up and hold it. | +2 up
+  - *buries its face in you and sobs until it forgets why*
+> Blow on the bump. | +1 pat
+  - *stops, surprised. Giggles through the tears.*
+> You're okay. | 0
+  - *keeps crying, unconvinced*
+ignored: *cries until it falls asleep*
+
+scene baby_curious
+who: baby
+temper: curious
+say: *stares at your face with total concentration, then reaches out and pokes your nose*
+> Boop its nose back. | +1 pat
+  - *gasps. This changes everything. Boops you again.*
+> Let it explore your face. | +1 up
+  - *pulls your lip, pokes your eye, grabs your ear. Science.*
+> Not my nose. | sad
+  - *withdraws its finger slowly, disappointed in you*
+ignored: *pokes a cushion instead, scientifically*
+
+scene baby_mischief
+who: baby
+temper: mischief
+say: *grins a gummy grin and throws its spoon directly at you*
+> Catch it! | +1 clap
+  - *screams with laughter and looks for something else to throw*
+> Pretend to be hit. | +2 tickle
+  - *laughs so hard it hiccups*
+> No throwing. | sad
+  - *throws the bowl instead*
+ignored: *throws its other spoon at the wall*
+
+scene baby_shy
+who: baby
+temper: shy
+say: *hides its face in its blanket when it sees you, then peeks out*
+> Peekaboo! | +1 peekaboo
+  - *hides again, giggling, peeks again*
+> Pick it up slowly. | +2 up
+  - *tucks its face into your neck and stays there, very quiet, very happy*
+> Hi there. | +1 pat
+  - *peeks out a little more*
+ignored: *stays hidden*
+
+scene baby_bold
+who: baby
+temper: bold
+say: *tries to climb off the bed headfirst, glancing at you as if daring you to stop it*
+> Catch it! | +1 up
+  - *laughs in your arms, already planning the next escape*
+> Toss it up instead. | +2 toss
+  - *higher. HIGHER. Its face says HIGHER.*
+> No climbing. | 0 pat
+  - *glares at you, then tries again*
+ignored: *falls off, bounces, is fine, is proud*
+
+scene baby_gentle
+who: baby
+temper: gentle sunny
+say: *pats your cheek with a tiny hand, very softly, and smiles*
+> Pat its cheek back. | +2 pat
+  - *giggles and pats you more, like it's taking care of you*
+> Pick it up. | +2 up
+  - *rests its head on you and pats your shoulder*
+> Kiss its hand. | +2 tickle
+  - *squeals and offers the other hand*
+ignored: *pats the pillow gently instead*
+
+scene baby_serious
+who: baby
+temper: serious
+say: *stares at you with a deep frown, as if you've disappointed it in a way it can't explain*
+> Make a funny face. | +1 peekaboo
+  - *the frown holds... holds... cracks into a gummy smile*
+> Frown back. | +1 pat
+  - *frowns harder. You are rivals now.*
+> Pick it up. | +1 up
+  - *allows this. Still frowning. Content.*
+ignored: *keeps frowning at the space you were in*
+
+scene baby_night_thunder
+who: baby
+when: thunder
+say: *screams at the thunder and holds out its arms for you*
+> Hold it tight. | +2 up
+  - *shakes against you at each crack, then slowly calms*
+> Hum over the storm. | +1 pat
+  - *listens to your voice instead of the thunder*
+> It's only thunder. | sad
+  - *screams louder*
+ignored: *screams at every crash*
+
+scene baby_rain
+who: baby
+when: rain
+say: *presses its hands against the window, watching the rain, babbling at it*
+> Watch the rain with it. | +1 up
+  - *points at every drop and babbles at it seriously*
+> Say "rain". | +1 pat
+  - *tries very hard* ...Waaa. ...Waaain.
+> Come away from the window. | 0
+  - *protests loudly*
+ignored: *keeps talking to the rain*
+
+scene baby_carried
+who: baby
+when: carried
+say: *grabs your nose and won't let go, laughing*
+say: *falls asleep on your shoulder, drooling a little*
+> Wiggle your nose. | +1 tickle
+  - *shrieks and grabs harder*
+> Walk around with it. | +1 pat
+  - *looks at everything from up high, very important*
+> Put it down. | down
+  - *grumbles as it's set down*
+ignored: *keeps holding on, content*
+
+scene baby_sibling
+who: baby
+when: siblings
+say: *watches {sib} play nearby and reaches toward them, babbling*
+> Bring it over to {sib}. | +1 up
+  - *squeals at {sib} and grabs at their sleeve, delighted*
+> Tell it about {sib}. | +1 pat
+  - *listens to the name and babbles it back, sort of*
+> Not now. | sad
+  - *watches {sib} sadly from a distance*
+ignored: *crawls toward {sib} on its own, very slowly*
+
+scene baby_other_parent
+who: baby
+when: npcparent
+say: *looks past you, babbling, as if looking for {other}*
+> {other}'s nearby. Don't worry. | +1 up
+  - *calms in your arms, still looking around*
+> Point it toward {other}. | +1 pat
+  - *spots {other} and squeals*
+> It's just us right now. | 0
+  - *looks at you, decides you'll do*
+ignored: *keeps looking for {other}*
+
+# ---------------------------------------------------------------------------------------------------- what you can say to a baby
+
+topic baby_favourite
+prompt: Who's the best baby?
+who: baby
+say: *looks around, as if checking whether you mean someone else, then beams*
+> You are! | +1 tickle
+  - *squeals. Agrees completely.*
+> It's you, {me}. | +1 up
+  - *grabs your face with both hands, very pleased*
+
+topic baby_sing
+prompt: Sing to the baby.
+who: baby
+say: *goes still, listening, eyes wide, mouth a little open*
+> Sing a lullaby. | +1 pat
+  - *slowly melts against you, humming along in a tiny voice*
+> Sing something silly. | +1 tickle
+  - *bounces and squeals and tries to sing too*
+
+topic baby_day
+prompt: Tell the baby about your day.
+who: baby
+say: *listens to every word very seriously, as if taking notes*
+> Tell it about the monsters. | +1
+  - *gasps at all the right moments*
+> Tell it how much you missed it. | +1 up
+  - *reaches up and pats your face*
+
+topic baby_toes
+prompt: Count the baby's toes.
+who: baby
+say: *holds up a foot, delighted to help*
+> One, two, three... | +1 tickle
+  - *shrieks at every toe. Ten toes. Ten shrieks.*
+> Eat the toes! | +1 tickle
+  - *laughs so hard it falls over*
+
+topic baby_face
+prompt: Make a funny face.
+who: baby
+say: *stares at you, unsure what's about to happen*
+> Puff your cheeks out. | +1 peekaboo
+  - *pokes your cheek. Pop. Hysterical laughter.*
+> Stick your tongue out. | +1 pat
+  - *sticks its tongue out back. It has learned. You've created a monster.*
+
+topic baby_other
+prompt: Tell it about {other}.
+who: baby
+say: *perks up at the name, looking around*
+> {othername} loves you very much. | +1 up
+  - *babbles {other}, sort of. Close enough.*
+> {other} will be back soon. | +1 pat
+  - *looks at the door, then back at you, trusting*
+
+topic baby_story
+prompt: Read the baby a story.
+who: baby
+say: *grabs the book and tries to eat it*
+> Read it anyway. | +1 pat
+  - *stops eating the book to listen. Starts again at the good part.*
+> Point at the pictures. | +1 up
+  - *slaps every picture. Every picture is very exciting.*
+
+topic baby_dance
+prompt: Dance with the baby.
+who: baby
+say: *bounces excitedly before you've even started*
+> Spin it around. | +1 toss
+  - *flies round, screaming happily*
+> Sway slowly. | +1 up
+  - *rests its head on you and sways along, sleepy and content*
+
+# =====================================================================================================================================
+# TODDLER
+# =====================================================================================================================================
 
 scene look_a_bug
 who: toddler child
 mood: happy bored
 say: {call}! {call}! Look! I found a bug! It has SO many legs!
+say: {call}, come look! There's a bug and he's walking and he has a face!
 > Wow! Show me! | +1 pat
   - It's tickly! ...Can I keep him? I named him Mister Legs.
 > Put it down gently, okay? | +1
@@ -11,3 +445,1558 @@ say: {call}! {call}! Look! I found a bug! It has SO many legs!
 > Not now, sweetheart. | sad
   - *drops its head* ...Okay.
 ignored: *shows the bug to a rock instead*
+
+scene toddler_up
+who: toddler
+mood: happy missed bored
+say: Up! Up up up! {call}, UP!
+say: *holds its arms straight up at you and bounces* Uuuup!
+> Pick it up. | +1 up
+  - Yay! I'm big! I'm so big!
+> Up on my shoulders! | +2 shoulders
+  - WHOA! I'm a giant! Go that way! No, that way!
+> Not right now. | sad
+  - *flops onto the floor in despair*
+ignored: *keeps its arms up for a long time, then sits down sadly*
+
+scene toddler_why
+who: toddler
+mood: happy bored
+temper: curious sunny mischief gentle
+say: {call}, why is the sky up? ...Why? ...But why?
+say: {call}! Why do birds go up and I don't go up?
+> Because the ground loves you. | +1 pat
+  - The ground LOVES me? ...Hi ground!
+> Why do YOU think? | +1 -> think
+> I don't know, buddy. | +1
+  - You don't KNOW? ...I'll ask {other}.
+page think
+say: Hmm. ...Because the sky is shy and it doesn't want to come down.
+> That's exactly right. | +2 hug
+  - I KNEW it! I'm so smart!
+> That's a great idea. | +1 pat
+  - I have LOTS of ideas. Wanna hear another one? It's about cheese.
+ignored: *asks a bird why instead*
+
+scene toddler_run
+who: toddler
+mood: happy bored
+say: {call}! Watch me run! I runned so fast! Watch!
+say: Chase me! You can't catch me! ...Chase me!
+> Chase it! | +2 play
+  - *shrieks and runs in a circle* You CAN'T catch me! ...You caught me!
+> Wow, you're so fast! | +1 clap
+  - I know! I'm the fastest! Faster than {other}!
+> Careful, don't fall. | +1
+  - I won't fall! ...I fell. I'm okay! Watch again!
+ignored: *runs in circles alone until it gets dizzy and falls over*
+
+scene toddler_flower
+who: toddler child
+mood: happy
+temper: gentle sunny shy
+say: {call}, I got you a flower. It's for you. Don't squish it.
+say: *hides something behind its back* ...Close your eyes. ...Okay open! It's a flower! For YOU!
+> Thank you, it's beautiful! | +2 flower
+  - *beams so hard its cheeks go pink*
+> Put it in my hair? | +2 hug
+  - *stands on tiptoe and very carefully puts it behind your ear* ...Pretty.
+> Where did you get it? | +1
+  - From the ground! The ground had lots. I only took one. ...Two. I ate one.
+ignored: *puts the flower on the ground for you to find later*
+
+scene toddler_sleepy
+who: toddler
+mood: sleepy
+say: *rubs its eyes* I'm not tired. ...I'm not. *yawns*
+say: {call}... carry me? My legs are sleepy.
+> Carry it. | +1 up
+  - *drops its head on your shoulder, already half asleep* ...Not tired...
+> Bedtime, I think. | bed
+  - Nooo... ...Okay. Can you tuck me? And check under the bed?
+> Sit with me a bit. | +1 hug
+  - *leans on you and is asleep in seconds*
+ignored: *falls asleep sitting up*
+
+scene toddler_sleepy_story
+who: toddler
+mood: sleepy
+when: night
+say: {call}, tell me a story. The one with the dragon. Do the voice.
+> Do the dragon voice. | +2 hug
+  - *giggles sleepily* ...Again. ...Again... *asleep*
+> Tell a new story. | +1
+  - *listens with heavy eyes* ...And then? ...And... *asleep*
+> Time to sleep. | bed
+  - *grumbles* No story is the worst story.
+ignored: *makes up its own dragon story and falls asleep in the middle*
+
+scene toddler_scared
+who: toddler
+mood: scared
+say: {call}... there's a monster. Over there. In the dark. It's looking at me.
+say: *runs and grabs your legs, shaking* {call}! There's a noise!
+> Pick it up and hold it. | +2 up
+  - *clings to you* ...Is it gone? ...You'll fight it?
+> Let's check together. | +1 hand
+  - *holds your hand very tight* ...It's just a chair. ...Stupid chair.
+> Monsters are scared of {call}. | +2 hug
+  - They are? ...Yeah. You're scary. ...In a good way.
+ignored: *hides under a blanket, shaking*
+
+scene toddler_scared_thunder
+who: toddler
+mood: scared
+when: thunder
+say: *sprints to you and buries its face in your legs* The sky is SHOUTING!
+> Pick it up. | +2 up
+  - *holds on tight* Make the sky stop shouting...
+> It's just clouds bumping. | +1 hug
+  - ...Clouds bump? ...Silly clouds. *still holds on*
+> Let's count till the next one. | +1 -> count
+page count
+say: One... two... three... *BOOM* AAAH! ...That was a big one.
+> Count with me again. | +2 hug
+  - One, two, three, four... it's further now! It's going away!
+> You're so brave. | +2 proud
+  - I'm brave! ...Hold me anyway.
+ignored: *hides under the table with its hands over its ears*
+
+scene toddler_missed
+who: toddler
+mood: missed
+say: {call}! {call}! YOU CAME BACK! *runs at you full speed*
+say: *stops dead, stares, then bursts into tears and runs to you* You were GONE!
+> Catch it in a hug. | +2 hug
+  - *squeezes your neck so hard* Don't go again. Promise.
+> Spin it around! | +2 spin
+  - *screams with joy* Again! Again!
+> I'm here now. | +1 up
+  - *won't let go of your shirt* ...Here now. Here now.
+ignored: *keeps calling for you*
+
+scene toddler_bored
+who: toddler
+mood: bored
+say: {call}. I'm bored. Everything is boring. Even the cat is boring.
+say: *lies face-down on the floor* ...I'm bored. Play with me.
+> Let's play! | +2 play
+  - YES! Play! What do we play? You pick! No, I pick!
+> Want to go for a walk? | +1 follow
+  - A walk! With you! I'm coming!
+> Find something to do. | sad
+  - *sighs the biggest sigh in the world*
+ignored: *keeps lying face-down, sighing loudly*
+
+scene toddler_bored_draw
+who: toddler
+mood: bored happy
+temper: mischief curious
+say: {call}, I drawed a picture! ...On the wall. It's a horse. It's a good horse.
+> That's a great horse. | +1 pat
+  - Thank you! I'll draw another one! On the other wall!
+> Not on the wall! | sad
+  - ...But the wall wanted a horse.
+> Let's draw on paper together. | +2 gift:paper
+  - Paper! Okay! I'll draw you! You'll be a horse too!
+ignored: *draws a second horse on the wall*
+
+scene toddler_proud
+who: toddler
+mood: proud happy
+say: {call}! I did it! I put my shoes on! ...They're on the wrong feet. I did it!
+say: Look! I climbed it! All by myself! I'm on top! Look at me!
+> I'm so proud of you! | +2 clap proud
+  - *beams* I'm the best at shoes!
+> High five! | +2 arms_up proud
+  - *slaps your hand as hard as it can* I'm STRONG!
+> Let's fix them. | +1
+  - Okay. ...But I did it first.
+ignored: *does it again, for nobody*
+
+scene toddler_proud_word
+who: toddler
+mood: proud
+say: {call}! I can say a big word! Listen! ...Spa-ghet-ti!
+> Wow! Say it again! | +2 clap proud
+  - Spa-GHET-ti! Spaghetti spaghetti spaghetti!
+> That's a huge word! | +2 hug proud
+  - I know LOTS of big words. Like... hippopota... hippo.
+> Clever! | +1
+  - *nods very seriously* I'm very clever.
+ignored: *says spaghetti to the cat*
+
+scene toddler_sad
+who: toddler
+mood: sad
+say: *sits in a corner with its back to you* ...I'm not talking to you.
+say: *sniffles* ...You didn't play with me.
+> I'm sorry. Let's play now. | +2 play
+  - *turns around slowly* ...Really? ...Okay. You can be the monster.
+> Come here, give me a hug. | +2 hug
+  - *runs to you and holds on* ...I wasn't really mad.
+> Okay, sit there then. | sad
+  - *sniffles louder*
+ignored: *stays in the corner, sulking very hard*
+
+scene toddler_hurt
+who: toddler
+mood: hurt
+say: *runs to you crying, holding up its knee* I FALLED DOWN! It's BROKEN!
+say: {call}... my hand has a hurt on it... *sniff*
+> Kiss it better. | +2 hug
+  - *sniffles* ...It's better. It's a little better. Kiss it again.
+> Let me see. Brave face! | +1 pat
+  - *sniff* ...I'm brave. *lip wobbles* ...I'm brave.
+> You're okay. | 0
+  - It's NOT okay! It's BROKEN!
+ignored: *cries until it forgets why*
+
+scene toddler_hurt_brave
+who: toddler
+mood: hurt
+say: *holds out a scraped elbow, trying very hard not to cry* I'm not crying. I'm a big kid.
+> You're so brave. | +2 proud hug
+  - *wipes its nose on you* ...I'm the bravest.
+> It's okay to cry. | +2 up
+  - *cries, relieved* ...It hurts...
+> Let's clean it up. | +1 pat
+  - Does it sting? ...OW! ...It stings. I'm still brave.
+ignored: *cries quietly so nobody sees*
+
+scene toddler_shy
+who: toddler
+temper: shy
+say: *hides behind your legs and peeks out at you* ...Hi.
+> Hi there, little one. | +1 pat
+  - *giggles and hides again*
+> Want to hold my hand? | +2 hand
+  - *takes your hand without a word, and doesn't let go*
+> Come out, silly. | 0
+  - *hides further*
+ignored: *stays behind the chair*
+
+scene toddler_bold
+who: toddler
+temper: bold
+say: {call}! I'm gonna jump off the stairs! Watch! ...Watch!
+say: I'm gonna fight the chicken! It looked at me!
+> Catch it when it jumps! | +2 toss
+  - *flies into your arms screaming with joy* AGAIN!
+> Not too high! | +1
+  - Okay. ...Higher. ...Okay, not higher.
+> Let's fight together! | +2 spin
+  - You hold the chicken! I'll punch it! ...Gently.
+ignored: *jumps anyway, lands, is fine, is very proud*
+
+scene toddler_curious
+who: toddler
+temper: curious
+say: {call}, what's this? *holds up a rock* ...What's THIS? *holds up another rock*
+> It's a special rock. | +1 pat
+  - SPECIAL? ...I'm keeping it forever. It's my best rock.
+> Let's find more! | +2 follow
+  - Yes! A rock hunt! Come on!
+> It's just a rock. | sad
+  - *looks at the rock, disappointed in both of you*
+ignored: *collects more rocks, alone*
+
+scene toddler_mischief
+who: toddler
+temper: mischief
+say: *giggles from behind the door* ...You can't find me. I'm invisible.
+> Where could it be? | +2 peekaboo
+  - *explodes out from behind the door* BOO! I scared you!
+> I see you! | +1 tickle
+  - NO you DON'T! ...You do. *giggles*
+> Come out. | 0
+  - *stays very still, still giggling*
+ignored: *waits behind the door for ages, very pleased with itself*
+
+scene toddler_gentle
+who: toddler
+temper: gentle
+say: {call}, the bird is sad. It can't fly. Can we help it? Please?
+> Let's help it together. | +2 hand
+  - *very carefully* ...It's okay, bird. {call} is here. {call} fixes everything.
+> We'll find it a safe place. | +1 pat
+  - Can I visit it? Every day? I'll bring it worms.
+> Leave it be. | sad
+  - *its eyes fill with tears*
+ignored: *sits with the bird, keeping it company*
+
+scene toddler_serious
+who: toddler
+temper: serious
+say: {call}. You forgot to close the door. *stares at you, deeply disappointed*
+> You're right. Thank you. | +2 proud
+  - *nods sternly* Doors are important.
+> Close it for me? | +1
+  - *closes it with great ceremony* There. Now we're safe.
+> It's fine open. | 0
+  - It is NOT fine. *closes it itself, frowning*
+ignored: *closes the door, glaring at nobody*
+
+scene toddler_sunny
+who: toddler
+temper: sunny
+say: {call}! I LOVE you! I love you this much! *spreads its arms as wide as they go*
+> I love you this much! | +2 hug
+  - No! I love you MORE! More than the sky!
+> Spin it around! | +2 spin
+  - *giggles uncontrollably* More love! More spinning!
+> I love you too. | +2 pat
+  - *hugs your leg and won't let go*
+ignored: *tells the cat it loves it this much*
+
+scene toddler_night_dark
+who: toddler
+when: night
+mood: sleepy scared happy
+say: {call}, can you check under my bed? For monsters. Just in case. I'm not scared.
+> Check under the bed. | +2 hug
+  - Nothing? ...Check the cupboard too. ...Okay. Thank you. You're the best monster checker.
+> Monsters are scared of you. | +1 proud
+  - They ARE? ...Grrr. Take that, monsters.
+> There's no such thing. | 0
+  - That's what a monster would say.
+ignored: *checks under the bed itself, very carefully, with a stick*
+
+scene toddler_rain
+who: toddler
+when: rain
+say: {call}! Can I jump in the puddles? Please? I'll be careful. I'll be SO careful.
+> Jump in them together! | +2 follow
+  - *SPLASH* ...You're all wet! *SPLASH* So am I!
+> Wear your boots first. | +1
+  - Boots! Okay! ...Which foot does this go on?
+> Stay inside. | sad
+  - *presses its face against the window, longing*
+ignored: *jumps in the puddles alone and comes back soaked*
+
+scene toddler_carried
+who: toddler
+when: carried
+say: I can see everything from up here! Go that way! Faster!
+> Run! | +2 spin
+  - FASTER! WHEEE!
+> Put it down. | down
+  - Nooo... ...Okay. Again later?
+> Sit up on my shoulders. | +2 shoulders
+  - TALLER! I'm the tallest!
+ignored: *bounces impatiently in your arms*
+
+scene toddler_sibling
+who: toddler child
+when: siblings
+say: {call}, {sib} won't let me play. They said I'm too little. I'm NOT little.
+> Let's all play together. | +2 play
+  - Yeah! And I get to be the leader!
+> I'll talk to {sib}. | +1 hug
+  - Tell them I'm big. Tell them I'm the biggest.
+> You can play with me. | +2 follow
+  - With YOU? ...That's better than {sib} anyway.
+ignored: *sulks at {sib} from across the room*
+
+scene toddler_other_parent
+who: toddler
+when: npcparent
+say: {call}, where's {other}? I want {other} too. Can we all be together?
+> Let's go find {other}. | +2 hand
+  - Yay! Hold my hand! We're going to find {other}!
+> {othername} is nearby. | +1
+  - Okay. ...I'll draw {other} a picture until they come.
+> It's just us for now. | +1 hug
+  - Okay. ...You're good too.
+ignored: *goes looking for {other} by itself*
+
+scene toddler_eto
+who: toddler child
+when: eto
+say: {call}, Mama Eto read me a scary story. With a monster that eats people. I wasn't scared. ...A little scared.
+> Was it a good story? | +1 -> story
+> Want me to read a nicer one? | +2 hug
+  - Yes. A nice one. With a bunny. ...And maybe a small monster.
+> Mama Eto loves scary stories. | +1
+  - She laughed at the scary part. She has a scary laugh. I like it.
+page story
+say: It was SO good. The monster was sad, and everyone was scared of him, but he just wanted a friend.
+> That sounds like a good monster. | +2 hug
+  - I'd be his friend. ...Would you?
+> Mama Eto writes good stories. | +1
+  - She says she wrote it. She says don't tell anyone. ...Oops.
+ignored: *tells the story to its toys, doing the scary voice*
+
+scene toddler_touka
+who: toddler child
+when: touka
+say: {call}, Mama Touka kicked a tree today and the tree FELL DOWN. Can I learn to kick trees?
+> When you're bigger. | +1
+  - I'm bigger now! Look! ...Okay, a little bigger.
+> Show me your kick! | +2 proud
+  - *kicks the air with enormous effort* HYAH! ...Did the tree fall?
+> Don't kick trees. | 0
+  - Mama Touka does. ...She said don't tell you.
+ignored: *practises kicking a cushion*
+
+scene toddler_ken
+who: toddler child
+when: ken
+say: {call}, Papa Ken made me hot chocolate and read me the book with the lighthouse. He cried at the end. Is he okay?
+> He's okay. He just loves that book. | +2 hug
+  - I love it too. I didn't cry. ...I cried a little.
+> That's what Papa does. | +1
+  - He cries at EVERY book. Even the cookbook.
+> Let's go give him a hug. | +2 hand
+  - Yes! Group hug! Papa needs a group hug!
+ignored: *goes to hug Papa Ken by itself*
+
+# ---------------------------------------------------------------------------------------------------- what a toddler can be asked
+
+topic toddler_favourite_animal
+prompt: What's your favourite animal?
+who: toddler
+say: A DOG. No. A wolf. No. A big wolf that's a dog. And it's purple.
+> A purple wolf-dog! | +1 clap
+  - YES! And it's mine! And its name is Biscuit!
+> I'd like a purple wolf-dog too. | +1 hug
+  - You can share mine! ...You can hold the leash.
+
+topic toddler_love
+prompt: Who do you love most?
+who: toddler
+say: *thinks very hard* ...You. And {other}. And the cat. And spaghetti. ...You most. Don't tell the cat.
+> I love you most too. | +2 hug
+  - *squeezes you* ...More than spaghetti?
+> I won't tell the cat. | +1
+  - Good. The cat gets jealous.
+
+topic toddler_grow_up
+prompt: What do you want to be?
+who: toddler
+say: A dragon! ...Or a cake maker. Or a dragon that makes cakes.
+> That's a great job. | +1 pat
+  - I'll make you a cake. With fire. Dragon fire.
+> Can I help make the cakes? | +1 hug
+  - You can lick the spoon. That's the best job.
+
+topic toddler_today
+prompt: What did you do today?
+who: toddler
+say: I played and I fell down and I got up and I ate a leaf and I saw a bird and I'm tired and I love you.
+> That's a busy day! | +1 hug
+  - So busy. I need a nap. ...No I don't.
+> You ate a leaf? | +1
+  - It was a crunchy leaf. Not good. Don't eat leaves.
+
+topic toddler_count
+prompt: Can you count to ten?
+who: toddler
+say: Yes! One, two, three, five, seven, nine, ten! ...TEN!
+> Perfect! | +1 clap proud
+  - I'm the best counter!
+> What about four? | +1
+  - Four is... four is a secret number.
+
+topic toddler_colour
+prompt: What's your favourite colour?
+who: toddler
+say: Blue! And red. And sparkly. Sparkly is a colour.
+> Sparkly is the best colour. | +1 pat
+  - I KNOW. You understand me.
+> I like blue too. | +1 hug
+  - We can both like blue. We're a blue family.
+
+topic toddler_dream
+prompt: What did you dream about?
+who: toddler
+say: I dreamed I was a fish and you were a bigger fish and we swimmed to the moon.
+> That sounds amazing. | +1 hug
+  - It WAS. Tonight I'll dream we're birds.
+> Fish can't swim to the moon. | +1
+  - DREAM fish can.
+
+topic toddler_monster
+prompt: Are you a little monster?
+who: toddler
+say: RAWR! *makes claws with its hands* I'm the scariest monster! ...Do you want a hug from the monster?
+> Hug the monster. | +2 hug
+  - *a very small, very fierce hug* RAWR. ...I love you.
+> Run from the monster! | +2 play
+  - *chases you, roaring, laughing*
+
+# =====================================================================================================================================
+# CHILD (five to nine)
+# =====================================================================================================================================
+
+scene child_explore
+who: child
+mood: happy bored
+say: {call}, can we go exploring? I found a cave. It's dark. I wasn't scared. Can we go? Please?
+say: There's a hill I've never been to the top of. Let's climb it. Right now. Before it gets dark.
+> Let's go together. | +2 follow
+  - YES! Stay close, okay? I'll protect you.
+> Hold my hand on the way. | +2 hand
+  - Okay! ...Not because I'm scared. Because you might get lost.
+> Maybe tomorrow. | sad
+  - Tomorrow is SO far away.
+ignored: *goes and stands at the edge of the cave, peering in, alone*
+
+scene child_tag
+who: child
+mood: happy bored
+say: Tag! You're it! *slaps your arm and sprints away*
+say: {call}, play tag with me! You never play tag! Come on!
+> Chase it! | +2 play
+  - You can't catch me! ...You caught me. Rematch!
+> High five, then go! | +2 high_five
+  - *slaps your hand* Now you're it! RUN!
+> I'm too tired. | sad
+  - You're ALWAYS too tired. ...Okay.
+ignored: *tags a tree and declares itself the winner*
+
+scene child_question
+who: child
+mood: happy bored
+temper: curious sunny gentle shy serious
+say: {call}, can I ask you something? Why do some people eat people and some people don't?
+say: {call}, where do stars come from? And why don't they fall down? And are they hot?
+> Let's sit and talk about it. | +2 hug -> talk
+> That's a big question. | +1
+  - I know. I have big questions. I'm a big kid.
+> Ask me later. | sad
+  - *nods and goes quiet* ...Okay.
+page talk
+say: *sits right next to you and looks up, waiting* ...So? What's the answer?
+> Everyone's different, and that's okay. | +2 pat
+  - Hm. ...Okay. I think I get it. Kind of. Can I ask another one?
+> Nobody really knows. | +1
+  - NOBODY? Not even you? ...Then I'll find out. When I'm big.
+ignored: *asks the question to the sky instead*
+
+scene child_teach_please
+who: child
+mood: happy bored proud
+say: {call}, teach me to fight! I've been practising! Watch! *punches the air very seriously*
+say: Can you show me a new move today? I'll be really good. I'll do it a hundred times.
+> Teach it a move. | +2 teach proud
+  - Like this? ...LIKE THIS? *does it again* I'm getting good!
+> Show me what you've got. | +2 high_five
+  - *does a flurry of very determined punches* ...Was that good? Was it?
+> Fighting's not for kids. | sad
+  - But you fight! And {other} fights! ...I'll learn anyway.
+ignored: *practises alone, punching a tree*
+
+scene child_treasure
+who: child
+mood: happy proud
+temper: curious mischief sunny
+say: {call}! I found treasure! Look! *holds out a very ordinary stone* It's magic. I can tell.
+> That's amazing treasure. | +2 pat
+  - I KNOW. I'm going to put it with my other treasures. I have nine.
+> Can I have it? | +2 -> give
+> It's just a rock. | sad
+  - *looks at the rock* ...It's a MAGIC rock. You just can't see it.
+page give
+say: *thinks very hard* ...Okay. Because I love you. Don't lose it. It's the best one.
+> I'll keep it forever. | +2 hug gift:cobblestone
+  - Forever and ever. Put it somewhere safe.
+> Thank you, treasure hunter. | +2 high_five gift:cobblestone
+  - I'll find you more. I'll find you a whole pile.
+ignored: *adds the stone to its secret pile*
+
+scene child_draw
+who: child
+mood: happy proud bored
+say: I drew you a picture! It's our family. That's you. That's {other}. That's me. I'm the tallest. ...I made myself taller.
+> I love it. | +2 hug gift:paper
+  - Put it somewhere everyone can see it. Like on the wall. Or on your face.
+> Why are you the tallest? | +1
+  - Because in the picture I'm grown up and I protect everyone.
+> Nice. | 0
+  - *looks at you, then at the picture* ...You didn't even look.
+ignored: *sticks the picture on the wall for you to find later*
+
+scene child_sleepy
+who: child
+mood: sleepy
+say: *yawns enormously* I'm not tired. I just need to... close my eyes... for a second.
+say: {call}... can I sleep with the door open tonight? And can you stay till I fall asleep?
+> Stay till it falls asleep. | +2 hug
+  - *mumbles* ...Thanks... *already asleep*
+> Off to bed. | bed
+  - *drags its feet* Okay... tuck me in. Properly. Like a burrito.
+> Carry it on your back. | +2 shoulders
+  - *falls asleep on your shoulders, drooling on your hair*
+ignored: *falls asleep on the floor*
+
+scene child_sleepy_story
+who: child
+mood: sleepy
+when: night
+say: {call}, tell me a story. A real one. About when you were little. Or about a fight you won.
+> Tell it about a fight. | +2 hug
+  - *listens with huge eyes* ...And then? ...And then you won? ...*yawn* ...You're so cool.
+> Tell it about when you were little. | +2 pat
+  - You were LITTLE? ...Were you scared of the dark too? ...Me too. Sometimes.
+> Not tonight. | bed
+  - *sighs* Okay. Tomorrow you owe me two stories.
+ignored: *makes up its own story about you, and falls asleep halfway*
+
+scene child_scared
+who: child
+mood: scared
+say: {call}... I heard something outside. Something big. It was breathing.
+say: *holds your sleeve tight* Are there Doves around? Will they find us?
+> I'll keep you safe. Always. | +2 hug
+  - *holds on* ...Promise? Pinky promise?
+> Let's go check together. | +2 hand
+  - *holds your hand very tight* ...If it's a monster, you fight it, and I'll... cheer.
+> It's nothing. Go back to sleep. | sad
+  - It WASN'T nothing. ...Okay.
+ignored: *hides under its blanket, listening*
+
+scene child_scared_brave
+who: child
+mood: scared
+say: I'm not scared. I'm just... standing near you. In case YOU get scared.
+> Thanks. I feel much safer. | +2 hug
+  - *stands up straighter* Good. I've got you.
+> We can be scared together. | +2 hand
+  - ...Okay. Yeah. Together's better.
+> You can go play. | sad
+  - *doesn't move* ...I'll just stay here. For you.
+ignored: *keeps standing very close to where you were*
+
+scene child_missed
+who: child
+mood: missed
+say: You're BACK! Where were you? You were gone forever! I counted the days. It was a lot.
+say: *runs at you and hits you with a hug so hard you nearly fall over*
+> I missed you so much. | +2 hug
+  - I missed you MORE. I missed you a thousand.
+> Spin it around! | +2 spin
+  - *screams with laughter* Again! You have to make up for being gone!
+> I was busy. | sad
+  - ...Too busy for me?
+ignored: *keeps watching the door, in case you leave again*
+
+scene child_missed_gift
+who: child
+mood: missed
+say: I made you something while you were gone. It took ages. Don't laugh. ...It's a bracelet. Out of string.
+> Put it on. | +2 hug gift:string
+  - *ties it very tight* Now you have to come back. It's a magic come-back bracelet.
+> It's perfect. | +2 high_five gift:string
+  - It's NOT perfect. It's wonky. ...But it's for you.
+> Thanks. | +1 gift:string
+  - Wear it every day, okay?
+ignored: *puts the bracelet on your pillow*
+
+scene child_bored
+who: child
+mood: bored
+say: {call}. I'm SO bored. I've done everything. Twice. Can we do something? Anything?
+say: There's nothing to do here. Can we go somewhere? Can we build something?
+> Let's build a fort! | +2 play
+  - YES! A fort! With a flag! And a moat! Can the moat have sharks?
+> Come on an adventure. | +2 follow
+  - Finally! Where are we going? Is it dangerous? I hope it's dangerous.
+> Read a book. | sad
+  - I READ the book. All the books.
+ignored: *lies on the floor, staring at the ceiling, sighing loudly*
+
+scene child_bored_contest
+who: child
+mood: bored happy
+temper: bold mischief sunny
+say: I bet I can jump further than you. I bet I can. Bet you a cookie.
+> You're on. | +2 play
+  - *jumps* ...I WIN! Cookie me! ...Rematch?
+> I'll let you win. | +1 high_five
+  - NO! No letting! Jump for real!
+> No betting. | 0
+  - It's not betting if I win.
+ignored: *jumps alone, declares itself the winner, eats an imaginary cookie*
+
+scene child_proud
+who: child
+mood: proud
+say: {call}! Did you see me? I hit the dummy fifty times! FIFTY! My arms are dead!
+say: Look, look! I can do the kick you showed me! Watch! *kicks* ...Did you see?
+> I'm so proud of you! | +2 high_five proud
+  - *glowing* I'm gonna be strong like you. Stronger. Sorry.
+> Show me again! | +2 teach
+  - *does it again, even harder* ...See? See?
+> Good job. | +1
+  - *waits for more praise, a little disappointed*
+ignored: *does it again, for nobody*
+
+scene child_proud_helped
+who: child
+mood: proud happy
+temper: gentle serious sunny
+say: I helped {other} today! I carried the heavy things. Well. The medium things. They said I was really helpful.
+> You're such a good helper. | +2 hug proud
+  - *beams* I'm the BEST helper.
+> High five, helper! | +2 high_five proud
+  - *slaps your hand* Helper five!
+> Was it really heavy? | +1
+  - SO heavy. Like a rock. A medium rock.
+ignored: *helps carry something else, to be extra helpful*
+
+scene child_sad
+who: child
+mood: sad
+say: *sits by itself, poking the ground with a stick* ...You said you'd play with me.
+say: Nobody listens to me. I'm just a kid.
+> I'm sorry. Let's play now. | +2 play
+  - *looks up* ...For real? ...Okay. You're still in trouble though.
+> I'm listening now. | +2 hug -> listen
+> Cheer up. | sad
+  - *pokes the ground harder*
+page listen
+say: *sniffles* ...I just wanted to show you something. And you were busy. You're always busy.
+> Show me now. I'm all yours. | +2 hand
+  - *wipes its nose and grabs your hand* Okay. Come on. It's this way.
+> You're right. I'm sorry. | +2 hug
+  - *hugs you* ...It's okay. Just... don't be busy so much.
+ignored: *keeps poking the ground*
+
+scene child_hurt
+who: child
+mood: hurt
+say: I fell out of the tree. It's fine. It's FINE. *clearly holding back tears*
+say: {call}... I got scratched. By a thing. It hurts a lot. Don't tell {other}, they'll worry.
+> Let me look. You're so brave. | +2 hug
+  - *sniffles* ...I'm brave. It hurts though. A lot.
+> Let's clean it up. | +1 hand
+  - Does it sting? ...OW. ...Okay. Okay. I'm okay.
+> Climbing trees is dangerous. | sad
+  - I KNOW. ...You don't have to say it.
+ignored: *limps away to cry where nobody sees*
+
+scene child_hurt_tough
+who: child
+mood: hurt
+temper: bold serious
+say: I got hurt. I didn't cry. Not even once. Check my face. No tears.
+> You're the toughest kid I know. | +2 proud high_five
+  - *grins through it* Tougher than YOU?
+> It's okay to cry, you know. | +2 hug
+  - *its face crumples* ...It really hurts...
+> Let's patch you up. | +1
+  - Use the big bandage. The cool one.
+ignored: *bandages itself, badly*
+
+scene child_shy
+who: child
+temper: shy
+say: {call}... can I stay with you for a bit? Other kids are loud. I like it here. With you.
+> Of course you can. | +2 hug
+  - *sits right next to you, quiet and happy*
+> Want to go for a walk, just us? | +2 hand
+  - *nods quickly and takes your hand*
+> Go play with them. | sad
+  - *goes, slowly, looking back*
+ignored: *sits nearby anyway, quietly*
+
+scene child_shy_secret
+who: child
+temper: shy gentle
+mood: happy sad bored
+say: Can I tell you a secret? Only you. ...Come closer. It's a quiet secret.
+> Lean in. | +2 -> secret
+> I promise I won't tell. | +2 -> secret
+> Tell me later. | sad
+  - *its face falls* ...It's okay. It wasn't a big secret.
+page secret
+say: *whispers* ...I want to be just like you when I grow up. ...That's it. Don't laugh.
+> I'd never laugh. | +2 hug
+  - *hides its red face in your shirt*
+> You'll be even better. | +2 proud
+  - *whispers* ...Really? ...Okay.
+ignored: *whispers the secret to its pillow*
+
+scene child_bold
+who: child
+temper: bold
+say: {call}! I'm gonna fight that zombie! I've been training! Let me fight it!
+say: When I grow up I'm gonna fight every Dove in the world. Even the big ones.
+> Let's train first. | +2 teach
+  - Okay! But then I fight it. Right after.
+> Stay behind me. | +1 follow
+  - Fine. ...But I'm guarding your back. That's a job.
+> You're too little. | sad
+  - I'm NOT little! I'm medium!
+ignored: *charges at a chicken instead*
+
+scene child_curious
+who: child
+temper: curious
+say: {call}, what's inside a creeper? Why do they explode? Do they WANT to explode? Is it sad?
+> Let's read about it. | +2 hug
+  - A book? About creepers? ...Is there a book about everything?
+> They're just made that way. | +1
+  - Like how I'm made of questions?
+> Stay away from creepers. | +1
+  - I know. But what's INSIDE them?
+ignored: *watches a creeper from a very safe distance, taking notes*
+
+scene child_mischief
+who: child
+temper: mischief
+say: *very innocent face* ...I didn't do anything. Why are you looking at me. I'm just standing here.
+say: {call}, close your eyes and hold out your hand. Trust me. ...TRUST me.
+> Close your eyes. | +2 -> trick
+> What did you do? | +1 -> did
+> I don't trust that face. | 0
+  - *grins* That's fair.
+page trick
+say: *puts a frog in your hand* SURPRISE! ...His name is Gerald.
+> Hello, Gerald. | +2 tickle
+  - *dies laughing* You're not even scared!
+> Chase the giggling child. | +2 play
+  - *runs away screaming with delight*
+page did
+say: ...Nothing. ...Well. I might have put a snowball in {other}'s boot. A small one. A medium one.
+> Let's go apologise. | +1 hand
+  - Ugh. ...Okay. But it was funny.
+> Did they find it yet? | +2 tickle
+  - *giggling* NOT YET!
+ignored: *does something, somewhere, that you'll find later*
+
+scene child_gentle
+who: child
+temper: gentle
+say: {call}, you look tired. Do you want to sit down? I'll get you water. Or a blanket. Or a hug.
+> A hug, please. | +2 hug
+  - *hugs you very carefully, like you might break* ...Better?
+> You're so kind. | +2 pat
+  - You're kind first. I learned it from you.
+> I'm fine. | 0
+  - Okay. ...I'll get you water anyway.
+ignored: *leaves a blanket on your chair*
+
+scene child_serious
+who: child
+temper: serious
+say: {call}, I've been thinking. I need to train harder. If something happened, I need to be able to protect everyone.
+> That's not your job. That's mine. | +2 hug
+  - It can be both of our jobs. ...I'll still train.
+> Then let's train together. | +2 teach
+  - Thank you. I'll take it seriously. I always take it seriously.
+> You think too much. | 0
+  - Someone has to.
+ignored: *does push-ups alone, counting very seriously*
+
+scene child_sunny
+who: child
+temper: sunny
+say: {call}! Today is the BEST day! The sun is out and I found a stick and you're here! Best day!
+> It really is! | +2 spin
+  - *spins with you, laughing* BEST! DAY!
+> What's so great about the stick? | +1
+  - It's the PERFECT stick. It's a sword. And a wand. And a stick.
+> Calm down a little. | 0
+  - I CAN'T. It's the BEST DAY.
+ignored: *tells everyone else it's the best day*
+
+scene child_night_stars
+who: child
+when: night
+mood: happy sleepy bored
+say: {call}, look! A shooting star! Did you see it? Quick, make a wish!
+> Make a wish together. | +2 hug
+  - I wished for... I can't tell you. Or it won't come true. ...It was about you.
+> I saw it! | +1
+  - It was SO fast! I hope there's another one!
+> Time for bed. | bed
+  - Aww. Can I watch one more?
+ignored: *makes a wish alone*
+
+scene child_rain
+who: child
+when: rain
+say: {call}, it's raining! Can we go stand in it? Just for a minute? I want to see if I melt.
+> Let's go stand in it! | +2 follow
+  - *holds its arms out* I'm not melting! I'm WET! Best day!
+> You won't melt. | +1
+  - I know. But I want to check.
+> You'll catch a cold. | sad
+  - *presses its face to the window, sighing*
+ignored: *goes out in the rain alone and comes back soaked and happy*
+
+scene child_thunder
+who: child
+when: thunder
+say: *jumps at the thunder* ...That was loud. Was that loud to you? It was loud to me.
+> Come sit with me till it's over. | +2 hug
+  - *sits right against you, flinching at every flash*
+> Let's count the seconds. | +2 hand
+  - One... two... three... *BOOM* ...It's getting further! It's leaving!
+> It's just thunder. | sad
+  - I KNOW it's just thunder. ...Can I sit with you anyway?
+ignored: *hides under the table*
+
+scene child_ghoul
+who: child
+when: ghoul
+mood: happy proud scared bored
+say: {call}, my eye did the thing again. It went red. Is it supposed to do that? Am I a monster?
+> You're not a monster. You're you. | +2 hug
+  - ...Okay. ...Is it pretty when it does it? A little?
+> Mine does it too. Look. | +2 proud
+  - *gasps* We MATCH! That's so cool!
+> We'll talk about it when you're older. | sad
+  - I'm older NOW. ...Okay.
+ignored: *stares at its own eye in a puddle*
+
+scene child_human
+who: child
+when: human npcparent
+mood: happy bored sad
+say: {call}, {other} has a red eye and I don't. Is something wrong with me? Why am I different?
+> Nothing's wrong with you. You're perfect. | +2 hug
+  - Perfect? ...Even without the red eye?
+> Different is good. | +2 pat
+  - ...Okay. I'll be the different one. That's special, right?
+> Ask {other}. | 0
+  - I DID. They said ask you.
+ignored: *looks at its own eyes for a long time*
+
+scene child_sibling
+who: child teen
+when: siblings
+mood: happy bored sad
+say: {call}, {sib} said I'm annoying. Am I annoying? Be honest. Don't be honest.
+> You're not annoying. | +2 hug
+  - Tell {sib} that. Tell them right now.
+> Only a little. | +1 tickle
+  - HEY. ...Okay, a little. But only to {sib}.
+> Work it out with {sib}. | 0
+  - Ugh. Fine. But they started it.
+ignored: *goes to be annoying at {sib} on purpose*
+
+scene child_eto_book
+who: child teen
+when: eto
+mood: happy bored proud
+say: Mama Eto let me read one of her books. A grown-up one. There was a LOT of blood. I'm not supposed to tell you.
+> Was it good? | +2 -> good
+> I'll talk to Mama Eto. | 0
+  - Don't! She'll stop letting me! ...It was just a little blood.
+> You can tell me anything. | +2 hug
+  - ...It was really good. And I didn't have nightmares. Much.
+page good
+say: It was AMAZING. The monster was the hero and he ate the bad king. Mama laughed when I told her my favourite part.
+> Mama Eto has great taste. | +2 pat
+  - I know! She says I have taste too. Monster taste.
+> Maybe something less bloody next time. | +1
+  - She said you'd say that. She said to say "boring". ...Boring.
+ignored: *goes to find another of Mama Eto's books*
+
+scene child_touka_kick
+who: child teen
+when: touka
+mood: happy proud bored
+say: Mama Touka taught me a kick! A real one! She said not to show you because you'd worry. Watch!
+> Show me! | +2 teach proud
+  - *kicks the air so hard it spins round* ...That was good, right? That was SO good.
+> Be careful with that. | +1
+  - She said you'd say that too. ...I'll be careful. Mostly.
+> High five, fighter! | +2 high_five
+  - *slaps your hand* Mama Touka says I kick like her. That's the best compliment.
+ignored: *practises the kick on a tree*
+
+scene child_ken_coffee
+who: child teen
+when: ken
+mood: happy sleepy bored
+say: Papa Ken let me try coffee. It was SO bitter. He laughed. He doesn't laugh much. It was nice.
+> You made Papa laugh? | +2 hug
+  - I did! ...I'm gonna do it again. I'll drink more coffee.
+> Coffee's not for kids. | +1
+  - He said that after. He said not to tell you. ...Oops.
+> Did you like it? | +1
+  - NO. ...I liked drinking it with Papa though.
+ignored: *goes to make Papa Ken laugh again*
+
+# ---------------------------------------------------------------------------------------------------- what a child can be asked
+
+topic child_best_day
+prompt: What was the best part of today?
+who: child
+say: When we played! And when I found a bug. And now. Now is good too.
+> Now is my favourite part too. | +2 hug
+  - *grins* We have the same favourite part.
+> What kind of bug? | +1
+  - A shiny one. It had a shell. I named it Captain.
+
+topic child_scared_of
+prompt: What are you scared of?
+who: child
+say: ...The dark. A little. And Doves. And you being gone. That's the worst one.
+> I'll always come back. | +2 hug
+  - Promise? ...Okay. Then I'm only scared of the dark.
+> You're braver than you think. | +2 proud
+  - ...Really? ...Okay. I'll try to be.
+
+topic child_friend
+prompt: Who's your best friend?
+who: child
+say: You! ...And a chicken I named Biscuit. You're tied.
+> I'm honoured to tie with Biscuit. | +2 high_five
+  - Biscuit is VERY cool. It's a big honour.
+> I'm glad I'm your best friend. | +2 hug
+  - Forever. Even when I'm big.
+
+topic child_grow_up
+prompt: What do you want to be when you grow up?
+who: child
+say: A fighter. Or a librarian. Or a fighter librarian who fights people who don't return books.
+> That's the best job ever. | +2 high_five
+  - I know! You can work there too. You can be the guard.
+> You can be anything. | +2 hug
+  - Even a dragon? ...Okay, not a dragon. But almost anything.
+
+topic child_lesson
+prompt: How's your training going?
+who: child
+say: Good! I punched the dummy so hard it wobbled. It wobbled a LOT.
+> Want to learn something new? | +2 teach
+  - YES. Show me the cool one. The spinny one.
+> I'm proud of you. | +2 proud hug
+  - *beams* Tell {other}. Tell them I'm strong.
+
+topic child_other
+prompt: What do you like about {other}?
+who: child
+say: {other} makes the best breakfast. And they're strong. And they laugh at my jokes even the bad ones.
+> Me too. | +2 hug
+  - We both like them! We're a team.
+> Tell them that sometime. | +1
+  - I will! Right now! ...After this.
+
+topic child_story_request
+prompt: Want a story?
+who: child
+say: YES. The one about the monster that was actually nice. With the voices.
+> Do all the voices. | +2 hug
+  - *giggles at every voice* ...Do the monster again. The growly one.
+> A new story this time. | +1
+  - A new one? ...Okay. But it needs a monster.
+
+topic child_food
+prompt: What's your favourite food?
+who: child
+say: Cake! ...{other} says I can't have too much. One slice is too much? That's not fair.
+> One more slice won't hurt. | +2 gift:cake
+  - *gasps* A whole CAKE? For me? You're the best!
+> {other} is right. | +1
+  - Ugh. You always agree with each other.
+
+topic child_secret_place
+prompt: Do you have a secret place?
+who: child
+say: ...Maybe. Behind the big tree. There's a hole. I keep my treasures there. Don't tell.
+> I'll never tell. | +2 hug
+  - Pinky promise. ...Okay. You can visit. Once.
+> Can I see it? | +2 follow
+  - Okay. Follow me. Quietly. It's secret.
+
+topic child_dream
+prompt: What did you dream about?
+who: child
+say: I dreamed I could fly. I flew over the whole world and you were down there waving.
+> I'd always wave at you. | +2 hug
+  - I waved back. I did a flip. I can't do flips. In the dream I could.
+> Maybe one day you'll fly. | +1
+  - With wings? Like Mama Touka? ...That would be SO cool.
+
+# =====================================================================================================================================
+# TEEN
+# =====================================================================================================================================
+
+scene teen_out_tonight
+who: teen
+mood: happy bored
+say: Hey, {call}. Can I go out tonight? I'll be careful. I'll be back before it's light. Probably.
+say: So. There's this thing tonight. Everyone's going. Can I go? Please don't make it weird.
+> Only if I come too. | +1 follow
+  - Oh my god. ...Fine. Walk ten steps behind me. Pretend you don't know me.
+> Be back before dawn. | +2 high_five
+  - Deal. ...Thanks. You're actually kind of okay.
+> Not tonight. | sad
+  - Seriously? Everyone else's parents said yes. ...Fine.
+ignored: *goes anyway, quietly*
+
+scene teen_train
+who: teen
+mood: happy bored proud
+say: Spar with me. Don't go easy. I hate it when you go easy.
+say: I've been practising. I think I can beat you now. Wanna find out?
+> Spar for real. | +2 teach
+  - *ducks your swing, grins* ...Okay, you're still faster. For now.
+> Show me what you've got. | +2 high_five proud
+  - *a fast combination that actually lands* ...Ha! Did you see that?
+> Maybe later. | sad
+  - You always say later. ...Whatever.
+ignored: *spars with a tree. Wins.*
+
+scene teen_question
+who: teen
+mood: happy bored sad
+temper: curious serious gentle shy
+say: Can I ask you something? Without you making it a big deal? ...How did you know you loved {other}?
+say: {call}... do you ever feel like you don't fit anywhere? Like, at all?
+> Sit down. Let's talk. | +2 hug -> talk
+> That's a big question. | +1
+  - Yeah. I have big questions now. I'm basically an adult.
+> Not now. | sad
+  - Right. Never mind. Forget it.
+page talk
+say: *sits down, not looking at you, waiting*
+> I just knew. Like coming home. | +2 pat
+  - ...Like coming home. Huh. ...That's actually really nice. Don't tell anyone I said nice.
+> Everyone feels like that sometimes. You fit here. | +2 hug
+  - ...Yeah. I guess I do. Here, at least.
+ignored: *stares at the ceiling, thinking it through alone*
+
+scene teen_embarrassing
+who: teen
+mood: happy bored
+temper: mischief sunny bold
+say: {call}. You did the thing again. The thing where you wave at me in public. People SAW.
+> *wave again* | +1 wave
+  - STOP. Oh my god. ...You're so embarrassing. ...Okay that was a little funny.
+> I'll never stop. | +2 hug
+  - Ugh. ...Fine. Never stop. But not in front of my friends.
+> Sorry. | +1
+  - It's fine. Just... wave smaller next time.
+ignored: *rolls its eyes at you from a distance*
+
+scene teen_music
+who: teen
+mood: happy bored
+say: Listen to this. No, actually listen. Don't make the face. This is the best song ever written.
+> Listen properly. | +2 pat
+  - ...Right? RIGHT? Okay, you get it. You're cool for like five seconds.
+> It's just noise. | sad
+  - It's NOT noise. You wouldn't get it.
+> Play me another one. | +2 high_five
+  - *grins* Okay. This one's even better. Brace yourself.
+ignored: *listens to it alone, loudly*
+
+scene teen_sleepy
+who: teen
+mood: sleepy
+say: *yawns* Don't talk to me. It's too early. Everything's too early.
+say: I stayed up late reading. Don't lecture me. It was a good book.
+> Coffee? | +2 hug
+  - ...Okay. Fine. You're not the worst parent.
+> What were you reading? | +1
+  - A book {other} recommended. It's... actually really good. Don't tell them.
+> Get some sleep. | bed
+  - Ugh. Fine. Wake me at noon. Or never.
+ignored: *goes back to bed*
+
+scene teen_sleepy_talk
+who: teen
+mood: sleepy sad
+when: night
+say: Can't sleep. ...Can I just sit here with you for a bit? You don't have to talk.
+> Sit with them. | +2 hug
+  - *leans on you a little, quiet* ...Thanks. This helps.
+> What's keeping you up? | +2 -> up
+> Try to sleep. | bed
+  - Yeah. Okay. ...Night.
+page up
+say: Stuff. Thinking about stuff. The future. What I'm supposed to be. ...It's dumb.
+> It's not dumb. You've got time. | +2 hug
+  - ...Yeah. Okay. I guess I do.
+> You'll figure it out. I did. | +2 pat
+  - You figured it out? ...That's honestly a little reassuring.
+ignored: *stays up, staring out the window*
+
+scene teen_scared
+who: teen
+mood: scared
+say: I'm not scared. I just... there were Doves near the river today. Close. I saw their cases.
+say: Something's out there tonight. I can hear it. I can handle it. ...Can you come with me anyway?
+> Stay close to me. | +2 hug
+  - ...Yeah. Okay. Just tonight.
+> We'll go together. | +2 follow
+  - Okay. I've got your back. You've got mine.
+> You can handle it. | +1 proud
+  - Yeah. Yeah, I can. ...I'll stay close anyway.
+ignored: *keeps watch alone, nervous*
+
+scene teen_scared_admit
+who: teen
+mood: scared sad
+say: ...Can I admit something? I had a nightmare. About you not coming back. I know it's stupid.
+> It's not stupid. Come here. | +2 hug
+  - *hugs you, finally, properly* ...Don't tell anyone.
+> I'll always come back. | +2 pat
+  - You can't promise that. ...But thanks for saying it.
+> Just a dream. | sad
+  - Yeah. I know. Forget it.
+ignored: *goes back to its room, quiet*
+
+scene teen_missed
+who: teen
+mood: missed
+say: Oh. Hey. You're back. ...Took you long enough. I wasn't worried or anything.
+say: You were gone a while. Whatever. ...I saved you some dinner.
+> I missed you too. | +2 hug
+  - Ugh. Fine. One hug. ...Okay, a long one.
+> You saved me dinner? | +2 pat
+  - It's cold now. It's whatever. ...Eat it.
+> Just busy. | sad
+  - Yeah. Sure. Busy.
+ignored: *pretends not to care, checks on you three times*
+
+scene teen_missed_tell
+who: teen
+mood: missed happy
+say: So much happened while you were gone. I beat {other} in a spar. Okay, almost. And I read four books. Want to hear about it?
+> Tell me everything. | +2 hug
+  - Okay so first— *talks for an hour, happier than it's been in days*
+> You almost beat {other}? | +2 high_five
+  - ALMOST. Next time for real. You'll see.
+> Later, okay? | sad
+  - ...Sure. Later.
+ignored: *tells it all to {other} instead*
+
+scene teen_bored
+who: teen
+mood: bored
+say: There's nothing to do. This place is so boring. Can we go somewhere? Anywhere?
+say: I'm bored out of my mind. Teach me something. Something cool. Not something useful.
+> Let's go adventuring. | +2 follow
+  - Finally. Somewhere dangerous. Don't tell {other}.
+> Let me teach you something cool. | +2 teach
+  - Okay. ...That's actually cool. Show me again.
+> Clean your room. | sad
+  - Wow. Okay. That's the opposite of fun.
+ignored: *goes to find trouble alone*
+
+scene teen_proud
+who: teen
+mood: proud
+say: Hey. So. I won. The spar today. Against someone older. I'm not bragging. I'm reporting.
+say: Did you see? I did the move. The one you showed me. It worked. It actually worked.
+> I'm so proud of you. | +2 hug proud
+  - ...Yeah. Okay. Thanks. Don't get emotional.
+> High five, champion. | +2 high_five proud
+  - *slaps your hand, grinning* Champion. Say it again.
+> Don't get cocky. | +1
+  - I'm not cocky. I'm confident. There's a difference.
+ignored: *tells {other} instead*
+
+scene teen_proud_made
+who: teen
+mood: proud happy
+temper: gentle curious serious sunny
+say: I made you something. It's not a big deal. It's a... a bookmark. I carved it. It's a little crooked.
+> I love it. | +2 hug gift:feather
+  - It's crooked. ...But it's yours. Use it in a good book.
+> You made this? | +2 proud gift:feather
+  - Yeah. Took me all week. Don't make a big deal.
+> Thanks. | +1 gift:feather
+  - ...Yeah. You're welcome.
+ignored: *leaves the bookmark in your book*
+
+scene teen_sad
+who: teen
+mood: sad
+say: I'm fine. Really. ...I'm not fine. Can we not talk about it? Can we just... be here?
+say: *sits alone, hood up, not looking at anyone*
+> Just sit with them. | +2 hug
+  - *after a long while, leans on you* ...Thanks.
+> Want to talk about it? | +2 -> talk
+> Cheer up. | sad
+  - Wow. Great advice. Thanks.
+page talk
+say: ...Someone said I'm a freak. Because of my eye. Or because I'm not like them. Whatever.
+> You're not a freak. You're mine. | +2 hug
+  - *quietly* ...Okay. ...Okay.
+> Want me to talk to them? | +1
+  - NO. Oh my god. ...But thanks. That's kind of nice.
+ignored: *stays hooded and alone*
+
+scene teen_sad_sorry
+who: teen
+mood: sad
+say: ...Sorry I yelled at you. I didn't mean it. I don't know why I said it.
+> It's okay. I love you. | +2 hug
+  - *mumbles* ...Love you too. Don't make it weird.
+> I'm sorry too. | +2 pat
+  - ...Okay. We're both sorry. Good.
+> You should be. | sad
+  - ...Yeah. I know.
+ignored: *goes to its room, quiet*
+
+scene teen_hurt
+who: teen
+mood: hurt
+say: It's nothing. Just a scratch. Don't freak out. ...It's a big scratch.
+say: I got into a fight. I won. Mostly. Don't tell {other}.
+> Let me patch you up. | +2 hug
+  - Fine. ...Ow. OW. Okay. Thanks.
+> Who did this? | +1 -> who
+> You need to be more careful. | sad
+  - I KNOW. You don't have to say it.
+page who
+say: Some kids. They said things about {other}. So I made them stop.
+> I'm proud you stood up for them. | +2 proud
+  - ...Yeah? You're not mad?
+> Next time, walk away. | +1 hug
+  - ...Yeah. Okay. Next time. Maybe.
+ignored: *patches itself up, badly*
+
+scene teen_shy
+who: teen
+temper: shy
+say: Hey. Um. Can I hang out with you today? I don't really want to be around anyone else.
+> Of course. | +2 hug
+  - Cool. ...Cool. Thanks.
+> Let's go somewhere quiet. | +2 follow
+  - Yeah. That'd be good.
+> Go see your friends. | sad
+  - ...Yeah. Sure.
+ignored: *sits in its room alone*
+
+scene teen_bold
+who: teen
+temper: bold
+say: I'm going after the ghoul by the river. The one that's been hunting people. Don't try to stop me.
+> Then I'm coming with you. | +2 follow
+  - ...Fine. Stay behind me. Kidding. Stay next to me.
+> Let's train first. | +2 teach
+  - Ugh. Fine. One more lesson. Then I go.
+> Absolutely not. | sad
+  - You can't stop me forever.
+ignored: *goes to the river alone*
+
+scene teen_curious
+who: teen
+temper: curious
+say: Did you know the CCG makes weapons out of ghouls? Out of their kagune. That's so messed up. ...Also kind of fascinating.
+> It's horrible. | +1 hug
+  - Yeah. Yeah, it is. ...I still want to know how it works.
+> Where did you learn that? | +1
+  - A book. {other} has a lot of books. I read the ones I'm not supposed to.
+> Stay away from Doves. | +1
+  - I know. I'm curious, not stupid.
+ignored: *goes to read more about it*
+
+scene teen_mischief
+who: teen
+temper: mischief
+say: So. Hypothetically. If someone put a frog in {other}'s coffee... how mad would {other} be? Hypothetically.
+> Very mad. | +1
+  - Right. Right. ...How fast can you run?
+> Did you do it? | +2 -> did
+> That's a great prank. | +2 high_five
+  - THANK you. Finally someone gets it.
+page did
+say: ...Maybe. It's a small frog. He's fine. The frog, I mean. {other} isn't going to be fine.
+> We should warn them. | +1
+  - No! ...Fine. But you're telling them.
+> I'll cover for you. | +2 high_five
+  - You're the best. Don't tell them I said that.
+ignored: *somewhere, a frog is in a cup*
+
+scene teen_gentle
+who: teen
+temper: gentle
+say: You look tired. Sit down. I'll make dinner. Don't argue. I can cook. Kind of.
+> Let them cook. | +2 hug
+  - Okay. ...It's a little burned. Eat around the burned bits.
+> You're a good kid. | +2 pat
+  - I'm not a kid. ...But thanks.
+> I'm fine. | 0
+  - You're not. Sit down.
+ignored: *makes dinner anyway and leaves it on the table*
+
+scene teen_serious
+who: teen
+temper: serious
+say: I've decided what I want to do. I want to protect people. Ghouls and humans. Both. I know it sounds stupid.
+> It doesn't sound stupid at all. | +2 hug proud
+  - ...Really? ...Okay. Then I'll do it. I'll actually do it.
+> Then train hard. | +2 teach
+  - I will. Every day. You'll see.
+> That's a lot to take on. | +1
+  - I know. Someone has to.
+ignored: *trains alone until dark*
+
+scene teen_sunny
+who: teen
+temper: sunny
+say: Guess what? GUESS. ...Okay, I'll tell you. I got a job! At the cafe! Part-time! I'm basically rich now.
+> Congratulations! | +2 high_five proud
+  - Thank you! Coffee's on me. Well. Employee discount. Half on me.
+> Don't let it go to your head. | +1
+  - Too late. My head is huge now. Enormous.
+> At the cafe? | +1
+  - Yeah! I'm gonna be the best waiter ever. Watch.
+ignored: *tells everyone else the good news*
+
+scene teen_night
+who: teen
+when: night
+mood: happy bored sleepy
+say: Can't sleep. Want to go up on the roof? I found a spot where you can see the whole city.
+> Show me. | +2 follow
+  - Come on. Quietly. ...See? Told you. Best view.
+> Bring a blanket. | +2 hug
+  - Good idea. You're smart sometimes.
+> Go to sleep. | bed
+  - Fine. Lame. Night.
+ignored: *goes up to the roof alone*
+
+scene teen_rain
+who: teen
+when: rain
+say: I like the rain. Everything's quieter. Nobody's out. I can think.
+> Think with me. | +2 hug
+  - *sits by the window with you, quiet* ...This is nice.
+> What are you thinking about? | +1
+  - Everything. Nothing. You know.
+> Want to go out in it? | +2 follow
+  - ...Yeah. Actually. Yeah.
+ignored: *watches the rain alone*
+
+scene teen_ghoul
+who: teen
+when: ghoul
+mood: happy bored proud scared sad
+say: My kagune came out today. By accident. I almost hurt someone. ...Can you teach me to control it?
+> Of course I'll teach you. | +2 teach
+  - ...Thanks. I was scared you'd be mad.
+> You didn't hurt anyone. That's what matters. | +2 hug
+  - Yeah. ...Yeah. But next time I need to be sure.
+> Let's work on it together. | +2 follow
+  - Okay. Now? Can we start now?
+ignored: *practises alone, carefully*
+
+scene teen_human
+who: teen
+when: human npcparent
+mood: happy bored sad
+say: Sometimes I wish I were a ghoul like {other}. Then I'd be stronger. Then I could actually help.
+> You're strong exactly as you are. | +2 hug
+  - ...You always say that. ...I'm starting to believe it.
+> There are other kinds of strong. | +2 pat
+  - Like what? ...Like you, I guess.
+> Train with me. | +2 teach
+  - Yeah. I'll be strong my own way.
+ignored: *trains harder, alone*
+
+scene teen_other_parent
+who: teen
+when: npcparent
+mood: happy bored sad missed
+say: {call}, is {other} okay? They seemed sad today. I didn't know what to say.
+> Let's both go see them. | +2 follow
+  - Yeah. ...You do the talking. I'll do the hugging.
+> You're sweet to notice. | +2 hug
+  - I'm not sweet. I'm observant. ...Okay, a little sweet.
+> They'll be fine. | +1
+  - I hope so. I'll make them coffee.
+ignored: *goes to check on {other} alone*
+
+# ---------------------------------------------------------------------------------------------------- what a teen can be asked
+
+topic teen_how
+prompt: How are you, really?
+who: teen
+say: I'm fine. ...Okay. I'm mostly fine. School stuff. Friend stuff. Nothing you need to worry about.
+> I'll always worry. | +2 hug
+  - Ugh. Fine. Worry a little. Not a lot.
+> Tell me about the friend stuff. | +1
+  - ...Okay. But you can't say anything. You just listen.
+
+topic teen_crush
+prompt: Do you like anyone?
+who: teen
+say: WHAT. No. Why would you ask that. ...Maybe. Don't ask who. Don't.
+> I won't ask who. | +2 pat
+  - ...Thanks. They're really nice. That's all you get.
+> Is it someone I know? | +1
+  - I'm leaving. I'm leaving right now.
+
+topic teen_future
+prompt: What do you want to do with your life?
+who: teen
+say: I don't know. Something that matters. Something you'd be proud of. ...Is that dumb?
+> I'm already proud of you. | +2 hug proud
+  - ...Stop. You're gonna make me cry. ...Thanks.
+> It's not dumb at all. | +2 pat
+  - Okay. Then I'll figure out what it is.
+
+topic teen_train_talk
+prompt: Want to train?
+who: teen
+say: Yeah. Let's go. And don't hold back this time.
+> Teach a new move. | +2 teach
+  - Okay, okay, show me again. ...Got it. I got it!
+> Spar for fun. | +2 high_five
+  - You're on. Loser makes dinner.
+
+topic teen_other
+prompt: How are you and {other} getting on?
+who: teen
+say: Good. Mostly. They're kind of embarrassing. Like you. ...You two are the same, you know that?
+> We're a good team. | +2 hug
+  - Yeah. You are. ...Don't tell them I said that.
+> Be nice to {other}. | +1
+  - I AM nice. I'm the nicest one in this family.
+
+topic teen_book
+prompt: Read anything good lately?
+who: teen
+say: Yeah. A book about a girl who ran away and became a monster hunter. It's really good. You'd hate it. It's sad.
+> Lend it to me. | +2 gift:book
+  - Fine. Don't crease the spine. I'll know.
+> Why would I hate it? | +1
+  - Because everyone dies. You'd cry. {other} cried.
+
+topic teen_music_talk
+prompt: What are you listening to?
+who: teen
+say: You wouldn't know it. It's... fine, it's good. Here. Listen. Don't make the face.
+> Listen properly. | +2 pat
+  - ...Right? It's good, right? You're cool for like five minutes.
+> Turn it down. | sad
+  - Wow. You're so old.
+
+topic teen_proud_of
+prompt: You know I'm proud of you, right?
+who: teen
+say: ...Why are you saying that? Out of nowhere? ...Yeah. I know. ...Thanks. Don't make it a thing.
+> I'll make it a thing. | +2 hug proud
+  - Ugh. Fine. One hug. ...Okay, two.
+> It's not a thing. | +2 pat
+  - Good. ...It's kind of a thing. Thanks.
+
+topic teen_fight_talk
+prompt: Were you fighting again?
+who: teen
+say: ...Define fighting. Okay, yes. But they started it. And I won.
+> Who started it? | +1
+  - Some idiot. He said something about our family. So.
+> I'm glad you're okay. | +2 hug
+  - I'm fine. Totally fine. ...Okay, my hand hurts a little.
+
+topic teen_coffee
+prompt: Want a coffee?
+who: teen
+say: Yes. Please. Black. Like my soul. ...That's a joke. {other} says it all the time.
+> Make two. | +2 hug
+  - Coffee with you. Okay. That's actually nice.
+> Black like your soul? | +1
+  - It's a family joke. You wouldn't get it. You married into it.

@@ -234,7 +234,7 @@ public final class SceneBook {
             if (token.isEmpty()) {
                 continue;
             }
-            if (token.matches("[+-][0-9]+")) {
+            if (token.matches("[+-]?[0-9]+")) {
                 option.regard += Integer.parseInt(token);
             } else if (token.equals("->")) {
                 if (i + 1 < tokens.length) {

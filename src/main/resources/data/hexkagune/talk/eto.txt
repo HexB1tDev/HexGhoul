@@ -1,10 +1,859 @@
-# Eto's scenes and topics (1.3.29). Read by SceneBook: see its comment for the form, SceneWords for every word allowed.
-# Her voice: playful, literary, dark, teasing; calls her partner "love" when soft; never says her pen name.
+# Eto's scenes and topics (1.3.29). Read by SceneBook (see its comment for the form; SceneWords for every word allowed).
+# Her voice: playful, literary, a little dark, always teasing. She writes under a pen name she never says. She was made, not born.
+# To a friend: curious, mischievous, generous with books and riddles. To her partner: possessive, soft, and she'd die before admitting it.
 
-scene rain_window
-who: together
-mood: clingy affectionate happy bored lonely
+# =====================================================================================================================================
+# FRIENDS: she likes them (friendly) or they're close (close). Never anything a couple does.
+# =====================================================================================================================================
+
+scene friend_riddle
+who: friend
+mood: happy bored
+say: You. Yes, you. Riddle. What has a spine but no bones, and a hundred faces but no eyes?
+say: Stop. Riddle time. I have teeth you can't see and I've swallowed whole towns. What am I?
+> A book. | +2 giggle
+  - Correct! You're not as dull as you look. That's a compliment, write it down.
+  - Ding. Smart. I might keep you around.
+> No idea. Tell me. | +1
+  - A book, silly. Books are the most dangerous things I own. And I own a lot of dangerous things.
+> I don't do riddles. | -1 pout
+  - Then you'll never get into my good books. That was a pun. I hate myself.
+ignored: Hm. Nobody wants riddles anymore. The books still love me.
+
+scene friend_recommend
+who: friend
+mood: happy bored sleepy
+say: I finished something terrible and wonderful last night. I need someone to suffer through it with me. Interested?
+say: Here. Take this. No, don't thank me. Thank me after chapter eleven, if you survive it.
+> I'll read it. | +2 read gift:book
+  - Good. Don't skip the epilogue. People skip epilogues. People are monsters.
+  - There's a note inside. Don't read the note until you've finished. You'll know why.
+> What's it about? | +1 -> plot
+> I'm not much of a reader. | -1
+  - Not a reader? ...I'll pretend I didn't hear that. For your sake.
+page plot
+say: A girl raised by wolves who finds out the wolves raised her as dinner. Then it gets sad.
+> That sounds amazing. | +2 gift:book
+  - Doesn't it? Here. Bring it back with all the corners still on.
+> That sounds horrifying. | +1
+  - Both! The best books are both. Like the best people.
+ignored: Fine. I'll find someone with taste.
+
+scene friend_inkstain
+who: friend
+mood: happy bored
+say: Hold still. You have something on your face. ...No, the other side. ...It's ink. Mine. Sorry, I was writing and I gestured.
+> You got ink on me? | +1 laugh
+  - A little. You're art now. Signed, even. Don't wash it off, it might be worth something one day.
+> What were you writing? | +1 -> secret
+> Ugh. Thanks. | 0 pout
+  - Rude. Most people pay for my ink.
+page secret
+say: A scene where a girl in a library meets someone who keeps coming back. I haven't decided how it ends.
+> Make it a happy ending. | +2 giggle
+  - Happy endings are lies we tell children. ...I'll think about it.
+> Make it a tragedy. | +1
+  - Oh, you DO understand me. Maybe a little of both.
+ignored: Keep the ink, then. It suits you.
+
+scene friend_people_watch
+who: friend
+mood: happy bored
+when: day
+say: Come stand here. See that man? He's been walking in circles for ten minutes. I've given him a whole tragic backstory.
+> Tell me his backstory. | +2 giggle
+  - He lost a letter. In the letter, he confessed something. Now somebody, somewhere, knows. He's trying to find them before they read it. ...Or he's lost. Probably lost.
+> Isn't that creepy? | 0
+  - Watching people is how you learn them. And I like knowing how things work. Especially people.
+> Let's make up one for you. | +2 -> hers
+page hers
+say: Oh? Go on, then. Who am I, to a stranger watching?
+> A librarian with a secret. | +2 giggle
+  - Close. Closer than you'd think. Shh.
+> Someone very lonely. | +1 look
+  - ...Hm. You watch too, then. Don't make a habit of it.
+> A monster in a pretty coat. | +1 lick
+  - Flattery! You'll get everywhere with that.
+ignored: Hm. He's leaving. I'll never know how it ends.
+
+scene friend_tea
+who: friend
+mood: happy sleepy
+say: I made tea. I don't drink tea. I just like holding something warm while I read. Do you want it?
+> Sure, thanks. | +1
+  - It's probably too strong. I make everything too strong. It's a character flaw.
+> Ghouls can't drink tea? | +1 -> ghoul
+> I'm fine. | 0
+  - More warmth for my hands, then.
+page ghoul
+say: We can drink coffee, and that's it. Everything else tastes like wet ash. I make the tea for the smell.
+> That's kind of sad. | +2 hair
+  - It's not sad. It's a reason to like the things we can have. ...Okay, it's a little sad.
+> I'll drink it for you. | +2 giggle
+  - Then I'll watch you drink it, and pretend. That's almost the same.
+ignored: It's gone cold. Like most of my offers.
+
+scene friend_sulk_apology
+who: friend
+mood: sulky
+say: I'm not talking to you. ...This is me not talking to you. I'm very good at it.
+say: You know what you did. Don't make that face, I'm not explaining it to you.
+> I'm sorry. Really. | +3 forgive
+  - ...Fine. Apology accepted. Provisionally. I'm keeping a list.
+  - Hm. You actually mean it. That's annoying. I was enjoying being cross.
+> What did I do? | -1 -> what
+> Fine, don't talk to me. | -2 sulk
+  - Gladly. Go away. ...Slowly. In case I change my mind.
+page what
+say: You laughed at my favourite book. In front of me. In MY library.
+> I'll read it properly this time. | +3 forgive read
+  - You'd better. There's a quiz. It's very hard.
+> It wasn't that good. | -2 pout
+  - Get out. Now. Go read a menu or something.
+ignored: Still not talking to you. Good. That's the plan.
+
+scene friend_sulk_ignore
+who: friend
+mood: sulky
+say: Oh. You're here. I'm reading. I'm busy. I'm VERY busy reading.
+> I brought you something. | +2 -> gift
+> Can I sit with you? | +1
+  - ...It's a free chair. I didn't say yes. I didn't say no. Sit if you want, I'm not stopping you.
+> Sorry for whatever I did. | +2 forgive
+  - Whatever you did. Wow. A whole apology for an unknown crime. ...Accepted. Barely.
+page gift
+say: A gift? Is this a bribe? You know I can be bought. Go on, what is it?
+> A compliment: you're brilliant. | +2 giggle forgive
+  - Cheap. Effective. I'll allow it.
+> Nothing, I lied. | -2 pout
+  - You lied to me. To ME. I'm impressed and furious.
+ignored: Busy. Still. See?
+
+scene friend_sulk_fair
+who: friend
+mood: sulky
+say: I've decided I'm upset with you. It's mostly the weather. A little bit you.
+> Then let me cheer you up. | +2 -> cheer
+> What can I do? | +1
+  - Bring me a book I haven't read. There are maybe four left in the world.
+> Okay. | -1 sulk
+  - "Okay." That's it? Wow. Stay away for an hour.
+page cheer
+say: Fine. Make me laugh. You have one chance. Go.
+> Tell her a terrible joke. | +2 laugh forgive
+  - That was awful. I laughed. Don't tell anyone.
+> Do a silly dance. | +3 giggle forgive
+  - What WAS that? ...Do it again. No, don't, I'll die.
+ignored: The weather's still bad. So are you.
+
+scene friend_bored_game
+who: friend
+mood: bored
+say: I've read every book on this shelf twice. Entertain me. Play a game with me.
+say: I'm so bored I alphabetised my knives. Do something with me before I alphabetise you.
+> Hide and seek? | +2 -> hide
+> Twenty questions. | +2 giggle
+  - I'll think of something. Ready? ...You'll never get it. It's the third thing I ever ate.
+> I'm busy, sorry. | -1 pout
+  - Everyone's busy. Nobody's interesting.
+page hide
+say: In a library? I'll win. I always win. Count to fifty. No peeking.
+> Count to fifty. | +2 giggle
+  - *you count, and when you turn round she's behind you, very close, smiling* ...Found you.
+> Count to ten and cheat. | +1 laugh
+  - CHEATER. I saw. I see everything.
+ignored: Then I'll play by myself. I'm very good at that.
+
+scene friend_bored_story
+who: friend
+mood: bored happy
+say: Tell me a story. Any story. I've run out of my own.
+> Tell her about your day. | +2
+  - That's not a story, that's a list. ...But a good one. Tell me the part with the creeper again.
+> Make one up. | +2 -> made
+> I'm not good at stories. | 0
+  - Everyone's a story. Most people just tell themselves badly.
+page made
+say: Go on. I'll judge it harshly.
+> A knight who was afraid of the dark. | +2 giggle
+  - And the dark was afraid of him too, and they became friends. ...See? You're a writer. You're welcome.
+> A monster who loved books. | +3 hair
+  - ...Hm. That one's mine. You can't have it. It's taken.
+ignored: No stories today. The world is very quiet.
+
+scene friend_bored_walk
+who: friend
+mood: bored
+say: Walk with me. I need to stretch my legs before they turn into shelves.
+> Let's go. | +2 follow
+  - Lead on. Pick somewhere interesting. If it's not interesting I'll make it interesting.
+> Only a short one. | +1 follow
+  - Short. Sure. That's what they all say.
+> Not today. | -1
+  - Fine. I'll walk in circles. Like that man outside.
+ignored: My legs will just have to turn into shelves, then.
+
+scene friend_sleepy_yawn
+who: friend
+mood: sleepy
+say: *yawns* ...Don't look at me. I was up all night. Writing. Not eating anyone. Writing.
+say: The sun's too bright. Talk to me in a low voice or not at all.
+> Go get some rest. | +2 yawn
+  - Rest is for people who've finished their chapter. ...Okay. One nap. Wake me if anything's on fire.
+> What were you writing? | +1
+  - A death scene. It took all night. It's beautiful. Somebody's going to cry on a train because of me.
+> You look terrible. | -1 pout
+  - I look EXHAUSTED. There's a difference. One is art.
+ignored: *falls asleep standing up, briefly*
+
+scene friend_sleepy_coffee
+who: friend
+mood: sleepy
+say: Coffee. I need coffee. You look like someone who knows where coffee is.
+> I'll make you some. | +2 sip
+  - My hero. Black. Black as my soul. ...That's a joke. Mostly.
+> Coffee's bad for you. | 0
+  - Everything is bad for me. I'm bad for me. Get the coffee.
+> I'm all out. | -1 yawn
+  - Then I'm going back to bed and you're carrying the guilt.
+ignored: No coffee. No mercy. No consciousness.
+
+scene friend_sleepy_dawn
+who: friend
+mood: sleepy
+when: dawn
+say: Dawn. The worst time. Everything is pink and hopeful. It's disgusting.
+> It's kind of pretty. | +1
+  - Pretty things aren't always nice. Look at me.
+> Let's watch it together anyway. | +2 lean
+  - ...Fine. Only because you asked. I'll complain the whole time.
+> Then go to sleep. | 0 yawn
+  - I will. Out of spite.
+ignored: The pink is winning. I'm going to bed.
+
+scene friend_hungry_human
+who: friend
+mood: hungry
+when: night human
+say: You smell... fine. You smell fine. Don't stand so close tonight, okay? It's a long night.
+say: It's late, and you smell like dinner, and I'm being very polite about it.
+> Should I leave? | +2
+  - No. Just... stay on that side. I like the company. I just also like the smell. It's complicated.
+> I trust you. | +1 lick
+  - That's sweet. That's very sweet. Don't do that. Trusting me at night is how stories end.
+> Are you going to eat me? | 0 giggle
+  - Not tonight. You'd be a waste. You're far too interesting.
+ignored: Good. Walk away. That's very wise.
+
+scene friend_hungry_ghoul
+who: friend
+mood: hungry
+when: night ghoul
+say: I'm starving. Are you starving? You look starving. Come hunting with me.
+say: Night's here. I can hear their heartbeats from here. Want to go out?
+> Let's hunt together. | +2 follow lick
+  - Good. Stay downwind. Try to look harmless. You're bad at it.
+> I've already eaten. | 0
+  - Show-off. Next time save me some.
+> Not tonight. | -1 pout
+  - Then I'll go alone. Don't wait up.
+ignored: More for me, then.
+
+scene friend_hungry_meat
+who: friend
+mood: hungry happy
+when: night meat ghoul
+say: Is that... ghoul meat? In your hand? Are you going to eat that or just hold it in front of me like a cruel person?
+> It's for you. | +3 lick
+  - You're my favourite person tonight. Don't tell the others. ...There are no others.
+> It's mine. | -1 pout
+  - Cruel. Cruel and delicious-smelling. Go away.
+> Let's share it. | +2 giggle
+  - Sharing? With a ghoul? You're either very brave or very stupid. I like both.
+ignored: I'll just stare at it, then. Hungrily.
+
+scene friend_hungry_restraint
+who: friend
+mood: hungry
+when: night
+say: Talk to me about something boring. Quick. It helps.
+> Taxes. | +2 laugh
+  - Perfect. I'm repulsed. The urge has passed.
+> The weather. | +1
+  - Clouds. Yes. Fluffy, inedible clouds. Thank you.
+> Why, what's wrong? | +1 -> wrong
+page wrong
+say: Nothing's wrong. Everything's exactly as wrong as it always is. I'm just hungry and you're... standing there.
+> I'll stand further away. | +2
+  - That's kind. It's insulting too, but kind.
+> I'll keep you company anyway. | +2 hair
+  - Brave. Stupid. Brave. Fine. Talk.
+ignored: Boring thoughts. Boring thoughts. Clouds.
+
+scene friend_hurt
+who: friend
+when: hurt
+say: You're bleeding all over my nice floor. Sit. Let me look at that.
+say: Who did that? Point at them. Just point.
+> It's nothing. | +1
+  - It's not nothing, it's dripping. Sit DOWN.
+> Can you patch me up? | +2 hair
+  - Hold still. ...There. You'll live. You're welcome. Don't make a habit of it.
+> Please don't stare at the blood. | +1 look
+  - I'm not staring. I'm ASSESSING. Professionally.
+ignored: Fine. Bleed. It's your blood.
+
+scene friend_rain
+who: friend
 when: rain
+say: It's raining. Come inside. The books don't like wet people, but I'll make an exception.
+> Thanks. | +1
+  - Shake off over there, not on the poetry.
+> I love the rain. | +2 giggle
+  - So do I! Everyone says it's gloomy. Gloomy is a perfectly good word for a mood.
+> I'll stay out here. | 0
+  - Suit yourself. Catch a cold. I'll write you a sad poem.
+ignored: Get wet, then.
+
+scene friend_library
+who: friend
+when: ownplace
+say: Welcome back to my library. Don't touch the red shelf. That's not a request.
+say: You keep coming back here. People who keep coming back here... well. Usually they stop.
+> What's on the red shelf? | +1 -> red
+> I like it here. | +2 hair
+  - Of course you do. It's the best place in the world. I built it out of everything I couldn't have.
+> Is that a threat? | 0 giggle
+  - It's an observation. Threats sound different. You'd know.
+page red
+say: Books people asked me never to read. So of course I've read all of them.
+> Can I read one? | +1
+  - No. They're mine. One day, maybe. If you're very good. Or very bad.
+> That's ominous. | +2 giggle
+  - I'm ominous. It's part of my charm.
+ignored: Don't touch the red shelf on your way out.
+
+scene friend_night_walk
+who: friend
+when: night
+mood: happy bored
+say: The night's clear. Walk with me under it? I'll tell you which stars have names and which ones I've named.
+> Show me your stars. | +2 follow
+  - That one's mine. I called it Footnote. It's very small and nobody notices it.
+> Is it safe out there? | +1
+  - With me? Safer than anywhere. For you. Not for whatever's out there.
+> I'm going to bed. | 0 yawn
+  - Sleep, then. Little human habits.
+ignored: The stars will wait. They always do.
+
+scene friend_close_trust
+who: close
+mood: happy
+say: Can I tell you something? ...I don't tell people things. So listen carefully, because I won't say it twice.
+> I'm listening. | +3 -> confess
+> You can tell me anything. | +3 -> confess
+> Maybe later. | -1
+  - Later. Right. Things don't keep, you know. They go off.
+page confess
+say: I like it when you visit. That's all. That's the whole secret. Now forget I said it.
+> I like visiting you too. | +3 giggle hearts
+  - Stop. Don't. ...Okay, say it once more.
+> That's sweet. | +2 hair
+  - It's not sweet. It's a fact. Facts aren't sweet. ...This one is a little sweet.
+ignored: Never mind. It wasn't important.
+
+scene friend_close_gift
+who: close
+mood: happy giddy
+say: I made you something. Don't look at me while you open it.
+> Open it. | +2 gift:writable_book
+  - It's a notebook. Empty. For you to fill. Stories are better when they're yours.
+  - It's blank. Write in it. Write about me, if you want. I won't mind. Much.
+> You didn't have to. | +2 shy
+  - I know I didn't. That's what makes it a gift. Take it.
+> Is it cursed? | +1 giggle gift:writable_book
+  - Only a little. You'll be fine.
+ignored: I'll just leave it here. On the shelf. Where you'll never see it.
+
+scene friend_close_worry
+who: close
+mood: happy bored
+when: night
+say: Where were you today? I looked. ...I wasn't worried. I just looked. Twice.
+> Out exploring. | +1
+  - Exploring. Without me. Bring me back a story next time, or a rock. Something.
+> Were you worried? | +2 -> worried
+> That's none of your business. | -2 pout
+  - Wow. Okay. Noted. Very noted.
+page worried
+say: Worried. Me. About you. ...Don't be absurd. I was curious. Curiosity is a very different feeling. It just feels the same.
+> I'll tell you next time. | +2 hair
+  - Good. Leave a note. In a book. I'll find it.
+> I missed you too. | +3 shy
+  - I didn't say I missed you. ...But fine. Yes. Shut up.
+ignored: Fine. Don't tell me. I'll find out anyway.
+
+# =====================================================================================================================================
+# TOGETHER: dating (partner) or married (wife). Soft, possessive, teasing; she says "love" when she forgets to be cool.
+# =====================================================================================================================================
+
+scene couple_happy_hello
+who: together
+mood: happy giddy
+say: There you are. I've been rehearsing what to say when you came back. I've forgotten all of it. Hi.
+say: Oh good, you're here. I was about to get bored, and you know what happens when I get bored.
+> Hi yourself. | +2 giggle
+  - Hi. That's it. That's the whole speech. I'm very eloquent today.
+> What happens when you get bored? | +1 -> bored
+> Come here. | +2 hug
+  - Bossy. I like it. Fine.
+page bored
+say: Books get rearranged. Monsters get eaten. People get written into tragedies. You're welcome to stop it.
+> Then I'll keep you busy. | +3 giggle hearts
+  - Promise? I'm very hard to keep busy. You'll have to work at it.
+> I'd read that tragedy. | +2 read
+  - You'd be in it. Chapter three. You'd be magnificent and you'd die beautifully.
+ignored: I'll just go rearrange something. Loudly.
+
+scene couple_happy_hand
+who: together
+mood: happy giddy clingy
+say: Give me your hand. No reason. Do I need a reason? I don't need a reason.
+say: My hand's cold. That's your problem now. Fix it.
+> Take her hand. | +2 hand
+  - There. Warmer. You're useful for something.
+  - Don't let go first. That's a rule. I just made it.
+> Only if you say please. | +1 giggle
+  - Please. There. I said it. Now give it to me before I bite it.
+> My hands are full. | -1 pout
+  - Full of what? Air? Nonsense? Drop them.
+ignored: Fine. I'll hold my own hand. It's almost as good. It's not.
+
+scene couple_happy_poem
+who: together
+mood: happy giddy affectionate
+say: I wrote you a poem. It's terrible. It's the most honest thing I've ever written. Do you want to hear it?
+> Read it to me. | +3 read -> poem
+> Is it about me? | +2 giggle
+  - Everything is about you lately. It's ruining my career. Yes.
+> Maybe later. | -1 pout
+  - Later. I'll be dead of embarrassment by later.
+page poem
+say: "You walked into my library like weather, and every book I own turned its pages to look." ...That's it. That's the poem. Don't laugh.
+> That's beautiful. | +3 hearts giddy
+  - It's not. It's two lines. ...Do you really think so? Say it again.
+> Write me another. | +2 write
+  - Greedy. I like that. Tomorrow. One a day, or I'll run out of you.
+> *laugh* | -1 pout
+  - I TOLD you not to laugh. That's it, I'm writing you into a tragedy.
+ignored: Never mind. I'll put it in a drawer. With the others.
+
+scene couple_happy_plan
+who: together
+mood: happy bored
+when: day
+say: I've decided we're going somewhere today. I don't know where yet. Pick somewhere and pretend it was my idea.
+> Let's go exploring. | +2 follow
+  - Yes. Somewhere with caves. Or ruins. Or both. Lead on, I'll be right behind you.
+> Let's stay in and read. | +2 read
+  - Oh, you know me. Pick a book. Not that one. ...Fine, that one.
+> I'm busy today. | -1 pout
+  - Busy. Too busy for me. I'll remember this. I'll write it down.
+ignored: Somewhere without you, then. How dull.
+
+scene couple_happy_question
+who: together
+mood: happy giddy
+say: Question. If I were a monster, a real one, teeth and everything... would you still come back here?
+> You are a monster, and I do. | +3 giggle hearts
+  - Hm. Correct answer. Suspiciously correct.
+> Always. | +3 hair
+  - ...Okay. Good. That's... good. I'm not crying, the library's dusty.
+> Depends how hungry you are. | +1 laugh
+  - Not very. Today. Lucky you.
+ignored: That's not an answer. That's silence. Silence counts as no.
+
+scene couple_happy_tease
+who: together
+mood: happy giddy
+say: You have a leaf in your hair. ...No, leave it. It suits you. You look like a woodland creature I'd adopt.
+> Pick it out for me. | +2 hair
+  - Hold still. ...There. I'm keeping it. Pressed, in a book. Don't ask why.
+> You have ink on your nose. | +2 giggle
+  - I do NOT— ...I do. Leave it. We match now.
+> I'm not a woodland creature. | 0 pout
+  - You're exactly a woodland creature. Small, suspicious, adorable.
+ignored: You'll walk around with the leaf. Good.
+
+scene couple_giddy_spin
+who: together
+mood: giddy
+say: I'm in a ridiculous mood. Spin me. Right now. Don't ask questions.
+say: Something's wrong with me. I keep smiling. Fix it. Or don't.
+> Spin her. | +3 dance giddy
+  - Again! ...No, I'm dizzy. Again anyway.
+> Why are you smiling? | +2 -> why
+> You're being weird. | 0 giggle
+  - I'm always weird. Now I'm weird and HAPPY. It's terrifying.
+page why
+say: Because of you, obviously. You kissed me and now my face won't behave.
+> Then I'll do it again. | +3 kiss
+  - Yes. Do that. That's the right answer.
+> Good. Keep smiling. | +2 hearts
+  - Stop being nice, it makes it worse.
+ignored: *twirls by herself, humming*
+
+scene couple_giddy_hum
+who: together
+mood: giddy happy clingy
+say: *hums something old at you until you notice* ...You noticed. Good. Now hum it back.
+> Hum it back. | +2 hum
+  - Off-key. Perfect. Do it again.
+> What song is that? | +1 -> song
+> I can't sing. | 0 giggle
+  - Nobody can. That's not the point of singing.
+page song
+say: A lullaby my— someone sang to me once. I forget the words. I remember it was warm.
+> Teach it to me. | +3 hum hearts
+  - Hm. Like this. ...You're terrible. Again.
+> It's beautiful. | +2 hair
+  - It's just a song. ...It's my favourite song.
+ignored: *keeps humming to herself*
+
+scene couple_giddy_secret
+who: together
+mood: giddy affectionate
+say: Come here. Closer. I want to whisper something. ...Closer. That's it.
+> Lean in. | +3 -> whisper
+> What is it? | +1
+  - It's a secret. Secrets need closeness. Lean in, coward.
+> I'm good here. | -1 pout
+  - Your loss. It was a very good secret.
+page whisper
+say: *very quietly* I think about you when I'm writing. Every single time. Now you know. Don't use it against me.
+> I think about you too. | +3 kiss
+  - Good. Kiss me before I lose my nerve.
+> I'm going to use it against you. | +2 laugh
+  - Of course you are. I'd do the same.
+ignored: Fine. The secret goes back in the drawer.
+
+scene couple_sulky_why
+who: together
+mood: sulky
+say: Don't. I'm upset with you. I'm doing the arms. You can see the arms. *crosses her arms*
+say: Oh, it's you. The person who hurt my feelings. Hello. I'm cross.
+> I'm sorry. Really. | +3 forgive hug
+  - ...Ugh. You mean it. I can tell. Come here, then. Quickly, before I change my mind.
+  - Fine. Forgiven. Mostly. I'm keeping the arms crossed for another minute on principle.
+> What did I do? | 0 -> what
+> You're cute when you're cross. | +1 giggle
+  - I'm not CUTE, I'm FURIOUS. ...Say it again though.
+page what
+say: You left. Without a word. I had a whole evening planned. There were books. There was going to be wine I can't drink.
+> I'll make it up to you tonight. | +3 forgive hearts
+  - You'd better. I want the whole evening. Twice.
+> I didn't know. | +1
+  - Of course you didn't. You never read the signs. I left signs. A trail of books.
+> You're overreacting. | -3 sulk
+  - Overreacting. Wow. Go away for a while. I mean it.
+ignored: Still cross. Still crossing my arms. Look. Look at them.
+
+scene couple_sulky_letter
+who: together
+mood: sulky
+say: I wrote you a letter. It says how annoyed I am. It's eleven pages. Do you want it or should I read it aloud?
+> Read it aloud. | +1 read -> letter
+> Can I just apologise instead? | +3 forgive
+  - ...Yes. That's quicker. Fine. Come here.
+> Burn it. | -2 pout
+  - Burn it. My PROSE. I'll burn YOU.
+page letter
+say: "Dear person I love most in the world: you are an idiot." ...That's page one. It goes on like that.
+> That's the sweetest insult ever. | +3 forgive giggle
+  - Isn't it? I worked very hard on it. Fine. You're forgiven. Page eleven says that too.
+> I deserve it. | +2 forgive
+  - You do. But you said it, so. ...Come here.
+ignored: I'll just leave it on your pillow, then. All eleven pages.
+
+scene couple_sulky_tea
+who: together
+mood: sulky
+say: I'm not sulking. I'm thinking very loudly in your direction.
+> Want to talk about it? | +2 -> talk
+> Here, have a kiss. | +2 kiss
+  - That's cheating. ...Fine. One. That's not enough to fix it. Do another.
+> Think quieter, please. | -2 sulk
+  - Oh, I'll think VERY quietly. Right at you. For an hour.
+page talk
+say: ...I don't like it when you go and fight without me. You come back smelling of blood that isn't mine to worry about.
+> Next time, come with me. | +3 forgive follow
+  - ...Okay. Yes. I'm coming. Don't argue.
+> I'll be more careful. | +2 forgive hair
+  - You'd better be. You're mine. You don't get to break.
+ignored: Loudly. Thinking. At you.
+
+scene couple_jealous_who
+who: together
+mood: jealous
+say: Who was that? The one you were being so charming at. Don't say "nobody". I saw. I have very good eyes. One of them especially.
+say: You smell like someone else's perfume. I'm not going to ask. I'm absolutely going to ask.
+> Nobody important. You're the only one. | +3 forgive hug
+  - Hm. Good answer. Come here so I can check.
+> Are you jealous? | +1 giggle -> jealous
+> None of your business. | -3 sulk
+  - None of my— oh, that's how it is. Fine. Go be charming at someone else, then.
+page jealous
+say: Jealous? Me? I don't get jealous. I get... thoughtful. About where to hide a body.
+> There's no body to hide. Just you. | +3 forgive hearts
+  - Just me. Say that again. Slower.
+> You're adorable when you're jealous. | +2 pout forgive
+  - I'm not adorable, I'm DANGEROUS. ...Fine. Both.
+ignored: Fine. Go. I'll be here. Thinking about where things go.
+
+scene couple_jealous_prove
+who: together
+mood: jealous
+say: Prove it. Prove I'm your favourite. I'll wait.
+> Kiss her. | +3 kiss forgive
+  - ...Okay. That's fairly convincing. Do it again, for evidence.
+> Write her name in the sky. | +2 giggle
+  - You can't do that. ...Try, though. I want to watch.
+> You don't need proof. | +1
+  - I always need proof. I'm a writer. I need evidence for everything.
+ignored: No proof. Noted. It's going in the file.
+
+scene couple_jealous_quiet
+who: together
+mood: jealous
+say: It's fine. I'm fine. I'm being very mature about this. ...Who were they?
+> Just a friend. I promise. | +2 forgive
+  - A friend. Fine. Friends are allowed. Friends at a distance. A long distance.
+> Nobody you need to worry about. | +2 hair forgive
+  - I'll decide who I worry about. ...But fine. Thank you for saying it.
+> Why do you care so much? | 0 -> care
+page care
+say: Because I've never had anything that was only mine before. And now I do. And I'm very bad at sharing.
+> I'm only yours. | +3 forgive hug
+  - ...Okay. Okay. Come here.
+> You don't have to share me. | +3 hearts forgive
+  - Good. I wasn't going to.
+ignored: Very mature. Still very mature. See?
+
+scene couple_lonely_back
+who: together
+mood: lonely
+say: You're back. ...You were gone a long time. I read the same page forty times. I don't remember a word of it.
+say: Oh. It's you. I'd started talking to the books. They're terrible listeners.
+> I missed you too. | +3 hug
+  - Good. Miss me more. Then come back faster.
+> I'm sorry I was gone so long. | +3 forgive cling
+  - Don't be sorry. Just stay a while. Right here. Don't move.
+> I was busy. | -1 pout
+  - Busy. You're always busy. I'm never busy. That's the problem.
+ignored: *goes back to staring at the same page*
+
+scene couple_lonely_stay
+who: together
+mood: lonely clingy
+say: Stay. Just for a bit. You don't have to talk. I just want to hear someone else breathing.
+> Sit with her. | +3 cling
+  - Thank you. ...Your breathing's very loud. I like it.
+> Come with me instead. | +2 follow
+  - Yes. Anywhere. As long as it's not here alone.
+> I can't right now. | -2 pout
+  - Of course. Go. I'm used to quiet.
+ignored: ...Quiet again.
+
+scene couple_lonely_letter
+who: together
+mood: lonely
+say: I wrote you letters while you were gone. I didn't know where to send them. Here. All of them.
+> Read them together. | +3 read
+  - Don't read the third one out loud. ...You're going to read the third one out loud.
+> Thank you. I'll keep them. | +3 gift:paper hair
+  - Keep them somewhere safe. Somewhere I'll never find them and read how needy I sound.
+> Why didn't you just come find me? | +1 -> find
+page find
+say: Because I don't go outside much. Because I didn't know if you wanted to be found. Because I'm an idiot.
+> I always want you to find me. | +3 hearts hug
+  - Then I will. Every time. Don't complain later.
+> You're not an idiot. | +2 hair
+  - I'm a little bit of an idiot. About you. Only about you.
+ignored: I'll keep them, then. In case.
+
+scene couple_clingy_arm
+who: together
+mood: clingy
+say: Don't move. I'm attaching myself to your arm now. This is permanent.
+say: Hold still. I'm cold and you're warm and that's just science.
+> Let her. | +2 cling
+  - Good. Now walk. Slowly. I'm coming with you.
+> Wrap your arm around her. | +3 hug
+  - ...Oh. Yes. That's much better than science.
+> You're heavy. | -1 pout
+  - I am NOT heavy, I'm dense with personality.
+ignored: Fine. I'll attach myself to the shelf instead.
+
+scene couple_clingy_follow
+who: together
+mood: clingy
+say: Where are you going? I'm coming. Don't argue. I've already decided.
+> Come on, then. | +2 follow
+  - Good. I'll walk behind you and step on your heels. Lovingly.
+> Hold my hand on the way. | +3 hand
+  - ...Fine. Since you asked. You did ask, right? Good.
+> I'll be right back. | -1 stay
+  - Right back. I'm counting. Out loud.
+ignored: I'll follow you anyway. Quietly. You'll never know.
+
+scene couple_clingy_lean
+who: together
+mood: clingy sleepy affectionate
+say: I'm going to lean on you now. You're the correct height. I measured once while you were sleeping.
+> Let her lean. | +2 cling lean
+  - Mm. Perfect. Don't talk. Talking moves the shoulder.
+> You measured me? | +2 giggle
+  - Several times. For science. And for a coat I might make you.
+> Lean on the wall. | -2 pout
+  - The wall doesn't love me back. Fine.
+ignored: *leans on the bookshelf instead and glares*
+
+scene couple_clingy_hair
+who: together
+mood: clingy happy
+say: Play with my hair. You don't have to. You absolutely have to.
+> Play with her hair. | +3 hair
+  - Mm. Gently. ...Okay, you can keep doing that forever. That's an order.
+> Braid it. | +3 giggle
+  - You can't braid. ...Oh, you can braid. Who taught you? I need names.
+> Maybe later. | -1 pout
+  - Later is a word people use to mean no.
+ignored: *plays with her own hair, sulking*
+
+scene couple_sleepy_morning
+who: together
+mood: sleepy
+say: *yawns into your shoulder* ...Don't talk to me yet. Mornings are illegal.
+say: Five more minutes. With you. In that order.
+> Five more minutes. | +2 cling
+  - Mm. You're warm. Stay. The world can wait.
+> Coffee? | +2 sip
+  - Yes. Bring it. Bring it closer. Hold it under my nose until I wake up.
+> Up you get, sleepyhead. | 0 yawn
+  - Monster. Tyrant. ...Fine. I'm up. Mostly.
+ignored: *falls back asleep against a shelf*
+
+scene couple_sleepy_carry
+who: together
+mood: sleepy
+say: I'm too tired to walk. Carry me. Or don't, and I'll sleep right here on the floor. Your choice.
+> Offer your back. | +3 cling giggle
+  - Piggyback? ...Yes. Absolutely yes. Giddy up.
+> Lean on me and walk. | +2 cling
+  - Slowly. Very slowly. I'm only half here.
+> The floor's comfy enough. | -1 yawn
+  - Fine. Goodnight. Cover me with a book.
+ignored: Floor it is. *yawns*
+
+scene couple_sleepy_story
+who: together
+mood: sleepy affectionate
+say: Tell me a bedtime story. You. Not me. I've heard all of mine.
+> Tell her a story. | +3 hum
+  - *she's asleep before the second sentence, smiling*
+  - ...and then? ...Mm. And then. *she's asleep*
+> Read her one of hers. | +2 read
+  - Not that one. Anything but that one. I cry at the end. ...Okay, that one.
+> You're too old for bedtime stories. | -1 pout
+  - Nobody's too old for stories. Some people are just too boring for them.
+ignored: No story. I'll dream my own. They're darker.
+
+scene couple_hungry_human
+who: together
+mood: hungry
+when: night human
+say: Don't panic. I'm hungry and you smell nice and I'm being very, very good. Distract me.
+say: Tell me something boring, love. Quickly. Your heartbeat's very loud tonight.
+> Kiss her. | +3 kiss
+  - That's not boring at all. ...It helps. Do it again.
+> Talk about the weather. | +2 laugh
+  - Clouds. Lovely. Inedible. Thank you.
+> I trust you. | +2 hair
+  - Don't. ...Do. I'd never. You know I'd never.
+ignored: Fine. I'll go hunt something that isn't you.
+
+scene couple_hungry_hunt
+who: together
+mood: hungry
+when: night
+say: I'm starving. Come with me. You can watch, or help, or hold my coat. I like you holding my coat.
+> Let's hunt together. | +2 follow lick
+  - Good. Stay close. Not that close. ...That close is fine.
+> I'll keep watch. | +2
+  - My lookout. My lovely lookout. Shout if you see a Dove.
+> I'll wait here. | 0 stay
+  - Wait, then. I'll bring something back. Don't ask what.
+ignored: Back soon. Don't wait up. Wait up.
+
+scene couple_hungry_meat
+who: together
+mood: hungry happy
+when: meat ghoul
+say: Is that for me? Tell me that's for me. Lie if you have to.
+> It's for you, love. | +3 lick hearts
+  - You're perfect. You're absolutely perfect. Give.
+> We'll eat together. | +3 giggle
+  - Dinner for two. In a library. With a monster. How romantic.
+> It's mine. | -2 pout
+  - Cruel. Cruel and gorgeous.
+ignored: *stares at it longingly*
+
+scene couple_affectionate_bed
+who: together
+mood: affectionate
+when: night
+say: It's late. I'm not tired. I'm something else entirely. Come here.
+say: The candles are lit. I'm not saying anything. I'm just saying the candles are lit.
+> Come to bed with her. | +3 night
+  - Good. Don't make me ask twice.
+> Kiss her first. | +3 kiss
+  - Mm. Smart. Very smart.
+> Not tonight, I'm tired. | -1 pout
+  - Tired. Fine. Hold me instead. That's not optional.
+ignored: The candles are going out. Like my patience.
+
+scene couple_affectionate_dance
+who: together
+mood: affectionate giddy
+when: night
+say: Dance with me. There's no music. Hum. Badly. I'll follow.
+> Dance with her. | +3 dance hearts
+  - Slower. ...Slower. There. Like that. Don't stop.
+> Hum the lullaby. | +3 hum dance
+  - That one. Of course that one. You remembered.
+> I have two left feet. | +1 giggle
+  - Good. I have two left feet too. We'll fall over together.
+ignored: I'll dance with the dark, then. It's a terrible lead.
+
+scene couple_affectionate_stars
+who: together
+mood: affectionate happy
+when: night !rain
+say: Come outside with me. I want to show you something. It's the stars. I'm not very mysterious tonight.
+> Look at the stars together. | +3 cling
+  - That one's ours. I decided. Don't tell the astronomers.
+> Name one after me. | +3 giggle
+  - I already did. Years before I met you. I just didn't know it was you yet.
+> It's cold out. | 0 pout
+  - It's always cold out. That's what I'm for.
+ignored: The stars and I will talk about you, then.
+
+# ---------------------------------------------------------------------------------------------------- together: particular moments
+
+scene couple_rain
+who: together
+when: rain
+mood: happy clingy affectionate lonely bored giddy sleepy
 say: It's raining. Come sit by the window with me. Every drop sounds like a page turning.
 say: Rain! Perfect. Nobody's coming tonight. Just us and the noise on the glass.
 > Sit with her. | +2 cling
@@ -12,6 +861,738 @@ say: Rain! Perfect. Nobody's coming tonight. Just us and the noise on the glass.
   - There. Your shoulder is the correct height. I've measured.
 > Read me something. | +2 read
   - Head here. '...and the rain kept every secret the town ever told it.' I just made that up. Don't tell my editor.
+> Let's go stand in it. | +3 giggle follow
+  - In the RAIN? ...Yes. Absolutely yes. Last one out is a Dove.
 > I've got things to do. | -1 pout
   - Go, then. Get wet. See if I care. ...I care a little.
 ignored: Fine. The rain and I will manage without you.
+
+scene couple_thunder
+who: together
+when: thunder
+say: Did you hear that? ...I'm not scared of thunder. I'm scared of nothing. Come closer anyway.
+> Hold her. | +3 hug
+  - ...Okay. That's better. Not because of the thunder. Because of you.
+> Are you scared of thunder? | +1 giggle -> scared
+> It's just a storm. | 0
+  - I know it's just a storm. I'm a monster, not an idiot.
+page scared
+say: Not scared. It's loud. I don't like loud things I can't eat.
+> I'll keep you safe. | +3 cling hearts
+  - You. Keep ME safe. ...That's very sweet and very stupid. Stay close.
+> Then eat the thunder. | +2 laugh
+  - I'll try. Next time. Hold my coat.
+ignored: *flinches at the next flash, alone*
+
+scene couple_hurt
+who: together
+when: hurt
+say: You're bleeding. Come here. NOW. Who did this? Point. I'll do the rest.
+say: Don't you dare die before I finish my book. Sit down. Let me see.
+> Let her patch you up. | +3 hug
+  - Hold still. ...There. You stupid, brave, wonderful idiot. Don't do that again.
+> It's just a scratch. | +1
+  - A scratch. There's a puddle. I can smell it from the other side of the room.
+> Go get them for me. | +2 lick
+  - Gladly. Stay here. Bleed less. I'll be back with an apology from them. A very small one.
+ignored: Fine. Bleed on my carpet. I'll frame it.
+
+scene couple_hurt_scold
+who: together
+when: hurt
+mood: sulky happy clingy lonely
+say: You promised you'd be careful. You promised me. Look at you.
+> I'm sorry. | +3 forgive cling
+  - Don't be sorry. Be careful. Be careful for me.
+> I won, though. | +1 giggle
+  - You won. And you're leaking. Both can be true. Sit.
+> I'm fine. | -1 pout
+  - You're fine. You're FINE. Wonderful. Fine people don't limp.
+ignored: I'm not talking to you until you stop bleeding.
+
+scene couple_dusk
+who: together
+when: dusk
+say: The sun's going. My favourite part. ...Of the day. You're my favourite part of the rest of it.
+> Watch the sunset together. | +3 cling
+  - Look how it bleeds over everything. Pretty. Like you, after a fight.
+> My eye's waking up too. | +2 giggle
+  - Matching eyes in the dark. How romantic. How monstrous. I love it.
+> Night means you're hungry. | +1 lick
+  - Night means I'm awake. Hungry is a side effect.
+ignored: The sun goes, and so do you. Typical.
+
+scene couple_dawn
+who: together
+when: dawn
+say: Look. The light. Pretty, isn't it? Like you. Don't tell anyone I said that.
+say: Morning already? ...Stay a bit longer. The night ended too soon.
+> Stay a bit longer. | +3 cling
+  - Thank you. The books can wait. The day can wait.
+> Go to sleep, sleepyhead. | +2 yawn
+  - Only if you come too. That's not a question.
+> I have to go. | -1 pout
+  - Go, then. Take the sunlight with you. I don't want it.
+ignored: Morning, alone. How dull.
+
+scene couple_pregnant_kick
+who: together
+when: pregnant
+say: Give me your hand. Here. ...Did you feel that? Our little monster kicked. Hard. They're going to be trouble.
+say: Come here. Someone wants to say hello. Put your hand here. Quick, before they stop.
+> Feel the kick. | +3 hand hearts
+  - There! Again! ...They like you. Obviously. They have taste.
+> Talk to the baby. | +3 giggle
+  - Talk louder, they can't hear you through all the... me. ...They kicked. They're laughing at you.
+> Are you okay? | +2
+  - I'm fine. I'm full of a person. It's very strange. I'm going to write about it.
+ignored: Never mind. They've gone quiet. Sulking. Like their parent.
+
+scene couple_pregnant_names
+who: together
+when: pregnant
+say: I've been making a list of names. It's forty pages. Half of them are from tragedies. Do you want to help?
+> Something from a happy book. | +2
+  - A happy book. I'd have to find one. Give me a year.
+> Something strong. | +2 -> strong
+> Something weird. | +3 giggle
+  - Yes. Something no one else has. Something nobody can spell. Perfect.
+page strong
+say: Strong like what? Like a storm? Like a fortress? Like someone who outlives everyone who wanted them dead?
+> Like their mother. | +3 hearts hug
+  - ...Stop it. You'll make me cry, and then the baby cries, and then we're all crying.
+> Like a storm. | +2
+  - A storm. A girl named for a storm. Or a boy. I like it.
+ignored: I'll just name them after a book. You can't stop me.
+
+scene couple_pregnant_cravings
+who: together
+when: pregnant
+say: I want something strange to eat. Something that doesn't exist. Find it for me. I believe in you.
+> Coffee? | +2 sip
+  - YES. Coffee. Bring me coffee. Bring me three.
+> Ghoul meat? | +2 lick
+  - Don't tempt me. ...Do tempt me. Go find some.
+> You're impossible. | +1 giggle
+  - I'm pregnant AND impossible. Twice the trouble. Hurry.
+ignored: I'll starve, then. Dramatically.
+
+scene couple_pregnant_scared
+who: together
+when: pregnant
+mood: sulky lonely sleepy happy clingy
+say: Can I tell you something? I'm scared. I don't know how to be somebody's mother. I didn't really have one.
+> You'll be wonderful. | +3 hug
+  - You don't know that. ...But you say it like you do. Keep saying it.
+> We'll learn together. | +3 cling hearts
+  - Together. Yes. I'm writing that down. You can't take it back.
+> Read every book on it. | +2 read
+  - I already have. Twice. They all disagree. Typical.
+ignored: Never mind. Forget I said it.
+
+scene couple_kids_baby
+who: together
+when: kids baby
+say: {kid} won't stop grabbing my hair. I've decided I don't mind. Don't tell them.
+say: The baby fell asleep on my chest and now I can't move. I'm a prisoner. Bring me a book.
+> Bring her a book. | +2 read
+  - Thank you. Turn the pages for me. I can't move my arms. Tiny tyrant.
+> Take a turn holding the baby. | +3 hearts
+  - Careful. Support the head. ...Look at you. Look at you two. I'm going to cry and blame the dust.
+> They take after you. | +2 giggle
+  - Grabbing things that aren't theirs? Yes. Obviously.
+ignored: *goes back to being a very still pillow*
+
+scene couple_kids_kid
+who: together
+when: kids kid
+say: {kid} asked me where babies come from. I told them the library. They believe me. Back me up.
+> Back her up. | +3 giggle
+  - Good. The library. Third shelf from the left. That's where we found them.
+> Tell them the truth. | +1
+  - The truth? At their age? You tell them. I'll watch. With popcorn.
+> They're going to find out. | +1 laugh
+  - Of course they will. And they'll be furious. It'll be wonderful.
+ignored: The library it is, then.
+
+scene couple_kids_teen
+who: together
+when: kids teen
+say: {kid} rolled their eyes at me today. At ME. I've never been so proud.
+> They get that from you. | +3 giggle
+  - They do. Every sigh. Every slammed book. Mine. All mine.
+> Should I talk to them? | +1
+  - No, leave them. A little rebellion is good. Unless they start reading terrible books. Then intervene.
+> I'll roll my eyes at them back. | +2 laugh
+  - Yes. Fight eyes with eyes. I love this family.
+ignored: I'll be proud alone, then.
+
+scene couple_kids_proud
+who: together
+when: kids
+mood: happy giddy affectionate
+say: Look at what we made. {kids}. Little monsters with your face and my teeth. I didn't think I'd ever have anything like this.
+> Neither did I. | +3 hug hearts
+  - Then we're both lucky idiots. Come here.
+> They're perfect. | +3 hair
+  - They're terrible. They're perfect. Both.
+> They're a lot of work. | +1 laugh
+  - They are. It's the best book I've ever written.
+ignored: I'll just watch them a little longer.
+
+scene couple_kids_tired
+who: together
+when: kids
+mood: sleepy sulky bored
+say: {kids} kept me up all night. Questions. So many questions. Why is the moon. Why are teeth. Why are you, Mama. I'm exhausted.
+> I'll take the next night. | +3 hug
+  - Promise. Promise or I'm leaving you for a bookshelf.
+> Come rest with me. | +2 cling
+  - Five minutes. Then they'll find us. They always find us.
+> You love it though. | +2 giggle
+  - I do. Don't tell them. They'll ask more questions.
+ignored: *falls asleep sitting up*
+
+scene couple_away
+who: together
+when: away
+say: You were gone for days. Days. I wrote three chapters and burned two. Where were you?
+say: Oh. You're alive. Good. I was writing your obituary. It was moving. You'd have hated it.
+> I missed you every day. | +3 hug
+  - ...Okay. Good. That's the right answer. Come here and prove it.
+> I had things to do. | -1 pout
+  - Things. You had things. I had THREE CHAPTERS.
+> Read me the obituary. | +2 giggle
+  - "Here lies the only person who ever came back." ...That's all I wrote. That's when I burned it.
+ignored: Fine. Disappear again. I'll write another one.
+
+scene couple_new
+who: partner
+when: new
+say: So. We're... doing this. Dating. Me. You. I have no idea what I'm doing, so if I do something strange, it's on purpose.
+> I don't know what I'm doing either. | +3 giggle
+  - Good. Two idiots. That's how all the good stories start.
+> You're doing great. | +2 hair
+  - Am I? I read twelve books about this. None of them had you in them.
+> Is it too late to back out? | -1 pout
+  - Yes. Far too late. I've already told the books.
+ignored: Okay. Strange it is.
+
+scene couple_long
+who: together
+when: long
+say: Do you remember the first time you came here? You looked so lost. You still do sometimes. I like it.
+> I remember. | +3 hearts
+  - I almost ate you. ...I'm very glad I didn't.
+> I'm not lost anymore. | +3 hug
+  - No. You're found. I found you. Finders keepers.
+> I don't remember that. | -1 pout
+  - Of course you don't. I remember for both of us.
+ignored: I remember it, anyway.
+
+scene couple_home
+who: wife
+when: home
+say: I moved some of my books here. Okay, most of my books. There might not be room for you. I'm joking. Mostly.
+> There's always room. | +3 hug
+  - Good. Because there's another hundred coming.
+> Where am I supposed to sleep? | +2 giggle
+  - On the books, obviously. They're very comfortable once you get used to the spines.
+> Maybe a few less books. | -1 pout
+  - Never. You married a library. You knew.
+ignored: Another shelf it is.
+
+scene couple_home_evening
+who: wife
+when: home night
+say: Home. Fire's lit. Kettle's on for you. I'm on the sofa. You're about to be on the sofa. That's the plan.
+> Join her on the sofa. | +3 cling
+  - Good. Feet up. Head here. Perfect.
+> Read together. | +2 read
+  - You read yours, I'll read mine, and every page I'll read you the best line. You'll hate it.
+> I'll make dinner. | +2
+  - For you. I'll watch. I like watching you cook. You're very bad at it.
+ignored: The sofa and I will be fine.
+
+scene couple_following
+who: together
+when: following
+say: Where are we going? Not that I mind. I'd follow you into a volcano. Just checking whether I should bring a book.
+> Somewhere fun. | +2 giggle
+  - Fun. Your fun or my fun? Mine involves screaming. Not mine.
+> Somewhere dangerous. | +2 lick
+  - Even better. Stay behind me.
+> I don't know yet. | +1
+  - Good. The best adventures start lost.
+ignored: I'll keep following anyway.
+
+scene couple_ghoul
+who: together
+when: ghoul
+mood: happy giddy hungry affectionate
+say: You're one of us now. Show me your eye. ...Pretty. Matching. I've always wanted something that matched.
+> Show her your eye. | +3 giggle hearts
+  - Look at us. Two monsters in a library. Like a book I'd write.
+> It still scares me. | +2 hair
+  - It should. A little. Fear keeps you clever. I'll be scared with you.
+> Let's hunt together tonight. | +2 lick
+  - A date. A terrible, perfect date. Yes.
+ignored: Keep it shut, then. For now.
+
+scene couple_human
+who: together
+when: human
+mood: happy giddy affectionate clingy
+say: You're so warm. Humans are always so warm. I could sit next to you like a fire.
+> Sit next to me, then. | +3 cling
+  - Don't mind if I do. ...You smell like bread. Why do you smell like bread?
+> Does it bother you? | +1 -> bother
+> You're cold. | +1 giggle
+  - I'm a monster. We run cold. You'll warm me up.
+page bother
+say: That I could eat you? Every day. That I won't? Every day too. You're safe. You're the safest thing in this world.
+> I know. | +3 hug
+  - Good. Never stop knowing.
+> I trust you. | +3 hearts
+  - Stupid. Brave. Mine.
+ignored: Warm, and gone. Typical humans.
+
+scene couple_wife_morning
+who: wife
+mood: happy sleepy clingy
+when: morning
+say: Good morning, husband or wife or whatever-you-are-to-me. Mine. Good morning, mine.
+> Good morning, mine. | +3 hug
+  - ...That's mine. You can't use it. ...Use it again.
+> Coffee? | +2 sip
+  - Coffee. Then kisses. Then the world. In that order.
+> Five more minutes. | +2 cling yawn
+  - Yes. Ten. Make it ten.
+ignored: Morning. To nobody. Lovely.
+
+scene couple_wife_ring
+who: wife
+mood: happy giddy affectionate
+say: I keep looking at the ring. I've read a thousand stories about weddings and I never thought I'd be in one.
+> How does it feel? | +2 -> feel
+> I'd marry you again. | +3 hearts kiss
+  - Tomorrow. Every day. Fine. Yes. Again.
+> Stop staring at it. | 0 pout
+  - Never. It's the prettiest thing I own. After you.
+page feel
+say: Like the last page of a book that turned out to have a sequel.
+> And the sequel's better. | +3 hug
+  - Don't you dare spoil it. ...It is, isn't it?
+> I'll write the next chapter. | +2 write
+  - You? Write? Oh, I'm reading over your shoulder for this.
+ignored: *keeps looking at the ring, smiling*
+
+scene couple_wife_future
+who: wife
+mood: happy lonely affectionate clingy
+when: night
+say: Do you ever think about when we're old? You'll be grey. I'll be the same. Unfair. I'll hold your hand anyway.
+> Hold my hand now too. | +3 hand
+  - Practice. Good idea. Now and then.
+> You'll still be beautiful. | +3 hearts
+  - Obviously. And you'll be the only person who knew me before.
+> Let's not think about it. | 0
+  - Fine. Later. I think about it enough for both of us.
+ignored: I'll hold my own hand. Practising.
+
+scene couple_sulky_owl
+who: together
+mood: sulky jealous
+when: night
+say: You've been gone all night. I sharpened everything I own. Twice. Do you know how much I own?
+> I'm sorry. Let me make it up. | +3 forgive hug
+  - ...Fine. Begin. I'll tell you when it's made up.
+> Did you sharpen the books too? | +1 giggle
+  - Don't be clever at me. ...Yes. The corners. They're lethal now.
+> I don't owe you an explanation. | -3 sulk
+  - No. You don't. Go away, then. Mind the corners.
+ignored: Sharpening. Again.
+
+scene couple_bored_mischief
+who: together
+mood: bored happy
+say: Let's do something terrible. Not terrible-terrible. Fun-terrible. Like hiding all your shoes.
+> Help her hide my shoes. | +2 giggle
+  - Yes! You can't help hide your own shoes, that's cheating. ...Okay, help.
+> Let's prank someone else. | +3 laugh follow
+  - Oh, I like you. Lead the way. I know where a creeper lives.
+> No pranks. | -1 pout
+  - Boring. You're wonderful and boring.
+ignored: *your shoes go missing anyway*
+
+scene couple_bored_teach
+who: together
+mood: bored happy
+when: ghoul
+say: Spar with me. You're getting lazy. I can see it in the way you stand. Come on. Hit me if you can.
+> Spar with her. | +2 kicks giggle
+  - Too slow. ...Better. ...Okay, that one was good. Don't get smug.
+> I don't want to hurt you. | +2 laugh
+  - Hurt ME? Oh, that's adorable. Try anyway.
+> Not today. | -1 pout
+  - Lazy. Lazy and soft. Tomorrow, then. No excuses.
+ignored: I'll spar with a shelf. It won't fight back. Coward.
+
+scene couple_happy_gift
+who: together
+mood: happy giddy clingy affectionate
+say: I picked a flower for you. Don't look so surprised. I can be nice. Occasionally. On purpose.
+> Thank you. It's beautiful. | +3 gift:lily_of_the_valley hair
+  - It's poisonous, did you know? Lily of the valley. Don't eat it. It reminded me of me.
+> Put it in your hair instead. | +3 giggle
+  - In MY hair? ...Fine. There. How do I look? Don't answer. I know.
+> You picked a flower? You? | +1 pout gift:lily_of_the_valley
+  - Shut up and take it.
+ignored: I'll press it in a book. You'll never see it.
+
+# =====================================================================================================================================
+# TOPICS: what the player can bring up ("Talk a while"). Anyone she talks to, unless said.
+# =====================================================================================================================================
+
+topic first_book
+prompt: What was the first book you ever read?
+who: friend together
+say: A fairy tale about a wolf who ate a grandmother. I read it to the end and thought: the wolf had the right idea. Then I felt bad. Then I didn't.
+> That explains a lot. | +1 giggle
+  - Doesn't it? Everything explains a lot about me if you squint.
+> Did you have anyone to read to you? | +1 -> alone
+> What's your favourite now? | +1
+  - It changes every week. This week it's a book about a lighthouse keeper who's lonely in a way I recognise.
+page alone
+say: No. I read alone. In the dark, mostly. Which is why I can see so well in it now. Every sad thing has a use.
+> You're not alone now. | +2 hair
+  - ...No. I suppose I'm not. Hm.
+> I'm sorry. | +1
+  - Don't be. I turned out wonderful.
+
+topic favourite_word
+prompt: What's your favourite word?
+who: friend together
+say: "Petrichor." The smell of rain on dry earth. It sounds like a spell, doesn't it? And it means something so small.
+> Mine's "you". | +2 giggle
+  - That's cheating. That's a pronoun. ...It's a good one, though.
+> That's a beautiful word. | +1
+  - Use it in a sentence today. I'll know if you didn't.
+> Sounds made up. | 0 pout
+  - All words are made up. That's the best thing about them.
+
+topic monsters
+prompt: Do you think you're a monster?
+who: friend together
+say: Of course I am. The question is whether monsters are bad. I've met kind monsters and cruel saints. I know which I'd rather be.
+> You're not a monster to me. | +2 hair
+  - Careful. That's the kind of thing people say right before the twist.
+> Monsters can be good. | +2
+  - Can they? Write me a book where it's true and I'll believe you.
+> You are a little scary. | +1 giggle
+  - Good. Scary keeps you honest.
+
+topic made
+prompt: What does "made, not born" mean?
+who: close together
+say: It means someone decided what I'd be before I had a say. Half of me was given, half I took. The eye is just the half that shows.
+> Do you hate them for it? | +1 -> hate
+> I like what you made of it. | +3 hearts
+  - ...That's the nicest thing anyone's said about my origin story. Including me.
+> That sounds lonely. | +2 hair
+  - It was. It isn't now. Don't make me say why.
+page hate
+say: Hate is too small a word. I'm writing a much bigger one. It'll take a whole book.
+> I'll read it. | +2
+  - You'll be the only one who understands it. That's enough.
+> I hope it has a happy ending. | +1
+  - For me? Maybe. For them? No.
+
+topic library
+prompt: Why do you live in a library?
+who: friend together
+say: Because books don't lie about what they are. And because nobody looks for a monster among the reference shelves.
+> It suits you. | +2 giggle
+  - Everything suits me. But yes, this especially.
+> Don't you get lonely? | +1
+  - Sometimes. Then someone wanders in. Like you. And it passes.
+> I'd go mad in here. | 0 pout
+  - You'd go mad anywhere. Here you'd go mad well-read.
+
+topic pen_name
+prompt: What's your pen name?
+who: friend together
+say: Nice try. If I told you, you'd find my books, read them, and know every terrible thing I've ever thought. ...Okay, you'd know some of them.
+> I'll find out one day. | +1 giggle
+  - You'll try. Many have. None succeeded. Well. One. They were very surprised.
+> I don't need to know. | +2
+  - ...Huh. Nobody's ever said that. I like that more than I should.
+> Is it something embarrassing? | +1 laugh
+  - It's something magnificent. You'd faint.
+
+topic fear
+prompt: What are you afraid of?
+who: close together
+say: Endings. Not my own. Other people's. Books end and I keep reading them in my head for years.
+> I'm not going anywhere. | +3 hug
+  - You say that now. ...Say it again in a year.
+> Me too. | +2
+  - Then we'll be afraid together. That's less frightening.
+> Nothing scares me. | +1 giggle
+  - Liar. Everyone's afraid of something. I'll find yours.
+
+topic dream
+prompt: Do you dream?
+who: friend together
+say: Every day. I dream I'm on a long train that never stops, reading a book that never ends. It's a nightmare. It's also my idea of heaven.
+> What do you think it means? | +1
+  - That I'd rather keep moving than arrive. Arriving is how stories end.
+> I dream about you. | +2 giggle
+  - Do you? What am I doing? ...No, don't tell me. I'll write my own version.
+> I don't dream. | 0
+  - Everybody dreams. Some people just forget out of politeness.
+
+topic coffee
+prompt: How do you take your coffee?
+who: friend together
+say: Black. Bitter. Too hot. Exactly the way life's been to me, so I've decided to enjoy it.
+> I'll make you one. | +2 sip
+  - Too much sugar and I'll pour it on your shoes. Go.
+> That's dark. | +1 giggle
+  - Everything I say is dark. You're still here. Draw your own conclusions.
+> I hate coffee. | -1 pout
+  - Then we can never truly be close. ...I'm joking. Mostly.
+
+topic stars
+prompt: Do you have a favourite star?
+who: friend together
+when: night
+say: The small one, next to the bright one. Everyone looks at the bright one. I named the small one Footnote.
+> That's adorable. | +2 giggle
+  - It's not adorable, it's literary. ...It's a little adorable.
+> Name one for me. | +2
+  - That one. The one blinking. It's called "Late Again". Fitting.
+> Stars are just gas. | -1 pout
+  - Everything is just something. You're just meat. See how that feels?
+
+topic hunger_talk
+prompt: Is it hard, being hungry all the time?
+who: friend together
+say: It's like holding your breath forever. You stop noticing until someone makes you notice. Like you just did. Thank you.
+> Sorry. | +1
+  - Don't be. It's good to be noticed. Even the hungry parts.
+> Can I help? | +2 -> help
+> I could never live like that. | 0
+  - You'd be surprised what you could live like. People are terribly adaptable.
+page help
+say: You help by being here and not being dinner. That's a very specific kind of help. Not many people manage it.
+> I'll keep managing it. | +2 giggle
+  - Good. I'd hate to have to find someone new to talk to.
+> What if I were dinner? | +1 lick
+  - Don't. Don't joke. ...Okay, it was a little funny.
+
+topic writing_now
+prompt: What are you writing right now?
+who: friend together
+say: A story about a girl who builds a house out of the bones of everyone who wronged her. It's a love story, I promise.
+> How is that a love story? | +1 -> love
+> Can I read it when it's done? | +2
+  - You'll be the first. And the last. It's not getting published.
+> That's horrifying. | +1 giggle
+  - Thank you. That's the reaction I wanted.
+page love
+say: She loves the house. She finally has somewhere that's hers. It's about belonging, written with a lot of teeth.
+> I get it. | +2 hair
+  - I knew you would. That's why I told you.
+> Write a happier one. | +1
+  - Happier for whom? The girl? Or the bones?
+
+topic weather_now
+prompt: Nice weather today, huh?
+who: friend together
+when: day !rain
+say: It's sunny. I'm suspicious of sunny. Sunny days feel like they're hiding something.
+> Like what? | +1 giggle
+  - A storm. A plot twist. A Dove on a roof. I trust rain more.
+> You need more sun. | 0 pout
+  - I need more shade. And more books. And you to stop saying that.
+> Let's go out in it anyway. | +2 follow
+  - Fine. Five minutes. I'll complain the whole time. You'll love it.
+
+topic rain_talk
+prompt: You like the rain, don't you?
+who: friend together
+when: rain
+say: I love it. It makes everything smell like an old book. And people stay inside. And the world gets quieter.
+> I love it too. | +2 giggle
+  - Then we'll be quiet together. Shh. Listen to it.
+> It's gloomy. | 0
+  - Gloomy is a lovely word. Don't use it like an insult.
+
+topic together_why
+prompt: Why did you choose me?
+who: together
+say: I didn't. You chose me, and I let you. That's different. And I've never let anyone before.
+> I'd choose you again. | +3 hearts
+  - Every time? ...Okay. Then I'd let you, every time.
+> That's a very you answer. | +2 giggle
+  - Everything I say is a very me answer. You chose that too.
+> What made you let me? | +2 -> let
+page let
+say: You came back. After you'd seen what I was. Most people run. You walked in with a book under your arm, like I was normal.
+> You're normal to me. | +3 hug
+  - That's the strangest compliment I've ever loved.
+> I'm a little stupid. | +2 laugh
+  - Brave and stupid. My favourite combination.
+
+topic together_first
+prompt: Do you remember when we met?
+who: together
+say: You stood in the doorway like you'd walked into the wrong building. You had. You stayed anyway. I almost ate you, did I mention that?
+> You did mention it. Often. | +2 giggle
+  - Because it's important. You were nearly a snack. Now look at you.
+> I'm glad you didn't. | +3 hug
+  - So am I. Snacks don't come back.
+> I remember it differently. | +1
+  - Of course you do. Your version is wrong.
+
+topic together_future
+prompt: Where do you see us in ten years?
+who: together
+say: Here. More books. More you. Possibly a garden, if I can grow something that doesn't bite. Probably not.
+> I'll plant the garden. | +2 giggle
+  - Plant something that eats other plants. I'd like that.
+> More you sounds good. | +3 hearts
+  - More me is a lot of me. You've been warned.
+> Ten years is a long time. | +1
+  - For you. For me it's two sequels and a short story.
+
+topic together_love
+prompt: Do you love me?
+who: together
+say: ...You can't just ask that. In daylight. With your face. ...Yes. Obviously. Idiot. Don't ask again. Ask again.
+> I love you too. | +3 kiss
+  - Say that in the dark later. It's more convincing.
+> Say it properly. | +2 -> properly
+> I knew it. | +2 giggle
+  - Of course you did. You're insufferable. I love you. Shut up.
+page properly
+say: *takes a breath* I love you. There. Like a person. Like a terrible, unbearable person. Happy?
+> Very. | +3 hearts hug
+  - Good. Never make me do that again. Make me do it again tomorrow.
+
+topic together_kids
+prompt: Do you want children?
+who: together
+when: !kids !pregnant
+say: Little monsters who look like you and read like me? ...I've thought about it. Don't make that face. I said thought.
+> I'd like that too. | +3 hearts
+  - Then ask me properly. On a night with a moon. I'll say yes.
+> Maybe one day. | +1
+  - One day. I'll put it in my calendar. In pencil.
+> I'm not ready. | 0
+  - Neither am I. Nobody ever is. That's what the books say.
+
+topic together_hair
+prompt: Can I brush your hair?
+who: together
+say: My hair? It's a disaster. Nobody touches my hair. ...You can touch my hair.
+> Brush her hair. | +3 hair
+  - Mm. Gently. ...Okay. You're hired. Forever.
+> I'll braid it. | +3 giggle
+  - Braid it and I'll wear it all day so everyone knows you did it.
+
+topic together_jealous
+prompt: Are you the jealous type?
+who: together
+say: Me? I'm the most jealous person who has ever lived. I just hide it under a lot of reading.
+> I know. It's cute. | +2 giggle
+  - It's not cute. It's a public safety warning.
+> You never need to be. | +3 hearts
+  - I know. I'm still going to be. It's my hobby.
+
+topic together_scary
+prompt: Show me something scary.
+who: together
+when: night
+say: *her eye opens, red in the dark, and she smiles with all her teeth* ...Boo.
+> That's not scary, that's beautiful. | +3 hearts giggle
+  - You're broken. I love it. Come here.
+> Okay that's terrifying. | +2 laugh
+  - Good. Now you know what everyone else sees.
+> Do it again. | +2 lick
+  - Greedy. Boo.
+
+topic together_tired
+prompt: Are you tired?
+who: together
+when: night
+say: Of everything except you. Which is a very tired thing to say. I'm tired. Hold me.
+> Hold her. | +3 cling
+  - Thank you. ...Don't move. Ever. That's all.
+> Go to sleep. | +1 yawn
+  - Only if you're there when I wake up.
+
+topic together_wife_house
+prompt: Do you like our home?
+who: wife
+when: home
+say: It's the first place I've lived that wasn't a hiding place. I don't know what to do with all the windows.
+> Leave them open. | +2
+  - And let the world in? ...Okay. One. Just one. For you.
+> Fill them with books. | +2 giggle
+  - Oh, you know me so well. Already planned. Already done.
+
+# ---------------------------------------------------------------------------------------------------- more for the hungry nights
+
+scene friend_hungry_story
+who: friend
+mood: hungry
+when: night
+say: I'm hungry. Tell me a story so I think about something else. Make it long. Make it boring. Make it about farming.
+> Tell her about farming. | +2 laugh
+  - ...Wheat. Yes. Fascinating. Inedible. Keep going. It's working.
+> Tell her a ghost story. | +2 giggle
+  - A ghost! Ghosts have no meat. Perfect. Go on.
+> I'd rather not. | -1 pout
+  - Then I'll tell myself one. It'll have a lot of eating in it.
+ignored: Farming. Farming. Think about farming.
+
+scene friend_hungry_eye
+who: friend
+mood: hungry
+when: night
+say: Don't mind my eye. It's open because I'm hungry, not because I'm angry. Different reasons. Same eye.
+> It's kind of beautiful. | +2 giggle
+  - You'd think everything's beautiful if it didn't eat you. ...Thank you, though.
+> Should I be scared? | +1 lick
+  - A little. Healthy amounts. Like a spice.
+> Close it, please. | 0 pout
+  - It doesn't close on request. It's not a door. Rude.
+ignored: The eye stays open. So does my patience. Mostly.
+
+scene couple_hungry_bite
+who: together
+mood: hungry
+when: night
+say: I'm going to bite something tonight. I'd prefer it was a monster and not your shoulder. Help me find a monster.
+> Go hunting together. | +2 follow lick
+  - My hero. My lovely, edible hero. Stay close.
+> My shoulder's available. | +2 giggle
+  - Don't offer me that. ...Don't take it back either. Kidding. Mostly.
+> Stay in with me instead. | +2 cling
+  - Stay in. Hungry. With you. ...That's a test of character. Fine.
+ignored: I'll find a monster myself. A big one.
+
+scene couple_hungry_coffee
+who: together
+mood: hungry sleepy
+when: night
+say: Make me coffee, love. Strong. The kind that's almost food. I'm being very good tonight and I want a reward.
+> Make her coffee. | +2 sip
+  - Mm. You're the best thing in this house. The coffee's second.
+> Kiss her instead. | +3 kiss
+  - That's a better reward. Do both.
+> Get it yourself. | -1 pout
+  - Cruel. I'll remember this when I'm less hungry.
+ignored: I'll make it myself. Badly.

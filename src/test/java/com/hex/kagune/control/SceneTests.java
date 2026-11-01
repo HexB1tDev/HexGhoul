@@ -59,7 +59,7 @@ public final class SceneTests {
         tempers();
         words();
         if (!FAILURES.isEmpty()) {
-            FAILURES.stream().limit(60).forEach(failure -> System.err.println("FAILED: " + failure));
+            FAILURES.forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
             System.exit(1);
         }
@@ -232,6 +232,29 @@ public final class SceneTests {
         }
         for (Scene scene : book) {
             check(scene.kind() == Scene.Kind.TOPIC || !scene.ignored().isEmpty(), "child." + scene.id() + " says something if left unanswered");
+            // A moment an answer starts fits at least one of the ages the scene is for (or it would never happen).
+            List<Scene.Page> pages = new ArrayList<>(scene.pages().values());
+            pages.add(scene.first());
+            for (Scene.Page page : pages) {
+                for (Scene.Option option : page.options()) {
+                    for (String effect : option.effects()) {
+                        ChildMoment moment;
+                        try {
+                            moment = ChildMoment.valueOf(effect.toUpperCase(java.util.Locale.ROOT));
+                        } catch (IllegalArgumentException notMoment) {
+                            continue;
+                        }
+                        boolean fits = false;
+                        for (com.hex.kagune.control.family.ChildStage stage : com.hex.kagune.control.family.ChildStage.values()) {
+                            String word = stage == com.hex.kagune.control.family.ChildStage.CHILD ? "child" : stage.name().toLowerCase(java.util.Locale.ROOT);
+                            if ((scene.who().isEmpty() || scene.who().contains(word)) && moment.fits(stage)) {
+                                fits = true;
+                            }
+                        }
+                        check(fits, "child." + scene.id() + ": '" + effect + "' fits one of its ages " + scene.who());
+                    }
+                }
+            }
         }
     }
 

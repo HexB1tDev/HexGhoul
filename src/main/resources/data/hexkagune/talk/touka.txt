@@ -1,14 +1,1419 @@
-# Touka's scenes and topics (1.3.29). Her voice: sharp, serious, pouty, blushing; insults that mean something else.
+# Touka's scenes and topics (1.3.29). Read by SceneBook (see its comment for the form; SceneWords for every word allowed).
+# Her voice: sharp, serious, quick to pout and quicker to kick; "idiot" means something else every time. She works the cafe, studies
+# for exams she swears she doesn't care about, hates Doves, and worries about a little brother she never names. Strangers get "what";
+# friends get insults that mean something else; her partner gets the same insults, blushing.
+
+# =====================================================================================================================================
+# FRIENDS
+# =====================================================================================================================================
 
 scene coffee_break
-who: anyone
+who: friend
 mood: happy bored sleepy
 when: day
 say: I'm on break. I made too much coffee. ...Don't read into it. Here.
+say: Sit. You look like you need caffeine and a slap. I'm only giving you one of those.
 > Thanks. Sit with me. | +2 sip
   - Fine. Five minutes. ...Ten. Don't get used to it.
 > Is it the good beans? | +1
-  - Of course it's the good beans. What do you take me for.
+  - Of course it's the good beans. What do you take me for, an amateur?
 > I'm not thirsty. | -1 pout
   - Whatever. More for me.
 ignored: Tch. It's getting cold anyway.
+
+scene friend_homework
+who: friend
+mood: happy bored sleepy
+say: You. Are you good at maths? Don't lie. I can tell when people lie, their left eye twitches.
+say: I have an exam tomorrow and my brain is soup. Quiz me. And don't laugh when I get it wrong.
+> Quiz her. | +2 read -> quiz
+> I'm terrible at maths. | +1 laugh
+  - Great. Two idiots and a textbook. Sit down anyway.
+> Why do you even go to school? | -1 huff
+  - Because I want to. Because someone told me I could be normal. Drop it.
+page quiz
+say: Okay. Okay. ...Go. Ask me the hard ones. If I cry, ignore it.
+> Ask an easy one first. | +2 shy
+  - ...That was too easy. Don't baby me. ...Thanks.
+> Ask the hardest one. | +2 cross
+  - ...I got it. I GOT it. Don't look so surprised, idiot.
+ignored: Fine. I'll fail by myself.
+
+scene friend_kick_practice
+who: friend
+mood: happy bored
+say: I need to kick something. You're something. Hold this pillow up. Higher.
+> Hold the pillow. | +2 kicks
+  - *THUMP* ...Sorry. Did that hurt? It was supposed to hurt the pillow.
+> Teach me to kick like that. | +2 kicks -> teach
+> Kick a tree instead. | -1 huff
+  - Trees don't flinch. Flinching is half the fun.
+page teach
+say: Weight on your back foot. Turn your hips. Don't think about it. Thinking is how you get punched.
+> Try the kick. | +2 kicks
+  - ...Not bad. Not good. Not bad. Again.
+> Show me again? | +1
+  - I showed you twice. Fine. Watch my hips. My HIPS, idiot. Not my face.
+ignored: Fine. I'll kick the air. It deserves it.
+
+scene friend_rabbit
+who: friend
+mood: happy bored
+say: There was a rabbit outside the cafe this morning. It just sat there and looked at me. I fed it. Don't tell anyone.
+> That's cute. | +2 shy
+  - It's NOT cute. It was hungry. Hungry things should eat. That's all.
+> Rabbits are your thing, huh? | +1 -> mask
+> You should've eaten it. | -1 huff
+  - Gross. I don't eat rabbits. I'm not a monster. ...Shut up.
+page mask
+say: My mask's a rabbit. Somebody laughed once. They don't laugh anymore.
+> It suits you. | +2 shy
+  - ...It's supposed to be scary. ...Thanks, I guess.
+> Did you kill them? | 0 cross
+  - I kicked them into a canal. They lived. Mostly.
+ignored: Whatever. The rabbit was better company.
+
+scene friend_cafe_help
+who: friend
+mood: happy bored
+when: ownplace
+say: The cafe's packed and I'm short-handed. Wipe some tables. Don't break anything.
+> Help out. | +2 wipe
+  - Not like that. Circles. Big circles. ...Okay, you're hired. Unpaid.
+> Make me a coffee first. | +1 sip
+  - Work first, coffee after. That's the rule. I made the rule.
+> I'm a customer, not staff. | -1 huff
+  - Then sit down and tip well.
+ignored: Fine. I'll do it myself. As usual.
+
+scene friend_dove_warning
+who: friend
+mood: happy bored hungry
+say: Doves were sniffing round the ward last night. If you see white coats and briefcases, you walk the other way. Got it?
+> Got it. | +1
+  - Good. I don't want to scrape you off a pavement.
+> I can handle them. | 0 cross
+  - Sure you can. Everyone who said that is in a jar now. Walk the other way.
+> Are you worried about me? | +2 shy -> worried
+page worried
+say: I'm not worried, I'm... practical. Dead friends are inconvenient. They don't help wipe tables.
+> I'll be careful. | +2 shy
+  - You'd better. ...Idiot.
+> You do care. | +1 kicks
+  - Say that again and you'll find out how fast I can kick.
+ignored: Don't come crying to me when you're in a jar.
+
+scene friend_sulk_kick
+who: friend
+mood: sulky
+say: Don't talk to me. I'm still mad about last time. ...What, you don't remember? That's WORSE.
+say: Hmph. Oh. It's you. I'm not talking to you. I'm saying this to the wall.
+> I'm sorry. Whatever it was. | +2 forgive
+  - "Whatever it was." Unbelievable. ...Fine. Apology noted. Barely.
+> What did I do? | 0 -> what
+> Sulk all you want. | -2 sulk
+  - Oh I WILL. Watch me sulk. I'm amazing at it.
+page what
+say: You laughed at my apron. I saw you. Don't deny it.
+> It's a cute apron. | +2 shy forgive
+  - It's a WORK apron. ...It's a little cute. Shut up. You're forgiven.
+> It was a funny apron. | -1 kicks
+  - *kicks your shin* Now we're even.
+ignored: The wall and I agree you're an idiot.
+
+scene friend_sulk_coffee
+who: friend
+mood: sulky
+say: I made you a coffee and you weren't here. So I drank it. Out of spite. It was a very good coffee.
+> Make me another one? | +1 sip
+  - Maybe. If you deserve it. You don't. ...Fine. Sit.
+> I'm sorry I missed it. | +2 forgive
+  - Yeah, well. Don't miss the next one.
+> I don't care about coffee. | -2 sulk
+  - You don't— get out. Out of my cafe. Now.
+ignored: Another one, drunk out of spite.
+
+scene friend_sulk_hug
+who: close
+mood: sulky
+say: I'm in a bad mood. Don't ask why. Don't look at me. ...Stop looking at me.
+> Give her a hug. | +3 hug shy forgive
+  - What are you— ...Fine. Five seconds. ...Okay, ten. Shut up.
+> Want to talk about it? | +2 -> talk
+> Okay, I'll leave you alone. | 0
+  - ...Good. ...You can come back in an hour.
+page talk
+say: ...My brother didn't write again. That's all. It's stupid. Forget it.
+> It's not stupid. | +3 shy forgive
+  - ...Thanks. He's fine. He's always fine. He's an idiot. Like you.
+> He'll write. | +2
+  - Yeah. Maybe. ...Thanks.
+ignored: See? I said don't look at me.
+
+scene friend_bored_spar
+who: friend
+mood: bored
+say: I'm bored. Spar with me. I won't use my wings. ...Probably.
+say: Nothing's happening. Nobody's fighting. I hate peace. Hit me.
+> Spar with her. | +2 kicks
+  - Too slow. Too slow. ...Okay, that one was decent.
+> No wings, promise? | +1 -> wings
+> I don't hit girls. | -1 cross
+  - Then you'll lose to one. Hit me or I'm kicking you first.
+page wings
+say: Promise. Mostly. If you make me angry, all bets are off.
+> Deal. | +2 kicks
+  - Good. ...You made me angry. *her wings flare* Run.
+> I'll try not to make you angry. | +1 laugh
+  - You'll fail. Everyone does.
+ignored: Fine. I'll go bother a Dove.
+
+scene friend_bored_walk
+who: friend
+mood: bored happy
+say: Let's walk. I need to get out of the cafe before I start alphabetising the sugar.
+> Let's go. | +2 follow
+  - Walk faster. Not that fast. You walk like a duck. ...Keep walking like a duck, it's funny.
+> Where to? | +1
+  - Somewhere quiet. Somewhere with no customers. Anywhere.
+> Can't today. | -1 pout
+  - Fine. Sugar it is.
+ignored: Sugar. Alphabetised. Thanks a lot.
+
+scene friend_bored_movie
+who: friend
+mood: bored
+when: night
+say: There's nothing to do. Tell me something that happened to you. Something stupid. I want to laugh at you.
+> Tell her an embarrassing story. | +2 laugh
+  - You did WHAT? ...Oh my god. I'm telling everyone.
+> You first. | +1 -> her
+> I don't have any. | -1 huff
+  - Liar. Everyone does. Yours are probably the worst ones.
+page her
+say: ...Fine. I once kicked a customer through a window. It was a Dove. The window was expensive. I had to pay for it with my tips. For a month.
+> That's amazing. | +2 giggle
+  - It wasn't amazing, it was a month of no tips! ...It was a little amazing.
+> Was it worth it? | +2 laugh
+  - Completely. I'd do it again. With a bigger window.
+ignored: Fine. Be boring. See if I care.
+
+scene friend_sleepy_late
+who: friend
+mood: sleepy
+say: *yawns* I studied until four. Don't talk loudly. Don't talk at all. Just stand there being quiet.
+> Stand there being quiet. | +2
+  - ...Thanks. You're good at that. It's your best skill.
+> You should sleep. | +1 yawn
+  - I'll sleep when I'm dead. Or after exams. Whichever comes first.
+> Want a coffee? | +2 sip
+  - Yes. Make it strong enough to stand a spoon in.
+ignored: *falls asleep on the counter*
+
+scene friend_sleepy_shift
+who: friend
+mood: sleepy
+say: Long shift. My feet hate me. Everything hates me. Carry me home. ...Kidding. Mostly.
+> I'll walk you home. | +2 follow
+  - ...Okay. Fine. Just so I don't fall asleep in a ditch.
+> Sit down for a bit. | +1
+  - If I sit down I won't get up. ...Fine. Five minutes.
+> You'll be fine. | 0 huff
+  - Thanks for nothing.
+ignored: Walking. Alone. Like always.
+
+scene friend_sleepy_dawn
+who: friend
+mood: sleepy
+when: dawn
+say: Sun's coming up and I haven't slept. Again. Don't tell anyone I was out all night.
+> Where were you? | +1 -> where
+> Your secret's safe. | +2
+  - It'd better be. I know where you live.
+> Go to bed. | +1 yawn
+  - I'm going. Stop nagging. You sound like the manager.
+page where
+say: Out. Watching the ward. Making sure nobody's getting hunted who shouldn't be. Somebody has to.
+> That's kind of you. | +2 shy
+  - It's not kind. It's... fine, it's kind. Don't tell anyone that either.
+> Next time, take me. | +2
+  - ...Maybe. If you can keep up.
+ignored: Bed. Finally.
+
+scene friend_hungry_ghoul
+who: friend
+mood: hungry
+when: night ghoul
+say: I'm starving. You look starving too. There's a body down by the river nobody's claimed. Come on. Quietly.
+> Go with her. | +2 follow
+  - Stay low. Don't make noise. ...You're making noise.
+> I'll find my own. | 0
+  - Suit yourself. Don't get caught.
+> I'm not that hungry. | +1
+  - Liar. Your eye's open. Come on.
+ignored: More for me.
+
+scene friend_hungry_human
+who: friend
+mood: hungry
+when: night human
+say: Stay over there tonight. I'm hungry and you smell like a convenience store sandwich. It's... a lot.
+> I'll keep my distance. | +2
+  - ...Thanks. Not because you're scary. Because I'm polite.
+> Do I really smell that good? | +1 laugh
+  - I said convenience store sandwich, not good. ...It's a little good.
+> You won't hurt me. | +1 cross
+  - No. I won't. But stand over there anyway.
+ignored: Good. Walk away. Smart human.
+
+scene friend_hungry_coffee
+who: friend
+mood: hungry
+when: night
+say: Coffee. It's the only thing that takes the edge off. Make me one, please. Quick.
+> Make her coffee. | +2 sip
+  - ...That helps. Thanks. Don't watch me drink it.
+> Is it that bad tonight? | +1 -> bad
+> I can't. | -1 huff
+  - Then go away before I start looking at you funny.
+page bad
+say: Bad enough. It passes. It always passes. Talk to me about something stupid.
+> Your apron. | +2 laugh
+  - My APRON. Again. ...Thanks. That worked.
+> Your exams. | +1
+  - Ugh. That definitely worked. Now I'm hungry AND stressed.
+ignored: It'll pass. It always passes.
+
+scene friend_hurt
+who: friend
+when: hurt
+say: You idiot. You're bleeding. Sit down before you fall down.
+say: What happened to you? Who did it? I'll kick them. Hard. Somewhere soft.
+> It's nothing. | +1 cross
+  - "Nothing." There's blood on my clean floor. Sit.
+> Help me patch it? | +2 shy
+  - Hold still. ...Don't make that noise, it's just antiseptic. ...Idiot.
+> Go kick them. | +2 kicks
+  - Gladly. Stay here. Bleed less.
+ignored: Fine. Bleed. I'll mop it later.
+
+scene friend_rain
+who: friend
+when: rain
+say: It's pouring. Get inside before you catch something. I'm not nursing you.
+> Thanks. | +1
+  - Towel's over there. Don't drip on the counter.
+> I like the rain. | +1
+  - You're weird. ...I like it too. It keeps the customers away.
+> I'll stay out. | -1 huff
+  - Fine. Catch a cold. I'm not making soup.
+ignored: Drown, then.
+
+scene friend_meat
+who: friend
+when: meat ghoul
+say: Is that for me? ...Don't make me ask. I'm not asking. I'm just looking at it.
+> It's yours. | +3 shy
+  - ...Thanks. I haven't eaten in days. Don't tell anyone.
+> Share it with me. | +2
+  - Fine. Half. Even halves. I'm watching your knife.
+> Nope. | -1 huff
+  - Then stop waving it around, idiot.
+ignored: Whatever. I wasn't hungry.
+
+scene friend_close_rare_smile
+who: close
+mood: happy
+say: Don't look at me. I'm smiling. It happens sometimes. It's not because of you. ...It's a little because of you.
+> I like your smile. | +3 shy
+  - Stop. ...Don't stop. ...Stop.
+> Why are you smiling? | +2 -> why
+> It's scary when you smile. | +1 kicks
+  - *kicks you* Is THIS scary?
+page why
+say: The cafe was quiet. My brother sent a letter. And you came by. ...That's a good day. That's all.
+> I'm glad I'm part of it. | +3 shy hearts
+  - You're a SMALL part of it. Don't get a big head.
+> Tell me about the letter. | +2
+  - He's fine. He said "fine" three times. That means he's not. Typical.
+ignored: Forget it. I'm not smiling anymore.
+
+scene friend_close_trust
+who: close
+mood: happy bored
+when: night
+say: Can I tell you something? You can't laugh. If you laugh I'll break your knees.
+> I won't laugh. | +3 -> secret
+> Promise. | +3 -> secret
+> I can't promise that. | -1 huff
+  - Then forget it.
+page secret
+say: ...I'm scared of failing my exams. Not because of the grades. Because then I'm just a ghoul who pretended to be a student.
+> You're both. And you're good at both. | +3 shy hearts
+  - ...Shut up. ...Thanks. Don't tell anyone.
+> I'll help you study. | +3 read
+  - ...Really? Okay. Tomorrow. Bring snacks. Human ones. For you, not me.
+ignored: Never mind. It was stupid.
+
+scene friend_close_teach
+who: close
+mood: happy bored
+when: ghoul
+say: Your wings— your kagune, whatever it is. You're using it wrong. Come here. I'll show you something.
+> Show me. | +2 -> show
+> I'm fine, thanks. | 0 huff
+  - You're not fine, you're sloppy. Come back when you want to stop being sloppy.
+> Why are you helping me? | +1 shy
+  - Because I'm sick of watching you nearly die. It's stressful. For the cafe.
+page show
+say: Breathe in. Feel it in your back. Don't push it out, let it out. Like... like a sigh. A violent sigh.
+> *tries it* | +2 kicks
+  - ...Better. Much better. Don't let it go to your head.
+> A violent sigh? | +1 laugh
+  - Don't mock my teaching. It works. Try it.
+ignored: Stay sloppy, then.
+
+# =====================================================================================================================================
+# TOGETHER: still prickly, always blushing. She'll never say it first. She'll say it.
+# =====================================================================================================================================
+
+scene couple_happy_hi
+who: together
+mood: happy giddy
+say: Hey. ...I was just passing. I wasn't looking for you. I just happened to be standing exactly where you'd walk. Coincidence.
+say: You're here. Good. I mean. Fine. Whatever. Hi.
+> Hi, Touka. | +2 shy
+  - Don't say my name like that. ...Say it like that again.
+> You were waiting for me. | +2 -> waiting
+> Come here. | +2 hug
+  - Ugh. Fine. ...You smell like outside. It's not bad.
+page waiting
+say: I was NOT waiting. I was... standing. With purpose. Near where you'd be. Shut up.
+> I like that you wait. | +3 shy hearts
+  - ...Idiot. I'll wait more, then. Don't make me wait long.
+> Sure you weren't. | +1 kicks
+  - *kicks you, gently* Shut up.
+ignored: Fine. I'll stand here. Purposefully. Alone.
+
+scene couple_happy_hand
+who: together
+mood: happy giddy clingy
+say: Give me your hand. ...Don't make it weird. My hands are cold, that's all. It's practical.
+> Take her hand. | +2 hand
+  - ...Warm. Okay. Don't let go. It's still practical.
+> You're blushing. | +1 shy
+  - I'm NOT. It's cold. Cold makes faces red. Science.
+> Use gloves. | -1 huff
+  - Gloves. Unbelievable. ...You're an idiot.
+ignored: Fine. I'll freeze. It's your fault.
+
+scene couple_happy_coffee
+who: together
+mood: happy sleepy clingy
+say: I made two cups. One's yours. Don't say anything nice about it or I'll pour it on you.
+> Drink it quietly. | +2 sip
+  - ...Good, right? Don't answer. I can see your face.
+> It's the best coffee I've ever had. | +2 shy
+  - I SAID don't say anything nice. ...It is, isn't it?
+> I don't drink coffee. | -1 pout
+  - You do now. Drink it.
+ignored: Two cups. One idiot missing.
+
+scene couple_happy_study
+who: together
+mood: happy bored
+say: Sit with me while I study. You don't have to do anything. Just sit. It helps. Don't ask why it helps.
+> Sit with her. | +2 read
+  - ...Thanks. Pass the eraser. Don't touch my notes.
+> Quiz you? | +2 -> quiz
+> I'll distract you. | +1 kicks
+  - You'll get kicked. Sit. Quietly.
+page quiz
+say: Fine. Ask me anything from chapter four. If I get it wrong, you didn't see it.
+> Ask her a question. | +2 shy
+  - ...Right? I got it right. Of course I got it right.
+> Ask her for a kiss instead. | +3 kiss
+  - That's not in chapter four. ...Fine. One. Then chapter four.
+ignored: Chapter four, alone. Great.
+
+scene couple_happy_tease
+who: together
+mood: happy giddy
+say: You've got something on your face. ...No. Other side. ...It's a smile. Disgusting. Wipe it off.
+> Wipe it off for me. | +2 shy hair
+  - Hold still. ...There. Ugh. You put it back. Stop smiling at me.
+> You're smiling too. | +2 -> smile
+> Wow, rude. | 0 kicks
+  - It was a JOKE, idiot. ...A bad one.
+page smile
+say: I am NOT. My face is just... doing that. On its own. Your fault.
+> I'll take the blame. | +3 shy hearts
+  - Good. You should. ...Idiot.
+> It looks good on you. | +3 giddy
+  - Stop. Stop it. I'm going to wipe tables. Aggressively.
+ignored: Whatever. Keep the smile. I don't care.
+
+scene couple_happy_walk
+who: together
+mood: happy bored clingy
+when: day
+say: Walk me to work? I mean. If you're going that way. Which you are. Because I said so.
+> Walk her to work. | +2 follow hand
+  - Hold my— ...fine. Hold it. Since you're here.
+> Race you there. | +2 kicks follow
+  - You'll lose. You'll lose so badly.
+> I'm not going that way. | -1 pout
+  - You are now. ...Fine. Whatever.
+ignored: Walking. Alone. Again.
+
+scene couple_giddy_kiss
+who: together
+mood: giddy
+say: Close your eyes. ...I said close them. ...Good. *a quick, pouty kiss* ...Don't open them yet. Don't look at me.
+> Open your eyes anyway. | +2 shy
+  - I SAID— ...ugh. You saw. You saw my face. Forget it.
+> Kiss her back. | +3 kiss
+  - Wh— ...okay. ...Okay. Again. ...No. Yes.
+> Keep your eyes closed. | +2 giggle
+  - ...Good. Count to ten. I'm leaving. I'm not leaving. Count slower.
+ignored: Forget it. That didn't happen.
+
+scene couple_giddy_shy
+who: together
+mood: giddy affectionate
+say: I keep thinking about you at work. I dropped a cup. Two cups. The manager asked if I was sick. I'm sick of YOU.
+> I think about you too. | +3 shy hearts
+  - ...Don't say that out loud. People can hear. ...Say it again quieter.
+> Sick of me? | +2 -> sick
+> You should focus at work. | 0 huff
+  - Thanks, mum. I KNOW.
+page sick
+say: Sick. Of you. Not in a bad way. In a... in a way where I can't stop. That's a sickness. Look it up.
+> I'm sick of you too. | +3 hug
+  - ...Good. Then we're both sick. Shut up and hug me.
+> That's the sweetest insult. | +2 shy
+  - It's not sweet. ...It's a little sweet. Don't tell anyone.
+ignored: I'll drop more cups, then.
+
+scene couple_giddy_spin
+who: together
+mood: giddy happy
+say: I'm in a weird mood. Don't ask. I just want to... ugh. Pick me up or something. Spin me. Don't tell anyone.
+> Spin her around. | +3 dance giddy
+  - Wh— PUT ME DOWN. ...Okay don't put me down. Again.
+> You want me to spin you? | +1 laugh
+  - Forget it. Forget I said anything.
+> Not in public. | 0 pout
+  - We're not IN public. ...Fine. Later. In private.
+ignored: Forget it. Weird mood's over.
+
+scene couple_sulky_back
+who: together
+mood: sulky
+say: Oh, NOW you show up. Hmph. Don't talk to me. ...Talk to me.
+say: I'm mad at you. You know why. ...You don't know why? THAT'S why.
+> I'm sorry. Really. | +3 forgive
+  - ...You mean it? ...Fine. Come here. Quick, before I change my mind.
+> What did I do this time? | 0 -> what
+> You're cute when you're mad. | +1 kicks
+  - *kicks you* I'm not CUTE, I'm FURIOUS. ...Say it again.
+page what
+say: You said you'd come by the cafe. I saved you a seat by the window. The whole afternoon. Like an idiot.
+> I'll come tomorrow. I promise. | +3 forgive
+  - You'd better. I'm saving the seat. If you don't come I'm kicking the chair at you.
+> I forgot. | -2 sulk
+  - You FORGOT. Great. Wonderful. Go away. Go forget somewhere else.
+ignored: I'm still mad. Just so you know.
+
+scene couple_sulky_kick
+who: together
+mood: sulky jealous
+say: I'm in a terrible mood. Stand still so I can kick you. It'll make me feel better. It won't hurt. Much.
+> Stand still. | +2 kicks forgive
+  - *THUMP* ...Okay. Better. ...Sorry. Did that hurt? Let me see.
+> Hug her instead. | +3 hug shy forgive
+  - That's not a kick. ...It's better than a kick. Don't stop.
+> Run away. | -1 huff
+  - COWARD. I'll catch you.
+ignored: I'll kick a wall. It won't run.
+
+scene couple_sulky_silent
+who: together
+mood: sulky
+say: *she's standing with her arms crossed, very obviously not looking at you*
+> Hand her a coffee. | +2 sip forgive
+  - ...Bribery. Hm. ...It's working. Don't think it's working.
+> Poke her cheek. | +1 kicks
+  - DON'T. ...Do it again and you lose the finger.
+> Leave her be. | 0
+  - ...Fine. Leave. ...You're actually leaving? Get back here.
+ignored: *keeps not looking at you, harder*
+
+scene couple_jealous_who
+who: together
+mood: jealous
+say: Who was that? That person you were talking to. You were smiling. You don't smile at me like that.
+say: You smell like someone's perfume. Don't explain. ...Explain.
+> Nobody. Just a friend. | +2 forgive
+  - A friend. Fine. Friends are allowed. At a distance. A long distance.
+> I smile at you more. | +3 shy forgive
+  - ...You do? ...Prove it. Smile. ...Okay. Okay, fine. Yeah.
+> Are you jealous? | +1 -> jealous
+page jealous
+say: I'm NOT jealous. I'm... observant. Observant people notice things. I noticed. That's all.
+> You're adorable when you notice. | +2 shy forgive
+  - Shut up. ...Don't talk to them again. I mean you can. Don't.
+> There's only you. | +3 hug forgive
+  - ...Okay. Good. Say it again so I remember.
+ignored: Fine. Go talk to them, then.
+
+scene couple_jealous_quiet
+who: together
+mood: jealous
+say: It's fine. I'm not upset. I just think you should know I could kick anyone you look at into the sea.
+> I only look at you. | +3 shy forgive
+  - ...Liar. ...Sweet liar. ...Keep lying.
+> You'd really do that? | +1 kicks
+  - Try me. ...Don't try me.
+> Calm down. | -2 sulk
+  - "Calm down." Wow. Okay. I'll calm down over there. Away from you.
+ignored: The sea's very deep. Just saying.
+
+scene couple_lonely_back
+who: together
+mood: lonely
+say: Where have you been? ...No. Don't explain. I don't care. ...I care. Just stay a bit.
+say: You were gone so long I almost texted you. I don't text people. You've ruined me.
+> I missed you. | +3 hug
+  - ...I missed you too. Idiot. Don't make me say it again.
+> I'm sorry I was gone. | +3 cling forgive
+  - Don't be sorry. Just... stay. Here. Okay? Just for a while.
+> I was busy. | -1 pout
+  - Busy. Right. Me too. Busy missing you. Ugh, forget I said that.
+ignored: Fine. Go. I'm used to it.
+
+scene couple_lonely_window
+who: together
+mood: lonely clingy
+say: I kept the window seat. Every day. In case. ...Sit. It's yours.
+> Sit with her. | +3 cling
+  - ...Good. Don't go anywhere. I'll get you coffee in a minute. In a minute.
+> You kept it every day? | +2 shy
+  - Don't look at me like that. It's a good seat. That's all.
+> I can't stay long. | -1 pout
+  - Of course you can't. Go, then.
+ignored: The seat stays empty. Again.
+
+scene couple_lonely_sleep
+who: together
+mood: lonely sleepy
+say: I couldn't sleep while you were gone. Not because of you. Because of... the noises. The noises sounded like you not being here.
+> Sleep now. I'm here. | +3 cling yawn
+  - ...Okay. Don't leave while I'm asleep. Promise.
+> That's sweet. | +2 shy
+  - It's not sweet, it's insomnia.
+> Try warm milk. | -1 huff
+  - I'm a GHOUL. Milk tastes like chalk. Idiot.
+ignored: Another night of noises, then.
+
+scene couple_clingy_arm
+who: together
+mood: clingy
+say: Don't move. I'm cold. I'm using your arm. It's not a hug. It's an arm.
+> Let her. | +2 cling
+  - ...Good arm. Okay. Walk slow.
+> It's definitely a hug. | +2 shy
+  - It's an ARM. ...Fine. Hug. Shut up.
+> I need my arm back. | -1 pout
+  - You have two. Use the other one.
+ignored: Fine. I'll be cold. Forever. Because of you.
+
+scene couple_clingy_follow
+who: together
+mood: clingy
+say: Where are you going? I'm coming. I'm not following you. I'm going the same way. Coincidence.
+> Come with me. | +2 follow
+  - Fine. Walk on the outside. Cars. ...There aren't any cars. Walk on the outside anyway.
+> Hold my hand. | +3 hand
+  - ...Fine. Only because there might be cars.
+> I'm going alone. | -1 pout
+  - Fine. Alone. Great. Have fun.
+ignored: I'll go the same way anyway.
+
+scene couple_clingy_lean
+who: together
+mood: clingy sleepy affectionate
+say: I'm leaning on you. You're sturdy. Like a wall. A warm, annoying wall.
+> Let her lean. | +2 cling lean
+  - ...Don't talk. Talking moves you.
+> Put an arm around her. | +3 hug shy
+  - ...Okay. That's fine. That's allowed.
+> I'm not a wall. | 0 kicks
+  - You're a wall. A very rude wall.
+ignored: The actual wall's better. It doesn't walk off.
+
+scene couple_sleepy_morning
+who: together
+mood: sleepy
+say: *yawns* Don't look at me. My hair's a mess. Everything's a mess. Make coffee.
+say: Five more minutes. Then I'm kicking you out of bed. Then I'm pulling you back.
+> Make coffee. | +2 sip
+  - ...You're useful. Sometimes. This is one of the times.
+> Fix her hair. | +3 hair shy
+  - Don't— ...fine. Gently. ...You're good at that. Weird.
+> Five more minutes. | +2 cling
+  - Ten. ...Fifteen.
+ignored: *falls back asleep, grumbling*
+
+scene couple_sleepy_shift
+who: together
+mood: sleepy
+say: I did a double shift. If you say anything annoying I'll fall asleep on you out of spite.
+> Rub her shoulders. | +3 shy
+  - Oh. ...Oh, that's— don't stop. Don't stop ever.
+> Go to bed. | +1 yawn
+  - Only if you come. To make sure I go. That's all.
+> Say something annoying. | +1 laugh
+  - *falls asleep on you, out of spite*
+ignored: Spite nap. Alone.
+
+scene couple_sleepy_dawn
+who: together
+mood: sleepy
+when: dawn
+say: The sun's coming up. I hate the sun. Stand in front of it. Block it. You're good for something.
+> Block the sun. | +2 cling
+  - ...Good. Stay like that. Forever. Or ten minutes.
+> Come inside. | +2
+  - Fine. Carry me. ...Kidding. Mostly kidding.
+> It's beautiful though. | 0 huff
+  - It's BRIGHT. Beautiful things are allowed to be annoying.
+ignored: The sun wins. Again.
+
+scene couple_hungry_human
+who: together
+mood: hungry
+when: night human
+say: Don't take it personally, but you smell really good tonight and I really need you to go stand over there.
+> Kiss her instead. | +3 kiss
+  - That's... not helping. ...That's helping a bit. Again.
+> Talk her through it. | +2
+  - ...Talk about the cafe. The boring parts. The sugar. ...Thanks.
+> I trust you. | +2 shy
+  - I know. That's the problem. Stand there anyway.
+ignored: Good. Further. Further away. Thanks.
+
+scene couple_hungry_hunt
+who: together
+mood: hungry
+when: night
+say: I need to eat. Come with me? You don't have to watch. Just... be nearby. It's better when you're nearby.
+> Go with her. | +2 follow
+  - Stay behind me. Watch for white coats.
+> I'll keep watch. | +2
+  - Good. Whistle if a Dove comes. Don't whistle badly.
+> I'll wait here. | 0 stay
+  - Fine. Don't wander off.
+ignored: Fine. Alone, then.
+
+scene couple_hungry_meat
+who: together
+mood: hungry
+when: meat ghoul
+say: Is that for me? ...You brought it for me. Didn't you. You idiot. You thoughtful, disgusting idiot.
+> It's for you. | +3 shy hearts
+  - ...Thank you. Don't watch me eat. I mean it.
+> Let's eat together. | +3
+  - Fine. Together. I'm taking the bigger half.
+> It's mine. | -2 kicks
+  - You walked up to a starving ghoul with meat and said "it's mine"? You have a death wish.
+ignored: *stares at it, starving, too proud to ask*
+
+scene couple_affectionate_bed
+who: together
+mood: affectionate
+when: night
+say: It's late. I'm going to bed. ...Are you coming or not? Don't make me say it twice.
+say: I'm not saying anything. I'm just... the lights are off. In the bedroom. That's all I'm saying.
+> Go with her. | +3 night
+  - ...Good. Don't make it weird. ...It's going to be weird. That's fine.
+> Kiss her first. | +3 kiss
+  - Mm. ...Okay. Now come on.
+> I'm not tired. | -1 pout
+  - Neither am I, idiot. That's not the point.
+ignored: Fine. I'll go to sleep. Alone. Angrily.
+
+scene couple_affectionate_shy
+who: together
+mood: affectionate giddy
+when: night
+say: Can I... sit closer? I mean. I'm going to sit closer. I'm not asking.
+> Pull her close. | +3 cling shy
+  - ...Oh. Okay. Yeah. That's... that's nice. Don't say anything.
+> Of course. | +2 shy
+  - ...You don't have to say "of course" like that. All soft. Ugh. Say it again.
+> There's room over there. | -2 pout
+  - Oh. Okay. ...Fine. Over there it is.
+ignored: Never mind. Forget it.
+
+scene couple_affectionate_stars
+who: together
+mood: affectionate happy
+when: night !rain
+say: Look up. ...No, not at me. Up. The sky. It's clear. We never get clear skies in the ward.
+> Look at the stars with her. | +3 cling
+  - ...Nice, right? Don't say anything. Just look.
+> I'd rather look at you. | +3 shy hearts
+  - Shut UP. ...You're so embarrassing. ...Keep looking, then.
+> It's cold. | 0 huff
+  - Then stand closer, idiot. Problem solved.
+ignored: Whatever. I'll look by myself.
+
+# ---------------------------------------------------------------------------------------------------- together: particular moments
+
+scene couple_rain
+who: together
+when: rain
+mood: happy clingy affectionate lonely bored giddy sleepy sulky
+say: It's raining. ...Share my umbrella. It's small. We'll have to stand close. That's not why I'm offering.
+say: Rain. Good. The cafe's empty. Sit by the window with me. Don't talk. Just... sit.
+> Share the umbrella. | +3 cling shy
+  - ...You're getting wet on purpose so you can stand closer. I know your tricks. ...Fine.
+> Sit by the window. | +2 sip
+  - Here. Coffee. Listen to the rain. ...Nice, right?
+> Dance in the rain. | +2 laugh
+  - You're an idiot. ...One spin. ONE. If anyone sees, you're dead.
+> I'll go get wet. | -1 pout
+  - Fine. Catch a cold. I'm not nursing you. ...I'll nurse you.
+ignored: Fine. Me and the umbrella. Again.
+
+scene couple_thunder
+who: together
+when: thunder
+say: That was close. The thunder. ...I'm not scared. I just don't like loud things I can't kick.
+> Hold her. | +3 hug shy
+  - ...Okay. That's... fine. That's good. Don't let go until it stops.
+> You're scared of thunder? | +1 kicks
+  - I'm NOT. ...*flinches* ...Shut up.
+> It'll pass. | +1
+  - I know it'll pass. Stand closer while it does.
+ignored: *jumps at the next crack of thunder, alone*
+
+scene couple_hurt
+who: together
+when: hurt
+say: What happened to you?! Sit down. NOW. Who did this? I'll kill them. I mean it.
+say: You IDIOT. Look at you. You promised me you'd be careful. Sit. Let me see.
+> Let her patch you up. | +3 hug
+  - Hold still. ...Don't you dare die on me. I'll kill you if you die.
+> It's just a scratch. | +1 cross
+  - A scratch. You're dripping. On the floor I mopped. Sit DOWN.
+> Go get them. | +2 kicks
+  - With pleasure. Stay here. Bleed less. I'll be back.
+ignored: Fine. Bleed. Idiot. ...Stupid idiot.
+
+scene couple_hurt_scared
+who: together
+when: hurt
+mood: sulky lonely clingy happy
+say: Don't do that to me again. I thought... I thought I'd have to bury you. Don't make me bury you.
+> I'm sorry I scared you. | +3 forgive hug
+  - I wasn't scared. ...I was terrified. Don't do it again.
+> You'd bury me? | +1 -> bury
+> I'm fine. | -1 pout
+  - You're not FINE. Stop saying fine.
+page bury
+say: In the nicest spot. Under a tree. I'd visit every day. ...I'd hate it. I'd hate every day. So don't.
+> I won't. | +3 cling
+  - Promise. Say promise.
+> That's weirdly sweet. | +2 shy
+  - Shut up. Don't die.
+ignored: Don't do that again. I mean it.
+
+scene couple_dusk
+who: together
+when: dusk
+say: Night's coming. My eye always itches at dusk. ...Walk with me while it's still light? I like the last bit of light.
+> Walk with her. | +2 follow hand
+  - ...Slow. Walk slow. The light goes fast.
+> Watch the sunset here. | +2 cling
+  - ...It's pretty. Don't tell anyone I said pretty.
+> I need to go. | -1 pout
+  - Of course you do. Go, then.
+ignored: Fine. The light's gone anyway.
+
+scene couple_dawn
+who: together
+when: dawn
+say: Morning. You stayed. ...I didn't think you would. Not that I care. ...I care.
+> I'll always stay. | +3 hug shy
+  - Don't say always. Always is a lie people say. ...Say it anyway.
+> Coffee? | +2 sip
+  - Yes. Two sugars. Don't tell anyone I take sugar.
+> I have to head out. | -1 pout
+  - Right. Sure. Go. Go be busy.
+ignored: Morning. Alone. Great.
+
+scene couple_pregnant_kick
+who: together
+when: pregnant
+say: Your kid kicked me all night. YOUR kid. I didn't sleep. Give me your hand. Feel this. This is what I live with.
+say: Come here. Put your hand there. ...Feel that? They're practising. They're going to kick like me.
+> Feel the kick. | +3 hand hearts
+  - There. Strong, right? ...Of course strong. They're mine.
+> Talk to the baby. | +3 shy
+  - Don't— oh. They stopped. They like your voice. Traitor.
+> Are you okay? | +2
+  - I'm fine. I'm huge and tired and I want coffee and I can't have much coffee. I'm FINE.
+ignored: Never mind. They stopped. Sulking. Like you.
+
+scene couple_pregnant_coffee
+who: together
+when: pregnant
+say: I'm only allowed one coffee a day. One. ONE. Do you know what that's like? Make it count. Make me the best one.
+> Make her the best coffee. | +3 sip
+  - ...Okay. That's... that's really good. Don't make me cry. Hormones. Shut up.
+> Have mine. | +2 shy
+  - That's two. That's cheating. ...Give it.
+> Rules are rules. | 0 huff
+  - I hate you. I love you. I hate you.
+ignored: One coffee. Alone. Tragic.
+
+scene couple_pregnant_protect
+who: together
+when: pregnant
+say: Doves have been close lately. If anything happens, you take the baby and you run. Don't argue. Promise me.
+> I promise. | +3 hug
+  - ...Good. ...Okay. Good.
+> I'm not leaving you. | +3 cling hearts
+  - Idiot. ...Stupid idiot. ...Okay. Then we both run.
+> Nothing's going to happen. | +1
+  - You don't know that. Promise anyway.
+ignored: Promise me later, then. Promise me.
+
+scene couple_pregnant_names
+who: together
+when: pregnant
+say: We need a name. Don't pick anything stupid. No food names. No names of anyone I've kicked.
+> Something strong. | +2
+  - Strong. Okay. Good. I like strong.
+> Something gentle. | +2 shy
+  - Gentle? For OUR kid? ...Okay. Maybe. They should have one gentle thing.
+> What about your brother's name? | +1 -> brother
+page brother
+say: ...No. Not his. He'd be unbearable about it. ...Thank you for asking, though.
+> Okay. | +2 hug
+  - ...Something new. Something only theirs.
+> He'd like that. | +1 shy
+  - He'd pretend not to. He'd like it. ...Still no.
+ignored: Fine. I'll name them myself. Don't complain.
+
+scene couple_kids_baby
+who: together
+when: kids baby
+say: {kid} won't sleep unless I hum. I don't hum. I'm humming. Every night. Don't tell anyone.
+> Hum together. | +3 hum
+  - ...You're off-key. They like it. Traitor. Keep going.
+> Take a turn with the baby. | +3 hearts
+  - Careful with the head. ...Look at you. ...Okay. You're good at this. Shut up.
+> They have you wrapped around their finger. | +2 laugh
+  - They do NOT. ...They do. Tiny dictator.
+ignored: Humming. Alone. Again.
+
+scene couple_kids_kid
+who: together
+when: kids kid
+say: {kid} kicked a boy at the park today. I'm supposed to tell them off. I'm so proud I can't think.
+> Tell them off together. | +2
+  - Fine. Serious faces. ...You're smiling. STOP smiling.
+> Teach them to kick properly. | +3 kicks
+  - ...Yes. Better form. Higher. That's my kid.
+> Kicking's bad. | 0 huff
+  - The boy pulled their hair. Kicking was the correct answer.
+ignored: Proud. Alone. Hmph.
+
+scene couple_kids_teen
+who: together
+when: kids teen
+say: {kid} said I'm "so embarrassing". Me. I'm the least embarrassing person in this family. Tell them. Tell them now.
+> You're very embarrassing. | +2 kicks laugh
+  - Traitor. You're on their side. I'll kick you both.
+> They don't mean it. | +2 shy
+  - I know. ...I said the same thing to my parents. ...Ugh. I've become them.
+> I'll talk to them. | +1
+  - Don't. They'll know I sent you. ...Okay, talk to them.
+ignored: Embarrassing. Me. Hmph.
+
+scene couple_kids_proud
+who: together
+when: kids
+mood: happy giddy affectionate clingy
+say: Look at them. {kids}. Ours. I never thought I'd... ugh. Don't look at me. I've got something in my eye.
+> Hug her. | +3 hug shy
+  - ...Okay. Just for a second. ...Okay, longer.
+> They're perfect. | +3 hearts
+  - They're loud and messy and they never put anything away. ...Yeah. Perfect.
+> You're crying. | +1 kicks
+  - I'm NOT. It's the wind. Indoors. Shut up.
+ignored: Whatever. I'll watch them myself.
+
+scene couple_kids_tired
+who: together
+when: kids
+mood: sleepy sulky bored lonely
+say: {kids} asked me nine hundred questions today. Why is the sky. Why are wings. Why can't we eat cake. I'm done. I'm DONE.
+> I'll take the next round. | +3 hug
+  - Promise? ...You'll last ten minutes. I'll watch. With coffee.
+> Rest with me. | +2 cling
+  - Five minutes. Then they find us. They always find us.
+> You love it. | +2 shy
+  - ...Shut up. Yes. Don't tell them.
+ignored: *falls asleep sitting up, coffee in hand*
+
+scene couple_away
+who: together
+when: away
+say: Three days. You don't text. You don't visit. I wasn't worried. Idiot. Where were you?
+say: You're back. Good. Fine. I'm not crying, I'm cutting onions. In the cafe. Ghouls don't cut onions. Shut up.
+> I missed you every day. | +3 hug
+  - ...Good. You should. ...Me too. Don't make me say it twice.
+> Sorry. I got caught up. | +2 forgive
+  - Caught up. Next time send a letter. A crow. Anything.
+> I can take care of myself. | -2 pout
+  - I KNOW. That's not the point, idiot.
+ignored: Fine. Disappear again. See if I care.
+
+scene couple_new
+who: partner
+when: new
+say: So we're... together. Officially. I've never done this. If I'm bad at it, don't tell me. Just... fix it quietly.
+> I'll be patient. | +3 shy
+  - ...Okay. Thanks. Don't be TOO patient. I'm not a child.
+> You're doing great. | +2 shy
+  - You're lying. ...Keep lying.
+> We could take it slow. | +2
+  - Slow's good. Slow's fine. ...Not too slow.
+ignored: Forget it. I'm bad at this.
+
+scene couple_long
+who: together
+when: long
+say: Do you remember when I kicked you the first day we met? ...I don't regret it. But I'm glad you came back.
+> I remember. It hurt. | +2 laugh
+  - It was supposed to. ...I'm sorry. Kind of.
+> I'd come back every time. | +3 hug shy
+  - ...Idiot. Even with the kicking? ...Idiot.
+> You kicked me? | +1 kicks
+  - You don't remember? Let me remind you.
+ignored: Whatever. I remember it.
+
+scene couple_home
+who: wife
+when: home
+say: I rearranged the kitchen. Don't touch anything. If you touch anything, I'll know. I'll know.
+> I'll stay out of the kitchen. | +2 shy
+  - ...You can come in. Just don't touch. Sit on the counter and watch me.
+> Make me something? | +2 sip
+  - Coffee. It's always coffee. Sit down.
+> I liked it before. | -1 pout
+  - It was a MESS before. ...Fine. I'll put the mugs back where you like them.
+ignored: Don't touch anything. I'll know.
+
+scene couple_home_night
+who: wife
+when: home night
+say: The kids are asleep. The cafe's closed. It's just us. ...What do we even do when it's just us?
+> Sit together. | +3 cling
+  - ...Oh. Yeah. This. This is good.
+> Anything you want. | +3 shy -> want
+> Sleep. | +1 yawn
+  - Sleep. Right. ...Boring. Smart. Boring.
+page want
+say: Anything? ...I want to sit by the window and drink coffee and not talk. With you. That's it. That's my big dream.
+> Then let's do that. | +3 sip hearts
+  - ...Thanks. Shut up. I'm not crying.
+> That's a great dream. | +2 shy
+  - It's a stupid dream. It's mine. Come on.
+ignored: Quiet house. Quiet me.
+
+scene couple_wife_apron
+who: wife
+mood: happy giddy clingy
+say: I made you an apron. For the cafe. You're working Sundays now. Don't argue. It has your name on it. Badly sewn.
+> Put it on. | +3 shy gift:string
+  - ...It's crooked. It looks stupid. You look stupid. ...Cute stupid.
+> You sewed this for me? | +2 shy
+  - I'm not good at sewing. Don't look at the stitches. Just wear it.
+> I don't want to work Sundays. | -1 huff
+  - Too bad. You married a waitress.
+ignored: Fine. I'll wear it myself.
+
+scene couple_wife_ring
+who: wife
+mood: happy affectionate giddy
+say: I keep looking at the ring. At work. Customers think I'm checking the time. I'm not checking the time.
+> I look at mine too. | +3 shy hearts
+  - ...You do? ...Idiot. Okay.
+> How does it feel? | +2 -> feel
+> Stop looking at it. | 0 kicks
+  - I'll look at it if I want. It's mine.
+page feel
+say: Heavy. Like something that won't go away. In a good way. I don't have many things that don't go away.
+> I won't go away. | +3 hug
+  - ...I know. That's what the ring is for.
+> It suits you. | +2 shy
+  - Everything suits me. ...Thanks.
+ignored: It's still on. Just checking.
+
+scene couple_bored
+who: together
+mood: bored happy
+say: I'm bored. The cafe's dead. Take me somewhere. Anywhere. Somewhere I can kick something.
+> Let's go adventuring. | +2 follow
+  - Finally. Walk faster. Let's find trouble.
+> Spar with me. | +2 kicks
+  - Yes. Finally. Don't hold back. I won't.
+> Bored together here. | +1 lean
+  - ...Fine. This is also okay. Lean back. Don't talk.
+ignored: Bored. Alone. Great.
+
+scene couple_bored_pillow
+who: together
+mood: bored giddy
+when: night home
+say: Pillow fight. Right now. Don't look at me like that. You'll lose.
+> Grab a pillow. | +3 laugh kicks
+  - HA! Got you! ...Got me. No fair. Again!
+> You're on. | +2 giggle
+  - Loser makes coffee for a week.
+> It's too late. | -1 pout
+  - Coward.
+ignored: *throws a pillow at your head anyway*
+
+scene couple_human
+who: together
+when: human
+mood: happy affectionate clingy giddy
+say: You're warm. Humans are always so warm. It's annoying. Stay still.
+> Let her warm up. | +3 cling
+  - ...Okay. This is fine. Don't make it weird.
+> Does it bother you, the smell? | +1 -> smell
+> You're always cold. | +1 shy
+  - I'm a ghoul. We run cold. You're the heater. That's your job now.
+page smell
+say: Sometimes. Mostly no. You smell like you. That's different from smelling like food. ...Mostly.
+> Mostly? | +2 laugh
+  - Mostly. Don't push it.
+> I trust you. | +3 shy hearts
+  - ...I know. I won't let you down.
+ignored: Warm and gone. Typical.
+
+scene couple_ghoul_wings
+who: together
+when: ghoul
+mood: happy giddy affectionate bored
+say: Let's fly. Not fly. Leap. Off the roofs. Wings out. You've got them, use them. Come on.
+> Race her across the roofs. | +3 follow kicks
+  - You're on. Loser buys coffee. ...You're buying coffee.
+> Show me how. | +2 -> how
+> I'm scared of heights. | +1 laugh
+  - A ghoul scared of heights. ...That's adorable. Hold my hand, then.
+page how
+say: Push off with your legs, let the wings catch you. Don't think. Thinking is how you hit a chimney.
+> Jump. | +2 kicks
+  - ...You hit the chimney. Again. Up you get.
+> Hold my hand the first time. | +3 hand shy
+  - ...Fine. Only the first time.
+ignored: Fine. I'll fly alone.
+
+# =====================================================================================================================================
+# TOPICS
+# =====================================================================================================================================
+
+topic cafe
+prompt: How's the cafe?
+who: friend together
+say: Busy. Loud. Somebody asked for a caramel thing with whipped cream. I made it. It hurt my soul.
+> You're good at your job. | +2 shy
+  - I'm great at my job. I'm terrible at liking it. ...I like it.
+> Why work at a cafe? | +1 -> why
+> Sounds boring. | -1 huff
+  - It's quiet. Quiet isn't boring. You wouldn't know.
+page why
+say: Because the manager gave me a place when I didn't have one. Because coffee's the only thing I can drink. Because the regulars are idiots and I like them.
+> That's a good reason. | +2
+  - It's the only reason. Don't make it sound nice.
+> I'm a regular now. | +2 shy
+  - You're an idiot regular. ...That's the best kind.
+
+topic school
+prompt: Why do you go to school?
+who: friend together
+say: Because someone told me I could have a normal life if I wanted it. I want it. Even the exams. Especially the exams. Don't laugh.
+> I'm not laughing. | +2 shy
+  - ...Good. Because I'll pass. You'll see.
+> What do you want to be? | +2 -> be
+> Ghouls don't need school. | -1 huff
+  - Ghouls don't need a lot of things. I want them anyway.
+page be
+say: ...A teacher. Maybe. Kids are less annoying than adults. Barely.
+> You'd be a great teacher. | +3 shy
+  - You've seen me teach. I kick people. ...Thanks.
+> Scary teacher. | +2 laugh
+  - The best kind. They'd pass.
+
+topic rabbit
+prompt: Why a rabbit mask?
+who: friend together
+say: Because it's funny. A rabbit, kicking a Dove through a window. They never see it coming. Nobody fears a rabbit. Until.
+> It's terrifying, actually. | +2 shy
+  - ...Good. That's the point. ...Thanks.
+> It's cute. | +1 kicks
+  - Call it cute again. Go on. I dare you.
+> Can I see it? | +1
+  - No. ...Maybe. If you're good. You're never good.
+
+topic brother
+prompt: Do you have family?
+who: close together
+say: ...A little brother. Somewhere. He's an idiot. He ran off and he doesn't write. I don't miss him. ...I miss him.
+> I'm sure he misses you too. | +3 shy
+  - He'd never say it. ...Neither would I. Runs in the family.
+> We could look for him. | +2 -> look
+> That's rough. | +1
+  - Yeah. It's whatever. Don't make a face.
+page look
+say: No. He doesn't want to be found. And when he does, he'll come. ...He'd better come.
+> He will. | +2 hug
+  - ...Okay. Yeah. He will.
+> I'll be here when he does. | +3 shy hearts
+  - ...You'd better be. He'll hate you. I'll love it.
+
+topic doves
+prompt: What's the deal with the Doves?
+who: friend together
+say: CCG. Investigators. White coats, briefcases, weapons made out of ghouls they killed. They're the reason I sleep with my shoes on.
+> I'll keep you safe from them. | +2 shy
+  - Me? I'll keep YOU safe. ...Fine. Both of us.
+> Have you fought them? | +1 -> fought
+> They're just doing their job. | -2 huff
+  - Their job is murdering people I know. Get out.
+page fought
+say: A few. I've won every time. I'm still alive. That's how you know.
+> That's impressive. | +2
+  - It's not impressive, it's necessary. ...It's a little impressive.
+> Be careful. | +2 shy
+  - I'm always careful. You're the one who isn't.
+
+topic wings
+prompt: Tell me about your wings.
+who: friend together
+say: Ukaku. They come out of my shoulders. Fast, light, they burn out quick. Like me when I'm angry. Don't laugh.
+> They're beautiful. | +2 shy
+  - They're WEAPONS. ...Beautiful weapons. Okay.
+> Can you teach me? | +1
+  - If you've got wings, maybe. Ask me properly. In the lesson bit.
+> They look painful. | +1
+  - Everything that's worth anything hurts a little.
+
+topic coffee_favourite
+prompt: What's your favourite coffee?
+who: friend together
+say: Black. Single origin. From the shop three streets over that's only open on Tuesdays. Nothing else is coffee. Everything else is a lie.
+> I'll get you some. | +2 sip
+  - On a Tuesday. Don't come back with a Wednesday bag. I'll know.
+> That's very specific. | +1 laugh
+  - Good taste is specific. Bad taste is a caramel thing with whipped cream.
+> Coffee's coffee. | -1 huff
+  - Get out of my cafe.
+
+topic hobby
+prompt: What do you do for fun?
+who: friend together
+say: Fun? ...I kick things. I study. I sit on the roof and watch the city. That counts as fun. Shut up.
+> That sounds nice, actually. | +2 shy
+  - ...It is nice. Don't tell anyone. They'll come up on the roof.
+> Take me to the roof sometime. | +2
+  - ...Maybe. If you're quiet. You're never quiet.
+> That's not fun. | -1 kicks
+  - It's MY fun. Find your own.
+
+topic manager
+prompt: What's your manager like?
+who: friend together
+say: Old. Kind. Makes the best coffee in the ward. He took me in when I was a mess. I'd die for that old man. Don't tell him.
+> He sounds wonderful. | +2
+  - He is. He's also nosy. He asked about you. ...Don't let it go to your head.
+> You'd die for him? | +1
+  - Without thinking. ...That's what family is, right?
+> He asked about me? | +2 shy
+  - He asks about everyone. ...He asked twice about you. Shut up.
+
+topic exam_now
+prompt: How did the exam go?
+who: friend together
+when: day
+say: ...I passed. Okay? I PASSED. Don't make a big deal out of it. ...Make a little deal out of it.
+> Congratulations! | +3 shy hearts
+  - ...Thanks. Okay. That's enough. ...Say it once more.
+> I knew you would. | +2 shy
+  - Liar. You didn't. ...Thanks for lying.
+> Was it easy? | 0 huff
+  - No. It was hard. That's why passing counts, idiot.
+
+topic night_roof
+prompt: Want to sit on the roof?
+who: friend together
+when: night
+say: ...Yeah. Okay. Bring a blanket. And don't talk about anything stupid. Or do. I don't care. Just come.
+> Bring a blanket. | +2 follow
+  - Good. You're useful tonight.
+> I'll bring coffee. | +2 sip
+  - Even better. You're learning.
+
+topic rain_talk
+prompt: Do you like the rain?
+who: friend together
+when: rain
+say: It's fine. The cafe's quiet in the rain. People come in wet and grateful. That's the only time customers are nice.
+> I'm always grateful. | +2 shy
+  - You're always wet. Dry off.
+> I love rain. | +1
+  - Weirdo. ...Me too.
+
+topic together_why
+prompt: Why did you say yes to me?
+who: together
+say: Because you were annoying in a way I didn't hate. That's rare. Don't make me say anything nicer than that.
+> Say something nicer. | +2 -> nicer
+> That's the nicest thing you've ever said. | +2 shy
+  - Then you have very low standards. Good. Keep them low.
+page nicer
+say: ...Fine. Because when you're around, I don't have to be angry all the time. There. Never ask again.
+> I love you. | +3 kiss
+  - ...Shut up. ...Me too. Shut UP.
+> Thank you for saying it. | +3 shy hearts
+  - Don't thank me. Just... don't leave.
+
+topic together_love
+prompt: Do you love me?
+who: together
+say: Wh— why would you ASK that? Out loud? In daylight? ...Yes. Obviously. Don't ask again. ...You can ask again sometimes.
+> I love you too. | +3 shy hearts
+  - ...I know. Idiot. Stop smiling.
+> Say it properly. | +2 -> properly
+page properly
+say: *takes a breath* ...I love you. There. Happy? I'm going to go kick something now.
+> Very happy. | +3 hug
+  - Good. ...Don't follow me. Follow me.
+
+topic together_first_kiss
+prompt: Remember our first kiss?
+who: together
+say: Don't. Don't bring that up. I missed. I kissed your nose. You laughed. I almost killed you.
+> It was perfect. | +3 shy
+  - It was a NOSE. ...It was a little perfect.
+> Let's try again. | +3 kiss
+  - Fine. Aim this time. ...Me. I'll aim.
+> I'll never forget it. | +2 kicks
+  - Forget it right now or I'll make you.
+
+topic together_future
+prompt: Where do you see us in ten years?
+who: together
+say: Same cafe. Same window seat. Older. You'll still be an idiot. I'll still be kicking you. ...That's a good future.
+> It's a perfect future. | +3 shy hearts
+  - Don't say perfect. Perfect jinxes things. ...It's a good future.
+> With kids? | +2 shy
+  - ...Maybe. If they're not idiots. They'll be idiots. They'll be ours.
+> Maybe somewhere new. | +1
+  - Maybe. As long as there's a window. And coffee. And you.
+
+topic together_scared
+prompt: What scares you?
+who: together
+say: Losing things. People. I've lost a lot. I don't plan on losing you. So don't be stupid.
+> You won't lose me. | +3 hug
+  - You can't promise that. ...Promise anyway.
+> Me too. | +2 cling
+  - Then we'll hold on. Tight. Ugh, that sounded soft. Forget it.
+
+topic together_hair
+prompt: Can I play with your hair?
+who: together
+say: My hair? ...Fine. Don't mess it up. ...You're messing it up. ...Keep messing it up.
+> Play with her hair. | +3 hair shy
+  - ...That's nice. That's really nice. Don't tell anyone.
+> Braid it. | +3 giggle
+  - You can braid? Who taught you? ...Do the other side.
+
+topic together_kids_want
+prompt: Do you want kids someday?
+who: together
+when: !kids !pregnant
+say: Kids? ...With you? ...I've thought about it. They'd be a nightmare. They'd kick everyone. ...Yeah. Maybe.
+> I'd like that. | +3 shy hearts
+  - ...Okay. Ask me properly one day. Not now. Now I'm blushing. Go away.
+> They'd be terrifying. | +2 laugh
+  - They'd be PERFECT. Terrifyingly perfect.
+
+topic together_wife_cafe
+prompt: Should we open our own cafe?
+who: wife
+say: ...Our own? With a window seat and the good beans and no caramel things? ...You'd really do that?
+> Absolutely. | +3 shy hearts
+  - ...Don't joke about this. ...You're not joking. Okay. Okay. Yes.
+> One day. | +2
+  - One day. I'm holding you to it. I'll pick the name.
+
+# ---------------------------------------------------------------------------------------------------- more for every mood
+
+scene friend_sulk_cup
+who: friend
+mood: sulky
+say: You broke my favourite cup last week. I'm still mad. It had a rabbit on it. Do you know how hard those are to find?
+> I'll find you a new one. | +3 forgive
+  - With a rabbit. A GOOD rabbit. Not a cartoon one. ...Fine. Deal.
+> It was an accident. | +1
+  - Accidents still break cups. ...I'm getting over it. Slowly.
+> It's just a cup. | -2 sulk
+  - JUST a cup. Get out of my sight for a while.
+ignored: I'll drink out of a plain cup. Like an animal.
+
+scene friend_sulk_rude
+who: friend
+mood: sulky
+say: You were rude to a customer yesterday. In MY cafe. Now they think I'm rude too. ...I AM rude. That's not the point.
+> I'll apologise to them. | +3 forgive
+  - ...Good. And tip big. Big enough that they forget your face.
+> You're always rude to customers. | +1 kicks
+  - I'm rude to customers WITH STYLE. You were just rude.
+> They deserved it. | 0 huff
+  - ...They kind of did. I'm still mad. Mostly on principle.
+ignored: Fine. My cafe, my rules. You're banned. For an hour.
+
+scene couple_hungry_restless
+who: together
+mood: hungry
+when: night
+say: I can't sit still. I'm hungry and I'm restless and if you say one annoying thing I'm kicking you into the river. Lovingly.
+> Go for a run with her. | +2 follow kicks
+  - Yes. Fast. Keep up or I'll leave you behind.
+> Hold her still. | +2 hug shy
+  - Wh— ...okay. That works. Weirdly. Don't let go.
+> Say one annoying thing. | +1 laugh
+  - *you're in the river* ...You asked for it.
+ignored: Restless. Alone. Great.
+
+scene couple_hungry_pride
+who: together
+mood: hungry
+when: night
+say: I haven't eaten in days. Don't tell me to eat. I know. I'm just... I don't like hunting near the cafe. It feels wrong.
+> We'll go far away together. | +3 follow
+  - ...Far away. Yeah. Okay. Thanks. Don't tell anyone where we went.
+> I'll find you something. | +2 shy
+  - You don't have to do that. ...You're going to do that anyway. Idiot. Thank you.
+> You need to eat. | +1 huff
+  - I KNOW. I said don't tell me. Ugh. Fine. Tomorrow.
+ignored: I'll go tomorrow. Probably.
