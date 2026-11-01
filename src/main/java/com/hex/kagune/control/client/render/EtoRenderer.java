@@ -302,13 +302,17 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
     }
 
     /** 1.3.30: {@code lines} (top first) in a bubble {@code base} blocks over its name tag's place, a line each, the last at the bottom. */
+    /**
+     * 1.3.38: a real bubble over her (SpeechBubbles: white, a tail to her; a thought cloud for what she does), not a name tag's line;
+     * asleep with nothing said, now and then a cloud of z's.
+     */
     private void bubble(EtoNpc npc, java.util.List<String> lines, double base, PoseStack pose, MultiBufferSource buffers, int light) {
-        for (int i = 0; i < lines.size(); i++) {
-            pose.m_85836_();
-            pose.m_85837_(0.0, base + (lines.size() - 1 - i) * 0.25, 0.0);
-            this.m_7649_(npc, Component.m_237113_(lines.get(i)), pose, buffers, light);
-            pose.m_85849_();
+        float partial = Minecraft.m_91087_().m_91296_();
+        if (lines.isEmpty() && npc.m_5803_()) {
+            SpeechBubbles.snore(npc, PaleClient.clock(partial), pose, buffers);
+            return;
         }
+        SpeechBubbles.draw(npc, lines, base, com.hex.kagune.control.client.NpcSpeech.age(npc.m_19879_(), partial), pose, buffers);
     }
 
     /** The anger mark over her head, to her right, popping in and throbbing, turned to the camera. */

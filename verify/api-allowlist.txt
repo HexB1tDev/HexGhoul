@@ -137,6 +137,9 @@ M net/minecraft/client/gui/components/events/GuiEventListener m_6348_ (DDI)Z    
 M net/minecraft/client/gui/components/events/GuiEventListener m_7920_ (III)Z         # [srg] keyReleased (eqt.b, yarn Element.keyReleased)
 M net/minecraft/client/gui/GuiGraphics m_286007_ (Ljava/lang/Runnable;)V             # [srg] drawManaged (eox.a, yarn DrawContext.draw(Runnable))
 M net/minecraft/client/gui/Font m_92895_ (Ljava/lang/String;)I                       # [srg] width(String) (eov.b, yarn TextRenderer.getWidth)
+M net/minecraft/client/gui/Font m_271703_ (Ljava/lang/String;FFIZLorg/joml/Matrix4f;Lnet/minecraft/client/renderer/MultiBufferSource;Lnet/minecraft/client/gui/Font$DisplayMode;II)I  # [srg] 1.3.38 drawInBatch(String...): joined.tsrg eov m_271703_ (Ljava/lang/String;FFIZLorg/joml/Matrix4f;Lfjx;Leov$a;II)I, yarn TextRenderer.draw
+C net/minecraft/client/gui/Font$DisplayMode                                           # [srg] 1.3.38 eov$a (yarn TextRenderer$TextLayerType, intermediary class_327$class_6415)
+F net/minecraft/client/gui/Font$DisplayMode f_181350_ Lnet/minecraft/client/gui/Font$DisplayMode;  # [srg] 1.3.38 NORMAL: joined.tsrg eov$a a NORMAL 181350
 C net/minecraftforge/client/event/ScreenEvent$Opening                                # [forge] 1.20.1 client/event/ScreenEvent.java (Opening)
 M net/minecraftforge/client/event/ScreenEvent$Opening getNewScreen ()Lnet/minecraft/client/gui/screens/Screen;  # [forge] same
 M net/minecraftforge/client/event/ScreenEvent$Opening setNewScreen (Lnet/minecraft/client/gui/screens/Screen;)V  # [forge] same

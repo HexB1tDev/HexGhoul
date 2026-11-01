@@ -17,8 +17,8 @@ import net.minecraftforge.fml.common.Mod;
  */
 @Mod.EventBusSubscriber(modid = "hexkagune", value = Dist.CLIENT)
 public final class NpcSpeech {
-    /** One bubble: its lines (styled) and the game time it comes down. */
-    record Bubble(List<String> lines, long until) {
+    /** One bubble: its lines (styled), the game time it comes down, and (1.3.38) the game time it went up. */
+    record Bubble(List<String> lines, long until, long from) {
     }
 
     private static final Map<Integer, Bubble> BUBBLES = new HashMap<>();
@@ -41,7 +41,7 @@ public final class NpcSpeech {
         for (String line : Speech.wrap(text)) {
             lines.add(Speech.styled(line, action));
         }
-        BUBBLES.put(npc, new Bubble(List.copyOf(lines), now() + Speech.ticks(text)));
+        BUBBLES.put(npc, new Bubble(List.copyOf(lines), now() + Speech.ticks(text), now()));
     }
 
     /**
@@ -68,6 +68,12 @@ public final class NpcSpeech {
             return List.of();
         }
         return bubble.lines();
+    }
+
+    /** 1.3.38: how long ago (ticks, {@code partial} in) the bubble over {@code npc} went up (huge if there is none). */
+    public static double age(int npc, float partial) {
+        Bubble bubble = BUBBLES.get(npc);
+        return bubble == null ? 1.0E9 : now() - bubble.from() + partial;
     }
 
     @SubscribeEvent

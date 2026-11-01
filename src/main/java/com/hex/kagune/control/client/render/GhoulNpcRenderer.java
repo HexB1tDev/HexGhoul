@@ -116,13 +116,10 @@ public final class GhoulNpcRenderer extends HumanoidMobRenderer<GhoulNpc, Player
             }
             GhoulModel.pose = null;
         }
-        // 1.3.30: what it says, in a bubble over its head (never the chat).
+        // 1.3.30: what it says, in a bubble over its head (never the chat). 1.3.38: a real bubble (SpeechBubbles).
         java.util.List<String> said = com.hex.kagune.control.client.NpcSpeech.lines(npc);
-        for (int i = 0; i < said.size() && !npc.m_20145_(); i++) {
-            pose.m_85836_();
-            pose.m_85837_(0.0, 0.3 + (said.size() - 1 - i) * 0.25, 0.0);
-            this.m_7649_(npc, net.minecraft.network.chat.Component.m_237113_(said.get(i)), pose, buffers, light);
-            pose.m_85849_();
+        if (!npc.m_20145_()) {
+            SpeechBubbles.draw(npc, said, 0.3, com.hex.kagune.control.client.NpcSpeech.age(npc.m_19879_(), partial), pose, buffers);
         }
     }
 

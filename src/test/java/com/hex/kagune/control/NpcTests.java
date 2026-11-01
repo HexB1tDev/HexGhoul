@@ -38,6 +38,7 @@ public final class NpcTests {
     public static void main(String[] args) {
         identity();
         blades();
+        bubbles();
         tempers();
         spawning();
         strength();
@@ -511,5 +512,46 @@ public final class NpcTests {
         check(off < 3.0, "winding out, its free hand grips the forearm (" + off + " px)");
         com.hex.kagune.control.client.animation.RigPose run = com.hex.kagune.control.client.animation.BladeArmPose.run(0.5, 1.0F);
         check(run.lean > 0.3F && run.rightArmHold == 1.0F, "its sprint: pitched forward, the blade arm swept back");
+    }
+
+    /**
+     * 1.3.38: the speech bubble and the thought cloud: every quad above the speaker's head but the tail's tip or the trail's last puff;
+     * the words inside the box; the outline behind the body, the body behind the words; actions make a cloud, words a bubble; words
+     * inked black, thoughts dark grey and slanted; it pops in and settles; a sleeper's z's grow.
+     */
+    static void bubbles() {
+        for (boolean thought : new boolean[] {false, true}) {
+            for (int lines = 1; lines <= 4; lines++) {
+                for (int width : new int[] {6, 40, 180}) {
+                    com.hex.kagune.control.npc.BubbleShape shape = com.hex.kagune.control.npc.BubbleShape.of(width, lines, thought);
+                    int[] quads = {0};
+                    float[] lowest = {-99.0F};
+                    boolean[] layered = {true};
+                    shape.fill((a, b, c, d, argb, depth) -> {
+                        quads[0]++;
+                        for (float[] p : new float[][] {a, b, c, d}) {
+                            lowest[0] = Math.max(lowest[0], p[1]);
+                        }
+                        layered[0] &= depth == com.hex.kagune.control.npc.BubbleShape.OUTLINE_DEPTH
+                            ? argb == (thought ? com.hex.kagune.control.npc.BubbleShape.CLOUD_INK : com.hex.kagune.control.npc.BubbleShape.INK)
+                            : depth == com.hex.kagune.control.npc.BubbleShape.BODY_DEPTH && (argb >>> 24) == 0xFF;
+                    });
+                    String what = (thought ? "cloud " : "bubble ") + lines + "x" + width;
+                    check(quads[0] > 20 && lowest[0] <= 2.0F && lowest[0] >= -0.1F, what + ": over the head, its point at it (" + lowest[0] + ")");
+                    check(layered[0] && com.hex.kagune.control.npc.BubbleShape.OUTLINE_DEPTH > com.hex.kagune.control.npc.BubbleShape.BODY_DEPTH,
+                        what + ": outline behind body, body behind the words");
+                    check(shape.x1 - shape.x0 >= width + 2 * com.hex.kagune.control.npc.BubbleShape.PAD && shape.lineY(0) > shape.y0
+                        && shape.lineY(lines - 1) + 9 <= shape.y1 && shape.y1 < 0.0F, what + ": the words inside the box");
+                }
+            }
+        }
+        check(com.hex.kagune.control.npc.BubbleShape.thought(java.util.List.of("§7§o*stirs*")) && !com.hex.kagune.control.npc.BubbleShape.thought(
+            java.util.List.of("§fHey.")) && !com.hex.kagune.control.npc.BubbleShape.thought(java.util.List.of()), "an action is a cloud, words a bubble");
+        check(com.hex.kagune.control.npc.BubbleShape.ink("§fHey.", false).equals("§0Hey.") && com.hex.kagune.control.npc.BubbleShape.ink("§7§o*sighs*",
+            true).equals("§8§o*sighs*"), "words inked black, thoughts dark grey and slanted");
+        check(com.hex.kagune.control.npc.BubbleShape.pop(0.0) < 0.7F && com.hex.kagune.control.npc.BubbleShape.pop(2.6) > 1.0F
+            && com.hex.kagune.control.npc.BubbleShape.pop(10.0) == 1.0F && com.hex.kagune.control.npc.BubbleShape.pop(1.0E9) == 1.0F, "it pops in and settles");
+        check(com.hex.kagune.control.npc.BubbleShape.zees(0).equals("z") && com.hex.kagune.control.npc.BubbleShape.zees(20).equals("z Z")
+            && com.hex.kagune.control.npc.BubbleShape.zees(50).equals("z Z z"), "a sleeper's z's grow");
     }
 }

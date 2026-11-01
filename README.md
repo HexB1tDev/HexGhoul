@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.38 (HexGhoul): real speech bubbles: white, rounded, outlined, with a tail; thought clouds for actions; a "z Z z" cloud over sleepers (testing)
+
+See `.github/release-notes-1.3.38.md`.
+
 ## 1.3.37 (HexGhoul): a sleeping spouse or child only half wakes when you touch them, drowsy and in their own way; a parent gets up for a CCG investigator by the house too (testing)
 
 See `.github/release-notes-1.3.37.md`.
