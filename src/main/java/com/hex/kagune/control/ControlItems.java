@@ -28,6 +28,10 @@ public final class ControlItems {
     public static final RegistryObject<Item> GHOUL_MEAT = ITEMS.register(GhoulMeat.ID, () -> new Item(new Item.Properties()
         .m_41489_(new FoodProperties.Builder().m_38760_(GhoulMeat.NUTRITION).m_38758_(GhoulMeat.SATURATION).m_38757_().m_38765_().m_38767_())));
 
+    /** 1.3.41: Touka's cookbook (one to a stack), read on a right click ({@code CookbookClient}). */
+    public static final RegistryObject<Item> COOKBOOK = ITEMS.register(com.hex.kagune.control.kitchen.Cookbook.ID,
+        () -> new Item(new Item.Properties().m_41487_(1)));
+
     /** 1.3.2: the ring a proposal is made with (one to a stack). */
     public static final RegistryObject<Item> GOLD_RING = ITEMS.register("gold_ring", () -> new Item(new Item.Properties().m_41487_(1)));
 
@@ -157,6 +161,11 @@ public final class ControlItems {
         return null;
     }
 
+    /** 1.3.41: true for Touka's cookbook. */
+    public static boolean cookbook(ItemStack stack) {
+        return stack != null && !stack.m_41619_() && stack.m_41720_() == COOKBOOK.get();
+    }
+
     /** True for the Gold Ring. */
     public static boolean ring(ItemStack stack) {
         return stack != null && !stack.m_41619_() && stack.m_41720_() == GOLD_RING.get();
@@ -181,7 +190,8 @@ public final class ControlItems {
         public static void tabs(BuildCreativeModeTabContentsEvent event) {
             if (event.getTabKey() == CreativeModeTabs.f_256839_) {
                 event.accept(GHOUL_MEAT);
-                // 1.3.40: the kitchen, in the cookbook's order.
+                // 1.3.41: the cookbook; 1.3.40: the kitchen, in its order.
+                event.accept(COOKBOOK);
                 for (RegistryObject<Item> dish : DISHES.values()) {
                     event.accept(dish);
                 }

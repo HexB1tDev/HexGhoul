@@ -50,15 +50,30 @@ TEXT = {
     "tooltip.hexkagune.kitchen.grows": "§8Devoured, you'd be at: strength %s, RC lasts %s",
     "tooltip.hexkagune.kitchen.human_meat": "§cContains human meat",
     "tooltip.hexkagune.kitchen.effect": "§9%s%s (%s)",
+    # 1.3.41: Touka's cookbook.
+    "item.hexkagune.ghoul_cookbook": "The Ghoul's Kitchen",
+    "item.hexkagune.ghoul_cookbook.about": "§7§oTouka's recipes, in her handwriting. Right-click to read.",
+    "book.hexkagune.cookbook.title": "The Ghoul's Kitchen",
+    "book.hexkagune.cookbook.subtitle": "Recipes for a ghoul's table.",
+    "book.hexkagune.cookbook.contents": "Contents",
+    "book.hexkagune.cookbook.effects": "The Kitchen's Own Effects",
+    "book.hexkagune.cookbook.in_chapter": "In this chapter",
+    "book.hexkagune.cookbook.pick": "Pick a dish.",
+    "book.hexkagune.cookbook.hunted": "No recipe: it comes off a human. Find one, and catch it.",
+    "book.hexkagune.cookbook.seared": "furnace, smoker, fire",
+    "book.hexkagune.cookbook.fills": "Fills",
+    "book.hexkagune.cookbook.ghoul_meat": "Contains ghoul meat",
+    "book.hexkagune.cookbook.ghoul_meat_pieces": "Contains ghoul meat (%s)",
+    "book.hexkagune.cookbook.human_meat": "Contains human meat",
 }
 
 CHAPTERS = [
-    ("basics", "The Basics"),
-    ("breads", "Breads and Sandwiches"),
-    ("bowls", "Bowls"),
-    ("plates", "The Grill and the Plate"),
-    ("sweets", "Sweets"),
-    ("drinks", "Drinks"),
+    ("basics", "The Basics", "Where every recipe starts: the meat, its blood, its broth."),
+    ("breads", "Breads and Sandwiches", "Bread round meat. Quick, filling, easy to carry."),
+    ("bowls", "Bowls", "Stews, soups, noodles. Slow food for a warm home."),
+    ("plates", "The Grill and the Plate", "Skewers, roasts, tartares, sushi: dinner on a plate."),
+    ("sweets", "Sweets", "Cakes, cookies and little things to make a ghoul smile."),
+    ("drinks", "Drinks", "Coffee, tea and tonics. A café's whole menu."),
 ]
 
 
@@ -347,8 +362,9 @@ def lang():
     for (key, name, _colour, what) in EFFECTS:
         data[f"effect.hexkagune.{key}"] = name
         data[f"effect.hexkagune.{key}.description"] = what
-    for (key, name) in CHAPTERS:
+    for (key, name, intro) in CHAPTERS:
         data[f"book.hexkagune.cookbook.chapter.{key}"] = name
+        data[f"book.hexkagune.cookbook.chapter.{key}.intro"] = intro
     data.update(TEXT)
     LANG.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
@@ -368,7 +384,7 @@ def java(pieces, human):
         lines.append(f'        new Dish("{d["id"]}", "{d["chapter"]}", Dish.Kind.{d["kind"].upper()}, {d["food"][0]}, {d["food"][1]}F, '
                      f'{pieces.get(H + d["id"], 0)}, {str(H + d["id"] in human).lower()}, {container}, {d["makes"]}, {recipe},\n'
                      f'            new Dish.Effect[] {{{effects}}}),')
-    chapters = ", ".join('"' + c[0] + '"' for c in CHAPTERS)
+    chapters = ", ".join('"' + c[0] + '"' for c in CHAPTERS)  # (key, name, intro)
     effects = ", ".join(f'new Kitchen("{k}", 0x{c:06X})' for (k, _n, c, _w) in EFFECTS)
     text = f'''package com.hex.kagune.control.kitchen;
 

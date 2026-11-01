@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.41 (HexGhoul): Home Living, part 2: Touka's cookbook (trade it for two cocoa beans) and its illustrated book (testing)
+
+See `.github/release-notes-1.3.41.md`.
+
 ## 1.3.40 (HexGhoul): Home Living, part 1: the ghoul kitchen (66 foods with their own icons, recipes and effects), The Human, mutants, endless ghoul-meat growth, homes by biome (testing)
 
 See `.github/release-notes-1.3.40.md`.

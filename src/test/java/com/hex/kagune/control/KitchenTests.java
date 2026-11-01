@@ -39,6 +39,7 @@ public final class KitchenTests {
         files();
         rules();
         human();
+        cookbook();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -167,6 +168,59 @@ public final class KitchenTests {
         check(Dishes.time(1200).equals("1:00") && Dishes.time(1800).equals("1:30") && Dishes.time(100).equals("0:05"), "time text");
         check(Dishes.level(0).isEmpty() && Dishes.level(1).equals(" II"), "level text");
         check(Dishes.CLEARED.length == 3 && Dishes.CLEAR_SIGHT_FAR > 1.0F, "clear sight clears");
+    }
+
+    /** 1.3.41: Touka's cookbook: its spreads, its pictures, its words. */
+    static void cookbook() throws IOException {
+        List<com.hex.kagune.control.kitchen.Cookbook.Spread> spreads = com.hex.kagune.control.kitchen.Cookbook.spreads();
+        check(spreads.size() == 2 + Menu.CHAPTERS.length + Menu.DISHES.length, "a cover, a spread a chapter, one a dish, the effects");
+        check(spreads.get(0).kind() == com.hex.kagune.control.kitchen.Cookbook.Kind.COVER, "it opens on its cover");
+        check(spreads.get(spreads.size() - 1).kind() == com.hex.kagune.control.kitchen.Cookbook.Kind.EFFECTS, "the effects at the back");
+        for (String chapter : Menu.CHAPTERS) {
+            int at = com.hex.kagune.control.kitchen.Cookbook.chapterAt(chapter);
+            check(at > 0 && spreads.get(at).chapter().equals(chapter) && spreads.get(at).kind() == com.hex.kagune.control.kitchen.Cookbook.Kind.CHAPTER,
+                chapter + " has its spread");
+            check(Files.isRegularFile(Path.of("src/main/resources/assets/hexkagune/textures/gui/cookbook/" + chapter + ".png")), chapter + " has its picture");
+        }
+        for (Dish dish : Menu.DISHES) {
+            int at = com.hex.kagune.control.kitchen.Cookbook.dishAt(dish.id());
+            check(at > com.hex.kagune.control.kitchen.Cookbook.chapterAt(dish.chapter()) && spreads.get(at).dish() == dish, dish.id() + " has its page in its chapter");
+        }
+        check(com.hex.kagune.control.kitchen.Cookbook.dishAt("nothing") == -1, "no page for no dish");
+        check(com.hex.kagune.control.kitchen.Cookbook.clamp(-4) == 0 && com.hex.kagune.control.kitchen.Cookbook.clamp(9999) == spreads.size() - 1, "kept in the book");
+        check(com.hex.kagune.control.kitchen.Cookbook.pageNumber(0) == 1 && com.hex.kagune.control.kitchen.Cookbook.pageNumber(3) == 7, "page numbers");
+        check(com.hex.kagune.control.kitchen.Cookbook.affordable(20, 2) && !com.hex.kagune.control.kitchen.Cookbook.affordable(19, 64)
+            && !com.hex.kagune.control.kitchen.Cookbook.affordable(100, 1), "two cocoa beans, once she likes you");
+        List<String> lines = com.hex.kagune.control.kitchen.Cookbook.wrap("one two three four five six", 9, String::length);
+        check(lines.equals(List.of("one two", "three", "four five", "six")), "wrapped at the spaces: " + lines);
+        check(com.hex.kagune.control.kitchen.Cookbook.wrap("enormousword small", 4, String::length).get(0).equals("enormousword"), "a long word alone");
+        check(com.hex.kagune.control.kitchen.Cookbook.wrap("", 10, String::length).isEmpty(), "nothing to wrap");
+        for (int seed = 0; seed < 6; seed++) {
+            check(!com.hex.kagune.control.kitchen.Cookbook.price(seed).isEmpty() && !com.hex.kagune.control.kitchen.Cookbook.given(seed).isEmpty(), "her lines");
+        }
+        for (String picture : new String[] {"cover", "backdrop"}) {
+            check(Files.isRegularFile(Path.of("src/main/resources/assets/hexkagune/textures/gui/cookbook/" + picture + ".png")), picture + " drawn");
+        }
+        check(Files.isRegularFile(Path.of("src/main/resources/assets/hexkagune/textures/gui/cookbook.png")), "the book drawn");
+        check(Files.isRegularFile(Path.of("src/main/resources/assets/hexkagune/textures/item/ghoul_cookbook.png")), "the book's icon");
+        String lang = read("src/main/resources/assets/hexkagune/lang/en_us.json");
+        String screen = read("src/main/java/com/hex/kagune/control/client/CookbookScreen.java");
+        java.util.regex.Matcher keys = java.util.regex.Pattern.compile("\"(book\\.hexkagune\\.cookbook\\.[a-z_]+)\"").matcher(screen);
+        int found = 0;
+        while (keys.find()) {
+            found++;
+            check(lang.contains("\"" + keys.group(1) + "\":"), "the book's words: " + keys.group(1));
+        }
+        check(found >= 10, "the screen's words checked: " + found);
+        for (String chapter : Menu.CHAPTERS) {
+            check(lang.contains("\"book.hexkagune.cookbook.chapter." + chapter + ".intro\":"), chapter + " has its few words");
+        }
+        for (Menu.Kitchen effect : Menu.EFFECTS) {
+            check(lang.contains("\"effect.hexkagune." + effect.key() + ".description\":"), effect.key() + " explained");
+        }
+        String server = read("src/main/java/com/hex/kagune/control/server/EtoServer.java");
+        check(server.contains("withCookbook(player, npc, page)") && server.contains("\"cookbook\""), "Touka offers it on her first page");
+        check(server.contains("Persona.TOUKA") && server.contains("Cookbook.affordable("), "only Touka, only for the beans");
     }
 
     static void human() {

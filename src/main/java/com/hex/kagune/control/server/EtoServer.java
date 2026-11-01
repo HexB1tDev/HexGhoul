@@ -359,6 +359,27 @@ public final class EtoServer {
             }
             return;
         }
+        if (key.equals("cookbook")) {
+            // 1.3.41: Touka's cookbook, for the two cocoa beans in your hand.
+            net.minecraft.world.item.ItemStack held = player.m_21205_();
+            int seed = npc.m_217043_().m_188503_(100);
+            net.minecraft.world.item.Item beans = com.hex.kagune.control.ControlItems.vanilla("minecraft:cocoa_beans");
+            int count = beans != null && !held.m_41619_() && held.m_41720_() == beans ? held.m_41613_() : 0;
+            if (!com.hex.kagune.control.kitchen.Cookbook.affordable(QuestServer.bond(player, npc.persona().key()).regard(), count)) {
+                show(player, npc, c, script.main(c, com.hex.kagune.control.kitchen.Cookbook.price(seed)), Kind.MAIN);
+                return;
+            }
+            if (!player.m_7500_()) {
+                held.m_41774_(com.hex.kagune.control.kitchen.Cookbook.PRICE);
+            }
+            net.minecraft.world.item.ItemStack book = new net.minecraft.world.item.ItemStack(com.hex.kagune.control.ControlItems.COOKBOOK.get(), 1);
+            if (!player.m_36356_(book)) {
+                player.m_36176_(book, false);
+            }
+            carry(player, npc, c, choice, new EtoTalk.Reply(com.hex.kagune.control.kitchen.Cookbook.given(seed), 2, EtoTalk.Effect.NONE, EtoGesture.NONE),
+                Kind.MAIN);
+            return;
+        }
         if (key.equals("gohome")) {
             // 1.3.29: "Go home, please.": to the home she shares with her spouse, or back where she belongs; the talk ends there.
             Going going = going(player, npc);
@@ -950,9 +971,34 @@ public final class EtoServer {
         return new EtoTalk.Page(page.line(), out);
     }
 
+    /**
+     * 1.3.41: Touka's first page offers her cookbook ("Got any recipes? For ghouls.") once she likes you
+     * ({@link com.hex.kagune.control.kitchen.Cookbook#REGARD}), before the goodbye, if there is room. She asks two cocoa beans for it.
+     */
+    private static EtoTalk.Page withCookbook(ServerPlayer player, EtoNpc npc, EtoTalk.Page page) {
+        if (npc.persona() != com.hex.kagune.control.npc.Persona.TOUKA || page.options().size() >= S2CNpcTalk.MOST
+            || QuestServer.bond(player, npc.persona().key()).regard() < com.hex.kagune.control.kitchen.Cookbook.REGARD) {
+            return page;
+        }
+        int at = page.options().size();
+        for (int i = 0; i < page.options().size(); i++) {
+            NpcTalk.Choice choice = page.options().get(i).choice();
+            if (choice == NpcTalk.Choice.SAY_6) {
+                return page;
+            }
+            if (choice == NpcTalk.Choice.LEAVE || choice == NpcTalk.Choice.INSULT || choice == NpcTalk.Choice.TEASE) {
+                at = Math.min(at, i);
+            }
+        }
+        List<EtoTalk.Option> out = new java.util.ArrayList<>(page.options());
+        out.add(at, new EtoTalk.Option(NpcTalk.Choice.SAY_6, com.hex.kagune.control.kitchen.Cookbook.ASK, "cookbook"));
+        return new EtoTalk.Page(page.line(), out);
+    }
+
     private static void show(ServerPlayer player, EtoNpc npc, EtoTalk.Context context, EtoTalk.Page page, Kind kind) {
         if (kind == Kind.MAIN) {
             page = withHome(player, npc, page);
+            page = withCookbook(player, npc, page);
             page = withLesson(player, npc, page);
         }
         List<EtoTalk.Option> options = page.options().size() > S2CNpcTalk.MOST ? page.options().subList(0, S2CNpcTalk.MOST) : page.options();
