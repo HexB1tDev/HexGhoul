@@ -23,6 +23,7 @@ public final class PathTests {
         ordinals();
         unmarkedProfiles();
         owed();
+        colours();
         if (!FAILURES.isEmpty()) {
             FAILURES.forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -88,5 +89,38 @@ public final class PathTests {
         check(KagunePath.forUnmarkedProfile(true, 1000, -1L, false) == KagunePath.RINKAKU, "a veteran is never asked");
         check(KagunePath.forUnmarkedProfile(false, 1000, -1L, false) == KagunePath.NONE,
             "a locked profile is never auto-assigned; it chooses when unlocked again");
+    }
+
+    /**
+     * 1.3.34: a Rinkaku kagune's random colour: any hue, never a muddy grey or too dark to see (the rare black and bone excepted), its
+     * veins its own hue and much darker; the original's crimson is the default it replaces; names and hex read right.
+     */
+    private static void colours() {
+        java.util.Random random = new java.util.Random(7L);
+        int[] hues = new int[12];
+        int rare = 0;
+        for (int i = 0; i < 4000; i++) {
+            KaguneColours.Pick pick = KaguneColours.roll(random::nextDouble);
+            if (pick.colour() == KaguneColours.BLACK || pick.colour() == KaguneColours.BONE) {
+                rare++;
+                continue;
+            }
+            double[] hsv = KaguneColours.toHsv(pick.colour());
+            double[] vein = KaguneColours.toHsv(pick.vein());
+            check(hsv[1] >= 0.5 && hsv[2] >= 0.4, "a rolled colour is vivid and light enough to see: " + KaguneColours.hex(pick.colour()));
+            double apart = Math.abs(vein[0] - hsv[0]);
+            check(vein[2] < hsv[2] * 0.3 && (apart < 0.05 || apart > 0.95),
+                "its veins are its own hue, much darker: " + KaguneColours.hex(pick.vein()));
+            hues[(int)(hsv[0] * 12) % 12]++;
+        }
+        for (int i = 0; i < 12; i++) {
+            check(hues[i] > 150, "every hue comes up (" + i + ": " + hues[i] + ")");
+        }
+        check(rare > 150 && rare < 500, "the rare black and bone come up now and then (" + rare + " of 4000)");
+        check(KaguneColours.DEFAULT == com.hex.kagune.data.KaguneProfile.DEFAULT_COLOR, "the default it replaces is the original's crimson");
+        check(KaguneColours.hex(0x0A0B0C).equals("#0A0B0C") && KaguneColours.name(KaguneColours.hsv(0.455, 0.8, 0.7)).endsWith("teal")
+            && KaguneColours.name(KaguneColours.hsv(0.75, 0.9, 0.9)).contains("violet") && KaguneColours.name(KaguneColours.BONE).equals("bone white"),
+            "a colour's name and hex");
+        check(KaguneColours.hsv(0.0, 1.0, 1.0) == 0xFF0000 && KaguneColours.hsv(1.0 / 3.0, 1.0, 1.0) == 0x00FF00, "hsv round trips");
     }
 }

@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.34 (HexGhoul): every Rinkaku kagune gets a random colour of its own; /kagune color reroll for another (testing)
+
+See `.github/release-notes-1.3.34.md`.
+
 ## 1.3.33 (HexGhoul): the crystal launcher rebuilt as a real gun with a rifle hold and twice the fire rate; both hands stay on two-handed quinques through every combo; new M1s for every quinque; a tap of right click folds a quinque back into its case; investigators dash left and right with brief afterimages (testing)
 
 See `.github/release-notes-1.3.33.md`.
