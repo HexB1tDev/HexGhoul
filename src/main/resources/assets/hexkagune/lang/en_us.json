@@ -153,6 +153,8 @@
   "subtitles.hexkagune.sfx.windup_clash": "A massive clash",
   "subtitles.hexkagune.sfx.ground": "Stone breaks",
   "subtitles.hexkagune.sfx.transform": "Kagune transforms",
+  "subtitles.hexkagune.sfx.case_open": "A quinque case unlocks",
+  "subtitles.hexkagune.sfx.case_close": "A quinque case locks",
   "item.hexkagune.quinque_case_bikaku": "Quinque Case (Bikaku)",
   "item.hexkagune.quinque_bikaku_blade": "Bikaku Quinque Blade",
   "item.hexkagune.quinque_case_koukaku": "Quinque Case (Koukaku)",

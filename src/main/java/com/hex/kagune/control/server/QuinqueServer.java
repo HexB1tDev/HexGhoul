@@ -134,14 +134,15 @@ public final class QuinqueServer {
         next.m_41751_(kept);
         who.m_21008_(InteractionHand.MAIN_HAND, next);
         Vec3 at = who.m_20182_().m_82520_(0.0, who.m_20206_() * 0.6, 0.0);
+        // 1.3.28: the case's own mechanism (tools/case_sfx.py): opening, its two latches thumbed back, a servo spinning up, plates
+        // sliding out and the lock home, with the weapon's own ring under it; shutting, the servo back, the halves meeting and the
+        // latches snapped shut. Both last the 12 ticks it takes.
+        float pitch = 0.96F + 0.08F * (float)who.m_217043_().m_188500_();
         if (opening) {
-            // The latch, the case unfolding, the weapon locking out (the owner's own pack, as every sound in the mod).
-            UkakuFire.sound(level, at, "hexkagune:centipede_click", 0.8F, 1.5F);
-            UkakuFire.sound(level, at, "hexkagune:sfx.transform.organic_armor_shift", 0.6F, 1.3F);
-            UkakuFire.sound(level, at, quinque == Quinque.SPEAR ? "hexkagune:sfx.chitin" : "hexkagune:sfx.blade_arc", 0.7F, 1.1F);
+            UkakuFire.sound(level, at, "hexkagune:sfx.case_open", 1.0F, pitch);
+            UkakuFire.sound(level, at, quinque == Quinque.SPEAR ? "hexkagune:sfx.chitin" : "hexkagune:sfx.blade_arc", 0.35F, 1.1F);
         } else {
-            UkakuFire.sound(level, at, "hexkagune:kagune_dismiss", 0.6F, 1.3F);
-            UkakuFire.sound(level, at, "hexkagune:centipede_click", 0.8F, 1.3F);
+            UkakuFire.sound(level, at, "hexkagune:sfx.case_close", 1.0F, pitch);
         }
         return true;
     }

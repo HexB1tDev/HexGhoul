@@ -32,7 +32,7 @@ public final class QuinqueClient {
     static void register() {
         ResourceLocation id = ResourceLocation.m_214293_("hexkagune", Quinque.PROPERTY);
         for (Quinque quinque : Quinque.values()) {
-            ItemProperties.m_174570_(ControlItems.caseOf(quinque), id, (stack, level, entity, seed) -> shown(stack, false));
+            ItemProperties.m_174570_(ControlItems.caseOf(quinque), id, (stack, level, entity, seed) -> caseFrame(stack, entity));
             ItemProperties.m_174570_(ControlItems.weaponOf(quinque), id, (stack, level, entity, seed) -> shown(stack, true));
         }
     }
@@ -142,6 +142,23 @@ public final class QuinqueClient {
                 SWINGS.computeIfAbsent(player.m_19879_(), id -> new Swing()).shot = PaleClient.clock(0.0F);
             }
         }
+    }
+
+    /**
+     * 1.3.28: the frame a shut case is drawn in ({@code holder}: who holds it, or null): as it opens, its opening frames; shut, in an
+     * investigator's hand, the carried frame solved for its arms (AgentPose.caseFrame), in anyone else's the plain shut case.
+     */
+    static float caseFrame(ItemStack stack, net.minecraft.world.entity.LivingEntity holder) {
+        float shown = shown(stack, false);
+        try {
+            if (holder instanceof com.hex.kagune.control.npc.CcgAgent agent) {
+                com.hex.kagune.control.npc.AgentRules.Look look = agent.look();
+                return com.hex.kagune.control.client.animation.AgentPose.caseFrame(shown, true, look.slim() || look.female());
+            }
+        } catch (RuntimeException failure) {
+            // (its look unreadable: drawn as anyone's)
+        }
+        return com.hex.kagune.control.client.animation.AgentPose.caseFrame(shown, false, false);
     }
 
     /** How far out {@code stack} is drawn now. */

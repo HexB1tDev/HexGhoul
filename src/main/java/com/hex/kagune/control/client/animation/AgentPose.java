@@ -183,4 +183,119 @@ public final class AgentPose {
     public static float running(double speed) {
         return (float)Math.max(0.0, Math.min(1.0, (speed - 0.16) / 0.12));
     }
+
+    // ---------------------------------------------------------------- 1.3.28: its case carried by the handle
+
+    /**
+     * Its carrying arm's turn in the world (radians: the right arm hanging straight down, a touch out from the body so the case clears
+     * its leg). The case's carried frames (tools/quinque_models.py CARRY_X, CARRY_Z) are solved for exactly this arm: the handle bar in
+     * the middle of the fist, the case hanging plumb below it, its latches out, its length along the stride.
+     */
+    public static final float CARRY_X = 0.0F;
+    public static final float CARRY_Z = 0.1F;
+    /** The deploy values that pick the case's carried frames (wide arms, slim arms), and the first of its opening frames (above both). */
+    public static final float CARRIED_WIDE = 0.05F;
+    public static final float CARRIED_SLIM = 0.1F;
+    public static final float OPENING_FRAME = 0.2F;
+    /** How far the carrying arm swings with a walk's stride and a run's (radians each way): a heavy case swings little. */
+    static final float SWAY_WALK = 0.1F;
+    static final float SWAY_RUN = 0.18F;
+
+    /**
+     * The deploy value a shut case is drawn at ({@code shown}: how far it is drawn opening, 0 shut): its opening frames as they come;
+     * otherwise, in an investigator's hand ({@code slim}: its arms), the carried frame solved for its arms, and anyone else's the plain
+     * shut case (fitted to vanilla's holding arm; never a carried frame, which is fitted to an investigator's).
+     */
+    public static float caseFrame(float shown, boolean investigator, boolean slim) {
+        if (shown >= OPENING_FRAME) {
+            return shown;
+        }
+        if (!investigator || shown > 0.0F) {
+            // (an investigator's case just starting to open has its arms already in the opening pose, QuinquePose.HELD: the plain frame)
+            return 0.0F;
+        }
+        return slim ? CARRIED_SLIM : CARRIED_WIDE;
+    }
+
+    /**
+     * Its case carried by the handle, on {@code p}'s right arm: the arm hangs plumb from the shoulder whatever the body is doing (the
+     * lean and the sideways tip taken back out of it, so the case hangs straight down from the fist; the shoulders' turn too, so the
+     * case stays along the stride and its corners never swing in against the hip), a touch out from the body, swinging {@code sway}
+     * (radians) with the stride. Put on after everything else that moves the body.
+     */
+    public static void carry(RigPose p, float sway) {
+        p.rightArmX = CARRY_X + sway - p.lean;
+        p.rightArmY = -p.twist;
+        p.rightArmZ = CARRY_Z - p.side;
+        p.rightArmHold = 1.0F;
+    }
+
+    /**
+     * The carrying arm's swing at {@code phase} of the stride: {@code walk} (0..1) of a walk's on vanilla's legs (which swing on
+     * {@code cos}), {@code run} (0..1) of its run's (whose legs swing on {@code sin}); always against the right leg, as an arm swings.
+     */
+    public static float sway(double phase, float walk, float run) {
+        float r = clamp01(run);
+        float w = clamp01(walk) * (1.0F - r);
+        return -(SWAY_WALK * w * (float)Math.cos(phase) + SWAY_RUN * r * (float)Math.sin(phase));
+    }
+
+    // ---------------------------------------------------------------- 1.3.28: standing about
+
+    /** The lean back of its idle (radians), the tip of its upper body off its weighted leg, its breath's and its glance's periods (ticks). */
+    static final float IDLE_LEAN = -0.1F;
+    static final float IDLE_SIDE = 0.04F;
+    static final double IDLE_BREATH = 74.0;
+    static final double IDLE_GLANCE = 230.0;
+
+    /** How still it stands at {@code speed} (blocks a tick along the ground): 1 at rest, none at a walk. */
+    public static float still(double speed) {
+        return (float)Math.max(0.0, Math.min(1.0, 1.0 - (speed - 0.015) / 0.05));
+    }
+
+    /**
+     * Standing about ({@code amount}: 0..1 of it, put on {@code p}): relaxed and a little cocky. It leans back from the hips; its weight
+     * is on its right leg (the case's side), the left one loose, a little forward, out and turned out; its upper body tips a touch away
+     * from the case's weight; its chest is turned a little open, its head cocked; its free arm hangs back, loose. It breathes (the
+     * chest and the shoulders rising and falling) and now and then looks off to one side. {@code age}: ticks; {@code seed} (its id)
+     * keeps two of them from breathing and looking about as one.
+     */
+    public static void idle(RigPose p, double age, int seed, float amount) {
+        float k = clamp01(amount);
+        if (k <= 0.0F) {
+            return;
+        }
+        double breath = Math.sin((age + (seed & 63) * 3.1) * (2.0 * Math.PI / IDLE_BREATH));
+        double look = Math.sin((age + (seed >> 6 & 127) * 5.3) * (2.0 * Math.PI / IDLE_GLANCE));
+        // Mostly looking ahead, now and then off to a side and back (the cube keeps it near zero most of the way round).
+        float glance = (float)(look * look * look);
+        p.lean += (IDLE_LEAN + 0.012F * (float)breath) * k;
+        p.side += IDLE_SIDE * k;
+        p.twist += -0.08F * k;
+        p.headY += 0.38F * glance * k;
+        p.headZ += 0.07F * k;
+        p.rightShoulderY += -0.2F * (float)breath * k;
+        p.leftShoulderY += -0.2F * (float)breath * k;
+        // The legs: its weight on the right, the left loose.
+        p.rightLegX = blend(p.rightLegX, 0.03F, k);
+        p.rightLegY = blend(p.rightLegY, 0.0F, k);
+        p.rightLegZ = blend(p.rightLegZ, 0.03F, k);
+        p.leftLegX = blend(p.leftLegX, -0.15F, k);
+        p.leftLegY = blend(p.leftLegY, -0.24F, k);
+        p.leftLegZ = blend(p.leftLegZ, -0.09F, k);
+        p.legHold = Math.max(p.legHold, k);
+        // The free arm: hanging a little back of straight down (its lean taken out), out a little, loose.
+        p.leftArmX = blend(p.leftArmX, 0.08F - p.lean + 0.02F * (float)breath, k);
+        p.leftArmY = blend(p.leftArmY, 0.12F, k);
+        p.leftArmZ = blend(p.leftArmZ, -0.07F - p.side, k);
+        p.leftArmHold = Math.max(p.leftArmHold, k);
+    }
+
+    static float blend(float from, float to, float k) {
+        return from + (to - from) * k;
+    }
+
+    static float clamp01(float v) {
+        return Float.isFinite(v) ? Math.max(0.0F, Math.min(1.0F, v)) : 0.0F;
+    }
 }

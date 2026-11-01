@@ -15,6 +15,10 @@ import net.minecraft.world.item.ItemStack;
  * 1.3.27: a CCG investigator's pose as this client draws it, from what its entity data says ({@link CcgAgent}): a flip over everything
  * (a player's, {@code PaleMotions.flip}); otherwise its run (AgentPose: the same for every one of them) under its quinque (a swing of its
  * string, a parry, the case opening or shutting, its stance, the launcher's kick) and a dash on top. Pure reading: nothing is kept.
+ *
+ * <p>1.3.28: standing about out of a fight it idles (AgentPose.idle: leaning back, its weight on one leg); its shut case is carried by
+ * the handle (AgentPose.carry: the arm hanging plumb whatever the body does, swinging a little with its stride), the case drawn in its
+ * carried frame (QuinqueClient.caseFrame) so it hangs straight down from the fist.
  */
 public final class AgentClient {
     private AgentClient() {
@@ -68,6 +72,13 @@ public final class AgentClient {
             take(p, arms);
             posed = true;
         }
+        // 1.3.28: standing about with its case shut: its idle.
+        boolean carried = weapon == null && (shut == null || QuinqueClient.shown(held, false) <= 0.0F);
+        float still = carried ? AgentPose.still(speed) : 0.0F;
+        if (still > 0.0F) {
+            AgentPose.idle(p, agent.f_19797_ + partial, agent.m_19879_(), still);
+            posed = true;
+        }
         if (weapon != null && weapon.ranged) {
             double shot = CcgAgent.since(now, agent.shotAt()) + partial;
             if (shot >= 0.0 && shot < 5.0) {
@@ -78,6 +89,11 @@ public final class AgentClient {
         double dashAge = CcgAgent.since(now, agent.dashAt()) + partial;
         if (dashAge >= 0.0 && dashAge < AgentPose.DASH_TICKS) {
             AgentPose.dash(p, agent.dash(), dashAge / AgentPose.DASH_TICKS);
+            posed = true;
+        }
+        // 1.3.28: its case shut, carried by the handle (last: the arm hangs plumb from wherever the body has gone).
+        if (carried && shut != null) {
+            AgentPose.carry(p, AgentPose.sway(phase, (float)Math.min(1.0, speed / 0.1), run));
             posed = true;
         }
         return posed ? p : null;

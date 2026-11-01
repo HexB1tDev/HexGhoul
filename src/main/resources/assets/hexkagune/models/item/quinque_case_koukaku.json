@@ -3,6 +3,18 @@
  "overrides": [
   {
    "predicate": {
+    "hexkagune:deploy": 0.05
+   },
+   "model": "hexkagune:item/quinque/koukaku_case_carried"
+  },
+  {
+   "predicate": {
+    "hexkagune:deploy": 0.1
+   },
+   "model": "hexkagune:item/quinque/koukaku_case_carried_slim"
+  },
+  {
+   "predicate": {
     "hexkagune:deploy": 0.2
    },
    "model": "hexkagune:item/quinque/koukaku_case_open"

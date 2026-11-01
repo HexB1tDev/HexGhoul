@@ -785,6 +785,32 @@
       }
     ]
   },
+  "sfx.case_open": {
+    "subtitle": "subtitles.hexkagune.sfx.case_open",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/quinque/case_open_1",
+        "volume": 0.86
+      },
+      {
+        "name": "hexkagune:sfx/quinque/case_open_2",
+        "volume": 0.78
+      }
+    ]
+  },
+  "sfx.case_close": {
+    "subtitle": "subtitles.hexkagune.sfx.case_close",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/quinque/case_close_1",
+        "volume": 0.73
+      },
+      {
+        "name": "hexkagune:sfx/quinque/case_close_2",
+        "volume": 0.92
+      }
+    ]
+  },
   "sfx.windup_clash": {
     "subtitle": "subtitles.hexkagune.sfx.windup_clash",
     "sounds": [

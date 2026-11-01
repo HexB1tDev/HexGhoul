@@ -135,7 +135,10 @@ public final class QuinqueTests {
                     }
                     frames++;
                 }
-                check(frames == 4 && previous > 0.9 && previous <= 1.0, item + ": four frames past its shut case, the last all the way out");
+                // 1.3.28: a case also has an investigator's two carried frames (ahead of the four opening ones); a weapon never does.
+                int expected = item.equals(q.caseId) ? 6 : 4;
+                check(frames == expected && previous > 0.9 && previous <= 1.0, item + ": " + expected + " frames past its shut case, the last all the way out");
+                check(json.contains("case_carried") == item.equals(q.caseId), item + ": the carried frames on the case alone");
                 Matcher parent = Pattern.compile("\"parent\"\\s*:\\s*\"hexkagune:([a-z_/]+)\"").matcher(json);
                 check(parent.find() && read("assets/hexkagune/models/" + parent.group(1) + ".json") != null, item + ": its shut case model exists");
                 check(lang != null && lang.contains("\"item.hexkagune." + item + "\""), item + " has a name");
@@ -144,6 +147,16 @@ public final class QuinqueTests {
         }
         check(lang != null && lang.contains("item.hexkagune.quinque.open") && lang.contains("item.hexkagune.quinque.close")
             && lang.contains("item.hexkagune.quinque.ghoul"), "the quinques' use lines are named");
+        // 1.3.28: the case's own sounds (tools/case_sfx.py), two takes each, played as it opens and shuts, with subtitles.
+        String sounds = read("assets/hexkagune/sounds.json");
+        String server = Files.readString(Path.of("src/main/java/com/hex/kagune/control/server/QuinqueServer.java"));
+        for (String event : new String[] {"case_open", "case_close"}) {
+            check(sounds != null && sounds.contains("\"sfx." + event + "\"") && sounds.contains("hexkagune:sfx/quinque/" + event + "_1")
+                && sounds.contains("hexkagune:sfx/quinque/" + event + "_2"), "the case's " + event + " sound has its two takes");
+            check(server.contains("\"hexkagune:sfx." + event + "\""), "the case plays its " + event + " sound");
+            check(lang != null && lang.contains("\"subtitles.hexkagune.sfx." + event + "\""), "the case's " + event + " sound has a subtitle");
+        }
+        check(!server.contains("centipede_click"), "the case's latch is its own now, not a centipede's click");
         // 1.3.27: the owner: "a suitcase you can't [craft], definitely": no recipe makes any of them.
         Path recipes = RESOURCES.resolve("data/hexkagune/recipes");
         if (Files.isDirectory(recipes)) {

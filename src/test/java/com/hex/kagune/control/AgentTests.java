@@ -18,6 +18,9 @@ import java.util.Random;
  * 1.3.27: the CCG's investigators: their skins and bodies (a woman a little taller and skinnier than Eto), the pairs they come in and
  * how rarely (a little more often than a wild ghoul, which is rarer now), who they go for (a ghoul only once they show their kagune),
  * how they fight, their case all but never left behind, the 32-bit clocks their moves ride on, and their run.
+ *
+ * <p>1.3.28: the two of them on one prey (one holds the front, the other goes round to its back), their case carried by the handle
+ * (its carried frame through vanilla's own hand layer: in the fist, hanging plumb, clear of the leg), and their idle.
  */
 public final class AgentTests {
     static int passed;
@@ -40,6 +43,9 @@ public final class AgentTests {
         fighting();
         clocks();
         running();
+        together();
+        carrying();
+        idling();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -167,7 +173,6 @@ public final class AgentTests {
         check(AgentRules.SHOOT_NEAREST > AgentRules.reach(Quinque.LAUNCHER) && AgentRules.SHOOT_FARTHEST < Quinque.SHARD_RANGE, "the launcher keeps its distance, in range");
         check(AgentRules.BURST * AgentRules.SHOT_GAP < AgentRules.BURST_GAP * 2, "bursts with a breath between");
         check(AgentRules.CALM > Quinque.UNFOLD * 4, "the case shuts a while after the fight");
-        check(AgentRules.flank(true) == 0.0 && AgentRules.flank(false) > Math.PI / 2.0, "the second comes from the far side");
         check(AgentRules.HEALTH > 20.0 && AgentRules.HEALTH < 80.0, "tougher than a player, not a boss");
     }
 
@@ -223,5 +228,298 @@ public final class AgentTests {
         RigPose over = new RigPose();
         AgentPose.dash(over, 0, 1.0);
         check(over.isZero(), "a dash done leaves nothing");
+    }
+
+    // ---------------------------------------------------------------- 1.3.28
+
+    /** One holds the front, the other goes round wide to the back, never across the one in front; they swap when the prey turns. */
+    static void together() {
+        // Always one of each, the launcher in front.
+        for (Quinque a : Quinque.values()) {
+            for (Quinque b : Quinque.values()) {
+                if (a == b) {
+                    continue;
+                }
+                for (boolean swapped : new boolean[] {false, true}) {
+                    boolean leadersFront = AgentRules.front(true, a, b, swapped);
+                    boolean followersFront = AgentRules.front(false, b, a, swapped);
+                    check(leadersFront != followersFront, a + "/" + b + (swapped ? " swapped" : "") + ": one in front, one round the back");
+                    if (a.ranged) {
+                        check(leadersFront, a + " leading: the launcher holds the front from range");
+                    } else if (b.ranged) {
+                        check(!leadersFront, b + " following: the launcher holds the front, the leader goes round");
+                    } else {
+                        check(leadersFront != swapped, a + "/" + b + ": the leader in front until they swap");
+                    }
+                }
+            }
+        }
+        // Round: the short way, on its own side of the one in front, a step at a time, wide of the prey, and in from behind.
+        double front = 0.7;
+        double goal = AgentRules.back(front);
+        check(Math.abs(AgentRules.wrap(goal - front)) > Math.PI - 1.0E-9, "the back is straight across from the front");
+        for (double start : new double[] {0.05, -0.05, 0.4, -0.4, 1.2, -1.2, 2.0, -2.5, 0.0}) {
+            double at = AgentRules.wrap(front + start);
+            double way = AgentRules.sideOf(at, front, -1.0);
+            check(start == 0.0 ? way == -1.0 : way == Math.signum(start), "on its own side of the one in front (" + start + ")");
+            int steps = 0;
+            double left = Math.abs(AgentRules.wrap(goal - at));
+            while (!AgentRules.behind(at, goal) && steps < 8) {
+                double next = AgentRules.round(at, goal, AgentRules.sideOf(at, front, -1.0));
+                double step = Math.abs(AgentRules.wrap(next - at));
+                check(step <= AgentRules.ROUND_STEP + 1.0E-9 && step > 0.1, "a step round at a time (" + start + ")");
+                check(Math.abs(AgentRules.wrap(next - front)) >= Math.abs(AgentRules.wrap(at - front)) - 1.0E-9,
+                    "always further round from the one in front (" + start + ")");
+                check(AgentRules.sideOf(next, front, way) == way || AgentRules.behind(next, goal), "never across the one in front (" + start + ")");
+                double now = Math.abs(AgentRules.wrap(goal - next));
+                check(now < left, "closer to the prey's back each step (" + start + ")");
+                left = now;
+                at = next;
+                steps++;
+            }
+            check(AgentRules.behind(at, goal) && steps <= 4, "round to the back in a few steps (" + start + ": " + steps + ")");
+        }
+        check(AgentRules.behind(AgentRules.wrap(goal + AgentRules.BEHIND * 0.9), goal) && !AgentRules.behind(AgentRules.wrap(goal + AgentRules.BEHIND * 1.2), goal),
+            "behind: within its angle of the back");
+        check(AgentRules.kept(AgentRules.wrap(goal + AgentRules.BEHIND * 1.5), goal) && !AgentRules.kept(front, goal) && AgentRules.BEHIND_KEPT > AgentRules.BEHIND
+            && AgentRules.BEHIND_KEPT < Math.PI / 2.0, "once in from behind it stays in a while, never from the front");
+        for (Quinque q : Quinque.values()) {
+            check(AgentRules.ROUND_RADIUS * Math.cos(AgentRules.ROUND_STEP / 2.0) > AgentRules.reach(q) + 0.3,
+                q + ": going round, even cutting between its spots, it stays out of its own reach of the prey");
+        }
+        check(AgentRules.ROUND_RADIUS * Math.cos(AgentRules.ROUND_STEP / 2.0) >= 4.5, "wide of a kagune's reach as it goes round");
+        // The one in front waits for the other, not for ever; it swaps when the prey turns on the one behind.
+        check(AgentRules.holding(false, 0L) && AgentRules.holding(false, AgentRules.HOLD_TICKS - 1L), "the front holds while the other goes round");
+        check(!AgentRules.holding(true, 5L), "and goes in once the other is behind");
+        check(!AgentRules.holding(false, AgentRules.HOLD_TICKS), "or once it has waited long enough");
+        check(AgentRules.HOLD_TICKS >= 40 && AgentRules.HOLD_TICKS <= 100 && AgentRules.HOLD_OFF > 0.5 && AgentRules.HOLD_OFF < 2.0,
+            "squared up just out of reach, for a few seconds at most");
+        double frontAt = 0.0;
+        double backAt = Math.PI;
+        check(AgentRules.turned(Math.PI - 0.2, frontAt, backAt), "the prey turned on the one behind: they swap (after a while)");
+        check(!AgentRules.turned(0.1, frontAt, backAt), "facing the one in front: no swap");
+        check(!AgentRules.turned(Math.PI / 2.0, frontAt, backAt), "looking off to a side: no swap");
+        check(AgentRules.SWAP_AFTER >= 20 && AgentRules.NEW_FIGHT > 20, "no swapping on a glance; a new fight sets the sides again");
+        check(Math.abs(AgentRules.wrap(3.0 * Math.PI) - Math.PI) < 1.0E-9 || Math.abs(AgentRules.wrap(3.0 * Math.PI) + Math.PI) < 1.0E-9,
+            "angles wrap");
+        check(AgentRules.wrap(Double.NaN) == 0.0, "a broken angle is none");
+    }
+
+    /**
+     * The case carried by the handle: its carried frame (the model JSON's own hand transform) through vanilla's ItemInHandLayer and
+     * ItemTransform, on the arm AgentPose gives it: the handle bar in the fist, the case hanging plumb with its latches out and its
+     * length along the stride, clear of the leg, under any lean of the body; only an investigator's case is ever drawn in that frame.
+     */
+    static void carrying() throws IOException {
+        // Which frame: the carried ones for an investigator's shut case alone.
+        check(AgentPose.caseFrame(0.0F, true, false) == AgentPose.CARRIED_WIDE && AgentPose.caseFrame(0.0F, true, true) == AgentPose.CARRIED_SLIM,
+            "an investigator's shut case: its carried frame for its arms");
+        check(AgentPose.caseFrame(0.0F, false, false) == 0.0F && AgentPose.caseFrame(0.1F, false, true) == 0.0F && AgentPose.caseFrame(0.15F, false, false) == 0.0F,
+            "a player's case is never drawn in an investigator's frame");
+        check(AgentPose.caseFrame(0.05F, true, true) == 0.0F, "an investigator's case starting to open: the plain frame (its arms in the opening pose)");
+        for (float out = AgentPose.OPENING_FRAME; out <= 1.0F; out += 0.1F) {
+            check(AgentPose.caseFrame(out, true, false) == out && AgentPose.caseFrame(out, false, false) == out, "opening: its opening frames (" + out + ")");
+        }
+        check(AgentPose.CARRIED_WIDE > 0.0F && AgentPose.CARRIED_WIDE < AgentPose.CARRIED_SLIM && AgentPose.CARRIED_SLIM < AgentPose.OPENING_FRAME,
+            "the carried frames below the first opening one");
+        for (Quinque q : Quinque.values()) {
+            String item = Files.readString(RESOURCES.resolve("assets/hexkagune/models/item/" + q.caseId + ".json"));
+            check(item.matches("(?s).*\\{\\s*\"hexkagune:deploy\"\\s*:\\s*" + AgentPose.CARRIED_WIDE + "\\s*}\\s*,\\s*\"model\"\\s*:\\s*\"hexkagune:item/quinque/"
+                + q.model + "_case_carried\".*"), q + ": its case's wide-armed carried frame at the value AgentPose gives");
+            check(item.matches("(?s).*\\{\\s*\"hexkagune:deploy\"\\s*:\\s*" + AgentPose.CARRIED_SLIM + "\\s*}\\s*,\\s*\"model\"\\s*:\\s*\"hexkagune:item/quinque/"
+                + q.model + "_case_carried_slim\".*"), q + ": its slim-armed one too");
+            check(item.matches("(?s).*\\{\\s*\"hexkagune:deploy\"\\s*:\\s*" + AgentPose.OPENING_FRAME + "\\s*}.*"), q + ": its first opening frame where AgentPose expects it");
+            for (boolean slim : new boolean[] {false, true}) {
+                double[] display = display(q.model + (slim ? "_case_carried_slim" : "_case_carried"));
+                check(display != null, q + (slim ? " slim" : " wide") + ": its carried frame has a hand transform");
+                if (display == null) {
+                    continue;
+                }
+                String what = q + (slim ? " (slim arms)" : " (wide arms)");
+                // Standing straight: right in the fist, plumb.
+                RigPose straight = new RigPose();
+                AgentPose.carry(straight, 0.0F);
+                Hang hang = hang(straight, slim, display);
+                check(hang.gripOff < 0.35, what + ": the handle bar in the middle of the fist (" + hang.gripOff + " px off)");
+                check(hang.tilt < Math.toRadians(1.0), what + ": the case hangs plumb (" + Math.toDegrees(hang.tilt) + " deg)");
+                check(hang.out > Math.cos(Math.toRadians(3.0)), what + ": its latches face out");
+                check(Math.abs(hang.along) > Math.cos(Math.toRadians(3.0)), what + ": its length along the stride");
+                double leg = slim ? 2.0 * (1.0 + (FemaleBody.HIPS - 1.0) * AgentRules.FEMALE_LEGS) - 0.1 + 2.0 * (1.0 + (FemaleBody.HIPS - 1.0) * AgentRules.FEMALE_LEGS) : 4.0;
+                check(hang.inner > leg + 0.3, what + ": clear of the leg (" + hang.inner + " px out, the leg " + leg + ")");
+                check(hang.bottom > 3.0 && hang.top < hang.fistY, what + ": below the fist, off the ground (" + hang.bottom + ".." + hang.top + ")");
+                // Leaning back at its ease, pitched into its run: the case still hangs from the fist as the arm does.
+                RigPose idle = new RigPose();
+                AgentPose.idle(idle, 37.0, 5, 1.0F);
+                AgentPose.carry(idle, 0.0F);
+                check(hang(idle, slim, display).tilt < Math.toRadians(2.0), what + ": leaning back, the case still hangs plumb");
+                for (double phase = 0.0; phase < Math.PI * 2.0; phase += 0.5) {
+                    RigPose run = AgentPose.run(phase, 1.0F, AgentPose.Carry.CASE);
+                    float sway = AgentPose.sway(phase, 1.0F, 1.0F);
+                    AgentPose.carry(run, sway);
+                    Hang moving = hang(run, slim, display);
+                    check(Math.abs(moving.tilt - Math.abs(sway)) < Math.toRadians(2.5), what + ": on the run it swings with the arm, the lean taken out ("
+                        + Math.toDegrees(moving.tilt) + " vs " + Math.toDegrees(sway) + ")");
+                    check(moving.inner > leg, what + ": clear of the leg on the run");
+                }
+            }
+        }
+        // The swing: none standing, small walking, a little more running; always against the right leg.
+        check(AgentPose.sway(1.0, 0.0F, 0.0F) == 0.0F, "standing: no swing");
+        for (double phase = 0.0; phase < Math.PI * 2.0; phase += 0.25) {
+            check(Math.abs(AgentPose.sway(phase, 1.0F, 0.0F)) <= 0.1F + 1.0E-6F && Math.abs(AgentPose.sway(phase, 1.0F, 1.0F)) <= 0.18F + 1.0E-6F,
+                "a heavy case swings little (" + phase + ")");
+            RigPose run = AgentPose.run(phase, 1.0F, AgentPose.Carry.CASE);
+            check(AgentPose.sway(phase, 1.0F, 1.0F) * run.rightLegX <= 1.0E-6F, "the case's arm swings against its leg (" + phase + ")");
+        }
+    }
+
+    /** Standing about: leaning back, the weight on one leg, breathing, a glance now and then; none of it once it walks. */
+    static void idling() {
+        check(AgentPose.still(0.0) == 1.0F && AgentPose.still(0.1) == 0.0F && AgentPose.still(0.04) > 0.0F && AgentPose.still(0.04) < 1.0F,
+            "idle standing, none at a walk, blended between");
+        float minLean = Float.MAX_VALUE;
+        float maxLean = -Float.MAX_VALUE;
+        float maxGlance = 0.0F;
+        for (double age = 0.0; age < 600.0; age += 3.0) {
+            RigPose p = new RigPose();
+            AgentPose.idle(p, age, 12345, 1.0F);
+            minLean = Math.min(minLean, p.lean);
+            maxLean = Math.max(maxLean, p.lean);
+            maxGlance = Math.max(maxGlance, Math.abs(p.headY));
+            check(p.lean < -0.05F && p.lean > -0.2F, "leaning back a little (" + age + ")");
+            check(p.legHold == 1.0F && p.leftArmHold == 1.0F, "its legs and its free arm are the idle's");
+            check(Math.abs(p.rightLegX) < 0.1F && p.leftLegX < -0.05F && p.leftLegZ < 0.0F, "its weight on the right leg, the left loose and out");
+            check(Math.abs(p.rightShoulderY) <= 0.2F + 1.0E-6F, "a breath, not a heave");
+            check(p.headX == 0.0F && Math.abs(p.headY) <= 0.38F + 1.0E-6F, "its eyes still where it looks, now and then off to a side");
+        }
+        check(maxLean - minLean > 0.015F && maxLean - minLean < 0.03F, "it breathes: " + (maxLean - minLean));
+        check(maxGlance > 0.3F, "it looks off to a side now and then: " + maxGlance);
+        RigPose a = new RigPose();
+        RigPose b = new RigPose();
+        AgentPose.idle(a, 100.0, 1, 1.0F);
+        AgentPose.idle(b, 100.0, 1 + 64 * 7 + 13, 1.0F);
+        check(a.lean != b.lean || a.headY != b.headY, "two of them don't breathe and look about as one");
+        RigPose none = new RigPose();
+        AgentPose.idle(none, 100.0, 1, 0.0F);
+        check(none.isZero(), "walking: no idle");
+    }
+
+    /** Where its case hangs for a pose: in model pixels of the entity (x its right, y up from its feet, z its back). */
+    record Hang(double gripOff, double tilt, double out, double along, double inner, double bottom, double top, double fistY) {
+    }
+
+    /** The case's carried frame ({@code display}: rotation, translation, scale) on {@code p}'s right arm, as vanilla draws it. */
+    static Hang hang(RigPose p, boolean slim, double[] display) {
+        float armY = slim ? 2.5F : 2.0F;
+        float[] pivot = p.transform("rightArm", RigPose.POSITION, -5.0F, armY, 0.0F);
+        float[] turn = p.transform("rightArm", RigPose.ROTATION, 0.0F, 0.0F, 0.0F);
+        double[] body = mul(scale(-1, -1, 1), translate(0, -1.501, 0));
+        double[] arm = mul(body, mul(translate(pivot[0] / 16.0, pivot[1] / 16.0, pivot[2] / 16.0), mul(rz(turn[2]), mul(ry(turn[1]), rx(turn[0])))));
+        double[] item = mul(body, mul(translate((pivot[0] + (slim ? 0.5 : 0.0)) / 16.0, pivot[1] / 16.0, pivot[2] / 16.0),
+            mul(rz(turn[2]), mul(ry(turn[1]), rx(turn[0])))));
+        item = mul(item, mul(rx(Math.toRadians(-90.0)), mul(ry(Math.toRadians(180.0)), translate(1.0 / 16.0, 0.125, -0.625))));
+        item = mul(item, translate(display[3] / 16.0, display[4] / 16.0, display[5] / 16.0));
+        item = mul(item, mul(rx(Math.toRadians(display[0])), mul(ry(Math.toRadians(display[1])), rz(Math.toRadians(display[2])))));
+        item = mul(item, mul(scale(display[6], display[6], display[6]), mul(translate(-0.5, -0.5, -0.5), scale(1.0 / 16.0, 1.0 / 16.0, 1.0 / 16.0))));
+        double[] fist = at(arm, (slim ? -0.5 : -1.0) / 16.0, 9.0 / 16.0, 0.0);
+        double[] grip = at(item, 8.0, 13.95, 8.0);
+        double[] up = unit(sub(at(item, 8.0, 12.0, 8.0), at(item, 8.0, 2.0, 8.0)));
+        double[] out = unit(sub(at(item, 8.0, 7.0, 9.5), at(item, 8.0, 7.0, 6.5)));
+        double[] along = unit(sub(at(item, 15.0, 7.0, 8.0), at(item, 1.0, 7.0, 8.0)));
+        double inner = Double.MAX_VALUE;
+        double bottom = Double.MAX_VALUE;
+        double top = -Double.MAX_VALUE;
+        for (double x : new double[] {1.0, 15.0}) {
+            for (double y : new double[] {1.8, 12.0}) {
+                for (double z : new double[] {6.35, 9.65}) {
+                    double[] c = at(item, x, y, z);
+                    inner = Math.min(inner, c[0] * 16.0);
+                    bottom = Math.min(bottom, c[1] * 16.0);
+                    top = Math.max(top, c[1] * 16.0);
+                }
+            }
+        }
+        double gripOff = Math.sqrt(sq(grip[0] - fist[0]) + sq(grip[1] - fist[1]) + sq(grip[2] - fist[2])) * 16.0;
+        return new Hang(gripOff, Math.acos(Math.max(-1.0, Math.min(1.0, up[1]))), out[0], along[2], inner, bottom, top, at(arm, 0.0, 10.0 / 16.0, 0.0)[1] * 16.0 + 2.0);
+    }
+
+    /** The case model's third person hand transform (rotation, translation, scale x) from its JSON, or null. */
+    static double[] display(String model) throws IOException {
+        Path file = RESOURCES.resolve("assets/hexkagune/models/item/quinque/" + model + ".json");
+        if (!Files.exists(file)) {
+            return null;
+        }
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile("\"thirdperson_righthand\"\\s*:\\s*\\{\\s*\"rotation\"\\s*:\\s*\\[([^\\]]*)\\]\\s*,"
+            + "\\s*\"translation\"\\s*:\\s*\\[([^\\]]*)\\]\\s*,\\s*\"scale\"\\s*:\\s*\\[([^\\]]*)\\]").matcher(Files.readString(file));
+        if (!m.find()) {
+            return null;
+        }
+        double[] out = new double[7];
+        int i = 0;
+        for (int g = 1; g <= 3; g++) {
+            String[] parts = m.group(g).split(",");
+            for (int k = 0; k < (g == 3 ? 1 : 3); k++) {
+                out[i++] = Double.parseDouble(parts[k].trim());
+            }
+        }
+        return out;
+    }
+
+    // 4x4 matrices, row major.
+    static double[] mul(double[] a, double[] b) {
+        double[] out = new double[16];
+        for (int r = 0; r < 4; r++) {
+            for (int c = 0; c < 4; c++) {
+                double v = 0.0;
+                for (int k = 0; k < 4; k++) {
+                    v += a[r * 4 + k] * b[k * 4 + c];
+                }
+                out[r * 4 + c] = v;
+            }
+        }
+        return out;
+    }
+
+    static double[] translate(double x, double y, double z) {
+        return new double[] {1, 0, 0, x, 0, 1, 0, y, 0, 0, 1, z, 0, 0, 0, 1};
+    }
+
+    static double[] scale(double x, double y, double z) {
+        return new double[] {x, 0, 0, 0, 0, y, 0, 0, 0, 0, z, 0, 0, 0, 0, 1};
+    }
+
+    static double[] rx(double a) {
+        double c = Math.cos(a);
+        double s = Math.sin(a);
+        return new double[] {1, 0, 0, 0, 0, c, -s, 0, 0, s, c, 0, 0, 0, 0, 1};
+    }
+
+    static double[] ry(double a) {
+        double c = Math.cos(a);
+        double s = Math.sin(a);
+        return new double[] {c, 0, s, 0, 0, 1, 0, 0, -s, 0, c, 0, 0, 0, 0, 1};
+    }
+
+    static double[] rz(double a) {
+        double c = Math.cos(a);
+        double s = Math.sin(a);
+        return new double[] {c, -s, 0, 0, s, c, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
+    }
+
+    static double[] at(double[] m, double x, double y, double z) {
+        return new double[] {m[0] * x + m[1] * y + m[2] * z + m[3], m[4] * x + m[5] * y + m[6] * z + m[7], m[8] * x + m[9] * y + m[10] * z + m[11]};
+    }
+
+    static double[] sub(double[] a, double[] b) {
+        return new double[] {a[0] - b[0], a[1] - b[1], a[2] - b[2]};
+    }
+
+    static double[] unit(double[] v) {
+        double n = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+        return n == 0.0 ? v : new double[] {v[0] / n, v[1] / n, v[2] / n};
+    }
+
+    static double sq(double v) {
+        return v * v;
     }
 }

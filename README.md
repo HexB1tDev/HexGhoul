@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.28 (HexGhoul): investigators carry their case by the handle, fight as a pair (one in front, one round the back), idle at ease; the quinque case's own mechanical sound (testing)
+
+See `.github/release-notes-1.3.28.md`.
+
 ## 1.3.27 (HexGhoul): CCG investigators: pairs in the owner's skins, fast and acrobatic, with quinques, clashes and parries; wild ghouls rarer; cases can't be crafted (testing)
 
 See `.github/release-notes-1.3.27.md`.

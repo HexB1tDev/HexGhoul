@@ -37,7 +37,11 @@ import net.minecraftforge.fml.common.Mod;
  *
  * <p>At peace it walks the world with its partner (the leader picks the way, the other keeps at its side), its quinque shut in its case.
  * It goes for a monster that comes too close, a wild ghoul in sight, a player who shows their kagune (marked a while: the pair keeps
- * after them), and anyone who strikes either of them; whatever its partner fights, it fights too, from the far side.
+ * after them), and anyone who strikes either of them; whatever its partner fights, it fights too.
+ *
+ * <p>1.3.28: two on one prey never come at it in a line ({@link AgentRules#front}): one holds the front (straight on, squared up just out
+ * of reach, keeping its prey's eyes on it), the other goes round wide and comes in from behind; when the prey turns on the one behind,
+ * the two swap.
  *
  * <p>In a fight: the case opens in its hand first (the quinque's own unfold). Then its feet: a blow coming at it ({@link KaguneClash#threat})
  * is met with its own (the two thrown apart: the kagune slapped aside, and it answers at once) or flipped and dashed clear of; prey too far
@@ -91,6 +95,14 @@ public final class AgentBrain {
         long wanderAt = Long.MIN_VALUE;
         double circle = 1.0;
         long circleAt = Long.MIN_VALUE;
+        /**
+         * 1.3.28: the two of them on one prey: when this fight began; whether it is going round to the prey's back now; (the leader's,
+         * for the pair) whether their sides have swapped since it began, and since when the prey has been turned on the one behind.
+         */
+        long fightFrom = Long.MIN_VALUE;
+        boolean rounding;
+        boolean swapped;
+        long turnedSince = Long.MIN_VALUE;
     }
 
     /** Its partner's id in its saved data (who it is: {@link CcgAgent#KEY}, packed). */
@@ -398,7 +410,15 @@ public final class AgentBrain {
     // ---------------------------------------------------------------- a fight
 
     private static void fight(CcgAgent agent, Mind mind, CcgAgent partner, LivingEntity prey, ServerLevel level, long now) {
+        if (ago(now, mind.foughtAt) > AgentRules.NEW_FIGHT) {
+            // A new fight: sides as they start (the leader in front), nobody round yet (the one in front waits on the other).
+            mind.fightFrom = now;
+            mind.swapped = false;
+            mind.turnedSince = Long.MIN_VALUE;
+            mind.rounding = true;
+        }
         mind.foughtAt = now;
+        sides(agent, mind, partner, prey, now);
         face(agent, prey);
         agent.m_21563_().m_24960_(prey, 30.0F, 30.0F);
         if (!mind.open) {
@@ -439,7 +459,7 @@ public final class AgentBrain {
         agent.f_20885_ = yaw;
     }
 
-    /** Melee: in to its weapon's reach (the follower from the far side), then its string of three. */
+    /** Melee: in to its weapon's reach (from the front, or round to the back: {@link #together}), then its string of three. */
     private static void close(CcgAgent agent, Mind mind, CcgAgent partner, LivingEntity prey, ServerLevel level, long now) {
         double reach = AgentRules.reach(mind.kind);
         double distance = Math.sqrt(prey.m_20280_(agent));
@@ -447,10 +467,42 @@ public final class AgentBrain {
             agent.m_21573_().m_26573_();
             return;
         }
+        Mind theirs = together(mind, partner, prey);
+        Vec3 spot;
+        boolean hold = false;
+        if (theirs == null) {
+            mind.rounding = false;
+            spot = toward(prey, around(agent, prey), reach - 0.6);
+        } else if (front(mind, theirs)) {
+            // The front: straight on; squared up just out of its reach while the other goes round, then in.
+            mind.rounding = false;
+            double at = around(agent, prey);
+            hold = AgentRules.holding(!theirs.rounding, ago(now, mind.fightFrom));
+            spot = toward(prey, at, hold ? reach + AgentRules.HOLD_OFF : reach - 0.6);
+            if (hold && distance > reach && distance <= reach + AgentRules.HOLD_OFF + 0.5) {
+                agent.m_21573_().m_26573_(); // it holds there, its eyes on its prey
+                return;
+            }
+        } else {
+            // The back: round, wide and out of its reach, the way round on its own side of the one in front; in from behind.
+            double at = around(agent, prey);
+            double front = around(partner, prey);
+            double goal = AgentRules.back(front);
+            if (mind.rounding ? !AgentRules.behind(at, goal) : !AgentRules.kept(at, goal)) {
+                mind.rounding = true;
+                if (now % 4L == 0L || agent.m_21573_().m_26571_()) {
+                    double next = AgentRules.round(at, goal, AgentRules.sideOf(at, front, mind.circle));
+                    Vec3 to = toward(prey, next, Math.max(AgentRules.ROUND_RADIUS, reach + 1.5));
+                    agent.m_21573_().m_26519_(to.f_82479_, prey.m_20186_(), to.f_82481_, AgentRules.FIGHT_PACE * 1.1);
+                }
+                return;
+            }
+            mind.rounding = false;
+            spot = toward(prey, goal, reach - 0.6);
+        }
         if (distance > reach) {
             if (now % 4L == 0L || agent.m_21573_().m_26571_()) {
-                Vec3 spot = spot(agent, mind, partner, prey, reach - 0.6);
-                agent.m_21573_().m_26519_(spot.f_82479_, prey.m_20186_(), spot.f_82481_, AgentRules.FIGHT_PACE);
+                agent.m_21573_().m_26519_(spot.f_82479_, prey.m_20186_(), spot.f_82481_, hold ? AgentRules.PATROL_PACE + 0.3 : AgentRules.FIGHT_PACE);
             }
             return;
         }
@@ -460,18 +512,56 @@ public final class AgentBrain {
         }
     }
 
-    /** Where it stands to fight {@code prey} from, {@code at} blocks off: its own side, or (following another in) the far side. */
-    private static Vec3 spot(CcgAgent agent, Mind mind, CcgAgent partner, LivingEntity prey, double at) {
-        Vec3 from = UkakuFire.horizontal(agent.m_20182_().m_82546_(prey.m_20182_()));
-        if (!mind.leader && partner != null && partner.mind != null && partner.mind.prey == prey.m_19879_()) {
-            Vec3 theirs = UkakuFire.horizontal(partner.m_20182_().m_82546_(prey.m_20182_()));
-            double angle = Math.atan2(theirs.f_82481_, theirs.f_82479_) + AgentRules.flank(false) * (mind.circle >= 0.0 ? 1.0 : -1.0);
-            from = new Vec3(Math.cos(angle), 0.0, Math.sin(angle));
+    /** Its partner's mind if the two of them fight {@code prey} together (null: it fights on its own). */
+    private static Mind together(Mind mind, CcgAgent partner, LivingEntity prey) {
+        if (partner == null || !partner.m_6084_() || partner.mind == null || partner.mind.prey != prey.m_19879_()) {
+            return null;
         }
-        if (from.m_165925_() < 1.0E-6) {
-            from = new Vec3(1.0, 0.0, 0.0);
+        return partner.mind;
+    }
+
+    /** True if it holds the front against the prey it fights with its partner ({@code theirs}); false, it goes round to the back. */
+    private static boolean front(Mind mind, Mind theirs) {
+        return AgentRules.front(mind.leader, mind.kind, theirs.kind, mind.leader ? mind.swapped : theirs.swapped);
+    }
+
+    /**
+     * The leader keeps the pair's sides: once the prey has been turned on the one behind it (and its back on the one in front)
+     * {@link AgentRules#SWAP_AFTER} ticks, with the one behind close enough to fight it, the two swap.
+     */
+    private static void sides(CcgAgent agent, Mind mind, CcgAgent partner, LivingEntity prey, long now) {
+        Mind theirs = together(mind, partner, prey);
+        if (!mind.leader || theirs == null || mind.kind.ranged || theirs.kind.ranged) {
+            mind.turnedSince = Long.MIN_VALUE;
+            return;
         }
-        return prey.m_20182_().m_82549_(from.m_82490_(Math.max(0.8, at)));
+        boolean mine = front(mind, theirs);
+        CcgAgent ahead = mine ? agent : partner;
+        CcgAgent behind = mine ? partner : agent;
+        Vec3 look = prey.m_20154_();
+        boolean close = behind.m_20280_(prey) <= Math.pow(AgentRules.reach((mine ? theirs : mind).kind) + 1.5, 2.0);
+        if (close && AgentRules.turned(Math.atan2(look.f_82481_, look.f_82479_), around(ahead, prey), around(behind, prey))) {
+            if (mind.turnedSince == Long.MIN_VALUE) {
+                mind.turnedSince = now;
+            } else if (ago(now, mind.turnedSince) >= AgentRules.SWAP_AFTER) {
+                mind.swapped = !mind.swapped;
+                mind.turnedSince = Long.MIN_VALUE;
+            }
+        } else {
+            mind.turnedSince = Long.MIN_VALUE;
+        }
+    }
+
+    /** Where {@code body} stands round {@code prey}: the angle (radians, atan2 of z and x) of its offset from it. */
+    private static double around(Entity body, Entity prey) {
+        Vec3 from = body.m_20182_().m_82546_(prey.m_20182_());
+        return from.f_82479_ * from.f_82479_ + from.f_82481_ * from.f_82481_ < 1.0E-8 ? 0.0 : Math.atan2(from.f_82481_, from.f_82479_);
+    }
+
+    /** The spot {@code at} blocks from {@code prey} at {@code angle} round it (never right on top of it). */
+    private static Vec3 toward(LivingEntity prey, double angle, double at) {
+        double r = Math.max(0.8, at);
+        return prey.m_20182_().m_82520_(Math.cos(angle) * r, 0.0, Math.sin(angle) * r);
     }
 
     /** The next of its string sets out at {@code prey}: a blow on its way (it can be met), landing a little on. */
@@ -630,7 +720,7 @@ public final class AgentBrain {
             return true;
         }
         double roll = agent.m_217043_().m_188500_();
-        if (flips && distance > reach + 3.0 && distance < 14.0 && roll < AgentRules.FLIP_CHANCE && agent.m_142582_(prey)) {
+        if (flips && !mind.rounding && distance > reach + 3.0 && distance < 14.0 && roll < AgentRules.FLIP_CHANCE && agent.m_142582_(prey)) {
             flip(agent, mind, PaleRules.Flip.FORWARD, toward, NpcRules.flipSpeed(distance - reach), AgentRules.FLIP_UP, prey, level, now);
             return true;
         }
@@ -702,6 +792,7 @@ public final class AgentBrain {
 
     /** It keeps its distance (backing off, closing in, circling) and fires bursts of shards at {@code prey}; too close, it clubs them. */
     private static void shoot(CcgAgent agent, Mind mind, CcgAgent partner, LivingEntity prey, ServerLevel level, long now) {
+        mind.rounding = false; // (the launcher always holds the front)
         double distance = Math.sqrt(prey.m_20280_(agent));
         boolean seen = agent.m_142582_(prey);
         if (mind.striking) {

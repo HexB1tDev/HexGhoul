@@ -21,10 +21,17 @@ out is the whole weapon telescoped in toward the hand (every height drawn in tow
   launcher   the Ukaku crystal launcher: a gun, three barrels, a magazine of glowing crystal, a pistol grip and a stock
 
 Textures: one 32x32 sheet per kind, patches of 4x4 pixels (2x2 UV), each face drawn from one patch.
+
+1.3.28: an investigator carries its case shut in two more frames of the same model, <kind>_case_carried (wide arms) and
+<kind>_case_carried_slim, chosen by the deploy values CARRIED_WIDE / CARRIED_SLIM its property gives for an investigator alone
+(QuinqueClient.caseFrame); their hand transform is solved here (carried_display) against its carrying arm (AgentPose.CARRY_X,
+CARRY_Z): the handle bar inside its fist, the case hanging plumb below it, latches out, clear of its leg.
 """
 import json
 import math
 import random
+
+import numpy as np
 from pathlib import Path
 
 from PIL import Image
@@ -309,6 +316,80 @@ CASE_DISPLAY = {
     "fixed": {"rotation": [0, 180, 0], "translation": [0, 0, 0], "scale": [0.9, 0.9, 0.9]},
 }
 
+# ---------------------------------------------------------------------------------------------------- 1.3.28: an investigator's grip
+
+# Its carrying arm (AgentPose.CARRY_X / CARRY_Z: the right arm hanging, a touch out from the body) and the deploy values that pick its
+# frames (AgentPose.CARRIED_WIDE / CARRIED_SLIM: under the first opening frame's 0.2).
+CARRY_X, CARRY_Z = 0.0, 0.1
+CARRIED_WIDE, CARRIED_SLIM = 0.05, 0.1
+CASE_SCALE = 0.62
+GRIP = (8.0, 13.95, 8.0)  # the handle bar's middle (model pixels)
+
+
+def _t(x, y, z):
+    m = np.eye(4); m[:3, 3] = (x, y, z); return m
+
+
+def _rx(a):
+    c, s_ = math.cos(a), math.sin(a); m = np.eye(4); m[1, 1] = c; m[1, 2] = -s_; m[2, 1] = s_; m[2, 2] = c; return m
+
+
+def _ry(a):
+    c, s_ = math.cos(a), math.sin(a); m = np.eye(4); m[0, 0] = c; m[0, 2] = s_; m[2, 0] = -s_; m[2, 2] = c; return m
+
+
+def _rz(a):
+    c, s_ = math.cos(a), math.sin(a); m = np.eye(4); m[0, 0] = c; m[0, 1] = -s_; m[1, 0] = s_; m[1, 1] = c; return m
+
+
+def arm_frame(slim, for_item):
+    """The right arm's frame in the entity's (blocks; x its right, y up, z its back; the feet at 0), as LivingEntityRenderer and the
+    arm's ModelPart turn it (Rz Ry Rx). For the item, PlayerModel.translateToHand moves a slim arm's pivot half a pixel in."""
+    pivot_x = -5.0 + (0.5 if slim and for_item else 0.0)
+    pivot_y = 2.5 if slim else 2.0
+    m = np.diag([-1.0, -1.0, 1.0, 1.0]) @ _t(0, -1.501, 0)
+    return m @ _t(pivot_x / 16, pivot_y / 16, 0) @ _rz(CARRY_Z) @ _rx(CARRY_X)
+
+
+def fist(slim):
+    """The middle of its fist, a pixel above the end of its arm (entity frame, blocks)."""
+    centre_x = -0.5 if slim else -1.0
+    return (arm_frame(slim, False) @ np.array([centre_x / 16, 9.0 / 16, 0.0, 1.0]))[:3]
+
+
+def hand_layer(slim):
+    """ItemInHandLayer's right hand: the arm, then Rx(-90) Ry(180) and its offset."""
+    return arm_frame(slim, True) @ _rx(math.radians(-90)) @ _ry(math.radians(180)) @ _t(1 / 16, 0.125, -0.625)
+
+
+def carried_display(slim):
+    """The third person transform (rotation XYZ degrees, translation pixels) that hangs the case from its fist: model y up, the
+    latches' side (model +z) out to its right, its length (model x) along its stride."""
+    layer = hand_layer(slim)
+    want = np.array([[0.0, 0.0, 1.0], [0.0, 1.0, 0.0], [-1.0, 0.0, 0.0]])  # columns: where model x, y, z go
+    rot = layer[:3, :3].T @ want
+    b = math.asin(max(-1.0, min(1.0, rot[0, 2])))
+    a = math.atan2(-rot[1, 2], rot[2, 2])
+    c = math.atan2(-rot[0, 1], rot[0, 0])
+    angles = [round(math.degrees(v), 2) for v in (a, b, c)]
+    # Rounded angles, then the translation that puts the grip in the fist with them (so the rounding moves nothing that matters).
+    r = _rx(math.radians(angles[0])) @ _ry(math.radians(angles[1])) @ _rz(math.radians(angles[2]))
+    grip_local = r @ np.diag([CASE_SCALE] * 3 + [1.0]) @ _t(-0.5, -0.5, -0.5) @ np.array([g / 16 for g in GRIP] + [1.0])
+    target = np.linalg.inv(layer) @ np.append(fist(slim), 1.0)
+    shift = [round(float(v) * 16, 3) for v in (target[:3] - grip_local[:3])]
+    return angles, shift
+
+
+def carried(slim):
+    """CASE_DISPLAY with its third person hand solved for an investigator's carrying arm."""
+    angles, shift = carried_display(slim)
+    d = dict(CASE_DISPLAY)
+    third = {"rotation": angles, "translation": shift, "scale": [CASE_SCALE] * 3}
+    d["thirdperson_righthand"] = third
+    d["thirdperson_lefthand"] = {"rotation": [angles[0], -angles[1], -angles[2]], "translation": shift, "scale": [CASE_SCALE] * 3}
+    return d
+
+
 FRAMES = [("case_open", 0.2), ("half", 0.45), ("nearly", 0.7), ("full", 0.95)]
 ITEMS = {  # kind -> (case item, weapon item)
     "bikaku": ("quinque_case_bikaku", "quinque_bikaku_blade"),
@@ -339,6 +420,8 @@ def main():
         frames = {
             "case_closed": model(kind, case_elements(False), CASE_DISPLAY),
             "case_open": model(kind, case_elements(True), CASE_DISPLAY),
+            "case_carried": model(kind, case_elements(False), carried(False)),
+            "case_carried_slim": model(kind, case_elements(False), carried(True)),
             "half": model(kind, telescoped(parts, 0.33), held),
             "nearly": model(kind, telescoped(parts, 0.66), held),
             "full": model(kind, telescoped(parts, 1.0), held),
@@ -349,9 +432,15 @@ def main():
                     assert -16 <= v <= 32, f"{kind} {name}: {v} is out of a model's bounds"
             write(MODELS / "quinque" / f"{kind}_{name}.json", data)
         overrides = [{"predicate": {"hexkagune:deploy": v}, "model": f"hexkagune:item/quinque/{kind}_{name}"} for name, v in FRAMES]
-        for item in ITEMS[kind]:
-            write(MODELS / f"{item}.json", {"parent": f"hexkagune:item/quinque/{kind}_case_closed", "overrides": overrides})
+        # 1.3.28: the case alone has an investigator's two carried frames, ahead of the opening ones (the last that matches is drawn).
+        carrying = [{"predicate": {"hexkagune:deploy": v}, "model": f"hexkagune:item/quinque/{kind}_{name}"}
+                    for name, v in (("case_carried", CARRIED_WIDE), ("case_carried_slim", CARRIED_SLIM))]
+        case_item, weapon_item = ITEMS[kind]
+        write(MODELS / f"{case_item}.json", {"parent": f"hexkagune:item/quinque/{kind}_case_closed", "overrides": carrying + overrides})
+        write(MODELS / f"{weapon_item}.json", {"parent": f"hexkagune:item/quinque/{kind}_case_closed", "overrides": overrides})
         print(f"{kind}: {len(parts)} parts, span {span(parts)}")
+    for slim in (False, True):
+        print(f"carried ({'slim' if slim else 'wide'}): rotation {carried_display(slim)[0]}, translation {carried_display(slim)[1]}")
 
 
 if __name__ == "__main__":

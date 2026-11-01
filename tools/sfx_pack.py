@@ -30,6 +30,8 @@ FLOW = "blood_and_gush/sustained_gushing/"
 DRIP = "blood_and_gush/drips_and_pools/"
 COMBO = "blood_and_gush/dramatic_combos/"
 CLASH = "super_punch_collisions/"
+# 1.3.28: the quinque case's own (tools/case_sfx.py builds them: its latches, its mechanism, its lock).
+QUINQUE = "quinque/"
 
 # pool: (gain, [files], subtitle). Frequent sounds get short files and a lower gain; the big ones the long, loud collisions.
 POOLS = {
@@ -92,6 +94,10 @@ POOLS = {
     "ultimate": (1.0, [CLASH + "ultimate_fist_collision", CLASH + "thunder_punch_collision", CLASH + "sky_splitting_clash",
                        CLASH + "charged_fist_collision"], "A colossal impact"),
     "thunder": (1.0, [CLASH + "thunder_punch_collision"], "Thunder"),
+    # 1.3.28: a quinque case opening (two latches, a servo, plates sliding, the lock home) and shutting (the servo back, the halves
+    # meeting, the latches snapped shut).
+    "case_open": (0.85, [QUINQUE + "case_open_1", QUINQUE + "case_open_2"], "A quinque case unlocks"),
+    "case_close": (0.85, [QUINQUE + "case_close_1", QUINQUE + "case_close_2"], "A quinque case locks"),
     "windup_clash": (1.0, [CLASH + "windup_to_massive_clash"], "A massive clash"),
     "ground": (0.55, [CLASH + "close_dry_collision", PHIT + "knuckle_slam"], "Stone breaks"),
 }

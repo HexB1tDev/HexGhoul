@@ -239,12 +239,97 @@ public final class AgentRules {
     /** How long its case takes to come open before it can swing (its unfold), and how long after its last fight it shuts it. */
     public static final int CALM = 160;
 
-    /**
-     * Its partner's side of the prey: the follower takes the far side (a pincer), the leader comes straight on. The angle (radians)
-     * round the prey from where the leader stands.
+    // ---------------------------------------------------------------- 1.3.28: the two of them together
+
+    /*
+     * A pair on one prey never comes at it in a line. One holds the front: it comes straight on and squares up just out of its prey's
+     * reach (HOLD_OFF past its own), its eyes on it, and strikes when the prey comes to it, once the other is round, or after HOLD_TICKS.
+     * The other goes round: wide (ROUND_RADIUS, past a kagune's reach), the way round on its own side of the one in front (never across
+     * it), and comes in from the prey's back (within BEHIND of straight opposite the one in front). The launcher always holds the front
+     * (it fights from range); otherwise the leader does, until the prey turns its back on it to face the other for SWAP_AFTER ticks: then
+     * the two swap (the one now behind it goes in, the one now in front holds).
+     *
+     * Angles are round the prey, atan2(dz, dx) of a position less the prey's, radians.
      */
-    public static double flank(boolean leader) {
-        return leader ? 0.0 : Math.PI * 0.75;
+
+    /** How far from its prey the one going round keeps (blocks), and how far round it heads at a time (radians). */
+    public static final double ROUND_RADIUS = 5.5;
+    public static final double ROUND_STEP = Math.toRadians(55.0);
+    /** Within this of the prey's back (radians) the one going round goes in; once in, it stays in while within the wider one. */
+    public static final double BEHIND = Math.toRadians(40.0);
+    public static final double BEHIND_KEPT = Math.toRadians(75.0);
+    /** The one in front: how far past its reach it squares up while the other goes round (blocks), and the longest it waits (ticks). */
+    public static final double HOLD_OFF = 1.2;
+    public static final int HOLD_TICKS = 60;
+    /** The prey turned on the one behind (its face within FACING of it, the one in front past TURNED_AWAY) this long: the two swap. */
+    public static final int SWAP_AFTER = 30;
+    public static final double FACING = Math.toRadians(50.0);
+    public static final double TURNED_AWAY = Math.toRadians(100.0);
+    /** A fight is a new one (its sides chosen again) after this long out of one (ticks). */
+    public static final int NEW_FIGHT = 40;
+
+    /**
+     * True if one of a pair holds the front against their prey ({@code mine}, {@code theirs}: the two quinques; {@code swapped}: the
+     * pair's sides swapped since the fight began); false, it goes round to the back. Never both: the pair always has one of each.
+     */
+    public static boolean front(boolean leader, Quinque mine, Quinque theirs, boolean swapped) {
+        if (mine.ranged != theirs.ranged) {
+            return mine.ranged;
+        }
+        return leader != swapped;
+    }
+
+    /** {@code a} wrapped onto -pi..pi. */
+    public static double wrap(double a) {
+        double w = Math.IEEEremainder(a, 2.0 * Math.PI);
+        return Double.isFinite(w) ? w : 0.0;
+    }
+
+    /** The prey's back: straight opposite the one in front ({@code front}: its angle round the prey). */
+    public static double back(double front) {
+        return wrap(front + Math.PI);
+    }
+
+    /** True if {@code at} (an angle round the prey) is within {@link #BEHIND} of {@code goal}. */
+    public static boolean behind(double at, double goal) {
+        return Math.abs(wrap(goal - at)) <= BEHIND;
+    }
+
+    /** True if the one already in from behind stays in: {@code at} within {@link #BEHIND_KEPT} of {@code goal} (no going back out for a step). */
+    public static boolean kept(double at, double goal) {
+        return Math.abs(wrap(goal - at)) <= BEHIND_KEPT;
+    }
+
+    /**
+     * Where the one going round heads next (an angle round the prey) from {@code at} toward {@code goal} (the prey's back): the short way
+     * round, at most {@link #ROUND_STEP} on; {@code way} (+1 or -1: the side of the one in front it is on) when it stands about straight
+     * across from it (next to the one in front), so it never crosses in front of it.
+     */
+    public static double round(double at, double goal, double way) {
+        double d = wrap(goal - at);
+        if (Math.abs(d) > Math.PI - 0.35) {
+            d = (way >= 0.0 ? 1.0 : -1.0) * Math.abs(d);
+        }
+        return wrap(at + Math.max(-ROUND_STEP, Math.min(ROUND_STEP, d)));
+    }
+
+    /** The side ({@code +1}/{@code -1}) of the one in front ({@code front}) that {@code at} is on, {@code otherwise} if right on it. */
+    public static double sideOf(double at, double front, double otherwise) {
+        double d = wrap(at - front);
+        return Math.abs(d) < 1.0E-3 ? (otherwise >= 0.0 ? 1.0 : -1.0) : Math.signum(d);
+    }
+
+    /**
+     * True if the prey, facing {@code look} (an angle), has turned on the one behind it ({@code backAt}) and its back on the one in
+     * front ({@code frontAt}): the one behind in front of its face, the one in front out of its sight.
+     */
+    public static boolean turned(double look, double frontAt, double backAt) {
+        return Math.abs(wrap(backAt - look)) <= FACING && Math.abs(wrap(frontAt - look)) >= TURNED_AWAY;
+    }
+
+    /** True while the one in front still waits for the other to come round: not yet behind, and not waited {@link #HOLD_TICKS}. */
+    public static boolean holding(boolean otherBehind, long waited) {
+        return !otherBehind && waited < HOLD_TICKS;
     }
 
     /** "Never", on an investigator's 32-bit clocks (its entity data keeps the low 32 bits of the game tick). */
