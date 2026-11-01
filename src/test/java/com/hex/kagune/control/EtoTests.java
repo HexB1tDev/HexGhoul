@@ -286,7 +286,8 @@ public final class EtoTests {
             check(EtoTalk.answer(date, choice) != null, "an answer to everything: " + choice);
         }
         check(NpcTalk.Choice.byOrdinal(11) == NpcTalk.Choice.LEAVE && NpcTalk.Choice.byOrdinal(18) == NpcTalk.Choice.SURGERY
-            && NpcTalk.Choice.values().length == 36 && NpcTalk.Choice.byOrdinal(35) == NpcTalk.Choice.HOME && NpcTalk.Choice.SAY_3.say() == 2
+            && NpcTalk.Choice.values().length == 37 && NpcTalk.Choice.byOrdinal(35) == NpcTalk.Choice.HOME
+            && NpcTalk.Choice.byOrdinal(36) == NpcTalk.Choice.ANSWER && NpcTalk.Choice.SAY_3.say() == 2
             && NpcTalk.Choice.LEAVE.say() == -1,
             "new choices at the end, the old ordinals kept");
         claimed();

@@ -40,8 +40,8 @@ public final class GhoulNpcTalk {
     static final double REACH = 6.0;
     static final double KEEP = 9.0;
 
-    /** Who each player is talking to and the answers they were offered. */
-    private record Talk(int npc, List<NpcTalk.Choice> offered) {
+    /** Who each player is talking to and the answers they were offered (1.3.29: and what each reply slot means: a scene's keys). */
+    private record Talk(int npc, List<NpcTalk.Choice> offered, List<String> keys) {
     }
 
     private static final Map<UUID, Talk> TALKS = new HashMap<>();
@@ -67,6 +67,11 @@ public final class GhoulNpcTalk {
         TALKS.remove(event.getEntity().m_20148_());
     }
 
+    /** 1.3.29: true while {@code player} has a talk with a ghoul open. */
+    static boolean talking(ServerPlayer player) {
+        return TALKS.containsKey(player.m_20148_());
+    }
+
     static void open(ServerPlayer player, GhoulNpc npc) {
         NpcIdentity who = npc.identity();
         GhoulNpcBrain.Mind mind = npc.mind;
@@ -90,7 +95,133 @@ public final class GhoulNpcTalk {
         befriended(player, who, key, QuestServer.bond(player, key)); // a favour done while apart may have made them friends
         GhoulNpcBrain.listen(npc, mind, player, now);
         NpcTalk.Context context = context(player, npc, who);
-        show(player, npc, who, context, NpcTalk.open(context).line(), NpcTalk.choices(context));
+        // 1.3.29: it came up to them with something: the talk opens on it.
+        SceneServer.Pending pending = SceneServer.take(player, npc.m_19879_());
+        com.hex.kagune.control.npc.scene.Scene scene = pending == null ? null : SceneServer.scene(pending.scene());
+        if (scene != null) {
+            scene(player, npc, who, context, scene, scene.first(), SceneServer.context(player, npc, now), pending.line());
+            return;
+        }
+        main(player, npc, who, context, NpcTalk.open(context).line());
+    }
+
+    /** 1.3.29: its first page: its own answers, and (one who walks with them) something to talk about. */
+    private static void main(ServerPlayer player, GhoulNpc npc, NpcIdentity who, NpcTalk.Context context, String line) {
+        List<NpcTalk.Choice> choices = new java.util.ArrayList<>(NpcTalk.choices(context));
+        List<String> labels = new java.util.ArrayList<>();
+        List<String> keys = new java.util.ArrayList<>();
+        for (int i = 0; i < choices.size(); i++) {
+            labels.add("");
+        }
+        if (context.ally() && !SceneServer.allyTopics(player, npc, player.m_9236_().m_46467_()).isEmpty()) {
+            int at = Math.max(0, choices.indexOf(NpcTalk.Choice.LEAVE));
+            choices.add(at, NpcTalk.Choice.SAY_8);
+            labels.add(at, "Let's talk.");
+            while (keys.size() < 7) {
+                keys.add("");
+            }
+            keys.add("topics");
+        }
+        send(player, npc, who, context, line, choices, labels, keys);
+    }
+
+    /** 1.3.29: a scene's page ({@code line}: what it says; null, the page's own), each answer keyed to it; a topic's has "back". */
+    private static void scene(ServerPlayer player, GhoulNpc npc, NpcIdentity who, NpcTalk.Context context, com.hex.kagune.control.npc.scene.Scene scene,
+                              com.hex.kagune.control.npc.scene.Scene.Page page, com.hex.kagune.control.npc.scene.SceneContext sc, String line) {
+        List<NpcTalk.Choice> choices = new java.util.ArrayList<>();
+        List<String> labels = new java.util.ArrayList<>();
+        List<String> keys = new java.util.ArrayList<>();
+        for (int i = 0; i < page.options().size() && i < NpcTalk.Choice.SAYS.length - 1; i++) {
+            choices.add(NpcTalk.Choice.SAYS[i]);
+            labels.add(com.hex.kagune.control.npc.scene.SceneBook.fill(page.options().get(i).label(), sc));
+            keys.add("s:" + scene.key() + ":" + page.id() + ":" + i);
+        }
+        if (scene.kind() == com.hex.kagune.control.npc.scene.Scene.Kind.TOPIC) {
+            choices.add(NpcTalk.Choice.SAYS[keys.size()]);
+            labels.add("...");
+            keys.add("topics");
+        }
+        choices.add(NpcTalk.Choice.LEAVE);
+        labels.add("");
+        String said = line != null ? line
+            : com.hex.kagune.control.npc.scene.SceneBook.fill(com.hex.kagune.control.npc.scene.SceneBook.one(page.lines(), sc.seed()), sc);
+        send(player, npc, who, context, said, choices, labels, keys);
+    }
+
+    /** 1.3.29: what can be talked about with it now (its topics, a different few each time), and back. */
+    private static void topics(ServerPlayer player, GhoulNpc npc, NpcIdentity who, NpcTalk.Context context, String line) {
+        long now = player.m_9236_().m_46467_();
+        List<com.hex.kagune.control.npc.scene.Scene> all = new java.util.ArrayList<>(SceneServer.allyTopics(player, npc, now));
+        java.util.Collections.shuffle(all, new java.util.Random(npc.m_217043_().m_188503_(100000)));
+        com.hex.kagune.control.npc.scene.SceneContext sc = SceneServer.context(player, npc, now);
+        List<NpcTalk.Choice> choices = new java.util.ArrayList<>();
+        List<String> labels = new java.util.ArrayList<>();
+        List<String> keys = new java.util.ArrayList<>();
+        for (com.hex.kagune.control.npc.scene.Scene scene : all) {
+            if (keys.size() >= 6) {
+                break;
+            }
+            choices.add(NpcTalk.Choice.SAYS[keys.size()]);
+            labels.add(com.hex.kagune.control.npc.scene.SceneBook.fill(scene.prompt(), sc));
+            keys.add("t:" + scene.key());
+        }
+        choices.add(NpcTalk.Choice.SAYS[keys.size()]);
+        labels.add("...");
+        keys.add("back");
+        choices.add(NpcTalk.Choice.LEAVE);
+        labels.add("");
+        send(player, npc, who, context, line, choices, labels, keys);
+    }
+
+    /** 1.3.29: the page sent with its own words on each answer and the keys behind its reply slots. */
+    private static void send(ServerPlayer player, GhoulNpc npc, NpcIdentity who, NpcTalk.Context context, String line, List<NpcTalk.Choice> choices,
+                             List<String> labels, List<String> keys) {
+        TALKS.put(player.m_20148_(), new Talk(npc.m_19879_(), List.copyOf(choices), List.copyOf(keys)));
+        int[] ordinals = new int[choices.size()];
+        String[] shown = new String[choices.size()];
+        for (int i = 0; i < ordinals.length; i++) {
+            ordinals[i] = choices.get(i).ordinal();
+            shown[i] = i < labels.size() ? labels.get(i) : "";
+        }
+        ControlNetwork.sendTo(player, new S2CNpcTalk(npc.m_19879_(), who.displayName(), who.temper().title(), context.regard(), context.ally(), who.skin(),
+            line, ordinals, shown));
+    }
+
+    /** 1.3.29: a reply slot with a key behind it: a scene's answer, a topic, the topics page, back to its first page. */
+    private static void keyed(ServerPlayer player, GhoulNpc npc, NpcIdentity who, String key) {
+        long now = player.m_9236_().m_46467_();
+        NpcTalk.Context context = context(player, npc, who);
+        if (key.equals("topics")) {
+            topics(player, npc, who, context, "...");
+            return;
+        }
+        if (key.equals("back")) {
+            main(player, npc, who, context, "...");
+            return;
+        }
+        if (key.startsWith("t:")) {
+            com.hex.kagune.control.npc.scene.Scene scene = SceneServer.scene(key.substring(2));
+            if (scene != null) {
+                scene(player, npc, who, context, scene, scene.first(), SceneServer.context(player, npc, now), null);
+            }
+            return;
+        }
+        SceneServer.AllyAnswer answer = SceneServer.allyAnswer(player, npc, key, now);
+        if (answer == null) {
+            main(player, npc, who, context, "...");
+            return;
+        }
+        NpcTalk.Context after = context(player, npc, who);
+        befriended(player, who, npc.m_20148_().toString(), QuestServer.bond(player, npc.m_20148_().toString()));
+        if (answer.next() != null && !answer.option().does("close")) {
+            scene(player, npc, who, after, answer.scene(), answer.next(), answer.context(), answer.line());
+            return;
+        }
+        if (answer.option().does("close")) {
+            send(player, npc, who, after, answer.line(), List.of(NpcTalk.Choice.LEAVE), List.of(""), List.of());
+            return;
+        }
+        main(player, npc, who, after, answer.line());
     }
 
     /** The first time it counts {@code player} a friend: they are told, and the quests hear of it. The bond as it now is. */
@@ -109,13 +240,26 @@ public final class GhoulNpcTalk {
     public static void heard(ServerPlayer player, int npcId, int ordinal) {
         Talk talk = TALKS.get(player.m_20148_());
         NpcTalk.Choice choice = NpcTalk.Choice.byOrdinal(ordinal);
+        if (choice == NpcTalk.Choice.ANSWER) {
+            // 1.3.29: the Answer key: the ghoul who walks with them came up with something.
+            if (talk == null && player.m_284548_().m_6815_(npcId) instanceof GhoulNpc npc && npc.m_6084_() && npc.m_20280_(player) <= 24.0 * 24.0) {
+                open(player, npc);
+            }
+            return;
+        }
         if (talk == null || talk.npc() != npcId || choice != NpcTalk.Choice.LEAVE && !talk.offered().contains(choice)) {
             return;
         }
         ServerLevel level = player.m_284548_();
-        if (!(level.m_6815_(npcId) instanceof GhoulNpc npc) || !npc.m_6084_() || npc.m_20280_(player) > KEEP * KEEP || npc.mind == null
+        double keep = talk.keys().isEmpty() ? KEEP : 16.0;
+        if (!(level.m_6815_(npcId) instanceof GhoulNpc npc) || !npc.m_6084_() || npc.m_20280_(player) > keep * keep || npc.mind == null
             || npc.identity() == null) {
             TALKS.remove(player.m_20148_());
+            return;
+        }
+        int slot = choice.say();
+        if (slot >= 0 && slot < talk.keys().size() && !talk.keys().get(slot).isEmpty()) {
+            keyed(player, npc, npc.identity(), talk.keys().get(slot));
             return;
         }
         NpcIdentity who = npc.identity();
@@ -204,7 +348,7 @@ public final class GhoulNpcTalk {
 
     /** The page sent: who it is, how it regards them, what it says and what they can answer. */
     private static void show(ServerPlayer player, GhoulNpc npc, NpcIdentity who, NpcTalk.Context context, String line, List<NpcTalk.Choice> choices) {
-        TALKS.put(player.m_20148_(), new Talk(npc.m_19879_(), List.copyOf(choices)));
+        TALKS.put(player.m_20148_(), new Talk(npc.m_19879_(), List.copyOf(choices), List.of()));
         int[] ordinals = new int[choices.size()];
         for (int i = 0; i < ordinals.length; i++) {
             ordinals[i] = choices.get(i).ordinal();

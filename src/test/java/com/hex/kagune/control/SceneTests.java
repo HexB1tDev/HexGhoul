@@ -55,6 +55,7 @@ public final class SceneTests {
         Map<String, List<Scene>> books = scripts();
         companions(books);
         children(books.getOrDefault("child", List.of()));
+        allies(books.getOrDefault("ally", List.of()));
         picking();
         tempers();
         words();
@@ -143,6 +144,7 @@ public final class SceneTests {
         int lines = 0;
         Set<String> speakers = new HashSet<>(SceneWords.COMPANIONS);
         speakers.add(SceneWords.CHILD);
+        speakers.add(SceneWords.ALLY);
         for (String speaker : speakers) {
             Path file = TALK.resolve(speaker + ".txt");
             check(Files.exists(file), speaker + " has a script");
@@ -255,6 +257,28 @@ public final class SceneTests {
                     }
                 }
             }
+        }
+    }
+
+    /** Every ally temper: something to come up with in every mood, by day and by night (hungry: at night); things to talk about. */
+    static void allies(List<Scene> book) {
+        for (String tier : SceneWords.ALLY_TIERS) {
+            for (String mood : SceneWords.ALLY_MOODS) {
+                for (String hour : new String[] {"day", "night"}) {
+                    if (mood.equals("hungry") && hour.equals("day")) {
+                        continue;
+                    }
+                    SceneContext c = new SceneContext(tier, mood, "", Set.of(hour, "ghoul", "man", "boy", "following"), Map.of("name", "Alex", "me", "Rin"), 4);
+                    int fit = SceneBook.fitting(book, Scene.Kind.APPROACH, c).size();
+                    check(fit >= 2, "a " + tier + " ally (" + mood + ", " + hour + ") comes up with " + fit + " scenes");
+                }
+            }
+            SceneContext talk = new SceneContext(tier, "happy", "", Set.of("day", "ghoul", "man", "boy"), Map.of(), 2);
+            int topics = SceneBook.fitting(book, Scene.Kind.TOPIC, talk).size();
+            check(topics >= 6, "a " + tier + " ally has " + topics + " things to talk about");
+        }
+        for (Scene scene : book) {
+            check(scene.kind() == Scene.Kind.TOPIC || !scene.ignored().isEmpty(), "ally." + scene.id() + " says something if left unanswered");
         }
     }
 

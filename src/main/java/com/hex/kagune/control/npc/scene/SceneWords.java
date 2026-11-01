@@ -17,9 +17,15 @@ public final class SceneWords {
     /** The speakers with a script, and which family each is. */
     public static final Set<String> COMPANIONS = Set.of("eto", "touka", "ken");
     public static final String CHILD = "child";
+    /** The wild ghouls who walk with a player (any of them: by its temper). */
+    public static final String ALLY = "ally";
 
     public static boolean child(String speaker) {
         return CHILD.equals(speaker);
+    }
+
+    public static boolean ally(String speaker) {
+        return ALLY.equals(speaker);
     }
 
     // ---------------------------------------------------------------- who a scene is for
@@ -28,6 +34,8 @@ public final class SceneWords {
     public static final Set<String> COMPANION_TIERS = Set.of("wary", "friendly", "close", "partner", "wife");
     /** A child's (ChildStage). */
     public static final Set<String> CHILD_TIERS = Set.of("baby", "toddler", "child", "teen");
+    /** An ally's: its temper (the ones that walk with a player). */
+    public static final Set<String> ALLY_TIERS = Set.of("anteiku", "pack", "drifter", "scavenger");
 
     /** Short words for several tiers at once. */
     public static Set<String> tiers(String word) {
@@ -52,6 +60,8 @@ public final class SceneWords {
     public static final Set<String> CHILD_MOODS = Set.of("happy", "sleepy", "scared", "missed", "bored", "proud", "sad", "hurt");
     /** A child's temperament (ChildTemper). */
     public static final Set<String> TEMPERS = Set.of("sunny", "shy", "bold", "curious", "mischief", "gentle", "serious");
+    /** An ally's moods: fine, restless, hungry (at night), hurt, worn out (dawn). */
+    public static final Set<String> ALLY_MOODS = Set.of("happy", "bored", "hungry", "hurt", "tired");
 
     // ---------------------------------------------------------------- moments ("when:", all must hold; "!" for not)
 
@@ -64,6 +74,8 @@ public final class SceneWords {
     /** A child's: a ghoul or not, a girl or a boy, which parent it talks to, the other parent a companion, brothers and sisters, carried. */
     public static final Set<String> CHILD_FLAGS = union(SHARED_FLAGS, Set.of("girl", "boy", "mother", "father", "siblings", "npcparent", "eto", "touka", "ken",
         "carried", "taught"));
+    /** An ally's: a boy or a girl, a friend of the player's (regard), not just someone who walks with them. */
+    public static final Set<String> ALLY_FLAGS = union(SHARED_FLAGS, Set.of("boy", "girl", "friend"));
 
     // ---------------------------------------------------------------- what an answer does
 
@@ -79,6 +91,8 @@ public final class SceneWords {
     /** A child's moments (ChildMoment, lower case) and deeds: picked up, carried on shoulders, by the hand, following, staying, to bed. */
     public static final Set<String> CHILD_EFFECTS = Set.of("hug", "pat", "high_five", "tickle", "peekaboo", "toss", "spin", "arms_up", "wave", "clap",
         "flower", "up", "down", "shoulders", "hand", "follow", "stay", "bed", "home", "teach", "sad", "proud", "close", "play");
+    /** An ally's deeds: following, waiting, done talking. */
+    public static final Set<String> ALLY_EFFECTS = Set.of("follow", "stay", "close");
     /** What may be given to the player ({@code gift:<item>}): small things, a ghoul's dinner for a ghoul. */
     public static final Set<String> GIFTS = Set.of("poppy", "dandelion", "cornflower", "blue_orchid", "allium", "oxeye_daisy", "lily_of_the_valley",
         "azure_bluet", "red_tulip", "pink_tulip", "sunflower", "cookie", "bread", "apple", "sweet_berries", "glow_berries", "honey_bottle", "pumpkin_pie",
@@ -92,6 +106,8 @@ public final class SceneWords {
     public static final Set<String> COMPANION_NAMES = Set.of("name", "kid", "kids", "partner", "she", "her", "self");
     /** A child's: what it calls the one it talks to, the other parent (what it calls them, their name), its own name, a brother or sister. */
     public static final Set<String> CHILD_NAMES = Set.of("call", "other", "othername", "me", "sib", "name");
+    /** An ally's: the player's name, its own. */
+    public static final Set<String> ALLY_NAMES = Set.of("name", "me");
     /** A name that needs a moment to hold (else there is no one to name). */
     public static String needs(String name) {
         return switch (name) {
@@ -110,25 +126,28 @@ public final class SceneWords {
 
     /** The tiers, moods, flags, effects and names of {@code speaker}'s family. */
     public static Set<String> tiersOf(String speaker) {
-        return child(speaker) ? CHILD_TIERS : COMPANION_TIERS;
+        return child(speaker) ? CHILD_TIERS : ally(speaker) ? ALLY_TIERS : COMPANION_TIERS;
     }
 
     public static Set<String> moodsOf(String speaker) {
-        return child(speaker) ? CHILD_MOODS : COMPANION_MOODS;
+        return child(speaker) ? CHILD_MOODS : ally(speaker) ? ALLY_MOODS : COMPANION_MOODS;
     }
 
     public static Set<String> flagsOf(String speaker) {
-        return child(speaker) ? CHILD_FLAGS : COMPANION_FLAGS;
+        return child(speaker) ? CHILD_FLAGS : ally(speaker) ? ALLY_FLAGS : COMPANION_FLAGS;
     }
 
     public static Set<String> namesOf(String speaker) {
-        return child(speaker) ? CHILD_NAMES : COMPANION_NAMES;
+        return child(speaker) ? CHILD_NAMES : ally(speaker) ? ALLY_NAMES : COMPANION_NAMES;
     }
 
     /** True if {@code effect} (a token after an answer's "|") is one {@code speaker}'s family may do. */
     public static boolean effect(String speaker, String effect) {
         if (effect.startsWith("gift:")) {
             return GIFTS.contains(effect.substring(5));
+        }
+        if (ally(speaker)) {
+            return ALLY_EFFECTS.contains(effect);
         }
         return child(speaker) ? CHILD_EFFECTS.contains(effect) : COMPANION_EFFECTS.contains(effect) || GESTURES.contains(effect);
     }

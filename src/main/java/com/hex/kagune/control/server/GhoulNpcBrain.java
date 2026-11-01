@@ -168,6 +168,12 @@ public final class GhoulNpcBrain {
             fight(npc, who, mind, prey, level, now);
         } else {
             mind.fleeing = false;
+            // 1.3.29: walking with a player and nothing to fight: now and then it comes up to them with something (SceneServer).
+            ServerPlayer owner = mind.owner != null && now % 20L == 15L ? owner(npc, mind) : null;
+            if (owner != null && owner.m_20280_(npc) <= 12.0 * 12.0 && SceneServer.allyTick(npc, owner, now)) {
+                sync(npc, mind, who);
+                return;
+            }
             idle(npc, who, mind, level, now);
         }
         sync(npc, mind, who);

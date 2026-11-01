@@ -1,0 +1,397 @@
+# The wild ghouls who walk with the player (1.3.29): their scenes and topics. Read by SceneBook (see its comment; SceneWords for words).
+# "who" is their temper: anteiku (gentle, protects humans, polite), pack (brash, violent, loyal to strength), drifter (a loner of few
+# words), scavenger (skittish, grateful, fiercely loyal once it trusts you). Their mood: happy, bored, hungry (at night), hurt, tired.
+# {me} is their name, {name} the player's.
+
+# =====================================================================================================================================
+# ANYONE WHO WALKS WITH YOU
+# =====================================================================================================================================
+
+scene ally_thanks
+who: anteiku drifter scavenger
+mood: happy bored
+say: Hey. I don't say this enough. ...Thanks. For letting me walk with you.
+say: You know, I didn't have anyone before you. Walking with you is... better. That's all.
+> Glad to have you. | +2
+  - ...Yeah. Me too.
+> We're a team. | +2
+  - A team. I like that. I'll watch your back.
+> Don't get sentimental. | -1
+  - Right. Sorry. Forget it.
+ignored: Never mind.
+
+scene ally_rest
+who: anteiku pack drifter scavenger
+mood: tired bored
+say: Can we stop for a bit? My legs are done. Even ghouls get tired.
+say: Let's rest here. Five minutes. I'll keep one eye open.
+> Rest here a while. | +2 stay
+  - *sits down heavily* ...Thanks. Wake me if anything comes.
+> Keep moving. | -1 follow
+  - Fine. Fine. Moving.
+> I'll keep watch. | +2
+  - You're alright, you know that?
+ignored: *sits down anyway*
+
+scene ally_hurt
+who: anteiku pack drifter scavenger
+mood: hurt
+say: I'm hit. It'll heal. Just... give me a minute before the next fight.
+say: That one got me good. I'm fine. I'm FINE. ...Mostly fine.
+> Rest. I'll handle the next one. | +2 stay
+  - ...Thanks. I owe you.
+> Here, take this. | +2 gift:ghoul_meat
+  - *eats it fast* ...That's better. Much better. Thanks.
+> Toughen up. | -1
+  - Easy for you to say.
+ignored: I'll heal. I always do.
+
+scene ally_hurt_player
+who: anteiku pack drifter scavenger
+when: hurt
+say: You're bleeding. Stay behind me for a bit. I've got this.
+> Thanks. | +2
+  - Don't thank me. Just heal.
+> I can still fight. | 0
+  - I know you can. Let me anyway.
+> Stay close. | +1 follow
+  - Right behind you. Always.
+ignored: I've got your back. Whether you like it or not.
+
+scene ally_hungry
+who: anteiku pack drifter scavenger
+mood: hungry
+when: night
+say: I'm starving. Can we find something? Anything. I won't be picky.
+say: My stomach's eating itself. Is there meat around? I can smell something.
+> Here. Eat this. | +3 gift:ghoul_meat
+  - *eats like it hasn't in days* ...You're a lifesaver. Literally.
+> Let's go find something. | +2 follow
+  - Yes. Let's. I'll take the lead. My nose is better.
+> Hold on a bit longer. | -1
+  - ...Right. Longer. Sure.
+ignored: I'll find something myself.
+
+scene ally_rain
+who: anteiku pack drifter scavenger
+when: rain
+say: Rain. Good. Washes the scent off us. The Doves can't track us in this.
+> Let's move while it lasts. | +2 follow
+  - Right. Quiet and quick.
+> I like the rain. | +1
+  - So do I. It feels clean.
+> Let's wait it out. | 0 stay
+  - Fine by me.
+ignored: *turns its face up to the rain*
+
+# =====================================================================================================================================
+# ANTEIKU: gentle, protects humans, polite, coffee
+# =====================================================================================================================================
+
+scene anteiku_coffee
+who: anteiku
+mood: happy bored tired
+say: I brought a flask of coffee. It's not as good as the cafe's, but it's warm. Want some?
+> Thanks. | +2 gift:cocoa_beans
+  - Here. And some beans for later. You can grind them yourself.
+> You carry coffee into fights? | +1
+  - Always. A warm cup after is the only thing that makes it bearable.
+> No thanks. | 0
+  - More for me, then.
+ignored: *drinks it quietly*
+
+scene anteiku_human
+who: anteiku
+mood: happy bored
+say: There's a human village nearby. Let's stay clear of it. They don't need to know we exist. It's better for everyone.
+> Agreed. | +2
+  - Thank you. Most ghouls don't understand that.
+> Why protect them? | +1 -> why
+> They're just food. | -3
+  - ...Don't say that. Not to me. Not ever.
+page why
+say: Because some of them are kind to us without knowing what we are. That's worth protecting.
+> That's beautiful. | +2
+  - It's just decency. It's rarer than it should be.
+> You're too soft. | -1
+  - Maybe. I'd rather be soft than be what the Doves say we are.
+ignored: Let's just go round it.
+
+scene anteiku_hungry
+who: anteiku
+mood: hungry
+when: night
+say: I need to eat. I only take from the ones already dead. Would you help me look? I'd rather not do this alone.
+> I'll help you. | +2 follow
+  - Thank you. We're looking for the ones nobody's coming back for.
+> Here, take my meat. | +3 gift:ghoul_meat
+  - You'd give that away? ...Thank you. Truly.
+> Can't it wait? | -1
+  - It can. For a while.
+ignored: I'll manage.
+
+scene anteiku_hurt
+who: anteiku
+mood: hurt
+say: I'm alright. Really. I've had worse in a single shift at the cafe. ...That's a joke. It hurts.
+> Sit down. Let me help. | +2 stay
+  - Thank you. You're kinder than most.
+> We'll find somewhere safe. | +2 follow
+  - Yes. Somewhere quiet. Thank you.
+> Walk it off. | -1
+  - Right. Walking.
+ignored: I'll be fine.
+
+# =====================================================================================================================================
+# PACK: brash, violent, loyal to strength
+# =====================================================================================================================================
+
+scene pack_fight
+who: pack
+mood: happy bored
+say: I'm itching for a fight. Point me at something. Anything. A Dove, a monster, a rival. I'm not picky.
+say: Boring. So boring. When do we get to hurt something?
+> Let's go hunting. | +2 follow
+  - FINALLY. Stay out of my way when it starts.
+> Patience. | 0
+  - Patience is for prey.
+> Fight me, then. | +2 -> spar
+page spar
+say: You? ...Ha! I like you. Come on, then. Don't cry when you lose.
+> Show me what you've got. | +2
+  - *after a brutal exchange, grinning* ...Not bad. Not bad at all.
+> On second thought... | -1
+  - Coward. ...Smart coward.
+ignored: Fine. I'll pick a fight myself.
+
+scene pack_respect
+who: pack
+mood: happy
+say: You fought well back there. I don't say that often. Don't make me say it twice.
+> You weren't bad either. | +2
+  - "Not bad". Ha. I was magnificent. ...You too.
+> I know. | +1
+  - Cocky. Good. Stay that way.
+> Thanks. | +1
+  - Don't thank me. Just keep winning.
+ignored: Whatever. I said it.
+
+scene pack_bored
+who: pack
+mood: bored tired
+say: This is the most boring walk in the history of walks. Tell me we're going somewhere with blood.
+> We're going somewhere dangerous. | +2 follow
+  - Now you're talking.
+> Not everything's a fight. | -1
+  - Says who? Everything worth doing is a fight.
+> Rest for now. | 0 stay
+  - Ugh. Fine. I'll sharpen something.
+ignored: *growls at a tree*
+
+scene pack_hungry
+who: pack
+mood: hungry
+when: night
+say: I'm starving and I'm angry and that's a bad mix. Feed me or point me at something I can eat.
+> Here. | +3 gift:ghoul_meat
+  - *tears into it* ...You're alright. You're alright.
+> Let's hunt together. | +2 follow
+  - YES. You and me. Let's go.
+> Calm down. | -2
+  - Don't tell me to calm down when I'm hungry.
+ignored: I'll find my own.
+
+scene pack_hurt
+who: pack
+mood: hurt
+say: It's a scratch. I've had worse. I've GIVEN worse. Don't look at me like that.
+> You need to rest. | +1 stay
+  - Rest. Ugh. ...Five minutes. Not a second more.
+> You fought like an animal. | +2
+  - *grins through the blood* Thanks.
+> You got sloppy. | -2
+  - Say that again when I'm healed.
+ignored: I'll heal. Then I'll get even.
+
+# =====================================================================================================================================
+# DRIFTER: a loner of few words
+# =====================================================================================================================================
+
+scene drifter_quiet
+who: drifter
+mood: happy bored tired
+say: ...
+say: *walks beside you in silence for a while, then* ...Nice night.
+> It is. | +2
+  - ...Yeah.
+> You don't talk much. | +1
+  - Nothing much worth saying.
+> Say something. | 0
+  - ...Something.
+ignored: ...
+
+scene drifter_story
+who: drifter
+mood: happy bored
+when: night
+say: Used to walk alone. Every night. Different town. Never stayed. ...This is different.
+> Different good? | +2 -> good
+> Why never stay? | +1
+  - Staying is how they find you.
+> Don't get attached. | -1
+  - ...Right.
+page good
+say: ...Yeah. Different good.
+> Then stay a while. | +3
+  - ...Maybe I will.
+> Glad to hear it. | +2
+  - ...Mm.
+ignored: ...Never mind.
+
+scene drifter_hungry
+who: drifter
+mood: hungry
+when: night
+say: Need to eat. I'll go alone. Won't be long.
+> I'll come with you. | +2 follow
+  - ...Alright.
+> Take this instead. | +3 gift:ghoul_meat
+  - ...Thanks. Didn't expect that.
+> Be careful. | +1
+  - Always am.
+ignored: *goes off alone*
+
+scene drifter_hurt
+who: drifter
+mood: hurt
+say: Took a hit. It'll close. Keep walking.
+> Let's stop. | +2 stay
+  - ...Fine. Short stop.
+> You sure? | +1
+  - Sure.
+> Keep up, then. | 0 follow
+  - Always do.
+ignored: ...It'll close.
+
+# =====================================================================================================================================
+# SCAVENGER: skittish, grateful, fiercely loyal
+# =====================================================================================================================================
+
+scene scavenger_thanks
+who: scavenger
+mood: happy bored
+say: You know, nobody ever let me walk with them before. They usually chase me off. You didn't. ...Thanks.
+say: I found something! For you! It's shiny. I don't know what it is. It's yours.
+> Thank you, friend. | +2 gift:amethyst_shard
+  - *beams* I'll find you more! I'm good at finding things!
+> You don't owe me anything. | +2
+  - I owe you everything. You let me stay.
+> What is it? | +1 gift:amethyst_shard
+  - I dunno! Pretty, though. Pretty is enough.
+ignored: *keeps the shiny thing, just in case*
+
+scene scavenger_nervous
+who: scavenger
+mood: happy bored tired
+say: Did you hear that? Something moved. Probably nothing. Probably. ...Can I walk closer to you?
+> Stay close. | +2 follow
+  - Thanks. Thanks. You're braver than me.
+> It was nothing. | +1
+  - Right. Nothing. ...I'll stay close anyway.
+> Stop jumping at shadows. | -1
+  - Sorry. I can't help it.
+ignored: *jumps at another shadow*
+
+scene scavenger_hungry
+who: scavenger
+mood: hungry
+when: night
+say: I'm so hungry. I'll eat anything. Scraps. Leftovers. Whatever the others leave. Please?
+> Here, have this. | +3 gift:ghoul_meat
+  - *eats like it's the best thing ever* ...You're the best. The BEST.
+> Let's find something. | +2 follow
+  - I know a spot! Follow me! Quietly!
+> Not now. | -1
+  - ...Okay. Later. Later's fine.
+ignored: I'll find scraps. I always do.
+
+scene scavenger_hurt
+who: scavenger
+mood: hurt
+say: I'm sorry, I got hurt. I'm slowing you down. Leave me if you have to. I'll catch up. Maybe.
+> I'm not leaving you. | +3 stay
+  - ...You'd stay? For me? ...Nobody ever stays.
+> Lean on me. | +2 follow
+  - Thanks. I'll be quick. I promise.
+> Hurry up, then. | -1
+  - Hurrying. Sorry. Hurrying.
+ignored: I'll catch up. Eventually.
+
+# =====================================================================================================================================
+# TOPICS
+# =====================================================================================================================================
+
+topic ally_past
+prompt: Where are you from?
+say: Here and there. Nowhere that wanted me for long. ...Walking with you is the longest I've stayed anywhere.
+> Stay as long as you like. | +2
+  - ...I might. Thanks.
+> That sounds lonely. | +1
+  - It was. It's less now.
+
+topic ally_doves
+prompt: Ever fought a Dove?
+say: Once. I ran. Running's why I'm alive. The ones who stayed to fight are in jars now.
+> Smart. | +1
+  - Smart's another word for scared. But I'm alive.
+> Next time we fight together. | +2
+  - Together. ...Yeah. That's different.
+
+topic ally_name
+prompt: Is {me} your real name?
+say: It's the one I picked. The old one belonged to someone I don't want to be anymore.
+> {me} suits you. | +2
+  - ...Thanks. I think so too.
+> What was the old one? | 0
+  - Doesn't matter. {me}'s who I am now.
+
+topic ally_hunger
+prompt: How do you cope with the hunger?
+say: You don't cope. You just carry it. Like a stone in your pocket. Some days it's heavier.
+> I know the feeling. | +2
+  - Yeah. You do. That's why I walk with you.
+> I'll share when I can. | +2
+  - ...You'd share? Nobody shares.
+
+topic ally_dream
+prompt: What do you want, someday?
+say: A place to sleep where nobody comes looking. That's it. That's the whole dream.
+> We'll find it. | +2
+  - ...Yeah? ...Okay. Let's.
+> That's a good dream. | +1
+  - It's a small one. Small ones come true sometimes.
+
+topic ally_fight_style
+prompt: How do you fight?
+say: Fast and dirty. Hit first. Hit hard. Don't stop till it's over. That's all there is.
+> Teach me. | +1
+  - You don't need teaching. You need practice. Lots of it.
+> That's brutal. | 0
+  - Fighting's brutal. Pretending it isn't gets you killed.
+
+topic ally_friends
+prompt: Do you have friends?
+say: ...You, I suppose. Is that weird? That's probably weird.
+> It's not weird. | +3
+  - ...Okay. Good. Friend.
+> We're friends. | +3
+  - Friends. ...I'll remember that.
+
+topic ally_night
+prompt: Do you like the night?
+when: night
+say: Night's when we're free. Nobody looks too closely. You can just... be what you are.
+> I feel the same. | +2
+  - Yeah. You get it.
+> It's dangerous. | +1
+  - Everything's dangerous. Night's honest about it.

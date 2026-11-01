@@ -253,7 +253,9 @@ public final class EtoServer {
             return;
         }
         ServerLevel level = player.m_284548_();
-        if (!(level.m_6815_(npcId) instanceof EtoNpc npc) || !npc.m_6084_() || npc.m_20280_(player) > KEEP * KEEP || npc.mind == null) {
+        // 1.3.29: a scene she came up with may be answered while she is still on her way (further off).
+        double keep = talk.kind() == Kind.SCENE ? 16.0 : KEEP;
+        if (!(level.m_6815_(npcId) instanceof EtoNpc npc) || !npc.m_6084_() || npc.m_20280_(player) > keep * keep || npc.mind == null) {
             TALKS.remove(player.m_20148_());
             return;
         }

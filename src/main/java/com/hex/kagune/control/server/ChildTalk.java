@@ -218,7 +218,13 @@ public final class ChildTalk {
             return;
         }
         ServerLevel level = player.m_284548_();
-        if (choice == NpcTalk.Choice.LEAVE || !(level.m_6815_(npcId) instanceof ChildNpc npc) || npc.mind == null || npc.m_20280_(player) > 8.0 * 8.0) {
+        // 1.3.29: a scene's answer may come while it is still on its way (further off).
+        boolean scenic = false;
+        for (String key : talk.keys()) {
+            scenic |= key.startsWith("s:") || key.startsWith("t:");
+        }
+        double keep = scenic ? 16.0 : 8.0;
+        if (choice == NpcTalk.Choice.LEAVE || !(level.m_6815_(npcId) instanceof ChildNpc npc) || npc.mind == null || npc.m_20280_(player) > keep * keep) {
             TALKS.remove(player.m_20148_());
             // 1.3.20: a moment chosen begins now the talk is closed.
             if (talk.queued() != null && level.m_6815_(npcId) instanceof ChildNpc chosen && chosen.mind != null) {

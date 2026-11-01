@@ -299,7 +299,7 @@ public final class SceneBook {
                 if (option.next != null && !pageIds.contains(option.next)) {
                     errors.add(where + " line " + option.line + ": leads to a page it doesn't have: " + option.next);
                 }
-                if (!SceneWords.child(speaker) && !together) {
+                if (SceneWords.COMPANIONS.contains(speaker) && !together) {
                     for (String effect : option.effects) {
                         if (SceneWords.TOGETHER_ONLY.contains(effect)) {
                             errors.add(where + " line " + option.line + ": '" + effect + "' is for a couple alone (who: partner/wife/together)");

@@ -106,7 +106,14 @@ public final class SceneServer {
     // ---------------------------------------------------------------- who waits on whom
 
     /** Someone came up to a player with {@code scene} and waits ({@code line}: what they said, so the talk opens on the same words). */
-    record Pending(int npc, String scene, String line, long until, boolean child, String about) {
+    record Pending(int npc, String scene, String line, long until, String kind, String about) {
+        boolean child() {
+            return "child".equals(this.kind);
+        }
+
+        boolean ally() {
+            return "ally".equals(this.kind);
+        }
     }
 
     private static final Map<UUID, Pending> PENDING = new HashMap<>();
@@ -133,11 +140,32 @@ public final class SceneServer {
         return now <= pending.until() + 40L ? pending : null;
     }
 
-    /** True if nobody is waiting on {@code player}, nobody came up to them a moment ago, and they are not in another talk. */
+    /** When each player last hurt something or was hurt: nobody comes up to them in the middle of a fight. */
+    private static final Map<UUID, Long> FIGHTING = new HashMap<>();
+    static final long FIGHT_QUIET = 200L;
+
+    @SubscribeEvent
+    public static void fought(net.minecraftforge.event.entity.living.LivingHurtEvent event) {
+        if (event.getEntity() instanceof ServerPlayer hurt) {
+            FIGHTING.put(hurt.m_20148_(), hurt.m_9236_().m_46467_());
+        }
+        if (event.getSource() != null && event.getSource().m_7639_() instanceof ServerPlayer hitter) {
+            FIGHTING.put(hitter.m_20148_(), hitter.m_9236_().m_46467_());
+        }
+    }
+
+    /**
+     * True if nobody is waiting on {@code player}, nobody came up to them a moment ago, they are not in another talk, and they are not in
+     * the middle of a fight.
+     */
     static boolean free(ServerPlayer player, long now) {
         Long last = LAST.get(player.m_20148_());
+        Long fought = FIGHTING.get(player.m_20148_());
+        if (fought != null && now - fought >= 0L && now - fought < FIGHT_QUIET) {
+            return false;
+        }
         return !PENDING.containsKey(player.m_20148_()) && (last == null || now - last >= BETWEEN) && !EtoServer.talking(player)
-            && !ChildTalk.talking(player) && player.m_6084_() && !player.m_5803_();
+            && !ChildTalk.talking(player) && !GhoulNpcTalk.talking(player) && player.m_6084_() && !player.m_5803_();
     }
 
     /**
@@ -225,7 +253,7 @@ public final class SceneServer {
         }
         said(player, speaker, scene);
         String line = SceneBook.fill(SceneBook.one(scene.first().lines(), sc.seed()), sc);
-        PENDING.put(player.m_20148_(), new Pending(npc.m_19879_(), scene.key(), line, now + WAIT, false, sc.tier() + "|" + sc.mood()));
+        PENDING.put(player.m_20148_(), new Pending(npc.m_19879_(), scene.key(), line, now + WAIT, "companion", sc.tier() + "|" + sc.mood()));
         LAST.put(player.m_20148_(), now);
         ControlNetwork.sendTo(player, new S2CNpcApproach(npc.m_19879_(), npc.displayName(), npc.persona().colour(), line, (int)WAIT));
         EtoBrain.walkUp(npc, npc.mind, player, EtoGesture.WAVE, now);
@@ -499,7 +527,7 @@ public final class SceneServer {
         }
         said(parent, "child:" + child.id, scene);
         String line = SceneBook.fill(SceneBook.one(scene.first().lines(), sc.seed()), sc);
-        PENDING.put(parent.m_20148_(), new Pending(npc.m_19879_(), scene.key(), line, now + WAIT, true, child.id));
+        PENDING.put(parent.m_20148_(), new Pending(npc.m_19879_(), scene.key(), line, now + WAIT, "child", child.id));
         LAST.put(parent.m_20148_(), now);
         ControlNetwork.sendTo(parent, new S2CNpcApproach(npc.m_19879_(), child.name, "§b", line, (int)WAIT));
         if (!parent.m_20148_().equals(npc.mind.carrier)) {
@@ -628,6 +656,129 @@ public final class SceneServer {
         return SceneBook.fitting(book("child"), Scene.Kind.TOPIC, context(player, npc, child, now));
     }
 
+
+    // ---------------------------------------------------------------- the ghouls who walk with a player
+
+    /** About how long between an ally coming up to the player it walks with (ticks). */
+    static final long ALLY_EVERY = 7200L;
+
+    /** Its player near: time for the ally to come up to them with something? */
+    static boolean allyTick(com.hex.kagune.control.npc.GhoulNpc npc, ServerPlayer owner, long now) {
+        java.util.Random random = new java.util.Random(npc.m_217043_().m_188503_(Integer.MAX_VALUE));
+        String who = "ally:" + npc.m_20148_();
+        if (!due(who, owner, now, ALLY_EVERY, random)) {
+            return false;
+        }
+        later(who, owner, now, ALLY_EVERY, random);
+        return approach(npc, owner, now);
+    }
+
+    /** The ally comes up to its player with something. */
+    static boolean approach(com.hex.kagune.control.npc.GhoulNpc npc, ServerPlayer player, long now) {
+        com.hex.kagune.control.npc.NpcIdentity who = npc.identity();
+        if (npc.mind == null || who == null || !free(player, now)) {
+            return false;
+        }
+        SceneContext sc = context(player, npc, now);
+        if (!com.hex.kagune.control.npc.scene.SceneWords.ALLY_TIERS.contains(sc.tier())) {
+            return false;
+        }
+        Scene scene = SceneBook.pick(book("ally"), Scene.Kind.APPROACH, sc, npc.m_217043_().m_188500_(), recent(player, "ally:" + npc.m_20148_()));
+        if (scene == null) {
+            return false;
+        }
+        said(player, "ally:" + npc.m_20148_(), scene);
+        String line = SceneBook.fill(SceneBook.one(scene.first().lines(), sc.seed()), sc);
+        PENDING.put(player.m_20148_(), new Pending(npc.m_19879_(), scene.key(), line, now + WAIT, "ally", npc.m_20148_().toString()));
+        LAST.put(player.m_20148_(), now);
+        ControlNetwork.sendTo(player, new S2CNpcApproach(npc.m_19879_(), who.displayName(), "\u00a77", line, (int)WAIT));
+        npc.m_21573_().m_5624_(player, 1.0);
+        return true;
+    }
+
+    /** What an ally's scene is picked and filled by: its temper, its mood, the hour, the weather, the player. */
+    static SceneContext context(ServerPlayer player, com.hex.kagune.control.npc.GhoulNpc npc, long now) {
+        ServerLevel level = player.m_284548_();
+        com.hex.kagune.control.npc.NpcIdentity who = npc.identity();
+        Set<String> flags = new HashSet<>();
+        long dayTime = level.m_46468_();
+        hours(flags, dayTime);
+        weather(flags, level);
+        if (player.m_21223_() < player.m_21233_() * 0.5F) {
+            flags.add("hurt");
+        }
+        flags.add(com.hex.kagune.data.KaguneProfile.isUnlocked(player) ? "ghoul" : "human");
+        flags.add(com.hex.kagune.control.Genders.female(player) ? "woman" : "man");
+        flags.add(who != null && who.girl() ? "girl" : "boy");
+        if (GhoulNpcBrain.following(npc)) {
+            flags.add("following");
+        }
+        QuestLog.Bond bond = QuestServer.bond(player, npc.m_20148_().toString());
+        if (bond.regard() >= com.hex.kagune.control.npc.NpcBonds.FRIEND) {
+            flags.add("friend");
+        }
+        boolean night = flags.contains("night");
+        long day = Math.floorDiv(dayTime, 24000L);
+        String mood;
+        if (npc.m_21223_() < npc.m_21233_() * 0.5F) {
+            mood = "hurt";
+        } else if (night && Math.floorMod(npc.m_20148_().hashCode() + day, 3L) == 0L) {
+            mood = "hungry";
+        } else if (flags.contains("dawn")) {
+            mood = "tired";
+        } else {
+            mood = npc.m_217043_().m_188500_() < 0.35 ? "bored" : "happy";
+        }
+        Map<String, String> names = new HashMap<>();
+        names.put("name", player.m_36316_().getName());
+        names.put("me", who == null ? "" : who.given());
+        String tier = who == null ? "" : who.temper().name().toLowerCase(java.util.Locale.ROOT);
+        return new SceneContext(tier, mood, "", Set.copyOf(flags), Map.copyOf(names), npc.m_217043_().m_188503_(100000));
+    }
+
+    /** An ally's answer: its words, what it does, the page it leads to. */
+    record AllyAnswer(String line, Scene.Option option, Scene scene, Scene.Page next, SceneContext context) {
+    }
+
+    static AllyAnswer allyAnswer(ServerPlayer player, com.hex.kagune.control.npc.GhoulNpc npc, String key, long now) {
+        Option found = option(key);
+        if (found == null || !"ally".equals(found.scene().speaker())) {
+            return null;
+        }
+        SceneContext sc = context(player, npc, now);
+        Scene.Option option = found.option();
+        String line = option.replies().isEmpty() ? null : SceneBook.fill(SceneBook.one(option.replies(), sc.seed()), sc);
+        String bondKey = npc.m_20148_().toString();
+        int regard = option.regard();
+        if (found.scene().kind() == Scene.Kind.TOPIC && regard > 0 && !paid(player, key, now)) {
+            regard = 0;
+        }
+        if (regard != 0) {
+            QuestLog.Bond bond = QuestServer.bond(player, bondKey);
+            QuestServer.bond(player, bondKey, bond.regard(bond.regard() + regard));
+        }
+        if (option.does("follow")) {
+            GhoulNpcBrain.follow(npc, true);
+        }
+        if (option.does("stay")) {
+            GhoulNpcBrain.follow(npc, false);
+        }
+        String gift = option.gift();
+        if (gift != null) {
+            give(player, gift);
+        }
+        Scene.Page next = option.next() == null ? null : found.scene().page(option.next());
+        if (line == null) {
+            line = next != null ? SceneBook.fill(SceneBook.one(next.lines(), sc.seed()), sc) : "...";
+        }
+        return new AllyAnswer(line, option, found.scene(), next, sc);
+    }
+
+    /** An ally's topics that fit now. */
+    static List<Scene> allyTopics(ServerPlayer player, com.hex.kagune.control.npc.GhoulNpc npc, long now) {
+        return SceneBook.fitting(book("ally"), Scene.Kind.TOPIC, context(player, npc, now));
+    }
+
     // ---------------------------------------------------------------- the hour, the weather
 
     static void hours(Set<String> flags, long dayTime) {
@@ -716,6 +867,14 @@ public final class SceneServer {
             }
             return;
         }
+        if (pending.ally()) {
+            if (body instanceof com.hex.kagune.control.npc.GhoulNpc ghoul && ghoul.identity() != null) {
+                SceneContext sc = context(player, ghoul, now);
+                String line = scene != null && !scene.ignored().isEmpty() ? SceneBook.fill(SceneBook.one(scene.ignored(), seed), sc) : "...";
+                player.m_5661_(Component.m_237113_("\u00a77" + ghoul.identity().displayName() + ": \u00a7r" + line), false);
+            }
+            return;
+        }
         if (!(body instanceof EtoNpc npc) || npc.mind == null) {
             return;
         }
@@ -736,6 +895,7 @@ public final class SceneServer {
         UUID id = event.getEntity().m_20148_();
         PENDING.remove(id);
         LAST.remove(id);
+        FIGHTING.remove(id);
         NEXT.keySet().removeIf(key -> key.endsWith("|" + id));
     }
 }
