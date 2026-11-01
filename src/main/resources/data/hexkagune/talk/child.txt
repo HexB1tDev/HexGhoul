@@ -1,0 +1,13 @@
+# The children's scenes and topics (1.3.29): every age, every temperament, every mood. {call} is what it calls the one it talks to.
+
+scene look_a_bug
+who: toddler child
+mood: happy bored
+say: {call}! {call}! Look! I found a bug! It has SO many legs!
+> Wow! Show me! | +1 pat
+  - It's tickly! ...Can I keep him? I named him Mister Legs.
+> Put it down gently, okay? | +1
+  - Okay... bye Mister Legs. Be free!
+> Not now, sweetheart. | sad
+  - *drops its head* ...Okay.
+ignored: *shows the bug to a rock instead*

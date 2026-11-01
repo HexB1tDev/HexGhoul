@@ -1,0 +1,17 @@
+# Eto's scenes and topics (1.3.29). Read by SceneBook: see its comment for the form, SceneWords for every word allowed.
+# Her voice: playful, literary, dark, teasing; calls her partner "love" when soft; never says her pen name.
+
+scene rain_window
+who: together
+mood: clingy affectionate happy bored lonely
+when: rain
+say: It's raining. Come sit by the window with me. Every drop sounds like a page turning.
+say: Rain! Perfect. Nobody's coming tonight. Just us and the noise on the glass.
+> Sit with her. | +2 cling
+  - Mm. Good. Now shh. Listen. ...See? The whole world goes quiet.
+  - There. Your shoulder is the correct height. I've measured.
+> Read me something. | +2 read
+  - Head here. '...and the rain kept every secret the town ever told it.' I just made that up. Don't tell my editor.
+> I've got things to do. | -1 pout
+  - Go, then. Get wet. See if I care. ...I care a little.
+ignored: Fine. The rain and I will manage without you.

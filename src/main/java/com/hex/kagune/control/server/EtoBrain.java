@@ -718,6 +718,15 @@ public final class EtoBrain {
         if (partner != null && together(npc, mind, level, partner, now)) {
             return;
         }
+        // 1.3.29: a friend near (not her partner): now and then she comes up to them with something (SceneServer).
+        if (now % 100L == 61L && mind.target == 0 && mind.holding == null) {
+            for (ServerPlayer player : level.m_6907_()) {
+                if (player != partner && player.m_6084_() && !player.m_5833_() && player.m_20280_(npc) <= 10.0 * 10.0 && npc.m_142582_(player)
+                    && SceneServer.friendTick(npc, player, now)) {
+                    return;
+                }
+            }
+        }
         // 1.3.15: her children, while they are still children: she keeps close, and holds the little ones now and then.
         if (ParentCare.tend(npc, mind, level, partner, now)) {
             return;
@@ -817,6 +826,13 @@ public final class EtoBrain {
                 walkUp(npc, mind, partner, EtoGesture.CLING, now);
                 return true;
             }
+        }
+        // 1.3.29: now and then she comes up to them with something to say (a scene: SceneServer) and waits for their answer.
+        if (now % 20L == 13L && distance < 14.0 && mind.holding == null && mind.kiss == null && mind.target == 0
+            && SceneServer.partnerTick(npc, partner, now)) {
+            mind.nextSeek = Math.max(mind.nextSeek, now + 2400L);
+            mind.initiativeAt = Math.max(mind.initiativeAt, now - com.hex.kagune.control.npc.EtoInitiative.EVERY / 2);
+            return true;
         }
         // 1.3.12: unasked, she does something with them: their hand, their arm, a hug, a lean, a song, a page, a dance.
         if (now % 20L == 5L && mind.gesture != EtoGesture.CLING) {

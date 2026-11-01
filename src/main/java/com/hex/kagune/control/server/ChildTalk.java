@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -80,6 +81,16 @@ public final class ChildTalk {
         if (child == null) {
             return;
         }
+        if (line == null && !play && queued == null) {
+            // 1.3.29: it came up to them with something: the talk opens on it.
+            SceneServer.Pending pending = SceneServer.take(player, npc.m_19879_());
+            com.hex.kagune.control.npc.scene.Scene scene = pending == null ? null : SceneServer.scene(pending.scene());
+            if (scene != null) {
+                com.hex.kagune.control.npc.scene.SceneContext sc = SceneServer.context(player, npc, child, level.m_46467_());
+                scene(player, npc, child, scene, scene.first(), sc, pending.line());
+                return;
+            }
+        }
         ChildStage stage = child.stage(level.m_46467_());
         boolean parent = child.parent(Pregnancies.player(player.m_20148_()));
         String call = ChildLines.call(stage, ChildBrain.isMother(child, player));
@@ -107,8 +118,14 @@ public final class ChildTalk {
             add(keys, labels, "play", stage == ChildStage.TEEN ? "Want to hang out?" : "Let's play!");
             if (stage.learns()) {
                 add(keys, labels, "teach", "Let me teach you to fight.");
-                add(keys, labels, "talk", "How are you?");
             }
+            // 1.3.29: talking, at every age (a baby is talked to; it answers its own way).
+            add(keys, labels, "talk", switch (stage) {
+                case BABY -> "Talk to the baby.";
+                case TODDLER -> "Tell me something!";
+                case CHILD -> "How are you?";
+                case TEEN -> "Talk to me.";
+            });
             if (stage.walks()) {
                 boolean following = player.m_20148_().equals(npc.following());
                 add(keys, labels, following ? "stay" : "follow", following ? "Wait here." : "Follow me.");
@@ -189,6 +206,14 @@ public final class ChildTalk {
     public static void heard(ServerPlayer player, int npcId, int ordinal) {
         Talk talk = TALKS.get(player.m_20148_());
         NpcTalk.Choice choice = NpcTalk.Choice.byOrdinal(ordinal);
+        if (choice == NpcTalk.Choice.ANSWER) {
+            // 1.3.29: the Answer key: it came up to them with something.
+            if (talk == null && player.m_284548_().m_6815_(npcId) instanceof ChildNpc npc && npc.mind != null && npc.m_20280_(player) <= 24.0 * 24.0
+                && !npc.m_5803_()) {
+                open(player, npc, null);
+            }
+            return;
+        }
         if (talk == null || talk.npc() != npcId) {
             return;
         }
@@ -307,9 +332,32 @@ public final class ChildTalk {
             }
             case "bed" -> reply = ChildBrain.bedtime(npc, player, now) ? ChildLines.bedtime(stage, seed) : ChildLines.noBed(stage, seed);
             case "home" -> reply = ChildBrain.goHome(npc, level) ? ChildLines.home(stage, seed) : "Home? Where's home?";
-            case "talk" -> reply = ChildLines.idle(stage, ChildLines.call(stage, ChildBrain.isMother(child, player)), seed);
+            case "talk" -> {
+                // 1.3.29: what can be talked about with it (its scripted topics); none fit, its own word.
+                if (topics(player, npc, child, ChildLines.idle(stage, ChildLines.call(stage, ChildBrain.isMother(child, player)), seed))) {
+                    return;
+                }
+                reply = ChildLines.idle(stage, ChildLines.call(stage, ChildBrain.isMother(child, player)), seed);
+            }
+            case "topics" -> {
+                if (topics(player, npc, child, stage == ChildStage.TEEN ? "What else?" : stage == ChildStage.BABY ? "*blinks at you*" : "What else? What else?")) {
+                    return;
+                }
+                reply = "...";
+            }
             default -> {
                 String key = talk.keys().get(index);
+                if (key.startsWith("s:")) {
+                    sceneAnswer(player, npc, child, key);
+                    return;
+                }
+                if (key.startsWith("t:")) {
+                    com.hex.kagune.control.npc.scene.Scene scene = SceneServer.scene(key.substring(2));
+                    if (scene != null) {
+                        scene(player, npc, child, scene, scene.first(), SceneServer.context(player, npc, child, now), null);
+                        return;
+                    }
+                }
                 if (key.startsWith("m:")) {
                     com.hex.kagune.control.family.ChildMoment moment = com.hex.kagune.control.family.ChildMoment.valueOf(key.substring(2));
                     if (moment.fits(stage)) {
@@ -328,5 +376,154 @@ public final class ChildTalk {
     @SubscribeEvent
     public static void loggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
         TALKS.remove(event.getEntity().m_20148_());
+    }
+
+    /** 1.3.29: true while {@code player} has a talk with a child open. */
+    static boolean talking(ServerPlayer player) {
+        return TALKS.containsKey(player.m_20148_());
+    }
+
+    /** 1.3.29: a scene's page ({@code line}: what it says; null, the page's own), each answer keyed to it; a topic's has "back". */
+    static void scene(ServerPlayer player, ChildNpc npc, Children.Child child, com.hex.kagune.control.npc.scene.Scene scene,
+                      com.hex.kagune.control.npc.scene.Scene.Page page, com.hex.kagune.control.npc.scene.SceneContext sc, String line) {
+        List<String> keys = new ArrayList<>();
+        List<String> labels = new ArrayList<>();
+        for (int i = 0; i < page.options().size(); i++) {
+            add(keys, labels, "s:" + scene.key() + ":" + page.id() + ":" + i, com.hex.kagune.control.npc.scene.SceneBook.fill(page.options().get(i).label(), sc));
+        }
+        if (scene.kind() == com.hex.kagune.control.npc.scene.Scene.Kind.TOPIC) {
+            add(keys, labels, "topics", "...");
+        }
+        String said = line != null ? line : com.hex.kagune.control.npc.scene.SceneBook.fill(com.hex.kagune.control.npc.scene.SceneBook.one(page.lines(), sc.seed()), sc);
+        send(player, npc, child, keys, labels, said, null);
+    }
+
+    /** 1.3.29: what can be talked about with it now (its topics, a different few each time), and back. */
+    static boolean topics(ServerPlayer player, ChildNpc npc, Children.Child child, String line) {
+        long now = player.m_284548_().m_46467_();
+        List<com.hex.kagune.control.npc.scene.Scene> all = new ArrayList<>(SceneServer.childTopics(player, npc, child, now));
+        if (all.isEmpty()) {
+            return false;
+        }
+        java.util.Collections.shuffle(all, new java.util.Random(npc.m_217043_().m_188503_(100000)));
+        com.hex.kagune.control.npc.scene.SceneContext sc = SceneServer.context(player, npc, child, now);
+        List<String> keys = new ArrayList<>();
+        List<String> labels = new ArrayList<>();
+        for (com.hex.kagune.control.npc.scene.Scene scene : all) {
+            if (keys.size() >= 6) {
+                break;
+            }
+            add(keys, labels, "t:" + scene.key(), com.hex.kagune.control.npc.scene.SceneBook.fill(scene.prompt(), sc));
+        }
+        add(keys, labels, "back", "...");
+        send(player, npc, child, keys, labels, line, null);
+        return true;
+    }
+
+    /** A page sent: its keys and words, then goodbye. */
+    private static void send(ServerPlayer player, ChildNpc npc, Children.Child child, List<String> keys, List<String> labels, String line,
+                             com.hex.kagune.control.family.ChildMoment queued) {
+        ServerLevel level = player.m_284548_();
+        ChildStage stage = child.stage(level.m_46467_());
+        boolean parent = child.parent(Pregnancies.player(player.m_20148_()));
+        TALKS.put(player.m_20148_(), new Talk(npc.m_19879_(), keys, queued));
+        int[] choices = new int[keys.size() + 1];
+        String[] shown = new String[keys.size() + 1];
+        for (int i = 0; i < keys.size(); i++) {
+            choices[i] = NpcTalk.Choice.SAYS[i].ordinal();
+            shown[i] = labels.get(i);
+        }
+        choices[keys.size()] = NpcTalk.Choice.LEAVE.ordinal();
+        shown[keys.size()] = "";
+        ControlNetwork.sendTo(player, new S2CNpcTalk(npc.m_19879_(), child.name, title(child, stage, player), parent ? 100 : 30, parent, -1, line, choices,
+            shown));
+    }
+
+    /** 1.3.29: an answer on one of its scenes: what it says and does, then the page it leads to, or its own. */
+    private static void sceneAnswer(ServerPlayer player, ChildNpc npc, Children.Child child, String key) {
+        ServerLevel level = player.m_284548_();
+        long now = level.m_46467_();
+        SceneServer.ChildAnswer answer = SceneServer.childAnswer(player, npc, child, key, now);
+        if (answer == null) {
+            open(player, npc, null);
+            return;
+        }
+        ChildStage stage = child.stage(now);
+        com.hex.kagune.control.family.ChildMoment queued = null;
+        boolean play = false;
+        boolean closing = false;
+        for (String effect : answer.option().effects()) {
+            switch (effect) {
+                case "up" -> {
+                    if (stage.carried() && npc.mind.carrier == null) {
+                        ChildBrain.pickUp(npc, player);
+                    }
+                }
+                case "down" -> {
+                    if (player.m_20148_().equals(npc.mind.carrier)) {
+                        ChildBrain.putDown(npc, npc.mind);
+                    }
+                }
+                case "shoulders" -> {
+                    if (ChildRules.shoulders(stage) && npc.mind.carrier == null) {
+                        ChildBrain.pickUp(npc, player, ChildRules.RIDE_SHOULDERS);
+                    }
+                }
+                case "hand" -> {
+                    if (ChildRules.hand(stage) && npc.mind.carrier == null) {
+                        ChildBrain.pickUp(npc, player, ChildRules.RIDE_HAND);
+                    }
+                }
+                case "follow" -> {
+                    if (stage.walks()) {
+                        npc.follow(player.m_20148_());
+                        npc.waiting(false);
+                    }
+                }
+                case "stay" -> {
+                    if (stage.walks()) {
+                        npc.follow(null);
+                        npc.settle();
+                        npc.waiting(true);
+                    }
+                }
+                case "bed" -> ChildBrain.bedtime(npc, player, now);
+                case "home" -> ChildBrain.goHome(npc, level);
+                case "teach" -> {
+                    if (ChildRules.teachable(stage, child.skill, child.lesson, now)) {
+                        child.skill++;
+                        child.lesson = now;
+                        Children.changed(level);
+                    }
+                }
+                case "play" -> play = true;
+                case "close" -> closing = true;
+                default -> {
+                    if (queued == null && !Set.of("sad", "proud").contains(effect) && !effect.startsWith("gift:")) {
+                        try {
+                            com.hex.kagune.control.family.ChildMoment moment = com.hex.kagune.control.family.ChildMoment.valueOf(effect.toUpperCase(java.util.Locale.ROOT));
+                            if (moment.fits(stage)) {
+                                queued = moment;
+                            }
+                        } catch (IllegalArgumentException unknown) {
+                            // (the tests keep every word known)
+                        }
+                    }
+                }
+            }
+        }
+        if (answer.next() != null && queued == null && !closing) {
+            scene(player, npc, child, answer.scene(), answer.next(), answer.context(), answer.line());
+            return;
+        }
+        if (queued != null) {
+            open(player, npc, answer.line(), false, queued);
+            return;
+        }
+        if (closing) {
+            send(player, npc, child, new ArrayList<>(), new ArrayList<>(), answer.line(), null);
+            return;
+        }
+        open(player, npc, answer.line(), play, null);
     }
 }

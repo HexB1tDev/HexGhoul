@@ -95,6 +95,7 @@
   "message.hexkagune.quest.hunt": "§4A hunt tonight: %s §7- %s x%s before dawn (pays %s)",
   "message.hexkagune.quest.hunt_over": "§8Dawn. The hunt is over: %s",
   "key.hexkagune.quests": "Quests",
+  "key.hexkagune.answer": "Answer (someone came up to talk)",
   "message.hexkagune.king.awake": "The Dragon is spent. Something is left in you: choose what kind of King you will become.",
   "message.hexkagune.king.not_awake": "A final kakuja comes only after the Dragon",
   "message.hexkagune.king.already": "You already chose %s",

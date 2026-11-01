@@ -938,3 +938,6 @@ M net/minecraftforge/fml/event/lifecycle/ParallelDispatchEvent enqueueWork (Ljav
 M net/minecraft/world/entity/Entity m_8097_ ()V                                    # [srg] defineSynchedData: bfj.a_ ()V (method_5693, yarn initDataTracker); the spike overrides it too
 F net/minecraft/world/entity/Entity f_19804_ Lnet/minecraft/network/syncher/SynchedEntityData;  # [srg] entityData: bfj.am (field_6011, yarn dataTracker); the spike reads its own
 M net/minecraft/world/entity/Mob m_6785_ (D)Z                                      # [srg] removeWhenFarAway: bgb.h (D)Z (method_5974, yarn canImmediatelyDespawn)
+
+# --- 1.3.29: scenes (a child scared in a storm) ---------------------------------------------------------------------------------------
+M net/minecraft/world/level/Level m_46470_ ()Z  # [srg] isThundering: joined.tsrg cmm.Y ()Z m_46470_ (intermediary method_8546, yarn World.isThundering)

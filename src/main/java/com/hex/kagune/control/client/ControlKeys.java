@@ -21,6 +21,9 @@ public final class ControlKeys {
     /** 7.0.1: GLFW_KEY_U; the quest journal ({@link QuestScreen}). */
     private static final int KEY_U = 85;
     public static final KeyMapping QUESTS = new KeyMapping("key.hexkagune.quests", InputConstants.Type.KEYSYM, KEY_U, "key.categories.hexkagune");
+    /** 1.3.29: GLFW_KEY_O; answer someone who came up to you with something to say ({@link NpcApproachOverlay}). */
+    private static final int KEY_O = 79;
+    public static final KeyMapping ANSWER = new KeyMapping("key.hexkagune.answer", InputConstants.Type.KEYSYM, KEY_O, "key.categories.hexkagune");
 
     private ControlKeys() {
     }
@@ -50,6 +53,7 @@ public final class ControlKeys {
         public static void register(RegisterKeyMappingsEvent event) {
             event.register(UNLEASH);
             event.register(QUESTS);
+            event.register(ANSWER);
         }
     }
 }

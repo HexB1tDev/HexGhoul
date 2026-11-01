@@ -1,0 +1,13 @@
+# Ken's scenes and topics (1.3.29). His voice: gentle, polite, bookish, worried for everyone; a devoted lover to women he dates.
+
+scene new_book
+who: anyone
+mood: happy bored
+say: Sorry to bother you. I found a book I think you'd like. I can't stop thinking about the ending.
+> Tell me about it. | +2 read
+  - It's about a man who loses everything and keeps walking anyway. ...It's hopeful, I promise. Mostly.
+> Read it to me later. | +1
+  - I'd like that. I'll mark the good parts.
+> Not really my thing. | -1
+  - Ah. That's okay. I'll find you something else.
+ignored: ...It's okay. Another time.

@@ -72,7 +72,9 @@ public final class EtoServer {
 
     /** What page a conversation is on. */
     enum Kind {
-        MAIN, TALK, TOPIC, SWEET, GIFTS, OFFER, CLOSED
+        MAIN, TALK, TOPIC, SWEET, GIFTS, OFFER, CLOSED,
+        // 1.3.29: a scene's page (something she came up with, or one of her scripted topics: SceneServer)
+        SCENE
     }
 
     private record Talk(int npc, List<EtoTalk.Option> offered, Kind kind) {
@@ -98,6 +100,11 @@ public final class EtoServer {
     @SubscribeEvent
     public static void loggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
         TALKS.remove(event.getEntity().m_20148_());
+    }
+
+    /** 1.3.29: true while {@code player} has a talk with a companion open. */
+    static boolean talking(ServerPlayer player) {
+        return TALKS.containsKey(player.m_20148_());
     }
 
     static void open(ServerPlayer player, EtoNpc npc) {
@@ -149,7 +156,53 @@ public final class EtoServer {
         EtoTalk.Context context = context(player, npc);
         NpcMemoryServer.set(player, npc.persona().key(), NpcMemory.SEEN, now);
         Script script = npc.persona().script();
+        // 1.3.29: she came up to them with something: the talk opens on it.
+        if (line == null && scene(player, npc, context)) {
+            return;
+        }
         show(player, npc, context, script.main(context, line != null ? line : script.greeting(context)), Kind.MAIN);
+    }
+
+    /** 1.3.29: the scene she came up to {@code player} with, opened (true), if she is still waiting on them. */
+    private static boolean scene(ServerPlayer player, EtoNpc npc, EtoTalk.Context context) {
+        SceneServer.Pending pending = SceneServer.take(player, npc.m_19879_());
+        com.hex.kagune.control.npc.scene.Scene scene = pending == null ? null : SceneServer.scene(pending.scene());
+        if (scene == null) {
+            return false;
+        }
+        com.hex.kagune.control.npc.scene.SceneContext sc = SceneServer.context(player, npc, context);
+        show(player, npc, context, SceneServer.page(scene, scene.first(), sc, pending.line()), Kind.SCENE);
+        return true;
+    }
+
+    /** 1.3.29: the topics page: hers as her script has them, and her scripted topics with them (a different few each time). */
+    static EtoTalk.Page topics(ServerPlayer player, EtoNpc npc, EtoTalk.Context c, String line) {
+        EtoTalk.Page own = npc.persona().script().talk(c, line);
+        List<com.hex.kagune.control.npc.scene.Scene> extra = new java.util.ArrayList<>(SceneServer.topics(player, npc, c));
+        if (extra.isEmpty()) {
+            return own;
+        }
+        List<EtoTalk.Option> keep = new java.util.ArrayList<>();
+        for (EtoTalk.Option option : own.options()) {
+            if (option.key().startsWith("topic:") && keep.size() < 3) {
+                keep.add(option);
+            }
+        }
+        java.util.Collections.shuffle(extra, new java.util.Random(c.seed()));
+        List<EtoTalk.Option> out = new java.util.ArrayList<>();
+        int slot = 0;
+        for (EtoTalk.Option option : keep) {
+            out.add(new EtoTalk.Option(NpcTalk.Choice.SAYS[slot++], option.label(), option.key()));
+        }
+        com.hex.kagune.control.npc.scene.SceneContext sc = SceneServer.context(player, npc, c);
+        for (com.hex.kagune.control.npc.scene.Scene scene : extra) {
+            if (slot >= NpcTalk.Choice.SAYS.length) {
+                break;
+            }
+            out.add(new EtoTalk.Option(NpcTalk.Choice.SAYS[slot++], com.hex.kagune.control.npc.scene.SceneBook.fill(scene.prompt(), sc), "t:" + scene.key()));
+        }
+        out.add(new EtoTalk.Option(NpcTalk.Choice.BACK, "", ""));
+        return new EtoTalk.Page(own.line(), out);
     }
 
     private static boolean sulking(EtoBrain.Mind mind, ServerPlayer player, long now) {
@@ -180,6 +233,13 @@ public final class EtoServer {
     public static void heard(ServerPlayer player, int npcId, int ordinal) {
         Talk talk = TALKS.get(player.m_20148_());
         NpcTalk.Choice choice = NpcTalk.Choice.byOrdinal(ordinal);
+        if (choice == NpcTalk.Choice.ANSWER) {
+            // 1.3.29: the Answer key: she came up to them with something; the talk opens on it (from where she stands, near enough).
+            if (talk == null && player.m_284548_().m_6815_(npcId) instanceof EtoNpc npc && npc.m_6084_() && npc.m_20280_(player) <= 24.0 * 24.0) {
+                open(player, npc);
+            }
+            return;
+        }
         if (talk == null || talk.npc() != npcId) {
             return;
         }
@@ -237,13 +297,29 @@ public final class EtoServer {
             show(player, npc, c, script.gifts(c, script.giftsAsked(c.seed())), Kind.GIFTS);
             return;
         }
+        if (key.startsWith("t:")) {
+            // 1.3.29: one of her scripted topics brought up.
+            EtoTalk.Page page = SceneServer.topic(player, npc, c, key);
+            if (page != null) {
+                show(player, npc, c, page, Kind.SCENE);
+            }
+            return;
+        }
+        if (key.startsWith("s:")) {
+            // 1.3.29: an answer on a scene's page: her reply, what it does, and the page it leads on to (or her own page).
+            SceneServer.Answer answer = SceneServer.answer(player, npc, c, key, level.m_46467_());
+            if (answer != null) {
+                carry(player, npc, c, choice, answer.reply(), answer.topic() ? Kind.TALK : Kind.MAIN, answer.next());
+            }
+            return;
+        }
         if (choice == NpcTalk.Choice.PROPOSE) {
             propose(player, npc, c);
             return;
         }
-        if (choice == NpcTalk.Choice.BACK && talk.kind() == Kind.TOPIC) {
+        if (choice == NpcTalk.Choice.BACK && (talk.kind() == Kind.TOPIC || talk.kind() == Kind.SCENE)) {
             // Back from a topic: to the others.
-            show(player, npc, c, script.talk(c, script.topicsAgain(c.seed())), Kind.TALK);
+            show(player, npc, c, topics(player, npc, c, script.topicsAgain(c.seed())), Kind.TALK);
             return;
         }
         Kind after = talk.kind() == Kind.SWEET || talk.kind() == Kind.TALK ? talk.kind() : Kind.MAIN;
@@ -267,6 +343,12 @@ public final class EtoServer {
 
     /** An answer carried out (her regard, what she does, what happens), then the page it leads to ({@code stay}: the page they were on). */
     private static void carry(ServerPlayer player, EtoNpc npc, EtoTalk.Context c, NpcTalk.Choice choice, EtoTalk.Reply reply, Kind stay) {
+        carry(player, npc, c, choice, reply, stay, null);
+    }
+
+    /** 1.3.29: the same, then {@code then} (a scene's next page) if the answer leads on to one and the talk is still open. */
+    private static void carry(ServerPlayer player, EtoNpc npc, EtoTalk.Context c, NpcTalk.Choice choice, EtoTalk.Reply reply, Kind stay,
+                              EtoTalk.Page then) {
         ServerLevel level = player.m_284548_();
         long now = level.m_46467_();
         long day = day(level);
@@ -434,13 +516,18 @@ public final class EtoServer {
         if (next == Kind.CLOSED) {
             EtoBrain.listen(npc, null, now);
         }
-        show(player, npc, after, page(npc.persona().script(), after, next, line), next);
+        if (then != null && next != Kind.CLOSED && next != Kind.TALK && next != Kind.SWEET) {
+            show(player, npc, after, then, Kind.SCENE);
+            return;
+        }
+        show(player, npc, after, page(player, npc, after, next, line), next);
     }
 
     /** The page {@code kind} with {@code line} hers. */
-    private static EtoTalk.Page page(Script script, EtoTalk.Context c, Kind kind, String line) {
+    private static EtoTalk.Page page(ServerPlayer player, EtoNpc npc, EtoTalk.Context c, Kind kind, String line) {
+        Script script = npc.persona().script();
         return switch (kind) {
-            case TALK -> script.talk(c, line);
+            case TALK -> topics(player, npc, c, line);
             case SWEET -> c.dating() ? script.sweet(c, line) : script.main(c, line);
             case GIFTS -> script.gifts(c, line);
             case OFFER -> new EtoTalk.Page(line, List.of(new EtoTalk.Option(NpcTalk.Choice.ACCEPT, "Yes. Do it.", ""),

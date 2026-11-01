@@ -61,6 +61,8 @@ public final class ChildBrain {
         UUID tuckBy;
         /** 1.3.21: the food it is given (eaten through its FEED moment). */
         net.minecraft.world.item.ItemStack food;
+        /** 1.3.29: when a parent came back after a long while away (it missed them), or never. */
+        long reunited = Long.MIN_VALUE;
     }
 
     private ChildBrain() {
@@ -772,12 +774,20 @@ public final class ChildBrain {
         mind.company = now;
         int seed = npc.m_217043_().m_188503_(1000);
         String call = ChildLines.call(stage, isMother(child, parent));
+        if (mind.parentAway != Long.MIN_VALUE && now - mind.parentAway >= 6000L) {
+            mind.reunited = now; // 1.3.29: away a long while: it missed them
+        }
         if (mind.parentAway != Long.MIN_VALUE && now - mind.parentAway >= 1200L) {
             say(parent, child, ChildLines.greet(stage, call, seed));
             mind.nextLine = now + 600L + npc.m_217043_().m_188503_(900);
             welcome(npc, mind, parent, now); // 1.3.20: it runs to them
         }
         mind.parentAway = Long.MIN_VALUE;
+        // 1.3.29: now and then it comes up to them with something (a scene: SceneServer), and waits for their answer.
+        if (mind.target == 0 && now % 20L == 9L && !busy(mind, now) && SceneServer.childTick(npc, child, parent, now)) {
+            mind.nextLine = Math.max(mind.nextLine, now + 1200L);
+            return;
+        }
         if (now >= mind.nextLine && mind.target == 0) {
             say(parent, child, ChildLines.idle(stage, call, seed));
             mind.nextLine = now + 900L + npc.m_217043_().m_188503_(1500);

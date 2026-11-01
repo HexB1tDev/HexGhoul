@@ -1,0 +1,14 @@
+# Touka's scenes and topics (1.3.29). Her voice: sharp, serious, pouty, blushing; insults that mean something else.
+
+scene coffee_break
+who: anyone
+mood: happy bored sleepy
+when: day
+say: I'm on break. I made too much coffee. ...Don't read into it. Here.
+> Thanks. Sit with me. | +2 sip
+  - Fine. Five minutes. ...Ten. Don't get used to it.
+> Is it the good beans? | +1
+  - Of course it's the good beans. What do you take me for.
+> I'm not thirsty. | -1 pout
+  - Whatever. More for me.
+ignored: Tch. It's getting cold anyway.
