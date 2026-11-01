@@ -4,14 +4,15 @@ package com.hex.kagune.control.npc;
  * 7.0.2: the ghoul NPCs' numbers (pure, tested): when and where they turn up, how strong each tier is, how they fight.
  *
  * <p>Spawning: only at night ({@link #night}), only in the overworld (any biome), now and then near a player ({@link #SPAWN_EVERY},
- * {@link #SPAWN_CHANCE}: about one or two a night near someone out in it), {@link #SPAWN_NEAREST} to {@link #SPAWN_FARTHEST} blocks
+ * {@link #SPAWN_CHANCE}: 1.3.27: rare now, about one every two or three nights near someone out in it, a little rarer than a pair
+ * of CCG investigators), {@link #SPAWN_NEAREST} to {@link #SPAWN_FARTHEST} blocks
  * out on the surface, never near another one ({@link #spaced}). They go as monsters do when no one is near, and slip away at dawn
  * when no one is watching.
  */
 public final class NpcRules {
     /** A try near each player this often (ticks), at this chance. */
     public static final int SPAWN_EVERY = 200;
-    public static final double SPAWN_CHANCE = 0.05;
+    public static final double SPAWN_CHANCE = 0.008;
     /** How far from the player it turns up (blocks). */
     public static final double SPAWN_NEAREST = 24.0;
     public static final double SPAWN_FARTHEST = 48.0;

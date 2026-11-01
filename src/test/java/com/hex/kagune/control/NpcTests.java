@@ -169,10 +169,10 @@ public final class NpcTests {
             check(distance >= NpcRules.SPAWN_NEAREST - 1.0E-9 && distance <= NpcRules.SPAWN_FARTHEST + 1.0E-9, "a ring round the player: " + distance);
             check(distance > NpcRules.CLEAR_OF_PLAYERS, "never on top of them");
         }
-        // About one or two a night near someone out in it (a night's tries times the chance).
+        // 1.3.27: rare now: about one every two or three nights near someone out in it (a night's tries times the chance).
         double tries = (NpcRules.NIGHT_TO - NpcRules.NIGHT_FROM) / (double)NpcRules.SPAWN_EVERY;
         double expected = tries * NpcRules.SPAWN_CHANCE;
-        check(expected >= 1.5 && expected <= 3.5, "rare but met: " + expected + " a night before spacing");
+        check(expected >= 0.25 && expected <= 0.6, "rare: " + expected + " a night before spacing");
     }
 
     /** The stronger the player, the stronger the ghoul; each tier tougher; the string hurts but does not shred. */

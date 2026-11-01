@@ -2,6 +2,8 @@
 package net.minecraft.world.entity;
 
 public abstract class Entity {
+    /** entityData (1.3.27) */ protected final net.minecraft.network.syncher.SynchedEntityData f_19804_ = null;
+    /** defineSynchedData (1.3.27) */ protected void m_8097_() { throw new UnsupportedOperationException(); }
     /** xo, zo (the position a tick ago; 1.2.2) */ public double f_19854_;
     public double f_19856_;
     /** spawnAtLocation(stack) (7.0.2) */ public net.minecraft.world.entity.item.ItemEntity m_19983_(net.minecraft.world.item.ItemStack stack) { throw new UnsupportedOperationException(); }

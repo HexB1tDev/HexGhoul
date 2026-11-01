@@ -114,17 +114,26 @@ public final class QuinqueServer {
 
     /** {@code held} opens into its weapon ({@code opening}) or shuts into its case; not while it is still moving. */
     static void turn(ServerPlayer player, ServerLevel level, ItemStack held, Quinque quinque, boolean opening) {
+        hand(player, level, held, quinque, opening);
+    }
+
+    /**
+     * 1.3.27: the quinque in {@code who}'s hand ({@code held}) opens into its weapon or shuts into its case (a player's, an
+     * investigator's): the stack keeps everything it carries and when it turned; the latch, the unfolding, the lock heard. False if it
+     * is still moving from the last time (nothing happens).
+     */
+    static boolean hand(LivingEntity who, ServerLevel level, ItemStack held, Quinque quinque, boolean opening) {
         long now = level.m_46467_();
         CompoundTag tag = held.m_41783_();
         if (tag != null && tag.m_128441_(Quinque.AT) && Quinque.moving(now, tag.m_128454_(Quinque.AT))) {
-            return;
+            return false;
         }
         ItemStack next = new ItemStack(opening ? ControlItems.weaponOf(quinque) : ControlItems.caseOf(quinque), 1);
         CompoundTag kept = tag == null ? new CompoundTag() : tag.m_6426_();
         kept.m_128356_(Quinque.AT, now);
         next.m_41751_(kept);
-        player.m_21008_(InteractionHand.MAIN_HAND, next);
-        Vec3 at = player.m_20182_().m_82520_(0.0, player.m_20206_() * 0.6, 0.0);
+        who.m_21008_(InteractionHand.MAIN_HAND, next);
+        Vec3 at = who.m_20182_().m_82520_(0.0, who.m_20206_() * 0.6, 0.0);
         if (opening) {
             // The latch, the case unfolding, the weapon locking out (the owner's own pack, as every sound in the mod).
             UkakuFire.sound(level, at, "hexkagune:centipede_click", 0.8F, 1.5F);
@@ -134,6 +143,7 @@ public final class QuinqueServer {
             UkakuFire.sound(level, at, "hexkagune:kagune_dismiss", 0.6F, 1.3F);
             UkakuFire.sound(level, at, "hexkagune:centipede_click", 0.8F, 1.3F);
         }
+        return true;
     }
 
     /** A quinque's cut: deeper into a ghoul, and a ghoul player's regeneration held back. Its wielder's own swing only (not a throw). */
@@ -179,8 +189,9 @@ public final class QuinqueServer {
     /**
      * A string's third blow on {@code target}: the blade knocks it back; the katana's wide cut takes the others in front too, the spear's
      * thrust the others in its line, the mace's slam the others round where it lands (thrown up); each a share of the blow ({@code dealt}).
+     * 1.3.27: a player's or an investigator's.
      */
-    static void finisher(ServerPlayer player, LivingEntity target, Quinque quinque, float dealt, ServerLevel level) {
+    static void finisher(LivingEntity player, LivingEntity target, Quinque quinque, float dealt, ServerLevel level) {
         Vec3 look = player.m_20154_();
         Vec3 at = GhoulNpcBrain.centre(target);
         UkakuFire.sound(level, at, quinque == Quinque.MACE ? "hexkagune:kagune_slam" : "hexkagune:sfx.blade_heavy", 0.9F,
@@ -212,7 +223,9 @@ public final class QuinqueServer {
                     continue;
                 }
                 other.f_19802_ = 0;
-                if (other.m_6469_(player.m_269291_().m_269075_(player), dealt * (quinque == Quinque.MACE ? 0.6F : quinque == Quinque.SPEAR ? 0.8F : 0.7F))
+                net.minecraft.world.damagesource.DamageSource source = player instanceof ServerPlayer server ? player.m_269291_().m_269075_(server)
+                    : player.m_269291_().m_269333_(player);
+                if (other.m_6469_(source, dealt * (quinque == Quinque.MACE ? 0.6F : quinque == Quinque.SPEAR ? 0.8F : 0.7F))
                     && quinque == Quinque.MACE) {
                     other.m_20256_(other.m_20184_().m_82520_(0.0, 0.55, 0.0));
                     other.f_19864_ = true;

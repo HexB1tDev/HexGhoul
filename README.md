@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.27 (HexGhoul): CCG investigators: pairs in the owner's skins, fast and acrobatic, with quinques, clashes and parries; wild ghouls rarer; cases can't be crafted (testing)
+
+See `.github/release-notes-1.3.27.md`.
+
 ## 1.3.26 (HexGhoul): Touka's wings show again; quinques reworked: a bigger mid-grip spear, a two-handed katana, a flesh mace, a crystal launcher, custom M1s (testing)
 
 See `.github/release-notes-1.3.26.md`.

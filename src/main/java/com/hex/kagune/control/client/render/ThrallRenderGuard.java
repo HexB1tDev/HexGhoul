@@ -24,7 +24,7 @@ import net.minecraftforge.fml.common.Mod;
  * client's world (the server keeps it, and it still fights), never drawn without one. What happened is logged once.
  * 1.3.1: Eto too (the owner's crash report: the same null renderer as the Library came into view). 1.3.14: every body the mod adds
  * (the owner's crash report on 1.3.12: a newborn child, the same null renderer): wild ghouls, the flesh creatures, Eto, Touka, Ken and
- * children; every one of them registered again together, once for each kind found without one.
+ * children; every one of them registered again together, once for each kind found without one. 1.3.27: the CCG's investigators.
  */
 @Mod.EventBusSubscriber(modid = "hexkagune", value = Dist.CLIENT)
 public final class ThrallRenderGuard {
@@ -37,7 +37,7 @@ public final class ThrallRenderGuard {
     /** True for a body the mod adds (and draws). */
     static boolean ours(Entity entity) {
         return entity instanceof FleshThrall || entity instanceof EtoNpc || entity instanceof com.hex.kagune.control.npc.ChildNpc
-            || entity instanceof com.hex.kagune.control.npc.GhoulNpc;
+            || entity instanceof com.hex.kagune.control.npc.GhoulNpc || entity instanceof com.hex.kagune.control.npc.CcgAgent;
     }
 
     /** Every renderer the mod has, registered (again). */
@@ -48,6 +48,7 @@ public final class ThrallRenderGuard {
         event.registerEntityRenderer(ControlEntities.TOUKA.get(), context -> new EtoRenderer(context, com.hex.kagune.control.npc.Persona.TOUKA));
         event.registerEntityRenderer(ControlEntities.KEN.get(), context -> new EtoRenderer(context, com.hex.kagune.control.npc.Persona.KEN));
         event.registerEntityRenderer(ControlEntities.CHILD.get(), ChildRenderer::new);
+        event.registerEntityRenderer(ControlEntities.AGENT.get(), AgentRenderer::new);
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)

@@ -933,3 +933,8 @@ M net/minecraft/client/renderer/item/ClampedItemPropertyFunction m_142187_ (Lnet
 C net/minecraftforge/common/ForgeMod  # [forge] common/ForgeMod.java
 F net/minecraftforge/common/ForgeMod ENTITY_REACH Lnet/minecraftforge/registries/RegistryObject;  # [forge] ForgeMod.ENTITY_REACH (1.20.1: RangedAttribute "forge.entity_reach", syncable): the Koukaku spear's reach
 M net/minecraftforge/fml/event/lifecycle/ParallelDispatchEvent enqueueWork (Ljava/lang/Runnable;)Ljava/util/concurrent/CompletableFuture;  # [forge] ParallelDispatchEvent.enqueueWork: work for the game's thread
+
+# --- 1.3.27: the CCG's investigators (an entity of the mod's own, its moves on its synced data) ----------------------------------
+M net/minecraft/world/entity/Entity m_8097_ ()V                                    # [srg] defineSynchedData: bfj.a_ ()V (method_5693, yarn initDataTracker); the spike overrides it too
+F net/minecraft/world/entity/Entity f_19804_ Lnet/minecraft/network/syncher/SynchedEntityData;  # [srg] entityData: bfj.am (field_6011, yarn dataTracker); the spike reads its own
+M net/minecraft/world/entity/Mob m_6785_ (D)Z                                      # [srg] removeWhenFarAway: bgb.h (D)Z (method_5974, yarn canImmediatelyDespawn)

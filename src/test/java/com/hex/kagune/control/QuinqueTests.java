@@ -12,7 +12,8 @@ import java.util.regex.Pattern;
 /**
  * 1.3.25: the CCG's quinques: a case opening into its weapon and shutting again over its frames, never overflowing; the two kinds'
  * strengths; and every file they need in place (a missing model is a purple cube in game): each item's model, its five frames, their
- * texture, the property they are chosen by, its name and its recipe.
+ * texture, the property they are chosen by, its name. 1.3.27: and no recipe: a case is never made, only taken from a fallen CCG
+ * investigator, and rarely.
  */
 public final class QuinqueTests {
     static int passed;
@@ -143,5 +144,19 @@ public final class QuinqueTests {
         }
         check(lang != null && lang.contains("item.hexkagune.quinque.open") && lang.contains("item.hexkagune.quinque.close")
             && lang.contains("item.hexkagune.quinque.ghoul"), "the quinques' use lines are named");
+        // 1.3.27: the owner: "a suitcase you can't [craft], definitely": no recipe makes any of them.
+        Path recipes = RESOURCES.resolve("data/hexkagune/recipes");
+        if (Files.isDirectory(recipes)) {
+            try (java.util.stream.Stream<Path> all = Files.list(recipes)) {
+                for (Path recipe : (Iterable<Path>)all::iterator) {
+                    String text = Files.readString(recipe);
+                    for (Quinque q : Quinque.values()) {
+                        check(!text.contains("hexkagune:" + q.caseId + "\"") && !text.contains("hexkagune:" + q.weaponId + "\""),
+                            recipe.getFileName() + " never makes a quinque (" + q + ")");
+                    }
+                }
+            }
+        }
+        check(lang != null && lang.contains("entity.hexkagune.ccg_investigator"), "the investigator has a name");
     }
 }

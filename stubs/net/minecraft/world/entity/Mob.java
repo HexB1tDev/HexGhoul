@@ -3,6 +3,7 @@ package net.minecraft.world.entity;
 
 public abstract class Mob extends LivingEntity {
     /** goalSelector */ protected final net.minecraft.world.entity.ai.goal.GoalSelector f_21345_ = null;
+    /** removeWhenFarAway (1.3.27) */ public boolean m_6785_(double distanceSqr) { throw new UnsupportedOperationException(); }
     /** registerGoals */ protected void m_8099_() { throw new UnsupportedOperationException(); }
     /** customServerAiStep */ protected void m_8024_() { throw new UnsupportedOperationException(); }
     /** getNavigation */ public net.minecraft.world.entity.ai.navigation.PathNavigation m_21573_() { throw new UnsupportedOperationException(); }

@@ -264,6 +264,9 @@ public final class GhoulNpcBrain {
         if (body instanceof ServerPlayer player) {
             return attitude(npc, who, player) == NpcTemper.Attitude.HOSTILE;
         }
+        if (body instanceof com.hex.kagune.control.npc.CcgAgent) {
+            return true; // 1.3.27: the CCG: whenever a wild ghoul and an investigator meet, they fight
+        }
         return body instanceof GhoulNpc other && other.identity() != null && who.temper().hunts(other.identity().temper());
     }
 

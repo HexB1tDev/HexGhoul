@@ -48,6 +48,14 @@ public final class ControlEntities {
         () -> EntityType.Builder.<com.hex.kagune.control.npc.ChildNpc>m_20704_(com.hex.kagune.control.npc.ChildNpc::new, MobCategory.CREATURE)
             .m_20699_(0.6F, 1.8F).m_20702_(10).m_20717_(1).m_20712_(KaguneMod.id("child").toString()));
 
+    /**
+     * 1.3.27: a CCG investigator: a player's size; of no wild kind (the mob caps never count them: they turn up in pairs, AgentSpawner),
+     * going as a wanderer does when no one is near.
+     */
+    public static final RegistryObject<EntityType<com.hex.kagune.control.npc.CcgAgent>> AGENT = ENTITIES.register("ccg_investigator",
+        () -> EntityType.Builder.<com.hex.kagune.control.npc.CcgAgent>m_20704_(com.hex.kagune.control.npc.CcgAgent::new, MobCategory.MISC)
+            .m_20699_(0.6F, 1.8F).m_20702_(10).m_20717_(2).m_20712_(KaguneMod.id("ccg_investigator").toString()));
+
     private ControlEntities() {
     }
 
@@ -75,6 +83,7 @@ public final class ControlEntities {
             event.put(TOUKA.get(), EtoNpc.attributes(com.hex.kagune.control.npc.Persona.TOUKA).m_22265_());
             event.put(KEN.get(), EtoNpc.attributes(com.hex.kagune.control.npc.Persona.KEN).m_22265_());
             event.put(CHILD.get(), com.hex.kagune.control.npc.ChildNpc.attributes().m_22265_());
+            event.put(AGENT.get(), com.hex.kagune.control.npc.CcgAgent.attributes().m_22265_());
         }
     }
 }
