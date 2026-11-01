@@ -384,6 +384,7 @@ def java(pieces, human):
         lines.append(f'        new Dish("{d["id"]}", "{d["chapter"]}", Dish.Kind.{d["kind"].upper()}, {d["food"][0]}, {d["food"][1]}F, '
                      f'{pieces.get(H + d["id"], 0)}, {str(H + d["id"] in human).lower()}, {container}, {d["makes"]}, {recipe},\n'
                      f'            new Dish.Effect[] {{{effects}}}),')
+    names = ",\n".join("        " + json.dumps(d["name"], ensure_ascii=False) for d in MENU)  # 1.3.42: the partner says what it made
     chapters = ", ".join('"' + c[0] + '"' for c in CHAPTERS)  # (key, name, intro)
     effects = ", ".join(f'new Kitchen("{k}", 0x{c:06X})' for (k, _n, c, _w) in EFFECTS)
     text = f'''package com.hex.kagune.control.kitchen;
@@ -405,6 +406,11 @@ public final class Menu {{
 
     public static final Dish[] DISHES = {{
 {chr(10).join(lines)}
+    }};
+
+    /** Each dish's name, as the lang file has it (the same order as {{@link #DISHES}}): what the partner says it made. */
+    public static final String[] NAMES = {{
+{names}
     }};
 
     /** One of the kitchen's own effects. */

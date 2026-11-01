@@ -12,10 +12,13 @@ import java.util.Map;
  */
 public final class Dishes {
     private static final Map<String, Dish> BY_ID = new HashMap<>();
+    private static final Map<String, String> NAMES = new HashMap<>();
 
     static {
-        for (Dish dish : Menu.DISHES) {
+        for (int i = 0; i < Menu.DISHES.length; i++) {
+            Dish dish = Menu.DISHES[i];
             BY_ID.put(dish.id(), dish);
+            NAMES.put(dish.id(), i < Menu.NAMES.length ? Menu.NAMES[i] : dish.id());
         }
     }
 
@@ -37,6 +40,16 @@ public final class Dishes {
     /** The dish whose item path is {@code id}, or null. */
     public static Dish byId(String id) {
         return id == null ? null : BY_ID.get(id);
+    }
+
+    /** 1.3.42: the dish an item id names ("hexkagune:crimson_curry"), or null (another mod's item, a vanilla one, no such dish). */
+    public static Dish byItem(String itemId) {
+        return itemId != null && itemId.startsWith("hexkagune:") ? BY_ID.get(itemId.substring("hexkagune:".length())) : null;
+    }
+
+    /** 1.3.42: the dish's name as the lang file has it ("Crimson Curry"), or its id if it isn't one. */
+    public static String name(String id) {
+        return id == null ? "" : NAMES.getOrDefault(id, id);
     }
 
     /** Every dish in {@code chapter}, in the book's order. */

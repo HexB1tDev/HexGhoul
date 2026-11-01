@@ -84,6 +84,8 @@ public final class HomeChores {
         /** 1.3.31: the home's chests as the chore began, and whether its spouse is a ghoul (their meal kept raw). */
         List<BlockPos> chests = List.of();
         boolean ghoul;
+        /** 1.3.42: the cookbook's dish it went to cook (its id), or null for the plain cooking. */
+        String dish;
 
         Job(Chores.Kind kind, List<BlockPos> round, long now) {
             this(kind, round, null, null, now);
@@ -240,6 +242,15 @@ public final class HomeChores {
         out.add("Can do now: " + (plan.cookAt() != null ? (ghoul ? "set aside raw cuts for you" : "cook") + ", " : "")
             + (plan.smeltAt() != null ? "smelt, " : "") + HomeKitchen.ripe(level, found, 64).size() + " ripe crops to pick"
             + (plan.noFuel() ? "; out of fuel (coal, charcoal, wood in a chest)" : "") + (chests.isEmpty() ? "; no plain chest or barrel to use" : ""));
+        // 1.3.42: the cookbook's dishes.
+        if (!ghoul) {
+            out.add("Cookbook dishes: only for a ghoul spouse (you're human: you get the plain cooking).");
+        } else {
+            List<String> dishes = HomeKitchen.possible(level, found, chests, true, 6);
+            int today = HomeKitchen.dishesToday(npc, level);
+            out.add("Cookbook dishes: " + (dishes.isEmpty() ? "none the chests hold everything for" : "could make " + String.join(", ", dishes))
+                + " (made today: " + today + " of " + com.hex.kagune.control.family.Kitchen.DISHES_A_DAY + ")");
+        }
         Job job = mind.chore;
         out.add("Doing: " + (job == null ? (HomeLife.night(level.m_46468_(), false) ? "resting (night)" : "nothing right now (next chore in "
             + Math.max(0L, (mind.nextChore - now) / 20L) + " s)") : job.kind.name().toLowerCase(java.util.Locale.ROOT) + ", step " + (job.index + 1) + " of "
@@ -317,7 +328,9 @@ public final class HomeChores {
         int mealRoom = com.hex.kagune.control.family.Kitchen.MEAL - com.hex.kagune.control.family.Kitchen.portions(HomeKitchen.meal(npc));
         HomeKitchen.Plan plan = chests.isEmpty() ? HomeKitchen.Plan.NONE : HomeKitchen.plan(level, found, chests, ghoul, mealRoom);
         List<BlockPos> ripe = chests.isEmpty() ? List.of() : HomeKitchen.ripe(level, found, 4);
-        counts[Chores.Kind.COOK.ordinal()] = plan.cookAt() != null ? 1 : 0;
+        // 1.3.42: one of the cookbook's dishes, when the chests hold all it needs (a few a day, a while apart).
+        HomeKitchen.Dinner dinner = HomeKitchen.dinner(npc, level, found, chests, ghoul, now);
+        counts[Chores.Kind.COOK.ordinal()] = plan.cookAt() != null || dinner != null ? 1 : 0;
         counts[Chores.Kind.SMELT.ordinal()] = plan.smeltAt() != null ? 1 : 0;
         counts[Chores.Kind.HARVEST.ordinal()] = ripe.size();
         if (plan.noFuel() && partner != null && now - mind.noFuelSaid > 24000L && SceneServer.sees(npc, partner, 12.0)) {
@@ -331,8 +344,9 @@ public final class HomeChores {
         if (kind == Chores.Kind.COOK || kind == Chores.Kind.SMELT) {
             // Fetched from the chest, then done at the stove.
             boolean cook = kind == Chores.Kind.COOK;
-            BlockPos from = cook ? plan.cookChest() : plan.smeltChest();
-            BlockPos at = cook ? plan.cookAt() : plan.smeltAt();
+            boolean dish = cook && dinner != null;
+            BlockPos from = dish ? dinner.chest() : cook ? plan.cookChest() : plan.smeltChest();
+            BlockPos at = dish ? dinner.at() : cook ? plan.cookAt() : plan.smeltAt();
             List<BlockPos> steps = new ArrayList<>(from.equals(at) ? List.of(at) : List.of(from, at));
             Chores.Kind atKind = kind(level.m_8055_(at).m_60734_());
             List<Chores.Kind> expects = steps.size() == 1 ? List.of(Chores.Kind.TIDY) : List.of(Chores.Kind.TIDY, atKind);
@@ -341,6 +355,7 @@ public final class HomeChores {
             Job job = new Job(kind, steps, expects, doings, now);
             job.chests = chests;
             job.ghoul = ghoul;
+            job.dish = dish ? dinner.cooking().dish().id() : null;
             return job;
         }
         if (kind == Chores.Kind.HARVEST) {
@@ -653,8 +668,11 @@ public final class HomeChores {
                 level.m_8767_(ParticleTypes.f_123804_, x, y + 1.2, z, 3, 0.25, 0.05, 0.25, 0.0);
             }
             case COOK -> {
-                level.m_8767_(ParticleTypes.f_123762_, x, y + 1.15, z, 2, 0.15, 0.05, 0.15, 0.01);
-                level.m_8767_(ParticleTypes.f_175834_, x, y + 0.45, z, 1, 0.2, 0.05, 0.2, 0.0);
+                // 1.3.42: smoke and flame only off a stove (a dish made at a table or by the chest is stirred without them).
+                if (com.hex.kagune.control.family.Kitchen.station(String.valueOf(level.m_8055_(at).m_60734_()), false)) {
+                    level.m_8767_(ParticleTypes.f_123762_, x, y + 1.15, z, 2, 0.15, 0.05, 0.15, 0.01);
+                    level.m_8767_(ParticleTypes.f_175834_, x, y + 0.45, z, 1, 0.2, 0.05, 0.2, 0.0);
+                }
             }
             default -> {
             }
@@ -693,6 +711,23 @@ public final class HomeChores {
                 // 1.3.31: the chest it fetched from first, then the stove (or a table, a ghoul's meal): it cooks there.
                 if (!job.last()) {
                     return false;
+                }
+                if (job.dish != null) {
+                    // 1.3.42: one of the cookbook's dishes, made for real; with its spouse there, handed over (or said where it is).
+                    ServerPlayer partner = EtoBrain.player(level, EtoBrain.spouse(npc));
+                    HomeKitchen.Made dish = HomeKitchen.cookDish(npc, level, job.chests, at, job.ghoul, job.dish, partner, now);
+                    if (dish == null) {
+                        return false;
+                    }
+                    if (partner != null && SceneServer.sees(npc, partner, 12.0)) {
+                        boolean kept = dish.kept() > 0 && HomeKitchen.hand(npc, partner) != null;
+                        if (npc.mind != null) {
+                            npc.mind.choreSaid = now; // no "There." on top of it as the chore ends
+                        }
+                        EtoBrain.say(npc, partner, com.hex.kagune.control.family.Kitchen.made(npc.persona().key(),
+                            com.hex.kagune.control.kitchen.Dishes.name(dish.cooking().dish().id()), kept, npc.m_217043_().m_188503_(1000)));
+                    }
+                    return true;
                 }
                 boolean made = HomeKitchen.cook(npc, level, job.chests, at, job.ghoul);
                 if (made) {
