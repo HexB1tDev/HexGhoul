@@ -261,12 +261,17 @@ public final class GhoulNpcBrain {
         if (body == npc || !body.m_6084_()) {
             return false;
         }
-        if (body instanceof Player player && (player.m_7500_() || player.m_5833_())) {
+        if (body instanceof Player player && player.m_5833_()) {
             return false;
         }
         Long until = mind.grudges.get(body.m_20148_());
         if (until != null && until > now) {
+            // 1.3.39: even a player in creative who hit it: it fights back (its kagune out, as the owner tests them), though its blows
+            // can't hurt them. It never goes for one unprovoked.
             return true;
+        }
+        if (body instanceof Player player && player.m_7500_()) {
+            return false;
         }
         ServerPlayer owner = owner(npc, mind);
         if (owner != null) {
@@ -466,6 +471,10 @@ public final class GhoulNpcBrain {
             return false;
         }
         Entity talker = level.m_6815_(mind.talking);
+        // 1.3.39: held as long as the talk is open on their screen (it used to walk off after 30 seconds of reading).
+        if (talker instanceof ServerPlayer player && GhoulNpcTalk.talkingWith(player, npc) && talker.m_20280_(npc) <= 100.0) {
+            mind.talkUntil = Math.max(mind.talkUntil, now + 40L);
+        }
         if (talker == null || now > mind.talkUntil || talker.m_20280_(npc) > 100.0) {
             mind.talking = 0;
             return false;

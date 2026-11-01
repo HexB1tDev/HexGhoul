@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.39 (HexGhoul): fixes: NPCs stay put while you talk to them; nobody suffocates in blocks while holding your hand; wild ghouls fight back in creative, so their kagune shows (testing)
+
+See `.github/release-notes-1.3.39.md`.
+
 ## 1.3.38 (HexGhoul): real speech bubbles: white, rounded, outlined, with a tail; thought clouds for actions; a "z Z z" cloud over sleepers (testing)
 
 See `.github/release-notes-1.3.38.md`.

@@ -16,6 +16,7 @@ public abstract class Entity {
     /** hurtMarked */ public boolean f_19864_;
     /** hasImpulse */ public boolean f_19812_;
     /** fallDistance */ public float f_19789_;
+    /** 1.3.39: noPhysics */ public boolean f_19794_;
     /** teleportTo(x, y, z) (a ServerPlayer sends it to its client) */ public void m_6021_(double x, double y, double z) { throw new UnsupportedOperationException(); }
     /** setDeltaMovement(x, y, z) */ public void m_20334_(double x, double y, double z) { throw new UnsupportedOperationException(); }
     /** xo */ public double f_19790_;

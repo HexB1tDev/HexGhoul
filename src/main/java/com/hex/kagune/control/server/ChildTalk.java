@@ -34,6 +34,19 @@ public final class ChildTalk {
     }
 
     private static final Map<UUID, Talk> TALKS = new HashMap<>();
+
+    /** 1.3.39: the player who has a talk with {@code npc} open on their screen (near enough), or null. */
+    static ServerPlayer talker(ChildNpc npc, ServerLevel level) {
+        if (TALKS.isEmpty()) {
+            return null;
+        }
+        for (Map.Entry<UUID, Talk> entry : TALKS.entrySet()) {
+            if (entry.getValue().npc() == npc.m_19879_() && level.m_8791_(entry.getKey()) instanceof ServerPlayer player && player.m_20280_(npc) <= 10.0 * 10.0) {
+                return player;
+            }
+        }
+        return null;
+    }
     static final double REACH = 4.5;
 
     private ChildTalk() {

@@ -175,7 +175,8 @@ public final class EtoBrain {
 
     /** 1.3.29: true while a chore at home has her (vanilla's strolling waits: it would walk her off it). */
     public static boolean busy(EtoNpc npc) {
-        return HomeChores.busy(npc.mind);
+        // 1.3.39: nor wandering off while someone talks to her.
+        return HomeChores.busy(npc.mind) || npc.mind != null && npc.mind.talking != null;
     }
 
     /**
@@ -789,6 +790,14 @@ public final class EtoBrain {
     // ---------------------------------------------------------------- calm
 
     private static void calm(EtoNpc npc, Mind mind, ServerLevel level, long now) {
+        if (mind.holding == null) {
+            solid(npc, player(level, mind.partner)); // (a hold dropped some other way)
+        }
+        // 1.3.39 (the owner: talked to, they walked away): her talk holds her as long as it is open on their screen, not 30 seconds.
+        ServerPlayer open = player(level, mind.talking);
+        if (open != null && EtoServer.talkingWith(open, npc) && open.m_20280_(npc) <= 10.0 * 10.0) {
+            mind.talkingUntil = Math.max(mind.talkingUntil, now + 40L);
+        }
         if (mind.talking != null && now > mind.talkingUntil) {
             mind.talking = null;
         }
@@ -1370,19 +1379,34 @@ public final class EtoBrain {
         float yaw = player.f_20883_;
         boolean woman = com.hex.kagune.control.Genders.female(player);
         Vec3 spot = HAND.spot(player.m_20185_(), player.m_20186_(), player.m_20189_(), yaw, woman);
-        Vec3 move = spot.m_82546_(npc.m_20182_());
-        if (level.m_45756_(npc, npc.m_20191_().m_82386_(move.f_82479_, move.f_82480_, move.f_82481_))) {
-            npc.m_21573_().m_26573_();
-            npc.m_6021_(spot.f_82479_, spot.f_82480_, spot.f_82481_);
-            npc.m_20256_(player.m_20184_());
-        } else {
-            stayBeside(npc, player, EtoHand.out(woman), now);
-        }
+        // 1.3.39 (the owner: hand in hand they suffocated in blocks: "just disable collision with blocks altogether while holding hands"):
+        // always at their side, through whatever is there, never pushed by it nor choked in it, nor falling.
+        npc.f_19794_ = true;
+        npc.m_20242_(true);
+        npc.m_21573_().m_26573_();
+        npc.m_6021_(spot.f_82479_, spot.f_82480_, spot.f_82481_);
+        npc.m_20256_(player.m_20184_());
+        npc.f_19789_ = 0.0F;
         npc.m_146922_(yaw);
         npc.f_20883_ = yaw;
         npc.f_20885_ = yaw;
         if (now % 80L == 0L) {
             hearts(level, npc, player, 1);
+        }
+    }
+
+    /**
+     * 1.3.39: back to a body that collides and falls, after a hand let go (or a hold dropped any other way); if it was let go inside a
+     * wall, set down on the feet of the one who held it ({@code by}), never left choking in it.
+     */
+    static void solid(net.minecraft.world.entity.Mob body, LivingEntity by) {
+        if (!body.f_19794_) {
+            return;
+        }
+        body.f_19794_ = false;
+        body.m_20242_(false);
+        if (body.m_9236_() instanceof ServerLevel world && !world.m_45756_(body, body.m_20191_()) && by != null && by.m_9236_() == world) {
+            body.m_6021_(by.m_20185_(), by.m_20186_(), by.m_20189_());
         }
     }
 
@@ -1394,6 +1418,7 @@ public final class EtoBrain {
         ServerPlayer player = player(level, mind.holding);
         mind.holding = null;
         mind.with = 0;
+        solid(npc, player);
         if (mind.gesture == EtoGesture.HAND) {
             gesture(mind, EtoGesture.NONE, now);
         }

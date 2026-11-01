@@ -50,6 +50,7 @@ public final class FamilyTests {
         reactions();
         initiative();
         drowsy();
+        held();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -1059,5 +1060,27 @@ public final class FamilyTests {
         check(brain.contains("body instanceof com.hex.kagune.control.npc.CcgAgent"), "an investigator by the house is a threat a parent gets up for");
         String server = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/EtoServer.java"));
         check(server.contains("\"sleep:back\"") && server.contains("\"sleep:kiss\"") && server.contains("\"sleep:up\""), "the drowsy page's three answers");
+    }
+
+    /**
+     * 1.3.39, the owner's bugs: anyone held (hand in hand, in arms, on shoulders) passes through blocks and is never choked in one, and is
+     * set down clear of a wall; a talk holds a companion, a child and a wild ghoul as long as it is open on the player's screen; a wild
+     * ghoul hit by a player in creative fights back (its kagune out).
+     */
+    static void held() throws java.io.IOException {
+        String eto = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/EtoBrain.java"));
+        String child = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/ChildBrain.java"));
+        String ghoul = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/GhoulNpcBrain.java"));
+        int hands = eto.indexOf("private static void holdHands");
+        check(hands > 0 && eto.indexOf("npc.f_19794_ = true;", hands) > hands && eto.indexOf("npc.f_19794_ = true;", hands) < eto.indexOf("private static void", hands + 30),
+            "hand in hand, a companion passes through blocks");
+        check(eto.contains("static void solid(") && eto.contains("solid(npc, player);"), "let go, she is solid again, set down clear of a wall");
+        check(child.contains("npc.f_19794_ = true;") && child.contains("EtoBrain.solid(npc, held);"), "a held child passes through blocks; set down, it is solid");
+        check(eto.contains("EtoServer.talkingWith(open, npc)") && eto.contains("npc.mind.talking != null"), "a companion stays for a talk as long as it is open");
+        check(child.contains("ChildTalk.talker(npc, level) != null"), "a child stands still while talked to");
+        check(ghoul.contains("GhoulNpcTalk.talkingWith(player, npc)"), "a wild ghoul stays for a talk as long as it is open");
+        int grudge = ghoul.indexOf("Long until = mind.grudges.get(body.m_20148_());");
+        int creative = ghoul.indexOf("if (body instanceof Player player && player.m_7500_()) {");
+        check(grudge > 0 && creative > grudge, "a ghoul hit by a player in creative fights back (the grudge first)");
     }
 }

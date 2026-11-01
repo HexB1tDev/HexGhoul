@@ -102,6 +102,12 @@ public final class EtoServer {
         TALKS.remove(event.getEntity().m_20148_());
     }
 
+    /** 1.3.39: true while {@code player} has a talk with {@code npc} open on their screen. */
+    static boolean talkingWith(ServerPlayer player, EtoNpc npc) {
+        Talk talk = TALKS.get(player.m_20148_());
+        return talk != null && talk.npc() == npc.m_19879_();
+    }
+
     /** 1.3.29: true while {@code player} has a talk with a companion open. */
     static boolean talking(ServerPlayer player) {
         return TALKS.containsKey(player.m_20148_());

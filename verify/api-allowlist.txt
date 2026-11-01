@@ -245,6 +245,7 @@ M net/minecraft/world/entity/Entity m_20184_ ()Lnet/minecraft/world/phys/Vec3;  
 F net/minecraft/world/entity/Entity f_19864_ Z                                      # [srg] hurtMarked, bfj.S (yarn velocityModified): the motion is sent to the client
 M net/minecraft/world/entity/Entity m_20256_ (Lnet/minecraft/world/phys/Vec3;)V       # [srg] setDeltaMovement, bfj.f (yarn setVelocity): a body the flesh lets go of stops
 F net/minecraft/world/entity/Entity f_19789_ F                                      # [srg] fallDistance, bfj.aa (yarn fallDistance): a held body's fall is forgotten
+F net/minecraft/world/entity/Entity f_19794_ Z                                      # [srg] 1.3.39 noPhysics, joined.tsrg bfj ae f_19794_ (yarn noClip): a body held by the hand passes through blocks, never choking in them
 M net/minecraft/world/phys/AABB <init> (DDDDDD)V                                    # [srg] AABB(minX..maxZ) (yarn Box(DDDDDD)), the Rising Flame's column
 
 # --- manifestation sounds (client, per limb; the original's KaguneAmbientSounds$WritheSound uses the same members) ----

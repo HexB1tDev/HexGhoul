@@ -167,6 +167,7 @@ public final class ChildBrain {
         }
         if (carrier == null && npc.carriedBy == 0) {
             npc.m_20242_(false); // never left floating (nor saved floating: a world saved mid-carry comes back with its gravity on)
+            EtoBrain.solid(npc, null);
         }
         if (carrier != null) {
             carry(npc, carrier, mind.ride);
@@ -174,6 +175,12 @@ public final class ChildBrain {
         } else if (busyStanding(mind, now)) {
             // 1.3.20: in a moment with a parent: standing to it, facing them (or walking up to them first).
             stand(npc, mind, level, now);
+        } else if (ChildTalk.talker(npc, level) != null && !npc.m_5803_()) {
+            // 1.3.39 (the owner: talked to, they walked away): it stands still and looks at whoever is talking to it.
+            ServerPlayer talker = ChildTalk.talker(npc, level);
+            npc.m_21573_().m_26573_();
+            npc.m_20256_(new Vec3(0.0, npc.m_20184_().f_82480_, 0.0));
+            npc.m_21563_().m_24960_(talker, 30.0F, 30.0F);
         } else if (stage.sits()) {
             // A baby sits where it is put.
             npc.m_21573_().m_26573_();
@@ -236,6 +243,8 @@ public final class ChildBrain {
         Vec3 at = carrier.m_20182_().m_82520_(-Math.sin(yaw) * ahead + Math.cos(yaw) * left, up, Math.cos(yaw) * ahead + Math.sin(yaw) * left);
         npc.m_21573_().m_26573_();
         npc.m_20242_(true);
+        // 1.3.39 (the owner: held by the hand they suffocated in blocks): no block in its way while it is held, nor choking it.
+        npc.f_19794_ = true;
         npc.carriedBy = carrier.m_19879_();
         npc.m_6021_(at.f_82479_, at.f_82480_, at.f_82481_);
         npc.m_20256_(Vec3.f_82478_);
@@ -270,6 +279,7 @@ public final class ChildBrain {
     }
 
     static void putDown(ChildNpc npc, Mind mind) {
+        LivingEntity held = mind.carrier != null && npc.m_9236_() instanceof ServerLevel at ? carrierOf(at, mind.carrier) : null;
         if (mind.carrier != null) {
             mind.carrier = null;
             mind.ride = ChildRules.RIDE_ARMS;
@@ -284,6 +294,8 @@ public final class ChildBrain {
         }
         npc.m_20242_(false);
         npc.carriedBy = 0;
+        // 1.3.39: solid again; set down inside a wall, it is put on the feet of whoever held it instead.
+        EtoBrain.solid(npc, held);
     }
 
     static boolean carried(ChildNpc npc) {

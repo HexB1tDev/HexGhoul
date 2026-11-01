@@ -46,6 +46,12 @@ public final class GhoulNpcTalk {
 
     private static final Map<UUID, Talk> TALKS = new HashMap<>();
 
+    /** 1.3.39: true while {@code player} has a talk with {@code npc} open on their screen. */
+    static boolean talkingWith(ServerPlayer player, GhoulNpc npc) {
+        Talk talk = TALKS.get(player.m_20148_());
+        return talk != null && talk.npc() == npc.m_19879_();
+    }
+
     private GhoulNpcTalk() {
     }
 
