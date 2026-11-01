@@ -176,6 +176,39 @@ public final class GraftRenderer {
                 tint = com.hex.kagune.control.KaguneColours.DEFAULT;
             }
         }
+        // 1.3.43: the ghoul children in view with Rinkaku tails of their own: the transplant's two tails, lashing as a wild ghoul's, at
+        // their size and in the colour they took from a parent.
+        for (com.hex.kagune.control.npc.ChildNpc child : ChildRenderer.drawn()) {
+            com.hex.kagune.control.client.ChildClient.View kid = com.hex.kagune.control.client.ChildClient.get(child.m_19879_());
+            com.hex.kagune.control.client.GhoulNpcClient.View seen = com.hex.kagune.control.client.GhoulNpcClient.get(child.m_19879_());
+            if (kid == null || seen == null || !com.hex.kagune.control.family.KaguneGenes.tails(kid.genome().kagune()) || !child.m_6084_()
+                || child.m_20145_() || child.m_5803_()) {
+                continue;
+            }
+            float deploy = com.hex.kagune.control.client.GhoulNpcClient.deploy(seen, clock);
+            if (deploy <= 0.005F) {
+                LIMBS.remove(child.m_20148_());
+                continue;
+            }
+            double distance = child.m_20280_(self);
+            if (distance > MAX_DISTANCE_SQR) {
+                continue;
+            }
+            GraftClient.View view = com.hex.kagune.control.client.GhoulNpcClient.graft(seen);
+            Limbs limbs = LIMBS.computeIfAbsent(child.m_20148_(), id -> new Limbs());
+            limbs.seen = level.m_46467_();
+            limbs.stage = GraftStage.TRANSPLANT;
+            Frame frame = Frame.of(child, partial, com.hex.kagune.control.family.ChildKaguneRules.scale(kid.stage()));
+            GraftRig.Body body = body(child, partial, clock, frame, prey(level, child, limbs, partial, frame));
+            VertexConsumer out = consumer[0] == null ? (consumer[0] = buffers.m_6299_(TYPE)) : consumer[0];
+            tint = kid.genome().colour() < 0 ? com.hex.kagune.control.KaguneColours.DEFAULT : kid.genome().colour() & 0xFFFFFF;
+            try {
+                drawSet(out, matrix, normals, level, child, view, GraftStage.TRANSPLANT, limbs.base, deploy, view, body, frame, camera, clock, partial,
+                    com.hex.kagune.control.family.ChildKaguneRules.tailMastery(kid.stage()), distance <= DETAIL_DISTANCE_SQR, null, null);
+            } finally {
+                tint = com.hex.kagune.control.KaguneColours.DEFAULT;
+            }
+        }
         if (consumer[0] != null) {
             buffers.m_109912_(TYPE);
         }
@@ -192,7 +225,7 @@ public final class GraftRenderer {
                                 double[] eyeRig, com.hex.kagune.control.client.animation.RigPose posed) {
         int n = Math.min(motion.length, stage.limbs(mastery));
         double length = stage.length(mastery);
-        double width = stage.width(mastery);
+        double width = stage.width(mastery) * frame.scale(); // 1.3.43: a child's tails as thick as they are long, at its size
         GraftMove move = moving == null ? GraftMove.NONE : moving.move();
         double age = moving == null ? 0.0 : moving.age(clock);
         if (moving != null && age > move.ticks() + 2) {
@@ -281,8 +314,8 @@ public final class GraftRenderer {
                 new double[][] {GraftRig.root(stage, n, 0, body.crouching())})[0], camera);
             if (eyeRig == null) {
                 GraftMesh.blob((a, b, c, d, nn, ca, cb, cc, cd) -> quad(out, matrix, normals, a, b, c, d, nn, ca, cb, cc, cd, light), root,
-                    frame.turn(new double[] {1.0, 0.0, 0.0}), new double[] {0.0, 1.0, 0.0}, frame.turn(new double[] {0.0, 0.0, 1.0}), 0.22 * heave,
-                    0.18 * heave, 0.14 * heave, 5, 8, 0.25, player.m_19879_(), v -> 0.4 + 0.4 * v, 0x8A1820, 0x3A050C, 1.0);
+                    frame.turn(new double[] {1.0, 0.0, 0.0}), new double[] {0.0, 1.0, 0.0}, frame.turn(new double[] {0.0, 0.0, 1.0}), 0.22 * heave * frame.scale(),
+                    0.18 * heave * frame.scale(), 0.14 * heave * frame.scale(), 5, 8, 0.25, player.m_19879_(), v -> 0.4 + 0.4 * v, 0x8A1820, 0x3A050C, 1.0);
             }
         }
     }
@@ -339,22 +372,30 @@ public final class GraftRenderer {
             entity.f_19792_ + (entity.m_20189_() - entity.f_19792_) * partial};
     }
 
-    /** A player's rig frame for this frame: feet in the world, and the body's forward and right. */
-    private record Frame(double x, double y, double z, double forwardX, double forwardZ, double rightX, double rightZ, double bodyYaw) {
+    /**
+     * A player's rig frame for this frame: feet in the world, and the body's forward and right; 1.3.43: and its size (a ghoul child's tails
+     * are a grown ghoul's rig drawn at its size: every rig point placed {@code scale} as far from its feet, every world point read back).
+     */
+    private record Frame(double x, double y, double z, double forwardX, double forwardZ, double rightX, double rightZ, double bodyYaw, double scale) {
         static Frame of(LivingEntity player, float partial) {
+            return of(player, partial, 1.0);
+        }
+
+        static Frame of(LivingEntity player, float partial, double scale) {
             double feetX = player.f_19790_ + (player.m_20185_() - player.f_19790_) * partial;
             double feetY = player.f_19791_ + (player.m_20186_() - player.f_19791_) * partial;
             double feetZ = player.f_19792_ + (player.m_20189_() - player.f_19792_) * partial;
             float previousYaw = player.f_20884_;
             double bodyYaw = previousYaw + wrap(player.f_20883_ - previousYaw) * partial;
             double yaw = Math.toRadians(bodyYaw);
-            return new Frame(feetX, feetY, feetZ, -Math.sin(yaw), Math.cos(yaw), -Math.cos(yaw), -Math.sin(yaw), bodyYaw);
+            return new Frame(feetX, feetY, feetZ, -Math.sin(yaw), Math.cos(yaw), -Math.cos(yaw), -Math.sin(yaw), bodyYaw, scale);
         }
 
         /** A rig point in the world, relative to the camera. */
         double[] place(double[] rig, Vec3 camera) {
-            return new double[] {this.x + this.rightX * rig[0] + this.forwardX * rig[2] - camera.f_82479_, this.y + rig[1] - camera.f_82480_,
-                this.z + this.rightZ * rig[0] + this.forwardZ * rig[2] - camera.f_82481_};
+            double s = this.scale;
+            return new double[] {this.x + (this.rightX * rig[0] + this.forwardX * rig[2]) * s - camera.f_82479_, this.y + rig[1] * s - camera.f_82480_,
+                this.z + (this.rightZ * rig[0] + this.forwardZ * rig[2]) * s - camera.f_82481_};
         }
 
         /** A rig direction in the world. */
@@ -364,9 +405,9 @@ public final class GraftRenderer {
 
         /** A world point in the rig. */
         double[] rig(double[] world) {
-            double dx = world[0] - this.x;
-            double dz = world[2] - this.z;
-            return new double[] {dx * this.rightX + dz * this.rightZ, world[1] - this.y, dx * this.forwardX + dz * this.forwardZ};
+            double dx = (world[0] - this.x) / this.scale;
+            double dz = (world[2] - this.z) / this.scale;
+            return new double[] {dx * this.rightX + dz * this.rightZ, (world[1] - this.y) / this.scale, dx * this.forwardX + dz * this.forwardZ};
         }
     }
 

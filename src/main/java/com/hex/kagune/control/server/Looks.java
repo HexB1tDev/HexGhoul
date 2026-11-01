@@ -40,11 +40,28 @@ public final class Looks {
         return HAIR.getOrDefault(player.m_20148_(), Genome.HAIR);
     }
 
-    /** {@code player} as a parent: their hair, the usual eyes and skin, ghoul or not, one-eyed or not. */
+    /**
+     * {@code player} as a parent: their hair, the usual eyes and skin, ghoul or not, one-eyed or not; 1.3.43: the kagune they pass on (their
+     * path's: Rinkaku tails, the Ukaku pair) and its colour (their own).
+     */
     public static Genome.Parent parent(ServerPlayer player) {
         boolean ghoul = KaguneProfile.isUnlocked(player);
         boolean oneEyed = ghoul && KakuganServer.eyes(player).oneEyed();
-        return new Genome.Parent(hair(player), Genome.EYES, skin(player), ghoul, oneEyed);
+        return new Genome.Parent(hair(player), Genome.EYES, skin(player), ghoul, oneEyed, kagune(player), kaguneColour(player));
+    }
+
+    /** 1.3.43: the kagune {@code player} passes on to a child ({@code KaguneGenes} bits; none for a human). */
+    public static int kagune(ServerPlayer player) {
+        return com.hex.kagune.control.family.KaguneGenes.ofPath(PathServer.path(player).id(), KaguneProfile.isUnlocked(player));
+    }
+
+    /** 1.3.43: {@code player}'s kagune colour (their profile's primary colour). */
+    public static int kaguneColour(ServerPlayer player) {
+        try {
+            return KaguneProfile.appearance(player).primaryColor() & 0xFFFFFF;
+        } catch (RuntimeException unreadable) {
+            return com.hex.kagune.control.KaguneColours.DEFAULT;
+        }
     }
 
     @SubscribeEvent

@@ -88,4 +88,17 @@ public final class WingRules {
             com.hex.kagune.control.ukaku.WingRig.Motion.NONE, 0.0F, 0.4F, 0.0F, 0.0F, false, detail, 1.0F, dissolving, aim, aim, at, kickRight, kickLeft,
             0.0F, 0.0F, SIDE > 0 ? 1.0F : 0.0F, SIDE > 0 ? 0.0F : 1.0F);
     }
+
+    /**
+     * 1.3.43: a ghoul child's wing or wings (Ukaku inherited) as the rig draws them at {@code mastery} (its stage's): the pair, or one
+     * alone on {@code side} (1 its right, -1 its left; the other grown to nothing), aiming as it shoots.
+     */
+    public static com.hex.kagune.control.ukaku.WingRig.Input child(int mastery, int wings, int side, float deploy, double time, boolean dissolving,
+                                                                   float aim, double[] at, float kickRight, float kickLeft, float detail) {
+        float right = wings >= 2 || side > 0 ? 1.0F : 0.0F;
+        float left = wings >= 2 || side < 0 ? 1.0F : 0.0F;
+        return new com.hex.kagune.control.ukaku.WingRig.Input(com.hex.kagune.control.ukaku.WingForm.TWIN, mastery, deploy, time, 0.0F, 0.0F,
+            com.hex.kagune.control.ukaku.WingRig.Motion.NONE, 0.0F, 0.4F, 0.0F, 0.0F, false, detail, 1.0F, dissolving, aim, aim, at, kickRight, kickLeft,
+            0.0F, 0.0F, right, left);
+    }
 }

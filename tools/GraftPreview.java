@@ -56,6 +56,9 @@ public final class GraftPreview {
         if (wanted.contains("npc")) {
             npc(new File(out, "ghoul-npc.png"));
         }
+        if (wanted.contains("child")) {
+            child(new File(out, "child-kagune.png"));
+        }
         if (wanted.contains("npc-scene")) {
             // The world behind the talk screen (tools/UiPreview.java talk): a ghoul NPC facing the player, close.
             RigPose still = new RigPose();
@@ -207,6 +210,38 @@ public final class GraftPreview {
                 kakugan(still, ukaku), ukaku));
         }
         ArtPreview.sheet(file, "Ghoul NPCs: their own skins, the kakugan, the transplant's tails and the twin wings", shots, 3, 480, 400);
+    }
+
+    /**
+     * 1.3.43: a ghoul child's inherited kagune as the game draws it (ChildKaguneRules' masteries, WingRules.child): a child of a Rinkaku
+     * father and an Ukaku mother (two tails and one wing), the same as a teen, and a child of two Ukaku (the pair). Drawn at a grown
+     * body's size: the game draws the child's body and its kagune at the same scale about its feet, so the proportions are these.
+     */
+    static void child(File file) throws Exception {
+        RigPose still = new RigPose();
+        List<ArtPreview.Shot> shots = new ArrayList<>();
+        int skin = 3;
+        com.hex.kagune.control.family.ChildStage[] stages = {com.hex.kagune.control.family.ChildStage.CHILD, com.hex.kagune.control.family.ChildStage.TEEN};
+        double[][] eyes = {{2.6, 2.0, 4.4}, {-2.9, 2.6, -4.0}, {4.8, 1.8, -0.3}};
+        String[] views = {"front", "behind", "side"};
+        for (com.hex.kagune.control.family.ChildStage stage : stages) {
+            int tails = com.hex.kagune.control.family.ChildKaguneRules.tailMastery(stage);
+            com.hex.kagune.control.ukaku.WingRig.Input wing = com.hex.kagune.control.npc.WingRules.child(
+                com.hex.kagune.control.family.ChildKaguneRules.wingMastery(stage), 1, 1, 1.0F, 40.0, false, 0.0F,
+                com.hex.kagune.control.ukaku.WingRig.FORWARD, 0.0F, 0.0F, 1.0F);
+            for (int v = 0; v < eyes.length; v++) {
+                List<WingPreview.Tri> tris = with(kakugan(still, skin), whole(still, GraftStage.TRANSPLANT, tails, GraftMove.NONE, 0.0, null, 1.0, eyes[v]));
+                shots.add(ghoul(stage.name().toLowerCase() + ": two tails (" + tails + ") + one wing (right): " + views[v], still, wing, eyes[v],
+                    new double[] {0.0, 1.45, -0.3}, tris, skin));
+            }
+        }
+        com.hex.kagune.control.ukaku.WingRig.Input pair = com.hex.kagune.control.npc.WingRules.child(
+            com.hex.kagune.control.family.ChildKaguneRules.wingMastery(com.hex.kagune.control.family.ChildStage.CHILD), 2, 1, 1.0F, 40.0, false, 0.0F,
+            com.hex.kagune.control.ukaku.WingRig.FORWARD, 0.0F, 0.0F, 1.0F);
+        for (int v = 0; v < eyes.length; v++) {
+            shots.add(ghoul("child of two Ukaku: the pair: " + views[v], still, pair, eyes[v], new double[] {0.0, 1.45, -0.3}, kakugan(still, skin), skin));
+        }
+        ArtPreview.sheet(file, "A ghoul child's inherited kagune (drawn at a grown body's scale; in game all of it at the child's size)", shots, 3, 420, 380);
     }
 
     /**

@@ -39,6 +39,18 @@ import net.minecraftforge.fml.common.Mod;
  * there were none.
  */
 public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerModel<ChildNpc>> {
+    /** 1.3.43: the children drawn this frame (their kagune is drawn after entities, as a wild ghoul's; cleared with theirs). */
+    private static final java.util.Set<ChildNpc> DRAWN = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+
+    /** 1.3.43: the children drawn so far this frame. */
+    static java.util.List<ChildNpc> drawn() {
+        return new java.util.ArrayList<>(DRAWN);
+    }
+
+    /** 1.3.43: the frame's list cleared (after both kagune renderers). */
+    static void cleared() {
+        DRAWN.clear();
+    }
     private static final ResourceLocation FALLBACK = Objects.requireNonNull(ResourceLocation.m_214293_("minecraft", "textures/entity/player/wide/steve.png"));
     /** Each skin made (by the child's looks, stage and kakugan), and its texture's name. */
     private static final Map<String, ResourceLocation> MADE = new HashMap<>();
@@ -210,6 +222,9 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
         ChildClient.View view = ChildClient.get(child.m_19879_());
         ChildStage stage = view == null ? child.stage : view.stage();
         child.carriedBy = view == null ? 0 : view.carrier();
+        if (view != null && com.hex.kagune.control.family.KaguneGenes.any(view.genome().kagune())) {
+            DRAWN.add(child); // 1.3.43: its kagune drawn after entities
+        }
         ChildSkins.Skin skin = skin(view);
         this.f_115290_ = skin != null && skin.slim() ? this.slim : this.wide;
         pose.m_85836_();

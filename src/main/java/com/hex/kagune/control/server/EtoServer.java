@@ -717,7 +717,8 @@ public final class EtoServer {
         }
         NpcMemoryServer.of(player).forget(p.key(), NpcMemory.BABY);
         NpcMemoryServer.save(player);
-        com.hex.kagune.control.family.Genome.Parent theirs = new com.hex.kagune.control.family.Genome.Parent(p.hair(), p.eyes(), p.skin(), true, p.oneEyed());
+        com.hex.kagune.control.family.Genome.Parent theirs = new com.hex.kagune.control.family.Genome.Parent(p.hair(), p.eyes(), p.skin(), true, p.oneEyed(),
+            p.kagune(), p.kaguneColour()); // 1.3.43: and its kagune
         java.util.Random random = new java.util.Random(level.m_46467_() ^ player.m_20148_().getLeastSignificantBits());
         if (p.female()) {
             com.hex.kagune.control.family.Genome genome = com.hex.kagune.control.family.Genome.of(theirs, Looks.parent(player), random);

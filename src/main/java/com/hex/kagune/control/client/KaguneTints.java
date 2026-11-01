@@ -10,7 +10,7 @@ import net.minecraft.world.entity.Entity;
 /**
  * 1.3.35: the colour a body's kagune is drawn in on this client: a player's own (their profile's, rolled by KaguneColours and sent to
  * everyone with the original's state), a wild ghoul's from the seed it was born with (KaguneTint.wild); anyone else's the original
- * crimson (drawn as it always was).
+ * crimson (drawn as it always was). 1.3.43: a ghoul child's from the parent it took its colour from.
  */
 public final class KaguneTints {
     private KaguneTints() {
@@ -30,6 +30,11 @@ public final class KaguneTints {
         try {
             if (entity instanceof AbstractClientPlayer player) {
                 return KaguneClientState.get(player).color() & 0xFFFFFF;
+            }
+            if (entity instanceof com.hex.kagune.control.npc.ChildNpc child) {
+                // 1.3.43: a ghoul child's, from the parent it took it from.
+                ChildClient.View view = ChildClient.get(child.m_19879_());
+                return view == null || view.genome().colour() < 0 ? KaguneColours.DEFAULT : view.genome().colour() & 0xFFFFFF;
             }
             if (entity instanceof com.hex.kagune.control.npc.GhoulNpc npc) {
                 GhoulNpcClient.View view = GhoulNpcClient.get(npc.m_19879_());

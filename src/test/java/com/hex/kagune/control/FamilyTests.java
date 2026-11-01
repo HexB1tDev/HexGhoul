@@ -51,6 +51,7 @@ public final class FamilyTests {
         initiative();
         drowsy();
         held();
+        kagune();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -148,6 +149,104 @@ public final class FamilyTests {
         }
         String born = com.hex.kagune.control.family.FamilyLines.born("Eto", true, "Hana");
         check(born.contains("A girl") && born.contains("Hana") && born.contains("Eto"), "the birth's words: who, and to whom");
+    }
+
+    /**
+     * 1.3.43: a ghoul child inherits its parents' kagune: the kinds (the same from both, whole; two kinds, both, the wings down to one;
+     * a human parent, the other's), its colour from one parent who has one; saved with its genome (one from before reads as not known and
+     * keeps everything else); its fight's rules (tails close, the wing further off, one wing's shots from its side); the wing drawn alone.
+     */
+    static void kagune() {
+        int tails = com.hex.kagune.control.family.KaguneGenes.TAILS;
+        int wings = com.hex.kagune.control.family.KaguneGenes.WINGS;
+        int wing = com.hex.kagune.control.family.KaguneGenes.WING;
+        int owl = com.hex.kagune.control.family.KaguneGenes.OWL;
+        int none = com.hex.kagune.control.family.KaguneGenes.NONE;
+        java.util.function.IntBinaryOperator inherit = com.hex.kagune.control.family.KaguneGenes::inherit;
+        check(inherit.applyAsInt(wings, tails) == (tails | wing) && inherit.applyAsInt(tails, wings) == (tails | wing),
+            "a Rinkaku father and an Ukaku mother: the tails and one wing (either way round)");
+        check(inherit.applyAsInt(wings, wings) == wings && inherit.applyAsInt(tails, tails) == tails && inherit.applyAsInt(owl, owl) == owl,
+            "two of the same kind: that kind whole (the pair of wings)");
+        check(inherit.applyAsInt(none, wings) == wings && inherit.applyAsInt(tails, none) == tails && inherit.applyAsInt(none, none) == none
+            && inherit.applyAsInt(com.hex.kagune.control.family.KaguneGenes.UNKNOWN, owl) == owl, "a parent with none: the other's whole");
+        check(inherit.applyAsInt(owl, tails) == (owl | tails) && inherit.applyAsInt(owl, wings) == (owl | wing), "Eto's child: her kagune and its father's (a wing alone)");
+        check(com.hex.kagune.control.family.KaguneGenes.wings(tails | wing) == 1 && com.hex.kagune.control.family.KaguneGenes.wings(wings) == 2
+            && com.hex.kagune.control.family.KaguneGenes.wings(tails) == 0 && com.hex.kagune.control.family.KaguneGenes.tails(tails | wing)
+            && !com.hex.kagune.control.family.KaguneGenes.tails(com.hex.kagune.control.family.KaguneGenes.UNKNOWN)
+            && com.hex.kagune.control.family.KaguneGenes.clean(com.hex.kagune.control.family.KaguneGenes.PAIR) == wings, "how many wings, tails or not");
+        check(com.hex.kagune.control.family.KaguneGenes.ofPath("ukaku", true) == wings && com.hex.kagune.control.family.KaguneGenes.ofPath("rinkaku", true) == tails
+            && com.hex.kagune.control.family.KaguneGenes.ofPath("none", true) == tails && com.hex.kagune.control.family.KaguneGenes.ofPath("ukaku", false) == none,
+            "a player passes on their path's kagune; a human none");
+        check(com.hex.kagune.control.npc.Persona.TOUKA.kagune() == wings && com.hex.kagune.control.npc.Persona.KEN.kagune() == tails
+            && com.hex.kagune.control.npc.Persona.ETO.kagune() == owl, "Touka passes on her wings, Ken his tails, Eto her Owl kagune");
+        check(com.hex.kagune.control.family.KaguneGenes.colour(wings, 0x112233, tails, 0x445566, 0.2) == 0x112233
+            && com.hex.kagune.control.family.KaguneGenes.colour(wings, 0x112233, tails, 0x445566, 0.8) == 0x445566
+            && com.hex.kagune.control.family.KaguneGenes.colour(none, 0x112233, tails, 0x445566, 0.2) == 0x445566
+            && com.hex.kagune.control.family.KaguneGenes.colour(none, 0x112233, none, 0x445566, 0.2) == -1, "its colour from one parent, only one who has a kagune");
+        check(com.hex.kagune.control.family.KaguneGenes.describe(tails | wing).equals("Rinkaku tails and an Ukaku wing")
+            && com.hex.kagune.control.family.KaguneGenes.describe(com.hex.kagune.control.family.KaguneGenes.UNKNOWN).equals("not known yet"), "in words");
+        // Conceived: everything decided before stays as it was for the same draws; the kagune and its colour from the parents.
+        com.hex.kagune.control.family.Genome.Parent touka = new com.hex.kagune.control.family.Genome.Parent(0x30304A, 0x404060, 0xF0D8C8, true, false, wings, 0xA50F37);
+        com.hex.kagune.control.family.Genome.Parent dad = new com.hex.kagune.control.family.Genome.Parent(0x201010, 0x403020, 0xC08060, true, false, tails, 0x2050E0);
+        com.hex.kagune.control.family.Genome.Parent toukaOld = new com.hex.kagune.control.family.Genome.Parent(0x30304A, 0x404060, 0xF0D8C8, true, false);
+        com.hex.kagune.control.family.Genome.Parent dadOld = new com.hex.kagune.control.family.Genome.Parent(0x201010, 0x403020, 0xC08060, true, false);
+        int fromMother = 0;
+        boolean same = true;
+        boolean mixed = true;
+        boolean trips = true;
+        for (int i = 0; i < 2000; i++) {
+            com.hex.kagune.control.family.Genome now = com.hex.kagune.control.family.Genome.of(touka, dad, new java.util.Random(i));
+            com.hex.kagune.control.family.Genome before = com.hex.kagune.control.family.Genome.of(toukaOld, dadOld, new java.util.Random(i));
+            same &= now.gender() == before.gender() && now.kakugan() == before.kakugan() && now.hair() == before.hair() && now.eyes() == before.eyes()
+                && now.skin() == before.skin() && now.seed() == before.seed();
+            mixed &= now.kagune() == (tails | wing) && (now.colour() == 0xA50F37 || now.colour() == 0x2050E0);
+            fromMother += now.colour() == 0xA50F37 ? 1 : 0;
+            trips &= now.equals(com.hex.kagune.control.family.Genome.load(now.save()));
+        }
+        check(same, "deciding the kagune changes nothing else a child of the same night would have been");
+        check(mixed, "Touka and a Rinkaku father: the tails and one wing, in one of their colours");
+        check(Math.abs(fromMother / 2000.0 - 0.5) < 0.05, "either parent's colour, evenly: " + fromMother);
+        check(trips, "the kagune saved and read back with the rest");
+        com.hex.kagune.control.family.Genome old = com.hex.kagune.control.family.Genome.load("2,1,3,5a3a22,4a3020,d9a07e,12345");
+        check(old != null && !old.kaguneKnown() && old.seed() == 12345L && old.hair() == 0x5A3A22 && old.colour() == -1
+            && old.withKagune(tails, 0x123456).kaguneKnown() && old.withKagune(tails, 0x123456).seed() == 12345L,
+            "a genome saved before reads as before, its kagune not known yet (worked out later), nothing else lost");
+        check(com.hex.kagune.control.family.Genome.load("2,1,3,5a3a22,4a3020,d9a07e,12345,3") == null, "a broken one isn't read");
+        com.hex.kagune.control.family.Genome humanChild = com.hex.kagune.control.family.Genome.of(new com.hex.kagune.control.family.Genome.Parent(0, 0, 0, false, false),
+            new com.hex.kagune.control.family.Genome.Parent(0, 0, 0, false, false), new java.util.Random(3));
+        check(!humanChild.ghoul() && humanChild.kagune() == none && humanChild.colour() == -1, "a human child: no kagune");
+        // Its fight.
+        double reach = 3.0;
+        check(com.hex.kagune.control.family.ChildKaguneRules.use(tails | wing, 2.0, true, reach) == com.hex.kagune.control.family.ChildKaguneRules.Use.TAILS
+            && com.hex.kagune.control.family.ChildKaguneRules.use(tails | wing, 8.0, true, reach) == com.hex.kagune.control.family.ChildKaguneRules.Use.WINGS
+            && com.hex.kagune.control.family.ChildKaguneRules.use(tails | wing, 3.5, true, reach) == com.hex.kagune.control.family.ChildKaguneRules.Use.CLOSE_IN
+            && com.hex.kagune.control.family.ChildKaguneRules.use(tails, 8.0, true, reach) == com.hex.kagune.control.family.ChildKaguneRules.Use.CLOSE_IN
+            && com.hex.kagune.control.family.ChildKaguneRules.use(wings, 1.0, true, reach) == com.hex.kagune.control.family.ChildKaguneRules.Use.WINGS
+            && com.hex.kagune.control.family.ChildKaguneRules.use(wings, 1.0, false, reach) == com.hex.kagune.control.family.ChildKaguneRules.Use.CLOSE_IN
+            && com.hex.kagune.control.family.ChildKaguneRules.use(owl, 1.0, true, reach) == com.hex.kagune.control.family.ChildKaguneRules.Use.NONE,
+            "tails and a wing: the tails up close, the wing from further off, a step in between; tails alone close in; wings alone shoot");
+        boolean oneSide = true;
+        for (long seed = 0; seed < 200; seed++) {
+            int side = com.hex.kagune.control.family.KaguneGenes.side(seed * 977L);
+            oneSide &= com.hex.kagune.control.family.ChildKaguneRules.side(tails | wing, seed * 977L, 1) == side
+                && com.hex.kagune.control.family.ChildKaguneRules.side(tails | wing, seed * 977L, -1) == side && (side == 1 || side == -1);
+        }
+        check(oneSide, "one wing: every shot from its side");
+        check(com.hex.kagune.control.family.ChildKaguneRules.side(wings, 5L, 1) == -1 && com.hex.kagune.control.family.ChildKaguneRules.side(wings, 5L, -1) == 1,
+            "the pair: the wings take turns");
+        check(com.hex.kagune.control.graft.GraftStage.TRANSPLANT.limbs(com.hex.kagune.control.family.ChildKaguneRules.tailMastery(com.hex.kagune.control.family.ChildStage.CHILD)) == 2
+            && com.hex.kagune.control.graft.GraftStage.TRANSPLANT.limbs(com.hex.kagune.control.family.ChildKaguneRules.tailMastery(com.hex.kagune.control.family.ChildStage.TEEN)) == 2,
+            "both tentacles: two tails from the start");
+        check(com.hex.kagune.control.family.ChildKaguneRules.scale(com.hex.kagune.control.family.ChildStage.CHILD) == com.hex.kagune.control.family.ChildStage.CHILD.draw
+            && com.hex.kagune.control.family.ChildKaguneRules.damage(com.hex.kagune.control.family.ChildStage.TEEN, 3, 0.5F)
+                < com.hex.kagune.control.family.ChildRules.damage(com.hex.kagune.control.family.ChildStage.TEEN, 3, true, 0.5F),
+            "its kagune at its size, a lash lighter than a grown ghoul's against its punch");
+        com.hex.kagune.control.ukaku.WingRig.Input one = com.hex.kagune.control.npc.WingRules.child(110, 1, -1, 1.0F, 0.0, false, 0.0F,
+            com.hex.kagune.control.ukaku.WingRig.FORWARD, 0.0F, 0.0F, 1.0F);
+        com.hex.kagune.control.ukaku.WingRig.Input two = com.hex.kagune.control.npc.WingRules.child(110, 2, -1, 1.0F, 0.0, false, 0.0F,
+            com.hex.kagune.control.ukaku.WingRig.FORWARD, 0.0F, 0.0F, 1.0F);
+        check(one.growLeft() == 1.0F && one.growRight() == 0.0F && two.growLeft() == 1.0F && two.growRight() == 1.0F
+            && !com.hex.kagune.control.ukaku.WingRig.build(one, new double[] {0.0, 1.5, 4.0}).isEmpty(), "one wing drawn on its side alone; the pair both");
     }
 
     static void genome() {

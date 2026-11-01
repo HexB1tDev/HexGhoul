@@ -146,6 +146,7 @@ public final class GhoulNpcRenderer extends HumanoidMobRenderer<GhoulNpc, Player
                 return;
             }
             DRAWN.clear();
+            ChildRenderer.cleared(); // 1.3.43: the children's too
             Minecraft minecraft = Minecraft.m_91087_();
             if (minecraft.f_91073_ != null && minecraft.f_91073_.m_46467_() % 100L == 0L) {
                 GhoulNpcClient.prune(minecraft.f_91073_);

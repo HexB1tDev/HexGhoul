@@ -335,6 +335,58 @@ public final class UkakuWingRenderer {
             }
             emit(consumer, matrix, normals, quads, x, y, z, yaw, scaled, com.hex.kagune.control.KaguneColours.DEFAULT); // (hers stay hers)
         }
+        // 1.3.43: the ghoul children in view with Ukaku of their own: one wing (born of two kinds: on the side its seed gives) or the pair,
+        // at their size, aiming as they shoot, in the colour they took from a parent.
+        for (com.hex.kagune.control.npc.ChildNpc child : ChildRenderer.drawn()) {
+            com.hex.kagune.control.client.ChildClient.View kid = com.hex.kagune.control.client.ChildClient.get(child.m_19879_());
+            com.hex.kagune.control.client.GhoulNpcClient.View seen = com.hex.kagune.control.client.GhoulNpcClient.get(child.m_19879_());
+            int wings = kid == null ? 0 : com.hex.kagune.control.family.KaguneGenes.wings(kid.genome().kagune());
+            if (wings == 0 || seen == null || !child.m_6084_() || child.m_20145_() || child.m_5803_()) {
+                continue;
+            }
+            float deploy = com.hex.kagune.control.client.GhoulNpcClient.deploy(seen, clock);
+            double distance = child.m_20280_(self);
+            if (deploy <= 0.005F || distance > MAX_DISTANCE_SQR) {
+                continue;
+            }
+            double size = com.hex.kagune.control.family.ChildKaguneRules.scale(kid.stage());
+            double x = child.f_19790_ + (child.m_20185_() - child.f_19790_) * partial - camera.f_82479_;
+            double y = child.f_19791_ + (child.m_20186_() - child.f_19791_) * partial - camera.f_82480_;
+            double z = child.f_19792_ + (child.m_20189_() - child.f_19792_) * partial - camera.f_82481_;
+            float yawDelta = ((child.f_20883_ - child.f_20884_) % 360.0F + 540.0F) % 360.0F - 180.0F;
+            double yaw = Math.toRadians(child.f_20884_ + yawDelta * partial);
+            double forwardX = -Math.sin(yaw);
+            double forwardZ = Math.cos(yaw);
+            double rightX = -Math.cos(yaw);
+            double rightZ = -Math.sin(yaw);
+            double[] eye = {-(rightX * x + rightZ * z) / size, -y / size, -(forwardX * x + forwardZ * z) / size};
+            double[] aim = WingRig.FORWARD;
+            net.minecraft.world.entity.Entity prey = seen.prey() == 0 ? null : level.m_6815_(seen.prey());
+            if (prey != null) {
+                double px = prey.f_19790_ + (prey.m_20185_() - prey.f_19790_) * partial - camera.f_82479_ - x;
+                double py = prey.f_19791_ + (prey.m_20186_() - prey.f_19791_) * partial + prey.m_20206_() * 0.52 - camera.f_82480_ - y - WingRig.ROOT_Y * size;
+                double pz = prey.f_19792_ + (prey.m_20189_() - prey.f_19792_) * partial - camera.f_82481_ - z;
+                double[] rig = {px * rightX + pz * rightZ, py, px * forwardX + pz * forwardZ};
+                double length = Math.sqrt(rig[0] * rig[0] + rig[1] * rig[1] + rig[2] * rig[2]);
+                if (length > 1.0E-3) {
+                    aim = new double[] {rig[0] / length, rig[1] / length, rig[2] / length};
+                }
+            }
+            float aimed = com.hex.kagune.control.client.GhoulNpcClient.aim(seen, clock);
+            WingRig.Input input = com.hex.kagune.control.npc.WingRules.child(com.hex.kagune.control.family.ChildKaguneRules.wingMastery(kid.stage()), wings,
+                com.hex.kagune.control.family.KaguneGenes.side(kid.genome().seed()), deploy, time / 20.0, !seen.out(), aimed, aim,
+                com.hex.kagune.control.client.GhoulNpcClient.kick(seen, 1, clock), com.hex.kagune.control.client.GhoulNpcClient.kick(seen, -1, clock),
+                distance > DETAIL_DISTANCE_SQR ? 0.3F : 1.0F);
+            List<WingRig.Quad> quads = WingRig.build(input, eye);
+            if (quads.isEmpty()) {
+                continue;
+            }
+            if (consumer == null) {
+                consumer = buffers.m_6299_(TYPE);
+            }
+            double[] scaled = {size, 0, 0, 0, size, 0, 0, 0, size, 0, 0, 0};
+            emit(consumer, matrix, normals, quads, x, y, z, yaw, scaled, com.hex.kagune.control.client.KaguneTints.of(child));
+        }
         // Shards of Ukaku's fire and crystal spikes in flight (camera-relative, facing the camera).
         double[] eye = {0.0, 0.0, 0.0};
         for (UkakuFx.Bolt bolt : UkakuFx.bolts()) {

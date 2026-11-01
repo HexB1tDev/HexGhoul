@@ -93,6 +93,21 @@ public abstract class Persona {
     /** True if one eye only turns (Eto's, Ken's); a child of theirs may be one-eyed. */
     public abstract boolean oneEyed();
 
+    /**
+     * 1.3.43: the kagune it passes on to a child ({@code KaguneGenes} bits): Ken's Rinkaku tails, Touka's Ukaku wings, Eto's Owl kagune.
+     */
+    public int kagune() {
+        if (this.owlKit()) {
+            return com.hex.kagune.control.family.KaguneGenes.OWL;
+        }
+        return this.wings() ? com.hex.kagune.control.family.KaguneGenes.WINGS : com.hex.kagune.control.family.KaguneGenes.TAILS;
+    }
+
+    /** 1.3.43: its kagune's colour, as a child may take it: the original's crimson (Touka's wings, Ken's tails); Eto's pale flesh. */
+    public int kaguneColour() {
+        return this.owlKit() ? 0xD8CCBC : com.hex.kagune.control.KaguneColours.DEFAULT;
+    }
+
     /** True for Eto alone: the Owl DNA kit in a fight (the flesh, Watch This, the Mutated Arm, the Owl). */
     public boolean owlKit() {
         return false;

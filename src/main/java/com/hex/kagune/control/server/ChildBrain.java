@@ -65,6 +65,10 @@ public final class ChildBrain {
         net.minecraft.world.item.ItemStack food;
         /** 1.3.29: when a parent came back after a long while away (it missed them), or never. */
         long reunited = Long.MIN_VALUE;
+        /** 1.3.43: its kagune in a fight (ChildKagune): out or not, its lash, its volley, its shots in flight. */
+        final ChildKagune.Fight kagune = new ChildKagune.Fight();
+        /** 1.3.43: it fought with its kagune this tick (else the kagune goes back in). */
+        boolean kaguneFought;
     }
 
     private ChildBrain() {
@@ -82,6 +86,12 @@ public final class ChildBrain {
         }
         String key = npc.uniqueKey();
         Mind mind = npc.mind;
+        if (now % 100L == 7L && !child.genome().kaguneKnown()) {
+            Children.genome(level, child); // 1.3.43: a child from before: its kagune worked out from its parents
+            if (mind != null) {
+                mind.dirty = true;
+            }
+        }
         if (mind == null) {
             BlockPos first = npc.home() != null ? npc.home() : npc.settle();
             if (!UniqueNpcs.claim(level, key, npc.m_20148_(), first)) {
@@ -220,6 +230,9 @@ public final class ChildBrain {
             mind.dirty = false;
             ControlNetwork.broadcastAround(npc, message(npc, mind, child));
         }
+        // 1.3.43: its kagune: its shots fly on; out of a fight, it goes back in.
+        ChildKagune.tick(npc, mind, mind.kaguneFought, level, now);
+        mind.kaguneFought = false;
     }
 
     // ---------------------------------------------------------------- carried
@@ -781,6 +794,13 @@ public final class ChildBrain {
                 say(parent, npc, child, ChildLines.fight(mind.stage, npc.m_217043_().m_188503_(100)));
             }
         }
+        // 1.3.43: a ghoul child with a kagune of its own fights with it (its tails, its wing or wings), as it was born to.
+        com.hex.kagune.control.family.Genome genome = ghoul ? Children.genome(level, child) : null;
+        if (ChildKagune.has(genome)) {
+            mind.kaguneFought = true;
+            ChildKagune.fight(npc, mind, child, genome, threat, level, now);
+            return;
+        }
         npc.m_21563_().m_24960_(threat, 30.0F, 30.0F);
         double reach = ChildRules.REACH + threat.m_20205_() * 0.5;
         if (npc.m_20280_(threat) > reach * reach) {
@@ -880,6 +900,7 @@ public final class ChildBrain {
             Children.Child child = Children.get(level, npc.childId());
             if (child != null) {
                 ControlNetwork.sendTo(viewer, message(npc, npc.mind, child));
+                ControlNetwork.sendTo(viewer, ChildKagune.message(npc, npc.mind, child)); // 1.3.43: its kagune, as a wild ghoul's
             }
         }
     }
@@ -926,6 +947,9 @@ public final class ChildBrain {
             }
             // 1.3.21: the owner: "when they die, that's it". Forgotten by the world: never remade.
             HomeLife.wake(npc);
+            if (npc.mind != null) {
+                ChildKagune.fizzleAll(npc, npc.mind); // 1.3.43: its shots in flight put out
+            }
             if (npc.mind != null && npc.mind.food != null) {
                 npc.mind.food = null;
             }

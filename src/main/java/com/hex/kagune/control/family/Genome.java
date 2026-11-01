@@ -6,9 +6,10 @@ import java.util.Random;
 /**
  * 1.3.10: what a child is, decided the night it is conceived (pure): a boy or a girl; a ghoul if either parent is; its kakugan (both eyes,
  * as a ghoul's are, or, if a parent is one-eyed, a good chance of just the one); its hair the blend of both parents' hair; its eyes one
- * parent's; its skin between theirs; a seed for the rest of its looks.
+ * parent's; its skin between theirs; a seed for the rest of its looks. 1.3.43: its kagune ({@link KaguneGenes}: the kinds from both parents,
+ * {@link KaguneGenes#UNKNOWN} for a child from before) and that kagune's colour (one parent's; -1 none or not known).
  */
-public record Genome(Gender gender, boolean ghoul, int kakugan, int hair, int eyes, int skin, long seed) {
+public record Genome(Gender gender, boolean ghoul, int kakugan, int hair, int eyes, int skin, long seed, int kagune, int colour) {
     /** Its kakugan: none (human), its right eye, its left, or both. */
     public static final int NONE = 0;
     public static final int RIGHT = 1;
@@ -21,8 +22,25 @@ public record Genome(Gender gender, boolean ghoul, int kakugan, int hair, int ey
     public static final int EYES = 0x4A3020;
     public static final int SKIN = 0xD9A07E;
 
-    /** A parent, as far as a child goes: their colours, and whether they are a ghoul, with one kakugan. */
-    public record Parent(int hair, int eyes, int skin, boolean ghoul, boolean oneEyed) {
+    /** 1.3.43: the genome of a child from before its kagune was decided (worked out when it next thinks). */
+    public Genome(Gender gender, boolean ghoul, int kakugan, int hair, int eyes, int skin, long seed) {
+        this(gender, ghoul, kakugan, hair, eyes, skin, seed, KaguneGenes.UNKNOWN, -1);
+    }
+
+    /**
+     * A parent, as far as a child goes: their colours, and whether they are a ghoul, with one kakugan; 1.3.43: the kagune they pass on
+     * ({@link KaguneGenes} bits) and its colour.
+     */
+    public record Parent(int hair, int eyes, int skin, boolean ghoul, boolean oneEyed, int kagune, int colour) {
+        /** A parent with no kagune to pass on (or not known). */
+        public Parent(int hair, int eyes, int skin, boolean ghoul, boolean oneEyed) {
+            this(hair, eyes, skin, ghoul, oneEyed, KaguneGenes.NONE, -1);
+        }
+    }
+
+    /** 1.3.43: this genome with its kagune decided ({@code kagune} bits, {@code colour}). */
+    public Genome withKagune(int kagune, int colour) {
+        return new Genome(this.gender, this.ghoul, this.kakugan, this.hair, this.eyes, this.skin, this.seed, kagune, colour);
     }
 
     public static Genome of(Parent mother, Parent father, Random random) {
@@ -36,7 +54,11 @@ public record Genome(Gender gender, boolean ghoul, int kakugan, int hair, int ey
         int hair = jitter(blend(mother.hair(), father.hair(), 0.35 + random.nextDouble() * 0.3), random, 10);
         int eyes = random.nextBoolean() ? mother.eyes() : father.eyes();
         int skin = blend(mother.skin(), father.skin(), 0.3 + random.nextDouble() * 0.4);
-        return new Genome(gender, ghoul, kakugan, hair, eyes, skin, random.nextLong());
+        long seed = random.nextLong();
+        // 1.3.43 (drawn after the rest, so everything before stays as it was): its kagune, and that kagune's colour from one parent.
+        int kagune = ghoul ? KaguneGenes.inherit(mother.kagune(), father.kagune()) : KaguneGenes.NONE;
+        int colour = kagune == KaguneGenes.NONE ? -1 : KaguneGenes.colour(mother.kagune(), mother.colour(), father.kagune(), father.colour(), random);
+        return new Genome(gender, ghoul, kakugan, hair, eyes, skin, seed, kagune, colour);
     }
 
     public boolean oneEyed() {
@@ -62,7 +84,12 @@ public record Genome(Gender gender, boolean ghoul, int kakugan, int hair, int ey
 
     public String save() {
         return this.gender.ordinal() + "," + (this.ghoul ? 1 : 0) + "," + this.kakugan + "," + Integer.toHexString(this.hair) + "," + Integer.toHexString(this.eyes)
-            + "," + Integer.toHexString(this.skin) + "," + this.seed;
+            + "," + Integer.toHexString(this.skin) + "," + this.seed + "," + this.kagune + "," + this.colour;
+    }
+
+    /** 1.3.43: true once its kagune is decided (a child from before has it worked out from its parents). */
+    public boolean kaguneKnown() {
+        return this.kagune != KaguneGenes.UNKNOWN;
     }
 
     /** As {@link #save} wrote it; null if it can't be read. */
@@ -71,12 +98,15 @@ public record Genome(Gender gender, boolean ghoul, int kakugan, int hair, int ey
             return null;
         }
         String[] p = saved.split(",");
-        if (p.length != 7) {
+        if (p.length != 7 && p.length != 9) {
             return null;
         }
         try {
+            // 1.3.43: one saved before its kagune was decided has seven parts: its kagune not known yet.
+            int kagune = p.length == 9 ? Integer.parseInt(p[7]) : KaguneGenes.UNKNOWN;
+            int colour = p.length == 9 ? Integer.parseInt(p[8]) : -1;
             return new Genome(Gender.byOrdinal(Integer.parseInt(p[0])), "1".equals(p[1]), Integer.parseInt(p[2]), Integer.parseInt(p[3], 16),
-                Integer.parseInt(p[4], 16), Integer.parseInt(p[5], 16), Long.parseLong(p[6]));
+                Integer.parseInt(p[4], 16), Integer.parseInt(p[5], 16), Long.parseLong(p[6]), kagune, colour);
         } catch (NumberFormatException bad) {
             return null;
         }

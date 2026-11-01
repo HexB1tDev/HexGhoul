@@ -230,6 +230,41 @@ public final class Children {
         return child.might;
     }
 
+    /**
+     * 1.3.43: {@code child}'s kagune, worked out now from its parents if it was born before its kagune was decided (a companion's own, a
+     * player's path: only once they are about), and kept; its genome either way.
+     */
+    public static Genome genome(ServerLevel level, Child child) {
+        Genome genome = child.genome();
+        if (genome.kaguneKnown()) {
+            return genome;
+        }
+        for (String key : new String[] {child.mother, child.father}) {
+            if (key != null && key.startsWith("player:") && Pregnancies.playerOf(level, key) == null) {
+                return genome; // a parent who isn't about: worked out once they are, so what they pass on is theirs
+            }
+        }
+        int[] mother = kagune(level, child.mother);
+        int[] father = kagune(level, child.father);
+        int bits = genome.ghoul() ? com.hex.kagune.control.family.KaguneGenes.inherit(mother[0], father[0]) : com.hex.kagune.control.family.KaguneGenes.NONE;
+        int colour = bits == com.hex.kagune.control.family.KaguneGenes.NONE ? -1
+            : com.hex.kagune.control.family.KaguneGenes.colour(mother[0], mother[1], father[0], father[1], new java.util.Random(genome.seed() ^ 0x6B61L));
+        genome = genome.withKagune(bits, colour);
+        child.genome = genome.save();
+        changed(level);
+        return genome;
+    }
+
+    /** 1.3.43: what the parent {@code key} passes on: its kagune bits and their colour. */
+    static int[] kagune(ServerLevel level, String key) {
+        if (key != null && key.startsWith("npc:")) {
+            Persona persona = Persona.of(key.substring(4));
+            return persona == null ? new int[] {0, -1} : new int[] {persona.kagune(), persona.kaguneColour()};
+        }
+        ServerPlayer player = key == null ? null : Pregnancies.playerOf(level, key);
+        return player == null ? new int[] {0, -1} : new int[] {Looks.kagune(player), Looks.kaguneColour(player)};
+    }
+
     /** 1.3.10, for testing: a child {@code ticks} older. */
     public static void age(ServerLevel level, Child child, long ticks) {
         child.born -= ticks;
