@@ -161,6 +161,16 @@ public final class EtoBrain {
         int stuck;
     }
 
+    /** 1.3.32: true if any player is near enough to see her (within 32 blocks): she is never moved before anyone's eyes. */
+    static boolean watched(EtoNpc npc, ServerLevel level) {
+        for (ServerPlayer player : level.m_6907_()) {
+            if (player.m_20280_(npc) < 32.0 * 32.0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /** 1.3.29: true while a chore at home has her (vanilla's strolling waits: it would walk her off it). */
     public static boolean busy(EtoNpc npc) {
         return HomeChores.busy(npc.mind);
@@ -288,8 +298,9 @@ public final class EtoBrain {
         if (mind.target != 0) {
             lost = Math.max(lost, com.hex.kagune.control.npc.FightRules.CHASE + 8.0); // 1.3.24: a chase is not being lost
         }
-        // 1.3.29: not while someone is talking to her (sent home from far off, she goes once the talk is over).
-        if (npc.m_20238_(homeAt) > lost * lost && !EtoOwl.carried(mind.owl) && (mind.talking == null || mind.target != 0)) {
+        // 1.3.29: not while someone is talking to her (sent home from far off, she goes once the talk is over). 1.3.32 (the owner: never
+        // teleport): only from really far, and only with nobody about to see it (she just walks back otherwise).
+        if (npc.m_20238_(homeAt) > lost * lost && !EtoOwl.carried(mind.owl) && (mind.talking == null || mind.target != 0) && !watched(npc, level)) {
             npc.m_6021_(homeAt.f_82479_, homeAt.f_82480_, homeAt.f_82481_);
             npc.m_21573_().m_26573_();
             mind.target = 0;

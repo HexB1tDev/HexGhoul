@@ -42,7 +42,7 @@ public final class Chores {
     /** How long it walks to a chore before it gives that one up (ticks), and how long without getting anywhere counts as stuck. */
     public static final long WALK = 300L;
     public static final long STUCK = 60L;
-    /** Set on its way again this many times without getting anywhere, it is put where it was going (hopelessly stuck in the house). */
+    /** Set on its way again this many times without getting anywhere, it gives that block up (1.3.32: it is never put anywhere). */
     public static final int REPATHS = 3;
     /** How far it must have got in {@link #STUCK} ticks not to be stuck (blocks). */
     public static final double PROGRESS = 0.6;

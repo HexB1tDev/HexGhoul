@@ -42,6 +42,7 @@ public final class FamilyTests {
         chores();
         speech();
         kitchen();
+        airplane();
         might();
         hands();
         spin();
@@ -418,6 +419,30 @@ public final class FamilyTests {
     }
 
     /** 1.3.21: a family's home: when each goes to bed, and whose bed is whose (the double bed the spouse's, single beds the children's). */
+    /**
+     * 1.3.32: the airplane: the child is carried round at the parent's body yaw plus the spin's turn (ChildRenderer.glue); an NPC parent's
+     * body is turned by its pose's spin about +Y (EtoRenderer: rotateAxis(spin)); the two must go the same way round (they went opposite).
+     */
+    static void airplane() {
+        for (double age = 4.0; age < com.hex.kagune.control.family.ChildMoment.SPIN.ticks - 4.0; age += 3.0) {
+            double turn = com.hex.kagune.control.family.ChildMoment.spinTurn(age);
+            if (Math.abs(turn) < 0.05 || Math.abs(Math.abs(turn) - Math.PI) < 0.05) {
+                continue;
+            }
+            com.hex.kagune.control.client.animation.RigPose parent = com.hex.kagune.control.client.animation.ChildMomentPose.parent(
+                com.hex.kagune.control.family.ChildMoment.SPIN, age, com.hex.kagune.control.family.ChildStage.CHILD, false);
+            // Facing south (+z): turned about +Y by the pose's spin, as the renderer turns it.
+            double a = parent.spin;
+            double px = Math.sin(a);
+            double pz = Math.cos(a);
+            // The child, carried at yaw + turn: Minecraft faces (-sin yaw, cos yaw).
+            double cx = -Math.sin(turn);
+            double cz = Math.cos(turn);
+            check(Math.signum(px) == Math.signum(cx) && Math.abs(px - cx) < 1.0E-6 && Math.abs(pz - cz) < 1.0E-6,
+                "the airplane: the parent turns the same way round as the child it carries (" + age + ")");
+        }
+    }
+
     /** 1.3.31: the spouse's real help: cooking, a ghoul's raw meal, smelting with fuel, ripe crops, the meal kept for its spouse. */
     static void kitchen() {
         java.util.function.Function<String, String> block = id -> "Block{minecraft:" + id + "}";

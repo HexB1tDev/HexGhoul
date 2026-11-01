@@ -43,6 +43,8 @@ public final class ChildBrain {
         long parentAway = Long.MIN_VALUE;
         boolean dirty = true;
         long company;
+        /** 1.3.32: whether the hand holding its own had Shift down last tick (a tap of it lets go, as with a companion). */
+        boolean holdShift = true;
         /** 1.3.20: how it is held (ChildRules.RIDE_*). */
         int ride;
         /** 1.3.20: its moment with a parent: what, since when, with whom (a player or its NPC parent); one it walks up to them for first. */
@@ -145,7 +147,27 @@ public final class ChildBrain {
             putDown(npc, mind);
             carrier = null;
         }
+        // 1.3.32 (the owner: there was no letting go but talking to it): hand in hand with a player, a tap of Shift lets go.
+        if (carrier instanceof ServerPlayer holder && mind.ride == ChildRules.RIDE_HAND) {
+            boolean shift = holder.m_6047_();
+            if (shift && !mind.holdShift) {
+                putDown(npc, mind);
+                carrier = null;
+                holder.m_5661_(Component.m_237113_("\u00a7b" + child.name + "\u00a77 lets go of your hand."), true);
+            }
+            mind.holdShift = shift;
+        } else {
+            mind.holdShift = true; // a new hold waits for Shift to be let up before a tap counts
+        }
         moments(npc, mind, child, level, now, stage);
+        // 1.3.32 (the owner: after the airplane the child hovered in midair): a moment that ended just now may have set it down (the
+        // airplane does); it was then carried again this same tick from the carrier looked up before, its gravity off for good.
+        if (mind.carrier == null) {
+            carrier = null;
+        }
+        if (carrier == null && npc.carriedBy == 0) {
+            npc.m_20242_(false); // never left floating (nor saved floating: a world saved mid-carry comes back with its gravity on)
+        }
         if (carrier != null) {
             carry(npc, carrier, mind.ride);
             mind.company = now;

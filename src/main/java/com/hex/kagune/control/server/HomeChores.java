@@ -26,8 +26,8 @@ import net.minecraftforge.registries.ForgeRegistries;
  * strolling to the door and back it goes about the house: to a chest (its lid up, bent over it, its things sorted and stacked for real),
  * round the floor with the brush (whatever has lain about on it a while is put into a chest), to the tables with a cloth, out round the
  * house with a bucket for the flowers and the crops (a crop or a sapling it waters may grow a step), to a bookshelf a while, to a window.
- * Each chore is a short round of a few blocks of its kind; on the way, if it gets nowhere for a few seconds it sets off again, and if it
- * is hopelessly stuck it is put beside what it was going to; a block it can't get to is given up. Anything else (a fight, a talk, a kiss,
+ * Each chore is a short round of a few blocks of its kind; on the way, if it gets nowhere for a few seconds it sets off again, and a
+ * block it can't get to is given up (1.3.32: it is never put anywhere). Anything else (a fight, a talk, a kiss,
  * its spouse's hand, a child, the night) stops it where it is (a chest's lid shut again). Its home's blocks are looked for every minute.
  */
 public final class HomeChores {
@@ -561,8 +561,8 @@ public final class HomeChores {
     }
 
     /**
-     * On its way: set on its path again every half second; no nearer in a few seconds, it sets off again; stuck that way a few times, it
-     * is put beside the block (inside the home); no way there at all, or too long on the way, the block is given up.
+     * On its way: set on its path again every half second; no nearer in a few seconds, it sets off again; stuck that way a few times, no
+     * way there at all, or too long on the way, the block is given up (1.3.32: never put anywhere).
      */
     private static void walk(EtoNpc npc, EtoBrain.Mind mind, Job job, Households.Home house, ServerLevel level, BlockPos at, long now) {
         if (now - job.walkSince > Chores.WALK || job.fails >= 3) {
@@ -582,14 +582,9 @@ public final class HomeChores {
                 npc.m_21573_().m_26573_();
                 job.nextPath = now;
                 if (job.repaths >= Chores.REPATHS) {
-                    BlockPos stand = besideBlock(level, at, house);
-                    if (stand != null && !crowded(npc, level)) {
-                        npc.m_6021_(stand.m_123341_() + 0.5, stand.m_123342_(), stand.m_123343_() + 0.5);
-                    } else {
-                        next(job, now);
-                        return;
-                    }
-                    job.repaths = 0;
+                    // 1.3.32 (the owner: it should never teleport): no way through, it gives that one up and goes on to the next.
+                    next(job, now);
+                    return;
                 }
             }
             job.fromX = npc.m_20185_();
@@ -603,30 +598,6 @@ public final class HomeChores {
                 job.fails++;
             }
         }
-    }
-
-    /** True if a player stands right by it (pressed in a corner by someone is not stuck: nobody is moved through them). */
-    private static boolean crowded(EtoNpc npc, ServerLevel level) {
-        for (ServerPlayer player : level.m_6907_()) {
-            if (player.m_20280_(npc) < 2.5 * 2.5) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /** A spot to stand beside {@code at} (one of its four sides, the same height or one off), inside the home; null if none. */
-    private static BlockPos besideBlock(ServerLevel level, BlockPos at, Households.Home house) {
-        int[][] sides = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
-        for (int dy = 0; dy >= -1; dy--) {
-            for (int[] side : sides) {
-                BlockPos spot = off(at, side[0], dy, side[1]);
-                if (standable(level, spot) && Math.abs(spot.m_123341_() - house.x()) <= house.radius() && Math.abs(spot.m_123343_() - house.z()) <= house.radius()) {
-                    return spot;
-                }
-            }
-        }
-        return standable(level, at) ? at : null;
     }
 
     // ---------------------------------------------------------------- the work
@@ -915,8 +886,8 @@ public final class HomeChores {
 
     /**
      * 1.3.29: walking anywhere at its home (strolling, to bed, back home), no nearer for a few seconds: it sets off again (its path
-     * dropped, whatever walks it picks a new one); stuck that way a few times over, it is put back on the home's spot (unless someone
-     * stands right by it).
+     * dropped, whatever walks it picks a new one). 1.3.32 (the owner: it jumped from the top floor to the basement): it is never put
+     * anywhere; stuck a few times over, it just stands a moment before walking again.
      */
     static void unstick(EtoNpc npc, EtoBrain.Mind mind, Households.Home house, long now) {
         if (npc.m_21573_().m_26571_() || npc.m_5803_()) {
@@ -939,10 +910,8 @@ public final class HomeChores {
         }
         mind.stuck++;
         npc.m_21573_().m_26573_();
-        if (mind.stuck >= Chores.REPATHS + 1 && npc.m_9236_() instanceof ServerLevel level && !crowded(npc, level)) {
+        if (mind.stuck >= Chores.REPATHS + 1) {
             mind.stuck = 0;
-            double[] feet = npc.homeFeet();
-            npc.m_6021_(feet[0], feet[1], feet[2]);
         }
     }
 }

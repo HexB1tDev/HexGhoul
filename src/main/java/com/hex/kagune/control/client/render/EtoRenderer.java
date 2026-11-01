@@ -263,7 +263,9 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
                 // 1.3.4: a lunge carries the whole of her forward (model pixels), as a Pale player's.
                 pose.m_85837_(-Math.sin(body) * posed.lunge / 16.0, 0.0, Math.cos(body) * posed.lunge / 16.0);
                 pose.m_85837_(0.0, -posed.drop / 16.0 + BodyFrame.TURN_PIVOT, 0.0);
-                pose.m_252781_(new Quaternionf().rotateAxis(-posed.spin, 0.0F, 1.0F, 0.0F));
+                // 1.3.32: a pose's spin turns the body as PlayerAnimator turns a player's (+ to their left, seen from above anticlockwise): it was
+                // the other way here, so an NPC parent's airplane spun against the child it carries round (ChildMomentPose.spinning).
+                pose.m_252781_(new Quaternionf().rotateAxis(posed.spin, 0.0F, 1.0F, 0.0F));
                 pose.m_252781_(new Quaternionf().rotateAxis(posed.flip, rightX, 0.0F, rightZ));
                 pose.m_252781_(new Quaternionf().rotateAxis(-posed.roll, rightZ, 0.0F, -rightX));
                 pose.m_85837_(0.0, -BodyFrame.TURN_PIVOT, 0.0);

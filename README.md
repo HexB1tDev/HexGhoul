@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.32 (HexGhoul): the airplane spins the right way on NPC parents; kids never hover after a moment; a Shift tap lets go of your kid's hand; the spouse never teleports around the house (testing)
+
+See `.github/release-notes-1.3.32.md`.
+
 ## 1.3.31 (HexGhoul): a spouse who actually helps at home: cooks (and keeps you a meal), smelts, harvests and replants, guards the house and the kids; nobody greets or talks to you through walls; /kagune home (testing)
 
 See `.github/release-notes-1.3.31.md`.
