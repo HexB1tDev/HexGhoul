@@ -3,6 +3,7 @@ package net.minecraft.world.level.block.state;
 
 public abstract class BlockBehaviour {
     public abstract static class BlockStateBase {
+        /** randomTick(level, pos, random) (1.3.29: a watered crop may grow a step) */ public void m_222972_(net.minecraft.server.level.ServerLevel level, net.minecraft.core.BlockPos pos, net.minecraft.util.RandomSource random) { throw new UnsupportedOperationException(); }
         /** isAir */ public boolean m_60795_() { throw new UnsupportedOperationException(); }
         /** getDestroySpeed(level, pos) */ public float m_60800_(net.minecraft.world.level.BlockGetter level, net.minecraft.core.BlockPos pos) { throw new UnsupportedOperationException(); }
         /** is(tag) */ public boolean m_204336_(net.minecraft.tags.TagKey<net.minecraft.world.level.block.Block> tag) { throw new UnsupportedOperationException(); }
@@ -11,4 +12,5 @@ public abstract class BlockBehaviour {
         /** getFluidState */ public net.minecraft.world.level.material.FluidState m_60819_() { throw new UnsupportedOperationException(); }
         /** getCollisionShape(level, pos) */ public net.minecraft.world.phys.shapes.VoxelShape m_60812_(net.minecraft.world.level.BlockGetter level, net.minecraft.core.BlockPos pos) { throw new UnsupportedOperationException(); }
     }
+
 }

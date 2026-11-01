@@ -118,6 +118,7 @@ public final class Households {
         data(level).all.put(Pregnancies.player(player.m_20148_()), home);
         data(level).m_77762_();
         HomeLife.forget(home);
+        HomeChores.forget(home);
         return home;
     }
 

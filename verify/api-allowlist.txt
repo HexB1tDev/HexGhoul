@@ -941,3 +941,25 @@ M net/minecraft/world/entity/Mob m_6785_ (D)Z                                   
 
 # --- 1.3.29: scenes (a child scared in a storm) ---------------------------------------------------------------------------------------
 M net/minecraft/world/level/Level m_46470_ ()Z  # [srg] isThundering: joined.tsrg cmm.Y ()Z m_46470_ (intermediary method_8546, yarn World.isThundering)
+
+# --- 1.3.29: a spouse keeping house (HomeChores: chests sorted, the floor swept into a chest, crops watered); "Go home, please." ------------
+C net/minecraft/world/Container  # [srg] bdq C_464_ (intermediary class_1263, yarn Inventory): a chest's or a barrel's block entity
+M net/minecraft/world/Container m_6643_ ()I  # [srg] getContainerSize: joined.tsrg bdq b ()I m_6643_ (yarn Inventory.size)
+M net/minecraft/world/Container m_8020_ (I)Lnet/minecraft/world/item/ItemStack;  # [srg] getItem(slot): joined.tsrg bdq a (I)Lcfz; m_8020_ (yarn Inventory.getStack)
+M net/minecraft/world/Container m_6836_ (ILnet/minecraft/world/item/ItemStack;)V  # [srg] setItem(slot, stack): joined.tsrg bdq a (ILcfz;)V m_6836_ (yarn Inventory.setStack)
+M net/minecraft/world/Container m_6596_ ()V  # [srg] setChanged: joined.tsrg bdq e ()V m_6596_ (yarn Inventory.markDirty)
+M net/minecraft/world/entity/item/ItemEntity m_32055_ ()Lnet/minecraft/world/item/ItemStack;  # [srg] getItem: joined.tsrg bvh j ()Lcfz; m_32055_ (yarn ItemEntity.getStack)
+M net/minecraft/world/item/ItemStack m_41613_ ()I  # [srg] getCount: joined.tsrg cfz L ()I m_41613_ (yarn ItemStack.getCount)
+M net/minecraft/world/item/ItemStack m_41764_ (I)V  # [srg] setCount: joined.tsrg cfz f (I)V m_41764_ (yarn ItemStack.setCount)
+M net/minecraft/world/item/ItemStack m_41777_ ()Lnet/minecraft/world/item/ItemStack;  # [srg] copy: joined.tsrg cfz p ()Lcfz; m_41777_ (yarn ItemStack.copy)
+M net/minecraft/world/item/ItemStack m_41741_ ()I  # [srg] getMaxStackSize: joined.tsrg cfz g ()I m_41741_ (yarn ItemStack.getMaxCount)
+M net/minecraft/world/item/ItemStack m_150942_ (Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemStack;)Z  # [srg] isSameItemSameTags: joined.tsrg cfz c (Lcfz;Lcfz;)Z m_150942_ (yarn ItemStack.canCombine; Forge's patch also compares capabilities)
+M net/minecraft/world/level/Level m_7696_ (Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/Block;II)V  # [srg] blockEvent: joined.tsrg cmm a (Lgu;Lcpn;II)V m_7696_ (yarn World.addSyncedBlockEvent): a chest's lid (event 1) up and down, no sound
+M net/minecraft/world/level/block/state/BlockBehaviour$BlockStateBase m_222972_ (Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;Lnet/minecraft/util/RandomSource;)V  # [srg] randomTick: joined.tsrg dca$a b (Laif;Lgu;Lapf;)V m_222972_ (intermediary method_26199, yarn AbstractBlockState.randomTick)
+M net/minecraft/world/entity/ai/control/LookControl m_24946_ (DDD)V  # [srg] setLookAt(x, y, z): joined.tsrg blx a (DDD)V m_24946_ (yarn LookControl.lookAt(DDD)): her head on the chest, the table, the flowers
+M net/minecraft/world/entity/ai/goal/Goal m_8036_ ()Z  # [srg] canUse: joined.tsrg bmv a ()Z m_8036_ (yarn Goal.canStart; RandomStrollGoal bns a ()Z m_8036_ overrides it, the stub hierarchy resolves the super call): her strolling waits while she does a chore
+M net/minecraft/world/entity/ai/goal/Goal m_8045_ ()Z  # [srg] canContinueToUse: joined.tsrg bmv b ()Z m_8045_ (yarn Goal.shouldContinue)
+F net/minecraft/core/particles/ParticleTypes f_123759_ Lnet/minecraft/core/particles/SimpleParticleType;  # [order] POOF: iv field 'W' (joined.tsrg iv W f_123759_); anchors in iv's declaration order: HEART=M f_123750_, LARGE_SMOKE=S f_123755_, SMOKE=Z f_123762_, SMALL_FLAME=aD f_175834_, CRIT=g f_123797_
+F net/minecraft/core/particles/ParticleTypes f_123748_ Lnet/minecraft/core/particles/SimpleParticleType;  # [order] HAPPY_VILLAGER: iv field 'K' (joined.tsrg iv K f_123748_), two before HEART=M (FLASH J, COMPOSTER L between)
+F net/minecraft/core/particles/ParticleTypes f_123769_ Lnet/minecraft/core/particles/SimpleParticleType;  # [order] SPLASH: iv field 'ag' (joined.tsrg iv ag f_123769_): SNEEZE aa, SPIT ab, SQUID_INK ac, SWEEP_ATTACK ad, TOTEM_OF_UNDYING ae, UNDERWATER af after SMOKE=Z
+F net/minecraft/core/particles/ParticleTypes f_123804_ Lnet/minecraft/core/particles/SimpleParticleType;  # [order] FALLING_WATER: iv field 'n' (joined.tsrg iv n f_123804_): DRIPPING_WATER m before it, CRIT=g f_123797_ as the original uses

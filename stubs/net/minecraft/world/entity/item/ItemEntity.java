@@ -2,4 +2,5 @@
 package net.minecraft.world.entity.item;
 
 public class ItemEntity extends net.minecraft.world.entity.Entity {
+    /** getItem (1.3.29) */ public net.minecraft.world.item.ItemStack m_32055_() { throw new UnsupportedOperationException(); }
 }

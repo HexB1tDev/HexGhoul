@@ -315,6 +315,18 @@ public final class EtoServer {
             }
             return;
         }
+        if (key.equals("gohome")) {
+            // 1.3.29: "Go home, please.": to the home she shares with her spouse, or back where she belongs; the talk ends there.
+            Going going = going(player, npc);
+            if (going == null) {
+                show(player, npc, c, script.main(c, "I'm already home."), Kind.MAIN);
+                return;
+            }
+            EtoBrain.sendHome(npc, level, going.at(), going.shared(), now);
+            String line = com.hex.kagune.control.family.Chores.goingHome(npc.persona().key(), going.shared(), npc.persona().home(), c.seed());
+            carry(player, npc, c, choice, new EtoTalk.Reply(line, 0, EtoTalk.Effect.CLOSE, EtoGesture.WAVE), Kind.MAIN);
+            return;
+        }
         if (choice == NpcTalk.Choice.PROPOSE) {
             propose(player, npc, c);
             return;
@@ -762,7 +774,62 @@ public final class EtoServer {
             persona.female() != com.hex.kagune.control.Genders.female(player));
     }
 
+    /** 1.3.29: where "Go home, please." sends her: the home she shares with her spouse ({@code shared}), or where she belongs. */
+    record Going(net.minecraft.core.BlockPos at, boolean shared) {
+    }
+
+    /**
+     * 1.3.29: where she would go if sent home now, or null if she is home already (or her home is in another world): following someone,
+     * or settled anywhere but her home (the one she shares with her spouse once they have one; else her own place).
+     */
+    static Going going(ServerPlayer player, EtoNpc npc) {
+        ServerLevel level = player.m_284548_();
+        boolean following = npc.following() != null;
+        net.minecraft.core.BlockPos home = npc.home();
+        Households.Home house = Households.of(level, EtoBrain.spouse(npc));
+        if (house != null) {
+            if (!house.in(level) || !following && house.at(home)) {
+                return null;
+            }
+            return new Going(house.pos(), true);
+        }
+        net.minecraft.core.BlockPos origin = npc.origin();
+        if (origin == null || home == null || UniqueNpcs.overworld(level) != level) {
+            return null;
+        }
+        double dx = origin.m_123341_() - home.m_123341_();
+        double dy = origin.m_123342_() - home.m_123342_();
+        double dz = origin.m_123343_() - home.m_123343_();
+        return following || dx * dx + dy * dy + dz * dz > 6.0 * 6.0 ? new Going(origin, false) : null;
+    }
+
+    /**
+     * 1.3.29: her first page offers "Go home, please." next to "Follow me." / "Wait here." when she is away from home (following them,
+     * waiting where she was told to). Only where she would follow or wait for them at all, only if there is room.
+     */
+    private static EtoTalk.Page withHome(ServerPlayer player, EtoNpc npc, EtoTalk.Page page) {
+        int at = -1;
+        for (int i = 0; i < page.options().size(); i++) {
+            NpcTalk.Choice choice = page.options().get(i).choice();
+            if (choice == NpcTalk.Choice.SAY_7) {
+                return page;
+            }
+            if (choice == NpcTalk.Choice.FOLLOW || choice == NpcTalk.Choice.STAY) {
+                at = i;
+            }
+        }
+        if (at < 0 || page.options().size() >= S2CNpcTalk.MOST || going(player, npc) == null) {
+            return page;
+        }
+        List<EtoTalk.Option> out = new java.util.ArrayList<>(page.options());
+        out.add(at + 1, new EtoTalk.Option(NpcTalk.Choice.SAY_7, "Go home, please.", "gohome"));
+        return new EtoTalk.Page(page.line(), out);
+    }
+
     private static void show(ServerPlayer player, EtoNpc npc, EtoTalk.Context context, EtoTalk.Page page, Kind kind) {
+        if (kind == Kind.MAIN) {
+            page = withHome(player, npc, page);
+        }
         List<EtoTalk.Option> options = page.options().size() > S2CNpcTalk.MOST ? page.options().subList(0, S2CNpcTalk.MOST) : page.options();
         TALKS.put(player.m_20148_(), new Talk(npc.m_19879_(), List.copyOf(options), kind));
         int[] ordinals = new int[options.size()];

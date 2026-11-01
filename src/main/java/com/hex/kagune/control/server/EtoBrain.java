@@ -144,6 +144,45 @@ public final class EtoBrain {
         /** 1.3.14: the partner she is coming to for the night they asked for a baby (null none), and when she may next try. */
         UUID babyNight;
         long nextBabyNight;
+        /** 1.3.29: the chore she is doing at home ({@link HomeChores}; null none), when she may start the next, the last, when she last said so. */
+        HomeChores.Job chore;
+        long nextChore;
+        com.hex.kagune.control.family.Chores.Kind lastChore;
+        long choreSaid = Long.MIN_VALUE;
+        long noSweepUntil;
+        /** 1.3.29: her walk at home last checked: where she was, when, how many checks in a row she got nowhere. */
+        double stuckX;
+        double stuckZ;
+        long stuckAt;
+        int stuck;
+    }
+
+    /** 1.3.29: true while a chore at home has her (vanilla's strolling waits: it would walk her off it). */
+    public static boolean busy(EtoNpc npc) {
+        return HomeChores.busy(npc.mind);
+    }
+
+    /**
+     * 1.3.29: "Go home, please.": she lets go of whatever she was doing with them, follows no one, and her home is where she belongs again
+     * ({@code at}): she walks there, or is simply there once she is far enough off (and the talk is over).
+     */
+    static void sendHome(EtoNpc npc, ServerLevel level, BlockPos at, boolean shared, long now) {
+        Mind mind = npc.mind;
+        if (mind == null) {
+            return;
+        }
+        letGo(npc, mind, level, now, false);
+        endKiss(npc, mind, null, now);
+        mind.toward = null;
+        mind.towardFor = EtoGesture.NONE;
+        HomeChores.stop(npc, mind, level);
+        if (shared) {
+            npc.homeAt(at);
+        } else {
+            npc.sendHome();
+        }
+        mind.company = now;
+        npc.m_21573_().m_26519_(at.m_123341_() + 0.5, at.m_123342_() - 1.0, at.m_123343_() + 0.5, 0.9);
     }
 
     /** Every Eto ticking on this server (one, unless another has yet to be sent away). */
@@ -174,6 +213,7 @@ public final class EtoBrain {
             npc.mind = mind;
             mind.nextGestureAt = now + 100L + npc.m_217043_().m_188503_(200);
             mind.nextSeek = now + 1200L;
+            mind.nextChore = now + 200L + npc.m_217043_().m_188503_(400);
             UniqueNpc known = UniqueNpcs.get(level, npc.persona().key());
             mind.company = known.company != Long.MIN_VALUE ? known.company : now;
             npc.origin();
@@ -244,7 +284,8 @@ public final class EtoBrain {
         if (mind.target != 0) {
             lost = Math.max(lost, com.hex.kagune.control.npc.FightRules.CHASE + 8.0); // 1.3.24: a chase is not being lost
         }
-        if (npc.m_20238_(homeAt) > lost * lost && !EtoOwl.carried(mind.owl)) {
+        // 1.3.29: not while someone is talking to her (sent home from far off, she goes once the talk is over).
+        if (npc.m_20238_(homeAt) > lost * lost && !EtoOwl.carried(mind.owl) && (mind.talking == null || mind.target != 0)) {
             npc.m_6021_(homeAt.f_82479_, homeAt.f_82480_, homeAt.f_82481_);
             npc.m_21573_().m_26573_();
             mind.target = 0;
@@ -259,6 +300,15 @@ public final class EtoBrain {
         int chase = (int)com.hex.kagune.control.npc.FightRules.CHASE;
         npc.m_21446_(home, house != null ? Math.max(house.radius(), target != null ? chase : 0) : target != null ? chase
             : mind.partnerNear ? EtoRules.LEASH : EtoRules.HOME_RADIUS);
+        // 1.3.29: her chores at home stop for anything else (a fight, a talk, a kiss, a hand, a child, the night, home no more); walking
+        // about at home, she never stays stuck.
+        if (mind.chore != null && (house == null || target != null || HomeLife.night(level.m_46468_(), false) || mind.toward != null || mind.kiss != null
+            || mind.holding != null || mind.talking != null || mind.cradling != null || mind.momentChild != null || mind.with != 0 || npc.m_5803_())) {
+            HomeChores.stop(npc, mind, level);
+        }
+        if (house != null && target == null && mind.chore == null && mind.toward == null && mind.kiss == null && mind.holding == null && mind.talking == null) {
+            HomeChores.unstick(npc, mind, house, now);
+        }
         boolean turned = target != null;
         if (turned != mind.turned) {
             mind.turned = turned;
@@ -731,6 +781,11 @@ public final class EtoBrain {
         if (ParentCare.tend(npc, mind, level, partner, now)) {
             return;
         }
+        // 1.3.29: at the home she shares with her spouse, by day, she keeps house (HomeChores): a chest, the floor, a table, the flowers.
+        Households.Home house = npc.following() == null ? Households.forCompanion(level, npc) : null;
+        if (house != null && !HomeLife.night(level.m_46468_(), false) && HomeChores.tick(npc, mind, house, level, partner, now)) {
+            return;
+        }
         if (now % 100L == 37L) {
             askForKiss(npc, mind, level, now);
             if (mind.toward != null) {
@@ -799,7 +854,7 @@ public final class EtoBrain {
         double distance = Math.sqrt(partner.m_20280_(npc));
         boolean clingy = mood == EtoMood.CLINGY || mood == EtoMood.AFFECTIONATE || mood == EtoMood.LONELY || mood == EtoMood.GIDDY;
         boolean reach = reachable(npc, partner);
-        if (clingy && reach && distance > 3.5 && now % 15L == 0L && !mind.gesture.still()) {
+        if (clingy && reach && distance > 3.5 && now % 15L == 0L && !mind.gesture.still() && mind.chore == null) {
             npc.m_21573_().m_5624_(partner, 1.0);
         }
         if (!reach) {
@@ -1372,6 +1427,7 @@ public final class EtoBrain {
         NpcWings.forget(npc, npc.mind);
         if (npc.mind != null) {
             EtoFlesh.release(level, npc.mind.owl);
+            HomeChores.stop(npc, npc.mind, level); // 1.3.29: a chest's lid she had up, shut
         }
         LIVE.remove(npc);
     }

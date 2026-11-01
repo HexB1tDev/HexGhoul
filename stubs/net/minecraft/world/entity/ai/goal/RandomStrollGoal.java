@@ -4,4 +4,7 @@ package net.minecraft.world.entity.ai.goal;
 public class RandomStrollGoal extends Goal {
     public RandomStrollGoal(net.minecraft.world.entity.PathfinderMob mob, double speed) {
     }
+
+    /** canUse (1.3.29) */ @Override public boolean m_8036_() { throw new UnsupportedOperationException(); }
+    /** canContinueToUse (1.3.29) */ @Override public boolean m_8045_() { throw new UnsupportedOperationException(); }
 }

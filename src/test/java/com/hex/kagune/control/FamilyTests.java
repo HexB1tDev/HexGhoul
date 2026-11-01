@@ -2,6 +2,7 @@ package com.hex.kagune.control;
 
 import com.hex.kagune.control.client.GenderView;
 import com.hex.kagune.control.client.PathChoiceLayout.Box;
+import com.hex.kagune.control.family.Chores;
 import com.hex.kagune.control.npc.EtoLines;
 import com.hex.kagune.control.npc.EtoMood;
 import com.hex.kagune.control.npc.EtoRules;
@@ -38,6 +39,7 @@ public final class FamilyTests {
         ownerSkins();
         moments();
         home();
+        chores();
         might();
         hands();
         spin();
@@ -414,6 +416,166 @@ public final class FamilyTests {
     }
 
     /** 1.3.21: a family's home: when each goes to bed, and whose bed is whose (the double bed the spouse's, single beds the children's). */
+    /** 1.3.29: a spouse's chores at home (HomeChores' rules): what each block is for, which chore next, a chest put in order, its words. */
+    static void chores() {
+        java.util.function.Function<String, String> block = id -> "Block{minecraft:" + id + "}";
+        check(Chores.id("Block{minecraft:oak_planks}").equals("minecraft:oak_planks") && Chores.id("plain").equals("plain") && Chores.id(null).isEmpty(),
+            "a block's registry name is read from its text");
+        check(Chores.of(block.apply("chest")) == Chores.Kind.TIDY && Chores.of(block.apply("barrel")) == Chores.Kind.TIDY
+            && Chores.of(block.apply("trapped_chest")) == Chores.Kind.TIDY && Chores.of("Block{othermod:oak_chest}") == Chores.Kind.TIDY,
+            "chests and barrels are tidied");
+        check(Chores.of(block.apply("ender_chest")) == null, "an ender chest is never touched (its things are each player's own)");
+        check(Chores.sortable(block.apply("chest")) && Chores.sortable(block.apply("barrel")) && !Chores.sortable(block.apply("trapped_chest"))
+            && !Chores.sortable(block.apply("ender_chest")) && !Chores.sortable(block.apply("crafting_table")),
+            "only a plain chest or a barrel has its things really sorted (a trapped chest only looks tidied)");
+        check(Chores.lid(block.apply("chest")) && Chores.lid(block.apply("trapped_chest")) && !Chores.lid(block.apply("barrel"))
+            && !Chores.lid("Block{othermod:oak_chest}"), "a chest's lid goes up (vanilla's: a mod's block event may mean something else), a barrel's doesn't");
+        check(Chores.of(block.apply("crafting_table")) == Chores.Kind.WIPE && Chores.of(block.apply("cartography_table")) == Chores.Kind.WIPE
+            && Chores.of("Block{furnimod:oak_table}") == Chores.Kind.WIPE && Chores.of(block.apply("enchanting_table")) == null, "tables are wiped");
+        check(Chores.of(block.apply("bookshelf")) == Chores.Kind.READ && Chores.of(block.apply("lectern")) == Chores.Kind.READ
+            && Chores.of(block.apply("chiseled_bookshelf")) == Chores.Kind.READ, "a book from the shelf, or the lectern");
+        check(Chores.of(block.apply("glass_pane")) == Chores.Kind.LOOK && Chores.of(block.apply("white_stained_glass_pane")) == Chores.Kind.LOOK
+            && Chores.of(block.apply("glass")) == null, "a window is looked out of");
+        for (String plant : new String[] {"poppy", "dandelion", "red_tulip", "cornflower", "rose_bush", "potted_poppy", "wheat", "carrots", "potatoes",
+            "beetroots", "oak_sapling", "cherry_sapling", "sweet_berry_bush", "melon_stem", "azalea", "flowering_azalea", "pink_petals"}) {
+            check(Chores.of(block.apply(plant)) == Chores.Kind.WATER, plant + " is watered");
+        }
+        for (String not : new String[] {"azalea_leaves", "flowering_azalea_leaves", "grass", "tall_grass", "stone", "oak_planks", "flower_pot", "air",
+            "water", "oak_door", "white_bed"}) {
+            check(Chores.of(block.apply(not)) == null, not + " is no one's chore");
+        }
+        check(Chores.grows(block.apply("wheat")) && Chores.grows(block.apply("oak_sapling")) && Chores.grows(block.apply("sweet_berry_bush"))
+            && Chores.grows(block.apply("pumpkin_stem")) && !Chores.grows(block.apply("poppy")) && !Chores.grows(block.apply("potted_oak_sapling"))
+            && !Chores.grows(block.apply("attached_pumpkin_stem")), "watered, crops and saplings may grow a step; flowers and pots don't");
+        for (Chores.Kind kind : Chores.Kind.values()) {
+            check(kind.gesture.still() && kind.gesture.ticks > 20, kind + "'s gesture keeps it standing at the chore a while");
+            check(kind.reach >= 1.0 && kind.reach <= 3.0, kind + " is done from close by");
+        }
+        check(Chores.Kind.TIDY.gesture == com.hex.kagune.control.npc.EtoGesture.TIDY && Chores.Kind.WATER.gesture == com.hex.kagune.control.npc.EtoGesture.WATER
+            && Chores.Kind.SWEEP.gesture == com.hex.kagune.control.npc.EtoGesture.SWEEP && Chores.Kind.WIPE.gesture == com.hex.kagune.control.npc.EtoGesture.WIPE,
+            "the chores use the gestures made for them (TIDY, WATER, the brush's SWEEP, the cloth's WIPE)");
+        for (double roll = 0.0; roll <= 1.0; roll += 0.1) {
+            long alone = Chores.gap(false, roll);
+            long with = Chores.gap(true, roll);
+            check(alone >= 400L && alone <= 1300L && with >= 1100L && with <= 2500L && alone < with, "home alone it keeps house more often than with its spouse about");
+        }
+        int[] none = new int[Chores.Kind.values().length];
+        check(Chores.pick(none, null, false, 0.5) == null && Chores.pick(null, null, false, 0.5) == null, "nothing in the home: no chore");
+        check(Chores.pick(none, null, true, 0.3) == Chores.Kind.SWEEP, "things lying on the floor: there is always the sweeping");
+        int[] chests = none.clone();
+        chests[Chores.Kind.TIDY.ordinal()] = 3;
+        for (double roll = 0.0; roll < 1.0; roll += 0.05) {
+            check(Chores.pick(chests, Chores.Kind.TIDY, false, roll) == Chores.Kind.TIDY, "only chests: the chests, even after the last tidying");
+        }
+        int[] all = new int[Chores.Kind.values().length];
+        java.util.Arrays.fill(all, 4);
+        int[] seen = new int[Chores.Kind.values().length];
+        int[] afterWater = new int[Chores.Kind.values().length];
+        for (int i = 0; i < 1000; i++) {
+            Chores.Kind kind = Chores.pick(all, null, false, i / 1000.0);
+            check(kind != null, "a full home always has a chore");
+            if (kind != null) {
+                seen[kind.ordinal()]++;
+            }
+            Chores.Kind again = Chores.pick(all, Chores.Kind.WATER, false, i / 1000.0);
+            if (again != null) {
+                afterWater[again.ordinal()]++;
+            }
+        }
+        for (Chores.Kind kind : Chores.Kind.values()) {
+            check(seen[kind.ordinal()] > 20, kind + " comes up in a full home");
+        }
+        check(afterWater[Chores.Kind.WATER.ordinal()] < seen[Chores.Kind.WATER.ordinal()] / 2, "the chore just done is less likely again");
+        int[] items = all.clone();
+        int swept = 0;
+        for (int i = 0; i < 100; i++) {
+            if (Chores.pick(items, Chores.Kind.SWEEP, true, i / 100.0) == Chores.Kind.SWEEP) {
+                swept++;
+            }
+        }
+        check(swept >= 25, "things on the floor make the sweeping likelier (even just after one)");
+        // A chest put in order: nothing lost or made, stacks full, sorted, the rest empty; already in order, nothing to do.
+        java.util.Random random = new java.util.Random(29);
+        String[] keys = {"minecraft:bread", "minecraft:apple", "minecraft:iron_sword|{Damage:3}", "minecraft:iron_sword|{Damage:9}", "minecraft:ender_pearl",
+            "minecraft:dirt"};
+        int[] maxes = {64, 64, 1, 1, 16, 64};
+        for (int round = 0; round < 300; round++) {
+            int size = 27;
+            List<Chores.Pile> piles = new ArrayList<>();
+            java.util.Map<String, Integer> totals = new java.util.HashMap<>();
+            for (int i = 0; i < size; i++) {
+                if (random.nextInt(3) == 0) {
+                    piles.add(null);
+                    continue;
+                }
+                int k = random.nextInt(keys.length);
+                int count = 1 + random.nextInt(maxes[k]);
+                piles.add(new Chores.Pile(keys[k], count, maxes[k]));
+                totals.merge(keys[k], count, Integer::sum);
+            }
+            List<Chores.Pile> sorted = Chores.sort(piles, size);
+            if (totals.isEmpty()) {
+                check(sorted == null, "an empty chest: nothing to sort");
+                continue;
+            }
+            check(sorted != null && sorted.size() <= size, "a chest's things always fit back in it, stacked");
+            if (sorted == null) {
+                continue;
+            }
+            java.util.Map<String, Integer> after = new java.util.HashMap<>();
+            String last = "";
+            boolean order = true;
+            boolean full = true;
+            for (int i = 0; i < sorted.size(); i++) {
+                Chores.Pile pile = sorted.get(i);
+                after.merge(pile.key(), pile.count(), Integer::sum);
+                order &= pile.key().compareTo(last) >= 0;
+                last = pile.key();
+                full &= pile.count() >= 1 && pile.count() <= pile.max();
+                if (i + 1 < sorted.size() && sorted.get(i + 1).key().equals(pile.key())) {
+                    full &= pile.count() == pile.max();
+                }
+            }
+            check(after.equals(totals), "sorting a chest never loses or makes a thing");
+            check(order, "a sorted chest is in name order");
+            check(full, "a sorted chest's stacks are full before the next of the same is begun, none past its limit");
+            List<Chores.Pile> again = new ArrayList<>(sorted);
+            while (again.size() < size) {
+                again.add(null);
+            }
+            check(Chores.sorted(again, size), "a chest already in order is left as it is");
+            check(Chores.sorted(piles, size) == piles.equals(again), "a chest is in order only if sorting would leave it as it is");
+            check(Chores.sort(again, size).equals(sorted), "sorting twice is sorting once");
+        }
+        List<Chores.Pile> over = new ArrayList<>();
+        over.add(new Chores.Pile("minecraft:dirt", 200, 64));
+        check(Chores.sort(over, 1) == null, "a stack past its own limit that would no longer fit: the chest is left alone");
+        List<Chores.Pile> messy = new ArrayList<>(java.util.Arrays.asList(new Chores.Pile("minecraft:dirt", 3, 64), null, new Chores.Pile("minecraft:dirt", 4, 64)));
+        check(!Chores.sorted(messy, 3) && Chores.sort(messy, 3).size() == 1 && Chores.sort(messy, 3).get(0).count() == 7, "two half stacks of dirt become one");
+        // Its words: every companion, every chore, every way.
+        String[] banned = {"kaneki", "ayato", "furuta", "takatsuki", "aogiri", "yoshimura"};
+        for (String key : new String[] {"eto", "touka", "ken"}) {
+            for (Chores.Kind kind : Chores.Kind.values()) {
+                for (int seed = 0; seed < 6; seed++) {
+                    for (String line : new String[] {Chores.start(key, kind, seed), Chores.done(key, kind, true, seed), Chores.done(key, kind, false, seed)}) {
+                        check(line != null && !line.isBlank(), key + " has words for " + kind);
+                        for (String name : banned) {
+                            check(line == null || !line.toLowerCase(java.util.Locale.ROOT).contains(name), key + "'s chore words never name " + name);
+                        }
+                    }
+                }
+            }
+            for (boolean married : new boolean[] {true, false}) {
+                for (int seed = -3; seed < 6; seed++) {
+                    String line = Chores.goingHome(key, married, "the Library", seed);
+                    check(line != null && !line.isBlank(), key + " answers being sent home");
+                }
+            }
+        }
+        check(!Chores.start("touka", Chores.Kind.WATER, 0).equals(Chores.start("eto", Chores.Kind.WATER, 0))
+            && !Chores.start("ken", Chores.Kind.WATER, 0).equals(Chores.start("eto", Chores.Kind.WATER, 0)), "each companion keeps house in its own words");
+    }
+
     static void home() {
         check(!com.hex.kagune.control.family.HomeRules.night(6000L, true) && com.hex.kagune.control.family.HomeRules.night(13000L, true)
             && !com.hex.kagune.control.family.HomeRules.night(13000L, false) && com.hex.kagune.control.family.HomeRules.night(14000L, false)

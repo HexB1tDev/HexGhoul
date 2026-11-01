@@ -178,6 +178,24 @@ public class EtoNpc extends PathfinderMob implements UniqueBody {
         this.home = origin;
     }
 
+    /**
+     * 1.3.29: sent home ("Go home, please."): following no one, her home where she belongs again; no teleport: she walks there (and is
+     * put there only from far off, as when she is lost). Returns where that is (null before her first tick).
+     */
+    public BlockPos sendHome() {
+        BlockPos origin = this.origin();
+        this.follow(null);
+        if (origin == null) {
+            return null;
+        }
+        CompoundTag tag = this.getPersistentData();
+        tag.m_128405_(HOME + "X", origin.m_123341_());
+        tag.m_128405_(HOME + "Y", origin.m_123342_());
+        tag.m_128405_(HOME + "Z", origin.m_123343_());
+        this.home = origin;
+        return origin;
+    }
+
     /** Where her home's floor is, in the middle of its block (x, feet y, z). */
     public double[] homeFeet() {
         BlockPos at = this.home();
@@ -199,7 +217,18 @@ public class EtoNpc extends PathfinderMob implements UniqueBody {
         this.f_21345_.m_25352_(0, new FloatGoal(this));
         this.f_21345_.m_25352_(2, new net.minecraft.world.entity.ai.goal.OpenDoorGoal(this, true));
         this.f_21345_.m_25352_(4, new MoveTowardsRestrictionGoal(this, 1.0));
-        this.f_21345_.m_25352_(6, new RandomStrollGoal(this, 0.6));
+        // 1.3.29: her strolling waits while she does a chore at home (it walked her off to the door and back instead).
+        this.f_21345_.m_25352_(6, new RandomStrollGoal(this, 0.6) {
+            @Override
+            public boolean m_8036_() {
+                return !EtoBrain.busy(EtoNpc.this) && super.m_8036_();
+            }
+
+            @Override
+            public boolean m_8045_() {
+                return !EtoBrain.busy(EtoNpc.this) && super.m_8045_();
+            }
+        });
         this.f_21345_.m_25352_(7, new LookAtPlayerGoal(this, Player.class, 8.0F));
         this.f_21345_.m_25352_(8, new RandomLookAroundGoal(this));
     }
