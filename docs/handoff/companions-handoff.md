@@ -1,7 +1,37 @@
-# START HERE (state after 1.3.52)
+# START HERE (state after 1.3.53)
 
 - **Next session:** read `docs/handoff/next-ai-1.3.51.md` first (the owner's goal: more interactions and dialog, polish first; how
-  conversations work; the known problems), then these sections. Problem 1 there (overlapping bubbles) is fixed by 1.3.52.
+  conversations worked; the known problems), then these sections. Problems 1 (bubbles) and 2 (walking off mid-talk) there are fixed by
+  1.3.52 and 1.3.53; "How conversations work now" there is out of date for held talks: read the 1.3.53 entry below.
+- **1.3.53 one conversation lock** (protocol 69, unchanged). Pure `family/Talks`: `GATHER` 2.2, `SPEAKS` 4, `LEAVES` 8, `WAITS` 240,
+  `GATHERS` 300, `TURN` 24 deg/tick; `End` DONE, LEFT, GONE, HURT, FIGHT, ASLEEP, INTERRUPTED (never sent); `faces(self, speaker, previous,
+  next, anchor, other)`; `turn(from, to, most)`; `remarked(End)` (LEFT only); `cutShort(who, stage, name, call, seed)` (56 lines: a persona
+  key's, else temper word + little/child/teen, else any; "" = says nothing). Server `Conversation` (members by entity id, an `anchor` who
+  stays put, `coming` members who walk up first, `Line(speaker id, text)`s): `start(level, now, what, anchor, members, coming, lines)` (null
+  if any member is in one; children's moments stopped `ChildBrain.stopMoment`, a companion's chore `HomeChores.stop` and still gesture
+  cleared), `join(level, who, comes, more)`, `free(body, level, now)` (a child: awake, no fight, no moment, not carried, not following, no
+  player talk, no tag/minding/escort; a companion: no fight, duty, hand, kiss, walk-up, player talk, moment, cling), `in(body)`,
+  `going(body, level, now)` (ticks it once a tick, whoever asks first; over: the mind lets go: `Mind.conversation` null, a child's
+  `lastTalk`), `hold(body, level, now)` (coming: walk to the anchor until within GATHER; else navigation stopped, its leash `m_21446_`
+  where it stands (radius 3), no sideways speed, `face`: the body turned by TURN a tick, the head up to 50 deg further, the look control
+  at them; a carried child: its carrier has it), `end(body, why, level, now)`. `tick`: each member present (else GONE), `trouble` (asleep;
+  hurt since it began (`hurtAt`); a fight (`target`); a child's player talk/following/a carrier not in it; a companion's player talk, hand,
+  kiss, walk-up: INTERRUPTED), past LEAVES from the anchor (not coming): LEFT with `cutShort` by a member who stays (a companion first) if
+  a line was said; lines: each when due and its speaker within SPEAKS of the anchor (the anchor: of the nearest member), else it waits
+  (never came together in GATHERS: LEFT, silent; a line waited WAITS: said from where it is within LEAVES, else that speaker `drop`ped);
+  sent with `Speech.turn` (1.3.52); empty and its last pause over: DONE. Hooks: `ChildBrain.tick` (going first; a threat it would fight
+  ends it; no `moments` meanwhile; the chain's hold right after being carried; `lines` says nothing meanwhile; `start` refuses a moment
+  mid-talk; `held(npc)` gates `ChildNpc`'s RandomStrollGoal); `EtoBrain.tick` (a fight ends hers; before bed/calm: going and hold);
+  `EtoBrain.busy` includes it; `ParentCare.tend` never picks up a child mid-talk. Uses: `ParentDuty` (reached: the child's fight state
+  cleared, any talk of its own ended, `Duty.talk` started with the child as anchor; after it: DONE -> home, else the duty ends; at the door
+  put down, `Duty.home` and the HOME talk, the duty finished once it is over; `finish` ends a talk still going; `led` is only the escort
+  now; `stillBy/stillUntil` are gone), `SiblingLife` (held kinds: a Conversation with the starter coming to the other; a squabble's
+  `breakUp` joins a free parent of both within 16 who sees it, coming; MIND: on reaching the toddler `Mind.mindingTalk`, then home only
+  if it was DONE; remarks (REACT/TEAM, tag shouts, a parent's TRANSFORM word) stay on the old `Mind.talk` queue and are skipped for one in
+  a talk). Tests: `FamilyTests.talks`.
+
+# State after 1.3.52
+
 - **1.3.52 bubbles take turns and keep apart** (protocol **69**: `S2CNpcSay(npc, text, ticks)`, `ticks` 0 = as long as it takes to read;
   the 2-arg constructor still sends 0). Server: `ParentDuty.talk` sends each due line with `life(said, next, now)` =
   `Speech.turn(speaker, nextSpeaker, gap)` (until the next queued line if someone else says it, at least 20, at most `Speech.MOST`; the

@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.53 (HexGhoul): nobody walks away mid-conversation (testing)
+
+See `.github/release-notes-1.3.53.md`.
+
 ## 1.3.52 (HexGhoul): speech bubbles take turns and keep out of each other's way (testing)
 
 See `.github/release-notes-1.3.52.md`.

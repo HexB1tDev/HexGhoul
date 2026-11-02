@@ -70,17 +70,17 @@ public final class ChildBrain {
         /** 1.3.43: it fought with its kagune this tick (else the kagune goes back in). */
         boolean kaguneFought;
         /**
-         * 1.3.49 (ParentDuty): what it and its parents say next (back and forth, each on its tick) and when the queue is free; until when it
-         * holds back from fighting (a parent stopped it); when a parent last came after it; the parent it stands still for while they talk
-         * (an entity id) and until when; the parent walking it home (a UUID) and until when; since when it has been out of its home; when a
-         * parent last had a word about its kagune.
+         * 1.3.49 (ParentDuty): a word or a shout of its own or about it (a remark in a fight, tag: each on its tick) and when that queue is
+         * free; until when it holds back from fighting (a parent stopped it); when a parent last came after it; the parent walking it home (a
+         * UUID) and until when; since when it has been out of its home; when a parent last had a word about its kagune. 1.3.53: a talk it
+         * stays for is its {@code conversation} (the last one it was in, {@code lastTalk}).
          */
         final java.util.ArrayDeque<ParentDuty.Said> talk = new java.util.ArrayDeque<>();
         long talkFree = Long.MIN_VALUE;
         long calmedUntil = Long.MIN_VALUE;
         long fetchedAt = Long.MIN_VALUE / 2;
-        int stillBy;
-        long stillUntil = Long.MIN_VALUE;
+        Conversation conversation;
+        Conversation lastTalk;
         UUID escort;
         long escortUntil = Long.MIN_VALUE;
         long outsideSince = Long.MIN_VALUE;
@@ -98,6 +98,8 @@ public final class ChildBrain {
         int minding;
         long mindingUntil = Long.MIN_VALUE;
         boolean mindingReached;
+        /** 1.3.53: its word with the little one it went after (they walk home once it is said). */
+        Conversation mindingTalk;
         long siblingRemarkAt = Long.MIN_VALUE / 2;
     }
 
@@ -201,7 +203,18 @@ public final class ChildBrain {
         } else {
             mind.holdShift = true; // a new hold waits for Shift to be let up before a tap counts
         }
-        moments(npc, mind, child, level, now, stage);
+        // 1.3.53: a talk it is in first: it stays for it (Conversation), unless something it would fight comes at it.
+        boolean talking = Conversation.going(npc, level, now);
+        if (talking && mind.carrier == null) {
+            LivingEntity danger = threat(npc, mind, child, level, now);
+            if (danger != null && ChildRules.fights(stage, child.skill) && now >= mind.calmedUntil) {
+                Conversation.end(npc, com.hex.kagune.control.family.Talks.End.FIGHT, level, now);
+                talking = false;
+            }
+        }
+        if (!talking) {
+            moments(npc, mind, child, level, now, stage);
+        }
         // 1.3.32 (the owner: after the airplane the child hovered in midair): a moment that ended just now may have set it down (the
         // airplane does); it was then carried again this same tick from the carrier looked up before, its gravity off for good.
         if (mind.carrier == null) {
@@ -214,6 +227,13 @@ public final class ChildBrain {
         if (carrier != null) {
             carry(npc, carrier, mind.ride);
             mind.company = now;
+        } else if (talking && Conversation.hold(npc, level, now)) {
+            // 1.3.53: in a talk: standing, turned to whoever speaks (or walking up to the one it talks to first); its fight off meanwhile.
+            if (mind.turned || mind.target != 0) {
+                mind.turned = false;
+                mind.target = 0;
+                mind.dirty = true;
+            }
         } else if (busyStanding(mind, now)) {
             // 1.3.20: in a moment with a parent: standing to it, facing them (or walking up to them first).
             stand(npc, mind, level, now);
@@ -228,7 +248,7 @@ public final class ChildBrain {
             npc.m_21573_().m_26573_();
             npc.m_20256_(new Vec3(0.0, npc.m_20184_().f_82480_, 0.0));
         } else if (ParentDuty.led(npc, mind, level, now)) {
-            // 1.3.49: its parent has it: standing still while they talk, or walking home at their side.
+            // 1.3.49: its parent (or a big brother or sister) walks it home at their side.
             if (mind.turned || mind.target != 0) {
                 mind.turned = false;
                 mind.target = 0;
@@ -391,6 +411,9 @@ public final class ChildBrain {
         if (mind == null || mind.stage == null || !moment.fits(mind.stage) || mind.target != 0 || busy(mind, now) || !partner.m_6084_()) {
             return false;
         }
+        if (Conversation.in(npc) != null) {
+            return false; // 1.3.53: not in the middle of a talk (a player who wants it ends the talk first: Conversation)
+        }
         if (npc.m_5803_() != (moment == ChildMoment.TUCK)) {
             return false; // asleep, only tucked in; tucked in, only asleep
         }
@@ -498,6 +521,39 @@ public final class ChildBrain {
             npc.mind.pending = ChildMoment.NONE;
             npc.mind.pendingWith = null;
         }
+    }
+
+    /**
+     * 1.3.53: a talk begins: whatever moment it was having (or walking up to) is over, as if its partner had gone off (set back on its
+     * feet from a spin, its flower kept, its food finished).
+     */
+    static void stopMoment(ChildNpc npc) {
+        Mind mind = npc.mind;
+        if (mind == null) {
+            return;
+        }
+        if (mind.pending != ChildMoment.NONE) {
+            mind.pending = ChildMoment.NONE;
+            mind.pendingWith = null;
+        }
+        if (mind.moment != ChildMoment.NONE) {
+            if (mind.moment == ChildMoment.SPIN) {
+                putDown(npc, mind);
+            }
+            if (mind.moment == ChildMoment.FLOWER) {
+                gift(npc, null);
+            }
+            if (mind.moment == ChildMoment.FEED) {
+                fed(npc, mind);
+            }
+            mind.moment = ChildMoment.NONE;
+            mind.dirty = true;
+        }
+    }
+
+    /** 1.3.53: true while it stays for a talk (its strolling waits: ChildNpc). */
+    public static boolean held(ChildNpc npc) {
+        return Conversation.in(npc) != null;
     }
 
     /** True while it is in a moment, or walking up to a parent for one. */
@@ -891,6 +947,9 @@ public final class ChildBrain {
             return;
         }
         mind.company = now;
+        if (mind.conversation != null) {
+            return; // 1.3.53: nothing of its own to say in the middle of a talk (a greeting waits till it is over)
+        }
         int seed = npc.m_217043_().m_188503_(1000);
         String call = ChildLines.call(stage, isMother(child, parent));
         if (mind.parentAway != Long.MIN_VALUE && now - mind.parentAway >= 6000L) {

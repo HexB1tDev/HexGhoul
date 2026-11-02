@@ -199,7 +199,18 @@ public class ChildNpc extends PathfinderMob implements UniqueBody {
         this.f_21345_.m_25352_(0, new FloatGoal(this));
         this.f_21345_.m_25352_(2, new net.minecraft.world.entity.ai.goal.OpenDoorGoal(this, true));
         this.f_21345_.m_25352_(4, new MoveTowardsRestrictionGoal(this, 1.0));
-        this.f_21345_.m_25352_(6, new RandomStrollGoal(this, 0.55));
+        // 1.3.53: its strolling waits while it stays for a talk (it crept off mid-line).
+        this.f_21345_.m_25352_(6, new RandomStrollGoal(this, 0.55) {
+            @Override
+            public boolean m_8036_() {
+                return !com.hex.kagune.control.server.ChildBrain.held(ChildNpc.this) && super.m_8036_();
+            }
+
+            @Override
+            public boolean m_8045_() {
+                return !com.hex.kagune.control.server.ChildBrain.held(ChildNpc.this) && super.m_8045_();
+            }
+        });
         this.f_21345_.m_25352_(7, new LookAtPlayerGoal(this, Player.class, 8.0F));
         this.f_21345_.m_25352_(8, new RandomLookAroundGoal(this));
     }

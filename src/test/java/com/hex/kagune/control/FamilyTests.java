@@ -57,6 +57,7 @@ public final class FamilyTests {
         parenting();
         etoChild();
         siblings();
+        talks();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -552,6 +553,70 @@ check(com.hex.kagune.control.graft.GraftStage.TRANSPLANT.limbs(com.hex.kagune.co
         java.util.List<com.hex.kagune.control.family.Siblings.Line> team = com.hex.kagune.control.family.Siblings.talk(com.hex.kagune.control.family.Siblings.Kind.TEAM,
             bold, kid, "Hana", "Mama", true, sunny, kid, "Ren", "Mama", false, 1);
         check(team.size() == 1 && !team.get(0).text().contains("{sibrole}"), "fighting side by side: a word for a brother or a sister");
+    }
+
+    /**
+     * 1.3.53: a talk that holds together: everyone turns to whoever speaks (the speaker to whom it answers or who answers it, never itself),
+     * a body turns a little a tick the short way round, only walking off gets a word, and every cut-short line is filled in and clean.
+     */
+    static void talks() {
+        int a = 11;
+        int b = 22;
+        int p = 33;
+        check(com.hex.kagune.control.family.Talks.faces(a, b, 0, a, b, b) == b && com.hex.kagune.control.family.Talks.faces(p, b, a, a, b, a) == b,
+            "listening, it faces whoever speaks");
+        check(com.hex.kagune.control.family.Talks.faces(a, a, b, b, b, b) == b && com.hex.kagune.control.family.Talks.faces(a, a, p, 0, b, b) == p,
+            "speaking, it faces whoever answers it, or whom it answered");
+        check(com.hex.kagune.control.family.Talks.faces(b, 0, 0, a, b, a) == a && com.hex.kagune.control.family.Talks.faces(a, 0, 0, a, b, b) == b,
+            "before a word: the one who waits faces the one coming to talk, who faces it");
+        boolean never = true;
+        for (int speaker : new int[] {0, a, b, p}) {
+            for (int next : new int[] {0, a, b, p}) {
+                for (int previous : new int[] {0, a, b}) {
+                    never &= com.hex.kagune.control.family.Talks.faces(a, speaker, previous, next, a, b) != a;
+                }
+            }
+        }
+        check(never, "never itself");
+        check(com.hex.kagune.control.family.Talks.turn(0.0F, 90.0F, 24.0F) == 24.0F && com.hex.kagune.control.family.Talks.turn(170.0F, -170.0F, 24.0F) == 190.0F
+            && com.hex.kagune.control.family.Talks.turn(10.0F, 15.0F, 24.0F) == 15.0F && com.hex.kagune.control.family.Talks.turn(-10.0F, -100.0F, 24.0F) == -34.0F,
+            "it turns a little a tick, the short way round");
+        check(com.hex.kagune.control.family.Talks.remarked(com.hex.kagune.control.family.Talks.End.LEFT)
+            && !com.hex.kagune.control.family.Talks.remarked(com.hex.kagune.control.family.Talks.End.GONE)
+            && !com.hex.kagune.control.family.Talks.remarked(com.hex.kagune.control.family.Talks.End.HURT)
+            && !com.hex.kagune.control.family.Talks.remarked(com.hex.kagune.control.family.Talks.End.FIGHT)
+            && !com.hex.kagune.control.family.Talks.remarked(com.hex.kagune.control.family.Talks.End.INTERRUPTED)
+            && !com.hex.kagune.control.family.Talks.remarked(com.hex.kagune.control.family.Talks.End.DONE),
+            "only walking off gets a word (never a death, a hurt, a fight, a player)");
+        check(com.hex.kagune.control.family.Talks.SPEAKS > com.hex.kagune.control.family.Talks.GATHER && com.hex.kagune.control.family.Talks.LEAVES
+            > com.hex.kagune.control.family.Talks.SPEAKS && com.hex.kagune.control.family.Talks.GATHERS >= com.hex.kagune.control.family.Talks.WAITS,
+            "they gather closer than a line waits for, and a line waits closer than walking off");
+        boolean clean = true;
+        int said = 0;
+        java.util.Set<String> seen = new java.util.HashSet<>();
+        String[] who = {"touka", "ken", "eto", "sunny", "shy", "bold", "curious", "mischief", "gentle", "serious", "unknown"};
+        for (String w : who) {
+            for (com.hex.kagune.control.family.ChildStage stage : new com.hex.kagune.control.family.ChildStage[] {com.hex.kagune.control.family.ChildStage.TODDLER,
+                com.hex.kagune.control.family.ChildStage.CHILD, com.hex.kagune.control.family.ChildStage.TEEN}) {
+                for (int seed = 0; seed < 12; seed++) {
+                    String line = com.hex.kagune.control.family.Talks.cutShort(w, stage, "Ren", "Mama", seed);
+                    if (line == null) {
+                        continue;
+                    }
+                    said++;
+                    seen.add(line);
+                    String low = line.toLowerCase(java.util.Locale.ROOT);
+                    clean &= !line.contains("{") && !line.isBlank();
+                    for (String banned : new String[] {"kaneki", "ayato", "furuta", "takatsuki", "aogiri", "yoshimura"}) {
+                        clean &= !low.contains(banned);
+                    }
+                }
+            }
+        }
+        check(clean && said > 300 && seen.size() > 50, "walked off on: every line filled in, no names it mustn't (" + seen.size() + " lines)");
+        check(com.hex.kagune.control.family.Talks.cutShort("bold", com.hex.kagune.control.family.ChildStage.TEEN, "Ren", "Mama", 1) != null
+            && com.hex.kagune.control.family.Talks.cutShort("ken", com.hex.kagune.control.family.ChildStage.TODDLER, "Ren", "Mama", 0).contains("later"),
+            "a teen in its own temper; a parent's line whatever the child's age");
     }
 
     static void genome() {

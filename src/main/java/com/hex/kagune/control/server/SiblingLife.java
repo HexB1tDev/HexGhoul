@@ -54,17 +54,20 @@ final class SiblingLife {
         return false;
     }
 
-    /** A moment begun with a sibling near, both free (by day; at night only a whispered chat). */
+    /**
+     * A moment begun with a sibling near, both free (by day; at night only a whispered chat). 1.3.53: a talk is a {@link Conversation}: the
+     * one who starts it walks up to the other first, both stay for it; a squabble's parent comes over to break it up.
+     */
     private static void begin(ChildNpc npc, ChildBrain.Mind mind, Children.Child child, ServerLevel level, long now) {
         ChildStage stage = child.stage(now);
-        if (stage == ChildStage.BABY || npc.m_5803_() || ChildBrain.carried(npc)) {
+        if (stage == ChildStage.BABY || !Conversation.free(npc, level, now)) {
             return;
         }
         for (ChildNpc other : level.m_6443_(ChildNpc.class, npc.m_20191_().m_82400_(Siblings.NEAR), body -> body != npc && body.m_6084_())) {
             Children.Child known = Children.get(level, other.childId());
             ChildBrain.Mind them = other.mind;
-            if (them == null || known == null || !siblings(child, known) || other.m_5803_() || ChildBrain.carried(other) || them.target != 0
-                || !them.talk.isEmpty() || them.tagWith != 0 || now - them.siblingAt < Siblings.EVERY / 2 || !npc.m_142582_(other)) {
+            if (them == null || known == null || !siblings(child, known) || !Conversation.free(other, level, now) || !them.talk.isEmpty()
+                || now - them.siblingAt < Siblings.EVERY / 2 || !npc.m_142582_(other)) {
                 continue;
             }
             ChildStage theirs = known.stage(now);
@@ -103,13 +106,11 @@ final class SiblingLife {
                     mind.mindingReached = false;
                 }
                 default -> {
-                    long ends = queue(npc, other, null, talk, now);
-                    mind.stillBy = other.m_19879_();
-                    mind.stillUntil = Math.min(ends, now + 360L);
-                    them.stillBy = npc.m_19879_();
-                    them.stillUntil = Math.min(ends, now + 360L);
-                    if (kind == Siblings.Kind.SQUABBLE) {
-                        breakUp(npc, other, child, known, level, ends);
+                    // It walks up to the other (who waits, turned to it), and they talk; both stay till it's said.
+                    Conversation together = Conversation.start(level, now, "sibling " + kind.name().toLowerCase(java.util.Locale.ROOT), other,
+                        List.of(npc, other), List.of(npc), lines(npc, other, null, talk));
+                    if (together != null && kind == Siblings.Kind.SQUABBLE) {
+                        breakUp(together, npc, other, child, known, level, now);
                     }
                 }
             }
@@ -117,12 +118,16 @@ final class SiblingLife {
         }
     }
 
-    /** A squabble's end: a companion parent of theirs near, who sees it, breaks it up, and each says sorry. */
-    private static void breakUp(ChildNpc npc, ChildNpc other, Children.Child child, Children.Child known, ServerLevel level, long at) {
+    /**
+     * A squabble's end: a companion parent of theirs near, who sees it and is free, hears it start, puts down what it was doing and comes
+     * over; once the squabble is said (and it is there), it breaks it up, and each says sorry.
+     */
+    private static void breakUp(Conversation squabble, ChildNpc npc, ChildNpc other, Children.Child child, Children.Child known, ServerLevel level,
+                                long now) {
         EtoNpc parent = null;
-        for (EtoNpc body : level.m_6443_(EtoNpc.class, npc.m_20191_().m_82400_(16.0), b -> b.m_6084_() && b.mind != null && b.mind.target == 0)) {
+        for (EtoNpc body : level.m_6443_(EtoNpc.class, npc.m_20191_().m_82400_(16.0), b -> b.m_6084_() && b.mind != null)) {
             String key = Pregnancies.npc(body.persona().key());
-            if (child.parent(key) && known.parent(key) && body.m_142582_(npc)) {
+            if (child.parent(key) && known.parent(key) && body.m_142582_(npc) && Conversation.free(body, level, now)) {
                 parent = body;
                 break;
             }
@@ -132,10 +137,7 @@ final class SiblingLife {
         }
         List<Siblings.Line> talk = Siblings.breakUp(parent.persona().key(), temper(child), child.name, temper(known), known.name,
             parent.m_217043_().m_188503_(1 << 20));
-        npc.mind.talkFree = Math.max(npc.mind.talkFree, at);
-        long ends = queue(npc, other, parent, talk, at);
-        npc.mind.stillUntil = Math.max(npc.mind.stillUntil, Math.min(ends, at + 300L));
-        other.mind.stillUntil = Math.max(other.mind.stillUntil, Math.min(ends, at + 300L));
+        squabble.join(level, parent, true, lines(npc, other, parent, talk));
     }
 
     /** Tag: the one who is it runs after the other and tags it (then it is the other's turn); the other runs off. Over after a while. */
@@ -145,9 +147,6 @@ final class SiblingLife {
             || other.m_20280_(npc) > 24.0 * 24.0) {
             mind.tagWith = 0;
             return false;
-        }
-        if (now < mind.stillUntil) {
-            return false; // still saying its piece
         }
         if (mind.chasing) {
             if (now % 5L == 0L) {
@@ -194,13 +193,25 @@ final class SiblingLife {
             }
             mind.mindingReached = true;
             Children.Child known = Children.get(level, little.childId());
-            if (known != null) {
+            if (known != null && Conversation.in(little) == null && Conversation.in(npc) == null) {
+                // 1.3.53: a word each, both standing for it (Conversation); then home together.
                 ChildStage stage = child.stage(now);
                 ChildStage theirs = known.stage(now);
-                long ends = queue(npc, little, null, Siblings.talk(Siblings.Kind.MIND, temper(child), stage, child.name, call(child, stage), girl(child),
-                    temper(known), theirs, known.name, call(known, theirs), girl(known), npc.m_217043_().m_188503_(1 << 20)), now);
-                little.mind.stillBy = npc.m_19879_();
-                little.mind.stillUntil = Math.min(ends, now + 200L);
+                mind.mindingTalk = Conversation.start(level, now, "sibling mind", little, List.of(npc, little), List.of(), lines(npc, little, null,
+                    Siblings.talk(Siblings.Kind.MIND, temper(child), stage, child.name, call(child, stage), girl(child), temper(known), theirs, known.name,
+                        call(known, theirs), girl(known), npc.m_217043_().m_188503_(1 << 20))));
+                return true;
+            }
+        }
+        if (mind.mindingTalk != null) {
+            if (!mind.mindingTalk.over()) {
+                return true; // (held by the talk itself)
+            }
+            boolean said = mind.mindingTalk.ended == com.hex.kagune.control.family.Talks.End.DONE;
+            mind.mindingTalk = null;
+            if (!said) {
+                mind.minding = 0; // cut short (hurt, a fight, a parent or a player took over): it leaves it be
+                return false;
             }
         }
         Vec3 door = new Vec3(house.pos().m_123341_() + 0.5, house.pos().m_123342_(), house.pos().m_123343_() + 0.5);
@@ -225,7 +236,7 @@ final class SiblingLife {
         for (ChildNpc other : level.m_6443_(ChildNpc.class, npc.m_20191_().m_82400_(12.0), body -> body != npc && body.m_6084_() && body.mind != null)) {
             Children.Child known = Children.get(level, other.childId());
             if (known == null || !siblings(child, known) || now - other.mind.siblingRemarkAt < Siblings.REMARKS_EVERY || !other.m_142582_(npc)
-                || other.m_5803_()) {
+                || other.m_5803_() || Conversation.in(other) != null) {
                 continue;
             }
             other.mind.siblingRemarkAt = now;
@@ -246,7 +257,17 @@ final class SiblingLife {
 
     // ---------------------------------------------------------------- their words
 
-    /** Their lines queued on {@code first}'s talk (1: {@code first}, 2: {@code second}, 0: {@code parent}), in turn; when the last ends. */
+    /** 1.3.53: their lines as a {@link Conversation}'s (1: {@code first}, 2: {@code second}, 0: {@code parent}). */
+    private static List<Conversation.Line> lines(ChildNpc first, ChildNpc second, EtoNpc parent, List<Siblings.Line> talk) {
+        List<Conversation.Line> out = new java.util.ArrayList<>();
+        for (Siblings.Line line : talk) {
+            int speaker = line.who() == 1 ? first.m_19879_() : line.who() == 2 ? second.m_19879_() : parent == null ? first.m_19879_() : parent.m_19879_();
+            out.add(new Conversation.Line(speaker, line.text()));
+        }
+        return out;
+    }
+
+    /** A shout or a remark queued on {@code first}'s words (1: {@code first}, 2: {@code second}, 0: {@code parent}), in turn; when the last ends. */
     private static long queue(ChildNpc first, ChildNpc second, EtoNpc parent, List<Siblings.Line> talk, long now) {
         long at = Math.max(now, first.mind.talkFree);
         for (Siblings.Line line : talk) {

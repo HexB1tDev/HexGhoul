@@ -82,6 +82,8 @@ public final class EtoBrain {
         final NpcWings.State wings = new NpcWings.State();
         /** 1.3.49: a child of hers she is going after (ParentDuty), or null. */
         ParentDuty.Duty duty;
+        /** 1.3.53: a talk she stays for (her children's, hers with them: Conversation), or null. */
+        Conversation conversation;
         EtoGesture gesture = EtoGesture.NONE;
         long gestureAt = Long.MIN_VALUE;
         long nextGestureAt;
@@ -177,8 +179,8 @@ public final class EtoBrain {
 
     /** 1.3.29: true while a chore at home has her (vanilla's strolling waits: it would walk her off it). */
     public static boolean busy(EtoNpc npc) {
-        // 1.3.39: nor wandering off while someone talks to her.
-        return HomeChores.busy(npc.mind) || npc.mind != null && npc.mind.talking != null;
+        // 1.3.39: nor wandering off while someone talks to her. 1.3.53: nor in a talk with her children.
+        return HomeChores.busy(npc.mind) || npc.mind != null && (npc.mind.talking != null || Conversation.in(npc) != null);
     }
 
     /**
@@ -337,6 +339,7 @@ public final class EtoBrain {
         if (target != null) {
             endKiss(npc, mind, null, now);
             letGo(npc, mind, level, now, false);
+            Conversation.end(npc, com.hex.kagune.control.family.Talks.End.FIGHT, level, now); // 1.3.53: a fight ends any talk
             ParentCare.drop(npc, mind, level, now);
             if (mind.gesture != EtoGesture.NONE && mind.gesture != EtoGesture.LAUGH) {
                 gesture(mind, EtoGesture.NONE, now);
@@ -349,8 +352,11 @@ public final class EtoBrain {
             if (mind.phase != EtoRules.Phase.CALM && now - mind.foughtAt > 60L) {
                 mind.phase = EtoRules.Phase.CALM;
             }
-            // 1.3.21: at night at home, to her bed (the double bed's free half); else her calm.
-            if (!toBed(npc, mind, house, level, now)) {
+            // 1.3.21: at night at home, to her bed (the double bed's free half); else her calm. 1.3.53: a talk she is in before either:
+            // she stays for it (standing, turned to whoever speaks; or coming over to it first).
+            if (Conversation.going(npc, level, now) && Conversation.hold(npc, level, now)) {
+                mind.company = now;
+            } else if (!toBed(npc, mind, house, level, now)) {
                 calm(npc, mind, level, now);
             }
             heal(npc, mind, now);

@@ -27,14 +27,18 @@ import net.minecraft.world.phys.Vec3;
  * Asleep, a parent is woken by a child out at night or fighting too long (HomeLife). It never leaves a fight of its own for it.
  */
 final class ParentDuty {
-    /** What it is doing about which child: why, which (its body's id), since when, whether it got to it, whether it carries it. */
+    /**
+     * What it is doing about which child: why, which (its body's id), since when, whether it got to it, whether it carries it; 1.3.53: their
+     * talk (a {@link Conversation} both stay for), and whether that is the word at the door (the duty is over once it is said).
+     */
     static final class Duty {
         Parenting.Why why;
         UUID child;
         long since;
         boolean reached;
         boolean carrying;
-        long talkEnds;
+        Conversation talk;
+        boolean home;
     }
 
     private ParentDuty() {
@@ -87,16 +91,19 @@ final class ParentDuty {
                 npc.m_21563_().m_24960_(child, 30.0F, 30.0F);
                 return true;
             }
-            // Got to it: the child stops, and they have it out.
+            // Got to it: the child stops (its fight over), and they have it out: a talk both stay for (1.3.53: Conversation).
             d.reached = true;
             npc.m_21573_().m_26573_();
             child.mind.calmedUntil = now + Parenting.CALMED;
             child.mind.fetchedAt = now;
+            child.mind.target = 0;
+            child.mind.turned = false;
+            child.mind.dirty = true;
+            Conversation.end(child, com.hex.kagune.control.family.Talks.End.INTERRUPTED, level, now); // whatever it was saying to a sibling
             List<Parenting.Line> talk = Parenting.talk(d.why, npc.persona().key(), stage, temper(known), known.name,
                 ChildLines.call(stage, npc.persona().female()), npc.m_217043_().m_188503_(1 << 20));
-            d.talkEnds = queue(child, npc, talk, now);
-            child.mind.stillBy = npc.m_19879_();
-            child.mind.stillUntil = Math.min(d.talkEnds, now + 400L);
+            d.talk = Conversation.start(level, now, "parent " + d.why.name().toLowerCase(java.util.Locale.ROOT), child, List.of(child, npc), List.of(),
+                lines(child, npc, talk));
             if (stage.carried() && house != null) {
                 ChildBrain.pickUp(child, npc);
                 d.carrying = true;
@@ -106,15 +113,17 @@ final class ParentDuty {
             }
             return true;
         }
-        // Said its piece: home, the child carried or at its side; nowhere to take it, done once they have talked.
-        if (now < d.talkEnds) {
-            npc.m_21573_().m_26573_();
-            npc.m_21563_().m_24960_(child, 30.0F, 30.0F);
-            if (!d.carrying) {
-                EtoBrain.face(npc, child);
-            }
+        // 1.3.53: the talk over (both stayed for it: EtoBrain and ChildBrain hold them while it goes on). Cut short (the child hurt, a fight,
+        // a player wanting it, gone): the duty is over too, for now. The word at the door said: done.
+        if (d.talk != null && d.talk.over() && (d.home || d.talk.ended != com.hex.kagune.control.family.Talks.End.DONE)) {
+            finish(npc, mind, child, level);
+            return false;
+        }
+        if (d.talk != null && !d.talk.over()) {
+            npc.m_21573_().m_26573_(); // (held by the talk itself; only here if her hold was skipped this tick)
             return true;
         }
+        // Said its piece: home, the child carried or at its side; nowhere to take it, done once they have talked.
         if (house == null || d.why == Parenting.Why.TRANSFORM) {
             finish(npc, mind, child, level);
             return false;
@@ -124,13 +133,25 @@ final class ParentDuty {
         boolean childHome = child.m_20238_(door) <= Math.pow(Math.max(3.0, house.radius() - 3.0), 2);
         boolean selfHome = npc.m_20238_(door) <= Math.pow(Math.max(3.0, house.radius() - 3.0), 2);
         if (childHome && (selfHome || d.carrying)) {
-            // At the door: put down, and a line each.
+            // At the door: put down, and a line each (1.3.53: both stay for it; the duty ends once it is said).
             if (d.carrying) {
                 ChildBrain.putDown(child, child.mind);
+                d.carrying = false;
+                mind.cradling = null;
+                if (mind.gesture == EtoGesture.PET) {
+                    EtoBrain.gesture(mind, EtoGesture.NONE, now);
+                }
             }
-            queue(child, npc, Parenting.talk(Parenting.Why.HOME, npc.persona().key(), stage, temper(known), known.name,
-                ChildLines.call(stage, npc.persona().female()), npc.m_217043_().m_188503_(1 << 20)), now);
-            finish(npc, mind, child, level);
+            if (child.mind.escort != null && npc.m_20148_().equals(child.mind.escort)) {
+                child.mind.escort = null;
+            }
+            d.home = true;
+            d.talk = Conversation.start(level, now, "parent home", child, List.of(child, npc), List.of(), lines(child, npc,
+                Parenting.talk(Parenting.Why.HOME, npc.persona().key(), stage, temper(known), known.name, ChildLines.call(stage, npc.persona().female()),
+                    npc.m_217043_().m_188503_(1 << 20))));
+            if (d.talk == null) {
+                finish(npc, mind, child, level);
+            }
             return true;
         }
         if (!d.carrying) {
@@ -147,6 +168,9 @@ final class ParentDuty {
     private static void finish(EtoNpc npc, EtoBrain.Mind mind, ChildNpc child, ServerLevel level) {
         Duty d = mind.duty;
         mind.duty = null;
+        if (d != null && d.talk != null && !d.talk.over()) {
+            Conversation.end(npc, com.hex.kagune.control.family.Talks.End.INTERRUPTED, level, level.m_46467_());
+        }
         if (d != null && d.carrying && child != null && child.mind != null && ChildBrain.carried(child)) {
             ChildBrain.putDown(child, child.mind);
         }
@@ -229,7 +253,7 @@ final class ParentDuty {
             return;
         }
         EtoNpc parent = nearParent(child, known, level, 24.0);
-        if (parent == null) {
+        if (parent == null || Conversation.in(parent) != null) {
             return;
         }
         child.mind.remarkedAt = now;
@@ -239,20 +263,10 @@ final class ParentDuty {
     }
 
     /**
-     * Its parent has it: standing still facing them while they talk ({@code stillBy}), or walking home at their side ({@code escort}).
-     * True while it does (nothing else of its own meanwhile).
+     * Its parent (or an older brother or sister) walks it home at their side ({@code escort}): true while it does (nothing else of its own
+     * meanwhile). 1.3.53: standing still for a talk is the talk's own ({@link Conversation#hold}).
      */
     static boolean led(ChildNpc npc, ChildBrain.Mind mind, ServerLevel level, long now) {
-        if (mind.stillBy != 0 && now < mind.stillUntil) {
-            Entity parent = level.m_6815_(mind.stillBy);
-            if (parent instanceof LivingEntity living && living.m_6084_()) {
-                npc.m_21573_().m_26573_();
-                npc.m_20256_(new Vec3(0.0, npc.m_20184_().f_82480_, 0.0));
-                npc.m_21563_().m_24960_(living, 30.0F, 30.0F);
-                return true;
-            }
-            mind.stillBy = 0;
-        }
         if (mind.escort != null && now < mind.escortUntil) {
             Entity parent = level.m_8791_(mind.escort);
             if (parent instanceof LivingEntity living && living.m_6084_() && living.m_9236_() == level) {
@@ -267,7 +281,16 @@ final class ParentDuty {
         return false;
     }
 
-    /** Its words queued, back and forth, each up long enough to read ({@link Parenting#pause}); when the last ends. */
+    /** 1.3.53: a parent's talk with its child as a {@link Conversation}'s lines (each by its speaker's entity id). */
+    static List<Conversation.Line> lines(ChildNpc child, EtoNpc parent, List<Parenting.Line> talk) {
+        List<Conversation.Line> out = new java.util.ArrayList<>();
+        for (Parenting.Line line : talk) {
+            out.add(new Conversation.Line(line.parent() ? parent.m_19879_() : child.m_19879_(), line.text()));
+        }
+        return out;
+    }
+
+    /** A remark's words queued (a word about its kagune, in a fight: no one stops for it), each in its turn; when the last ends. */
     static long queue(ChildNpc child, EtoNpc parent, List<Parenting.Line> talk, long now) {
         long at = Math.max(now, child.mind.talkFree);
         for (Parenting.Line line : talk) {
