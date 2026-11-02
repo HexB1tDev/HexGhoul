@@ -123,7 +123,7 @@ public final class KingChoiceView {
             new String[] {"Rinkaku", "Six that hunt; a Black Sun"},
             new String[] {"Moves", "Centipede arms, a small Dragon"},
             new String[] {"Body", "+45% melee, +35% speed"},
-            new String[] {"Health", "+80%, 25% of blows taken off"}), true);
+            new String[] {"Toughness", "25% of blows off, then half the rest (2.0: no extra health)"}), true);
     }
 
     static void peace(UiCanvas c, KingTheme t, UkakuMenuView.Rect r, boolean picked, boolean hover, boolean sealed, double time) {
@@ -151,7 +151,7 @@ public final class KingChoiceView {
             new String[] {"Blades", "Six cross blades on arms"},
             new String[] {"Moves", "Graceful, long combos"},
             new String[] {"Body", "+30% melee, +40% attack speed"},
-            new String[] {"Health", "+100%, 35% of blows taken off"}), false);
+            new String[] {"Toughness", "35% of blows off, then half the rest (2.0: no extra health)"}), false);
         if (sealed) {
             c.fill(r.x(), top + r.height() - 26, r.x() + r.width(), top + r.height() - 8, 0xE01E2026);
             c.centered("SEALED: NOT READY YET. IT IS COMING.", r.x() + r.width() / 2, top + r.height() - 21, 0xFFF0E6E0);

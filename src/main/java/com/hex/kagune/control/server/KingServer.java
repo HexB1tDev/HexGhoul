@@ -638,7 +638,8 @@ public final class KingServer {
         modifier(player, Attributes.f_22281_, MELEE, "Final kakuja melee", boosts[0]);
         modifier(player, Attributes.f_22279_, SPEED, "Final kakuja speed", boosts[1]);
         modifier(player, Attributes.f_22283_, ATTACK_SPEED, "Final kakuja attack speed", boosts[2]);
-        modifier(player, Attributes.f_22276_, HEALTH, "Final kakuja health", boosts[3]);
+        // 2.0 (the owner): no health from a form; a final kakuja makes a ghoul a tank instead (GhoulTank.FINAL). The old modifier is
+        // still taken off by unboost, for anyone who had it.
         if (form == KingForm.WAR) {
             AttributeInstance rooted = player.m_21051_(Attributes.f_22278_);
             if (rooted != null && rooted.m_22111_(ROOTED) == null) {

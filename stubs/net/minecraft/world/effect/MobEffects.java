@@ -15,5 +15,6 @@ public final class MobEffects {
     /** GLOWING (1.3.15) */ public static final MobEffect f_19619_ = null;
     /** REGENERATION */ public static final MobEffect f_19605_ = null;
     /** DAMAGE_RESISTANCE */ public static final MobEffect f_19606_ = null;
+    /** HEALTH_BOOST (2.0: the original's centipede forms give it; it no longer does) */ public static final MobEffect f_19616_ = null;
     /** DAMAGE_BOOST (Strength) */ public static final MobEffect f_19600_ = null;
 }

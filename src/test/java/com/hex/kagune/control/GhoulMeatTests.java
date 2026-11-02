@@ -20,6 +20,7 @@ public final class GhoulMeatTests {
         curves();
         food();
         text();
+        tank();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -67,5 +68,30 @@ public final class GhoulMeatTests {
     static void text() {
         check(GhoulMeat.percent(1.0F).equals("+0%") && GhoulMeat.percent(1.123F).equals("+12%"), "percent text");
         check(GhoulMeat.times(1.0F).equals("x1.00") && GhoulMeat.times(1.2249F).equals("x1.22"), "times text");
+    }
+
+    /** 2.0: a ghoul is a living tank: mastery, meat and form each cut a blow, together to about a quarter; a new ghoul takes it all. */
+    private static void tank() {
+        check(com.hex.kagune.control.GhoulTank.taken(0, 0, 0.0) == 1.0, "a new ghoul with its kagune in takes a blow whole");
+        double most = com.hex.kagune.control.GhoulTank.taken(1000, 100000, com.hex.kagune.control.GhoulTank.form(true, 5, true, true));
+        check(most > 0.2 && most < 0.3, "a seasoned ghoul in a final kakuja takes about a quarter (" + most + ")");
+        double prev = 1.0;
+        boolean falls = true;
+        for (int m = 0; m <= 1000; m += 100) {
+            double t = com.hex.kagune.control.GhoulTank.taken(m, 0, 0.0);
+            falls &= t <= prev;
+            prev = t;
+        }
+        check(falls && com.hex.kagune.control.GhoulTank.taken(1000, 0, 0.0) < 0.7, "more mastery, less taken");
+        check(Math.abs(com.hex.kagune.control.GhoulTank.meat(20) - 0.5) < 1.0E-9 && com.hex.kagune.control.GhoulTank.meat(0) == 0.0
+            && com.hex.kagune.control.GhoulTank.meat(200) > 0.9, "meat: half its share at 20 pieces, more for ever");
+        double out = com.hex.kagune.control.GhoulTank.form(true, 0, false, false);
+        double quad = com.hex.kagune.control.GhoulTank.form(true, 2, false, false);
+        double kakuja = com.hex.kagune.control.GhoulTank.form(true, 5, true, false);
+        double fin = com.hex.kagune.control.GhoulTank.form(true, 5, true, true);
+        check(com.hex.kagune.control.GhoulTank.form(false, 5, false, false) == 0.0 && out > 0.0 && quad > out && kakuja > quad && fin > kakuja,
+            "the better the form, the more it takes off");
+        check(com.hex.kagune.control.GhoulTank.bypasses("outOfWorld") && com.hex.kagune.control.GhoulTank.bypasses("genericKill")
+            && !com.hex.kagune.control.GhoulTank.bypasses("player"), "the void and a kill command are never softened");
     }
 }

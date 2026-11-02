@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.80 (HexGhoul): ghouls are living tanks: resistance, not health (testing)
+
+See `.github/release-notes-1.3.80.md`.
+
 ## 1.3.79 (HexGhoul): 136 new looks for the children: other hair and eye colours (testing)
 
 See `.github/release-notes-1.3.79.md`.

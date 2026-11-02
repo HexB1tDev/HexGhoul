@@ -76,6 +76,12 @@ public final class Sightings {
             sight == FinalSight.RINKAKU || sight == FinalSight.UKAKU, kakuja, active, PaleServer.eyes(player));
     }
 
+    /** 2.0: true while {@code player} is in a kakuja of any kind (rinkaku's, ukaku's, a graft's, the Owl). */
+    public static boolean kakuja(ServerPlayer player) {
+        boolean owl = PaleServer.peek(player) != null && PaleServer.peek(player).owl;
+        return owl || UkakuServer.kakuja(player) || GraftServer.kakuja(player) || KaguneProfile.isActive(player) && KaguneProfile.form(player).isKakuja();
+    }
+
     /** 1.3.65: which of the worst sights {@code player} is now ({@link FinalSight}: told apart; NONE for anything less). */
     public static FinalSight finalOf(ServerPlayer player) {
         boolean rinkaku = KaguneProfile.isActive(player) && PathServer.path(player) == com.hex.kagune.control.KagunePath.RINKAKU

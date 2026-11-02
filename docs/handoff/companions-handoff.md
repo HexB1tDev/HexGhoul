@@ -1,7 +1,16 @@
-# START HERE (state after 1.3.79)
+# START HERE (state after 1.3.80)
 
-- RULE 1 (stop at 97% usage) is gone for good: the owner had it removed from `CLAUDE.md` after 1.3.78.
-- The owner's next step is testing in game. Next: whatever they report (bugs first, each its own version).
+- The owner's last request (Release 2.0): more villagers per village with unique looks, a bug/lag pass, an animation pass, mastery/forms
+  as resistance not health, then release 2.0. Done so far: 1.3.80 (the tank).
+- **1.3.80 the living tank** (protocol 72, unchanged). Pure `control/GhoulTank`: `taken(mastery, eaten, form)` = (1 - 0.35 m/1000)(1 -
+  0.25 eaten/(eaten+20))(1 - form); `form(out, stage, kakuja, final)`: in 0, out 0.10 + 0.04 x min(3, KaguneForm ordinal), any kakuja
+  0.32, a final 0.50; `bypasses(msgId)` (outOfWorld, genericKill). `server/GhoulTankServer`: LivingHurtEvent LOWEST on ghoul players
+  (`Sightings.kakuja`, new: owl/ukaku/graft/rinkaku kakuja; `Sightings.finalOf`). War/Peace no longer add max health for players
+  (`KingServer.boost`; `unboost` still removes the old HEALTH modifier; Ken the NPC keeps his); `RinkakuFormBuffs` skips HEALTH_BOOST
+  (stub `MobEffects.f_19616_`: proven, the original links it). `KingChoiceView`: "Toughness". `GhoulMeatTests.tank`.
+
+# State after 1.3.79
+
 - **1.3.79 children's looks** (the owner: "make dozens of other versions with different hair colors and eye colors ... careful with the
   hair cause skins usually have hair on the back"; protocol 72, unchanged; client only). `tools/child_variants.py` writes
   `textures/entity/child/skins/<key>_v1..4.png` (136 for 34 skins) and `family/ChildLooks.java` (`Look(texture, hair, eyes)`, `of(key)`
