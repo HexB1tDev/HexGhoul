@@ -33,20 +33,28 @@ public final class HumanTalk {
     static final double KEEP = 9.0;
     /** What each of the page's reply slots asks. */
     static final String[] ASKS = {"How are you?", "Tell me about yourself.", "Any news?", "You look lovely today."};
-    private static final List<NpcTalk.Choice> CHOICES = List.of(NpcTalk.Choice.SAY_1, NpcTalk.Choice.SAY_2, NpcTalk.Choice.SAY_3, NpcTalk.Choice.SAY_4,
-        NpcTalk.Choice.LEAVE);
 
-    /** Who each player is talking to (an entity id), and the day they last paid each human a compliment. */
-    private static final Map<UUID, Integer> TALKS = new HashMap<>();
+    /** 1.3.74: what the romance's reply slots say (SAY_5..SAY_8). */
+    static final String[] ROMANCE = {"There's something I have to tell you... I'm a ghoul.", "Please, hear me out. I'd never hurt you.",
+        "Go out with me.", "I love you."};
+
+    /** Who each player is talking to (an entity id) and what they were offered; the day they last paid each human a compliment. */
+    private record Talk(int npc, List<NpcTalk.Choice> offered) {
+    }
+
+    private static final Map<UUID, Talk> TALKS = new HashMap<>();
     private static final Map<String, Long> PRAISED = new HashMap<>();
+    /** 1.3.74: a confession it doubts (player and human: waiting for the plea), and the day one was turned down (no more till tomorrow). */
+    private static final java.util.Set<String> DOUBTED = new java.util.HashSet<>();
+    private static final Map<String, Long> REFUSED = new HashMap<>();
 
     private HumanTalk() {
     }
 
     /** The player talking to {@code human} now, or null. */
     static ServerPlayer talker(HumanNpc human, ServerLevel level) {
-        for (Map.Entry<UUID, Integer> talk : TALKS.entrySet()) {
-            if (talk.getValue() != human.m_19879_()) {
+        for (Map.Entry<UUID, Talk> talk : TALKS.entrySet()) {
+            if (talk.getValue().npc() != human.m_19879_()) {
                 continue;
             }
             ServerPlayer player = level.m_7654_().m_6846_().m_11259_(talk.getKey());
@@ -98,14 +106,14 @@ public final class HumanTalk {
         if (!bond.has(com.hex.kagune.control.npc.NpcBonds.MET)) {
             QuestServer.bond(player, key, bond.with(com.hex.kagune.control.npc.NpcBonds.MET, true));
         }
-        show(player, human, HumanPersona.hello(temper, bond.regard(), human.m_217043_().m_188503_(1000)));
+        show(player, human, HumanPersona.hello(temper, bond.regard(), bond.has(HumanPersona.PARTNER), human.m_217043_().m_188503_(1000)));
     }
 
     /** An answer from the talk screen (routed here by {@code C2SNpcTalk} when the one talked to is a human). */
     public static void heard(ServerPlayer player, int npcId, int ordinal) {
-        Integer talking = TALKS.get(player.m_20148_());
+        Talk talking = TALKS.get(player.m_20148_());
         NpcTalk.Choice choice = NpcTalk.Choice.byOrdinal(ordinal);
-        if (talking == null || talking != npcId || !CHOICES.contains(choice)) {
+        if (talking == null || talking.npc() != npcId || choice != NpcTalk.Choice.LEAVE && !talking.offered().contains(choice)) {
             return;
         }
         ServerLevel level = player.m_284548_();
@@ -134,6 +142,13 @@ public final class HumanTalk {
             }
             case SAY_2 -> line = HumanPersona.about(temper, roll);
             case SAY_3 -> line = HumanPersona.news(roll);
+            case SAY_5, SAY_6 -> line = confess(player, human, temper, key, bond, choice == NpcTalk.Choice.SAY_6, day, roll);
+            case SAY_7 -> {
+                line = HumanPersona.yes(temper, roll);
+                QuestServer.bond(player, key, bond.with(HumanPersona.PARTNER, true));
+                player.m_5661_(Component.m_237113_("\u00a7d" + HumanPersona.name(seed) + " and you are together now."), false);
+            }
+            case SAY_8 -> line = HumanPersona.love(temper, roll);
             default -> {
                 line = HumanPersona.compliment(temper, bond.regard(), roll);
                 String praised = player.m_20148_() + key;
@@ -146,16 +161,64 @@ public final class HumanTalk {
         show(player, human, line);
     }
 
-    /** The page: its name and temper, how warm it is to them, what it says, the four asks and goodbye. */
+    /**
+     * 1.3.74: a ghoul's confession ({@code plea}: the second try, after a doubt): taken (it knows, and they may go out), doubted (they may
+     * plead), or turned down (its regard for them cools a little; no more till tomorrow).
+     */
+    private static String confess(ServerPlayer player, HumanNpc human, HumanPersona.Temper temper, String key, QuestLog.Bond bond, boolean plea,
+                                  long day, int roll) {
+        String both = player.m_20148_() + key;
+        DOUBTED.remove(both);
+        HumanPersona.Answer answer = HumanPersona.confession(temper, bond.regard(), plea, human.m_217043_().m_188500_());
+        switch (answer) {
+            case YES -> QuestServer.bond(player, key, bond.with(HumanPersona.CONFESSED, true));
+            case DOUBT -> DOUBTED.add(both);
+            case NO -> {
+                REFUSED.put(both, day);
+                QuestServer.bond(player, key, bond.regard(bond.regard() - 8));
+            }
+        }
+        return HumanPersona.confessed(temper, answer, roll);
+    }
+
+    /** The page: its name and temper, how warm it is to them, what it says, the asks (1.3.74: and the romance's, as they stand) and goodbye. */
     private static void show(ServerPlayer player, HumanNpc human, String line) {
         long seed = seed(human);
-        TALKS.put(player.m_20148_(), human.m_19879_());
-        int regard = QuestServer.bond(player, human.m_20148_().toString()).regard();
-        int[] ordinals = new int[CHOICES.size()];
-        String[] labels = new String[CHOICES.size()];
+        String key = human.m_20148_().toString();
+        QuestLog.Bond bond = QuestServer.bond(player, key);
+        int regard = bond.regard();
+        String both = player.m_20148_() + key;
+        long day = Math.floorDiv(player.m_284548_().m_46468_(), 24000L);
+        boolean ghoul = com.hex.kagune.data.KaguneProfile.isUnlocked(player);
+        boolean partner = bond.has(HumanPersona.PARTNER);
+        boolean close = regard >= HumanPersona.CLOSE;
+        List<NpcTalk.Choice> offered = new java.util.ArrayList<>(List.of(NpcTalk.Choice.SAY_1, NpcTalk.Choice.SAY_2, NpcTalk.Choice.SAY_3,
+            NpcTalk.Choice.SAY_4));
+        List<String> said = new java.util.ArrayList<>(List.of(ASKS));
+        boolean doubted = DOUBTED.contains(both);
+        if (doubted) {
+            offered.add(NpcTalk.Choice.SAY_6);
+            said.add(ROMANCE[1]);
+        } else if (ghoul && close && !partner && !bond.has(HumanPersona.CONFESSED) && REFUSED.getOrDefault(both, Long.MIN_VALUE) != day) {
+            offered.add(NpcTalk.Choice.SAY_5);
+            said.add(ROMANCE[0]);
+        }
+        if (close && !partner && !doubted && (!ghoul || bond.has(HumanPersona.CONFESSED))) {
+            offered.add(NpcTalk.Choice.SAY_7);
+            said.add(ROMANCE[2]);
+        }
+        if (partner) {
+            offered.add(NpcTalk.Choice.SAY_8);
+            said.add(ROMANCE[3]);
+        }
+        offered.add(NpcTalk.Choice.LEAVE);
+        said.add("");
+        TALKS.put(player.m_20148_(), new Talk(human.m_19879_(), List.copyOf(offered)));
+        int[] ordinals = new int[offered.size()];
+        String[] labels = new String[offered.size()];
         for (int i = 0; i < ordinals.length; i++) {
-            ordinals[i] = CHOICES.get(i).ordinal();
-            labels[i] = i < ASKS.length ? ASKS[i] : "";
+            ordinals[i] = offered.get(i).ordinal();
+            labels[i] = said.get(i);
         }
         // Its skin as a talk screen knows it: -100 less its look (a vanilla default skin: HumanRules.LOOKS).
         ControlNetwork.sendTo(player, new S2CNpcTalk(human.m_19879_(), HumanPersona.name(seed), HumanPersona.temper(seed).title, regard, false,

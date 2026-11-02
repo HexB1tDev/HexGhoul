@@ -1,12 +1,22 @@
-# START HERE (state after 1.3.73)
+# START HERE (state after 1.3.74)
 
 - **RULE 1 (the owner's, every session): at 97% of the 5-hour or weekly usage, stop, save, hand off, give a prompt. See `CLAUDE.md`.**
 - **Next session:** read `docs/handoff/next-ai-1.3.67.md` first (the owner's last update and its plan, in order), then
-  `docs/handoff/next-ai-1.3.60.md` (house rules). Done of that plan: 1-4 (1.3.68-1.3.72), 5 begun: talking and personalities (1.3.73).
-  Next: romance and dating with humans (asking out, dates, partners; the companions' `Romance`/`RomanceCard` as a model), a ghoul player's
-  confession before a relationship can start (may need convincing, by temper and regard), humans' gestures (the owner: take Eto's, the
-  kids', Touka's and Ken's animations as a base; HumanRenderer.Model would need a pose like EtoModel's RigPose.transform and a synced
-  gesture), and cuter human skins from the kids' skins (art/children: different hair and clothes; never alter the owner's files).
+  `docs/handoff/next-ai-1.3.60.md` (house rules). Done of that plan: 1-4 (1.3.68-1.3.72), 5: talking (1.3.73), romance and the ghoul's
+  confession (1.3.74). Left of 5: dates (walking together hand in hand), gestures for humans (kisses, hugs, blushes...: the owner: "take
+  animations from eto, kids, touka and kaneki for base, mix it together and adapt it to NPCS": HumanRenderer.Model would apply an
+  EtoPose RigPose via RigPose.transform as EtoModel does, the gesture synced by a new S2C message or a field), and "make the humans as cute
+  looking as possible": skins adapted from the owner's kids' skins (art/children) with other hair and clothes, never altering the
+  owner's files (generated copies only). Optional, from the earlier list: War/Peace same-move cancels.
+- **1.3.74 romance with humans** (protocol 72, unchanged). Pure `HumanPersona`: `CONFESSED` 16 / `PARTNER` 32 (bond flags beside
+  NpcBonds' 1..8), `Answer` YES/DOUBT/NO, `confession(temper, regard, convincing, roll)` (trust KIND .6 .. NERVOUS .15, + regard past CLOSE
+  /100, + .35 pleading; a failed first try is a DOUBT, a failed plea a NO), `confessed(temper, answer)`, `yes(temper)`, `love(temper)`,
+  `hello(temper, regard, partner)`. `HumanTalk`: offered choices per state (`Talk(npc, offered)`): SAY_5 the confession (a ghoul player,
+  regard >= CLOSE, not confessed or partnered, not refused today), SAY_6 the plea (after a DOUBT: `DOUBTED`), SAY_7 ask out (CLOSE, not
+  partnered, a human player or confessed: PARTNER and a chat line), SAY_8 "I love you." (partnered); a NO: regard -8, `REFUSED` for the
+  day. `NpcTests.village`.
+
+# State after 1.3.73
 - **1.3.73 talking to humans** (protocol 72, unchanged). Pure `village/HumanPersona`: `Temper` x8 (title), `temper(seed)`, `name(seed)`
   (24 names), `WARM` 20 / `CLOSE` 60 regard, `liking(temper)` (compliment), `hello(temper, regard)`, `chat`, `about`, `news`,
   `compliment(temper, regard)`, `bye(temper, regard)` (~128 lines). Server `HumanTalk`: right click (`EntityInteract`, cancelled) within

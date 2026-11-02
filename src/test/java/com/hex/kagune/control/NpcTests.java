@@ -798,5 +798,39 @@ public final class NpcTests {
         check(!com.hex.kagune.control.village.HumanPersona.hello(com.hex.kagune.control.village.HumanPersona.Temper.SHY, 0, 1)
             .equals(com.hex.kagune.control.village.HumanPersona.hello(com.hex.kagune.control.village.HumanPersona.Temper.SHY, 90, 1)),
             "a friend is greeted otherwise than a stranger");
+        // 1.3.74: romance: a ghoul's confession first (may take convincing), then together.
+        com.hex.kagune.control.village.HumanPersona.Temper kind = com.hex.kagune.control.village.HumanPersona.Temper.KIND;
+        com.hex.kagune.control.village.HumanPersona.Temper nervous = com.hex.kagune.control.village.HumanPersona.Temper.NERVOUS;
+        int[] yes = new int[2];
+        boolean shape = true;
+        for (int i = 0; i < 1000; i++) {
+            double roll = i / 1000.0;
+            com.hex.kagune.control.village.HumanPersona.Answer first = com.hex.kagune.control.village.HumanPersona.confession(kind, 60, false, roll);
+            com.hex.kagune.control.village.HumanPersona.Answer plea = com.hex.kagune.control.village.HumanPersona.confession(nervous, 60, true, roll);
+            shape &= first != com.hex.kagune.control.village.HumanPersona.Answer.NO && plea != com.hex.kagune.control.village.HumanPersona.Answer.DOUBT;
+            yes[0] += com.hex.kagune.control.village.HumanPersona.confession(kind, 60, false, roll) == com.hex.kagune.control.village.HumanPersona.Answer.YES ? 1 : 0;
+            yes[1] += com.hex.kagune.control.village.HumanPersona.confession(nervous, 60, false, roll) == com.hex.kagune.control.village.HumanPersona.Answer.YES ? 1 : 0;
+        }
+        check(shape, "a first try never a flat no (a doubt: they may plead), a plea never another doubt");
+        check(yes[0] > yes[1] * 2 && yes[1] > 0, "the kind believe a ghoul far sooner than the nervous (" + yes[0] + " to " + yes[1] + " in 1000)");
+        check(com.hex.kagune.control.village.HumanPersona.confession(nervous, 100, true, 0.8) == com.hex.kagune.control.village.HumanPersona.Answer.YES,
+            "close enough and pleading, even the nervous may believe");
+        check(com.hex.kagune.control.village.HumanPersona.CONFESSED != com.hex.kagune.control.village.HumanPersona.PARTNER
+            && (com.hex.kagune.control.village.HumanPersona.CONFESSED & 15) == 0 && (com.hex.kagune.control.village.HumanPersona.PARTNER & 15) == 0,
+            "the romance's flags clear of the bond's own (met, befriended, asked, ally)");
+        boolean romance = true;
+        for (com.hex.kagune.control.village.HumanPersona.Temper temper : com.hex.kagune.control.village.HumanPersona.Temper.values()) {
+            for (int seed = 0; seed < 4; seed++) {
+                for (com.hex.kagune.control.village.HumanPersona.Answer answer : com.hex.kagune.control.village.HumanPersona.Answer.values()) {
+                    String line = com.hex.kagune.control.village.HumanPersona.confessed(temper, answer, seed);
+                    romance &= !line.isBlank() && !banned.matcher(line).find();
+                }
+                for (String line : new String[] {com.hex.kagune.control.village.HumanPersona.yes(temper, seed),
+                    com.hex.kagune.control.village.HumanPersona.love(temper, seed), com.hex.kagune.control.village.HumanPersona.hello(temper, 90, true, seed)}) {
+                    romance &= !line.isBlank() && !banned.matcher(line).find();
+                }
+            }
+        }
+        check(romance, "every temper has its words for a confession (yes, doubt, no), a yes, love, and a partner's hello");
     }
 }

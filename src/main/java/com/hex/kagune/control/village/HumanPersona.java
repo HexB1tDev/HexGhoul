@@ -56,6 +56,23 @@ public final class HumanPersona {
 
     /** What it says as a player starts talking to it ({@code regard}: how warm it is to them). */
     public static String hello(Temper temper, int regard, int seed) {
+        return hello(temper, regard, false, seed);
+    }
+
+    /** As above; 1.3.74: {@code partner}: they are together. */
+    public static String hello(Temper temper, int regard, boolean partner, int seed) {
+        if (partner) {
+            return switch (temper) {
+                case CHEERFUL -> pick(seed, "My love! Come here!", "There's my favourite person in the whole world!");
+                case SHY -> pick(seed, "*lights up* ...Hi, you.", "*takes your hand without a word*");
+                case BOLD -> pick(seed, "There you are. Missed you. Don't let it go to your head.", "Mine. Come here.");
+                case KIND -> pick(seed, "Welcome home, love. Are you hurt? Hungry?", "I saved you some dinner.");
+                case GRUMPY -> pick(seed, "...You're late. I was worried. Not that I'd say so.", "Hmph. Hi. ...Hi.");
+                case FLIRTY -> pick(seed, "Mm, there you are. I was getting lonely.", "Come closer. Closer.");
+                case DREAMY -> pick(seed, "My moon. You came back.", "I dreamt about you. Again.");
+                case NERVOUS -> pick(seed, "You're safe! You're safe. Good. Hi.", "I counted the minutes. Don't laugh.");
+            };
+        }
         boolean close = regard >= CLOSE;
         boolean warm = regard >= WARM;
         return switch (temper) {
@@ -142,6 +159,103 @@ public final class HumanPersona {
             case FLIRTY -> warm ? "Leaving already? I'll miss you." : "Don't be a stranger, stranger.";
             case DREAMY -> warm ? "Until the next pretty sky." : "Bye... safe travels.";
             case NERVOUS -> warm ? "Be careful! Lock your door! ...Bye!" : "B-bye!";
+        };
+    }
+
+    // ---------------------------------------------------------------- 1.3.74: romance
+
+    /** Bond flags (beside {@code NpcBonds}' own): a ghoul player has told it what they are and it took it; they are together. */
+    public static final int CONFESSED = 16;
+    public static final int PARTNER = 32;
+
+    /** How it takes a ghoul's confession: yes, it needs to hear more (a second try, with more chance), or no (try another day). */
+    public enum Answer { YES, DOUBT, NO }
+
+    /**
+     * 1.3.74 (the owner: "if you're a ghoul at some point before starting a relationship you have to admit to your human love interest that
+     * you're a ghoul, may or may not require convincing"): how it takes it, from its temper's trust (the kind and the dreamy most, the
+     * nervous least), how close they are ({@code regard} past {@link #CLOSE} helps), whether this is the player pleading their case
+     * ({@code convincing}: a good deal likelier), against {@code roll} 0..1. A first try that would fail is a doubt (it wants to hear
+     * more), not a no; the plea that fails is a no.
+     */
+    public static Answer confession(Temper temper, int regard, boolean convincing, double roll) {
+        double trust = switch (temper) {
+            case KIND -> 0.6;
+            case DREAMY -> 0.55;
+            case FLIRTY, BOLD -> 0.5;
+            case CHEERFUL -> 0.45;
+            case GRUMPY -> 0.3;
+            case SHY -> 0.25;
+            case NERVOUS -> 0.15;
+        };
+        double chance = trust + Math.max(0.0, regard - CLOSE) / 100.0 + (convincing ? 0.35 : 0.0);
+        if (roll < chance) {
+            return Answer.YES;
+        }
+        return convincing ? Answer.NO : Answer.DOUBT;
+    }
+
+    /** What it says to the confession, by how it takes it. */
+    public static String confessed(Temper temper, Answer answer, int seed) {
+        return switch (answer) {
+            case YES -> switch (temper) {
+                case CHEERFUL -> pick(seed, "...A ghoul. You. And you never hurt me once. Then you're still you to me!", "I'm scared. But I'm more scared of losing you.");
+                case SHY -> pick(seed, "*is quiet for a long time* ...You told me. You trusted me. ...I trust you too.", "I- I'm shaking. But I'm not leaving.");
+                case BOLD -> pick(seed, "Ha. I knew there was something about you. Doesn't change a thing.", "A ghoul. Good. Then nobody will dare touch me.");
+                case KIND -> pick(seed, "Oh, you poor thing. Carrying that alone. You don't have to anymore.", "Thank you for telling me. That must have been so hard.");
+                case GRUMPY -> pick(seed, "...Figures. The one person I like, and you're a ghoul. ...I still like you. Idiot.", "Hmph. Fine. Don't eat the neighbours.");
+                case FLIRTY -> pick(seed, "Dangerous AND gorgeous? You should have led with that.", "Mm. So you could eat me. ...I've had worse offers.");
+                case DREAMY -> pick(seed, "Like the stories... a monster with a gentle heart. I always hoped it was true.", "Then the moon and I both love something strange.");
+                case NERVOUS -> pick(seed, "*breathes very fast* ...Okay. Okay. You've had a hundred chances to hurt me. You never did. Okay.", "I'm going to faint. ...But I'm staying.");
+            };
+            case DOUBT -> switch (temper) {
+                case CHEERFUL -> pick(seed, "Wait, what? That's... that's not funny. Is it true?", "*the smile drops* ...You're joking. You have to be joking.");
+                case SHY -> pick(seed, "*backs away a step* ...Why are you telling me this?", "I... I need to sit down.");
+                case BOLD -> pick(seed, "A ghoul. Prove you won't hurt anyone. Go on.", "You'd better explain that. Right now.");
+                case KIND -> pick(seed, "I... I don't know what to say. Help me understand.", "*takes your hand, then hesitates* ...Tell me more.");
+                case GRUMPY -> pick(seed, "Are you out of your mind? Explain. Slowly.", "...Give me one reason not to scream for the CCG.");
+                case FLIRTY -> pick(seed, "Okay, that's a lot. Even for me. Convince me.", "*laughs nervously* ...You're serious.");
+                case DREAMY -> pick(seed, "A ghoul... like in the stories? The bad ones or the sad ones?", "*stares at you a long time* ...Which story are you?");
+                case NERVOUS -> pick(seed, "*goes white* Y-you're... please don't... please explain.", "*glances at the street, at the CCG* ...Talk. Quickly.");
+            };
+            case NO -> switch (temper) {
+                case CHEERFUL -> "I'm sorry. I can't. Not today. Please go.";
+                case SHY -> "*shakes their head, crying* ...Please leave.";
+                case BOLD -> "No. I'm not doing this. Walk away.";
+                case KIND -> "I'm sorry. I need time. Please give me time.";
+                case GRUMPY -> "Get out. Before I change my mind about the CCG.";
+                case FLIRTY -> "That's... too much. Even for me. Not today.";
+                case DREAMY -> "The sad stories end badly. I'm sorry. Not today.";
+                case NERVOUS -> "*backs away, shaking* G-go away. Please.";
+            };
+        };
+    }
+
+    /** Its yes to being asked out (it is close to them and, if they are a ghoul, knows). */
+    public static String yes(Temper temper, int seed) {
+        return switch (temper) {
+            case CHEERFUL -> pick(seed, "YES! I mean, yes. Yes!", "I thought you'd never ask!");
+            case SHY -> pick(seed, "*covers their face* ...Yes. Yes, please.", "Me? ...Okay. Yes.");
+            case BOLD -> pick(seed, "Finally. Yes. Now kiss me before I change my mind.", "About time. Yes.");
+            case KIND -> pick(seed, "I'd love that more than anything.", "Yes. I'll take care of you. I promise.");
+            case GRUMPY -> pick(seed, "...Fine. Yes. Don't make me regret it.", "Hmph. Took you long enough. Yes.");
+            case FLIRTY -> pick(seed, "I was starting to think I'd have to ask you.", "Mm. Yes. You're mine now.");
+            case DREAMY -> pick(seed, "Yes. I'll write a poem about today.", "Like a story. Yes.");
+            case NERVOUS -> pick(seed, "Y-yes! Oh no, I said that too loud. Yes.", "Really? Me? Yes. Yes!");
+        };
+    }
+
+    /** What its partner hears ("I love you."). */
+    public static String love(Temper temper, int seed) {
+        return switch (temper) {
+            case CHEERFUL -> pick(seed, "I love you too! So, so much!", "*throws their arms around you* Me too!");
+            case SHY -> pick(seed, "*whispers* ...I love you too.", "*hides their face in your shoulder* ...Me too.");
+            case BOLD -> pick(seed, "Obviously. I love you too.", "Say it louder. ...I love you too.");
+            case KIND -> pick(seed, "I love you too. Always. Whatever you are.", "And I love you. Come home safe tonight.");
+            case GRUMPY -> pick(seed, "...Yeah. Me too. Don't make a thing of it.", "*grumbles* ...Love you too.");
+            case FLIRTY -> pick(seed, "Prove it. *grins* ...I love you too.", "Mm, say it again. I love you too.");
+            case DREAMY -> pick(seed, "You're my favourite story.", "I love you more than the moon. Don't tell the moon.");
+            case NERVOUS -> pick(seed, "I love you too! Please be careful out there!", "Me too. So much it scares me. In a good way.");
         };
     }
 
