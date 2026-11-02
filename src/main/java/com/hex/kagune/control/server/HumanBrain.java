@@ -64,6 +64,7 @@ public final class HumanBrain {
             human.dress(look);
             mind.nextWander = now + 40 + human.m_217043_().m_188503_(80);
         }
+        VillagePlace.Place place = VillagePlace.of(human); // 1.3.71: one of the Brick Village's people (null: anyone else)
         Danger danger = danger(human, level, mind, now);
         if (danger != null) {
             mind.shakenUntil = now + HumanRules.SHAKEN;
@@ -86,13 +87,17 @@ public final class HumanBrain {
                         human.m_21573_().m_26573_();
                     }
                 } else {
-                    flee(human, danger.body(), HumanRules.pace(danger.sight()), danger.sight().terror() ? 14.0 : 10.0);
+                    flee(human, danger.body(), HumanRules.pace(danger.sight()), danger.sight().terror() ? 14.0 : 10.0, place);
                 }
             }
             return;
         }
         mind.ranFrom = 0;
         human.scared(now < mind.shakenUntil);
+        if (place != null) {
+            village(human, mind, place, level, now);
+            return;
+        }
         if (now >= mind.nextWander && now >= mind.shakenUntil) {
             mind.nextWander = now + 120 + human.m_217043_().m_188503_(160);
             double angle = human.m_217043_().m_188500_() * Math.PI * 2.0;
@@ -195,10 +200,48 @@ public final class HumanBrain {
     }
 
     /** Off, straight away from {@code danger} if it can, else turned a little either way, then further round. */
-    static void flee(HumanNpc human, LivingEntity danger, double pace, double length) {
+    static void flee(HumanNpc human, LivingEntity danger, double pace, double length, VillagePlace.Place place) {
         for (double turn : new double[] {0.0, 0.6, -0.6, 1.2, -1.2, 1.8, -1.8}) {
             double[] to = HumanRules.fleeStep(human.m_20185_(), human.m_20189_(), danger.m_20185_(), danger.m_20189_(), turn, length);
+            if (place != null) {
+                to = place.clamp(to[0], to[1], 2.0); // 1.3.71: never past the village's perimeter, even running
+            }
             if (human.m_21573_().m_26519_(to[0], human.m_20186_(), to[1], pace)) {
+                return;
+            }
+        }
+    }
+
+    /**
+     * 1.3.71: a Brick Village human's day ({@code VillageRules}): by night it goes home (where it was placed, inside its house) and stays;
+     * by day, now and then, it walks to a spot on the streets near it; never past the perimeter.
+     */
+    static void village(HumanNpc human, Mind mind, VillagePlace.Place place, ServerLevel level, long now) {
+        if (com.hex.kagune.control.npc.NpcRules.night(level.m_46468_())) {
+            double dx = place.homeX() + 0.5 - human.m_20185_();
+            double dz = place.homeZ() + 0.5 - human.m_20189_();
+            if (dx * dx + dz * dz > 1.5 * 1.5) {
+                if (now % 20L == 0L || human.m_21573_().m_26571_()) {
+                    human.m_21573_().m_26519_(place.homeX() + 0.5, place.homeY(), place.homeZ() + 0.5, com.hex.kagune.control.village.VillageRules.HOMEWARD);
+                }
+            } else {
+                human.m_21573_().m_26573_();
+            }
+            return;
+        }
+        if (now < mind.nextWander || now < mind.shakenUntil || !human.m_21573_().m_26571_()) {
+            return;
+        }
+        mind.nextWander = now + com.hex.kagune.control.village.VillageRules.STROLL_EVERY
+            + human.m_217043_().m_188503_(com.hex.kagune.control.village.VillageRules.STROLL_MORE);
+        int[][] streets = com.hex.kagune.control.village.BrickVillage.STREETS;
+        double reach = com.hex.kagune.control.village.VillageRules.STROLL_REACH;
+        for (int tries = 0; tries < 12; tries++) {
+            double[] to = place.world(streets[human.m_217043_().m_188503_(streets.length)]);
+            double dx = to[0] - human.m_20185_();
+            double dz = to[2] - human.m_20189_();
+            if (dx * dx + dz * dz <= reach * reach && place.inside(to[0], to[2])) {
+                human.m_21573_().m_26519_(to[0], to[1], to[2], com.hex.kagune.control.village.VillageRules.STROLL);
                 return;
             }
         }

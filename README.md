@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.71 (HexGhoul): the Brick Village spawns in plains, with its people living in it (testing)
+
+See `.github/release-notes-1.3.71.md`.
+
 ## 1.3.70 (HexGhoul): CCG ranks, they attack only what shows itself, and protecting humans comes first (testing)
 
 See `.github/release-notes-1.3.70.md`.

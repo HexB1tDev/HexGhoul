@@ -1,8 +1,28 @@
-# START HERE (state after 1.3.70)
+# START HERE (state after 1.3.71)
 
 - **Next session:** read `docs/handoff/next-ai-1.3.67.md` first (the owner's last update and its plan, in order), then
-  `docs/handoff/next-ai-1.3.60.md` (house rules). Done of that plan: 1 (1.3.68), 2 (1.3.69), 3 (1.3.70; also the owner's later "humans run
-  to the CCG, who defend them first"). Next: 4, the village.
+  `docs/handoff/next-ai-1.3.60.md` (house rules). Done of that plan: 1 (1.3.68), 2 (1.3.69), 3 (1.3.70), 4 the village itself and its
+  people's homes, streets and patrol (1.3.71). Next: the village's trading in the streets and general talk, then 5 (personalities,
+  romance, the ghoul's confession, cute looks).
+- **1.3.71 the Brick Village** (protocol 72, unchanged). `tools/village_structure.py` (uses `library_structure.py`'s NBT) turns
+  `art/village/Brick_Village-from-abfielder.litematic` (1.21.8, author PaaskeVillads) into `data/hexkagune/structures/brick_village.nbt`
+  (99x41x97; the template's y 0 is the walking level: the ground is the world's; every cell to y 12, above it only solid or roofed;
+  SWAPS for 1.21-only blocks; block entities as 1.20.1 reads them; armour stands as ArmorItems) and writes
+  `control/village/BrickVillage.java` (do not edit by hand): `PERIMETER` 51, `STREETS` (open-sky ground every 4th block, y 0..1),
+  `ROUTE` (16 street spots 14..34 out, by angle, ~20 degrees apart), `HOMES` (inside each street door: a flood fill on the inner side
+  stays roofed), all from the template's middle (49, 0, 48). The template holds 8 `hexkagune:human` (at the homes) and 2
+  `hexkagune:ccg_investigator` (streets), yaw 0, PersistenceRequired, `ForgeData.HexVillage` {CentreX/Y/Z: to the middle, Home}.
+  Worldgen: `structure/brick_village.json` (jigsaw, beard_thin, start_height absolute 0 on WORLD_SURFACE_WG), its pool, its set
+  (random_spread 44/18, salt 1371206533), `tags/worldgen/biome/has_structure/brick_village.json` (plains, sunflower_plains).
+  Pure `village/VillageRules`: `turns(yaw)` (a yaw-0 body turned with the template), `turn/unturn` (CLOCKWISE_90: x, z -> -z, x),
+  `inside`, `clamp`, `next`, `nearest`, paces and times. Server `VillagePlace.of(mob)` (first tick: the turn from its yaw, the middle in the
+  world and its home = where it stands, kept as Turns/MidX..Z/HomeX..Z in HexVillage) -> `Place.world(spot)`, `inside`, `clamp`, `local`.
+  `HumanBrain`: a village human: `village(...)` (night: home and still; day: a street spot within 22 every 140..340 ticks); fleeing
+  clamped inside the perimeter. `AgentBrain`: a village investigator: `wake` makes no partner, `lost` never removes it, `patrol` ->
+  `village(...)` (`Mind.waypoint` on `ROUTE`, joined at the nearest, one way or the other by its id). `NpcTests.village`.
+
+# State after 1.3.70
+
 - **1.3.70 CCG ranks and protection** (protocol 72, unchanged). Pure `AgentRules.Rank` (RANK_3 30, RANK_2 25, RANK_1 20, FIRST_CLASS 14,
   ASSOCIATE_SPECIAL 8, SPECIAL 3 in 100; health 36..124, speed 0.32..0.395; `roll(r)`, `of(leader, a, b)` the better of two for the
   leader, `byOrdinal`), `AgentRules.DEFEND` 24. `AgentBrain`: `Mind.rank`, saved as `RANK` (`CcgAgent.KEY + "Rank"`) in its persistent data,

@@ -36,6 +36,7 @@ public final class NpcTests {
     }
 
     public static void main(String[] args) {
+        village();
         identity();
         blades();
         bubbles();
@@ -686,5 +687,52 @@ public final class NpcTests {
         double r = b.rim();
         return new double[] {b.x() + (b.x0() - r + place.shift()) * k, b.y() + (-b.y1() - r + place.lift()) * k, b.x() + (b.x1() + r + place.shift()) * k,
             b.y() + (-b.y0() + r + place.lift()) * k};
+    }
+
+    /** 1.3.71: the Brick Village: its map, and its people's sense of where they are once it is placed turned. */
+    static void village() {
+        int[][] streets = com.hex.kagune.control.village.BrickVillage.STREETS;
+        int[][] route = com.hex.kagune.control.village.BrickVillage.ROUTE;
+        int[][] homes = com.hex.kagune.control.village.BrickVillage.HOMES;
+        int perimeter = com.hex.kagune.control.village.BrickVillage.PERIMETER;
+        check(streets.length > 100 && route.length >= 8 && homes.length >= 6, "a village of streets, a patrol loop and homes ("
+            + streets.length + ", " + route.length + ", " + homes.length + ")");
+        boolean in = true;
+        for (int[][] set : new int[][][] {streets, route, homes}) {
+            for (int[] p : set) {
+                in &= com.hex.kagune.control.village.VillageRules.inside(p[0], p[2], perimeter) && p.length == 3;
+            }
+        }
+        check(in, "every street spot, patrol spot and home within the perimeter");
+        boolean ground = true;
+        for (int[] p : route) {
+            ground &= p[1] >= 0 && p[1] <= 1;
+        }
+        check(ground, "the patrol stays on the ground (never a roof)");
+        for (int i = 0; i < route.length; i++) {
+            int[] a = route[i];
+            int[] b = route[(i + 1) % route.length];
+            check(Math.hypot(a[0] - b[0], a[2] - b[2]) < 24.0, "the patrol's steps are short (" + i + ")");
+        }
+        // Turns: as the game turns a template (CLOCKWISE_90: x, z to -z, x), and a yaw-0 body's yaw with it (+90 a quarter turn).
+        check(com.hex.kagune.control.village.VillageRules.turns(0.0F) == 0 && com.hex.kagune.control.village.VillageRules.turns(90.0F) == 1
+            && com.hex.kagune.control.village.VillageRules.turns(180.0F) == 2 && com.hex.kagune.control.village.VillageRules.turns(-90.0F) == 3
+            && com.hex.kagune.control.village.VillageRules.turns(269.0F) == 3 && com.hex.kagune.control.village.VillageRules.turns(-180.0F) == 2,
+            "the village's turn read off a body placed facing south");
+        int[] q = com.hex.kagune.control.village.VillageRules.turn(3, 5, 1);
+        check(q[0] == -5 && q[1] == 3, "a quarter turn clockwise: x, z to -z, x");
+        boolean back = true;
+        for (int t = 0; t < 4; t++) {
+            int[] r = com.hex.kagune.control.village.VillageRules.unturn(com.hex.kagune.control.village.VillageRules.turn(7, -2, t)[0],
+                com.hex.kagune.control.village.VillageRules.turn(7, -2, t)[1], t);
+            back &= r[0] == 7 && r[1] == -2;
+        }
+        check(back, "turned and turned back, the same spot");
+        double[] c = com.hex.kagune.control.village.VillageRules.clamp(200.0, -3.0, perimeter, 2.0);
+        check(c[0] == perimeter - 2.0 && c[1] == -3.0 && !com.hex.kagune.control.village.VillageRules.inside(perimeter + 1.0, 0.0, perimeter),
+            "running, never past the perimeter");
+        check(com.hex.kagune.control.village.VillageRules.next(route.length - 1, route.length, true) == 0
+            && com.hex.kagune.control.village.VillageRules.next(0, route.length, false) == route.length - 1
+            && com.hex.kagune.control.village.VillageRules.nearest(route, route[3][0], route[3][2]) == 3, "the loop walked round, either way");
     }
 }

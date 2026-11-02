@@ -104,6 +104,8 @@ public final class AgentBrain {
          * for the pair) whether their sides have swapped since it began, and since when the prey has been turned on the one behind.
          */
         long fightFrom = Long.MIN_VALUE;
+        /** 1.3.71: the village patrol's next waypoint on its loop (-1: to be joined). */
+        int waypoint = -1;
         boolean rounding;
         boolean swapped;
         long turnedSince = Long.MIN_VALUE;
@@ -160,6 +162,12 @@ public final class AgentBrain {
             mind.kind = Quinque.values()[Math.floorMod((int)(packed >> 8 & 0xFF), Quinque.values().length)];
             mind.leader = (packed >> 16 & 1L) != 0L;
             mind.partner = saved.m_128403_(PARTNER) ? saved.m_128342_(PARTNER) : null;
+        } else if (saved.m_128441_(VillagePlace.KEY)) {
+            // 1.3.71: one of the Brick Village's patrol: someone of its own, walking its loop alone (no partner turns up for it).
+            mind.look = (int)Math.floor(agent.m_217043_().m_188500_() * AgentRules.LOOKS.length);
+            mind.kind = AgentRules.kind(agent.m_217043_().m_188500_());
+            mind.leader = true;
+            save(agent, mind.look, mind.kind, true, null);
         } else {
             mind.look = (int)Math.floor(agent.m_217043_().m_188500_() * AgentRules.LOOKS.length);
             mind.kind = AgentRules.kind(agent.m_217043_().m_188500_());
@@ -264,8 +272,8 @@ public final class AgentBrain {
             return false;
         }
         mind.leader = true;
-        if (mind.prey != 0) {
-            return false;
+        if (mind.prey != 0 || agent.getPersistentData().m_128441_(VillagePlace.KEY)) {
+            return false; // (1.3.71: the village's patrol never leaves it)
         }
         for (ServerPlayer player : level.m_6907_()) {
             if (player.m_20280_(agent) <= 48.0 * 48.0) {
@@ -514,6 +522,11 @@ public final class AgentBrain {
             mind.open = false;
         }
         mind.shots = 0;
+        VillagePlace.Place place = VillagePlace.of(agent);
+        if (place != null) {
+            village(agent, mind, place, now);
+            return;
+        }
         if (!mind.leader && partner != null) {
             // At its leader's side (a step to its right), catching up when left behind.
             double gap = Math.sqrt(agent.m_20280_(partner));
@@ -541,6 +554,29 @@ public final class AgentBrain {
         int y = level.m_6924_(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, (int)Math.floor(x), (int)Math.floor(z));
         if (Math.abs(y - agent.m_20186_()) <= 6.0) {
             agent.m_21573_().m_26519_(x, y, z, AgentRules.PATROL_PACE);
+        }
+    }
+
+    /**
+     * 1.3.71: the village's patrol (the owner: "CCG agents often patrol the streets in an orderly maner, never going into the houses"): it
+     * walks the loop of street spots round the village ({@code BrickVillage.ROUTE}) in order, joining it at the nearest spot; after a
+     * fight, back to it.
+     */
+    private static void village(CcgAgent agent, Mind mind, VillagePlace.Place place, long now) {
+        int[][] route = com.hex.kagune.control.village.BrickVillage.ROUTE;
+        if (mind.waypoint < 0 || mind.waypoint >= route.length) {
+            double[] local = place.local(agent.m_20185_(), agent.m_20189_());
+            mind.waypoint = com.hex.kagune.control.village.VillageRules.nearest(route, local[0], local[1]);
+        }
+        double[] to = place.world(route[mind.waypoint]);
+        double dx = to[0] - agent.m_20185_();
+        double dz = to[2] - agent.m_20189_();
+        if (dx * dx + dz * dz <= com.hex.kagune.control.village.VillageRules.REACHED * com.hex.kagune.control.village.VillageRules.REACHED) {
+            mind.waypoint = com.hex.kagune.control.village.VillageRules.next(mind.waypoint, route.length, Math.floorMod(agent.m_19879_(), 2) == 0);
+            to = place.world(route[mind.waypoint]);
+        }
+        if (now % 20L == 0L || agent.m_21573_().m_26571_()) {
+            agent.m_21573_().m_26519_(to[0], to[1], to[2], com.hex.kagune.control.village.VillageRules.PATROL);
         }
     }
 
