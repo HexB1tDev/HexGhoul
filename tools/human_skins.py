@@ -25,24 +25,28 @@ PICKS = [("daughter_21", 150, 1.0), ("daughter_08", 220, 1.05), ("daughter_18", 
          ("son_04", 200, 0.95), ("son_08", 120, 1.0), ("son_12", 260, 0.9), ("son_06", 330, 1.0), ("son_13", 60, 1.05)]
 
 
-def skin_like(h, s, v, tone):
-    """Skin (its own tone, lit or shaded) and a blush on it: kept as they are; hair, clothes and eyes are not."""
+def skin_like(h, s, v, tone, face):
+    """Skin (its own tone, lit or shaded) and a blush on it: kept as they are; hair, clothes and eyes are not. On the face (the head's
+    own layer) a wider match: its shading strays further from the tone, and a turned cheek shows at once."""
     th, ts, tv = tone
     dh = min(abs(h - th), 1.0 - abs(h - th)) * 360.0
     blush = (h * 360.0 >= 340.0 or h * 360.0 <= 12.0) and abs(s - ts) <= 0.25 and v >= tv * 0.7
+    if face:
+        return dh <= 24.0 and abs(s - ts) <= 0.24 and v >= tv * 0.4 or blush and dh <= 30.0
     return dh <= 14.0 and abs(s - ts) <= 0.16 and v >= tv * 0.45 or blush and dh <= 30.0
 
 
 def turn(img, degrees, light, tone):
     px = img.load()
     w, h = img.size
+    k = w // 64
     for y in range(h):
         for x in range(w):
             r, g, b, a = px[x, y]
             if a == 0:
                 continue
             hh, s, v = colorsys.rgb_to_hsv(r / 255.0, g / 255.0, b / 255.0)
-            if s < 0.12 or skin_like(hh, s, v, tone):
+            if s < 0.12 or skin_like(hh, s, v, tone, x < 32 * k and y < 16 * k):
                 continue  # whites, blacks and greys, and skin, kept
             hh = (hh + degrees / 360.0) % 1.0
             v = min(1.0, v * light)

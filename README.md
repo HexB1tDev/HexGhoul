@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.75 (HexGhoul): the villagers' own cute skins (testing)
+
+See `.github/release-notes-1.3.75.md`.
+
 ## 1.3.74 (HexGhoul): romance with the villagers, and a ghoul must confess first (testing)
 
 See `.github/release-notes-1.3.74.md`.

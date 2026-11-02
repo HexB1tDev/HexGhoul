@@ -691,6 +691,19 @@ public final class NpcTests {
 
     /** 1.3.71: the Brick Village: its map, and its people's sense of where they are once it is placed turned. */
     static void village() {
+        // 1.3.75: the villagers' own skins exist, are painted for a player's body, and every new look maps to one of them.
+        boolean skins = com.hex.kagune.control.village.HumanSkins.ALL.length >= 8;
+        for (com.hex.kagune.control.village.HumanSkins.Skin s : com.hex.kagune.control.village.HumanSkins.ALL) {
+            skins &= new java.io.File("src/main/resources/assets/hexkagune/" + s.path()).isFile();
+        }
+        for (int roll = -50; roll < 50; roll++) {
+            int look = com.hex.kagune.control.npc.HumanRules.pick(roll * 7919);
+            skins &= look >= com.hex.kagune.control.npc.HumanRules.CUTE && "hexkagune".equals(com.hex.kagune.control.npc.HumanRules.namespace(look))
+                && com.hex.kagune.control.npc.HumanRules.skin(look).startsWith("textures/entity/human/human_");
+        }
+        skins &= "minecraft".equals(com.hex.kagune.control.npc.HumanRules.namespace(3))
+            && com.hex.kagune.control.npc.HumanRules.skin(3).startsWith("textures/entity/player/");
+        check(skins, "the villagers' own skins: files there, new looks map to them, old looks keep vanilla's");
         int[][] streets = com.hex.kagune.control.village.BrickVillage.STREETS;
         int[][] route = com.hex.kagune.control.village.BrickVillage.ROUTE;
         int[][] homes = com.hex.kagune.control.village.BrickVillage.HOMES;

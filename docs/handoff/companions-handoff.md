@@ -1,20 +1,22 @@
-# WIP after 1.3.74 (stopped at 97% of the 5-hour usage: RULE 1)
+# START HERE (state after 1.3.75)
 
-- **1.3.75 WIP (not built): the villagers' own cute skins.** Committed as WIP; the quick check (`python3 tools/quick_check.py NpcTests
-  KitchenTests`) passed, the full `python3 build.py` has NOT been run, `build.py`/`KagunePatch` still say 1.3.74. To finish: bump both to
-  1.3.75, write `.github/release-notes-1.3.75.md` and the README entry, a top section here, run the full build to EXIT 0, commit
-  "1.3.75: ...", push. What it is: `tools/human_skins.py` makes `assets/hexkagune/textures/entity/human/human_00..09.png` from ten of the
-  children's processed skins (`textures/entity/child/skins`, never the owner's originals: daughter_21, 08, 18, 19, 13, son_04, 08, 12, 06,
-  13), hair, clothes and eyes turned in hue (each its own turn and lightness), skin kept (matched against its ChildSkins tone, a blush
-  kept), whites, blacks and greys kept; writes `village/HumanSkins.java` (path, girl, slim). `HumanRules.CUTE` 1000, `pick(roll)`,
-  `namespace(look)`, `skin`/`slim` for looks >= CUTE; `HumanBrain` gives a new human `HumanRules.pick` (old ones keep their vanilla look);
-  `HumanRenderer` maps looks >= CUTE to the mod's textures; `NpcTalkClient` uses `HumanRules.namespace` for a human's face. Honest look:
-  most read clearly different from the children (hair and clothes), #1 (from daughter_08) and #3 (daughter_19) only a little (mostly grey
-  and white). Not previewed on a model; untested in game. A test is still to add (HumanSkins paths exist, looks >= CUTE map to them).
-- Then left of the owner's update: humans' gestures (kisses, hugs, blushes: from Eto's, the kids', Touka's and Ken's animations), dates
-  (walking together hand in hand inside the village). The prompt for the next session: `docs/handoff/next-session-prompt.md`.
+- The owner dropped RULE 1 in the session that finished 1.3.75 ("ignore the 97% rule, I changed my mind"); `CLAUDE.md` still holds it
+  until they say otherwise for good. Commit and push often anyway.
+- **Next:** what is left of the owner's update (`docs/handoff/next-ai-1.3.67.md`, plan 5): humans' gestures (kisses, hugs, blushes: from
+  Eto's, the kids', Touka's and Ken's animations), then dates (walking together hand in hand, inside the village).
+- **1.3.75 the villagers' own skins** (protocol 72, unchanged). `tools/human_skins.py` makes `assets/hexkagune/textures/entity/human/
+  human_00..09.png` from ten of the children's processed skins (`textures/entity/child/skins`, never the owner's originals: daughter_21,
+  08, 18, 19, 13, son_04, 08, 12, 06, 13), hair, clothes and eyes turned in hue (each its own turn and lightness), skin kept (matched
+  against its ChildSkins tone: within 14 degrees, saturation .16, a blush kept; on the head's own layer a wider match, 24 degrees and .24,
+  as its shading strays: without it #0's cheeks went teal), whites, blacks and greys kept; writes `village/HumanSkins.java` (path, girl,
+  slim). `HumanRules.CUTE` 1000, `pick(roll)`, `namespace(look)`, `skin`/`slim` for looks >= CUTE; `HumanBrain` gives a new human
+  `HumanRules.pick` (old ones keep their vanilla look, saved); `HumanRenderer` maps looks >= CUTE to the mod's textures (HD skins: 64 to
+  1024 px, the model's UVs are fractions); `NpcTalkClient` uses `HumanRules.namespace` for a human's face. Honest look (a flat front view,
+  not a model): most read clearly different from the children (hair and clothes); #1 (from daughter_08) and #3 (daughter_19) only a little
+  (mostly grey and white). `NpcTests.village` (files there, new looks map to them, old ones to vanilla's).
 
-# START HERE (state after 1.3.74)
+# State after 1.3.74
+
 
 - **RULE 1 (the owner's, every session): at 97% of the 5-hour or weekly usage, stop, save, hand off, give a prompt. See `CLAUDE.md`.**
 - **Next session:** read `docs/handoff/next-ai-1.3.67.md` first (the owner's last update and its plan, in order), then
