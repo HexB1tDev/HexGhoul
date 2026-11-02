@@ -75,8 +75,11 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
         return view == null ? null : ChildSkins.pick(view.genome());
     }
 
+    /** 2.0 (lag): each texture's location made once, not several times a frame for every child drawn. */
+    private static final java.util.Map<String, ResourceLocation> TEXTURES = new java.util.HashMap<>();
+
     private static ResourceLocation texture(String name) {
-        return Objects.requireNonNull(ResourceLocation.m_214293_("hexkagune", "textures/entity/child/skins/" + name + ".png"));
+        return TEXTURES.computeIfAbsent(name, n -> Objects.requireNonNull(ResourceLocation.m_214293_("hexkagune", "textures/entity/child/skins/" + n + ".png")));
     }
 
     /**

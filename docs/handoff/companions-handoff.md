@@ -1,7 +1,12 @@
-# START HERE (state after 1.3.81)
+# START HERE (state after 1.3.82)
 
 - The owner's last request (Release 2.0): more villagers per village with unique looks, a bug/lag pass, an animation pass, mastery/forms
-  as resistance not health, then release 2.0. Done so far: 1.3.80 (the tank), 1.3.81 (villagers).
+  as resistance not health, then release 2.0. Done so far: 1.3.80 (the tank), 1.3.81 (villagers), 1.3.82 (bug/lag pass).
+- **1.3.82 bug/lag pass** (protocol 72, unchanged). Read every tick handler's gate (67: all phase-gated, most state- or modulo-gated),
+  the wide entity scans (the 128-block ally count only on a talk; agents' and ghouls' prey scans every 10 ticks, filtered before the
+  sight ray), the villager tick end to end. Fixed: a villager walking up for a kiss/hug never leaves its village for it (at the edge it
+  does it there: `place.inside(partner)`); `ChildRenderer.texture` caches its ResourceLocations (`TEXTURES`; it made several a frame per
+  child). 1.3.81 already throttled calm villagers' danger scans (`LOOKS`). Nothing else found by reading; no profiler run (no game here).
 - **1.3.81 villagers** (protocol 72, unchanged). `tools/village_structure.py`: two humans per home (Home = k and 8 + k: the slot).
   `tools/human_skins.py`: the 10 old looks first (unchanged), then two turns of every ChildBlinks skin (`MORE_TURNS`), mid greys and dull
   colours (s < 0.3, v .25-.8, not skin) tinted at sat .42 for the new ones, kept if >= 30% of the skin changed (`DIFFERENT`), `DROP`ped by

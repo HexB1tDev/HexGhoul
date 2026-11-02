@@ -303,7 +303,8 @@ public final class HumanBrain {
             net.minecraft.world.entity.Entity to = mind.with == null ? null : level.m_8791_(mind.with);
             if (!(to instanceof ServerPlayer partner) || !partner.m_6084_() || partner.m_20280_(human) > 12.0 * 12.0) {
                 mind.pending = 0;
-            } else if (partner.m_20280_(human) <= HumanTalk.CLOSE * HumanTalk.CLOSE || now >= mind.pendingUntil) {
+            } else if (partner.m_20280_(human) <= HumanTalk.CLOSE * HumanTalk.CLOSE || now >= mind.pendingUntil
+                || place != null && !place.inside(partner.m_20185_(), partner.m_20189_())) { // 2.0: never out of its village for it
                 human.m_21573_().m_26573_();
                 face(human, partner);
                 human.m_21563_().m_24960_(partner, 30.0F, 30.0F);
