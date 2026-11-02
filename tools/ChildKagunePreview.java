@@ -18,7 +18,9 @@ import javax.imageio.ImageIO;
 /**
  * 1.3.43 off-game: a ghoul child of a Rinkaku father and an Ukaku mother (Touka) with its kagune out, at its real size: one of the owner's
  * child skins (read only, scaled down to 64 x 64 in memory, its kakugan layers laid over as the game draws them), the body and the
- * kagune drawn at {@link ChildKaguneRules#scale} about its feet, the two tails at {@link ChildKaguneRules#tailMastery}, the one wing at
+ * kagune drawn at {@link ChildKaguneRules#scale} about its feet; 1.3.44: its one Rinkaku tentacle at rest ({@link
+ * ChildKaguneRules#tentacleRest}) and mid-lash, through {@code ArtPreview.rinkaku} (the previews' stand-in for the original's tube: the
+ * game draws it with the original's own), the one wing at
  * {@link ChildKaguneRules#wingMastery} ({@link WingRules#child}), recoloured as the game recolours them ({@link KaguneTint#recolour}),
  * Touka beside it for scale. Usage after a build: {@code javac -cp build/classes -sourcepath tools -d <cls> tools/ChildKagunePreview.java},
  * then {@code java -cp build/classes:<cls> ChildKagunePreview <out-dir>}.
@@ -56,12 +58,12 @@ public final class ChildKagunePreview {
                 // The child (its kakugan open: it is fighting), then Touka a little way off to its left, as tall as she is.
                 tris.addAll(placed(body(still, kid, false), s, 0.0, 0.0));
                 tris.addAll(placed(body(still, touka, true), toukaSize, -1.9, 0.0));
-                // Its two tails, as the game draws them at its size, in its colour.
+                // 1.3.44: its one Rinkaku tentacle at rest (ChildKaguneRules.tentacleRest: the first tentacle's curl), as thick as a
+                // Rinkaku player's first, at its size, in its colour and its veins (ArtPreview's stand-in for the original's tube).
                 double[] rigEye = {eye[0] / s, eye[1] / s, eye[2] / s};
-                for (WingPreview.Tri t : GraftPreview.whole(still, GraftStage.TRANSPLANT, ChildKaguneRules.tailMastery(stage), GraftMove.NONE, 0.0, null, 1.0,
-                    rigEye)) {
-                    tris.add(tinted(scaled(t, s, 0.0, 0.0), colour));
-                }
+                double length = GraftStage.TRANSPLANT.length(ChildKaguneRules.tailMastery(stage));
+                double[][] rest = ChildKaguneRules.tentacleRest(length, 40.0, 77, 12);
+                tris.addAll(tentacle(rest, s, colour));
                 // Its one wing, on the right (KaguneGenes.side picks it per child), at its size, in its colour.
                 WingRig.Input wing = WingRules.child(ChildKaguneRules.wingMastery(stage), KaguneGenes.wings(KaguneGenes.TAILS | KaguneGenes.WING), 1, 1.0F,
                     40.0, false, 0.0F, WingRig.FORWARD, 0.0F, 0.0F, 1.0F);
@@ -79,8 +81,47 @@ public final class ChildKagunePreview {
                 shots.add(new ArtPreview.Shot(row[2] + ": " + names[v], null, ArtPreview.NO_WINGS, eye, views[v][1], tris));
             }
         }
+        // Mid-lash (the rising lash at its beat, then the guillotine's), from in front and to its right: the move's path on its pelvis.
+        for (Object[] row : rows) {
+            ChildStage stage = (ChildStage)row[0];
+            int colour = (Integer)row[1];
+            double s = ChildKaguneRules.scale(stage);
+            double length = GraftStage.TRANSPLANT.length(ChildKaguneRules.tailMastery(stage));
+            for (GraftMove move : new GraftMove[] {GraftMove.LASH_1, GraftMove.LASH_3, GraftMove.LASH_5}) {
+                GraftMove.Beat beat = move.beats(ChildKaguneRules.TENTACLES).get(0);
+                // A sweep is shown halfway round (it lands from its first tick to its last); anything else the tick it lands.
+                double at = beat.kind() == GraftMove.Kind.SWEEP ? (beat.land() + beat.end()) / 2.0 : beat.land();
+                double[] aim = {0.0, 0.9 / s, 2.4 / s};
+                com.hex.kagune.control.graft.GraftRig.Pose lash = com.hex.kagune.control.graft.GraftRig.pose(new com.hex.kagune.control.graft.GraftRig.Input(
+                    GraftStage.TRANSPLANT, ChildKaguneRules.TENTACLES, 0, length, new com.hex.kagune.control.graft.GraftRig.Body(0.0, false, 0.0, true, 0.0, 0.0,
+                    40.0), move, at, aim, null, null, 0.3));
+                double[] from = com.hex.kagune.control.graft.GraftRig.root(GraftStage.TRANSPLANT, 1, 0, false);
+                double[] to = ChildKaguneRules.TENTACLE_ROOT;
+                double[][] points = new double[lash.points().length][];
+                for (int i = 0; i < points.length; i++) {
+                    double f = 1.0 - i / (double)Math.max(1, points.length - 1);
+                    double[] p = lash.points()[i];
+                    points[i] = new double[] {p[0] + (to[0] - from[0]) * f, p[1] + (to[1] - from[1]) * f, p[2] + (to[2] - from[2]) * f};
+                }
+                List<WingPreview.Tri> tris = new ArrayList<>(placed(body(new RigPose(), kid, false), s, 0.0, 0.0));
+                tris.addAll(tentacle(points, s, colour));
+                tris.addAll(PalePreview.dummyAt(new double[] {0.0, 0.0, 2.4}));
+                double[] eye = {4.6, 1.6, 2.6};
+                shots.add(new ArtPreview.Shot(stage.name().toLowerCase() + ": " + move.name().toLowerCase() + " (tick " + (int)at + ")", null,
+                    ArtPreview.NO_WINGS, eye, new double[] {0.0, 0.9, 1.0}, tris));
+            }
+        }
         ArtPreview.sheet(new File(out, "child-rinkaku-ukaku.png"),
-            "A Rinkaku father and Touka's child: two tails and one wing, at its real size (Touka beside it)", shots, 3, 460, 400);
+            "A Rinkaku father and Touka's child: one Rinkaku tentacle and one wing, at its real size (Touka beside it); then its lashes", shots, 3, 460, 400);
+    }
+
+    /** 1.3.44: its tentacle through {@code rig} (a grown body's rig space) at {@code scale}, as thick as a Rinkaku player's first, in {@code colour}. */
+    static List<WingPreview.Tri> tentacle(double[][] rig, double scale, int colour) {
+        double[][] placed = new double[rig.length][];
+        for (int i = 0; i < rig.length; i++) {
+            placed[i] = new double[] {rig[i][0] * scale, rig[i][1] * scale, rig[i][2] * scale};
+        }
+        return ArtPreview.rinkaku(placed, ChildKaguneRules.TENTACLE_THICKNESS * scale, colour, com.hex.kagune.control.KaguneColours.veinOf(colour));
     }
 
     /** The posed player model in {@code skin} (slim arms or wide) as opaque triangles, feet at the origin. */

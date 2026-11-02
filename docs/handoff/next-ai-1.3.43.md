@@ -1,8 +1,8 @@
 # HANDOFF: HexGhoul after 1.3.43. Read this first, then `docs/handoff/next-ai-1.3.33.md` (how the owner works, older ideas).
 
 Branch **`claude/relaxed-carson-4y0frw`** (check it out from origin; push with `git push -u origin claude/relaxed-carson-4y0frw`).
-Never push to `main`; no PR unless asked. Version **1.3.43** in `build.py` and `patch/KagunePatch.java` (bump both; the next is
-**1.3.44**). Network `PROTOCOL` is **"68"**. Nothing since 1.3.28 has been tried in game: never say anything works in game.
+Never push to `main`; no PR unless asked. Version **1.3.44** in `build.py` and `patch/KagunePatch.java` (bump both; the next is
+**1.3.45**: 1.3.44 was the owner's bug report: one real Rinkaku tentacle on a child, see the top of `companions-handoff.md`). Network `PROTOCOL` is **"68"**. Nothing since 1.3.28 has been tried in game: never say anything works in game.
 
 ## House rules (the owner's, verbatim where quoted)
 
@@ -29,9 +29,9 @@ Never push to `main`; no PR unless asked. Version **1.3.43** in `build.py` and `
 
 ## What's next
 
-1. **1.3.44: Eto's child (the rest of the owner's ask).** The owner: "Eto's child gets her kagune abilities and transformation at low
+1. **1.3.45: Eto's child (the rest of the owner's ask).** The owner: "Eto's child gets her kagune abilities and transformation at low
    health". The genome already carries it (`KaguneGenes.OWL`, Eto's colour 0xD8CCBC); `ChildKagune.has` ignores OWL for now and
-   `/kagune children` says it comes later. What exists to build on:
+   `/kagune children` says it comes later (its words name no version). What exists to build on:
    - Server: Eto's kit is `server/EtoOwl` (+ `EtoFlesh` swipe/grab/hammer, `EtoWatch`, `EtoArm`, `EtoOwlForm` grow/fight, rules in
      `npc/EtoRules`: `owlNow(share, ...)` = her low-health trigger), all typed on `EtoNpc` and `EtoBrain.Mind`/`EtoOwl.Fight`. Either
      generalise the pieces a child needs (the flesh moves, the Owl's grow and its moves) to a small interface both brains implement, or
@@ -49,6 +49,7 @@ Never push to `main`; no PR unless asked. Version **1.3.43** in `build.py` and `
 
 - 1.3.42: a chore's cooking at the stove with a full chest; the "made" lines; the meal handed over; buckets and bottles put back;
   `/kagune home`'s dish list. A human spouse gets no cookbook dishes (by design: every dish has ghoul or human meat).
-- 1.3.43: a ghoul child's tails/wing in a fight at its size (offline preview only: `GraftPreview <dir> child`), the shots' origin at
-  the wing tip, the colour; old children's kagune worked out once a player parent is online.
+- 1.3.43/1.3.44: a ghoul child's one Rinkaku tentacle (the original's tube, built from a hand-made `KaguneClientState.View`: check its
+  thickness, veins and point in game) and its wing in a fight at its size (offline: `tools/ChildKagunePreview.java`), the shots' origin
+  at the wing tip, the colour; old children's kagune worked out once a player parent is online.
 - Older: the cookbook screen at every GUI scale; dish effects stacking; The Human's flee pathing; structure generation in new worlds.

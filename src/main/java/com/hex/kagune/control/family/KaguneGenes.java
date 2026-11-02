@@ -113,14 +113,14 @@ public final class KaguneGenes {
         return colour(motherBits, motherColour, fatherBits, fatherColour, random.nextDouble());
     }
 
-    /** What it has, in words ("Rinkaku tails and an Ukaku wing"), for {@code /kagune child} and the like. */
+    /** What it has, in words ("a Rinkaku tentacle and an Ukaku wing"), for {@code /kagune child} and the like. */
     public static String describe(int bits) {
         if (bits == UNKNOWN) {
             return "not known yet";
         }
         StringBuilder out = new StringBuilder();
         if (tails(bits)) {
-            out.append("Rinkaku tails");
+            out.append("a Rinkaku tentacle"); // 1.3.44: one
         }
         int wings = wings(bits);
         if (wings > 0) {

@@ -183,7 +183,7 @@ public final class FamilyTests {
             && com.hex.kagune.control.family.KaguneGenes.colour(wings, 0x112233, tails, 0x445566, 0.8) == 0x445566
             && com.hex.kagune.control.family.KaguneGenes.colour(none, 0x112233, tails, 0x445566, 0.2) == 0x445566
             && com.hex.kagune.control.family.KaguneGenes.colour(none, 0x112233, none, 0x445566, 0.2) == -1, "its colour from one parent, only one who has a kagune");
-        check(com.hex.kagune.control.family.KaguneGenes.describe(tails | wing).equals("Rinkaku tails and an Ukaku wing")
+        check(com.hex.kagune.control.family.KaguneGenes.describe(tails | wing).equals("a Rinkaku tentacle and an Ukaku wing")
             && com.hex.kagune.control.family.KaguneGenes.describe(com.hex.kagune.control.family.KaguneGenes.UNKNOWN).equals("not known yet"), "in words");
         // Conceived: everything decided before stays as it was for the same draws; the kagune and its colour from the parents.
         com.hex.kagune.control.family.Genome.Parent touka = new com.hex.kagune.control.family.Genome.Parent(0x30304A, 0x404060, 0xF0D8C8, true, false, wings, 0xA50F37);
@@ -234,9 +234,35 @@ public final class FamilyTests {
         check(oneSide, "one wing: every shot from its side");
         check(com.hex.kagune.control.family.ChildKaguneRules.side(wings, 5L, 1) == -1 && com.hex.kagune.control.family.ChildKaguneRules.side(wings, 5L, -1) == 1,
             "the pair: the wings take turns");
-        check(com.hex.kagune.control.graft.GraftStage.TRANSPLANT.limbs(com.hex.kagune.control.family.ChildKaguneRules.tailMastery(com.hex.kagune.control.family.ChildStage.CHILD)) == 2
-            && com.hex.kagune.control.graft.GraftStage.TRANSPLANT.limbs(com.hex.kagune.control.family.ChildKaguneRules.tailMastery(com.hex.kagune.control.family.ChildStage.TEEN)) == 2,
-            "both tentacles: two tails from the start");
+check(com.hex.kagune.control.graft.GraftStage.TRANSPLANT.limbs(com.hex.kagune.control.family.ChildKaguneRules.tailMastery(com.hex.kagune.control.family.ChildStage.CHILD)) == 1
+            && com.hex.kagune.control.graft.GraftStage.TRANSPLANT.limbs(com.hex.kagune.control.family.ChildKaguneRules.tailMastery(com.hex.kagune.control.family.ChildStage.TEEN)) == 1
+            && com.hex.kagune.control.family.ChildKaguneRules.TENTACLES == 1, "1.3.44 (the owner): one tentacle, not two, a child's and a teen's");
+        // 1.3.44: at rest, a Rinkaku player's first tentacle's curl: from the pelvis, up behind the back, over the head; it sways, a little.
+        double length = com.hex.kagune.control.graft.GraftStage.TRANSPLANT.length(0);
+        boolean rests = true;
+        for (double time = 0.0; time < 400.0; time += 13.0) {
+            double[][] rest = com.hex.kagune.control.family.ChildKaguneRules.tentacleRest(length, time, 77, 12);
+            double[] root = rest[0];
+            double[] tip = rest[rest.length - 1];
+            double lowestBack = 0.0;
+            for (double[] p : rest) {
+                lowestBack = Math.min(lowestBack, p[2]);
+            }
+            double run = 0.0;
+            for (int i = 1; i < rest.length; i++) {
+                run += Math.sqrt(Math.pow(rest[i][0] - rest[i - 1][0], 2) + Math.pow(rest[i][1] - rest[i - 1][1], 2) + Math.pow(rest[i][2] - rest[i - 1][2], 2));
+            }
+            rests &= rest.length == 12 && Math.abs(root[0] - com.hex.kagune.control.family.ChildKaguneRules.TENTACLE_ROOT[0]) < 1.0E-9
+                && Math.abs(root[1] - com.hex.kagune.control.family.ChildKaguneRules.TENTACLE_ROOT[1]) < 1.0E-9 && tip[1] > 1.8 && lowestBack < -0.4
+                && Math.abs(tip[0]) < 0.6 && run > length * 0.6 && run < length * 1.3;
+        }
+        check(rests, "at rest: from its pelvis, back and up over its head, about as long as it is, swaying a little");
+        check(com.hex.kagune.control.KaguneColours.veinOf(com.hex.kagune.control.KaguneColours.DEFAULT) == com.hex.kagune.control.KaguneColours.DEFAULT_VEIN
+            && com.hex.kagune.control.KaguneColours.veinOf(com.hex.kagune.control.KaguneColours.BONE) == com.hex.kagune.control.KaguneColours.BONE_VEIN
+            && Math.abs(com.hex.kagune.control.KaguneColours.toHsv(com.hex.kagune.control.KaguneColours.veinOf(0x2E6BD8))[0]
+                - com.hex.kagune.control.KaguneColours.toHsv(0x2E6BD8)[0]) < 0.02
+            && com.hex.kagune.control.KaguneColours.toHsv(com.hex.kagune.control.KaguneColours.veinOf(0x2E6BD8))[2] < 0.2,
+            "its tentacle's veins: the crimson's own, the bone's ash, else its colour's hue, much darker");
         check(com.hex.kagune.control.family.ChildKaguneRules.scale(com.hex.kagune.control.family.ChildStage.CHILD) == com.hex.kagune.control.family.ChildStage.CHILD.draw
             && com.hex.kagune.control.family.ChildKaguneRules.damage(com.hex.kagune.control.family.ChildStage.TEEN, 3, 0.5F)
                 < com.hex.kagune.control.family.ChildRules.damage(com.hex.kagune.control.family.ChildStage.TEEN, 3, true, 0.5F),

@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.44 (HexGhoul): fix: a Rinkaku child has one real Rinkaku tentacle, not two graft tails (testing)
+
+See `.github/release-notes-1.3.44.md`.
+
 ## 1.3.43 (HexGhoul): children inherit their parents' kagune, part 1: Rinkaku tails and Ukaku wings, colour from one parent (testing)
 
 See `.github/release-notes-1.3.43.md`.

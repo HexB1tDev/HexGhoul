@@ -33,8 +33,8 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 1.3.43: a ghoul child's kagune in a fight, on the server ({@link ChildKaguneRules}): the tails' string (the transplant's lashes, every
- * beat landing on the tick its clients draw it, as a wild ghoul's: {@code GhoulNpcCombat}), the wing's or wings' fire shots (from the
+ * 1.3.43: a ghoul child's kagune in a fight, on the server ({@link ChildKaguneRules}): its Rinkaku tentacle's string (1.3.44: one
+ * tentacle; the lash string's beats, every one landing on the tick its clients draw it, as a wild ghoul's: {@code GhoulNpcCombat}), the wing's or wings' fire shots (from the
  * tip of the wing it aims, flown a tick at a time, burning what they hit), all at its size, and with tails and a wing both: the tails up
  * close, the wing further off. Its clients are told as a wild ghoul's are ({@link S2CGhoulNpc}, under the child's id), and draw it from
  * what the child inherited. Its blows land only on what it fights and on monsters about it: never a player, a companion or a child.

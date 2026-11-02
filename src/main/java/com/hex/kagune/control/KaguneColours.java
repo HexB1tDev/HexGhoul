@@ -73,6 +73,25 @@ public final class KaguneColours {
     }
 
     /** {@code rgb}'s hue (0..1), saturation and value. */
+    /**
+     * 1.3.44: the veins of a kagune {@code rgb} (0xRRGGBB), as a roll's are: the original's crimson its own dark veins; the near black its
+     * blood red; the bone its ash; anything else the same hue, much darker.
+     */
+    public static int veinOf(int rgb) {
+        int colour = rgb & 0xFFFFFF;
+        if (colour == DEFAULT) {
+            return DEFAULT_VEIN;
+        }
+        if (colour == BLACK) {
+            return BLACK_VEIN;
+        }
+        if (colour == BONE) {
+            return BONE_VEIN;
+        }
+        double[] hsv = toHsv(colour);
+        return hsv(hsv[0], Math.min(1.0, hsv[1] + 0.1), Math.max(0.06, hsv[2] * 0.17));
+    }
+
     public static double[] toHsv(int rgb) {
         double r = (rgb >> 16 & 255) / 255.0;
         double g = (rgb >> 8 & 255) / 255.0;
