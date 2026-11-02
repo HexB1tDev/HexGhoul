@@ -1,7 +1,17 @@
-# START HERE (state after 1.3.68)
+# START HERE (state after 1.3.69)
 
 - **Next session:** read `docs/handoff/next-ai-1.3.67.md` first (the owner's last update and its plan, in order), then
-  `docs/handoff/next-ai-1.3.60.md` (house rules). Done of that plan: 1 (1.3.68). Next: 2, the ghoul arm blade.
+  `docs/handoff/next-ai-1.3.60.md` (house rules). Done of that plan: 1 (1.3.68), 2 (1.3.69). Next: 3, CCG ranks and attacking only the
+  revealed.
+- **1.3.69 the ghoul arm blade** (protocol 72, unchanged; client drawing only). `BladeArmModel`: `sabre(sink, cx, root, front, length,
+  width, thick, ...)`: `SECTIONS` 12 diamond rings (forward edge z -0.55 w, back edge +0.45 w, flats +-t), width `0.75 W (0.82 + 0.5
+  sin(min(1, 4u) pi/2)(1 - 0.2u)) (1-u)^0.75`, thick `0.5 T (1-u)^0.6`, swept `z - 1.3 u^2`, the edge faces lighter, a glowing seam on both
+  flats but the last two sections; `wedge(sink, base, dir, across, length, width, thick, colour, keel)`: a pointed plate (four sloping
+  faces and its base) for the spiral's scales, the shoulder fins and the root fins; `outward(corners, inside)` normals (two-sided drawing:
+  winding never matters; never exactly up, the glow mark). The sleeve is still a box. Preview `tools/BladeArmPreview.java`.
+
+# State after 1.3.68
+
 - **1.3.68 wild ghouls by night and day** (protocol **72**: `S2CGhoulNpc` gained `eyes` (a 15-arg constructor keeps false for
   `ChildKagune`); `GhoulNpcClient.View.eyes`; `GhoulNpcRenderer.Eyes` draws the kakugan whole while it is set). Pure
   `NpcRules.prowls(wild, dayTime)` (wild and night) / `hides(wild, dayTime)` (wild and day). `GhoulNpcBrain.Mind.eyes` (sent as eyes and

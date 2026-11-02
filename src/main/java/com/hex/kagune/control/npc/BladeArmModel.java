@@ -45,8 +45,7 @@ public final class BladeArmModel {
             for (int k = 0; k < 3; k++) {
                 double s = fin * (1.0 - 0.22 * k);
                 double[] at = {cx + half * 0.6 + 0.4 * k, -1.6 - 1.2 * k * s, half + 0.6 + 0.5 * k};
-                box(sink, at, axis(0.0, -0.55, 0.8), axis(1.0, 0.0, 0.0), axis(0.0, 0.8, 0.55), 1.4 * s, (2.6 - 0.5 * k) * s, 0.7 * s,
-                    k == 0 ? plate : ridge, dark);
+                wedge(sink, at, axis(0.0, -0.55, 0.8), axis(1.0, 0.0, 0.0), (3.4 - 0.6 * k) * s, 1.5 * s, 0.75 * s, k == 0 ? plate : ridge, ridge);
             }
         }
         // The spiral, shoulder to wrist.
@@ -70,10 +69,11 @@ public final class BladeArmModel {
             double r = radius + 0.25 * (1.0 - s);
             double[] at = {cx + radial[0] * r, y, radial[2] * r};
             double size = 0.55 + 0.45 * s;
-            box(sink, at, along, across, radial, 3.2 * size, 2.3 * size, 0.85 * size, plate, dark);
-            // Its ridge down the back of the plate, a little proud of it.
-            double[] proud = {at[0] + radial[0] * 0.5 * size, at[1], at[2] + radial[2] * 0.5 * size};
-            box(sink, proud, along, across, radial, 2.6 * size, 0.55 * size, 0.3 * size, ridge, plate);
+            // 1.3.69 (the owner: "sharper and less cubic"): a pointed scale laid along the spiral, its point down the arm and a little out,
+            // its keel a light ridge (it was a box with a box on it).
+            double[] base = {at[0] - along[0] * 1.5 * size, at[1] - along[1] * 1.5 * size, at[2] - along[2] * 1.5 * size};
+            double[] lean = axis(along[0] + radial[0] * 0.18 + 0.0, along[1] + 0.12, along[2] + radial[2] * 0.18);
+            wedge(sink, base, lean, across, 3.9 * size, 2.4 * size, 0.85 * size, plate, ridge);
         }
         // The sleeve over the forearm, as the spiral closes there.
         double sleeve = BladeArm.plate(BladeArm.PLATES - 3, wrap);
@@ -89,32 +89,122 @@ public final class BladeArmModel {
         }
         double length = BladeArm.BLADE_LENGTH * out;
         double root = 10.0;
-        double[] widths = {3.6, 3.2, 2.5, 1.6};
-        double[] thick = {1.1, 0.95, 0.8, 0.6};
         double front = -0.35; // a little to the thumb's side (z -)
-        for (int k = 0; k < 4; k++) {
-            double y0 = root + length * k / 4.0;
-            double y1 = root + length * (k + 1) / 4.0;
-            double w = widths[k] * (0.5 + 0.5 * out);
-            double[] mid = {cx, (y0 + y1) / 2.0, front};
-            box(sink, mid, axis(0, 0, 1), axis(0, 1, 0), axis(1, 0, 0), w, y1 - y0 + 0.05, thick[k], plate, dark);
-            // The edge, on the thumb's side.
-            box(sink, new double[] {cx, (y0 + y1) / 2.0, front - w / 2.0 - 0.15}, axis(0, 0, 1), axis(0, 1, 0), axis(1, 0, 0), 0.4, y1 - y0 + 0.05,
-                thick[k] * 0.55, ridge, plate);
-            // The glowing seam down both flats.
-            for (double side : new double[] {-1.0, 1.0}) {
-                double[] seam = {cx + side * (thick[k] / 2.0 + 0.04), (y0 + y1) / 2.0, front + 0.2};
-                flat(sink, seam, axis(0, 0, 1), axis(0, 1, 0), new double[] {side, 0, 0}, 0.45 * (1.0 - 0.15 * k), y1 - y0, glow);
-            }
-        }
-        // The point: a narrow wedge past the last length.
-        double tip = root + length;
-        box(sink, new double[] {cx, tip + 1.0 * out, front + 0.3}, axis(0, 0, 1), axis(0, 1, 0), axis(1, 0, 0), 0.8, 2.0 * out, 0.45, ridge, plate);
+        sabre(sink, cx, root, front, length, 3.6 * (0.5 + 0.5 * out), 1.15, plate, ridge, dark, glow);
         // Two fins at its root, turned like the spiral.
         for (double side : new double[] {-1.0, 1.0}) {
-            double[] at = {cx + side * 1.3, root + 1.2, 0.6};
-            box(sink, at, axis(side * 0.35, 0.94, 0.0), axis(0, 0, 1), axis(side, 0.0, 0.0), 0.7, 3.0 * out, 1.6, ridge, dark);
+            double[] at = {cx + side * 1.1, root - 0.2, 0.6};
+            wedge(sink, at, axis(side * 0.4, 0.92, 0.12), axis(0, 0, 1), 3.6 * out, 1.5, 0.6, ridge, ridge);
         }
+    }
+
+    /** 1.3.69: how many sections the blade is drawn in, root to point. */
+    static final int SECTIONS = 12;
+
+    /**
+     * 1.3.69 (the owner: "make the kagune arm blade for ghouls sharper and less cubic"; it was four boxes and a box for its point): one
+     * blade, root to point: a diamond across (both edges sharp, thickest down its middle), widest a little past the root and narrowing in a
+     * long curve to a needle point, swept a little forward (toward the thumb, z -) like a sabre; the edge side lighter, a glowing seam down
+     * both flats. {@code width} and {@code thick} at the root, {@code length} past {@code root} down the arm.
+     */
+    static void sabre(Sink sink, double cx, double root, double front, double length, double width, double thick, int plate, int edge, int dark,
+                      int glow) {
+        double[][][] ring = new double[SECTIONS + 1][][];
+        for (int i = 0; i <= SECTIONS; i++) {
+            double u = (double)i / SECTIONS;
+            double y = root + length * u;
+            // Swept forward toward the point, a sabre's curve.
+            double z = front - 1.3 * u * u;
+            // Widest a little past the root, then a long curve to a point (0 at the end).
+            double w = width * (0.82 + 0.5 * Math.sin(Math.min(1.0, u * 4.0) * Math.PI / 2.0) * (1.0 - u * 0.2)) * Math.pow(1.0 - u, 0.75) * 0.75;
+            double t = thick * Math.pow(1.0 - u, 0.6) * 0.5;
+            // The diamond: the forward edge (z -), one flat's middle (x +), the back edge (z +, blunter), the other flat (x -).
+            ring[i] = new double[][] {{cx, y, z - w * 0.55}, {cx + t, y, z}, {cx, y, z + w * 0.45}, {cx - t, y, z}};
+        }
+        for (int i = 0; i < SECTIONS; i++) {
+            double[][] a = ring[i];
+            double[][] b = ring[i + 1];
+            double fade = (double)i / SECTIONS;
+            int flat = mix(plate, edge, 0.15 + 0.25 * fade);
+            for (int k = 0; k < 4; k++) {
+                int k2 = (k + 1) % 4;
+                double[] mid = {cx, (a[k][1] + b[k][1]) / 2.0, (a[0][2] + a[2][2] + b[0][2] + b[2][2]) / 4.0};
+                double[] n = outward(new double[][] {a[k], a[k2], b[k2], b[k]}, mid);
+                // The faces toward the forward edge (k 3 -> 0 -> 1) lighter: the cutting edge catching the light.
+                int near = 0xFF000000 | (k == 0 || k == 3 ? edge : flat) & 0xFFFFFF;
+                int far = 0xFF000000 | (k == 0 || k == 3 ? flat : mix(plate, dark, 0.3)) & 0xFFFFFF;
+                sink.quad(a[k], a[k2], b[k2], b[k], n, near, far, far, near);
+            }
+            // The glowing seam down both flats (not the last length: it runs out before the point).
+            if (i < SECTIONS - 2) {
+                for (int side = 1; side <= 3; side += 2) {
+                    double[] pa = a[side];
+                    double[] pb = b[side];
+                    double out = side == 1 ? 0.04 : -0.04;
+                    double h = 0.2 * (1.0 - fade);
+                    sink.quad(new double[] {pa[0] + out, pa[1], pa[2] - h}, new double[] {pa[0] + out, pa[1], pa[2] + h},
+                        new double[] {pb[0] + out, pb[1], pb[2] + h * 0.8}, new double[] {pb[0] + out, pb[1], pb[2] - h * 0.8}, GLOW, glow, glow, glow, glow);
+                }
+            }
+        }
+    }
+
+    /**
+     * 1.3.69: a pointed plate: a {@code width} by {@code thick} base at {@code base}, coming to a point {@code length} along {@code dir}
+     * ({@code across}: its width's way), its keel ({@code keel} colour) along the top; four sloping faces and the base.
+     */
+    static void wedge(Sink sink, double[] base, double[] dir, double[] across, double length, double width, double thick, int colour, int keel) {
+        double[] up = axis(dir[1] * across[2] - dir[2] * across[1], dir[2] * across[0] - dir[0] * across[2], dir[0] * across[1] - dir[1] * across[0]);
+        double[] tip = add(base, scale(dir, length));
+        double[] l = add(base, scale(across, -width / 2.0));
+        double[] r = add(base, scale(across, width / 2.0));
+        double[] top = add(add(base, scale(up, thick / 2.0)), scale(dir, length * 0.18));
+        double[] bottom = add(base, scale(up, -thick / 2.0));
+        int c = 0xFF000000 | colour & 0xFFFFFF;
+        int k = 0xFF000000 | keel & 0xFFFFFF;
+        int under = 0xFF000000 | mix(colour, 0, 0.35) & 0xFFFFFF;
+        double[] mid = add(base, scale(dir, length * 0.3));
+        sink.quad(l, top, tip, tip, outward(new double[][] {l, top, tip}, mid), c, k, c, c);
+        sink.quad(top, r, tip, tip, outward(new double[][] {top, r, tip}, mid), k, c, c, c);
+        sink.quad(r, bottom, tip, tip, outward(new double[][] {r, bottom, tip}, mid), under, under, under, under);
+        sink.quad(bottom, l, tip, tip, outward(new double[][] {bottom, l, tip}, mid), under, under, under, under);
+        sink.quad(l, bottom, r, top, outward(new double[][] {l, bottom, r, top}, mid), under, under, under, c);
+    }
+
+    static double[] add(double[] a, double[] b) {
+        return new double[] {a[0] + b[0], a[1] + b[1], a[2] + b[2]};
+    }
+
+    static double[] scale(double[] a, double k) {
+        return new double[] {a[0] * k, a[1] * k, a[2] * k};
+    }
+
+    /**
+     * The unit normal of the face through {@code corners}, turned to face away from {@code inside} (the drawing is two-sided, so the
+     * winding never matters, only the light). Never exactly straight up: that is the mark of a glowing quad.
+     */
+    static double[] outward(double[][] corners, double[] inside) {
+        double[] n = normal(corners[0], corners[1], corners[2]);
+        double[] c = {0.0, 0.0, 0.0};
+        for (double[] p : corners) {
+            c = add(c, scale(p, 1.0 / corners.length));
+        }
+        double[] away = {c[0] - inside[0], c[1] - inside[1], c[2] - inside[2]};
+        if (n[0] * away[0] + n[1] * away[1] + n[2] * away[2] < 0.0) {
+            n = scale(n, -1.0);
+        }
+        return n[1] > 0.9999 ? axis(0.01, 1.0, 0.0) : n;
+    }
+
+    /** The unit normal of the triangle {@code a b c} (the way its winding faces). */
+    static double[] normal(double[] a, double[] b, double[] c) {
+        double ux = b[0] - a[0];
+        double uy = b[1] - a[1];
+        double uz = b[2] - a[2];
+        double vx = c[0] - a[0];
+        double vy = c[1] - a[1];
+        double vz = c[2] - a[2];
+        return axis(uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx);
     }
 
     // ---------------------------------------------------------------- boxes
