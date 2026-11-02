@@ -8,3 +8,4 @@ HexKagune 2.0.2 for Forge 1.20.1. Install on client and server (**protocol 72**,
 - **The village's land check is gentler:** the ground may differ by up to 12 blocks (was 8), and a river or pond may touch 2 of its 16 edge points (was no water anywhere). The middle must still be dry, so there are still no villages in the sea.
 - **Villages are a little closer together** (spacing 40 chunks, was 48).
 - **A safer start:** the village now calls vanilla's own placing directly, with a fallback, so it can't silently never generate.
+- (The first 2.0.2 build stopped on three old tests that still expected plains only; they now check the new biome lists.)

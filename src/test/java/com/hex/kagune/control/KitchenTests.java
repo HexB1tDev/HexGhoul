@@ -157,10 +157,17 @@ public final class KitchenTests {
         String plains = read("src/main/resources/data/hexkagune/tags/worldgen/biome/has_structure/anteiku.json");
         String tower = read("src/main/resources/data/hexkagune/tags/worldgen/biome/has_structure/cyber_tower.json");
         String library = read("src/main/resources/data/hexkagune/tags/worldgen/biome/has_structure/library.json");
-        check(plains.contains("minecraft:plains") && !plains.contains("forest") && !plains.contains("is_overworld"), "the cafe on plains only");
-        check(tower.contains("minecraft:plains") && !tower.contains("forest") && !tower.contains("is_overworld"), "the tower on plains only");
-        check(library.contains("minecraft:plains") && library.contains("minecraft:forest") && !library.contains("taiga")
-            && !library.contains("savanna") && !library.contains("meadow"), "the library in forests and plains only");
+        // 2.0.2 (the owner: "stop limiting it to plains ... including some from biomes o plenty"): open land and woods, Biomes O' Plenty's
+        // as optional entries; never water, sand or the whole overworld.
+        String village = read("src/main/resources/data/hexkagune/tags/worldgen/biome/has_structure/village.json");
+        for (String[] tag : new String[][] {{"the cafe", plains}, {"the tower", tower}, {"the library", library}, {"the village", village}}) {
+            String t = tag[1];
+            boolean woods = !tag[0].equals("the village");
+            check(t.contains("minecraft:plains") && t.contains("minecraft:cherry_grove") && t.contains("minecraft:savanna")
+                && t.contains("minecraft:forest") == woods && t.contains("biomesoplenty:prairie") && t.contains("\"required\": false")
+                && !t.contains("ocean") && !t.contains("river") && !t.contains("beach") && !t.contains("desert") && !t.contains("is_overworld"),
+                tag[0] + " on open land" + (woods ? " and in woods" : "") + ", Biomes O' Plenty's too");
+        }
     }
 
     static void rules() {
