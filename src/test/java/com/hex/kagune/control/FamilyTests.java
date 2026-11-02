@@ -52,6 +52,7 @@ public final class FamilyTests {
         drowsy();
         held();
         kagune();
+        vitality();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -313,6 +314,29 @@ check(com.hex.kagune.control.graft.GraftStage.TRANSPLANT.limbs(com.hex.kagune.co
             com.hex.kagune.control.ukaku.WingRig.FORWARD, 0.0F, 0.0F, 1.0F);
         check(one.growLeft() == 1.0F && one.growRight() == 0.0F && two.growLeft() == 1.0F && two.growRight() == 1.0F
             && !com.hex.kagune.control.ukaku.WingRig.build(one, new double[] {0.0, 1.5, 4.0}).isEmpty(), "one wing drawn on its side alone; the pair both");
+    }
+
+    /** 1.3.47: a child's health from its parents': the stronger's, more for the other's strength, by stage; it heals on its own. */
+    static void vitality() {
+        float grown = com.hex.kagune.control.family.ChildRules.grownHealth(360.0F, 0.5F, 20.0F, com.hex.kagune.control.family.ChildRules.playerMight(true, 1000, false));
+        check(Math.abs(grown - 400.0F) < 2.0F, "the owner's own sum: a mother of 360 and a father at full mastery: about 400 (" + grown + ")");
+        check(com.hex.kagune.control.family.ChildRules.grownHealth(20.0F, 0.0F, 340.0F, 1.0F) == 340.0F
+            && com.hex.kagune.control.family.ChildRules.grownHealth(260.0F, 0.0F, 20.0F, 0.15F) > 260.0F
+            && com.hex.kagune.control.family.ChildRules.grownHealth(260.0F, 0.0F, 20.0F, 1.0F) <= 260.0F * 1.1401F,
+            "the stronger parent's health, never less; the other's strength adds at most 14%");
+        float last = 0.0F;
+        boolean rising = true;
+        for (com.hex.kagune.control.family.ChildStage stage : com.hex.kagune.control.family.ChildStage.values()) {
+            float h = com.hex.kagune.control.family.ChildRules.health(stage, 0.5F, 400.0F);
+            rising &= h > last && h >= com.hex.kagune.control.family.ChildRules.health(stage, 0.5F);
+            last = h;
+        }
+        check(rising && com.hex.kagune.control.family.ChildRules.health(com.hex.kagune.control.family.ChildStage.TEEN, 0.5F, 400.0F) == 400.0F
+            && com.hex.kagune.control.family.ChildRules.health(com.hex.kagune.control.family.ChildStage.BABY, 0.5F, 0.0F)
+                == com.hex.kagune.control.family.ChildRules.health(com.hex.kagune.control.family.ChildStage.BABY, 0.5F),
+            "it grows into it, all of it as a teen; not known yet, as before");
+        check(com.hex.kagune.control.family.ChildRules.healing(240.0F, true) == 2.0F
+            && com.hex.kagune.control.family.ChildRules.healing(240.0F, false) < 2.0F, "a ghoul child heals itself in two minutes, a human slower");
     }
 
     static void genome() {

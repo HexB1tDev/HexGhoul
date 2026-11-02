@@ -172,6 +172,47 @@ public final class ChildRules {
         return stage.health * (1.0F + 1.5F * Math.max(0.0F, Math.min(1.0F, might)));
     }
 
+    /**
+     * 1.3.47 (the owner: "the stronger the parents, the stronger the child... father max mastery, mother 360 HP: the kid 400"): how much
+     * health it grows into: the stronger parent's health ({@code motherHealth}, {@code fatherHealth}: a companion's own, a player's most),
+     * and up to {@link #PARENT_BONUS} more for the other parent's strength ({@code ...Might}, 0..1: a player's mastery, ChildRules.playerMight).
+     */
+    public static float grownHealth(float motherHealth, float motherMight, float fatherHealth, float fatherMight) {
+        boolean mother = motherHealth >= fatherHealth;
+        float strong = Math.max(1.0F, Math.max(motherHealth, fatherHealth));
+        float other = Math.max(0.0F, Math.min(1.0F, mother ? fatherMight : motherMight));
+        return strong * (1.0F + PARENT_BONUS * other);
+    }
+
+    /** 1.3.47: the most the other parent's strength adds to a child's grown health (a share of the stronger's). */
+    public static final float PARENT_BONUS = 0.14F;
+
+    /** 1.3.47: how much of its grown health it has at {@code stage}: a quarter as a baby, all of it as a teen. */
+    public static float share(ChildStage stage) {
+        return switch (stage) {
+            case BABY -> 0.25F;
+            case TODDLER -> 0.4F;
+            case CHILD -> 0.65F;
+            case TEEN -> 1.0F;
+        };
+    }
+
+    /**
+     * 1.3.47: its health at {@code stage}: its share of what it grows into ({@code grown}, {@link #grownHealth}; not known yet: 0), never
+     * less than 1.3.21's ({@link #health(ChildStage, float)}).
+     */
+    public static float health(ChildStage stage, float might, float grown) {
+        float before = health(stage, might);
+        return grown <= 0.0F ? before : Math.max(before, grown * share(stage));
+    }
+
+    /** 1.3.47: how long after it was last hurt it starts to heal (ticks), and how much a second (a ghoul's in two minutes, a human's in ten). */
+    public static final int HEAL_AFTER = 100;
+
+    public static float healing(float most, boolean ghoul) {
+        return most / (ghoul ? 120.0F : 600.0F);
+    }
+
     /** 1.3.21: what its blow deals, born {@code might} strong (up to more than twice as hard). */
     public static float damage(ChildStage stage, int skill, boolean ghoul, float might) {
         return damage(stage, skill, ghoul) * (1.0F + 1.25F * Math.max(0.0F, Math.min(1.0F, might)));

@@ -1,7 +1,18 @@
-# START HERE (state after 1.3.46)
+# START HERE (state after 1.3.47)
 
-- **Next session:** read `docs/handoff/next-ai-1.3.43.md` first, then the owner's latest list (in the 1.3.46+ sections here and in
-  `next-ai-1.3.43.md`): child HP from its parents (1.3.47), the rest of the kagune kit (1.3.48), parenting (1.3.49), then Eto's child.
+- **Next session:** read `docs/handoff/next-ai-1.3.43.md` first ("What's next" item 0: 1.3.48 the rest of the kit, 1.3.49 parenting,
+  then Eto's child).
+- **1.3.47 child health** (protocol 68, unchanged; the owner: "father max mastery, mother 360 HP: the kid 400"): pure
+  `ChildRules.grownHealth(motherHealth, motherMight, fatherHealth, fatherMight)` = the stronger's health x (1 + `PARENT_BONUS` 0.14 x
+  the other's might), `share(stage)` (0.25 / 0.4 / 0.65 / 1), `health(stage, might, grown)` (never under 1.3.21's), `HEAL_AFTER` 100 and
+  `healing(most, ghoul)` (a ghoul's whole in 120 s, a human's 600 s). `Children.Child.vitality` (saved as the 12th field; -1 unknown),
+  `Children.vitality(level, child)` (worked out once every player parent is online: a companion's `Persona.health()`, a player's
+  `m_21233_`, 20 if away) and `Children.health(level, key)`. `ChildBrain`: a stage's most from it, the first tick keeps the share of
+  health it had; it heals every second once unhurt for `HEAL_AFTER`; a child whose vitality turns known re-reads its most. `/kagune
+  children` shows health / most (grows into). `FamilyTests.vitality`.
+
+# State after 1.3.46
+
 - **1.3.46 layouts** (protocol 68, unchanged; the owner: "add other variations, like two wings and the tentacle in the middle... stays
   in the back like a tail"): pure `ChildKaguneRules.Layout` (SHOULDER_RIGHT side 1, SHOULDER_LEFT -1, TAIL 0), `layout(bits, seed)`
   (tentacle children only; shares `RIGHT_SHARE` 0.4, `TAIL_SHARE` 0.35, the rest left; a mix of the seed so old children get one),

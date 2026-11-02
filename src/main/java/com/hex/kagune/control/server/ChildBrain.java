@@ -139,11 +139,13 @@ public final class ChildBrain {
             mind.stage = stage;
             npc.stage = stage;
             npc.m_6210_();
-            // 1.3.21: as strong as its parents: their might makes its health.
-            float most = ChildRules.health(stage, Children.might(level, child));
+            // 1.3.21: as strong as its parents: their might makes its health. 1.3.47: their health too (ChildRules.grownHealth).
+            float most = ChildRules.health(stage, Children.might(level, child), Children.vitality(level, child));
+            float was = Math.max(1.0F, npc.m_21233_());
+            float share = Math.max(0.0F, Math.min(1.0F, npc.m_21223_() / was));
             npc.m_21051_(net.minecraft.world.entity.ai.attributes.Attributes.f_22276_).m_22100_(most);
-            // Grown into a new stage: its new health whole; its first tick: what it had (no more than it may).
-            npc.m_21153_(first ? Math.min(Math.max(npc.m_21223_(), 1.0F), most) : most);
+            // Grown into a new stage: its new health whole; its first tick: as hurt as it was (1.3.47: the same share of its new most).
+            npc.m_21153_(first ? Math.max(1.0F, share * most) : most);
             if (!stage.carried()) {
                 putDown(npc, mind);
             }
@@ -229,6 +231,16 @@ public final class ChildBrain {
         if (mind.dirty) {
             mind.dirty = false;
             ControlNetwork.broadcastAround(npc, message(npc, mind, child));
+        }
+        // 1.3.47: it heals on its own a while after it was last hurt (a ghoul child fast); its most worked out again once its parents are known.
+        if (now % 20L == 3L) {
+            float most = npc.m_21233_();
+            if (npc.m_21223_() < most && npc.m_6084_() && (mind.hurtAt == Long.MIN_VALUE || now - mind.hurtAt >= ChildRules.HEAL_AFTER)) {
+                npc.m_5634_(ChildRules.healing(most, child.genome().ghoul()));
+            }
+            if (child.vitality < 0.0F && now % 200L == 3L && mind.stage != null && Children.vitality(level, child) > 0.0F) {
+                mind.stage = null; // its most worked out again next tick, now its parents' health is known
+            }
         }
         // 1.3.43: its kagune: its shots fly on; out of a fight, it goes back in.
         ChildKagune.tick(npc, mind, mind.kaguneFought, level, now);

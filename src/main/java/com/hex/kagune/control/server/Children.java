@@ -44,6 +44,8 @@ public final class Children {
         public long lesson = Long.MIN_VALUE;
         /** 1.3.21: how strong it was born (0..1, ChildRules.might); -1 not known yet (a child from before: worked out when it next thinks). */
         public float might = -1.0F;
+        /** 1.3.47: the health it grows into (ChildRules.grownHealth); -1 not known yet (worked out when it next thinks). */
+        public float vitality = -1.0F;
 
         public Genome genome() {
             Genome g = Genome.load(this.genome);
@@ -62,12 +64,12 @@ public final class Children {
 
         String save() {
             return String.join("\t", this.id, this.name, this.genome, this.mother, this.motherName, this.father, this.fatherName, Long.toString(this.born),
-                Integer.toString(this.skill), Long.toString(this.lesson), Float.toString(this.might));
+                Integer.toString(this.skill), Long.toString(this.lesson), Float.toString(this.might), Float.toString(this.vitality));
         }
 
         static Child load(String line) {
             String[] p = line.split("\t", -1);
-            if (p.length != 10 && p.length != 11) {
+            if (p.length < 10 || p.length > 12) {
                 return null;
             }
             Child c = new Child();
@@ -83,6 +85,7 @@ public final class Children {
                 c.skill = Integer.parseInt(p[8]);
                 c.lesson = Long.parseLong(p[9]);
                 c.might = p.length > 10 ? Float.parseFloat(p[10]) : -1.0F;
+                c.vitality = p.length > 11 ? Float.parseFloat(p[11]) : -1.0F;
             } catch (NumberFormatException bad) {
                 return null;
             }
@@ -263,6 +266,34 @@ public final class Children {
         }
         ServerPlayer player = key == null ? null : Pregnancies.playerOf(level, key);
         return player == null ? new int[] {0, -1} : new int[] {Looks.kagune(player), Looks.kaguneColour(player)};
+    }
+
+    /**
+     * 1.3.47: the health {@code child} grows into, worked out now from its parents if it isn't known yet (a companion's own health; a
+     * player's most while they are about: worked out once they are), and kept.
+     */
+    public static float vitality(ServerLevel level, Child child) {
+        if (child.vitality < 0.0F) {
+            for (String key : new String[] {child.mother, child.father}) {
+                if (key != null && key.startsWith("player:") && Pregnancies.playerOf(level, key) == null) {
+                    return 0.0F; // a parent who isn't about: 1.3.21's health until they are
+                }
+            }
+            child.vitality = ChildRules.grownHealth(health(level, child.mother), might(level, child.mother), health(level, child.father),
+                might(level, child.father));
+            changed(level);
+        }
+        return child.vitality;
+    }
+
+    /** 1.3.47: a parent's health as a child takes it: a companion's own; a player's most (20 if they aren't about). */
+    static float health(ServerLevel level, String key) {
+        if (key != null && key.startsWith("npc:")) {
+            Persona persona = Persona.of(key.substring(4));
+            return persona == null ? 20.0F : persona.health();
+        }
+        ServerPlayer player = key == null ? null : Pregnancies.playerOf(level, key);
+        return player == null ? 20.0F : player.m_21233_();
     }
 
     /** 1.3.10, for testing: a child {@code ticks} older. */

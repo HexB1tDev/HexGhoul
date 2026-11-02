@@ -1,8 +1,8 @@
 # HANDOFF: HexGhoul after 1.3.43. Read this first, then `docs/handoff/next-ai-1.3.33.md` (how the owner works, older ideas).
 
 Branch **`claude/relaxed-carson-4y0frw`** (check it out from origin; push with `git push -u origin claude/relaxed-carson-4y0frw`).
-Never push to `main`; no PR unless asked. Version **1.3.46** in `build.py` and `patch/KagunePatch.java` (bump both; the next is
-**1.3.47**: 1.3.44-1.3.46 were the owner's reports and asks on the child's tentacle; see the top of `companions-handoff.md`). Network `PROTOCOL` is **"68"**. Nothing since 1.3.28 has been tried in game: never say anything works in game.
+Never push to `main`; no PR unless asked. Version **1.3.47** in `build.py` and `patch/KagunePatch.java` (bump both; the next is
+**1.3.48**: 1.3.44-1.3.47 were the owner's reports and asks on the children; see the top of `companions-handoff.md`). Network `PROTOCOL` is **"68"**. Nothing since 1.3.28 has been tried in game: never say anything works in game.
 
 ## House rules (the owner's, verbatim where quoted)
 
@@ -30,8 +30,7 @@ Never push to `main`; no PR unless asked. Version **1.3.46** in `build.py` and `
 ## What's next
 
 0. **The owner's newest asks (after 1.3.45), in this order, one version each:**
-   - **1.3.47 child HP from its parents:** "the stronger the parents, the stronger the child... father max mastery, mother 360 HP ->
-     the kid 400". Grown health = the stronger parent's health, plus up to ~14% of it for the other's strength; by stage below that.
+   - (done in 1.3.47: child HP from its parents.)
    - **1.3.48 the rest of the kit:** "crystallize... grab, throw, crush, backflip, front flip, everything the mother and father can
      do" (Ukaku crystal spikes; Rinkaku grab, throw, crush; flips like the wild ghouls'). **Never a kakuja** ("the kid will never have
      access to the [kakujas]": the owner's word came through as "cockroaches"; confirm with the owner how that squares with Eto's

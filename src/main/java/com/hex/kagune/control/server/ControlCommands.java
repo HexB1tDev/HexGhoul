@@ -372,6 +372,12 @@ final class ControlCommands {
             } else {
                 line = "\u00a7b" + kid.name + "\u00a7r (" + stage + "): nowhere loaded.";
             }
+            // 1.3.47: its health, and what it grows into.
+            if (body instanceof net.minecraft.world.entity.LivingEntity hp) {
+                float grown = Children.vitality(level, kid);
+                line += "\n  \u00a77health: " + (int)Math.ceil(hp.m_21223_()) + " / " + (int)Math.ceil(hp.m_21233_())
+                    + (grown > 0.0F ? " (grows into " + (int)Math.ceil(grown) + ")" : "");
+            }
             // 1.3.43: what kagune it inherited (worked out now for a child from before, once its parents are about), and its colour.
             com.hex.kagune.control.family.Genome genome = Children.genome(level, kid);
             if (genome.ghoul()) {
