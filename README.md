@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.73 (HexGhoul): talk to the villagers, each with a name and a personality of their own (testing)
+
+See `.github/release-notes-1.3.73.md`.
+
 ## 1.3.72 (HexGhoul): the Brick Village's people trade and chat in the streets (testing)
 
 See `.github/release-notes-1.3.72.md`.

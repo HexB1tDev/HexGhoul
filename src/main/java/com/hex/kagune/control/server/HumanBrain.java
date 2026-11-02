@@ -102,6 +102,14 @@ public final class HumanBrain {
         }
         mind.ranFrom = 0;
         human.scared(now < mind.shakenUntil);
+        // 1.3.73: a player talking to it: it stands still, facing them.
+        ServerPlayer talker = HumanTalk.talker(human, level);
+        if (talker != null) {
+            human.m_21573_().m_26573_();
+            human.m_21563_().m_24960_(talker, 30.0F, 30.0F);
+            face(human, talker);
+            return;
+        }
         if (place != null) {
             village(human, mind, place, level, now);
             return;

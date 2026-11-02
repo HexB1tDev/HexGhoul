@@ -765,5 +765,38 @@ public final class NpcTests {
             said.add(dusk);
         }
         check(said.size() > 100, "plenty of different words in the streets (" + said.size() + ")");
+        // 1.3.73: talking with them: a name and a temper each, every word in its temper's way.
+        java.util.EnumSet<com.hex.kagune.control.village.HumanPersona.Temper> tempers = java.util.EnumSet.noneOf(com.hex.kagune.control.village.HumanPersona.Temper.class);
+        java.util.Set<String> names = new java.util.HashSet<>();
+        for (long seed = 0; seed < 4000; seed += 13) {
+            tempers.add(com.hex.kagune.control.village.HumanPersona.temper(seed * 7919L));
+            names.add(com.hex.kagune.control.village.HumanPersona.name(seed * 104729L));
+        }
+        check(tempers.size() == com.hex.kagune.control.village.HumanPersona.Temper.values().length && names.size() > 12,
+            "every temper and plenty of names turn up (" + tempers.size() + ", " + names.size() + ")");
+        for (String name : names) {
+            check(!banned.matcher(name).find() && !java.util.Set.of("Eto", "Touka", "Ken").contains(name), "a name of its own: " + name);
+        }
+        java.util.Set<String> talk = new java.util.HashSet<>();
+        boolean spoken = true;
+        for (com.hex.kagune.control.village.HumanPersona.Temper temper : com.hex.kagune.control.village.HumanPersona.Temper.values()) {
+            spoken &= com.hex.kagune.control.village.HumanPersona.liking(temper) > 0;
+            for (int regard : new int[] {-50, 0, 30, 80}) {
+                for (int seed = 0; seed < 6; seed++) {
+                    for (String line : new String[] {com.hex.kagune.control.village.HumanPersona.hello(temper, regard, seed),
+                        com.hex.kagune.control.village.HumanPersona.chat(temper, seed), com.hex.kagune.control.village.HumanPersona.about(temper, seed),
+                        com.hex.kagune.control.village.HumanPersona.news(seed), com.hex.kagune.control.village.HumanPersona.compliment(temper, regard, seed),
+                        com.hex.kagune.control.village.HumanPersona.bye(temper, regard, seed)}) {
+                        spoken &= line != null && !line.isBlank() && !banned.matcher(line).find();
+                        talk.add(line);
+                    }
+                }
+            }
+        }
+        check(spoken, "every temper says something to everything, warm or not, and likes a compliment");
+        check(talk.size() >= 120, "plenty of different words when talked to (" + talk.size() + ")");
+        check(!com.hex.kagune.control.village.HumanPersona.hello(com.hex.kagune.control.village.HumanPersona.Temper.SHY, 0, 1)
+            .equals(com.hex.kagune.control.village.HumanPersona.hello(com.hex.kagune.control.village.HumanPersona.Temper.SHY, 90, 1)),
+            "a friend is greeted otherwise than a stranger");
     }
 }

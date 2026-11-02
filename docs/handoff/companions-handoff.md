@@ -1,10 +1,21 @@
-# START HERE (state after 1.3.72)
+# START HERE (state after 1.3.73)
 
 - **RULE 1 (the owner's, every session): at 97% of the 5-hour or weekly usage, stop, save, hand off, give a prompt. See `CLAUDE.md`.**
 - **Next session:** read `docs/handoff/next-ai-1.3.67.md` first (the owner's last update and its plan, in order), then
-  `docs/handoff/next-ai-1.3.60.md` (house rules). Done of that plan: 1 (1.3.68), 2 (1.3.69), 3 (1.3.70), 4 (1.3.71 the village, homes,
-  streets, patrol; 1.3.72 trading and chat). Next: 5: talking to humans (a player's general talk), personalities, romance and dating,
-  the ghoul's confession before a relationship, their cuter looks.
+  `docs/handoff/next-ai-1.3.60.md` (house rules). Done of that plan: 1-4 (1.3.68-1.3.72), 5 begun: talking and personalities (1.3.73).
+  Next: romance and dating with humans (asking out, dates, partners; the companions' `Romance`/`RomanceCard` as a model), a ghoul player's
+  confession before a relationship can start (may need convincing, by temper and regard), humans' gestures (the owner: take Eto's, the
+  kids', Touka's and Ken's animations as a base; HumanRenderer.Model would need a pose like EtoModel's RigPose.transform and a synced
+  gesture), and cuter human skins from the kids' skins (art/children: different hair and clothes; never alter the owner's files).
+- **1.3.73 talking to humans** (protocol 72, unchanged). Pure `village/HumanPersona`: `Temper` x8 (title), `temper(seed)`, `name(seed)`
+  (24 names), `WARM` 20 / `CLOSE` 60 regard, `liking(temper)` (compliment), `hello(temper, regard)`, `chat`, `about`, `news`,
+  `compliment(temper, regard)`, `bye(temper, regard)` (~128 lines). Server `HumanTalk`: right click (`EntityInteract`, cancelled) within
+  `REACH` 6 opens the talk (`S2CNpcTalk`, skin `-100 - look`: `NpcTalkClient` maps <= -100 to vanilla's `HumanRules.skin`); frightened:
+  refused; a trade ends; MET flag; asks SAY_1..4 (chat: +`NpcBonds.CHAT` once a day via `chatted`; about; news; compliment: +liking once a
+  day, `PRAISED`), LEAVE: a bubble goodbye. `talker(human, level)` keeps it still and facing them (`HumanBrain.tick`, after the danger).
+  `C2SNpcTalk` routes a `HumanNpc` to `HumanTalk.heard`. Seed: the UUID's halves xored. `NpcTests.village`.
+
+# State after 1.3.72
 - **1.3.72 trading and chat in the village** (protocol 72, unchanged). Pure `village/VillageTalk`: `Goods(item, name, price)` x12,
   `COIN` emerald, `trade(goods, seed)` (5 lines: seller call, buyer ask, seller price, buyer pays `hands` true, seller parting),
   `greet(seed)` 10, `dusk(seed)` 4. Server `VillageTrade` (both `HumanBrain.Mind.trade`; ticked once a tick by either: walk to the street
