@@ -1,6 +1,9 @@
 # HANDOFF: HexGhoul after 1.3.67. Read this first, then `docs/handoff/next-ai-1.3.60.md` (house rules, family talk), then the top
 sections of `docs/handoff/companions-handoff.md`.
 
+**RULE 1 (the owner's, all sessions, no exceptions): at 97% of the 5-hour or the weekly usage, stop at once, save (commit and push,
+WIP marked as such), write the handoff, and give the owner a prompt for the next session. How to read the usage: `CLAUDE.md`.**
+
 Branch **`claude/relaxed-carson-4y0frw`** (check it out from origin; push with `git push -u origin claude/relaxed-carson-4y0frw`).
 Never push to `main`; no PR unless asked. Network `PROTOCOL` is **"71"**. Nothing since 1.3.28 has been tried in game: never say anything
 works in game. House rules as in `next-ai-1.3.63.md` (each fix/feature its own version, full `python3 build.py` EXIT 0, banned names, sounds

@@ -1,5 +1,7 @@
 # START HERE (state after 1.3.71)
 
+- **RULE 1 (the owner's, every session): at 97% of the 5-hour or weekly usage, stop, save, hand off, give a prompt. See `CLAUDE.md`.**
+
 - **Next session:** read `docs/handoff/next-ai-1.3.67.md` first (the owner's last update and its plan, in order), then
   `docs/handoff/next-ai-1.3.60.md` (house rules). Done of that plan: 1 (1.3.68), 2 (1.3.69), 3 (1.3.70), 4 the village itself and its
   people's homes, streets and patrol (1.3.71). Next: the village's trading in the streets and general talk, then 5 (personalities,
