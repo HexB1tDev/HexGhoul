@@ -421,7 +421,8 @@ def write_tiles(out, entities_at, people, middle, height):
         key = (tile_of(px), tile_of(pz))
         lx, lz = px - SPLITS[key[0]], pz - SPLITS[key[1]]
         data = L.compound(HexVillage=L.compound(CentreX=L.Tag(L.INT, middle[0] - px), CentreY=L.Tag(L.INT, middle[1] - py),
-                                                CentreZ=L.Tag(L.INT, middle[2] - pz), Home=L.Tag(L.INT, k if kind == "hexkagune:human" else -1)))
+                                                CentreZ=L.Tag(L.INT, middle[2] - pz), Home=L.Tag(L.INT, k if kind == "hexkagune:human" else -1),
+                                                Map=L.Tag(L.INT, 2)))
         nbt = L.compound(id=L.s(kind), PersistenceRequired=L.Tag(L.BYTE, 1), Rotation=L.floats(0.0, 0.0), Motion=L.doubles(0.0, 0.0, 0.0),
                          OnGround=L.Tag(L.BYTE, 1), ForgeData=data)
         entities[key].append({"blockPos": L.ints(lx, py, lz), "pos": L.doubles(lx + 0.5, float(py), lz + 0.5), "nbt": nbt})

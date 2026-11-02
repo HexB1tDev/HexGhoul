@@ -1,58 +1,51 @@
-# HANDOFF: HexGhoul, 2.0.1 IN PROGRESS (not built). Read this first, then `docs/handoff/next-ai-2.0.0.md`, then
-`docs/handoff/next-ai-1.3.60.md` (house rules), then the top of `docs/handoff/companions-handoff.md`.
+# HANDOFF: HexGhoul after 2.0.1. Read this first, then `docs/handoff/next-ai-2.0.0.md`, then `docs/handoff/next-ai-1.3.60.md` (house
+rules), then the top of `docs/handoff/companions-handoff.md`.
 
-Branch **`claude/relaxed-carson-4y0frw`** (push only there; never main; no PR unless asked). `build.py`/`KagunePatch` still say **2.0.0**:
-bump both to **2.0.1**. Protocol "72". Nothing is tested in game except what the owner reports. The owner is short on usage: work fast,
-push as soon as each piece is done; CI (`.github/workflows/release.yml`) builds and publishes the jar from `.github/release-notes-<ver>.md`.
+Branch **`claude/relaxed-carson-4y0frw`** (push only there; never main; no PR unless asked). Version **2.0.1** in `build.py` and
+`patch/KagunePatch.java` (the next is **2.0.2**). Protocol **"72"** (unchanged in 2.0.1). Nothing is tested in game except what the owner
+reports. CI (`.github/workflows/release.yml`) builds and publishes the jar when `.github/release-notes-<ver>.md` is pushed.
 
-## The owner's report on 2.0.0 (their words, after playing)
+## The owner's report on 2.0.0 (their words) and what 2.0.1 did
 
 > "the villages should be renamed just village, like Hex Ghouls Village. Next up is that the fact that the villages are spawning in big
 > bodies of water when they should look for dry land to attempt to spawn ... CCG investigators, I only see two of them when there should
-> be at least a little more. ... the game just crashed ... the speak to menu, like when you right click on someone, is currently showing
-> like the inaccurate face of the person, and that's you got to patch. I'm going to send you the new schematic file for the new villages.
-> So adapt all this that I said, make sure that the game doesn't crash, and upload the new 2.0.1 version."
+> be at least a little more. ... the game just crashed ... the speak to menu ... is currently showing like the inaccurate face of the
+> person ... I'm going to send you the new schematic file for the new villages."
 
-Screenshot: the Brick Village sat on a dirt platform in the sea (beard terrain adaptation built land under it in water).
+1. **Crash**: `Font.DisplayMode.NORMAL` (an enum constant keeps its name; 1.3.38 had `f_181350_`). `SpeechBubbles.draw/snore` now catch
+   RuntimeException and LinkageError (`Safety.caught`): a bubble never crashes the game.
+2. **Talk faces**: `S2CNpcTalk.skin` is a byte. Children sent -1 (Eto's face); villagers sent -100 - look (look >= 1000: cut to a byte,
+   a companion's or a ghoul's face). Now `S2CNpcTalk.CHILD_FACE` (-50) and `HUMAN_FACE` (-51); `NpcTalkClient` draws
+   `ChildRenderer.textureOf(id)` / `HumanRenderer.textureOf(entity)` (the level's entity by id): the skin each is drawn in.
+3. **Rename**: the structure is `hexkagune:village` (structure, structure_set, biome tag `has_structure/village`, pools
+   `village/<i>_<j>`, templates `structures/village/t_<i>_<j>.nbt`). The map class is `village/VillageMap` (generated).
+4. **The new village** (`tools/village_structure.py`, reads the Sponge schematic): window x 10..265, z 8..263 of the 288 x 272 schematic
+   (every house kept; vanilla's jigsaw reaches 128 from the middle, any turn); ground y 8 (the commonest top of ground), sunk by it
+   (`start_height` -8, written by the tool); natural rock below ground - 3 left to the world unless it shows; air written 3 over the ground
+   and inside buildings; rim water made bank; BYG/Pixelmon swapped (SWAPS), barriers/command blocks/fire/Pixelmon signs dropped; leaves
+   persistent; signs' text kept only for the village's own (SIGNS_KEPT); containers empty. 5 x 5 tiles (SPLITS) joined by jigsaw blocks
+   (a tree from the middle tile: its row, then each column; `size` 4), start anchor `hexkagune:village_middle`, terrain adaptation none,
+   `max_distance_from_center` 128. 13 houses (of 23 found; farthest-point spread), 2 villagers each (26 = the 26 looks), 6 investigators
+   on the patrol ring (18..36 out). Preview: `docs/handoff/village-2.0.1.png`. Template entities carry HexVillage `Map` 2.
+5. **Dry land**: `ControlStructures` registers `hexkagune:dry_jigsaw` (DeferredRegister on `Registries.STRUCTURE_TYPE`): `DryJigsaw`
+   wraps vanilla's `JigsawStructure` (its map codec xmapped: same JSON fields), its settings from Forge's
+   `modifiableStructureInfo().getOriginalStructureInfo()`; `findGenerationPoint` samples 25 points (`VillageGround.SAMPLES`, +-112) with
+   `ChunkGenerator.getBaseHeight` WORLD_SURFACE_WG vs OCEAN_FLOOR_WG: any water, or ground more than `FLAT` 8 apart: no village. Else
+   vanilla's own findGenerationPoint, called through `ObfuscationReflectionHelper` (its access could not be checked here; by name it works
+   either way). All new API is allowlisted with evidence (2.0.1 block at the end of `verify/api-allowlist.txt`).
+6. **Old worlds**: Brick Villages already built keep `village/BrickVillage` (restored as legacy data): `VillagePlace.Place.brick` (no
+   `Map` key) picks its streets/route/perimeter. The old structure id is gone: Minecraft logs unknown structure starts and goes on.
+7. **More CCG**: 6 per village; wild pairs `AgentRules.SPAWN_CHANCE` 0.0084 (about a pair a day; was 0.0042).
 
-## Done (in the WIP commit, not built)
+## Untested in game (watch these first)
 
-1. **The crash** (crash report: `NoSuchFieldError: f_181350_` in `SpeechBubbles.emit`, from `HumanRenderer`: every speech bubble crashed
-   the game). `Font.DisplayMode.NORMAL` is an enum constant: SRG keeps its name (`NORMAL`), 1.3.38 had read the tsrg line `eov$a a NORMAL
-   181350` as `f_181350_`. Fixed in `SpeechBubbles` (uses `Font.DisplayMode.NORMAL`), the stub `stubs/net/minecraft/client/gui/Font.java`
-   and `verify/api-allowlist.txt` line 142. Checked: no other enum constant in the allowlist has an f_ name.
-2. The new schematic is in the repo, unchanged: `art/village/japanesevillagev4.schem`.
+- World loading with the new structure type (a wrong name here would fail world creation: everything was checked against the mappings,
+  but nothing ran). `/locate structure hexkagune:village`.
+- How the village sits: sunk by 8, terrain adaptation none (edges meet the world as they are; the mountain cut on the east is a steep face).
+  Trees of the world may grow in its open grass (features come after structures).
+- Memory: about 914,000 template blocks (~45 MB once loaded).
+- Villagers and investigators in the big village: walking the hills (street spots up to 6 over the ground), homes, the patrol.
 
-## Left, in order
+## Ideas left from 2.0.0's list
 
-1. **Speech bubbles fail-safe**: wrap `SpeechBubbles.draw` (or the calls in `HumanRenderer`/others) in try/catch of RuntimeException and
-   LinkageError, logging once (`com.hex.kagune.control.Safety.caught` takes RuntimeException), so a drawing error never crashes the game.
-2. **Talk screen faces**: `ChildTalk` (line ~175) sends skin **-1**, which `NpcTalkClient` draws as Eto's skin: every child's talk screen
-   shows Eto's face. Fix: send a child code (e.g. -50) and in `NpcTalkClient` look up the entity (`minecraft.f_91073_.m_6815_(npc)`) and
-   draw `ChildRenderer`'s texture for it (make `m_5478_`'s body a static `ChildRenderer.textureOf(ChildNpc)`: `ChildLooks.pick(skin.key(),
-   genome.hair(), genome.eyes())`, or the made skin, else FALLBACK). Humans' faces map by `-100 - look` and looked right by reading; if
-   the owner meant villagers too, check `HumanTalk`'s skin code against `HumanNpc.look()` on the client. GuiCanvas.face draws u/v 8..16 of
-   64 by fraction, so HD skins are fine.
-3. **Rename** the structure to plain village: `data/hexkagune/worldgen/structure/brick_village.json` (+ its template pool, structure_set,
-   `tags/worldgen/biome/has_structure/brick_village.json`, `structures/brick_village.nbt`) to `village` (`hexkagune:village`); the owner's
-   words: "renamed just village, like Hex Ghouls Village". Keep Java names or rename consistently (`BrickVillage.java` is generated by
-   `tools/village_structure.py`: MAP).
-4. **New village from the schematic** (`japanesevillagev4.schem`, Sponge v2: Width 288, Height 86, Length 272, DataVersion **2586 = 1.16.5**,
-   Palette name[props] -> id, BlockData varints (`library_structure.varints`), index (y*Length + z)*Width + x, BlockEntities with `Pos`,
-   `Id`, old sign Text1..4). Adapt `tools/village_structure.py` (it reads a litematic now: `main()`'s first lines and `te`). Problems to
-   handle: **modded blocks** `byg:*` (cherry log/leaves/foliage, glowstone lantern, flowers) and `pixelmon:*` (temple blocks, poke center
-   and mart signs) must be swapped for vanilla 1.20.1 ones (cherry_log/cherry_leaves/pink_petals exist in 1.20.1; temple -> stone bricks
-   etc.; signs -> air or oak signs); **renamed** `grass_path` -> `dirt_path`; drop `barrier`, `command_block`, `chain_command_block`,
-   `bedrock`, `structure` junk, redstone contraptions if any; signs' Text1..4 -> 1.20 front_text. **Size**: 288x272 is far bigger than the
-   Brick Village (99x97); a jigsaw start piece this big may exceed `max_distance_from_center` (max 128): split it into pieces or a
-   single-piece custom placement. Doors: generalise `DOORS` to any `*_door` but iron. Recompute homes/streets/ROUTE/PERIMETER (MAP).
-5. **Dry land only**: vanilla jigsaw has no water check (beard_thin builds a platform in the sea). Plan: a custom StructureType
-   `hexkagune:dry_jigsaw` wrapping `JigsawStructure` (its CODEC xmapped), `findGenerationPoint` rejecting when, at ~9 points over the
-   footprint, `ChunkGenerator.getBaseHeight(x, z, WORLD_SURFACE_WG, ...)` > `getBaseHeight(..., OCEAN_FLOOR_WG, ...)` (water over the
-   floor), else `inner.findValidGenerationPoint(ctx)` (public). Needs new allowlist entries with [srg] evidence: the mapping cache is at
-   `build/mapping-cache/joined.tsrg` + `intermediary-1.20.1.tiny`; `tools/find_srg.py <yarn class> <member>` needs the **yarn** class path
-   (e.g. `net/minecraft/world/gen/structure/Structure`, `net/minecraft/world/gen/chunk/ChunkGenerator`). Enum constants keep their names.
-   Be careful: a wrong name here crashes world loading.
-6. **More CCG investigators** per village: `AGENTS = 2` in `tools/village_structure.py` (they stand on street spots `near[3 + k*5]`); raise
-   to ~6 and regenerate.
-7. Bump to 2.0.1, release notes `.github/release-notes-2.0.1.md`, README entry, top section in `companions-handoff.md`, commit, push.
+See `next-ai-1.3.60.md` (group scenes, family meal, bedtime story, ...).

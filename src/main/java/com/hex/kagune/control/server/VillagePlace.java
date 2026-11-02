@@ -1,5 +1,6 @@
 package com.hex.kagune.control.server;
 
+import com.hex.kagune.control.village.BrickVillage;
 import com.hex.kagune.control.village.VillageMap;
 import com.hex.kagune.control.village.VillageRules;
 import net.minecraft.nbt.CompoundTag;
@@ -15,7 +16,20 @@ final class VillagePlace {
     static final String KEY = "HexVillage";
 
     /** The village's middle (block x, y, z), its turn (quarter turns clockwise), this one's home (block x, y, z; a human's). */
-    record Place(int x, int y, int z, int turns, int homeX, int homeY, int homeZ) {
+    record Place(int x, int y, int z, int turns, int homeX, int homeY, int homeZ, boolean brick) {
+        /** 2.0.1: its village's streets, patrol and perimeter (the new village's; a Brick Village's, built before 2.0.1, its own). */
+        int[][] streets() {
+            return this.brick ? BrickVillage.STREETS : VillageMap.STREETS;
+        }
+
+        int[][] route() {
+            return this.brick ? BrickVillage.ROUTE : VillageMap.ROUTE;
+        }
+
+        int perimeter() {
+            return this.brick ? BrickVillage.PERIMETER : VillageMap.PERIMETER;
+        }
+
         /** The map's spot {@code at} ({dx, dy, dz} from the middle, the template's frame) in the world: {x + 0.5, y, z + 0.5}. */
         double[] world(int[] at) {
             int[] turned = VillageRules.turn(at[0], at[2], this.turns);
@@ -24,12 +38,12 @@ final class VillagePlace {
 
         /** True if ({@code wx}, {@code wz}) is within the perimeter. */
         boolean inside(double wx, double wz) {
-            return VillageRules.inside(wx - this.x - 0.5, wz - this.z - 0.5, VillageMap.PERIMETER);
+            return VillageRules.inside(wx - this.x - 0.5, wz - this.z - 0.5, perimeter());
         }
 
         /** ({@code wx}, {@code wz}) brought back within the perimeter, {@code margin} in from it. */
         double[] clamp(double wx, double wz, double margin) {
-            double[] c = VillageRules.clamp(wx - this.x - 0.5, wz - this.z - 0.5, VillageMap.PERIMETER, margin);
+            double[] c = VillageRules.clamp(wx - this.x - 0.5, wz - this.z - 0.5, perimeter(), margin);
             return new double[] {this.x + 0.5 + c[0], this.z + 0.5 + c[1]};
         }
 
@@ -72,6 +86,6 @@ final class VillagePlace {
             data.m_128365_(KEY, v);
         }
         return new Place(v.m_128451_("MidX"), v.m_128451_("MidY"), v.m_128451_("MidZ"), v.m_128451_("Turns"), v.m_128451_("HomeX"), v.m_128451_("HomeY"),
-            v.m_128451_("HomeZ"));
+            v.m_128451_("HomeZ"), !v.m_128441_("Map"));
     }
 }

@@ -563,7 +563,7 @@ public final class AgentBrain {
      * fight, back to it.
      */
     private static void village(CcgAgent agent, Mind mind, VillagePlace.Place place, long now) {
-        int[][] route = com.hex.kagune.control.village.VillageMap.ROUTE;
+        int[][] route = place.route();
         if (mind.waypoint < 0 || mind.waypoint >= route.length) {
             double[] local = place.local(agent.m_20185_(), agent.m_20189_());
             mind.waypoint = com.hex.kagune.control.village.VillageRules.nearest(route, local[0], local[1]);

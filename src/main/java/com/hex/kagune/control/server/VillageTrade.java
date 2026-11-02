@@ -64,7 +64,7 @@ final class VillageTrade {
         double mz = (seller.m_20189_() + buyer.m_20189_()) / 2.0;
         double[] spot = {mx, seller.m_20186_(), mz};
         double best = 12.0 * 12.0;
-        for (int[] street : com.hex.kagune.control.village.VillageMap.STREETS) {
+        for (int[] street : place.streets()) {
             double[] at = place.world(street);
             double d = (at[0] - mx) * (at[0] - mx) + (at[2] - mz) * (at[2] - mz);
             if (d < best) {

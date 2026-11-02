@@ -1,10 +1,14 @@
-# 2.0.1 IN PROGRESS (not built): read `docs/handoff/next-ai-2.0.1.md` first
+# START HERE (state after 2.0.1): read `docs/handoff/next-ai-2.0.1.md` first
 
-- The owner's report on 2.0.0: a crash on every speech bubble (fixed in the WIP: `Font.DisplayMode.NORMAL`, not `f_181350_`), children's
-  talk screens show Eto's face, villages should be renamed "village", spawn on dry land only, have more CCG investigators, and use the new
-  schematic `art/village/japanesevillagev4.schem`. What is left, in order: `next-ai-2.0.1.md`.
+- **2.0.1** (the owner's report on 2.0.0; protocol 72, unchanged): the speech-bubble crash (`Font.DisplayMode.NORMAL`) and bubbles that
+  can never crash the game (`SpeechBubbles` catch + `Safety.caught`); talk screens show the skin the child or villager is drawn in
+  (`S2CNpcTalk.CHILD_FACE`/`HUMAN_FACE`; the face byte had cut villagers' looks); the structure renamed `hexkagune:village`, built from
+  the owner's schematic `art/village/japanesevillagev4.schem` by `tools/village_structure.py` (25 jigsaw tiles, 13 houses, 26 villagers,
+  6 investigators; map `village/VillageMap`, legacy `village/BrickVillage` for old worlds); only on dry, fairly flat land
+  (`ControlStructures` `hexkagune:dry_jigsaw`, `village/VillageGround`); wild investigator pairs about once a day. Details:
+  `next-ai-2.0.1.md`.
 
-# START HERE (state after 2.0.0)
+# State after 2.0.0
 
 - **2.0.0 is Release 2.0**: the version bump and the roll-up notes (`.github/release-notes-2.0.0.md`) over 1.3.68-1.3.83; no code change
   from 1.3.83. The owner tests it in game next: their reports come first, each its own version (the next is 2.0.1).

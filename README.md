@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.0.1 (HexGhoul): the crash fixed, the new village, on dry land (testing)
+
+See `.github/release-notes-2.0.1.md`: the speech-bubble crash fixed (and bubbles can never crash the game), the right face on every talk screen, the new village from the owner's schematic (`hexkagune:village`, 26 villagers, 6 investigators) only on dry, flat land, investigator pairs about once a day.
+
 ## 2.0.0 (HexGhoul): Release 2.0
 
 See `.github/release-notes-2.0.0.md`: the living tank (resistance, not health), the Brick Village with 16 villagers (talk, romance, gestures, dates), blinking, 136 new children's looks, CCG ranks, the bug/lag and animation passes.
