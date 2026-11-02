@@ -16,6 +16,13 @@ public final class NpcTalkClient {
 
     public static void accept(S2CNpcTalk message) {
         Minecraft minecraft = Minecraft.m_91087_();
+        // 1.3.77: a page with nothing to answer ends the talk (a villager walking up for a kiss or a hug, to be seen in the world).
+        if (message.choices().length == 0) {
+            if (minecraft.f_91080_ instanceof NpcTalkScreen screen && screen.npc == message.npc()) {
+                minecraft.m_91152_(null);
+            }
+            return;
+        }
         List<NpcTalk.Choice> choices = new ArrayList<>();
         List<String> labels = new ArrayList<>();
         for (int i = 0; i < message.choices().length; i++) {

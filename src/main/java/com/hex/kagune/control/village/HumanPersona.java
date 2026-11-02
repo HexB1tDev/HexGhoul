@@ -259,6 +259,34 @@ public final class HumanPersona {
         };
     }
 
+    /** 1.3.77: what it says after a kiss with its partner. */
+    public static String kissed(Temper temper, int seed) {
+        return switch (temper) {
+            case CHEERFUL -> pick(seed, "*giggles* Again! No, wait, people are looking. ...Again!", "Mm! You taste like sunshine.");
+            case SHY -> pick(seed, "*goes red to the ears* ...Hi.", "*hides their face in their hands* ...That was nice.");
+            case BOLD -> pick(seed, "That's more like it.", "Don't stop there. ...Fine, later.");
+            case KIND -> pick(seed, "*smiles* I missed you today.", "You're home. That's all I wanted.");
+            case GRUMPY -> pick(seed, "...In the street? Really? ...Don't stop.", "Hmph. ...One more. Then go.");
+            case FLIRTY -> pick(seed, "Mm. I was waiting for that all day.", "You're getting good at that.");
+            case DREAMY -> pick(seed, "*sighs* Like the end of a story.", "I think I heard music just now.");
+            case NERVOUS -> pick(seed, "Oh! Oh. Okay. Wow. Hi.", "D-did anyone see? ...I don't care. Hi.");
+        };
+    }
+
+    /** 1.3.77: what it says in a hug with its partner. */
+    public static String hugged(Temper temper, int seed) {
+        return switch (temper) {
+            case CHEERFUL -> pick(seed, "*squeezes you tight* Gotcha!", "Hugs fix everything!");
+            case SHY -> pick(seed, "*holds on a little longer* ...Thank you.", "*muffled* ...You're warm.");
+            case BOLD -> pick(seed, "Come here. *pulls you in*", "Nobody hugs like you do.");
+            case KIND -> pick(seed, "There you are. You're safe now.", "*rubs your back* Long day?");
+            case GRUMPY -> pick(seed, "...Fine. A short one. ...Okay, a long one.", "*grumbles, but doesn't let go*");
+            case FLIRTY -> pick(seed, "Mm, you smell nice today.", "Just a hug? ...For now.");
+            case DREAMY -> pick(seed, "Let's stay like this till the stars come out.", "You feel like home.");
+            case NERVOUS -> pick(seed, "*hugs back stiffly, then melts* ...Oh. That's nice.", "Is this okay? This is okay. Good.");
+        };
+    }
+
     static String pick(int seed, String... lines) {
         return lines[Math.floorMod(seed, lines.length)];
     }

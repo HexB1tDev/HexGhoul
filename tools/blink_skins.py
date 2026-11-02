@@ -5,7 +5,7 @@ the villagers' (each villager's skin is a child's with other colours: the same e
     python3 tools/blink_skins.py [preview-dir]
 
 For each child skin (the game's own processed copies, textures/entity/child/skins/<key>.png: never the owner's files) it writes
-<key>_closed.png beside it: only the eyes' pixels, laid over the skin while it blinks or sleeps: each eye grown over from the skin round
+<key>_closed.png (and, 1.3.77, <key>_blush.png: pink on the cheeks under the eyes) beside it: only the eyes' pixels, laid over the skin while it blinks or sleeps: each eye grown over from the skin round
 it (keeping its shading), a thin lash line across its lower part, sagging a little ("- -", as Eto's and the companions' shut eyes). Writes
 src/main/java/com/hex/kagune/control/family/ChildBlinks.java: the keys that have one (a skin whose eyes are already shut, or hidden by
 its hair, has none and never blinks).
@@ -171,6 +171,30 @@ def shut(face, tone, mask):
     return out
 
 
+def blush(face, tone, mask):
+    """{(x, y): colour}: a soft pink oval on the cheek under the eye (1.3.77: villagers blush), only where it is the skin."""
+    s = face.s
+    if not mask:
+        return {}
+    x0, x1 = min(p[0] for p in mask), max(p[0] for p in mask)
+    y1 = max(p[1] for p in mask)
+    cx = (x0 + x1 + 1) / 2.0
+    cy = y1 + 1 + 0.45 * s
+    rx = max(0.42 * (x1 - x0 + 1), 1.0)
+    ry = max(0.34 * s, 0.6)
+    out = {}
+    for y in range(int(cy - ry - 1), int(cy + ry + 2)):
+        for x in range(int(cx - rx - 1), int(cx + rx + 2)):
+            if not (0 <= x < face.n and 0 <= y < face.n):
+                continue
+            d = ((x + 0.5 - cx) / rx) ** 2 + ((y + 0.5 - cy) / ry) ** 2
+            c = face.seen[y][x]
+            if d >= 1.0 or c[3] < 128 or not cs.skinlike(c, tone) and not cs.blushlike(c, tone):
+                continue
+            out[(x, y)] = (255, 104, 128, int(170 * (1.0 - d) ** 0.6))
+    return out
+
+
 def main():
     preview = Path(sys.argv[1]) if len(sys.argv) > 1 else None
     keys = sorted(p.stem for p in SKINS.glob("*.png") if p.stem.split("_")[-1].isdigit())
@@ -179,8 +203,9 @@ def main():
     for key in keys:
         target = SKINS / (key + "_closed.png")
         if key in NONE or key not in BOXES:
-            if target.exists():
-                target.unlink()
+            for old in (target, SKINS / (key + "_blush.png")):
+                if old.exists():
+                    old.unlink()
             continue
         image = Image.open(SKINS / (key + ".png")).convert("RGBA")
         w = image.size[0]
@@ -190,12 +215,15 @@ def main():
         if key in TONE_ROWS:
             tone = band_tone(face, *TONE_ROWS[key])
         overlay = Image.new("RGBA", (w, w), (0, 0, 0, 0))
+        cheeks = Image.new("RGBA", (w, w), (0, 0, 0, 0))
         found = 0
         for side in (0, 1):
             mask = eye_mask(face, tone, BOXES[key][side], KEEP.get(key))
             for (x, y), colour in shut(face, tone, mask).items():
                 on_hat = face.hat[y][x][3] > 0  # a see-through hat pixel too: it would tint the shut eye
                 overlay.putpixel(((40 if on_hat else 8) * s + x, 8 * s + y), colour)
+            for (x, y), colour in blush(face, tone, mask).items():
+                cheeks.putpixel(((40 if face.hat[y][x][3] > 0 else 8) * s + x, 8 * s + y), colour)
             found += bool(mask)
         if found == 0:
             if target.exists():
@@ -203,6 +231,7 @@ def main():
             print(f"{key}: no eyes found")
             continue
         overlay.save(target, optimize=True)
+        cheeks.save(SKINS / (key + "_blush.png"), optimize=True)
         made.append(key)
         if preview is not None:
             def face_img(img):
@@ -230,6 +259,11 @@ public final class ChildBlinks {{
     /** True if skin {{@code key}} has its eyes-shut overlay. */
     public static boolean has(String key) {{
         return key != null && KEYS.contains(key);
+    }}
+
+    /** 1.3.77: its blush (pink on the cheeks under the eyes), for a skin that {{@link #has}} shut eyes. */
+    public static String blush(String key) {{
+        return "textures/entity/child/skins/" + key + "_blush.png";
     }}
 
     /** The overlay's texture path (the mod's), for a skin that {{@link #has}} one. */

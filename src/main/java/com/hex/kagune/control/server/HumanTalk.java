@@ -31,6 +31,9 @@ public final class HumanTalk {
     /** How near a player must be to talk, and to keep talking (blocks). */
     static final double REACH = 6.0;
     static final double KEEP = 9.0;
+    /** 1.3.77: how close a villager comes up to its partner for a kiss or a hug, and how long it tries to. */
+    static final double CLOSE = 1.3;
+    static final long COMING = 100L;
     /** What each of the page's reply slots asks. */
     static final String[] ASKS = {"How are you?", "Tell me about yourself.", "Any news?", "You look lovely today."};
 
@@ -106,7 +109,10 @@ public final class HumanTalk {
         if (!bond.has(com.hex.kagune.control.npc.NpcBonds.MET)) {
             QuestServer.bond(player, key, bond.with(com.hex.kagune.control.npc.NpcBonds.MET, true));
         }
-        show(player, human, HumanPersona.hello(temper, bond.regard(), bond.has(HumanPersona.PARTNER), human.m_217043_().m_188503_(1000)));
+        int roll = human.m_217043_().m_188503_(1000);
+        show(player, human, HumanPersona.hello(temper, bond.regard(), bond.has(HumanPersona.PARTNER), roll));
+        human.mind.with = player.m_20148_();
+        HumanBrain.gesture(human, com.hex.kagune.control.village.HumanGestures.hello(temper, bond.has(HumanPersona.PARTNER), roll), 0, now); // 1.3.77
     }
 
     /** An answer from the talk screen (routed here by {@code C2SNpcTalk} when the one talked to is a human). */
@@ -130,6 +136,23 @@ public final class HumanTalk {
         if (choice == NpcTalk.Choice.LEAVE) {
             TALKS.remove(player.m_20148_());
             HumanBrain.say(human, level, HumanPersona.bye(temper, bond.regard(), roll));
+            HumanBrain.gesture(human, com.hex.kagune.control.village.HumanGestures.bye(temper, roll), 0, level.m_46467_()); // 1.3.77
+            return;
+        }
+        long now = level.m_46467_();
+        human.mind.with = player.m_20148_();
+        // 1.3.77: a kiss or a hug: the talk ends so it can be seen; it walks up to them, and does it (a kiss: leaning in, then kissed and
+        // hearts), with a line in a bubble.
+        if (choice == NpcTalk.Choice.KISS || choice == NpcTalk.Choice.HUG) {
+            TALKS.remove(player.m_20148_());
+            boolean kiss = choice == NpcTalk.Choice.KISS;
+            human.mind.pending = com.hex.kagune.control.village.HumanGestures.of(kiss ? com.hex.kagune.control.npc.EtoGesture.KISS
+                : com.hex.kagune.control.npc.EtoGesture.HUG);
+            human.mind.pendingThen = kiss ? com.hex.kagune.control.village.HumanGestures.of(com.hex.kagune.control.npc.EtoGesture.KISSED) : 0;
+            human.mind.pendingUntil = now + COMING;
+            human.mind.pendingLine = kiss ? HumanPersona.kissed(temper, roll) : HumanPersona.hugged(temper, roll);
+            ControlNetwork.sendTo(player, new S2CNpcTalk(human.m_19879_(), HumanPersona.name(seed), temper.title, bond.regard(), false,
+                -100 - human.look(), "", new int[0], new String[0]));
             return;
         }
         String line;
@@ -159,7 +182,24 @@ public final class HumanTalk {
             }
         }
         show(player, human, line);
+        // 1.3.77: its body with its words.
+        int move = switch (choice) {
+            case SAY_1 -> com.hex.kagune.control.village.HumanGestures.chat(temper, roll);
+            case SAY_2 -> com.hex.kagune.control.village.HumanGestures.about(temper, roll);
+            case SAY_3 -> com.hex.kagune.control.village.HumanGestures.news(roll);
+            case SAY_5, SAY_6 -> com.hex.kagune.control.village.HumanGestures.confessed(answered);
+            case SAY_7 -> com.hex.kagune.control.village.HumanGestures.yes(temper);
+            case SAY_8 -> com.hex.kagune.control.village.HumanGestures.love(temper, roll);
+            default -> com.hex.kagune.control.village.HumanGestures.compliment(temper, roll);
+        };
+        HumanBrain.gesture(human, move, 0, now);
+        if (choice == NpcTalk.Choice.SAY_7 || choice == NpcTalk.Choice.SAY_8) {
+            HumanBrain.hearts(human, level, choice == NpcTalk.Choice.SAY_7 ? 10 : 5);
+        }
     }
+
+    /** 1.3.77: how its last confession was taken (for its gesture; set by {@link #confess}). */
+    private static HumanPersona.Answer answered = HumanPersona.Answer.DOUBT;
 
     /**
      * 1.3.74: a ghoul's confession ({@code plea}: the second try, after a doubt): taken (it knows, and they may go out), doubted (they may
@@ -170,6 +210,7 @@ public final class HumanTalk {
         String both = player.m_20148_() + key;
         DOUBTED.remove(both);
         HumanPersona.Answer answer = HumanPersona.confession(temper, bond.regard(), plea, human.m_217043_().m_188500_());
+        answered = answer;
         switch (answer) {
             case YES -> QuestServer.bond(player, key, bond.with(HumanPersona.CONFESSED, true));
             case DOUBT -> DOUBTED.add(both);
@@ -210,6 +251,12 @@ public final class HumanTalk {
         if (partner) {
             offered.add(NpcTalk.Choice.SAY_8);
             said.add(ROMANCE[3]);
+            // 1.3.77: a kiss, a hug.
+            String name = HumanPersona.name(seed);
+            offered.add(NpcTalk.Choice.KISS);
+            said.add("Kiss " + name + ".");
+            offered.add(NpcTalk.Choice.HUG);
+            said.add("Hug " + name + ".");
         }
         offered.add(NpcTalk.Choice.LEAVE);
         said.add("");

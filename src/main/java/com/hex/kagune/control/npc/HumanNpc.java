@@ -28,6 +28,12 @@ public class HumanNpc extends PathfinderMob {
     static final EntityDataAccessor<Integer> LOOK = SynchedEntityData.m_135353_(HumanNpc.class, EntityDataSerializers.f_135028_);
     /** 1 while it is frightened. */
     static final EntityDataAccessor<Integer> SCARED = SynchedEntityData.m_135353_(HumanNpc.class, EntityDataSerializers.f_135028_);
+    /** 1.3.77: what it is doing with its body ({@code HumanGestures.pack}: the move, its style, a count; 0 nothing). */
+    static final EntityDataAccessor<Integer> GESTURE = SynchedEntityData.m_135353_(HumanNpc.class, EntityDataSerializers.f_135028_);
+
+    /** 1.3.77 (clients): the gesture last seen on it and when (its age in ticks), so each one plays from its start. */
+    public int shownGesture;
+    public float shownAt;
 
     /** The server's state for it; null on clients and until its first tick. */
     public HumanBrain.Mind mind;
@@ -48,6 +54,17 @@ public class HumanNpc extends PathfinderMob {
         super.m_8097_();
         this.f_19804_.m_135372_(LOOK, 0);
         this.f_19804_.m_135372_(SCARED, 0);
+        this.f_19804_.m_135372_(GESTURE, 0);
+    }
+
+    public int gesture() {
+        return this.f_19804_.m_135370_(GESTURE);
+    }
+
+    public void gesture(int packed) {
+        if (this.f_19804_.m_135370_(GESTURE) != packed) {
+            this.f_19804_.m_135381_(GESTURE, packed);
+        }
     }
 
     public boolean dressed() {

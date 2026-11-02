@@ -48,6 +48,71 @@ public final class HumanBrain {
         long tradeReady = Long.MIN_VALUE / 2;
         long greetAt = Long.MIN_VALUE / 2;
         boolean dusk;
+        /** 1.3.77: the move it is making (HumanGestures code, 0 none), until when, how many it has made, what comes after (a kiss's second beat). */
+        int gesture;
+        long gestureUntil;
+        int gestures;
+        int then;
+        /** 1.3.77: the player it is making it with (hearts between them), and when it next does something by itself in the street. */
+        UUID with;
+        long idleAt = Long.MIN_VALUE / 2;
+        /** 1.3.77: a move it walks up to its partner ({@code with}) to make (a kiss, a hug), till when it tries, what after, its line. */
+        int pending;
+        long pendingUntil;
+        int pendingThen;
+        String pendingLine;
+    }
+
+    /** 1.3.77: {@code human} makes move {@code code} (HumanGestures), every client drawing it; {@code then}: the move after it, or 0. */
+    public static void gesture(HumanNpc human, int code, int then, long now) {
+        Mind mind = human.mind;
+        if (mind == null || code <= 0) {
+            return;
+        }
+        mind.gesture = code;
+        mind.gestureUntil = now + com.hex.kagune.control.village.HumanGestures.ticks(code);
+        mind.then = then;
+        mind.gestures++;
+        com.hex.kagune.control.village.HumanPersona.Temper temper = com.hex.kagune.control.village.HumanPersona.temper(HumanTalk.seed(human));
+        human.gesture(com.hex.kagune.control.village.HumanGestures.pack(code, com.hex.kagune.control.village.HumanGestures.style(temper), mind.gestures));
+    }
+
+    /** 1.3.77: its move over, the next (a kiss's second beat, with hearts), else nothing; a fright ends any. */
+    static void gestures(HumanNpc human, Mind mind, ServerLevel level, long now, boolean frightened) {
+        if (mind.gesture == 0) {
+            return;
+        }
+        if (frightened) {
+            mind.gesture = 0;
+            mind.then = 0;
+            human.gesture(0);
+            return;
+        }
+        if (now < mind.gestureUntil) {
+            return;
+        }
+        int next = mind.then;
+        mind.gesture = 0;
+        mind.then = 0;
+        human.gesture(0);
+        if (next > 0) {
+            gesture(human, next, 0, now);
+            if (com.hex.kagune.control.village.HumanGestures.gesture(next) == com.hex.kagune.control.npc.EtoGesture.KISSED) {
+                hearts(human, level, 8);
+            }
+        }
+    }
+
+    /** 1.3.77: hearts between it and the player it is with (or over its head). */
+    static void hearts(HumanNpc human, ServerLevel level, int count) {
+        net.minecraft.world.entity.Entity other = human.mind == null || human.mind.with == null ? null : level.m_8791_(human.mind.with);
+        double x = human.m_20185_();
+        double z = human.m_20189_();
+        if (other != null && other.m_20280_(human) < 16.0) {
+            x = (x + other.m_20185_()) * 0.5;
+            z = (z + other.m_20189_()) * 0.5;
+        }
+        level.m_8767_(net.minecraft.core.particles.ParticleTypes.f_123750_, x, human.m_20186_() + 1.7, z, count, 0.3, 0.25, 0.3, 0.02);
     }
 
     /** 1.3.65: what it runs from, how bad a sight it is, and whether it is a ghoul it screams about. */
@@ -77,6 +142,7 @@ public final class HumanBrain {
             }
             mind.shakenUntil = now + HumanRules.SHAKEN;
             human.scared(true);
+            gestures(human, mind, level, now, true); // 1.3.77: a fright ends any move
             scream(human, level, mind, danger, now);
             mind.ranFrom = danger.body().m_19879_();
             if (now >= mind.nextPlan || human.m_21573_().m_26571_()) {
@@ -102,6 +168,41 @@ public final class HumanBrain {
         }
         mind.ranFrom = 0;
         human.scared(now < mind.shakenUntil);
+        gestures(human, mind, level, now, false);
+        // 1.3.77: walking up to its partner for a kiss or a hug: close enough (or after a while), it faces them and does it.
+        if (mind.pending != 0) {
+            net.minecraft.world.entity.Entity to = mind.with == null ? null : level.m_8791_(mind.with);
+            if (!(to instanceof ServerPlayer partner) || !partner.m_6084_() || partner.m_20280_(human) > 12.0 * 12.0) {
+                mind.pending = 0;
+            } else if (partner.m_20280_(human) <= HumanTalk.CLOSE * HumanTalk.CLOSE || now >= mind.pendingUntil) {
+                human.m_21573_().m_26573_();
+                face(human, partner);
+                human.m_21563_().m_24960_(partner, 30.0F, 30.0F);
+                int what = mind.pending;
+                mind.pending = 0;
+                gesture(human, what, mind.pendingThen, now);
+                if (com.hex.kagune.control.village.HumanGestures.gesture(what) == com.hex.kagune.control.npc.EtoGesture.HUG) {
+                    hearts(human, level, 5);
+                }
+                say(human, level, mind.pendingLine);
+            } else {
+                if (now % 10L == 0L || human.m_21573_().m_26571_()) {
+                    human.m_21573_().m_26519_(partner.m_20185_(), partner.m_20186_(), partner.m_20189_(), HumanRules.WALK);
+                }
+                return;
+            }
+        }
+        // 1.3.77: a move it stands still for (a kiss, a hug, a bow): it stays where it is, facing whoever it is with.
+        if (mind.gesture != 0 && mind.trade == null && com.hex.kagune.control.village.HumanGestures.still(mind.gesture)) {
+            human.m_21573_().m_26573_();
+            net.minecraft.world.entity.Entity with = mind.with == null ? null : level.m_8791_(mind.with);
+            if (with != null && with.m_20280_(human) < 8.0 * 8.0) {
+                face(human, with);
+            }
+            if (HumanTalk.talker(human, level) == null) {
+                return;
+            }
+        }
         // 1.3.73: a player talking to it: it stands still, facing them.
         ServerPlayer talker = HumanTalk.talker(human, level);
         if (talker != null) {
@@ -241,6 +342,7 @@ public final class HumanBrain {
         boolean night = com.hex.kagune.control.npc.NpcRules.night(level.m_46468_());
         if (night && !mind.dusk && human.m_217043_().m_188503_(3) == 0) {
             say(human, level, com.hex.kagune.control.village.VillageTalk.dusk(human.m_217043_().m_188503_(100)));
+            gesture(human, com.hex.kagune.control.village.HumanGestures.dusk(human.m_217043_().m_188503_(100)), 0, now); // 1.3.77
         }
         mind.dusk = night;
         if (night) {
@@ -261,7 +363,17 @@ public final class HumanBrain {
                 return;
             }
         }
-        if (now < mind.nextWander || now < mind.shakenUntil || !human.m_21573_().m_26571_()) {
+        // 1.3.77: standing in the street, now and then something of its own (a stretch, a hum, a twirl of its hair: by its temper).
+        if (mind.gesture == 0 && now >= mind.idleAt && now >= mind.shakenUntil && human.m_21573_().m_26571_()) {
+            if (mind.idleAt != Long.MIN_VALUE / 2) {
+                gesture(human, com.hex.kagune.control.village.HumanGestures.idle(com.hex.kagune.control.village.HumanPersona.temper(HumanTalk.seed(human)),
+                    human.m_217043_().m_188503_(1000)), 0, now);
+                mind.nextWander = Math.max(mind.nextWander, mind.gestureUntil + 20L);
+            }
+            mind.idleAt = now + 500L + human.m_217043_().m_188503_(900);
+        }
+        if (now < mind.nextWander || now < mind.shakenUntil || !human.m_21573_().m_26571_() || mind.gesture != 0
+            && com.hex.kagune.control.village.HumanGestures.still(mind.gesture)) {
             return;
         }
         mind.nextWander = now + com.hex.kagune.control.village.VillageRules.STROLL_EVERY
@@ -291,7 +403,11 @@ public final class HumanBrain {
                 mind.greetAt = now;
                 other.mind.greetAt = now;
                 face(human, other);
+                face(other, human);
                 say(human, level, com.hex.kagune.control.village.VillageTalk.greet(human.m_217043_().m_188503_(1000)));
+                // 1.3.77: a wave or a little bow, and one back.
+                gesture(human, com.hex.kagune.control.village.HumanGestures.greet(human.m_217043_().m_188503_(1000)), 0, now);
+                gesture(other, com.hex.kagune.control.village.HumanGestures.greet(other.m_217043_().m_188503_(1000)), 0, now + 6L);
                 return;
             }
             if (now >= mind.tradeReady && now >= other.mind.tradeReady && human.m_217043_().m_188503_(6) == 0) {

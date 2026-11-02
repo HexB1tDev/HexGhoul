@@ -1,9 +1,30 @@
-# START HERE (state after 1.3.76)
+# START HERE (state after 1.3.77)
 
 - The owner dropped RULE 1 in this session ("ignore the 97% rule, I changed my mind"); `CLAUDE.md` still holds it until they say otherwise
   for good. Commit and push often anyway.
-- **Next:** humans' gestures (kisses, hugs, blushes: from Eto's, the kids', Touka's and Ken's animations), then dates (walking together hand
-  in hand, inside the village).
+- **Next:** dates with a villager partner (walking together hand in hand, inside the village). Reuse: companions' HAND gesture
+  (`EtoGesture.HAND`, how Eto walks hand in hand: `EtoBrain` "hand"), `VillagePlace` (stay inside the perimeter), `HumanBrain.Mind.with`.
+- **1.3.77 villagers' gestures** (protocol 72, unchanged; `HumanNpc.GESTURE` is new entity data, no message). Pure `village/HumanGestures`:
+  a move = an `EtoGesture` ordinal or `CUE` 128 + a `ChildCue` ordinal; `pack(code, style, count)` (8 + 2 + 22 bits); `style(temper)`
+  (EtoPose style: CHEERFUL/FLIRTY/DREAMY Eto's 0, KIND/BOLD Ken's 1, SHY/GRUMPY/NERVOUS Touka's 2); `ticks` (held Eto gestures `HELD` 40),
+  `eyesClosed`, `blush` (Eto's blush flag; the cues GIGGLE, PLEAD), `still`; picks by temper: `hello(temper, partner)`, `chat`, `about`,
+  `news`, `compliment`, `confessed(answer)` (AWE / child CROSS / FLINCH), `yes`, `love`, `bye`, `greet`, `dusk`, `idle`; none hold props.
+  `HumanPersona.kissed`, `hugged` (16 lines each). Server `HumanBrain`: `Mind.gesture/gestureUntil/gestures/then/with/idleAt/pending*`;
+  `gesture(human, code, then, now)` (sets the entity data); `gestures(...)` each tick (ends it; the `then` move next, KISSED with hearts; a
+  fright ends any); `hearts(human, level, n)` (`ParticleTypes.HEART` between it and `with`); before the talker check: walking up to its
+  partner for a pending kiss/hug (`HumanTalk.CLOSE` 1.3, `COMING` 100 ticks), then the move and its line; a still move holds it in
+  place facing `with`. `village`: a dusk word comes with YAWN/STRETCH; standing (navigation done) every 500..1400 ticks an idle move;
+  `meet`: both face each other, greet moves. `HumanTalk`: hello/bye/each answer's move (`answered` keeps the last confession's answer);
+  SAY_7/SAY_8 hearts; partners get `Choice.KISS`/`HUG` (labels "Kiss <name>.", "Hug <name>."): the talk ends (`S2CNpcTalk` with no choices:
+  `NpcTalkClient` closes the screen), `pending` set. Client `HumanRenderer`: `posed(human, age)` (a new packed value restarts it from
+  `shownAt`; a cue: `ChildTalkPose.pose(cue, t, null, false)` x `cue.weight`; a gesture: `EtoPose.gesture(g, t, style, count % 3)`),
+  drop/spin/flip/roll as `EtoRenderer`, `Model.pose` applied per part (`RigPose.transform`); the `Blink` layer also draws the blush
+  (`HumanRules.blush(look)`: `ChildBlinks.blush(child)`, `tools/blink_skins.py` writes `<key>_blush.png`: an oval under each boxed eye,
+  only on skin, alpha to 170) rising over 8 ticks, and shuts the eyes for `eyesClosed` moves. Not previewed on a villager (reused poses).
+  `NpcTests.village`.
+
+# State after 1.3.76
+
 - **1.3.76 blinks** (the owner: "they should all blink like Touka, Eto and all the kids do"; protocol 72, unchanged; client only). By
   reading, the children never blinked (only `EtoRenderer`'s `closed`); now they do. `tools/blink_skins.py` (imports `child_skins.py`'s
   face readers) writes `textures/entity/child/skins/<key>_closed.png`: each eye boxed BY HAND (`BOXES`, face pixels, rectangles holding the

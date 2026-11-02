@@ -43,6 +43,11 @@ public final class ChildBlinks {
         return key != null && KEYS.contains(key);
     }
 
+    /** 1.3.77: its blush (pink on the cheeks under the eyes), for a skin that {@link #has} shut eyes. */
+    public static String blush(String key) {
+        return "textures/entity/child/skins/" + key + "_blush.png";
+    }
+
     /** The overlay's texture path (the mod's), for a skin that {@link #has} one. */
     public static String closed(String key) {
         return "textures/entity/child/skins/" + key + "_closed.png";

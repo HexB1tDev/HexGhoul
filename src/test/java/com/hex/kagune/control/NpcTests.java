@@ -825,6 +825,51 @@ public final class NpcTests {
         check(!com.hex.kagune.control.village.HumanPersona.hello(com.hex.kagune.control.village.HumanPersona.Temper.SHY, 0, 1)
             .equals(com.hex.kagune.control.village.HumanPersona.hello(com.hex.kagune.control.village.HumanPersona.Temper.SHY, 90, 1)),
             "a friend is greeted otherwise than a stranger");
+        // 1.3.77: gestures: every temper moves with everything it says, real moves (no props), coded and decoded whole.
+        boolean moves = true;
+        java.util.Set<Integer> kinds = new java.util.HashSet<>();
+        for (com.hex.kagune.control.village.HumanPersona.Temper temper : com.hex.kagune.control.village.HumanPersona.Temper.values()) {
+            for (int seed = 0; seed < 12; seed++) {
+                java.util.List<Integer> codes = new java.util.ArrayList<>(java.util.List.of(
+                    com.hex.kagune.control.village.HumanGestures.hello(temper, false, seed), com.hex.kagune.control.village.HumanGestures.hello(temper, true, seed),
+                    com.hex.kagune.control.village.HumanGestures.chat(temper, seed), com.hex.kagune.control.village.HumanGestures.about(temper, seed),
+                    com.hex.kagune.control.village.HumanGestures.news(seed), com.hex.kagune.control.village.HumanGestures.compliment(temper, seed),
+                    com.hex.kagune.control.village.HumanGestures.yes(temper), com.hex.kagune.control.village.HumanGestures.love(temper, seed),
+                    com.hex.kagune.control.village.HumanGestures.bye(temper, seed), com.hex.kagune.control.village.HumanGestures.greet(seed),
+                    com.hex.kagune.control.village.HumanGestures.dusk(seed), com.hex.kagune.control.village.HumanGestures.idle(temper, seed)));
+                for (com.hex.kagune.control.village.HumanPersona.Answer answer : com.hex.kagune.control.village.HumanPersona.Answer.values()) {
+                    codes.add(com.hex.kagune.control.village.HumanGestures.confessed(answer));
+                }
+                for (int code : codes) {
+                    boolean cue = com.hex.kagune.control.village.HumanGestures.cue(code);
+                    com.hex.kagune.control.npc.EtoGesture g = com.hex.kagune.control.village.HumanGestures.gesture(code);
+                    moves &= code > 0 && com.hex.kagune.control.village.HumanGestures.ticks(code) > 0
+                        && (cue ? com.hex.kagune.control.village.HumanGestures.childCue(code) != com.hex.kagune.control.family.ChildCue.NONE
+                            : g != com.hex.kagune.control.npc.EtoGesture.NONE && g.mainHand == null && g.offHand == null);
+                    int packed = com.hex.kagune.control.village.HumanGestures.pack(code, com.hex.kagune.control.village.HumanGestures.style(temper), seed * 977 + 5);
+                    moves &= com.hex.kagune.control.village.HumanGestures.code(packed) == code
+                        && com.hex.kagune.control.village.HumanGestures.style(packed) == com.hex.kagune.control.village.HumanGestures.style(temper)
+                        && com.hex.kagune.control.village.HumanGestures.count(packed) == seed * 977 + 5;
+                    kinds.add(code);
+                }
+                for (String line : new String[] {com.hex.kagune.control.village.HumanPersona.kissed(temper, seed),
+                    com.hex.kagune.control.village.HumanPersona.hugged(temper, seed)}) {
+                    moves &= line != null && !line.isBlank() && !banned.matcher(line).find();
+                }
+            }
+        }
+        int kiss = com.hex.kagune.control.village.HumanGestures.of(com.hex.kagune.control.npc.EtoGesture.KISS);
+        check(moves && kinds.size() >= 25, "villagers move with their words: " + kinds.size() + " different moves, none with a prop");
+        check(com.hex.kagune.control.village.HumanGestures.ticks(kiss) == com.hex.kagune.control.village.HumanGestures.HELD
+            && com.hex.kagune.control.village.HumanGestures.eyesClosed(kiss)
+            && com.hex.kagune.control.village.HumanGestures.blush(com.hex.kagune.control.village.HumanGestures.of(com.hex.kagune.control.npc.EtoGesture.KISSED))
+            && com.hex.kagune.control.village.HumanGestures.still(kiss), "a kiss: held a while, eyes shut, standing still; then a blush");
+        boolean pink = true;
+        for (int i = 0; i < com.hex.kagune.control.village.HumanSkins.ALL.length; i++) {
+            String path = com.hex.kagune.control.npc.HumanRules.blush(com.hex.kagune.control.npc.HumanRules.CUTE + i);
+            pink &= path == null || new java.io.File("src/main/resources/assets/hexkagune/" + path).isFile();
+        }
+        check(pink && com.hex.kagune.control.npc.HumanRules.blush(2) == null, "villagers' blushes are there");
         // 1.3.74: romance: a ghoul's confession first (may take convincing), then together.
         com.hex.kagune.control.village.HumanPersona.Temper kind = com.hex.kagune.control.village.HumanPersona.Temper.KIND;
         com.hex.kagune.control.village.HumanPersona.Temper nervous = com.hex.kagune.control.village.HumanPersona.Temper.NERVOUS;

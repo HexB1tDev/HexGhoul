@@ -77,6 +77,15 @@ public final class HumanRules {
         return com.hex.kagune.control.family.ChildBlinks.has(child) ? com.hex.kagune.control.family.ChildBlinks.closed(child) : null;
     }
 
+    /** 1.3.77: the texture (the mod's) of look {@code look}'s blush (its child skin's), or null (vanilla's looks, or no eyes boxed). */
+    public static String blush(int look) {
+        if (look < CUTE) {
+            return null;
+        }
+        String child = com.hex.kagune.control.village.HumanSkins.ALL[Math.floorMod(look - CUTE, com.hex.kagune.control.village.HumanSkins.ALL.length)].child();
+        return com.hex.kagune.control.family.ChildBlinks.has(child) ? com.hex.kagune.control.family.ChildBlinks.blush(child) : null;
+    }
+
     public static boolean slim(int look) {
         if (look >= CUTE) {
             return com.hex.kagune.control.village.HumanSkins.ALL[Math.floorMod(look - CUTE, com.hex.kagune.control.village.HumanSkins.ALL.length)].slim();
