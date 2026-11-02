@@ -620,6 +620,8 @@ final class EtoOwl {
         f.point = point;
         f.yaw = npc.f_20883_;
         f.dirty = true;
+        // 1.3.63: her big moves let go meet the same coming back (MoveClash).
+        MoveClash.begun(npc, move, detail, target, now, MoveClash.HIT, () -> f.move == move && f.at == now, () -> end(f));
     }
 
     static void end(Fight f) {

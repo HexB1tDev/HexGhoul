@@ -233,6 +233,10 @@ public final class PaleServer {
         state.point = point == null ? Vec3.f_82478_ : point;
         state.hit.clear();
         broadcast(player, state);
+        // 1.3.63: a big move let go: met by the same coming back, both are cancelled with a big impact (MoveClash).
+        double hit = move == PaleMove.PUNCH || move == PaleMove.OWL_PUNCH
+            ? com.hex.kagune.control.pale.PaleRules.punchDamage(KaguneProfile.mastery(player), charge) * power(player) : MoveClash.HIT;
+        MoveClash.begun(player, move, detail, targetId, now, hit, () -> state.move == move && state.startedAt == now, () -> end(player, state));
     }
 
     /** Back to nothing (her stance), and every client told. */

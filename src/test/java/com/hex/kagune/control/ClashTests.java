@@ -39,6 +39,7 @@ public final class ClashTests {
         shards();
         grabs();
         impacts();
+        sameMoves();
         if (!FAILURES.isEmpty()) {
             FAILURES.forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -73,6 +74,47 @@ public final class ClashTests {
             "thrown apart as before by an ordinary clash, harder by a big one");
         check(Math.abs(ClashRules.pitch(ClashRules.ORDINARY) - 1.0F) < 1.0E-6 && ClashRules.pitch(ClashRules.MOST) < 1.0F
             && ClashRules.volume(ClashRules.MOST) > ClashRules.volume(ClashRules.ORDINARY), "a big clash sounds deeper and carries further");
+    }
+
+    /**
+     * 1.3.63: the same big move meeting itself: a Big Punch meets a Big Punch (the Owl's too, or one still winding up), a Speed Kick a
+     * Speed Kick, a club slam a slam; never two different moves; let-go moves are on their way until they'd land; the impact is always
+     * big, bigger for harder blows, within bounds.
+     */
+    static void sameMoves() {
+        com.hex.kagune.control.pale.MoveClashRules.Family punch = com.hex.kagune.control.pale.MoveClashRules.Family.PUNCH;
+        check(com.hex.kagune.control.pale.MoveClashRules.family(com.hex.kagune.control.pale.PaleMove.PUNCH) == punch
+            && com.hex.kagune.control.pale.MoveClashRules.family(com.hex.kagune.control.pale.PaleMove.OWL_PUNCH) == punch
+            && com.hex.kagune.control.pale.MoveClashRules.family(com.hex.kagune.control.pale.PaleMove.PUNCH_CHARGE) == punch
+            && com.hex.kagune.control.pale.MoveClashRules.family(com.hex.kagune.control.pale.PaleMove.OWL_PUNCH_CHARGE) == punch,
+            "a Big Punch is a Big Punch: the Owl's, or one winding up");
+        check(com.hex.kagune.control.pale.MoveClashRules.family(com.hex.kagune.control.pale.PaleMove.KICK)
+            == com.hex.kagune.control.pale.MoveClashRules.family(com.hex.kagune.control.pale.PaleMove.OWL_KICK)
+            && com.hex.kagune.control.pale.MoveClashRules.family(com.hex.kagune.control.pale.PaleMove.KICK) != punch
+            && com.hex.kagune.control.pale.MoveClashRules.family(com.hex.kagune.control.pale.PaleMove.HAMMER)
+            == com.hex.kagune.control.pale.MoveClashRules.family(com.hex.kagune.control.pale.PaleMove.OWL_FISSURE)
+            && com.hex.kagune.control.pale.MoveClashRules.family(com.hex.kagune.control.pale.PaleMove.HAMMER)
+            != com.hex.kagune.control.pale.MoveClashRules.family(com.hex.kagune.control.pale.PaleMove.KICK),
+            "a kick meets a kick, a slam a slam; never different moves");
+        check(com.hex.kagune.control.pale.MoveClashRules.family(com.hex.kagune.control.pale.PaleMove.STRIKE) == null
+            && com.hex.kagune.control.pale.MoveClashRules.family(com.hex.kagune.control.pale.PaleMove.NONE) == null
+            && com.hex.kagune.control.pale.MoveClashRules.family(null) == null, "an M1 or nothing isn't a big move (M1s have their own clash)");
+        boolean windows = true;
+        for (com.hex.kagune.control.pale.PaleMove move : com.hex.kagune.control.pale.PaleMove.values()) {
+            boolean released = com.hex.kagune.control.pale.MoveClashRules.released(move);
+            int window = com.hex.kagune.control.pale.MoveClashRules.window(move, 5);
+            windows &= released ? window > 0 && window < 20 && com.hex.kagune.control.pale.MoveClashRules.family(move) != null : window == 0;
+        }
+        check(windows && !com.hex.kagune.control.pale.MoveClashRules.released(com.hex.kagune.control.pale.PaleMove.PUNCH_CHARGE),
+            "a let-go big move is on its way until it lands (a moment); one winding up isn't let go yet");
+        check(com.hex.kagune.control.pale.MoveClashRules.window(com.hex.kagune.control.pale.PaleMove.KICK, 7)
+            > com.hex.kagune.control.pale.MoveClashRules.window(com.hex.kagune.control.pale.PaleMove.KICK, 2), "a longer dash is on its way longer");
+        check(com.hex.kagune.control.pale.MoveClashRules.power(1.0, 1.0) == com.hex.kagune.control.pale.MoveClashRules.BIG
+            && com.hex.kagune.control.pale.MoveClashRules.power(80.0, 80.0) == ClashRules.MOST && ClashRules.quakes(com.hex.kagune.control.pale.MoveClashRules.BIG)
+            && com.hex.kagune.control.pale.MoveClashRules.STAGGER > ClashRules.STAGGER, "always a big impact that shakes the ground, both staggered longer");
+        for (com.hex.kagune.control.pale.MoveClashRules.Family family : com.hex.kagune.control.pale.MoveClashRules.Family.values()) {
+            check(com.hex.kagune.control.pale.MoveClashRules.reach(family) >= 3.5, family + " meets within reach");
+        }
     }
 
     /** 1.0.42: an M1 on its way meets a shard flying at the one swinging it, in front of him and within reach; nothing else. */

@@ -221,6 +221,13 @@ public final class KaguneClash {
         }
     }
 
+    /** 1.3.63: {@code a} and {@code b} meet in a clash of {@code power}: both thrown apart, the wind of it, the ground under it shaking. */
+    static void collide(LivingEntity a, LivingEntity b, float power) {
+        apart(a, b, power);
+        apart(b, a, power);
+        wind(a, b, power);
+    }
+
     /** {@code who} thrown back from {@code from}, the harder the bigger the clash ({@code power}). */
     private static void apart(LivingEntity who, LivingEntity from, float power) {
         double dx = who.m_20185_() - from.m_20185_();

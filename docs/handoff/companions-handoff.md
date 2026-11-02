@@ -1,9 +1,22 @@
-# START HERE (state after 1.3.62)
+# START HERE (state after 1.3.63)
 
 - **Next session:** read `docs/handoff/next-ai-1.3.60.md` first (family talk after the polish). The owner's next update (asked during
   1.3.60, "after this one is fully finished"): clash impacts sized by how hard each hit was, shaking the ground and camera; the same move
   meeting itself (big punch, speed kick...) cancelling both with a big impact; more and better reactions to the final kakujas (Rinkaku and
   Ukaku, especially War/Peace: being scared of War); new dramatic running animations for War and Peace; their new clash sounds (1.3.61).
+- **1.3.63 same-move clash** (protocol 71, unchanged). Pure `pale/MoveClashRules`: `Family` PUNCH (PUNCH, OWL_PUNCH and their charges),
+  KICK (KICK, OWL_KICK), SLAM (HAMMER, OWL_FISSURE and charges); `released(move)`; `window(move, detail)` (to its impact + 1: punch
+  `PUNCH_IMPACT`, kick `KICK_BURST + dash + KICK_CONTACT`, the Owl's kick `dash + KICK_SKEWER`, `HAMMER_IMPACT`, `FISSURE_IMPACT`); `reach`
+  4.5 / 4 / 5.5; `BIG` 2.4, `STAGGER` 14; `power(hitA, hitB)` = max(BIG, `ClashRules.impact`). Server `MoveClash`: `begun(who, move,
+  detail, target, now, hit, live, stop)` from `PaleServer.begin` (a punch's hit `punchDamage x power`, else `HIT` 20) and `EtoOwl.begin`
+  (HIT); a `LevelTickEvent` (END) checks each live registered move in its window against bodies within reach doing the same family
+  (`moveOf`: a player's `PaleServer.state`, Eto's `mind.owl.move`) and both at each other (`at`: the target by id, else facing) -> both
+  stopped (the other's registered stop, or `cut`: `PaleServer.end` / `EtoOwl.end`), `KaguneClash.collide(a, b, power)` (apart both, the
+  wind, the ground), `PaleStun.stun` both for STAGGER. Not covered: War/Peace (`KingServer.move` has no cancel), `ChildFlesh`.
+  `ClashTests.sameMoves`.
+
+# State after 1.3.62
+
 - **1.3.62 clash size** (protocol **71**: `KingMarkFx.GROUND` 8, appended). Pure `ClashRules`: `HIT` 7 (a blow of unknown strength),
   `REFERENCE` 12 (two blows' damage for an `ORDINARY` 1.2 clash), `LEAST` 0.7, `MOST` 3, `QUAKES` 1.55; `impact(hitA, hitB)` = 1.2 x
   sqrt(sum / 12) clamped; `quakes`, `rumble(power)` (0.35..1 above QUAKES), `rumbleTicks` 8 + 6p, `felt` 10 + 8p, `push` PUSH x (0.7 +
