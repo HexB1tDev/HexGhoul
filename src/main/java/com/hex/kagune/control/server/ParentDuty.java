@@ -199,6 +199,10 @@ final class ParentDuty {
             if (distance > 96.0 || now - child.mind.fetchedAt < Parenting.AGAIN_AFTER) {
                 continue;
             }
+            // 1.3.55: someone else (a big brother or sister) is already walking it home: one is enough.
+            if (child.mind.escort != null && now < child.mind.escortUntil && !child.mind.escort.equals(npc.m_20148_())) {
+                continue;
+            }
             ChildStage stage = known.stage(now);
             Households.Home house = Households.forChild(level, known);
             double beyond = house == null ? -1.0 : Math.sqrt(child.m_20238_(new Vec3(house.pos().m_123341_() + 0.5, house.pos().m_123342_(),

@@ -243,4 +243,43 @@ public final class Siblings {
         double step = Math.min(RUN, in);
         return new double[] {x + ix / in * step, z + iz / in * step};
     }
+
+    /**
+     * 1.3.55: what an older one says when it was going after a toddler ({@code name}) that wandered and sees a parent ({@code call}: what it
+     * calls them) already on the way: it stands down, in its own temper ({@code t}) and age ({@code stage}: a child's words, or a teen's).
+     */
+    public static String standDown(ChildTemper t, ChildStage stage, String name, String call, int seed) {
+        String key = (t == null ? "any" : t.word()) + ":" + (stage == ChildStage.TEEN ? "teen" : "child");
+        java.util.List<String> lines = STAND_DOWN.getOrDefault(key, STAND_DOWN.get("any:" + (stage == ChildStage.TEEN ? "teen" : "child")));
+        String line = lines.get(Math.floorMod(seed, lines.size()));
+        return line.replace("{name}", name == null || name.isBlank() ? "you" : name).replace("{call}", call == null || call.isBlank() ? "Mom" : call);
+    }
+
+    /** 1.3.55: every stand-down line, by "temper:group" (for the tests). */
+    public static java.util.Map<String, java.util.List<String>> standDownLines() {
+        return STAND_DOWN;
+    }
+
+    private static final java.util.Map<String, java.util.List<String>> STAND_DOWN = java.util.Map.ofEntries(
+        java.util.Map.entry("any:child", java.util.List.of("{call}'s got you. ...You're so in trouble, {name}.", "Oh good, {call}'s here.")),
+        java.util.Map.entry("any:teen", java.util.List.of("{call}'s got it. Good luck, {name}.", "Never mind. {call}'s on it.")),
+        java.util.Map.entry("sunny:child", java.util.List.of("Oh good, {call}'s got you! Bye, {name}!", "{call}'s coming! You're saved, {name}! ...Kind of.",
+            "Phew. {call}'s on it.")),
+        java.util.Map.entry("sunny:teen", java.util.List.of("Oh, {call}'s on it. Later, {name}!", "Saved by {call}. Lucky you, {name}.")),
+        java.util.Map.entry("shy:child", java.util.List.of("...{call}'s got you. Okay.", "*stops, and lets {call} go to {name}*", "...oh. Good.")),
+        java.util.Map.entry("shy:teen", java.util.List.of("...{call}'s got it.", "*steps back as {call} goes after {name}*")),
+        java.util.Map.entry("bold:child", java.util.List.of("{call}'s got you. ...You're SO in trouble, {name}.", "Ha! Busted, {name}.",
+            "Fine, {call} can deal with you.")),
+        java.util.Map.entry("bold:teen", java.util.List.of("{call}'s got you. Enjoy the lecture, {name}.", "You're so dead, {name}.")),
+        java.util.Map.entry("curious:child", java.util.List.of("Oh, {call} got there first. I wonder how mad {call} is.", "{call}'s going? Huh. Okay.")),
+        java.util.Map.entry("curious:teen", java.util.List.of("{call} beat me to it.", "Huh. {call}'s fast.")),
+        java.util.Map.entry("mischief:child", java.util.List.of("Ooh, {call}'s got you. Hehe. Good luck, {name}~", "Busted! Hehe.",
+            "Not my problem anymore~")),
+        java.util.Map.entry("mischief:teen", java.util.List.of("Ohh, {name}. You're in for it now~", "And that's my cue to leave.")),
+        java.util.Map.entry("gentle:child", java.util.List.of("{call}'s got you, {name}. It's okay.", "Be good for {call}, okay?",
+            "Okay... {call} will bring you home.")),
+        java.util.Map.entry("gentle:teen", java.util.List.of("Go with {call}, {name}. It's okay.", "{call}'s here. You're safe, {name}.")),
+        java.util.Map.entry("serious:child", java.util.List.of("{call} has it handled. Good.", "{call}'s got you. We'll talk about this later, {name}.",
+            "Right. Not my job, then.")),
+        java.util.Map.entry("serious:teen", java.util.List.of("{call} has it. Fine.", "Good. {call} will handle it.")));
 }

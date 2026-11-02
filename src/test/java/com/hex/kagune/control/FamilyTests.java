@@ -574,6 +574,25 @@ check(com.hex.kagune.control.graft.GraftStage.TRANSPLANT.limbs(com.hex.kagune.co
         check(inside, "a runner in tag never heads out of its yard");
         check(away && roomy > 100, "with room, it runs away from whoever is it");
         double[] corner = com.hex.kagune.control.family.Siblings.runTo(100 + 9.4, -40, 100 + 8, -40, 0.0, 100, -40, 12);
+        // 1.3.55: a big brother or sister stands down when a parent is already going: every temper, both ages, filled in and clean.
+        boolean down = true;
+        java.util.Set<String> downSeen = new java.util.HashSet<>();
+        for (com.hex.kagune.control.family.ChildTemper t : com.hex.kagune.control.family.ChildTemper.values()) {
+            for (com.hex.kagune.control.family.ChildStage st : new com.hex.kagune.control.family.ChildStage[] {kid, teen}) {
+                check(com.hex.kagune.control.family.Siblings.standDownLines().containsKey(t.word() + ":" + (st == teen ? "teen" : "child")),
+                    "stand-down lines of its own for " + t.word());
+                for (int seed = 0; seed < 6; seed++) {
+                    String line = com.hex.kagune.control.family.Siblings.standDown(t, st, "Hana", "Mama", seed);
+                    String low = line.toLowerCase(java.util.Locale.ROOT);
+                    down &= !line.contains("{") && !line.isBlank();
+                    for (String banned : new String[] {"kaneki", "ayato", "furuta", "takatsuki", "aogiri", "yoshimura"}) {
+                        down &= !low.contains(banned);
+                    }
+                    downSeen.add(line);
+                }
+            }
+        }
+        check(down && downSeen.size() >= 30, "standing down for a parent: every line filled in, no names it mustn't (" + downSeen.size() + ")");
         check(Math.hypot(corner[0] - 100, corner[1] + 40) <= com.hex.kagune.control.family.Siblings.yard(12) + 1.0E-6
             && Math.hypot(corner[0] - 108, corner[1] + 40) > 1.0, "chased to the edge, it turns along it instead of running off");
         java.util.List<com.hex.kagune.control.family.Siblings.Line> team = com.hex.kagune.control.family.Siblings.talk(com.hex.kagune.control.family.Siblings.Kind.TEAM,

@@ -1,8 +1,15 @@
-# START HERE (state after 1.3.54)
+# START HERE (state after 1.3.55)
 
 - **Next session:** read `docs/handoff/next-ai-1.3.51.md` first (the owner's goal: more interactions and dialog, polish first; how
-  conversations worked; the known problems), then these sections. Problems 1 (bubbles), 2 (walking off mid-talk) and 3 (tag off home) there are fixed
-  by 1.3.52, 1.3.53 and 1.3.54; "How conversations work now" there is out of date for held talks: read the 1.3.53 entry below.
+  conversations worked; the known problems), then these sections. Problems 1 (bubbles), 2 (walking off mid-talk), 3 (tag off home) and 4 (two escorts)
+  there are fixed by 1.3.52 to 1.3.55; "How conversations work now" there is out of date for held talks: read the 1.3.53 entry below.
+- **1.3.55 one escort** (protocol 69, unchanged): pure `Siblings.standDown(temper, stage, name, call, seed)` (38 lines, "temper:child|teen",
+  `standDownLines()`). `SiblingLife.parentGoing(level, little)` (a live companion whose `duty.child` is it); `begin` skips MIND then;
+  `minding` stands down when one is going (minding 0, its escort of the little one dropped, the line on its remark queue unless it is in a
+  talk). `ParentDuty.look` skips a child someone else is escorting (`escort` set, not expired, not itself). `FamilyTests.siblings`.
+
+# State after 1.3.54
+
 - **1.3.54 tag in the yard** (protocol 69, unchanged): pure `Siblings.RUN` 5, `YARD` 2.5, `yard(radius)` (the edge less YARD, at least 3),
   `runTo(x, z, chaserX, chaserZ, turn, homeX, homeZ, radius)` (RUN away turned by `turn`; outside the yard: the extra turn (0.5..2.6 rad
   either way) that keeps it farthest from the chaser, else back toward the middle). `SiblingLife.tag` runs there (no home: the game ends);

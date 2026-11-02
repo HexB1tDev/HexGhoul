@@ -84,6 +84,9 @@ final class SiblingLife {
             if (night && kind != Siblings.Kind.CHAT && kind != Siblings.Kind.COMFORT && kind != Siblings.Kind.MIND) {
                 continue;
             }
+            if (kind == Siblings.Kind.MIND && parentGoing(level, other) != null) {
+                continue; // 1.3.55: a parent is already going after it: one is enough
+            }
             if (kind == Siblings.Kind.TAG && !(inYard(npc, child, level) && inYard(other, known, level))) {
                 kind = Siblings.Kind.CHAT; // 1.3.54: tag only at home, both in its yard (they play there, never off beyond it)
             }
@@ -200,6 +203,23 @@ final class SiblingLife {
             mind.minding = 0;
             return false;
         }
+        // 1.3.55: a parent already on its way to the little one: one is enough. It stands down, and says so.
+        EtoNpc going = parentGoing(level, little);
+        if (going != null) {
+            mind.minding = 0;
+            mind.mindingTalk = null;
+            if (npc.m_20148_().equals(little.mind.escort)) {
+                little.mind.escort = null;
+            }
+            Children.Child known = Children.get(level, little.childId());
+            if (Conversation.in(npc) == null && mind.talk.isEmpty()) {
+                ChildStage stage = child.stage(now);
+                mind.talk.add(new ParentDuty.Said(npc.m_19879_(), Siblings.standDown(temper(child), stage, known == null ? "" : known.name,
+                    ChildLines.call(stage, going.persona().female()), npc.m_217043_().m_188503_(1 << 20)), now));
+            }
+            npc.m_21573_().m_26573_();
+            return false;
+        }
         if (!mind.mindingReached) {
             if (npc.m_20280_(little) > 2.2 * 2.2) {
                 if (now % 10L == 0L) {
@@ -264,6 +284,16 @@ final class SiblingLife {
             queue(other, npc, null, talk, now);
             return;
         }
+    }
+
+    /** 1.3.55: a companion parent going after {@code little} (its duty: ParentDuty), or null. */
+    static EtoNpc parentGoing(ServerLevel level, ChildNpc little) {
+        for (EtoNpc parent : EtoBrain.live()) {
+            if (parent.m_9236_() == level && parent.mind != null && parent.mind.duty != null && little.m_20148_().equals(parent.mind.duty.child)) {
+                return parent;
+            }
+        }
+        return null;
     }
 
     /** True if {@code body} is after one of {@code child}'s brothers or sisters (its target): a threat to it too. */
