@@ -65,7 +65,7 @@ def main():
         girl, slim, rgb = table[key]
         tone = colorsys.rgb_to_hsv((rgb >> 16 & 255) / 255.0, (rgb >> 8 & 255) / 255.0, (rgb & 255) / 255.0)
         turn(img, degrees, light, tone).save(OUT / f"human_{i:02d}.png")
-        rows.append(f'        new Skin("textures/entity/human/human_{i:02d}.png", {str(girl).lower()}, {str(slim).lower()}), // from {key}, hue +{degrees}')
+        rows.append(f'        new Skin("textures/entity/human/human_{i:02d}.png", {str(girl).lower()}, {str(slim).lower()}, "{key}"), // hue +{degrees}')
     body = "\n".join(rows)
     TABLE.write_text(f'''package com.hex.kagune.control.village;
 
@@ -77,8 +77,11 @@ public final class HumanSkins {{
     private HumanSkins() {{
     }}
 
-    /** One skin: its texture (the mod's), girl or boy, slim arms or wide. */
-    public record Skin(String path, boolean girl, boolean slim) {{
+    /**
+     * One skin: its texture (the mod's), girl or boy, slim arms or wide, and the child's skin it was made from (1.3.76: its eyes are in
+     * the same place, so it blinks with that skin's shut eyes, {{@code ChildBlinks}}).
+     */
+    public record Skin(String path, boolean girl, boolean slim, String child) {{
     }}
 
     public static final Skin[] ALL = {{

@@ -65,6 +65,18 @@ public final class HumanRules {
         return "textures/entity/player/" + (slim(n) ? "slim/" : "wide/") + LOOKS[n % LOOKS.length] + ".png";
     }
 
+    /**
+     * 1.3.76: the texture (the mod's) of look {@code look}'s shut eyes for a blink, or null: a villager's own skin blinks with the shut eyes
+     * of the child's skin it was made from (the eyes in the same place, the skin's tone kept); vanilla's default skins have none.
+     */
+    public static String closed(int look) {
+        if (look < CUTE) {
+            return null;
+        }
+        String child = com.hex.kagune.control.village.HumanSkins.ALL[Math.floorMod(look - CUTE, com.hex.kagune.control.village.HumanSkins.ALL.length)].child();
+        return com.hex.kagune.control.family.ChildBlinks.has(child) ? com.hex.kagune.control.family.ChildBlinks.closed(child) : null;
+    }
+
     public static boolean slim(int look) {
         if (look >= CUTE) {
             return com.hex.kagune.control.village.HumanSkins.ALL[Math.floorMod(look - CUTE, com.hex.kagune.control.village.HumanSkins.ALL.length)].slim();

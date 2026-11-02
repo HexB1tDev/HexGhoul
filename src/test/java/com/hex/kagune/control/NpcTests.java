@@ -704,6 +704,20 @@ public final class NpcTests {
         skins &= "minecraft".equals(com.hex.kagune.control.npc.HumanRules.namespace(3))
             && com.hex.kagune.control.npc.HumanRules.skin(3).startsWith("textures/entity/player/");
         check(skins, "the villagers' own skins: files there, new looks map to them, old looks keep vanilla's");
+        // 1.3.76: blinks: every skin that blinks has its shut eyes; villagers blink with their child skin's; vanilla's looks have none.
+        int blinking = 0;
+        boolean shut = com.hex.kagune.control.npc.HumanRules.closed(3) == null;
+        for (com.hex.kagune.control.family.ChildSkins.Skin s : com.hex.kagune.control.family.ChildSkins.ALL) {
+            if (com.hex.kagune.control.family.ChildBlinks.has(s.key())) {
+                blinking++;
+                shut &= new java.io.File("src/main/resources/assets/hexkagune/" + com.hex.kagune.control.family.ChildBlinks.closed(s.key())).isFile();
+            }
+        }
+        for (int i = 0; i < com.hex.kagune.control.village.HumanSkins.ALL.length; i++) {
+            String path = com.hex.kagune.control.npc.HumanRules.closed(com.hex.kagune.control.npc.HumanRules.CUTE + i);
+            shut &= (path != null) == com.hex.kagune.control.family.ChildBlinks.has(com.hex.kagune.control.village.HumanSkins.ALL[i].child());
+        }
+        check(shut && blinking >= 25, "shut eyes for blinks: " + blinking + " child skins, the villagers' from theirs");
         int[][] streets = com.hex.kagune.control.village.BrickVillage.STREETS;
         int[][] route = com.hex.kagune.control.village.BrickVillage.ROUTE;
         int[][] homes = com.hex.kagune.control.village.BrickVillage.HOMES;

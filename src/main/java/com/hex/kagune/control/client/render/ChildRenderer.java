@@ -434,7 +434,7 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
 
     /**
      * 1.3.18: a ghoul child's kakugan as it fights, on the owner's skin it wears: the eye or eyes it has turned (only those pixels, laid over
-     * the skin), their irises drawn full bright.
+     * the skin), their irises drawn full bright. 1.3.76: its blinks (and its eyes shut asleep), over the kakugan.
      */
     static final class Kakugan extends RenderLayer<ChildNpc, PlayerModel<ChildNpc>> {
         Kakugan(ChildRenderer parent) {
@@ -450,11 +450,21 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
             try {
                 ChildClient.View view = ChildClient.get(child.m_19879_());
                 ChildSkins.Skin skin = skin(view);
-                if (skin == null || !view.turned()) {
+                if (skin == null) {
+                    return;
+                }
+                PlayerModel<ChildNpc> model = this.m_117386_();
+                // 1.3.76: its eyes shut now and then (a blink, as Eto's and the companions'), or asleep: the shut eyes over any kakugan.
+                if (com.hex.kagune.control.family.ChildBlinks.has(skin.key())
+                    && (child.m_5803_() || com.hex.kagune.control.npc.EtoRules.blink(child.m_19879_() * 31 + 7, ageInTicks))) {
+                    model.m_7695_(pose, buffers.m_6299_(RenderType.m_110473_(texture(skin.key() + "_closed"))), light, OverlayTexture.f_118083_,
+                        1.0F, 1.0F, 1.0F, 1.0F);
+                    return;
+                }
+                if (!view.turned()) {
                     return;
                 }
                 int eyes = view.genome().kakugan();
-                PlayerModel<ChildNpc> model = this.m_117386_();
                 for (String side : new String[] {"r", "l"}) {
                     boolean has = eyes == Genome.BOTH || eyes == (side.equals("r") ? Genome.RIGHT : Genome.LEFT);
                     if (!has) {

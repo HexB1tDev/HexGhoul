@@ -1,4 +1,24 @@
-# START HERE (state after 1.3.75)
+# START HERE (state after 1.3.76)
+
+- The owner dropped RULE 1 in this session ("ignore the 97% rule, I changed my mind"); `CLAUDE.md` still holds it until they say otherwise
+  for good. Commit and push often anyway.
+- **Next:** humans' gestures (kisses, hugs, blushes: from Eto's, the kids', Touka's and Ken's animations), then dates (walking together hand
+  in hand, inside the village).
+- **1.3.76 blinks** (the owner: "they should all blink like Touka, Eto and all the kids do"; protocol 72, unchanged; client only). By
+  reading, the children never blinked (only `EtoRenderer`'s `closed`); now they do. `tools/blink_skins.py` (imports `child_skins.py`'s
+  face readers) writes `textures/entity/child/skins/<key>_closed.png`: each eye boxed BY HAND (`BOXES`, face pixels, rectangles holding the
+  whole eye and no hair; looked at on a 40 px-per-face-pixel grid); everything inside (but `KEEP`: son_12's blood) is grown over from the
+  skin round it (`inpaint`: rings, each pixel the mean of its filled or skinlike neighbours, then from anything if no skin reaches), a lash
+  line (0.36 face px thick, at 68% down; on 8x and finer skins a 0.12 px sag and thinner ends) in a neutral dark as deep as the eye's
+  darkest (never its hue), painted on the hat layer wherever the hat has any alpha. `TONE_ROWS` (son_11: its skin tone read from rows
+  2.5..4.5). `NONE`: daughter_02, 04, 06, 07, 10, 11, 12, 20, 21, 22, son_14. Writes `family/ChildBlinks` (`has`, `closed`): 28 of 39.
+  **The first try (found by colour, one flat fill) was rejected by the owner with a dozen faces marked: never judge faces from a
+  thumbnail; zoom every one.** Review sheet: `docs/handoff/blinks-1.3.76.png`. `HumanSkins.Skin` gained `child`; `HumanRules.closed(look)`;
+  `HumanRenderer.Blink` layer and `ChildRenderer.Kakugan` (now first: shut eyes over any kakugan) draw it while `EtoRules.blink(id * 31 +
+  7, age)` or asleep. `NpcTests.village`.
+
+# State after 1.3.75
+
 
 - The owner dropped RULE 1 in the session that finished 1.3.75 ("ignore the 97% rule, I changed my mind"); `CLAUDE.md` still holds it
   until they say otherwise for good. Commit and push often anyway.
