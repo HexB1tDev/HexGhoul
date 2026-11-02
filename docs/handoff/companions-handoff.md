@@ -1,8 +1,23 @@
-# START HERE (state after 1.3.56)
+# START HERE (state after 1.3.57)
 
 - **Next session:** read `docs/handoff/next-ai-1.3.51.md` first (the owner's goal: more interactions and dialog, polish first; how
   conversations worked; the known problems), then these sections. Problems 1 (bubbles), 2 (walking off mid-talk), 3 (tag off home), 4 (two escorts) and 5
   (Eto's child unposed) there are fixed by 1.3.52 to 1.3.56; "How conversations work now" there is out of date for held talks: read the 1.3.53 entry below.
+- **1.3.57 gestures with the lines** (protocol **70**: `S2CChild` gained `cue` (byte, `ChildCue` ordinal) and `cueAt` (varlong)). Pure
+  `family/ChildCue` (NONE, CROSS, STAMP, POINT, HIPS, SHRUG, SORRY, CHEER, GIGGLE, WHISPER, BLEH, PAT, SULK, THINK, WAVE, PLEAD; sent by
+  ordinal: append only; `ticks`, `running(age)`, `weight(age)` in 4 / out 8) and `family/TalkCues` (`Scene` CHAT, TEASE, BRAG, COMFORT,
+  SCHEME, SQUABBLE, MIND, SCOLDED, RAMPAGE, HOME, MAKE_UP, CUT; `said(text)` keywords; `child(text, scene, temper, starter, index, seed)`;
+  `saidBy(text)` / `parent(text, scene, persona, index, seed)` -> `EtoGesture`). `Conversation.Line(speaker, text, cue, gesture)` (2-arg:
+  none); `Conversation.act` on saying it (a child: `Mind.cue/cueAt`, dirty; a companion: `EtoBrain.gesture`); `ParentDuty.lines(child,
+  parent, talk, scene, temper)` and `SiblingLife.lines(first, second, parent, talk, scene, t1, t2)` fill them (`SiblingLife.scene(kind)`;
+  breakUp MAKE_UP; MIND); a cut-short line too (CUT). Client: `ChildClient.View` cue/cueAt/cueBegan (`cueAge`), `ChildRenderer.posed`
+  (after a moment, before a flip) blends `client/animation/ChildTalkPose.pose(cue, age, stage, carried)` by `weight` (a carried child's legs
+  left sitting). Preview: `javac -nowarn -cp build/classes:build/base.jar -d build/talk-preview tools/PoseRender.java tools/MomentPreview.java
+  tools/TalkPreview.java` then `java -Djava.awt.headless=true -cp build/talk-preview:build/classes:build/base.jar TalkPreview <dir> <boy skin>
+  <girl skin>` (square HD skins, e.g. `art/children/sons/cute-boy-hd.png`, `art/children/daughters/hd-cute-girl.png`). `FamilyTests.cues`.
+
+# State after 1.3.56
+
 - **1.3.56 Eto's child posed** (protocol 69, unchanged; client only): `client/animation/ChildFight.pose(child, clock, partial)` (as
   `EtoFight` without Peace or the Owl: a `PaleAnimator` per child from `PaleClient.get(child UUID)`, its landings, `ArmPose.body` while
   `ArmClient.get(child)`; null when nothing poses it; animators not drawn for `FORGET` 200 ticks dropped). `ChildRenderer.m_7392_` works

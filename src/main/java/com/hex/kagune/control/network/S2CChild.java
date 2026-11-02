@@ -12,7 +12,9 @@ import net.minecraftforge.network.NetworkEvent;
  * ordinal), who carries it (an entity id, 0 no one), and whether its kakugan shows (it fights). 1.3.20: how it is held ({@code ChildRules}
  * RIDE_*), and the moment it is having with a parent ({@code ChildMoment} ordinal), since when (game ticks), with whom (an entity id).
  */
-public record S2CChild(int id, String name, String genome, int stage, int carrier, boolean turned, int ride, int moment, long momentAt, int partner) {
+public record S2CChild(int id, String name, String genome, int stage, int carrier, boolean turned, int ride, int moment, long momentAt, int partner,
+                       int cue, long cueAt) {
+    // 1.3.57 (protocol 70): and what it does with its body as it says a line in a talk ({@code ChildCue} ordinal), since when.
     public static void encode(S2CChild message, FriendlyByteBuf buffer) {
         buffer.writeInt(message.id);
         S2CNpcTalk.text(buffer, message.name);
@@ -24,11 +26,13 @@ public record S2CChild(int id, String name, String genome, int stage, int carrie
         buffer.writeByte(message.moment);
         buffer.m_130103_(message.momentAt);
         buffer.writeInt(message.partner);
+        buffer.writeByte(message.cue);
+        buffer.m_130103_(message.cueAt);
     }
 
     public static S2CChild decode(FriendlyByteBuf buffer) {
         return new S2CChild(buffer.readInt(), S2CNpcTalk.text(buffer), S2CNpcTalk.text(buffer), buffer.readByte(), buffer.readInt(), buffer.readBoolean(),
-            buffer.readByte(), buffer.readByte(), buffer.m_130258_(), buffer.readInt());
+            buffer.readByte(), buffer.readByte(), buffer.m_130258_(), buffer.readInt(), buffer.readByte(), buffer.m_130258_());
     }
 
     public static void handle(S2CChild message, Supplier<NetworkEvent.Context> supplier) {

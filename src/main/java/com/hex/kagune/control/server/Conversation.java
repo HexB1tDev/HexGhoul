@@ -1,5 +1,6 @@
 package com.hex.kagune.control.server;
 
+import com.hex.kagune.control.family.ChildCue;
 import com.hex.kagune.control.family.ChildLines;
 import com.hex.kagune.control.family.ChildStage;
 import com.hex.kagune.control.family.ChildTemper;
@@ -8,6 +9,7 @@ import com.hex.kagune.control.family.Talks;
 import com.hex.kagune.control.network.ControlNetwork;
 import com.hex.kagune.control.network.S2CNpcSay;
 import com.hex.kagune.control.npc.ChildNpc;
+import com.hex.kagune.control.npc.EtoGesture;
 import com.hex.kagune.control.npc.EtoNpc;
 import com.hex.kagune.control.npc.Speech;
 import java.util.ArrayDeque;
@@ -36,8 +38,11 @@ import net.minecraft.world.phys.Vec3;
  * it goes on as long as any of them is about.
  */
 final class Conversation {
-    /** One line: who says it (an entity id), what. */
-    record Line(int speaker, String text) {
+    /** One line: who says it (an entity id), what; 1.3.57: and what it does as it says it (a child's cue, a companion's gesture). */
+    record Line(int speaker, String text, ChildCue cue, EtoGesture gesture) {
+        Line(int speaker, String text) {
+            this(speaker, text, ChildCue.NONE, EtoGesture.NONE);
+        }
     }
 
     private final List<Integer> members = new ArrayList<>();
@@ -313,6 +318,7 @@ final class Conversation {
         int pause = Parenting.pause(line.text());
         Line next = this.lines.peek();
         say(level, says, line.text(), next == null ? 0 : Speech.turn(line.speaker(), next.speaker(), pause));
+        act(says, line.cue(), line.gesture(), now);
         this.nextAt = now + pause;
     }
 
@@ -402,20 +408,36 @@ final class Conversation {
         String name = name(level, left);
         int seed = by.m_217043_().m_188503_(1 << 20);
         String line;
+        ChildCue cue = ChildCue.NONE;
+        EtoGesture gesture = EtoGesture.NONE;
         if (by instanceof EtoNpc npc) {
             line = Talks.cutShort(npc.persona().key(), ChildStage.CHILD, name, null, seed);
+            gesture = com.hex.kagune.control.family.TalkCues.parent(line, com.hex.kagune.control.family.TalkCues.Scene.CUT, npc.persona().key(), 0, seed);
         } else if (by instanceof ChildNpc child && Children.get(level, child.childId()) != null) {
             Children.Child known = Children.get(level, child.childId());
             ChildStage stage = known.stage(level.m_46467_());
             boolean motherNpc = known.mother != null && known.mother.startsWith("npc:");
             boolean fatherNpc = known.father != null && known.father.startsWith("npc:");
-            line = Talks.cutShort(ChildTemper.of(known.id, known.mother, known.father).word(), stage, name, ChildLines.call(stage, motherNpc || !fatherNpc),
-                seed);
+            ChildTemper temper = ChildTemper.of(known.id, known.mother, known.father);
+            line = Talks.cutShort(temper.word(), stage, name, ChildLines.call(stage, motherNpc || !fatherNpc), seed);
+            cue = com.hex.kagune.control.family.TalkCues.child(line, com.hex.kagune.control.family.TalkCues.Scene.CUT, temper, false, 0, seed);
         } else {
             line = null;
         }
         if (line != null) {
             say(level, by, line, 0);
+            act(by, cue, gesture, level.m_46467_());
+        }
+    }
+
+    /** 1.3.57: {@code body} does what goes with its line: a child its cue (sent with it), a companion her gesture. */
+    static void act(LivingEntity body, ChildCue cue, EtoGesture gesture, long now) {
+        if (body instanceof ChildNpc child && child.mind != null && cue != null && cue != ChildCue.NONE) {
+            child.mind.cue = cue;
+            child.mind.cueAt = now;
+            child.mind.dirty = true;
+        } else if (body instanceof EtoNpc npc && npc.mind != null && gesture != null && gesture != EtoGesture.NONE) {
+            EtoBrain.gesture(npc.mind, gesture, now);
         }
     }
 

@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.57 (HexGhoul): they act out what they say: gestures and poses with every line (testing)
+
+See `.github/release-notes-1.3.57.md`.
+
 ## 1.3.56 (HexGhoul): Eto's child moves its body when it fights with her flesh (testing)
 
 See `.github/release-notes-1.3.56.md`.

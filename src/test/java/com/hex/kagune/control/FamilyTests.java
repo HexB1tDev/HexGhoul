@@ -58,6 +58,7 @@ public final class FamilyTests {
         etoChild();
         siblings();
         talks();
+        cues();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -662,6 +663,63 @@ check(com.hex.kagune.control.graft.GraftStage.TRANSPLANT.limbs(com.hex.kagune.co
         check(com.hex.kagune.control.family.Talks.cutShort("bold", com.hex.kagune.control.family.ChildStage.TEEN, "Ren", "Mama", 1) != null
             && com.hex.kagune.control.family.Talks.cutShort("ken", com.hex.kagune.control.family.ChildStage.TODDLER, "Ren", "Mama", 0).contains("later"),
             "a teen in its own temper; a parent's line whatever the child's age");
+    }
+
+    /**
+     * 1.3.57: what each one does as it says its line: what the line says first (folded arms, a giggle, a plea, a sigh, a laugh), else the
+     * talk and the speaker's own way; every child's line in every talk and temper gets something fitting, a parent's scolding its gesture.
+     */
+    static void cues() {
+        com.hex.kagune.control.family.ChildTemper bold = com.hex.kagune.control.family.ChildTemper.BOLD;
+        com.hex.kagune.control.family.ChildTemper shy = com.hex.kagune.control.family.ChildTemper.SHY;
+        com.hex.kagune.control.family.ChildTemper mischief = com.hex.kagune.control.family.ChildTemper.MISCHIEF;
+        check(com.hex.kagune.control.family.TalkCues.said("*crosses her arms*") == com.hex.kagune.control.family.ChildCue.CROSS
+            && com.hex.kagune.control.family.TalkCues.said("Hehe~ Gotcha.") == com.hex.kagune.control.family.ChildCue.GIGGLE
+            && com.hex.kagune.control.family.TalkCues.said("Pleeease, Mama?") == com.hex.kagune.control.family.ChildCue.PLEAD
+            && com.hex.kagune.control.family.TalkCues.said("*sticks out his tongue*") == com.hex.kagune.control.family.ChildCue.BLEH
+            && com.hex.kagune.control.family.TalkCues.said("I'm sorry...") == com.hex.kagune.control.family.ChildCue.SORRY
+            && com.hex.kagune.control.family.TalkCues.said("Psst. Come here.") == com.hex.kagune.control.family.ChildCue.WHISPER
+            && com.hex.kagune.control.family.TalkCues.said("I found a frog.") == com.hex.kagune.control.family.ChildCue.NONE,
+            "a line that says what it does is done that way");
+        com.hex.kagune.control.family.TalkCues.Scene squabble = com.hex.kagune.control.family.TalkCues.Scene.SQUABBLE;
+        check(com.hex.kagune.control.family.TalkCues.child("You always do this!", squabble, bold, true, 0, 0) == com.hex.kagune.control.family.ChildCue.POINT
+            && com.hex.kagune.control.family.TalkCues.child("No, YOU always do this!", squabble, shy, false, 1, 0) == com.hex.kagune.control.family.ChildCue.SULK,
+            "a squabble: a bold one points, a shy one sulks");
+        check(com.hex.kagune.control.family.TalkCues.child("I took down a zombie today.", com.hex.kagune.control.family.TalkCues.Scene.BRAG, bold, true, 0, 3)
+            == com.hex.kagune.control.family.ChildCue.HIPS && com.hex.kagune.control.family.TalkCues.child("You distract them. I get the cake.",
+            com.hex.kagune.control.family.TalkCues.Scene.SCHEME, bold, true, 0, 1) == com.hex.kagune.control.family.ChildCue.WHISPER,
+            "a brag on its hips, a scheme whispered");
+        boolean bleh = false;
+        for (int seed = 0; seed < 8; seed++) {
+            bleh |= com.hex.kagune.control.family.TalkCues.child("Sorry, Ren.", com.hex.kagune.control.family.TalkCues.Scene.MAKE_UP, mischief, true, 1, seed)
+                == com.hex.kagune.control.family.ChildCue.SORRY && com.hex.kagune.control.family.TalkCues.child("Fine.",
+                com.hex.kagune.control.family.TalkCues.Scene.MAKE_UP, mischief, true, 1, seed) == com.hex.kagune.control.family.ChildCue.BLEH;
+        }
+        check(bleh, "a mischievous one's sorry: sometimes a tongue stuck out instead (a sorry it says is still a sorry)");
+        boolean every = true;
+        for (com.hex.kagune.control.family.TalkCues.Scene scene : com.hex.kagune.control.family.TalkCues.Scene.values()) {
+            for (com.hex.kagune.control.family.ChildTemper t : com.hex.kagune.control.family.ChildTemper.values()) {
+                for (int index = 0; index < 5; index++) {
+                    for (int seed = 0; seed < 4; seed++) {
+                        com.hex.kagune.control.family.ChildCue cue = com.hex.kagune.control.family.TalkCues.child("Well.", scene, t, index % 2 == 0, index, seed);
+                        every &= cue != null && (cue != com.hex.kagune.control.family.ChildCue.NONE || scene == com.hex.kagune.control.family.TalkCues.Scene.CHAT
+                            || scene == com.hex.kagune.control.family.TalkCues.Scene.HOME || scene == com.hex.kagune.control.family.TalkCues.Scene.BRAG);
+                    }
+                }
+            }
+        }
+        check(every, "every talk but small talk gives a child something to do with itself");
+        check(com.hex.kagune.control.family.TalkCues.parent("Where do you think you're going?", com.hex.kagune.control.family.TalkCues.Scene.SCOLDED,
+            "touka", 0, 1) == com.hex.kagune.control.npc.EtoGesture.SCOLD && com.hex.kagune.control.family.TalkCues.parent("*sighs* Come here.",
+            com.hex.kagune.control.family.TalkCues.Scene.SCOLDED, "ken", 2, 0) == com.hex.kagune.control.npc.EtoGesture.HUFF
+            && com.hex.kagune.control.family.TalkCues.parent("Fufu. Again?", com.hex.kagune.control.family.TalkCues.Scene.MAKE_UP, "eto", 0, 1)
+            == com.hex.kagune.control.npc.EtoGesture.LAUGH, "a parent's gesture: Touka's hands on hips, a sigh, Eto's laugh");
+        for (com.hex.kagune.control.family.ChildCue cue : com.hex.kagune.control.family.ChildCue.values()) {
+            check(cue == com.hex.kagune.control.family.ChildCue.NONE || cue.ticks >= 30 && cue.weight(cue.ticks / 2.0) > 0.99F && cue.weight(0.0) == 0.0F
+                && cue.weight(cue.ticks) == 0.0F, cue + ": eases in, holds, eases out");
+        }
+        check(com.hex.kagune.control.family.ChildCue.NONE.ordinal() == 0 && com.hex.kagune.control.family.ChildCue.byOrdinal(99)
+            == com.hex.kagune.control.family.ChildCue.NONE, "sent by ordinal, nothing unknown");
     }
 
     static void genome() {

@@ -238,6 +238,23 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
                 return out;
             }
         }
+        // 1.3.57: what it does with its body as it says a line in a talk (arms folded, a stamp, a point, a shrug...).
+        double cueAge = view.cueAge(clock);
+        if (view.cue().running(cueAge)) {
+            com.hex.kagune.control.client.animation.RigPose cue = com.hex.kagune.control.client.animation.ChildTalkPose.pose(view.cue(), cueAge,
+                view.stage(), view.carrier() != 0);
+            if (cue != null) {
+                float w = view.cue().weight(cueAge);
+                com.hex.kagune.control.client.animation.RigPose out = new com.hex.kagune.control.client.animation.RigPose();
+                com.hex.kagune.control.client.animation.ChildMomentPose.blend(out, cue, w);
+                out.armHold = cue.armHold * w;
+                out.rightArmHold = cue.rightArmHold * w;
+                out.leftArmHold = cue.leftArmHold * w;
+                out.legHold = cue.legHold * w;
+                out.headHold = cue.headHold * w;
+                return out;
+            }
+        }
         if (view.carrier() == 0) {
             // 1.3.48: a flip in a fight, a ghoul's, as the wild ghouls' are posed (its whole body turned over about its middle).
             com.hex.kagune.control.client.GhoulNpcClient.View fighting = com.hex.kagune.control.client.GhoulNpcClient.get(child.m_19879_());

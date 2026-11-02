@@ -114,7 +114,7 @@ final class SiblingLife {
                 default -> {
                     // It walks up to the other (who waits, turned to it), and they talk; both stay till it's said.
                     Conversation together = Conversation.start(level, now, "sibling " + kind.name().toLowerCase(java.util.Locale.ROOT), other,
-                        List.of(npc, other), List.of(npc), lines(npc, other, null, talk));
+                        List.of(npc, other), List.of(npc), lines(npc, other, null, talk, scene(kind), temper(child), temper(known)));
                     if (together != null && kind == Siblings.Kind.SQUABBLE) {
                         breakUp(together, npc, other, child, known, level, now);
                     }
@@ -143,7 +143,7 @@ final class SiblingLife {
         }
         List<Siblings.Line> talk = Siblings.breakUp(parent.persona().key(), temper(child), child.name, temper(known), known.name,
             parent.m_217043_().m_188503_(1 << 20));
-        squabble.join(level, parent, true, lines(npc, other, parent, talk));
+        squabble.join(level, parent, true, lines(npc, other, parent, talk, com.hex.kagune.control.family.TalkCues.Scene.MAKE_UP, temper(child), temper(known)));
     }
 
     /** Tag: the one who is it runs after the other and tags it (then it is the other's turn); the other runs off. Over after a while. */
@@ -235,7 +235,8 @@ final class SiblingLife {
                 ChildStage theirs = known.stage(now);
                 mind.mindingTalk = Conversation.start(level, now, "sibling mind", little, List.of(npc, little), List.of(), lines(npc, little, null,
                     Siblings.talk(Siblings.Kind.MIND, temper(child), stage, child.name, call(child, stage), girl(child), temper(known), theirs, known.name,
-                        call(known, theirs), girl(known), npc.m_217043_().m_188503_(1 << 20))));
+                        call(known, theirs), girl(known), npc.m_217043_().m_188503_(1 << 20)), com.hex.kagune.control.family.TalkCues.Scene.MIND, temper(child),
+                    temper(known)));
                 return true;
             }
         }
@@ -303,14 +304,40 @@ final class SiblingLife {
 
     // ---------------------------------------------------------------- their words
 
-    /** 1.3.53: their lines as a {@link Conversation}'s (1: {@code first}, 2: {@code second}, 0: {@code parent}). */
-    private static List<Conversation.Line> lines(ChildNpc first, ChildNpc second, EtoNpc parent, List<Siblings.Line> talk) {
+    /**
+     * 1.3.53: their lines as a {@link Conversation}'s (1: {@code first}, 2: {@code second}, 0: {@code parent}); 1.3.57: each with what its
+     * speaker does as it says it ({@link com.hex.kagune.control.family.TalkCues}, in {@code scene}, by each one's temper or the parent's way).
+     */
+    private static List<Conversation.Line> lines(ChildNpc first, ChildNpc second, EtoNpc parent, List<Siblings.Line> talk,
+                                                 com.hex.kagune.control.family.TalkCues.Scene scene, ChildTemper firstTemper, ChildTemper secondTemper) {
         List<Conversation.Line> out = new java.util.ArrayList<>();
-        for (Siblings.Line line : talk) {
-            int speaker = line.who() == 1 ? first.m_19879_() : line.who() == 2 ? second.m_19879_() : parent == null ? first.m_19879_() : parent.m_19879_();
-            out.add(new Conversation.Line(speaker, line.text()));
+        int seed = first.m_217043_().m_188503_(1 << 20);
+        for (int i = 0; i < talk.size(); i++) {
+            Siblings.Line line = talk.get(i);
+            if (line.who() == 0 && parent != null) {
+                out.add(new Conversation.Line(parent.m_19879_(), line.text(), com.hex.kagune.control.family.ChildCue.NONE,
+                    com.hex.kagune.control.family.TalkCues.parent(line.text(), scene, parent.persona().key(), i, seed + i)));
+                continue;
+            }
+            boolean starter = line.who() != 2;
+            int speaker = starter ? first.m_19879_() : second.m_19879_();
+            out.add(new Conversation.Line(speaker, line.text(), com.hex.kagune.control.family.TalkCues.child(line.text(), scene, starter ? firstTemper
+                : secondTemper, starter, i, seed + i), com.hex.kagune.control.npc.EtoGesture.NONE));
         }
         return out;
+    }
+
+    /** 1.3.57: the talk a sibling moment's lines are in. */
+    private static com.hex.kagune.control.family.TalkCues.Scene scene(Siblings.Kind kind) {
+        return switch (kind) {
+            case TEASE -> com.hex.kagune.control.family.TalkCues.Scene.TEASE;
+            case BRAG -> com.hex.kagune.control.family.TalkCues.Scene.BRAG;
+            case COMFORT -> com.hex.kagune.control.family.TalkCues.Scene.COMFORT;
+            case SCHEME -> com.hex.kagune.control.family.TalkCues.Scene.SCHEME;
+            case SQUABBLE -> com.hex.kagune.control.family.TalkCues.Scene.SQUABBLE;
+            case MIND -> com.hex.kagune.control.family.TalkCues.Scene.MIND;
+            default -> com.hex.kagune.control.family.TalkCues.Scene.CHAT;
+        };
     }
 
     /** A shout or a remark queued on {@code first}'s words (1: {@code first}, 2: {@code second}, 0: {@code parent}), in turn; when the last ends. */

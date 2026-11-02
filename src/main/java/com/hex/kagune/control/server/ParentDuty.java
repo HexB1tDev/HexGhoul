@@ -4,6 +4,7 @@ import com.hex.kagune.control.family.ChildLines;
 import com.hex.kagune.control.family.ChildStage;
 import com.hex.kagune.control.family.ChildTemper;
 import com.hex.kagune.control.family.Parenting;
+import com.hex.kagune.control.family.TalkCues;
 import com.hex.kagune.control.network.ControlNetwork;
 import com.hex.kagune.control.network.S2CNpcSay;
 import com.hex.kagune.control.npc.ChildNpc;
@@ -103,7 +104,7 @@ final class ParentDuty {
             List<Parenting.Line> talk = Parenting.talk(d.why, npc.persona().key(), stage, temper(known), known.name,
                 ChildLines.call(stage, npc.persona().female()), npc.m_217043_().m_188503_(1 << 20));
             d.talk = Conversation.start(level, now, "parent " + d.why.name().toLowerCase(java.util.Locale.ROOT), child, List.of(child, npc), List.of(),
-                lines(child, npc, talk));
+                lines(child, npc, talk, d.why == Parenting.Why.RAMPAGE ? TalkCues.Scene.RAMPAGE : TalkCues.Scene.SCOLDED, temper(known)));
             if (stage.carried() && house != null) {
                 ChildBrain.pickUp(child, npc);
                 d.carrying = true;
@@ -148,7 +149,7 @@ final class ParentDuty {
             d.home = true;
             d.talk = Conversation.start(level, now, "parent home", child, List.of(child, npc), List.of(), lines(child, npc,
                 Parenting.talk(Parenting.Why.HOME, npc.persona().key(), stage, temper(known), known.name, ChildLines.call(stage, npc.persona().female()),
-                    npc.m_217043_().m_188503_(1 << 20))));
+                    npc.m_217043_().m_188503_(1 << 20)), TalkCues.Scene.HOME, temper(known)));
             if (d.talk == null) {
                 finish(npc, mind, child, level);
             }
@@ -285,11 +286,22 @@ final class ParentDuty {
         return false;
     }
 
-    /** 1.3.53: a parent's talk with its child as a {@link Conversation}'s lines (each by its speaker's entity id). */
-    static List<Conversation.Line> lines(ChildNpc child, EtoNpc parent, List<Parenting.Line> talk) {
+    /**
+     * 1.3.53: a parent's talk with its child as a {@link Conversation}'s lines (each by its speaker's entity id); 1.3.57: each with what its
+     * speaker does as it says it ({@link TalkCues}: the parent's gesture, the child's cue, in {@code scene}, by its {@code temper}).
+     */
+    static List<Conversation.Line> lines(ChildNpc child, EtoNpc parent, List<Parenting.Line> talk, TalkCues.Scene scene, ChildTemper temper) {
         List<Conversation.Line> out = new java.util.ArrayList<>();
-        for (Parenting.Line line : talk) {
-            out.add(new Conversation.Line(line.parent() ? parent.m_19879_() : child.m_19879_(), line.text()));
+        int seed = parent.m_217043_().m_188503_(1 << 20);
+        for (int i = 0; i < talk.size(); i++) {
+            Parenting.Line line = talk.get(i);
+            if (line.parent()) {
+                out.add(new Conversation.Line(parent.m_19879_(), line.text(), com.hex.kagune.control.family.ChildCue.NONE,
+                    TalkCues.parent(line.text(), scene, parent.persona().key(), i, seed + i)));
+            } else {
+                out.add(new Conversation.Line(child.m_19879_(), line.text(), TalkCues.child(line.text(), scene, temper, false, i, seed + i),
+                    EtoGesture.NONE));
+            }
         }
         return out;
     }
