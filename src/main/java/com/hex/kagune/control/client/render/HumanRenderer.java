@@ -215,6 +215,11 @@ public final class HumanRenderer extends HumanoidMobRenderer<HumanNpc, PlayerMod
 
     @Override
     public ResourceLocation m_5478_(HumanNpc human) {
+        return textureOf(human);
+    }
+
+    /** 2.0.1: the skin {@code human} is drawn in (its talk screen's face shows the same one). */
+    public static ResourceLocation textureOf(HumanNpc human) {
         int look = human.look();
         if (look >= HumanRules.CUTE) {
             // 1.3.75: a villager's own skin (HumanSkins).

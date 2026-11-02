@@ -18,6 +18,12 @@ public record S2CNpcTalk(int npc, String name, String temper, int regard, boolea
     private static final int MAX_TEXT = 1024;
     /** Most answers on a page. */
     public static final int MOST = 12;
+    /**
+     * 2.0.1: the face is sent as a byte. A child's and a villager's are these codes, and the client draws the skin the entity itself is
+     * drawn in (a villager's look, -100 - look before, was cut to a byte and showed a companion's or a ghoul's face).
+     */
+    public static final int CHILD_FACE = -50;
+    public static final int HUMAN_FACE = -51;
 
     public S2CNpcTalk(int npc, String name, String temper, int regard, boolean ally, int skin, String line, int[] choices) {
         this(npc, name, temper, regard, ally, skin, line, choices, new String[0]);

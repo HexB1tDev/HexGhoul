@@ -49,12 +49,17 @@ public final class SpeechBubbles {
         if (lines == null || lines.isEmpty()) {
             return;
         }
-        String[] text = inked(lines);
-        boolean thought = com.hex.kagune.control.npc.BubbleShape.thought(lines);
-        // 1.3.52: out of the way of the other bubbles up (BubbleLayout), shrinking away at its end as the reply pops up.
-        BubbleLayout.Place place = place(body, base);
-        double left = NpcSpeech.left(body.m_19879_(), Minecraft.m_91087_().m_91296_());
-        render(body, text, thought, base, age, left, place, pose, buffers);
+        // 2.0.1: a bubble that fails to draw is logged and skipped, never a crash (2.0.0 crashed the game on every bubble).
+        try {
+            String[] text = inked(lines);
+            boolean thought = com.hex.kagune.control.npc.BubbleShape.thought(lines);
+            // 1.3.52: out of the way of the other bubbles up (BubbleLayout), shrinking away at its end as the reply pops up.
+            BubbleLayout.Place place = place(body, base);
+            double left = NpcSpeech.left(body.m_19879_(), Minecraft.m_91087_().m_91296_());
+            render(body, text, thought, base, age, left, place, pose, buffers);
+        } catch (RuntimeException | LinkageError failure) {
+            com.hex.kagune.control.Safety.caught(failure, "SpeechBubbles.draw");
+        }
     }
 
     private static String[] inked(List<String> lines) {
@@ -72,7 +77,11 @@ public final class SpeechBubbles {
         if (phase > 70.0) {
             return;
         }
-        render(body, new String[] {com.hex.kagune.control.npc.BubbleShape.zees(phase)}, true, 0.15, phase, 1.0E9, BubbleLayout.Place.HOME, pose, buffers);
+        try {
+            render(body, new String[] {com.hex.kagune.control.npc.BubbleShape.zees(phase)}, true, 0.15, phase, 1.0E9, BubbleLayout.Place.HOME, pose, buffers);
+        } catch (RuntimeException | LinkageError failure) {
+            com.hex.kagune.control.Safety.caught(failure, "SpeechBubbles.snore");
+        }
     }
 
     // ---------------------------------------------------------------- 1.3.52: keeping them apart

@@ -39,14 +39,23 @@ public final class NpcTalkClient {
         }
         // 1.3.0: skin -1 is Eto's own (128 pixels: the face is drawn by its share of the texture, so it fits).
         // 1.3.14: -1, -2, -3...: each companion's own, in Persona's order (Eto, Touka, Ken).
-        // 1.3.73: -100 and less: a human's (vanilla's default skins, HumanRules.LOOKS).
-        boolean human = message.skin() <= -100;
-        String texture = human ? com.hex.kagune.control.npc.HumanRules.skin(-100 - message.skin())
-            : message.skin() < 0 ? companion(-message.skin() - 1) : NpcLook.texture(message.skin());
-        ResourceLocation skin = Objects.requireNonNull(ResourceLocation.m_214293_(human ? com.hex.kagune.control.npc.HumanRules.namespace(-100 - message.skin())
-            : "hexkagune", texture));
+        // 2.0.1: CHILD_FACE is a child's: the skin it is drawn in (ChildRenderer), not Eto's (-1 had shown hers on every child).
+        if (message.skin() == S2CNpcTalk.CHILD_FACE) {
+            minecraft.m_91152_(new NpcTalkScreen(message.npc(), com.hex.kagune.control.client.render.ChildRenderer.textureOf(message.npc()), model));
+            return;
+        }
+        if (message.skin() == S2CNpcTalk.HUMAN_FACE) {
+            ResourceLocation face = minecraft.f_91073_ != null && minecraft.f_91073_.m_6815_(message.npc()) instanceof com.hex.kagune.control.npc.HumanNpc human
+                ? com.hex.kagune.control.client.render.HumanRenderer.textureOf(human) : STEVE;
+            minecraft.m_91152_(new NpcTalkScreen(message.npc(), face, model));
+            return;
+        }
+        String texture = message.skin() < 0 ? companion(-message.skin() - 1) : NpcLook.texture(message.skin());
+        ResourceLocation skin = Objects.requireNonNull(ResourceLocation.m_214293_("hexkagune", texture));
         minecraft.m_91152_(new NpcTalkScreen(message.npc(), skin, model));
     }
+
+    private static final ResourceLocation STEVE = Objects.requireNonNull(ResourceLocation.m_214293_("minecraft", "textures/entity/player/wide/steve.png"));
 
     /** 1.3.14: the companion {@code index}'s skin (Persona's order). */
     static String companion(int index) {

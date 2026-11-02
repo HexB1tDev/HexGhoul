@@ -172,7 +172,7 @@ public final class ChildTalk {
         choices[keys.size()] = NpcTalk.Choice.LEAVE.ordinal();
         shown[keys.size()] = "";
         String said = line != null ? line : parent ? ChildLines.greet(stage, call, seed) : stage == ChildStage.BABY ? "*stares at you*" : "...Hi.";
-        ControlNetwork.sendTo(player, new S2CNpcTalk(npc.m_19879_(), child.name, title(child, stage, player), parent ? 100 : 30, parent, -1, said, choices, shown));
+        ControlNetwork.sendTo(player, new S2CNpcTalk(npc.m_19879_(), child.name, title(child, stage, player), parent ? 100 : 30, parent, S2CNpcTalk.CHILD_FACE, said, choices, shown));
     }
 
     /**
@@ -207,7 +207,7 @@ public final class ChildTalk {
         }
         choices[keys.size()] = NpcTalk.Choice.LEAVE.ordinal();
         shown[keys.size()] = "";
-        ControlNetwork.sendTo(player, new S2CNpcTalk(npc.m_19879_(), child.name, "Asleep", 100, true, -1, line, choices, shown));
+        ControlNetwork.sendTo(player, new S2CNpcTalk(npc.m_19879_(), child.name, "Asleep", 100, true, S2CNpcTalk.CHILD_FACE, line, choices, shown));
     }
 
     /** 1.3.37: what a sleeping child mumbles, half woken (a baby sleeps on). */
@@ -488,7 +488,7 @@ public final class ChildTalk {
         }
         choices[keys.size()] = NpcTalk.Choice.LEAVE.ordinal();
         shown[keys.size()] = "";
-        ControlNetwork.sendTo(player, new S2CNpcTalk(npc.m_19879_(), child.name, title(child, stage, player), parent ? 100 : 30, parent, -1, line, choices,
+        ControlNetwork.sendTo(player, new S2CNpcTalk(npc.m_19879_(), child.name, title(child, stage, player), parent ? 100 : 30, parent, S2CNpcTalk.CHILD_FACE, line, choices,
             shown));
     }
 

@@ -393,7 +393,12 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
 
     @Override
     public ResourceLocation m_5478_(ChildNpc child) {
-        ChildClient.View view = ChildClient.get(child.m_19879_());
+        return textureOf(child.m_19879_());
+    }
+
+    /** 2.0.1: the skin the child with entity id {@code id} is drawn in (its talk screen's face shows the same one). */
+    public static ResourceLocation textureOf(int id) {
+        ChildClient.View view = ChildClient.get(id);
         if (view == null) {
             return FALLBACK;
         }

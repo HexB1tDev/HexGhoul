@@ -159,7 +159,7 @@ public final class HumanTalk {
                 QuestServer.bond(player, key, bond.regard(bond.regard() + DATE));
             }
             ControlNetwork.sendTo(player, new S2CNpcTalk(human.m_19879_(), HumanBrain.name(human), temper.title, bond.regard(), false,
-                -100 - human.look(), "", new int[0], new String[0]));
+                S2CNpcTalk.HUMAN_FACE, "", new int[0], new String[0]));
             return;
         }
         if (choice == NpcTalk.Choice.KISS || choice == NpcTalk.Choice.HUG) {
@@ -171,7 +171,7 @@ public final class HumanTalk {
             human.mind.pendingUntil = now + COMING;
             human.mind.pendingLine = kiss ? HumanPersona.kissed(temper, roll) : HumanPersona.hugged(temper, roll);
             ControlNetwork.sendTo(player, new S2CNpcTalk(human.m_19879_(), HumanBrain.name(human), temper.title, bond.regard(), false,
-                -100 - human.look(), "", new int[0], new String[0]));
+                S2CNpcTalk.HUMAN_FACE, "", new int[0], new String[0]));
             return;
         }
         String line;
@@ -291,8 +291,8 @@ public final class HumanTalk {
             ordinals[i] = offered.get(i).ordinal();
             labels[i] = said.get(i);
         }
-        // Its skin as a talk screen knows it: -100 less its look (a vanilla default skin: HumanRules.LOOKS).
+        // 2.0.1: its face as the client draws it (HUMAN_FACE: the talk screen reads its look off the entity).
         ControlNetwork.sendTo(player, new S2CNpcTalk(human.m_19879_(), HumanBrain.name(human), HumanPersona.temper(seed).title, regard, false,
-            -100 - human.look(), line, ordinals, labels));
+            S2CNpcTalk.HUMAN_FACE, line, ordinals, labels));
     }
 }
