@@ -70,7 +70,7 @@ public final class EtoFight {
         return under == null && p.isZero() ? null : p;
     }
 
-    /** 1.3.19: Peace on {@code npc}'s body, as on a player's (its run left to the legs' own walk). */
+    /** 1.3.19: Peace on {@code npc}'s body, as on a player's (1.3.67: its run too, KingRun.peace; it was left to the legs' own walk). */
     private static void peace(EtoNpc npc, RigPose p, float partial, float bodyYaw, boolean air) {
         com.hex.kagune.control.client.KingClient.View worn = com.hex.kagune.control.client.KingClient.get(npc);
         if (worn == null || worn.form() != com.hex.kagune.control.king.KingForm.PEACE) {
@@ -98,6 +98,11 @@ public final class EtoFight {
         float run = Math.min(1.0F, npc.f_267362_.m_267711_(partial) * 1.4F);
         WarPose.peace(p, time, 1.0F - 0.7F * run);
         com.hex.kagune.control.king.KingMove move = worn.moveAt(time);
+        // 1.3.67: his run is Peace's glide (KingRun.peace), as a player's, its stride his legs' own swing (a fight's pace is a sprint);
+        // a blow has his upper body.
+        if (!air) {
+            KingRun.peace(p, npc.f_267362_.m_267590_(partial) * 0.6662, run, run, move == com.hex.kagune.control.king.KingMove.NONE ? 1.0F : 0.0F, time);
+        }
         if (move != com.hex.kagune.control.king.KingMove.NONE) {
             RigPose blow = new RigPose();
             PeacePose.act(blow, move, time - worn.moveAt(), worn.level(), 1.0F);

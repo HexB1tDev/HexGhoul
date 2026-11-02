@@ -1,12 +1,18 @@
-# START HERE (state after 1.3.66)
+# START HERE (state after 1.3.67)
 
-- **Next session:** read `docs/handoff/next-ai-1.3.63.md` first (the owner's current update), then `docs/handoff/next-ai-1.3.60.md`
-  (house rules, family talk). Left: **1.3.67 War and Peace running animations**: a work in progress is in `git stash` on this branch
-  ("1.3.67 WIP": `KingRun.war` the beast's charge (both claws reach ahead between footfalls and rake back as each lands, near flat, rolling),
-  `KingRun.peace` the glide (near flat, head level, arms swept back and wide, bounding with a hang), `PeaceMotion.rest` running pitch
-  +14 instead of -7 against the deeper lean; still to do: Peace's lowest blade dips ~30 px below the feet at phase 0 in
-  `tools/art-preview.sh <dir> king-runs` (less flip/lean, or lift that blade), Ken's run in `EtoFight.peace` (KingRun.peace from his limb
-  swing), docs). If the stash is gone, redo it from this description.
+- **Next session:** read `docs/handoff/next-ai-1.3.67.md` first (the owner's last update, what is done and what is left, in order), then
+  `docs/handoff/next-ai-1.3.60.md` (house rules, family talk).
+- **1.3.67 War and Peace runs** (protocol 71, unchanged; client only). `KingRun.war`: the beast's charge (lean 0.24 + 0.76 s, flip -0.15 s,
+  head out and up; `rake` = cos 2 phase: both claws `s (-1.25 + 0.9 rake)` reach between footfalls and rake back as each lands, elbows bent
+  as they pull; walking: the old pump x (1 - s); twist, side, roll lurching; heavy wide legs; stomp drop 0.4 + 1.8 s). `KingRun.peace`: the
+  glide (lean 0.12 + 0.7 s, head level, arms back 0.2 + 0.2 s and out 0.1 + 0.75 s like swept wings, a wingbeat with the bound; bank; legs
+  0.55 + 0.5 s swing, 0.8 + 1.2 s fold; drop `(0.25 + 0.45 s) land - (0.2 + 2.8 s) air`). `PeaceMotion.rest` running: pitch
+  `+(14 + 9 tier) run` (was -7), `y + 0.12 tier run`. `EtoFight.peace`: Ken's run (`KingRun.peace` on his limb swing x 0.6662, run as
+  sprint, free unless a move; not in the air). Preview: `tools/art-preview.sh <dir> king-runs`; the lowest point of Peace's form through a
+  sprint (32 phases) is +0.14 blocks (measured by a scratch class over `ArtPreview.peaceRun/peaceTris`).
+
+# State after 1.3.66
+
 - **1.3.66 War's rinkaku alive** (the owner: "the back tendrils in WAR path are too unrealistic and solid, they are like unmoving branches of
   a tree, they have 0 similarity to the original tendrils of the other kagunes"; protocol 71, unchanged; client drawing only). `WarModel`:
   `Motion` gained `lag, run, rise` (canonical 10 args; the 4/6/7-arg constructors keep working) and `drifting(lag, run, rise)`;

@@ -287,10 +287,12 @@ public final class PeaceMotion {
         double yaw = home[3] + 8.0 * Math.sin(time * 0.047 + seed * 2.1) - 10.0 * reach + own[0];
         double pitch = home[4] + 5.0 * Math.sin(time * 0.071 + seed * 0.9) + own[1];
         double roll = home[5] + 18.0 * Math.sin(time * 0.039 + seed * 1.7) + own[2];
-        // Running: streamed back and in, the points dipping.
+        // Running: streamed back and in. 1.3.66: the points lifted against his deeper lean (KingRun's glide tips him some 21 degrees further
+        // than before), so they still dip a little as they did, and stay ahead along the ground, never into it.
         x *= 1.0 - 0.2 * run;
         z -= 0.9 * run;
-        pitch -= 7.0 * run;
+        pitch += (14.0 + 9.0 * tier) * run;
+        y += 0.12 * tier * run; // (the lower pairs, nearest the ground, a little more)
         // Rising leaves them below him, falling lifts them (the lower pair, farther from where they are held, most).
         double drag = Math.max(-1.0, Math.min(1.0, rise / 0.45));
         y -= (0.1 + 0.05 * tier) * drag;
