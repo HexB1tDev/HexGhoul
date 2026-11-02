@@ -179,12 +179,44 @@ public final class ChildTalkPose {
                 p.headX = -0.2F;
                 p.drop = carried ? 0.0F : -0.7F * (float)Math.abs(Math.sin(t * 0.45));
             }
+            case HIDE -> {
+                // Crouched down small (its legs folded forward under it, as near as a model without knees comes), arms round its knees,
+                // peeking about.
+                if (!carried) {
+                    p.rightLegX = -1.3F;
+                    p.leftLegX = -1.3F;
+                    p.rightLegY = 0.28F;
+                    p.leftLegY = -0.28F;
+                    p.legHold = 1.0F;
+                    p.drop = little ? 4.3F : 8.6F; // a little one's legs are half as long
+                }
+                p.rightArmX = -1.15F;
+                p.leftArmX = -1.15F;
+                p.rightArmZ = -0.22F;
+                p.leftArmZ = 0.22F;
+                p.armHold = 1.0F;
+                p.headX = -0.1F;
+                p.headY = 0.35F * (float)Math.sin(t * 0.05);
+            }
+            case COUNT -> {
+                // Both hands over its eyes, head down a little, rocking as it counts (a little one's short arms only reach its cheeks: its
+                // hands pressed to its face, its big head bowed into them).
+                p.rightArmX = little ? -1.9F : -2.15F;
+                p.leftArmX = little ? -1.9F : -2.15F;
+                p.rightArmY = little ? -0.3F : -0.75F;
+                p.leftArmY = little ? 0.3F : 0.75F;
+                p.rightArmZ = little ? -0.35F : -0.3F;
+                p.leftArmZ = little ? 0.35F : 0.3F;
+                p.armHold = 1.0F;
+                p.headX = little ? 0.45F : 0.15F;
+                p.roll = 0.03F * (float)Math.sin(t * 0.3);
+            }
             default -> {
                 return null;
             }
         }
-        if (little) {
-            // A little one's short arms: a touch higher to reach the same place.
+        if (little && cue != ChildCue.COUNT) {
+            // A little one's big head: a touch less of a nod.
             p.headX *= 0.8F;
         }
         return p;

@@ -31,14 +31,14 @@ public final class TalkPreview {
         out.mkdirs();
         BufferedImage boy = MomentPreview.small(ImageIO.read(new File(args[1])));
         BufferedImage girl = MomentPreview.small(ImageIO.read(new File(args.length > 2 ? args[2] : args[1])));
-        double[] telling = {0, 30, 8.5, 16, 30, 11, 30, 10, 20, 30, 7, 22, 45, 30, 14, 20};
+        double[] telling = {0, 30, 8.5, 16, 30, 11, 30, 10, 20, 30, 7, 22, 45, 30, 14, 20, 300, 40};
         List<Shot> shots = new ArrayList<>();
         for (ChildCue cue : ChildCue.values()) {
             if (cue != ChildCue.NONE) {
                 shots.add(new Shot(cue.name().toLowerCase() + " (child)", cue, telling[cue.ordinal()], ChildStage.CHILD, 30));
             }
         }
-        for (ChildCue cue : new ChildCue[] {ChildCue.CROSS, ChildCue.STAMP, ChildCue.SORRY, ChildCue.PLEAD, ChildCue.SULK}) {
+        for (ChildCue cue : new ChildCue[] {ChildCue.CROSS, ChildCue.STAMP, ChildCue.SORRY, ChildCue.PLEAD, ChildCue.SULK, ChildCue.HIDE, ChildCue.COUNT}) {
             shots.add(new Shot(cue.name().toLowerCase() + " (toddler)", cue, telling[cue.ordinal()], ChildStage.TODDLER, 30));
         }
         int w = 260;

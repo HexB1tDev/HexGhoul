@@ -1,8 +1,28 @@
-# START HERE (state after 1.3.57)
+# START HERE (state after 1.3.58)
 
 - **Next session:** read `docs/handoff/next-ai-1.3.51.md` first (the owner's goal: more interactions and dialog, polish first; how
   conversations worked; the known problems), then these sections. Problems 1 (bubbles), 2 (walking off mid-talk), 3 (tag off home), 4 (two escorts) and 5
   (Eto's child unposed) there are fixed by 1.3.52 to 1.3.56; "How conversations work now" there is out of date for held talks: read the 1.3.53 entry below.
+- **1.3.58 hide and seek** (protocol 70, unchanged). Pure `family/HideAndSeek`: `INSTEAD_OF_TAG` 0.5, `COUNT` 100, `SEEKS` 900,
+  `HINT_EVERY` 160, `HEARD` 80, `FINDS` 3, `NEAREST` 4 / `FARTHEST` 11, `SPOTS` 24, `REACHES` 160, `AFTER` 80, `LONGEST`; `Part` (PROPOSE,
+  AGREE, COUNT, READY, SEEKING, HINT, FOUND, CAUGHT, GIVE_UP, WIN; never sent); `line(part, temper, stage, seed)` (80 lines, keys
+  "part:temper|any:little|big"); `bestSpot(distance, hidden)`; `spot(i, hx, hz, radius, seed)` (a golden-angle spread in the yard);
+  `heard(sinceHint)`. `ChildCue` gained HIDE (1200 ticks: legs folded forward, `drop` 8.6 / a little one's 4.3, arms round its knees) and
+  COUNT (hands over the eyes; a little one's to its cheeks, its head bowed). `ParentDuty.Said` gained a `cue` (3-arg: none), applied as
+  it is said (`Conversation.act`). Server `SiblingLife`: `begin` turns TAG into `startHide` half the time (PROPOSE with CHEER, AGREE on the
+  seeker's queue; `Mind.hideWith/seeker/hidePart/hideAt/hideBegan/hideFound/hideSpot/hideSetOff/hidden/hintAt/seekTo/seekToAt/seekSaidAt`);
+  `tick` runs `hide` first: stops (`stopHide`, both minds, a HIDE/COUNT cue cleared) on anything (gone, carried, a fight, a moment, a talk,
+  a player's talk, asleep, following, LONGEST, no home); `seek` (part 0: still, turned away (`Conversation.faceTo`), COUNT, READY at
+  COUNT; part 1: found within FINDS in sight after 20 ticks -> FOUND (POINT) + CAUGHT (`caughtCue`) -> `over`; SEEKS -> GIVE_UP (SHRUG) +
+  WIN (CHEER); else to a `spot` every 70 ticks or to 1.5 blocks of the hider when `heard`, SEEKING now and then (THINK); part 2: AFTER,
+  then stop); `hideAway` (`spot`: the 24 spots with `ground` (a block with collision under two without, from home y + 2 to - 3), seen
+  from the seeker's eyes by `ClipContext` COLLIDER to the spot's head height; there or REACHES: HIDE cue, still, peeking at the seeker;
+  HINT now and then while looked for; over: found, it stands; not, it runs to the seeker). Guards: `Conversation.free` (no game),
+  `ChildBrain.held` (its stroll waits), `ChildBrain.lines` (silent), `ChildBrain.start` (a player's moment ends the game, others refused),
+  `ParentCare.tend` (no pick-up). Preview: `TalkPreview` shows HIDE and COUNT. `FamilyTests.hideAndSeek`.
+
+# State after 1.3.57
+
 - **1.3.57 gestures with the lines** (protocol **70**: `S2CChild` gained `cue` (byte, `ChildCue` ordinal) and `cueAt` (varlong)). Pure
   `family/ChildCue` (NONE, CROSS, STAMP, POINT, HIPS, SHRUG, SORRY, CHEER, GIGGLE, WHISPER, BLEH, PAT, SULK, THINK, WAVE, PLEAD; sent by
   ordinal: append only; `ticks`, `running(age)`, `weight(age)` in 4 / out 8) and `family/TalkCues` (`Scene` CHAT, TEASE, BRAG, COMFORT,

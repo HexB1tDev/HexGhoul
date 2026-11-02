@@ -35,7 +35,11 @@ public enum ChildCue {
     /** A wave. */
     WAVE(36),
     /** Hands together under its chin, bouncing on its toes: "pleeease". */
-    PLEAD(60);
+    PLEAD(60),
+    /** 1.3.58 (hide and seek): crouched down small, arms round its knees, peeking. Held while it hides (a new cue ends it). */
+    HIDE(1200),
+    /** 1.3.58 (hide and seek): both hands over its eyes, counting. */
+    COUNT(110);
 
     /** How long it lasts (ticks). */
     public final int ticks;

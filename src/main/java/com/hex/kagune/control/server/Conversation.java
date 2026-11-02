@@ -129,7 +129,8 @@ final class Conversation {
         if (body instanceof ChildNpc child) {
             ChildBrain.Mind mind = child.mind;
             return mind != null && mind.target == 0 && !ChildBrain.busy(mind, now) && !ChildBrain.carried(child) && child.following() == null
-                && ChildTalk.talker(child, level) == null && mind.tagWith == 0 && mind.minding == 0 && (mind.escort == null || now >= mind.escortUntil);
+                && ChildTalk.talker(child, level) == null && mind.tagWith == 0 && mind.minding == 0 && (mind.escort == null || now >= mind.escortUntil)
+                && mind.hideWith == 0;
         }
         if (body instanceof EtoNpc npc) {
             EtoBrain.Mind mind = npc.mind;
@@ -205,7 +206,15 @@ final class Conversation {
 
     /** {@code body} turned toward {@code to}: its body by {@link Talks#TURN} a tick, its head straight at them. */
     static void face(LivingEntity body, Entity to) {
-        Vec3 way = to.m_20182_().m_82546_(body.m_20182_());
+        faceTo(body, to.m_20182_());
+        if (body instanceof Mob mob) {
+            mob.m_21563_().m_24960_(to, 30.0F, 30.0F);
+        }
+    }
+
+    /** 1.3.58: {@code body} turned toward the point {@code at}: its body by {@link Talks#TURN} a tick, its head further. */
+    static void faceTo(LivingEntity body, Vec3 at) {
+        Vec3 way = at.m_82546_(body.m_20182_());
         if (way.f_82479_ * way.f_82479_ + way.f_82481_ * way.f_82481_ < 1.0E-4) {
             return;
         }
@@ -214,9 +223,6 @@ final class Conversation {
         body.m_146922_(turned);
         body.f_20883_ = turned;
         body.f_20885_ = Talks.turn(turned, yaw, 50.0F);
-        if (body instanceof Mob mob) {
-            mob.m_21563_().m_24960_(to, 30.0F, 30.0F);
-        }
     }
 
     /** {@code body}'s talk over now, for {@code why} (the rest of it dropped; a fight, a hurt, a player: nothing more said). */

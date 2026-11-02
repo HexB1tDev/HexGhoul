@@ -59,6 +59,7 @@ public final class FamilyTests {
         siblings();
         talks();
         cues();
+        hideAndSeek();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -720,6 +721,54 @@ check(com.hex.kagune.control.graft.GraftStage.TRANSPLANT.limbs(com.hex.kagune.co
         }
         check(com.hex.kagune.control.family.ChildCue.NONE.ordinal() == 0 && com.hex.kagune.control.family.ChildCue.byOrdinal(99)
             == com.hex.kagune.control.family.ChildCue.NONE, "sent by ordinal, nothing unknown");
+    }
+
+    /**
+     * 1.3.58: hide and seek: every part of the game has words for every temper at both ages, filled in and clean; the hider picks a spot out
+     * of sight first, then a good distance; the spots it weighs are all in the yard; the seeker goes to a giggle it just heard.
+     */
+    static void hideAndSeek() {
+        boolean clean = true;
+        java.util.Set<String> seen = new java.util.HashSet<>();
+        for (com.hex.kagune.control.family.HideAndSeek.Part part : com.hex.kagune.control.family.HideAndSeek.Part.values()) {
+            for (com.hex.kagune.control.family.ChildTemper t : com.hex.kagune.control.family.ChildTemper.values()) {
+                for (com.hex.kagune.control.family.ChildStage st : new com.hex.kagune.control.family.ChildStage[] {com.hex.kagune.control.family.ChildStage.TODDLER,
+                    com.hex.kagune.control.family.ChildStage.CHILD, com.hex.kagune.control.family.ChildStage.TEEN}) {
+                    for (int seed = 0; seed < 12; seed++) {
+                        String line = com.hex.kagune.control.family.HideAndSeek.line(part, t, st, seed);
+                        String low = line == null ? "" : line.toLowerCase(java.util.Locale.ROOT);
+                        clean &= line != null && !line.isBlank() && !line.contains("{");
+                        for (String banned : new String[] {"kaneki", "ayato", "furuta", "takatsuki", "aogiri", "yoshimura"}) {
+                            clean &= !low.contains(banned);
+                        }
+                        seen.add(line);
+                    }
+                }
+            }
+        }
+        check(clean && seen.size() > 70, "hide and seek: every part, temper and age has its words (" + seen.size() + " lines)");
+        check(com.hex.kagune.control.family.HideAndSeek.line(com.hex.kagune.control.family.HideAndSeek.Part.HINT,
+            com.hex.kagune.control.family.ChildTemper.SUNNY, com.hex.kagune.control.family.ChildStage.CHILD, 1).startsWith("*"),
+            "a hider's giggle is a thought (in its cloud)");
+        check(com.hex.kagune.control.family.HideAndSeek.bestSpot(new double[] {9.0, 5.0, 7.0}, new boolean[] {false, true, false}) == 1
+            && com.hex.kagune.control.family.HideAndSeek.bestSpot(new double[] {9.0, 5.0, 7.0}, new boolean[] {false, false, false}) == 0
+            && com.hex.kagune.control.family.HideAndSeek.bestSpot(new double[] {2.0, 6.0}, new boolean[] {true, true}) == 1
+            && com.hex.kagune.control.family.HideAndSeek.bestSpot(new double[] {Double.NaN, 3.0}, new boolean[] {true, false}) == 1
+            && com.hex.kagune.control.family.HideAndSeek.bestSpot(new double[] {Double.NaN}, new boolean[] {true}) == -1,
+            "out of sight first, then a good way off; never a spot with no ground");
+        boolean inside = true;
+        for (int seed = 0; seed < 40; seed++) {
+            for (int i = 0; i < com.hex.kagune.control.family.HideAndSeek.SPOTS; i++) {
+                double[] at = com.hex.kagune.control.family.HideAndSeek.spot(i, 10.0, -5.0, 14.0, seed * 37);
+                inside &= Math.hypot(at[0] - 10.0, at[1] + 5.0) <= com.hex.kagune.control.family.Siblings.yard(14.0) + 1.0E-9;
+            }
+        }
+        check(inside, "every spot it weighs is in the yard");
+        check(com.hex.kagune.control.family.HideAndSeek.heard(10L) && !com.hex.kagune.control.family.HideAndSeek.heard(500L)
+            && !com.hex.kagune.control.family.HideAndSeek.heard(-5L), "a giggle heard just now leads the seeker to it");
+        check(com.hex.kagune.control.family.HideAndSeek.LONGEST > com.hex.kagune.control.family.HideAndSeek.COUNT + com.hex.kagune.control.family.HideAndSeek.SEEKS
+            && com.hex.kagune.control.family.ChildCue.HIDE.ticks > com.hex.kagune.control.family.HideAndSeek.LONGEST - 200,
+            "its crouch lasts the game");
     }
 
     static void genome() {

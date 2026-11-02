@@ -318,7 +318,10 @@ final class ParentDuty {
     }
 
     /** One line due: who says it (an entity id), what, on which tick. */
-    record Said(int speaker, String text, long at) {
+    record Said(int speaker, String text, long at, com.hex.kagune.control.family.ChildCue cue) {
+        Said(int speaker, String text, long at) {
+            this(speaker, text, at, com.hex.kagune.control.family.ChildCue.NONE);
+        }
     }
 
     /**
@@ -338,6 +341,7 @@ final class ParentDuty {
                     ControlNetwork.sendTo(player, new S2CNpcSay(said.speaker(), said.text(), ticks));
                 }
             }
+            Conversation.act(body, said.cue(), EtoGesture.NONE, now); // 1.3.58: what it does as it says it
         }
     }
 

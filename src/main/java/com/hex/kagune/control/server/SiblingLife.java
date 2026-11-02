@@ -38,6 +38,11 @@ final class SiblingLife {
      * then, a new moment begun with a sibling near (a talk, which stands them both still; tag; minding a toddler).
      */
     static boolean tick(ChildNpc npc, ChildBrain.Mind mind, Children.Child child, ServerLevel level, long now) {
+        if (mind.hideWith != 0) {
+            if (hide(npc, mind, child, level, now)) {
+                return true; // 1.3.58: playing hide and seek
+            }
+        }
         if (mind.tagWith != 0) {
             if (tag(npc, mind, child, level, now)) {
                 return true;
@@ -96,6 +101,10 @@ final class SiblingLife {
                 known.name, call(known, theirs), girl(known), npc.m_217043_().m_188503_(1 << 20));
             switch (kind) {
                 case TAG -> {
+                    if (npc.m_217043_().m_188500_() < com.hex.kagune.control.family.HideAndSeek.INSTEAD_OF_TAG) {
+                        startHide(npc, other, child, known, level, now); // 1.3.58: hide and seek instead
+                        return;
+                    }
                     // It tags the other: the other is it, and chases.
                     mind.tagWith = other.m_19879_();
                     mind.chasing = false;
@@ -181,6 +190,281 @@ final class SiblingLife {
             npc.m_21573_().m_26519_(to[0], npc.m_20186_(), to[1], 1.25);
         }
         return true;
+    }
+
+    // ---------------------------------------------------------------- 1.3.58: hide and seek
+
+    /** Hide and seek begun: {@code seeker} (who proposed it) counts, {@code hider} hides; a word each first. */
+    private static void startHide(ChildNpc seeker, ChildNpc hider, Children.Child child, Children.Child known, ServerLevel level, long now) {
+        ChildStage stage = child.stage(now);
+        ChildStage theirs = known.stage(now);
+        int seed = seeker.m_217043_().m_188503_(1 << 20);
+        String propose = com.hex.kagune.control.family.HideAndSeek.line(com.hex.kagune.control.family.HideAndSeek.Part.PROPOSE, temper(child), stage, seed);
+        String agree = com.hex.kagune.control.family.HideAndSeek.line(com.hex.kagune.control.family.HideAndSeek.Part.AGREE, temper(known), theirs, seed + 7);
+        long at = Math.max(now, seeker.mind.talkFree);
+        seeker.mind.talk.add(new ParentDuty.Said(seeker.m_19879_(), propose, at, com.hex.kagune.control.family.ChildCue.CHEER));
+        long next = at + Parenting.pause(propose);
+        seeker.mind.talk.add(new ParentDuty.Said(hider.m_19879_(), agree, next, com.hex.kagune.control.family.TalkCues.said(agree)));
+        seeker.mind.talkFree = next + Parenting.pause(agree);
+        for (ChildNpc body : new ChildNpc[] {seeker, hider}) {
+            ChildBrain.Mind m = body.mind;
+            m.hideWith = (body == seeker ? hider : seeker).m_19879_();
+            m.seeker = body == seeker;
+            m.hidePart = 0;
+            m.hideAt = next; // the count begins as the other runs off
+            m.hideBegan = now;
+            m.hideFound = false;
+            m.hideSpot = null;
+            m.hidden = false;
+            m.seekTo = null;
+            m.hintAt = Long.MIN_VALUE / 2;
+            m.seekSaidAt = Long.MIN_VALUE / 2;
+        }
+    }
+
+    /** Its part in a game of hide and seek this tick: true while it plays. */
+    private static boolean hide(ChildNpc npc, ChildBrain.Mind mind, Children.Child child, ServerLevel level, long now) {
+        Entity found = level.m_6815_(mind.hideWith);
+        Households.Home house = Households.forChild(level, child);
+        if (!(found instanceof ChildNpc other) || !other.m_6084_() || other.mind == null || other.mind.hideWith != npc.m_19879_() || house == null
+            || now - mind.hideBegan > com.hex.kagune.control.family.HideAndSeek.LONGEST || ChildBrain.carried(npc) || ChildBrain.carried(other)
+            || other.m_20280_(npc) > 32.0 * 32.0 || other.mind.target != 0 || ChildBrain.busy(other.mind, now) || Conversation.in(other) != null
+            || ChildTalk.talker(other, level) != null || other.m_5803_() || other.following() != null || npc.following() != null) {
+            stopHide(npc);
+            return false;
+        }
+        return mind.seeker ? seek(npc, mind, child, other, house, level, now) : hideAway(npc, mind, child, other, house, level, now);
+    }
+
+    /** The seeker: counts (eyes covered, turned away), looks about the yard (to a giggle it heard), finds it or gives up. */
+    private static boolean seek(ChildNpc npc, ChildBrain.Mind mind, Children.Child child, ChildNpc hider, Households.Home house, ServerLevel level,
+                                long now) {
+        ChildStage stage = child.stage(now);
+        long t = now - mind.hideAt;
+        int seed = npc.m_217043_().m_188503_(1 << 20);
+        switch (mind.hidePart) {
+            case 0 -> {
+                still(npc);
+                if (t < 0L) {
+                    Conversation.face(npc, hider); // still saying who counts
+                    return true;
+                }
+                if (mind.seekSaidAt < mind.hideAt) {
+                    mind.seekSaidAt = now;
+                    mind.talk.add(new ParentDuty.Said(npc.m_19879_(), com.hex.kagune.control.family.HideAndSeek.line(
+                        com.hex.kagune.control.family.HideAndSeek.Part.COUNT, temper(child), stage, seed), now, com.hex.kagune.control.family.ChildCue.COUNT));
+                }
+                // Turned away from where the other runs, eyes covered.
+                Conversation.faceTo(npc, npc.m_20182_().m_82549_(npc.m_20182_().m_82546_(hider.m_20182_())));
+                if (t >= com.hex.kagune.control.family.HideAndSeek.COUNT) {
+                    mind.talk.add(new ParentDuty.Said(npc.m_19879_(), com.hex.kagune.control.family.HideAndSeek.line(
+                        com.hex.kagune.control.family.HideAndSeek.Part.READY, temper(child), stage, seed), now, com.hex.kagune.control.family.ChildCue.CHEER));
+                    mind.hidePart = 1;
+                    mind.hideAt = now;
+                    mind.seekSaidAt = now;
+                }
+                return true;
+            }
+            case 1 -> {
+                Children.Child known = Children.get(level, hider.childId());
+                ChildStage theirs = known == null ? ChildStage.CHILD : known.stage(now);
+                ChildTemper theirTemper = known == null ? null : temper(known);
+                if (npc.m_20280_(hider) <= com.hex.kagune.control.family.HideAndSeek.FINDS * com.hex.kagune.control.family.HideAndSeek.FINDS
+                    && npc.m_142582_(hider) && t > 20L) {
+                    // Found it.
+                    String got = com.hex.kagune.control.family.HideAndSeek.line(com.hex.kagune.control.family.HideAndSeek.Part.FOUND, temper(child), stage, seed);
+                    String caught = com.hex.kagune.control.family.HideAndSeek.line(com.hex.kagune.control.family.HideAndSeek.Part.CAUGHT, theirTemper, theirs,
+                        seed + 3);
+                    mind.talk.add(new ParentDuty.Said(npc.m_19879_(), got, now, com.hex.kagune.control.family.ChildCue.POINT));
+                    mind.talk.add(new ParentDuty.Said(hider.m_19879_(), caught, now + Parenting.pause(got), caughtCue(caught, theirTemper)));
+                    mind.talkFree = now + Parenting.pause(got) + Parenting.pause(caught);
+                    over(npc, hider, true, now);
+                    return true;
+                }
+                if (t >= com.hex.kagune.control.family.HideAndSeek.SEEKS) {
+                    // Gives up: the other pops out, the winner.
+                    String up = com.hex.kagune.control.family.HideAndSeek.line(com.hex.kagune.control.family.HideAndSeek.Part.GIVE_UP, temper(child), stage, seed);
+                    String win = com.hex.kagune.control.family.HideAndSeek.line(com.hex.kagune.control.family.HideAndSeek.Part.WIN, theirTemper, theirs, seed + 5);
+                    mind.talk.add(new ParentDuty.Said(npc.m_19879_(), up, now, com.hex.kagune.control.family.ChildCue.SHRUG));
+                    mind.talk.add(new ParentDuty.Said(hider.m_19879_(), win, now + Parenting.pause(up), com.hex.kagune.control.family.ChildCue.CHEER));
+                    mind.talkFree = now + Parenting.pause(up) + Parenting.pause(win);
+                    over(npc, hider, false, now);
+                    return true;
+                }
+                // Looking about: somewhere new in the yard now and then, or to where it heard a giggle.
+                boolean heard = com.hex.kagune.control.family.HideAndSeek.heard(now - hider.mind.hintAt);
+                if (mind.seekTo == null || now - mind.seekToAt > 70L || npc.m_20238_(mind.seekTo) < 1.6 * 1.6 || heard && now - mind.seekToAt > 20L
+                    && hider.mind.hintAt > mind.seekToAt) {
+                    Vec3 to;
+                    if (heard) {
+                        double a = npc.m_217043_().m_188500_() * Math.PI * 2.0;
+                        to = hider.m_20182_().m_82520_(Math.cos(a) * 1.5, 0.0, Math.sin(a) * 1.5);
+                    } else {
+                        double[] xz = com.hex.kagune.control.family.HideAndSeek.spot(npc.m_217043_().m_188503_(com.hex.kagune.control.family.HideAndSeek.SPOTS),
+                            house.pos().m_123341_() + 0.5, house.pos().m_123343_() + 0.5, house.radius(), seed);
+                        to = new Vec3(xz[0], npc.m_20186_(), xz[1]);
+                    }
+                    mind.seekTo = to;
+                    mind.seekToAt = now;
+                    npc.m_21573_().m_26519_(to.f_82479_, to.f_82480_, to.f_82481_, heard ? 1.1 : 0.85);
+                }
+                if (now - mind.seekSaidAt > 220L && npc.m_217043_().m_188500_() < 0.02 && mind.talk.isEmpty()) {
+                    mind.seekSaidAt = now;
+                    mind.talk.add(new ParentDuty.Said(npc.m_19879_(), com.hex.kagune.control.family.HideAndSeek.line(
+                        com.hex.kagune.control.family.HideAndSeek.Part.SEEKING, temper(child), stage, seed), now, com.hex.kagune.control.family.ChildCue.THINK));
+                }
+                return true;
+            }
+            default -> {
+                still(npc);
+                Conversation.face(npc, hider);
+                if (t >= com.hex.kagune.control.family.HideAndSeek.AFTER) {
+                    stopHide(npc);
+                }
+                return true;
+            }
+        }
+    }
+
+    /** The hider: to the best spot it can find in the yard out of the seeker's sight, crouched there, giggling now and then; out once it's over. */
+    private static boolean hideAway(ChildNpc npc, ChildBrain.Mind mind, Children.Child child, ChildNpc seeker, Households.Home house, ServerLevel level,
+                                    long now) {
+        ChildBrain.Mind them = seeker.mind;
+        if (them.hidePart == 2) {
+            // Over: found, it stands up where it is; not found, it comes out to the one who gave up.
+            if (!them.hideFound && npc.m_20280_(seeker) > 2.2 * 2.2) {
+                if (now % 10L == 0L) {
+                    npc.m_21573_().m_5624_(seeker, 1.15);
+                }
+            } else {
+                still(npc);
+                Conversation.face(npc, seeker);
+            }
+            return true;
+        }
+        if (them.hidePart == 0 && now < them.hideAt) {
+            still(npc);
+            Conversation.face(npc, seeker); // still saying it'll hide
+            return true;
+        }
+        if (mind.hideSpot == null) {
+            mind.hideSpot = spot(npc, seeker, house, level);
+            mind.hideSetOff = now;
+        }
+        if (!mind.hidden) {
+            if (npc.m_20238_(mind.hideSpot) > 0.8 * 0.8 && now - mind.hideSetOff < com.hex.kagune.control.family.HideAndSeek.REACHES) {
+                if (now % 10L == Math.floorMod(npc.m_19879_(), 10)) {
+                    npc.m_21573_().m_26519_(mind.hideSpot.f_82479_, mind.hideSpot.f_82480_, mind.hideSpot.f_82481_, 1.25);
+                }
+                return true;
+            }
+            // There (or as near as it got): crouched down small.
+            mind.hidden = true;
+            mind.cue = com.hex.kagune.control.family.ChildCue.HIDE;
+            mind.cueAt = now;
+            mind.dirty = true;
+        }
+        still(npc);
+        Conversation.faceTo(npc, seeker.m_20182_()); // peeking out at it
+        // Now and then, while it is looked for, a giggle it can't help (a hint the seeker may hear).
+        if (them.hidePart == 1 && now - mind.hintAt >= com.hex.kagune.control.family.HideAndSeek.HINT_EVERY && now % 20L == Math.floorMod(npc.m_19879_(), 20)
+            && npc.m_217043_().m_188500_() < 0.15) {
+            mind.hintAt = now;
+            Children.Child known = Children.get(level, npc.childId());
+            mind.talk.add(new ParentDuty.Said(npc.m_19879_(), com.hex.kagune.control.family.HideAndSeek.line(com.hex.kagune.control.family.HideAndSeek.Part.HINT,
+                known == null ? null : temper(known), child.stage(now), npc.m_217043_().m_188503_(1 << 20)), now));
+        }
+        return true;
+    }
+
+    /**
+     * Where to hide: of {@link com.hex.kagune.control.family.HideAndSeek#SPOTS} spots round the yard with ground to stand on, one the seeker
+     * can't see from where it counts (a block between its eyes and the spot), the farther the better; where it is if there is none.
+     */
+    private static Vec3 spot(ChildNpc npc, ChildNpc seeker, Households.Home house, ServerLevel level) {
+        int n = com.hex.kagune.control.family.HideAndSeek.SPOTS;
+        Vec3[] at = new Vec3[n];
+        double[] distance = new double[n];
+        boolean[] hidden = new boolean[n];
+        int seed = npc.m_217043_().m_188503_(360);
+        Vec3 eye = seeker.m_146892_();
+        for (int i = 0; i < n; i++) {
+            double[] xz = com.hex.kagune.control.family.HideAndSeek.spot(i, house.pos().m_123341_() + 0.5, house.pos().m_123343_() + 0.5, house.radius(), seed);
+            Double y = ground(level, xz[0], xz[1], house.pos().m_123342_());
+            if (y == null) {
+                distance[i] = Double.NaN;
+                continue;
+            }
+            at[i] = new Vec3(xz[0], y, xz[1]);
+            distance[i] = Math.sqrt(seeker.m_20238_(at[i]));
+            Vec3 head = at[i].m_82520_(0.0, Math.max(0.5, npc.m_20206_() * 0.6), 0.0);
+            hidden[i] = level.m_45547_(new net.minecraft.world.level.ClipContext(eye, head, net.minecraft.world.level.ClipContext.Block.COLLIDER,
+                net.minecraft.world.level.ClipContext.Fluid.NONE, seeker)).m_6662_() == net.minecraft.world.phys.HitResult.Type.BLOCK;
+        }
+        int best = com.hex.kagune.control.family.HideAndSeek.bestSpot(distance, hidden);
+        return best < 0 ? npc.m_20182_() : at[best];
+    }
+
+    /** The height of ground to stand on at ({@code x}, {@code z}) near {@code near} (a solid block under two clear ones), or null. */
+    private static Double ground(ServerLevel level, double x, double z, int near) {
+        for (int y = near + 2; y >= near - 3; y--) {
+            net.minecraft.core.BlockPos feet = net.minecraft.core.BlockPos.m_274561_(x, y, z);
+            net.minecraft.core.BlockPos below = net.minecraft.core.BlockPos.m_274561_(x, y - 1, z);
+            net.minecraft.core.BlockPos above = net.minecraft.core.BlockPos.m_274561_(x, y + 1, z);
+            if (!level.m_8055_(below).m_60812_(level, below).m_83281_() && level.m_8055_(feet).m_60812_(level, feet).m_83281_()
+                && level.m_8055_(above).m_60812_(level, above).m_83281_()) {
+                return (double)y;
+            }
+        }
+        return null;
+    }
+
+    /** The game over: found ({@code found}) or given up; they stand a moment, then go back to what they were doing. */
+    private static void over(ChildNpc seeker, ChildNpc hider, boolean found, long now) {
+        seeker.mind.hidePart = 2;
+        seeker.mind.hideAt = now;
+        seeker.mind.hideFound = found;
+        hider.mind.hidePart = 2;
+        hider.mind.hideFound = found;
+        seeker.m_21573_().m_26573_();
+    }
+
+    /** Hide and seek over for {@code npc} and whoever it played with (its crouch and its covered eyes let go). */
+    static void stopHide(ChildNpc npc) {
+        ChildBrain.Mind mind = npc.mind;
+        if (mind == null || mind.hideWith == 0) {
+            return;
+        }
+        Entity other = npc.m_9236_().m_6815_(mind.hideWith);
+        for (ChildNpc body : other instanceof ChildNpc them && them.mind != null && them.mind.hideWith == npc.m_19879_() ? new ChildNpc[] {npc, them}
+            : new ChildNpc[] {npc}) {
+            ChildBrain.Mind m = body.mind;
+            m.hideWith = 0;
+            m.hideSpot = null;
+            m.hidden = false;
+            m.seekTo = null;
+            m.hidePart = 0;
+            if (m.cue == com.hex.kagune.control.family.ChildCue.HIDE || m.cue == com.hex.kagune.control.family.ChildCue.COUNT) {
+                m.cue = com.hex.kagune.control.family.ChildCue.NONE;
+                m.dirty = true;
+            }
+        }
+    }
+
+    /** What a found hider does as it says its line: what the line says, else by its temper. */
+    private static com.hex.kagune.control.family.ChildCue caughtCue(String line, ChildTemper temper) {
+        com.hex.kagune.control.family.ChildCue own = com.hex.kagune.control.family.TalkCues.said(line);
+        if (own != com.hex.kagune.control.family.ChildCue.NONE) {
+            return own;
+        }
+        return temper == ChildTemper.BOLD ? com.hex.kagune.control.family.ChildCue.STAMP : temper == ChildTemper.SHY
+            ? com.hex.kagune.control.family.ChildCue.SULK : com.hex.kagune.control.family.ChildCue.GIGGLE;
+    }
+
+    /** Standing where it is (no walking, no sliding). */
+    private static void still(ChildNpc npc) {
+        npc.m_21573_().m_26573_();
+        npc.m_20256_(new Vec3(0.0, npc.m_20184_().f_82480_, 0.0));
     }
 
     /** 1.3.54: true if {@code body} (the child {@code known}) is in its home's yard (where tag may be played: {@link Siblings#yard}). */

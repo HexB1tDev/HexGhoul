@@ -216,7 +216,8 @@ final class ParentCare {
             return true;
         }
         // 1.3.53: never one in the middle of a talk (it was picked up mid-line).
-        boolean free = nearest.mind != null && !ChildBrain.carried(nearest) && nearest.stage.carried() && Conversation.in(nearest) == null;
+        boolean free = nearest.mind != null && !ChildBrain.carried(nearest) && nearest.stage.carried() && Conversation.in(nearest) == null
+            && nearest.mind.hideWith == 0; // 1.3.58: nor one hiding in a game
         if (free && distance < 2.5 && now >= mind.nextCradle && npc.m_217043_().m_188500_() < PICKS) {
             ChildBrain.pickUp(nearest, npc);
             mind.cradling = nearest.m_20148_();

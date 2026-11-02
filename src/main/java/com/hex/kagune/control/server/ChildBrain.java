@@ -100,6 +100,25 @@ public final class ChildBrain {
         boolean mindingReached;
         /** 1.3.53: its word with the little one it went after (they walk home once it is said). */
         Conversation mindingTalk;
+        /**
+         * 1.3.58 (SiblingLife): hide and seek: with whom (an entity id; 0 none), whether it is the one who seeks, the seeker's part (0
+         * counting, 1 looking, 2 over) and since when, when the game began, whether the seeker found it; the hider's spot (null: not chosen
+         * yet), since when it has been on its way there, whether it is hidden, when it last giggled; the seeker's next place to look, since
+         * when, when it last said so.
+         */
+        int hideWith;
+        boolean seeker;
+        int hidePart;
+        long hideAt;
+        long hideBegan;
+        boolean hideFound;
+        Vec3 hideSpot;
+        long hideSetOff;
+        boolean hidden;
+        long hintAt = Long.MIN_VALUE / 2;
+        Vec3 seekTo;
+        long seekToAt;
+        long seekSaidAt = Long.MIN_VALUE / 2;
         /** 1.3.57: what it does with its body as it says a line in a talk (TalkCues), since when. */
         com.hex.kagune.control.family.ChildCue cue = com.hex.kagune.control.family.ChildCue.NONE;
         long cueAt = Long.MIN_VALUE;
@@ -417,6 +436,13 @@ public final class ChildBrain {
         if (Conversation.in(npc) != null) {
             return false; // 1.3.53: not in the middle of a talk (a player who wants it ends the talk first: Conversation)
         }
+        if (mind.hideWith != 0) {
+            // 1.3.58: in the middle of hide and seek: a player who wants it ends the game; anyone else waits.
+            if (!(partner instanceof ServerPlayer)) {
+                return false;
+            }
+            SiblingLife.stopHide(npc);
+        }
         if (npc.m_5803_() != (moment == ChildMoment.TUCK)) {
             return false; // asleep, only tucked in; tucked in, only asleep
         }
@@ -554,9 +580,9 @@ public final class ChildBrain {
         }
     }
 
-    /** 1.3.53: true while it stays for a talk (its strolling waits: ChildNpc). */
+    /** 1.3.53: true while it stays for a talk (its strolling waits: ChildNpc); 1.3.58: or plays hide and seek. */
     public static boolean held(ChildNpc npc) {
-        return Conversation.in(npc) != null;
+        return Conversation.in(npc) != null || npc.mind != null && npc.mind.hideWith != 0;
     }
 
     /** True while it is in a moment, or walking up to a parent for one. */
@@ -950,8 +976,8 @@ public final class ChildBrain {
             return;
         }
         mind.company = now;
-        if (mind.conversation != null) {
-            return; // 1.3.53: nothing of its own to say in the middle of a talk (a greeting waits till it is over)
+        if (mind.conversation != null || mind.hideWith != 0) {
+            return; // 1.3.53: nothing of its own to say in the middle of a talk (a greeting waits till it is over); 1.3.58: nor hiding
         }
         int seed = npc.m_217043_().m_188503_(1000);
         String call = ChildLines.call(stage, isMother(child, parent));
