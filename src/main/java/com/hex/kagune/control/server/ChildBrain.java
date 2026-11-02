@@ -123,6 +123,8 @@ public final class ChildBrain {
         com.hex.kagune.control.family.ChildCue cue = com.hex.kagune.control.family.ChildCue.NONE;
         long cueAt = Long.MIN_VALUE;
         long siblingRemarkAt = Long.MIN_VALUE / 2;
+        /** 1.3.59: when it last played with a baby brother or sister. */
+        long babyAt = Long.MIN_VALUE / 2;
     }
 
     private ChildBrain() {

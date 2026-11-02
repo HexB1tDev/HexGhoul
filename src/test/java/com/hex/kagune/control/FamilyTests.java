@@ -60,6 +60,7 @@ public final class FamilyTests {
         talks();
         cues();
         hideAndSeek();
+        littleOnes();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -769,6 +770,51 @@ check(com.hex.kagune.control.graft.GraftStage.TRANSPLANT.limbs(com.hex.kagune.co
         check(com.hex.kagune.control.family.HideAndSeek.LONGEST > com.hex.kagune.control.family.HideAndSeek.COUNT + com.hex.kagune.control.family.HideAndSeek.SEEKS
             && com.hex.kagune.control.family.ChildCue.HIDE.ticks > com.hex.kagune.control.family.HideAndSeek.LONGEST - 200,
             "its crouch lasts the game");
+    }
+
+    /**
+     * 1.3.59: an older one with the baby: peekaboo, faces, baby talk, a hum in the evening; every kind, temper and age has its words, the
+     * baby's are actions (its thought cloud), peekaboo hides the face then says boo; filled in and clean.
+     */
+    static void littleOnes() {
+        boolean clean = true;
+        boolean shapes = true;
+        java.util.Set<String> seen = new java.util.HashSet<>();
+        for (com.hex.kagune.control.family.LittleOnes.Kind kind : com.hex.kagune.control.family.LittleOnes.Kind.values()) {
+            for (com.hex.kagune.control.family.ChildTemper t : com.hex.kagune.control.family.ChildTemper.values()) {
+                for (com.hex.kagune.control.family.ChildStage st : new com.hex.kagune.control.family.ChildStage[] {com.hex.kagune.control.family.ChildStage.TODDLER,
+                    com.hex.kagune.control.family.ChildStage.CHILD, com.hex.kagune.control.family.ChildStage.TEEN}) {
+                    for (int seed = 0; seed < 9; seed++) {
+                        java.util.List<com.hex.kagune.control.family.LittleOnes.Line> talk = com.hex.kagune.control.family.LittleOnes.talk(kind, t, st, "Mei", seed);
+                        shapes &= talk.size() == (kind == com.hex.kagune.control.family.LittleOnes.Kind.PEEKABOO ? 4 : 3) && !talk.get(0).baby()
+                            && !talk.get(talk.size() - 1).baby() && talk.stream().filter(com.hex.kagune.control.family.LittleOnes.Line::baby).count() == 1;
+                        for (com.hex.kagune.control.family.LittleOnes.Line line : talk) {
+                            String low = line.text().toLowerCase(java.util.Locale.ROOT);
+                            clean &= !line.text().isBlank() && !line.text().contains("{") && line.cue() != null;
+                            clean &= !line.baby() || line.text().startsWith("*") && line.text().endsWith("*");
+                            for (String banned : new String[] {"kaneki", "ayato", "furuta", "takatsuki", "aogiri", "yoshimura"}) {
+                                clean &= !low.contains(banned);
+                            }
+                            seen.add(line.text());
+                        }
+                    }
+                }
+            }
+        }
+        check(shapes, "the older one starts and ends it, the baby answers once between");
+        check(clean && seen.size() > 70, "with the baby: every line filled in, the baby's all actions, no names it mustn't (" + seen.size() + ")");
+        java.util.List<com.hex.kagune.control.family.LittleOnes.Line> peek = com.hex.kagune.control.family.LittleOnes.talk(
+            com.hex.kagune.control.family.LittleOnes.Kind.PEEKABOO, com.hex.kagune.control.family.ChildTemper.GENTLE, com.hex.kagune.control.family.ChildStage.CHILD,
+            "Mei", 4);
+        check(peek.get(0).cue() == com.hex.kagune.control.family.ChildCue.COUNT && peek.get(1).text().toLowerCase(java.util.Locale.ROOT).contains("boo"),
+            "peekaboo: its own face hidden, then boo");
+        check(com.hex.kagune.control.family.LittleOnes.pick(com.hex.kagune.control.family.ChildTemper.BOLD, true, 0.1)
+            == com.hex.kagune.control.family.LittleOnes.Kind.LULLABY, "in the evening, a hum to settle it");
+        java.util.Set<com.hex.kagune.control.family.LittleOnes.Kind> kinds = java.util.EnumSet.noneOf(com.hex.kagune.control.family.LittleOnes.Kind.class);
+        for (double r = 0.0; r < 1.0; r += 0.02) {
+            kinds.add(com.hex.kagune.control.family.LittleOnes.pick(com.hex.kagune.control.family.ChildTemper.GENTLE, false, r));
+        }
+        check(kinds.size() == 4, "by day, all of them: " + kinds);
     }
 
     static void genome() {

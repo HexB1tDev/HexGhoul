@@ -76,6 +76,14 @@ final class SiblingLife {
                 continue;
             }
             ChildStage theirs = known.stage(now);
+            if (theirs == ChildStage.BABY) {
+                // 1.3.59: the baby of the family: an older one goes over and plays with it (peekaboo, faces, baby talk, a hum at night).
+                if (now - mind.babyAt >= com.hex.kagune.control.family.LittleOnes.EVERY && npc.m_217043_().m_188500_() < com.hex.kagune.control.family.LittleOnes.CHANCE
+                    && baby(npc, other, child, known, level, now)) {
+                    return;
+                }
+                continue;
+            }
             boolean hurt = other.m_21223_() < other.m_21233_() * Siblings.HURT;
             Households.Home house = Households.forChild(level, known);
             double beyond = house == null ? -1.0 : Math.sqrt(other.m_20238_(new Vec3(house.pos().m_123341_() + 0.5, house.pos().m_123342_(),
@@ -579,6 +587,29 @@ final class SiblingLife {
             }
         }
         return null;
+    }
+
+    /**
+     * 1.3.59: an older one ({@code npc}) plays with the baby ({@code baby}): it walks over, and they have their moment, a talk both stay for
+     * (its lines and the baby's babbling, laughing, yawning: LittleOnes). False if it can't now.
+     */
+    private static boolean baby(ChildNpc npc, ChildNpc baby, Children.Child child, Children.Child known, ServerLevel level, long now) {
+        boolean night = HomeLife.night(level.m_46468_(), true);
+        com.hex.kagune.control.family.LittleOnes.Kind kind = com.hex.kagune.control.family.LittleOnes.pick(temper(child), night,
+            npc.m_217043_().m_188500_());
+        List<com.hex.kagune.control.family.LittleOnes.Line> said = com.hex.kagune.control.family.LittleOnes.talk(kind, temper(child), child.stage(now),
+            known.name, npc.m_217043_().m_188503_(1 << 20));
+        List<Conversation.Line> lines = new java.util.ArrayList<>();
+        for (com.hex.kagune.control.family.LittleOnes.Line line : said) {
+            lines.add(new Conversation.Line(line.baby() ? baby.m_19879_() : npc.m_19879_(), line.text(), line.cue(), com.hex.kagune.control.npc.EtoGesture.NONE));
+        }
+        if (Conversation.start(level, now, "baby " + kind.name().toLowerCase(java.util.Locale.ROOT), baby, List.of(npc, baby), List.of(npc), lines) == null) {
+            return false;
+        }
+        npc.mind.babyAt = now;
+        npc.mind.siblingAt = now;
+        baby.mind.siblingAt = now;
+        return true;
     }
 
     /** True if {@code body} is after one of {@code child}'s brothers or sisters (its target): a threat to it too. */

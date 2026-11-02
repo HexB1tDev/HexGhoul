@@ -242,7 +242,7 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
         double cueAge = view.cueAge(clock);
         if (view.cue().running(cueAge)) {
             com.hex.kagune.control.client.animation.RigPose cue = com.hex.kagune.control.client.animation.ChildTalkPose.pose(view.cue(), cueAge,
-                view.stage(), view.carrier() != 0);
+                view.stage(), view.carrier() != 0 || view.stage().sits()); // 1.3.59: a baby sitting keeps its legs as they sit, no hops
             if (cue != null) {
                 float w = view.cue().weight(cueAge);
                 com.hex.kagune.control.client.animation.RigPose out = new com.hex.kagune.control.client.animation.RigPose();

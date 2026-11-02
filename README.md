@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.59 (HexGhoul): big brothers and sisters play with the baby (testing)
+
+See `.github/release-notes-1.3.59.md`.
+
 ## 1.3.58 (HexGhoul): brothers and sisters play hide and seek (testing)
 
 See `.github/release-notes-1.3.58.md`.

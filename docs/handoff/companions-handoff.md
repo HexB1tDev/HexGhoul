@@ -1,8 +1,17 @@
-# START HERE (state after 1.3.58)
+# START HERE (state after 1.3.59)
 
 - **Next session:** read `docs/handoff/next-ai-1.3.51.md` first (the owner's goal: more interactions and dialog, polish first; how
   conversations worked; the known problems), then these sections. Problems 1 (bubbles), 2 (walking off mid-talk), 3 (tag off home), 4 (two escorts) and 5
   (Eto's child unposed) there are fixed by 1.3.52 to 1.3.56; "How conversations work now" there is out of date for held talks: read the 1.3.53 entry below.
+- **1.3.59 babies in sibling moments** (protocol 70, unchanged). Pure `family/LittleOnes`: `Kind` PEEKABOO, FACES, BABBLE, LULLABY (never
+  sent); `Line(baby, text, cue)`; `EVERY` 1800, `CHANCE` 0.5; `pick(temper, evening, roll)` (evening: LULLABY; else weights by temper);
+  `talk(kind, temper, stage, name, seed)` (PEEKABOO older COUNT, older "boo" CHEER, baby CHEER, older GIGGLE; the others older, baby,
+  older; `TalkCues.said` overrides a line's cue except PAT); 98 lines, keys "kind:part:temper|any:baby|little|big|teen" (teen falls back to
+  big). `SiblingLife.begin`: a free baby sibling in sight -> `baby(...)` (when `Mind.babyAt` is EVERY old and CHANCE): a Conversation,
+  the baby the anchor, the older one coming. `ChildRenderer.posed`: a sitting baby's cue keeps its legs and no hop. `FamilyTests.littleOnes`.
+
+# State after 1.3.58
+
 - **1.3.58 hide and seek** (protocol 70, unchanged). Pure `family/HideAndSeek`: `INSTEAD_OF_TAG` 0.5, `COUNT` 100, `SEEKS` 900,
   `HINT_EVERY` 160, `HEARD` 80, `FINDS` 3, `NEAREST` 4 / `FARTHEST` 11, `SPOTS` 24, `REACHES` 160, `AFTER` 80, `LONGEST`; `Part` (PROPOSE,
   AGREE, COUNT, READY, SEEKING, HINT, FOUND, CAUGHT, GIVE_UP, WIN; never sent); `line(part, temper, stage, seed)` (80 lines, keys
