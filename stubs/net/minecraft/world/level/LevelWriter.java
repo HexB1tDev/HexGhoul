@@ -4,4 +4,5 @@ package net.minecraft.world.level;
 /** Real hierarchy: Level -> LevelAccessor -> CommonLevelAccessor -> LevelSimulatedRW -> LevelWriter. */
 public interface LevelWriter {
     /** addFreshEntity */ boolean m_7967_(net.minecraft.world.entity.Entity entity);
+    /** setBlock(pos, state, flags) */ default boolean m_7731_(net.minecraft.core.BlockPos pos, net.minecraft.world.level.block.state.BlockState state, int flags) { throw new UnsupportedOperationException(); }
 }

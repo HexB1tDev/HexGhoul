@@ -1,6 +1,18 @@
 package com.hex.kagune.control;
 
 import com.hex.kagune.control.village.VillageGround;
+import com.hex.kagune.control.village.VillageRules;
+import com.hex.kagune.control.village.VillageTops;
+import net.minecraft.core.BlockPos;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.StructureManager;
+import net.minecraft.world.level.WorldGenLevel;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.structure.BoundingBox;
+import net.minecraft.world.level.levelgen.structure.PoolElementStructurePiece;
+import net.minecraft.world.level.levelgen.structure.StructurePiece;
+import net.minecraft.world.level.levelgen.structure.pieces.PiecesContainer;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import java.lang.reflect.Method;
@@ -80,6 +92,45 @@ public final class ControlStructures {
             } catch (RuntimeException | LinkageError failure) {
                 Safety.caught(failure, "ControlStructures.DryJigsaw");
                 return Optional.empty();
+            }
+        }
+
+        /**
+         * 2.0.4 (the owner: "the area where the village spawns should be erased"): as each chunk of it is placed, the world's own ground
+         * over the village's (a hill, a mountain's foot, standing in its streets and yards) is cleared, column by column, from just over
+         * its own highest block there (never below its ground: the world's ground still meets its low edges) up.
+         */
+        @Override
+        public void m_214110_(WorldGenLevel level, StructureManager structures, ChunkGenerator generator, RandomSource random, BoundingBox box,
+                              ChunkPos chunk, PiecesContainer pieces) {
+            try {
+                clear(level, chunk, pieces);
+            } catch (RuntimeException | LinkageError failure) {
+                Safety.caught(failure, "ControlStructures.DryJigsaw.clear");
+            }
+        }
+
+        /** The world's own blocks over the village in {@code chunk} made air (its start piece, the middle tile, tells where it lies, turned). */
+        static void clear(WorldGenLevel level, ChunkPos chunk, PiecesContainer pieces) {
+            java.util.List<StructurePiece> all = pieces.f_192741_();
+            if (all.isEmpty() || !(all.get(0) instanceof PoolElementStructurePiece start)) {
+                return;
+            }
+            BlockPos at = start.m_72646_();
+            int turns = ((Enum<?>)(Object)start.m_6830_()).ordinal(); // NONE, CLOCKWISE_90, CLOCKWISE_180, COUNTERCLOCKWISE_90: quarter turns clockwise
+            BlockState air = Blocks.f_50016_.m_49966_();
+            for (int x = chunk.m_45604_(); x < chunk.m_45604_() + 16; x++) {
+                for (int z = chunk.m_45605_(); z < chunk.m_45605_() + 16; z++) {
+                    int[] local = VillageRules.unturn(x - at.m_123341_(), z - at.m_123343_(), turns);
+                    int from = VillageTops.clearFrom(local[0] + VillageTops.MIDDLE, local[1] + VillageTops.MIDDLE);
+                    if (from < 0) {
+                        continue;
+                    }
+                    int top = level.m_6924_(Heightmap.Types.WORLD_SURFACE_WG, x, z);
+                    for (int y = at.m_123342_() + from; y < top; y++) {
+                        level.m_7731_(new BlockPos(x, y, z), air, 2);
+                    }
+                }
             }
         }
 

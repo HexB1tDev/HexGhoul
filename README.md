@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.0.4 (HexGhoul): babies after the first, and the village clears its ground (testing)
+
+See `.github/release-notes-2.0.4.md`: the night for another child comes at the shared bed; the world's own ground over the village is cleared as it is placed.
+
 ## 2.0.3 (HexGhoul): children grow up; grown daughters get the woman's body (testing)
 
 See `.github/release-notes-2.0.3.md`: a grown-up stage after the teen years (from day 16, protocol 73); grown daughters drawn with Touka's adult female body; no younger stage ever has it.

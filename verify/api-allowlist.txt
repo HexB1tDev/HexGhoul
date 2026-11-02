@@ -1030,3 +1030,15 @@ M com/mojang/serialization/MapCodec xmap (Ljava/util/function/Function;Ljava/uti
 M com/mojang/serialization/MapCodec codec ()Lcom/mojang/serialization/Codec;          # [lib] DFU 6 MapCodec.codec(): new MapCodecCodec(this) (fields inline under a dispatch's type)
 C com/mojang/serialization/MapCodec$MapCodecCodec                                   # [lib] DFU 6 MapCodec.MapCodecCodec (public static final)
 M com/mojang/serialization/MapCodec$MapCodecCodec codec ()Lcom/mojang/serialization/MapCodec;  # [lib] DFU 6 MapCodecCodec.codec()
+# --- 2.0.4: the world's own ground over the village cleared as it is placed (Structure.afterPlace, the start piece's place and turn) ----
+M net/minecraft/world/level/levelgen/structure/Structure m_214110_ (Lnet/minecraft/world/level/WorldGenLevel;Lnet/minecraft/world/level/StructureManager;Lnet/minecraft/world/level/chunk/ChunkGenerator;Lnet/minecraft/util/RandomSource;Lnet/minecraft/world/level/levelgen/structure/BoundingBox;Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/world/level/levelgen/structure/pieces/PiecesContainer;)V  # [srg] afterPlace: joined.tsrg dsa a (Lcng;Lcne;Lddy;Lapf;Ldrs;Lclt;Ldsp;)V m_214110_ (yarn postPlace); overridden (StructureStart.placeInChunk calls it per chunk)
+C net/minecraft/world/level/WorldGenLevel                                           # [srg] cng C_1625_ (class_5281, yarn StructureWorldAccess)
+C net/minecraft/world/level/StructureManager                                        # [srg] cne C_213086_ (class_5138, yarn StructureAccessor)
+C net/minecraft/world/level/levelgen/structure/BoundingBox                          # [srg] drs C_2478_ (class_3341, yarn BlockBox)
+C net/minecraft/world/level/levelgen/structure/pieces/PiecesContainer               # [srg] dsp C_183028_ (class_6624, yarn StructurePiecesList), a record
+M net/minecraft/world/level/levelgen/structure/pieces/PiecesContainer f_192741_ ()Ljava/util/List;  # [srg] record accessor pieces: joined.tsrg dsp c ()Ljava/util/List; f_192741_
+M net/minecraft/world/level/levelgen/structure/StructurePiece m_6830_ ()Lnet/minecraft/world/level/block/Rotation;  # [srg] getRotation: dse m_6830_ ()Lcvz; (yarn getRotation)
+C net/minecraft/world/level/levelgen/structure/PoolElementStructurePiece            # [srg] drw (class_3790, yarn PoolStructurePiece)
+M net/minecraft/world/level/levelgen/structure/PoolElementStructurePiece m_72646_ ()Lnet/minecraft/core/BlockPos;  # [srg] getPosition: drw m_72646_ ()Lgu; (yarn getPos)
+M net/minecraft/world/level/LevelWriter m_7731_ (Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z  # [srg] setBlock: joined.tsrg cmu a (Lgu;Ldcb;I)Z m_7731_ (cmu = LevelWriter)
+C net/minecraft/world/level/block/Rotation                                          # [srg] cvz C_1886_ (class_2470, yarn BlockRotation); NONE, CLOCKWISE_90, CLOCKWISE_180, COUNTERCLOCKWISE_90 in order (joined.tsrg cvz a..d), read by ordinal through java.lang.Enum

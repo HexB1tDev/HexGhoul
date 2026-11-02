@@ -284,6 +284,7 @@ def main():
     spec["start_height"] = {"absolute": -ground}
     structure.write_text(json.dumps(spec, indent=2) + "\n")
     write_map(middle, homes, streets, route)
+    write_tops(out, ground)
     signs = [sign_text(t) for t in blocks_entities.values() if val(t["Id"]) == "minecraft:sign"]
     kinds = collections.Counter("air" if c[0] == "minecraft:air" else "natural" if short(c[0]) in NATURAL else "built" for c in out.values())
     print("kept:", dict(kinds))
@@ -502,6 +503,51 @@ public final class VillageMap {{
 }}
 ''')
 
+
+
+def write_tops(out, ground):
+    """2.0.4: each column's highest block of the village (x, z in the template's frame), for clearing the world's own ground over it."""
+    tops = [[-1] * SIZE for _ in range(SIZE)]
+    for (x, y, z), c in out.items():
+        if c[0] != "minecraft:air" and y > tops[x][z]:
+            tops[x][z] = y
+    text = "".join(chr(41 + tops[x][z]) for z in range(SIZE) for x in range(SIZE))  # -1..85 as ')'..'~'
+    parts = [json.dumps(text[i:i + 16384]) for i in range(0, len(text), 16384)]
+    path = MAP.parent / "VillageTops.java"
+    path.write_text(f'''package com.hex.kagune.control.village;
+
+/**
+ * 2.0.4: the village's highest block in each column (pure; written by {{@code tools/village_structure.py}}: do not edit by hand), in the
+ * template's frame (x east, z south, 0 .. {SIZE - 1}). The owner: "the area where the village spawns should be erased": as each chunk of it
+ * is placed, the world's own ground over it (a hill, a mountain's foot) is cleared from {{@link #clearFrom}} up.
+ */
+public final class VillageTops {{
+    /** A side of the village (blocks). */
+    public static final int SIZE = {SIZE};
+    /** Its ground's height in the template (its streets one over it). */
+    public static final int GROUND = {ground};
+    /** Where its middle tile (the structure's start piece) lies in the template: its corner, either way. */
+    public static final int MIDDLE = {SPLITS[MIDDLE_TILE[0]]};
+    // Joined when the class loads (as one constant it would pass a class file's 65535 bytes).
+    private static final String TOPS = String.join("", {", ".join(parts)});
+
+    private VillageTops() {{
+    }}
+
+    /** The highest block of the village in column ({{@code x}}, {{@code z}}) (template frame), -1 if none or outside it. */
+    public static int top(int x, int z) {{
+        return x < 0 || z < 0 || x >= SIZE || z >= SIZE ? -1 : TOPS.charAt(z * SIZE + x) - 41;
+    }}
+
+    /** The lowest height (template frame) the world's own blocks are cleared from in that column, never below its ground: -1 outside. */
+    public static int clearFrom(int x, int z) {{
+        if (x < 0 || z < 0 || x >= SIZE || z >= SIZE) {{
+            return -1;
+        }}
+        return Math.max(top(x, z), GROUND) + 1;
+    }}
+}}
+''')
 
 
 def preview(cells, top, middle, homes, streets, route, people):

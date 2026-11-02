@@ -512,11 +512,38 @@ public final class EtoBrain {
                     default -> "*curls up on her side of the bed* Come to bed, love. Don't make me wait.";
                 };
                 say(npc, partner, line);
+                babyNightInBed(npc, mind, partner, now);
             }
             mind.dirty = true;
         }
         return true;
     }
+
+    /**
+     * 2.0.4 (the owner: after a first child, "you can request another but the cutscene is not triggering anymore whenever near the bed at
+     * night"): at the home they share, she goes to bed at night instead of her calm, so the baby night ({@code together}) never came. Now,
+     * lying in the shared bed, the night they asked for follows when they come to bed: within {@link #BED_NEAR} of her, or lying down
+     * themselves close by (the double bed's other half).
+     */
+    private static void babyNightInBed(EtoNpc npc, Mind mind, ServerPlayer partner, long now) {
+        if (now % 20L != 7L || now < mind.nextBabyNight) {
+            return;
+        }
+        double d2 = partner.m_20280_(npc);
+        if (d2 > BED_NEAR * BED_NEAR && !(partner.m_5803_() && d2 < BED_LYING * BED_LYING)) {
+            return;
+        }
+        EtoTalk.Context c = context(npc, partner);
+        if (c.night() && !c.nightUsed() && c.married() && c.mixed() && c.family().wantsBaby() && !c.pregnant()) {
+            mind.nextBabyNight = now + 1200L;
+            mind.babyNight = null;
+            EtoServer.night(partner, npc, c);
+        }
+    }
+
+    /** 2.0.4: how near the bed they come for the baby night (blocks from her), and how near lying down in it. */
+    static final double BED_NEAR = 3.0;
+    static final double BED_LYING = 6.0;
 
     /**
      * 1.3.24: a hostile mob to take on: a monster; a neutral one (an enderman, a zombified piglin, a spider by day) only once it is after

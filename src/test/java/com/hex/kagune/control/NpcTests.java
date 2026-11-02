@@ -766,6 +766,17 @@ public final class NpcTests {
         }
         check(ground, "the patrol stays near the ground (never a roof)");
         check(homes.length == 13 && perimeter <= 128, "13 homes (26 villagers, 26 looks), the village within 128 of its middle");
+        // 2.0.4: the world's own ground cleared over the village, from just over its own highest block, never below its ground.
+        boolean clears = com.hex.kagune.control.village.VillageTops.clearFrom(-1, 5) == -1
+            && com.hex.kagune.control.village.VillageTops.clearFrom(5, com.hex.kagune.control.village.VillageTops.SIZE) == -1;
+        for (int x = 0; x < com.hex.kagune.control.village.VillageTops.SIZE; x += 7) {
+            for (int z = 0; z < com.hex.kagune.control.village.VillageTops.SIZE; z += 7) {
+                int from = com.hex.kagune.control.village.VillageTops.clearFrom(x, z);
+                clears &= from > com.hex.kagune.control.village.VillageTops.GROUND && from > com.hex.kagune.control.village.VillageTops.top(x, z);
+            }
+        }
+        check(clears && com.hex.kagune.control.village.VillageTops.MIDDLE == 102 && com.hex.kagune.control.village.VillageTops.top(128, 128) >= 0,
+            "the world's ground cleared over the village, never into it");
         // 2.0.1: only on dry, fairly flat land.
         int n = com.hex.kagune.control.village.VillageGround.SAMPLES.length;
         int[] flat = new int[n];

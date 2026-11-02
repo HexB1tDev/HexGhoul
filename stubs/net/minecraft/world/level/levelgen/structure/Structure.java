@@ -6,6 +6,10 @@ public abstract class Structure {
     /** findGenerationPoint (called by name through ObfuscationReflectionHelper) */
     public abstract java.util.Optional<Structure.GenerationStub> m_214086_(Structure.GenerationContext context);
     /** type */ public abstract StructureType<?> m_213658_();
+    /** afterPlace (per chunk, its pieces placed) */
+    public void m_214110_(net.minecraft.world.level.WorldGenLevel level, net.minecraft.world.level.StructureManager structures,
+        net.minecraft.world.level.chunk.ChunkGenerator generator, net.minecraft.util.RandomSource random, BoundingBox box, net.minecraft.world.level.ChunkPos chunk,
+        net.minecraft.world.level.levelgen.structure.pieces.PiecesContainer pieces) { throw new UnsupportedOperationException(); }
     /** Forge */ public net.minecraftforge.common.world.ModifiableStructureInfo modifiableStructureInfo() { throw new UnsupportedOperationException(); }
 
     public static final class StructureSettings {
