@@ -211,7 +211,9 @@ public final class HomeLife {
                 boolean danger = threat != null && threat.m_20280_(npc) < 14.0 * 14.0;
                 // 1.3.37: a hand on her shoulder only half wakes her (EtoServer's drowsy page): up only if asked to get up.
                 boolean talked = mind.talking != null && now >= mind.drowsyUntil;
-                boolean up = !night(day, false) || now - mind.hurtAt < 3L || talked || !bedAt(level, mind.bed) || house == null || danger;
+                // 1.3.49: a child of hers out in the night a while, or on a rampage: she wakes and goes after it (ParentDuty).
+                boolean child = now % 40L == Math.floorMod(npc.m_19879_(), 40) && ParentDuty.wakes(npc, level, now);
+                boolean up = !night(day, false) || now - mind.hurtAt < 3L || talked || !bedAt(level, mind.bed) || house == null || danger || child;
                 if (up) {
                     wake(npc);
                     mind.bed = null;

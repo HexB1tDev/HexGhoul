@@ -114,6 +114,7 @@ final class ChildKagune {
             f.readyAt = Math.max(f.readyAt, now + 10L); // the kagune tears out first
             f.dirty = true;
             sound(level, npc.m_20182_(), HexKaguneSounds.KAGUNE_STRAIN.get(), 0.6F, 1.35F);
+            ParentDuty.transformed(npc, child, level, now); // 1.3.49: a parent near has a word about it
         }
         if (f.prey != threat.m_19879_()) {
             f.prey = threat.m_19879_();

@@ -54,6 +54,7 @@ public final class FamilyTests {
         kagune();
         vitality();
         kit();
+        parenting();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -381,6 +382,84 @@ check(com.hex.kagune.control.graft.GraftStage.TRANSPLANT.limbs(com.hex.kagune.co
         com.hex.kagune.control.ukaku.WingRig.Input glass = com.hex.kagune.control.npc.WingRules.child(110, 2, 1, 1.0F, 0.0, false, 0.0F,
             com.hex.kagune.control.ukaku.WingRig.FORWARD, 0.0F, 0.0F, 1.0F, 1.0F);
         check(glass.crystalRight() == 1.0F && glass.crystalLeft() == 1.0F, "its wings drawn in crystal");
+    }
+
+    /** 1.3.49: a companion parent after its children: when it is too much, and what they say, back and forth, in hundreds of lines. */
+    static void parenting() {
+        com.hex.kagune.control.family.ChildStage baby = com.hex.kagune.control.family.ChildStage.BABY;
+        com.hex.kagune.control.family.ChildStage toddler = com.hex.kagune.control.family.ChildStage.TODDLER;
+        com.hex.kagune.control.family.ChildStage kid = com.hex.kagune.control.family.ChildStage.CHILD;
+        com.hex.kagune.control.family.ChildStage teen = com.hex.kagune.control.family.ChildStage.TEEN;
+        com.hex.kagune.control.family.Parenting.Why wandered = com.hex.kagune.control.family.Parenting.Why.WANDERED;
+        com.hex.kagune.control.family.Parenting.Why night = com.hex.kagune.control.family.Parenting.Why.NIGHT;
+        check(com.hex.kagune.control.family.Parenting.strayed(toddler, 6.0, false, false, false) == wandered
+            && com.hex.kagune.control.family.Parenting.strayed(toddler, 2.0, false, false, false) == null
+            && com.hex.kagune.control.family.Parenting.strayed(toddler, 0.5, true, false, false) == night
+            && com.hex.kagune.control.family.Parenting.strayed(kid, 10.0, false, false, false) == null
+            && com.hex.kagune.control.family.Parenting.strayed(kid, 20.0, false, false, false) == wandered
+            && com.hex.kagune.control.family.Parenting.strayed(kid, 5.0, true, false, false) == night
+            && com.hex.kagune.control.family.Parenting.strayed(teen, 30.0, false, false, false) == null
+            && com.hex.kagune.control.family.Parenting.strayed(teen, 30.0, true, false, false) == night
+            && com.hex.kagune.control.family.Parenting.strayed(teen, -3.0, true, false, false) == null,
+            "a toddler may hardly leave home, a teen may roam; at night all of them less; at home, never");
+        check(com.hex.kagune.control.family.Parenting.strayed(kid, 50.0, true, true, false) == null
+            && com.hex.kagune.control.family.Parenting.strayed(toddler, 50.0, true, false, true) == null
+            && com.hex.kagune.control.family.Parenting.strayed(baby, 50.0, true, false, false) == null,
+            "never one that follows a player, is carried, or is a baby");
+        check(!com.hex.kagune.control.family.Parenting.rampage(kid, 300L, 5.0, 0.8F) && com.hex.kagune.control.family.Parenting.rampage(kid, 700L, 5.0, 0.8F)
+            && com.hex.kagune.control.family.Parenting.rampage(kid, 100L, 25.0, 0.8F) && com.hex.kagune.control.family.Parenting.rampage(kid, 100L, 0.0, 0.2F)
+            && !com.hex.kagune.control.family.Parenting.rampage(teen, 900L, 25.0, 0.5F) && com.hex.kagune.control.family.Parenting.rampage(teen, 1300L, 0.0, 0.9F)
+            && !com.hex.kagune.control.family.Parenting.rampage(toddler, 99999L, 99.0, 0.01F),
+            "too long, too far, too hurt: a rampage (a teen has more rope); a toddler never fights");
+        check(com.hex.kagune.control.family.Parenting.notices(20.0, true, 0L) && !com.hex.kagune.control.family.Parenting.notices(20.0, false, 100L)
+            && com.hex.kagune.control.family.Parenting.notices(90.0, false, com.hex.kagune.control.family.Parenting.MISSED_AFTER)
+            && !com.hex.kagune.control.family.Parenting.notices(60.0, true, 0L), "a parent sees it near, or misses it after a while");
+        check(com.hex.kagune.control.family.Parenting.pause("") >= 36 && com.hex.kagune.control.family.Parenting.pause("x".repeat(500)) <= 110
+            && com.hex.kagune.control.family.Parenting.pause("x".repeat(40)) > com.hex.kagune.control.family.Parenting.pause("x"), "long enough to read");
+        // The words: every parent, every temper, every why, every age has its lines; none names anyone it mustn't.
+        String[] parents = {"touka", "ken", "eto"};
+        int n = 0;
+        java.util.Set<String> seen = new java.util.HashSet<>();
+        boolean shapes = true;
+        boolean clean = true;
+        for (String who : parents) {
+            for (com.hex.kagune.control.family.ChildTemper temper : com.hex.kagune.control.family.ChildTemper.values()) {
+                for (com.hex.kagune.control.family.Parenting.Why why : com.hex.kagune.control.family.Parenting.Why.values()) {
+                    for (com.hex.kagune.control.family.ChildStage stage : new com.hex.kagune.control.family.ChildStage[] {toddler, kid, teen}) {
+                        boolean fights = stage.learns();
+                        if ((why == com.hex.kagune.control.family.Parenting.Why.RAMPAGE || why == com.hex.kagune.control.family.Parenting.Why.TRANSFORM) && !fights) {
+                            continue;
+                        }
+                        for (int seed = 0; seed < 6; seed++) {
+                            java.util.List<com.hex.kagune.control.family.Parenting.Line> talk = com.hex.kagune.control.family.Parenting.talk(why, who, stage, temper,
+                                "Hana", "Mama", seed * 31 + 7);
+                            int want = why == com.hex.kagune.control.family.Parenting.Why.TRANSFORM ? 2 : why == com.hex.kagune.control.family.Parenting.Why.HOME ? 2 : 5;
+                            shapes &= talk.size() >= want && talk.size() <= want + 1 && talk.get(0).parent() && !talk.get(1).parent();
+                            if (talk.size() >= 5) {
+                                shapes &= talk.get(2).parent() && !talk.get(3).parent() && talk.get(4).parent();
+                            }
+                            for (com.hex.kagune.control.family.Parenting.Line line : talk) {
+                                String low = line.text().toLowerCase(java.util.Locale.ROOT);
+                                clean &= !line.text().contains("{") && !line.text().isBlank();
+                                for (String banned : new String[] {"kaneki", "ayato", "furuta", "takatsuki", "aogiri", "yoshimura"}) {
+                                    clean &= !low.contains(banned);
+                                }
+                                seen.add(line.text());
+                                n++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        check(shapes, "back and forth: the parent first, then the child, the parent, the child, the parent's last word");
+        check(clean, "every line filled in (the name, what it calls them), and no names it mustn't");
+        check(seen.size() > 450, "hundreds of different lines heard: " + seen.size() + " in " + n + " talks' lines");
+        java.util.List<com.hex.kagune.control.family.Parenting.Line> one = com.hex.kagune.control.family.Parenting.talk(wandered, "touka", kid,
+            com.hex.kagune.control.family.ChildTemper.BOLD, "Hana", "Mom", 3);
+        check(one.equals(com.hex.kagune.control.family.Parenting.talk(wandered, "touka", kid, com.hex.kagune.control.family.ChildTemper.BOLD, "Hana", "Mom", 3))
+            && !one.equals(com.hex.kagune.control.family.Parenting.talk(wandered, "touka", kid, com.hex.kagune.control.family.ChildTemper.BOLD, "Hana", "Mom", 4)),
+            "the same seed, the same talk; another, another");
     }
 
     static void genome() {

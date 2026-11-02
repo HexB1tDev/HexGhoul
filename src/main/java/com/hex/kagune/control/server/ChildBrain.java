@@ -69,6 +69,22 @@ public final class ChildBrain {
         final ChildKagune.Fight kagune = new ChildKagune.Fight();
         /** 1.3.43: it fought with its kagune this tick (else the kagune goes back in). */
         boolean kaguneFought;
+        /**
+         * 1.3.49 (ParentDuty): what it and its parents say next (back and forth, each on its tick) and when the queue is free; until when it
+         * holds back from fighting (a parent stopped it); when a parent last came after it; the parent it stands still for while they talk
+         * (an entity id) and until when; the parent walking it home (a UUID) and until when; since when it has been out of its home; when a
+         * parent last had a word about its kagune.
+         */
+        final java.util.ArrayDeque<ParentDuty.Said> talk = new java.util.ArrayDeque<>();
+        long talkFree = Long.MIN_VALUE;
+        long calmedUntil = Long.MIN_VALUE;
+        long fetchedAt = Long.MIN_VALUE / 2;
+        int stillBy;
+        long stillUntil = Long.MIN_VALUE;
+        UUID escort;
+        long escortUntil = Long.MIN_VALUE;
+        long outsideSince = Long.MIN_VALUE;
+        long remarkedAt = Long.MIN_VALUE / 2;
     }
 
     private ChildBrain() {
@@ -197,9 +213,16 @@ public final class ChildBrain {
             // A baby sits where it is put.
             npc.m_21573_().m_26573_();
             npc.m_20256_(new Vec3(0.0, npc.m_20184_().f_82480_, 0.0));
+        } else if (ParentDuty.led(npc, mind, level, now)) {
+            // 1.3.49: its parent has it: standing still while they talk, or walking home at their side.
+            if (mind.turned || mind.target != 0) {
+                mind.turned = false;
+                mind.target = 0;
+                mind.dirty = true;
+            }
         } else {
             LivingEntity threat = threat(npc, mind, child, level, now);
-            if (threat != null && ChildRules.fights(stage, child.skill)) {
+            if (threat != null && ChildRules.fights(stage, child.skill) && now >= mind.calmedUntil) {
                 fight(npc, mind, child, threat, level, now);
             } else {
                 // 1.3.24: the fight over, for a human child too (its target was only ever cleared for a ghoul child that had turned: a
@@ -240,6 +263,18 @@ public final class ChildBrain {
             }
             if (child.vitality < 0.0F && now % 200L == 3L && mind.stage != null && Children.vitality(level, child) > 0.0F) {
                 mind.stage = null; // its most worked out again next tick, now its parents' health is known
+            }
+        }
+        // 1.3.49: what it and its parents say, each on its tick; how long it has been out of its home (a parent misses it).
+        ParentDuty.talk(npc, mind, level, now);
+        if (now % 20L == 13L) {
+            Households.Home family = Households.forChild(level, child);
+            boolean out = family != null && npc.m_20238_(new Vec3(family.pos().m_123341_() + 0.5, family.pos().m_123342_(),
+                family.pos().m_123343_() + 0.5)) > (double)family.radius() * family.radius();
+            if (!out) {
+                mind.outsideSince = Long.MIN_VALUE;
+            } else if (mind.outsideSince == Long.MIN_VALUE) {
+                mind.outsideSince = now;
             }
         }
         // 1.3.43: its kagune: its shots fly on; out of a fight, it goes back in.

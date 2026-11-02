@@ -80,6 +80,8 @@ public final class EtoBrain {
         final KenPeace.State peace = new KenPeace.State();
         /** 1.3.19: Touka's wings ({@link NpcWings}). */
         final NpcWings.State wings = new NpcWings.State();
+        /** 1.3.49: a child of hers she is going after (ParentDuty), or null. */
+        ParentDuty.Duty duty;
         EtoGesture gesture = EtoGesture.NONE;
         long gestureAt = Long.MIN_VALUE;
         long nextGestureAt;
@@ -830,6 +832,10 @@ public final class EtoBrain {
             npc.m_21573_().m_26573_();
             face(npc, talker);
             npc.m_21563_().m_24960_(talker, 30.0F, 30.0F);
+            return;
+        }
+        // 1.3.49: a child of hers strayed too far, out at night, or on a rampage: she goes after it before anything else of her own.
+        if (ParentDuty.tick(npc, mind, level, now)) {
             return;
         }
         if (partner != null && together(npc, mind, level, partner, now)) {
@@ -1637,7 +1643,7 @@ public final class EtoBrain {
         mind.dirty = true;
     }
 
-    private static void face(EtoNpc npc, Entity other) {
+    static void face(EtoNpc npc, Entity other) {
         Vec3 to = other.m_20182_().m_82546_(npc.m_20182_());
         if (to.f_82479_ * to.f_82479_ + to.f_82481_ * to.f_82481_ < 1.0E-4) {
             return;

@@ -1,6 +1,26 @@
-# START HERE (state after 1.3.48)
+# START HERE (state after 1.3.49)
 
-- **Next session:** read `docs/handoff/next-ai-1.3.43.md` first ("What's next" item 0: 1.3.49 parenting, then Eto's child).
+- **Next session:** read `docs/handoff/next-ai-1.3.43.md` first ("What's next": Eto's child, after asking the owner how "never a
+  kakuja" squares with her transformation at low health).
+- **1.3.49 parenting** (protocol 68, unchanged): pure `family/Parenting` (`Why` WANDERED, NIGHT, RAMPAGE, TRANSFORM, HOME; `strays(stage,
+  night)` blocks past the home's edge: toddler 4/0, child 16/2, teen 40/24; `strayed(...)` never a follower, a carried child or a baby;
+  `rampage(stage, fought, beyond, health)`: past `fightsFor` (600, a teen 1200), 20 (36) blocks out, or under 0.3 (0.25) health;
+  `notices` (in sight within 40, or missed after 600); AGAIN_AFTER 1200, GIVES_UP 2400, CALMED 1200, REMARKS_EVERY 3000, REACHES 2.6;
+  `pause(text)`; `talk(why, persona, stage, temper, name, call, seed)` -> parent/child lines: open, reply, follow, close, final (a word
+  about its kagune: open, reply, maybe final; at the door: open, reply)). `family/ParentingLines` (579 lines in 240 keys
+  "part:who:why:group", who = a persona key or a temper's word, group little/child/teen; a missing "little" falls back to "child";
+  written from a script's data, edit the Java directly). Server `ParentDuty`: `EtoBrain.Mind.duty`; `tick` from `EtoBrain.calm` right
+  after a talk holds her (before `together`, chores, `ParentCare.tend`; never during her own fight, a carried toddler put down if one
+  starts): `look` (her children by `Children.of(level, "npc:<key>")`, bodies via `UniqueNpcs` "child:<id>", within 96; RAMPAGE first,
+  noticed within 64), walk (1.4 for a rampage, else 1.1), reached: the child's `calmedUntil`, `fetchedAt`, the talk queued (`queue`:
+  `ChildBrain.Mind.talk`, `talkFree`), the child stands still for it (`stillBy`/`stillUntil`), a toddler picked up (`cradling`); then
+  home to the house's door (`escort` for an older child, `led`), at the door put down and the HOME talk; `wakes` (HomeLife wakes her for a
+  child out in the night 300+ ticks or rampaging); `transformed` (from `ChildKagune.fight` when its kagune first comes out: a parent within
+  24 who sees it); `talk` (ChildBrain each tick: due lines as `S2CNpcSay` to players within 24 the speaker sees). `ChildBrain`: `led`
+  before its threat (its fight off while led), `calmedUntil` gates fighting, `outsideSince` kept every 20 ticks. `FamilyTests.parenting`.
+
+# State after 1.3.48
+
 - **1.3.48 the kit** (protocol 68, unchanged): pure `ChildKaguneRules.Act` (NONE, LASH, SHOOT, FAN, GRAB, BACK_FLIP, FRONT_FLIP, CLOSE_IN;
   no kakuja), `choose(bits, distance, sees, tailReach, crystal, small, onGround, now, flipReady, grabReady, fanReady, roll)`, constants
   (CRYSTAL_AFTER 20, FAN_SPIKES 5 / FAN_SPREAD 32 / FAN_EVERY 160, SPIKE_SHARE 1.2, GRAB_EVERY 220 / GRAB_CATCH 8 / GRAB_HOLD 26 /

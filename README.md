@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.49 (HexGhoul): parenting: the companion parent fetches a wandering child, stops a rampage, and scolds it, back and forth in their bubbles (testing)
+
+See `.github/release-notes-1.3.49.md`.
+
 ## 1.3.48 (HexGhoul): children use their parents' whole kit: crystal wings and spikes, the tentacle's grab, throw and crush, back and front flips (never a kakuja) (testing)
 
 See `.github/release-notes-1.3.48.md`.
