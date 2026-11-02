@@ -734,5 +734,36 @@ public final class NpcTests {
         check(com.hex.kagune.control.village.VillageRules.next(route.length - 1, route.length, true) == 0
             && com.hex.kagune.control.village.VillageRules.next(0, route.length, false) == route.length - 1
             && com.hex.kagune.control.village.VillageRules.nearest(route, route[3][0], route[3][2]) == 3, "the loop walked round, either way");
+        // 1.3.72: trading in the streets, and a word in passing.
+        java.util.regex.Pattern banned = java.util.regex.Pattern.compile("Kaneki|Ayato|Furuta|Takatsuki|Aogiri|Yoshimura|\\{|\\}|null");
+        java.util.Set<String> said = new java.util.HashSet<>();
+        boolean trades = true;
+        java.util.Set<String> known = java.util.Set.of("minecraft:bread", "minecraft:apple", "minecraft:carrot", "minecraft:baked_potato",
+            "minecraft:cookie", "minecraft:pumpkin_pie", "minecraft:cod", "minecraft:sweet_berries", "minecraft:honey_bottle", "minecraft:poppy",
+            "minecraft:paper", "minecraft:candle", "minecraft:emerald");
+        for (com.hex.kagune.control.village.VillageTalk.Goods goods : com.hex.kagune.control.village.VillageTalk.GOODS) {
+            trades &= known.contains(goods.item());
+            for (int seed = 0; seed < 600; seed += 7) {
+                java.util.List<com.hex.kagune.control.village.VillageTalk.Line> lines = com.hex.kagune.control.village.VillageTalk.trade(goods, seed);
+                int hands = 0;
+                for (com.hex.kagune.control.village.VillageTalk.Line line : lines) {
+                    hands += line.hands() ? 1 : 0;
+                    trades &= !line.text().isBlank() && !banned.matcher(line.text()).find();
+                    said.add(line.text());
+                }
+                trades &= lines.size() >= 4 && hands == 1 && lines.get(0).seller() && !lines.get(1).seller() && !lines.get(3).seller()
+                    && lines.get(3).hands() && lines.get(0).text().toLowerCase(java.util.Locale.ROOT).contains(goods.name().split(" ")[0]);
+            }
+        }
+        check(trades && known.contains(com.hex.kagune.control.village.VillageTalk.COIN), "every trade: goods 1.20.1 has, the seller first, "
+            + "the coin and the goods changing hands once, the goods named, nothing that must stay out");
+        for (int seed = 0; seed < 40; seed++) {
+            String greet = com.hex.kagune.control.village.VillageTalk.greet(seed);
+            String dusk = com.hex.kagune.control.village.VillageTalk.dusk(seed);
+            check(!greet.isBlank() && !dusk.isBlank() && !banned.matcher(greet + dusk).find(), "a word in passing, and at dusk");
+            said.add(greet);
+            said.add(dusk);
+        }
+        check(said.size() > 100, "plenty of different words in the streets (" + said.size() + ")");
     }
 }

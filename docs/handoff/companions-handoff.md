@@ -1,11 +1,22 @@
-# START HERE (state after 1.3.71)
+# START HERE (state after 1.3.72)
 
 - **RULE 1 (the owner's, every session): at 97% of the 5-hour or weekly usage, stop, save, hand off, give a prompt. See `CLAUDE.md`.**
-
 - **Next session:** read `docs/handoff/next-ai-1.3.67.md` first (the owner's last update and its plan, in order), then
-  `docs/handoff/next-ai-1.3.60.md` (house rules). Done of that plan: 1 (1.3.68), 2 (1.3.69), 3 (1.3.70), 4 the village itself and its
-  people's homes, streets and patrol (1.3.71). Next: the village's trading in the streets and general talk, then 5 (personalities,
-  romance, the ghoul's confession, cute looks).
+  `docs/handoff/next-ai-1.3.60.md` (house rules). Done of that plan: 1 (1.3.68), 2 (1.3.69), 3 (1.3.70), 4 (1.3.71 the village, homes,
+  streets, patrol; 1.3.72 trading and chat). Next: 5: talking to humans (a player's general talk), personalities, romance and dating,
+  the ghoul's confession before a relationship, their cuter looks.
+- **1.3.72 trading and chat in the village** (protocol 72, unchanged). Pure `village/VillageTalk`: `Goods(item, name, price)` x12,
+  `COIN` emerald, `trade(goods, seed)` (5 lines: seller call, buyer ask, seller price, buyer pays `hands` true, seller parting),
+  `greet(seed)` 10, `dusk(seed)` 4. Server `VillageTrade` (both `HumanBrain.Mind.trade`; ticked once a tick by either: walk to the street
+  spot nearest their midpoint (seller) and `APART` 1.8 off it (buyer), `GATHER` 300 then talk where they are; still, facing; lines every
+  `40..120` ticks by length via `HumanBrain.say`; the hands line swaps the items; ends on gone, fright (`shakenUntil`), night, `LONGEST`
+  1200 or done: hands emptied, `tradeReady` +`AGAIN` 1600 + 0..600). `HumanBrain`: `Mind.trade/tradeReady/greetAt/dusk`; a danger ends a
+  trade; `village`: a trade runs first; at dusk a word (1 in 3); by day `meet` once a second (a greeting to one within 4, each a minute
+  apart, 1 in 4; else a trade with one within 20 when both may, 1 in 6); `face`, `say` (bubbles to players within 24 who see it).
+  `NpcTests.village`.
+
+# State after 1.3.71
+
 - **1.3.71 the Brick Village** (protocol 72, unchanged). `tools/village_structure.py` (uses `library_structure.py`'s NBT) turns
   `art/village/Brick_Village-from-abfielder.litematic` (1.21.8, author PaaskeVillads) into `data/hexkagune/structures/brick_village.nbt`
   (99x41x97; the template's y 0 is the walking level: the ground is the world's; every cell to y 12, above it only solid or roofed;

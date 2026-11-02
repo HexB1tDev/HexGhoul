@@ -43,6 +43,11 @@ public final class HumanBrain {
         /** 1.3.65: what it last ran from (an entity id, 0 nothing) and when it last screamed. */
         int ranFrom;
         long screamAt = Long.MIN_VALUE / 2;
+        /** 1.3.72: a trade in the street it is in (null: none), when it may start another, when it last had a word in passing. */
+        VillageTrade trade;
+        long tradeReady = Long.MIN_VALUE / 2;
+        long greetAt = Long.MIN_VALUE / 2;
+        boolean dusk;
     }
 
     /** 1.3.65: what it runs from, how bad a sight it is, and whether it is a ghoul it screams about. */
@@ -67,6 +72,9 @@ public final class HumanBrain {
         VillagePlace.Place place = VillagePlace.of(human); // 1.3.71: one of the Brick Village's people (null: anyone else)
         Danger danger = danger(human, level, mind, now);
         if (danger != null) {
+            if (mind.trade != null) {
+                mind.trade.end(level, now); // 1.3.72: a fright ends a trade
+            }
             mind.shakenUntil = now + HumanRules.SHAKEN;
             human.scared(true);
             scream(human, level, mind, danger, now);
@@ -217,7 +225,17 @@ public final class HumanBrain {
      * by day, now and then, it walks to a spot on the streets near it; never past the perimeter.
      */
     static void village(HumanNpc human, Mind mind, VillagePlace.Place place, ServerLevel level, long now) {
-        if (com.hex.kagune.control.npc.NpcRules.night(level.m_46468_())) {
+        // 1.3.72: in a trade in the street: it runs it.
+        if (mind.trade != null && mind.trade.tick(human, level, now)) {
+            return;
+        }
+        mind.trade = null;
+        boolean night = com.hex.kagune.control.npc.NpcRules.night(level.m_46468_());
+        if (night && !mind.dusk && human.m_217043_().m_188503_(3) == 0) {
+            say(human, level, com.hex.kagune.control.village.VillageTalk.dusk(human.m_217043_().m_188503_(100)));
+        }
+        mind.dusk = night;
+        if (night) {
             double dx = place.homeX() + 0.5 - human.m_20185_();
             double dz = place.homeZ() + 0.5 - human.m_20189_();
             if (dx * dx + dz * dz > 1.5 * 1.5) {
@@ -228,6 +246,12 @@ public final class HumanBrain {
                 human.m_21573_().m_26573_();
             }
             return;
+        }
+        if (now % 20L == Math.floorMod(human.m_19879_(), 20) && now >= mind.shakenUntil) {
+            meet(human, mind, place, level, now);
+            if (mind.trade != null) {
+                return;
+            }
         }
         if (now < mind.nextWander || now < mind.shakenUntil || !human.m_21573_().m_26571_()) {
             return;
@@ -243,6 +267,53 @@ public final class HumanBrain {
             if (dx * dx + dz * dz <= reach * reach && place.inside(to[0], to[2])) {
                 human.m_21573_().m_26519_(to[0], to[1], to[2], com.hex.kagune.control.village.VillageRules.STROLL);
                 return;
+            }
+        }
+    }
+
+    /**
+     * 1.3.72: once a second, by day: a word to another of the village it passes (within 4 blocks, each at most once a minute), and now and
+     * then (when it may trade again) a trade with one within 20 who is free.
+     */
+    static void meet(HumanNpc human, Mind mind, VillagePlace.Place place, ServerLevel level, long now) {
+        for (HumanNpc other : level.m_6443_(HumanNpc.class, human.m_20191_().m_82400_(20.0), o -> o != human && o.m_6084_() && o.mind != null
+                && o.mind.trade == null && now >= o.mind.shakenUntil && VillagePlace.of(o) != null)) {
+            double d = other.m_20280_(human);
+            if (d <= 4.0 * 4.0 && now - mind.greetAt >= 1200L && now - other.mind.greetAt >= 1200L && human.m_217043_().m_188503_(4) == 0) {
+                mind.greetAt = now;
+                other.mind.greetAt = now;
+                face(human, other);
+                say(human, level, com.hex.kagune.control.village.VillageTalk.greet(human.m_217043_().m_188503_(1000)));
+                return;
+            }
+            if (now >= mind.tradeReady && now >= other.mind.tradeReady && human.m_217043_().m_188503_(6) == 0) {
+                VillageTrade.start(human, other, place, now);
+                return;
+            }
+        }
+    }
+
+    /** 1.3.72: {@code human} turned square to {@code other}. */
+    static void face(HumanNpc human, net.minecraft.world.entity.Entity other) {
+        double dx = other.m_20185_() - human.m_20185_();
+        double dz = other.m_20189_() - human.m_20189_();
+        if (dx * dx + dz * dz < 1.0E-4) {
+            return;
+        }
+        float yaw = (float)Math.toDegrees(Math.atan2(-dx, dz));
+        human.m_146922_(yaw);
+        human.f_20883_ = yaw;
+        human.f_20885_ = yaw;
+    }
+
+    /** 1.3.72: a word in a bubble over its head, to every player near who sees it. */
+    static void say(HumanNpc human, ServerLevel level, String line) {
+        if (line == null || line.isEmpty()) {
+            return;
+        }
+        for (ServerPlayer player : level.m_6907_()) {
+            if (player.m_20280_(human) <= 24.0 * 24.0 && human.m_142582_(player)) {
+                com.hex.kagune.control.network.ControlNetwork.sendTo(player, new com.hex.kagune.control.network.S2CNpcSay(human.m_19879_(), line));
             }
         }
     }
