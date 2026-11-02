@@ -51,19 +51,20 @@ public final class Sightings {
         WATCHERS.add(watcher);
     }
 
-    /** What {@code player} shows now. */
+    /**
+     * What {@code player} shows now ({@link Display#of}). 1.3.64: dread while they are the Dragon, wear War or Peace (worn now: it was
+     * {@code KingServer.awake}, the save that the Dragon once went through them, so a War/Peace-path player always read as dread and NPCs
+     * reacted once, never again), or are in Rinkaku's final kakuja or Ukaku's (both read as a kakuja before).
+     */
     public static Display of(ServerPlayer player) {
-        if (com.hex.kagune.control.DragonLock.dragon(player) || KingServer.awake(player)) {
-            return Display.DREAD;
-        }
+        boolean king = KingServer.wearing(player) != com.hex.kagune.control.king.KingForm.NONE;
+        boolean active = KaguneProfile.isActive(player);
+        boolean rinkaku = active && PathServer.path(player) == com.hex.kagune.control.KagunePath.RINKAKU
+            && KaguneProfile.form(player) == com.hex.kagune.control.RinkakuForms.finalKakuja();
+        boolean ukaku = UkakuServer.kakuja(player) && UkakuServer.form(player).finalKakuja();
         boolean owl = PaleServer.peek(player) != null && PaleServer.peek(player).owl;
-        if (owl || UkakuServer.kakuja(player) || GraftServer.kakuja(player) || KaguneProfile.isActive(player) && KaguneProfile.form(player).isKakuja()) {
-            return Display.KAKUJA;
-        }
-        if (KaguneProfile.isActive(player)) {
-            return Display.KAGUNE;
-        }
-        return PaleServer.eyes(player) ? Display.EYES : Display.NONE;
+        boolean kakuja = owl || UkakuServer.kakuja(player) || GraftServer.kakuja(player) || active && KaguneProfile.form(player).isKakuja();
+        return Display.of(com.hex.kagune.control.DragonLock.dragon(player), king, rinkaku || ukaku, kakuja, active, PaleServer.eyes(player));
     }
 
     /** Last shown (NONE if never looked at). */

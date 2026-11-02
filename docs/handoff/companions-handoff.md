@@ -1,4 +1,15 @@
-# START HERE (state after 1.3.63)
+# START HERE (state after 1.3.64)
+
+- **Next session:** read `docs/handoff/next-ai-1.3.63.md` first (the owner's current update and what's left), then
+  `docs/handoff/next-ai-1.3.60.md` (house rules, family talk).
+- **1.3.64 dread is worn** (protocol 71, unchanged). Pure `Display.of(dragon, king, finalKakuja, kakuja, kagune, eyes)`: DREAD for the
+  Dragon, War/Peace worn, or a final kakuja; else KAKUJA, KAGUNE, EYES, NONE. `Sightings.of(player)` feeds it: `DragonLock.dragon`,
+  `KingServer.wearing(player) != NONE` (was `KingServer.awake`, the permanent save: a War/Peace-path player read DREAD forever, so the
+  rise-only watchers reacted once and never again), Rinkaku's final kakuja (`KaguneProfile.isActive`, `PathServer.path` RINKAKU,
+  `KaguneProfile.form == RinkakuForms.finalKakuja()`), Ukaku's (`UkakuServer.kakuja && UkakuServer.form(player).finalKakuja()`); the
+  rest as before. `FamilyTests.reactions`.
+
+# State after 1.3.63
 
 - **Next session:** read `docs/handoff/next-ai-1.3.60.md` first (family talk after the polish). The owner's next update (asked during
   1.3.60, "after this one is fully finished"): clash impacts sized by how hard each hit was, shaking the ground and camera; the same move

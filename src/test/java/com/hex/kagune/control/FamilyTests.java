@@ -1655,6 +1655,19 @@ check(com.hex.kagune.control.graft.GraftStage.TRANSPLANT.limbs(com.hex.kagune.co
         check(kagune.rose(eyes) && kakuja.rose(none) && !eyes.rose(kagune) && !kagune.rose(kagune) && eyes.rose(null) && !none.rose(null),
             "noticed only as it rises: more than before");
         check(!eyes.frightening() && !kagune.frightening() && kakuja.frightening() && dread.frightening(), "a kakuja and worse frighten a stranger");
+        // 1.3.64: dread is what they wear now: the Dragon, War or Peace on, a final kakuja (Rinkaku's or Ukaku's); else the rest in order.
+        check(com.hex.kagune.control.npc.Display.of(false, false, false, false, false, false) == none
+            && com.hex.kagune.control.npc.Display.of(false, false, false, false, false, true) == eyes
+            && com.hex.kagune.control.npc.Display.of(false, false, false, false, true, true) == kagune
+            && com.hex.kagune.control.npc.Display.of(false, false, false, true, true, true) == kakuja,
+            "nothing worn: their kakuja, kagune, eyes or nothing (a Dragon once spent in them is not shown)");
+        check(com.hex.kagune.control.npc.Display.of(true, false, false, false, false, false) == dread
+            && com.hex.kagune.control.npc.Display.of(false, true, false, false, false, false) == dread
+            && com.hex.kagune.control.npc.Display.of(false, false, true, true, true, true) == dread,
+            "the Dragon, War or Peace worn, or a final kakuja: dread");
+        check(dread.rose(com.hex.kagune.control.npc.Display.of(false, false, false, false, false, false))
+            && dread.rose(com.hex.kagune.control.npc.Display.of(false, false, false, true, true, false)),
+            "putting War on again after taking it off, or going from the first kakuja to the final one, is noticed again");
         boolean said = true;
         for (com.hex.kagune.control.npc.Display shown : new com.hex.kagune.control.npc.Display[] {eyes, kagune, kakuja, dread}) {
             for (com.hex.kagune.control.npc.EtoVoice voice : com.hex.kagune.control.npc.EtoVoice.values()) {

@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.64 (HexGhoul): NPCs see War and Peace when they are worn, and the Rinkaku and Ukaku final kakujas count as final (testing)
+
+See `.github/release-notes-1.3.64.md`.
+
 ## 1.3.63 (HexGhoul): the same big move meeting itself cancels both with a big impact (testing)
 
 See `.github/release-notes-1.3.63.md`.
