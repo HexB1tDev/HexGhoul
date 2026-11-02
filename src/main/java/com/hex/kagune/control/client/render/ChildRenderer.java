@@ -255,7 +255,20 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
                 pose.m_252781_(new org.joml.Quaternionf().rotateAxis(-body.roll, rightZ, 0.0F, -rightX));
                 pose.m_85837_(0.0, -middle, 0.0);
             }
-            super.m_7392_(child, yaw, partial, pose, buffers, light);
+            // 1.3.50: Eto's child's Mutated Arm out: its own right arm is the flesh now (drawn by PaleFleshRenderer), not drawn here.
+            boolean mutated = com.hex.kagune.control.client.ArmClient.out(child);
+            if (mutated) {
+                this.f_115290_.f_102811_.f_104207_ = false;
+                this.f_115290_.f_103375_.f_104207_ = false;
+            }
+            try {
+                super.m_7392_(child, yaw, partial, pose, buffers, light);
+            } finally {
+                if (mutated) {
+                    this.f_115290_.f_102811_.f_104207_ = true;
+                    this.f_115290_.f_103375_.f_104207_ = true;
+                }
+            }
         } finally {
             pose.m_85849_();
         }

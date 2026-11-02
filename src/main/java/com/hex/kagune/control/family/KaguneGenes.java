@@ -127,7 +127,7 @@ public final class KaguneGenes {
             out.append(out.length() == 0 ? "" : " and ").append(wings == 2 ? "Ukaku wings" : "an Ukaku wing");
         }
         if (owl(bits)) {
-            out.append(out.length() == 0 ? "" : " and ").append("the Owl's flesh");
+            out.append(out.length() == 0 ? "" : " and ").append("Eto's flesh");
         }
         return out.length() == 0 ? "none" : out.toString();
     }

@@ -238,7 +238,7 @@ public final class ChildKaguneRules {
         };
         int wings = wingCount(bits, seed);
         String rest = wings == 2 ? " and Ukaku wings" : wings == 1 ? " and an Ukaku wing on its " + (wingSide(bits, seed) > 0 ? "right" : "left") : "";
-        return tentacle + rest + (KaguneGenes.owl(bits) ? " and the Owl's flesh" : "");
+        return tentacle + rest + (KaguneGenes.owl(bits) ? " and Eto's flesh" : "");
     }
 
     // ---------------------------------------------------------------- 1.3.48: the rest of its parents' kit (never a kakuja)
@@ -251,7 +251,9 @@ public final class ChildKaguneRules {
      * a gap, as a ghoul does. Never a kakuja: no move here grows one.
      */
     public enum Act {
-        NONE, LASH, SHOOT, FAN, GRAB, BACK_FLIP, FRONT_FLIP, CLOSE_IN
+        NONE, LASH, SHOOT, FAN, GRAB, BACK_FLIP, FRONT_FLIP, CLOSE_IN,
+        /** 1.3.50, Eto's child: her flesh's rake, its grab, its club; her Mutated Arm, its transformation at low health. */
+        SWIPE, FLESH_GRAB, HAMMER, ARM
     }
 
     /** Ticks after its wings are out that they turn to crystal; a fan's spikes, their spread (degrees), how often (ticks). */
@@ -314,6 +316,54 @@ public final class ChildKaguneRules {
             case CLOSE_IN -> Act.CLOSE_IN;
             case NONE -> Act.NONE;
         };
+    }
+
+    // ---------------------------------------------------------------- 1.3.50: Eto's child
+
+    /** How often its rake, its grab and its club come back; its arm (ticks). */
+    public static final int SWIPE_EVERY = 50;
+    public static final int HAMMER_EVERY = 170;
+    public static final int ARM_EVERY = 320;
+    /** Under this share of its health, its arm turns (its transformation, the owner's "at low health"); held to a sphere this often. */
+    public static final float ARM_BELOW = 0.4F;
+    public static final double ARM_HELD = 0.35;
+    /** Each move's blow against its lash's unit. */
+    public static final float SWIPE_SHARE = 1.5F;
+    public static final float FLESH_THROW_SHARE = 1.4F;
+    public static final float HAMMER_SHARE = 1.3F;
+    public static final float ARM_SHARE = 1.1F;
+    public static final float ARM_CRUSH_SHARE = 0.7F;
+    /** How far its rake reaches and its grab goes, against a grown body's (PaleRules: 4 and 9 blocks), before its size. */
+    public static final double SWIPE_REACH = 4.0;
+    public static final double GRAB_RANGE = 8.0;
+
+    /**
+     * 1.3.50: what Eto's child does with her flesh, against prey {@code distance} away (blocks, the world) at its size ({@code scale}):
+     * badly hurt ({@code health} under {@link #ARM_BELOW} of its most), its arm turns and shoots out at it (its transformation); close,
+     * the rake (and now and then the club instead); further, the grab if it is no bigger than a person ({@code small}); else nothing of the
+     * flesh ({@link Act#CLOSE_IN}: it closes in, or uses what else it has, its father's tentacle or wing).
+     */
+    public static Act chooseFlesh(double distance, boolean sees, double scale, boolean small, float health, long now, long swipeReady, long grabReady,
+                                  long hammerReady, long armReady, double roll) {
+        if (!sees) {
+            return Act.CLOSE_IN;
+        }
+        if (health < ARM_BELOW && now >= armReady && distance <= 14.0 * scale) {
+            return Act.ARM;
+        }
+        double reach = SWIPE_REACH * scale;
+        if (distance <= reach) {
+            if (now >= hammerReady && roll < 0.35) {
+                return Act.HAMMER;
+            }
+            if (now >= swipeReady) {
+                return Act.SWIPE;
+            }
+        }
+        if (small && now >= grabReady && distance > reach * 0.6 && distance <= GRAB_RANGE * scale && roll < 0.6) {
+            return Act.FLESH_GRAB;
+        }
+        return Act.CLOSE_IN;
     }
 
     /** 1.3.48: a fan's spike {@code i} of {@link #FAN_SPIKES}: degrees off its aim, the middle one straight. */

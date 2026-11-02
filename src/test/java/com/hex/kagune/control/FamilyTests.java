@@ -55,6 +55,7 @@ public final class FamilyTests {
         vitality();
         kit();
         parenting();
+        etoChild();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -460,6 +461,32 @@ check(com.hex.kagune.control.graft.GraftStage.TRANSPLANT.limbs(com.hex.kagune.co
         check(one.equals(com.hex.kagune.control.family.Parenting.talk(wandered, "touka", kid, com.hex.kagune.control.family.ChildTemper.BOLD, "Hana", "Mom", 3))
             && !one.equals(com.hex.kagune.control.family.Parenting.talk(wandered, "touka", kid, com.hex.kagune.control.family.ChildTemper.BOLD, "Hana", "Mom", 4)),
             "the same seed, the same talk; another, another");
+    }
+
+    /** 1.3.50: Eto's child: her flesh's rake, grab and club, and her Mutated Arm when it is badly hurt; never the Owl. */
+    static void etoChild() {
+        com.hex.kagune.control.family.ChildKaguneRules.Act arm = com.hex.kagune.control.family.ChildKaguneRules.Act.ARM;
+        java.util.function.Function<Object[], com.hex.kagune.control.family.ChildKaguneRules.Act> act = a -> com.hex.kagune.control.family.ChildKaguneRules.chooseFlesh(
+            (Double)a[0], true, 0.7, (Boolean)a[1], (Float)a[2], 1000L, (Long)a[3], (Long)a[4], (Long)a[5], (Long)a[6], (Double)a[7]);
+        long ready = 0L;
+        long later = 9000L;
+        check(act.apply(new Object[] {3.0, true, 0.3F, ready, ready, ready, ready, 0.9}) == arm
+            && act.apply(new Object[] {3.0, true, 0.3F, ready, ready, ready, later, 0.9}) != arm
+            && act.apply(new Object[] {3.0, true, 0.8F, ready, ready, ready, ready, 0.9}) != arm,
+            "badly hurt, its arm turns (its transformation), once in a while; not while it is well");
+        check(act.apply(new Object[] {2.0, true, 0.9F, ready, ready, ready, ready, 0.9}) == com.hex.kagune.control.family.ChildKaguneRules.Act.SWIPE
+            && act.apply(new Object[] {2.0, true, 0.9F, ready, ready, ready, ready, 0.1}) == com.hex.kagune.control.family.ChildKaguneRules.Act.HAMMER
+            && act.apply(new Object[] {2.0, true, 0.9F, later, later, later, ready, 0.1}) == com.hex.kagune.control.family.ChildKaguneRules.Act.CLOSE_IN,
+            "close: the rake, now and then the club; neither ready, closer");
+        check(act.apply(new Object[] {4.5, true, 0.9F, ready, ready, ready, ready, 0.3}) == com.hex.kagune.control.family.ChildKaguneRules.Act.FLESH_GRAB
+            && act.apply(new Object[] {4.5, false, 0.9F, ready, ready, ready, ready, 0.3}) == com.hex.kagune.control.family.ChildKaguneRules.Act.CLOSE_IN,
+            "further: the flesh's grab, if it's small enough");
+        check(com.hex.kagune.control.family.ChildKaguneRules.chooseFlesh(2.0, false, 0.7, true, 0.1F, 1000L, 0L, 0L, 0L, 0L, 0.1)
+            == com.hex.kagune.control.family.ChildKaguneRules.Act.CLOSE_IN, "nothing it can't see");
+        int owl = com.hex.kagune.control.family.KaguneGenes.OWL;
+        check(com.hex.kagune.control.family.KaguneGenes.any(owl) && com.hex.kagune.control.family.ChildKaguneRules.wingCount(owl, 3L) == 0
+            && com.hex.kagune.control.family.ChildKaguneRules.describe(owl | com.hex.kagune.control.family.KaguneGenes.TAILS, 3L).endsWith("Eto's flesh"),
+            "Eto's child fights with her flesh, with its father's kagune beside it");
     }
 
     static void genome() {

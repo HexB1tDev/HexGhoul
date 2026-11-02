@@ -951,6 +951,10 @@ public final class ChildBrain {
                 if (com.hex.kagune.control.family.KaguneGenes.wings(child.genome().kagune()) > 0) {
                     ControlNetwork.sendTo(viewer, ChildKagune.wings(npc, npc.mind)); // 1.3.48: its wings' crystal
                 }
+                if (com.hex.kagune.control.family.KaguneGenes.owl(child.genome().kagune()) && npc.mind != null) {
+                    ChildFlesh.tracked(viewer, npc, npc.mind.kagune.flesh); // 1.3.50: Eto's child's flesh, and its arm if it is out
+                    ChildArm.tracked(viewer, npc);
+                }
             }
         }
     }

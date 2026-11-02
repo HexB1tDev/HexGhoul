@@ -1,8 +1,8 @@
 # HANDOFF: HexGhoul after 1.3.43. Read this first, then `docs/handoff/next-ai-1.3.33.md` (how the owner works, older ideas).
 
 Branch **`claude/relaxed-carson-4y0frw`** (check it out from origin; push with `git push -u origin claude/relaxed-carson-4y0frw`).
-Never push to `main`; no PR unless asked. Version **1.3.49** in `build.py` and `patch/KagunePatch.java` (bump both; the next is
-**1.3.50**: 1.3.44-1.3.49 were the owner's reports and asks on the children; see the top of `companions-handoff.md`). Network `PROTOCOL` is **"68"**. Nothing since 1.3.28 has been tried in game: never say anything works in game.
+Never push to `main`; no PR unless asked. Version **1.3.50** in `build.py` and `patch/KagunePatch.java` (bump both; the next is
+**1.3.51**: 1.3.44-1.3.50 were the owner's reports and asks on the children; see the top of `companions-handoff.md`). Network `PROTOCOL` is **"68"**. Nothing since 1.3.28 has been tried in game: never say anything works in game.
 
 ## House rules (the owner's, verbatim where quoted)
 
@@ -34,19 +34,12 @@ Never push to `main`; no PR unless asked. Version **1.3.49** in `build.py` and `
    - (done in 1.3.48: crystal, grab/throw/crush, flips; no kakuja. Confirm with the owner how "never a kakuja" squares with Eto's child's
      "transformation at low health", which is her Owl kakuja.)
    - (done in 1.3.49: parenting: fetching, night, rampages, the talks, a word when the kagune comes out.)
-1. **Eto's child (the rest of the owner's ask).** The owner: "Eto's child gets her kagune abilities and transformation at low
-   health". The genome already carries it (`KaguneGenes.OWL`, Eto's colour 0xD8CCBC); `ChildKagune.has` ignores OWL for now and
-   `/kagune children` says it comes later (its words name no version). What exists to build on:
-   - Server: Eto's kit is `server/EtoOwl` (+ `EtoFlesh` swipe/grab/hammer, `EtoWatch`, `EtoArm`, `EtoOwlForm` grow/fight, rules in
-     `npc/EtoRules`: `owlNow(share, ...)` = her low-health trigger), all typed on `EtoNpc` and `EtoBrain.Mind`/`EtoOwl.Fight`. Either
-     generalise the pieces a child needs (the flesh moves, the Owl's grow and its moves) to a small interface both brains implement, or
-     write a child-sized subset in `ChildKagune` (the cleaner path last time: the tails and wings were rewritten, not shared).
-   - Client: her flesh is drawn by `PaleFleshRenderer` through `EtoRenderer.Kit` (`draw(LivingEntity who, PaleClient.PaleView view,
-     RigPose drawn, double scale)`: any body, any scale) fed from `EtoClient` views; the Owl's creature replaces her body while
-     `OwlClient.creature(npc, now)`. A child needs a `PaleView` (its move) sent to its clients and a loop like `EtoRenderer.kit` over
-     children, with `ChildKaguneRules.scale(stage)`.
-   - Rules to keep: only what it fights and monsters are hit (`ChildKagune.fair`); a child of Eto and a Rinkaku/Ukaku father also has
-     the father's kagune (OWL|TAILS, OWL|WING): the owner minds a crowded back (1.3.45): keep the father's kagune off the flesh's place.
+1. (done in 1.3.50: Eto's child: her flesh and her Mutated Arm at low health; no Owl.) **Next, 1.3.51: brothers and sisters** (the
+   owner: "proceed with eto first and then move straight to the interactions"): siblings playing together (tag, chasing, hide and
+   seek, a big one spinning a toddler), talking to each other in bubbles by temper and age (teasing, bragging, comfort, ganging up on a
+   parent), an older one minding a toddler (holding its hand, fetching it back), fighting side by side and reacting to each other's
+   kagune, squabbles the companion parent breaks up, sharing food, sleeping near each other. Build on `Parenting`/`ParentDuty` (talks
+   as `ChildBrain.Mind.talk` queues: a sibling's line is just another speaker id) and `ChildMoment`.
 2. **The Human's structure later** (the owner: "spawnable via command only for now; future structure later"): don't build it until asked.
 3. Then the owner's bug reports from playing (they come first whenever they arrive; each fix its own version).
 

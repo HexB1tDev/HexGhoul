@@ -75,6 +75,9 @@ final class ChildKagune {
         boolean throwing;
         int flip = -1;
         long flipAt = Long.MIN_VALUE;
+        /** 1.3.50: Eto's child's flesh (her moves), and when its arm turns again. */
+        final ChildFlesh.Flesh flesh = new ChildFlesh.Flesh();
+        long armReady = Long.MIN_VALUE;
     }
 
     /** A fire shot in flight. */
@@ -93,9 +96,9 @@ final class ChildKagune {
     private ChildKagune() {
     }
 
-    /** True if {@code genome} gives it a kagune it fights with here (tails or wings: Eto's Owl kagune is not yet a child's). */
+    /** True if {@code genome} gives it a kagune it fights with (tails, wings; 1.3.50: Eto's flesh). */
     static boolean has(Genome genome) {
-        return genome != null && genome.ghoul() && (KaguneGenes.tails(genome.kagune()) || KaguneGenes.wings(genome.kagune()) > 0);
+        return genome != null && genome.ghoul() && KaguneGenes.any(genome.kagune());
     }
 
     /**
@@ -129,6 +132,10 @@ final class ChildKagune {
             f.dirty = true;
             fx(npc, S2CUkakuFx.CRYSTALLIZE, 0, back(npc, scale), Vec3.f_82478_, (float)scale, 1);
             UkakuFire.sound(level, back(npc, scale), "block.amethyst_block.resonate", 0.8F, 1.4F);
+        }
+        // 1.3.50: Eto's child: her flesh first (its rake, its grab, its club; its arm turned when it is badly hurt).
+        if (KaguneGenes.owl(bits) && f.move == GraftMove.NONE && flesh(npc, f, stage, damage, threat, level, now, bits)) {
+            return;
         }
         if (f.move != GraftMove.NONE) {
             if (f.move == GraftMove.HUMAN_PUPPET || f.heldId != 0) {
@@ -202,6 +209,54 @@ final class ChildKagune {
             case SHOOT -> shoot(npc, f, bits, genome.seed(), stage, child.skill, damage, threat, distance, level, now);
             case CLOSE_IN -> npc.m_21573_().m_5624_(threat, 1.25);
             default -> {
+            }
+        }
+    }
+
+    /**
+     * 1.3.50: a tick of Eto's child's flesh: a move under way carried on; its arm out (it walks on at what it fights); else her next move
+     * chosen ({@link ChildKaguneRules#chooseFlesh}). False if the flesh has nothing to do now (its other kagune, or closing in, then).
+     */
+    private static boolean flesh(ChildNpc npc, Fight f, ChildStage stage, float damage, LivingEntity threat, ServerLevel level, long now, int bits) {
+        ChildFlesh.Flesh flesh = f.flesh;
+        if (flesh.busy()) {
+            ChildFlesh.tick(npc, flesh, threat, damage, level, now);
+            return true;
+        }
+        if (ChildArm.out(npc)) {
+            npc.m_21573_().m_5624_(threat, 0.9);
+            return true;
+        }
+        double scale = ChildKaguneRules.scale(stage);
+        double distance = Math.sqrt(threat.m_20280_(npc));
+        float health = npc.m_21223_() / Math.max(1.0F, npc.m_21233_());
+        ChildKaguneRules.Act act = ChildKaguneRules.chooseFlesh(distance, npc.m_142582_(threat), scale,
+            ChildKaguneRules.grabbable(threat.m_20205_(), threat.m_20206_()), health, now, flesh.swipeReady, flesh.grabReady, flesh.hammerReady, f.armReady,
+            npc.m_217043_().m_188500_());
+        switch (act) {
+            case ARM -> {
+                ChildArm.start(npc, threat, damage, level, now);
+                f.armReady = now + ChildKaguneRules.ARM_EVERY;
+                return true;
+            }
+            case SWIPE -> {
+                ChildFlesh.swipe(npc, flesh, threat, level, now);
+                return true;
+            }
+            case HAMMER -> {
+                ChildFlesh.hammer(npc, flesh, threat, level, now);
+                return true;
+            }
+            case FLESH_GRAB -> {
+                ChildFlesh.grab(npc, flesh, threat, level, now);
+                return true;
+            }
+            default -> {
+                if (KaguneGenes.tails(bits) || KaguneGenes.wings(bits) > 0) {
+                    return false; // its father's kagune, then
+                }
+                npc.m_21573_().m_5624_(threat, 1.2);
+                return true;
             }
         }
     }
@@ -354,6 +409,14 @@ final class ChildKagune {
     /** Every tick, fighting or not: its shots fly on; its kagune drawn back in once the fight is over (or it can't fight). */
     static void tick(ChildNpc npc, ChildBrain.Mind mind, boolean fighting, ServerLevel level, long now) {
         Fight f = mind.kagune;
+        // 1.3.50: Eto's child's arm swings on; its flesh's move told; out of a fight, the flesh lets go and the arm goes back.
+        ChildArm.tick(npc, level, now);
+        if (!fighting && (f.flesh.busy() || ChildArm.out(npc))) {
+            ChildFlesh.release(level, f.flesh);
+            ChildFlesh.end(f.flesh);
+            ChildArm.forget(npc);
+        }
+        ChildFlesh.send(npc, f.flesh);
         for (Iterator<Bolt> it = f.bolts.iterator(); it.hasNext(); ) {
             if (!step(npc, mind, it.next(), level, now)) {
                 it.remove();
@@ -386,8 +449,10 @@ final class ChildKagune {
         }
     }
 
-    /** Its shots put out (it died, or is gone): every client stops drawing them. */
+    /** Its shots put out (it died, or is gone): every client stops drawing them. 1.3.50: its arm back, its flesh lets go. */
     static void fizzleAll(ChildNpc npc, ChildBrain.Mind mind) {
+        ChildArm.forget(npc);
+        ChildFlesh.release((ServerLevel)npc.m_9236_(), mind.kagune.flesh);
         for (Bolt bolt : mind.kagune.bolts) {
             fx(npc, S2CUkakuFx.FIZZLE, bolt.id, bolt.position, bolt.velocity, 1.0F, 0);
         }

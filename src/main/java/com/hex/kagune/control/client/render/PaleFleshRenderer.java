@@ -174,6 +174,27 @@ public final class PaleFleshRenderer {
             }
             return any;
         }, level, minecraft, time, RANGE);
+        // 1.3.50: Eto's children fighting with her flesh (its rake, grab and club) and her Mutated Arm (its transformation, badly hurt), as
+        // hers are drawn, at their size. Never the Owl: a child has no kakuja.
+        for (com.hex.kagune.control.npc.ChildNpc child : ChildRenderer.drawn()) {
+            com.hex.kagune.control.client.ChildClient.View kid = com.hex.kagune.control.client.ChildClient.get(child.m_19879_());
+            if (kid == null || !com.hex.kagune.control.family.KaguneGenes.owl(kid.genome().kagune()) || !child.m_6084_() || child.m_20145_()
+                || child.m_20280_(minecraft.f_91074_) > RANGE * RANGE) {
+                continue;
+            }
+            double size = com.hex.kagune.control.family.ChildKaguneRules.scale(kid.stage());
+            com.hex.kagune.control.client.PaleClient.PaleView view = com.hex.kagune.control.client.PaleClient.get(child.m_20148_());
+            try {
+                if (view.move().flesh()) {
+                    drew |= flesh(child, view, null, size, time, partial, level, minecraft, camera, matrix, normals, buffers);
+                }
+                if (ArmClient.out(child)) {
+                    drew |= arm(child, view, null, size, time, partial, level, minecraft, camera, matrix, normals, buffers);
+                }
+            } catch (RuntimeException failure) {
+                PlayerLayers.failed("a child's flesh", failure);
+            }
+        }
         drew |= punctures(level, partial, time, camera, matrix, normals, buffers);
         FleshMotion.forget(time);
         if (OwlShardClient.any()) {

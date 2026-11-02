@@ -1,7 +1,21 @@
-# START HERE (state after 1.3.49)
+# START HERE (state after 1.3.50)
 
-- **Next session:** read `docs/handoff/next-ai-1.3.43.md` first ("What's next": Eto's child, after asking the owner how "never a
-  kakuja" squares with her transformation at low health).
+- **Next session:** read `docs/handoff/next-ai-1.3.43.md` first ("What's next": 1.3.51 siblings, the owner's next ask).
+- **1.3.50 Eto's child** (protocol 68, unchanged; the owner: "her kagune abilities and transformation at low health", and "never a
+  kakuja": its transformation is her Mutated Arm, never the Owl; the owner was told and may ask for the Owl as an exception). Pure
+  `ChildKaguneRules.Act` gained SWIPE, FLESH_GRAB, HAMMER, ARM (appended; never sent), `chooseFlesh(distance, sees, scale, small, health,
+  now, swipeReady, grabReady, hammerReady, armReady, roll)` (ARM under `ARM_BELOW` 0.4 health within 14 x scale; close: HAMMER 35% or
+  SWIPE; further: FLESH_GRAB; else CLOSE_IN), constants (SWIPE_EVERY 50, HAMMER_EVERY 170, ARM_EVERY 320, ARM_HELD 0.35, shares,
+  SWIPE_REACH 4 / GRAB_RANGE 8 before scale). Server `ChildFlesh` (her `EtoFlesh` rake, grab (REACH, HOLD, THROW on `PaleRules.throwAt`,
+  MISS) and club (HAMMER_CHARGE, HAMMER, shockwave) at `ChildKaguneRules.scale`, hits through `ChildKagune.fair`; told by
+  `S2CPaleState` under the child's UUID; `Fight.flesh`) and `ChildArm` (a port of `EtoArm` at its size, `ArmRules`, `S2CPaleArm` under
+  its UUID; power = its blow). `ChildKagune.has` = any kagune; `fight` runs the flesh first for an OWL child (`flesh()`), falling back to
+  a father's tentacle/wing; `tick` ticks the arm, lets go and draws it back out of a fight; StartTracking sends both. Client:
+  `PaleClient.get(UUID)`; `PaleFleshRenderer` draws children's flesh and arm (`flesh`/`arm` with the child's scale, `drawn` null: the
+  move alone poses them); `ChildRenderer` hides the right arm and sleeve while `ArmClient.out(child)`. `FamilyTests.etoChild`.
+
+# State after 1.3.49
+
 - **1.3.49 parenting** (protocol 68, unchanged): pure `family/Parenting` (`Why` WANDERED, NIGHT, RAMPAGE, TRANSFORM, HOME; `strays(stage,
   night)` blocks past the home's edge: toddler 4/0, child 16/2, teen 40/24; `strayed(...)` never a follower, a carried child or a baby;
   `rampage(stage, fought, beyond, health)`: past `fightsFor` (600, a teen 1200), 20 (36) blocks out, or under 0.3 (0.25) health;

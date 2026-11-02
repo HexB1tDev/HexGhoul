@@ -383,7 +383,7 @@ final class ControlCommands {
             if (genome.ghoul()) {
                 line += "\n  \u00a77kagune: " + com.hex.kagune.control.family.ChildKaguneRules.describe(genome.kagune(), genome.seed())
                     + (genome.colour() >= 0 ? ", " + com.hex.kagune.control.KaguneColours.name(genome.colour()) + " (" + com.hex.kagune.control.KaguneColours.hex(genome.colour()) + ")" : "")
-                    + (com.hex.kagune.control.family.KaguneGenes.owl(genome.kagune()) ? " \u00a78(the Owl's flesh comes in a later update)" : "");
+                    + (com.hex.kagune.control.family.KaguneGenes.owl(genome.kagune()) ? " \u00a78(her rake, grab and club; her Mutated Arm when badly hurt)" : "");
             }
             String said = line;
             context.getSource().m_288197_(() -> Component.m_237113_(said), false);

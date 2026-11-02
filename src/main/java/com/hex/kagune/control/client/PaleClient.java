@@ -235,6 +235,11 @@ public final class PaleClient {
             message.charge(), message.yaw(), message.x(), message.y(), message.z(), began));
     }
 
+    /** 1.3.50: the move of any body told by its UUID (Eto's child's flesh is told as a player's is). */
+    public static PaleView get(java.util.UUID id) {
+        return id == null ? PaleView.NONE : VIEWS.getOrDefault(id, PaleView.NONE);
+    }
+
     public static PaleView get(Player player) {
         return player == null ? PaleView.NONE : VIEWS.getOrDefault(player.m_36316_().getId(), PaleView.NONE);
     }
