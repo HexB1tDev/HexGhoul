@@ -1,7 +1,8 @@
 # START HERE (state after 1.3.51)
 
-- **Next session:** read `docs/handoff/next-ai-1.3.43.md` first (the owner's list is done through siblings; next: whatever the owner
-  asks, bug reports first; still open: the Owl as an exception for Eto's child if the owner wants it).
+- **Next session:** read `docs/handoff/next-ai-1.3.51.md` first: the owner's next goal (more interactions and dialog, beauty and as few
+  bugs as possible: nobody walking off mid-talk, no overlapping bubbles in squabbles), how conversations work now, and the problems
+  already found by reading the code. Still open: the Owl as an exception for Eto's child if the owner wants it.
 - **1.3.51 siblings** (protocol 68, unchanged; the owner: "interactions between brothers and sisters"): pure `family/Siblings` (`Kind`
   CHAT, TEASE, BRAG, COMFORT, SCHEME, SQUABBLE, TAG, MIND, REACT, TEAM; `pick(sa, ta, sb, tb, hurt, strayed, roll)` (no baby; MIND for an
   older one and a strayed toddler; COMFORT when hurt; else weights by both tempers, toddlers brag/scheme less); `talk(...)` -> `Line(who:
