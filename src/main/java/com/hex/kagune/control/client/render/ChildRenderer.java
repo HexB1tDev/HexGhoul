@@ -123,6 +123,16 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
                 turn(this.f_102814_, posed.leftLegX, posed.leftLegY, posed.leftLegZ, posed.legHold);
             }
             little(young);
+            // 1.3.56: Eto's child in its fight (her flesh's moves, her Mutated Arm): each part posed exactly as hers is (ChildFight).
+            com.hex.kagune.control.client.animation.RigPose fight = young || asleep ? null : FIGHT.get(child.m_19879_());
+            if (fight != null) {
+                apply("head", this.f_102808_, fight);
+                apply("torso", this.f_102810_, fight);
+                apply("rightArm", this.f_102811_, fight);
+                apply("leftArm", this.f_102812_, fight);
+                apply("rightLeg", this.f_102813_, fight);
+                apply("leftLeg", this.f_102814_, fight);
+            }
             this.f_102809_.m_104315_(this.f_102808_);
             this.f_103378_.m_104315_(this.f_102810_);
             this.f_103377_.m_104315_(this.f_102813_);
@@ -172,6 +182,18 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
             }
         }
 
+        /** 1.3.56: {@code part} (PlayerAnimator's name {@code name}) moved and turned as the pose has it, from where it was (as EtoModel's). */
+        private static void apply(String name, ModelPart part, com.hex.kagune.control.client.animation.RigPose p) {
+            float[] at = p.transform(name, com.hex.kagune.control.client.animation.RigPose.POSITION, part.f_104200_, part.f_104201_, part.f_104202_);
+            float[] turn = p.transform(name, com.hex.kagune.control.client.animation.RigPose.ROTATION, part.f_104203_, part.f_104204_, part.f_104205_);
+            part.f_104200_ = at[0];
+            part.f_104201_ = at[1];
+            part.f_104202_ = at[2];
+            part.f_104203_ = turn[0];
+            part.f_104204_ = turn[1];
+            part.f_104205_ = turn[2];
+        }
+
         /** A part's turn: held at {@code (x, y, z)} by {@code hold} (taken from what it had), the rest added. */
         private static void turn(ModelPart part, float x, float y, float z, float hold) {
             float own = 1.0F - Math.max(0.0F, Math.min(1.0F, hold));
@@ -185,6 +207,14 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
             part.f_233554_ = k;
             part.f_233555_ = k;
         }
+    }
+
+    /** 1.3.56: each fighting Eto's child's body as its fight poses it this frame (by entity id). */
+    private static final java.util.Map<Integer, com.hex.kagune.control.client.animation.RigPose> FIGHT = new java.util.HashMap<>();
+
+    /** 1.3.56: {@code child}'s body as its fight posed it when it was last drawn (for her flesh on it), or null (the move alone poses it). */
+    public static com.hex.kagune.control.client.animation.RigPose fightDrawn(ChildNpc child) {
+        return FIGHT.get(child.m_19879_());
     }
 
     /** 1.3.20: how its moment (or its ride) poses it now ({@code ageInTicks}: its own clock, for looking about), or null. */
@@ -229,6 +259,15 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
         }
         ChildSkins.Skin skin = skin(view);
         this.f_115290_ = skin != null && skin.slim() ? this.slim : this.wide;
+        // 1.3.56: Eto's child fighting with her flesh: its body posed for it this frame (its model's parts; her flesh drawn on it after).
+        FIGHT.remove(child.m_19879_());
+        if (view != null && com.hex.kagune.control.family.KaguneGenes.owl(view.genome().kagune()) && !child.m_5803_() && !stage.young) {
+            com.hex.kagune.control.client.animation.RigPose fight = com.hex.kagune.control.client.animation.ChildFight.pose(child,
+                com.hex.kagune.control.client.PaleClient.clock(partial), partial);
+            if (fight != null) {
+                FIGHT.put(child.m_19879_(), fight);
+            }
+        }
         pose.m_85836_();
         try {
             boolean asleep = child.m_5803_();

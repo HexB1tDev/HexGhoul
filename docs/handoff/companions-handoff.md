@@ -1,8 +1,17 @@
-# START HERE (state after 1.3.55)
+# START HERE (state after 1.3.56)
 
 - **Next session:** read `docs/handoff/next-ai-1.3.51.md` first (the owner's goal: more interactions and dialog, polish first; how
-  conversations worked; the known problems), then these sections. Problems 1 (bubbles), 2 (walking off mid-talk), 3 (tag off home) and 4 (two escorts)
-  there are fixed by 1.3.52 to 1.3.55; "How conversations work now" there is out of date for held talks: read the 1.3.53 entry below.
+  conversations worked; the known problems), then these sections. Problems 1 (bubbles), 2 (walking off mid-talk), 3 (tag off home), 4 (two escorts) and 5
+  (Eto's child unposed) there are fixed by 1.3.52 to 1.3.56; "How conversations work now" there is out of date for held talks: read the 1.3.53 entry below.
+- **1.3.56 Eto's child posed** (protocol 69, unchanged; client only): `client/animation/ChildFight.pose(child, clock, partial)` (as
+  `EtoFight` without Peace or the Owl: a `PaleAnimator` per child from `PaleClient.get(child UUID)`, its landings, `ArmPose.body` while
+  `ArmClient.get(child)`; null when nothing poses it; animators not drawn for `FORGET` 200 ticks dropped). `ChildRenderer.m_7392_` works
+  it out for an OWL child (not asleep, not young) into `FIGHT` (by id); `Model.m_6973_` applies it after `little()` with `apply(name,
+  part, pose)` (EtoModel's: `RigPose.transform` positions and rotations for head, torso, arms, legs). `ChildRenderer.fightDrawn(child)` is
+  passed as `drawn` to `PaleFleshRenderer.flesh/arm` for children (was null). Reference look: `tools/pale-preview.sh <dir> flesh`.
+
+# State after 1.3.55
+
 - **1.3.55 one escort** (protocol 69, unchanged): pure `Siblings.standDown(temper, stage, name, call, seed)` (38 lines, "temper:child|teen",
   `standDownLines()`). `SiblingLife.parentGoing(level, little)` (a live companion whose `duty.child` is it); `begin` skips MIND then;
   `minding` stands down when one is going (minding 0, its escort of the little one dropped, the line on its remark queue unless it is in a

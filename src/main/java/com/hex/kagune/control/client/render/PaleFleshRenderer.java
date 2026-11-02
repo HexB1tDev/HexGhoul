@@ -185,11 +185,13 @@ public final class PaleFleshRenderer {
             double size = com.hex.kagune.control.family.ChildKaguneRules.scale(kid.stage());
             com.hex.kagune.control.client.PaleClient.PaleView view = com.hex.kagune.control.client.PaleClient.get(child.m_20148_());
             try {
+                // 1.3.56: on its body as it is posed this frame (ChildFight), else as the move alone poses it.
+                RigPose posed = ChildRenderer.fightDrawn(child);
                 if (view.move().flesh()) {
-                    drew |= flesh(child, view, null, size, time, partial, level, minecraft, camera, matrix, normals, buffers);
+                    drew |= flesh(child, view, posed, size, time, partial, level, minecraft, camera, matrix, normals, buffers);
                 }
                 if (ArmClient.out(child)) {
-                    drew |= arm(child, view, null, size, time, partial, level, minecraft, camera, matrix, normals, buffers);
+                    drew |= arm(child, view, posed, size, time, partial, level, minecraft, camera, matrix, normals, buffers);
                 }
             } catch (RuntimeException failure) {
                 PlayerLayers.failed("a child's flesh", failure);
