@@ -287,6 +287,62 @@ public final class HumanPersona {
         };
     }
 
+    /** 1.3.78: taking its partner's hand for a walk. */
+    public static String walk(Temper temper, int seed) {
+        return switch (temper) {
+            case CHEERFUL -> pick(seed, "A walk? Yes! Hold on tight!", "*grabs your hand and swings it* Let's go!");
+            case SHY -> pick(seed, "*takes your hand very carefully* ...Okay.", "Your hand's warm. ...Let's walk.");
+            case BOLD -> pick(seed, "Finally. *laces their fingers with yours*", "Lead the way. Or I will.");
+            case KIND -> pick(seed, "I'd love to. Not too fast, okay?", "*squeezes your hand* Show me your favourite street.");
+            case GRUMPY -> pick(seed, "...Fine. Only because my feet are cold.", "*takes your hand, looking anywhere else* Walk, then.");
+            case FLIRTY -> pick(seed, "Hand in hand? Everyone will talk. Good.", "Mm. I was hoping you'd ask.");
+            case DREAMY -> pick(seed, "Like in the stories. Let's walk till the lamps come on.", "Let's count the chimneys.");
+            case NERVOUS -> pick(seed, "O-okay! Is my hand sweaty? Sorry!", "People can see us. ...I don't mind. Let's go.");
+        };
+    }
+
+    /** 1.3.78: a word now and then, walking hand in hand. */
+    public static String stroll(Temper temper, int seed) {
+        return switch (temper) {
+            case CHEERFUL -> pick(seed, "Look, the baker waved at us!", "This is the best day. Again.", "*hums and swings your hands*");
+            case SHY -> pick(seed, "*leans their head on your shoulder for a moment*", "...I like this.", "*squeezes your hand once*");
+            case BOLD -> pick(seed, "Let them stare. You're mine.", "Faster! No, slower. I want this to last.", "Nobody else gets to do this.");
+            case KIND -> pick(seed, "Are you warm enough?", "I'm glad you're here. Really.", "Mind the step, love.");
+            case GRUMPY -> pick(seed, "...This isn't so bad.", "If anyone asks, you dragged me.", "*doesn't let go*");
+            case FLIRTY -> pick(seed, "You walk like you own the place. Cute.", "Your hand fits mine. Funny, that.", "Where are you taking me?");
+            case DREAMY -> pick(seed, "The bricks are warm from the sun. Feel?", "I'm going to remember this street forever.", "Do you hear the swallows?");
+            case NERVOUS -> pick(seed, "Am I walking too fast? Too slow?", "I keep smiling. I can't stop.", "Hold on, my heart's going so fast.");
+        };
+    }
+
+    /** 1.3.78: its partner let go of its hand. */
+    public static String letGo(Temper temper, int seed) {
+        return switch (temper) {
+            case CHEERFUL -> pick(seed, "Aw! Again soon, okay?", "That was fun! Thank you!");
+            case SHY -> pick(seed, "*holds the hand you held* ...Thank you.", "...Already? Okay. That was nice.");
+            case BOLD -> pick(seed, "Done already? Next time, longer.", "Fine. But I'm keeping your warmth.");
+            case KIND -> pick(seed, "Thank you for the walk. Come back safe.", "That was lovely. Rest a little, okay?");
+            case GRUMPY -> pick(seed, "...Hmph. My hand's cold now.", "Whatever. ...Same time tomorrow?");
+            case FLIRTY -> pick(seed, "Leaving me wanting more. Clever.", "Mm. I'll be thinking about that.");
+            case DREAMY -> pick(seed, "The end of a chapter. Not the book.", "I'll dream about this walk.");
+            case NERVOUS -> pick(seed, "Was that okay? It was okay. It was great!", "Oh! Okay. Thank you. I'm still shaking.");
+        };
+    }
+
+    /** 1.3.78: at the edge of the village: it never goes past (the owner: "they never leave the village perimeter"). */
+    public static String edge(Temper temper, int seed) {
+        return switch (temper) {
+            case CHEERFUL -> pick(seed, "Not past the walls! Come back in, it's nicer here!", "Out there? No way. Back inside!");
+            case SHY -> pick(seed, "*stops* I... can't go out there. I'm sorry.", "*lets go* It's not safe past the walls...");
+            case BOLD -> pick(seed, "Past the walls? Not even for you.", "I stay inside. You know that.");
+            case KIND -> pick(seed, "I can't go beyond the village. Come back to me soon.", "This is as far as I go. Be careful out there.");
+            case GRUMPY -> pick(seed, "Out there? With the ghouls? No.", "I'm not going past the walls. Don't ask.");
+            case FLIRTY -> pick(seed, "If you want me, you'll have to come back in.", "Running away from me? I'll wait here.");
+            case DREAMY -> pick(seed, "The village ends here. My world does too.", "Past the walls is someone else's story.");
+            case NERVOUS -> pick(seed, "N-no, not out there! Please come back in!", "I can't, I can't. The walls, please.");
+        };
+    }
+
     static String pick(int seed, String... lines) {
         return lines[Math.floorMod(seed, lines.length)];
     }

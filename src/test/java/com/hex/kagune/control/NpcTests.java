@@ -870,6 +870,21 @@ public final class NpcTests {
             pink &= path == null || new java.io.File("src/main/resources/assets/hexkagune/" + path).isFile();
         }
         check(pink && com.hex.kagune.control.npc.HumanRules.blush(2) == null, "villagers' blushes are there");
+        // 1.3.78: dates: hand in hand, standing so the two hands meet; something to say for each moment, by every temper.
+        boolean dated = true;
+        for (com.hex.kagune.control.village.HumanPersona.Temper temper : com.hex.kagune.control.village.HumanPersona.Temper.values()) {
+            for (int seed = 0; seed < 6; seed++) {
+                for (String line : new String[] {com.hex.kagune.control.village.HumanPersona.walk(temper, seed),
+                    com.hex.kagune.control.village.HumanPersona.stroll(temper, seed), com.hex.kagune.control.village.HumanPersona.letGo(temper, seed),
+                    com.hex.kagune.control.village.HumanPersona.edge(temper, seed)}) {
+                    dated &= line != null && !line.isBlank() && !banned.matcher(line).find();
+                }
+            }
+        }
+        double apart = com.hex.kagune.control.village.HumanHand.out(false, false);
+        double[] right = com.hex.kagune.control.village.HumanHand.offset(0.0F, apart);
+        check(dated && apart > 1.0 && apart < 1.3 && com.hex.kagune.control.village.HumanHand.out(true, true) < apart
+            && Math.abs(right[0] + apart) < 1.0E-9 && Math.abs(right[1]) < 1.0E-9, "a date: hand in hand at its partner's right, a word for each moment");
         // 1.3.74: romance: a ghoul's confession first (may take convincing), then together.
         com.hex.kagune.control.village.HumanPersona.Temper kind = com.hex.kagune.control.village.HumanPersona.Temper.KIND;
         com.hex.kagune.control.village.HumanPersona.Temper nervous = com.hex.kagune.control.village.HumanPersona.Temper.NERVOUS;

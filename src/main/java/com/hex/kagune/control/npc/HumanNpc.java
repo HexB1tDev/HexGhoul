@@ -31,6 +31,9 @@ public class HumanNpc extends PathfinderMob {
     /** 1.3.77: what it is doing with its body ({@code HumanGestures.pack}: the move, its style, a count; 0 nothing). */
     static final EntityDataAccessor<Integer> GESTURE = SynchedEntityData.m_135353_(HumanNpc.class, EntityDataSerializers.f_135028_);
 
+    /** 1.3.78: whose hand it holds on a date (their entity id plus one; 0: nobody's). */
+    static final EntityDataAccessor<Integer> HOLDING = SynchedEntityData.m_135353_(HumanNpc.class, EntityDataSerializers.f_135028_);
+
     /** 1.3.77 (clients): the gesture last seen on it and when (its age in ticks), so each one plays from its start. */
     public int shownGesture;
     public float shownAt;
@@ -55,6 +58,18 @@ public class HumanNpc extends PathfinderMob {
         this.f_19804_.m_135372_(LOOK, 0);
         this.f_19804_.m_135372_(SCARED, 0);
         this.f_19804_.m_135372_(GESTURE, 0);
+        this.f_19804_.m_135372_(HOLDING, 0);
+    }
+
+    /** 1.3.78: the entity id of whoever's hand it holds, or -1. */
+    public int holding() {
+        return this.f_19804_.m_135370_(HOLDING) - 1;
+    }
+
+    public void holding(int id) {
+        if (this.f_19804_.m_135370_(HOLDING) != id + 1) {
+            this.f_19804_.m_135381_(HOLDING, id + 1);
+        }
     }
 
     public int gesture() {

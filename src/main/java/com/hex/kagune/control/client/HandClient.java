@@ -23,6 +23,19 @@ public final class HandClient {
     private static final Map<Integer, HandSway> SWAYS = new HashMap<>();
     /** Per holder (entity id): the NPC whose hand they hold. */
     private static final Map<Integer, Integer> HOLDERS = new HashMap<>();
+    /** 1.3.78: villagers seen holding someone's hand on a date (their renderer says so), stepped here like Eto's. */
+    private static final java.util.Set<Integer> VILLAGERS = new java.util.HashSet<>();
+
+    /** 1.3.78: villager {@code id} was drawn holding a hand. */
+    public static void villager(int id) {
+        VILLAGERS.add(id);
+    }
+
+    /** 1.3.78: true if a villager holds {@code holder}'s hand. */
+    public static boolean heldByVillager(int holder) {
+        Integer npc = HOLDERS.get(holder);
+        return npc != null && VILLAGERS.contains(npc);
+    }
 
     private HandClient() {
     }
@@ -50,6 +63,21 @@ public final class HandClient {
             sway.step(forward, turn);
             HOLDERS.put(view.with(), id);
         }
+        // 1.3.78: the villagers holding a hand, the same way.
+        VILLAGERS.removeIf(id -> !(minecraft.f_91073_.m_6815_(id) instanceof com.hex.kagune.control.npc.HumanNpc human) || human.holding() < 0
+            || !(minecraft.f_91073_.m_6815_(human.holding()) instanceof LivingEntity));
+        for (int id : VILLAGERS) {
+            com.hex.kagune.control.npc.HumanNpc human = (com.hex.kagune.control.npc.HumanNpc)minecraft.f_91073_.m_6815_(id);
+            LivingEntity living = (LivingEntity)minecraft.f_91073_.m_6815_(human.holding());
+            HandSway sway = SWAYS.computeIfAbsent(id, ignored -> new HandSway());
+            double yaw = Math.toRadians(living.f_20883_);
+            double dx = living.m_20185_() - living.f_19790_;
+            double dz = living.m_20189_() - living.f_19792_;
+            double forward = dx * -Math.sin(yaw) + dz * Math.cos(yaw);
+            float turn = ((living.f_20883_ - living.f_20884_) % 360.0F + 540.0F) % 360.0F - 180.0F;
+            sway.step(forward, turn);
+            HOLDERS.put(human.holding(), id);
+        }
         SWAYS.keySet().removeIf(id -> minecraft.f_91073_.m_6815_(id) == null);
     }
 
@@ -73,5 +101,6 @@ public final class HandClient {
     public static void loggingOut(ClientPlayerNetworkEvent.LoggingOut event) {
         SWAYS.clear();
         HOLDERS.clear();
+        VILLAGERS.clear();
     }
 }

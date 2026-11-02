@@ -1,9 +1,24 @@
-# START HERE (state after 1.3.77)
+# START HERE (state after 1.3.78)
 
 - The owner dropped RULE 1 in this session ("ignore the 97% rule, I changed my mind"); `CLAUDE.md` still holds it until they say otherwise
   for good. Commit and push often anyway.
-- **Next:** dates with a villager partner (walking together hand in hand, inside the village). Reuse: companions' HAND gesture
-  (`EtoGesture.HAND`, how Eto walks hand in hand: `EtoBrain` "hand"), `VillagePlace` (stay inside the perimeter), `HumanBrain.Mind.with`.
+- **The owner's update from `next-ai-1.3.67.md` is done** (1.3.68-1.3.78), all untested in game. Next: whatever the owner reports or asks
+  (bugs first, each its own version). Optional from older lists: War/Peace same-move cancels.
+- **1.3.78 dates** (protocol 72, unchanged; `HumanNpc.HOLDING` new entity data: holder id + 1). Pure `village/HumanHand`: `hand(slim)`
+  (0.34/0.375 + 0.75 sin EtoHand.ARM), `holder(woman)` (a woman's at Eto's size, as `EtoHand.OUT_FEMALE`), `out(villagerSlim, holderWoman)`,
+  `offset(bodyYaw, out)` (to the holder's right). `HumanPersona.walk`, `stroll` (3 each), `letGo`, `edge` (16 each). `HumanTalk`:
+  partners get `Choice.INVITE` ("Let's go for a walk, hand in hand.", hidden while holding): the talk ends, `HumanBrain.takeHand`, a line,
+  hearts, `DATE` +4 regard once a day (`DATED`). `HumanBrain`: `Mind.holding/holdShift/strollAt`; right after the danger branch,
+  `holdHands` (EtoBrain.holdHands' way: HAND gesture held (`gestureUntil` MAX), glued every tick at `HumanHand` beside the player's body
+  yaw, noPhysics + no gravity, their motion, facing their yaw, a heart every 80 ticks, a `stroll` line every 300..700) and nothing else that
+  tick; `letGo` on a shift tap (a `letGo` line and a WAVE), far (> 12), dead, spectator, a fright (silent), or the spot outside the
+  village (`place.inside`: an `edge` line, it stays inside); `EtoBrain.solid` restores the body; a new Mind clears no-gravity and holding.
+  Client: `HumanRenderer.glue` (EtoRenderer.glue's way with `HumanHand`, registers `HandClient.villager(id)`), its left arm alive by
+  `HandSway.arm(..., size 1.0)`; `HandClient` steps villagers' sways too and `heldByVillager(holder)`; `EtoClient.handHeld` counts it, so
+  the player's own arm reaches out (KaguneBodyAnimation). Not previewed; untested in game. `NpcTests.village`.
+
+# State after 1.3.77
+
 - **1.3.77 villagers' gestures** (protocol 72, unchanged; `HumanNpc.GESTURE` is new entity data, no message). Pure `village/HumanGestures`:
   a move = an `EtoGesture` ordinal or `CUE` 128 + a `ChildCue` ordinal; `pack(code, style, count)` (8 + 2 + 22 bits); `style(temper)`
   (EtoPose style: CHEERFUL/FLIRTY/DREAMY Eto's 0, KIND/BOLD Ken's 1, SHY/GRUMPY/NERVOUS Touka's 2); `ticks` (held Eto gestures `HELD` 40),

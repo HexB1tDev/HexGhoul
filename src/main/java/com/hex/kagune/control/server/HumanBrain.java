@@ -61,6 +61,98 @@ public final class HumanBrain {
         long pendingUntil;
         int pendingThen;
         String pendingLine;
+        /** 1.3.78: on a date: whose hand it holds (null: nobody's), whether they were crouching last tick, when it next says a word. */
+        UUID holding;
+        boolean holdShift;
+        long strollAt;
+    }
+
+    /** 1.3.78: it takes {@code player}'s hand for a walk (a date), glued at their right side until one of them lets go. */
+    public static void takeHand(HumanNpc human, ServerPlayer player, long now) {
+        Mind mind = human.mind;
+        if (mind == null) {
+            return;
+        }
+        mind.holding = player.m_20148_();
+        mind.with = player.m_20148_();
+        mind.holdShift = player.m_6047_();
+        mind.strollAt = now + 200L + human.m_217043_().m_188503_(200);
+        mind.pending = 0;
+        if (mind.trade != null) {
+            mind.trade.end((ServerLevel)human.m_9236_(), now);
+        }
+    }
+
+    /**
+     * 1.3.78: hand in hand (EtoBrain's way): every tick at its partner's right side ({@link com.hex.kagune.control.village.HumanHand}),
+     * facing the way they face, through whatever is there (it never chokes in a wall), a word now and then, a heart. It lets go when they
+     * crouch, go far or die, and at the village's edge: a villager of the Brick Village never goes past it.
+     */
+    static void holdHands(HumanNpc human, Mind mind, VillagePlace.Place place, ServerLevel level, long now) {
+        net.minecraft.world.entity.Entity found = level.m_8791_(mind.holding);
+        if (!(found instanceof ServerPlayer player) || !player.m_6084_() || player.m_5833_() || player.m_20280_(human) > 12.0 * 12.0) {
+            letGo(human, mind, level, now, null);
+            return;
+        }
+        com.hex.kagune.control.village.HumanPersona.Temper temper = com.hex.kagune.control.village.HumanPersona.temper(HumanTalk.seed(human));
+        boolean shift = player.m_6047_();
+        if (shift && !mind.holdShift) {
+            letGo(human, mind, level, now, com.hex.kagune.control.village.HumanPersona.letGo(temper, human.m_217043_().m_188503_(1000)));
+            return;
+        }
+        mind.holdShift = shift;
+        float yaw = player.f_20883_;
+        double[] off = com.hex.kagune.control.village.HumanHand.offset(yaw, com.hex.kagune.control.village.HumanHand.out(HumanRules.slim(human.look()),
+            com.hex.kagune.control.Genders.female(player)));
+        double x = player.m_20185_() + off[0];
+        double z = player.m_20189_() + off[1];
+        if (place != null && !place.inside(x, z)) {
+            letGo(human, mind, level, now, com.hex.kagune.control.village.HumanPersona.edge(temper, human.m_217043_().m_188503_(1000)));
+            return;
+        }
+        int hand = com.hex.kagune.control.village.HumanGestures.of(com.hex.kagune.control.npc.EtoGesture.HAND);
+        if (mind.gesture != hand) {
+            gesture(human, hand, 0, now);
+        }
+        mind.gestureUntil = Long.MAX_VALUE;
+        human.holding(player.m_19879_());
+        human.f_19794_ = true;
+        human.m_20242_(true);
+        human.m_21573_().m_26573_();
+        human.m_6021_(x, player.m_20186_(), z);
+        human.m_20256_(player.m_20184_());
+        human.f_19789_ = 0.0F;
+        human.m_146922_(yaw);
+        human.f_20883_ = yaw;
+        human.f_20885_ = yaw;
+        if (now % 80L == 0L) {
+            hearts(human, level, 1);
+        }
+        if (now >= mind.strollAt) {
+            mind.strollAt = now + 300L + human.m_217043_().m_188503_(400);
+            say(human, level, com.hex.kagune.control.village.HumanPersona.stroll(temper, human.m_217043_().m_188503_(1000)));
+        }
+    }
+
+    /** 1.3.78: it lets go of the hand it holds (saying {@code line}, if any), back to a body that collides and falls. */
+    static void letGo(HumanNpc human, Mind mind, ServerLevel level, long now, String line) {
+        if (mind.holding == null) {
+            return;
+        }
+        net.minecraft.world.entity.Entity by = level.m_8791_(mind.holding);
+        mind.holding = null;
+        human.holding(-1);
+        EtoBrain.solid(human, by instanceof net.minecraft.world.entity.LivingEntity living ? living : null);
+        if (mind.gesture == com.hex.kagune.control.village.HumanGestures.of(com.hex.kagune.control.npc.EtoGesture.HAND)) {
+            mind.gesture = 0;
+            human.gesture(0);
+        }
+        human.m_21573_().m_26573_();
+        mind.nextWander = now + 60L;
+        if (line != null) {
+            say(human, level, line);
+            gesture(human, com.hex.kagune.control.village.HumanGestures.of(com.hex.kagune.control.npc.EtoGesture.WAVE), 0, now);
+        }
     }
 
     /** 1.3.77: {@code human} makes move {@code code} (HumanGestures), every client drawing it; {@code then}: the move after it, or 0. */
@@ -133,6 +225,9 @@ public final class HumanBrain {
             saved.m_128405_(HumanNpc.KEY, look);
             human.dress(look);
             mind.nextWander = now + 40 + human.m_217043_().m_188503_(80);
+            // 1.3.78: saved mid-date (no gravity is kept with it), it comes back a body that falls; nobody's hand in it.
+            human.m_20242_(false);
+            human.holding(-1);
         }
         VillagePlace.Place place = VillagePlace.of(human); // 1.3.71: one of the Brick Village's people (null: anyone else)
         Danger danger = danger(human, level, mind, now);
@@ -143,6 +238,7 @@ public final class HumanBrain {
             mind.shakenUntil = now + HumanRules.SHAKEN;
             human.scared(true);
             gestures(human, mind, level, now, true); // 1.3.77: a fright ends any move
+            letGo(human, mind, level, now, null); // 1.3.78: a fright lets go of any hand
             scream(human, level, mind, danger, now);
             mind.ranFrom = danger.body().m_19879_();
             if (now >= mind.nextPlan || human.m_21573_().m_26571_()) {
@@ -168,6 +264,13 @@ public final class HumanBrain {
         }
         mind.ranFrom = 0;
         human.scared(now < mind.shakenUntil);
+        // 1.3.78: on a date, hand in hand: nothing else.
+        if (mind.holding != null) {
+            holdHands(human, mind, place, level, now);
+            if (mind.holding != null) {
+                return;
+            }
+        }
         gestures(human, mind, level, now, false);
         // 1.3.77: walking up to its partner for a kiss or a hug: close enough (or after a while), it faces them and does it.
         if (mind.pending != 0) {

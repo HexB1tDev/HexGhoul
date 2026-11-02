@@ -143,6 +143,9 @@ public final class EtoClient {
 
     /** 1.3.3: 1 if an Eto holds the hand of the player {@code id} (their own arm reaches out to her), else 0. */
     public static float handHeld(int id) {
+        if (HandClient.heldByVillager(id)) {
+            return 1.0F; // 1.3.78: a villager's on a date
+        }
         for (View view : VIEWS.values()) {
             if (view.with() == id && view.gesture() == EtoGesture.HAND) {
                 return 1.0F;

@@ -80,6 +80,40 @@ public final class HumanRenderer extends HumanoidMobRenderer<HumanNpc, PlayerMod
         return EtoPose.gesture(HumanGestures.gesture(code), t, HumanGestures.style(packed), HumanGestures.count(packed) % 3);
     }
 
+    /**
+     * 1.3.78: hand in hand on a date, drawn glued at its partner's right side (HumanHand, as they are drawn this frame), on its hand's
+     * spring (HandSway), facing their way (EtoRenderer.glue's way). True if a pose was pushed.
+     */
+    static boolean glue(HumanNpc human, float partial, PoseStack pose) {
+        if (human.holding() < 0 || !(human.m_9236_().m_6815_(human.holding()) instanceof net.minecraft.world.entity.LivingEntity holder)) {
+            return false;
+        }
+        com.hex.kagune.control.client.HandClient.villager(human.m_19879_());
+        float turn = ((holder.f_20883_ - holder.f_20884_) % 360.0F + 540.0F) % 360.0F - 180.0F;
+        float bodyYaw = holder.f_20884_ + turn * partial;
+        double[] off = com.hex.kagune.control.village.HumanHand.offset(bodyYaw, com.hex.kagune.control.village.HumanHand.out(HumanRules.slim(human.look()),
+            com.hex.kagune.control.Genders.female(holder)));
+        com.hex.kagune.control.npc.HandSway sway = com.hex.kagune.control.client.HandClient.of(human.m_19879_());
+        if (sway != null) {
+            double yaw = Math.toRadians(bodyYaw);
+            double trail = sway.trail(partial);
+            double out = sway.out(partial);
+            off[0] += Math.sin(yaw) * trail - Math.cos(yaw) * out;
+            off[1] += -Math.cos(yaw) * trail - Math.sin(yaw) * out;
+        }
+        double hx = holder.f_19790_ + (holder.m_20185_() - holder.f_19790_) * partial;
+        double hy = holder.f_19791_ + (holder.m_20186_() - holder.f_19791_) * partial;
+        double hz = holder.f_19792_ + (holder.m_20189_() - holder.f_19792_) * partial;
+        double ex = human.f_19790_ + (human.m_20185_() - human.f_19790_) * partial;
+        double ey = human.f_19791_ + (human.m_20186_() - human.f_19791_) * partial;
+        double ez = human.f_19792_ + (human.m_20189_() - human.f_19792_) * partial;
+        pose.m_85836_();
+        pose.m_85837_(hx + off[0] - ex, hy - ey, hz + off[1] - ez);
+        human.f_20883_ = bodyYaw;
+        human.f_20884_ = bodyYaw;
+        return true;
+    }
+
     /** 1.3.77: how long its current gesture has played (ticks), for its blush to come up. */
     static float gestureAge(HumanNpc human, float age) {
         return Math.max(0.0F, age - human.shownAt);
@@ -133,6 +167,19 @@ public final class HumanRenderer extends HumanoidMobRenderer<HumanNpc, PlayerMod
         this.f_115290_ = HumanRules.slim(human.look()) ? this.slim : this.wide;
         // 1.3.77: its gesture (Eto's, in its temper's way, or a child's cue), posed as Eto's model poses hers, its hop and tip too.
         RigPose posed = human.scared() ? null : posed(human, human.f_19797_ + partial);
+        boolean glued = glue(human, partial, pose); // 1.3.78: hand in hand on a date
+        if (glued && posed != null) {
+            // 1.3.78: its held arm alive, as Eto's (HandSway): reaching to their hand as it trails, out as it swings wide.
+            com.hex.kagune.control.npc.HandSway sway = com.hex.kagune.control.client.HandClient.of(human.m_19879_());
+            if (sway != null) {
+                double trail = sway.trail(partial);
+                float[] arm = com.hex.kagune.control.npc.HandSway.arm(trail, sway.out(partial), com.hex.kagune.control.client.HandClient.clock(sway, partial),
+                    false, 1.0);
+                posed.leftArmX += arm[0];
+                posed.leftArmZ -= arm[1];
+                posed.lean += (float)com.hex.kagune.control.npc.HandSway.pulled(trail);
+            }
+        }
         Model.pose = posed;
         boolean turned = posed != null && (Math.abs(posed.flip) > 1.0E-3F || Math.abs(posed.roll) > 1.0E-3F || Math.abs(posed.spin) > 1.0E-3F
             || Math.abs(posed.drop) > 1.0E-3F);
@@ -152,6 +199,9 @@ public final class HumanRenderer extends HumanoidMobRenderer<HumanNpc, PlayerMod
             super.m_7392_(human, yaw, partial, pose, buffers, light);
         } finally {
             if (turned) {
+                pose.m_85849_();
+            }
+            if (glued) {
                 pose.m_85849_();
             }
             Model.pose = null;

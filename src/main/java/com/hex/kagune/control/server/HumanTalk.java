@@ -50,6 +50,9 @@ public final class HumanTalk {
     /** 1.3.74: a confession it doubts (player and human: waiting for the plea), and the day one was turned down (no more till tomorrow). */
     private static final java.util.Set<String> DOUBTED = new java.util.HashSet<>();
     private static final Map<String, Long> REFUSED = new HashMap<>();
+    /** 1.3.78: the day each player last took each villager on a date (player + villager), and how much it warms to them for it. */
+    private static final Map<String, Long> DATED = new HashMap<>();
+    static final int DATE = 4;
 
     private HumanTalk() {
     }
@@ -143,6 +146,22 @@ public final class HumanTalk {
         human.mind.with = player.m_20148_();
         // 1.3.77: a kiss or a hug: the talk ends so it can be seen; it walks up to them, and does it (a kiss: leaning in, then kissed and
         // hearts), with a line in a bubble.
+        // 1.3.78: a date: it takes their hand and walks with them, glued at their side, inside the village; the talk ends so it can be
+        // seen. Once a day it warms to them a little for it.
+        if (choice == NpcTalk.Choice.INVITE) {
+            TALKS.remove(player.m_20148_());
+            HumanBrain.takeHand(human, player, now);
+            HumanBrain.say(human, level, HumanPersona.walk(temper, roll));
+            HumanBrain.hearts(human, level, 4);
+            String both = player.m_20148_() + key;
+            if (DATED.getOrDefault(both, Long.MIN_VALUE) != day) {
+                DATED.put(both, day);
+                QuestServer.bond(player, key, bond.regard(bond.regard() + DATE));
+            }
+            ControlNetwork.sendTo(player, new S2CNpcTalk(human.m_19879_(), HumanPersona.name(seed), temper.title, bond.regard(), false,
+                -100 - human.look(), "", new int[0], new String[0]));
+            return;
+        }
         if (choice == NpcTalk.Choice.KISS || choice == NpcTalk.Choice.HUG) {
             TALKS.remove(player.m_20148_());
             boolean kiss = choice == NpcTalk.Choice.KISS;
@@ -257,6 +276,11 @@ public final class HumanTalk {
             said.add("Kiss " + name + ".");
             offered.add(NpcTalk.Choice.HUG);
             said.add("Hug " + name + ".");
+            // 1.3.78: a date, hand in hand (not while it already holds their hand).
+            if (human.mind == null || human.mind.holding == null) {
+                offered.add(NpcTalk.Choice.INVITE);
+                said.add("Let's go for a walk, hand in hand.");
+            }
         }
         offered.add(NpcTalk.Choice.LEAVE);
         said.add("");
