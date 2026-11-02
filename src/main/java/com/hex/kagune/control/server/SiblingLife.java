@@ -84,6 +84,9 @@ final class SiblingLife {
             if (night && kind != Siblings.Kind.CHAT && kind != Siblings.Kind.COMFORT && kind != Siblings.Kind.MIND) {
                 continue;
             }
+            if (kind == Siblings.Kind.TAG && !(inYard(npc, child, level) && inYard(other, known, level))) {
+                kind = Siblings.Kind.CHAT; // 1.3.54: tag only at home, both in its yard (they play there, never off beyond it)
+            }
             mind.siblingAt = now;
             them.siblingAt = now;
             List<Siblings.Line> talk = Siblings.talk(kind, temper(child), stage, child.name, call(child, stage), girl(child), temper(known), theirs,
@@ -163,16 +166,29 @@ final class SiblingLife {
                 mind.talk.add(said);
             }
         } else if (now % 10L == 0L) {
-            // Away from the one who is it, a few blocks, a little to one side.
-            Vec3 away = npc.m_20182_().m_82546_(other.m_20182_());
-            Vec3 flat = new Vec3(away.f_82479_, 0.0, away.f_82481_);
-            flat = flat.m_82556_() < 1.0E-4 ? new Vec3(1.0, 0.0, 0.0) : flat.m_82541_();
+            // Away from the one who is it, a few blocks, a little to one side; 1.3.54: never off its home's yard (Siblings.runTo).
+            Households.Home house = Households.forChild(level, child);
+            if (house == null) {
+                mind.tagWith = 0;
+                return false;
+            }
             double turn = (npc.m_217043_().m_188500_() - 0.5) * 1.4;
-            Vec3 run = new Vec3(flat.f_82479_ * Math.cos(turn) - flat.f_82481_ * Math.sin(turn), 0.0, flat.f_82479_ * Math.sin(turn) + flat.f_82481_ * Math.cos(turn));
-            Vec3 to = npc.m_20182_().m_82549_(run.m_82490_(5.0));
-            npc.m_21573_().m_26519_(to.f_82479_, npc.m_20186_(), to.f_82481_, 1.25);
+            double[] to = Siblings.runTo(npc.m_20185_(), npc.m_20189_(), other.m_20185_(), other.m_20189_(), turn, house.pos().m_123341_() + 0.5,
+                house.pos().m_123343_() + 0.5, house.radius());
+            npc.m_21573_().m_26519_(to[0], npc.m_20186_(), to[1], 1.25);
         }
         return true;
+    }
+
+    /** 1.3.54: true if {@code body} (the child {@code known}) is in its home's yard (where tag may be played: {@link Siblings#yard}). */
+    private static boolean inYard(ChildNpc body, Children.Child known, ServerLevel level) {
+        Households.Home house = Households.forChild(level, known);
+        if (house == null) {
+            return false;
+        }
+        double dx = body.m_20185_() - (house.pos().m_123341_() + 0.5);
+        double dz = body.m_20189_() - (house.pos().m_123343_() + 0.5);
+        return Math.sqrt(dx * dx + dz * dz) <= Siblings.yard(house.radius());
     }
 
     /** An older one after a toddler that wandered: to it; reached, a word each, and home together (the toddler at its side). */

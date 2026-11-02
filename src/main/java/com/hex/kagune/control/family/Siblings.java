@@ -27,6 +27,12 @@ public final class Siblings {
     /** How close a chaser must get to tag (blocks); how long a tagged one can't tag straight back (ticks). */
     public static final double TAG_REACH = 1.3;
     public static final long NO_TAG_BACKS = 30L;
+    /**
+     * 1.3.54: how far a runner in tag heads off at a time (blocks), and how far inside its home's edge it keeps (a toddler at play never
+     * wanders off enough for a parent to come after it).
+     */
+    public static final double RUN = 5.0;
+    public static final double YARD = 2.5;
     /** Hurt under this share of its health, a sibling near comforts it. */
     public static final float HURT = 0.6F;
     /** How long between two words about a sibling's kagune, or a "got your back" (ticks). */
@@ -180,5 +186,61 @@ public final class Siblings {
         String line = lines[pick.nextInt(lines.length)];
         out.add(new Line(s.who(), line.replace("{sib}", s.other() == null || s.other().isEmpty() ? "you" : s.other())
             .replace("{call}", s.call() == null ? "Mom" : s.call()).replace("{sibrole}", s.otherGirl() ? "sister" : "brother")));
+    }
+
+    /** 1.3.54: how far from its home's middle a game of tag may go (blocks): its edge less {@link #YARD}, never under 3. */
+    public static double yard(double radius) {
+        return Math.max(3.0, radius - YARD);
+    }
+
+    /**
+     * 1.3.54: where a runner in tag at ({@code x}, {@code z}) heads: {@link #RUN} blocks away from the one who is it ({@code cx},
+     * {@code cz}), turned by {@code turn} radians; kept in its home (middle {@code hx}, {@code hz}, {@code radius}: {@link #yard}). A run
+     * that would leave it turns along the edge (the turn that keeps it farthest from the chaser), else heads back in.
+     */
+    public static double[] runTo(double x, double z, double cx, double cz, double turn, double hx, double hz, double radius) {
+        double ax = x - cx;
+        double az = z - cz;
+        double length = Math.sqrt(ax * ax + az * az);
+        if (length < 1.0E-4) {
+            ax = 1.0;
+            az = 0.0;
+        } else {
+            ax /= length;
+            az /= length;
+        }
+        double limit = yard(radius);
+        double[] best = null;
+        double bestFar = -1.0;
+        for (double extra : new double[] {0.0, 0.5, -0.5, 1.0, -1.0, 1.5, -1.5, 2.0, -2.0, 2.6, -2.6}) {
+            double a = turn + extra;
+            double rx = ax * Math.cos(a) - az * Math.sin(a);
+            double rz = ax * Math.sin(a) + az * Math.cos(a);
+            double tx = x + rx * RUN;
+            double tz = z + rz * RUN;
+            if (Math.hypot(tx - hx, tz - hz) > limit) {
+                continue;
+            }
+            double far = Math.hypot(tx - cx, tz - cz);
+            if (extra == 0.0) {
+                return new double[] {tx, tz}; // the way it meant to go is fine
+            }
+            if (far > bestFar) {
+                bestFar = far;
+                best = new double[] {tx, tz};
+            }
+        }
+        if (best != null) {
+            return best;
+        }
+        // Nowhere in reach is inside: back in, toward the middle, as far as it may go.
+        double ix = hx - x;
+        double iz = hz - z;
+        double in = Math.sqrt(ix * ix + iz * iz);
+        if (in < 1.0E-4) {
+            return new double[] {x, z};
+        }
+        double step = Math.min(RUN, in);
+        return new double[] {x + ix / in * step, z + iz / in * step};
     }
 }

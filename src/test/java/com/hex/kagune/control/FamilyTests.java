@@ -550,6 +550,32 @@ check(com.hex.kagune.control.graft.GraftStage.TRANSPLANT.limbs(com.hex.kagune.co
         check(broken.size() == 3 && broken.get(0).who() == 0 && broken.get(1).who() == 1 && broken.get(2).who() == 2
             && !broken.get(1).text().contains("{"), "a parent breaks it up, and each says sorry");
         check(com.hex.kagune.control.family.Siblings.tagged(bold, kid, "Ren", 2).text().length() > 2, "a tag's shout");
+        // 1.3.54: tag stays in the yard: wherever the runner and the chaser are, it heads somewhere inside, away from the chaser if it can.
+        java.util.Random random = new java.util.Random(54);
+        boolean inside = true;
+        boolean away = true;
+        int roomy = 0;
+        for (int i = 0; i < 4000; i++) {
+            double radius = 6 + random.nextInt(14);
+            double limit = com.hex.kagune.control.family.Siblings.yard(radius);
+            double angle = random.nextDouble() * Math.PI * 2;
+            double r = random.nextDouble() * limit;
+            double x = 100 + Math.cos(angle) * r;
+            double z = -40 + Math.sin(angle) * r;
+            double cx = x + (random.nextDouble() - 0.5) * 6;
+            double cz = z + (random.nextDouble() - 0.5) * 6;
+            double[] to = com.hex.kagune.control.family.Siblings.runTo(x, z, cx, cz, (random.nextDouble() - 0.5) * 1.4, 100, -40, radius);
+            inside &= Math.hypot(to[0] - 100, to[1] + 40) <= limit + 1.0E-6;
+            if (r < limit - com.hex.kagune.control.family.Siblings.RUN - 1) {
+                roomy++;
+                away &= Math.hypot(to[0] - cx, to[1] - cz) > Math.hypot(x - cx, z - cz);
+            }
+        }
+        check(inside, "a runner in tag never heads out of its yard");
+        check(away && roomy > 100, "with room, it runs away from whoever is it");
+        double[] corner = com.hex.kagune.control.family.Siblings.runTo(100 + 9.4, -40, 100 + 8, -40, 0.0, 100, -40, 12);
+        check(Math.hypot(corner[0] - 100, corner[1] + 40) <= com.hex.kagune.control.family.Siblings.yard(12) + 1.0E-6
+            && Math.hypot(corner[0] - 108, corner[1] + 40) > 1.0, "chased to the edge, it turns along it instead of running off");
         java.util.List<com.hex.kagune.control.family.Siblings.Line> team = com.hex.kagune.control.family.Siblings.talk(com.hex.kagune.control.family.Siblings.Kind.TEAM,
             bold, kid, "Hana", "Mama", true, sunny, kid, "Ren", "Mama", false, 1);
         check(team.size() == 1 && !team.get(0).text().contains("{sibrole}"), "fighting side by side: a word for a brother or a sister");

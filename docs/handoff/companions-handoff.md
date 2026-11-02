@@ -1,8 +1,15 @@
-# START HERE (state after 1.3.53)
+# START HERE (state after 1.3.54)
 
 - **Next session:** read `docs/handoff/next-ai-1.3.51.md` first (the owner's goal: more interactions and dialog, polish first; how
-  conversations worked; the known problems), then these sections. Problems 1 (bubbles) and 2 (walking off mid-talk) there are fixed by
-  1.3.52 and 1.3.53; "How conversations work now" there is out of date for held talks: read the 1.3.53 entry below.
+  conversations worked; the known problems), then these sections. Problems 1 (bubbles), 2 (walking off mid-talk) and 3 (tag off home) there are fixed
+  by 1.3.52, 1.3.53 and 1.3.54; "How conversations work now" there is out of date for held talks: read the 1.3.53 entry below.
+- **1.3.54 tag in the yard** (protocol 69, unchanged): pure `Siblings.RUN` 5, `YARD` 2.5, `yard(radius)` (the edge less YARD, at least 3),
+  `runTo(x, z, chaserX, chaserZ, turn, homeX, homeZ, radius)` (RUN away turned by `turn`; outside the yard: the extra turn (0.5..2.6 rad
+  either way) that keeps it farthest from the chaser, else back toward the middle). `SiblingLife.tag` runs there (no home: the game ends);
+  `begin` turns TAG into CHAT unless both are `inYard`. `FamilyTests.siblings`.
+
+# State after 1.3.53
+
 - **1.3.53 one conversation lock** (protocol 69, unchanged). Pure `family/Talks`: `GATHER` 2.2, `SPEAKS` 4, `LEAVES` 8, `WAITS` 240,
   `GATHERS` 300, `TURN` 24 deg/tick; `End` DONE, LEFT, GONE, HURT, FIGHT, ASLEEP, INTERRUPTED (never sent); `faces(self, speaker, previous,
   next, anchor, other)`; `turn(from, to, most)`; `remarked(End)` (LEFT only); `cutShort(who, stage, name, call, seed)` (56 lines: a persona
