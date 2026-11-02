@@ -19,7 +19,8 @@ import net.minecraftforge.fml.common.Mod;
 
 /**
  * Home Living (1.3.40): The Human as vanilla draws a player, in one of vanilla's own default skins ({@link HumanRules#LOOKS}, wide or
- * slim arms as the skin is painted for); frightened, it runs with its arms thrown up over its head, flailing.
+ * slim arms as the skin is painted for); frightened, it runs with its arms thrown up over its head, flailing. 1.3.65: its screams in a
+ * bubble over its head.
  */
 public final class HumanRenderer extends HumanoidMobRenderer<HumanNpc, PlayerModel<HumanNpc>> {
     private static final ResourceLocation[] SKINS = new ResourceLocation[HumanRules.LOOKS.length * 2];
@@ -47,6 +48,11 @@ public final class HumanRenderer extends HumanoidMobRenderer<HumanNpc, PlayerMod
     public void m_7392_(HumanNpc human, float yaw, float partial, PoseStack pose, MultiBufferSource buffers, int light) {
         this.f_115290_ = HumanRules.slim(human.look()) ? this.slim : this.wide;
         super.m_7392_(human, yaw, partial, pose, buffers, light);
+        // 1.3.65: its screams, in a bubble over its head.
+        if (!human.m_20145_()) {
+            SpeechBubbles.draw(human, com.hex.kagune.control.client.NpcSpeech.lines(human), 0.3,
+                com.hex.kagune.control.client.NpcSpeech.age(human.m_19879_(), partial), pose, buffers);
+        }
     }
 
     @Override

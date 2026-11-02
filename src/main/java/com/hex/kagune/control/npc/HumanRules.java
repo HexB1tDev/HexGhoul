@@ -22,6 +22,21 @@ public final class HumanRules {
     /** How long (ticks) it keeps running from whoever hurt it. */
     public static final int HURT_MEMORY = 600;
 
+    /**
+     * 1.3.65: the worst sights ({@link FinalSight}) are seen from much further and run from harder: a final kakuja from {@link #DREAD_NOTICE},
+     * War and the Dragon (a terror) from {@link #TERROR_NOTICE}, in its sight; a terror at a sprint ({@link #TERROR_RUN}), and remembered
+     * {@link #TERROR_MEMORY} ticks out of sight (it keeps running till it is {@link #TERROR_SAFE} off). It screams as it starts to run, and
+     * from a terror every {@link #SCREAMS} ticks or so.
+     */
+    public static final double DREAD_NOTICE = 28.0;
+    public static final double TERROR_NOTICE = 40.0;
+    public static final double TERROR_SAFE = 52.0;
+    public static final double TERROR_RUN = 1.3;
+    public static final int TERROR_MEMORY = 100;
+    public static final int SCREAMS = 70;
+    /** How far its scream is heard (blocks: shown to the players who see it within this). */
+    public static final double HEARD = 32.0;
+
     /** Vanilla's default skins: (path, slim arms). */
     public static final String[] LOOKS = {"steve", "alex", "ari", "efe", "kai", "makena", "noor", "sunny", "zuri"};
 
@@ -49,6 +64,19 @@ public final class HumanRules {
      */
     public static boolean notices(double distance, boolean kaguneOut) {
         return distance <= (kaguneOut ? NOTICE : CLOSE);
+    }
+
+    /**
+     * 1.3.65: how far off it sees a ghoul player as one: a terror from {@link #TERROR_NOTICE}, another final sight from {@link #DREAD_NOTICE},
+     * their kagune out (or a kakuja) from {@link #NOTICE}, hidden only from {@link #CLOSE}.
+     */
+    public static double notice(FinalSight sight, boolean shown) {
+        return sight.terror() ? TERROR_NOTICE : sight.any() ? DREAD_NOTICE : shown ? NOTICE : CLOSE;
+    }
+
+    /** 1.3.65: how fast it runs from {@code sight} (a terror: a sprint). */
+    public static double pace(FinalSight sight) {
+        return sight.terror() ? TERROR_RUN : RUN;
     }
 
     /** Where it runs to: {@code away} (x, z) from the danger, turned by {@code turn} radians (when the straight way is blocked). */

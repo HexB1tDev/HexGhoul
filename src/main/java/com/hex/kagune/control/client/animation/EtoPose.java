@@ -737,6 +737,40 @@ public final class EtoPose {
                 p.leftArmZ = -0.12F;
                 p.headY = 0.15F * (float)Math.sin(t * 0.05);
             }
+            case FLINCH -> {
+                // 1.3.65 (a final kakuja, War above all): a step back from it (the right foot behind), the right arm drawn in across her
+                // body, the left hand thrown up in front of her, palm out, to keep it off; her head pulled back and turned a little aside; a
+                // tremble that settles as she holds her ground.
+                float back = ease(Math.min(1.0F, t / 7.0F));
+                float shake = 0.05F * (float)Math.sin(t * 2.1) * Math.max(0.0F, 1.0F - t / 50.0F);
+                p.lean = -0.16F * back;
+                p.drop = 0.35F * back;
+                p.rightArmX = -1.0F * back + shake;
+                p.rightArmY = 0.25F * back;
+                p.rightArmZ = -0.75F * back;
+                p.leftArmX = -1.95F * back - shake;
+                p.leftArmY = 0.0F;
+                p.leftArmZ = 0.08F * back;
+                p.headX = -0.15F * back;
+                p.headY = 0.35F * back;
+                p.rightLegX = 0.38F * back;
+                p.leftLegX = -0.1F * back;
+                p.legHold = back;
+            }
+            case AWE -> {
+                // 1.3.65 (Peace): her hands come together low on her chest, her head tipped back to look up at it, a slow breath in and out.
+                float up = ease(Math.min(1.0F, t / 12.0F));
+                float breath = (float)Math.sin(t * 0.09) * 0.5F + 0.5F;
+                p.rightArmX = -0.75F * up;
+                p.leftArmX = -0.75F * up;
+                p.rightArmY = 0.25F * up;
+                p.leftArmY = -0.25F * up;
+                p.rightArmZ = -0.6F * up;
+                p.leftArmZ = 0.6F * up;
+                p.headX = (-0.5F - 0.08F * breath) * up;
+                p.lean = -0.06F * up;
+                p.drop = -0.12F * breath * up;
+            }
             case BOW -> {
                 // A small, polite bow from the hips, hands at the sides.
                 float bow = (float)Math.sin(Math.min(1.0, t / (double)EtoGesture.BOW.ticks) * Math.PI);

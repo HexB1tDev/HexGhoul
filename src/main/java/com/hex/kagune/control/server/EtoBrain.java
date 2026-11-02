@@ -1608,7 +1608,8 @@ public final class EtoBrain {
      * 1.3.11: {@code player} shows her what they are ({@link com.hex.kagune.control.npc.Display}): a word by who they are to her and where
      * she is (her Library), and what she does: amused, annoyed among her books, impressed, worried for her partner as it gets worse.
      */
-    static void saw(EtoNpc npc, ServerPlayer player, com.hex.kagune.control.npc.Display shown, ServerLevel level, long now) {
+    static void saw(EtoNpc npc, ServerPlayer player, com.hex.kagune.control.npc.Display shown, com.hex.kagune.control.npc.FinalSight sight,
+        ServerLevel level, long now) {
         Mind mind = npc.mind;
         if (mind == null || mind.target == player.m_19879_() || shown == com.hex.kagune.control.npc.Display.NONE) {
             return;
@@ -1622,7 +1623,11 @@ public final class EtoBrain {
         com.hex.kagune.control.npc.EtoVoice voice = com.hex.kagune.control.npc.EtoVoice.of(c);
         BlockPos origin = npc.origin();
         boolean library = origin != null && npc.m_20238_(new Vec3(origin.m_123341_() + 0.5, origin.m_123342_(), origin.m_123343_() + 0.5)) < 28.0 * 28.0;
-        String line = npc.persona().script().saw(shown, voice, library, npc.m_217043_().m_188503_(1000));
+        // 1.3.65: the worst sights told apart, each companion its own way (Eto fascinated by War, Touka sick with worry, Ken who has been
+        // there; Peace in awe).
+        boolean worst = shown == com.hex.kagune.control.npc.Display.DREAD && sight != null && sight.any();
+        com.hex.kagune.control.npc.Script script = npc.persona().script();
+        String line = worst ? script.dread(sight, voice, library, npc.m_217043_().m_188503_(1000)) : script.saw(shown, voice, library, npc.m_217043_().m_188503_(1000));
         if (!line.isEmpty()) {
             say(npc, player, line);
         }
@@ -1632,7 +1637,7 @@ public final class EtoBrain {
             case EYES -> gesture = ours ? EtoGesture.BLUSH : EtoGesture.LOOK;
             case KAGUNE -> gesture = ours ? EtoGesture.GIGGLE : library ? EtoGesture.ANGRY : EtoGesture.LAUGH;
             case KAKUJA -> gesture = ours ? EtoGesture.CLING : EtoGesture.LOOK;
-            default -> gesture = ours ? EtoGesture.HUG : EtoGesture.LOOK;
+            default -> gesture = worst ? script.dreadGesture(sight, ours) : ours ? EtoGesture.HUG : EtoGesture.LOOK;
         }
         if (mind.target == 0 && mind.kiss == null && mind.holding == null) {
             face(npc, player);

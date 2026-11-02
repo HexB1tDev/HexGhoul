@@ -113,6 +113,8 @@ public final class GhoulNpcBrain {
         /** 7.0.2: sent off (it walks away and is gone), or scared off (it runs a while). */
         long leavingAt = Long.MIN_VALUE;
         long scaredUntil = Long.MIN_VALUE;
+        /** 1.3.65: who scared it off (an entity id, 0: whoever is nearest): it runs from them (Sightings: War keeps it running). */
+        int scaredOf;
         /** 1.0.41: its flip (an PaleRules.Flip, -1 none), when it took off, its push (renewed the tick after), when it may flip again. */
         int flip = -1;
         long flipAt = Long.MIN_VALUE;
@@ -370,6 +372,15 @@ public final class GhoulNpcBrain {
 
     private static void flee(GhoulNpc npc, Mind mind, LivingEntity from, ServerLevel level, long now) {
         Entity threat = from;
+        double run = 14.0;
+        if (now < mind.scaredUntil && mind.scaredOf != 0 && level.m_6815_(mind.scaredOf) instanceof LivingEntity scary && scary.m_6084_()
+            && scary.m_20280_(npc) <= 48.0 * 48.0) {
+            // 1.3.65: away from what scared it (War above all), not whoever is nearest; from a terror, further at a time.
+            threat = scary;
+            if (scary instanceof ServerPlayer player && Sightings.seen(player).terror()) {
+                run = com.hex.kagune.control.npc.FinalSight.TERROR_RUN;
+            }
+        }
         if (threat == null) {
             double best = Double.MAX_VALUE;
             for (ServerPlayer player : level.m_6907_()) {
@@ -386,7 +397,7 @@ public final class GhoulNpcBrain {
             return;
         }
         Vec3 away = GhoulNpcCombat.flat(npc.m_20182_().m_82546_(threat.m_20182_()));
-        Vec3 to = npc.m_20182_().m_82549_(away.m_82490_(14.0));
+        Vec3 to = npc.m_20182_().m_82549_(away.m_82490_(run));
         int y = level.m_6924_(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, (int)Math.floor(to.f_82479_), (int)Math.floor(to.f_82481_));
         npc.m_21573_().m_26519_(to.f_82479_, y, to.f_82481_, 1.3);
     }
@@ -554,6 +565,7 @@ public final class GhoulNpcBrain {
     /** Scared off: it runs a while. */
     static void scare(GhoulNpc npc, Mind mind, long now) {
         mind.scaredUntil = now + 120L;
+        mind.scaredOf = 0;
         listen(npc, mind, null, now);
     }
 

@@ -5,6 +5,8 @@ import com.hex.kagune.control.npc.AgentRules;
 import com.hex.kagune.control.npc.CcgAgent;
 import com.hex.kagune.control.npc.ChildNpc;
 import com.hex.kagune.control.npc.EtoNpc;
+import com.hex.kagune.control.npc.FearLines;
+import com.hex.kagune.control.npc.FinalSight;
 import com.hex.kagune.control.npc.FleshThrall;
 import com.hex.kagune.control.npc.GhoulNpc;
 import com.hex.kagune.control.npc.NpcRules;
@@ -103,6 +105,15 @@ public final class AgentBrain {
         boolean rounding;
         boolean swapped;
         long turnedSince = Long.MIN_VALUE;
+        /**
+         * 1.3.65: one of the worst sights it faltered at (an entity id), when; until when it stands frozen, then falls back; whether it
+         * finds its nerve (a word) once that is over.
+         */
+        int falterFrom;
+        long falteredAt = Long.MIN_VALUE;
+        long falterUntil = Long.MIN_VALUE;
+        long fallBackUntil = Long.MIN_VALUE;
+        boolean rallies;
     }
 
     /** Its partner's id in its saved data (who it is: {@link CcgAgent#KEY}, packed). */
@@ -185,6 +196,9 @@ public final class AgentBrain {
         }
         if (PaleStun.stunned(agent)) {
             return;
+        }
+        if (falter(agent, mind, level, now)) {
+            return; // 1.3.65: frozen at War (or worse), or falling back from it
         }
         LivingEntity prey = prey(agent, mind, partner, level, now);
         if (prey != null) {
@@ -339,16 +353,88 @@ public final class AgentBrain {
                 continue;
             }
             double distance = Math.sqrt(player.m_20280_(agent));
-            if (!AgentRules.revealed(KaguneProfile.isUnlocked(player), KaguneProfile.isActive(player), distance, agent.m_142582_(player))) {
+            // 1.3.65: a final kakuja (War, Peace, the Dragon: the kagune itself in) shows what they are as much as a kagune.
+            FinalSight sight = Sightings.seen(player);
+            boolean shown = KaguneProfile.isActive(player) || sight.any();
+            boolean seen = agent.m_142582_(player);
+            if (!AgentRules.revealed(KaguneProfile.isUnlocked(player), shown, distance, seen)) {
                 continue;
+            }
+            if (sight.any() && seen && ago(now, mind.falteredAt) >= AgentRules.FALTER_AGAIN) {
+                falter(agent, mind, player, sight, level, now);
             }
             Long was = mind.grudges.get(player.m_20148_());
             if (was == null || was <= now) {
-                player.m_5661_(Component.m_237113_("§cThe CCG has seen your kagune."), true);
+                player.m_5661_(Component.m_237113_(sight.any() || !KaguneProfile.isActive(player) ? "§cThe CCG has seen what you are."
+                    : "§cThe CCG has seen your kagune."), true);
             }
             mark(mind, player.m_20148_(), now + AgentRules.MARKED);
             if (partner != null && partner.mind != null) {
                 mark(partner.mind, player.m_20148_(), now + AgentRules.MARKED);
+            }
+        }
+    }
+
+    /**
+     * 1.3.65: it first sees {@code sight} on {@code player}: frozen where it stands a moment ({@link AgentRules#falter}), a word (a senior
+     * steadies itself, a junior shakes), then it falls back ({@link AgentRules#FALL_BACK}) before it finds its nerve.
+     */
+    private static void falter(CcgAgent agent, Mind mind, ServerPlayer player, FinalSight sight, ServerLevel level, long now) {
+        mind.falterFrom = player.m_19879_();
+        mind.falteredAt = now;
+        mind.falterUntil = now + AgentRules.falter(sight, mind.leader);
+        mind.fallBackUntil = mind.falterUntil + AgentRules.FALL_BACK;
+        mind.rallies = true;
+        end(agent, mind);
+        say(agent, level, FearLines.falter(sight, mind.leader, agent.m_217043_().m_188503_(100)));
+    }
+
+    /**
+     * 1.3.65: frozen (its eyes on it, nothing in its hands moving; a blow snaps it out of that) or falling back from it (off to
+     * {@link AgentRules#FALL_BACK_TO} blocks); true while either lasts. Once over, a word as it goes in again.
+     */
+    private static boolean falter(CcgAgent agent, Mind mind, ServerLevel level, long now) {
+        if (now >= mind.fallBackUntil) {
+            if (mind.rallies) {
+                mind.rallies = false;
+                say(agent, level, FearLines.rally(mind.leader, agent.m_217043_().m_188503_(100)));
+            }
+            return false;
+        }
+        if (!(level.m_6815_(mind.falterFrom) instanceof LivingEntity dread) || !dread.m_6084_() || dread.m_20280_(agent) > AgentRules.LEASH * AgentRules.LEASH) {
+            mind.falterUntil = Long.MIN_VALUE;
+            mind.fallBackUntil = Long.MIN_VALUE;
+            mind.rallies = false;
+            return false;
+        }
+        end(agent, mind);
+        agent.m_21563_().m_24960_(dread, 30.0F, 30.0F);
+        if (now < mind.falterUntil && (mind.hurtAt == Long.MIN_VALUE || mind.hurtAt < mind.falteredAt)) {
+            face(agent, dread);
+            agent.m_21573_().m_26573_();
+            agent.m_20256_(new Vec3(0.0, agent.m_20184_().f_82480_, 0.0));
+            return true;
+        }
+        if (dread.m_20280_(agent) < AgentRules.FALL_BACK_TO * AgentRules.FALL_BACK_TO) {
+            if (now % 5L == 0L || agent.m_21573_().m_26571_()) {
+                double[] to = com.hex.kagune.control.npc.HumanRules.fleeStep(agent.m_20185_(), agent.m_20189_(), dread.m_20185_(), dread.m_20189_(), 0.0, 6.0);
+                agent.m_21573_().m_26519_(to[0], agent.m_20186_(), to[1], AgentRules.PATROL_PACE + 0.4);
+            }
+        } else {
+            agent.m_21573_().m_26573_();
+            face(agent, dread);
+        }
+        return true;
+    }
+
+    /** 1.3.65: a word in a bubble over its head, to every player near who sees it. */
+    private static void say(CcgAgent agent, ServerLevel level, String line) {
+        if (line == null || line.isEmpty()) {
+            return;
+        }
+        for (ServerPlayer player : level.m_6907_()) {
+            if (player.m_20280_(agent) <= 24.0 * 24.0 && agent.m_142582_(player)) {
+                com.hex.kagune.control.network.ControlNetwork.sendTo(player, new com.hex.kagune.control.network.S2CNpcSay(agent.m_19879_(), line));
             }
         }
     }

@@ -389,6 +389,30 @@ public final class EtoLines {
         };
     }
 
+    /**
+     * 1.3.65: what she says at the worst sights: War fascinates her (on her partner: hers, even like that), Peace leaves her without a
+     * clever word, the Dragon frightens her for her partner, the final kakujas she reads like a book ({@code library}: in her Library).
+     */
+    public static String dread(FinalSight sight, EtoVoice voice, boolean library, int seed) {
+        boolean ours = voice.together();
+        return switch (sight) {
+            case WAR -> ours ? one(seed, "Look at you. The King everyone whispers about... and you came home to me.",
+                "I could read you for years like this. ...Don't you dare forget my name in there.", "Mine. Even like that. Especially like that.")
+                : one(seed, "So that's the One-Eyed King. Taller than in the stories. Better, too.", "Oh, keep going. Show me everything. I'm taking notes.",
+                    library ? "The One-Eyed King, in my Library. I should charge admission." : "Everyone's running. I'm not. Isn't that interesting?");
+            case PEACE -> ours ? one(seed, "...Oh. You're beautiful. I didn't think a monster could look like a prayer.",
+                "Stay like that a moment. I want to remember it exactly.")
+                : one(seed, "Peace. How ironic. And how lovely.", "Even I can't think of anything clever to say. ...That's a first.");
+            case DRAGON -> ours ? one(seed, "Stop. Please. Look at me. ...You're still in there. I know you are.", "That's enough. Come back. Now.")
+                : one(seed, "...Well. That's new. Even I haven't read about that.", "Hm. So the stories were true. Stay away from my shelves.");
+            case RINKAKU -> ours ? one(seed, "All of that is you? ...Come back to me before it eats the rest.", "Hey. You. Under all those legs. Come back.")
+                : one(seed, "A final kakuja. All legs and appetite. How very Rinkaku.", "You've been eating very well, haven't you?");
+            case UKAKU -> ours ? one(seed, "You're on fire. Literally. Come here— no, don't come here. Come back.", "Burning that brightly... careful you don't burn out.")
+                : one(seed, "Needles and fire and half a mask. Dramatic. I approve.", "Ukaku's last word. Loud, isn't it?");
+            case NONE -> "";
+        };
+    }
+
     /** 1.3.10: the morning after the night she conceived. */
     public static String conceived(EtoTalk.Context c) {
         return fill(c, one(c.seed(), "...Something changed last night. Don't ask me how I know. I know.",

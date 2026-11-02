@@ -104,6 +104,11 @@ public final class AgentRenderer extends HumanoidMobRenderer<CcgAgent, PlayerMod
             pose.m_85849_();
             AgentModel.pose = null;
         }
+        // 1.3.65: what it says (faltering at War, its nerve back), in a bubble over its head.
+        if (!agent.m_20145_()) {
+            SpeechBubbles.draw(agent, com.hex.kagune.control.client.NpcSpeech.lines(agent), 0.3,
+                com.hex.kagune.control.client.NpcSpeech.age(agent.m_19879_(), partial), pose, buffers);
+        }
     }
 
     @Override

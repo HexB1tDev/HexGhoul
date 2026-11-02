@@ -7,6 +7,7 @@ import com.hex.kagune.control.family.ChildStage;
 import com.hex.kagune.control.network.ControlNetwork;
 import com.hex.kagune.control.network.S2CChild;
 import com.hex.kagune.control.npc.ChildNpc;
+import com.hex.kagune.control.npc.FinalSight;
 import com.hex.kagune.control.npc.EtoNpc;
 import com.hex.kagune.control.npc.FightRules;
 import com.hex.kagune.control.npc.UniqueNpc;
@@ -125,6 +126,10 @@ public final class ChildBrain {
         long siblingRemarkAt = Long.MIN_VALUE / 2;
         /** 1.3.59: when it last played with a baby brother or sister. */
         long babyAt = Long.MIN_VALUE / 2;
+        /** 1.3.65: a parent in War (or the Dragon) it hides from (null: none), until when, when it last said something about it. */
+        UUID dreadOf;
+        long dreadUntil = Long.MIN_VALUE;
+        long dreadSaidAt = Long.MIN_VALUE / 2;
     }
 
     private ChildBrain() {
@@ -248,8 +253,16 @@ public final class ChildBrain {
             npc.m_20242_(false); // never left floating (nor saved floating: a world saved mid-carry comes back with its gravity on)
             EtoBrain.solid(npc, null);
         }
+        if (mind.cue == com.hex.kagune.control.family.ChildCue.COWER && now >= mind.dreadUntil) {
+            mind.cue = com.hex.kagune.control.family.ChildCue.NONE; // 1.3.65: no longer hiding: it stands up straight again
+            mind.dreadOf = null;
+            mind.dirty = true;
+        }
         if (carrier != null) {
             carry(npc, carrier, mind.ride);
+            mind.company = now;
+        } else if (now < mind.dreadUntil && cower(npc, mind, child, level, now)) {
+            // 1.3.65: a parent in War near: it hides behind the other parent (or keeps off), peeking out at them.
             mind.company = now;
         } else if (talking && Conversation.hold(npc, level, now)) {
             // 1.3.53: in a talk: standing, turned to whoever speaks (or walking up to the one it talks to first); its fight off meanwhile.
@@ -978,8 +991,8 @@ public final class ChildBrain {
             return;
         }
         mind.company = now;
-        if (mind.conversation != null || mind.hideWith != 0) {
-            return; // 1.3.53: nothing of its own to say in the middle of a talk (a greeting waits till it is over); 1.3.58: nor hiding
+        if (mind.conversation != null || mind.hideWith != 0 || now < mind.dreadUntil) {
+            return; // 1.3.53: nothing of its own to say in the middle of a talk (a greeting waits till it is over); 1.3.58: nor hiding (1.3.65: from War)
         }
         int seed = npc.m_217043_().m_188503_(1000);
         String call = ChildLines.call(stage, isMother(child, parent));
@@ -1004,6 +1017,120 @@ public final class ChildBrain {
     }
 
     /** 1.3.30: its words to {@code player}, in a bubble over its head ({@code npc}) that only they see (never the chat). */
+    // ---------------------------------------------------------------- 1.3.65: hiding from War
+
+    /**
+     * {@code from}, its parent, is in War (or the Dragon) near it: it hides from them a while ({@link FinalSight#HIDES}, kept up as long as
+     * they are near). As it starts, whatever it was doing stops: a talk, a moment, a game of hide and seek or tag, minding a little one.
+     */
+    static void dread(ChildNpc npc, ServerPlayer from, ServerLevel level, long now) {
+        Mind mind = npc.mind;
+        if (mind == null || mind.carrier != null) {
+            return; // in someone's arms: they have it
+        }
+        boolean fresh = now >= mind.dreadUntil;
+        mind.dreadOf = from.m_20148_();
+        mind.dreadUntil = now + FinalSight.HIDES;
+        if (!fresh) {
+            return;
+        }
+        mind.dreadSaidAt = now; // its first word is the one it says on seeing it (Sightings)
+        if (Conversation.in(npc) != null) {
+            Conversation.end(npc, com.hex.kagune.control.family.Talks.End.INTERRUPTED, level, now);
+        }
+        stopMoment(npc);
+        SiblingLife.stopHide(npc);
+        mind.tagWith = 0;
+        mind.minding = 0;
+    }
+
+    /**
+     * Hiding from the parent in War: behind the other parent (a player, or its companion parent: whichever is nearer, within 24 and not in
+     * War themselves), on the far side from them, or with no one to hide behind, {@link FinalSight#KEEPS_OFF} off; crouched in on itself
+     * ({@code ChildCue.COWER}), its eyes on them; now and then a word ({@code FearLines.hiding}). A baby can't go anywhere: it sits and
+     * whimpers. False once they are gone (it stops hiding).
+     */
+    private static boolean cower(ChildNpc npc, Mind mind, Children.Child child, ServerLevel level, long now) {
+        ServerPlayer from = mind.dreadOf == null ? null : level.m_7654_().m_6846_().m_11259_(mind.dreadOf);
+        if (from == null || from.m_9236_() != level || !from.m_6084_() || from.m_20280_(npc) > 24.0 * 24.0) {
+            mind.dreadUntil = Long.MIN_VALUE;
+            return false;
+        }
+        if (Conversation.in(npc) != null) {
+            Conversation.end(npc, com.hex.kagune.control.family.Talks.End.INTERRUPTED, level, now);
+        }
+        ChildStage stage = child.stage(now);
+        LivingEntity shelter = stage.sits() ? null : shelter(npc, child, from, level);
+        Vec3 spot = null;
+        if (shelter != null) {
+            double[] at = FinalSight.behind(shelter.m_20185_(), shelter.m_20189_(), from.m_20185_(), from.m_20189_(),
+                FinalSight.BEHIND + shelter.m_20205_() * 0.5);
+            spot = new Vec3(at[0], shelter.m_20186_(), at[1]);
+        } else if (!stage.sits() && from.m_20280_(npc) < FinalSight.KEEPS_OFF * FinalSight.KEEPS_OFF) {
+            double[] at = com.hex.kagune.control.npc.HumanRules.fleeStep(npc.m_20185_(), npc.m_20189_(), from.m_20185_(), from.m_20189_(), 0.0, 4.0);
+            spot = new Vec3(at[0], npc.m_20186_(), at[1]);
+        }
+        double dx = spot == null ? 0.0 : spot.f_82479_ - npc.m_20185_();
+        double dz = spot == null ? 0.0 : spot.f_82481_ - npc.m_20189_();
+        if (spot != null && dx * dx + dz * dz > FinalSight.THERE * FinalSight.THERE) {
+            if (now % 5L == 0L || npc.m_21573_().m_26571_()) {
+                npc.m_21573_().m_26519_(spot.f_82479_, spot.f_82480_, spot.f_82481_, 1.35);
+            }
+        } else {
+            npc.m_21573_().m_26573_();
+            npc.m_20256_(new Vec3(0.0, npc.m_20184_().f_82480_, 0.0));
+        }
+        npc.m_21563_().m_24960_(from, 30.0F, 30.0F);
+        if (mind.turned || mind.target != 0) {
+            mind.turned = false;
+            mind.target = 0;
+            mind.dirty = true;
+        }
+        if (mind.cue != com.hex.kagune.control.family.ChildCue.COWER || !mind.cue.running(now - mind.cueAt)) {
+            mind.cue = com.hex.kagune.control.family.ChildCue.COWER;
+            mind.cueAt = now;
+            mind.dirty = true;
+        }
+        if (now - mind.dreadSaidAt >= 160L + npc.m_217043_().m_188503_(100)) {
+            mind.dreadSaidAt = now;
+            String call = ChildLines.call(stage, isMother(child, from));
+            String other = shelter instanceof ServerPlayer them ? ChildLines.call(stage, isMother(child, them))
+                : shelter instanceof EtoNpc companion ? ChildLines.call(stage, companion.persona().female()) : "";
+            String line = com.hex.kagune.control.npc.FearLines.hiding(stage, call, other, npc.m_217043_().m_188503_(100));
+            for (ServerPlayer player : level.m_6907_()) {
+                if (player.m_20280_(npc) <= 16.0 * 16.0 && SceneServer.sees(npc, player, 16.0)) {
+                    ControlNetwork.sendTo(player, new com.hex.kagune.control.network.S2CNpcSay(npc.m_19879_(), line));
+                }
+            }
+        }
+        return true;
+    }
+
+    /** The other parent it hides behind from {@code from}: a player or its companion parent, the nearer, within 24, alive, not in War. */
+    private static LivingEntity shelter(ChildNpc npc, Children.Child child, ServerPlayer from, ServerLevel level) {
+        String fromKey = Pregnancies.player(from.m_20148_());
+        LivingEntity best = null;
+        double bestDistance = 24.0 * 24.0;
+        for (String parent : new String[] {child.mother, child.father}) {
+            if (parent == null || parent.equals(fromKey)) {
+                continue;
+            }
+            ServerPlayer player = Pregnancies.playerOf(level, parent);
+            if (player != null && player != from && player.m_9236_() == level && player.m_6084_() && !Sightings.seen(player).terror()
+                && player.m_20280_(npc) < bestDistance) {
+                best = player;
+                bestDistance = player.m_20280_(npc);
+            }
+        }
+        for (EtoNpc companion : level.m_6443_(EtoNpc.class, npc.m_20191_().m_82400_(24.0), body -> body.m_6084_() && body.mind != null)) {
+            if (child.parent(Pregnancies.npc(companion.persona().key())) && companion.m_20280_(npc) < bestDistance) {
+                best = companion;
+                bestDistance = companion.m_20280_(npc);
+            }
+        }
+        return best;
+    }
+
     static void say(ServerPlayer player, ChildNpc npc, Children.Child child, String line) {
         // 1.3.31: only when it can see them, near enough (never through a wall).
         if (line != null && !line.isEmpty() && npc != null && SceneServer.sees(npc, player, 16.0)) {

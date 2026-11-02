@@ -39,7 +39,12 @@ public enum ChildCue {
     /** 1.3.58 (hide and seek): crouched down small, arms round its knees, peeking. Held while it hides (a new cue ends it). */
     HIDE(1200),
     /** 1.3.58 (hide and seek): both hands over its eyes, counting. */
-    COUNT(110);
+    COUNT(110),
+    /**
+     * 1.3.65 (a parent in War): hunched behind the other parent, its arms crossed up in front of its chest and chin (a little one's hands
+     * clutched under its chin), its head tucked down, peeking out at them, trembling. Held while it hides (cleared when it stops).
+     */
+    COWER(1200);
 
     /** How long it lasts (ticks). */
     public final int ticks;

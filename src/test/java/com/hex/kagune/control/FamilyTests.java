@@ -61,6 +61,7 @@ public final class FamilyTests {
         cues();
         hideAndSeek();
         littleOnes();
+        fear();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -1682,6 +1683,141 @@ check(com.hex.kagune.control.graft.GraftStage.TRANSPLANT.limbs(com.hex.kagune.co
         }
         check(said, "Eto, ghouls and children each have something to say at every sight, whoever they are to them");
         check(EtoLines.saw(none, com.hex.kagune.control.npc.EtoVoice.FRIENDLY, false, 1).isEmpty(), "nothing shown, nothing said");
+    }
+
+    /** 1.3.65: the worst sights told apart, and everyone's own reaction to each (War feared most). */
+    static void fear() {
+        com.hex.kagune.control.npc.FinalSight none = com.hex.kagune.control.npc.FinalSight.NONE;
+        com.hex.kagune.control.npc.FinalSight war = com.hex.kagune.control.npc.FinalSight.WAR;
+        com.hex.kagune.control.npc.FinalSight peace = com.hex.kagune.control.npc.FinalSight.PEACE;
+        com.hex.kagune.control.npc.FinalSight dragon = com.hex.kagune.control.npc.FinalSight.DRAGON;
+        com.hex.kagune.control.npc.FinalSight rinkaku = com.hex.kagune.control.npc.FinalSight.RINKAKU;
+        com.hex.kagune.control.npc.FinalSight ukaku = com.hex.kagune.control.npc.FinalSight.UKAKU;
+        com.hex.kagune.control.king.KingForm noForm = com.hex.kagune.control.king.KingForm.NONE;
+        check(com.hex.kagune.control.npc.FinalSight.of(false, noForm, false, false) == none
+            && com.hex.kagune.control.npc.FinalSight.of(false, com.hex.kagune.control.king.KingForm.WAR, false, false) == war
+            && com.hex.kagune.control.npc.FinalSight.of(false, com.hex.kagune.control.king.KingForm.PEACE, false, false) == peace
+            && com.hex.kagune.control.npc.FinalSight.of(true, com.hex.kagune.control.king.KingForm.WAR, true, true) == dragon
+            && com.hex.kagune.control.npc.FinalSight.of(false, noForm, true, true) == rinkaku
+            && com.hex.kagune.control.npc.FinalSight.of(false, noForm, false, true) == ukaku, "the worst sights told apart, the Dragon first");
+        check(war.terror() && dragon.terror() && !peace.terror() && !rinkaku.terror() && !ukaku.terror() && !none.terror() && !none.any()
+            && peace.any(), "War and the Dragon are a terror; Peace and the final kakujas frighten, but less");
+        check(war.scares() > peace.scares() && peace.scares() == rinkaku.scares() && peace.scares() > 160L && none.scares() == 0L,
+            "a wild ghoul runs longest from War (and longer from any final sight than from a kakuja)");
+        double[] behind = com.hex.kagune.control.npc.FinalSight.behind(0.0, 0.0, 10.0, 0.0, 1.0);
+        check(Math.abs(behind[0] + 1.0) < 1.0E-9 && Math.abs(behind[1]) < 1.0E-9, "a child hides on the far side of the other parent from War");
+        double[] onTop = com.hex.kagune.control.npc.FinalSight.behind(3.0, 4.0, 3.0, 4.0, 1.0);
+        check(Math.abs(Math.hypot(onTop[0] - 3.0, onTop[1] - 4.0) - 1.0) < 1.0E-9, "right on top of them: still a step behind");
+        // Humans see a terror from much further, and run harder.
+        check(com.hex.kagune.control.npc.HumanRules.notice(war, true) > com.hex.kagune.control.npc.HumanRules.notice(peace, true)
+            && com.hex.kagune.control.npc.HumanRules.notice(peace, false) > com.hex.kagune.control.npc.HumanRules.notice(none, true)
+            && com.hex.kagune.control.npc.HumanRules.notice(none, true) == com.hex.kagune.control.npc.HumanRules.NOTICE
+            && com.hex.kagune.control.npc.HumanRules.notice(none, false) == com.hex.kagune.control.npc.HumanRules.CLOSE
+            && com.hex.kagune.control.npc.HumanRules.TERROR_SAFE > com.hex.kagune.control.npc.HumanRules.TERROR_NOTICE,
+            "a human sees War from furthest, a final kakuja further than a kagune, a hidden ghoul only close; it runs till well out of it");
+        check(com.hex.kagune.control.npc.HumanRules.pace(war) > com.hex.kagune.control.npc.HumanRules.pace(peace)
+            && com.hex.kagune.control.npc.HumanRules.pace(peace) == com.hex.kagune.control.npc.HumanRules.RUN, "it sprints from a terror");
+        // The CCG falters: longest at War, a junior longer than its senior; never at nothing.
+        check(com.hex.kagune.control.npc.AgentRules.falter(war, false) > com.hex.kagune.control.npc.AgentRules.falter(war, true)
+            && com.hex.kagune.control.npc.AgentRules.falter(war, true) > com.hex.kagune.control.npc.AgentRules.falter(peace, true)
+            && com.hex.kagune.control.npc.AgentRules.falter(peace, true) > 0 && com.hex.kagune.control.npc.AgentRules.falter(none, false) == 0,
+            "an investigator stands frozen longest at War, a junior longer than its senior");
+        check(com.hex.kagune.control.family.ChildCue.COWER.ordinal() == com.hex.kagune.control.family.ChildCue.COUNT.ordinal() + 1
+            && com.hex.kagune.control.family.ChildCue.COWER.ordinal() == com.hex.kagune.control.family.ChildCue.values().length - 1
+            && com.hex.kagune.control.family.ChildCue.COWER.running(600), "the cowering cue: appended (sent by ordinal), held while it hides");
+        boolean posed = true;
+        for (com.hex.kagune.control.family.ChildStage stage : com.hex.kagune.control.family.ChildStage.values()) {
+            for (boolean carried : new boolean[] {false, true}) {
+                posed &= com.hex.kagune.control.client.animation.ChildTalkPose.pose(com.hex.kagune.control.family.ChildCue.COWER, 30.0, stage, carried) != null;
+            }
+        }
+        check(posed, "a child cowers at every age, on its feet or sat");
+        // Every line, every sight: something to say, in character, no names that must stay out, every blank filled.
+        java.util.regex.Pattern banned = java.util.regex.Pattern.compile("Kaneki|Ayato|Furuta|Takatsuki|Aogiri|Yoshimura|\\{|\\}|null",
+            java.util.regex.Pattern.CASE_INSENSITIVE);
+        java.util.Set<String> lines = new java.util.HashSet<>();
+        int said = 0;
+        java.util.List<String> bad = new java.util.ArrayList<>();
+        for (com.hex.kagune.control.npc.FinalSight sight : com.hex.kagune.control.npc.FinalSight.values()) {
+            for (int seed = 0; seed < 12; seed++) {
+                java.util.List<String> these = new java.util.ArrayList<>();
+                these.add(com.hex.kagune.control.npc.FearLines.scream(sight, seed));
+                if (sight.any()) {
+                    these.add(com.hex.kagune.control.npc.FearLines.stranger(sight, seed));
+                    these.add(com.hex.kagune.control.npc.FearLines.ally(sight, seed));
+                    for (boolean senior : new boolean[] {true, false}) {
+                        these.add(com.hex.kagune.control.npc.FearLines.falter(sight, senior, seed));
+                    }
+                    for (com.hex.kagune.control.family.ChildStage stage : com.hex.kagune.control.family.ChildStage.values()) {
+                        String child = com.hex.kagune.control.npc.FearLines.child(stage, "Papa", sight, seed);
+                        these.add(child);
+                        if (child.contains("{") || stage != com.hex.kagune.control.family.ChildStage.BABY && sight == war && seed == 1
+                            && stage == com.hex.kagune.control.family.ChildStage.CHILD && !child.contains("Papa")) {
+                            bad.add("unfilled: " + child);
+                        }
+                    }
+                    for (com.hex.kagune.control.npc.Persona persona : com.hex.kagune.control.npc.Persona.ALL) {
+                        for (com.hex.kagune.control.npc.EtoVoice voice : com.hex.kagune.control.npc.EtoVoice.values()) {
+                            for (boolean home : new boolean[] {true, false}) {
+                                these.add(persona.script().dread(sight, voice, home, seed));
+                            }
+                        }
+                        for (boolean ours : new boolean[] {true, false}) {
+                            if (persona.script().dreadGesture(sight, ours) == com.hex.kagune.control.npc.EtoGesture.NONE) {
+                                bad.add(persona.key() + " does nothing at " + sight);
+                            }
+                        }
+                    }
+                } else {
+                    check(com.hex.kagune.control.npc.FearLines.stranger(sight, seed).isEmpty() && com.hex.kagune.control.npc.FearLines.ally(sight, seed).isEmpty()
+                        && com.hex.kagune.control.npc.FearLines.falter(sight, true, seed).isEmpty()
+                        && com.hex.kagune.control.npc.Persona.ETO.script().dread(sight, com.hex.kagune.control.npc.EtoVoice.CLOSE, false, seed).isEmpty(),
+                        "nothing worst shown, nothing worst said");
+                }
+                if (sight.terror()) {
+                    these.add(com.hex.kagune.control.npc.FearLines.fleeing(sight, seed));
+                } else {
+                    check(com.hex.kagune.control.npc.FearLines.fleeing(sight, seed).isEmpty(), "only a terror is shouted about on the run");
+                }
+                for (String line : these) {
+                    said++;
+                    lines.add(line);
+                    if (line == null || line.isBlank() || banned.matcher(line).find()) {
+                        bad.add(sight + ": [" + line + "]");
+                    }
+                }
+            }
+        }
+        for (com.hex.kagune.control.family.ChildStage stage : com.hex.kagune.control.family.ChildStage.values()) {
+            for (String other : new String[] {"Mama", ""}) {
+                for (int seed = 0; seed < 6; seed++) {
+                    String line = com.hex.kagune.control.npc.FearLines.hiding(stage, "Papa", other, seed);
+                    lines.add(line);
+                    said++;
+                    if (line.isBlank() || banned.matcher(line).find() || other.isEmpty() && line.contains("Mama")) {
+                        bad.add("hiding: [" + line + "]");
+                    }
+                }
+            }
+        }
+        for (boolean senior : new boolean[] {true, false}) {
+            for (int seed = 0; seed < 6; seed++) {
+                String line = com.hex.kagune.control.npc.FearLines.rally(senior, seed);
+                lines.add(line);
+                said++;
+                if (line.isBlank() || banned.matcher(line).find()) {
+                    bad.add("rally: [" + line + "]");
+                }
+            }
+        }
+        check(bad.isEmpty(), "every fear line set says something, in character, nothing that must stay out: " + bad);
+        check(lines.size() >= 190, "a good many different words at the worst sights (" + lines.size() + " different of " + said + ")");
+        check(!com.hex.kagune.control.npc.Persona.ETO.script().dread(war, com.hex.kagune.control.npc.EtoVoice.CLOSE, false, 0)
+            .equals(com.hex.kagune.control.npc.Persona.TOUKA.script().dread(war, com.hex.kagune.control.npc.EtoVoice.CLOSE, false, 0))
+            && com.hex.kagune.control.npc.Persona.ETO.script().dreadGesture(war, false) != com.hex.kagune.control.npc.Persona.TOUKA.script().dreadGesture(war, false)
+            && com.hex.kagune.control.npc.Persona.TOUKA.script().dreadGesture(war, false) == com.hex.kagune.control.npc.EtoGesture.FLINCH
+            && com.hex.kagune.control.npc.Persona.KEN.script().dreadGesture(peace, false) == com.hex.kagune.control.npc.EtoGesture.AWE,
+            "each companion their own way: Eto studies War, Touka flinches from it, Ken stands in awe of Peace");
     }
 
     static void initiative() {

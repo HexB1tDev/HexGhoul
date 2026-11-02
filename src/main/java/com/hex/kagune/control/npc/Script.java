@@ -101,6 +101,15 @@ public interface Script {
     /** What it says on seeing {@code shown} ({@code home}: in its own place). */
     String saw(Display shown, EtoVoice voice, boolean home, int seed);
 
+    /**
+     * 1.3.65: what it says on seeing {@code sight} (War, Peace, the Dragon, Rinkaku's or Ukaku's final kakuja) on someone it is {@code voice}
+     * to ({@code home}: in its own place); its own way with each.
+     */
+    String dread(FinalSight sight, EtoVoice voice, boolean home, int seed);
+
+    /** 1.3.65: what it does with its body at {@code sight} ({@code ours}: on its partner). */
+    EtoGesture dreadGesture(FinalSight sight, boolean ours);
+
     /** What it says as it starts {@code act} unasked. */
     String initiative(EtoInitiative.Act act, int seed);
 

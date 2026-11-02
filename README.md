@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.65 (HexGhoul): everyone fears War, and every final kakuja gets its own reactions (testing)
+
+See `.github/release-notes-1.3.65.md`.
+
 ## 1.3.64 (HexGhoul): NPCs see War and Peace when they are worn, and the Rinkaku and Ukaku final kakujas count as final (testing)
 
 See `.github/release-notes-1.3.64.md`.

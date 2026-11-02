@@ -211,6 +211,28 @@ public final class ChildTalkPose {
                 p.headX = little ? 0.45F : 0.15F;
                 p.roll = 0.03F * (float)Math.sin(t * 0.3);
             }
+            case COWER -> {
+                // 1.3.65 (a parent in War): shielding itself, its arms crossed up in front of its chest and chin (a little one's hands
+                // clutched together under its chin), its head tucked down, peeking out at them; hunched forward a little, a fast tremble
+                // all through it, a flinch now and then.
+                float shake = 0.03F * (float)Math.sin(t * 2.3);
+                float flinch = (float)Math.max(0.0, Math.sin(t * 0.21 - 1.0));
+                flinch = flinch * flinch * flinch * flinch;
+                p.rightArmX = (little ? -1.2F : -1.3F) + shake - 0.12F * flinch;
+                p.leftArmX = (little ? -1.2F : -1.3F) - shake - 0.12F * flinch;
+                p.rightArmY = -0.3F;
+                p.leftArmY = 0.3F;
+                p.rightArmZ = little ? -0.75F : -0.95F;
+                p.leftArmZ = little ? 0.75F : 0.95F;
+                p.armHold = 1.0F;
+                p.headX = 0.3F + 0.12F * flinch;
+                p.headY = 0.14F * (float)Math.sin(t * 0.07); // (its eyes are already on them: only a little peek either way)
+                p.lean = 0.14F + 0.08F * flinch;
+                p.roll = shake * 0.5F;
+                if (!carried) {
+                    p.drop = little ? 0.5F : 1.0F + 0.6F * flinch; // knees in a little (a model without knees: the body sinks)
+                }
+            }
             default -> {
                 return null;
             }

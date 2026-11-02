@@ -52,6 +52,20 @@ public final class CompanionPreview {
             ken.add(new Shot((String)g[2] + ", side", EtoPose.gesture((EtoGesture)g[0], (Double)g[1], true), 80.0));
         }
         sheet(new File(out, "ken-poses.png"), "Ken", textures + "ken/ken.png", true, ken);
+        // 1.3.65: at the worst sights: a flinch from War (Touka, Ken), awe at Peace (all three), front and side, as it starts and held.
+        for (Object[] who : new Object[][] {{"Eto", "eto/eto.png", true, 0}, {"Touka", "touka/touka.png", true, 2}, {"Ken", "ken/ken.png", false, 1}}) {
+            List<Shot> fear = new ArrayList<>();
+            for (EtoGesture gesture : new EtoGesture[] {EtoGesture.FLINCH, EtoGesture.AWE}) {
+                for (double age : new double[] {4.0, 30.0}) {
+                    for (double yaw : new double[] {20.0, 80.0}) {
+                        fear.add(new Shot(gesture.name().toLowerCase() + " t" + (int)age + (yaw > 50 ? " side" : ""),
+                            EtoPose.gesture(gesture, age, (Integer)who[3], 0), yaw));
+                    }
+                }
+            }
+            sheet(new File(out, ((String)who[0]).toLowerCase() + "-fear-poses.png"), who[0] + " (1.3.65 flinch, awe)", textures + who[1],
+                (Boolean)who[2], fear);
+        }
     }
 
     /**

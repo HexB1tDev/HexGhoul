@@ -1,6 +1,8 @@
 package com.hex.kagune.control.server;
 
 import com.hex.kagune.control.ControlItems;
+import com.hex.kagune.control.npc.FearLines;
+import com.hex.kagune.control.npc.FinalSight;
 import com.hex.kagune.control.npc.GhoulNpc;
 import com.hex.kagune.control.npc.HumanNpc;
 import com.hex.kagune.control.npc.HumanRules;
@@ -20,7 +22,8 @@ import net.minecraftforge.fml.common.Mod;
  * Home Living (1.3.40): what The Human does ({@link HumanRules}), on the server: given a look the first time it ticks (kept in its saved
  * data), it wanders a few steps now and then; a ghoul that shows itself (a ghoul player with its kagune out, or one come too close; a
  * wild ghoul) or anyone who has hurt it sends it running straight away from them, its arms up, round whatever is in the way, until it
- * is far enough to stop, frightened a while after.
+ * is far enough to stop, frightened a while after. 1.3.65: War and the Dragon it sees from much further and runs from at a sprint,
+ * screaming (a bubble over its head); a final kakuja from further than a kagune.
  */
 @Mod.EventBusSubscriber(modid = "hexkagune")
 public final class HumanBrain {
@@ -34,6 +37,16 @@ public final class HumanBrain {
         long shakenUntil;
         long nextWander;
         long nextPlan;
+        /** 1.3.65: a terror it saw (War, the Dragon: a player's entity id) and until when it keeps running from it out of sight. */
+        int dreadOf;
+        long dreadUntil = Long.MIN_VALUE;
+        /** 1.3.65: what it last ran from (an entity id, 0 nothing) and when it last screamed. */
+        int ranFrom;
+        long screamAt = Long.MIN_VALUE / 2;
+    }
+
+    /** 1.3.65: what it runs from, how bad a sight it is, and whether it is a ghoul it screams about. */
+    record Danger(LivingEntity body, FinalSight sight, boolean ghoul) {
     }
 
     public static void tick(HumanNpc human) {
@@ -51,16 +64,19 @@ public final class HumanBrain {
             human.dress(look);
             mind.nextWander = now + 40 + human.m_217043_().m_188503_(80);
         }
-        LivingEntity danger = danger(human, level, mind, now);
+        Danger danger = danger(human, level, mind, now);
         if (danger != null) {
             mind.shakenUntil = now + HumanRules.SHAKEN;
             human.scared(true);
+            scream(human, level, mind, danger, now);
+            mind.ranFrom = danger.body().m_19879_();
             if (now >= mind.nextPlan || human.m_21573_().m_26571_()) {
                 mind.nextPlan = now + 10;
-                flee(human, danger);
+                flee(human, danger.body(), HumanRules.pace(danger.sight()), danger.sight().terror() ? 14.0 : 10.0);
             }
             return;
         }
+        mind.ranFrom = 0;
         human.scared(now < mind.shakenUntil);
         if (now >= mind.nextWander && now >= mind.shakenUntil) {
             mind.nextWander = now + 120 + human.m_217043_().m_188503_(160);
@@ -71,39 +87,79 @@ public final class HumanBrain {
         }
     }
 
-    /** The nearest thing it is running from, or null. */
-    static LivingEntity danger(HumanNpc human, ServerLevel level, Mind mind, long now) {
-        LivingEntity best = null;
+    /**
+     * The nearest thing it is running from, or null. 1.3.65: a ghoul player as {@link HumanRules#notice} says (War and the Dragon from
+     * {@link HumanRules#TERROR_NOTICE} off, another final kakuja from {@link HumanRules#DREAD_NOTICE}: beyond {@link HumanRules#NOTICE} only
+     * in its sight), and a terror kept running from out of sight a while ({@link HumanRules#TERROR_MEMORY}, out to {@link HumanRules#TERROR_SAFE}).
+     */
+    static Danger danger(HumanNpc human, ServerLevel level, Mind mind, long now) {
+        Danger best = null;
         double bestDistance = Double.MAX_VALUE;
         if (mind.hurtBy != null && now < mind.hurtUntil) {
             net.minecraft.world.entity.Entity by = level.m_8791_(mind.hurtBy);
             if (by instanceof LivingEntity living && living.m_6084_() && living.m_20280_(human) < HumanRules.SAFE * HumanRules.SAFE) {
-                best = living;
+                best = new Danger(living, living instanceof ServerPlayer hurter ? Sightings.seen(hurter) : FinalSight.NONE,
+                    living instanceof GhoulNpc || living instanceof ServerPlayer hurter2 && KaguneProfile.isUnlocked(hurter2));
                 bestDistance = Math.sqrt(living.m_20280_(human));
             }
         }
-        for (LivingEntity living : level.m_6443_(LivingEntity.class, human.m_20191_().m_82400_(HumanRules.NOTICE),
-                living -> living != human && living.m_6084_())) {
-            double distance = Math.sqrt(living.m_20280_(human));
-            boolean ghoul;
-            if (living instanceof ServerPlayer player) {
-                ghoul = !player.m_5833_() && KaguneProfile.isUnlocked(player) && HumanRules.notices(distance, KaguneProfile.isActive(player));
-            } else {
-                ghoul = living instanceof GhoulNpc && HumanRules.notices(distance, true);
+        for (ServerPlayer player : level.m_6907_()) {
+            if (player.m_5833_() || !player.m_6084_() || !KaguneProfile.isUnlocked(player)
+                || player.m_20280_(human) > HumanRules.TERROR_SAFE * HumanRules.TERROR_SAFE) {
+                continue;
             }
-            if (ghoul && distance < bestDistance) {
-                best = living;
+            double distance = Math.sqrt(player.m_20280_(human));
+            FinalSight sight = Sightings.seen(player);
+            boolean shown = KaguneProfile.isActive(player) || sight.any();
+            boolean noticed = distance <= HumanRules.notice(sight, shown) && (distance <= HumanRules.NOTICE || human.m_142582_(player));
+            if (noticed && sight.terror()) {
+                mind.dreadOf = player.m_19879_();
+                mind.dreadUntil = now + HumanRules.TERROR_MEMORY;
+            }
+            boolean remembered = sight.terror() && mind.dreadOf == player.m_19879_() && now < mind.dreadUntil;
+            if ((noticed || remembered) && distance < bestDistance) {
+                best = new Danger(player, sight, true);
+                bestDistance = distance;
+            }
+        }
+        for (GhoulNpc ghoul : level.m_6443_(GhoulNpc.class, human.m_20191_().m_82400_(HumanRules.NOTICE), living -> living.m_6084_())) {
+            double distance = Math.sqrt(ghoul.m_20280_(human));
+            if (HumanRules.notices(distance, true) && distance < bestDistance) {
+                best = new Danger(ghoul, FinalSight.NONE, true);
                 bestDistance = distance;
             }
         }
         return best;
     }
 
+    /**
+     * 1.3.65: a scream, as it starts to run from a ghoul (not again for a while), and from a terror every {@link HumanRules#SCREAMS} ticks
+     * or so; in a bubble over its head, to every player near who sees it.
+     */
+    static void scream(HumanNpc human, ServerLevel level, Mind mind, Danger danger, long now) {
+        if (!danger.ghoul()) {
+            return;
+        }
+        boolean fresh = danger.body().m_19879_() != mind.ranFrom;
+        long since = now - mind.screamAt;
+        boolean due = danger.sight().terror() ? since >= HumanRules.SCREAMS + human.m_217043_().m_188503_(30) : fresh && since >= 200L;
+        if (!due || since < 30L) {
+            return;
+        }
+        mind.screamAt = now;
+        String line = FearLines.scream(danger.sight(), human.m_217043_().m_188503_(100));
+        for (ServerPlayer player : level.m_6907_()) {
+            if (player.m_20280_(human) <= HumanRules.HEARD * HumanRules.HEARD && human.m_142582_(player)) {
+                com.hex.kagune.control.network.ControlNetwork.sendTo(player, new com.hex.kagune.control.network.S2CNpcSay(human.m_19879_(), line));
+            }
+        }
+    }
+
     /** Off, straight away from {@code danger} if it can, else turned a little either way, then further round. */
-    static void flee(HumanNpc human, LivingEntity danger) {
+    static void flee(HumanNpc human, LivingEntity danger, double pace, double length) {
         for (double turn : new double[] {0.0, 0.6, -0.6, 1.2, -1.2, 1.8, -1.8}) {
-            double[] to = HumanRules.fleeStep(human.m_20185_(), human.m_20189_(), danger.m_20185_(), danger.m_20189_(), turn, 10.0);
-            if (human.m_21573_().m_26519_(to[0], human.m_20186_(), to[1], HumanRules.RUN)) {
+            double[] to = HumanRules.fleeStep(human.m_20185_(), human.m_20189_(), danger.m_20185_(), danger.m_20189_(), turn, length);
+            if (human.m_21573_().m_26519_(to[0], human.m_20186_(), to[1], pace)) {
                 return;
             }
         }

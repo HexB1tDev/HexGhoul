@@ -4,6 +4,8 @@ import com.hex.kagune.control.family.ChildStage;
 import com.hex.kagune.control.npc.ChildNpc;
 import com.hex.kagune.control.npc.Display;
 import com.hex.kagune.control.npc.EtoNpc;
+import com.hex.kagune.control.npc.FearLines;
+import com.hex.kagune.control.npc.FinalSight;
 import com.hex.kagune.control.npc.GhoulNpc;
 import com.hex.kagune.control.npc.ReactionLines;
 import com.hex.kagune.data.KaguneProfile;
@@ -25,6 +27,9 @@ import net.minecraftforge.fml.common.Mod;
  * looked at twice a second; when it rises, every NPC near who sees them reacts, each its own way ({@link Watcher}): Eto by who they are
  * to her (amused, annoyed in her Library, impressed, worried for her partner), ghoul NPCs that don't know them afraid of a kakuja and
  * worse (they run), their followers impressed, their own children amazed or frightened. Every NPC to come adds its own watcher.
+ * 1.3.65: the worst sights told apart ({@link FinalSight}: War, Peace, the Dragon, Rinkaku's and Ukaku's final kakujas), each with its own
+ * words ({@link FearLines}); War and the Dragon kept up while worn ({@code terror}): wild ghouls keep running, their children hide. Humans
+ * and the CCG look for themselves ({@link #seen}).
  */
 @Mod.EventBusSubscriber(modid = "hexkagune")
 public final class Sightings {
@@ -35,6 +40,9 @@ public final class Sightings {
 
     private static final List<Watcher> WATCHERS = new ArrayList<>();
     private static final Map<UUID, Display> SHOWN = new HashMap<>();
+    /** 1.3.65: which of the worst sights each player was when last looked at, and when a ghoul last shouted about them. */
+    private static final Map<UUID, FinalSight> SIGHT = new HashMap<>();
+    private static final Map<UUID, Long> SHOUTED = new HashMap<>();
     /** How far an NPC notices (blocks). */
     static final double NOTICE = 16.0;
 
@@ -57,14 +65,28 @@ public final class Sightings {
      * reacted once, never again), or are in Rinkaku's final kakuja or Ukaku's (both read as a kakuja before).
      */
     public static Display of(ServerPlayer player) {
-        boolean king = KingServer.wearing(player) != com.hex.kagune.control.king.KingForm.NONE;
+        return of(player, finalOf(player));
+    }
+
+    private static Display of(ServerPlayer player, FinalSight sight) {
         boolean active = KaguneProfile.isActive(player);
-        boolean rinkaku = active && PathServer.path(player) == com.hex.kagune.control.KagunePath.RINKAKU
-            && KaguneProfile.form(player) == com.hex.kagune.control.RinkakuForms.finalKakuja();
-        boolean ukaku = UkakuServer.kakuja(player) && UkakuServer.form(player).finalKakuja();
         boolean owl = PaleServer.peek(player) != null && PaleServer.peek(player).owl;
         boolean kakuja = owl || UkakuServer.kakuja(player) || GraftServer.kakuja(player) || active && KaguneProfile.form(player).isKakuja();
-        return Display.of(com.hex.kagune.control.DragonLock.dragon(player), king, rinkaku || ukaku, kakuja, active, PaleServer.eyes(player));
+        return Display.of(sight == FinalSight.DRAGON, sight == FinalSight.WAR || sight == FinalSight.PEACE,
+            sight == FinalSight.RINKAKU || sight == FinalSight.UKAKU, kakuja, active, PaleServer.eyes(player));
+    }
+
+    /** 1.3.65: which of the worst sights {@code player} is now ({@link FinalSight}: told apart; NONE for anything less). */
+    public static FinalSight finalOf(ServerPlayer player) {
+        boolean rinkaku = KaguneProfile.isActive(player) && PathServer.path(player) == com.hex.kagune.control.KagunePath.RINKAKU
+            && KaguneProfile.form(player) == com.hex.kagune.control.RinkakuForms.finalKakuja();
+        boolean ukaku = UkakuServer.kakuja(player) && UkakuServer.form(player).finalKakuja();
+        return FinalSight.of(com.hex.kagune.control.DragonLock.dragon(player), KingServer.wearing(player), rinkaku, ukaku);
+    }
+
+    /** 1.3.65: which of the worst sights {@code player} was when last looked at (twice a second; NONE if never). */
+    public static FinalSight seen(ServerPlayer player) {
+        return SIGHT.getOrDefault(player.m_20148_(), FinalSight.NONE);
     }
 
     /** Last shown (NONE if never looked at). */
@@ -78,10 +100,13 @@ public final class Sightings {
             || (level.m_46467_() + player.m_19879_()) % 10L != 0L || !player.m_6084_()) {
             return;
         }
-        Display shown = of(player);
+        FinalSight sight = finalOf(player);
+        Display shown = of(player, sight);
         Display before = SHOWN.put(player.m_20148_(), shown);
-        if (shown.rose(before == null ? Display.NONE : before)) {
-            long now = level.m_46467_();
+        FinalSight was = SIGHT.put(player.m_20148_(), sight);
+        long now = level.m_46467_();
+        // 1.3.65: one of the worst sights turned into another (the Dragon gone and War on) is seen again too.
+        if (shown.rose(before == null ? Display.NONE : before) || sight.any() && sight != was) {
             for (Watcher watcher : WATCHERS) {
                 try {
                     watcher.saw(level, player, shown, before == null ? Display.NONE : before, now);
@@ -90,36 +115,80 @@ public final class Sightings {
                 }
             }
         }
+        if (sight.terror()) {
+            try {
+                terror(level, player, sight, now);
+            } catch (RuntimeException failure) {
+                com.hex.kagune.control.Safety.caught(failure, "NPCs fleeing War");
+            }
+        }
     }
 
     @SubscribeEvent
     public static void loggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
         SHOWN.remove(event.getEntity().m_20148_());
+        SIGHT.remove(event.getEntity().m_20148_());
+        SHOUTED.remove(event.getEntity().m_20148_());
+    }
+
+    /**
+     * 1.3.65: War or the Dragon, kept up twice a second while it is worn (not only as it is put on): every wild ghoul that sees it within
+     * {@link FinalSight#KEEPS_RUNNING} keeps running from it (now and then one shouts), and their own children near hide from them
+     * ({@code ChildBrain.dread}: behind the other parent).
+     */
+    private static void terror(ServerLevel level, ServerPlayer player, FinalSight sight, long now) {
+        boolean shout = now - SHOUTED.getOrDefault(player.m_20148_(), Long.MIN_VALUE / 2) >= FinalSight.SHOUTS;
+        for (GhoulNpc npc : level.m_6443_(GhoulNpc.class, player.m_20191_().m_82400_(FinalSight.KEEPS_RUNNING),
+                ghoul -> ghoul.m_6084_() && ghoul.mind != null && ghoul.m_142582_(player))) {
+            if (player.m_20148_().equals(npc.mind.owner)) {
+                continue;
+            }
+            npc.mind.scaredUntil = Math.max(npc.mind.scaredUntil, now + FinalSight.STILL_SCARED);
+            npc.mind.scaredOf = player.m_19879_();
+            if (shout && npc.m_20280_(player) <= 20.0 * 20.0) {
+                shout = false;
+                SHOUTED.put(player.m_20148_(), now);
+                com.hex.kagune.control.network.ControlNetwork.sendTo(player, new com.hex.kagune.control.network.S2CNpcSay(npc.m_19879_(),
+                    FearLines.fleeing(sight, npc.m_217043_().m_188503_(100))));
+            }
+        }
+        String me = Pregnancies.player(player.m_20148_());
+        for (ChildNpc npc : level.m_6443_(ChildNpc.class, player.m_20191_().m_82400_(NOTICE), child -> child.m_6084_() && child.mind != null)) {
+            Children.Child child = Children.get(level, npc.childId());
+            if (child != null && child.parent(me) && (npc.m_20280_(player) <= 8.0 * 8.0 || npc.m_142582_(player))) {
+                ChildBrain.dread(npc, player, level, now);
+            }
+        }
     }
 
     // ---------------------------------------------------------------- the NPCs
 
     private static void eto(ServerLevel level, ServerPlayer player, Display shown, Display before, long now) {
         for (EtoNpc npc : level.m_6443_(EtoNpc.class, player.m_20191_().m_82400_(NOTICE), eto -> eto.m_6084_() && eto.m_142582_(player))) {
-            EtoBrain.saw(npc, player, shown, level, now);
+            EtoBrain.saw(npc, player, shown, seen(player), level, now);
         }
     }
 
     private static void ghouls(ServerLevel level, ServerPlayer player, Display shown, Display before, long now) {
         boolean told = false;
+        FinalSight sight = seen(player);
         for (GhoulNpc npc : level.m_6443_(GhoulNpc.class, player.m_20191_().m_82400_(NOTICE), ghoul -> ghoul.m_6084_() && ghoul.mind != null && ghoul.m_142582_(player))) {
             boolean ally = player.m_20148_().equals(npc.mind.owner);
             if (!ally && shown.frightening()) {
-                // It runs from what it can't fight (unless it is already at their throat).
+                // It runs from what it can't fight (unless it is already at their throat). 1.3.65: from them (not the nearest player), as
+                // long as the sight is bad (War and the Dragon longest, and kept up while in sight: terror).
                 if (npc.mind.prey != player.m_19879_() || shown == Display.DREAD) {
-                    npc.mind.scaredUntil = now + (shown == Display.DREAD ? 240L : 160L);
+                    npc.mind.scaredUntil = Math.max(npc.mind.scaredUntil, now + (sight.any() ? sight.scares() : shown == Display.DREAD ? 240L : 160L));
+                    npc.mind.scaredOf = player.m_19879_();
                 }
             }
             if (!told && npc.m_20280_(player) <= 12.0 * 12.0 && (ally || shown != Display.EYES)) {
                 told = true;
-                // 1.3.30: in a bubble over its head, not the chat.
-                com.hex.kagune.control.network.ControlNetwork.sendTo(player, new com.hex.kagune.control.network.S2CNpcSay(npc.m_19879_(),
-                    ally ? ReactionLines.ally(shown, (int)(now / 10L)) : ReactionLines.stranger(shown, (int)(now / 10L))));
+                // 1.3.30: in a bubble over its head, not the chat. 1.3.65: the worst sights each their own words.
+                int seed = (int)(now / 10L);
+                String line = sight.any() ? ally ? FearLines.ally(sight, seed) : FearLines.stranger(sight, seed)
+                    : ally ? ReactionLines.ally(shown, seed) : ReactionLines.stranger(shown, seed);
+                com.hex.kagune.control.network.ControlNetwork.sendTo(player, new com.hex.kagune.control.network.S2CNpcSay(npc.m_19879_(), line));
             }
         }
     }
@@ -132,8 +201,13 @@ public final class Sightings {
                 continue;
             }
             ChildStage stage = child.stage(now);
-            ChildBrain.say(player, npc, child, ReactionLines.child(stage, com.hex.kagune.control.family.ChildLines.call(stage, ChildBrain.isMother(child, player)), shown,
-                npc.m_217043_().m_188503_(100)));
+            String call = com.hex.kagune.control.family.ChildLines.call(stage, ChildBrain.isMother(child, player));
+            FinalSight sight = seen(player);
+            int seed = npc.m_217043_().m_188503_(100);
+            ChildBrain.say(player, npc, child, sight.any() ? FearLines.child(stage, call, sight, seed) : ReactionLines.child(stage, call, shown, seed));
+            if (sight.terror() && npc.mind != null) {
+                ChildBrain.dread(npc, player, level, now); // 1.3.65: it hides from them (behind the other parent)
+            }
         }
     }
 }

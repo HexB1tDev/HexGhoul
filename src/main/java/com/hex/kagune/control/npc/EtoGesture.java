@@ -92,7 +92,14 @@ public enum EtoGesture {
     /** 1.3.29: tidying a chest (bent over it, putting things where they go). */
     TIDY(140, false, false),
     /** 1.3.31: cooking at the stove (a bowl in her off hand, stirring with the other, her head down to the fire). */
-    COOK(160, false, false, "minecraft:wooden_shovel", "minecraft:bowl");
+    COOK(160, false, false, "minecraft:wooden_shovel", "minecraft:bowl"),
+    /**
+     * 1.3.65 (a final kakuja, War above all): a step back from it, one arm drawn in across her body, the other hand thrown up in front of
+     * her, palm out, to keep it off; her head pulled back and turned a little aside; a tremble that settles as she holds her ground.
+     */
+    FLINCH(70, false, false),
+    /** 1.3.65 (Peace): her hands together low on her chest, her head tipped back to look up at it, a slow breath in and out. */
+    AWE(96, false, false);
 
     public final int ticks;
     public final boolean eyesClosed;
@@ -134,6 +141,6 @@ public enum EtoGesture {
     public boolean still() {
         return this.mainHand != null || this == LEAN || this == STRETCH || this == POUT || this == YAWN || this == PET || this == LOOK || this == CROSS
             || this == TAP || this == SCOLD || this == SHY || this == CHIN || this == CRACK || this == BOW || this == KICKS || this == STEAL || this == TIDY
-            || this == COOK;
+            || this == COOK || this == FLINCH || this == AWE;
     }
 }

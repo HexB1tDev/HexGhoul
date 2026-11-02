@@ -130,7 +130,7 @@ final class Conversation {
             ChildBrain.Mind mind = child.mind;
             return mind != null && mind.target == 0 && !ChildBrain.busy(mind, now) && !ChildBrain.carried(child) && child.following() == null
                 && ChildTalk.talker(child, level) == null && mind.tagWith == 0 && mind.minding == 0 && (mind.escort == null || now >= mind.escortUntil)
-                && mind.hideWith == 0;
+                && mind.hideWith == 0 && now >= mind.dreadUntil; // 1.3.65: nor one hiding from a parent in War
         }
         if (body instanceof EtoNpc npc) {
             EtoBrain.Mind mind = npc.mind;

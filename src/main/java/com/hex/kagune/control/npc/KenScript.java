@@ -434,6 +434,39 @@ final class KenScript extends CompanionScript {
     }
 
     @Override
+    public String dread(FinalSight sight, EtoVoice voice, boolean home, int seed) {
+        // 1.3.65: he has walked War's road and knows where it goes; Peace is his own, and he knows what it cost.
+        boolean ours = voice.together();
+        return switch (sight) {
+            case WAR -> ours ? one(seed, "I know where that road goes. I walked it. ...Come back. I'll wait as long as it takes.",
+                "Listen to my voice. Only my voice. You're still you.", "I'll pull you out. Whatever it takes.")
+                : one(seed, "That's what I became. Don't become it.", "Run. Please. I know what that is.");
+            case PEACE -> ours ? one(seed, "...That's mine. How do you— ...It suits you better than it ever did me.",
+                "Peace. Then you know what it cost. I'm sorry. And I'm proud of you.")
+                : one(seed, "You found it too. ...Then you know what it costs.", "That's mine. Or it was. Where did you find it?");
+            case DRAGON -> ours ? one(seed, "...I've been there. Come back. COME BACK.", "I'll pull you out. I did it once. I'll do it again.")
+                : one(seed, "That's... no. I know what that is. Run.", "Don't let it keep you. It keeps everyone.");
+            case RINKAKU -> ours ? one(seed, "I know those legs. I grew them too. ...Come back before they're all that's left.",
+                "Count with me. A thousand, minus seven. Come back.")
+                : one(seed, "I know what that hunger feels like. Don't let it keep you.", "Stay in control. Please.");
+            case UKAKU -> ours ? one(seed, "You're burning. Let me help you put it out.", "Fire like that eats the one who carries it. Come back.")
+                : one(seed, "Ukaku, all the way. Be careful. Fire doesn't care whose it is.", "Easy. I'm not your enemy.");
+            case NONE -> "";
+        };
+    }
+
+    @Override
+    public EtoGesture dreadGesture(FinalSight sight, boolean ours) {
+        return switch (sight) {
+            case WAR, DRAGON -> ours ? EtoGesture.HUG : EtoGesture.FLINCH;
+            case PEACE -> EtoGesture.AWE;
+            case RINKAKU -> EtoGesture.CRACK;
+            case UKAKU -> ours ? EtoGesture.CHIN : EtoGesture.LOOK;
+            case NONE -> EtoGesture.NONE;
+        };
+    }
+
+    @Override
     public String initiative(EtoInitiative.Act act, int seed) {
         return switch (act) {
             case HAND -> one(seed, "Give me your hand. I want everyone to see who I'm with.", "Your hand. ...Just because.", "Walk with me. Here, take my hand.");

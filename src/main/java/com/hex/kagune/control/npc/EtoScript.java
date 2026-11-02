@@ -196,6 +196,24 @@ final class EtoScript implements Script {
     }
 
     @Override
+    public String dread(FinalSight sight, EtoVoice voice, boolean home, int seed) {
+        return EtoLines.dread(sight, voice, home, seed);
+    }
+
+    @Override
+    public EtoGesture dreadGesture(FinalSight sight, boolean ours) {
+        // Fascinated by War (hungry for it, on her partner), in awe of Peace, frightened for her partner by the rest.
+        return switch (sight) {
+            case WAR -> ours ? EtoGesture.LICK : EtoGesture.CHIN;
+            case PEACE -> EtoGesture.AWE;
+            case DRAGON -> ours ? EtoGesture.HUG : EtoGesture.LOOK;
+            case RINKAKU -> ours ? EtoGesture.HUG : EtoGesture.LICK;
+            case UKAKU -> ours ? EtoGesture.HUG : EtoGesture.CHIN;
+            case NONE -> EtoGesture.NONE;
+        };
+    }
+
+    @Override
     public String initiative(EtoInitiative.Act act, int seed) {
         return EtoInitiative.line(act, seed);
     }

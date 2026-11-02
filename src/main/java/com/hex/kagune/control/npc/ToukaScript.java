@@ -427,6 +427,37 @@ final class ToukaScript extends CompanionScript {
     }
 
     @Override
+    public String dread(FinalSight sight, EtoVoice voice, boolean home, int seed) {
+        // 1.3.65: worried sick for her partner, and not ashamed to run from the rest; Peace is beautiful (don't tell anyone).
+        boolean ours = voice.together();
+        return switch (sight) {
+            case WAR -> ours ? one(seed, "No. No no no. Take it off. Take it OFF.", "Please. Whatever's left of you in there. Please come back.",
+                "Don't you dare become that. Not you. Not you too.")
+                : one(seed, "Run. Everyone run.", "That's the... no. No. I'm not staying to find out.");
+            case PEACE -> ours ? one(seed, "...It's beautiful. Don't you dare tell anyone I said that.", "Why are you so calm? ...Why am I?")
+                : one(seed, "...What is that. Why can't I look away?", "Stay back. ...Please.");
+            case DRAGON -> ours ? one(seed, "Where are you? Answer me! ANSWER ME!", "Come back. I'll drag you out myself if I have to.")
+                : one(seed, "That's... that's not a ghoul anymore.", "Run. Don't think. Just run.");
+            case RINKAKU -> ours ? one(seed, "Idiot. Look at you. Come back before it eats you.", "Hey! I'm right here. Look at me, not at whatever's hungry.")
+                : one(seed, "...What ARE you.", "Stay away from me. And keep those legs away from me.");
+            case UKAKU -> ours ? one(seed, "Those aren't wings anymore. ...Put the fire out. Please.", "That's what Ukaku turns into? You're burning yourself up.")
+                : one(seed, "Fire and needles. Great. Get away from me.", "That's not wings. That's a wildfire.");
+            case NONE -> "";
+        };
+    }
+
+    @Override
+    public EtoGesture dreadGesture(FinalSight sight, boolean ours) {
+        return switch (sight) {
+            case WAR, DRAGON -> EtoGesture.FLINCH;
+            case PEACE -> ours ? EtoGesture.SHY : EtoGesture.AWE;
+            case RINKAKU -> ours ? EtoGesture.SCOLD : EtoGesture.CROSS;
+            case UKAKU -> ours ? EtoGesture.SCOLD : EtoGesture.FLINCH;
+            case NONE -> EtoGesture.NONE;
+        };
+    }
+
+    @Override
     public String initiative(EtoInitiative.Act act, int seed) {
         return switch (act) {
             case HAND -> one(seed, "Give me your hand. ...Don't ask why.", "Hand. Now. It's cold.", "My hand's free. Fix that.");

@@ -139,6 +139,22 @@ public final class AgentRules {
 
     // ---------------------------------------------------------------- who they go for
 
+    /**
+     * 1.3.65: an investigator who first sees one of the worst sights ({@link FinalSight}) within {@link #REVEALED_RANGE} falters: frozen
+     * where it stands {@link #falter} ticks (War and the Dragon longest, a junior longer than its senior), then falls back
+     * {@link #FALL_BACK} ticks (backing off to {@link #FALL_BACK_TO} blocks, facing it), then finds its nerve and goes in. Not again for
+     * {@link #FALTER_AGAIN} ticks. A blow while frozen snaps it out of the freeze (it still falls back).
+     */
+    public static final int FALL_BACK = 60;
+    public static final double FALL_BACK_TO = 14.0;
+    public static final long FALTER_AGAIN = 1200L;
+
+    /** Ticks it stands frozen at {@code sight} ({@code senior}: the pair's leader). */
+    public static int falter(FinalSight sight, boolean senior) {
+        int frozen = sight.terror() ? 50 : sight.any() ? 30 : 0;
+        return senior ? frozen * 7 / 10 : frozen;
+    }
+
     /** A monster this close is cut down; a wild ghoul this close is hunted; a revealed ghoul this close is gone for. */
     public static final double MOB_RANGE = 6.0;
     public static final double GHOUL_RANGE = 20.0;

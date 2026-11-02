@@ -1,7 +1,40 @@
-# START HERE (state after 1.3.64)
+# START HERE (state after 1.3.65)
 
-- **Next session:** read `docs/handoff/next-ai-1.3.63.md` first (the owner's current update and what's left), then
-  `docs/handoff/next-ai-1.3.60.md` (house rules, family talk).
+- **Next session:** read `docs/handoff/next-ai-1.3.63.md` first (the owner's current update and what's left: 1.3.66 War and Peace
+  running animations), then `docs/handoff/next-ai-1.3.60.md` (house rules, family talk).
+- **1.3.65 fear of the final kakujas** (protocol 71, unchanged; `EtoGesture` FLINCH, AWE and `ChildCue` COWER appended). Pure
+  `npc/FinalSight` (NONE, WAR, PEACE, DRAGON, RINKAKU, UKAKU; never sent): `of(dragon, worn, rinkaku, ukaku)` (the Dragon first),
+  `terror()` (WAR, DRAGON), `scares()` (300 / 240), `STILL_SCARED` 40, `KEEPS_RUNNING` 28, `TERROR_RUN` 20, `SHOUTS` 120, `HIDES` 30,
+  `BEHIND` 0.95, `THERE` 0.6, `KEEPS_OFF` 7, `behind(sx, sz, fx, fz, gap)`. Pure `npc/FearLines`: `stranger`, `ally`, `fleeing` (terror),
+  `child(stage, call, sight)`, `hiding(stage, call, other)`, `scream(sight)` (NONE: an ordinary ghoul), `falter(sight, senior)`,
+  `rally(senior)`: 132 lines; `Script.dread(sight, voice, home, seed)` (Eto 23 in `EtoLines.dread`, Touka 21, Ken 21) and
+  `Script.dreadGesture(sight, ours)`. `HumanRules`: `DREAD_NOTICE` 28, `TERROR_NOTICE` 40, `TERROR_SAFE` 52, `TERROR_RUN` 1.3,
+  `TERROR_MEMORY` 100, `SCREAMS` 70, `HEARD` 32, `notice(sight, shown)`, `pace(sight)`. `AgentRules`: `falter(sight, senior)` (50 / 30,
+  a senior 70%), `FALL_BACK` 60, `FALL_BACK_TO` 14, `FALTER_AGAIN` 1200.
+  Server: `Sightings` keeps `SIGHT` (`seen(player)`, `finalOf(player)`); a watcher round also when the sight changes among the worst;
+  `terror(level, player, sight, now)` each check while War/the Dragon is worn: wild ghouls in sight within 28 (not allies) keep
+  `scaredUntil` >= now + 40 and `scaredOf` = them (one shouts every SHOUTS), their own children within 16 (8, or in sight) get
+  `ChildBrain.dread`. The ghoul watcher sets `scaredOf` and uses `FearLines` for the worst; the child watcher too (and `dread` for a terror).
+  `GhoulNpcBrain.Mind.scaredOf`: `flee` runs from it (within 48; a terror: 20 blocks at a time); `scare()` clears it. `HumanBrain.danger`
+  returns a `Danger(body, sight, ghoul)`: players by `HumanRules.notice` (beyond NOTICE only in its sight), a terror remembered
+  `dreadOf/dreadUntil`; `scream` (bubbles to players within HEARD who see it: fresh danger, at most every 200; a terror every SCREAMS + 0..30);
+  `flee(human, danger, pace, length)`. `AgentBrain`: `reveal` counts `sight.any()` as shown ("The CCG has seen what you are."), and the
+  first sight (in its sight, FALTER_AGAIN since the last) -> `falter(agent, mind, player, sight, level, now)` (a line; `falterUntil`,
+  `fallBackUntil`, `rallies`); `tick` -> `falter(agent, mind, level, now)` after the stun: frozen (facing, stopped; a blow since
+  `falteredAt` ends it), then backing off to FALL_BACK_TO, then the rally line. `say` = bubbles to players within 24 who see it.
+  `ChildBrain.Mind.dreadOf/dreadUntil/dreadSaidAt`; `dread(npc, from, level, now)` (not carried; fresh: ends its talk, moment, hide and
+  seek, tag, minding); the chain's `cower` right after carried (the other parent: a player parent not in a terror or a companion parent,
+  the nearer within 24 -> `FinalSight.behind` them; none: keep KEEPS_OFF; a baby sits; COWER cue held; a `FearLines.hiding` line every
+  160..260 to players within 16 who see it); `lines` silent meanwhile; the COWER cue cleared when it ends; `Conversation.free` refuses
+  one hiding. `EtoBrain.saw(npc, player, shown, sight, level, now)`: DREAD with a sight -> `script.dread` and `dreadGesture`.
+  Client: `HumanRenderer` and `AgentRenderer` draw `SpeechBubbles`; `ChildTalkPose` COWER (arms crossed up before its chest and chin, a
+  little one's hands under its chin, head tucked, trembling, a flinch now and then); `EtoPose` FLINCH (a step back, the right arm in across
+  her, the left up before her face) and AWE (hands together low on the chest, head tipped back, breathing). Previews:
+  `TalkPreview` (COWER added), `CompanionPreview` writes `eto-/touka-/ken-fear-poses.png`. `FamilyTests.fear`, `CompanionTests` (order).
+  Not covered: Ken's own Peace (an NPC) frightens no one; companions don't move at a sight; no scream sound in the pack (bubbles only).
+
+# State after 1.3.64
+
 - **1.3.64 dread is worn** (protocol 71, unchanged). Pure `Display.of(dragon, king, finalKakuja, kakuja, kagune, eyes)`: DREAD for the
   Dragon, War/Peace worn, or a final kakuja; else KAKUJA, KAGUNE, EYES, NONE. `Sightings.of(player)` feeds it: `DragonLock.dragon`,
   `KingServer.wearing(player) != NONE` (was `KingServer.awake`, the permanent save: a War/Peace-path player read DREAD forever, so the
