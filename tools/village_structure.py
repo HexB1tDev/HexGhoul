@@ -175,6 +175,10 @@ def main():
     people = []
     for k, (hx, hy, hz, dx, dz) in enumerate(homes):
         people.append(("hexkagune:human", (hx, hy, hz), k))
+    # 2.0 (the owner: "Add more humans ... per village"): a second in every house, its own number after the first ones' (each number is
+    # the villager's slot: its look and its name are the village's own shuffle at that slot, so no two in a village share either).
+    for k, (hx, hy, hz, dx, dz) in enumerate(homes):
+        people.append(("hexkagune:human", (hx, hy, hz), len(homes) + k))
     near = sorted(streets, key=lambda p: (p[0] - centre[0]) ** 2 + (p[2] - centre[2]) ** 2)
     for k in range(AGENTS):
         people.append(("hexkagune:ccg_investigator", near[3 + k * 5], k))

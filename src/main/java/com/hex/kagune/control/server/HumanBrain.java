@@ -207,6 +207,20 @@ public final class HumanBrain {
         level.m_8767_(net.minecraft.core.particles.ParticleTypes.f_123750_, x, human.m_20186_() + 1.7, z, count, 0.3, 0.25, 0.3, 0.02);
     }
 
+    /** 2.0: how often (ticks) a calm villager looks around for danger. */
+    static final long LOOKS = 4L;
+
+    /** 2.0: in its saved data: its name (a village's own, by its slot), and that its village gave it its look and name. */
+    static final String NAME = "HexHumanName";
+    static final String UNIQUE = "HexHumanUnique";
+
+    /** 2.0: its name: its village's for it, else by its seed. */
+    public static String name(HumanNpc human) {
+        CompoundTag saved = human.getPersistentData();
+        return saved.m_128441_(NAME) ? com.hex.kagune.control.village.HumanPersona.named(saved.m_128451_(NAME))
+            : com.hex.kagune.control.village.HumanPersona.name(HumanTalk.seed(human));
+    }
+
     /** 1.3.65: what it runs from, how bad a sight it is, and whether it is a ghoul it screams about. */
     record Danger(LivingEntity body, FinalSight sight, boolean ghoul) {
     }
@@ -230,7 +244,19 @@ public final class HumanBrain {
             human.holding(-1);
         }
         VillagePlace.Place place = VillagePlace.of(human); // 1.3.71: one of the Brick Village's people (null: anyone else)
-        Danger danger = danger(human, level, mind, now);
+        // 2.0: once, a village's own look and name for it, by its slot (no two of a village's people share either).
+        if (place != null && !human.getPersistentData().m_128441_(UNIQUE)) {
+            int slot = Math.max(0, VillagePlace.slot(human));
+            CompoundTag saved = human.getPersistentData();
+            int look = HumanRules.villageLook(place.x(), place.z(), slot);
+            saved.m_128405_(HumanNpc.KEY, look);
+            saved.m_128405_(NAME, HumanRules.villageName(place.x(), place.z(), slot, com.hex.kagune.control.village.HumanPersona.names()));
+            saved.m_128405_(UNIQUE, 1);
+            human.dress(look);
+        }
+        // 2.0 (lag): a calm villager looks around every LOOKS ticks (staggered by its id), a frightened or hurt one every tick.
+        boolean alert = now < mind.shakenUntil || now < mind.hurtUntil || (now + human.m_19879_()) % LOOKS == 0L;
+        Danger danger = alert ? danger(human, level, mind, now) : null;
         if (danger != null) {
             if (mind.trade != null) {
                 mind.trade.end(level, now); // 1.3.72: a fright ends a trade

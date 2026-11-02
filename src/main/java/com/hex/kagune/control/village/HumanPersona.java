@@ -35,6 +35,15 @@ public final class HumanPersona {
     public static final int WARM = 20;
     public static final int CLOSE = 60;
 
+    /** 2.0: how many names there are, and name {@code index} (a village gives each of its people its own). */
+    public static int names() {
+        return NAMES.length;
+    }
+
+    public static String named(int index) {
+        return NAMES[Math.floorMod(index, NAMES.length)];
+    }
+
     public static Temper temper(long seed) {
         Temper[] all = Temper.values();
         return all[(int)Math.floorMod(seed * 0x9E3779B97F4A7C15L >>> 33, (long)all.length)];

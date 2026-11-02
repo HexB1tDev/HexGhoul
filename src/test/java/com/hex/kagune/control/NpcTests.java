@@ -717,6 +717,22 @@ public final class NpcTests {
             versions += looks.length - 1;
         }
         check(looked && versions >= 100, "children's looks: " + versions + " versions with other hair and eyes, each picked by its own colours");
+        // 2.0: a village's people never share a look or a name (16 of them: two in each of its 8 houses), whatever village it is.
+        boolean unique = com.hex.kagune.control.village.HumanSkins.ALL.length >= 16;
+        java.util.Set<Integer> firsts = new java.util.HashSet<>();
+        for (int v = 0; v < 200; v++) {
+            int mx = v * 977 - 5000;
+            int mz = v * -613 + 300;
+            java.util.Set<Integer> looks = new java.util.HashSet<>();
+            java.util.Set<Integer> names = new java.util.HashSet<>();
+            for (int slot = 0; slot < 16; slot++) {
+                int look = com.hex.kagune.control.npc.HumanRules.villageLook(mx, mz, slot);
+                unique &= look >= com.hex.kagune.control.npc.HumanRules.CUTE && looks.add(look);
+                unique &= names.add(com.hex.kagune.control.npc.HumanRules.villageName(mx, mz, slot, com.hex.kagune.control.village.HumanPersona.names()));
+            }
+            firsts.add(com.hex.kagune.control.npc.HumanRules.villageLook(mx, mz, 0));
+        }
+        check(unique && firsts.size() >= 10, "no two of a village's 16 people share a look or a name; villages shuffle differently");
         // 1.3.76: blinks: every skin that blinks has its shut eyes; villagers blink with their child skin's; vanilla's looks have none.
         int blinking = 0;
         boolean shut = com.hex.kagune.control.npc.HumanRules.closed(3) == null;

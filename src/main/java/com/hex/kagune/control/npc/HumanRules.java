@@ -51,6 +51,38 @@ public final class HumanRules {
         return CUTE + Math.floorMod(roll, com.hex.kagune.control.village.HumanSkins.ALL.length);
     }
 
+    /**
+     * 2.0 (the owner: "make sure there are no 2 of the same look per village"): the village at ({@code midX}, {@code midZ})'s own shuffle of
+     * the villagers' looks, at slot {@code slot} (each of a village's people has its own slot): no two slots below the number of looks
+     * share one.
+     */
+    public static int villageLook(int midX, int midZ, int slot) {
+        int n = com.hex.kagune.control.village.HumanSkins.ALL.length;
+        return CUTE + shuffled(midX, midZ, 0x5EEDL, n)[Math.floorMod(slot, n)];
+    }
+
+    /** 2.0: the same for its names ({@code names} of them): no two of a village's people share one. */
+    public static int villageName(int midX, int midZ, int slot, int names) {
+        return shuffled(midX, midZ, 0x4A3EL, names)[Math.floorMod(slot, names)];
+    }
+
+    /** 0 .. n-1 in the order the village at ({@code x}, {@code z}) shuffles them ({@code salt}: which shuffle). */
+    static int[] shuffled(int x, int z, long salt, int n) {
+        int[] order = new int[n];
+        for (int i = 0; i < n; i++) {
+            order[i] = i;
+        }
+        long s = (x * 341873128712L) ^ (z * 132897987541L) ^ (salt * 0x9E3779B97F4A7C15L);
+        for (int i = n - 1; i > 0; i--) {
+            s = s * 6364136223846793005L + 1442695040888963407L;
+            int j = (int)Math.floorMod(s >>> 33, (long)(i + 1));
+            int k = order[i];
+            order[i] = order[j];
+            order[j] = k;
+        }
+        return order;
+    }
+
     /** 1.3.75: whose texture {@code look} is: the mod's (a villager's own skin) or vanilla's (a default skin). */
     public static String namespace(int look) {
         return look >= CUTE ? "hexkagune" : "minecraft";

@@ -1,7 +1,14 @@
-# START HERE (state after 1.3.80)
+# START HERE (state after 1.3.81)
 
 - The owner's last request (Release 2.0): more villagers per village with unique looks, a bug/lag pass, an animation pass, mastery/forms
-  as resistance not health, then release 2.0. Done so far: 1.3.80 (the tank).
+  as resistance not health, then release 2.0. Done so far: 1.3.80 (the tank), 1.3.81 (villagers).
+- **1.3.81 villagers** (protocol 72, unchanged). `tools/village_structure.py`: two humans per home (Home = k and 8 + k: the slot).
+  `tools/human_skins.py`: the 10 old looks first (unchanged), then two turns of every ChildBlinks skin (`MORE_TURNS`), mid greys and dull
+  colours (s < 0.3, v .25-.8, not skin) tinted at sat .42 for the new ones, kept if >= 30% of the skin changed (`DIFFERENT`), `DROP`ped by
+  hand after looking (daughter_01 #2, son_08's, son_13 #2): 26. `HumanRules.villageLook(midX, midZ, slot)` / `villageName(..., names)`
+  (a seeded shuffle per village, `shuffled`); `HumanBrain`: once per village human (`UNIQUE` flag) after `VillagePlace.of`: look + name
+  (`NAME`) by `VillagePlace.slot`; `HumanBrain.name(human)` everywhere in `HumanTalk`; `HumanPersona.names()/named(i)`. Lag: `LOOKS` 4 (a
+  calm villager's danger scan every 4 ticks, staggered). Sheet: `docs/handoff/villagers-1.3.81.png`. `NpcTests.village`.
 - **1.3.80 the living tank** (protocol 72, unchanged). Pure `control/GhoulTank`: `taken(mastery, eaten, form)` = (1 - 0.35 m/1000)(1 -
   0.25 eaten/(eaten+20))(1 - form); `form(out, stage, kakuja, final)`: in 0, out 0.10 + 0.04 x min(3, KaguneForm ordinal), any kakuja
   0.32, a final 0.50; `bypasses(msgId)` (outOfWorld, genericKill). `server/GhoulTankServer`: LivingHurtEvent LOWEST on ghoul players

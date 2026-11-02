@@ -99,7 +99,7 @@ public final class HumanTalk {
             return;
         }
         HumanPersona.Temper temper = HumanPersona.temper(seed(human));
-        String name = HumanPersona.name(seed(human));
+        String name = HumanBrain.name(human);
         if (now < human.mind.shakenUntil) {
             player.m_5661_(Component.m_237113_(name + " is too frightened to talk."), true);
             return;
@@ -158,7 +158,7 @@ public final class HumanTalk {
                 DATED.put(both, day);
                 QuestServer.bond(player, key, bond.regard(bond.regard() + DATE));
             }
-            ControlNetwork.sendTo(player, new S2CNpcTalk(human.m_19879_(), HumanPersona.name(seed), temper.title, bond.regard(), false,
+            ControlNetwork.sendTo(player, new S2CNpcTalk(human.m_19879_(), HumanBrain.name(human), temper.title, bond.regard(), false,
                 -100 - human.look(), "", new int[0], new String[0]));
             return;
         }
@@ -170,7 +170,7 @@ public final class HumanTalk {
             human.mind.pendingThen = kiss ? com.hex.kagune.control.village.HumanGestures.of(com.hex.kagune.control.npc.EtoGesture.KISSED) : 0;
             human.mind.pendingUntil = now + COMING;
             human.mind.pendingLine = kiss ? HumanPersona.kissed(temper, roll) : HumanPersona.hugged(temper, roll);
-            ControlNetwork.sendTo(player, new S2CNpcTalk(human.m_19879_(), HumanPersona.name(seed), temper.title, bond.regard(), false,
+            ControlNetwork.sendTo(player, new S2CNpcTalk(human.m_19879_(), HumanBrain.name(human), temper.title, bond.regard(), false,
                 -100 - human.look(), "", new int[0], new String[0]));
             return;
         }
@@ -188,7 +188,7 @@ public final class HumanTalk {
             case SAY_7 -> {
                 line = HumanPersona.yes(temper, roll);
                 QuestServer.bond(player, key, bond.with(HumanPersona.PARTNER, true));
-                player.m_5661_(Component.m_237113_("\u00a7d" + HumanPersona.name(seed) + " and you are together now."), false);
+                player.m_5661_(Component.m_237113_("\u00a7d" + HumanBrain.name(human) + " and you are together now."), false);
             }
             case SAY_8 -> line = HumanPersona.love(temper, roll);
             default -> {
@@ -271,7 +271,7 @@ public final class HumanTalk {
             offered.add(NpcTalk.Choice.SAY_8);
             said.add(ROMANCE[3]);
             // 1.3.77: a kiss, a hug.
-            String name = HumanPersona.name(seed);
+            String name = HumanBrain.name(human);
             offered.add(NpcTalk.Choice.KISS);
             said.add("Kiss " + name + ".");
             offered.add(NpcTalk.Choice.HUG);
@@ -292,7 +292,7 @@ public final class HumanTalk {
             labels[i] = said.get(i);
         }
         // Its skin as a talk screen knows it: -100 less its look (a vanilla default skin: HumanRules.LOOKS).
-        ControlNetwork.sendTo(player, new S2CNpcTalk(human.m_19879_(), HumanPersona.name(seed), HumanPersona.temper(seed).title, regard, false,
+        ControlNetwork.sendTo(player, new S2CNpcTalk(human.m_19879_(), HumanBrain.name(human), HumanPersona.temper(seed).title, regard, false,
             -100 - human.look(), line, ordinals, labels));
     }
 }

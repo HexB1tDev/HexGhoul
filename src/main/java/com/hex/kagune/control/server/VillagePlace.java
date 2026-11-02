@@ -43,6 +43,12 @@ final class VillagePlace {
     private VillagePlace() {
     }
 
+    /** 2.0: {@code mob}'s slot among its village's people (its template number), or -1. */
+    static int slot(Mob mob) {
+        CompoundTag data = mob.getPersistentData();
+        return data.m_128441_(KEY) ? data.m_128469_(KEY).m_128451_("Home") : -1;
+    }
+
     /** {@code mob}'s place in its village, worked out (and kept) the first time; null if it is none of the village's. */
     static Place of(Mob mob) {
         CompoundTag data = mob.getPersistentData();

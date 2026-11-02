@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.81 (HexGhoul): twice the villagers, never two alike in a village (testing)
+
+See `.github/release-notes-1.3.81.md`.
+
 ## 1.3.80 (HexGhoul): ghouls are living tanks: resistance, not health (testing)
 
 See `.github/release-notes-1.3.80.md`.
