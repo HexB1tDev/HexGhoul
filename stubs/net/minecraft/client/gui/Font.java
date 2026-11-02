@@ -9,8 +9,8 @@ public class Font {
         throw new UnsupportedOperationException();
     }
 
-    /** 1.3.38: Font.DisplayMode (its constants by their SRG field names). */
+    /** 1.3.38: Font.DisplayMode (an enum: its constants keep their names; 2.0.1: NORMAL, not f_181350_). */
     public static final class DisplayMode {
-        /** NORMAL */ public static final DisplayMode f_181350_ = null;
+        public static final DisplayMode NORMAL = null;
     }
 }

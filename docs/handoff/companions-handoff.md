@@ -1,3 +1,9 @@
+# 2.0.1 IN PROGRESS (not built): read `docs/handoff/next-ai-2.0.1.md` first
+
+- The owner's report on 2.0.0: a crash on every speech bubble (fixed in the WIP: `Font.DisplayMode.NORMAL`, not `f_181350_`), children's
+  talk screens show Eto's face, villages should be renamed "village", spawn on dry land only, have more CCG investigators, and use the new
+  schematic `art/village/japanesevillagev4.schem`. What is left, in order: `next-ai-2.0.1.md`.
+
 # START HERE (state after 2.0.0)
 
 - **2.0.0 is Release 2.0**: the version bump and the roll-up notes (`.github/release-notes-2.0.0.md`) over 1.3.68-1.3.83; no code change

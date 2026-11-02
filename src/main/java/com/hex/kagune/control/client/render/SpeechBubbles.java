@@ -232,7 +232,7 @@ public final class SpeechBubbles {
         for (int i = 0; i < text.length; i++) {
             float x = shape.shift - font.m_92895_(text[i]) / 2.0F;
             float y = shape.lineY(i);
-            font.m_271703_(text[i], x, y, 0xFF000000, false, matrix, buffers, Font.DisplayMode.f_181350_, 0, FULL_BRIGHT);
+            font.m_271703_(text[i], x, y, 0xFF000000, false, matrix, buffers, Font.DisplayMode.NORMAL, 0, FULL_BRIGHT);
         }
     }
 }
