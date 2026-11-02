@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.0.0 (HexGhoul): Release 2.0
+
+See `.github/release-notes-2.0.0.md`: the living tank (resistance, not health), the Brick Village with 16 villagers (talk, romance, gestures, dates), blinking, 136 new children's looks, CCG ranks, the bug/lag and animation passes.
+
 ## 1.3.83 (HexGhoul): animation pass: six broken poses fixed (testing)
 
 See `.github/release-notes-1.3.83.md`.

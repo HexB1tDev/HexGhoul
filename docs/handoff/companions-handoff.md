@@ -1,4 +1,9 @@
-# START HERE (state after 1.3.83)
+# START HERE (state after 2.0.0)
+
+- **2.0.0 is Release 2.0**: the version bump and the roll-up notes (`.github/release-notes-2.0.0.md`) over 1.3.68-1.3.83; no code change
+  from 1.3.83. The owner tests it in game next: their reports come first, each its own version (the next is 2.0.1).
+
+# State after 1.3.83
 
 - The owner's last request (Release 2.0): more villagers per village with unique looks, a bug/lag pass, an animation pass, mastery/forms
   as resistance not health, then release 2.0. Done so far: 1.3.80 (the tank), 1.3.81 (villagers), 1.3.82 (bug/lag pass), 1.3.83
