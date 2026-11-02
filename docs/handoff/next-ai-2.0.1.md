@@ -1,4 +1,5 @@
-# HANDOFF: HexGhoul after 2.0.1. Read this first, then `docs/handoff/next-ai-2.0.0.md`, then `docs/handoff/next-ai-1.3.60.md` (house
+# HANDOFF: HexGhoul after 2.0.1 (2.0.2: more biomes for all four structures, a gentler village land check: see the top of
+`companions-handoff.md`; the next is 2.0.3). Read this first, then `docs/handoff/next-ai-2.0.0.md`, then `docs/handoff/next-ai-1.3.60.md` (house
 rules), then the top of `docs/handoff/companions-handoff.md`.
 
 Branch **`claude/relaxed-carson-4y0frw`** (push only there; never main; no PR unless asked). Version **2.0.1** in `build.py` and

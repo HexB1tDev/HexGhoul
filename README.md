@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.0.2 (HexGhoul): villages, Anteiku, the Cyber Tower and the library in many more biomes (testing)
+
+See `.github/release-notes-2.0.2.md`: all four structures beyond plains (meadows, cherry groves, savannas, snowy plains, forests and taigas for the buildings, and Biomes O' Plenty's open biomes), a gentler land check for the village, villages a little closer together.
+
 ## 2.0.1 (HexGhoul): the crash fixed, the new village, on dry land (testing)
 
 See `.github/release-notes-2.0.1.md`: the speech-bubble crash fixed (and bubbles can never crash the game), the right face on every talk screen, the new village from the owner's schematic (`hexkagune:village`, 26 villagers, 6 investigators) only on dry, flat land, investigator pairs about once a day.

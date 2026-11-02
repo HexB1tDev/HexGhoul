@@ -1,4 +1,13 @@
-# START HERE (state after 2.0.1): read `docs/handoff/next-ai-2.0.1.md` first
+# START HERE (state after 2.0.2): read `docs/handoff/next-ai-2.0.1.md` first
+
+- **2.0.2** (the owner: "stop limiting it to plains ... including some from biomes o plenty currently cant even find a village with locate
+  structure ... same for anteikou, and cybertower and library"): the biome tags `has_structure/{village,anteiku,cyber_tower,library}` and
+  `prefers/{anteiku,cyber_tower}` list open vanilla biomes (+ forests and taigas for the three buildings) and Biomes O' Plenty's as
+  optional entries (`"required": false`); `VillageGround` FLAT 12, up to `WET_EDGE` 2 wet edge samples (the middle 9 dry);
+  `ControlStructures.DryJigsaw` calls `inner.m_214086_` straight, the reflection only on IllegalAccessError; village spacing 40/20.
+  Pushed without a local build at the owner's word: CI's build is the check.
+
+# State after 2.0.1
 
 - **2.0.1** (the owner's report on 2.0.0; protocol 72, unchanged): the speech-bubble crash (`Font.DisplayMode.NORMAL`) and bubbles that
   can never crash the game (`SpeechBubbles` catch + `Safety.caught`); talk screens show the skin the child or villager is drawn in

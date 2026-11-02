@@ -65,11 +65,19 @@ public final class ControlStructures {
             if (!VillageGround.suits(surface, floor)) {
                 return Optional.empty();
             }
+            // 2.0.2: vanilla's own placing called straight (public in vanilla's jigsaw), by name if the game says it may not be.
             try {
-                @SuppressWarnings("unchecked")
-                Optional<Structure.GenerationStub> stub = (Optional<Structure.GenerationStub>)find().invoke(this.inner, context);
-                return stub;
-            } catch (ReflectiveOperationException | RuntimeException | LinkageError failure) {
+                return this.inner.m_214086_(context);
+            } catch (IllegalAccessError denied) {
+                try {
+                    @SuppressWarnings("unchecked")
+                    Optional<Structure.GenerationStub> stub = (Optional<Structure.GenerationStub>)find().invoke(this.inner, context);
+                    return stub;
+                } catch (ReflectiveOperationException | RuntimeException | LinkageError failure) {
+                    Safety.caught(failure, "ControlStructures.DryJigsaw");
+                    return Optional.empty();
+                }
+            } catch (RuntimeException | LinkageError failure) {
                 Safety.caught(failure, "ControlStructures.DryJigsaw");
                 return Optional.empty();
             }

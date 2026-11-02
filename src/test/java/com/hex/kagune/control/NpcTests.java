@@ -774,8 +774,17 @@ public final class NpcTests {
         wet[12] = 72;
         int[] hill = flat.clone();
         hill[3] = 70 + com.hex.kagune.control.village.VillageGround.FLAT + 1;
+        // 2.0.2: a little water at the rim (sample 0 is a corner, 1 and 2 on the edge): a river or a pond, never the sea.
+        int[] rim = flat.clone();
+        rim[0] = 72;
+        rim[1] = 72;
+        int[] wider = rim.clone();
+        wider[2] = 72;
+        int[] low = flat.clone();
+        low[0] = 40;
         check(n == 25 && com.hex.kagune.control.village.VillageGround.suits(flat, flat)
             && !com.hex.kagune.control.village.VillageGround.suits(wet, flat) && !com.hex.kagune.control.village.VillageGround.suits(hill, hill)
+            && com.hex.kagune.control.village.VillageGround.suits(rim, low) && !com.hex.kagune.control.village.VillageGround.suits(wider, flat)
             && !com.hex.kagune.control.village.VillageGround.suits(new int[0], new int[0]), "a village only on dry, fairly flat land");
         for (int i = 0; i < route.length; i++) {
             int[] a = route[i];
