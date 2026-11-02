@@ -396,7 +396,8 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
         }
         ChildSkins.Skin skin = skin(view);
         if (skin != null) {
-            return texture(skin.key());
+            // 1.3.79: its skin in the look nearest the hair and eyes its genes gave it (ChildLooks: other hair and eye colours).
+            return texture(com.hex.kagune.control.family.ChildLooks.pick(skin.key(), view.genome().hair(), view.genome().eyes()).texture());
         }
         boolean kakugan = view.turned() && view.genome().kakugan() != com.hex.kagune.control.family.Genome.NONE;
         String key = view.genome().save() + "|" + view.stage().ordinal() + "|" + kakugan;

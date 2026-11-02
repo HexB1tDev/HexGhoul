@@ -33,6 +33,9 @@ The owner's update in `next-ai-1.3.67.md` is now done (1.3.68-1.3.78).
 - Dates: the glue and the player's arm (`EtoClient.handHeld` now counts villagers), letting go at the village edge, a villager saved
   mid-date (gravity restored on load).
 
+## After: 1.3.79 (children's looks: 136 versions with other hair and eye colours, picked by the child's genes; see the top of
+`companions-handoff.md`). The owner then went to test in game.
+
 ## Next
 
 Whatever the owner reports or asks (bug reports first, each its own version). Optional from older lists: War/Peace same-move cancels.

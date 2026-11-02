@@ -1,8 +1,24 @@
-# START HERE (state after 1.3.78)
+# START HERE (state after 1.3.79)
 
 - RULE 1 (stop at 97% usage) is gone for good: the owner had it removed from `CLAUDE.md` after 1.3.78.
-- **The owner's update from `next-ai-1.3.67.md` is done** (1.3.68-1.3.78), all untested in game. Next: whatever the owner reports or asks
-  (bugs first, each its own version). Optional from older lists: War/Peace same-move cancels.
+- The owner's next step is testing in game. Next: whatever they report (bugs first, each its own version).
+- **1.3.79 children's looks** (the owner: "make dozens of other versions with different hair colors and eye colors ... careful with the
+  hair cause skins usually have hair on the back"; protocol 72, unchanged; client only). `tools/child_variants.py` writes
+  `textures/entity/child/skins/<key>_v1..4.png` (136 for 34 skins) and `family/ChildLooks.java` (`Look(texture, hair, eyes)`, `of(key)`
+  its own first, `pick(key, hair, eyes)`: 2 x hair distance + eye distance, `ChildSkins.distance`). Hair: shades from the face front's
+  fringe (first 1.5 rows, not skin, >= 4%, up to 10; a vivid shade far from the commonest's hue dropped: son_13's horns); `Hair` matches
+  by distance < 38, by hue for coloured hair (sat >= 0.25, v >= 0.1; +-16 degrees, sat and light in range) and by light for greyish hair;
+  never skinlike. Head: all matching pixels (the face and hat fronts only flooded from the hairline; eye boxes never); girls' body: floods
+  from the top of torso/jacket faces and arm tops (backs also from their top 40%; chest fronts only their outer 2.5 units). `BODY_OFF`
+  (daughter_06, 07), `NOT_HAIR` (son_07's hood on the hat layer, daughter_13's skirt), `NO_VARIANTS` (daughter_02, 04, 07, 10, son_14),
+  `EYES_ONLY` (daughter_08, 17, 23; and every skin whose fringe is skin-coloured: 05, 09, 14). Irises: inside blink_skins.BOXES, not
+  white/skin/black/glint. Recolour by light against the mask's mean (highlights toward white). `ChildRenderer.m_5478_` draws
+  `ChildLooks.pick(skin.key(), genome.hair(), genome.eyes())`; overlays still by the skin's key. Existing children may change colours.
+  Review sheet: `docs/handoff/child-looks-1.3.79.png` (every version front and back). Previews were checked skin by skin, zoomed in
+  (the first passes recoloured boys' hoodies and shirts, a hood, bows: all fixed). `NpcTests.village`.
+
+# State after 1.3.78
+
 - **1.3.78 dates** (protocol 72, unchanged; `HumanNpc.HOLDING` new entity data: holder id + 1). Pure `village/HumanHand`: `hand(slim)`
   (0.34/0.375 + 0.75 sin EtoHand.ARM), `holder(woman)` (a woman's at Eto's size, as `EtoHand.OUT_FEMALE`), `out(villagerSlim, holderWoman)`,
   `offset(bodyYaw, out)` (to the holder's right). `HumanPersona.walk`, `stroll` (3 each), `letGo`, `edge` (16 each). `HumanTalk`:

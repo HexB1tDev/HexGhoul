@@ -704,6 +704,19 @@ public final class NpcTests {
         skins &= "minecraft".equals(com.hex.kagune.control.npc.HumanRules.namespace(3))
             && com.hex.kagune.control.npc.HumanRules.skin(3).startsWith("textures/entity/player/");
         check(skins, "the villagers' own skins: files there, new looks map to them, old looks keep vanilla's");
+        // 1.3.79: children's looks: every version's texture there, its own look first, the nearest look picked by hair and eyes.
+        int versions = 0;
+        boolean looked = true;
+        for (com.hex.kagune.control.family.ChildSkins.Skin s : com.hex.kagune.control.family.ChildSkins.ALL) {
+            com.hex.kagune.control.family.ChildLooks.Look[] looks = com.hex.kagune.control.family.ChildLooks.of(s.key());
+            looked &= looks.length >= 1 && looks[0].texture().equals(s.key());
+            for (com.hex.kagune.control.family.ChildLooks.Look look : looks) {
+                looked &= new java.io.File("src/main/resources/assets/hexkagune/textures/entity/child/skins/" + look.texture() + ".png").isFile();
+                looked &= com.hex.kagune.control.family.ChildLooks.pick(s.key(), look.hair(), look.eyes()) == look;
+            }
+            versions += looks.length - 1;
+        }
+        check(looked && versions >= 100, "children's looks: " + versions + " versions with other hair and eyes, each picked by its own colours");
         // 1.3.76: blinks: every skin that blinks has its shut eyes; villagers blink with their child skin's; vanilla's looks have none.
         int blinking = 0;
         boolean shut = com.hex.kagune.control.npc.HumanRules.closed(3) == null;
