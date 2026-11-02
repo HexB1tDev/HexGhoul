@@ -559,11 +559,11 @@ public final class AgentBrain {
 
     /**
      * 1.3.71: the village's patrol (the owner: "CCG agents often patrol the streets in an orderly maner, never going into the houses"): it
-     * walks the loop of street spots round the village ({@code BrickVillage.ROUTE}) in order, joining it at the nearest spot; after a
+     * walks the loop of street spots round the village ({@code VillageMap.ROUTE}) in order, joining it at the nearest spot; after a
      * fight, back to it.
      */
     private static void village(CcgAgent agent, Mind mind, VillagePlace.Place place, long now) {
-        int[][] route = com.hex.kagune.control.village.BrickVillage.ROUTE;
+        int[][] route = com.hex.kagune.control.village.VillageMap.ROUTE;
         if (mind.waypoint < 0 || mind.waypoint >= route.length) {
             double[] local = place.local(agent.m_20185_(), agent.m_20189_());
             mind.waypoint = com.hex.kagune.control.village.VillageRules.nearest(route, local[0], local[1]);

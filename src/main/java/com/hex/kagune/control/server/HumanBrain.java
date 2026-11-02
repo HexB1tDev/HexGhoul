@@ -508,7 +508,7 @@ public final class HumanBrain {
         }
         mind.nextWander = now + com.hex.kagune.control.village.VillageRules.STROLL_EVERY
             + human.m_217043_().m_188503_(com.hex.kagune.control.village.VillageRules.STROLL_MORE);
-        int[][] streets = com.hex.kagune.control.village.BrickVillage.STREETS;
+        int[][] streets = com.hex.kagune.control.village.VillageMap.STREETS;
         double reach = com.hex.kagune.control.village.VillageRules.STROLL_REACH;
         for (int tries = 0; tries < 12; tries++) {
             double[] to = place.world(streets[human.m_217043_().m_188503_(streets.length)]);

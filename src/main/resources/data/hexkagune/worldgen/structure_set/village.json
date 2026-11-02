@@ -1,14 +1,14 @@
 {
   "structures": [
     {
-      "structure": "hexkagune:brick_village",
+      "structure": "hexkagune:village",
       "weight": 1
     }
   ],
   "placement": {
     "type": "minecraft:random_spread",
-    "spacing": 44,
-    "separation": 18,
+    "spacing": 48,
+    "separation": 24,
     "salt": 1371206533
   }
 }

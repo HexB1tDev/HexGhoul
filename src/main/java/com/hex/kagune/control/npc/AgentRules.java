@@ -177,9 +177,12 @@ public final class AgentRules {
 
     // ---------------------------------------------------------------- when they turn up
 
-    /** Every this many ticks each player in the overworld has this chance of a pair turning up: about one pair every two days. */
+    /**
+     * Every this many ticks each player in the overworld has this chance of a pair turning up: about one pair a day (2.0.1, the owner: "I
+     * only see two of them when there should be at least a little more"; one every two days before).
+     */
     public static final int SPAWN_EVERY = 200;
-    public static final double SPAWN_CHANCE = 0.0042;
+    public static final double SPAWN_CHANCE = 0.0084;
     /** How far from the player (blocks), no player closer than this to the spot, the pair this far apart. */
     public static final double SPAWN_NEAREST = 28.0;
     public static final double SPAWN_FARTHEST = 52.0;

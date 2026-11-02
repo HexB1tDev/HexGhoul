@@ -106,14 +106,14 @@ public final class AgentTests {
         check(AgentRules.size(man) == AgentRules.MALE_SIZE && AgentRules.build(man) == 1.0F, "a man a player's size");
     }
 
-    /** Pairs, rare: about one every two days, a little more often than a wild ghoul (now one every two or three nights). */
+    /** Pairs: about one a day (2.0.1; one every two days before), more often than a wild ghoul (one every two or three nights). */
     static void spawning() {
         double agentTries = 24000.0 / AgentRules.SPAWN_EVERY;
         double pairsADay = agentTries * AgentRules.SPAWN_CHANCE;
         double ghoulTries = (NpcRules.NIGHT_TO - NpcRules.NIGHT_FROM) / (double)NpcRules.SPAWN_EVERY;
         double ghoulsADay = ghoulTries * NpcRules.SPAWN_CHANCE;
-        check(pairsADay >= 0.3 && pairsADay <= 0.7, "not an everyday find: " + pairsADay + " pairs a day");
-        check(pairsADay > ghoulsADay && pairsADay < ghoulsADay * 2.0, "a little more often than a wild ghoul: " + pairsADay + " vs " + ghoulsADay);
+        check(pairsADay >= 0.8 && pairsADay <= 1.2, "about a pair a day: " + pairsADay + " pairs a day");
+        check(pairsADay > ghoulsADay * 1.5, "more often than a wild ghoul: " + pairsADay + " vs " + ghoulsADay);
         check(ghoulsADay < 0.6, "a wild ghoul is rare now: " + ghoulsADay + " a night");
         check(!AgentRules.spaced(AgentRules.ALONE - 1.0) && AgentRules.spaced(AgentRules.ALONE + 1.0) && AgentRules.spaced(Double.MAX_VALUE),
             "never near another pair");

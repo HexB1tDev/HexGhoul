@@ -21,6 +21,8 @@ public final class KaguneControlBootstrap {
         ControlItems.register(context.getModEventBus());
         // 7.0.2: the expansion's own entities (the ghoul NPC).
         ControlEntities.register(context.getModEventBus());
+        // 2.0.1: the village's structure type (hexkagune:dry_jigsaw: only on dry land).
+        ControlStructures.register(context.getModEventBus());
         KaguneMod.LOGGER.info("HexKagune kagune control, instinct and combat expansion loaded");
     }
 }

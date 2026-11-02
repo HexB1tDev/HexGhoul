@@ -20,7 +20,7 @@ import net.minecraftforge.fml.common.Mod;
  * 1.3.27: where the CCG's investigators come from: the overworld, any time of day, always two together. Every
  * {@link AgentRules#SPAWN_EVERY} ticks each player out in it has a {@link AgentRules#SPAWN_CHANCE} chance of a pair turning up
  * {@link AgentRules#SPAWN_NEAREST} to {@link AgentRules#SPAWN_FARTHEST} blocks away, on the surface, no player close to the spot and no
- * other investigator anywhere near it ({@link AgentRules#spaced}): about one pair every two days near someone, never an everyday sight.
+ * other investigator anywhere near it ({@link AgentRules#spaced}): about one pair a day near someone (2.0.1; every two days before).
  */
 @Mod.EventBusSubscriber(modid = "hexkagune")
 public final class AgentSpawner {

@@ -992,3 +992,41 @@ M net/minecraft/client/gui/GuiGraphics m_280480_ (Lnet/minecraft/world/item/Item
 M net/minecraft/client/gui/GuiGraphics m_280370_ (Lnet/minecraft/client/gui/Font;Lnet/minecraft/world/item/ItemStack;II)V  # [srg] renderItemDecorations(font, stack, x, y): joined.tsrg eox a (Leov;Lcfz;II)V m_280370_, intermediary method_51431, yarn DrawContext.drawItemInSlot (a recipe's count)
 M net/minecraft/client/gui/GuiGraphics m_280153_ (Lnet/minecraft/client/gui/Font;Lnet/minecraft/world/item/ItemStack;II)V  # [srg] renderTooltip(font, stack, x, y): joined.tsrg eox b (Leov;Lcfz;II)V m_280153_, intermediary method_51446, yarn DrawContext.drawItemTooltip
 M net/minecraft/client/gui/components/events/GuiEventListener m_6050_ (DDD)Z  # [srg] mouseScrolled: joined.tsrg eqt a (DDD)Z m_6050_ (eqt = GuiEventListener), intermediary method_25401, yarn Element.mouseScrolled; Screen inherits it
+
+# --- 2.0.1: the village only on dry land (hexkagune:dry_jigsaw: vanilla's jigsaw fields and placing, started only where VillageGround allows) --
+C net/minecraft/world/level/levelgen/structure/Structure                            # [srg] dsa C_213164_ (intermediary class_3195, yarn Structure)
+M net/minecraft/world/level/levelgen/structure/Structure <init> (Lnet/minecraft/world/level/levelgen/structure/Structure$StructureSettings;)V  # [srg] dsa.<init>(Ldsa$c;)V (yarn Structure(Structure.Config)); protected, called as super(...)
+M net/minecraft/world/level/levelgen/structure/Structure m_214086_ (Lnet/minecraft/world/level/levelgen/structure/Structure$GenerationContext;)Ljava/util/Optional;  # [srg] findGenerationPoint: joined.tsrg dsa a (Ldsa$a;)Ljava/util/Optional; m_214086_ (yarn getStructurePosition); overridden, and called by name through ObfuscationReflectionHelper
+M net/minecraft/world/level/levelgen/structure/Structure m_213658_ ()Lnet/minecraft/world/level/levelgen/structure/StructureType;  # [srg] type: joined.tsrg dsa ()Ldsj; m_213658_ (yarn getType); overridden
+M net/minecraft/world/level/levelgen/structure/Structure modifiableStructureInfo ()Lnet/minecraftforge/common/world/ModifiableStructureInfo;  # [forge] patches/minecraft/.../levelgen/structure/Structure.java.patch (public, Forge's own name; set in the constructor)
+C net/minecraft/world/level/levelgen/structure/Structure$StructureSettings          # [srg] dsa$c C_213164_$C_226689_ (class_3195$class_7302, yarn Structure$Config)
+C net/minecraft/world/level/levelgen/structure/Structure$GenerationContext          # [srg] dsa$a C_213164_$C_213165_ (class_3195$class_7149, yarn Structure$Context), a record
+M net/minecraft/world/level/levelgen/structure/Structure$GenerationContext f_226622_ ()Lnet/minecraft/world/level/chunk/ChunkGenerator;  # [srg] record accessor chunkGenerator: joined.tsrg dsa$a b ()Lddy; f_226622_
+M net/minecraft/world/level/levelgen/structure/Structure$GenerationContext f_226624_ ()Lnet/minecraft/world/level/levelgen/RandomState;  # [srg] record accessor randomState: joined.tsrg dsa$a d ()Ldhy; f_226624_ (yarn noiseConfig)
+M net/minecraft/world/level/levelgen/structure/Structure$GenerationContext f_226628_ ()Lnet/minecraft/world/level/ChunkPos;  # [srg] record accessor chunkPos: joined.tsrg dsa$a h ()Lclt; f_226628_
+M net/minecraft/world/level/levelgen/structure/Structure$GenerationContext f_226629_ ()Lnet/minecraft/world/level/LevelHeightAccessor;  # [srg] record accessor heightAccessor: joined.tsrg dsa$a i ()Lcmo; f_226629_ (yarn world, class_5539 HeightLimitView)
+C net/minecraft/world/level/levelgen/structure/StructureType                        # [srg] dsj C_213168_ (class_7151, yarn StructureType), an interface
+M net/minecraft/world/level/levelgen/structure/StructureType m_226884_ ()Lcom/mojang/serialization/Codec;  # [srg] codec: joined.tsrg dsj codec ()Lcom/mojang/serialization/Codec; m_226884_ (implemented by a lambda)
+C net/minecraft/world/level/levelgen/structure/structures/JigsawStructure           # [srg] dtt C_213193_ (class_5434, yarn JigsawStructure)
+F net/minecraft/world/level/levelgen/structure/structures/JigsawStructure f_227604_ Lcom/mojang/serialization/Codec;  # [srg] CODEC: joined.tsrg dtt e f_227604_ (yarn CODEC; ExtraCodecs.validate(mapCodec, validate).codec(): a MapCodecCodec)
+C net/minecraft/world/level/chunk/ChunkGenerator                                    # [srg] ddy (class_2794, yarn ChunkGenerator)
+M net/minecraft/world/level/chunk/ChunkGenerator m_214096_ (IILnet/minecraft/world/level/levelgen/Heightmap$Types;Lnet/minecraft/world/level/LevelHeightAccessor;Lnet/minecraft/world/level/levelgen/RandomState;)I  # [srg] getBaseHeight: joined.tsrg ddy (IILdhk$a;Lcmo;Ldhy;)I m_214096_ (yarn getHeight)
+C net/minecraft/world/level/levelgen/RandomState                                    # [srg] dhy (class_7138, yarn NoiseConfig)
+C net/minecraft/world/level/LevelHeightAccessor                                     # [srg] cmo (class_5539, yarn HeightLimitView)
+C net/minecraft/world/level/ChunkPos                                                # [srg] clt (class_1923, yarn ChunkPos)
+M net/minecraft/world/level/ChunkPos m_45604_ ()I                                   # [srg] getMinBlockX: clt m_45604_ (yarn getStartX)
+M net/minecraft/world/level/ChunkPos m_45605_ ()I                                   # [srg] getMinBlockZ: clt m_45605_ (yarn getStartZ)
+F net/minecraft/world/level/levelgen/Heightmap$Types WORLD_SURFACE_WG Lnet/minecraft/world/level/levelgen/Heightmap$Types;  # [srg] dhk$a.a WORLD_SURFACE_WG (enum constants keep their names)
+F net/minecraft/world/level/levelgen/Heightmap$Types OCEAN_FLOOR_WG Lnet/minecraft/world/level/levelgen/Heightmap$Types;  # [srg] dhk$a.c OCEAN_FLOOR_WG (enum constants keep their names)
+F net/minecraft/core/registries/Registries f_256938_ Lnet/minecraft/resources/ResourceKey;  # [srg] STRUCTURE_TYPE: jc f_256938_ (yarn RegistryKeys.STRUCTURE_TYPE)
+M net/minecraftforge/registries/DeferredRegister create (Lnet/minecraft/resources/ResourceKey;Ljava/lang/String;)Lnet/minecraftforge/registries/DeferredRegister;  # [forge] 1.20.1 registries/DeferredRegister.java:84 create(ResourceKey<? extends Registry<B>>, String)
+C net/minecraftforge/common/world/ModifiableStructureInfo                          # [forge] 1.20.1 common/world/ModifiableStructureInfo.java
+M net/minecraftforge/common/world/ModifiableStructureInfo getOriginalStructureInfo ()Lnet/minecraftforge/common/world/ModifiableStructureInfo$StructureInfo;  # [forge] same, line 52 (public)
+C net/minecraftforge/common/world/ModifiableStructureInfo$StructureInfo            # [forge] same, line 96: public record StructureInfo(StructureSettings structureSettings)
+M net/minecraftforge/common/world/ModifiableStructureInfo$StructureInfo structureSettings ()Lnet/minecraft/world/level/levelgen/structure/Structure$StructureSettings;  # [forge] same, the record's accessor
+C com/mojang/serialization/Codec                                                    # [lib] DataFixerUpper 6.0.8 (Minecraft 1.20.1's), an interface
+C com/mojang/serialization/MapCodec                                                 # [lib] DataFixerUpper 6.0.8 MapCodec
+M com/mojang/serialization/MapCodec xmap (Ljava/util/function/Function;Ljava/util/function/Function;)Lcom/mojang/serialization/MapCodec;  # [lib] DFU 6 MapCodec.xmap(to, from)
+M com/mojang/serialization/MapCodec codec ()Lcom/mojang/serialization/Codec;          # [lib] DFU 6 MapCodec.codec(): new MapCodecCodec(this) (fields inline under a dispatch's type)
+C com/mojang/serialization/MapCodec$MapCodecCodec                                   # [lib] DFU 6 MapCodec.MapCodecCodec (public static final)
+M com/mojang/serialization/MapCodec$MapCodecCodec codec ()Lcom/mojang/serialization/MapCodec;  # [lib] DFU 6 MapCodecCodec.codec()

@@ -1,6 +1,6 @@
 package com.hex.kagune.control.server;
 
-import com.hex.kagune.control.village.BrickVillage;
+import com.hex.kagune.control.village.VillageMap;
 import com.hex.kagune.control.village.VillageRules;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.Mob;
@@ -24,12 +24,12 @@ final class VillagePlace {
 
         /** True if ({@code wx}, {@code wz}) is within the perimeter. */
         boolean inside(double wx, double wz) {
-            return VillageRules.inside(wx - this.x - 0.5, wz - this.z - 0.5, BrickVillage.PERIMETER);
+            return VillageRules.inside(wx - this.x - 0.5, wz - this.z - 0.5, VillageMap.PERIMETER);
         }
 
         /** ({@code wx}, {@code wz}) brought back within the perimeter, {@code margin} in from it. */
         double[] clamp(double wx, double wz, double margin) {
-            double[] c = VillageRules.clamp(wx - this.x - 0.5, wz - this.z - 0.5, BrickVillage.PERIMETER, margin);
+            double[] c = VillageRules.clamp(wx - this.x - 0.5, wz - this.z - 0.5, VillageMap.PERIMETER, margin);
             return new double[] {this.x + 0.5 + c[0], this.z + 0.5 + c[1]};
         }
 

@@ -747,10 +747,10 @@ public final class NpcTests {
             shut &= (path != null) == com.hex.kagune.control.family.ChildBlinks.has(com.hex.kagune.control.village.HumanSkins.ALL[i].child());
         }
         check(shut && blinking >= 25, "shut eyes for blinks: " + blinking + " child skins, the villagers' from theirs");
-        int[][] streets = com.hex.kagune.control.village.BrickVillage.STREETS;
-        int[][] route = com.hex.kagune.control.village.BrickVillage.ROUTE;
-        int[][] homes = com.hex.kagune.control.village.BrickVillage.HOMES;
-        int perimeter = com.hex.kagune.control.village.BrickVillage.PERIMETER;
+        int[][] streets = com.hex.kagune.control.village.VillageMap.STREETS;
+        int[][] route = com.hex.kagune.control.village.VillageMap.ROUTE;
+        int[][] homes = com.hex.kagune.control.village.VillageMap.HOMES;
+        int perimeter = com.hex.kagune.control.village.VillageMap.PERIMETER;
         check(streets.length > 100 && route.length >= 8 && homes.length >= 6, "a village of streets, a patrol loop and homes ("
             + streets.length + ", " + route.length + ", " + homes.length + ")");
         boolean in = true;
@@ -762,9 +762,21 @@ public final class NpcTests {
         check(in, "every street spot, patrol spot and home within the perimeter");
         boolean ground = true;
         for (int[] p : route) {
-            ground &= p[1] >= 0 && p[1] <= 1;
+            ground &= p[1] >= -4 && p[1] <= 4;
         }
-        check(ground, "the patrol stays on the ground (never a roof)");
+        check(ground, "the patrol stays near the ground (never a roof)");
+        check(homes.length == 13 && perimeter <= 128, "13 homes (26 villagers, 26 looks), the village within 128 of its middle");
+        // 2.0.1: only on dry, fairly flat land.
+        int n = com.hex.kagune.control.village.VillageGround.SAMPLES.length;
+        int[] flat = new int[n];
+        java.util.Arrays.fill(flat, 70);
+        int[] wet = flat.clone();
+        wet[12] = 72;
+        int[] hill = flat.clone();
+        hill[3] = 70 + com.hex.kagune.control.village.VillageGround.FLAT + 1;
+        check(n == 25 && com.hex.kagune.control.village.VillageGround.suits(flat, flat)
+            && !com.hex.kagune.control.village.VillageGround.suits(wet, flat) && !com.hex.kagune.control.village.VillageGround.suits(hill, hill)
+            && !com.hex.kagune.control.village.VillageGround.suits(new int[0], new int[0]), "a village only on dry, fairly flat land");
         for (int i = 0; i < route.length; i++) {
             int[] a = route[i];
             int[] b = route[(i + 1) % route.length];

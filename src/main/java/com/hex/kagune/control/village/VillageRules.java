@@ -3,7 +3,7 @@ package com.hex.kagune.control.village;
 /**
  * 1.3.71: the Brick Village's people (pure, tested): the village is placed turned a quarter turn at a time, and so is each of its people
  * (placed facing south in the template, yaw 0), so one tells the village's turn from its own yaw the first time it ticks
- * ({@link #turns}) and turns the village's map ({@link BrickVillage}) with it ({@link #turn}). Its humans live in its houses (their homes,
+ * ({@link #turns}) and turns the village's map ({@link VillageMap}) with it ({@link #turn}). Its humans live in its houses (their homes,
  * where they were placed), walk its streets by day and stay home by night; its investigators walk the loop round it ({@code ROUTE}) in
  * order; none of them ever goes past its perimeter ({@link #inside}, {@link #clamp}).
  */
