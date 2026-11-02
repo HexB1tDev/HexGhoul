@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.68 (HexGhoul): wild ghouls prowl and hunt humans at night, and hide what they are by day (testing)
+
+See `.github/release-notes-1.3.68.md`.
+
 ## 1.3.67 (HexGhoul): new, more dramatic runs for War and Peace (testing)
 
 See `.github/release-notes-1.3.67.md`.

@@ -224,6 +224,9 @@ public final class GhoulNpcRenderer extends HumanoidMobRenderer<GhoulNpc, Player
                 }
                 GhoulNpcClient.View view = GhoulNpcClient.get(npc.m_19879_());
                 float intensity = GhoulNpcClient.deploy(view, PaleClient.clock(partialTick));
+                if (view != null && view.eyes()) {
+                    intensity = 1.0F; // 1.3.68: a wild ghoul prowling at night: its kakugan on, its kagune not yet
+                }
                 if (intensity <= 0.003F || npc.m_20145_()) {
                     return;
                 }

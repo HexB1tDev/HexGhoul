@@ -97,6 +97,19 @@ public final class NpcRules {
         return time >= NIGHT_FROM && time < NIGHT_TO;
     }
 
+    /**
+     * 1.3.68 (the owner: "hunt humans at night (Kagune and Kakugan off during the day)"): a wild ghoul (walking with no player) prowls at
+     * night, its kakugan on, hunting humans; by day it hides what it is: its kagune and its kakugan in, it starts nothing and runs from a
+     * fight. A ghoul that walks with a player does neither.
+     */
+    public static boolean prowls(boolean wild, long dayTime) {
+        return wild && night(dayTime);
+    }
+
+    public static boolean hides(boolean wild, long dayTime) {
+        return wild && !night(dayTime);
+    }
+
     /** True if a new one may turn up: the nearest other ghoul NPC {@code nearest} away, {@code crowd} others within {@link #CROWD}. */
     public static boolean spaced(double nearest, int crowd) {
         return nearest >= ALONE && crowd <= CROWD_MOST;

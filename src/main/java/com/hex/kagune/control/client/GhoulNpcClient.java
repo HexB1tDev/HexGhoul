@@ -24,7 +24,7 @@ public final class GhoulNpcClient {
     /** One NPC as the server last said; {@code ...Began} are client clock times, {@code ...At} the server's game ticks. */
     public record View(NpcIdentity identity, boolean out, long outAt, double outBegan, GraftMove move, long moveAt, double moveBegan, double x, double y,
                        double z, int prey, long volleyAt, double volleyBegan, long shotAt, double shotBegan, int shotSide, int flip, long flipAt,
-                       double flipBegan, int raw) {
+                       double flipBegan, int raw, boolean eyes) {
         /** Ticks since the lash began (huge with none). */
         public double age(double clock) {
             return this.move == GraftMove.NONE ? Double.MAX_VALUE : Math.max(0.0, clock - this.moveBegan);
@@ -50,7 +50,7 @@ public final class GhoulNpcClient {
         double flipBegan = began(world, clock, message.flipAt(), before == null ? Long.MIN_VALUE : before.flipAt(), before == null ? 0.0 : before.flipBegan());
         VIEWS.put(message.id(), new View(NpcIdentity.unpack(message.identity()), message.out(), message.outAt(), outBegan, GraftMove.byOrdinal(message.move()),
             message.moveAt(), moveBegan, message.x(), message.y(), message.z(), message.prey(), message.volleyAt(), volleyBegan, message.shotAt(),
-            shotBegan, message.shotSide(), message.flip(), message.flipAt(), flipBegan, message.move()));
+            shotBegan, message.shotSide(), message.flip(), message.flipAt(), flipBegan, message.move(), message.eyes()));
     }
 
     /** When something the server began at tick {@code at} began on the client clock: told again, as before; fresh, now; old, as long ago. */

@@ -1,7 +1,17 @@
-# START HERE (state after 1.3.67)
+# START HERE (state after 1.3.68)
 
-- **Next session:** read `docs/handoff/next-ai-1.3.67.md` first (the owner's last update, what is done and what is left, in order), then
-  `docs/handoff/next-ai-1.3.60.md` (house rules, family talk).
+- **Next session:** read `docs/handoff/next-ai-1.3.67.md` first (the owner's last update and its plan, in order), then
+  `docs/handoff/next-ai-1.3.60.md` (house rules). Done of that plan: 1 (1.3.68). Next: 2, the ghoul arm blade.
+- **1.3.68 wild ghouls by night and day** (protocol **72**: `S2CGhoulNpc` gained `eyes` (a 15-arg constructor keeps false for
+  `ChildKagune`); `GhoulNpcClient.View.eyes`; `GhoulNpcRenderer.Eyes` draws the kakugan whole while it is set). Pure
+  `NpcRules.prowls(wild, dayTime)` (wild and night) / `hides(wild, dayTime)` (wild and day). `GhoulNpcBrain.Mind.eyes` (sent as eyes and
+  not out); `tick`: a wild ghoul by day runs (`flee`) from any prey (only a grudge makes one by day); `wanted`: (after the grudge and the
+  owner) by day false, `HumanNpc` at night true. `HumanRules.notice(sight, shown)`: not shown -> 0 (was CLOSE 6); `HumanBrain.danger`:
+  a player shown = kagune, a final sight, `GhoulServer.ghoul` (kakugan open) or any `Sightings.last`; a `GhoulNpc` only with `mind.out` or
+  `mind.eyes`. `FamilyTests.fear`.
+
+# State after 1.3.67
+
 - **1.3.67 War and Peace runs** (protocol 71, unchanged; client only). `KingRun.war`: the beast's charge (lean 0.24 + 0.76 s, flip -0.15 s,
   head out and up; `rake` = cos 2 phase: both claws `s (-1.25 + 0.9 rake)` reach between footfalls and rake back as each lands, elbows bent
   as they pull; walking: the old pump x (1 - s); twist, side, roll lurching; heavy wide legs; stomp drop 0.4 + 1.8 s). `KingRun.peace`: the

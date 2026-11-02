@@ -36,8 +36,16 @@ only from the hexkagune: pack, allowlist new API, append only to ordinal-sent en
 >
 > make sure this is as bug free as possible, however we gotta start working faster, we're running out of usage in all accounts."
 
-Their litematic was uploaded to the session that made 1.3.67 as `Brick_Village-from-abfielder.litematic` (session uploads; if it is not
-in the repo under `art/village/`, ask the owner to send it again). "Kaneki" in their words means Ken (the name is banned in the jar).
+And two more, sent during 1.3.68:
+
+> "if you're a ghoul at some point before starting a relationship you have to admit to your human love interest that you're a ghoul, may or
+> may not require convincing.
+>
+> Humans will run to a nearby ccg agent in the village if any are available, CCG agents top priority if to defend humans, so they will drop
+> what they're doing to protect them if they are in trouble."
+
+Their litematic was uploaded to the session that made 1.3.67 as `Brick_Village-from-abfielder.litematic` (kept unchanged in the repo as
+`art/village/Brick_Village-from-abfielder.litematic`). "Kaneki" in their words means Ken (the name is banned in the jar).
 
 ## Plan (each its own version; see the top of `companions-handoff.md` for what of it is done)
 
@@ -48,6 +56,8 @@ in the repo under `art/village/`, ask the owner to send it again). "Kaneki" in t
    (eyes or kagune: `AgentBrain.wanted` / `reveal`; wild ghoul NPCs only with their kagune out or eyes on).
 4. The village: the litematic to a structure (NBT, `data/hexkagune/structures/`), a jigsaw-free single-piece structure set for plains
    only (worldgen JSON: structure, structure_set, biome tag), its humans (house assignment, street patrol, trading in the streets, a
-   perimeter they never leave), CCG patrols on the streets, never indoors.
+   perimeter they never leave), CCG patrols on the streets, never indoors; a frightened human runs to the nearest free agent (if any near),
+   and agents drop anything to defend a human in trouble (their top priority).
 5. Humans: general talk, personalities, romance and dating (reuse `Romance`, `RomanceCard`, the scene system, companion gestures),
-   cute looks from the children's skins (different hair, clothes).
+   cute looks from the children's skins (different hair, clothes); a ghoul player must admit what they are to a human love interest before
+   the relationship can start (a confession scene that may need convincing: by personality, regard).

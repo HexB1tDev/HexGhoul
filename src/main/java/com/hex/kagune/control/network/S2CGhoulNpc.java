@@ -14,7 +14,13 @@ import net.minecraftforge.network.NetworkEvent;
  * (an {@code PaleRules.Flip}, -1 none, and when it took off).
  */
 public record S2CGhoulNpc(int id, long identity, boolean out, long outAt, int move, long moveAt, double x, double y, double z, int prey, long volleyAt,
-                          long shotAt, int shotSide, int flip, long flipAt) {
+                          long shotAt, int shotSide, int flip, long flipAt, boolean eyes) {
+    /** Without its kakugan on unless its kagune is out (1.3.68: {@code eyes}, a wild ghoul prowling at night). */
+    public S2CGhoulNpc(int id, long identity, boolean out, long outAt, int move, long moveAt, double x, double y, double z, int prey, long volleyAt,
+                       long shotAt, int shotSide, int flip, long flipAt) {
+        this(id, identity, out, outAt, move, moveAt, x, y, z, prey, volleyAt, shotAt, shotSide, flip, flipAt, false);
+    }
+
     public static void encode(S2CGhoulNpc message, FriendlyByteBuf buffer) {
         buffer.writeInt(message.id);
         buffer.m_130103_(message.identity);
@@ -31,12 +37,13 @@ public record S2CGhoulNpc(int id, long identity, boolean out, long outAt, int mo
         buffer.writeInt(message.shotSide);
         buffer.writeByte(message.flip);
         buffer.m_130103_(message.flipAt);
+        buffer.writeBoolean(message.eyes);
     }
 
     public static S2CGhoulNpc decode(FriendlyByteBuf buffer) {
         return new S2CGhoulNpc(buffer.readInt(), buffer.m_130258_(), buffer.readBoolean(), buffer.m_130258_(), buffer.readInt(), buffer.m_130258_(),
             buffer.readDouble(), buffer.readDouble(), buffer.readDouble(), buffer.readInt(), buffer.m_130258_(), buffer.m_130258_(), buffer.readInt(),
-            buffer.readByte(), buffer.m_130258_());
+            buffer.readByte(), buffer.m_130258_(), buffer.readBoolean());
     }
 
     public static void handle(S2CGhoulNpc message, Supplier<NetworkEvent.Context> supplier) {

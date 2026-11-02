@@ -110,7 +110,8 @@ public final class HumanBrain {
             }
             double distance = Math.sqrt(player.m_20280_(human));
             FinalSight sight = Sightings.seen(player);
-            boolean shown = KaguneProfile.isActive(player) || sight.any();
+            boolean shown = KaguneProfile.isActive(player) || sight.any() || GhoulServer.ghoul(player)
+                || Sightings.last(player) != com.hex.kagune.control.npc.Display.NONE; // 1.3.68: their eyes on is enough
             boolean noticed = distance <= HumanRules.notice(sight, shown) && (distance <= HumanRules.NOTICE || human.m_142582_(player));
             if (noticed && sight.terror()) {
                 mind.dreadOf = player.m_19879_();
@@ -122,7 +123,9 @@ public final class HumanBrain {
                 bestDistance = distance;
             }
         }
-        for (GhoulNpc ghoul : level.m_6443_(GhoulNpc.class, human.m_20191_().m_82400_(HumanRules.NOTICE), living -> living.m_6084_())) {
+        // 1.3.68: a ghoul NPC only with its eyes on or its kagune out (by day a wild one hides both: just a person).
+        for (GhoulNpc ghoul : level.m_6443_(GhoulNpc.class, human.m_20191_().m_82400_(HumanRules.NOTICE),
+                living -> living.m_6084_() && living.mind != null && (living.mind.out || living.mind.eyes))) {
             double distance = Math.sqrt(ghoul.m_20280_(human));
             if (HumanRules.notices(distance, true) && distance < bestDistance) {
                 best = new Danger(ghoul, FinalSight.NONE, true);

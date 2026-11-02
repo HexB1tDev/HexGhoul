@@ -113,6 +113,8 @@ public final class GhoulNpcBrain {
         /** 7.0.2: sent off (it walks away and is gone), or scared off (it runs a while). */
         long leavingAt = Long.MIN_VALUE;
         long scaredUntil = Long.MIN_VALUE;
+        /** 1.3.68: its kakugan on with its kagune in (a wild ghoul prowling at night: NpcRules.prowls). */
+        boolean eyes;
         /** 1.3.65: who scared it off (an entity id, 0: whoever is nearest): it runs from them (Sightings: War keeps it running). */
         int scaredOf;
         /** 1.0.41: its flip (an PaleRules.Flip, -1 none), when it took off, its push (renewed the tick after), when it may flip again. */
@@ -171,7 +173,16 @@ public final class GhoulNpcBrain {
             return; // reeling: it does nothing until it shakes it off
         }
         LivingEntity prey = prey(npc, who, mind, level, now);
-        if (now < mind.scaredUntil || who.temper().coward() && afraid(npc, level, prey)) {
+        // 1.3.68: a wild ghoul prowls by night (its kakugan on) and hides what it is by day: anything it would fight, it runs from instead.
+        boolean wild = mind.owner == null;
+        boolean eyes = NpcRules.prowls(wild, level.m_46468_());
+        if (eyes != mind.eyes) {
+            mind.eyes = eyes;
+            mind.dirty = true;
+        }
+        if (prey != null && NpcRules.hides(wild, level.m_46468_())) {
+            flee(npc, mind, prey, level, now);
+        } else if (now < mind.scaredUntil || who.temper().coward() && afraid(npc, level, prey)) {
             flee(npc, mind, prey, level, now);
         } else if (prey == null && talking(npc, mind, level, now)) {
             mind.fleeing = false;
@@ -284,6 +295,14 @@ public final class GhoulNpcBrain {
             // (Not a creeper: it would blow up beside them.)
             return body == owner.m_21188_() || body instanceof Mob mob && mob.m_5448_() == owner && !(body instanceof Creeper)
                 || body instanceof Enemy && !(body instanceof Creeper) && body.m_20280_(owner) <= 100.0;
+        }
+        // 1.3.68: by day a wild ghoul starts nothing (only what hurt it, above, and that it runs from); by night it hunts humans.
+        long day = npc.m_9236_().m_46468_();
+        if (NpcRules.hides(true, day)) {
+            return false;
+        }
+        if (body instanceof com.hex.kagune.control.npc.HumanNpc) {
+            return NpcRules.prowls(true, day);
         }
         if (body instanceof ServerPlayer player) {
             return attitude(npc, who, player) == NpcTemper.Attitude.HOSTILE;
@@ -716,7 +735,7 @@ public final class GhoulNpcBrain {
         boolean blade = who.kind() == NpcIdentity.Kind.KOUKAKU;
         return new S2CGhoulNpc(npc.m_19879_(), who.pack(), mind.out, mind.outAt, blade ? mind.blade : mind.move.ordinal(), blade ? mind.bladeAt : mind.moveAt,
             mind.point.f_82479_,
-            mind.point.f_82480_, mind.point.f_82481_, mind.prey, mind.volleyAt, mind.shotAt, mind.shotSide, mind.flip, mind.flipAt);
+            mind.point.f_82480_, mind.point.f_82481_, mind.prey, mind.volleyAt, mind.shotAt, mind.shotSide, mind.flip, mind.flipAt, mind.eyes && !mind.out);
     }
 
     /** A player starts seeing it: they are told who it is and what it is doing. */

@@ -68,10 +68,11 @@ public final class HumanRules {
 
     /**
      * 1.3.65: how far off it sees a ghoul player as one: a terror from {@link #TERROR_NOTICE}, another final sight from {@link #DREAD_NOTICE},
-     * their kagune out (or a kakuja) from {@link #NOTICE}, hidden only from {@link #CLOSE}.
+     * their eyes on or their kagune out (or a kakuja) from {@link #NOTICE}. 1.3.68 (the owner: "they run from anyone with eyes on, or kagune
+     * out"): one who hides it all is just a person to it (it was felt from {@link #CLOSE}).
      */
     public static double notice(FinalSight sight, boolean shown) {
-        return sight.terror() ? TERROR_NOTICE : sight.any() ? DREAD_NOTICE : shown ? NOTICE : CLOSE;
+        return sight.terror() ? TERROR_NOTICE : sight.any() ? DREAD_NOTICE : shown ? NOTICE : 0.0;
     }
 
     /** 1.3.65: how fast it runs from {@code sight} (a terror: a sprint). */

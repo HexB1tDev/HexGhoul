@@ -1712,9 +1712,13 @@ check(com.hex.kagune.control.graft.GraftStage.TRANSPLANT.limbs(com.hex.kagune.co
         check(com.hex.kagune.control.npc.HumanRules.notice(war, true) > com.hex.kagune.control.npc.HumanRules.notice(peace, true)
             && com.hex.kagune.control.npc.HumanRules.notice(peace, false) > com.hex.kagune.control.npc.HumanRules.notice(none, true)
             && com.hex.kagune.control.npc.HumanRules.notice(none, true) == com.hex.kagune.control.npc.HumanRules.NOTICE
-            && com.hex.kagune.control.npc.HumanRules.notice(none, false) == com.hex.kagune.control.npc.HumanRules.CLOSE
+            && com.hex.kagune.control.npc.HumanRules.notice(none, false) == 0.0
             && com.hex.kagune.control.npc.HumanRules.TERROR_SAFE > com.hex.kagune.control.npc.HumanRules.TERROR_NOTICE,
-            "a human sees War from furthest, a final kakuja further than a kagune, a hidden ghoul only close; it runs till well out of it");
+            "a human sees War from furthest, a final kakuja further than a kagune or eyes, a ghoul hiding it all not at all; it runs till well out of it");
+        check(com.hex.kagune.control.npc.NpcRules.prowls(true, 18000L) && !com.hex.kagune.control.npc.NpcRules.prowls(true, 6000L)
+            && !com.hex.kagune.control.npc.NpcRules.prowls(false, 18000L) && com.hex.kagune.control.npc.NpcRules.hides(true, 6000L)
+            && !com.hex.kagune.control.npc.NpcRules.hides(true, 18000L) && !com.hex.kagune.control.npc.NpcRules.hides(false, 6000L),
+            "1.3.68: a wild ghoul prowls by night (eyes on, hunting humans) and hides by day; one walking with a player does neither");
         check(com.hex.kagune.control.npc.HumanRules.pace(war) > com.hex.kagune.control.npc.HumanRules.pace(peace)
             && com.hex.kagune.control.npc.HumanRules.pace(peace) == com.hex.kagune.control.npc.HumanRules.RUN, "it sprints from a terror");
         // The CCG falters: longest at War, a junior longer than its senior; never at nothing.
