@@ -114,6 +114,9 @@ public final class ArtPreview {
         if (wanted.contains("war")) {
             war(new File(out, "king-war.png"));
         }
+        if (wanted.contains("war-alive")) {
+            warAlive(new File(out, "king-war-alive.png"));
+        }
         if (wanted.contains("war-combo")) {
             warStrikes(new File(out, "king-war-combo.png"), true);
         }
@@ -2925,6 +2928,44 @@ public final class ArtPreview {
         }
         System.out.println("war: " + quads + " quads");
         sheet(file, "War, the One-Eyed King (final evolution, evil path): smooth living kakuja after the reference sheet", shots, 3, 600, 520);
+    }
+
+    /** 1.3.66: War's whole form with the rinkaku in {@code motion}. */
+    static List<WingPreview.Tri> warTris(RigPose pose, double time, double grow, com.hex.kagune.control.king.WarModel.Motion motion) {
+        List<WingPreview.Tri> out = new ArrayList<>();
+        String[] names = {"head", "torso", "rightArm", "leftArm", "rightLeg", "leftLeg"};
+        com.hex.kagune.control.king.WarModel.Part[] parts = com.hex.kagune.control.king.WarModel.Part.values();
+        for (int i = 0; i < parts.length; i++) {
+            com.hex.kagune.control.king.WarModel.Part part = parts[i];
+            String name = names[i];
+            out.addAll(placedLit(sink -> com.hex.kagune.control.king.WarModel.build(sink, part, time, grow, 0.0, motion), q -> onPart(pose, name, q)));
+        }
+        return out;
+    }
+
+    /**
+     * 1.3.66: War's rinkaku alive (the owner: "like unmoving branches of a tree"): from behind, a second apart as they sway; then running
+     * (streaming back), turning (left behind), rising and falling, and in a frenzy.
+     */
+    static void warAlive(File file) throws Exception {
+        RigPose still = new RigPose();
+        double[] back = {-4.2, 2.1, -5.6};
+        double[] side = {-6.6, 1.6, 0.4};
+        double[] look = {0.0, 1.15, 0.0};
+        com.hex.kagune.control.king.WarModel.Motion rest = com.hex.kagune.control.king.WarModel.Motion.STILL;
+        List<Shot> shots = new ArrayList<>();
+        for (int k = 0; k < 6; k++) {
+            double t = 400.0 + k * 20.0;
+            shots.add(new Shot("standing, t+" + k + "s", still, NO_WINGS, back, look, warTris(still, t, 1.0, rest)));
+        }
+        Object[][] moving = {{"running (from the side)", rest.drifting(0.0, 1.0, 0.0), side}, {"turning right", rest.drifting(0.5, 0.0, 0.0), back},
+            {"rising (a jump)", rest.drifting(0.0, 0.0, 0.45), side}, {"falling", rest.drifting(0.0, 0.0, -0.45), side},
+            {"frenzy (his M1)", new com.hex.kagune.control.king.WarModel.Motion(0.0, 0.0, 0.1, 0.9), back},
+            {"standing (from the side)", rest, side}};
+        for (Object[] m : moving) {
+            shots.add(new Shot((String)m[0], still, NO_WINGS, (double[])m[2], look, warTris(still, 460.0, 1.0, (com.hex.kagune.control.king.WarModel.Motion)m[1])));
+        }
+        sheet(file, "1.3.66: War's rinkaku alive: swaying as the original tentacles do, and following him", shots, 6, 360, 400);
     }
 
     /** War as the game draws it at {@code night} (0..1): the plates dimmed, the eye's halo, and the bloom sized for {@code distance}. */

@@ -35,7 +35,8 @@ import java.util.List;
  *       reaches 13 pixels out, and the scythe: a curved blade with a steel edge facing forward and in, a glowing groove, a
  *       serrated crimson back, its tip on the ground in front of the feet.</li>
  *   <li>Back: six rinkaku from between the shoulder blades (the top pair over the head, the middle pair to the hips, the lower
- *       pair to the knees), living tubes that writhe, black above and glowing crimson beneath; and the cape, a spiked mantle over
+ *       pair to the knees), living tubes that writhe, black above and glowing crimson beneath (1.3.66: smooth and tapering, swaying and
+ *       following him as the original kagune's tentacles do: {@link #alive}); and the cape, a spiked mantle over
  *       two layers of torn strips to the ankles (1.0.17: pure black, and real cloth: {@link WarCloth}).</li>
  *   <li>Torso: the high collar, the coat with its V neck (the upper chest the player's own), plates, the diagonal sash, the belt
  *       (1.0.17: all he wears pure black; the coat's skirt is {@link WarCloth}'s).</li>
@@ -102,7 +103,8 @@ public final class WarModel {
      * down, to impale); {@code spread} fans them out round him (the storm, the eye); {@code frenzy} makes them thrash; 1.0.13:
      * {@code cocoon} wraps them round him, coil over coil, head to foot.
      */
-    public record Motion(double reach, double low, double spread, double frenzy, double cocoon, double[][] aims, double orb) {
+    public record Motion(double reach, double low, double spread, double frenzy, double cocoon, double[][] aims, double orb, double lag, double run,
+                         double rise) {
         public static final Motion STILL = new Motion(0.0, 0.0, 0.0, 0.0);
 
         public Motion(double reach, double low, double spread, double frenzy) {
@@ -111,6 +113,19 @@ public final class WarModel {
 
         public Motion(double reach, double low, double spread, double frenzy, double cocoon, double[][] aims) {
             this(reach, low, spread, frenzy, cocoon, aims, 0.0);
+        }
+
+        public Motion(double reach, double low, double spread, double frenzy, double cocoon, double[][] aims, double orb) {
+            this(reach, low, spread, frenzy, cocoon, aims, orb, 0.0, 0.0, 0.0);
+        }
+
+        /**
+         * 1.3.66: this motion as he moves, for the rinkaku to follow ({@link #alive}): {@code lag} how far his turning leaves them behind
+         * (radians, + to his left, as Peace's blades), {@code run} how fast he goes (0..1), {@code rise} how fast he rises (blocks a tick,
+         * - falling).
+         */
+        public Motion drifting(double lag, double run, double rise) {
+            return new Motion(this.reach, this.low, this.spread, this.frenzy, this.cocoon, this.aims, this.orb, lag, run, rise);
         }
 
         /**
@@ -126,7 +141,7 @@ public final class WarModel {
          * rinkaku numbered as {@link #TENDRILS} goes, the right one of each pair first.
          */
         public Motion aiming(double[][] aims) {
-            return new Motion(this.reach, this.low, this.spread, this.frenzy, this.cocoon, aims, this.orb);
+            return new Motion(this.reach, this.low, this.spread, this.frenzy, this.cocoon, aims, this.orb, this.lag, this.run, this.rise);
         }
 
         /** The rinkaku in {@code move}, {@code progress} (0..1) through it. */
@@ -341,6 +356,18 @@ public final class WarModel {
 
     static double[] v(double x, double y, double z) {
         return new double[] {x, y, z};
+    }
+
+    /** 1.3.66: the point {@code u} (0..1) of the way along the Catmull-Rom curve through {@code points}. */
+    static double[] along(List<double[]> points, double u) {
+        int n = points.size();
+        double f = clamp01(u) * (n - 1);
+        int i = Math.min(n - 2, (int)Math.floor(f));
+        double[] p0 = points.get(Math.max(0, i - 1));
+        double[] p1 = points.get(i);
+        double[] p2 = points.get(i + 1);
+        double[] p3 = points.get(Math.min(n - 1, i + 2));
+        return catmull(p0, p1, p2, p3, f - i);
     }
 
     /** A centre line through control points (Catmull-Rom), framed by parallel transport from {@code up}. */
@@ -851,8 +878,6 @@ public final class WarModel {
         {{1.2, 21.5, 2.6}, {5.4, 26.4, 5.6}, {9.8, 28.4, 4.4}, {12.8, 24.0, 2.0}, {13.6, 18.6, 0.6}, {12.8, 14.0, -0.6}},
         {{1.2, 20.5, 2.6}, {6.0, 21.6, 5.8}, {10.8, 20.0, 5.0}, {13.6, 14.8, 3.0}, {13.8, 9.0, 1.6}, {12.8, 5.0, 0.6}},
     };
-    /** Armoured segments along each rinkaku. */
-    static final int SEGMENTS = 7;
 
     /** 1.0.7: how much bigger the rinkaku are than their control points (out from the root), and how thick at the root. */
     static final double TENDRIL_SCALE = 1.3;
@@ -872,9 +897,107 @@ public final class WarModel {
     static final double ORB_CENTRE = 17.9;
     static final double ORB_RADIUS = 19.6;
 
+    /**
+     * 1.3.66: smooth and tapering all the way, as the original kagune's tentacles are (it was armoured segments, each flaring at its start:
+     * the owner, "like unmoving branches of a tree"): thick at the root, thinning to a fine point.
+     */
     static double tendrilRadius(double s) {
-        double seg = (s * SEGMENTS) % 1.0;
-        return (TENDRIL_ROOT * Math.pow(1.0 - s, 0.65) + 0.12) * (1.1 - 0.24 * GraftMesh.smooth(seg));
+        return TENDRIL_ROOT * Math.pow(1.0 - s, 0.85) + 0.1;
+    }
+
+    /** 1.3.66: how many points each rinkaku's bend is worked out at (its six control points sampled along their curve). */
+    static final int ALIVE_POINTS = 12;
+
+    /**
+     * 1.3.66 (the owner: "the back tendrils in WAR path are too unrealistic and solid, they are like unmoving branches of a tree, they have 0
+     * similarity to the original tendrils of the other kagunes"): where a rinkaku's point at {@code u} (0 root .. 1 tip) of its length
+     * sways to, {@code p} at rest, as the original kagune's tentacles move: a slow sway on several waves at once, side to side, up and down,
+     * out and back (a third of a block and more at the tip: it was a twentieth), the bend running out along it from the root so it
+     * undulates instead of swinging stiff, now and then a jerk as if it smelled something, heavy enough to sag a little; and following him
+     * ({@link Motion#drifting}): streaming back as he runs, swung out the way he came from as he turns, left below as he rises and lifted as
+     * he falls. Faster and wilder in a frenzy.
+     */
+    static double[] alive(double[] p, double[] root, double u, int seed, double time, Motion motion) {
+        double frenzy = motion.frenzy();
+        double t = time * (1.0 + 1.5 * frenzy);
+        double jolt = Math.pow(Math.max(0.0, Math.sin(time * 0.23 + seed * 1.7)), 12) * 0.9;
+        double reach = Math.pow(u, 1.25) * (1.0 + jolt) * (1.0 + 1.2 * frenzy);
+        double wave = u * 2.4;
+        double side = 4.4 * Math.sin(t * 0.061 + seed * 1.37 - wave) + 1.5 * Math.sin(t * 0.137 + seed * 0.61 - wave * 1.6);
+        double bob = 3.0 * Math.sin(t * 0.049 + seed * 2.17 - wave * 0.8) + 1.1 * Math.sin(t * 0.113 + seed * 0.83 - wave * 1.3);
+        double wander = 2.4 * Math.sin(t * 0.038 + seed * 0.92 - wave * 0.6) + 0.9 * Math.sin(t * 0.091 + seed * 1.71 - wave * 1.1);
+        // Curling in and opening out a little, the whole of it.
+        double flex = 1.0 + 0.1 * Math.sin(t * 0.044 + seed * 2.9) * Math.min(1.0, u * 2.0);
+        double[] out = add(root, mul(sub(p, root), flex));
+        out = add(out, v(side * reach, bob * reach - 1.2 * u * u, wander * reach));
+        // Following him: the way he runs, turns, rises (the tip most).
+        double trail = Math.pow(u, 1.4);
+        double run = Math.max(0.0, Math.min(1.0, motion.run()));
+        double rise = Math.max(-0.6, Math.min(0.6, motion.rise()));
+        out = add(out, v(motion.lag() * 9.0 * trail, -9.0 * rise * trail, 9.0 * run * trail));
+        // Never into the ground under him (as the original's lift off it): the lowest pair reach his feet at rest.
+        out[1] = Math.max(out[1], FLOOR);
+        return out;
+    }
+
+    /** 1.3.66: how low (body pixels over his feet) a rinkaku's sway may take it. */
+    public static final double FLOOR = 0.8;
+
+    /**
+     * 1.3.66: the centre line of rinkaku ({@code sx}: -1 his right, 1 his left; {@code level} 0 top .. 2 lowest) at {@code time}, grown
+     * {@code grow}, in {@code motion}: {@link #ALIVE_POINTS} points from its root to its point (body pixels).
+     */
+    public static List<double[]> centre(int sx, int level, double time, double grow, Motion motion) {
+        double[][] cp = TENDRILS[level];
+        List<double[]> pts = new ArrayList<>();
+        int seed = level * 2 + (sx > 0 ? 1 : 0);
+        double[] root = v(sx * cp[0][0], cp[0][1], cp[0][2]);
+        List<double[]> rest = new ArrayList<>();
+        for (double[] c : cp) {
+            rest.add(add(root, mul(sub(v(sx * c[0], c[1], c[2]), root), TENDRIL_SCALE)));
+        }
+        for (int k = 0; k < ALIVE_POINTS; k++) {
+            double u = (double)k / (ALIVE_POINTS - 1);
+            // Where it is at rest (along the control points' curve), out of the back as it grows; then alive (1.3.66: alive).
+            double[] p = along(rest, u);
+            p = lerp(root, p, GraftMesh.smooth(clamp01(grow * 1.3 - u * 0.3)));
+            p = alive(p, root, u, seed, time, motion);
+            // The moves: out in front to seize (and down to impale), or fanned out round him.
+            double pull = Math.pow(u, 1.5);
+            if (motion.reach() > 0.0) {
+                double[] prey = v(sx * (1.2 + 0.7 * level), 22.0 - 2.0 * level - 14.0 * motion.low(), -13.0 + 1.5 * level + 6.0 * motion.low());
+                p = lerp(p, prey, motion.reach() * pull);
+            }
+            if (motion.spread() > 0.0) {
+                double a = Math.toRadians(sx * (40.0 + 32.0 * level)) + time * 0.12 * motion.frenzy();
+                double[] fan = v(Math.sin(a) * 15.0, 30.0 - 6.0 * level, Math.cos(a) * 9.0);
+                p = lerp(p, fan, motion.spread() * pull);
+            }
+            // 1.0.13: the cocoon: wound round him, each rinkaku its own coil, from over his head down to his feet.
+            if (motion.cocoon() > 0.0 && k > 0) {
+                double a = sx * (u * Math.PI * 6.0 + level * 2.1) + time * 0.03;
+                double radius = 5.4 + 0.5 * level + 0.3 * Math.sin(u * 9.0 + seed);
+                double[] coil = v(Math.sin(a) * radius, 35.0 - u * 34.0 + level * 0.9, Math.cos(a) * radius * 0.8);
+                p = lerp(p, coil, motion.cocoon() * GraftMesh.smooth(clamp01(u * 1.6)));
+            }
+            // 1.0.28: King's Defiance: wound round him into a sphere, each rinkaku a band of it from its crown to under his
+            // feet, the bands crossing (the right ones one way, the left ones the other), breathing slowly.
+            if (motion.orb() > 0.0 && k > 0) {
+                double lat = Math.PI * (0.05 + 0.9 * clamp01(u * 1.05 + level * 0.012));
+                double a = sx * (u * Math.PI * 2.6 + level * 1.05) + sx * time * 0.015 + (sx > 0 ? 0.5 : 0.0);
+                double r = ORB_RADIUS * (1.0 + 0.03 * Math.sin(time * 0.11 + seed) + 0.04 * Math.sin(u * 11.0 + seed * 2.0));
+                double[] ball = v(Math.sin(a) * Math.sin(lat) * r, ORB_CENTRE + Math.cos(lat) * r, Math.cos(a) * Math.sin(lat) * r);
+                p = lerp(p, ball, motion.orb() * GraftMesh.smooth(clamp01(u * 2.2)));
+            }
+            // 1.0.7: its own strike, at what it hunts.
+            double[][] aims = motion.aims();
+            if (aims != null && seed < aims.length && aims[seed] != null && k > 0) {
+                double[] aim = aims[seed];
+                p = lerp(p, v(aim[0], aim[1], aim[2]), aim[3] * Math.pow(u, 1.2));
+            }
+            pts.add(p);
+        }
+        return pts;
     }
 
     static void tendrils(Body body, double time, double grow, Motion motion) {
@@ -883,72 +1006,26 @@ public final class WarModel {
         }
         for (int sx = -1; sx <= 1; sx += 2) {
             for (int level = 0; level < TENDRILS.length; level++) {
-                double[][] cp = TENDRILS[level];
-                List<double[]> pts = new ArrayList<>();
                 int seed = level * 2 + (sx > 0 ? 1 : 0);
-                // Now and then a rinkaku jerks, as if it smelled something.
-                double jolt = Math.pow(Math.max(0.0, Math.sin(time * 0.23 + seed * 1.7)), 12) * 1.4;
-                for (int k = 0; k < cp.length; k++) {
-                    double u = (double)k / (cp.length - 1);
-                    // Out of the back as it grows; then alive: a writhe that grows toward the tip.
-                    double[] root = v(sx * cp[0][0], cp[0][1], cp[0][2]);
-                    double[] p = add(root, mul(sub(v(sx * cp[k][0], cp[k][1], cp[k][2]), root), TENDRIL_SCALE));
-                    p = lerp(root, p, GraftMesh.smooth(clamp01(grow * 1.3 - u * 0.3)));
-                    double w = Math.pow(u, 1.3) * (1.3 + jolt) * (1.0 + 1.6 * motion.frenzy());
-                    double pace = 1.0 + 1.5 * motion.frenzy();
-                    p = add(p, v(Math.sin(time * 0.07 * pace + seed * 1.3 + u * 3.0) * w, Math.sin(time * 0.06 * pace + seed * 2.1 + u * 2.4) * w * 0.8,
-                        Math.cos(time * 0.065 * pace + seed * 0.7 + u * 2.7) * w));
-                    // The moves: out in front to seize (and down to impale), or fanned out round him.
-                    double pull = Math.pow(u, 1.5);
-                    if (motion.reach() > 0.0) {
-                        double[] prey = v(sx * (1.2 + 0.7 * level), 22.0 - 2.0 * level - 14.0 * motion.low(), -13.0 + 1.5 * level + 6.0 * motion.low());
-                        p = lerp(p, prey, motion.reach() * pull);
-                    }
-                    if (motion.spread() > 0.0) {
-                        double a = Math.toRadians(sx * (40.0 + 32.0 * level)) + time * 0.12 * motion.frenzy();
-                        double[] fan = v(Math.sin(a) * 15.0, 30.0 - 6.0 * level, Math.cos(a) * 9.0);
-                        p = lerp(p, fan, motion.spread() * pull);
-                    }
-                    // 1.0.13: the cocoon: wound round him, each rinkaku its own coil, from over his head down to his feet.
-                    if (motion.cocoon() > 0.0 && k > 0) {
-                        double a = sx * (u * Math.PI * 6.0 + level * 2.1) + time * 0.03;
-                        double radius = 5.4 + 0.5 * level + 0.3 * Math.sin(u * 9.0 + seed);
-                        double[] coil = v(Math.sin(a) * radius, 35.0 - u * 34.0 + level * 0.9, Math.cos(a) * radius * 0.8);
-                        p = lerp(p, coil, motion.cocoon() * GraftMesh.smooth(clamp01(u * 1.6)));
-                    }
-                    // 1.0.28: King's Defiance: wound round him into a sphere, each rinkaku a band of it from its crown to under his
-                    // feet, the bands crossing (the right ones one way, the left ones the other), breathing slowly.
-                    if (motion.orb() > 0.0 && k > 0) {
-                        double lat = Math.PI * (0.05 + 0.9 * clamp01(u * 1.05 + level * 0.012));
-                        double a = sx * (u * Math.PI * 2.6 + level * 1.05) + sx * time * 0.015 + (sx > 0 ? 0.5 : 0.0);
-                        double r = ORB_RADIUS * (1.0 + 0.03 * Math.sin(time * 0.11 + seed) + 0.04 * Math.sin(u * 11.0 + seed * 2.0));
-                        double[] ball = v(Math.sin(a) * Math.sin(lat) * r, ORB_CENTRE + Math.cos(lat) * r, Math.cos(a) * Math.sin(lat) * r);
-                        p = lerp(p, ball, motion.orb() * GraftMesh.smooth(clamp01(u * 2.2)));
-                    }
-                    // 1.0.7: its own strike, at what it hunts.
-                    double[][] aims = motion.aims();
-                    if (aims != null && seed < aims.length && aims[seed] != null && k > 0) {
-                        double[] aim = aims[seed];
-                        p = lerp(p, v(aim[0], aim[1], aim[2]), aim[3] * Math.pow(u, 1.2));
-                    }
-                    pts.add(p);
-                }
+                List<double[]> pts = centre(sx, level, time, grow, motion);
                 KakujaModel.Spine sp = spine(pts, 56, v(0, 1, 0));
                 GraftMesh.tube(new SinkAdapter(body), sp, 0.0, 0.97, 56, 6, new GraftMesh.Surface() {
                     @Override
                     public double radius(double s, double a) {
-                        // A blade-like ridge down the back, flatter across.
-                        double ridge = Math.pow(Math.max(0.0, Math.sin(a)), 6) * 0.45;
+                        // 1.3.66: round and soft (only a low ridge down the back), a slow swell running out along it as it breathes.
+                        double ridge = Math.pow(Math.max(0.0, Math.sin(a)), 6) * 0.12;
+                        double swell = 1.0 + 0.08 * Math.sin(s * 17.0 - time * 0.22 + seed * 1.9);
                         // (1.0.28: grown thick to close the cocoon's sphere.)
-                        return tendrilRadius(s) * (1.0 + ridge - 0.15 * Math.abs(Math.cos(a))) * (1.0 + 1.3 * motion.orb());
+                        return tendrilRadius(s) * swell * (1.0 + ridge - 0.06 * Math.abs(Math.cos(a))) * (1.0 + 1.3 * motion.orb());
                     }
 
                     @Override
                     public int colour(double s, double a) {
+                        // Black above, glowing crimson beneath, a sheen down the back; the swell darker as it passes (no armour bands).
                         double under = Math.max(0.0, -Math.sin(a));
-                        double seg = (s * SEGMENTS) % 1.0;
+                        double sheen = Math.pow(Math.max(0.0, Math.sin(a)), 3);
                         int c = mix(BLACK, CRIMSON, clamp01(under * 1.2 + s * 0.25));
-                        c = mix(c, seg < 0.25 ? GREY : CHAR_L, 0.45 * Math.max(0.0, Math.sin(a)) * (1.0 - s * 0.7));
+                        c = mix(c, CHAR_L, 0.35 * sheen * (1.0 - s * 0.6) * (0.75 + 0.25 * Math.sin(s * 17.0 - time * 0.22 + seed * 1.9)));
                         return mix(c, RED, clamp01(under * under * 1.2 - 0.35 + s * 0.4));
                     }
                 }, 1.0);
@@ -966,25 +1043,11 @@ public final class WarModel {
                     double[] e1 = mul(f1[3], r1 * 0.18);
                     body.glow(add(add(f0[0], d0), e0), add(add(f1[0], d1), e1), sub(add(f1[0], d1), e1), sub(add(f0[0], d0), e0), RED, RED, BLOOD, BLOOD);
                 }
-                // Barbs: a hooked spike off the ridge at the start of every segment, raking back toward the body, and thorns off the
-                // edges, alternating.
-                for (int k = 1; k < SEGMENTS; k++) {
-                    double s = (double)k / SEGMENTS + 0.01;
-                    double[][] f = sp.at(s);
-                    double r = tendrilRadius(s);
-                    double fade = 1.0 - s * 0.55;
-                    double[] ridge = add(f[0], mul(f[2], r * 1.25));
-                    shard(body, sub(ridge, mul(f[2], 0.4)), add(f[2], mul(f[1], -0.55)), mul(f[1], -1), (1.6 + hash(seed * 31 + k) * 1.0) * fade * grow + 0.3,
-                        r * 0.9, 0.5, f[3], BLACK, k % 2 == 0 ? CHAR_L : CRIMSON, RED, 3);
-                    int edge = k % 2 == 0 ? 1 : -1;
-                    double[] flank = add(f[0], mul(f[3], edge * r * 0.9));
-                    shard(body, flank, add(mul(f[3], edge), mul(f[1], -0.35)), mul(f[1], -1), (1.0 + hash(seed * 37 + k) * 0.7) * fade * grow + 0.2, r * 0.6, 0.4,
-                        f[2], BLACK, CHAR, 0, 2);
-                }
-                // The point: a long hooked claw, curling under.
+                // The point: fine and sharp, straight on from the tube (1.3.66: it was a long hooked claw, and hooked barbs and thorns all
+                // along it: what made it a branch).
                 double[][] tip = sp.at(0.97);
                 double[][] before = sp.at(0.9);
-                shard(body, before[0], sub(tip[0], before[0]), mul(tip[2], -1), 3.8 * grow + 0.4, tendrilRadius(0.9) * 2.2, 0.55, tip[3], BLACK, BLOOD, RED, 5);
+                shard(body, before[0], sub(tip[0], before[0]), mul(tip[2], -1), 1.6 * grow + 0.3, tendrilRadius(0.9) * 1.6, 0.4, tip[3], BLACK, BLOOD, RED, 5);
             }
         }
     }

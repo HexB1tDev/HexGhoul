@@ -192,10 +192,10 @@ public final class KingLayer extends RenderLayer<AbstractClientPlayer, EntityMod
                 pair.was = pair.next;
                 pair.next = old;
             }
-            buildInto(pair.was, view.form(), now, now, view.grow(now), night, warMotion(player, view, now), turning, eye, peace, null, clothed,
+            buildInto(pair.was, view.form(), now, now, view.grow(now), night, warMotion(player, view, now, now, 0.0), turning, eye, peace, null, clothed,
                 com.hex.kagune.control.king.PeaceModel.ARMOUR);
-            buildInto(pair.next, view.form(), now + 1L, now + 1.0, view.grow(now + 1.0), night, warMotion(player, view, now + 1.0), turning, eye, peace,
-                null, clothed, com.hex.kagune.control.king.PeaceModel.ARMOUR);
+            buildInto(pair.next, view.form(), now + 1L, now + 1.0, view.grow(now + 1.0), night, warMotion(player, view, now + 1.0, now, 1.0), turning, eye,
+                peace, null, clothed, com.hex.kagune.control.king.PeaceModel.ARMOUR);
             built = pair.next;
             from = pair.was;
             tween = (float)Math.max(0.0, Math.min(1.0, time - now));
@@ -714,6 +714,19 @@ public final class KingLayer extends RenderLayer<AbstractClientPlayer, EntityMod
 
     /** 1.0.26: what War's rinkaku are doing at {@code time}: the move's, aimed at what each struck (third person and first person alike). */
     public static WarModel.Motion warMotion(AbstractClientPlayer player, KingClient.View view, double time) {
+        return warMotion(player, view, time, (long)Math.floor(time), time - Math.floor(time));
+    }
+
+    /**
+     * As above; 1.3.66: and following him as he moves ({@link #drift} on {@code tick}, {@code k} of the way from the tick before to it), so
+     * the rinkaku trail as he runs, turns and rises.
+     */
+    static WarModel.Motion warMotion(AbstractClientPlayer player, KingClient.View view, double time, long tick, double k) {
+        double[] drift = drift(player, tick, k);
+        return warMotionStill(player, view, time).drifting(drift[0], drift[1], drift[2]);
+    }
+
+    private static WarModel.Motion warMotionStill(AbstractClientPlayer player, KingClient.View view, double time) {
         com.hex.kagune.control.king.KingMove move = view.moveAt(time);
         double age = Math.floor(time) - view.moveAt();
         if (move == com.hex.kagune.control.king.KingMove.DEFY) {
@@ -789,8 +802,31 @@ public final class KingLayer extends RenderLayer<AbstractClientPlayer, EntityMod
         return new double[] {turn, dx * -Math.cos(yaw) + dz * -Math.sin(yaw), player.m_20186_() - player.f_19791_, dx * -Math.sin(yaw) + dz * Math.cos(yaw)};
     }
 
-    /** 1.0.16: how far each Peace's turning leaves its blades behind, and how fast it runs, eased (per player). */
+    /** 1.0.16: how far each Peace's turning leaves its blades behind, and how fast it runs, eased (per player). 1.3.66: War's rinkaku too. */
     private static final Map<LivingEntity, double[]> SWAY = new WeakHashMap<>();
+
+    /**
+     * How far {@code player}'s turning leaves its kagune behind (radians, + to his left), how fast it runs (0..1) and rises (blocks a tick):
+     * {lag, run, rise}, eased a tick at a time ({was, now} kept for each, so a frame between ticks sits between them), on {@code tick}, as
+     * the tick before ({@code k} 0) or this one (1) or between. 1.0.16 (Peace's blades); 1.3.66: also War's rinkaku, out of peaceState.
+     */
+    static double[] drift(LivingEntity player, long tick, double k) {
+        double[] sway = SWAY.computeIfAbsent(player, p -> new double[] {0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0});
+        if (sway[2] != tick) {
+            sway[2] = tick;
+            // 1.0.18: and how fast he rises.
+            sway[3] = sway[0];
+            sway[4] = sway[1];
+            sway[5] = sway[6];
+            double d = player.f_20883_ - player.f_20884_;
+            double turn = Math.toRadians(d - 360.0 * Math.floor((d + 180.0) / 360.0));
+            double speed = Math.hypot(player.m_20185_() - player.f_19790_, player.m_20189_() - player.f_19792_);
+            sway[0] += (Math.max(-0.6, Math.min(0.6, turn * 1.2)) - sway[0]) * 0.35;
+            sway[1] += (Math.min(1.0, speed / 0.26) - sway[1]) * 0.25;
+            sway[6] += (Math.max(-0.6, Math.min(0.6, player.m_20186_() - player.f_19791_)) - sway[6]) * 0.3;
+        }
+        return new double[] {sway[3] + (sway[0] - sway[3]) * k, sway[4] + (sway[1] - sway[4]) * k, sway[5] + (sway[6] - sway[5]) * k};
+    }
 
     /**
      * 1.0.16: what {@code player}'s Peace blades are doing this frame: the move (and the one it cut off), the look's pitch, the blades
@@ -819,24 +855,10 @@ public final class KingLayer extends RenderLayer<AbstractClientPlayer, EntityMod
             age = at - view.since();
         }
         double pitch = -Math.toRadians(player.f_19860_ + (player.m_146909_() - player.f_19860_) * partial);
-        double[] sway = SWAY.computeIfAbsent(player, p -> new double[] {0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0});
-        if (sway[2] != Math.floor(time)) {
-            sway[2] = Math.floor(time);
-            // Eased a tick at a time ({was, now} kept for each, so a frame between ticks sits between them): 1.0.18: and how fast he rises.
-            sway[3] = sway[0];
-            sway[4] = sway[1];
-            sway[5] = sway[6];
-            double d = player.f_20883_ - player.f_20884_;
-            double turn = Math.toRadians(d - 360.0 * Math.floor((d + 180.0) / 360.0));
-            double speed = Math.hypot(player.m_20185_() - player.f_19790_, player.m_20189_() - player.f_19792_);
-            sway[0] += (Math.max(-0.6, Math.min(0.6, turn * 1.2)) - sway[0]) * 0.35;
-            sway[1] += (Math.min(1.0, speed / 0.26) - sway[1]) * 0.25;
-            sway[6] += (Math.max(-0.6, Math.min(0.6, player.m_20186_() - player.f_19791_)) - sway[6]) * 0.3;
-        }
-        double k = at == time ? time - Math.floor(time) : 1.0;
-        double lag = sway[3] + (sway[0] - sway[3]) * k;
-        double run = sway[4] + (sway[1] - sway[4]) * k;
-        double rise = sway[5] + (sway[6] - sway[5]) * k;
+        double[] drift = drift(player, (long)Math.floor(time), at == time ? time - Math.floor(time) : 1.0);
+        double lag = drift[0];
+        double run = drift[1];
+        double rise = drift[2];
         double cut = view.moveAt() - view.wasAt();
         return new com.hex.kagune.control.king.PeaceMotion.State(move, view.level(), age, pitch,
             com.hex.kagune.control.client.KingFx.peaceAims(player, at, at == time ? partial : 1.0F), move == com.hex.kagune.control.king.KingMove.NONE ? com.hex.kagune.control.king.KingMove.NONE

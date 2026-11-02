@@ -1238,6 +1238,43 @@ public final class KingTests {
         check(half[half.length - 1][1] < 75.0, "V: and its point leads it up");
         check(Boolean.TRUE.equals(com.hex.kagune.control.king.WarRules.lashes(3.0)) && Boolean.FALSE.equals(com.hex.kagune.control.king.WarRules.lashes(12.0))
             && com.hex.kagune.control.king.WarRules.lashes(30.0) == null, "the instinct lashes near, shoots far, leaves the rest");
+        // 1.3.66 (the owner: "like unmoving branches of a tree"): the rinkaku sway as the original tentacles do, follow him, and never go
+        // into the ground under him.
+        WarModel.Motion calm = WarModel.Motion.STILL;
+        double leastMove = Double.MAX_VALUE;
+        double lowest = Double.MAX_VALUE;
+        boolean sane = true;
+        for (int sx = -1; sx <= 1; sx += 2) {
+            for (int level = 0; level < 3; level++) {
+                double most = 0.0;
+                for (double t = 0.0; t < 2400.0; t += 37.0) {
+                    java.util.List<double[]> a = WarModel.centre(sx, level, t, 1.0, calm);
+                    java.util.List<double[]> b = WarModel.centre(sx, level, t + 40.0, 1.0, calm);
+                    double[] ta = a.get(a.size() - 1);
+                    double[] tb = b.get(b.size() - 1);
+                    most = Math.max(most, Math.sqrt(Math.pow(ta[0] - tb[0], 2) + Math.pow(ta[1] - tb[1], 2) + Math.pow(ta[2] - tb[2], 2)));
+                    for (WarModel.Motion m : new WarModel.Motion[] {calm, calm.drifting(0.6, 1.0, -0.6), calm.drifting(-0.6, 0.0, 0.6),
+                        new WarModel.Motion(0.0, 0.0, 0.1, 0.9).drifting(0.3, 1.0, 0.0)}) {
+                        for (double[] q : WarModel.centre(sx, level, t, 1.0, m)) {
+                            sane &= Double.isFinite(q[0]) && Double.isFinite(q[1]) && Double.isFinite(q[2]) && Math.abs(q[0]) < 60.0 && q[1] < 70.0;
+                            lowest = Math.min(lowest, q[1]);
+                        }
+                    }
+                }
+                leastMove = Math.min(leastMove, most);
+            }
+        }
+        check(sane, "the rinkaku stay finite and near him however he moves");
+        check(lowest >= WarModel.FLOOR - 1.0E-9, "never into the ground under him (lowest " + lowest + ")");
+        check(leastMove > 5.0, "every rinkaku's point really moves: at least " + leastMove + " pixels in two seconds somewhere (it swayed 1.3 either way, 2.7 in a jerk)");
+        java.util.List<double[]> standing = WarModel.centre(1, 1, 500.0, 1.0, calm);
+        java.util.List<double[]> running = WarModel.centre(1, 1, 500.0, 1.0, calm.drifting(0.0, 1.0, 0.0));
+        java.util.List<double[]> rising = WarModel.centre(1, 1, 500.0, 1.0, calm.drifting(0.0, 0.0, 0.5));
+        java.util.List<double[]> turning = WarModel.centre(1, 1, 500.0, 1.0, calm.drifting(0.5, 0.0, 0.0));
+        double[] s0 = standing.get(standing.size() - 1);
+        check(running.get(running.size() - 1)[2] > s0[2] + 5.0 && rising.get(rising.size() - 1)[1] < s0[1] - 2.0
+            && turning.get(turning.size() - 1)[0] > s0[0] + 2.0 && Math.abs(running.get(0)[2] - standing.get(0)[2]) < 1.0E-9,
+            "they follow him: streaming back as he runs, left below as he rises, left behind as he turns (the root stays on his back)");
         for (int i = 0; i < 6; i++) {
             double[] tip = WarModel.tendrilTip(i);
             check(Math.signum(tip[0]) == (i % 2 == 0 ? -1.0 : 1.0) && Math.abs(tip[0]) > 10.0, "rinkaku " + i + "'s point is out on its side");

@@ -1,7 +1,28 @@
-# START HERE (state after 1.3.65)
+# START HERE (state after 1.3.66)
 
-- **Next session:** read `docs/handoff/next-ai-1.3.63.md` first (the owner's current update and what's left: 1.3.66 War and Peace
-  running animations), then `docs/handoff/next-ai-1.3.60.md` (house rules, family talk).
+- **Next session:** read `docs/handoff/next-ai-1.3.63.md` first (the owner's current update), then `docs/handoff/next-ai-1.3.60.md`
+  (house rules, family talk). Left: **1.3.67 War and Peace running animations**: a work in progress is in `git stash` on this branch
+  ("1.3.67 WIP": `KingRun.war` the beast's charge (both claws reach ahead between footfalls and rake back as each lands, near flat, rolling),
+  `KingRun.peace` the glide (near flat, head level, arms swept back and wide, bounding with a hang), `PeaceMotion.rest` running pitch
+  +14 instead of -7 against the deeper lean; still to do: Peace's lowest blade dips ~30 px below the feet at phase 0 in
+  `tools/art-preview.sh <dir> king-runs` (less flip/lean, or lift that blade), Ken's run in `EtoFight.peace` (KingRun.peace from his limb
+  swing), docs). If the stash is gone, redo it from this description.
+- **1.3.66 War's rinkaku alive** (the owner: "the back tendrils in WAR path are too unrealistic and solid, they are like unmoving branches of
+  a tree, they have 0 similarity to the original tendrils of the other kagunes"; protocol 71, unchanged; client drawing only). `WarModel`:
+  `Motion` gained `lag, run, rise` (canonical 10 args; the 4/6/7-arg constructors keep working) and `drifting(lag, run, rise)`;
+  `centre(sx, level, time, grow, motion)` (public) the centre line, `ALIVE_POINTS` 12 sampled `along` the six control points' Catmull-Rom
+  curve, then `alive(p, root, u, seed, time, motion)`: the original TendrilChain's idle motion in kind (side 4.4 + 1.5, bob 3.0 + 1.1, wander
+  2.4 + 0.9 px on slow waves, phase running out along it `- u x 2.4`, scaled u^1.25 x (1 + jolt) x (1 + 1.2 frenzy), pace 1 + 1.5 frenzy, a
+  flex of the whole, a 1.2 u^2 sag), following him (x + lag 9, y - rise 9, z + run 9, all x u^1.4), `FLOOR` 0.8 (body px over the feet);
+  then the moves' lerps as before. `tendrilRadius` smooth (2.35 (1-s)^0.85 + 0.1; the segment flare and `SEGMENTS` gone); the tube: a
+  low ridge (0.12), a swell `1 + 0.08 sin(17 s - 0.22 t + 1.9 seed)`, a sheen instead of armour bands; the barbs, thorns and hooked claw
+  gone, a short fine point instead. `KingLayer.drift(player, tick, k)` (out of `peaceState`: SWAY eased a tick at a time) feeds
+  `warMotion(player, view, time, tick, k)` (the Pair: now k 0, now + 1 k 1; the 3-arg one by the time's fraction).
+  Preview: `tools/art-preview.sh <dir> war-alive` (`king-war-alive.png`: from behind a second apart, running, turning, rising, falling,
+  frenzy). `KingTests` (moves 14..18 px in 2 s per tip, follows, never below FLOOR).
+
+# State after 1.3.65
+
 - **1.3.65 fear of the final kakujas** (protocol 71, unchanged; `EtoGesture` FLINCH, AWE and `ChildCue` COWER appended). Pure
   `npc/FinalSight` (NONE, WAR, PEACE, DRAGON, RINKAKU, UKAKU; never sent): `of(dragon, worn, rinkaku, ukaku)` (the Dragon first),
   `terror()` (WAR, DRAGON), `scares()` (300 / 240), `STILL_SCARED` 40, `KEEPS_RUNNING` 28, `TERROR_RUN` 20, `SHOUTS` 120, `HIDES` 30,
