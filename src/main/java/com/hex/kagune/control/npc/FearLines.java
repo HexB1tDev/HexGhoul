@@ -75,7 +75,7 @@ public final class FearLines {
                 case UKAKU -> pick(seed, "You're on fire! Does it hurt? Tell me it doesn't hurt!", "Flames and needles... okay. Okay. That's scary.");
                 case NONE -> "";
             };
-            case TEEN -> switch (sight) {
+            case TEEN, ADULT -> switch (sight) {
                 case WAR -> pick(seed, "...That's what they're all so scared of. It's you. It's been you.", "Take it off. I'm not joking. Take it off.");
                 case PEACE -> pick(seed, "...Okay. That's actually beautiful. Don't let it go to your head.", "That's the calmest I've ever seen you. It's terrifying.");
                 case DRAGON -> pick(seed, "Is anyone even in there? " + parent + "?!", "Come back. Just... come back as you.");
@@ -99,7 +99,7 @@ public final class FearLines {
             case CHILD -> behind ? pick(seed, "Is that really " + parent + "? Is " + parent + " okay?", "I'm not scared. I'm just standing here. Behind you.",
                 "...Tell me when it's " + parent + " again.")
                 : pick(seed, "I'm not looking. I'm not looking.", "...Is it gone yet?");
-            case TEEN -> behind ? pick(seed, "...Just tell me when it's over.", "I'm fine. I'm FINE. I'm just standing back here.",
+            case TEEN, ADULT -> behind ? pick(seed, "...Just tell me when it's over.", "I'm fine. I'm FINE. I'm just standing back here.",
                 "Don't let them come any closer, okay?")
                 : pick(seed, "...Just tell me when it's over.", "I'm staying right here. Far right here.");
         };

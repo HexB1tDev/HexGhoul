@@ -9,11 +9,11 @@ package com.hex.kagune.control.family;
 public enum ChildMoment {
     NONE(0, 0, false, false, 0.0),
     /** It runs into their arms; they bend down to it (a little one) or simply hold it (a teen). */
-    HUG(70, mask(ChildStage.TODDLER, ChildStage.CHILD, ChildStage.TEEN), false, false, 0.5),
+    HUG(70, mask(ChildStage.TODDLER, ChildStage.CHILD, ChildStage.TEEN, ChildStage.ADULT), false, false, 0.5),
     /** A hand on its head, ruffling its hair; it beams up at them. */
-    PAT(50, mask(ChildStage.BABY, ChildStage.TODDLER, ChildStage.CHILD, ChildStage.TEEN), false, false, 0.72),
+    PAT(50, mask(ChildStage.BABY, ChildStage.TODDLER, ChildStage.CHILD, ChildStage.TEEN, ChildStage.ADULT), false, false, 0.72),
     /** Hands up, slapped together. */
-    HIGH_FIVE(28, mask(ChildStage.CHILD, ChildStage.TEEN), false, false, 0.95),
+    HIGH_FIVE(28, mask(ChildStage.CHILD, ChildStage.TEEN, ChildStage.ADULT), false, false, 0.95),
     /** Fingers at its sides; it squirms and giggles. */
     TICKLE(60, mask(ChildStage.BABY, ChildStage.TODDLER, ChildStage.CHILD), false, false, 0.58),
     /** Hands over their face, opened: peekaboo! It bounces and claps. */
@@ -25,15 +25,15 @@ public enum ChildMoment {
     /** A toddler's arms up: pick me up! */
     ARMS_UP(60, mask(ChildStage.TODDLER), false, true, 0.8),
     /** A wave at them. */
-    WAVE(36, mask(ChildStage.TODDLER, ChildStage.CHILD, ChildStage.TEEN), false, true, 0.0),
+    WAVE(36, mask(ChildStage.TODDLER, ChildStage.CHILD, ChildStage.TEEN, ChildStage.ADULT), false, true, 0.0),
     /** A happy clap (a baby's, a toddler's). */
     CLAP(36, mask(ChildStage.BABY, ChildStage.TODDLER), false, true, 0.0),
     /** A flower it found, held up to them, and given. */
     FLOWER(56, mask(ChildStage.TODDLER, ChildStage.CHILD), false, true, 0.85),
     /** 1.3.21: tucked into its bed: they lean over it, smooth its covers, a hand on its head. */
-    TUCK(80, mask(ChildStage.BABY, ChildStage.TODDLER, ChildStage.CHILD, ChildStage.TEEN), false, false, 0.0),
+    TUCK(80, mask(ChildStage.BABY, ChildStage.TODDLER, ChildStage.CHILD, ChildStage.TEEN, ChildStage.ADULT), false, false, 0.0),
     /** 1.3.21: fed from their hand: it eats, munching. */
-    FEED(60, mask(ChildStage.BABY, ChildStage.TODDLER, ChildStage.CHILD, ChildStage.TEEN), false, false, 0.85);
+    FEED(60, mask(ChildStage.BABY, ChildStage.TODDLER, ChildStage.CHILD, ChildStage.TEEN, ChildStage.ADULT), false, false, 0.85);
 
     public final int ticks;
     private final int stages;

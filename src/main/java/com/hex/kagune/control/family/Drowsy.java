@@ -92,7 +92,7 @@ public final class Drowsy {
             return pick(new String[] {"*leans into your hand, already asleep again*", "*a sleepy little smile* ...night...",
                 "*curls up a little tighter, breathing slow*"}, seed);
         }
-        return stage == ChildStage.TEEN ? pick(new String[] {"*rolls over without a word*", "...night."}, seed)
+        return stage.older() ? pick(new String[] {"*rolls over without a word*", "...night."}, seed)
             : pick(new String[] {"...okay... *eyes closing*", "*yawns and snuggles in*"}, seed);
     }
 }

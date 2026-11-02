@@ -36,7 +36,7 @@ public final class ChildRules {
         float z = switch (stage) {
             case BABY, TODDLER -> -0.2F;
             case CHILD -> -0.117F;
-            case TEEN -> -0.183F;
+            case TEEN, ADULT -> -0.183F;
         };
         for (int i = 0; i < 16 && !reaches(stage, parent, z); i++) {
             z -= 0.03F;
@@ -56,7 +56,7 @@ public final class ChildRules {
     }
 
     public static float handParentX(ChildStage stage) {
-        return stage == ChildStage.TEEN ? -0.15F : -0.06F;
+        return stage.older() ? -0.15F : -0.06F;
     }
 
     /** 1.3.21: hand in hand: how far to its parent's left it walks (blocks), and its right arm (z out to them, x forward). */
@@ -153,7 +153,7 @@ public final class ChildRules {
         if (!fights(stage, skill)) {
             return 0.0F;
         }
-        float base = stage == ChildStage.TEEN ? 3.0F + 1.4F * skill : 1.5F + 0.8F * skill;
+        float base = stage.older() ? 3.0F + 1.4F * skill : 1.5F + 0.8F * skill;
         return ghoul ? base * 1.5F : base;
     }
 
@@ -193,7 +193,7 @@ public final class ChildRules {
             case BABY -> 0.25F;
             case TODDLER -> 0.4F;
             case CHILD -> 0.65F;
-            case TEEN -> 1.0F;
+            case TEEN, ADULT -> 1.0F;
         };
     }
 

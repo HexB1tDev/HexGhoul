@@ -78,7 +78,7 @@ public final class Talks {
         String key = who == null ? "" : who.toLowerCase(Locale.ROOT);
         List<String> lines = PARENT.get(key);
         if (lines == null) {
-            String group = stage == ChildStage.TODDLER ? "little" : stage == ChildStage.TEEN ? "teen" : "child";
+            String group = stage == ChildStage.TODDLER ? "little" : stage.older() ? "teen" : "child";
             lines = CHILD.get(key + ":" + group);
             if (lines == null) {
                 lines = CHILD.get("any:" + group);

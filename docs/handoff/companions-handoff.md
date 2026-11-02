@@ -1,4 +1,14 @@
-# START HERE (state after 2.0.2): read `docs/handoff/next-ai-2.0.1.md` first
+# START HERE (state after 2.0.3): read `docs/handoff/next-ai-2.0.1.md` first
+
+- **2.0.3** (the owner: daughters should have Touka's model "only ... when they reach adulthood"; protocol **73**): `ChildStage.ADULT`
+  (from 16 days, box and draw 1.0, health 30; appended last: S2CChild sends the ordinal). `ChildStage.older()` (TEEN or ADULT) replaced
+  every `== TEEN` (and `case TEEN` -> `case TEEN, ADULT`, moment masks) so a grown-up acts as a teen; own words: talk title "Grown",
+  `ChildLines.grown` "is all grown up now", the grow command stops at ADULT. `ChildRenderer.woman(view)` (ADULT and female only):
+  `Model.m_6973_` shapes Touka's legs (`Persona.TOUKA.legs()`) and slim arms after `little()` resets the parts each frame; drawn at
+  `Persona.TOUKA.size()`; layer `Figure` draws `FemaleFigure.bust` (Touka's curves, skin and its second layer, `jiggle`). No younger
+  stage ever gets the female body (the owner first asked for daughters in general: refused; this is the adult-only version).
+
+# State after 2.0.2
 
 - **2.0.2** (the owner: "stop limiting it to plains ... including some from biomes o plenty currently cant even find a village with locate
   structure ... same for anteikou, and cybertower and library"): the biome tags `has_structure/{village,anteiku,cyber_tower,library}` and

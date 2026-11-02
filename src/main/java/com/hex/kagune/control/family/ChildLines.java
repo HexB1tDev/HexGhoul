@@ -8,7 +8,7 @@ package com.hex.kagune.control.family;
 public final class ChildLines {
     /** What it calls a parent: a little one "Mama" or "Papa", a teen too ("Mom", "Dad"). */
     public static String call(ChildStage stage, boolean mother) {
-        if (stage == ChildStage.TEEN) {
+        if (stage.older()) {
             return mother ? "Mom" : "Dad";
         }
         return mother ? "Mama" : "Papa";
@@ -25,7 +25,7 @@ public final class ChildLines {
                 "Why is the sky? ...Why?");
             case CHILD -> pick(seed, "Can we go exploring? Please?", parent + ", teach me something cool.", "I found a weird rock. It's mine now.",
                 "When I grow up I'm gonna be strong like you.", "Do you think monsters are scared of us?");
-            case TEEN -> pick(seed, "...What? I'm just standing here.", "Can I go out tonight? I'll be careful. Mostly.",
+            case TEEN, ADULT -> pick(seed, "...What? I'm just standing here.", "Can I go out tonight? I'll be careful. Mostly.",
                 "You're kind of embarrassing, " + parent + ". ...I'm glad you're here, though.", "I've been practising. Wanna see?",
                 "I'm fine. Really. ...Okay, maybe a hug.");
         };
@@ -37,7 +37,7 @@ public final class ChildLines {
             case BABY -> pick(seed, "*kicks happily*", "*squeals*", "*holds out tiny arms*");
             case TODDLER -> pick(seed, parent + "!", parent + "! You came back!", "*runs at your legs and holds on*");
             case CHILD -> pick(seed, "Hi " + parent + "!", parent + "! Guess what I did today!", "You're back! Can we play?");
-            case TEEN -> pick(seed, "Hey.", "Oh. Hey, " + parent + ".", "...Hi. Took you long enough.");
+            case TEEN, ADULT -> pick(seed, "Hey.", "Oh. Hey, " + parent + ".", "...Hi. Took you long enough.");
         };
     }
 
@@ -55,7 +55,7 @@ public final class ChildLines {
             case BABY -> pick(seed, "*shrieks with laughter*", "*grabs your finger and won't let go*", "Peek... boo! *giggles*");
             case TODDLER -> pick(seed, "Again! Do it again!", "You can't catch me! ...You caught me!", "*spins until it falls over, laughing*");
             case CHILD -> pick(seed, "Tag, you're it!", "I win! I always win!", "Let's play hide and seek. You count. No peeking!");
-            case TEEN -> pick(seed, "Fine. One round. ...Okay, two.", "You're slow. ...That was fun.", "Don't tell anyone I still like this.");
+            case TEEN, ADULT -> pick(seed, "Fine. One round. ...Okay, two.", "You're slow. ...That was fun.", "Don't tell anyone I still like this.");
         };
     }
 
@@ -82,7 +82,7 @@ public final class ChildLines {
             case BABY -> "*can't walk yet*";
             case TODDLER -> pick(seed, "Coming! Wait for me!", "*toddles after you*");
             case CHILD -> pick(seed, "Where are we going? Can I lead?", "Adventure!");
-            case TEEN -> pick(seed, "Fine. Where to?", "Sure. Lead the way.");
+            case TEEN, ADULT -> pick(seed, "Fine. Where to?", "Sure. Lead the way.");
         };
     }
 
@@ -91,12 +91,12 @@ public final class ChildLines {
             case BABY -> "*stays exactly where you put it*";
             case TODDLER -> pick(seed, "Okay... Come back soon?", "I stay. I'm good at staying.");
             case CHILD -> pick(seed, "Aww. Okay. I'll be here.", "Fine, but bring me something.");
-            case TEEN -> pick(seed, "Yeah, yeah. I'll be here.", "Cool. I'll hang out.");
+            case TEEN, ADULT -> pick(seed, "Yeah, yeah. I'll be here.", "Cool. I'll hang out.");
         };
     }
 
     public static String fight(ChildStage stage, int seed) {
-        return stage == ChildStage.TEEN ? pick(seed, "Back off from my family!", "Leave them alone!") : pick(seed, "Get away! I know how to fight!", "Hyaa!");
+        return stage.older() ? pick(seed, "Back off from my family!", "Leave them alone!") : pick(seed, "Get away! I know how to fight!", "Hyaa!");
     }
 
     public static String scared(ChildStage stage, String parent, int seed) {
@@ -110,13 +110,14 @@ public final class ChildLines {
             case TODDLER -> name + " took their first steps!";
             case CHILD -> name + " isn't a toddler anymore. Look how big they are.";
             case TEEN -> name + " is a teenager now. When did that happen?";
+            case ADULT -> name + " is all grown up now.";
         };
     }
 
     /** 1.3.20: what it says as a moment with a parent begins ({@code parent}: what it calls them). */
     public static String moment(ChildMoment moment, ChildStage stage, String parent, int seed) {
         boolean baby = stage == ChildStage.BABY;
-        boolean teen = stage == ChildStage.TEEN;
+        boolean teen = stage.older();
         return switch (moment) {
             case HUG -> teen ? pick(seed, "Ugh, fine. ...*hugs you back, tight*", "...Okay. Just one. *doesn't let go*")
                 : pick(seed, "*runs into your arms* " + parent + "!", "*squeezes you as hard as it can*", "Biggest hug! The BIGGEST!");
@@ -150,29 +151,29 @@ public final class ChildLines {
 
     /** 1.3.21: bedtime, asked (it goes off to bed), and when it has no bed of its own at home. */
     public static String bedtime(ChildStage stage, int seed) {
-        return stage == ChildStage.TEEN ? pick(seed, "Ugh, fine. ...Night.", "It's not even late. ...Okay.") : pick(seed, "Five more minutes? ...Okay.", "*yawns* Okay, " +
+        return stage.older() ? pick(seed, "Ugh, fine. ...Night.", "It's not even late. ...Okay.") : pick(seed, "Five more minutes? ...Okay.", "*yawns* Okay, " +
             "I'm going.", "Will you tuck me in?");
     }
 
     /** 1.3.21: in bed, calling for its parent to come tuck it in. */
     public static String tuckMe(ChildStage stage, String parent, int seed) {
-        return stage == ChildStage.TEEN ? pick(seed, "...You can say goodnight, " + parent + ". If you want.", "Night, " + parent + "? ...You coming?")
+        return stage.older() ? pick(seed, "...You can say goodnight, " + parent + ". If you want.", "Night, " + parent + "? ...You coming?")
             : pick(seed, parent + "! Come tuck me in!", "I'm in bed, " + parent + "! Tuck me in?", parent + "? Are you coming to say night night?");
     }
 
     public static String noBed(ChildStage stage, int seed) {
-        return stage == ChildStage.TEEN ? "I don't have a bed here. ...I'll crash wherever." : pick(seed, "But I don't have a bed...", "Where do I sleep?");
+        return stage.older() ? "I don't have a bed here. ...I'll crash wherever." : pick(seed, "But I don't have a bed...", "Where do I sleep?");
     }
 
     /** 1.3.21: walking hand in hand, and let go of. */
     public static String hand(ChildStage stage, int seed) {
-        return stage == ChildStage.TEEN ? pick(seed, "In public? ...Fine. Don't tell anyone.", "*takes your hand, grumbling, and doesn't let go*")
+        return stage.older() ? pick(seed, "In public? ...Fine. Don't tell anyone.", "*takes your hand, grumbling, and doesn't let go*")
             : pick(seed, "*grabs your hand tight*", "Hand! Let's go!", "*swings your hand happily*");
     }
 
     /** It is gone home (told to). */
     public static String home(ChildStage stage, int seed) {
-        return stage == ChildStage.TEEN ? "Heading home. See you there." : pick(seed, "Going home! Race you!", "Okay! Home!");
+        return stage.older() ? "Heading home. See you there." : pick(seed, "Going home! Race you!", "Okay! Home!");
     }
 
 

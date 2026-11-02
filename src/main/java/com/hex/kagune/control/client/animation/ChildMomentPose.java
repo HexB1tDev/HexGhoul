@@ -27,7 +27,7 @@ public final class ChildMomentPose {
 
     /** A little one's (baby, toddler, child): the parent bends down to it. */
     static boolean little(ChildStage stage) {
-        return stage != ChildStage.TEEN;
+        return !stage.older();
     }
 
     // ---------------------------------------------------------------- the parent
@@ -69,7 +69,7 @@ public final class ChildMomentPose {
                     case BABY -> -0.7F;
                     case TODDLER -> -1.0F;
                     case CHILD -> -1.3F;
-                    case TEEN -> -1.75F;
+                    case TEEN, ADULT -> -1.75F;
                 };
                 if (stage == ChildStage.BABY || stage == ChildStage.TODDLER) {
                     bend(p, knees, stage);
@@ -87,7 +87,7 @@ public final class ChildMomentPose {
                 // Up, the slap at 12, and back down.
                 float up = smooth(t / 9.0) * (1.0F - smooth((t - 16.0) / 10.0));
                 float slap = Math.max(0.0F, 1.0F - Math.abs(t - 12.0F) / 3.0F);
-                p.rightArmX = (stage == ChildStage.TEEN ? -2.5F : -2.05F) * up - 0.2F * slap;
+                p.rightArmX = (stage.older() ? -2.5F : -2.05F) * up - 0.2F * slap;
                 p.rightArmZ = -0.18F * up;
                 p.headX = small ? 0.25F : 0.0F;
                 p.lean = small ? 0.12F : 0.0F;
@@ -150,7 +150,7 @@ public final class ChildMomentPose {
                     case BABY -> -0.7F;
                     case TODDLER -> -0.95F;
                     case CHILD -> -1.2F;
-                    case TEEN -> -1.35F;
+                    case TEEN, ADULT -> -1.35F;
                 };
                 if (stage == ChildStage.BABY || stage == ChildStage.TODDLER) {
                     bend(p, knees, stage);
@@ -199,7 +199,7 @@ public final class ChildMomentPose {
                 p.headX = -0.15F;
                 p.headY = 0.3F;
             }
-            case TEEN -> {
+            case TEEN, ADULT -> {
                 p.headX = -0.05F;
                 p.headY = 0.25F;
             }
@@ -266,7 +266,7 @@ public final class ChildMomentPose {
     public static RigPose child(ChildMoment moment, double age, ChildStage stage) {
         RigPose p = new RigPose();
         float t = (float)age;
-        boolean teen = stage == ChildStage.TEEN;
+        boolean teen = stage.older();
         switch (moment) {
             case HUG -> {
                 float hop = t < 10.0F ? -2.0F * sin(Math.PI * t / 10.0) : 0.0F;

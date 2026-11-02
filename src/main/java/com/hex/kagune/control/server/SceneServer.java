@@ -311,7 +311,7 @@ public final class SceneServer {
                     case BABY -> "baby";
                     case TODDLER -> "toddler";
                     case CHILD -> "kid";
-                    case TEEN -> "teen";
+                    case TEEN, ADULT -> "teen";
                 });
             }
             Children.Child one = kids.get(Math.floorMod(c.seed(), kids.size()));
@@ -630,7 +630,7 @@ public final class SceneServer {
             case BABY -> "baby";
             case TODDLER -> "toddler";
             case CHILD -> "child";
-            case TEEN -> "teen";
+            case TEEN, ADULT -> "teen";
         };
         return new SceneContext(tier, mood.word(), temper.word(), Set.copyOf(flags), Map.copyOf(names), npc.m_217043_().m_188503_(100000));
     }

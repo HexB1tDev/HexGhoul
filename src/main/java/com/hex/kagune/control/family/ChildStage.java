@@ -3,14 +3,18 @@ package com.hex.kagune.control.family;
 /**
  * 1.3.10: how grown a child is (pure), by its age in Minecraft days: a baby that sits and is carried, a toddler that toddles after you and
  * can still be picked up, a child that can be taught to fight, a teen. Each its own size: its box ({@link #box}, of a player's) and how big
- * it is drawn ({@link #draw}; babies and toddlers on a little one's proportions, a big head, {@link #young}). Never the adult female body.
+ * it is drawn ({@link #draw}; babies and toddlers on a little one's proportions, a big head, {@link #young}). 2.0.3: grown up ({@link #ADULT},
+ * the owner: "only gets that model when they reach adulthood"): a grown daughter has the adult female body (Touka's); no younger stage
+ * ever does.
  */
 public enum ChildStage {
     // 1.3.15: a baby and a toddler bigger (the owner lost one: too small to find), on their own little-one proportions.
     BABY(0.0, 0.38F, 0.6F, true, 6.0F),
     TODDLER(2.0, 0.5F, 0.8F, true, 10.0F),
     CHILD(5.0, 0.7F, 0.7F, false, 16.0F),
-    TEEN(9.0, 0.88F, 0.88F, false, 24.0F);
+    TEEN(9.0, 0.88F, 0.88F, false, 24.0F),
+    // 2.0.3: grown up, a grown-up's size (a daughter drawn at a woman's, Touka's); otherwise as a teen does.
+    ADULT(16.0, 1.0F, 1.0F, false, 30.0F);
 
     /** From this many Minecraft days old. */
     public final double fromDays;
@@ -64,7 +68,7 @@ public enum ChildStage {
 
     /** It can be taught to fight, and fights once it has been. */
     public boolean learns() {
-        return this == CHILD || this == TEEN;
+        return this == CHILD || this == TEEN || this == ADULT;
     }
 
     /** It can follow you about, or wait where it is told. */
@@ -74,6 +78,11 @@ public enum ChildStage {
 
     /** The next stage, or this if it is the last. */
     public ChildStage next() {
-        return this == TEEN ? TEEN : values()[this.ordinal() + 1];
+        return this == ADULT ? ADULT : values()[this.ordinal() + 1];
+    }
+
+    /** 2.0.3: a teen or older (a teen's ways: its lines, its moves, its say). */
+    public boolean older() {
+        return this == TEEN || this == ADULT;
     }
 }

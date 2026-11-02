@@ -63,7 +63,7 @@ public final class ChildSkin {
                 topColour = PASTELS[random.nextInt(PASTELS.length)];
                 bottomColour = topColour;
             }
-            case TEEN -> {
+            case TEEN, ADULT -> {
                 hair = girl ? GIRL_HAIR[random.nextInt(GIRL_HAIR.length)] : BOY_HAIR[random.nextInt(BOY_HAIR.length)];
                 top = TEEN_TOPS[random.nextInt(TEEN_TOPS.length)];
                 bottom = TEEN_BOTTOMS[random.nextInt(TEEN_BOTTOMS.length)];

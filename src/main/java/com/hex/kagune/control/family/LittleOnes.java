@@ -99,7 +99,7 @@ public final class LittleOnes {
 
     /** One line: {@code part} of {@code kind}, its temper's at its age if it has one (now and then the age's anyway), else its age's. */
     static String line(String kind, String part, ChildTemper temper, ChildStage stage, String name, int seed) {
-        String group = stage == ChildStage.BABY ? "baby" : stage == ChildStage.TODDLER ? "little" : stage == ChildStage.TEEN ? "teen" : "big";
+        String group = stage == ChildStage.BABY ? "baby" : stage == ChildStage.TODDLER ? "little" : stage.older() ? "teen" : "big";
         List<String> any = LINES.get(kind + ":" + part + ":any:" + group);
         if (any == null && group.equals("teen")) {
             any = LINES.get(kind + ":" + part + ":any:big");

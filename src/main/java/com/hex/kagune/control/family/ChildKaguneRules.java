@@ -39,7 +39,7 @@ public final class ChildKaguneRules {
      * they know of it, and the server strikes from the same.
      */
     public static int tailMastery(ChildStage stage) {
-        return stage == ChildStage.TEEN ? 60 : 0;
+        return stage.older() ? 60 : 0;
     }
 
     /** 1.3.44: how many Rinkaku tentacles it has: one (with or without its wing). */
@@ -176,7 +176,7 @@ public final class ChildKaguneRules {
 
     /** The mastery its wing or wings are drawn at (and shoot from the tip of): a child's small, a teen's grown; by its stage alone. */
     public static int wingMastery(ChildStage stage) {
-        return stage == ChildStage.TEEN ? 220 : 110;
+        return stage.older() ? 220 : 110;
     }
 
     /** One unit of a lash's power, or one shot: a share of its punch ({@link ChildRules#damage}), as strong as it was born. */

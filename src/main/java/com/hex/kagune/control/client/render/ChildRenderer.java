@@ -68,6 +68,7 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
         this.wide = wide;
         this.slim = slim;
         this.m_115326_(new Kakugan(this));
+        this.m_115326_(new Figure(this));
     }
 
     /** 1.3.18: the owner's skin a child wears (null: none for its sex, or no view yet). */
@@ -92,8 +93,11 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
         static final float HEAD = 1.0F;
         static final float BODY = 0.5F;
 
+        private final boolean slim;
+
         Model(ModelPart root, boolean slim) {
             super(root, slim);
+            this.slim = slim;
         }
 
         @Override
@@ -126,6 +130,14 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
                 turn(this.f_102814_, posed.leftLegX, posed.leftLegY, posed.leftLegZ, posed.legHold);
             }
             little(young);
+            // 2.0.3: a grown daughter has the adult female body, Touka's (her legs' curves; a wide skin's arms slim); never a child.
+            if (!young && woman(view)) {
+                FemaleFigure.shapeLegs(this, com.hex.kagune.control.npc.Persona.TOUKA.legs());
+                FemaleFigure.spreadLegs(this, com.hex.kagune.control.npc.Persona.TOUKA.legs());
+                if (!this.slim) {
+                    FemaleFigure.shapeArms(this);
+                }
+            }
             // 1.3.56: Eto's child in its fight (her flesh's moves, her Mutated Arm): each part posed exactly as hers is (ChildFight).
             com.hex.kagune.control.client.animation.RigPose fight = young || asleep ? null : FIGHT.get(child.m_19879_());
             if (fight != null) {
@@ -299,7 +311,8 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
                 // Sat down: its legs (a little one's are half as long) out in front, not under it.
                 pose.m_85837_(0.0, -0.75 * stage.draw * (stage.young ? 0.5 : 1.0), 0.0);
             }
-            pose.m_85841_(stage.draw, stage.draw, stage.draw);
+            float drawn = stage.draw * (woman(view) ? com.hex.kagune.control.npc.Persona.TOUKA.size() : 1.0F);
+            pose.m_85841_(drawn, drawn, drawn);
             // 1.3.20: its moment's hop, sway and tip, about its middle.
             com.hex.kagune.control.client.animation.RigPose body = asleep ? null : posed(child, view, child.f_19797_ + partial);
             if (body != null && (body.drop != 0.0F || body.roll != 0.0F || body.flip != 0.0F)) {
@@ -445,6 +458,35 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
      * 1.3.18: a ghoul child's kakugan as it fights, on the owner's skin it wears: the eye or eyes it has turned (only those pixels, laid over
      * the skin), their irises drawn full bright. 1.3.76: its blinks (and its eyes shut asleep), over the kakugan.
      */
+    /** 2.0.3: a grown daughter (ADULT, never a younger stage): she has the adult female body, Touka's. */
+    static boolean woman(ChildClient.View view) {
+        return view != null && view.stage() == ChildStage.ADULT && view.genome().gender().female();
+    }
+
+    /** 2.0.3: a grown daughter's bust (the shared female body's, Touka's curves), in her own skin, bouncing as she moves. */
+    static final class Figure extends RenderLayer<ChildNpc, PlayerModel<ChildNpc>> {
+        Figure(ChildRenderer parent) {
+            super(parent);
+        }
+
+        @Override
+        public void m_6494_(PoseStack pose, MultiBufferSource buffers, int light, ChildNpc child, float limbSwing, float limbSwingAmount, float partialTick,
+                            float ageInTicks, float netHeadYaw, float headPitch) {
+            ChildClient.View view = ChildClient.get(child.m_19879_());
+            if (child.m_20145_() || !woman(view)) {
+                return;
+            }
+            double y = child.f_19791_ + (child.m_20186_() - child.f_19791_) * partialTick;
+            float bounce = FemaleFigure.jiggle(child.m_19879_(), y, com.hex.kagune.control.client.PaleClient.clock(partialTick));
+            float curves = com.hex.kagune.control.npc.Persona.TOUKA.curves();
+            ResourceLocation skin = textureOf(child.m_19879_());
+            FemaleFigure.bust(this.m_117386_().f_102810_, pose, buffers.m_6299_(net.minecraft.client.renderer.RenderType.m_110473_(skin)), light, bounce,
+                false, curves);
+            FemaleFigure.bust(this.m_117386_().f_102810_, pose, buffers.m_6299_(net.minecraft.client.renderer.RenderType.m_110473_(skin)), light, bounce,
+                true, curves);
+        }
+    }
+
     static final class Kakugan extends RenderLayer<ChildNpc, PlayerModel<ChildNpc>> {
         Kakugan(ChildRenderer parent) {
             super(parent);

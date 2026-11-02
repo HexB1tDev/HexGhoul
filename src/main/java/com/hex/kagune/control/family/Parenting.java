@@ -36,7 +36,7 @@ public final class Parenting {
             case BABY -> 0.0;
             case TODDLER -> night ? 0.0 : 4.0;
             case CHILD -> night ? 2.0 : 16.0;
-            case TEEN -> night ? 24.0 : 40.0;
+            case TEEN, ADULT -> night ? 24.0 : 40.0;
         };
     }
 
@@ -56,7 +56,7 @@ public final class Parenting {
 
     /** How long a child (and a teen) may fight with its kagune before it is too much (ticks): thirty seconds, a minute for a teen. */
     public static long fightsFor(ChildStage stage) {
-        return stage == ChildStage.TEEN ? 1200L : 600L;
+        return stage.older() ? 1200L : 600L;
     }
 
     /**
@@ -67,7 +67,7 @@ public final class Parenting {
         if (!stage.learns()) {
             return false;
         }
-        boolean teen = stage == ChildStage.TEEN;
+        boolean teen = stage.older();
         return fought > fightsFor(stage) || beyond > (teen ? 36.0 : 20.0) || health < (teen ? 0.25F : 0.3F);
     }
 
@@ -101,7 +101,7 @@ public final class Parenting {
         return switch (stage) {
             case BABY, TODDLER -> "little";
             case CHILD -> "child";
-            case TEEN -> "teen";
+            case TEEN, ADULT -> "teen";
         };
     }
 

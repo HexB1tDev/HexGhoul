@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.0.3 (HexGhoul): children grow up; grown daughters get the woman's body (testing)
+
+See `.github/release-notes-2.0.3.md`: a grown-up stage after the teen years (from day 16, protocol 73); grown daughters drawn with Touka's adult female body; no younger stage ever has it.
+
 ## 2.0.2 (HexGhoul): villages, Anteiku, the Cyber Tower and the library in many more biomes (testing)
 
 See `.github/release-notes-2.0.2.md`: all four structures beyond plains (meadows, cherry groves, savannas, snowy plains, forests and taigas for the buildings, and Biomes O' Plenty's open biomes), a gentler land check for the village, villages a little closer together.

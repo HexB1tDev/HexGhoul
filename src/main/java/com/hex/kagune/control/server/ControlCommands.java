@@ -318,7 +318,7 @@ final class ControlCommands {
             Children.Child child = Children.get(level, npc.childId());
             if (child != null && child.parent(me)) {
                 com.hex.kagune.control.family.ChildStage stage = child.stage(level.m_46467_());
-                if (stage == com.hex.kagune.control.family.ChildStage.TEEN) {
+                if (stage == com.hex.kagune.control.family.ChildStage.ADULT) {
                     context.getSource().m_81352_(Component.m_237113_(child.name + " is as grown as a child gets."));
                     return 0;
                 }

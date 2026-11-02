@@ -34,7 +34,7 @@ public final class ReactionLines {
             case BABY -> scary ? "*cries*" : "*stares at your eyes, fascinated*";
             case TODDLER -> scary ? pick(seed, parent + " scary! " + parent + " scary!", "*hides its face*") : pick(seed, "Ooh! Pretty eyes!", parent + " glowy!");
             case CHILD -> scary ? pick(seed, parent + "...? Is that still you?", "Whoa... you're HUGE.") : pick(seed, "Whoa! Teach me that!", "So cool!");
-            case TEEN -> scary ? pick(seed, "...Okay, that's actually terrifying. Nice.", "Just... come back as you, okay?")
+            case TEEN, ADULT -> scary ? pick(seed, "...Okay, that's actually terrifying. Nice.", "Just... come back as you, okay?")
                 : pick(seed, "Show-off.", "That's... actually kind of cool.");
         };
     }

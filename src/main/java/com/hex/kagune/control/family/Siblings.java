@@ -249,8 +249,8 @@ public final class Siblings {
      * calls them) already on the way: it stands down, in its own temper ({@code t}) and age ({@code stage}: a child's words, or a teen's).
      */
     public static String standDown(ChildTemper t, ChildStage stage, String name, String call, int seed) {
-        String key = (t == null ? "any" : t.word()) + ":" + (stage == ChildStage.TEEN ? "teen" : "child");
-        java.util.List<String> lines = STAND_DOWN.getOrDefault(key, STAND_DOWN.get("any:" + (stage == ChildStage.TEEN ? "teen" : "child")));
+        String key = (t == null ? "any" : t.word()) + ":" + (stage.older() ? "teen" : "child");
+        java.util.List<String> lines = STAND_DOWN.getOrDefault(key, STAND_DOWN.get("any:" + (stage.older() ? "teen" : "child")));
         String line = lines.get(Math.floorMod(seed, lines.size()));
         return line.replace("{name}", name == null || name.isBlank() ? "you" : name).replace("{call}", call == null || call.isBlank() ? "Mom" : call);
     }

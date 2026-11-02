@@ -15,7 +15,7 @@ import org.joml.Matrix4f;
 /**
  * 1.3.9: the one female body ({@link FemaleBody}) drawn on any humanoid model: Eto's, a female player's, every woman to come. Her
  * legs wider and deeper, a wide-armed skin's arms slim, the bust on the torso (painted with the skin's own torso front, and its second
- * layer over it), bouncing as she moves. Never on a child.
+ * layer over it), bouncing as she moves. Never on a child (2.0.3: a grown daughter, ChildStage.ADULT, is a woman and has it).
  */
 public final class FemaleFigure {
     /** Each body's bust bounce: how far it lags, how fast, her height and the clock when last carried on (by entity id). */

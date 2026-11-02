@@ -129,7 +129,7 @@ public final class ChildTalk {
             if (stage.carried() || carrying) {
                 add(keys, labels, carrying ? "down" : "up", carrying ? "Put you down." : "Pick up.");
             }
-            add(keys, labels, "play", stage == ChildStage.TEEN ? "Want to hang out?" : "Let's play!");
+            add(keys, labels, "play", stage.older() ? "Want to hang out?" : "Let's play!");
             if (stage.learns()) {
                 add(keys, labels, "teach", "Let me teach you to fight.");
             }
@@ -138,7 +138,7 @@ public final class ChildTalk {
                 case BABY -> "Talk to the baby.";
                 case TODDLER -> "Tell me something!";
                 case CHILD -> "How are you?";
-                case TEEN -> "Talk to me.";
+                case TEEN, ADULT -> "Talk to me.";
             });
             if (stage.walks()) {
                 boolean following = player.m_20148_().equals(npc.following());
@@ -233,6 +233,7 @@ public final class ChildTalk {
             case TODDLER -> "Toddler";
             case CHILD -> "Child";
             case TEEN -> "Teen";
+            case ADULT -> "Grown";
         };
         boolean girl = child.genome().gender().female();
         String whose = child.parent(Pregnancies.player(player.m_20148_())) ? "your " + (girl ? "daughter" : "son")
@@ -393,7 +394,7 @@ public final class ChildTalk {
                 reply = ChildLines.idle(stage, ChildLines.call(stage, ChildBrain.isMother(child, player)), seed);
             }
             case "topics" -> {
-                if (topics(player, npc, child, stage == ChildStage.TEEN ? "What else?" : stage == ChildStage.BABY ? "*blinks at you*" : "What else? What else?")) {
+                if (topics(player, npc, child, stage.older() ? "What else?" : stage == ChildStage.BABY ? "*blinks at you*" : "What else? What else?")) {
                     return;
                 }
                 reply = "...";
@@ -420,7 +421,7 @@ public final class ChildTalk {
                         return;
                     }
                 }
-                reply = stage == ChildStage.TEEN ? "...Hey." : "*hides shyly*";
+                reply = stage.older() ? "...Hey." : "*hides shyly*";
             }
         }
         open(player, npc, reply);

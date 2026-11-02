@@ -337,7 +337,9 @@ check(com.hex.kagune.control.graft.GraftStage.TRANSPLANT.limbs(com.hex.kagune.co
         boolean rising = true;
         for (com.hex.kagune.control.family.ChildStage stage : com.hex.kagune.control.family.ChildStage.values()) {
             float h = com.hex.kagune.control.family.ChildRules.health(stage, 0.5F, 400.0F);
-            rising &= h > last && h >= com.hex.kagune.control.family.ChildRules.health(stage, 0.5F);
+            // 2.0.3: a grown-up keeps a teen's (all of it).
+            rising &= (stage == com.hex.kagune.control.family.ChildStage.ADULT ? h == last : h > last)
+                && h >= com.hex.kagune.control.family.ChildRules.health(stage, 0.5F);
             last = h;
         }
         check(rising && com.hex.kagune.control.family.ChildRules.health(com.hex.kagune.control.family.ChildStage.TEEN, 0.5F, 400.0F) == 400.0F
@@ -898,19 +900,24 @@ check(com.hex.kagune.control.graft.GraftStage.TRANSPLANT.limbs(com.hex.kagune.co
         com.hex.kagune.control.family.ChildStage teen = com.hex.kagune.control.family.ChildStage.TEEN;
         check(com.hex.kagune.control.family.ChildStage.of(0.0) == baby && com.hex.kagune.control.family.ChildStage.of(2.5)
             == com.hex.kagune.control.family.ChildStage.TODDLER && com.hex.kagune.control.family.ChildStage.of(6.0)
-            == com.hex.kagune.control.family.ChildStage.CHILD && com.hex.kagune.control.family.ChildStage.of(50.0) == teen,
-            "a baby, a toddler, a child, a teen, by its age in days");
+            == com.hex.kagune.control.family.ChildStage.CHILD && com.hex.kagune.control.family.ChildStage.of(12.0) == teen
+            && com.hex.kagune.control.family.ChildStage.of(50.0) == com.hex.kagune.control.family.ChildStage.ADULT,
+            "a baby, a toddler, a child, a teen, a grown-up (2.0.3), by its age in days");
         float last = 0.0F;
         boolean growing = true;
         for (com.hex.kagune.control.family.ChildStage stage : com.hex.kagune.control.family.ChildStage.values()) {
-            growing &= stage.box > last && stage.box < 1.0F && stage.health > 0.0F;
+            growing &= stage.box > last && (stage == com.hex.kagune.control.family.ChildStage.ADULT ? stage.box == 1.0F : stage.box < 1.0F)
+                && stage.health > 0.0F;
             last = stage.box;
         }
-        check(growing, "each stage bigger than the last, all smaller than a grown player");
+        check(growing, "each stage bigger than the last, all smaller than a grown player until it is one (2.0.3)");
         check(baby.sits() && baby.carried() && !baby.walks() && !baby.learns() && com.hex.kagune.control.family.ChildStage.TODDLER.carried()
             && com.hex.kagune.control.family.ChildStage.TODDLER.walks() && !com.hex.kagune.control.family.ChildStage.CHILD.carried()
-            && com.hex.kagune.control.family.ChildStage.CHILD.learns() && teen.learns() && teen.next() == teen,
-            "a baby sits and is carried; a toddler walks and can still be carried; a child and a teen can be taught");
+            && com.hex.kagune.control.family.ChildStage.CHILD.learns() && teen.learns() && com.hex.kagune.control.family.ChildStage.ADULT.learns()
+            && teen.next() == com.hex.kagune.control.family.ChildStage.ADULT
+            && com.hex.kagune.control.family.ChildStage.ADULT.next() == com.hex.kagune.control.family.ChildStage.ADULT
+            && teen.older() && com.hex.kagune.control.family.ChildStage.ADULT.older() && !com.hex.kagune.control.family.ChildStage.CHILD.older(),
+            "a baby sits and is carried; a toddler walks and can still be carried; a child, a teen and a grown-up can be taught; it grows up");
         check(com.hex.kagune.control.family.ChildStage.days(0L, 48000L) == 2.0, "days from the birth");
         check(!com.hex.kagune.control.family.ChildRules.teachable(baby, 0, Long.MIN_VALUE, 0L)
             && com.hex.kagune.control.family.ChildRules.teachable(teen, 0, Long.MIN_VALUE, 0L)
