@@ -24,6 +24,7 @@ import net.minecraftforge.fml.common.Mod;
  */
 public final class HumanRenderer extends HumanoidMobRenderer<HumanNpc, PlayerModel<HumanNpc>> {
     private static final ResourceLocation[] SKINS = new ResourceLocation[HumanRules.LOOKS.length * 2];
+    private static final java.util.Map<Integer, ResourceLocation> CUTE = new java.util.HashMap<>();
 
     static {
         for (int i = 0; i < SKINS.length; i++) {
@@ -57,7 +58,12 @@ public final class HumanRenderer extends HumanoidMobRenderer<HumanNpc, PlayerMod
 
     @Override
     public ResourceLocation m_5478_(HumanNpc human) {
-        return SKINS[Math.floorMod(human.look(), SKINS.length)];
+        int look = human.look();
+        if (look >= HumanRules.CUTE) {
+            // 1.3.75: a villager's own skin (HumanSkins).
+            return CUTE.computeIfAbsent(look, l -> Objects.requireNonNull(ResourceLocation.m_214293_(HumanRules.namespace(l), HumanRules.skin(l))));
+        }
+        return SKINS[Math.floorMod(look, SKINS.length)];
     }
 
     /** A player's body; frightened, its arms up over its head, waving. */

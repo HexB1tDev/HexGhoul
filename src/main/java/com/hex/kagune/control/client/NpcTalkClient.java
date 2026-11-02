@@ -36,7 +36,8 @@ public final class NpcTalkClient {
         boolean human = message.skin() <= -100;
         String texture = human ? com.hex.kagune.control.npc.HumanRules.skin(-100 - message.skin())
             : message.skin() < 0 ? companion(-message.skin() - 1) : NpcLook.texture(message.skin());
-        ResourceLocation skin = Objects.requireNonNull(ResourceLocation.m_214293_(human ? "minecraft" : "hexkagune", texture));
+        ResourceLocation skin = Objects.requireNonNull(ResourceLocation.m_214293_(human ? com.hex.kagune.control.npc.HumanRules.namespace(-100 - message.skin())
+            : "hexkagune", texture));
         minecraft.m_91152_(new NpcTalkScreen(message.npc(), skin, model));
     }
 

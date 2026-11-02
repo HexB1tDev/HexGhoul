@@ -64,7 +64,7 @@ public final class HumanBrain {
             mind = human.mind = new Mind();
             CompoundTag saved = human.getPersistentData();
             int look = saved.m_128441_(HumanNpc.KEY) ? saved.m_128451_(HumanNpc.KEY)
-                : human.m_217043_().m_188503_(HumanRules.LOOKS.length * 2);
+                : HumanRules.pick(human.m_217043_().m_188503_(1 << 20)); // 1.3.75: a villager's own look;
             saved.m_128405_(HumanNpc.KEY, look);
             human.dress(look);
             mind.nextWander = now + 40 + human.m_217043_().m_188503_(80);

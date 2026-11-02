@@ -43,13 +43,32 @@ public final class HumanRules {
     private HumanRules() {
     }
 
-    /** The skin's texture path for look {@code look} (0 .. 2 * LOOKS.length - 1: the wide ones, then the slim). */
+    /** 1.3.75: the villagers' own looks (HumanSkins) are numbered from this; a new human is given one of them. */
+    public static final int CUTE = 1000;
+
+    /** 1.3.75: a new human's look ({@code roll} any int): one of the villagers' own skins. */
+    public static int pick(int roll) {
+        return CUTE + Math.floorMod(roll, com.hex.kagune.control.village.HumanSkins.ALL.length);
+    }
+
+    /** 1.3.75: whose texture {@code look} is: the mod's (a villager's own skin) or vanilla's (a default skin). */
+    public static String namespace(int look) {
+        return look >= CUTE ? "hexkagune" : "minecraft";
+    }
+
+    /** The skin's texture path for look {@code look} (0 .. 2 * LOOKS.length - 1: the wide ones, then the slim; 1.3.75: CUTE on, HumanSkins). */
     public static String skin(int look) {
+        if (look >= CUTE) {
+            return com.hex.kagune.control.village.HumanSkins.ALL[Math.floorMod(look - CUTE, com.hex.kagune.control.village.HumanSkins.ALL.length)].path();
+        }
         int n = Math.floorMod(look, LOOKS.length * 2);
         return "textures/entity/player/" + (slim(n) ? "slim/" : "wide/") + LOOKS[n % LOOKS.length] + ".png";
     }
 
     public static boolean slim(int look) {
+        if (look >= CUTE) {
+            return com.hex.kagune.control.village.HumanSkins.ALL[Math.floorMod(look - CUTE, com.hex.kagune.control.village.HumanSkins.ALL.length)].slim();
+        }
         return Math.floorMod(look, LOOKS.length * 2) >= LOOKS.length;
     }
 
