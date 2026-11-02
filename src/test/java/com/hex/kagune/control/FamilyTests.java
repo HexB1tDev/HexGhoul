@@ -416,7 +416,7 @@ check(com.hex.kagune.control.graft.GraftStage.TRANSPLANT.limbs(com.hex.kagune.co
         check(com.hex.kagune.control.family.Parenting.notices(20.0, true, 0L) && !com.hex.kagune.control.family.Parenting.notices(20.0, false, 100L)
             && com.hex.kagune.control.family.Parenting.notices(90.0, false, com.hex.kagune.control.family.Parenting.MISSED_AFTER)
             && !com.hex.kagune.control.family.Parenting.notices(60.0, true, 0L), "a parent sees it near, or misses it after a while");
-        check(com.hex.kagune.control.family.Parenting.pause("") >= 36 && com.hex.kagune.control.family.Parenting.pause("x".repeat(500)) <= 110
+        check(com.hex.kagune.control.family.Parenting.pause("") >= 40 && com.hex.kagune.control.family.Parenting.pause("x".repeat(500)) <= 140
             && com.hex.kagune.control.family.Parenting.pause("x".repeat(40)) > com.hex.kagune.control.family.Parenting.pause("x"), "long enough to read");
         // The words: every parent, every temper, every why, every age has its lines; none names anyone it mustn't.
         String[] parents = {"touka", "ken", "eto"};

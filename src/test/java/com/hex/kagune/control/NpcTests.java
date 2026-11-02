@@ -553,5 +553,138 @@ public final class NpcTests {
             && com.hex.kagune.control.npc.BubbleShape.pop(10.0) == 1.0F && com.hex.kagune.control.npc.BubbleShape.pop(1.0E9) == 1.0F, "it pops in and settles");
         check(com.hex.kagune.control.npc.BubbleShape.zees(0).equals("z") && com.hex.kagune.control.npc.BubbleShape.zees(20).equals("z Z")
             && com.hex.kagune.control.npc.BubbleShape.zees(50).equals("z Z z"), "a sleeper's z's grow");
+        turns();
+        layout();
+    }
+
+    /**
+     * 1.3.52: a talk's turns: a line answered by someone else comes down as the answer goes up (never both at once), shrinking away; the
+     * same speaker's next line takes its place anyway; a lone line stays as long as it takes to read.
+     */
+    static void turns() {
+        String line = "You always get the bigger half and it's not fair.";
+        check(com.hex.kagune.control.npc.Speech.turn(4, 5, 70L) == 70 && com.hex.kagune.control.npc.Speech.turn(4, 4, 70L) == 0
+            && com.hex.kagune.control.npc.Speech.turn(4, 5, 3L) == 20 && com.hex.kagune.control.npc.Speech.turn(4, 5, 99999L)
+            == com.hex.kagune.control.npc.Speech.MOST, "a line is up until someone else answers (at least a second)");
+        check(com.hex.kagune.control.npc.Speech.life(line, 0) == com.hex.kagune.control.npc.Speech.ticks(line)
+            && com.hex.kagune.control.npc.Speech.life(line, 70) == 70 && com.hex.kagune.control.npc.Speech.life(line, 2) == 10
+            && com.hex.kagune.control.npc.Speech.life(line, 9999) == com.hex.kagune.control.npc.Speech.ticks(line), "sent for a while, up that long");
+        boolean readable = true;
+        for (int n = 0; n <= 120; n++) {
+            String text = "x".repeat(n);
+            int pause = com.hex.kagune.control.family.Parenting.pause(text);
+            readable &= pause < com.hex.kagune.control.npc.Speech.ticks(text) && pause >= 40 && pause <= 140 && pause >= 20 + n;
+        }
+        check(readable, "each turn up long enough to read (a tick or more a letter), the next before it would have come down anyway");
+        check(com.hex.kagune.control.npc.BubbleShape.pop(10.0, 100.0) == 1.0F && com.hex.kagune.control.npc.BubbleShape.pop(10.0, 0.0) == 0.0F
+            && com.hex.kagune.control.npc.BubbleShape.pop(10.0, 1.5) > 0.3F && com.hex.kagune.control.npc.BubbleShape.pop(10.0, 1.5) < 1.0F
+            && com.hex.kagune.control.npc.BubbleShape.pop(1.0, 100.0) == com.hex.kagune.control.npc.BubbleShape.pop(1.0), "it shrinks away at its end");
+        // Moved aside or up: the box goes, its point stays at the head; the tail (a cloud's trail) leans down to it.
+        for (boolean thought : new boolean[] {false, true}) {
+            com.hex.kagune.control.npc.BubbleShape home = com.hex.kagune.control.npc.BubbleShape.of(120, 2, thought);
+            com.hex.kagune.control.npc.BubbleShape same = com.hex.kagune.control.npc.BubbleShape.of(120, 2, thought, 0.0F, 0.0F);
+            check(same.home() && same.x0 == home.x0 && same.y1 == home.y1, "unmoved, the same shape as before");
+            for (float[] move : new float[][] {{90.0F, 0.0F}, {-150.0F, 0.0F}, {0.0F, 40.0F}, {60.0F, 25.0F}}) {
+                com.hex.kagune.control.npc.BubbleShape moved = com.hex.kagune.control.npc.BubbleShape.of(120, 2, thought, move[0], move[1]);
+                float[] lowest = {-99.0F, 0.0F};
+                int[] below = {0};
+                moved.fill((a, b, c, d, argb, depth) -> {
+                    for (float[] pt : new float[][] {a, b, c, d}) {
+                        if (pt[1] > lowest[0]) {
+                            lowest[0] = pt[1];
+                            lowest[1] = pt[0];
+                        }
+                        below[0] += pt[1] > moved.y1 + 2.0F ? 1 : 0;
+                    }
+                });
+                String what = (thought ? "cloud" : "bubble") + " moved " + move[0] + "," + move[1];
+                check(Math.abs(moved.x0 - (home.x0 + move[0])) < 0.01F && Math.abs(moved.y1 - (home.y1 - move[1])) < 0.01F, what + ": its box moved");
+                check(lowest[0] <= 2.6F && lowest[0] >= -2.0F && Math.abs(lowest[1] + 5.0F) < 4.5F, what + ": its point still at the head (" + lowest[0]
+                    + " at " + lowest[1] + ")");
+                check(below[0] > 0, what + ": something reaches down from the box to the head");
+                check(moved.lineY(0) > moved.y0 && moved.lineY(1) + 9 <= moved.y1, what + ": the words still inside");
+            }
+        }
+    }
+
+    /** 1.3.52: bubbles kept apart: two that would overlap spread apart, each to its own speaker's side; boxed in, the newer goes up. */
+    static void layout() {
+        double k = 0.025 / 6.0; // radians a pixel six blocks off
+        com.hex.kagune.control.npc.BubbleShape wide = com.hex.kagune.control.npc.BubbleShape.of(200, 2, false);
+        com.hex.kagune.control.npc.BubbleShape small = com.hex.kagune.control.npc.BubbleShape.of(60, 1, false);
+        java.util.function.BiFunction<Integer, Double, com.hex.kagune.control.npc.BubbleLayout.Seen> at = (id, x) -> new com.hex.kagune.control.npc.BubbleLayout.Seen(
+            id, 100.0 - id, x, 0.0, k, wide.x0, wide.y0, wide.x1, wide.y1, wide.rim());
+        java.util.Map<Integer, com.hex.kagune.control.npc.BubbleLayout.Place> one = com.hex.kagune.control.npc.BubbleLayout.arrange(java.util.List.of(at.apply(1, 0.0)));
+        check(one.get(1).equals(com.hex.kagune.control.npc.BubbleLayout.Place.HOME), "alone, over its head");
+        java.util.Map<Integer, com.hex.kagune.control.npc.BubbleLayout.Place> apart = com.hex.kagune.control.npc.BubbleLayout.arrange(java.util.List.of(
+            at.apply(1, 0.0), at.apply(2, 1.2)));
+        check(apart.get(1).equals(com.hex.kagune.control.npc.BubbleLayout.Place.HOME) && apart.get(2).equals(com.hex.kagune.control.npc.BubbleLayout.Place.HOME),
+            "far enough apart, both over their own heads");
+        // Two speakers a block and a half apart, six blocks off: spread apart sideways, each to its own speaker's side, never stacked.
+        double near = 1.5 / 6.0;
+        for (double side : new double[] {1.0, -1.0}) {
+            java.util.List<com.hex.kagune.control.npc.BubbleLayout.Seen> two = java.util.List.of(at.apply(1, 0.0), at.apply(2, side * near));
+            java.util.Map<Integer, com.hex.kagune.control.npc.BubbleLayout.Place> placed = com.hex.kagune.control.npc.BubbleLayout.arrange(two);
+            check(placed.get(2).shift() * side > 0.0F && placed.get(1).shift() * side < 0.0F && placed.get(1).lift() == 0.0F && placed.get(2).lift() == 0.0F,
+                "spread apart, each to its own side: " + placed);
+            check(clear(two, placed), "and clear of each other");
+            for (com.hex.kagune.control.npc.BubbleLayout.Seen b : two) {
+                double[] box = box(b, placed.get(b.id()));
+                check(b.x() > box[0] && b.x() < box[2], "each still over its own speaker, its tail short");
+            }
+        }
+        // Right on top of each other (a little one on its parent's hip): split to either side, the point between them.
+        java.util.List<com.hex.kagune.control.npc.BubbleLayout.Seen> stacked = java.util.List.of(at.apply(1, 0.0), new com.hex.kagune.control.npc.BubbleLayout.Seen(
+            2, 1.0, 0.0, 0.0004, k * 1.06, small.x0, small.y0, small.x1, small.y1, small.rim()));
+        java.util.Map<Integer, com.hex.kagune.control.npc.BubbleLayout.Place> hip = com.hex.kagune.control.npc.BubbleLayout.arrange(stacked);
+        check(clear(stacked, hip) && hip.get(1).shift() < 0.0F && hip.get(2).shift() > 0.0F && hip.get(2).lift() <= com.hex.kagune.control.npc.BubbleLayout.TILT,
+            "a little one's bubble on its parent's: split either side, " + hip);
+        // A cloud (its puffs reach past its box) beside a bubble: what is drawn kept clear, not just the boxes.
+        com.hex.kagune.control.npc.BubbleShape cloud = com.hex.kagune.control.npc.BubbleShape.of(190, 2, true);
+        java.util.List<com.hex.kagune.control.npc.BubbleLayout.Seen> puffs = java.util.List.of(com.hex.kagune.control.npc.BubbleLayout.Seen.of(1, 30.0, 0.0, 0.0,
+            k, cloud), com.hex.kagune.control.npc.BubbleLayout.Seen.of(2, 5.0, 0.0, 0.0004, k * 1.06, small));
+        java.util.Map<Integer, com.hex.kagune.control.npc.BubbleLayout.Place> drawn = com.hex.kagune.control.npc.BubbleLayout.arrange(puffs);
+        double cloudRight = (cloud.x1 + cloud.rim() + drawn.get(1).shift()) * k;
+        double bubbleLeft = 0.0004 + (small.x0 - small.rim() + drawn.get(2).shift()) * k * 1.06;
+        check(cloud.rim() > 4.0F && bubbleLeft >= cloudRight, "a cloud's puffs kept clear of the bubble beside it");
+        // Three in a row: nobody covers anybody.
+        java.util.List<com.hex.kagune.control.npc.BubbleLayout.Seen> three = java.util.List.of(at.apply(1, 0.0), at.apply(2, near), at.apply(3, -near));
+        check(clear(three, com.hex.kagune.control.npc.BubbleLayout.arrange(three)), "three talking at once: none covers another");
+        // Five crowded together: no room aside for all, so some go up; still none covers another.
+        java.util.List<com.hex.kagune.control.npc.BubbleLayout.Seen> crowd = new java.util.ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            crowd.add(at.apply(i + 1, (i - 2) * 0.1));
+        }
+        java.util.Map<Integer, com.hex.kagune.control.npc.BubbleLayout.Place> lifted = com.hex.kagune.control.npc.BubbleLayout.arrange(crowd);
+        boolean up = false;
+        for (com.hex.kagune.control.npc.BubbleLayout.Place place : lifted.values()) {
+            up |= place.lift() > 0.0F;
+        }
+        check(clear(crowd, lifted) && up, "a crowd: some go up, none covers another");
+        check(com.hex.kagune.control.npc.BubbleLayout.arrange(java.util.List.of(at.apply(2, near), at.apply(1, 0.0))).equals(
+            com.hex.kagune.control.npc.BubbleLayout.arrange(java.util.List.of(at.apply(1, 0.0), at.apply(2, near)))), "the same whatever order they come in");
+    }
+
+    private static boolean clear(java.util.List<com.hex.kagune.control.npc.BubbleLayout.Seen> seen,
+                                 java.util.Map<Integer, com.hex.kagune.control.npc.BubbleLayout.Place> placed) {
+        for (com.hex.kagune.control.npc.BubbleLayout.Seen a : seen) {
+            for (com.hex.kagune.control.npc.BubbleLayout.Seen b : seen) {
+                if (a.id() < b.id()) {
+                    double[] p = box(a, placed.get(a.id()));
+                    double[] q = box(b, placed.get(b.id()));
+                    if (p[0] < q[2] && q[0] < p[2] && p[1] < q[3] && q[1] < p[3]) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    private static double[] box(com.hex.kagune.control.npc.BubbleLayout.Seen b, com.hex.kagune.control.npc.BubbleLayout.Place place) {
+        double k = b.perPixel();
+        double r = b.rim();
+        return new double[] {b.x() + (b.x0() - r + place.shift()) * k, b.y() + (-b.y1() - r + place.lift()) * k, b.x() + (b.x1() + r + place.shift()) * k,
+            b.y() + (-b.y0() + r + place.lift()) * k};
     }
 }

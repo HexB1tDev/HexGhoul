@@ -91,8 +91,9 @@ public final class Parenting {
 
     /** How long a line stays up before the next is said (ticks): long enough to read it. */
     public static int pause(String text) {
+        // 1.3.52: a little longer (each line now comes down as the reply goes up, so this is all the time it is up to be read).
         int length = text == null ? 0 : text.length();
-        return Math.max(36, Math.min(110, 30 + length * 13 / 10));
+        return Math.max(40, Math.min(140, 32 + length * 7 / 5));
     }
 
     /** The stage's group its lines are for: a toddler's words, a child's, a teen's. */

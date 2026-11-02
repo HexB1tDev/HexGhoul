@@ -33,6 +33,14 @@ public final class NpcSpeech {
 
     /** {@code npc} (an entity id) says {@code text}: up over its head from now. */
     public static void accept(int npc, String text) {
+        accept(npc, text, 0);
+    }
+
+    /**
+     * {@code npc} says {@code text}: up over its head from now, for {@code ticks} (1.3.52: a line in a talk, until the answer comes; 0, or
+     * longer than it takes to read: as long as it takes to read).
+     */
+    public static void accept(int npc, String text, int ticks) {
         if (text == null || text.isBlank()) {
             return;
         }
@@ -41,7 +49,7 @@ public final class NpcSpeech {
         for (String line : Speech.wrap(text)) {
             lines.add(Speech.styled(line, action));
         }
-        BUBBLES.put(npc, new Bubble(List.copyOf(lines), now() + Speech.ticks(text), now()));
+        BUBBLES.put(npc, new Bubble(List.copyOf(lines), now() + Speech.life(text, ticks), now()));
     }
 
     /**
@@ -74,6 +82,17 @@ public final class NpcSpeech {
     public static double age(int npc, float partial) {
         Bubble bubble = BUBBLES.get(npc);
         return bubble == null ? 1.0E9 : now() - bubble.from() + partial;
+    }
+
+    /** 1.3.52: how long until the bubble over {@code npc} comes down (ticks, {@code partial} in; huge if there is none: it is not going). */
+    public static double left(int npc, float partial) {
+        Bubble bubble = BUBBLES.get(npc);
+        return bubble == null ? 1.0E9 : bubble.until() - now() - partial;
+    }
+
+    /** 1.3.52: everyone with a bubble up now (entity ids). */
+    public static java.util.Set<Integer> speaking() {
+        return java.util.Set.copyOf(BUBBLES.keySet());
     }
 
     @SubscribeEvent

@@ -50,6 +50,26 @@ public final class Speech {
         return Math.max(LEAST, Math.min(MOST, 40 + length * 2));
     }
 
+    /**
+     * 1.3.52: how long {@code text} stays up when it was sent for {@code ticks} (a line in a talk, until the answer): that, never under 10
+     * ticks nor longer than it takes to read; 0: as long as it takes to read.
+     */
+    public static int life(String text, int ticks) {
+        return ticks <= 0 ? ticks(text) : Math.max(10, Math.min(ticks(text), ticks));
+    }
+
+    /**
+     * 1.3.52: how long a line in a talk is sent up for (ticks; 0: as long as it takes to read): until the next line, {@code gap} ticks on,
+     * if someone else says it ({@code next} another speaker than {@code speaker}); never under a second. The same speaker's next line takes
+     * its bubble's place anyway.
+     */
+    public static int turn(int speaker, int next, long gap) {
+        if (next == speaker) {
+            return 0;
+        }
+        return (int)Math.max(20L, Math.min(MOST, gap));
+    }
+
     /** One line of the bubble with its look: an action (in asterisks) grey and slanted, words white. Formatting codes stripped first. */
     public static String styled(String line, boolean action) {
         String bare = line.replaceAll("§.", "");

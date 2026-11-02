@@ -1,6 +1,28 @@
-# START HERE (state after 1.3.51)
+# START HERE (state after 1.3.52)
 
-- **Next session:** read `docs/handoff/next-ai-1.3.51.md` first: the owner's next goal (more interactions and dialog, beauty and as few
+- **Next session:** read `docs/handoff/next-ai-1.3.51.md` first (the owner's goal: more interactions and dialog, polish first; how
+  conversations work; the known problems), then these sections. Problem 1 there (overlapping bubbles) is fixed by 1.3.52.
+- **1.3.52 bubbles take turns and keep apart** (protocol **69**: `S2CNpcSay(npc, text, ticks)`, `ticks` 0 = as long as it takes to read;
+  the 2-arg constructor still sends 0). Server: `ParentDuty.talk` sends each due line with `life(said, next, now)` =
+  `Speech.turn(speaker, nextSpeaker, gap)` (until the next queued line if someone else says it, at least 20, at most `Speech.MOST`; the
+  same speaker or none: 0). `Parenting.pause` = max(40, min(140, 32 + 1.4 x length)) (was 36..110, 30 + 1.3 x): the pause is now all the
+  time a turn is up. Client: `NpcSpeech.accept(npc, text, ticks)` (until = `Speech.life(text, ticks)`: the sent life, 10..`ticks(text)`),
+  `left(npc, partial)`, `speaking()`. `BubbleShape.pop(age, left)` shrinks it over its last `GOES` 3 ticks; `BubbleShape.of(width, lines,
+  thought, shift, lift)` moves the box (its point stays at the head; the tail's base `tailBase()` as near the head as the box's corner
+  allows; a cloud's `trail()` stretched with more, smaller puffs), `rim()` (what is drawn past the box: a cloud 6, a bubble 1.5), `home()`.
+  Pure `npc/BubbleLayout.arrange(List<Seen>)` -> `Place(shift, lift)` per id: on the view as angles (x right, y up, `perPixel` = 0.025 /
+  distance), sorted oldest first; pairs that overlap (rims in, `GAP` 3 px) pushed apart sideways half each, toward each speaker's side
+  (right on top of each other: the newer right), each at most half its width + `REACH` 40 px (the other takes the rest), up to `ROUNDS`
+  40; then `tilt` (moved far aside, up to `TILT` 12 px so the tail angles down); then anything still overlapping: the newer lifted over.
+  `SpeechBubbles.place(body, base)` works the layout out once a frame (`m_91296_` partial + game time as the frame's key) for every
+  bubble in the player's sight (`NpcSpeech.lines(body)`, interpolated positions, each speaker's last `base`), skipping bubbles in their
+  last `GOES` ticks (going: kept where they were), and eases each place over ~2 ticks. Preview: `tools/BubblePreview.java <dir>` also
+  writes `bubbles-scene.png` (before/after a squabble and a carried toddler, the turn, lines said at once, a cloud beside a bubble).
+  Tests: `NpcTests.turns`, `NpcTests.layout`.
+
+# State after 1.3.51
+
+- Next session after 1.3.51: read `docs/handoff/next-ai-1.3.51.md` first: the owner's next goal (more interactions and dialog, beauty and as few
   bugs as possible: nobody walking off mid-talk, no overlapping bubbles in squabbles), how conversations work now, and the problems
   already found by reading the code. Still open: the Owl as an exception for Eto's child if the owner wants it.
 - **1.3.51 siblings** (protocol 68, unchanged; the owner: "interactions between brothers and sisters"): pure `family/Siblings` (`Kind`

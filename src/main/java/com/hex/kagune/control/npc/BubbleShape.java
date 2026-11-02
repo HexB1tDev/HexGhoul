@@ -34,21 +34,51 @@ public final class BubbleShape {
     public final float x1;
     public final float y1;
     public final boolean thought;
+    /** 1.3.52: how far its box was moved aside and up (pixels) off its usual place over the head; its point stays at the head. */
+    public final float shift;
+    public final float lift;
 
-    private BubbleShape(float x0, float y0, float x1, float y1, boolean thought) {
+    private BubbleShape(float x0, float y0, float x1, float y1, boolean thought, float shift, float lift) {
         this.x0 = x0;
         this.y0 = y0;
         this.x1 = x1;
         this.y1 = y1;
         this.thought = thought;
+        this.shift = shift;
+        this.lift = lift;
     }
 
     /** The shape round {@code lines} lines of text at most {@code width} pixels wide. */
     public static BubbleShape of(int width, int lines, boolean thought) {
+        return of(width, lines, thought, 0.0F, 0.0F);
+    }
+
+    /**
+     * 1.3.52: the same, its box moved {@code shift} pixels to the right (left if less than 0) and {@code lift} up, out of another bubble's
+     * way ({@link BubbleLayout}); its tail (a cloud's trail) still runs down to the speaker's head, leaning and longer.
+     */
+    public static BubbleShape of(int width, int lines, boolean thought, float shift, float lift) {
         float w = Math.max(18, width) + 2 * PAD + (thought ? 4 : 0);
         float h = Math.max(1, lines) * LINE - 1 + 2 * PAD + (thought ? 2 : 0);
-        float bottom = -(thought ? TRAIL : TAIL);
-        return new BubbleShape(-w / 2.0F, bottom - h, w / 2.0F, bottom, thought);
+        float up = Math.max(0.0F, lift);
+        float bottom = -(thought ? TRAIL : TAIL) - up;
+        return new BubbleShape(shift - w / 2.0F, bottom - h, shift + w / 2.0F, bottom, thought, shift, up);
+    }
+
+    /** 1.3.52: how far what is drawn reaches past its box (pixels): a cloud's puffs, the outline. */
+    public float rim() {
+        return this.thought ? 6.0F : RIM + 0.25F;
+    }
+
+    /** 1.3.52: true if it sits in its usual place (not moved aside or up). */
+    public boolean home() {
+        return Math.abs(this.shift) < 0.01F && this.lift < 0.01F;
+    }
+
+    /** 1.3.52: where its tail meets the box's bottom edge (x): over the head if it can be, else as near it as the box's corner allows. */
+    float tailBase() {
+        float margin = this.thought ? 7.0F : 6.5F;
+        return Math.max(this.x0 + margin, Math.min(this.x1 - margin, -2.5F));
     }
 
     /** Where line {@code i}'s top is. */
@@ -67,10 +97,12 @@ public final class BubbleShape {
     private void shapes(Fill fill, float grow, int argb, float depth) {
         if (!this.thought) {
             rounded(fill, this.x0 - grow, this.y0 - grow, this.x1 + grow, this.y1 + grow, 4.0F + grow, argb, depth);
-            // The tail: down and a little to one side, to the speaker's head; its base sunk into the box.
+            // The tail: down and a little to one side, to the speaker's head; its base sunk into the box. 1.3.52: from wherever the box
+            // was moved, leaning (and longer) down to the head.
             float g = grow * 1.6F;
-            float[] left = {-6.5F - g, this.y1 - 1.0F};
-            float[] right = {1.5F + g, this.y1 - 1.0F};
+            float base = this.tailBase();
+            float[] left = {base - 4.0F - g, this.y1 - 1.0F};
+            float[] right = {base + 4.0F + g, this.y1 - 1.0F};
             float[] tip = {-4.5F - grow * 0.4F, grow * 1.4F};
             fill.quad(left, right, tip, tip, argb, depth);
             return;
@@ -81,8 +113,33 @@ public final class BubbleShape {
             circle(fill, puff[0], puff[1], puff[2] + grow, argb, depth);
         }
         // The trail of little puffs down to the head.
-        circle(fill, -4.0F, -5.2F, 2.5F + grow, argb, depth);
-        circle(fill, -6.5F, -1.6F, 1.5F + grow, argb, depth);
+        for (float[] puff : this.trail()) {
+            circle(fill, puff[0], puff[1], puff[2] + grow, argb, depth);
+        }
+    }
+
+    /**
+     * A cloud's trail (x, y, radius), biggest first: two little puffs under it to the head; 1.3.52: moved aside or up, as many as it takes
+     * along the way from its bottom edge down to the head, smaller and smaller.
+     */
+    List<float[]> trail() {
+        List<float[]> out = new ArrayList<>();
+        if (this.home()) {
+            out.add(new float[] {-4.0F, -5.2F, 2.5F});
+            out.add(new float[] {-6.5F, -1.6F, 1.5F});
+            return out;
+        }
+        float fromX = this.tailBase();
+        float fromY = this.y1;
+        float toX = -6.5F;
+        float toY = -1.6F;
+        double length = Math.hypot(toX - fromX, toY - fromY);
+        int n = Math.max(2, Math.min(7, (int)Math.round(length / 6.5)));
+        for (int i = 0; i < n; i++) {
+            float t = (i + 1.0F) / n;
+            out.add(new float[] {fromX + (toX - fromX) * t, fromY + (toY - fromY) * t, 2.7F - 1.2F * i / Math.max(1, n - 1)});
+        }
+        return out;
     }
 
     /** The cloud's puffs (x, y, radius) along its edges. */
@@ -152,6 +209,22 @@ public final class BubbleShape {
             return (float)(0.55 + 0.53 * (age / 2.5));
         }
         return (float)(1.08 - 0.08 * ((age - 2.5) / 1.5));
+    }
+
+    /** 1.3.52: how long it takes to shrink away at its end (ticks). */
+    public static final double GOES = 3.0;
+
+    /**
+     * 1.3.52: how big it is drawn {@code age} ticks after it was said with {@code left} ticks before it comes down: popping in, and in its
+     * last {@link #GOES} ticks shrinking away (as the reply pops up in its turn).
+     */
+    public static float pop(double age, double left) {
+        float in = pop(age);
+        if (left >= GOES) {
+            return in;
+        }
+        double t = Math.max(0.0, left) / GOES;
+        return (float)(in * t * (2.0 - t));
     }
 
     /** True if every line is an action or a thought (NpcSpeech styles them grey and slanted): a cloud, not a bubble. */

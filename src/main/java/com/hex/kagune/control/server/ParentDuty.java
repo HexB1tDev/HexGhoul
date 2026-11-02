@@ -282,7 +282,10 @@ final class ParentDuty {
     record Said(int speaker, String text, long at) {
     }
 
-    /** Its talk this tick: the lines that are due said, in the speaker's bubble, to every player near who can see the speaker. */
+    /**
+     * Its talk this tick: the lines that are due said, in the speaker's bubble, to every player near who can see the speaker. 1.3.52: a
+     * line answered by someone else is up only until the answer comes ({@link #life}): the two bubbles take turns, never both up at once.
+     */
     static void talk(ChildNpc npc, ChildBrain.Mind mind, ServerLevel level, long now) {
         while (!mind.talk.isEmpty() && mind.talk.peek().at() <= now) {
             Said said = mind.talk.poll();
@@ -290,12 +293,21 @@ final class ParentDuty {
             if (!(speaker instanceof LivingEntity body) || !body.m_6084_()) {
                 continue;
             }
+            int ticks = life(said, mind.talk.peek(), now);
             for (ServerPlayer player : level.m_6907_()) {
                 if (SceneServer.sees(body, player, 24.0)) {
-                    ControlNetwork.sendTo(player, new S2CNpcSay(said.speaker(), said.text()));
+                    ControlNetwork.sendTo(player, new S2CNpcSay(said.speaker(), said.text(), ticks));
                 }
             }
         }
+    }
+
+    /**
+     * 1.3.52: how long {@code said}'s bubble stays up (ticks; 0: as long as it takes to read): until {@code next} is said, if someone else
+     * says it (the same speaker's next line takes its bubble's place anyway); never less than a second.
+     */
+    static int life(Said said, Said next, long now) {
+        return next == null ? 0 : com.hex.kagune.control.npc.Speech.turn(said.speaker(), next.speaker(), next.at() - now);
     }
 
     // ---------------------------------------------------------------- finding them
