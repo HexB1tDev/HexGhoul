@@ -341,7 +341,7 @@ public final class UkakuWingRenderer {
         for (com.hex.kagune.control.npc.ChildNpc child : ChildRenderer.drawn()) {
             com.hex.kagune.control.client.ChildClient.View kid = com.hex.kagune.control.client.ChildClient.get(child.m_19879_());
             com.hex.kagune.control.client.GhoulNpcClient.View seen = com.hex.kagune.control.client.GhoulNpcClient.get(child.m_19879_());
-            int wings = kid == null ? 0 : com.hex.kagune.control.family.KaguneGenes.wings(kid.genome().kagune());
+            int wings = kid == null ? 0 : com.hex.kagune.control.family.ChildKaguneRules.wingCount(kid.genome().kagune(), kid.genome().seed()); // 1.3.46
             if (wings == 0 || seen == null || !child.m_6084_() || child.m_20145_() || child.m_5803_()) {
                 continue;
             }

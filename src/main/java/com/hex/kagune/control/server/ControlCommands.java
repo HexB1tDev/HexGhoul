@@ -375,7 +375,7 @@ final class ControlCommands {
             // 1.3.43: what kagune it inherited (worked out now for a child from before, once its parents are about), and its colour.
             com.hex.kagune.control.family.Genome genome = Children.genome(level, kid);
             if (genome.ghoul()) {
-                line += "\n  \u00a77kagune: " + com.hex.kagune.control.family.KaguneGenes.describe(genome.kagune())
+                line += "\n  \u00a77kagune: " + com.hex.kagune.control.family.ChildKaguneRules.describe(genome.kagune(), genome.seed())
                     + (genome.colour() >= 0 ? ", " + com.hex.kagune.control.KaguneColours.name(genome.colour()) + " (" + com.hex.kagune.control.KaguneColours.hex(genome.colour()) + ")" : "")
                     + (com.hex.kagune.control.family.KaguneGenes.owl(genome.kagune()) ? " \u00a78(the Owl's flesh comes in a later update)" : "");
             }

@@ -63,17 +63,82 @@ public final class ChildKaguneRules {
     public static final double REST_SHARE = 0.85;
 
     /**
+     * 1.3.46 (the owner: "add other variations, like two wings and the tentacle in the middle... it just stays in the back like a tail"):
+     * how a child of a tentacle and a wing carries them, born with it (by its seed): its tentacle over its right shoulder and one wing on
+     * its left; the mirror of that; or its tentacle low out of the middle of its back like a tail, both wings above it. A child with only
+     * the tentacle carries it over a shoulder or as a tail the same way.
+     */
+    public enum Layout {
+        SHOULDER_RIGHT(1), SHOULDER_LEFT(-1), TAIL(0);
+
+        /** Which side the tentacle leaves from and leans to: 1 its right, -1 its left, 0 the middle. */
+        public final int side;
+
+        Layout(int side) {
+            this.side = side;
+        }
+    }
+
+    /** 1.3.46: the share of children born to each layout: over the right shoulder, the tail, over the left (the rest). */
+    public static final double RIGHT_SHARE = 0.4;
+    public static final double TAIL_SHARE = 0.35;
+
+    /** 1.3.46: how a child with kagune {@code bits} and {@code seed} carries its tentacle (and its wing): the same all its life. */
+    public static Layout layout(int bits, long seed) {
+        if (!KaguneGenes.tails(bits)) {
+            return Layout.SHOULDER_RIGHT; // no tentacle: nothing to lay out (its wing keeps its seed's side)
+        }
+        long mixed = seed * 0x2545F4914F6CDD1DL;
+        mixed ^= mixed >>> 29;
+        double roll = (mixed >>> 11) * 0x1.0p-53;
+        return roll < RIGHT_SHARE ? Layout.SHOULDER_RIGHT : roll < RIGHT_SHARE + TAIL_SHARE ? Layout.TAIL : Layout.SHOULDER_LEFT;
+    }
+
+    /**
+     * 1.3.46: how many wings it has as it carries them: a child of a tentacle and a wing has the pair when its tentacle is a tail (room
+     * for both), one beside a tentacle over its shoulder; anyone else as born ({@link KaguneGenes#wings}).
+     */
+    public static int wingCount(int bits, long seed) {
+        int wings = KaguneGenes.wings(bits);
+        if (wings > 0 && KaguneGenes.tails(bits)) {
+            return layout(bits, seed) == Layout.TAIL ? 2 : 1;
+        }
+        return wings;
+    }
+
+    /** 1.3.46: where its tentacle leaves its body (rig space): its pelvis, off the spine on the side it leans to, or in the middle as a tail. */
+    public static double[] tentacleRoot(Layout layout) {
+        return new double[] {TENTACLE_ROOT[0] * layout.side, TENTACLE_ROOT[1], TENTACLE_ROOT[2]};
+    }
+
+    /** As {@link #tentacleRest(double, double, int, int, Layout)} over its right shoulder (1.3.45's). */
+    public static double[][] tentacleRest(double length, double time, int seed, int points) {
+        return tentacleRest(length, time, seed, points, Layout.SHOULDER_RIGHT);
+    }
+
+    /**
      * 1.3.44: its tentacle at rest, in the shape the original lays a Rinkaku player's first tentacle out in (the cubic from the pelvis
      * through its two controls to its rest above and a little ahead of the head: up behind the back and curling over), drawn out about
      * its root to {@link #REST_SHARE} of its {@code length} (rig space, a grown body's: as long at rest as it is in a lash, so it never
-     * stretches), swaying a little on {@code time} (ticks) by its {@code seed}; {@code points} evenly along the curve, root first.
+     * stretches), swaying a little on {@code time} (ticks) by its {@code seed}; {@code points} evenly along the curve, root first. 1.3.46:
+     * over the shoulder its {@code layout} gives, or as a tail: out behind it, a little low, the end curling up, swaying side to side.
      */
-    public static double[][] tentacleRest(double length, double time, int seed, int points) {
-        double[] root = TENTACLE_ROOT;
-        double arch = length * 0.09;
-        double[] rest = {SEED_FAN, root[1] + SEED_HEIGHT + arch, root[2] + length * (0.03 + SEED_BACK * 0.04)};
-        double[] a = {root[0] + SEED_FAN * LEAN, root[1] + SEED_HEIGHT * 0.42 + length * 0.15, root[2] - length * 0.22};
-        double[] b = {rest[0] + SEED_FAN * 0.05, rest[1] + length * 0.12, rest[2] - length * 0.16};
+    public static double[][] tentacleRest(double length, double time, int seed, int points, Layout layout) {
+        double[] root = tentacleRoot(layout);
+        double[] a;
+        double[] b;
+        double[] rest;
+        if (layout == Layout.TAIL) {
+            a = new double[] {0.0, root[1] - length * 0.04, root[2] - length * 0.32};
+            b = new double[] {0.0, root[1] - length * 0.02, root[2] - length * 0.62};
+            rest = new double[] {0.0, root[1] + length * 0.2, root[2] - length * 0.78};
+        } else {
+            double fan = SEED_FAN * layout.side;
+            double arch = length * 0.09;
+            rest = new double[] {fan, root[1] + SEED_HEIGHT + arch, root[2] + length * (0.03 + SEED_BACK * 0.04)};
+            a = new double[] {root[0] + fan * LEAN, root[1] + SEED_HEIGHT * 0.42 + length * 0.15, root[2] - length * 0.22};
+            b = new double[] {rest[0] + fan * 0.05, rest[1] + length * 0.12, rest[2] - length * 0.16};
+        }
         int n = Math.max(2, points);
         double[][] curve = new double[n][];
         double run = 0.0;
@@ -91,6 +156,7 @@ public final class ChildKaguneRules {
         }
         double grow = run < 1.0E-6 ? 1.0 : REST_SHARE * length / run;
         double phase = time / 20.0 + (seed & 255) * 0.0245;
+        boolean tail = layout == Layout.TAIL;
         double[][] out = new double[n][];
         for (int i = 0; i < n; i++) {
             double t = i / (double)(n - 1);
@@ -98,11 +164,11 @@ public final class ChildKaguneRules {
             for (int k = 0; k < 3; k++) {
                 p[k] = root[k] + (curve[i][k] - root[k]) * grow;
             }
-            // The sway: nothing at the root, the most at the point, slow and a little out of step along it.
-            double sway = SEED_WIGGLE * t * t;
-            p[0] += sway * Math.sin(phase * 1.7 + t * 2.1);
-            p[1] += sway * 0.6 * Math.sin(phase * 1.3 + t * 1.4 + 1.1);
-            p[2] += sway * 0.5 * Math.cos(phase * 1.1 + t * 1.8);
+            // The sway: nothing at the root, the most at the point, slow and a little out of step along it (a tail's from side to side).
+            double sway = SEED_WIGGLE * t * t * (tail ? 2.2 : 1.0);
+            p[0] += sway * Math.sin(phase * (tail ? 1.2 : 1.7) + t * 2.1);
+            p[1] += sway * (tail ? 0.25 : 0.6) * Math.sin(phase * 1.3 + t * 1.4 + 1.1);
+            p[2] += sway * (tail ? 0.2 : 0.5) * Math.cos(phase * 1.1 + t * 1.8);
             out[i] = p;
         }
         return out;
@@ -144,18 +210,35 @@ public final class ChildKaguneRules {
 
     /** The wing its next shot leaves from (1 its right, -1 its left): its one wing's side, or turn about with the pair ({@code last}). */
     public static int side(int bits, long seed, int last) {
-        if (KaguneGenes.wings(bits) == 1) {
+        if (wingCount(bits, seed) == 1) {
             return wingSide(bits, seed);
         }
         return last >= 0 ? -1 : 1;
     }
 
     /**
-     * 1.3.45: the side its one wing grows on (1 its right, -1 its left): with its tentacle, on its left (the tentacle has its right: the
-     * owner, a crowded back); else the side its seed gives ({@link KaguneGenes#side}).
+     * 1.3.45: the side its one wing grows on (1 its right, -1 its left): with a tentacle over a shoulder, the other side (the owner, a
+     * crowded back; 1.3.46: either shoulder); else the side its seed gives ({@link KaguneGenes#side}).
      */
     public static int wingSide(int bits, long seed) {
-        return KaguneGenes.tails(bits) ? -1 : KaguneGenes.side(seed);
+        Layout layout = layout(bits, seed);
+        return KaguneGenes.tails(bits) && layout.side != 0 ? -layout.side : KaguneGenes.side(seed);
+    }
+
+    /** 1.3.46: what it has as it carries it, in words ("a Rinkaku tentacle as a tail and Ukaku wings"), for {@code /kagune children}. */
+    public static String describe(int bits, long seed) {
+        if (!KaguneGenes.tails(bits)) {
+            return KaguneGenes.describe(bits);
+        }
+        Layout layout = layout(bits, seed);
+        String tentacle = "a Rinkaku tentacle " + switch (layout) {
+            case SHOULDER_RIGHT -> "over its right shoulder";
+            case SHOULDER_LEFT -> "over its left shoulder";
+            case TAIL -> "as a tail";
+        };
+        int wings = wingCount(bits, seed);
+        String rest = wings == 2 ? " and Ukaku wings" : wings == 1 ? " and an Ukaku wing on its " + (wingSide(bits, seed) > 0 ? "right" : "left") : "";
+        return tentacle + rest + (KaguneGenes.owl(bits) ? " and the Owl's flesh" : "");
     }
 
     /** Its pause after a string or volley ({@code roll} in 0..1). */

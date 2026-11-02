@@ -1,7 +1,18 @@
-# START HERE (state after 1.3.45)
+# START HERE (state after 1.3.46)
 
-- **Next session:** read `docs/handoff/next-ai-1.3.43.md` first (house rules; its Eto's child is now **1.3.46**: 1.3.44 and 1.3.45
-  went to the owner's reports on the child's tentacle).
+- **Next session:** read `docs/handoff/next-ai-1.3.43.md` first, then the owner's latest list (in the 1.3.46+ sections here and in
+  `next-ai-1.3.43.md`): child HP from its parents (1.3.47), the rest of the kagune kit (1.3.48), parenting (1.3.49), then Eto's child.
+- **1.3.46 layouts** (protocol 68, unchanged; the owner: "add other variations, like two wings and the tentacle in the middle... stays
+  in the back like a tail"): pure `ChildKaguneRules.Layout` (SHOULDER_RIGHT side 1, SHOULDER_LEFT -1, TAIL 0), `layout(bits, seed)`
+  (tentacle children only; shares `RIGHT_SHARE` 0.4, `TAIL_SHARE` 0.35, the rest left; a mix of the seed so old children get one),
+  `wingCount(bits, seed)` (tentacle + wing: TAIL 2, a shoulder 1; else `KaguneGenes.wings`), `wingSide` (the other side of a shoulder
+  tentacle), `tentacleRoot(layout)` (x mirrored; 0 for the tail), `tentacleRest(..., layout)` (the tail: out behind at waist height,
+  curling up, a wider side-to-side sway), `describe(bits, seed)` (`/kagune children`). Used by `ChildKaguneRules.side` (the server's
+  shots), `GraftRenderer.drawTentacle` (rest and the lash's root), `UkakuWingRenderer`'s child loop (count and side). Preview:
+  `tools/ChildKagunePreview.java` (the three layouts, the tail's lashes). `FamilyTests.kagune`.
+
+# State after 1.3.45
+
 - **1.3.45** (protocol 68, unchanged; the owner: the back was crowded, lean the tail to the right): `ChildKaguneRules.TENTACLE_ROOT` x
   0.13 (its right), `SEED_FAN` 0.95 and `LEAN` 0.45 (the first control pulled out to the right: up over the right shoulder);
   `ChildKaguneRules.wingSide(bits, seed)`: with a tentacle the one wing is always on its left (-1), else `KaguneGenes.side(seed)`; used

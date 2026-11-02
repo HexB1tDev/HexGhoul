@@ -226,15 +226,49 @@ public final class FamilyTests {
             && com.hex.kagune.control.family.ChildKaguneRules.use(owl, 1.0, true, reach) == com.hex.kagune.control.family.ChildKaguneRules.Use.NONE,
             "tails and a wing: the tails up close, the wing from further off, a step in between; tails alone close in; wings alone shoot");
         boolean oneSide = true;
-        for (long seed = 0; seed < 200; seed++) {
-            int side = com.hex.kagune.control.family.KaguneGenes.side(seed * 977L);
-            oneSide &= com.hex.kagune.control.family.ChildKaguneRules.side(tails | wing, seed * 977L, 1) == -1
-                && com.hex.kagune.control.family.ChildKaguneRules.side(tails | wing, seed * 977L, -1) == -1
-                && com.hex.kagune.control.family.ChildKaguneRules.wingSide(tails | wing, seed * 977L) == -1
-                && com.hex.kagune.control.family.ChildKaguneRules.side(owl | wing, seed * 977L, 1) == side
-                && com.hex.kagune.control.family.ChildKaguneRules.side(owl | wing, seed * 977L, -1) == side && (side == 1 || side == -1);
+        int[] layouts = new int[3];
+        for (long seed = 0; seed < 4000; seed++) {
+            long sd = seed * 977L + 13L;
+            com.hex.kagune.control.family.ChildKaguneRules.Layout layout = com.hex.kagune.control.family.ChildKaguneRules.layout(tails | wing, sd);
+            layouts[layout.ordinal()]++;
+            if (layout.side != 0) {
+                oneSide &= com.hex.kagune.control.family.ChildKaguneRules.wingCount(tails | wing, sd) == 1
+                    && com.hex.kagune.control.family.ChildKaguneRules.side(tails | wing, sd, 1) == -layout.side
+                    && com.hex.kagune.control.family.ChildKaguneRules.side(tails | wing, sd, -1) == -layout.side
+                    && com.hex.kagune.control.family.ChildKaguneRules.wingSide(tails | wing, sd) == -layout.side;
+            } else {
+                oneSide &= com.hex.kagune.control.family.ChildKaguneRules.wingCount(tails | wing, sd) == 2
+                    && com.hex.kagune.control.family.ChildKaguneRules.side(tails | wing, sd, 1) == -1
+                    && com.hex.kagune.control.family.ChildKaguneRules.side(tails | wing, sd, -1) == 1;
+            }
+            int side = com.hex.kagune.control.family.KaguneGenes.side(sd);
+            oneSide &= com.hex.kagune.control.family.ChildKaguneRules.side(owl | wing, sd, 1) == side
+                && com.hex.kagune.control.family.ChildKaguneRules.wingCount(owl | wing, sd) == 1
+                && com.hex.kagune.control.family.ChildKaguneRules.wingCount(wings, sd) == 2
+                && com.hex.kagune.control.family.ChildKaguneRules.wingCount(tails, sd) == 0
+                && com.hex.kagune.control.family.ChildKaguneRules.layout(tails | wing, sd) == layout;
         }
-        check(oneSide, "1.3.45: one wing beside the tentacle: on its left (the tentacle has its right), every shot from there; else its seed's side");
+        check(oneSide, "1.3.46: over a shoulder, one wing on the other side, every shot from there; as a tail, both wings, taking turns; "
+            + "no tentacle, its seed's side; the same every time");
+        check(Math.abs(layouts[0] / 4000.0 - com.hex.kagune.control.family.ChildKaguneRules.RIGHT_SHARE) < 0.04
+            && Math.abs(layouts[2] / 4000.0 - com.hex.kagune.control.family.ChildKaguneRules.TAIL_SHARE) < 0.04 && layouts[1] > 700,
+            "1.3.46: born over the right shoulder, the left, or with a tail, in their shares: " + java.util.Arrays.toString(layouts));
+        boolean tailRests = true;
+        for (double time = 0.0; time < 400.0; time += 17.0) {
+            double[][] rest = com.hex.kagune.control.family.ChildKaguneRules.tentacleRest(com.hex.kagune.control.graft.GraftStage.TRANSPLANT.length(0), time, 5, 12,
+                com.hex.kagune.control.family.ChildKaguneRules.Layout.TAIL);
+            double[] tip = rest[rest.length - 1];
+            for (double[] p : rest) {
+                tailRests &= p[1] < 1.9 && p[2] < -0.1 && Math.abs(p[0]) < 0.6; // never over a shoulder: behind it, under its shoulders, about the middle
+            }
+            tailRests &= Math.abs(rest[0][0]) < 1.0E-9 && tip[2] < rest[0][2] - 1.5 && tip[1] > rest[0][1] - 0.4;
+        }
+        check(tailRests, "1.3.46: as a tail it stays in the back: out behind, low, from the middle, swaying side to side");
+        double[][] left = com.hex.kagune.control.family.ChildKaguneRules.tentacleRest(3.9, 40.0, 5, 12, com.hex.kagune.control.family.ChildKaguneRules.Layout.SHOULDER_LEFT);
+        double[][] right = com.hex.kagune.control.family.ChildKaguneRules.tentacleRest(3.9, 40.0, 5, 12, com.hex.kagune.control.family.ChildKaguneRules.Layout.SHOULDER_RIGHT);
+        check(left[0][0] < -0.05 && left[11][0] < -0.4 && right[0][0] > 0.05 && right[11][0] > 0.4, "1.3.46: over the left shoulder, the mirror of the right");
+        check(com.hex.kagune.control.family.ChildKaguneRules.describe(tails | wing, 0L).startsWith("a Rinkaku tentacle ")
+            && com.hex.kagune.control.family.ChildKaguneRules.describe(wings, 0L).equals("Ukaku wings"), "1.3.46: what it carries, in words");
         check(com.hex.kagune.control.family.ChildKaguneRules.side(wings, 5L, 1) == -1 && com.hex.kagune.control.family.ChildKaguneRules.side(wings, 5L, -1) == 1,
             "the pair: the wings take turns");
 check(com.hex.kagune.control.graft.GraftStage.TRANSPLANT.limbs(com.hex.kagune.control.family.ChildKaguneRules.tailMastery(com.hex.kagune.control.family.ChildStage.CHILD)) == 1

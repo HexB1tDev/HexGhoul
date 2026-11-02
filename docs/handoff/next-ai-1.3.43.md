@@ -1,9 +1,8 @@
 # HANDOFF: HexGhoul after 1.3.43. Read this first, then `docs/handoff/next-ai-1.3.33.md` (how the owner works, older ideas).
 
 Branch **`claude/relaxed-carson-4y0frw`** (check it out from origin; push with `git push -u origin claude/relaxed-carson-4y0frw`).
-Never push to `main`; no PR unless asked. Version **1.3.45** in `build.py` and `patch/KagunePatch.java` (bump both; the next is
-**1.3.46**: 1.3.44 and 1.3.45 were the owner's reports: one real Rinkaku tentacle on a child, leaning right with the wing on the left;
-see the top of `companions-handoff.md`). Network `PROTOCOL` is **"68"**. Nothing since 1.3.28 has been tried in game: never say anything works in game.
+Never push to `main`; no PR unless asked. Version **1.3.46** in `build.py` and `patch/KagunePatch.java` (bump both; the next is
+**1.3.47**: 1.3.44-1.3.46 were the owner's reports and asks on the child's tentacle; see the top of `companions-handoff.md`). Network `PROTOCOL` is **"68"**. Nothing since 1.3.28 has been tried in game: never say anything works in game.
 
 ## House rules (the owner's, verbatim where quoted)
 
@@ -30,7 +29,18 @@ see the top of `companions-handoff.md`). Network `PROTOCOL` is **"68"**. Nothing
 
 ## What's next
 
-1. **1.3.46: Eto's child (the rest of the owner's ask).** The owner: "Eto's child gets her kagune abilities and transformation at low
+0. **The owner's newest asks (after 1.3.45), in this order, one version each:**
+   - **1.3.47 child HP from its parents:** "the stronger the parents, the stronger the child... father max mastery, mother 360 HP ->
+     the kid 400". Grown health = the stronger parent's health, plus up to ~14% of it for the other's strength; by stage below that.
+   - **1.3.48 the rest of the kit:** "crystallize... grab, throw, crush, backflip, front flip, everything the mother and father can
+     do" (Ukaku crystal spikes; Rinkaku grab, throw, crush; flips like the wild ghouls'). **Never a kakuja** ("the kid will never have
+     access to the [kakujas]": the owner's word came through as "cockroaches"; confirm with the owner how that squares with Eto's
+     child's "transformation at low health", which is her Owl kakuja).
+   - **1.3.49 parenting:** spouses react when a child's kagune comes out; a toddler too far from home or out at night is fetched (the
+     companion parent walks to it, picks it up, carries it home); a child on a rampage in its ghoul state (chasing too long, too far)
+     is stopped by the companion parent; scolding conversations back and forth in both speech bubbles (S2CNpcSay to the parents
+     near; many lines per persona and per stage: "even if it takes thousands more voice lines").
+1. **Eto's child (the rest of the owner's ask).** The owner: "Eto's child gets her kagune abilities and transformation at low
    health". The genome already carries it (`KaguneGenes.OWL`, Eto's colour 0xD8CCBC); `ChildKagune.has` ignores OWL for now and
    `/kagune children` says it comes later (its words name no version). What exists to build on:
    - Server: Eto's kit is `server/EtoOwl` (+ `EtoFlesh` swipe/grab/hammer, `EtoWatch`, `EtoArm`, `EtoOwlForm` grow/fight, rules in

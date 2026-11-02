@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.46 (HexGhoul): a child of a Rinkaku and an Ukaku parent is born with one of three looks: over either shoulder, or a tail with both wings (testing)
+
+See `.github/release-notes-1.3.46.md`.
+
 ## 1.3.45 (HexGhoul): a child's tentacle leans out to the right, its wing on the left: the back isn't crowded any more (testing)
 
 See `.github/release-notes-1.3.45.md`.

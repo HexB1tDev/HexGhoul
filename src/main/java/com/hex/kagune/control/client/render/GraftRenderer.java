@@ -232,9 +232,12 @@ public final class GraftRenderer {
         if (age > move.ticks() + 2) {
             move = GraftMove.NONE;
         }
+        // 1.3.46: over the shoulder it was born to carry it over, or as a tail.
+        com.hex.kagune.control.family.ChildKaguneRules.Layout layout = com.hex.kagune.control.family.ChildKaguneRules.layout(kid.genome().kagune(),
+            kid.genome().seed());
         GraftRig.Pose pose;
         if (move == GraftMove.NONE) {
-            double[][] rest = com.hex.kagune.control.family.ChildKaguneRules.tentacleRest(length, clock, child.m_19879_(), GraftMotion.POINTS);
+            double[][] rest = com.hex.kagune.control.family.ChildKaguneRules.tentacleRest(length, clock, child.m_19879_(), GraftMotion.POINTS, layout);
             pose = new GraftRig.Pose(rest, new double[] {0.0, 1.0, 0.0}, 0.0, 1.0, length, 1.0, 0.0);
         } else {
             double[] aim = frame.rig(new double[] {moving.x(), moving.y(), moving.z()});
@@ -248,7 +251,7 @@ public final class GraftRenderer {
                 body, move, age, aim, null, null, 0.3));
             // The move's path, carried from the graft's root onto the pelvis it leaves from.
             double[] from = GraftRig.root(GraftStage.TRANSPLANT, 1, 0, body.crouching());
-            double[] to = com.hex.kagune.control.family.ChildKaguneRules.TENTACLE_ROOT;
+            double[] to = com.hex.kagune.control.family.ChildKaguneRules.tentacleRoot(layout);
             double[][] points = new double[lash.points().length][];
             for (int i = 0; i < points.length; i++) {
                 double f = 1.0 - i / (double)Math.max(1, points.length - 1);
