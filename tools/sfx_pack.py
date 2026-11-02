@@ -32,6 +32,8 @@ COMBO = "blood_and_gush/dramatic_combos/"
 CLASH = "super_punch_collisions/"
 # 1.3.28: the quinque case's own (tools/case_sfx.py builds them: its latches, its mechanism, its lock).
 QUINQUE = "quinque/"
+# 1.3.61: the owner's own clash sounds (Clashes.zip: Clash1..4.ogg, mono 48 kHz), every clash's impact.
+CLASHES = "clashes/"
 
 # pool: (gain, [files], subtitle). Frequent sounds get short files and a lower gain; the big ones the long, loud collisions.
 POOLS = {
@@ -85,7 +87,8 @@ POOLS = {
     "whoosh": (0.55, [SWORD + "air_tear", PSWING + "double_feint", PSWING + "spinning_fist"], "A rush of air"),
     "dash": (0.65, [SWORD + "air_tear", PSWING + "double_feint"], "A dash"),
     "air_burst": (0.75, [CLASH + "heavy_air_burst"], "A burst of air"),
-    "clash": (0.85, [CLASH + "fast_counter_clash", CLASH + "close_dry_collision", CLASH + "hit_stop_clash"], "Kagune clash"),
+    # 1.3.61 (the owner: "use the new sounds I sent as the new clash sounds whenever there's an impact"): theirs.
+    "clash": (0.95, [CLASHES + "clash_1", CLASHES + "clash_2", CLASHES + "clash_3", CLASHES + "clash_4"], "Kagune clash"),
     "clash_big": (0.95, [CLASH + "titan_fist_clash", CLASH + "double_shock_impact", CLASH + "sonic_fist_crash"], "A huge clash"),
     "burst": (0.7, [CLASH + "close_dry_collision", CLASH + "fast_counter_clash", CLASH + "heavy_air_burst"], "An impact bursts"),
     "shockwave": (0.85, [CLASH + "wide_air_shockwave", CLASH + "twin_fist_shockwave", CLASH + "heavy_air_burst", CLASH + "double_shock_impact"],

@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.61 (HexGhoul): the owner's new clash sounds on every clash (testing)
+
+See `.github/release-notes-1.3.61.md`.
+
 ## 1.3.60 (HexGhoul): two fixes to family talks, found reviewing 1.3.53 to 1.3.59 (testing)
 
 See `.github/release-notes-1.3.60.md`.

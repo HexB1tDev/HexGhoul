@@ -1,8 +1,17 @@
-# START HERE (state after 1.3.60)
+# START HERE (state after 1.3.61)
 
-- **Next session:** read `docs/handoff/next-ai-1.3.51.md` first (the owner's goal: more interactions and dialog, polish first; how
-  conversations worked; the known problems), then these sections. Problems 1 (bubbles), 2 (walking off mid-talk), 3 (tag off home), 4 (two escorts) and 5
-  (Eto's child unposed) there are fixed by 1.3.52 to 1.3.56; "How conversations work now" there is out of date for held talks: read the 1.3.53 entry below.
+- **Next session:** read `docs/handoff/next-ai-1.3.60.md` first (family talk after the polish). The owner's next update (asked during
+  1.3.60, "after this one is fully finished"): clash impacts sized by how hard each hit was, shaking the ground and camera; the same move
+  meeting itself (big punch, speed kick...) cancelling both with a big impact; more and better reactions to the final kakujas (Rinkaku and
+  Ukaku, especially War/Peace: being scared of War); new dramatic running animations for War and Peace; their new clash sounds (1.3.61).
+- **1.3.61 clash sounds** (protocol 70, unchanged): the owner's `Clashes.zip` (Clash1..4.ogg, mono 48 kHz) copied unchanged to
+  `assets/hexkagune/sounds/sfx/clashes/clash_1..4.ogg`; `tools/sfx_pack.py` (the single source of `sounds.json`: run it after any sound
+  change; regenerating before this change reproduced the file exactly) has `CLASHES` and the `clash` pool (gain 0.95) is those four, so
+  `sfx.clash` and the original's `kagune_guard` play them. `KaguneClash.burst` plays `sfx.clash` at the burst's volume (pitch 1 +
+  (1.2 - power) x 0.15) and the gust (`entity.ender_dragon.flap` at 0.8), no longer the `KAGUNE_SLAM` heavy punch under it.
+
+# State after 1.3.60
+
 - **1.3.60 review fixes** (protocol 70, unchanged): `Conversation.tick` ends a talk (LEFT, silent) when a speaker who never came is
   dropped and fewer than two members are left; `Conversation.free` refuses a companion following a player.
 

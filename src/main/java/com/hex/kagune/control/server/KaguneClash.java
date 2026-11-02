@@ -5,7 +5,6 @@ import com.hex.kagune.control.Safety;
 import com.hex.kagune.control.king.KingMarkFx;
 import com.hex.kagune.control.network.ControlNetwork;
 import com.hex.kagune.control.network.S2CKingFx;
-import com.hex.kagune.sound.HexKaguneSounds;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -13,7 +12,6 @@ import java.util.UUID;
 import java.util.function.BooleanSupplier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
@@ -243,10 +241,10 @@ public final class KaguneClash {
             power, 0.0F, 0.0F};
         ControlNetwork.broadcastAround(near, new S2CKingFx(near.m_20148_(), S2CKingFx.MARK, new int[] {KingMarkFx.CLASH, 0}, data));
         if (near.m_9236_() instanceof ServerLevel level) {
-            float pitch = 1.25F + (1.2F - power) * 0.4F;
-            level.m_6263_(null, at.f_82479_, at.f_82480_, at.f_82481_, HexKaguneSounds.KAGUNE_SLAM.get(), SoundSource.PLAYERS, volume, pitch);
-            UkakuFire.sound(level, at, "entity.ender_dragon.flap", volume * 1.08F, 1.5F);
-            UkakuFire.sound(level, at, "hexkagune:sfx.clash", volume * 0.92F, 1.0F); // 1.2.8: kagune on kagune: an impact
+            // 1.3.61 (the owner: "use the new sounds I sent as the new clash sounds whenever there's an impact"): their clash is the
+            // impact itself (sfx.clash: Clashes.zip's four), with the gust of it; the heavy blow it was layered over is gone.
+            UkakuFire.sound(level, at, "hexkagune:sfx.clash", volume, 1.0F + (1.2F - power) * 0.15F);
+            UkakuFire.sound(level, at, "entity.ender_dragon.flap", volume * 0.8F, 1.5F);
         }
     }
 }

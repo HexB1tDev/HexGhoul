@@ -674,16 +674,20 @@
     "subtitle": "subtitles.hexkagune.sfx.clash",
     "sounds": [
       {
-        "name": "hexkagune:sfx/super_punch_collisions/fast_counter_clash",
-        "volume": 0.53
+        "name": "hexkagune:sfx/clashes/clash_1",
+        "volume": 0.55
       },
       {
-        "name": "hexkagune:sfx/super_punch_collisions/close_dry_collision",
-        "volume": 0.56
+        "name": "hexkagune:sfx/clashes/clash_2",
+        "volume": 0.58
       },
       {
-        "name": "hexkagune:sfx/super_punch_collisions/hit_stop_clash",
-        "volume": 0.57
+        "name": "hexkagune:sfx/clashes/clash_3",
+        "volume": 0.86
+      },
+      {
+        "name": "hexkagune:sfx/clashes/clash_4",
+        "volume": 0.59
       }
     ]
   },
