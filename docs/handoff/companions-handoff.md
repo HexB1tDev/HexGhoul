@@ -1,7 +1,6 @@
 # START HERE (state after 1.3.78)
 
-- The owner dropped RULE 1 in this session ("ignore the 97% rule, I changed my mind"); `CLAUDE.md` still holds it until they say otherwise
-  for good. Commit and push often anyway.
+- RULE 1 (stop at 97% usage) is gone for good: the owner had it removed from `CLAUDE.md` after 1.3.78.
 - **The owner's update from `next-ai-1.3.67.md` is done** (1.3.68-1.3.78), all untested in game. Next: whatever the owner reports or asks
   (bugs first, each its own version). Optional from older lists: War/Peace same-move cancels.
 - **1.3.78 dates** (protocol 72, unchanged; `HumanNpc.HOLDING` new entity data: holder id + 1). Pure `village/HumanHand`: `hand(slim)`
