@@ -41,8 +41,8 @@ public final class ChildKagunePreview {
             {ChildStage.CHILD, 0xA50F37, "child (5-8 days): Touka's crimson"},
             {ChildStage.TEEN, 0x2E6BD8, "teen (9+ days): its father's colour (a blue, for the example)"}};
         double[][][] views = {
-            {{1.2, 1.3, 5.6}, {-0.8, 0.95, 0.0}},
-            {{0.6, 2.0, -5.6}, {-0.8, 1.0, 0.0}},
+            {{0.9, 1.4, 6.2}, {-1.0, 1.0, 0.0}},
+            {{-0.4, 2.0, -6.0}, {-1.0, 1.0, 0.0}},
             {{5.4, 1.3, 1.2}, {-0.6, 0.9, 0.0}}};
         String[] names = {"front", "behind", "side"};
         ArtPreview.fov = 40.0;
@@ -57,15 +57,16 @@ public final class ChildKagunePreview {
                 RigPose still = new RigPose();
                 // The child (its kakugan open: it is fighting), then Touka a little way off to its left, as tall as she is.
                 tris.addAll(placed(body(still, kid, false), s, 0.0, 0.0));
-                tris.addAll(placed(body(still, touka, true), toukaSize, -1.9, 0.0));
+                tris.addAll(placed(body(still, touka, true), toukaSize, -2.7, 0.0));
                 // 1.3.44: its one Rinkaku tentacle at rest (ChildKaguneRules.tentacleRest: the first tentacle's curl), as thick as a
                 // Rinkaku player's first, at its size, in its colour and its veins (ArtPreview's stand-in for the original's tube).
                 double[] rigEye = {eye[0] / s, eye[1] / s, eye[2] / s};
                 double length = GraftStage.TRANSPLANT.length(ChildKaguneRules.tailMastery(stage));
                 double[][] rest = ChildKaguneRules.tentacleRest(length, 40.0, 77, 12);
                 tris.addAll(tentacle(rest, s, colour));
-                // Its one wing, on the right (KaguneGenes.side picks it per child), at its size, in its colour.
-                WingRig.Input wing = WingRules.child(ChildKaguneRules.wingMastery(stage), KaguneGenes.wings(KaguneGenes.TAILS | KaguneGenes.WING), 1, 1.0F,
+                // Its one wing (1.3.45: on its left, the tentacle has its right), at its size, in its colour.
+                WingRig.Input wing = WingRules.child(ChildKaguneRules.wingMastery(stage), KaguneGenes.wings(KaguneGenes.TAILS | KaguneGenes.WING),
+                    ChildKaguneRules.wingSide(KaguneGenes.TAILS | KaguneGenes.WING, 77L), 1.0F,
                     40.0, false, 0.0F, WingRig.FORWARD, 0.0F, 0.0F, 1.0F);
                 for (WingRig.Quad q : WingRig.build(wing, rigEye)) {
                     float[] x = q.xyz();

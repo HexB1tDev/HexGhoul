@@ -1,7 +1,15 @@
-# START HERE (state after 1.3.44)
+# START HERE (state after 1.3.45)
 
-- **Next session:** read `docs/handoff/next-ai-1.3.43.md` first (house rules; its "1.3.44 Eto's child" is now **1.3.45**: this version
-  went to the owner's bug report).
+- **Next session:** read `docs/handoff/next-ai-1.3.43.md` first (house rules; its Eto's child is now **1.3.46**: 1.3.44 and 1.3.45
+  went to the owner's reports on the child's tentacle).
+- **1.3.45** (protocol 68, unchanged; the owner: the back was crowded, lean the tail to the right): `ChildKaguneRules.TENTACLE_ROOT` x
+  0.13 (its right), `SEED_FAN` 0.95 and `LEAN` 0.45 (the first control pulled out to the right: up over the right shoulder);
+  `ChildKaguneRules.wingSide(bits, seed)`: with a tentacle the one wing is always on its left (-1), else `KaguneGenes.side(seed)`; used
+  by `ChildKaguneRules.side` (the server's shots) and `UkakuWingRenderer`'s child loop. Lashes carry the move's path onto the new root
+  (`GraftRenderer.drawTentacle`, unchanged). Preview: `tools/ChildKagunePreview.java` (Touka moved further left). `FamilyTests.kagune`.
+
+# State after 1.3.44
+
 - **1.3.44 fix** (protocol 68, unchanged; the owner: "it's meant to be one tentacle not two", and the 1.3.43 tails were the dormant Graft
   DNA's toothed tails): `ChildKaguneRules.tailMastery` is 0 / 60 (under `GraftStage.TWIN_MASTERY`: one limb on the server's string and
   the client's), `TENTACLES` 1, `TENTACLE_THICKNESS` 0.18 (a Rinkaku player's first tentacle: `KaguneProfile.tendrilBaseThickness` at

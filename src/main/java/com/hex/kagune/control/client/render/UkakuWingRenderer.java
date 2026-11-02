@@ -335,7 +335,8 @@ public final class UkakuWingRenderer {
             }
             emit(consumer, matrix, normals, quads, x, y, z, yaw, scaled, com.hex.kagune.control.KaguneColours.DEFAULT); // (hers stay hers)
         }
-        // 1.3.43: the ghoul children in view with Ukaku of their own: one wing (born of two kinds: on the side its seed gives) or the pair,
+        // 1.3.43: the ghoul children in view with Ukaku of their own: one wing (born of two kinds: 1.3.45: on the left beside a tentacle,
+        // else the side its seed gives) or the pair,
         // at their size, aiming as they shoot, in the colour they took from a parent.
         for (com.hex.kagune.control.npc.ChildNpc child : ChildRenderer.drawn()) {
             com.hex.kagune.control.client.ChildClient.View kid = com.hex.kagune.control.client.ChildClient.get(child.m_19879_());
@@ -374,7 +375,7 @@ public final class UkakuWingRenderer {
             }
             float aimed = com.hex.kagune.control.client.GhoulNpcClient.aim(seen, clock);
             WingRig.Input input = com.hex.kagune.control.npc.WingRules.child(com.hex.kagune.control.family.ChildKaguneRules.wingMastery(kid.stage()), wings,
-                com.hex.kagune.control.family.KaguneGenes.side(kid.genome().seed()), deploy, time / 20.0, !seen.out(), aimed, aim,
+                com.hex.kagune.control.family.ChildKaguneRules.wingSide(kid.genome().kagune(), kid.genome().seed()), deploy, time / 20.0, !seen.out(), aimed, aim,
                 com.hex.kagune.control.client.GhoulNpcClient.kick(seen, 1, clock), com.hex.kagune.control.client.GhoulNpcClient.kick(seen, -1, clock),
                 distance > DETAIL_DISTANCE_SQR ? 0.3F : 1.0F);
             List<WingRig.Quad> quads = WingRig.build(input, eye);

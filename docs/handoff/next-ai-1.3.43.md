@@ -1,8 +1,9 @@
 # HANDOFF: HexGhoul after 1.3.43. Read this first, then `docs/handoff/next-ai-1.3.33.md` (how the owner works, older ideas).
 
 Branch **`claude/relaxed-carson-4y0frw`** (check it out from origin; push with `git push -u origin claude/relaxed-carson-4y0frw`).
-Never push to `main`; no PR unless asked. Version **1.3.44** in `build.py` and `patch/KagunePatch.java` (bump both; the next is
-**1.3.45**: 1.3.44 was the owner's bug report: one real Rinkaku tentacle on a child, see the top of `companions-handoff.md`). Network `PROTOCOL` is **"68"**. Nothing since 1.3.28 has been tried in game: never say anything works in game.
+Never push to `main`; no PR unless asked. Version **1.3.45** in `build.py` and `patch/KagunePatch.java` (bump both; the next is
+**1.3.46**: 1.3.44 and 1.3.45 were the owner's reports: one real Rinkaku tentacle on a child, leaning right with the wing on the left;
+see the top of `companions-handoff.md`). Network `PROTOCOL` is **"68"**. Nothing since 1.3.28 has been tried in game: never say anything works in game.
 
 ## House rules (the owner's, verbatim where quoted)
 
@@ -29,7 +30,7 @@ Never push to `main`; no PR unless asked. Version **1.3.44** in `build.py` and `
 
 ## What's next
 
-1. **1.3.45: Eto's child (the rest of the owner's ask).** The owner: "Eto's child gets her kagune abilities and transformation at low
+1. **1.3.46: Eto's child (the rest of the owner's ask).** The owner: "Eto's child gets her kagune abilities and transformation at low
    health". The genome already carries it (`KaguneGenes.OWL`, Eto's colour 0xD8CCBC); `ChildKagune.has` ignores OWL for now and
    `/kagune children` says it comes later (its words name no version). What exists to build on:
    - Server: Eto's kit is `server/EtoOwl` (+ `EtoFlesh` swipe/grab/hammer, `EtoWatch`, `EtoArm`, `EtoOwlForm` grow/fight, rules in
@@ -41,7 +42,7 @@ Never push to `main`; no PR unless asked. Version **1.3.44** in `build.py` and `
      `OwlClient.creature(npc, now)`. A child needs a `PaleView` (its move) sent to its clients and a loop like `EtoRenderer.kit` over
      children, with `ChildKaguneRules.scale(stage)`.
    - Rules to keep: only what it fights and monsters are hit (`ChildKagune.fair`); a child of Eto and a Rinkaku/Ukaku father also has
-     the father's kagune (OWL|TAILS, OWL|WING): decide with the owner how the two show together if it looks crowded.
+     the father's kagune (OWL|TAILS, OWL|WING): the owner minds a crowded back (1.3.45): keep the father's kagune off the flesh's place.
 2. **The Human's structure later** (the owner: "spawnable via command only for now; future structure later"): don't build it until asked.
 3. Then the owner's bug reports from playing (they come first whenever they arrive; each fix its own version).
 

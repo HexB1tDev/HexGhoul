@@ -228,10 +228,13 @@ public final class FamilyTests {
         boolean oneSide = true;
         for (long seed = 0; seed < 200; seed++) {
             int side = com.hex.kagune.control.family.KaguneGenes.side(seed * 977L);
-            oneSide &= com.hex.kagune.control.family.ChildKaguneRules.side(tails | wing, seed * 977L, 1) == side
-                && com.hex.kagune.control.family.ChildKaguneRules.side(tails | wing, seed * 977L, -1) == side && (side == 1 || side == -1);
+            oneSide &= com.hex.kagune.control.family.ChildKaguneRules.side(tails | wing, seed * 977L, 1) == -1
+                && com.hex.kagune.control.family.ChildKaguneRules.side(tails | wing, seed * 977L, -1) == -1
+                && com.hex.kagune.control.family.ChildKaguneRules.wingSide(tails | wing, seed * 977L) == -1
+                && com.hex.kagune.control.family.ChildKaguneRules.side(owl | wing, seed * 977L, 1) == side
+                && com.hex.kagune.control.family.ChildKaguneRules.side(owl | wing, seed * 977L, -1) == side && (side == 1 || side == -1);
         }
-        check(oneSide, "one wing: every shot from its side");
+        check(oneSide, "1.3.45: one wing beside the tentacle: on its left (the tentacle has its right), every shot from there; else its seed's side");
         check(com.hex.kagune.control.family.ChildKaguneRules.side(wings, 5L, 1) == -1 && com.hex.kagune.control.family.ChildKaguneRules.side(wings, 5L, -1) == 1,
             "the pair: the wings take turns");
 check(com.hex.kagune.control.graft.GraftStage.TRANSPLANT.limbs(com.hex.kagune.control.family.ChildKaguneRules.tailMastery(com.hex.kagune.control.family.ChildStage.CHILD)) == 1
@@ -254,9 +257,12 @@ check(com.hex.kagune.control.graft.GraftStage.TRANSPLANT.limbs(com.hex.kagune.co
             }
             rests &= rest.length == 12 && Math.abs(root[0] - com.hex.kagune.control.family.ChildKaguneRules.TENTACLE_ROOT[0]) < 1.0E-9
                 && Math.abs(root[1] - com.hex.kagune.control.family.ChildKaguneRules.TENTACLE_ROOT[1]) < 1.0E-9 && tip[1] > 1.8 && lowestBack < -0.4
-                && Math.abs(tip[0]) < 0.6 && run > length * 0.6 && run < length * 1.3;
+                && tip[0] > 0.5 && run > length * 0.6 && run < length * 1.3 && root[0] > 0.05;
+            for (double[] p : rest) {
+                rests &= p[0] > -0.05; // 1.3.45: never across to its left (the wing's side)
+            }
         }
-        check(rests, "at rest: from its pelvis, back and up over its head, about as long as it is, swaying a little");
+        check(rests, "at rest: from its pelvis (1.3.45: on its right), back and up over its right shoulder, about as long as it is, swaying a little");
         check(com.hex.kagune.control.KaguneColours.veinOf(com.hex.kagune.control.KaguneColours.DEFAULT) == com.hex.kagune.control.KaguneColours.DEFAULT_VEIN
             && com.hex.kagune.control.KaguneColours.veinOf(com.hex.kagune.control.KaguneColours.BONE) == com.hex.kagune.control.KaguneColours.BONE_VEIN
             && Math.abs(com.hex.kagune.control.KaguneColours.toHsv(com.hex.kagune.control.KaguneColours.veinOf(0x2E6BD8))[0]

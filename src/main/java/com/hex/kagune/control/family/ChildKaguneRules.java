@@ -46,13 +46,18 @@ public final class ChildKaguneRules {
     public static final int TENTACLES = 1;
     /** 1.3.44: the tentacle's thickness, as a Rinkaku player's first tentacle is (the original's 0.18 at mastery 0), before its size. */
     public static final float TENTACLE_THICKNESS = 0.18F;
-    /** 1.3.44: the original seed tentacle's layout (KaguneForm.RINKAKU_SEED: fan to the side, height, back, its sway). */
-    public static final double SEED_FAN = 0.15;
+    /**
+     * 1.3.44: the original seed tentacle's layout (KaguneForm.RINKAKU_SEED: fan to the side, height, back, its sway). 1.3.45 (the owner:
+     * the back was crowded, the tentacle up the middle and the wing on it): the fan far out to its right, the one tail of a first kagune
+     * up over its right shoulder ({@link #LEAN}: how much of the way it leans over from the root on).
+     */
+    public static final double SEED_FAN = 0.95;
+    public static final double LEAN = 0.45;
     public static final double SEED_HEIGHT = 0.44;
     public static final double SEED_BACK = 0.62;
     public static final double SEED_WIGGLE = 0.16;
     /** 1.3.44: where it leaves the body (rig space: its pelvis, as a Rinkaku player's, TendrilChain.pelvisAnchor's height and back). */
-    public static final double[] TENTACLE_ROOT = {0.0, 1.8 * 0.43, -0.18};
+    public static final double[] TENTACLE_ROOT = {0.13, 1.8 * 0.43, -0.18}; // 1.3.45: off the spine, on its right
 
     /** 1.3.44: how much of its length its tentacle shows at rest (the rest curled over; a lash straightens it out to the whole). */
     public static final double REST_SHARE = 0.85;
@@ -67,7 +72,7 @@ public final class ChildKaguneRules {
         double[] root = TENTACLE_ROOT;
         double arch = length * 0.09;
         double[] rest = {SEED_FAN, root[1] + SEED_HEIGHT + arch, root[2] + length * (0.03 + SEED_BACK * 0.04)};
-        double[] a = {SEED_FAN * 0.16, root[1] + SEED_HEIGHT * 0.42 + length * 0.15, root[2] - length * 0.22};
+        double[] a = {root[0] + SEED_FAN * LEAN, root[1] + SEED_HEIGHT * 0.42 + length * 0.15, root[2] - length * 0.22};
         double[] b = {rest[0] + SEED_FAN * 0.05, rest[1] + length * 0.12, rest[2] - length * 0.16};
         int n = Math.max(2, points);
         double[][] curve = new double[n][];
@@ -140,9 +145,17 @@ public final class ChildKaguneRules {
     /** The wing its next shot leaves from (1 its right, -1 its left): its one wing's side, or turn about with the pair ({@code last}). */
     public static int side(int bits, long seed, int last) {
         if (KaguneGenes.wings(bits) == 1) {
-            return KaguneGenes.side(seed);
+            return wingSide(bits, seed);
         }
         return last >= 0 ? -1 : 1;
+    }
+
+    /**
+     * 1.3.45: the side its one wing grows on (1 its right, -1 its left): with its tentacle, on its left (the tentacle has its right: the
+     * owner, a crowded back); else the side its seed gives ({@link KaguneGenes#side}).
+     */
+    public static int wingSide(int bits, long seed) {
+        return KaguneGenes.tails(bits) ? -1 : KaguneGenes.side(seed);
     }
 
     /** Its pause after a string or volley ({@code roll} in 0..1). */
