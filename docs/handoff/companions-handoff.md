@@ -1,8 +1,20 @@
-# START HERE (state after 1.3.69)
+# START HERE (state after 1.3.70)
 
 - **Next session:** read `docs/handoff/next-ai-1.3.67.md` first (the owner's last update and its plan, in order), then
-  `docs/handoff/next-ai-1.3.60.md` (house rules). Done of that plan: 1 (1.3.68), 2 (1.3.69). Next: 3, CCG ranks and attacking only the
-  revealed.
+  `docs/handoff/next-ai-1.3.60.md` (house rules). Done of that plan: 1 (1.3.68), 2 (1.3.69), 3 (1.3.70; also the owner's later "humans run
+  to the CCG, who defend them first"). Next: 4, the village.
+- **1.3.70 CCG ranks and protection** (protocol 72, unchanged). Pure `AgentRules.Rank` (RANK_3 30, RANK_2 25, RANK_1 20, FIRST_CLASS 14,
+  ASSOCIATE_SPECIAL 8, SPECIAL 3 in 100; health 36..124, speed 0.32..0.395; `roll(r)`, `of(leader, a, b)` the better of two for the
+  leader, `byOrdinal`), `AgentRules.DEFEND` 24. `AgentBrain`: `Mind.rank`, saved as `RANK` (`CcgAgent.KEY + "Rank"`) in its persistent data,
+  rolled once in `wake` (health and speed attributes set every wake, healed whole when first rolled; the name is its title; the old
+  SENIOR/JUNIOR names gone); `wanted`: a `GhoulNpc` only if `mind.out || mind.eyes` (or `current`); `reveal`: shown also by
+  `GhoulServer.ghoul` or any `Sightings.last`; `prey`: every 10 ticks `defend(agent, level, now)` (a `HumanNpc` within DEFEND hurt lately:
+  its `hurtBy` while `hurtUntil`, not an agent or a creative player; or a `GhoulNpc` whose prey is a human), marked for both of the pair
+  and taken as `current` over anything. `HumanBrain`: fleeing, `guard(human, level, danger)` (the nearest agent within DEFEND, not past
+  the danger) -> to `FinalSight.behind(agent, danger, 1.6)`, standing there once within 1.2; else away. `AgentTests.ranks`.
+
+# State after 1.3.69
+
 - **1.3.69 the ghoul arm blade** (protocol 72, unchanged; client drawing only). `BladeArmModel`: `sabre(sink, cx, root, front, length,
   width, thick, ...)`: `SECTIONS` 12 diamond rings (forward edge z -0.55 w, back edge +0.45 w, flats +-t), width `0.75 W (0.82 + 0.5
   sin(min(1, 4u) pi/2)(1 - 0.2u)) (1-u)^0.75`, thick `0.5 T (1-u)^0.6`, swept `z - 1.3 u^2`, the edge faces lighter, a glowing seam on both

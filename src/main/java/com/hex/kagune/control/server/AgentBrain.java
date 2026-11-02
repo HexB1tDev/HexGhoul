@@ -56,6 +56,8 @@ public final class AgentBrain {
     /** One investigator's state on the server. */
     public static final class Mind {
         int look;
+        /** 1.3.70: its rank (AgentRules.Rank). */
+        AgentRules.Rank rank = AgentRules.Rank.RANK_3;
         Quinque kind = Quinque.BLADE;
         boolean leader;
         UUID partner;
@@ -119,8 +121,8 @@ public final class AgentBrain {
     /** Its partner's id in its saved data (who it is: {@link CcgAgent#KEY}, packed). */
     static final String PARTNER = CcgAgent.KEY + "Partner";
 
-    private static final String[] SENIOR = {"First Class Investigator", "Senior Investigator", "Associate Special Class Investigator"};
-    private static final String[] JUNIOR = {"Rank 3 Investigator", "Rank 2 Investigator", "Rank 1 Investigator"};
+    /** 1.3.70: its rank in its saved data. */
+    static final String RANK = CcgAgent.KEY + "Rank";
 
     private AgentBrain() {
     }
@@ -171,8 +173,19 @@ public final class AgentBrain {
         }
         mind.partnerSeen = now;
         agent.dress(mind.look, mind.kind);
-        int rank = Math.floorMod(agent.m_20148_().hashCode(), 3);
-        agent.m_6593_(Component.m_237113_((mind.leader ? SENIOR : JUNIOR)[rank]));
+        // 1.3.70: its rank, by chance (kept in its saved data; the one leading the pair takes the better of two chances), its health and its
+        // speed by it, and its name.
+        CompoundTag data = agent.getPersistentData();
+        boolean fresh = !data.m_128441_(RANK);
+        mind.rank = fresh ? AgentRules.Rank.of(mind.leader, agent.m_217043_().m_188500_(), agent.m_217043_().m_188500_())
+            : AgentRules.Rank.byOrdinal(data.m_128451_(RANK));
+        data.m_128405_(RANK, mind.rank.ordinal());
+        agent.m_21051_(net.minecraft.world.entity.ai.attributes.Attributes.f_22276_).m_22100_(mind.rank.health);
+        agent.m_21051_(net.minecraft.world.entity.ai.attributes.Attributes.f_22279_).m_22100_(mind.rank.speed);
+        if (fresh) {
+            agent.m_21153_(agent.m_21233_());
+        }
+        agent.m_6593_(Component.m_237113_(mind.rank.title));
         agent.mind = mind;
         return mind;
     }
@@ -273,8 +286,18 @@ public final class AgentBrain {
     // ---------------------------------------------------------------- what it goes for
 
     private static LivingEntity prey(CcgAgent agent, Mind mind, CcgAgent partner, ServerLevel level, long now) {
+        LivingEntity defend = null;
         if (now % 10L == Math.floorMod(agent.m_19879_(), 10)) {
             reveal(agent, mind, partner, level, now); // (kept up in a fight too: a kagune still out keeps them marked)
+            // 1.3.70 (the owner: "CCG agents top priority if to defend humans, so they will drop what they're doing to protect them"):
+            // whatever is hurting or hunting a human near, it goes for, before anything else.
+            defend = defend(agent, level, now);
+            if (defend != null) {
+                mark(mind, defend.m_20148_(), now + AgentRules.MARKED);
+                if (partner != null && partner.mind != null) {
+                    mark(partner.mind, defend.m_20148_(), now + AgentRules.MARKED);
+                }
+            }
         }
         LivingEntity current = mind.prey != 0 && level.m_6815_(mind.prey) instanceof LivingEntity living ? living : null;
         if (current != null && (!current.m_6084_() || current.m_20280_(agent) > AgentRules.LEASH * AgentRules.LEASH
@@ -300,12 +323,44 @@ public final class AgentBrain {
                 }
             }
         }
+        if (defend != null && defend.m_20280_(agent) <= AgentRules.LEASH * AgentRules.LEASH) {
+            current = defend; // it drops whatever it was doing
+        }
         int id = current == null ? 0 : current.m_19879_();
         if (id != mind.prey) {
             mind.prey = id;
             agent.m_6710_(current);
         }
         return current;
+    }
+
+    /**
+     * 1.3.70: something hurting a human within {@link AgentRules#DEFEND} (whoever struck it lately, investigators aside) or hunting one (a
+     * ghoul NPC with a human for prey), the nearest; null if every human near is safe.
+     */
+    static LivingEntity defend(CcgAgent agent, ServerLevel level, long now) {
+        LivingEntity best = null;
+        double bestDistance = Double.MAX_VALUE;
+        for (com.hex.kagune.control.npc.HumanNpc human : level.m_6443_(com.hex.kagune.control.npc.HumanNpc.class,
+                agent.m_20191_().m_82400_(AgentRules.DEFEND), h -> h.m_6084_() && h.mind != null)) {
+            if (human.mind.hurtBy == null || now >= human.mind.hurtUntil) {
+                continue;
+            }
+            Entity by = level.m_8791_(human.mind.hurtBy);
+            if (by instanceof LivingEntity living && living.m_6084_() && !(living instanceof CcgAgent) && !(living instanceof Player p && p.m_7500_())
+                && living.m_20280_(agent) < bestDistance) {
+                best = living;
+                bestDistance = living.m_20280_(agent);
+            }
+        }
+        for (GhoulNpc ghoul : level.m_6443_(GhoulNpc.class, agent.m_20191_().m_82400_(AgentRules.DEFEND), g -> g.m_6084_() && g.mind != null)) {
+            if (ghoul.mind.prey != 0 && level.m_6815_(ghoul.mind.prey) instanceof com.hex.kagune.control.npc.HumanNpc
+                && ghoul.m_20280_(agent) < bestDistance) {
+                best = ghoul;
+                bestDistance = ghoul.m_20280_(agent);
+            }
+        }
+        return best;
     }
 
     /**
@@ -328,8 +383,11 @@ public final class AgentBrain {
             return false;
         }
         double distance = Math.sqrt(body.m_20280_(agent));
-        if (body instanceof GhoulNpc) {
-            return current || distance <= AgentRules.GHOUL_RANGE;
+        if (body instanceof GhoulNpc ghoul) {
+            // 1.3.70 (the owner: "CCG agents dont attack anyone unless their eyes are revealed or kagune shown"): a wild ghoul only once it
+            // shows what it is (its eyes on, its kagune out); one already fought, till it is done.
+            boolean shows = ghoul.mind != null && (ghoul.mind.out || ghoul.mind.eyes);
+            return current || shows && distance <= AgentRules.GHOUL_RANGE;
         }
         if (body instanceof Mob mob && (mob.m_5448_() == agent || partner != null && mob.m_5448_() == partner)) {
             return true;
@@ -355,7 +413,8 @@ public final class AgentBrain {
             double distance = Math.sqrt(player.m_20280_(agent));
             // 1.3.65: a final kakuja (War, Peace, the Dragon: the kagune itself in) shows what they are as much as a kagune.
             FinalSight sight = Sightings.seen(player);
-            boolean shown = KaguneProfile.isActive(player) || sight.any();
+            boolean shown = KaguneProfile.isActive(player) || sight.any() || GhoulServer.ghoul(player)
+                || Sightings.last(player) != com.hex.kagune.control.npc.Display.NONE; // 1.3.70: their eyes on too
             boolean seen = agent.m_142582_(player);
             if (!AgentRules.revealed(KaguneProfile.isUnlocked(player), shown, distance, seen)) {
                 continue;

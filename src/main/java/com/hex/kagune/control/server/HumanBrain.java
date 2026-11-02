@@ -72,7 +72,22 @@ public final class HumanBrain {
             mind.ranFrom = danger.body().m_19879_();
             if (now >= mind.nextPlan || human.m_21573_().m_26571_()) {
                 mind.nextPlan = now + 10;
-                flee(human, danger.body(), HumanRules.pace(danger.sight()), danger.sight().terror() ? 14.0 : 10.0);
+                // 1.3.70 (the owner: "Humans will run to a nearby ccg agent ... if any are available"): behind the nearest investigator,
+                // if one is near; else away.
+                com.hex.kagune.control.npc.CcgAgent guard = guard(human, level, danger.body());
+                if (guard != null) {
+                    double[] spot = com.hex.kagune.control.npc.FinalSight.behind(guard.m_20185_(), guard.m_20189_(), danger.body().m_20185_(),
+                        danger.body().m_20189_(), 1.6);
+                    double dx = spot[0] - human.m_20185_();
+                    double dz = spot[1] - human.m_20189_();
+                    if (dx * dx + dz * dz > 1.2 * 1.2) {
+                        human.m_21573_().m_26519_(spot[0], guard.m_20186_(), spot[1], HumanRules.pace(danger.sight()));
+                    } else {
+                        human.m_21573_().m_26573_();
+                    }
+                } else {
+                    flee(human, danger.body(), HumanRules.pace(danger.sight()), danger.sight().terror() ? 14.0 : 10.0);
+                }
             }
             return;
         }
@@ -156,6 +171,27 @@ public final class HumanBrain {
                 com.hex.kagune.control.network.ControlNetwork.sendTo(player, new com.hex.kagune.control.network.S2CNpcSay(human.m_19879_(), line));
             }
         }
+    }
+
+    /**
+     * 1.3.70: the investigator it runs to from {@code danger}: the nearest alive within {@code AgentRules.DEFEND}, never one it would have to
+     * run past the danger to reach; null if there is none.
+     */
+    static com.hex.kagune.control.npc.CcgAgent guard(HumanNpc human, ServerLevel level, LivingEntity danger) {
+        com.hex.kagune.control.npc.CcgAgent best = null;
+        double bestDistance = Double.MAX_VALUE;
+        double range = com.hex.kagune.control.npc.AgentRules.DEFEND;
+        for (com.hex.kagune.control.npc.CcgAgent agent : level.m_6443_(com.hex.kagune.control.npc.CcgAgent.class, human.m_20191_().m_82400_(range),
+                a -> a.m_6084_() && a != danger)) {
+            // Not one it would have to run past the danger to reach.
+            boolean past = danger.m_20280_(agent) < danger.m_20280_(human) && agent.m_20280_(human) > danger.m_20280_(human);
+            double distance = agent.m_20280_(human);
+            if (!past && distance < bestDistance) {
+                best = agent;
+                bestDistance = distance;
+            }
+        }
+        return best;
     }
 
     /** Off, straight away from {@code danger} if it can, else turned a little either way, then further round. */

@@ -71,6 +71,62 @@ public final class AgentRules {
 
     // ---------------------------------------------------------------- what it is
 
+    /**
+     * 1.3.70 (the owner: "CCG agents now have different ranks (random in the wild) the higher the rank the more HP and faster they are"):
+     * its rank, the lowest most common (out of {@code weight} in 100), each with its own health and movement; shown as its name.
+     */
+    public enum Rank {
+        RANK_3("Rank 3 Investigator", 30, 36.0, 0.32),
+        RANK_2("Rank 2 Investigator", 25, 46.0, 0.33),
+        RANK_1("Rank 1 Investigator", 20, 58.0, 0.345),
+        FIRST_CLASS("First Class Investigator", 14, 72.0, 0.36),
+        ASSOCIATE_SPECIAL("Associate Special Class Investigator", 8, 92.0, 0.375),
+        SPECIAL("Special Class Investigator", 3, 124.0, 0.395);
+
+        public final String title;
+        public final int weight;
+        public final double health;
+        public final double speed;
+
+        Rank(String title, int weight, double health, double speed) {
+            this.title = title;
+            this.weight = weight;
+            this.health = health;
+            this.speed = speed;
+        }
+
+        /** A rank by chance ({@code roll} 0..1): the lower, the likelier. */
+        public static Rank roll(double roll) {
+            int total = 0;
+            for (Rank rank : values()) {
+                total += rank.weight;
+            }
+            double at = Math.max(0.0, Math.min(0.999999, roll)) * total;
+            for (Rank rank : values()) {
+                at -= rank.weight;
+                if (at < 0.0) {
+                    return rank;
+                }
+            }
+            return RANK_3;
+        }
+
+        /** A pair's: the one who leads takes the better of two chances, the other the worse ({@code a}, {@code b} 0..1). */
+        public static Rank of(boolean leader, double a, double b) {
+            Rank one = roll(a);
+            Rank two = roll(b);
+            return leader == one.ordinal() >= two.ordinal() ? one : two;
+        }
+
+        public static Rank byOrdinal(int ordinal) {
+            Rank[] all = values();
+            return ordinal >= 0 && ordinal < all.length ? all[ordinal] : RANK_3;
+        }
+    }
+
+    /** 1.3.70: how near a human in trouble has to be for it to drop everything and go to it, and how near one runs to it from. */
+    public static final double DEFEND = 24.0;
+
     /** Health, armour, movement (faster than a wild ghoul's lowest), how far it follows. */
     public static final double HEALTH = 44.0;
     public static final double ARMOR = 6.0;

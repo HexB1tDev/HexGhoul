@@ -46,6 +46,7 @@ public final class AgentTests {
         together();
         carrying();
         idling();
+        ranks();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -540,5 +541,33 @@ public final class AgentTests {
     static float[] standing(double y) {
         double k = Math.sqrt(0.5) * (y - 8.0);
         return new float[] {(float)(8.0 + k), (float)(8.0 + k), 8.0F};
+    }
+
+    /** 1.3.70: ranks by chance, the lowest most common; the higher, the more health and the faster; a pair's leader the better. */
+    static void ranks() {
+        AgentRules.Rank[] all = AgentRules.Rank.values();
+        int[] seen = new int[all.length];
+        for (int i = 0; i < 10000; i++) {
+            seen[AgentRules.Rank.roll(i / 10000.0).ordinal()]++;
+        }
+        boolean falling = true;
+        for (int k = 1; k < all.length; k++) {
+            falling &= seen[k] < seen[k - 1] && seen[k] > 0;
+            check(all[k].health > all[k - 1].health && all[k].speed > all[k - 1].speed, all[k] + ": more health and faster than " + all[k - 1]);
+        }
+        check(falling && seen[0] > 2500, "the lowest rank the most common, each higher rarer, every one possible");
+        check(AgentRules.Rank.roll(0.0) == AgentRules.Rank.RANK_3 && AgentRules.Rank.roll(1.0) == AgentRules.Rank.SPECIAL
+            && AgentRules.Rank.roll(-3.0) == AgentRules.Rank.RANK_3, "the ends of the roll");
+        boolean leads = true;
+        for (double a = 0.0; a < 1.0; a += 0.07) {
+            for (double b = 0.0; b < 1.0; b += 0.07) {
+                leads &= AgentRules.Rank.of(true, a, b).ordinal() >= AgentRules.Rank.of(false, a, b).ordinal();
+            }
+        }
+        check(leads, "with the same two chances, the one leading never ranks below the other");
+        check(AgentRules.Rank.byOrdinal(99) == AgentRules.Rank.RANK_3 && AgentRules.Rank.byOrdinal(5) == AgentRules.Rank.SPECIAL, "saved ranks read back");
+        for (AgentRules.Rank rank : all) {
+            check(rank.title.endsWith("Investigator") && !rank.title.contains("Kaneki"), "its name: " + rank.title);
+        }
     }
 }
