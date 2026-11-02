@@ -1,8 +1,8 @@
 # HANDOFF: HexGhoul after 1.3.43. Read this first, then `docs/handoff/next-ai-1.3.33.md` (how the owner works, older ideas).
 
 Branch **`claude/relaxed-carson-4y0frw`** (check it out from origin; push with `git push -u origin claude/relaxed-carson-4y0frw`).
-Never push to `main`; no PR unless asked. Version **1.3.50** in `build.py` and `patch/KagunePatch.java` (bump both; the next is
-**1.3.51**: 1.3.44-1.3.50 were the owner's reports and asks on the children; see the top of `companions-handoff.md`). Network `PROTOCOL` is **"68"**. Nothing since 1.3.28 has been tried in game: never say anything works in game.
+Never push to `main`; no PR unless asked. Version **1.3.51** in `build.py` and `patch/KagunePatch.java` (bump both; the next is
+**1.3.52**: 1.3.44-1.3.51 were the owner's reports and asks on the children; see the top of `companions-handoff.md`). Network `PROTOCOL` is **"68"**. Nothing since 1.3.28 has been tried in game: never say anything works in game.
 
 ## House rules (the owner's, verbatim where quoted)
 
@@ -34,7 +34,7 @@ Never push to `main`; no PR unless asked. Version **1.3.50** in `build.py` and `
    - (done in 1.3.48: crystal, grab/throw/crush, flips; no kakuja. Confirm with the owner how "never a kakuja" squares with Eto's child's
      "transformation at low health", which is her Owl kakuja.)
    - (done in 1.3.49: parenting: fetching, night, rampages, the talks, a word when the kagune comes out.)
-1. (done in 1.3.50: Eto's child: her flesh and her Mutated Arm at low health; no Owl.) **Next, 1.3.51: brothers and sisters** (the
+1. (done in 1.3.50: Eto's child: her flesh and her Mutated Arm at low health; no Owl.) (done in 1.3.51: brothers and sisters; the
    owner: "proceed with eto first and then move straight to the interactions"): siblings playing together (tag, chasing, hide and
    seek, a big one spinning a toddler), talking to each other in bubbles by temper and age (teasing, bragging, comfort, ganging up on a
    parent), an older one minding a toddler (holding its hand, fetching it back), fighting side by side and reacting to each other's

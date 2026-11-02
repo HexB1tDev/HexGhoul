@@ -1,6 +1,24 @@
-# START HERE (state after 1.3.50)
+# START HERE (state after 1.3.51)
 
-- **Next session:** read `docs/handoff/next-ai-1.3.43.md` first ("What's next": 1.3.51 siblings, the owner's next ask).
+- **Next session:** read `docs/handoff/next-ai-1.3.43.md` first (the owner's list is done through siblings; next: whatever the owner
+  asks, bug reports first; still open: the Owl as an exception for Eto's child if the owner wants it).
+- **1.3.51 siblings** (protocol 68, unchanged; the owner: "interactions between brothers and sisters"): pure `family/Siblings` (`Kind`
+  CHAT, TEASE, BRAG, COMFORT, SCHEME, SQUABBLE, TAG, MIND, REACT, TEAM; `pick(sa, ta, sb, tb, hurt, strayed, roll)` (no baby; MIND for an
+  older one and a strayed toddler; COMFORT when hurt; else weights by both tempers, toddlers brag/scheme less); `talk(...)` -> `Line(who:
+  1 the starter, 2 the other, 0 a parent)`: most 1-2-1, SQUABBLE 1-2-1-2, TAG 1-2, REACT/TEAM 1; `tagged`, `breakUp(persona, ...)` 0-1-2;
+  NEAR 10, EVERY 1500, TAG_TICKS 400, TAG_REACH 1.3, HURT 0.6, REMARKS_EVERY 1200). `family/SiblingLines` (337 + 12 lines, keys
+  "part:who:kind:group", who a temper word / "any" / a persona, group little/big/any; falls back temper -> any, little <-> big; written from
+  a script's data, edit the Java directly). Server `SiblingLife` (`siblings(a, b)` a parent in common; `tick` from `ChildBrain` (after
+  following a player, before going to bed): tag (`Mind.tagWith/chasing/tagUntil/taggedAt`: the chaser runs at 1.3, tags within reach,
+  roles swap with a shout; the runner runs off), minding (`Mind.minding/mindingUntil/mindingReached`: to the toddler, a word each, then
+  its `escort` home), else every 40 ticks a new moment with a free sibling near in sight (`Mind.siblingAt`; by night only chat, comfort,
+  minding): talks queued on its `Mind.talk` (speaker ids; `ParentDuty.talk` says them), both standing still for them (`stillBy`); a
+  squabble's `breakUp` by a companion parent of both within 16 who sees it; `kagune` (from `ChildKagune.fight` as its kagune comes out:
+  a sibling within 12 who sees it says REACT, or TEAM fighting the same target; `Mind.siblingRemarkAt`); `afterSibling` makes a monster
+  after a sibling a threat in `ChildBrain.threat`. `FamilyTests.siblings`.
+
+# State after 1.3.50
+
 - **1.3.50 Eto's child** (protocol 68, unchanged; the owner: "her kagune abilities and transformation at low health", and "never a
   kakuja": its transformation is her Mutated Arm, never the Owl; the owner was told and may ask for the Owl as an exception). Pure
   `ChildKaguneRules.Act` gained SWIPE, FLESH_GRAB, HAMMER, ARM (appended; never sent), `chooseFlesh(distance, sees, scale, small, health,

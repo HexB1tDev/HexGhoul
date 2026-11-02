@@ -118,6 +118,7 @@ final class ChildKagune {
             f.dirty = true;
             sound(level, npc.m_20182_(), HexKaguneSounds.KAGUNE_STRAIN.get(), 0.6F, 1.35F);
             ParentDuty.transformed(npc, child, level, now); // 1.3.49: a parent near has a word about it
+            SiblingLife.kagune(npc, child, level, now); // 1.3.51: and a brother or sister near
         }
         if (f.prey != threat.m_19879_()) {
             f.prey = threat.m_19879_();

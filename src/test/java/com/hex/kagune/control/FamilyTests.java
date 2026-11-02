@@ -56,6 +56,7 @@ public final class FamilyTests {
         kit();
         parenting();
         etoChild();
+        siblings();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -487,6 +488,70 @@ check(com.hex.kagune.control.graft.GraftStage.TRANSPLANT.limbs(com.hex.kagune.co
         check(com.hex.kagune.control.family.KaguneGenes.any(owl) && com.hex.kagune.control.family.ChildKaguneRules.wingCount(owl, 3L) == 0
             && com.hex.kagune.control.family.ChildKaguneRules.describe(owl | com.hex.kagune.control.family.KaguneGenes.TAILS, 3L).endsWith("Eto's flesh"),
             "Eto's child fights with her flesh, with its father's kagune beside it");
+    }
+
+    /** 1.3.51: brothers and sisters: which moment they have, and what they say, in turn, by temper and age; a parent breaks up a squabble. */
+    static void siblings() {
+        com.hex.kagune.control.family.ChildStage baby = com.hex.kagune.control.family.ChildStage.BABY;
+        com.hex.kagune.control.family.ChildStage toddler = com.hex.kagune.control.family.ChildStage.TODDLER;
+        com.hex.kagune.control.family.ChildStage kid = com.hex.kagune.control.family.ChildStage.CHILD;
+        com.hex.kagune.control.family.ChildStage teen = com.hex.kagune.control.family.ChildStage.TEEN;
+        com.hex.kagune.control.family.ChildTemper sunny = com.hex.kagune.control.family.ChildTemper.SUNNY;
+        com.hex.kagune.control.family.ChildTemper bold = com.hex.kagune.control.family.ChildTemper.BOLD;
+        check(com.hex.kagune.control.family.Siblings.pick(baby, sunny, kid, bold, false, false, 0.5) == null
+            && com.hex.kagune.control.family.Siblings.pick(kid, sunny, baby, bold, true, true, 0.5) == null, "a baby has no moments of its own");
+        check(com.hex.kagune.control.family.Siblings.pick(teen, sunny, toddler, bold, false, true, 0.5) == com.hex.kagune.control.family.Siblings.Kind.MIND
+            && com.hex.kagune.control.family.Siblings.pick(toddler, sunny, toddler, bold, false, true, 0.5) != com.hex.kagune.control.family.Siblings.Kind.MIND,
+            "an older one goes after a toddler that wandered; a toddler doesn't");
+        check(com.hex.kagune.control.family.Siblings.pick(kid, sunny, kid, bold, true, false, 0.9) == com.hex.kagune.control.family.Siblings.Kind.COMFORT,
+            "one hurt is comforted");
+        java.util.Set<com.hex.kagune.control.family.Siblings.Kind> kinds = java.util.EnumSet.noneOf(com.hex.kagune.control.family.Siblings.Kind.class);
+        for (double r = 0.0; r < 1.0; r += 0.01) {
+            kinds.add(com.hex.kagune.control.family.Siblings.pick(kid, com.hex.kagune.control.family.ChildTemper.MISCHIEF, teen, bold, false, false, r));
+        }
+        check(kinds.size() >= 6, "they chat, tease, brag, scheme, squabble and play: " + kinds);
+        java.util.Set<String> seen = new java.util.HashSet<>();
+        boolean turns = true;
+        boolean clean = true;
+        for (com.hex.kagune.control.family.Siblings.Kind kind : com.hex.kagune.control.family.Siblings.Kind.values()) {
+            for (com.hex.kagune.control.family.ChildTemper ta : com.hex.kagune.control.family.ChildTemper.values()) {
+                for (com.hex.kagune.control.family.ChildTemper tb : com.hex.kagune.control.family.ChildTemper.values()) {
+                    for (com.hex.kagune.control.family.ChildStage sa : new com.hex.kagune.control.family.ChildStage[] {toddler, kid, teen}) {
+                        for (int seed = 0; seed < 3; seed++) {
+                            java.util.List<com.hex.kagune.control.family.Siblings.Line> talk = com.hex.kagune.control.family.Siblings.talk(kind, ta, sa, "Hana",
+                                "Mama", true, tb, kid, "Ren", "Mama", false, seed * 13 + ta.ordinal() * 7 + tb.ordinal());
+                            int[] want = switch (kind) {
+                                case REACT, TEAM -> new int[] {1};
+                                case TAG -> new int[] {1, 2};
+                                case SQUABBLE -> new int[] {1, 2, 1, 2};
+                                default -> new int[] {1, 2, 1};
+                            };
+                            turns &= talk.size() == want.length;
+                            for (int i = 0; i < talk.size() && i < want.length; i++) {
+                                turns &= talk.get(i).who() == want[i];
+                                String text = talk.get(i).text();
+                                String low = text.toLowerCase(java.util.Locale.ROOT);
+                                clean &= !text.contains("{") && !text.isBlank();
+                                for (String banned : new String[] {"kaneki", "ayato", "furuta", "takatsuki", "aogiri", "yoshimura"}) {
+                                    clean &= !low.contains(banned);
+                                }
+                                seen.add(text);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        check(turns, "in turn: the one, the other, the one (a squabble back and forth twice, tag a shout and an answer)");
+        check(clean, "every line filled in, no names it mustn't");
+        check(seen.size() > 250, "hundreds of different lines: " + seen.size());
+        java.util.List<com.hex.kagune.control.family.Siblings.Line> broken = com.hex.kagune.control.family.Siblings.breakUp("touka", sunny, "Hana", bold, "Ren", 5);
+        check(broken.size() == 3 && broken.get(0).who() == 0 && broken.get(1).who() == 1 && broken.get(2).who() == 2
+            && !broken.get(1).text().contains("{"), "a parent breaks it up, and each says sorry");
+        check(com.hex.kagune.control.family.Siblings.tagged(bold, kid, "Ren", 2).text().length() > 2, "a tag's shout");
+        java.util.List<com.hex.kagune.control.family.Siblings.Line> team = com.hex.kagune.control.family.Siblings.talk(com.hex.kagune.control.family.Siblings.Kind.TEAM,
+            bold, kid, "Hana", "Mama", true, sunny, kid, "Ren", "Mama", false, 1);
+        check(team.size() == 1 && !team.get(0).text().contains("{sibrole}"), "fighting side by side: a word for a brother or a sister");
     }
 
     static void genome() {

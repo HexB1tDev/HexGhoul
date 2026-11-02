@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.51 (HexGhoul): brothers and sisters: they talk, tease, scheme, squabble, play tag, mind the little ones and fight side by side (testing)
+
+See `.github/release-notes-1.3.51.md`.
+
 ## 1.3.50 (HexGhoul): Eto's child fights with her flesh, and badly hurt its arm mutates (no kakuja) (testing)
 
 See `.github/release-notes-1.3.50.md`.

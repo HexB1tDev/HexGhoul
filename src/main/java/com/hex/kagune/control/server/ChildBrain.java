@@ -85,6 +85,20 @@ public final class ChildBrain {
         long escortUntil = Long.MIN_VALUE;
         long outsideSince = Long.MIN_VALUE;
         long remarkedAt = Long.MIN_VALUE / 2;
+        /**
+         * 1.3.51 (SiblingLife): when it last had a moment with a brother or sister; the one it plays tag with (an entity id, 0 none),
+         * whether it is it (chasing), until when, when it was last tagged; the little one it is going after (an entity id) and until when,
+         * whether it got to it; when it last had a word about a sibling's kagune.
+         */
+        long siblingAt = Long.MIN_VALUE / 2;
+        int tagWith;
+        boolean chasing;
+        long tagUntil = Long.MIN_VALUE;
+        long taggedAt = Long.MIN_VALUE / 2;
+        int minding;
+        long mindingUntil = Long.MIN_VALUE;
+        boolean mindingReached;
+        long siblingRemarkAt = Long.MIN_VALUE / 2;
     }
 
     private ChildBrain() {
@@ -244,6 +258,9 @@ public final class ChildBrain {
                     }
                 } else if (leader != null && leader.m_9236_() == level) {
                     follow(npc, leader);
+                    mind.company = now;
+                } else if (SiblingLife.tick(npc, mind, child, level, now)) {
+                    // 1.3.51: playing tag with a brother or sister, or walking a little one home.
                     mind.company = now;
                 } else if (atHouse && !npc.waiting()) {
                     toBed(npc, mind, child, house, level, now, stage);
@@ -817,7 +834,8 @@ public final class ChildBrain {
         for (LivingEntity body : level.m_6443_(LivingEntity.class, npc.m_20191_().m_82400_(ChildRules.GUARD), entity -> entity.m_6084_()
             && EtoBrain.hostile(entity))) {
             LivingEntity target = body instanceof Mob mob ? mob.m_5448_() : null;
-            boolean family = target == npc || target instanceof ServerPlayer player && child.parent(Pregnancies.player(player.m_20148_()));
+            boolean family = target == npc || target instanceof ServerPlayer player && child.parent(Pregnancies.player(player.m_20148_()))
+                || target != null && SiblingLife.afterSibling(target, child, level); // 1.3.51: after a brother or sister: theirs to fight too
             double distance = body.m_20280_(npc);
             if ((family || FightRules.notices(Math.sqrt(distance))) && distance < bestDistance) {
                 best = body;
