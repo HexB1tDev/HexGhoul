@@ -913,6 +913,9 @@ public final class ChildBrain {
             if (child != null) {
                 ControlNetwork.sendTo(viewer, message(npc, npc.mind, child));
                 ControlNetwork.sendTo(viewer, ChildKagune.message(npc, npc.mind, child)); // 1.3.43: its kagune, as a wild ghoul's
+                if (com.hex.kagune.control.family.KaguneGenes.wings(child.genome().kagune()) > 0) {
+                    ControlNetwork.sendTo(viewer, ChildKagune.wings(npc, npc.mind)); // 1.3.48: its wings' crystal
+                }
             }
         }
     }

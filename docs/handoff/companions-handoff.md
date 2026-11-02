@@ -1,7 +1,21 @@
-# START HERE (state after 1.3.47)
+# START HERE (state after 1.3.48)
 
-- **Next session:** read `docs/handoff/next-ai-1.3.43.md` first ("What's next" item 0: 1.3.48 the rest of the kit, 1.3.49 parenting,
-  then Eto's child).
+- **Next session:** read `docs/handoff/next-ai-1.3.43.md` first ("What's next" item 0: 1.3.49 parenting, then Eto's child).
+- **1.3.48 the kit** (protocol 68, unchanged): pure `ChildKaguneRules.Act` (NONE, LASH, SHOOT, FAN, GRAB, BACK_FLIP, FRONT_FLIP, CLOSE_IN;
+  no kakuja), `choose(bits, distance, sees, tailReach, crystal, small, onGround, now, flipReady, grabReady, fanReady, roll)`, constants
+  (CRYSTAL_AFTER 20, FAN_SPIKES 5 / FAN_SPREAD 32 / FAN_EVERY 160, SPIKE_SHARE 1.2, GRAB_EVERY 220 / GRAB_CATCH 8 / GRAB_HOLD 26 /
+  SQUEEZE_EVERY 8, GRAB_WIDEST 1.0 / GRAB_TALLEST 2.2, FLIP_EVERY 90, BACK_FLIP_INSIDE 1.7, FRONT_FLIP 6..11), `grabbable`, `fan(i)`,
+  `throwsIt(roll)`. Server `ChildKagune`: crystal (S2CUkakuFx.CRYSTALLIZE, then `fire(..., spike, kind, spread)` sends SPIKE + kind /
+  SPIKE_IMPACT / SPIKE_FIZZLE; a spike stabs, no fire), `grabbing` (HUMAN_PUPPET: caught on GRAB_CATCH within the skewer's reach x scale
+  + 0.6, `carry` to `holdPoint` + `PaleStun.stun`, `squeeze` every 8; then PUPPET_THROW (flung at tick 5) or LASH_5 (lifted, crushed
+  down on the slam's land tick with a SHOCKWAVE); `end`), `flip` (`PaleRules.Flip` launch at its size; `Fight.flip/flipAt` into
+  `S2CGhoulNpc`). Its prey in the message is what it holds while it holds. Children with wings also send `S2CNpcWings` (`wings()`, on
+  StartTracking too). Client: `WingRules.child(..., crystal)` (crystal from `NpcWingsClient`), `GraftRenderer.drawTentacle` winds a
+  holding move round the held body (`GraftRig.Input` held/heldRadius), `ChildRenderer.posed` returns `GhoulNpcClient.flip` out of a
+  moment. Preview row (grab, crystal). `FamilyTests.kit`.
+
+# State after 1.3.47
+
 - **1.3.47 child health** (protocol 68, unchanged; the owner: "father max mastery, mother 360 HP: the kid 400"): pure
   `ChildRules.grownHealth(motherHealth, motherMight, fatherHealth, fatherMight)` = the stronger's health x (1 + `PARENT_BONUS` 0.14 x
   the other's might), `share(stage)` (0.25 / 0.4 / 0.65 / 1), `health(stage, might, grown)` (never under 1.3.21's), `HEAL_AFTER` 100 and

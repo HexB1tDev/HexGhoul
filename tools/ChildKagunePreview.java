@@ -101,6 +101,47 @@ public final class ChildKagunePreview {
             shots.add(new ArtPreview.Shot("the tail: " + move.name().toLowerCase() + " (tick " + (int)at + ")", null, ArtPreview.NO_WINGS,
                 new double[] {4.6, 1.6, 2.6}, new double[] {0.0, 0.9, 1.0}, tris));
         }
+        // 1.3.48: a grab (the Puppet seize, its tentacle wound round what it holds up in front of it), and crystal wings.
+        {
+            double[] heldAt = {0.0, 2.0, 1.9}; // where the server holds it: in front, at its chest and above (a grown body's rig space)
+            com.hex.kagune.control.graft.GraftRig.Pose grab = com.hex.kagune.control.graft.GraftRig.pose(new com.hex.kagune.control.graft.GraftRig.Input(
+                GraftStage.TRANSPLANT, ChildKaguneRules.TENTACLES, 0, length, new com.hex.kagune.control.graft.GraftRig.Body(0.0, false, 0.0, true, 0.0, 0.0,
+                40.0), GraftMove.HUMAN_PUPPET, 20.0, heldAt, null, heldAt, 0.45));
+            double[] from = com.hex.kagune.control.graft.GraftRig.root(GraftStage.TRANSPLANT, 1, 0, false);
+            double[] to = ChildKaguneRules.tentacleRoot(ChildKaguneRules.Layout.SHOULDER_RIGHT);
+            double[][] points = new double[grab.points().length][];
+            for (int i = 0; i < points.length; i++) {
+                double f = 1.0 - i / (double)Math.max(1, points.length - 1);
+                double[] p = grab.points()[i];
+                points[i] = new double[] {p[0] + (to[0] - from[0]) * f, p[1] + (to[1] - from[1]) * f, p[2] + (to[2] - from[2]) * f};
+            }
+            List<WingPreview.Tri> tris = new ArrayList<>(placed(body(new RigPose(), kid, false), s, 0.0, 0.0));
+            tris.addAll(tentacle(points, s, colour));
+            tris.addAll(PalePreview.dummyAt(new double[] {heldAt[0] * s, heldAt[1] * s - 1.0, heldAt[2] * s}));
+            shots.add(new ArtPreview.Shot("1.3.48 grab: it holds it up and squeezes", null, ArtPreview.NO_WINGS, new double[] {4.2, 1.8, 2.2},
+                new double[] {0.0, 1.1, 0.7}, tris));
+        }
+        for (ChildKaguneRules.Layout layout : new ChildKaguneRules.Layout[] {ChildKaguneRules.Layout.TAIL, ChildKaguneRules.Layout.SHOULDER_RIGHT}) {
+            double[] eye = {-0.6, 1.9, -4.6};
+            double[] rigEye = {eye[0] / s, eye[1] / s, eye[2] / s};
+            List<WingPreview.Tri> tris = new ArrayList<>(placed(body(new RigPose(), kid, false), s, 0.0, 0.0));
+            tris.addAll(tentacle(ChildKaguneRules.tentacleRest(length, 40.0, 77, 12, layout), s, colour));
+            WingRig.Input wing = WingRules.child(ChildKaguneRules.wingMastery(stage), layout == ChildKaguneRules.Layout.TAIL ? 2 : 1,
+                layout.side != 0 ? -layout.side : 1, 1.0F, 40.0, false, 0.0F, WingRig.FORWARD, 0.0F, 0.0F, 1.0F, 1.0F);
+            for (WingRig.Quad q : WingRig.build(wing, rigEye)) {
+                float[] x = q.xyz();
+                double[][] c = new double[4][];
+                for (int k = 0; k < 4; k++) {
+                    c[k] = new double[] {x[k * 3] * s, x[k * 3 + 1] * s, x[k * 3 + 2] * s};
+                }
+                int[] a = KaguneTint.recolour(q.argb(), colour);
+                double[] n = {q.nx(), q.ny(), q.nz()};
+                tris.add(new WingPreview.Tri(new double[][] {c[0], c[1], c[2]}, new int[] {a[0], a[1], a[2]}, n, false));
+                tris.add(new WingPreview.Tri(new double[][] {c[0], c[2], c[3]}, new int[] {a[0], a[2], a[3]}, n, false));
+            }
+            shots.add(new ArtPreview.Shot("1.3.48 crystal: " + (layout == ChildKaguneRules.Layout.TAIL ? "the tail's two wings" : "the shoulder's wing")
+                + ", behind", null, ArtPreview.NO_WINGS, eye, new double[] {0.0, 1.0, 0.0}, tris));
+        }
         ArtPreview.sheet(new File(out, "child-rinkaku-ukaku.png"),
             "A child of a Rinkaku and an Ukaku parent: the three ways it may carry them (at a child's size); then the tail's lashes", shots, 3, 460, 400);
     }

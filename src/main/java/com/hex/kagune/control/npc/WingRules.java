@@ -95,9 +95,15 @@ public final class WingRules {
      */
     public static com.hex.kagune.control.ukaku.WingRig.Input child(int mastery, int wings, int side, float deploy, double time, boolean dissolving,
                                                                    float aim, double[] at, float kickRight, float kickLeft, float detail) {
+        return child(mastery, wings, side, deploy, time, dissolving, aim, at, kickRight, kickLeft, detail, 0.0F);
+    }
+
+    /** 1.3.48: the same, turned to crystal as far as {@code crystal} (0..1). */
+    public static com.hex.kagune.control.ukaku.WingRig.Input child(int mastery, int wings, int side, float deploy, double time, boolean dissolving,
+                                                                   float aim, double[] at, float kickRight, float kickLeft, float detail, float crystal) {
         float right = wings >= 2 || side > 0 ? 1.0F : 0.0F;
         float left = wings >= 2 || side < 0 ? 1.0F : 0.0F;
-        return new com.hex.kagune.control.ukaku.WingRig.Input(com.hex.kagune.control.ukaku.WingForm.TWIN, mastery, deploy, time, 0.0F, 0.0F,
+        return new com.hex.kagune.control.ukaku.WingRig.Input(com.hex.kagune.control.ukaku.WingForm.TWIN, mastery, deploy, time, crystal, crystal,
             com.hex.kagune.control.ukaku.WingRig.Motion.NONE, 0.0F, 0.4F, 0.0F, 0.0F, false, detail, 1.0F, dissolving, aim, aim, at, kickRight, kickLeft,
             0.0F, 0.0F, right, left);
     }

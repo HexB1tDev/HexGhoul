@@ -209,7 +209,9 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
             }
         }
         if (view.carrier() == 0) {
-            return null;
+            // 1.3.48: a flip in a fight, a ghoul's, as the wild ghouls' are posed (its whole body turned over about its middle).
+            com.hex.kagune.control.client.GhoulNpcClient.View fighting = com.hex.kagune.control.client.GhoulNpcClient.get(child.m_19879_());
+            return fighting == null ? null : com.hex.kagune.control.client.GhoulNpcClient.flip(fighting, clock, child.m_20096_());
         }
         // 1.3.21: hand in hand, its arm to the hand of whoever holds it, by their size.
         double size = child.m_9236_().m_6815_(view.carrier()) instanceof net.minecraft.world.entity.LivingEntity carrier ? ChildNpc.carrySize(carrier) : 1.0;

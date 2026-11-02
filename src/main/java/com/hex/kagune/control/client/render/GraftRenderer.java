@@ -247,8 +247,16 @@ public final class GraftRenderer {
                     aim = frame.rig(centre(followed, partial));
                 }
             }
+            // 1.3.48: a grab's tentacle wound round what it holds (the server holds it there).
+            double[] held = null;
+            double heldRadius = 0.3;
+            Entity grabbed = move.holds() && moving.targets()[0] != 0 ? level.m_6815_(moving.targets()[0]) : null;
+            if (grabbed != null) {
+                held = frame.rig(centre(grabbed, partial));
+                heldRadius = grabbed.m_20205_() * 0.5 / frame.scale() + 0.15;
+            }
             GraftRig.Pose lash = GraftRig.pose(new GraftRig.Input(GraftStage.TRANSPLANT, com.hex.kagune.control.family.ChildKaguneRules.TENTACLES, 0, length,
-                body, move, age, aim, null, null, 0.3));
+                body, move, age, aim, null, held, heldRadius));
             // The move's path, carried from the graft's root onto the pelvis it leaves from.
             double[] from = GraftRig.root(GraftStage.TRANSPLANT, 1, 0, body.crouching());
             double[] to = com.hex.kagune.control.family.ChildKaguneRules.tentacleRoot(layout);

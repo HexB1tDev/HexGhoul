@@ -241,6 +241,91 @@ public final class ChildKaguneRules {
         return tentacle + rest + (KaguneGenes.owl(bits) ? " and the Owl's flesh" : "");
     }
 
+    // ---------------------------------------------------------------- 1.3.48: the rest of its parents' kit (never a kakuja)
+
+    /**
+     * 1.3.48 (the owner: "crystallize... grab, throw, crush, backflip, front flip, everything the mother and father can do... the kid will
+     * never have access to the [kakujas]"): what it does next, beyond a lash or a shot. Its wings turn to crystal a moment after they are
+     * out ({@link #CRYSTAL_AFTER}), and then throw crystal spikes (and now and then a fan of them); its tentacle grabs what it fights (if
+     * that is no bigger than a person), squeezes it, and throws it or crushes it into the ground; it flips back out of reach and in over
+     * a gap, as a ghoul does. Never a kakuja: no move here grows one.
+     */
+    public enum Act {
+        NONE, LASH, SHOOT, FAN, GRAB, BACK_FLIP, FRONT_FLIP, CLOSE_IN
+    }
+
+    /** Ticks after its wings are out that they turn to crystal; a fan's spikes, their spread (degrees), how often (ticks). */
+    public static final int CRYSTAL_AFTER = 20;
+    public static final int FAN_SPIKES = 5;
+    public static final double FAN_SPREAD = 32.0;
+    public static final int FAN_EVERY = 160;
+    /** A crystal spike's damage against a fire shot's. */
+    public static final float SPIKE_SHARE = 1.2F;
+    /** A grab: how often; the tick it catches; how long it holds and squeezes (every {@link #SQUEEZE_EVERY}); what it is then. */
+    public static final int GRAB_EVERY = 220;
+    public static final int GRAB_CATCH = 8;
+    public static final int GRAB_HOLD = 26;
+    public static final int SQUEEZE_EVERY = 8;
+    /** What it may grab: no wider and no taller than this (blocks): a person-sized monster, not a spider or a golem. */
+    public static final double GRAB_WIDEST = 1.0;
+    public static final double GRAB_TALLEST = 2.2;
+    /** Flips: how often; a back flip when its prey is this close; a front flip in when it is this far (and it has a tentacle to reach with). */
+    public static final int FLIP_EVERY = 90;
+    public static final double BACK_FLIP_INSIDE = 1.7;
+    public static final double FRONT_FLIP_FROM = 6.0;
+    public static final double FRONT_FLIP_TO = 11.0;
+
+    /** True if it can grab a body {@code width} wide and {@code height} tall. */
+    public static boolean grabbable(double width, double height) {
+        return width <= GRAB_WIDEST && height <= GRAB_TALLEST;
+    }
+
+    /**
+     * 1.3.48: what it does now, against prey {@code distance} away that it {@code sees}, with kagune {@code bits}: a back flip out when it
+     * is right on top of it, a front flip in when it is far and its tentacle can't reach it yet; a grab when it can, its tentacle reaching
+     * ({@code tailReach}) and the prey small enough ({@code small}); a fan of crystal when its wings are crystal ({@code crystal}) and the
+     * fan is ready; else a lash or a shot as before ({@link #use}). The {@code ...Ready} are the ticks each comes back on; {@code roll} in
+     * 0..1; {@code onGround}: flips only from the ground.
+     */
+    public static Act choose(int bits, double distance, boolean sees, double tailReach, boolean crystal, boolean small, boolean onGround, long now,
+                             long flipReady, long grabReady, long fanReady, double roll) {
+        boolean tails = KaguneGenes.tails(bits);
+        boolean wings = KaguneGenes.wings(bits) > 0;
+        if (!tails && !wings) {
+            return Act.NONE;
+        }
+        if (onGround && now >= flipReady) {
+            if (distance < BACK_FLIP_INSIDE && roll < 0.6) {
+                return Act.BACK_FLIP;
+            }
+            if (tails && sees && distance >= FRONT_FLIP_FROM && distance <= FRONT_FLIP_TO && roll < 0.35) {
+                return Act.FRONT_FLIP;
+            }
+        }
+        if (tails && sees && small && now >= grabReady && distance <= tailReach - 0.3 && roll < 0.45) {
+            return Act.GRAB;
+        }
+        if (wings && crystal && sees && now >= fanReady && distance >= 3.0 && distance <= SHOT_RANGE && roll < 0.5) {
+            return Act.FAN;
+        }
+        return switch (use(bits, distance, sees, tailReach)) {
+            case TAILS -> Act.LASH;
+            case WINGS -> Act.SHOOT;
+            case CLOSE_IN -> Act.CLOSE_IN;
+            case NONE -> Act.NONE;
+        };
+    }
+
+    /** 1.3.48: a fan's spike {@code i} of {@link #FAN_SPIKES}: degrees off its aim, the middle one straight. */
+    public static double fan(int i) {
+        return FAN_SPREAD * (2.0 * i / (FAN_SPIKES - 1) - 1.0);
+    }
+
+    /** 1.3.48: how a grab ends ({@code roll} in 0..1): thrown away (three in five), or crushed into the ground. */
+    public static boolean throwsIt(double roll) {
+        return roll < 0.6;
+    }
+
     /** Its pause after a string or volley ({@code roll} in 0..1). */
     public static int pause(double roll) {
         return PAUSE_LEAST + (int)Math.round(Math.max(0.0, Math.min(1.0, roll)) * (PAUSE_MOST - PAUSE_LEAST));

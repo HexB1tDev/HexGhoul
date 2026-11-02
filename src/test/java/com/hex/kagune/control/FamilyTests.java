@@ -53,6 +53,7 @@ public final class FamilyTests {
         held();
         kagune();
         vitality();
+        kit();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -337,6 +338,49 @@ check(com.hex.kagune.control.graft.GraftStage.TRANSPLANT.limbs(com.hex.kagune.co
             "it grows into it, all of it as a teen; not known yet, as before");
         check(com.hex.kagune.control.family.ChildRules.healing(240.0F, true) == 2.0F
             && com.hex.kagune.control.family.ChildRules.healing(240.0F, false) < 2.0F, "a ghoul child heals itself in two minutes, a human slower");
+    }
+
+    /** 1.3.48: the rest of its parents' kit: flips, a grab, a fan of crystal, as before the lashes and shots; never a kakuja. */
+    static void kit() {
+        int tails = com.hex.kagune.control.family.KaguneGenes.TAILS;
+        int wing = com.hex.kagune.control.family.KaguneGenes.WING;
+        int wings = com.hex.kagune.control.family.KaguneGenes.WINGS;
+        java.util.function.Function<Object[], com.hex.kagune.control.family.ChildKaguneRules.Act> act = a -> com.hex.kagune.control.family.ChildKaguneRules.choose(
+            (Integer)a[0], (Double)a[1], true, 3.0, (Boolean)a[2], (Boolean)a[3], (Boolean)a[4], 1000L, (Long)a[5], (Long)a[6], (Long)a[7], (Double)a[8]);
+        long ready = 0L;
+        long later = 5000L;
+        check(act.apply(new Object[] {tails | wing, 1.0, false, true, true, ready, ready, ready, 0.3}) == com.hex.kagune.control.family.ChildKaguneRules.Act.BACK_FLIP,
+            "right on top of it: a back flip out");
+        check(act.apply(new Object[] {tails | wing, 1.0, false, true, false, ready, later, ready, 0.3}) != com.hex.kagune.control.family.ChildKaguneRules.Act.BACK_FLIP,
+            "never a flip from the air");
+        check(act.apply(new Object[] {tails, 8.0, false, true, true, ready, ready, ready, 0.2}) == com.hex.kagune.control.family.ChildKaguneRules.Act.FRONT_FLIP,
+            "far off with a tentacle: a front flip in");
+        check(act.apply(new Object[] {tails, 2.0, false, true, true, ready, ready, ready, 0.3}) == com.hex.kagune.control.family.ChildKaguneRules.Act.GRAB
+            && act.apply(new Object[] {tails, 2.0, false, false, true, ready, ready, ready, 0.3}) == com.hex.kagune.control.family.ChildKaguneRules.Act.LASH
+            && act.apply(new Object[] {tails, 2.0, false, true, true, ready, later, ready, 0.3}) == com.hex.kagune.control.family.ChildKaguneRules.Act.LASH,
+            "in reach: a grab if it's small enough and the grab is back, else a lash");
+        check(act.apply(new Object[] {wings, 6.0, true, false, true, later, ready, ready, 0.3}) == com.hex.kagune.control.family.ChildKaguneRules.Act.FAN
+            && act.apply(new Object[] {wings, 6.0, false, false, true, later, ready, ready, 0.3}) == com.hex.kagune.control.family.ChildKaguneRules.Act.SHOOT
+            && act.apply(new Object[] {wings, 6.0, true, false, true, later, ready, later, 0.3}) == com.hex.kagune.control.family.ChildKaguneRules.Act.SHOOT,
+            "crystal wings: a fan when it's back; before they turn, or between fans, shots");
+        check(act.apply(new Object[] {0, 2.0, true, true, true, ready, ready, ready, 0.3}) == com.hex.kagune.control.family.ChildKaguneRules.Act.NONE,
+            "no kagune: nothing of it");
+        boolean noKakuja = true;
+        for (com.hex.kagune.control.family.ChildKaguneRules.Act a : com.hex.kagune.control.family.ChildKaguneRules.Act.values()) {
+            noKakuja &= !a.name().contains("KAKUJA") && !a.name().contains("OWL");
+        }
+        check(noKakuja, "the owner: a child never has a kakuja");
+        check(com.hex.kagune.control.family.ChildKaguneRules.fan(0) == -com.hex.kagune.control.family.ChildKaguneRules.FAN_SPREAD
+            && com.hex.kagune.control.family.ChildKaguneRules.fan(com.hex.kagune.control.family.ChildKaguneRules.FAN_SPIKES - 1)
+                == com.hex.kagune.control.family.ChildKaguneRules.FAN_SPREAD
+            && com.hex.kagune.control.family.ChildKaguneRules.fan(com.hex.kagune.control.family.ChildKaguneRules.FAN_SPIKES / 2) == 0.0, "a fan, even round its aim");
+        check(com.hex.kagune.control.family.ChildKaguneRules.grabbable(0.6, 1.95) && !com.hex.kagune.control.family.ChildKaguneRules.grabbable(1.4, 0.9)
+            && !com.hex.kagune.control.family.ChildKaguneRules.grabbable(1.4, 2.7), "it grabs a zombie, not a spider or a golem");
+        check(com.hex.kagune.control.family.ChildKaguneRules.throwsIt(0.1) && !com.hex.kagune.control.family.ChildKaguneRules.throwsIt(0.9),
+            "a grab ends thrown, or crushed");
+        com.hex.kagune.control.ukaku.WingRig.Input glass = com.hex.kagune.control.npc.WingRules.child(110, 2, 1, 1.0F, 0.0, false, 0.0F,
+            com.hex.kagune.control.ukaku.WingRig.FORWARD, 0.0F, 0.0F, 1.0F, 1.0F);
+        check(glass.crystalRight() == 1.0F && glass.crystalLeft() == 1.0F, "its wings drawn in crystal");
     }
 
     static void genome() {
