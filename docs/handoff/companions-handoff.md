@@ -1,7 +1,13 @@
-# START HERE (state after 1.3.82)
+# START HERE (state after 1.3.83)
 
 - The owner's last request (Release 2.0): more villagers per village with unique looks, a bug/lag pass, an animation pass, mastery/forms
-  as resistance not health, then release 2.0. Done so far: 1.3.80 (the tank), 1.3.81 (villagers), 1.3.82 (bug/lag pass).
+  as resistance not health, then release 2.0. Done so far: 1.3.80 (the tank), 1.3.81 (villagers), 1.3.82 (bug/lag pass), 1.3.83
+  (animation pass).
+- **1.3.83 animation pass** (client only). New preview `tools/VillagerPreview.java` (every HumanGestures move per style, through
+  `PoseRender` stiff, on a villager skin brought down to 64 px: PoseRender reads only 64-pixel skins). Found on it and on all EtoGesture
+  values on Eto: the early "hand to the face" poses had the arm's Y turn outward (+ on the right arm; CHIN and LOOK, which read right, use
+  -): fixed in `EtoPose` LEAN, GIGGLE (one hand at the mouth, the other across the tummy), YAWN, LICK, RING (hands over the mouth), and
+  LAUGH (was a T; now hands on the belly). Shared with Eto/Touka/Ken. Sheet `docs/handoff/villager-moves-2.0.png`.
 - **1.3.82 bug/lag pass** (protocol 72, unchanged). Read every tick handler's gate (67: all phase-gated, most state- or modulo-gated),
   the wide entity scans (the 128-block ally count only on a talk; agents' and ghouls' prey scans every 10 ticks, filtered before the
   sight ray), the villager tick end to end. Fixed: a villager walking up for a kiss/hug never leaves its village for it (at the edge it

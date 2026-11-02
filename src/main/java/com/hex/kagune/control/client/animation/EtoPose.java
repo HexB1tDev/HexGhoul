@@ -318,10 +318,10 @@ public final class EtoPose {
                 p.leftArmZ = -0.12F;
             }
             case LEAN -> {
-                // Chin on her hand, hip out, bored and cute.
-                p.rightArmX = -1.95F;
-                p.rightArmY = 0.55F;
-                p.rightArmZ = -0.25F;
+                // Chin on her hand, hip out, bored and cute. (2.0: the arm turned in to the face; it was turned out, an arm held out sideways.)
+                p.rightArmX = -2.0F;
+                p.rightArmY = -0.55F;
+                p.rightArmZ = 0.1F;
                 p.headZ = 0.28F;
                 p.headX = 0.12F;
                 p.roll = -0.06F;
@@ -329,15 +329,16 @@ public final class EtoPose {
                 p.leftArmX = 0.15F;
             }
             case GIGGLE -> {
-                // Hands over her mouth, shoulders shaking; then a shrug.
+                // A hand over her mouth, the other across her tummy, shoulders shaking; then a shrug. (2.0: both arms were turned out, held
+                // straight ahead like a sleepwalker's: a stiff arm can't fold to the mouth, so one turns in to it, the other lies across.)
                 float shake = (float)Math.sin(t * 1.7);
                 if (t < 22.0F) {
-                    p.rightArmX = -1.85F;
-                    p.leftArmX = -1.85F;
-                    p.rightArmY = 0.55F;
-                    p.leftArmY = -0.55F;
-                    p.rightArmZ = -0.2F;
-                    p.leftArmZ = 0.2F;
+                    p.rightArmX = -2.1F;
+                    p.leftArmX = -0.55F;
+                    p.rightArmY = -0.55F;
+                    p.leftArmY = 0.45F;
+                    p.rightArmZ = 0.0F;
+                    p.leftArmZ = 0.0F;
                     p.headX = 0.18F + 0.08F * shake;
                     p.drop = 0.35F * shake;
                 } else {
@@ -487,21 +488,21 @@ public final class EtoPose {
                 p.roll = 0.02F * (float)Math.sin(t * 0.09);
             }
             case YAWN -> {
-                // A hand to her mouth, head back; then a shudder of a stretch.
+                // A hand to her mouth, head back; then a shudder of a stretch. (2.0: the hand turned in to the mouth.)
                 float yawn = (float)Math.sin(Math.min(1.0, t / 24.0) * Math.PI);
-                p.rightArmX = -1.85F;
-                p.rightArmY = 0.55F;
-                p.rightArmZ = -0.2F;
+                p.rightArmX = -2.15F;
+                p.rightArmY = -0.5F;
+                p.rightArmZ = 0.0F;
                 p.headX = -0.32F * yawn;
                 p.leftArmX = -2.4F * (t > 20.0F ? ease((t - 20.0F) / 8.0F) : 0.0F);
                 p.leftArmZ = -0.25F;
                 p.drop = -0.4F * yawn;
             }
             case LICK -> {
-                // A finger at her lips, head tipped, the other hand on her hip.
-                p.rightArmX = -1.75F;
-                p.rightArmY = 0.5F;
-                p.rightArmZ = -0.25F;
+                // A finger at her lips, head tipped, the other hand on her hip. (2.0: the hand turned in to the lips.)
+                p.rightArmX = -2.0F;
+                p.rightArmY = -0.45F;
+                p.rightArmZ = 0.05F;
                 p.headZ = 0.2F;
                 p.headX = -0.08F;
                 p.leftArmZ = -0.45F;
@@ -534,13 +535,13 @@ public final class EtoPose {
             }
             case RING -> {
                 if (t < 30.0F) {
-                    // Hands over her mouth.
+                    // Hands over her mouth. (2.0: turned in to it; they were turned out.)
                     p.rightArmX = -1.85F;
                     p.leftArmX = -1.85F;
-                    p.rightArmY = 0.55F;
-                    p.leftArmY = -0.55F;
-                    p.rightArmZ = -0.2F;
-                    p.leftArmZ = 0.2F;
+                    p.rightArmY = -0.55F;
+                    p.leftArmY = 0.55F;
+                    p.rightArmZ = 0.2F;
+                    p.leftArmZ = -0.2F;
                     p.headX = 0.12F;
                 } else {
                     // Then she jumps.
@@ -575,13 +576,15 @@ public final class EtoPose {
                 p.rightArmZ = 0.06F;
             }
             case LAUGH -> {
-                // Head back, arms wide, shaking with it.
+                // Head back, hands on her belly, shaking with it. (2.0: the arms were flung straight out, a stiff T on a mob's arms.)
                 float shake = (float)Math.sin(t * 2.2);
-                p.headX = -0.5F + 0.05F * shake;
-                p.rightArmZ = 1.1F;
-                p.leftArmZ = -1.1F;
-                p.rightArmX = -0.4F;
-                p.leftArmX = -0.4F;
+                p.headX = -0.45F + 0.05F * shake;
+                p.rightArmZ = 0.05F;
+                p.leftArmZ = -0.05F;
+                p.rightArmX = -0.75F + 0.06F * shake;
+                p.leftArmX = -0.75F + 0.06F * shake;
+                p.rightArmY = -0.45F;
+                p.leftArmY = 0.45F;
                 p.drop = 0.3F * shake;
             }
             // 1.3.14: Touka's (strict, pouty) and Ken's (quiet, a little eerie).

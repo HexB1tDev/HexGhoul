@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.83 (HexGhoul): animation pass: six broken poses fixed (testing)
+
+See `.github/release-notes-1.3.83.md`.
+
 ## 1.3.82 (HexGhoul): bug and lag pass (testing)
 
 See `.github/release-notes-1.3.82.md`.
