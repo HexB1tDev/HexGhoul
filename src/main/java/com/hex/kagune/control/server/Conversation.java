@@ -135,7 +135,7 @@ final class Conversation {
         if (body instanceof EtoNpc npc) {
             EtoBrain.Mind mind = npc.mind;
             return mind != null && mind.target == 0 && mind.duty == null && mind.holding == null && mind.kiss == null && mind.toward == null
-                && mind.talking == null && mind.momentChild == null && mind.with == 0;
+                && mind.talking == null && mind.momentChild == null && mind.with == 0 && npc.following() == null; // 1.3.60: not one following a player
         }
         return false;
     }
@@ -311,6 +311,9 @@ final class Conversation {
             if (apart > Talks.LEAVES) {
                 this.drop(line.speaker(), says); // never came over: its lines dropped, it is out of it, the rest go on
                 this.waiting = Long.MIN_VALUE;
+                if (this.members.size() < 2) {
+                    this.finish(Talks.End.LEFT, level, null); // 1.3.60: no one left to talk to (no word about it either)
+                }
                 return;
             }
             // Waited long enough: it says it from where it is.

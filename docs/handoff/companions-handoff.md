@@ -1,8 +1,13 @@
-# START HERE (state after 1.3.59)
+# START HERE (state after 1.3.60)
 
 - **Next session:** read `docs/handoff/next-ai-1.3.51.md` first (the owner's goal: more interactions and dialog, polish first; how
   conversations worked; the known problems), then these sections. Problems 1 (bubbles), 2 (walking off mid-talk), 3 (tag off home), 4 (two escorts) and 5
   (Eto's child unposed) there are fixed by 1.3.52 to 1.3.56; "How conversations work now" there is out of date for held talks: read the 1.3.53 entry below.
+- **1.3.60 review fixes** (protocol 70, unchanged): `Conversation.tick` ends a talk (LEFT, silent) when a speaker who never came is
+  dropped and fewer than two members are left; `Conversation.free` refuses a companion following a player.
+
+# State after 1.3.59
+
 - **1.3.59 babies in sibling moments** (protocol 70, unchanged). Pure `family/LittleOnes`: `Kind` PEEKABOO, FACES, BABBLE, LULLABY (never
   sent); `Line(baby, text, cue)`; `EVERY` 1800, `CHANCE` 0.5; `pick(temper, evening, roll)` (evening: LULLABY; else weights by temper);
   `talk(kind, temper, stage, name, seed)` (PEEKABOO older COUNT, older "boo" CHEER, baby CHEER, older GIGGLE; the others older, baby,
