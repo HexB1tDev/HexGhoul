@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 1.3.62 (HexGhoul): a clash is as big as the two blows were hard, and a hard one shakes the ground (testing)
+
+See `.github/release-notes-1.3.62.md`.
+
 ## 1.3.61 (HexGhoul): the owner's new clash sounds on every clash (testing)
 
 See `.github/release-notes-1.3.61.md`.

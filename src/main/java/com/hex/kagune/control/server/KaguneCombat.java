@@ -367,7 +367,9 @@ public final class KaguneCombat {
         if (!(ukaku && (stage.pattern().flame() || stage.pattern().crystal() || stage.pattern().finalKakuja()))) {
             // 1.0.40: a blow (not a shot) on its way: another's M1 landing on him before it lands meets it (KaguneClash), and both stop.
             long began = now;
-            KaguneClash.swing(player, now, impact, range, () -> combo.startedAt == began && !combo.impactDone && combo.owns(state),
+            // 1.3.62: as hard as it lands (its first target's damage, as below).
+            double hit = (ukaku ? UkakuRules.meleeDamage(KaguneProfile.mastery(player)) : KaguneProfile.swipeDamage(player)) * stage.damageMul();
+            KaguneClash.swing(player, now, impact, range, hit, () -> combo.startedAt == began && !combo.impactDone && combo.owns(state),
                 () -> clashed(player, state, combo));
         }
 

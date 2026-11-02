@@ -38,12 +38,41 @@ public final class ClashTests {
         check(ClashRules.PUSH > 0.0 && ClashRules.LIFT > 0.0 && ClashRules.STAGGER > 0, "both are thrown apart and kept a moment from striking again");
         shards();
         grabs();
+        impacts();
         if (!FAILURES.isEmpty()) {
             FAILURES.forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
             System.exit(1);
         }
         System.out.println("Clash tests: " + passed + " checks passed");
+    }
+
+    /**
+     * 1.3.62: a clash as big as both blows were hard: two ordinary blows as it always looked, two jabs a small one, two heavy blows a big
+     * one that shakes the ground (harder and longer the bigger, felt further), thrown apart harder, a deeper, louder sound; never past its
+     * bounds.
+     */
+    static void impacts() {
+        check(Math.abs(ClashRules.impact(ClashRules.REFERENCE / 2.0, ClashRules.REFERENCE / 2.0) - ClashRules.ORDINARY) < 1.0E-4,
+            "two ordinary blows: the clash as it always was");
+        check(ClashRules.impact(1.4, 1.4) < ClashRules.ORDINARY && ClashRules.impact(12.0, 15.0) > ClashRules.ORDINARY, "two jabs smaller, two heavy blows bigger");
+        boolean rising = true;
+        float last = 0.0F;
+        for (double h = 0.0; h < 200.0; h += 0.5) {
+            float p = ClashRules.impact(h, h);
+            rising &= p >= last && p >= ClashRules.LEAST && p <= ClashRules.MOST;
+            last = p;
+        }
+        check(rising && ClashRules.impact(500.0, 500.0) == ClashRules.MOST && ClashRules.impact(0.0, 0.0) == ClashRules.LEAST
+            && ClashRules.impact(-5.0, 1.0) == ClashRules.LEAST, "the harder, the bigger, within its bounds");
+        check(!ClashRules.quakes(ClashRules.ORDINARY) && ClashRules.quakes(ClashRules.impact(12.0, 12.0)) && ClashRules.rumble(ClashRules.ORDINARY) == 0.0F
+            && ClashRules.rumble(ClashRules.MOST) == 1.0F && ClashRules.rumble(2.0F) > ClashRules.rumble(1.7F), "only a hard clash shakes the ground, harder the bigger");
+        check(ClashRules.rumbleTicks(ClashRules.MOST) > ClashRules.rumbleTicks(ClashRules.QUAKES) && ClashRules.felt(ClashRules.MOST) > ClashRules.felt(ClashRules.QUAKES),
+            "longer, and felt further, the bigger");
+        check(Math.abs(ClashRules.push(ClashRules.ORDINARY) - ClashRules.PUSH) < 1.0E-6 && ClashRules.push(ClashRules.MOST) > ClashRules.PUSH,
+            "thrown apart as before by an ordinary clash, harder by a big one");
+        check(Math.abs(ClashRules.pitch(ClashRules.ORDINARY) - 1.0F) < 1.0E-6 && ClashRules.pitch(ClashRules.MOST) < 1.0F
+            && ClashRules.volume(ClashRules.MOST) > ClashRules.volume(ClashRules.ORDINARY), "a big clash sounds deeper and carries further");
     }
 
     /** 1.0.42: an M1 on its way meets a shard flying at the one swinging it, in front of him and within reach; nothing else. */

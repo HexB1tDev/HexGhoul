@@ -1,9 +1,23 @@
-# START HERE (state after 1.3.61)
+# START HERE (state after 1.3.62)
 
 - **Next session:** read `docs/handoff/next-ai-1.3.60.md` first (family talk after the polish). The owner's next update (asked during
   1.3.60, "after this one is fully finished"): clash impacts sized by how hard each hit was, shaking the ground and camera; the same move
   meeting itself (big punch, speed kick...) cancelling both with a big impact; more and better reactions to the final kakujas (Rinkaku and
   Ukaku, especially War/Peace: being scared of War); new dramatic running animations for War and Peace; their new clash sounds (1.3.61).
+- **1.3.62 clash size** (protocol **71**: `KingMarkFx.GROUND` 8, appended). Pure `ClashRules`: `HIT` 7 (a blow of unknown strength),
+  `REFERENCE` 12 (two blows' damage for an `ORDINARY` 1.2 clash), `LEAST` 0.7, `MOST` 3, `QUAKES` 1.55; `impact(hitA, hitB)` = 1.2 x
+  sqrt(sum / 12) clamped; `quakes`, `rumble(power)` (0.35..1 above QUAKES), `rumbleTicks` 8 + 6p, `felt` 10 + 8p, `push` PUSH x (0.7 +
+  0.25p), `volume` 0.95 + 0.3p, `pitch` 1 + (1.2 - p) x 0.15 (at least 0.65). `KaguneClash.Swing` has `hit`; `swing(..., hit, ...)`
+  overloads (old ones: HIT); `meets` -> `impact(mine.hit, theirs.hit)` -> `apart(..., power)`, `wind(a, b, power)` (burst at that power
+  and `volume`; quaking: `quake(near, ground, power)` = an `S2CKingFx` MARK `GROUND` at the lower feet with power - 0.6, and
+  `sfx.quake` at 0.8 volume, pitch 0.85). `burst` pitch = `ClashRules.pitch`. Hits: PaleBlitz `fist(mastery) x strike.damage x power`;
+  KaguneCombat the first target's base damage; GraftCombat `GraftRules.damage x` the heaviest beat's power; GhoulNpcCombat
+  `NpcRules.damage(tier) x` blade weight / heaviest beat; AgentBrain `AgentRules.damage(q, step)` (a parry step 0). Client:
+  `KingMarks` CLASH adds `rumble(at, ClashRules.rumble(p), rumbleTicks, felt)` (-> `PaleCamera.rumble`) when it quakes; `GROUND`
+  -> `ground(at, p)` (a dust ring of puffs, grit) and `KingMarkFx` GROUND shapes (two dust rings, grey sparks). `ClashTests.impacts`.
+
+# State after 1.3.61
+
 - **1.3.61 clash sounds** (protocol 70, unchanged): the owner's `Clashes.zip` (Clash1..4.ogg, mono 48 kHz) copied unchanged to
   `assets/hexkagune/sounds/sfx/clashes/clash_1..4.ogg`; `tools/sfx_pack.py` (the single source of `sounds.json`: run it after any sound
   change; regenerating before this change reproduced the file exactly) has `CLASHES` and the `clash` pool (gain 0.95) is those four, so

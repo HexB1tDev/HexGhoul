@@ -18,6 +18,60 @@ public final class ClashRules {
     /** Ticks before either may strike again. */
     public static final int STAGGER = 10;
 
+    /**
+     * 1.3.62: how hard a blow is when nothing better is known (its damage), and how hard two blows are between them for the clash to look
+     * as it always has (the wind at {@link #ORDINARY} power); the most and least a clash may be; the power from which the ground shakes.
+     */
+    public static final double HIT = 7.0;
+    public static final double REFERENCE = 12.0;
+    public static final float ORDINARY = 1.2F;
+    public static final float LEAST = 0.7F;
+    public static final float MOST = 3.0F;
+    public static final float QUAKES = 1.55F;
+
+    /**
+     * 1.3.62 (the owner: "depending on how hard the player / NPC hit the impact should be bigger, even shake the floor / camera"): a
+     * clash's power from both blows' damage: {@link #ORDINARY} for two ordinary blows, growing with the root of how much more they carry
+     * between them, from {@link #LEAST} to {@link #MOST}.
+     */
+    public static float impact(double hitA, double hitB) {
+        double sum = Math.max(0.0, hitA) + Math.max(0.0, hitB);
+        return (float)Math.max(LEAST, Math.min(MOST, ORDINARY * Math.sqrt(sum / REFERENCE)));
+    }
+
+    /** 1.3.62: true if a clash of {@code power} shakes the ground. */
+    public static boolean quakes(float power) {
+        return power >= QUAKES;
+    }
+
+    /** 1.3.62: how hard the ground shakes the view at the heart of a clash of {@code power} (0 below {@link #QUAKES}, up to 1). */
+    public static float rumble(float power) {
+        return power < QUAKES ? 0.0F : Math.min(1.0F, 0.35F + (power - QUAKES) / (MOST - QUAKES) * 0.65F);
+    }
+
+    /** 1.3.62: how long (ticks) the ground shakes for a clash of {@code power}, and how far off (blocks) it is felt. */
+    public static double rumbleTicks(float power) {
+        return 8.0 + 6.0 * power;
+    }
+
+    public static double felt(float power) {
+        return 10.0 + 8.0 * power;
+    }
+
+    /** 1.3.62: how hard each is thrown back from a clash of {@code power} (blocks a tick across): {@link #PUSH} for an ordinary one. */
+    public static double push(float power) {
+        return PUSH * (0.7 + 0.25 * power);
+    }
+
+    /** 1.3.62: the clash's sound: louder (heard further) and deeper the harder it is. */
+    public static float volume(float power) {
+        return 0.95F + 0.3F * power;
+    }
+
+    public static float pitch(float power) {
+        return Math.max(0.65F, 1.0F + (ORDINARY - power) * 0.15F);
+    }
+
     /** 1.0.42: blocks past a blow's reach that a shard is still met at, and how many shards one blow meets. */
     public static final double SHARD_SLACK = 0.75;
     public static final int SHARDS_PER_BLOW = 3;

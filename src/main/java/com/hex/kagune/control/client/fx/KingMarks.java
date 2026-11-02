@@ -70,6 +70,7 @@ public final class KingMarks {
             }
             case KingMarkFx.SOOT -> smoke(at, along, p);
             case KingMarkFx.QUAKE -> quake(at, p);
+            case KingMarkFx.GROUND -> ground(at, p);
             case KingMarkFx.FLARE -> {
                 for (int i = 0; i < RcFx.count(8.0F * p); i++) {
                     Vec3 v = new Vec3(Math.random() - 0.5, Math.random() * 0.8, Math.random() - 0.5).m_82490_(0.12 * p);
@@ -104,6 +105,11 @@ public final class KingMarks {
                         .spawn();
                 }
                 kick(at, 0.6F * p, 14.0);
+                // 1.3.62: a clash hard enough shakes the ground: the view of everyone near shudders with it, harder the nearer.
+                if (com.hex.kagune.control.ClashRules.quakes(p)) {
+                    rumble(at, com.hex.kagune.control.ClashRules.rumble(p), com.hex.kagune.control.ClashRules.rumbleTicks(p),
+                        com.hex.kagune.control.ClashRules.felt(p));
+                }
             }
             case KingMarkFx.TRAIL -> {
                 smoke(at, along.m_82490_(-1.0), 0.5F * p);
@@ -170,6 +176,36 @@ public final class KingMarks {
                 .size(0.1F + (float)Math.random() * 0.08F, 0.08F).fall(0.045F).drag(0.98F).spawn();
         }
         kick(at, 0.6F * p, 14.0);
+    }
+
+    /** 1.3.62: the ground shaking under a hard clash: dust rolled out across it, grit thrown up (no camera here: the clash's own rumble). */
+    static void ground(Vec3 at, float p) {
+        int n = RcFx.count(12.0F * p);
+        for (int i = 0; i < n; i++) {
+            double a = Math.PI * 2.0 * i / Math.max(1, n) + Math.random() * 0.4;
+            Vec3 out = new Vec3(Math.cos(a), 0.0, Math.sin(a));
+            RcFx.at(RcFx.PUFF, false, 24 + (int)(Math.random() * 12), at.m_82549_(out.m_82490_(0.4)).m_82520_(0.0, 0.12, 0.0))
+                .velocity(out.m_82490_(0.14 + 0.1 * p * Math.random()).m_82520_(0.0, 0.01, 0.0)).colors(0xA87A7268, 0x007A7268).size(0.4F * p, 1.2F * p)
+                .drag(0.86F).spawn();
+        }
+        for (int i = 0; i < RcFx.count(10.0F * p); i++) {
+            double a = Math.random() * Math.PI * 2.0;
+            Vec3 v = new Vec3(Math.cos(a) * (0.05 + Math.random() * 0.1), 0.18 + Math.random() * 0.22 * p, Math.sin(a) * (0.05 + Math.random() * 0.1));
+            RcFx.at(RcFx.ASH, false, 20 + (int)(Math.random() * 10), at.m_82520_(0.0, 0.15, 0.0)).velocity(v).colors(0xFF5A544C, 0x005A544C)
+                .size(0.09F + (float)Math.random() * 0.07F, 0.07F).fall(0.045F).drag(0.98F).spawn();
+        }
+    }
+
+    /** 1.3.62: the view of this client's player shaken by the ground shaking at {@code at}, harder the nearer, nothing past {@code reach}. */
+    static void rumble(Vec3 at, float strength, double ticks, double reach) {
+        Entity self = Minecraft.m_91087_().f_91074_;
+        if (self == null) {
+            return;
+        }
+        double away = self.m_20182_().m_82554_(at);
+        if (away < reach) {
+            PaleCamera.rumble((float)(strength * (1.0 - away / reach)), ticks, PaleClient.clock(0.0F));
+        }
     }
 
     /** The view of this client's player kicked by something landing {@code at}, harder the nearer, nothing past {@code reach}. */

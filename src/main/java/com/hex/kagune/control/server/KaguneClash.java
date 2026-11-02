@@ -27,10 +27,11 @@ import net.minecraft.world.phys.Vec3;
 public final class KaguneClash {
     /**
      * A blow on its way: whose, when it set out, the last tick it can land, how far it reaches, the way it is aimed (null: the way its
-     * owner looks), what it goes for (0: whatever is in front), whether it is still going, how it is cut off.
+     * owner looks), what it goes for (0: whatever is in front), whether it is still going, how it is cut off; 1.3.62: how hard it is (the
+     * damage it would do).
      */
     private record Swing(LivingEntity who, long began, long until, double reach, Vec3 aim, int target, BooleanSupplier live, Runnable stop,
-                         int[] shards) {
+                         int[] shards, double hit) {
     }
 
     private static final Map<UUID, Swing> SWINGS = new HashMap<>();
@@ -47,15 +48,26 @@ public final class KaguneClash {
      * is still that blow (not cut off by anything since), {@code stop} cuts it off.
      */
     public static void swing(ServerPlayer player, long now, int lands, double reach, BooleanSupplier live, Runnable stop) {
-        swing(player, now, lands, reach, null, 0, live, stop);
+        swing(player, now, lands, reach, null, 0, ClashRules.HIT, live, stop);
+    }
+
+    /** 1.3.62: as above, {@code hit} hard (the damage it would do: the clash it makes is as big as both blows between them). */
+    public static void swing(ServerPlayer player, long now, int lands, double reach, double hit, BooleanSupplier live, Runnable stop) {
+        swing(player, now, lands, reach, null, 0, hit, live, stop);
     }
 
     /** 1.0.41: as above for any body: aimed along {@code aim} (null: the way it looks) at {@code target} (an entity id, 0: none in particular). */
     public static void swing(LivingEntity who, long now, int lands, double reach, Vec3 aim, int target, BooleanSupplier live, Runnable stop) {
+        swing(who, now, lands, reach, aim, target, ClashRules.HIT, live, stop);
+    }
+
+    /** 1.3.62: as above, {@code hit} hard. */
+    public static void swing(LivingEntity who, long now, int lands, double reach, Vec3 aim, int target, double hit, BooleanSupplier live,
+                             Runnable stop) {
         if (SWINGS.size() > 64) {
             SWINGS.values().removeIf(old -> now > old.until() + FORGET || old.who().m_213877_());
         }
-        SWINGS.put(who.m_20148_(), new Swing(who, now, now + Math.max(0, lands), reach, aim, target, live, stop, new int[1]));
+        SWINGS.put(who.m_20148_(), new Swing(who, now, now + Math.max(0, lands), reach, aim, target, live, stop, new int[1], hit));
         if (LAST.size() > 256) {
             LAST.values().removeIf(at -> now > at + FORGET);
         }
@@ -140,9 +152,11 @@ public final class KaguneClash {
         SWINGS.remove(other.m_20148_());
         stop(mine);
         stop(theirs);
-        apart(striker, other);
-        apart(other, striker);
-        wind(striker, other);
+        // 1.3.62: as big as both blows were hard between them.
+        float power = ClashRules.impact(mine == null ? ClashRules.HIT : mine.hit(), theirs.hit());
+        apart(striker, other, power);
+        apart(other, striker, power);
+        wind(striker, other, power);
         return true;
     }
 
@@ -207,8 +221,8 @@ public final class KaguneClash {
         }
     }
 
-    /** {@code who} thrown back from {@code from}. */
-    private static void apart(LivingEntity who, LivingEntity from) {
+    /** {@code who} thrown back from {@code from}, the harder the bigger the clash ({@code power}). */
+    private static void apart(LivingEntity who, LivingEntity from, float power) {
         double dx = who.m_20185_() - from.m_20185_();
         double dz = who.m_20189_() - from.m_20189_();
         double l = Math.sqrt(dx * dx + dz * dz);
@@ -218,18 +232,35 @@ public final class KaguneClash {
             dz = -look.f_82481_;
             l = Math.max(1.0E-4, Math.sqrt(dx * dx + dz * dz));
         }
-        who.m_20256_(new Vec3(dx / l * ClashRules.PUSH, ClashRules.LIFT, dz / l * ClashRules.PUSH));
+        double push = ClashRules.push(power);
+        who.m_20256_(new Vec3(dx / l * push, ClashRules.LIFT, dz / l * push));
         who.f_19864_ = true;
         who.f_19789_ = 0.0F;
     }
 
-    /** The wind of it, between their chests, blown out square to the line they met on; the crack and the gust of it. */
-    private static void wind(LivingEntity a, LivingEntity b) {
+    /**
+     * The wind of it, between their chests, blown out square to the line they met on; the crack and the gust of it. 1.3.62: as big as
+     * {@code power}; hard enough ({@link ClashRules#quakes}), the ground under them shakes (a ring of dust, the view of all near shaken,
+     * a deep rumble).
+     */
+    private static void wind(LivingEntity a, LivingEntity b, float power) {
         Vec3 chestA = a.m_20182_().m_82520_(0.0, a.m_20206_() * 0.6, 0.0);
         Vec3 chestB = b.m_20182_().m_82520_(0.0, b.m_20206_() * 0.6, 0.0);
         Vec3 at = chestA.m_82549_(chestB).m_82490_(0.5);
         Vec3 way = chestB.m_82546_(chestA);
-        burst(a, at, way.m_82556_() < 1.0E-6 ? a.m_20154_() : way.m_82541_(), 1.2F, 1.3F);
+        burst(a, at, way.m_82556_() < 1.0E-6 ? a.m_20154_() : way.m_82541_(), power, ClashRules.volume(power));
+        if (ClashRules.quakes(power)) {
+            quake(a, new Vec3(at.f_82479_, Math.min(a.m_20186_(), b.m_20186_()) + 0.05, at.f_82481_), power);
+        }
+    }
+
+    /** 1.3.62: the ground shaking under a clash of {@code power} at {@code ground}: its ring of dust and rumble for every client near. */
+    public static void quake(LivingEntity near, Vec3 ground, float power) {
+        float[] data = {(float)ground.f_82479_, (float)ground.f_82480_, (float)ground.f_82481_, 0.0F, 1.0F, 0.0F, power - 0.6F, 0.0F, 0.0F};
+        ControlNetwork.broadcastAround(near, new S2CKingFx(near.m_20148_(), S2CKingFx.MARK, new int[] {KingMarkFx.GROUND, 0}, data));
+        if (near.m_9236_() instanceof ServerLevel level) {
+            UkakuFire.sound(level, ground, "hexkagune:sfx.quake", ClashRules.volume(power) * 0.8F, 0.85F);
+        }
     }
 
     /**
@@ -243,7 +274,7 @@ public final class KaguneClash {
         if (near.m_9236_() instanceof ServerLevel level) {
             // 1.3.61 (the owner: "use the new sounds I sent as the new clash sounds whenever there's an impact"): their clash is the
             // impact itself (sfx.clash: Clashes.zip's four), with the gust of it; the heavy blow it was layered over is gone.
-            UkakuFire.sound(level, at, "hexkagune:sfx.clash", volume, 1.0F + (1.2F - power) * 0.15F);
+            UkakuFire.sound(level, at, "hexkagune:sfx.clash", volume, ClashRules.pitch(power));
             UkakuFire.sound(level, at, "entity.ender_dragon.flap", volume * 0.8F, 1.5F);
         }
     }

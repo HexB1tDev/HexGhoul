@@ -84,12 +84,16 @@ final class GraftCombat {
             // 1.0.40: on its way: another's M1 landing on him before its first blow lands meets it (KaguneClash), and both stop.
             int lands = move.ticks();
             double reach = 3.0;
+            float power = 0.0F;
             for (GraftMove.Beat beat : move.beats(limbs(player))) {
                 lands = Math.min(lands, beat.land());
                 reach = Math.max(reach, beat.reach());
+                power = Math.max(power, beat.power());
             }
             long began = state.startedAt;
-            KaguneClash.swing(player, now, lands + 1, reach, () -> state.move == move && state.startedAt == began, () -> clashed(player, state));
+            // 1.3.62: as hard as its heaviest beat lands.
+            double hit = GraftRules.damage(KaguneProfile.mastery(player), GraftServer.stage(player)) * Math.max(0.5F, power);
+            KaguneClash.swing(player, now, lands + 1, reach, hit, () -> state.move == move && state.startedAt == began, () -> clashed(player, state));
         }
     }
 

@@ -117,7 +117,7 @@ final class GhoulNpcCombat {
             npc.f_20885_ = yaw;
         }
         KaguneClash.swing(npc, now, BladeArm.lands(step), BladeArm.reach(who.tier(), step) + 0.5, aim, prey.m_19879_(),
-            () -> mind.bladeToken == token && mind.bladeStriking, () -> bladeMet(npc, mind, token));
+            NpcRules.damage(who.tier()) * BladeArm.weight(step), () -> mind.bladeToken == token && mind.bladeStriking, () -> bladeMet(npc, mind, token));
         double push = BladeArm.lunge(step);
         Vec3 velocity = npc.m_20184_();
         npc.m_20256_(new Vec3(aim.f_82479_ * push, velocity.f_82480_, aim.f_82481_ * push));
@@ -247,11 +247,13 @@ final class GhoulNpcCombat {
         sound(level, npc.m_20182_(), HexKaguneSounds.KAGUNE_WHIP.get(), 0.6F, 0.95F + 0.1F * (float)npc.m_217043_().m_188500_());
         int limbs = limbs(who);
         int lands = move.ticks();
+        float power = 0.0F;
         for (GraftMove.Beat beat : move.beats(limbs)) {
             lands = Math.min(lands, beat.land());
+            power = Math.max(power, beat.power());
         }
         long began = now;
-        KaguneClash.swing(npc, now, lands + 1, GraftCombat.reach(move, limbs), flat(facing), prey.m_19879_(),
+        KaguneClash.swing(npc, now, lands + 1, GraftCombat.reach(move, limbs), flat(facing), prey.m_19879_(), NpcRules.damage(who.tier()) * Math.max(0.5F, power),
             () -> mind.move == move && mind.moveAt == began, () -> cut(npc, mind));
     }
 

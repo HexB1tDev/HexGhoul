@@ -81,7 +81,10 @@ final class PaleBlitz {
         state.strikeEndsAt = now + strike.duration;
         state.queuedAt = Long.MIN_VALUE;
         // 1.0.40: on its way: another's M1 landing on her before it lands meets it (KaguneClash), and both stop.
-        KaguneClash.swing(player, now, strike.impact, strike.reach, () -> state.move == PaleMove.STRIKE && state.startedAt == now, () -> clashed(player, state));
+        // 1.3.62: as hard as it lands (the clash it makes is as big as both blows).
+        double hit = PaleRules.fist(KaguneProfile.mastery(player)) * strike.damage * PaleServer.power(player);
+        KaguneClash.swing(player, now, strike.impact, strike.reach, hit, () -> state.move == PaleMove.STRIKE && state.startedAt == now,
+            () -> clashed(player, state));
     }
 
     /** 1.0.40: her blow met another's coming back (KaguneClash): cut off, nothing queued after it, a moment before she can strike again. */

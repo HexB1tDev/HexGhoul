@@ -30,6 +30,11 @@ public final class KingMarkFx {
      * rings square to the line they met along, streaks of air whipping out all round, sparks thrown back both ways.
      */
     public static final int CLASH = 7;
+    /**
+     * 1.3.62: the ground shaking under a hard clash ({@code KaguneClash.quake}): a ring of dust rolling out across the ground, grey grit
+     * thrown up; none of War's red.
+     */
+    public static final int GROUND = 8;
 
     /** How long any mark has shapes to draw (ticks). */
     public static final int LASTS = 16;
@@ -58,6 +63,13 @@ public final class KingMarkFx {
                 flash(sink, at, eye, 0.4 * p, age, 4.0, 0xFFC01020);
                 sparks(sink, at, way, 0.45, 14 + (int)(6 * p), 0.35 * p, 0.05, age, 9.0, seed, eye, 0xFFFF3040, 0xFF5A0410, 0.05);
                 ring(sink, at, way, 0.3 + 0.9 * p * out(age / 6.0), 0.12 * p, 1.0 - age / 6.0, 0xFFB0101E);
+            }
+            case GROUND -> {
+                double r = (0.9 + 2.2 * p) * out(age / 10.0);
+                dust(sink, at, r, 0.6 + 0.5 * p, 1.0 - age / LASTS, 0xFF6A625A);
+                dust(sink, at, r * 0.6, 0.4 + 0.3 * p, 0.8 * (1.0 - age / LASTS), 0xFF7A7268);
+                sparks(sink, add(at, new double[] {0.0, 0.1, 0.0}), UP, 0.8, 8 + (int)(6 * p), 0.26 * p, 0.06, age, 10.0, seed, eye, 0xFFB8B0A4, 0xFF4A443C,
+                    0.05);
             }
             case QUAKE -> {
                 double r = (0.8 + 2.4 * p) * out(age / 10.0);

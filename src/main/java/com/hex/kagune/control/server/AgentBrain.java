@@ -576,7 +576,7 @@ public final class AgentBrain {
         mind.landsAt = now + lands;
         int token = ++mind.token;
         Vec3 aim = UkakuFire.horizontal(prey.m_20182_().m_82546_(agent.m_20182_()));
-        KaguneClash.swing(agent, now, lands, AgentRules.reach(q) + 0.5, aim, prey.m_19879_(), () -> mind.token == token && mind.striking,
+        KaguneClash.swing(agent, now, lands, AgentRules.reach(q) + 0.5, aim, prey.m_19879_(), AgentRules.damage(q, mind.step), () -> mind.token == token && mind.striking,
             () -> stopped(agent, mind, token));
         agent.swing(mind.step, now);
         Vec3 at = agent.m_20182_().m_82520_(0.0, agent.m_20206_() * 0.6, 0.0);
@@ -771,7 +771,7 @@ public final class AgentBrain {
         int token = ++mind.token;
         face(agent, who);
         Vec3 aim = UkakuFire.horizontal(who.m_20182_().m_82546_(agent.m_20182_()));
-        KaguneClash.swing(agent, now, lands, AgentRules.reach(mind.kind) + 1.5, aim, who.m_19879_(), () -> mind.token == token && mind.striking,
+        KaguneClash.swing(agent, now, lands, AgentRules.reach(mind.kind) + 1.5, aim, who.m_19879_(), AgentRules.damage(mind.kind, 0), () -> mind.token == token && mind.striking,
             () -> stopped(agent, mind, token));
         agent.swing(CcgAgent.PARRY, now);
         UkakuFire.sound(level, agent.m_20182_().m_82520_(0.0, agent.m_20206_() * 0.6, 0.0), "hexkagune:sfx.blade_arc", 0.6F, 1.4F);
