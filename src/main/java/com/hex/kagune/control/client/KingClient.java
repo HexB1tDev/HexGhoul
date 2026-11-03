@@ -125,7 +125,8 @@ public final class KingClient {
                 double k = 0.9375 / 16.0;
                 net.minecraft.world.phys.Vec3 from = owner.m_20182_().m_82520_(Math.cos(yaw) * body[0] * k + Math.sin(yaw) * body[2] * k, body[1] * k,
                     Math.sin(yaw) * body[0] * k - Math.cos(yaw) * body[2] * k);
-                com.hex.kagune.control.client.fx.KingMarks.spike(from, prey.m_20182_().m_82520_(0.0, prey.m_20206_() * 0.5, 0.0), message.target());
+                com.hex.kagune.control.client.fx.KingMarks.spike(from, prey.m_20182_().m_82520_(0.0, prey.m_20206_() * 0.5, 0.0), message.target(),
+                    KaguneTints.of(owner)); // 2.0.16: in the owner's kagune colour
             }
         }
     }

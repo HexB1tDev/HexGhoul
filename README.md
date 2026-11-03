@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.0.16 (HexGhoul): projectile trails in the kagune's colour (testing)
+
+See `.github/release-notes-2.0.16.md`: every Ukaku particle (trails, the vortex's, impacts, bursts) and War's spike embers in the shooter's kagune colour.
+
 ## 2.0.15 (HexGhoul): Ukaku's shots no longer burn (testing)
 
 See `.github/release-notes-2.0.15.md`: every Ukaku projectile (players', children's, wild ghouls') only hurts and pushes; fire moves that aren't shots are unchanged.

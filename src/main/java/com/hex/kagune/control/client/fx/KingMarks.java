@@ -29,13 +29,16 @@ public final class KingMarks {
         Vec3 at;
         Vec3 dir;
         final int target;
+        /** 2.0.16: its owner's kagune colour (its embers drawn in it). */
+        final int colour;
         int life;
 
-        Flight(Vec3 at, Vec3 dir, int target) {
+        Flight(Vec3 at, Vec3 dir, int target, int colour) {
             this.was = at;
             this.at = at;
             this.dir = dir;
             this.target = target;
+            this.colour = colour;
         }
     }
 
@@ -234,11 +237,16 @@ public final class KingMarks {
 
     /** A spike let fly from {@code from} toward {@code target} (as the server lets it fly from that rinkaku's point). */
     public static void spike(Vec3 from, Vec3 toward, int target) {
+        spike(from, toward, target, com.hex.kagune.control.KaguneColours.DEFAULT);
+    }
+
+    /** 2.0.16: ...its embers in {@code colour} (its owner's kagune colour). */
+    public static void spike(Vec3 from, Vec3 toward, int target, int colour) {
         if (!RcFx.near(from, FAR) || FLIGHTS.size() > 64) {
             return;
         }
         Vec3 d = toward.m_82546_(from);
-        FLIGHTS.add(new Flight(from, d.m_82556_() < 1.0E-6 ? new Vec3(0.0, 0.0, 1.0) : d.m_82541_(), target));
+        FLIGHTS.add(new Flight(from, d.m_82556_() < 1.0E-6 ? new Vec3(0.0, 0.0, 1.0) : d.m_82541_(), target, colour));
     }
 
     /** Each client tick: the spikes fly on (bending toward their prey as the server's do), embers shed behind them. */
@@ -265,7 +273,8 @@ public final class KingMarks {
             f.life++;
             for (int k = 0; k < 2; k++) {
                 Vec3 p = f.was.m_82549_(f.at.m_82546_(f.was).m_82490_(Math.random()));
-                RcFx.at(RcFx.EMBER, true, 10, p).velocity(new Vec3((Math.random() - 0.5) * 0.03, 0.01, (Math.random() - 0.5) * 0.03)).colors(0xFFFF3A40, 0x00600008)
+                RcFx.at(RcFx.EMBER, true, 10, p).velocity(new Vec3((Math.random() - 0.5) * 0.03, 0.01, (Math.random() - 0.5) * 0.03)).colors(
+                    com.hex.kagune.control.KaguneTint.recolour(0xFFFF3A40, f.colour), com.hex.kagune.control.KaguneTint.recolour(0x00600008, f.colour))
                     .size(0.07F, 0.02F).spawn();
             }
             boolean met = prey != null && prey.m_20182_().m_82520_(0.0, prey.m_20206_() * 0.5, 0.0).m_82554_(f.at) < 0.6 + prey.m_20205_() * 0.5;

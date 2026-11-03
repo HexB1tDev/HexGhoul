@@ -173,7 +173,32 @@ public final class UkakuFx {
         return VORTICES.values();
     }
 
+    /**
+     * 2.0.16 (the owner: "make sure the trail of the projectiles (ALL OF THEM) match the kagune color a lot don't"): the kagune colour the
+     * particles being made now are drawn in (the shooter's: {@code KaguneTints}); every fire and crystal colour here is turned to it
+     * ({@link com.hex.kagune.control.KaguneTint#recolour}, as the wings and the shards' bodies already were). The original crimson leaves
+     * them as they were.
+     */
+    private static int tint = com.hex.kagune.control.KaguneColours.DEFAULT;
+
+    private static int c(int argb) {
+        return tint == com.hex.kagune.control.KaguneColours.DEFAULT ? argb : com.hex.kagune.control.KaguneTint.recolour(argb, tint);
+    }
+
+    private static void tintFor(int shooter) {
+        tint = shooter == 0 ? com.hex.kagune.control.KaguneColours.DEFAULT : com.hex.kagune.control.client.KaguneTints.of(shooter);
+    }
+
     public static void accept(S2CUkakuFx message) {
+        try {
+            tintFor(message.shooter() != 0 ? message.shooter() : Math.max(0, shooter(message.id())));
+            acceptTinted(message);
+        } finally {
+            tint = com.hex.kagune.control.KaguneColours.DEFAULT;
+        }
+    }
+
+    private static void acceptTinted(S2CUkakuFx message) {
         ClientLevel level = Minecraft.m_91087_().f_91073_;
         if (level == null) {
             return;
@@ -409,8 +434,18 @@ public final class UkakuFx {
             return;
         }
         long now = level.m_46467_();
+        try {
+            tickTinted(level, now);
+        } finally {
+            tint = com.hex.kagune.control.KaguneColours.DEFAULT;
+        }
+    }
+
+    /** 2.0.16: each tick's trails, each in its shooter's kagune colour. */
+    private static void tickTinted(ClientLevel level, long now) {
         for (Iterator<Bolt> iterator = BOLTS.values().iterator(); iterator.hasNext(); ) {
             Bolt bolt = iterator.next();
+            tintFor(bolt.shooter());
             if (now - bolt.born() > bolt.life() + 2) {
                 iterator.remove();
                 continue;
@@ -429,6 +464,7 @@ public final class UkakuFx {
         }
         for (Iterator<Vortex> iterator = VORTICES.values().iterator(); iterator.hasNext(); ) {
             Vortex vortex = iterator.next();
+            tintFor(vortex.shooter);
             if (vortex.done(now)) {
                 iterator.remove();
                 continue;
@@ -444,6 +480,7 @@ public final class UkakuFx {
         }
         for (Iterator<Lasting> iterator = LASTING.iterator(); iterator.hasNext(); ) {
             Lasting lasting = iterator.next();
+            tintFor(lasting.shooter());
             if (now >= lasting.until()) {
                 iterator.remove();
                 continue;
@@ -496,23 +533,23 @@ public final class UkakuFx {
     /** RC flame: molten into red into nothing, rising a little. */
     private static void flame(Vec3 at, Vec3 velocity, float size, int life) {
         RcFx.at(RcFx.FLAME, true, life, at).velocity(velocity).drag(0.88F).fall(-0.003F).wander(0.01F).bloom(1)
-            .colors(RANDOM.nextFloat() < 0.35F ? RcFx.MOLTEN : RcFx.FIRE, RcFx.clear(RcFx.CRIMSON)).size(size, size * 0.4F).spawn();
+            .colors(c(RANDOM.nextFloat() < 0.35F ? RcFx.MOLTEN : RcFx.FIRE), c(RcFx.clear(RcFx.CRIMSON))).size(size, size * 0.4F).spawn();
     }
 
     private static void ember(Vec3 at, Vec3 velocity, float size, int life) {
         RcFx.at(RcFx.EMBER, true, life, at).velocity(velocity).drag(0.93F).fall(0.004F).wander(0.008F).bloom(0)
-            .colors(RANDOM.nextFloat() < 0.5F ? RcFx.CORE : RcFx.MOLTEN, RcFx.clear(RcFx.RED)).size(size, size * 0.4F).spawn();
+            .colors(c(RANDOM.nextFloat() < 0.5F ? RcFx.CORE : RcFx.MOLTEN), c(RcFx.clear(RcFx.RED))).size(size, size * 0.4F).spawn();
     }
 
     /** The pink glow that hangs around RC fire. */
     private static void aura(Vec3 at, Vec3 velocity, float size, int life) {
         RcFx.at(RcFx.MOTE, true, life, at).velocity(velocity).drag(0.9F).fall(-0.001F).bloom(2)
-            .colors(0x80F2A2F0, RcFx.clear(RcFx.PINK)).size(size, size * 1.4F).spawn();
+            .colors(c(0x80F2A2F0), c(RcFx.clear(RcFx.PINK))).size(size, size * 1.4F).spawn();
     }
 
     private static void smoke(Vec3 at, Vec3 velocity, float size, int life) {
         RcFx.at(RcFx.PUFF, false, life, at).velocity(velocity).drag(0.92F).fall(-0.002F).wander(0.004F).bloom(4)
-            .colors(RcFx.SMOKE, 0x00100406).size(size, size * 2.2F).spawn();
+            .colors(c(RcFx.SMOKE), c(0x00100406)).size(size, size * 2.2F).spawn();
     }
 
     /** A shard leaving the wing: a flash of fire at the muzzle. */
@@ -563,9 +600,9 @@ public final class UkakuFx {
                 16 + RANDOM.nextInt(14));
         }
         aura(at, Vec3.f_82478_, 0.9F * scale, 6);
-        RcFx.at(RcFx.RING, true, 8, at).bloom(0).colors(0xFFFF6A3A, RcFx.clear(RcFx.CRIMSON)).size(0.3F * scale, 2.4F * scale).spawn();
+        RcFx.at(RcFx.RING, true, 8, at).bloom(0).colors(c(0xFFFF6A3A), c(RcFx.clear(RcFx.CRIMSON))).size(0.3F * scale, 2.4F * scale).spawn();
         if (hit || flare) {
-            RcFx.at(RcFx.VEINS, true, 7, at).bloom(0).colors(0xFFFF2A3A, RcFx.clear(RcFx.CRIMSON)).size(0.9F * scale, 1.6F * scale).spawn();
+            RcFx.at(RcFx.VEINS, true, 7, at).bloom(0).colors(c(0xFFFF2A3A), c(RcFx.clear(RcFx.CRIMSON))).size(0.9F * scale, 1.6F * scale).spawn();
         }
         for (int i = RcFx.count(flare ? 4 : 1); i > 0; i--) {
             smoke(at.m_82549_(jitter(0.3 * scale)), new Vec3(0.0, 0.02, 0.0).m_82549_(jitter(0.02)), 0.5F * scale, 28 + RANDOM.nextInt(16));
@@ -583,8 +620,8 @@ public final class UkakuFx {
     /** The Rising Flame's first instant: a ring and veins of fire on the ground. */
     private static void pillarBurst(Vec3 base, float radius) {
         Vec3 ground = base.m_82520_(0.0, 0.1, 0.0);
-        RcFx.at(RcFx.RING, true, 10, ground).bloom(0).colors(0xFFFF6A3A, RcFx.clear(RcFx.CRIMSON)).size(0.5F, radius * 3.0F).spawn();
-        RcFx.at(RcFx.VEINS, true, 12, ground).bloom(0).colors(0xFFFF2A3A, RcFx.clear(RcFx.CRIMSON)).size(radius * 1.6F, radius * 2.2F).spawn();
+        RcFx.at(RcFx.RING, true, 10, ground).bloom(0).colors(c(0xFFFF6A3A), c(RcFx.clear(RcFx.CRIMSON))).size(0.5F, radius * 3.0F).spawn();
+        RcFx.at(RcFx.VEINS, true, 12, ground).bloom(0).colors(c(0xFFFF2A3A), c(RcFx.clear(RcFx.CRIMSON))).size(radius * 1.6F, radius * 2.2F).spawn();
         for (int i = RcFx.count(16); i > 0; i--) {
             Vec3 out = sphere();
             ember(ground, new Vec3(out.f_82479_ * 0.25, 0.25 + 0.3 * RANDOM.nextDouble(), out.f_82481_ * 0.25), 0.06F, 18 + RANDOM.nextInt(12));
@@ -599,7 +636,7 @@ public final class UkakuFx {
             Vec3 at = base.m_82520_(Math.cos(a) * r, 0.1 + RANDOM.nextDouble() * 0.6, Math.sin(a) * r);
             RcFx.at(RcFx.FLAME, true, 10 + RANDOM.nextInt(6), at).velocity(new Vec3(-Math.cos(a) * r * 0.04, 0.35 + 0.3 * RANDOM.nextDouble(),
                     -Math.sin(a) * r * 0.04)).drag(0.9F).fall(-0.01F).wander(0.01F).bloom(1)
-                .colors(RANDOM.nextFloat() < 0.4F ? RcFx.MOLTEN : RcFx.FIRE, RcFx.clear(RcFx.CRIMSON)).size(0.55F, 0.25F).spawn();
+                .colors(c(RANDOM.nextFloat() < 0.4F ? RcFx.MOLTEN : RcFx.FIRE), c(RcFx.clear(RcFx.CRIMSON))).size(0.55F, 0.25F).spawn();
         }
         if (RANDOM.nextFloat() < 0.6F * left) {
             aura(base.m_82520_(0.0, 1.0 + RANDOM.nextDouble(), 0.0), new Vec3(0.0, 0.15, 0.0), radius * 0.8F, 6);
@@ -639,7 +676,7 @@ public final class UkakuFx {
             double r = RANDOM.nextDouble() * radius;
             Vec3 spot = at.m_82520_(Math.cos(a) * r, 0.05, Math.sin(a) * r);
             RcFx.at(RcFx.FLAME, true, 10 + RANDOM.nextInt(6), spot).velocity(new Vec3(0.0, 0.05, 0.0)).drag(0.9F).fall(-0.004F).wander(0.006F).bloom(1)
-                .colors(RcFx.FIRE, RcFx.clear(RcFx.CRIMSON)).size(0.22F, 0.1F).spawn();
+                .colors(c(RcFx.FIRE), c(RcFx.clear(RcFx.CRIMSON))).size(0.22F, 0.1F).spawn();
         }
     }
     // ------------------------------------------------------------------ the crystal
@@ -654,20 +691,20 @@ public final class UkakuFx {
     /** A glint of crystal: a white-pink spark that flashes and is gone. */
     static void glint(Vec3 at, Vec3 velocity, float size, int life) {
         RcFx.at(RcFx.MOTE, true, life, at).velocity(velocity).drag(0.9F).bloom(0)
-            .colors(RANDOM.nextFloat() < 0.5F ? GEM_GLINT : GEM_POINT, RcFx.clear(GEM_RED)).size(size, size * 0.2F).spawn();
+            .colors(c(RANDOM.nextFloat() < 0.5F ? GEM_GLINT : GEM_POINT), c(RcFx.clear(GEM_RED))).size(size, size * 0.2F).spawn();
     }
 
     /** A chip of crystal: a red shard flung off that falls and fades. */
     static void chip(Vec3 at, Vec3 velocity, float size, int life) {
         RcFx.at(RcFx.STREAK, true, life, at).velocity(velocity).drag(0.94F).fall(0.025F).bloom(0)
-            .colors(RANDOM.nextFloat() < 0.4F ? GEM_POINT : RANDOM.nextFloat() < 0.6F ? GEM_RED : GEM_CRIMSON, RcFx.clear(GEM_VIOLET))
+            .colors(c(RANDOM.nextFloat() < 0.4F ? GEM_POINT : RANDOM.nextFloat() < 0.6F ? GEM_RED : GEM_CRIMSON), c(RcFx.clear(GEM_VIOLET)))
             .size(size, size * 0.5F).spawn();
     }
 
     /** The faint red mist RC crystal leaves hanging in the air. */
     static void haze(Vec3 at, Vec3 velocity, float size, int life) {
         RcFx.at(RcFx.MOTE, true, life, at).velocity(velocity).drag(0.9F).fall(-0.001F).bloom(2)
-            .colors(0x60FF2C58, RcFx.clear(GEM_CRIMSON)).size(size, size * 1.5F).spawn();
+            .colors(c(0x60FF2C58), c(RcFx.clear(GEM_CRIMSON))).size(size, size * 1.5F).spawn();
     }
 
     /** A spike leaving the wing: a ring of glints and a puff of red at the wing tip. */
@@ -726,7 +763,7 @@ public final class UkakuFx {
             glint(at.m_82549_(jitter(0.2)), jitter(0.05), 0.12F, 4 + RANDOM.nextInt(4));
         }
         if (body) {
-            RcFx.at(RcFx.RING, true, 6, at).bloom(0).colors(0xC0FF2C58, RcFx.clear(GEM_CRIMSON)).size(0.2F * size, 1.1F * size).spawn();
+            RcFx.at(RcFx.RING, true, 6, at).bloom(0).colors(c(0xC0FF2C58), c(RcFx.clear(GEM_CRIMSON))).size(0.2F * size, 1.1F * size).spawn();
         }
     }
 
@@ -755,16 +792,16 @@ public final class UkakuFx {
         for (int i = RcFx.count(8 * scale); i > 0; i--) {
             glint(at.m_82549_(jitter(0.25)), sphere().m_82490_(0.06), 0.16F * scale, 4 + RANDOM.nextInt(4));
         }
-        RcFx.at(RcFx.MOTE, true, 4, at).bloom(0).colors(0xFFFFFFFF, RcFx.clear(GEM_POINT)).size(0.9F * scale, 1.5F * scale).spawn();
-        RcFx.at(RcFx.RING, true, 7, at).bloom(0).colors(0xE0FF2C58, RcFx.clear(GEM_CRIMSON)).size(0.25F * scale, 1.8F * scale).spawn();
+        RcFx.at(RcFx.MOTE, true, 4, at).bloom(0).colors(c(0xFFFFFFFF), c(RcFx.clear(GEM_POINT))).size(0.9F * scale, 1.5F * scale).spawn();
+        RcFx.at(RcFx.RING, true, 7, at).bloom(0).colors(c(0xE0FF2C58), c(RcFx.clear(GEM_CRIMSON))).size(0.25F * scale, 1.8F * scale).spawn();
         haze(at, Vec3.f_82478_, 0.7F * scale, 8);
     }
 
     /** The Crystal Bloom: a flower of crystal light around him (bigger the more spikes it burst). */
     private static void bloom(Vec3 chest, int burst) {
         float scale = 1.0F + Math.min(1.5F, burst * 0.12F);
-        RcFx.at(RcFx.RING, true, 10, chest).bloom(0).colors(0xFFFF6A8A, RcFx.clear(GEM_CRIMSON)).size(0.4F, 5.0F * scale).spawn();
-        RcFx.at(RcFx.VEINS, true, 9, chest).bloom(0).colors(0xFFFF2A3A, RcFx.clear(GEM_CRIMSON)).size(1.2F * scale, 2.6F * scale).spawn();
+        RcFx.at(RcFx.RING, true, 10, chest).bloom(0).colors(c(0xFFFF6A8A), c(RcFx.clear(GEM_CRIMSON))).size(0.4F, 5.0F * scale).spawn();
+        RcFx.at(RcFx.VEINS, true, 9, chest).bloom(0).colors(c(0xFFFF2A3A), c(RcFx.clear(GEM_CRIMSON))).size(1.2F * scale, 2.6F * scale).spawn();
         for (int i = RcFx.count(24 * scale); i > 0; i--) {
             Vec3 way = sphere();
             glint(chest.m_82549_(way.m_82490_(0.4)), way.m_82490_(0.15 + 0.15 * RANDOM.nextDouble()), 0.16F, 6 + RANDOM.nextInt(6));
@@ -774,7 +811,7 @@ public final class UkakuFx {
 
     /** A bursting spike exploding (Bursting Shards): a blast of crystal and red light {@code radius} wide. */
     private static void blast(Vec3 at, float radius) {
-        RcFx.at(RcFx.RING, true, 9, at).bloom(0).colors(0xFFFFE0E8, RcFx.clear(GEM_CRIMSON)).size(0.4F, radius * 2.4F).spawn();
+        RcFx.at(RcFx.RING, true, 9, at).bloom(0).colors(c(0xFFFFE0E8), c(RcFx.clear(GEM_CRIMSON))).size(0.4F, radius * 2.4F).spawn();
         for (int i = RcFx.count(20); i > 0; i--) {
             chip(at, sphere().m_82490_(0.2 + 0.3 * RANDOM.nextDouble()), 0.14F, 12 + RANDOM.nextInt(10));
         }
@@ -820,7 +857,7 @@ public final class UkakuFx {
             ember(at, sphere().m_82490_(0.15).m_82549_(dir.m_82490_(0.1)), 0.06F, 14 + RANDOM.nextInt(10));
         }
         aura(at, Vec3.f_82478_, 1.4F * size, 6);
-        RcFx.at(RcFx.RING, true, 8, at).bloom(0).colors(0xFFFF6A3A, RcFx.clear(RcFx.CRIMSON)).size(0.4F * size, 2.6F * size).spawn();
+        RcFx.at(RcFx.RING, true, 8, at).bloom(0).colors(c(0xFFFF6A3A), c(RcFx.clear(RcFx.CRIMSON))).size(0.4F * size, 2.6F * size).spawn();
     }
 
     /** What the vortex sheds as it spins: fire flung off its whole spinning length, embers, the pink glow, smoke at the point. */
@@ -876,8 +913,8 @@ public final class UkakuFx {
         for (int i = RcFx.count(10); i > 0; i--) {
             ember(at, sphere().m_82490_(0.2).m_82549_(dir.m_82490_(0.15)), 0.06F, 16 + RANDOM.nextInt(12));
         }
-        RcFx.at(RcFx.RING, true, 8, at).bloom(0).colors(0xFFFF6A3A, RcFx.clear(RcFx.CRIMSON)).size(0.3F * scale, 2.2F * scale).spawn();
-        RcFx.at(RcFx.VEINS, true, 7, at).bloom(0).colors(0xFFFF2A3A, RcFx.clear(RcFx.CRIMSON)).size(0.8F * scale, 1.5F * scale).spawn();
+        RcFx.at(RcFx.RING, true, 8, at).bloom(0).colors(c(0xFFFF6A3A), c(RcFx.clear(RcFx.CRIMSON))).size(0.3F * scale, 2.2F * scale).spawn();
+        RcFx.at(RcFx.VEINS, true, 7, at).bloom(0).colors(c(0xFFFF2A3A), c(RcFx.clear(RcFx.CRIMSON))).size(0.8F * scale, 1.5F * scale).spawn();
         aura(at, Vec3.f_82478_, 0.9F * scale, 5);
     }
 

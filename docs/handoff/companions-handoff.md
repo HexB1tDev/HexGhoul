@@ -1,4 +1,13 @@
-# START HERE (state after 2.0.15): read `docs/handoff/next-ai-2.0.9.md` first, then `next-ai-2.0.5.md`, then `next-ai-2.0.1.md`
+# START HERE (state after 2.0.16): read `docs/handoff/next-ai-2.0.9.md` first, then `next-ai-2.0.5.md`, then `next-ai-2.0.1.md`
+
+- **2.0.16** (the owner: "make sure the trail of the projectiles (ALL OF THEM) match the kagune color a lot don't"; "also ... the voltex
+  move (the one with a horizontal tornado)"). `client/fx/UkakuFx`: a static `tint` (the shooter's `KaguneTints.of`) and `c(argb)` =
+  `KaguneTint.recolour(argb, tint)` round all 22 `.colors(...)`; set in `accept` (the message's shooter, or `shooter(id)` for an impact;
+  the old body is `acceptTinted`) and per bolt/vortex/lasting in the tick (`tickTinted`), reset in finally. The vortex's mesh was already
+  tinted (`UkakuWingRenderer`, 1.3.35). `KingMarks.Flight` carries a colour (`spike(..., colour)`; `KingClient` passes the owner's). Owl
+  fx (blood, bone, dust, white streaks) left as they are (not kagune-coloured fire). Not run.
+
+# State after 2.0.15
 
 - **2.0.15** (the owner: "Ukaku's projectiles should not burn targets anymore only knockback + damage"). `UkakuFire.burn(..., 0, ...)` now
   means no fire, a STAB wound, no burn sound; new `UkakuFire.shot(...)` (no fire, + a push away from a burst's centre) for bolt hits
