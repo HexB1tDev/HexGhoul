@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.0.21 (HexGhoul): White Reaper encounter (testing)
+
+See `.github/release-notes-2.0.21.md`. Rank 10 is now the White Reaper, a solo encounter with a single world-wide slot.
+
 ## 2.0.20 (HexGhoul): an investigator's superior is always the stronger (testing)
 
 See `.github/release-notes-2.0.20.md`: a pair's leader ranks above its partner and has a superior's edge (more health, harder hits) on top.

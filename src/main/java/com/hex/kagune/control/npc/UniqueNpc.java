@@ -55,6 +55,11 @@ public final class UniqueNpc {
         return true;
     }
 
+    /** A living body keeps this claim across unloaded chunks, with no timeout. */
+    public boolean claimExclusive(UUID body, long now) {
+        return (!this.alive || body.equals(this.body)) && this.claim(body, now);
+    }
+
     /** She died at {@code now}. */
     public void died(UUID body, long now) {
         if (body.equals(this.body)) {

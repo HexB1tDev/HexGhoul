@@ -31,6 +31,8 @@ import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
+import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -159,6 +161,19 @@ public final class AgentBrain {
         }
     }
 
+    private static final String REAPER = "ccg:reaper";
+    private static final String REAPER_INITIALIZED = CcgAgent.KEY + "ReaperInitialized";
+
+    static boolean claimReaper(CcgAgent agent, ServerLevel level) {
+        return UniqueNpcs.claimExclusive(level, REAPER, agent.m_20148_());
+    }
+
+    static void prepareReaper(CcgAgent agent, int look) {
+        save(agent, Math.max(4, look), Quinque.KATANA, true, null);
+        agent.getPersistentData().m_128405_(RANK_LEVEL, AgentRules.Rank.RANK_10.level());
+        agent.m_21530_();
+    }
+
     /** Its first tick: who it is, from its saved data (one made alone, by a command, becomes someone, and its partner turns up). */
     private static Mind wake(CcgAgent agent, ServerLevel level, long now) {
         Mind mind = new Mind();
@@ -187,7 +202,6 @@ public final class AgentBrain {
             }
         }
         mind.partnerSeen = now;
-        agent.dress(mind.look, mind.kind);
         // 1.3.70: its rank, by chance (kept in its saved data; the one leading the pair takes the better of two chances), its health and its
         // speed by it, and its name.
         // 2.0.17: Rank 0 to 10 (saved by number under RANK_LEVEL; one saved before by the old order under RANK), its armour too.
@@ -196,6 +210,17 @@ public final class AgentBrain {
         mind.rank = data.m_128441_(RANK_LEVEL) ? AgentRules.Rank.byOrdinal(data.m_128451_(RANK_LEVEL))
             : data.m_128441_(RANK) ? AgentRules.Rank.fromOld(data.m_128451_(RANK))
             : AgentRules.Rank.of(mind.leader, agent.m_217043_().m_188500_(), agent.m_217043_().m_188500_());
+        boolean reaper = mind.rank == AgentRules.Rank.RANK_10 && !fresh && mind.partner == null
+            && !saved.m_128441_(VillagePlace.KEY) && claimReaper(agent, level);
+        if (reaper) {
+            mind.look = Math.max(4, mind.look);
+            mind.kind = Quinque.KATANA;
+            agent.m_21530_();
+            agent.m_21051_(net.minecraft.world.entity.ai.attributes.Attributes.f_22278_).m_22100_(AgentRules.REAPER_KNOCKBACK_RESISTANCE);
+        } else {
+            mind.rank = AgentRules.regularRank(mind.rank);
+        }
+        agent.dress(mind.look, mind.kind);
         // 2.0.20: the pair's leader is its superior, always the stronger: set against its partner's rank if that is known already (the
         // one who wakes second is set by the other), and a superior's edge on top.
         if (mind.partner != null && level.m_8791_(mind.partner) instanceof CcgAgent other) {
@@ -211,8 +236,11 @@ public final class AgentBrain {
         agent.m_21051_(net.minecraft.world.entity.ai.attributes.Attributes.f_22276_).m_22100_(AgentRules.health(mind.rank, mind.superior));
         agent.m_21051_(net.minecraft.world.entity.ai.attributes.Attributes.f_22279_).m_22100_(mind.rank.speed);
         agent.m_21051_(net.minecraft.world.entity.ai.attributes.Attributes.f_22284_).m_22100_(mind.rank.armor);
-        if (fresh) {
+        if (fresh || reaper && !saved.m_128441_(REAPER_INITIALIZED)) {
             agent.m_21153_(agent.m_21233_());
+            if (reaper) {
+                saved.m_128405_(REAPER_INITIALIZED, 1);
+            }
         }
         agent.m_6593_(Component.m_237113_(mind.rank.title));
         agent.mind = mind;
@@ -289,7 +317,7 @@ public final class AgentBrain {
      * it carries on alone, leading itself. True if it went.
      */
     private static boolean lost(CcgAgent agent, Mind mind, CcgAgent partner, ServerLevel level, long now) {
-        if (partner != null || ago(now, mind.partnerSeen) < AgentRules.PARTNER_LOST) {
+        if (mind.rank == AgentRules.Rank.RANK_10 || partner != null || ago(now, mind.partnerSeen) < AgentRules.PARTNER_LOST) {
             return false;
         }
         mind.leader = true;
@@ -307,8 +335,10 @@ public final class AgentBrain {
 
     /** Unhurt a while, it slowly mends (a human: nothing like a ghoul). */
     private static void regen(CcgAgent agent, Mind mind, long now) {
-        if (ago(now, mind.hurtAt) > 200L && now % 40L == 0L && agent.m_21223_() < agent.m_21233_()) {
-            agent.m_5634_(1.0F);
+        boolean reaper = mind.rank == AgentRules.Rank.RANK_10;
+        if (ago(now, mind.hurtAt) > 200L && (!reaper || ago(now, mind.foughtAt) > 200L)
+            && now % 40L == 0L && agent.m_21223_() < agent.m_21233_()) {
+            agent.m_5634_(reaper ? 3.0F : 1.0F);
         }
     }
 
@@ -1006,7 +1036,7 @@ public final class AgentBrain {
         agent.f_19789_ = 0.0F;
         mind.push = push;
         mind.flipAt = now;
-        mind.flipReadyAt = now + AgentRules.FLIP_EVERY;
+        mind.flipReadyAt = now + (mind.rank == AgentRules.Rank.RANK_10 ? AgentRules.REAPER_FLIP_EVERY : AgentRules.FLIP_EVERY);
         mind.dashReadyAt = Math.max(mind.dashReadyAt, now + NpcRules.FLIP_BUSY);
         if (facing != null) {
             face(agent, facing);
@@ -1137,10 +1167,18 @@ public final class AgentBrain {
     /** It falls: its case is left behind, all but never (only to a player's hand in its death). */
     public static void drop(CcgAgent agent, int looting, boolean byPlayer) {
         Mind mind = agent.mind;
-        if (!byPlayer || mind == null || agent.m_217043_().m_188500_() >= AgentRules.dropChance(looting)) {
+        if (!byPlayer || mind == null || mind.rank == AgentRules.Rank.RANK_10 || agent.m_217043_().m_188500_() >= AgentRules.dropChance(looting)) {
             return;
         }
         agent.m_19983_(new ItemStack(ControlItems.caseOf(mind.kind), 1));
+    }
+
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public static void died(LivingDeathEvent event) {
+        if (event.getEntity() instanceof CcgAgent agent && agent.m_9236_() instanceof ServerLevel level
+            && agent.getPersistentData().m_128451_(RANK_LEVEL) == AgentRules.Rank.RANK_10.level()) {
+            UniqueNpcs.died(level, REAPER, agent.m_20148_());
+        }
     }
 
     /** It was struck: it and its partner go for whoever did it (and a ghoul who did is marked as one). */
@@ -1151,6 +1189,9 @@ public final class AgentBrain {
         }
         long now = level.m_46467_();
         agent.mind.hurtAt = now;
+        if (agent.mind.rank == AgentRules.Rank.RANK_10 && !com.hex.kagune.control.GhoulTank.bypasses(event.getSource().m_19385_())) {
+            event.setAmount(event.getAmount() * AgentRules.REAPER_TAKEN);
+        }
         if (!(event.getSource().m_7639_() instanceof LivingEntity attacker) || attacker instanceof CcgAgent || attacker == agent) {
             return;
         }

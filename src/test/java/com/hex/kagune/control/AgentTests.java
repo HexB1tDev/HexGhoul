@@ -582,20 +582,22 @@ public final class AgentTests {
         boolean superiorStronger = true;
         boolean ranked = true;
         for (AgentRules.Rank l : all) {
+            if (l == AgentRules.Rank.RANK_10) continue;
             for (AgentRules.Rank p : all) {
+                if (p == AgentRules.Rank.RANK_10) continue;
                 AgentRules.Rank partnerAfter = AgentRules.subordinate(p, l);
                 AgentRules.Rank leaderAfter = AgentRules.superior(l, p);
                 superiorStronger &= AgentRules.health(l, true) > AgentRules.health(partnerAfter, false) && AgentRules.power(l, true) > AgentRules.power(partnerAfter, false)
                     && AgentRules.health(leaderAfter, true) > AgentRules.health(p, false) && AgentRules.power(leaderAfter, true) > AgentRules.power(p, false);
                 ranked &= partnerAfter.level() <= l.level() && leaderAfter.level() >= p.level() && (l.level() == 0 || partnerAfter.level() < l.level())
-                    && (p.level() == 10 || leaderAfter.level() > p.level());
+                    && (p.level() == 9 || leaderAfter.level() > p.level());
             }
         }
         check(superiorStronger, "whatever their ranks and whoever woke first, the superior has more health and hits harder");
-        check(ranked, "the superior ranks above its partner (but at Rank 0 and Rank 10, where its edge alone makes it the stronger)");
+        check(ranked, "the superior ranks above its partner (but at Rank 0 and Rank 9, where its edge alone makes it the stronger)");
         // 2.0.18: dashes chained in zigzags, more and faster by rank, more often, sooner again.
         check(AgentRules.dashes(AgentRules.Rank.RANK_0) == 1 && AgentRules.dashes(AgentRules.Rank.RANK_2) == 2 && AgentRules.dashes(AgentRules.Rank.RANK_5) == 3
-            && AgentRules.dashes(AgentRules.Rank.RANK_8) == 4 && AgentRules.dashes(AgentRules.Rank.RANK_10) == 6, "more dashes in a row the higher the rank");
+            && AgentRules.dashes(AgentRules.Rank.RANK_8) == 4 && AgentRules.dashes(AgentRules.Rank.RANK_10) == 8, "more dashes in a row the higher the rank");
         boolean quicker = true;
         for (int k = 1; k < all.length; k++) {
             quicker &= AgentRules.dashSpeed(all[k]) > AgentRules.dashSpeed(all[k - 1]) && AgentRules.dashEvery(all[k]) <= AgentRules.dashEvery(all[k - 1])
@@ -608,7 +610,18 @@ public final class AgentTests {
         double[] back = AgentRules.zig(side[0], side[1], 0.0, 1.0, false);
         check(Math.abs(side[0] + 1.0) < 1.0E-9 && Math.abs(side[1]) < 1.0E-9 && in[0] < 0.0 && in[1] > 0.0
             && Math.abs(Math.hypot(in[0], in[1]) - 1.0) < 1.0E-9 && Math.abs(back[0] - 1.0) < 1.0E-9, "each dash of a zigzag the other side; leaning in on prey out of reach");
+        AgentRules.Rank reaper = AgentRules.Rank.RANK_10;
+        check(reaper.title.equals("White Reaper") && AgentRules.regularRank(reaper) == AgentRules.Rank.RANK_9
+            && AgentRules.superior(reaper, reaper) == AgentRules.Rank.RANK_9, "the White Reaper is outside the regular ranks");
+        var slot = new com.hex.kagune.control.npc.UniqueNpc();
+        var first = new java.util.UUID(0L, 1L);
+        var second = new java.util.UUID(0L, 2L);
+        check(slot.claimExclusive(first, 0L) && !slot.claimExclusive(second, Long.MAX_VALUE)
+            && slot.claimExclusive(first, 1L), "the same Reaper still owns the slot after unloading");
+        slot.died(first, 2L);
+        check(slot.claimExclusive(second, 3L) && !slot.claimExclusive(first, 4L), "only death frees the Reaper slot");
         for (AgentRules.Rank rank : all) {
+            if (rank == AgentRules.Rank.RANK_10) continue;
             check(rank.title.endsWith("Rank " + rank.level() + " Investigator") && rank.title.startsWith("\u00a7c") == rank.dangerous()
                 && !rank.title.contains("Kaneki"), "its name: " + rank.title);
         }

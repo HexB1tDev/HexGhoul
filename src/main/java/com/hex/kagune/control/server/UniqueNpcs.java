@@ -202,6 +202,19 @@ public final class UniqueNpcs {
         return true;
     }
 
+    /** Claims a permanent world-wide slot until its holder dies. */
+    public static boolean claimExclusive(ServerLevel level, String key, UUID body) {
+        UniqueNpc npc = get(level, key);
+        if (npc.alive && body.equals(npc.body)) {
+            return true;
+        }
+        if (!npc.claimExclusive(body, level.m_46467_())) {
+            return false;
+        }
+        changed(level);
+        return true;
+    }
+
     /**
      * 1.3.3: how she is now: where she belongs (kept the first time it is known), whether she is away from it, and when she last had
      * company. Saved when it matters (not every time she has company).

@@ -62,6 +62,11 @@ public final class AgentSpawner {
             if (leader == null) {
                 continue;
             }
+            if (AgentRules.Rank.roll(player.m_217043_().m_188500_()) == AgentRules.Rank.RANK_10
+                && AgentBrain.claimReaper(leader, level)) {
+                AgentBrain.prepareReaper(leader, look);
+                return true;
+            }
             if (partner(leader, level, look, kind) == null) {
                 leader.m_146870_(); // never one alone
                 continue;
@@ -110,8 +115,7 @@ public final class AgentSpawner {
         if (!level.m_45786_(agent)) {
             return null;
         }
-        level.m_7967_(agent);
-        return agent;
+        return level.m_7967_(agent) ? agent : null;
     }
 
     /**

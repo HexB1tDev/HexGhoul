@@ -90,7 +90,7 @@ public final class AgentRules {
         RANK_7(5.0, 104.0, 0.375, 11.0, 1.8F, 0.76),
         RANK_8(2.0, 160.0, 0.39, 14.0, 2.3F, 0.68),
         RANK_9(1.2, 210.0, 0.40, 16.0, 2.7F, 0.62),
-        RANK_10(0.8, 280.0, 0.41, 18.0, 3.2F, 0.55);
+        RANK_10(0.15, 280.0, 0.60, 18.0, 3.1F, 0.45);
 
         /** From this rank up: rare and really dangerous (named in red). */
         public static final int DANGEROUS = 8;
@@ -105,7 +105,7 @@ public final class AgentRules {
 
         Rank(double weight, double health, double speed, double armor, float power, double pace) {
             int level = Integer.parseInt(this.name().substring("RANK_".length()));
-            this.title = (level >= DANGEROUS ? "\u00a7c" : "") + "Rank " + level + " Investigator";
+            this.title = level == 10 ? "White Reaper" : (level >= DANGEROUS ? "\u00a7c" : "") + "Rank " + level + " Investigator";
             this.weight = weight;
             this.health = health;
             this.speed = speed;
@@ -168,15 +168,24 @@ public final class AgentRules {
     public static final double SUPERIOR_HEALTH = 1.25;
     public static final float SUPERIOR_POWER = 1.15F;
 
-    /** The leader's rank, its partner's known: its own if above theirs, else one above theirs (Rank 10 at most). */
+    /** The leader's rank, its partner's known: its own if above theirs, else one above theirs (Rank 9 at most). */
     public static Rank superior(Rank own, Rank partner) {
-        return own.level() > partner.level() ? own : Rank.byOrdinal(Math.min(Rank.RANK_10.level(), partner.level() + 1));
+        return regularRank(Rank.byOrdinal(Math.max(own.level(), partner.level() + 1)));
     }
 
     /** The partner's rank, its leader's known: its own if below theirs, else one below theirs (Rank 0 at least). */
     public static Rank subordinate(Rank own, Rank leader) {
-        return own.level() < leader.level() ? own : Rank.byOrdinal(Math.max(0, leader.level() - 1));
+        return Rank.byOrdinal(Math.min(regularRank(own).level(), Math.max(0, regularRank(leader).level() - 1)));
     }
+
+    public static Rank regularRank(Rank rank) {
+        return rank == Rank.RANK_10 ? Rank.RANK_9 : rank;
+    }
+
+    public static final float REAPER_TAKEN = 0.65F;
+    public static final double REAPER_KNOCKBACK_RESISTANCE = 0.85;
+    public static final double REAPER_DASH_SPEED = 2.1;
+    public static final int REAPER_FLIP_EVERY = 20;
 
     /** Its health by its rank, a superior's more. */
     public static double health(Rank rank, boolean superior) {
@@ -370,17 +379,17 @@ public final class AgentRules {
     /**
      * 2.0.18 (the owner: "fastly increase the dash amount/speed also with mastery", then: "I meant the dashes of the CCG ... CCG agents dash
      * more than once in zigzags"): how many dashes it chains (each the other way: a zigzag), by its rank, rising fast: 1 at Rank 0 and 1, 2 at
-     * 2 to 4, 3 at 5 to 7, then 4, 5 and 6 at 8, 9 and 10.
+     * 2 to 4, 3 at 5 to 7, then 4, 5 and 8 at 8, 9 and 10.
      */
     public static int dashes(Rank rank) {
         int level = rank == null ? 0 : rank.level();
-        return level <= 1 ? 1 : level <= 4 ? 2 : level <= 7 ? 3 : level - 4;
+        return rank == Rank.RANK_10 ? 8 : level <= 1 ? 1 : level <= 4 ? 2 : level <= 7 ? 3 : level - 4;
     }
 
     /** 2.0.18: how fast its dashes go (blocks a tick): {@link #DASH_SPEED}, 6% more a rank, and far more from Rank 8. */
     public static double dashSpeed(Rank rank) {
         int level = rank == null ? 0 : rank.level();
-        return DASH_SPEED * (1.0 + 0.06 * level + (level >= Rank.DANGEROUS ? 0.15 * (level - Rank.DANGEROUS + 1) : 0.0));
+        return rank == Rank.RANK_10 ? REAPER_DASH_SPEED : DASH_SPEED * (1.0 + 0.06 * level + (level >= Rank.DANGEROUS ? 0.15 * (level - Rank.DANGEROUS + 1) : 0.0));
     }
 
     /** 2.0.18: how soon it may dash again after one (ticks): {@link #DASH_EVERY}, shorter by its rank's pace. */
