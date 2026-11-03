@@ -96,6 +96,20 @@ public final class HumanTalk {
         return human.m_20148_().getMostSignificantBits() ^ human.m_20148_().getLeastSignificantBits();
     }
 
+    /** 2.0.35: who {@code human} falls for (by its own seed and whether it is a woman: its look). */
+    static HumanPersona.Attraction attraction(HumanNpc human) {
+        return HumanPersona.attraction(seed(human), com.hex.kagune.control.npc.HumanRules.female(human.look()));
+    }
+
+    /** 2.0.35: {@code player} a woman (true), a man (false), or never said (null). */
+    static Boolean female(ServerPlayer player) {
+        com.hex.kagune.control.Gender gender = com.hex.kagune.control.Genders.of(player.m_20148_());
+        return gender == com.hex.kagune.control.Gender.UNSET ? null : gender.female();
+    }
+
+    /** 2.0.35: the ask that has it say who it falls for and what it looks for. */
+    static final NpcTalk.Choice TYPE = NpcTalk.Choice.WHO;
+
     static void open(ServerPlayer player, HumanNpc human) {
         ServerLevel level = player.m_284548_();
         long now = level.m_46467_();
@@ -197,6 +211,7 @@ public final class HumanTalk {
             return;
         }
         String line;
+        boolean turnedDown = false;
         switch (choice) {
             case SAY_1 -> {
                 line = HumanPersona.chat(temper, roll);
@@ -208,10 +223,19 @@ public final class HumanTalk {
             case SAY_3 -> line = HumanPersona.news(roll);
             case SAY_5, SAY_6 -> line = confess(player, human, temper, key, bond, choice == NpcTalk.Choice.SAY_6, day, roll);
             case SAY_7 -> {
-                line = HumanPersona.yes(temper, roll);
-                QuestServer.bond(player, key, bond.with(HumanPersona.PARTNER, true));
-                player.m_5661_(Component.m_237113_("\u00a7d" + HumanBrain.name(human) + " and you are together now."), false);
+                HumanPersona.Attraction attraction = attraction(human);
+                if (HumanPersona.attracted(attraction, female(player))) {
+                    line = HumanPersona.yes(temper, roll);
+                    QuestServer.bond(player, key, bond.with(HumanPersona.PARTNER, true));
+                    player.m_5661_(Component.m_237113_("\u00a7d" + HumanBrain.name(human) + " and you are together now."), false);
+                } else {
+                    // 2.0.35: not who it falls for: a kind no, and friends still (no asking again).
+                    line = HumanPersona.notMyType(temper, attraction, roll);
+                    QuestServer.bond(player, key, bond.with(HumanPersona.NOT_TYPE, true));
+                    turnedDown = true;
+                }
             }
+            case WHO -> line = HumanPersona.type(temper, attraction(human), HumanPersona.taste(seed), roll); // 2.0.35
             case SAY_8 -> line = HumanPersona.love(temper, roll);
             default -> {
                 line = HumanPersona.compliment(temper, bond.regard(), roll);
@@ -229,12 +253,14 @@ public final class HumanTalk {
             case SAY_2 -> com.hex.kagune.control.village.HumanGestures.about(temper, roll);
             case SAY_3 -> com.hex.kagune.control.village.HumanGestures.news(roll);
             case SAY_5, SAY_6 -> com.hex.kagune.control.village.HumanGestures.confessed(answered);
-            case SAY_7 -> com.hex.kagune.control.village.HumanGestures.yes(temper);
+            case SAY_7 -> turnedDown ? com.hex.kagune.control.village.HumanGestures.about(temper, roll)
+                : com.hex.kagune.control.village.HumanGestures.yes(temper);
+            case WHO -> com.hex.kagune.control.village.HumanGestures.about(temper, roll);
             case SAY_8 -> com.hex.kagune.control.village.HumanGestures.love(temper, roll);
             default -> com.hex.kagune.control.village.HumanGestures.compliment(temper, roll);
         };
         HumanBrain.gesture(human, move, 0, now);
-        if (choice == NpcTalk.Choice.SAY_7 || choice == NpcTalk.Choice.SAY_8) {
+        if (choice == NpcTalk.Choice.SAY_7 && !turnedDown || choice == NpcTalk.Choice.SAY_8) {
             HumanBrain.hearts(human, level, choice == NpcTalk.Choice.SAY_7 ? 10 : 5);
         }
     }
@@ -250,7 +276,8 @@ public final class HumanTalk {
                                   long day, int roll) {
         String both = player.m_20148_() + key;
         DOUBTED.remove(both);
-        HumanPersona.Answer answer = HumanPersona.confession(temper, bond.regard(), plea, human.m_217043_().m_188500_());
+        HumanPersona.Answer answer = HumanPersona.confession(temper, bond.regard(), plea, human.m_217043_().m_188500_(),
+            HumanPersona.trusts(HumanPersona.taste(seed(human)))); // 2.0.35: what it looks for in someone
         answered = answer;
         switch (answer) {
             case YES -> QuestServer.bond(player, key, bond.with(HumanPersona.CONFESSED, true));
@@ -370,6 +397,10 @@ public final class HumanTalk {
         List<String> said = new java.util.ArrayList<>(List.of(ASKS));
         offered.add(TRADE); // 2.0.13
         said.add("Let's trade.");
+        if (regard >= HumanPersona.WARM) {
+            offered.add(TYPE); // 2.0.35
+            said.add("What's your type?");
+        }
         boolean doubted = DOUBTED.contains(both);
         if (doubted) {
             offered.add(NpcTalk.Choice.SAY_6);
@@ -378,7 +409,7 @@ public final class HumanTalk {
             offered.add(NpcTalk.Choice.SAY_5);
             said.add(ROMANCE[0]);
         }
-        if (close && !partner && !doubted && (!ghoul || bond.has(HumanPersona.CONFESSED))) {
+        if (close && !partner && !doubted && !bond.has(HumanPersona.NOT_TYPE) && (!ghoul || bond.has(HumanPersona.CONFESSED))) {
             offered.add(NpcTalk.Choice.SAY_7);
             said.add(ROMANCE[2]);
         }

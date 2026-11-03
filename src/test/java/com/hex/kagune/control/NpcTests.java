@@ -48,6 +48,7 @@ public final class NpcTests {
         bonds();
         favours();
         talk();
+        attraction();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -690,6 +691,64 @@ public final class NpcTests {
     }
 
     /** 1.3.71: the Brick Village: its map, and its people's sense of where they are once it is placed turned. */
+    /**
+     * 2.0.35: who each villager falls for (its own for life): most the other sex, a fair share both, some their own; a player who isn't who
+     * it falls for is turned down kindly; every line filled, in character, never a banned name.
+     */
+    static void attraction() {
+        java.util.regex.Pattern banned = java.util.regex.Pattern.compile("Kaneki|Ayato|Furuta|Takatsuki|Aogiri|Yoshimura|\\{|\\}|null");
+        for (boolean female : new boolean[] {true, false}) {
+            int[] counts = new int[3];
+            for (long seed = 0; seed < 20000; seed++) {
+                counts[com.hex.kagune.control.village.HumanPersona.attraction(seed * 7919L + 13L, female).ordinal()]++;
+            }
+            int other = counts[(female ? com.hex.kagune.control.village.HumanPersona.Attraction.MEN : com.hex.kagune.control.village.HumanPersona.Attraction.WOMEN).ordinal()];
+            int own = counts[(female ? com.hex.kagune.control.village.HumanPersona.Attraction.WOMEN : com.hex.kagune.control.village.HumanPersona.Attraction.MEN).ordinal()];
+            int both = counts[com.hex.kagune.control.village.HumanPersona.Attraction.BOTH.ordinal()];
+            check(other > 11500 && other < 13300 && both > 3800 && both < 5000 && own > 2700 && own < 3700,
+                (female ? "women" : "men") + ": most fall for the other sex, a fair share both, some their own: " + java.util.Arrays.toString(counts));
+        }
+        long seed = 123456789L;
+        check(com.hex.kagune.control.village.HumanPersona.attraction(seed, true) == com.hex.kagune.control.village.HumanPersona.attraction(seed, true)
+            && com.hex.kagune.control.village.HumanPersona.taste(seed) == com.hex.kagune.control.village.HumanPersona.taste(seed), "its own for life");
+        java.util.Set<com.hex.kagune.control.village.HumanPersona.Taste> tastes = java.util.EnumSet.noneOf(com.hex.kagune.control.village.HumanPersona.Taste.class);
+        for (long s = 0; s < 2000; s++) {
+            tastes.add(com.hex.kagune.control.village.HumanPersona.taste(s));
+        }
+        check(tastes.size() == com.hex.kagune.control.village.HumanPersona.Taste.values().length, "every taste turns up");
+        var MEN = com.hex.kagune.control.village.HumanPersona.Attraction.MEN;
+        var WOMEN = com.hex.kagune.control.village.HumanPersona.Attraction.WOMEN;
+        var BOTH = com.hex.kagune.control.village.HumanPersona.Attraction.BOTH;
+        check(com.hex.kagune.control.village.HumanPersona.attracted(MEN, false) && !com.hex.kagune.control.village.HumanPersona.attracted(MEN, true)
+            && com.hex.kagune.control.village.HumanPersona.attracted(WOMEN, true) && !com.hex.kagune.control.village.HumanPersona.attracted(WOMEN, false)
+            && com.hex.kagune.control.village.HumanPersona.attracted(BOTH, true) && com.hex.kagune.control.village.HumanPersona.attracted(BOTH, false)
+            && com.hex.kagune.control.village.HumanPersona.attracted(MEN, null) && com.hex.kagune.control.village.HumanPersona.attracted(WOMEN, null),
+            "who may date whom (a player who never said may date anyone)");
+        for (com.hex.kagune.control.village.HumanPersona.Temper temper : com.hex.kagune.control.village.HumanPersona.Temper.values()) {
+            for (int roll = 0; roll < 6; roll++) {
+                for (var a : com.hex.kagune.control.village.HumanPersona.Attraction.values()) {
+                    for (var t : com.hex.kagune.control.village.HumanPersona.Taste.values()) {
+                        String line = com.hex.kagune.control.village.HumanPersona.type(temper, a, t, roll);
+                        check(!line.isBlank() && !banned.matcher(line).find() && line.contains(a == MEN ? "men" : a == WOMEN ? "women" : "person")
+                            || a == BOTH && line.contains("Anyone"), "its type, in its own words: " + temper + " " + a + " " + t);
+                    }
+                }
+                for (var a : new com.hex.kagune.control.village.HumanPersona.Attraction[] {MEN, WOMEN}) {
+                    String no = com.hex.kagune.control.village.HumanPersona.notMyType(temper, a, roll);
+                    check(!no.isBlank() && !banned.matcher(no).find() && no.toLowerCase(java.util.Locale.ROOT).contains(a == MEN ? "men" : "women")
+                        && !no.toLowerCase(java.util.Locale.ROOT).contains(a == MEN ? "women" : "zzz"), "a kind no that says who it falls for: " + temper + " " + a);
+                }
+            }
+        }
+        check(com.hex.kagune.control.village.HumanPersona.trusts(com.hex.kagune.control.village.HumanPersona.Taste.DARING) > 0.0
+            && com.hex.kagune.control.village.HumanPersona.trusts(com.hex.kagune.control.village.HumanPersona.Taste.FUNNY) == 0.0,
+            "someone who likes a little danger takes a ghoul's confession more readily");
+        check(com.hex.kagune.control.village.HumanPersona.NOT_TYPE != com.hex.kagune.control.village.HumanPersona.PARTNER
+            && com.hex.kagune.control.village.HumanPersona.NOT_TYPE != com.hex.kagune.control.village.HumanPersona.CONFESSED
+            && (com.hex.kagune.control.village.HumanPersona.NOT_TYPE & (com.hex.kagune.control.npc.NpcBonds.MET | com.hex.kagune.control.npc.NpcBonds.BEFRIENDED
+            | com.hex.kagune.control.npc.NpcBonds.ASKED | com.hex.kagune.control.npc.NpcBonds.ALLY)) == 0, "its own bond flag");
+    }
+
     static void village() {
         // 2.0.13: trading with village humans: seven wares each (2.0.14: a staple, two more foods, two farming goods, two basic goods), never meat or fish; every
         // non-meat ingredient the cookbook needs is sold by someone; what they buy, and the page's words.

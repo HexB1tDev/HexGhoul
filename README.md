@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.0.35 (HexGhoul): who villagers fall for (testing)
+
+See `.github/release-notes-2.0.35.md`. Every villager, man or woman, now has their own idea of who they fall for and what they look for in a partner. You can romance male and female villagers alike, as long as you're who they fall for; ask "What's your type?" to find out.
+
 ## 2.0.34 (HexGhoul): village women's bodies (testing)
 
 See `.github/release-notes-2.0.34.md`. Village women now have the female body the game already gives its CCG women and grown daughters: hips and thighs shaped, a wide-painted skin's arms drawn slim, the bust in her own skin (and its second layer), bouncing as she moves, drawn a little shorter and slimmer than the men.

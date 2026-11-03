@@ -188,6 +188,11 @@ public final class HumanPersona {
      * more), not a no; the plea that fails is a no.
      */
     public static Answer confession(Temper temper, int regard, boolean convincing, double roll) {
+        return confession(temper, regard, convincing, roll, 0.0);
+    }
+
+    /** 2.0.35: the same, {@code more} likelier for what it looks for ({@link #trusts}). */
+    public static Answer confession(Temper temper, int regard, boolean convincing, double roll, double more) {
         double trust = switch (temper) {
             case KIND -> 0.6;
             case DREAMY -> 0.55;
@@ -197,7 +202,7 @@ public final class HumanPersona {
             case SHY -> 0.25;
             case NERVOUS -> 0.15;
         };
-        double chance = trust + Math.max(0.0, regard - CLOSE) / 100.0 + (convincing ? 0.35 : 0.0);
+        double chance = trust + more + Math.max(0.0, regard - CLOSE) / 100.0 + (convincing ? 0.35 : 0.0);
         if (roll < chance) {
             return Answer.YES;
         }
@@ -349,6 +354,129 @@ public final class HumanPersona {
             case FLIRTY -> pick(seed, "If you want me, you'll have to come back in.", "Running away from me? I'll wait here.");
             case DREAMY -> pick(seed, "The village ends here. My world does too.", "Past the walls is someone else's story.");
             case NERVOUS -> pick(seed, "N-no, not out there! Please come back in!", "I can't, I can't. The walls, please.");
+        };
+    }
+
+    // ---------------------------------------------------------------- 2.0.35: who it falls for, and what it looks for
+
+    /**
+     * 2.0.35 (the owner: "romance with both males and female characters, different preferences on every male and female"): who it falls
+     * for, its own for life ({@link #attraction}).
+     */
+    public enum Attraction {
+        MEN, WOMEN, BOTH
+    }
+
+    /** 2.0.35: what it looks for in a partner, its own for life ({@link #taste}). */
+    public enum Taste {
+        STRONG, GENTLE, FUNNY, MYSTERIOUS, CLEVER, DARING, LOYAL, CARING
+    }
+
+    /** Bond flag: it told this player they are not its type (no asking it out again; still friends). */
+    public static final int NOT_TYPE = 64;
+
+    /** {@code seed} stirred with {@code salt} into 0..1 (each of its traits from its own bits, none moving another). */
+    static double unit(long seed, long salt) {
+        long s = (seed ^ salt * 0x9E3779B97F4A7C15L) * 0xBF58476D1CE4E5B9L;
+        s ^= s >>> 31;
+        s *= 0x94D049BB133111EBL;
+        s ^= s >>> 29;
+        return (s >>> 11) * 0x1.0p-53;
+    }
+
+    /** Who a {@code female} (or male) villager falls for: most the other sex (62 in 100), a fair share both (22), the rest their own. */
+    public static Attraction attraction(long seed, boolean female) {
+        double r = unit(seed, 0xA77AL);
+        if (r < 0.62) {
+            return female ? Attraction.MEN : Attraction.WOMEN;
+        }
+        if (r < 0.84) {
+            return Attraction.BOTH;
+        }
+        return female ? Attraction.WOMEN : Attraction.MEN;
+    }
+
+    public static Taste taste(long seed) {
+        Taste[] all = Taste.values();
+        return all[Math.min(all.length - 1, (int)(unit(seed, 0x7A57EL) * all.length))];
+    }
+
+    /** True if it could fall for a player who is a woman ({@code female} true), a man (false), or never said (null: it may). */
+    public static boolean attracted(Attraction attraction, Boolean female) {
+        return female == null || attraction == Attraction.BOTH || (attraction == Attraction.WOMEN) == female;
+    }
+
+    /** Who it falls for, in its own words' plain part ("men", "women"). */
+    static String who(Attraction attraction) {
+        return attraction == Attraction.MEN ? "men" : "women";
+    }
+
+    /** Its answer to "What's your type?": who, then what it looks for, in its temper's way. */
+    public static String type(Temper temper, Attraction attraction, Taste taste, int seed) {
+        String opener = switch (temper) {
+            case CHEERFUL -> "Ooh, fun question! ";
+            case SHY -> "*fidgets with a sleeve* ...";
+            case BOLD -> "Straight answer? ";
+            case KIND -> "Hmm, let me think... ";
+            case GRUMPY -> "Why do you care? ...Fine. ";
+            case FLIRTY -> "Fishing, are we? ";
+            case DREAMY -> "Oh... ";
+            case NERVOUS -> "W-what? Um. ";
+        };
+        String who = switch (attraction) {
+            case MEN -> pick(seed, "Men. It's always been men for me.", "I fall for men. Every time.");
+            case WOMEN -> pick(seed, "Women. It's always been women for me.", "I fall for women. Every time.");
+            case BOTH -> pick(seed, "Men, women... I fall for the person, not the rest.", "Truly? Anyone. It's the heart I fall for.");
+        };
+        String looks = switch (taste) {
+            case STRONG -> "Someone strong enough to keep the night out.";
+            case GENTLE -> "Someone gentle, who really listens.";
+            case FUNNY -> "Someone who can make me laugh till it hurts.";
+            case MYSTERIOUS -> "Someone with a few secrets. I like a puzzle.";
+            case CLEVER -> "Someone clever. A sharp mind gets me every time.";
+            case DARING -> "Someone a little dangerous, if I'm honest.";
+            case LOYAL -> "Someone who'd never leave. Ever.";
+            case CARING -> "Someone who'd look after me when I'm sick.";
+        };
+        return opener + who + " " + looks;
+    }
+
+    /** Its kind no to being asked out by someone who isn't who it falls for (only ever {@link Attraction#MEN} or {@link Attraction#WOMEN}). */
+    public static String notMyType(Temper temper, Attraction attraction, int seed) {
+        String who = who(attraction);
+        return switch (temper) {
+            case CHEERFUL -> pick(seed, "Aww, I'm so flattered! But I'm only into " + who + ". Friends forever, though?",
+                "You're amazing, really! I just only fall for " + who + ". Still my favourite person to talk to!");
+            case SHY -> pick(seed, "*goes bright red* I... I'm sorry. I only like " + who + ". ...We can still be friends?",
+                "*hides their face* You're so kind... but it's " + who + " for me. I'm sorry.");
+            case BOLD -> pick(seed, "Flattered. But I'm into " + who + ", always have been. No hard feelings.",
+                "Ha. Wrong door, friend. " + cap(who) + " only. Still got your back, though.");
+            case KIND -> pick(seed, "Oh, sweetheart. I'm sorry. My heart's always gone to " + who + ". You still mean a lot to me.",
+                "That's lovely of you. But I only fall for " + who + ". Let me be your friend instead?");
+            case GRUMPY -> pick(seed, "...You're not my type. " + cap(who) + " are. Don't make it weird. ...We're still fine.",
+                "Hmph. " + cap(who) + ". Only " + who + ". ...But you can still come by. If you want.");
+            case FLIRTY -> pick(seed, "Mm, tempting. But I only play for " + who + ", darling. Shame.",
+                "Oh, you're sweet. But it's " + who + " for me. You can still look, though.");
+            case DREAMY -> pick(seed, "In another story, maybe. But my heart has only ever drifted toward " + who + ".",
+                "Like the moon and the sea... close, but not that. I only love " + who + ". I'm sorry.");
+            case NERVOUS -> pick(seed, "Oh! Oh no. I'm so sorry. I- I like " + who + ". Please don't be mad!",
+                "I-I'm flattered! But I only like " + who + ". We're still okay? Please say we're okay.");
+        };
+    }
+
+    private static String cap(String word) {
+        return Character.toUpperCase(word.charAt(0)) + word.substring(1);
+    }
+
+    /**
+     * 2.0.35: how much more readily it takes a ghoul's confession for what it looks for: someone mysterious or a little dangerous, a good
+     * deal; someone loyal or caring, a little (it sees what they risked to tell it).
+     */
+    public static double trusts(Taste taste) {
+        return switch (taste) {
+            case MYSTERIOUS, DARING -> 0.15;
+            case LOYAL, CARING -> 0.05;
+            default -> 0.0;
         };
     }
 
