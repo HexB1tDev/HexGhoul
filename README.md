@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.0.18 (HexGhoul): CCG agents dash in zigzags, more by rank (testing)
+
+See `.github/release-notes-2.0.18.md`: chained dashes, each the other way, 1 at Rank 0 up to 6 at Rank 10, faster, likelier and sooner by rank.
+
 ## 2.0.17 (HexGhoul): CCG ranks 0 to 10, stronger by rank (testing)
 
 See `.github/release-notes-2.0.17.md`: Rank 0 to 10, each with more health, speed, armour, harder hits and shorter rests; 8 to 10 rare and dangerous.

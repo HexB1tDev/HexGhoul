@@ -89,6 +89,10 @@ public final class AgentBrain {
         Vec3 push;
         long dashAt = Long.MIN_VALUE;
         Vec3 dashWay = Vec3.f_82478_;
+        /** 2.0.18: dashes still to come in its zigzag, the line to its prey it zigzags about, whether it zigzags in on them. */
+        int zigzag;
+        Vec3 zigAxis = Vec3.f_82478_;
+        boolean zigIn;
         long flipReadyAt = Long.MIN_VALUE;
         long dashReadyAt = Long.MIN_VALUE;
         /** The launcher: shards of this burst, the next shard, when the next burst may start. */
@@ -846,12 +850,27 @@ public final class AgentBrain {
                 return true;
             }
         }
+        double speed = AgentRules.dashSpeed(mind.rank);
         if (mind.dashAt != Long.MIN_VALUE && now - mind.dashAt < AgentRules.DASH_TICKS) {
             Vec3 velocity = agent.m_20184_();
-            agent.m_20256_(new Vec3(mind.dashWay.f_82479_ * AgentRules.DASH_SPEED, velocity.f_82480_, mind.dashWay.f_82481_ * AgentRules.DASH_SPEED));
+            agent.m_20256_(new Vec3(mind.dashWay.f_82479_ * speed, velocity.f_82480_, mind.dashWay.f_82481_ * speed));
             agent.f_19864_ = true;
             agent.m_21573_().m_26573_();
             return true;
+        }
+        // 2.0.18: a zigzag: the next dash at once, the other way (leaning in on prey out of reach); a wall or a drop that way ends it.
+        if (mind.zigzag > 0 && mind.dashAt != Long.MIN_VALUE && now - mind.dashAt == AgentRules.DASH_TICKS && agent.m_9236_() instanceof ServerLevel level) {
+            mind.zigzag--;
+            double[] next = AgentRules.zig(mind.dashWay.f_82479_, mind.dashWay.f_82481_, mind.zigAxis.f_82479_, mind.zigAxis.f_82481_, mind.zigIn);
+            Vec3 way = new Vec3(next[0], 0.0, next[1]);
+            if (clear(agent, level, way)) {
+                boolean left = way.f_82479_ * -mind.zigAxis.f_82481_ + way.f_82481_ * mind.zigAxis.f_82479_ > 0.0;
+                int left0 = mind.zigzag;
+                dash(agent, mind, way, left ? 2 : 3, level, now);
+                mind.zigzag = left0; // (dash() starts a new zigzag: this one goes on)
+                return true;
+            }
+            mind.zigzag = 0;
         }
         return false;
     }
@@ -916,7 +935,7 @@ public final class AgentBrain {
             flip(agent, mind, PaleRules.Flip.BACK, toward.m_82490_(-1.0), AgentRules.FLIP_BACK_SPEED, AgentRules.FLIP_BACK_UP, prey, level, now);
             return true;
         }
-        if (dashes && !q.ranged && distance <= reach + 0.5 && now < mind.readyAt - 4L && roll < 0.06) {
+        if (dashes && !q.ranged && distance <= reach + 0.5 && now < mind.readyAt - 4L && roll < 0.06 * AgentRules.dashOften(mind.rank)) {
             Vec3 side = new Vec3(-toward.f_82481_, 0.0, toward.f_82479_);
             boolean left = agent.m_217043_().m_188500_() < 0.5;
             dash(agent, mind, left ? side : side.m_82490_(-1.0), left ? 2 : 3, level, now);
@@ -927,7 +946,7 @@ public final class AgentBrain {
         double chance = agent.m_217043_().m_188500_();
         boolean between = q.ranged ? now < mind.nextShot || now < mind.burstReadyAt : now < mind.readyAt - 3L;
         boolean near = q.ranged ? distance <= AgentRules.SHOOT_FARTHEST : distance <= reach + 3.0;
-        if (dashes && !mind.rounding && between && near && chance < AgentRules.SIDE_DASH && agent.m_142582_(prey)) {
+        if (dashes && !mind.rounding && between && near && chance < AgentRules.SIDE_DASH * AgentRules.dashOften(mind.rank) && agent.m_142582_(prey)) {
             Vec3 side = new Vec3(-toward.f_82481_, 0.0, toward.f_82479_);
             boolean left = agent.m_217043_().m_188500_() < 0.5;
             if (!clear(agent, level, left ? side : side.m_82490_(-1.0))) {
@@ -1014,10 +1033,18 @@ public final class AgentBrain {
         end(agent, mind);
         mind.dashAt = now;
         mind.dashWay = way;
-        mind.dashReadyAt = now + AgentRules.DASH_EVERY;
+        mind.dashReadyAt = now + AgentRules.dashEvery(mind.rank); // 2.0.18: sooner by its rank
+        // 2.0.18: a zigzag of AgentRules.dashes(rank) about the line to its prey (or its own way, none known), in on them if out of reach.
+        int preyId = mind.prey != 0 ? mind.prey : mind.target;
+        LivingEntity prey = preyId == 0 ? null : level.m_6815_(preyId) instanceof LivingEntity body ? body : null;
+        Vec3 axis = prey == null ? way : UkakuFire.horizontal(prey.m_20182_().m_82546_(agent.m_20182_()));
+        mind.zigAxis = axis.m_82556_() < 1.0E-6 ? way : axis.m_82541_();
+        mind.zigIn = prey != null && !mind.kind.ranged && Math.sqrt(prey.m_20280_(agent)) > AgentRules.reach(mind.kind) + 0.5;
+        mind.zigzag = AgentRules.dashes(mind.rank) - 1;
         agent.dash(which, now);
+        double speed = AgentRules.dashSpeed(mind.rank);
         Vec3 velocity = agent.m_20184_();
-        agent.m_20256_(new Vec3(way.f_82479_ * AgentRules.DASH_SPEED, Math.max(velocity.f_82480_, 0.05), way.f_82481_ * AgentRules.DASH_SPEED));
+        agent.m_20256_(new Vec3(way.f_82479_ * speed, Math.max(velocity.f_82480_, 0.05), way.f_82481_ * speed));
         agent.f_19864_ = true;
         UkakuFire.sound(level, agent.m_20182_(), "entity.player.attack.sweep", 0.3F, 1.3F);
     }

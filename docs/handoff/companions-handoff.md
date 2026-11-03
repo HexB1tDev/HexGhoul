@@ -1,4 +1,13 @@
-# START HERE (state after 2.0.17): read `docs/handoff/next-ai-2.0.9.md` first, then `next-ai-2.0.5.md`, then `next-ai-2.0.1.md`
+# START HERE (state after 2.0.18): read `docs/handoff/next-ai-2.0.9.md` first, then `next-ai-2.0.5.md`, then `next-ai-2.0.1.md`
+
+- **2.0.18** (the owner: "fastly increase the dash amount/speed also with mastery"; asked, they meant the CCG agents' dash: "CCG agents
+  dash more than once in zigzags"). `AgentRules.dashes(rank)` (1, 1, 2, 2, 2, 3, 3, 3, 4, 5, 6), `dashSpeed(rank)` (DASH_SPEED x (1 +
+  0.06 level + 0.15 per rank from 8)), `dashEvery(rank)` (x pace), `dashOften(rank)` (1 + 0.15 level, on SIDE_DASH and the close-in
+  0.06), `zig(way, axis, in)` (mirrored across the line to the prey, leaning in by 0.6 when out of reach). `AgentBrain.Mind`: `zigzag`,
+  `zigAxis`, `zigIn`; `dash()` starts a zigzag (axis to `mind.prey`, else `target`); `feet()` chains the next the tick the last ends
+  (`DASH_TICKS`), its side picked for the animation, ended by `clear()` failing. Tests in `AgentTests.ranks` (harness only).
+
+# State after 2.0.17
 
 - **2.0.17** (the owner: "buff CCG agents depending on the rank ... add more ranks RANK 0 to 10 (10,9,8 being rare but really
   dangerous, with a decent amount of HP.)"). `AgentRules.Rank` is now RANK_0..RANK_10 (weight, health, speed, armor, power, pace; title

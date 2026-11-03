@@ -338,6 +338,48 @@ public final class AgentRules {
     /** A dash: how hard it pushes off (blocks a tick), and how long the push lasts (renewed against the ground's grip). */
     public static final double DASH_SPEED = 0.8;
     public static final int DASH_TICKS = 4;
+    /**
+     * 2.0.18 (the owner: "fastly increase the dash amount/speed also with mastery", then: "I meant the dashes of the CCG ... CCG agents dash
+     * more than once in zigzags"): how many dashes it chains (each the other way: a zigzag), by its rank, rising fast: 1 at Rank 0 and 1, 2 at
+     * 2 to 4, 3 at 5 to 7, then 4, 5 and 6 at 8, 9 and 10.
+     */
+    public static int dashes(Rank rank) {
+        int level = rank == null ? 0 : rank.level();
+        return level <= 1 ? 1 : level <= 4 ? 2 : level <= 7 ? 3 : level - 4;
+    }
+
+    /** 2.0.18: how fast its dashes go (blocks a tick): {@link #DASH_SPEED}, 6% more a rank, and far more from Rank 8. */
+    public static double dashSpeed(Rank rank) {
+        int level = rank == null ? 0 : rank.level();
+        return DASH_SPEED * (1.0 + 0.06 * level + (level >= Rank.DANGEROUS ? 0.15 * (level - Rank.DANGEROUS + 1) : 0.0));
+    }
+
+    /** 2.0.18: how soon it may dash again after one (ticks): {@link #DASH_EVERY}, shorter by its rank's pace. */
+    public static int dashEvery(Rank rank) {
+        return (int)Math.round(DASH_EVERY * (rank == null ? 1.0 : rank.pace));
+    }
+
+    /** 2.0.18: how much likelier its dashes are (the side dash, the dodge between blows) by its rank: 15% more a rank. */
+    public static double dashOften(Rank rank) {
+        return 1.0 + 0.15 * (rank == null ? 0 : rank.level());
+    }
+
+    /**
+     * 2.0.18: the next dash of a zigzag after one along {@code wx, wz}, about the line to its prey {@code ax, az} (unit): the other side of
+     * it (its way mirrored across that line), and {@code in} (prey out of reach) leaning in along it. A unit vector {x, z}.
+     */
+    public static double[] zig(double wx, double wz, double ax, double az, boolean in) {
+        double dot = wx * ax + wz * az;
+        double x = 2.0 * dot * ax - wx;
+        double z = 2.0 * dot * az - wz;
+        if (in) {
+            x += ax * 0.6;
+            z += az * 0.6;
+        }
+        double length = Math.sqrt(x * x + z * z);
+        return length < 1.0E-6 ? new double[] {-wx, -wz} : new double[] {x / length, z / length};
+    }
+
     /** Flips: how fast along and up. */
     public static final double FLIP_SPEED = 0.7;
     public static final double FLIP_UP = 0.62;

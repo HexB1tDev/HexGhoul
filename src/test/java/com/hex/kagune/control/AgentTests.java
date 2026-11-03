@@ -578,6 +578,21 @@ public final class AgentTests {
         check(AgentRules.Rank.byOrdinal(99) == AgentRules.Rank.RANK_0 && AgentRules.Rank.byOrdinal(10) == AgentRules.Rank.RANK_10, "saved ranks read back");
         check(AgentRules.Rank.fromOld(0) == AgentRules.Rank.RANK_1 && AgentRules.Rank.fromOld(5) == AgentRules.Rank.RANK_8
             && AgentRules.Rank.fromOld(-1) == AgentRules.Rank.RANK_0, "agents saved with the old six ranks keep their place");
+        // 2.0.18: dashes chained in zigzags, more and faster by rank, more often, sooner again.
+        check(AgentRules.dashes(AgentRules.Rank.RANK_0) == 1 && AgentRules.dashes(AgentRules.Rank.RANK_2) == 2 && AgentRules.dashes(AgentRules.Rank.RANK_5) == 3
+            && AgentRules.dashes(AgentRules.Rank.RANK_8) == 4 && AgentRules.dashes(AgentRules.Rank.RANK_10) == 6, "more dashes in a row the higher the rank");
+        boolean quicker = true;
+        for (int k = 1; k < all.length; k++) {
+            quicker &= AgentRules.dashSpeed(all[k]) > AgentRules.dashSpeed(all[k - 1]) && AgentRules.dashEvery(all[k]) <= AgentRules.dashEvery(all[k - 1])
+                && AgentRules.dashOften(all[k]) > AgentRules.dashOften(all[k - 1]) && AgentRules.dashes(all[k]) >= AgentRules.dashes(all[k - 1]);
+        }
+        check(quicker && Math.abs(AgentRules.dashSpeed(AgentRules.Rank.RANK_0) - AgentRules.DASH_SPEED) < 1.0E-9
+            && AgentRules.dashSpeed(AgentRules.Rank.RANK_10) > AgentRules.DASH_SPEED * 2.0, "faster, likelier and sooner dashes the higher the rank");
+        double[] side = AgentRules.zig(1.0, 0.0, 0.0, 1.0, false);
+        double[] in = AgentRules.zig(1.0, 0.0, 0.0, 1.0, true);
+        double[] back = AgentRules.zig(side[0], side[1], 0.0, 1.0, false);
+        check(Math.abs(side[0] + 1.0) < 1.0E-9 && Math.abs(side[1]) < 1.0E-9 && in[0] < 0.0 && in[1] > 0.0
+            && Math.abs(Math.hypot(in[0], in[1]) - 1.0) < 1.0E-9 && Math.abs(back[0] - 1.0) < 1.0E-9, "each dash of a zigzag the other side; leaning in on prey out of reach");
         for (AgentRules.Rank rank : all) {
             check(rank.title.endsWith("Rank " + rank.level() + " Investigator") && rank.title.startsWith("\u00a7c") == rank.dangerous()
                 && !rank.title.contains("Kaneki"), "its name: " + rank.title);
