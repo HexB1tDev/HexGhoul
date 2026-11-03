@@ -1,4 +1,17 @@
-# START HERE (state after 2.0.8): read `docs/handoff/next-ai-2.0.5.md` first (the session's requests), then `next-ai-2.0.1.md`
+# START HERE (state after 2.0.9): read `docs/handoff/next-ai-2.0.9.md` first, then `next-ai-2.0.5.md`, then `next-ai-2.0.1.md`
+
+- **2.0.9** (the owner: "spouse will sort items from chests all of them in the house perimeter, separating items in different chests from
+  NBT data, food in one chest, blocks in another, etc. If it doesnt know what to do with them it puts them in a "Whatever" chest"; asked,
+  they chose that she labels them). Pure `family/ChestSort`: `Kind` (FOOD, BLOCKS, TOOLS, ARMOR, ORES, PLANTS, DROPS, WHATEVER, each with
+  its label), `kind(id, food, block)` (by the id's path words; food first), `named(name)`, `box(name)` (a kind's name / the player's own
+  other name: `theirs` / free), `assign(boxes, counts)` (named kinds kept; free chests to the wanted kinds by count; a Whatever chest kept,
+  the last free one), `target`, `nameOf`/`saved` (CustomName JSON), `half(state)`. Server `ChestSorter.organize(level, chests, at)` from
+  `HomeChores.effect` TIDY (before the in-place `sort`): units (double chests paired by `type=`/`facing=` in the state's string), counts,
+  names written through `BlockEntity.m_187480_` + `m_142466_` (CustomName; no new API), each stack in `at` that belongs elsewhere moved
+  whole with `HomeChores.insert`. Block items by the item's class chain's simple name "BlockItem" (reflection: no game API). Only the
+  ChestSort checks were run (harness).
+
+# State after 2.0.8
 
 - **2.0.8** (the owner: "longer cooking animations over the furnace, with sizzling sounds, while an NPC is doing a task make sure it doesnt
   cancel it out to do another. Cooking process should envolve grabbing items needed from a chest, going to the furnace and start cooking

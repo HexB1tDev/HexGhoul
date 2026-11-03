@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.0.9 (HexGhoul): your spouse sorts the house's chests by kind (testing)
+
+See `.github/release-notes-2.0.9.md`: chests labelled Food, Blocks, Tools & Weapons, Armor, Ores & Minerals, Plants & Seeds, Mob Drops and Whatever; your own named chests left alone.
+
 ## 2.0.8 (HexGhoul): cooking at the stove takes its time, and a task is finished first (testing)
 
 See `.github/release-notes-2.0.8.md`: three rounds of stirring at the stove with its crackle, no turning away, chores finished before her own errands.

@@ -1436,6 +1436,72 @@ check(com.hex.kagune.control.graft.GraftStage.TRANSPLANT.limbs(com.hex.kagune.co
 
     /** 1.3.29: a spouse's chores at home (HomeChores' rules): what each block is for, which chore next, a chest put in order, its words. */
     static void chores() {
+        // 2.0.9: the spouse sorts the home's chests by kind.
+        {
+            java.util.function.BiFunction<String, boolean[], com.hex.kagune.control.family.ChestSort.Kind> k =
+                (id, fb) -> com.hex.kagune.control.family.ChestSort.kind(id, fb[0], fb[1]);
+            boolean[] item = {false, false};
+            boolean[] food = {true, false};
+            boolean[] block = {false, true};
+            check(k.apply("minecraft:cooked_beef", food) == com.hex.kagune.control.family.ChestSort.Kind.FOOD
+                && k.apply("minecraft:stone", block) == com.hex.kagune.control.family.ChestSort.Kind.BLOCKS
+                && k.apply("minecraft:oak_planks", block) == com.hex.kagune.control.family.ChestSort.Kind.BLOCKS
+                && k.apply("minecraft:iron_pickaxe", item) == com.hex.kagune.control.family.ChestSort.Kind.TOOLS
+                && k.apply("minecraft:bow", item) == com.hex.kagune.control.family.ChestSort.Kind.TOOLS
+                && k.apply("minecraft:bowl", item) == com.hex.kagune.control.family.ChestSort.Kind.WHATEVER
+                && k.apply("minecraft:diamond_chestplate", item) == com.hex.kagune.control.family.ChestSort.Kind.ARMOR
+                && k.apply("minecraft:iron_ore", block) == com.hex.kagune.control.family.ChestSort.Kind.ORES
+                && k.apply("minecraft:raw_iron", item) == com.hex.kagune.control.family.ChestSort.Kind.ORES
+                && k.apply("minecraft:iron_ingot", item) == com.hex.kagune.control.family.ChestSort.Kind.ORES
+                && k.apply("minecraft:diamond", item) == com.hex.kagune.control.family.ChestSort.Kind.ORES
+                && k.apply("minecraft:coal_block", block) == com.hex.kagune.control.family.ChestSort.Kind.BLOCKS
+                && k.apply("minecraft:wheat_seeds", item) == com.hex.kagune.control.family.ChestSort.Kind.PLANTS
+                && k.apply("minecraft:oak_sapling", block) == com.hex.kagune.control.family.ChestSort.Kind.PLANTS
+                && k.apply("minecraft:poppy", block) == com.hex.kagune.control.family.ChestSort.Kind.PLANTS
+                && k.apply("minecraft:grass_block", block) == com.hex.kagune.control.family.ChestSort.Kind.BLOCKS
+                && k.apply("minecraft:bone", item) == com.hex.kagune.control.family.ChestSort.Kind.DROPS
+                && k.apply("minecraft:string", item) == com.hex.kagune.control.family.ChestSort.Kind.DROPS
+                && k.apply("minecraft:rotten_flesh", food) == com.hex.kagune.control.family.ChestSort.Kind.FOOD
+                && k.apply("minecraft:enchanted_book", item) == com.hex.kagune.control.family.ChestSort.Kind.WHATEVER
+                && k.apply("somemod:weird_gadget", item) == com.hex.kagune.control.family.ChestSort.Kind.WHATEVER,
+                "each thing's kind: food, blocks, tools, armour, ores, plants, drops, else Whatever");
+            check(com.hex.kagune.control.family.ChestSort.named("Food") == com.hex.kagune.control.family.ChestSort.Kind.FOOD
+                && com.hex.kagune.control.family.ChestSort.named("armour") == com.hex.kagune.control.family.ChestSort.Kind.ARMOR
+                && com.hex.kagune.control.family.ChestSort.named(" whatever ") == com.hex.kagune.control.family.ChestSort.Kind.WHATEVER
+                && com.hex.kagune.control.family.ChestSort.named("Tools & Weapons") == com.hex.kagune.control.family.ChestSort.Kind.TOOLS
+                && com.hex.kagune.control.family.ChestSort.named("My diamonds") == null && com.hex.kagune.control.family.ChestSort.named("") == null,
+                "a chest named for a kind (any case, its word); any other name is not");
+            check(com.hex.kagune.control.family.ChestSort.box("My diamonds").theirs() && !com.hex.kagune.control.family.ChestSort.box("").theirs()
+                && com.hex.kagune.control.family.ChestSort.box("").free() && !com.hex.kagune.control.family.ChestSort.box("Food").free(),
+                "the player's own named chest is theirs; an unnamed one is free");
+            java.util.List<com.hex.kagune.control.family.ChestSort.Box> boxes = java.util.List.of(com.hex.kagune.control.family.ChestSort.box("Food"),
+                com.hex.kagune.control.family.ChestSort.box(""), com.hex.kagune.control.family.ChestSort.box("Secret stash"),
+                com.hex.kagune.control.family.ChestSort.box(""), com.hex.kagune.control.family.ChestSort.box(""));
+            java.util.Map<com.hex.kagune.control.family.ChestSort.Kind, Integer> counts = new java.util.EnumMap<>(com.hex.kagune.control.family.ChestSort.Kind.class);
+            counts.put(com.hex.kagune.control.family.ChestSort.Kind.FOOD, 20);
+            counts.put(com.hex.kagune.control.family.ChestSort.Kind.BLOCKS, 300);
+            counts.put(com.hex.kagune.control.family.ChestSort.Kind.TOOLS, 3);
+            counts.put(com.hex.kagune.control.family.ChestSort.Kind.ORES, 40);
+            java.util.List<com.hex.kagune.control.family.ChestSort.Kind> kinds = com.hex.kagune.control.family.ChestSort.assign(boxes, counts);
+            check(kinds.get(0) == com.hex.kagune.control.family.ChestSort.Kind.FOOD && kinds.get(1) == com.hex.kagune.control.family.ChestSort.Kind.BLOCKS
+                && kinds.get(2) == null && kinds.get(3) == com.hex.kagune.control.family.ChestSort.Kind.ORES
+                && kinds.get(4) == com.hex.kagune.control.family.ChestSort.Kind.WHATEVER,
+                "named chests keep their kind, the player's own is left alone, the most things first, the last free one Whatever: " + kinds);
+            check(com.hex.kagune.control.family.ChestSort.target(kinds, com.hex.kagune.control.family.ChestSort.Kind.TOOLS) == 4
+                && com.hex.kagune.control.family.ChestSort.target(kinds, com.hex.kagune.control.family.ChestSort.Kind.BLOCKS) == 1
+                && com.hex.kagune.control.family.ChestSort.target(java.util.Arrays.asList(com.hex.kagune.control.family.ChestSort.Kind.FOOD, null),
+                    com.hex.kagune.control.family.ChestSort.Kind.TOOLS) == -1, "a kind without a chest goes to Whatever; with none, it stays");
+            java.util.List<com.hex.kagune.control.family.ChestSort.Kind> two = com.hex.kagune.control.family.ChestSort.assign(java.util.List.of(
+                com.hex.kagune.control.family.ChestSort.box(""), com.hex.kagune.control.family.ChestSort.box("")), counts);
+            check(two.get(0) == com.hex.kagune.control.family.ChestSort.Kind.BLOCKS && two.get(1) == com.hex.kagune.control.family.ChestSort.Kind.WHATEVER,
+                "few chests: the biggest kind gets one, the rest goes to Whatever");
+            check(com.hex.kagune.control.family.ChestSort.nameOf("{\"text\":\"Food\"}").equals("Food")
+                && com.hex.kagune.control.family.ChestSort.nameOf(com.hex.kagune.control.family.ChestSort.saved("Tools & Weapons")).equals("Tools & Weapons")
+                && com.hex.kagune.control.family.ChestSort.nameOf("").isEmpty()
+                && com.hex.kagune.control.family.ChestSort.half("Block{minecraft:chest}[facing=north,type=left,waterlogged=false]").equals("left")
+                && com.hex.kagune.control.family.ChestSort.half("Block{minecraft:barrel}[facing=up,open=false]").isEmpty(),
+                "names read and written as the game saves them; a double chest's halves");
+        }
         // 2.0.8: the stove's stirring three rounds over, and its crackle (none at a table).
         check(com.hex.kagune.control.family.Chores.stepTicks(com.hex.kagune.control.npc.EtoGesture.COOK)
             == 3L * com.hex.kagune.control.npc.EtoGesture.COOK.ticks - 4L

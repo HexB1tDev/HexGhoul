@@ -700,7 +700,9 @@ public final class HomeChores {
         double z = at.m_123343_() + 0.5;
         switch (job.kind) {
             case TIDY -> {
-                if (sort(level, at)) {
+                // 2.0.9: the home's chests by kind first (named; what belongs in another chest taken there), then this one put in order.
+                boolean moved = ChestSorter.organize(level, HomeKitchen.chests(level, found(level, house, now)), at);
+                if (sort(level, at) || moved) {
                     level.m_8767_(ParticleTypes.f_123748_, x, y + 1.0, z, 5, 0.3, 0.2, 0.3, 0.0);
                     return true;
                 }
