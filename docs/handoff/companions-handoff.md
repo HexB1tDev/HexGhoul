@@ -1,4 +1,10 @@
-# START HERE (state after 2.0.4): read `docs/handoff/next-ai-2.0.1.md` first
+# START HERE (state after 2.0.4): read `docs/handoff/next-ai-2.0.5.md` first (what to do next: strangers and someone else's children,
+never dateable; children inheriting both kagunes), then `next-ai-2.0.1.md` (what 2.0.1 to 2.0.4 did)
+
+- Preview since 2.0.4 (no mod change): `tools/GrownDaughterPreview.java`, sheet `docs/handoff/grown-daughters-2.0.3.png` (grown daughters
+  beside themselves as teens, to scale; it showed them about 2% shorter grown, 0.86 against a teen's 0.88: offered to the owner, open).
+
+# State after 2.0.4
 
 - **2.0.4** (protocol 73, unchanged). (1) The owner: after a first child, "you can request another but the cutscene is not triggering
   anymore whenever near the bed at night": at a shared home `EtoBrain.toBed` takes the night instead of `calm`, so `together`'s baby
