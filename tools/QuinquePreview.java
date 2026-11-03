@@ -115,7 +115,12 @@ public final class QuinquePreview {
 
     @SuppressWarnings("unchecked")
     static Model load(String kind, String texture) throws Exception {
-        java.util.Map<String, Object> json = (java.util.Map<String, Object>)new Json(Files.readString(new File(MODELS, kind + "_full.json").toPath())).value();
+        return load(kind, texture, "full");
+    }
+
+    /** 2.0.32: any of its frames ("full", "fire"). */
+    static Model load(String kind, String texture, String frame) throws Exception {
+        java.util.Map<String, Object> json = (java.util.Map<String, Object>)new Json(Files.readString(new File(MODELS, kind + "_" + frame + ".json").toPath())).value();
         BufferedImage tex = ImageIO.read(new File(TEXTURES, "quinque_" + texture + ".png"));
         List<Element> elements = new ArrayList<>();
         for (Object o : (List<Object>)json.get("elements")) {
@@ -232,6 +237,18 @@ public final class QuinquePreview {
         String only = args.length > 1 ? args[1] : null;
         dir.mkdirs();
         PoseRender.stiff = true;
+        if (args.length > 2 && args[2].equals("aim")) {
+            // 2.0.32: Dawn pointed as its ball gathers (AgentPose.aimDawn), in its fire frame (its point parted about the light).
+            Model fire = load("dawn", "dawn", "fire");
+            List<RigPose> poses = new ArrayList<>();
+            List<String> labels = new ArrayList<>();
+            for (double[] at : new double[][] {{0, 0}, {2, 0}, {5, 0}, {8, -20}, {8, 25}}) {
+                poses.add(com.hex.kagune.control.client.animation.AgentPose.aimDawn(at[0], (float)at[1]));
+                labels.add("aim t" + (int)at[0] + " pitch " + (int)at[1]);
+            }
+            sheet(new File(dir, "quinque-dawn-aim.png"), "dawn", Quinque.DAWN, fire, poses, labels, new double[][] {{-35, 10}, {-95, 4}, {40, 10}}, 300);
+            return;
+        }
         for (int k = 0; k < KINDS.length; k++) {
             if (only != null && !only.equals(KINDS[k][0])) {
                 continue;

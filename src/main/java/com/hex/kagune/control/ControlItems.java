@@ -198,10 +198,8 @@ public final class ControlItems {
             }
             if (event.getTabKey() == CreativeModeTabs.f_256797_) {
                 // 1.3.25: the quinques, each case and its weapon.
+                // 2.0.32: Dawn too, now that a player can wield it (its lightning on right click).
                 for (com.hex.kagune.control.quinque.Quinque q : com.hex.kagune.control.quinque.Quinque.values()) {
-                    if (q == com.hex.kagune.control.quinque.Quinque.DAWN) {
-                        continue;
-                    }
                     event.accept(CASES.get(q));
                     event.accept(WEAPONS.get(q));
                 }

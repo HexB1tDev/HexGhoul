@@ -53,10 +53,10 @@ public final class QuinqueServer {
         ItemStack held = player.m_21205_();
         Quinque shut = ControlItems.quinqueCase(held);
         Quinque open = shut == null ? ControlItems.quinqueWeapon(held) : null;
-        boolean fires = open != null && open.ranged && !player.m_6047_();
+        boolean fires = open != null && open.firesOnUse() && !player.m_6047_();
         // 1.3.33: a melee quinque folds back into its case at a tap of right click (the owner's ask); the launcher fires on right
-        // click, so it still shuts on Shift + right click.
-        boolean folds = open != null && (!open.ranged || player.m_6047_());
+        // click, so it still shuts on Shift + right click. 2.0.32: Dawn too (its lightning).
+        boolean folds = open != null && (!open.firesOnUse() || player.m_6047_());
         if (shut == null && !fires && !folds) {
             return; // not a quinque
         }
@@ -66,7 +66,9 @@ public final class QuinqueServer {
             return; // the server turns it (and fires it); the client only swings
         }
         try {
-            if (fires) {
+            if (fires && open == Quinque.DAWN) {
+                gather(server, level, held);
+            } else if (fires) {
                 fire(server, level, held, open);
                 SECOND.put(server.m_20148_(), level.m_46467_() + Quinque.SHOT_EVERY);
             } else if (tapped(server, level.m_46467_())) {
@@ -132,6 +134,72 @@ public final class QuinqueServer {
             UkakuFire.sound(level, from, "hexkagune:kagune_dismiss", 0.7F, 0.7F);
             player.m_5661_(net.minecraft.network.chat.Component.m_237113_("§7The launcher overheats."), true);
         }
+    }
+
+    // ---------------------------------------------------------------- 2.0.32: Dawn's lightning in a player's hand
+
+    /** Each player's Dawn: when its ball leaves (game time; the player's tick releases it), and when its last one left. */
+    private static final java.util.Map<UUID, Long> DAWN_DUE = new java.util.HashMap<>();
+    private static final java.util.Map<UUID, Long> DAWN_LAST = new java.util.HashMap<>();
+
+    /**
+     * 2.0.32: a right click with Dawn out: its point opens (its stack's {@link Quinque#DAWN_AT} / {@link Quinque#DAWN_FIRES}, drawn as its
+     * "fire" frame by every client) and a ball gathers there for {@link Quinque#DAWN_CHARGE} ticks, then flies ({@link #release}); not
+     * while it is still opening out of its case, nor within {@link Quinque#DAWN_COOLDOWN} of the last.
+     */
+    static void gather(ServerPlayer player, ServerLevel level, ItemStack held) {
+        long now = level.m_46467_();
+        CompoundTag tag = held.m_41783_();
+        if (tag != null && tag.m_128441_(Quinque.AT) && Quinque.moving(now, tag.m_128454_(Quinque.AT))) {
+            return; // still opening
+        }
+        if (DAWN_DUE.containsKey(player.m_20148_())) {
+            return; // a ball already gathering
+        }
+        Long last = DAWN_LAST.get(player.m_20148_());
+        if (last != null && !Quinque.dawnReady(now - last)) {
+            player.m_5661_(net.minecraft.network.chat.Component.m_237113_(String.format("\u00a77Dawn gathers again in %.1f s.",
+                (Quinque.DAWN_COOLDOWN - (now - last)) / 20.0)), true);
+            return;
+        }
+        opens(held, now, now + Quinque.DAWN_CHARGE);
+        DAWN_DUE.put(player.m_20148_(), now + Quinque.DAWN_CHARGE);
+        UkakuFire.sound(level, player.m_146892_(), "hexkagune:sfx.dash", 0.35F, 1.7F);
+    }
+
+    /** 2.0.32: Dawn's point (the stack {@code held}) opens at {@code at} for a ball leaving at {@code fires}: every client draws it open. */
+    public static void opens(ItemStack held, long at, long fires) {
+        CompoundTag own = held.m_41783_();
+        if (own == null) {
+            own = new CompoundTag();
+            held.m_41751_(own);
+        }
+        own.m_128356_(Quinque.DAWN_AT, at);
+        own.m_128356_(Quinque.DAWN_FIRES, fires);
+    }
+
+    /** 2.0.32: the gathered ball leaves the open point of the Dawn in {@code player}'s hand, along their look (if it is still there). */
+    static void release(ServerPlayer player, ServerLevel level) {
+        Quinque out = ControlItems.quinqueWeapon(player.m_21205_());
+        if (out != Quinque.DAWN || !player.m_6084_()) {
+            return;
+        }
+        long now = level.m_46467_();
+        DAWN_LAST.put(player.m_20148_(), now);
+        Vec3 look = player.m_20154_();
+        Vec3 right = new Vec3(-look.f_82481_, 0.0, look.f_82479_).m_82541_();
+        Vec3 eye = player.m_146892_();
+        Vec3 hand = eye.m_82549_(right.m_82490_(0.3)).m_82520_(0.0, -0.4, 0.0);
+        Vec3 tip = hand.m_82549_(look.m_82490_(1.9));
+        // Never through a wall right in front: from the eye's side of anything in the way.
+        net.minecraft.world.phys.BlockHitResult in = level.m_45547_(new net.minecraft.world.level.ClipContext(eye, tip,
+            net.minecraft.world.level.ClipContext.Block.COLLIDER, net.minecraft.world.level.ClipContext.Fluid.NONE, player));
+        if (in.m_6662_() != net.minecraft.world.phys.HitResult.Type.MISS) {
+            tip = in.m_82450_().m_82546_(look.m_82490_(0.3));
+        }
+        CrystalShots.lightning(player, level, tip, look, body -> !(body instanceof ServerPlayer other && (other.m_7500_() || other.m_5833_())),
+            Quinque.DAWN_PLAYER_SHOT);
+        UkakuFire.sound(level, tip, "hexkagune:sfx.thunder", 0.6F, 1.5F);
     }
 
     /** {@code held} opens into its weapon ({@code opening}) or shuts into its case; not while it is still moving. */
@@ -329,6 +397,16 @@ public final class QuinqueServer {
             return;
         }
         Quinque out = ControlItems.quinqueWeapon(player.m_21205_());
+        // 2.0.32: Dawn's gathered ball, due now.
+        Long ball = DAWN_DUE.isEmpty() ? null : DAWN_DUE.get(player.m_20148_());
+        if (ball != null && player.m_9236_() instanceof ServerLevel here && here.m_46467_() >= ball) {
+            DAWN_DUE.remove(player.m_20148_());
+            try {
+                release(player, here);
+            } catch (RuntimeException failure) {
+                com.hex.kagune.control.Safety.caught(failure, "Dawn's lightning");
+            }
+        }
         // 1.3.33: the second shard of the pull, if the launcher is still out in the hand and not being shut.
         Long due = SECOND.isEmpty() ? null : SECOND.get(player.m_20148_());
         if (due != null && player.m_9236_() instanceof ServerLevel level && level.m_46467_() >= due) {

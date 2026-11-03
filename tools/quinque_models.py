@@ -942,7 +942,10 @@ def main():
                     for name, v in (("case_carried", CARRIED_WIDE), ("case_carried_slim", CARRIED_SLIM))]
         case_item, weapon_item = ITEMS[kind]
         write(MODELS / f"{case_item}.json", {"parent": f"hexkagune:item/quinque/{kind}_case_closed", "overrides": carrying + overrides})
-        write(MODELS / f"{weapon_item}.json", {"parent": f"hexkagune:item/quinque/{kind}_case_closed", "overrides": overrides})
+        # 2.0.32: Dawn's weapon shows its parted point while its ball gathers and leaves (QuinqueClient.dawnFrame: Quinque.DAWN_FIRE_FRAME);
+        # only on the weapon: a case just starting to shut reads 1.0 too.
+        firing = [{"predicate": {"hexkagune:deploy": 0.99}, "model": "hexkagune:item/quinque/dawn_fire"}] if kind == "dawn" else []
+        write(MODELS / f"{weapon_item}.json", {"parent": f"hexkagune:item/quinque/{kind}_case_closed", "overrides": overrides + firing})
         print(f"{kind}: {len(parts)} parts, span {span(parts)}")
     write_holds()
     for slim in (False, True):

@@ -24,6 +24,12 @@
     "hexkagune:deploy": 0.95
    },
    "model": "hexkagune:item/quinque/dawn_full"
+  },
+  {
+   "predicate": {
+    "hexkagune:deploy": 0.99
+   },
+   "model": "hexkagune:item/quinque/dawn_fire"
   }
  ]
 }

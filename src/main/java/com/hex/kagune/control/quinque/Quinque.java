@@ -170,6 +170,40 @@ public enum Quinque {
     /** 2.0.31: the share of the blow its arc deals to the others it takes. */
     public static final float ARC_SHARE = 0.6F;
 
+    // ---------------------------------------------------------------- 2.0.32: Dawn's lightning in a player's hand
+
+    /**
+     * 2.0.32 (the owner: "Right click with it should fire a lightning ball, like a yellow lightning ball that explodes with VFX and all
+     * ... the tip of the weapon should open slightly to release the ball of energy"): true if a right click fires it rather than folding
+     * it (the launcher, and Dawn); Shift + right click folds either.
+     */
+    public boolean firesOnUse() {
+        return this.ranged || this == DAWN;
+    }
+
+    /** A player's Dawn: its point opens and the ball gathers this long (ticks) before it flies, then it rests this long before another. */
+    public static final int DAWN_CHARGE = 5;
+    public static final long DAWN_COOLDOWN = 40L;
+    /** A player's ball: as the White Reaper's (its speed, range, blast) but this much at its heart (his: 26). */
+    public static final float DAWN_PLAYER_SHOT = 16.0F;
+    /** Its point stays open this long after the ball leaves it. */
+    public static final int DAWN_OPEN_AFTER = 6;
+    /** The weapon stack's tags: when its point began to open, and when the ball leaves it (game time). */
+    public static final String DAWN_AT = "DawnAt";
+    public static final String DAWN_FIRES = "DawnFires";
+    /** Its "fire" frame's place on the model property (above "full", 0.95; the property is clamped to 0..1). */
+    public static final float DAWN_FIRE_FRAME = 0.99F;
+
+    /** True while Dawn's point is open: from {@code at} (opening) until {@link #DAWN_OPEN_AFTER} past {@code fires} (the ball gone). */
+    public static boolean tipOpen(long now, long at, long fires) {
+        return at != Long.MIN_VALUE && fires != Long.MIN_VALUE && now >= at && now - fires <= DAWN_OPEN_AFTER && fires >= at;
+    }
+
+    /** True if a player's Dawn may gather another ball {@code since} ticks after the last (never: always). */
+    public static boolean dawnReady(long since) {
+        return since < 0L || since >= DAWN_COOLDOWN;
+    }
+
     /**
      * The launcher: 1.3.33 a shard every {@link #SHOT_EVERY} ticks held (use repeats every four: each pull fires two, the second
      * {@link #SHOT_EVERY} on), this much each, this fast, this far. The owner: "the gun that shoots spikes is really slow when it comes

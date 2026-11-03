@@ -34,6 +34,7 @@ public final class QuinqueTests {
         files();
         holds();
         dawn();
+        dawnFire();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -73,6 +74,30 @@ public final class QuinqueTests {
         double[] out = com.hex.kagune.control.quinque.DawnArc.point(2, 1.0);
         check(in[0] == out[0] && in[1] == out[1] && out[2] > in[2] + 3.0 && out[2] <= Quinque.DAWN.sweep(Quinque.FINISHER),
             "the thrust: straight out along its line, no further than it reaches");
+    }
+
+    /** 2.0.32: Dawn's lightning in a player's hand: a right click fires it, its point open while the ball gathers and just after. */
+    static void dawnFire() throws IOException {
+        check(Quinque.DAWN.firesOnUse() && Quinque.LAUNCHER.firesOnUse() && !Quinque.KATANA.firesOnUse() && !Quinque.SPEAR.firesOnUse(),
+            "Dawn and the launcher fire on right click (Shift folds them); the rest fold on it");
+        long at = 1000L;
+        long fires = at + Quinque.DAWN_CHARGE;
+        check(!Quinque.tipOpen(at - 1, at, fires) && Quinque.tipOpen(at, at, fires) && Quinque.tipOpen(fires, at, fires)
+            && Quinque.tipOpen(fires + Quinque.DAWN_OPEN_AFTER, at, fires) && !Quinque.tipOpen(fires + Quinque.DAWN_OPEN_AFTER + 1, at, fires),
+            "its point opens as the ball gathers and closes a moment after it leaves");
+        check(!Quinque.tipOpen(at, Long.MIN_VALUE, fires) && !Quinque.tipOpen(at, at, Long.MIN_VALUE) && !Quinque.tipOpen(at + 2, at + 5, at),
+            "never open without both times, or with them the wrong way round");
+        check(Quinque.dawnReady(-1L) && !Quinque.dawnReady(Quinque.DAWN_COOLDOWN - 1) && Quinque.dawnReady(Quinque.DAWN_COOLDOWN),
+            "another ball only after it rests");
+        check(Quinque.DAWN_PLAYER_SHOT > 0.0F && Quinque.DAWN_PLAYER_SHOT < com.hex.kagune.control.npc.AgentRules.DAWN_SHOT_DAMAGE,
+            "a player's ball lighter than the White Reaper's");
+        check(Quinque.DAWN_FIRE_FRAME > 0.95F && Quinque.DAWN_FIRE_FRAME <= 1.0F, "its fire frame above the full frame, inside the clamped property");
+        String weapon = read("assets/hexkagune/models/item/quinque_dawn.json");
+        String shut = read("assets/hexkagune/models/item/quinque_case_dawn.json");
+        check(weapon != null && weapon.replaceAll("\\s", "").endsWith("{\"predicate\":{\"hexkagune:deploy\":" + Quinque.DAWN_FIRE_FRAME
+            + "},\"model\":\"hexkagune:item/quinque/dawn_fire\"}]}"), "the weapon's last override is its fire frame");
+        check(shut != null && !shut.contains("dawn_fire"), "the case never shows the fire frame (a case starting to shut reads 1.0)");
+        check(read("assets/hexkagune/models/item/quinque/dawn_fire.json") != null, "the fire frame's model is in place");
     }
 
     static void turning() {
@@ -173,7 +198,8 @@ public final class QuinqueTests {
                     frames++;
                 }
                 // 1.3.28: a case also has an investigator's two carried frames (ahead of the four opening ones); a weapon never does.
-                int expected = item.equals(q.caseId) ? 6 : 4;
+                // 2.0.32: Dawn's weapon has its fire frame last too.
+                int expected = item.equals(q.caseId) ? 6 : q == Quinque.DAWN ? 5 : 4;
                 check(frames == expected && previous > 0.9 && previous <= 1.0, item + ": " + expected + " frames past its shut case, the last all the way out");
                 check(json.contains("case_carried") == item.equals(q.caseId), item + ": the carried frames on the case alone");
                 Matcher parent = Pattern.compile("\"parent\"\\s*:\\s*\"hexkagune:([a-z_/]+)\"").matcher(json);
@@ -331,9 +357,9 @@ public final class QuinqueTests {
                     "the blade leaves the fist 25..75 degrees off the forearm's line (swing " + (step + 1) + " at " + t + ")");
             }
         }
-        // A tap folds a melee quinque; the launcher fires on it and folds on Shift.
+        // A tap folds a melee quinque; the launcher (2.0.32: and Dawn) fires on it and folds on Shift.
         String server = Files.readString(Path.of("src/main/java/com/hex/kagune/control/server/QuinqueServer.java"));
-        check(server.contains("boolean folds = open != null && (!open.ranged || player.m_6047_())") && server.contains("tapped("),
+        check(server.contains("boolean folds = open != null && (!open.firesOnUse() || player.m_6047_())") && server.contains("tapped("),
             "a tap of right click folds a melee quinque (held down, it never flips back)");
     }
 }

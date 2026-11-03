@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.0.32 (HexGhoul): Dawn's lightning in a player's hand (testing)
+
+See `.github/release-notes-2.0.32.md`. A player holding Dawn fires its yellow lightning ball with right click: the point opens, the ball gathers there for a quarter of a second while the lance comes up onto your aim, then it flies and explodes on impact with the same lightning effects as the White Reaper's. Shift + right click folds Dawn back into its case.
+
 ## 2.0.31 (HexGhoul): Dawn's own M1s (testing)
 
 See `.github/release-notes-2.0.31.md`. Dawn has its own three M1s, made for a three-block lance held in one hand at the hip: a wide level sweep, a rising backhand, and a lunging thrust as the finisher. Before, it borrowed the katana's two-handed chops, and every swing ended with its point in the ground. The White Reaper and any player holding Dawn swing it the same way.

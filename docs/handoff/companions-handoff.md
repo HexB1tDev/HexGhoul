@@ -1,4 +1,13 @@
-# START HERE (state after 2.0.31)
+# START HERE (state after 2.0.32)
+
+A player holding Dawn fires its yellow lightning ball with right click: the point opens, the ball gathers there for a quarter of a second while the lance comes up onto your aim, then it flies and explodes on impact with the same lightning effects as the White Reaper's. Shift + right click folds Dawn back into its case.
+
+- A player's ball: 16 at its heart (the Reaper's is 26), its blast falling off over 2.5 blocks in proportion. It travels 1.5 blocks a tick for up to 32 blocks, pushes back what it catches, and never burns or breaks blocks. One every 2 seconds; tapping sooner shows the time left on the action bar.
+- The point opens (2.0.30's `dawn_fire` frame, its two halves parted about a yellow light) while the ball gathers and for 6 ticks after it leaves, for players and for the White Reaper as he aims. Every client sees it: the times ride on the weapon stack.
+- Getting Dawn: the White Reaper now leaves his black case when a player kills him, and Dawn is in the creative Combat tab.
+- No new Minecraft API: the cooldown is kept on the server, not vanilla's item cooldown. Previewed off-game: `docs/handoff/dawn-aim-2.0.32.png` (`tools/QuinquePreview.java <out> dawn aim`). Protocol stays 76.
+
+# State after 2.0.31
 
 Dawn has its own three M1s, made for a three-block lance held in one hand at the hip: a wide level sweep, a rising backhand, and a lunging thrust as the finisher. Before, it borrowed the katana's two-handed chops, and every swing ended with its point in the ground. The White Reaper and any player holding Dawn swing it the same way.
 

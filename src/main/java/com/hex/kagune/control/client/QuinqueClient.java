@@ -42,13 +42,38 @@ public final class QuinqueClient {
             ResourceLocation id = ResourceLocation.m_214293_("hexkagune", Quinque.PROPERTY);
             for (Quinque quinque : Quinque.values()) {
                 net.minecraft.client.renderer.item.ClampedItemPropertyFunction caseFrame = (stack, level, entity, seed) -> caseFrame(stack, entity);
-                net.minecraft.client.renderer.item.ClampedItemPropertyFunction weaponFrame = (stack, level, entity, seed) -> shown(stack, true);
+                net.minecraft.client.renderer.item.ClampedItemPropertyFunction weaponFrame = quinque == Quinque.DAWN
+                    ? (stack, level, entity, seed) -> dawnFrame(stack, level) : (stack, level, entity, seed) -> shown(stack, true);
                 put.invoke(null, ControlItems.caseOf(quinque), id, caseFrame);
                 put.invoke(null, ControlItems.weaponOf(quinque), id, weaponFrame);
             }
         } catch (ReflectiveOperationException | RuntimeException | LinkageError failure) {
             com.hex.kagune.control.Safety.caught(failure, "registering the quinques' turning frames");
         }
+    }
+
+    /**
+     * 2.0.32: Dawn's frame: its "fire" frame (its point parted about the gathering ball, {@link Quinque#DAWN_FIRE_FRAME}) while its stack
+     * says its point is open ({@link Quinque#tipOpen}), else as any weapon (kept below the fire frame's place: "full" is 0.95).
+     */
+    static float dawnFrame(ItemStack stack, net.minecraft.client.multiplayer.ClientLevel level) {
+        long[] open = dawnOpen(stack, level);
+        return open != null ? 1.0F : Math.min(0.96F, shown(stack, true));
+    }
+
+    /** 2.0.32: {when its point began to open, the game time now} while Dawn's point is open, else null. */
+    static long[] dawnOpen(ItemStack stack, net.minecraft.client.multiplayer.ClientLevel level) {
+        net.minecraft.nbt.CompoundTag tag = stack.m_41783_();
+        if (tag == null || !tag.m_128441_(Quinque.DAWN_AT) || !tag.m_128441_(Quinque.DAWN_FIRES)) {
+            return null;
+        }
+        net.minecraft.client.multiplayer.ClientLevel world = level != null ? level : net.minecraft.client.Minecraft.m_91087_().f_91073_;
+        if (world == null) {
+            return null;
+        }
+        long now = world.m_46467_();
+        long at = tag.m_128454_(Quinque.DAWN_AT);
+        return Quinque.tipOpen(now, at, tag.m_128454_(Quinque.DAWN_FIRES)) ? new long[] {at, now} : null;
     }
 
     /** 1.3.25: what a quinque is and how it is used, under its name (on the game bus). */
@@ -72,8 +97,8 @@ public final class QuinqueClient {
             if (!quinque.ranged) {
                 lines.add(Component.m_237115_("item.hexkagune.quinque.combo"));
             }
-            lines.add(Component.m_237115_(shut != null ? "item.hexkagune.quinque.open" : quinque.ranged ? "item.hexkagune.quinque.fire"
-                : "item.hexkagune.quinque.close"));
+            lines.add(Component.m_237115_(shut != null ? "item.hexkagune.quinque.open" : quinque == Quinque.DAWN ? "item.hexkagune.quinque.dawn_fire"
+                : quinque.ranged ? "item.hexkagune.quinque.fire" : "item.hexkagune.quinque.close"));
         }
     }
 
@@ -134,8 +159,10 @@ public final class QuinqueClient {
             }
         } else {
             float out = shown(held, true);
-            p = out < 1.0F ? com.hex.kagune.control.client.animation.QuinquePose.unfolding(weapon, out)
-                : com.hex.kagune.control.client.animation.QuinquePose.hold(weapon);
+            long[] open = weapon == Quinque.DAWN ? dawnOpen(held, null) : null;
+            p = open != null ? com.hex.kagune.control.client.animation.AgentPose.aimDawn(open[1] - open[0] + partial, body.m_146909_())
+                : out < 1.0F ? com.hex.kagune.control.client.animation.QuinquePose.unfolding(weapon, out)
+                : com.hex.kagune.control.client.animation.QuinquePose.hold(weapon); // 2.0.32: pointing Dawn as its ball gathers
         }
         if (p != null && weapon.ranged) {
             // 1.3.33: the gun along the look (up or down with the head) unless it is clubbing; a kick for each shard of the pair a

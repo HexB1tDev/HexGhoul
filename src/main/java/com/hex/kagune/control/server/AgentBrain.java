@@ -744,6 +744,9 @@ public final class AgentBrain {
 
     private static void cancelLightning(CcgAgent agent, Mind mind, long now) {
         if (mind.aimAt != Long.MIN_VALUE) {
+            if (ControlItems.quinqueWeapon(agent.m_21205_()) == Quinque.DAWN && ago(now, mind.aimAt) < AgentRules.DAWN_AIM_TICKS) {
+                QuinqueServer.opens(agent.m_21205_(), mind.aimAt, now); // 2.0.32: broken off: its point closes again
+            }
             mind.aimAt = Long.MIN_VALUE;
             agent.swing(-1, now);
         }
@@ -784,6 +787,10 @@ public final class AgentBrain {
             && now >= mind.readyAt && agent.m_142582_(prey)) {
             mind.aimAt = now;
             mind.aimTarget = prey.m_19879_();
+            if (ControlItems.quinqueWeapon(agent.m_21205_()) == Quinque.DAWN) {
+                // 2.0.32: its point opens as it aims, the ball gathering there until it flies.
+                QuinqueServer.opens(agent.m_21205_(), now, now + AgentRules.DAWN_AIM_TICKS);
+            }
             mind.lightningReadyAt = now + AgentRules.DAWN_SHOT_COOLDOWN;
             agent.m_21573_().m_26573_();
             agent.swing(CcgAgent.AIM_DAWN, now);
@@ -1350,6 +1357,10 @@ public final class AgentBrain {
         Mind mind = agent.mind;
         if (reaper(agent)) {
             HumanBrain.drop(agent, looting);
+            if (byPlayer) {
+                // 2.0.32: whoever brings him down by their own hand takes Dawn, shut in its black case.
+                agent.m_19983_(new ItemStack(ControlItems.caseOf(Quinque.DAWN), 1));
+            }
             return;
         }
         if (!byPlayer || mind == null || agent.m_217043_().m_188500_() >= AgentRules.dropChance(looting)) {

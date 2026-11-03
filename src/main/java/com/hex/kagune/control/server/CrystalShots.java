@@ -59,7 +59,12 @@ public final class CrystalShots {
     }
 
     public static void lightning(LivingEntity shooter, ServerLevel level, Vec3 from, Vec3 way, Predicate<LivingEntity> foe) {
-        launch(shooter, level, from, way, AgentRules.DAWN_SHOT_SPEED, AgentRules.DAWN_SHOT_RANGE, AgentRules.DAWN_SHOT_DAMAGE, foe, true);
+        lightning(shooter, level, from, way, foe, AgentRules.DAWN_SHOT_DAMAGE);
+    }
+
+    /** 2.0.32: a lightning ball of {@code damage} at its heart (a player's Dawn: Quinque.DAWN_PLAYER_SHOT), its blast in proportion. */
+    public static void lightning(LivingEntity shooter, ServerLevel level, Vec3 from, Vec3 way, Predicate<LivingEntity> foe, float damage) {
+        launch(shooter, level, from, way, AgentRules.DAWN_SHOT_SPEED, AgentRules.DAWN_SHOT_RANGE, damage, foe, true);
     }
 
     private static void launch(LivingEntity shooter, ServerLevel level, Vec3 from, Vec3 way, double speed, double range, float damage,
@@ -169,7 +174,8 @@ public final class CrystalShots {
                 ClipContext.Fluid.NONE, shot.shooter)).m_6662_() == HitResult.Type.BLOCK)) {
                 continue;
             }
-            float damage = AgentRules.dawnBlastDamage(body == direct ? 0.0 : distance);
+            // 2.0.32: in proportion to the ball's own heart (a player's is lighter than the Reaper's).
+            float damage = AgentRules.dawnBlastDamage(body == direct ? 0.0 : distance) * shot.damage / AgentRules.DAWN_SHOT_DAMAGE;
             Vec3 away = centre.m_82546_(at).m_82541_();
             WoundHits.expect(body, WoundBook.Blow.BLUNT, centre, away, 0.0);
             body.f_19802_ = 0;
@@ -181,7 +187,7 @@ public final class CrystalShots {
                 striking = false;
             }
             if (hurt) {
-                body.m_147240_(0.9 * damage / AgentRules.DAWN_SHOT_DAMAGE, -away.f_82479_, -away.f_82481_);
+                body.m_147240_(0.9 * damage / Math.max(1.0F, shot.damage), -away.f_82479_, -away.f_82481_);
             }
         }
         fx(shot, S2CUkakuFx.DAWN_BURST, at, shot.velocity, (float)radius, 0);
