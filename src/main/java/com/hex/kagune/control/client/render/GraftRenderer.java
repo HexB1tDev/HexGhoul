@@ -321,7 +321,8 @@ public final class GraftRenderer {
             com.hex.kagune.control.family.ChildKaguneRules.TENTACLE_THICKNESS * size, 0.46F, 6.0F, 10.0F, 8.5F, 5.0F, false, false, 0, 0, 0);
         com.hex.kagune.client.render.TendrilChain chain = TENTACLES.computeIfAbsent(child.m_19879_(), id -> new com.hex.kagune.client.render.TendrilChain(0));
         int light = LevelRenderer.m_109541_(level, BlockPos.m_274561_(child.m_20185_(), child.m_20186_() + 1.0, child.m_20189_()));
-        com.hex.kagune.client.render.KaguneWorldRenderer.emitTubeLegacy(out, matrix, normals, chain, path, look, 0, light, clock, child.m_19879_());
+        // 2.0.39: as a Rinkaku player's tail is drawn now (RinkakuTube: the owner's reference, in the child's own colour).
+        RinkakuTube.emit(out, matrix, normals, path, look.thickness(), colour, light, child.m_19879_());
     }
 
     /** Every limb of {@code stage}, grown {@code grown} of the way out, making {@code moving}'s move (null: at rest). */

@@ -199,6 +199,48 @@ public final class ControlTests {
         check(gap.follow(new double[][] {{0, 0, 0}, {1, 1, 1}}, 40.5, 2.0)[1][0] == 1.0, "a new shape starts afresh");
     }
 
+    /** 2.0.39: a Rinkaku tail as the owner's reference has it, in the tail's own colour. */
+    static void rinkakuRibbon() {
+        int[] crimson = RinkakuRibbon.palette(KaguneColours.DEFAULT);
+        check(crimson[0] == RinkakuRibbon.HEART && crimson[1] == RinkakuRibbon.DEEP && crimson[2] == RinkakuRibbon.LIGHT,
+            "the original crimson is exactly the picture's palette");
+        int[] blue = RinkakuRibbon.palette(0x1E50D8);
+        double[] heart = KaguneColours.toHsv(blue[0] & 0xFFFFFF);
+        check(heart[0] > 0.55 && heart[0] < 0.72 && KaguneColours.toHsv(blue[2] & 0xFFFFFF)[2] > heart[2], "a blue kagune: a blue ribbon, its marks lighter");
+        int[] black = RinkakuRibbon.palette(0x141414);
+        check(KaguneColours.toHsv(black[0] & 0xFFFFFF)[2] < 0.3 && KaguneColours.toHsv(black[2] & 0xFFFFFF)[2] > KaguneColours.toHsv(black[0] & 0xFFFFFF)[2] + 0.15,
+            "a black kagune: a black ribbon (never blood red), its marks grey enough to show");
+        for (int colour : new int[] {KaguneColours.DEFAULT, 0x1E50D8, 0x7A1FB8, 0x1F9E4A, 0x141414, 0xE8E8E8}) {
+            int[] p = RinkakuRibbon.palette(colour);
+            check(KaguneColours.toHsv(p[1] & 0xFFFFFF)[2] < KaguneColours.toHsv(p[0] & 0xFFFFFF)[2], "its edges deeper than its heart: " + Integer.toHexString(colour));
+        }
+        check(RinkakuRibbon.profile(1.0) == 0.0 && RinkakuRibbon.profile(0.4) > RinkakuRibbon.profile(0.0) && RinkakuRibbon.profile(0.9) < RinkakuRibbon.profile(0.5),
+            "it swells past the back and tapers to a point");
+        check(RinkakuRibbon.WIDE > RinkakuRibbon.THIN * 1.5, "a broad, flat ribbon");
+        check(RinkakuRibbon.shade(0.0, false, 0.0, 0) < RinkakuRibbon.shade(1.0, false, 0.0, 0), "darker at its edges");
+        double[][] path = new double[30][];
+        for (int i = 0; i < 30; i++) {
+            path[i] = new double[] {0.1 * i, 0.9 + Math.sin(i * 0.2), -0.2 - 0.05 * i};
+        }
+        RinkakuRibbon.Mesh mesh = RinkakuRibbon.build(path, 0.22, 0x1E50D8, 7);
+        check(mesh != null && mesh.at().length >= 4 && mesh.at().length <= RinkakuRibbon.MOST_RINGS && mesh.at()[0].length == RinkakuRibbon.SIDES + 1,
+            "a mesh of rings round it");
+        boolean finite = true;
+        for (double[][] ring : mesh.at()) {
+            for (double[] p : ring) {
+                finite &= Double.isFinite(p[0]) && Double.isFinite(p[1]) && Double.isFinite(p[2]);
+            }
+        }
+        check(finite, "no NaN in the mesh");
+        check(java.util.Arrays.equals(mesh.at()[2][0], mesh.at()[2][RinkakuRibbon.SIDES]), "each ring closes on itself");
+        check(mesh.along()[0] == 0.0 && mesh.along()[mesh.along().length - 1] > mesh.along()[1] && RinkakuRibbon.v(1.0) > RinkakuRibbon.v(0.5),
+            "its markings run from the root toward the point");
+        double[][][] over = RinkakuRibbon.over(mesh);
+        double[] c = mesh.centre()[3];
+        check(RinkakuRoot.distance(over[3][4], c) > RinkakuRoot.distance(mesh.at()[3][4], c), "its markings a hair outside it");
+        check(RinkakuRibbon.build(new double[][] {{0, 0, 0}}, 0.2, 0, 0) == null && RinkakuRibbon.build(path, 0.0, 0, 0) == null, "nothing to draw: nothing");
+    }
+
     /** 2.0.38: a Rinkaku tail grows out of the lower back: its root inside the body, its base leaving the back, its far part its own. */
     static void rinkakuRoot() {
         double height = 1.8;
@@ -239,6 +281,7 @@ public final class ControlTests {
 
     public static void main(String[] args) {
         rinkakuRoot();
+        rinkakuRibbon();
         progression();
         hungerAndFrenzy();
         urges();

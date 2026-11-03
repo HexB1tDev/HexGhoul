@@ -70,7 +70,15 @@ public final class CentipedeRenderer {
             return;
         }
         KakujaFx.tube(state, limbIndex, points, (long)time);
-        KaguneWorldRenderer.emitTubeLegacy(consumer, pose, normalMatrix, chain, points, state, limbIndex, light, time, seed);
+        // 2.0.39: Rinkaku's tails drawn as the owner's reference has them (RinkakuTube), in the tail's own colour; the original's tube
+        // only if that fails.
+        try {
+            RinkakuTube.emit(consumer, pose, normalMatrix, points, state.limbThickness(state.form().limb(limbIndex)), state.color() & 0xFFFFFF,
+                light, seed + limbIndex * 131);
+        } catch (RuntimeException failure) {
+            PlayerLayers.failed("a Rinkaku tail", failure);
+            KaguneWorldRenderer.emitTubeLegacy(consumer, pose, normalMatrix, chain, points, state, limbIndex, light, time, seed);
+        }
     }
 
     @SubscribeEvent(priority = EventPriority.LOW)
