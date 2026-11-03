@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.0.19 (HexGhoul): fix the crash while the game loads (testing)
+
+See `.github/release-notes-2.0.19.md`: the quinques' model frames are registered through Forge's reflection helper (the vanilla method is private; the launch did not make it public), and a failure there can no longer stop the game.
+
 ## 2.0.18 (HexGhoul): CCG agents dash in zigzags, more by rank (testing)
 
 See `.github/release-notes-2.0.18.md`: chained dashes, each the other way, 1 at Rank 0 up to 6 at Rank 10, faster, likelier and sooner by rank.

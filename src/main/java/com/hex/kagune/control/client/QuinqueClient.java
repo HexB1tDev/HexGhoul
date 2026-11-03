@@ -29,11 +29,25 @@ public final class QuinqueClient {
         event.enqueueWork(QuinqueClient::register);
     }
 
+    /**
+     * 2.0.19 (the owner's crash on loading: "QuinqueClient tried to access private method ItemProperties.m_174570_"): the register is
+     * private in vanilla and only public where Forge's access transformer has been applied to it, which their launcher did not do.
+     * It is called through Forge's {@code ObfuscationReflectionHelper} instead (made accessible either way), and if even that fails
+     * the quinques are only drawn without their turning frames: the game never stops for it.
+     */
     static void register() {
-        ResourceLocation id = ResourceLocation.m_214293_("hexkagune", Quinque.PROPERTY);
-        for (Quinque quinque : Quinque.values()) {
-            ItemProperties.m_174570_(ControlItems.caseOf(quinque), id, (stack, level, entity, seed) -> caseFrame(stack, entity));
-            ItemProperties.m_174570_(ControlItems.weaponOf(quinque), id, (stack, level, entity, seed) -> shown(stack, true));
+        try {
+            java.lang.reflect.Method put = net.minecraftforge.fml.util.ObfuscationReflectionHelper.findMethod(ItemProperties.class, "m_174570_",
+                net.minecraft.world.item.Item.class, ResourceLocation.class, net.minecraft.client.renderer.item.ClampedItemPropertyFunction.class);
+            ResourceLocation id = ResourceLocation.m_214293_("hexkagune", Quinque.PROPERTY);
+            for (Quinque quinque : Quinque.values()) {
+                net.minecraft.client.renderer.item.ClampedItemPropertyFunction caseFrame = (stack, level, entity, seed) -> caseFrame(stack, entity);
+                net.minecraft.client.renderer.item.ClampedItemPropertyFunction weaponFrame = (stack, level, entity, seed) -> shown(stack, true);
+                put.invoke(null, ControlItems.caseOf(quinque), id, caseFrame);
+                put.invoke(null, ControlItems.weaponOf(quinque), id, weaponFrame);
+            }
+        } catch (ReflectiveOperationException | RuntimeException | LinkageError failure) {
+            com.hex.kagune.control.Safety.caught(failure, "registering the quinques' turning frames");
         }
     }
 

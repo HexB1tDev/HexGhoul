@@ -931,7 +931,6 @@ F net/minecraft/world/item/Tiers NETHERITE Lnet/minecraft/world/item/Tiers;  # [
 M net/minecraft/world/item/SwordItem <init> (Lnet/minecraft/world/item/Tier;IFLnet/minecraft/world/item/Item$Properties;)V  # [forge] SwordItem(Tier, int, float, Properties) (yarn chk.<init>(class_1832, I, F, class_1792$class_1793))
 F net/minecraft/world/item/CreativeModeTabs f_256797_ Lnet/minecraft/resources/ResourceKey;  # [srg] COMBAT: joined.tsrg ceg i -> f_256797_ (intermediary field_40202, yarn COMBAT)
 C net/minecraft/client/renderer/item/ItemProperties  # [srg] fuc C_4463_ (class_5272, yarn ModelPredicateProviderRegistry)
-M net/minecraft/client/renderer/item/ItemProperties m_174570_ (Lnet/minecraft/world/item/Item;Lnet/minecraft/resources/ResourceLocation;Lnet/minecraft/client/renderer/item/ClampedItemPropertyFunction;)V  # [srg] register(item, id, fn): joined.tsrg fuc a (Lcfu;Lacq;Lfua;)V -> m_174570_ (method_27879)
 C net/minecraft/client/renderer/item/ClampedItemPropertyFunction  # [srg] fua C_141753_ (class_6395, yarn ClampedModelPredicateProvider)
 M net/minecraft/client/renderer/item/ClampedItemPropertyFunction m_142187_ (Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/client/multiplayer/ClientLevel;Lnet/minecraft/world/entity/LivingEntity;I)F  # [srg] unclampedCall: joined.tsrg fua unclampedCall (Lcfz;Lfew;Lbfz;I)F -> m_142187_ (a lambda's method)
 C net/minecraftforge/common/ForgeMod  # [forge] common/ForgeMod.java

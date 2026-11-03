@@ -1,4 +1,13 @@
-# START HERE (state after 2.0.18): read `docs/handoff/next-ai-2.0.9.md` first, then `next-ai-2.0.5.md`, then `next-ai-2.0.1.md`
+# START HERE (state after 2.0.19): read `docs/handoff/next-ai-2.0.9.md` first, then `next-ai-2.0.5.md`, then `next-ai-2.0.1.md`
+
+- **2.0.19** (the owner's crash on 2.0.18 while loading, Forge 47.4.10 on Android/Amethyst: `IllegalAccessError: QuinqueClient tried to
+  access private method ItemProperties.m_174570_`). The call is unchanged since 1.3.25 (Forge's access transformer normally makes it
+  public; that launch did not). `QuinqueClient.register` now gets it with `ObfuscationReflectionHelper.findMethod` (accessible either way)
+  and `invoke`s it, everything caught into `Safety.caught`. The allowlist's `ItemProperties m_174570_` line is gone (no longer referenced;
+  the class lines stay). Lesson: the verifier checks names and descriptors, not access; a vanilla-private member used directly only works
+  where an access transformer applies. Not run.
+
+# State after 2.0.18
 
 - **2.0.18** (the owner: "fastly increase the dash amount/speed also with mastery"; asked, they meant the CCG agents' dash: "CCG agents
   dash more than once in zigzags"). `AgentRules.dashes(rank)` (1, 1, 2, 2, 2, 3, 3, 3, 4, 5, 6), `dashSpeed(rank)` (DASH_SPEED x (1 +
