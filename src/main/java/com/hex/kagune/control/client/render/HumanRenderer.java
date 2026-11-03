@@ -58,6 +58,33 @@ public final class HumanRenderer extends HumanoidMobRenderer<HumanNpc, PlayerMod
         this.wide = wide;
         this.slim = slim;
         this.m_115326_(new Blink(this));
+        this.m_115326_(new Figure(this));
+    }
+
+    /** 2.0.34: a village woman's bust (the shared female figure's, as the CCG's women have it) in her own skin, bouncing as she moves. */
+    static final class Figure extends RenderLayer<HumanNpc, PlayerModel<HumanNpc>> {
+        Figure(HumanRenderer parent) {
+            super(parent);
+        }
+
+        @Override
+        public void m_6494_(PoseStack pose, MultiBufferSource buffers, int light, HumanNpc human, float limbSwing, float limbSwingAmount,
+                            float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
+            if (human.m_20145_() || !HumanRules.female(human.look())) {
+                return;
+            }
+            try {
+                double y = human.f_19791_ + (human.m_20186_() - human.f_19791_) * partialTick;
+                float bounce = FemaleFigure.jiggle(human.m_19879_(), y, com.hex.kagune.control.client.PaleClient.clock(partialTick));
+                ResourceLocation skin = textureOf(human);
+                FemaleFigure.bust(this.m_117386_().f_102810_, pose, buffers.m_6299_(RenderType.m_110473_(skin)), light, bounce, false,
+                    HumanRules.WOMAN_CURVES);
+                FemaleFigure.bust(this.m_117386_().f_102810_, pose, buffers.m_6299_(RenderType.m_110473_(skin)), light, bounce, true,
+                    HumanRules.WOMAN_CURVES);
+            } catch (RuntimeException failure) {
+                PlayerLayers.failed("a village woman's figure", failure);
+            }
+        }
     }
 
     /** 1.3.77: its gesture now ({@code age}: its age in ticks), or null: each new one played from when it was first seen. */
@@ -165,6 +192,8 @@ public final class HumanRenderer extends HumanoidMobRenderer<HumanNpc, PlayerMod
     @Override
     public void m_7392_(HumanNpc human, float yaw, float partial, PoseStack pose, MultiBufferSource buffers, int light) {
         this.f_115290_ = HumanRules.slim(human.look()) ? this.slim : this.wide;
+        boolean woman = HumanRules.female(human.look()); // 2.0.34: her body
+        Model.woman = woman;
         // 1.3.77: its gesture (Eto's, in its temper's way, or a child's cue), posed as Eto's model poses hers, its hop and tip too.
         RigPose posed = human.scared() ? null : posed(human, human.f_19797_ + partial);
         boolean glued = glue(human, partial, pose); // 1.3.78: hand in hand on a date
@@ -181,6 +210,11 @@ public final class HumanRenderer extends HumanoidMobRenderer<HumanNpc, PlayerMod
             }
         }
         Model.pose = posed;
+        if (woman) {
+            // 2.0.34: drawn at her height and a touch slimmer for it.
+            pose.m_85836_();
+            pose.m_85841_(HumanRules.WOMAN_SIZE * HumanRules.WOMAN_BUILD, HumanRules.WOMAN_SIZE, HumanRules.WOMAN_SIZE * HumanRules.WOMAN_BUILD);
+        }
         boolean turned = posed != null && (Math.abs(posed.flip) > 1.0E-3F || Math.abs(posed.roll) > 1.0E-3F || Math.abs(posed.spin) > 1.0E-3F
             || Math.abs(posed.drop) > 1.0E-3F);
         try {
@@ -201,10 +235,14 @@ public final class HumanRenderer extends HumanoidMobRenderer<HumanNpc, PlayerMod
             if (turned) {
                 pose.m_85849_();
             }
+            if (woman) {
+                pose.m_85849_();
+            }
             if (glued) {
                 pose.m_85849_();
             }
             Model.pose = null;
+            Model.woman = false;
         }
         // 1.3.65: its screams, in a bubble over its head.
         if (!human.m_20145_()) {
@@ -230,12 +268,41 @@ public final class HumanRenderer extends HumanoidMobRenderer<HumanNpc, PlayerMod
 
     /** A player's body; frightened, its arms up over its head, waving. */
     static final class Model extends PlayerModel<HumanNpc> {
+        private final boolean slimArms;
+
         Model(ModelPart root, boolean slim) {
             super(root, slim);
+            this.slimArms = slim;
         }
 
         /** 1.3.77: the pose of the villager being drawn now (the render thread's alone), or null. */
         static RigPose pose;
+        /** 2.0.34: whether the villager being drawn now is a woman (the render thread's alone). */
+        static boolean woman;
+
+        /**
+         * 2.0.34: a woman's legs (the figure's curves, their pivots out so they meet), a wide skin's arms slim; a man's as vanilla's. The
+         * model is shared by every villager, so each is put back first (vanilla never sets the legs' sideways pivots or any part's scale).
+         */
+        private void figure() {
+            ModelPart[] legs = {this.f_102813_, this.f_102814_, this.f_103377_, this.f_103376_};
+            for (int i = 0; i < legs.length; i++) {
+                legs[i].f_233553_ = 1.0F;
+                legs[i].f_233555_ = 1.0F;
+                legs[i].f_104200_ = i % 2 == 0 ? -com.hex.kagune.control.FemaleBody.VANILLA_LEG_X : com.hex.kagune.control.FemaleBody.VANILLA_LEG_X;
+            }
+            for (ModelPart arm : new ModelPart[] {this.f_102811_, this.f_102812_, this.f_103375_, this.f_103374_}) {
+                arm.f_233553_ = 1.0F;
+            }
+            if (!woman) {
+                return;
+            }
+            FemaleFigure.shapeLegs(this, HumanRules.WOMAN_LEGS);
+            FemaleFigure.spreadLegs(this, HumanRules.WOMAN_LEGS);
+            if (!this.slimArms) {
+                FemaleFigure.shapeArms(this);
+            }
+        }
 
         @Override
         public void m_6973_(HumanNpc human, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
@@ -256,6 +323,7 @@ public final class HumanRenderer extends HumanoidMobRenderer<HumanNpc, PlayerMod
                 this.f_103376_.m_104315_(this.f_102814_);
                 this.f_103378_.m_104315_(this.f_102810_);
             }
+            figure();
             if (!human.scared()) {
                 return;
             }

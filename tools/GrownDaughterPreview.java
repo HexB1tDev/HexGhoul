@@ -82,8 +82,12 @@ public final class GrownDaughterPreview {
 
     /** PoseRender.model's skinned branch with the figure: legs shaped and spread (Touka's), wide arms slim, the bust on the torso. */
     static List<PoseRender.Tri> grown(RigPose pose, BufferedImage skin, boolean slim) {
+        return grown(pose, skin, slim, Persona.TOUKA.legs(), Persona.TOUKA.curves());
+    }
+
+    /** 2.0.34: the same with any figure's {@code legs} and {@code curves} (a village woman's, AgentRules.FEMALE_*). */
+    static List<PoseRender.Tri> grown(RigPose pose, BufferedImage skin, boolean slim, float legs, float curves) {
         List<PoseRender.Tri> tris = new ArrayList<>();
-        float legs = Persona.TOUKA.legs();
         double hips = 1.0 + (FemaleBody.HIPS - 1.0) * legs;
         double thighs = 1.0 + (FemaleBody.THIGHS - 1.0) * legs;
         double legX = 2.0 * hips - 0.1;
@@ -116,14 +120,13 @@ public final class GrownDaughterPreview {
             PoseRender.cube(tris, new PoseRender.Cube(mn, mx, (Integer)p[2], PoseRender.textured((Integer)p[6], (Integer)p[7], w, h, d, true)),
                 (PoseRender.Part)p[3], same, world, sx, sz, (Double)p[8]);
         }
-        bust(tris, pose, skin, false);
-        bust(tris, pose, skin, true);
+        bust(tris, pose, skin, false, curves);
+        bust(tris, pose, skin, true, curves);
         return tris;
     }
 
     /** FemaleFigure.bust's wedge in cells a texel wide, each the skin's torso front texel the game samples there. */
-    static void bust(List<PoseRender.Tri> tris, RigPose pose, BufferedImage skin, boolean jacket) {
-        float curves = Persona.TOUKA.curves();
+    static void bust(List<PoseRender.Tri> tris, RigPose pose, BufferedImage skin, boolean jacket, float curves) {
         double grow = jacket ? 0.25 : 0.0;
         double top = FemaleBody.BUST_TOP;
         double tip = FemaleBody.BUST_TIP;

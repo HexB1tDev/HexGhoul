@@ -118,6 +118,29 @@ public final class HumanRules {
         return com.hex.kagune.control.family.ChildBlinks.has(child) ? com.hex.kagune.control.family.ChildBlinks.blush(child) : null;
     }
 
+    /** 2.0.34: vanilla's default skins a woman wears (only humans made before 1.3.75 still wear one). */
+    static final java.util.Set<String> WOMEN = java.util.Set.of("alex", "ari", "efe", "makena", "noor");
+
+    /**
+     * 2.0.34 (the owner: "give the females proper female bodies that we already got in the game"): a woman's look: a villager's own skin made
+     * from a daughter's ({@code HumanSkins.Skin.girl}), or one of vanilla's women's.
+     */
+    public static boolean female(int look) {
+        if (look >= CUTE) {
+            return com.hex.kagune.control.village.HumanSkins.ALL[Math.floorMod(look - CUTE, com.hex.kagune.control.village.HumanSkins.ALL.length)].girl();
+        }
+        return WOMEN.contains(LOOKS[Math.floorMod(look, LOOKS.length * 2) % LOOKS.length]);
+    }
+
+    /**
+     * 2.0.34: a village woman's body, the shared female body as the CCG's women have it (Eto's figure a little taller and a touch slimmer:
+     * {@code AgentRules.FEMALE_*}): her height and width drawn against a man's, and how much of the figure's curves and legs.
+     */
+    public static final float WOMAN_SIZE = AgentRules.FEMALE_SIZE;
+    public static final float WOMAN_BUILD = AgentRules.FEMALE_BUILD;
+    public static final float WOMAN_CURVES = AgentRules.FEMALE_CURVES;
+    public static final float WOMAN_LEGS = AgentRules.FEMALE_LEGS;
+
     public static boolean slim(int look) {
         if (look >= CUTE) {
             return com.hex.kagune.control.village.HumanSkins.ALL[Math.floorMod(look - CUTE, com.hex.kagune.control.village.HumanSkins.ALL.length)].slim();
