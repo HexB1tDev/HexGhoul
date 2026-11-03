@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.0.22 (HexGhoul): Dawn and its black briefcase (testing)
+
+See `.github/release-notes-2.0.22.md`. The White Reaper now carries Dawn, a black lance swung as a sword.
+
 ## 2.0.21 (HexGhoul): White Reaper encounter (testing)
 
 See `.github/release-notes-2.0.21.md`. Rank 10 is now the White Reaper, a solo encounter with a single world-wide slot.

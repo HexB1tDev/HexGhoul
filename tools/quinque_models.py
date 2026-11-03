@@ -44,6 +44,7 @@ MODELS = ROOT / "src" / "main" / "resources" / "assets" / "hexkagune" / "models"
 CASE, TRIM, HANDLE, LATCH, EMBLEM, CORE = (0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0)
 BLADE, EDGE, JOINT, WRAP, STEEL, SHAFT = (0, 1), (1, 1), (2, 1), (3, 1), (4, 1), (5, 1)
 FLESH, VEIN, BONE, GOLD = (0, 2), (1, 2), (2, 2), (3, 2)
+ENGRAVING = (4, 2)
 
 BASE = {"case": (206, 209, 214), "trim": (64, 66, 72), "handle": (24, 24, 27), "latch": (150, 153, 160), "wrap": (30, 28, 30),
         "steel": (184, 187, 194), "flesh": (150, 40, 52), "vein": (88, 14, 26), "bone": (226, 218, 198), "gold": (196, 160, 70)}
@@ -58,6 +59,9 @@ KINDS = {
                  shaft=(214, 206, 192)),
     "launcher": dict(BASE, emblem=(30, 120, 200), core=(120, 240, 255), blade=(56, 58, 66), edge=(196, 200, 210), joint=(28, 30, 36),
                      shaft=(150, 154, 162)),
+    "dawn": dict(BASE, case=(19, 20, 24), trim=(38, 39, 45), latch=(66, 67, 74), emblem=(99, 78, 39),
+                 core=(145, 109, 45), blade=(32, 28, 28), edge=(46, 39, 39), joint=(17, 16, 19),
+                 shaft=(31, 26, 24), gold=(157, 122, 55)),
 }
 
 HAND = 5.0  # the right hand's grip, standing (a vanilla sword's)
@@ -96,7 +100,7 @@ def texture(kind, colours):
     patch(LATCH, colours["latch"], "plate")
     patch(EMBLEM, colours["emblem"], "plate")
     patch(CORE, colours["core"], "glow")
-    patch(BLADE, colours["blade"], "vein")
+    patch(BLADE, colours["blade"], "noise" if kind == "dawn" else "vein")
     patch(EDGE, colours["edge"])
     patch(JOINT, colours["joint"])
     patch(WRAP, colours["wrap"], "wrap")
@@ -106,6 +110,11 @@ def texture(kind, colours):
     patch(VEIN, colours["vein"], "vein")
     patch(BONE, colours["bone"], "plate")
     patch(GOLD, colours["gold"], "plate")
+    if kind == "dawn":
+        for row, pattern in enumerate(("..#...#.", ".#.#....", ".#.#....", "..#...#.")):
+            for col, mark in enumerate(pattern):
+                color = colours["gold"] if mark == "#" else colours["blade"]
+                img.putpixel((16 + col, 8 + row), color + (255,))
     return img
 
 
@@ -118,6 +127,10 @@ def box(frm, to, cell, turned=True, rot=None):
     """An element. {turned}: the standing weapons' -45 degrees about z (the handheld diagonal); {rot}: its own (axis, angle, origin)
     instead (1.3.33: the launcher, built lying along x)."""
     faces = {face: {"uv": uv(cell), "texture": "#q"} for face in ("north", "south", "east", "west", "up", "down")}
+    if cell == ENGRAVING:
+        for face in ("north", "south", "up", "down"):
+            faces[face]["uv"] = [8, 4, 12, 6]
+            faces[face]["rotation"] = 90
     element = {"from": [round(v, 3) for v in frm], "to": [round(v, 3) for v in to], "faces": faces}
     if rot is not None:
         axis, angle, origin = rot
@@ -287,13 +300,71 @@ def launcher_parts():
     return g
 
 
-GUNS = {"launcher"}
+def dawn_parts():
+    """A narrow black lance with a hollow flared guard, engraved gold bands, and a hooked knuckle guard."""
+    parts = []
+
+    def add(x0, x1, y0, y1, z0, z1, cell, rotation=None):
+        parts.append(((x0, 8 + y0, 8 + z0), (x1, 8 + y1, 8 + z1), cell, rotation))
+
+    def core(x0, x1, ry, rz, cell):
+        add(x0, x1, -ry, ry, -rz, rz, cell)
+
+    # Eight slats make each cross-section of the flared shell. The rim stays open around the shaft.
+    sections = [
+        (-2.8, -2.45, 3.04, JOINT), (-2.45, -2.20, 2.96, BLADE),
+        (-2.20, -2.03, 2.92, GOLD), (-2.03, -1.14, 2.86, ENGRAVING),
+        (-1.14, -0.97, 2.72, GOLD), (-0.97, 0.45, 2.62, BLADE),
+        (0.45, 0.60, 2.43, GOLD), (0.60, 1.35, 2.36, ENGRAVING),
+        (1.35, 1.50, 2.24, GOLD), (1.50, 2.8, 2.10, BLADE),
+        (2.8, 4.1, 1.89, BLADE), (4.1, 5.4, 1.67, BLADE),
+        (5.4, 6.7, 1.46, BLADE), (6.7, 8.0, 1.26, BLADE),
+        (8.0, 9.35, 1.06, BLADE), (9.35, 10.8, 0.87, BLADE),
+        (10.8, 12.5, 0.71, BLADE),
+    ]
+    for x0, x1, radius, cell in sections:
+        flat = radius * (math.sqrt(2) - 1) + 0.035
+        for sign in (-1, 1):
+            low, high = sorted((sign * radius, sign * (radius - 0.30)))
+            add(x0, x1, low, high, -flat, flat, cell)
+            add(x0, x1, -flat, flat, low, high, cell)
+            for angle in (-45, 45):
+                add(x0, x1, low, high, -flat, flat, cell, ("x", angle, (8, 8, 8)))
+
+    # Two recessed shoulders interrupt the otherwise straight taper at the base of the point.
+    for x0, x1, height, depth in [
+        (12.2, 13.1, 0.62, 0.57), (13.1, 14.1, 0.40, 0.49),
+        (14.1, 15.3, 0.42, 0.49), (15.3, 16.2, 0.57, 0.62),
+        (16.2, 17.8, 0.68, 0.52), (17.8, 19.3, 0.51, 0.42),
+        (19.3, 21.2, 0.42, 0.34), (21.2, 23.5, 0.34, 0.29),
+        (23.5, 25.9, 0.26, 0.22), (25.9, 28.1, 0.19, 0.16),
+        (28.1, 30.0, 0.12, 0.10), (30.0, 31.8, 0.06, 0.055),
+    ]:
+        core(x0, x1, height, depth, BLADE)
+        add(x0, x1, -height * 0.3, height * 0.35, depth - 0.02, depth + 0.035, EDGE)
+
+    core(-9.4, 12.5, 0.31, 0.31, SHAFT)
+    for x0, x1, radius in [(-10.2, -9.4, 0.42), (-11.0, -10.2, 0.33), (-12.7, -11.0, 0.23),
+                           (-14.0, -12.7, 0.14), (-14.8, -14.0, 0.06)]:
+        core(x0, x1, radius, radius, JOINT)
+
+    # Black hooked guard on the underside, with a raised root and a narrow return.
+    add(-5.4, -2.55, -1.80, -1.20, -0.36, 0.36, SHAFT)
+    add(-3.05, -2.52, -1.58, -0.28, -0.42, 0.42, JOINT)
+    add(-7.45, -5.05, -1.77, -1.26, -0.31, 0.31, JOINT, ("z", -22.5, (-5.2, 6.4, 8)))
+    add(-8.85, -6.9, -1.35, -1.03, -0.22, 0.22, SHAFT, ("z", -45, (-7.25, 6.8, 8)))
+    add(-9.55, -8.1, -0.63, -0.45, -0.13, 0.13, EDGE, ("z", -22.5, (-8.4, 7.45, 8)))
+    return parts
 
 
-def gun_telescoped(parts, f):
+GUN_GRIP_DAWN = (-5.7, 8.0, 8.0)
+GUNS = {"launcher", "dawn"}
+
+
+def gun_telescoped(parts, f, grip=GUN_GRIP):
     """The gun {f} out (0..1): every length drawn in toward its grip along x, the case round the grip shrinking into it."""
     els = []
-    gx = GUN_GRIP[0]
+    gx = grip[0]
     for frm, to, cell, rot in parts:
         a = gx + (frm[0] - gx) * f
         b = gx + (to[0] - gx) * f
@@ -303,7 +374,15 @@ def gun_telescoped(parts, f):
         if rot is not None:
             axis, angle, origin = rot
             turn = (axis, angle, (gx + (origin[0] - gx) * f, origin[1], origin[2]))
-        els.append(box((a, frm[1], frm[2]), (b, to[1], to[2]), cell, rot=turn, turned=False))
+        element = box((a, frm[1], frm[2]), (b, to[1], to[2]), cell, rot=turn, turned=False)
+        if grip == GUN_GRIP_DAWN and cell in {GOLD, ENGRAVING}:
+            # Color only the outer wall of each slat. The open end and interior are black.
+            outside = ("up" if frm[1] > 8 else "down") if to[1] - frm[1] < to[2] - frm[2] else ("south" if frm[2] > 8 else "north")
+            for side, face in element["faces"].items():
+                if side != outside:
+                    face["uv"] = uv(JOINT)
+                    face.pop("rotation", None)
+        els.append(element)
     if f < 1.0:
         k = 1.0 - f
         half = 2.4 + 3.6 * k
@@ -317,7 +396,7 @@ def gun_telescoped(parts, f):
     return els
 
 
-WEAPONS = {"bikaku": blade_parts, "koukaku": spear_parts, "katana": katana_parts, "mace": mace_parts, "launcher": launcher_parts}
+WEAPONS = {"bikaku": blade_parts, "koukaku": spear_parts, "katana": katana_parts, "mace": mace_parts, "launcher": launcher_parts, "dawn": dawn_parts}
 
 
 def telescoped(parts, f):
@@ -433,6 +512,8 @@ STANCES = {
     # A rifle: bladed (the left shoulder toward the target), the stock in the right shoulder, the barrel along the look.
     "launcher": dict(twist=0.85, pitch=-1.62, yaw=-1.12, tip=(0, 0, -1), side=(0, -1, 0), scale=0.62, gun=True,
                      right=GUN_GRIP, left=GUN_FORE),
+    "dawn": dict(twist=0.36, pitch=-1.05, yaw=-0.42, tip=(0, -0.02, -1), side=(0, -1, 0), scale=0.74, gun=True,
+                 right=GUN_GRIP_DAWN, left=GUN_GRIP_DAWN),
     # The spear low and level at the hip, its point at the chest of what it faces, the left hand in front on the shaft (sliding along
     # it, slide: from .. to, as the spear is driven through it in a thrust).
     "koukaku": dict(twist=1.0, pitch=-1.0, yaw=-1.05, tip=(0, 0.06, -1), side=(1, 0, 0), scale=0.85, right=4.5, left=12.5,
@@ -573,6 +654,7 @@ FIRST = {
     "koukaku": ([0, -90, 25], [1.13, 1.2, 1.13], 0.45),
     "katana": ([0, -90, 25], [1.13, 2.0, 1.13], 0.5),
     "mace": ([0, -90, 25], [1.13, 1.6, 1.13], 0.5),
+    "dawn": ([0, 100, 0], [-2.0, 3.0, -5.0], 0.58),
     "launcher": ([0, 100, 0], [-2.0, 3.0, -5.0], 0.6),
 }
 
@@ -580,6 +662,11 @@ FIRST = {
 def weapon_display(kind, lo_hi):
     roll, arm, angles, translation, scale = solve_hold(kind)
     d = handheld((angles, translation, scale), FIRST[kind])
+    if kind == "dawn":
+        d["gui"] = {"rotation": [15, -20, 20], "translation": [0, 0, 0], "scale": [0.34] * 3}
+        d["ground"] = {"rotation": [0, 0, 0], "translation": [0, 2, 0], "scale": [0.28] * 3}
+        d["fixed"] = d["gui"]
+        return d
     if kind in GUNS:
         # Side on in a slot, the muzzle to the right, a little turned to show its top.
         d["gui"] = {"rotation": [15, -25, 0], "translation": [-1.6, -0.6, 0], "scale": [0.4] * 3}
@@ -599,7 +686,7 @@ def weapon_display(kind, lo_hi):
 
 
 HOLDS_JAVA = ROOT / "src" / "main" / "java" / "com" / "hex" / "kagune" / "control" / "client" / "animation" / "QuinqueHolds.java"
-JAVA_KINDS = {"bikaku": "BLADE", "koukaku": "SPEAR", "katana": "KATANA", "mace": "MACE", "launcher": "LAUNCHER"}
+JAVA_KINDS = {"bikaku": "BLADE", "koukaku": "SPEAR", "katana": "KATANA", "mace": "MACE", "launcher": "LAUNCHER", "dawn": "DAWN"}
 
 
 def write_holds():
@@ -746,6 +833,7 @@ ITEMS = {  # kind -> (case item, weapon item)
     "katana": ("quinque_case_katana", "quinque_katana"),
     "mace": ("quinque_case_mace", "quinque_flesh_mace"),
     "launcher": ("quinque_case_launcher", "quinque_crystal_launcher"),
+    "dawn": ("quinque_case_dawn", "quinque_dawn"),
 }
 
 
@@ -757,7 +845,13 @@ def model(kind, elements, display):
 
 def write(path, data):
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data, indent=1) + "\n")
+    if path.name in {"dawn_half.json", "dawn_nearly.json", "dawn_full.json"}:
+        elements = data.pop("elements")
+        payload = json.dumps(data, indent=1)[:-2] + ',\n "elements": [\n'
+        payload += ",\n".join("  " + json.dumps(el, separators=(",", ":")) for el in elements)
+        path.write_text(payload + "\n ]\n}\n")
+    else:
+        path.write_text(json.dumps(data, indent=1) + "\n")
 
 
 def main():
@@ -766,7 +860,11 @@ def main():
         texture(kind, colours).save(TEXTURES / f"quinque_{kind}.png")
         parts = WEAPONS[kind]()
         held = weapon_display(kind, span(parts))
-        tele = gun_telescoped if kind in GUNS else telescoped
+        if kind == "dawn":
+            def tele(parts, fraction):
+                return gun_telescoped(parts, fraction, GUN_GRIP_DAWN)
+        else:
+            tele = gun_telescoped if kind in GUNS else telescoped
         frames = {
             "case_closed": model(kind, case_elements(False), CASE_DISPLAY),
             "case_open": model(kind, case_elements(True), CASE_DISPLAY),

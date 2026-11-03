@@ -235,7 +235,7 @@ public final class AgentRules {
         Quinque kind = kind(r);
         if (kind == first) {
             Quinque[] all = Quinque.values();
-            kind = all[(kind.ordinal() + 1 + (int)Math.floor(r * 3.0)) % all.length];
+            kind = all[(kind.ordinal() + 1 + (int)Math.floor(r * 3.0)) % (Quinque.LAUNCHER.ordinal() + 1)];
         }
         if (kind == first || kind == Quinque.LAUNCHER && first == Quinque.LAUNCHER) {
             kind = first == Quinque.KATANA ? Quinque.SPEAR : Quinque.KATANA;
@@ -316,7 +316,7 @@ public final class AgentRules {
     public static double reach(Quinque q) {
         return switch (q) {
             case BLADE -> 2.6;
-            case KATANA -> 3.0;
+            case KATANA, DAWN -> 3.0;
             case SPEAR -> 4.4;
             case MACE -> 3.1;
             case LAUNCHER -> 2.4;
@@ -335,7 +335,7 @@ public final class AgentRules {
         return switch (q) {
             case SPEAR -> 3;
             case BLADE -> 4;
-            case KATANA -> 5;
+            case KATANA, DAWN -> 5;
             case MACE -> 9;
             case LAUNCHER -> 6;
         };
@@ -352,7 +352,7 @@ public final class AgentRules {
     public static double parry(Quinque q) {
         return switch (q) {
             case BLADE -> 0.5;
-            case KATANA -> 0.62;
+            case KATANA, DAWN -> 0.62;
             case SPEAR -> 0.48;
             case MACE -> 0.3;
             case LAUNCHER -> 0.0;

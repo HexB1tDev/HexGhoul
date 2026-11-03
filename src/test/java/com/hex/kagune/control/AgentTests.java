@@ -127,9 +127,11 @@ public final class AgentTests {
             Quinque first = AgentRules.kind(random.nextDouble());
             Quinque second = AgentRules.partnerKind(first, random.nextDouble());
             seen.merge(first, 1, Integer::sum);
+            check(first != Quinque.DAWN && second != Quinque.DAWN, "regular investigators never carry Dawn");
             check(second != first, "a pair carries two different quinques (" + first + ")");
         }
         for (Quinque q : Quinque.values()) {
+            if (q == Quinque.DAWN) continue;
             check(seen.getOrDefault(q, 0) > 1000, q + " is carried: " + seen.get(q));
         }
         check(seen.get(Quinque.LAUNCHER) < seen.get(Quinque.BLADE) && seen.get(Quinque.LAUNCHER) < seen.get(Quinque.KATANA), "the launcher least");

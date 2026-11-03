@@ -1,4 +1,12 @@
-# START HERE (state after 2.0.21)
+# START HERE (state after 2.0.22)
+
+The White Reaper now carries Dawn, a black lance swung as a sword.
+
+- Dawn has a tapered blade, a hollow flared guard with two engraved gold bands, and a hooked grip. It folds into a black briefcase. The model and texture were previewed outside the game.
+- Dawn has a three-block melee reach. Its ordinary hits deal 23.7 raw damage and its finisher deals 32.0.
+- Dawn is reserved for the White Reaper encounter pending a player acquisition decision. Protocol 74 carries the new weapon ordinal.
+
+# State after 2.0.21
 
 Rank 10 is now the White Reaper, a solo encounter with a single world-wide slot.
 

@@ -23,7 +23,8 @@ public enum Quinque {
     /** 1.3.26: Rinkaku: a flesh mace, a long handle in both hands, a great lump of flesh for a head (14 damage, 0.8 a second). */
     MACE("rinkaku", "mace", "quinque_case_mace", "quinque_flesh_mace", 9, -3.2F, 0.75, 1.7F, 100, true, false, 12),
     /** 1.3.26: Ukaku: a launcher firing crystal shards (hold use); a poor club (4 damage). */
-    LAUNCHER("ukaku", "launcher", "quinque_case_launcher", "quinque_crystal_launcher", -1, -2.4F, 0.0, 1.4F, 40, true, true, 7);
+    LAUNCHER("ukaku", "launcher", "quinque_case_launcher", "quinque_crystal_launcher", -1, -2.4F, 0.0, 1.4F, 40, true, true, 7),
+    DAWN("koukaku", "dawn", "quinque_case_dawn", "quinque_dawn", 4, -2.3F, 0.5, 1.5F, 60, false, false, 8);
 
     /** How long it takes to open or shut (ticks). */
     public static final int UNFOLD = 12;
@@ -138,6 +139,7 @@ public enum Quinque {
             case BLADE -> 1.4F;
             case SPEAR -> 1.3F;
             case KATANA -> 1.6F;
+            case DAWN -> 1.35F;
             case MACE -> 1.25F;
             case LAUNCHER -> 1.0F;
         };
@@ -150,6 +152,7 @@ public enum Quinque {
         }
         return switch (this) {
             case KATANA -> 3.5;
+            case DAWN -> 3.0;
             case MACE -> 3.0;
             case SPEAR -> 5.0;
             default -> 0.0;

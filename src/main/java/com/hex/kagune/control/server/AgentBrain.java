@@ -169,7 +169,7 @@ public final class AgentBrain {
     }
 
     static void prepareReaper(CcgAgent agent, int look) {
-        save(agent, Math.max(4, look), Quinque.KATANA, true, null);
+        save(agent, Math.max(4, look), Quinque.DAWN, true, null);
         agent.getPersistentData().m_128405_(RANK_LEVEL, AgentRules.Rank.RANK_10.level());
         agent.m_21530_();
     }
@@ -214,7 +214,7 @@ public final class AgentBrain {
             && !saved.m_128441_(VillagePlace.KEY) && claimReaper(agent, level);
         if (reaper) {
             mind.look = Math.max(4, mind.look);
-            mind.kind = Quinque.KATANA;
+            mind.kind = Quinque.DAWN;
             agent.m_21530_();
             agent.m_21051_(net.minecraft.world.entity.ai.attributes.Attributes.f_22278_).m_22100_(AgentRules.REAPER_KNOCKBACK_RESISTANCE);
         } else {

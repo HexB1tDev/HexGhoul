@@ -102,7 +102,7 @@ public final class QuinquePose {
                 default -> new Key[] {rest(0), k(0.3, -1.9, 0.25, 0, 0.1, -0.12, -0.5, 0), k(0.5, -0.3, 0.0, 0, -0.1, 0.3, 3.0, 0.4),
                     k(0.68, 0.2, -0.05, 0, -0.15, 0.35, 3.0, 0.5), rest(1)};
             };
-            case KATANA -> switch (step) {
+            case KATANA, DAWN -> switch (step) {
                 // Kesa-giri: from over the right shoulder down across to the left hip.
                 case 0 -> new Key[] {rest(0), k(0.3, -1.0, 0.45, -0.35, 0.35, -0.05, -0.5, 0), k(0.5, 0.15, -0.25, 0.35, -0.3, 0.2, 2.5, 0.8),
                     k(0.68, 0.3, -0.4, 0.45, -0.45, 0.25, 2.2, 1.0), rest(1)};
