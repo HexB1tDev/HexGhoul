@@ -195,7 +195,8 @@ public final class QuinqueServer {
                 finisher(player, event.getEntity(), quinque, event.getAmount(), level);
             }
         }
-        if (!ghoul(event.getEntity(), level)) {
+        if (quinque == Quinque.DAWN && attacker instanceof com.hex.kagune.control.npc.CcgAgent
+            || !ghoul(event.getEntity(), level)) {
             return;
         }
         event.setAmount(event.getAmount() * quinque.ghoul);

@@ -186,6 +186,11 @@ public final class AgentRules {
     public static final double REAPER_KNOCKBACK_RESISTANCE = 0.85;
     public static final double REAPER_DASH_SPEED = 2.1;
     public static final int REAPER_FLIP_EVERY = 20;
+    public static final double REAPER_KICK_REACH = 2.8;
+    public static final int REAPER_KICK_WINDUP = 6;
+    public static final int REAPER_KICK_DURATION = 14;
+    public static final int REAPER_KICK_COOLDOWN = 88;
+    public static final float REAPER_KICK_DAMAGE = 22.0F;
 
     /** Its health by its rank, a superior's more. */
     public static double health(Rank rank, boolean superior) {

@@ -1,5 +1,6 @@
 package com.hex.kagune.control.client.animation;
 
+import com.hex.kagune.control.npc.AgentRules;
 import com.hex.kagune.control.quinque.Quinque;
 
 /**
@@ -14,6 +15,25 @@ import com.hex.kagune.control.quinque.Quinque;
  */
 public final class AgentPose {
     private AgentPose() {
+    }
+
+    /** A loaded knee, a quick front kick, then the foot goes back under the hips. */
+    public static RigPose kick(double age) {
+        float windup = (float)Math.min(1.0, age / AgentRules.REAPER_KICK_WINDUP);
+        float recover = (float)Math.max(0.0, 1.0 - (age - AgentRules.REAPER_KICK_WINDUP)
+            / (AgentRules.REAPER_KICK_DURATION - AgentRules.REAPER_KICK_WINDUP));
+        float extension = (float)Math.pow(windup, 2.5) * Math.min(1.0F, recover);
+        RigPose p = QuinquePose.hold(Quinque.DAWN);
+        p.rightLegX = -1.48F * extension;
+        p.leftLegX = 0.22F * extension;
+        p.rightLegZ = 0.08F * extension;
+        p.legHold = 1.0F;
+        p.lean -= 0.27F * extension;
+        p.lunge += 2.0F * extension;
+        p.leftArmX = -0.35F * extension;
+        p.leftArmZ = -0.55F * extension;
+        p.leftArmHold = extension;
+        return p;
     }
 
     /** What the right hand carries as it runs. */

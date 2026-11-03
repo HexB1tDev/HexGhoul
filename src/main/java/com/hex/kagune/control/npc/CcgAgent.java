@@ -42,6 +42,7 @@ public class CcgAgent extends PathfinderMob {
 
     /** The swing that meets a blow coming at it: a quick cut up across it, its weapon slapping the blow aside. */
     public static final int PARRY = 3;
+    public static final int KICK = 4;
     /** "Never", on the 32-bit clocks. */
     public static final int NEVER = AgentRules.NEVER;
 

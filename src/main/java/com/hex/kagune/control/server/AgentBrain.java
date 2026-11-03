@@ -85,6 +85,9 @@ public final class AgentBrain {
         int token;
         long readyAt = Long.MIN_VALUE;
         long answered = Long.MIN_VALUE;
+        long kickAt = Long.MIN_VALUE;
+        long kickReadyAt = Long.MIN_VALUE;
+        int kickTarget;
         /** A finisher just landed and it means to flip clear of it. */
         boolean clear;
         /** Its feet: its flip and when, its push; its dash, when, which way; when it may flip and dash again. */
@@ -265,6 +268,7 @@ public final class AgentBrain {
             return; // in a flip or a dash: nothing else this tick
         }
         if (PaleStun.stunned(agent)) {
+            cancelKick(agent, mind, now);
             return;
         }
         if (falter(agent, mind, level, now)) {
@@ -569,6 +573,7 @@ public final class AgentBrain {
 
     private static void patrol(CcgAgent agent, Mind mind, CcgAgent partner, ServerLevel level, long now) {
         end(agent, mind);
+        cancelKick(agent, mind, now);
         if (mind.open && ago(now, mind.foughtAt) > AgentRules.CALM && QuinqueServer.hand(agent, level, agent.m_21205_(), mind.kind, false)) {
             mind.open = false;
         }
@@ -666,6 +671,9 @@ public final class AgentBrain {
             agent.m_21573_().m_26573_(); // the case still opening in its hand
             return;
         }
+        if (kick(agent, mind, prey, level, now)) {
+            return;
+        }
         if (mind.striking && now >= mind.landsAt) {
             land(agent, mind, level, now);
         }
@@ -677,6 +685,68 @@ public final class AgentBrain {
         } else {
             close(agent, mind, partner, prey, level, now);
         }
+    }
+
+    private static void cancelKick(CcgAgent agent, Mind mind, long now) {
+        if (mind.kickAt != Long.MIN_VALUE) {
+            mind.kickAt = Long.MIN_VALUE;
+            agent.swing(-1, now);
+        }
+    }
+
+    /** A close-range kick with a visible windup and a chance for its target to get clear. */
+    private static boolean kick(CcgAgent agent, Mind mind, LivingEntity prey, ServerLevel level, long now) {
+        if (mind.rank != AgentRules.Rank.RANK_10) {
+            return false;
+        }
+        if (mind.kickAt != Long.MIN_VALUE) {
+            if (ago(now, mind.kickAt) >= AgentRules.REAPER_KICK_DURATION) {
+                cancelKick(agent, mind, now);
+                return false;
+            }
+            agent.m_21573_().m_26573_();
+            if (ago(now, mind.kickAt) >= AgentRules.REAPER_KICK_WINDUP && mind.kickTarget != 0) {
+                Entity target = level.m_6815_(mind.kickTarget);
+                mind.kickTarget = 0;
+                if (target instanceof LivingEntity body && body.m_6084_() && agent.m_142582_(body)
+                    && body.m_20280_(agent) <= Math.pow(AgentRules.REAPER_KICK_REACH + 0.3, 2)) {
+                    Vec3 away = UkakuFire.horizontal(body.m_20182_().m_82546_(agent.m_20182_()));
+                    if (away.m_82526_(UkakuFire.horizontal(agent.m_20154_())) >= 0.15) {
+                        kickLands(agent, body, away, level, now);
+                    }
+                }
+            }
+            return true;
+        }
+        if (!mind.striking && now >= mind.kickReadyAt && now >= mind.readyAt && agent.m_20096_()
+            && prey.m_20280_(agent) <= AgentRules.REAPER_KICK_REACH * AgentRules.REAPER_KICK_REACH
+            && agent.m_142582_(prey) && agent.m_217043_().m_188500_() < 0.25) {
+            mind.kickAt = now;
+            mind.kickReadyAt = now + AgentRules.REAPER_KICK_COOLDOWN;
+            mind.kickTarget = prey.m_19879_();
+            agent.m_21573_().m_26573_();
+            agent.swing(CcgAgent.KICK, now);
+            UkakuFire.sound(level, agent.m_20182_(), "hexkagune:sfx.dash", 0.7F, 1.3F);
+            return true;
+        }
+        return false;
+    }
+
+    private static void kickLands(CcgAgent agent, LivingEntity body, Vec3 away, ServerLevel level, long now) {
+        Vec3 centre = GhoulNpcBrain.centre(body);
+        WoundHits.expect(body, WoundBook.Blow.BLUNT, centre, away, 0.0);
+        body.f_19802_ = 0;
+        if (!body.m_6469_(agent.m_269291_().m_269333_(agent), AgentRules.REAPER_KICK_DAMAGE)) {
+            return;
+        }
+        double resist = Math.max(0.0, Math.min(1.0, body.m_21133_(net.minecraft.world.entity.ai.attributes.Attributes.f_22278_)));
+        double speed = PaleRules.KICK_SPEED * 0.45 * (1.0 - PaleRules.KICK_RESIST * resist);
+        Vec3 launch = away.m_82490_(speed).m_82520_(0.0, PaleRules.KICK_UP, 0.0);
+        body.m_20256_(launch);
+        body.f_19864_ = true;
+        PaleKnockdown.launched(body, now);
+        PaleBlitz.fxAround(body, agent.m_19879_(), com.hex.kagune.control.network.S2CPaleFx.KICKED, centre, launch, 1.0F, 0);
+        UkakuFire.sound(level, centre, "hexkagune:sfx.shockwave", 1.0F, 1.1F);
     }
 
     /** It turns square to {@code prey}. */

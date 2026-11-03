@@ -1,4 +1,11 @@
-# START HERE (state after 2.0.22)
+# START HERE (state after 2.0.23)
+
+The White Reaper can mix a telegraphed front kick into Dawn’s melee strings.
+
+- The kick has a six-tick windup, deals 22 raw damage, and launches and tumbles the target. The target can step out of range or break line of sight.
+- Dawn’s NPC damage uses its stated values before the target’s defenses. Protocol 75 carries the kick pose.
+
+# State after 2.0.22
 
 The White Reaper now carries Dawn, a black lance swung as a sword.
 

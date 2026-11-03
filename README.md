@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.0.23 (HexGhoul): White Reaper front kick (testing)
+
+See `.github/release-notes-2.0.23.md`. The White Reaper can mix a telegraphed front kick into Dawn’s melee strings.
+
 ## 2.0.22 (HexGhoul): Dawn and its black briefcase (testing)
 
 See `.github/release-notes-2.0.22.md`. The White Reaper now carries Dawn, a black lance swung as a sword.

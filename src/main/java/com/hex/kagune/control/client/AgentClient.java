@@ -50,7 +50,9 @@ public final class AgentClient {
         double swingAge = CcgAgent.since(now, agent.swingAt()) + partial;
         int swing = agent.swing();
         RigPose arms = null;
-        if (weapon != null && swing >= 0 && swing < CcgAgent.PARRY && swingAge >= 0.0 && swingAge < weapon.swing) {
+        if (weapon == Quinque.DAWN && swing == CcgAgent.KICK && swingAge >= 0.0 && swingAge < AgentRules.REAPER_KICK_DURATION) {
+            arms = AgentPose.kick(swingAge);
+        } else if (weapon != null && swing >= 0 && swing < CcgAgent.PARRY && swingAge >= 0.0 && swingAge < weapon.swing) {
             arms = QuinquePose.swing(weapon, swing, swingAge / weapon.swing);
         } else if (weapon != null && swing == CcgAgent.PARRY && swingAge >= 0.0 && swingAge < AgentPose.PARRY_TICKS) {
             arms = AgentPose.parry(weapon, swingAge / AgentPose.PARRY_TICKS);
