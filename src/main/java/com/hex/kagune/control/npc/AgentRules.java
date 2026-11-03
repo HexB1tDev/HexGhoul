@@ -73,31 +73,59 @@ public final class AgentRules {
 
     /**
      * 1.3.70 (the owner: "CCG agents now have different ranks (random in the wild) the higher the rank the more HP and faster they are"):
-     * its rank, the lowest most common (out of {@code weight} in 100), each with its own health and movement; shown as its name.
+     * its rank, the lowest most common (out of {@code weight} in 100), each with its own health and movement; shown as its name. 2.0.17
+     * (the owner: "buff CCG agents depending on the rank ... add more ranks RANK 0 to 10 (10,9,8 being rare but really dangerous, with a
+     * decent amount of HP.)"): Rank 0 to Rank 10, each harder than the last: its health, speed, armour, how hard it hits ({@link #power})
+     * and how soon it strikes again ({@link #pace}: its rest between blows times this); 8, 9 and 10 rare, with a lot of health, hitting two
+     * to three times as hard and far faster, their names in red. Saved by its number ({@link #level}).
      */
     public enum Rank {
-        RANK_3("Rank 3 Investigator", 30, 36.0, 0.32),
-        RANK_2("Rank 2 Investigator", 25, 46.0, 0.33),
-        RANK_1("Rank 1 Investigator", 20, 58.0, 0.345),
-        FIRST_CLASS("First Class Investigator", 14, 72.0, 0.36),
-        ASSOCIATE_SPECIAL("Associate Special Class Investigator", 8, 92.0, 0.375),
-        SPECIAL("Special Class Investigator", 3, 124.0, 0.395);
+        RANK_0(19.0, 30.0, 0.31, 4.0, 0.85F, 1.0),
+        RANK_1(17.0, 36.0, 0.32, 5.0, 0.95F, 1.0),
+        RANK_2(15.0, 44.0, 0.33, 6.0, 1.05F, 0.95),
+        RANK_3(13.0, 52.0, 0.335, 7.0, 1.15F, 0.92),
+        RANK_4(11.0, 62.0, 0.345, 8.0, 1.3F, 0.88),
+        RANK_5(9.0, 74.0, 0.355, 9.0, 1.45F, 0.84),
+        RANK_6(7.0, 88.0, 0.365, 10.0, 1.6F, 0.8),
+        RANK_7(5.0, 104.0, 0.375, 11.0, 1.8F, 0.76),
+        RANK_8(2.0, 160.0, 0.39, 14.0, 2.3F, 0.68),
+        RANK_9(1.2, 210.0, 0.40, 16.0, 2.7F, 0.62),
+        RANK_10(0.8, 280.0, 0.41, 18.0, 3.2F, 0.55);
+
+        /** From this rank up: rare and really dangerous (named in red). */
+        public static final int DANGEROUS = 8;
 
         public final String title;
-        public final int weight;
+        public final double weight;
         public final double health;
         public final double speed;
+        public final double armor;
+        public final float power;
+        public final double pace;
 
-        Rank(String title, int weight, double health, double speed) {
-            this.title = title;
+        Rank(double weight, double health, double speed, double armor, float power, double pace) {
+            int level = Integer.parseInt(this.name().substring("RANK_".length()));
+            this.title = (level >= DANGEROUS ? "\u00a7c" : "") + "Rank " + level + " Investigator";
             this.weight = weight;
             this.health = health;
             this.speed = speed;
+            this.armor = armor;
+            this.power = power;
+            this.pace = pace;
+        }
+
+        /** Its number (0 to 10). */
+        public int level() {
+            return this.ordinal();
+        }
+
+        public boolean dangerous() {
+            return this.ordinal() >= DANGEROUS;
         }
 
         /** A rank by chance ({@code roll} 0..1): the lower, the likelier. */
         public static Rank roll(double roll) {
-            int total = 0;
+            double total = 0.0;
             for (Rank rank : values()) {
                 total += rank.weight;
             }
@@ -108,7 +136,7 @@ public final class AgentRules {
                     return rank;
                 }
             }
-            return RANK_3;
+            return RANK_0;
         }
 
         /** A pair's: the one who leads takes the better of two chances, the other the worse ({@code a}, {@code b} 0..1). */
@@ -118,9 +146,16 @@ public final class AgentRules {
             return leader == one.ordinal() >= two.ordinal() ? one : two;
         }
 
+        /** Its rank by its number (saved), the lowest for anything else. */
         public static Rank byOrdinal(int ordinal) {
             Rank[] all = values();
-            return ordinal >= 0 && ordinal < all.length ? all[ordinal] : RANK_3;
+            return ordinal >= 0 && ordinal < all.length ? all[ordinal] : RANK_0;
+        }
+
+        /** 2.0.17: an agent saved before (1.3.70's six ranks, by their order: Rank 3, 2, 1, First Class, Associate Special, Special). */
+        public static Rank fromOld(int ordinal) {
+            int[] to = {1, 2, 3, 4, 6, 8};
+            return ordinal >= 0 && ordinal < to.length ? values()[to[ordinal]] : RANK_0;
         }
     }
 

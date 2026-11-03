@@ -543,21 +543,31 @@ public final class AgentTests {
         return new float[] {(float)(8.0 + k), (float)(8.0 + k), 8.0F};
     }
 
-    /** 1.3.70: ranks by chance, the lowest most common; the higher, the more health and the faster; a pair's leader the better. */
+    /**
+     * 1.3.70: ranks by chance, the lowest most common; the higher, the more health and the faster; a pair's leader the better. 2.0.17: Rank
+     * 0 to 10, each harder (health, speed, armour, power, a shorter rest); 8, 9 and 10 rare, dangerous, with a lot of health.
+     */
     static void ranks() {
         AgentRules.Rank[] all = AgentRules.Rank.values();
+        check(all.length == 11 && all[0].level() == 0 && all[10].level() == 10, "Rank 0 to Rank 10");
         int[] seen = new int[all.length];
-        for (int i = 0; i < 10000; i++) {
-            seen[AgentRules.Rank.roll(i / 10000.0).ordinal()]++;
+        for (int i = 0; i < 100000; i++) {
+            seen[AgentRules.Rank.roll(i / 100000.0).ordinal()]++;
         }
         boolean falling = true;
         for (int k = 1; k < all.length; k++) {
             falling &= seen[k] < seen[k - 1] && seen[k] > 0;
-            check(all[k].health > all[k - 1].health && all[k].speed > all[k - 1].speed, all[k] + ": more health and faster than " + all[k - 1]);
+            check(all[k].health > all[k - 1].health && all[k].speed > all[k - 1].speed && all[k].armor > all[k - 1].armor
+                && all[k].power > all[k - 1].power && all[k].pace <= all[k - 1].pace, all[k] + ": harder in every way than " + all[k - 1]);
         }
-        check(falling && seen[0] > 2500, "the lowest rank the most common, each higher rarer, every one possible");
-        check(AgentRules.Rank.roll(0.0) == AgentRules.Rank.RANK_3 && AgentRules.Rank.roll(1.0) == AgentRules.Rank.SPECIAL
-            && AgentRules.Rank.roll(-3.0) == AgentRules.Rank.RANK_3, "the ends of the roll");
+        check(falling && seen[0] > 15000, "the lowest rank the most common, each higher rarer, every one possible");
+        int dangerous = seen[8] + seen[9] + seen[10];
+        check(dangerous > 1000 && dangerous < 6000, "8, 9 and 10 rare (about 4 in 100): " + dangerous);
+        check(AgentRules.Rank.RANK_8.dangerous() && !AgentRules.Rank.RANK_7.dangerous() && AgentRules.Rank.RANK_8.health >= 150.0
+            && AgentRules.Rank.RANK_10.health >= 250.0 && AgentRules.Rank.RANK_8.power >= 2.0F && AgentRules.Rank.RANK_10.power >= 3.0F
+            && AgentRules.Rank.RANK_10.pace <= 0.6, "the top three really dangerous: a lot of health, two to three times as hard, far quicker");
+        check(AgentRules.Rank.roll(0.0) == AgentRules.Rank.RANK_0 && AgentRules.Rank.roll(1.0) == AgentRules.Rank.RANK_10
+            && AgentRules.Rank.roll(-3.0) == AgentRules.Rank.RANK_0, "the ends of the roll");
         boolean leads = true;
         for (double a = 0.0; a < 1.0; a += 0.07) {
             for (double b = 0.0; b < 1.0; b += 0.07) {
@@ -565,9 +575,12 @@ public final class AgentTests {
             }
         }
         check(leads, "with the same two chances, the one leading never ranks below the other");
-        check(AgentRules.Rank.byOrdinal(99) == AgentRules.Rank.RANK_3 && AgentRules.Rank.byOrdinal(5) == AgentRules.Rank.SPECIAL, "saved ranks read back");
+        check(AgentRules.Rank.byOrdinal(99) == AgentRules.Rank.RANK_0 && AgentRules.Rank.byOrdinal(10) == AgentRules.Rank.RANK_10, "saved ranks read back");
+        check(AgentRules.Rank.fromOld(0) == AgentRules.Rank.RANK_1 && AgentRules.Rank.fromOld(5) == AgentRules.Rank.RANK_8
+            && AgentRules.Rank.fromOld(-1) == AgentRules.Rank.RANK_0, "agents saved with the old six ranks keep their place");
         for (AgentRules.Rank rank : all) {
-            check(rank.title.endsWith("Investigator") && !rank.title.contains("Kaneki"), "its name: " + rank.title);
+            check(rank.title.endsWith("Rank " + rank.level() + " Investigator") && rank.title.startsWith("\u00a7c") == rank.dangerous()
+                && !rank.title.contains("Kaneki"), "its name: " + rank.title);
         }
     }
 }

@@ -57,7 +57,7 @@ public final class AgentBrain {
     public static final class Mind {
         int look;
         /** 1.3.70: its rank (AgentRules.Rank). */
-        AgentRules.Rank rank = AgentRules.Rank.RANK_3;
+        AgentRules.Rank rank = AgentRules.Rank.RANK_0;
         Quinque kind = Quinque.BLADE;
         boolean leader;
         UUID partner;
@@ -125,6 +125,8 @@ public final class AgentBrain {
 
     /** 1.3.70: its rank in its saved data. */
     static final String RANK = CcgAgent.KEY + "Rank";
+    /** 2.0.17: its rank's number (0 to 10). */
+    static final String RANK_LEVEL = CcgAgent.KEY + "RankLevel";
 
     private AgentBrain() {
     }
@@ -183,13 +185,16 @@ public final class AgentBrain {
         agent.dress(mind.look, mind.kind);
         // 1.3.70: its rank, by chance (kept in its saved data; the one leading the pair takes the better of two chances), its health and its
         // speed by it, and its name.
+        // 2.0.17: Rank 0 to 10 (saved by number under RANK_LEVEL; one saved before by the old order under RANK), its armour too.
         CompoundTag data = agent.getPersistentData();
-        boolean fresh = !data.m_128441_(RANK);
-        mind.rank = fresh ? AgentRules.Rank.of(mind.leader, agent.m_217043_().m_188500_(), agent.m_217043_().m_188500_())
-            : AgentRules.Rank.byOrdinal(data.m_128451_(RANK));
-        data.m_128405_(RANK, mind.rank.ordinal());
+        boolean fresh = !data.m_128441_(RANK_LEVEL) && !data.m_128441_(RANK);
+        mind.rank = data.m_128441_(RANK_LEVEL) ? AgentRules.Rank.byOrdinal(data.m_128451_(RANK_LEVEL))
+            : data.m_128441_(RANK) ? AgentRules.Rank.fromOld(data.m_128451_(RANK))
+            : AgentRules.Rank.of(mind.leader, agent.m_217043_().m_188500_(), agent.m_217043_().m_188500_());
+        data.m_128405_(RANK_LEVEL, mind.rank.level());
         agent.m_21051_(net.minecraft.world.entity.ai.attributes.Attributes.f_22276_).m_22100_(mind.rank.health);
         agent.m_21051_(net.minecraft.world.entity.ai.attributes.Attributes.f_22279_).m_22100_(mind.rank.speed);
+        agent.m_21051_(net.minecraft.world.entity.ai.attributes.Attributes.f_22284_).m_22100_(mind.rank.armor);
         if (fresh) {
             agent.m_21153_(agent.m_21233_());
         }
@@ -757,7 +762,7 @@ public final class AgentBrain {
         mind.landsAt = now + lands;
         int token = ++mind.token;
         Vec3 aim = UkakuFire.horizontal(prey.m_20182_().m_82546_(agent.m_20182_()));
-        KaguneClash.swing(agent, now, lands, AgentRules.reach(q) + 0.5, aim, prey.m_19879_(), AgentRules.damage(q, mind.step), () -> mind.token == token && mind.striking,
+        KaguneClash.swing(agent, now, lands, AgentRules.reach(q) + 0.5, aim, prey.m_19879_(), AgentRules.damage(q, mind.step) * mind.rank.power, () -> mind.token == token && mind.striking,
             () -> stopped(agent, mind, token));
         agent.swing(mind.step, now);
         Vec3 at = agent.m_20182_().m_82520_(0.0, agent.m_20206_() * 0.6, 0.0);
@@ -793,7 +798,8 @@ public final class AgentBrain {
         mind.striking = false;
         mind.parrying = false;
         int step = mind.step;
-        mind.readyAt = now + Math.max(0, q.swing - AgentRules.lands(q)) + AgentRules.between(q) + (step == Quinque.FINISHER ? AgentRules.AFTER_STRING : 0);
+        mind.readyAt = now + Math.max(0, q.swing - AgentRules.lands(q)) + Math.round(AgentRules.between(q) * mind.rank.pace) // 2.0.17: by its rank
+            + (step == Quinque.FINISHER ? AgentRules.AFTER_STRING : 0);
         Entity found = level.m_6815_(mind.target);
         if (parry || !(found instanceof LivingEntity prey) || !prey.m_6084_()) {
             KaguneClash.landed(agent);
@@ -814,7 +820,7 @@ public final class AgentBrain {
         if (distance > AgentRules.reach(q) + prey.m_20205_() * 0.5 + 0.6 || Math.abs(to.f_82480_) > 2.5 || flat.m_82526_(look) < 0.15) {
             return; // it slipped the blow
         }
-        float dealt = AgentRules.damage(q, step);
+        float dealt = AgentRules.damage(q, step) * mind.rank.power; // 2.0.17: by its rank
         Vec3 centre = GhoulNpcBrain.centre(prey);
         WoundHits.expect(prey, q == Quinque.SPEAR ? WoundBook.Blow.STAB : q == Quinque.MACE ? WoundBook.Blow.CRUSH : q == Quinque.LAUNCHER ? WoundBook.Blow.BLUNT
             : WoundBook.Blow.SLASH, centre.m_82546_(flat.m_82490_(0.3)), flat, 0.0);
@@ -952,7 +958,7 @@ public final class AgentBrain {
         int token = ++mind.token;
         face(agent, who);
         Vec3 aim = UkakuFire.horizontal(who.m_20182_().m_82546_(agent.m_20182_()));
-        KaguneClash.swing(agent, now, lands, AgentRules.reach(mind.kind) + 1.5, aim, who.m_19879_(), AgentRules.damage(mind.kind, 0), () -> mind.token == token && mind.striking,
+        KaguneClash.swing(agent, now, lands, AgentRules.reach(mind.kind) + 1.5, aim, who.m_19879_(), AgentRules.damage(mind.kind, 0) * mind.rank.power, () -> mind.token == token && mind.striking,
             () -> stopped(agent, mind, token));
         agent.swing(CcgAgent.PARRY, now);
         UkakuFire.sound(level, agent.m_20182_().m_82520_(0.0, agent.m_20206_() * 0.6, 0.0), "hexkagune:sfx.blade_arc", 0.6F, 1.4F);
@@ -1082,7 +1088,7 @@ public final class AgentBrain {
         double spread = Math.toRadians(2.5);
         way = way.m_82541_().m_82520_((agent.m_217043_().m_188500_() - 0.5) * spread, (agent.m_217043_().m_188500_() - 0.5) * spread,
             (agent.m_217043_().m_188500_() - 0.5) * spread).m_82541_();
-        CrystalShots.fire(agent, level, from, way, Quinque.SHARD_SPEED, Quinque.SHARD_RANGE, AgentRules.SHARD_DAMAGE, body -> foe(agent, body));
+        CrystalShots.fire(agent, level, from, way, Quinque.SHARD_SPEED, Quinque.SHARD_RANGE, AgentRules.SHARD_DAMAGE * (agent.mind == null ? 1.0F : agent.mind.rank.power), body -> foe(agent, body));
         agent.shot(now);
         UkakuFire.sound(level, from, "block.amethyst_block.hit", 0.55F, 1.5F + 0.15F * (float)agent.m_217043_().m_188500_());
     }

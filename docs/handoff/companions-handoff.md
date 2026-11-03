@@ -1,4 +1,13 @@
-# START HERE (state after 2.0.16): read `docs/handoff/next-ai-2.0.9.md` first, then `next-ai-2.0.5.md`, then `next-ai-2.0.1.md`
+# START HERE (state after 2.0.17): read `docs/handoff/next-ai-2.0.9.md` first, then `next-ai-2.0.5.md`, then `next-ai-2.0.1.md`
+
+- **2.0.17** (the owner: "buff CCG agents depending on the rank ... add more ranks RANK 0 to 10 (10,9,8 being rare but really
+  dangerous, with a decent amount of HP.)"). `AgentRules.Rank` is now RANK_0..RANK_10 (weight, health, speed, armor, power, pace; title
+  "Rank N Investigator", red from `DANGEROUS` 8); `fromOld(ordinal)` maps 1.3.70's six. `AgentBrain`: saved by number under `RANK_LEVEL`
+  (the old `RANK` read once through `fromOld`); armour (`Attributes.f_22284_`, already referenced by `CcgAgent`) set by rank; damage x
+  `rank.power` (blows, both clash swings, launcher shards via `agent.mind`); the rest between blows x `rank.pace`. `AgentTests.ranks`
+  rewritten (harness only).
+
+# State after 2.0.16
 
 - **2.0.16** (the owner: "make sure the trail of the projectiles (ALL OF THEM) match the kagune color a lot don't"; "also ... the voltex
   move (the one with a horizontal tornado)"). `client/fx/UkakuFx`: a static `tint` (the shooter's `KaguneTints.of`) and `c(argb)` =

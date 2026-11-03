@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.0.17 (HexGhoul): CCG ranks 0 to 10, stronger by rank (testing)
+
+See `.github/release-notes-2.0.17.md`: Rank 0 to 10, each with more health, speed, armour, harder hits and shorter rests; 8 to 10 rare and dangerous.
+
 ## 2.0.16 (HexGhoul): projectile trails in the kagune's colour (testing)
 
 See `.github/release-notes-2.0.16.md`: every Ukaku particle (trails, the vortex's, impacts, bursts) and War's spike embers in the shooter's kagune colour.

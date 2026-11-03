@@ -1,8 +1,8 @@
-# HANDOFF: HexGhoul after 2.0.16 (this file keeps its 2.0.9 name). Read this first, then `docs/handoff/next-ai-2.0.5.md` (how the owner works now), then
+# HANDOFF: HexGhoul after 2.0.17 (this file keeps its 2.0.9 name). Read this first, then `docs/handoff/next-ai-2.0.5.md` (how the owner works now), then
 `docs/handoff/next-ai-1.3.60.md` (house rules), then the top sections of `docs/handoff/companions-handoff.md` (one per version).
 
-Branch **`claude/relaxed-carson-4y0frw`** (push only there; never main; no PR unless asked). Version **2.0.16** in `build.py` and
-`patch/KagunePatch.java`; the next is **2.0.17**. Protocol **"73"** (unchanged this session). Nothing is tested in game.
+Branch **`claude/relaxed-carson-4y0frw`** (push only there; never main; no PR unless asked). Version **2.0.17** in `build.py` and
+`patch/KagunePatch.java`; the next is **2.0.18**. Protocol **"73"** (unchanged this session). Nothing is tested in game.
 
 ## What this session shipped (each its own version; details at the top of `companions-handoff.md`)
 
@@ -21,6 +21,7 @@ Branch **`claude/relaxed-carson-4y0frw`** (push only there; never main; no PR un
 - **2.0.14** villagers also sell seeds and farming goods (seven wares each).
 - **2.0.15** Ukaku's projectiles no longer set targets alight (only damage + knockback).
 - **2.0.16** every projectile trail (Ukaku's, the vortex's, War's spikes) in the shooter's kagune colour.
+- **2.0.17** CCG agents Rank 0 to 10, stronger by rank; 8 to 10 rare and dangerous.
 
 ## How it was checked
 
