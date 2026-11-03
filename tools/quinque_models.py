@@ -61,7 +61,7 @@ KINDS = {
                      shaft=(150, 154, 162)),
     "dawn": dict(BASE, case=(19, 20, 24), trim=(38, 39, 45), latch=(66, 67, 74), emblem=(99, 78, 39),
                  core=(145, 109, 45), blade=(32, 28, 28), edge=(46, 39, 39), joint=(17, 16, 19),
-                 shaft=(31, 26, 24), gold=(157, 122, 55)),
+                 shaft=(31, 26, 24), gold=(157, 122, 55), light=(255, 228, 96)),
 }
 
 HAND = 5.0  # the right hand's grip, standing (a vanilla sword's)
@@ -115,6 +115,7 @@ def texture(kind, colours):
             for col, mark in enumerate(pattern):
                 color = colours["gold"] if mark == "#" else colours["blade"]
                 img.putpixel((16 + col, 8 + row), color + (255,))
+        patch(LIGHT, colours["light"], "glow")  # 2.0.30: the light in its parted point (drawn last: nothing else changes)
     return img
 
 
@@ -300,53 +301,106 @@ def launcher_parts():
     return g
 
 
-def dawn_parts():
-    """A narrow black lance with a hollow flared guard, engraved gold bands, and a hooked knuckle guard."""
+def lerp_profile(points, x):
+    """The radius at {x} along a profile of (x, radius) points (straight between them, held past the ends)."""
+    if x <= points[0][0]:
+        return points[0][1]
+    for (xa, ra), (xb, rb) in zip(points, points[1:]):
+        if x <= xb:
+            return ra + (rb - ra) * (x - xa) / (xb - xa)
+    return points[-1][1]
+
+
+# 2.0.30 (the owner: "smooth out ... because it's really squared, sort of, just to match ours better"): the spike's radius along the
+# lance (the recess at its base, the thicker middle, then the long straight taper to the point), and the guard's taper.
+DAWN_SPIKE = [(12.2, 0.60), (13.1, 0.55), (13.6, 0.44), (14.7, 0.44), (15.3, 0.57), (16.5, 0.63), (17.8, 0.55), (19.3, 0.46),
+              (21.2, 0.38), (23.5, 0.31), (25.9, 0.24), (28.1, 0.17), (30.0, 0.10), (31.8, 0.04)]
+DAWN_TAPER = [(1.50, 2.20), (2.15, 2.10), (3.45, 1.89), (4.75, 1.67), (6.05, 1.46), (7.35, 1.26), (8.675, 1.06), (10.075, 0.87),
+              (11.65, 0.71), (12.5, 0.66)]
+# 2.0.30: the point opens from here as a shot leaves it (the "fire" frame): its two halves parted, a light between them.
+DAWN_SPLIT = 26.1
+LIGHT = (5, 2)
+
+
+def dawn_parts(open_tip=False):
+    """A narrow black lance with a hollow flared guard, engraved gold bands, and a hooked knuckle guard. 2.0.30: round where it was
+    square: the guard's rings 16-sided (8 once small) in fine steps, the spike, grip and butt 8-sided along smooth profiles, the spike's
+    two ridges turning about it along its middle; {open_tip}: its point split in two and parted (22.5 degrees each way) about a light."""
     parts = []
 
     def add(x0, x1, y0, y1, z0, z1, cell, rotation=None):
         parts.append(((x0, 8 + y0, 8 + z0), (x1, 8 + y1, 8 + z1), cell, rotation))
 
-    def core(x0, x1, ry, rz, cell):
-        add(x0, x1, -ry, ry, -rz, rz, cell)
+    def turned(angle):
+        return None if angle == 0 else ("x", angle, (8, 8, 8))
 
-    # Eight slats make each cross-section of the flared shell. The rim stays open around the shaft.
-    sections = [
+    def rod(x0, x1, r, cell):
+        """An 8-sided rod along x: the square and the same turned 45 degrees."""
+        add(x0, x1, -r, r, -r, r, cell)
+        add(x0, x1, -r, r, -r, r, cell, turned(45))
+
+    def ring(x0, x1, radius, cell, wall=0.30):
+        """One step of the hollow guard: 16 slats round it (8 once it is small), its open middle left for the shaft."""
+        sides = 16 if radius >= 1.2 else 8
+        half = radius * math.tan(math.pi / sides) + 0.035
+        for sign in (-1, 1):
+            low, high = sorted((sign * radius, sign * (radius - wall)))
+            if sides == 16:
+                for angle in (0, 22.5, -22.5, 45, -45):
+                    add(x0, x1, low, high, -half, half, cell, turned(angle))
+                for angle in (0, 22.5, -22.5):
+                    add(x0, x1, -half, half, low, high, cell, turned(angle))
+            else:
+                add(x0, x1, low, high, -half, half, cell)
+                add(x0, x1, -half, half, low, high, cell)
+                for angle in (-45, 45):
+                    add(x0, x1, low, high, -half, half, cell, turned(angle))
+
+    # The guard: the rim and its engraved gold bands as before (the long plain stretch between them in two), then its taper in fine
+    # steps (0.55 px), each barely smaller than the last.
+    for x0, x1, radius, cell in [
         (-2.8, -2.45, 3.04, JOINT), (-2.45, -2.20, 2.96, BLADE),
         (-2.20, -2.03, 2.92, GOLD), (-2.03, -1.14, 2.86, ENGRAVING),
-        (-1.14, -0.97, 2.72, GOLD), (-0.97, 0.45, 2.62, BLADE),
+        (-1.14, -0.97, 2.72, GOLD), (-0.97, -0.26, 2.66, BLADE), (-0.26, 0.45, 2.56, BLADE),
         (0.45, 0.60, 2.43, GOLD), (0.60, 1.35, 2.36, ENGRAVING),
-        (1.35, 1.50, 2.24, GOLD), (1.50, 2.8, 2.10, BLADE),
-        (2.8, 4.1, 1.89, BLADE), (4.1, 5.4, 1.67, BLADE),
-        (5.4, 6.7, 1.46, BLADE), (6.7, 8.0, 1.26, BLADE),
-        (8.0, 9.35, 1.06, BLADE), (9.35, 10.8, 0.87, BLADE),
-        (10.8, 12.5, 0.71, BLADE),
-    ]
-    for x0, x1, radius, cell in sections:
-        flat = radius * (math.sqrt(2) - 1) + 0.035
-        for sign in (-1, 1):
-            low, high = sorted((sign * radius, sign * (radius - 0.30)))
-            add(x0, x1, low, high, -flat, flat, cell)
-            add(x0, x1, -flat, flat, low, high, cell)
-            for angle in (-45, 45):
-                add(x0, x1, low, high, -flat, flat, cell, ("x", angle, (8, 8, 8)))
-
-    # Two recessed shoulders interrupt the otherwise straight taper at the base of the point.
-    for x0, x1, height, depth in [
-        (12.2, 13.1, 0.62, 0.57), (13.1, 14.1, 0.40, 0.49),
-        (14.1, 15.3, 0.42, 0.49), (15.3, 16.2, 0.57, 0.62),
-        (16.2, 17.8, 0.68, 0.52), (17.8, 19.3, 0.51, 0.42),
-        (19.3, 21.2, 0.42, 0.34), (21.2, 23.5, 0.34, 0.29),
-        (23.5, 25.9, 0.26, 0.22), (25.9, 28.1, 0.19, 0.16),
-        (28.1, 30.0, 0.12, 0.10), (30.0, 31.8, 0.06, 0.055),
+        (1.35, 1.50, 2.24, GOLD),
     ]:
-        core(x0, x1, height, depth, BLADE)
-        add(x0, x1, -height * 0.3, height * 0.35, depth - 0.02, depth + 0.035, EDGE)
+        ring(x0, x1, radius, cell)
+    steps = 20
+    for i in range(steps):
+        x0 = 1.50 + (12.5 - 1.50) * i / steps
+        x1 = 1.50 + (12.5 - 1.50) * (i + 1) / steps
+        ring(x0, x1, lerp_profile(DAWN_TAPER, (x0 + x1) / 2), BLADE)
 
-    core(-9.4, 12.5, 0.31, 0.31, SHAFT)
+    # The spike: 8-sided along its profile, in short steps (finer toward the point).
+    edges = [12.2]
+    while edges[-1] < 31.8 - 1e-6:
+        edges.append(min(31.8, edges[-1] + (0.7 if edges[-1] < 24.0 else 0.9)))
+    for x0, x1 in zip(edges, edges[1:]):
+        r = lerp_profile(DAWN_SPIKE, (x0 + x1) / 2)
+        if open_tip and x0 >= DAWN_SPLIT - 1e-6:
+            # Its point parted: each half a half-rod, turned up or down about the split.
+            add(x0, x1, 0.0, r, -r, r, BLADE, ("z", 22.5, (DAWN_SPLIT, 8, 8)))
+            add(x0, x1, -r, 0.0, -r, r, BLADE, ("z", -22.5, (DAWN_SPLIT, 8, 8)))
+        else:
+            rod(x0, x1, r, BLADE)
+    if open_tip:
+        # The light gathering where it parts (the lightning ball about to leave it).
+        add(DAWN_SPLIT - 0.35, DAWN_SPLIT + 1.1, -0.36, 0.36, -0.36, 0.36, LIGHT)
+        add(DAWN_SPLIT - 0.35, DAWN_SPLIT + 1.1, -0.36, 0.36, -0.36, 0.36, LIGHT, turned(45))
+    # Its two ridges along the thicker middle, turning about it a little at a time (a shallow twist).
+    ridge = [(15.3, 16.9, -45), (16.9, 18.5, -22.5), (18.5, 20.1, 0), (20.1, 21.7, 22.5), (21.7, 23.3, 45)]
+    for x0, x1, angle in ridge:
+        r = lerp_profile(DAWN_SPIKE, (x0 + x1) / 2)
+        for sign in (-1, 1):
+            low, high = sorted((sign * (r - 0.05), sign * (r + 0.07)))
+            add(x0, x1, -0.11, 0.11, low, high, EDGE, turned(angle))
+
+    # The grip and its butt spike, 8-sided.
+    rod(-9.4, 12.5, 0.31, SHAFT)
     for x0, x1, radius in [(-10.2, -9.4, 0.42), (-11.0, -10.2, 0.33), (-12.7, -11.0, 0.23),
                            (-14.0, -12.7, 0.14), (-14.8, -14.0, 0.06)]:
-        core(x0, x1, radius, radius, JOINT)
+        rod(x0, x1, radius, JOINT)
 
     # Black hooked guard on the underside, with a raised root and a narrow return.
     add(-5.4, -2.55, -1.80, -1.20, -0.36, 0.36, SHAFT)
@@ -845,7 +899,7 @@ def model(kind, elements, display):
 
 def write(path, data):
     path.parent.mkdir(parents=True, exist_ok=True)
-    if path.name in {"dawn_half.json", "dawn_nearly.json", "dawn_full.json"}:
+    if path.name in {"dawn_half.json", "dawn_nearly.json", "dawn_full.json", "dawn_fire.json"}:
         elements = data.pop("elements")
         payload = json.dumps(data, indent=1)[:-2] + ',\n "elements": [\n'
         payload += ",\n".join("  " + json.dumps(el, separators=(",", ":")) for el in elements)
@@ -874,6 +928,9 @@ def main():
             "nearly": model(kind, tele(parts, 0.66), held),
             "full": model(kind, tele(parts, 1.0), held),
         }
+        if kind == "dawn":
+            # 2.0.30: its point parted about a light as a lightning ball leaves it (chosen as a shot is fired; see the item's overrides).
+            frames["fire"] = model(kind, tele(dawn_parts(open_tip=True), 1.0), held)
         for name, data in frames.items():
             for el in data["elements"]:
                 for v in el["from"] + el["to"]:

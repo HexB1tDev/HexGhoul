@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.0.30 (HexGhoul): Dawn smoothed (testing)
+
+See `.github/release-notes-2.0.30.md`. Dawn is round where it was square: its guard is a 16-sided cone in fine steps (it was an 8-sided one in 12 big steps), and its spike, grip and butt are 8-sided along smooth profiles, with the spike's two ridges turning about it along its thicker middle.
+
 ## 2.0.29 (HexGhoul): /kagune reaper, and the Reaper turns up once in a while (testing)
 
 See `.github/release-notes-2.0.29.md`. `/kagune reaper` (operators) puts the White Reaper five blocks ahead of you for testing; in the wild he now turns up about once in a hundred in-game days instead of about once in 660.
