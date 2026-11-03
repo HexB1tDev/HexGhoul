@@ -102,7 +102,22 @@ public final class QuinquePose {
                 default -> new Key[] {rest(0), k(0.3, -1.9, 0.25, 0, 0.1, -0.12, -0.5, 0), k(0.5, -0.3, 0.0, 0, -0.1, 0.3, 3.0, 0.4),
                     k(0.68, 0.2, -0.05, 0, -0.15, 0.35, 3.0, 0.5), rest(1)};
             };
-            case KATANA, DAWN -> switch (step) {
+            // 2.0.31 (the owner: "We need proper M1 combat on that ... weapon"): Dawn's own, a three-block lance in one hand swung as a
+            // sword from its stance at the hip (it borrowed the katana's two-handed chops before, every one ending its point in the ground).
+            case DAWN -> switch (step) {
+                // A wide flat sweep at chest height: drawn out to the right, the chest turned with it, then carried round in front and on to
+                // the left, its length level all the way.
+                case 0 -> new Key[] {rest(0), k(0.3, 0.05, 1.05, 0, 0.55, -0.05, -0.5, 0), k(0.5, -0.05, 0.05, 0, -0.2, 0.12, 2.0, 0.3),
+                    k(0.68, 0.0, -0.85, 0, -0.55, 0.15, 1.6, 0.3), rest(1)};
+                // Back the other way, rising: low on the left, up across the front to high on the right.
+                case 1 -> new Key[] {rest(0), k(0.3, 0.55, -0.75, 0, -0.45, 0.1, 0.0, 0.5), k(0.5, -0.35, 0.25, 0, 0.2, 0.0, 2.2, 0.2),
+                    k(0.68, -0.95, 0.75, 0, 0.45, -0.08, 1.8, 0.0), rest(1)};
+                // The finisher: drawn back with the chest (the arm turning against it so the lance stays on the line), sunk, then driven
+                // out its whole length with a long lunge.
+                default -> new Key[] {rest(0), k(0.3, 0.08, -0.55, 0, 0.6, -0.12, -2.5, 0.8), k(0.5, -0.38, 0.45, 0, -0.5, 0.3, 7.5, 0.9),
+                    k(0.68, -0.38, 0.47, 0, -0.52, 0.32, 7.5, 1.0), rest(1)};
+            };
+            case KATANA -> switch (step) {
                 // Kesa-giri: from over the right shoulder down across to the left hip.
                 case 0 -> new Key[] {rest(0), k(0.3, -1.0, 0.45, -0.35, 0.35, -0.05, -0.5, 0), k(0.5, 0.15, -0.25, 0.35, -0.3, 0.2, 2.5, 0.8),
                     k(0.68, 0.3, -0.4, 0.45, -0.45, 0.25, 2.2, 1.0), rest(1)};
@@ -211,7 +226,7 @@ public final class QuinquePose {
         if (s <= 0.01F) {
             return;
         }
-        boolean right = q == Quinque.BLADE || q == Quinque.KATANA;
+        boolean right = q == Quinque.BLADE || q == Quinque.KATANA || q == Quinque.DAWN;
         p.rightLegX = right ? -s : 0.8F * s;
         p.leftLegX = right ? 0.8F * s : -s;
         p.legHold = Math.max(p.legHold, Math.min(1.0F, s / 0.12F));

@@ -33,12 +33,46 @@ public final class QuinqueTests {
         kinds();
         files();
         holds();
+        dawn();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
             System.exit(1);
         }
         System.out.println("Quinque tests: " + passed + " checks passed");
+    }
+
+    /** 2.0.31: Dawn's own string: its sweep takes the others in front, its thrust the others in its line; its ribbons follow each swing. */
+    static void dawn() {
+        check(Quinque.DAWN.arc(0) == 3.0 && Quinque.DAWN.arc(1) == 0.0 && Quinque.DAWN.arc(Quinque.FINISHER) == 0.0,
+            "Dawn's first blow, the wide sweep, takes the others in front within its length");
+        for (Quinque q : Quinque.values()) {
+            if (q != Quinque.DAWN) {
+                for (int step = 0; step < 3; step++) {
+                    check(q.arc(step) == 0.0, q + " has no arc of its own on blow " + step);
+                }
+            }
+        }
+        check(Quinque.DAWN.sweep(Quinque.FINISHER) == 4.5 && Quinque.DAWN.sweep(0) == 0.0, "Dawn's thrust reaches its whole length");
+        check(Quinque.ARC_SHARE > 0.0F && Quinque.ARC_SHARE < 1.0F, "the arc deals a share of the blow");
+        check(com.hex.kagune.control.quinque.DawnArc.along(0.0) == 0.0 && com.hex.kagune.control.quinque.DawnArc.along(1.0) == 1.0
+            && Math.abs(com.hex.kagune.control.quinque.DawnArc.along(0.49) - 0.5) < 0.01, "the ribbon is laid from the windup to the follow through");
+        double[] a = com.hex.kagune.control.quinque.DawnArc.point(0, 0.0);
+        double[] b = com.hex.kagune.control.quinque.DawnArc.point(0, 1.0);
+        double[] mid = com.hex.kagune.control.quinque.DawnArc.point(0, 0.5);
+        check(a[0] > 1.5 && b[0] < -1.5 && Math.abs(mid[0]) < 0.01 && mid[2] > 2.5 && a[1] == b[1] && a[1] > 1.0 && a[1] < 1.6,
+            "the sweep: level at chest height, from out on the right round the front to the left");
+        for (double u = 0.0; u <= 1.0; u += 0.1) {
+            double[] p = com.hex.kagune.control.quinque.DawnArc.point(0, u);
+            check(Math.hypot(p[0], p[2]) <= Quinque.DAWN.arc(0), "the sweep's ribbon stays within the arc it hits: " + u);
+        }
+        double[] low = com.hex.kagune.control.quinque.DawnArc.point(1, 0.0);
+        double[] high = com.hex.kagune.control.quinque.DawnArc.point(1, 1.0);
+        check(low[0] < 0.0 && high[0] > 0.0 && high[1] > low[1] + 1.5, "the second: rising from low on the left to high on the right");
+        double[] in = com.hex.kagune.control.quinque.DawnArc.point(2, 0.0);
+        double[] out = com.hex.kagune.control.quinque.DawnArc.point(2, 1.0);
+        check(in[0] == out[0] && in[1] == out[1] && out[2] > in[2] + 3.0 && out[2] <= Quinque.DAWN.sweep(Quinque.FINISHER),
+            "the thrust: straight out along its line, no further than it reaches");
     }
 
     static void turning() {

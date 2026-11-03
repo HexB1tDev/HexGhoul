@@ -152,12 +152,23 @@ public enum Quinque {
         }
         return switch (this) {
             case KATANA -> 3.5;
-            case DAWN -> 3.0;
+            case DAWN -> 4.5; // 2.0.31: its finisher is a thrust: the others in its line, its whole length
             case MACE -> 3.0;
             case SPEAR -> 5.0;
             default -> 0.0;
         };
     }
+
+    /**
+     * 2.0.31: how far round an ordinary blow (not the finisher) reaches others in front (blocks; 0 none): Dawn's first, its wide flat
+     * sweep, takes everyone in front within its length.
+     */
+    public double arc(int step) {
+        return this == DAWN && step == 0 ? 3.0 : 0.0;
+    }
+
+    /** 2.0.31: the share of the blow its arc deals to the others it takes. */
+    public static final float ARC_SHARE = 0.6F;
 
     /**
      * The launcher: 1.3.33 a shard every {@link #SHOT_EVERY} ticks held (use repeats every four: each pull fires two, the second

@@ -56,6 +56,10 @@ public final class AgentClient {
             arms = AgentPose.aimDawn(swingAge, agent.m_146909_());
         } else if (weapon != null && swing >= 0 && swing < CcgAgent.PARRY && swingAge >= 0.0 && swingAge < weapon.swing) {
             arms = QuinquePose.swing(weapon, swing, swingAge / weapon.swing);
+            if (weapon == Quinque.DAWN) {
+                // 2.0.31: its dark ribbons along the way its point goes.
+                com.hex.kagune.control.client.fx.DawnTrails.swing(agent, swing, agent.swingAt(), swingAge / weapon.swing, partial);
+            }
         } else if (weapon != null && swing == CcgAgent.PARRY && swingAge >= 0.0 && swingAge < AgentPose.PARRY_TICKS) {
             arms = AgentPose.parry(weapon, swingAge / AgentPose.PARRY_TICKS);
         } else if (weapon != null) {

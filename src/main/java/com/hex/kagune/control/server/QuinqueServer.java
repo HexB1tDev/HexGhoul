@@ -193,6 +193,8 @@ public final class QuinqueServer {
             event.setAmount(event.getAmount() * quinque.weight(step));
             if (step == Quinque.FINISHER) {
                 finisher(player, event.getEntity(), quinque, event.getAmount(), level);
+            } else if (quinque.arc(step) > 0.0) {
+                arc(player, event.getEntity(), quinque, step, event.getAmount(), level, QuinqueServer::sweepable);
             }
         }
         if (quinque == Quinque.DAWN && attacker instanceof com.hex.kagune.control.npc.CcgAgent
@@ -224,6 +226,9 @@ public final class QuinqueServer {
             target.m_147240_(0.6, -look.f_82479_, -look.f_82481_);
             return;
         }
+        if (quinque == Quinque.DAWN) {
+            target.m_147240_(0.8, -look.f_82479_, -look.f_82481_); // 2.0.31: the thrust drives it back along its line
+        }
         double reach = quinque.sweep(Quinque.FINISHER);
         if (reach <= 0.0) {
             return;
@@ -237,7 +242,7 @@ public final class QuinqueServer {
                 boolean hits;
                 if (quinque == Quinque.MACE) {
                     hits = other.m_20238_(at) <= reach * reach;
-                } else if (quinque == Quinque.SPEAR) {
+                } else if (quinque == Quinque.SPEAR || quinque == Quinque.DAWN) {
                     double along = to.m_82526_(look);
                     hits = along > 0.0 && along <= reach && to.m_82546_(look.m_82490_(along)).m_82553_() <= 0.9;
                 } else {
@@ -249,7 +254,7 @@ public final class QuinqueServer {
                 other.f_19802_ = 0;
                 net.minecraft.world.damagesource.DamageSource source = player instanceof ServerPlayer server ? player.m_269291_().m_269075_(server)
                     : player.m_269291_().m_269333_(player);
-                if (other.m_6469_(source, dealt * (quinque == Quinque.MACE ? 0.6F : quinque == Quinque.SPEAR ? 0.8F : 0.7F))
+                if (other.m_6469_(source, dealt * (quinque == Quinque.MACE ? 0.6F : quinque == Quinque.SPEAR || quinque == Quinque.DAWN ? 0.8F : 0.7F))
                     && quinque == Quinque.MACE) {
                     other.m_20256_(other.m_20184_().m_82520_(0.0, 0.55, 0.0));
                     other.f_19864_ = true;
@@ -260,6 +265,37 @@ public final class QuinqueServer {
         }
         if (quinque == Quinque.MACE) {
             KaguneClash.burst(player, at.m_82520_(0.0, -0.6, 0.0), look, 1.2F, 0.9F);
+        }
+    }
+
+    /**
+     * 2.0.31: an ordinary blow's arc ({@link Quinque#arc}: Dawn's wide sweep): everyone {@code may} allows in front of {@code attacker}
+     * within its reach besides {@code target} takes {@link Quinque#ARC_SHARE} of {@code dealt}. A player's or an investigator's.
+     */
+    static void arc(LivingEntity attacker, LivingEntity target, Quinque quinque, int step, float dealt, ServerLevel level,
+                    java.util.function.Predicate<LivingEntity> may) {
+        double reach = quinque.arc(step);
+        if (reach <= 0.0 || sweeping) {
+            return;
+        }
+        Vec3 look = UkakuFire.horizontal(attacker.m_20154_());
+        Vec3 from = attacker.m_20182_();
+        AABB area = new AABB(from.f_82479_, from.f_82480_, from.f_82481_, from.f_82479_, from.f_82480_, from.f_82481_).m_82400_(reach + 1.0);
+        sweeping = true;
+        try {
+            for (LivingEntity other : level.m_6443_(LivingEntity.class, area, b -> b != attacker && b != target && b.m_6084_() && may.test(b))) {
+                Vec3 to = GhoulNpcBrain.centre(other).m_82546_(attacker.m_146892_());
+                Vec3 flat = UkakuFire.horizontal(to);
+                if (to.m_82553_() > reach + other.m_20205_() * 0.5 || Math.abs(to.f_82480_) > 2.0 || flat.m_82526_(look) < 0.2) {
+                    continue;
+                }
+                other.f_19802_ = 0;
+                net.minecraft.world.damagesource.DamageSource source = attacker instanceof ServerPlayer server ? attacker.m_269291_().m_269075_(server)
+                    : attacker.m_269291_().m_269333_(attacker);
+                other.m_6469_(source, dealt * Quinque.ARC_SHARE);
+            }
+        } finally {
+            sweeping = false;
         }
     }
 

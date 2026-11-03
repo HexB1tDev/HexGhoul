@@ -991,7 +991,9 @@ public final class AgentBrain {
         UkakuFire.sound(level, at, heavy ? "hexkagune:sfx.blade_heavy" : "hexkagune:sfx.blade_arc", 0.6F, q == Quinque.MACE ? 0.75F : 1.1F
             + 0.15F * (float)agent.m_217043_().m_188500_());
         // The spear's and the katana's blows step in; the spear's thrust drives in hard.
-        double step = q == Quinque.SPEAR ? (heavy ? 0.75 : 0.4) : q == Quinque.KATANA ? (heavy ? 0.55 : 0.25) : heavy ? 0.3 : 0.12;
+        // 2.0.31: Dawn's thrust drives in as hard as the spear's, its sweeps step through.
+        double step = q == Quinque.SPEAR ? (heavy ? 0.75 : 0.4) : q == Quinque.DAWN ? (heavy ? 0.75 : 0.3)
+            : q == Quinque.KATANA ? (heavy ? 0.55 : 0.25) : heavy ? 0.3 : 0.12;
         Vec3 velocity = agent.m_20184_();
         agent.m_20256_(new Vec3(aim.f_82479_ * step, velocity.f_82480_, aim.f_82481_ * step));
     }
@@ -1046,9 +1048,13 @@ public final class AgentBrain {
         WoundHits.expect(prey, q == Quinque.SPEAR ? WoundBook.Blow.STAB : q == Quinque.MACE ? WoundBook.Blow.CRUSH : q == Quinque.LAUNCHER ? WoundBook.Blow.BLUNT
             : WoundBook.Blow.SLASH, centre.m_82546_(flat.m_82490_(0.3)), flat, 0.0);
         prey.f_19802_ = 0;
-        if (prey.m_6469_(agent.m_269291_().m_269333_(agent), dealt) && step == Quinque.FINISHER) {
+        boolean hit = prey.m_6469_(agent.m_269291_().m_269333_(agent), dealt);
+        if (hit && step == Quinque.FINISHER) {
             QuinqueServer.finisher(agent, prey, q, dealt, level);
             mind.clear = agent.m_217043_().m_188500_() < 0.4; // and now and then it flips clear after it
+        } else if (q.arc(step) > 0.0) {
+            // 2.0.31: Dawn's wide sweep takes its other foes in front too (never a bystander).
+            QuinqueServer.arc(agent, prey, q, step, dealt, level, body -> foe(agent, body));
         }
     }
 

@@ -220,8 +220,8 @@ public final class QuinquePreview {
     }
 
     static final double[] TIMES = {0.3, 0.42, 0.5, 0.6, 0.75};
-    static final String[][] KINDS = {{"koukaku", "koukaku"}, {"katana", "katana"}, {"mace", "mace"}, {"launcher", "launcher"}, {"bikaku", "bikaku"}};
-    static final Quinque[] QUINQUES = {Quinque.SPEAR, Quinque.KATANA, Quinque.MACE, Quinque.LAUNCHER, Quinque.BLADE};
+    static final String[][] KINDS = {{"koukaku", "koukaku"}, {"katana", "katana"}, {"mace", "mace"}, {"launcher", "launcher"}, {"bikaku", "bikaku"}, {"dawn", "dawn"}};
+    static final Quinque[] QUINQUES = {Quinque.SPEAR, Quinque.KATANA, Quinque.MACE, Quinque.LAUNCHER, Quinque.BLADE, Quinque.DAWN};
 
     /**
      * Writes, per quinque, quinque-KIND.png (its stance and every swing in a row, three views), and for a closer look

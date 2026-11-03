@@ -128,6 +128,10 @@ public final class QuinqueClient {
         double t = (clock - swing.began) / weapon.swing;
         if (t >= 0.0 && t < 1.0) {
             p = com.hex.kagune.control.client.animation.QuinquePose.swing(weapon, swing.step, t);
+            if (weapon == Quinque.DAWN) {
+                // 2.0.31: its dark ribbons along the way its point goes.
+                com.hex.kagune.control.client.fx.DawnTrails.swing(body, swing.step, swing.began, t, partial);
+            }
         } else {
             float out = shown(held, true);
             p = out < 1.0F ? com.hex.kagune.control.client.animation.QuinquePose.unfolding(weapon, out)
