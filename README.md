@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.0.12 (HexGhoul): clashes shake the screen (testing)
+
+See `.github/release-notes-2.0.12.md`: every clash shakes the view hard (about 6 degrees, the hardest about 10), harder the nearer.
+
 ## 2.0.11 (HexGhoul): bigger, louder clashes; the weaker one flies (testing)
 
 See `.github/release-notes-2.0.11.md`: the clash sound louder and layered, its wind bigger; the weaker side pushed further; a 2.5x gap sends it off like the Speed Kick, through blocks, down and stunned.

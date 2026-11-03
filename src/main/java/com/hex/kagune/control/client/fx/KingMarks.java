@@ -105,6 +105,16 @@ public final class KingMarks {
                         .spawn();
                 }
                 kick(at, 0.6F * p, 14.0);
+                // 2.0.12 (the owner: clashes weren't shaking the screen): the view of everyone near shaken hard, the nearer the harder.
+                Entity me = Minecraft.m_91087_().f_91074_;
+                if (me != null) {
+                    double reach = com.hex.kagune.control.ClashRules.shakeReach(p);
+                    double away = me.m_20182_().m_82554_(at);
+                    if (away < reach) {
+                        com.hex.kagune.control.client.PaleCamera.clash((float)(com.hex.kagune.control.ClashRules.shake(p) * (1.0 - away / reach)),
+                            com.hex.kagune.control.ClashRules.shakeTicks(p), com.hex.kagune.control.client.PaleClient.clock(0.0F));
+                    }
+                }
                 // 1.3.62: a clash hard enough shakes the ground: the view of everyone near shudders with it, harder the nearer.
                 if (com.hex.kagune.control.ClashRules.quakes(p)) {
                     rumble(at, com.hex.kagune.control.ClashRules.rumble(p), com.hex.kagune.control.ClashRules.rumbleTicks(p),

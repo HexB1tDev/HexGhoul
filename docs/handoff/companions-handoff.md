@@ -1,4 +1,13 @@
-# START HERE (state after 2.0.11): read `docs/handoff/next-ai-2.0.9.md` first, then `next-ai-2.0.5.md`, then `next-ai-2.0.1.md`
+# START HERE (state after 2.0.12): read `docs/handoff/next-ai-2.0.9.md` first, then `next-ai-2.0.5.md`, then `next-ai-2.0.1.md`
+
+- **2.0.12** (the owner: "I dont think clashes are shaking them screen at all", then "increase it further"). By reading: the CLASH mark's
+  `kick` was `PaleCamera`'s 1.6-degree pitch jolt (e^-0.45t, ~5 ticks); the rumble only from `QUAKES`. New `PaleCamera.clash(strength,
+  ticks, time)` (its own state; pitch 4.0, roll 3.0, yaw 1.8 degrees x strength x uneven sines, fading ^1.6; under `cameraEffects` /
+  `cameraEffectStrength`), called by `KingMarks` CLASH with `ClashRules.shake(p)` (0.7 + 0.55p, up to `SHAKE_MOST` 2.6; p is the drawn
+  `shown` power, 1.68 for an ordinary clash -> 1.62), `shakeTicks` 14 + 6p, `shakeReach` 20 + 5p, linear falloff. No new API
+  (`ComputeCameraAngles.setYaw` was allowlisted). `ClashTests` extended (harness only).
+
+# State after 2.0.11
 
 - **2.0.11** (the owner: "Increase the volume of the clash sounds, the stronger the users the louder and even bigger the impact ... the
   weakest player/entity gets pushed further back, if the difference is too vast ... pushed far back a ton, stunned and ragdolled"; then:

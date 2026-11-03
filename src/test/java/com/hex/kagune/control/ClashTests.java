@@ -85,6 +85,11 @@ public final class ClashTests {
             && ClashRules.push(1.5F, ClashRules.ratio(12.0, 4.0)) < ClashRules.push(1.5F, 1.0), "the weaker thrown further, the stronger less");
         check(!ClashRules.overwhelmed(ClashRules.ratio(7.0, 12.0)) && ClashRules.overwhelmed(ClashRules.ratio(4.0, 10.0))
             && !ClashRules.overwhelmed(ClashRules.ratio(10.0, 4.0)), "only a big enough gap overwhelms, and only the weaker");
+        // 2.0.12: every clash shakes the view, harder, longer and further the harder it is (an ordinary one about 6 degrees).
+        float ordinary = ClashRules.shown(ClashRules.ORDINARY);
+        check(ClashRules.shake(ordinary) >= 1.5F && ClashRules.shake(ClashRules.shown(ClashRules.MOST)) == ClashRules.SHAKE_MOST
+            && ClashRules.shake(ClashRules.shown(ClashRules.LEAST)) > 0.5F && ClashRules.shakeTicks(ClashRules.shown(ClashRules.MOST)) > ClashRules.shakeTicks(ordinary)
+            && ClashRules.shakeReach(ordinary) >= 20.0, "every clash shakes the view: an ordinary one hard, a huge one hardest, longest and furthest");
     }
 
     /**

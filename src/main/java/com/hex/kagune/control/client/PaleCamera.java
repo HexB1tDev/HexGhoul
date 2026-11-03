@@ -27,7 +27,23 @@ public final class PaleCamera {
     private static double rumbleAt = Double.NEGATIVE_INFINITY;
     private static double rumbleFor;
 
+    /** 2.0.12: the last clash's shake: how hard, from when, for how long (PaleClient's clock, ticks). */
+    private static float clash;
+    private static double clashAt = Double.NEGATIVE_INFINITY;
+    private static double clashFor;
+
     private PaleCamera() {
+    }
+
+    /** 2.0.12: a clash shaking the view, {@code strength} 1 about 4 degrees of pitch (peaks near 7), fading out over {@code ticks} (a stronger one takes over). */
+    public static void clash(float strength, double ticks, double time) {
+        double since = time - clashAt;
+        float left = since >= 0.0 && since < clashFor ? clash * (float)(1.0 - since / clashFor) : 0.0F;
+        if (strength >= left) {
+            clash = strength;
+            clashAt = time;
+            clashFor = Math.max(1.0, ticks);
+        }
     }
 
     /** Swing the view {@code degrees} (+ to the right) over {@code ticks}. */
@@ -150,7 +166,7 @@ public final class PaleCamera {
 
     @SubscribeEvent
     public static void cameraAngles(ViewportEvent.ComputeCameraAngles event) {
-        if (kick <= 0.0F && rumble <= 0.0F || !ControlConfig.cameraEffects()) {
+        if (kick <= 0.0F && rumble <= 0.0F && clash <= 0.0F || !ControlConfig.cameraEffects()) {
             return;
         }
         double time = PaleClient.clock((float)event.getPartialTick());
@@ -172,6 +188,18 @@ public final class PaleCamera {
             float roll = (float)(Math.sin(t * 3.3 + 2.1) + 0.5 * Math.sin(t * 11.9 + 0.7));
             event.setPitch(event.getPitch() + 1.2F * fade * pitch * scale);
             event.setRoll(event.getRoll() + 0.9F * fade * roll * scale);
+        }
+        double clashing = time - clashAt;
+        if (clash > 0.0F && clashing >= 0.0 && clashing < clashFor) {
+            // 2.0.12: a clash: a hard jolt that shudders out (fast uneven sines), pitch, roll and a little yaw, dying away to nothing.
+            float fade = clash * (float)Math.pow(1.0 - clashing / clashFor, 1.6);
+            double t = clashing;
+            float pitch = (float)(Math.sin(t * 5.3 + 0.2) + 0.55 * Math.sin(t * 12.1 + 1.1) + 0.3 * Math.sin(t * 19.7));
+            float roll = (float)(Math.sin(t * 4.4 + 1.7) + 0.5 * Math.sin(t * 13.3 + 0.5));
+            float yaw = (float)(Math.sin(t * 6.1 + 2.4) + 0.4 * Math.sin(t * 15.9));
+            event.setPitch(event.getPitch() + 4.0F * fade * pitch * scale);
+            event.setRoll(event.getRoll() + 3.0F * fade * roll * scale);
+            event.setYaw(event.getYaw() + 1.8F * fade * yaw * scale);
         }
     }
 }

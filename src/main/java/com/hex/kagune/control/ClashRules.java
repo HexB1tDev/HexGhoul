@@ -77,6 +77,25 @@ public final class ClashRules {
         return power >= 2.2F ? 3 : power >= 1.5F ? 2 : 1;
     }
 
+    /**
+     * 2.0.12 (the owner: "I dont think clashes are shaking them screen at all"; it was a 1.6-degree jolt gone in a quarter second; then
+     * "increase it further"): how hard a clash shakes the view at its heart ({@code shown}: its drawn power, {@link #shown}), 1 about 4
+     * degrees (an ordinary clash about 1.6), up to {@link #SHAKE_MOST}; how long (ticks) and how far off (blocks) it is felt.
+     */
+    public static final float SHAKE_MOST = 2.6F;
+
+    public static float shake(float shown) {
+        return Math.max(0.0F, Math.min(SHAKE_MOST, 0.7F + 0.55F * shown));
+    }
+
+    public static double shakeTicks(float shown) {
+        return 14.0 + 6.0 * shown;
+    }
+
+    public static double shakeReach(float shown) {
+        return 20.0 + 5.0 * shown;
+    }
+
     /** 2.0.11: how big the clash's wind is drawn (its puffs, sparks and kick of the view): bigger than its power, the harder the bigger. */
     public static float shown(float power) {
         return Math.min(MOST * 1.5F, power * 1.4F);
