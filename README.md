@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.0.25 (HexGhoul): Dawn lightning (testing)
+
+See `.github/release-notes-2.0.25.md`. The White Reaper now points Dawn at distant targets and fires an explosive yellow lightning ball.
+
 ## 2.0.24 (HexGhoul): Cap legacy investigator pairs at Rank 9 (testing)
 
 See `.github/release-notes-2.0.24.md`. A pair loaded from an older save can include a former Rank 10. Its superior now caps correctly at Rank 9 and keeps the superior’s health and damage bonus. Protocol 75 is unchanged.

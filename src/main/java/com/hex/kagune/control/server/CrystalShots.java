@@ -2,6 +2,7 @@ package com.hex.kagune.control.server;
 
 import com.hex.kagune.control.network.ControlNetwork;
 import com.hex.kagune.control.network.S2CUkakuFx;
+import com.hex.kagune.control.npc.AgentRules;
 import com.hex.kagune.control.wound.WoundBook;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -39,7 +40,9 @@ public final class CrystalShots {
         Vec3 position;
         Vec3 velocity;
         int life;
+        double remaining;
         float damage;
+        boolean lightning;
         Predicate<LivingEntity> foe;
         final Set<Integer> hit = new HashSet<>();
     }
@@ -52,6 +55,15 @@ public final class CrystalShots {
     /** {@code shooter} fires a shard from {@code from} along {@code way} (unit), {@code speed} a tick, {@code range} far, at {@code foe}. */
     public static void fire(LivingEntity shooter, ServerLevel level, Vec3 from, Vec3 way, double speed, double range, float damage,
                             Predicate<LivingEntity> foe) {
+        launch(shooter, level, from, way, speed, range, damage, foe, false);
+    }
+
+    public static void lightning(LivingEntity shooter, ServerLevel level, Vec3 from, Vec3 way, Predicate<LivingEntity> foe) {
+        launch(shooter, level, from, way, AgentRules.DAWN_SHOT_SPEED, AgentRules.DAWN_SHOT_RANGE, AgentRules.DAWN_SHOT_DAMAGE, foe, true);
+    }
+
+    private static void launch(LivingEntity shooter, ServerLevel level, Vec3 from, Vec3 way, double speed, double range, float damage,
+                               Predicate<LivingEntity> foe, boolean lightning) {
         if (SHOTS.size() > 400) {
             return; // never a flood
         }
@@ -61,10 +73,12 @@ public final class CrystalShots {
         shot.position = from;
         shot.velocity = way.m_82490_(speed);
         shot.life = (int)Math.ceil(range / speed);
+        shot.remaining = range;
         shot.damage = damage;
         shot.foe = foe;
+        shot.lightning = lightning;
         SHOTS.add(shot);
-        fx(shot, S2CUkakuFx.SPIKE, from, shot.velocity, 0.55F, shot.life);
+        fx(shot, lightning ? S2CUkakuFx.DAWN_BALL : S2CUkakuFx.SPIKE, from, shot.velocity, 0.55F, shot.life);
     }
 
     @SubscribeEvent
@@ -94,10 +108,13 @@ public final class CrystalShots {
     private static boolean step(Shot shot) {
         ServerLevel level = shot.level;
         Vec3 from = shot.position;
-        Vec3 to = from.m_82549_(shot.velocity);
+        double speed = shot.velocity.m_82553_();
+        Vec3 step = shot.lightning && shot.remaining < speed ? shot.velocity.m_82490_(shot.remaining / speed) : shot.velocity;
+        Vec3 to = from.m_82549_(step);
+        shot.remaining -= speed;
         Vec3 met = KaguneClash.swat(shot.shooter, level, from, to, level.m_46467_());
         if (met != null) {
-            fx(shot, S2CUkakuFx.SPIKE_IMPACT, met, shot.velocity, 0.0F, 0);
+            fx(shot, shot.lightning ? S2CUkakuFx.DAWN_BURST : S2CUkakuFx.SPIKE_IMPACT, met, shot.velocity, 0.0F, 0);
             return false; // swatted out of the air by a blow on its way
         }
         BlockHitResult block = level.m_45547_(new ClipContext(from, to, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, shot.shooter));
@@ -113,6 +130,10 @@ public final class CrystalShots {
                 if (!body.m_20191_().m_82400_(RADIUS).m_82390_(point)) {
                     continue;
                 }
+                if (shot.lightning) {
+                    burst(shot, point, body);
+                    return false;
+                }
                 shot.hit.add(body.m_19879_());
                 pierce(shot, body);
                 fx(shot, S2CUkakuFx.SPIKE_IMPACT, point, shot.velocity, 1.0F, 0);
@@ -120,15 +141,52 @@ public final class CrystalShots {
             }
         }
         if (wall) {
-            fx(shot, S2CUkakuFx.SPIKE_IMPACT, end, shot.velocity, 0.0F, 0);
+            if (shot.lightning) {
+                burst(shot, end.m_82546_(shot.velocity.m_82541_().m_82490_(0.04)), null);
+            } else {
+                fx(shot, S2CUkakuFx.SPIKE_IMPACT, end, shot.velocity, 0.0F, 0);
+            }
             return false;
         }
         shot.position = to;
         if (--shot.life <= 0) {
-            fx(shot, S2CUkakuFx.SPIKE_FIZZLE, to, shot.velocity, 1.0F, 0);
+            fx(shot, shot.lightning ? S2CUkakuFx.DAWN_BURST : S2CUkakuFx.SPIKE_FIZZLE, to, shot.velocity, shot.lightning ? 0.0F : 1.0F, 0);
             return false;
         }
         return true;
+    }
+
+    /** An electrical burst damages exposed targets. It never ignites entities or breaks blocks. */
+    private static void burst(Shot shot, Vec3 at, LivingEntity direct) {
+        double radius = AgentRules.DAWN_BLAST_RADIUS;
+        AABB area = new AABB(at.f_82479_ - radius, at.f_82480_ - radius, at.f_82481_ - radius,
+            at.f_82479_ + radius, at.f_82480_ + radius, at.f_82481_ + radius);
+        for (LivingEntity body : shot.level.m_6443_(LivingEntity.class, area,
+            body -> body != shot.shooter && body.m_6084_() && shot.foe.test(body))) {
+            Vec3 centre = GhoulNpcBrain.centre(body);
+            double distance = at.m_82554_(centre);
+            if (body != direct && (distance > radius || shot.level.m_45547_(new ClipContext(at, centre, ClipContext.Block.COLLIDER,
+                ClipContext.Fluid.NONE, shot.shooter)).m_6662_() == HitResult.Type.BLOCK)) {
+                continue;
+            }
+            float damage = AgentRules.dawnBlastDamage(body == direct ? 0.0 : distance);
+            Vec3 away = centre.m_82546_(at).m_82541_();
+            WoundHits.expect(body, WoundBook.Blow.BLUNT, centre, away, 0.0);
+            body.f_19802_ = 0;
+            boolean hurt;
+            striking = true;
+            try {
+                hurt = body.m_6469_(shot.shooter.m_269291_().m_269333_(shot.shooter), damage);
+            } finally {
+                striking = false;
+            }
+            if (hurt) {
+                body.m_147240_(0.9 * damage / AgentRules.DAWN_SHOT_DAMAGE, -away.f_82479_, -away.f_82481_);
+            }
+        }
+        fx(shot, S2CUkakuFx.DAWN_BURST, at, shot.velocity, (float)radius, 0);
+        UkakuFire.sound(shot.level, at, "hexkagune:sfx.thunder", 1.1F, 1.05F);
+        UkakuFire.sound(shot.level, at, "hexkagune:sfx.burst", 0.9F, 1.1F);
     }
 
     private static void pierce(Shot shot, LivingEntity body) {
@@ -152,7 +210,12 @@ public final class CrystalShots {
     }
 
     private static void fx(Shot shot, int kind, Vec3 at, Vec3 velocity, float size, int extra) {
-        ControlNetwork.broadcastAround(shot.shooter, new S2CUkakuFx(kind, shot.shooter.m_19879_(), shot.id, at.f_82479_, at.f_82480_, at.f_82481_,
-            (float)velocity.f_82479_, (float)velocity.f_82480_, (float)velocity.f_82481_, size, extra));
+        S2CUkakuFx message = new S2CUkakuFx(kind, shot.shooter.m_19879_(), shot.id, at.f_82479_, at.f_82480_, at.f_82481_,
+            (float)velocity.f_82479_, (float)velocity.f_82480_, (float)velocity.f_82481_, size, extra);
+        if (shot.lightning) {
+            ControlNetwork.sendNear(shot.level, at, 80.0, message);
+        } else {
+            ControlNetwork.broadcastAround(shot.shooter, message);
+        }
     }
 }

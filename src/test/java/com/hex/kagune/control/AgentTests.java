@@ -615,6 +615,12 @@ public final class AgentTests {
         AgentRules.Rank reaper = AgentRules.Rank.RANK_10;
         check(reaper.title.equals("White Reaper") && AgentRules.regularRank(reaper) == AgentRules.Rank.RANK_9
             && AgentRules.superior(reaper, reaper) == AgentRules.Rank.RANK_9, "the White Reaper is outside the regular ranks");
+        check(AgentRules.dawnBlastDamage(0.0) == 26.0F
+            && AgentRules.dawnBlastDamage(1.25) > AgentRules.dawnBlastDamage(2.5)
+            && Math.abs(AgentRules.dawnBlastDamage(2.5) - 10.4F) < 0.01F, "Dawn's blast falls off from 26 to 10.4 raw damage");
+        RigPose kick = AgentPose.kick(AgentRules.REAPER_KICK_WINDUP);
+        check(kick.rightLegX < -1.4F && kick.legHold == 1.0F
+            && AgentPose.kick(AgentRules.REAPER_KICK_DURATION).rightLegX == 0.0F, "the front kick extends and recovers");
         var slot = new com.hex.kagune.control.npc.UniqueNpc();
         var first = new java.util.UUID(0L, 1L);
         var second = new java.util.UUID(0L, 2L);

@@ -27,7 +27,9 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
@@ -88,6 +90,9 @@ public final class AgentBrain {
         long kickAt = Long.MIN_VALUE;
         long kickReadyAt = Long.MIN_VALUE;
         int kickTarget;
+        long aimAt = Long.MIN_VALUE;
+        long lightningReadyAt = Long.MIN_VALUE;
+        int aimTarget;
         /** A finisher just landed and it means to flip clear of it. */
         boolean clear;
         /** Its feet: its flip and when, its push; its dash, when, which way; when it may flip and dash again. */
@@ -269,6 +274,7 @@ public final class AgentBrain {
         }
         if (PaleStun.stunned(agent)) {
             cancelKick(agent, mind, now);
+            cancelLightning(agent, mind, now);
             return;
         }
         if (falter(agent, mind, level, now)) {
@@ -574,6 +580,7 @@ public final class AgentBrain {
     private static void patrol(CcgAgent agent, Mind mind, CcgAgent partner, ServerLevel level, long now) {
         end(agent, mind);
         cancelKick(agent, mind, now);
+        cancelLightning(agent, mind, now);
         if (mind.open && ago(now, mind.foughtAt) > AgentRules.CALM && QuinqueServer.hand(agent, level, agent.m_21205_(), mind.kind, false)) {
             mind.open = false;
         }
@@ -671,7 +678,7 @@ public final class AgentBrain {
             agent.m_21573_().m_26573_(); // the case still opening in its hand
             return;
         }
-        if (kick(agent, mind, prey, level, now)) {
+        if (lightning(agent, mind, prey, level, now) || kick(agent, mind, prey, level, now)) {
             return;
         }
         if (mind.striking && now >= mind.landsAt) {
@@ -685,6 +692,56 @@ public final class AgentBrain {
         } else {
             close(agent, mind, partner, prey, level, now);
         }
+    }
+
+    private static void cancelLightning(CcgAgent agent, Mind mind, long now) {
+        if (mind.aimAt != Long.MIN_VALUE) {
+            mind.aimAt = Long.MIN_VALUE;
+            agent.swing(-1, now);
+        }
+    }
+
+    /** Hold Dawn level, point at the quarry, then fire if the lane is still clear. */
+    private static boolean lightning(CcgAgent agent, Mind mind, LivingEntity prey, ServerLevel level, long now) {
+        if (mind.kind != Quinque.DAWN || mind.kickAt != Long.MIN_VALUE || mind.striking) {
+            return false;
+        }
+        double range = Math.sqrt(prey.m_20280_(agent));
+        if (mind.aimAt != Long.MIN_VALUE) {
+            if (prey.m_19879_() != mind.aimTarget || range > AgentRules.DAWN_SHOT_RANGE || !agent.m_142582_(prey)) {
+                cancelLightning(agent, mind, now);
+                return false;
+            }
+            agent.m_21573_().m_26573_();
+            if (ago(now, mind.aimAt) >= AgentRules.DAWN_AIM_TICKS) {
+                cancelLightning(agent, mind, now);
+                mind.readyAt = now + 7;
+                Vec3 hand = agent.m_146892_().m_82520_(0.0, -0.52, 0.0);
+                Vec3 target = GhoulNpcBrain.centre(prey);
+                Vec3 along = target.m_82546_(hand).m_82541_();
+                Vec3 forward = UkakuFire.horizontal(along);
+                hand = hand.m_82520_(-forward.f_82481_ * 0.30, 0.0, forward.f_82479_ * 0.30);
+                along = target.m_82546_(hand).m_82541_();
+                Vec3 tip = hand.m_82549_(along.m_82490_(1.72));
+                if (level.m_45547_(new ClipContext(hand, tip, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, agent))
+                    .m_6662_() == HitResult.Type.MISS) {
+                    CrystalShots.lightning(agent, level, tip, along, body -> foe(agent, body));
+                    agent.shot(now);
+                    UkakuFire.sound(level, tip, "hexkagune:sfx.thunder", 0.65F, 1.45F);
+                }
+            }
+            return true;
+        }
+        if (range >= AgentRules.DAWN_SHOT_MIN && range <= AgentRules.DAWN_SHOT_RANGE && now >= mind.lightningReadyAt
+            && now >= mind.readyAt && agent.m_142582_(prey)) {
+            mind.aimAt = now;
+            mind.aimTarget = prey.m_19879_();
+            mind.lightningReadyAt = now + AgentRules.DAWN_SHOT_COOLDOWN;
+            agent.m_21573_().m_26573_();
+            agent.swing(CcgAgent.AIM_DAWN, now);
+            return true;
+        }
+        return false;
     }
 
     private static void cancelKick(CcgAgent agent, Mind mind, long now) {

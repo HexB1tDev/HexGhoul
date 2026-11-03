@@ -191,6 +191,17 @@ public final class AgentRules {
     public static final int REAPER_KICK_DURATION = 14;
     public static final int REAPER_KICK_COOLDOWN = 88;
     public static final float REAPER_KICK_DAMAGE = 22.0F;
+    public static final double DAWN_SHOT_MIN = 6.0;
+    public static final double DAWN_SHOT_RANGE = 32.0;
+    public static final double DAWN_SHOT_SPEED = 1.5;
+    public static final double DAWN_BLAST_RADIUS = 2.5;
+    public static final float DAWN_SHOT_DAMAGE = 26.0F;
+    public static final int DAWN_AIM_TICKS = 12;
+    public static final int DAWN_SHOT_COOLDOWN = 72;
+
+    public static float dawnBlastDamage(double distance) {
+        return (float)(DAWN_SHOT_DAMAGE * (1.0 - 0.6 * Math.min(1.0, Math.max(0.0, distance / DAWN_BLAST_RADIUS))));
+    }
 
     /** Its health by its rank, a superior's more. */
     public static double health(Rank rank, boolean superior) {

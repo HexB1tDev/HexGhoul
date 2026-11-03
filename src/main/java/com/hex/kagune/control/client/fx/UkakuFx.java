@@ -138,6 +138,9 @@ public final class UkakuFx {
     }
 
     private static final Map<Integer, Bolt> BOLTS = new HashMap<>();
+    private static final Map<Integer, Bolt> DAWN_BOLTS = new HashMap<>();
+    private static final int DAWN_GOLD = 0xFFFFD21B;
+    private static final int DAWN_WHITE = 0xFFFFFFDB;
     /** 1.3.35: who shot each shard lately (its id), so one stuck in a body is drawn in its shooter's colour. */
     private static final Map<Integer, Integer> SHOOTERS = new HashMap<>();
 
@@ -245,6 +248,22 @@ public final class UkakuFx {
             return;
         }
         switch (kind) {
+            case S2CUkakuFx.DAWN_BALL -> {
+                if (DAWN_BOLTS.size() < 16) {
+                    Bolt bolt = new Bolt(message.id(), kind, message.shooter(), at, velocity, now, Math.max(1, message.extra()),
+                        message.size(), 0, false, false);
+                    DAWN_BOLTS.put(message.id(), bolt);
+                    if (RcFx.near(at, VISIBLE)) {
+                        dawnBall(at, velocity);
+                    }
+                }
+            }
+            case S2CUkakuFx.DAWN_BURST -> {
+                DAWN_BOLTS.remove(message.id());
+                if (RcFx.near(at, VISIBLE)) {
+                    dawnBurst(at, message.size());
+                }
+            }
             case S2CUkakuFx.IMPACT -> {
                 Bolt bolt = BOLTS.remove(message.id());
                 if (RcFx.near(at, VISIBLE)) {
@@ -443,6 +462,17 @@ public final class UkakuFx {
 
     /** 2.0.16: each tick's trails, each in its shooter's kagune colour. */
     private static void tickTinted(ClientLevel level, long now) {
+        for (Iterator<Bolt> iterator = DAWN_BOLTS.values().iterator(); iterator.hasNext(); ) {
+            Bolt bolt = iterator.next();
+            if (now - bolt.born() >= bolt.life()) {
+                iterator.remove();
+                continue;
+            }
+            Vec3 head = bolt.at(now);
+            if (RcFx.near(head, VISIBLE)) {
+                dawnBall(head, bolt.velocity());
+            }
+        }
         for (Iterator<Bolt> iterator = BOLTS.values().iterator(); iterator.hasNext(); ) {
             Bolt bolt = iterator.next();
             tintFor(bolt.shooter());
@@ -511,6 +541,7 @@ public final class UkakuFx {
     @SubscribeEvent
     public static void loggingOut(ClientPlayerNetworkEvent.LoggingOut event) {
         BOLTS.clear();
+        DAWN_BOLTS.clear();
         VORTICES.clear();
         LASTING.clear();
         RcFx.reset();
@@ -528,6 +559,32 @@ public final class UkakuFx {
         double a = RANDOM.nextDouble() * Math.PI * 2.0;
         double s = Math.sqrt(1.0 - z * z);
         return new Vec3(s * Math.cos(a), z, s * Math.sin(a));
+    }
+
+    private static void dawnBall(Vec3 head, Vec3 flight) {
+        RcFx.at(RcFx.MOTE, true, 2, head).velocity(flight).drag(1.0F).bloom(2)
+            .colors(DAWN_GOLD, 0x88FFA300).size(0.57F, 0.40F).spawn();
+        RcFx.at(RcFx.MOTE, true, 2, head).velocity(flight).drag(1.0F).bloom(1)
+            .colors(DAWN_WHITE, 0x88FFDF39).size(0.29F, 0.20F).spawn();
+        for (int k = 0; k < 7; k++) {
+            Vec3 side = sphere();
+            Vec3 point = head.m_82546_(flight.m_82490_(k * 0.12)).m_82549_(side.m_82490_(0.12 + 0.18 * RANDOM.nextDouble()));
+            RcFx.at(RcFx.SPARK, true, 3, point).velocity(side.m_82490_(0.13)).bloom(1)
+                .colors(k % 2 == 0 ? DAWN_WHITE : DAWN_GOLD, RcFx.clear(DAWN_GOLD)).size(0.105F, 0.03F).spawn();
+        }
+    }
+
+    private static void dawnBurst(Vec3 at, float radius) {
+        if (radius <= 0.0F) {
+            RcFx.at(RcFx.SPARK, true, 4, at).colors(DAWN_GOLD, RcFx.clear(DAWN_GOLD)).size(0.32F, 0.04F).spawn();
+            return;
+        }
+        RcFx.at(RcFx.MOTE, true, 6, at).bloom(2).colors(DAWN_WHITE, RcFx.clear(DAWN_GOLD)).size(0.9F, radius * 1.5F).spawn();
+        for (int k = 0; k < 32; k++) {
+            Vec3 velocity = sphere().m_82490_(0.22 + RANDOM.nextDouble() * 0.45);
+            RcFx.at(RcFx.SPARK, true, 7 + RANDOM.nextInt(5), at).velocity(velocity).drag(0.87F).bloom(1)
+                .colors(k % 3 == 0 ? DAWN_WHITE : DAWN_GOLD, RcFx.clear(DAWN_GOLD)).size(0.22F, 0.035F).spawn();
+        }
     }
 
     /** RC flame: molten into red into nothing, rising a little. */

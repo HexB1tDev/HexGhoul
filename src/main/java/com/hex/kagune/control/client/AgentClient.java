@@ -52,6 +52,8 @@ public final class AgentClient {
         RigPose arms = null;
         if (weapon == Quinque.DAWN && swing == CcgAgent.KICK && swingAge >= 0.0 && swingAge < AgentRules.REAPER_KICK_DURATION) {
             arms = AgentPose.kick(swingAge);
+        } else if (weapon == Quinque.DAWN && swing == CcgAgent.AIM_DAWN && swingAge >= 0.0 && swingAge <= AgentRules.DAWN_AIM_TICKS + 2) {
+            arms = AgentPose.aimDawn(swingAge, agent.m_146909_());
         } else if (weapon != null && swing >= 0 && swing < CcgAgent.PARRY && swingAge >= 0.0 && swingAge < weapon.swing) {
             arms = QuinquePose.swing(weapon, swing, swingAge / weapon.swing);
         } else if (weapon != null && swing == CcgAgent.PARRY && swingAge >= 0.0 && swingAge < AgentPose.PARRY_TICKS) {
@@ -64,7 +66,12 @@ public final class AgentClient {
                 AgentPose.stanceRun(p, weapon, phase, run);
                 posed = true;
             } else {
-                arms = QuinquePose.hold(weapon);
+                arms = weapon == Quinque.DAWN ? AgentPose.aimDawn(0.0, 0.0F) : QuinquePose.hold(weapon);
+                double shot = CcgAgent.since(now, agent.shotAt()) + partial;
+                if (weapon == Quinque.DAWN && shot >= 0.0 && shot < QuinquePose.KICK_TICKS) {
+                    arms = AgentPose.aimDawn(AgentRules.DAWN_AIM_TICKS, agent.m_146909_());
+                    QuinquePose.recoil(arms, weapon, (float)(1.0 - shot / QuinquePose.KICK_TICKS));
+                }
             }
         } else if (shut != null) {
             float out = QuinqueClient.shown(held, false);

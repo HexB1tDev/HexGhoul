@@ -84,6 +84,8 @@ public record S2CUkakuFx(int kind, int shooter, int id, double x, double y, doub
     public static final int REVEAL = 40;
     /** 6.0.0: the kakuja's dash: a rush of wind from {@code x, y, z} along {@code v}, {@code size} how strong. */
     public static final int GUST = 41;
+    public static final int DAWN_BALL = 42;
+    public static final int DAWN_BURST = 43;
 
     public static void encode(S2CUkakuFx message, FriendlyByteBuf buffer) {
         buffer.writeByte(message.kind);

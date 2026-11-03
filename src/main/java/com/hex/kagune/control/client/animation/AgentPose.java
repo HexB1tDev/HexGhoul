@@ -17,6 +17,18 @@ public final class AgentPose {
     private AgentPose() {
     }
 
+    /** Bring the tip to the target and hold it there through the windup. */
+    public static RigPose aimDawn(double age, float pitch) {
+        RigPose pose = QuinquePose.hold(Quinque.DAWN);
+        float raise = QuinquePose.ease(age / 5.0);
+        float targetPitch = (float)Math.toRadians(Math.max(-55.0F, Math.min(55.0F, pitch)));
+        QuinquePose.pitchBy(pose, Quinque.DAWN, 0.22F * (1.0F - raise) + targetPitch * raise);
+        pose.leftArmZ = -0.30F * raise;
+        pose.leftArmX = -0.42F * raise;
+        pose.leftArmHold = raise;
+        return pose;
+    }
+
     /** A loaded knee, a quick front kick, then the foot goes back under the hips. */
     public static RigPose kick(double age) {
         float windup = (float)Math.min(1.0, age / AgentRules.REAPER_KICK_WINDUP);
