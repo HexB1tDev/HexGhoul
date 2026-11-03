@@ -56,7 +56,7 @@ public final class AgentSpawner {
             if (!clear(level, x, z)) {
                 continue;
             }
-            int look = (int)Math.floor(player.m_217043_().m_188500_() * AgentRules.LOOKS.length);
+            int look = AgentRules.regularLook(player.m_217043_().m_188500_());
             Quinque kind = AgentRules.kind(player.m_217043_().m_188500_());
             CcgAgent leader = place(level, x, z);
             if (leader == null) {
@@ -136,7 +136,8 @@ public final class AgentSpawner {
             if (other == null) {
                 continue;
             }
-            int otherLook = Math.floorMod(look + 1 + (int)Math.floor(leader.m_217043_().m_188500_() * (AgentRules.LOOKS.length - 1)), AgentRules.LOOKS.length);
+            int otherLook = Math.floorMod(look + 1 + (int)Math.floor(leader.m_217043_().m_188500_() * (AgentRules.REGULAR_LOOKS - 1)),
+                AgentRules.REGULAR_LOOKS);
             Quinque otherKind = AgentRules.partnerKind(kind, leader.m_217043_().m_188500_());
             AgentBrain.pair(leader, look, kind, other, otherLook, otherKind);
             return other;

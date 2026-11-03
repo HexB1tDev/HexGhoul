@@ -27,7 +27,11 @@ public final class AgentRules {
         }
     }
 
-    /** The owner's skins: four women (all slim armed), five men (three wide, two slim). */
+    /**
+     * The owner's skins: four women (all slim armed), five men (three wide, two slim); 2.0.28 (appended: sent by its number) the White
+     * Reaper's own (the owner: "use this skin ... for the White Reaper specifically ... always ... for lore purposes"; slim armed), worn by
+     * him alone ({@link #REAPER_LOOK}): an ordinary investigator draws from the first {@link #REGULAR_LOOKS}.
+     */
     public static final Look[] LOOKS = {
         new Look("ccg_f0", true, true),
         new Look("ccg_f1", true, true),
@@ -38,7 +42,17 @@ public final class AgentRules {
         new Look("ccg_m2", false, false),
         new Look("ccg_m3", false, true),
         new Look("ccg_m4", false, true),
+        new Look("ccg_reaper", false, true),
     };
+
+    /** 2.0.28: the looks an ordinary investigator may wear (all but the White Reaper's), and his. */
+    public static final int REGULAR_LOOKS = 9;
+    public static final int REAPER_LOOK = 9;
+
+    /** 2.0.28: an ordinary investigator's look for a roll {@code r} in 0..1 (never the White Reaper's). */
+    public static int regularLook(double r) {
+        return Math.max(0, Math.min(REGULAR_LOOKS - 1, (int)Math.floor(r * REGULAR_LOOKS)));
+    }
 
     /** The look numbered {@code index} (any int: wrapped onto the table). */
     public static Look look(int index) {

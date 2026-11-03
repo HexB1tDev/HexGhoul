@@ -178,7 +178,8 @@ public final class AgentBrain {
     }
 
     static void prepareReaper(CcgAgent agent, int look) {
-        save(agent, Math.max(4, look), Quinque.DAWN, true, null);
+        // 2.0.28: always in the owner's own skin for him (AgentRules.REAPER_LOOK), whatever look was rolled.
+        save(agent, AgentRules.REAPER_LOOK, Quinque.DAWN, true, null);
         agent.getPersistentData().m_128405_(RANK_LEVEL, AgentRules.Rank.RANK_10.level());
         agent.m_21530_();
     }
@@ -195,12 +196,12 @@ public final class AgentBrain {
             mind.partner = saved.m_128403_(PARTNER) ? saved.m_128342_(PARTNER) : null;
         } else if (saved.m_128441_(VillagePlace.KEY)) {
             // 1.3.71: one of the Brick Village's patrol: someone of its own, walking its loop alone (no partner turns up for it).
-            mind.look = (int)Math.floor(agent.m_217043_().m_188500_() * AgentRules.LOOKS.length);
+            mind.look = AgentRules.regularLook(agent.m_217043_().m_188500_());
             mind.kind = AgentRules.kind(agent.m_217043_().m_188500_());
             mind.leader = true;
             save(agent, mind.look, mind.kind, true, null);
         } else {
-            mind.look = (int)Math.floor(agent.m_217043_().m_188500_() * AgentRules.LOOKS.length);
+            mind.look = AgentRules.regularLook(agent.m_217043_().m_188500_());
             mind.kind = AgentRules.kind(agent.m_217043_().m_188500_());
             mind.leader = true;
             save(agent, mind.look, mind.kind, true, null);
@@ -222,12 +223,15 @@ public final class AgentBrain {
         boolean reaper = mind.rank == AgentRules.Rank.RANK_10 && !fresh && mind.partner == null
             && !saved.m_128441_(VillagePlace.KEY) && claimReaper(agent, level);
         if (reaper) {
-            mind.look = Math.max(4, mind.look);
+            mind.look = AgentRules.REAPER_LOOK; // 2.0.28: his own skin, a Reaper saved before included
             mind.kind = Quinque.DAWN;
             agent.m_21530_();
             agent.m_21051_(net.minecraft.world.entity.ai.attributes.Attributes.f_22278_).m_22100_(AgentRules.REAPER_KNOCKBACK_RESISTANCE);
         } else {
             mind.rank = AgentRules.regularRank(mind.rank);
+            if (mind.look >= AgentRules.REGULAR_LOOKS) {
+                mind.look = Math.floorMod(mind.look, AgentRules.REGULAR_LOOKS); // 2.0.28: only the White Reaper wears his skin
+            }
         }
         agent.dress(mind.look, mind.kind);
         // 2.0.20: the pair's leader is its superior, always the stronger: set against its partner's rank if that is known already (the

@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.0.28 (HexGhoul): the White Reaper's own skin (testing)
+
+See `.github/release-notes-2.0.28.md`. The White Reaper always wears the owner's own skin, on the slim arms it is painted for; no other investigator can roll it.
+
 ## 2.0.27 (HexGhoul): wild ghouls' kagune always drawn (testing)
 
 See `.github/release-notes-2.0.27.md`. Wild ghouls' kagune no longer depends on their body's draw call being noticed: Rinkaku tails and Ukaku wings are drawn for every living wild ghoul with its kagune out within 48 blocks, and one ghoul failing to draw never hides the others.

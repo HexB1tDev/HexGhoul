@@ -55,9 +55,13 @@ public final class AgentTests {
         System.out.println("Agent tests: " + passed + " checks passed");
     }
 
-    /** The owner's nine skins, each in place (a 64x64 skin), four women and five men, each on the arms it is painted for. */
+    /**
+     * The owner's nine skins, each in place (a 64x64 skin), four women and five men, each on the arms it is painted for; 2.0.28: and the
+     * White Reaper's own, last, slim armed, worn by him alone.
+     */
     static void looks() throws IOException {
-        check(AgentRules.LOOKS.length == 9, "nine investigators' skins");
+        check(AgentRules.LOOKS.length == 10, "nine investigators' skins and the White Reaper's");
+        check(AgentRules.REGULAR_LOOKS == 9 && AgentRules.REAPER_LOOK == 9, "the Reaper's skin is the one appended last");
         int women = 0;
         int slimMen = 0;
         for (AgentRules.Look look : AgentRules.LOOKS) {
@@ -71,12 +75,22 @@ public final class AgentTests {
                 check(look.slim() == slimArms(png), look.texture() + " is drawn on the arms it is painted for");
             }
             check(!look.female() || look.slim(), look.texture() + ": a woman on the slim arms");
-            check(look.texture().matches("ccg_[fm][0-9]"), look.texture() + " has a plain name (no file names from the web)");
+            check(look.texture().matches("ccg_[fm][0-9]|ccg_reaper"), look.texture() + " has a plain name (no file names from the web)");
             women += look.female() ? 1 : 0;
             slimMen += !look.female() && look.slim() ? 1 : 0;
         }
-        check(women == 4 && slimMen == 2, "four women; five men, two of them slim armed");
-        check(AgentRules.look(-1) == AgentRules.LOOKS[8] && AgentRules.look(9) == AgentRules.LOOKS[0], "any look number wraps onto the table");
+        check(women == 4 && slimMen == 3, "four women; six men, three of them slim armed (the Reaper one of them)");
+        AgentRules.Look reaper = AgentRules.LOOKS[AgentRules.REAPER_LOOK];
+        check(reaper.texture().equals("ccg_reaper") && !reaper.female() && reaper.slim(), "the White Reaper: his skin, a man's body on the slim arms");
+        check(AgentRules.look(-1) == AgentRules.LOOKS[AgentRules.LOOKS.length - 1] && AgentRules.look(AgentRules.LOOKS.length) == AgentRules.LOOKS[0],
+            "any look number wraps onto the table");
+        java.util.Set<Integer> rolled = new java.util.HashSet<>();
+        for (int i = 0; i <= 1000; i++) {
+            int look = AgentRules.regularLook(i / 1000.0);
+            check(look >= 0 && look < AgentRules.REGULAR_LOOKS, "an ordinary investigator never wears the Reaper's skin: " + i);
+            rolled.add(look);
+        }
+        check(rolled.size() == AgentRules.REGULAR_LOOKS, "every ordinary skin can be rolled");
     }
 
     /** True if the skin's right arm's outer column (x 54..55, y 20..31) is empty: a slim skin. Reads the PNG's pixels with ImageIO. */
