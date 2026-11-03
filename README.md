@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.0.37 (HexGhoul): Rinkaku's guard removed (testing)
+
+See `.github/release-notes-2.0.37.md`. Rinkaku's C move, the tendril guard, is gone: C does nothing on the Rinkaku path any more and the guard is no longer listed in the ability guide. Rinkaku's defence becomes its right click (the block, in a coming version).
+
 ## 2.0.36 (HexGhoul): four new villager tempers (testing)
 
 See `.github/release-notes-2.0.36.md`. Villagers have four new tempers, for twelve in all: Playful (teasing, games and pranks), Stoic (calm, few words, steady), Sarcastic (dry wit), and Romantic (a hopeless romantic, flowery and sincere). Each has its own lines for everything a villager says and its own body language.

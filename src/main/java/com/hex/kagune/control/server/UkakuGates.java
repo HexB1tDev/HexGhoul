@@ -81,7 +81,11 @@ public final class UkakuGates {
         }
     }
 
-    /** C: Rinkaku's tendril guard; Ukaku has no guard (5.0.13: the Wing Block is gone), so the key does nothing for him. */
+    /**
+     * C: the final kakuja's Steel Blade on the Ukaku path. 2.0.37 (the owner: "The C ability called guard is not meant to be in the game
+     * anymore ... completely delete the C move called guard"): Rinkaku's tendril guard (the original's {@code toggleGuardLegacy}, the only
+     * thing that ever raised it) is never called again; a guard somehow still up is let down. Rinkaku's block is its right click now.
+     */
     public static void toggleGuard(ServerPlayer player) {
         if (PaleServer.isPale(player) || GraftServer.isGraft(player)) {
             return; // 6.1.0: Pale has no tendril guard; C does nothing on her path (7.0.0: Graft's C is his own guard)
@@ -91,8 +95,11 @@ public final class UkakuGates {
             if (KaguneProfile.isActive(player) && player.m_6084_()) {
                 UkakuServer.toggleBlade(player);
             }
-        } else if (!RinkakuAutonomy.refuse(player)) {
-            KaguneServerController.toggleGuardLegacy(player);
+            return;
+        }
+        KaguneRuntime.State state = KaguneRuntime.get(player.m_20148_());
+        if (state != null && state.guarding) {
+            state.guarding = false;
         }
     }
 

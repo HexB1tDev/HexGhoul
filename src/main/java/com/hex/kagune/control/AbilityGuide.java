@@ -174,7 +174,7 @@ public final class AbilityGuide {
             rows.add(row(in, "Crush", TEXT, locked(m, RinkakuUnlocks.CRUSH), Key.CRUSH));
             rows.add(row(in, "Lift", TEXT, locked(m, RinkakuUnlocks.LIFT), Key.LIFT));
             rows.add(row(in, "Slam", TEXT, locked(m, RinkakuUnlocks.SLAM), Key.SLAM));
-            rows.add(row(in, "Guard", TEXT, 0, Key.GUARD));
+            // 2.0.37: the tendril guard (C) is gone; right click blocks (RinkakuBlock).
             if (form.hasCentipedeLegs()) {
                 rows.add(new Row("auto", "Centipede legs hunt and grab", KAKUJA_PLUM, 0));
             }

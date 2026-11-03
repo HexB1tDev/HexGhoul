@@ -1,4 +1,10 @@
-# START HERE (state after 2.0.36)
+# START HERE (state after 2.0.37)
+
+Rinkaku's C move, the tendril guard, is gone: C does nothing on the Rinkaku path any more and the guard is no longer listed in the ability guide. Rinkaku's defence becomes its right click (the block, in a coming version).
+
+- The original's `toggleGuardLegacy` was the only thing that ever raised the guard; it is never called now, and a guard somehow still up is let down when C is pressed. C still works for the paths that use it (Ukaku's final kakuja Steel Blade, Graft's own C). Protocol stays 77.
+
+# State after 2.0.36
 
 Villagers have four new tempers, for twelve in all: Playful (teasing, games and pranks), Stoic (calm, few words, steady), Sarcastic (dry wit), and Romantic (a hopeless romantic, flowery and sincere). Each has its own lines for everything a villager says and its own body language.
 
