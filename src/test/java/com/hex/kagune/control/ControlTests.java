@@ -199,7 +199,46 @@ public final class ControlTests {
         check(gap.follow(new double[][] {{0, 0, 0}, {1, 1, 1}}, 40.5, 2.0)[1][0] == 1.0, "a new shape starts afresh");
     }
 
+    /** 2.0.38: a Rinkaku tail grows out of the lower back: its root inside the body, its base leaving the back, its far part its own. */
+    static void rinkakuRoot() {
+        double height = 1.8;
+        for (int limb = 0; limb < 6; limb++) {
+            double side = RinkakuRoot.side(limb, 0.0);
+            double[] root = RinkakuRoot.root(limb, side, height);
+            check(root[2] > RinkakuRoot.BACK && root[2] < 0.0 && Math.abs(root[0]) < 0.25 && root[1] > 0.75 && root[1] < 1.0,
+                "tail " + limb + ": rooted inside the lower back (" + java.util.Arrays.toString(root) + ")");
+            double[] way = RinkakuRoot.direction(limb, side);
+            check(way[2] < -0.6 && Math.signum(way[0]) == side && Math.abs(Math.hypot(Math.hypot(way[0], way[1]), way[2]) - 1.0) < 1.0E-9,
+                "tail " + limb + ": leaves the back, round to its own side");
+            int n = 30;
+            double[][] path = new double[n][];
+            for (int i = 0; i < n; i++) {
+                double t = i / (double)(n - 1);
+                path[i] = new double[] {side * (0.15 + 0.9 * t), 0.774 + 1.5 * Math.sin(t * 1.4), -0.18 - 1.3 * t + 0.4 * t * t};
+            }
+            double[][] grown = RinkakuRoot.attach(path, limb, 0.0, height);
+            check(grown != path && grown.length == n && java.util.Arrays.equals(grown[0], root), "tail " + limb + ": its first point is the root");
+            boolean leaving = true;
+            for (int i = 1; i < n && RinkakuRoot.distance(grown[i], grown[0]) < RinkakuRoot.BASE * 0.5; i++) {
+                double[] d = {grown[i][0] - root[0], grown[i][1] - root[1], grown[i][2] - root[2]};
+                double len = Math.sqrt(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]);
+                leaving &= (d[0] * way[0] + d[1] * way[1] + d[2] * way[2]) / len > 0.999;
+            }
+            check(leaving, "tail " + limb + ": its base is straight out of the back");
+            check(java.util.Arrays.equals(grown[n - 1], path[n - 1]) || RinkakuRoot.distance(grown[n - 1], path[n - 1]) < 1.0E-9,
+                "tail " + limb + ": its tip stays where its motion put it");
+            boolean finite = true;
+            for (double[] p : grown) {
+                finite &= Double.isFinite(p[0]) && Double.isFinite(p[1]) && Double.isFinite(p[2]);
+            }
+            check(finite, "tail " + limb + ": no NaN");
+        }
+        check(RinkakuRoot.attach(new double[][] {{0, 1, 0}}, 0, 0.0, 1.8).length == 1, "a path too short is left alone");
+        check(RinkakuRoot.root(0, -1.0, 0.9)[1] < RinkakuRoot.root(0, -1.0, 1.8)[1], "a smaller body's root is lower");
+    }
+
     public static void main(String[] args) {
+        rinkakuRoot();
         progression();
         hungerAndFrenzy();
         urges();

@@ -112,6 +112,27 @@ public final class StrikePaths {
         return true;
     }
 
+    /** 2.0.38: {@code path} (world) through {@link com.hex.kagune.control.RinkakuRoot#attach} in the owner's frame ({@code feet}, {@code yaw}). */
+    static double[][] attachRoot(double[][] path, int limb, double fanSide, double[] feet, double yaw, double height) {
+        double fx = -Math.sin(yaw);
+        double fz = Math.cos(yaw);
+        double rx = -Math.cos(yaw);
+        double rz = -Math.sin(yaw);
+        double[][] rig = new double[path.length][];
+        for (int i = 0; i < path.length; i++) {
+            double dx = path[i][0] - feet[0];
+            double dz = path[i][2] - feet[2];
+            rig[i] = new double[] {dx * rx + dz * rz, path[i][1] - feet[1], dx * fx + dz * fz};
+        }
+        double[][] grown = com.hex.kagune.control.RinkakuRoot.attach(rig, limb, fanSide, height);
+        double[][] out = new double[path.length][];
+        for (int i = 0; i < path.length; i++) {
+            double[] q = grown[i];
+            out[i] = new double[] {feet[0] + q[0] * rx + q[2] * fx, feet[1] + q[1], feet[2] + q[0] * rz + q[2] * fz};
+        }
+        return out;
+    }
+
     public static Vec3[] clearOwner(Vec3[] points, TendrilChain chain, AbstractClientPlayer player, KaguneClientState.View view, float partialTick) {
         if (points == null || points.length < 3 || player == null || view == null) {
             return points;
@@ -150,6 +171,11 @@ public final class StrikePaths {
             }
         }
         boolean moved = BodyClearance.clear(path, feet, -Math.sin(yaw), Math.cos(yaw), player.m_20205_(), player.m_20206_(), radius, side);
+        // 2.0.38: the tail grown out of his lower back (RinkakuRoot): its root sunk in it, its base leaving it, then its own motion.
+        if (!layout.segmented()) {
+            path = attachRoot(path, limb, layout.fanSide(), feet, yaw, player.m_20206_());
+            moved = true;
+        }
         // 1.0.24: the roots ride his body as it is drawn (a lean, a lunge, a drop, a flip, a roll), as Graft's do: before, a body
         // animation left them hanging where his hips would be standing still.
         boolean ridden = ride(path, player, feet, yaw, partialTick);
