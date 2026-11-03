@@ -1,8 +1,11 @@
 package com.hex.kagune.control.server;
 
 import com.hex.kagune.control.family.ChildLines;
+import com.hex.kagune.control.family.ChildPage;
 import com.hex.kagune.control.family.ChildRules;
 import com.hex.kagune.control.family.ChildStage;
+import com.hex.kagune.control.family.ChildTemper;
+import com.hex.kagune.control.family.StrangerLines;
 import com.hex.kagune.control.network.ControlNetwork;
 import com.hex.kagune.control.network.S2CNpcTalk;
 import com.hex.kagune.control.npc.ChildNpc;
@@ -112,66 +115,33 @@ public final class ChildTalk {
         List<String> keys = new ArrayList<>();
         List<String> labels = new ArrayList<>();
         boolean carrying = player.m_20148_().equals(npc.mind.carrier);
+        List<ChildPage.Choice> page;
         if (queued != null) {
-            // Chosen: its line, then goodbye; the moment begins as the talk closes.
+            page = List.of(); // Chosen: its line, then goodbye; the moment begins as the talk closes.
         } else if (parent && play) {
-            for (com.hex.kagune.control.family.ChildMoment moment : com.hex.kagune.control.family.ChildMoment.PLAY) {
-                if (moment.fits(stage)) {
-                    add(keys, labels, "m:" + moment.name(), moment.label());
-                }
-            }
-            if (com.hex.kagune.control.family.ChildRules.shoulders(stage)) {
-                boolean riding = carrying && npc.mind.ride == com.hex.kagune.control.family.ChildRules.RIDE_SHOULDERS;
-                add(keys, labels, riding ? "down" : "shoulders", riding ? "Down you get." : "Up on my shoulders!");
-            }
-            add(keys, labels, "back", "...");
+            page = ChildPage.play(stage, carrying, npc.mind.ride);
         } else if (parent) {
-            if (stage.carried() || carrying) {
-                add(keys, labels, carrying ? "down" : "up", carrying ? "Put you down." : "Pick up.");
-            }
-            add(keys, labels, "play", stage.older() ? "Want to hang out?" : "Let's play!");
-            if (stage.learns()) {
-                add(keys, labels, "teach", "Let me teach you to fight.");
-            }
-            // 1.3.29: talking, at every age (a baby is talked to; it answers its own way).
-            add(keys, labels, "talk", switch (stage) {
-                case BABY -> "Talk to the baby.";
-                case TODDLER -> "Tell me something!";
-                case CHILD -> "How are you?";
-                case TEEN, ADULT -> "Talk to me.";
-            });
-            if (stage.walks()) {
-                boolean following = player.m_20148_().equals(npc.following());
-                add(keys, labels, following ? "stay" : "follow", following ? "Wait here." : "Follow me.");
-            }
-            // 1.3.21: hand in hand; fed; to bed; home.
-            boolean handed = carrying && npc.mind.ride == com.hex.kagune.control.family.ChildRules.RIDE_HAND;
-            if (com.hex.kagune.control.family.ChildRules.hand(stage) && (!carrying || handed)) {
-                add(keys, labels, handed ? "down" : "hand", handed ? "Let go." : "Hold my hand.");
-            }
-            if (!player.m_21205_().m_41619_() && (player.m_21205_().m_41614_() || com.hex.kagune.control.ControlItems.ghoulMeat(player.m_21205_()))) {
-                add(keys, labels, "feed", "Here, eat this. (the food in your hand)");
-            }
+            boolean food = !player.m_21205_().m_41619_() && (player.m_21205_().m_41614_() || com.hex.kagune.control.ControlItems.ghoulMeat(player.m_21205_()));
             Households.Home house = Households.forChild(level, child);
-            if (house != null && HomeLife.night(level.m_46468_(), true) && !npc.m_5803_()) {
-                add(keys, labels, "bed", "Bedtime.");
-            }
-            if (house != null && (npc.following() != null || npc.waiting()) && !house.at(npc.home())) {
-                add(keys, labels, "home", "Go home.");
-            }
+            page = ChildPage.parent(stage, new ChildPage.Parent(carrying, npc.mind.ride, player.m_20148_().equals(npc.following()), food,
+                house != null && HomeLife.night(level.m_46468_(), true) && !npc.m_5803_(),
+                house != null && (npc.following() != null || npc.waiting()) && !house.at(npc.home())));
         } else {
-            add(keys, labels, "hi", "Hello there.");
+            // 2.0.5: someone else's child: gentle choices only (never a parent's, never romance).
+            boolean food = !player.m_21205_().m_41619_() && (player.m_21205_().m_41614_() || com.hex.kagune.control.ControlItems.ghoulMeat(player.m_21205_()));
+            page = ChildPage.stranger(stage, food);
+        }
+        for (ChildPage.Choice choice : page) {
+            add(keys, labels, choice.key(), choice.label());
         }
         TALKS.put(player.m_20148_(), new Talk(npc.m_19879_(), keys, queued));
-        int[] choices = new int[keys.size() + 1];
+        int[] choices = ChildPage.choices(keys.size());
         String[] shown = new String[keys.size() + 1];
         for (int i = 0; i < keys.size(); i++) {
-            choices[i] = NpcTalk.Choice.SAYS[i].ordinal();
             shown[i] = labels.get(i);
         }
-        choices[keys.size()] = NpcTalk.Choice.LEAVE.ordinal();
         shown[keys.size()] = "";
-        String said = line != null ? line : parent ? ChildLines.greet(stage, call, seed) : stage == ChildStage.BABY ? "*stares at you*" : "...Hi.";
+        String said = line != null ? line : parent ? ChildLines.greet(stage, call, seed) : StrangerLines.hello(stage, temper(child), seed);
         ControlNetwork.sendTo(player, new S2CNpcTalk(npc.m_19879_(), child.name, title(child, stage, player), parent ? 100 : 30, parent, S2CNpcTalk.CHILD_FACE, said, choices, shown));
     }
 
@@ -188,24 +158,18 @@ public final class ChildTalk {
         List<String> keys = new ArrayList<>();
         List<String> labels = new ArrayList<>();
         boolean parent = child.parent(Pregnancies.player(player.m_20148_()));
-        if (queued == null && parent && !ChildBrain.busy(npc.mind, level.m_46467_())) {
-            add(keys, labels, "tuck", "*tuck them in*");
-        }
         if (queued == null) {
-            // 1.3.37: a hand on their hair, or a word to go back to sleep.
-            if (parent) {
-                add(keys, labels, "stroke", "*stroke their hair*");
+            // 1.3.37: a hand on their hair, or a word to go back to sleep (2.0.5: the choices in ChildPage).
+            for (ChildPage.Choice choice : ChildPage.asleep(parent, !ChildBrain.busy(npc.mind, level.m_46467_()))) {
+                add(keys, labels, choice.key(), choice.label());
             }
-            add(keys, labels, "back", "Go back to sleep.");
         }
         TALKS.put(player.m_20148_(), new Talk(npc.m_19879_(), keys, queued));
-        int[] choices = new int[keys.size() + 1];
+        int[] choices = ChildPage.choices(keys.size());
         String[] shown = new String[keys.size() + 1];
         for (int i = 0; i < keys.size(); i++) {
-            choices[i] = NpcTalk.Choice.SAYS[i].ordinal();
             shown[i] = labels.get(i);
         }
-        choices[keys.size()] = NpcTalk.Choice.LEAVE.ordinal();
         shown[keys.size()] = "";
         ControlNetwork.sendTo(player, new S2CNpcTalk(npc.m_19879_(), child.name, "Asleep", 100, true, S2CNpcTalk.CHILD_FACE, line, choices, shown));
     }
@@ -220,7 +184,7 @@ public final class ChildTalk {
     }
 
     private static void add(List<String> keys, List<String> labels, String key, String label) {
-        if (keys.size() < NpcTalk.Choice.SAYS.length && keys.size() < S2CNpcTalk.MOST - 1) {
+        if (keys.size() < ChildPage.MOST && keys.size() < S2CNpcTalk.MOST - 1) {
             keys.add(key);
             labels.add(label);
         }
@@ -291,6 +255,10 @@ public final class ChildTalk {
         if (index < 0 || index >= talk.keys().size() || child == null) {
             return;
         }
+        if (!child.parent(Pregnancies.player(player.m_20148_())) && ChildPage.parentOnly(talk.keys().get(index))) {
+            open(player, npc, null); // 2.0.5: a parent's choice is never anyone else's (however it got on their page)
+            return;
+        }
         if ("back".equals(talk.keys().get(index)) || "stroke".equals(talk.keys().get(index))) {
             // 1.3.37: settled back to sleep (stroked: a parent's hand on their hair, and it eases them).
             boolean stroked = "stroke".equals(talk.keys().get(index));
@@ -312,6 +280,10 @@ public final class ChildTalk {
         }
         if (npc.m_5803_()) {
             asleep(player, npc, "*fast asleep, breathing softly*", null); // it fell asleep while they talked
+            return;
+        }
+        if (talk.keys().get(index).startsWith("x:")) {
+            stranger(player, npc, child, talk.keys().get(index));
             return;
         }
         long now = level.m_46467_();
@@ -427,6 +399,81 @@ public final class ChildTalk {
         open(player, npc, reply);
     }
 
+    /** 2.0.5: its temper (its own for life). */
+    private static ChildTemper temper(Children.Child child) {
+        return ChildTemper.of(child.id, child.mother, child.father);
+    }
+
+    /** 2.0.5: a stranger's answer (someone who is not its parent): gentle things only, its words by its age and temper. */
+    private static void stranger(ServerPlayer player, ChildNpc npc, Children.Child child, String key) {
+        ServerLevel level = player.m_284548_();
+        long now = level.m_46467_();
+        ChildStage stage = child.stage(now);
+        ChildTemper temper = temper(child);
+        int seed = npc.m_217043_().m_188503_(1000);
+        switch (key) {
+            case ChildPage.CHAT -> open(player, npc, StrangerLines.chat(stage, temper, child.name, child.motherName, child.fatherName, seed));
+            case ChildPage.WAVE -> open(player, npc, StrangerLines.wave(stage, temper, seed), false,
+                stage == ChildStage.BABY ? com.hex.kagune.control.family.ChildMoment.CLAP : com.hex.kagune.control.family.ChildMoment.WAVE);
+            case ChildPage.FIVE -> {
+                String reply = StrangerLines.five(stage, temper, seed);
+                if (com.hex.kagune.control.family.ChildMoment.HIGH_FIVE.fits(stage) && !StrangerLines.shyOfHands(stage, temper)) {
+                    open(player, npc, reply, false, com.hex.kagune.control.family.ChildMoment.HIGH_FIVE); // done as the talk closes
+                } else {
+                    open(player, npc, reply);
+                }
+            }
+            case ChildPage.TREAT -> {
+                net.minecraft.world.item.ItemStack held = player.m_21205_();
+                if (held.m_41619_()) {
+                    open(player, npc, stage.older() ? "...Your hand's empty." : "*looks at your empty hand*");
+                    return;
+                }
+                boolean eats = ChildBrain.eats(child.genome().ghoul(), held);
+                if (eats && stage.older() && !player.m_7500_()) {
+                    held.m_41774_(1); // a teen or a grown-up takes it politely, for later; little ones never take food from strangers
+                }
+                open(player, npc, StrangerLines.treat(stage, temper, eats, seed));
+            }
+            case ChildPage.PARENTS -> {
+                // The nearer of its parents close by (a player or its companion parent), pointed out; else they are away.
+                net.minecraft.world.entity.LivingEntity found = null;
+                boolean mother = true;
+                double best = 48.0 * 48.0;
+                for (String parentKey : new String[] {child.mother, child.father}) {
+                    ServerPlayer them = Pregnancies.playerOf(level, parentKey);
+                    if (them != null && them != player && them.m_9236_() == level && them.m_6084_() && them.m_20280_(npc) < best) {
+                        found = them;
+                        best = them.m_20280_(npc);
+                        mother = parentKey.equals(child.mother);
+                    }
+                }
+                for (com.hex.kagune.control.npc.EtoNpc companion : level.m_6443_(com.hex.kagune.control.npc.EtoNpc.class, npc.m_20191_().m_82400_(48.0),
+                    body -> body.m_6084_() && body.mind != null)) {
+                    String companionKey = Pregnancies.npc(companion.persona().key());
+                    if (child.parent(companionKey) && companion.m_20280_(npc) < best) {
+                        found = companion;
+                        best = companion.m_20280_(npc);
+                        mother = companionKey.equals(child.mother);
+                    }
+                }
+                String who = mother ? child.motherName : child.fatherName;
+                open(player, npc, StrangerLines.parents(stage, temper, found != null, mother, who, seed));
+                if (found != null) {
+                    double dx = found.m_20185_() - player.m_20185_();
+                    double dz = found.m_20189_() - player.m_20189_();
+                    player.m_5661_(net.minecraft.network.chat.Component.m_237113_("\u00a7b" + child.name + "\u00a77 points toward \u00a7b" + who + "\u00a77 ("
+                        + StrangerLines.compass(dx, dz) + ", " + (int)Math.round(Math.sqrt(dx * dx + dz * dz)) + " blocks)."), true);
+                    if (found instanceof ServerPlayer parentPlayer) {
+                        parentPlayer.m_5661_(net.minecraft.network.chat.Component.m_237113_("\u00a7b" + player.m_36316_().getName() + "\u00a77 asked \u00a7b"
+                            + child.name + "\u00a77 where you are."), false);
+                    }
+                }
+            }
+            default -> open(player, npc, null);
+        }
+    }
+
     @SubscribeEvent
     public static void loggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
         TALKS.remove(event.getEntity().m_20148_());
@@ -481,13 +528,11 @@ public final class ChildTalk {
         ChildStage stage = child.stage(level.m_46467_());
         boolean parent = child.parent(Pregnancies.player(player.m_20148_()));
         TALKS.put(player.m_20148_(), new Talk(npc.m_19879_(), keys, queued));
-        int[] choices = new int[keys.size() + 1];
+        int[] choices = ChildPage.choices(keys.size());
         String[] shown = new String[keys.size() + 1];
         for (int i = 0; i < keys.size(); i++) {
-            choices[i] = NpcTalk.Choice.SAYS[i].ordinal();
             shown[i] = labels.get(i);
         }
-        choices[keys.size()] = NpcTalk.Choice.LEAVE.ordinal();
         shown[keys.size()] = "";
         ControlNetwork.sendTo(player, new S2CNpcTalk(npc.m_19879_(), child.name, title(child, stage, player), parent ? 100 : 30, parent, S2CNpcTalk.CHILD_FACE, line, choices,
             shown));

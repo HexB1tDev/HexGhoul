@@ -203,6 +203,10 @@ public final class Sightings {
         String me = Pregnancies.player(player.m_20148_());
         for (ChildNpc npc : level.m_6443_(ChildNpc.class, player.m_20191_().m_82400_(NOTICE), child -> child.m_6084_())) {
             Children.Child child = Children.get(level, npc.childId());
+            if (child != null && !child.parent(me) && shown != Display.NONE && (npc.m_20280_(player) <= 12.0 * 12.0 || npc.m_142582_(player))) {
+                stranger(level, player, npc, child, shown, now); // 2.0.5: someone else's child
+                continue;
+            }
             if (child == null || !child.parent(me) || shown == Display.EYES && now % 3L != 0L) {
                 continue;
             }
@@ -214,6 +218,20 @@ public final class Sightings {
             if (sight.terror() && npc.mind != null) {
                 ChildBrain.dread(npc, player, level, now); // 1.3.65: it hides from them (behind the other parent)
             }
+        }
+    }
+
+    /**
+     * 2.0.5: someone else's child sees a stranger show their kakugan, kagune or worse: its words by its age and temper; a kagune frightens
+     * a little one (a kakuja and worse anyone) into hiding behind a parent, or keeping off ({@code ChildBrain.dread}).
+     */
+    private static void stranger(ServerLevel level, ServerPlayer player, ChildNpc npc, Children.Child child, Display shown, long now) {
+        ChildStage stage = child.stage(now);
+        com.hex.kagune.control.family.ChildTemper temper = com.hex.kagune.control.family.ChildTemper.of(child.id, child.mother, child.father);
+        ChildBrain.say(player, npc, child, com.hex.kagune.control.family.StrangerLines.scared(stage, temper, shown, npc.m_217043_().m_188503_(100)));
+        boolean frightened = shown.frightening() || shown == Display.KAGUNE && !stage.older();
+        if (frightened && npc.mind != null) {
+            ChildBrain.dread(npc, player, level, now, shown.frightening() ? 200L : 120L);
         }
     }
 }

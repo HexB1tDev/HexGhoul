@@ -509,7 +509,10 @@ public final class ChildBrain {
         mind.dirty = true;
         if (partner instanceof ServerPlayer player && npc.m_9236_() instanceof ServerLevel level) {
             Children.Child child = Children.get(level, npc.childId());
-            if (child != null) {
+            if (child != null && !child.parent(Pregnancies.player(player.m_20148_()))) {
+                // 2.0.5: with someone who is not its parent (a wave, a high five): its words for a stranger.
+                say(player, npc, child, com.hex.kagune.control.family.StrangerLines.moment(moment, mind.stage, npc.m_217043_().m_188503_(1000)));
+            } else if (child != null) {
                 say(player, npc, child, ChildLines.moment(moment, mind.stage, ChildLines.call(mind.stage, isMother(child, player)),
                     npc.m_217043_().m_188503_(1000)));
             }
@@ -1024,13 +1027,18 @@ public final class ChildBrain {
      * they are near). As it starts, whatever it was doing stops: a talk, a moment, a game of hide and seek or tag, minding a little one.
      */
     static void dread(ChildNpc npc, ServerPlayer from, ServerLevel level, long now) {
+        dread(npc, from, level, now, FinalSight.HIDES);
+    }
+
+    /** 2.0.5: the same, for {@code ticks} (a stranger's kagune frightens it for a while: it is not renewed while in sight). */
+    static void dread(ChildNpc npc, ServerPlayer from, ServerLevel level, long now, long ticks) {
         Mind mind = npc.mind;
         if (mind == null || mind.carrier != null) {
             return; // in someone's arms: they have it
         }
         boolean fresh = now >= mind.dreadUntil;
         mind.dreadOf = from.m_20148_();
-        mind.dreadUntil = now + FinalSight.HIDES;
+        mind.dreadUntil = Math.max(mind.dreadUntil, now + ticks);
         if (!fresh) {
             return;
         }
@@ -1096,7 +1104,10 @@ public final class ChildBrain {
             String call = ChildLines.call(stage, isMother(child, from));
             String other = shelter instanceof ServerPlayer them ? ChildLines.call(stage, isMother(child, them))
                 : shelter instanceof EtoNpc companion ? ChildLines.call(stage, companion.persona().female()) : "";
-            String line = com.hex.kagune.control.npc.FearLines.hiding(stage, call, other, npc.m_217043_().m_188503_(100));
+            // 2.0.5: hiding from a stranger (not its parent in War): its words for them.
+            String line = child.parent(Pregnancies.player(from.m_20148_()))
+                ? com.hex.kagune.control.npc.FearLines.hiding(stage, call, other, npc.m_217043_().m_188503_(100))
+                : com.hex.kagune.control.family.StrangerLines.hiding(stage, other, npc.m_217043_().m_188503_(100));
             for (ServerPlayer player : level.m_6907_()) {
                 if (player.m_20280_(npc) <= 16.0 * 16.0 && SceneServer.sees(npc, player, 16.0)) {
                     ControlNetwork.sendTo(player, new com.hex.kagune.control.network.S2CNpcSay(npc.m_19879_(), line));

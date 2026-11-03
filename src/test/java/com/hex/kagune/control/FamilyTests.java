@@ -29,6 +29,7 @@ public final class FamilyTests {
 
     public static void main(String[] args) throws java.io.IOException {
         genders();
+        strangers();
         body();
         screen();
         pregnancy();
@@ -68,6 +69,179 @@ public final class FamilyTests {
             System.exit(1);
         }
         System.out.println("Family tests: " + passed + " checks passed");
+    }
+
+    /**
+     * 2.0.5: someone else's children. Strangers get gentle choices only, never a parent's; and NOT DATEABLE: no page, for a parent or a
+     * stranger, at any stage including grown, ever offers romance (keys, words, the talk's own romance choices), and no child scene carries
+     * a romance effect or words. Babies and toddlers say nothing coherent to strangers (the owner): two words at most outside the *actions*.
+     */
+    static void strangers() throws java.io.IOException {
+        com.hex.kagune.control.family.ChildStage[] stages = com.hex.kagune.control.family.ChildStage.values();
+        java.util.List<java.util.List<com.hex.kagune.control.family.ChildPage.Choice>> pages = new java.util.ArrayList<>();
+        java.util.List<java.util.List<com.hex.kagune.control.family.ChildPage.Choice>> strangerPages = new java.util.ArrayList<>();
+        for (com.hex.kagune.control.family.ChildStage stage : stages) {
+            for (int bits = 0; bits < 32; bits++) {
+                for (int ride = 0; ride <= 3; ride++) {
+                    pages.add(com.hex.kagune.control.family.ChildPage.parent(stage, new com.hex.kagune.control.family.ChildPage.Parent((bits & 1) != 0, ride,
+                        (bits & 2) != 0, (bits & 4) != 0, (bits & 8) != 0, (bits & 16) != 0)));
+                    pages.add(com.hex.kagune.control.family.ChildPage.play(stage, (bits & 1) != 0, ride));
+                }
+            }
+            for (boolean food : new boolean[] {false, true}) {
+                strangerPages.add(com.hex.kagune.control.family.ChildPage.stranger(stage, food));
+            }
+        }
+        for (boolean parent : new boolean[] {false, true}) {
+            for (boolean free : new boolean[] {false, true}) {
+                pages.add(com.hex.kagune.control.family.ChildPage.asleep(parent, free));
+            }
+        }
+        pages.add(com.hex.kagune.control.family.ChildPage.asleep(false, true));
+        boolean familyKnown = true;
+        boolean noRomance = true;
+        for (java.util.List<com.hex.kagune.control.family.ChildPage.Choice> page : pages) {
+            for (com.hex.kagune.control.family.ChildPage.Choice choice : page) {
+                String key = choice.key();
+                familyKnown &= com.hex.kagune.control.family.ChildPage.FAMILY.contains(key) || key.startsWith("m:");
+                noRomance &= !romanceKey(key) && !com.hex.kagune.control.family.ChildPage.romantic(choice.label());
+            }
+            check(page.size() <= com.hex.kagune.control.family.ChildPage.MOST, "a page fits the talk's reply slots");
+        }
+        check(familyKnown, "a parent's page holds only family keys (a new key must be added on purpose)");
+        boolean gentle = true;
+        boolean strangersAsk = true;
+        for (java.util.List<com.hex.kagune.control.family.ChildPage.Choice> page : strangerPages) {
+            for (com.hex.kagune.control.family.ChildPage.Choice choice : page) {
+                gentle &= com.hex.kagune.control.family.ChildPage.STRANGER.contains(choice.key()) && !com.hex.kagune.control.family.ChildPage.parentOnly(choice.key());
+                noRomance &= !romanceKey(choice.key()) && !com.hex.kagune.control.family.ChildPage.romantic(choice.label());
+            }
+            strangersAsk &= page.stream().anyMatch(c -> c.key().equals(com.hex.kagune.control.family.ChildPage.PARENTS))
+                && page.stream().anyMatch(c -> c.key().equals(com.hex.kagune.control.family.ChildPage.CHAT));
+        }
+        check(gentle, "a stranger's page: gentle choices only, never a parent's (carry, hand, follow, teach, bed, home, feed, play)");
+        check(strangersAsk, "a stranger can always talk and ask where its parents are");
+        check(noRomance, "NOT DATEABLE: no child's page (parent or stranger, any stage, grown too) has a romance key or words");
+        check(com.hex.kagune.control.family.ChildPage.stranger(com.hex.kagune.control.family.ChildStage.TODDLER, true).stream()
+            .noneMatch(c -> c.key().equals(com.hex.kagune.control.family.ChildPage.FIVE))
+            && com.hex.kagune.control.family.ChildPage.stranger(com.hex.kagune.control.family.ChildStage.BABY, true).stream()
+            .noneMatch(c -> c.key().equals(com.hex.kagune.control.family.ChildPage.TREAT))
+            && com.hex.kagune.control.family.ChildPage.stranger(com.hex.kagune.control.family.ChildStage.ADULT, true).stream()
+            .anyMatch(c -> c.key().equals(com.hex.kagune.control.family.ChildPage.FIVE)), "a high five from a child up; no food offered to a baby");
+        boolean onlySays = true;
+        for (int n = 0; n <= com.hex.kagune.control.family.ChildPage.MOST; n++) {
+            for (int ordinal : com.hex.kagune.control.family.ChildPage.choices(n)) {
+                com.hex.kagune.control.npc.NpcTalk.Choice choice = com.hex.kagune.control.npc.NpcTalk.Choice.byOrdinal(ordinal);
+                onlySays &= (choice.say() >= 0 || choice == com.hex.kagune.control.npc.NpcTalk.Choice.LEAVE)
+                    && !com.hex.kagune.control.family.ChildPage.ROMANCE_CHOICES.contains(choice);
+            }
+        }
+        check(onlySays, "a child's talk sends only reply slots and goodbye: never the talk's romance choices (kiss, ask out, propose...)");
+        // Every child scene (what its parents talk about with it): no romance effect, no romance words.
+        java.util.Set<String> effects = new java.util.HashSet<>(com.hex.kagune.control.npc.scene.SceneWords.CHILD_EFFECTS);
+        effects.retainAll(com.hex.kagune.control.family.ChildPage.ROMANCE_KEYS);
+        check(effects.isEmpty(), "no child scene effect is romance");
+        com.hex.kagune.control.npc.scene.SceneBook.Parsed book = com.hex.kagune.control.npc.scene.SceneBook.parse("child",
+            java.nio.file.Files.readString(java.nio.file.Path.of("src/main/resources/data/hexkagune/talk/child.txt")));
+        boolean scenesClean = !book.scenes().isEmpty();
+        for (com.hex.kagune.control.npc.scene.Scene scene : book.scenes()) {
+            scenesClean &= !com.hex.kagune.control.family.ChildPage.romantic(scene.prompt());
+            for (com.hex.kagune.control.npc.scene.Scene.Page page : scene.pages().values()) {
+                for (String line : page.lines()) {
+                    scenesClean &= !com.hex.kagune.control.family.ChildPage.romantic(line);
+                }
+                for (com.hex.kagune.control.npc.scene.Scene.Option option : page.options()) {
+                    scenesClean &= !com.hex.kagune.control.family.ChildPage.romantic(option.label());
+                    for (String effect : option.effects()) {
+                        scenesClean &= !romanceKey(effect);
+                    }
+                    for (String reply : option.replies()) {
+                        scenesClean &= !com.hex.kagune.control.family.ChildPage.romantic(reply);
+                    }
+                }
+            }
+        }
+        check(scenesClean, "NOT DATEABLE: no child scene has a romance effect or romance words");
+        check(com.hex.kagune.control.family.ChildPage.romantic("Will you go out with me?") && com.hex.kagune.control.family.ChildPage.romantic("Marry me.")
+            && !com.hex.kagune.control.family.ChildPage.romantic("Kiss it better.") && !com.hex.kagune.control.family.ChildPage.romantic("Not now, sweetheart."),
+            "what reads as romance (a parent's kiss on a scraped knee does not)");
+        check(com.hex.kagune.control.family.ChildPage.parentOnly("up") && com.hex.kagune.control.family.ChildPage.parentOnly("m:HUG")
+            && com.hex.kagune.control.family.ChildPage.parentOnly("s:x:y:0") && com.hex.kagune.control.family.ChildPage.parentOnly("t:topic")
+            && !com.hex.kagune.control.family.ChildPage.parentOnly("back") && !com.hex.kagune.control.family.ChildPage.parentOnly(com.hex.kagune.control.family.ChildPage.CHAT),
+            "what only parents may do");
+        // The lines: filled in, never romance, and little ones never coherent.
+        boolean filled = true;
+        boolean friendly = true;
+        boolean little = true;
+        com.hex.kagune.control.npc.Display[] shown = com.hex.kagune.control.npc.Display.values();
+        for (com.hex.kagune.control.family.ChildStage stage : stages) {
+            for (com.hex.kagune.control.family.ChildTemper temper : com.hex.kagune.control.family.ChildTemper.values()) {
+                for (int seed = 0; seed < 12; seed++) {
+                    java.util.List<String> lines = new java.util.ArrayList<>();
+                    lines.add(com.hex.kagune.control.family.StrangerLines.hello(stage, temper, seed));
+                    lines.add(com.hex.kagune.control.family.StrangerLines.chat(stage, temper, "Hana", "Touka", "Riku", seed));
+                    lines.add(com.hex.kagune.control.family.StrangerLines.chat(stage, temper, "Hana", "", "", seed));
+                    lines.add(com.hex.kagune.control.family.StrangerLines.wave(stage, temper, seed));
+                    lines.add(com.hex.kagune.control.family.StrangerLines.five(stage, temper, seed));
+                    for (boolean eats : new boolean[] {false, true}) {
+                        lines.add(com.hex.kagune.control.family.StrangerLines.treat(stage, temper, eats, seed));
+                    }
+                    for (boolean near : new boolean[] {false, true}) {
+                        for (boolean mother : new boolean[] {false, true}) {
+                            lines.add(com.hex.kagune.control.family.StrangerLines.parents(stage, temper, near, mother, mother ? "Touka" : "Riku", seed));
+                            lines.add(com.hex.kagune.control.family.StrangerLines.parents(stage, temper, near, mother, "", seed));
+                        }
+                    }
+                    for (com.hex.kagune.control.npc.Display display : shown) {
+                        if (display != com.hex.kagune.control.npc.Display.NONE) {
+                            lines.add(com.hex.kagune.control.family.StrangerLines.scared(stage, temper, display, seed));
+                        }
+                    }
+                    lines.add(com.hex.kagune.control.family.StrangerLines.hiding(stage, "Mama", seed));
+                    lines.add(com.hex.kagune.control.family.StrangerLines.hiding(stage, "", seed));
+                    for (com.hex.kagune.control.family.ChildMoment moment : new com.hex.kagune.control.family.ChildMoment[] {com.hex.kagune.control.family.ChildMoment.WAVE,
+                        com.hex.kagune.control.family.ChildMoment.CLAP, com.hex.kagune.control.family.ChildMoment.HIGH_FIVE}) {
+                        if (moment.fits(stage)) {
+                            lines.add(com.hex.kagune.control.family.StrangerLines.moment(moment, stage, seed));
+                        }
+                    }
+                    for (String line : lines) {
+                        filled &= line != null && !line.isBlank() && !line.contains("null") && !line.contains("{") && !line.contains("  ");
+                        friendly &= !com.hex.kagune.control.family.ChildPage.romantic(line);
+                        if (stage == com.hex.kagune.control.family.ChildStage.BABY || stage == com.hex.kagune.control.family.ChildStage.TODDLER) {
+                            little &= spoken(line) <= 2;
+                        }
+                    }
+                }
+            }
+        }
+        check(filled, "a stranger's lines are filled in (names, no gaps)");
+        check(friendly, "NOT DATEABLE: a child's words to a stranger are never flirty, grown ones included");
+        check(little, "a baby and a toddler say two words at most to a stranger (the rest is what they do)");
+        check(spoken("*babbles at you* Ba! Ba-ba!") == 2 && spoken("I'm Hana! My mom is Touka.") == 6, "spoken words counted outside the *actions*");
+        check(com.hex.kagune.control.family.StrangerLines.compass(0, -5).equals("north") && com.hex.kagune.control.family.StrangerLines.compass(5, 0).equals("east")
+            && com.hex.kagune.control.family.StrangerLines.compass(0, 5).equals("south") && com.hex.kagune.control.family.StrangerLines.compass(-3, -3).equals("north-west"),
+            "which way its parent is");
+        check(com.hex.kagune.control.family.StrangerLines.shyOfHands(com.hex.kagune.control.family.ChildStage.CHILD, com.hex.kagune.control.family.ChildTemper.SHY)
+            && !com.hex.kagune.control.family.StrangerLines.shyOfHands(com.hex.kagune.control.family.ChildStage.TEEN, com.hex.kagune.control.family.ChildTemper.SHY),
+            "a shy child won't high-five a stranger");
+    }
+
+    /** A key that is romance: one of the words, or one of them inside it ("ask_out", "m:KISS"). */
+    private static boolean romanceKey(String key) {
+        String k = key.toLowerCase(java.util.Locale.ROOT);
+        for (String word : com.hex.kagune.control.family.ChildPage.ROMANCE_KEYS) {
+            if (k.equals(word) || k.endsWith(":" + word) || k.contains(word + "_") || k.contains("_" + word)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** How many words are spoken, outside the *actions*. */
+    private static int spoken(String line) {
+        String said = line.replaceAll("\\*[^*]*\\*", " ").replaceAll("[^A-Za-z' -]", " ").trim();
+        return said.isEmpty() ? 0 : said.split("\\s+").length;
     }
 
     static void genders() {

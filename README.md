@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.0.5 (HexGhoul): other players and someone else's children, never dateable (testing)
+
+See `.github/release-notes-2.0.5.md`: a real talk page for players who aren't the parents (by age and temper; babies and toddlers never coherent; gentle choices only), parents-only things kept for parents, children frightened by a stranger's kagune, and a test that no child is ever dateable.
+
 ## 2.0.4 (HexGhoul): babies after the first, and the village clears its ground (testing)
 
 See `.github/release-notes-2.0.4.md`: the night for another child comes at the shared bed; the world's own ground over the village is cleared as it is placed.

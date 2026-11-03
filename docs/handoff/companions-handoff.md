@@ -1,10 +1,28 @@
-# START HERE (state after 2.0.4): read `docs/handoff/next-ai-2.0.5.md` first (what to do next: strangers and someone else's children,
-never dateable; children inheriting both kagunes), then `next-ai-2.0.1.md` (what 2.0.1 to 2.0.4 did)
+# START HERE (state after 2.0.5): read `docs/handoff/next-ai-2.0.5.md` first (the session's requests), then `next-ai-2.0.1.md`
+
+- **2.0.5** (the owner: "Interaction between other players with another player's sons/daughters (NOT DATEABLE)"; mid-session: "make sure
+  chat is accurate to the child's age, dont make a toddler/baby be able to say anything coherent"; protocol 73, unchanged). Pure
+  `family/ChildPage`: every child talk page's choices (parent main page `parent(stage, Parent(carrying, ride, following, food, bedtime,
+  away))`, `play`, `asleep(parent, free)`, moved out of `ChildTalk` unchanged) and the new `stranger(stage, food)`: keys `x:chat`, `x:wave`,
+  `x:five` (HIGH_FIVE stages), `x:treat` (food in hand, not a baby), `x:parents`. `PARENT_ONLY` (+ "m:", "s:", "t:") is refused in
+  `ChildTalk.heard` for a non-parent whatever the page held. `ChildPage.choices(n)` builds every page's choice ordinals (SAYS + LEAVE).
+  NOT DATEABLE guards: `ROMANCE_KEYS`, `ROMANCE_CHOICES` (the talk's ASK_OUT, KISS, HUG, PROPOSE, NIGHT...), `romantic(text)` (phrases;
+  a parent's "Kiss it better" is not one). Pure `family/StrangerLines` (by stage and `ChildTemper`): `hello`, `chat` (its name, mom and
+  dad by name), `wave`, `five` (`shyOfHands`: a shy child), `moment` (said by `ChildBrain.begin` when the partner is not a parent),
+  `treat` (little ones refuse; teen/grown take one politely, no FEED moment), `parents(near, mother, who)` (+ `compass(dx, dz)` for the
+  asker's action bar; a player parent gets a chat line), `scared(stage, temper, Display)`, `hiding` (used by `ChildBrain.cower` when the one
+  it hides from is not its parent). Babies: actions only; toddlers: two spoken words at most outside *actions* (tested by counting).
+  `Sightings.children`: a stranger who shows more near (12 blocks or in sight) gets `stranger(...)`: a line, and `ChildBrain.dread(..., ticks)`
+  (new overload; 120 for a kagune to a little one, 200 for a kakuja or worse to anyone; `dreadUntil` only ever extended). Test
+  `FamilyTests.strangers` (every stage x 32 page states x 4 rides, both stranger pages, `choices(n)`, every scene of `talk/child.txt`,
+  every new line x temper x 12 seeds). Only the new test block was run (in a harness against the pure classes); the server code was not
+  compiled locally (no base jar here): CI is the check. Untested in game.
+
+# State after 2.0.4 (and the preview after it)
 
 - Preview since 2.0.4 (no mod change): `tools/GrownDaughterPreview.java`, sheet `docs/handoff/grown-daughters-2.0.3.png` (grown daughters
   beside themselves as teens, to scale; it showed them about 2% shorter grown, 0.86 against a teen's 0.88: offered to the owner, open).
 
-# State after 2.0.4
 
 - **2.0.4** (protocol 73, unchanged). (1) The owner: after a first child, "you can request another but the cutscene is not triggering
   anymore whenever near the bed at night": at a shared home `EtoBrain.toBed` takes the night instead of `calm`, so `together`'s baby
