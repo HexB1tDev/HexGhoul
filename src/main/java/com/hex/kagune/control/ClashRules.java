@@ -63,9 +63,47 @@ public final class ClashRules {
         return PUSH * (0.7 + 0.25 * power);
     }
 
-    /** 1.3.62: the clash's sound: louder (heard further) and deeper the harder it is. */
+    /**
+     * 1.3.62: the clash's sound: louder (heard further) and deeper the harder it is. 2.0.11 (the owner: "Increase the volume of the clash
+     * sounds, the stronger the users the louder and even bigger the impact, current still too small"): louder again, and laid over itself
+     * {@link #layers} times (one sound can be no louder than full: two or three at once are).
+     */
     public static float volume(float power) {
-        return 0.95F + 0.3F * power;
+        return 1.3F + 0.55F * power;
+    }
+
+    /** 2.0.11: how many times the clash's sound is laid over itself: once, twice from a hard clash, three times from a huge one. */
+    public static int layers(float power) {
+        return power >= 2.2F ? 3 : power >= 1.5F ? 2 : 1;
+    }
+
+    /** 2.0.11: how big the clash's wind is drawn (its puffs, sparks and kick of the view): bigger than its power, the harder the bigger. */
+    public static float shown(float power) {
+        return Math.min(MOST * 1.5F, power * 1.4F);
+    }
+
+    /**
+     * 2.0.11 (the owner: "the weakest player/entity gets pushed further back, if the difference is too vast (gap in power too big) the
+     * entity/player get pushed far back a ton, stunned and ragdolled"): how much harder the other's blow was than its own ({@code own},
+     * {@code other}: their damage): 1 even, above 1 the other was stronger.
+     */
+    public static double ratio(double own, double other) {
+        return Math.max(0.1, other) / Math.max(0.1, own);
+    }
+
+    /** 2.0.11: how hard one is thrown back by the gap ({@link #ratio}): the weaker further, the stronger less (0.35 to 2.2 times). */
+    public static double push(float power, double ratio) {
+        return push(power) * Math.max(0.35, Math.min(2.2, Math.pow(ratio, 0.8)));
+    }
+
+    /**
+     * 2.0.11: the gap from which the weaker is overwhelmed (the owner: "its pretty much the same effect entirely of the kick without the
+     * animation, send them through blocks"): flown off as the Speed Kick sends a body, through what it can break, down and stunned.
+     */
+    public static final double GAP = 2.5;
+
+    public static boolean overwhelmed(double ratio) {
+        return ratio >= GAP;
     }
 
     public static float pitch(float power) {

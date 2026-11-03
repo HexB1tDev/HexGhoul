@@ -1,4 +1,16 @@
-# START HERE (state after 2.0.10): read `docs/handoff/next-ai-2.0.9.md` first, then `next-ai-2.0.5.md`, then `next-ai-2.0.1.md`
+# START HERE (state after 2.0.11): read `docs/handoff/next-ai-2.0.9.md` first, then `next-ai-2.0.5.md`, then `next-ai-2.0.1.md`
+
+- **2.0.11** (the owner: "Increase the volume of the clash sounds, the stronger the users the louder and even bigger the impact ... the
+  weakest player/entity gets pushed further back, if the difference is too vast ... pushed far back a ton, stunned and ragdolled"; then:
+  "its pretty much the same effect entirely of the kick without the animation, send them through blocks"). `ClashRules`: `volume` 1.3 +
+  0.55p, `layers(p)` (1, 2 from 1.5, 3 from 2.2: `KaguneClash.burst` plays sfx.clash that many times), `shown(p)` (p x 1.4, the
+  S2CKingFx CLASH size: the client's puffs/sparks/kick and its rumble threshold read it), `ratio(own, other)`, `push(p, ratio)` (x
+  ratio^0.8 in 0.35..2.2), `GAP` 2.5, `overwhelmed`. `KaguneClash.meets` passes each side's ratio and the other's hit; `apart(...)`:
+  overwhelmed -> the Speed Kick's speed/rise (`PaleRules.KICK_*`, knockback resistance), `BlockSmash.kick(player, ...)` when the stronger
+  is a player (an NPC: velocity only, no smashing), `PaleKnockdown.launched(..., KICK_DOWN_TICKS, true)`, `S2CPaleFx.KICKED` (the tumble).
+  `MoveClash.collide` keeps the even push. `ClashTests` extended; only those checks were run (harness).
+
+# State after 2.0.10
 
 - **2.0.10**: CI's `SfxTests` failed 2.0.8's (and so 2.0.9's) release: every vanilla sound name in the code must be remapped to the user's
   pack (`Sfx.remapped`) or listed in `SfxTests.KEPT_VANILLA`. The three stove sounds the owner approved are now listed there. No mod change.

@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.0.11 (HexGhoul): bigger, louder clashes; the weaker one flies (testing)
+
+See `.github/release-notes-2.0.11.md`: the clash sound louder and layered, its wind bigger; the weaker side pushed further; a 2.5x gap sends it off like the Speed Kick, through blocks, down and stunned.
+
 ## 2.0.10 (HexGhoul): the release of 2.0.8 and 2.0.9's changes (testing)
 
 See `.github/release-notes-2.0.10.md`: the build's sound check now allows the stove's crackle you approved; this jar carries the cooking and chest sorting.

@@ -153,9 +153,11 @@ public final class KaguneClash {
         stop(mine);
         stop(theirs);
         // 1.3.62: as big as both blows were hard between them.
-        float power = ClashRules.impact(mine == null ? ClashRules.HIT : mine.hit(), theirs.hit());
-        apart(striker, other, power);
-        apart(other, striker, power);
+        double hitMine = mine == null ? ClashRules.HIT : mine.hit();
+        float power = ClashRules.impact(hitMine, theirs.hit());
+        // 2.0.11: the weaker thrown further; overwhelmed by a big enough gap, flung far, down and stunned.
+        apart(striker, other, power, ClashRules.ratio(hitMine, theirs.hit()), theirs.hit(), now);
+        apart(other, striker, power, ClashRules.ratio(theirs.hit(), hitMine), hitMine, now);
         wind(striker, other, power);
         return true;
     }
@@ -228,8 +230,38 @@ public final class KaguneClash {
         wind(a, b, power);
     }
 
-    /** {@code who} thrown back from {@code from}, the harder the bigger the clash ({@code power}). */
-    private static void apart(LivingEntity who, LivingEntity from, float power) {
+    /**
+     * 2.0.11: {@code who} thrown back from {@code from} by the gap between their blows ({@code ratio}: how much harder the other's was): the
+     * weaker further. Overwhelmed ({@link ClashRules#overwhelmed}; the owner: "pretty much the same effect entirely of the kick without the
+     * animation, send them through blocks"): sent off as the Speed Kick sends a body (its speed, its rise, {@code BlockSmash.kick}'s flight
+     * through what it can break and into what is in the way, {@code strongerHit} its crash), down where it lands and stunned till it is up
+     * ({@code PaleKnockdown}), every client drawing it tumbling, lying there and getting up. A body flown by an NPC breaks no blocks (the
+     * kick's smashing is a player's).
+     */
+    private static void apart(LivingEntity who, LivingEntity from, float power, double ratio, double strongerHit, long now) {
+        if (!ClashRules.overwhelmed(ratio)) {
+            push(who, from, ClashRules.push(power, ratio), ClashRules.LIFT);
+            return;
+        }
+        double resist = Math.max(0.0, Math.min(1.0, who.m_21133_(net.minecraft.world.entity.ai.attributes.Attributes.f_22278_)));
+        double speed = com.hex.kagune.control.pale.PaleRules.KICK_SPEED * (1.0 - com.hex.kagune.control.pale.PaleRules.KICK_RESIST * resist);
+        Vec3 away = push(who, from, 1.0, 0.0);
+        Vec3 launch = away.m_82490_(speed).m_82520_(0.0, com.hex.kagune.control.pale.PaleRules.KICK_UP, 0.0);
+        if (from instanceof ServerPlayer player) {
+            BlockSmash.kick(player, who, away, speed, com.hex.kagune.control.pale.PaleRules.KICK_UP, (float)strongerHit);
+        } else {
+            who.m_20256_(launch);
+            who.f_19864_ = true;
+        }
+        PaleKnockdown.launched(who, now, com.hex.kagune.control.pale.PaleRules.KICK_DOWN_TICKS, true);
+        PaleBlitz.fxAround(who, from.m_19879_(), com.hex.kagune.control.network.S2CPaleFx.KICKED, who.m_20182_(), launch, 1.0F, 0);
+        if (who.m_9236_() instanceof ServerLevel level) {
+            UkakuFire.sound(level, who.m_20182_(), "entity.player.attack.knockback", 1.4F, 0.55F);
+        }
+    }
+
+    /** {@code who} sent off from {@code from}: {@code push} blocks a tick across, {@code lift} up. Its launch. */
+    private static Vec3 push(LivingEntity who, LivingEntity from, double push, double lift) {
         double dx = who.m_20185_() - from.m_20185_();
         double dz = who.m_20189_() - from.m_20189_();
         double l = Math.sqrt(dx * dx + dz * dz);
@@ -239,10 +271,16 @@ public final class KaguneClash {
             dz = -look.f_82481_;
             l = Math.max(1.0E-4, Math.sqrt(dx * dx + dz * dz));
         }
-        double push = ClashRules.push(power);
-        who.m_20256_(new Vec3(dx / l * push, ClashRules.LIFT, dz / l * push));
+        Vec3 launch = new Vec3(dx / l * push, lift, dz / l * push);
+        who.m_20256_(launch);
         who.f_19864_ = true;
         who.f_19789_ = 0.0F;
+        return launch;
+    }
+
+    /** {@code who} thrown back from {@code from}, the harder the bigger the clash ({@code power}). */
+    private static void apart(LivingEntity who, LivingEntity from, float power) {
+        push(who, from, ClashRules.push(power), ClashRules.LIFT);
     }
 
     /**
@@ -276,12 +314,15 @@ public final class KaguneClash {
      */
     public static void burst(LivingEntity near, Vec3 at, Vec3 way, float power, float volume) {
         float[] data = {(float) at.f_82479_, (float) at.f_82480_, (float) at.f_82481_, (float) way.f_82479_, (float) way.f_82480_, (float) way.f_82481_,
-            power, 0.0F, 0.0F};
+            ClashRules.shown(power), 0.0F, 0.0F}; // 2.0.11: drawn bigger than its power
         ControlNetwork.broadcastAround(near, new S2CKingFx(near.m_20148_(), S2CKingFx.MARK, new int[] {KingMarkFx.CLASH, 0}, data));
         if (near.m_9236_() instanceof ServerLevel level) {
             // 1.3.61 (the owner: "use the new sounds I sent as the new clash sounds whenever there's an impact"): their clash is the
             // impact itself (sfx.clash: Clashes.zip's four), with the gust of it; the heavy blow it was layered over is gone.
-            UkakuFire.sound(level, at, "hexkagune:sfx.clash", volume, ClashRules.pitch(power));
+            // 2.0.11: louder, laid over itself the harder it is (one sound is never louder than full), each a shade apart.
+            for (int layer = 0; layer < ClashRules.layers(power); layer++) {
+                UkakuFire.sound(level, at, "hexkagune:sfx.clash", volume, ClashRules.pitch(power) * (1.0F - 0.04F * layer));
+            }
             UkakuFire.sound(level, at, "entity.ender_dragon.flap", volume * 0.8F, 1.5F);
         }
     }

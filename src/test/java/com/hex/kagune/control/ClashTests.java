@@ -74,6 +74,17 @@ public final class ClashTests {
             "thrown apart as before by an ordinary clash, harder by a big one");
         check(Math.abs(ClashRules.pitch(ClashRules.ORDINARY) - 1.0F) < 1.0E-6 && ClashRules.pitch(ClashRules.MOST) < 1.0F
             && ClashRules.volume(ClashRules.MOST) > ClashRules.volume(ClashRules.ORDINARY), "a big clash sounds deeper and carries further");
+        // 2.0.11: louder and bigger, the weaker thrown further, a big gap overwhelming (the Speed Kick's flight).
+        check(ClashRules.volume(ClashRules.ORDINARY) > 0.95F + 0.3F * ClashRules.ORDINARY && ClashRules.layers(ClashRules.ORDINARY) == 1
+            && ClashRules.layers(1.6F) == 2 && ClashRules.layers(ClashRules.MOST) == 3 && ClashRules.shown(ClashRules.MOST) > ClashRules.MOST
+            && ClashRules.shown(2.0F) > ClashRules.shown(1.0F), "the clash louder (laid over itself when hard) and drawn bigger, the harder the bigger");
+        check(Math.abs(ClashRules.ratio(7.0, 7.0) - 1.0) < 1.0E-9 && ClashRules.ratio(4.0, 12.0) > 1.0 && ClashRules.ratio(12.0, 4.0) < 1.0,
+            "the gap between two blows");
+        check(Math.abs(ClashRules.push(ClashRules.ORDINARY, 1.0) - ClashRules.PUSH) < 1.0E-6
+            && ClashRules.push(1.5F, ClashRules.ratio(4.0, 12.0)) > ClashRules.push(1.5F, 1.0)
+            && ClashRules.push(1.5F, ClashRules.ratio(12.0, 4.0)) < ClashRules.push(1.5F, 1.0), "the weaker thrown further, the stronger less");
+        check(!ClashRules.overwhelmed(ClashRules.ratio(7.0, 12.0)) && ClashRules.overwhelmed(ClashRules.ratio(4.0, 10.0))
+            && !ClashRules.overwhelmed(ClashRules.ratio(10.0, 4.0)), "only a big enough gap overwhelms, and only the weaker");
     }
 
     /**
