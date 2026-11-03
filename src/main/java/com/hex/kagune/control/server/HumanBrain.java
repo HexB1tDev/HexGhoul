@@ -573,7 +573,7 @@ public final class HumanBrain {
     }
 
     /** Its meat, when it dies. */
-    public static void drop(HumanNpc human, int looting) {
+    public static void drop(LivingEntity human, int looting) {
         Item meat = ControlItems.dishItem("human_meat");
         if (meat != null) {
             human.m_19983_(new ItemStack(meat, HumanRules.meat(human.m_217043_().m_188500_(), looting)));

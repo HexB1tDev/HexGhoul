@@ -21,6 +21,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -1291,20 +1292,39 @@ public final class AgentBrain {
 
     // ---------------------------------------------------------------- what happens to it
 
-    /** It falls: its case is left behind, all but never (only to a player's hand in its death). */
+    /** The Reaper leaves human meat. Regular investigators rarely leave their quinque case. */
     public static void drop(CcgAgent agent, int looting, boolean byPlayer) {
         Mind mind = agent.mind;
-        if (!byPlayer || mind == null || mind.rank == AgentRules.Rank.RANK_10 || agent.m_217043_().m_188500_() >= AgentRules.dropChance(looting)) {
+        if (reaper(agent)) {
+            HumanBrain.drop(agent, looting);
+            return;
+        }
+        if (!byPlayer || mind == null || agent.m_217043_().m_188500_() >= AgentRules.dropChance(looting)) {
             return;
         }
         agent.m_19983_(new ItemStack(ControlItems.caseOf(mind.kind), 1));
     }
 
+    private static boolean reaper(CcgAgent agent) {
+        CompoundTag saved = agent.getPersistentData();
+        return saved.m_128451_(RANK_LEVEL) == AgentRules.Rank.RANK_10.level()
+            && !saved.m_128403_(PARTNER) && !saved.m_128441_(VillagePlace.KEY);
+    }
+
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void died(LivingDeathEvent event) {
         if (event.getEntity() instanceof CcgAgent agent && agent.m_9236_() instanceof ServerLevel level
-            && agent.getPersistentData().m_128451_(RANK_LEVEL) == AgentRules.Rank.RANK_10.level()) {
+            && reaper(agent)) {
+            // Death events run before vanilla rolls equipment drops.
+            removeDawn(agent, InteractionHand.MAIN_HAND, agent.m_21205_());
+            removeDawn(agent, InteractionHand.OFF_HAND, agent.m_21206_());
             UniqueNpcs.died(level, REAPER, agent.m_20148_());
+        }
+    }
+
+    private static void removeDawn(CcgAgent agent, InteractionHand hand, ItemStack stack) {
+        if (ControlItems.quinqueWeapon(stack) == Quinque.DAWN || ControlItems.quinqueCase(stack) == Quinque.DAWN) {
+            agent.m_21008_(hand, ItemStack.f_41583_);
         }
     }
 

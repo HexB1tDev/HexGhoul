@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.0.26 (HexGhoul): White Reaper human-meat loot (testing)
+
+See `.github/release-notes-2.0.26.md`. The White Reaper drops raw Human Meat on death using the existing human loot rule.
+
 ## 2.0.25 (HexGhoul): Dawn lightning (testing)
 
 See `.github/release-notes-2.0.25.md`. The White Reaper now points Dawn at distant targets and fires an explosive yellow lightning ball.

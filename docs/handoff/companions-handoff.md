@@ -1,4 +1,11 @@
-# START HERE (state after 2.0.25)
+# START HERE (state after 2.0.26)
+
+The White Reaper drops raw Human Meat on death using the existing human loot rule.
+
+- Drops one to three pieces, plus one per Looting level.
+- Dawn and its black briefcase are cleared from the Reaper’s hands before vanilla rolls equipment drops. Protocol remains 76.
+
+# State after 2.0.25
 
 The White Reaper now points Dawn at distant targets and fires an explosive yellow lightning ball.
 
