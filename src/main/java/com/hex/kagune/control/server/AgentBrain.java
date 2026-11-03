@@ -2,6 +2,9 @@ package com.hex.kagune.control.server;
 
 import com.hex.kagune.control.ControlItems;
 import com.hex.kagune.control.npc.AgentRules;
+import com.hex.kagune.control.network.S2CUkakuFx;
+import com.hex.kagune.control.network.ControlNetwork;
+import com.hex.kagune.control.npc.ReaperTendril;
 import com.hex.kagune.control.npc.CcgAgent;
 import com.hex.kagune.control.npc.ChildNpc;
 import com.hex.kagune.control.npc.EtoNpc;
@@ -30,6 +33,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
@@ -94,6 +98,15 @@ public final class AgentBrain {
         long aimAt = Long.MIN_VALUE;
         long lightningReadyAt = Long.MIN_VALUE;
         int aimTarget;
+        /**
+         * 2.0.33: the ground tendril (npc.ReaperTendril): when it set out, at whom, where it rises (null until the lance is in the ground),
+         * whether it has risen yet, and when it may again.
+         */
+        long groundAt = Long.MIN_VALUE;
+        int groundTarget;
+        Vec3 groundSpot;
+        boolean erupted;
+        long groundReadyAt = Long.MIN_VALUE;
         /** A finisher just landed and it means to flip clear of it. */
         boolean clear;
         /** Its feet: its flip and when, its push; its dash, when, which way; when it may flip and dash again. */
@@ -317,12 +330,16 @@ public final class AgentBrain {
             return;
         }
         regen(agent, mind, now);
+        if (rooted(agent, mind, level, now)) {
+            return; // 2.0.33: its lance in the ground for its tendril: it holds there until it pulls it out
+        }
         if (feet(agent, mind, now)) {
             return; // in a flip or a dash: nothing else this tick
         }
         if (PaleStun.stunned(agent)) {
             cancelKick(agent, mind, now);
             cancelLightning(agent, mind, now);
+            cancelGround(agent, mind, now);
             return;
         }
         if (falter(agent, mind, level, now)) {
@@ -726,7 +743,7 @@ public final class AgentBrain {
             agent.m_21573_().m_26573_(); // the case still opening in its hand
             return;
         }
-        if (lightning(agent, mind, prey, level, now) || kick(agent, mind, prey, level, now)) {
+        if (ground(agent, mind, prey, level, now) || lightning(agent, mind, prey, level, now) || kick(agent, mind, prey, level, now)) {
             return;
         }
         if (mind.striking && now >= mind.landsAt) {
@@ -740,6 +757,129 @@ public final class AgentBrain {
         } else {
             close(agent, mind, partner, prey, level, now);
         }
+    }
+
+    // ---------------------------------------------------------------- 2.0.33: the White Reaper's ground tendril
+
+    /** Broken off before the lance is in the ground (stunned, its prey gone): nothing rises. */
+    private static void cancelGround(CcgAgent agent, Mind mind, long now) {
+        if (mind.groundAt != Long.MIN_VALUE && mind.groundSpot == null) {
+            mind.groundAt = Long.MIN_VALUE;
+            agent.swing(-1, now);
+        }
+    }
+
+    /**
+     * The tendril, started ({@link ReaperTendril}): he raises Dawn while his prey is in range and in sight, and at {@link ReaperTendril#PLANT}
+     * drives it into the ground ({@link #plant}). True while he is raising it (nothing else this tick); once it is in, {@link #rooted}
+     * holds him.
+     */
+    private static boolean ground(CcgAgent agent, Mind mind, LivingEntity prey, ServerLevel level, long now) {
+        if (mind.rank != AgentRules.Rank.RANK_10 || mind.kind != Quinque.DAWN) {
+            return false;
+        }
+        if (mind.groundAt != Long.MIN_VALUE) {
+            agent.m_21573_().m_26573_();
+            if (mind.groundSpot == null && ago(now, mind.groundAt) >= ReaperTendril.PLANT) {
+                plant(agent, mind, level, now);
+            }
+            return true;
+        }
+        if (mind.striking || mind.kickAt != Long.MIN_VALUE || mind.aimAt != Long.MIN_VALUE || now < mind.groundReadyAt || now < mind.readyAt
+            || !agent.m_20096_()) {
+            return false;
+        }
+        double range = Math.sqrt(prey.m_20280_(agent));
+        if (range < ReaperTendril.NEAREST || range > ReaperTendril.FARTHEST || !agent.m_142582_(prey)
+            || agent.m_217043_().m_188500_() >= ReaperTendril.CHANCE) {
+            return false;
+        }
+        mind.groundAt = now;
+        mind.groundTarget = prey.m_19879_();
+        mind.groundSpot = null;
+        mind.erupted = false;
+        mind.groundReadyAt = now + ReaperTendril.COOLDOWN;
+        agent.m_21573_().m_26573_();
+        agent.swing(CcgAgent.GROUND, now);
+        UkakuFire.sound(level, agent.m_20182_(), "hexkagune:sfx.blade_heavy", 0.8F, 0.65F);
+        return true;
+    }
+
+    /** The lance goes into the ground: where its prey stands now (on the ground under it, if it is in the air) is marked. */
+    private static void plant(CcgAgent agent, Mind mind, ServerLevel level, long now) {
+        Entity found = level.m_6815_(mind.groundTarget);
+        if (!(found instanceof LivingEntity body) || !body.m_6084_()) {
+            cancelGround(agent, mind, now);
+            return;
+        }
+        Vec3 feet = body.m_20182_();
+        HitResult down = level.m_45547_(new ClipContext(feet.m_82520_(0.0, 0.5, 0.0), feet.m_82520_(0.0, -8.0, 0.0), ClipContext.Block.COLLIDER,
+            ClipContext.Fluid.NONE, agent));
+        Vec3 spot = down.m_6662_() == HitResult.Type.MISS ? feet : down.m_82450_();
+        mind.groundSpot = spot;
+        Vec3 lance = agent.m_20182_().m_82549_(UkakuFire.horizontal(agent.m_20154_()).m_82490_(1.5));
+        UkakuFire.sound(level, lance, "hexkagune:sfx.crunch", 1.0F, 0.6F);
+        UkakuFire.sound(level, lance, "hexkagune:sfx.shockwave", 0.7F, 0.55F);
+        UkakuFire.sound(level, spot, "hexkagune:sfx.shockwave", 0.5F, 0.5F);
+        ControlNetwork.sendNear(level, spot, 80.0, new S2CUkakuFx(S2CUkakuFx.REAPER_MARK, agent.m_19879_(), 0, spot.f_82479_, spot.f_82480_,
+            spot.f_82481_, (float)lance.f_82479_, (float)lance.f_82480_, (float)lance.f_82481_, (float)ReaperTendril.RADIUS, ReaperTendril.WARN));
+    }
+
+    /** True while its lance is in the ground (it stands there, nothing else); the tendril rises on time, then the lance comes out. */
+    private static boolean rooted(CcgAgent agent, Mind mind, ServerLevel level, long now) {
+        if (mind.groundAt == Long.MIN_VALUE) {
+            return false;
+        }
+        long age = ago(now, mind.groundAt);
+        if (mind.groundSpot == null) {
+            if (age > ReaperTendril.PLANT + 2) {
+                cancelGround(agent, mind, now); // its prey went before the lance went in
+            }
+            return false;
+        }
+        if (!mind.erupted && age >= ReaperTendril.erupts()) {
+            mind.erupted = true;
+            erupt(agent, mind, level, now);
+        }
+        if (age >= ReaperTendril.DURATION) {
+            mind.groundAt = Long.MIN_VALUE;
+            mind.groundSpot = null;
+            mind.readyAt = Math.max(mind.readyAt, now + 6L);
+            agent.swing(-1, now);
+            return false;
+        }
+        agent.m_21573_().m_26573_();
+        Vec3 velocity = agent.m_20184_();
+        agent.m_20256_(new Vec3(velocity.f_82479_ * 0.3, velocity.f_82480_, velocity.f_82481_ * 0.3));
+        return true;
+    }
+
+    /** The tendril bursts up out of the mark: everyone on it it is after is struck and thrown up. */
+    private static void erupt(CcgAgent agent, Mind mind, ServerLevel level, long now) {
+        Vec3 spot = mind.groundSpot;
+        double r = ReaperTendril.RADIUS + 0.8;
+        AABB area = new AABB(spot.f_82479_ - r, spot.f_82480_ - 1.0, spot.f_82481_ - r, spot.f_82479_ + r, spot.f_82480_ + ReaperTendril.HEIGHT,
+            spot.f_82481_ + r);
+        for (LivingEntity body : level.m_6443_(LivingEntity.class, area, b -> b != agent && b.m_6084_() && foe(agent, b))) {
+            Vec3 feet = body.m_20182_();
+            if (!ReaperTendril.hits(feet.f_82479_ - spot.f_82479_, feet.f_82480_ - spot.f_82480_, feet.f_82481_ - spot.f_82481_)) {
+                continue;
+            }
+            Vec3 centre = GhoulNpcBrain.centre(body);
+            WoundHits.expect(body, WoundBook.Blow.STAB, centre.m_82520_(0.0, -0.4, 0.0), new Vec3(0.0, 1.0, 0.0), 0.0);
+            body.f_19802_ = 0;
+            if (body.m_6469_(agent.m_269291_().m_269333_(agent), ReaperTendril.DAMAGE)) {
+                Vec3 away = UkakuFire.horizontal(feet.m_82546_(spot));
+                body.m_20256_(new Vec3(away.f_82479_ * 0.35, ReaperTendril.THROW_UP, away.f_82481_ * 0.35));
+                body.f_19864_ = true;
+            }
+        }
+        int seed = (int)(now & 0x7FFFFFFF) ^ agent.m_19879_();
+        ControlNetwork.sendNear(level, spot, 96.0, new S2CUkakuFx(S2CUkakuFx.REAPER_TENDRIL, agent.m_19879_(), seed, spot.f_82479_, spot.f_82480_,
+            spot.f_82481_, 0.0F, 1.0F, 0.0F, ReaperTendril.THICKNESS, ReaperTendril.LIFE));
+        UkakuFire.sound(level, spot, "hexkagune:sfx.burst", 1.1F, 0.6F);
+        UkakuFire.sound(level, spot, "hexkagune:sfx.crunch", 1.0F, 0.75F);
+        UkakuFire.sound(level, spot, "hexkagune:sfx.shockwave", 0.9F, 0.7F);
     }
 
     private static void cancelLightning(CcgAgent agent, Mind mind, long now) {

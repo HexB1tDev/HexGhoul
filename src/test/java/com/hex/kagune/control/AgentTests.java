@@ -47,12 +47,48 @@ public final class AgentTests {
         carrying();
         idling();
         ranks();
+        tendril();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
             System.exit(1);
         }
         System.out.println("Agent tests: " + passed + " checks passed");
+    }
+
+    /** 2.0.33: the White Reaper's ground tendril: telegraphed (time to get off the mark), big, and it rises, whips and sinks. */
+    static void tendril() {
+        check(com.hex.kagune.control.npc.ReaperTendril.erupts() == com.hex.kagune.control.npc.ReaperTendril.PLANT + com.hex.kagune.control.npc.ReaperTendril.WARN
+            && com.hex.kagune.control.npc.ReaperTendril.WARN >= 12, "the mark shows long enough to step off it (at least 0.6 s)");
+        check(com.hex.kagune.control.npc.ReaperTendril.erupts() < com.hex.kagune.control.npc.ReaperTendril.HOLD
+            && com.hex.kagune.control.npc.ReaperTendril.HOLD < com.hex.kagune.control.npc.ReaperTendril.DURATION,
+            "the lance stays in the ground until after it rises, then comes out");
+        check(com.hex.kagune.control.npc.ReaperTendril.hits(0.0, 0.0, 0.0) && com.hex.kagune.control.npc.ReaperTendril.hits(1.5, 0.0, 0.0)
+            && com.hex.kagune.control.npc.ReaperTendril.hits(0.0, 3.0, 0.0) && !com.hex.kagune.control.npc.ReaperTendril.hits(1.7, 0.0, 0.0)
+            && !com.hex.kagune.control.npc.ReaperTendril.hits(1.2, 0.0, 1.2) && !com.hex.kagune.control.npc.ReaperTendril.hits(0.0, 6.0, 0.0),
+            "it catches whoever stands on the mark (and above it), not beside it");
+        check(com.hex.kagune.control.npc.ReaperTendril.RADIUS >= 1.5 && com.hex.kagune.control.npc.ReaperTendril.HEIGHT >= 5.0
+            && com.hex.kagune.control.npc.ReaperTendril.THICKNESS >= 0.5F, "a big tendril");
+        check(com.hex.kagune.control.npc.ReaperTendril.out(-1.0) == 0.0 && com.hex.kagune.control.npc.ReaperTendril.out(0.0) == 0.0
+            && com.hex.kagune.control.npc.ReaperTendril.out(com.hex.kagune.control.npc.ReaperTendril.RISE) == 1.0
+            && com.hex.kagune.control.npc.ReaperTendril.out(com.hex.kagune.control.npc.ReaperTendril.LIFE) == 0.0
+            && com.hex.kagune.control.npc.ReaperTendril.out(com.hex.kagune.control.npc.ReaperTendril.LIFE - 1) < 0.2,
+            "it bursts out fast and sinks back at the end");
+        for (double age = 0.0; age < com.hex.kagune.control.npc.ReaperTendril.LIFE; age += 0.5) {
+            double[][] line = com.hex.kagune.control.npc.ReaperTendril.line(age, 1234, 14);
+            double top = line[line.length - 1][1];
+            boolean finite = true;
+            double far = 0.0;
+            for (double[] p : line) {
+                finite &= Double.isFinite(p[0]) && Double.isFinite(p[1]) && Double.isFinite(p[2]);
+                far = Math.max(far, Math.hypot(p[0], p[2]));
+            }
+            check(finite && line[0][1] < 0.0 && top <= com.hex.kagune.control.npc.ReaperTendril.HEIGHT && far < 2.0,
+                "its line leaves the ground and stays over the mark: " + age);
+        }
+        check(com.hex.kagune.control.npc.ReaperTendril.line(10.0, 1, 14)[13][1] > 4.5, "full height while it whips");
+        check(com.hex.kagune.control.npc.ReaperTendril.CHANCE > 0.0 && com.hex.kagune.control.npc.ReaperTendril.COOLDOWN >= 100L
+            && com.hex.kagune.control.npc.ReaperTendril.NEAREST > AgentRules.REAPER_KICK_REACH, "now and then, on prey out of a kick's reach");
     }
 
     /**

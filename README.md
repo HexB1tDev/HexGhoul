@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.0.33 (HexGhoul): the White Reaper's ground tendril (testing)
+
+See `.github/release-notes-2.0.33.md`. The White Reaper has a new move only he uses: he raises Dawn and drives it point first into the ground, the spot where his prey stood is marked on the ground for 0.8 s, then a huge black tendril bursts up out of it. Step off the mark in time and it misses.
+
 ## 2.0.32 (HexGhoul): Dawn's lightning in a player's hand (testing)
 
 See `.github/release-notes-2.0.32.md`. A player holding Dawn fires its yellow lightning ball with right click: the point opens, the ball gathers there for a quarter of a second while the lance comes up onto your aim, then it flies and explodes on impact with the same lightning effects as the White Reaper's. Shift + right click folds Dawn back into its case.

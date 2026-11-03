@@ -86,6 +86,10 @@ public record S2CUkakuFx(int kind, int shooter, int id, double x, double y, doub
     public static final int GUST = 41;
     public static final int DAWN_BALL = 42;
     public static final int DAWN_BURST = 43;
+    /** 2.0.33: the White Reaper's lance gone into the ground: where his tendril will rise is marked ({@code size} its radius) for {@code extra} ticks. */
+    public static final int REAPER_MARK = 44;
+    /** 2.0.33: his black tendril bursting up out of the mark at {@code x, y, z} (its seed in {@code id}), drawn for {@code extra} ticks. */
+    public static final int REAPER_TENDRIL = 45;
 
     public static void encode(S2CUkakuFx message, FriendlyByteBuf buffer) {
         buffer.writeByte(message.kind);

@@ -264,6 +264,19 @@ public final class UkakuFx {
                     dawnBurst(at, message.size());
                 }
             }
+            // 2.0.33: the White Reaper's tendril: its mark on the ground, then it bursting up out of it.
+            case S2CUkakuFx.REAPER_MARK -> {
+                LASTING.add(new Lasting(kind, message.shooter(), at, velocity, message.size(), now + Math.max(2, message.extra())));
+                if (RcFx.near(at, VISIBLE)) {
+                    reaperPlant(new Vec3(message.vx(), message.vy(), message.vz()));
+                }
+            }
+            case S2CUkakuFx.REAPER_TENDRIL -> {
+                com.hex.kagune.control.client.render.ReaperTendrils.rise(at, message.id());
+                if (RcFx.near(at, VISIBLE)) {
+                    reaperBurst(at, message.size());
+                }
+            }
             case S2CUkakuFx.IMPACT -> {
                 Bolt bolt = BOLTS.remove(message.id());
                 if (RcFx.near(at, VISIBLE)) {
@@ -532,6 +545,11 @@ public final class UkakuFx {
                         embers(lasting.at(), lasting.size());
                     }
                 }
+                case S2CUkakuFx.REAPER_MARK -> {
+                    if (RcFx.near(lasting.at(), VISIBLE)) {
+                        reaperMark(lasting.at(), lasting.size(), lasting.until() - now);
+                    }
+                }
                 default -> {
                 }
             }
@@ -585,6 +603,66 @@ public final class UkakuFx {
             RcFx.at(RcFx.SPARK, true, 7 + RANDOM.nextInt(5), at).velocity(velocity).drag(0.87F).bloom(1)
                 .colors(k % 3 == 0 ? DAWN_WHITE : DAWN_GOLD, RcFx.clear(DAWN_GOLD)).size(0.22F, 0.035F).spawn();
         }
+    }
+
+    // ------------------------------------------------------------------ 2.0.33: the White Reaper's tendril
+
+    private static final int REAPER_SMOKE = 0xE0100C0E;
+    private static final int REAPER_RED = 0xD8B0101E;
+
+    /** Where his lance went into the ground: a burst of dirt-dark smoke and a few red sparks. */
+    private static void reaperPlant(Vec3 lance) {
+        for (int k = 0; k < 10; k++) {
+            Vec3 velocity = new Vec3((RANDOM.nextDouble() - 0.5) * 0.18, 0.06 + RANDOM.nextDouble() * 0.12, (RANDOM.nextDouble() - 0.5) * 0.18);
+            RcFx.at(RcFx.PUFF, false, 10 + RANDOM.nextInt(6), lance).velocity(velocity).drag(0.85F).colors(REAPER_SMOKE, 0x00221A16)
+                .size(0.35F, 0.7F).spawn();
+        }
+        for (int k = 0; k < 6; k++) {
+            RcFx.at(RcFx.SPARK, true, 5 + RANDOM.nextInt(4), lance).velocity(sphere().m_82490_(0.2)).drag(0.85F).colors(REAPER_RED, 0x00500008)
+                .size(0.12F, 0.03F).spawn();
+        }
+    }
+
+    /**
+     * The mark it will rise from ({@code radius} round {@code at}), {@code left} ticks before it does: its rim picked out in dark smoke and
+     * red glints creeping round it, cracks of red welling up inside, growing more urgent as it comes.
+     */
+    private static void reaperMark(Vec3 at, float radius, long left) {
+        double urgency = Math.max(0.0, Math.min(1.0, 1.0 - left / 16.0));
+        int rim = 6 + (int)Math.round(6 * urgency);
+        double turn = RANDOM.nextDouble() * Math.PI * 2.0;
+        for (int k = 0; k < rim; k++) {
+            double a = turn + k * Math.PI * 2.0 / rim;
+            Vec3 point = at.m_82520_(Math.cos(a) * radius, 0.08, Math.sin(a) * radius);
+            RcFx.at(RcFx.PUFF, false, 8, point).velocity(new Vec3(0.0, 0.025, 0.0)).drag(0.9F).colors(REAPER_SMOKE, 0x00100C0E)
+                .size(0.3F, 0.45F).spawn();
+            if (k % 2 == 0) {
+                RcFx.at(RcFx.SPARK, true, 5, point.m_82520_(0.0, 0.05, 0.0)).colors(REAPER_RED, 0x00400008).size(0.16F, 0.05F).spawn();
+            }
+        }
+        for (int k = 0; k < 2 + (int)Math.round(3 * urgency); k++) {
+            double a = RANDOM.nextDouble() * Math.PI * 2.0;
+            double d = Math.sqrt(RANDOM.nextDouble()) * radius * 0.85;
+            Vec3 point = at.m_82520_(Math.cos(a) * d, 0.06, Math.sin(a) * d);
+            RcFx.at(RcFx.MOTE, true, 6, point).velocity(new Vec3(0.0, 0.03 + 0.05 * urgency, 0.0)).colors(REAPER_RED, 0x00300006)
+                .size(0.14F, 0.04F).spawn();
+        }
+    }
+
+    /** It bursting up: the ground thrown up round it in dark smoke and red sparks, a dark ring spreading. */
+    private static void reaperBurst(Vec3 at, float size) {
+        for (int k = 0; k < 22; k++) {
+            double a = RANDOM.nextDouble() * Math.PI * 2.0;
+            Vec3 velocity = new Vec3(Math.cos(a) * (0.15 + RANDOM.nextDouble() * 0.2), 0.12 + RANDOM.nextDouble() * 0.3,
+                Math.sin(a) * (0.15 + RANDOM.nextDouble() * 0.2));
+            RcFx.at(RcFx.PUFF, false, 12 + RANDOM.nextInt(8), at.m_82520_(0.0, 0.2, 0.0)).velocity(velocity).drag(0.86F).fall(0.008F)
+                .colors(REAPER_SMOKE, 0x00221A16).size(0.45F + size * 0.3F, 0.9F).spawn();
+        }
+        for (int k = 0; k < 18; k++) {
+            RcFx.at(RcFx.SPARK, true, 6 + RANDOM.nextInt(5), at.m_82520_(0.0, 0.4 + RANDOM.nextDouble() * 1.5, 0.0))
+                .velocity(sphere().m_82490_(0.25 + RANDOM.nextDouble() * 0.2)).drag(0.85F).colors(REAPER_RED, 0x00500008).size(0.16F, 0.04F).spawn();
+        }
+        RcFx.at(RcFx.RING, false, 9, at.m_82520_(0.0, 0.15, 0.0)).colors(0xC0100C0E, 0x00100C0E).size(0.6F, 4.0F).spawn();
     }
 
     /** RC flame: molten into red into nothing, rising a little. */

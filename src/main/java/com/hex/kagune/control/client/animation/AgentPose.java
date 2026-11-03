@@ -29,6 +29,37 @@ public final class AgentPose {
         return pose;
     }
 
+    /**
+     * 2.0.33: the White Reaper's ground tendril (npc.ReaperTendril): Dawn raised point up, then driven point first into the ground before
+     * him with both hands, his weight sunk on it, held there while the tendril rises, then pulled out back into his stance.
+     */
+    public static RigPose ground(double age) {
+        RigPose p = QuinquePose.hold(Quinque.DAWN);
+        float raise = QuinquePose.ease(age / 6.0);
+        float drive = QuinquePose.ease((age - 6.0) / (com.hex.kagune.control.npc.ReaperTendril.PLANT - 6.0));
+        float out = QuinquePose.ease((age - com.hex.kagune.control.npc.ReaperTendril.HOLD)
+            / (com.hex.kagune.control.npc.ReaperTendril.DURATION - com.hex.kagune.control.npc.ReaperTendril.HOLD));
+        float down = drive * (1.0F - out);
+        float up = raise * (1.0F - drive);
+        QuinquePose.pitchBy(p, Quinque.DAWN, -1.2F * up + 0.85F * down);
+        p.lean += 0.22F * down - 0.08F * up;
+        p.lunge += 1.5F * down - 1.0F * up;
+        p.headX += 0.15F * down;
+        // Sunk on it in a wide stance: the right foot forward, the left back, the hips lowered as far as the split legs lower them.
+        float split = 0.45F * down;
+        p.rightLegX = -split;
+        p.leftLegX = 0.8F * split;
+        p.legHold = Math.max(p.legHold, down);
+        p.drop += 12.0F * (1.0F - (float)Math.cos(split));
+        // The left hand comes onto the shaft above the right as it goes in.
+        float both = Math.max(up, down);
+        p.leftArmX = -1.05F * both;
+        p.leftArmY = 0.35F * both;
+        p.leftArmZ = 0.1F * both;
+        p.leftArmHold = both;
+        return p;
+    }
+
     /** A loaded knee, a quick front kick, then the foot goes back under the hips. */
     public static RigPose kick(double age) {
         float windup = (float)Math.min(1.0, age / AgentRules.REAPER_KICK_WINDUP);

@@ -44,6 +44,8 @@ public class CcgAgent extends PathfinderMob {
     public static final int PARRY = 3;
     public static final int KICK = 4;
     public static final int AIM_DAWN = 5;
+    /** 2.0.33: the White Reaper driving Dawn into the ground for his tendril (npc.ReaperTendril). */
+    public static final int GROUND = 6;
     /** "Never", on the 32-bit clocks. */
     public static final int NEVER = AgentRules.NEVER;
 

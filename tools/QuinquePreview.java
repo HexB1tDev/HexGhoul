@@ -237,6 +237,18 @@ public final class QuinquePreview {
         String only = args.length > 1 ? args[1] : null;
         dir.mkdirs();
         PoseRender.stiff = true;
+        if (args.length > 2 && args[2].equals("ground")) {
+            // 2.0.33: the White Reaper driving Dawn into the ground for his tendril (AgentPose.ground).
+            Model full = load("dawn", "dawn");
+            List<RigPose> poses = new ArrayList<>();
+            List<String> labels = new ArrayList<>();
+            for (double t : new double[] {3, 6, 9, 20, 33}) {
+                poses.add(com.hex.kagune.control.client.animation.AgentPose.ground(t));
+                labels.add("ground t" + (int)t);
+            }
+            sheet(new File(dir, "quinque-dawn-ground.png"), "dawn", Quinque.DAWN, full, poses, labels, new double[][] {{-35, 10}, {-95, 4}, {40, 10}}, 300);
+            return;
+        }
         if (args.length > 2 && args[2].equals("aim")) {
             // 2.0.32: Dawn pointed as its ball gathers (AgentPose.aimDawn), in its fire frame (its point parted about the light).
             Model fire = load("dawn", "dawn", "fire");

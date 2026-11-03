@@ -52,6 +52,8 @@ public final class AgentClient {
         RigPose arms = null;
         if (weapon == Quinque.DAWN && swing == CcgAgent.KICK && swingAge >= 0.0 && swingAge < AgentRules.REAPER_KICK_DURATION) {
             arms = AgentPose.kick(swingAge);
+        } else if (weapon == Quinque.DAWN && swing == CcgAgent.GROUND && swingAge >= 0.0 && swingAge < com.hex.kagune.control.npc.ReaperTendril.DURATION) {
+            arms = AgentPose.ground(swingAge); // 2.0.33: Dawn driven into the ground for his tendril
         } else if (weapon == Quinque.DAWN && swing == CcgAgent.AIM_DAWN && swingAge >= 0.0 && swingAge <= AgentRules.DAWN_AIM_TICKS + 2) {
             arms = AgentPose.aimDawn(swingAge, agent.m_146909_());
         } else if (weapon != null && swing >= 0 && swing < CcgAgent.PARRY && swingAge >= 0.0 && swingAge < weapon.swing) {
