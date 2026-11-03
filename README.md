@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.0.7 (HexGhoul): no more teleporting home; out by day, home by night (testing)
+
+See `.github/release-notes-2.0.7.md`: the spouse and children walk home instead of being put there; farther out by day, home by night; put home only when stuck.
+
 ## 2.0.6 (HexGhoul): children have a chance at one kagune or both (testing)
 
 See `.github/release-notes-2.0.6.md`: parents of two kinds give 40% the mother's, 40% the father's, 20% both; why Touka and an Ukaku player only ever had Ukaku children.

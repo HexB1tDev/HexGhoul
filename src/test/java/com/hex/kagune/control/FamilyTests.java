@@ -1596,6 +1596,24 @@ check(com.hex.kagune.control.graft.GraftStage.TRANSPLANT.limbs(com.hex.kagune.co
     }
 
     static void home() {
+        // 2.0.7: out past home by day (by age), home by night; put home only when stuck.
+        check(com.hex.kagune.control.family.HomeRules.roam(null) == com.hex.kagune.control.family.HomeRules.ROAM
+            && com.hex.kagune.control.family.HomeRules.roam(com.hex.kagune.control.family.ChildStage.ADULT) == com.hex.kagune.control.family.HomeRules.ROAM
+            && com.hex.kagune.control.family.HomeRules.roam(com.hex.kagune.control.family.ChildStage.TEEN) == com.hex.kagune.control.family.HomeRules.ROAM
+            && com.hex.kagune.control.family.HomeRules.roam(com.hex.kagune.control.family.ChildStage.CHILD) == com.hex.kagune.control.family.HomeRules.ROAM / 2
+            && com.hex.kagune.control.family.HomeRules.roam(com.hex.kagune.control.family.ChildStage.TODDLER) == 0
+            && com.hex.kagune.control.family.HomeRules.roam(com.hex.kagune.control.family.ChildStage.BABY) == 0, "how far each may roam past home by day");
+        check(com.hex.kagune.control.family.HomeRules.leash(12, false, 24) == 36 && com.hex.kagune.control.family.HomeRules.leash(12, true, 24) == 12,
+            "by day the leash reaches out, at night only home");
+        boolean roamsWithinStray = true;
+        for (com.hex.kagune.control.family.ChildStage stage : com.hex.kagune.control.family.ChildStage.values()) {
+            roamsWithinStray &= com.hex.kagune.control.family.HomeRules.roam(stage) <= com.hex.kagune.control.family.Parenting.strays(stage, false);
+        }
+        check(roamsWithinStray, "a child's own roaming never takes it past where its parent would go after it by day");
+        check(!com.hex.kagune.control.family.HomeRules.noHeadway(40.0, 39.0, 0L, 100L)
+            && com.hex.kagune.control.family.HomeRules.noHeadway(40.0, 39.0, 0L, com.hex.kagune.control.family.HomeRules.NO_HEADWAY)
+            && !com.hex.kagune.control.family.HomeRules.noHeadway(40.0, 37.0, 0L, com.hex.kagune.control.family.HomeRules.NO_HEADWAY)
+            && !com.hex.kagune.control.family.HomeRules.noHeadway(40.0, 39.0, Long.MIN_VALUE, 99999L), "put home only after minutes getting no nearer");
         check(!com.hex.kagune.control.family.HomeRules.night(6000L, true) && com.hex.kagune.control.family.HomeRules.night(13000L, true)
             && !com.hex.kagune.control.family.HomeRules.night(13000L, false) && com.hex.kagune.control.family.HomeRules.night(14000L, false)
             && !com.hex.kagune.control.family.HomeRules.night(23500L, true) && com.hex.kagune.control.family.HomeRules.night(24000L * 3 + 18000L, false),

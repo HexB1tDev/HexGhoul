@@ -262,13 +262,13 @@ public final class EtoBrain {
             UniqueNpcs.report(level, npc.persona().key(), origin, away, mind.company);
             if (away && mind.target == 0 && now - mind.company >= UniqueNpc.GOES_HOME) {
                 letGo(npc, mind, level, now, false);
-                npc.goHome();
+                npc.sendHome(); // 2.0.7: she walks home (never put there)
                 home = npc.home();
                 mind.company = now;
                 UniqueNpcs.report(level, npc.persona().key(), origin, false, now);
                 ServerPlayer partner = player(level, mind.partner);
                 if (partner != null) {
-                    partner.m_5661_(Component.m_237113_(npc.persona().colour() + npc.displayName() + " got tired of waiting and went home to "
+                    partner.m_5661_(Component.m_237113_(npc.persona().colour() + npc.displayName() + " got tired of waiting and set off home to "
                         + npc.persona().home() + "."), false);
                 }
             }
@@ -301,15 +301,17 @@ public final class EtoBrain {
         // 1.3.21: at the home shared with their spouse, she roams all of it, walks back on her own when she strays (her restriction), and is
         // brought back only from far beyond it.
         Households.Home house = npc.following() == null ? Households.forCompanion(level, npc) : null;
-        double lost = house != null ? Households.LOST : EtoRules.LOST;
-        if (mind.target != 0) {
-            lost = Math.max(lost, com.hex.kagune.control.npc.FightRules.CHASE + 8.0); // 1.3.24: a chase is not being lost
-        }
-        // 1.3.29: not while someone is talking to her (sent home from far off, she goes once the talk is over). 1.3.32 (the owner: never
-        // teleport): only from really far, and only with nobody about to see it (she just walks back otherwise).
-        if (npc.m_20238_(homeAt) > lost * lost && !EtoOwl.carried(mind.owl) && (mind.talking == null || mind.target != 0) && !watched(npc, level)) {
-            npc.m_6021_(homeAt.f_82479_, homeAt.f_82480_, homeAt.f_82481_);
-            npc.m_21573_().m_26573_();
+        // 2.0.7 (the owner: "NPCS should not be teleported home unless they die or bug inside a wall ... go outside the max radius, just with
+        // the feeling that by night time they have to be home"): at a shared home her leash reaches farther by day and only her home at
+        // night; far out, she walks back (MoveTowardsRestrictionGoal), never put there for being far. Put home only stuck inside blocks, or
+        // out when she should be home and getting no nearer for minutes with nobody to see (Homeward).
+        boolean night = HomeLife.night(level.m_46468_(), false);
+        int leash = house != null ? com.hex.kagune.control.family.HomeRules.leash(house.radius(), night, com.hex.kagune.control.family.HomeRules.roam(null))
+            : mind.partnerNear ? EtoRules.LEASH : EtoRules.HOME_RADIUS;
+        boolean away = mind.target == 0 && mind.talking == null && mind.holding == null && npc.following() == null
+            && npc.m_20238_(homeAt) > (house != null ? (leash + 4.0) * (leash + 4.0) : EtoRules.LOST * EtoRules.LOST);
+        if (!EtoOwl.carried(mind.owl) && mind.holding == null && Homeward.bugged(npc, level, homeAt, away, now)) {
+            Homeward.put(npc, homeAt);
             mind.target = 0;
         }
         LivingEntity target = target(npc, mind, level, homeAt, now);
@@ -320,8 +322,7 @@ public final class EtoBrain {
         // Her partner about, she may wander as far as her leash to be near them.
         // 1.3.24: fighting, as far as the chase goes (it keeps after what it fights till it is dead or gone).
         int chase = (int)com.hex.kagune.control.npc.FightRules.CHASE;
-        npc.m_21446_(home, house != null ? Math.max(house.radius(), target != null ? chase : 0) : target != null ? chase
-            : mind.partnerNear ? EtoRules.LEASH : EtoRules.HOME_RADIUS);
+        npc.m_21446_(home, house != null ? Math.max(leash, target != null ? chase : 0) : target != null ? chase : leash);
         // 1.3.29: her chores at home stop for anything else (a fight, a talk, a kiss, a hand, a child, the night, home no more); walking
         // about at home, she never stays stuck.
         if (mind.chore != null && (house == null || target != null || HomeLife.night(level.m_46468_(), false) || mind.toward != null || mind.kiss != null

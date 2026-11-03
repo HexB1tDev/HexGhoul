@@ -41,6 +41,36 @@ public final class HomeRules {
     }
 
     /** True at night for a child ({@code child}) or a spouse: from its bedtime until the morning. */
+    /**
+     * 2.0.7 (the owner: "I want them to be able to go outside the max radius, just with the feeling that by night time they have to be
+     * home"): how far past its home's radius one may roam by day: a spouse ({@code null}), a teen or a grown child {@link #ROAM}, a child
+     * half that, a toddler and a baby not at all.
+     */
+    public static int roam(ChildStage stage) {
+        if (stage == null || stage.older()) {
+            return ROAM;
+        }
+        return stage == ChildStage.CHILD ? ROAM / 2 : 0;
+    }
+
+    /** 2.0.7: by day, farther out. */
+    public static final int ROAM = 24;
+
+    /** 2.0.7: its leash now: its home's {@code radius} at night (home by then), that and its {@code roam} by day. */
+    public static int leash(int radius, boolean night, int roam) {
+        return night ? radius : radius + roam;
+    }
+
+    /** 2.0.7: looks (every 10 ticks) its body may be stuck inside blocks before it is put home (3 s). */
+    public static final int WALLED = 6;
+    /** 2.0.7: how long it may get no nearer home, out when it should be home, before it is put there (unseen): stuck, not just slow. */
+    public static final long NO_HEADWAY = 2400L;
+
+    /** 2.0.7: true if it should be put home: no nearer by 2 blocks than {@code best} (when it was, {@code since}) for {@link #NO_HEADWAY}. */
+    public static boolean noHeadway(double best, double far, long since, long now) {
+        return since != Long.MIN_VALUE && far > best - 2.0 && now - since >= NO_HEADWAY;
+    }
+
     public static boolean night(long dayTime, boolean child) {
         long t = Math.floorMod(dayTime, 24000L);
         return t >= (child ? KIDS_BED : SPOUSE_BED) && t < WAKE;

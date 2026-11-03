@@ -144,6 +144,20 @@ public class ChildNpc extends PathfinderMob implements UniqueBody {
         return new BlockPos(tag.m_128451_(ORIGIN + "X"), tag.m_128451_(ORIGIN + "Y"), tag.m_128451_(ORIGIN + "Z"));
     }
 
+    /** 2.0.7: its home where it belongs again, following no one; no teleport: it walks there (its leash). */
+    public void sendHome() {
+        BlockPos origin = this.origin();
+        this.follow(null);
+        if (origin == null) {
+            return;
+        }
+        CompoundTag tag = this.getPersistentData();
+        tag.m_128405_(HOME + "X", origin.m_123341_());
+        tag.m_128405_(HOME + "Y", origin.m_123342_());
+        tag.m_128405_(HOME + "Z", origin.m_123343_());
+        this.home = origin;
+    }
+
     @Override
     public void goHome() {
         BlockPos origin = this.origin();

@@ -1,4 +1,17 @@
-# START HERE (state after 2.0.6): read `docs/handoff/next-ai-2.0.5.md` first (the session's requests), then `next-ai-2.0.1.md`
+# START HERE (state after 2.0.7): read `docs/handoff/next-ai-2.0.5.md` first (the session's requests), then `next-ai-2.0.1.md`
+
+- **2.0.7** (the owner: "NPCS should not be teleported home unless they die or bug inside a wall ... go outside the max radius, just with
+  the feeling that by night time they have to be home, this includes both kids and spouse"). Pure `HomeRules.roam(stage)` (null = spouse;
+  `ROAM` 24 for spouse/teen/grown, 12 child, 0 toddler/baby: within `Parenting.strays` by day, tested), `leash(radius, night, roam)`,
+  `WALLED` 6, `NO_HEADWAY` 2400, `noHeadway(...)`. `EtoBrain`: the LOST teleport is gone; at a shared home `m_21446_` uses the day/night
+  leash (her chase still widens it); `ChildBrain`: the same by its age (`HomeLife.night(..., true)`), its LOST `goHome` gone. Day-long
+  "no company" returns now call `sendHome()` (new on `ChildNpc`, already on `EtoNpc`): home set, no teleport ("set off home to"). New
+  `server/Homeward.bugged(mob, level, home, away, now)` (every 10 ticks; WeakHashMap state): body box (deflated 0.15) colliding
+  (`m_45756_`) for 6 looks, not noPhysics/asleep/carried, or `away` (night or past the leash + 4, idle) with no 2-block headway in 2400
+  ticks and no player within 32 -> `Homeward.put`. Following teleports (to the leader) and hand-holding are unchanged. Walking home is
+  vanilla's `MoveTowardsRestrictionGoal` (both have it at priority 4). Only the HomeRules checks were run (harness).
+
+# State after 2.0.6
 
 - **2.0.6** (the owner: "Double check that the kids have a chance to enherit both kagunes ... only have seen the ukaku on kids"; they were
   on the Ukaku path with Touka: wings x wings = wings, no bug; asked, they chose 40/40/20). `KaguneGenes.inherit(mother, father, roll)`:

@@ -174,9 +174,16 @@ public final class ChildBrain {
         }
         boolean atHouse = house != null && house.at(home);
         if (npc.following() == null && mind.carrier == null) {
-            npc.m_21446_(home, atHouse ? house.radius() - 2 : 8);
-            if (atHouse && npc.m_20238_(new Vec3(home.m_123341_() + 0.5, home.m_123342_() - 1.0, home.m_123343_() + 0.5)) > Households.LOST * Households.LOST) {
-                npc.goHome(); // far beyond its home (lost, left behind): brought back
+            // 2.0.7 (the owner: never teleported home for being far; out past its home by day, home by night): its leash wider by day (by its
+            // age), its home's at night; far out, it walks back. Put home only stuck inside blocks, or out at night getting no nearer (unseen).
+            boolean night = HomeLife.night(level.m_46468_(), true);
+            int leash = atHouse ? com.hex.kagune.control.family.HomeRules.leash(house.radius() - 2, night,
+                com.hex.kagune.control.family.HomeRules.roam(child.stage(now))) : 8;
+            npc.m_21446_(home, leash);
+            Vec3 homeAt = new Vec3(home.m_123341_() + 0.5, home.m_123342_() - 1.0, home.m_123343_() + 0.5);
+            boolean away = atHouse && !npc.waiting() && npc.m_20238_(homeAt) > (leash + 4.0) * (leash + 4.0);
+            if (npc.carriedBy == 0 && Homeward.bugged(npc, level, homeAt, away, now)) {
+                Homeward.put(npc, homeAt);
             }
         }
         if (now % 200L == 11L) {
@@ -189,7 +196,7 @@ public final class ChildBrain {
                 + Math.pow(origin.m_123343_() - home.m_123343_(), 2) > 36.0;
             UniqueNpcs.report(level, key, origin, away, mind.company);
             if (away && mind.carrier == null && now - mind.company >= UniqueNpc.GOES_HOME) {
-                npc.goHome();
+                npc.sendHome(); // 2.0.7: it walks home (never put there)
                 mind.company = now;
             }
         }
