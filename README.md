@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.0.13 (HexGhoul): trading with village humans (testing)
+
+See `.github/release-notes-2.0.13.md`: "Let's trade." on a villager's talk page; mostly the cookbook's non-meat ingredients plus basic goods, for the emeralds in your hand; they buy crops and plain goods.
+
 ## 2.0.12 (HexGhoul): clashes shake the screen (testing)
 
 See `.github/release-notes-2.0.12.md`: every clash shakes the view hard (about 6 degrees, the hardest about 10), harder the nearer.

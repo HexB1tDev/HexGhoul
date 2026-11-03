@@ -691,6 +691,56 @@ public final class NpcTests {
 
     /** 1.3.71: the Brick Village: its map, and its people's sense of where they are once it is placed turned. */
     static void village() {
+        // 2.0.13: trading with village humans: six wares each (a staple, three more foods, two basic goods), never meat or fish; every
+        // non-meat ingredient the cookbook needs is sold by someone; what they buy, and the page's words.
+        {
+            boolean six = true;
+            boolean noMeat = true;
+            java.util.Set<String> sold = new java.util.HashSet<>();
+            java.util.Set<String> staples = new java.util.HashSet<>();
+            for (com.hex.kagune.control.village.VillageShop.Offer o : com.hex.kagune.control.village.VillageShop.STAPLES) {
+                staples.add(o.item());
+            }
+            for (long seed = 0; seed < 600; seed++) {
+                java.util.List<com.hex.kagune.control.village.VillageShop.Offer> stock = com.hex.kagune.control.village.VillageShop.stock(seed * 7919L);
+                six &= stock.size() == 6 && stock.stream().map(com.hex.kagune.control.village.VillageShop.Offer::item).distinct().count() == 6
+                    && staples.contains(stock.get(0).item()) && stock.get(0).equals(com.hex.kagune.control.village.VillageShop.stock(seed * 7919L).get(0));
+                for (com.hex.kagune.control.village.VillageShop.Offer o : stock) {
+                    sold.add(o.item());
+                    noMeat &= !java.util.regex.Pattern.compile("beef|pork|chicken|mutton|rabbit|cod|salmon|fish|hexkagune:|flesh").matcher(o.item()).find()
+                        && o.count() > 0 && o.price() > 0 && o.count() <= 64;
+                }
+            }
+            check(six, "each sells six things for life, a staple first, none twice");
+            check(noMeat, "no meat, no fish, sensible lots");
+            java.util.Set<String> needed = new java.util.TreeSet<>();
+            for (com.hex.kagune.control.kitchen.Dish dish : com.hex.kagune.control.kitchen.Menu.DISHES) {
+                if (dish.recipe() != null) {
+                    for (String item : dish.recipe().ingredients()) {
+                        if (item.startsWith("minecraft:") && !item.equals("minecraft:cod")) {
+                            needed.add(item);
+                        }
+                    }
+                }
+            }
+            needed.removeAll(sold);
+            check(needed.isEmpty(), "every non-meat ingredient of the cookbook is sold in some village: missing " + needed);
+            com.hex.kagune.control.village.VillageShop.Offer wheat = com.hex.kagune.control.village.VillageShop.buys("minecraft:wheat");
+            check(wheat != null && com.hex.kagune.control.village.VillageShop.buys("minecraft:diamond") == null
+                && com.hex.kagune.control.village.VillageShop.lots(wheat, 45) == 2
+                && com.hex.kagune.control.village.VillageShop.sellLabel(wheat, 45).equals("Sell 40 wheat: 2 emeralds")
+                && com.hex.kagune.control.village.VillageShop.STAPLES[0].label().equals("12 wheat: 1 emerald"), "what it buys and how the page says it");
+            boolean said = true;
+            for (int r = 0; r < 12; r++) {
+                for (String line : new String[] {com.hex.kagune.control.village.VillageShop.hello(r), com.hex.kagune.control.village.VillageShop.done(r),
+                    com.hex.kagune.control.village.VillageShop.short_(wheat, 0, r), com.hex.kagune.control.village.VillageShop.short_(wheat, 3, r),
+                    com.hex.kagune.control.village.VillageShop.sold(wheat, r), com.hex.kagune.control.village.VillageShop.bought(wheat, 2, r),
+                    com.hex.kagune.control.village.VillageShop.purse(0), com.hex.kagune.control.village.VillageShop.purse(5)}) {
+                    said &= line != null && !line.isBlank() && !line.contains("null");
+                }
+            }
+            check(said, "the trade's words are all there");
+        }
         // 1.3.75: the villagers' own skins exist, are painted for a player's body, and every new look maps to one of them.
         boolean skins = com.hex.kagune.control.village.HumanSkins.ALL.length >= 8;
         for (com.hex.kagune.control.village.HumanSkins.Skin s : com.hex.kagune.control.village.HumanSkins.ALL) {

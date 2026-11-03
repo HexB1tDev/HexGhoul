@@ -42,7 +42,11 @@ public final class HumanTalk {
         "Go out with me.", "I love you."};
 
     /** Who each player is talking to (an entity id) and what they were offered; the day they last paid each human a compliment. */
-    private record Talk(int npc, List<NpcTalk.Choice> offered) {
+    private record Talk(int npc, List<NpcTalk.Choice> offered, List<com.hex.kagune.control.village.VillageShop.Offer> deals,
+                        com.hex.kagune.control.village.VillageShop.Offer selling) {
+        Talk(int npc, List<NpcTalk.Choice> offered) {
+            this(npc, offered, null, null);
+        }
     }
 
     private static final Map<UUID, Talk> TALKS = new HashMap<>();
@@ -144,6 +148,24 @@ public final class HumanTalk {
         }
         long now = level.m_46467_();
         human.mind.with = player.m_20148_();
+        // 2.0.13: trading: "Let's trade." opens its wares; on that page, a buy, the sale of what is in their hand, or back.
+        if (choice == TRADE && talking.deals() == null) {
+            trade(player, human, com.hex.kagune.control.village.VillageShop.hello(roll));
+            return;
+        }
+        if (talking.deals() != null) {
+            if (choice == NpcTalk.Choice.BACK) {
+                show(player, human, com.hex.kagune.control.village.VillageShop.done(roll));
+                return;
+            }
+            int slot = choice.say();
+            if (slot >= 0 && slot < talking.deals().size()) {
+                trade(player, human, buy(player, talking.deals().get(slot), roll));
+            } else if (choice == SELL && talking.selling() != null) {
+                trade(player, human, sell(player, talking.selling(), roll));
+            }
+            return;
+        }
         // 1.3.77: a kiss or a hug: the talk ends so it can be seen; it walks up to them, and does it (a kiss: leaning in, then kissed and
         // hearts), with a line in a bubble.
         // 1.3.78: a date: it takes their hand and walks with them, glued at their side, inside the village; the talk ends so it can be
@@ -241,6 +263,97 @@ public final class HumanTalk {
         return HumanPersona.confessed(temper, answer, roll);
     }
 
+    /** 2.0.13: the choice that opens its wares on the main page, and the one that sells what is in their hand on the trade page. */
+    static final NpcTalk.Choice TRADE = NpcTalk.Choice.FAVOUR;
+    static final NpcTalk.Choice SELL = NpcTalk.Choice.SAY_7;
+
+    /**
+     * 2.0.13: its wares ({@code VillageShop.stock}, its own for life): each to buy with the emeralds in their hand, the sale of what they
+     * hold if it buys that, back to the talk, goodbye.
+     */
+    private static void trade(ServerPlayer player, HumanNpc human, String line) {
+        long seed = seed(human);
+        HumanPersona.Temper temper = HumanPersona.temper(seed);
+        QuestLog.Bond bond = QuestServer.bond(player, human.m_20148_().toString());
+        List<com.hex.kagune.control.village.VillageShop.Offer> stock = com.hex.kagune.control.village.VillageShop.stock(seed);
+        net.minecraft.world.item.ItemStack held = player.m_21205_();
+        String heldId = held.m_41619_() ? "" : String.valueOf(net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(held.m_41720_()));
+        List<NpcTalk.Choice> offered = new java.util.ArrayList<>();
+        List<String> said = new java.util.ArrayList<>();
+        for (int i = 0; i < stock.size() && i < SELL.say(); i++) {
+            offered.add(NpcTalk.Choice.SAYS[i]);
+            said.add("Buy " + stock.get(i).label());
+        }
+        com.hex.kagune.control.village.VillageShop.Offer buys = com.hex.kagune.control.village.VillageShop.buys(heldId);
+        if (buys != null && com.hex.kagune.control.village.VillageShop.lots(buys, held.m_41613_()) > 0) {
+            offered.add(SELL);
+            said.add(com.hex.kagune.control.village.VillageShop.sellLabel(buys, held.m_41613_()));
+        } else {
+            buys = null;
+        }
+        offered.add(NpcTalk.Choice.BACK);
+        said.add("Let's talk instead.");
+        offered.add(NpcTalk.Choice.LEAVE);
+        said.add("");
+        TALKS.put(player.m_20148_(), new Talk(human.m_19879_(), List.copyOf(offered), stock, buys));
+        int[] ordinals = new int[offered.size()];
+        String[] labels = new String[offered.size()];
+        for (int i = 0; i < ordinals.length; i++) {
+            ordinals[i] = offered.get(i).ordinal();
+            labels[i] = said.get(i);
+        }
+        int coins = heldId.equals(com.hex.kagune.control.village.VillageShop.EMERALD) ? held.m_41613_() : 0;
+        ControlNetwork.sendTo(player, new S2CNpcTalk(human.m_19879_(), HumanBrain.name(human), temper.title, bond.regard(), false,
+            S2CNpcTalk.HUMAN_FACE, line + " " + com.hex.kagune.control.village.VillageShop.purse(coins), ordinals, labels));
+    }
+
+    /** 2.0.13: {@code offer} bought with the emeralds in their hand (a creative player pays nothing), or what it says if they can't. */
+    private static String buy(ServerPlayer player, com.hex.kagune.control.village.VillageShop.Offer offer, int roll) {
+        net.minecraft.world.item.ItemStack held = player.m_21205_();
+        boolean coin = !held.m_41619_() && com.hex.kagune.control.village.VillageShop.EMERALD.equals(
+            String.valueOf(net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(held.m_41720_())));
+        if (!player.m_7500_() && (!coin || held.m_41613_() < offer.price())) {
+            return com.hex.kagune.control.village.VillageShop.short_(offer, coin ? held.m_41613_() : 0, roll);
+        }
+        net.minecraft.world.item.ItemStack goods = stack(offer.item(), offer.count());
+        if (goods.m_41619_()) {
+            return "...Sorry, I'm out of that today.";
+        }
+        if (!player.m_7500_()) {
+            held.m_41774_(offer.price());
+        }
+        give(player, goods);
+        return com.hex.kagune.control.village.VillageShop.sold(offer, roll);
+    }
+
+    /** 2.0.13: what they hold sold to it (as many whole lots as they have), the emeralds into their hands. */
+    private static String sell(ServerPlayer player, com.hex.kagune.control.village.VillageShop.Offer offer, int roll) {
+        net.minecraft.world.item.ItemStack held = player.m_21205_();
+        String heldId = held.m_41619_() ? "" : String.valueOf(net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(held.m_41720_()));
+        int lots = heldId.equals(offer.item()) ? com.hex.kagune.control.village.VillageShop.lots(offer, held.m_41613_()) : 0;
+        if (lots <= 0) {
+            return "Hm? You're not holding enough of that anymore.";
+        }
+        held.m_41774_(lots * offer.count());
+        give(player, stack(com.hex.kagune.control.village.VillageShop.EMERALD, lots * offer.price()));
+        return com.hex.kagune.control.village.VillageShop.bought(offer, lots, roll);
+    }
+
+    /** {@code count} of {@code id} ("minecraft:wheat"), or empty if there is no such item. */
+    private static net.minecraft.world.item.ItemStack stack(String id, int count) {
+        int colon = id.indexOf(':');
+        net.minecraft.world.item.Item item = net.minecraftforge.registries.ForgeRegistries.ITEMS.getValue(
+            net.minecraft.resources.ResourceLocation.m_214293_(id.substring(0, colon), id.substring(colon + 1)));
+        return item == null ? net.minecraft.world.item.ItemStack.f_41583_ : new net.minecraft.world.item.ItemStack(item, count);
+    }
+
+    /** Into their inventory, or dropped at their feet if it is full. */
+    private static void give(ServerPlayer player, net.minecraft.world.item.ItemStack stack) {
+        if (!player.m_36356_(stack) && !stack.m_41619_()) {
+            player.m_36176_(stack, false);
+        }
+    }
+
     /** The page: its name and temper, how warm it is to them, what it says, the asks (1.3.74: and the romance's, as they stand) and goodbye. */
     private static void show(ServerPlayer player, HumanNpc human, String line) {
         long seed = seed(human);
@@ -255,6 +368,8 @@ public final class HumanTalk {
         List<NpcTalk.Choice> offered = new java.util.ArrayList<>(List.of(NpcTalk.Choice.SAY_1, NpcTalk.Choice.SAY_2, NpcTalk.Choice.SAY_3,
             NpcTalk.Choice.SAY_4));
         List<String> said = new java.util.ArrayList<>(List.of(ASKS));
+        offered.add(TRADE); // 2.0.13
+        said.add("Let's trade.");
         boolean doubted = DOUBTED.contains(both);
         if (doubted) {
             offered.add(NpcTalk.Choice.SAY_6);

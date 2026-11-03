@@ -1,4 +1,14 @@
-# START HERE (state after 2.0.12): read `docs/handoff/next-ai-2.0.9.md` first, then `next-ai-2.0.5.md`, then `next-ai-2.0.1.md`
+# START HERE (state after 2.0.13): read `docs/handoff/next-ai-2.0.9.md` first, then `next-ai-2.0.5.md`, then `next-ai-2.0.1.md`
+
+- **2.0.13** (the owner couldn't find trading with villagers: there was none, only villager-to-villager street trades (1.3.72); then: "they
+  mostly trade basic stuff like villagers, but a lot more food, the ones needed for our recipes on touka (not meat)"). Pure
+  `village/VillageShop`: `Offer(item, name, count, price)`, `STAPLES`, `FOODS` (the cookbook's vanilla non-meat ingredients; cod left out),
+  `BASICS`, `BUYS`; `stock(seed)` (a staple + 3 foods + 2 basics, from the villager's uuid seed), `buys(item)`, `lots`, `sellLabel`, lines.
+  `HumanTalk`: main page `TRADE` (= `Choice.FAVOUR`, label "Let's trade."); `trade(...)` page: SAY_1..SAY_6 buy, `SELL` (= SAY_7) sells
+  the held stack's whole lots, BACK to `show`, LEAVE; `Talk` carries `deals`/`selling`. Paid from the main hand's emeralds only (no
+  inventory API); creative pays nothing. `NpcTests.village` extended (every non-meat recipe ingredient sold somewhere); harness only.
+
+# State after 2.0.12
 
 - **2.0.12** (the owner: "I dont think clashes are shaking them screen at all", then "increase it further"). By reading: the CLASH mark's
   `kick` was `PaleCamera`'s 1.6-degree pitch jolt (e^-0.45t, ~5 ticks); the rumble only from `QUAKES`. New `PaleCamera.clash(strength,
