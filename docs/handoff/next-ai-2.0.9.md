@@ -27,8 +27,8 @@ version.
 
 ## Open (ask the owner when it fits)
 
-- **Old toddler and baby lines** (with their parents, in `ChildLines`, `talk/child.txt`, siblings, hide and seek...) are full sentences.
-  The owner's "nothing coherent" was said while the stranger lines were being written; offer a pass over the old ones as its own version.
+- **Decided (the owner, after 2.0.12):** "leave it as it is for the parents": babies' and toddlers' lines with their own parents stay as they
+  are (full sentences). Only lines to strangers follow "nothing coherent" (2.0.5). Don't offer this again.
 - Grown daughters' height (from 2.0.4's handoff): still unanswered.
 - What a cook takes from the chest isn't shown in her hands on the way to the stove (EtoRenderer draws only gesture props).
 - Mob Drops, Ores and the rest are decided by item id words; modded items mostly land in Whatever. Tune `ChestSort` word lists if the
