@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.0.29 (HexGhoul): /kagune reaper, and the Reaper turns up once in a while (testing)
+
+See `.github/release-notes-2.0.29.md`. `/kagune reaper` (operators) puts the White Reaper five blocks ahead of you for testing; in the wild he now turns up about once in a hundred in-game days instead of about once in 660.
+
 ## 2.0.28 (HexGhoul): the White Reaper's own skin (testing)
 
 See `.github/release-notes-2.0.28.md`. The White Reaper always wears the owner's own skin, on the slim arms it is painted for; no other investigator can roll it.

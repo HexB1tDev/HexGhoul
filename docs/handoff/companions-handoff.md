@@ -1,4 +1,11 @@
-# START HERE (state after 2.0.28)
+# START HERE (state after 2.0.29)
+
+`/kagune reaper` (operators) puts the White Reaper five blocks ahead of you for testing; in the wild he now turns up about once in a hundred in-game days instead of about once in 660.
+
+- Never two: a Reaper already loaded anywhere is sent away first, and the command takes over his slot. One standing in unloaded ground gives the slot up; when that ground loads, he wakes as an ordinary Rank 9 investigator with a regular quinque.
+- Natural spawns: each appearance of investigators (about one a day near each player) has a 1% chance to be the White Reaper alone (`AgentRules.REAPER_CHANCE`). Before, he only came from Rank 10's 0.15 weight in the rank table. He stays rarer than a Rank 9. Protocol stays 76.
+
+# State after 2.0.28
 
 The White Reaper always wears the owner's own skin, on the slim arms it is painted for; no other investigator can roll it.
 

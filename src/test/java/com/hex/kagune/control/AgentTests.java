@@ -629,6 +629,12 @@ public final class AgentTests {
         AgentRules.Rank reaper = AgentRules.Rank.RANK_10;
         check(reaper.title.equals("White Reaper") && AgentRules.regularRank(reaper) == AgentRules.Rank.RANK_9
             && AgentRules.superior(reaper, reaper) == AgentRules.Rank.RANK_9, "the White Reaper is outside the regular ranks");
+        double weights = 0.0;
+        for (AgentRules.Rank rank : AgentRules.Rank.values()) {
+            weights += rank.weight;
+        }
+        check(AgentRules.REAPER_CHANCE > 0.0 && AgentRules.REAPER_CHANCE < AgentRules.Rank.RANK_9.weight / weights,
+            "2.0.29: the White Reaper turns up, rarer than a Rank 9");
         check(AgentRules.dawnBlastDamage(0.0) == 26.0F
             && AgentRules.dawnBlastDamage(1.25) > AgentRules.dawnBlastDamage(2.5)
             && Math.abs(AgentRules.dawnBlastDamage(2.5) - 10.4F) < 0.01F, "Dawn's blast falls off from 26 to 10.4 raw damage");

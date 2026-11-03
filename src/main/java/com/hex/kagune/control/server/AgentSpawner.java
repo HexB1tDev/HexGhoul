@@ -62,8 +62,7 @@ public final class AgentSpawner {
             if (leader == null) {
                 continue;
             }
-            if (AgentRules.Rank.roll(player.m_217043_().m_188500_()) == AgentRules.Rank.RANK_10
-                && AgentBrain.claimReaper(leader, level)) {
+            if (player.m_217043_().m_188500_() < AgentRules.REAPER_CHANCE && AgentBrain.claimReaper(leader, level)) {
                 AgentBrain.prepareReaper(leader, look);
                 return true;
             }

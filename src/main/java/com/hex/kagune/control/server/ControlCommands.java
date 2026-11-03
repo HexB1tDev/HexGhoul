@@ -125,6 +125,13 @@ final class ControlCommands {
             .then(Commands.m_82127_("set").requires(source -> source.m_6761_(2))
                 .then(Commands.m_82129_("count", com.mojang.brigadier.arguments.IntegerArgumentType.integer(0, 100000))
                     .executes(ControlCommands::setGhoulMeat)))));
+        // 2.0.29: the White Reaper five blocks ahead (an operator's, for testing him; never two: one already about is sent away first).
+        dispatcher.register(Commands.m_82127_("kagune").then(Commands.m_82127_("reaper").requires(source -> source.m_6761_(2))
+            .executes(context -> {
+                String said = AgentBrain.summonReaper(context.getSource().m_81375_());
+                context.getSource().m_288197_(() -> Component.m_237113_(said), true);
+                return said.startsWith("No room") || said.contains("held") ? 0 : 1;
+            })));
         // 7.0.2: a ghoul NPC five blocks ahead (an operator's: to meet one without waiting for the night), its kagune, temper and tier
         // as asked (rinkaku/ukaku; feral, gourmet, pack, drifter, scavenger, anteiku; 0 to 2), else rolled.
         dispatcher.register(Commands.m_82127_("kagune").then(Commands.m_82127_("npc").requires(source -> source.m_6761_(2))

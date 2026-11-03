@@ -177,6 +177,44 @@ public final class AgentBrain {
         return UniqueNpcs.claimExclusive(level, REAPER, agent.m_20148_());
     }
 
+    /**
+     * 2.0.29 (the owner: "Make sure that the rank 10 investigator can be spawned via command for testing purposes"): {@code /kagune reaper}
+     * puts the White Reaper five blocks ahead of {@code player}. Never two: a Reaper already loaded anywhere is sent away first, and one
+     * standing in unloaded ground gives the slot up (when that ground loads he wakes an ordinary Rank 9 investigator without Dawn). What
+     * the operator is told back.
+     */
+    public static String summonReaper(ServerPlayer player) {
+        ServerLevel level = player.m_284548_();
+        com.hex.kagune.control.npc.UniqueNpc slot = UniqueNpcs.get(level, REAPER);
+        boolean replaced = false;
+        if (slot.alive && slot.body != null) {
+            net.minecraft.server.MinecraftServer server = level.m_7654_();
+            for (ServerLevel each : server == null ? java.util.List.of(level) : server.m_129785_()) {
+                if (each.m_8791_(slot.body) instanceof CcgAgent old) {
+                    old.m_146870_();
+                    replaced = true;
+                }
+            }
+            UniqueNpcs.died(level, REAPER, slot.body);
+        }
+        Vec3 ahead = UkakuFire.horizontal(player.m_20154_()).m_82490_(5.0);
+        int x = (int)Math.floor(player.m_20185_() + ahead.f_82479_);
+        int z = (int)Math.floor(player.m_20189_() + ahead.f_82481_);
+        CcgAgent agent = AgentSpawner.placeAt(level, x, (int)Math.floor(player.m_20186_() + 0.01), z);
+        if (agent == null) {
+            agent = AgentSpawner.place(level, x + 0.5, z + 0.5);
+        }
+        if (agent == null) {
+            return "No room for the White Reaper there.";
+        }
+        if (!claimReaper(agent, level)) {
+            agent.m_146870_();
+            return "The White Reaper's slot is held: try again.";
+        }
+        prepareReaper(agent, AgentRules.REAPER_LOOK);
+        return replaced ? "The White Reaper (the one before him sent away)." : "The White Reaper.";
+    }
+
     static void prepareReaper(CcgAgent agent, int look) {
         // 2.0.28: always in the owner's own skin for him (AgentRules.REAPER_LOOK), whatever look was rolled.
         save(agent, AgentRules.REAPER_LOOK, Quinque.DAWN, true, null);
@@ -231,6 +269,11 @@ public final class AgentBrain {
             mind.rank = AgentRules.regularRank(mind.rank);
             if (mind.look >= AgentRules.REGULAR_LOOKS) {
                 mind.look = Math.floorMod(mind.look, AgentRules.REGULAR_LOOKS); // 2.0.28: only the White Reaper wears his skin
+            }
+            if (mind.kind == Quinque.DAWN) {
+                // 2.0.29: a Reaper who lost his slot (another summoned while he lay in unloaded ground) is an ordinary investigator now.
+                mind.kind = AgentRules.kind(agent.m_217043_().m_188500_());
+                save(agent, mind.look, mind.kind, mind.leader, mind.partner);
             }
         }
         agent.dress(mind.look, mind.kind);

@@ -196,6 +196,13 @@ public final class AgentRules {
         return rank == Rank.RANK_10 ? Rank.RANK_9 : rank;
     }
 
+    /**
+     * 2.0.29 (the owner: "overall he's just a rare guy that spawns once in a while"): the chance that an appearance of investigators (about
+     * one a day near each player, {@link #SPAWN_CHANCE}) is the White Reaper alone instead: about once in a hundred days. Before, he took
+     * Rank 10's weight in the rank table (0.15 in 99), about once in 660 days. Rarer than a Rank 9 still. {@code /kagune reaper} for tests.
+     */
+    public static final double REAPER_CHANCE = 0.01;
+
     public static final float REAPER_TAKEN = 0.65F;
     public static final double REAPER_KNOCKBACK_RESISTANCE = 0.85;
     public static final double REAPER_DASH_SPEED = 2.1;
