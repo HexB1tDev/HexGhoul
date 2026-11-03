@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.0.10 (HexGhoul): the release of 2.0.8 and 2.0.9's changes (testing)
+
+See `.github/release-notes-2.0.10.md`: the build's sound check now allows the stove's crackle you approved; this jar carries the cooking and chest sorting.
+
 ## 2.0.9 (HexGhoul): your spouse sorts the house's chests by kind (testing)
 
 See `.github/release-notes-2.0.9.md`: chests labelled Food, Blocks, Tools & Weapons, Armor, Ores & Minerals, Plants & Seeds, Mob Drops and Whatever; your own named chests left alone.

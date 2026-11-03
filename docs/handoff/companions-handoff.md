@@ -1,4 +1,9 @@
-# START HERE (state after 2.0.9): read `docs/handoff/next-ai-2.0.9.md` first, then `next-ai-2.0.5.md`, then `next-ai-2.0.1.md`
+# START HERE (state after 2.0.10): read `docs/handoff/next-ai-2.0.9.md` first, then `next-ai-2.0.5.md`, then `next-ai-2.0.1.md`
+
+- **2.0.10**: CI's `SfxTests` failed 2.0.8's (and so 2.0.9's) release: every vanilla sound name in the code must be remapped to the user's
+  pack (`Sfx.remapped`) or listed in `SfxTests.KEPT_VANILLA`. The three stove sounds the owner approved are now listed there. No mod change.
+
+# State after 2.0.9
 
 - **2.0.9** (the owner: "spouse will sort items from chests all of them in the house perimeter, separating items in different chests from
   NBT data, food in one chest, blocks in another, etc. If it doesnt know what to do with them it puts them in a "Whatever" chest"; asked,
