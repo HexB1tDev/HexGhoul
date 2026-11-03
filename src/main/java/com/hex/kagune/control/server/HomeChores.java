@@ -169,20 +169,31 @@ public final class HomeChores {
             }
             return true;
         }
-        // At it: facing it, hands busy, until the gesture is done (or something else took its hands: then on to the next).
+        // At it: facing it, hands busy, until the step is done. 2.0.8 (the owner: "longer cooking animations over the furnace, with sizzling
+        // sounds, while an NPC is doing a task make sure it doesnt cancel it out to do another ... dont allow them to rotate while cooking"):
+        // at the stove the stirring goes round Chores.COOK_LOOPS times, the stove crackling; her body and head stay on it every tick; a
+        // gesture or word of her own no longer ends the step (her hands go back to it). Only what stops the chore (a fight, a talk, a kiss,
+        // a hand, the night: stop()) ends it early.
         npc.m_21573_().m_26573_();
         face(npc, at);
         long age = now - job.workSince;
         if (age % 10L == 0L && (job.doing == job.kind.gesture || job.expect() == Chores.Kind.COOK)) {
             particles(level, job.expect() == Chores.Kind.COOK ? Chores.Kind.COOK : job.kind, at);
         }
-        if (mind.gesture != job.doing) {
-            shut(level, job);
-            next(job, now);
-        } else if (age >= job.doing.ticks - 4L) {
+        if (job.doing == EtoGesture.COOK && age % 40L == 0L) {
+            String sound = Chores.crackle(String.valueOf(level.m_8055_(at).m_60734_()));
+            if (sound != null) {
+                level.m_6263_(null, at.m_123341_() + 0.5, at.m_123342_() + 0.6, at.m_123343_() + 0.5,
+                    net.minecraft.sounds.SoundEvent.m_262824_(net.minecraft.resources.ResourceLocation.m_214293_("minecraft", sound)),
+                    net.minecraft.sounds.SoundSource.PLAYERS, 0.8F, 0.9F + npc.m_217043_().m_188501_() * 0.2F);
+            }
+        }
+        if (age >= Chores.stepTicks(job.doing)) {
             job.did |= effect(npc, job, level, at, house, now);
             shut(level, job);
             next(job, now);
+        } else if (mind.gesture != job.doing || job.doing.over(now - mind.gestureAt)) {
+            EtoBrain.gesture(mind, job.doing, now); // back to it (another round of stirring, or after a word of her own)
         }
         return true;
     }

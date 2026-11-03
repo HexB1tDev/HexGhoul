@@ -229,8 +229,29 @@ public class EtoNpc extends PathfinderMob implements UniqueBody {
                 return !EtoBrain.busy(EtoNpc.this) && super.m_8045_();
             }
         });
-        this.f_21345_.m_25352_(7, new LookAtPlayerGoal(this, Player.class, 8.0F));
-        this.f_21345_.m_25352_(8, new RandomLookAroundGoal(this));
+        // 2.0.8 (the owner: "dont allow them to rotate while cooking"): no glancing at players or about while a chore has her.
+        this.f_21345_.m_25352_(7, new LookAtPlayerGoal(this, Player.class, 8.0F) {
+            @Override
+            public boolean m_8036_() {
+                return !EtoBrain.busy(EtoNpc.this) && super.m_8036_();
+            }
+
+            @Override
+            public boolean m_8045_() {
+                return !EtoBrain.busy(EtoNpc.this) && super.m_8045_();
+            }
+        });
+        this.f_21345_.m_25352_(8, new RandomLookAroundGoal(this) {
+            @Override
+            public boolean m_8036_() {
+                return !EtoBrain.busy(EtoNpc.this) && super.m_8036_();
+            }
+
+            @Override
+            public boolean m_8045_() {
+                return !EtoBrain.busy(EtoNpc.this) && super.m_8045_();
+            }
+        });
     }
 
     @Override

@@ -1436,6 +1436,15 @@ check(com.hex.kagune.control.graft.GraftStage.TRANSPLANT.limbs(com.hex.kagune.co
 
     /** 1.3.29: a spouse's chores at home (HomeChores' rules): what each block is for, which chore next, a chest put in order, its words. */
     static void chores() {
+        // 2.0.8: the stove's stirring three rounds over, and its crackle (none at a table).
+        check(com.hex.kagune.control.family.Chores.stepTicks(com.hex.kagune.control.npc.EtoGesture.COOK)
+            == 3L * com.hex.kagune.control.npc.EtoGesture.COOK.ticks - 4L
+            && com.hex.kagune.control.family.Chores.stepTicks(com.hex.kagune.control.npc.EtoGesture.TIDY) == com.hex.kagune.control.npc.EtoGesture.TIDY.ticks - 4L,
+            "cooking at the stove lasts three rounds of stirring; other steps one");
+        check("block.furnace.fire_crackle".equals(com.hex.kagune.control.family.Chores.crackle("Block{minecraft:furnace}"))
+            && "block.smoker.smoke".equals(com.hex.kagune.control.family.Chores.crackle("Block{minecraft:smoker}"))
+            && "block.campfire.crackle".equals(com.hex.kagune.control.family.Chores.crackle("Block{minecraft:soul_campfire}"))
+            && com.hex.kagune.control.family.Chores.crackle("Block{minecraft:oak_planks}") == null, "each stove's crackle; a table has none");
         java.util.function.Function<String, String> block = id -> "Block{minecraft:" + id + "}";
         check(Chores.id("Block{minecraft:oak_planks}").equals("minecraft:oak_planks") && Chores.id("plain").equals("plain") && Chores.id(null).isEmpty(),
             "a block's registry name is read from its text");

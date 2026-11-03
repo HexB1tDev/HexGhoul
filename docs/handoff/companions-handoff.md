@@ -1,4 +1,16 @@
-# START HERE (state after 2.0.7): read `docs/handoff/next-ai-2.0.5.md` first (the session's requests), then `next-ai-2.0.1.md`
+# START HERE (state after 2.0.8): read `docs/handoff/next-ai-2.0.5.md` first (the session's requests), then `next-ai-2.0.1.md`
+
+- **2.0.8** (the owner: "longer cooking animations over the furnace, with sizzling sounds, while an NPC is doing a task make sure it doesnt
+  cancel it out to do another. Cooking process should envolve grabbing items needed from a chest, going to the furnace and start cooking
+  over it. dont allow them to rotate while cooking"; asked about the sound, they chose vanilla's crackle: the one exception to the
+  hexkagune-only rule). `Chores.COOK_LOOPS` 3, `stepTicks(gesture)`, `crackle(block)` (furnace/smoker/campfire; null at a table). In
+  `HomeChores.tick` a step ends only by time (`stepTicks`); a changed or finished gesture is set back (`EtoBrain.gesture`), so the COOK
+  stir loops; the stove sounds every 40 ticks (`SoundEvent.m_262824_(ResourceLocation.m_214293_("minecraft", ...))`, `SoundSource.PLAYERS`,
+  all already proven). `EtoBrain`: a chore under way ticks before `ParentDuty`/`together`/friend scenes/`ParentCare`; `ParentDuty` leaves
+  a non-RAMPAGE duty while a chore runs. `EtoNpc`: `LookAtPlayerGoal`/`RandomLookAroundGoal` wait while `EtoBrain.busy`. The chest ->
+  stove round was already there (1.3.31); ingredients are not shown in her hands. Only the Chores checks were run (harness).
+
+# State after 2.0.7
 
 - **2.0.7** (the owner: "NPCS should not be teleported home unless they die or bug inside a wall ... go outside the max radius, just with
   the feeling that by night time they have to be home, this includes both kids and spouse"). Pure `HomeRules.roam(stage)` (null = spouse;

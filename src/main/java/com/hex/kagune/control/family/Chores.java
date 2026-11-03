@@ -151,6 +151,30 @@ public final class Chores {
      * How long until the next chore (ticks): 15 to 35 seconds home alone; 20 to 45 with its spouse about (1.3.30, the owner: it should be
      * busy about the house, not hanging on them).
      */
+    /** 2.0.8 (the owner: "longer cooking animations over the furnace"): how many rounds of stirring at the stove (each the COOK gesture). */
+    public static final int COOK_LOOPS = 3;
+
+    /** 2.0.8: how long a step at {@code gesture} lasts: the stove's stirring {@link #COOK_LOOPS} times over, anything else once. */
+    public static long stepTicks(EtoGesture gesture) {
+        return (gesture == EtoGesture.COOK ? COOK_LOOPS : 1) * (long)gesture.ticks - 4L;
+    }
+
+    /**
+     * 2.0.8 (the owner: "with sizzling sounds"; vanilla's crackle, by their word, the one sound not from the hexkagune pack): the sound a
+     * stove makes while it is cooked at ({@code block} as the game writes it: "Block{minecraft:furnace}"; a sound of minecraft:), or null
+     * (a table: no fire).
+     */
+    public static String crackle(String block) {
+        String b = block == null ? "" : block;
+        if (b.contains("smoker")) {
+            return "block.smoker.smoke";
+        }
+        if (b.contains("campfire")) {
+            return "block.campfire.crackle";
+        }
+        return b.contains("furnace") ? "block.furnace.fire_crackle" : null;
+    }
+
     public static long gap(boolean partnerNear, double roll) {
         double r = Math.max(0.0, Math.min(1.0, roll));
         return partnerNear ? 400L + (long)(r * 500.0) : 300L + (long)(r * 400.0);

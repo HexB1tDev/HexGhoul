@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.0.8 (HexGhoul): cooking at the stove takes its time, and a task is finished first (testing)
+
+See `.github/release-notes-2.0.8.md`: three rounds of stirring at the stove with its crackle, no turning away, chores finished before her own errands.
+
 ## 2.0.7 (HexGhoul): no more teleporting home; out by day, home by night (testing)
 
 See `.github/release-notes-2.0.7.md`: the spouse and children walk home instead of being put there; farther out by day, home by night; put home only when stuck.

@@ -69,6 +69,10 @@ final class ParentDuty {
             if (mind.duty == null) {
                 return false;
             }
+            if (mind.chore != null && mind.duty.why != com.hex.kagune.control.family.Parenting.Why.RAMPAGE) {
+                mind.duty = null; // 2.0.8: a chore under way is finished first (a rampage can't wait)
+                return false;
+            }
             HomeChores.stop(npc, mind, level);
             if (mind.cradling != null) {
                 ParentCare.drop(npc, mind, level, now); // whoever it held is put down: it is going after another

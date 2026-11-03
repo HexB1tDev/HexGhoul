@@ -868,6 +868,14 @@ public final class EtoBrain {
             npc.m_21563_().m_24960_(talker, 30.0F, 30.0F);
             return;
         }
+        // 2.0.8 (the owner: "while an NPC is doing a task make sure it doesnt cancel it out to do another"): a chore under way comes before
+        // her own errands (a straying child, a moment with her spouse, a friend's word, a kiss she'd ask for); they wait till it is done.
+        if (mind.chore != null && mind.cradling == null && !HomeLife.night(level.m_46468_(), false)) {
+            Households.Home keeping = npc.following() == null ? Households.forCompanion(level, npc) : null;
+            if (keeping != null && HomeChores.tick(npc, mind, keeping, level, partner, now)) {
+                return;
+            }
+        }
         // 1.3.49: a child of hers strayed too far, out at night, or on a rampage: she goes after it before anything else of her own.
         if (ParentDuty.tick(npc, mind, level, now)) {
             return;
