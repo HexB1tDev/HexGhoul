@@ -1,4 +1,10 @@
-# START HERE (state after 2.0.13): read `docs/handoff/next-ai-2.0.9.md` first, then `next-ai-2.0.5.md`, then `next-ai-2.0.1.md`
+# START HERE (state after 2.0.14): read `docs/handoff/next-ai-2.0.9.md` first, then `next-ai-2.0.5.md`, then `next-ai-2.0.1.md`
+
+- **2.0.14** (the owner: "seeds, farming materials, food etc"): `VillageShop.FARMING` (12 offers: seeds, bone meal, oak sapling, sugar cane,
+  hay, stone/iron hoe, bucket, composter); `stock` = staple + 2 `FOODS` + 2 `FARMING` + 2 `BASICS` (seven); `HumanTalk.SELL` moved to SAY_8
+  (wares on SAY_1..SAY_7). The draw order changed, so existing villagers' wares change once. `NpcTests.village` updated; harness only.
+
+# State after 2.0.13
 
 - **2.0.13** (the owner couldn't find trading with villagers: there was none, only villager-to-villager street trades (1.3.72); then: "they
   mostly trade basic stuff like villagers, but a lot more food, the ones needed for our recipes on touka (not meat)"). Pure

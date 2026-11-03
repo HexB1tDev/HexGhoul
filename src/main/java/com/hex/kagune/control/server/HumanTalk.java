@@ -265,7 +265,7 @@ public final class HumanTalk {
 
     /** 2.0.13: the choice that opens its wares on the main page, and the one that sells what is in their hand on the trade page. */
     static final NpcTalk.Choice TRADE = NpcTalk.Choice.FAVOUR;
-    static final NpcTalk.Choice SELL = NpcTalk.Choice.SAY_7;
+    static final NpcTalk.Choice SELL = NpcTalk.Choice.SAY_8; // 2.0.14: seven wares on SAY_1..SAY_7
 
     /**
      * 2.0.13: its wares ({@code VillageShop.stock}, its own for life): each to buy with the emeralds in their hand, the sale of what they

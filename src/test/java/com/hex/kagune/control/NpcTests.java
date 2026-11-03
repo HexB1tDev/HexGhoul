@@ -691,7 +691,7 @@ public final class NpcTests {
 
     /** 1.3.71: the Brick Village: its map, and its people's sense of where they are once it is placed turned. */
     static void village() {
-        // 2.0.13: trading with village humans: six wares each (a staple, three more foods, two basic goods), never meat or fish; every
+        // 2.0.13: trading with village humans: seven wares each (2.0.14: a staple, two more foods, two farming goods, two basic goods), never meat or fish; every
         // non-meat ingredient the cookbook needs is sold by someone; what they buy, and the page's words.
         {
             boolean six = true;
@@ -703,15 +703,17 @@ public final class NpcTests {
             }
             for (long seed = 0; seed < 600; seed++) {
                 java.util.List<com.hex.kagune.control.village.VillageShop.Offer> stock = com.hex.kagune.control.village.VillageShop.stock(seed * 7919L);
-                six &= stock.size() == 6 && stock.stream().map(com.hex.kagune.control.village.VillageShop.Offer::item).distinct().count() == 6
-                    && staples.contains(stock.get(0).item()) && stock.get(0).equals(com.hex.kagune.control.village.VillageShop.stock(seed * 7919L).get(0));
+                six &= stock.size() == 7 && stock.stream().map(com.hex.kagune.control.village.VillageShop.Offer::item).distinct().count() == 7
+                    && staples.contains(stock.get(0).item()) && stock.get(0).equals(com.hex.kagune.control.village.VillageShop.stock(seed * 7919L).get(0))
+                    && stock.stream().filter(o -> java.util.Arrays.asList(com.hex.kagune.control.village.VillageShop.FARMING).contains(o)).count() == 2
+                    && stock.size() <= com.hex.kagune.control.npc.NpcTalk.Choice.SAYS.length - 1;
                 for (com.hex.kagune.control.village.VillageShop.Offer o : stock) {
                     sold.add(o.item());
                     noMeat &= !java.util.regex.Pattern.compile("beef|pork|chicken|mutton|rabbit|cod|salmon|fish|hexkagune:|flesh").matcher(o.item()).find()
                         && o.count() > 0 && o.price() > 0 && o.count() <= 64;
                 }
             }
-            check(six, "each sells six things for life, a staple first, none twice");
+            check(six, "each sells seven things for life, a staple first, two farming goods (2.0.14), none twice, one slot left to sell");
             check(noMeat, "no meat, no fish, sensible lots");
             java.util.Set<String> needed = new java.util.TreeSet<>();
             for (com.hex.kagune.control.kitchen.Dish dish : com.hex.kagune.control.kitchen.Menu.DISHES) {

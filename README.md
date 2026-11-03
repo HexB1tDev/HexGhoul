@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.0.14 (HexGhoul): villagers sell seeds and farming goods too (testing)
+
+See `.github/release-notes-2.0.14.md`: seven wares each: a staple, two foods, two farming goods (seeds, bone meal, saplings, cane, hay, a hoe, a bucket, a composter), two basic goods.
+
 ## 2.0.13 (HexGhoul): trading with village humans (testing)
 
 See `.github/release-notes-2.0.13.md`: "Let's trade." on a villager's talk page; mostly the cookbook's non-meat ingredients plus basic goods, for the emeralds in your hand; they buy crops and plain goods.

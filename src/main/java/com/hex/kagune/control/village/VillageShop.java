@@ -7,8 +7,9 @@ import java.util.Random;
 /**
  * 2.0.13 (the owner: "check how the trading works with the Human NPCS I couldn't find a way", then: "they mostly trade basic stuff like
  * villagers, but a lot more food, the ones needed for our recipes on touka (not meat)"): what a village human sells a player and buys from
- * them, for emeralds (pure, tested). Each sells six things for life (from its id): four foods the cookbook's recipes need (never meat, never
- * fish), a staple among them, and two basic goods; and it buys the field's crops and plain goods, as a village would. Paid with the emeralds
+ * them, for emeralds (pure, tested). Each sells seven things for life (from its id): three foods the cookbook's recipes need (never meat,
+ * never fish), a staple among them, two farming goods (2.0.14: seeds and the like) and two basic goods; and it buys the field's crops and
+ * plain goods, as a village would. Paid with the emeralds
  * in the player's hand; sold from what is in their hand.
  */
 public final class VillageShop {
@@ -54,6 +55,22 @@ public final class VillageShop {
         new Offer("minecraft:bread", "bread", 6, 1),
     };
 
+    /** 2.0.14 (the owner: "seeds, farming materials, food etc"): the field's things: seeds, bone meal, saplings, cane, hay, tools. */
+    public static final Offer[] FARMING = {
+        new Offer("minecraft:wheat_seeds", "wheat seeds", 16, 1),
+        new Offer("minecraft:beetroot_seeds", "beetroot seeds", 16, 1),
+        new Offer("minecraft:pumpkin_seeds", "pumpkin seeds", 8, 1),
+        new Offer("minecraft:melon_seeds", "melon seeds", 8, 1),
+        new Offer("minecraft:bone_meal", "bone meal", 12, 1),
+        new Offer("minecraft:oak_sapling", "oak saplings", 4, 1),
+        new Offer("minecraft:sugar_cane", "sugar cane", 8, 1),
+        new Offer("minecraft:hay_block", "hay bales", 2, 1),
+        new Offer("minecraft:stone_hoe", "stone hoe", 1, 1),
+        new Offer("minecraft:iron_hoe", "iron hoe", 1, 3),
+        new Offer("minecraft:bucket", "bucket", 1, 2),
+        new Offer("minecraft:composter", "composter", 1, 2),
+    };
+
     /** Basic goods, as a village's: the kitchen's bowls, bottles and odds and ends, and plain things. */
     public static final Offer[] BASICS = {
         new Offer("minecraft:bowl", "bowls", 8, 1),
@@ -97,19 +114,21 @@ public final class VillageShop {
         new Offer("minecraft:iron_ingot", "iron ingots", 4, 1),
     };
 
-    /** How many foods and basic goods each one sells. */
-    public static final int FOOD_OFFERS = 4;
+    /** How many foods (the staple among them), farming goods and basic goods each one sells (2.0.14: seven in all). */
+    public static final int FOOD_OFFERS = 3;
+    public static final int FARMING_OFFERS = 2;
     public static final int BASIC_OFFERS = 2;
 
     private VillageShop() {
     }
 
-    /** What one sells ({@code seed}: its own, always the same): a staple, three more foods, two basic goods, none twice. */
+    /** What one sells ({@code seed}: its own, always the same): a staple, two more foods, two farming goods, two basic goods, none twice. */
     public static List<Offer> stock(long seed) {
         Random random = new Random(seed ^ 0x5A0B5L);
         List<Offer> out = new ArrayList<>();
         out.add(STAPLES[random.nextInt(STAPLES.length)]);
         pick(out, FOODS, FOOD_OFFERS - 1, random);
+        pick(out, FARMING, FARMING_OFFERS, random);
         pick(out, BASICS, BASIC_OFFERS, random);
         return out;
     }
