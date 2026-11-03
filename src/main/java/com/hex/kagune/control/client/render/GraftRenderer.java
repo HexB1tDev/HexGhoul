@@ -93,6 +93,7 @@ public final class GraftRenderer {
         MultiBufferSource.BufferSource buffers = minecraft.m_91269_().m_110104_();
         VertexConsumer[] consumer = {null};
         for (AbstractClientPlayer player : level.m_6907_()) {
+            try {
             if (!GraftClient.isGraft(player) || !player.m_6084_() || player.m_20145_() || player.m_5803_() || player.m_21255_()
                 || com.hex.kagune.control.client.ReviveClient.apart(player, partial)) {
                 continue;
@@ -143,9 +144,16 @@ public final class GraftRenderer {
             } else {
                 java.util.Arrays.fill(limbs.colossi, null);
             }
+            } catch (RuntimeException failure) {
+                // 2.0.27: one player's limbs failing never keeps the next player's, the wild ghouls' or the children's from being drawn.
+                LIMBS.remove(player.m_20148_());
+                PlayerLayers.failed("a Graft player's limbs", failure);
+            }
         }
         // 7.0.2: the rinkaku ghoul NPCs in view: the transplant's tails, as a player's, at their tier's size.
+        // 2.0.27: each ghoul on its own: one that fails is skipped (logged), never the rest of them nor the children after.
         for (com.hex.kagune.control.npc.GhoulNpc npc : GhoulNpcRenderer.drawn()) {
+            try {
             com.hex.kagune.control.client.GhoulNpcClient.View seen = com.hex.kagune.control.client.GhoulNpcClient.get(npc.m_19879_());
             if (seen == null || seen.identity().kind() != com.hex.kagune.control.npc.NpcIdentity.Kind.RINKAKU || !npc.m_6084_() || npc.m_20145_()) {
                 continue;
@@ -174,6 +182,10 @@ public final class GraftRenderer {
                     com.hex.kagune.control.client.GhoulNpcClient.flip(seen, clock, npc.m_20096_()));
             } finally {
                 tint = com.hex.kagune.control.KaguneColours.DEFAULT;
+            }
+            } catch (RuntimeException failure) {
+                LIMBS.remove(npc.m_20148_());
+                PlayerLayers.failed("a wild ghoul's tails", failure);
             }
         }
         // 1.3.43: the ghoul children in view with a Rinkaku tentacle of their own. 1.3.44 (the owner: "one tentacle, not two", and not the

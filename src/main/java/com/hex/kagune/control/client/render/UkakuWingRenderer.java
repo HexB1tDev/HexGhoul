@@ -229,7 +229,9 @@ public final class UkakuWingRenderer {
         }
         // 7.0.2: the ukaku ghoul NPCs in view: the twin wings, as Ukaku's, aiming as they shoot.
         double clock = com.hex.kagune.control.client.PaleClient.clock(partial);
+        // 2.0.27: each ghoul on its own: one that fails is skipped (logged), never the rest of them nor the companions' wings after.
         for (com.hex.kagune.control.npc.GhoulNpc npc : GhoulNpcRenderer.drawn()) {
+            try {
             com.hex.kagune.control.client.GhoulNpcClient.View seen = com.hex.kagune.control.client.GhoulNpcClient.get(npc.m_19879_());
             if (seen == null || seen.identity().kind() != com.hex.kagune.control.npc.NpcIdentity.Kind.UKAKU || !npc.m_6084_() || npc.m_20145_()) {
                 continue;
@@ -277,6 +279,9 @@ public final class UkakuWingRenderer {
             com.hex.kagune.control.client.animation.RigPose flipping = com.hex.kagune.control.client.GhoulNpcClient.flip(seen, clock, npc.m_20096_());
             emit(consumer, matrix, normals, quads, x, y, z, yaw, flipping == null ? 0.0F : flipping.flip,
                 com.hex.kagune.control.KaguneTint.wild(seen.identity().seed()));
+            } catch (RuntimeException failure) {
+                PlayerLayers.failed("a wild ghoul's wings", failure);
+            }
         }
         // 1.3.19: a companion's wings (Touka's): a lesser pair at her size, riding her torso as it was drawn, crystal as she throws.
         for (int id : com.hex.kagune.control.client.NpcWingsClient.ids()) {

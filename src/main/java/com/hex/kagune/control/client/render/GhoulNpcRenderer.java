@@ -76,6 +76,8 @@ public final class GhoulNpcRenderer extends HumanoidMobRenderer<GhoulNpc, Player
      */
     @Override
     public void m_7392_(GhoulNpc npc, float yaw, float partial, PoseStack pose, MultiBufferSource buffers, int light) {
+        // 2.0.27: noted as drawn before anything else (not only from its eyes' layer: a layer skipped or failing left its kagune undrawn).
+        note(npc);
         GhoulNpcClient.View view = GhoulNpcClient.get(npc.m_19879_());
         this.f_115290_ = view != null && view.identity().girl() ? this.slim : this.wide;
         double clock = PaleClient.clock(partial);
@@ -129,9 +131,43 @@ public final class GhoulNpcRenderer extends HumanoidMobRenderer<GhoulNpc, Player
         return SKINS[view == null ? 0 : view.identity().skin()];
     }
 
-    /** The NPCs drawn so far this frame. */
+    /** 2.0.27: {@code npc} noted as drawn this frame (its kagune is drawn after entities). */
+    private static void note(GhoulNpc npc) {
+        if (DRAWN.size() < 256) {
+            DRAWN.add(npc);
+        }
+    }
+
+    /** How near a living ghoul with its kagune out has its kagune drawn even if its body was not noted this frame (2.0.27). */
+    private static final double KAGUNE_ALWAYS = 48.0;
+
+    /**
+     * The NPCs drawn so far this frame. 2.0.27 (the owner: wild ghouls fight "but they're not manifesting the kagune ... It's invisible"):
+     * and every living ghoul within {@link #KAGUNE_ALWAYS} of the player with its kagune coming out or out, even if its body's renderer
+     * never noted it (a renderer or layer skipped by another mod or a failure): the kagune no longer hangs on the body's draw.
+     */
     static List<GhoulNpc> drawn() {
-        return new ArrayList<>(DRAWN);
+        List<GhoulNpc> out = new ArrayList<>(DRAWN);
+        try {
+            Minecraft minecraft = Minecraft.m_91087_();
+            if (minecraft.f_91073_ != null && minecraft.f_91074_ != null) {
+                double clock = PaleClient.clock(0.0F);
+                Set<GhoulNpc> seen = Collections.newSetFromMap(new IdentityHashMap<>());
+                seen.addAll(out);
+                for (GhoulNpc npc : minecraft.f_91073_.m_6443_(GhoulNpc.class, minecraft.f_91074_.m_20191_().m_82400_(KAGUNE_ALWAYS),
+                    living -> living.m_6084_() && !living.m_20145_())) {
+                    if (out.size() >= 256) {
+                        break;
+                    }
+                    if (!seen.contains(npc) && GhoulNpcClient.deploy(GhoulNpcClient.get(npc.m_19879_()), clock) > 0.005F) {
+                        out.add(npc);
+                    }
+                }
+            }
+        } catch (RuntimeException failure) {
+            PlayerLayers.failed("the wild ghouls near you", failure);
+        }
+        return out;
     }
 
     /** After both kagune renderers: the frame's list cleared, and now and then the NPCs gone from the world forgotten. */
@@ -219,9 +255,7 @@ public final class GhoulNpcRenderer extends HumanoidMobRenderer<GhoulNpc, Player
         public void m_6494_(PoseStack pose, MultiBufferSource buffers, int packedLight, GhoulNpc npc, float limbSwing, float limbSwingAmount,
                             float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
             try {
-                if (DRAWN.size() < 256) {
-                    DRAWN.add(npc);
-                }
+                note(npc);
                 GhoulNpcClient.View view = GhoulNpcClient.get(npc.m_19879_());
                 float intensity = GhoulNpcClient.deploy(view, PaleClient.clock(partialTick));
                 if (view != null && view.eyes()) {
