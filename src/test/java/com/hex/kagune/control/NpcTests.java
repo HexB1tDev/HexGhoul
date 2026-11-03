@@ -967,12 +967,20 @@ public final class NpcTests {
         // 1.3.73: talking with them: a name and a temper each, every word in its temper's way.
         java.util.EnumSet<com.hex.kagune.control.village.HumanPersona.Temper> tempers = java.util.EnumSet.noneOf(com.hex.kagune.control.village.HumanPersona.Temper.class);
         java.util.Set<String> names = new java.util.HashSet<>();
+        // 2.0.36: a villager placed before keeps one of the first eight (by its seed); one placed since rolls any of them.
+        java.util.EnumSet<com.hex.kagune.control.village.HumanPersona.Temper> rolled = java.util.EnumSet.noneOf(com.hex.kagune.control.village.HumanPersona.Temper.class);
+        boolean legacy = true;
         for (long seed = 0; seed < 4000; seed += 13) {
-            tempers.add(com.hex.kagune.control.village.HumanPersona.temper(seed * 7919L));
+            com.hex.kagune.control.village.HumanPersona.Temper old = com.hex.kagune.control.village.HumanPersona.temper(seed * 7919L);
+            legacy &= old.ordinal() < com.hex.kagune.control.village.HumanPersona.LEGACY;
+            tempers.add(old);
+            rolled.add(com.hex.kagune.control.village.HumanPersona.rolled(seed * 7919L));
             names.add(com.hex.kagune.control.village.HumanPersona.name(seed * 104729L));
         }
-        check(tempers.size() == com.hex.kagune.control.village.HumanPersona.Temper.values().length && names.size() > 12,
-            "every temper and plenty of names turn up (" + tempers.size() + ", " + names.size() + ")");
+        check(legacy && tempers.size() == com.hex.kagune.control.village.HumanPersona.LEGACY && names.size() > 12,
+            "every old temper and plenty of names turn up, a villager placed before keeping its own (" + tempers.size() + ", " + names.size() + ")");
+        check(rolled.size() == com.hex.kagune.control.village.HumanPersona.Temper.values().length && com.hex.kagune.control.village.HumanPersona.Temper.values().length == 12,
+            "2.0.36: a new villager may have any of the twelve tempers (" + rolled.size() + ")");
         for (String name : names) {
             check(!banned.matcher(name).find() && !java.util.Set.of("Eto", "Touka", "Ken").contains(name), "a name of its own: " + name);
         }

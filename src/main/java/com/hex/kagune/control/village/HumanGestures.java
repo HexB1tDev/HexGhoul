@@ -83,6 +83,10 @@ public final class HumanGestures {
             case CHEERFUL, FLIRTY, DREAMY -> 0;
             case KIND, BOLD -> 1;
             case SHY, GRUMPY, NERVOUS -> 2;
+            // 2.0.36: the new tempers: the playful and the romantic bright, the stoic steady, the sarcastic reserved.
+            case PLAYFUL, ROMANTIC -> 0;
+            case STOIC -> 1;
+            case SARCASTIC -> 2;
         };
     }
 
@@ -117,6 +121,10 @@ public final class HumanGestures {
             case FLIRTY -> pick(seed, g(EtoGesture.HAIR), g(EtoGesture.WAVE));
             case DREAMY -> pick(seed, g(EtoGesture.WAVE), g(EtoGesture.LOOK));
             case NERVOUS -> pick(seed, g(EtoGesture.TAP), g(EtoGesture.BOW));
+            case PLAYFUL -> pick(seed, g(EtoGesture.WAVE), g(EtoGesture.HOP), g(EtoGesture.PEACE));
+            case STOIC -> pick(seed, g(EtoGesture.BOW), g(EtoGesture.WAVE));
+            case SARCASTIC -> pick(seed, c(ChildCue.SHRUG), g(EtoGesture.CROSS));
+            case ROMANTIC -> pick(seed, g(EtoGesture.TWIRL), g(EtoGesture.WAVE));
         };
     }
 
@@ -131,6 +139,10 @@ public final class HumanGestures {
             case FLIRTY -> pick(seed, g(EtoGesture.GIGGLE), g(EtoGesture.HAIR), c(ChildCue.WHISPER));
             case DREAMY -> pick(seed, g(EtoGesture.CHIN), c(ChildCue.THINK), g(EtoGesture.HUM));
             case NERVOUS -> pick(seed, g(EtoGesture.TAP), c(ChildCue.GIGGLE));
+            case PLAYFUL -> pick(seed, g(EtoGesture.GIGGLE), c(ChildCue.CHEER), c(ChildCue.POINT));
+            case STOIC -> pick(seed, c(ChildCue.THINK), g(EtoGesture.CHIN));
+            case SARCASTIC -> pick(seed, c(ChildCue.SHRUG), g(EtoGesture.LAUGH));
+            case ROMANTIC -> pick(seed, g(EtoGesture.HUM), g(EtoGesture.TWIRL), g(EtoGesture.SHY));
         };
     }
 
@@ -160,6 +172,10 @@ public final class HumanGestures {
             case GRUMPY -> pick(seed, g(EtoGesture.HUFF), g(EtoGesture.POUT));
             case FLIRTY -> pick(seed, g(EtoGesture.HAIR), g(EtoGesture.TWIRL));
             case DREAMY -> pick(seed, g(EtoGesture.SHY), g(EtoGesture.HUM));
+            case PLAYFUL -> pick(seed, g(EtoGesture.GIGGLE), g(EtoGesture.TWIRL));
+            case STOIC -> g(EtoGesture.BOW);
+            case SARCASTIC -> pick(seed, c(ChildCue.SHRUG), g(EtoGesture.POUT));
+            case ROMANTIC -> pick(seed, g(EtoGesture.SHY), g(EtoGesture.TWIRL));
         };
     }
 
@@ -223,6 +239,10 @@ public final class HumanGestures {
             case FLIRTY -> pick(seed, g(EtoGesture.HAIR), g(EtoGesture.TWIRL));
             case DREAMY -> pick(seed, g(EtoGesture.LOOK), g(EtoGesture.HUM), g(EtoGesture.CHIN));
             case NERVOUS -> pick(seed, g(EtoGesture.TAP), g(EtoGesture.LOOK));
+            case PLAYFUL -> pick(seed, g(EtoGesture.DANCE), g(EtoGesture.STRETCH), g(EtoGesture.HOP));
+            case STOIC -> pick(seed, g(EtoGesture.CROSS), g(EtoGesture.LOOK));
+            case SARCASTIC -> pick(seed, g(EtoGesture.TAP), g(EtoGesture.LOOK), g(EtoGesture.CROSS));
+            case ROMANTIC -> pick(seed, g(EtoGesture.HUM), g(EtoGesture.HAIR), g(EtoGesture.LOOK));
         };
     }
 

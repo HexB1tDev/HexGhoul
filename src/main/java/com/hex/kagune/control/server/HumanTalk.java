@@ -116,7 +116,7 @@ public final class HumanTalk {
         if (!human.m_6084_() || human.mind == null) {
             return;
         }
-        HumanPersona.Temper temper = HumanPersona.temper(seed(human));
+        HumanPersona.Temper temper = HumanBrain.temper(human);
         String name = HumanBrain.name(human);
         if (now < human.mind.shakenUntil) {
             player.m_5661_(Component.m_237113_(name + " is too frightened to talk."), true);
@@ -149,7 +149,7 @@ public final class HumanTalk {
             return;
         }
         long seed = seed(human);
-        HumanPersona.Temper temper = HumanPersona.temper(seed);
+        HumanPersona.Temper temper = HumanBrain.temper(human);
         String key = human.m_20148_().toString();
         QuestLog.Bond bond = QuestServer.bond(player, key);
         int roll = human.m_217043_().m_188503_(1000);
@@ -300,7 +300,7 @@ public final class HumanTalk {
      */
     private static void trade(ServerPlayer player, HumanNpc human, String line) {
         long seed = seed(human);
-        HumanPersona.Temper temper = HumanPersona.temper(seed);
+        HumanPersona.Temper temper = HumanBrain.temper(human);
         QuestLog.Bond bond = QuestServer.bond(player, human.m_20148_().toString());
         List<com.hex.kagune.control.village.VillageShop.Offer> stock = com.hex.kagune.control.village.VillageShop.stock(seed);
         net.minecraft.world.item.ItemStack held = player.m_21205_();
@@ -438,7 +438,7 @@ public final class HumanTalk {
             labels[i] = said.get(i);
         }
         // 2.0.1: its face as the client draws it (HUMAN_FACE: the talk screen reads its look off the entity).
-        ControlNetwork.sendTo(player, new S2CNpcTalk(human.m_19879_(), HumanBrain.name(human), HumanPersona.temper(seed).title, regard, false,
+        ControlNetwork.sendTo(player, new S2CNpcTalk(human.m_19879_(), HumanBrain.name(human), HumanBrain.temper(human).title, regard, false,
             S2CNpcTalk.HUMAN_FACE, line, ordinals, labels));
     }
 }

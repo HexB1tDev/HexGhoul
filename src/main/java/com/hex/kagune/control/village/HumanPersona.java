@@ -18,7 +18,12 @@ public final class HumanPersona {
         GRUMPY("Grumpy"),
         FLIRTY("Flirty"),
         DREAMY("Dreamy"),
-        NERVOUS("Nervous");
+        NERVOUS("Nervous"),
+        // 2.0.36 (the owner: "more variety in the traits"): appended (saved by ordinal); only villagers placed from now on roll them.
+        PLAYFUL("Playful"),
+        STOIC("Stoic"),
+        SARCASTIC("Sarcastic"),
+        ROMANTIC("Romantic");
 
         public final String title;
 
@@ -44,9 +49,22 @@ public final class HumanPersona {
         return NAMES[Math.floorMod(index, NAMES.length)];
     }
 
+    /** 2.0.36: the first eight tempers, the ones a villager placed before 2.0.36 has. */
+    public static final int LEGACY = 8;
+
+    /**
+     * Its temper by its seed alone, one of the first {@link #LEGACY} (2.0.36: unchanged for every villager placed before, who keep theirs;
+     * a villager placed since keeps the one it {@link #rolled} in its saved data).
+     */
     public static Temper temper(long seed) {
         Temper[] all = Temper.values();
-        return all[(int)Math.floorMod(seed * 0x9E3779B97F4A7C15L >>> 33, (long)all.length)];
+        return all[(int)Math.floorMod(seed * 0x9E3779B97F4A7C15L >>> 33, (long)LEGACY)];
+    }
+
+    /** 2.0.36: a new villager's temper, any of them (the new ones too), from its seed. */
+    public static Temper rolled(long seed) {
+        Temper[] all = Temper.values();
+        return all[Math.min(all.length - 1, (int)(unit(seed, 0x7E3FL) * all.length))];
     }
 
     public static String name(long seed) {
@@ -60,6 +78,8 @@ public final class HumanPersona {
             case CHEERFUL, SHY, DREAMY -> 4;
             case KIND, BOLD, NERVOUS -> 3;
             case GRUMPY -> 1;
+            case PLAYFUL, ROMANTIC -> 5;
+            case STOIC, SARCASTIC -> 2;
         };
     }
 
@@ -80,6 +100,10 @@ public final class HumanPersona {
                 case FLIRTY -> pick(seed, "Mm, there you are. I was getting lonely.", "Come closer. Closer.");
                 case DREAMY -> pick(seed, "My moon. You came back.", "I dreamt about you. Again.");
                 case NERVOUS -> pick(seed, "You're safe! You're safe. Good. Hi.", "I counted the minutes. Don't laugh.");
+                case PLAYFUL -> pick(seed, "Boo! Did I scare you? ...I missed you.", "Tag, you're it! ...Kidding. Come here.");
+                case STOIC -> pick(seed, "You're back. Good.", "*nods once, and steps close*");
+                case SARCASTIC -> pick(seed, "Oh look, my favourite headache is back.", "You again. Lucky me. ...No, really. Lucky me.");
+                case ROMANTIC -> pick(seed, "My darling! I wrote you a letter. Three, actually.", "You're here! My heart did a little dance.");
             };
         }
         boolean close = regard >= CLOSE;
@@ -102,6 +126,14 @@ public final class HumanPersona {
                 : warm ? pick(seed, "Hello again... did you see the sky today?", "Oh! You're real. Hello.") : pick(seed, "Hm? Oh. Hello. Sorry, I was somewhere else.", "You look like a story.");
             case NERVOUS -> close ? pick(seed, "Oh good, it's you. I feel safer already.", "You came! I- I mean, hello.")
                 : warm ? pick(seed, "Ah, hello again. Everything's fine. Probably.", "Oh, it's you. Phew.") : pick(seed, "W-who's there? Oh. Hello.", "Please don't be a ghoul. ...You're not, are you?");
+            case PLAYFUL -> close ? pick(seed, "Guess who's been waiting? Me! It's me.", "There you are! I hid your favourite apple. Find it.")
+                : warm ? pick(seed, "Oh good, a victim! I mean, a friend.", "Back again? Wanna race to the well?") : pick(seed, "Ooh, a new face! Are you fun?", "Hi! Wanna see a trick? ...Later, then.");
+            case STOIC -> close ? pick(seed, "You came. I'm glad.", "Sit. Rest. You've earned it.")
+                : warm ? pick(seed, "Hello again.", "*nods* You're well?") : pick(seed, "Hm. A traveller.", "State your business. Calmly.");
+            case SARCASTIC -> close ? pick(seed, "Ah, my most tolerable person.", "If it isn't the one human I can stand.")
+                : warm ? pick(seed, "Oh, joy. You.", "Back for more of my charm?") : pick(seed, "Wow, a stranger. In a village. How thrilling.", "Let me guess: lost, hungry, or both?");
+            case ROMANTIC -> close ? pick(seed, "Oh, it's you! I was just thinking about you. Again.", "Every time you come by, it feels like a story starting.")
+                : warm ? pick(seed, "Hello again! The flowers bloomed today. Did you see?", "Oh! You. My day just got a chapter better.") : pick(seed, "Oh, hello! You have a face from a love story.", "A stranger at the gate... how romantic.");
         };
     }
 
@@ -116,6 +148,10 @@ public final class HumanPersona {
             case FLIRTY -> pick(seed, "Better now that you asked.", "Lonely. Not that you'd do anything about it. ...Would you?");
             case DREAMY -> pick(seed, "I counted the stars last night. I lost count at the pretty ones.", "Floating. In a good way.");
             case NERVOUS -> pick(seed, "Fine! Fine. I heard a noise last night. It was probably a cat.", "Okay as long as the CCG walks by.");
+            case PLAYFUL -> pick(seed, "I put a frog in the baker's flour sack. Best morning ever.", "Bored! Play a game with me. Any game.");
+            case STOIC -> pick(seed, "Well enough. The wind is from the east.", "Steady. As always.");
+            case SARCASTIC -> pick(seed, "Living the dream. The dream is mostly chores.", "Fantastic. The rooster and I are best friends now.");
+            case ROMANTIC -> pick(seed, "I'm reading a love story. The heroine's an idiot. I adore her.", "Wonderful! Someone left a rose on my step. Probably the wind. Probably.");
         };
     }
 
@@ -130,6 +166,10 @@ public final class HumanPersona {
             case FLIRTY -> pick(seed, "I like good food, good music, and people who look at me like you do.", "I'm a lot of fun. Ask anyone. Better yet, find out.");
             case DREAMY -> pick(seed, "I write poems nobody reads. You could be the first.", "I think the moon is lonely. I talk to it sometimes.");
             case NERVOUS -> pick(seed, "I keep the inn's books. Numbers don't bite.", "I triple-lock my door. Is that a lot? It's not a lot.");
+            case PLAYFUL -> pick(seed, "I know every rooftop in this village. Don't tell my mother.", "I'm the best at hide and seek. Nobody's found me since spring.");
+            case STOIC -> pick(seed, "I chop wood and keep watch at night. Someone should.", "I lost my family to a ghoul. I don't hate. I don't forget.");
+            case SARCASTIC -> pick(seed, "I run the stall nobody visits. Business is booming.", "I'm the village's ray of sunshine. Can't you tell?");
+            case ROMANTIC -> pick(seed, "I believe in love at first sight. And second. And third.", "I keep a pressed flower from every festival. Hundreds of them.");
         };
     }
 
@@ -153,6 +193,10 @@ public final class HumanPersona {
             case FLIRTY -> pick(seed, "Only today? *winks*", warm ? "Keep talking like that and I'll steal you away." : "Mm. Say it again, slower.");
             case DREAMY -> pick(seed, "Lovely... like a word in a poem. Thank you.", warm ? "I'm going to write that down. And keep it forever." : "Oh! Me? Thank you.");
             case NERVOUS -> pick(seed, "M-me? Are you sure? Thank you!", warm ? "*laughs too loud* Thank you! Sorry. Thank you." : "Oh! Oh. That's... nice. Thanks.");
+            case PLAYFUL -> pick(seed, "Ha! I know. Say it again, louder!", warm ? "Careful, I'll start believing you." : "Flattery gets you... a cookie. Here.");
+            case STOIC -> pick(seed, "...Thank you.", warm ? "*a rare smile* You're kind." : "Noted.");
+            case SARCASTIC -> pick(seed, "Wow. Did that hurt to say?", warm ? "...Okay, that one actually landed. Thanks." : "Sure. And I'm the CCG's finest.");
+            case ROMANTIC -> pick(seed, "*hand over heart* You'll make me swoon!", warm ? "Say that by moonlight and I'm yours." : "Oh! Thank you. You're very sweet.");
         };
     }
 
@@ -168,6 +212,10 @@ public final class HumanPersona {
             case FLIRTY -> warm ? "Leaving already? I'll miss you." : "Don't be a stranger, stranger.";
             case DREAMY -> warm ? "Until the next pretty sky." : "Bye... safe travels.";
             case NERVOUS -> warm ? "Be careful! Lock your door! ...Bye!" : "B-bye!";
+            case PLAYFUL -> warm ? "Don't go! ...Fine. Race you next time!" : "Bye-bye! Catch you later. Literally.";
+            case STOIC -> warm ? "Go carefully. Come back." : "Safe road.";
+            case SARCASTIC -> warm ? "Try not to die. I'd be mildly upset." : "Don't let the gate hit you.";
+            case ROMANTIC -> warm ? "Parting is such sweet sorrow. Come back soon!" : "Farewell! Mind the roses.";
         };
     }
 
@@ -201,6 +249,10 @@ public final class HumanPersona {
             case GRUMPY -> 0.3;
             case SHY -> 0.25;
             case NERVOUS -> 0.15;
+            case PLAYFUL -> 0.5;
+            case STOIC -> 0.4;
+            case SARCASTIC -> 0.35;
+            case ROMANTIC -> 0.55;
         };
         double chance = trust + more + Math.max(0.0, regard - CLOSE) / 100.0 + (convincing ? 0.35 : 0.0);
         if (roll < chance) {
@@ -221,6 +273,10 @@ public final class HumanPersona {
                 case FLIRTY -> pick(seed, "Dangerous AND gorgeous? You should have led with that.", "Mm. So you could eat me. ...I've had worse offers.");
                 case DREAMY -> pick(seed, "Like the stories... a monster with a gentle heart. I always hoped it was true.", "Then the moon and I both love something strange.");
                 case NERVOUS -> pick(seed, "*breathes very fast* ...Okay. Okay. You've had a hundred chances to hurt me. You never did. Okay.", "I'm going to faint. ...But I'm staying.");
+                case PLAYFUL -> pick(seed, "A ghoul? Wow. Can you do the eye thing? Do the eye thing!", "So you're dangerous AND fun. Best friend ever. More than friend. You know.");
+                case STOIC -> pick(seed, "...I see. You've never given me reason to fear you. I won't start now.", "A ghoul. And still here, being honest. That's enough for me.");
+                case SARCASTIC -> pick(seed, "A ghoul. Of course. Of COURSE the one I like is a ghoul. ...Fine. I'm in.", "Well, that explains the diet. I'm still here, aren't I?");
+                case ROMANTIC -> pick(seed, "A ghoul and a human... the most beautiful tragedy. Let's not make it one.", "Love doesn't ask what you are. Neither do I.");
             };
             case DOUBT -> switch (temper) {
                 case CHEERFUL -> pick(seed, "Wait, what? That's... that's not funny. Is it true?", "*the smile drops* ...You're joking. You have to be joking.");
@@ -231,6 +287,10 @@ public final class HumanPersona {
                 case FLIRTY -> pick(seed, "Okay, that's a lot. Even for me. Convince me.", "*laughs nervously* ...You're serious.");
                 case DREAMY -> pick(seed, "A ghoul... like in the stories? The bad ones or the sad ones?", "*stares at you a long time* ...Which story are you?");
                 case NERVOUS -> pick(seed, "*goes white* Y-you're... please don't... please explain.", "*glances at the street, at the CCG* ...Talk. Quickly.");
+                case PLAYFUL -> pick(seed, "Ha ha, good one. ...Wait. You're not laughing.", "Is this a prank? Tell me it's a prank.");
+                case STOIC -> pick(seed, "*is silent a long time* ...Explain.", "I need more than that. Tell me everything.");
+                case SARCASTIC -> pick(seed, "Oh great, a ghoul. Love that for me. ...Talk.", "Sure, and I'm a dove. ...Wait. You're serious?");
+                case ROMANTIC -> pick(seed, "Like the stories... but which ending? Tell me more.", "My heart says yes. My head needs to hear more.");
             };
             case NO -> switch (temper) {
                 case CHEERFUL -> "I'm sorry. I can't. Not today. Please go.";
@@ -241,6 +301,10 @@ public final class HumanPersona {
                 case FLIRTY -> "That's... too much. Even for me. Not today.";
                 case DREAMY -> "The sad stories end badly. I'm sorry. Not today.";
                 case NERVOUS -> "*backs away, shaking* G-go away. Please.";
+                case PLAYFUL -> "That's not a funny game. Go away. Please.";
+                case STOIC -> "No. Leave. Don't come back today.";
+                case SARCASTIC -> "Wow. No. Absolutely not. Goodbye.";
+                case ROMANTIC -> "Some stories aren't meant to be. I'm sorry. Please go.";
             };
         };
     }
@@ -256,6 +320,10 @@ public final class HumanPersona {
             case FLIRTY -> pick(seed, "I was starting to think I'd have to ask you.", "Mm. Yes. You're mine now.");
             case DREAMY -> pick(seed, "Yes. I'll write a poem about today.", "Like a story. Yes.");
             case NERVOUS -> pick(seed, "Y-yes! Oh no, I said that too loud. Yes.", "Really? Me? Yes. Yes!");
+            case PLAYFUL -> pick(seed, "Yes! Ha! I win!", "Yes! Now you have to play every game I make up.");
+            case STOIC -> pick(seed, "Yes.", "*takes your hand* ...Yes.");
+            case SARCASTIC -> pick(seed, "Took you long enough. Yes, obviously.", "Fine. Yes. Don't let it go to your head.");
+            case ROMANTIC -> pick(seed, "Yes! Yes, a thousand times!", "I've been dreaming of this. Yes!");
         };
     }
 
@@ -270,6 +338,10 @@ public final class HumanPersona {
             case FLIRTY -> pick(seed, "Prove it. *grins* ...I love you too.", "Mm, say it again. I love you too.");
             case DREAMY -> pick(seed, "You're my favourite story.", "I love you more than the moon. Don't tell the moon.");
             case NERVOUS -> pick(seed, "I love you too! Please be careful out there!", "Me too. So much it scares me. In a good way.");
+            case PLAYFUL -> pick(seed, "Love you more! I win.", "*pokes your cheek* Love you too, silly.");
+            case STOIC -> pick(seed, "I love you. I don't say things I don't mean.", "*rests their forehead on yours* ...Yes. Me too.");
+            case SARCASTIC -> pick(seed, "Ugh. ...I love you too. Happy?", "Gross. ...Me too.");
+            case ROMANTIC -> pick(seed, "I love you to the moon and every star past it.", "I love you. I'll say it every day until you're sick of it.");
         };
     }
 
@@ -284,6 +356,10 @@ public final class HumanPersona {
             case FLIRTY -> pick(seed, "Mm. I was waiting for that all day.", "You're getting good at that.");
             case DREAMY -> pick(seed, "*sighs* Like the end of a story.", "I think I heard music just now.");
             case NERVOUS -> pick(seed, "Oh! Oh. Okay. Wow. Hi.", "D-did anyone see? ...I don't care. Hi.");
+            case PLAYFUL -> pick(seed, "Ha! Got you back. ...Wait, I liked that.", "Again! That's the rule.");
+            case STOIC -> pick(seed, "...Good.", "*says nothing, but holds you a moment longer*");
+            case SARCASTIC -> pick(seed, "Wow, in public. Scandalous. ...Do it again.", "That was terrible. Again, for practice.");
+            case ROMANTIC -> pick(seed, "*swoons* Like the last page of a novel.", "My knees went weak. Do that again.");
         };
     }
 
@@ -298,6 +374,10 @@ public final class HumanPersona {
             case FLIRTY -> pick(seed, "Mm, you smell nice today.", "Just a hug? ...For now.");
             case DREAMY -> pick(seed, "Let's stay like this till the stars come out.", "You feel like home.");
             case NERVOUS -> pick(seed, "*hugs back stiffly, then melts* ...Oh. That's nice.", "Is this okay? This is okay. Good.");
+            case PLAYFUL -> pick(seed, "*lifts you off your feet* Gotcha!", "Hug attack! You lose.");
+            case STOIC -> pick(seed, "*holds you, steady as a wall*", "You're safe here.");
+            case SARCASTIC -> pick(seed, "Ugh, affection. ...Don't let go yet.", "This is so embarrassing. Five more seconds.");
+            case ROMANTIC -> pick(seed, "I could stay like this forever.", "*sighs happily* My favourite place in the world.");
         };
     }
 
@@ -312,6 +392,10 @@ public final class HumanPersona {
             case FLIRTY -> pick(seed, "Hand in hand? Everyone will talk. Good.", "Mm. I was hoping you'd ask.");
             case DREAMY -> pick(seed, "Like in the stories. Let's walk till the lamps come on.", "Let's count the chimneys.");
             case NERVOUS -> pick(seed, "O-okay! Is my hand sweaty? Sorry!", "People can see us. ...I don't mind. Let's go.");
+            case PLAYFUL -> pick(seed, "Race you! ...Holding hands. Slow race.", "Let's go! I'll show you a secret path.");
+            case STOIC -> pick(seed, "Lead on.", "*takes your hand without a word*");
+            case SARCASTIC -> pick(seed, "Hand in hand? How original. ...Let's go.", "Fine. I'll let you be seen with me.");
+            case ROMANTIC -> pick(seed, "Hand in hand, like in the books! Lead on, my love.", "A stroll at dusk? You know my weak spot.");
         };
     }
 
@@ -326,6 +410,10 @@ public final class HumanPersona {
             case FLIRTY -> pick(seed, "You walk like you own the place. Cute.", "Your hand fits mine. Funny, that.", "Where are you taking me?");
             case DREAMY -> pick(seed, "The bricks are warm from the sun. Feel?", "I'm going to remember this street forever.", "Do you hear the swallows?");
             case NERVOUS -> pick(seed, "Am I walking too fast? Too slow?", "I keep smiling. I can't stop.", "Hold on, my heart's going so fast.");
+            case PLAYFUL -> pick(seed, "Step on the cracks and you lose!", "*swings your hand way too high*", "Bet I can walk backwards the whole way.");
+            case STOIC -> pick(seed, "*matches your step exactly*", "Quiet evening. Good.", "I like walking with you.");
+            case SARCASTIC -> pick(seed, "Everyone's staring. Smile, it's free.", "Yes, this is my idea of a thrill.", "Mind the puddle. Or don't, I'd laugh.");
+            case ROMANTIC -> pick(seed, "Look, the lamps are coming on just for us.", "Do you think they'll write songs about us?", "*leans into your arm, smiling*");
         };
     }
 
@@ -340,6 +428,10 @@ public final class HumanPersona {
             case FLIRTY -> pick(seed, "Leaving me wanting more. Clever.", "Mm. I'll be thinking about that.");
             case DREAMY -> pick(seed, "The end of a chapter. Not the book.", "I'll dream about this walk.");
             case NERVOUS -> pick(seed, "Was that okay? It was okay. It was great!", "Oh! Okay. Thank you. I'm still shaking.");
+            case PLAYFUL -> pick(seed, "Aw, game over? Rematch tomorrow!", "That was fun! Tag, you're it!");
+            case STOIC -> pick(seed, "Until next time.", "*nods* Thank you.");
+            case SARCASTIC -> pick(seed, "Finally, my hand is free. ...Come back soon.", "That was almost fun. Don't tell anyone.");
+            case ROMANTIC -> pick(seed, "Until we meet again, my love.", "I'll keep the warmth of your hand all night.");
         };
     }
 
@@ -354,6 +446,10 @@ public final class HumanPersona {
             case FLIRTY -> pick(seed, "If you want me, you'll have to come back in.", "Running away from me? I'll wait here.");
             case DREAMY -> pick(seed, "The village ends here. My world does too.", "Past the walls is someone else's story.");
             case NERVOUS -> pick(seed, "N-no, not out there! Please come back in!", "I can't, I can't. The walls, please.");
+            case PLAYFUL -> pick(seed, "Nope! The wall is base. Safe zone!", "Can't cross the line, those are the rules!");
+            case STOIC -> pick(seed, "The wall stays between me and the dark. I stop here.", "No further. Go well.");
+            case SARCASTIC -> pick(seed, "Out there? With the monsters? Pass.", "The wall and I have an understanding. I stay.");
+            case ROMANTIC -> pick(seed, "Even love stops at the wall. Come back to me.", "I'll wait here, like a lantern in a window.");
         };
     }
 
@@ -422,6 +518,10 @@ public final class HumanPersona {
             case FLIRTY -> "Fishing, are we? ";
             case DREAMY -> "Oh... ";
             case NERVOUS -> "W-what? Um. ";
+            case PLAYFUL -> "Hee, wanna guess? No? Okay. ";
+            case STOIC -> "...Hm. ";
+            case SARCASTIC -> "Oh, we're doing this now? ";
+            case ROMANTIC -> "Oh, my favourite question! ";
         };
         String who = switch (attraction) {
             case MEN -> pick(seed, "Men. It's always been men for me.", "I fall for men. Every time.");
@@ -461,6 +561,14 @@ public final class HumanPersona {
                 "Like the moon and the sea... close, but not that. I only love " + who + ". I'm sorry.");
             case NERVOUS -> pick(seed, "Oh! Oh no. I'm so sorry. I- I like " + who + ". Please don't be mad!",
                 "I-I'm flattered! But I only like " + who + ". We're still okay? Please say we're okay.");
+            case PLAYFUL -> pick(seed, "Aww, nice try! But I'm only into " + who + ". Still my favourite playmate!",
+                "Ha! Wrong team, buddy. " + cap(who) + " only. But you're still fun!");
+            case STOIC -> pick(seed, "I'm honoured. But I love " + who + ". That won't change. Friends, if you'll have me.",
+                "No. " + cap(who) + ", only. ...But you have my respect. And my friendship.");
+            case SARCASTIC -> pick(seed, "Bold. Also: I'm into " + who + ", genius. Still friends, I guess.",
+                "Aw, that's cute. Unfortunately for you, it's " + who + " for me. Friends?");
+            case ROMANTIC -> pick(seed, "Oh, you're darling. But my heart has only ever sung for " + who + ". Let's be the best of friends?",
+                "If only! But I've only ever fallen for " + who + ". You'll find your story, I know it.");
         };
     }
 

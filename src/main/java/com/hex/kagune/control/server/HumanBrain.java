@@ -94,7 +94,7 @@ public final class HumanBrain {
             letGo(human, mind, level, now, null);
             return;
         }
-        com.hex.kagune.control.village.HumanPersona.Temper temper = com.hex.kagune.control.village.HumanPersona.temper(HumanTalk.seed(human));
+        com.hex.kagune.control.village.HumanPersona.Temper temper = temper(human);
         boolean shift = player.m_6047_();
         if (shift && !mind.holdShift) {
             letGo(human, mind, level, now, com.hex.kagune.control.village.HumanPersona.letGo(temper, human.m_217043_().m_188503_(1000)));
@@ -165,7 +165,7 @@ public final class HumanBrain {
         mind.gestureUntil = now + com.hex.kagune.control.village.HumanGestures.ticks(code);
         mind.then = then;
         mind.gestures++;
-        com.hex.kagune.control.village.HumanPersona.Temper temper = com.hex.kagune.control.village.HumanPersona.temper(HumanTalk.seed(human));
+        com.hex.kagune.control.village.HumanPersona.Temper temper = temper(human);
         human.gesture(com.hex.kagune.control.village.HumanGestures.pack(code, com.hex.kagune.control.village.HumanGestures.style(temper), mind.gestures));
     }
 
@@ -212,6 +212,18 @@ public final class HumanBrain {
 
     /** 2.0: in its saved data: its name (a village's own, by its slot), and that its village gave it its look and name. */
     static final String NAME = "HexHumanName";
+    /** 2.0.36: its temper (ordinal), saved for a villager placed since 2.0.36 (any of them); one placed before has its legacy one. */
+    static final String TEMPER = "HexHumanTemper";
+
+    /** 2.0.36: {@code human}'s temper: its saved one, else the one its seed always gave it (one of the first eight). */
+    public static com.hex.kagune.control.village.HumanPersona.Temper temper(HumanNpc human) {
+        CompoundTag saved = human.getPersistentData();
+        if (saved.m_128441_(TEMPER)) {
+            com.hex.kagune.control.village.HumanPersona.Temper[] all = com.hex.kagune.control.village.HumanPersona.Temper.values();
+            return all[Math.floorMod(saved.m_128451_(TEMPER), all.length)];
+        }
+        return com.hex.kagune.control.village.HumanPersona.temper(HumanTalk.seed(human));
+    }
     static final String UNIQUE = "HexHumanUnique";
 
     /** 2.0: its name: its village's for it, else by its seed. */
@@ -252,6 +264,8 @@ public final class HumanBrain {
             saved.m_128405_(HumanNpc.KEY, look);
             saved.m_128405_(NAME, HumanRules.villageName(place.x(), place.z(), slot, com.hex.kagune.control.village.HumanPersona.names()));
             saved.m_128405_(UNIQUE, 1);
+            // 2.0.36: a villager placed from now on may have any temper (the new ones too), kept with it.
+            saved.m_128405_(TEMPER, com.hex.kagune.control.village.HumanPersona.rolled(HumanTalk.seed(human)).ordinal());
             human.dress(look);
         }
         // 2.0 (lag): a calm villager looks around every LOOKS ticks (staggered by its id), a frightened or hurt one every tick.
@@ -496,7 +510,7 @@ public final class HumanBrain {
         // 1.3.77: standing in the street, now and then something of its own (a stretch, a hum, a twirl of its hair: by its temper).
         if (mind.gesture == 0 && now >= mind.idleAt && now >= mind.shakenUntil && human.m_21573_().m_26571_()) {
             if (mind.idleAt != Long.MIN_VALUE / 2) {
-                gesture(human, com.hex.kagune.control.village.HumanGestures.idle(com.hex.kagune.control.village.HumanPersona.temper(HumanTalk.seed(human)),
+                gesture(human, com.hex.kagune.control.village.HumanGestures.idle(temper(human),
                     human.m_217043_().m_188503_(1000)), 0, now);
                 mind.nextWander = Math.max(mind.nextWander, mind.gestureUntil + 20L);
             }

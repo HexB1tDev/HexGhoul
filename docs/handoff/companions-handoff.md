@@ -1,4 +1,13 @@
-# START HERE (state after 2.0.35)
+# START HERE (state after 2.0.36)
+
+Villagers have four new tempers, for twelve in all: Playful (teasing, games and pranks), Stoic (calm, few words, steady), Sarcastic (dry wit), and Romantic (a hopeless romantic, flowery and sincere). Each has its own lines for everything a villager says and its own body language.
+
+- Every line set has them: greetings (stranger, warm, close, partner), small talk, about themselves, compliments, goodbyes, a ghoul's confession (taken, doubted, refused), saying yes, "I love you", kisses, hugs, walks hand in hand, letting go, the village's edge, "What's your type?", and the kind "not my type". They also get their own trust for a confession and their own warmth to compliments.
+- Body language: the playful and romantic move brightly (Eto's way), the stoic steadily (Ken's), the sarcastic reserved (Touka's), with their own hello, chat, compliment and idle gestures.
+- Nobody already in your world changes: villagers placed before keep the temper their seed always gave them. Villagers placed from now on (new villages) roll any of the twelve, saved with them (`HexHumanTemper`). The enum is appended to (saved by ordinal).
+- Tested by the existing per-temper checks, which now cover all twelve: every line filled, no banned names. Also: villagers placed before only ever have the first eight, and new ones can have all twelve. Protocol stays 77.
+
+# State after 2.0.35
 
 Every villager, man or woman, now has their own idea of who they fall for and what they look for in a partner. You can romance male and female villagers alike, as long as you're who they fall for; ask "What's your type?" to find out.
 
