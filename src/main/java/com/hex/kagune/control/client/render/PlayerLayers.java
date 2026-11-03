@@ -81,7 +81,10 @@ public final class PlayerLayers {
         // 1.3.9: a woman's figure (her bust).
         FigureLayer figure = new FigureLayer(renderer);
         renderer.m_115326_(figure);
-        List<RenderLayer> ours = List.of(wounds, kakugan, armor, mask, blade, graft, king, figure);
+        // 2.0.40: where a Rinkaku's tails tear out of the lower back.
+        RinkakuMarkLayer mark = new RinkakuMarkLayer(renderer);
+        renderer.m_115326_(mark);
+        List<RenderLayer> ours = List.of(wounds, kakugan, armor, mask, blade, graft, king, figure, mark);
         ATTACHED.put(renderer, ours);
         return ours;
     }
