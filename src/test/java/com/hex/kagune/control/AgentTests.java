@@ -578,6 +578,21 @@ public final class AgentTests {
         check(AgentRules.Rank.byOrdinal(99) == AgentRules.Rank.RANK_0 && AgentRules.Rank.byOrdinal(10) == AgentRules.Rank.RANK_10, "saved ranks read back");
         check(AgentRules.Rank.fromOld(0) == AgentRules.Rank.RANK_1 && AgentRules.Rank.fromOld(5) == AgentRules.Rank.RANK_8
             && AgentRules.Rank.fromOld(-1) == AgentRules.Rank.RANK_0, "agents saved with the old six ranks keep their place");
+        // 2.0.20: a pair's leader (its superior) always the stronger, whatever the two rolled and whichever woke first.
+        boolean superiorStronger = true;
+        boolean ranked = true;
+        for (AgentRules.Rank l : all) {
+            for (AgentRules.Rank p : all) {
+                AgentRules.Rank partnerAfter = AgentRules.subordinate(p, l);
+                AgentRules.Rank leaderAfter = AgentRules.superior(l, p);
+                superiorStronger &= AgentRules.health(l, true) > AgentRules.health(partnerAfter, false) && AgentRules.power(l, true) > AgentRules.power(partnerAfter, false)
+                    && AgentRules.health(leaderAfter, true) > AgentRules.health(p, false) && AgentRules.power(leaderAfter, true) > AgentRules.power(p, false);
+                ranked &= partnerAfter.level() <= l.level() && leaderAfter.level() >= p.level() && (l.level() == 0 || partnerAfter.level() < l.level())
+                    && (p.level() == 10 || leaderAfter.level() > p.level());
+            }
+        }
+        check(superiorStronger, "whatever their ranks and whoever woke first, the superior has more health and hits harder");
+        check(ranked, "the superior ranks above its partner (but at Rank 0 and Rank 10, where its edge alone makes it the stronger)");
         // 2.0.18: dashes chained in zigzags, more and faster by rank, more often, sooner again.
         check(AgentRules.dashes(AgentRules.Rank.RANK_0) == 1 && AgentRules.dashes(AgentRules.Rank.RANK_2) == 2 && AgentRules.dashes(AgentRules.Rank.RANK_5) == 3
             && AgentRules.dashes(AgentRules.Rank.RANK_8) == 4 && AgentRules.dashes(AgentRules.Rank.RANK_10) == 6, "more dashes in a row the higher the rank");

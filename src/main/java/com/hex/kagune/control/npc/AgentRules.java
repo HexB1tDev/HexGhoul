@@ -159,6 +159,35 @@ public final class AgentRules {
         }
     }
 
+    /**
+     * 2.0.20 (the owner: "Make sure that no matter the RANK of the investigator his superior is still stronger"): the one leading a pair is
+     * its superior: at least one rank above its partner ({@link #superior}, {@link #subordinate}: whichever of the two is known second is
+     * set by the other's), and on top of its rank a superior's edge ({@link #SUPERIOR_HEALTH}, {@link #SUPERIOR_POWER}), so even two of the
+     * same rank (both Rank 0: there is none below) leave the superior the stronger.
+     */
+    public static final double SUPERIOR_HEALTH = 1.25;
+    public static final float SUPERIOR_POWER = 1.15F;
+
+    /** The leader's rank, its partner's known: its own if above theirs, else one above theirs (Rank 10 at most). */
+    public static Rank superior(Rank own, Rank partner) {
+        return own.level() > partner.level() ? own : Rank.byOrdinal(Math.min(Rank.RANK_10.level(), partner.level() + 1));
+    }
+
+    /** The partner's rank, its leader's known: its own if below theirs, else one below theirs (Rank 0 at least). */
+    public static Rank subordinate(Rank own, Rank leader) {
+        return own.level() < leader.level() ? own : Rank.byOrdinal(Math.max(0, leader.level() - 1));
+    }
+
+    /** Its health by its rank, a superior's more. */
+    public static double health(Rank rank, boolean superior) {
+        return rank.health * (superior ? SUPERIOR_HEALTH : 1.0);
+    }
+
+    /** How hard it hits by its rank, a superior's harder. */
+    public static float power(Rank rank, boolean superior) {
+        return rank.power * (superior ? SUPERIOR_POWER : 1.0F);
+    }
+
     /** 1.3.70: how near a human in trouble has to be for it to drop everything and go to it, and how near one runs to it from. */
     public static final double DEFEND = 24.0;
 

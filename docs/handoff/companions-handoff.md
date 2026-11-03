@@ -1,4 +1,13 @@
-# START HERE (state after 2.0.19): read `docs/handoff/next-ai-2.0.9.md` first, then `next-ai-2.0.5.md`, then `next-ai-2.0.1.md`
+# START HERE (state after 2.0.20): read `docs/handoff/next-ai-2.0.9.md` first, then `next-ai-2.0.5.md`, then `next-ai-2.0.1.md`
+
+- **2.0.20** (the owner: "Make sure that no matter the RANK of the investigator his superior is still stronger"). Before, each agent of a
+  pair rolled its own rank (`Rank.of(leader, ...)` per agent, separate draws), so a partner could out-rank its leader. Pure
+  `AgentRules.superior(own, partner)` / `subordinate(own, leader)`, `SUPERIOR_HEALTH` 1.25, `SUPERIOR_POWER` 1.15, `health(rank,
+  superior)`, `power(rank, superior)`. `AgentBrain.wake`: with the partner loaded (`level.m_8791_`), its rank (mind, else saved
+  `RANK_LEVEL`) sets this one's; `Mind.superior` = leader with a partner; health and every damage use the superior's edge. Tests in
+  `AgentTests.ranks` (every pair of ranks, either waking first). Harness only.
+
+# State after 2.0.19
 
 - **2.0.19** (the owner's crash on 2.0.18 while loading, Forge 47.4.10 on Android/Amethyst: `IllegalAccessError: QuinqueClient tried to
   access private method ItemProperties.m_174570_`). The call is unchanged since 1.3.25 (Forge's access transformer normally makes it

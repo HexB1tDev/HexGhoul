@@ -1,8 +1,8 @@
-# HANDOFF: HexGhoul after 2.0.19 (this file keeps its 2.0.9 name). Read this first, then `docs/handoff/next-ai-2.0.5.md` (how the owner works now), then
+# HANDOFF: HexGhoul after 2.0.20 (this file keeps its 2.0.9 name). Read this first, then `docs/handoff/next-ai-2.0.5.md` (how the owner works now), then
 `docs/handoff/next-ai-1.3.60.md` (house rules), then the top sections of `docs/handoff/companions-handoff.md` (one per version).
 
-Branch **`claude/relaxed-carson-4y0frw`** (push only there; never main; no PR unless asked). Version **2.0.19** in `build.py` and
-`patch/KagunePatch.java`; the next is **2.0.20**. Protocol **"73"** (unchanged this session). Nothing is tested in game.
+Branch **`claude/relaxed-carson-4y0frw`** (push only there; never main; no PR unless asked). Version **2.0.20** in `build.py` and
+`patch/KagunePatch.java`; the next is **2.0.21**. Protocol **"73"** (unchanged this session). Nothing is tested in game.
 
 ## What this session shipped (each its own version; details at the top of `companions-handoff.md`)
 
@@ -25,6 +25,7 @@ Branch **`claude/relaxed-carson-4y0frw`** (push only there; never main; no PR un
 - **2.0.18** CCG agents dash in zigzag chains (1 to 6 by rank), faster and more often by rank.
 - **2.0.19** crash fix: the quinques' `ItemProperties.register` (vanilla-private) now through `ObfuscationReflectionHelper`, never fatal.
   Watch for other vanilla-private members used directly: the verifier can't see access.
+- **2.0.20** a pair's leader (superior) always stronger: a rank above its partner and a superior's edge.
 
 ## How it was checked
 

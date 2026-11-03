@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.0.20 (HexGhoul): an investigator's superior is always the stronger (testing)
+
+See `.github/release-notes-2.0.20.md`: a pair's leader ranks above its partner and has a superior's edge (more health, harder hits) on top.
+
 ## 2.0.19 (HexGhoul): fix the crash while the game loads (testing)
 
 See `.github/release-notes-2.0.19.md`: the quinques' model frames are registered through Forge's reflection helper (the vanilla method is private; the launch did not make it public), and a failure there can no longer stop the game.
