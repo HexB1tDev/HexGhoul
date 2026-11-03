@@ -249,9 +249,12 @@ public final class Children {
         }
         int[] mother = kagune(level, child.mother);
         int[] father = kagune(level, child.father);
-        int bits = genome.ghoul() ? com.hex.kagune.control.family.KaguneGenes.inherit(mother[0], father[0]) : com.hex.kagune.control.family.KaguneGenes.NONE;
+        // 2.0.6: of two kinds, the same chance as at conception (its roll from its seed, so it is always the same).
+        int bits = genome.ghoul() ? com.hex.kagune.control.family.KaguneGenes.inherit(mother[0], father[0], new java.util.Random(genome.seed() ^ 0x6B62L).nextDouble())
+            : com.hex.kagune.control.family.KaguneGenes.NONE;
         int colour = bits == com.hex.kagune.control.family.KaguneGenes.NONE ? -1
-            : com.hex.kagune.control.family.KaguneGenes.colour(mother[0], mother[1], father[0], father[1], new java.util.Random(genome.seed() ^ 0x6B61L));
+            : com.hex.kagune.control.family.KaguneGenes.colourOf(bits, mother[0], mother[1], father[0], father[1],
+                com.hex.kagune.control.family.KaguneGenes.colour(mother[0], mother[1], father[0], father[1], new java.util.Random(genome.seed() ^ 0x6B61L)));
         genome = genome.withKagune(bits, colour);
         child.genome = genome.save();
         changed(level);

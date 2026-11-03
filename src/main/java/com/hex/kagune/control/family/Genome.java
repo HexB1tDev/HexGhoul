@@ -56,8 +56,13 @@ public record Genome(Gender gender, boolean ghoul, int kakugan, int hair, int ey
         int skin = blend(mother.skin(), father.skin(), 0.3 + random.nextDouble() * 0.4);
         long seed = random.nextLong();
         // 1.3.43 (drawn after the rest, so everything before stays as it was): its kagune, and that kagune's colour from one parent.
+        // 2.0.6: of two kinds, a chance of one alone (its roll drawn last of all), its colour then that parent's.
         int kagune = ghoul ? KaguneGenes.inherit(mother.kagune(), father.kagune()) : KaguneGenes.NONE;
         int colour = kagune == KaguneGenes.NONE ? -1 : KaguneGenes.colour(mother.kagune(), mother.colour(), father.kagune(), father.colour(), random);
+        if (ghoul) {
+            kagune = KaguneGenes.inherit(mother.kagune(), father.kagune(), random.nextDouble());
+            colour = KaguneGenes.colourOf(kagune, mother.kagune(), mother.colour(), father.kagune(), father.colour(), colour);
+        }
         return new Genome(gender, ghoul, kakugan, hair, eyes, skin, seed, kagune, colour);
     }
 

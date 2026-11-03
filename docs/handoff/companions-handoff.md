@@ -1,4 +1,14 @@
-# START HERE (state after 2.0.5): read `docs/handoff/next-ai-2.0.5.md` first (the session's requests), then `next-ai-2.0.1.md`
+# START HERE (state after 2.0.6): read `docs/handoff/next-ai-2.0.5.md` first (the session's requests), then `next-ai-2.0.1.md`
+
+- **2.0.6** (the owner: "Double check that the kids have a chance to enherit both kagunes ... only have seen the ukaku on kids"; they were
+  on the Ukaku path with Touka: wings x wings = wings, no bug; asked, they chose 40/40/20). `KaguneGenes.inherit(mother, father, roll)`:
+  two different kinds, roll < `ONE_KIND` 0.4 the mother's alone, < 0.8 the father's, else both (the old two-argument `inherit`); same kind
+  or a parent with none, as before. `colourOf(...)`: one kind alone, that parent's colour. `Genome.of` draws the roll last (after the
+  colour's, so nothing earlier changes); `Children.genome` (UNKNOWN children) rolls from `Random(seed ^ 0x6B62)`. Drawing checked by
+  reading: `GraftRenderer` (tails bits) and `UkakuWingRenderer` (`wingCount`) gate independently on the genome; `S2CGhoulNpc`'s one kind
+  only feeds the shared fight view. `FamilyTests.kagune`: shares over 2000 seeds, each pairing. Only the genes block was run (harness).
+
+# State after 2.0.5
 
 - **2.0.5** (the owner: "Interaction between other players with another player's sons/daughters (NOT DATEABLE)"; mid-session: "make sure
   chat is accurate to the child's age, dont make a toddler/baby be able to say anything coherent"; protocol 73, unchanged). Pure

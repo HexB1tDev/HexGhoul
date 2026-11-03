@@ -7,6 +7,7 @@ import java.util.Random;
  * as bits, from both parents, and its colour, from one of them. Each parent passes on what they have (a player their path: Rinkaku tails
  * or the Ukaku pair; Touka her wings, Ken his tails, Eto her Owl kagune); a child of two of the same kind has it whole, a child of two
  * kinds has both, its wings down to one (the owner: a Rinkaku father and an Ukaku mother, the tails and one wing, with the moves of both).
+ * 2.0.6: of two kinds, a chance: 40% the mother's alone, 40% the father's alone, 20% both ({@link #inherit(int, int, double)}).
  */
 public final class KaguneGenes {
     /** Not known (a child from before this: worked out from its parents when it next thinks). */
@@ -54,6 +55,37 @@ public final class KaguneGenes {
             both &= ~PAIR;
         }
         return both;
+    }
+
+    /** 2.0.6: the share of children of two kinds who take only their mother's kind (as many take only their father's; the rest both). */
+    public static final double ONE_KIND = 0.4;
+
+    /**
+     * 2.0.6 (the owner: kids should "have a chance to enherit both kagunes"; chosen 40/40/20): of two different kinds, {@code roll} in
+     * [0, 1) below {@link #ONE_KIND} the mother's kind alone, below twice that the father's alone, else both ({@link #inherit(int, int)}: the
+     * wings down to one). The same kind from both, or one parent with none: as before, whatever the roll.
+     */
+    public static int inherit(int mother, int father, double roll) {
+        int m = clean(mother);
+        int f = clean(father);
+        if (m == NONE || f == NONE || m == f) {
+            return inherit(mother, father);
+        }
+        return roll < ONE_KIND ? m : roll < 2.0 * ONE_KIND ? f : inherit(mother, father);
+    }
+
+    /**
+     * 2.0.6: its colour once its kind is known: a child that took one parent's kind alone has that parent's colour; otherwise {@code rolled}
+     * (one parent's, {@link #colour(int, int, int, int, double)}).
+     */
+    public static int colourOf(int bits, int motherBits, int motherColour, int fatherBits, int fatherColour, int rolled) {
+        int m = clean(motherBits);
+        int f = clean(fatherBits);
+        int own = clean(bits);
+        if (own == NONE || m == f || m == NONE || f == NONE) {
+            return rolled;
+        }
+        return own == m ? motherColour & 0xFFFFFF : own == f ? fatherColour & 0xFFFFFF : rolled;
     }
 
     /** {@code bits} with anything that isn't a kind dropped, and a lone second wing made a wing ({@link #UNKNOWN} and bad values: none). */

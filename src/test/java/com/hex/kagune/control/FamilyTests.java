@@ -375,6 +375,9 @@ public final class FamilyTests {
         com.hex.kagune.control.family.Genome.Parent toukaOld = new com.hex.kagune.control.family.Genome.Parent(0x30304A, 0x404060, 0xF0D8C8, true, false);
         com.hex.kagune.control.family.Genome.Parent dadOld = new com.hex.kagune.control.family.Genome.Parent(0x201010, 0x403020, 0xC08060, true, false);
         int fromMother = 0;
+        int onlyMother = 0;
+        int onlyFather = 0;
+        int both = 0;
         boolean same = true;
         boolean mixed = true;
         boolean trips = true;
@@ -383,13 +386,43 @@ public final class FamilyTests {
             com.hex.kagune.control.family.Genome before = com.hex.kagune.control.family.Genome.of(toukaOld, dadOld, new java.util.Random(i));
             same &= now.gender() == before.gender() && now.kakugan() == before.kakugan() && now.hair() == before.hair() && now.eyes() == before.eyes()
                 && now.skin() == before.skin() && now.seed() == before.seed();
-            mixed &= now.kagune() == (tails | wing) && (now.colour() == 0xA50F37 || now.colour() == 0x2050E0);
-            fromMother += now.colour() == 0xA50F37 ? 1 : 0;
+            // 2.0.6: her wings alone in her colour, his tail alone in his, or both (the tail and one wing) in either one's.
+            if (now.kagune() == wings) {
+                onlyMother++;
+                mixed &= now.colour() == 0xA50F37;
+            } else if (now.kagune() == tails) {
+                onlyFather++;
+                mixed &= now.colour() == 0x2050E0;
+            } else {
+                mixed &= now.kagune() == (tails | wing) && (now.colour() == 0xA50F37 || now.colour() == 0x2050E0);
+                fromMother += now.colour() == 0xA50F37 ? 1 : 0;
+                both++;
+            }
             trips &= now.equals(com.hex.kagune.control.family.Genome.load(now.save()));
         }
         check(same, "deciding the kagune changes nothing else a child of the same night would have been");
-        check(mixed, "Touka and a Rinkaku father: the tails and one wing, in one of their colours");
-        check(Math.abs(fromMother / 2000.0 - 0.5) < 0.05, "either parent's colour, evenly: " + fromMother);
+        check(mixed, "Touka and a Rinkaku father: her wings, his tail, or the tail and one wing; its colour from whose kind it took");
+        check(Math.abs(onlyMother / 2000.0 - 0.4) < 0.04 && Math.abs(onlyFather / 2000.0 - 0.4) < 0.04 && Math.abs(both / 2000.0 - 0.2) < 0.03,
+            "2.0.6: two kinds, 40% the mother's, 40% the father's, 20% both: " + onlyMother + "/" + onlyFather + "/" + both);
+        check(both > 0 && Math.abs(fromMother / (double)both - 0.5) < 0.12, "with both, either parent's colour, evenly: " + fromMother + " of " + both);
+        // 2.0.6: each pairing (a roll low, middle, high): the same kind or a parent with none never changes; two kinds by the roll.
+        java.util.function.IntBinaryOperator low = (m, f) -> com.hex.kagune.control.family.KaguneGenes.inherit(m, f, 0.1);
+        java.util.function.IntBinaryOperator middle = (m, f) -> com.hex.kagune.control.family.KaguneGenes.inherit(m, f, 0.5);
+        java.util.function.IntBinaryOperator high = (m, f) -> com.hex.kagune.control.family.KaguneGenes.inherit(m, f, 0.9);
+        check(low.applyAsInt(wings, tails) == wings && middle.applyAsInt(wings, tails) == tails && high.applyAsInt(wings, tails) == (tails | wing),
+            "Touka x a Rinkaku player: her wings, his tail, or both");
+        check(low.applyAsInt(wings, wings) == wings && middle.applyAsInt(wings, wings) == wings && high.applyAsInt(wings, wings) == wings,
+            "Touka x an Ukaku player: always wings (the owner's Ukaku-only children)");
+        check(low.applyAsInt(wings, none) == wings && high.applyAsInt(none, wings) == wings, "Touka x a human player: always her wings");
+        check(low.applyAsInt(tails, wings) == tails && middle.applyAsInt(tails, wings) == wings && high.applyAsInt(tails, wings) == (tails | wing),
+            "Ken x an Ukaku player: his tail, the wings, or both");
+        check(low.applyAsInt(owl, tails) == owl && middle.applyAsInt(owl, tails) == tails && high.applyAsInt(owl, tails) == (owl | tails)
+            && high.applyAsInt(owl, wings) == (owl | wing), "Eto x a Rinkaku or Ukaku player: hers, theirs, or both");
+        check(com.hex.kagune.control.family.KaguneGenes.colourOf(wings, wings, 0x111111, tails, 0x222222, 0x222222) == 0x111111
+            && com.hex.kagune.control.family.KaguneGenes.colourOf(tails, wings, 0x111111, tails, 0x222222, 0x111111) == 0x222222
+            && com.hex.kagune.control.family.KaguneGenes.colourOf(tails | wing, wings, 0x111111, tails, 0x222222, 0x222222) == 0x222222
+            && com.hex.kagune.control.family.KaguneGenes.colourOf(wings, wings, 0x111111, wings, 0x222222, 0x222222) == 0x222222,
+            "one kind alone: that parent's colour; else the one rolled");
         check(trips, "the kagune saved and read back with the rest");
         com.hex.kagune.control.family.Genome old = com.hex.kagune.control.family.Genome.load("2,1,3,5a3a22,4a3020,d9a07e,12345");
         check(old != null && !old.kaguneKnown() && old.seed() == 12345L && old.hair() == 0x5A3A22 && old.colour() == -1
