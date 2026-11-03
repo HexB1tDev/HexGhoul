@@ -759,11 +759,11 @@ final class ChildKagune {
         return true;
     }
 
-    /** A shot's hit: hurt (a mob's attack), set alight a moment, pushed a little the way it flew. */
+    /** A shot's hit: hurt (a mob's attack), pushed a little the way it flew (2.0.15: never set alight). */
     private static void burn(ChildNpc npc, LivingEntity body, Bolt bolt) {
         Vec3 centre = GhoulNpcBrain.centre(body);
         Vec3 into = bolt.velocity.m_82541_();
-        WoundHits.expect(body, bolt.spike ? WoundBook.Blow.STAB : WoundBook.Blow.BURN, centre.m_82546_(into.m_82490_(0.3)), into, 0.0);
+        WoundHits.expect(body, WoundBook.Blow.STAB, centre.m_82546_(into.m_82490_(0.3)), into, 0.0); // 2.0.15: never a burn
         body.f_19802_ = 0;
         if (bolt.spike) {
             // 1.3.48: a crystal spike runs it through: no fire.
@@ -776,7 +776,7 @@ final class ChildKagune {
         if (!body.m_6469_(npc.m_269291_().m_269333_(npc), bolt.damage)) {
             return;
         }
-        body.m_20254_(1);
+        // 2.0.15: its shots no longer set what they hit alight (only hurt and push).
         if (bolt.velocity.m_165925_() > 1.0E-6) {
             body.m_147240_(0.15, -bolt.velocity.f_82479_, -bolt.velocity.f_82481_);
         }

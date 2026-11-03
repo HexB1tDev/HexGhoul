@@ -636,10 +636,8 @@ final class UkakuCrystalCombat {
         if (push.m_165925_() > 1.0E-6 && spike.knockback > 0.0F) {
             target.m_147240_(spike.knockback, -push.f_82479_, -push.f_82481_);
         }
-        if (spike.burnSeconds > 0) {
-            // Wrapped in flame: alight first, so the wound it opens is already a scorched one.
-            target.m_20254_(spike.burnSeconds);
-        }
+        // 2.0.15 (the owner: "Ukaku's projectiles should not burn targets anymore only knockback + damage"): a burning needle no longer sets
+        // what it hits alight.
         bleed(target, spike.stacks, player, now);
         float power = spike.kind == Kind.LANCE ? 1.6F : spike.kind == Kind.BARRAGE ? 0.6F : 1.0F;
         UkakuFire.fx(player, S2CUkakuFx.BLOOD, target.m_19879_(), point, push.m_82541_(), power, 0);
@@ -799,9 +797,7 @@ final class UkakuCrystalCombat {
         // Bursting out where it sat: the flesh round it torn out.
         WoundHits.expect(target, com.hex.kagune.control.wound.WoundBook.Blow.BURST, at, new Vec3(dir[0], dir[1], dir[2]), 0.0);
         if (target.m_6469_(player.m_269291_().m_269075_(player), damage)) {
-            if (fire) {
-                target.m_20254_(UkakuRules.PYRE_BURN_SECONDS);
-            }
+            // 2.0.15: a needle bursting into flame inside it no longer sets it alight.
             bleed(target, 1, player, now);
             ControlServer.onKaguneHit(player, 1);
         }

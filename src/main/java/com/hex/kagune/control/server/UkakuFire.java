@@ -395,14 +395,14 @@ final class UkakuFire {
         fx(player, S2CUkakuFx.EMBERS, 0, at, Vec3.f_82478_, 1.4F, ticks);
     }
 
-    /** Fire blasting out round {@code at} (a needle bursting into flame): everyone near burns, {@code source} at half. */
+    /** Fire blasting out round {@code at} (a needle bursting into flame): everyone near hurt and thrown back (2.0.15: never set alight), {@code source} at half. */
     static void fireBlast(ServerPlayer player, LivingEntity source, Vec3 at, float damage, double radius) {
         Vec3 shift = at.m_82546_(player.m_20191_().m_82399_());
         AABB area = player.m_20191_().m_82386_(shift.f_82479_, shift.f_82480_, shift.f_82481_).m_82400_(radius);
         for (LivingEntity target : player.m_284548_().m_6443_(LivingEntity.class, area,
             entity -> entity != player && entity.m_6084_() && KaguneServerController.validSwipeTarget(player, entity))) {
             if (KaguneServerController.center(target).m_82557_(at) <= (radius + 0.6) * (radius + 0.6)) {
-                burn(player, target, target == source ? damage * 0.5F : damage, UkakuRules.PYRE_BURN_SECONDS, Vec3.f_82478_);
+                shot(player, target, target == source ? damage * 0.5F : damage, Vec3.f_82478_, at, 0.5); // 2.0.15: no fire
             }
         }
         fx(player, S2CUkakuFx.BURST_BLAST, 0, at, Vec3.f_82478_, (float)(radius / 2.2), 1);
@@ -532,7 +532,7 @@ final class UkakuFire {
 
     private static void strike(ServerPlayer player, Bolt bolt, LivingEntity target, float damage) {
         Vec3 push = bolt.velocity;
-        if (!burn(player, target, damage, bolt.burnSeconds, push)) {
+        if (!shot(player, target, damage, push, null, 0.0)) { // 2.0.15: no fire
             return;
         }
         if (push.m_165925_() > 1.0E-6) {
@@ -554,13 +554,34 @@ final class UkakuFire {
         target.f_19802_ = 0;
         Vec3 centre = KaguneServerController.center(target);
         Vec3 into = push != null && push.m_82556_() > 1.0E-6 ? push.m_82541_() : centre.m_82546_(player.m_146892_()).m_82541_();
-        WoundHits.expect(target, com.hex.kagune.control.wound.WoundBook.Blow.BURN, centre.m_82546_(into.m_82490_(0.3)), into, 0.0);
+        // 2.0.15: a shot (burnSeconds 0) runs it through, a flame burns it.
+        WoundHits.expect(target, burnSeconds > 0 ? com.hex.kagune.control.wound.WoundBook.Blow.BURN : com.hex.kagune.control.wound.WoundBook.Blow.STAB,
+            centre.m_82546_(into.m_82490_(0.3)), into, 0.0);
         if (!target.m_6469_(player.m_269291_().m_269075_(player), damage)) {
             return false;
         }
-        target.m_20254_(burnSeconds);
-        sound(player.m_284548_(), KaguneServerController.center(target), "entity.generic.burn", 0.5F, KaguneServerController.vary(player, 1.2F, 0.1F));
+        if (burnSeconds > 0) {
+            target.m_20254_(burnSeconds);
+            sound(player.m_284548_(), KaguneServerController.center(target), "entity.generic.burn", 0.5F, KaguneServerController.vary(player, 1.2F, 0.1F));
+        }
         ControlServer.onKaguneHit(player, 1);
+        return true;
+    }
+
+    /**
+     * 2.0.15 (the owner: "Ukaku's projectiles should not burn targets anymore only knockback + damage"): a shot's hit: hurt, never set
+     * alight, pushed the way {@code push} goes (a burst's, away from {@code from}).
+     */
+    private static boolean shot(ServerPlayer player, LivingEntity target, float damage, Vec3 push, Vec3 from, double knock) {
+        if (!burn(player, target, damage, 0, push)) {
+            return false;
+        }
+        if (from != null) {
+            Vec3 away = target.m_20182_().m_82546_(from);
+            if (away.m_165925_() > 1.0E-4) {
+                target.m_147240_(knock, -away.f_82479_, -away.f_82481_);
+            }
+        }
         return true;
     }
 
@@ -593,7 +614,7 @@ final class UkakuFire {
         for (LivingEntity target : player.m_284548_().m_6443_(LivingEntity.class, area,
             entity -> entity != player && entity.m_6084_() && KaguneServerController.validSwipeTarget(player, entity))) {
             if (KaguneServerController.center(target).m_82557_(at) <= (radius + 0.6) * (radius + 0.6)) {
-                burn(player, target, damage, bolt.burnSeconds, Vec3.f_82478_);
+                shot(player, target, damage, Vec3.f_82478_, at, 0.4); // 2.0.15: no fire
             }
         }
         fx(player, S2CUkakuFx.BURST_BLAST, 0, at, Vec3.f_82478_, (float)(radius / 2.2), 1);

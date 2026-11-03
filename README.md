@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.0.15 (HexGhoul): Ukaku's shots no longer burn (testing)
+
+See `.github/release-notes-2.0.15.md`: every Ukaku projectile (players', children's, wild ghouls') only hurts and pushes; fire moves that aren't shots are unchanged.
+
 ## 2.0.14 (HexGhoul): villagers sell seeds and farming goods too (testing)
 
 See `.github/release-notes-2.0.14.md`: seven wares each: a staple, two foods, two farming goods (seeds, bone meal, saplings, cane, hay, a hoe, a bucket, a composter), two basic goods.

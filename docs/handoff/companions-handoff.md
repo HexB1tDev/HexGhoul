@@ -1,4 +1,12 @@
-# START HERE (state after 2.0.14): read `docs/handoff/next-ai-2.0.9.md` first, then `next-ai-2.0.5.md`, then `next-ai-2.0.1.md`
+# START HERE (state after 2.0.15): read `docs/handoff/next-ai-2.0.9.md` first, then `next-ai-2.0.5.md`, then `next-ai-2.0.1.md`
+
+- **2.0.15** (the owner: "Ukaku's projectiles should not burn targets anymore only knockback + damage"). `UkakuFire.burn(..., 0, ...)` now
+  means no fire, a STAB wound, no burn sound; new `UkakuFire.shot(...)` (no fire, + a push away from a burst's centre) for bolt hits
+  (`strike`), shard explosions and needle-burst blasts. `UkakuCrystalCombat`: a spike's `burnSeconds` and a fire burst's
+  `PYRE_BURN_SECONDS` no longer set alight. `ChildKagune.burn` and `GhoulNpcCombat.burn` (wild ghouls, `NpcRules.SHOT_BURN` now unused):
+  STAB wound, no fire. Kept burning (not projectiles): the flame dash art, the pillar, Ember Hop (`scorch`), embers, the vortex. Not run.
+
+# State after 2.0.14
 
 - **2.0.14** (the owner: "seeds, farming materials, food etc"): `VillageShop.FARMING` (12 offers: seeds, bone meal, oak sapling, sugar cane,
   hay, stone/iron hoe, bucket, composter); `stock` = staple + 2 `FOODS` + 2 `FARMING` + 2 `BASICS` (seven); `HumanTalk.SELL` moved to SAY_8

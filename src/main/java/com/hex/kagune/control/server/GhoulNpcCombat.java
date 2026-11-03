@@ -567,16 +567,16 @@ final class GhoulNpcCombat {
         return true;
     }
 
-    /** A shot's hit: hurt (a mob's attack), burning, pushed a little the way it flew. */
+    /** A shot's hit: hurt (a mob's attack), pushed a little the way it flew (2.0.15: no longer burning). */
     private static void burn(GhoulNpc npc, LivingEntity body, Bolt bolt) {
         Vec3 centre = GhoulNpcBrain.centre(body);
         Vec3 into = bolt.velocity.m_82541_();
-        WoundHits.expect(body, WoundBook.Blow.BURN, centre.m_82546_(into.m_82490_(0.3)), into, 0.0);
+        WoundHits.expect(body, WoundBook.Blow.STAB, centre.m_82546_(into.m_82490_(0.3)), into, 0.0); // 2.0.15: never a burn
         body.f_19802_ = 0;
         if (!body.m_6469_(npc.m_269291_().m_269333_(npc), bolt.damage)) {
             return;
         }
-        body.m_20254_(NpcRules.SHOT_BURN);
+        // 2.0.15 (the owner: Ukaku's projectiles only hurt and push): no longer set alight.
         if (bolt.velocity.m_165925_() > 1.0E-6) {
             body.m_147240_(0.2, -bolt.velocity.f_82479_, -bolt.velocity.f_82481_);
         }
