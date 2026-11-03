@@ -1,4 +1,8 @@
-# START HERE (state after 2.0.23)
+# START HERE (state after 2.0.24)
+
+A pair loaded from an older save can include a former Rank 10. Its superior now caps correctly at Rank 9 and keeps the superior’s health and damage bonus. Protocol 75 is unchanged.
+
+# State after 2.0.23
 
 The White Reaper can mix a telegraphed front kick into Dawn’s melee strings.
 

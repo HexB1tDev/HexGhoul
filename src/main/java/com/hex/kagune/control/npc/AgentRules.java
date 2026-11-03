@@ -170,7 +170,7 @@ public final class AgentRules {
 
     /** The leader's rank, its partner's known: its own if above theirs, else one above theirs (Rank 9 at most). */
     public static Rank superior(Rank own, Rank partner) {
-        return regularRank(Rank.byOrdinal(Math.max(own.level(), partner.level() + 1)));
+        return Rank.byOrdinal(Math.min(Rank.RANK_9.level(), Math.max(own.level(), partner.level() + 1)));
     }
 
     /** The partner's rank, its leader's known: its own if below theirs, else one below theirs (Rank 0 at least). */
