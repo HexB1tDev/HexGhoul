@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.3.5 (HexGhoul): mood kisses: each companion's own, the face kept clear (testing)
+
+See `.github/release-notes-2.3.5.md`. The mood kisses, redone: each companion has their own, and no kiss closes the arms in front of the face any more. Before, every kiss was the same pose on all three, and some brought both arms up crossed or together in front of her face. That's exactly where your face and first-person camera are, so it would have blocked your view.
+
 ## 2.3.4 (HexGhoul): human partners: a real kiss, no fear, a ring (testing)
 
 See `.github/release-notes-2.3.4.md`. Village human partners now get the full romance the companions have.

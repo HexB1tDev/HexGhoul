@@ -140,11 +140,16 @@ public final class CompanionPreview {
             sheet(new File(out, ((String)who[0]).toLowerCase() + "-mood-kisses.png"), who[0] + ": a kiss for every mood (2.2.4)", textures + who[1],
                 (Boolean)who[2], shots);
         }
-        // Frames: Eto waiting, every kind side by side, moving (the bounce, the sway, the tapping foot, the teasing bob).
-        File folder = new File(out, "kisses-frames");
+        for (Object[] who : new Object[][] {{"eto", "eto/eto.png", true, 0}, {"touka", "touka/touka.png", true, 2}, {"ken", "ken/ken.png", false, 1}}) {
+            kissFrames(new File(out, who[0] + "-kisses-frames"), textures + who[1], (Boolean)who[2], (Integer)who[3]);
+        }
+    }
+
+    /** Frames of every kind of kiss waiting, side by side, moving, on one companion ({@code persona}: Persona.style). */
+    static void kissFrames(File folder, String skin, boolean slim, int persona) throws Exception {
         folder.mkdirs();
-        PoseRender.skin = ImageIO.read(new File(textures + "eto/eto.png"));
-        PoseRender.slim = true;
+        PoseRender.skin = ImageIO.read(new File(skin));
+        PoseRender.slim = slim;
         PoseRender.stiff = true;
         com.hex.kagune.control.npc.MoodKiss.Style[] styles = com.hex.kagune.control.npc.MoodKiss.Style.values();
         int w = 200;
@@ -159,7 +164,7 @@ public final class CompanionPreview {
             g.setColor(new Color(34, 34, 40));
             g.fillRect(0, 0, sheet.getWidth(), sheet.getHeight());
             for (int i = 0; i < styles.length; i++) {
-                RigPose pose = kiss(styles[i], EtoGesture.KISS, tick, 0);
+                RigPose pose = kiss(styles[i], EtoGesture.KISS, tick, persona);
                 BufferedImage image = PoseRender.render(pose == null ? new RigPose() : pose, PoseRender.orbit(40.0, 8.0, 4.4, 0.95), w, h, null);
                 int x = i % columns * w;
                 int y = i / columns * (h + 20);
@@ -176,7 +181,7 @@ public final class CompanionPreview {
     /** The kiss pose as the game draws it: the persona's usual, with the mood's over it. */
     static RigPose kiss(com.hex.kagune.control.npc.MoodKiss.Style style, EtoGesture gesture, double age, int persona) {
         RigPose usual = EtoPose.gesture(gesture, age, persona, 0);
-        return com.hex.kagune.control.client.animation.MoodKissPose.apply(usual, style, gesture, age);
+        return com.hex.kagune.control.client.animation.MoodKissPose.apply(usual, style, gesture, age, persona);
     }
 
     static void sheet(File file, String title, String skin, boolean slim, List<Shot> shots) throws Exception {

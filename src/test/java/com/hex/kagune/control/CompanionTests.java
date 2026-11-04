@@ -352,6 +352,14 @@ public final class CompanionTests {
         }
     }
 
+    /** 2.3.5: two poses that differ somewhere (arms, head, lean). */
+    static boolean differ(RigPose a, RigPose b) {
+        float d = Math.abs(a.rightArmX - b.rightArmX) + Math.abs(a.leftArmX - b.leftArmX) + Math.abs(a.rightArmZ - b.rightArmZ)
+            + Math.abs(a.leftArmZ - b.leftArmZ) + Math.abs(a.rightArmY - b.rightArmY) + Math.abs(a.headY - b.headY) + Math.abs(a.headZ - b.headZ)
+            + Math.abs(a.lean - b.lean) + Math.abs(a.drop - b.drop);
+        return d > 0.15F;
+    }
+
     /** 2.2.7: married by command: everything about it full (Courtship.wed). */
     static void wed() {
         com.hex.kagune.control.quest.QuestLog.Bond[] starts = {new com.hex.kagune.control.quest.QuestLog.Bond(0, -1L, 0, 0),
@@ -406,23 +414,47 @@ public final class CompanionTests {
                 }
             }
             for (EtoGesture gesture : new EtoGesture[] {EtoGesture.KISS, EtoGesture.BLUSH, EtoGesture.PULL}) {
-                RigPose usual = EtoPose.gesture(gesture, 20.0, 0, 0);
-                RigPose moody = com.hex.kagune.control.client.animation.MoodKissPose.apply(usual, style, gesture, 20.0);
-                if (style == com.hex.kagune.control.npc.MoodKiss.Style.SWEET) {
-                    check(moody == usual, gesture + ": sweet is the usual kiss");
-                } else {
-                    check(moody != null && moody != usual && moody.lean > 0.3F && moody.lean < 0.75F
-                        && Float.isFinite(moody.headX) && Math.abs(moody.headX) < 1.1F, style + " " + gesture + ": leaning in, its own way");
+                for (int persona = 0; persona < 3; persona++) {
+                    for (double age : new double[] {0.0, 7.0, 20.0, 45.0, 90.0, 200.0}) {
+                        RigPose usual = EtoPose.gesture(gesture, age, persona, 0);
+                        RigPose moody = com.hex.kagune.control.client.animation.MoodKissPose.apply(usual, style, gesture, age, persona);
+                        if (style == com.hex.kagune.control.npc.MoodKiss.Style.SWEET) {
+                            check(moody == usual, gesture + ": sweet is the usual kiss");
+                            continue;
+                        }
+                        check(moody != null && moody != usual && Float.isFinite(moody.headX) && Math.abs(moody.headX) < 1.1F,
+                            style + " " + gesture + " " + persona + ": a pose");
+                        // 2.3.5: never an arm raised to face height turned in across the middle (the partner's face, their camera).
+                        check(com.hex.kagune.control.client.animation.MoodKissPose.clear(moody), style + " " + gesture + " persona " + persona
+                            + " at " + age + ": the partner's face kept clear (arms " + moody.rightArmX + "/" + moody.rightArmY + ", " + moody.leftArmX + "/"
+                            + moody.leftArmY + ")");
+                    }
+                    RigPose held = com.hex.kagune.control.client.animation.MoodKissPose.apply(null, style, gesture, 40.0, persona);
+                    if (style != com.hex.kagune.control.npc.MoodKiss.Style.SWEET && gesture == EtoGesture.KISS) {
+                        check(held.lean > 0.3F && held.lean < 0.75F, style + " " + persona + ": leaning in");
+                    }
+                }
+                if (style != com.hex.kagune.control.npc.MoodKiss.Style.SWEET) {
+                    // 2.3.5: each companion their own way, not one copied to all three.
+                    RigPose eto = com.hex.kagune.control.client.animation.MoodKissPose.apply(null, style, gesture, 40.0, 0);
+                    RigPose ken = com.hex.kagune.control.client.animation.MoodKissPose.apply(null, style, gesture, 40.0, 1);
+                    RigPose touka = com.hex.kagune.control.client.animation.MoodKissPose.apply(null, style, gesture, 40.0, 2);
+                    if (gesture == EtoGesture.KISS) {
+                        check(differ(eto, ken) && differ(eto, touka) && differ(ken, touka), style + ": Eto's, Ken's and Touka's each their own");
+                    }
                 }
             }
             RigPose other = EtoPose.gesture(EtoGesture.WAVE, 20.0, 0, 0);
-            check(com.hex.kagune.control.client.animation.MoodKissPose.apply(other, style, EtoGesture.WAVE, 20.0) == other, style + ": only the kiss is changed");
+            check(com.hex.kagune.control.client.animation.MoodKissPose.apply(other, style, EtoGesture.WAVE, 20.0, 0) == other, style + ": only the kiss is changed");
         }
-        RigPose angry = com.hex.kagune.control.client.animation.MoodKissPose.apply(null, com.hex.kagune.control.npc.MoodKiss.Style.ANGRY, EtoGesture.KISS, 30.0);
-        check(angry.rightArmX < -1.2F && angry.headY > 0.15F, "angry: a fist in their collar, looking away");
-        RigPose desperate = com.hex.kagune.control.client.animation.MoodKissPose.apply(null, com.hex.kagune.control.npc.MoodKiss.Style.DESPERATE, EtoGesture.KISS,
-            30.0);
-        check(desperate.rightArmZ < -0.4F && desperate.leftArmZ > 0.4F, "desperate: arms round them");
+        // 2.3.5: angry looks angry: the face turned away while waiting, on every one of them; Eto stamps, Touka's fists are clenched.
+        for (int persona = 0; persona < 3; persona++) {
+            RigPose angry = com.hex.kagune.control.client.animation.MoodKissPose.apply(null, com.hex.kagune.control.npc.MoodKiss.Style.ANGRY,
+                EtoGesture.KISS, 30.0, persona);
+            check(Math.abs(angry.headY) > 0.3F && angry.lean < 0.45F, persona + ": angry, the face turned away, leaning in grudgingly");
+        }
+        check(com.hex.kagune.control.client.animation.MoodKissPose.apply(null, com.hex.kagune.control.npc.MoodKiss.Style.ANGRY, EtoGesture.KISS, 2.0, 0)
+            .rightLegX < 0.0F, "Eto stamps her foot");
         check(com.hex.kagune.control.npc.MoodKiss.waits(com.hex.kagune.control.npc.MoodKiss.Style.ANGRY) < EtoRules.KISS_WAIT
             && com.hex.kagune.control.npc.MoodKiss.waits(com.hex.kagune.control.npc.MoodKiss.Style.SLEEPY) > EtoRules.KISS_WAIT,
             "the angry won't wait long; the sleepy forget to stop");
