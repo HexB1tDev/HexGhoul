@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.3.1 (HexGhoul): the mood kisses rendered; possessive, giddy and tender reworked (testing)
+
+See `.github/release-notes-2.3.1.md`. The mood kisses (2.2.4) are rendered for the first time, and three of them are reworked after seeing the renders. Possessive and tender looked almost the same (both arms straight out). Giddy's "hands clasped at the chest" just looked like arms hanging, because a mob's arms don't bend at the elbow.
+
 ## 2.3.0 (HexGhoul): grown daughters take their mother's height (testing)
 
 See `.github/release-notes-2.3.0.md`. Grown daughters now take their mother's height, and each one varies a little. A daughter grows up to her mother's size: Eto's, Touka's, or a woman player's (the female body). She then comes out up to 4% taller or shorter than her mother, by her own genes, so sisters aren't all the same height. Before, every grown daughter was drawn at one fixed size.

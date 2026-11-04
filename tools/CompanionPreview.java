@@ -31,6 +31,10 @@ public final class CompanionPreview {
             frames(out);
             return;
         }
+        if (args.length > 1 && args[1].equals("kisses")) {
+            kisses(out);
+            return;
+        }
         String textures = "src/main/resources/assets/hexkagune/textures/entity/";
         List<Shot> touka = new ArrayList<>();
         for (Object[] g : new Object[][] {{EtoGesture.CROSS, 40.0}, {EtoGesture.TAP, 20.0}, {EtoGesture.HUFF, 14.0}, {EtoGesture.SIP, 50.0},
@@ -115,6 +119,64 @@ public final class CompanionPreview {
             g.dispose();
             ImageIO.write(sheet, "png", new File(folder, String.format("frame_%03d.png", frame)));
         }
+    }
+
+    /**
+     * 2.2.4: the kiss as each mood has it ({@code MoodKissPose}): every kind, waiting (three-quarter and side), blushing (held a while) and
+     * pulling them in (held longer), on Eto, Touka and Ken; and frames of each waiting, for a GIF ({@code kisses-frames}).
+     */
+    static void kisses(File out) throws Exception {
+        String textures = "src/main/resources/assets/hexkagune/textures/entity/";
+        for (Object[] who : new Object[][] {{"Eto", "eto/eto.png", true, 0}, {"Touka", "touka/touka.png", true, 2}, {"Ken", "ken/ken.png", false, 1}}) {
+            List<Shot> shots = new ArrayList<>();
+            for (com.hex.kagune.control.npc.MoodKiss.Style style : com.hex.kagune.control.npc.MoodKiss.Style.values()) {
+                String name = style.name().toLowerCase();
+                shots.add(new Shot(name + ": waiting", kiss(style, EtoGesture.KISS, 30.0, (Integer)who[3]), 28.0));
+                shots.add(new Shot(name + ": waiting, side", kiss(style, EtoGesture.KISS, 30.0, (Integer)who[3]), 85.0));
+                shots.add(new Shot(name + ": held (blush)", kiss(style, EtoGesture.BLUSH, 30.0, (Integer)who[3]), 28.0));
+                shots.add(new Shot(name + ": pulled in", kiss(style, EtoGesture.PULL, 30.0, (Integer)who[3]), 28.0));
+                shots.add(new Shot(name + ": pulled in, side", kiss(style, EtoGesture.PULL, 30.0, (Integer)who[3]), 85.0));
+            }
+            sheet(new File(out, ((String)who[0]).toLowerCase() + "-mood-kisses.png"), who[0] + ": a kiss for every mood (2.2.4)", textures + who[1],
+                (Boolean)who[2], shots);
+        }
+        // Frames: Eto waiting, every kind side by side, moving (the bounce, the sway, the tapping foot, the teasing bob).
+        File folder = new File(out, "kisses-frames");
+        folder.mkdirs();
+        PoseRender.skin = ImageIO.read(new File(textures + "eto/eto.png"));
+        PoseRender.slim = true;
+        PoseRender.stiff = true;
+        com.hex.kagune.control.npc.MoodKiss.Style[] styles = com.hex.kagune.control.npc.MoodKiss.Style.values();
+        int w = 200;
+        int h = 260;
+        int columns = 5;
+        int rows = (styles.length + columns - 1) / columns;
+        for (int frame = 0; frame < 80; frame++) {
+            double tick = frame * 2.0;
+            BufferedImage sheet = new BufferedImage(columns * w, rows * (h + 20), BufferedImage.TYPE_INT_RGB);
+            Graphics2D g = sheet.createGraphics();
+            g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+            g.setColor(new Color(34, 34, 40));
+            g.fillRect(0, 0, sheet.getWidth(), sheet.getHeight());
+            for (int i = 0; i < styles.length; i++) {
+                RigPose pose = kiss(styles[i], EtoGesture.KISS, tick, 0);
+                BufferedImage image = PoseRender.render(pose == null ? new RigPose() : pose, PoseRender.orbit(40.0, 8.0, 4.4, 0.95), w, h, null);
+                int x = i % columns * w;
+                int y = i / columns * (h + 20);
+                g.drawImage(image, x, y, null);
+                g.setColor(Color.WHITE);
+                g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
+                g.drawString(styles[i].name().toLowerCase(), x + 8, y + h + 15);
+            }
+            g.dispose();
+            ImageIO.write(sheet, "png", new File(folder, String.format("frame_%03d.png", frame)));
+        }
+    }
+
+    /** The kiss pose as the game draws it: the persona's usual, with the mood's over it. */
+    static RigPose kiss(com.hex.kagune.control.npc.MoodKiss.Style style, EtoGesture gesture, double age, int persona) {
+        RigPose usual = EtoPose.gesture(gesture, age, persona, 0);
+        return com.hex.kagune.control.client.animation.MoodKissPose.apply(usual, style, gesture, age);
     }
 
     static void sheet(File file, String title, String skin, boolean slim, List<Shot> shots) throws Exception {

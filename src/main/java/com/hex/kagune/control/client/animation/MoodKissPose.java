@@ -8,9 +8,9 @@ import com.hex.kagune.control.npc.MoodKiss;
  * blush ({@code BLUSH}) and pull them in ({@code PULL}). Sweet is the usual, untouched; anything else is each mood's own body:
  * <ul>
  * <li>angry: a fist in their collar, the other hand clenched at the side, the head turned away, a foot tapping;</li>
- * <li>possessive: both arms round their neck at once, held tight, leaning hard;</li>
- * <li>giddy: hands clasped at the chest, bouncing on the toes, the head bobbing;</li>
- * <li>tender: both hands up to their face, slow, a gentle sway;</li>
+ * <li>possessive: both arms thrown up round their neck at once, high and crossed, on the toes, leaning hard;</li>
+ * <li>giddy: bouncing on the toes, arms flapping at the sides, the head bobbing;</li>
+ * <li>tender: both hands up to their cheeks, close together, slow, the head tipped, a gentle sway;</li>
  * <li>desperate: arms thrown round them, leaning their whole weight in, trembling;</li>
  * <li>sleepy: arms hanging, the head lolling, drooping in and out;</li>
  * <li>hungry: the head tipped for a bite, a hand at their jaw, the other on the hip;</li>
@@ -58,43 +58,41 @@ public final class MoodKissPose {
                 p.rightLegX = blush ? 0.0F : -0.16F * (float)Math.max(0.0, Math.sin(t * 0.55));
             }
             case POSSESSIVE -> {
-                // Both arms round their neck at once, gripping, pulling them down to her.
-                float lean = blush ? 0.58F : 0.54F;
+                // 2.3.1: arms thrown up round their neck at once, high and crossed behind it, up on the toes, pulling them down to her.
+                float lean = blush ? 0.62F : 0.58F;
                 p.lean = lean;
-                p.rightArmX = -1.95F;
-                p.leftArmX = -1.95F;
-                p.rightArmY = -0.48F;
-                p.leftArmY = 0.48F;
-                p.rightArmZ = 0.02F;
-                p.leftArmZ = -0.02F;
-                p.headX = -lean - 0.06F;
-                p.headZ = 0.12F;
+                p.rightArmX = -2.3F;
+                p.leftArmX = -2.3F;
+                p.rightArmY = -0.8F;
+                p.leftArmY = 0.8F;
+                p.headX = -lean - 0.1F;
+                p.headZ = 0.2F;
+                p.drop = -0.6F;
             }
             case GIDDY -> {
-                // Up on the toes, hands clasped at the chest, bouncing, the head bobbing side to side.
+                // 2.3.1: bouncing on the toes, arms flapping at the sides with excitement (a stiff arm can't clasp at the chest), the head bobbing.
                 float lean = blush ? EtoPose.BLUSH_LEAN : EtoPose.KISS_LEAN;
+                float flap = (float)Math.abs(Math.sin(t * 0.5));
                 p.lean = lean;
-                p.rightArmX = -1.05F;
-                p.leftArmX = -1.05F;
-                p.rightArmY = 0.7F;
-                p.leftArmY = -0.7F;
-                p.rightArmZ = -0.3F;
-                p.leftArmZ = 0.3F;
+                p.rightArmX = -0.35F;
+                p.leftArmX = -0.35F;
+                p.rightArmZ = 0.55F + 0.45F * flap;
+                p.leftArmZ = -(0.55F + 0.45F * flap);
                 p.headX = -lean - 0.04F;
                 p.headZ = 0.16F * (float)Math.sin(t * 0.3);
                 p.drop = -(blush ? 0.7F : 1.3F) * (float)Math.abs(Math.sin(t * 0.35));
             }
             case TENDER -> {
-                // Both hands up to their face, slowly, swaying a little.
+                // 2.3.1: both hands up to their cheeks, slowly, close together (a face's width apart), the head tipped, swaying a little.
                 float lean = blush ? EtoPose.BLUSH_LEAN : EtoPose.KISS_LEAN;
                 float reach = EtoPose.ease(t / 18.0F);
                 p.lean = lean;
-                p.rightArmX = -(blush ? 1.85F : 1.75F) * reach;
-                p.leftArmX = -(blush ? 1.85F : 1.75F) * reach;
-                p.rightArmY = -0.4F * reach;
-                p.leftArmY = 0.4F * reach;
+                p.rightArmX = -(blush ? 1.7F : 1.6F) * reach;
+                p.leftArmX = -(blush ? 1.7F : 1.6F) * reach;
+                p.rightArmY = -0.15F * reach;
+                p.leftArmY = 0.15F * reach;
                 p.headX = -lean - 0.04F;
-                p.headZ = 0.1F * (float)Math.sin(t * 0.05);
+                p.headZ = -0.2F - 0.06F * (float)Math.sin(t * 0.05);
                 p.roll = 0.02F * (float)Math.sin(t * 0.05);
             }
             case DESPERATE -> {
@@ -175,19 +173,23 @@ public final class MoodKissPose {
                 p.headY = 0.08F;
             }
             case POSSESSIVE -> {
-                // Tighter, and further in.
-                p.rightArmY = -0.52F;
-                p.leftArmY = 0.52F;
-                p.lean += 0.05F;
-                p.headX -= 0.05F;
+                // 2.3.1: high and crossed behind their neck, and further in.
+                p.rightArmX = -2.3F;
+                p.leftArmX = -2.3F;
+                p.rightArmY = -0.8F;
+                p.leftArmY = 0.8F;
+                p.lean += 0.06F;
+                p.headX -= 0.06F;
+                p.drop = -0.5F;
             }
             case GIDDY -> p.drop = -0.6F * (float)Math.abs(Math.sin(t * 0.4));
             case TENDER -> {
-                // Hands on their face, not round their neck.
-                p.rightArmX = -1.85F;
-                p.leftArmX = -1.85F;
-                p.rightArmY = -0.42F;
-                p.leftArmY = 0.42F;
+                // Hands on their cheeks, not round their neck.
+                p.rightArmX = -1.7F;
+                p.leftArmX = -1.7F;
+                p.rightArmY = -0.15F;
+                p.leftArmY = 0.15F;
+                p.headZ = -0.2F;
                 p.roll = 0.02F * (float)Math.sin(t * 0.05);
             }
             case DESPERATE -> {
