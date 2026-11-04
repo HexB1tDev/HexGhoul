@@ -7,10 +7,13 @@ import java.util.Set;
 /**
  * 2.1.2 (pure, tested; the owner: "adapt the Ken, Eto and Touka quests for romance better, so that it's more immersive and less
  * repetitive, it's super boring at it stands"): each companion's own courtship, in place of the three errands they all shared (books,
- * ten kills at night, a flower). Five chapters each, every one asking for something only that one would ask (Eto wants a page you wrote,
- * a walk in the dark, ink, to watch you hunt, the Library at three in the morning; Touka beans for the cafe, the ward cleared of what
- * draws the Doves, somewhere high, company through exam night, a rabbit's foot; Ken a book, coffee taken slowly, one man-eater stopped,
- * white flowers for his door, one sunrise not alone), and every one closed by its moment: a scene of its own in the companion's script
+ * ten kills at night, a flower). Five chapters each, every one asking for something only that one would ask. 2.1.5 (the owner: "the kill
+ * doves quest shouldn't be monsters, considering we now have CCG agents ... we have humans, ccg, etc why are the quests so boring"): out
+ * of the mod's own world: Eto wants to walk among the humans unseen, a human who cares for you, Doves killed while she watches, a human's
+ * secret, the Library at three in the morning; Touka a cup of the cafe's blend you brewed, Doves cleared from the ward, somewhere high,
+ * the ghoul stalking her human friend's village, the ranked investigator hunting the rabbit; Ken ghoul meat for the ghouls who won't kill,
+ * a lonely wild ghoul made a friend, a Pack ghoul stopped, the Dove hunting him fought side by side, one sunrise not alone. Every one is
+ * closed by its moment: a scene of its own in the companion's script
  * ({@code moment <chapter id>} in {@code data/hexkagune/talk/<key>.txt}) that plays as soon as the task is done. After the fifth, they
  * may ask the companion out.
  *
@@ -35,6 +38,10 @@ public final class Courtship {
     public static final int STEP_SECONDS = 10;
     /** High enough (block height) for "somewhere high". */
     public static final int HIGH = 100;
+    /** 2.1.5: how warm a village human must be to count as caring for them. */
+    public static final int HUMAN_CLOSE = 60;
+    /** 2.1.5: a bond's flag: its courtship is the 2.1.5 one (a count kept from before it meant something else, so it starts again). */
+    public static final int FROM_215 = 1 << 16;
     /** Near enough (blocks) to be "with" them at dawn or in the night; to be sitting with them. */
     public static final double WITH = 10.0;
     public static final double SITTING = 6.0;
@@ -58,11 +65,28 @@ public final class Courtship {
         /** With them at dawn. */
         DAWN,
         /** With them at their own place in the dead of night. */
-        DEEP;
+        DEEP,
+        // 2.1.5 (the owner: "we have humans, ccg, etc. why are the quests so boring"): what the mod's own world holds.
+        /** Doves (CCG investigators) killed, of at least the chapter's {@link Chapter#rank}. */
+        DOVES,
+        /** The same, with the companion walking with them. */
+        DOVES_WITH,
+        /** Wild ghouls of the Pack (the ones that kill for the joy of it) killed. */
+        GHOUL_PACK,
+        /** Wild ghouls killed where the humans of a village are (preying on them). */
+        VILLAGE_GHOUL,
+        /** A wild ghoul made their ally (it walks with them). */
+        ALLY,
+        /** A village human brought to care for them (its regard at {@link #HUMAN_CLOSE}). */
+        HUMAN_FRIEND,
+        /** A village human brought to tell them its secret. */
+        HUMAN_SECRET,
+        /** Walking through a human village after dark with the companion following (steps of {@link #STEP_SECONDS}). */
+        VILLAGE_NIGHT;
 
         /** True if counted in steps of time (shown in minutes). */
         public boolean timed() {
-            return this == WALK_NIGHT || this == SIT;
+            return this == WALK_NIGHT || this == SIT || this == VILLAGE_NIGHT;
         }
     }
 
@@ -73,93 +97,107 @@ public final class Courtship {
      * {@code {n}} is how much is done, {@code {need}} how much is needed ({@code {m}}, {@code {mm}}: the same in minutes).
      */
     public record Chapter(String id, String title, Task task, int need, Set<String> items, String itemName, String ask, String progress,
-                          String journal) {
+                          String journal, int rank) {
+        /** 2.1.5: as 2.1.2 made one: any Dove will do. */
+        public Chapter(String id, String title, Task task, int need, Set<String> items, String itemName, String ask, String progress, String journal) {
+            this(id, title, task, need, items, itemName, ask, progress, journal, 0);
+        }
     }
 
     // ---------------------------------------------------------------- the chapters
 
-    static final Set<String> WRITTEN = Set.of("minecraft:written_book");
-    static final Set<String> INK = Set.of("minecraft:ink_sac", "minecraft:glow_ink_sac");
-    static final Set<String> COCOA = Set.of("minecraft:cocoa_beans");
-    static final Set<String> RABBIT_FOOT = Set.of("minecraft:rabbit_foot");
-    static final Set<String> BOOKS = Set.of("minecraft:book", "minecraft:writable_book", "minecraft:enchanted_book", "minecraft:written_book",
-        "minecraft:knowledge_book");
-    static final Set<String> WHITE_FLOWERS = Set.of("minecraft:white_tulip", "minecraft:oxeye_daisy", "minecraft:lily_of_the_valley",
-        "minecraft:azure_bluet");
+    /** Any drink of her cookbook's (the blend wants human meat; the tonic and the shot ghoul meat). */
+    static final Set<String> BLEND = Set.of("hexkagune:anteiku_blend", "hexkagune:blood_latte", "hexkagune:crimson_tea", "hexkagune:rc_tonic",
+        "hexkagune:kakuja_shot");
+    static final Set<String> GHOUL_MEAT = Set.of("hexkagune:ghoul_meat");
 
+    /**
+     * 2.1.5: hers: walking among the humans unseen, a human who cares for you, Doves dying while she watches, a human's secret, then the
+     * Library at three in the morning.
+     */
     static final List<Chapter> ETO = List.of(
-        new Chapter("eto_letter", "Write me something", Task.GIVE, 1, WRITTEN, "the book you wrote",
-            "You want to do something for me? Write me something. A page, a poem, a grocery list, I don't care. Put it in a book, sign it, bring "
-                + "it here. I want to see how your head works when nobody's watching it.",
-            "Still waiting on my page. A book and quill, write, sign it. It doesn't have to be good. ...It has to be yours.",
-            "Write Eto something in a book and quill, sign it, and hand it to her"),
-        new Chapter("eto_night_walk", "A walk after dark", Task.WALK_NIGHT, 18, Set.of(), "",
-            "Walk with me tonight. Not to anywhere. Just out, in the dark, while the city pretends it's asleep. Once it's dark, ask me to follow "
-                + "you, and don't let me get bored.",
-            "We've walked {m} of {mm} minutes. The night's still young. So am I. Relatively.",
-            "After dark, have Eto follow you and walk together: {m} of {mm} minutes"),
-        new Chapter("eto_ink", "Ink for a monster", Task.GIVE, 4, INK, "the ink sacs",
-            "My pen's run dry, and I'm in the middle of something terrible. Bring me ink. Squid ink, four sacs. The glowing kind is fine too, "
-                + "I'll write something that glows.",
-            "Ink. {n} of four. Squids live in water, in case you were wondering where.",
-            "Bring Eto ink sacs (glowing ones count too): {n} of {need}"),
-        new Chapter("eto_watch", "Let me watch you", Task.KILLS_WITH, 6, Set.of(), "",
-            "I want to watch you hunt. Not because I'm hungry. Because people show you who they are with blood on their hands. Take me out "
-                + "after dark and kill six things while I watch.",
-            "{n} of six. Keep going. I'm taking notes. In my head. Mostly.",
-            "After dark, with Eto following you, kill monsters while she watches: {n} of {need}"),
+        new Chapter("eto_village_night", "A walk among them", Task.VILLAGE_NIGHT, 12, Set.of(), "",
+            "Take me to the humans' village. At night. I want to walk down their street while they sleep, and nobody knows what's walking past "
+                + "their windows. Ask me to follow you, and walk me through it.",
+            "{m} of {mm} minutes among them. Slowly. I'm reading their windows.",
+            "After dark, with Eto following you, walk through a human village: {m} of {mm} minutes"),
+        new Chapter("eto_human_friend", "Make one of them love you", Task.HUMAN_FRIEND, 1, Set.of(), "",
+            "Here's what I want. Go into that village and make one of them care about you. Really care. Talk, give them things, listen to their "
+                + "boring little lives. I want to know if they can love something like us without knowing.",
+            "Not yet? They're slow. Humans are always slow. Keep at it.",
+            "Make a village human care about you (their regard " + HUMAN_CLOSE + ")"),
+        new Chapter("eto_watch", "Let me watch you", Task.DOVES_WITH, 3, Set.of(), "",
+            "I want to watch you kill Doves. Not because they deserve it. Because people show you who they are with blood on their hands. Take "
+                + "me with you, and kill three of them while I watch.",
+            "{n} of three. Keep going. I'm taking notes. In my head. Mostly.",
+            "With Eto following you, kill CCG investigators while she watches: {n} of {need}"),
+        new Chapter("eto_secret", "A human's secret", Task.HUMAN_SECRET, 1, Set.of(), "",
+            "Humans are dull until you know their secrets. Then they're the best books there are. Go and get one of them to tell you a secret. "
+                + "A real one. Then come back and don't tell me what it was. I'll guess.",
+            "No secret yet? They only tell people they trust. Be trusted. It's easy. I hear.",
+            "Get a village human to tell you a secret"),
         new Chapter("eto_deep", "The Library at three in the morning", Task.DEEP, 1, Set.of(), "",
             "Last thing. Come to the Library in the dead of night, when even the books are asleep. Stay with me there. I want to show you "
                 + "something no one's ever seen.",
             "The dead of night. The Library. Me. You know where. Don't be late. I hate waiting almost as much as I hate being early.",
             "In the dead of night, be with Eto at the Library"));
 
+    /**
+     * 2.1.5: hers: a cup of the cafe's own blend you brewed yourself, Doves in the ward, somewhere high, the ghoul stalking her human friend's
+     * village, and the investigator hunting the rabbit.
+     */
     static final List<Chapter> TOUKA = List.of(
-        new Chapter("touka_beans", "The cafe's out of beans", Task.GIVE, 8, COCOA, "the cocoa beans",
-            "...Fine. Since you won't leave me alone. The cafe's out of good beans. Bring me eight. Cocoa beans, the brown pods off jungle trees. "
-                + "Don't ask. And don't eat any.",
-            "Beans. {n} of eight. It's not hard. Jungle. Trees. Pods. Go.",
-            "Bring Touka cocoa beans for the cafe: {n} of {need}"),
-        new Chapter("touka_patrol", "Doves in the ward", Task.KILLS, 8, Set.of(), "",
-            "Doves have been sniffing round the ward. Every time something ugly crawls out at night and eats someone, they come looking, and "
-                + "they find us instead. Clear the night out. Eight of them. I'll know if you lie.",
-            "{n} of eight. The night's not going to clean itself.",
-            "Kill monsters at night to keep the Doves away from the ward: {n} of {need}"),
+        new Chapter("touka_blend", "Brew it yourself", Task.GIVE, 1, BLEND, "the drink you made",
+            "...Fine. Since you won't leave me alone. Make me something from my cookbook. A drink. The cafe's blend if you've got the stomach for "
+                + "it, a tonic if you don't. Make it yourself, bring it here, and don't you dare buy it from someone.",
+            "Still nothing? It's in the book. Drinks chapter. It's not hard. ...It's a little hard.",
+            "Make Touka a drink from her cookbook (the drinks chapter: the Anteiku Blend, an RC Tonic...) and hand it to her"),
+        new Chapter("touka_patrol", "Doves in the ward", Task.DOVES, 4, Set.of(), "",
+            "Doves have been sniffing round the ward. Investigators. Asking about the cafe, about a girl in a rabbit mask. Make them stop asking. "
+                + "Four of them. I'll know if you lie.",
+            "{n} of four. They're still out there. Asking.",
+            "Kill CCG investigators to keep them away from the ward: {n} of {need}"),
         new Chapter("touka_roof", "Somewhere high", Task.HIGH, 1, Set.of(), "",
             "Take me somewhere high. Higher than the rooftops. A mountain, a tower, I don't care. Somewhere the whole world's under us and "
                 + "nobody's looking up. Ask me to follow you, and climb.",
             "Still on the ground. Higher. Way higher. Somewhere the clouds are close.",
             "With Touka following you, climb somewhere high (height " + HIGH + " or more)"),
-        new Chapter("touka_exam", "Exam night", Task.SIT, 12, Set.of(), "",
-            "I have an exam. A real one, human school, don't laugh. Sit with me while I study. You don't have to say anything. Just... be there, "
-                + "so I don't throw the book at the wall.",
-            "Sit. Stay. Don't talk. You've lasted {m} of {mm} minutes. That's a record, for you.",
-            "Sit with Touka at the cafe while she studies: {m} of {mm} minutes"),
-        new Chapter("touka_rabbit", "A rabbit's foot", Task.GIVE, 1, RABBIT_FOOT, "the rabbit's foot",
-            "Last thing. Bring me a rabbit's foot. ...Don't ask why. Just do it. And if you make one joke about my mask I'll put you through a "
-                + "wall.",
-            "A rabbit's foot. One. You know what a rabbit is.",
-            "Bring Touka a rabbit's foot"));
+        new Chapter("touka_friend", "My human friend", Task.VILLAGE_GHOUL, 1, Set.of(), "",
+            "I've got a human friend. She doesn't know what I am. She walks home past the woods by a village like hers, and something's been "
+                + "hunting there. One of us. Find the ghoul preying on those humans, and kill it.",
+            "It's still out there. Near the humans. Find it.",
+            "Kill a wild ghoul preying on a human village"),
+        new Chapter("touka_rank", "Hunting rabbits", Task.DOVES, 1, Set.of(), "",
+            "Last thing. The Doves sent someone serious. A ranked investigator, Rank 4 or worse, and he's hunting rabbits. Me. Kill him before he "
+                + "finds the cafe. ...And come back. That part's not optional.",
+            "He's still out there. Rank 4 or above. You'll know him.",
+            "Kill a CCG investigator of Rank 4 or above", 4));
 
+    /**
+     * 2.1.5: his: meat for the ghouls who won't kill, a lonely ghoul made a friend, a Pack ghoul stopped, the Dove hunting him fought side by
+     * side, then one sunrise not alone.
+     */
     static final List<Chapter> KEN = List.of(
-        new Chapter("ken_book", "A book he hasn't read", Task.GIVE, 1, BOOKS, "the book",
-            "You'd do something for me? ...Then bring me a book. One I haven't read. That's all. That's all I've ever really wanted from anyone.",
-            "A book. Any book. ...Well, not any. One I haven't read. I've read a lot. Sorry.",
-            "Bring Ken a book he hasn't read"),
-        new Chapter("ken_coffee", "Coffee, slowly", Task.SIT, 12, Set.of(), "",
-            "Have coffee with me. ...That's it. That's the favour. Sit with me a while, here, and don't hurry. I'm bad at asking people to stay.",
-            "Stay a little longer. {m} of {mm} minutes. The coffee's still warm.",
-            "Sit with Ken at his place over coffee: {m} of {mm} minutes"),
-        new Chapter("ken_ghoul", "The one who eats people", Task.GHOUL, 1, Set.of(), "",
-            "There's a ghoul out there eating people who can't fight back. Not hunting. Eating. I've seen what's left. I can't be everywhere. "
+        new Chapter("ken_meat", "The ones who won't kill", Task.GIVE, 3, GHOUL_MEAT, "the ghoul meat",
+            "There are ghouls who won't hunt people. They starve instead. I feed the ones I can. ...Bring me meat for them. Ghoul meat. Three. "
+                + "I know what I'm asking. I'm sorry.",
+            "{n} of three. Every one is someone who doesn't have to kill tonight.",
+            "Bring Ken ghoul meat for the ghouls who won't kill: {n} of {need}"),
+        new Chapter("ken_ally", "Nobody should be alone", Task.ALLY, 1, Set.of(), "",
+            "Out there, there are ghouls who've never had anyone. I was one. Find one of them. Talk to them. Walk with them. Make one of them your "
+                + "friend, so they're not alone anymore.",
+            "Still alone, all of them? ...Try a gentle one. They're the loneliest.",
+            "Make a wild ghoul your ally (it walks with you)"),
+        new Chapter("ken_ghoul", "The ones who enjoy it", Task.GHOUL_PACK, 1, Set.of(), "",
+            "There are ghouls who kill because they like it. The Pack. They eat people who can't fight back, and laugh. I can't be everywhere. "
                 + "...Stop one. Please. And come back alive.",
-            "Not yet? ...Be careful. A wild ghoul. They're out there. They always are.",
-            "Kill a wild ghoul that preys on people"),
-        new Chapter("ken_flowers", "White flowers by the door", Task.GIVE, 3, WHITE_FLOWERS, "the white flowers",
-            "I'd like to plant something by the door. White flowers. Three. Daisies, white tulips, lilies of the valley... anything white. I used "
-                + "to dream of red ones. I'd like to stop.",
-            "{n} of three white flowers. ...Thank you for not asking about the red ones.",
-            "Bring Ken white flowers (white tulips, oxeye daisies, lilies of the valley, azure bluets): {n} of {need}"),
+            "Not yet? ...Be careful. A Pack ghoul. You'll know them by how they smile.",
+            "Kill a wild ghoul of the Pack"),
+        new Chapter("ken_doves", "Beside me", Task.DOVES_WITH, 1, Set.of(), "",
+            "There's an investigator who's been tracking me. Rank 5, maybe more. I don't want to fight him alone anymore. Walk with me, and when "
+                + "he finds us, fight beside me.",
+            "He hasn't found us yet. Stay close. Rank 5 or above.",
+            "With Ken following you, kill a CCG investigator of Rank 5 or above", 5),
         new Chapter("ken_sunrise", "One sunrise", Task.DAWN, 1, Set.of(), "",
             "I don't sleep well. I haven't, for a long time. Stay up with me, once. Until the sun comes up. I'd like to see one sunrise with "
                 + "someone, instead of alone.",
@@ -194,10 +232,14 @@ public final class Courtship {
     /** {@code bond} as this courtship keeps it: the errands' flags read as chapters (their count, meaningless now, from 0). */
     public static QuestLog.Bond migrate(QuestLog.Bond bond, int total) {
         if ((bond.flags() & LEGACY) == 0) {
+            // 2.1.5: a chapter on from before it changed what each asks: its count starts again (it counted something else).
+            if (bond.has(EtoRules.LINE_ON) && !bond.has(FROM_215)) {
+                return EtoRules.count(new QuestLog.Bond(bond.regard(), bond.chatted(), bond.flags() | FROM_215, bond.favours()), 0);
+            }
             return bond;
         }
         int closed = closed(bond, total);
-        QuestLog.Bond cleared = new QuestLog.Bond(bond.regard(), bond.chatted(), bond.flags() & ~LEGACY & ~BITS | Math.min(7, closed) << SHIFT,
+        QuestLog.Bond cleared = new QuestLog.Bond(bond.regard(), bond.chatted(), bond.flags() & ~LEGACY & ~BITS | Math.min(7, closed) << SHIFT | FROM_215,
             bond.favours());
         return EtoRules.count(cleared, 0);
     }
@@ -224,13 +266,19 @@ public final class Courtship {
 
     /** Begun: the first chapter on, nothing done of it. */
     public static QuestLog.Bond begin(QuestLog.Bond bond) {
-        return EtoRules.count(new QuestLog.Bond(bond.regard(), bond.chatted(), (bond.flags() | EtoRules.LINE_ON) & ~LEGACY & ~BITS, bond.favours()), 0);
+        return EtoRules.count(new QuestLog.Bond(bond.regard(), bond.chatted(), (bond.flags() | EtoRules.LINE_ON | FROM_215) & ~LEGACY & ~BITS,
+            bond.favours()), 0);
     }
 
     /** {@code amount} more done on the chapter on for {@code key}, if it is a {@code task} (never past what it needs). */
     public static QuestLog.Bond progress(String key, QuestLog.Bond bond, Task task, int amount) {
+        return progress(key, bond, task, amount, Integer.MAX_VALUE);
+    }
+
+    /** 2.1.5: the same, for a Dove of rank {@code rank} (a chapter wanting a higher one doesn't count it). */
+    public static QuestLog.Bond progress(String key, QuestLog.Bond bond, Task task, int amount, int rank) {
         Chapter chapter = chapter(key, bond);
-        if (chapter == null || chapter.task() != task || amount <= 0) {
+        if (chapter == null || chapter.task() != task || amount <= 0 || rank < chapter.rank()) {
             return bond;
         }
         return EtoRules.count(bond, Math.min(chapter.need(), EtoRules.count(bond) + amount));

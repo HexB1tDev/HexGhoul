@@ -172,6 +172,14 @@ public final class AgentBrain {
     private AgentBrain() {
     }
 
+    /** 2.1.5: {@code agent}'s rank (0 to 10): its mind's, else its saved one. */
+    static int rankLevel(CcgAgent agent) {
+        if (agent.mind != null && agent.mind.rank != null) {
+            return agent.mind.rank.level();
+        }
+        return agent.getPersistentData().m_128451_(RANK_LEVEL);
+    }
+
     /** Ticks from {@code at} to {@code now}; "never" is forever ago (never overflows). */
     static long ago(long now, long at) {
         return at == Long.MIN_VALUE ? Long.MAX_VALUE : now - at;

@@ -1550,27 +1550,28 @@ ignored: Nothing happened. Got it? Nothing.
 # task is done. Never picked otherwise. Not yet a couple: nothing a couple does. She hides everything behind insults; let them crack.
 # =====================================================================================================================================
 
-moment touka_beans
-say: *After closing. The cafe's dark except the bar. Touka grinds your beans by hand, glaring at them, and pours two cups.* Sit. Drink. And be honest, or I'll know.
-> *Drink it.* | +1 sip -> taste
-> You made one for me? | +2 -> taste
-ignored: *She drinks both cups herself, angrily.*
+moment touka_blend
+say: *After closing. Touka takes the bottle you made, sniffs it, frowns, sips it, and puts it down very carefully. Then she makes one of her own and slides it next to yours.* Drink mine. Then drink yours. Then tell me which is better. Be honest, or I'll know.
+> Yours. Obviously. | +2 -> taste
+> Mine, actually. | +3 laugh -> taste
+> They taste the same. | +1 huff -> taste
+ignored: *She drinks both, frowning, and doesn't say which won.*
 page taste
-say: *She watches you over the rim of her own cup, not drinking it.* Well? I made it the way the old man taught me. Every cup's supposed to be for one person. I've never made one for... *She stops.* Just tell me if it's bad.
-> It's the best coffee I've ever had. | +3 shy
-  - ...Liar. *She looks away fast.* ...It's okay if you're lying. Say it again anyway.
-> It's a little bitter. Honestly. | +4 laugh
-  - *She actually laughs, then covers her mouth like it's illegal.* Finally, someone honest. Yeah. It's bitter. I'm bad at sugar. ...I'll try again. For you. Shut up.
+say: *She watches you over the rim of her own cup.* Yours is too sweet and you rushed it. *A pause.* ...It's not bad. The old man taught me that every cup's supposed to be for one person. Nobody's ever made one for me. *She stops.* Don't look at me like that.
+> I'll make you one every day. | +4 shy
+  - *She chokes on her coffee.* That's— you can't just SAY it! That's the whole point of the coffee! ...Idiot. *She doesn't look at you for a full minute.* Doves have been asking about the cafe. Next, you're helping me with that.
+> Teach me to make it properly. | +4 laugh
+  - *She actually laughs, then covers her mouth like it's illegal.* Fine. Thursdays. Bring beans. *Then, darker:* Doves have been sniffing round. Next, you're making them stop.
 > Who's the old man? | +3 -> oldman
 page oldman
 say: The manager. He found me when I was a brat who bit everyone. Gave me an apron instead of a beating. *She turns her cup.* He says coffee's how you tell someone you're glad they exist without saying anything embarrassing.
 > Then I'm glad you exist too. | +4 shy
-  - *She chokes on her coffee.* That's— you can't just SAY it! That's the whole point of the coffee! ...Idiot. *She doesn't look at you for a full minute.*
+  - *She goes red to the ears.* ...Shut up. *Quietly:* Doves have been asking about the cafe. Four of them. Next, you're making them stop asking.
 > So this cup means something. | +3 huff
-  - It means you brought beans. That's all. *Her ears are red.* Doves have been sniffing round. Next you're helping me clear the night. Don't get killed.
+  - It means you can follow a recipe. That's all. *Her ears are red.* Doves next. Investigators. Don't get killed.
 
 moment touka_patrol
-say: *Touka drops off a wall beside you, breathing hard, wings fading to sparks.* Eight. I counted. You fight like an idiot, you know that? You leave your left side open every time.
+say: *Touka drops off a wall beside you, breathing hard, wings fading to sparks. A Dove's coat lies in the street behind you.* Four. I counted. You fight like an idiot, you know that? You leave your left side open every time.
 > You were watching me? | +2 -> watch
 > You were following me the whole time? | +2 -> watch
 > My left side is fine. | +1 huff -> watch
@@ -1598,50 +1599,42 @@ say: Down there I'm always hiding. From Doves, from customers, from school. Up h
 > They're not the only good thing. | +4 blush
   - *She throws a clump of grass at you.* Stop being nice, I can't— ...Okay. Okay. *She lets you sit next to her. Very close. Not touching. Almost.*
 > Fly away with me, then. | +4 shy
-  - Idiot. Ghouls with Ukaku burn out if they fly too long. ...But maybe someday. Somewhere quiet. *She says it to the clouds, not to you.*
+  - Idiot. Ghouls with Ukaku burn out if they fly too long. ...But maybe someday. Somewhere quiet. *She says it to the clouds, not to you.* Next, there's a ghoul hunting near my friend's village. Kill it.
 > Show me your wings. | +3 -> wings
 page wings
 say: *Slowly, she lets them out. Not the crystals she fights with: soft red light, flickering like a candle, spilling over the grass.* Nobody's seen them like this. They only look like this when I'm not scared.
 > They're beautiful. | +5 blush
-  - ...Shut up. *The wings flicker brighter.* I have an exam. Sit with me while I study, at the cafe. Don't talk. Just be there. That's what's next.
+  - ...Shut up. *The wings flicker brighter.* There's a human village I keep an eye on. My friend lives there. Something's been hunting near it. That's what's next.
 > So you're not scared right now? | +4 shy
-  - Not right now. *She pulls them back in, embarrassed.* Exam next. Cafe. You sit, I study. If you make me laugh I'll kill you.
+  - Not right now. *She pulls them back in, embarrassed.* Next. A ghoul's been hunting near a human village. My friend's village. Find it and kill it.
 
-moment touka_exam
-say: *Touka slams the book shut.* Okay. Quiz me. If I get three right I'll pass. Ask me anything from chapter nine. Go.
-> What's the capital of the north? | +1 -> q1
-> I don't know what's in chapter nine. | +2 -> q1
-ignored: *She opens the book again and pretends you were never there.*
-page q1
-say: That's not even in chapter nine, you— *She snatches the book and points.* THIS. The date. When the treaty was signed. I know this one. It's... *she screws her eyes shut* ...it's on the tip of my tongue.
-> You know this. Breathe. | +3 -> q2
-> I'll give you a hint. | +2 -> q2
-> It's the year you were born. | +1 huff -> q2
-page q2
-say: ...Got it! *She writes it in the margin, triumphant.* One. Okay. Next. Ask me why it failed. I know why it failed. I wrote a whole essay on it. Ask me.
-> Why did it fail? | +3 -> q3
-> Tell me like you'd tell the examiner. | +2 -> q3
-page q3
-say: Because nobody trusted anybody, and everyone was waiting for the other side to break first. *She stops, hears herself, and looks at you.* ...That's a stupid answer for history and a pretty good one for everything else.
-> You don't have to wait for me to break first. | +5 shy
-  - *She stares at you for a long moment. Then she puts her forehead on the book.* ...I hate you. I'm going to pass this exam and it's going to be your fault. *Muffled:* Bring me a rabbit's foot. Last thing. Don't ask.
-> You'll pass. I know it. | +4 laugh
-  - If I pass, you're buying me something. If I fail, you're buying me something bigger. *She's smiling into the book.* Last thing after this. A rabbit's foot. Don't ask why.
-> Want me to stay until you're done? | +4 blush
-  - ...Yeah. Stay. Don't talk. *She opens the book again, and her foot finds yours under the table, and stays.*
+moment touka_friend
+say: *Touka is sitting on the village wall, swinging her legs, looking at a lit window on the far street.* That's her house. My friend. She's asleep. She'll walk to school tomorrow past those woods and never know anything was there. *She doesn't look at you.* Thanks.
+> She's safe now. | +3 -> friend
+> Does she know what you are? | +2 -> friend
+> You could have done it yourself. | +1 -> friend
+ignored: *She watches the window until the candle goes out.*
+page friend
+say: She makes me food I can't eat. I eat it anyway and throw up after. Every time. *A small, crooked smile.* She thinks I'm a normal girl who works at a cafe and fails maths. I study so hard for those exams so I can stay in her school. Just to be near something normal.
+> You are normal. To me. | +5 shy
+  - *She kicks your ankle, hard, and then leans her shoulder into yours and leaves it there.* ...Idiot. *Quietly:* There's one more thing. A Dove. A ranked one. He's been hunting rabbits. Me.
+> She's lucky to have you. | +4 look
+  - I'm lucky to have her. *She jumps down.* One more thing. There's an investigator, Rank 4 or worse, hunting the rabbit. I need you.
+> Maybe tell her someday. | +3 look
+  - Maybe. If the world ever lets me. *She stands up.* Last thing. A Dove's hunting the rabbit. Rank 4, maybe higher. Kill him before he finds the cafe.
 
-moment touka_rabbit
-say: *Touka turns the rabbit's foot over in her fingers. She doesn't make a joke. She doesn't call you an idiot.* You actually brought it.
-> You asked. | +2 -> rabbit
-> Why a rabbit's foot? | +2 -> rabbit
-ignored: *She puts it in her pocket and walks away without a word. Her hand doesn't leave the pocket.*
+moment touka_rank
+say: *Touka finds you before you've wiped the blood off. She looks at the investigator's coat on the ground, then at you, checking you over like she's counting your limbs.* You idiot. You absolute idiot. Rank 4. You could have died.
+> I didn't. | +2 -> rabbit
+> He was hunting you. | +3 -> rabbit
+ignored: *She turns away fast and doesn't let you see her face.*
 page rabbit
-say: Everyone calls me the rabbit. Because of the mask. And rabbits are prey. Small, scared, always running. *She closes her fist around it.* I wanted something that said I'm lucky instead. Something somebody gave me because they wanted me to keep going.
-> I want you to keep going. With me. | +5 shy -> ask
-> You're not prey. You're terrifying. | +5 laugh -> ask
-> Then it's yours. For luck. | +4 -> ask
+say: *She pulls something out of her pocket: a rabbit's foot, worn soft.* Everyone calls me the rabbit. Because of the mask. Prey. Small, scared, always running. *She closes your fingers around it.* My brother gave me this, before he left. It's supposed to be lucky. You need it more than I do.
+> Then you're not prey. You're the one who's lucky. | +5 shy -> ask
+> I'll keep it safe. | +5 -> ask
+> I can't take this. | +4 -> ask
 page ask
-say: *She puts it in her pocket and keeps her hand on it.* ...Okay. That's all of it. You did everything I asked and you didn't run away once, which, for someone who has to deal with me, is a miracle. *She glares at the floor.* So if there's something you wanted to say, say it. Before I lose my nerve. Or yours.
+say: *She keeps her hand around yours a second too long.* ...Okay. That's all of it. You did everything I asked and you didn't run away once, which, for someone who has to deal with me, is a miracle. *She glares at the floor.* So if there's something you wanted to say, say it. Before I lose my nerve. Or yours.
 > Give me one second. | +3 blush
   - One. *She counts under her breath.* ...Two. Three. You're taking too long. Ask me properly, idiot. I'm waiting.
 > You already know. | +3 huff

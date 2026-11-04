@@ -1602,63 +1602,53 @@ ignored: I'll make it myself. Badly.
 # task is done. Never picked otherwise. Not yet a couple: nothing a couple does.
 # =====================================================================================================================================
 
-moment eto_letter
-say: *She takes the book like it might bite her, opens it, and reads. Her lips move. Twice she stops and looks at you over the page.*
-> Well? | +1 -> verdict
-> Don't read it in front of me. | +1 -> verdict
-> I'm not a writer. Be gentle. | +2 -> verdict
-ignored: I'll read it when you're not looking, then. Even better.
-page verdict
-say: Your handwriting is a crime. Your spelling is a second crime. And this line, here... *she taps it* ...I've read eleven thousand books and nobody ever wrote me a line like this one. Why did you write it?
-> Because it's true. | +4 hair
-  - ...Don't. Don't say that so plainly. I don't have a shelf for things said plainly. *She closes the book very carefully.* I'm keeping this. Forever.
-> I wanted you to smile. | +3 giggle
-  - Then you failed. I'm not smiling. This is my face. ...Fine. It's a smile. Write me another one someday and I'll pretend it isn't.
-> I copied it from a book. | -1 pout -> caught
-page caught
-say: Liar. I know every book. This one isn't in any of them. *She hugs it to her chest.* You wrote it and you're embarrassed. That's the best part.
-> ...Fine. I wrote it. | +3 giggle
-  - I knew it. Next chapter, then. Tonight, you're walking me somewhere dark. Don't be late.
-> I'll never admit it. | +2
-  - You don't have to. The ink already did. *She tucks the book under her arm and won't give it back.*
+moment eto_village_night
+say: *The village is asleep. Eto walks down the middle of the street like she owns it, trailing a finger along the shutters, reading the names painted on the doors in a whisper.* Baker. Smith. Somebody's grandmother. Do you hear them breathing? All of them, in there, breathing.
+> They'd scream if they knew. | +2 -> windows
+> Keep your voice down. | +1 -> windows
+> It's peaceful. | +2 -> windows
+ignored: *She stops under one window for a long time, then walks on, humming.*
+page windows
+say: *She stops under a window with a candle in it.* A child's asleep in there. I can smell the milk on its breath. *She smiles.* Everyone thinks the monster wants to come in. The monster just wants to know what it's like, on the other side of the glass. Being someone they'd leave a candle out for.
+> You could be. For me. | +4 hair
+  - *She turns, and for a second the smile isn't a smile at all.* ...Careful. I'll hold you to that. *Lighter:* Next, go in there in daylight and make one of them love you. I want to see if it's possible.
+> They'd never leave one out for us. | +3 look
+  - No. They wouldn't. *She taps the glass, once, very softly, and walks on.* So go and make one of them try. Make a human love you. I want to watch it happen.
+> Let's go before someone wakes up. | +2 giggle
+  - Spoilsport. *She skips ahead.* Tomorrow, come back in daylight. Make one of them adore you. I want to know if they can.
 
-moment eto_night_walk
-say: *Eto stops in the middle of the path, tilts her head back and breathes in the dark like it's perfume.* Do you know why I like the night? Everybody's honest at night. The ones who want to eat you stop pretending they don't.
-> And what about you? | +2 -> honest
-> I like it because you're in it. | +3 blush -> honest
-> I prefer the day. | 0 -> honest
-ignored: *She walks on ahead, humming, as if she'd said nothing.*
-page honest
-say: Me? *She laughs, small.* At night I'm the thing under the bed. I eat people, {name}. Not because I'm hungry. Because it's what I was made for. Does that frighten you?
-> No. I'm still here. | +4 hair
-  - ...Hm. You are, aren't you. Still here. *She takes a step closer, then one back.* Bring me ink next. I want to write this down before I lose it.
-> A little. | +3 look
-  - Good. A little is honest. People who say none are lying, and people who say all of it run. *She smiles at the moon.* Stay a little scared. It's flattering.
-> You're more than what you eat. | +3 blush
-  - Careful. Say things like that and I'll start believing in people again. Terrible habit. ...Ink. Next. I need to write.
+moment eto_human_friend
+say: *Eto is waiting at the edge of the village with her chin on her hands.* I watched. From the roof. You made them laugh. They touched your arm. *She tilts her head.* What did it feel like? Being loved by something that would scream if it knew what you were?
+> Warm. And terrible. | +4 -> know
+> It felt normal. Like I belonged. | +3 -> know
+> I'm human. They'd have no reason to scream. | +2 -> know
+ignored: *She watches the village a while longer, saying nothing.*
+page know
+say: Do you know why I asked? *She picks at a thread on her sleeve.* I've never had one. Not once. Everyone who ever loved me knew exactly what I was, and wanted something for it. I wanted to see if the other kind of love was real. *She looks up.* It is, isn't it.
+> It's real. So is mine. | +5 blush
+  - *She opens her mouth, closes it, and looks away fast.* ...That's cheating. You can't just— *She stands up.* Doves next. I want to watch you kill them. I need to remember what you are.
+> You've got one now. | +5 hair
+  - Don't. *Quietly:* Don't say things I'll want to keep. *She brushes off her skirt.* Next, I want to watch you kill Doves. Three of them. I'll be right behind you.
+> It's real. It's also fragile. | +3 look
+  - Everything worth having is. *She hops down from the wall.* Next, kill Doves for me. Three. I'll come and watch. Fragile things should see what the world is like.
 
-moment eto_ink
-say: *She uncorks a sac, pours it into a chipped bottle, dips a long black quill and writes something fast on the inside of her wrist. She holds it up.* Read it.
-> *Read it aloud.* | +2 -> wrist
-> What does it say? | +1 -> wrist
-> You're writing on yourself? | +1 -> wrist
-ignored: *She licks the ink off her wrist and pretends it never happened.*
-page wrist
-say: It says your name. *She turns her hand over, looking at it like it's someone else's.* I write the names of everyone I mean to remember. Usually they're dead before the ink dries. You're the first one I wrote down hoping you wouldn't be.
-> I'm not going anywhere. | +4 blush
-  - Everyone says that. ...You say it like you mean it, though. I'll leave the ink on. *She pulls her sleeve down over it.* For a few days.
-> Who else did you write down? | +2 -> list
-> Should I be worried? | +2 giggle
-  - Very. But not about that. *She caps the bottle.* Next, I want to watch you hunt. I want to see your face when you do.
-page list
-say: A man who sold me books for nine years and never asked my name. A girl who drew owls. My mother, once, though I never met her. *She shrugs.* A short list. Ink is precious.
-> Thank you for adding me. | +4 hair
-  - Don't thank me. It's a curse, probably. *Softly:* Come hunting with me. After dark. I want to watch.
-> I'll make sure it's not a curse. | +3 giggle
-  - Big words. Prove it. Take me hunting after dark, and let me watch you.
+moment eto_secret
+say: *Eto is lying on her back on a table between the shelves, a book open on her face.* Don't tell me what it was. *The book doesn't move.* Let me guess. Somebody's in love with somebody they can't have. Or somebody did something terrible once and smiles every day so no one asks.
+> Close. Very close. | +3 giggle -> guess
+> I promised not to tell. | +4 -> guess
+> Why do you care about their secrets? | +2 -> guess
+ignored: *The book stays on her face. She might be asleep. She isn't.*
+page guess
+say: *She takes the book off her face and sits up.* You kept it. You actually kept it, even from me. *She looks delighted.* That's why they told you. Because you're the kind who keeps things. *Softer:* I have a secret too. The biggest one. Come to the Library in the dead of night, and I'll tell you.
+> I'll be there. | +4 hair
+  - Three in the morning. When even the books are asleep. *She lies back down and puts the book back over her face, but you can hear her smiling.*
+> Is it dangerous? | +3 giggle
+  - Terribly. For both of us. *She grins.* Three in the morning. Come alone.
+> You can tell me now. | +2 pout
+  - No. Some things need the dark. *She points at the ceiling, at nothing.* Three in the morning. The Library. Me.
 
 moment eto_watch
-say: *There's blood on your sleeve. Eto steps over the last body without looking at it, takes your face in both hands, and turns it to the moonlight like she's reading it.* There you are.
+say: *There's a Dove's blood on your sleeve. Eto steps over the last investigator without looking at him, takes your face in both hands, and turns it to the light like she's reading it.* There you are.
 > What are you looking for? | +2 -> face
 > Let go. | 0 -> face
 > *Stand still and let her look.* | +3 -> face
@@ -1666,11 +1656,11 @@ ignored: *She wipes a fleck of blood off your cheek with her thumb and walks off
 page face
 say: Most people go ugly when they kill. Their faces crack and something mean leaks out. Yours didn't. You looked... sad, and sure. *She wipes your cheek with her thumb.* I've never been looked at like that. Like the sad, sure thing was worth protecting.
 > You are worth protecting. | +5 blush
-  - *For once she has nothing to say. She lets go of your face, slowly.* ...Come to the Library in the dead of night. I want to show you something. I've never shown anyone.
+  - *For once she has nothing to say. She lets go of your face, slowly.* ...One more thing, before the last. Get one of those humans to tell you a secret. I'll tell you why after.
 > I was protecting you. | +4 hair
-  - From what? I'm the worst thing out here. *But she's smiling.* Come to the Library in the dead of night. Just you. There's something I want you to see.
+  - From what? I'm the worst thing out here. *But she's smiling.* Next, go and get a human to tell you a secret. A real one. I'll explain after.
 > I didn't feel anything. | +1 look
-  - Liar. I watched. *She hums.* Come to the Library in the dead of night anyway. Maybe you'll feel something there.
+  - Liar. I watched. *She hums.* Next, get a human to tell you their secret. Maybe you'll feel something then.
 
 moment eto_deep
 say: *The Library is black except for one candle. Eto is sitting on the floor between two shelves, without her coat, without the smile. She pats the floor beside her.* Sit. I'm going to tell you something, and you're going to be quiet until I'm done.

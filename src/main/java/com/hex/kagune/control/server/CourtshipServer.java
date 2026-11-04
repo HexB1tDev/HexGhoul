@@ -70,12 +70,37 @@ public final class CourtshipServer {
             case HIGH -> along && player.m_20186_() >= Courtship.HIGH && npc.m_20186_() >= Courtship.HIGH - 8;
             case DAWN -> near <= Courtship.WITH && (time >= 22300L || time < 900L);
             case DEEP -> near <= Courtship.WITH && time >= 16500L && time < 21500L && ownPlace(npc);
+            // 2.1.5: through a human village after dark (its people about), her along.
+            case VILLAGE_NIGHT -> along && EtoRules.night(time) && moving(player) && player.m_284548_().m_6443_(com.hex.kagune.control.npc.HumanNpc.class,
+                player.m_20191_().m_82400_(VILLAGE_NEAR), human -> human.m_6084_()).size() >= 2;
             default -> false;
         };
     }
 
     /** Last positions seen ("<player>"), so a walk only counts while they walk. */
     private static final java.util.Map<UUID, double[]> WHERE = new java.util.HashMap<>();
+
+    /** 2.1.5: how near (blocks) humans must be for it to be their village. */
+    static final double VILLAGE_NEAR = 32.0;
+
+    /**
+     * 2.1.5: something done that a courtship chapter may ask for ({@code task}: a wild ghoul made an ally, a village human brought to care
+     * for them, a human's secret told): every companion's chapter of it moved on.
+     */
+    public static void event(ServerPlayer player, Courtship.Task task, int amount) {
+        for (Persona persona : Persona.ALL) {
+            QuestLog.Bond bond = EtoServer.courtBond(player, persona.key());
+            Courtship.Chapter chapter = Courtship.chapter(persona.key(), bond);
+            if (chapter == null || chapter.task() != task || EtoRules.count(bond) >= chapter.need()) {
+                continue;
+            }
+            QuestLog.Bond after = Courtship.progress(persona.key(), bond, task, amount);
+            if (after != bond) {
+                QuestServer.bond(player, persona.key(), after);
+                tell(player, persona, after);
+            }
+        }
+    }
 
     /** True if {@code player} has gone a few blocks since the last step. */
     private static boolean moving(ServerPlayer player) {

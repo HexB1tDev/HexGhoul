@@ -168,12 +168,12 @@ public final class EtoTests {
         check(EtoRules.step(bond) == EtoRules.Step.NONE, "nothing asked yet");
         bond = EtoRules.begin(bond);
         check(EtoRules.step(bond) == EtoRules.Step.COURTING && EtoRules.count(bond) == 0
-            && com.hex.kagune.control.npc.Courtship.chapter(EtoRules.KEY, bond).id().equals("eto_letter"), "her first chapter: a page you wrote");
+            && com.hex.kagune.control.npc.Courtship.chapter(EtoRules.KEY, bond).id().equals("eto_village_night"), "her first chapter: a walk among the humans");
         bond = com.hex.kagune.control.npc.Courtship.progress(EtoRules.KEY, bond, com.hex.kagune.control.npc.Courtship.Task.KILLS, 5);
         check(EtoRules.count(bond) == 0, "only the chapter on counts");
         bond = EtoRules.gifted(bond, 12L);
-        bond = com.hex.kagune.control.npc.Courtship.progress(EtoRules.KEY, bond, com.hex.kagune.control.npc.Courtship.Task.GIVE, 3);
-        check(EtoRules.count(bond) == 1 && com.hex.kagune.control.npc.Courtship.ready(EtoRules.KEY, bond) && EtoRules.giftedOn(bond, 12L),
+        bond = com.hex.kagune.control.npc.Courtship.progress(EtoRules.KEY, bond, com.hex.kagune.control.npc.Courtship.Task.VILLAGE_NIGHT, 300);
+        check(EtoRules.count(bond) == 12 && com.hex.kagune.control.npc.Courtship.ready(EtoRules.KEY, bond) && EtoRules.giftedOn(bond, 12L),
             "never past what it needs, the gift day kept beside it");
         check(EtoRules.date(bond) == bond, "no asking her out mid-courtship");
         for (int chapter = 0; chapter < com.hex.kagune.control.npc.Courtship.CHAPTERS; chapter++) {
@@ -253,7 +253,7 @@ public final class EtoTests {
             "a close friend: her courtship begins (a human too)");
         check(!EtoTalk.choices(context(com.hex.kagune.control.npc.Courtship.BEGIN_AT - 1, 0, 0, false, false, false, null, false))
             .contains(NpcTalk.Choice.FAVOUR), "not before");
-        EtoTalk.Context ready = context(80, EtoRules.LINE_ON, 1, false, true, false, null, false);
+        EtoTalk.Context ready = context(80, EtoRules.LINE_ON, 12, false, true, false, null, false);
         check(EtoTalk.answer(ready, NpcTalk.Choice.FAVOUR).effect() == EtoTalk.Effect.COURT, "a chapter's task done: its moment");
         EtoTalk.Context ask = context(100, EtoRules.LINE_ON | EtoRules.BOOKS_DONE | EtoRules.HUNT_DONE | EtoRules.FLOWER_DONE, 0, false, false, false, null, false);
         check(EtoTalk.choices(ask).contains(NpcTalk.Choice.ASK_OUT) && EtoTalk.answer(ask, NpcTalk.Choice.ASK_OUT).effect() == EtoTalk.Effect.DATE,

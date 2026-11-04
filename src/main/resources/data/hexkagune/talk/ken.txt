@@ -1406,41 +1406,44 @@ say: An old man who ran a cafe. He took in strays like me. He said coffee was th
 # task is done. Never picked otherwise. Not yet a couple: nothing a couple does. He apologises for wanting things; let him want them.
 # =====================================================================================================================================
 
-moment ken_book
-say: *Ken turns the book over, reads the back, then the first page. Then the first page again. He looks up, a little lost.* I haven't read this. I thought I'd read everything.
-> Good. It's yours. | +2 -> read
-> I hoped you hadn't. | +2 -> read
-ignored: *He's already three chapters in and doesn't notice you leave.*
-page read
-say: When I was a boy, books were the only place nobody could reach me. My mother worked all the time. My aunt didn't want me. So I lived in other people's stories. *He touches the spine.* Nobody's ever given me one. I always had to go and find them.
-> Now someone's bringing them to you. | +4 bow
-  - *He smiles, and it's so small and surprised that it almost hurts to look at.* ...Thank you. Really. Have coffee with me sometime? At my place. Slowly. That's what I'd like next.
-> Where do you live now, then? In stories? | +3 -> live
-> I'd like to read it after you. | +3 read
-  - Then I'll read it slowly, so you're not waiting too long, and quickly, so you're not waiting too long. *He laughs at himself.* Coffee next. At my place. Will you?
-page live
-say: *He thinks about it honestly, chin in his hand.* ...A little bit in stories. A little bit in the dark. And lately, a little bit wherever you happen to be. *He goes red.* That came out strangely. I'm sorry.
-> Don't be sorry. I liked it. | +4 chin
-  - *He covers his face with one hand.* ...Okay. Then I'm not sorry. Have coffee with me. At my place. That's all I'll ask, next.
-> It came out perfectly. | +4 bow
-  - You're kind. Too kind. *He smiles at the floor.* Come and have coffee with me. I'll make it properly.
-
-moment ken_coffee
-say: *The coffee's gone cold. Neither of you noticed. Ken's been talking for twenty minutes about a novel with a sad ending, and he stops, mid-sentence, embarrassed.* I've been talking too much. I never talk this much.
-> I like listening to you. | +3 -> talk
-> Keep going. What happens next? | +3 -> talk
-ignored: *He picks up both cold cups and washes them very carefully.*
-page talk
-say: Nobody's asked me what happens next in a long time. *He turns the cup in his hands.* People ask me how strong I am. What I can do. Whether I'll protect them. Nobody asks me what I'm reading. *He cracks a finger under his thumb without noticing.*
-> Your finger. You're doing it again. | +3 -> finger
-> I'll always ask what you're reading. | +4 bow
-  - ...Then I'll always have an answer ready. *He looks up.* There's something I need to do, out there. Something I can't do alone. Will you help me, next?
+moment ken_meat
+say: *Ken wraps the meat in paper, one piece at a time, very carefully, like he's wrapping presents.* There's an old couple in the east alley. They haven't hunted in years. And a boy, maybe twelve. He cries every time he gets hungry, because he knows what hungry means for us.
+> They'll eat tonight. | +3 -> them
+> You do this every week? | +2 -> them
+> Why not let them hunt? | +1 -> them
+ignored: *He finishes wrapping in silence, and doesn't look up.*
+page them
+say: *He cracks a finger under his thumb without noticing.* Because I know what it does to you. The first time. And the hundredth. If I can stop one person from finding out, it's worth it. *He looks at you.* You brought them meat without asking who for. People don't do that.
+> I trust you. | +4 bow
+  - *He stops wrapping.* ...Thank you. *Quietly:* There are ghouls out there who've never had anyone. Make one of them your friend? So they're not alone.
+> Your finger. You're doing it again. | +4 -> finger
+> Let me come with you to give it to them. | +4 chin
+  - *He smiles, surprised.* ...The boy would like that. He's never met anyone who isn't scared. *Then:* There's something else. Out there, ghouls who've never had anyone. Walk with one. Be their friend.
 page finger
 say: *He stops, looks at his hand like it belongs to someone else.* Sorry. Old habit. Someone once... it was a long time ago. Ten days, actually. I count things. *He tries to smile.* I'll tell you about it someday. Not today. Is that alright?
 > Whenever you're ready. I'll wait. | +5 bow
-  - *Something in his face loosens.* You'll wait. ...Thank you. *Quietly:* There's a ghoul out there eating people who can't fight. Stop one for me. Please. Come back.
+  - *Something in his face loosens.* You'll wait. ...Thank you. *Quietly:* There are ghouls out there who've never had anyone. Find one. Be their friend.
 > You don't have to tell me anything. | +4 chin
-  - I know. That's why I think I will. *He sets the cup down.* There's a man-eater out in the dark. Stop one. Please be careful.
+  - I know. That's why I think I will. *He sets the parcel down.* Find a lonely ghoul out there. Make them your friend. Please.
+
+moment ken_ally
+say: *Ken sees the ghoul walking at your side before he sees you. He stops, and for a second he looks about twelve years old.* You... they're with you. They came with you.
+> Nobody should be alone. You said so. | +3 -> alone
+> They're my friend now. | +3 -> alone
+ignored: *He nods to the ghoul at your side, a small, careful nod, like a bow.*
+page alone
+say: I was alone for a long time. After. I'd walk around the ward all night so I wouldn't have to be in a room with myself. *He looks at your companion, then at you.* Somebody did this for me once. I never thanked them properly. They're gone now.
+> Then thank them by letting me do it for you. | +5 bow
+  - *He laughs, small and wet.* You keep saying things I've wanted to hear for years. *Then, harder:* There are ghouls who kill for fun. The Pack. Stop one of them for me. Please. Come back.
+> You're not alone anymore either. | +5 chin
+  - *He looks at the ground for a long time.* ...No. I'm not. *Quietly:* There's a ghoul of the Pack out there, killing people for the joy of it. Stop one. And come back.
+> Tell me about them. | +3 -> gone
+page gone
+say: They ran a cafe. They gave me an apron and a cup of coffee and never once asked what I'd done. *He smiles at nothing.* That's all it takes, sometimes. A cup and a chair and no questions.
+> I'll give you all three. | +5 bow
+  - *He has to look away.* ...Thank you. *Then, quieter:* The Pack. Ghouls who enjoy it. Stop one for me. Please come back.
+> They'd be proud of you. | +4 chin
+  - I hope so. *He straightens.* There are ghouls who kill people because they like it. The Pack. Stop one. Come back alive.
 
 moment ken_ghoul
 say: *Ken finds you before you find him. He looks at the blood on you, then at your face, then checks your arms, your ribs, quietly, like a doctor.* Are you hurt? Tell me the truth.
@@ -1451,27 +1454,27 @@ page hurt
 say: *He breathes out.* I shouldn't have asked you. Every time I let someone do something dangerous for me they... *He stops.* That ghoul would have killed again tonight. And tomorrow. You saved people who'll never know your name. That's how it always is.
 > Is that how it is for you? | +4 -> him
 > I did it because you asked. | +4 crack
-  - *He flinches, and then doesn't.* ...Then I'll be careful what I ask. *Softer:* I'd like to plant something by my door. White flowers. Will you bring me some?
+  - *He flinches, and then doesn't.* ...Then I'll be careful what I ask. *Softer:* There's an investigator tracking me. I don't want to face him alone anymore. Walk with me?
 page him
 say: Every night. *He sits down on the curb.* People call me a king. Kings get thanked. I just get tired. *He looks at you.* But you came back. Most people don't come back. Thank you for coming back.
 > I'll always come back to you. | +5 bow
-  - *He doesn't answer for a while. When he does, his voice is careful.* ...I'd like to plant white flowers by my door. Will you bring me some? I want something there that isn't red.
+  - *He doesn't answer for a while. When he does, his voice is careful.* ...There's a Dove who's been tracking me. Rank 5, maybe more. Walk with me. When he finds us, stay.
 > You don't have to carry it alone. | +5 chin
-  - *He laughs, small and wet.* You keep saying things I've wanted to hear for years. ...Bring me white flowers. Three. For my door. I'll explain someday.
+  - *He laughs, small and wet.* ...Then don't let me carry this one. There's an investigator hunting me. Rank 5 or above. Walk with me, and when he comes, fight beside me.
 
-moment ken_flowers
-say: *Ken kneels by his door and plants them one by one, pressing the soil down with his fingers, careful as if they could feel it.* There. White. *He sits back on his heels.*
-> They look perfect. | +2 -> red
-> Why white? | +2 -> red
-ignored: *He waters them with a cup, very slowly, and smiles at them.*
-page red
-say: When I was... taken, those ten days, I dreamt of red flowers. Fields of them. Every time I woke up it was worse, so I started wanting to stay in the dream. *He brushes dirt off his hands.* I'd like to see white ones when I come home now. Something gentle. Something you gave me.
-> Then every time you come home, think of me. | +5 bow
-  - ...I already do. *He says it to the flowers, not to you, then hears himself and goes completely red.* I'm sorry. I mean— I mean it. I'm not sorry.
-> I'll bring more when these fade. | +4 chin
-  - They'll fade? *He looks honestly stricken, then laughs.* Of course they will. ...Then bring more. Keep bringing them. I'd like that.
-> Thank you for telling me. | +4 bow
-  - Thank you for listening without looking at me like I'm broken. *Quietly:* One more thing. Stay up with me once. Until sunrise. I don't sleep well, and I'd like to see one with someone.
+moment ken_doves
+say: *The investigator's quinque is still humming on the ground. Ken is standing very still, breathing hard, one tail still out and dripping. He looks at you like he's checking you're real.* You stayed. You didn't run.
+> I said I'd fight beside you. | +3 -> stayed
+> Are you hurt? | +3 -> stayed
+ignored: *He stands there until the quinque goes quiet, then puts his kagune away.*
+page stayed
+say: *He sits down on the curb, suddenly, like his legs gave out.* Every fight, I'm the one in front. So nobody else gets hurt. I've been in front for so long I forgot what it's like to have someone at my back. *He looks up.* It's quieter. Having you there.
+> You never have to stand in front alone again. | +5 bow
+  - *He doesn't answer for a while.* ...I'd like to believe that. *Quietly:* Stay up with me tonight? Until the sun comes up. I'd like to see one sunrise with someone. With you.
+> I'll always have your back. | +5 chin
+  - *He laughs, small and surprised.* ...Okay. *Then:* There's one more thing I'd like. It's small. Stay up with me until dawn. I want to see one sunrise not alone.
+> We make a good team. | +4 bow
+  - We do. *He stands, and offers you his hand up, though you're not the one sitting.* ...Stay up with me tonight? Until the sun comes up. That's the last thing I'll ask.
 
 moment ken_sunrise
 say: *The sky goes grey, then pink. Ken is sitting next to you with his knees pulled up, watching it like he's never seen one.* It's been years since I watched this. I usually close the curtains. The light hurts after a long night.

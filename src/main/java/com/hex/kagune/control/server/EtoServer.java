@@ -1264,17 +1264,27 @@ public final class EtoServer {
             return;
         }
         boolean night = EtoRules.night(killer.m_9236_().m_46468_());
-        // 2.1.2: a courtship chapter of kills counts: at night anywhere, at night with the companion along, or a wild ghoul.
+        // 2.1.2: a courtship chapter of kills counts. 2.1.5: Doves of a rank (alone or with the companion along), Pack ghouls, ghouls
+        // preying on a village, as well as before (at night, at night with them along, any wild ghoul).
+        int rank = dead instanceof com.hex.kagune.control.npc.CcgAgent agent ? AgentBrain.rankLevel(agent) : -1;
+        boolean nearHumans = dead instanceof GhoulNpc && !killer.m_284548_().m_6443_(com.hex.kagune.control.npc.HumanNpc.class,
+            dead.m_20191_().m_82400_(CourtshipServer.VILLAGE_NEAR), human -> human.m_6084_()).isEmpty();
         for (com.hex.kagune.control.npc.Persona persona : com.hex.kagune.control.npc.Persona.ALL) {
             QuestLog.Bond bond = courtBond(killer, persona.key());
             com.hex.kagune.control.npc.Courtship.Chapter chapter = com.hex.kagune.control.npc.Courtship.chapter(persona.key(), bond);
             if (chapter == null || EtoRules.count(bond) >= chapter.need()) {
                 continue;
             }
+            boolean along = CourtshipServer.along(killer, persona.key());
             boolean counts = switch (chapter.task()) {
                 case KILLS -> dead instanceof Enemy && night;
-                case KILLS_WITH -> dead instanceof Enemy && night && CourtshipServer.along(killer, persona.key());
+                case KILLS_WITH -> dead instanceof Enemy && night && along;
                 case GHOUL -> dead instanceof GhoulNpc;
+                case DOVES -> rank >= chapter.rank();
+                case DOVES_WITH -> rank >= chapter.rank() && along;
+                case GHOUL_PACK -> dead instanceof GhoulNpc ghoul && ghoul.identity() != null
+                    && ghoul.identity().temper() == com.hex.kagune.control.npc.NpcTemper.PACK;
+                case VILLAGE_GHOUL -> nearHumans;
                 default -> false;
             };
             if (counts) {

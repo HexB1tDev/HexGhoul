@@ -448,6 +448,9 @@ public final class HumanTalk {
         String key = human.m_20148_().toString();
         QuestLog.Bond bond = QuestServer.bond(player, key);
         int regard = bond.regard();
+        if (regard >= com.hex.kagune.control.npc.Courtship.HUMAN_CLOSE) {
+            CourtshipServer.event(player, com.hex.kagune.control.npc.Courtship.Task.HUMAN_FRIEND, 1); // 2.1.5: a human who cares for them
+        }
         String both = player.m_20148_() + key;
         long day = Math.floorDiv(player.m_284548_().m_46468_(), 24000L);
         boolean ghoul = com.hex.kagune.data.KaguneProfile.isUnlocked(player);
@@ -578,6 +581,9 @@ public final class HumanTalk {
                 }
             }
             line = com.hex.kagune.control.village.HumanVoice.answer(temper, HumanBrain.life(human), topic, roll, gossip);
+        }
+        if (topic == com.hex.kagune.control.village.HumanVoice.Topic.SECRET) {
+            CourtshipServer.event(player, com.hex.kagune.control.npc.Courtship.Task.HUMAN_SECRET, 1); // 2.1.5
         }
         if (topic.personal() && !bond.has(topic.flag())) {
             QuestServer.bond(player, key, bond.with(topic.flag(), true).regard(bond.regard() + com.hex.kagune.control.village.HumanVoice.LEARNED));

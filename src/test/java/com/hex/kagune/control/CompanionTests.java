@@ -350,6 +350,13 @@ public final class CompanionTests {
                 }
             }
             check(tasks.size() >= 4, p.key() + "'s chapters ask for " + tasks.size() + " kinds of thing");
+            // 2.1.5: out of the mod's own world: nothing of the old shared errands' kind (kills of any monster, a sit, ink, beans...).
+            for (com.hex.kagune.control.npc.Courtship.Chapter chapter : chapters) {
+                check(chapter.task() != com.hex.kagune.control.npc.Courtship.Task.KILLS && chapter.task() != com.hex.kagune.control.npc.Courtship.Task.KILLS_WITH
+                    && chapter.task() != com.hex.kagune.control.npc.Courtship.Task.SIT && chapter.task() != com.hex.kagune.control.npc.Courtship.Task.WALK_NIGHT
+                    && (chapter.task() != com.hex.kagune.control.npc.Courtship.Task.GIVE || chapter.items().stream().allMatch(i -> i.startsWith("hexkagune:"))),
+                    chapter.id() + ": asks for something of the mod's own world");
+            }
             // The road: begun, a hand-over taken whole (never past what it needs), its moment closing it, the next on, then asking out.
             QuestLog.Bond bond = com.hex.kagune.control.npc.Courtship.begin(new QuestLog.Bond(70, 0L, NpcBonds.MET, 0));
             check(com.hex.kagune.control.npc.Courtship.chapter(p.key(), bond) == chapters.get(0) && EtoRules.step(bond) == EtoRules.Step.COURTING,
@@ -369,6 +376,22 @@ public final class CompanionTests {
                 check(com.hex.kagune.control.npc.Courtship.closed(bond, chapters.size()) == i + 1 && EtoRules.count(bond) == 0, chapter.id() + ": closed");
             }
             check(EtoRules.step(bond) == EtoRules.Step.ASK && com.hex.kagune.control.npc.Courtship.chapter(p.key(), bond) == null, p.key() + ": then ask");
+            // 2.1.5: a Dove below the chapter's rank doesn't count; one at it does.
+            for (int i = 0; i < chapters.size(); i++) {
+                com.hex.kagune.control.npc.Courtship.Chapter chapter = chapters.get(i);
+                if (chapter.rank() > 0) {
+                    QuestLog.Bond on = new QuestLog.Bond(70, 0L, NpcBonds.MET | EtoRules.LINE_ON | i << com.hex.kagune.control.npc.Courtship.SHIFT
+                        | com.hex.kagune.control.npc.Courtship.FROM_215, 0);
+                    check(EtoRules.count(com.hex.kagune.control.npc.Courtship.progress(p.key(), on, chapter.task(), 1, chapter.rank() - 1)) == 0
+                        && EtoRules.count(com.hex.kagune.control.npc.Courtship.progress(p.key(), on, chapter.task(), 1, chapter.rank())) == 1,
+                        chapter.id() + ": only a Dove of Rank " + chapter.rank() + " or above");
+                }
+            }
+            // 2.1.5: a chapter on from before 2.1.5 starts its count again (it counted something else).
+            QuestLog.Bond before = new QuestLog.Bond(70, 0L, NpcBonds.MET | EtoRules.LINE_ON | 1 << com.hex.kagune.control.npc.Courtship.SHIFT, 6);
+            QuestLog.Bond now = com.hex.kagune.control.npc.Courtship.migrate(before, 5);
+            check(EtoRules.count(now) == 0 && com.hex.kagune.control.npc.Courtship.closed(now, 5) == 1 && com.hex.kagune.control.npc.Courtship.migrate(now, 5) == now,
+                p.key() + ": a chapter from before 2.1.5 starts again, once");
             // A bond from before 2.1.2: the errands read as chapters.
             QuestLog.Bond twoDone = new QuestLog.Bond(100, 0L, NpcBonds.MET | EtoRules.LINE_ON | EtoRules.BOOKS_DONE | EtoRules.HUNT_DONE, 7);
             QuestLog.Bond migrated = com.hex.kagune.control.npc.Courtship.migrate(twoDone, 5);

@@ -321,6 +321,7 @@ public final class GhoulNpcTalk {
                 GhoulNpcBrain.bind(npc, player);
                 bond = bond.with(NpcBonds.ALLY, true);
                 QuestServer.signal(player, Signal.BEFRIEND, 1, temper, Tags.ALLY);
+                CourtshipServer.event(player, com.hex.kagune.control.npc.Courtship.Task.ALLY, 1); // 2.1.5
             }
             case PART -> {
                 GhoulNpcBrain.unbind(npc, now);

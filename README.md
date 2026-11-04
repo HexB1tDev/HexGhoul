@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.1.5 (HexGhoul): courtships out of the mod's own world (testing)
+
+See `.github/release-notes-2.1.5.md`. The companions' courtships now come from the mod's own world, not generic chores. The CCG's Doves (some of a given rank), wild ghouls of the Pack, a ghoul preying on a human village, a wild ghoul made your ally, village humans who come to care for you or tell you a secret, a walk through a human village at night, a drink from Touka's cookbook, ghoul meat. Every chapter's scene is rewritten to match.
+
 ## 2.1.4 (HexGhoul): romance for every personality (testing)
 
 See `.github/release-notes-2.1.4.md`. Romance with village humans now has words for every personality. You can flirt with anyone (strangers, friends and close friends each answer differently). A partner gets conversations of their own. Kisses, hugs and "I love you" have more variety.
