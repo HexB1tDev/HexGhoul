@@ -148,6 +148,16 @@ public final class EtoServer {
                 EtoBrain.forgive(npc, player);
                 EtoBrain.gesture(mind, EtoGesture.READ, now);
                 line = npc.persona().script().letter(c, true);
+            } else if (!enemy && mind.target != player.m_19879_()) {
+                // 2.2.0: put out, not an enemy: they can always say sorry (or come back with a little someone, or a letter).
+                EtoBrain.listen(npc, player, now);
+                List<EtoTalk.Option> options = new java.util.ArrayList<>();
+                options.add(new EtoTalk.Option(NpcTalk.Choice.SAY_1, "I'm sorry.", "sorry"));
+                options.add(new EtoTalk.Option(NpcTalk.Choice.SAY_2, "It was an accident. I swear.", "sorry"));
+                options.add(new EtoTalk.Option(NpcTalk.Choice.LEAVE, "", ""));
+                show(player, npc, c, new EtoTalk.Page(com.hex.kagune.control.npc.Tolerance.putOut(npc.persona().key(), npc.m_217043_().m_188503_(100)),
+                    options), Kind.MAIN);
+                return;
             } else {
                 player.m_5661_(Component.m_237113_(npc.persona().script().snub(npc.m_217043_().m_188503_(100), enemy)), true);
                 return;
@@ -509,6 +519,21 @@ public final class EtoServer {
             int bit = 56 + Math.floorMod(what.hashCode(), 8);
             EtoTalk.Reply reply = script.sweetly(c, what);
             carry(player, npc, c, choice, firstToday(player, npc, level, bit) ? reply : unpaid(reply), Kind.SWEET);
+            return;
+        }
+        if (key.equals("sorry")) {
+            // 2.2.0: an apology: forgiven at once, or (hurt again and again) forgiven once she's had a moment.
+            boolean now2 = EtoBrain.apologised(npc, player, level.m_46467_());
+            String line = com.hex.kagune.control.npc.Tolerance.forgiven(npc.persona().key(), !now2, npc.m_217043_().m_188503_(100));
+            EtoTalk.Context after = context(player, npc);
+            if (now2) {
+                QuestLog.Bond bond = QuestServer.bond(player, npc.persona().key());
+                QuestServer.bond(player, npc.persona().key(), bond.regard(bond.regard() + 1));
+                EtoBrain.giddy(npc, player, level.m_46467_());
+                show(player, npc, after, npc.persona().script().main(after, line), Kind.MAIN);
+            } else {
+                show(player, npc, after, new EtoTalk.Page(line, List.of(new EtoTalk.Option(NpcTalk.Choice.LEAVE, "", ""))), Kind.CLOSED);
+            }
             return;
         }
         if (key.equals("gifts")) {

@@ -115,6 +115,10 @@ public final class EtoBrain {
         /** Per player: smiling since a kiss or a hug, until; cross after a hit, until; close since; next she goes looking for them. */
         final Map<UUID, Long> giddy = new HashMap<>();
         final Map<UUID, Long> sulk = new HashMap<>();
+        /** 2.2.0: what she holds against each partner (how many offences, the last when): {@link com.hex.kagune.control.npc.Tolerance}. */
+        final Map<UUID, long[]> offences = new HashMap<>();
+        /** 2.2.0: when she last brushed a blow off (so a flurry isn't a flurry of words). */
+        long shrugAt = Long.MIN_VALUE / 2;
         final Map<UUID, Long> nearSince = new HashMap<>();
         long nextSeek;
         long nextNightAsk;
@@ -647,6 +651,9 @@ public final class EtoBrain {
             && fighter.m_9236_() instanceof ServerLevel at) {
             fighter.mind.reachedAt = at.m_46467_();
         }
+        if (by instanceof ServerPlayer hitter && !(event.getEntity() instanceof EtoNpc) && hitter.m_9236_() instanceof ServerLevel at) {
+            STRUCK.put(hitter.m_20148_(), at.m_46467_()); // 2.2.0: in the middle of a fight (a blow on her then is an accident)
+        }
         if (event.getEntity() instanceof ServerPlayer victim) {
             protect(victim, event.getSource());
             return;
@@ -676,12 +683,24 @@ public final class EtoBrain {
         if (attacker instanceof ServerPlayer player) {
             QuestLog.Bond bond = QuestServer.bond(player, npc.persona().key());
             if (partnerOf(mind, player)) {
-                QuestServer.bond(player, npc.persona().key(), bond.regard(bond.regard() + Romance.PARTNER_BLOW));
-                if (until(mind.sulk, player.m_20148_()) < now) {
-                    say(npc, player, npc.persona().script().partnerHit(npc.m_217043_().m_188503_(100), mind.stage == Romance.Stage.MARRIED));
-                    gesture(mind, EtoGesture.POUT, now);
+                // 2.2.0: tolerance: a first blow is an accident (more so mid-fight); only more of them, close together, put her out.
+                boolean fighting = now - STRUCK.getOrDefault(player.m_20148_(), Long.MIN_VALUE / 2) <= FIGHTING;
+                com.hex.kagune.control.npc.Tolerance.Reaction reaction = com.hex.kagune.control.npc.Tolerance.hit(offences(mind, player, now), fighting);
+                offend(mind, player, now);
+                int seed = npc.m_217043_().m_188503_(100);
+                QuestServer.bond(player, npc.persona().key(), bond.regard(bond.regard() + reaction.regard));
+                if (reaction == com.hex.kagune.control.npc.Tolerance.Reaction.SHRUG) {
+                    if (until(mind.sulk, player.m_20148_()) < now && now - mind.shrugAt > 40L) {
+                        mind.shrugAt = now;
+                        say(npc, player, com.hex.kagune.control.npc.Tolerance.shrug(npc.persona().key(), seed));
+                    }
+                } else {
+                    if (until(mind.sulk, player.m_20148_()) < now) {
+                        say(npc, player, npc.persona().script().partnerHit(seed, mind.stage == Romance.Stage.MARRIED));
+                        gesture(mind, EtoGesture.POUT, now);
+                    }
+                    mind.sulk.put(player.m_20148_(), Math.max(until(mind.sulk, player.m_20148_()), now + reaction.sulk));
                 }
-                mind.sulk.put(player.m_20148_(), now + Romance.PARTNER_SULK);
                 endKiss(npc, mind, null, now);
                 return;
             }
@@ -1158,6 +1177,45 @@ public final class EtoBrain {
         }
     }
 
+    /** 2.2.0: when each player last struck something that wasn't a companion (mid-fight, a blow on her is an accident). */
+    private static final Map<UUID, Long> STRUCK = new HashMap<>();
+    /** 2.2.0: struck something else this recently (ticks): fighting. */
+    static final long FIGHTING = 60L;
+
+    /** 2.2.0: how many offences of {@code player}'s she still holds at {@code now}. */
+    static int offences(Mind mind, ServerPlayer player, long now) {
+        long[] held = mind.offences.get(player.m_20148_());
+        return held == null ? 0 : com.hex.kagune.control.npc.Tolerance.offences((int)held[0], held[1], now);
+    }
+
+    /** 2.2.0: one more offence of {@code player}'s, now. */
+    private static void offend(Mind mind, ServerPlayer player, long now) {
+        int before = offences(mind, player, now);
+        mind.offences.put(player.m_20148_(), new long[] {before + 1L, now});
+        if (STRUCK.size() > 256) {
+            STRUCK.clear();
+        }
+    }
+
+    /**
+     * 2.2.0: {@code player} says sorry: all forgiven (true), or (hurt again and again) forgiven but she wants a moment first (false: a short
+     * sulk in place of what she held).
+     */
+    static boolean apologised(EtoNpc npc, ServerPlayer player, long now) {
+        Mind mind = npc.mind;
+        if (mind == null) {
+            return true;
+        }
+        com.hex.kagune.control.npc.Tolerance.Apology answer = com.hex.kagune.control.npc.Tolerance.apology(offences(mind, player, now));
+        forgive(npc, player);
+        mind.offences.remove(player.m_20148_());
+        if (answer == com.hex.kagune.control.npc.Tolerance.Apology.A_MOMENT) {
+            mind.sulk.put(player.m_20148_(), now + com.hex.kagune.control.npc.Tolerance.MOMENT);
+            return false;
+        }
+        return true;
+    }
+
     /** True if she is ignoring {@code player} (they left her hanging). */
     public static boolean ignoring(EtoNpc npc, ServerPlayer player, long now) {
         Mind mind = npc.mind;
@@ -1367,13 +1425,21 @@ public final class EtoBrain {
                 endKiss(npc, mind, player, now);
             }
             default -> {
-                // Left hanging.
+                // Left hanging. 2.2.0: the first time shrugged off; only more of them put her out, and not for long.
                 mind.kiss = null;
                 mind.toward = null;
-                mind.ignoring.put(player.m_20148_(), now + EtoRules.IGNORE_TICKS);
-                gesture(mind, EtoGesture.ANGRY, now);
-                say(npc, player, npc.persona().script().hanging(seed));
-                player.m_5661_(Component.m_237113_(npc.displayName() + " is cross with you. " + capital(npc.persona().she()) + "'ll ignore you for a while."), true);
+                com.hex.kagune.control.npc.Tolerance.Reaction reaction = com.hex.kagune.control.npc.Tolerance.missed(offences(mind, player, now));
+                offend(mind, player, now);
+                if (reaction == com.hex.kagune.control.npc.Tolerance.Reaction.SHRUG) {
+                    gesture(mind, EtoGesture.POUT, now);
+                    say(npc, player, com.hex.kagune.control.npc.Tolerance.shrugKiss(npc.persona().key(), seed));
+                } else {
+                    mind.ignoring.put(player.m_20148_(), now + reaction.sulk);
+                    gesture(mind, EtoGesture.ANGRY, now);
+                    say(npc, player, npc.persona().script().hanging(seed));
+                    player.m_5661_(Component.m_237113_(npc.displayName() + " is put out with you. Say sorry (talk to " + npc.persona().her() + "), or give "
+                        + npc.persona().her() + " a minute."), true);
+                }
             }
         }
     }

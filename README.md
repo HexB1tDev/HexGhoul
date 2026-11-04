@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.2.0 (HexGhoul): tolerance, and sorry is always there (testing)
+
+See `.github/release-notes-2.2.0.md`. Companions are far more tolerant, and you can always say sorry. A first accidental hit or a missed kiss is brushed off with a word. Only more of them close together put your partner out, and then for 20 seconds to a minute, never the old 5 minutes. When they're put out, talking to them opens "I'm sorry." / "It was an accident. I swear." and that forgives you on the spot.
+
 ## 2.1.9 (HexGhoul): Peace and War break the nerve of whoever faces them (testing)
 
 See `.github/release-notes-2.1.9.md`. Rinkaku's final kakuja (Peace or War) now breaks the nerve of whoever faces it. Doves of Rank 0 to 4 and the two weaker tiers of wild ghouls run from it, and keep running while it's in sight. Rank 5 to 7 Doves and the strongest wild ghouls stand and fight, but tremble the whole time, and every few seconds their nerve gives and they back off before coming again. Rank 8 and above (Special Class, the White Reaper) stand as before.

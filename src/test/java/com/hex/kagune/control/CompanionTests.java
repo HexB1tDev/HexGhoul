@@ -49,6 +49,7 @@ public final class CompanionTests {
         talk();
         courtship();
         proofs();
+        tolerance();
         poses();
         ken();
         touka();
@@ -322,6 +323,33 @@ public final class CompanionTests {
         tails.add(Gate.RINKAKU_FULL_KAKUJA);
         Teaching.View dragon = Teaching.view("ken", true, KagunePath.RINKAKU, 1000, tails::contains);
         check(dragon.ready() && dragon.next().gate() == Gate.RINKAKU_DRAGON, "and last, the Dragon");
+    }
+
+    /** 2.2.0: a partner lets go of a first blow or a missed kiss; only more, close together, put them out; sorry always helps. */
+    static void tolerance() {
+        com.hex.kagune.control.npc.Tolerance.Reaction shrug = com.hex.kagune.control.npc.Tolerance.Reaction.SHRUG;
+        check(com.hex.kagune.control.npc.Tolerance.hit(0, false) == shrug && com.hex.kagune.control.npc.Tolerance.hit(1, true) == shrug
+            && com.hex.kagune.control.npc.Tolerance.hit(1, false) == com.hex.kagune.control.npc.Tolerance.Reaction.PUT_OUT
+            && com.hex.kagune.control.npc.Tolerance.hit(2, false) == com.hex.kagune.control.npc.Tolerance.Reaction.CROSS,
+            "a first blow (a second mid-fight) brushed off; then put out; then cross");
+        check(com.hex.kagune.control.npc.Tolerance.missed(0) == shrug && com.hex.kagune.control.npc.Tolerance.missed(1)
+            == com.hex.kagune.control.npc.Tolerance.Reaction.PUT_OUT, "a first missed kiss shrugged off");
+        for (com.hex.kagune.control.npc.Tolerance.Reaction r : com.hex.kagune.control.npc.Tolerance.Reaction.values()) {
+            check(r.sulk <= 1200L && r.regard >= -6, r + ": never the five minutes of before, never a big blow to regard");
+        }
+        check(com.hex.kagune.control.npc.Tolerance.offences(3, 100L, 100L + com.hex.kagune.control.npc.Tolerance.FORGETS) == 0
+            && com.hex.kagune.control.npc.Tolerance.offences(3, 100L, 200L) == 3 && com.hex.kagune.control.npc.Tolerance.offences(3, Long.MIN_VALUE, 0L) == 0,
+            "what they hold fades after three minutes");
+        check(com.hex.kagune.control.npc.Tolerance.apology(1) == com.hex.kagune.control.npc.Tolerance.Apology.FORGIVEN
+            && com.hex.kagune.control.npc.Tolerance.apology(5) == com.hex.kagune.control.npc.Tolerance.Apology.A_MOMENT, "sorry forgives (a moment first, if it keeps happening)");
+        for (Persona p : Persona.ALL) {
+            for (int seed = 0; seed < 6; seed++) {
+                for (String line : new String[] {com.hex.kagune.control.npc.Tolerance.shrug(p.key(), seed), com.hex.kagune.control.npc.Tolerance.shrugKiss(p.key(), seed),
+                    com.hex.kagune.control.npc.Tolerance.forgiven(p.key(), seed % 2 == 0, seed), com.hex.kagune.control.npc.Tolerance.putOut(p.key(), seed)}) {
+                    check(line != null && line.length() > 3, p.key() + " says it");
+                }
+            }
+        }
     }
 
     /** 2.1.8: Ken's final kakujas need their proof first (Teaching.proof); everything else is taught as before. */
