@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.3.6 (HexGhoul): endgame ghouls far tougher: more health, more resistance (testing)
+
+See `.github/release-notes-2.3.6.md`. Endgame ghouls are far tougher. Before, a player with mastery 1000, every quest done and 100+ ghoul meat eaten still had only 20 health and took about 46% of every blow with the kagune out, so a Rank 7 investigator could nearly one-shot them. Now every factor counts for more, the quests count too, and health grows.
+
 ## 2.3.5 (HexGhoul): mood kisses: each companion's own, the face kept clear (testing)
 
 See `.github/release-notes-2.3.5.md`. The mood kisses, redone: each companion has their own, and no kiss closes the arms in front of the face any more. Before, every kiss was the same pose on all three, and some brought both arms up crossed or together in front of her face. That's exactly where your face and first-person camera are, so it would have blocked your view.

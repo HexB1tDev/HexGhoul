@@ -74,7 +74,7 @@ public final class GhoulMeatTests {
     private static void tank() {
         check(com.hex.kagune.control.GhoulTank.taken(0, 0, 0.0) == 1.0, "a new ghoul with its kagune in takes a blow whole");
         double most = com.hex.kagune.control.GhoulTank.taken(1000, 100000, com.hex.kagune.control.GhoulTank.form(true, 5, true, true));
-        check(most > 0.2 && most < 0.3, "a seasoned ghoul in a final kakuja takes about a quarter (" + most + ")");
+        check(most > 0.15 && most < 0.22, "a seasoned ghoul in a final kakuja takes about a fifth, before its quests (2.3.6; " + most + ")");
         double prev = 1.0;
         boolean falls = true;
         for (int m = 0; m <= 1000; m += 100) {
@@ -83,8 +83,18 @@ public final class GhoulMeatTests {
             prev = t;
         }
         check(falls && com.hex.kagune.control.GhoulTank.taken(1000, 0, 0.0) < 0.7, "more mastery, less taken");
-        check(Math.abs(com.hex.kagune.control.GhoulTank.meat(20) - 0.5) < 1.0E-9 && com.hex.kagune.control.GhoulTank.meat(0) == 0.0
-            && com.hex.kagune.control.GhoulTank.meat(200) > 0.9, "meat: half its share at 20 pieces, more for ever");
+        check(Math.abs(com.hex.kagune.control.GhoulTank.meat(15) - 0.5) < 1.0E-9 && com.hex.kagune.control.GhoulTank.meat(0) == 0.0
+            && com.hex.kagune.control.GhoulTank.meat(200) > 0.9, "meat: half its share at 15 pieces, more for ever");
+        // 2.3.6: an endgame ghoul (mastery 1000, every unlock, 100 ghoul meat) is far tougher: about 40 health, under 30% of a blow with
+        // its kagune out, about a sixth in a final kakuja.
+        double endgameOut = com.hex.kagune.control.GhoulTank.taken(1000, 100, 1.0, com.hex.kagune.control.GhoulTank.form(true, 0, false, false));
+        double endgameFinal = com.hex.kagune.control.GhoulTank.taken(1000, 100, 1.0, com.hex.kagune.control.GhoulTank.form(true, 0, true, true));
+        double extra = com.hex.kagune.control.GhoulTank.health(1000, 100, 1.0);
+        check(endgameOut < 0.3 && endgameFinal < 0.17 && extra > 18.0 && extra <= 20.0, "endgame: " + endgameOut + " of a blow, " + endgameFinal
+            + " in a final kakuja, +" + extra + " health");
+        check(com.hex.kagune.control.GhoulTank.health(0, 0, 0.0) == 0.0 && com.hex.kagune.control.GhoulTank.taken(0, 0, 0.0, 0.0) == 1.0,
+            "a new ghoul: a player's health, every blow whole");
+        check((20.0 + extra) / endgameOut > 3.0 * (20.0 / 0.46), "about three times as hard to bring down as before 2.3.6");
         double out = com.hex.kagune.control.GhoulTank.form(true, 0, false, false);
         double quad = com.hex.kagune.control.GhoulTank.form(true, 2, false, false);
         double kakuja = com.hex.kagune.control.GhoulTank.form(true, 5, true, false);
