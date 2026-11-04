@@ -87,6 +87,7 @@ public final class KakujaArmorLayer extends RenderLayer<AbstractClientPlayer, En
         }
         pose.m_85836_();
         model.f_102810_.m_104299_(pose);
+        BuildLayer.fit(pose, player, model); // 2.3.3: over a man's chest
         if (PlayerLayers.skinLayers3d()) {
             pose.m_85841_(1.0F, 1.0F, CHEST_CLEARANCE);
         }

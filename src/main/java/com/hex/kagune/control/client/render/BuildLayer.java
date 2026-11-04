@@ -62,26 +62,29 @@ public final class BuildLayer extends RenderLayer<AbstractClientPlayer, EntityMo
     }
 
     /**
-     * True when {@code player}'s build is drawn on {@code model} now: a man, seen, his torso shown, no chestplate, and nothing grown over
-     * his torso (Ukaku's kakuja armour, Graft's, a King's form or the turning into one: each fits the torso as it always was).
+     * True when {@code player}'s build is drawn on {@code model} now: a man, seen, his torso shown, no chestplate. 2.3.3 (the owner: "Whenever
+     * you transform into any form, your chest ... vanishes ... The chest should adapt to the form and vice versa"): in every form too
+     * (Ukaku's kakuja, Graft's hide, War, Peace, the Dragon's turning); the forms' torso armour is widened over it instead
+     * ({@link #fit}).
      */
     static boolean drawn(AbstractClientPlayer player, PlayerModel<?> model, float partialTick) {
-        if (!Genders.male(player) || player.m_20145_() || !model.f_102810_.f_104207_
-            || !player.m_6844_(net.minecraft.world.entity.EquipmentSlot.CHEST).m_41619_()) {
-            return false;
+        return built(player, model);
+    }
+
+    /** 2.3.3: true when {@code player}'s build shows on {@code model} (a man, seen, his torso shown, no chestplate). */
+    public static boolean built(AbstractClientPlayer player, net.minecraft.client.model.HumanoidModel<?> model) {
+        return Genders.male(player) && !player.m_20145_() && model.f_102810_.f_104207_
+            && player.m_6844_(net.minecraft.world.entity.EquipmentSlot.CHEST).m_41619_();
+    }
+
+    /**
+     * 2.3.3: {@code pose}, already on the torso ({@code translateAndRotate}), widened and deepened about its middle so armour fitted to
+     * the bare torso sits over a man's chest ({@code ReaperBuild.PLAYER_FIT_X}, {@code _Z}); nothing for anyone else.
+     */
+    public static void fit(PoseStack pose, AbstractClientPlayer player, net.minecraft.client.model.HumanoidModel<?> model) {
+        if (built(player, model)) {
+            pose.m_85841_(ReaperBuild.PLAYER_FIT_X, 1.0F, ReaperBuild.PLAYER_FIT_Z);
         }
-        if (com.hex.kagune.control.client.UkakuClient.kakujaArmor(player, partialTick) > 0.003F) {
-            return false;
-        }
-        double clock = com.hex.kagune.control.client.PaleClient.clock(partialTick);
-        if (com.hex.kagune.control.client.GraftClient.isGraft(player)
-            && com.hex.kagune.control.client.GraftClient.hide(com.hex.kagune.control.client.GraftClient.get(player), clock) > 0.003) {
-            return false;
-        }
-        com.hex.kagune.control.client.KingClient.View king = com.hex.kagune.control.client.KingClient.get(player);
-        double time = com.hex.kagune.control.client.ControlClient.worldTime(partialTick);
-        return (king == null || king.form() == com.hex.kagune.control.king.KingForm.NONE)
-            && com.hex.kagune.control.client.TurningClient.progress(player, time) < 0.0;
     }
 
     /** True when the build's jacket layer is drawn: he wears his skin's jacket (or 3D Skin Layers draws it, hiding the flat one). */

@@ -40,6 +40,29 @@ public final class ReaperBuild {
     public static final double[][] PLAYER = slimmer(PROFILE, PLAYER_SHARE);
     /** How much further out (pixels) a male player's arms hang, clear of his chest. */
     public static final float PLAYER_ARM_OUT = 0.45F;
+    /**
+     * 2.3.3 (the owner: "Whenever you transform into any form, your chest ... vanishes ... The chest should adapt to the form and vice
+     * versa"): how much a form's armour fitted to the bare torso (Ukaku's kakuja plates, Graft's hide, War's and Peace's shells) is
+     * widened ({@code X}) and deepened ({@code Z}) about the torso's middle to sit over a male player's chest, jacket layer and all.
+     */
+    public static final float PLAYER_FIT_X = (float)((widest(PLAYER) + JACKET) / (4.0 + JACKET));
+    public static final float PLAYER_FIT_Z = (float)((deepest(PLAYER) + JACKET) / (2.0 + JACKET));
+
+    static double widest(double[][] rows) {
+        double most = 0.0;
+        for (double[] r : rows) {
+            most = Math.max(most, r[1]);
+        }
+        return most;
+    }
+
+    static double deepest(double[][] rows) {
+        double most = 0.0;
+        for (double[] r : rows) {
+            most = Math.max(most, Math.max(r[2], r[3]));
+        }
+        return most;
+    }
 
     /** {@code rows} with only {@code share} of how far each stands out past the torso (4 a side, 2 front and back); inside it, as is. */
     static double[][] slimmer(double[][] rows, double share) {

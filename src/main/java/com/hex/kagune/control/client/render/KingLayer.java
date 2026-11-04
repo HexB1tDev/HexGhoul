@@ -228,6 +228,9 @@ public final class KingLayer extends RenderLayer<AbstractClientPlayer, EntityMod
                 PlayerLayers.upperBody(pose, player, partial);
             }
             part.m_104299_(pose);
+            if (i == 1) {
+                BuildLayer.fit(pose, player, model); // 2.3.3: War's and Peace's shells over a man's chest
+            }
             matrices[i] = new Matrix4f(pose.m_85850_().m_252922_());
             normals[i] = new Matrix3f(pose.m_85850_().m_252943_());
             pose.m_85849_();

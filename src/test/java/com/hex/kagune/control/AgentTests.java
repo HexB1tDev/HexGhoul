@@ -693,6 +693,13 @@ public final class AgentTests {
         int[] quads = new int[1];
         com.hex.kagune.control.npc.ReaperBuild.chest(player, true, (corners, uv, normal) -> quads[0]++);
         check(quads[0] == (rows.length - 1) * 4 + 1, "a player's chest drawn whole");
+        // 2.3.3: a form's armour fitted to the bare torso, widened to sit over his chest (the chest is kept in every form).
+        float fx = com.hex.kagune.control.npc.ReaperBuild.PLAYER_FIT_X;
+        float fz = com.hex.kagune.control.npc.ReaperBuild.PLAYER_FIT_Z;
+        check(fx > 1.0F && fx < 1.2F && fz > 1.0F && fz < 1.4F, "armour widened a little over his chest (" + fx + ", " + fz + ")");
+        check((4.0 + com.hex.kagune.control.npc.ReaperBuild.JACKET) * fx >= playerWidest + com.hex.kagune.control.npc.ReaperBuild.JACKET - 1.0E-6
+            && (2.0 + com.hex.kagune.control.npc.ReaperBuild.JACKET) * fz >= playerFurthest + com.hex.kagune.control.npc.ReaperBuild.JACKET - 1.0E-6,
+            "the widened armour covers the chest, jacket and all");
     }
 
     /** 2.0.43: the White Reaper standing about: leaning well back, hip cocked, his free hand in his pocket, his eyes on you, barely moving. */
