@@ -98,6 +98,8 @@ public final class EtoBrain {
         /** 2.2.4: the kiss as her mood has it (MoodKiss), and whether a teasing one has dodged its first try. */
         com.hex.kagune.control.npc.MoodKiss.Style kissStyle = com.hex.kagune.control.npc.MoodKiss.Style.SWEET;
         boolean dodged;
+        /** 2.3.9: the kiss is one she came asking for herself (not one they asked for): turning it down is no offence. */
+        boolean asked;
         /** Per player: when she next asks for a kiss of her own, and until when she ignores them. */
         final Map<UUID, Long> nextAsk = new HashMap<>();
         final Map<UUID, Long> ignoring = new HashMap<>();
@@ -1185,6 +1187,7 @@ public final class EtoBrain {
             alert(npc, player, Romance.Want.KISS, "");
             say(npc, player, npc.persona().script().kissHint(npc.m_217043_().m_188503_(1000)));
             walkUp(npc, mind, player, EtoGesture.KISS, now);
+            mind.asked = true; // 2.3.9: hers to ask; theirs to turn down (walk off) without hurting her
         }
     }
 
@@ -1311,6 +1314,7 @@ public final class EtoBrain {
             what = EtoGesture.HUG; // 1.3.29: one who never winds round an arm (Touka) holds them properly instead
         }
         endKiss(npc, mind, null, now);
+        mind.asked = false;
         if (npc.m_9236_() instanceof ServerLevel level) {
             ParentCare.drop(npc, mind, level, now);
         }
@@ -1454,6 +1458,13 @@ public final class EtoBrain {
         if (now == mind.kissAt && mind.dodged && mind.kiss == EtoRules.Kiss.WAIT) {
             gesture(mind, EtoGesture.KISS, now);
         }
+        // 2.3.9 (the owner: "sometimes your spouse gets stuck in the kiss-asking animation when you don't really want one ... you press
+        // shift on her and ... nothing happened"): never left leaning in for long whatever happens (twice her wait at most), and one she
+        // came asking for herself let go without a grudge.
+        if (mind.kiss == EtoRules.Kiss.WAIT && now - mind.kissAt > 2L * com.hex.kagune.control.npc.MoodKiss.waits(mind.kissStyle) + 40L) {
+            letGoOfKiss(npc, mind, player, now);
+            return;
+        }
         boolean shift = player.m_6047_();
         int released = !shift && mind.held > 0 ? mind.held : 0;
         mind.held = shift ? mind.held + 1 : 0;
@@ -1528,6 +1539,10 @@ public final class EtoBrain {
                 mind.kissStyle = com.hex.kagune.control.npc.MoodKiss.Style.SWEET;
             }
             default -> {
+                if (mind.asked) {
+                    letGoOfKiss(npc, mind, player, now); // 2.3.9: hers to ask; not wanted now is no offence
+                    return;
+                }
                 // Left hanging. 2.2.0: the first time shrugged off; only more of them put her out, and not for long.
                 mind.kiss = null;
                 mind.toward = null;
@@ -1546,6 +1561,22 @@ public final class EtoBrain {
                 }
             }
         }
+    }
+
+    /**
+     * 2.3.9: a kiss she leaned in for that isn't happening (they walked off, or it ran on too long): she straightens up and lets it go with
+     * a shrug of her own (Tolerance's), no grudge, no sulk.
+     */
+    static void letGoOfKiss(EtoNpc npc, Mind mind, ServerPlayer player, long now) {
+        mind.kiss = null;
+        mind.toward = null;
+        mind.held = 0;
+        mind.asked = false;
+        mind.with = 0;
+        mind.kissStyle = com.hex.kagune.control.npc.MoodKiss.Style.SWEET;
+        gesture(mind, EtoGesture.POUT, now);
+        say(npc, player, com.hex.kagune.control.npc.Tolerance.shrugKiss(npc.persona().key(), npc.m_217043_().m_188503_(100)));
+        mind.dirty = true;
     }
 
     /** How far to their right she stands to cling to their arm, and to hold their hand. */

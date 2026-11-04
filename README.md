@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.3.9 (HexGhoul): an unwanted kiss let go, never stuck (testing)
+
+See `.github/release-notes-2.3.9.md`. Fix: a spouse could get stuck leaning in for a kiss you didn't want. She now never stays leaning in for long, and turning down a kiss she came asking for is no offence.
+
 ## 2.3.8 (HexGhoul): a child can always be sent home (testing)
 
 See `.github/release-notes-2.3.8.md`. Fix: there was no button to send a child home. "Go home." only showed while the child was out away from home, never while it followed you around nearby. Now it's on the page whenever the child can walk.

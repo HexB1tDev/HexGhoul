@@ -1,4 +1,13 @@
-# START HERE (state after 2.3.8)
+# START HERE (state after 2.3.9)
+
+Fix: a spouse could get stuck leaning in for a kiss you didn't want. She now never stays leaning in for long, and turning down a kiss she came asking for is no offence.
+
+- **A kiss she asks for herself** ("...wants a kiss"): if you walk off, she straightens up with a shrug ("Fine, later.") and moves on. There's no grudge, no sulk and no make-up scene. A tap of Shift still kisses her, and holding still makes her blush and pull you in.
+- **Never stuck**: whatever happens (blocked by a wall, out of reach, a missed key), she stops leaning in after at most twice her usual wait and lets it go the same way.
+- **A kiss you asked for** and then left hanging still counts against you as before (shrugged off the first time; only repeated ones put her out).
+- **Code**: `EtoBrain.Mind.asked`, `EtoBrain.letGoOfKiss`, the cap in her kiss handling. Protocol stays 84. Not tested in game.
+
+# State after 2.3.8
 
 Fix: there was no button to send a child home. "Go home." only showed while the child was out away from home, never while it followed you around nearby. Now it's on the page whenever the child can walk.
 
