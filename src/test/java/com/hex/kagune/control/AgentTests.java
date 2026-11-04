@@ -48,6 +48,7 @@ public final class AgentTests {
         idling();
         reaperIdling();
         reaperBuild();
+        reaperTactics();
         ranks();
         tendril();
         if (!FAILURES.isEmpty()) {
@@ -470,6 +471,85 @@ public final class AgentTests {
         RigPose none = new RigPose();
         AgentPose.idle(none, 100.0, 1, 0.0F);
         check(none.isZero(), "walking: no idle");
+    }
+
+    /** 2.0.49: the White Reaper's tactics: the play he makes on what he reads, and his soar's flight. */
+    static void reaperTactics() {
+        com.hex.kagune.control.npc.ReaperTactics.Read calm = read(8.0, false, false, false, false, 1.0, 1.0, false, true, true, true, true, false);
+        check(com.hex.kagune.control.npc.ReaperTactics.choose(calm, 0.99) == com.hex.kagune.control.npc.ReaperTactics.Play.NONE,
+            "nothing to read: the usual moves");
+        check(com.hex.kagune.control.npc.ReaperTactics.choose(read(4.0, false, false, false, true, 1.0, 1.0, false, true, true, true, true, false), 0.99)
+            == com.hex.kagune.control.npc.ReaperTactics.Play.VAULT, "a guard up close: over it");
+        check(com.hex.kagune.control.npc.ReaperTactics.choose(read(8.0, false, false, false, true, 1.0, 1.0, false, true, true, true, true, false), 0.99)
+            != com.hex.kagune.control.npc.ReaperTactics.Play.VAULT, "not from too far off");
+        check(com.hex.kagune.control.npc.ReaperTactics.choose(read(12.0, true, false, false, false, 1.0, 1.0, false, true, true, true, true, false), 0.1)
+            == com.hex.kagune.control.npc.ReaperTactics.Play.SKY_SHOT, "a quarry in the air, far enough: shot where it can't step aside");
+        check(com.hex.kagune.control.npc.ReaperTactics.choose(read(7.0, false, true, false, false, 1.0, 1.0, false, true, true, true, true, false), 0.99)
+            == com.hex.kagune.control.npc.ReaperTactics.Play.PUNISH, "stunned: in at once");
+        check(com.hex.kagune.control.npc.ReaperTactics.choose(read(6.0, false, false, true, false, 1.0, 1.0, false, true, true, true, true, false), 0.99)
+            == com.hex.kagune.control.npc.ReaperTactics.Play.PUNISH, "a blow spent on nothing: in at once");
+        check(com.hex.kagune.control.npc.ReaperTactics.choose(read(2.0, false, true, false, false, 1.0, 1.0, false, true, true, true, true, false), 0.99)
+            == com.hex.kagune.control.npc.ReaperTactics.Play.NONE, "already in reach: his string, not a lunge");
+        check(com.hex.kagune.control.npc.ReaperTactics.choose(read(9.0, false, false, false, false, 0.2, 1.0, false, true, true, true, true, false), 0.99)
+            == com.hex.kagune.control.npc.ReaperTactics.Play.PUNISH, "nearly dead: he goes in for it");
+        check(com.hex.kagune.control.npc.ReaperTactics.choose(read(3.0, false, false, false, false, 1.0, 0.3, false, true, true, true, true, false), 0.99)
+            == com.hex.kagune.control.npc.ReaperTactics.Play.SOAR, "hurt and pressed: up and away, and the volley down");
+        check(com.hex.kagune.control.npc.ReaperTactics.choose(read(2.5, false, false, false, false, 1.0, 1.0, true, true, true, true, true, false), 0.3)
+            == com.hex.kagune.control.npc.ReaperTactics.Play.SOAR, "his string landed: often a soar after it");
+        check(com.hex.kagune.control.npc.ReaperTactics.choose(read(6.0, false, false, false, false, 1.0, 1.0, false, true, true, true, true, false), 0.01)
+            == com.hex.kagune.control.npc.ReaperTactics.Play.SOAR, "now and then a soar to keep them guessing");
+        check(com.hex.kagune.control.npc.ReaperTactics.choose(read(3.0, false, true, false, true, 0.1, 0.1, true, true, true, true, true, true), 0.0)
+            == com.hex.kagune.control.npc.ReaperTactics.Play.NONE, "in the middle of something: nothing new");
+        com.hex.kagune.control.npc.ReaperTactics.Read air = new com.hex.kagune.control.npc.ReaperTactics.Read(3.0, 3.0, true, false, true, false,
+            false, 1.0, 0.3, true, false, true, true, true, true, false);
+        check(com.hex.kagune.control.npc.ReaperTactics.choose(air, 0.0) == com.hex.kagune.control.npc.ReaperTactics.Play.NONE,
+            "off his feet: no new play");
+        check(com.hex.kagune.control.npc.ReaperTactics.choose(read(3.0, false, false, false, false, 1.0, 0.3, false, true, true, true, false, false), 0.0)
+            != com.hex.kagune.control.npc.ReaperTactics.Play.SOAR, "no soar before it is ready again");
+        // The soar's flight, as a mob flies (moved by its speed, then gravity 0.08 and drag: 0.98 up and down, 0.91 along, in the air).
+        double y = 0.0;
+        double along = 0.0;
+        double vy = 0.0;
+        double va = 0.0;
+        int apexTick = -1;
+        double apex = 0.0;
+        for (int tick = 0; tick < 60; tick++) {
+            if (tick < com.hex.kagune.control.npc.ReaperTactics.RAMP) {
+                double[] launch = com.hex.kagune.control.npc.ReaperTactics.soar(tick);
+                va = launch[0];
+                vy = launch[1];
+            } else if (apexTick < 0 && vy <= com.hex.kagune.control.npc.ReaperTactics.APEX) {
+                apexTick = tick;
+                apex = y;
+            }
+            if (apexTick >= 0 && tick < apexTick + com.hex.kagune.control.npc.ReaperTactics.AIR_AIM) {
+                vy = Math.max(vy, com.hex.kagune.control.npc.ReaperTactics.HANG_FALL);
+                va *= com.hex.kagune.control.npc.ReaperTactics.HANG_DRIFT;
+            }
+            y += vy;
+            along += va;
+            vy = (vy - 0.08) * 0.98;
+            va *= 0.91;
+            if (y <= 0.0 && tick > 2) {
+                break;
+            }
+        }
+        check(apex > 4.0 && apex < 6.5, "it climbs about two and a half times a flip (" + apex + " blocks)");
+        double spun = com.hex.kagune.control.npc.ReaperTactics.SPIN_FROM + com.hex.kagune.control.npc.ReaperTactics.SPIN_TICKS;
+        check(apexTick > 8 && Math.abs(apexTick - spun) <= 4.0, "turned over by the top of it, where he aims (top " + apexTick + ", turned " + spun + ")");
+        check(along > 4.0 && along < 10.0, "back far enough for the volley (" + along + " blocks)");
+        double[] led = com.hex.kagune.control.npc.ReaperTactics.lead(new double[] {0, 0, 0}, new double[] {0.2, 0, 0}, 15.0, 1.5);
+        check(Math.abs(led[0] - 0.2 * com.hex.kagune.control.npc.ReaperTactics.LEAD * 10.0) < 1.0E-9 && led[2] == 0.0,
+            "a moving quarry led along its way");
+        double[] still = com.hex.kagune.control.npc.ReaperTactics.lead(new double[] {1, 2, 3}, new double[] {0, 0, 0}, 15.0, 1.5);
+        check(still[0] == 1 && still[1] == 2 && still[2] == 3, "a still one shot where it stands");
+    }
+
+    static com.hex.kagune.control.npc.ReaperTactics.Read read(double distance, boolean airborne, boolean stunned, boolean whiffed, boolean guarding,
+                                                            double preyHealth, double ownHealth, boolean afterString, boolean flipReady,
+                                                            boolean dashReady, boolean shotReady, boolean soarReady, boolean busy) {
+        return new com.hex.kagune.control.npc.ReaperTactics.Read(distance, 3.0, true, airborne, stunned, whiffed, guarding, preyHealth, ownHealth,
+            afterString, true, flipReady, dashReady, shotReady, soarReady, busy);
     }
 
     /** 2.0.45: the White Reaper's build: his upper torso broader than his waist, his chest out in front of his belly, in his own skin. */

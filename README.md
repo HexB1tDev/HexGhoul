@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.0.49 (HexGhoul): the White Reaper fights as a tactician (testing)
+
+See `.github/release-notes-2.0.49.md`. The White Reaper fights as a tactician. Each fight he reads his opponent and picks a play ahead of the moves every investigator has: a backflip launched as Up We Go launches one, firing the volley from mid-air; closing in on openings; vaulting over a guard; shooting a target out of the air.
+
 ## 2.0.48 (HexGhoul): the White Reaper's five-ball volley (testing)
 
 See `.github/release-notes-2.0.48.md`. The White Reaper can fire a five-ball volley from Dawn. All five lightning balls leave its point together, open out into a ring around the line he aimed along (1.6 blocks across, 1.0 up and down, one ball at the top and the rest evenly round), then close in on the spot he aimed at from every side at once: a pincer. Standing still gets you caught, while a good step aside slips it. Past that spot they cross and spread again. Each ball carries 40% of a single shot, so all five on one target is twice a single ball. From 7 blocks or more, half his shots are the volley.

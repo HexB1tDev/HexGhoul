@@ -15,6 +15,7 @@ import com.hex.kagune.control.npc.GhoulNpc;
 import com.hex.kagune.control.npc.NpcRules;
 import com.hex.kagune.control.pale.PaleRules;
 import com.hex.kagune.control.quinque.Quinque;
+import com.hex.kagune.control.npc.ReaperTactics;
 import com.hex.kagune.control.wound.WoundBook;
 import com.hex.kagune.data.KaguneProfile;
 import java.util.HashMap;
@@ -100,6 +101,15 @@ public final class AgentBrain {
         int aimTarget;
         /** 2.0.48: the shot being aimed is the five-ball volley (DawnVolley), not a single ball. */
         boolean volley;
+        /** 2.0.49: how long the shot being aimed is held (a quick one at a quarry in the air, or from the top of a soar). */
+        int aimTicks = AgentRules.DAWN_AIM_TICKS;
+        /** 2.0.49, the White Reaper's tactics (ReaperTactics): a soar (when it began, its way back, at whom, whether it fired), its cooldown, his string just landed. */
+        long soarAt = Long.MIN_VALUE;
+        Vec3 soarWay = Vec3.f_82478_;
+        int soarTarget;
+        boolean soarFired;
+        long soarReadyAt = Long.MIN_VALUE;
+        boolean strung;
         /**
          * 2.0.33: the ground tendril (npc.ReaperTendril): when it set out, at whom, where it rises (null until the lance is in the ground),
          * whether it has risen yet, and when it may again.
@@ -334,6 +344,9 @@ public final class AgentBrain {
         regen(agent, mind, now);
         if (rooted(agent, mind, level, now)) {
             return; // 2.0.33: its lance in the ground for its tendril: it holds there until it pulls it out
+        }
+        if (soar(agent, mind, level, now)) {
+            return; // 2.0.49: the White Reaper soaring, aiming from the top of it
         }
         if (feet(agent, mind, now)) {
             return; // in a flip or a dash: nothing else this tick
@@ -745,6 +758,9 @@ public final class AgentBrain {
             agent.m_21573_().m_26573_(); // the case still opening in its hand
             return;
         }
+        if (tactics(agent, mind, prey, level, now)) {
+            return; // 2.0.49: the White Reaper's read of the fight
+        }
         if (ground(agent, mind, prey, level, now) || lightning(agent, mind, prey, level, now) || kick(agent, mind, prey, level, now)) {
             return;
         }
@@ -906,29 +922,8 @@ public final class AgentBrain {
                 return false;
             }
             agent.m_21573_().m_26573_();
-            if (ago(now, mind.aimAt) >= AgentRules.DAWN_AIM_TICKS) {
-                cancelLightning(agent, mind, now);
-                mind.readyAt = now + 7;
-                Vec3 hand = agent.m_146892_().m_82520_(0.0, -0.52, 0.0);
-                Vec3 target = GhoulNpcBrain.centre(prey);
-                Vec3 along = target.m_82546_(hand).m_82541_();
-                Vec3 forward = UkakuFire.horizontal(along);
-                hand = hand.m_82520_(-forward.f_82481_ * 0.30, 0.0, forward.f_82479_ * 0.30);
-                along = target.m_82546_(hand).m_82541_();
-                Vec3 tip = hand.m_82549_(along.m_82490_(Quinque.DAWN_TIP));
-                if (level.m_45547_(new ClipContext(hand, tip, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, agent))
-                    .m_6662_() == HitResult.Type.MISS) {
-                    if (mind.volley) {
-                        // 2.0.48: five from the one point, opening into a ring and closing on where the quarry stands.
-                        CrystalShots.volley(agent, level, tip, along, target.m_82554_(tip), body -> foe(agent, body),
-                            AgentRules.DAWN_SHOT_DAMAGE * com.hex.kagune.control.quinque.DawnVolley.SHARE);
-                        UkakuFire.sound(level, tip, "hexkagune:sfx.thunder", 0.9F, 1.25F);
-                    } else {
-                        CrystalShots.lightning(agent, level, tip, along, body -> foe(agent, body));
-                    }
-                    agent.shot(now);
-                    UkakuFire.sound(level, tip, "hexkagune:sfx.thunder", 0.65F, 1.45F);
-                }
+            if (ago(now, mind.aimAt) >= mind.aimTicks) {
+                release(agent, mind, prey, level, now);
             }
             return true;
         }
@@ -936,6 +931,7 @@ public final class AgentBrain {
             && now >= mind.readyAt && agent.m_142582_(prey)) {
             mind.aimAt = now;
             mind.aimTarget = prey.m_19879_();
+            mind.aimTicks = AgentRules.DAWN_AIM_TICKS;
             mind.volley = AgentRules.volley(range, agent.m_217043_().m_188500_());
             if (ControlItems.quinqueWeapon(agent.m_21205_()) == Quinque.DAWN) {
                 // 2.0.32: its point opens as it aims, the ball gathering there until it flies.
@@ -947,6 +943,213 @@ public final class AgentBrain {
             return true;
         }
         return false;
+    }
+
+    /**
+     * The aimed shot leaves Dawn's point at {@code prey}: a single ball or (2.0.48) the volley. 2.0.49: led along the way it is moving
+     * ({@link ReaperTactics#lead}: where it will be when the ball gets there; its way read off where it was last tick, which a player's
+     * body keeps on the server where its own motion doesn't).
+     */
+    private static void release(CcgAgent agent, Mind mind, LivingEntity prey, ServerLevel level, long now) {
+        cancelLightning(agent, mind, now);
+        mind.readyAt = now + 7;
+        mind.aimTicks = AgentRules.DAWN_AIM_TICKS;
+        Vec3 hand = agent.m_146892_().m_82520_(0.0, -0.52, 0.0);
+        Vec3 target = GhoulNpcBrain.centre(prey);
+        if (mind.rank == AgentRules.Rank.RANK_10) {
+            double[] moving = {prey.m_20185_() - prey.f_19790_, prey.m_20186_() - prey.f_19791_, prey.m_20189_() - prey.f_19792_};
+            double[] led = ReaperTactics.lead(new double[] {target.f_82479_, target.f_82480_, target.f_82481_}, moving, target.m_82554_(hand),
+                AgentRules.DAWN_SHOT_SPEED);
+            target = new Vec3(led[0], led[1], led[2]);
+        }
+        Vec3 along = target.m_82546_(hand).m_82541_();
+        Vec3 forward = UkakuFire.horizontal(along);
+        hand = hand.m_82520_(-forward.f_82481_ * 0.30, 0.0, forward.f_82479_ * 0.30);
+        along = target.m_82546_(hand).m_82541_();
+        Vec3 tip = hand.m_82549_(along.m_82490_(Quinque.DAWN_TIP));
+        if (level.m_45547_(new ClipContext(hand, tip, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, agent)).m_6662_() != HitResult.Type.MISS) {
+            return;
+        }
+        if (mind.volley) {
+            // 2.0.48: five from the one point, opening into a ring and closing on where the quarry will be.
+            CrystalShots.volley(agent, level, tip, along, target.m_82554_(tip), body -> foe(agent, body),
+                AgentRules.DAWN_SHOT_DAMAGE * com.hex.kagune.control.quinque.DawnVolley.SHARE);
+            UkakuFire.sound(level, tip, "hexkagune:sfx.thunder", 0.9F, 1.25F);
+        } else {
+            CrystalShots.lightning(agent, level, tip, along, body -> foe(agent, body));
+        }
+        agent.shot(now);
+        UkakuFire.sound(level, tip, "hexkagune:sfx.thunder", 0.65F, 1.45F);
+    }
+
+    // ---------------------------------------------------------------- 2.0.49: the White Reaper's tactics
+
+    /** True if {@code prey} is guarding in front of {@code agent}: a Rinkaku's block up and facing him, or a shield raised. */
+    private static boolean guarding(LivingEntity prey, CcgAgent agent) {
+        if (!(prey instanceof ServerPlayer player)) {
+            return false;
+        }
+        if (player.m_21254_()) {
+            return true;
+        }
+        if (!RinkakuBlockServer.up(player)) {
+            return false;
+        }
+        Vec3 look = player.m_20154_();
+        Vec3 to = agent.m_20182_().m_82546_(player.m_20182_());
+        return com.hex.kagune.control.RinkakuBlock.covers(new double[] {look.f_82479_, look.f_82480_, look.f_82481_},
+            new double[] {to.f_82479_, to.f_82480_, to.f_82481_});
+    }
+
+    /** His read of the fight ({@link ReaperTactics#choose}) and the play he makes on it. True if he made one (nothing else this tick). */
+    private static boolean tactics(CcgAgent agent, Mind mind, LivingEntity prey, ServerLevel level, long now) {
+        if (mind.rank != AgentRules.Rank.RANK_10 || mind.kind != Quinque.DAWN) {
+            return false;
+        }
+        boolean busy = mind.striking || mind.kickAt != Long.MIN_VALUE || mind.aimAt != Long.MIN_VALUE || mind.groundAt != Long.MIN_VALUE
+            || mind.soarAt != Long.MIN_VALUE;
+        if (now % 2L != 0L && !mind.strung) {
+            return false; // he reads it every other tick (at once after his string lands)
+        }
+        double distance = Math.sqrt(prey.m_20280_(agent));
+        long last = KaguneClash.lastSwing(prey);
+        boolean whiffed = last != Long.MIN_VALUE && now - last >= 4L && now - last <= 14L && mind.hurtAt < last;
+        boolean airborne = !prey.m_20096_() && !prey.m_20069_() && !prey.m_20159_();
+        ReaperTactics.Read read = new ReaperTactics.Read(distance, AgentRules.reach(mind.kind), agent.m_142582_(prey), airborne,
+            PaleStun.stunned(prey), whiffed, guarding(prey, agent), prey.m_21223_() / Math.max(1.0F, prey.m_21233_()),
+            agent.m_21223_() / Math.max(1.0F, agent.m_21233_()), mind.strung, agent.m_20096_(), now >= mind.flipReadyAt,
+            now >= mind.dashReadyAt, now >= mind.lightningReadyAt, now >= mind.soarReadyAt, busy);
+        ReaperTactics.Play play = ReaperTactics.choose(read, agent.m_217043_().m_188500_());
+        if (!busy) {
+            mind.strung = false;
+        }
+        Vec3 toward = UkakuFire.horizontal(prey.m_20182_().m_82546_(agent.m_20182_()));
+        switch (play) {
+            case VAULT -> {
+                // Clean over the guard, landing behind it, his string the moment he is down.
+                flip(agent, mind, PaleRules.Flip.FORWARD, toward, NpcRules.flipSpeed(distance + ReaperTactics.VAULT_PAST),
+                    AgentRules.FLIP_UP * ReaperTactics.VAULT_LIFT, prey, level, now);
+                mind.readyAt = now;
+                return true;
+            }
+            case SKY_SHOT -> {
+                mind.aimAt = now;
+                mind.aimTarget = prey.m_19879_();
+                mind.aimTicks = ReaperTactics.SKY_AIM;
+                mind.volley = distance >= AgentRules.VOLLEY_MIN;
+                mind.lightningReadyAt = now + ReaperTactics.SKY_EVERY;
+                QuinqueServer.opens(agent.m_21205_(), now, now + ReaperTactics.SKY_AIM);
+                agent.m_21573_().m_26573_();
+                agent.swing(CcgAgent.AIM_DAWN, now);
+                return true;
+            }
+            case PUNISH -> {
+                double reach = AgentRules.reach(mind.kind);
+                if (distance > ReaperTactics.PUNISH_FLIP && now >= mind.flipReadyAt) {
+                    flip(agent, mind, PaleRules.Flip.FORWARD, toward, NpcRules.flipSpeed(distance - reach), AgentRules.FLIP_UP, prey, level, now);
+                } else if (now >= mind.dashReadyAt && clear(agent, level, toward)) {
+                    dash(agent, mind, toward, 0, level, now);
+                } else {
+                    return false;
+                }
+                mind.readyAt = now;
+                return true;
+            }
+            case SOAR -> {
+                Vec3 away = toward.m_82490_(-1.0);
+                if (!open(level, agent.m_20185_() + away.f_82479_ * 1.2, agent.m_20186_() + 0.2, agent.m_20189_() + away.f_82481_ * 1.2)
+                    || !open(level, agent.m_20185_(), agent.m_20186_() + agent.m_20206_() + 0.8, agent.m_20189_())) {
+                    return false; // a wall at his back or a ceiling over him
+                }
+                startSoar(agent, mind, prey, away, level, now);
+                return true;
+            }
+            default -> {
+                return false;
+            }
+        }
+    }
+
+    /** A backflip launched as Up We Go launches one (ReaperTactics.soar): the first tick of its ramp now. */
+    private static void startSoar(CcgAgent agent, Mind mind, LivingEntity prey, Vec3 away, ServerLevel level, long now) {
+        end(agent, mind);
+        agent.m_21573_().m_26573_();
+        mind.soarAt = now;
+        mind.soarWay = away;
+        mind.soarTarget = prey.m_19879_();
+        mind.soarFired = false;
+        mind.soarReadyAt = now + ReaperTactics.SOAR_EVERY;
+        mind.flipAt = now;
+        mind.push = null;
+        mind.flipReadyAt = now + AgentRules.REAPER_FLIP_EVERY;
+        mind.dashReadyAt = Math.max(mind.dashReadyAt, now + NpcRules.FLIP_BUSY);
+        double[] launch = ReaperTactics.soar(0);
+        agent.m_20256_(new Vec3(away.f_82479_ * launch[0], launch[1], away.f_82481_ * launch[0]));
+        agent.f_19864_ = true;
+        agent.f_19789_ = 0.0F;
+        face(agent, prey);
+        agent.flip(PaleRules.Flip.BACK.ordinal() + CcgAgent.SOARING, now);
+        UkakuFire.sound(level, agent.m_20182_(), "entity.player.attack.sweep", 0.5F, 0.6F);
+        UkakuFire.sound(level, agent.m_20182_(), "hexkagune:sfx.dash", 0.8F, 0.8F);
+    }
+
+    /**
+     * The soar under way: its launch built up over its ramp, then (from the top of it) Dawn aimed down at his quarry while he hangs there a
+     * moment, and the volley (a single ball from close) let go. Over once he is down. True while it lasts (nothing else this tick).
+     */
+    private static boolean soar(CcgAgent agent, Mind mind, ServerLevel level, long now) {
+        if (mind.soarAt == Long.MIN_VALUE) {
+            return false;
+        }
+        long age = now - mind.soarAt;
+        boolean down = age > 2L && agent.m_20096_();
+        if (down || age > ReaperTactics.LONGEST || age < 0L || PaleStun.stunned(agent) || !agent.m_6084_()) {
+            mind.soarAt = Long.MIN_VALUE;
+            if (mind.aimAt != Long.MIN_VALUE) {
+                cancelLightning(agent, mind, now);
+            }
+            mind.aimTicks = AgentRules.DAWN_AIM_TICKS;
+            if (down) {
+                mind.readyAt = Math.max(mind.readyAt, now + 3L);
+            }
+            return false;
+        }
+        agent.m_21573_().m_26573_();
+        agent.f_19789_ = 0.0F;
+        if (age < ReaperTactics.RAMP) {
+            double[] launch = ReaperTactics.soar((int)age);
+            agent.m_20256_(new Vec3(mind.soarWay.f_82479_ * launch[0], launch[1], mind.soarWay.f_82481_ * launch[0]));
+            agent.f_19864_ = true;
+            return true;
+        }
+        Entity found = level.m_6815_(mind.soarTarget);
+        if (!(found instanceof LivingEntity prey) || !prey.m_6084_()) {
+            return true; // nobody to shoot at: he comes down
+        }
+        face(agent, prey);
+        Vec3 eye = agent.m_146892_();
+        Vec3 to = GhoulNpcBrain.centre(prey).m_82546_(eye);
+        agent.m_146926_((float)Math.max(-60.0, Math.min(75.0, -Math.toDegrees(Math.atan2(to.f_82480_, Math.sqrt(to.m_165925_()))))));
+        if (mind.aimAt == Long.MIN_VALUE && !mind.soarFired && agent.m_20184_().f_82480_ <= ReaperTactics.APEX && agent.m_142582_(prey)) {
+            // The top of it: Dawn down at them, its point opening.
+            mind.aimAt = now;
+            mind.aimTarget = prey.m_19879_();
+            mind.aimTicks = ReaperTactics.AIR_AIM;
+            mind.volley = Math.sqrt(prey.m_20280_(agent)) >= com.hex.kagune.control.quinque.DawnVolley.NEAREST;
+            QuinqueServer.opens(agent.m_21205_(), now, now + ReaperTactics.AIR_AIM);
+            agent.swing(CcgAgent.AIM_DAWN, now);
+        }
+        if (mind.aimAt != Long.MIN_VALUE) {
+            // He hangs there while he aims, his drift all but gone.
+            Vec3 v = agent.m_20184_();
+            agent.m_20256_(new Vec3(v.f_82479_ * ReaperTactics.HANG_DRIFT, Math.max(v.f_82480_, ReaperTactics.HANG_FALL), v.f_82481_ * ReaperTactics.HANG_DRIFT));
+            agent.f_19864_ = true;
+            if (ago(now, mind.aimAt) >= mind.aimTicks) {
+                mind.soarFired = true;
+                release(agent, mind, prey, level, now);
+            }
+        }
+        return true;
     }
 
     private static void cancelKick(CcgAgent agent, Mind mind, long now) {
@@ -1208,6 +1411,7 @@ public final class AgentBrain {
         boolean hit = prey.m_6469_(agent.m_269291_().m_269333_(agent), dealt);
         if (hit && step == Quinque.FINISHER) {
             QuinqueServer.finisher(agent, prey, q, dealt, level);
+            mind.strung = mind.rank == AgentRules.Rank.RANK_10; // 2.0.49: his string landed: a soar may follow (ReaperTactics)
             mind.clear = agent.m_217043_().m_188500_() < 0.4; // and now and then it flips clear after it
         } else if (q.arc(step) > 0.0) {
             // 2.0.31: Dawn's wide sweep takes its other foes in front too (never a bystander).

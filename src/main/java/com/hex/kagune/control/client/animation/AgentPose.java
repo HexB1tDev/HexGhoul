@@ -402,6 +402,16 @@ public final class AgentPose {
         p.leftArmHold = Math.max(p.leftArmHold, k);
     }
 
+    /**
+     * 2.0.49: the White Reaper's soar (ReaperTactics): a flip as Up We Go launches one, stretched long, rising through its launch and turning
+     * over by the top of it ({@code SPIN_FROM}, {@code SPIN_TICKS}), where his aim takes over. {@code age} ticks in; {@code landed} ticks
+     * since he came down (negative: not yet).
+     */
+    public static RigPose soar(com.hex.kagune.control.pale.PaleRules.Flip flip, double age, double landed) {
+        return PaleMotions.flip(flip, age, landed, com.hex.kagune.control.npc.ReaperTactics.SPIN_FROM,
+            com.hex.kagune.control.npc.ReaperTactics.SPIN_TICKS);
+    }
+
     static float blend(float from, float to, float k) {
         return from + (to - from) * k;
     }

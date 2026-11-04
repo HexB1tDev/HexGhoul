@@ -33,7 +33,14 @@ public final class AgentClient {
         }
         long now = agent.m_9236_().m_46467_();
         double flipAge = CcgAgent.since(now, agent.flipAt()) + partial;
-        if (agent.flip() >= 0 && flipAge >= 0.0 && flipAge <= NpcRules.FLIP_POSED) {
+        // 2.0.49: the White Reaper's soar: its own flip, done turning by the top, where his aim (or his hold) takes over.
+        boolean soaring = agent.flip() >= CcgAgent.SOARING;
+        if (soaring && flipAge >= 0.0 && flipAge <= com.hex.kagune.control.npc.ReaperTactics.SPIN_FROM
+            + com.hex.kagune.control.npc.ReaperTactics.SPIN_TICKS + 1.0) {
+            double landed = agent.m_20096_() && flipAge > 4.0 ? flipAge - 4.0 : -1.0;
+            return com.hex.kagune.control.client.animation.AgentPose.soar(PaleRules.Flip.byOrdinal(agent.flip() - CcgAgent.SOARING), flipAge, landed);
+        }
+        if (!soaring && agent.flip() >= 0 && flipAge >= 0.0 && flipAge <= NpcRules.FLIP_POSED) {
             double landed = agent.m_20096_() && flipAge > 4.0 ? flipAge - 4.0 : -1.0;
             return PaleMotions.flip(PaleRules.Flip.byOrdinal(agent.flip()), flipAge, landed);
         }
@@ -41,7 +48,8 @@ public final class AgentClient {
         Quinque weapon = ControlItems.quinqueWeapon(held);
         Quinque shut = weapon == null ? ControlItems.quinqueCase(held) : null;
         double speed = Math.hypot(agent.m_20185_() - agent.f_19790_, agent.m_20189_() - agent.f_19792_);
-        float run = AgentPose.running(speed);
+        // 2.0.49: drifting back through the air after a soar is no run.
+        float run = soaring && !agent.m_20096_() && flipAge <= com.hex.kagune.control.npc.ReaperTactics.LONGEST ? 0.0F : AgentPose.running(speed);
         double phase = limbSwing * 0.6662;
         AgentPose.Carry carry = weapon == null ? AgentPose.Carry.CASE : weapon.twoHanded ? AgentPose.Carry.STANCE : AgentPose.Carry.BLADE;
         RigPose p = AgentPose.run(phase, run, carry);

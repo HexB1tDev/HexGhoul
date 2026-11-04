@@ -137,6 +137,12 @@ public class CcgAgent extends PathfinderMob {
         return this.get(FLIP_AT);
     }
 
+    /**
+     * 2.0.49: added to a flip's number (PaleRules.Flip) for the White Reaper's soar (an Up We Go launch, ReaperTactics): drawn rising
+     * long and turning over by the top of it, where he aims.
+     */
+    public static final int SOARING = 10;
+
     public void flip(int which, long at) {
         this.put(FLIP, which);
         this.put(FLIP_AT, (int)at);
