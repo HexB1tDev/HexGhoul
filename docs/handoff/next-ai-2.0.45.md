@@ -117,6 +117,20 @@ Previews: `dawn-bigger-2.0.47.png`, `dawn-aim-2.0.47.png`, `dawn-volley-2.0.48.p
   Also still open from before: "romance dialog for every personality type, different trades per NPC". Look at `village/HumanPersona`,
   `server/HumanTalk`, `village/VillageTalk`, `village/VillageShop`, `HumanRules.female`, the `HumanRenderer` Figure layer.
 
+## Since 2.1.5 (each its own version; details at the top of `companions-handoff.md`)
+
+- **2.1.5** courtships out of the mod's own world (the owner: "why are the quests so boring"): Doves by rank, Pack ghouls, a ghoul preying on
+  a village, a ghoul ally, village humans who care or confide, a night walk through a village, a cookbook drink, ghoul meat.
+- **2.1.6** fix: Rinkaku tails swung across the back easing into rest: `RinkakuRoot.side` had the original's fanSide backwards (the original
+  lays a tail along its owner's LEFT times fanSide). Don't touch the kagune model or rest position (the owner likes them).
+- **2.1.7** the White Reaper's dashes for Ukaku's final kakuja (sprint double-tapped, 3 charges, 1 back each 5 s); no kakuja vanishes any
+  more; the release workflow keeps only the 5 newest releases and runs (cleanup job).
+- **2.1.8** Ken wants proof before a final kakuja (`Teaching.Proof`).
+- **2.1.9** Peace and War: Doves Rank 0-4 and weaker wild ghouls run; Rank 5-7 and the strongest shake and keep backing off.
+- **2.2.0** tolerance and "I'm sorry." (`Tolerance`).
+- **2.2.1** half-human children (`HalfBlood`): 70% lost; the rest one-eyed, stronger, Reaper dashes. **2.2.2** grown, their kakuja.
+- **2.2.3** a partner's mood shapes what they do (`MoodActs`), and they come to make up. The owner called this "the last thing for the mod".
+
 Ask the owner:
 - how the courtships read in game (pace: 3-minute walk, 2-minute sits; whether regard 60 to begin is right);
 - whether the Reaper is now too hard or too easy (soar every 5 s at most, punishes, sky shots every 2.3 s, 5 balls at 40% each);
