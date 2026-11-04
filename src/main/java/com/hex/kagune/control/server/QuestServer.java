@@ -359,6 +359,7 @@ public final class QuestServer {
         }
         if (ControlItems.ghoulMeat(eaten)) {
             tags.add(Tags.GHOUL_MEAT);
+            EtoServer.proved(player, com.hex.kagune.control.npc.Teaching.Deed.EAT_GHOUL, 0); // 2.1.8: Ken's proof before the Full Kakuja
         }
         feed(player, new QuestEvent(Signal.EAT, 1, tags));
     }

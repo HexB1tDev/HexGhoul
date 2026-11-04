@@ -195,6 +195,57 @@ public final class Teaching {
         return lines[Math.floorMod(seed, lines.length)];
     }
 
+    // ---------------------------------------------------------------- 2.1.8: proof before the final kakujas
+
+    /** What a proof asks for: ghoul meat eaten, Doves of a rank killed, wild ghouls killed in the first kakuja (Ukaku's). */
+    public enum Deed {
+        EAT_GHOUL, DOVES, GHOULS_IN_KAKUJA
+    }
+
+    /**
+     * 2.1.8 (the owner: "Make Ken's quests a little harder specifically the ones involving the final kakuja variant"): what Ken asks to see
+     * done before he teaches a final kakuja ({@code need} of {@code deed}; {@code rank} the Doves' least), in his words ({@code ask} as he sets
+     * it, {@code progress} while it is under way: {n} done, {need} needed).
+     */
+    public record Proof(Deed deed, int need, int rank, String ask, String progress) {
+        /** What the game says on the action bar as one is done. */
+        public String bar(int done) {
+            String what = switch (this.deed) {
+                case EAT_GHOUL -> "ghoul meat eaten";
+                case DOVES -> "Doves of Rank " + this.rank + "+ killed";
+                case GHOULS_IN_KAKUJA -> "ghouls killed in your kakuja";
+            };
+            return "Ken's proof: " + Math.min(done, this.need) + " of " + this.need + " " + what + (done >= this.need ? ". Go and see him." : "");
+        }
+    }
+
+    /** The proof {@code lesson} needs before it is taught, or null (Touka's lessons and the centipede: none). */
+    public static Proof proof(Lesson lesson) {
+        if (lesson == null) {
+            return null;
+        }
+        return switch (lesson.id()) {
+            case "ken_king" -> new Proof(Deed.EAT_GHOUL, 5, 0,
+                "The Full Kakuja isn't taught. It's eaten. You have to eat your own until there's nothing human left to complain. Eat ghoul meat. "
+                    + "Five. Then come back, and I'll show you how to keep your mind while you wear it.",
+                "{n} of five. Keep eating. I know what it tastes like. I'm sorry.");
+            case "ken_dragon" -> new Proof(Deed.DOVES, 3, 6,
+                "The Dragon only wakes in someone who's stood at the edge and come back. Kill three Doves who are worth fearing. Rank 6 or above. "
+                    + "Then come back alive, and we'll talk about dying.",
+                "{n} of three. Rank 6 or above. They'll find you. They always do.");
+            case "ken_storm" -> new Proof(Deed.GHOULS_IN_KAKUJA, 10, 0,
+                "Your wings can go further. But the storm has to be fed first. Put on your kakuja and hunt your own: ten wild ghouls, with your "
+                    + "first kakuja's wings out. Then come back, and sit down. It won't be gentle.",
+                "{n} of ten, in your kakuja. Feed the storm. It's hungrier than you are.");
+            default -> null;
+        };
+    }
+
+    /** {@code text} with a proof's counts put in. */
+    public static String fill(String text, Proof proof, int done) {
+        return text.replace("{n}", Integer.toString(Math.min(done, proof.need()))).replace("{need}", Integer.toString(proof.need()));
+    }
+
     /** "Touka teaches it (mastery 400)": what the game says when a taught gate stands in the way. */
     public static String gatedText(Gate gate, String teacherName) {
         Lesson lesson = teaching(gate);

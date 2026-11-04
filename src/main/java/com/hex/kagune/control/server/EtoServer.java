@@ -181,6 +181,63 @@ public final class EtoServer {
         show(player, npc, context, script.main(context, line != null ? line : script.greeting(context)), Kind.MAIN);
     }
 
+    /**
+     * 2.1.8: a lesson asked for that needs its proof first ({@code Teaching.proof}): set as it is asked (his words), or how far along it is;
+     * true while it isn't done (the lesson waits). Done, it is taught as before, and the proof forgotten.
+     */
+    private static boolean proofFirst(ServerPlayer player, EtoNpc npc, EtoTalk.Context c) {
+        if (!c.teaching().ready()) {
+            return false;
+        }
+        com.hex.kagune.control.npc.Teaching.Lesson next = c.teaching().next();
+        com.hex.kagune.control.npc.Teaching.Proof proof = com.hex.kagune.control.npc.Teaching.proof(next);
+        if (proof == null) {
+            return false;
+        }
+        String key = npc.persona().key();
+        NpcMemory memory = NpcMemoryServer.of(player);
+        long bit = com.hex.kagune.control.npc.Teaching.bit(next);
+        if (memory.get(key, NpcMemory.PROOF, 0L) != bit) {
+            memory.set(key, NpcMemory.PROOF, bit).set(key, NpcMemory.PROOF_COUNT, 0L);
+            NpcMemoryServer.save(player);
+            player.m_5661_(Component.m_237113_(npc.persona().colour() + npc.displayName() + "'s proof before " + next.name() + ": "
+                + proof.bar(0)), false);
+            show(player, npc, c, npc.persona().script().main(c, com.hex.kagune.control.npc.Teaching.fill(proof.ask(), proof, 0)), Kind.MAIN);
+            return true;
+        }
+        int done = (int)memory.get(key, NpcMemory.PROOF_COUNT, 0L);
+        if (done < proof.need()) {
+            show(player, npc, c, npc.persona().script().main(c, com.hex.kagune.control.npc.Teaching.fill(proof.progress(), proof, done)), Kind.MAIN);
+            return true;
+        }
+        memory.forget(key, NpcMemory.PROOF).forget(key, NpcMemory.PROOF_COUNT);
+        NpcMemoryServer.save(player);
+        return false;
+    }
+
+    /** 2.1.8: one more {@code deed} toward any proof a teacher set {@code player} ({@code rank}: a Dove's). */
+    static void proved(ServerPlayer player, com.hex.kagune.control.npc.Teaching.Deed deed, int rank) {
+        NpcMemory memory = NpcMemoryServer.of(player);
+        for (com.hex.kagune.control.npc.Persona persona : com.hex.kagune.control.npc.Persona.ALL) {
+            long bit = memory.get(persona.key(), NpcMemory.PROOF, 0L);
+            if (bit == 0L) {
+                continue;
+            }
+            for (com.hex.kagune.control.npc.Teaching.Lesson lesson : com.hex.kagune.control.npc.Teaching.of(persona.key())) {
+                com.hex.kagune.control.npc.Teaching.Proof proof = com.hex.kagune.control.npc.Teaching.proof(lesson);
+                if (com.hex.kagune.control.npc.Teaching.bit(lesson) != bit || proof == null || proof.deed() != deed || rank < proof.rank()) {
+                    continue;
+                }
+                long done = memory.get(persona.key(), NpcMemory.PROOF_COUNT, 0L);
+                if (done < proof.need()) {
+                    memory.set(persona.key(), NpcMemory.PROOF_COUNT, done + 1);
+                    NpcMemoryServer.save(player);
+                    player.m_5661_(Component.m_237113_(persona.colour() + proof.bar((int)done + 1)), true);
+                }
+            }
+        }
+    }
+
     /** 1.3.37: how long a half-woken sleeper waits on a word before the talk would get them up (ticks). */
     static final long DROWSY = 600L;
 
@@ -542,6 +599,9 @@ public final class EtoServer {
             return;
         }
         Kind after = talk.kind() == Kind.SWEET || talk.kind() == Kind.TALK ? talk.kind() : Kind.MAIN;
+        if (choice == NpcTalk.Choice.LESSON && proofFirst(player, npc, c)) {
+            return; // 2.1.8: a final kakuja is taught once its proof is done
+        }
         if (choice == NpcTalk.Choice.LESSON) {
             // 1.3.29: asked for what they know already (a command, an old quest): "You already know...", and on to the next thing.
             String known = alreadyKnown(player, npc, c.seed());
@@ -1264,6 +1324,13 @@ public final class EtoServer {
             return;
         }
         boolean night = EtoRules.night(killer.m_9236_().m_46468_());
+        // 2.1.8: Ken's proofs: Doves of a rank, wild ghouls killed in Ukaku's first kakuja.
+        if (dead instanceof com.hex.kagune.control.npc.CcgAgent agent) {
+            proved(killer, com.hex.kagune.control.npc.Teaching.Deed.DOVES, AgentBrain.rankLevel(agent));
+        }
+        if (dead instanceof GhoulNpc && UkakuServer.isUkaku(killer) && KaguneProfile.isActive(killer) && UkakuServer.form(killer).kakuja()) {
+            proved(killer, com.hex.kagune.control.npc.Teaching.Deed.GHOULS_IN_KAKUJA, 0);
+        }
         // 2.1.2: a courtship chapter of kills counts. 2.1.5: Doves of a rank (alone or with the companion along), Pack ghouls, ghouls
         // preying on a village, as well as before (at night, at night with them along, any wild ghoul).
         int rank = dead instanceof com.hex.kagune.control.npc.CcgAgent agent ? AgentBrain.rankLevel(agent) : -1;

@@ -3,7 +3,7 @@
 `docs/handoff/next-ai-1.3.60.md` (house rules), then the top sections of `docs/handoff/companions-handoff.md` (one per version, newest first).
 
 Branch **`claude/loving-albattani-xld4zv`** (push only to the branch the session is given). Never push to `main`; no PR unless asked.
-Version **2.1.7** in `build.py` and `patch/KagunePatch.java`; the next is **2.1.8** (after 2.1.9 comes 2.2.0). Protocol **"81"** (`ControlNetwork.PROTOCOL`; 2.1.7 added `C2SUkakuAction.REAPER_DASH`; 2.0.42
+Version **2.1.8** in `build.py` and `patch/KagunePatch.java`; the next is **2.1.9** (after 2.1.9 comes 2.2.0). Protocol **"81"** (`ControlNetwork.PROTOCOL`; 2.1.7 added `C2SUkakuAction.REAPER_DASH`; 2.0.42
 added `S2CRinkakuBlock`, message id 48, and `C2SUkakuAction.BLOCK`; 2.0.48 `S2CUkakuFx.DAWN_RING`; 2.0.49 `CcgAgent.SOARING` on the flip). Nothing is tested in game.
 
 ## The owner's requests since 2.0.36 (their words, trimmed)

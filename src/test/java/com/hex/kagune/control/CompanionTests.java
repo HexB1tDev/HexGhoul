@@ -48,6 +48,7 @@ public final class CompanionTests {
         lessons();
         talk();
         courtship();
+        proofs();
         poses();
         ken();
         touka();
@@ -321,6 +322,20 @@ public final class CompanionTests {
         tails.add(Gate.RINKAKU_FULL_KAKUJA);
         Teaching.View dragon = Teaching.view("ken", true, KagunePath.RINKAKU, 1000, tails::contains);
         check(dragon.ready() && dragon.next().gate() == Gate.RINKAKU_DRAGON, "and last, the Dragon");
+    }
+
+    /** 2.1.8: Ken's final kakujas need their proof first (Teaching.proof); everything else is taught as before. */
+    static void proofs() {
+        for (Teaching.Lesson lesson : Teaching.ALL) {
+            Teaching.Proof proof = Teaching.proof(lesson);
+            boolean finalOne = lesson.gate() == Gate.RINKAKU_FULL_KAKUJA || lesson.gate() == Gate.RINKAKU_DRAGON || lesson.gate() == Gate.UKAKU_FINAL_KAKUJA;
+            check(finalOne == (proof != null), lesson.id() + ": a proof first only for a final kakuja");
+            if (proof != null) {
+                check(proof.need() >= 3 && !Teaching.fill(proof.ask(), proof, 0).contains("{") && Teaching.fill(proof.progress(), proof, 2).contains("2")
+                    && proof.bar(proof.need()).contains("Go and see him") && !proof.bar(1).contains("Go and see"), lesson.id() + ": its proof said cleanly");
+            }
+        }
+        check(Teaching.proof(Teaching.byId("ken_dragon")).rank() >= 6, "the Dragon wants Doves worth fearing");
     }
 
     /**

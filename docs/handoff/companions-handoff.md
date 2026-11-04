@@ -1,4 +1,14 @@
-# START HERE (state after 2.1.7)
+# START HERE (state after 2.1.8)
+
+Ken's final-kakuja lessons are harder. Before he teaches the Full Kakuja, the Dragon or Ukaku's final kakuja, he asks you to prove you're ready. The proof is set the moment you ask, tracked on the action bar, and the lesson is taught (or the trial lived through) once it's done.
+
+- **The Full Kakuja**: eat 5 ghoul meat. "The Full Kakuja isn't taught. It's eaten."
+- **The Dragon**: kill 3 Doves of Rank 6 or above. "The Dragon only wakes in someone who's stood at the edge and come back."
+- **Ukaku's final kakuja**: kill 10 wild ghouls with your first kakuja's wings out, then the trial as before. "The storm has to be fed first."
+- **Unchanged**: the centipede and Touka's lessons. The mastery each lesson needs is unchanged too.
+- **Code**: `Teaching.Proof` (pure, tested), counted in the player's memory of Ken (`NpcMemory.PROOF`). Ghoul meat eaten (`QuestServer.ate`) and Doves and ghouls killed (`EtoServer.died`) count toward it. Tests in `CompanionTests.proofs`. Not tested in game.
+
+# State after 2.1.7
 
 Ukaku's final kakuja gets the White Reaper's dashes: tap sprint twice to dash the way you're moving. You have 3 charges, the action bar shows "Dash 2/3" as one is spent, and one comes back every 5 seconds until you're at 3/3 again. No kakuja vanishes any more. Also, after each release, only the 5 newest releases and the 5 newest action runs are kept.
 
