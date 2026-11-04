@@ -1818,3 +1818,32 @@ say: Tall. Terrible at cooking. She'd have laughed too loud in libraries and bee
   - *She sets the cup down and leans into you without a word.*
 > She'd be proud of you. | +4 blush
   - Of a monster who eats people and writes about it? ...Maybe. If you're there. *She hides her face against your shoulder.*
+
+# =====================================================================================================================================
+# 2.2.3: MAKING UP. Over a sulk, or a jealous spell, she comes to them herself (EtoBrain.makeUp). Never picked otherwise ("when: makeup").
+# =====================================================================================================================================
+
+scene make_up
+who: together
+when: makeup
+say: *Eto walks up with her hands behind her back, not quite looking at you.* ...So. I've decided I'm not angry anymore. You're welcome.
+say: *She stops in front of you and sighs, very theatrically.* I was cruel just now. In my head. Very cruel. I wrote you a terrible death. ...I've rewritten it. You live.
+> I'm sorry too. | +3 hug
+  - *She steps into you and holds on.* Good. We're both sorry. That's the most romantic thing two monsters can be.
+> You're forgiven too. | +2 giggle
+  - Forgiven? Me? Bold. ...I'll take it. *She bumps her head against your shoulder.*
+> Come here. | +3 kiss
+  - *She does, and she's smiling into it before it's over.* ...Mm. Okay. Now I'm really not angry.
+ignored: *She hovers a moment, then goes back to her book, and doesn't turn a single page.*
+
+scene jealous_over
+who: together
+when: makeup
+say: *Eto is suddenly at your elbow.* I've thought about it. Whoever that was, they can't read you the way I can. They don't know which page you fold the corner on. ...So I'm not worried. I'm not.
+> You're the only one. | +4 cling
+  - *She hooks her arm through yours and holds on hard.* I know. I just like hearing it. ...Again tomorrow, please.
+> You were jealous. | +2 giggle
+  - I was RESEARCHING jealousy. For a book. ...Fine. A little. Don't make me say it twice.
+> Come here, you. | +3 kiss
+  - *She pulls you down to her by the collar.* Mine. There. That's settled.
+ignored: *She stands a moment longer, then takes your sleeve, just two fingers, and doesn't let go.*

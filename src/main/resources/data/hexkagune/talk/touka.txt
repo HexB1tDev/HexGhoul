@@ -1774,3 +1774,32 @@ say: *Walking back under the streetlights, she's holding the can in both hands l
   - Our place is a convenience store. That's the least romantic thing ever. *She's smiling.* ...Okay. Deal.
 > I'll say hello to you every day instead. | +4 shy
   - That's so cheesy I want to throw this can at you. *She doesn't. She holds onto it, and onto you.*
+
+# =====================================================================================================================================
+# 2.2.3: MAKING UP. Over a sulk, or a jealous spell, she comes to them herself (EtoBrain.makeUp). Never picked otherwise ("when: makeup").
+# =====================================================================================================================================
+
+scene make_up
+who: together
+when: makeup
+say: *Touka stomps up, stops, and glares at the ground between your feet.* ...I'm done being mad. Okay? Don't say anything stupid.
+say: *She shoves a can of coffee into your hands without looking at you.* Here. It's an apology. Don't make it weird.
+> I'm sorry too. | +3 hug
+  - *She makes a noise like an angry cat and hugs you anyway, hard, face hidden.* ...Idiot. Me too.
+> Is that a peace offering? | +2 laugh
+  - It's COFFEE. ...It's a peace offering. Drink it before I take it back.
+> *Kiss her forehead.* | +3 kiss
+  - *She goes completely red.* ...Fine. We're good. We're good! Stop looking at me.
+ignored: *She stands there a moment, then kicks your ankle, gently, and walks off. That was an apology too.*
+
+scene jealous_over
+who: together
+when: makeup
+say: *Touka catches your sleeve.* Hey. ...Earlier. That was stupid of me. I know you're not— I know it's me. I just... Ugh. Forget it. Just hold my hand for a bit.
+> *Take her hand.* | +4 hand
+  - *She laces her fingers through yours and stares straight ahead, pink to the ears.* ...Thanks. Shut up. Thanks.
+> It's always been you. | +4 shy
+  - ...I know. *Quietly.* I know. I just get scared. Don't tell anyone that either.
+> You were cute jealous. | +2 kicks
+  - *She kicks your shin.* I was NOT. ...Was I? Shut up.
+ignored: *She lets go of your sleeve slowly, and stays close all the same.*

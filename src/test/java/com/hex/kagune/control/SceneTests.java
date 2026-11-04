@@ -212,6 +212,12 @@ public final class SceneTests {
                     check(moment.who().isEmpty() && moment.when().isEmpty(), chapter.id() + " plays whenever its task is done (nothing it waits on)");
                 }
             }
+            // 2.2.3: coming to make up after a sulk and after jealousy: there, and never come up with but by name.
+            for (String id : new String[] {"make_up", "jealous_over"}) {
+                Scene made = book.stream().filter(scene -> scene.id().equals(id)).findFirst().orElse(null);
+                check(made != null && made.when().contains("makeup") && !made.fits(new SceneContext("partner", "happy", "", Set.of("day", "human", "man"),
+                    names(), 1)), speaker + " has " + id + ", only ever asked for by name");
+            }
             long dates = book.stream().filter(scene -> scene.kind() == Scene.Kind.DATE).count();
             check(dates >= 6, speaker + " has " + dates + " dates");
             for (String tier : new String[] {"partner", "wife"}) {

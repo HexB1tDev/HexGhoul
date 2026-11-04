@@ -50,6 +50,7 @@ public final class CompanionTests {
         courtship();
         proofs();
         tolerance();
+        moods();
         poses();
         ken();
         touka();
@@ -323,6 +324,28 @@ public final class CompanionTests {
         tails.add(Gate.RINKAKU_FULL_KAKUJA);
         Teaching.View dragon = Teaching.view("ken", true, KagunePath.RINKAKU, 1000, tails::contains);
         check(dragon.ready() && dragon.next().gate() == Gate.RINKAKU_DRAGON, "and last, the Dragon");
+    }
+
+    /** 2.2.3: a partner's mood shapes what they do: kisses asked for, kisses and hugs taken. */
+    static void moods() {
+        for (EtoMood mood : EtoMood.values()) {
+            double k = com.hex.kagune.control.npc.MoodActs.kissing(mood);
+            check(k >= 0.0 && k <= 3.0, mood + ": a sane share");
+        }
+        check(com.hex.kagune.control.npc.MoodActs.kissing(EtoMood.SULKY) == 0.0 && com.hex.kagune.control.npc.MoodActs.kissing(EtoMood.JEALOUS) == 0.0
+            && com.hex.kagune.control.npc.MoodActs.kissing(EtoMood.LONELY) > 1.5 && com.hex.kagune.control.npc.MoodActs.kissing(EtoMood.SLEEPY) < 1.0,
+            "mad or jealous: no kisses; lonely: far more; sleepy: fewer");
+        for (Persona p : Persona.ALL) {
+            for (int seed = 0; seed < 4; seed++) {
+                check(com.hex.kagune.control.npc.MoodActs.refuse(p.key(), EtoMood.SULKY, true, seed) != null
+                    && com.hex.kagune.control.npc.MoodActs.refuse(p.key(), EtoMood.JEALOUS, false, seed) != null
+                    && com.hex.kagune.control.npc.MoodActs.refuse(p.key(), EtoMood.BLOODTHIRSTY, true, seed) != null
+                    && com.hex.kagune.control.npc.MoodActs.refuse(p.key(), EtoMood.BLOODTHIRSTY, false, seed) == null
+                    && com.hex.kagune.control.npc.MoodActs.refuse(p.key(), EtoMood.HAPPY, true, seed) == null
+                    && com.hex.kagune.control.npc.MoodActs.refuse(p.key(), EtoMood.AFFECTIONATE, true, seed) == null
+                    && com.hex.kagune.control.npc.MoodActs.reassured(p.key(), seed).length() > 5, p.key() + ": takes what the mood allows");
+            }
+        }
     }
 
     /** 2.2.0: a partner lets go of a first blow or a missed kiss; only more, close together, put them out; sorry always helps. */

@@ -117,6 +117,8 @@ public final class EtoBrain {
         final Map<UUID, Long> sulk = new HashMap<>();
         /** 2.2.0: what she holds against each partner (how many offences, the last when): {@link com.hex.kagune.control.npc.Tolerance}. */
         final Map<UUID, long[]> offences = new HashMap<>();
+        /** 2.2.3: once she's over it, she comes to make it up ({@code make_up} after a sulk, {@code jealous_over} after jealousy): by player. */
+        final Map<UUID, String> makeUp = new HashMap<>();
         /** 2.2.0: when she last brushed a blow off (so a flurry isn't a flurry of words). */
         long shrugAt = Long.MIN_VALUE / 2;
         final Map<UUID, Long> nearSince = new HashMap<>();
@@ -700,6 +702,7 @@ public final class EtoBrain {
                         gesture(mind, EtoGesture.POUT, now);
                     }
                     mind.sulk.put(player.m_20148_(), Math.max(until(mind.sulk, player.m_20148_()), now + reaction.sulk));
+                    mind.makeUp.put(player.m_20148_(), "make_up"); // 2.2.3
                 }
                 endKiss(npc, mind, null, now);
                 return;
@@ -1048,6 +1051,10 @@ public final class EtoBrain {
                 return true;
             }
         }
+        // 2.2.3: over a sulk or a jealous spell: she comes to make it up herself (her script's make_up, jealous_over).
+        if (now % 20L == 9L && distance < 14.0 && mind.holding == null && mind.kiss == null && mind.target == 0 && makeUp(npc, mind, partner, level, now)) {
+            return true;
+        }
         // 1.3.29: now and then she comes up to them with something to say (a scene: SceneServer) and waits for their answer.
         if (now % 20L == 13L && distance < 14.0 && mind.holding == null && mind.kiss == null && mind.target == 0
             && SceneServer.partnerTick(npc, partner, now)) {
@@ -1163,7 +1170,8 @@ public final class EtoBrain {
             || now < mind.nextAsk.getOrDefault(player.m_20148_(), Long.MIN_VALUE)) {
             return;
         }
-        double chance = (mood(npc, player, now) == EtoMood.AFFECTIONATE ? EtoRules.KISS_ASK_CHANCE * 2.0 : EtoRules.KISS_ASK_CHANCE) * npc.persona().kissing();
+        // 2.2.3: how readily by her mood (never when jealous; most when lonely or affectionate; little when sleepy or starving).
+        double chance = EtoRules.KISS_ASK_CHANCE * com.hex.kagune.control.npc.MoodActs.kissing(mood(npc, player, now)) * npc.persona().kissing();
         if (npc.m_217043_().m_188500_() < chance) {
             mind.nextAsk.put(player.m_20148_(), now + EtoRules.KISS_ASK_EVERY);
             // 1.3.14: Touka and Ken, more often than not, just walk up and give a quick one themselves.
@@ -1175,6 +1183,33 @@ public final class EtoBrain {
             say(npc, player, npc.persona().script().kissHint(npc.m_217043_().m_188503_(1000)));
             walkUp(npc, mind, player, EtoGesture.KISS, now);
         }
+    }
+
+    /**
+     * 2.2.3: jealous of {@code partner} now: remembered, so she comes to make it up once it's passed; no longer cross or jealous with one
+     * remembered: she comes up to them with it (true), if they are free and in sight.
+     */
+    private static boolean makeUp(EtoNpc npc, Mind mind, ServerPlayer partner, ServerLevel level, long now) {
+        EtoMood mood = mood(npc, partner, now);
+        UUID id = partner.m_20148_();
+        if (mood == EtoMood.JEALOUS) {
+            mind.makeUp.put(id, "jealous_over");
+            return false;
+        }
+        String scene = mind.makeUp.get(id);
+        if (scene == null || mood == EtoMood.SULKY) {
+            return false;
+        }
+        com.hex.kagune.control.npc.scene.Scene made = SceneServer.scene(npc.persona().key() + "." + scene);
+        if (made == null) {
+            mind.makeUp.remove(id);
+            return false;
+        }
+        if (SceneServer.approachMoment(npc, partner, made, now)) {
+            mind.makeUp.remove(id);
+            return true;
+        }
+        return false;
     }
 
     /** 2.2.0: when each player last struck something that wasn't a companion (mid-fight, a blow on her is an accident). */
@@ -1435,6 +1470,7 @@ public final class EtoBrain {
                     say(npc, player, com.hex.kagune.control.npc.Tolerance.shrugKiss(npc.persona().key(), seed));
                 } else {
                     mind.ignoring.put(player.m_20148_(), now + reaction.sulk);
+                    mind.makeUp.put(player.m_20148_(), "make_up"); // 2.2.3
                     gesture(mind, EtoGesture.ANGRY, now);
                     say(npc, player, npc.persona().script().hanging(seed));
                     player.m_5661_(Component.m_237113_(npc.displayName() + " is put out with you. Say sorry (talk to " + npc.persona().her() + "), or give "

@@ -521,6 +521,20 @@ public final class EtoServer {
             carry(player, npc, c, choice, firstToday(player, npc, level, bit) ? reply : unpaid(reply), Kind.SWEET);
             return;
         }
+        if (key.equals("reassure")) {
+            // 2.2.3: jealous, and told it's only them: over it.
+            NpcMemoryServer.of(player).forget(npc.persona().key(), NpcMemory.JEALOUS);
+            NpcMemoryServer.save(player);
+            if (npc.mind != null) {
+                npc.mind.makeUp.remove(player.m_20148_());
+            }
+            QuestLog.Bond bond = QuestServer.bond(player, npc.persona().key());
+            QuestServer.bond(player, npc.persona().key(), bond.regard(bond.regard() + 2));
+            EtoBrain.giddy(npc, player, level.m_46467_());
+            EtoTalk.Context after = context(player, npc);
+            show(player, npc, after, npc.persona().script().main(after, com.hex.kagune.control.npc.MoodActs.reassured(npc.persona().key(), c.seed())), Kind.MAIN);
+            return;
+        }
         if (key.equals("sorry")) {
             // 2.2.0: an apology: forgiven at once, or (hurt again and again) forgiven once she's had a moment.
             boolean now2 = EtoBrain.apologised(npc, player, level.m_46467_());
@@ -617,6 +631,15 @@ public final class EtoServer {
         if (choice == NpcTalk.Choice.PROPOSE) {
             propose(player, npc, c);
             return;
+        }
+        if ((choice == NpcTalk.Choice.KISS || choice == NpcTalk.Choice.HUG) && c.dating()) {
+            // 2.2.3: in no mood for it (sulking, jealous, a kiss while starving): said so, and back to the page.
+            String no = com.hex.kagune.control.npc.MoodActs.refuse(npc.persona().key(), c.mood(), choice == NpcTalk.Choice.KISS, c.seed());
+            if (no != null) {
+                EtoBrain.gesture(npc.mind, EtoGesture.POUT, level.m_46467_());
+                show(player, npc, c, talk.kind() == Kind.SWEET ? script.sweet(c, no) : script.main(c, no), talk.kind() == Kind.SWEET ? Kind.SWEET : Kind.MAIN);
+                return;
+            }
         }
         if (choice == NpcTalk.Choice.BACK && (talk.kind() == Kind.TOPIC || talk.kind() == Kind.SCENE)) {
             // Back from a topic: to the others.
@@ -1247,6 +1270,12 @@ public final class EtoServer {
     }
 
     private static void show(ServerPlayer player, EtoNpc npc, EtoTalk.Context context, EtoTalk.Page page, Kind kind) {
+        if (kind == Kind.MAIN && context.dating() && context.mood() == EtoMood.JEALOUS) {
+            // 2.2.3: jealous: they can tell them it's only them.
+            List<EtoTalk.Option> out = new java.util.ArrayList<>(page.options());
+            out.add(Math.max(0, out.size() - 1), new EtoTalk.Option(NpcTalk.Choice.SAY_5, com.hex.kagune.control.npc.MoodActs.REASSURE, "reassure"));
+            page = new EtoTalk.Page(page.line(), out);
+        }
         if (kind == Kind.MAIN) {
             page = withHome(player, npc, page);
             page = withCookbook(player, npc, page);

@@ -1629,3 +1629,32 @@ say: Sometimes. *The blue light moves over him.* Not now, though. Now I'd rather
   - *He laughs softly and leans against you, both of you watching the slow glowing things.* ...I'd like that.
 > Kiss me in the blue light. | +4 kiss
   - *He glances around for anyone watching, finds no one, and kisses you, carefully, like you're the fragile thing.*
+
+# =====================================================================================================================================
+# 2.2.3: MAKING UP. Over a sulk, or a jealous spell, he comes to them himself (EtoBrain.makeUp). Never picked otherwise ("when: makeup").
+# =====================================================================================================================================
+
+scene make_up
+who: together
+when: makeup
+say: *Ken comes over slowly, rubbing the back of his neck.* I'm sorry. I went quiet on you. I do that. I'm not angry anymore. I don't think I really was.
+say: *He stops in front of you and cracks a finger, then catches himself.* ...I want to make it right. Whatever it was. Can we?
+> Of course we can. | +3 hug
+  - *He lets out a breath he must have been holding a long time, and hugs you, carefully, like you might break.* Thank you.
+> I'm sorry too. | +3 bow
+  - Then we're both sorry, and it's done. *He smiles, a little crooked.* That's how it works, right? I'm still learning.
+> *Take his hand.* | +3 hand
+  - *He squeezes it back, hard.* ...Okay. Okay. We're okay.
+ignored: *He waits a little, then nods to himself, and stays near anyway, in case you change your mind.*
+
+scene jealous_over
+who: together
+when: makeup
+say: *Ken sits down next to you.* About earlier. I was jealous. That's not fair to you. You've never given me a reason. I just... I'm not used to having something I'm afraid to lose.
+> You won't lose me. | +4 cling
+  - *He leans into your shoulder and stays there.* ...Okay. I believe you. I'm going to keep believing you.
+> I'd be jealous too. | +3 chin
+  - *He laughs, surprised.* Really? ...That helps, somehow. Thank you.
+> *Kiss him.* | +4 kiss
+  - *He goes still, then kisses you back.* ...That's a very good answer.
+ignored: *He sits beside you a while longer in silence, and that's an answer too.*

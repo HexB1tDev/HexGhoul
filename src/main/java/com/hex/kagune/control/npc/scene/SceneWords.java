@@ -70,7 +70,9 @@ public final class SceneWords {
         "woman", "man", "home", "following");
     /** A companion's: their family together, how long, how long apart, what the player holds, her own place. */
     public static final Set<String> COMPANION_FLAGS = union(SHARED_FLAGS, Set.of("pregnant", "kids", "baby", "toddler", "kid", "teen", "away", "new", "long",
-        "meat", "book", "flower", "ownplace", "mixed", "taught"));
+        "meat", "book", "flower", "ownplace", "mixed", "taught",
+        // 2.2.3: never set by the moment itself: a scene with it only comes up when asked for by name (making up after a sulk, after jealousy)
+        "makeup"));
     /** A child's: a ghoul or not, a girl or a boy, which parent it talks to, the other parent a companion, brothers and sisters, carried. */
     public static final Set<String> CHILD_FLAGS = union(SHARED_FLAGS, Set.of("girl", "boy", "mother", "father", "siblings", "npcparent", "eto", "touka", "ken",
         "carried", "taught"));
