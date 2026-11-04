@@ -39,6 +39,7 @@ public final class RinkakuTube {
     }
 
     private static final List<Marks> PENDING = new ArrayList<>();
+    private static final int FULL_BRIGHT = 0xF000F0;
 
     private RinkakuTube() {
     }
@@ -50,6 +51,16 @@ public final class RinkakuTube {
      * {@link com.hex.kagune.control.RinkakuRibbon}), {@code seed} its smudges.
      */
     public static void emit(VertexConsumer out, Matrix4f pose, Matrix3f normals, Vec3[] points, float thickness, int colour, int light, int seed) {
+        emit(out, pose, normals, points, thickness, colour, light, seed, null, 0.0);
+    }
+
+    /**
+     * 2.0.41: the same, seen from {@code eye} (the points' own frame: the camera in the world for the original's, the origin for the
+     * children's) at {@code time} (ticks): its glossy rim and glint by the camera, a little clear seen edge-on, the glowing veins over its
+     * skin pulsing (drawn at full brightness, the far ones through its clear skin), its markings fading where it is seen edge-on.
+     */
+    public static void emit(VertexConsumer out, Matrix4f pose, Matrix3f normals, Vec3[] points, float thickness, int colour, int light, int seed,
+                            double[] eye, double time) {
         if (points == null || points.length < 2 || thickness <= 0.0F) {
             return;
         }
@@ -57,7 +68,7 @@ public final class RinkakuTube {
         for (int i = 0; i < points.length; i++) {
             path[i] = new double[] {points[i].f_82479_, points[i].f_82480_, points[i].f_82481_};
         }
-        com.hex.kagune.control.RinkakuRibbon.Mesh mesh = com.hex.kagune.control.RinkakuRibbon.build(path, thickness, colour, seed);
+        com.hex.kagune.control.RinkakuRibbon.Mesh mesh = com.hex.kagune.control.RinkakuRibbon.build(path, thickness, colour, seed, eye);
         if (mesh == null) {
             return;
         }
@@ -69,6 +80,13 @@ public final class RinkakuTube {
                 vertex(out, pose, normals, mesh.at()[r + 1][k], mesh.way()[r + 1][k], mesh.tint()[r + 1][k], light, 0.5F, 0.5F);
                 vertex(out, pose, normals, mesh.at()[r + 1][k + 1], mesh.way()[r + 1][k + 1], mesh.tint()[r + 1][k + 1], light, 0.5F, 0.5F);
                 vertex(out, pose, normals, mesh.at()[r][k + 1], mesh.way()[r][k + 1], mesh.tint()[r][k + 1], light, 0.5F, 0.5F);
+            }
+        }
+        // Its veins, glowing: lit from straight above at full brightness (as Ukaku's glowing quads), so the world's light never dims them.
+        double[] up = {0.0, 1.0, 0.0};
+        for (com.hex.kagune.control.RinkakuRibbon.Glow glow : com.hex.kagune.control.RinkakuRibbon.veins(mesh, seed, time)) {
+            for (int i = 0; i < 4; i++) {
+                vertex(out, pose, normals, glow.corners()[i], up, glow.argb()[i], FULL_BRIGHT, 0.5F, 0.5F);
             }
         }
         if (PENDING.size() < 64) {
@@ -94,7 +112,8 @@ public final class RinkakuTube {
                         int[] ks = {k, k, k + 1, k + 1};
                         int[] rs = {r, r + 1, r + 1, r};
                         for (int v = 0; v < 4; v++) {
-                            vertex(out, marks.pose(), marks.normals(), over[rs[v]][ks[v]], mesh.way()[rs[v]][ks[v]], mesh.light(), marks.light(),
+                            int clear = mesh.marks()[rs[v]][ks[v]] << 24 | mesh.light() & 0xFFFFFF;
+                            vertex(out, marks.pose(), marks.normals(), over[rs[v]][ks[v]], mesh.way()[rs[v]][ks[v]], clear, marks.light(),
                                 com.hex.kagune.control.RinkakuRibbon.u(ks[v]), com.hex.kagune.control.RinkakuRibbon.v(mesh.along()[rs[v]]));
                         }
                     }
@@ -110,7 +129,7 @@ public final class RinkakuTube {
 
     private static void vertex(VertexConsumer out, Matrix4f pose, Matrix3f normals, double[] p, double[] n, int argb, int light, float u, float v) {
         out.m_252986_(pose, (float)p[0], (float)p[1], (float)p[2])
-            .m_6122_((argb >> 16) & 0xFF, (argb >> 8) & 0xFF, argb & 0xFF, 0xFF)
+            .m_6122_((argb >> 16) & 0xFF, (argb >> 8) & 0xFF, argb & 0xFF, argb >>> 24)
             .m_7421_(u, v)
             .m_86008_(OverlayTexture.f_118083_)
             .m_85969_(light)

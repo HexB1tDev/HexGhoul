@@ -30,9 +30,142 @@ public final class RinkakuRibbon {
 
     /**
      * A tail's mesh: each ring's points round it ({@link #SIDES} + 1, the last the first again) and their outward normals, each point's
-     * colour (ARGB), how far along each ring is (blocks from the root), each ring's middle, and its markings' light colour.
+     * colour (ARGB), how far along each ring is (blocks from the root), each ring's middle, and its markings' light colour; 2.0.41: each
+     * ring's way across its faces and through them and its half-sizes those ways (for the veins on it), how clear its markings are at each
+     * point (seen edge-on, they fade), and its glow's colour.
      */
-    public record Mesh(double[][][] at, double[][][] way, int[][] tint, double[] along, double[][] centre, int light) {
+    public record Mesh(double[][][] at, double[][][] way, int[][] tint, double[] along, double[][] centre, int light, double[][] wide,
+                       double[][] thin, double[] half, double[] deep, int[][] marks, int glow) {
+    }
+
+    /**
+     * 2.0.41 (the owner: "improve the kagune texture and material to be the same quality and beauty of ukaku, veins inside and etc"): the
+     * rest of the palette: the glossy rim it shows toward its silhouette, the wet glint where the light catches it, and the RC glow of its
+     * veins and its root.
+     */
+    public static final int RIM = 0xFFEE8C92;
+    public static final int SHEEN = 0xFFFFDCE0;
+    public static final int GLOW = 0xFFFF2A3E;
+    /** The light it glints with (from above, a little behind and to the side), and how sharp the glint. */
+    static final double[] SKY = normalize(new double[] {0.35, 0.88, 0.3});
+    static final double GLINT = 22.0;
+    /** How see-through its skin is at the most (seen edge-on): enough that the veins on its far side show faintly through. */
+    public static final double CLEAREST = 0.78;
+    /** Its veins: how many run along it, how far out from its middle (of its size: just over its skin, under its markings), how wide. */
+    public static final int VEINS = 4;
+    public static final double VEIN_LIFT = 1.009;
+    public static final double VEIN_CORE = 0.008;
+    public static final double VEIN_SOFT = 0.026;
+
+    /** One quad of a vein: its corners and its colours (ARGB, glowing: drawn at full brightness). */
+    public record Glow(double[][] corners, int[] argb) {
+    }
+
+    /**
+     * Its colour at a point: {@code base} (its heart to its deep edge, already shaded) {@code t} along it (0 root .. 1 point), the hotter
+     * root and the darker point; seen {@code facing} (1 face on .. 0 edge-on, or negative: not known) the glossy rim toward its silhouette
+     * and {@code glint} of the light's sheen; and how clear its skin is there. ARGB.
+     */
+    public static int surface(int base, int[] colours, double t, double facing, double glint) {
+        int c = mix(base, colours[4], 0.42 * (1.0 - smooth(t / 0.16)));
+        c = mix(c, colours[1], 0.4 * smooth((t - 0.78) / 0.22));
+        double alpha = 1.0;
+        if (facing >= 0.0) {
+            c = mix(c, colours[3], 0.55 * (1.0 - smooth(facing / 0.5)));
+            c = mix(c, colours[5], 0.5 * Math.max(0.0, Math.min(1.0, glint)));
+            alpha = CLEAREST + (1.0 - CLEAREST) * smooth(facing / 0.45);
+        }
+        return (int)Math.round(alpha * 255.0) << 24 | (c & 0xFFFFFF);
+    }
+
+    /** How clear a mark is at a point seen {@code facing} (marks seen edge-on fade, never shimmering at the silhouette): 0..255. */
+    public static int markAlpha(double facing) {
+        return facing < 0.0 ? 255 : (int)Math.round(255.0 * smooth((facing - 0.08) / 0.3));
+    }
+
+    /**
+     * The tail's veins at {@code time} (ticks): {@link #VEINS} glowing lines wandering along it just over its skin round to every side of
+     * it (the far ones show through its clear skin), each with a fork, a soft glow round a bright core, thin and fading at both ends, a
+     * pulse of RC flowing out along them from the root to the point.
+     */
+    public static java.util.List<Glow> veins(Mesh mesh, int seed, double time) {
+        java.util.List<Glow> out = new java.util.ArrayList<>();
+        int rings = mesh.at().length;
+        double total = Math.max(1.0E-6, mesh.along()[rings - 1]);
+        for (int v = 0; v < VEINS; v++) {
+            double start = 2.0 * Math.PI * v / VEINS + 0.4 + (seed % 7) * 0.13;
+            vein(out, mesh, seed * 13 + v, start, 0.03, 0.9 - 0.05 * (v % 2), 0.0, total, time);
+            double fork = 0.3 + 0.17 * v;
+            vein(out, mesh, seed * 13 + v + 50, start, fork, Math.min(0.88, fork + 0.32), v % 2 == 0 ? 1.2 : -1.2, total, time);
+        }
+        return out;
+    }
+
+    private static void vein(java.util.List<Glow> out, Mesh mesh, int seed, double start, double from, double to, double veer, double total,
+                             double time) {
+        int rings = mesh.at().length;
+        int steps = Math.max(3, (int)Math.round((to - from) * (rings - 1) * 1.2));
+        double[][] previous = null;
+        int[] previousColour = null;
+        for (int step = 0; step <= steps; step++) {
+            double t = from + (to - from) * step / steps;
+            double x = t * (rings - 1);
+            int k = Math.min(rings - 2, (int)Math.floor(x));
+            double f = x - k;
+            double[] centre = lerp(mesh.centre()[k], mesh.centre()[k + 1], f);
+            double[] w = lerp(mesh.wide()[k], mesh.wide()[k + 1], f);
+            double[] n = lerp(mesh.thin()[k], mesh.thin()[k + 1], f);
+            double half = mesh.half()[k] + (mesh.half()[k + 1] - mesh.half()[k]) * f;
+            double deep = mesh.deep()[k] + (mesh.deep()[k + 1] - mesh.deep()[k]) * f;
+            double along = (t - from) / Math.max(1.0E-6, to - from);
+            double s = t * total;
+            double theta = start + veer * along + 0.45 * Math.sin(s * 4.5 + seed * 1.3) + 0.1 * Math.sin(s * 13.0 + seed);
+            double cw = Math.cos(theta);
+            double sn = Math.sin(theta);
+            double[] p = {centre[0] + (w[0] * cw * half + n[0] * sn * deep) * VEIN_LIFT, centre[1] + (w[1] * cw * half + n[1] * sn * deep) * VEIN_LIFT,
+                centre[2] + (w[2] * cw * half + n[2] * sn * deep) * VEIN_LIFT};
+            double[] across = normalize(new double[] {-w[0] * sn * half + n[0] * cw * deep, -w[1] * sn * half + n[1] * cw * deep,
+                -w[2] * sn * half + n[2] * cw * deep});
+            double fade = smooth(along / 0.15) * (1.0 - smooth((along - 0.78) / 0.22)) * (veer != 0.0 ? 0.75 : 1.0);
+            // A pulse of RC flowing out from the root: a bright band travelling along every vein.
+            double pulse = 0.6 + 0.4 * Math.pow(Math.max(0.0, Math.sin(s * 3.2 - time * 0.42)), 3.0);
+            double size = Math.max(0.2, Math.min(1.0, half * 6.0));
+            double soft = VEIN_SOFT * size * (0.4 + 0.6 * fade);
+            double core = VEIN_CORE * size * (0.4 + 0.6 * fade);
+            double[][] now = {add(p, across, soft), add(p, across, core), add(p, across, -core), add(p, across, -soft)};
+            int glow = mesh.glow();
+            int[] colour = {argb(glow, 0.28 * fade * pulse), argb(mix(glow, 0xFFFFFFFF, 0.22 * pulse), 0.8 * fade * pulse)};
+            if (previous != null) {
+                // The soft glow either side, then the bright core over it.
+                out.add(new Glow(new double[][] {previous[0], now[0], now[3], previous[3]},
+                    new int[] {previousColour[0], colour[0], colour[0], previousColour[0]}));
+                out.add(new Glow(new double[][] {previous[1], now[1], now[2], previous[2]},
+                    new int[] {previousColour[1], colour[1], colour[1], previousColour[1]}));
+            }
+            previous = now;
+            previousColour = colour;
+        }
+    }
+
+    static int argb(int rgb, double alpha) {
+        return (int)Math.round(Math.max(0.0, Math.min(1.0, alpha)) * 255.0) << 24 | (rgb & 0xFFFFFF);
+    }
+
+    static double smooth(double t) {
+        double c = Math.max(0.0, Math.min(1.0, t));
+        return c * c * (3.0 - 2.0 * c);
+    }
+
+    static double[] lerp(double[] a, double[] b, double t) {
+        return new double[] {a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t};
+    }
+
+    static double[] add(double[] p, double[] d, double k) {
+        return new double[] {p[0] + d[0] * k, p[1] + d[1] * k, p[2] + d[2] * k};
+    }
+
+    static double[] normalize(double[] v) {
+        return unit(v, new double[] {0.0, 1.0, 0.0});
     }
 
     /** Its width (of its widest) {@code t} along it (0 its root .. 1 its point): a swell past the back, a long taper to a point. */
@@ -53,9 +186,10 @@ public final class RinkakuRibbon {
         return Math.min(1.0, edge * 0.85 + smudge * 0.35 + (back ? 0.15 : 0.0));
     }
 
-    /** The palette of a tail of kagune colour {@code colour} (0xRRGGBB): {heart, deep, light}. */
+    /** The palette of a tail of kagune colour {@code colour} (0xRRGGBB): {heart, deep, light, rim, glow, sheen}. */
     public static int[] palette(int colour) {
-        int[] out = {KaguneTint.recolour(HEART, colour), KaguneTint.recolour(DEEP, colour), KaguneTint.recolour(LIGHT, colour)};
+        int[] out = {KaguneTint.recolour(HEART, colour), KaguneTint.recolour(DEEP, colour), KaguneTint.recolour(LIGHT, colour),
+            KaguneTint.recolour(RIM, colour), KaguneTint.recolour(GLOW, colour), KaguneTint.recolour(SHEEN, colour)};
         if (KaguneColours.toHsv(colour & 0xFFFFFF)[2] < 0.3) {
             out[2] = 0xFF6E686C; // a black kagune: its stripe and light marks smoke grey, so they still show on it
         }
@@ -77,6 +211,11 @@ public final class RinkakuRibbon {
      * faces upright), so a tail spread out to the side shows its broad face, as in the picture.
      */
     public static Mesh build(double[][] points, double thickness, int colour, int seed) {
+        return build(points, thickness, colour, seed, null);
+    }
+
+    /** 2.0.41: the same, seen from {@code eye} (the same frame as the points; null: unknown): its rim, glint and clearness by it. */
+    public static Mesh build(double[][] points, double thickness, int colour, int seed, double[] eye) {
         if (points == null || points.length < 2 || !(thickness > 0.0)) {
             return null;
         }
@@ -121,12 +260,19 @@ public final class RinkakuRibbon {
         double[][][] at = new double[rings][SIDES + 1][];
         double[][][] way = new double[rings][SIDES + 1][];
         int[][] tint = new int[rings][SIDES + 1];
+        int[][] marks = new int[rings][SIDES + 1];
+        double[][] wide = new double[rings][];
+        double[] halfs = new double[rings];
+        double[] deeps = new double[rings];
         for (int r = 0; r < rings; r++) {
             double[] n = thin[r];
             double[] w = cross(tangent[r], n); // across its faces
             double size = thickness * profile(r / (double)(rings - 1));
             double a = size * WIDE;
             double c = size * THIN;
+            wide[r] = w;
+            halfs[r] = a;
+            deeps[r] = c;
             for (int k = 0; k <= SIDES; k++) {
                 double phi = 2.0 * Math.PI * (k % SIDES) / SIDES;
                 double cw = Math.cos(phi);
@@ -134,10 +280,23 @@ public final class RinkakuRibbon {
                 at[r][k] = new double[] {centre[r][0] + w[0] * a * cw + n[0] * c * sn, centre[r][1] + w[1] * a * cw + n[1] * c * sn,
                     centre[r][2] + w[2] * a * cw + n[2] * c * sn};
                 way[r][k] = unit(new double[] {w[0] * c * cw + n[0] * a * sn, w[1] * c * cw + n[1] * a * sn, w[2] * c * cw + n[2] * a * sn}, n);
-                tint[r][k] = mix(colours[0], colours[1], shade(cw, sn < 0.0, along[r], seed));
+                double facing = -1.0;
+                double glint = 0.0;
+                if (eye != null) {
+                    double[] p = at[r][k];
+                    double[] view = unit(new double[] {eye[0] - p[0], eye[1] - p[1], eye[2] - p[2]}, way[r][k]);
+                    double[] nn = way[r][k];
+                    facing = Math.min(1.0, Math.abs(dot(nn, view)));
+                    double d = 2.0 * dot(SKY, nn);
+                    double[] mirror = {d * nn[0] - SKY[0], d * nn[1] - SKY[1], d * nn[2] - SKY[2]};
+                    glint = Math.pow(Math.max(0.0, dot(mirror, view)), GLINT);
+                }
+                tint[r][k] = surface(mix(colours[0], colours[1], shade(cw, sn < 0.0, along[r], seed)), colours, r / (double)(rings - 1),
+                    facing, glint);
+                marks[r][k] = markAlpha(facing);
             }
         }
-        return new Mesh(at, way, tint, along, centre, colours[2]);
+        return new Mesh(at, way, tint, along, centre, colours[2], wide, thin, halfs, deeps, marks, colours[4]);
     }
 
     /** Its markings' points: each of the mesh's a hair further out from its ring's middle ({@link #OVER}). */

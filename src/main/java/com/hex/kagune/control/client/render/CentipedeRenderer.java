@@ -73,8 +73,9 @@ public final class CentipedeRenderer {
         // 2.0.39: Rinkaku's tails drawn as the owner's reference has them (RinkakuTube), in the tail's own colour; the original's tube
         // only if that fails.
         try {
+            Vec3 eye = Minecraft.m_91087_().f_91063_.m_109153_().m_90583_(); // the original draws in the world's frame
             RinkakuTube.emit(consumer, pose, normalMatrix, points, state.limbThickness(state.form().limb(limbIndex)), state.color() & 0xFFFFFF,
-                light, seed + limbIndex * 131);
+                light, seed + limbIndex * 131, new double[] {eye.f_82479_, eye.f_82480_, eye.f_82481_}, time);
         } catch (RuntimeException failure) {
             PlayerLayers.failed("a Rinkaku tail", failure);
             KaguneWorldRenderer.emitTubeLegacy(consumer, pose, normalMatrix, chain, points, state, limbIndex, light, time, seed);

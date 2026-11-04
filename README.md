@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.0.41 (HexGhoul): Rinkaku tails' living material (testing)
+
+See `.github/release-notes-2.0.41.md`. Rinkaku tails now have a living material at the level of Ukaku's wings: glowing veins running through the flesh with a pulse of RC flowing from the body to the point, a glossy rim toward the silhouette, a wet glint where the light catches them, a slightly clear skin seen edge-on (the veins on the far side show faintly through), a hotter, glowing root where they leave the back and darker points. All in the player's kagune colour.
+
 ## 2.0.40 (HexGhoul): where the Rinkaku tails tear out (testing)
 
 See `.github/release-notes-2.0.40.md`. While a Rinkaku's tails are out, the skin of the lower back shows where they tear out, as in the owner's reference: a glowing opening with a torn rim and red veins branching out from it across the back, in the kagune's own colour.

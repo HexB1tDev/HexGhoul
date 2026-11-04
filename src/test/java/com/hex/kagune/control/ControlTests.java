@@ -239,6 +239,35 @@ public final class ControlTests {
         double[] c = mesh.centre()[3];
         check(RinkakuRoot.distance(over[3][4], c) > RinkakuRoot.distance(mesh.at()[3][4], c), "its markings a hair outside it");
         check(RinkakuRibbon.build(new double[][] {{0, 0, 0}}, 0.2, 0, 0) == null && RinkakuRibbon.build(path, 0.0, 0, 0) == null, "nothing to draw: nothing");
+        // 2.0.41: its material, as Ukaku's: by the camera, glowing veins.
+        int[] pal = RinkakuRibbon.palette(KaguneColours.DEFAULT);
+        int face = RinkakuRibbon.surface(pal[0], pal, 0.5, 1.0, 0.0);
+        int edge = RinkakuRibbon.surface(pal[0], pal, 0.5, 0.0, 0.0);
+        check(face >>> 24 == 255 && edge >>> 24 < 255 && (edge >>> 24) >= (int)(RinkakuRibbon.CLEAREST * 255) - 1,
+            "solid face on, a little clear seen edge-on");
+        check(KaguneColours.toHsv(edge & 0xFFFFFF)[2] > KaguneColours.toHsv(face & 0xFFFFFF)[2], "a lighter, glossy rim toward its silhouette");
+        check(KaguneColours.toHsv(RinkakuRibbon.surface(pal[0], pal, 0.5, 1.0, 1.0) & 0xFFFFFF)[1] < KaguneColours.toHsv(face & 0xFFFFFF)[1],
+            "a pale glint where the light catches it");
+        check(RinkakuRibbon.surface(pal[0], pal, 0.5, -1.0, 0.0) >>> 24 == 255, "not knowing the camera: solid");
+        check(RinkakuRibbon.markAlpha(0.0) == 0 && RinkakuRibbon.markAlpha(1.0) == 255 && RinkakuRibbon.markAlpha(-1.0) == 255,
+            "its markings fade seen edge-on");
+        RinkakuRibbon.Mesh seen = RinkakuRibbon.build(path, 0.22, KaguneColours.DEFAULT, 7, new double[] {0.0, 1.0, -30.0});
+        java.util.List<RinkakuRibbon.Glow> veins = RinkakuRibbon.veins(seen, 7, 40.0);
+        check(veins.size() > RinkakuRibbon.VEINS * 4, "veins run along it, forked");
+        boolean glowing = true;
+        for (RinkakuRibbon.Glow g : veins) {
+            for (int argb : g.argb()) {
+                glowing &= (argb >>> 24) <= 255 && KaguneColours.toHsv(argb & 0xFFFFFF)[0] > 0.9 || (argb >>> 24) == 0;
+            }
+            for (double[] q : g.corners()) {
+                glowing &= Double.isFinite(q[0]) && Double.isFinite(q[1]) && Double.isFinite(q[2]);
+            }
+        }
+        check(glowing, "the crimson's veins glow red, no NaN");
+        RinkakuRibbon.Mesh blueMesh = RinkakuRibbon.build(path, 0.22, 0x1E50D8, 7, new double[] {0.0, 1.0, -30.0});
+        int vein = RinkakuRibbon.veins(blueMesh, 7, 40.0).get(1).argb()[1];
+        double hue = KaguneColours.toHsv(vein & 0xFFFFFF)[0];
+        check(hue > 0.5 && hue < 0.75, "a blue kagune's veins glow blue");
     }
 
     /** 2.0.38: a Rinkaku tail grows out of the lower back: its root inside the body, its base leaving the back, its far part its own. */
