@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.3.8 (HexGhoul): a child can always be sent home (testing)
+
+See `.github/release-notes-2.3.8.md`. Fix: there was no button to send a child home. "Go home." only showed while the child was out away from home, never while it followed you around nearby. Now it's on the page whenever the child can walk.
+
 ## 2.3.7 (HexGhoul): bubbles steady in bed; children's kagune shown, both parents' halves (testing)
 
 See `.github/release-notes-2.3.7.md`. Fixes: bubbles jumping over NPCs in bed, and children's kagune that couldn't be seen. Children now also have both parents' halves of the kagune.

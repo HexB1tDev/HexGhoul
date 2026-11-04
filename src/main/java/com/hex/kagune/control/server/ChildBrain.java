@@ -901,7 +901,16 @@ public final class ChildBrain {
         Children.Child child = Children.get(level, npc.childId());
         Households.Home house = Households.forChild(level, child);
         if (house == null) {
-            return false;
+            // 2.3.8: no family home: back where it belongs (where it was born or first put), never left following.
+            if (npc.origin() == null) {
+                return false;
+            }
+            npc.waiting(false);
+            npc.sendHome();
+            if (npc.mind != null) {
+                putDown(npc, npc.mind);
+            }
+            return true;
         }
         npc.follow(null);
         npc.waiting(false);

@@ -1,4 +1,11 @@
-# START HERE (state after 2.3.7)
+# START HERE (state after 2.3.8)
+
+Fix: there was no button to send a child home. "Go home." only showed while the child was out away from home, never while it followed you around nearby. Now it's on the page whenever the child can walk.
+
+- A child with a family home walks back there. One without a family home walks back to where it belongs (where it was born or first put down). Either way it stops following you and isn't left carried.
+- **Code**: `ChildPage` (the option), `ChildBrain.goHome` (the fallback). Protocol stays 84. Not tested in game.
+
+# State after 2.3.7
 
 Fixes: bubbles jumping over NPCs in bed, and children's kagune that couldn't be seen. Children now also have both parents' halves of the kagune.
 

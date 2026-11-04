@@ -101,7 +101,9 @@ public final class ChildPage {
         if (p.bedtime()) {
             add(out, "bed", "Bedtime.");
         }
-        if (p.away()) {
+        // 2.3.8 (the owner: "there's no button for the kid to send them home"): always, once it walks (before, only when it was out away
+        // from home: never while it followed them about near it).
+        if (p.away() || stage.walks()) {
             add(out, "home", "Go home.");
         }
         return out;
