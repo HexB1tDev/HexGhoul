@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.2.8 (HexGhoul): quests complete all unlocks everything (testing)
+
+See `.github/release-notes-2.2.8.md`. `/kagune quests complete all` now unlocks everything. Besides finishing every open quest, it opens every gate, including the ones a companion teaches: the Centipede, the Full Kakuja, the Dragon, Crystal Wings, Gatling, the first and final Ukaku kakujas, and every mutation's gate. Nobody sends you to a teacher any more.
+
 ## 2.2.7 (HexGhoul): a command to marry a companion outright (testing)
 
 See `.github/release-notes-2.2.7.md`. New operator command: `/kagune eto marry`, `/kagune touka marry` and `/kagune ken marry` (with an optional player after it, like `max`). It marries you to that companion at once and fills everything about the relationship.

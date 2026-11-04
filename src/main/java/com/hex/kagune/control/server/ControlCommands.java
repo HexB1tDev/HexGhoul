@@ -187,7 +187,21 @@ final class ControlCommands {
             String said = done.isEmpty() ? "No quests on right now." : "Completed " + done.size() + (done.size() == 1 ? " quest: " : " quests: ")
                 + String.join(", ", done) + ".";
             context.getSource().m_288197_(() -> Component.m_237113_(said), false);
-            return done.size();
+            // 2.2.8: and everything they open, those taught by a companion too (the Dragon, the kakujas): nobody to go and ask.
+            List<String> opened = QuestServer.grantAll(player);
+            String gates = opened.isEmpty() ? "Every unlock was already open." : "Unlocked: " + String.join(", ", opened) + ".";
+            context.getSource().m_288197_(() -> Component.m_237113_(gates), false);
+            // Rinkaku: the crown (War or Peace) to choose now, as after the Dragon (its gate open, the Dragon still wakes at the next death).
+            if (PathServer.path(player) == com.hex.kagune.control.KagunePath.RINKAKU && !KingServer.awake(player)) {
+                KingServer.awaken(player);
+                context.getSource().m_288197_(() -> Component.m_237113_("The final kakuja (War or Peace) is yours to choose."), false);
+            }
+            int mastery = KaguneProfile.mastery(player);
+            if (mastery < 1000) {
+                context.getSource().m_288197_(() -> Component.m_237113_("\u00a77Your mastery is " + mastery
+                    + "; a form still needs its own mastery too (the kakujas 750 to 1000). /kagune mastery set 1000 for all of it."), false);
+            }
+            return done.size() + opened.size();
         }
         boolean done = QuestServer.force(player, id);
         if (!done) {

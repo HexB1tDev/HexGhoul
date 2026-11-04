@@ -666,6 +666,27 @@ public final class QuestServer {
         return done;
     }
 
+    /**
+     * 2.2.8 (the owner: "/kagune quests complete all should include the dragon quests and everything for the Kakujas ... it should
+     * instantly unlock everything"): every gate open at once, those a companion teaches too (the Dragon, the kakujas, Crystal Wings), so
+     * nobody sends them to a teacher; the gates newly opened, by name.
+     */
+    static List<String> grantAll(ServerPlayer player) {
+        Cached cached = cached(player);
+        List<String> opened = new java.util.ArrayList<>();
+        for (Gate gate : Gate.values()) {
+            if (!cached.log.open(gate)) {
+                cached.log.grant(gate);
+                if (gate.on(PathServer.path(player))) {
+                    opened.add(gate.displayName());
+                }
+            }
+        }
+        write(player, cached);
+        sync(player);
+        return opened;
+    }
+
     static void grant(ServerPlayer player, Gate gate) {
         Cached cached = cached(player);
         cached.log.grant(gate);
