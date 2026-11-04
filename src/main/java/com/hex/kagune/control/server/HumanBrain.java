@@ -65,6 +65,11 @@ public final class HumanBrain {
         UUID holding;
         boolean holdShift;
         long strollAt;
+        /** 2.2.6: a player it is coming over to by itself (null: none), why, until when it tries, and its roll for what it says. */
+        UUID comeTo;
+        com.hex.kagune.control.village.HumanApproach.Why comeWhy;
+        long comeUntil;
+        int comeRoll;
     }
 
     /** 1.3.78: it takes {@code player}'s hand for a walk (a date), glued at their right side until one of them lets go. */
@@ -379,9 +384,14 @@ public final class HumanBrain {
         // 1.3.73: a player talking to it: it stands still, facing them.
         ServerPlayer talker = HumanTalk.talker(human, level);
         if (talker != null) {
+            mind.comeTo = null; // 2.2.6: talked to first: whatever it was coming over for can wait
             human.m_21573_().m_26573_();
             human.m_21563_().m_24960_(talker, 30.0F, 30.0F);
             face(human, talker);
+            return;
+        }
+        // 2.2.6: coming over by itself to a player it knows, with something to say (by its temper and how close they are).
+        if (HumanApproachServer.tick(human, mind, place, level, now)) {
             return;
         }
         if (place != null) {

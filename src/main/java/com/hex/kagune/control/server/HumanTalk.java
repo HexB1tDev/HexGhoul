@@ -75,6 +75,11 @@ public final class HumanTalk {
     private HumanTalk() {
     }
 
+    /** 2.2.6: true while {@code player} has a villager's talk open. */
+    static boolean talking(ServerPlayer player) {
+        return TALKS.containsKey(player.m_20148_());
+    }
+
     /** The player talking to {@code human} now, or null. */
     static ServerPlayer talker(HumanNpc human, ServerLevel level) {
         for (Map.Entry<UUID, Talk> talk : TALKS.entrySet()) {
@@ -428,7 +433,7 @@ public final class HumanTalk {
     }
 
     /** {@code count} of {@code id} ("minecraft:wheat"), or empty if there is no such item. */
-    private static net.minecraft.world.item.ItemStack stack(String id, int count) {
+    static net.minecraft.world.item.ItemStack stack(String id, int count) {
         int colon = id.indexOf(':');
         net.minecraft.world.item.Item item = net.minecraftforge.registries.ForgeRegistries.ITEMS.getValue(
             net.minecraft.resources.ResourceLocation.m_214293_(id.substring(0, colon), id.substring(colon + 1)));
@@ -436,7 +441,7 @@ public final class HumanTalk {
     }
 
     /** Into their inventory, or dropped at their feet if it is full. */
-    private static void give(ServerPlayer player, net.minecraft.world.item.ItemStack stack) {
+    static void give(ServerPlayer player, net.minecraft.world.item.ItemStack stack) {
         if (!player.m_36356_(stack) && !stack.m_41619_()) {
             player.m_36176_(stack, false);
         }

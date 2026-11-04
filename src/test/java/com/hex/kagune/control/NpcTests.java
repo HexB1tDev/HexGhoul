@@ -39,6 +39,7 @@ public final class NpcTests {
         village();
         lives();
         romance214();
+        approach226();
         identity();
         blades();
         bubbles();
@@ -882,6 +883,76 @@ public final class NpcTests {
             > com.hex.kagune.control.village.HumanRomance.flirted(com.hex.kagune.control.village.HumanPersona.Temper.STOIC, true)
             && com.hex.kagune.control.village.HumanRomance.flirted(com.hex.kagune.control.village.HumanPersona.Temper.KIND, false) == 0,
             "a flirt warms the flirty most, and one that doesn't land warms nobody");
+    }
+
+    /** 2.2.6: villagers come over by themselves (HumanApproach): how often by temper and warmth, why, and every temper's words. */
+    static void approach226() {
+        com.hex.kagune.control.village.HumanPersona.Temper[] tempers = com.hex.kagune.control.village.HumanPersona.Temper.values();
+        int warm = com.hex.kagune.control.village.HumanPersona.WARM;
+        int close = com.hex.kagune.control.village.HumanPersona.CLOSE;
+        java.util.regex.Pattern banned = java.util.regex.Pattern.compile("Kaneki|Ayato|Furuta|Takatsuki|Aogiri|Yoshimura");
+        boolean clean = true;
+        String bad = "";
+        for (com.hex.kagune.control.village.HumanPersona.Temper temper : tempers) {
+            long stranger = com.hex.kagune.control.village.HumanApproach.every(temper, warm - 1, false);
+            long friend = com.hex.kagune.control.village.HumanApproach.every(temper, warm, false);
+            long dear = com.hex.kagune.control.village.HumanApproach.every(temper, close, false);
+            long partner = com.hex.kagune.control.village.HumanApproach.every(temper, 0, true);
+            check(stranger == 0L && friend > dear && dear > partner && partner >= 1200L && friend <= 30000L,
+                temper + ": never to a stranger; more often the closer (" + friend + ", " + dear + ", " + partner + ")");
+            java.util.EnumMap<com.hex.kagune.control.village.HumanApproach.Why, Integer> seen = new java.util.EnumMap<>(com.hex.kagune.control.village.HumanApproach.Why.class);
+            for (int roll = 0; roll < 2000; roll++) {
+                com.hex.kagune.control.village.HumanApproach.Why friendly = com.hex.kagune.control.village.HumanApproach.pick(temper, close, false, false, false, false, roll);
+                check(!friendly.partners(), temper + ": a friend never comes for a partner's reasons");
+                com.hex.kagune.control.village.HumanApproach.Why loved = com.hex.kagune.control.village.HumanApproach.pick(temper, 0, true, false, roll % 2 == 0, false, roll);
+                seen.merge(loved, 1, Integer::sum);
+                seen.merge(friendly, 1, Integer::sum);
+                check(com.hex.kagune.control.village.HumanApproach.pick(temper, warm, false, false, false, false, roll)
+                    != com.hex.kagune.control.village.HumanApproach.Why.GIFT, temper + ": only one close to them brings a gift");
+                check(com.hex.kagune.control.village.HumanApproach.pick(temper, 100, true, false, true, true, roll)
+                    != com.hex.kagune.control.village.HumanApproach.Why.GIFT, temper + ": one gift a day");
+                check(com.hex.kagune.control.village.HumanApproach.pick(temper, warm, false, true, false, false, roll)
+                    == com.hex.kagune.control.village.HumanApproach.Why.WORRIED, temper + ": worried when they're hurt");
+            }
+            for (com.hex.kagune.control.village.HumanApproach.Why why : com.hex.kagune.control.village.HumanApproach.Why.values()) {
+                check(why == com.hex.kagune.control.village.HumanApproach.Why.WORRIED || seen.getOrDefault(why, 0) > 0, temper + ": comes over for " + why);
+                for (int roll = 0; roll < 4; roll++) {
+                    String line = com.hex.kagune.control.village.HumanApproach.line(temper, why, "honey bottles", "The fog's back.", roll);
+                    boolean ok = why == com.hex.kagune.control.village.HumanApproach.Why.WALK ? line.isEmpty()
+                        : line.length() > 3 && !line.contains("{") && !banned.matcher(line).find() && line.length() <= 300
+                        && (why != com.hex.kagune.control.village.HumanApproach.Why.GIFT || line.contains("oney bottles"))
+                        && (why != com.hex.kagune.control.village.HumanApproach.Why.NEWS && why != com.hex.kagune.control.village.HumanApproach.Why.GOSSIP
+                            || line.endsWith("The fog's back."));
+                    if (!ok && bad.isEmpty()) {
+                        bad = temper + " " + why + ": " + line;
+                    }
+                    clean &= ok;
+                }
+            }
+        }
+        check(clean, "every temper's words for coming over: " + bad);
+        check(com.hex.kagune.control.village.HumanApproach.every(com.hex.kagune.control.village.HumanPersona.Temper.FLIRTY, close, false)
+            < com.hex.kagune.control.village.HumanApproach.every(com.hex.kagune.control.village.HumanPersona.Temper.SHY, close, false),
+            "the flirty come over more often than the shy");
+        // The gift, as said.
+        check(com.hex.kagune.control.village.HumanApproach.thing("cookies", 4).equals("cookies")
+            && com.hex.kagune.control.village.HumanApproach.thing("iron ingot", 1).equals("an iron ingot")
+            && com.hex.kagune.control.village.HumanApproach.thing("lantern", 1).equals("a lantern")
+            && com.hex.kagune.control.village.HumanApproach.thing("bread", 2).equals("bread")
+            && com.hex.kagune.control.village.HumanApproach.thing("honeycomb", 1).equals("honeycomb")
+            && com.hex.kagune.control.village.HumanApproach.line(com.hex.kagune.control.village.HumanPersona.Temper.STOIC,
+                com.hex.kagune.control.village.HumanApproach.Why.GIFT, "an iron ingot", "", 0).startsWith("An iron ingot"),
+            "a gift said rightly (\"an iron ingot\", \"cookies\", \"bread\")");
+        check(com.hex.kagune.control.village.HumanApproach.gives(12) == 4 && com.hex.kagune.control.village.HumanApproach.gives(1) == 1,
+            "a third of a ware's lot, at least one");
+        // Every trade's wares can be given, and said.
+        for (com.hex.kagune.control.village.HumanLife.Job job : com.hex.kagune.control.village.HumanLife.Job.values()) {
+            check(!job.wares.isEmpty(), job + ": something to give");
+            for (com.hex.kagune.control.village.VillageShop.Offer ware : job.wares) {
+                String thing = com.hex.kagune.control.village.HumanApproach.thing(ware.name(), com.hex.kagune.control.village.HumanApproach.gives(ware.count()));
+                check(!thing.isBlank() && !thing.startsWith("a a") && !thing.startsWith("a e") && !thing.startsWith("a i"), job + ": " + thing);
+            }
+        }
     }
 
     static void village() {
