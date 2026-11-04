@@ -95,6 +95,9 @@ public final class EtoBrain {
         EtoRules.Kiss kiss;
         long kissAt;
         int held;
+        /** 2.2.4: the kiss as her mood has it (MoodKiss), and whether a teasing one has dodged its first try. */
+        com.hex.kagune.control.npc.MoodKiss.Style kissStyle = com.hex.kagune.control.npc.MoodKiss.Style.SWEET;
+        boolean dodged;
         /** Per player: when she next asks for a kiss of her own, and until when she ignores them. */
         final Map<UUID, Long> nextAsk = new HashMap<>();
         final Map<UUID, Long> ignoring = new HashMap<>();
@@ -1405,9 +1408,15 @@ public final class EtoBrain {
                     mind.kissAt = now;
                     mind.held = 0;
                     mind.with = player.m_19879_();
+                    // 2.2.4: the kiss her mood gives (angry, possessive, giddy, tender, desperate, sleepy, hungry, teasing, or sweet).
+                    mind.kissStyle = com.hex.kagune.control.npc.MoodKiss.of(mood(npc, player, now));
+                    mind.dodged = false;
+                    mind.dirty = true;
                     gesture(mind, EtoGesture.KISS, now);
-                    player.m_5661_(Component.m_237113_(npc.persona().colour() + "\u2764 " + npc.persona().script().kissWaiting(npc.displayName())
-                        + " \u00a77(tap or hold Shift)"), true);
+                    String waiting = mind.kissStyle == com.hex.kagune.control.npc.MoodKiss.Style.SWEET
+                        ? npc.persona().script().kissWaiting(npc.displayName())
+                        : com.hex.kagune.control.npc.MoodKiss.waiting(mind.kissStyle, npc.displayName(), npc.persona().female() ? "her" : "his");
+                    player.m_5661_(Component.m_237113_(npc.persona().colour() + "\u2764 " + waiting + " \u00a77(tap or hold Shift)"), true);
                     return;
                 }
                 default -> {
@@ -1418,11 +1427,28 @@ public final class EtoBrain {
             }
         }
         npc.m_21573_().m_26573_();
+        if (now < mind.kissAt) {
+            return; // 2.2.4: a teasing one, back from her dodge, about to lean in again
+        }
+        if (now == mind.kissAt && mind.dodged && mind.kiss == EtoRules.Kiss.WAIT) {
+            gesture(mind, EtoGesture.KISS, now);
+        }
         boolean shift = player.m_6047_();
         int released = !shift && mind.held > 0 ? mind.held : 0;
         mind.held = shift ? mind.held + 1 : 0;
         EtoRules.Kiss before = mind.kiss;
-        EtoRules.Kiss after = EtoRules.kiss(before, now - mind.kissAt, shift, mind.held, released, distance);
+        // 2.2.4: how long she waits is her mood's (the angry won't wait; the sleepy forget to stop).
+        long waited = (now - mind.kissAt) * EtoRules.KISS_WAIT / Math.max(1, com.hex.kagune.control.npc.MoodKiss.waits(mind.kissStyle));
+        EtoRules.Kiss after = EtoRules.kiss(before, waited, shift, mind.held, released, distance);
+        if (after == EtoRules.Kiss.KISSED && before == EtoRules.Kiss.WAIT && com.hex.kagune.control.npc.MoodKiss.dodges(mind.kissStyle) && !mind.dodged) {
+            // 2.2.4: teasing: the first try dodged, laughing; she leans in again in a moment.
+            mind.dodged = true;
+            mind.held = 0;
+            mind.kissAt = now + 12L;
+            gesture(mind, EtoGesture.HOP, now);
+            say(npc, player, com.hex.kagune.control.npc.MoodKiss.dodged(npc.persona().key(), npc.m_217043_().m_188503_(100)));
+            return;
+        }
         if (after == before) {
             if (before == EtoRules.Kiss.BLUSH && now % 15L == 0L) {
                 hearts(level, npc, player, 1);
@@ -1448,16 +1474,37 @@ public final class EtoBrain {
                 pullIn(npc, player, level, now);
             }
             case KISSED -> {
-                String line = before == EtoRules.Kiss.PULL ? npc.persona().script().pulled(seed) : before == EtoRules.Kiss.BLUSH ? npc.persona().script().held(seed)
-                    : npc.persona().script().kissed(seed, mind.stage == Romance.Stage.MARRIED);
+                com.hex.kagune.control.npc.MoodKiss.Style style = mind.kissStyle;
+                String moody = com.hex.kagune.control.npc.MoodKiss.kissed(npc.persona().key(), style, before == EtoRules.Kiss.BLUSH,
+                    before == EtoRules.Kiss.PULL, seed);
+                String line = moody != null ? moody : before == EtoRules.Kiss.PULL ? npc.persona().script().pulled(seed)
+                    : before == EtoRules.Kiss.BLUSH ? npc.persona().script().held(seed) : npc.persona().script().kissed(seed, mind.stage == Romance.Stage.MARRIED);
                 say(npc, player, line);
                 NpcMemoryServer.add(player, npc.persona().key(), NpcMemory.KISSES, 1L);
                 giddy(npc, player, now);
                 RomanceServer.romanced(player, npc.persona().key());
                 if (before == EtoRules.Kiss.PULL) {
-                    hearts(level, npc, player, 14);
+                    hearts(level, npc, player, (int)Math.round(14 * com.hex.kagune.control.npc.MoodKiss.hearts(style)));
+                }
+                // 2.2.4: an angry kiss ends the sulk; a possessive one the jealousy.
+                if (style == com.hex.kagune.control.npc.MoodKiss.Style.ANGRY) {
+                    forgive(npc, player);
+                    mind.makeUp.remove(player.m_20148_());
+                }
+                if (style == com.hex.kagune.control.npc.MoodKiss.Style.POSSESSIVE) {
+                    NpcMemoryServer.of(player).forget(npc.persona().key(), NpcMemory.JEALOUS);
+                    NpcMemoryServer.save(player);
+                    mind.makeUp.remove(player.m_20148_());
                 }
                 endKiss(npc, mind, player, now);
+                EtoGesture then = com.hex.kagune.control.npc.MoodKiss.after(style);
+                if (then != null) {
+                    gesture(mind, then, now); // what she does once it's over: arms crossed, clinging, holding on, leaning, licking her lips, off
+                    if (then == EtoGesture.HUG || then == EtoGesture.CLING || then == EtoGesture.LEAN) {
+                        mind.with = player.m_19879_();
+                    }
+                }
+                mind.kissStyle = com.hex.kagune.control.npc.MoodKiss.Style.SWEET;
             }
             default -> {
                 // Left hanging. 2.2.0: the first time shrugged off; only more of them put her out, and not for long.
@@ -1823,7 +1870,8 @@ public final class EtoBrain {
         }
         EtoOwl.Fight f = mind.owl;
         return new S2CEto(npc.m_19879_(), mind.gesture.ordinal(), mind.gestureAt, f.move.ordinal(), f.detail, f.at, f.target, f.charge, f.yaw,
-            f.point.f_82479_, f.point.f_82480_, f.point.f_82481_, mind.turned, mind.with, mind.tag);
+            f.point.f_82479_, f.point.f_82480_, f.point.f_82481_, mind.turned, mind.with, mind.tag,
+            mind.kissStyle == null ? 0 : mind.kissStyle.ordinal()); // 2.2.4
     }
 
     /** A player starts seeing her: they are told what she is doing. */

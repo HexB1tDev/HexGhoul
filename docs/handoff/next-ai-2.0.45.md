@@ -3,7 +3,7 @@
 `docs/handoff/next-ai-1.3.60.md` (house rules), then the top sections of `docs/handoff/companions-handoff.md` (one per version, newest first).
 
 Branch **`claude/loving-albattani-xld4zv`** (push only to the branch the session is given). Never push to `main`; no PR unless asked.
-Version **2.2.3** in `build.py` and `patch/KagunePatch.java`; the next is **2.2.4** (the last number never reaches 10). Protocol **"82"** (`ControlNetwork.PROTOCOL`; 2.1.9 added the synced AFRAID on CcgAgent and GhoulNpc; 2.1.7 added `C2SUkakuAction.REAPER_DASH`; 2.0.42
+Version **2.2.4** in `build.py` and `patch/KagunePatch.java`; the next is **2.2.5** (the last number never reaches 10). Protocol **"83"** (`ControlNetwork.PROTOCOL`; 2.2.4 added the kiss's mood to `S2CEto`; 2.1.9 added the synced AFRAID on CcgAgent and GhoulNpc; 2.1.7 added `C2SUkakuAction.REAPER_DASH`; 2.0.42
 added `S2CRinkakuBlock`, message id 48, and `C2SUkakuAction.BLOCK`; 2.0.48 `S2CUkakuFx.DAWN_RING`; 2.0.49 `CcgAgent.SOARING` on the flip). Nothing is tested in game.
 
 ## The owner's requests since 2.0.36 (their words, trimmed)
@@ -130,6 +130,7 @@ Previews: `dawn-bigger-2.0.47.png`, `dawn-aim-2.0.47.png`, `dawn-volley-2.0.48.p
 - **2.2.0** tolerance and "I'm sorry." (`Tolerance`).
 - **2.2.1** half-human children (`HalfBlood`): 70% lost; the rest one-eyed, stronger, Reaper dashes. **2.2.2** grown, their kakuja.
 - **2.2.3** a partner's mood shapes what they do (`MoodActs`), and they come to make up. The owner called this "the last thing for the mod".
+- **2.2.4** a kiss for every mood (`MoodKiss`, `MoodKissPose`): angry, possessive, giddy, tender, desperate, sleepy, hungry, teasing, sweet. Kisses are never refused now.
 
 Ask the owner:
 - how the courtships read in game (pace: 3-minute walk, 2-minute sits; whether regard 60 to begin is right);

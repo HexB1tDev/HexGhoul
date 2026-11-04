@@ -105,6 +105,8 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
         }
         // 1.3.29: each her own way (Persona.style), and a kiss not the same kiss every time (by when it began).
         RigPose own = EtoPose.gesture(view.gesture(), view.gestureAge(clock), npc.persona().style(), (int)Math.floorMod(view.gestureAt(), 3L));
+        // 2.2.4: the kiss as her mood gives it (MoodKiss): angry, possessive, giddy, tender, desperate, sleepy, hungry, teasing.
+        own = com.hex.kagune.control.client.animation.MoodKissPose.apply(own, view.kiss(), view.gesture(), view.gestureAge(clock));
         // 1.3.30: a child in its arms: cradled the whole time it is held (never faded out with its gesture's time), easing in as it is picked up.
         if (com.hex.kagune.control.client.ChildClient.carrying(npc.m_19879_())) {
             double age = view.gesture() == com.hex.kagune.control.npc.EtoGesture.PET ? view.gestureAge(clock) : Double.MAX_VALUE;

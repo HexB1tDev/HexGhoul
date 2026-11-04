@@ -15,7 +15,13 @@ import net.minecraftforge.network.NetworkEvent;
  * its charge, the way she faced and its point; every client poses her with a Pale player's own animator.
  */
 public record S2CEto(int id, int gesture, long gestureAt, int move, int detail, long moveAt, int target, float charge, float yaw, double x, double y,
-                     double z, boolean turned, int with, String tag) {
+                     double z, boolean turned, int with, String tag, int kiss) {
+    /** 2.2.4: as 1.3.4 made one: the sweet kiss ({@code kiss}: MoodKiss.Style's ordinal, the kiss her mood gives). */
+    public S2CEto(int id, int gesture, long gestureAt, int move, int detail, long moveAt, int target, float charge, float yaw, double x, double y,
+                  double z, boolean turned, int with, String tag) {
+        this(id, gesture, gestureAt, move, detail, moveAt, target, charge, yaw, x, y, z, turned, with, tag, 0);
+    }
+
     public static void encode(S2CEto message, FriendlyByteBuf buffer) {
         buffer.writeInt(message.id);
         buffer.writeByte(message.gesture);
@@ -32,12 +38,13 @@ public record S2CEto(int id, int gesture, long gestureAt, int move, int detail, 
         buffer.writeBoolean(message.turned);
         buffer.writeInt(message.with);
         S2CNpcTalk.text(buffer, message.tag);
+        buffer.writeByte(message.kiss);
     }
 
     public static S2CEto decode(FriendlyByteBuf buffer) {
         return new S2CEto(buffer.readInt(), buffer.readByte(), buffer.m_130258_(), buffer.readByte(), buffer.readByte(), buffer.m_130258_(), buffer.readInt(),
             buffer.readFloat(), buffer.readFloat(), buffer.readDouble(), buffer.readDouble(), buffer.readDouble(), buffer.readBoolean(), buffer.readInt(),
-            S2CNpcTalk.text(buffer));
+            S2CNpcTalk.text(buffer), buffer.readByte());
     }
 
     public static void handle(S2CEto message, Supplier<NetworkEvent.Context> supplier) {

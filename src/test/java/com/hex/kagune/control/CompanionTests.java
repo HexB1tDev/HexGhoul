@@ -51,6 +51,7 @@ public final class CompanionTests {
         proofs();
         tolerance();
         moods();
+        moodKisses();
         poses();
         ken();
         touka();
@@ -337,15 +338,74 @@ public final class CompanionTests {
             "mad or jealous: no kisses; lonely: far more; sleepy: fewer");
         for (Persona p : Persona.ALL) {
             for (int seed = 0; seed < 4; seed++) {
-                check(com.hex.kagune.control.npc.MoodActs.refuse(p.key(), EtoMood.SULKY, true, seed) != null
+                check(com.hex.kagune.control.npc.MoodActs.refuse(p.key(), EtoMood.SULKY, true, seed) == null
+                    && com.hex.kagune.control.npc.MoodActs.refuse(p.key(), EtoMood.SULKY, false, seed) != null
                     && com.hex.kagune.control.npc.MoodActs.refuse(p.key(), EtoMood.JEALOUS, false, seed) != null
-                    && com.hex.kagune.control.npc.MoodActs.refuse(p.key(), EtoMood.BLOODTHIRSTY, true, seed) != null
+                    && com.hex.kagune.control.npc.MoodActs.refuse(p.key(), EtoMood.JEALOUS, true, seed) == null
+                    && com.hex.kagune.control.npc.MoodActs.refuse(p.key(), EtoMood.BLOODTHIRSTY, true, seed) == null
                     && com.hex.kagune.control.npc.MoodActs.refuse(p.key(), EtoMood.BLOODTHIRSTY, false, seed) == null
                     && com.hex.kagune.control.npc.MoodActs.refuse(p.key(), EtoMood.HAPPY, true, seed) == null
                     && com.hex.kagune.control.npc.MoodActs.refuse(p.key(), EtoMood.AFFECTIONATE, true, seed) == null
                     && com.hex.kagune.control.npc.MoodActs.reassured(p.key(), seed).length() > 5, p.key() + ": takes what the mood allows");
             }
         }
+    }
+
+    /** 2.2.4: a kiss for every mood: the same lean-in and hold, each mood its own words, wait, body and after. */
+    static void moodKisses() {
+        com.hex.kagune.control.npc.MoodKiss.Style[] styles = com.hex.kagune.control.npc.MoodKiss.Style.values();
+        check(styles[0] == com.hex.kagune.control.npc.MoodKiss.Style.SWEET && styles.length == 9, "the kinds of kiss (sent by ordinal: sweet first)");
+        check(com.hex.kagune.control.npc.MoodKiss.of(EtoMood.SULKY) == com.hex.kagune.control.npc.MoodKiss.Style.ANGRY
+            && com.hex.kagune.control.npc.MoodKiss.of(EtoMood.JEALOUS) == com.hex.kagune.control.npc.MoodKiss.Style.POSSESSIVE
+            && com.hex.kagune.control.npc.MoodKiss.of(EtoMood.HAPPY) == com.hex.kagune.control.npc.MoodKiss.Style.SWEET
+            && com.hex.kagune.control.npc.MoodKiss.of(EtoMood.BORED) == com.hex.kagune.control.npc.MoodKiss.Style.TEASING,
+            "angry when sulking, possessive when jealous, sweet when happy, teasing when bored");
+        Set<com.hex.kagune.control.npc.MoodKiss.Style> used = new HashSet<>();
+        for (EtoMood mood : EtoMood.values()) {
+            used.add(com.hex.kagune.control.npc.MoodKiss.of(mood));
+        }
+        check(used.size() == styles.length, "every kind of kiss comes from some mood");
+        for (com.hex.kagune.control.npc.MoodKiss.Style style : styles) {
+            int waits = com.hex.kagune.control.npc.MoodKiss.waits(style);
+            check(waits >= 40 && waits <= 400, style + ": a sane wait");
+            check(com.hex.kagune.control.npc.MoodKiss.dodges(style) == (style == com.hex.kagune.control.npc.MoodKiss.Style.TEASING), style + ": only teasing dodges");
+            double hearts = com.hex.kagune.control.npc.MoodKiss.hearts(style);
+            check(hearts > 0.0 && hearts <= 2.0, style + ": hearts");
+            String waiting = com.hex.kagune.control.npc.MoodKiss.waiting(style, "Touka", "her");
+            check(waiting.startsWith("Touka") && waiting.length() > 15, style + ": what the screen says while they wait");
+            for (Persona p : Persona.ALL) {
+                for (int seed = 0; seed < 4; seed++) {
+                    for (int h = 0; h < 3; h++) {
+                        String line = com.hex.kagune.control.npc.MoodKiss.kissed(p.key(), style, h == 1, h == 2, seed);
+                        check(style == com.hex.kagune.control.npc.MoodKiss.Style.SWEET ? line == null : line != null && line.length() > 10,
+                            p.key() + " " + style + ": their words after (sweet keeps the script's)");
+                    }
+                    check(com.hex.kagune.control.npc.MoodKiss.dodged(p.key(), seed).length() > 10, p.key() + ": a dodge");
+                }
+            }
+            for (EtoGesture gesture : new EtoGesture[] {EtoGesture.KISS, EtoGesture.BLUSH, EtoGesture.PULL}) {
+                RigPose usual = EtoPose.gesture(gesture, 20.0, 0, 0);
+                RigPose moody = com.hex.kagune.control.client.animation.MoodKissPose.apply(usual, style, gesture, 20.0);
+                if (style == com.hex.kagune.control.npc.MoodKiss.Style.SWEET) {
+                    check(moody == usual, gesture + ": sweet is the usual kiss");
+                } else {
+                    check(moody != null && moody != usual && moody.lean > 0.3F && moody.lean < 0.75F
+                        && Float.isFinite(moody.headX) && Math.abs(moody.headX) < 1.1F, style + " " + gesture + ": leaning in, its own way");
+                }
+            }
+            RigPose other = EtoPose.gesture(EtoGesture.WAVE, 20.0, 0, 0);
+            check(com.hex.kagune.control.client.animation.MoodKissPose.apply(other, style, EtoGesture.WAVE, 20.0) == other, style + ": only the kiss is changed");
+        }
+        RigPose angry = com.hex.kagune.control.client.animation.MoodKissPose.apply(null, com.hex.kagune.control.npc.MoodKiss.Style.ANGRY, EtoGesture.KISS, 30.0);
+        check(angry.rightArmX < -1.2F && angry.headY > 0.15F, "angry: a fist in their collar, looking away");
+        RigPose desperate = com.hex.kagune.control.client.animation.MoodKissPose.apply(null, com.hex.kagune.control.npc.MoodKiss.Style.DESPERATE, EtoGesture.KISS,
+            30.0);
+        check(desperate.rightArmZ < -0.4F && desperate.leftArmZ > 0.4F, "desperate: arms round them");
+        check(com.hex.kagune.control.npc.MoodKiss.waits(com.hex.kagune.control.npc.MoodKiss.Style.ANGRY) < EtoRules.KISS_WAIT
+            && com.hex.kagune.control.npc.MoodKiss.waits(com.hex.kagune.control.npc.MoodKiss.Style.SLEEPY) > EtoRules.KISS_WAIT,
+            "the angry won't wait long; the sleepy forget to stop");
+        check(com.hex.kagune.control.npc.MoodKiss.after(com.hex.kagune.control.npc.MoodKiss.Style.ANGRY) == EtoGesture.ANGRY
+            && com.hex.kagune.control.npc.MoodKiss.after(com.hex.kagune.control.npc.MoodKiss.Style.SWEET) == null, "after: arms crossed when angry; the usual when sweet");
     }
 
     /** 2.2.0: a partner lets go of a first blow or a missed kiss; only more, close together, put them out; sorry always helps. */

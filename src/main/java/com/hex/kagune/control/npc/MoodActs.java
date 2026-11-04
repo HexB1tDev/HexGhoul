@@ -27,30 +27,29 @@ public final class MoodActs {
         };
     }
 
-    /** What they won't take now: a kiss ({@code kiss} true) or a hug, in {@code mood}; null if they'll take it. */
+    /**
+     * What they won't take now: a kiss ({@code kiss} true) or a hug, in {@code mood}; null if they'll take it. 2.2.4 (the owner: "If they're
+     * angry and you ask for one, they'll give you an angry one"): a kiss is never turned down now, only given as the mood has it
+     * ({@link MoodKiss}); a hug still is, sulking or jealous.
+     */
     public static String refuse(String key, EtoMood mood, boolean kiss, int seed) {
+        if (kiss) {
+            return null;
+        }
         return switch (mood) {
             case SULKY -> pick(seed, switch (key) {
-                case "eto" -> new String[] {"No. I'm sulking. It's an art. Don't interrupt it.", "You can kiss me when I've decided you can. Not before."};
+                case "eto" -> new String[] {"No. I'm sulking. It's an art. Don't interrupt it.", "You can hug me when I've decided you can. Not before."};
                 case "touka" -> new String[] {"Don't. I'm still mad.", "Touch me and lose a hand."};
                 case "ken" -> new String[] {"...Not right now. I'm sorry. Give me a little while.", "I need a moment first. Please."};
                 default -> new String[] {"Not now."};
             });
             case JEALOUS -> pick(seed, switch (key) {
-                case "eto" -> new String[] {kiss ? "Kiss whoever you were with earlier. I'm sure they'd love it." : "Hug them instead. The other one.",
-                    "Oh, now you remember me? How sweet."};
-                case "touka" -> new String[] {kiss ? "Go kiss them, then. Since you like them so much." : "Don't. I saw you.",
-                    "Who was that? ...Don't answer. Just don't touch me right now."};
+                case "eto" -> new String[] {"Hug them instead. The other one.", "Oh, now you remember me? How sweet."};
+                case "touka" -> new String[] {"Don't. I saw you.", "Who was that? ...Don't answer. Just don't touch me right now."};
                 case "ken" -> new String[] {"...I saw you with someone else. I know it's stupid. I just need you to tell me it's me.",
                     "Can you tell me first? That it's me. Then yes."};
                 default -> new String[] {"No."};
             });
-            case BLOODTHIRSTY -> kiss ? pick(seed, switch (key) {
-                case "eto" -> new String[] {"If I kiss you now I'll bite. Hard. Feed me first, darling.", "Not with my eye open like this. I'm starving."};
-                case "touka" -> new String[] {"Back off. I'm hungry and you smell good. That's not a compliment.", "Feed me first. Then we'll see."};
-                case "ken" -> new String[] {"Not now. I'm too hungry. I'd hurt you. Please.", "I can't. Not while I'm like this. Let's hunt first."};
-                default -> new String[] {"I'm hungry."};
-            }) : null;
             default -> null;
         };
     }

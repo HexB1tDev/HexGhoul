@@ -19,7 +19,8 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = "hexkagune", value = Dist.CLIENT)
 public final class EtoClient {
     /** Her as the server last said; {@code ...Began} are client clock times. */
-    public record View(EtoGesture gesture, long gestureAt, double gestureBegan, PaleClient.PaleView fight, boolean turned, int with, String tag) {
+    public record View(EtoGesture gesture, long gestureAt, double gestureBegan, PaleClient.PaleView fight, boolean turned, int with, String tag,
+                       com.hex.kagune.control.npc.MoodKiss.Style kiss) {
         public double gestureAge(double clock) {
             return Math.max(0.0, clock - this.gestureBegan);
         }
@@ -50,8 +51,10 @@ public final class EtoClient {
         double moveBegan = began(world, clock, message.moveAt(), was.startedAt(), was.began());
         PaleClient.PaleView fight = new PaleClient.PaleView(com.hex.kagune.control.pale.PaleMove.byOrdinal(message.move()), message.detail(), message.moveAt(),
             message.target(), message.charge(), message.yaw(), message.x(), message.y(), message.z(), moveBegan);
+        com.hex.kagune.control.npc.MoodKiss.Style[] styles = com.hex.kagune.control.npc.MoodKiss.Style.values();
+        com.hex.kagune.control.npc.MoodKiss.Style kiss = styles[Math.floorMod(message.kiss(), styles.length)]; // 2.2.4
         VIEWS.put(message.id(), new View(EtoGesture.byOrdinal(message.gesture()), message.gestureAt(), gestureBegan, fight, message.turned(), message.with(),
-            message.tag()));
+            message.tag(), kiss));
     }
 
     private static double began(long world, double clock, long at, long was, double wasBegan) {

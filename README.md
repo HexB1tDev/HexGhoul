@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.2.4 (HexGhoul): a kiss for every mood (testing)
+
+See `.github/release-notes-2.2.4.md`. A kiss for every mood. It works the same as before: they lean in and wait, a tap of Shift is a quick kiss, holding makes them blush, and holding longer makes them pull you in. Now each mood gives its own kiss: how they wait, how long, what they say, how they move, and what they do after. A kiss is never turned down any more. Ask an angry partner for one and you get an angry one.
+
 ## 2.2.3 (HexGhoul): a partner's mood shapes what they do (testing)
 
 See `.github/release-notes-2.2.3.md`. A partner's mood now shapes what they do, not just what they say. Mad or jealous, they never come up asking for a kiss, and they turn yours down. Lonely, affectionate or clingy, they come for kisses far more often. Sleepy or starving, less. Once a sulk or a jealous spell has passed, they come to you on their own to make it up.
