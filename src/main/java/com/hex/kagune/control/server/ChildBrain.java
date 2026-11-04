@@ -1205,7 +1205,8 @@ public final class ChildBrain {
         return new S2CChild(npc.m_19879_(), child.name, child.genome, (mind == null || mind.stage == null ? child.stage(npc.m_9236_().m_46467_()) : mind.stage)
             .ordinal(), carrier == null ? 0 : carrier.m_19879_(), mind != null && mind.turned, mind == null ? 0 : mind.ride,
             (mind == null ? ChildMoment.NONE : mind.moment).ordinal(), mind == null ? Long.MIN_VALUE : mind.momentAt, partner == null ? 0 : partner.m_19879_(),
-            (mind == null ? com.hex.kagune.control.family.ChildCue.NONE : mind.cue).ordinal(), mind == null ? Long.MIN_VALUE : mind.cueAt);
+            (mind == null ? com.hex.kagune.control.family.ChildCue.NONE : mind.cue).ordinal(), mind == null ? Long.MIN_VALUE : mind.cueAt,
+            Children.motherSize(child)); // 2.3.0
     }
 
     /** A player starts seeing a child: they are told how to draw it. */

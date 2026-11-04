@@ -3,7 +3,7 @@
 `docs/handoff/next-ai-1.3.60.md` (house rules), then the top sections of `docs/handoff/companions-handoff.md` (one per version, newest first).
 
 Branch **`claude/loving-albattani-xld4zv`** (push only to the branch the session is given). Never push to `main`; no PR unless asked.
-Version **2.2.9** in `build.py` and `patch/KagunePatch.java`; the next is **2.3.0** (the last number never reaches 10). Protocol **"83"** (`ControlNetwork.PROTOCOL`; 2.2.4 added the kiss's mood to `S2CEto`; 2.1.9 added the synced AFRAID on CcgAgent and GhoulNpc; 2.1.7 added `C2SUkakuAction.REAPER_DASH`; 2.0.42
+Version **2.3.0** in `build.py` and `patch/KagunePatch.java`; the next is **2.3.1** (the last number never reaches 10). Protocol **"84"** (`ControlNetwork.PROTOCOL`; 2.3.0 added the mother's size to `S2CChild`; 2.2.4 added the kiss's mood to `S2CEto`; 2.1.9 added the synced AFRAID on CcgAgent and GhoulNpc; 2.1.7 added `C2SUkakuAction.REAPER_DASH`; 2.0.42
 added `S2CRinkakuBlock`, message id 48, and `C2SUkakuAction.BLOCK`; 2.0.48 `S2CUkakuFx.DAWN_RING`; 2.0.49 `CcgAgent.SOARING` on the flip). Nothing is tested in game.
 
 ## The owner's requests since 2.0.36 (their words, trimmed)
@@ -138,6 +138,7 @@ Previews: `dawn-bigger-2.0.47.png`, `dawn-aim-2.0.47.png`, `dawn-volley-2.0.48.p
 - **2.2.8** `/kagune quests complete all` opens every gate (the taught ones too: the Dragon, the kakujas) and gives a Rinkaku player the crown.
 - **2.2.9** every investigator a ghoul kills gives mastery by rank; an uncommon field ration (cookbook food); Dawn 1 in 5 (was always).
   The owner answered "Dawn drops": yes, but rare.
+- **2.3.0** grown daughters are their mother's height, give or take 4% (`ChildRules.daughter`); the owner answered the old height question.
 
 Ask the owner:
 - how the courtships read in game (pace: 3-minute walk, 2-minute sits; whether regard 60 to begin is right);

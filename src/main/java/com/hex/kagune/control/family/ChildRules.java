@@ -5,6 +5,23 @@ package com.hex.kagune.control.family;
  * close it keeps when it follows; where a carried child is held (in front of the chest, a player's size).
  */
 public final class ChildRules {
+    /**
+     * 2.3.0 (the owner: "The daughter should be variating. They should be the size of their mother, basically"): how far a grown daughter's
+     * height may be from her mother's, either way (her own: sisters aren't all the same height).
+     */
+    public static final double DAUGHTER_SPREAD = 0.04;
+
+    /** 2.3.0: a grown daughter's size (a player's 1): her mother's ({@code mother}), give or take {@link #DAUGHTER_SPREAD}, by {@code seed}. */
+    public static float daughter(float mother, long seed) {
+        double v = (Math.floorMod(seed, 81L) - 40L) / 40.0 * DAUGHTER_SPREAD;
+        return (float)Math.max(0.7, Math.min(1.05, mother * (1.0 + v)));
+    }
+
+    /** 2.3.0: a girl's size drawn at {@code stage}: grown, her own ({@code grown}); a teen, never taller than she will be grown. */
+    public static float girl(ChildStage stage, float grown) {
+        return stage == ChildStage.ADULT ? grown : stage == ChildStage.TEEN ? Math.min(stage.draw, grown) : stage.draw;
+    }
+
     /** The most it can be taught; a lesson a day at most. */
     public static final int SKILL_MOST = 5;
     public static final long LESSON_EVERY = ChildStage.DAY;

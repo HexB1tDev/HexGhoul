@@ -17,7 +17,7 @@ import net.minecraftforge.fml.common.Mod;
 public final class ChildClient {
     public record View(String name, Genome genome, ChildStage stage, int carrier, boolean turned, int ride,
                        com.hex.kagune.control.family.ChildMoment moment, long momentAt, double momentBegan, int partner,
-                       com.hex.kagune.control.family.ChildCue cue, long cueAt, double cueBegan) {
+                       com.hex.kagune.control.family.ChildCue cue, long cueAt, double cueBegan, float mother) {
         /** 1.3.57: how far into its talk cue it is (client clock ticks), or -1 when it has none. */
         public double cueAge(double clock) {
             return this.cue == com.hex.kagune.control.family.ChildCue.NONE ? -1.0 : clock - this.cueBegan;
@@ -66,7 +66,7 @@ public final class ChildClient {
             cueBegan = PaleClient.clock(0.0F) - Math.max(0L, Math.min(world - message.cueAt(), 200L));
         }
         VIEWS.put(message.id(), new View(message.name(), genome, stage, message.carrier(), message.turned(), message.ride(), moment, message.momentAt(),
-            began, message.partner(), cue, message.cueAt(), cueBegan));
+            began, message.partner(), cue, message.cueAt(), cueBegan, message.mother()));
         if (minecraft.f_91073_ != null && minecraft.f_91073_.m_6815_(message.id()) instanceof ChildNpc child) {
             // 1.3.15: carried, it neither pushes nor is pushed on this side either (the local player's own pushing is the client's).
             child.carriedBy = message.carrier();

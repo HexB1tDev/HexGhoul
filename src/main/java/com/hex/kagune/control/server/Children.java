@@ -161,6 +161,20 @@ public final class Children {
         data(level).m_77762_();
     }
 
+    /**
+     * 2.3.0: how big {@code child}'s mother is (a player's 1), for a grown daughter's height: a companion her own size, a woman player the
+     * female body's ({@code FemaleBody.SIZE}).
+     */
+    static float motherSize(Child child) {
+        if (child != null && child.mother.startsWith("npc:")) {
+            com.hex.kagune.control.npc.Persona persona = com.hex.kagune.control.npc.Persona.of(child.mother.substring(4));
+            if (persona.female()) {
+                return persona.size();
+            }
+        }
+        return com.hex.kagune.control.FemaleBody.SIZE;
+    }
+
     /** Every child {@code key} is a parent of. */
     public static List<Child> of(ServerLevel level, String key) {
         List<Child> out = new ArrayList<>();

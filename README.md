@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.3.0 (HexGhoul): grown daughters take their mother's height (testing)
+
+See `.github/release-notes-2.3.0.md`. Grown daughters now take their mother's height, and each one varies a little. A daughter grows up to her mother's size: Eto's, Touka's, or a woman player's (the female body). She then comes out up to 4% taller or shorter than her mother, by her own genes, so sisters aren't all the same height. Before, every grown daughter was drawn at one fixed size.
+
 ## 2.2.9 (HexGhoul): investigators give mastery and rations; Dawn a rare prize (testing)
 
 See `.github/release-notes-2.2.9.md`. CCG investigators now pay out properly. Every one you bring down as a ghoul gives mastery, and now and then one leaves a field ration: human food the cookbook's recipes use. The White Reaper's Dawn is now a rare prize instead of a sure drop.

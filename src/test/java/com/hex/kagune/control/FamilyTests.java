@@ -81,6 +81,7 @@ public final class FamilyTests {
         speech();
         kitchen();
         airplane();
+        daughters();
         might();
         hands();
         spin();
@@ -1346,6 +1347,30 @@ check(com.hex.kagune.control.graft.GraftStage.TRANSPLANT.limbs(com.hex.kagune.co
      * 1.3.32: the airplane: the child is carried round at the parent's body yaw plus the spin's turn (ChildRenderer.glue); an NPC parent's
      * body is turned by its pose's spin about +Y (EtoRenderer: rotateAxis(spin)); the two must go the same way round (they went opposite).
      */
+    /** 2.3.0: a grown daughter is her mother's height, give or take her own; a teen girl never taller than she'll be grown. */
+    static void daughters() {
+        float mother = com.hex.kagune.control.FemaleBody.SIZE;
+        float least = Float.MAX_VALUE;
+        float most = 0.0F;
+        java.util.Set<Float> sizes = new java.util.HashSet<>();
+        for (long seed = -500; seed < 500; seed++) {
+            float grown = com.hex.kagune.control.family.ChildRules.daughter(mother, seed * 7919L);
+            least = Math.min(least, grown);
+            most = Math.max(most, grown);
+            sizes.add(grown);
+            check(Math.abs(grown - mother) <= mother * com.hex.kagune.control.family.ChildRules.DAUGHTER_SPREAD + 1.0E-4, "her mother's height, give or take: " + grown);
+            check(com.hex.kagune.control.family.ChildRules.daughter(mother, seed * 7919L) == grown, "the same every time");
+            float teen = com.hex.kagune.control.family.ChildRules.girl(com.hex.kagune.control.family.ChildStage.TEEN, grown);
+            check(teen <= grown + 1.0E-6 && teen <= com.hex.kagune.control.family.ChildStage.TEEN.draw, "growing up never makes her shorter");
+            check(com.hex.kagune.control.family.ChildRules.girl(com.hex.kagune.control.family.ChildStage.ADULT, grown) == grown, "grown: her own height");
+            check(com.hex.kagune.control.family.ChildRules.girl(com.hex.kagune.control.family.ChildStage.CHILD, grown)
+                == com.hex.kagune.control.family.ChildStage.CHILD.draw, "a little girl: as any child");
+        }
+        check(sizes.size() >= 20 && most - least > 0.05F, "sisters vary (" + least + " to " + most + ")");
+        check(com.hex.kagune.control.family.ChildRules.daughter(0.94F, 0L) > com.hex.kagune.control.family.ChildRules.daughter(0.86F, 0L),
+            "a taller mother, a taller daughter");
+    }
+
     static void airplane() {
         for (double age = 4.0; age < com.hex.kagune.control.family.ChildMoment.SPIN.ticks - 4.0; age += 3.0) {
             double turn = com.hex.kagune.control.family.ChildMoment.spinTurn(age);

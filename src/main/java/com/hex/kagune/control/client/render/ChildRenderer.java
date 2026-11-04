@@ -311,7 +311,9 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
                 // Sat down: its legs (a little one's are half as long) out in front, not under it.
                 pose.m_85837_(0.0, -0.75 * stage.draw * (stage.young ? 0.5 : 1.0), 0.0);
             }
-            float drawn = stage.draw * (woman(view) ? com.hex.kagune.control.npc.Persona.TOUKA.size() : 1.0F);
+            // 2.3.0: a girl grows to her mother's height, give or take her own (as a teen never taller than she'll be grown).
+            float drawn = view != null && view.genome().gender().female()
+                ? ChildRules.girl(stage, ChildRules.daughter(view.mother(), view.genome().seed() ^ view.name().hashCode())) : stage.draw;
             pose.m_85841_(drawn, drawn, drawn);
             // 1.3.20: its moment's hop, sway and tip, about its middle.
             com.hex.kagune.control.client.animation.RigPose body = asleep ? null : posed(child, view, child.f_19797_ + partial);
