@@ -47,6 +47,7 @@ public final class AgentTests {
         carrying();
         idling();
         reaperIdling();
+        reaperBuild();
         ranks();
         tendril();
         if (!FAILURES.isEmpty()) {
@@ -469,6 +470,51 @@ public final class AgentTests {
         RigPose none = new RigPose();
         AgentPose.idle(none, 100.0, 1, 0.0F);
         check(none.isZero(), "walking: no idle");
+    }
+
+    /** 2.0.45: the White Reaper's build: his upper torso broader than his waist, his chest out in front of his belly, in his own skin. */
+    static void reaperBuild() {
+        double[][] rows = com.hex.kagune.control.npc.ReaperBuild.PROFILE;
+        double[] top = rows[1];
+        double[] waist = rows[rows.length - 1];
+        double widest = 0.0;
+        double furthest = 0.0;
+        for (double[] row : rows) {
+            widest = Math.max(widest, row[1]);
+            furthest = Math.max(furthest, row[2]);
+        }
+        check(widest > 4.4 && widest < 5.0, "his upper torso a little broader than a player's (" + widest + " of 4 pixels a side)");
+        check(furthest - 2.0 > 0.7 && furthest - 2.0 < 1.3, "his chest a little out in front of his belly (" + (furthest - 2.0) + " pixels)");
+        check(top[1] > waist[1] + 0.5 && top[2] > waist[2] + 0.7, "broader and deeper up top than at the waist (a V)");
+        check(waist[1] < 4.0 && waist[2] < 2.0 && waist[3] < 2.0, "at the waist it is just inside the torso, which takes over there");
+        boolean down = true;
+        for (int i = 1; i < rows.length; i++) {
+            down &= rows[i][0] > rows[i - 1][0];
+        }
+        check(down && rows[0][0] < 0.0 && rows[rows.length - 1][0] < 12.0, "its rows run down the torso from just over its top");
+        check(4.0 + com.hex.kagune.control.npc.ReaperBuild.ARM_OUT >= widest, "his arms hang clear of it");
+        for (boolean jacket : new boolean[] {false, true}) {
+            int[] count = new int[1];
+            boolean[] ok = {true, true, true};
+            com.hex.kagune.control.npc.ReaperBuild.chest(jacket, (corners, uv, normal) -> {
+                count[0]++;
+                for (int k = 0; k < 4; k++) {
+                    double u = uv[2 * k];
+                    double v = uv[2 * k + 1];
+                    ok[0] &= u >= 16.0 && u <= 40.0 && v >= (jacket ? 32.0 : 16.0) && v <= (jacket ? 48.0 : 32.0);
+                }
+                double[] mid = {(corners[0][0] + corners[2][0]) / 2, (corners[0][1] + corners[2][1]) / 2, (corners[0][2] + corners[2][2]) / 2};
+                double l = Math.sqrt(normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2]);
+                ok[1] &= Math.abs(l - 1.0) < 1.0E-9;
+                // Outward: away from the torso's middle line (a top's up, model -y).
+                double out = normal[0] * mid[0] + normal[2] * mid[2] + (Math.abs(normal[1]) > 0.9 ? -normal[1] : 0.0);
+                ok[2] &= out > 0.0;
+            });
+            String layer = jacket ? "its jacket layer" : "the chest";
+            check(count[0] == (rows.length - 1) * 4 + 1, layer + ": four sides a band, and its top");
+            check(ok[0], layer + ": painted from the torso's own skin (and its jacket layer's)");
+            check(ok[1] && ok[2], layer + ": every face turned outward");
+        }
     }
 
     /** 2.0.43: the White Reaper standing about: leaning well back, hip cocked, his free hand in his pocket, his eyes on you, barely moving. */

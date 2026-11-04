@@ -1,4 +1,11 @@
-# START HERE (state after 2.0.44)
+# START HERE (state after 2.0.45)
+
+The White Reaper has a heavier build. His upper torso is a little bigger than the part that meets his legs: broader across the shoulders and chest, with the chest standing about a pixel out in front of his belly and a touch fuller at the back, tapering into his normal waist (a V-shape). No spheres or sculpted muscle: it's his own torso drawn again a little larger, in his own skin and coat layer. His arms hang slightly further out to clear it.
+
+- `ReaperBuild` (pure, tested in `AgentTests`): the chest's outline down the torso, each face painted from the torso's own texels (and the jacket layer's), every face turned outward. Drawn by a new layer on the investigator renderer, for the Reaper only, carried by his torso as it is posed (leans, flips, his idle). His arms are set 0.75 px out while he is drawn, then put back, since the model is shared with other investigators. Dawn is one-handed, so its grip is unaffected.
+- Previewed off-game in his skin through the game's transforms (`tools/ReaperPreview.java ... build`): before and after, front, sides (with the near arm hidden to show the profile), three-quarters, above: `docs/handoff/reaper-build-2.0.45.png`. Protocol stays 78.
+
+# State after 2.0.44
 
 Fix for 2.0.43: the White Reaper's free hand now actually goes into his pocket in game. Investigators are drawn on vanilla's player model, which doesn't bend elbows or knees, but 2.0.43's pocket arm relied on a bent elbow, so in game it would have hung off at an angle. The arm is now solved for a straight arm: angled in to his hip, the hand sunk into the pocket at its front.
 

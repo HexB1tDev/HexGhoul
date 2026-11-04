@@ -14,6 +14,10 @@ import net.minecraft.client.model.geom.ModelPart;
 final class AgentModel extends PlayerModel<CcgAgent> {
     /** The pose of the investigator being drawn now (the render thread's alone), or null. */
     static RigPose pose;
+    /** 2.0.45: the investigator being drawn now is the White Reaper (his arms set out round his broader chest: ReaperBuild). */
+    static boolean brawny;
+    /** True while this model's arms are set out for him ({@link #settle} puts them back once he is drawn). */
+    private boolean spread;
 
     private final boolean female;
 
@@ -40,6 +44,15 @@ final class AgentModel extends PlayerModel<CcgAgent> {
             this.f_103376_.m_104315_(this.f_102814_);
             this.f_103378_.m_104315_(this.f_102810_);
         }
+        this.settle();
+        if (brawny) {
+            // 2.0.45: his arms hang a little further out, clear of his broader chest (their sleeves with them).
+            this.f_102811_.f_104200_ -= com.hex.kagune.control.npc.ReaperBuild.ARM_OUT;
+            this.f_102812_.f_104200_ += com.hex.kagune.control.npc.ReaperBuild.ARM_OUT;
+            this.f_103375_.m_104315_(this.f_102811_);
+            this.f_103374_.m_104315_(this.f_102812_);
+            this.spread = true;
+        }
         if (!this.female) {
             return;
         }
@@ -49,6 +62,21 @@ final class AgentModel extends PlayerModel<CcgAgent> {
         }
         FemaleFigure.shapeLegs(this, AgentRules.FEMALE_LEGS);
         FemaleFigure.spreadLegs(this, AgentRules.FEMALE_LEGS);
+    }
+
+    /**
+     * 2.0.45: the arms back where they were before they were set out for the White Reaper (the model is shared with others on the same
+     * arms, and vanilla doesn't put an arm's place back every frame).
+     */
+    void settle() {
+        if (!this.spread) {
+            return;
+        }
+        this.spread = false;
+        this.f_102811_.f_104200_ += com.hex.kagune.control.npc.ReaperBuild.ARM_OUT;
+        this.f_102812_.f_104200_ -= com.hex.kagune.control.npc.ReaperBuild.ARM_OUT;
+        this.f_103375_.m_104315_(this.f_102811_);
+        this.f_103374_.m_104315_(this.f_102812_);
     }
 
     /** {@code part} (PlayerAnimator's name {@code name}) moved and turned as the pose has it, from where vanilla put it. */

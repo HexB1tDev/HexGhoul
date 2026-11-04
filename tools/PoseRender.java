@@ -177,6 +177,8 @@ public final class PoseRender {
     static boolean slim = false;
     /** 1.0.41: no elbows or knees bent (a mob on vanilla's player model, as a ghoul NPC is drawn): its limbs swing whole. */
     static boolean stiff = false;
+    /** 2.0.45: how much further out (pixels) both arms hang (the White Reaper's, ReaperBuild.ARM_OUT). */
+    static double armOut = 0.0;
     /** What {@link #textured} returns for a see-through texel of the second layer: no cell drawn there. */
     static final int SEE_THROUGH = -1;
 
@@ -221,8 +223,8 @@ public final class PoseRender {
         // 6.2.0: a pose bulked up of its own (RigPose.bulk) pushes its arms out itself.
         double bulk = Math.max(PoseRender.bulk, pose.bulk);
         double out = armSeparation(bulk) - RigPose.BULK_SPREAD * pose.bulk;
-        Part rightArm = part(pose, "rightArm", -5 - out, 2, 0, 0, 0, BOB);
-        Part leftArm = part(pose, "leftArm", 5 + out, 2, 0, 0, 0, -BOB);
+        Part rightArm = part(pose, "rightArm", -5 - out - armOut, 2, 0, 0, 0, BOB);
+        Part leftArm = part(pose, "leftArm", 5 + out + armOut, 2, 0, 0, 0, -BOB);
         Part rightLeg = part(pose, "rightLeg", -1.9, 12, 0.1, 0, 0, 0);
         Part leftLeg = part(pose, "leftLeg", 1.9, 12, 0.1, 0, 0, 0);
         double upperAxisAngle = -body.bendAxis;
@@ -242,6 +244,9 @@ public final class PoseRender {
                 {new double[] {-2, 0, -2}, new double[] {2, 12, 2}, 1, rightLeg, null, 0, 16, 0, 32, 0.25},
                 {new double[] {-2, 0, -2}, new double[] {2, 12, 2}, 1, leftLeg, null, 16, 48, 0, 48, 0.25}};
             for (Object[] p : parts) {
+                if (noRightArm && p[3] == rightArm) {
+                    continue;
+                }
                 double[] mn = (double[])p[0];
                 double[] mx = (double[])p[1];
                 int w = (int)Math.round(mx[0] - mn[0]);

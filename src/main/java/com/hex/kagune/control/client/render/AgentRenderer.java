@@ -7,6 +7,7 @@ import com.hex.kagune.control.client.animation.RigPose;
 import com.hex.kagune.control.npc.AgentRules;
 import com.hex.kagune.control.npc.CcgAgent;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import java.util.Objects;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.model.geom.ModelLayers;
@@ -15,11 +16,14 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import org.joml.Matrix3f;
+import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 
 /**
@@ -54,6 +58,7 @@ public final class AgentRenderer extends HumanoidMobRenderer<CcgAgent, PlayerMod
         this.slim = slim;
         this.female = female;
         this.m_115326_(new Figure(this));
+        this.m_115326_(new Build(this));
     }
 
     @Override
@@ -70,6 +75,7 @@ public final class AgentRenderer extends HumanoidMobRenderer<CcgAgent, PlayerMod
             posed = null;
         }
         AgentModel.pose = posed;
+        AgentModel.brawny = agent.lookIndex() == AgentRules.REAPER_LOOK; // 2.0.45: his arms set out round his broader chest
         try {
             AgentClient.afterimages(agent, posed, partial);
         } catch (RuntimeException failure) {
@@ -103,6 +109,10 @@ public final class AgentRenderer extends HumanoidMobRenderer<CcgAgent, PlayerMod
             }
             pose.m_85849_();
             AgentModel.pose = null;
+            AgentModel.brawny = false;
+            if (this.f_115290_ instanceof AgentModel model) {
+                model.settle();
+            }
         }
         // 1.3.65: what it says (faltering at War, its nerve back), in a bubble over its head.
         if (!agent.m_20145_()) {
@@ -133,6 +143,44 @@ public final class AgentRenderer extends HumanoidMobRenderer<CcgAgent, PlayerMod
                     AgentRules.FEMALE_CURVES);
             } catch (RuntimeException failure) {
                 PlayerLayers.failed("an investigator's figure", failure);
+            }
+        }
+    }
+
+    /**
+     * 2.0.45: the White Reaper's build ({@link com.hex.kagune.control.npc.ReaperBuild}): his torso's upper part drawn again over it, broader
+     * and standing out in front of his belly, in his own skin and its jacket layer, carried by his torso as it is posed.
+     */
+    static final class Build extends RenderLayer<CcgAgent, PlayerModel<CcgAgent>> {
+        Build(AgentRenderer parent) {
+            super(parent);
+        }
+
+        @Override
+        public void m_6494_(PoseStack pose, MultiBufferSource buffers, int light, CcgAgent agent, float limbSwing, float limbSwingAmount, float partialTick,
+                            float ageInTicks, float netHeadYaw, float headPitch) {
+            if (agent.m_20145_() || agent.lookIndex() != AgentRules.REAPER_LOOK) {
+                return;
+            }
+            try {
+                pose.m_85836_();
+                this.m_117386_().f_102810_.m_104299_(pose);
+                Matrix4f m = pose.m_85850_().m_252922_();
+                Matrix3f n = pose.m_85850_().m_252943_();
+                VertexConsumer out = buffers.m_6299_(RenderType.m_110473_(SKINS[agent.lookIndex()]));
+                com.hex.kagune.control.npc.ReaperBuild.Sink sink = (corners, uv, normal) -> {
+                    for (int k = 0; k < 4; k++) {
+                        double[] c = corners[k];
+                        out.m_252986_(m, (float)(c[0] / 16.0), (float)(c[1] / 16.0), (float)(c[2] / 16.0)).m_6122_(255, 255, 255, 255)
+                            .m_7421_((float)(uv[2 * k] / 64.0), (float)(uv[2 * k + 1] / 64.0)).m_86008_(OverlayTexture.f_118083_).m_85969_(light)
+                            .m_252939_(n, (float)normal[0], (float)normal[1], (float)normal[2]).m_5752_();
+                    }
+                };
+                com.hex.kagune.control.npc.ReaperBuild.chest(false, sink);
+                com.hex.kagune.control.npc.ReaperBuild.chest(true, sink);
+                pose.m_85849_();
+            } catch (RuntimeException failure) {
+                PlayerLayers.failed("the White Reaper's build", failure);
             }
         }
     }
