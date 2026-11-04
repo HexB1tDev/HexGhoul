@@ -40,6 +40,14 @@ public final class UkakuFx {
         /** Where the head is at {@code time} (client game ticks, interpolated). */
         public Vec3 at(double time) {
             double age = Math.max(0.0, Math.min(this.life, time - this.born));
+            if (this.kind == S2CUkakuFx.DAWN_RING) {
+                // 2.0.48: a volley's ball, along its ring as the server flies it (DawnVolley).
+                double speed = this.velocity.m_82553_();
+                Vec3 way = speed < 1.0E-6 ? new Vec3(0.0, 0.0, 1.0) : this.velocity.m_82490_(1.0 / speed);
+                double[] p = com.hex.kagune.control.quinque.DawnVolley.at(new double[] {this.start.f_82479_, this.start.f_82480_, this.start.f_82481_},
+                    new double[] {way.f_82479_, way.f_82480_, way.f_82481_}, this.seed, this.size, speed * age);
+                return new Vec3(p[0], p[1], p[2]);
+            }
             return this.start.m_82549_(this.velocity.m_82490_(age));
         }
     }
@@ -252,6 +260,17 @@ public final class UkakuFx {
                 if (DAWN_BOLTS.size() < 16) {
                     Bolt bolt = new Bolt(message.id(), kind, message.shooter(), at, velocity, now, Math.max(1, message.extra()),
                         message.size(), 0, false, false);
+                    DAWN_BOLTS.put(message.id(), bolt);
+                    if (RcFx.near(at, VISIBLE)) {
+                        dawnBall(at, velocity);
+                    }
+                }
+            }
+            case S2CUkakuFx.DAWN_RING -> {
+                if (DAWN_BOLTS.size() < 24) {
+                    int index = message.extra() / 100;
+                    int life = Math.max(1, message.extra() % 100);
+                    Bolt bolt = new Bolt(message.id(), kind, message.shooter(), at, velocity, now, life, message.size(), index, false, false);
                     DAWN_BOLTS.put(message.id(), bolt);
                     if (RcFx.near(at, VISIBLE)) {
                         dawnBall(at, velocity);
@@ -483,7 +502,8 @@ public final class UkakuFx {
             }
             Vec3 head = bolt.at(now);
             if (RcFx.near(head, VISIBLE)) {
-                dawnBall(head, bolt.velocity());
+                // 2.0.48: a volley's ball trails along its own curve.
+                dawnBall(head, bolt.kind() == S2CUkakuFx.DAWN_RING ? head.m_82546_(bolt.at(now - 1.0)) : bolt.velocity());
             }
         }
         for (Iterator<Bolt> iterator = BOLTS.values().iterator(); iterator.hasNext(); ) {

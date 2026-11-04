@@ -1,4 +1,12 @@
-# START HERE (state after 2.0.47)
+# START HERE (state after 2.0.48)
+
+The White Reaper can fire a five-ball volley from Dawn. All five lightning balls leave its point together, open out into a ring around the line he aimed along (1.6 blocks across, 1.0 up and down, one ball at the top and the rest evenly round), then close in on the spot he aimed at from every side at once: a pincer. Standing still gets you caught, while a good step aside slips it. Past that spot they cross and spread again. Each ball carries 40% of a single shot, so all five on one target is twice a single ball. From 7 blocks or more, half his shots are the volley.
+
+- `quinque/DawnVolley` (pure, tested in `QuinqueTests`): the path every ball follows. The server flies and hits along it (`CrystalShots.volley`), and every client draws it from the same numbers, so nothing more is sent per tick. The ring is flattened up and down so the lower balls don't hit the ground from chest height.
+- New FX kind `S2CUkakuFx.DAWN_RING` (46): each ball's start, its way, the aimed-at distance, and its place in the ring. Protocol 79.
+- Preview of the flight paths (from behind him, and from the side): `docs/handoff/dawn-volley-2.0.48.png` (new `tools/VolleyPreview.java`). Players' Dawn still fires a single ball.
+
+# State after 2.0.47
 
 Dawn, the White Reaper's lance, is bigger and smoother. It's drawn about 20% bigger in the hand (scale 0.74 to 0.9). Its spike is half as thick again all along and meets the cone guard without a step; before, it read as a needle beside the guard. The spike and grip are 16-sided (were 8) in finer steps. Same silhouette as before: a black lance with a flared, gold-banded guard, a gun-sword style grip with its hooked knuckle guard, and a spiked pommel.
 

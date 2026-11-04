@@ -98,6 +98,8 @@ public final class AgentBrain {
         long aimAt = Long.MIN_VALUE;
         long lightningReadyAt = Long.MIN_VALUE;
         int aimTarget;
+        /** 2.0.48: the shot being aimed is the five-ball volley (DawnVolley), not a single ball. */
+        boolean volley;
         /**
          * 2.0.33: the ground tendril (npc.ReaperTendril): when it set out, at whom, where it rises (null until the lance is in the ground),
          * whether it has risen yet, and when it may again.
@@ -916,7 +918,14 @@ public final class AgentBrain {
                 Vec3 tip = hand.m_82549_(along.m_82490_(Quinque.DAWN_TIP));
                 if (level.m_45547_(new ClipContext(hand, tip, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, agent))
                     .m_6662_() == HitResult.Type.MISS) {
-                    CrystalShots.lightning(agent, level, tip, along, body -> foe(agent, body));
+                    if (mind.volley) {
+                        // 2.0.48: five from the one point, opening into a ring and closing on where the quarry stands.
+                        CrystalShots.volley(agent, level, tip, along, target.m_82554_(tip), body -> foe(agent, body),
+                            AgentRules.DAWN_SHOT_DAMAGE * com.hex.kagune.control.quinque.DawnVolley.SHARE);
+                        UkakuFire.sound(level, tip, "hexkagune:sfx.thunder", 0.9F, 1.25F);
+                    } else {
+                        CrystalShots.lightning(agent, level, tip, along, body -> foe(agent, body));
+                    }
                     agent.shot(now);
                     UkakuFire.sound(level, tip, "hexkagune:sfx.thunder", 0.65F, 1.45F);
                 }
@@ -927,6 +936,7 @@ public final class AgentBrain {
             && now >= mind.readyAt && agent.m_142582_(prey)) {
             mind.aimAt = now;
             mind.aimTarget = prey.m_19879_();
+            mind.volley = AgentRules.volley(range, agent.m_217043_().m_188500_());
             if (ControlItems.quinqueWeapon(agent.m_21205_()) == Quinque.DAWN) {
                 // 2.0.32: its point opens as it aims, the ball gathering there until it flies.
                 QuinqueServer.opens(agent.m_21205_(), now, now + AgentRules.DAWN_AIM_TICKS);

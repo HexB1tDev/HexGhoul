@@ -90,6 +90,11 @@ public record S2CUkakuFx(int kind, int shooter, int id, double x, double y, doub
     public static final int REAPER_MARK = 44;
     /** 2.0.33: his black tendril bursting up out of the mark at {@code x, y, z} (its seed in {@code id}), drawn for {@code extra} ticks. */
     public static final int REAPER_TENDRIL = 45;
+    /**
+     * 2.0.48: one ball of the White Reaper's volley (DawnVolley): from (x, y, z) along v (its speed a tick), {@code size} the distance it
+     * aimed at, {@code extra} its place in the ring times 100 plus its life (ticks).
+     */
+    public static final int DAWN_RING = 46;
 
     public static void encode(S2CUkakuFx message, FriendlyByteBuf buffer) {
         buffer.writeByte(message.kind);

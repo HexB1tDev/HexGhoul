@@ -28,6 +28,73 @@ public final class QuinqueTests {
         }
     }
 
+    /** 2.0.48: the White Reaper's volley: five from one point, opening into an even ring, closing on the aimed-at point, apart past it. */
+    static void dawnVolley() {
+        double[] from = {10.0, 64.0, -3.0};
+        double[][] ways = {{0.0, 0.0, 1.0}, {0.6, 0.0, -0.8}, {0.0, 1.0, 0.0}, {0.48, 0.6, 0.64}};
+        for (double[] way : ways) {
+            double aimed = 14.0;
+            double[][] basis = com.hex.kagune.control.quinque.DawnVolley.basis(way);
+            double dot = basis[0][0] * way[0] + basis[0][1] * way[1] + basis[0][2] * way[2];
+            double dot2 = basis[1][0] * way[0] + basis[1][1] * way[1] + basis[1][2] * way[2];
+            check(Math.abs(dot) < 1.0E-9 && Math.abs(dot2) < 1.0E-9 && basis[1][1] >= 0.0, "the ring is square to its way, its up up");
+            int n = com.hex.kagune.control.quinque.DawnVolley.COUNT;
+            double[][] start = new double[n][];
+            double[][] open = new double[n][];
+            double[][] met = new double[n][];
+            for (int i = 0; i < n; i++) {
+                start[i] = com.hex.kagune.control.quinque.DawnVolley.at(from, way, i, aimed, 0.0);
+                open[i] = com.hex.kagune.control.quinque.DawnVolley.at(from, way, i, aimed, aimed * com.hex.kagune.control.quinque.DawnVolley.OPEN);
+                met[i] = com.hex.kagune.control.quinque.DawnVolley.at(from, way, i, aimed, aimed);
+            }
+            double[] centre = {from[0] + way[0] * aimed * com.hex.kagune.control.quinque.DawnVolley.OPEN,
+                from[1] + way[1] * aimed * com.hex.kagune.control.quinque.DawnVolley.OPEN, from[2] + way[2] * aimed * com.hex.kagune.control.quinque.DawnVolley.OPEN};
+            double[] aim = {from[0] + way[0] * aimed, from[1] + way[1] * aimed, from[2] + way[2] * aimed};
+            boolean together = true;
+            boolean ring = true;
+            boolean closed = true;
+            double nearest = 1.0E9;
+            for (int i = 0; i < n; i++) {
+                together &= distance(start[i], from) < 1.0E-9;
+                double[] off = {open[i][0] - centre[0], open[i][1] - centre[1], open[i][2] - centre[2]};
+                double across = off[0] * basis[0][0] + off[1] * basis[0][1] + off[2] * basis[0][2];
+                double upward = off[0] * basis[1][0] + off[1] * basis[1][1] + off[2] * basis[1][2];
+                double a = com.hex.kagune.control.quinque.DawnVolley.angle(i);
+                ring &= Math.abs(across - Math.cos(a) * com.hex.kagune.control.quinque.DawnVolley.RADIUS) < 1.0E-9
+                    && Math.abs(upward - Math.sin(a) * com.hex.kagune.control.quinque.DawnVolley.RADIUS_UP) < 1.0E-9;
+                closed &= distance(met[i], aim) < 1.0E-9;
+                nearest = Math.min(nearest, distance(open[i], open[(i + 1) % n]));
+            }
+            check(together, "all five leave the one point");
+            check(ring, "they open into a ring, evenly round it (" + com.hex.kagune.control.quinque.DawnVolley.RADIUS + " across, "
+                + com.hex.kagune.control.quinque.DawnVolley.RADIUS_UP + " up and down)");
+            check(nearest > 1.0, "never two together while it is open");
+            check(closed, "and close on the point aimed at");
+            double[] past0 = com.hex.kagune.control.quinque.DawnVolley.at(from, way, 0, aimed, aimed * 1.5);
+            double[] past2 = com.hex.kagune.control.quinque.DawnVolley.at(from, way, 2, aimed, aimed * 1.5);
+            check(distance(past0, past2) > 1.0, "past it they spread again");
+        }
+        double[] top = com.hex.kagune.control.quinque.DawnVolley.at(from, new double[] {0.0, 0.0, 1.0}, 0, 14.0, 14.0 * 0.35);
+        check(top[1] > from[1] + 0.95, "the first ball is the top of the ring");
+        double lowest = 0.0;
+        for (int i = 0; i < com.hex.kagune.control.quinque.DawnVolley.COUNT; i++) {
+            for (double t = 0.0; t <= 14.0; t += 0.25) {
+                lowest = Math.min(lowest, com.hex.kagune.control.quinque.DawnVolley.at(from, new double[] {0.0, 0.0, 1.0}, i, 14.0, t)[1] - from[1]);
+            }
+        }
+        check(lowest > -1.0, "from chest height none of it dips to the ground (" + lowest + ")");
+        check(com.hex.kagune.control.quinque.DawnVolley.spread(0.0) == 0.0 && com.hex.kagune.control.quinque.DawnVolley.spread(Double.NaN) == 0.0
+            && com.hex.kagune.control.quinque.DawnVolley.spread(com.hex.kagune.control.quinque.DawnVolley.OPEN) == 1.0
+            && com.hex.kagune.control.quinque.DawnVolley.spread(1.0) == 0.0, "its spread: shut, open, shut");
+        // A near quarry: the ring still opens (taken at the nearest it allows), and it doesn't go wild.
+        double[] near = com.hex.kagune.control.quinque.DawnVolley.at(from, new double[] {0.0, 0.0, 1.0}, 3, 1.0, 2.0);
+        check(distance(near, from) < 4.0, "a near shot stays near its line");
+        check(com.hex.kagune.control.quinque.DawnVolley.SHARE * com.hex.kagune.control.quinque.DawnVolley.COUNT <= 2.0F + 1.0E-6F,
+            "all five on one body: at most twice a single shot");
+        check(com.hex.kagune.control.npc.AgentRules.volley(10.0, 0.1) && !com.hex.kagune.control.npc.AgentRules.volley(10.0, 0.9)
+            && !com.hex.kagune.control.npc.AgentRules.volley(4.0, 0.0), "the volley from far enough off, half the time");
+    }
+
     public static void main(String[] args) throws IOException {
         turning();
         kinds();
@@ -35,6 +102,7 @@ public final class QuinqueTests {
         holds();
         dawn();
         dawnFire();
+        dawnVolley();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");

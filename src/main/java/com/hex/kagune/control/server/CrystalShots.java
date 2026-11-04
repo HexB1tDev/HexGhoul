@@ -45,6 +45,12 @@ public final class CrystalShots {
         boolean lightning;
         Predicate<LivingEntity> foe;
         final Set<Integer> hit = new HashSet<>();
+        /** 2.0.48: one ball of the White Reaper's volley (its place in the ring, -1: none): where it left and along what, how far it aimed, how far it has gone. */
+        int ring = -1;
+        double[] origin;
+        double[] way;
+        double aimed;
+        double travelled;
     }
 
     private static final List<Shot> SHOTS = new ArrayList<>();
@@ -65,6 +71,36 @@ public final class CrystalShots {
     /** 2.0.32: a lightning ball of {@code damage} at its heart (a player's Dawn: Quinque.DAWN_PLAYER_SHOT), its blast in proportion. */
     public static void lightning(LivingEntity shooter, ServerLevel level, Vec3 from, Vec3 way, Predicate<LivingEntity> foe, float damage) {
         launch(shooter, level, from, way, AgentRules.DAWN_SHOT_SPEED, AgentRules.DAWN_SHOT_RANGE, damage, foe, true);
+    }
+
+    /**
+     * 2.0.48: the White Reaper's volley ({@link com.hex.kagune.control.quinque.DawnVolley}): its balls from {@code from} along {@code way}
+     * (unit), opening into a ring and closing again on the point {@code aimed} blocks along, each of {@code damage}.
+     */
+    public static void volley(LivingEntity shooter, ServerLevel level, Vec3 from, Vec3 way, double aimed, Predicate<LivingEntity> foe, float damage) {
+        if (SHOTS.size() > 400) {
+            return;
+        }
+        double speed = AgentRules.DAWN_SHOT_SPEED;
+        double range = AgentRules.DAWN_SHOT_RANGE;
+        for (int index = 0; index < com.hex.kagune.control.quinque.DawnVolley.COUNT; index++) {
+            Shot shot = new Shot();
+            shot.shooter = shooter;
+            shot.level = level;
+            shot.position = from;
+            shot.velocity = way.m_82490_(speed);
+            shot.life = (int)Math.ceil(range / speed);
+            shot.remaining = range;
+            shot.damage = damage;
+            shot.foe = foe;
+            shot.lightning = true;
+            shot.ring = index;
+            shot.origin = new double[] {from.f_82479_, from.f_82480_, from.f_82481_};
+            shot.way = new double[] {way.f_82479_, way.f_82480_, way.f_82481_};
+            shot.aimed = aimed;
+            SHOTS.add(shot);
+            fx(shot, S2CUkakuFx.DAWN_RING, from, shot.velocity, (float)aimed, index * 100 + Math.min(99, shot.life));
+        }
     }
 
     private static void launch(LivingEntity shooter, ServerLevel level, Vec3 from, Vec3 way, double speed, double range, float damage,
@@ -113,9 +149,21 @@ public final class CrystalShots {
     private static boolean step(Shot shot) {
         ServerLevel level = shot.level;
         Vec3 from = shot.position;
-        double speed = shot.velocity.m_82553_();
-        Vec3 step = shot.lightning && shot.remaining < speed ? shot.velocity.m_82490_(shot.remaining / speed) : shot.velocity;
-        Vec3 to = from.m_82549_(step);
+        double speed = shot.ring >= 0 ? AgentRules.DAWN_SHOT_SPEED : shot.velocity.m_82553_();
+        Vec3 to;
+        if (shot.ring >= 0) {
+            // 2.0.48: a volley's ball along its ring (DawnVolley), its velocity this tick's step.
+            shot.travelled += Math.min(speed, Math.max(0.0, shot.remaining));
+            double[] next = com.hex.kagune.control.quinque.DawnVolley.at(shot.origin, shot.way, shot.ring, shot.aimed, shot.travelled);
+            to = new Vec3(next[0], next[1], next[2]);
+            Vec3 moved = to.m_82546_(from);
+            if (moved.m_82556_() > 1.0E-8) {
+                shot.velocity = moved;
+            }
+        } else {
+            Vec3 step = shot.lightning && shot.remaining < speed ? shot.velocity.m_82490_(shot.remaining / speed) : shot.velocity;
+            to = from.m_82549_(step);
+        }
         shot.remaining -= speed;
         Vec3 met = KaguneClash.swat(shot.shooter, level, from, to, level.m_46467_());
         if (met != null) {

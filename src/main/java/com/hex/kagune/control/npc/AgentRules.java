@@ -219,6 +219,14 @@ public final class AgentRules {
     public static final float DAWN_SHOT_DAMAGE = 26.0F;
     public static final int DAWN_AIM_TICKS = 12;
     public static final int DAWN_SHOT_COOLDOWN = 72;
+    /** 2.0.48: the share of his shots from far enough off ({@link #VOLLEY_MIN} blocks) that are the five-ball volley (DawnVolley). */
+    public static final double VOLLEY_CHANCE = 0.5;
+    public static final double VOLLEY_MIN = 7.0;
+
+    /** 2.0.48: true if a shot aimed from {@code range} off (a roll {@code r} in 0..1) is the volley. */
+    public static boolean volley(double range, double r) {
+        return range >= VOLLEY_MIN && r < VOLLEY_CHANCE;
+    }
 
     public static float dawnBlastDamage(double distance) {
         return (float)(DAWN_SHOT_DAMAGE * (1.0 - 0.6 * Math.min(1.0, Math.max(0.0, distance / DAWN_BLAST_RADIUS))));
