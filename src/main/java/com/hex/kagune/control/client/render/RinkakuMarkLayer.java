@@ -39,6 +39,9 @@ public final class RinkakuMarkLayer extends RenderLayer<AbstractClientPlayer, En
     static final float TOP = 2.0F;
     static final float BOTTOM = 12.0F;
     static final float OUT = 2.32F;
+    /** 2.0.46: on a man's build, how many bands down the back the tile is cut into, and how far outside the build's back it lies. */
+    static final int BANDS = 20;
+    static final float LIFT = 0.07F;
 
     public RinkakuMarkLayer(RenderLayerParent<AbstractClientPlayer, EntityModel<AbstractClientPlayer>> parent) {
         super(parent);
@@ -75,27 +78,44 @@ public final class RinkakuMarkLayer extends RenderLayer<AbstractClientPlayer, En
         model.f_102810_.m_104299_(pose);
         Matrix4f matrix = pose.m_85850_().m_252922_();
         Matrix3f normals = pose.m_85850_().m_252943_();
-        quad(buffers.m_6299_(LIT), matrix, normals, red, (int)(255 * Math.min(1.0F, out * 1.4F)), light, false);
+        // 2.0.46: on a man's broader back (BuildLayer) the mark lies on it, not under it.
+        boolean built = model instanceof net.minecraft.client.model.PlayerModel<?> player2 && BuildLayer.drawn(player, player2, partialTick);
+        boolean jacket = built && BuildLayer.jacket((net.minecraft.client.model.PlayerModel<?>)model);
+        quad(buffers.m_6299_(LIT), matrix, normals, red, (int)(255 * Math.min(1.0F, out * 1.4F)), light, false, built, jacket);
         float k = Math.min(1.0F, out) * breath;
         int dim = 0xFF000000 | (int)(((glowing >> 16) & 0xFF) * k) << 16 | (int)(((glowing >> 8) & 0xFF) * k) << 8 | (int)((glowing & 0xFF) * k);
-        quad(buffers.m_6299_(SHINE), matrix, normals, dim, 255, FULL_BRIGHT, true);
+        quad(buffers.m_6299_(SHINE), matrix, normals, dim, 255, FULL_BRIGHT, true, built, jacket);
         pose.m_85849_();
     }
 
-    /** The tile over the back ({@code both}: sent both ways round, for the glow's type, which culls back faces). */
-    private static void quad(VertexConsumer out, Matrix4f matrix, Matrix3f normals, int argb, int alpha, int light, boolean both) {
-        float[][] corners = {{LEFT, TOP, 0.0F, 0.0F}, {LEFT, BOTTOM, 0.0F, 1.0F}, {RIGHT, BOTTOM, 1.0F, 1.0F}, {RIGHT, TOP, 1.0F, 0.0F}};
-        for (int pass = 0; pass < (both ? 2 : 1); pass++) {
-            for (int i = 0; i < 4; i++) {
-                float[] c = corners[pass == 0 ? i : 3 - i];
-                // The back faces +z in the model; seen from behind its left is the model's +x, so the tile's u runs the other way.
-                out.m_252986_(matrix, c[0] / 16.0F, c[1] / 16.0F, OUT / 16.0F)
-                    .m_6122_((argb >> 16) & 0xFF, (argb >> 8) & 0xFF, argb & 0xFF, alpha)
-                    .m_7421_(1.0F - c[2], c[3])
-                    .m_86008_(OverlayTexture.f_118083_)
-                    .m_85969_(light)
-                    .m_252939_(normals, 0.0F, 0.0F, 1.0F)
-                    .m_5752_();
+    /**
+     * The tile over the back ({@code both}: sent both ways round, for the glow's type, which culls back faces). 2.0.46: {@code built}, on a
+     * man's build: cut into bands down the back, each laid just outside the build's back where it stands out ({@code jacket}: its jacket
+     * layer's).
+     */
+    private static void quad(VertexConsumer out, Matrix4f matrix, Matrix3f normals, int argb, int alpha, int light, boolean both, boolean built,
+                             boolean jacket) {
+        int bands = built ? BANDS : 1;
+        for (int b = 0; b < bands; b++) {
+            float v0 = b / (float)bands;
+            float v1 = (b + 1) / (float)bands;
+            float y0 = TOP + (BOTTOM - TOP) * v0;
+            float y1 = TOP + (BOTTOM - TOP) * v1;
+            float z0 = built ? Math.max(OUT, (float)com.hex.kagune.control.npc.ReaperBuild.back(y0, jacket) + LIFT) : OUT;
+            float z1 = built ? Math.max(OUT, (float)com.hex.kagune.control.npc.ReaperBuild.back(y1, jacket) + LIFT) : OUT;
+            float[][] corners = {{LEFT, y0, 0.0F, v0, z0}, {LEFT, y1, 0.0F, v1, z1}, {RIGHT, y1, 1.0F, v1, z1}, {RIGHT, y0, 1.0F, v0, z0}};
+            for (int pass = 0; pass < (both ? 2 : 1); pass++) {
+                for (int i = 0; i < 4; i++) {
+                    float[] c = corners[pass == 0 ? i : 3 - i];
+                    // The back faces +z in the model; seen from behind its left is the model's +x, so the tile's u runs the other way.
+                    out.m_252986_(matrix, c[0] / 16.0F, c[1] / 16.0F, c[4] / 16.0F)
+                        .m_6122_((argb >> 16) & 0xFF, (argb >> 8) & 0xFF, argb & 0xFF, alpha)
+                        .m_7421_(1.0F - c[2], c[3])
+                        .m_86008_(OverlayTexture.f_118083_)
+                        .m_85969_(light)
+                        .m_252939_(normals, 0.0F, 0.0F, 1.0F)
+                        .m_5752_();
+                }
             }
         }
     }

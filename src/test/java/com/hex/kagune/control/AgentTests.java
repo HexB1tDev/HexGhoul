@@ -493,6 +493,12 @@ public final class AgentTests {
         }
         check(down && rows[0][0] < 0.0 && rows[rows.length - 1][0] < 12.0, "its rows run down the torso from just over its top");
         check(4.0 + com.hex.kagune.control.npc.ReaperBuild.ARM_OUT >= widest, "his arms hang clear of it");
+        // 2.0.46: its back, for what lies on a man's back (the Rinkaku mark).
+        check(com.hex.kagune.control.npc.ReaperBuild.back(3.0, false) == 2.35 && com.hex.kagune.control.npc.ReaperBuild.back(3.0, true) == 2.6,
+            "its back up the chest, and its jacket layer's");
+        check(com.hex.kagune.control.npc.ReaperBuild.back(9.5, true) == 0.0 && com.hex.kagune.control.npc.ReaperBuild.back(-1.0, true) == 0.0
+            && com.hex.kagune.control.npc.ReaperBuild.back(Double.NaN, true) == 0.0, "none below his waist nor over his shoulders");
+        check(com.hex.kagune.control.npc.ReaperBuild.back(8.5, true) < 2.25, "at the waist it is back inside the torso's jacket layer");
         for (boolean jacket : new boolean[] {false, true}) {
             int[] count = new int[1];
             boolean[] ok = {true, true, true};

@@ -30,6 +30,26 @@ public final class ReaperBuild {
     /** How much further out (pixels) each arm hangs, clear of the broader chest. */
     public static final float ARM_OUT = 0.75F;
 
+    /**
+     * 2.0.46: how far back (pixels, +z) the build's back stands at {@code y} down the torso ({@code jacket}: its jacket layer's), or 0 where
+     * there is none (above the shoulders or below the waist): what is laid on a man's back (the Rinkaku mark) sits on it.
+     */
+    public static double back(double y, boolean jacket) {
+        int rows = PROFILE.length;
+        if (!(y >= PROFILE[0][0]) || y > PROFILE[rows - 1][0]) {
+            return 0.0;
+        }
+        for (int i = 0; i + 1 < rows; i++) {
+            double[] a = PROFILE[i];
+            double[] b = PROFILE[i + 1];
+            if (y <= b[0]) {
+                double t = (y - a[0]) / (b[0] - a[0]);
+                return a[3] + (b[3] - a[3]) * t + (jacket ? JACKET : 0.0);
+            }
+        }
+        return 0.0;
+    }
+
     /** Where each quad goes: its four corners (torso pixels), their places on the skin (texture pixels, u v four times), its normal. */
     public interface Sink {
         void quad(double[][] corners, double[] uv, double[] normal);

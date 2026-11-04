@@ -31,6 +31,11 @@ public final class Genders {
         return entity instanceof Player && of(entity.m_20148_()).female();
     }
 
+    /** 2.0.46: true for a player who picked male (drawn with the White Reaper's build: {@code BuildLayer}). */
+    public static boolean male(Entity entity) {
+        return entity instanceof Player && of(entity.m_20148_()) == Gender.MALE;
+    }
+
     public static void put(UUID id, Gender gender) {
         if (id == null) {
             return;
