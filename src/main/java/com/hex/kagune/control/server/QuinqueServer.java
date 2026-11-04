@@ -190,7 +190,7 @@ public final class QuinqueServer {
         Vec3 right = new Vec3(-look.f_82481_, 0.0, look.f_82479_).m_82541_();
         Vec3 eye = player.m_146892_();
         Vec3 hand = eye.m_82549_(right.m_82490_(0.3)).m_82520_(0.0, -0.4, 0.0);
-        Vec3 tip = hand.m_82549_(look.m_82490_(1.9));
+        Vec3 tip = hand.m_82549_(look.m_82490_(Quinque.DAWN_TIP));
         // Never through a wall right in front: from the eye's side of anything in the way.
         net.minecraft.world.phys.BlockHitResult in = level.m_45547_(new net.minecraft.world.level.ClipContext(eye, tip,
             net.minecraft.world.level.ClipContext.Block.COLLIDER, net.minecraft.world.level.ClipContext.Fluid.NONE, player));

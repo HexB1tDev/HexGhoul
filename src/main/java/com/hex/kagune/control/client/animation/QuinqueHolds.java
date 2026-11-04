@@ -46,8 +46,8 @@ public final class QuinqueHolds {
                 new float[] {1.30000F, 5.00000F, 8.00000F}, new float[] {11.10000F, 4.60000F, 8.00000F},
                 new float[] {11.10000F, 4.60000F, 8.00000F}, new float[] {11.10000F, 4.60000F, 8.00000F});
             case DAWN -> new Hold(0.36000F, -1.05000F, -0.42000F, 0.00000F,
-                new float[] {-1.14836F, 0.87235F, 0.02801F},
-                new float[] {29.84000F, 86.56000F, 1.15000F}, new float[] {0.58600F, 3.16000F, -7.58700F}, 0.74000F,
+                new float[] {-1.14837F, 0.87238F, 0.02808F},
+                new float[] {29.84000F, 86.56000F, 1.15000F}, new float[] {0.71800F, 4.28700F, -9.46200F}, 0.90000F,
                 new float[] {-5.70000F, 8.00000F, 8.00000F}, new float[] {-5.70000F, 8.00000F, 8.00000F},
                 new float[] {-5.70000F, 8.00000F, 8.00000F}, new float[] {-5.70000F, 8.00000F, 8.00000F});
             default -> null;

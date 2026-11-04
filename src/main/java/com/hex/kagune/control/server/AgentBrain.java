@@ -913,7 +913,7 @@ public final class AgentBrain {
                 Vec3 forward = UkakuFire.horizontal(along);
                 hand = hand.m_82520_(-forward.f_82481_ * 0.30, 0.0, forward.f_82479_ * 0.30);
                 along = target.m_82546_(hand).m_82541_();
-                Vec3 tip = hand.m_82549_(along.m_82490_(1.72));
+                Vec3 tip = hand.m_82549_(along.m_82490_(Quinque.DAWN_TIP));
                 if (level.m_45547_(new ClipContext(hand, tip, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, agent))
                     .m_6662_() == HitResult.Type.MISS) {
                     CrystalShots.lightning(agent, level, tip, along, body -> foe(agent, body));

@@ -194,6 +194,12 @@ public enum Quinque {
     /** Its "fire" frame's place on the model property (above "full", 0.95; the property is clamped to 0..1). */
     public static final float DAWN_FIRE_FRAME = 0.99F;
 
+    /**
+     * 2.0.47: how far (blocks) Dawn's point is from the hand holding it, as its model is drawn in the hand (its grip to its point, 37.5
+     * model pixels at the hand's 0.9 scale): where its lightning leaves it.
+     */
+    public static final double DAWN_TIP = 2.1;
+
     /** True while Dawn's point is open: from {@code at} (opening) until {@link #DAWN_OPEN_AFTER} past {@code fires} (the ball gone). */
     public static boolean tipOpen(long now, long at, long fires) {
         return at != Long.MIN_VALUE && fires != Long.MIN_VALUE && now >= at && now - fires <= DAWN_OPEN_AFTER && fires >= at;

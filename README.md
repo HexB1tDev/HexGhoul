@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.0.47 (HexGhoul): Dawn bigger and smoother (testing)
+
+See `.github/release-notes-2.0.47.md`. Dawn, the White Reaper's lance, is bigger and smoother. It's drawn about 20% bigger in the hand (scale 0.74 to 0.9). Its spike is half as thick again all along and meets the cone guard without a step; before, it read as a needle beside the guard. The spike and grip are 16-sided (were 8) in finer steps. Same silhouette as before: a black lance with a flared, gold-banded guard, a gun-sword style grip with its hooked knuckle guard, and a spiked pommel.
+
 ## 2.0.46 (HexGhoul): male players get the White Reaper's build (testing)
 
 See `.github/release-notes-2.0.46.md`. Players who pick male on the gender screen now have the White Reaper's build. The upper torso is drawn a little bigger over their own: broader across the shoulders and chest, the chest standing out in front of the belly, tapering into the normal waist, in their own skin and jacket layer. The arms hang slightly further out to clear it. Players who haven't picked a gender look as before, and female players keep their figure.

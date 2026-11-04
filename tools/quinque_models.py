@@ -313,10 +313,12 @@ def lerp_profile(points, x):
 
 # 2.0.30 (the owner: "smooth out ... because it's really squared, sort of, just to match ours better"): the spike's radius along the
 # lance (the recess at its base, the thicker middle, then the long straight taper to the point), and the guard's taper.
-DAWN_SPIKE = [(12.2, 0.60), (13.1, 0.55), (13.6, 0.44), (14.7, 0.44), (15.3, 0.57), (16.5, 0.63), (17.8, 0.55), (19.3, 0.46),
-              (21.2, 0.38), (23.5, 0.31), (25.9, 0.24), (28.1, 0.17), (30.0, 0.10), (31.8, 0.04)]
-DAWN_TAPER = [(1.50, 2.20), (2.15, 2.10), (3.45, 1.89), (4.75, 1.67), (6.05, 1.46), (7.35, 1.26), (8.675, 1.06), (10.075, 0.87),
-              (11.65, 0.71), (12.5, 0.66)]
+# 2.0.47 (the owner: "make his [lance] a little bigger. It's too small. And a little smoother"): the spike half as thick again all along
+# (it read as a needle beside the guard), the guard's taper ending on it without a step, the whole drawn bigger in the hand (STANCES).
+DAWN_SPIKE = [(12.2, 0.92), (13.1, 0.84), (13.6, 0.68), (14.7, 0.68), (15.3, 0.86), (16.5, 0.95), (17.8, 0.84), (19.3, 0.70),
+              (21.2, 0.58), (23.5, 0.47), (25.9, 0.36), (28.1, 0.25), (30.0, 0.14), (31.8, 0.05)]
+DAWN_TAPER = [(1.50, 2.20), (2.15, 2.10), (3.45, 1.91), (4.75, 1.72), (6.05, 1.53), (7.35, 1.35), (8.675, 1.18), (10.075, 1.04),
+              (11.65, 0.96), (12.5, 0.94)]
 # 2.0.30: the point opens from here as a shot leaves it (the "fire" frame): its two halves parted, a light between them.
 DAWN_SPLIT = 26.1
 LIGHT = (5, 2)
@@ -338,6 +340,12 @@ def dawn_parts(open_tip=False):
         """An 8-sided rod along x: the square and the same turned 45 degrees."""
         add(x0, x1, -r, r, -r, r, cell)
         add(x0, x1, -r, r, -r, r, cell, turned(45))
+
+    def rod16(x0, x1, r, cell):
+        """2.0.47: a 16-sided rod along x: the square turned 0, 22.5, 45 and -22.5 degrees (each square's corner trimmed to the circle)."""
+        side = r * math.cos(math.pi / 16)
+        for angle in (0, 22.5, 45, -22.5):
+            add(x0, x1, -side, side, -side, side, cell, turned(angle))
 
     def ring(x0, x1, radius, cell, wall=0.30):
         """One step of the hollow guard: 16 slats round it (8 once it is small), its open middle left for the shaft."""
@@ -372,10 +380,10 @@ def dawn_parts(open_tip=False):
         x1 = 1.50 + (12.5 - 1.50) * (i + 1) / steps
         ring(x0, x1, lerp_profile(DAWN_TAPER, (x0 + x1) / 2), BLADE)
 
-    # The spike: 8-sided along its profile, in short steps (finer toward the point).
+    # The spike: 16-sided along its profile (2.0.47: was 8), in short steps.
     edges = [12.2]
     while edges[-1] < 31.8 - 1e-6:
-        edges.append(min(31.8, edges[-1] + (0.7 if edges[-1] < 24.0 else 0.9)))
+        edges.append(min(31.8, edges[-1] + (0.55 if edges[-1] < 24.0 else 0.7)))
     for x0, x1 in zip(edges, edges[1:]):
         r = lerp_profile(DAWN_SPIKE, (x0 + x1) / 2)
         if open_tip and x0 >= DAWN_SPLIT - 1e-6:
@@ -383,7 +391,7 @@ def dawn_parts(open_tip=False):
             add(x0, x1, 0.0, r, -r, r, BLADE, ("z", 22.5, (DAWN_SPLIT, 8, 8)))
             add(x0, x1, -r, 0.0, -r, r, BLADE, ("z", -22.5, (DAWN_SPLIT, 8, 8)))
         else:
-            rod(x0, x1, r, BLADE)
+            rod16(x0, x1, r, BLADE)
     if open_tip:
         # The light gathering where it parts (the lightning ball about to leave it).
         add(DAWN_SPLIT - 0.35, DAWN_SPLIT + 1.1, -0.36, 0.36, -0.36, 0.36, LIGHT)
@@ -397,10 +405,10 @@ def dawn_parts(open_tip=False):
             add(x0, x1, -0.11, 0.11, low, high, EDGE, turned(angle))
 
     # The grip and its butt spike, 8-sided.
-    rod(-9.4, 12.5, 0.31, SHAFT)
-    for x0, x1, radius in [(-10.2, -9.4, 0.42), (-11.0, -10.2, 0.33), (-12.7, -11.0, 0.23),
-                           (-14.0, -12.7, 0.14), (-14.8, -14.0, 0.06)]:
-        rod(x0, x1, radius, JOINT)
+    rod16(-9.4, 12.5, 0.44, SHAFT)
+    for x0, x1, radius in [(-10.2, -9.4, 0.58), (-11.0, -10.2, 0.46), (-12.7, -11.0, 0.32),
+                           (-14.0, -12.7, 0.19), (-14.8, -14.0, 0.08)]:
+        rod16(x0, x1, radius, JOINT)
 
     # Black hooked guard on the underside, with a raised root and a narrow return.
     add(-5.4, -2.55, -1.80, -1.20, -0.36, 0.36, SHAFT)
@@ -566,7 +574,7 @@ STANCES = {
     # A rifle: bladed (the left shoulder toward the target), the stock in the right shoulder, the barrel along the look.
     "launcher": dict(twist=0.85, pitch=-1.62, yaw=-1.12, tip=(0, 0, -1), side=(0, -1, 0), scale=0.62, gun=True,
                      right=GUN_GRIP, left=GUN_FORE),
-    "dawn": dict(twist=0.36, pitch=-1.05, yaw=-0.42, tip=(0, -0.02, -1), side=(0, -1, 0), scale=0.74, gun=True,
+    "dawn": dict(twist=0.36, pitch=-1.05, yaw=-0.42, tip=(0, -0.02, -1), side=(0, -1, 0), scale=0.9, gun=True,
                  right=GUN_GRIP_DAWN, left=GUN_GRIP_DAWN),
     # The spear low and level at the hip, its point at the chest of what it faces, the left hand in front on the shaft (sliding along
     # it, slide: from .. to, as the spear is driven through it in a thrust).
@@ -708,7 +716,7 @@ FIRST = {
     "koukaku": ([0, -90, 25], [1.13, 1.2, 1.13], 0.45),
     "katana": ([0, -90, 25], [1.13, 2.0, 1.13], 0.5),
     "mace": ([0, -90, 25], [1.13, 1.6, 1.13], 0.5),
-    "dawn": ([0, 100, 0], [-2.0, 3.0, -5.0], 0.58),
+    "dawn": ([0, 100, 0], [-2.0, 3.0, -5.0], 0.66),
     "launcher": ([0, 100, 0], [-2.0, 3.0, -5.0], 0.6),
 }
 
