@@ -18,6 +18,7 @@ public final class ReaperPreview {
     public static void main(String[] args) throws Exception {
         PoseRender.skin = ImageIO.read(new File(args[0]));
         PoseRender.slim = true;
+        PoseRender.stiff = true; // an investigator is a mob on vanilla's player model: no elbows or knees bend
         File out = new File(args[1]);
         record Shot(String label, boolean reaper, double yaw, double pitch) {
         }

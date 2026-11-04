@@ -385,21 +385,20 @@ public final class AgentPose {
         p.headZ += 0.14F * k;
         p.rightShoulderY += -0.12F * (float)breath * k;
         p.leftShoulderY += -0.12F * (float)breath * k;
-        // The legs: his weight sunk on the right, the left loose, out in front and turned out, its knee soft.
+        // The legs: his weight sunk on the right, the left loose, out in front and turned out.
         p.rightLegX = blend(p.rightLegX, 0.06F, k);
         p.rightLegY = blend(p.rightLegY, 0.08F, k);
         p.rightLegZ = blend(p.rightLegZ, 0.04F, k);
         p.leftLegX = blend(p.leftLegX, -0.26F, k);
         p.leftLegY = blend(p.leftLegY, -0.42F, k);
         p.leftLegZ = blend(p.leftLegZ, -0.13F, k);
-        p.leftKnee = blend(p.leftKnee, 0.2F, k);
         p.legHold = Math.max(p.legHold, k);
-        // The free hand in his pocket (solved through the game's transforms, tools/ArmSolve's way): the elbow out and back, the forearm
-        // in and forward to the front of his hip, the hand sunk in the pocket. Its lean and tip taken out, so it stays there.
-        p.leftArmX = blend(p.leftArmX, -0.058F - p.lean, k);
-        p.leftArmY = blend(p.leftArmY, 0.596F, k);
-        p.leftArmZ = blend(p.leftArmZ, 0.173F - p.side, k);
-        p.leftElbow = blend(p.leftElbow, 0.623F, k);
+        // The free hand in his pocket (solved through the game's transforms, tools/ArmSolve's way, on an investigator's straight arms:
+        // vanilla's player model bends no elbow): the arm in to his hip, its hand sunk in the pocket at its side. Its lean and tip
+        // taken out, so it stays there.
+        p.leftArmX = blend(p.leftArmX, -0.327F - p.lean, k);
+        p.leftArmY = blend(p.leftArmY, 0.392F, k);
+        p.leftArmZ = blend(p.leftArmZ, 0.284F - p.side, k);
         p.leftArmHold = Math.max(p.leftArmHold, k);
     }
 

@@ -485,9 +485,10 @@ public final class AgentTests {
             check(reaper.lean < other.lean - 0.1F && reaper.lean > -0.35F, "he leans back further than any investigator (" + age + ")");
             check(reaper.side > other.side && reaper.twist < other.twist, "his hip cocked, his chest turned open");
             check(reaper.headY == 0.0F && reaper.headX > 0.0F && reaper.headX < -reaper.lean, "no glancing about; his chin a touch up");
-            check(reaper.legHold == 1.0F && reaper.leftArmHold == 1.0F && reaper.leftKnee > 0.0F && reaper.leftLegX < -0.2F,
+            check(reaper.legHold == 1.0F && reaper.leftArmHold == 1.0F && reaper.leftLegX < -0.2F && reaper.leftLegY < -0.3F,
                 "his weight on his right leg, the left loose in front");
-            check(reaper.leftElbow > 0.4F && reaper.leftArmY > 0.3F, "his free hand bent in to his pocket");
+            check(reaper.leftElbow == 0.0F && reaper.leftKnee == 0.0F && reaper.leftArmY > 0.3F && reaper.leftArmZ + reaper.side > 0.2F,
+                "his free arm straight in to his pocket (an investigator's model bends no elbow)");
         }
         check(maxLean - minLean > 0.005F && maxLean - minLean < 0.02F, "a slow breath, hardly moving: " + (maxLean - minLean));
         RigPose none = new RigPose();

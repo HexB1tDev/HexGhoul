@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.0.44 (HexGhoul): the Reaper's pocket hand on a straight arm (testing)
+
+See `.github/release-notes-2.0.44.md`. Fix for 2.0.43: the White Reaper's free hand now actually goes into his pocket in game. Investigators are drawn on vanilla's player model, which doesn't bend elbows or knees, but 2.0.43's pocket arm relied on a bent elbow, so in game it would have hung off at an angle. The arm is now solved for a straight arm: angled in to his hip, the hand sunk into the pocket at its front.
+
 ## 2.0.43 (HexGhoul): the White Reaper at ease (testing)
 
 See `.github/release-notes-2.0.43.md`. The White Reaper has his own idle when he stands around with his case shut, in place of the regular investigators' one. He leans well back from the hips with his hip cocked and his weight sunk on the leg that holds the case. His other leg is loose, out in front and turned out. His chest is turned open, his head cocked with his chin a touch up so he looks down at you, and his free hand is in his coat pocket. It's a pose: only a slow breath, and no glancing about.

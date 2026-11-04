@@ -1,4 +1,10 @@
-# START HERE (state after 2.0.43)
+# START HERE (state after 2.0.44)
+
+Fix for 2.0.43: the White Reaper's free hand now actually goes into his pocket in game. Investigators are drawn on vanilla's player model, which doesn't bend elbows or knees, but 2.0.43's pocket arm relied on a bent elbow, so in game it would have hung off at an angle. The arm is now solved for a straight arm: angled in to his hip, the hand sunk into the pocket at its front.
+
+- `AgentPose.reaperIdle`: the pocket arm re-solved through the game's transforms with no elbow; the unused knee bend is dropped. `tools/ReaperPreview.java` now renders as an investigator is drawn (no bends), and `docs/handoff/reaper-idle-2.0.43.png` is re-rendered that way. Protocol stays 78.
+
+# State after 2.0.43
 
 The White Reaper has his own idle when he stands around with his case shut, in place of the regular investigators' one. He leans well back from the hips with his hip cocked and his weight sunk on the leg that holds the case. His other leg is loose, out in front and turned out. His chest is turned open, his head cocked with his chin a touch up so he looks down at you, and his free hand is in his coat pocket. It's a pose: only a slow breath, and no glancing about.
 
