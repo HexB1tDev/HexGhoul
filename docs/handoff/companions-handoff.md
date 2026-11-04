@@ -1,4 +1,18 @@
-# START HERE (state after 2.2.4)
+# START HERE (state after 2.2.5)
+
+A male player's chest is a little smaller. The upper chest no longer stands out as far: it's broader than the waist, as before, but only 60% as far out past the torso as the White Reaper's, across the shoulders, in front and behind. The arms hang a little closer in to match. The White Reaper keeps his build exactly as it was.
+
+- Widest across the chest: 4.41 px a side, down from 4.68 (the torso is 4). Out in front of the belly: 0.63 px, down from 1.05. The back: 0.21 px past the torso, down from 0.35. The waist is unchanged, so the taper (the V) stays.
+- Arms 0.45 px further out than a bare torso, down from 0.75.
+- The Rinkaku mark on a man's back follows the slimmer back.
+- **Code**:
+  - `ReaperBuild.PLAYER` (the Reaper's outline at `PLAYER_SHARE` 0.6 past the torso) and `PLAYER_ARM_OUT`.
+  - `ReaperBuild.chest` and `back` take an outline.
+  - Used by `BuildLayer`, `RinkakuMarkLayer` and `KaguneBodyAnimation`. The Reaper's `AgentRenderer`/`AgentModel` keep `PROFILE` and `ARM_OUT`.
+  - Tested in `AgentTests.reaperBuild`.
+- Preview, rendered off-game: `docs/handoff/player-build-2.2.5.png` (player before, player now, the Reaper; front, side, three-quarter). Made with `tools/ReaperPreview.java <skin> <out> player`. Protocol stays 83. Not tested in game.
+
+# State after 2.2.4
 
 A kiss for every mood. It works the same as before: they lean in and wait, a tap of Shift is a quick kiss, holding makes them blush, and holding longer makes them pull you in. Now each mood gives its own kiss: how they wait, how long, what they say, how they move, and what they do after. A kiss is never turned down any more. Ask an angry partner for one and you get an angry one.
 

@@ -101,8 +101,8 @@ public final class RinkakuMarkLayer extends RenderLayer<AbstractClientPlayer, En
             float v1 = (b + 1) / (float)bands;
             float y0 = TOP + (BOTTOM - TOP) * v0;
             float y1 = TOP + (BOTTOM - TOP) * v1;
-            float z0 = built ? Math.max(OUT, (float)com.hex.kagune.control.npc.ReaperBuild.back(y0, jacket) + LIFT) : OUT;
-            float z1 = built ? Math.max(OUT, (float)com.hex.kagune.control.npc.ReaperBuild.back(y1, jacket) + LIFT) : OUT;
+            float z0 = built ? Math.max(OUT, (float)com.hex.kagune.control.npc.ReaperBuild.back(com.hex.kagune.control.npc.ReaperBuild.PLAYER, y0, jacket) + LIFT) : OUT;
+            float z1 = built ? Math.max(OUT, (float)com.hex.kagune.control.npc.ReaperBuild.back(com.hex.kagune.control.npc.ReaperBuild.PLAYER, y1, jacket) + LIFT) : OUT;
             float[][] corners = {{LEFT, y0, 0.0F, v0, z0}, {LEFT, y1, 0.0F, v1, z1}, {RIGHT, y1, 1.0F, v1, z1}, {RIGHT, y0, 1.0F, v0, z0}};
             for (int pass = 0; pass < (both ? 2 : 1); pass++) {
                 for (int i = 0; i < 4; i++) {

@@ -105,7 +105,7 @@ public final class KaguneShowcase {
         pose.leftElbow = 0.25F;
         pose.rightLegX = -0.1F;
         pose.leftLegX = 0.1F;
-        PoseRender.armOut = s.build ? ReaperBuild.ARM_OUT : 0.0;
+        PoseRender.armOut = s.build ? ReaperBuild.PLAYER_ARM_OUT : 0.0;
         closeUp = s.label.startsWith("a tail up close");
         // The close-up: square on the broad far end of the upper left tail, where its scales are biggest.
         PoseRender.Camera cam = closeUp
@@ -159,7 +159,7 @@ public final class KaguneShowcase {
                 for (int k = 0; k < 4; k++) {
                     double x = 4.0 - 8.0 * corners[k][0];
                     double y = 2.0 + 10.0 * corners[k][1];
-                    double z = build ? Math.max(2.32, ReaperBuild.back(y, true) + 0.07) : 2.32;
+                    double z = build ? Math.max(2.32, ReaperBuild.back(ReaperBuild.PLAYER, y, true) + 0.07) : 2.32;
                     q[k] = PoseRender.point(pose, "torso", new double[] {x, y, z});
                 }
                 blendQuad(canvas, q, rgb, alpha, add);

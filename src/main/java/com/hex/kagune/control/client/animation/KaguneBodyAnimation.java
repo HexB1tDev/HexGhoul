@@ -1340,8 +1340,9 @@ public final class KaguneBodyAnimation implements IAnimation {
         }
         if (type == TransformType.POSITION && ("rightArm".equals(modelName) || "leftArm".equals(modelName))
             && com.hex.kagune.control.Genders.male(this.player)) {
-            // 2.0.46: a man's arms set out round his broader chest (the White Reaper's build, BuildLayer), as hers are spread.
-            float shift = com.hex.kagune.control.npc.ReaperBuild.ARM_OUT * ("rightArm".equals(modelName) ? -1.0F : 1.0F);
+            // 2.0.46: a man's arms set out round his broader chest (the White Reaper's build, BuildLayer), as hers are spread. 2.2.5: a
+            // player's chest is slimmer than the Reaper's, so less far.
+            float shift = com.hex.kagune.control.npc.ReaperBuild.PLAYER_ARM_OUT * ("rightArm".equals(modelName) ? -1.0F : 1.0F);
             return new Vec3f(shaped.getX() + shift, shaped.getY(), shaped.getZ());
         }
         return shaped;

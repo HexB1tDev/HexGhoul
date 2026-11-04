@@ -31,17 +31,47 @@ public final class ReaperBuild {
     public static final float ARM_OUT = 0.75F;
 
     /**
+     * 2.2.5 (the owner: "the men's chest, the top chest, is a little too large. At least for the player. Keep the same for Arima"): a male
+     * player's build, slimmer than the White Reaper's: the same shape ({@link #PROFILE}'s rows, the waist the same), but only
+     * {@link #PLAYER_SHARE} of how far his stands out past the torso, across the shoulders and chest, in front and behind.
+     */
+    public static final double PLAYER_SHARE = 0.6;
+    /** A male player's chest's outline: {@link #PROFILE}, {@link #PLAYER_SHARE} as far out past the torso (its waist row as his). */
+    public static final double[][] PLAYER = slimmer(PROFILE, PLAYER_SHARE);
+    /** How much further out (pixels) a male player's arms hang, clear of his chest. */
+    public static final float PLAYER_ARM_OUT = 0.45F;
+
+    /** {@code rows} with only {@code share} of how far each stands out past the torso (4 a side, 2 front and back); inside it, as is. */
+    static double[][] slimmer(double[][] rows, double share) {
+        double[][] out = new double[rows.length][];
+        for (int i = 0; i < rows.length; i++) {
+            double[] r = rows[i];
+            out[i] = new double[] {r[0], past(r[1], 4.0, share), past(r[2], 2.0, share), past(r[3], 2.0, share)};
+        }
+        return out;
+    }
+
+    private static double past(double value, double torso, double share) {
+        return value > torso ? torso + (value - torso) * share : value;
+    }
+
+    /**
      * 2.0.46: how far back (pixels, +z) the build's back stands at {@code y} down the torso ({@code jacket}: its jacket layer's), or 0 where
      * there is none (above the shoulders or below the waist): what is laid on a man's back (the Rinkaku mark) sits on it.
      */
     public static double back(double y, boolean jacket) {
-        int rows = PROFILE.length;
-        if (!(y >= PROFILE[0][0]) || y > PROFILE[rows - 1][0]) {
+        return back(PROFILE, y, jacket);
+    }
+
+    /** 2.2.5: {@link #back(double, boolean)} for the build whose outline is {@code profile} ({@link #PROFILE} or {@link #PLAYER}). */
+    public static double back(double[][] profile, double y, boolean jacket) {
+        int rows = profile.length;
+        if (!(y >= profile[0][0]) || y > profile[rows - 1][0]) {
             return 0.0;
         }
         for (int i = 0; i + 1 < rows; i++) {
-            double[] a = PROFILE[i];
-            double[] b = PROFILE[i + 1];
+            double[] a = profile[i];
+            double[] b = profile[i + 1];
             if (y <= b[0]) {
                 double t = (y - a[0]) / (b[0] - a[0]);
                 return a[3] + (b[3] - a[3]) * t + (jacket ? JACKET : 0.0);
@@ -57,12 +87,17 @@ public final class ReaperBuild {
 
     /** The chest ({@code jacket}: its jacket layer, standing {@link #JACKET} off it), quad by quad: front, back, sides, and the top. */
     public static void chest(boolean jacket, Sink sink) {
+        chest(PROFILE, jacket, sink);
+    }
+
+    /** 2.2.5: {@link #chest(boolean, Sink)} for the build whose outline is {@code profile} ({@link #PROFILE} or {@link #PLAYER}). */
+    public static void chest(double[][] profile, boolean jacket, Sink sink) {
         double grow = jacket ? JACKET : 0.0;
         double v0 = jacket ? 32.0 : 16.0;
-        int rows = PROFILE.length;
+        int rows = profile.length;
         for (int i = 0; i + 1 < rows; i++) {
-            double[] a = PROFILE[i];
-            double[] b = PROFILE[i + 1];
+            double[] a = profile[i];
+            double[] b = profile[i + 1];
             double ya = a[0] - (i == 0 ? grow : 0.0);
             double yb = b[0];
             double wa = a[1] + grow;
@@ -77,7 +112,7 @@ public final class ReaperBuild {
             emit(sink, v0, new double[][] {{wa, ya, fa}, {wa, ya, ba}, {wb, yb, bb}, {wb, yb, fb}}, Face.LEFT);
             emit(sink, v0, new double[][] {{-wa, ya, ba}, {-wa, ya, fa}, {-wb, yb, fb}, {-wb, yb, bb}}, Face.RIGHT);
         }
-        double[] top = PROFILE[0];
+        double[] top = profile[0];
         double y = top[0] - grow;
         double w = top[1] + grow;
         double f = -(top[2] + grow);

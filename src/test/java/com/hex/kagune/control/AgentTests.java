@@ -631,6 +631,29 @@ public final class AgentTests {
             check(ok[0], layer + ": painted from the torso's own skin (and its jacket layer's)");
             check(ok[1] && ok[2], layer + ": every face turned outward");
         }
+        // 2.2.5: a male player's build, slimmer than his (the owner: "a little too large ... for the player. Keep the same for Arima").
+        double[][] player = com.hex.kagune.control.npc.ReaperBuild.PLAYER;
+        check(rows[1][1] == 4.68 && rows[2][2] == 3.05 && com.hex.kagune.control.npc.ReaperBuild.ARM_OUT == 0.75F, "the Reaper's own build unchanged");
+        check(player.length == rows.length, "a player's: the same rows");
+        double playerWidest = 0.0;
+        double playerFurthest = 0.0;
+        for (int i = 0; i < rows.length; i++) {
+            check(player[i][0] == rows[i][0] && player[i][1] <= rows[i][1] && player[i][2] <= rows[i][2] && player[i][3] <= rows[i][3],
+                "a player's no bigger than his anywhere (row " + i + ")");
+            playerWidest = Math.max(playerWidest, player[i][1]);
+            playerFurthest = Math.max(playerFurthest, player[i][2]);
+        }
+        check(playerWidest > 4.2 && playerWidest < widest - 0.2, "a player's a little less broad (" + playerWidest + ")");
+        check(playerFurthest - 2.0 > 0.4 && playerFurthest - 2.0 < (furthest - 2.0) * 0.75, "a player's chest out less far (" + playerFurthest + ")");
+        check(player[1][1] > player[player.length - 1][1] + 0.3 && player[1][2] > player[player.length - 1][2] + 0.4, "still a V");
+        check(java.util.Arrays.equals(player[player.length - 1], waist), "the same at the waist");
+        check(4.0 + com.hex.kagune.control.npc.ReaperBuild.PLAYER_ARM_OUT >= playerWidest
+            && com.hex.kagune.control.npc.ReaperBuild.PLAYER_ARM_OUT < com.hex.kagune.control.npc.ReaperBuild.ARM_OUT, "a player's arms clear of it, closer in");
+        check(com.hex.kagune.control.npc.ReaperBuild.back(player, 3.0, true) < com.hex.kagune.control.npc.ReaperBuild.back(3.0, true)
+            && com.hex.kagune.control.npc.ReaperBuild.back(player, 3.0, true) > 2.25, "a player's back: less far out, still outside the torso's jacket");
+        int[] quads = new int[1];
+        com.hex.kagune.control.npc.ReaperBuild.chest(player, true, (corners, uv, normal) -> quads[0]++);
+        check(quads[0] == (rows.length - 1) * 4 + 1, "a player's chest drawn whole");
     }
 
     /** 2.0.43: the White Reaper standing about: leaning well back, hip cocked, his free hand in his pocket, his eyes on you, barely moving. */

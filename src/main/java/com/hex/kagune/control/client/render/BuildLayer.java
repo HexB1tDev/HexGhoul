@@ -20,7 +20,8 @@ import org.joml.Matrix4f;
  * muscle"): a man's build, the White Reaper's ({@link ReaperBuild}): his torso's upper part drawn again over it, broader across the
  * shoulders and chest and standing out in front of his belly, tapering into his waist, painted with his own skin's torso and its jacket
  * layer over it, on his torso as it is posed (the upper body's bend carried, as every layer on it must). His arms are set out round it by
- * his body layer ({@code KaguneBodyAnimation}). Not drawn through a chestplate, nor while he is unseen.
+ * his body layer ({@code KaguneBodyAnimation}). Not drawn through a chestplate, nor while he is unseen. 2.2.5: slimmer than the Reaper's
+ * ({@link ReaperBuild#PLAYER}; the owner: the top chest "a little too large ... for the player").
  */
 public final class BuildLayer extends RenderLayer<AbstractClientPlayer, EntityModel<AbstractClientPlayer>> {
     public BuildLayer(RenderLayerParent<AbstractClientPlayer, EntityModel<AbstractClientPlayer>> parent) {
@@ -48,11 +49,11 @@ public final class BuildLayer extends RenderLayer<AbstractClientPlayer, EntityMo
                         .m_252939_(n, (float)normal[0], (float)normal[1], (float)normal[2]).m_5752_();
                 }
             };
-            ReaperBuild.chest(false, sink);
+            ReaperBuild.chest(ReaperBuild.PLAYER, false, sink); // 2.2.5: a player's, slimmer than the Reaper's
             // The jacket layer when he wears one (3D Skin Layers hides the flat one and draws its own: drawn here too, so the chest
             // isn't left in the bare torso's colours).
             if (jacket(model)) {
-                ReaperBuild.chest(true, sink);
+                ReaperBuild.chest(ReaperBuild.PLAYER, true, sink);
             }
             pose.m_85849_();
         } catch (RuntimeException failure) {

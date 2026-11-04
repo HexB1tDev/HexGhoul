@@ -23,6 +23,10 @@ public final class ReaperPreview {
         record Shot(String label, boolean reaper, boolean build, double yaw, double pitch) {
         }
         boolean builds = args.length > 2 && args[2].equals("build");
+        if (args.length > 2 && args[2].equals("player")) {
+            players(out);
+            return;
+        }
         List<Shot> shots = new ArrayList<>(builds ? List.of(
             new Shot("before, front", true, false, 0, 4),
             new Shot("his build, front", true, true, 0, 4),
@@ -85,10 +89,53 @@ public final class ReaperPreview {
         System.out.println("wrote " + out);
     }
 
+    /**
+     * 2.2.5: a male player's build before (the Reaper's chest) and now ({@code ReaperBuild.PLAYER}), with the Reaper's own beside them,
+     * standing straight in the same skin, from the front, the side (near arm hidden, to show the chest's profile) and three-quarters.
+     */
+    static void players(File out) throws Exception {
+        record Look(String label, double[][] profile, double armOut) {
+        }
+        Look[] looks = {
+            new Look("player before (2.0.46)", com.hex.kagune.control.npc.ReaperBuild.PROFILE, com.hex.kagune.control.npc.ReaperBuild.ARM_OUT),
+            new Look("player now (2.2.5)", com.hex.kagune.control.npc.ReaperBuild.PLAYER, com.hex.kagune.control.npc.ReaperBuild.PLAYER_ARM_OUT),
+            new Look("White Reaper (unchanged)", com.hex.kagune.control.npc.ReaperBuild.PROFILE, com.hex.kagune.control.npc.ReaperBuild.ARM_OUT)};
+        double[][] views = {{0, 2}, {-90, 2}, {-35, 6}};
+        String[] names = {"front", "side", "three-quarter"};
+        int w = 420;
+        int h = 560;
+        BufferedImage sheet = new BufferedImage(w * looks.length, h * views.length, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = sheet.createGraphics();
+        for (int v = 0; v < views.length; v++) {
+            for (int l = 0; l < looks.length; l++) {
+                RigPose pose = new RigPose();
+                PoseRender.armOut = looks[l].armOut();
+                PoseRender.noRightArm = v == 1;
+                List<PoseRender.Tri> extra = new ArrayList<>();
+                chest(extra, pose, false, looks[l].profile());
+                chest(extra, pose, true, looks[l].profile());
+                BufferedImage img = PoseRender.render(pose, PoseRender.orbit(views[v][0], views[v][1], 3.4, 1.15), w, h, extra);
+                g.drawImage(img, l * w, v * h, w, h, null);
+                g.setColor(Color.WHITE);
+                g.setFont(new Font("SansSerif", Font.BOLD, 16));
+                g.drawString(looks[l].label() + ", " + names[v], l * w + 10, v * h + 22);
+            }
+        }
+        g.dispose();
+        out.getParentFile().mkdirs();
+        ImageIO.write(sheet, "png", out);
+        System.out.println("wrote " + out);
+    }
+
     /** ReaperBuild's chest on {@code pose}'s torso, each quad cut into small cells painted from the skin (see-through texels left out). */
     static void chest(List<PoseRender.Tri> tris, RigPose pose, boolean jacket) {
+        chest(tris, pose, jacket, com.hex.kagune.control.npc.ReaperBuild.PROFILE);
+    }
+
+    /** 2.2.5: the chest whose outline is {@code profile} (the Reaper's, or a male player's: {@code ReaperBuild.PLAYER}). */
+    static void chest(List<PoseRender.Tri> tris, RigPose pose, boolean jacket, double[][] profile) {
         int cuts = 10;
-        com.hex.kagune.control.npc.ReaperBuild.chest(jacket, (c, uv, n) -> {
+        com.hex.kagune.control.npc.ReaperBuild.chest(profile, jacket, (c, uv, n) -> {
             for (int a = 0; a < cuts; a++) {
                 for (int b = 0; b < cuts; b++) {
                     double s0 = a / (double)cuts, s1 = (a + 1) / (double)cuts, t0 = b / (double)cuts, t1 = (b + 1) / (double)cuts;
