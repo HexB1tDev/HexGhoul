@@ -18,6 +18,25 @@ public final class KingRules {
     public static final float UPKEEP = 0.04F;
     public static final float CALL_ENERGY = 5.0F;
 
+    /**
+     * 2.1.1 (the owner: "Final form (Peace or War) now have a 5 minute cooldown, reflected as the new custom effect Exaustion"): once a final
+     * kakuja is let go (taken off, run dry, or its body killed) it can't be called again for this long (ticks: 5 minutes), shown as
+     * Exhaustion. Kept on the player's profile under {@link #RESTS} (the game tick the rest ends), so milk, death and a relog leave it be.
+     */
+    public static final int EXHAUSTION_TICKS = 6000;
+    public static final String RESTS = "HexKingRestsUntil";
+
+    /** How long (ticks) the rest that ends at {@code until} still has at {@code now}: none once it is over, never more than a whole rest. */
+    public static long restLeft(long until, long now) {
+        return until > now ? Math.min(until - now, EXHAUSTION_TICKS) : 0L;
+    }
+
+    /** {@code ticks} as minutes and seconds ("4:05"), rounded up to the second. */
+    public static String clock(long ticks) {
+        long seconds = (Math.max(0L, ticks) + 19L) / 20L;
+        return seconds / 60L + ":" + (seconds % 60L < 10L ? "0" : "") + seconds % 60L;
+    }
+
     /** War's numbers from the spec: melee, move speed, attack speed, max health (shares added to the base) and damage taken off. */
     public static final double WAR_MELEE = 0.45;
     public static final double WAR_SPEED = 0.35;

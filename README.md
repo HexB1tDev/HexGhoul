@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.1.1 (HexGhoul): final forms rest five minutes: Exhaustion (testing)
+
+See `.github/release-notes-2.1.1.md`. The final forms (War and Peace) now have a 5-minute cooldown, shown as a new custom effect, Exhaustion, with its own icon: a kakugan half shut under a heavy, cracked lid, its red dimmed, a drop of RC running from it. Once a final form is let go (taken off, run dry, or the player killed in it), Exhaustion runs for 5 minutes, and calling War or Peace meanwhile is refused with the time left ("Exhausted: War can't be called again for 4:12").
+
 ## 2.1.0 (HexGhoul): kakuja legs and mask in the kagune's colours (testing)
 
 See `.github/release-notes-2.1.0.md`. A Rinkaku kakuja's centipede legs and mask now take on the kagune's colour, blending with it while staying distinct. Before, both were a fixed plum. The centipede's segments are always greys, black and white: charcoal plates with pale grey and white rims, or bone-white plates for a kagune too dark to stand apart from them. They carry only a breath of the kagune's hue. The glowing flesh between the plates is the kagune's own colour. The mask has the same grey shell leaning a little more toward the kagune's colour, with the kagune's dark in its edges. The red kakugan lens stays. From this version on, the last number never reaches 10 (after x.y.9 comes x.(y+1).0), the owner's rule.

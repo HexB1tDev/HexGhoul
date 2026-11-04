@@ -1,5 +1,6 @@
 package com.hex.kagune.control.server;
 
+import com.hex.kagune.control.ControlItems;
 import com.hex.kagune.control.KagunePath;
 import com.hex.kagune.control.king.KingForm;
 import com.hex.kagune.control.king.KingMove;
@@ -15,6 +16,7 @@ import java.util.UUID;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
@@ -571,6 +573,13 @@ public final class KingServer {
         if (PathServer.path(player) != KagunePath.RINKAKU || !player.m_6084_()) {
             return;
         }
+        // 2.1.1: still resting from the last one (Exhaustion): not yet.
+        long rest = resting(player);
+        if (rest > 0L) {
+            player.m_5661_(Component.m_237110_("message.hexkagune.king.exhausted", form.displayName(), KingRules.clock(rest)), true);
+            showRest(player, rest);
+            return;
+        }
         // 1.0.23: it runs on RC, as every form does: not while spent, not on an empty bar.
         int spent = KaguneLock.locked(player);
         if (spent > 0) {
@@ -610,6 +619,9 @@ public final class KingServer {
         MOTIONS.remove(player.m_20148_());
         if (worn == null) {
             return;
+        }
+        if (worn.on() && !worn.preview()) {
+            exhaust(player); // 2.1.1: let go (or run dry, or killed in it): it rests five minutes, as Exhaustion
         }
         if (shown && worn.on()) {
             WORN.put(player.m_20148_(), new Worn(worn.form(), false, player.m_9236_().m_46467_(), worn.preview()));
@@ -730,6 +742,9 @@ public final class KingServer {
         }
         Worn worn = WORN.get(player.m_20148_());
         long now = player.m_9236_().m_46467_();
+        if (now % 10L == 0L) {
+            restTick(player);
+        }
         Long pending = PENDING.get(player.m_20148_());
         if (pending != null && (worn == null || !worn.on())) {
             if (now > pending || !player.m_6084_()) {
@@ -812,6 +827,46 @@ public final class KingServer {
                 amount = (float)(amount * (1.0 - KingRules.reduction(form)));
             }
             event.setAmount(amount);
+        }
+    }
+
+    // ------------------------------------------------------------------ 2.1.1: Exhaustion
+
+    /** The final kakuja is let go: it rests {@link KingRules#EXHAUSTION_TICKS} (none while cooldowns are off), shown as Exhaustion. */
+    static void exhaust(ServerPlayer player) {
+        long ticks = Cooldowns.of(player, (long)KingRules.EXHAUSTION_TICKS);
+        if (ticks <= 0L) {
+            return;
+        }
+        long now = player.m_9236_().m_46467_();
+        KaguneProfile.root(player).m_128356_(KingRules.RESTS, now + ticks);
+        showRest(player, ticks);
+    }
+
+    /** How long (ticks) {@code player} still rests from the last final kakuja (none while cooldowns are off). */
+    public static long resting(ServerPlayer player) {
+        if (Cooldowns.off(player)) {
+            return 0L;
+        }
+        return KingRules.restLeft(KaguneProfile.root(player).m_128454_(KingRules.RESTS), player.m_9236_().m_46467_());
+    }
+
+    /** Exhaustion shown for the {@code left} ticks of the rest (its icon, its time). */
+    private static void showRest(ServerPlayer player, long left) {
+        player.m_147207_(new MobEffectInstance(ControlItems.exhaustion(), (int)Math.max(1L, left), 0, false, false, true), null);
+    }
+
+    /**
+     * Every half second: Exhaustion shown while the rest lasts (put back if milk or a death took it away) and taken away once it is over
+     * (or cooldowns are switched off).
+     */
+    private static void restTick(ServerPlayer player) {
+        long left = resting(player);
+        boolean shown = player.m_21023_(ControlItems.exhaustion());
+        if (left > 0L && !shown && player.m_6084_()) {
+            showRest(player, left);
+        } else if (left <= 0L && shown) {
+            player.m_21195_(ControlItems.exhaustion());
         }
     }
 

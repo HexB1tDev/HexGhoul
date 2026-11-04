@@ -54,6 +54,8 @@ public final class ControlItems {
     private static final DeferredRegister<net.minecraft.world.effect.MobEffect> EFFECTS = DeferredRegister.create(ForgeRegistries.MOB_EFFECTS,
         "hexkagune");
     private static final java.util.Map<String, RegistryObject<net.minecraft.world.effect.MobEffect>> KITCHEN_EFFECTS = new java.util.HashMap<>();
+    /** 2.1.1: Exhaustion, the rest after a final kakuja (KingServer). */
+    private static final RegistryObject<net.minecraft.world.effect.MobEffect> EXHAUSTION = EFFECTS.register("exhaustion", ExhaustionEffect::new);
 
     static {
         for (com.hex.kagune.control.kitchen.Dish dish : com.hex.kagune.control.kitchen.Menu.DISHES) {
@@ -105,6 +107,11 @@ public final class ControlItems {
     public static Item dishItem(String id) {
         RegistryObject<Item> item = DISHES.get(id);
         return item == null ? null : item.get();
+    }
+
+    /** 2.1.1: the Exhaustion effect (the rest after a final kakuja). */
+    public static net.minecraft.world.effect.MobEffect exhaustion() {
+        return EXHAUSTION.get();
     }
 
     /** One of the kitchen's own effects by key, or null. */

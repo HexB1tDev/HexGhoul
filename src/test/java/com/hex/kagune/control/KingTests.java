@@ -25,7 +25,39 @@ public final class KingTests {
         }
     }
 
+    /** 2.1.1: a final kakuja rests five minutes once it is let go, shown as Exhaustion, and can't be called meanwhile. */
+    static void exhaustion() {
+        check(com.hex.kagune.control.king.KingRules.EXHAUSTION_TICKS == 5 * 60 * 20, "the rest is five minutes");
+        check(com.hex.kagune.control.king.KingRules.restLeft(1000L, 400L) == 600L && com.hex.kagune.control.king.KingRules.restLeft(1000L, 1000L) == 0L
+            && com.hex.kagune.control.king.KingRules.restLeft(1000L, 5000L) == 0L && com.hex.kagune.control.king.KingRules.restLeft(0L, 5000L) == 0L,
+            "what is left of it, none once it is over (or never set)");
+        check(com.hex.kagune.control.king.KingRules.restLeft(Long.MAX_VALUE, 0L) == com.hex.kagune.control.king.KingRules.EXHAUSTION_TICKS,
+            "never more than a whole rest (a stored end far off can't lock it for good)");
+        check(com.hex.kagune.control.king.KingRules.clock(6000L).equals("5:00") && com.hex.kagune.control.king.KingRules.clock(1L).equals("0:01")
+            && com.hex.kagune.control.king.KingRules.clock(1300L).equals("1:05") && com.hex.kagune.control.king.KingRules.clock(0L).equals("0:00"),
+            "shown as minutes and seconds, rounded up");
+        String server = read("src/main/java/com/hex/kagune/control/server/KingServer.java");
+        int off = server.indexOf("public static void off(ServerPlayer player, boolean shown)");
+        check(off > 0 && server.indexOf("exhaust(player)", off) > off && server.indexOf("worn.on() && !worn.preview()", off) > off,
+            "letting a real final kakuja go (not the preview) starts the rest");
+        int toggle = server.indexOf("public static void toggle(ServerPlayer player)");
+        int refused = server.indexOf("message.hexkagune.king.exhausted", toggle);
+        check(toggle > 0 && refused > toggle && refused < server.indexOf("WORN.put(player.m_20148_(), new Worn(form, true, now, false))", toggle),
+            "calling one while resting is refused before it can come over him");
+        check(server.contains("restTick(player)") && server.contains("m_21023_(ControlItems.exhaustion())"), "Exhaustion kept showing while the rest lasts");
+        check(new java.io.File("src/main/resources/assets/hexkagune/textures/mob_effect/exhaustion.png").isFile(), "its icon is there");
+    }
+
+    static String read(String path) {
+        try {
+            return java.nio.file.Files.readString(java.nio.file.Path.of(path));
+        } catch (java.io.IOException failure) {
+            return "";
+        }
+    }
+
     public static void main(String[] args) {
+        exhaustion();
         crown();
         night();
         pose();
