@@ -54,11 +54,16 @@ public final class RinkakuRibbon {
     /** Its veins: how many run along it, how far out from its middle (of its size: just over its skin, under its markings), how wide. */
     public static final int VEINS = 6;
     public static final double VEIN_LIFT = 1.009;
-    public static final double VEIN_CORE = 0.011;
-    public static final double VEIN_SOFT = 0.04;
+    // 2.0.51 (the owner: "the veins should be thinner more realistic"): fine cores, a narrow glow, a faint halo; each thinning along its
+    // length and its branches finer than the vein they leave.
+    public static final double VEIN_CORE = 0.0042;
+    public static final double VEIN_SOFT = 0.013;
     /** 2.0.50 (the owner: "More veins, and more glow"): the wide faint aura round the main veins and the spines, and its alpha. */
-    public static final double VEIN_AURA = 0.085;
-    public static final double AURA_ALPHA = 0.13;
+    public static final double VEIN_AURA = 0.03;
+    public static final double AURA_ALPHA = 0.12;
+    /** How much thinner a vein is at its end than where it starts, and a branch than the vein it leaves. */
+    public static final double VEIN_TAPER = 0.55;
+    public static final double BRANCH = 0.65;
 
     /** One quad of a vein: its corners and its colours (ARGB, glowing: drawn at full brightness). */
     public record Glow(double[][] corners, int[] argb) {
@@ -143,14 +148,14 @@ public final class RinkakuRibbon {
             double fade = smooth(along / 0.12) * (1.0 - smooth((along - 0.8) / 0.2)) * (veer != 0.0 ? 0.8 : 1.0);
             // A pulse of RC flowing out from the root: a bright band travelling along every vein (2.0.50: brighter).
             double pulse = 0.72 + 0.5 * Math.pow(Math.max(0.0, Math.sin(s * 3.2 - time * 0.42)), 3.0);
-            double size = Math.max(0.25, Math.min(1.0, half * 6.0));
+            double size = Math.max(0.25, Math.min(1.0, half * 6.0)) * (1.0 - VEIN_TAPER * along) * (veer != 0.0 ? BRANCH : 1.0);
             double soft = VEIN_SOFT * size * (0.4 + 0.6 * fade);
             double core = VEIN_CORE * size * (0.4 + 0.6 * fade);
             double wide = VEIN_AURA * size * (0.4 + 0.6 * fade);
             double[][] now = {add(p, across, soft), add(p, across, core), add(p, across, -core), add(p, across, -soft), add(p, across, wide),
                 add(p, across, -wide)};
             int glow = mesh.glow();
-            int[] colour = {argb(glow, Math.min(1.0, 0.34 * fade * pulse)), argb(mix(glow, 0xFFFFFFFF, Math.min(1.0, 0.3 * pulse)),
+            int[] colour = {argb(glow, Math.min(1.0, 0.45 * fade * pulse)), argb(mix(glow, 0xFFFFFFFF, Math.min(1.0, 0.3 * pulse)),
                 Math.min(1.0, 0.95 * fade * pulse)), argb(glow, Math.min(1.0, AURA_ALPHA * fade * pulse))};
             if (previous != null) {
                 if (aura) {
@@ -167,6 +172,22 @@ public final class RinkakuRibbon {
             previous = now;
             previousColour = colour;
         }
+    }
+
+    /** 2.0.51: the grey the baked skin's scales sit on ({@code tools/rinkaku_scales.py}): its texels are this much darker than white. */
+    public static final int SKIN_BASE = 200;
+
+    /**
+     * 2.0.51: {@code argb} as the skin's vertex colour: brightened by 255 / {@link #SKIN_BASE} (each channel, at most full), so the skin's
+     * base grey gives back the colour itself and its scales' lit rims come out brighter than it.
+     */
+    public static int lifted(int argb) {
+        int out = argb & 0xFF000000;
+        for (int shift = 16; shift >= 0; shift -= 8) {
+            int c = (argb >> shift) & 0xFF;
+            out |= Math.min(255, (c * 255 + SKIN_BASE / 2) / SKIN_BASE) << shift;
+        }
+        return out;
     }
 
     static int argb(int rgb, double alpha) {
@@ -203,6 +224,52 @@ public final class RinkakuRibbon {
         double x = (c - BROADEST) / (1.0 - BROADEST);
         return PEAK * Math.sqrt(Math.max(0.0, 1.0 - x * x));
     }
+
+    // ---------------------------------------------------------------- 2.0.51: alive
+
+    /**
+     * 2.0.51 (the owner: "they should also be animated so they change length and pulsate shape (thicker on the middle etc)"): how long it
+     * is drawn at {@code time} (ticks), of the length its motion gave it: slowly stretching out and drawing in ({@link #STRETCH} either
+     * way over {@link #STRETCH_PERIOD} ticks) with a quicker, smaller flutter on it, each tail ({@code seed}) out of step with the others.
+     * 1 when the time isn't known.
+     */
+    public static double stretch(double time, int seed) {
+        if (!Double.isFinite(time)) {
+            return 1.0;
+        }
+        return 1.0 + STRETCH * Math.sin(2.0 * Math.PI * time / STRETCH_PERIOD + (seed & 1023) * 1.7)
+            + STRETCH_QUICK * Math.sin(2.0 * Math.PI * time / QUICK_PERIOD + (seed & 1023) * 0.9);
+    }
+
+    public static final double STRETCH = 0.09;
+    public static final double STRETCH_PERIOD = 70.0;
+    public static final double STRETCH_QUICK = 0.03;
+    public static final double QUICK_PERIOD = 23.0;
+
+    /**
+     * 2.0.51: how much thicker than its shape ({@link #profile}) it is {@code t} along it at {@code time}: a swell running out along it from
+     * the root to its end every {@link #SURGE_PERIOD} ticks (a muscle's contraction: {@link #SURGE} thicker in a band {@link #SURGE_WIDTH}
+     * of its length wide), and its middle breathing thicker and thinner ({@link #BREATH}, over {@link #BREATH_PERIOD} ticks). 1 when the time
+     * isn't known.
+     */
+    public static double swell(double t, double time, int seed) {
+        if (!Double.isFinite(time)) {
+            return 1.0;
+        }
+        double c = Math.max(0.0, Math.min(1.0, t));
+        double cycle = (time + (seed & 1023) * 7.3) / SURGE_PERIOD;
+        double phase = (cycle - Math.floor(cycle)) * 1.3 - 0.15;
+        double bump = Math.exp(-sq((c - phase) / SURGE_WIDTH));
+        double keep = smooth(c / 0.12) * (1.0 - smooth((c - 0.9) / 0.1));
+        double breath = 1.0 + BREATH * Math.sin(2.0 * Math.PI * time / BREATH_PERIOD + (seed & 1023) * 2.1) * Math.sin(Math.PI * c);
+        return breath * (1.0 + SURGE * bump * keep);
+    }
+
+    public static final double SURGE = 0.3;
+    public static final double SURGE_WIDTH = 0.09;
+    public static final double SURGE_PERIOD = 42.0;
+    public static final double BREATH = 0.14;
+    public static final double BREATH_PERIOD = 56.0;
 
     /** 2.0.50: where it is broadest (of its length), how broad (of its thickness), and how much of that it has at its root. */
     public static final double BROADEST = 0.78;
@@ -249,6 +316,14 @@ public final class RinkakuRibbon {
 
     /** 2.0.41: the same, seen from {@code eye} (the same frame as the points; null: unknown): its rim, glint and clearness by it. */
     public static Mesh build(double[][] points, double thickness, int colour, int seed, double[] eye) {
+        return build(points, thickness, colour, seed, eye, Double.NaN);
+    }
+
+    /**
+     * 2.0.51: the same at {@code time} (ticks; NaN: still): drawn {@link #stretch} as long as its points go (past its last point, on along
+     * the way its end points), {@link #swell} as thick, its markings staying where they are on it.
+     */
+    public static Mesh build(double[][] points, double thickness, int colour, int seed, double[] eye, double time) {
         if (points == null || points.length < 2 || !(thickness > 0.0)) {
             return null;
         }
@@ -260,12 +335,24 @@ public final class RinkakuRibbon {
         if (!(total > 1.0E-4)) {
             return null;
         }
-        int rings = Math.max(4, Math.min(MOST_RINGS, (int)Math.ceil(total / STEP) + 1));
+        // 2.0.51: drawn as long as it is stretched now; past its last point it goes on along the way its end points.
+        double drawn = total * stretch(time, seed);
+        int count = points.length;
+        double[] end = unit(new double[] {points[count - 1][0] - points[count - 2][0], points[count - 1][1] - points[count - 2][1],
+            points[count - 1][2] - points[count - 2][2]}, new double[] {0.0, 0.0, 1.0});
+        int rings = Math.max(4, Math.min(MOST_RINGS, (int)Math.ceil(drawn / STEP) + 1));
         double[][] centre = new double[rings][];
         double[] along = new double[rings];
         int j = 0;
         for (int r = 0; r < rings; r++) {
-            double want = total * r / (rings - 1);
+            double want = drawn * r / (rings - 1);
+            along[r] = want;
+            if (want > total) {
+                double past = want - total;
+                double[] last = points[count - 1];
+                centre[r] = new double[] {last[0] + end[0] * past, last[1] + end[1] * past, last[2] + end[2] * past};
+                continue;
+            }
             while (j < points.length - 2 && arc[j + 1] < want) {
                 j++;
             }
@@ -274,7 +361,6 @@ public final class RinkakuRibbon {
             double[] a = points[j];
             double[] b = points[j + 1];
             centre[r] = new double[] {a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f};
-            along[r] = want;
         }
         double[][] tangent = new double[rings][];
         for (int r = 0; r < rings; r++) {
@@ -300,7 +386,7 @@ public final class RinkakuRibbon {
         for (int r = 0; r < rings; r++) {
             double[] n = thin[r];
             double[] w = cross(tangent[r], n); // across its faces
-            double size = thickness * profile(r / (double)(rings - 1));
+            double size = thickness * profile(r / (double)(rings - 1)) * swell(r / (double)(rings - 1), time, seed);
             double a = size * WIDE;
             double c = size * THIN;
             wide[r] = w;

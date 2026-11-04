@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""2.0.50 (the owner: "Make the scales on the rinkaku more realistic"): the Rinkaku tail's scales, as a tile laid over the tail by RinkakuTube
+"""2.0.50 (the owner: "Make the scales on the rinkaku more realistic"): the Rinkaku tail's scales, as a tile on the tail's skin (2.0.51: baked
+into it, rinkaku_skin.png, the tail's colour multiplied in; and a plain white texel for its glowing veins, white.png) drawn by RinkakuTube
 (u round the tail, one tile across each broad face; v along it, one tile every RinkakuRibbon.TILE blocks, v growing toward the tip).
 Was: thin chevrons, black and white (2.0.39).
 
@@ -12,7 +13,7 @@ length of each face near one edge (the reference's).
 The tile is stretched about 1.8 times as tall on the tail as it is wide (a face ~0.3 blocks across, a tile 0.55 along), so the scales
 are drawn that much squatter here to come out round.
 
-    python3 tools/rinkaku_scales.py   ->  src/main/resources/assets/hexkagune/textures/misc/rinkaku_scales.png
+    python3 tools/rinkaku_scales.py   ->  src/main/resources/assets/hexkagune/textures/misc/rinkaku_skin.png, white.png
 """
 import math
 import random
@@ -20,7 +21,11 @@ from pathlib import Path
 
 from PIL import Image
 
-OUT = Path(__file__).resolve().parent.parent / "src/main/resources/assets/hexkagune/textures/misc/rinkaku_scales.png"
+OUT = Path(__file__).resolve().parent.parent / "src/main/resources/assets/hexkagune/textures/misc/rinkaku_skin.png"
+WHITE = OUT.parent / "white.png"
+# 2.0.51: the scales baked into the tail's skin (one layer: a second a hair outside it flickered against it, broken up, at a distance):
+# opaque greys over this base grey, the tail's colour multiplied in as it is drawn (RinkakuRibbon.lifted brightens it by 255 / BASE).
+BASE = 200
 SIZE = 128
 SS = 4
 COLS = 4           # scales across a face (big enough to read as scales a few blocks off)
@@ -114,9 +119,12 @@ def main():
             st[x % big, y] = (255, 255, 255, int(70 * alpha))
     img = Image.alpha_composite(img, stripe)
     small = img.resize((SIZE, SIZE), Image.LANCZOS)
+    skin = Image.new("RGBA", (SIZE, SIZE), (BASE, BASE, BASE, 255))
+    skin = Image.alpha_composite(skin, small)
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    small.save(OUT)
-    print("wrote", OUT)
+    skin.save(OUT)
+    Image.new("RGBA", (4, 4), (255, 255, 255, 255)).save(WHITE)
+    print("wrote", OUT, WHITE)
 
 
 if __name__ == "__main__":

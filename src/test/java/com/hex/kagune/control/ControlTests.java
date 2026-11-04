@@ -270,8 +270,9 @@ public final class ControlTests {
         RinkakuRibbon.Mesh seen = RinkakuRibbon.build(path, 0.22, KaguneColours.DEFAULT, 7, new double[] {0.0, 1.0, -30.0});
         java.util.List<RinkakuRibbon.Glow> veins = RinkakuRibbon.veins(seen, 7, 40.0);
         check(veins.size() > RinkakuRibbon.VEINS * 4, "veins run along it, forked");
-        check(RinkakuRibbon.VEINS >= 6 && RinkakuRibbon.VEIN_SOFT > 0.03 && RinkakuRibbon.VEIN_AURA > RinkakuRibbon.VEIN_SOFT,
-            "2.0.50: more veins, a wider glow, an aura round them");
+        check(RinkakuRibbon.VEINS >= 6 && RinkakuRibbon.VEIN_AURA > RinkakuRibbon.VEIN_SOFT && RinkakuRibbon.VEIN_SOFT > RinkakuRibbon.VEIN_CORE * 2.0,
+            "2.0.50: more veins, a glow and an aura round them");
+        check(RinkakuRibbon.VEIN_CORE < 0.006 && RinkakuRibbon.VEIN_SOFT < 0.02, "2.0.51: fine, as veins are");
         int bright = 0;
         for (RinkakuRibbon.Glow g : veins) {
             bright = Math.max(bright, g.argb()[0] >>> 24);
@@ -439,7 +440,101 @@ public final class ControlTests {
         check(find(full, "Block (hold) · on time: stagger") == null, "not in the final kakuja");
     }
 
+    /** 2.0.51: the tails at rest as drawn (RinkakuIdle), alive (RinkakuRibbon.stretch, swell), one skin (lifted). */
+    static void rinkakuAlive() {
+        double height = 1.8;
+        for (int tails = 1; tails <= 6; tails++) {
+            for (int limb = 0; limb < tails; limb++) {
+                double side = RinkakuRoot.side(limb, 0.0);
+                double[][] rest = RinkakuIdle.pose(limb, tails, 0.0, 30, height, 4.6, 100.0, 77 + limb, 0.0, 0.0, 0.0);
+                String name = tails + " tails, tail " + limb;
+                check(rest.length == 30 && java.util.Arrays.equals(rest[0], RinkakuRoot.root(limb, side, height)), name + ": from its root");
+                boolean finite = true;
+                double most = 0.0;
+                double least = 1.0E9;
+                double arc = 0.0;
+                for (int i = 1; i < rest.length; i++) {
+                    finite &= Double.isFinite(rest[i][0]) && Double.isFinite(rest[i][1]) && Double.isFinite(rest[i][2]);
+                    double step = RinkakuRoot.distance(rest[i], rest[i - 1]);
+                    arc += step;
+                    most = Math.max(most, step);
+                    least = Math.min(least, step);
+                }
+                check(finite && most - least < 0.03, name + ": smooth and evenly spaced");
+                check(Math.signum(rest[29][0]) == side && Math.abs(rest[29][0]) > 0.6, name + ": out to its own side");
+                check(rest[29][2] < 0.6, name + ": never out in front of him at rest");
+                check(arc > 3.6, name + ": its whole length, not coiled up short (" + arc + ")");
+            }
+        }
+        double[][] upper = RinkakuIdle.pose(0, 4, 0.0, 30, height, 4.6, 0.0, 1, 0.0, 0.0, 0.0);
+        double[][] lower = RinkakuIdle.pose(2, 4, 0.0, 30, height, 4.6, 0.0, 1, 0.0, 0.0, 0.0);
+        check(upper[29][1] > lower[29][1] + 0.4 && Math.abs(lower[29][0]) > Math.abs(upper[29][0]) + 0.6, "the first pair arcs up high, the second fans out wide");
+        double[][] a = RinkakuIdle.pose(0, 2, 0.0, 30, height, 4.6, 0.0, 5, 0.0, 0.0, 0.0);
+        double[][] b = RinkakuIdle.pose(0, 2, 0.0, 30, height, 4.6, 21.0, 5, 0.0, 0.0, 0.0);
+        double swayed = RinkakuRoot.distance(a[29], b[29]);
+        check(swayed > 0.05 && swayed < 0.8 && RinkakuRoot.distance(a[1], b[1]) < 0.05, "it sways, its end more than its root (" + swayed + ")");
+        double[][] still = RinkakuIdle.pose(0, 2, 0.0, 30, height, 4.6, Double.NaN, 5, 0.0, 0.0, 0.0);
+        double[][] running = RinkakuIdle.pose(0, 2, 0.0, 30, height, 4.6, Double.NaN, 5, RinkakuIdle.FULL_RUN, 0.0, 0.0);
+        check(running[29][2] < still[29][2] - 0.8 && running[29][1] < still[29][1], "running, it trails back and down");
+        double[][] turning = RinkakuIdle.pose(1, 2, 0.0, 30, height, 4.6, Double.NaN, 5, 0.0, 0.0, 0.2);
+        double[][] straight = RinkakuIdle.pose(1, 2, 0.0, 30, height, 4.6, Double.NaN, 5, 0.0, 0.0, 0.0);
+        check(turning[29][0] > straight[29][0] + 0.3, "turning to his left, it lags out to his right");
+        double[][] longer = RinkakuIdle.pose(0, 2, 0.0, 30, height, 7.0, Double.NaN, 5, 0.0, 0.0, 0.0);
+        double rootY = RinkakuRoot.root(0, RinkakuRoot.side(0, 0.0), height)[1];
+        check(Math.abs(longer[29][0]) > Math.abs(still[29][0]) + 0.3 && (longer[29][1] - rootY) / (still[29][1] - rootY) < 7.0 / 4.6,
+            "a longer tail reaches further, rising less than it lengthens");
+        double[][] huge = RinkakuIdle.pose(0, 2, 0.0, 30, height, 12.0, Double.NaN, 5, 0.0, 0.0, 0.0);
+        check(huge[29][2] < 0.4, "even a very long one doesn't come forward over him (" + huge[29][2] + ")");
+        check(RinkakuIdle.settle(0.0, true, 1.0) > 0.0 && RinkakuIdle.settle(0.0, true, 1.0) < 0.3, "it settles into its rest over a few ticks");
+        check(RinkakuIdle.settle(1.0, false, 3.0) == 0.0, "and leaves it at once for a move");
+        check(RinkakuIdle.settle(0.5, true, Double.NaN) == 0.5 && RinkakuIdle.settle(Double.NaN, true, 1.0) > 0.0, "odd numbers change nothing wild");
+        // Alive: its length and its shape.
+        double shortest = 9.0;
+        double longest = 0.0;
+        for (double t = 0.0; t < 400.0; t += 0.5) {
+            double s = RinkakuRibbon.stretch(t, 9);
+            shortest = Math.min(shortest, s);
+            longest = Math.max(longest, s);
+        }
+        check(shortest < 0.92 && longest > 1.08 && shortest > 0.85 && longest < 1.15, "it stretches and draws in by about a tenth (" + shortest + ".." + longest + ")");
+        check(RinkakuRibbon.stretch(Double.NaN, 9) == 1.0 && RinkakuRibbon.swell(0.5, Double.NaN, 9) == 1.0, "still when the time isn't known");
+        check(RinkakuRibbon.stretch(10.0, 1) != RinkakuRibbon.stretch(10.0, 2), "each tail out of step with the others");
+        double[] peakAt = new double[2];
+        for (int j = 0; j < 2; j++) {
+            double best = 0.0;
+            for (double u = 0.0; u <= 1.0; u += 0.01) {
+                double w = RinkakuRibbon.swell(u, 30.0 + j * 8.0, 0) / RinkakuRibbon.swell(u, Double.NaN, 0);
+                double breath = 1.0 + RinkakuRibbon.BREATH * Math.sin(2.0 * Math.PI * (30.0 + j * 8.0) / RinkakuRibbon.BREATH_PERIOD) * Math.sin(Math.PI * u);
+                if (w / breath > best) {
+                    best = w / breath;
+                    peakAt[j] = u;
+                }
+            }
+        }
+        check(peakAt[1] > peakAt[0], "a swell runs out along it from the root (" + peakAt[0] + " then " + peakAt[1] + ")");
+        double fattest = 0.0;
+        for (double t = 0.0; t < 120.0; t += 1.0) {
+            fattest = Math.max(fattest, RinkakuRibbon.swell(0.5, t, 3));
+        }
+        check(fattest > 1.2 && fattest < 1.6, "its middle swells thicker now and then (" + fattest + ")");
+        double[][] line = new double[20][];
+        for (int i = 0; i < 20; i++) {
+            line[i] = new double[] {0.15 * i, 1.0, 0.0};
+        }
+        RinkakuRibbon.Mesh grown = null;
+        for (double t = 0.0; t < 80.0 && grown == null; t += 1.0) {
+            if (RinkakuRibbon.stretch(t, 4) > 1.05) {
+                grown = RinkakuRibbon.build(line, 0.15, KaguneColours.DEFAULT, 4, new double[] {0.0, 5.0, 5.0}, t);
+            }
+        }
+        check(grown != null && grown.centre()[grown.centre().length - 1][0] > 2.85 + 0.05, "stretched past its last point, it goes on along its way");
+        // One skin: the scales baked in, its colour brightened back.
+        check(RinkakuRibbon.lifted(0xFF000000 | RinkakuRibbon.SKIN_BASE << 16) == 0xFFFF0000 && RinkakuRibbon.lifted(0x80FFFFFF) == 0x80FFFFFF
+            && RinkakuRibbon.lifted(0xFF000000) == 0xFF000000, "the skin's base grey gives back the colour itself");
+    }
+
     public static void main(String[] args) {
+        rinkakuAlive();
         rinkakuBlock();
         rinkakuRoot();
         rinkakuRibbon();

@@ -16,7 +16,8 @@ import javax.imageio.ImageIO;
  * 2.0.46: the Rinkaku kagune as it is now, off-game, on a man (his build, 2.0.46): the body through {@link PoseRender}'s exact transforms in
  * a real skin, the emergence mark on his back ({@code rinkaku_mark.png} and its glow, tinted as {@code RinkakuMarkLayer} tints them) and
  * four tails grown out of it ({@code RinkakuRoot.attach}) as {@code RinkakuTube} draws them: {@code RinkakuRibbon}'s mesh shaded from the
- * camera, its markings ({@code rinkaku_scales.png}) and its glowing veins, in the kagune's colour. Tails' paths are a still pose made up
+ * camera, its skin with the scales baked in ({@code rinkaku_skin.png}, 2.0.51) and its glowing veins, in the kagune's colour. 2.0.51: the
+ * tails at rest as the game draws them now ({@code RinkakuIdle}), alive ({@code RinkakuRibbon.stretch}, {@code swell}) at {@link #time}. Was: a pose made up
  * for the picture (the game's come from the original's motion).
  *
  * <p>Usage: {@code java -cp <classes> KaguneShowcase <skin.png> <textures/misc dir> <out.png> [sheet|build]}.
@@ -33,10 +34,22 @@ public final class KaguneShowcase {
         PoseRender.skin = ImageIO.read(new File(args[0]));
         PoseRender.slim = false;
         File misc = new File(args[1]);
-        scales = ImageIO.read(new File(misc, "rinkaku_scales.png"));
+        scales = ImageIO.read(new File(misc, "rinkaku_skin.png"));
         mark = ImageIO.read(new File(misc, "rinkaku_mark.png"));
         markGlow = ImageIO.read(new File(misc, "rinkaku_mark_glow.png"));
         String mode = args.length > 3 ? args[3] : "sheet";
+        if (mode.equals("frames")) {
+            // 2.0.51: frames of it alive (every other tick through a whole sway), for a GIF: <out> is a directory.
+            File dir = new File(args[2]);
+            dir.mkdirs();
+            Shot shot = new Shot("", 0xA50F37, 145, 10, 8.2, 1.8, true, true);
+            for (int f = 0; f < 42; f++) {
+                time = f * 2.0;
+                ImageIO.write(render(shot, 420, 460), "png", new File(dir, String.format("f%03d.png", f)));
+            }
+            System.out.println("wrote 42 frames to " + dir);
+            return;
+        }
         List<Shot> shots = mode.equals("build") ? List.of(
             new Shot("before (as every player was), front", 0, 0, 4, 4.2, 1.0, false, false),
             new Shot("a man now (the White Reaper's build), front", 0, 0, 4, 4.2, 1.0, false, true),
@@ -47,18 +60,18 @@ public final class KaguneShowcase {
             new Shot("a man now, behind", 0, 160, 8, 4.2, 1.0, false, true),
             new Shot("a man now, close", 0, 20, 6, 2.6, 1.25, false, true))
             : List.of(
-            new Shot("crimson (default), from behind", 0xA50F37, 180, 14, 6.6, 1.5, true, true),
-            new Shot("crimson, three-quarter behind", 0xA50F37, 140, 10, 6.6, 1.5, true, true),
-            new Shot("crimson, from the side", 0xA50F37, 90, 6, 6.6, 1.5, true, true),
-            new Shot("crimson, from the front", 0xA50F37, 20, 6, 6.6, 1.5, true, true),
+            new Shot("crimson (default), from behind", 0xA50F37, 180, 14, 8.4, 1.8, true, true),
+            new Shot("crimson, three-quarter behind", 0xA50F37, 140, 10, 8.4, 1.8, true, true),
+            new Shot("crimson, from the side", 0xA50F37, 90, 6, 8.4, 1.8, true, true),
+            new Shot("crimson, from the front", 0xA50F37, 20, 6, 8.4, 1.8, true, true),
             new Shot("a tail up close: its scales and veins", 0xA50F37, 0, 0, 0, 0, true, true),
             new Shot("the mark as they tear out (tails hidden)", 0xA50F37, 180, 4, 2.1, 1.0, false, true),
-            new Shot("blue", 0x1E50D8, 150, 12, 6.6, 1.5, true, true),
-            new Shot("purple", 0x7A1FB8, 150, 12, 6.6, 1.5, true, true),
-            new Shot("black (its veins glow blood red)", 0x141414, 150, 12, 6.6, 1.5, true, true),
-            new Shot("white", 0xE8E8E8, 150, 12, 6.6, 1.5, true, true),
-            new Shot("green", 0x1F9E4A, 150, 12, 6.6, 1.5, true, true),
-            new Shot("crimson, at night (the veins and the mark glow)", -1, 150, 12, 6.6, 1.5, true, true));
+            new Shot("blue", 0x1E50D8, 150, 12, 8.4, 1.8, true, true),
+            new Shot("purple", 0x7A1FB8, 150, 12, 8.4, 1.8, true, true),
+            new Shot("black (its veins glow blood red)", 0x141414, 150, 12, 8.4, 1.8, true, true),
+            new Shot("white", 0xE8E8E8, 150, 12, 8.4, 1.8, true, true),
+            new Shot("green", 0x1F9E4A, 150, 12, 8.4, 1.8, true, true),
+            new Shot("crimson, at night (the veins and the mark glow)", -1, 150, 12, 8.4, 1.8, true, true));
         int w = 480;
         int h = 520;
         int cols = 4;
@@ -156,18 +169,17 @@ public final class KaguneShowcase {
 
     // ------------------------------------------------------------------ the tails
 
-    /** Tail {@code limb}'s path (owner's frame: x right, y up, z forward, from his feet): a still pose for the picture. */
+    /** The time (ticks) the tails are drawn at: their sway, stretch, swell and veins' pulse. */
+    static double time = 0.0;
+    /** A tail's length as the game has it by default (the original's 8 + 0.0016 a mastery point, at 500, times the default appearance's
+     *  length and the form's own: about 4.6 blocks). */
+    static final double LENGTH = 4.6;
+
+    /** Tail {@code limb}'s path (owner's frame: x right, y up, z forward, from his feet): at rest as the game draws it (RinkakuIdle), grown
+     *  out of his back (RinkakuRoot.attach), at {@link #time}. */
     static double[][] path(int limb) {
-        double side = RinkakuRoot.side(limb, 0.0);
-        double[] root = RinkakuRoot.root(limb, side, 1.8);
-        double[] way = RinkakuRoot.direction(limb, side);
-        double[] base = {root[0] + way[0] * 0.5, root[1] + way[1] * 0.5, root[2] + way[2] * 0.5};
-        double[][] keys = limb < 2
-            ? new double[][] {root, base, {side * 0.75, 1.55, -0.85}, {side * 1.05, 2.35, -1.0}, {side * 1.0, 2.85, -0.55}, {side * 0.8, 2.95, 0.05}}
-            : new double[][] {root, base, {side * 1.0, 0.95, -0.7}, {side * 1.75, 1.15, -0.85}, {side * 2.25, 1.65, -0.6}, {side * 2.4, 2.05, -0.15}};
-        double[][] line = spline(keys, 14);
-        double[][] even = resample(line, 46);
-        return RinkakuRoot.attach(even, limb, 0.0, 1.8);
+        double[][] rest = com.hex.kagune.control.RinkakuIdle.pose(limb, 4, 0.0, 46, 1.8, LENGTH, time, 77 + limb * 131, 0.0, 0.0, 0.0);
+        return RinkakuRoot.attach(rest, limb, 0.0, 1.8);
     }
 
     static boolean closeUp;
@@ -188,60 +200,57 @@ public final class KaguneShowcase {
         // The game's own thickness: the original's 0.18 + 3.5e-5 a mastery point (here 500), times the default appearance scale (0.6), times
         // the Four-Tail form's own (0.94 the upper pair, 0.88 the lower).
         double thickness = (0.18 + 3.5E-5 * 500) * 0.6 * (limb < 2 ? 0.94 : 0.88);
-        RinkakuRibbon.Mesh m = RinkakuRibbon.build(world, thickness, colour, seed, cam.eye());
+        RinkakuRibbon.Mesh m = RinkakuRibbon.build(world, thickness, colour, seed, cam.eye(), time);
         if (m == null) {
             return;
         }
         int rings = m.at().length;
         int sides = RinkakuRibbon.SIDES;
-        // Its skin, lit as an entity is.
-        for (int r = 0; r < rings - 1; r++) {
-            for (int k = 0; k < sides; k++) {
-                int[] rs = {r, r + 1, r + 1, r};
-                int[] ks = {k, k, k + 1, k + 1};
-                double[][] p = new double[4][];
-                int[] c = new int[4];
-                for (int v = 0; v < 4; v++) {
-                    p[v] = m.at()[rs[v]][ks[v]];
-                    double[] n = m.way()[rs[v]][ks[v]];
-                    c[v] = lit(m.tint()[rs[v]][ks[v]], n, dark);
-                }
-                smoothQuad(canvas, p, c, true);
-            }
-        }
-        // Its markings, a hair outside it, from the texture (black stays black, white is its light colour).
-        double[][][] over = RinkakuRibbon.over(m);
-        int cuts = closeUp ? 24 : 10;
+        // Its one skin (2.0.51): the baked scales' texel times its colour (brightened back, RinkakuRibbon.lifted), lit as an entity is.
+        int cuts = closeUp ? 16 : 6;
         for (int r = 0; r < rings - 1; r++) {
             for (int k = 0; k < sides; k++) {
                 double ua = RinkakuRibbon.u(k), ub = RinkakuRibbon.u(k + 1);
                 double va = RinkakuRibbon.v(m.along()[r]), vb = RinkakuRibbon.v(m.along()[r + 1]);
-                double[][] q = {over[r][k], over[r + 1][k], over[r + 1][k + 1], over[r][k + 1]};
-                double fade = (m.marks()[r][k] + m.marks()[r + 1][k + 1]) / 2.0 / 255.0;
+                double[][] q = {m.at()[r][k], m.at()[r + 1][k], m.at()[r + 1][k + 1], m.at()[r][k + 1]};
+                int[] tints = {m.tint()[r][k], m.tint()[r + 1][k], m.tint()[r + 1][k + 1], m.tint()[r][k + 1]};
+                double[] n = m.way()[r][k];
                 for (int a = 0; a < cuts; a++) {
                     for (int b = 0; b < cuts; b++) {
                         double s0 = a / (double)cuts, s1 = (a + 1) / (double)cuts, t0 = b / (double)cuts, t1 = (b + 1) / (double)cuts;
-                        double tu = ua + (ub - ua) * (t0 + t1) / 2;
-                        double tv = va + (vb - va) * (s0 + s1) / 2;
+                        double sm = (s0 + s1) / 2, tm = (t0 + t1) / 2;
+                        double tu = ua + (ub - ua) * tm;
+                        double tv = va + (vb - va) * sm;
                         int texel = scales.getRGB(Math.floorMod((int)Math.floor(tu * scales.getWidth()), scales.getWidth()),
                             Math.floorMod((int)Math.floor(tv * scales.getHeight()), scales.getHeight()));
-                        double alpha = (texel >>> 24) / 255.0 * fade;
-                        if (alpha < 0.1) {
-                            continue;
-                        }
-                        int rgb = lit(multiply(texel, 0xFF000000 | m.light()), m.way()[r][k], dark);
+                        int tint = mix4(tints, sm, tm);
+                        int rgb = lit(0xFF000000 | multiply(texel, RinkakuRibbon.lifted(tint)), n, dark) & 0xFFFFFF;
+                        double alpha = (tint >>> 24) / 255.0;
                         double[][] cell = {bilerp(q, s0, t0), bilerp(q, s1, t0), bilerp(q, s1, t1), bilerp(q, s0, t1)};
-                        blendQuad(canvas, cell, rgb, alpha, 0);
+                        int c = (int)(alpha * 255) << 24 | rgb;
+                        tri(canvas, cell[0], cell[1], cell[2], c, c, c, true, 1.0, 0, false);
+                        tri(canvas, cell[0], cell[2], cell[3], c, c, c, true, 1.0, 0, false);
                     }
                 }
             }
         }
         // Its veins, at full brightness (the world's light never dims them).
-        for (RinkakuRibbon.Glow glow : RinkakuRibbon.veins(m, seed, 0.0)) {
+        for (RinkakuRibbon.Glow glow : RinkakuRibbon.veins(m, seed, time)) {
             double[][] p = glow.corners();
             int[] a = glow.argb();
             blendQuad(canvas, p, a[0] & 0xFFFFFF, (a[0] >>> 24) / 255.0, 0);
         }
+    }
+
+    /** The colour (ARGB) at ({@code s} along, {@code t} across) of a quad whose corners are {@code c} (in its corners' order). */
+    static int mix4(int[] c, double s, double t) {
+        int out = 0;
+        for (int shift = 24; shift >= 0; shift -= 8) {
+            double a = ((c[0] >>> shift) & 255) * (1 - s) + ((c[1] >>> shift) & 255) * s;
+            double b = ((c[3] >>> shift) & 255) * (1 - s) + ((c[2] >>> shift) & 255) * s;
+            out |= (int)Math.round(a + (b - a) * t) << shift;
+        }
+        return out;
     }
 
     // ------------------------------------------------------------------ drawing

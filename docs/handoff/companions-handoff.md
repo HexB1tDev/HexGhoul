@@ -1,4 +1,15 @@
-# START HERE (state after 2.0.50)
+# START HERE (state after 2.0.51)
+
+The Rinkaku tails are fixed and alive. The texture breakage the owner showed in game is gone. At rest the tails take the shape from the showcase render instead of the original chain's coiled, twitching rest. They stretch and draw in, swells run along them, their middles breathe, and the veins are fine and realistic.
+
+- **Texture breakage**: the scales were a second layer drawn 1.8% outside the tail, and a few blocks off the two flickered against each other and broke up in patches. Now there's one skin: the scales are baked into its texture (`rinkaku_skin.png`, greys the tail's colour is multiplied into, brightened back by `RinkakuRibbon.lifted`) and the glowing veins are drawn over it on a plain white texel (`white.png`). `RinkakuTube` keeps every tail as it's drawn and draws them all after the original's tails (skins first, then veins). Nothing goes into the original's own buffer anymore.
+- **Twitching, snapping, short**: the original's chain coils a 4.6-block tail (the default length) into a short knot at rest, twitching as its links settle. Now at rest (`RinkakuIdle`, `RinkakuIdleClient`, applied in `StrikePaths.clearOwner`) each tail takes its designed shape at its own full length: the first pair arcs up off the back and over, the second fans out wide, the third sweeps back. Longer tails spread further rather than tower, and they never come forward over the player. They sway gently (each tail out of step), trail back and down when running, lean away when stepping aside, and lag when turning (the player's motion smoothed so they can't twitch with it). A tail settles into its rest over about 8 ticks and leaves it in about 2 for a move, so blows aren't late.
+- **Alive**: each tail slowly stretches and draws in by about a tenth with a quicker small flutter (`RinkakuRibbon.stretch`; past its last point it carries on along the way its end points). A swell of extra thickness runs out along it every 2 s (`swell`), and its middle breathes thicker and thinner. The scales stay put on it.
+- **Veins**: fine cores (0.004 blocks), a narrow glow and a faint halo. Each thins along its length, and branches are finer than the vein they leave.
+- Tests: `ControlTests.rinkakuAlive` (the rest pose's shape, length, sway, trail and lag, settling; stretch and swell bounds; the swell running out along the tail; the stretched mesh carrying on past its end; the skin's brightening) and the thin veins.
+- Previews made with the game's own code (`tools/KaguneShowcase.java` now draws the in-game rest pose, the baked skin and the animation): `docs/handoff/kagune-showcase-2.0.51.png` and the animated `docs/handoff/rinkaku-alive-2.0.51.gif` (a whole sway cycle). Protocol stays 80.
+
+# State after 2.0.50
 
 The Rinkaku tails are reworked as asked: realistic scales, thin where they leave the body, and more glowing veins.
 

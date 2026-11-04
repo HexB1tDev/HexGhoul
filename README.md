@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.0.51 (HexGhoul): Rinkaku tails fixed and alive (testing)
+
+See `.github/release-notes-2.0.51.md`. The Rinkaku tails are fixed and alive. The texture breakage the owner showed in game is gone. At rest the tails take the shape from the showcase render instead of the original chain's coiled, twitching rest. They stretch and draw in, swells run along them, their middles breathe, and the veins are fine and realistic.
+
 ## 2.0.50 (HexGhoul): Rinkaku scales, leaf shape and more glow (testing)
 
 See `.github/release-notes-2.0.50.md`. The Rinkaku tails are reworked as asked: realistic scales, thin where they leave the body, and more glowing veins.

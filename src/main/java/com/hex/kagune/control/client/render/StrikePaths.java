@@ -160,6 +160,14 @@ public final class StrikePaths {
             path = smooth(chain, path, yaw, idle ? IDLE_RESPONSE : ACTION_RESPONSE, idle ? IDLE_WIGGLE : 1.0,
                 com.hex.kagune.control.client.ControlClient.worldTime(partialTick));
         }
+        // 2.0.51: at rest, the shape the tails were drawn with (RinkakuIdle), not the original chain's coiled, twitching rest.
+        if (!layout.segmented()) {
+            double[][] rested = com.hex.kagune.control.client.RinkakuIdleClient.apply(path, limb, player, view, feet, yaw,
+                com.hex.kagune.control.client.ControlClient.worldTime(partialTick));
+            if (rested != null) {
+                path = rested;
+            }
+        }
         // 5.0.14: a tentacle guarding him against incoming shots (Auto Projectile) swings into its guard.
         boolean guarding = false;
         if (!layout.segmented()) {

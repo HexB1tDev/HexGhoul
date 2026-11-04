@@ -1,6 +1,5 @@
 package com.hex.kagune.control.client.render;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,33 +21,37 @@ import org.joml.Matrix4f;
 /**
  * 2.0.39 (the owner: "change the texture to match the reference picture on the tail"): a Rinkaku tail as the owner's picture has it: a
  * broad, flat ribbon (wider than it is thick; 2.0.50: thin where it leaves the back, broadest near its far end, a rounded end), crimson
- * at the middle of each face darkening to deep maroon at its edges, with dark smudges along it; over it the markings
- * ({@code tools/rinkaku_scales.py}; 2.0.50: overlapping keeled scales, each with a lit rim and the shadow of its edge, where thin chevrons
- * were) and a faint light stripe along each face near one edge. Every colour is the tail's own kagune colour's ({@code KaguneTint}).
+ * at the middle of each face darkening to deep maroon at its edges, with dark smudges along it, covered in overlapping keeled scales
+ * ({@code tools/rinkaku_scales.py}). Every colour is the tail's own kagune colour's ({@code KaguneTint}).
  *
- * <p>Drawn in two passes: the ribbon at once into the original's own buffer (a white texel tinted per vertex, as before), and the
- * markings a hair outside it, kept until after every tail is drawn ({@link #render}): switching buffers in the middle of the original's
- * drawing would end its batch under it.
+ * <p>2.0.51 (the owner, with screenshots: "patch the bug shown in the image (texture breakage etc)"): the scales were a second layer a hair
+ * (1.8%) outside the ribbon, which a few blocks off flickered against it and broke up in patches. Now there is one skin: the scales baked
+ * into its texture ({@code rinkaku_skin.png}, greys the tail's colour is multiplied into, {@link com.hex.kagune.control.RinkakuRibbon#lifted}),
+ * and over it the glowing veins on a plain white texel. Each tail is kept as it is drawn ({@link #emit}: nothing goes into the original's own
+ * buffer, whose batch must not be ended under it) and every one is drawn after the original's tails ({@link #render}: the skins, then the
+ * veins over them).
  */
 @Mod.EventBusSubscriber(modid = "hexkagune", value = Dist.CLIENT)
 public final class RinkakuTube {
-    private static final RenderType MARKS = RenderType.m_110473_(Objects.requireNonNull(ResourceLocation.m_214293_("hexkagune", "textures/misc/rinkaku_scales.png")));
+    private static final RenderType SKIN = RenderType.m_110473_(Objects.requireNonNull(ResourceLocation.m_214293_("hexkagune", "textures/misc/rinkaku_skin.png")));
+    private static final RenderType GLOW = RenderType.m_110473_(Objects.requireNonNull(ResourceLocation.m_214293_("hexkagune", "textures/misc/white.png")));
 
-    /** One tail's markings, kept for the pass after: its rings (where, the way out, how far along), its tint, light and matrices. */
-    private record Marks(Matrix4f pose, Matrix3f normals, com.hex.kagune.control.RinkakuRibbon.Mesh mesh, int light) {
+    /** One tail kept for the pass after: its mesh, its light and matrices, its seed and the time (its veins' pulse). */
+    private record Tail(Matrix4f pose, Matrix3f normals, com.hex.kagune.control.RinkakuRibbon.Mesh mesh, int light, int seed, double time) {
     }
 
-    private static final List<Marks> PENDING = new ArrayList<>();
+    private static final List<Tail> PENDING = new ArrayList<>();
     private static final int FULL_BRIGHT = 0xF000F0;
+    /** Never more than this many kept at once (a frame's worth). */
+    private static final int MOST = 96;
 
     private RinkakuTube() {
     }
 
     /**
-     * Draws a tail along {@code points} ({@code pose}'s space: world for the original's, the camera's for the children's) into
-     * {@code out} (the original's white-texel buffer), {@code thickness} its original radius, {@code colour} its kagune colour (0xRRGGBB:
-     * the owner: "we gotta adapt the texture to the different colors": every colour of it is the reference palette turned to this one,
-     * {@link com.hex.kagune.control.RinkakuRibbon}), {@code seed} its smudges.
+     * Draws a tail along {@code points} ({@code pose}'s space: world for the original's, the camera's for the children's), {@code thickness}
+     * its original radius, {@code colour} its kagune colour (0xRRGGBB), {@code seed} its smudges. ({@code out}, the original's buffer, is
+     * no longer drawn into: 2.0.51.)
      */
     public static void emit(VertexConsumer out, Matrix4f pose, Matrix3f normals, Vec3[] points, float thickness, int colour, int light, int seed) {
         emit(out, pose, normals, points, thickness, colour, light, seed, null, 0.0);
@@ -56,45 +59,26 @@ public final class RinkakuTube {
 
     /**
      * 2.0.41: the same, seen from {@code eye} (the points' own frame: the camera in the world for the original's, the origin for the
-     * children's) at {@code time} (ticks): its glossy rim and glint by the camera, a little clear seen edge-on, the glowing veins over its
-     * skin pulsing (drawn at full brightness, the far ones through its clear skin), its markings fading where it is seen edge-on.
+     * children's) at {@code time} (ticks): its glossy rim and glint by the camera, a little clear seen edge-on, its glowing veins pulsing.
+     * 2.0.51: alive ({@code RinkakuRibbon.stretch}, {@code swell}).
      */
     public static void emit(VertexConsumer out, Matrix4f pose, Matrix3f normals, Vec3[] points, float thickness, int colour, int light, int seed,
                             double[] eye, double time) {
-        if (points == null || points.length < 2 || thickness <= 0.0F) {
+        if (points == null || points.length < 2 || thickness <= 0.0F || PENDING.size() >= MOST) {
             return;
         }
         double[][] path = new double[points.length][];
         for (int i = 0; i < points.length; i++) {
             path[i] = new double[] {points[i].f_82479_, points[i].f_82480_, points[i].f_82481_};
         }
-        com.hex.kagune.control.RinkakuRibbon.Mesh mesh = com.hex.kagune.control.RinkakuRibbon.build(path, thickness, colour, seed, eye);
-        if (mesh == null) {
-            return;
-        }
-        int rings = mesh.at().length;
-        int sides = com.hex.kagune.control.RinkakuRibbon.SIDES;
-        for (int r = 0; r < rings - 1; r++) {
-            for (int k = 0; k < sides; k++) {
-                vertex(out, pose, normals, mesh.at()[r][k], mesh.way()[r][k], mesh.tint()[r][k], light, 0.5F, 0.5F);
-                vertex(out, pose, normals, mesh.at()[r + 1][k], mesh.way()[r + 1][k], mesh.tint()[r + 1][k], light, 0.5F, 0.5F);
-                vertex(out, pose, normals, mesh.at()[r + 1][k + 1], mesh.way()[r + 1][k + 1], mesh.tint()[r + 1][k + 1], light, 0.5F, 0.5F);
-                vertex(out, pose, normals, mesh.at()[r][k + 1], mesh.way()[r][k + 1], mesh.tint()[r][k + 1], light, 0.5F, 0.5F);
-            }
-        }
-        // Its veins, glowing: lit from straight above at full brightness (as Ukaku's glowing quads), so the world's light never dims them.
-        double[] up = {0.0, 1.0, 0.0};
-        for (com.hex.kagune.control.RinkakuRibbon.Glow glow : com.hex.kagune.control.RinkakuRibbon.veins(mesh, seed, time)) {
-            for (int i = 0; i < 4; i++) {
-                vertex(out, pose, normals, glow.corners()[i], up, glow.argb()[i], FULL_BRIGHT, 0.5F, 0.5F);
-            }
-        }
-        if (PENDING.size() < 64) {
-            PENDING.add(new Marks(new Matrix4f(pose), new Matrix3f(normals), mesh, light));
+        com.hex.kagune.control.RinkakuRibbon.Mesh mesh = com.hex.kagune.control.RinkakuRibbon.build(path, thickness, colour, seed, eye,
+            eye == null ? Double.NaN : time);
+        if (mesh != null) {
+            PENDING.add(new Tail(new Matrix4f(pose), new Matrix3f(normals), mesh, light, seed, time));
         }
     }
 
-    /** After every tail: their markings, a hair outside each, in their light colour (black marks stay black). */
+    /** After the original's tails: every tail's skin, then every tail's veins glowing over it. */
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void render(RenderLevelStageEvent event) {
         if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_ENTITIES || PENDING.isEmpty()) {
@@ -102,26 +86,36 @@ public final class RinkakuTube {
         }
         try {
             MultiBufferSource.BufferSource buffers = Minecraft.m_91087_().m_91269_().m_110104_();
-            VertexConsumer out = buffers.m_6299_(MARKS);
             int sides = com.hex.kagune.control.RinkakuRibbon.SIDES;
-            for (Marks marks : PENDING) {
-                com.hex.kagune.control.RinkakuRibbon.Mesh mesh = marks.mesh();
-                double[][][] over = com.hex.kagune.control.RinkakuRibbon.over(mesh);
+            VertexConsumer skin = buffers.m_6299_(SKIN);
+            for (Tail tail : PENDING) {
+                com.hex.kagune.control.RinkakuRibbon.Mesh mesh = tail.mesh();
                 for (int r = 0; r < mesh.at().length - 1; r++) {
                     for (int k = 0; k < sides; k++) {
                         int[] ks = {k, k, k + 1, k + 1};
                         int[] rs = {r, r + 1, r + 1, r};
                         for (int v = 0; v < 4; v++) {
-                            int clear = mesh.marks()[rs[v]][ks[v]] << 24 | mesh.light() & 0xFFFFFF;
-                            vertex(out, marks.pose(), marks.normals(), over[rs[v]][ks[v]], mesh.way()[rs[v]][ks[v]], clear, marks.light(),
+                            int argb = com.hex.kagune.control.RinkakuRibbon.lifted(mesh.tint()[rs[v]][ks[v]]);
+                            vertex(skin, tail.pose(), tail.normals(), mesh.at()[rs[v]][ks[v]], mesh.way()[rs[v]][ks[v]], argb, tail.light(),
                                 com.hex.kagune.control.RinkakuRibbon.u(ks[v]), com.hex.kagune.control.RinkakuRibbon.v(mesh.along()[rs[v]]));
                         }
                     }
                 }
             }
-            buffers.m_109912_(MARKS);
+            buffers.m_109912_(SKIN);
+            // Its veins, glowing: lit from straight above at full brightness (as Ukaku's glowing quads), so the world's light never dims them.
+            VertexConsumer glow = buffers.m_6299_(GLOW);
+            double[] up = {0.0, 1.0, 0.0};
+            for (Tail tail : PENDING) {
+                for (com.hex.kagune.control.RinkakuRibbon.Glow g : com.hex.kagune.control.RinkakuRibbon.veins(tail.mesh(), tail.seed(), tail.time())) {
+                    for (int i = 0; i < 4; i++) {
+                        vertex(glow, tail.pose(), tail.normals(), g.corners()[i], up, g.argb()[i], FULL_BRIGHT, 0.5F, 0.5F);
+                    }
+                }
+            }
+            buffers.m_109912_(GLOW);
         } catch (RuntimeException failure) {
-            PlayerLayers.failed("a Rinkaku tail's markings", failure);
+            PlayerLayers.failed("a Rinkaku tail", failure);
         } finally {
             PENDING.clear();
         }
@@ -136,5 +130,4 @@ public final class RinkakuTube {
             .m_252939_(normals, (float)n[0], (float)n[1], (float)n[2])
             .m_5752_();
     }
-
 }
