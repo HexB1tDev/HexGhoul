@@ -89,7 +89,11 @@ final class ControlCommands {
                 .then(Commands.m_82127_("here").executes(context -> companionHere(context, persona)))
                 .then(Commands.m_82127_("max").executes(context -> maxEto(context, context.getSource().m_81375_(), persona))
                     .then(Commands.m_82129_("player", EntityArgument.m_91466_())
-                        .executes(context -> maxEto(context, EntityArgument.m_91474_(context, "player"), persona))))));
+                        .executes(context -> maxEto(context, EntityArgument.m_91474_(context, "player"), persona))))
+                // 2.2.7: married at once, everything about it full.
+                .then(Commands.m_82127_("marry").executes(context -> marry(context, context.getSource().m_81375_(), persona))
+                    .then(Commands.m_82129_("player", EntityArgument.m_91466_())
+                        .executes(context -> marry(context, EntityArgument.m_91474_(context, "player"), persona))))));
         }
         // 1.3.31: what your spouse makes of your home (anyone's command): what it found, what it can do, what it's doing, the meal it keeps.
         dispatcher.register(Commands.m_82127_("kagune").then(Commands.m_82127_("home").executes(context -> {
@@ -463,6 +467,57 @@ final class ControlCommands {
         com.hex.kagune.control.quest.QuestLog.Bond bond = QuestServer.bond(player, persona.key());
         QuestServer.bond(player, persona.key(), bond.regard(com.hex.kagune.control.npc.NpcBonds.MOST).with(com.hex.kagune.control.npc.NpcBonds.MET, true));
         context.getSource().m_288197_(() -> Component.m_237113_(persona.name() + "'s regard is at the most (100)."), false);
+        return 1;
+    }
+
+    /**
+     * 2.2.7 (the owner: "a command to fully marry [Touka, Eto and Ken] ... everything about that person's relationship is instantly maxed,
+     * categorized as married, and everything's full"): {@code player} married to {@code persona} at once, as a ring taken would leave it
+     * and more: regard at the most, every chapter of the courtship closed, dating since and wed today (earlier days kept), nothing held
+     * against them (no sulk, grudge, offence, jealousy or make-up owed), and giddy with them. A player has one spouse: one they were married
+     * to before is let go; so is anyone else this one was with. Operators only; the companion needn't be near.
+     */
+    private static int marry(CommandContext<CommandSourceStack> context, ServerPlayer player, com.hex.kagune.control.npc.Persona persona) {
+        net.minecraft.server.level.ServerLevel level = player.m_284548_();
+        long now = level.m_46467_();
+        long day = Math.floorDiv(level.m_46468_(), 24000L);
+        String key = persona.key();
+        List<String> notes = new java.util.ArrayList<>();
+        // One spouse each: a marriage to another of them ends.
+        String before = UniqueNpcs.spouseOf(level, player, key);
+        if (before != null) {
+            UniqueNpcs.pair(level, before, null, com.hex.kagune.control.npc.Romance.Stage.NONE);
+            com.hex.kagune.control.quest.QuestLog.Bond old = QuestServer.bond(player, before);
+            QuestServer.bond(player, before, old.with(com.hex.kagune.control.npc.EtoRules.DATING, false));
+            com.hex.kagune.control.npc.Persona other = com.hex.kagune.control.npc.Persona.of(before);
+            notes.add("Your marriage to " + (other == null ? before : other.name()) + " is over.");
+        }
+        com.hex.kagune.control.npc.UniqueNpc unique = UniqueNpcs.get(level, key);
+        if (unique.claimedFrom(player.m_20148_())) {
+            notes.add(persona.name() + " left " + (unique.partnerName.isEmpty() ? "their partner" : unique.partnerName) + " for you.");
+        }
+        UniqueNpcs.pair(level, key, player, com.hex.kagune.control.npc.Romance.Stage.MARRIED);
+        com.hex.kagune.control.npc.NpcMemory memory = NpcMemoryServer.of(player);
+        long since = memory.get(key, com.hex.kagune.control.npc.NpcMemory.SINCE, -1L);
+        long wed = memory.get(key, com.hex.kagune.control.npc.NpcMemory.WED, -1L);
+        memory.set(key, com.hex.kagune.control.npc.NpcMemory.SINCE, since >= 0L && since <= day ? since : day);
+        memory.set(key, com.hex.kagune.control.npc.NpcMemory.WED, wed >= 0L && wed <= day ? wed : day);
+        memory.forget(key, com.hex.kagune.control.npc.NpcMemory.JEALOUS);
+        NpcMemoryServer.save(player);
+        QuestServer.bond(player, key, com.hex.kagune.control.npc.Courtship.wed(QuestServer.bond(player, key)));
+        RomanceServer.romanced(player, key);
+        // The one in the world (if loaded): nothing held against them, giddy, the ring's gesture and hearts.
+        for (com.hex.kagune.control.npc.EtoNpc npc : EtoBrain.live()) {
+            if (npc.persona() == persona && npc.m_6084_() && npc.m_9236_() == level) {
+                EtoBrain.married(npc, player, now);
+            }
+        }
+        String name = persona.name();
+        context.getSource().m_288197_(() -> Component.m_237113_(persona.colour() + "\u2764 " + player.m_36316_().getName() + " and " + name
+            + " are married. Regard 100, the courtship done, nothing held against you."), true);
+        for (String note : notes) {
+            context.getSource().m_288197_(() -> Component.m_237113_("\u00a77" + note), false);
+        }
         return 1;
     }
 }

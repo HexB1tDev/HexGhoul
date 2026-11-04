@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.2.7 (HexGhoul): a command to marry a companion outright (testing)
+
+See `.github/release-notes-2.2.7.md`. New operator command: `/kagune eto marry`, `/kagune touka marry` and `/kagune ken marry` (with an optional player after it, like `max`). It marries you to that companion at once and fills everything about the relationship.
+
 ## 2.2.6 (HexGhoul): village humans come up to you (testing)
 
 See `.github/release-notes-2.2.6.md`. Village humans now come up to you on their own. A villager who knows you will sometimes notice you (within 12 blocks, in sight), walk over and say something. Why they come, how often, and what they say depend on their temper (all 12) and how close you are. Partners come most. Strangers never do.

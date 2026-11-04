@@ -295,6 +295,18 @@ public final class Courtship {
             bond.favours()), 0);
     }
 
+    /**
+     * 2.2.7 (the owner: "a command to fully marry ... everything about that person's relationship is instantly maxed, categorized as married,
+     * and everything's full"): {@code bond} as a marriage leaves it, all at once: regard at the most, met and befriended, the courtship
+     * begun and every chapter of it closed, dating (the stage the world keeps, married, is set beside it), nothing left owing on a chapter.
+     * What was taught stays taught; the day of the last gift is kept.
+     */
+    public static QuestLog.Bond wed(QuestLog.Bond bond) {
+        int flags = bond.flags() & ~LEGACY & ~BITS | NpcBonds.MET | NpcBonds.BEFRIENDED | EtoRules.LINE_ON | EtoRules.DATING | FROM_215
+            | Math.min(7, CHAPTERS) << SHIFT;
+        return EtoRules.count(new QuestLog.Bond(NpcBonds.MOST, bond.chatted(), flags, bond.favours()), 0);
+    }
+
     /** How many of a {@link Task#GIVE}'s items a hand-over of {@code held} takes now (0: it isn't one, or it is done). */
     public static int takes(String key, QuestLog.Bond bond, int held) {
         Chapter chapter = chapter(key, bond);

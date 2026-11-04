@@ -1277,6 +1277,27 @@ public final class EtoBrain {
         }
     }
 
+    /**
+     * 2.2.7: married to {@code player} by command ({@code /kagune <who> marry}): nothing held against them (no sulk, grudge, offence,
+     * being ignored, make-up owed), giddy with them, the ring's gesture and hearts.
+     */
+    static void married(EtoNpc npc, ServerPlayer player, long now) {
+        Mind mind = npc.mind;
+        if (mind == null) {
+            return;
+        }
+        forgive(npc, player);
+        mind.offences.remove(player.m_20148_());
+        mind.makeUp.remove(player.m_20148_());
+        giddy(npc, player, now);
+        gesture(mind, EtoGesture.RING, now);
+        if (npc.m_9236_() instanceof ServerLevel level) {
+            partner(npc, mind, level);
+            hearts(level, npc, player, 12);
+        }
+        mind.dirty = true;
+    }
+
     /** 1.3.2: something sweet happened with {@code player}: she smiles about it a while. */
     static void giddy(EtoNpc npc, ServerPlayer player, long now) {
         if (npc.mind != null) {

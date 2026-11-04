@@ -52,6 +52,7 @@ public final class CompanionTests {
         tolerance();
         moods();
         moodKisses();
+        wed();
         poses();
         ken();
         touka();
@@ -348,6 +349,27 @@ public final class CompanionTests {
                     && com.hex.kagune.control.npc.MoodActs.refuse(p.key(), EtoMood.AFFECTIONATE, true, seed) == null
                     && com.hex.kagune.control.npc.MoodActs.reassured(p.key(), seed).length() > 5, p.key() + ": takes what the mood allows");
             }
+        }
+    }
+
+    /** 2.2.7: married by command: everything about it full (Courtship.wed). */
+    static void wed() {
+        com.hex.kagune.control.quest.QuestLog.Bond[] starts = {new com.hex.kagune.control.quest.QuestLog.Bond(0, -1L, 0, 0),
+            new com.hex.kagune.control.quest.QuestLog.Bond(-80, 3L, EtoRules.BOOKS_DONE | EtoRules.TAUGHT_SOAR, EtoRules.gifted(
+                new com.hex.kagune.control.quest.QuestLog.Bond(0, 0L, 0, 0), 9L).favours() | 2),
+            EtoRules.begin(new com.hex.kagune.control.quest.QuestLog.Bond(70, 5L, com.hex.kagune.control.npc.NpcBonds.MET, 0))};
+        for (com.hex.kagune.control.quest.QuestLog.Bond start : starts) {
+            com.hex.kagune.control.quest.QuestLog.Bond wed = com.hex.kagune.control.npc.Courtship.wed(start);
+            check(wed.regard() == com.hex.kagune.control.npc.NpcBonds.MOST, "wed: regard at the most");
+            check(wed.has(EtoRules.DATING) && EtoRules.step(wed) == EtoRules.Step.DATING, "wed: past dating's step (the world keeps them married)");
+            check(com.hex.kagune.control.npc.Courtship.closed(wed, com.hex.kagune.control.npc.Courtship.CHAPTERS) == com.hex.kagune.control.npc.Courtship.CHAPTERS
+                && !com.hex.kagune.control.npc.Courtship.on(wed, com.hex.kagune.control.npc.Courtship.CHAPTERS) && EtoRules.count(wed) == 0,
+                "wed: every chapter closed, nothing owing");
+            check(wed.has(com.hex.kagune.control.npc.NpcBonds.MET) && wed.has(com.hex.kagune.control.npc.NpcBonds.BEFRIENDED)
+                && !wed.has(EtoRules.BOOKS_DONE), "wed: met, befriended, the old errands gone");
+            check(wed.has(EtoRules.TAUGHT_SOAR) == start.has(EtoRules.TAUGHT_SOAR) && EtoRules.giftDay(wed) == EtoRules.giftDay(start)
+                && wed.chatted() == start.chatted(), "wed: what was taught kept, and the last gift's day");
+            check(com.hex.kagune.control.npc.Courtship.wed(wed).equals(wed), "wed twice: the same");
         }
     }
 
