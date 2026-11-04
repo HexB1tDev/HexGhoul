@@ -1,4 +1,12 @@
-# START HERE (state after 2.3.1)
+# START HERE (state after 2.3.2)
+
+Fix: Rinkaku strikes came round the wrong side. A strike from your right tail swept round through your left side, and the other way round, in every Rinkaku form. 2.1.6 changed which side a tail is "on" to stop tails swinging across on their way back. That side also feeds the code that steers a strike round your body, and that code's "+1" is your left even though it calls it right, so every strike passing you went round the opposite side. Strikes now go round the tail's own side again. The 2.1.6 fix for tails swinging across on their way back is kept.
+
+- `RinkakuRoot.clearance` gives `BodyClearance` its own convention. `StrikePaths` uses it.
+- `ControlTests` now checks that every tail, laid on either side or on neither, is carried round its own side when it strikes straight through you.
+- Protocol stays 84. Not tested in game.
+
+# State after 2.3.1
 
 The mood kisses (2.2.4) are rendered for the first time, and three of them are reworked after seeing the renders. Possessive and tender looked almost the same (both arms straight out). Giddy's "hands clasped at the chest" just looked like arms hanging, because a mob's arms don't bend at the elbow.
 

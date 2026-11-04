@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.3.2 (HexGhoul): Rinkaku strikes go round the right side again (testing)
+
+See `.github/release-notes-2.3.2.md`. Fix: Rinkaku strikes came round the wrong side. A strike from your right tail swept round through your left side, and the other way round, in every Rinkaku form. 2.1.6 changed which side a tail is "on" to stop tails swinging across on their way back. That side also feeds the code that steers a strike round your body, and that code's "+1" is your left even though it calls it right, so every strike passing you went round the opposite side. Strikes now go round the tail's own side again. The 2.1.6 fix for tails swinging across on their way back is kept.
+
 ## 2.3.1 (HexGhoul): the mood kisses rendered; possessive, giddy and tender reworked (testing)
 
 See `.github/release-notes-2.3.1.md`. The mood kisses (2.2.4) are rendered for the first time, and three of them are reworked after seeing the renders. Possessive and tender looked almost the same (both arms straight out). Giddy's "hands clasped at the chest" just looked like arms hanging, because a mob's arms don't bend at the elbow.

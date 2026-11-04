@@ -480,6 +480,25 @@ public final class ControlTests {
                 == Math.signum(originalX), "tail " + limb + " rests on the side the original lays it out on");
         }
 
+        // 2.3.2: a strike passing his body goes round the tail's own side (BodyClearance's +1 is his left: (forward.z, 0, -forward.x)).
+        // Facing +z his left is +x: a tail laid out on his left (fanSide > 0) striking straight through him is carried round at +x.
+        for (int limb = 0; limb < 4; limb++) {
+            for (double fan : new double[] {0.8, -0.8, 0.0}) {
+                double[][] strike = new double[12][];
+                for (int i = 0; i < strike.length; i++) {
+                    strike[i] = new double[] {0.0, 1.1, -0.45 + i * 0.18};
+                }
+                boolean moved = com.hex.kagune.control.BodyClearance.clear(strike, new double[] {0.0, 0.0, 0.0}, 0.0, 1.0, 0.6, 1.8, 0.12,
+                    RinkakuRoot.clearance(limb, fan));
+                double across = 0.0;
+                for (double[] p : strike) {
+                    across += p[0];
+                }
+                double ownSide = -RinkakuRoot.side(limb, fan); // his right is -x facing +z
+                check(moved && Math.signum(across) == Math.signum(ownSide), "tail " + limb + " (fan " + fan + ") strikes round its own side, not across him");
+            }
+        }
+
         double height = 1.8;
         for (int tails = 1; tails <= 6; tails++) {
             for (int limb = 0; limb < tails; limb++) {

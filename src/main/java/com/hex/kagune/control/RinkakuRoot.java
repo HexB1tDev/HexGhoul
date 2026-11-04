@@ -36,6 +36,16 @@ public final class RinkakuRoot {
     }
 
     /**
+     * 2.3.2 (the owner: "The attacks are coming from the wrong side ... I'm attacking with the right [tail], yet it's going around through
+     * the left side"): the side {@code BodyClearance.clear} takes for tail {@code limb}. Its "+1" is the direction (forward.z, 0,
+     * -forward.x), which is the owner's LEFT (it calls it right), so it takes the opposite of {@link #side}. 2.1.6 gave it {@link #side}
+     * as it is, and every strike that passes his body was carried round his other side.
+     */
+    public static double clearance(int limb, double fanSide) {
+        return -side(limb, fanSide);
+    }
+
+    /**
      * The way tail {@code limb} leaves the back (unit, owner's frame): backwards, round to its {@code side}, the first pair rising a little,
      * the next level, the next falling (up to six tails), each pair a little further round.
      */
