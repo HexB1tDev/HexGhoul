@@ -37,6 +37,7 @@ public final class NpcTests {
 
     public static void main(String[] args) {
         village();
+        lives();
         identity();
         blades();
         bubbles();
@@ -749,6 +750,96 @@ public final class NpcTests {
             | com.hex.kagune.control.npc.NpcBonds.ASKED | com.hex.kagune.control.npc.NpcBonds.ALLY)) == 0, "its own bond flag");
     }
 
+    /**
+     * 2.1.3: every villager is someone (HumanLife, HumanVoice): a woman's or a man's name, a life of its own for life, every temper able to
+     * say every part of it cleanly, the page offering what it may be asked as it warms, gifts landing as they should, its village's people
+     * each given a different trade.
+     */
+    static void lives() {
+        java.util.regex.Pattern banned = java.util.regex.Pattern.compile("Kaneki|Ayato|Furuta|Takatsuki|Aogiri|Yoshimura|Touka|Hinami|Nishiki|Amon|Juuzou"
+            + "|Arima|Rize|Uta\\b|Yomo|Shuu|Tsukiyama|Akira|Mutsuki|Urie|Saiko|Haise|Hide\\b|Hideyoshi|Kimi\\b|Chie\\b|Yoriko|Banjou");
+        java.util.Set<String> names = new java.util.HashSet<>();
+        for (boolean woman : new boolean[] {true, false}) {
+            for (int i = 0; i < com.hex.kagune.control.village.HumanLife.names(woman); i++) {
+                String name = com.hex.kagune.control.village.HumanLife.name(woman, i);
+                check(names.add(name) && !banned.matcher(name).find() && name.matches("[A-Z][a-z]+")
+                    && !name.toLowerCase(java.util.Locale.ROOT).matches(".*(kaneki|ayato|furuta).*"), "a name of its own (none banned from the jar): " + name);
+            }
+        }
+        check(com.hex.kagune.control.village.HumanLife.names(true) >= 40 && com.hex.kagune.control.village.HumanLife.names(false) >= 40,
+            "plenty of women's names and men's");
+        java.util.Set<String> lives = new java.util.HashSet<>();
+        java.util.EnumSet<com.hex.kagune.control.village.HumanLife.Job> jobs = java.util.EnumSet.noneOf(com.hex.kagune.control.village.HumanLife.Job.class);
+        java.util.EnumSet<com.hex.kagune.control.village.HumanLife.View> views = java.util.EnumSet.noneOf(com.hex.kagune.control.village.HumanLife.View.class);
+        for (long seed = 0; seed < 400; seed++) {
+            com.hex.kagune.control.village.HumanLife.Life life = com.hex.kagune.control.village.HumanLife.of(seed * 104729L + 7L, null);
+            check(life.equals(com.hex.kagune.control.village.HumanLife.of(seed * 104729L + 7L, null)), "its own for life");
+            lives.add(life.job() + life.family() + life.hobby() + life.fear() + life.dream() + life.secret());
+            jobs.add(life.job());
+            views.add(life.view());
+            check(com.hex.kagune.control.village.HumanLife.gift(life, life.loves()) == com.hex.kagune.control.village.HumanLife.Gift.LOVED
+                && com.hex.kagune.control.village.HumanLife.gift(life, "minecraft:rotten_flesh") == com.hex.kagune.control.village.HumanLife.Gift.DISLIKED
+                && com.hex.kagune.control.village.HumanLife.gift(life, "minecraft:cobblestone") == com.hex.kagune.control.village.HumanLife.Gift.FINE,
+                "a gift lands as it should");
+        }
+        check(lives.size() >= 395, "no two lives alike: " + lives.size() + " of 400");
+        check(jobs.size() == com.hex.kagune.control.village.HumanLife.Job.values().length && views.size() == com.hex.kagune.control.village.HumanLife.View.values().length,
+            "every trade and every view of ghouls turns up");
+        java.util.Set<com.hex.kagune.control.village.HumanLife.Job> village = new java.util.HashSet<>();
+        for (int slot = 0; slot < 12; slot++) {
+            village.add(com.hex.kagune.control.village.HumanLife.villageJob(320, -1088, slot));
+        }
+        check(village.size() == 12, "a village's people each have their own trade");
+        // Every temper says every part of every life, cleanly.
+        boolean clean = true;
+        String bad = "";
+        for (com.hex.kagune.control.village.HumanPersona.Temper temper : com.hex.kagune.control.village.HumanPersona.Temper.values()) {
+            for (int seed = 0; seed < 60; seed++) {
+                com.hex.kagune.control.village.HumanLife.Life life = com.hex.kagune.control.village.HumanLife.of(seed * 31L + temper.ordinal(), null);
+                java.util.List<String> lines = new java.util.ArrayList<>();
+                for (com.hex.kagune.control.village.HumanVoice.Topic topic : com.hex.kagune.control.village.HumanVoice.Topic.values()) {
+                    if (topic != com.hex.kagune.control.village.HumanVoice.Topic.TYPE) {
+                        lines.add(com.hex.kagune.control.village.HumanVoice.answer(temper, life, topic, seed * 13, seed % 2 == 0 ? null
+                            : com.hex.kagune.control.village.HumanVoice.gossip("Hana", "baker", seed)));
+                    }
+                }
+                lines.add(com.hex.kagune.control.village.HumanVoice.chat(temper, life, seed * 7));
+                lines.add(com.hex.kagune.control.village.HumanVoice.caught(life, seed * 32) + "Hi.");
+                for (com.hex.kagune.control.village.HumanLife.Gift how : com.hex.kagune.control.village.HumanLife.Gift.values()) {
+                    lines.add(com.hex.kagune.control.village.HumanVoice.gift(temper, how, life.lovesName(), seed % 3 == 0, seed));
+                }
+                for (String line : lines) {
+                    boolean ok = line != null && !line.isBlank() && !line.contains("{") && !line.contains("null") && line.length() <= 420
+                        && !banned.matcher(line).find();
+                    if (!ok && bad.isEmpty()) {
+                        bad = temper + ": " + line;
+                    }
+                    clean &= ok;
+                }
+            }
+        }
+        check(clean, "every temper says every part of every life cleanly: " + bad);
+        // The page: what may be asked, as it warms; what is not yet known first.
+        java.util.List<com.hex.kagune.control.village.HumanVoice.Topic> stranger = com.hex.kagune.control.village.HumanVoice.topics(0, false, 0, 3);
+        java.util.List<com.hex.kagune.control.village.HumanVoice.Topic> friend = com.hex.kagune.control.village.HumanVoice.topics(90, false, 0, 3);
+        check(!stranger.contains(com.hex.kagune.control.village.HumanVoice.Topic.SECRET) && !stranger.contains(com.hex.kagune.control.village.HumanVoice.Topic.FEAR)
+            && stranger.contains(com.hex.kagune.control.village.HumanVoice.Topic.WORK) && stranger.size() <= com.hex.kagune.control.village.HumanVoice.ROOM,
+            "a stranger can ask what anyone could");
+        check(friend.contains(com.hex.kagune.control.village.HumanVoice.Topic.SECRET) || friend.size() == com.hex.kagune.control.village.HumanVoice.ROOM,
+            "a close friend can ask more");
+        int known = 0;
+        for (com.hex.kagune.control.village.HumanVoice.Topic topic : com.hex.kagune.control.village.HumanVoice.Topic.values()) {
+            if (topic != com.hex.kagune.control.village.HumanVoice.Topic.SECRET) {
+                known |= topic.flag();
+            }
+        }
+        check(com.hex.kagune.control.village.HumanVoice.topics(90, false, known, 5).get(0) == com.hex.kagune.control.village.HumanVoice.Topic.SECRET,
+            "what isn't known yet comes first");
+        check((com.hex.kagune.control.village.HumanVoice.Topic.WORK.flag() & (com.hex.kagune.control.npc.NpcBonds.MET | com.hex.kagune.control.npc.NpcBonds.ASKED
+            | com.hex.kagune.control.village.HumanPersona.CONFESSED | com.hex.kagune.control.village.HumanPersona.PARTNER
+            | com.hex.kagune.control.village.HumanPersona.NOT_TYPE)) == 0, "learned flags past the bond's own");
+    }
+
     static void village() {
         // 2.0.13: trading with village humans: seven wares each (2.0.14: a staple, two more foods, two farming goods, two basic goods), never meat or fish; every
         // non-meat ingredient the cookbook needs is sold by someone; what they buy, and the page's words.
@@ -762,17 +853,23 @@ public final class NpcTests {
             }
             for (long seed = 0; seed < 600; seed++) {
                 java.util.List<com.hex.kagune.control.village.VillageShop.Offer> stock = com.hex.kagune.control.village.VillageShop.stock(seed * 7919L);
+                com.hex.kagune.control.village.HumanLife.Job job = com.hex.kagune.control.village.HumanLife.of(seed * 7919L, null).job();
                 six &= stock.size() == 7 && stock.stream().map(com.hex.kagune.control.village.VillageShop.Offer::item).distinct().count() == 7
-                    && staples.contains(stock.get(0).item()) && stock.get(0).equals(com.hex.kagune.control.village.VillageShop.stock(seed * 7919L).get(0))
-                    && stock.stream().filter(o -> java.util.Arrays.asList(com.hex.kagune.control.village.VillageShop.FARMING).contains(o)).count() == 2
+                    && stock.get(0).equals(job.wares.get(0)) && stock.equals(com.hex.kagune.control.village.VillageShop.stock(seed * 7919L))
+                    && stock.subList(0, com.hex.kagune.control.village.VillageShop.TRADE_OFFERS).stream().allMatch(job.wares::contains)
                     && stock.size() <= com.hex.kagune.control.npc.NpcTalk.Choice.SAYS.length - 1;
                 for (com.hex.kagune.control.village.VillageShop.Offer o : stock) {
                     sold.add(o.item());
-                    noMeat &= !java.util.regex.Pattern.compile("beef|pork|chicken|mutton|rabbit|cod|salmon|fish|hexkagune:|flesh").matcher(o.item()).find()
-                        && o.count() > 0 && o.price() > 0 && o.count() <= 64;
+                    noMeat &= !java.util.regex.Pattern.compile("beef|porkchop|chicken|mutton|rabbit|cod|salmon|tropical_fish|pufferfish|hexkagune:|flesh")
+                        .matcher(o.item()).find() && o.count() > 0 && o.price() > 0 && o.count() <= 64;
                 }
             }
-            check(six, "each sells seven things for life, a staple first, two farming goods (2.0.14), none twice, one slot left to sell");
+            check(six, "each sells seven things for life (2.1.3: five of its trade's own, its trade's first first), none twice, one slot left to sell");
+            for (com.hex.kagune.control.village.HumanLife.Job job : com.hex.kagune.control.village.HumanLife.Job.values()) {
+                check(job.wares.size() >= com.hex.kagune.control.village.VillageShop.TRADE_OFFERS + 1
+                    && job.wares.stream().map(com.hex.kagune.control.village.VillageShop.Offer::item).distinct().count() == job.wares.size()
+                    && job.wares.stream().allMatch(o -> o.item().matches("minecraft:[a-z_]+")), job + ": enough wares of its own, none twice");
+            }
             check(noMeat, "no meat, no fish, sensible lots");
             java.util.Set<String> needed = new java.util.TreeSet<>();
             for (com.hex.kagune.control.kitchen.Dish dish : com.hex.kagune.control.kitchen.Menu.DISHES) {

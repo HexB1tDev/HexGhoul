@@ -43,11 +43,19 @@ public final class HumanTalk {
 
     /** Who each player is talking to (an entity id) and what they were offered; the day they last paid each human a compliment. */
     private record Talk(int npc, List<NpcTalk.Choice> offered, List<com.hex.kagune.control.village.VillageShop.Offer> deals,
-                        com.hex.kagune.control.village.VillageShop.Offer selling) {
+                        com.hex.kagune.control.village.VillageShop.Offer selling, List<com.hex.kagune.control.village.HumanVoice.Topic> topics) {
         Talk(int npc, List<NpcTalk.Choice> offered) {
-            this(npc, offered, null, null);
+            this(npc, offered, null, null, null);
+        }
+
+        Talk(int npc, List<NpcTalk.Choice> offered, List<com.hex.kagune.control.village.VillageShop.Offer> deals,
+             com.hex.kagune.control.village.VillageShop.Offer selling) {
+            this(npc, offered, deals, selling, null);
         }
     }
+
+    /** 2.1.3: the day each player last gave each human a gift (player + human). */
+    private static final Map<String, Long> GIFTED = new HashMap<>();
 
     private static final Map<UUID, Talk> TALKS = new HashMap<>();
     private static final Map<String, Long> PRAISED = new HashMap<>();
@@ -131,7 +139,9 @@ public final class HumanTalk {
             QuestServer.bond(player, key, bond.with(com.hex.kagune.control.npc.NpcBonds.MET, true));
         }
         int roll = human.m_217043_().m_188503_(1000);
-        show(player, human, HumanPersona.hello(temper, bond.regard(), bond.has(HumanPersona.PARTNER), roll));
+        // 2.1.3: now and then caught at its odd habit first.
+        show(player, human, com.hex.kagune.control.village.HumanVoice.caught(HumanBrain.life(human), roll)
+            + HumanPersona.hello(temper, bond.regard(), bond.has(HumanPersona.PARTNER), roll));
         human.mind.with = player.m_20148_();
         HumanBrain.gesture(human, com.hex.kagune.control.village.HumanGestures.hello(temper, bond.has(HumanPersona.PARTNER), roll), 0, now); // 1.3.77
     }
@@ -162,6 +172,26 @@ public final class HumanTalk {
         }
         long now = level.m_46467_();
         human.mind.with = player.m_20148_();
+        // 2.1.3: "Talk a while.": its topics; on that page, one of them asked (and the page again), or back.
+        if (talking.topics() != null) {
+            if (choice == NpcTalk.Choice.BACK) {
+                show(player, human, com.hex.kagune.control.village.VillageShop.done(roll));
+                return;
+            }
+            int slot = choice.say();
+            if (slot >= 0 && slot < talking.topics().size()) {
+                topic(player, human, talking.topics().get(slot), roll);
+            }
+            return;
+        }
+        if (choice == NpcTalk.Choice.CHAT) {
+            topics(player, human, com.hex.kagune.control.village.HumanVoice.TOPICS_ASKED[Math.floorMod(roll, com.hex.kagune.control.village.HumanVoice.TOPICS_ASKED.length)]);
+            return;
+        }
+        if (choice == NpcTalk.Choice.GIFT) {
+            gift(player, human, temper, key, bond, day, roll);
+            return;
+        }
         // 2.0.13: trading: "Let's trade." opens its wares; on that page, a buy, the sale of what is in their hand, or back.
         if (choice == TRADE && talking.deals() == null) {
             trade(player, human, com.hex.kagune.control.village.VillageShop.hello(roll));
@@ -214,7 +244,7 @@ public final class HumanTalk {
         boolean turnedDown = false;
         switch (choice) {
             case SAY_1 -> {
-                line = HumanPersona.chat(temper, roll);
+                line = com.hex.kagune.control.village.HumanVoice.chat(temper, HumanBrain.life(human), roll); // 2.1.3
                 if (bond.chatted() != day) {
                     QuestServer.bond(player, key, bond.regard(bond.regard() + com.hex.kagune.control.npc.NpcBonds.CHAT).chatted(day));
                 }
@@ -302,7 +332,8 @@ public final class HumanTalk {
         long seed = seed(human);
         HumanPersona.Temper temper = HumanBrain.temper(human);
         QuestLog.Bond bond = QuestServer.bond(player, human.m_20148_().toString());
-        List<com.hex.kagune.control.village.VillageShop.Offer> stock = com.hex.kagune.control.village.VillageShop.stock(seed);
+        List<com.hex.kagune.control.village.VillageShop.Offer> stock = com.hex.kagune.control.village.VillageShop.stock(seed,
+            HumanBrain.life(human).job()); // 2.1.3: by its trade
         net.minecraft.world.item.ItemStack held = player.m_21205_();
         String heldId = held.m_41619_() ? "" : String.valueOf(net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(held.m_41720_()));
         List<NpcTalk.Choice> offered = new java.util.ArrayList<>();
@@ -330,7 +361,7 @@ public final class HumanTalk {
             labels[i] = said.get(i);
         }
         int coins = heldId.equals(com.hex.kagune.control.village.VillageShop.EMERALD) ? held.m_41613_() : 0;
-        ControlNetwork.sendTo(player, new S2CNpcTalk(human.m_19879_(), HumanBrain.name(human), temper.title, bond.regard(), false,
+        ControlNetwork.sendTo(player, new S2CNpcTalk(human.m_19879_(), HumanBrain.name(human), title(human), bond.regard(), false,
             S2CNpcTalk.HUMAN_FACE, line + " " + com.hex.kagune.control.village.VillageShop.purse(coins), ordinals, labels));
     }
 
@@ -392,15 +423,16 @@ public final class HumanTalk {
         boolean ghoul = com.hex.kagune.data.KaguneProfile.isUnlocked(player);
         boolean partner = bond.has(HumanPersona.PARTNER);
         boolean close = regard >= HumanPersona.CLOSE;
-        List<NpcTalk.Choice> offered = new java.util.ArrayList<>(List.of(NpcTalk.Choice.SAY_1, NpcTalk.Choice.SAY_2, NpcTalk.Choice.SAY_3,
-            NpcTalk.Choice.SAY_4));
-        List<String> said = new java.util.ArrayList<>(List.of(ASKS));
+        // 2.1.3: how it is, a while's talk (its life: TOPICS), a compliment, a gift, its wares.
+        List<NpcTalk.Choice> offered = new java.util.ArrayList<>(List.of(NpcTalk.Choice.SAY_1, NpcTalk.Choice.CHAT, NpcTalk.Choice.SAY_4));
+        List<String> said = new java.util.ArrayList<>(List.of(ASKS[0], "Talk a while.", ASKS[3]));
+        net.minecraft.world.item.ItemStack held = player.m_21205_();
+        if (!held.m_41619_()) {
+            offered.add(NpcTalk.Choice.GIFT);
+            said.add("This is for you. (the " + thing(held) + " in your hand)");
+        }
         offered.add(TRADE); // 2.0.13
         said.add("Let's trade.");
-        if (regard >= HumanPersona.WARM) {
-            offered.add(TYPE); // 2.0.35
-            said.add("What's your type?");
-        }
         boolean doubted = DOUBTED.contains(both);
         if (doubted) {
             offered.add(NpcTalk.Choice.SAY_6);
@@ -438,7 +470,115 @@ public final class HumanTalk {
             labels[i] = said.get(i);
         }
         // 2.0.1: its face as the client draws it (HUMAN_FACE: the talk screen reads its look off the entity).
-        ControlNetwork.sendTo(player, new S2CNpcTalk(human.m_19879_(), HumanBrain.name(human), HumanBrain.temper(human).title, regard, false,
+        ControlNetwork.sendTo(player, new S2CNpcTalk(human.m_19879_(), HumanBrain.name(human), title(human), regard, false,
             S2CNpcTalk.HUMAN_FACE, line, ordinals, labels));
+    }
+
+    /** 2.1.3: the talk screen's line under its name: its temper and its trade ("Shy baker"). */
+    static String title(HumanNpc human) {
+        return HumanBrain.temper(human).title + " " + HumanBrain.life(human).job().title;
+    }
+
+    /** 2.1.3: what {@code stack} is called, plainly ("sweet berries"). */
+    static String thing(net.minecraft.world.item.ItemStack stack) {
+        net.minecraft.resources.ResourceLocation id = net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(stack.m_41720_());
+        return id == null ? "thing" : id.m_135815_().replace('_', ' ');
+    }
+
+    /** 2.1.3: the "Talk a while." page: what can be asked about its life now ({@code line}: its words). */
+    private static void topics(ServerPlayer player, HumanNpc human, String line) {
+        String key = human.m_20148_().toString();
+        QuestLog.Bond bond = QuestServer.bond(player, key);
+        List<com.hex.kagune.control.village.HumanVoice.Topic> topics = com.hex.kagune.control.village.HumanVoice.topics(bond.regard(),
+            bond.has(HumanPersona.PARTNER), bond.flags(), human.m_217043_().m_188503_(1000));
+        List<NpcTalk.Choice> offered = new java.util.ArrayList<>();
+        List<String> said = new java.util.ArrayList<>();
+        for (int i = 0; i < topics.size(); i++) {
+            offered.add(NpcTalk.Choice.SAYS[i]);
+            said.add(topics.get(i).label);
+        }
+        offered.add(NpcTalk.Choice.BACK);
+        said.add("Let's talk about something else.");
+        offered.add(NpcTalk.Choice.LEAVE);
+        said.add("");
+        TALKS.put(player.m_20148_(), new Talk(human.m_19879_(), List.copyOf(offered), null, null, List.copyOf(topics)));
+        int[] ordinals = new int[offered.size()];
+        String[] labels = new String[offered.size()];
+        for (int i = 0; i < ordinals.length; i++) {
+            ordinals[i] = offered.get(i).ordinal();
+            labels[i] = said.get(i);
+        }
+        ControlNetwork.sendTo(player, new S2CNpcTalk(human.m_19879_(), HumanBrain.name(human), title(human), bond.regard(), false,
+            S2CNpcTalk.HUMAN_FACE, line, ordinals, labels));
+    }
+
+    /** 2.1.3: {@code topic} asked: its answer (the first time something personal is learned, it warms to them for it), and the page again. */
+    private static void topic(ServerPlayer player, HumanNpc human, com.hex.kagune.control.village.HumanVoice.Topic topic, int roll) {
+        ServerLevel level = player.m_284548_();
+        String key = human.m_20148_().toString();
+        QuestLog.Bond bond = QuestServer.bond(player, key);
+        HumanPersona.Temper temper = HumanBrain.temper(human);
+        String line;
+        if (topic == com.hex.kagune.control.village.HumanVoice.Topic.TYPE) {
+            line = HumanPersona.type(temper, attraction(human), HumanPersona.taste(seed(human)), roll); // 2.0.35
+        } else {
+            String gossip = null;
+            if (topic == com.hex.kagune.control.village.HumanVoice.Topic.GOSSIP && human.m_217043_().m_188499_()) {
+                HumanNpc other = neighbour(human, level);
+                if (other != null) {
+                    gossip = com.hex.kagune.control.village.HumanVoice.gossip(HumanBrain.name(other), HumanBrain.life(other).job().title, roll);
+                }
+            }
+            line = com.hex.kagune.control.village.HumanVoice.answer(temper, HumanBrain.life(human), topic, roll, gossip);
+        }
+        if (topic.personal() && !bond.has(topic.flag())) {
+            QuestServer.bond(player, key, bond.with(topic.flag(), true).regard(bond.regard() + com.hex.kagune.control.village.HumanVoice.LEARNED));
+        }
+        int move = switch (topic) {
+            case GOSSIP -> com.hex.kagune.control.village.HumanGestures.news(roll);
+            case WORK, HOBBY, QUIRK -> com.hex.kagune.control.village.HumanGestures.chat(temper, roll);
+            default -> com.hex.kagune.control.village.HumanGestures.about(temper, roll);
+        };
+        HumanBrain.gesture(human, move, 0, level.m_46467_());
+        topics(player, human, line);
+    }
+
+    /** 2.1.3: another of the village's people near {@code human} (for a word about them), or null. */
+    private static HumanNpc neighbour(HumanNpc human, ServerLevel level) {
+        List<HumanNpc> near = level.m_6443_(HumanNpc.class, human.m_20191_().m_82400_(48.0), other -> other != human && other.m_6084_());
+        return near.isEmpty() ? null : near.get(human.m_217043_().m_188503_(near.size()));
+    }
+
+    /**
+     * 2.1.3: what is in their hand given to it: how it lands (its favourite wins it over, food and flowers please it, something nasty
+     * stings), once a day for the warmth; one of it taken.
+     */
+    private static void gift(ServerPlayer player, HumanNpc human, HumanPersona.Temper temper, String key, QuestLog.Bond bond, long day, int roll) {
+        net.minecraft.world.item.ItemStack held = player.m_21205_();
+        if (held.m_41619_()) {
+            show(player, human, "Hm? Your hands are empty.");
+            return;
+        }
+        String id = String.valueOf(net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(held.m_41720_()));
+        com.hex.kagune.control.village.HumanLife.Life life = HumanBrain.life(human);
+        com.hex.kagune.control.village.HumanLife.Gift how = com.hex.kagune.control.village.HumanLife.gift(life, id);
+        String both = player.m_20148_() + key;
+        boolean again = GIFTED.getOrDefault(both, Long.MIN_VALUE) == day;
+        String name = how == com.hex.kagune.control.village.HumanLife.Gift.LOVED ? life.lovesName() : thing(held);
+        if (how == com.hex.kagune.control.village.HumanLife.Gift.DISLIKED) {
+            QuestServer.bond(player, key, bond.regard(bond.regard() + how.regard));
+        } else {
+            held.m_41774_(1);
+            if (!again) {
+                GIFTED.put(both, day);
+                QuestServer.bond(player, key, bond.regard(bond.regard() + how.regard));
+            }
+            if (how == com.hex.kagune.control.village.HumanLife.Gift.LOVED && !again) {
+                HumanBrain.hearts(human, player.m_284548_(), 6);
+            }
+        }
+        HumanBrain.gesture(human, how == com.hex.kagune.control.village.HumanLife.Gift.DISLIKED ? com.hex.kagune.control.village.HumanGestures.about(temper, roll)
+            : com.hex.kagune.control.village.HumanGestures.compliment(temper, roll), 0, player.m_284548_().m_46467_());
+        show(player, human, com.hex.kagune.control.village.HumanVoice.gift(temper, how, name, again, roll));
     }
 }

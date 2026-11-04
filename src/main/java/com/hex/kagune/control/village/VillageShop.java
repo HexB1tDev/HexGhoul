@@ -7,8 +7,8 @@ import java.util.Random;
 /**
  * 2.0.13 (the owner: "check how the trading works with the Human NPCS I couldn't find a way", then: "they mostly trade basic stuff like
  * villagers, but a lot more food, the ones needed for our recipes on touka (not meat)"): what a village human sells a player and buys from
- * them, for emeralds (pure, tested). Each sells seven things for life (from its id): three foods the cookbook's recipes need (never meat,
- * never fish), a staple among them, two farming goods (2.0.14: seeds and the like) and two basic goods; and it buys the field's crops and
+ * them, for emeralds (pure, tested). Each sells seven things for life (from its id; 2.1.3: by its trade, {@link HumanLife.Job}: five of
+ * its trade's own wares, one of the cookbook's foods, one farming or basic good; never meat, never fish); and it buys the field's crops and
  * plain goods, as a village would. Paid with the emeralds
  * in the player's hand; sold from what is in their hand.
  */
@@ -122,14 +122,29 @@ public final class VillageShop {
     private VillageShop() {
     }
 
-    /** What one sells ({@code seed}: its own, always the same): a staple, two more foods, two farming goods, two basic goods, none twice. */
+    /** 2.1.3: how many of its trade's own wares each one sells (its trade's first always among them); the rest from the village's goods. */
+    public static final int TRADE_OFFERS = 5;
+
+    /** What one sells ({@code seed}: its own, always the same), by the job its life gives it ({@link HumanLife#of}). */
     public static List<Offer> stock(long seed) {
+        return stock(seed, HumanLife.of(seed, null).job());
+    }
+
+    /**
+     * 2.1.3 (the owner: "different trades per NPC"): what one sells by its trade: its trade's first ware and four more of its own (a baker
+     * bread, cookies, cake...; a smith iron, buckets, shears...), then one of the cookbook's foods and one farming or basic good, none twice:
+     * seven in all, the same for life.
+     */
+    public static List<Offer> stock(long seed, HumanLife.Job job) {
         Random random = new Random(seed ^ 0x5A0B5L);
         List<Offer> out = new ArrayList<>();
-        out.add(STAPLES[random.nextInt(STAPLES.length)]);
-        pick(out, FOODS, FOOD_OFFERS - 1, random);
-        pick(out, FARMING, FARMING_OFFERS, random);
-        pick(out, BASICS, BASIC_OFFERS, random);
+        out.add(job.wares.get(0));
+        pick(out, job.wares.subList(1, job.wares.size()).toArray(new Offer[0]), TRADE_OFFERS - 1, random);
+        pick(out, FOODS, 1, random);
+        Offer[] rest = new Offer[FARMING.length + BASICS.length];
+        System.arraycopy(FARMING, 0, rest, 0, FARMING.length);
+        System.arraycopy(BASICS, 0, rest, FARMING.length, BASICS.length);
+        pick(out, rest, FOOD_OFFERS + FARMING_OFFERS + BASIC_OFFERS - out.size(), random);
         return out;
     }
 

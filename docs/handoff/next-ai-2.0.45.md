@@ -3,7 +3,7 @@
 `docs/handoff/next-ai-1.3.60.md` (house rules), then the top sections of `docs/handoff/companions-handoff.md` (one per version, newest first).
 
 Branch **`claude/loving-albattani-xld4zv`** (push only to the branch the session is given). Never push to `main`; no PR unless asked.
-Version **2.1.2** in `build.py` and `patch/KagunePatch.java`; the next is **2.1.3** (after 2.1.9 comes 2.2.0). Protocol **"80"** (`ControlNetwork.PROTOCOL`; 2.0.42
+Version **2.1.3** in `build.py` and `patch/KagunePatch.java`; the next is **2.1.4** (after 2.1.9 comes 2.2.0). Protocol **"80"** (`ControlNetwork.PROTOCOL`; 2.0.42
 added `S2CRinkakuBlock`, message id 48, and `C2SUkakuAction.BLOCK`; 2.0.48 `S2CUkakuFx.DAWN_RING`; 2.0.49 `CcgAgent.SOARING` on the flip). Nothing is tested in game.
 
 ## The owner's requests since 2.0.36 (their words, trimmed)
@@ -104,7 +104,12 @@ Previews: `dawn-bigger-2.0.47.png`, `dawn-aim-2.0.47.png`, `dawn-volley-2.0.48.p
 - **2.1.2** The owner: "adapt the Ken, Eto and Touka quests for romance better, so that it's more immersive and less repetitive, it's
   super boring at it stands." Each companion's own five-chapter courtship (`npc/Courtship`, `server/CourtshipServer`), each chapter closed
   by a `moment` scene in their talk script; eight `date` scenes each, from the sweet page, once a day. Begins at regard 60.
-- **Next (the owner's words, same message):** "As for humans this is where we gotta spend the most time, we gotta add wayyyyy more options
+- **2.1.3** Every villager is someone: `village/HumanLife` (trade, family, pastime, fear, dream, habit, secret, favourite gift, view of ghouls;
+  gendered names), `village/HumanVoice` (the 12 tempers' framing, the "Talk a while." topics, gifts, gossip), trades by trade
+  (`VillageShop.stock(seed, job)`). Female village humans checked: the body follows `HumanRules.female(look)` (unchanged since 2.0.34).
+- **Next: 2.1.4** romance for every temper (flirting before dating, partner talk), then villagers coming up to the player (a `human.txt`
+  scene script would fit: `SceneBook` already reads companions', children's and allies').
+- **The owner's words for this work:** "As for humans this is where we gotta spend the most time, we gotta add wayyyyy more options
   and text to each personality and make it feel like every NPC is unique, double check that Female humans have the female body model."
   Also still open from before: "romance dialog for every personality type, different trades per NPC". Look at `village/HumanPersona`,
   `server/HumanTalk`, `village/VillageTalk`, `village/VillageShop`, `HumanRules.female`, the `HumanRenderer` Figure layer.

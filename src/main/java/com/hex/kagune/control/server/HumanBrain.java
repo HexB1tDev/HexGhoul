@@ -226,11 +226,31 @@ public final class HumanBrain {
     }
     static final String UNIQUE = "HexHumanUnique";
 
-    /** 2.0: its name: its village's for it, else by its seed. */
+    /** 2.1.3: in its saved data: its name among a woman's or a man's (a villager placed since), and its job (ordinal + 1). */
+    static final String NAME2 = "HexHumanName2";
+    static final String JOB = "HexHumanJob";
+
+    /**
+     * 2.0: its name: its village's for it, else by its seed. 2.1.3: a woman's or a man's name for one placed since (one named before keeps
+     * its own).
+     */
     public static String name(HumanNpc human) {
         CompoundTag saved = human.getPersistentData();
+        boolean woman = HumanRules.female(human.look());
+        if (saved.m_128441_(NAME2)) {
+            return com.hex.kagune.control.village.HumanLife.name(woman, saved.m_128451_(NAME2));
+        }
         return saved.m_128441_(NAME) ? com.hex.kagune.control.village.HumanPersona.named(saved.m_128451_(NAME))
-            : com.hex.kagune.control.village.HumanPersona.name(HumanTalk.seed(human));
+            : com.hex.kagune.control.village.HumanLife.name(woman, (int)Math.floorMod(HumanTalk.seed(human) >>> 7,
+            (long)com.hex.kagune.control.village.HumanLife.names(woman)));
+    }
+
+    /** 2.1.3: {@code human}'s life (its job its village's for it, if it gave one; the rest its seed's). */
+    public static com.hex.kagune.control.village.HumanLife.Life life(HumanNpc human) {
+        CompoundTag saved = human.getPersistentData();
+        com.hex.kagune.control.village.HumanLife.Job[] jobs = com.hex.kagune.control.village.HumanLife.Job.values();
+        com.hex.kagune.control.village.HumanLife.Job job = saved.m_128441_(JOB) ? jobs[Math.floorMod(saved.m_128451_(JOB) - 1, jobs.length)] : null;
+        return com.hex.kagune.control.village.HumanLife.of(HumanTalk.seed(human), job);
     }
 
     /** 1.3.65: what it runs from, how bad a sight it is, and whether it is a ghoul it screams about. */
@@ -263,10 +283,19 @@ public final class HumanBrain {
             int look = HumanRules.villageLook(place.x(), place.z(), slot);
             saved.m_128405_(HumanNpc.KEY, look);
             saved.m_128405_(NAME, HumanRules.villageName(place.x(), place.z(), slot, com.hex.kagune.control.village.HumanPersona.names()));
+            // 2.1.3: a woman's name or a man's, none shared in its village.
+            boolean woman = HumanRules.female(look);
+            saved.m_128405_(NAME2, HumanRules.villageName(place.x(), place.z() + (woman ? 1 : 0), slot,
+                com.hex.kagune.control.village.HumanLife.names(woman)));
             saved.m_128405_(UNIQUE, 1);
             // 2.0.36: a villager placed from now on may have any temper (the new ones too), kept with it.
             saved.m_128405_(TEMPER, com.hex.kagune.control.village.HumanPersona.rolled(HumanTalk.seed(human)).ordinal());
             human.dress(look);
+        }
+        // 2.1.3: once, a village's own job for each of its people (none shared while there are enough), kept with it.
+        if (place != null && !human.getPersistentData().m_128441_(JOB)) {
+            human.getPersistentData().m_128405_(JOB, com.hex.kagune.control.village.HumanLife.villageJob(place.x(), place.z(),
+                Math.max(0, VillagePlace.slot(human))).ordinal() + 1);
         }
         // 2.0 (lag): a calm villager looks around every LOOKS ticks (staggered by its id), a frightened or hurt one every tick.
         boolean alert = now < mind.shakenUntil || now < mind.hurtUntil || (now + human.m_19879_()) % LOOKS == 0L;

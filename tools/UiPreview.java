@@ -370,6 +370,40 @@ public class UiPreview {
         etoFrame(new File(dir, "eto-talk-4-claimed.png"), half, cold, new com.hex.kagune.control.client.NpcTalkView.Motion(3.0, 99.0, 12.0F, -8, 0.5));
     }
 
+    /** 2.1.3: a village human's talk: the first page, the "Talk a while." page with one of its secrets told, and a gift it loved. */
+    static void villageTalk(File dir) throws Exception {
+        BufferedImage face = ImageIO.read(new File("src/main/resources/assets/hexkagune/textures/entity/human/human_03.png"));
+        com.hex.kagune.control.village.HumanPersona.Temper shy = com.hex.kagune.control.village.HumanPersona.Temper.SHY;
+        com.hex.kagune.control.village.HumanLife.Life life = com.hex.kagune.control.village.HumanLife.of(424242L,
+            com.hex.kagune.control.village.HumanLife.Job.BEEKEEPER);
+        com.hex.kagune.control.npc.NpcTalk.Choice[] says = com.hex.kagune.control.npc.NpcTalk.Choice.SAYS;
+        java.util.List<com.hex.kagune.control.npc.NpcTalk.Choice> main = java.util.List.of(says[0], com.hex.kagune.control.npc.NpcTalk.Choice.CHAT, says[3],
+            com.hex.kagune.control.npc.NpcTalk.Choice.GIFT, com.hex.kagune.control.npc.NpcTalk.Choice.FAVOUR, com.hex.kagune.control.npc.NpcTalk.Choice.LEAVE);
+        java.util.List<String> mainLabels = java.util.List.of("How are you?", "Talk a while.", "You look lovely today.",
+            "This is for you. (the " + life.lovesName() + " in your hand)", "Let's trade.", "");
+        String hello = com.hex.kagune.control.village.HumanVoice.caught(life, 0) + com.hex.kagune.control.village.HumanPersona.hello(shy, 64, false, 1);
+        etoFrame(new File(dir, "village-talk-main.png"), face, new com.hex.kagune.control.client.NpcTalkView.Model("Hana", "Shy beekeeper", 64, false,
+            hello, main, mainLabels), com.hex.kagune.control.client.NpcTalkView.Motion.still(64));
+        java.util.List<com.hex.kagune.control.village.HumanVoice.Topic> topics = com.hex.kagune.control.village.HumanVoice.topics(86, false,
+            com.hex.kagune.control.village.HumanVoice.Topic.WORK.flag() | com.hex.kagune.control.village.HumanVoice.Topic.FAMILY.flag(), 2);
+        java.util.List<com.hex.kagune.control.npc.NpcTalk.Choice> choices = new java.util.ArrayList<>();
+        java.util.List<String> labels = new java.util.ArrayList<>();
+        for (int i = 0; i < topics.size(); i++) {
+            choices.add(says[i]);
+            labels.add(topics.get(i).label);
+        }
+        choices.add(com.hex.kagune.control.npc.NpcTalk.Choice.BACK);
+        labels.add("Let's talk about something else.");
+        choices.add(com.hex.kagune.control.npc.NpcTalk.Choice.LEAVE);
+        labels.add("");
+        String secret = com.hex.kagune.control.village.HumanVoice.answer(shy, life, com.hex.kagune.control.village.HumanVoice.Topic.SECRET, 0, null);
+        etoFrame(new File(dir, "village-talk-secret.png"), face, new com.hex.kagune.control.client.NpcTalkView.Model("Hana", "Shy beekeeper", 88, false,
+            secret, choices, labels), com.hex.kagune.control.client.NpcTalkView.Motion.still(88));
+        String loved = com.hex.kagune.control.village.HumanVoice.gift(shy, com.hex.kagune.control.village.HumanLife.Gift.LOVED, life.lovesName(), false, 1);
+        etoFrame(new File(dir, "village-talk-gift.png"), face, new com.hex.kagune.control.client.NpcTalkView.Model("Hana", "Shy beekeeper", 72, false,
+            loved, main, mainLabels), com.hex.kagune.control.client.NpcTalkView.Motion.still(72));
+    }
+
     static void etoFrame(File out, BufferedImage face, com.hex.kagune.control.client.NpcTalkView.Model model,
                          com.hex.kagune.control.client.NpcTalkView.Motion motion) throws Exception {
         int w = 960;
@@ -469,6 +503,10 @@ public class UiPreview {
         }
         if (args.length > 1 && args[1].equals("talk")) {
             talk(dir);
+            return;
+        }
+        if (args.length > 1 && args[1].equals("village-talk")) {
+            villageTalk(dir);
             return;
         }
         if (args.length > 1 && args[1].equals("eto-talk")) {

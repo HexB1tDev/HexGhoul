@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.1.3 (HexGhoul): every villager is someone (testing)
+
+See `.github/release-notes-2.1.3.md`. Every village human is now someone of their own. Each has a trade, a family, a pastime, an odd habit, a fear, a dream, a secret, a favourite gift and a view of ghouls, all fixed for life, and says them in their personality's voice. A new "Talk a while." page lets you ask about all of it. Getting to know them warms them to you, and their trade decides what they sell.
+
 ## 2.1.2 (HexGhoul): each companion's own courtship, and dates (testing)
 
 See `.github/release-notes-2.1.2.md`. Eto, Touka and Ken no longer share the same three errands (three books, ten kills at night, a flower). Each now has their own five-chapter courtship. Every chapter asks for something only that companion would ask for, and closes with a written scene that has choices, played the moment the task is done. Once you're together, you can take them on dates.
