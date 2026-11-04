@@ -254,7 +254,7 @@ public final class Children {
     public static Genome genome(ServerLevel level, Child child) {
         Genome genome = child.genome();
         if (genome.kaguneKnown()) {
-            return genome;
+            return both(level, child, genome);
         }
         for (String key : new String[] {child.mother, child.father}) {
             if (key != null && key.startsWith("player:") && Pregnancies.playerOf(level, key) == null) {
@@ -270,6 +270,30 @@ public final class Children {
             : com.hex.kagune.control.family.KaguneGenes.colourOf(bits, mother[0], mother[1], father[0], father[1],
                 com.hex.kagune.control.family.KaguneGenes.colour(mother[0], mother[1], father[0], father[1], new java.util.Random(genome.seed() ^ 0x6B61L)));
         genome = genome.withKagune(bits, colour);
+        child.genome = genome.save();
+        changed(level);
+        return genome;
+    }
+
+    /**
+     * 2.3.7 (the owner: "they're going to have one of each, both parents. If they're both ghouls, you get both halves"): a child born
+     * before, of two ghoul parents, that took only one parent's kind (2.0.6's roll) or one tentacle of two Rinkaku parents, now has both
+     * halves (worked out once both parents are known: a companion always, a player while they are about); its colour kept.
+     */
+    static Genome both(ServerLevel level, Child child, Genome genome) {
+        if (!genome.ghoul() || genome.half() || genome.kagune() <= com.hex.kagune.control.family.KaguneGenes.NONE) {
+            return genome;
+        }
+        int[] mother = kagune(level, child.mother);
+        int[] father = kagune(level, child.father);
+        if (mother[0] <= 0 || father[0] <= 0) {
+            return genome;
+        }
+        int bits = com.hex.kagune.control.family.KaguneGenes.inherit(mother[0], father[0]);
+        if (bits == genome.kagune() || bits <= 0) {
+            return genome;
+        }
+        genome = genome.withKagune(bits, genome.colour());
         child.genome = genome.save();
         changed(level);
         return genome;

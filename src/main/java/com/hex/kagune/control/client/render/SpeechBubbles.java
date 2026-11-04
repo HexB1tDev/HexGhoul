@@ -71,6 +71,20 @@ public final class SpeechBubbles {
         return text;
     }
 
+    /**
+     * 2.3.7 (the owner: "The text over their heads glitches whenever they're in bed. It starts going up and down really fast ... The speech
+     * bubble and thought bubble"): how far over where {@code body} is drawn ({@code partial}) its bubbles start: its height standing; lying
+     * in a bed, a fixed height over the bed (its block's top, by the block it lies in), never its lying box nor its bob in the bed, which
+     * moved the bubble with every settle.
+     */
+    static double head(Entity body, float partial) {
+        if (body instanceof LivingEntity living && living.m_5803_()) {
+            double drawn = body.f_19791_ + (body.m_20186_() - body.f_19791_) * partial;
+            return Math.floor(body.m_20186_() + 0.01) + 1.15 - drawn;
+        }
+        return body.m_20206_();
+    }
+
     /** A sleeper's "z Z z" cloud, {@code clock} its own time (it drifts in and out). */
     public static void snore(Entity body, double clock, PoseStack pose, MultiBufferSource buffers) {
         double phase = (clock + (body.m_19879_() & 63) * 7.0) % 120.0;
@@ -137,7 +151,7 @@ public final class SpeechBubbles {
                 continue;
             }
             double x = body.f_19790_ + (body.m_20185_() - body.f_19790_) * partial;
-            double y = body.f_19791_ + (body.m_20186_() - body.f_19791_) * partial + body.m_20206_() + BASES.getOrDefault(id, 0.3);
+            double y = body.f_19791_ + (body.m_20186_() - body.f_19791_) * partial + head(body, partial) + BASES.getOrDefault(id, 0.3);
             double z = body.f_19792_ + (body.m_20189_() - body.f_19792_) * partial;
             double fx = x - camera.f_82479_;
             double fy = y - camera.f_82480_;
@@ -188,7 +202,7 @@ public final class SpeechBubbles {
                                PoseStack pose, MultiBufferSource buffers) {
         Minecraft minecraft = Minecraft.m_91087_();
         Vec3 camera = minecraft.f_91063_.m_109153_().m_90583_();
-        double top = body.m_20206_() + base;
+        double top = head(body, minecraft.m_91296_()) + base;
         double dx = camera.f_82479_ - body.m_20185_();
         double dy = camera.f_82480_ - (body.m_20186_() + top);
         double dz = camera.f_82481_ - body.m_20189_();

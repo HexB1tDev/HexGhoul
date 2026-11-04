@@ -194,11 +194,13 @@ public final class GraftRenderer {
         for (com.hex.kagune.control.npc.ChildNpc child : ChildRenderer.drawn()) {
             com.hex.kagune.control.client.ChildClient.View kid = com.hex.kagune.control.client.ChildClient.get(child.m_19879_());
             com.hex.kagune.control.client.GhoulNpcClient.View seen = com.hex.kagune.control.client.GhoulNpcClient.get(child.m_19879_());
-            if (kid == null || seen == null || !com.hex.kagune.control.family.KaguneGenes.tails(kid.genome().kagune()) || !child.m_6084_()
+            if (kid == null || !com.hex.kagune.control.family.KaguneGenes.tails(kid.genome().kagune()) || !child.m_6084_()
                 || child.m_20145_() || child.m_5803_()) {
                 continue;
             }
-            float deploy = com.hex.kagune.control.client.GhoulNpcClient.deploy(seen, clock);
+            // 2.3.7 (the owner: "when he manifests the [kagune], I cannot see [it] at all"): shown whenever it fights (its kakugan out,
+            // S2CChild's turned), even before (or without) its kagune's own state.
+            float deploy = Math.max(seen == null ? 0.0F : com.hex.kagune.control.client.GhoulNpcClient.deploy(seen, clock), kid != null && kid.turned() ? 1.0F : 0.0F);
             if (deploy <= 0.005F) {
                 LIMBS.remove(child.m_20148_());
                 continue;
@@ -212,8 +214,13 @@ public final class GraftRenderer {
             Frame frame = Frame.of(child, partial, com.hex.kagune.control.family.ChildKaguneRules.scale(kid.stage()));
             GraftRig.Body body = body(child, partial, clock, frame, prey(level, child, limbs, partial, frame));
             VertexConsumer out = consumer[0] == null ? (consumer[0] = buffers.m_6299_(TYPE)) : consumer[0];
-            drawTentacle(out, matrix, normals, level, child, kid, com.hex.kagune.control.client.GhoulNpcClient.graft(seen), limbs, deploy, body, frame,
+            drawTentacle(0, out, matrix, normals, level, child, kid, seen == null ? GraftClient.View.NONE : com.hex.kagune.control.client.GhoulNpcClient.graft(seen), limbs, deploy, body, frame,
                 camera, clock, partial);
+            if (com.hex.kagune.control.family.KaguneGenes.tentacles(kid.genome().kagune()) > 1) {
+                // 2.3.7: its other parent's tentacle, over its other shoulder (at rest while the first lashes).
+                drawTentacle(1, out, matrix, normals, level, child, kid, GraftClient.View.NONE, limbs, deploy, body, frame,
+                camera, clock, partial);
+            }
         }
         if (consumer[0] != null) {
             buffers.m_109912_(TYPE);
@@ -234,7 +241,7 @@ public final class GraftRenderer {
      * same as every limb's, GraftMotion), grown out as far as it is, and drawn by the original's own tube (its taper, surface, veins and
      * point) in the child's colour and its veins, as thick as a Rinkaku player's first tentacle at the child's size.
      */
-    private static void drawTentacle(VertexConsumer out, Matrix4f matrix, Matrix3f normals, ClientLevel level, com.hex.kagune.control.npc.ChildNpc child,
+    private static void drawTentacle(int index, VertexConsumer out, Matrix4f matrix, Matrix3f normals, ClientLevel level, com.hex.kagune.control.npc.ChildNpc child,
                                      com.hex.kagune.control.client.ChildClient.View kid, GraftClient.View moving, Limbs limbs, double grown,
                                      GraftRig.Body body, Frame frame, Vec3 camera, double clock, float partial) {
         int mastery = com.hex.kagune.control.family.ChildKaguneRules.tailMastery(kid.stage());
@@ -247,6 +254,11 @@ public final class GraftRenderer {
         // 1.3.46: over the shoulder it was born to carry it over, or as a tail.
         com.hex.kagune.control.family.ChildKaguneRules.Layout layout = com.hex.kagune.control.family.ChildKaguneRules.layout(kid.genome().kagune(),
             kid.genome().seed());
+        if (index > 0) {
+            // 2.3.7: the second tentacle over the other shoulder from the first.
+            layout = layout == com.hex.kagune.control.family.ChildKaguneRules.Layout.SHOULDER_LEFT
+                ? com.hex.kagune.control.family.ChildKaguneRules.Layout.SHOULDER_RIGHT : com.hex.kagune.control.family.ChildKaguneRules.Layout.SHOULDER_LEFT;
+        }
         GraftRig.Pose pose;
         if (move == GraftMove.NONE) {
             double[][] rest = com.hex.kagune.control.family.ChildKaguneRules.tentacleRest(length, clock, child.m_19879_(), GraftMotion.POINTS, layout);
@@ -280,10 +292,10 @@ public final class GraftRenderer {
             }
             pose = new GraftRig.Pose(points, lash.dorsal(), 0.0, 1.0, length, lash.response(), 0.0);
         }
-        if (limbs.base[0] == null) {
-            limbs.base[0] = new GraftMotion.Limb();
+        if (limbs.base[index] == null) {
+            limbs.base[index] = new GraftMotion.Limb();
         }
-        GraftMotion.Limb leg = limbs.base[0];
+        GraftMotion.Limb leg = limbs.base[index];
         leg.follow(pose, clock);
         double[][] rig = leg.points();
         // Evenly along its curve, only as much as has grown out of its back.
@@ -322,7 +334,7 @@ public final class GraftRenderer {
         com.hex.kagune.client.render.TendrilChain chain = TENTACLES.computeIfAbsent(child.m_19879_(), id -> new com.hex.kagune.client.render.TendrilChain(0));
         int light = LevelRenderer.m_109541_(level, BlockPos.m_274561_(child.m_20185_(), child.m_20186_() + 1.0, child.m_20189_()));
         // 2.0.39: as a Rinkaku player's tail is drawn now (RinkakuTube: the owner's reference, in the child's own colour).
-        RinkakuTube.emit(out, matrix, normals, path, look.thickness(), colour, light, child.m_19879_(), new double[] {0.0, 0.0, 0.0}, clock);
+        RinkakuTube.emit(out, matrix, normals, path, look.thickness(), colour, light, child.m_19879_() + index * 7919, new double[] {0.0, 0.0, 0.0}, clock);
     }
 
     /** Every limb of {@code stage}, grown {@code grown} of the way out, making {@code moving}'s move (null: at rest). */

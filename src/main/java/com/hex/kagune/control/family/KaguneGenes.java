@@ -24,7 +24,12 @@ public final class KaguneGenes {
     public static final int OWL = 8;
     /** The Ukaku pair. */
     public static final int WINGS = WING | PAIR;
-    private static final int ALL = TAILS | WINGS | OWL;
+    /**
+     * 2.3.7 (the owner: "they're going to have one of each, both parents. If they're both ghouls, you get both halves"): a second tentacle,
+     * one from each Rinkaku parent (only with {@link #TAILS}).
+     */
+    public static final int TWIN = 16;
+    private static final int ALL = TAILS | WINGS | OWL | TWIN;
 
     private KaguneGenes() {
     }
@@ -44,13 +49,15 @@ public final class KaguneGenes {
     public static int inherit(int mother, int father) {
         int m = clean(mother);
         int f = clean(father);
+        // 2.3.7: two Rinkaku parents, a tentacle from each.
+        boolean twin = (m & TAILS) != 0 && (f & TAILS) != 0;
         if (m == NONE || m == f) {
-            return f;
+            return twin ? f | TWIN : f;
         }
         if (f == NONE) {
             return m;
         }
-        int both = m | f;
+        int both = m | f | (twin ? TWIN : 0);
         if ((both & WING) != 0 && (both & (TAILS | OWL)) != 0) {
             both &= ~PAIR;
         }
@@ -58,7 +65,7 @@ public final class KaguneGenes {
     }
 
     /** 2.0.6: the share of children of two kinds who take only their mother's kind (as many take only their father's; the rest both). */
-    public static final double ONE_KIND = 0.4;
+    public static final double ONE_KIND = 0.0; // 2.3.7: was 0.4 (2.0.6); now both parents' halves, always
 
     /**
      * 2.0.6 (the owner: kids should "have a chance to enherit both kagunes"; chosen 40/40/20): of two different kinds, {@code roll} in
@@ -97,11 +104,19 @@ public final class KaguneGenes {
         if ((out & PAIR) != 0) {
             out |= WING;
         }
+        if ((out & TAILS) == 0) {
+            out &= ~TWIN;
+        }
         return out;
     }
 
     public static boolean tails(int bits) {
         return bits > 0 && (bits & TAILS) != 0;
+    }
+
+    /** 2.3.7: how many Rinkaku tentacles: 0, 1, or 2 (one from each Rinkaku parent). */
+    public static int tentacles(int bits) {
+        return !tails(bits) ? 0 : (bits & TWIN) != 0 ? 2 : 1;
     }
 
     /** How many Ukaku wings: 0, 1 or 2. */

@@ -387,8 +387,14 @@ public final class FamilyTests {
         java.util.function.IntBinaryOperator inherit = com.hex.kagune.control.family.KaguneGenes::inherit;
         check(inherit.applyAsInt(wings, tails) == (tails | wing) && inherit.applyAsInt(tails, wings) == (tails | wing),
             "a Rinkaku father and an Ukaku mother: the tails and one wing (either way round)");
-        check(inherit.applyAsInt(wings, wings) == wings && inherit.applyAsInt(tails, tails) == tails && inherit.applyAsInt(owl, owl) == owl,
+        check(inherit.applyAsInt(wings, wings) == wings && inherit.applyAsInt(owl, owl) == owl,
             "two of the same kind: that kind whole (the pair of wings)");
+        // 2.3.7: two Rinkaku parents, a tentacle from each.
+        check(inherit.applyAsInt(tails, tails) == (tails | com.hex.kagune.control.family.KaguneGenes.TWIN)
+            && com.hex.kagune.control.family.KaguneGenes.tentacles(inherit.applyAsInt(tails, tails)) == 2
+            && com.hex.kagune.control.family.KaguneGenes.tentacles(tails) == 1 && com.hex.kagune.control.family.KaguneGenes.tentacles(wings) == 0
+            && com.hex.kagune.control.family.KaguneGenes.clean(wings | com.hex.kagune.control.family.KaguneGenes.TWIN) == wings,
+            "2.3.7: two Rinkaku parents: two tentacles, one from each (and never a second tentacle without the first)");
         check(inherit.applyAsInt(none, wings) == wings && inherit.applyAsInt(tails, none) == tails && inherit.applyAsInt(none, none) == none
             && inherit.applyAsInt(com.hex.kagune.control.family.KaguneGenes.UNKNOWN, owl) == owl, "a parent with none: the other's whole");
         check(inherit.applyAsInt(owl, tails) == (owl | tails) && inherit.applyAsInt(owl, wings) == (owl | wing), "Eto's child: her kagune and its father's (a wing alone)");
@@ -440,22 +446,22 @@ public final class FamilyTests {
         }
         check(same, "deciding the kagune changes nothing else a child of the same night would have been");
         check(mixed, "Touka and a Rinkaku father: her wings, his tail, or the tail and one wing; its colour from whose kind it took");
-        check(Math.abs(onlyMother / 2000.0 - 0.4) < 0.04 && Math.abs(onlyFather / 2000.0 - 0.4) < 0.04 && Math.abs(both / 2000.0 - 0.2) < 0.03,
-            "2.0.6: two kinds, 40% the mother's, 40% the father's, 20% both: " + onlyMother + "/" + onlyFather + "/" + both);
+        check(onlyMother == 0 && onlyFather == 0 && both == 2000,
+            "2.3.7 (the owner: \"one of each, both parents\"): two kinds, always both: " + onlyMother + "/" + onlyFather + "/" + both);
         check(both > 0 && Math.abs(fromMother / (double)both - 0.5) < 0.12, "with both, either parent's colour, evenly: " + fromMother + " of " + both);
         // 2.0.6: each pairing (a roll low, middle, high): the same kind or a parent with none never changes; two kinds by the roll.
         java.util.function.IntBinaryOperator low = (m, f) -> com.hex.kagune.control.family.KaguneGenes.inherit(m, f, 0.1);
         java.util.function.IntBinaryOperator middle = (m, f) -> com.hex.kagune.control.family.KaguneGenes.inherit(m, f, 0.5);
         java.util.function.IntBinaryOperator high = (m, f) -> com.hex.kagune.control.family.KaguneGenes.inherit(m, f, 0.9);
-        check(low.applyAsInt(wings, tails) == wings && middle.applyAsInt(wings, tails) == tails && high.applyAsInt(wings, tails) == (tails | wing),
-            "Touka x a Rinkaku player: her wings, his tail, or both");
+        check(low.applyAsInt(wings, tails) == (tails | wing) && middle.applyAsInt(wings, tails) == (tails | wing) && high.applyAsInt(wings, tails) == (tails | wing),
+            "Touka x a Rinkaku player: her wing and his tail, always (2.3.7)");
         check(low.applyAsInt(wings, wings) == wings && middle.applyAsInt(wings, wings) == wings && high.applyAsInt(wings, wings) == wings,
             "Touka x an Ukaku player: always wings (the owner's Ukaku-only children)");
         check(low.applyAsInt(wings, none) == wings && high.applyAsInt(none, wings) == wings, "Touka x a human player: always her wings");
-        check(low.applyAsInt(tails, wings) == tails && middle.applyAsInt(tails, wings) == wings && high.applyAsInt(tails, wings) == (tails | wing),
-            "Ken x an Ukaku player: his tail, the wings, or both");
-        check(low.applyAsInt(owl, tails) == owl && middle.applyAsInt(owl, tails) == tails && high.applyAsInt(owl, tails) == (owl | tails)
-            && high.applyAsInt(owl, wings) == (owl | wing), "Eto x a Rinkaku or Ukaku player: hers, theirs, or both");
+        check(low.applyAsInt(tails, wings) == (tails | wing) && middle.applyAsInt(tails, wings) == (tails | wing),
+            "Ken x an Ukaku player: his tail and a wing, always (2.3.7)");
+        check(low.applyAsInt(owl, tails) == (owl | tails) && middle.applyAsInt(owl, tails) == (owl | tails)
+            && high.applyAsInt(owl, wings) == (owl | wing), "Eto x a Rinkaku or Ukaku player: hers and theirs, always (2.3.7)");
         check(com.hex.kagune.control.family.KaguneGenes.colourOf(wings, wings, 0x111111, tails, 0x222222, 0x222222) == 0x111111
             && com.hex.kagune.control.family.KaguneGenes.colourOf(tails, wings, 0x111111, tails, 0x222222, 0x111111) == 0x222222
             && com.hex.kagune.control.family.KaguneGenes.colourOf(tails | wing, wings, 0x111111, tails, 0x222222, 0x222222) == 0x222222

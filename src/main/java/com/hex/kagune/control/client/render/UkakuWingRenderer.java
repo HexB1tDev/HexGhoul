@@ -347,10 +347,12 @@ public final class UkakuWingRenderer {
             com.hex.kagune.control.client.ChildClient.View kid = com.hex.kagune.control.client.ChildClient.get(child.m_19879_());
             com.hex.kagune.control.client.GhoulNpcClient.View seen = com.hex.kagune.control.client.GhoulNpcClient.get(child.m_19879_());
             int wings = kid == null ? 0 : com.hex.kagune.control.family.ChildKaguneRules.wingCount(kid.genome().kagune(), kid.genome().seed()); // 1.3.46
-            if (wings == 0 || seen == null || !child.m_6084_() || child.m_20145_() || child.m_5803_()) {
+            if (wings == 0 || !child.m_6084_() || child.m_20145_() || child.m_5803_()) {
                 continue;
             }
-            float deploy = com.hex.kagune.control.client.GhoulNpcClient.deploy(seen, clock);
+            // 2.3.7: shown whenever it fights (its kakugan out), even before its kagune's own state reaches this side.
+            float deploy = Math.max(seen == null ? 0.0F : com.hex.kagune.control.client.GhoulNpcClient.deploy(seen, clock), kid.turned() ? 1.0F : 0.0F);
+            boolean out = seen != null ? seen.out() : kid.turned();
             double distance = child.m_20280_(self);
             if (deploy <= 0.005F || distance > MAX_DISTANCE_SQR) {
                 continue;
@@ -367,7 +369,7 @@ public final class UkakuWingRenderer {
             double rightZ = -Math.sin(yaw);
             double[] eye = {-(rightX * x + rightZ * z) / size, -y / size, -(forwardX * x + forwardZ * z) / size};
             double[] aim = WingRig.FORWARD;
-            net.minecraft.world.entity.Entity prey = seen.prey() == 0 ? null : level.m_6815_(seen.prey());
+            net.minecraft.world.entity.Entity prey = seen == null || seen.prey() == 0 ? null : level.m_6815_(seen.prey());
             if (prey != null) {
                 double px = prey.f_19790_ + (prey.m_20185_() - prey.f_19790_) * partial - camera.f_82479_ - x;
                 double py = prey.f_19791_ + (prey.m_20186_() - prey.f_19791_) * partial + prey.m_20206_() * 0.52 - camera.f_82480_ - y - WingRig.ROOT_Y * size;
@@ -380,11 +382,11 @@ public final class UkakuWingRenderer {
             }
             float aimed = com.hex.kagune.control.client.GhoulNpcClient.aim(seen, clock);
             WingRig.Input input = com.hex.kagune.control.npc.WingRules.child(com.hex.kagune.control.family.ChildKaguneRules.wingMastery(kid.stage()), wings,
-                com.hex.kagune.control.family.ChildKaguneRules.wingSide(kid.genome().kagune(), kid.genome().seed()), deploy, time / 20.0, !seen.out(), aimed, aim,
+                com.hex.kagune.control.family.ChildKaguneRules.wingSide(kid.genome().kagune(), kid.genome().seed()), deploy, time / 20.0, !out, aimed, aim,
                 com.hex.kagune.control.client.GhoulNpcClient.kick(seen, 1, clock), com.hex.kagune.control.client.GhoulNpcClient.kick(seen, -1, clock),
                 distance > DETAIL_DISTANCE_SQR ? 0.3F : 1.0F,
                 com.hex.kagune.control.client.NpcWingsClient.crystal(com.hex.kagune.control.client.NpcWingsClient.get(child.m_19879_()), clock), // 1.3.48
-                com.hex.kagune.control.family.HalfBlood.kakuja(kid.genome(), kid.stage(), seen.out())); // 2.2.2: a grown half-human child's kakuja
+                com.hex.kagune.control.family.HalfBlood.kakuja(kid.genome(), kid.stage(), out)); // 2.2.2: a grown half-human child's kakuja
             List<WingRig.Quad> quads = WingRig.build(input, eye);
             if (quads.isEmpty()) {
                 continue;

@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.3.7 (HexGhoul): bubbles steady in bed; children's kagune shown, both parents' halves (testing)
+
+See `.github/release-notes-2.3.7.md`. Fixes: bubbles jumping over NPCs in bed, and children's kagune that couldn't be seen. Children now also have both parents' halves of the kagune.
+
 ## 2.3.6 (HexGhoul): endgame ghouls far tougher: more health, more resistance (testing)
 
 See `.github/release-notes-2.3.6.md`. Endgame ghouls are far tougher. Before, a player with mastery 1000, every quest done and 100+ ghoul meat eaten still had only 20 health and took about 46% of every blow with the kagune out, so a Rank 7 investigator could nearly one-shot them. Now every factor counts for more, the quests count too, and health grows.
