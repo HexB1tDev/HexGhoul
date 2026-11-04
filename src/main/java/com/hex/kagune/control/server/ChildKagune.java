@@ -110,7 +110,8 @@ final class ChildKagune {
         ChildStage stage = mind.stage == null ? child.stage(now) : mind.stage;
         double scale = ChildKaguneRules.scale(stage);
         int bits = genome.kagune();
-        float damage = ChildKaguneRules.damage(stage, child.skill, Children.might(level, child));
+        float damage = ChildKaguneRules.damage(stage, child.skill, Children.might(level, child))
+            * (genome != null && genome.half() ? com.hex.kagune.control.family.HalfBlood.DAMAGE : 1.0F); // 2.2.1
         if (!f.out) {
             f.out = true;
             f.outAt = now;

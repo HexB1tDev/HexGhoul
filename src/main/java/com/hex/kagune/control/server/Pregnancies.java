@@ -48,15 +48,17 @@ public final class Pregnancies {
         public long conceived;
         public String genome = "";
         public int alerted;
+        /** 2.2.1: where (a share of the term) a half-human pregnancy is lost ({@code HalfBlood}); -1 carried to term. */
+        public double lostAt = -1.0;
 
         String save() {
             return String.join("\t", this.mother, this.motherName, this.father, this.fatherName, Long.toString(this.conceived), this.genome,
-                Integer.toString(this.alerted));
+                Integer.toString(this.alerted), Double.toString(this.lostAt));
         }
 
         static Carried load(String line) {
             String[] p = line.split("\t", -1);
-            if (p.length != 7) {
+            if (p.length != 7 && p.length != 8) {
                 return null;
             }
             Carried c = new Carried();
@@ -68,6 +70,7 @@ public final class Pregnancies {
                 c.conceived = Long.parseLong(p[4]);
                 c.genome = p[5];
                 c.alerted = Integer.parseInt(p[6]);
+                c.lostAt = p.length == 8 ? Double.parseDouble(p[7]) : -1.0; // 2.2.1
             } catch (NumberFormatException bad) {
                 return null;
             }
@@ -155,6 +158,11 @@ public final class Pregnancies {
 
     /** She conceived tonight, by {@code father}: the child decided now. */
     public static void conceive(ServerLevel level, String mother, String motherName, String father, String fatherName, Genome genome) {
+        conceive(level, mother, motherName, father, fatherName, genome, -1.0);
+    }
+
+    /** 2.2.1: the same, a half-human child to be lost at {@code lostAt} of the term (-1: carried to term). */
+    public static void conceive(ServerLevel level, String mother, String motherName, String father, String fatherName, Genome genome, double lostAt) {
         if (pregnant(level, mother)) {
             return;
         }
@@ -165,6 +173,7 @@ public final class Pregnancies {
         c.fatherName = fatherName;
         c.conceived = level.m_46467_();
         c.genome = genome.save();
+        c.lostAt = lostAt;
         data(level).all.put(mother, c);
         data(level).m_77762_();
         sync(level, mother);
@@ -255,6 +264,10 @@ public final class Pregnancies {
                     }
                 }
             }
+            if (c.lostAt >= 0.0 && along >= c.lostAt) {
+                lost(level, c); // 2.2.1: a half-human child lost
+                continue;
+            }
             if (Pregnancy.due(c.conceived, now)) {
                 LivingEntity mother = body(level, c.mother);
                 if (mother != null && mother.m_9236_() instanceof ServerLevel there) {
@@ -271,6 +284,24 @@ public final class Pregnancies {
             case 1 -> "are heavy and tired. The baby is growing.";
             default -> "feel it: it's close now.";
         };
+    }
+
+    /** 2.2.1: a half-human pregnancy lost: over, and both told, gently. */
+    static void lost(ServerLevel level, Carried c) {
+        Data data = data(level);
+        data.all.remove(c.mother);
+        data.m_77762_();
+        LivingEntity mother = body(level, c.mother);
+        if (mother != null) {
+            ControlNetwork.broadcastAround(mother, new S2CPregnancy(mother.m_20148_(), Long.MIN_VALUE));
+        }
+        for (String who : new String[] {c.father, c.mother}) {
+            ServerPlayer player = playerOf(level, who);
+            if (player != null) {
+                player.m_5661_(net.minecraft.network.chat.Component.m_237113_("\u00a77" + (who.equals(c.mother) ? "You lost the baby." : c.motherName
+                    + " lost the baby.") + " A ghoul's child and a human's rarely lives. It isn't anyone's fault."), false);
+            }
+        }
     }
 
     /** The birth: the pregnancy over, the cutscene, the child. */

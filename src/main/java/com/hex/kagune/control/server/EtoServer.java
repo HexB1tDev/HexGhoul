@@ -967,12 +967,15 @@ public final class EtoServer {
         com.hex.kagune.control.family.Genome.Parent theirs = new com.hex.kagune.control.family.Genome.Parent(p.hair(), p.eyes(), p.skin(), true, p.oneEyed(),
             p.kagune(), p.kaguneColour()); // 1.3.43: and its kagune
         java.util.Random random = new java.util.Random(level.m_46467_() ^ player.m_20148_().getLeastSignificantBits());
+        // 2.2.1: a ghoul's and a human's child is most often lost (HalfBlood); its fate drawn after the child, so nothing else changes.
         if (p.female()) {
             com.hex.kagune.control.family.Genome genome = com.hex.kagune.control.family.Genome.of(theirs, Looks.parent(player), random);
-            Pregnancies.conceive(level, npcKey, npc.displayName(), playerKey, player.m_36316_().getName(), genome);
+            double lostAt = genome.half() ? com.hex.kagune.control.family.HalfBlood.lostAt(random.nextDouble(), random.nextDouble()) : -1.0;
+            Pregnancies.conceive(level, npcKey, npc.displayName(), playerKey, player.m_36316_().getName(), genome, lostAt);
         } else {
             com.hex.kagune.control.family.Genome genome = com.hex.kagune.control.family.Genome.of(Looks.parent(player), theirs, random);
-            Pregnancies.conceive(level, playerKey, player.m_36316_().getName(), npcKey, npc.displayName(), genome);
+            double lostAt = genome.half() ? com.hex.kagune.control.family.HalfBlood.lostAt(random.nextDouble(), random.nextDouble()) : -1.0;
+            Pregnancies.conceive(level, playerKey, player.m_36316_().getName(), npcKey, npc.displayName(), genome, lostAt);
         }
         return true;
     }

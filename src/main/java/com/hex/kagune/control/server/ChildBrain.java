@@ -147,6 +147,7 @@ public final class ChildBrain {
         }
         String key = npc.uniqueKey();
         Mind mind = npc.mind;
+        HalfBloodServer.tick(npc, now); // 2.2.1: a dash under way
         if (now % 100L == 7L && !child.genome().kaguneKnown()) {
             Children.genome(level, child); // 1.3.43: a child from before: its kagune worked out from its parents
             if (mind != null) {
@@ -209,6 +210,13 @@ public final class ChildBrain {
             npc.m_6210_();
             // 1.3.21: as strong as its parents: their might makes its health. 1.3.47: their health too (ChildRules.grownHealth).
             float most = ChildRules.health(stage, Children.might(level, child), Children.vitality(level, child));
+            com.hex.kagune.control.family.Genome born = Children.genome(level, child);
+            boolean half = born != null && born.half();
+            if (half) {
+                // 2.2.1: a ghoul's and a human's child: far harder to kill, and quicker.
+                most *= com.hex.kagune.control.family.HalfBlood.HEALTH;
+            }
+            npc.m_21051_(net.minecraft.world.entity.ai.attributes.Attributes.f_22279_).m_22100_(0.3 * (half ? com.hex.kagune.control.family.HalfBlood.SPEED : 1.0));
             float was = Math.max(1.0F, npc.m_21233_());
             float share = Math.max(0.0F, Math.min(1.0F, npc.m_21223_() / was));
             npc.m_21051_(net.minecraft.world.entity.ai.attributes.Attributes.f_22276_).m_22100_(most);
@@ -971,6 +979,10 @@ public final class ChildBrain {
         }
         // 1.3.43: a ghoul child with a kagune of its own fights with it (its tails, its wing or wings), as it was born to.
         com.hex.kagune.control.family.Genome genome = ghoul ? Children.genome(level, child) : null;
+        // 2.2.1: a ghoul's and a human's child dashes as the White Reaper does: into reach, or out of the way.
+        if (genome != null && genome.half()) {
+            HalfBloodServer.fight(npc, threat, level, now);
+        }
         if (ChildKagune.has(genome)) {
             mind.kaguneFought = true;
             ChildKagune.fight(npc, mind, child, genome, threat, level, now);
@@ -986,7 +998,9 @@ public final class ChildBrain {
         if (mind.lastHit == Long.MIN_VALUE || now - mind.lastHit >= ChildRules.cooldown(child.skill)) {
             mind.lastHit = now;
             npc.m_21011_(net.minecraft.world.InteractionHand.MAIN_HAND, true);
-            threat.m_6469_(npc.m_269291_().m_269333_(npc), ChildRules.damage(mind.stage, child.skill, ghoul, Children.might(level, child)));
+            com.hex.kagune.control.family.Genome born = Children.genome(level, child);
+            float half = born != null && born.half() ? com.hex.kagune.control.family.HalfBlood.DAMAGE : 1.0F; // 2.2.1
+            threat.m_6469_(npc.m_269291_().m_269333_(npc), ChildRules.damage(mind.stage, child.skill, ghoul, Children.might(level, child)) * half);
         }
     }
 

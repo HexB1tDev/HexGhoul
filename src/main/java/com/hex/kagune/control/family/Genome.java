@@ -9,7 +9,12 @@ import java.util.Random;
  * parent's; its skin between theirs; a seed for the rest of its looks. 1.3.43: its kagune ({@link KaguneGenes}: the kinds from both parents,
  * {@link KaguneGenes#UNKNOWN} for a child from before) and that kagune's colour (one parent's; -1 none or not known).
  */
-public record Genome(Gender gender, boolean ghoul, int kakugan, int hair, int eyes, int skin, long seed, int kagune, int colour) {
+public record Genome(Gender gender, boolean ghoul, int kakugan, int hair, int eyes, int skin, long seed, int kagune, int colour, boolean half) {
+    /** 2.2.1: as 1.3.43 made one: not half-human ({@link HalfBlood}). */
+    public Genome(Gender gender, boolean ghoul, int kakugan, int hair, int eyes, int skin, long seed, int kagune, int colour) {
+        this(gender, ghoul, kakugan, hair, eyes, skin, seed, kagune, colour, false);
+    }
+
     /** Its kakugan: none (human), its right eye, its left, or both. */
     public static final int NONE = 0;
     public static final int RIGHT = 1;
@@ -40,7 +45,7 @@ public record Genome(Gender gender, boolean ghoul, int kakugan, int hair, int ey
 
     /** 1.3.43: this genome with its kagune decided ({@code kagune} bits, {@code colour}). */
     public Genome withKagune(int kagune, int colour) {
-        return new Genome(this.gender, this.ghoul, this.kakugan, this.hair, this.eyes, this.skin, this.seed, kagune, colour);
+        return new Genome(this.gender, this.ghoul, this.kakugan, this.hair, this.eyes, this.skin, this.seed, kagune, colour, this.half);
     }
 
     public static Genome of(Parent mother, Parent father, Random random) {
@@ -63,7 +68,12 @@ public record Genome(Gender gender, boolean ghoul, int kakugan, int hair, int ey
             kagune = KaguneGenes.inherit(mother.kagune(), father.kagune(), random.nextDouble());
             colour = KaguneGenes.colourOf(kagune, mother.kagune(), mother.colour(), father.kagune(), father.colour(), colour);
         }
-        return new Genome(gender, ghoul, kakugan, hair, eyes, skin, seed, kagune, colour);
+        // 2.2.1 (drawn last of all, so everything before stays as it was): a ghoul's and a human's child is one-eyed, always.
+        boolean half = HalfBlood.half(mother, father);
+        if (half) {
+            kakugan = random.nextBoolean() ? RIGHT : LEFT;
+        }
+        return new Genome(gender, ghoul, kakugan, hair, eyes, skin, seed, kagune, colour, half);
     }
 
     public boolean oneEyed() {
@@ -89,7 +99,7 @@ public record Genome(Gender gender, boolean ghoul, int kakugan, int hair, int ey
 
     public String save() {
         return this.gender.ordinal() + "," + (this.ghoul ? 1 : 0) + "," + this.kakugan + "," + Integer.toHexString(this.hair) + "," + Integer.toHexString(this.eyes)
-            + "," + Integer.toHexString(this.skin) + "," + this.seed + "," + this.kagune + "," + this.colour;
+            + "," + Integer.toHexString(this.skin) + "," + this.seed + "," + this.kagune + "," + this.colour + (this.half ? ",1" : "");
     }
 
     /** 1.3.43: true once its kagune is decided (a child from before has it worked out from its parents). */
@@ -103,15 +113,16 @@ public record Genome(Gender gender, boolean ghoul, int kakugan, int hair, int ey
             return null;
         }
         String[] p = saved.split(",");
-        if (p.length != 7 && p.length != 9) {
+        if (p.length != 7 && p.length != 9 && p.length != 10) {
             return null;
         }
         try {
             // 1.3.43: one saved before its kagune was decided has seven parts: its kagune not known yet.
-            int kagune = p.length == 9 ? Integer.parseInt(p[7]) : KaguneGenes.UNKNOWN;
-            int colour = p.length == 9 ? Integer.parseInt(p[8]) : -1;
+            int kagune = p.length >= 9 ? Integer.parseInt(p[7]) : KaguneGenes.UNKNOWN;
+            int colour = p.length >= 9 ? Integer.parseInt(p[8]) : -1;
+            boolean half = p.length == 10 && "1".equals(p[9]); // 2.2.1
             return new Genome(Gender.byOrdinal(Integer.parseInt(p[0])), "1".equals(p[1]), Integer.parseInt(p[2]), Integer.parseInt(p[3], 16),
-                Integer.parseInt(p[4], 16), Integer.parseInt(p[5], 16), Long.parseLong(p[6]), kagune, colour);
+                Integer.parseInt(p[4], 16), Integer.parseInt(p[5], 16), Long.parseLong(p[6]), kagune, colour, half);
         } catch (NumberFormatException bad) {
             return null;
         }

@@ -27,7 +27,37 @@ public final class FamilyTests {
         }
     }
 
+    /** 2.2.1: a ghoul's and a human's child: most lost, the one that lives one-eyed with the ghoul parent's kagune, kept in its genome. */
+    static void halfBlood() {
+        com.hex.kagune.control.family.Genome.Parent ghoul = new com.hex.kagune.control.family.Genome.Parent(0x223344, 0x445566, 0xEEDDCC, true, false,
+            com.hex.kagune.control.family.KaguneGenes.TAILS, 0xAA2222);
+        com.hex.kagune.control.family.Genome.Parent human = new com.hex.kagune.control.family.Genome.Parent(0x553311, 0x335577, 0xFFE0C0, false, false);
+        int lost = 0;
+        for (long seed = 0; seed < 2000; seed++) {
+            java.util.Random random = new java.util.Random(seed);
+            com.hex.kagune.control.family.Genome child = com.hex.kagune.control.family.Genome.of(seed % 2 == 0 ? ghoul : human, seed % 2 == 0 ? human : ghoul, random);
+            check(child.half() && child.ghoul() && child.oneEyed() && child.kagune() == com.hex.kagune.control.family.KaguneGenes.TAILS,
+                "a ghoul's and a human's child: a one-eyed ghoul with the ghoul parent's kagune whole");
+            com.hex.kagune.control.family.Genome back = com.hex.kagune.control.family.Genome.load(child.save());
+            check(back != null && back.equals(child), "kept as it is through the save");
+            double at = com.hex.kagune.control.family.HalfBlood.lostAt(random.nextDouble(), random.nextDouble());
+            if (at >= 0.0) {
+                lost++;
+                check(at >= com.hex.kagune.control.family.HalfBlood.LOST_FROM && at <= com.hex.kagune.control.family.HalfBlood.LOST_TO, "lost in the first half");
+            }
+        }
+        check(lost > 1300 && lost < 1500, "seven in ten are lost: " + lost + " of 2000");
+        com.hex.kagune.control.family.Genome two = com.hex.kagune.control.family.Genome.of(ghoul, ghoul, new java.util.Random(4));
+        com.hex.kagune.control.family.Genome none = com.hex.kagune.control.family.Genome.of(human, human, new java.util.Random(4));
+        check(!two.half() && !none.half() && !none.ghoul(), "two ghouls' child, two humans': not half-human");
+        com.hex.kagune.control.family.Genome old = com.hex.kagune.control.family.Genome.load("0,1,1,ff,ff,ff,5,1,255");
+        check(old != null && !old.half(), "a child from before is not half-human");
+        check(com.hex.kagune.control.family.HalfBlood.HEALTH > 1.4F && com.hex.kagune.control.family.HalfBlood.DAMAGE > 1.3F
+            && com.hex.kagune.control.family.HalfBlood.SPEED > 1.2, "far stronger, harder to kill, quicker");
+    }
+
     public static void main(String[] args) throws java.io.IOException {
+        halfBlood();
         genders();
         strangers();
         body();
@@ -1039,8 +1069,10 @@ check(com.hex.kagune.control.graft.GraftStage.TRANSPLANT.limbs(com.hex.kagune.co
         boolean between = true;
         boolean ghouls = true;
         boolean roundTrip = true;
+        // 2.2.1: a ghoul's and a human's child is always one-eyed (HalfBlood): the chance of one kakugan is a one-eyed ghoul parent's with a
+        // ghoul's (two ghouls), as it always was.
         for (int i = 0; i < n; i++) {
-            com.hex.kagune.control.family.Genome child = com.hex.kagune.control.family.Genome.of(eto, human, random);
+            com.hex.kagune.control.family.Genome child = com.hex.kagune.control.family.Genome.of(eto, ghoul, random);
             ghouls &= child.ghoul() && child.kakugan() != com.hex.kagune.control.family.Genome.NONE;
             one += child.oneEyed() ? 1 : 0;
             girls += child.gender() == Gender.FEMALE ? 1 : 0;
@@ -1058,7 +1090,7 @@ check(com.hex.kagune.control.graft.GraftStage.TRANSPLANT.limbs(com.hex.kagune.co
         boolean neverOne = true;
         boolean humans = true;
         for (int i = 0; i < 500; i++) {
-            neverOne &= !com.hex.kagune.control.family.Genome.of(ghoul, human, random).oneEyed();
+            neverOne &= !com.hex.kagune.control.family.Genome.of(ghoul, ghoul, random).oneEyed(); // 2.2.1: two ghouls (a half-human child is one-eyed)
             com.hex.kagune.control.family.Genome both = com.hex.kagune.control.family.Genome.of(human, human, random);
             humans &= !both.ghoul() && both.kakugan() == com.hex.kagune.control.family.Genome.NONE;
         }
