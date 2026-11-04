@@ -52,10 +52,13 @@ public final class RinkakuRibbon {
     /** How see-through its skin is at the most (seen edge-on): enough that the veins on its far side show faintly through. */
     public static final double CLEAREST = 0.78;
     /** Its veins: how many run along it, how far out from its middle (of its size: just over its skin, under its markings), how wide. */
-    public static final int VEINS = 4;
+    public static final int VEINS = 6;
     public static final double VEIN_LIFT = 1.009;
-    public static final double VEIN_CORE = 0.008;
-    public static final double VEIN_SOFT = 0.026;
+    public static final double VEIN_CORE = 0.011;
+    public static final double VEIN_SOFT = 0.04;
+    /** 2.0.50 (the owner: "More veins, and more glow"): the wide faint aura round the main veins and the spines, and its alpha. */
+    public static final double VEIN_AURA = 0.085;
+    public static final double AURA_ALPHA = 0.13;
 
     /** One quad of a vein: its corners and its colours (ARGB, glowing: drawn at full brightness). */
     public record Glow(double[][] corners, int[] argb) {
@@ -67,7 +70,7 @@ public final class RinkakuRibbon {
      * and {@code glint} of the light's sheen; and how clear its skin is there. ARGB.
      */
     public static int surface(int base, int[] colours, double t, double facing, double glint) {
-        int c = mix(base, colours[4], 0.42 * (1.0 - smooth(t / 0.16)));
+        int c = mix(base, colours[4], 0.55 * (1.0 - smooth(t / 0.22))); // 2.0.50: a hotter root, glowing further out
         c = mix(c, colours[1], 0.4 * smooth((t - 0.78) / 0.22));
         double alpha = 1.0;
         if (facing >= 0.0) {
@@ -94,15 +97,24 @@ public final class RinkakuRibbon {
         double total = Math.max(1.0E-6, mesh.along()[rings - 1]);
         for (int v = 0; v < VEINS; v++) {
             double start = 2.0 * Math.PI * v / VEINS + 0.4 + (seed % 7) * 0.13;
-            vein(out, mesh, seed * 13 + v, start, 0.03, 0.9 - 0.05 * (v % 2), 0.0, total, time);
-            double fork = 0.3 + 0.17 * v;
-            vein(out, mesh, seed * 13 + v + 50, start, fork, Math.min(0.88, fork + 0.32), v % 2 == 0 ? 1.2 : -1.2, total, time);
+            vein(out, mesh, seed * 13 + v, start, 0.03, 0.92 - 0.04 * (v % 3), 0.0, total, time, true);
+            double fork = 0.22 + 0.1 * v;
+            vein(out, mesh, seed * 13 + v + 50, start, fork, Math.min(0.9, fork + 0.34), v % 2 == 0 ? 1.1 : -1.1, total, time, false);
+            if (v % 2 == 0) {
+                // 2.0.50: half of them fork again further out.
+                double second = Math.min(0.75, fork + 0.24);
+                vein(out, mesh, seed * 13 + v + 90, start, second, Math.min(0.93, second + 0.22), v % 4 == 0 ? -1.3 : 1.3, total, time, false);
+            }
+        }
+        // 2.0.50: a glowing spine down the middle of each broad face, wandering little (the light from inside it).
+        for (int face = 0; face < 2; face++) {
+            vein(out, mesh, seed * 13 + 200 + face, face == 0 ? Math.PI / 2.0 : -Math.PI / 2.0, 0.02, 0.95, 0.0, total, time, true);
         }
         return out;
     }
 
     private static void vein(java.util.List<Glow> out, Mesh mesh, int seed, double start, double from, double to, double veer, double total,
-                             double time) {
+                             double time, boolean aura) {
         int rings = mesh.at().length;
         int steps = Math.max(3, (int)Math.round((to - from) * (rings - 1) * 1.2));
         double[][] previous = null;
@@ -119,23 +131,33 @@ public final class RinkakuRibbon {
             double deep = mesh.deep()[k] + (mesh.deep()[k + 1] - mesh.deep()[k]) * f;
             double along = (t - from) / Math.max(1.0E-6, to - from);
             double s = t * total;
-            double theta = start + veer * along + 0.45 * Math.sin(s * 4.5 + seed * 1.3) + 0.1 * Math.sin(s * 13.0 + seed);
+            // The spines (straight down a broad face's middle) wander little; the others more.
+            double wander = Math.abs(Math.abs(start) - Math.PI / 2.0) < 1.0E-9 && veer == 0.0 ? 0.12 : 0.45;
+            double theta = start + veer * along + wander * Math.sin(s * 4.5 + seed * 1.3) + 0.1 * Math.sin(s * 13.0 + seed);
             double cw = Math.cos(theta);
             double sn = Math.sin(theta);
             double[] p = {centre[0] + (w[0] * cw * half + n[0] * sn * deep) * VEIN_LIFT, centre[1] + (w[1] * cw * half + n[1] * sn * deep) * VEIN_LIFT,
                 centre[2] + (w[2] * cw * half + n[2] * sn * deep) * VEIN_LIFT};
             double[] across = normalize(new double[] {-w[0] * sn * half + n[0] * cw * deep, -w[1] * sn * half + n[1] * cw * deep,
                 -w[2] * sn * half + n[2] * cw * deep});
-            double fade = smooth(along / 0.15) * (1.0 - smooth((along - 0.78) / 0.22)) * (veer != 0.0 ? 0.75 : 1.0);
-            // A pulse of RC flowing out from the root: a bright band travelling along every vein.
-            double pulse = 0.6 + 0.4 * Math.pow(Math.max(0.0, Math.sin(s * 3.2 - time * 0.42)), 3.0);
-            double size = Math.max(0.2, Math.min(1.0, half * 6.0));
+            double fade = smooth(along / 0.12) * (1.0 - smooth((along - 0.8) / 0.2)) * (veer != 0.0 ? 0.8 : 1.0);
+            // A pulse of RC flowing out from the root: a bright band travelling along every vein (2.0.50: brighter).
+            double pulse = 0.72 + 0.5 * Math.pow(Math.max(0.0, Math.sin(s * 3.2 - time * 0.42)), 3.0);
+            double size = Math.max(0.25, Math.min(1.0, half * 6.0));
             double soft = VEIN_SOFT * size * (0.4 + 0.6 * fade);
             double core = VEIN_CORE * size * (0.4 + 0.6 * fade);
-            double[][] now = {add(p, across, soft), add(p, across, core), add(p, across, -core), add(p, across, -soft)};
+            double wide = VEIN_AURA * size * (0.4 + 0.6 * fade);
+            double[][] now = {add(p, across, soft), add(p, across, core), add(p, across, -core), add(p, across, -soft), add(p, across, wide),
+                add(p, across, -wide)};
             int glow = mesh.glow();
-            int[] colour = {argb(glow, 0.28 * fade * pulse), argb(mix(glow, 0xFFFFFFFF, 0.22 * pulse), 0.8 * fade * pulse)};
+            int[] colour = {argb(glow, Math.min(1.0, 0.34 * fade * pulse)), argb(mix(glow, 0xFFFFFFFF, Math.min(1.0, 0.3 * pulse)),
+                Math.min(1.0, 0.95 * fade * pulse)), argb(glow, Math.min(1.0, AURA_ALPHA * fade * pulse))};
             if (previous != null) {
+                if (aura) {
+                    // 2.0.50: the wide faint aura first, under the rest.
+                    out.add(new Glow(new double[][] {previous[4], now[4], now[5], previous[5]},
+                        new int[] {previousColour[2], colour[2], colour[2], previousColour[2]}));
+                }
                 // The soft glow either side, then the bright core over it.
                 out.add(new Glow(new double[][] {previous[0], now[0], now[3], previous[3]},
                     new int[] {previousColour[0], colour[0], colour[0], previousColour[0]}));
@@ -168,13 +190,24 @@ public final class RinkakuRibbon {
         return unit(v, new double[] {0.0, 1.0, 0.0});
     }
 
-    /** Its width (of its widest) {@code t} along it (0 its root .. 1 its point): a swell past the back, a long taper to a point. */
+    /**
+     * 2.0.50 (the owner: "Make the rinkaku shape more thin closer to the emergence area", with a drawing: a leaf, a point where it leaves
+     * the body, broadest near its far end): how wide it is {@code t} along it (0 its root .. 1 its end), of its thickness: {@link #ROOT_WIDTH}
+     * of its broadest where it leaves the body, widening all the way to {@link #BROADEST} along, then a short rounded end.
+     */
     public static double profile(double t) {
         double c = Math.max(0.0, Math.min(1.0, t));
-        double swell = 0.84 + 0.22 * Math.sin(Math.PI * Math.min(1.0, c / 0.55) * 0.5);
-        double taper = c < 0.5 ? 1.0 : 1.0 - Math.pow((c - 0.5) / 0.5, 1.7);
-        return Math.max(0.0, swell * taper);
+        if (c <= BROADEST) {
+            return PEAK * (ROOT_WIDTH + (1.0 - ROOT_WIDTH) * Math.pow(c / BROADEST, 0.9));
+        }
+        double x = (c - BROADEST) / (1.0 - BROADEST);
+        return PEAK * Math.sqrt(Math.max(0.0, 1.0 - x * x));
     }
+
+    /** 2.0.50: where it is broadest (of its length), how broad (of its thickness), and how much of that it has at its root. */
+    public static final double BROADEST = 0.78;
+    public static final double PEAK = 1.15;
+    public static final double ROOT_WIDTH = 0.25;
 
     /**
      * How dark it is at {@code across} (-1 one edge .. 1 the other, through the middle of a face), on its {@code back} face or not,

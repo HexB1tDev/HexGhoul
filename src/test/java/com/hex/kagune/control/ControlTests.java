@@ -214,8 +214,24 @@ public final class ControlTests {
             int[] p = RinkakuRibbon.palette(colour);
             check(KaguneColours.toHsv(p[1] & 0xFFFFFF)[2] < KaguneColours.toHsv(p[0] & 0xFFFFFF)[2], "its edges deeper than its heart: " + Integer.toHexString(colour));
         }
-        check(RinkakuRibbon.profile(1.0) == 0.0 && RinkakuRibbon.profile(0.4) > RinkakuRibbon.profile(0.0) && RinkakuRibbon.profile(0.9) < RinkakuRibbon.profile(0.5),
-            "it swells past the back and tapers to a point");
+        // 2.0.50 (the owner's drawing): thin where it leaves the body, broadest near its far end, a short rounded end.
+        check(RinkakuRibbon.profile(1.0) == 0.0, "it ends");
+        check(RinkakuRibbon.profile(0.0) < RinkakuRibbon.profile(RinkakuRibbon.BROADEST) * 0.3, "thin where it leaves the body");
+        boolean widening = true;
+        for (double t = 0.02; t <= RinkakuRibbon.BROADEST; t += 0.02) {
+            widening &= RinkakuRibbon.profile(t) > RinkakuRibbon.profile(t - 0.02);
+        }
+        check(widening, "widening all the way out to its broadest");
+        double broadest = 0.0;
+        double where = 0.0;
+        for (double t = 0.0; t <= 1.0; t += 0.005) {
+            if (RinkakuRibbon.profile(t) > broadest) {
+                broadest = RinkakuRibbon.profile(t);
+                where = t;
+            }
+        }
+        check(where > 0.7 && where < 0.85, "broadest near its far end (" + where + ")");
+        check(RinkakuRibbon.profile(0.97) > RinkakuRibbon.profile(0.5) * 0.4, "its end rounded, not drawn out to a needle");
         check(RinkakuRibbon.WIDE > RinkakuRibbon.THIN * 1.5, "a broad, flat ribbon");
         check(RinkakuRibbon.shade(0.0, false, 0.0, 0) < RinkakuRibbon.shade(1.0, false, 0.0, 0), "darker at its edges");
         double[][] path = new double[30][];
@@ -254,6 +270,13 @@ public final class ControlTests {
         RinkakuRibbon.Mesh seen = RinkakuRibbon.build(path, 0.22, KaguneColours.DEFAULT, 7, new double[] {0.0, 1.0, -30.0});
         java.util.List<RinkakuRibbon.Glow> veins = RinkakuRibbon.veins(seen, 7, 40.0);
         check(veins.size() > RinkakuRibbon.VEINS * 4, "veins run along it, forked");
+        check(RinkakuRibbon.VEINS >= 6 && RinkakuRibbon.VEIN_SOFT > 0.03 && RinkakuRibbon.VEIN_AURA > RinkakuRibbon.VEIN_SOFT,
+            "2.0.50: more veins, a wider glow, an aura round them");
+        int bright = 0;
+        for (RinkakuRibbon.Glow g : veins) {
+            bright = Math.max(bright, g.argb()[0] >>> 24);
+        }
+        check(bright > 220, "their cores burn bright (" + bright + ")");
         boolean glowing = true;
         for (RinkakuRibbon.Glow g : veins) {
             for (int argb : g.argb()) {

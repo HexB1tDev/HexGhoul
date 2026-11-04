@@ -51,7 +51,7 @@ public final class KaguneShowcase {
             new Shot("crimson, three-quarter behind", 0xA50F37, 140, 10, 6.6, 1.5, true, true),
             new Shot("crimson, from the side", 0xA50F37, 90, 6, 6.6, 1.5, true, true),
             new Shot("crimson, from the front", 0xA50F37, 20, 6, 6.6, 1.5, true, true),
-            new Shot("a tail up close: chevrons, stripe, veins", 0xA50F37, 0, 0, 0, 0, true, true),
+            new Shot("a tail up close: its scales and veins", 0xA50F37, 0, 0, 0, 0, true, true),
             new Shot("the mark as they tear out (tails hidden)", 0xA50F37, 180, 4, 2.1, 1.0, false, true),
             new Shot("blue", 0x1E50D8, 150, 12, 6.6, 1.5, true, true),
             new Shot("purple", 0x7A1FB8, 150, 12, 6.6, 1.5, true, true),
@@ -93,8 +93,10 @@ public final class KaguneShowcase {
         pose.rightLegX = -0.1F;
         pose.leftLegX = 0.1F;
         PoseRender.armOut = s.build ? ReaperBuild.ARM_OUT : 0.0;
-        PoseRender.Camera cam = s.label.startsWith("a tail up close")
-            ? new PoseRender.Camera(new double[] {2.5, 2.7, -2.5}, new double[] {1.0, 2.25, -0.95}, 34)
+        closeUp = s.label.startsWith("a tail up close");
+        // The close-up: square on the broad far end of the upper left tail, where its scales are biggest.
+        PoseRender.Camera cam = closeUp
+            ? new PoseRender.Camera(new double[] {1.7, 3.3, -2.3}, new double[] {1.0, 2.75, -0.7}, 30)
             : PoseRender.orbit(s.yaw, s.pitch, s.distance, s.target);
         PoseRender.Canvas canvas = new PoseRender.Canvas(w, h, 2, cam, night ? 0x10141C : 0x3A4450);
         canvas.floor(6, night ? 0x1E232B : 0x58626C, night ? 0x1A1F27 : 0x4E5862);
@@ -168,6 +170,8 @@ public final class KaguneShowcase {
         return RinkakuRoot.attach(even, limb, 0.0, 1.8);
     }
 
+    static boolean closeUp;
+
     static void drawTail(PoseRender.Canvas canvas, RigPose pose, int limb, int colour, PoseRender.Camera cam, double dark) {
         double[][] own = path(limb);
         // Into PoseRender's world (x to his left), riding his torso where his pose has carried it.
@@ -207,7 +211,7 @@ public final class KaguneShowcase {
         }
         // Its markings, a hair outside it, from the texture (black stays black, white is its light colour).
         double[][][] over = RinkakuRibbon.over(m);
-        int cuts = 6;
+        int cuts = closeUp ? 24 : 10;
         for (int r = 0; r < rings - 1; r++) {
             for (int k = 0; k < sides; k++) {
                 double ua = RinkakuRibbon.u(k), ub = RinkakuRibbon.u(k + 1);

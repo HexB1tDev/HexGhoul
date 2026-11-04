@@ -21,10 +21,10 @@ import org.joml.Matrix4f;
 
 /**
  * 2.0.39 (the owner: "change the texture to match the reference picture on the tail"): a Rinkaku tail as the owner's picture has it: a
- * broad, flat ribbon (wider than it is thick, {@link #WIDE}, {@link #THIN}), swelling a little from the back then tapering to a point,
- * crimson at the middle of each face darkening to deep maroon at its edges, with dark smudges along it ({@link #shade}); over it the
- * markings ({@code tools/rinkaku_scales.py}): thin chevrons black and light all over it, pointing back toward the body, and a light stripe
- * along each face near one edge. Every colour is the tail's own kagune colour's (its palette turned to it, {@code KaguneTint}).
+ * broad, flat ribbon (wider than it is thick; 2.0.50: thin where it leaves the back, broadest near its far end, a rounded end), crimson
+ * at the middle of each face darkening to deep maroon at its edges, with dark smudges along it; over it the markings
+ * ({@code tools/rinkaku_scales.py}; 2.0.50: overlapping keeled scales, each with a lit rim and the shadow of its edge, where thin chevrons
+ * were) and a faint light stripe along each face near one edge. Every colour is the tail's own kagune colour's ({@code KaguneTint}).
  *
  * <p>Drawn in two passes: the ribbon at once into the original's own buffer (a white texel tinted per vertex, as before), and the
  * markings a hair outside it, kept until after every tail is drawn ({@link #render}): switching buffers in the middle of the original's

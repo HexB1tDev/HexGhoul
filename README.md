@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.0.50 (HexGhoul): Rinkaku scales, leaf shape and more glow (testing)
+
+See `.github/release-notes-2.0.50.md`. The Rinkaku tails are reworked as asked: realistic scales, thin where they leave the body, and more glowing veins.
+
 ## 2.0.49 (HexGhoul): the White Reaper fights as a tactician (testing)
 
 See `.github/release-notes-2.0.49.md`. The White Reaper fights as a tactician. Each fight he reads his opponent and picks a play ahead of the moves every investigator has: a backflip launched as Up We Go launches one, firing the volley from mid-air; closing in on openings; vaulting over a guard; shooting a target out of the air.
