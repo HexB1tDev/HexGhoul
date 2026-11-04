@@ -1,10 +1,10 @@
-# HANDOFF: HexGhoul after 2.0.45. Read this first, then `docs/handoff/next-ai-2.0.36.md` (2.0.27 to 2.0.36 and what to ask the owner),
+# HANDOFF: HexGhoul after 2.0.45 (updated through 2.0.49: see "Since 2.0.45" below). Read this first, then `docs/handoff/next-ai-2.0.36.md` (2.0.27 to 2.0.36 and what to ask the owner),
 `docs/handoff/next-ai-2.0.21.md`, `docs/handoff/next-ai-2.0.9.md`, `docs/handoff/next-ai-2.0.5.md` (how the owner works),
 `docs/handoff/next-ai-1.3.60.md` (house rules), then the top sections of `docs/handoff/companions-handoff.md` (one per version, newest first).
 
 Branch **`claude/loving-albattani-xld4zv`** (push only to the branch the session is given). Never push to `main`; no PR unless asked.
-Version **2.0.45** in `build.py` and `patch/KagunePatch.java`; the next is **2.0.46**. Protocol **"78"** (`ControlNetwork.PROTOCOL`; 2.0.42
-added `S2CRinkakuBlock`, message id 48, and `C2SUkakuAction.BLOCK`). Nothing is tested in game.
+Version **2.0.49** in `build.py` and `patch/KagunePatch.java`; the next is **2.0.50**. Protocol **"80"** (`ControlNetwork.PROTOCOL`; 2.0.42
+added `S2CRinkakuBlock`, message id 48, and `C2SUkakuAction.BLOCK`; 2.0.48 `S2CUkakuFx.DAWN_RING`; 2.0.49 `CcgAgent.SOARING` on the flip). Nothing is tested in game.
 
 ## The owner's requests since 2.0.36 (their words, trimmed)
 
@@ -54,6 +54,41 @@ Reaper always leaves his case (Dawn) to a player who kills him (2.0.32), and Daw
 - **2.0.45** the White Reaper's build (`npc/ReaperBuild`, the `Build` layer in `AgentRenderer`): his upper torso drawn again over his own,
   broader and about 1 px out in front, tapering into his waist, in his own skin and its jacket layer. His arms are set 0.75 px out while he
   is drawn (`AgentModel.brawny`/`settle`; the model is shared with other investigators).
+
+## Since 2.0.45
+
+The owner asked:
+
+> "whenever the player model picks male, I want you to give the same model as [the White Reaper] in terms of the muscle. And show me the new
+> kagunes."
+>
+> "I want [the White Reaper] to be ... a little tech, a bit more of a tactician ... make his [lance] a little bigger. It's too small. And a
+> little smoother ... It's [IXA] ... shoot, like ... 5 at once in front of him. Like, all emerging from the same point and then separating
+> into, like, a circle ... backflip with the mutation thing that makes him backflip higher ... midair, start shooting lightning balls ...
+> get close when he sees an opportunity. It should be the pinnacle of combat in this mod."
+
+- **2.0.46** male players get the Reaper's build:
+  - `BuildLayer`; arms set out in `KaguneBodyAnimation.get3DTransform`;
+  - hidden under a chestplate and torso armour forms;
+  - the Rinkaku mark lies on the broader back (`ReaperBuild.back`).
+- The owner was sent `docs/handoff/kagune-showcase-2.0.46.png` (new `tools/KaguneShowcase.java`: the game's own ribbon mesh, markings,
+  veins and mark on a body, at the real tail thickness of 0.18 + 3.5e-5 per mastery point, times appearance 0.6, times the per-tail
+  scale).
+- **2.0.47** Dawn bigger (hand scale 0.9) with a thicker 16-sided spike. `Quinque.DAWN_TIP` = 2.1 is where its shots leave.
+- **2.0.48** the five-ball volley (`quinque/DawnVolley`: open into a flattened ring, close on the aimed point; `CrystalShots.volley`;
+  FX `DAWN_RING`).
+- **2.0.49** the tactician (`npc/ReaperTactics`, plus `AgentBrain.tactics`, `soar` and `release`):
+  - **soar**: an Up We Go backflip, about 5 up and 5 back, then the volley from the apex;
+  - **punish** openings;
+  - **vault** over guards;
+  - **sky shot** at targets in the air;
+  - every shot leads its target.
+
+Previews: `dawn-bigger-2.0.47.png`, `dawn-aim-2.0.47.png`, `dawn-volley-2.0.48.png`, `reaper-soar-2.0.49.png`, `male-build-2.0.46.png`.
+
+Ask the owner:
+- whether the Reaper is now too hard or too easy (soar every 5 s at most, punishes, sky shots every 2.3 s, 5 balls at 40% each);
+- "Dawn drops" (still unanswered).
 
 ## How it was checked
 
