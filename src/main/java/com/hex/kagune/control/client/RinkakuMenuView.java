@@ -184,9 +184,7 @@ public final class RinkakuMenuView {
         row(c, t, "K tap", "Strongest half kakuja", x, y + 80);
         row(c, t, "K hold", model.king().chosen() == KingForm.NONE ? "Final kakuja (after the Dragon)" : model.king().chosen().displayName(), x, y + 98);
         c.text("Half kakujas: Centipede (750), Full Kakuja (1000)", x, y + 122, t.trait(), false);
-        c.text("Full Kakuja, sprint: vanish into the wind 5 s", x, y + 138, t.muted(), false);
-        c.text("(attacking ends it; 30 s cooldown)", x, y + 152, t.faint(), false);
-        c.text("Right click: dash (S held: back)", x, y + 168, t.muted(), false);
+        c.text("Full Kakuja, right click: dash (S held: back)", x, y + 138, t.muted(), false); // 2.1.7: no vanish
 
         button(c, t, hits, "eyes", "ADJUST KAKUGAN", x, y + 200, 220, mouseX, mouseY, time);
 

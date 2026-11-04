@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.1.7 (HexGhoul): the Reaper's dashes for Ukaku's final kakuja (testing)
+
+See `.github/release-notes-2.1.7.md`. Ukaku's final kakuja gets the White Reaper's dashes: tap sprint twice to dash the way you're moving. You have 3 charges, the action bar shows "Dash 2/3" as one is spent, and one comes back every 5 seconds until you're at 3/3 again. No kakuja vanishes any more. Also, after each release, only the 5 newest releases and the 5 newest action runs are kept.
+
 ## 2.1.6 (HexGhoul): Rinkaku tails no longer swing across on their way back (testing)
 
 See `.github/release-notes-2.1.6.md`. Fix: Rinkaku tails no longer swing across the back after an attack or when the kagune comes out. Each tail's rest spot was on the opposite side from where the original's own motion carries that tail. So every time a tail eased back into rest (after a blow, when transforming), it crossed over to the other side, which looked like the tails rotating or swapping. Once it settled the picture looked right, because the rest shape is symmetric. The kagune's model, shape and rest position are unchanged. Each tail now rests on its own side.

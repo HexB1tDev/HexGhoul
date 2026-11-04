@@ -40,6 +40,8 @@ public final class UkakuInput {
     private static final int GATLING_RESEND_TICKS = 4;
     /** K being timed. */
     private static final KakujaKey KAKUJA_KEY = new KakujaKey();
+    /** 2.1.7: the sprint key's presses (a double tap is the White Reaper's dash in the final kakuja). */
+    private static final com.hex.kagune.control.ReaperDash.Taps SPRINT_TAPS = new com.hex.kagune.control.ReaperDash.Taps();
 
     private UkakuInput() {
     }
@@ -112,6 +114,30 @@ public final class UkakuInput {
             armed = true;
         }
         gatling(minecraft);
+        reaperDash(minecraft);
+    }
+
+    /**
+     * 2.1.7: the sprint key tapped twice in Ukaku's final kakuja: the White Reaper's dash, the way they are moving (W, S, A, D and between;
+     * none, the way they look). The server keeps the charges and checks the form.
+     */
+    private static void reaperDash(Minecraft minecraft) {
+        LocalPlayer player = minecraft.f_91074_;
+        if (player == null || minecraft.f_91066_ == null || minecraft.f_91073_ == null) {
+            return;
+        }
+        boolean down = minecraft.f_91080_ == null && minecraft.f_91066_.f_92091_.m_90857_();
+        if (!SPRINT_TAPS.tick(down, minecraft.f_91073_.m_46467_())) {
+            return;
+        }
+        KaguneClientState.View view = KaguneClientState.self();
+        if (PathClient.get(player) != KagunePath.UKAKU || !view.unlocked() || !view.active() || !UkakuClient.finalKakuja(player)) {
+            return;
+        }
+        net.minecraft.client.player.Input input = player.f_108618_;
+        double[] way = com.hex.kagune.control.ReaperDash.direction(player.m_146908_(), input == null ? 0.0 : input.f_108567_,
+            input == null ? 0.0 : input.f_108566_);
+        ControlNetwork.CHANNEL.sendToServer(new C2SUkakuAction(C2SUkakuAction.REAPER_DASH, com.hex.kagune.control.ReaperDash.encode(way)));
     }
 
     /**

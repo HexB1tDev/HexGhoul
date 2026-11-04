@@ -425,6 +425,10 @@ public final class UkakuServer {
             }
             return;
         }
+        if (action == com.hex.kagune.control.network.C2SUkakuAction.REAPER_DASH) {
+            ReaperDashServer.dash(player, targetId); // 2.1.7
+            return;
+        }
         if (action == com.hex.kagune.control.network.C2SUkakuAction.DASH) {
             KakujaPassive.dash(player, targetId < 0 ? -1 : 1);
             return;

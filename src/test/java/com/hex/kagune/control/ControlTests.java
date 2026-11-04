@@ -117,8 +117,8 @@ public final class ControlTests {
         // 6.0.0: with the blade out, its swings, the dash, the vanish and the fireballs.
         AbilityGuide.Panel blade = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.UKAKU, AbilityGuide.State.OUT, 1000,
             com.hex.kagune.gameplay.KaguneForm.RINKAKU_SEED, com.hex.kagune.control.ukaku.WingForm.FINAL_KAKUJA, false, keys, true));
-        check(find(blade, "Steel Blade:") != null && find(blade, "Dash") != null && find(blade, "Vanish") != null && find(blade, "Fireballs") != null,
-            "the Steel Blade's board: swings, dash, vanish, fireballs");
+        check(find(blade, "Steel Blade:") != null && find(blade, "Dash") != null && find(blade, "Vanish") == null && find(blade, "Reaper's dash") != null && find(blade, "Fireballs") != null,
+            "the Steel Blade's board: swings, dash, the Reaper's dash (2.1.7: no vanish), fireballs");
         // The player's own keys.
         java.util.Map<AbilityGuide.Key, String> rebound = defaultKeys();
         rebound.put(AbilityGuide.Key.RAPID, AbilityGuide.keyName("key.keyboard.f", "CONTROL"));
@@ -441,6 +441,32 @@ public final class ControlTests {
     }
 
     /** 2.0.51: the tails at rest as drawn (RinkakuIdle), alive (RinkakuRibbon.stretch, swell), one skin (lifted). */
+    /** 2.1.7: the White Reaper's dash (ReaperDash): three charges, one back every five seconds, the double tap, the way it goes. */
+    static void reaperDash() {
+        ReaperDash.Charges charges = new ReaperDash.Charges();
+        check(charges.ready(0L) == 3 && charges.spend(0L) && charges.ready(1L) == 2 && ReaperDash.bar(2).equals("Dash 2/3"), "three, one spent: 2/3");
+        check(charges.spend(10L) && charges.spend(20L) && !charges.spend(30L) && charges.ready(30L) == 0, "three in a row, then none");
+        check(charges.ready(99L) == 0 && charges.ready(100L) == 1 && charges.ready(199L) == 1 && charges.ready(200L) == 2 && charges.ready(300L) == 3
+            && charges.ready(5000L) == 3, "one back every five seconds, from the first spent, up to three");
+        ReaperDash.Charges again = new ReaperDash.Charges();
+        again.spend(0L);
+        again.ready(100L);
+        check(again.spend(150L) && again.ready(249L) == 2 && again.ready(250L) == 3, "a refill starts again from the spend after it's full");
+        ReaperDash.Taps taps = new ReaperDash.Taps();
+        check(!taps.tick(true, 0L) && !taps.tick(true, 1L) && !taps.tick(false, 2L) && taps.tick(true, 5L), "two presses within seven ticks");
+        check(!taps.tick(false, 6L) && !taps.tick(true, 30L) && !taps.tick(false, 31L) && !taps.tick(true, 45L), "too slow: no dash");
+        double[] ahead = ReaperDash.direction(0.0, 0.0, 0.0);
+        double[] back = ReaperDash.direction(0.0, -1.0, 0.0);
+        double[] left = ReaperDash.direction(0.0, 0.0, 1.0);
+        check(Math.abs(ahead[1] - 1.0) < 1e-9 && Math.abs(back[1] + 1.0) < 1e-9 && Math.abs(left[0] - 1.0) < 1e-9,
+            "facing south: no keys south, S north, A east (his left)");
+        for (int deg = 0; deg < 360; deg += 15) {
+            double[] way = ReaperDash.direction(deg, 1.0, 0.3);
+            double[] back2 = ReaperDash.decode(ReaperDash.encode(way));
+            check(Math.abs(way[0] - back2[0]) < 0.003 && Math.abs(way[1] - back2[1]) < 0.003, "the way survives the packet at " + deg);
+        }
+    }
+
     static void rinkakuAlive() {
         // 2.1.6: each tail's side as the original lays it out (TendrilChain: its fanSide along its owner's LEFT; with none, an even tail on
         // his right), so its rest, root and guard are on the side its own motion carries it (else each blend swings it across his back).
@@ -581,6 +607,7 @@ public final class ControlTests {
     public static void main(String[] args) {
         kakujaPalette();
         rinkakuAlive();
+        reaperDash();
         rinkakuBlock();
         rinkakuRoot();
         rinkakuRibbon();

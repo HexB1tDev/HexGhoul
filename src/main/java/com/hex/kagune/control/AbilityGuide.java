@@ -184,7 +184,6 @@ public final class AbilityGuide {
             if (full) {
                 // 6.0.0: the kakuja's passive and dash.
                 rows.add(new Row(key(in, Key.USE), "Dash (S held: back)", KAKUJA_RED, 0));
-                rows.add(new Row("sprint", "Vanish 5 s (30 s cooldown)", KAKUJA_PLUM, 0));
             }
         }
         transform(in, rows, kakuja, full, accent);
@@ -221,7 +220,7 @@ public final class AbilityGuide {
             // 6.0.0: the Steel Blade out.
             rows.add(row(in, "Steel Blade: Sweep · Return · Execution", EMBER, 0, Key.ATTACK));
             rows.add(new Row(key(in, Key.USE), "Dash (S held: back)", EMBER, 0));
-            rows.add(new Row("sprint", "Vanish 5 s (30 s cooldown)", TEXT, 0));
+            rows.add(new Row("sprint x2", "Reaper's dash: 3 charges, 1 back each 5 s", EMBER, 0)); // 2.1.7
             rows.add(new Row(key(in, Key.SLINGSHOT), "Fireballs", TEXT, 0));
             rows.add(row(in, "Open the wings", TEXT, 0, Key.GUARD));
             title = "STEEL BLADE";
@@ -232,6 +231,7 @@ public final class AbilityGuide {
             rows.add(row(in, "Fire cyclone", TEXT, 0, Key.RAPID));
             rows.add(new Row(key(in, Key.SLINGSHOT) + " hold", "Pyre Gatling", TEXT, 0));
             rows.add(row(in, "Steel Blade", TEXT, 0, Key.GUARD));
+            rows.add(new Row("sprint x2", "Reaper's dash: 3 charges, 1 back each 5 s", EMBER, 0)); // 2.1.7
             title = "FINAL KAKUJA";
             subtitle = "Ukaku · needles and fire";
         } else if (form.kakuja()) {

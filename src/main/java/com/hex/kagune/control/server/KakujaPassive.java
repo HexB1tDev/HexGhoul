@@ -185,9 +185,8 @@ public final class KakujaPassive {
                 // kagune takes no fall damage anyway (the original's ghoul durability), so nothing else changes.
                 player.f_19789_ = 0.0F;
             }
-        } else if (kind != null && sprinting && !state.wasSprinting && now >= state.readyAt) {
-            vanish(player, state, now);
         }
+        // 2.1.7 (the owner: "no longer vanishes in any kakuja form"): breaking into a sprint no longer vanishes him.
         state.wasSprinting = sprinting;
         if (state.dashUntil != Long.MIN_VALUE) {
             if (now >= state.dashUntil || !player.m_6084_()) {

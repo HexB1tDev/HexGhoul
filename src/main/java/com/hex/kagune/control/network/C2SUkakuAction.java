@@ -33,6 +33,11 @@ public record C2SUkakuAction(int action, int targetId) {
      * it is let go ({@code RinkakuBlockServer}).
      */
     public static final int BLOCK = 7;
+    /**
+     * 2.1.7: the White Reaper's dash in Ukaku's final kakuja (the sprint key tapped twice): {@code targetId} the way the player was moving,
+     * in tenths of a degree of world yaw ({@code ReaperDash.encode}).
+     */
+    public static final int REAPER_DASH = 8;
 
     public static void encode(C2SUkakuAction message, FriendlyByteBuf buffer) {
         buffer.writeByte(message.action);
