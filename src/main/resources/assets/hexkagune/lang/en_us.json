@@ -27,6 +27,8 @@
   "message.hexkagune.kakuja_kagune_out": "Bring your kagune out first to transform (K)",
   "message.hexkagune.kakuja_on": "Kakuja: %s",
   "message.hexkagune.kakuja_off": "Kagune: %s",
+  "message.hexkagune.rinkaku_block.broken": "Guard broken - your tails need a moment",
+  "message.hexkagune.rinkaku_block.recovering": "Your tails are still recovering from the broken guard",
   "message.hexkagune.kakuja_autonomous": "Your centipede legs fight on their own in the first kakuja - you can only walk (K to change back)",
   "message.hexkagune.ukaku.kakuja_no_wings": "Your kakuja is armored tentacles, not wings - turn back with K for that",
   "message.hexkagune.ukaku.gatling_crystal": "The Gatling fires crystal spikes - crystallize your wings first (V)",

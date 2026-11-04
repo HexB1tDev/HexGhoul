@@ -621,8 +621,10 @@ public final class KaguneBodyAnimation implements IAnimation {
             this.finish(steel, time, tickDelta);
             return;
         }
+        // 2.0.42: Rinkaku's block (RinkakuBlockClient): the stance gives way to its guard.
+        float block = view.mode() == TendrilMode.IDLE ? com.hex.kagune.control.client.RinkakuBlockClient.amount(this.player, time) : 0.0F;
         // The ambient stance (Ukaku relaxed, Rinkaku animalistic) when standing still.
-        p.add(this.idle.pose(tickDelta), 1.0F);
+        p.add(this.idle.pose(tickDelta), 1.0F - block);
         if (PathClient.get(this.player) == KagunePath.PALE) {
             // 6.1.0: Pale at play: hip-shot, gestures now and then, and a loose saunter when she walks (6.2.0: none of it in the Owl).
             double owlClock = com.hex.kagune.control.client.PaleClient.clock(tickDelta);
@@ -796,6 +798,10 @@ public final class KaguneBodyAnimation implements IAnimation {
             }
             default -> {
             }
+        }
+        float[] jolt = com.hex.kagune.control.client.RinkakuBlockClient.jolt(this.player, time);
+        if (block > 0.0F || jolt[1] > 0.0F) {
+            RinkakuBlockPose.apply(p, block, jolt[0], jolt[1]);
         }
         if (view.guarding()) {
             p.rightArmX -= 1.0F;

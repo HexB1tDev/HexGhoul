@@ -170,6 +170,15 @@ public final class StrikePaths {
                 guarding = true;
             }
         }
+        // 2.0.42: Rinkaku's block: the tails swung round in front of him (RinkakuBlock), or thrown back by a broken one.
+        if (!layout.segmented()) {
+            double[][] blocking = com.hex.kagune.control.client.RinkakuBlockClient.apply(path, limb, player, view, feet, yaw,
+                com.hex.kagune.control.client.ControlClient.worldTime(partialTick));
+            if (blocking != null) {
+                path = blocking;
+                guarding = true;
+            }
+        }
         boolean moved = BodyClearance.clear(path, feet, -Math.sin(yaw), Math.cos(yaw), player.m_20205_(), player.m_20206_(), radius, side);
         // 2.0.38: the tail grown out of his lower back (RinkakuRoot): its root sunk in it, its base leaving it, then its own motion.
         if (!layout.segmented()) {

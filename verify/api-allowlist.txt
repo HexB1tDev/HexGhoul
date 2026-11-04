@@ -1041,3 +1041,6 @@ C net/minecraft/world/level/levelgen/structure/PoolElementStructurePiece        
 M net/minecraft/world/level/levelgen/structure/PoolElementStructurePiece m_72646_ ()Lnet/minecraft/core/BlockPos;  # [srg] getPosition: drw m_72646_ ()Lgu; (yarn getPos)
 M net/minecraft/world/level/LevelWriter m_7731_ (Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z  # [srg] setBlock: joined.tsrg cmu a (Lgu;Ldcb;I)Z m_7731_ (cmu = LevelWriter)
 C net/minecraft/world/level/block/Rotation                                          # [srg] cvz C_1886_ (class_2470, yarn BlockRotation); NONE, CLOCKWISE_90, CLOCKWISE_180, COUNTERCLOCKWISE_90 in order (joined.tsrg cvz a..d), read by ordinal through java.lang.Enum
+
+# --- 2.0.42: Rinkaku's block --------------------------------------------------------------------------
+M net/minecraftforge/event/entity/living/LivingAttackEvent getAmount ()F            # [forge] event/entity/living/LivingAttackEvent.java (final float amount; getSource/getAmount): how hard the blocked blow was

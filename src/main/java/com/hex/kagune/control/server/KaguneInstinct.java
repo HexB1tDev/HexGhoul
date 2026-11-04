@@ -93,8 +93,8 @@ final class KaguneInstinct {
     }
 
     private static boolean eligible(ServerPlayer player, KaguneRuntime.State runtime) {
-        if (!basicEligible(player) || runtime.guarding || runtime.hasManualHeldEntities()) {
-            return false;
+        if (!basicEligible(player) || runtime.guarding || runtime.hasManualHeldEntities() || RinkakuBlockServer.up(player)) {
+            return false; // 2.0.42: nor while he holds his block (the tails are his guard)
         }
         return runtime.mode == TendrilMode.IDLE || runtime.mode == TendrilMode.RETRACT || runtime.mode == TendrilMode.SWIPE;
     }

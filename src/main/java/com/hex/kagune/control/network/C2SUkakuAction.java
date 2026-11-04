@@ -28,6 +28,11 @@ public record C2SUkakuAction(int action, int targetId) {
      * forward (W or no direction), -1 back (S).
      */
     public static final int DASH = 6;
+    /**
+     * 2.0.42: Rinkaku's block on the right click: {@code targetId} 2 when the button goes down, 1 every few ticks while it is held, 0 when
+     * it is let go ({@code RinkakuBlockServer}).
+     */
+    public static final int BLOCK = 7;
 
     public static void encode(C2SUkakuAction message, FriendlyByteBuf buffer) {
         buffer.writeByte(message.action);

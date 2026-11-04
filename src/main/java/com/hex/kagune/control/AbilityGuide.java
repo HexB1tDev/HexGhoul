@@ -174,7 +174,10 @@ public final class AbilityGuide {
             rows.add(row(in, "Crush", TEXT, locked(m, RinkakuUnlocks.CRUSH), Key.CRUSH));
             rows.add(row(in, "Lift", TEXT, locked(m, RinkakuUnlocks.LIFT), Key.LIFT));
             rows.add(row(in, "Slam", TEXT, locked(m, RinkakuUnlocks.SLAM), Key.SLAM));
-            // 2.0.37: the tendril guard (C) is gone; right click blocks (RinkakuBlock).
+            // 2.0.37: the tendril guard (C) is gone. 2.0.42: right click held blocks (RinkakuBlock); the final kakuja's dashes instead.
+            if (!full) {
+                rows.add(row(in, "Block (hold) · on time: stagger", TEXT, 0, Key.USE));
+            }
             if (form.hasCentipedeLegs()) {
                 rows.add(new Row("auto", "Centipede legs hunt and grab", KAKUJA_PLUM, 0));
             }

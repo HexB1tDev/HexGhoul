@@ -308,7 +308,116 @@ public final class ControlTests {
         check(RinkakuRoot.root(0, -1.0, 0.9)[1] < RinkakuRoot.root(0, -1.0, 1.8)[1], "a smaller body's root is lower");
     }
 
+    /** 2.0.42: Rinkaku's block: the perfect window, the weight that breaks it, what it covers, and the tails' guard in front of him. */
+    static void rinkakuBlock() {
+        // The perfect window: only a fresh press, only its first three ticks.
+        check(RinkakuBlock.perfect(100, true, 100) && RinkakuBlock.perfect(100, true, 102), "a blow in the first ticks of a fresh press is perfect");
+        check(!RinkakuBlock.perfect(100, true, 103), "three ticks after the press is too late");
+        check(!RinkakuBlock.perfect(100, false, 100), "a block raised without a fresh press has no perfect window");
+        check(!RinkakuBlock.perfect(100, true, 99), "a blow before the press is not perfect");
+        check(RinkakuBlock.PERFECT_TICKS <= 3, "the window is extremely tight (0.15 s at most)");
+        check(!RinkakuBlock.opensWindow(100, 110) && RinkakuBlock.opensWindow(100, 100 + RinkakuBlock.FRESH_AFTER),
+            "mashing the button opens no window; a press after a pause does");
+        check(RinkakuBlock.opensWindow(Long.MIN_VALUE / 2, 0), "the first press opens one");
+        // The weight: light blows one each, heavy ones more, capped; a flurry counts once every few ticks.
+        check(RinkakuBlock.weight(2.0F) == 1.0F && RinkakuBlock.weight(RinkakuBlock.LIGHT_BLOW) == 1.0F, "a light blow weighs one");
+        check(RinkakuBlock.weight(12.0F) == 2.0F && RinkakuBlock.weight(1000.0F) == RinkakuBlock.MOST_WEIGHT, "a heavy blow weighs more, capped");
+        check(RinkakuBlock.weight(Float.NaN) == 1.0F, "an odd amount weighs one");
+        int light = 0;
+        float weight = 0.0F;
+        while (!RinkakuBlock.breaks(weight)) {
+            weight += RinkakuBlock.weight(4.0F);
+            light++;
+        }
+        check(light == 6, "six light blows break the guard (" + light + ")");
+        check(RinkakuBlock.breaks(RinkakuBlock.weight(30.0F) * 2), "two crushing blows break it");
+        check(!RinkakuBlock.counts(100, 100 + RinkakuBlock.HIT_GAP - 1) && RinkakuBlock.counts(100, 100 + RinkakuBlock.HIT_GAP),
+            "blows in the same flurry weigh once");
+        check(RinkakuBlock.settle(3.0F, RinkakuBlock.RECOVER_DELAY - 1) == 3.0F, "the weight stays a while after a blow");
+        float drained = 3.0F;
+        for (int t = 0; t < 200; t++) {
+            drained = RinkakuBlock.settle(drained, RinkakuBlock.RECOVER_DELAY + t);
+        }
+        check(drained == 0.0F, "then drains away");
+        check(RinkakuBlock.BREAK_COOLDOWN >= 60, "a broken guard cools down for seconds");
+        // What it covers: in front and to the sides, not behind; straight above or below counts.
+        double[] facing = {0.0, 0.0, 1.0};
+        check(RinkakuBlock.covers(facing, new double[] {0.0, 0.3, 3.0}), "a blow from in front is blocked");
+        check(RinkakuBlock.covers(facing, new double[] {3.0, 0.0, 0.0}), "and from the side");
+        check(!RinkakuBlock.covers(facing, new double[] {0.0, 0.0, -3.0}), "not from behind");
+        check(!RinkakuBlock.covers(facing, new double[] {2.0, 0.0, -3.0}), "nor from behind and to a side");
+        check(RinkakuBlock.covers(facing, new double[] {0.05, -1.0, 0.0}), "one from right under him counts as in front");
+        // The guard's look: up in three ticks, down in six.
+        check(RinkakuBlock.amount(0.0, Double.NaN) == 0.0F && RinkakuBlock.amount(RinkakuBlock.RAISE_TICKS, Double.NaN) == 1.0F,
+            "the tails swing into the guard in " + RinkakuBlock.RAISE_TICKS + " ticks");
+        check(RinkakuBlock.amount(20.0, RinkakuBlock.LOWER_TICKS) == 0.0F && RinkakuBlock.amount(20.0, 2.0) > 0.0F, "and fold back out");
+        check(RinkakuBlock.recoil(1.0, false) < -0.1 && RinkakuBlock.recoil(1.0, true) > 0.2, "a blow presses the guard back, a perfect block snaps it out");
+        check(RinkakuBlock.recoil(RinkakuBlock.SNAP_TICKS + 1.0, true) == 0.0 && RinkakuBlock.recoil(RinkakuBlock.RECOIL_TICKS, false) == 0.0
+            && RinkakuBlock.recoil(Double.NaN, false) == 0.0, "and both settle");
+        check(RinkakuBlock.thrown(RinkakuBlock.THROW_TICKS)[0] == 1.0 && RinkakuBlock.thrown(40.0)[1] == 0.0, "a broken guard's tails are thrown back, then let go");
+        // The tails: from the root round the side, crossing in front of him, each lane lower and further out.
+        double height = 1.8;
+        for (int tails = 1; tails <= 6; tails++) {
+            check(RinkakuBlock.lanes(tails) == Math.min(3, (tails + 1) / 2), tails + " tails make " + RinkakuBlock.lanes(tails) + " lanes");
+            for (int limb = 0; limb < tails; limb++) {
+                double side = RinkakuRoot.side(limb, 0.0);
+                double[][] pose = RinkakuBlock.pose(limb, tails, 0.0, 24, height);
+                String name = tails + " tails, tail " + limb;
+                check(pose.length == 24 && java.util.Arrays.equals(pose[0], RinkakuRoot.root(limb, side, height)), name + ": from its root");
+                double[] middle = pose[15];
+                check(middle[2] > 0.5 && Math.abs(middle[0]) < 0.45 && middle[1] > 0.7 && middle[1] < 1.85,
+                    name + ": crosses in front of him (" + java.util.Arrays.toString(middle) + ")");
+                boolean outside = true;
+                boolean finite = true;
+                double step = 0.0;
+                double most = 0.0;
+                double least = 1.0E9;
+                for (int i = 0; i < pose.length; i++) {
+                    double[] p = pose[i];
+                    finite &= Double.isFinite(p[0]) && Double.isFinite(p[1]) && Double.isFinite(p[2]);
+                    // Past its base, never through the torso (x within 0.3, z within 0.15, from the hips to the shoulders).
+                    if (i > 3) {
+                        outside &= !(Math.abs(p[0]) < 0.3 && Math.abs(p[2]) < 0.2 && p[1] > 0.7 && p[1] < 1.5);
+                    }
+                    if (i > 0) {
+                        step = RinkakuRoot.distance(p, pose[i - 1]);
+                        most = Math.max(most, step);
+                        least = Math.min(least, step);
+                    }
+                }
+                check(finite, name + ": no NaN");
+                check(outside, name + ": never through his body");
+                check(most - least < 0.02, name + ": evenly spaced");
+                check(Math.signum(pose[8][0]) == side, name + ": comes round its own side");
+                check(Math.signum(pose[23][0]) == -side || tails == 1 && Math.abs(pose[23][0]) > 0.3, name + ": ends on the far side");
+            }
+        }
+        double[][] top = RinkakuBlock.pose(0, 4, 0.0, 24, height);
+        double[][] low = RinkakuBlock.pose(2, 4, 0.0, 24, height);
+        check(top[15][1] > low[15][1] + 0.25 && low[15][2] > top[15][2], "the second pair crosses lower, a little further out");
+        double[][] a = RinkakuBlock.pose(0, 2, 0.0, 24, height);
+        double[][] b = RinkakuBlock.pose(1, 2, 0.0, 24, height);
+        check(RinkakuRoot.distance(a[15], b[15]) > 0.08, "a pair's two tails cross apart, one before the other");
+        double[][] flung = RinkakuBlock.flung(0, 0.0, 24, height);
+        check(flung[23][2] < -1.2 && flung[23][1] > 2.0, "a broken guard throws the tails back up over him");
+        double[][] pushed = RinkakuBlock.push(top, new double[] {0.0, 0.0, 1.0}, 0.2);
+        check(pushed[0][2] == top[0][2] && Math.abs(pushed[23][2] - top[23][2] - 0.2) < 1.0E-9, "a press moves the guard's front, not its root");
+        double[][] half = RinkakuBlock.blend(top, flung, 0.5);
+        check(Math.abs(half[10][1] - (top[10][1] + flung[10][1]) * 0.5) < 1.0E-9, "the blend goes halfway");
+        double[][] small = RinkakuBlock.pose(0, 2, 0.0, 24, 0.9);
+        check(small[15][1] < top[15][1] * 0.6, "a smaller body's guard is lower");
+        // Its row in the guide: on the right click, but not in the final kakuja (whose right click is its dash).
+        java.util.Map<AbilityGuide.Key, String> keys = defaultKeys();
+        AbilityGuide.Panel quad = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.RINKAKU, AbilityGuide.State.OUT, 1000,
+            com.hex.kagune.gameplay.KaguneForm.RINKAKU_QUAD, com.hex.kagune.control.ukaku.WingForm.TWIN, false, keys));
+        check(find(quad, "Block (hold) · on time: stagger") != null, "the guide shows the block");
+        AbilityGuide.Panel full = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.RINKAKU, AbilityGuide.State.OUT, 1000,
+            com.hex.kagune.gameplay.KaguneForm.FULL_KAKUJA, com.hex.kagune.control.ukaku.WingForm.TWIN, false, keys));
+        check(find(full, "Block (hold) · on time: stagger") == null, "not in the final kakuja");
+    }
+
     public static void main(String[] args) {
+        rinkakuBlock();
         rinkakuRoot();
         rinkakuRibbon();
         progression();

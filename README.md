@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.0.42 (HexGhoul): Rinkaku Blocking with perfect blocks (testing)
+
+See `.github/release-notes-2.0.42.md`. Rinkaku has a new move, Blocking, on the right click: hold it with the tails out and they swing up off your back, round your shoulders and cross in front of you (an X per pair, one pair above the next), while you raise your forearms over your face in a ready stance. Every blow from in front or the sides is stopped completely. Too many hits break the guard: the tails are thrown back, you are knocked back and the block goes on a 5 s cooldown. A perfect block (the blow lands within 3 ticks, 0.15 s, of pressing) causes an impact, gives you no knockback and staggers the attacker for 1.2 s: they are stunned and pushed off, and can't hurt anything, so you get a free hit.
+
 ## 2.0.41 (HexGhoul): Rinkaku tails' living material (testing)
 
 See `.github/release-notes-2.0.41.md`. Rinkaku tails now have a living material at the level of Ukaku's wings: glowing veins running through the flesh with a pulse of RC flowing from the body to the point, a glossy rim toward the silhouette, a wet glint where the light catches them, a slightly clear skin seen edge-on (the veins on the far side show faintly through), a hotter, glowing root where they leave the back and darker points. All in the player's kagune colour.
