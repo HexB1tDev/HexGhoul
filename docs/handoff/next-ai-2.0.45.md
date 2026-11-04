@@ -3,7 +3,7 @@
 `docs/handoff/next-ai-1.3.60.md` (house rules), then the top sections of `docs/handoff/companions-handoff.md` (one per version, newest first).
 
 Branch **`claude/loving-albattani-xld4zv`** (push only to the branch the session is given). Never push to `main`; no PR unless asked.
-Version **2.0.49** in `build.py` and `patch/KagunePatch.java`; the next is **2.0.50**. Protocol **"80"** (`ControlNetwork.PROTOCOL`; 2.0.42
+Version **2.0.51** in `build.py` and `patch/KagunePatch.java`; the next is **2.0.52**. Protocol **"80"** (`ControlNetwork.PROTOCOL`; 2.0.42
 added `S2CRinkakuBlock`, message id 48, and `C2SUkakuAction.BLOCK`; 2.0.48 `S2CUkakuFx.DAWN_RING`; 2.0.49 `CcgAgent.SOARING` on the flip). Nothing is tested in game.
 
 ## The owner's requests since 2.0.36 (their words, trimmed)
@@ -85,6 +85,17 @@ The owner asked:
   - every shot leads its target.
 
 Previews: `dawn-bigger-2.0.47.png`, `dawn-aim-2.0.47.png`, `dawn-volley-2.0.48.png`, `reaper-soar-2.0.49.png`, `male-build-2.0.46.png`.
+
+- **2.0.50** Rinkaku tail scales (overlapping keeled), the leaf shape (the owner's drawing: thin at the root, broadest near the end), more veins.
+- **2.0.51** Rinkaku tails fixed and alive, after the owner's in-game screenshots:
+  - one skin with the scales baked in (the second layer broke up at a distance);
+  - the designed rest pose at the full length (`RinkakuIdle`), replacing the original chain's coiled, twitching rest;
+  - stretch, swell and breath (`RinkakuRibbon.stretch`, `swell`);
+  - fine, tapering veins;
+  - an animated preview, `rinkaku-alive-2.0.51.gif`.
+- **Waiting on the owner's approval of the tails**, then (their words): "move and add way more dialog to normal humans, romance dialog for
+  every personality type, different trades per NPC (if it isnt in place yet)". Look at `village/HumanPersona`, `HumanTalk`,
+  `VillageTrade` first.
 
 Ask the owner:
 - whether the Reaper is now too hard or too easy (soar every 5 s at most, punishes, sky shots every 2.3 s, 5 balls at 40% each);
