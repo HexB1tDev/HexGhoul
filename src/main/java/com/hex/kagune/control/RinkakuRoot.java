@@ -27,7 +27,12 @@ public final class RinkakuRoot {
 
     /** The side ({@code +1} right, {@code -1} left) of tail {@code limb}: its layout's own ({@code fanSide}), else alternating. */
     public static double side(int limb, double fanSide) {
-        return Math.abs(fanSide) >= 0.01 ? Math.signum(fanSide) : limb % 2 == 0 ? -1.0 : 1.0;
+        // 2.1.6 (the owner: "whenever they attack, instead of slowly going back to their spot ... it snaps back to a weird spot like
+        // they're rotating ... same when transforming it's like the left tentacles switch to the right side"): the original lays a tail
+        // out along (forward.z, 0, -forward.x), its owner's LEFT, times its fanSide (TendrilChain.initialize, updateSegmentedCurve), and
+        // with no fanSide puts an even tail on its -1 side: his right. This read it the other way round, so every tail's rest, root and
+        // guard were on the side opposite to where its own motion carries it, and each blend into them swung it across his back.
+        return Math.abs(fanSide) >= 0.01 ? -Math.signum(fanSide) : limb % 2 == 0 ? 1.0 : -1.0;
     }
 
     /**

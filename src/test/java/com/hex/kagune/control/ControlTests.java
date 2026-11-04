@@ -442,6 +442,18 @@ public final class ControlTests {
 
     /** 2.0.51: the tails at rest as drawn (RinkakuIdle), alive (RinkakuRibbon.stretch, swell), one skin (lifted). */
     static void rinkakuAlive() {
+        // 2.1.6: each tail's side as the original lays it out (TendrilChain: its fanSide along its owner's LEFT; with none, an even tail on
+        // his right), so its rest, root and guard are on the side its own motion carries it (else each blend swings it across his back).
+        check(RinkakuRoot.side(0, 1.0) < 0.0 && RinkakuRoot.side(1, -0.6) > 0.0 && RinkakuRoot.side(0, 0.0) > 0.0 && RinkakuRoot.side(1, 0.0) < 0.0,
+            "a tail's side as the original has it: fanSide > 0 on his left");
+        for (int limb = 0; limb < 4; limb++) {
+            double fan = limb % 2 == 0 ? -0.8 : 0.8;
+            double[][] rest = RinkakuIdle.pose(limb, 4, fan, 12, 1.8, 3.4, Double.NaN, 7, 0.0, 0.0, 0.0);
+            double originalX = -fan; // the original's left (x right in the owner's frame) times its fanSide
+            check(Math.signum(rest[rest.length - 1][0]) == Math.signum(originalX) && Math.signum(RinkakuRoot.root(limb, RinkakuRoot.side(limb, fan), 1.8)[0])
+                == Math.signum(originalX), "tail " + limb + " rests on the side the original lays it out on");
+        }
+
         double height = 1.8;
         for (int tails = 1; tails <= 6; tails++) {
             for (int limb = 0; limb < tails; limb++) {

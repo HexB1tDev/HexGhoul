@@ -79,7 +79,9 @@ public final class RinkakuIdleClient {
         double[] moving = motion(player, fx, fz, rx, rz, time);
         double length = view.limbLength(form.limb(limb));
         int seed = player.m_20148_().hashCode() + limb * 131;
-        double[][] pose = RinkakuIdle.pose(index, tails, form.limb(limb).fanSide(), path.length, player.m_20206_(), length, time, seed,
+        // 2.1.6: its side as the original has it, by its own place among the limbs when its layout gives none.
+        double fan = Math.abs(form.limb(limb).fanSide()) >= 0.01 ? form.limb(limb).fanSide() : limb % 2 == 0 ? -1.0 : 1.0;
+        double[][] pose = RinkakuIdle.pose(index, tails, fan, path.length, player.m_20206_(), length, time, seed,
             moving[0], moving[1], moving[2]);
         double[][] world = new double[pose.length][];
         for (int i = 0; i < pose.length; i++) {

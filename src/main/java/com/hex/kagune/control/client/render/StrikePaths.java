@@ -145,7 +145,7 @@ public final class StrikePaths {
         float turn = player.f_20883_ - player.f_20884_;
         turn -= 360.0F * Math.round(turn / 360.0F);
         double yaw = Math.toRadians(player.f_20884_ + turn * partialTick);
-        double side = Math.abs(layout.fanSide()) < 0.01 ? (limb % 2 == 0 ? -1.0 : 1.0) : Math.signum(layout.fanSide());
+        double side = com.hex.kagune.control.RinkakuRoot.side(limb, layout.fanSide()); // 2.1.6: his right +1, as the original lays them out
         float thickness = view.limbThickness(layout);
         // Centipede limbs are drawn fatter than their thickness says (KaguneWorldRenderer).
         double radius = layout.segmented() ? Math.max(0.18, thickness * 0.81) : thickness;

@@ -247,6 +247,9 @@ public final class RinkakuBlockClient {
             return null;
         }
         double fanSide = form.limb(limb).fanSide();
+        if (Math.abs(fanSide) < 0.01) {
+            fanSide = limb % 2 == 0 ? -1.0 : 1.0; // 2.1.6: its side as the original has it, by its own place among the limbs
+        }
         double height = player.m_20206_();
         Minecraft minecraft = Minecraft.m_91087_();
         boolean own = player == minecraft.f_91074_ && minecraft.f_91066_.m_92176_().m_90612_();

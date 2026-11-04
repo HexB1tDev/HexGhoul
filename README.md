@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.1.6 (HexGhoul): Rinkaku tails no longer swing across on their way back (testing)
+
+See `.github/release-notes-2.1.6.md`. Fix: Rinkaku tails no longer swing across the back after an attack or when the kagune comes out. Each tail's rest spot was on the opposite side from where the original's own motion carries that tail. So every time a tail eased back into rest (after a blow, when transforming), it crossed over to the other side, which looked like the tails rotating or swapping. Once it settled the picture looked right, because the rest shape is symmetric. The kagune's model, shape and rest position are unchanged. Each tail now rests on its own side.
+
 ## 2.1.5 (HexGhoul): courtships out of the mod's own world (testing)
 
 See `.github/release-notes-2.1.5.md`. The companions' courtships now come from the mod's own world, not generic chores. The CCG's Doves (some of a given rank), wild ghouls of the Pack, a ghoul preying on a human village, a wild ghoul made your ally, village humans who come to care for you or tell you a secret, a walk through a human village at night, a drink from Touka's cookbook, ghoul meat. Every chapter's scene is rewritten to match.
