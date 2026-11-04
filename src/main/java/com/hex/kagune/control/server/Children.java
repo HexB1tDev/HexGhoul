@@ -290,7 +290,8 @@ public final class Children {
             return genome;
         }
         int bits = com.hex.kagune.control.family.KaguneGenes.inherit(mother[0], father[0]);
-        if (bits == genome.kagune() || bits <= 0) {
+        // Only ever the half it lacked added (never a kind taken away, nor changed when a player parent later changes path).
+        if (bits == genome.kagune() || bits <= 0 || (bits & genome.kagune()) != genome.kagune()) {
             return genome;
         }
         genome = genome.withKagune(bits, genome.colour());

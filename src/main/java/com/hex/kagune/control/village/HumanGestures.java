@@ -4,7 +4,7 @@ import com.hex.kagune.control.family.ChildCue;
 import com.hex.kagune.control.npc.EtoGesture;
 
 /**
- * 1.3.77: what a villager does with its body as it talks and lives (pure). The owner: "take animations from eto, kids, touka and kaneki for
+ * 1.3.77: what a villager does with its body as it talks and lives (pure). The owner: "take animations from eto, kids, touka and ken for
  * base, mix it together and adapt it to NPCS". A move is one of Eto's gestures (drawn in Eto's, Ken's or Touka's way by the villager's
  * temper, {@link #style}) or one of the children's talk cues ({@link #CUE} on), coded into one int for its entity data with its style and a
  * count, so the same move twice plays twice ({@link #pack}). None of them holds a prop: a villager's hands stay its own.

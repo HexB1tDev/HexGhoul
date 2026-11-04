@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.4.0 (HexGhoul): final sweep: health kept across logins, children's halves only added (testing)
+
+See `.github/release-notes-2.4.0.md`. The final sweep after 2.3.2 to 2.3.9. All 34 test suites pass (millions of checks), the Minecraft API check passes, and two problems that would have shown up in play are fixed.
+
 ## 2.3.9 (HexGhoul): an unwanted kiss let go, never stuck (testing)
 
 See `.github/release-notes-2.3.9.md`. Fix: a spouse could get stuck leaning in for a kiss you didn't want. She now never stays leaning in for long, and turning down a kiss she came asking for is no offence.

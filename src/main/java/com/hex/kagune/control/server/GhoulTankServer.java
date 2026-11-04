@@ -57,6 +57,31 @@ public final class GhoulTankServer {
         if (health == null) {
             return;
         }
+        apply(player, health);
+        player.getPersistentData().m_128405_(KEPT, Math.round(player.m_21223_() * 100.0F)); // what it had, for its next login (the bonus isn't saved)
+    }
+
+    /** 2.3.6: the health the bonus let it have when it last logged out, put back once the bonus is back (loading clamps it to 20). */
+    static final String KEPT = "HexGhoulHealth";
+
+    @SubscribeEvent
+    public static void loggedIn(net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)) {
+            return;
+        }
+        GIVEN.remove(player.m_20148_());
+        net.minecraft.world.entity.ai.attributes.AttributeInstance health = player.m_21051_(net.minecraft.world.entity.ai.attributes.Attributes.f_22276_);
+        if (health == null) {
+            return;
+        }
+        apply(player, health);
+        float kept = player.getPersistentData().m_128451_(KEPT) / 100.0F;
+        if (kept > player.m_21223_() && player.m_6084_()) {
+            player.m_21153_(Math.min(kept, player.m_21233_()));
+        }
+    }
+
+    private static void apply(ServerPlayer player, net.minecraft.world.entity.ai.attributes.AttributeInstance health) {
         double extra = KaguneProfile.isUnlocked(player)
             ? Math.round(GhoulTank.health(KaguneProfile.mastery(player), GhoulMeatServer.eaten(player), unlocked(player))) : 0.0;
         Double before = GIVEN.get(player.m_20148_());

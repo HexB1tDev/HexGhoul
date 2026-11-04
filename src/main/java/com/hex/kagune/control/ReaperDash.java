@@ -1,7 +1,7 @@
 package com.hex.kagune.control;
 
 /**
- * 2.1.7 (pure, tested; the owner: "Ayato Kakuja Final Variant: Gets access to Arima's dashes (3 dashes, after using one, it will show in
+ * 2.1.7 (pure, tested; the owner: "[Ukaku] Kakuja Final Variant: Gets access to Arima's dashes (3 dashes, after using one, it will show in
  * the action bar 2/3 and another will regenerate after 5 seconds and return it to 3/3). Dash is activated when double tapping sprint."):
  * the White Reaper's dash for a player: a short burst the way they are moving ({@link #direction}: W, S, A, D and between; no direction,
  * the way they look), at his speed, from {@link #CHARGES} charges that come back one every {@link #RECHARGE} ticks ({@link Charges}).

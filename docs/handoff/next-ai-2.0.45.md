@@ -3,7 +3,7 @@
 `docs/handoff/next-ai-1.3.60.md` (house rules), then the top sections of `docs/handoff/companions-handoff.md` (one per version, newest first).
 
 Branch **`claude/loving-albattani-xld4zv`** (push only to the branch the session is given). Never push to `main`; no PR unless asked.
-Version **2.3.9** in `build.py` and `patch/KagunePatch.java`; the next is **2.4.0** (the last number never reaches 10). Protocol **"84"** (`ControlNetwork.PROTOCOL`; 2.3.0 added the mother's size to `S2CChild`; 2.2.4 added the kiss's mood to `S2CEto`; 2.1.9 added the synced AFRAID on CcgAgent and GhoulNpc; 2.1.7 added `C2SUkakuAction.REAPER_DASH`; 2.0.42
+Version **2.4.0** in `build.py` and `patch/KagunePatch.java`; the next is **2.4.1** (the last number never reaches 10). Protocol **"84"** (`ControlNetwork.PROTOCOL`; 2.3.0 added the mother's size to `S2CChild`; 2.2.4 added the kiss's mood to `S2CEto`; 2.1.9 added the synced AFRAID on CcgAgent and GhoulNpc; 2.1.7 added `C2SUkakuAction.REAPER_DASH`; 2.0.42
 added `S2CRinkakuBlock`, message id 48, and `C2SUkakuAction.BLOCK`; 2.0.48 `S2CUkakuFx.DAWN_RING`; 2.0.49 `CcgAgent.SOARING` on the flip). Nothing is tested in game.
 
 ## The owner's requests since 2.0.36 (their words, trimmed)
@@ -139,6 +139,12 @@ Previews: `dawn-bigger-2.0.47.png`, `dawn-aim-2.0.47.png`, `dawn-volley-2.0.48.p
 - **2.2.9** every investigator a ghoul kills gives mastery by rank; an uncommon field ration (cookbook food); Dawn 1 in 5 (was always).
   The owner answered "Dawn drops": yes, but rare.
 - **2.3.0** grown daughters are their mother's height, give or take 4% (`ChildRules.daughter`); the owner answered the old height question.
+- **2.3.2 to 2.4.0** the owner's bug list after testing (their words: "do not dare say anything until everything I listed ... is fixed"):
+  Rinkaku strikes round the wrong side (2.3.2, `RinkakuRoot.clearance`: BodyClearance's +1 is the owner's LEFT); the male chest kept in
+  every form, armour widened over it (2.3.3); human partners' kiss as the companions', no fear once confessed, a romance page and a
+  ring (2.3.4); mood kisses per companion, arms never closed in front of the face (2.3.5, `MoodKissPose.clear`); endgame ghouls tougher,
+  health up to 40 (2.3.6); bubbles steady in bed, children's kagune shown, both parents' halves (2.3.7); "Go home." always (2.3.8); an
+  unwanted kiss let go (2.3.9); the sweep (2.4.0).
 - **2.3.1** the mood kisses rendered for the owner (`docs/handoff/*-mood-kisses-2.3.1.png`, `mood-kisses-waiting-2.3.1.gif`); possessive, giddy
   and tender reworked to read apart. Render poses with `tools/CompanionPreview.java <out> kisses` (stiff limbs, as in game).
 
