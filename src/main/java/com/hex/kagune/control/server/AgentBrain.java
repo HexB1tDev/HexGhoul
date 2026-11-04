@@ -1747,13 +1747,23 @@ public final class AgentBrain {
 
     // ---------------------------------------------------------------- what happens to it
 
-    /** The Reaper leaves human meat. Regular investigators rarely leave their quinque case. */
+    /**
+     * The Reaper leaves human meat. Regular investigators rarely leave their quinque case. 2.2.9: any of them, brought down by a player,
+     * now and then leaves a field ration (food the cookbook takes: {@link AgentRules#RATIONS}); the Reaper's Dawn is a rare prize now.
+     */
     public static void drop(CcgAgent agent, int looting, boolean byPlayer) {
         Mind mind = agent.mind;
+        if (byPlayer && agent.m_217043_().m_188500_() < AgentRules.rationChance(looting)) {
+            AgentRules.Ration ration = AgentRules.ration(agent.m_217043_().m_188500_());
+            ItemStack food = HumanTalk.stack(ration.item(), AgentRules.rations(ration, agent.m_217043_().m_188500_()));
+            if (!food.m_41619_()) {
+                agent.m_19983_(food);
+            }
+        }
         if (reaper(agent)) {
             HumanBrain.drop(agent, looting);
-            if (byPlayer) {
-                // 2.0.32: whoever brings him down by their own hand takes Dawn, shut in its black case.
+            // 2.0.32: whoever brings him down by their own hand may take Dawn, shut in its black case (2.2.9: one time in five).
+            if (byPlayer && agent.m_217043_().m_188500_() < AgentRules.dawnChance(looting)) {
                 agent.m_19983_(new ItemStack(ControlItems.caseOf(Quinque.DAWN), 1));
             }
             return;
@@ -1762,6 +1772,20 @@ public final class AgentBrain {
             return;
         }
         agent.m_19983_(new ItemStack(ControlItems.caseOf(mind.kind), 1));
+    }
+
+    /** 2.2.9: an investigator brought down by a ghoul: mastery for it, by its rank ({@link AgentRules#mastery}). */
+    @SubscribeEvent
+    public static void slain(LivingDeathEvent event) {
+        if (!(event.getEntity() instanceof CcgAgent agent) || !(agent.m_9236_() instanceof ServerLevel)
+            || !(event.getSource().m_7639_() instanceof net.minecraft.server.level.ServerPlayer player) || !KaguneProfile.isUnlocked(player)) {
+            return;
+        }
+        AgentRules.Rank rank = agent.mind != null ? agent.mind.rank : AgentRules.Rank.byOrdinal(agent.getPersistentData().m_128451_(RANK_LEVEL));
+        int mastery = AgentRules.mastery(rank);
+        KaguneProfile.addMastery(player, mastery);
+        com.hex.kagune.network.KaguneNetwork.broadcast(player);
+        player.m_5661_(net.minecraft.network.chat.Component.m_237113_("\u00a7c+" + mastery + " mastery \u00a77(an investigator brought down)"), true);
     }
 
     private static boolean reaper(CcgAgent agent) {

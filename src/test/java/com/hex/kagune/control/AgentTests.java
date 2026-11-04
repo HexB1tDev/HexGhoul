@@ -78,6 +78,7 @@ public final class AgentTests {
         idling();
         reaperIdling();
         reaperBuild();
+        spoils();
         reaperTactics();
         ranks();
         tendril();
@@ -580,6 +581,44 @@ public final class AgentTests {
                                                             boolean dashReady, boolean shotReady, boolean soarReady, boolean busy) {
         return new com.hex.kagune.control.npc.ReaperTactics.Read(distance, 3.0, true, airborne, stunned, whiffed, guarding, preyHealth, ownHealth,
             afterString, true, flipReady, dashReady, shotReady, soarReady, busy);
+    }
+
+    /** 2.2.9: what a fallen investigator leaves: mastery always, a ration now and then, Dawn rarely. */
+    static void spoils() throws IOException {
+        int last = 0;
+        for (com.hex.kagune.control.npc.AgentRules.Rank rank : com.hex.kagune.control.npc.AgentRules.Rank.values()) {
+            int mastery = com.hex.kagune.control.npc.AgentRules.mastery(rank);
+            check(mastery > last && mastery <= 60, rank + ": more mastery the higher the rank (" + mastery + ")");
+            last = mastery;
+        }
+        check(com.hex.kagune.control.npc.AgentRules.mastery(com.hex.kagune.control.npc.AgentRules.Rank.RANK_10) == 60, "the Reaper: 60");
+        check(com.hex.kagune.control.npc.AgentRules.dawnChance(0) == 0.2 && com.hex.kagune.control.npc.AgentRules.dawnChance(9) <= 0.36,
+            "Dawn: rare (one in five, a little more with Looting), no longer every time");
+        check(com.hex.kagune.control.npc.AgentRules.rationChance(0) > com.hex.kagune.control.npc.AgentRules.dropChance(0) * 3
+            && com.hex.kagune.control.npc.AgentRules.rationChance(3) < 0.25, "a ration: uncommon, though far likelier than a case");
+        java.util.Set<String> cookbook = new java.util.HashSet<>();
+        try (java.util.stream.Stream<java.nio.file.Path> files = Files.list(RESOURCES.resolve("data/hexkagune/recipes/kitchen"))) {
+            for (java.nio.file.Path file : (Iterable<java.nio.file.Path>)files::iterator) {
+                java.util.regex.Matcher m = java.util.regex.Pattern.compile("\"item\"\\s*:\\s*\"([^\"]+)\"").matcher(Files.readString(file));
+                while (m.find()) {
+                    cookbook.add(m.group(1));
+                }
+            }
+        }
+        java.util.Set<String> seen = new java.util.HashSet<>();
+        for (int i = 0; i < 1000; i++) {
+            com.hex.kagune.control.npc.AgentRules.Ration r = com.hex.kagune.control.npc.AgentRules.ration(i / 1000.0);
+            seen.add(r.item());
+            for (double roll : new double[] {0.0, 0.5, 0.999, 1.0}) {
+                int n = com.hex.kagune.control.npc.AgentRules.rations(r, roll);
+                check(n >= r.least() && n <= r.most(), r.item() + ": " + n);
+            }
+        }
+        for (com.hex.kagune.control.npc.AgentRules.Ration r : com.hex.kagune.control.npc.AgentRules.RATIONS) {
+            check(seen.contains(r.item()), r.item() + ": comes up");
+            check(cookbook.contains(r.item()), r.item() + ": something the cookbook's recipes take");
+            check(!r.item().contains("meat") && r.least() >= 1 && r.most() <= 4, r.item() + ": a ration, not a feast");
+        }
     }
 
     /** 2.0.45: the White Reaper's build: his upper torso broader than his waist, his chest out in front of his belly, in his own skin. */

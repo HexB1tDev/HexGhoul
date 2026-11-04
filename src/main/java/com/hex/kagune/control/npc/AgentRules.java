@@ -293,6 +293,65 @@ public final class AgentRules {
         return 0.025 + 0.01 * Math.max(0, Math.min(3, looting));
     }
 
+    /**
+     * 2.2.9 (the owner: "Dawn drops yes, but it's kind of rare"): the White Reaper's case (Dawn) left to whoever brings him down by their
+     * own hand: one in five (a little more with Looting). It was every time (2.0.32).
+     */
+    public static double dawnChance(int looting) {
+        return 0.2 + 0.05 * Math.max(0, Math.min(3, looting));
+    }
+
+    /**
+     * 2.2.9 (the owner: "All CCG agents should give you mastery"): the mastery a ghoul earns for an investigator of {@code rank} brought
+     * down, whatever it fought with (a kill with the kagune out also earns the original's own few): 6 for a Rank 0, 2 more a rank, the
+     * White Reaper 60.
+     */
+    public static int mastery(Rank rank) {
+        return rank == Rank.RANK_10 ? 60 : 6 + 2 * rank.level();
+    }
+
+    /** 2.2.9: an investigator's field ration: what, how many at least and at most, how often against the others. */
+    public record Ration(String item, int least, int most, int weight) {
+    }
+
+    /**
+     * 2.2.9 (the owner: "another drop that is relevant, not something too broken ... rations like food, human food ... something that can be
+     * used to craft the custom recipes ... not a very common drop either"): what an investigator carries to eat, every one of it something
+     * the cookbook's recipes take.
+     */
+    public static final Ration[] RATIONS = {
+        new Ration("minecraft:bread", 1, 2, 5), new Ration("minecraft:wheat", 2, 4, 4), new Ration("minecraft:egg", 1, 3, 4),
+        new Ration("minecraft:sugar", 1, 3, 3), new Ration("minecraft:beetroot", 1, 3, 3), new Ration("minecraft:carrot", 1, 3, 3),
+        new Ration("minecraft:potato", 1, 3, 3), new Ration("minecraft:baked_potato", 1, 2, 2), new Ration("minecraft:dried_kelp", 2, 4, 2),
+        new Ration("minecraft:cocoa_beans", 1, 2, 2), new Ration("minecraft:sweet_berries", 2, 4, 2), new Ration("minecraft:brown_mushroom", 1, 2, 2),
+        new Ration("minecraft:apple", 1, 2, 2), new Ration("minecraft:honey_bottle", 1, 1, 1), new Ration("minecraft:milk_bucket", 1, 1, 1)};
+
+    /** 2.2.9: the chance a fallen investigator leaves a ration: uncommon (one in eight), a little more with Looting. */
+    public static double rationChance(int looting) {
+        return 0.125 + 0.03 * Math.max(0, Math.min(3, looting));
+    }
+
+    /** 2.2.9: the ration at {@code roll} (0 to 1) by weight. */
+    public static Ration ration(double roll) {
+        int total = 0;
+        for (Ration r : RATIONS) {
+            total += r.weight();
+        }
+        double at = Math.max(0.0, Math.min(0.999999, roll)) * total;
+        for (Ration r : RATIONS) {
+            at -= r.weight();
+            if (at < 0.0) {
+                return r;
+            }
+        }
+        return RATIONS[RATIONS.length - 1];
+    }
+
+    /** 2.2.9: how many of {@code ration} at {@code roll} (0 to 1). */
+    public static int rations(Ration ration, double roll) {
+        return ration.least() + (int)Math.floor(Math.max(0.0, Math.min(0.999999, roll)) * (ration.most() - ration.least() + 1));
+    }
+
     // ---------------------------------------------------------------- when they turn up
 
     /**
