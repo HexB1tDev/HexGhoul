@@ -113,6 +113,9 @@ public final class GhoulNpcBrain {
         /** 7.0.2: sent off (it walks away and is gone), or scared off (it runs a while). */
         long leavingAt = Long.MIN_VALUE;
         long scaredUntil = Long.MIN_VALUE;
+        /** 2.1.9: trembling before Peace or War (who, until when): it fights, but its nerve keeps giving. */
+        int afraidOf;
+        long afraidUntil = Long.MIN_VALUE;
         /** 1.3.68: its kakugan on with its kagune in (a wild ghoul prowling at night: NpcRules.prowls). */
         boolean eyes;
         /** 1.3.65: who scared it off (an entity id, 0: whoever is nearest): it runs from them (Sightings: War keeps it running). */
@@ -171,6 +174,12 @@ public final class GhoulNpcBrain {
         if (PaleStun.stunned(npc)) {
             sync(npc, mind, who);
             return; // reeling: it does nothing until it shakes it off
+        }
+        // 2.1.9: trembling before Peace or War, its nerve giving now and then: it backs off a moment, then comes again.
+        npc.afraid(now < mind.afraidUntil);
+        if (now < mind.afraidUntil && now >= mind.scaredUntil && com.hex.kagune.control.npc.FinalSight.breaks(npc.m_19879_(), now)) {
+            mind.scaredUntil = now + com.hex.kagune.control.npc.FinalSight.BACKS_OFF;
+            mind.scaredOf = mind.afraidOf;
         }
         LivingEntity prey = prey(npc, who, mind, level, now);
         // 1.3.68: a wild ghoul prowls by night (its kakugan on) and hides what it is by day: anything it would fight, it runs from instead.

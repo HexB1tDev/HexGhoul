@@ -86,6 +86,12 @@ public final class AgentRenderer extends HumanoidMobRenderer<CcgAgent, PlayerMod
         float size = AgentRules.size(look);
         float wide = size * AgentRules.build(look);
         pose.m_85836_();
+        if (agent.afraid()) {
+            // 2.1.9: trembling before Peace or War.
+            float shiver = com.hex.kagune.control.npc.FinalSight.tremble(agent.m_19879_(), agent.f_19797_ + partial);
+            pose.m_252781_(new Quaternionf().rotateAxis(shiver, 0.0F, 1.0F, 0.0F));
+            pose.m_252781_(new Quaternionf().rotateAxis(shiver * 0.5F, 0.0F, 0.0F, 1.0F));
+        }
         pose.m_85841_(wide, size, wide);
         try {
             if (turned) {

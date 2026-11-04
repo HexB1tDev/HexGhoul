@@ -75,6 +75,56 @@ public enum FinalSight {
         return this == WAR || this == DRAGON;
     }
 
+    // ---------------------------------------------------------------- 2.1.9: the king's final kakuja (Peace or War) seen in a fight
+
+    /**
+     * 2.1.9 (the owner: "Wild ghouls and CGG agents (ranks 0-4) run away from the final form of Rinkaku (Peace or War). Ranks (4-7) shake when
+     * fighting the user and back away way more often"): how one holds its nerve before Peace or War: it runs (and keeps running while it is
+     * in sight), it fights trembling and keeps backing off, or it stands (a Special Class investigator, the White Reaper).
+     */
+    public enum Nerve {
+        RUN, SHAKE, STAND
+    }
+
+    /** True for Rinkaku's final kakuja, either one. */
+    public boolean kingly() {
+        return this == WAR || this == PEACE;
+    }
+
+    /** An investigator of Rank {@code rank}: 0 to 4 run, 5 to 7 shake, 8 and above stand. */
+    public static Nerve investigator(int rank) {
+        return rank <= 4 ? Nerve.RUN : rank <= 7 ? Nerve.SHAKE : Nerve.STAND;
+    }
+
+    /** A wild ghoul of tier {@code tier} (0 the weakest, {@code tiers} - 1 the strongest): all but the strongest run; the strongest shake. */
+    public static Nerve ghoul(int tier, int tiers) {
+        return tier < tiers - 1 ? Nerve.RUN : Nerve.SHAKE;
+    }
+
+    /** How far off (blocks) Peace or War is felt; how far a runner gets before it stops to look back. */
+    public static final double DREAD_RANGE = 32.0;
+    public static final double RUNS_TO = 26.0;
+    /** While it is in sight, a runner keeps running this long from now, a shaker keeps trembling this long (ticks; kept up twice a second). */
+    public static final long STILL_RUNNING = 40L;
+    public static final long STILL_SHAKING = 30L;
+    /** A shaker's nerve gives every this many ticks or so (it backs off, then comes again), for this long. */
+    public static final long BREAKS_EVERY = 90L;
+    public static final long BACKS_OFF = 35L;
+
+    /** True if, at {@code now}, a shaker ({@code id}: its own, so no two break together) loses its nerve and backs off. */
+    public static boolean breaks(int id, long now) {
+        return Math.floorMod(now + id * 37L, BREAKS_EVERY) < 10L;
+    }
+
+    /**
+     * How far (radians) a trembling body is turned about its feet at {@code time} (ticks, with the partial tick): a fast, small, uneven
+     * shiver, its own ({@code id}).
+     */
+    public static float tremble(int id, double time) {
+        double t = time * 1.9 + id * 0.73;
+        return (float)(0.035 * (Math.sin(t * 2.3) * 0.6 + Math.sin(t * 3.7 + 1.1) * 0.4));
+    }
+
     /** How long a wild ghoul that first sees it runs (ticks). */
     public long scares() {
         return this.terror() ? TERROR_SCARES : this.any() ? SCARES : 0L;

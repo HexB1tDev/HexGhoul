@@ -157,6 +157,11 @@ public final class AgentBrain {
         int falterFrom;
         long falteredAt = Long.MIN_VALUE;
         long falterUntil = Long.MIN_VALUE;
+        /** 2.1.9: running from Peace or War (who, until when), or trembling before it (who, until when). */
+        int routedFrom;
+        long routedUntil = Long.MIN_VALUE;
+        int afraidOf;
+        long afraidUntil = Long.MIN_VALUE;
         long fallBackUntil = Long.MIN_VALUE;
         boolean rallies;
     }
@@ -364,6 +369,17 @@ public final class AgentBrain {
             cancelLightning(agent, mind, now);
             cancelGround(agent, mind, now);
             return;
+        }
+        // 2.1.9: before Peace or War: a junior runs; a senior trembles, and its nerve keeps giving (it backs off, then comes again).
+        agent.afraid(now < mind.afraidUntil || now < mind.routedUntil);
+        if (routed(agent, mind, level, now)) {
+            return;
+        }
+        if (now < mind.afraidUntil && now >= mind.fallBackUntil && FinalSight.breaks(agent.m_19879_(), now)) {
+            mind.falterFrom = mind.afraidOf;
+            mind.falteredAt = now;
+            mind.falterUntil = now;
+            mind.fallBackUntil = now + FinalSight.BACKS_OFF;
         }
         if (falter(agent, mind, level, now)) {
             return; // 1.3.65: frozen at War (or worse), or falling back from it
@@ -603,6 +619,23 @@ public final class AgentBrain {
         mind.rallies = true;
         end(agent, mind);
         say(agent, level, FearLines.falter(sight, mind.leader, agent.m_217043_().m_188503_(100)));
+    }
+
+    /** 2.1.9: running from Peace or War, as far as {@link FinalSight#RUNS_TO}, its weapon down; true while it is. */
+    private static boolean routed(CcgAgent agent, Mind mind, ServerLevel level, long now) {
+        if (now >= mind.routedUntil) {
+            return false;
+        }
+        if (!(level.m_6815_(mind.routedFrom) instanceof LivingEntity dread) || !dread.m_6084_()) {
+            mind.routedUntil = Long.MIN_VALUE;
+            return false;
+        }
+        end(agent, mind);
+        if (dread.m_20280_(agent) < FinalSight.RUNS_TO * FinalSight.RUNS_TO && (now % 5L == 0L || agent.m_21573_().m_26571_())) {
+            double[] to = com.hex.kagune.control.npc.HumanRules.fleeStep(agent.m_20185_(), agent.m_20189_(), dread.m_20185_(), dread.m_20189_(), 0.0, 9.0);
+            agent.m_21573_().m_26519_(to[0], agent.m_20186_(), to[1], AgentRules.PATROL_PACE + 0.6);
+        }
+        return true;
     }
 
     /**

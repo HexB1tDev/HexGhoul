@@ -39,6 +39,8 @@ public class CcgAgent extends PathfinderMob {
     static final EntityDataAccessor<Integer> DASH = SynchedEntityData.m_135353_(CcgAgent.class, EntityDataSerializers.f_135028_);
     static final EntityDataAccessor<Integer> DASH_AT = SynchedEntityData.m_135353_(CcgAgent.class, EntityDataSerializers.f_135028_);
     static final EntityDataAccessor<Integer> SHOT_AT = SynchedEntityData.m_135353_(CcgAgent.class, EntityDataSerializers.f_135028_);
+    /** 2.1.9: 1 while it trembles (Peace or War in front of it), else 0. */
+    static final EntityDataAccessor<Integer> AFRAID = SynchedEntityData.m_135353_(CcgAgent.class, EntityDataSerializers.f_135028_);
 
     /** The swing that meets a blow coming at it: a quick cut up across it, its weapon slapping the blow aside. */
     public static final int PARRY = 3;
@@ -76,6 +78,16 @@ public class CcgAgent extends PathfinderMob {
         this.f_19804_.m_135372_(DASH, 0);
         this.f_19804_.m_135372_(DASH_AT, NEVER);
         this.f_19804_.m_135372_(SHOT_AT, NEVER);
+        this.f_19804_.m_135372_(AFRAID, 0);
+    }
+
+    /** 2.1.9: true while it trembles before Peace or War. */
+    public boolean afraid() {
+        return this.get(AFRAID) != 0;
+    }
+
+    public void afraid(boolean afraid) {
+        this.put(AFRAID, afraid ? 1 : 0);
     }
 
     private int get(EntityDataAccessor<Integer> key) {

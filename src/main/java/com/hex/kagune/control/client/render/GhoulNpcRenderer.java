@@ -93,6 +93,13 @@ public final class GhoulNpcRenderer extends HumanoidMobRenderer<GhoulNpc, Player
             }
         }
         GhoulModel.pose = posed;
+        boolean shaking = npc.afraid(); // 2.1.9: trembling before Peace or War
+        if (shaking) {
+            float shiver = com.hex.kagune.control.npc.FinalSight.tremble(npc.m_19879_(), npc.f_19797_ + partial);
+            pose.m_85836_();
+            pose.m_252781_(new Quaternionf().rotateAxis(shiver, 0.0F, 1.0F, 0.0F));
+            pose.m_252781_(new Quaternionf().rotateAxis(shiver * 0.5F, 0.0F, 0.0F, 1.0F));
+        }
         boolean turned = posed != null && (Math.abs(posed.flip) > 1.0E-3F || Math.abs(posed.roll) > 1.0E-3F || Math.abs(posed.spin) > 1.0E-3F
             || Math.abs(posed.drop) > 1.0E-3F || Math.abs(posed.lunge) > 1.0E-3F);
         try {
@@ -114,6 +121,9 @@ public final class GhoulNpcRenderer extends HumanoidMobRenderer<GhoulNpc, Player
             super.m_7392_(npc, yaw, partial, pose, buffers, light);
         } finally {
             if (turned) {
+                pose.m_85849_();
+            }
+            if (shaking) {
                 pose.m_85849_();
             }
             GhoulModel.pose = null;

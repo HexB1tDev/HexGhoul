@@ -121,6 +121,13 @@ public final class Sightings {
                 }
             }
         }
+        if (sight.kingly()) {
+            try {
+                dread(level, player, sight, now); // 2.1.9
+            } catch (RuntimeException failure) {
+                com.hex.kagune.control.Safety.caught(failure, "NPCs before Peace or War");
+            }
+        }
         if (sight.terror()) {
             try {
                 terror(level, player, sight, now);
@@ -146,8 +153,9 @@ public final class Sightings {
         boolean shout = now - SHOUTED.getOrDefault(player.m_20148_(), Long.MIN_VALUE / 2) >= FinalSight.SHOUTS;
         for (GhoulNpc npc : level.m_6443_(GhoulNpc.class, player.m_20191_().m_82400_(FinalSight.KEEPS_RUNNING),
                 ghoul -> ghoul.m_6084_() && ghoul.mind != null && ghoul.m_142582_(player))) {
-            if (player.m_20148_().equals(npc.mind.owner)) {
-                continue;
+            if (player.m_20148_().equals(npc.mind.owner) || sight.kingly() && npc.identity() != null
+                && FinalSight.ghoul(npc.identity().tier(), com.hex.kagune.control.npc.NpcIdentity.TIERS) == FinalSight.Nerve.SHAKE) {
+                continue; // 2.1.9: the strongest wild ghouls stand before War, trembling (dread)
             }
             npc.mind.scaredUntil = Math.max(npc.mind.scaredUntil, now + FinalSight.STILL_SCARED);
             npc.mind.scaredOf = player.m_19879_();
@@ -167,6 +175,43 @@ public final class Sightings {
         }
     }
 
+    /**
+     * 2.1.9: Peace or War in sight, kept up twice a second: investigators of Rank 0 to 4 and the weaker wild ghouls run (and keep
+     * running while it is in sight); Rank 5 to 7 and the strongest wild ghouls stand, trembling, their nerve giving now and then; Rank 8 and
+     * above stand as they are.
+     */
+    private static void dread(ServerLevel level, ServerPlayer player, FinalSight sight, long now) {
+        net.minecraft.world.phys.AABB around = player.m_20191_().m_82400_(FinalSight.DREAD_RANGE);
+        for (com.hex.kagune.control.npc.CcgAgent agent : level.m_6443_(com.hex.kagune.control.npc.CcgAgent.class, around,
+                a -> a.m_6084_() && a.mind != null && (a.m_142582_(player) || a.m_20280_(player) <= 10.0 * 10.0))) {
+            switch (FinalSight.investigator(AgentBrain.rankLevel(agent))) {
+                case RUN -> {
+                    agent.mind.routedFrom = player.m_19879_();
+                    agent.mind.routedUntil = Math.max(agent.mind.routedUntil, now + FinalSight.STILL_RUNNING);
+                }
+                case SHAKE -> {
+                    agent.mind.afraidOf = player.m_19879_();
+                    agent.mind.afraidUntil = Math.max(agent.mind.afraidUntil, now + FinalSight.STILL_SHAKING);
+                }
+                default -> {
+                }
+            }
+        }
+        for (GhoulNpc npc : level.m_6443_(GhoulNpc.class, around, ghoul -> ghoul.m_6084_() && ghoul.mind != null && ghoul.identity() != null
+                && (ghoul.m_142582_(player) || ghoul.m_20280_(player) <= 10.0 * 10.0))) {
+            if (player.m_20148_().equals(npc.mind.owner)) {
+                continue;
+            }
+            if (FinalSight.ghoul(npc.identity().tier(), com.hex.kagune.control.npc.NpcIdentity.TIERS) == FinalSight.Nerve.RUN) {
+                npc.mind.scaredUntil = Math.max(npc.mind.scaredUntil, now + FinalSight.STILL_RUNNING);
+                npc.mind.scaredOf = player.m_19879_();
+            } else {
+                npc.mind.afraidOf = player.m_19879_();
+                npc.mind.afraidUntil = Math.max(npc.mind.afraidUntil, now + FinalSight.STILL_SHAKING);
+            }
+        }
+    }
+
     // ---------------------------------------------------------------- the NPCs
 
     private static void eto(ServerLevel level, ServerPlayer player, Display shown, Display before, long now) {
@@ -180,7 +225,9 @@ public final class Sightings {
         FinalSight sight = seen(player);
         for (GhoulNpc npc : level.m_6443_(GhoulNpc.class, player.m_20191_().m_82400_(NOTICE), ghoul -> ghoul.m_6084_() && ghoul.mind != null && ghoul.m_142582_(player))) {
             boolean ally = player.m_20148_().equals(npc.mind.owner);
-            if (!ally && shown.frightening()) {
+            boolean shaker = sight.kingly() && npc.identity() != null
+                && FinalSight.ghoul(npc.identity().tier(), com.hex.kagune.control.npc.NpcIdentity.TIERS) == FinalSight.Nerve.SHAKE; // 2.1.9
+            if (!ally && shown.frightening() && !shaker) {
                 // It runs from what it can't fight (unless it is already at their throat). 1.3.65: from them (not the nearest player), as
                 // long as the sight is bad (War and the Dragon longest, and kept up while in sight: terror).
                 if (npc.mind.prey != player.m_19879_() || shown == Display.DREAD) {

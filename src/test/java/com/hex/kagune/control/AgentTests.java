@@ -35,8 +35,38 @@ public final class AgentTests {
         }
     }
 
+    /** 2.1.9: before Peace or War: Rank 0-4 and the weaker wild ghouls run, Rank 5-7 and the strongest shake, Rank 8 and above stand. */
+    static void dread() {
+        com.hex.kagune.control.npc.FinalSight war = com.hex.kagune.control.npc.FinalSight.WAR;
+        check(war.kingly() && com.hex.kagune.control.npc.FinalSight.PEACE.kingly() && !com.hex.kagune.control.npc.FinalSight.DRAGON.kingly()
+            && !com.hex.kagune.control.npc.FinalSight.UKAKU.kingly(), "Peace and War are the king's");
+        for (int rank = 0; rank <= 10; rank++) {
+            com.hex.kagune.control.npc.FinalSight.Nerve nerve = com.hex.kagune.control.npc.FinalSight.investigator(rank);
+            check(nerve == (rank <= 4 ? com.hex.kagune.control.npc.FinalSight.Nerve.RUN : rank <= 7 ? com.hex.kagune.control.npc.FinalSight.Nerve.SHAKE
+                : com.hex.kagune.control.npc.FinalSight.Nerve.STAND), "Rank " + rank + ": " + nerve);
+        }
+        int tiers = com.hex.kagune.control.npc.NpcIdentity.TIERS;
+        for (int tier = 0; tier < tiers; tier++) {
+            check(com.hex.kagune.control.npc.FinalSight.ghoul(tier, tiers) == (tier < tiers - 1 ? com.hex.kagune.control.npc.FinalSight.Nerve.RUN
+                : com.hex.kagune.control.npc.FinalSight.Nerve.SHAKE), "wild ghoul tier " + tier);
+        }
+        int breaks = 0;
+        for (long t = 0; t < 900; t++) {
+            if (com.hex.kagune.control.npc.FinalSight.breaks(17, t)) {
+                breaks++;
+            }
+        }
+        check(breaks >= 90 && breaks <= 110, "a shaker's nerve gives about once every few seconds: " + breaks + " ticks of 900");
+        float most = 0.0F;
+        for (double t = 0.0; t < 200.0; t += 0.37) {
+            most = Math.max(most, Math.abs(com.hex.kagune.control.npc.FinalSight.tremble(5, t)));
+        }
+        check(most > 0.015F && most < 0.05F, "a tremble, small: " + most);
+    }
+
     public static void main(String[] args) throws IOException {
         looks();
+        dread();
         bodies();
         spawning();
         targets();
