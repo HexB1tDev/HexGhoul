@@ -38,6 +38,7 @@ public final class NpcTests {
     public static void main(String[] args) {
         village();
         lives();
+        romance214();
         identity();
         blades();
         bubbles();
@@ -838,6 +839,49 @@ public final class NpcTests {
         check((com.hex.kagune.control.village.HumanVoice.Topic.WORK.flag() & (com.hex.kagune.control.npc.NpcBonds.MET | com.hex.kagune.control.npc.NpcBonds.ASKED
             | com.hex.kagune.control.village.HumanPersona.CONFESSED | com.hex.kagune.control.village.HumanPersona.PARTNER
             | com.hex.kagune.control.village.HumanPersona.NOT_TYPE)) == 0, "learned flags past the bond's own");
+    }
+
+    /** 2.1.4: romance for every temper (HumanRomance): flirting at every warmth, a kind no, a partner's talk, more kisses, hugs and love. */
+    static void romance214() {
+        java.util.regex.Pattern banned = java.util.regex.Pattern.compile("Kaneki|Ayato|Furuta|Takatsuki|Aogiri|Yoshimura");
+        boolean clean = true;
+        String bad = "";
+        int distinct = 0;
+        for (com.hex.kagune.control.village.HumanPersona.Temper temper : com.hex.kagune.control.village.HumanPersona.Temper.values()) {
+            java.util.Set<String> said = new java.util.HashSet<>();
+            for (int seed = 0; seed < 24; seed++) {
+                java.util.List<String> lines = new java.util.ArrayList<>();
+                for (int regard : new int[] {0, 30, 70}) {
+                    lines.add(com.hex.kagune.control.village.HumanRomance.flirt(temper, regard, true, seed));
+                    lines.add(com.hex.kagune.control.village.HumanRomance.flirt(temper, regard, false, seed));
+                }
+                com.hex.kagune.control.village.HumanLife.Life life = com.hex.kagune.control.village.HumanLife.of(seed * 977L, null);
+                for (com.hex.kagune.control.village.HumanRomance.Partner topic : com.hex.kagune.control.village.HumanRomance.Partner.values()) {
+                    for (com.hex.kagune.control.village.HumanPersona.Taste taste : com.hex.kagune.control.village.HumanPersona.Taste.values()) {
+                        lines.add(com.hex.kagune.control.village.HumanRomance.partner(temper, topic, taste, life.dream(), seed));
+                    }
+                }
+                lines.add(com.hex.kagune.control.village.HumanRomance.kissed(temper, seed));
+                lines.add(com.hex.kagune.control.village.HumanRomance.hugged(temper, seed));
+                lines.add(com.hex.kagune.control.village.HumanRomance.loved(temper, seed));
+                for (String line : lines) {
+                    boolean ok = line != null && !line.isBlank() && !line.contains("{") && !line.contains("null") && line.length() <= 420
+                        && !banned.matcher(line).find() && !line.contains("like I want");
+                    if (!ok && bad.isEmpty()) {
+                        bad = temper + ": " + line;
+                    }
+                    clean &= ok;
+                    said.add(line);
+                }
+            }
+            distinct += said.size();
+            check(said.size() >= 60, temper + " has plenty to say in love: " + said.size());
+        }
+        check(clean, "every temper's romance is said cleanly: " + bad);
+        check(com.hex.kagune.control.village.HumanRomance.flirted(com.hex.kagune.control.village.HumanPersona.Temper.FLIRTY, true)
+            > com.hex.kagune.control.village.HumanRomance.flirted(com.hex.kagune.control.village.HumanPersona.Temper.STOIC, true)
+            && com.hex.kagune.control.village.HumanRomance.flirted(com.hex.kagune.control.village.HumanPersona.Temper.KIND, false) == 0,
+            "a flirt warms the flirty most, and one that doesn't land warms nobody");
     }
 
     static void village() {

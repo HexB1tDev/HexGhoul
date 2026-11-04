@@ -43,16 +43,22 @@ public final class HumanTalk {
 
     /** Who each player is talking to (an entity id) and what they were offered; the day they last paid each human a compliment. */
     private record Talk(int npc, List<NpcTalk.Choice> offered, List<com.hex.kagune.control.village.VillageShop.Offer> deals,
-                        com.hex.kagune.control.village.VillageShop.Offer selling, List<com.hex.kagune.control.village.HumanVoice.Topic> topics) {
+                        com.hex.kagune.control.village.VillageShop.Offer selling, List<com.hex.kagune.control.village.HumanVoice.Topic> topics,
+                        List<com.hex.kagune.control.village.HumanRomance.Partner> ours) {
         Talk(int npc, List<NpcTalk.Choice> offered) {
-            this(npc, offered, null, null, null);
+            this(npc, offered, null, null, null, null);
         }
 
         Talk(int npc, List<NpcTalk.Choice> offered, List<com.hex.kagune.control.village.VillageShop.Offer> deals,
              com.hex.kagune.control.village.VillageShop.Offer selling) {
-            this(npc, offered, deals, selling, null);
+            this(npc, offered, deals, selling, null, null);
         }
     }
+
+    /** 2.1.4: the day each player last flirted with each human (player + human). */
+    private static final Map<String, Long> FLIRTED = new HashMap<>();
+    /** 2.1.4: a partner's talk on the page (at most this many of them a time, the rest of the page its life's). */
+    static final int OURS = 3;
 
     /** 2.1.3: the day each player last gave each human a gift (player + human). */
     private static final Map<String, Long> GIFTED = new HashMap<>();
@@ -181,7 +187,30 @@ public final class HumanTalk {
             int slot = choice.say();
             if (slot >= 0 && slot < talking.topics().size()) {
                 topic(player, human, talking.topics().get(slot), roll);
+            } else if (talking.ours() != null && slot >= talking.topics().size() && slot < talking.topics().size() + talking.ours().size()) {
+                // 2.1.4: its partner's talk.
+                com.hex.kagune.control.village.HumanRomance.Partner ours = talking.ours().get(slot - talking.topics().size());
+                HumanBrain.gesture(human, com.hex.kagune.control.village.HumanGestures.love(temper, roll), 0, now);
+                HumanBrain.hearts(human, level, 3);
+                topics(player, human, com.hex.kagune.control.village.HumanRomance.partner(temper, ours, HumanPersona.taste(seed),
+                    HumanBrain.life(human).dream(), roll));
             }
+            return;
+        }
+        if (choice == NpcTalk.Choice.TEASE) {
+            // 2.1.4: a flirt: how it lands by how warm it is and whether the player is who it falls for; once a day for the warmth.
+            boolean lands = HumanPersona.attracted(attraction(human), female(player)) && !bond.has(HumanPersona.NOT_TYPE);
+            String both = player.m_20148_() + key;
+            if (lands && FLIRTED.getOrDefault(both, Long.MIN_VALUE) != day) {
+                FLIRTED.put(both, day);
+                QuestServer.bond(player, key, bond.regard(bond.regard() + com.hex.kagune.control.village.HumanRomance.flirted(temper, true)));
+            }
+            HumanBrain.gesture(human, lands ? com.hex.kagune.control.village.HumanGestures.compliment(temper, roll)
+                : com.hex.kagune.control.village.HumanGestures.about(temper, roll), 0, now);
+            if (lands && bond.regard() >= HumanPersona.CLOSE) {
+                HumanBrain.hearts(human, level, 2);
+            }
+            show(player, human, com.hex.kagune.control.village.HumanRomance.flirt(temper, bond.regard(), lands, roll));
             return;
         }
         if (choice == NpcTalk.Choice.CHAT) {
@@ -235,7 +264,8 @@ public final class HumanTalk {
                 : com.hex.kagune.control.npc.EtoGesture.HUG);
             human.mind.pendingThen = kiss ? com.hex.kagune.control.village.HumanGestures.of(com.hex.kagune.control.npc.EtoGesture.KISSED) : 0;
             human.mind.pendingUntil = now + COMING;
-            human.mind.pendingLine = kiss ? HumanPersona.kissed(temper, roll) : HumanPersona.hugged(temper, roll);
+            human.mind.pendingLine = kiss ? com.hex.kagune.control.village.HumanRomance.kissed(temper, roll)
+                : com.hex.kagune.control.village.HumanRomance.hugged(temper, roll);
             ControlNetwork.sendTo(player, new S2CNpcTalk(human.m_19879_(), HumanBrain.name(human), temper.title, bond.regard(), false,
                 S2CNpcTalk.HUMAN_FACE, "", new int[0], new String[0]));
             return;
@@ -266,7 +296,7 @@ public final class HumanTalk {
                 }
             }
             case WHO -> line = HumanPersona.type(temper, attraction(human), HumanPersona.taste(seed), roll); // 2.0.35
-            case SAY_8 -> line = HumanPersona.love(temper, roll);
+            case SAY_8 -> line = com.hex.kagune.control.village.HumanRomance.loved(temper, roll); // 2.1.4
             default -> {
                 line = HumanPersona.compliment(temper, bond.regard(), roll);
                 String praised = player.m_20148_() + key;
@@ -433,6 +463,10 @@ public final class HumanTalk {
         }
         offered.add(TRADE); // 2.0.13
         said.add("Let's trade.");
+        if (!partner) {
+            offered.add(NpcTalk.Choice.TEASE); // 2.1.4
+            said.add(regard >= HumanPersona.CLOSE ? "Flirt with " + HumanBrain.name(human) + "." : "Flirt a little.");
+        }
         boolean doubted = DOUBTED.contains(both);
         if (doubted) {
             offered.add(NpcTalk.Choice.SAY_6);
@@ -489,19 +523,33 @@ public final class HumanTalk {
     private static void topics(ServerPlayer player, HumanNpc human, String line) {
         String key = human.m_20148_().toString();
         QuestLog.Bond bond = QuestServer.bond(player, key);
+        int turn = human.m_217043_().m_188503_(1000);
         List<com.hex.kagune.control.village.HumanVoice.Topic> topics = com.hex.kagune.control.village.HumanVoice.topics(bond.regard(),
-            bond.has(HumanPersona.PARTNER), bond.flags(), human.m_217043_().m_188503_(1000));
+            bond.has(HumanPersona.PARTNER), bond.flags(), turn);
+        // 2.1.4: its partner's talk too (a few a time), the page's room shared with its life's.
+        List<com.hex.kagune.control.village.HumanRomance.Partner> ours = new java.util.ArrayList<>();
+        if (bond.has(HumanPersona.PARTNER)) {
+            com.hex.kagune.control.village.HumanRomance.Partner[] all = com.hex.kagune.control.village.HumanRomance.Partner.values();
+            for (int i = 0; i < OURS; i++) {
+                ours.add(all[Math.floorMod(turn + i, all.length)]);
+            }
+            topics = new java.util.ArrayList<>(topics.subList(0, Math.min(topics.size(), com.hex.kagune.control.village.HumanVoice.ROOM - OURS)));
+        }
         List<NpcTalk.Choice> offered = new java.util.ArrayList<>();
         List<String> said = new java.util.ArrayList<>();
         for (int i = 0; i < topics.size(); i++) {
             offered.add(NpcTalk.Choice.SAYS[i]);
             said.add(topics.get(i).label);
         }
+        for (int i = 0; i < ours.size(); i++) {
+            offered.add(NpcTalk.Choice.SAYS[topics.size() + i]);
+            said.add(ours.get(i).label);
+        }
         offered.add(NpcTalk.Choice.BACK);
         said.add("Let's talk about something else.");
         offered.add(NpcTalk.Choice.LEAVE);
         said.add("");
-        TALKS.put(player.m_20148_(), new Talk(human.m_19879_(), List.copyOf(offered), null, null, List.copyOf(topics)));
+        TALKS.put(player.m_20148_(), new Talk(human.m_19879_(), List.copyOf(offered), null, null, List.copyOf(topics), List.copyOf(ours)));
         int[] ordinals = new int[offered.size()];
         String[] labels = new String[offered.size()];
         for (int i = 0; i < ordinals.length; i++) {
