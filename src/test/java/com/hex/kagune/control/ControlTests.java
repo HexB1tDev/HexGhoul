@@ -533,7 +533,41 @@ public final class ControlTests {
             && RinkakuRibbon.lifted(0xFF000000) == 0xFF000000, "the skin's base grey gives back the colour itself");
     }
 
+    /** 2.1.0: a kakuja's centipede legs and mask in the kagune's colours: grey plates, its colour in the flesh between them. */
+    static void kakujaPalette() {
+        for (int colour : new int[] {KaguneColours.DEFAULT, 0x1E50D8, 0x7A1FB8, 0x1F9E4A, 0x141414, 0xE8E8E8, 0xFFD400, 0xFF6A00}) {
+            KakujaPalette.Palette p = KakujaPalette.of(colour);
+            String name = Integer.toHexString(colour);
+            boolean grey = true;
+            for (int plate : new int[] {p.shadow(), p.dark(), p.plate(), p.hi(), p.streak(), p.rim(), p.rimShade(), p.gloss(), p.claw()}) {
+                grey &= KakujaPalette.chroma(plate) < 0.08;
+            }
+            check(grey, name + ": the plates are greys, black and white, never its colour");
+            double[] kagune = KaguneColours.toHsv(colour);
+            double[] flesh = KaguneColours.toHsv(p.flesh());
+            if (kagune[1] > 0.4 && kagune[2] > 0.35) {
+                double dh = Math.abs(flesh[0] - kagune[0]);
+                check(Math.min(dh, 1.0 - dh) < 0.06 && flesh[1] > 0.4, name + ": the flesh between them is its colour");
+            }
+            double plateValue = KaguneColours.toHsv(p.plate())[2];
+            check(Math.abs(plateValue - kagune[2]) > 0.25 || kagune[1] > 0.4, name + ": the plates stand apart from the kagune");
+            check(KaguneColours.toHsv(p.rim())[2] > KaguneColours.toHsv(p.plate())[2] + 0.2, name + ": each plate's rim lit pale");
+        }
+        check(KakujaPalette.bone(0x141414) && !KakujaPalette.bone(KaguneColours.DEFAULT) && !KakujaPalette.bone(0xE8E8E8),
+            "a black kagune gets bone-white plates; the others dark ones");
+        check(KaguneColours.toHsv(KakujaPalette.of(0x141414).plate())[2] > 0.6, "bone-white plates are light");
+        KakujaPalette.Palette blue = KakujaPalette.of(0x1E50D8);
+        KakujaPalette.Palette red = KakujaPalette.of(KaguneColours.DEFAULT);
+        check(blue.plate() != red.plate() && KakujaPalette.chroma(blue.plate()) < 0.08, "the greys lean, just, to the kagune's hue");
+        com.hex.kagune.control.kakugan.CentipedeMask.colours(blue);
+        com.hex.kagune.control.ukaku.CentipedeTail.colours(blue);
+        check(true, "the legs and the mask take a palette");
+        com.hex.kagune.control.kakugan.CentipedeMask.colours(red);
+        com.hex.kagune.control.ukaku.CentipedeTail.colours(red);
+    }
+
     public static void main(String[] args) {
+        kakujaPalette();
         rinkakuAlive();
         rinkakuBlock();
         rinkakuRoot();

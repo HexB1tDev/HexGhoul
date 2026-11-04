@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.1.0 (HexGhoul): kakuja legs and mask in the kagune's colours (testing)
+
+See `.github/release-notes-2.1.0.md`. A Rinkaku kakuja's centipede legs and mask now take on the kagune's colour, blending with it while staying distinct. Before, both were a fixed plum. The centipede's segments are always greys, black and white: charcoal plates with pale grey and white rims, or bone-white plates for a kagune too dark to stand apart from them. They carry only a breath of the kagune's hue. The glowing flesh between the plates is the kagune's own colour. The mask has the same grey shell leaning a little more toward the kagune's colour, with the kagune's dark in its edges. The red kakugan lens stays. From this version on, the last number never reaches 10 (after x.y.9 comes x.(y+1).0), the owner's rule.
+
 ## 2.0.51 (HexGhoul): Rinkaku tails fixed and alive (testing)
 
 See `.github/release-notes-2.0.51.md`. The Rinkaku tails are fixed and alive. The texture breakage the owner showed in game is gone. At rest the tails take the shape from the showcase render instead of the original chain's coiled, twitching rest. They stretch and draw in, swells run along them, their middles breathe, and the veins are fine and realistic.

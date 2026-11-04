@@ -25,6 +25,13 @@ public final class ArtPreview {
 
     public static void main(String[] args) throws Exception {
         File out = new File(args.length > 0 ? args[0] : "build/preview");
+        // 2.1.0: -Dkagune=RRGGBB draws the centipede legs and the mask in that kagune's colours (KakujaPalette).
+        String kagune = System.getProperty("kagune");
+        if (kagune != null) {
+            com.hex.kagune.control.KakujaPalette.Palette palette = com.hex.kagune.control.KakujaPalette.of(Integer.parseInt(kagune, 16));
+            com.hex.kagune.control.ukaku.CentipedeTail.colours(palette);
+            com.hex.kagune.control.kakugan.CentipedeMask.colours(palette);
+        }
         out.mkdirs();
         java.util.Set<String> wanted = new java.util.HashSet<>(java.util.Arrays.asList(args).subList(Math.min(1, args.length), args.length));
         if (wanted.isEmpty() || wanted.contains("aim")) {

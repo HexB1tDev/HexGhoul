@@ -69,6 +69,8 @@ public final class RinkakuMaskLayer extends RenderLayer<AbstractClientPlayer, En
             return;
         }
         KakuganEyes eyes = KakuganClient.eyes(player);
+        // 2.1.0: in his kagune's colours, as his centipede legs are (KakujaPalette).
+        com.hex.kagune.control.kakugan.CentipedeMask.colours(com.hex.kagune.control.KakujaPalette.of(view.color()));
         pose.m_85836_();
         PlayerLayers.upperBody(pose, player, partialTick);
         model.f_102808_.m_104299_(pose);

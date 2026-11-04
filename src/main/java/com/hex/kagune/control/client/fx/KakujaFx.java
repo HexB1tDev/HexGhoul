@@ -455,6 +455,10 @@ public final class KakujaFx {
     }
 
     private static void shatter(AbstractClientPlayer player, Track track, KaguneForm was, double now) {
+        // 2.1.0: what breaks off is in his kagune's own colours (KakujaPalette), as it was drawn.
+        com.hex.kagune.control.KakujaPalette.Palette palette = com.hex.kagune.control.KakujaPalette.of(KaguneClientState.get(player).color());
+        CentipedeTail.colours(palette);
+        com.hex.kagune.control.kakugan.CentipedeMask.colours(palette);
         if (track.shatteredAt == now) {
             return; // (broken already this tick: the death and the kagune put away arrive together)
         }

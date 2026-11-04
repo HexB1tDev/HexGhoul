@@ -135,6 +135,8 @@ The tools: `tools/BlockPreview.java`, `tools/ReaperPreview.java <skin> <out> [bu
 - New Minecraft API needs an allowlist entry with [srg], [order] or [forge] evidence plus a stub. Stale entries fail the build. Never call
   a vanilla-private member directly (use `ObfuscationReflectionHelper`).
 - Append only to ordinal-sent enums.
+- **Version numbers (the owner's rule):** the last number never reaches 10: after x.y.9 comes x.(y+1).0 (2.1.9 is followed by 2.2.0).
+  It was missed through 2.0.51, and published releases can't be renumbered, so it applies from 2.1.0 on.
 - Each fix or feature is its own version:
   - both version strings, release notes, a README entry and a new top section in `companions-handoff.md`;
   - commit `2.0.x: ...` with `Co-Authored-By: Claude <noreply@anthropic.com>` and the session line, no model names;

@@ -120,6 +120,8 @@ public final class CentipedeRenderer {
             boolean fine = !firstPerson && distance <= DETAIL_DISTANCE_SQR;
             Legs legs = LEGS.computeIfAbsent(player.m_20148_(), id -> new Legs());
             legs.seen = level.m_46467_();
+            // 2.1.0: his legs in his kagune's colours: grey plates, its own colour in the flesh between them (KakujaPalette).
+            CentipedeTail.colours(com.hex.kagune.control.KakujaPalette.of(view.color()));
             if (Double.compare(legs.burstAt, track.burstAt()) != 0) {
                 // A new burst: the legs tear out afresh from his back.
                 java.util.Arrays.fill(legs.legs, null);

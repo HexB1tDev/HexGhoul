@@ -20,20 +20,44 @@ import static com.hex.kagune.control.ukaku.KakujaModel.sub;
  * and inside of the curl and the back faces out of it.
  */
 public final class CentipedeTail {
-    static final int PLATE_SHADOW = 0x22142A;
-    static final int PLATE_DARK = 0x36213C;
-    static final int PLATE = 0x563A5E;
-    static final int PLATE_HI = 0x6F5078;
-    static final int STREAK = 0x9A7EA6;
-    static final int RIM = 0xC6A4C0;
-    static final int RIM_SHADE = 0x8C6C8A;
-    static final int FLESH_DARK = 0x6E1016;
-    static final int FLESH = 0xC82A28;
-    static final int FLESH_HOT = 0xF2493A;
-    static final int CLAW = 0x121016;
-    static final int CLAW_SHEEN = 0x3E3846;
-    static final int CLAW_EDGE = 0xB4A6BE;
-    static final int FANG_POINT = 0x170D19;
+    // 2.1.0: the colours are the kagune's own now (KakujaPalette: greys for the plates, its colour for the flesh), set before each set of
+    // legs is drawn ({@link #colours}): the render thread's alone. These are the default crimson kagune's.
+    static int PLATE_SHADOW;
+    static int PLATE_DARK;
+    static int PLATE;
+    static int PLATE_HI;
+    static int STREAK;
+    static int RIM;
+    static int RIM_SHADE;
+    static int FLESH_DARK;
+    static int FLESH;
+    static int FLESH_HOT;
+    static int CLAW;
+    static int CLAW_SHEEN;
+    static int CLAW_EDGE;
+    static int FANG_POINT;
+
+    static {
+        colours(com.hex.kagune.control.KakujaPalette.of(com.hex.kagune.control.KaguneColours.DEFAULT));
+    }
+
+    /** 2.1.0: the legs drawn next are in {@code palette} (the kagune's: {@code KakujaPalette.of}). */
+    public static void colours(com.hex.kagune.control.KakujaPalette.Palette palette) {
+        PLATE_SHADOW = palette.shadow();
+        PLATE_DARK = palette.dark();
+        PLATE = palette.plate();
+        PLATE_HI = palette.hi();
+        STREAK = palette.streak();
+        RIM = palette.rim();
+        RIM_SHADE = palette.rimShade();
+        FLESH_DARK = palette.fleshDark();
+        FLESH = palette.flesh();
+        FLESH_HOT = palette.fleshHot();
+        CLAW = palette.claw();
+        CLAW_SHEEN = palette.clawSheen();
+        CLAW_EDGE = palette.clawEdge();
+        FANG_POINT = palette.claw();
+    }
 
     /**
      * A plate's cross-section: x across (unit half-width), y dorsal (unit half-height). A box with chamfered corners and a
