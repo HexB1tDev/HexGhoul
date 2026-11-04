@@ -224,6 +224,8 @@ public final class HumanPersona {
     /** Bond flags (beside {@code NpcBonds}' own): a ghoul player has told it what they are and it took it; they are together. */
     public static final int CONFESSED = 16;
     public static final int PARTNER = 32;
+    /** 2.3.4: married (a ring taken), a bond flag past the topics' (HumanVoice.Topic.flag: 128 up to 1 << 17). */
+    public static final int MARRIED = 1 << 20;
 
     /** How it takes a ghoul's confession: yes, it needs to hear more (a second try, with more chance), or no (try another day). */
     public enum Answer { YES, DOUBT, NO }

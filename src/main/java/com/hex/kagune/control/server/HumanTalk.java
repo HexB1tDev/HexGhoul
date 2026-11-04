@@ -248,6 +248,19 @@ public final class HumanTalk {
         // hearts), with a line in a bubble.
         // 1.3.78: a date: it takes their hand and walks with them, glued at their side, inside the village; the talk ends so it can be
         // seen. Once a day it warms to them a little for it.
+        // 2.3.4: the romance page, back from it, a ring.
+        if (choice == NpcTalk.Choice.SWEET) {
+            sweet(player, human, HumanPersona.hello(temper, bond.regard(), true, roll));
+            return;
+        }
+        if (choice == NpcTalk.Choice.BACK && talking.topics() == null && talking.deals() == null) {
+            show(player, human, HumanPersona.hello(temper, bond.regard(), bond.has(HumanPersona.PARTNER), roll));
+            return;
+        }
+        if (choice == NpcTalk.Choice.PROPOSE) {
+            propose(player, human, temper, key, bond, roll, now);
+            return;
+        }
         if (choice == NpcTalk.Choice.INVITE) {
             TALKS.remove(player.m_20148_());
             HumanBrain.takeHand(human, player, now);
@@ -488,19 +501,9 @@ public final class HumanTalk {
             said.add(ROMANCE[2]);
         }
         if (partner) {
-            offered.add(NpcTalk.Choice.SAY_8);
-            said.add(ROMANCE[3]);
-            // 1.3.77: a kiss, a hug.
-            String name = HumanBrain.name(human);
-            offered.add(NpcTalk.Choice.KISS);
-            said.add("Kiss " + name + ".");
-            offered.add(NpcTalk.Choice.HUG);
-            said.add("Hug " + name + ".");
-            // 1.3.78: a date, hand in hand (not while it already holds their hand).
-            if (human.mind == null || human.mind.holding == null) {
-                offered.add(NpcTalk.Choice.INVITE);
-                said.add("Let's go for a walk, hand in hand.");
-            }
+            // 2.3.4 (the owner: "there's no romance tab like in the other NPCs"): the romance on a page of its own, as a companion's is.
+            offered.add(NpcTalk.Choice.SWEET);
+            said.add("Be sweet to " + HumanBrain.name(human) + ". (romance)");
         }
         offered.add(NpcTalk.Choice.LEAVE);
         said.add("");
@@ -512,8 +515,85 @@ public final class HumanTalk {
             labels[i] = said.get(i);
         }
         // 2.0.1: its face as the client draws it (HUMAN_FACE: the talk screen reads its look off the entity).
-        ControlNetwork.sendTo(player, new S2CNpcTalk(human.m_19879_(), HumanBrain.name(human), title(human), regard, false,
+        ControlNetwork.sendTo(player, new S2CNpcTalk(human.m_19879_(), HumanBrain.name(human), spouse(human, bond) + title(human), regard, false,
             S2CNpcTalk.HUMAN_FACE, line, ordinals, labels));
+    }
+
+    /** 2.3.4: "Your wife, " or "Your husband, " before its title, married to them; else nothing. */
+    static String spouse(HumanNpc human, QuestLog.Bond bond) {
+        return bond.has(HumanPersona.MARRIED) ? (com.hex.kagune.control.npc.HumanRules.female(human.look()) ? "Your wife, " : "Your husband, ") : "";
+    }
+
+    /**
+     * 2.3.4: the romance page (a partner's): "I love you.", a kiss (as a companion's: Shift tapped or held), a hug, a walk hand in hand,
+     * a ring offered (one in hand, not yet married), back.
+     */
+    private static void sweet(ServerPlayer player, HumanNpc human, String line) {
+        String key = human.m_20148_().toString();
+        QuestLog.Bond bond = QuestServer.bond(player, key);
+        String name = HumanBrain.name(human);
+        List<NpcTalk.Choice> offered = new java.util.ArrayList<>();
+        List<String> said = new java.util.ArrayList<>();
+        offered.add(NpcTalk.Choice.SAY_8);
+        said.add(ROMANCE[3]);
+        offered.add(NpcTalk.Choice.KISS);
+        said.add("Kiss " + name + ".");
+        offered.add(NpcTalk.Choice.HUG);
+        said.add("Hug " + name + ".");
+        if (human.mind == null || human.mind.holding == null) {
+            offered.add(NpcTalk.Choice.INVITE);
+            said.add("Let's go for a walk, hand in hand.");
+        }
+        if (!bond.has(HumanPersona.MARRIED) && (com.hex.kagune.control.ControlItems.ring(player.m_21205_())
+            || com.hex.kagune.control.ControlItems.ring(player.m_21206_()))) {
+            offered.add(NpcTalk.Choice.PROPOSE);
+            said.add("Marry me. (offer the ring)");
+        }
+        offered.add(NpcTalk.Choice.BACK);
+        said.add("Back.");
+        offered.add(NpcTalk.Choice.LEAVE);
+        said.add("");
+        TALKS.put(player.m_20148_(), new Talk(human.m_19879_(), List.copyOf(offered)));
+        int[] ordinals = new int[offered.size()];
+        String[] labels = new String[offered.size()];
+        for (int i = 0; i < ordinals.length; i++) {
+            ordinals[i] = offered.get(i).ordinal();
+            labels[i] = said.get(i);
+        }
+        ControlNetwork.sendTo(player, new S2CNpcTalk(human.m_19879_(), name, spouse(human, bond) + title(human), bond.regard(), false,
+            S2CNpcTalk.HUMAN_FACE, line, ordinals, labels));
+    }
+
+    /** 2.3.4: a ring offered to a partner: married (the ring taken), one spouse at a time (no companion already). */
+    private static void propose(ServerPlayer player, HumanNpc human, HumanPersona.Temper temper, String key, QuestLog.Bond bond, int roll, long now) {
+        ServerLevel level = player.m_284548_();
+        if (!bond.has(HumanPersona.PARTNER) || bond.has(HumanPersona.MARRIED)) {
+            sweet(player, human, com.hex.kagune.control.village.HumanRomance.loved(temper, roll));
+            return;
+        }
+        if (UniqueNpcs.spouseOf(level, player, null) != null) {
+            sweet(player, human, "You're already married. ...To someone else. I'm not doing that.");
+            return;
+        }
+        boolean taken = false;
+        for (net.minecraft.world.item.ItemStack held : new net.minecraft.world.item.ItemStack[] {player.m_21205_(), player.m_21206_()}) {
+            if (!taken && com.hex.kagune.control.ControlItems.ring(held)) {
+                held.m_41774_(1);
+                taken = true;
+            }
+        }
+        if (!taken) {
+            sweet(player, human, "A ring? Where? ...Don't tease me like that.");
+            return;
+        }
+        QuestServer.bond(player, key, bond.with(HumanPersona.MARRIED, true).regard(Math.max(bond.regard(), com.hex.kagune.control.npc.NpcBonds.MOST)));
+        HumanBrain.gesture(human, com.hex.kagune.control.village.HumanGestures.of(com.hex.kagune.control.npc.EtoGesture.RING), 0, now);
+        HumanBrain.hearts(human, level, 20);
+        if (level.m_7654_() != null) {
+            level.m_7654_().m_6846_().m_240416_(Component.m_237113_("\u00a7d\u2764 " + player.m_36316_().getName() + " and " + HumanBrain.name(human)
+                + " are married!"), false);
+        }
+        sweet(player, human, com.hex.kagune.control.village.HumanRomance.proposed(temper, roll));
     }
 
     /** 2.1.3: the talk screen's line under its name: its temper and its trade ("Shy baker"). */

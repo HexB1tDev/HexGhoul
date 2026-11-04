@@ -945,6 +945,20 @@ public final class NpcTests {
             "a gift said rightly (\"an iron ingot\", \"cookies\", \"bread\")");
         check(com.hex.kagune.control.village.HumanApproach.gives(12) == 4 && com.hex.kagune.control.village.HumanApproach.gives(1) == 1,
             "a third of a ware's lot, at least one");
+        // 2.3.4: a human partner's ring and a kiss left hanging, every temper; married past every other flag of a human's bond.
+        int topicFlags = 0;
+        for (com.hex.kagune.control.village.HumanVoice.Topic topic : com.hex.kagune.control.village.HumanVoice.Topic.values()) {
+            topicFlags |= topic.flag();
+        }
+        check((com.hex.kagune.control.village.HumanPersona.MARRIED & (topicFlags | com.hex.kagune.control.village.HumanPersona.CONFESSED
+            | com.hex.kagune.control.village.HumanPersona.PARTNER | com.hex.kagune.control.village.HumanPersona.NOT_TYPE
+            | com.hex.kagune.control.village.HumanPersona.LEGACY | 7)) == 0, "married: a flag of its own");
+        for (com.hex.kagune.control.village.HumanPersona.Temper temper : tempers) {
+            for (int roll = 0; roll < 4; roll++) {
+                check(com.hex.kagune.control.village.HumanRomance.proposed(temper, roll).length() > 3
+                    && com.hex.kagune.control.village.HumanRomance.hanging(temper, roll).length() > 3, temper + ": a ring's answer, a kiss left hanging");
+            }
+        }
         // Every trade's wares can be given, and said.
         for (com.hex.kagune.control.village.HumanLife.Job job : com.hex.kagune.control.village.HumanLife.Job.values()) {
             check(!job.wares.isEmpty(), job + ": something to give");

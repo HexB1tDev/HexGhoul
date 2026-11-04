@@ -70,6 +70,11 @@ public final class HumanBrain {
         com.hex.kagune.control.village.HumanApproach.Why comeWhy;
         long comeUntil;
         int comeRoll;
+        /** 2.3.4: a kiss as a companion's goes (EtoRules.kiss: waiting, blushing, pulling them in), since when, Shift held, what it says. */
+        com.hex.kagune.control.npc.EtoRules.Kiss kiss;
+        long kissAt;
+        int kissHeld;
+        String kissLine;
     }
 
     /** 1.3.78: it takes {@code player}'s hand for a walk (a date), glued at their right side until one of them lets go. */
@@ -136,6 +141,80 @@ public final class HumanBrain {
         if (now >= mind.strollAt) {
             mind.strollAt = now + 300L + human.m_217043_().m_188503_(400);
             say(human, level, com.hex.kagune.control.village.HumanPersona.stroll(temper, human.m_217043_().m_188503_(1000)));
+        }
+    }
+
+    /** 2.3.4: it leans in for {@code partner}'s kiss and waits, as a companion does ({@code line}: what it says, kissed). */
+    static void startKiss(HumanNpc human, Mind mind, ServerPlayer partner, long now, String line) {
+        mind.kiss = com.hex.kagune.control.npc.EtoRules.Kiss.WAIT;
+        mind.kissAt = now;
+        mind.kissHeld = 0;
+        mind.kissLine = line;
+        mind.with = partner.m_20148_();
+        held(human, com.hex.kagune.control.npc.EtoGesture.KISS, now);
+        partner.m_5661_(net.minecraft.network.chat.Component.m_237113_("\u00a7d\u2764 " + name(human) + " leans in, eyes closed... \u00a77(tap or hold Shift)"), true);
+    }
+
+    /** 2.3.4: a gesture held until the kiss moves on (never timed out under it, as before: it stopped as Shift was held). */
+    private static void held(HumanNpc human, com.hex.kagune.control.npc.EtoGesture gesture, long now) {
+        gesture(human, com.hex.kagune.control.village.HumanGestures.of(gesture), 0, now);
+        human.mind.gestureUntil = Long.MAX_VALUE;
+    }
+
+    /**
+     * 2.3.4 (the owner: "if [your partner]'s a human, the kiss mechanics don't seem to apply like [the companions'] ... you should be
+     * able to hold shift to make out with them"): the kiss as {@code EtoRules.kiss} has it: a tap of Shift a quick kiss; held, a blush;
+     * held longer, it pulls them in; let go, kissed. Left waiting too long, it gives up.
+     */
+    static void kissing(HumanNpc human, Mind mind, ServerLevel level, long now) {
+        net.minecraft.world.entity.Entity found = mind.with == null ? null : level.m_8791_(mind.with);
+        if (!(found instanceof ServerPlayer player) || !player.m_6084_() || player.m_20280_(human) > 6.0 * 6.0) {
+            mind.kiss = null;
+            mind.gesture = 0;
+            human.gesture(0);
+            return;
+        }
+        human.m_21573_().m_26573_();
+        face(human, player);
+        human.m_21563_().m_24960_(player, 30.0F, 30.0F);
+        boolean shift = player.m_6047_();
+        int released = !shift && mind.kissHeld > 0 ? mind.kissHeld : 0;
+        mind.kissHeld = shift ? mind.kissHeld + 1 : 0;
+        com.hex.kagune.control.npc.EtoRules.Kiss before = mind.kiss;
+        com.hex.kagune.control.npc.EtoRules.Kiss after = com.hex.kagune.control.npc.EtoRules.kiss(before, now - mind.kissAt, shift, mind.kissHeld,
+            released, Math.sqrt(player.m_20280_(human)));
+        if (after == before) {
+            if (before == com.hex.kagune.control.npc.EtoRules.Kiss.BLUSH && now % 15L == 0L
+                || before == com.hex.kagune.control.npc.EtoRules.Kiss.PULL && now % 10L == 0L) {
+                hearts(human, level, before == com.hex.kagune.control.npc.EtoRules.Kiss.PULL ? 2 : 1);
+            }
+            return;
+        }
+        com.hex.kagune.control.village.HumanPersona.Temper temper = temper(human);
+        int roll = human.m_217043_().m_188503_(1000);
+        switch (after) {
+            case BLUSH -> {
+                mind.kiss = after;
+                mind.kissAt = now;
+                held(human, com.hex.kagune.control.npc.EtoGesture.BLUSH, now);
+                hearts(human, level, 3);
+            }
+            case PULL -> {
+                mind.kiss = after;
+                held(human, com.hex.kagune.control.npc.EtoGesture.PULL, now);
+                hearts(human, level, 8);
+            }
+            case KISSED -> {
+                mind.kiss = null;
+                gesture(human, com.hex.kagune.control.village.HumanGestures.of(com.hex.kagune.control.npc.EtoGesture.KISSED), 0, now);
+                hearts(human, level, before == com.hex.kagune.control.npc.EtoRules.Kiss.PULL ? 14 : 8);
+                say(human, level, mind.kissLine != null ? mind.kissLine : com.hex.kagune.control.village.HumanRomance.kissed(temper, roll));
+            }
+            default -> {
+                mind.kiss = null;
+                gesture(human, com.hex.kagune.control.village.HumanGestures.of(com.hex.kagune.control.npc.EtoGesture.POUT), 0, now);
+                say(human, level, com.hex.kagune.control.village.HumanRomance.hanging(temper, roll));
+            }
         }
     }
 
@@ -312,6 +391,7 @@ public final class HumanBrain {
             mind.shakenUntil = now + HumanRules.SHAKEN;
             human.scared(true);
             gestures(human, mind, level, now, true); // 1.3.77: a fright ends any move
+            mind.kiss = null; // 2.3.4
             letGo(human, mind, level, now, null); // 1.3.78: a fright lets go of any hand
             scream(human, level, mind, danger, now);
             mind.ranFrom = danger.body().m_19879_();
@@ -346,6 +426,11 @@ public final class HumanBrain {
             }
         }
         gestures(human, mind, level, now, false);
+        // 2.3.4: kissing (leaning in, blushing, pulling them in): nothing else till it's over.
+        if (mind.kiss != null) {
+            kissing(human, mind, level, now);
+            return;
+        }
         // 1.3.77: walking up to its partner for a kiss or a hug: close enough (or after a while), it faces them and does it.
         if (mind.pending != 0) {
             net.minecraft.world.entity.Entity to = mind.with == null ? null : level.m_8791_(mind.with);
@@ -358,6 +443,11 @@ public final class HumanBrain {
                 human.m_21563_().m_24960_(partner, 30.0F, 30.0F);
                 int what = mind.pending;
                 mind.pending = 0;
+                if (com.hex.kagune.control.village.HumanGestures.gesture(what) == com.hex.kagune.control.npc.EtoGesture.KISS) {
+                    // 2.3.4: a kiss as a companion's: leaning in, waiting for them (a tap of Shift, or held: blushing, then pulled in).
+                    startKiss(human, mind, partner, now, mind.pendingLine);
+                    return;
+                }
                 gesture(human, what, mind.pendingThen, now);
                 if (com.hex.kagune.control.village.HumanGestures.gesture(what) == com.hex.kagune.control.npc.EtoGesture.HUG) {
                     hearts(human, level, 5);
@@ -428,6 +518,11 @@ public final class HumanBrain {
                 || player.m_20280_(human) > HumanRules.TERROR_SAFE * HumanRules.TERROR_SAFE) {
                 continue;
             }
+            // 2.3.4 (the owner: "when you turn ghoul in front of them, even if you already admitted that you're a ghoul, they start running
+            // away and shouting ghoul"): one it knows is a ghoul and took them as they are (told and accepted, or its partner) stays.
+            if (knows(human, player)) {
+                continue;
+            }
             double distance = Math.sqrt(player.m_20280_(human));
             FinalSight sight = Sightings.seen(player);
             boolean shown = KaguneProfile.isActive(player) || sight.any() || GhoulServer.ghoul(player)
@@ -453,6 +548,12 @@ public final class HumanBrain {
             }
         }
         return best;
+    }
+
+    /** 2.3.4: true if {@code human} knows {@code player} is a ghoul and took them as they are (confessed and accepted, or together). */
+    static boolean knows(HumanNpc human, ServerPlayer player) {
+        com.hex.kagune.control.quest.QuestLog.Bond bond = QuestServer.bond(player, human.m_20148_().toString());
+        return bond.has(com.hex.kagune.control.village.HumanPersona.CONFESSED) || bond.has(com.hex.kagune.control.village.HumanPersona.PARTNER);
     }
 
     /**

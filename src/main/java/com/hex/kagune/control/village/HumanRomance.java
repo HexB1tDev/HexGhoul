@@ -274,6 +274,40 @@ public final class HumanRomance {
         return Math.floorMod(seed >> 1, 2) == 0 ? HumanPersona.kissed(temper, seed) : pick(seed, KISSED[temper.ordinal()]);
     }
 
+    /** 2.3.4: a partner given a ring, by temper. */
+    static final String[][] PROPOSED = {
+        {"YES! Yes yes yes! Oh, I'm going to cry. I'm crying. YES!", "Is that... oh! Yes! A thousand times yes!"},
+        {"*covers their face* ...Yes. Yes. I can't look at you. Yes.", "I... yes. I've never wanted anything more. Yes."},
+        {"About time you asked. Yes. Put it on me.", "Yes. And I'm telling the whole village. Right now."},
+        {"Oh, my dear. Yes. Of course yes. Come here.", "Yes. I'll look after you for the rest of my life. And you me."},
+        {"...Fine. Yes. Don't make that face. YES, alright?", "Took you long enough. ...Yes. Obviously yes."},
+        {"A ring? You really do know the way to my heart. Yes.", "Yes. Now kiss me like you mean it."},
+        {"I dreamed this. Exactly this. Yes... say it again so I know I'm awake.", "Yes. Under every star, yes."},
+        {"Y-you mean it? Really? ...Yes! Yes, sorry, yes!", "I'm shaking. Yes. Please don't take it back."},
+        {"Ha! Is this a trick? ...It's not? YES!", "Yes! Race you to the altar!"},
+        {"...Yes.", "Yes. For the rest of my life."},
+        {"Oh no, a commitment. Terrifying. ...Yes, you idiot. Yes.", "Well, someone has to marry you. Yes."},
+        {"Yes, my love. A thousand times, in every lifetime.", "I've waited my whole life for this question. Yes."}};
+
+    /** 2.3.4: what a partner says to a ring. */
+    public static String proposed(Temper temper, int seed) {
+        return pick(seed, PROPOSED[temper.ordinal()]);
+    }
+
+    /** 2.3.4: left leaning in for a kiss that never came, by temper. */
+    static final String[][] HANGING = {
+        {"...Oh. Okay! Later, then!", "Hey! You owe me one."}, {"*opens their eyes, red* ...S-sorry. Never mind.", "...Okay."},
+        {"Really? Fine. Your loss.", "Coward. ...Later."}, {"That's alright. Another time, dear.", "Shy today? That's okay."},
+        {"Hmph. Forget it.", "Unbelievable."}, {"Playing hard to get? Cute.", "I'll make you regret that. Sweetly."},
+        {"...Oh. I was somewhere else anyway.", "The moment floated off."}, {"D-did I do something wrong?", "Sorry, sorry. Never mind."},
+        {"Ha! You chickened out!", "Missed your chance!"}, {"...Another time.", "...Hm. Later."},
+        {"Wow. Left hanging. Great.", "Okay, that was humiliating. For you."}, {"*sighs* The moment's gone...", "Next time, then, my love."}};
+
+    /** 2.3.4: what a partner says when a kiss never came. */
+    public static String hanging(Temper temper, int seed) {
+        return pick(seed, HANGING[temper.ordinal()]);
+    }
+
     static String pick(int seed, String... lines) {
         return lines[Math.floorMod(seed, lines.length)];
     }

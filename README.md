@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.3.4 (HexGhoul): human partners: a real kiss, no fear, a ring (testing)
+
+See `.github/release-notes-2.3.4.md`. Village human partners now get the full romance the companions have.
+
 ## 2.3.3 (HexGhoul): the male chest stays in every form (testing)
 
 See `.github/release-notes-2.3.3.md`. Fix: a male player's chest vanished whenever he transformed. The build was switched off in every form (Ukaku's kakuja, Graft's hide, War, Peace and the Dragon's turning), so the chest dropped back to the plain torso. It now stays in every form, and each form's torso armour is widened to fit over it instead: about 10% wider and 28% deeper, centred on the torso, so it covers the chest and the jacket layer.
