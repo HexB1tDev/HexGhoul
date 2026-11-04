@@ -52,6 +52,13 @@ public final class FamilyTests {
         check(!two.half() && !none.half() && !none.ghoul(), "two ghouls' child, two humans': not half-human");
         com.hex.kagune.control.family.Genome old = com.hex.kagune.control.family.Genome.load("0,1,1,ff,ff,ff,5,1,255");
         check(old != null && !old.half(), "a child from before is not half-human");
+        // 2.2.2: grown, in a fight, its kagune's kakuja.
+        com.hex.kagune.control.family.Genome halfChild = com.hex.kagune.control.family.Genome.of(ghoul, human, new java.util.Random(9));
+        check(com.hex.kagune.control.family.HalfBlood.kakuja(halfChild, com.hex.kagune.control.family.ChildStage.ADULT, true)
+            && !com.hex.kagune.control.family.HalfBlood.kakuja(halfChild, com.hex.kagune.control.family.ChildStage.TEEN, true)
+            && !com.hex.kagune.control.family.HalfBlood.kakuja(halfChild, com.hex.kagune.control.family.ChildStage.ADULT, false)
+            && !com.hex.kagune.control.family.HalfBlood.kakuja(two, com.hex.kagune.control.family.ChildStage.ADULT, true),
+            "its kakuja only grown, in a fight, and only a half-human child's");
         check(com.hex.kagune.control.family.HalfBlood.HEALTH > 1.4F && com.hex.kagune.control.family.HalfBlood.DAMAGE > 1.3F
             && com.hex.kagune.control.family.HalfBlood.SPEED > 1.2, "far stronger, harder to kill, quicker");
     }

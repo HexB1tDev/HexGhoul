@@ -383,7 +383,8 @@ public final class UkakuWingRenderer {
                 com.hex.kagune.control.family.ChildKaguneRules.wingSide(kid.genome().kagune(), kid.genome().seed()), deploy, time / 20.0, !seen.out(), aimed, aim,
                 com.hex.kagune.control.client.GhoulNpcClient.kick(seen, 1, clock), com.hex.kagune.control.client.GhoulNpcClient.kick(seen, -1, clock),
                 distance > DETAIL_DISTANCE_SQR ? 0.3F : 1.0F,
-                com.hex.kagune.control.client.NpcWingsClient.crystal(com.hex.kagune.control.client.NpcWingsClient.get(child.m_19879_()), clock)); // 1.3.48
+                com.hex.kagune.control.client.NpcWingsClient.crystal(com.hex.kagune.control.client.NpcWingsClient.get(child.m_19879_()), clock), // 1.3.48
+                com.hex.kagune.control.family.HalfBlood.kakuja(kid.genome(), kid.stage(), seen.out())); // 2.2.2: a grown half-human child's kakuja
             List<WingRig.Quad> quads = WingRig.build(input, eye);
             if (quads.isEmpty()) {
                 continue;

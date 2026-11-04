@@ -25,6 +25,23 @@ public final class HalfBlood {
     public static final double DASH_FROM = 3.5;
     public static final double DASH_TO = 14.0;
 
+    /**
+     * 2.2.2 (the owner: "the kid when in adult form, can use that kagune's Kakuja (Ukaku: first kakuja, Rinkaku: Centipede legs + normal
+     * kagune form)"): true while a half-human child ({@code genome}) is grown ({@code stage}) and fighting with its kagune out ({@code out}):
+     * its kagune's kakuja on it.
+     */
+    public static boolean kakuja(Genome genome, ChildStage stage, boolean out) {
+        return genome != null && genome.half() && stage == ChildStage.ADULT && out;
+    }
+
+    /** Its kakuja's centipede legs (a Rinkaku child's): how many, how far they strike (blocks), how often (ticks), how hard (its blows times). */
+    public static final int LEGS = 2;
+    public static final double LEG_REACH = 5.5;
+    public static final int LEG_EVERY = 28;
+    public static final float LEG_DAMAGE = 1.4F;
+    /** Its Ukaku kakuja's blows, times. */
+    public static final float WING_KAKUJA = 1.3F;
+
     /** True if a child of {@code mother} and {@code father} is half-human: one a ghoul, the other not. */
     public static boolean half(Genome.Parent mother, Genome.Parent father) {
         return mother.ghoul() != father.ghoul();

@@ -112,6 +112,17 @@ final class ChildKagune {
         int bits = genome.kagune();
         float damage = ChildKaguneRules.damage(stage, child.skill, Children.might(level, child))
             * (genome != null && genome.half() ? com.hex.kagune.control.family.HalfBlood.DAMAGE : 1.0F); // 2.2.1
+        // 2.2.2: grown, in a fight, its kagune's kakuja: its wings' blows harder; its centipede legs striking, by turns, what is in reach.
+        if (com.hex.kagune.control.family.HalfBlood.kakuja(genome, stage, f.out)) {
+            if ((bits & KaguneGenes.WING) != 0) {
+                damage *= com.hex.kagune.control.family.HalfBlood.WING_KAKUJA;
+            }
+            if ((bits & KaguneGenes.TAILS) != 0 && Math.floorMod(now + npc.m_19879_() * 7L, com.hex.kagune.control.family.HalfBlood.LEG_EVERY) == 5L
+                && npc.m_20280_(threat) <= com.hex.kagune.control.family.HalfBlood.LEG_REACH * com.hex.kagune.control.family.HalfBlood.LEG_REACH) {
+                threat.m_6469_(npc.m_269291_().m_269333_(npc), damage * com.hex.kagune.control.family.HalfBlood.LEG_DAMAGE);
+                UkakuFire.sound(level, threat.m_20182_(), "entity.player.attack.strong", 0.8F, 0.7F);
+            }
+        }
         if (!f.out) {
             f.out = true;
             f.outAt = now;

@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.2.2 (HexGhoul): a grown half-human child's kakuja (testing)
+
+See `.github/release-notes-2.2.2.md`. A ghoul's and a human's child, once grown (adult), uses its kagune's kakuja in a fight. A Rinkaku child grows two centipede legs out of its back beside its tail, which strike what's in reach by turns. An Ukaku child's wings become Ukaku's first kakuja, and its blows land harder. Other children still never have a kakuja.
+
 ## 2.2.1 (HexGhoul): a ghoul's and a human's child (testing)
 
 See `.github/release-notes-2.2.1.md`. A child of a ghoul and a human (a human player and Eto, Touka or Ken) is now rarely carried to term. 7 in 10 such pregnancies are lost, somewhere in the first half. The one that lives is born a one-eyed ghoul, always, with the ghoul parent's kagune whole. It has 60% more health, 50% harder blows (fists and kagune) and 30% more speed than any other child, and it fights with the White Reaper's dashes. Its kakuja once grown (Ukaku's first kakuja, Rinkaku's centipede legs) comes in the next version.

@@ -216,12 +216,93 @@ public final class CentipedeRenderer {
                 }, spine, look);
             }
         }
+        // 2.2.2: a grown half-human child's kakuja (HalfBlood): its centipede legs beside its tail, in its kagune's colours.
+        for (com.hex.kagune.control.npc.ChildNpc child : ChildRenderer.drawn()) {
+            com.hex.kagune.control.client.ChildClient.View kid = com.hex.kagune.control.client.ChildClient.get(child.m_19879_());
+            com.hex.kagune.control.client.GhoulNpcClient.View seen = com.hex.kagune.control.client.GhoulNpcClient.get(child.m_19879_());
+            if (kid == null || seen == null || !child.m_6084_() || child.m_20145_() || child.m_5803_()
+                || (kid.genome().kagune() & com.hex.kagune.control.family.KaguneGenes.TAILS) == 0
+                || !com.hex.kagune.control.family.HalfBlood.kakuja(kid.genome(), kid.stage(), seen.out()) || child.m_20280_(self) > MAX_DISTANCE_SQR) {
+                continue;
+            }
+            if (consumer == null) {
+                consumer = buffers.m_6299_(TYPE);
+            }
+            childLegs(consumer, matrix, normals, level, child, kid, seen, camera, partial, time, child.m_20280_(self) <= DETAIL_DISTANCE_SQR);
+        }
         if (consumer != null) {
             buffers.m_109912_(TYPE);
         }
         if (level.m_46467_() % 40L == 0L) {
             long now = level.m_46467_();
             LEGS.values().removeIf(legs -> now - legs.seen > 100L);
+        }
+    }
+
+    /** 2.2.2: each half-human child's legs (by entity id), when last drawn. */
+    private static final Map<Integer, Legs> CHILD_LEGS = new HashMap<>();
+
+    /**
+     * 2.2.2: a grown half-human child's two centipede legs (HalfBlood): out of its back either side of its tail, at rest round it, striking
+     * at what it fights; drawn by the same motion and mesh as a player's, in its kagune's colours.
+     */
+    private static void childLegs(VertexConsumer out, Matrix4f matrix, Matrix3f normals, ClientLevel level, com.hex.kagune.control.npc.ChildNpc child,
+                                  com.hex.kagune.control.client.ChildClient.View kid, com.hex.kagune.control.client.GhoulNpcClient.View seen, Vec3 camera,
+                                  float partial, double time, boolean fine) {
+        if (CHILD_LEGS.size() > 64) {
+            CHILD_LEGS.clear();
+        }
+        Legs legs = CHILD_LEGS.computeIfAbsent(child.m_19879_(), id -> new Legs());
+        legs.seen = level.m_46467_();
+        int colour = kid.genome().colour() < 0 ? com.hex.kagune.control.KaguneColours.DEFAULT : kid.genome().colour();
+        CentipedeTail.colours(com.hex.kagune.control.KakujaPalette.of(colour));
+        double feetX = child.f_19790_ + (child.m_20185_() - child.f_19790_) * partial;
+        double feetY = child.f_19791_ + (child.m_20186_() - child.f_19791_) * partial;
+        double feetZ = child.f_19792_ + (child.m_20189_() - child.f_19792_) * partial;
+        double bodyYaw = child.f_20884_ + wrap(child.f_20883_ - child.f_20884_) * partial;
+        double yaw = Math.toRadians(bodyYaw);
+        Frame frame = new Frame(feetX, feetY, feetZ, -Math.sin(yaw), Math.cos(yaw), -Math.cos(yaw), -Math.sin(yaw));
+        double speed = Math.hypot(child.m_20185_() - child.f_19790_, child.m_20189_() - child.f_19792_);
+        double fullLength = CentipedeMotion.length(800) * Math.max(0.7, child.m_20206_() / 1.8);
+        double width = CentipedeMotion.width(fullLength);
+        int plates = CentipedeMotion.plates(fullLength, width);
+        Entity prey = seen.prey() == 0 ? null : level.m_6815_(seen.prey());
+        double reach = com.hex.kagune.control.family.HalfBlood.LEG_REACH;
+        for (int i = 0; i < com.hex.kagune.control.family.HalfBlood.LEGS; i++) {
+            int side = i == 0 ? 1 : -1;
+            // Striking at its prey, the legs taking turns (the server's own beat: HalfBlood.LEG_EVERY), else at rest round it.
+            CentipedeMotion.Act act = CentipedeMotion.Act.REST;
+            double[] target = null;
+            if (prey != null && prey.m_20280_(child) <= reach * reach) {
+                double beat = (time + child.m_19879_() * 7) % com.hex.kagune.control.family.HalfBlood.LEG_EVERY;
+                boolean mine = ((long)Math.floor((time + child.m_19879_() * 7) / com.hex.kagune.control.family.HalfBlood.LEG_EVERY)) % 2 == i;
+                act = mine ? beat < 3.0 ? CentipedeMotion.Act.LOCK : beat < 8.0 ? CentipedeMotion.Act.STRIKE : CentipedeMotion.Act.REST : CentipedeMotion.Act.REST;
+                target = frame.rig(centre(prey, partial));
+            }
+            CentipedeMotion.Input input = new CentipedeMotion.Input(side, false, fullLength, child.m_20206_() * 0.55, act, target, 0.3, false, 0.0,
+                0.0, speed, time);
+            if (legs.legs[i] == null) {
+                legs.legs[i] = new CentipedeMotion.Leg();
+            }
+            CentipedeMotion.Leg leg = legs.legs[i];
+            leg.follow(CentipedeMotion.pose(input), time, speed);
+            double[][] rig = leg.points();
+            double[][] world = new double[rig.length][];
+            for (int k = 0; k < rig.length; k++) {
+                world[k] = frame.place(rig[k], camera);
+            }
+            double[] dorsal = frame.turn(leg.dorsal());
+            KakujaModel.Spine spine = CentipedeTail.through(world, fine ? 64 : 40, side, dorsal);
+            CentipedeTail.Look look = new CentipedeTail.Look(width, plates, fine, 1.0, side > 0 ? 1 : 2, leg.jaw(), leg.flare(), 0.35, leg.phase());
+            double[] middle = world[world.length / 2];
+            int light = LevelRenderer.m_109541_(level, BlockPos.m_274561_(middle[0] + camera.f_82479_, middle[1] + camera.f_82480_, middle[2] + camera.f_82481_));
+            CentipedeTail.tail((a, b, c, d, n, ca, cb, cc, cd) -> {
+                int lit = n[0] == 0.0 && n[1] == 1.0 && n[2] == 0.0 ? FULL_BRIGHT : light;
+                vertex(out, matrix, normals, a, n, ca, lit);
+                vertex(out, matrix, normals, b, n, cb, lit);
+                vertex(out, matrix, normals, c, n, cc, lit);
+                vertex(out, matrix, normals, d, n, cd, lit);
+            }, spine, look);
         }
     }
 
