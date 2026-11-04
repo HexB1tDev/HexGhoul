@@ -355,6 +355,54 @@ public final class AgentPose {
         p.leftArmHold = Math.max(p.leftArmHold, k);
     }
 
+    // ---------------------------------------------------------------- 2.0.43: the White Reaper standing about
+
+    /** His lean back (radians), the tip of his upper body off his weighted leg, his chest turned open, and his slow breath (ticks). */
+    static final float REAPER_LEAN = -0.26F;
+    static final float REAPER_SIDE = 0.09F;
+    static final float REAPER_TWIST = -0.15F;
+    static final double REAPER_BREATH = 110.0;
+
+    /**
+     * 2.0.43 (the owner: "a small ambient animation to the White Reaper, making sure that he's just like really edgy and as if he knows
+     * that he can kill you at any point. Like super relaxed overall, lean back and all ... doesn't have to have any movement, just a
+     * pose"): the White Reaper's own idle in place of {@link #idle}. He leans well back from the hips, his weight sunk on his right leg
+     * (the case's side) and his hip cocked, the left leg loose and turned out in front; his chest turned open, his chin a touch up so he
+     * looks down at whoever is in front of him, his head cocked; his free hand in his coat's pocket. He hardly moves: a slow breath, no
+     * glancing about (his eyes stay on you).
+     */
+    public static void reaperIdle(RigPose p, double age, int seed, float amount) {
+        float k = clamp01(amount);
+        if (k <= 0.0F) {
+            return;
+        }
+        double breath = Math.sin((age + (seed & 63) * 3.1) * (2.0 * Math.PI / REAPER_BREATH));
+        p.lean += (REAPER_LEAN + 0.008F * (float)breath) * k;
+        p.side += REAPER_SIDE * k;
+        p.twist += REAPER_TWIST * k;
+        // The lean takes the head back with it: brought most of the way forward again, so his chin is only a little up.
+        p.headX += 0.13F * k;
+        p.headZ += 0.14F * k;
+        p.rightShoulderY += -0.12F * (float)breath * k;
+        p.leftShoulderY += -0.12F * (float)breath * k;
+        // The legs: his weight sunk on the right, the left loose, out in front and turned out, its knee soft.
+        p.rightLegX = blend(p.rightLegX, 0.06F, k);
+        p.rightLegY = blend(p.rightLegY, 0.08F, k);
+        p.rightLegZ = blend(p.rightLegZ, 0.04F, k);
+        p.leftLegX = blend(p.leftLegX, -0.26F, k);
+        p.leftLegY = blend(p.leftLegY, -0.42F, k);
+        p.leftLegZ = blend(p.leftLegZ, -0.13F, k);
+        p.leftKnee = blend(p.leftKnee, 0.2F, k);
+        p.legHold = Math.max(p.legHold, k);
+        // The free hand in his pocket (solved through the game's transforms, tools/ArmSolve's way): the elbow out and back, the forearm
+        // in and forward to the front of his hip, the hand sunk in the pocket. Its lean and tip taken out, so it stays there.
+        p.leftArmX = blend(p.leftArmX, -0.058F - p.lean, k);
+        p.leftArmY = blend(p.leftArmY, 0.596F, k);
+        p.leftArmZ = blend(p.leftArmZ, 0.173F - p.side, k);
+        p.leftElbow = blend(p.leftElbow, 0.623F, k);
+        p.leftArmHold = Math.max(p.leftArmHold, k);
+    }
+
     static float blend(float from, float to, float k) {
         return from + (to - from) * k;
     }

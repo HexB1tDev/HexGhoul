@@ -93,7 +93,11 @@ public final class AgentClient {
         boolean carried = weapon == null && (shut == null || QuinqueClient.shown(held, false) <= 0.0F);
         float still = carried ? AgentPose.still(speed) : 0.0F;
         if (still > 0.0F) {
-            AgentPose.idle(p, agent.f_19797_ + partial, agent.m_19879_(), still);
+            if (agent.lookIndex() == com.hex.kagune.control.npc.AgentRules.REAPER_LOOK) {
+                AgentPose.reaperIdle(p, agent.f_19797_ + partial, agent.m_19879_(), still); // 2.0.43: his own, at ease
+            } else {
+                AgentPose.idle(p, agent.f_19797_ + partial, agent.m_19879_(), still);
+            }
             posed = true;
         }
         if (weapon != null && weapon.ranged) {

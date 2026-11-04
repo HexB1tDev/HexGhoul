@@ -46,6 +46,7 @@ public final class AgentTests {
         together();
         carrying();
         idling();
+        reaperIdling();
         ranks();
         tendril();
         if (!FAILURES.isEmpty()) {
@@ -468,6 +469,35 @@ public final class AgentTests {
         RigPose none = new RigPose();
         AgentPose.idle(none, 100.0, 1, 0.0F);
         check(none.isZero(), "walking: no idle");
+    }
+
+    /** 2.0.43: the White Reaper standing about: leaning well back, hip cocked, his free hand in his pocket, his eyes on you, barely moving. */
+    static void reaperIdling() {
+        float minLean = Float.MAX_VALUE;
+        float maxLean = -Float.MAX_VALUE;
+        for (double age = 0.0; age < 600.0; age += 3.0) {
+            RigPose reaper = new RigPose();
+            RigPose other = new RigPose();
+            AgentPose.reaperIdle(reaper, age, 12345, 1.0F);
+            AgentPose.idle(other, age, 12345, 1.0F);
+            minLean = Math.min(minLean, reaper.lean);
+            maxLean = Math.max(maxLean, reaper.lean);
+            check(reaper.lean < other.lean - 0.1F && reaper.lean > -0.35F, "he leans back further than any investigator (" + age + ")");
+            check(reaper.side > other.side && reaper.twist < other.twist, "his hip cocked, his chest turned open");
+            check(reaper.headY == 0.0F && reaper.headX > 0.0F && reaper.headX < -reaper.lean, "no glancing about; his chin a touch up");
+            check(reaper.legHold == 1.0F && reaper.leftArmHold == 1.0F && reaper.leftKnee > 0.0F && reaper.leftLegX < -0.2F,
+                "his weight on his right leg, the left loose in front");
+            check(reaper.leftElbow > 0.4F && reaper.leftArmY > 0.3F, "his free hand bent in to his pocket");
+        }
+        check(maxLean - minLean > 0.005F && maxLean - minLean < 0.02F, "a slow breath, hardly moving: " + (maxLean - minLean));
+        RigPose none = new RigPose();
+        AgentPose.reaperIdle(none, 100.0, 1, 0.0F);
+        check(none.isZero(), "walking: no idle");
+        RigPose half = new RigPose();
+        AgentPose.reaperIdle(half, 100.0, 1, 0.5F);
+        RigPose full = new RigPose();
+        AgentPose.reaperIdle(full, 100.0, 1, 1.0F);
+        check(Math.abs(half.side - full.side * 0.5F) < 1.0E-6F, "it blends in and out");
     }
 
     /** Where its case hangs for a pose: in model pixels of the entity (x its right, y up from its feet, z its back). */

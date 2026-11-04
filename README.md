@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.0.43 (HexGhoul): the White Reaper at ease (testing)
+
+See `.github/release-notes-2.0.43.md`. The White Reaper has his own idle when he stands around with his case shut, in place of the regular investigators' one. He leans well back from the hips with his hip cocked and his weight sunk on the leg that holds the case. His other leg is loose, out in front and turned out. His chest is turned open, his head cocked with his chin a touch up so he looks down at you, and his free hand is in his coat pocket. It's a pose: only a slow breath, and no glancing about.
+
 ## 2.0.42 (HexGhoul): Rinkaku Blocking with perfect blocks (testing)
 
 See `.github/release-notes-2.0.42.md`. Rinkaku has a new move, Blocking, on the right click: hold it with the tails out and they swing up off your back, round your shoulders and cross in front of you (an X per pair, one pair above the next), while you raise your forearms over your face in a ready stance. Every blow from in front or the sides is stopped completely. Too many hits break the guard: the tails are thrown back, you are knocked back and the block goes on a 5 s cooldown. A perfect block (the blow lands within 3 ticks, 0.15 s, of pressing) causes an impact, gives you no knockback and staggers the attacker for 1.2 s: they are stunned and pushed off, and can't hurt anything, so you get a free hit.
