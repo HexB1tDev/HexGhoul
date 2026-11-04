@@ -38,7 +38,7 @@ public final class RomanceServer {
         List<RomanceCard> out = new ArrayList<>();
         for (Persona persona : Persona.ALL) {
             String key = persona.key();
-            QuestLog.Bond bond = QuestServer.bond(player, key);
+            QuestLog.Bond bond = EtoServer.courtBond(player, key);
             UniqueNpc unique = UniqueNpcs.get(level, key);
             Romance.Stage stage = unique.stageOf(player.m_20148_());
             String claimedBy = unique.claimedFrom(player.m_20148_()) ? unique.partnerName : null;
@@ -46,7 +46,8 @@ public final class RomanceServer {
             com.hex.kagune.control.family.FamilyView family = EtoServer.family(level, player, memory, persona);
             boolean home = stage == Romance.Stage.MARRIED && Households.of(level, player.m_20148_()) != null;
             out.add(new RomanceCard(key, bond.has(NpcBonds.MET), stage, bond.regard(), persona.likes(woman), claimedBy, EtoRules.step(bond),
-                EtoRules.count(bond), stage.together() ? Romance.days(since, day) : 0L, family.children(), home, family.carrying() >= 0.0));
+                EtoRules.count(bond), stage.together() ? Romance.days(since, day) : 0L, family.children(), home, family.carrying() >= 0.0,
+                com.hex.kagune.control.npc.Courtship.closed(bond, com.hex.kagune.control.npc.Courtship.CHAPTERS)));
         }
         return out;
     }

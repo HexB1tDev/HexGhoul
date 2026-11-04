@@ -376,7 +376,7 @@ public final class QuestTests {
             String key = new String[] {"eto", "touka", "ken"}[i % 3];
             com.hex.kagune.control.npc.RomanceCard card = new com.hex.kagune.control.npc.RomanceCard(key, random.nextInt(5) > 0, stages[random.nextInt(stages.length)],
                 random.nextInt(201) - 100, random.nextBoolean(), random.nextInt(4) == 0 ? "Somebody" : null, steps[random.nextInt(steps.length)],
-                random.nextInt(11), random.nextInt(9), random.nextInt(4), random.nextBoolean(), random.nextBoolean());
+                random.nextInt(11), random.nextInt(9), random.nextInt(4), random.nextBoolean(), random.nextBoolean(), random.nextInt(6));
             cards.add(card);
             String next = card.next();
             String stage = card.stageText();

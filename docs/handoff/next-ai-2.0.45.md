@@ -1,9 +1,9 @@
-# HANDOFF: HexGhoul after 2.0.45 (updated through 2.0.49: see "Since 2.0.45" below). Read this first, then `docs/handoff/next-ai-2.0.36.md` (2.0.27 to 2.0.36 and what to ask the owner),
+# HANDOFF: HexGhoul after 2.0.45 (updated through 2.1.2: see "Since 2.0.45" and "Since 2.1.0" below). Read this first, then `docs/handoff/next-ai-2.0.36.md` (2.0.27 to 2.0.36 and what to ask the owner),
 `docs/handoff/next-ai-2.0.21.md`, `docs/handoff/next-ai-2.0.9.md`, `docs/handoff/next-ai-2.0.5.md` (how the owner works),
 `docs/handoff/next-ai-1.3.60.md` (house rules), then the top sections of `docs/handoff/companions-handoff.md` (one per version, newest first).
 
 Branch **`claude/loving-albattani-xld4zv`** (push only to the branch the session is given). Never push to `main`; no PR unless asked.
-Version **2.0.51** in `build.py` and `patch/KagunePatch.java`; the next is **2.0.52**. Protocol **"80"** (`ControlNetwork.PROTOCOL`; 2.0.42
+Version **2.1.2** in `build.py` and `patch/KagunePatch.java`; the next is **2.1.3** (after 2.1.9 comes 2.2.0). Protocol **"80"** (`ControlNetwork.PROTOCOL`; 2.0.42
 added `S2CRinkakuBlock`, message id 48, and `C2SUkakuAction.BLOCK`; 2.0.48 `S2CUkakuFx.DAWN_RING`; 2.0.49 `CcgAgent.SOARING` on the flip). Nothing is tested in game.
 
 ## The owner's requests since 2.0.36 (their words, trimmed)
@@ -97,7 +97,20 @@ Previews: `dawn-bigger-2.0.47.png`, `dawn-aim-2.0.47.png`, `dawn-volley-2.0.48.p
   every personality type, different trades per NPC (if it isnt in place yet)". Look at `village/HumanPersona`, `HumanTalk`,
   `VillageTrade` first.
 
+## Since 2.1.0
+
+- **2.1.0** Kakuja legs and mask in the kagune's colours (`KakujaPalette`: plates always greys, flesh the kagune colour).
+- **2.1.1** Final forms rest five minutes: the Exhaustion effect (`ExhaustionEffect`, `KingRules.RESTS`).
+- **2.1.2** The owner: "adapt the Ken, Eto and Touka quests for romance better, so that it's more immersive and less repetitive, it's
+  super boring at it stands." Each companion's own five-chapter courtship (`npc/Courtship`, `server/CourtshipServer`), each chapter closed
+  by a `moment` scene in their talk script; eight `date` scenes each, from the sweet page, once a day. Begins at regard 60.
+- **Next (the owner's words, same message):** "As for humans this is where we gotta spend the most time, we gotta add wayyyyy more options
+  and text to each personality and make it feel like every NPC is unique, double check that Female humans have the female body model."
+  Also still open from before: "romance dialog for every personality type, different trades per NPC". Look at `village/HumanPersona`,
+  `server/HumanTalk`, `village/VillageTalk`, `village/VillageShop`, `HumanRules.female`, the `HumanRenderer` Figure layer.
+
 Ask the owner:
+- how the courtships read in game (pace: 3-minute walk, 2-minute sits; whether regard 60 to begin is right);
 - whether the Reaper is now too hard or too easy (soar every 5 s at most, punishes, sky shots every 2.3 s, 5 balls at 40% each);
 - "Dawn drops" (still unanswered).
 

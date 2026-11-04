@@ -271,6 +271,24 @@ public final class SceneServer {
         return true;
     }
 
+    /**
+     * 2.1.2: she comes up to {@code player} with her courtship chapter's moment ({@code scene}), its task just done: as any scene she comes
+     * up with, but this one in particular, and only if they are free and she can see them. False if she can't now.
+     */
+    static boolean approachMoment(EtoNpc npc, ServerPlayer player, Scene scene, long now) {
+        if (npc.mind == null || scene == null || !free(player, now) || !sees(npc, player, SEES)) {
+            return false;
+        }
+        EtoTalk.Context c = EtoServer.context(player, npc);
+        SceneContext sc = context(player, npc, c);
+        String line = SceneBook.fill(SceneBook.one(scene.first().lines(), sc.seed()), sc);
+        PENDING.put(player.m_20148_(), new Pending(npc.m_19879_(), scene.key(), line, now + WAIT, "companion", sc.tier() + "|" + sc.mood()));
+        LAST.put(player.m_20148_(), now);
+        ControlNetwork.sendTo(player, new S2CNpcApproach(npc.m_19879_(), npc.displayName(), npc.persona().colour(), line, (int)WAIT));
+        EtoBrain.walkUp(npc, npc.mind, player, EtoGesture.WAVE, now);
+        return true;
+    }
+
     /** What a scene of hers is picked and filled by: who they are to her, her mood, the hour and the weather, their family. */
     static SceneContext context(ServerPlayer player, EtoNpc npc, EtoTalk.Context c) {
         ServerLevel level = player.m_284548_();
@@ -434,8 +452,8 @@ public final class SceneServer {
             }
         }
         int regard = option.regard();
-        if (found.scene().kind() == Scene.Kind.TOPIC && regard > 0 && !paid(player, key, now)) {
-            regard = 0; // a topic's kind words count once a day
+        if ((found.scene().kind() == Scene.Kind.TOPIC || found.scene().kind() == Scene.Kind.DATE) && regard > 0 && !paid(player, key, now)) {
+            regard = 0; // a topic's (2.1.2: a date's) kind words count once a day
         }
         EtoTalk.Page next = null;
         if (option.next() != null) {

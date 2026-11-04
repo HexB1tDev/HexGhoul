@@ -19,6 +19,7 @@ import com.hex.kagune.control.npc.Teaching;
 import com.hex.kagune.control.quest.Gate;
 import com.hex.kagune.control.quest.Quest;
 import com.hex.kagune.control.quest.QuestBook;
+import com.hex.kagune.control.quest.QuestLog;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -46,6 +47,7 @@ public final class CompanionTests {
         personas();
         lessons();
         talk();
+        courtship();
         poses();
         ken();
         touka();
@@ -319,6 +321,106 @@ public final class CompanionTests {
         tails.add(Gate.RINKAKU_FULL_KAKUJA);
         Teaching.View dragon = Teaching.view("ken", true, KagunePath.RINKAKU, 1000, tails::contains);
         check(dragon.ready() && dragon.next().gate() == Gate.RINKAKU_DRAGON, "and last, the Dragon");
+    }
+
+    /**
+     * 2.1.2: each companion's own courtship (Courtship): five chapters asking for different things (no two companions alike), each in its
+     * own words; a bond from before read as its chapters; what is handed over taken whole; the first page's words for where they are.
+     */
+    static void courtship() {
+        Set<String> ids = new HashSet<>();
+        Set<String> asks = new HashSet<>();
+        java.util.regex.Pattern banned = java.util.regex.Pattern.compile("Kaneki|Ayato|Furuta|Takatsuki|Aogiri|Yoshimura", java.util.regex.Pattern.CASE_INSENSITIVE);
+        for (Persona p : Persona.ALL) {
+            List<com.hex.kagune.control.npc.Courtship.Chapter> chapters = com.hex.kagune.control.npc.Courtship.of(p.key());
+            check(chapters.size() == com.hex.kagune.control.npc.Courtship.CHAPTERS, p.key() + " has five chapters");
+            Set<com.hex.kagune.control.npc.Courtship.Task> tasks = new HashSet<>();
+            for (com.hex.kagune.control.npc.Courtship.Chapter chapter : chapters) {
+                check(ids.add(chapter.id()) && chapter.id().startsWith(p.key() + "_"), chapter.id() + ": its own");
+                check(asks.add(chapter.ask()), chapter.id() + ": asked in its own words");
+                tasks.add(chapter.task());
+                check(chapter.need() >= 1 && chapter.need() <= 255, chapter.id() + ": a count the bond can keep");
+                check(chapter.task() != com.hex.kagune.control.npc.Courtship.Task.GIVE || !chapter.items().isEmpty() && !chapter.itemName().isEmpty(),
+                    chapter.id() + ": what to hand over, named");
+                for (String text : new String[] {chapter.title(), chapter.ask(), chapter.progress(), chapter.journal()}) {
+                    check(!text.isBlank() && text.length() <= com.hex.kagune.control.npc.scene.SceneBook.LINE_MOST && !banned.matcher(text).find(),
+                        chapter.id() + ": a clean line: " + text);
+                    String filled = com.hex.kagune.control.npc.Courtship.fill(text, chapter, 1);
+                    check(!filled.contains("{"), chapter.id() + ": every count put in: " + filled);
+                }
+            }
+            check(tasks.size() >= 4, p.key() + "'s chapters ask for " + tasks.size() + " kinds of thing");
+            // The road: begun, a hand-over taken whole (never past what it needs), its moment closing it, the next on, then asking out.
+            QuestLog.Bond bond = com.hex.kagune.control.npc.Courtship.begin(new QuestLog.Bond(70, 0L, NpcBonds.MET, 0));
+            check(com.hex.kagune.control.npc.Courtship.chapter(p.key(), bond) == chapters.get(0) && EtoRules.step(bond) == EtoRules.Step.COURTING,
+                p.key() + ": begun on chapter one");
+            for (int i = 0; i < chapters.size(); i++) {
+                com.hex.kagune.control.npc.Courtship.Chapter chapter = chapters.get(i);
+                check(com.hex.kagune.control.npc.Courtship.close(p.key(), bond) == bond, chapter.id() + ": nothing closes before its task is done");
+                if (chapter.task() == com.hex.kagune.control.npc.Courtship.Task.GIVE) {
+                    String item = chapter.items().iterator().next();
+                    check(com.hex.kagune.control.npc.Courtship.wants(p.key(), bond, item) && !com.hex.kagune.control.npc.Courtship.wants(p.key(), bond,
+                        "minecraft:dirt"), chapter.id() + ": wants what it asks for, only that");
+                    check(com.hex.kagune.control.npc.Courtship.takes(p.key(), bond, 64) == chapter.need(), chapter.id() + ": a stack held out: as much as it needs");
+                }
+                bond = com.hex.kagune.control.npc.Courtship.progress(p.key(), bond, chapter.task(), 300);
+                check(EtoRules.count(bond) == chapter.need() && com.hex.kagune.control.npc.Courtship.ready(p.key(), bond), chapter.id() + ": done");
+                bond = com.hex.kagune.control.npc.Courtship.close(p.key(), bond);
+                check(com.hex.kagune.control.npc.Courtship.closed(bond, chapters.size()) == i + 1 && EtoRules.count(bond) == 0, chapter.id() + ": closed");
+            }
+            check(EtoRules.step(bond) == EtoRules.Step.ASK && com.hex.kagune.control.npc.Courtship.chapter(p.key(), bond) == null, p.key() + ": then ask");
+            // A bond from before 2.1.2: the errands read as chapters.
+            QuestLog.Bond twoDone = new QuestLog.Bond(100, 0L, NpcBonds.MET | EtoRules.LINE_ON | EtoRules.BOOKS_DONE | EtoRules.HUNT_DONE, 7);
+            QuestLog.Bond migrated = com.hex.kagune.control.npc.Courtship.migrate(twoDone, 5);
+            check(com.hex.kagune.control.npc.Courtship.closed(migrated, 5) == 2 && EtoRules.count(migrated) == 0 && !migrated.has(EtoRules.BOOKS_DONE)
+                && EtoRules.step(migrated) == EtoRules.Step.COURTING, p.key() + ": two errands done before: chapter three, from nothing");
+            QuestLog.Bond allDone = new QuestLog.Bond(100, 0L, NpcBonds.MET | EtoRules.LINE_ON | EtoRules.BOOKS_DONE | EtoRules.HUNT_DONE
+                | EtoRules.FLOWER_DONE, 0);
+            check(EtoRules.step(allDone) == EtoRules.Step.ASK && EtoRules.step(com.hex.kagune.control.npc.Courtship.migrate(allDone, 5)) == EtoRules.Step.ASK,
+                p.key() + ": every errand done before: still waiting to be asked");
+            check(com.hex.kagune.control.npc.Courtship.migrate(bond, 5) == bond, p.key() + ": a bond already kept the new way is left alone");
+            // The first page: the courtship's answer, labelled for where they are.
+            boolean mixed = true;
+            EtoTalk.Context close = context(com.hex.kagune.control.npc.Courtship.BEGIN_AT, Romance.Stage.NONE, null, true, EtoMood.HAPPY, 1,
+                Teaching.View.NONE, mixed, 6000L);
+            check(p.script().main(close, "").choices().contains(NpcTalk.Choice.FAVOUR) && p.script().answer(close, NpcTalk.Choice.FAVOUR).effect()
+                == EtoTalk.Effect.BEGIN && p.script().answer(close, NpcTalk.Choice.FAVOUR).line().equals(chapters.get(0).ask()),
+                p.key() + ": close enough, the courtship begins in its first chapter's words");
+            EtoTalk.Context holding = courting(p, 0, 0, 5);
+            EtoTalk.Option give = option(p.script().main(holding, ""), NpcTalk.Choice.FAVOUR);
+            boolean firstGives = chapters.get(0).task() == com.hex.kagune.control.npc.Courtship.Task.GIVE;
+            check(give != null && (!firstGives || give.label().contains(chapters.get(0).itemName())), p.key() + ": what's held is offered by name");
+            check(!firstGives || p.script().answer(holding, NpcTalk.Choice.FAVOUR).effect() == EtoTalk.Effect.COURT, p.key() + ": held out, handed over");
+            EtoTalk.Context done = courting(p, 1, chapters.get(1).need(), 0);
+            check(option(p.script().main(done, ""), NpcTalk.Choice.FAVOUR).label().equals("I did what you asked.")
+                && p.script().answer(done, NpcTalk.Choice.FAVOUR).effect() == EtoTalk.Effect.COURT, p.key() + ": a task done, its moment");
+            EtoTalk.Context dating = context(90, Romance.Stage.DATING, null, true, EtoMood.HAPPY, 2, Teaching.View.NONE, mixed, 6000L);
+            check(!p.script().main(dating, "").choices().contains(NpcTalk.Choice.FAVOUR), p.key() + ": dating, no chores");
+            EtoTalk.Option dates = null;
+            for (EtoTalk.Option o : p.script().sweet(dating, "").options()) {
+                if (o.key().equals("dates")) {
+                    dates = o;
+                }
+            }
+            check(dates != null && p.script().sweet(dating, "").options().size() <= 12, p.key() + ": a partner can ask for a date");
+        }
+    }
+
+    /** {@code p}'s courtship on chapter {@code closed} + 1 with {@code done} of it done and {@code held} of what it asks for in hand. */
+    static EtoTalk.Context courting(Persona p, int closed, int done, int held) {
+        int flags = NpcBonds.MET | EtoRules.LINE_ON | closed << com.hex.kagune.control.npc.Courtship.SHIFT;
+        return new EtoTalk.Context(80, flags, done, true, false, false, false, false, null, true, false, 4, Romance.Stage.NONE, null, false, 6000L,
+            EtoMood.HAPPY, 0L, 0L, null, false, false, false, EtoRules.Pact.NONE, 0, false, false, "Sam", false,
+            com.hex.kagune.control.family.FamilyView.NONE, Teaching.View.NONE, true, held);
+    }
+
+    static EtoTalk.Option option(EtoTalk.Page page, NpcTalk.Choice choice) {
+        for (EtoTalk.Option o : page.options()) {
+            if (o.choice() == choice) {
+                return o;
+            }
+        }
+        return null;
     }
 
     /** A talk with {@code persona}: who they are to it, everything else ordinary. */

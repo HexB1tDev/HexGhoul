@@ -26,7 +26,9 @@ public final class EtoTalk {
         // 1.3.14: a companion's lesson taught ({@link Teaching}: its gate opens), or lived through first (the torture, then the gate)
         LEARN, TORTURE,
         // 1.3.21: "This is our home now." (a spouse): the home they share is where the player stands
-        HOME
+        HOME,
+        // 2.1.2: a courtship chapter's items handed over, or its task done: its moment plays (Courtship)
+        COURT
     }
 
     /**
@@ -43,7 +45,19 @@ public final class EtoTalk {
                           Romance.Stage stage, String claimedBy, boolean following, long dayTime, EtoMood mood, long daysTogether, long daysAway,
                           String puppy, boolean ring, boolean meat, boolean letter, EtoRules.Pact pact, int pactCount, boolean trialDone,
                           boolean nightUsed, String name, boolean spouseElsewhere, com.hex.kagune.control.family.FamilyView family,
-                          Teaching.View teaching, boolean mixed) {
+                          Teaching.View teaching, boolean mixed, int held) {
+        /** 2.1.2: as 1.3.14 made one: none of what her courtship's chapter asks for in hand ({@code held}: how many). */
+        public Context(int regard, int flags, int count, boolean ghoul, boolean chattedToday, boolean giftedToday, boolean book, boolean flower,
+                       EtoRules.Lesson next, boolean beforeDone, boolean granted, int seed,
+                       Romance.Stage stage, String claimedBy, boolean following, long dayTime, EtoMood mood, long daysTogether, long daysAway,
+                       String puppy, boolean ring, boolean meat, boolean letter, EtoRules.Pact pact, int pactCount, boolean trialDone,
+                       boolean nightUsed, String name, boolean spouseElsewhere, com.hex.kagune.control.family.FamilyView family,
+                       Teaching.View teaching, boolean mixed) {
+            this(regard, flags, count, ghoul, chattedToday, giftedToday, book, flower, next, beforeDone, granted, seed, stage, claimedBy, following, dayTime,
+                mood, daysTogether, daysAway, puppy, ring, meat, letter, pact, pactCount, trialDone, nightUsed, name, spouseElsewhere, family, teaching,
+                mixed, 0);
+        }
+
         /**
          * 1.3.14: as 1.3.10 made one: nothing taught ({@code teaching}: what a companion who teaches could teach them now), and a couple
          * who could have a child ({@code mixed}: one of them a woman, the other a man).
@@ -82,7 +96,17 @@ public final class EtoTalk {
         }
 
         EtoRules.Step step() {
-            return EtoRules.step(new com.hex.kagune.control.quest.QuestLog.Bond(this.regard, 0L, this.flags, this.count));
+            return EtoRules.step(this.bond());
+        }
+
+        /** Her bond as the page sees it (regard, flags, the count on). */
+        com.hex.kagune.control.quest.QuestLog.Bond bond() {
+            return new com.hex.kagune.control.quest.QuestLog.Bond(this.regard, 0L, this.flags, this.count);
+        }
+
+        /** 2.1.2: the chapter of {@code key}'s courtship on (null: none on). */
+        public Courtship.Chapter chapter(String key) {
+            return Courtship.chapter(key, this.bond());
         }
 
         public boolean dating() {
@@ -112,7 +136,7 @@ public final class EtoTalk {
             return new Context(this.regard, this.flags, this.count, this.ghoul, this.chattedToday, this.giftedToday, this.book, this.flower, this.next,
                 this.beforeDone, this.granted, seed, this.stage, this.claimedBy, this.following, this.dayTime, this.mood, this.daysTogether, this.daysAway,
                 this.puppy, this.ring, this.meat, this.letter, this.pact, this.pactCount, this.trialDone, this.nightUsed, this.name, this.spouseElsewhere,
-                this.family, this.teaching, this.mixed);
+                this.family, this.teaching, this.mixed, this.held);
         }
 
         /** 1.3.14: they could have a child together: married, opposite genders, not carrying one already, not asked yet. */
@@ -191,15 +215,7 @@ public final class EtoTalk {
             out.addAll(gifts);
         }
         student(c, out);
-        EtoRules.Step step = c.step();
-        if (!voice.together() && c.mayDate()) {
-            if (step != EtoRules.Step.NONE && step != EtoRules.Step.DATING || step == EtoRules.Step.NONE && c.regard() >= NpcBonds.MOST) {
-                out.add(Option.of(NpcTalk.Choice.FAVOUR));
-            }
-            if (step == EtoRules.Step.ASK) {
-                out.add(Option.of(NpcTalk.Choice.ASK_OUT));
-            }
-        }
+        Courtship.options(EtoRules.KEY, c, true, out); // 2.1.2: her own courtship
         if (voice.together() || c.regard() >= NpcBonds.FRIENDLY) {
             out.add(Option.of(c.following() ? NpcTalk.Choice.STAY : NpcTalk.Choice.FOLLOW));
         }
@@ -326,6 +342,7 @@ public final class EtoTalk {
         out.add(Option.of(NpcTalk.Choice.HUG));
         out.add(new Option(NpcTalk.Choice.SAY_1, "Hold me.", "sweet:cling"));
         out.add(new Option(NpcTalk.Choice.SAY_2, "Hold my hand.", "sweet:hand"));
+        out.add(new Option(NpcTalk.Choice.SAY_6, Courtship.DATES, "dates")); // 2.1.2
         int start = Math.floorMod(c.seed(), SWEET_SAYS.length);
         for (int i = 0; i < 3; i++) {
             String[] say = SWEET_SAYS[(start + i) % SWEET_SAYS.length];
@@ -444,13 +461,6 @@ public final class EtoTalk {
         if (!c.book()) {
             return new Reply("A book? Where?", 0, Effect.NONE);
         }
-        if (c.step() == EtoRules.Step.BOOKS) {
-            int now = c.count() + 1;
-            int regard = c.giftedToday() ? 0 : EtoRules.GIFT;
-            return now >= EtoRules.Step.BOOKS.need
-                ? new Reply("Three! Oh, these are perfect. Now, something less bookish: ask me again.", regard, Effect.BOOK, EtoGesture.READ)
-                : new Reply("One more for the pile. That's " + now + " of three.", regard, Effect.BOOK, EtoGesture.READ);
-        }
         if (c.giftedToday()) {
             return new Reply("You're spoiling me. One a day, or I'll never finish them.", 0, Effect.NONE);
         }
@@ -461,9 +471,6 @@ public final class EtoTalk {
     private static Reply flower(Context c) {
         if (!c.flower()) {
             return new Reply("A flower? Where?", 0, Effect.NONE);
-        }
-        if (c.step() == EtoRules.Step.FLOWER) {
-            return new Reply("...You picked this yourself. I can tell. Thank you. Was there something you wanted to ask me?", 0, Effect.FLOWER, EtoGesture.HAIR);
         }
         if (c.giftedToday()) {
             return new Reply("I've still got the last one. Spoil me tomorrow.", 0, Effect.NONE);
@@ -524,21 +531,12 @@ public final class EtoTalk {
         return new Reply(EtoLines.surgeryOffer(c), 0, Effect.OFFER);
     }
 
+    /** 2.1.2: her courtship ({@link Courtship}): her chapters, and her words around them. */
     private static Reply favour(Context c) {
-        if (!c.mayDate()) {
-            return new Reply(c.claimed() ? EtoLines.fill(c, "I don't need anything from you. {partner} takes care of me.") : "Nothing. Go home to your spouse.",
-                0, Effect.NONE);
-        }
-        return switch (c.step()) {
-            case NONE -> c.regard() >= NpcBonds.MOST
-                ? new Reply("Since you asked so nicely... Bring me three books I haven't read. Then I'll think of something else.", 0, Effect.BEGIN)
-                : new Reply("Nothing I'd ask of you. Yet.", 0, Effect.NONE);
-            case BOOKS -> new Reply("Books. Three of them, ones I haven't read. You've brought " + c.count() + ".", 0, Effect.NONE);
-            case HUNT -> new Reply("The night's crawling with ugly things. Kill ten of them for me, after dark. " + c.count() + " so far.", 0, Effect.NONE);
-            case FLOWER -> new Reply("Last thing. A flower. Pick it yourself, I'll know.", 0, Effect.NONE);
-            case ASK -> new Reply("That's everything. ...Was there something you wanted to ask me?", 0, Effect.NONE);
-            case DATING -> new Reply("You don't have to do anything for me now, silly. Just come back.", 0, Effect.NONE);
-        };
+        return Courtship.favour(EtoRules.KEY, c, "Nothing I'd ask of you. Yet. Come and bother me more. ...That was an invitation.",
+            "That's everything. Five chapters. You read all the way to the end. ...Was there something you wanted to ask me?",
+            "You don't have to do anything for me now, silly. Just come back.", "I don't need anything from you. {partner} takes care of me.",
+            "Nothing. Go home to your spouse.");
     }
 
     private static Reply surgery(Context c) {

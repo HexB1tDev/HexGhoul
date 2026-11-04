@@ -276,6 +276,8 @@ public final class EtoBrain {
         if (now % 20L == 3L) {
             partner(npc, mind, level);
         }
+        // 2.1.2: courtship chapters counted in time and place (a walk, a sit, somewhere high, dawn, the dead of night).
+        CourtshipServer.tick(npc, level, now);
         // 1.3.1: following a player, her home goes with her (never pulled back to the Library); she keeps up, or is put by them if far behind.
         // 1.3.3: holding someone's hand, the same, at their side.
         UUID leaderId = mind.holding != null ? mind.holding : npc.following();

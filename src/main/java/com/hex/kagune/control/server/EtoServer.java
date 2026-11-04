@@ -174,6 +174,10 @@ public final class EtoServer {
         if (line == null && scene(player, npc, context)) {
             return;
         }
+        // 2.1.2: a courtship chapter's task done: its moment, before anything else.
+        if (line == null && moment(player, npc, null)) {
+            return;
+        }
         show(player, npc, context, script.main(context, line != null ? line : script.greeting(context)), Kind.MAIN);
     }
 
@@ -200,10 +204,135 @@ public final class EtoServer {
         if (scene == null) {
             return false;
         }
+        if (scene.kind() == com.hex.kagune.control.npc.scene.Scene.Kind.MOMENT) {
+            // 2.1.2: she came up with a courtship chapter's moment: it plays (and the chapter closes) if it is still the one due.
+            return moment(player, npc, pending.line());
+        }
         com.hex.kagune.control.npc.scene.SceneContext sc = SceneServer.context(player, npc, context);
         show(player, npc, context, SceneServer.page(scene, scene.first(), sc, pending.line()), Kind.SCENE);
         return true;
     }
+
+    // ---------------------------------------------------------------- 2.1.2: the courtship
+
+    /**
+     * The moment of the courtship's chapter on, if its task is done: the chapter closed (the next on), the game says where they are, and
+     * the moment's scene plays ({@code line}: its first words, if already said; null its own). False if no moment is due.
+     */
+    static boolean moment(ServerPlayer player, EtoNpc npc, String line) {
+        String key = npc.persona().key();
+        QuestLog.Bond bond = courtBond(player, key);
+        com.hex.kagune.control.npc.Courtship.Chapter chapter = com.hex.kagune.control.npc.Courtship.chapter(key, bond);
+        if (chapter == null || !com.hex.kagune.control.npc.Courtship.ready(key, bond)) {
+            return false;
+        }
+        ServerLevel level = player.m_284548_();
+        long now = level.m_46467_();
+        QuestLog.Bond closed = com.hex.kagune.control.npc.Courtship.close(key, bond);
+        QuestServer.bond(player, key, closed.regard(closed.regard() + MOMENT_REGARD));
+        int done = com.hex.kagune.control.npc.Courtship.closed(closed, com.hex.kagune.control.npc.Courtship.CHAPTERS);
+        player.m_5661_(Component.m_237113_(npc.persona().colour() + "\u2764 " + npc.displayName() + ": chapter " + done + " of "
+            + com.hex.kagune.control.npc.Courtship.CHAPTERS + ", " + chapter.title() + (done >= com.hex.kagune.control.npc.Courtship.CHAPTERS
+            ? ". Every chapter closed: ask " + npc.persona().her() + " out." : ". (Your journal has what comes next.)")), false);
+        UkakuFire.sound(level, npc.m_20182_(), "entity.player.levelup", 0.6F, 1.6F);
+        EtoBrain.hearts(level, npc, player, 6);
+        EtoBrain.listen(npc, player, now);
+        com.hex.kagune.control.npc.scene.Scene scene = SceneServer.scene(key + "." + chapter.id());
+        EtoTalk.Context c = context(player, npc);
+        if (scene == null) {
+            show(player, npc, c, npc.persona().script().main(c, "..."), Kind.MAIN);
+            return true;
+        }
+        com.hex.kagune.control.npc.scene.SceneContext sc = SceneServer.context(player, npc, c);
+        show(player, npc, c, SceneServer.page(scene, scene.first(), sc, line), Kind.SCENE);
+        return true;
+    }
+
+    /** Regard a chapter's moment brings, before anything said in it. */
+    static final int MOMENT_REGARD = 4;
+
+    /** {@code player}'s bond with {@code key}, as the courtship keeps it (a bond from before it read as its chapters, and saved so). */
+    static QuestLog.Bond courtBond(ServerPlayer player, String key) {
+        QuestLog.Bond bond = QuestServer.bond(player, key);
+        QuestLog.Bond migrated = com.hex.kagune.control.npc.Courtship.migrate(bond, com.hex.kagune.control.npc.Courtship.CHAPTERS);
+        if (migrated != bond) {
+            QuestServer.bond(player, key, migrated);
+        }
+        return migrated;
+    }
+
+    /** How many of what the courtship's chapter on asks for {@code player} holds (both hands). */
+    static int held(ServerPlayer player, String key, QuestLog.Bond bond) {
+        int n = 0;
+        for (ItemStack held : new ItemStack[] {player.m_21205_(), player.m_21206_()}) {
+            if (com.hex.kagune.control.npc.Courtship.wants(key, bond, id(held))) {
+                n += held.m_41613_();
+            }
+        }
+        return n;
+    }
+
+    /** What the chapter on asks for taken from {@code player}'s hands (as much as it still needs): how many. */
+    private static int handOver(ServerPlayer player, String key, QuestLog.Bond bond) {
+        int want = com.hex.kagune.control.npc.Courtship.takes(key, bond, held(player, key, bond));
+        int taken = 0;
+        for (ItemStack held : new ItemStack[] {player.m_21205_(), player.m_21206_()}) {
+            if (taken < want && com.hex.kagune.control.npc.Courtship.wants(key, bond, id(held))) {
+                int some = Math.min(want - taken, held.m_41613_());
+                held.m_41774_(some);
+                taken += some;
+            }
+        }
+        return taken;
+    }
+
+    /** The dates they could go on now: a few of hers that fit, each an answer, and back. */
+    private static EtoTalk.Page dates(ServerPlayer player, EtoNpc npc, EtoTalk.Context c) {
+        String key = npc.persona().key();
+        int seed = npc.m_217043_().m_188503_(100000);
+        long today = day(player.m_284548_());
+        if (NpcMemoryServer.of(player).get(key, NpcMemory.DATE_DAY, -1L) == today) {
+            return npc.persona().script().sweet(c, com.hex.kagune.control.npc.Courtship.datedToday(key, seed));
+        }
+        com.hex.kagune.control.npc.scene.SceneContext sc = SceneServer.context(player, npc, c);
+        List<com.hex.kagune.control.npc.scene.Scene> fit = new java.util.ArrayList<>(com.hex.kagune.control.npc.scene.SceneBook.fitting(
+            SceneServer.book(key), com.hex.kagune.control.npc.scene.Scene.Kind.DATE, sc));
+        java.util.Collections.shuffle(fit, new java.util.Random(seed));
+        List<EtoTalk.Option> out = new java.util.ArrayList<>();
+        for (int i = 0; i < fit.size() && i < DATES_OFFERED; i++) {
+            out.add(new EtoTalk.Option(NpcTalk.Choice.SAYS[i], com.hex.kagune.control.npc.scene.SceneBook.fill(fit.get(i).prompt(), sc), "d:" + fit.get(i).key()));
+        }
+        out.add(new EtoTalk.Option(NpcTalk.Choice.BACK, "", ""));
+        return new EtoTalk.Page(com.hex.kagune.control.npc.Courtship.datesAsked(key, seed), out);
+    }
+
+    /** At most this many dates are offered at once. */
+    static final int DATES_OFFERED = 4;
+
+    /** The date {@code key} ("d:eto.date_rooftop") begun: once a day; its scene plays. */
+    private static void date(ServerPlayer player, EtoNpc npc, EtoTalk.Context c, String key) {
+        com.hex.kagune.control.npc.scene.Scene scene = SceneServer.scene(key.substring(2));
+        String persona = npc.persona().key();
+        if (scene == null || scene.kind() != com.hex.kagune.control.npc.scene.Scene.Kind.DATE || !scene.speaker().equals(persona) || !c.dating()) {
+            return;
+        }
+        long today = day(player.m_284548_());
+        if (NpcMemoryServer.of(player).get(persona, NpcMemory.DATE_DAY, -1L) == today) {
+            show(player, npc, c, npc.persona().script().sweet(c, com.hex.kagune.control.npc.Courtship.datedToday(persona, c.seed())), Kind.SWEET);
+            return;
+        }
+        NpcMemoryServer.set(player, persona, NpcMemory.DATE_DAY, today);
+        QuestLog.Bond bond = QuestServer.bond(player, persona);
+        QuestServer.bond(player, persona, bond.regard(bond.regard() + DATE_REGARD));
+        RomanceServer.romanced(player, persona);
+        EtoBrain.giddy(npc, player, player.m_284548_().m_46467_());
+        EtoTalk.Context after = context(player, npc);
+        com.hex.kagune.control.npc.scene.SceneContext sc = SceneServer.context(player, npc, after);
+        show(player, npc, after, SceneServer.page(scene, scene.first(), sc, null), Kind.SCENE);
+    }
+
+    /** Regard a date brings, before anything said on it. */
+    static final int DATE_REGARD = 3;
 
     /** 1.3.29: the topics page: hers as her script has them, and her scripted topics with them (a different few each time). */
     static EtoTalk.Page topics(ServerPlayer player, EtoNpc npc, EtoTalk.Context c, String line) {
@@ -327,6 +456,17 @@ public final class EtoServer {
         }
         if (key.equals("gifts")) {
             show(player, npc, c, script.gifts(c, script.giftsAsked(c.seed())), Kind.GIFTS);
+            return;
+        }
+        if (key.equals("dates")) {
+            // 2.1.2: where to go together.
+            if (c.dating()) {
+                show(player, npc, c, dates(player, npc, c), Kind.SWEET);
+            }
+            return;
+        }
+        if (key.startsWith("d:")) {
+            date(player, npc, c, key);
             return;
         }
         if (key.startsWith("t:")) {
@@ -466,9 +606,23 @@ public final class EtoServer {
             case BOOK, FLOWER -> {
                 boolean isBook = reply.effect() == EtoTalk.Effect.BOOK;
                 java.util.function.Predicate<String> gift = isBook ? npc.persona()::errandItem : npc.persona()::flower;
-                bond = take(player, gift)
-                    ? EtoRules.advance(EtoRules.gifted(bond, day), isBook ? EtoRules.Step.BOOKS : EtoRules.Step.FLOWER, 1)
-                    : bond.regard(bond.regard() - reply.regard());
+                bond = take(player, gift) ? EtoRules.gifted(bond, day) : bond.regard(bond.regard() - reply.regard());
+                next = Kind.MAIN;
+            }
+            case COURT -> {
+                // 2.1.2: what the chapter asks for handed over (all of it that it still needs), then its moment if that was the last of it.
+                String key = npc.persona().key();
+                bond = com.hex.kagune.control.npc.Courtship.migrate(bond, com.hex.kagune.control.npc.Courtship.CHAPTERS);
+                int taken = handOver(player, key, bond);
+                if (taken > 0) {
+                    bond = com.hex.kagune.control.npc.Courtship.progress(key, bond, com.hex.kagune.control.npc.Courtship.Task.GIVE, taken);
+                    EtoBrain.gesture(npc.mind, EtoGesture.BOW, now);
+                }
+                if (com.hex.kagune.control.npc.Courtship.ready(key, bond)) {
+                    QuestServer.bond(player, key, bond);
+                    moment(player, npc, null);
+                    return;
+                }
                 next = Kind.MAIN;
             }
             case MEAT -> {
@@ -526,7 +680,15 @@ public final class EtoServer {
                 NpcMemoryServer.of(player).set(npc.persona().key(), NpcMemory.TRIAL, EtoRules.Pact.HUNT.ordinal()).set(npc.persona().key(), NpcMemory.TRIAL_COUNT, 0L);
                 NpcMemoryServer.save(player);
             }
-            case BEGIN -> bond = EtoRules.begin(bond);
+            case BEGIN -> {
+                // 2.1.2: the courtship begins: the first chapter on.
+                bond = EtoRules.begin(bond);
+                java.util.List<com.hex.kagune.control.npc.Courtship.Chapter> chapters = com.hex.kagune.control.npc.Courtship.of(npc.persona().key());
+                if (!chapters.isEmpty()) {
+                    player.m_5661_(Component.m_237113_(npc.persona().colour() + "\u2764 " + npc.displayName() + "'s courtship begins. Chapter 1 of "
+                        + chapters.size() + ": " + chapters.get(0).title() + ". (Your journal's Romance tab keeps track.)"), false);
+                }
+            }
             case DATE -> {
                 if (c.mayDate() && npc.persona().likes(com.hex.kagune.control.Genders.female(player))) {
                     bond = EtoRules.date(bond);
@@ -810,8 +972,8 @@ public final class EtoServer {
     static EtoTalk.Context context(ServerPlayer player, EtoNpc npc) {
         ServerLevel level = player.m_284548_();
         long now = level.m_46467_();
+        QuestLog.Bond bond = courtBond(player, npc.persona().key());
         QuestLog log = QuestServer.log(player);
-        QuestLog.Bond bond = log.bond(npc.persona().key());
         boolean ghoul = KaguneProfile.isUnlocked(player);
         com.hex.kagune.control.KagunePath path = PathServer.path(player);
         int mastery = KaguneProfile.mastery(player);
@@ -847,7 +1009,7 @@ public final class EtoServer {
             holds(player, EtoRules::letter), pact, (int)memory.get(npc.persona().key(), NpcMemory.TRIAL_COUNT, 0L), trialDone,
             memory.get(npc.persona().key(), NpcMemory.NIGHT_DAY, -1L) == day, player.m_36316_().getName(),
             UniqueNpcs.spouseOf(level, player, npc.persona().key()) != null, family(level, player, memory, persona), teaching,
-            persona.female() != com.hex.kagune.control.Genders.female(player));
+            persona.female() != com.hex.kagune.control.Genders.female(player), held(player, persona.key(), bond));
     }
 
     /**
@@ -1077,7 +1239,7 @@ public final class EtoServer {
             : now == EtoRules.Pact.READY ? EtoRules.NAME + "'s price is paid. Go and see her." : EtoRules.NAME + "'s price: that part's done. Go and see her."), true);
     }
 
-    // ---------------------------------------------------------------- deaths: her errand's kills, a human's pact, and hers
+    // ---------------------------------------------------------------- deaths: a courtship's kills, a human's pact, and hers
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void died(LivingDeathEvent event) {
@@ -1102,17 +1264,23 @@ public final class EtoServer {
             return;
         }
         boolean night = EtoRules.night(killer.m_9236_().m_46468_());
-        if (dead instanceof Enemy && night) {
-            // 1.3.14: every companion's errand of kills at night counts (each is on its own step).
-            for (com.hex.kagune.control.npc.Persona persona : com.hex.kagune.control.npc.Persona.ALL) {
-                QuestLog.Bond bond = QuestServer.bond(killer, persona.key());
-                if (EtoRules.step(bond) == EtoRules.Step.HUNT) {
-                    QuestLog.Bond after = EtoRules.advance(bond, EtoRules.Step.HUNT, 1);
-                    QuestServer.bond(killer, persona.key(), after);
-                    killer.m_5661_(Component.m_237113_(EtoRules.step(after) == EtoRules.Step.HUNT
-                        ? persona.name() + "'s errand: " + EtoRules.count(after) + " of " + EtoRules.Step.HUNT.need + " killed tonight"
-                        : persona.name() + "'s errand: done. Go and see " + persona.her() + "."), true);
-                }
+        // 2.1.2: a courtship chapter of kills counts: at night anywhere, at night with the companion along, or a wild ghoul.
+        for (com.hex.kagune.control.npc.Persona persona : com.hex.kagune.control.npc.Persona.ALL) {
+            QuestLog.Bond bond = courtBond(killer, persona.key());
+            com.hex.kagune.control.npc.Courtship.Chapter chapter = com.hex.kagune.control.npc.Courtship.chapter(persona.key(), bond);
+            if (chapter == null || EtoRules.count(bond) >= chapter.need()) {
+                continue;
+            }
+            boolean counts = switch (chapter.task()) {
+                case KILLS -> dead instanceof Enemy && night;
+                case KILLS_WITH -> dead instanceof Enemy && night && CourtshipServer.along(killer, persona.key());
+                case GHOUL -> dead instanceof GhoulNpc;
+                default -> false;
+            };
+            if (counts) {
+                QuestLog.Bond after = com.hex.kagune.control.npc.Courtship.progress(persona.key(), bond, chapter.task(), 1);
+                QuestServer.bond(killer, persona.key(), after);
+                CourtshipServer.tell(killer, persona, after);
             }
         }
         if (!KaguneProfile.isUnlocked(killer)) {

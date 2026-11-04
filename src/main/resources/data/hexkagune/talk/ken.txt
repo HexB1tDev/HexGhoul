@@ -1400,3 +1400,229 @@ say: An old man who ran a cafe. He took in strays like me. He said coffee was th
   - He was. He is. Kinder than the world deserved.
 > You make it well. | +2 sip
   - Thank you. I'm still not as good as him. One day.
+
+# =====================================================================================================================================
+# 2.1.2: HIS COURTSHIP. Five chapters (npc/Courtship.java has what each asks for); each closes with its moment, played the moment the
+# task is done. Never picked otherwise. Not yet a couple: nothing a couple does. He apologises for wanting things; let him want them.
+# =====================================================================================================================================
+
+moment ken_book
+say: *Ken turns the book over, reads the back, then the first page. Then the first page again. He looks up, a little lost.* I haven't read this. I thought I'd read everything.
+> Good. It's yours. | +2 -> read
+> I hoped you hadn't. | +2 -> read
+ignored: *He's already three chapters in and doesn't notice you leave.*
+page read
+say: When I was a boy, books were the only place nobody could reach me. My mother worked all the time. My aunt didn't want me. So I lived in other people's stories. *He touches the spine.* Nobody's ever given me one. I always had to go and find them.
+> Now someone's bringing them to you. | +4 bow
+  - *He smiles, and it's so small and surprised that it almost hurts to look at.* ...Thank you. Really. Have coffee with me sometime? At my place. Slowly. That's what I'd like next.
+> Where do you live now, then? In stories? | +3 -> live
+> I'd like to read it after you. | +3 read
+  - Then I'll read it slowly, so you're not waiting too long, and quickly, so you're not waiting too long. *He laughs at himself.* Coffee next. At my place. Will you?
+page live
+say: *He thinks about it honestly, chin in his hand.* ...A little bit in stories. A little bit in the dark. And lately, a little bit wherever you happen to be. *He goes red.* That came out strangely. I'm sorry.
+> Don't be sorry. I liked it. | +4 chin
+  - *He covers his face with one hand.* ...Okay. Then I'm not sorry. Have coffee with me. At my place. That's all I'll ask, next.
+> It came out perfectly. | +4 bow
+  - You're kind. Too kind. *He smiles at the floor.* Come and have coffee with me. I'll make it properly.
+
+moment ken_coffee
+say: *The coffee's gone cold. Neither of you noticed. Ken's been talking for twenty minutes about a novel with a sad ending, and he stops, mid-sentence, embarrassed.* I've been talking too much. I never talk this much.
+> I like listening to you. | +3 -> talk
+> Keep going. What happens next? | +3 -> talk
+ignored: *He picks up both cold cups and washes them very carefully.*
+page talk
+say: Nobody's asked me what happens next in a long time. *He turns the cup in his hands.* People ask me how strong I am. What I can do. Whether I'll protect them. Nobody asks me what I'm reading. *He cracks a finger under his thumb without noticing.*
+> Your finger. You're doing it again. | +3 -> finger
+> I'll always ask what you're reading. | +4 bow
+  - ...Then I'll always have an answer ready. *He looks up.* There's something I need to do, out there. Something I can't do alone. Will you help me, next?
+page finger
+say: *He stops, looks at his hand like it belongs to someone else.* Sorry. Old habit. Someone once... it was a long time ago. Ten days, actually. I count things. *He tries to smile.* I'll tell you about it someday. Not today. Is that alright?
+> Whenever you're ready. I'll wait. | +5 bow
+  - *Something in his face loosens.* You'll wait. ...Thank you. *Quietly:* There's a ghoul out there eating people who can't fight. Stop one for me. Please. Come back.
+> You don't have to tell me anything. | +4 chin
+  - I know. That's why I think I will. *He sets the cup down.* There's a man-eater out in the dark. Stop one. Please be careful.
+
+moment ken_ghoul
+say: *Ken finds you before you find him. He looks at the blood on you, then at your face, then checks your arms, your ribs, quietly, like a doctor.* Are you hurt? Tell me the truth.
+> I'm fine. | +2 -> hurt
+> A little. | +3 -> hurt
+ignored: *He checks you over in silence and only lets go when he's sure.*
+page hurt
+say: *He breathes out.* I shouldn't have asked you. Every time I let someone do something dangerous for me they... *He stops.* That ghoul would have killed again tonight. And tomorrow. You saved people who'll never know your name. That's how it always is.
+> Is that how it is for you? | +4 -> him
+> I did it because you asked. | +4 crack
+  - *He flinches, and then doesn't.* ...Then I'll be careful what I ask. *Softer:* I'd like to plant something by my door. White flowers. Will you bring me some?
+page him
+say: Every night. *He sits down on the curb.* People call me a king. Kings get thanked. I just get tired. *He looks at you.* But you came back. Most people don't come back. Thank you for coming back.
+> I'll always come back to you. | +5 bow
+  - *He doesn't answer for a while. When he does, his voice is careful.* ...I'd like to plant white flowers by my door. Will you bring me some? I want something there that isn't red.
+> You don't have to carry it alone. | +5 chin
+  - *He laughs, small and wet.* You keep saying things I've wanted to hear for years. ...Bring me white flowers. Three. For my door. I'll explain someday.
+
+moment ken_flowers
+say: *Ken kneels by his door and plants them one by one, pressing the soil down with his fingers, careful as if they could feel it.* There. White. *He sits back on his heels.*
+> They look perfect. | +2 -> red
+> Why white? | +2 -> red
+ignored: *He waters them with a cup, very slowly, and smiles at them.*
+page red
+say: When I was... taken, those ten days, I dreamt of red flowers. Fields of them. Every time I woke up it was worse, so I started wanting to stay in the dream. *He brushes dirt off his hands.* I'd like to see white ones when I come home now. Something gentle. Something you gave me.
+> Then every time you come home, think of me. | +5 bow
+  - ...I already do. *He says it to the flowers, not to you, then hears himself and goes completely red.* I'm sorry. I mean— I mean it. I'm not sorry.
+> I'll bring more when these fade. | +4 chin
+  - They'll fade? *He looks honestly stricken, then laughs.* Of course they will. ...Then bring more. Keep bringing them. I'd like that.
+> Thank you for telling me. | +4 bow
+  - Thank you for listening without looking at me like I'm broken. *Quietly:* One more thing. Stay up with me once. Until sunrise. I don't sleep well, and I'd like to see one with someone.
+
+moment ken_sunrise
+say: *The sky goes grey, then pink. Ken is sitting next to you with his knees pulled up, watching it like he's never seen one.* It's been years since I watched this. I usually close the curtains. The light hurts after a long night.
+> Does it hurt now? | +2 -> light
+> *Lean on his shoulder.* | +3 -> light
+ignored: *He watches the whole sunrise alone, and smiles at the end anyway.*
+page light
+say: No. *He sounds surprised.* No, it doesn't. *The sun comes up over the edge of the world, and he watches it, and then he watches you instead.* I don't think I'm a good person to love. I've done things. I'll do more. People around me get hurt.
+> I'm not afraid of that. | +5 bow -> ask
+> I'll decide who's good to love. | +5 chin -> ask
+> Too late. I already do. | +6 bow -> ask
+page ask
+say: *He's quiet for a long time. Then he laughs, a real one, the first one you've heard from him.* ...I'm bad at this. I'm supposed to ask, aren't I? I can't. I'd apologise halfway through. *He looks at you, hopeful and terrified.* Would you... ask me something? Anything. I'll say yes.
+> I'll ask. Give me a moment. | +3 bow
+  - Take your time. The sun's up. We've got all day. *He doesn't look away from you this time.*
+> You already know what I want to ask. | +3 chin
+  - I think I do. I'd still like to hear it. Out loud. Once. *He waits, hands in his lap, like a boy on his first day of school.*
+
+# =====================================================================================================================================
+# 2.1.2: DATES, offered from the sweet page, once a day. His are quiet: a bookstore, the river, a bench in the rain, cooking for her.
+# =====================================================================================================================================
+
+date ken_bookstore
+prompt: Let's spend the afternoon in a bookstore.
+who: together
+when: day
+say: *He disappears into the shelves immediately and comes back every five minutes with something to show you.* This one made me cry on a train. This one I hated, but I think you'd like it. This one... *he hides it behind his back* ...never mind.
+> What's the one behind your back? | +3 -> hidden
+> Pick one for me. | +3 read -> pick
+page hidden
+say: *He hands it over, red to the ears. It's a book of love poems.* I was going to buy it for you. Secretly. It's very embarrassing. Please don't read it in front of me.
+> *Read one out loud.* | +4 kiss
+  - *He covers his face with both hands and peeks through his fingers.* ...You read it better than it's written. That's not possible. Do it again.
+> I'll read it tonight. | +3 hand
+  - Alone. Please. ...Or with me. Not out loud. *He takes your hand at the counter like it's the most natural thing in the world, and then panics about it.*
+page pick
+say: *He takes it very seriously. Forty minutes. He finally hands you something small and worn.* This one. It's about someone who's lonely until they're not. It's not very good. I love it.
+> Then I'll love it too. | +4 hand
+  - You don't have to. *He's beaming.* But it would make me very happy.
+> Read it with me. | +3 cling
+  - A chapter each, out loud? *He's already finding a corner to sit in.* I'd like nothing more.
+
+date ken_river
+prompt: Walk by the river with me.
+who: together
+say: *He walks slower than usual, hands in his pockets, matching your pace exactly.* When I was a kid I used to walk along a river like this one, with a friend. We talked about what we'd be when we grew up.
+> What did you want to be? | +3 -> grew
+> Where's your friend now? | +2 -> friend
+page grew
+say: A writer. Someone who reads all day and writes a little at night. *He smiles.* I'm a ghoul who fights at night and reads a little in the day. That's close. Isn't it?
+> It's closer than most people get. | +3 chin
+  - That's a kind way to look at it. *He bumps your shoulder with his.* What about you? What did you want to be?
+> You could still write. I'd read it. | +4 hand
+  - You'd be my only reader. *He laughs.* ...That would be enough. *He takes your hand and you walk the rest of the way like that.*
+page friend
+say: Fighting on the other side, now. We don't talk. *A long breath.* I still hope. Is that stupid? To keep hoping for someone who isn't coming back?
+> It's not stupid. It's you. | +4 cling
+  - *He stops walking and hugs you, quickly, tightly, then lets go and looks at the river.* ...Sorry. Thank you.
+> I'll hope with you. | +4 hand
+  - Then it's lighter. *He laces his fingers with yours.* Two people hoping is lighter.
+
+date ken_rain_bench
+prompt: Sit with me in the rain.
+who: together
+when: rain
+say: *He opens an umbrella over both of you on a bench, and it's too small, and he holds it over you entirely and gets soaked himself.* I don't mind. I like the rain. It's honest. It doesn't pretend to be anything.
+> Get under here with me. | +3 cling -> rain
+> You're soaked, Ken. | +2 laugh -> rain
+page rain
+say: *He shifts closer until his shoulder's against yours under the umbrella.* My mother used to walk me home in the rain. One umbrella. She always held it on my side. I didn't notice until she was gone. *He looks at you.* I'm noticing now.
+> I'll hold it on your side, then. | +5 hand
+  - *He laughs, softly.* Then we'll both be wet, and both be happy. That's a good trade.
+> She must have loved you very much. | +4 cling
+  - She did. *He's quiet.* I didn't think anyone would again. *He holds the umbrella a little tighter.*
+> Kiss me in the rain. | +4 kiss
+  - *He goes very red, drops the umbrella, and does.* ...That was very much like a book. I've wanted to do that like a book for a very long time.
+
+date ken_cook
+prompt: Cook for me tonight.
+who: together
+when: home
+say: *He looks genuinely frightened.* Cook? For you? ...I can't eat human food. I can't even taste it properly. But... *he rolls up his sleeves* ...I remember how. My mother taught me. Hamburger steak. I'll try.
+> I'll help. | +3 -> pan
+> I believe in you. | +3 -> pan
+page pan
+say: *Somehow it's perfect. He watches you take the first bite like it's an exam result.* ...Is it good? I can't tell. I made it the way she did. I haven't made it since she died.
+> It's the best thing I've ever eaten. | +5 hug
+  - *His eyes go bright and he looks at the ceiling for a moment.* ...Okay. Then I'll make it again. Every time you want. Every time.
+> She'd be proud of you. | +5 cling
+  - *He puts the spatula down very carefully and holds onto the counter.* ...Thank you. Eat. Please. Before I start crying into the pan.
+> Eat with me. Just pretend. | +4 laugh
+  - *He sits down and pretends to eat with exaggerated joy, which is the silliest you've ever seen him.* Mm. Delicious. Look at me. A normal person.
+
+date ken_night_library
+prompt: Read together until late.
+who: together
+when: night
+say: *He's made a nest of cushions in the corner with two mugs and a lamp turned low.* I thought we could each read our own book. Together. In the same place. ...Is that a strange idea for a date?
+> It's a perfect idea. | +3 -> nest
+> Can we read the same book instead? | +3 read -> nest
+page nest
+say: *An hour in, he's stopped turning pages. He's just looking at you reading.* ...Sorry. You looked very peaceful. I wanted to remember it. I've lost a lot of things I should have looked at longer.
+> Then look as long as you want. | +4 cling
+  - *He puts his book down and leans his head against yours.* ...I will. Every night, if you'll let me.
+> Come here and read to me instead. | +4 hand
+  - *He reads to you in a quiet, careful voice until you're both too sleepy to follow the words.*
+> I was looking at you too. | +4 kiss
+  - You were? *He's honestly amazed.* ...I didn't think anyone would want to look at me that way. *He kisses your forehead, very gently.*
+
+date ken_stars
+prompt: Let's find somewhere quiet and look up.
+who: together
+when: night !rain
+say: *He lies back in the grass with his hands behind his head.* I used to think the dark was the only place I belonged. Then I looked up once and there were all these lights in it. *He points.* That's the one I talk to. Don't laugh.
+> What do you tell it? | +3 -> star
+> I won't laugh. | +3 -> star
+page star
+say: That I'm still here. That I'm trying. *He turns his head toward you in the grass.* Tonight I don't have to tell it anything. You're here. You already know.
+> I know. I'm not going anywhere. | +5 hand
+  - *His hand finds yours in the grass and holds on, firmly, like an anchor.* ...Okay. I believe you.
+> Tell me instead, then. Every night. | +4 cling
+  - Every night. *He rolls closer and puts his forehead against your shoulder.* That's a promise I'd like to keep.
+
+date ken_picnic
+prompt: A picnic. I'll bring everything.
+who: together
+when: day !rain
+say: *He's packed far too much. There are three blankets. There is a thermos of coffee and a whole basket he can't eat a single thing from.* I didn't know what you'd like. So I brought everything. Is that... too much?
+> It's perfect. | +3 -> picnic
+> Three blankets, Ken? | +2 laugh -> picnic
+page picnic
+say: *He lies back on the second blanket and watches clouds while you eat.* I've never done this. Not even as a kid. We didn't have time for picnics. *He turns his head.* I like watching you enjoy things. It feels like I'm enjoying them too.
+> Then let's do this every week. | +4 hand
+  - Every week. *He says it like he's writing it down somewhere important.* I'll bring four blankets next time.
+> Lie here with me. | +4 cling
+  - *He shuffles over until his shoulder touches yours, and stays very still, like a cat that's afraid to break the moment.*
+> You deserve nice things too. | +4 bow
+  - *He's quiet a long time.* ...I'm starting to think I might. Because of you.
+
+date ken_aquarium
+prompt: The aquarium. You'll like the jellyfish.
+who: together
+when: day
+say: *He stops in front of the jellyfish tank and doesn't move for ten minutes.* They don't have brains. Did you know that? They just drift, and glow, and nothing hurts them because they don't know enough to be hurt.
+> Do you envy them? | +3 -> jelly
+> They're beautiful. Like the light on your face. | +4 chin -> jelly
+page jelly
+say: Sometimes. *The blue light moves over him.* Not now, though. Now I'd rather know enough to be here. With you. Even if it means knowing the other things too.
+> I'm glad you're here. | +4 hand
+  - *He takes your hand in the dark of the tank room, and his is cold, and then it isn't.*
+> We can drift a little. Together. | +4 cling
+  - *He laughs softly and leans against you, both of you watching the slow glowing things.* ...I'd like that.
+> Kiss me in the blue light. | +4 kiss
+  - *He glances around for anyone watching, finds no one, and kisses you, carefully, like you're the fragile thing.*

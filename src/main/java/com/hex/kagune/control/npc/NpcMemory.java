@@ -29,6 +29,8 @@ public final class NpcMemory {
     public static final String TOPICS = "topics";
     /** 1.3.29: the lessons this teacher has taught them, or told them they knew already (a bit each: Teaching.bit). */
     public static final String TAUGHT = "taught";
+    /** 2.1.2: the game day they last went on a date. */
+    public static final String DATE_DAY = "dateday";
 
     private final Map<String, Map<String, Long>> values = new LinkedHashMap<>();
 

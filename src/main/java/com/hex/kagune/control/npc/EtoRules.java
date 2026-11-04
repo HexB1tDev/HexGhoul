@@ -106,9 +106,15 @@ public final class EtoRules {
         }
     }
 
-    /** Her errands at {@link NpcBonds#MOST}, in order, and how many of each: then the player may ask her out. */
+    /**
+     * Where the player is on the road to dating her. 2.1.2: {@link #COURTING} through her own chapters ({@link Courtship}), then
+     * {@link #ASK}. BOOKS, HUNT and FLOWER were the three errands every companion shared before it; kept (the journal's cards send this by
+     * ordinal) and never returned now.
+     */
     public enum Step {
-        NONE(0), BOOKS(3), HUNT(10), FLOWER(1), ASK(0), DATING(0);
+        NONE(0), BOOKS(3), HUNT(10), FLOWER(1), ASK(0), DATING(0),
+        // 2.1.2
+        COURTING(0);
 
         public final int need;
 
@@ -297,7 +303,7 @@ public final class EtoRules {
 
     // ---------------------------------------------------------------- her errands
 
-    /** Where the player is in her errands. */
+    /** Where the player is on the road to dating her (2.1.2: through her chapters, {@link Courtship}). */
     public static Step step(QuestLog.Bond bond) {
         if (bond.has(DATING)) {
             return Step.DATING;
@@ -305,16 +311,10 @@ public final class EtoRules {
         if (!bond.has(LINE_ON)) {
             return Step.NONE;
         }
-        if (!bond.has(BOOKS_DONE)) {
-            return Step.BOOKS;
-        }
-        if (!bond.has(HUNT_DONE)) {
-            return Step.HUNT;
-        }
-        return bond.has(FLOWER_DONE) ? Step.ASK : Step.FLOWER;
+        return Courtship.closed(bond, Courtship.CHAPTERS) >= Courtship.CHAPTERS ? Step.ASK : Step.COURTING;
     }
 
-    /** How much of the errand on is done. */
+    /** How much of the chapter on is done. */
     public static int count(QuestLog.Bond bond) {
         return bond.favours() & 0xFF;
     }
@@ -344,32 +344,12 @@ public final class EtoRules {
         return giftDay(bond) == Math.floorMod(day, 0x7FFFFFL);
     }
 
-    /** The errands begun (at {@link NpcBonds#MOST}): books first. */
+    /** 2.1.2: the courtship begun ({@link Courtship#BEGIN_AT}): the first chapter on. */
     public static QuestLog.Bond begin(QuestLog.Bond bond) {
-        return count(bond.with(LINE_ON, true), 0);
+        return Courtship.begin(bond);
     }
 
-    /**
-     * {@code amount} more done on {@code step} (it must be the errand on): the bond as it then is, the errand finished and the next one
-     * on (its count from 0) once {@link Step#need} is reached.
-     */
-    public static QuestLog.Bond advance(QuestLog.Bond bond, Step step, int amount) {
-        if (step(bond) != step || step.need <= 0 || amount <= 0) {
-            return bond;
-        }
-        int done = count(bond) + amount;
-        if (done < step.need) {
-            return count(bond, done);
-        }
-        int flag = switch (step) {
-            case BOOKS -> BOOKS_DONE;
-            case HUNT -> HUNT_DONE;
-            default -> FLOWER_DONE;
-        };
-        return count(bond.with(flag, true), 0);
-    }
-
-    /** Asked out once every errand is done: they are dating. */
+    /** Asked out once every chapter is closed: they are dating. */
     public static QuestLog.Bond date(QuestLog.Bond bond) {
         return step(bond) == Step.ASK ? bond.with(DATING, true) : bond;
     }
@@ -378,7 +358,7 @@ public final class EtoRules {
     static final int TAUGHT = TAUGHT_KICK | TAUGHT_SOAR | TAUGHT_WITNESS | TAUGHT_TRIAL;
 
     /**
-     * Killed by them: she remembers nothing kind of them, only that they are her enemy (her errands and any dating with it). 1.3.2: what
+     * Killed by them: she remembers nothing kind of them, only that they are her enemy (her courtship and any dating with it). 1.3.2: what
      * she taught stays taught: a lesson is never asked for twice.
      */
     public static QuestLog.Bond killedBy(QuestLog.Bond bond) {

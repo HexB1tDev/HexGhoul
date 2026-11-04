@@ -13,7 +13,12 @@ import java.util.Set;
 public record Scene(String speaker, String id, Kind kind, String prompt, Set<String> who, Set<String> moods, Set<String> tempers, List<String> when,
                     int weight, Page first, Map<String, Page> pages, List<String> ignored) {
     public enum Kind {
-        APPROACH, TOPIC
+        APPROACH, TOPIC,
+        /**
+         * 2.1.2: a courtship chapter's moment ({@code moment <chapter id>}), played when its task is done and never picked otherwise; and
+         * a date ({@code date <id>}), offered to a partner as one of the places to go together (its {@link #prompt} the offer).
+         */
+        MOMENT, DATE
     }
 
     /** A page: what it says (one of these, picked), and the answers. */

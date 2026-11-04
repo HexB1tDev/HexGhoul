@@ -12,6 +12,11 @@ final class ToukaScript extends CompanionScript {
     // ---------------------------------------------------------------- who she is to them
 
     @Override
+    protected String key() {
+        return "touka";
+    }
+
+    @Override
     protected String her() {
         return "her";
     }
@@ -92,12 +97,9 @@ final class ToukaScript extends CompanionScript {
                 s("Talk to me, idiot. I missed you today.", "Come here and tell me everything. Leave out the gross parts."))),
                 c.chattedToday() ? 0 : EtoRules.CHAT, EtoTalk.Effect.TALK);
             case BOOK -> errandItem(c, "Coffee beans? Where? You're holding air.",
-                "Good beans. That's {n} of three. Keep going.", "Three. That's enough to keep the cafe going a week. ...Thanks. "
-                    + "Now something else. Ask me again.",
                 "We're stocked. Bring them tomorrow.", "Beans again? You're trying to make me like you. ...It's working. Shut up.",
                 "Oh. Good beans, actually. The cafe's always running low. Thanks.", EtoGesture.SIP);
             case FLOWER -> flowerGiven(c, "A rabbit's foot? Where?",
-                "...A rabbit's foot. Is this supposed to be a joke? Because it's not funny. ...I'm keeping it. Was there something you wanted to ask me?",
                 "I already have one. From you. ...I keep it in my pocket. Don't tell anyone.",
                 "Another one? You're so weird. ...Thanks.", "Is this a joke about my mask? ...It's kind of funny. I'm keeping it.", EtoGesture.SHY);
             case GIFT -> c.meat() ? new EtoTalk.Reply(one(seed, "...You brought me dinner. Who taught you to be thoughtful? Gross. Thank you.",
@@ -108,12 +110,8 @@ final class ToukaScript extends CompanionScript {
             case LETTER -> c.letter() ? new EtoTalk.Reply(this.letter(c, false), c.giftedToday() ? 0 : 4, EtoTalk.Effect.LETTER, EtoGesture.READ)
                 : r("A letter? Where?", 0);
             case LESSON -> lesson(c, LESSONS);
-            case FAVOUR -> errand(c,
-                "...Fine. Since you won't leave me alone. The cafe's out of good beans. Bring me three bags. Cocoa beans, the brown pods. Don't ask.",
-                "I don't need anything from you. Yet.",
-                "Beans. Three. You've brought {n}. It's not hard.",
-                "Doves have been sniffing round the ward. Ugly things crawl out at night and draw them in. Kill ten of them after dark. {n} so far.",
-                "Last thing. Bring me a rabbit's foot. ...Don't ask why. Just do it.",
+            case FAVOUR -> errand(c, this.key(),
+                "I don't need anything from you. Yet. ...Stop looking at me like that.",
                 "That's everything. ...Was there something you wanted to say? Say it before I change my mind.",
                 "You don't have to do chores for me anymore. Just... come by.",
                 "I don't need anything. {partner} takes care of it.", "Go home to your spouse, idiot.");

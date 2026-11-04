@@ -204,8 +204,26 @@ public final class SceneTests {
                 long particular = SceneBook.fitting(book, Scene.Kind.APPROACH, c).stream().filter(s -> s.when().contains(moment[moment.length - 1])).count();
                 check(particular >= 1, speaker + " has something particular for '" + String.join("+", moment) + "': " + particular);
             }
+            // 2.1.2: every chapter of the courtship closes with its moment; a couple has dates to go on, by day and by night.
+            for (com.hex.kagune.control.npc.Courtship.Chapter chapter : com.hex.kagune.control.npc.Courtship.of(speaker)) {
+                Scene moment = book.stream().filter(scene -> scene.id().equals(chapter.id())).findFirst().orElse(null);
+                check(moment != null && moment.kind() == Scene.Kind.MOMENT, speaker + " has the moment of " + chapter.id());
+                if (moment != null) {
+                    check(moment.who().isEmpty() && moment.when().isEmpty(), chapter.id() + " plays whenever its task is done (nothing it waits on)");
+                }
+            }
+            long dates = book.stream().filter(scene -> scene.kind() == Scene.Kind.DATE).count();
+            check(dates >= 6, speaker + " has " + dates + " dates");
+            for (String tier : new String[] {"partner", "wife"}) {
+                for (String hour : new String[] {"day", "night"}) {
+                    SceneContext c = new SceneContext(tier, "happy", "", Set.of(hour, "human", "man"), names(), 5);
+                    int fit = SceneBook.fitting(book, Scene.Kind.DATE, c).size();
+                    check(fit >= 3, speaker + " has " + fit + " dates for a " + tier + " by " + hour);
+                }
+            }
             for (Scene scene : book) {
-                check(scene.kind() == Scene.Kind.TOPIC || !scene.ignored().isEmpty(), speaker + "." + scene.id() + " says something if left unanswered");
+                check(scene.kind() == Scene.Kind.TOPIC || scene.kind() == Scene.Kind.DATE || !scene.ignored().isEmpty(),
+                    speaker + "." + scene.id() + " says something if left unanswered");
             }
         }
     }

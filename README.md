@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.1.2 (HexGhoul): each companion's own courtship, and dates (testing)
+
+See `.github/release-notes-2.1.2.md`. Eto, Touka and Ken no longer share the same three errands (three books, ten kills at night, a flower). Each now has their own five-chapter courtship. Every chapter asks for something only that companion would ask for, and closes with a written scene that has choices, played the moment the task is done. Once you're together, you can take them on dates.
+
 ## 2.1.1 (HexGhoul): final forms rest five minutes: Exhaustion (testing)
 
 See `.github/release-notes-2.1.1.md`. The final forms (War and Peace) now have a 5-minute cooldown, shown as a new custom effect, Exhaustion, with its own icon: a kakugan half shut under a heavy, cracked lid, its red dimmed, a drop of RC running from it. Once a final form is let go (taken off, run dry, or the player killed in it), Exhaustion runs for 5 minutes, and calling War or Peace meanwhile is refused with the time left ("Exhausted: War can't be called again for 4:12").

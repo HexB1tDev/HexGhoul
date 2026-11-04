@@ -162,28 +162,27 @@ public final class EtoTests {
         check(back.bond(EtoRules.KEY).has(EtoRules.TAUGHT_KICK) && back.state(kick, KagunePath.RINKAKU, 0) == QuestLog.State.DONE, "kept in the save");
     }
 
+    /** 2.1.2: her courtship (Courtship): five chapters of her own, each closed by its moment, then she may be asked out. */
     static void errands() {
         QuestLog.Bond bond = new QuestLog.Bond(100, 0L, NpcBonds.MET, 0);
         check(EtoRules.step(bond) == EtoRules.Step.NONE, "nothing asked yet");
         bond = EtoRules.begin(bond);
-        check(EtoRules.step(bond) == EtoRules.Step.BOOKS && EtoRules.count(bond) == 0, "books first");
-        bond = EtoRules.advance(bond, EtoRules.Step.HUNT, 5);
-        check(EtoRules.step(bond) == EtoRules.Step.BOOKS && EtoRules.count(bond) == 0, "only the errand on counts");
-        bond = EtoRules.advance(EtoRules.gifted(bond, 12L), EtoRules.Step.BOOKS, 1);
-        bond = EtoRules.advance(bond, EtoRules.Step.BOOKS, 1);
-        check(EtoRules.step(bond) == EtoRules.Step.BOOKS && EtoRules.count(bond) == 2 && EtoRules.giftedOn(bond, 12L) && !EtoRules.giftedOn(bond, 13L),
-            "two books, the gift day kept beside them");
-        bond = EtoRules.advance(bond, EtoRules.Step.BOOKS, 1);
-        check(EtoRules.step(bond) == EtoRules.Step.HUNT && EtoRules.count(bond) == 0 && EtoRules.giftedOn(bond, 12L), "three: then the hunt");
-        for (int i = 0; i < 9; i++) {
-            bond = EtoRules.advance(bond, EtoRules.Step.HUNT, 1);
+        check(EtoRules.step(bond) == EtoRules.Step.COURTING && EtoRules.count(bond) == 0
+            && com.hex.kagune.control.npc.Courtship.chapter(EtoRules.KEY, bond).id().equals("eto_letter"), "her first chapter: a page you wrote");
+        bond = com.hex.kagune.control.npc.Courtship.progress(EtoRules.KEY, bond, com.hex.kagune.control.npc.Courtship.Task.KILLS, 5);
+        check(EtoRules.count(bond) == 0, "only the chapter on counts");
+        bond = EtoRules.gifted(bond, 12L);
+        bond = com.hex.kagune.control.npc.Courtship.progress(EtoRules.KEY, bond, com.hex.kagune.control.npc.Courtship.Task.GIVE, 3);
+        check(EtoRules.count(bond) == 1 && com.hex.kagune.control.npc.Courtship.ready(EtoRules.KEY, bond) && EtoRules.giftedOn(bond, 12L),
+            "never past what it needs, the gift day kept beside it");
+        check(EtoRules.date(bond) == bond, "no asking her out mid-courtship");
+        for (int chapter = 0; chapter < com.hex.kagune.control.npc.Courtship.CHAPTERS; chapter++) {
+            com.hex.kagune.control.npc.Courtship.Chapter on = com.hex.kagune.control.npc.Courtship.chapter(EtoRules.KEY, bond);
+            check(on != null && EtoRules.step(bond) == EtoRules.Step.COURTING, "chapter " + (chapter + 1) + " on");
+            bond = com.hex.kagune.control.npc.Courtship.progress(EtoRules.KEY, bond, on.task(), on.need());
+            bond = com.hex.kagune.control.npc.Courtship.close(EtoRules.KEY, bond);
         }
-        check(EtoRules.step(bond) == EtoRules.Step.HUNT && EtoRules.count(bond) == 9, "nine kills");
-        bond = EtoRules.advance(bond, EtoRules.Step.HUNT, 1);
-        check(EtoRules.step(bond) == EtoRules.Step.FLOWER, "ten: then a flower");
-        check(EtoRules.date(bond) == bond, "no asking her out before the flower");
-        bond = EtoRules.advance(bond, EtoRules.Step.FLOWER, 1);
-        check(EtoRules.step(bond) == EtoRules.Step.ASK, "then ask her");
+        check(EtoRules.step(bond) == EtoRules.Step.ASK && EtoRules.giftedOn(bond, 12L), "five chapters: then ask her");
         bond = EtoRules.date(bond);
         check(EtoRules.step(bond) == EtoRules.Step.DATING && bond.has(EtoRules.DATING) && bond.regard() == 100, "dating");
         QuestLog.Bond back = QuestLog.load(saved(bond)).bond(EtoRules.KEY);
@@ -249,14 +248,16 @@ public final class EtoTests {
         EtoTalk.Context gifted = new EtoTalk.Context(25, 0, 0, true, true, true, true, false, null, true, false, 3);
         check(EtoTalk.answer(gifted, NpcTalk.Choice.BOOK).effect() == EtoTalk.Effect.NONE && EtoTalk.answer(gifted, NpcTalk.Choice.CHAT).regard() == 0,
             "one gift and one chat a day");
-        EtoTalk.Context adored = context(100, 0, 0, false, false, false, null, false);
+        EtoTalk.Context adored = context(com.hex.kagune.control.npc.Courtship.BEGIN_AT, 0, 0, false, false, false, null, false);
         check(EtoTalk.choices(adored).contains(NpcTalk.Choice.FAVOUR) && EtoTalk.answer(adored, NpcTalk.Choice.FAVOUR).effect() == EtoTalk.Effect.BEGIN,
-            "at 100 she asks for her errands (a human too)");
-        EtoTalk.Context books = context(100, EtoRules.LINE_ON, 2, false, true, false, null, false);
-        check(EtoTalk.answer(books, NpcTalk.Choice.BOOK).effect() == EtoTalk.Effect.BOOK, "the third book counts even on a gifted day");
+            "a close friend: her courtship begins (a human too)");
+        check(!EtoTalk.choices(context(com.hex.kagune.control.npc.Courtship.BEGIN_AT - 1, 0, 0, false, false, false, null, false))
+            .contains(NpcTalk.Choice.FAVOUR), "not before");
+        EtoTalk.Context ready = context(80, EtoRules.LINE_ON, 1, false, true, false, null, false);
+        check(EtoTalk.answer(ready, NpcTalk.Choice.FAVOUR).effect() == EtoTalk.Effect.COURT, "a chapter's task done: its moment");
         EtoTalk.Context ask = context(100, EtoRules.LINE_ON | EtoRules.BOOKS_DONE | EtoRules.HUNT_DONE | EtoRules.FLOWER_DONE, 0, false, false, false, null, false);
         check(EtoTalk.choices(ask).contains(NpcTalk.Choice.ASK_OUT) && EtoTalk.answer(ask, NpcTalk.Choice.ASK_OUT).effect() == EtoTalk.Effect.DATE,
-            "every errand done: ask her out");
+            "every errand of before done: ask her out (as before)");
         int dating = EtoRules.LINE_ON | EtoRules.BOOKS_DONE | EtoRules.HUNT_DONE | EtoRules.FLOWER_DONE | EtoRules.DATING;
         EtoTalk.Context date = context(100, dating, 0, false, false, false, null, false);
         List<NpcTalk.Choice> dated = EtoTalk.choices(date);

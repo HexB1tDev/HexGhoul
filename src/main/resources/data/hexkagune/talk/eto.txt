@@ -1596,3 +1596,235 @@ say: Make me coffee, love. Strong. The kind that's almost food. I'm being very g
 > Get it yourself. | -1 pout
   - Cruel. I'll remember this when I'm less hungry.
 ignored: I'll make it myself. Badly.
+
+# =====================================================================================================================================
+# 2.1.2: HER COURTSHIP. Five chapters (npc/Courtship.java has what each asks for); each closes with its moment, played the moment the
+# task is done. Never picked otherwise. Not yet a couple: nothing a couple does.
+# =====================================================================================================================================
+
+moment eto_letter
+say: *She takes the book like it might bite her, opens it, and reads. Her lips move. Twice she stops and looks at you over the page.*
+> Well? | +1 -> verdict
+> Don't read it in front of me. | +1 -> verdict
+> I'm not a writer. Be gentle. | +2 -> verdict
+ignored: I'll read it when you're not looking, then. Even better.
+page verdict
+say: Your handwriting is a crime. Your spelling is a second crime. And this line, here... *she taps it* ...I've read eleven thousand books and nobody ever wrote me a line like this one. Why did you write it?
+> Because it's true. | +4 hair
+  - ...Don't. Don't say that so plainly. I don't have a shelf for things said plainly. *She closes the book very carefully.* I'm keeping this. Forever.
+> I wanted you to smile. | +3 giggle
+  - Then you failed. I'm not smiling. This is my face. ...Fine. It's a smile. Write me another one someday and I'll pretend it isn't.
+> I copied it from a book. | -1 pout -> caught
+page caught
+say: Liar. I know every book. This one isn't in any of them. *She hugs it to her chest.* You wrote it and you're embarrassed. That's the best part.
+> ...Fine. I wrote it. | +3 giggle
+  - I knew it. Next chapter, then. Tonight, you're walking me somewhere dark. Don't be late.
+> I'll never admit it. | +2
+  - You don't have to. The ink already did. *She tucks the book under her arm and won't give it back.*
+
+moment eto_night_walk
+say: *Eto stops in the middle of the path, tilts her head back and breathes in the dark like it's perfume.* Do you know why I like the night? Everybody's honest at night. The ones who want to eat you stop pretending they don't.
+> And what about you? | +2 -> honest
+> I like it because you're in it. | +3 blush -> honest
+> I prefer the day. | 0 -> honest
+ignored: *She walks on ahead, humming, as if she'd said nothing.*
+page honest
+say: Me? *She laughs, small.* At night I'm the thing under the bed. I eat people, {name}. Not because I'm hungry. Because it's what I was made for. Does that frighten you?
+> No. I'm still here. | +4 hair
+  - ...Hm. You are, aren't you. Still here. *She takes a step closer, then one back.* Bring me ink next. I want to write this down before I lose it.
+> A little. | +3 look
+  - Good. A little is honest. People who say none are lying, and people who say all of it run. *She smiles at the moon.* Stay a little scared. It's flattering.
+> You're more than what you eat. | +3 blush
+  - Careful. Say things like that and I'll start believing in people again. Terrible habit. ...Ink. Next. I need to write.
+
+moment eto_ink
+say: *She uncorks a sac, pours it into a chipped bottle, dips a long black quill and writes something fast on the inside of her wrist. She holds it up.* Read it.
+> *Read it aloud.* | +2 -> wrist
+> What does it say? | +1 -> wrist
+> You're writing on yourself? | +1 -> wrist
+ignored: *She licks the ink off her wrist and pretends it never happened.*
+page wrist
+say: It says your name. *She turns her hand over, looking at it like it's someone else's.* I write the names of everyone I mean to remember. Usually they're dead before the ink dries. You're the first one I wrote down hoping you wouldn't be.
+> I'm not going anywhere. | +4 blush
+  - Everyone says that. ...You say it like you mean it, though. I'll leave the ink on. *She pulls her sleeve down over it.* For a few days.
+> Who else did you write down? | +2 -> list
+> Should I be worried? | +2 giggle
+  - Very. But not about that. *She caps the bottle.* Next, I want to watch you hunt. I want to see your face when you do.
+page list
+say: A man who sold me books for nine years and never asked my name. A girl who drew owls. My mother, once, though I never met her. *She shrugs.* A short list. Ink is precious.
+> Thank you for adding me. | +4 hair
+  - Don't thank me. It's a curse, probably. *Softly:* Come hunting with me. After dark. I want to watch.
+> I'll make sure it's not a curse. | +3 giggle
+  - Big words. Prove it. Take me hunting after dark, and let me watch you.
+
+moment eto_watch
+say: *There's blood on your sleeve. Eto steps over the last body without looking at it, takes your face in both hands, and turns it to the moonlight like she's reading it.* There you are.
+> What are you looking for? | +2 -> face
+> Let go. | 0 -> face
+> *Stand still and let her look.* | +3 -> face
+ignored: *She wipes a fleck of blood off your cheek with her thumb and walks off smiling.*
+page face
+say: Most people go ugly when they kill. Their faces crack and something mean leaks out. Yours didn't. You looked... sad, and sure. *She wipes your cheek with her thumb.* I've never been looked at like that. Like the sad, sure thing was worth protecting.
+> You are worth protecting. | +5 blush
+  - *For once she has nothing to say. She lets go of your face, slowly.* ...Come to the Library in the dead of night. I want to show you something. I've never shown anyone.
+> I was protecting you. | +4 hair
+  - From what? I'm the worst thing out here. *But she's smiling.* Come to the Library in the dead of night. Just you. There's something I want you to see.
+> I didn't feel anything. | +1 look
+  - Liar. I watched. *She hums.* Come to the Library in the dead of night anyway. Maybe you'll feel something there.
+
+moment eto_deep
+say: *The Library is black except for one candle. Eto is sitting on the floor between two shelves, without her coat, without the smile. She pats the floor beside her.* Sit. I'm going to tell you something, and you're going to be quiet until I'm done.
+> *Sit beside her.* | +2 -> truth
+> I'm listening. | +2 -> truth
+ignored: *She blows out the candle.* ...Some other night, then.
+page truth
+say: I was born in a cage, more or less. Made, really, the way you'd make a weapon. Everything I am, somebody planned. *She stares at the candle.* Except this. Whatever this is, with you. Nobody planned it. Not even me. It scares me more than anything I've ever killed.
+> It scares me too. | +5 hair -> ask
+> Then let's not plan it. | +5 giggle -> ask
+> You don't have to be scared with me. | +5 blush -> ask
+page ask
+say: *She looks at you sideways, and the smile comes back, small and crooked.* That's the end of my book. Five chapters. You read it all the way through. Most people skip to the end. ...So. Was there something you wanted to ask me, {name}?
+> There is. Give me a moment. | +3 blush
+  - Take all night. I'll be right here. *She doesn't let go of your sleeve.* Ask me properly. Out loud. I want to hear it.
+> You already know what I'll ask. | +3 giggle
+  - I want to hear you say it. Out loud, not in ink. Go on. *She pulls her knees up and waits, pretending not to.*
+
+# =====================================================================================================================================
+# 2.1.2: DATES, offered from the sweet page ("Let's go somewhere."), once a day. Hers are bookish, nocturnal and a little dangerous.
+# =====================================================================================================================================
+
+date eto_bookshop
+prompt: Let's go hunting for old books.
+who: together
+when: day
+say: Old books? You know the way to my heart. *She drags you by the wrist to a stall stacked with crumbling covers and starts pulling them out like a raccoon.* Look. LOOK. A first printing. The idiot's selling it for nothing.
+> Buy it for her. | +3 giggle -> after
+> Read the first line to her. | +3 read -> after
+> Which is your favourite? | +2 -> after
+page after
+say: *An hour later she has seven books under one arm and your hand in the other.* This is what I'd do every day, if the world let me. Books and somebody who doesn't mind waiting while I smell them.
+> I don't mind at all. | +3 hand
+  - Good. Then I'll take three hours next time. *She squeezes your fingers.*
+> You smell books? | +2 laugh
+  - Everybody smells books. The honest ones admit it. *She shoves one under your nose.* Vanilla and dust. Heaven.
+> Next time, I'll find you one. | +3 hair
+  - You'd better. I'll know if you just pick the prettiest cover. *She would, secretly, love that.*
+
+date eto_rooftop
+prompt: Watch the city from a roof with me.
+who: together
+when: night
+say: *She sits on the edge of the roof with her feet over nothing, swinging them.* Look at them all. Little lights. Every one of them is somebody who thinks they're the main character.
+> Aren't they? | +2 -> lights
+> You're the main character to me. | +4 blush -> lights
+> Come back from the edge. | +2 -> lights
+page lights
+say: I used to come up here and pick a window and make up a whole life for whoever was behind it. Then I'd eat them. *A pause.* That was a joke. Mostly. Tonight I picked us. Want to hear our story?
+> Tell me. | +3 cling
+  - Two monsters on a roof. Nobody wrote them. They wrote each other. *She leans her head on your shoulder.* It's a short book. I don't want it to be.
+> Does it have a happy ending? | +3 hair
+  - I haven't written the ending. *She threads her arm through yours.* I keep putting it off. Isn't that strange, for me?
+> I'd rather live it than hear it. | +3 kiss
+  - *She stares at you, then kisses you, quick and fierce.* ...Fine. That's a better answer than mine.
+
+date eto_graveyard
+prompt: A walk through a graveyard. Your kind of place.
+who: together
+when: night
+say: Oh, you know me too well. *She hops from headstone to headstone, reading the names out loud.* Here lies a baker. Here lies a liar. Here lies someone who thought they'd have more time.
+> Will someone write your name somewhere? | +3 -> name
+> Get down before you break your neck. | +2 -> name
+> Read me the happiest one. | +2 -> name
+page name
+say: *She jumps down beside you.* Nobody will bury me. I'll go the way monsters go, and someone will write a book where I'm the villain. *She tilts her head.* Unless you write it first.
+> I'll write you as the heroine. | +4 blush
+  - That'd be the biggest lie in literature. ...Do it anyway. I want to read it.
+> I'll make sure you have a name on a stone. | +4 cling
+  - *She goes very still, then grabs your arm with both hands.* ...Don't say things like that in a graveyard. Something might hear you and make it true.
+> You won't go anywhere. | +3 hand
+  - Brave. Wrong, probably. But brave. *She laces her fingers through yours and doesn't say anything for a while.*
+
+date eto_rain_reading
+prompt: Read to me while it rains.
+who: together
+when: rain
+say: Rain and a book. You're spoiling me. *She curls up against the window with a blanket, then lifts one side of it for you.* In. Now. Before the good part.
+> *Get under the blanket.* | +3 cling -> read
+> Which book? | +2 -> read
+page read
+say: *She reads in a low voice, doing all the voices, very badly on purpose. Halfway through a sad chapter she stops and doesn't start again.* ...I wrote this one. Under the other name. You didn't know.
+> I loved it. | +4 blush
+  - You're lying. ...You're not lying. *She hides her face in the blanket.* Don't look at me for a minute.
+> Keep reading. I want to hear how it ends. | +3 hair
+  - It ends badly. ...But I can change it for you. Out loud. Just this once.
+> Why did you stop? | +3 cling
+  - Because I wrote it before I knew you, and now it's wrong. Everything I wrote before you is a little bit wrong. *She leans into you.* Annoying.
+
+date eto_stars
+prompt: Lie in a field and count the stars.
+who: together
+when: night !rain
+say: *She lies down in the grass and points straight up.* That one's mine. And that one. And that whole bit, there. I'm claiming them. You can have the dim one by the tree.
+> Can I have you instead? | +4 blush -> sky
+> That's unfair. | +2 laugh -> sky
+> *Lie down beside her.* | +3 -> sky
+page sky
+say: When I was small I thought the stars were holes in a lid somebody put over the world to keep us in. *She turns her head toward you in the grass.* I still think that, a little. But it's nicer in here, now.
+> I'm glad you're in here with me. | +4 hand
+  - Me too. Don't tell anyone. *Her hand finds yours in the grass.*
+> I'd tear the lid off for you. | +4 giggle
+  - Romantic AND destructive. You're perfect. *She rolls onto your chest.* Don't move.
+> Let's fall asleep out here. | +3 cling
+  - Something might eat us. ...Let it try. *She settles in against you.*
+
+date eto_kitchen
+prompt: Let's cook something. Badly.
+who: together
+when: home
+say: You know I can't eat any of this, right? *She's already wearing an apron.* I just want to make something and ruin it. With you. Hand me the knife. ...Not like that. Handle first. I'm not a monster. Well.
+> Let's bake a cake. | +3 giggle -> mess
+> Teach me something. | +2 -> mess
+page mess
+say: *Twenty minutes later there's flour on the ceiling and Eto has eaten exactly nothing and is very proud.* It's horrible. Look at it. It's the worst thing I've ever made, and I've made a lot of things.
+> It's beautiful because we made it. | +4 kiss
+  - *She laughs into the kiss.* Sap. ...Say it again. Never mind. Don't. I'll cry flour.
+> We should frame it. | +3 laugh
+  - YES. Above the bed. A warning to all visitors. *She wipes flour off your nose.*
+> I'll eat it for both of us. | +3 hug
+  - My hero. If you die, I'll write a book about it. *She hugs you, getting flour all over both of you.*
+
+date eto_museum
+prompt: The museum. You can tell me what's wrong with it.
+who: together
+when: day
+say: Oh, you're going to regret this. *She marches you past every exhibit with commentary.* Wrong. Wrong. That one's a forgery. That skeleton is three animals glued together. ...THAT one is right. Look at it. Isn't it gorgeous?
+> What is it? | +2 -> bones
+> You're gorgeous when you're angry at museums. | +4 giggle -> bones
+page bones
+say: A fossil of something that ate everything around it for a million years and then just... stopped. Nobody knows why. *She presses her hand to the glass.* I like to think it got tired. Or found something it liked more than eating.
+> Like you found me? | +4 blush
+  - *She turns and looks at you, very still.* ...That was annoyingly good. I'm writing it down. Don't you dare take credit.
+> Maybe it just got full. | +2 laugh
+  - Unromantic. Correct, probably. *She slips her arm through yours.* Come on. There's a mummy I want to insult.
+> I'd never stop being interested in you. | +3 cling
+  - Careful. A million years is a long time. *She leans against you in front of the glass.* ...I'd hold you to it.
+
+date eto_tea
+prompt: Let's have tea. You pour.
+who: together
+say: Tea? With me? I can't drink it, you know. *She sets out two tiny cups anyway, very formally, and folds her hands.* But I adore the ceremony. Pour. Slowly. If you spill, I'll write about it.
+> *Pour very slowly.* | +3 -> cups
+> *Spill a little on purpose.* | +2 giggle -> cups
+page cups
+say: *She holds her cup up to her nose and breathes in, eyes closed, and doesn't drink.* My mother liked tea, they told me. I never met her. I do this sometimes to feel like I know something about her. It's silly.
+> It's not silly. It's beautiful. | +4 hair
+  - *She opens her eyes.* You keep saying that word about things of mine. ...I'm starting to believe you. That's dangerous.
+> Tell me what you imagine she was like. | +4 -> mother
+> I'll drink yours for you. | +3 laugh
+  - Uncultured! ...Go on, then. *She watches you drink it like it's the most interesting thing she's ever seen.*
+page mother
+say: Tall. Terrible at cooking. She'd have laughed too loud in libraries and been thrown out of them. *Her voice goes soft.* She'd have liked you. That's the part I'm sure of.
+> I'd have liked her too. | +4 cling
+  - *She sets the cup down and leans into you without a word.*
+> She'd be proud of you. | +4 blush
+  - Of a monster who eats people and writes about it? ...Maybe. If you're there. *She hides her face against your shoulder.*

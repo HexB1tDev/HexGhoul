@@ -260,12 +260,12 @@ public class UiPreview {
         }
         journal(new File(dir, "quests-ghoul.png"), KagunePath.GRAFT, 400, ghoul, com.hex.kagune.control.client.QuestJournalView.Tab.GHOUL, "eto_kick",
             0L);
-        // 1.3.29: the Romance tab: married to Eto (home set, a child), Touka's errands half done, Ken not met.
+        // 1.3.29: the Romance tab: married to Eto (home set, a child), Touka courting (2.1.2: chapter two, five of eight), Ken not met.
         java.util.List<com.hex.kagune.control.npc.RomanceCard> cards = java.util.List.of(
             new com.hex.kagune.control.npc.RomanceCard("eto", true, com.hex.kagune.control.npc.Romance.Stage.MARRIED, 96, true, null,
                 com.hex.kagune.control.npc.EtoRules.Step.DATING, 0, 12L, 1, true, false),
-            new com.hex.kagune.control.npc.RomanceCard("touka", true, com.hex.kagune.control.npc.Romance.Stage.NONE, 100, true, null,
-                com.hex.kagune.control.npc.EtoRules.Step.BOOKS, 2, 0L, 0, false, false),
+            new com.hex.kagune.control.npc.RomanceCard("touka", true, com.hex.kagune.control.npc.Romance.Stage.NONE, 74, true, null,
+                com.hex.kagune.control.npc.EtoRules.Step.COURTING, 5, 0L, 0, false, false, 1),
             new com.hex.kagune.control.npc.RomanceCard("ken", false, com.hex.kagune.control.npc.Romance.Stage.NONE, 0, true, null,
                 com.hex.kagune.control.npc.EtoRules.Step.NONE, 0, 0L, 0, false, false));
         journal(new File(dir, "quests-romance.png"), KagunePath.RINKAKU, 520, chose, com.hex.kagune.control.client.QuestJournalView.Tab.ROMANCE, "romance:eto",

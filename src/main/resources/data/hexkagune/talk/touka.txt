@@ -1544,3 +1544,240 @@ say: *a quick kiss on your cheek, and she's already walking off* ...Don't follow
 > Pretend nothing happened. | +1
   - Good. Nothing happened. ...Nothing happened twice, later.
 ignored: Nothing happened. Got it? Nothing.
+
+# =====================================================================================================================================
+# 2.1.2: HER COURTSHIP. Five chapters (npc/Courtship.java has what each asks for); each closes with its moment, played the moment the
+# task is done. Never picked otherwise. Not yet a couple: nothing a couple does. She hides everything behind insults; let them crack.
+# =====================================================================================================================================
+
+moment touka_beans
+say: *After closing. The cafe's dark except the bar. Touka grinds your beans by hand, glaring at them, and pours two cups.* Sit. Drink. And be honest, or I'll know.
+> *Drink it.* | +1 sip -> taste
+> You made one for me? | +2 -> taste
+ignored: *She drinks both cups herself, angrily.*
+page taste
+say: *She watches you over the rim of her own cup, not drinking it.* Well? I made it the way the old man taught me. Every cup's supposed to be for one person. I've never made one for... *She stops.* Just tell me if it's bad.
+> It's the best coffee I've ever had. | +3 shy
+  - ...Liar. *She looks away fast.* ...It's okay if you're lying. Say it again anyway.
+> It's a little bitter. Honestly. | +4 laugh
+  - *She actually laughs, then covers her mouth like it's illegal.* Finally, someone honest. Yeah. It's bitter. I'm bad at sugar. ...I'll try again. For you. Shut up.
+> Who's the old man? | +3 -> oldman
+page oldman
+say: The manager. He found me when I was a brat who bit everyone. Gave me an apron instead of a beating. *She turns her cup.* He says coffee's how you tell someone you're glad they exist without saying anything embarrassing.
+> Then I'm glad you exist too. | +4 shy
+  - *She chokes on her coffee.* That's— you can't just SAY it! That's the whole point of the coffee! ...Idiot. *She doesn't look at you for a full minute.*
+> So this cup means something. | +3 huff
+  - It means you brought beans. That's all. *Her ears are red.* Doves have been sniffing round. Next you're helping me clear the night. Don't get killed.
+
+moment touka_patrol
+say: *Touka drops off a wall beside you, breathing hard, wings fading to sparks.* Eight. I counted. You fight like an idiot, you know that? You leave your left side open every time.
+> You were watching me? | +2 -> watch
+> You were following me the whole time? | +2 -> watch
+> My left side is fine. | +1 huff -> watch
+ignored: Tch. Whatever. Good work. *She's gone over the rooftops before you can answer.*
+page watch
+say: Somebody had to. If a Dove got you, I'd... *She kicks a stone off the roof.* I'd have to find someone else to bring beans. That's all. Don't look at me like that.
+> You were worried. | +3 shy -> brother
+> I'd have come back for you too. | +4 blush -> brother
+page brother
+say: *She sits on the ledge. Quieter:* I have a brother. He left. Chose the people who hurt others, because they're strong. I keep thinking if I'd been stronger he'd have stayed. *She glares at the city.* I don't know why I'm telling you this.
+> Because you trust me. | +4 shy
+  - *A long pause.* ...Maybe. Don't make it weird. *She stands up.* Next time, take me somewhere high. Higher than this. I want to breathe.
+> It's not your fault he left. | +4 look
+  - You don't know that. ...But thanks. *She wipes her face fast with her sleeve and pretends it was the wind.* Take me somewhere high next time. Really high.
+> He might come back. | +3 look
+  - He won't. ...But if he does, I'll kick him first. *Almost a smile.* Somewhere high. Next time. Where nobody's looking up.
+
+moment touka_roof
+say: *Wind. Clouds close enough to touch. Touka walks right to the edge and spreads her arms and the wind takes her hair.* Oh. Oh, this is... *She doesn't finish.*
+> Is it high enough? | +2 -> high
+> *Stand beside her.* | +3 -> high
+ignored: *She stays at the edge a long time, saying nothing.*
+page high
+say: Down there I'm always hiding. From Doves, from customers, from school. Up here nobody's looking for me. *She sits down in the grass.* I used to dream about flying away from all of it. My wings were the only good thing I had.
+> They're not the only good thing. | +4 blush
+  - *She throws a clump of grass at you.* Stop being nice, I can't— ...Okay. Okay. *She lets you sit next to her. Very close. Not touching. Almost.*
+> Fly away with me, then. | +4 shy
+  - Idiot. Ghouls with Ukaku burn out if they fly too long. ...But maybe someday. Somewhere quiet. *She says it to the clouds, not to you.*
+> Show me your wings. | +3 -> wings
+page wings
+say: *Slowly, she lets them out. Not the crystals she fights with: soft red light, flickering like a candle, spilling over the grass.* Nobody's seen them like this. They only look like this when I'm not scared.
+> They're beautiful. | +5 blush
+  - ...Shut up. *The wings flicker brighter.* I have an exam. Sit with me while I study, at the cafe. Don't talk. Just be there. That's what's next.
+> So you're not scared right now? | +4 shy
+  - Not right now. *She pulls them back in, embarrassed.* Exam next. Cafe. You sit, I study. If you make me laugh I'll kill you.
+
+moment touka_exam
+say: *Touka slams the book shut.* Okay. Quiz me. If I get three right I'll pass. Ask me anything from chapter nine. Go.
+> What's the capital of the north? | +1 -> q1
+> I don't know what's in chapter nine. | +2 -> q1
+ignored: *She opens the book again and pretends you were never there.*
+page q1
+say: That's not even in chapter nine, you— *She snatches the book and points.* THIS. The date. When the treaty was signed. I know this one. It's... *she screws her eyes shut* ...it's on the tip of my tongue.
+> You know this. Breathe. | +3 -> q2
+> I'll give you a hint. | +2 -> q2
+> It's the year you were born. | +1 huff -> q2
+page q2
+say: ...Got it! *She writes it in the margin, triumphant.* One. Okay. Next. Ask me why it failed. I know why it failed. I wrote a whole essay on it. Ask me.
+> Why did it fail? | +3 -> q3
+> Tell me like you'd tell the examiner. | +2 -> q3
+page q3
+say: Because nobody trusted anybody, and everyone was waiting for the other side to break first. *She stops, hears herself, and looks at you.* ...That's a stupid answer for history and a pretty good one for everything else.
+> You don't have to wait for me to break first. | +5 shy
+  - *She stares at you for a long moment. Then she puts her forehead on the book.* ...I hate you. I'm going to pass this exam and it's going to be your fault. *Muffled:* Bring me a rabbit's foot. Last thing. Don't ask.
+> You'll pass. I know it. | +4 laugh
+  - If I pass, you're buying me something. If I fail, you're buying me something bigger. *She's smiling into the book.* Last thing after this. A rabbit's foot. Don't ask why.
+> Want me to stay until you're done? | +4 blush
+  - ...Yeah. Stay. Don't talk. *She opens the book again, and her foot finds yours under the table, and stays.*
+
+moment touka_rabbit
+say: *Touka turns the rabbit's foot over in her fingers. She doesn't make a joke. She doesn't call you an idiot.* You actually brought it.
+> You asked. | +2 -> rabbit
+> Why a rabbit's foot? | +2 -> rabbit
+ignored: *She puts it in her pocket and walks away without a word. Her hand doesn't leave the pocket.*
+page rabbit
+say: Everyone calls me the rabbit. Because of the mask. And rabbits are prey. Small, scared, always running. *She closes her fist around it.* I wanted something that said I'm lucky instead. Something somebody gave me because they wanted me to keep going.
+> I want you to keep going. With me. | +5 shy -> ask
+> You're not prey. You're terrifying. | +5 laugh -> ask
+> Then it's yours. For luck. | +4 -> ask
+page ask
+say: *She puts it in her pocket and keeps her hand on it.* ...Okay. That's all of it. You did everything I asked and you didn't run away once, which, for someone who has to deal with me, is a miracle. *She glares at the floor.* So if there's something you wanted to say, say it. Before I lose my nerve. Or yours.
+> Give me one second. | +3 blush
+  - One. *She counts under her breath.* ...Two. Three. You're taking too long. Ask me properly, idiot. I'm waiting.
+> You already know. | +3 huff
+  - I want to HEAR it. Out loud. If I have to say it first I'll die. *She crosses her arms and waits, pink to the ears.*
+
+# =====================================================================================================================================
+# 2.1.2: DATES, offered from the sweet page, once a day. Hers are small and real: coffee, a movie, the arcade, the rooftop, the beach.
+# =====================================================================================================================================
+
+date touka_movie
+prompt: Let's go see a movie.
+who: together
+say: A movie? *She scowls at the posters like they insulted her.* Fine. Not the romance one. Not the scary one either, I'll laugh and people will stare. ...The romance one. Shut up.
+> The romance one it is. | +3 shy -> after
+> The scary one. I want to see you laugh. | +3 laugh -> after
+page after
+say: *Walking out afterwards she's quiet. Then:* That was stupid. The guy was stupid, and she was stupid for waiting for him. *A beat.* ...I cried at the end. If you tell anyone I'll put you through a window.
+> I held your hand the whole time. | +3 hand
+  - You did. *She doesn't let go.* I didn't stop you. Remember that.
+> I cried too. | +4 laugh
+  - You did NOT. ...You did. Oh my god. *She leans on you laughing.* We're both stupid.
+> Want to see the scary one next time? | +2 huff
+  - Next time I pick. And it'll be the dumbest action movie in the world. *She bumps your shoulder.*
+
+date touka_beach
+prompt: The sea. Let's go to the beach.
+who: together
+when: day !rain
+say: *Touka takes her shoes off and walks straight into the shallows, then yelps.* COLD. It's so cold. Why do people do this for fun?
+> *Splash her.* | +3 kicks -> water
+> Come back, I'll warm you up. | +3 hug -> water
+page water
+say: *Soaked, furious, and laughing.* You're dead. You're so dead. *Afterwards she sits in the sand wringing out her hair.* ...When we were kids, my brother and I wanted to see the sea. We never did. I'm glad it was with you.
+> I'll take you every summer. | +4 cling
+  - Every summer. You promised. I have witnesses. *She points at a seagull.* That one.
+> He'd be glad you saw it. | +3 look
+  - Maybe. *She looks at the waves a long time.* Thanks for not making it sad. ...You made it a little sad. It's fine.
+> You're beautiful when you laugh. | +4 shy
+  - *She shoves sand at you.* Stop. ...Okay. Don't stop. Say it quieter.
+
+date touka_arcade
+prompt: Arcade. I'll beat you at everything.
+who: together
+when: day
+say: Beat ME? *She cracks her knuckles.* You've made a fatal mistake. I've been coming here since I was twelve. Pick your game. Pick your grave.
+> The claw machine. | +3 -> claw
+> The fighting game. | +2 -> fight
+page claw
+say: *Eleven tries. Eleven. On the twelfth she gets the ugly stuffed rabbit, and screams, and the whole arcade turns around.* MINE. ...It's yours. I won it for you. Take it before I change my mind.
+> I'll treasure it. | +4 hug
+  - You'd better. It cost me eleven coins and my dignity. *She shoves it into your arms and turns away, smiling.*
+> It looks like you. | +3 laugh
+  - It does NOT. ...It kind of does. Keep it on your bed. So you think of me. That was a joke. It wasn't.
+page fight
+say: *She wins. Then she wins again. Then she wins eight more times, explaining every combo, patient as a teacher, until you win one round. She throws her arms up.* YOU DID IT. Okay, I let you. ...I didn't let you. You actually did it.
+> Teach me more. | +3 giggle
+  - Every Sunday. You and me. I'll make you dangerous. *She grins, wild and proud.*
+> You're kind of amazing. | +4 shy
+  - I know. ...Don't look at me like that in public. *She drags you out by the sleeve.*
+
+date touka_roof_again
+prompt: Back up on a rooftop, just us.
+who: together
+when: night
+say: *She's already up there when you climb over the edge, sitting with two cans of coffee.* Took you long enough. Sit. I've been thinking about the last time we were up high.
+> What about it? | +2 -> roof
+> *Sit and take the coffee.* | +3 sip -> roof
+page roof
+say: That I wasn't scared. Up here. With you. *She turns the can in her hands.* I'm always scared, you know. Of being found, of losing people. With you it's quiet. I don't know what to do with quiet.
+> Just stay in it with me. | +4 cling
+  - *She leans against your shoulder, stiff at first, then all at once.* ...Okay. Just for a bit. Don't move.
+> Get used to it. | +3 laugh
+  - Bossy. ...Fine. I'll practise. *She puts her head on your shoulder.* This is practising.
+> Kiss me, then. That's something to do. | +4 kiss
+  - *She stares, goes pink, and grabs your collar.* ...Fine. Don't make it weird.
+
+date touka_cafe_closed
+prompt: The cafe after closing. Just us.
+who: together
+when: dusk
+say: *She flips the sign to CLOSED and locks the door, then stands there with her back to it like she's daring anyone to knock.* There. No customers. No manager. Sit at the counter. I'm making you something new.
+> What is it? | +2 -> new
+> Surprise me. | +3 -> new
+page new
+say: *She slides over a cup with a terrible little rabbit drawn in the foam.* I practised. Forty cups. Don't laugh. It's supposed to be cute.
+> It's the cutest thing I've ever seen. | +4 shy
+  - It's a rabbit with a lopsided head. *She's beaming anyway.* ...Drink it before it gets cold, idiot.
+> Did you drink all forty practice cups? | +3 laugh
+  - I can't drink coffee all day! I'm a ghoul, not a— ...I drank eleven. I'm vibrating. Don't look at me.
+> Make me forty more. | +3 hug
+  - *She throws a cloth at you.* One a day. Every day. That's the deal. Forever. *She stops.* ...I said forever. Ignore that.
+
+date touka_study_park
+prompt: Study in the park with me.
+who: together
+when: day
+say: *She sets out her books on a blanket like a battle plan and gives you a highlighter.* You're on vocabulary. If I get a word wrong, you poke me. If I get it right, you... *she thinks* ...you don't poke me.
+> What do I get if you get them all right? | +3 -> reward
+> *Poke her preemptively.* | +2 kicks -> reward
+page reward
+say: *Forty words later she's gotten thirty-eight. She lies back on the blanket, triumphant, and looks at the clouds.* Thirty-eight. That's a pass. ...You were a good study partner. Better than the books. Less paper cuts.
+> You were amazing. | +3 shy
+  - I was adequate. Amazing is for exam day. *She's grinning at the sky.*
+> I want my reward now. | +4 kiss
+  - *She sits up, kisses you on the cheek, and lies straight back down like nothing happened.* There. Don't push it.
+> Let's just lie here a while. | +3 cling
+  - *She shuffles over until her head is on your arm.* ...Ten minutes. Then more vocabulary. Okay, twenty.
+
+date touka_fireworks
+prompt: There are fireworks tonight. Come on.
+who: together
+when: night !rain
+say: *She's found the one spot on the hill nobody else knows about, and she's already sitting there with her knees up when the first one goes off.* Sit. Quick. You'll miss the big ones.
+> *Sit close.* | +3 cling -> sky
+> You've been here before. | +2 -> sky
+page sky
+say: Every year. Alone. *Green light washes over her face.* I used to pretend they were for me. Stupid, right? A ghoul thinking the whole city lit up the sky for her.
+> This year they are for you. | +4 shy
+  - *She doesn't answer. She just leans her head on your shoulder for the rest of the show, and grips your sleeve at every loud one.*
+> Not stupid. I'd light them for you. | +4 kiss
+  - *Between two bursts she grabs your face and kisses you, fast.* ...Don't say anything. Watch the fireworks.
+> Make a wish on the next one. | +3 look
+  - Wishes are for kids. *A gold one opens over the whole sky. She closes her eyes anyway.* ...Done. Don't ask.
+
+date touka_konbini
+prompt: Late night snack run. My treat.
+who: together
+when: night
+say: Your treat? You know I can't eat any of that. *She follows you into the bright little shop anyway and stops in front of the drinks.* ...But they have canned coffee. The good one. The one with the stupid cat on it.
+> Buy her the cat one. | +3 sip -> walk
+> Buy two. One for each of us. | +3 -> walk
+page walk
+say: *Walking back under the streetlights, she's holding the can in both hands like it's warm.* When I first lived on my own I'd come here at three in the morning just because it was bright and somebody said hello. *She shrugs.* Lonely people like convenience stores.
+> You don't have to be lonely now. | +4 hand
+  - *She looks at your hand for a long time, then takes it, and swings it a little, like she's annoyed about it.* ...Yeah. I know.
+> Let's make it our three a.m. place. | +3 laugh
+  - Our place is a convenience store. That's the least romantic thing ever. *She's smiling.* ...Okay. Deal.
+> I'll say hello to you every day instead. | +4 shy
+  - That's so cheesy I want to throw this can at you. *She doesn't. She holds onto it, and onto you.*

@@ -11,6 +11,11 @@ import java.util.List;
  */
 final class KenScript extends CompanionScript {
     @Override
+    protected String key() {
+        return "ken";
+    }
+
+    @Override
     protected String her() {
         return "him";
     }
@@ -95,13 +100,9 @@ final class KenScript extends CompanionScript {
                 s("Tell me about your day. All of it.", "Come here and talk. I've been waiting."))),
                 c.chattedToday() ? 0 : EtoRules.CHAT, EtoTalk.Effect.TALK);
             case BOOK -> errandItem(c, "A book? I don't see one.",
-                "Oh, I haven't read this one. That's {n} of three. Thank you.", "Three. I'll read them tonight. All of them. ...Was there something "
-                    + "else? You can ask me again.",
                 "I haven't finished the last one yet. Tomorrow?", "Another one? You know exactly how to make me happy.",
                 "A book... for me? I don't know what to say. Thank you. Really.", EtoGesture.READ);
             case FLOWER -> flowerGiven(c, "A flower? Where?",
-                "A white one. ...I used to dream of flowers, back then. Red ones. White suits me better now, I think. ...Was there something you "
-                    + "wanted to ask?",
                 "I still have the last one, pressed in a book.", "Thank you. I'll keep this one too.", "For me? ...People don't usually give me things. "
                     + "Thank you.", EtoGesture.BOW);
             case GIFT -> c.meat() ? new EtoTalk.Reply(one(seed, "...You brought me something to eat. I'm always hungry. I never say. Thank you.",
@@ -112,13 +113,9 @@ final class KenScript extends CompanionScript {
             case LETTER -> c.letter() ? new EtoTalk.Reply(this.letter(c, false), c.giftedToday() ? 0 : 4, EtoTalk.Effect.LETTER, EtoGesture.READ)
                 : r("A letter? I don't see one.", 0);
             case LESSON -> lesson(c, LESSONS);
-            case FAVOUR -> !c.mixed() ? r("You don't owe me anything. You're a friend. That's already a lot, for me.", 0) : errand(c,
-                "You'd do something for me? ...Then bring me books. Three I haven't read. That's all I've ever really wanted.",
-                "Nothing, really. You don't owe me anything.",
-                "Three books. You've brought {n}. Take your time.",
-                "There are things in the dark that hunt people who can't fight back. Kill ten of them at night. {n} so far. Please be careful.",
-                "One more thing. A white flower. ...It's a silly thing. Humour me.",
-                "That's everything. ...Was there something you wanted to ask me? I'll listen.",
+            case FAVOUR -> !c.mixed() ? r("You don't owe me anything. You're a friend. That's already a lot, for me.", 0) : errand(c, this.key(),
+                "Nothing, really. You don't owe me anything. ...Come and sit with me more, if you want. I'd like that.",
+                "That's everything. ...Was there something you wanted to ask me? I'll listen. I'm good at listening.",
                 "You don't need to do anything for me. Just be here.",
                 "{partner} takes care of me. But thank you.", "You're married. Go home to them. Please.");
             case ASK_OUT -> !c.mixed() ? r("...I'm flattered. Really. But not like that. Friends? I don't have many.", 0) : !c.mayDate() ? r(c.claimed() ? EtoLines.fill(c, "I'm {partner}'s. I'm sorry.") : "You're married. I can't.", 0)

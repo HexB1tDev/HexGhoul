@@ -352,7 +352,7 @@ public final class QuestJournalView {
         });
         dy += 24;
         if (!card.stage().together() && card.likes()) {
-            c.text("ERRANDS", dx, dy, HEADER, false);
+            c.text("COURTING", dx, dy, HEADER, false);
             c.text(c.fit(card.errands(), width - LABEL_WIDTH), dx + LABEL_WIDTH, dy, VALUE, false);
             dy += 16;
         }

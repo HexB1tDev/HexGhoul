@@ -16,7 +16,8 @@ import java.util.regex.Pattern;
  *
  * <pre>
  * # a comment
- * scene rain_window                      (something it comes up to them with; "topic rain" for something they can bring up)
+ * scene rain_window                      (something it comes up to them with; "topic rain" for something they can bring up;
+ *                                         2.1.2: "moment eto_letter" a courtship chapter's, "date stargazing" a date's)
  * prompt: What's the rain like?           (a topic's: what the player says to bring it up)
  * who: together                           (who it is for: tiers, or together / friend / anyone; a child's: baby toddler child teen...)
  * mood: clingy affectionate happy         (any of these moods; none: any mood)
@@ -99,10 +100,16 @@ public final class SceneBook {
             if (line.isEmpty() || line.startsWith("#")) {
                 continue;
             }
-            if (line.startsWith("scene ") || line.startsWith("topic ")) {
+            if (line.startsWith("scene ") || line.startsWith("topic ") || line.startsWith("moment ") || line.startsWith("date ")) {
                 scene = new SceneDraft();
-                scene.id = line.substring(6).strip();
-                scene.kind = line.startsWith("scene ") ? Scene.Kind.APPROACH : Scene.Kind.TOPIC;
+                int space = line.indexOf(' ');
+                scene.id = line.substring(space + 1).strip();
+                scene.kind = switch (line.substring(0, space)) {
+                    case "scene" -> Scene.Kind.APPROACH;
+                    case "moment" -> Scene.Kind.MOMENT;
+                    case "date" -> Scene.Kind.DATE;
+                    default -> Scene.Kind.TOPIC;
+                };
                 scene.line = at;
                 if (!scene.id.matches("[a-z0-9_]+")) {
                     errors.add("line " + at + ": a scene's name is lower case letters, digits and _: " + scene.id);
@@ -254,8 +261,14 @@ public final class SceneBook {
 
     private static Scene build(String speaker, SceneDraft draft, List<String> errors) {
         String where = "scene " + draft.id + " (line " + draft.line + ")";
-        if (draft.kind == Scene.Kind.TOPIC && (draft.prompt == null || draft.prompt.isEmpty())) {
-            errors.add(where + ": a topic needs a prompt");
+        if ((draft.kind == Scene.Kind.TOPIC || draft.kind == Scene.Kind.DATE) && (draft.prompt == null || draft.prompt.isEmpty())) {
+            errors.add(where + ": a " + (draft.kind == Scene.Kind.DATE ? "date" : "topic") + " needs a prompt");
+        }
+        if (draft.kind == Scene.Kind.DATE && (draft.who.isEmpty() || !SceneWords.tiers("together").containsAll(draft.who))) {
+            errors.add(where + ": a date is for a couple alone (who: together)");
+        }
+        if ((draft.kind == Scene.Kind.MOMENT || draft.kind == Scene.Kind.DATE) && !SceneWords.COMPANIONS.contains(speaker)) {
+            errors.add(where + ": only a companion has moments and dates");
         }
         if (draft.prompt != null && draft.prompt.length() > LABEL_MOST) {
             errors.add(where + ": its prompt is longer than " + LABEL_MOST + ": " + draft.prompt);
@@ -281,7 +294,7 @@ public final class SceneBook {
             if (page.options.size() > OPTIONS_MOST) {
                 errors.add(where + ": page " + page.id + " has more than " + OPTIONS_MOST + " answers");
             }
-            if (draft.kind == Scene.Kind.APPROACH && page.id.equals("start") && page.options.size() < 2) {
+            if ((draft.kind == Scene.Kind.APPROACH || draft.kind == Scene.Kind.MOMENT) && page.id.equals("start") && page.options.size() < 2) {
                 errors.add(where + ": something it comes up with needs at least two answers");
             }
             for (String line : page.lines) {

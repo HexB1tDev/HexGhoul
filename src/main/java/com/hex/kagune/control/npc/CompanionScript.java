@@ -6,7 +6,7 @@ import java.util.List;
 /**
  * 1.3.14: the shape of a companion's talk after Eto (pure, tested): the same pages as hers ({@link EtoTalk}: who they are to it decides
  * the first page, "talk a while" opens the topics, its partner gets the sweet page, gifts get their own page when there are many), the
- * same road to dating (its errands at the most regard: {@link EtoRules.Step}), and where hers has her pact and her surgery, a teacher's
+ * same road to dating (2.1.2: its own courtship's chapters, {@link Courtship}), and where hers has her pact and her surgery, a teacher's
  * lessons ({@link Teaching}). What it says is its own: a companion is this shape plus its words.
  */
 abstract class CompanionScript implements Script {
@@ -23,6 +23,9 @@ abstract class CompanionScript implements Script {
 
     /** What asking for a lesson is called. */
     protected abstract String lessonLabel(EtoTalk.Context c);
+
+    /** 2.1.2: its key (its courtship's chapters, {@link Courtship}). */
+    protected abstract String key();
 
     /** Him or her (the kiss, the hug, being sweet). */
     protected abstract String her();
@@ -62,15 +65,7 @@ abstract class CompanionScript implements Script {
             out.addAll(gifts);
         }
         this.lesson(c, out);
-        EtoRules.Step step = c.step();
-        if (!voice.together() && c.mayDate() && this.romantic(c)) {
-            if (step != EtoRules.Step.NONE && step != EtoRules.Step.DATING || step == EtoRules.Step.NONE && c.regard() >= NpcBonds.MOST) {
-                out.add(EtoTalk.Option.of(NpcTalk.Choice.FAVOUR));
-            }
-            if (step == EtoRules.Step.ASK) {
-                out.add(EtoTalk.Option.of(NpcTalk.Choice.ASK_OUT));
-            }
-        }
+        Courtship.options(this.key(), c, this.romantic(c), out); // 2.1.2: its own courtship
         if (voice.together() || c.regard() >= NpcBonds.FRIENDLY) {
             out.add(EtoTalk.Option.of(c.following() ? NpcTalk.Choice.STAY : NpcTalk.Choice.FOLLOW));
         }
@@ -187,6 +182,7 @@ abstract class CompanionScript implements Script {
         out.add(new EtoTalk.Option(NpcTalk.Choice.HUG, "Hug " + this.her() + ".", ""));
         out.add(new EtoTalk.Option(NpcTalk.Choice.SAY_1, "Hold me.", "sweet:cling"));
         out.add(new EtoTalk.Option(NpcTalk.Choice.SAY_2, "Hold my hand.", "sweet:hand"));
+        out.add(new EtoTalk.Option(NpcTalk.Choice.SAY_6, Courtship.DATES, "dates")); // 2.1.2
         String[][] says = this.sweetSays();
         int start = Math.floorMod(c.seed(), says.length);
         for (int i = 0; i < Math.min(3, says.length); i++) {
@@ -232,33 +228,15 @@ abstract class CompanionScript implements Script {
         return EtoVoice.of(c).together();
     }
 
-    /** The errands' answers, shared in shape: begun, how far along, done (names and items in the words given). */
-    static EtoTalk.Reply errand(EtoTalk.Context c, String begin, String notYet, String items, String hunt, String last, String ask, String dating,
-                                String taken, String married) {
-        if (!c.mayDate()) {
-            return new EtoTalk.Reply(c.claimed() ? EtoLines.fill(c, taken) : married, 0, EtoTalk.Effect.NONE);
-        }
-        return switch (c.step()) {
-            case NONE -> c.regard() >= NpcBonds.MOST ? new EtoTalk.Reply(begin, 0, EtoTalk.Effect.BEGIN) : new EtoTalk.Reply(notYet, 0, EtoTalk.Effect.NONE);
-            case BOOKS -> new EtoTalk.Reply(items.replace("{n}", Integer.toString(c.count())), 0, EtoTalk.Effect.NONE);
-            case HUNT -> new EtoTalk.Reply(hunt.replace("{n}", Integer.toString(c.count())), 0, EtoTalk.Effect.NONE);
-            case FLOWER -> new EtoTalk.Reply(last, 0, EtoTalk.Effect.NONE);
-            case ASK -> new EtoTalk.Reply(ask, 0, EtoTalk.Effect.NONE);
-            case DATING -> new EtoTalk.Reply(dating, 0, EtoTalk.Effect.NONE);
-        };
+    /** 2.1.2: what is said about its courtship ({@link Courtship#favour}): its chapters' words are its own, the rest given here. */
+    static EtoTalk.Reply errand(EtoTalk.Context c, String key, String notYet, String asking, String dating, String taken, String married) {
+        return Courtship.favour(key, c, notYet, asking, dating, taken, married);
     }
 
-    /** Its first errand's item handed over: counted toward the errand, or just a gift. */
-    static EtoTalk.Reply errandItem(EtoTalk.Context c, String none, String counted, String enough, String spoiled, String warm, String cool,
-                                    EtoGesture gesture) {
+    /** Its first gift's item handed over (books, beans...): a gift, once a day. */
+    static EtoTalk.Reply errandItem(EtoTalk.Context c, String none, String spoiled, String warm, String cool, EtoGesture gesture) {
         if (!c.book()) {
             return new EtoTalk.Reply(none, 0, EtoTalk.Effect.NONE);
-        }
-        int regard = c.giftedToday() ? 0 : EtoRules.GIFT;
-        if (c.step() == EtoRules.Step.BOOKS) {
-            int now = c.count() + 1;
-            return now >= EtoRules.Step.BOOKS.need ? new EtoTalk.Reply(enough, regard, EtoTalk.Effect.BOOK, gesture)
-                : new EtoTalk.Reply(counted.replace("{n}", Integer.toString(now)), regard, EtoTalk.Effect.BOOK, gesture);
         }
         if (c.giftedToday()) {
             return new EtoTalk.Reply(spoiled, 0, EtoTalk.Effect.NONE);
@@ -266,13 +244,10 @@ abstract class CompanionScript implements Script {
         return new EtoTalk.Reply(together(c) ? warm : cool, EtoRules.GIFT, EtoTalk.Effect.BOOK, gesture);
     }
 
-    /** Its last errand's gift handed over (or just a gift). */
-    static EtoTalk.Reply flowerGiven(EtoTalk.Context c, String none, String last, String spoiled, String warm, String cool, EtoGesture gesture) {
+    /** Its second gift handed over (a flower, a rabbit's foot...): a gift, once a day. */
+    static EtoTalk.Reply flowerGiven(EtoTalk.Context c, String none, String spoiled, String warm, String cool, EtoGesture gesture) {
         if (!c.flower()) {
             return new EtoTalk.Reply(none, 0, EtoTalk.Effect.NONE);
-        }
-        if (c.step() == EtoRules.Step.FLOWER) {
-            return new EtoTalk.Reply(last, 0, EtoTalk.Effect.FLOWER, gesture);
         }
         if (c.giftedToday()) {
             return new EtoTalk.Reply(spoiled, 0, EtoTalk.Effect.NONE);
