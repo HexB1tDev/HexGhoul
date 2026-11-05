@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.5.2 (HexGhoul): No hearts when the kagune or a kakuja comes out (testing)
+
+See `.github/release-notes-2.5.2.md`. No more hearts when the kagune or a kakuja comes out. They were vanilla's damage-indicator particles (dark red hearts) that the original mod's fallback effects drew as "blood" and "mist" where the tails root at your lower back, on every limb tearing out and every landing impact; and a companion partner seeing your kagune also puffed hearts between you (behind you when they follow you). Rinkaku now throws the mod's own blood out of the back as each limb tears out.
+
 ## 2.5.1 (HexGhoul): The finger crack flows: eased up and down, never a snap; a cleaner crack sound (testing)
 
 See `.github/release-notes-2.5.1.md`. The finger crack is now one flowing movement: the arm eases up over almost a second, the thumb presses into the finger, the finger cracks (a small flick of the hand, the head tipping with it), a moment held, then the arm eases back down to rest. On a player it starts and ends exactly where their body already was, instead of jumping to the pose. The crack sound is replaced with a cleaner, shorter knuckle-style crack.

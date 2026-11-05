@@ -3,7 +3,7 @@
 `docs/handoff/next-ai-1.3.60.md` (house rules), then the top sections of `docs/handoff/companions-handoff.md` (one per version, newest first).
 
 Branch **`claude/loving-albattani-xld4zv`** (push only to the branch the session is given). Never push to `main`; no PR unless asked.
-Version **2.5.1** in `build.py` and `patch/KagunePatch.java`; the next is **2.5.2** (the last number never reaches 10). Protocol **"86"** (`ControlNetwork.PROTOCOL`; 2.5.0 bumped it for 2.4.8's S2CUkakuFx CRACK and 2.4.9's new EtoGesture ordinals; 2.4.5 added S2CThyDeath and C2SUkakuAction THY_DEATH; 2.3.0 added the mother's size to `S2CChild`; 2.2.4 added the kiss's mood to `S2CEto`; 2.1.9 added the synced AFRAID on CcgAgent and GhoulNpc; 2.1.7 added `C2SUkakuAction.REAPER_DASH`; 2.0.42
+Version **2.5.2** in `build.py` and `patch/KagunePatch.java`; the next is **2.5.3** (the last number never reaches 10). Protocol **"86"** (`ControlNetwork.PROTOCOL`; 2.5.0 bumped it for 2.4.8's S2CUkakuFx CRACK and 2.4.9's new EtoGesture ordinals; 2.4.5 added S2CThyDeath and C2SUkakuAction THY_DEATH; 2.3.0 added the mother's size to `S2CChild`; 2.2.4 added the kiss's mood to `S2CEto`; 2.1.9 added the synced AFRAID on CcgAgent and GhoulNpc; 2.1.7 added `C2SUkakuAction.REAPER_DASH`; 2.0.42
 added `S2CRinkakuBlock`, message id 48, and `C2SUkakuAction.BLOCK`; 2.0.48 `S2CUkakuFx.DAWN_RING`; 2.0.49 `CcgAgent.SOARING` on the flip). Nothing is tested in game.
 
 ## The owner's requests since 2.0.36 (their words, trimmed)
@@ -160,6 +160,8 @@ Previews: `dawn-bigger-2.0.47.png`, `dawn-aim-2.0.47.png`, `dawn-volley-2.0.48.p
   new ones that way); favours kept under `PlayerPersisted` (survive death); protocol 86.
 - **2.5.1** the finger crack eased up and down (`EtoPose.crackWeight`; players blended with `crackOver`), cracking at
   `EtoGesture.CRACK_SNAP` with its sound; a cleaner `finger_crack.ogg`.
+- **2.5.2** no hearts as the kagune/kakuja comes out: the original's fallback blood/mist/landing drew DAMAGE_INDICATOR (patched to
+  `UkakuBlood.FALLBACK` by `KagunePatch.noHearts`); Rinkaku's manifest blood is `UkakuBlood.spurt`; partners no longer puff hearts at it.
 - **2.3.1** the mood kisses rendered for the owner (`docs/handoff/*-mood-kisses-2.3.1.png`, `mood-kisses-waiting-2.3.1.gif`); possessive, giddy
   and tender reworked to read apart. Render poses with `tools/CompanionPreview.java <out> kisses` (stiff limbs, as in game).
 

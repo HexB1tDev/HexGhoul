@@ -24,7 +24,7 @@ import sys
 import zipfile
 
 ROOT = Path(__file__).resolve().parent
-VERSION = "2.5.1"
+VERSION = "2.5.2"
 INPUT = ROOT / "input" / "hexkagune-1.0.0.jar"
 BUILD = Path(os.environ.get("HEXKAGUNE_BUILD_DIR", ROOT / "build"))
 OUTPUT = BUILD / f"hexkagune-{VERSION}.jar"
@@ -55,6 +55,7 @@ CHANGED = {
     "com/hex/kagune/client/KaguneAuraEffects.class",
     "com/hex/kagune/client/render/TendrilChain.class",
     "com/hex/kagune/client/KaguneManifestationEffects.class",
+    "com/hex/kagune/client/KaguneLandingEffects.class",  # 2.5.2: its fallback dust drew dark hearts (KagunePatch.noHearts)
     "com/hex/kagune/KaguneMod.class",
     "com/hex/kagune/data/KaguneProfile.class",
     "com/hex/kagune/client/render/KaguneWorldRenderer.class",

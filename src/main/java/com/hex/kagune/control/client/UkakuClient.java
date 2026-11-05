@@ -112,8 +112,12 @@ public final class UkakuClient {
         }
         boolean ukaku = isUkaku(player);
         ManifestSounds.limb(player, opening, ukaku);
-        if (!ukaku) {
-            KaguneManifestationEffects.spawnBloodLegacy(player, opening);
+        if (!ukaku && player.m_9236_() instanceof net.minecraft.client.multiplayer.ClientLevel level) {
+            // 2.5.2: the mod's own blood thrown out of the back as a limb tears out (the original's fallback drew dark hearts).
+            double yaw = Math.toRadians(player.f_20883_);
+            Vec3 behind = new Vec3(Math.sin(yaw), 0.0, -Math.cos(yaw));
+            Vec3 at = player.m_20182_().m_82520_(behind.f_82479_ * 0.3, 1.0, behind.f_82481_ * 0.3);
+            com.hex.kagune.control.client.fx.UkakuBlood.spurt(level, at, behind.m_82520_(0.0, 0.45, 0.0), opening ? 1.3F : 0.8F, player);
         }
     }
 

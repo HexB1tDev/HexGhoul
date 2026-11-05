@@ -1930,9 +1930,8 @@ public final class EtoBrain {
             face(npc, player);
             gesture(mind, gesture, now);
         }
-        if (ours && shown == com.hex.kagune.control.npc.Display.KAGUNE) {
-            hearts(level, npc, player, 3);
-        }
+        // 2.5.2 (the owner: no hearts as the kagune or a kakuja comes out): her partner's kagune makes her giggle; no hearts puffed
+        // between them (with her behind them, they rose behind their back as it tore out).
     }
 
     static void gesture(Mind mind, EtoGesture gesture, long now) {

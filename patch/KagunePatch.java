@@ -40,7 +40,7 @@ public final class KagunePatch implements Opcodes {
     private static final String COOLDOWN = "slingshotCooldownUntil";
     /** 3.0.0: the grapple's flight onto the grabbed block. */
     static final String SLINGSHOT = "com/hex/kagune/control/server/RinkakuSlingshot";
-    static final String VERSION = "2.5.1";
+    static final String VERSION = "2.5.2";
     private static final String PLAYER = "net/minecraft/server/level/ServerPlayer";
     private static final String VECTOR = "net/minecraft/world/phys/Vec3";
     // 1.1.0 kagune control expansion hooks
@@ -56,6 +56,7 @@ public final class KagunePatch implements Opcodes {
     private static final String TENDRIL = "com/hex/kagune/client/render/TendrilChain";
     private static final String VIEW = "com/hex/kagune/client/KaguneClientState$View";
     private static final String MANIFEST = "com/hex/kagune/client/KaguneManifestationEffects";
+    private static final String LANDING = "com/hex/kagune/client/KaguneLandingEffects";
     private static final String CLIENT_PLAYER = "net/minecraft/client/player/AbstractClientPlayer";
     private static final String SERVER_ENTITY = "net/minecraft/world/entity/Entity";
     private static final String BOOTSTRAP = "com/hex/kagune/control/KaguneControlBootstrap";
@@ -576,6 +577,23 @@ public final class KagunePatch implements Opcodes {
         trampoline(node, "spawnBlood", UKAKU_CLIENT, "spawnManifestBlood");
     }
 
+    /** 2.5.2: every damage indicator (a dark heart) {@code node} draws, a drop of blood instead ({@code UkakuBlood.FALLBACK}). */
+    private static int noHearts(ClassNode node) {
+        int swapped = 0;
+        for (MethodNode method : node.methods) {
+            for (AbstractInsnNode instruction : method.instructions.toArray()) {
+                if (instruction instanceof FieldInsnNode field && field.getOpcode() == GETSTATIC
+                        && field.owner.equals("net/minecraft/core/particles/ParticleTypes") && field.name.equals("f_123798_")) {
+                    field.owner = "com/hex/kagune/control/client/fx/UkakuBlood";
+                    field.name = "FALLBACK";
+                    field.desc = "Lnet/minecraft/core/particles/ParticleOptions;";
+                    swapped++;
+                }
+            }
+        }
+        return swapped;
+    }
+
     private static void patchModConstructor(ClassNode node) {
         MethodNode constructor = method(node, "<init>");
         int hooks = 0;
@@ -909,6 +927,12 @@ public final class KagunePatch implements Opcodes {
         ClassNode mod = read(entries.get(MOD + ".class"));
         patchTendrilChain(tendril);
         patchManifestation(manifest);
+        // 2.5.2 (the owner: "The hearts are still appearing when popping out the kakujas"): the original's fallback blood and mist (drawn
+        // as each limb tears out) and its landing dust drew vanilla's damage indicator, dark hearts; now a dark red drop of blood.
+        expect(noHearts(manifest), 2, "manifestation fallback hearts");
+        ClassNode landing = read(entries.get(LANDING + ".class"));
+        expect(noHearts(landing), 2, "landing fallback hearts");
+        entries.put(LANDING + ".class", write(landing));
         patchModConstructor(mod);
         ClassNode profile = read(entries.get(PROFILE + ".class"));
         // 1.2.0: the chosen path lives inside the profile root, so death-cloning carries it and /kagune reset clears it.
