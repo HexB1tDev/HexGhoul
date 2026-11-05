@@ -1,5 +1,6 @@
 package com.hex.kagune.control.npc;
 
+import com.hex.kagune.control.quinque.Arm;
 import com.hex.kagune.control.quinque.Quinque;
 import com.hex.kagune.control.server.AgentBrain;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -41,6 +42,13 @@ public class CcgAgent extends PathfinderMob {
     static final EntityDataAccessor<Integer> SHOT_AT = SynchedEntityData.m_135353_(CcgAgent.class, EntityDataSerializers.f_135028_);
     /** 2.1.9: 1 while it trembles (Peace or War in front of it), else 0. */
     static final EntityDataAccessor<Integer> AFRAID = SynchedEntityData.m_135353_(CcgAgent.class, EntityDataSerializers.f_135028_);
+    /**
+     * 3.0.0: its kagune-made weapon (the higher ranks', {@link ArmRules#pack}: which, a masterwork, out of its case; 0 none), when it last
+     * tore out of its case or went back in, and who its whip binds (an entity id, 0 none).
+     */
+    static final EntityDataAccessor<Integer> ARM = SynchedEntityData.m_135353_(CcgAgent.class, EntityDataSerializers.f_135028_);
+    static final EntityDataAccessor<Integer> ARM_AT = SynchedEntityData.m_135353_(CcgAgent.class, EntityDataSerializers.f_135028_);
+    static final EntityDataAccessor<Integer> ARM_TARGET = SynchedEntityData.m_135353_(CcgAgent.class, EntityDataSerializers.f_135028_);
 
     /** The swing that meets a blow coming at it: a quick cut up across it, its weapon slapping the blow aside. */
     public static final int PARRY = 3;
@@ -79,6 +87,38 @@ public class CcgAgent extends PathfinderMob {
         this.f_19804_.m_135372_(DASH_AT, NEVER);
         this.f_19804_.m_135372_(SHOT_AT, NEVER);
         this.f_19804_.m_135372_(AFRAID, 0);
+        this.f_19804_.m_135372_(ARM, 0);
+        this.f_19804_.m_135372_(ARM_AT, NEVER);
+        this.f_19804_.m_135372_(ARM_TARGET, 0);
+    }
+
+    /** 3.0.0: its kagune-made weapon as packed ({@link ArmRules#pack}; 0 none). */
+    public int armPacked() {
+        return this.get(ARM);
+    }
+
+    /** 3.0.0: the weapon it carries (null: a regular quinque). */
+    public Arm weapon() {
+        return ArmRules.arm(this.get(ARM));
+    }
+
+    public int armAt() {
+        return this.get(ARM_AT);
+    }
+
+    /** 3.0.0: its weapon ({@code packed}) as it is now, and when it last came out or went in ({@link Long#MIN_VALUE}: never). */
+    public void arm(int packed, long at) {
+        this.put(ARM, packed);
+        this.put(ARM_AT, at == Long.MIN_VALUE ? NEVER : (int)at);
+    }
+
+    /** 3.0.0: who its whip binds (an entity id; 0 none). */
+    public int armTarget() {
+        return this.get(ARM_TARGET);
+    }
+
+    public void armTarget(int id) {
+        this.put(ARM_TARGET, id);
     }
 
     /** 2.1.9: true while it trembles before Peace or War. */
@@ -127,7 +167,10 @@ public class CcgAgent extends PathfinderMob {
         this.put(LOOK, 1 + (Math.floorMod(look, AgentRules.LOOKS.length) | kind.ordinal() << 8));
     }
 
-    /** Its swing: which (0..2, {@link #PARRY}) or -1, and when it began (the low 32 bits of the game tick). */
+    /**
+     * Its swing: which (0..2, {@link #PARRY}) or -1, and when it began (the low 32 bits of the game tick). 3.0.0: with a kagune-made weapon,
+     * a blow of its string ({@link ArmRules#stepCode}) or one of its moves ({@link ArmRules#abilityCode}).
+     */
     public int swing() {
         return this.get(SWING);
     }

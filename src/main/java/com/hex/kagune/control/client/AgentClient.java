@@ -44,6 +44,15 @@ public final class AgentClient {
             double landed = agent.m_20096_() && flipAge > 4.0 ? flipAge - 4.0 : -1.0;
             return PaleMotions.flip(PaleRules.Flip.byOrdinal(agent.flip()), flipAge, landed);
         }
+        // 3.0.0: a kagune-made weapon, out of its case (its hand empty: the weapon is drawn from its entity data, WeaponLayer).
+        com.hex.kagune.control.quinque.Arm arm = agent.weapon();
+        if (arm != null && agent.m_21205_().m_41619_()) {
+            float shown = com.hex.kagune.control.npc.ArmRules.shown(com.hex.kagune.control.npc.ArmRules.out(agent.armPacked()),
+                CcgAgent.since(now, agent.armAt()) + partial);
+            if (shown > 0.0F) {
+                return armed(agent, arm, shown, limbSwing, partial, now);
+            }
+        }
         ItemStack held = agent.m_21205_();
         Quinque weapon = ControlItems.quinqueWeapon(held);
         Quinque shut = weapon == null ? ControlItems.quinqueCase(held) : null;
@@ -138,6 +147,51 @@ public final class AgentClient {
             QuinqueGrip.reach(p, weapon, look.slim() || look.female());
         }
         return posed ? p : null;
+    }
+
+    /**
+     * 3.0.0: posed with its kagune-made weapon ({@link com.hex.kagune.control.client.animation.WeaponPose}): its run under it; a blow of its
+     * string, one of its moves, a parry, tearing out of its case or going back in, its stance; a dash on top; both hands on a two-handed one
+     * (but the javelin's throw).
+     */
+    private static RigPose armed(CcgAgent agent, com.hex.kagune.control.quinque.Arm arm, float shown, float limbSwing, float partial, long now) {
+        double speed = Math.hypot(agent.m_20185_() - agent.f_19790_, agent.m_20189_() - agent.f_19792_);
+        float run = AgentPose.running(speed);
+        double phase = limbSwing * 0.6662;
+        Quinque base = com.hex.kagune.control.client.animation.WeaponPose.base(arm);
+        RigPose p = AgentPose.run(phase, run, arm.twoHanded ? AgentPose.Carry.STANCE : AgentPose.Carry.BLADE);
+        int swing = agent.swing();
+        double swingAge = CcgAgent.since(now, agent.swingAt()) + partial;
+        int step = com.hex.kagune.control.npc.ArmRules.step(swing);
+        com.hex.kagune.control.quinque.Arm.Ability ability = com.hex.kagune.control.npc.ArmRules.ability(swing);
+        boolean oneHanded = !arm.twoHanded;
+        RigPose arms = null;
+        if (shown < 1.0F) {
+            arms = QuinquePose.unfolding(base, shown);
+        } else if (step >= 0 && swingAge >= 0.0 && swingAge < arm.strike(step).total()) {
+            arms = com.hex.kagune.control.client.animation.WeaponPose.strike(arm, step, swingAge);
+        } else if (ability != null && arm.slot(ability) >= 0 && swingAge >= 0.0 && swingAge < ability.total) {
+            arms = com.hex.kagune.control.client.animation.WeaponPose.ability(arm, ability, swingAge);
+            oneHanded |= com.hex.kagune.control.client.animation.WeaponPose.oneHanded(ability, swingAge);
+        } else if (swing == CcgAgent.PARRY && swingAge >= 0.0 && swingAge < AgentPose.PARRY_TICKS) {
+            arms = AgentPose.parry(base, swingAge / AgentPose.PARRY_TICKS);
+        } else if (arm.twoHanded && run > 0.0F) {
+            AgentPose.stanceRun(p, base, phase, run);
+        } else {
+            arms = com.hex.kagune.control.client.animation.WeaponPose.stance(arm);
+        }
+        if (arms != null) {
+            take(p, arms);
+        }
+        double dashAge = CcgAgent.since(now, agent.dashAt()) + partial;
+        if (dashAge >= 0.0 && dashAge < AgentPose.DASH_TICKS) {
+            AgentPose.dash(p, agent.dash(), dashAge / AgentPose.DASH_TICKS);
+        }
+        if (!oneHanded && QuinquePose.gripped(shown)) {
+            AgentRules.Look look = agent.look();
+            QuinqueGrip.reach(p, base, look.slim() || look.female());
+        }
+        return p;
     }
 
     /** 1.3.33: a dash's afterimages: how long each lasts (ticks), how see-through it starts, its colour (a cold white), how often one. */

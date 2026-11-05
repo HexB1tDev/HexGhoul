@@ -59,6 +59,7 @@ public final class AgentRenderer extends HumanoidMobRenderer<CcgAgent, PlayerMod
         this.female = female;
         this.m_115326_(new Figure(this));
         this.m_115326_(new Build(this));
+        this.m_115326_(new WeaponLayer(this)); // 3.0.0: a higher rank's kagune-made weapon
     }
 
     @Override

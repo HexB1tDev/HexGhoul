@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.0.0 (HexGhoul): CCG rework: kagune-made weapons for the higher ranks (experimental) (testing)
+
+See `.github/release-notes-3.0.0.md`. Experimental. The CCG rework: investigators of Rank 4 and up may carry a weapon grown from a kagune (a tendril whip, a crystal spear, a flesh hammer, a bone greatsword), each with a long M1 string and two moves of its own that they use whenever they see fit. Not tested in game. Install matching versions on client and server (network protocol 87).
+
 ## 2.5.7 (HexGhoul): Another baby on the sweet page, five days apart; the night comes at home (testing)
 
 See `.github/release-notes-2.5.7.md`. Another baby: asked for on the sweet page now, in each companion's own words, five Minecraft days after the last was born; and at the home you share, the night you asked for actually comes (she comes to you for it, as she did before you had a home).

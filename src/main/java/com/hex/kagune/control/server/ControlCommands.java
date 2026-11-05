@@ -136,6 +136,14 @@ final class ControlCommands {
                 context.getSource().m_288197_(() -> Component.m_237113_(said), true);
                 return said.startsWith("No room") || said.contains("held") ? 0 : 1;
             })));
+        // 3.0.0: an investigator with one of the higher ranks' kagune-made weapons five blocks ahead (an operator's, to see them):
+        // whip, spear, hammer or sword, its rank 4 to 9 (6 if not given; 8 and 9 a masterwork).
+        dispatcher.register(Commands.m_82127_("kagune").then(Commands.m_82127_("investigator").requires(source -> source.m_6761_(2))
+            .then(Commands.m_82129_("weapon", StringArgumentType.word())
+                .executes(context -> summonArmed(context, StringArgumentType.getString(context, "weapon"), 6))
+                .then(Commands.m_82129_("rank", com.mojang.brigadier.arguments.IntegerArgumentType.integer(4, 9))
+                    .executes(context -> summonArmed(context, StringArgumentType.getString(context, "weapon"),
+                        com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "rank")))))));
         // 7.0.2: a ghoul NPC five blocks ahead (an operator's: to meet one without waiting for the night), its kagune, temper and tier
         // as asked (rinkaku/ukaku; feral, gourmet, pack, drifter, scavenger, anteiku; 0 to 2), else rolled.
         dispatcher.register(Commands.m_82127_("kagune").then(Commands.m_82127_("npc").requires(source -> source.m_6761_(2))
@@ -147,6 +155,25 @@ final class ControlCommands {
                     .then(Commands.m_82129_("tier", com.mojang.brigadier.arguments.IntegerArgumentType.integer(0, 2))
                         .executes(context -> spawnNpc(context, StringArgumentType.getString(context, "kind"), StringArgumentType.getString(context, "temper"),
                             com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "tier"))))))));
+    }
+
+    /** 3.0.0: {@code /kagune investigator <weapon> [rank]}. */
+    private static int summonArmed(com.mojang.brigadier.context.CommandContext<net.minecraft.commands.CommandSourceStack> context, String weapon, int rank)
+        throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        com.hex.kagune.control.quinque.Arm arm = switch (weapon.toLowerCase(java.util.Locale.ROOT)) {
+            case "whip", "tendril", "rinkaku" -> com.hex.kagune.control.quinque.Arm.WHIP;
+            case "spear", "crystal", "ukaku" -> com.hex.kagune.control.quinque.Arm.CRYSTAL_SPEAR;
+            case "hammer", "koukaku" -> com.hex.kagune.control.quinque.Arm.FLESH_HAMMER;
+            case "sword", "greatsword", "bikaku" -> com.hex.kagune.control.quinque.Arm.BONE_SWORD;
+            default -> null;
+        };
+        if (arm == null) {
+            context.getSource().m_81352_(Component.m_237113_("Which weapon? whip, spear, hammer or sword."));
+            return 0;
+        }
+        String said = AgentBrain.summonArmed(context.getSource().m_81375_(), arm, rank);
+        context.getSource().m_288197_(() -> Component.m_237113_(said), true);
+        return said.startsWith("No room") ? 0 : 1;
     }
 
     private static int spawnNpc(CommandContext<CommandSourceStack> context, String kind, String temper, int tier) throws CommandSyntaxException {

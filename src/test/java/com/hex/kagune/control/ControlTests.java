@@ -672,8 +672,214 @@ public final class ControlTests {
         check(all, "every map of game times on the server is WorldTimes' (forgotten with its world)" + stray);
     }
 
+    /** 3.0.0: the higher ranks' quinques: who carries them, their strings, their moves, their meshes and the whip's paths. */
+    private static void arms() {
+        com.hex.kagune.control.npc.AgentRules.Rank[] ranks = com.hex.kagune.control.npc.AgentRules.Rank.values();
+        boolean gated = true;
+        for (com.hex.kagune.control.npc.AgentRules.Rank rank : ranks) {
+            double chance = com.hex.kagune.control.npc.ArmRules.chance(rank);
+            gated &= rank.level() < 4 || rank == com.hex.kagune.control.npc.AgentRules.Rank.RANK_10 ? chance == 0.0 : chance > 0.0;
+            gated &= rank.level() >= 8 && rank.level() <= 9 ? chance == 1.0 && com.hex.kagune.control.npc.ArmRules.masterwork(rank)
+                : !com.hex.kagune.control.npc.ArmRules.masterwork(rank);
+        }
+        boolean rising = true;
+        for (int i = 5; i <= 9; i++) {
+            rising &= com.hex.kagune.control.npc.ArmRules.chance(ranks[i]) >= com.hex.kagune.control.npc.ArmRules.chance(ranks[i - 1]);
+        }
+        check(gated && rising && com.hex.kagune.control.npc.ArmRules.roll(ranks[3], 0.0, 0.5) == null
+            && com.hex.kagune.control.npc.ArmRules.roll(ranks[10], 0.0, 0.5) == null
+            && com.hex.kagune.control.npc.ArmRules.roll(ranks[9], 0.99, 0.0) != null,
+            "3.0.0: none below Rank 4, ever likelier up the ranks, always at 8 and 9 (a masterwork), never the White Reaper (Dawn)");
+        java.util.Set<com.hex.kagune.control.quinque.Arm> low = new java.util.HashSet<>();
+        java.util.Set<com.hex.kagune.control.quinque.Arm> high = new java.util.HashSet<>();
+        for (int i = 0; i < 100; i++) {
+            low.add(com.hex.kagune.control.npc.ArmRules.roll(ranks[4], 0.0, i / 100.0));
+            high.add(com.hex.kagune.control.npc.ArmRules.roll(ranks[7], 0.0, i / 100.0));
+        }
+        check(low.equals(java.util.Set.of(com.hex.kagune.control.quinque.Arm.WHIP, com.hex.kagune.control.quinque.Arm.CRYSTAL_SPEAR))
+            && high.size() == com.hex.kagune.control.quinque.Arm.values().length,
+            "3.0.0: Rank 4 and 5 carry a whip or a crystal spear; from Rank 6 the hammer and the greatsword too");
+        boolean strings = true;
+        boolean moves = true;
+        for (com.hex.kagune.control.quinque.Arm arm : com.hex.kagune.control.quinque.Arm.values()) {
+            strings &= arm.length() >= 4;
+            int step = 0;
+            for (int i = 0; i < arm.length() - 1; i++) {
+                int next = com.hex.kagune.control.npc.ArmRules.next(arm, step, 5L);
+                strings &= next == step + 1;
+                step = next;
+            }
+            strings &= com.hex.kagune.control.npc.ArmRules.next(arm, step, 5L) == 0 && com.hex.kagune.control.npc.ArmRules.next(arm, 1, 999L) == 0;
+            for (int i = 0; i < arm.length(); i++) {
+                com.hex.kagune.control.quinque.Arm.Strike strike = arm.strike(i);
+                strings &= strike.land() > 0 && strike.land() < strike.total() && strike.damage() > 0.0F && strike.arc() > 0.0
+                    && com.hex.kagune.control.npc.ArmRules.damage(arm, i, true) > com.hex.kagune.control.npc.ArmRules.damage(arm, i, false);
+                strings &= com.hex.kagune.control.npc.ArmRules.step(com.hex.kagune.control.npc.ArmRules.stepCode(i)) == i;
+            }
+            float last = arm.strike(arm.length() - 1).damage();
+            for (int i = 0; i < arm.length() - 1; i++) {
+                strings &= arm.strike(i).damage() < last;
+            }
+            com.hex.kagune.control.quinque.Arm.Ability[] own = arm.abilities();
+            moves &= own.length == 2 && own[0] != own[1] && arm.slot(own[0]) == 0 && arm.slot(own[1]) == 1;
+            for (com.hex.kagune.control.quinque.Arm.Ability a : own) {
+                moves &= a.hits.length > 0 && a.hits[a.hits.length - 1] < a.total && a.cooldown > a.total && a.farthest > a.nearest
+                    && com.hex.kagune.control.npc.ArmRules.ability(com.hex.kagune.control.npc.ArmRules.abilityCode(a)) == a;
+                double inside = (a.nearest + Math.min(a.farthest, a.nearest + 3.0)) / 2.0;
+                moves &= com.hex.kagune.control.npc.ArmRules.ability(arm, ranks[9], inside, new boolean[] {true, true}, 0.0, arm.slot(a) == 0 ? 0.1 : 0.9) == a
+                    || !own[1 - arm.slot(a)].fits(inside);
+                moves &= com.hex.kagune.control.npc.ArmRules.ability(arm, ranks[9], inside, new boolean[] {false, false}, 0.0, 0.5) == null;
+            }
+            moves &= com.hex.kagune.control.npc.ArmRules.ability(arm, ranks[4], 3.0, new boolean[] {true, true}, 0.99, 0.5) == null;
+            int packed = com.hex.kagune.control.npc.ArmRules.pack(arm, true, true);
+            moves &= com.hex.kagune.control.npc.ArmRules.arm(packed) == arm && com.hex.kagune.control.npc.ArmRules.masterwork(packed)
+                && com.hex.kagune.control.npc.ArmRules.out(packed) && !com.hex.kagune.control.npc.ArmRules.out(com.hex.kagune.control.npc.ArmRules.pack(arm, false, false));
+        }
+        check(strings, "3.0.0: every weapon's string is four to six blows, each landing inside its swing, run in order and started over after its last "
+            + "or a pause; its last blow its heaviest; a masterwork's harder");
+        check(moves && com.hex.kagune.control.npc.ArmRules.pack(null, true, true) == 0 && com.hex.kagune.control.npc.ArmRules.arm(0) == null
+            && com.hex.kagune.control.npc.ArmRules.eagerness(ranks[9]) > com.hex.kagune.control.npc.ArmRules.eagerness(ranks[4]),
+            "3.0.0: each weapon has two moves of its own, used at the distances they're for, only off cooldown, more readily the better the rank");
+        check(com.hex.kagune.control.npc.ArmRules.shown(true, 0.0) == 0.0F && com.hex.kagune.control.npc.ArmRules.shown(true, 99.0) == 1.0F
+            && com.hex.kagune.control.npc.ArmRules.shown(false, 0.0) == 1.0F && com.hex.kagune.control.npc.ArmRules.shown(false, 99.0) == 0.0F,
+            "3.0.0: a weapon tears out of its case and goes back in over its unfold, eased");
+        boolean meshes = true;
+        StringBuilder sizes = new StringBuilder();
+        for (com.hex.kagune.control.quinque.Arm arm : com.hex.kagune.control.quinque.Arm.values()) {
+            for (boolean master : new boolean[] {false, true}) {
+                com.hex.kagune.control.quinque.ArmMesh.Mesh m = com.hex.kagune.control.quinque.ArmMesh.of(arm, master);
+                meshes &= m.quads > 100 && m.quads < 6000 && m.pos.length == m.quads * 12 && m.argb.length == m.quads * 4;
+                for (float v : m.pos) {
+                    meshes &= Float.isFinite(v) && Math.abs(v) < 4.0F;
+                }
+                for (int i = 0; i < m.normal.length; i += 3) {
+                    double len = Math.sqrt(m.normal[i] * m.normal[i] + m.normal[i + 1] * m.normal[i + 1] + m.normal[i + 2] * m.normal[i + 2]);
+                    meshes &= Math.abs(len - 1.0) < 1.0E-3;
+                }
+                boolean glows = false;
+                for (boolean g : m.glow) {
+                    glows |= g;
+                }
+                meshes &= glows && com.hex.kagune.control.quinque.ArmMesh.of(arm, master) == m;
+                float[] span = m.span();
+                sizes.append(' ').append(arm).append(master ? "*" : "").append('=').append(String.format("%.2f", span[1] - span[0]));
+            }
+            if (arm != com.hex.kagune.control.quinque.Arm.WHIP) {
+                float[] reg = com.hex.kagune.control.quinque.ArmMesh.of(arm, false).span();
+                float[] mw = com.hex.kagune.control.quinque.ArmMesh.of(arm, true).span();
+                meshes &= reg[1] - reg[0] > 2.0F && mw[1] - mw[0] > reg[1] - reg[0];
+            }
+        }
+        check(meshes, "3.0.0: every weapon's mesh builds clean (finite, unit normals, its glow), once, over two blocks long, a masterwork longer:" + sizes);
+        boolean whips = true;
+        double length = com.hex.kagune.control.quinque.WhipPath.length(false);
+        for (int step = 0; step < 6; step++) {
+            com.hex.kagune.control.quinque.Arm.Strike strike = com.hex.kagune.control.quinque.Arm.WHIP.strike(step);
+            double land = strike.land() / (double)strike.total();
+            double[][] at = com.hex.kagune.control.quinque.WhipPath.lash(step, land, land, length, 7.0);
+            double[] tip = at[at.length - 1];
+            double far = Math.sqrt(tip[0] * tip[0] + tip[1] * tip[1] + tip[2] * tip[2]);
+            whips &= at.length == com.hex.kagune.control.quinque.WhipPath.POINTS && far > length * 0.75 && far <= length + 0.01;
+            for (double t = 0.0; t <= 1.0; t += 0.05) {
+                for (double[] pnt : com.hex.kagune.control.quinque.WhipPath.lash(step, t, land, length, 7.0)) {
+                    whips &= Double.isFinite(pnt[0]) && Double.isFinite(pnt[1]) && Double.isFinite(pnt[2]);
+                }
+            }
+        }
+        double[][] bound = com.hex.kagune.control.quinque.WhipPath.bind(16.0, new double[] {4.0, 0.0, 0.0}, 0.35, length, 3.0);
+        double[] end = bound[bound.length - 1];
+        whips &= Math.abs(end[0] - 4.0) < 0.6 && Math.abs(end[1]) < 0.6;
+        for (double age = 0.0; age <= com.hex.kagune.control.quinque.Arm.Ability.FLAY.total; age += 1.0) {
+            for (double[] pnt : com.hex.kagune.control.quinque.WhipPath.flay(age, length, 3.0)) {
+                whips &= Double.isFinite(pnt[0]) && Math.sqrt(pnt[0] * pnt[0] + pnt[1] * pnt[1] + pnt[2] * pnt[2]) <= length + 0.5;
+            }
+        }
+        check(whips, "3.0.0: the whip's tendril reaches out near its whole length as each lash lands, never further; the bind coils round its foe");
+        weaponPoses();
+    }
+
+    /** 3.0.0: how an investigator holds and swings its kagune-made weapon (WeaponPose, the client's, pure). */
+    private static void weaponPoses() {
+        java.util.Random random = new java.util.Random(30);
+        boolean exact = true;
+        boolean cone = true;
+        for (com.hex.kagune.control.quinque.Arm arm : com.hex.kagune.control.quinque.Arm.values()) {
+            double[] line = com.hex.kagune.control.client.animation.WeaponPose.held(com.hex.kagune.control.client.animation.WeaponPose.stance(arm), arm);
+            double[] armWay = com.hex.kagune.control.client.animation.WeaponPose.armWay(com.hex.kagune.control.client.animation.WeaponPose.stance(arm));
+            double held = line[0] * armWay[0] + line[1] * armWay[1] + line[2] * armWay[2];
+            for (int i = 0; i < 300; i++) {
+                double[] a = com.hex.kagune.control.client.animation.WeaponPose.way(random.nextDouble() * 360.0 - 180.0, random.nextDouble() * 180.0 - 90.0);
+                double[] w = com.hex.kagune.control.client.animation.WeaponPose.way(random.nextDouble() * 360.0 - 180.0, random.nextDouble() * 180.0 - 90.0);
+                com.hex.kagune.control.client.animation.RigPose p = new com.hex.kagune.control.client.animation.RigPose();
+                com.hex.kagune.control.client.animation.WeaponPose.point(p, arm, a, w);
+                double[] got = com.hex.kagune.control.client.animation.WeaponPose.held(p, arm);
+                double[] armGot = com.hex.kagune.control.client.animation.WeaponPose.armWay(p);
+                exact &= Math.abs(got[0] - w[0]) < 1.0E-4 && Math.abs(got[1] - w[1]) < 1.0E-4 && Math.abs(got[2] - w[2]) < 1.0E-4;
+                cone &= Math.abs(got[0] * armGot[0] + got[1] * armGot[1] + got[2] * armGot[2] - held) < 1.0E-4;
+            }
+        }
+        check(exact && cone, "3.0.0: the weapon points exactly where it is put, the arm holding it at its own set angle to it");
+        boolean finite = true;
+        boolean home = true;
+        for (com.hex.kagune.control.quinque.Arm arm : com.hex.kagune.control.quinque.Arm.values()) {
+            com.hex.kagune.control.client.animation.RigPose stance = com.hex.kagune.control.client.animation.WeaponPose.stance(arm);
+            java.util.List<com.hex.kagune.control.client.animation.RigPose> ends = new java.util.ArrayList<>();
+            for (int step = 0; step < arm.length(); step++) {
+                com.hex.kagune.control.quinque.Arm.Strike strike = arm.strike(step);
+                for (double age = 0.0; age <= strike.total(); age += 0.5) {
+                    finite &= finite(com.hex.kagune.control.client.animation.WeaponPose.strike(arm, step, age));
+                }
+                ends.add(com.hex.kagune.control.client.animation.WeaponPose.strike(arm, step, strike.total()));
+            }
+            for (com.hex.kagune.control.quinque.Arm.Ability ability : arm.abilities()) {
+                for (double age = 0.0; age <= ability.total; age += 0.5) {
+                    finite &= finite(com.hex.kagune.control.client.animation.WeaponPose.ability(arm, ability, age));
+                }
+                ends.add(com.hex.kagune.control.client.animation.WeaponPose.ability(arm, ability, ability.total));
+            }
+            for (com.hex.kagune.control.client.animation.RigPose end : ends) {
+                double turn = Math.IEEEremainder(end.spin - stance.spin, Math.PI * 2.0);
+                home &= Math.abs(end.rightArmX - stance.rightArmX) < 1.0E-3 && Math.abs(end.rightArmY - stance.rightArmY) < 1.0E-3
+                    && Math.abs(end.rightArmZ - stance.rightArmZ) < 1.0E-3 && Math.abs(end.twist - stance.twist) < 1.0E-3 && Math.abs(turn) < 1.0E-3
+                    && Math.abs(end.lean - stance.lean) < 1.0E-3 && Math.abs(end.lunge - stance.lunge) < 1.0E-3;
+            }
+        }
+        check(finite, "3.0.0: every blow of every string and every move is a real pose all the way through");
+        check(home, "3.0.0: every blow and every move ends back in its stance (a spin a whole turn round): nothing jumps when it ends");
+        com.hex.kagune.control.quinque.Arm.Ability javelin = com.hex.kagune.control.quinque.Arm.Ability.JAVELIN;
+        check(com.hex.kagune.control.client.animation.WeaponPose.grown(javelin, 13.0) == 1.0F
+            && com.hex.kagune.control.client.animation.WeaponPose.grown(javelin, javelin.hits[0] + 1.0) == 0.0F
+            && com.hex.kagune.control.client.animation.WeaponPose.grown(javelin, javelin.hits[0] + 14.0) == 1.0F
+            && com.hex.kagune.control.client.animation.WeaponPose.grown(com.hex.kagune.control.quinque.Arm.Ability.QUAKE, 20.0) == 1.0F
+            && com.hex.kagune.control.client.animation.WeaponPose.oneHanded(javelin, 14.0)
+            && !com.hex.kagune.control.client.animation.WeaponPose.oneHanded(com.hex.kagune.control.quinque.Arm.Ability.PIERCE, 14.0),
+            "3.0.0: the javelin leaves the hand as it is thrown (thrown one-handed) and another grows back");
+        boolean fists = true;
+        for (com.hex.kagune.control.quinque.Arm arm : com.hex.kagune.control.quinque.Arm.values()) {
+            double[] fist = com.hex.kagune.control.client.animation.WeaponPose.meshToArm(arm)[3];
+            fists &= Math.abs(fist[0] * 16.0 + 1.0) < 0.3 && Math.abs(fist[1] * 16.0 - 9.0) < 0.3 && Math.abs(fist[2] * 16.0) < 0.3;
+        }
+        check(fists, "3.0.0: each weapon is held in the fist (where the quinque it takes after is gripped)");
+        double[] feet = com.hex.kagune.control.client.animation.WeaponPose.toModel(new double[] {0.0, 0.0, 0.0}, 37.0, 1.0, 1.0);
+        double[] ahead = com.hex.kagune.control.client.animation.WeaponPose.toModel(new double[] {0.0, 1.501, 1.0}, 0.0, 1.0, 1.0);
+        double[] left = com.hex.kagune.control.client.animation.WeaponPose.toModel(new double[] {1.0, 1.501, 0.0}, 0.0, 1.0, 1.0);
+        double[] from = {0.2, 0.9, -0.1};
+        double[] back = com.hex.kagune.control.client.animation.WeaponPose.toBody(from,
+            com.hex.kagune.control.client.animation.WeaponPose.fromBody(from, new double[] {1.5, -0.4, 0.7}));
+        check(Math.abs(feet[0]) < 1.0E-9 && Math.abs(feet[1] - 1.501) < 1.0E-9 && Math.abs(feet[2]) < 1.0E-9
+            && Math.abs(ahead[2] + 1.0) < 1.0E-9 && Math.abs(ahead[1]) < 1.0E-9 && Math.abs(left[0] - 1.0) < 1.0E-9
+            && Math.abs(back[0] - 1.5) < 1.0E-9 && Math.abs(back[1] + 0.4) < 1.0E-9 && Math.abs(back[2] - 0.7) < 1.0E-9,
+            "3.0.0: the world into the investigator's model frame (facing south, ahead is its front, east its left) and its body's frame both ways");
+    }
+
+    private static boolean finite(com.hex.kagune.control.client.animation.RigPose p) {
+        return Float.isFinite(p.rightArmX) && Float.isFinite(p.rightArmY) && Float.isFinite(p.rightArmZ) && Float.isFinite(p.twist)
+            && Float.isFinite(p.lean) && Float.isFinite(p.lunge) && Float.isFinite(p.drop) && Float.isFinite(p.spin) && Float.isFinite(p.leftArmX);
+    }
+
     public static void main(String[] args) {
         worldTimes();
+        arms();
         kakujaPalette();
         rinkakuAlive();
         thyDeath();

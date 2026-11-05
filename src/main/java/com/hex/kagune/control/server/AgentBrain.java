@@ -14,6 +14,8 @@ import com.hex.kagune.control.npc.FleshThrall;
 import com.hex.kagune.control.npc.GhoulNpc;
 import com.hex.kagune.control.npc.NpcRules;
 import com.hex.kagune.control.pale.PaleRules;
+import com.hex.kagune.control.quinque.Arm;
+import com.hex.kagune.control.npc.ArmRules;
 import com.hex.kagune.control.quinque.Quinque;
 import com.hex.kagune.control.npc.ReaperTactics;
 import com.hex.kagune.control.wound.WoundBook;
@@ -164,6 +166,23 @@ public final class AgentBrain {
         long afraidUntil = Long.MIN_VALUE;
         long fallBackUntil = Long.MIN_VALUE;
         boolean rallies;
+        // 3.0.0: a higher rank's kagune-made weapon (AgentArms; null: a regular quinque), a masterwork, out of its case and since when.
+        Arm arm;
+        boolean master;
+        boolean armOut;
+        long armAt = Long.MIN_VALUE;
+        // One of its moves under way (null: none): when it began, at whom, its next blow, those its charge went through, its way.
+        Arm.Ability move;
+        long moveAt = Long.MIN_VALUE;
+        int moveTarget;
+        int moveHit;
+        boolean bound;
+        Vec3 moveWay = Vec3.f_82478_;
+        final java.util.Set<Integer> moveStruck = new java.util.HashSet<>();
+        /** When each of its two moves is ready again. */
+        final long[] moveReady = {Long.MIN_VALUE, Long.MIN_VALUE};
+        /** Wounds its Cleave left bleeding: {entity id, until, damage (float bits)}. */
+        final java.util.List<long[]> bleeds = new java.util.ArrayList<>();
     }
 
     /** Its partner's id in its saved data (who it is: {@link CcgAgent#KEY}, packed). */
@@ -200,12 +219,43 @@ public final class AgentBrain {
         b.dress(lookB, kindB);
     }
 
-    private static void save(CcgAgent agent, int look, Quinque kind, boolean leader, UUID partner) {
+    static void save(CcgAgent agent, int look, Quinque kind, boolean leader, UUID partner) {
         CompoundTag saved = agent.getPersistentData();
         saved.m_128356_(CcgAgent.KEY, (long)(look & 0xFF) | (long)kind.ordinal() << 8 | (leader ? 1L : 0L) << 16);
         if (partner != null) {
             saved.m_128362_(PARTNER, partner);
         }
+    }
+
+    /** 3.0.0: made by {@link #summonArmed} (its rank set already): at full health when it wakes. */
+    static final String SUMMONED = CcgAgent.KEY + "Summoned";
+
+    /**
+     * 3.0.0: {@code /kagune investigator <weapon> [rank]} puts an investigator of {@code rank} (4 to 9; 8 and 9 a masterwork) with {@code arm}
+     * five blocks ahead of {@code player}, alone, to see the weapon and its moves. What the operator is told back.
+     */
+    public static String summonArmed(ServerPlayer player, Arm arm, int rank) {
+        ServerLevel level = player.m_284548_();
+        Vec3 ahead = UkakuFire.horizontal(player.m_20154_()).m_82490_(5.0);
+        int x = (int)Math.floor(player.m_20185_() + ahead.f_82479_);
+        int z = (int)Math.floor(player.m_20189_() + ahead.f_82481_);
+        CcgAgent agent = AgentSpawner.placeAt(level, x, (int)Math.floor(player.m_20186_() + 0.01), z);
+        if (agent == null) {
+            agent = AgentSpawner.place(level, x + 0.5, z + 0.5);
+        }
+        if (agent == null) {
+            return "No room ahead for an investigator.";
+        }
+        int level4 = Math.max(ArmRules.FROM, Math.min(AgentRules.Rank.RANK_9.level(), rank));
+        AgentRules.Rank given = AgentRules.Rank.byOrdinal(level4);
+        int look = AgentRules.regularLook(agent.m_217043_().m_188500_());
+        save(agent, look, arm.carried, true, null);
+        CompoundTag data = agent.getPersistentData();
+        data.m_128405_(RANK_LEVEL, level4);
+        data.m_128405_(AgentArms.KEY, ArmRules.pack(arm, ArmRules.masterwork(given), false));
+        data.m_128405_(SUMMONED, 1);
+        agent.dress(look, arm.carried);
+        return "A Rank " + level4 + " investigator with " + (ArmRules.masterwork(given) ? "a masterwork " : "a ") + arm.title + ".";
     }
 
     private static final String REAPER = "ccg:reaper";
@@ -292,7 +342,8 @@ public final class AgentBrain {
         // speed by it, and its name.
         // 2.0.17: Rank 0 to 10 (saved by number under RANK_LEVEL; one saved before by the old order under RANK), its armour too.
         CompoundTag data = agent.getPersistentData();
-        boolean fresh = !data.m_128441_(RANK_LEVEL) && !data.m_128441_(RANK);
+        boolean fresh = !data.m_128441_(RANK_LEVEL) && !data.m_128441_(RANK) || data.m_128441_(SUMMONED);
+        data.m_128473_(SUMMONED);
         mind.rank = data.m_128441_(RANK_LEVEL) ? AgentRules.Rank.byOrdinal(data.m_128451_(RANK_LEVEL))
             : data.m_128441_(RANK) ? AgentRules.Rank.fromOld(data.m_128451_(RANK))
             : AgentRules.Rank.of(mind.leader, agent.m_217043_().m_188500_(), agent.m_217043_().m_188500_());
@@ -327,6 +378,10 @@ public final class AgentBrain {
         }
         mind.superior = mind.leader && mind.partner != null;
         data.m_128405_(RANK_LEVEL, mind.rank.level());
+        // 3.0.0: a higher rank's own kagune-made weapon, rolled once by its rank (kept in its saved data); its case carried at peace.
+        if (!reaper) {
+            AgentArms.wake(agent, mind);
+        }
         agent.m_21051_(net.minecraft.world.entity.ai.attributes.Attributes.f_22276_).m_22100_(AgentRules.health(mind.rank, mind.superior));
         agent.m_21051_(net.minecraft.world.entity.ai.attributes.Attributes.f_22279_).m_22100_(mind.rank.speed);
         agent.m_21051_(net.minecraft.world.entity.ai.attributes.Attributes.f_22284_).m_22100_(mind.rank.armor);
@@ -349,12 +404,13 @@ public final class AgentBrain {
         }
         long now = level.m_46467_();
         Mind mind = agent.mind == null ? wake(agent, level, now) : agent.mind;
-        arm(agent, mind);
+        arm(agent, mind, now);
         CcgAgent partner = partner(agent, mind, level, now);
         if (lost(agent, mind, partner, level, now)) {
             return;
         }
         regen(agent, mind, now);
+        AgentArms.tick(agent, mind, level, now);
         if (rooted(agent, mind, level, now)) {
             return; // 2.0.33: its lance in the ground for its tendril: it holds there until it pulls it out
         }
@@ -365,6 +421,7 @@ public final class AgentBrain {
             return; // in a flip or a dash: nothing else this tick
         }
         if (PaleStun.stunned(agent)) {
+            AgentArms.cancel(agent, mind, now);
             cancelKick(agent, mind, now);
             cancelLightning(agent, mind, now);
             cancelGround(agent, mind, now);
@@ -392,9 +449,18 @@ public final class AgentBrain {
         }
     }
 
-    /** The stack in its hand is its quinque: its case shut, or its weapon while it is open (put back if anything took it). */
-    private static void arm(CcgAgent agent, Mind mind) {
+    /**
+     * The stack in its hand is its quinque: its case shut, or its weapon while it is open (put back if anything took it). 3.0.0: a
+     * kagune-made weapon is no item: its hand is empty while it is out (and while it goes back into its case), the case in it at peace.
+     */
+    private static void arm(CcgAgent agent, Mind mind, long now) {
         ItemStack held = agent.m_21205_();
+        if (mind.arm != null && (mind.armOut || ago(now, mind.armAt) < ArmRules.UNFOLD)) {
+            if (!held.m_41619_()) {
+                agent.m_21008_(InteractionHand.MAIN_HAND, ItemStack.f_41583_);
+            }
+            return;
+        }
         Quinque want = mind.kind;
         boolean right = mind.open ? ControlItems.quinqueWeapon(held) == want : ControlItems.quinqueCase(held) == want;
         if (!right) {
@@ -705,6 +771,9 @@ public final class AgentBrain {
         if (mind.open && ago(now, mind.foughtAt) > AgentRules.CALM && QuinqueServer.hand(agent, level, agent.m_21205_(), mind.kind, false)) {
             mind.open = false;
         }
+        if (mind.armOut && ago(now, mind.foughtAt) > AgentRules.CALM) {
+            AgentArms.sheathe(agent, mind, level, now); // 3.0.0: back into its case
+        }
         mind.shots = 0;
         VillagePlace.Place place = VillagePlace.of(agent);
         if (place != null) {
@@ -764,11 +833,14 @@ public final class AgentBrain {
         }
     }
 
-    /** Whatever blow it was making is let go of. */
-    private static void end(CcgAgent agent, Mind mind) {
+    /** Whatever blow it was making is let go of (3.0.0: and any move of its own under way). */
+    static void end(CcgAgent agent, Mind mind) {
         if (mind.striking) {
             mind.striking = false;
             KaguneClash.landed(agent);
+        }
+        if (mind.move != null) {
+            AgentArms.cancel(agent, mind, agent.m_9236_().m_46467_());
         }
     }
 
@@ -786,6 +858,10 @@ public final class AgentBrain {
         sides(agent, mind, partner, prey, now);
         face(agent, prey);
         agent.m_21563_().m_24960_(prey, 30.0F, 30.0F);
+        if (mind.arm != null) {
+            AgentArms.fight(agent, mind, partner, prey, level, now); // 3.0.0: its kagune-made weapon
+            return;
+        }
         if (!mind.open) {
             if (QuinqueServer.hand(agent, level, agent.m_21205_(), mind.kind, true)) {
                 mind.open = true;
@@ -811,7 +887,7 @@ public final class AgentBrain {
         if (maneuver(agent, mind, prey, level, now)) {
             return;
         }
-        if (mind.kind.ranged) {
+        if (ranged(mind)) {
             shoot(agent, mind, partner, prey, level, now);
         } else {
             close(agent, mind, partner, prey, level, now);
@@ -1256,7 +1332,7 @@ public final class AgentBrain {
     }
 
     /** It turns square to {@code prey}. */
-    private static void face(CcgAgent agent, Entity prey) {
+    static void face(CcgAgent agent, Entity prey) {
         Vec3 to = prey.m_20182_().m_82546_(agent.m_20182_());
         if (to.m_165925_() < 1.0E-6) {
             return;
@@ -1268,8 +1344,8 @@ public final class AgentBrain {
     }
 
     /** Melee: in to its weapon's reach (from the front, or round to the back: {@link #together}), then its string of three. */
-    private static void close(CcgAgent agent, Mind mind, CcgAgent partner, LivingEntity prey, ServerLevel level, long now) {
-        double reach = AgentRules.reach(mind.kind);
+    static void close(CcgAgent agent, Mind mind, CcgAgent partner, LivingEntity prey, ServerLevel level, long now) {
+        double reach = reach(mind);
         double distance = Math.sqrt(prey.m_20280_(agent));
         if (mind.striking) {
             agent.m_21573_().m_26573_();
@@ -1316,12 +1392,31 @@ public final class AgentBrain {
         }
         agent.m_21573_().m_26573_();
         if (now >= mind.readyAt) {
-            begin(agent, mind, prey, level, now);
+            if (mind.arm != null) {
+                AgentArms.begin(agent, mind, prey, level, now);
+            } else {
+                begin(agent, mind, prey, level, now);
+            }
         }
     }
 
+    /** 3.0.0: true if it keeps its distance and shoots (a regular launcher; never one with a kagune-made weapon). */
+    static boolean ranged(Mind mind) {
+        return mind.arm == null && mind.kind.ranged;
+    }
+
+    /** 3.0.0: the quinque it fights as (its sides, its parries): a kagune-made weapon fights as a blade does. */
+    static Quinque fighting(Mind mind) {
+        return mind.arm != null ? Quinque.BLADE : mind.kind;
+    }
+
+    /** 3.0.0: how far its blows reach (its string's first, with a kagune-made weapon). */
+    static double reach(Mind mind) {
+        return mind.arm != null ? ArmRules.reach(mind.arm, 0, mind.master) : AgentRules.reach(mind.kind);
+    }
+
     /** Its partner's mind if the two of them fight {@code prey} together (null: it fights on its own). */
-    private static Mind together(Mind mind, CcgAgent partner, LivingEntity prey) {
+    static Mind together(Mind mind, CcgAgent partner, LivingEntity prey) {
         if (partner == null || !partner.m_6084_() || partner.mind == null || partner.mind.prey != prey.m_19879_()) {
             return null;
         }
@@ -1330,7 +1425,7 @@ public final class AgentBrain {
 
     /** True if it holds the front against the prey it fights with its partner ({@code theirs}); false, it goes round to the back. */
     private static boolean front(Mind mind, Mind theirs) {
-        return AgentRules.front(mind.leader, mind.kind, theirs.kind, mind.leader ? mind.swapped : theirs.swapped);
+        return AgentRules.front(mind.leader, fighting(mind), fighting(theirs), mind.leader ? mind.swapped : theirs.swapped);
     }
 
     /**
@@ -1339,7 +1434,7 @@ public final class AgentBrain {
      */
     private static void sides(CcgAgent agent, Mind mind, CcgAgent partner, LivingEntity prey, long now) {
         Mind theirs = together(mind, partner, prey);
-        if (!mind.leader || theirs == null || mind.kind.ranged || theirs.kind.ranged) {
+        if (!mind.leader || theirs == null || ranged(mind) || ranged(theirs)) {
             mind.turnedSince = Long.MIN_VALUE;
             return;
         }
@@ -1347,7 +1442,7 @@ public final class AgentBrain {
         CcgAgent ahead = mine ? agent : partner;
         CcgAgent behind = mine ? partner : agent;
         Vec3 look = prey.m_20154_();
-        boolean close = behind.m_20280_(prey) <= Math.pow(AgentRules.reach((mine ? theirs : mind).kind) + 1.5, 2.0);
+        boolean close = behind.m_20280_(prey) <= Math.pow(reach(mine ? theirs : mind) + 1.5, 2.0);
         if (close && AgentRules.turned(Math.atan2(look.f_82481_, look.f_82479_), around(ahead, prey), around(behind, prey))) {
             if (mind.turnedSince == Long.MIN_VALUE) {
                 mind.turnedSince = now;
@@ -1361,13 +1456,13 @@ public final class AgentBrain {
     }
 
     /** Where {@code body} stands round {@code prey}: the angle (radians, atan2 of z and x) of its offset from it. */
-    private static double around(Entity body, Entity prey) {
+    static double around(Entity body, Entity prey) {
         Vec3 from = body.m_20182_().m_82546_(prey.m_20182_());
         return from.f_82479_ * from.f_82479_ + from.f_82481_ * from.f_82481_ < 1.0E-8 ? 0.0 : Math.atan2(from.f_82481_, from.f_82479_);
     }
 
     /** The spot {@code at} blocks from {@code prey} at {@code angle} round it (never right on top of it). */
-    private static Vec3 toward(LivingEntity prey, double angle, double at) {
+    static Vec3 toward(LivingEntity prey, double angle, double at) {
         double r = Math.max(0.8, at);
         return prey.m_20182_().m_82520_(Math.cos(angle) * r, 0.0, Math.sin(angle) * r);
     }
@@ -1400,7 +1495,7 @@ public final class AgentBrain {
     }
 
     /** Its blow met another (thrown apart, KaguneClash): nothing lands; a parry that met a blow answers at once. */
-    private static void stopped(CcgAgent agent, Mind mind, int token) {
+    static void stopped(CcgAgent agent, Mind mind, int token) {
         if (mind.token != token) {
             return;
         }
@@ -1416,7 +1511,7 @@ public final class AgentBrain {
     }
 
     /** The blow lands (or the parry ends): unless it met a blow of theirs coming back, it cuts whoever is still in reach in front. */
-    private static void land(CcgAgent agent, Mind mind, ServerLevel level, long now) {
+    static void land(CcgAgent agent, Mind mind, ServerLevel level, long now) {
         Quinque q = mind.kind;
         boolean parry = mind.parrying;
         mind.striking = false;
@@ -1505,8 +1600,8 @@ public final class AgentBrain {
      * flip in on prey too far off, a back flip clear of prey too close or a finished string, a quick side step between blows. True if it
      * moved its feet (nothing else this tick).
      */
-    private static boolean maneuver(CcgAgent agent, Mind mind, LivingEntity prey, ServerLevel level, long now) {
-        Quinque q = mind.kind;
+    static boolean maneuver(CcgAgent agent, Mind mind, LivingEntity prey, ServerLevel level, long now) {
+        Quinque q = fighting(mind); // 3.0.0: a kagune-made weapon fights as a blade does (never as a launcher)
         double distance = Math.sqrt(prey.m_20280_(agent));
         boolean flips = agent.m_20096_() && now >= mind.flipReadyAt;
         boolean dashes = agent.m_20096_() && now >= mind.dashReadyAt;
@@ -1516,7 +1611,7 @@ public final class AgentBrain {
             double roll = agent.m_217043_().m_188500_();
             LivingEntity who = threat.who();
             double gap = Math.sqrt(who.m_20280_(agent));
-            if (roll < AgentRules.parry(q) && gap <= AgentRules.reach(q) + 2.5) {
+            if (roll < AgentRules.parry(q) && gap <= reach(mind) + 2.5) {
                 parry(agent, mind, threat, level, now);
                 return false;
             }
@@ -1544,7 +1639,7 @@ public final class AgentBrain {
             return false;
         }
         Vec3 toward = UkakuFire.horizontal(prey.m_20182_().m_82546_(agent.m_20182_()));
-        double reach = q.ranged ? AgentRules.SHOOT_NEAREST : AgentRules.reach(q);
+        double reach = q.ranged ? AgentRules.SHOOT_NEAREST : reach(mind);
         if (flips && mind.clear) {
             mind.clear = false;
             flip(agent, mind, PaleRules.Flip.BACK, toward.m_82490_(-1.0), AgentRules.FLIP_BACK_SPEED, AgentRules.FLIP_BACK_UP, prey, level, now);
@@ -1632,7 +1727,7 @@ public final class AgentBrain {
      * 1.3.33: room for a dash along {@code way} (level, unit): the blocks at its feet and head two and three blocks along are open, and
      * there is ground under where it lands.
      */
-    private static boolean clear(CcgAgent agent, ServerLevel level, Vec3 way) {
+    static boolean clear(CcgAgent agent, ServerLevel level, Vec3 way) {
         for (double along : new double[] {1.5, 3.0}) {
             double x = agent.m_20185_() + way.f_82479_ * along;
             double y = agent.m_20186_();
@@ -1664,7 +1759,7 @@ public final class AgentBrain {
         LivingEntity prey = preyId == 0 ? null : level.m_6815_(preyId) instanceof LivingEntity body ? body : null;
         Vec3 axis = prey == null ? way : UkakuFire.horizontal(prey.m_20182_().m_82546_(agent.m_20182_()));
         mind.zigAxis = axis.m_82556_() < 1.0E-6 ? way : axis.m_82541_();
-        mind.zigIn = prey != null && !mind.kind.ranged && Math.sqrt(prey.m_20280_(agent)) > AgentRules.reach(mind.kind) + 0.5;
+        mind.zigIn = prey != null && !ranged(mind) && Math.sqrt(prey.m_20280_(agent)) > reach(mind) + 0.5;
         mind.zigzag = AgentRules.dashes(mind.rank) - 1;
         agent.dash(which, now);
         double speed = AgentRules.dashSpeed(mind.rank);
