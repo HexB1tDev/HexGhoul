@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.0.2 (HexGhoul): Investigators' case drops scaled by how common the case is (testing)
+
+See `.github/release-notes-3.0.2.md`. Investigators' case drops now follow how common the case is: the commoner the weapon an investigator fought with, the likelier its case drops. It used to be a flat 2.5% for every one of them. Not tested in game.
+
 ## 3.0.1 (HexGhoul): CCG weapons re-animated (footwork, no folding) and the greatsword, spear and hammer remodelled (testing)
 
 See `.github/release-notes-3.0.1.md`. The CCG weapons, redone after 3.0.0 shipped with animations that folded the body at the hips and a greatsword that looked like a strip of paper. Every blow and move of all four weapons is re-animated, and the sword, spear and hammer have new models. Not tested in game.

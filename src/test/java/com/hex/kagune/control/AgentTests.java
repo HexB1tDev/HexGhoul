@@ -220,10 +220,25 @@ public final class AgentTests {
         }
         check(seen.get(Quinque.LAUNCHER) < seen.get(Quinque.BLADE) && seen.get(Quinque.LAUNCHER) < seen.get(Quinque.KATANA), "the launcher least");
         check(AgentRules.kind(0.0) == Quinque.BLADE && AgentRules.kind(0.999999) == Quinque.LAUNCHER, "the rolls cover the table");
-        // Really rare to get its case.
-        check(AgentRules.dropChance(0) <= 0.03 && AgentRules.dropChance(0) > 0.0, "the case: really rare");
-        check(AgentRules.dropChance(3) > AgentRules.dropChance(0) && AgentRules.dropChance(3) <= 0.06 && AgentRules.dropChance(99) == AgentRules.dropChance(3),
-            "a little less rare with Looting, never common");
+        // 3.0.2: its case, the commoner the likelier: the regular quinques by how many carry them, then the higher ranks' weapons.
+        com.hex.kagune.control.quinque.Arm whip = com.hex.kagune.control.quinque.Arm.WHIP;
+        com.hex.kagune.control.quinque.Arm spearArm = com.hex.kagune.control.quinque.Arm.CRYSTAL_SPEAR;
+        com.hex.kagune.control.quinque.Arm hammer = com.hex.kagune.control.quinque.Arm.FLESH_HAMMER;
+        com.hex.kagune.control.quinque.Arm sword = com.hex.kagune.control.quinque.Arm.BONE_SWORD;
+        double[] ladder = {AgentRules.caseChance(Quinque.BLADE, null, false, 0), AgentRules.caseChance(Quinque.KATANA, null, false, 0),
+            AgentRules.caseChance(Quinque.SPEAR, null, false, 0), AgentRules.caseChance(Quinque.MACE, null, false, 0),
+            AgentRules.caseChance(Quinque.LAUNCHER, null, false, 0), AgentRules.caseChance(whip.carried, whip, false, 0),
+            AgentRules.caseChance(hammer.carried, hammer, false, 0), AgentRules.caseChance(sword.carried, sword, true, 0)};
+        boolean falling = true;
+        for (int i = 1; i < ladder.length; i++) {
+            falling &= ladder[i] < ladder[i - 1] && ladder[i] > 0.0;
+        }
+        check(falling && ladder[0] == 0.10 && ladder[ladder.length - 1] == 0.02, "the case: the commoner the likelier (a blade one in ten ... a masterwork one in fifty)");
+        check(AgentRules.caseChance(whip.carried, whip, false, 0) == AgentRules.caseChance(spearArm.carried, spearArm, false, 0)
+            && AgentRules.caseChance(hammer.carried, hammer, false, 0) == AgentRules.caseChance(sword.carried, sword, false, 0)
+            && AgentRules.caseChance(Quinque.DAWN, null, false, 3) == 0.0, "as common, as likely; Dawn is the Reaper's own");
+        check(Math.abs(AgentRules.caseChance(Quinque.BLADE, null, false, 3) - 0.175) < 1.0E-9 && AgentRules.caseChance(Quinque.BLADE, null, false, 99)
+            == AgentRules.caseChance(Quinque.BLADE, null, false, 3), "Looting: a quarter more a level, to three");
     }
 
     /** A ghoul is let be until their kagune is out in front of them; monsters only up close; wild ghouls on sight. */
@@ -594,8 +609,8 @@ public final class AgentTests {
         check(com.hex.kagune.control.npc.AgentRules.mastery(com.hex.kagune.control.npc.AgentRules.Rank.RANK_10) == 60, "the Reaper: 60");
         check(com.hex.kagune.control.npc.AgentRules.dawnChance(0) == 0.2 && com.hex.kagune.control.npc.AgentRules.dawnChance(9) <= 0.36,
             "Dawn: rare (one in five, a little more with Looting), no longer every time");
-        check(com.hex.kagune.control.npc.AgentRules.rationChance(0) > com.hex.kagune.control.npc.AgentRules.dropChance(0) * 3
-            && com.hex.kagune.control.npc.AgentRules.rationChance(3) < 0.25, "a ration: uncommon, though far likelier than a case");
+        check(com.hex.kagune.control.npc.AgentRules.rationChance(0) > com.hex.kagune.control.npc.AgentRules.caseChance(Quinque.BLADE, null, false, 0)
+            && com.hex.kagune.control.npc.AgentRules.rationChance(3) < 0.25, "a ration: uncommon, though likelier than any case");
         java.util.Set<String> cookbook = new java.util.HashSet<>();
         try (java.util.stream.Stream<java.nio.file.Path> files = Files.list(RESOURCES.resolve("data/hexkagune/recipes/kitchen"))) {
             for (java.nio.file.Path file : (Iterable<java.nio.file.Path>)files::iterator) {

@@ -1843,7 +1843,7 @@ public final class AgentBrain {
     // ---------------------------------------------------------------- what happens to it
 
     /**
-     * The Reaper leaves human meat. Regular investigators rarely leave their quinque case. 2.2.9: any of them, brought down by a player,
+     * The Reaper leaves human meat. Regular investigators now and then leave their quinque case (3.0.2: the commoner, the likelier). 2.2.9: any of them, brought down by a player,
      * now and then leaves a field ration (food the cookbook takes: {@link AgentRules#RATIONS}); the Reaper's Dawn is a rare prize now.
      */
     public static void drop(CcgAgent agent, int looting, boolean byPlayer) {
@@ -1863,7 +1863,8 @@ public final class AgentBrain {
             }
             return;
         }
-        if (!byPlayer || mind == null || agent.m_217043_().m_188500_() >= AgentRules.dropChance(looting)) {
+        // 3.0.2: the commoner what it fought with, the likelier its case is left (AgentRules.caseChance).
+        if (!byPlayer || mind == null || agent.m_217043_().m_188500_() >= AgentRules.caseChance(mind.kind, mind.arm, mind.master, looting)) {
             return;
         }
         agent.m_19983_(new ItemStack(ControlItems.caseOf(mind.kind), 1));

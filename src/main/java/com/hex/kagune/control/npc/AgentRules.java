@@ -14,7 +14,7 @@ import com.hex.kagune.control.quinque.Quinque;
  * <p>Each carries a quinque shut in its case ({@link #kind}), opened as a fight finds it and shut again after; fast on their feet
  * ({@link #SPEED}, faster still in a fight), flipping in and out, dashing past a blow, meeting a kagune's blow with their own (the two
  * thrown apart) or slapping it aside, and stringing their weapon's three M1s ({@link Quinque#next}). The case is all but never left
- * behind when one falls ({@link #dropChance}).
+ * behind when one falls ({@link #caseChance}).
  */
 public final class AgentRules {
     private AgentRules() {
@@ -288,9 +288,31 @@ public final class AgentRules {
         return kind;
     }
 
-    /** The case's chance of being left when one falls: really rare (and a little less rare with Looting). */
-    public static double dropChance(int looting) {
-        return 0.025 + 0.01 * Math.max(0, Math.min(3, looting));
+    /**
+     * 3.0.2 (the owner: "a proper drop rate ... the more common they are, the more often they drop"): the chance an investigator brought
+     * down by a player leaves the case it carried, by how common what it fought with is among investigators (counted over their ranks'
+     * odds and their rolls): a blade (a fifth of them) one in ten, a katana, a spear, a mace, the launcher (a tenth of them) less; one of
+     * the higher ranks' kagune-made weapons less still (its kagune's case: the whip's a mace's, the crystal spear's a launcher's, the
+     * hammer's a spear's, the greatsword's a blade's): the whip and the crystal spear (Rank 4 up) one in twenty, the hammer and the
+     * greatsword (Rank 6 up) one in thirty-three, a masterwork (Rank 8 and 9) one in fifty. Looting adds a quarter of it a level (to
+     * three). The White Reaper's Dawn is its own ({@link #dawnChance}).
+     */
+    public static double caseChance(Quinque kind, com.hex.kagune.control.quinque.Arm arm, boolean masterwork, int looting) {
+        double base;
+        if (arm != null) {
+            base = masterwork ? 0.02 : arm == com.hex.kagune.control.quinque.Arm.WHIP || arm == com.hex.kagune.control.quinque.Arm.CRYSTAL_SPEAR ? 0.05
+                : 0.03;
+        } else {
+            base = switch (kind) {
+                case BLADE -> 0.10;
+                case KATANA -> 0.095;
+                case SPEAR -> 0.09;
+                case MACE -> 0.08;
+                case LAUNCHER -> 0.07;
+                default -> 0.0;
+            };
+        }
+        return base * (1.0 + 0.25 * Math.max(0, Math.min(3, looting)));
     }
 
     /**

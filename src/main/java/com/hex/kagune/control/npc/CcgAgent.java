@@ -241,7 +241,7 @@ public class CcgAgent extends PathfinderMob {
         AgentBrain.tick(this);
     }
 
-    /** What it leaves when it falls: its case, all but never ({@link AgentRules#dropChance}); nothing else it carries. */
+    /** What it leaves when it falls: now and then its case, the commoner the likelier ({@link AgentRules#caseChance}); a ration. */
     @Override
     protected void m_7472_(DamageSource source, int looting, boolean recentlyHit) {
         AgentBrain.drop(this, looting, recentlyHit);
