@@ -52,7 +52,12 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
      * ghouls' tails had in 2.0.27.
      */
     static java.util.List<ChildNpc> drawn() {
+        // 2.5.6 (lag): worked out once a frame (every kagune pass reads it), forgotten with the frame's list.
+        if (FRAME != null) {
+            return FRAME;
+        }
         java.util.List<ChildNpc> out = new java.util.ArrayList<>(DRAWN);
+        FRAME = out;
         try {
             net.minecraft.client.Minecraft minecraft = net.minecraft.client.Minecraft.m_91087_();
             if (minecraft.f_91073_ != null && minecraft.f_91074_ != null) {
@@ -81,9 +86,13 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
         return out;
     }
 
+    /** 2.5.6: this frame's list, once worked out (null: not yet). */
+    private static java.util.List<ChildNpc> FRAME;
+
     /** 1.3.43: the frame's list cleared (after both kagune renderers). */
     static void cleared() {
         DRAWN.clear();
+        FRAME = null;
     }
     private static final ResourceLocation FALLBACK = Objects.requireNonNull(ResourceLocation.m_214293_("minecraft", "textures/entity/player/wide/steve.png"));
     /** Each skin made (by the child's looks, stage and kakugan), and its texture's name. */

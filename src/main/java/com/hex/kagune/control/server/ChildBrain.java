@@ -945,6 +945,9 @@ public final class ChildBrain {
      * What threatens it: what it already fights, kept till it is dead or gone far off (1.3.24: {@link FightRules}); else a hostile mob
      * after it or one of its parents, or within five blocks of it (it was three).
      */
+    /** 2.5.6: how often (ticks) it looks about for a new threat while it fights none. */
+    static final long THREAT_EVERY = 5L;
+
     private static LivingEntity threat(ChildNpc npc, Mind mind, Children.Child child, ServerLevel level, long now) {
         LivingEntity current = mind.target != 0 && level.m_6815_(mind.target) instanceof LivingEntity living ? living : null;
         if (current != null) {
@@ -956,16 +959,26 @@ public final class ChildBrain {
                 return current;
             }
         }
+        // 2.5.6 (the owner: "final check for lag"): at peace, a new threat looked for four times a second, not every tick, staggered by
+        // child; in a fight (its foe just gone) the next one at once, so its kagune never goes in and out between foes.
+        if (mind.target == 0 && Math.floorMod(now + npc.m_19879_(), THREAT_EVERY) != 0L) {
+            return null;
+        }
         LivingEntity best = null;
         double bestDistance = Double.MAX_VALUE;
+        double spots = ChildRules.SPOTS * ChildRules.SPOTS;
         for (LivingEntity body : level.m_6443_(LivingEntity.class, npc.m_20191_().m_82400_(ChildRules.GUARD), entity -> entity.m_6084_()
             && EtoBrain.hostile(entity))) {
+            double distance = body.m_20280_(npc);
+            if (distance >= bestDistance) {
+                continue;
+            }
             LivingEntity target = body instanceof Mob mob ? mob.m_5448_() : null;
             boolean family = target == npc || target instanceof ServerPlayer player && child.parent(Pregnancies.player(player.m_20148_()))
                 || target != null && SiblingLife.afterSibling(target, child, level); // 1.3.51: after a brother or sister: theirs to fight too
-            double distance = body.m_20280_(npc);
-            // 2.5.4: one after its family, wherever it is about; any other close and in its line of sight (ChildRules.spots).
-            if ((family || ChildRules.spots(Math.sqrt(distance), npc.m_142582_(body))) && distance < bestDistance) {
+            // 2.5.4: one after its family, wherever it is about; any other close and in its line of sight (ChildRules.spots). 2.5.6: its
+            // sight (a ray through the blocks) looked along last, only for one close enough and nearer than the best so far.
+            if (family || distance <= spots && ChildRules.spots(Math.sqrt(distance), npc.m_142582_(body))) {
                 best = body;
                 bestDistance = distance;
             }

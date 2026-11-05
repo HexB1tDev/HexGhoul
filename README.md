@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.5.6 (HexGhoul): Lag check: children's threat search and the kagune passes' scans throttled (testing)
+
+See `.github/release-notes-2.5.6.md`. Lag check. Two hot spots found, both from recent versions, both fixed: children looked for monsters with a line-of-sight ray to every monster within 10 blocks on every tick, and the kagune passes scanned for nearby children and wild ghouls up to six times a frame. Everything else that runs every tick or every frame was checked and is already throttled.
+
 ## 2.5.5 (HexGhoul): A child's Rinkaku is drawn whenever it is out (testing)
 
 See `.github/release-notes-2.5.5.md`. A child's Rinkaku (and its wings) is now drawn whenever it is out, whether or not the child's body was drawn the usual way that frame. Before, the tentacle was only drawn for a child its body's renderer had noted during the same frame, so anything that skips or replaces that call (an entity-culling or performance mod, a body drawn some other way) left the kagune invisible even while the child fought with it. This is the fix the wild ghouls' tails got in 2.0.27, which children never had.

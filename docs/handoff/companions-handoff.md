@@ -1,4 +1,12 @@
-# START HERE (state after 2.5.5)
+# START HERE (state after 2.5.6)
+
+Lag check. Two hot spots found, both from recent versions, both fixed: children looked for monsters with a line-of-sight ray to every monster within 10 blocks on every tick, and the kagune passes scanned for nearby children and wild ghouls up to six times a frame. Everything else that runs every tick or every frame was checked and is already throttled.
+
+- `ChildBrain.threat` (2.5.4's): a child at peace looks for a new threat every 5 ticks, staggered by child (`THREAT_EVERY`); in a fight, the next foe at once (its kagune never goes in and out between foes). Line of sight, a ray through the blocks, is now looked along last: only for a monster within 8 blocks and nearer than the best so far (it was cast for every monster in range, every tick, before even its distance was checked).
+- `ChildRenderer.drawn` (2.5.5's nearby-children fallback) and `GhoulNpcRenderer.drawn` (2.0.27's): worked out once a frame and shared by every kagune pass (tentacles, wings, flesh, centipede), cleared with the frame's list. Before: up to four scans of a 96-block box a frame for children and two for wild ghouls.
+- Checked and fine: the two handlers that run for every mob every tick (bed, swimming) leave at once for anything not concerned; all 27 player-tick handlers run once a tick (their phase checked) and the heavier ones every 10 to 40 ticks; investigators, wild ghouls and companions look for prey every 5 to 10 ticks with sight checked last; villagers look about every few ticks, come up to you every 40, ask favours every 200; the spouse's cooking and serving touch chests only when they start, finish or put food away; swimming looks for a shore once a second at most.
+
+# State after 2.5.5
 
 A child's Rinkaku (and its wings) is now drawn whenever it is out, whether or not the child's body was drawn the usual way that frame. Before, the tentacle was only drawn for a child its body's renderer had noted during the same frame, so anything that skips or replaces that call (an entity-culling or performance mod, a body drawn some other way) left the kagune invisible even while the child fought with it. This is the fix the wild ghouls' tails got in 2.0.27, which children never had.
 

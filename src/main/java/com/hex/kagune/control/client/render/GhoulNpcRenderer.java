@@ -156,8 +156,16 @@ public final class GhoulNpcRenderer extends HumanoidMobRenderer<GhoulNpc, Player
      * and every living ghoul within {@link #KAGUNE_ALWAYS} of the player with its kagune coming out or out, even if its body's renderer
      * never noted it (a renderer or layer skipped by another mod or a failure): the kagune no longer hangs on the body's draw.
      */
+    /** 2.5.6: this frame's list, once worked out (null: not yet). */
+    private static List<GhoulNpc> FRAME;
+
     static List<GhoulNpc> drawn() {
+        // 2.5.6 (lag): worked out once a frame (the tails' and the wings' passes both read it), forgotten with the frame's list.
+        if (FRAME != null) {
+            return FRAME;
+        }
         List<GhoulNpc> out = new ArrayList<>(DRAWN);
+        FRAME = out;
         try {
             Minecraft minecraft = Minecraft.m_91087_();
             if (minecraft.f_91073_ != null && minecraft.f_91074_ != null) {
@@ -192,6 +200,7 @@ public final class GhoulNpcRenderer extends HumanoidMobRenderer<GhoulNpc, Player
                 return;
             }
             DRAWN.clear();
+            FRAME = null;
             ChildRenderer.cleared(); // 1.3.43: the children's too
             Minecraft minecraft = Minecraft.m_91087_();
             if (minecraft.f_91073_ != null && minecraft.f_91073_.m_46467_() % 100L == 0L) {
