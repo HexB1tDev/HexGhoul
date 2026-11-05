@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.4.3 (HexGhoul): NPCs swim like players, never stuck in water (testing)
+
+See `.github/release-notes-2.4.3.md`. NPCs swim like players now and don't get stuck in water. This covers every NPC in the mod: companions, children, villagers, wild ghouls, investigators and thralls. Before, they only bobbed at the surface, crawled at the game's slow mob pace, and nosed at the bank without getting out.
+
 ## 2.4.2 (HexGhoul): Not That Easily: everything thinks you're dead (testing)
 
 See `.github/release-notes-2.4.2.md`. "You Thought You'd Get Rid of Me That Easily?" now makes everything think you're dead. That covers every path's version: Rinkaku's passive, Ukaku's, Graft's and Pale's mutations. Vanilla mobs already forgot you, but this mod's own fighters kept their own minds and came straight back for you.

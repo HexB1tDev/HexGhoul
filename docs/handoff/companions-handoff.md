@@ -1,4 +1,14 @@
-# START HERE (state after 2.4.2)
+# START HERE (state after 2.4.3)
+
+NPCs swim like players now and don't get stuck in water. This covers every NPC in the mod: companions, children, villagers, wild ghouls, investigators and thralls. Before, they only bobbed at the surface, crawled at the game's slow mob pace, and nosed at the bank without getting out.
+
+- **Speed**: heading somewhere, they swim at about a player's pace (around 3.5 blocks a second) the way they face.
+- **Head up**: they rise whenever their head is under water.
+- **Getting out**: at a bank (a block in front, with room above it) they pull themselves up and out, as a jump would.
+- **No path**: when they have nowhere to go (no path through the water), they make for the nearest dry ground within 8 blocks instead of floating in place.
+- **Code**: `NpcSwim` (one tick handler for all of them). Protocol stays 84. Not tested in game.
+
+# State after 2.4.2
 
 "You Thought You'd Get Rid of Me That Easily?" now makes everything think you're dead. That covers every path's version: Rinkaku's passive, Ukaku's, Graft's and Pale's mutations. Vanilla mobs already forgot you, but this mod's own fighters kept their own minds and came straight back for you.
 
