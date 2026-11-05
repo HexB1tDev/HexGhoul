@@ -53,11 +53,18 @@ public final class WhipPath {
         return curve(tip, mid, e, length, time, step);
     }
 
-    /** How far through its arc a lash is (0..1.1), {@code t} through its swing: quick through the blow, easing after. */
+    /**
+     * 3.0.1: how far through its arc a lash is (0..1), {@code t} through its swing: quickening into the blow, which lands (0.5, the arc's
+     * point on its foe) as the swing does ({@code land}), slowing through its follow-through.
+     */
     static double progress(double t, double land) {
         double k = Math.max(0.0, Math.min(1.0, t));
         double l = Math.max(0.05, Math.min(0.95, land));
-        return k < l ? 0.85 * ease(k / l) : 0.85 + 0.25 * ease((k - l) / (1.0 - l));
+        if (k < l) {
+            return 0.5 * Math.pow(k / l, 1.6);
+        }
+        double y = (k - l) / (1.0 - l);
+        return 0.5 + 0.5 * (1.0 - (1.0 - y) * (1.0 - y));
     }
 
     /** How far out the tendril reaches (0..1): drawn back at the start, its whole length as the blow lands, half back after. */
@@ -67,31 +74,34 @@ public final class WhipPath {
         return k < l ? 0.3 + 0.7 * ease(k / l) : 1.0 - 0.45 * ease((k - l) / (1.0 - l));
     }
 
-    /** The way its tip goes {@code p} through blow {@code step}'s arc: {yaw (+ to its left), pitch (+ up)} as a unit way {forward, left, up}. */
+    /**
+     * The way its tip goes {@code p} through blow {@code step}'s arc: {yaw (+ to its left), pitch (+ up)} as a unit way {forward, left, up}.
+     * 3.0.1: every arc passes through its foe (yaw and pitch near 0) halfway, as the blow lands.
+     */
     static double[] arc(int step, double p) {
         double yaw;
         double pitch;
         switch (Math.floorMod(step, 6)) {
             case 0 -> { // forehand: from its right round to its left, at the chest
-                yaw = Math.toRadians(-85.0 + 165.0 * p);
-                pitch = Math.toRadians(8.0);
+                yaw = Math.toRadians(-100.0 + 200.0 * p);
+                pitch = Math.toRadians(10.0 - 8.0 * p);
             }
             case 1 -> { // backhand: from its left back to its right
-                yaw = Math.toRadians(80.0 - 165.0 * p);
-                pitch = Math.toRadians(6.0);
+                yaw = Math.toRadians(95.0 - 190.0 * p);
+                pitch = Math.toRadians(8.0 - 6.0 * p);
             }
-            case 2 -> { // overhead: up and back over its head, cracked down in front
-                yaw = Math.toRadians(-10.0 + 10.0 * p);
-                pitch = Math.toRadians(115.0 - 145.0 * p);
+            case 2 -> { // overhead: up and back over its head, cracked straight at them, falling to the ground before it
+                yaw = 0.0;
+                pitch = Math.toRadians(p < 0.5 ? 125.0 - 245.0 * p : 2.5 - 75.0 * (p - 0.5));
             }
             case 3 -> { // low: along the ground, right to left
-                yaw = Math.toRadians(-80.0 + 165.0 * p);
-                pitch = Math.toRadians(-32.0);
+                yaw = Math.toRadians(-95.0 + 190.0 * p);
+                pitch = Math.toRadians(-18.0);
             }
-            case 4 -> { // double: there and back
-                double q = p < 0.5 ? p * 2.0 : 2.0 - p * 2.0;
-                yaw = Math.toRadians(-70.0 + 140.0 * q);
-                pitch = Math.toRadians(12.0 - 10.0 * q);
+            case 4 -> { // double: across to its left (through them), wrapped round, and back across through them again
+                double swing = p < 0.62 ? ease(p / 0.62) : 1.0 - 0.7 * ease((p - 0.62) / 0.38);
+                yaw = Math.toRadians(-95.0 + 190.0 * swing);
+                pitch = Math.toRadians(10.0);
             }
             default -> { // a whole turn round: the body turns it (its spin), the tendril out to its right, trailing the hand
                 yaw = Math.toRadians(-125.0 + 20.0 * p);

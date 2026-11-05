@@ -3,7 +3,7 @@
 `docs/handoff/next-ai-1.3.60.md` (house rules), then the top sections of `docs/handoff/companions-handoff.md` (one per version, newest first).
 
 Branch **`claude/loving-albattani-xld4zv`** (push only to the branch the session is given). Never push to `main`; no PR unless asked.
-Version **3.0.0** in `build.py` and `patch/KagunePatch.java`; the next is **3.0.1** (the last number never reaches 10). Protocol **"87"** (`ControlNetwork.PROTOCOL`; 3.0.0 bumped it for CcgAgent ARM, ARM_AT, ARM_TARGET and the ArmRules SWING codes; 2.5.0 bumped it for 2.4.8's S2CUkakuFx CRACK and 2.4.9's new EtoGesture ordinals; 2.4.5 added S2CThyDeath and C2SUkakuAction THY_DEATH; 2.3.0 added the mother's size to `S2CChild`; 2.2.4 added the kiss's mood to `S2CEto`; 2.1.9 added the synced AFRAID on CcgAgent and GhoulNpc; 2.1.7 added `C2SUkakuAction.REAPER_DASH`; 2.0.42
+Version **3.0.1** in `build.py` and `patch/KagunePatch.java`; the next is **3.0.2** (the last number never reaches 10). Protocol **"87"** (`ControlNetwork.PROTOCOL`; 3.0.0 bumped it for CcgAgent ARM, ARM_AT, ARM_TARGET and the ArmRules SWING codes; 2.5.0 bumped it for 2.4.8's S2CUkakuFx CRACK and 2.4.9's new EtoGesture ordinals; 2.4.5 added S2CThyDeath and C2SUkakuAction THY_DEATH; 2.3.0 added the mother's size to `S2CChild`; 2.2.4 added the kiss's mood to `S2CEto`; 2.1.9 added the synced AFRAID on CcgAgent and GhoulNpc; 2.1.7 added `C2SUkakuAction.REAPER_DASH`; 2.0.42
 added `S2CRinkakuBlock`, message id 48, and `C2SUkakuAction.BLOCK`; 2.0.48 `S2CUkakuFx.DAWN_RING`; 2.0.49 `CcgAgent.SOARING` on the flip). Nothing is tested in game.
 
 ## The owner's requests since 2.0.36 (their words, trimmed)
@@ -181,6 +181,12 @@ Previews: `dawn-bigger-2.0.47.png`, `dawn-aim-2.0.47.png`, `dawn-volley-2.0.48.p
   `client/render/WeaponLayer` (meshes from `quinque/ArmMesh`, the whip via `RinkakuTube` along `quinque/WhipPath`). Previews:
   `tools/ArmPreview.java`, `tools/WeaponPosePreview.java` (`docs/handoff/*-3.0.0.png`). `/kagune investigator <weapon> [rank]`.
   NOTE: `client/animation/ArmPose` is Pale's arm (not these weapons).
+- **3.0.1** after the owner's anger at 3.0.0 ("How does animations like this pass?"; the sword "looks like a piece of paper"): the
+  weapon keys rebuilt (`WeaponPose.K`: weapon/arm ways relative to the foe, twist, lean capped 0.26, side, spin, stride with the back
+  foot planted (lunge = 12 sin stride, drop from the legs only), `bk()` weight back, the free arm; 7 stages a blow), `AgentClient.flow`
+  blends one blow into the next, `WhipPath.arc` passes through the foe at the landing. New sword (`ArmMesh.Builder.faceted`), spear,
+  hammer armour. JUDGE POSES AT FULL SIZE FROM SEVERAL SIDES (`tools/WeaponPosePreview.java` strips; a big single frame tells more),
+  as motion, not only "does it point the right way".
 - **2.3.1** the mood kisses rendered for the owner (`docs/handoff/*-mood-kisses-2.3.1.png`, `mood-kisses-waiting-2.3.1.gif`); possessive, giddy
   and tender reworked to read apart. Render poses with `tools/CompanionPreview.java <out> kisses` (stiff limbs, as in game).
 

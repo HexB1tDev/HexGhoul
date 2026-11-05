@@ -183,6 +183,7 @@ public final class AgentClient {
         if (arms != null) {
             take(p, arms);
         }
+        p = flow(agent.m_19879_(), agent.swingAt(), swing, p, now + partial);
         double dashAge = CcgAgent.since(now, agent.dashAt()) + partial;
         if (dashAge >= 0.0 && dashAge < AgentPose.DASH_TICKS) {
             AgentPose.dash(p, agent.dash(), dashAge / AgentPose.DASH_TICKS);
@@ -192,6 +193,57 @@ public final class AgentClient {
             QuinqueGrip.reach(p, base, look.slim() || look.female());
         }
         return p;
+    }
+
+    /** 3.0.1: how long a new blow or move blends out of whatever the last left it in (ticks). */
+    static final double FLOW = 3.0;
+
+    /** 3.0.1: each armed investigator's last pose drawn, and the swing it was drawn in (by entity id). */
+    private static final java.util.Map<Integer, Flow> FLOWS = new java.util.HashMap<>();
+
+    private static final class Flow {
+        int swingAt = CcgAgent.NEVER;
+        int swing = -1;
+        RigPose last;
+        RigPose from;
+        double since;
+        double drawnAt;
+    }
+
+    /**
+     * 3.0.1: one blow into the next without a jump. A string's next blow (or a move) begins before the last has settled back into its
+     * stance (the higher the rank, the sooner): its first ticks are blended out of the pose the last one was drawn in (a spin taken the
+     * short way round, never unwound).
+     */
+    static RigPose flow(int id, int swingAt, int swing, RigPose p, double clock) {
+        if (FLOWS.size() > 256) {
+            FLOWS.clear();
+        }
+        Flow f = FLOWS.computeIfAbsent(id, ignored -> new Flow());
+        if (f.last != null && (swingAt != f.swingAt || swing != f.swing) && clock - f.drawnAt < 10.0) {
+            f.from = new RigPose().add(f.last, 1.0F);
+            f.since = clock;
+        }
+        f.swingAt = swingAt;
+        f.swing = swing;
+        RigPose out = p;
+        if (f.from != null) {
+            double k = (clock - f.since) / FLOW;
+            if (k >= 1.0 || k < 0.0) {
+                f.from = null;
+            } else {
+                float w = (float)(k * k * (3.0 - 2.0 * k));
+                f.from.spin = p.spin + (float)Math.IEEEremainder(f.from.spin - p.spin, Math.PI * 2.0);
+                out = new RigPose().add(f.from, 1.0F - w).add(p, w);
+                out.legHold = Math.max(f.from.legHold, p.legHold);
+                out.rightArmHold = Math.max(f.from.rightArmHold, p.rightArmHold);
+                out.leftArmHold = Math.max(f.from.leftArmHold, p.leftArmHold);
+                out.armHold = Math.max(f.from.armHold, p.armHold);
+            }
+        }
+        f.last = new RigPose().add(out, 1.0F);
+        f.drawnAt = clock;
+        return out;
     }
 
     /** 1.3.33: a dash's afterimages: how long each lasts (ticks), how see-through it starts, its colour (a cold white), how often one. */
@@ -257,6 +309,7 @@ public final class AgentClient {
         p.armHold = 0.0F;
         p.twist += arms.twist;
         p.lean += arms.lean;
+        p.side += arms.side;
         p.lunge += arms.lunge;
         p.drop += arms.drop;
         p.spin += arms.spin;

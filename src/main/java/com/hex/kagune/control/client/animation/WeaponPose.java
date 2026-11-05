@@ -162,154 +162,382 @@ public final class WeaponPose {
 
     // ---------------------------------------------------------------- its blows and its moves
 
-    /**
-     * A key: when (0..1), where the weapon points (exactly) and the side the arm is on (chest frame, degrees: {@link #point}), and the
-     * body's twist, lean (radians), lunge, drop (pixels), spin (radians).
+    /*
+     * 3.0.1 (the owner, of the overhead smash: "How does animations like this pass?"): rebuilt. Every key says where the weapon and the
+     * arm point relative to the foe (azimuth: + to its left; elevation: + up; degrees, turned with the body's own spin), how the chest
+     * twists against the hips, how far the body leans (forward, sideways: never more than a man leans) and spins, and its feet: a stride
+     * (the front foot out, the back one planted where it stood: the body carried forward over it and lowered only as far as the stride
+     * lowers it, so no foot sinks or slides) and how wide they stand. The head stays on the foe. A one-handed weapon's free arm swings
+     * against the blow. Each blow is an anticipation, a windup, the blow quickening, the impact, the follow-through, settling, and back.
      */
-    private static double[] k(double t, double armAz, double armEl, double weaponAz, double weaponEl, double twist, double lean, double lunge, double drop,
-                              double spin) {
-        return new double[] {t, armAz, armEl, weaponAz, weaponEl, twist, lean, lunge, drop, spin};
+
+    private static final int T = 0;
+    private static final int W_AZ = 1;
+    private static final int W_EL = 2;
+    private static final int A_AZ = 3;
+    private static final int A_EL = 4;
+    private static final int TWIST = 5;
+    private static final int LEAN = 6;
+    private static final int SIDE = 7;
+    private static final int SPIN = 8;
+    private static final int STEP = 9;
+    private static final int SPREAD = 10;
+    private static final int L_AZ = 11;
+    private static final int L_EL = 12;
+    /** Which foot is planted in its stride: +1 the back one (the body carried forward over the front), -1 the front (its weight rocked back). */
+    private static final int SHIFT = 13;
+    private static final int CHANNELS = 14;
+    /** The most a body leans forward or back, and to a side (radians): further, and straight legs read as folding at the hips. */
+    static final double MOST_LEAN = 0.26;
+    static final double MOST_SIDE = 0.2;
+    /** Its stance's feet: the left a little forward, a little apart (radians). */
+    static final double STANCE_STEP = 0.15;
+    static final double STANCE_SPREAD = 0.07;
+    /** A one-handed weapon's free arm at rest (azimuth, elevation). */
+    static final double[] FREE_ARM = {25.0, -72.0};
+
+    /** One key, its unset channels NaN until it is filled in from its stance. */
+    static final class K {
+        final double[] v = new double[CHANNELS];
+
+        K(double t) {
+            java.util.Arrays.fill(this.v, Double.NaN);
+            this.v[T] = t;
+        }
+
+        K w(double az, double el) {
+            this.v[W_AZ] = az;
+            this.v[W_EL] = el;
+            return this;
+        }
+
+        K a(double az, double el) {
+            this.v[A_AZ] = az;
+            this.v[A_EL] = el;
+            return this;
+        }
+
+        K tw(double x) {
+            this.v[TWIST] = x;
+            return this;
+        }
+
+        K ln(double x) {
+            this.v[LEAN] = x;
+            return this;
+        }
+
+        K sd(double x) {
+            this.v[SIDE] = x;
+            return this;
+        }
+
+        K sp(double x) {
+            this.v[SPIN] = x;
+            return this;
+        }
+
+        K st(double x) {
+            this.v[STEP] = x;
+            return this;
+        }
+
+        K spr(double x) {
+            this.v[SPREAD] = x;
+            return this;
+        }
+
+        K l(double az, double el) {
+            this.v[L_AZ] = az;
+            this.v[L_EL] = el;
+            return this;
+        }
+
+        /** Its weight rocked back onto its back foot (the front one planted): drawn back before a blow. */
+        K bk() {
+            this.v[SHIFT] = -1.0;
+            return this;
+        }
     }
 
-    /** Its stance at {@code t} ({@code spin}: the body's turn, a whole turn ending as it began). */
-    private static double[] rest(Arm arm, double t, double spin) {
+    private static K k(double t) {
+        return new K(t);
+    }
+
+    /** Its stance as a key at {@code t} (spun {@code spin}: a whole turn ends as it began). */
+    private static K rest(double t, double spin) {
+        return k(t).sp(spin);
+    }
+
+    private static K rest(double t) {
+        return k(t);
+    }
+
+    /** {@code arm}'s stance: where its weapon and arm point relative to the foe {weapon az, el, arm az, el}. */
+    static double[] stanceToFoe(Arm arm) {
         double[] w = stanceWays(arm);
-        return k(t, w[0], w[1], w[2], w[3], 0.0, 0.0, 0.0, 0.0, spin);
+        double turn = Math.toDegrees(QuinqueHolds.of(base(arm)).twist());
+        return new double[] {w[2] - turn, w[3], w[0] - turn, w[1]};
     }
 
-    private static double[] rest(Arm arm, double t) {
-        return rest(arm, t, 0.0);
+    /** {@code keys} filled in: every unset channel its stance's. */
+    static double[][] filled(Arm arm, K... keys) {
+        double[] stance = stanceToFoe(arm);
+        double[] defaults = new double[CHANNELS];
+        defaults[W_AZ] = stance[0];
+        defaults[W_EL] = stance[1];
+        defaults[A_AZ] = stance[2];
+        defaults[A_EL] = stance[3];
+        defaults[STEP] = STANCE_STEP;
+        defaults[SPREAD] = STANCE_SPREAD;
+        defaults[L_AZ] = FREE_ARM[0];
+        defaults[L_EL] = FREE_ARM[1];
+        defaults[SHIFT] = 1.0;
+        double[][] out = new double[keys.length][];
+        for (int i = 0; i < keys.length; i++) {
+            out[i] = keys[i].v.clone();
+            for (int c = 1; c < CHANNELS; c++) {
+                if (Double.isNaN(out[i][c])) {
+                    out[i][c] = defaults[c];
+                }
+            }
+        }
+        return out;
     }
 
     private static final double TURN = Math.PI * 2.0;
+    private static final double HALF = Math.PI;
 
-    /**
-     * Its {@code step}th blow's keys, the blow landing at 0.5. Written in the chest's frame against each stance: a direction in the world
-     * is the chest's azimuth less the chest's turn (the stance's and the key's twist; + twists the chest to its right).
-     */
+    /** Its {@code step}th blow's keys, the blow landing at 0.5. */
     static double[][] keys(Arm arm, int step) {
         int n = Math.floorMod(step, arm.length());
         return switch (arm) {
             case WHIP -> switch (n) {
-                // Forehand: the arm out to its right and up, the handle laid back, then whipped across the front and on to its left.
-                case 0 -> new double[][] {rest(arm, 0), k(0.3, -75, 10, -110, 20, 0.45, -0.05, -0.5, 0, 0), k(0.5, 10, -10, 30, 0, -0.15, 0.1, 1.5, 0.3, 0),
-                    k(0.68, 60, -25, 80, -10, -0.4, 0.12, 1.2, 0.3, 0), rest(arm, 1)};
-                // Backhand: across to its left first, then out to its right.
-                case 1 -> new double[][] {rest(arm, 0), k(0.3, 60, 0, 100, 10, -0.4, -0.05, -0.5, 0, 0), k(0.5, -10, -10, -30, 0, 0.15, 0.08, 1.5, 0.3, 0),
-                    k(0.68, -70, -20, -90, -10, 0.4, 0.1, 1.2, 0.3, 0), rest(arm, 1)};
-                // Overhead: raised high and back over its head, cracked down in front.
-                case 2 -> new double[][] {rest(arm, 0), k(0.3, 5, 125, 5, 150, 0.1, -0.15, -0.5, 0, 0), k(0.5, 5, 0, 5, -20, -0.05, 0.3, 2.5, 0.6, 0),
-                    k(0.68, 5, -35, 5, -50, -0.08, 0.35, 2.5, 0.8, 0), rest(arm, 1)};
-                // Low: sunk, the arm low out to its right, swept along the ground across to its left.
-                case 3 -> new double[][] {rest(arm, 0), k(0.3, -80, -45, -110, -30, 0.45, 0.2, 0, 2.0, 0), k(0.5, 0, -40, 20, -35, -0.1, 0.3, 1.5, 3.0, 0),
-                    k(0.68, 60, -40, 90, -30, -0.4, 0.3, 1.5, 3.0, 0), rest(arm, 1)};
-                // Double: out to its right, across to its left, and back again.
-                case 4 -> new double[][] {rest(arm, 0), k(0.2, -70, 5, -100, 15, 0.4, 0, 0, 0, 0), k(0.5, 50, -10, 80, 0, -0.35, 0.1, 1.2, 0.3, 0),
-                    k(0.75, -50, 0, -80, 5, 0.35, 0.05, 1.0, 0.2, 0), rest(arm, 1)};
-                // A whole turn of the body to its left, the arm held out to its right, the tendril trailing round.
-                default -> new double[][] {rest(arm, 0), k(0.15, -85, 0, -95, 10, 0.1, 0, 0, 0.5, 0.15), k(0.5, -90, 5, -100, 10, 0, 0.05, 1.0, 0.8, Math.PI),
-                    k(0.85, -85, 0, -95, 10, 0.1, 0, 0.5, 0.5, TURN - 0.15), rest(arm, 1, TURN)};
+                // Forehand: the arm drawn back up to its right, whipped across in front with a stride, on round to its left.
+                case 0 -> filled(arm, rest(0), k(0.12).w(30, 10).a(25, -45).tw(-0.1).l(-20, -60),
+                    k(0.3).w(-120, 25).a(-80, 15).tw(0.55).ln(-0.08).sd(0.05).st(0.1).l(40, -30),
+                    k(0.42).w(-60, 12).a(-45, 0).tw(0.3).ln(0.02).st(0.2).l(10, -45),
+                    k(0.5).w(10, 0).a(5, -5).tw(-0.15).ln(0.12).st(0.3).l(-50, -40),
+                    k(0.6).w(70, -10).a(55, -20).tw(-0.45).ln(0.15).sd(-0.05).st(0.3).l(-40, -55),
+                    k(0.75).w(50, -5).a(40, -35).tw(-0.25).ln(0.08).st(0.25).l(-10, -65), rest(1));
+                // Backhand: from across its body on its left, out to its right.
+                case 1 -> filled(arm, rest(0), k(0.12).w(-10, 10).a(5, -45).tw(0.1),
+                    k(0.3).w(110, 15).a(65, 5).tw(-0.55).ln(-0.05).sd(-0.05).st(0.12).l(-30, -40),
+                    k(0.42).w(60, 8).a(40, 0).tw(-0.3).st(0.2).l(0, -50),
+                    k(0.5).w(-10, 0).a(-10, -5).tw(0.15).ln(0.1).st(0.25).l(30, -50),
+                    k(0.6).w(-75, -8).a(-55, -15).tw(0.45).ln(0.12).sd(0.05).st(0.25).l(45, -45),
+                    k(0.75).w(-45, -5).a(-35, -30).tw(0.25).ln(0.06).st(0.2).l(30, -60), rest(1));
+                // Overhead: a dip, raised high and back over its head, cracked down in front with a long stride.
+                case 2 -> filled(arm, rest(0), k(0.12).w(10, -20).a(10, -60).ln(0.05),
+                    k(0.3).w(0, 150).a(0, 140).tw(0.1).ln(-0.15).st(0.2).bk().l(10, -20),
+                    k(0.42).w(0, 70).a(0, 90).ln(-0.05).st(0.15).l(0, -40),
+                    k(0.5).w(0, -25).a(0, -5).ln(0.22).st(0.32).l(-20, -70),
+                    k(0.6).w(0, -55).a(0, -30).ln(0.25).st(0.32).l(-15, -70),
+                    k(0.75).w(5, -30).a(5, -45).ln(0.12).st(0.25), rest(1));
+                // Low: sunk in a wide stride, swept along the ground from its right across to its left.
+                case 3 -> filled(arm, rest(0), k(0.12).w(20, -5).a(15, -50),
+                    k(0.3).w(-110, -25).a(-80, -35).tw(0.5).ln(0.2).sd(0.08).st(0.25).spr(0.2).l(40, -20),
+                    k(0.42).w(-50, -30).a(-40, -40).tw(0.25).ln(0.25).st(0.3).spr(0.22).l(20, -30),
+                    k(0.5).w(15, -35).a(10, -45).tw(-0.1).ln(0.28).st(0.32).spr(0.22).l(-20, -35),
+                    k(0.6).w(75, -30).a(55, -40).tw(-0.45).ln(0.25).sd(-0.06).st(0.3).spr(0.2).l(-40, -40),
+                    k(0.75).w(50, -20).a(40, -45).tw(-0.25).ln(0.12).st(0.25).spr(0.12), rest(1));
+                // Double: across to its left, wrapped round, and straight back across.
+                case 4 -> filled(arm, rest(0), k(0.15).w(-100, 20).a(-70, 10).tw(0.45).ln(-0.05).st(0.12).l(40, -35),
+                    k(0.35).w(-40, 10).a(-30, 0).tw(0.2).st(0.2), k(0.5).w(40, 0).a(30, -10).tw(-0.3).ln(0.1).st(0.25).l(-40, -45),
+                    k(0.62).w(95, 10).a(60, 0).tw(-0.5).ln(0.05).st(0.25).l(-40, -40),
+                    k(0.8).w(-30, 0).a(-25, -10).tw(0.3).ln(0.12).st(0.3).l(40, -45),
+                    k(0.9).w(-20, -10).a(-10, -35).tw(0.15).ln(0.06).st(0.2), rest(1));
+                // A whole turn of the body to its left, the arm out to its right, the tendril trailing round.
+                default -> filled(arm, rest(0), k(0.1).w(-40, 10).a(-50, -20).tw(0.3).st(0.1).sp(-0.3).l(30, -40),
+                    k(0.25).w(-95, 5).a(-90, -5).tw(0.15).sp(0.5).st(0.15).spr(0.1).l(60, -20),
+                    k(0.5).w(-95, 5).a(-90, 0).ln(0.05).sp(HALF).st(0.15).spr(0.12).l(70, -15),
+                    k(0.7).w(-95, 5).a(-90, 0).sp(1.6 * Math.PI).st(0.15).spr(0.12).l(70, -15),
+                    k(0.85).w(-60, 0).a(-60, -20).sp(TURN - 0.2).st(0.15).l(40, -40), rest(1, TURN));
             };
             case CRYSTAL_SPEAR -> switch (n) {
-                // A thrust along its own line: the chest turned back to draw it, then squared up behind it with a long step.
-                case 0 -> new double[][] {rest(arm, 0), k(0.3, 70, -45, 77, -3, 0.35, -0.05, -1.5, 0, 0), k(0.5, 35, -10, 34, 4, -0.4, 0.15, 5, 0.3, 0),
-                    k(0.68, 35, -10, 34, 4, -0.42, 0.16, 5, 0.3, 0), rest(arm, 1)};
-                // Two: one at the middle, drawn back, one at the face.
-                case 1 -> new double[][] {rest(arm, 0), k(0.25, 70, -45, 77, -3, 0.35, -0.05, -1.5, 0, 0), k(0.5, 35, -10, 34, 4, -0.4, 0.15, 5, 0.3, 0),
-                    k(0.64, 65, -35, 74, 0, 0.3, 0, -1, 0, 0), k(0.82, 30, 0, 34, 6, -0.4, 0.12, 4.5, 0, 0), rest(arm, 1)};
-                // Rising: the crystal swept up from low on its right across to high on its left, as a staff.
-                case 2 -> new double[][] {rest(arm, 0), k(0.3, 30, -50, 20, -35, 0.4, 0.1, 0, 1.5, 0), k(0.5, 60, -20, 41, 15, -0.2, 0, 2.5, 0.5, 0),
-                    k(0.68, 80, 10, 68, 40, -0.5, -0.08, 2.0, 0, 0), rest(arm, 1)};
-                // A whole turn to its right, the butt round into them halfway (its back to them).
-                case 3 -> new double[][] {rest(arm, 0), k(0.2, 60, -30, 57, 2, 0, 0.05, 0, 0.5, -0.5), k(0.5, 55, -25, 57, 10, 0, 0.1, 2, 0.8, -Math.PI),
-                    k(0.8, 60, -30, 57, 2, 0, 0.05, 1, 0.5, -TURN + 0.5), rest(arm, 1, -TURN)};
-                // Lunging: sunk, drawn far back, driven out its whole length.
-                default -> new double[][] {rest(arm, 0), k(0.3, 75, -50, 86, -3, 0.5, -0.1, -2.5, 1.0, 0), k(0.5, 35, -8, 26, 2, -0.55, 0.3, 8, 0.8, 0),
-                    k(0.68, 35, -8, 26, 2, -0.55, 0.32, 8, 0.9, 0), rest(arm, 1)};
+                // A thrust along its own line: drawn back (the chest coiling, weight back), driven out with a stride, recovered.
+                case 0 -> filled(arm, rest(0), k(0.12).w(0, -8).a(5, -40).tw(0.1),
+                    k(0.3).w(0, -3).a(15, -55).tw(0.65).ln(-0.08).st(0.28).bk(),
+                    k(0.42).w(0, 2).a(5, -25).tw(0.0).st(0.25),
+                    k(0.5).w(0, 5).a(0, -5).tw(-0.45).ln(0.2).st(0.4),
+                    k(0.6).w(0, 5).a(0, -5).tw(-0.48).ln(0.22).st(0.4),
+                    k(0.75).w(0, 2).a(2, -20).tw(-0.2).ln(0.1).st(0.3), rest(1));
+                // Two: at the middle, drawn half back, at the face.
+                case 1 -> filled(arm, rest(0), k(0.25).w(0, -3).a(15, -55).tw(0.65).ln(-0.08).st(0.28).bk(),
+                    k(0.5).w(0, 3).a(0, -5).tw(-0.45).ln(0.2).st(0.4),
+                    k(0.62).w(0, 5).a(10, -40).tw(0.4).ln(-0.02).st(0.3).bk(),
+                    k(0.8).w(0, 14).a(0, 5).tw(-0.45).ln(0.15).st(0.42),
+                    k(0.9).w(0, 12).a(2, -5).tw(-0.4).ln(0.12).st(0.4), rest(1));
+                // Rising: its head swept from low on its right up across to high on its left, as a staff is.
+                case 2 -> filled(arm, rest(0), k(0.12).w(-10, -10).a(0, -40).tw(0.15),
+                    k(0.3).w(-80, -35).a(-30, -50).tw(0.55).ln(0.12).st(0.2).spr(0.12),
+                    k(0.42).w(-40, -15).a(-10, -35).tw(0.25).ln(0.08).st(0.28),
+                    k(0.5).w(10, 20).a(10, -15).tw(-0.2).st(0.32),
+                    k(0.6).w(55, 45).a(25, 5).tw(-0.5).ln(-0.08).st(0.3),
+                    k(0.75).w(30, 25).a(15, -15).tw(-0.25).st(0.25), rest(1));
+                // A whole turn to its right: its back to them halfway, the butt round into them.
+                case 3 -> filled(arm, rest(0), k(0.12).w(10, 0).tw(-0.15).sp(0.2),
+                    k(0.3).w(0, 3).tw(0.2).st(0.15).spr(0.1).sp(-1.2),
+                    k(0.5).w(0, 10).tw(0.1).ln(0.05).st(0.2).spr(0.12).sp(-HALF),
+                    k(0.7).w(0, 3).st(0.2).spr(0.1).sp(-4.8),
+                    k(0.85).st(0.15).sp(-TURN + 0.3), rest(1, -TURN));
+                // Lunging: a deep coil, weight back, then out its whole length with the longest stride, held, recovered.
+                default -> filled(arm, rest(0), k(0.12).w(0, -5).a(10, -45).tw(0.15).st(0.05),
+                    k(0.3).w(0, -4).a(20, -60).tw(0.8).ln(-0.1).st(0.32).spr(0.1).bk(),
+                    k(0.42).w(0, 0).a(5, -30).tw(0.1).ln(0.1).st(0.3),
+                    k(0.5).w(0, 3).a(0, -3).tw(-0.6).ln(0.24).st(0.55).spr(0.1),
+                    k(0.65).w(0, 3).a(0, -3).tw(-0.62).ln(0.24).st(0.55).spr(0.1),
+                    k(0.8).w(0, 0).a(5, -20).tw(-0.25).ln(0.12).st(0.4), rest(1));
             };
             case FLESH_HAMMER -> switch (n) {
-                // Laid out to its right and swung across in front, the whole chest behind it.
-                case 0 -> new double[][] {rest(arm, 0), k(0.3, -20, -25, -57, 5, 0.5, -0.05, -0.5, 0.5, 0), k(0.5, 30, -15, 3, 0, -0.2, 0.15, 2.0, 0.8, 0),
-                    k(0.68, 60, -20, 60, -5, -0.6, 0.2, 2.0, 0.8, 0), rest(arm, 1)};
+                // Wound far back to its right, its head behind it, then round in front at chest height with a stride.
+                case 0 -> filled(arm, rest(0), k(0.12).w(15, 70).a(30, -10).tw(-0.1),
+                    k(0.3).w(-110, 20).a(-50, -15).tw(0.65).ln(-0.05).sd(0.06).st(0.1).spr(0.1),
+                    k(0.42).w(-60, 8).a(-25, -15).tw(0.35).st(0.25).spr(0.12),
+                    k(0.5).w(0, 0).a(10, -15).tw(-0.1).ln(0.12).sd(-0.04).st(0.35).spr(0.12),
+                    k(0.6).w(70, -5).a(45, -20).tw(-0.55).ln(0.15).sd(-0.06).st(0.35).spr(0.12),
+                    k(0.75).w(45, 10).a(35, -20).tw(-0.35).ln(0.08).st(0.28), rest(1));
                 // Back the other way.
-                case 1 -> new double[][] {rest(arm, 0), k(0.3, 70, -20, 70, 5, -0.6, 0, 0, 0.5, 0), k(0.5, 20, -15, 20, 0, 0.1, 0.12, 1.5, 0.8, 0),
-                    k(0.68, -30, -25, -31, -5, 0.6, 0.15, 1.5, 0.8, 0), rest(arm, 1)};
-                // Up from the ground: its head down by its feet, swung up through them.
-                case 2 -> new double[][] {rest(arm, 0), k(0.3, -10, -70, -30, -30, 0.2, 0.25, 0, 2.5, 0), k(0.5, 15, -10, 14, 30, 0, 0, 2.5, 0.5, 0),
-                    k(0.68, 15, 30, 14, 80, -0.05, -0.12, 2.0, 0, 0), rest(arm, 1)};
-                // Raised high over its head and brought down into the ground before it.
-                default -> new double[][] {rest(arm, 0), k(0.3, 14, 120, 14, 150, 0, -0.2, -0.5, 0, 0), k(0.5, 14, -15, 14, -32, 0, 0.6, 2.5, 1.5, 0),
-                    k(0.68, 14, -25, 14, -36, 0, 0.65, 2.5, 1.8, 0), rest(arm, 1)};
+                case 1 -> filled(arm, rest(0), k(0.12).w(-5, 65).a(25, -15).tw(0.05),
+                    k(0.3).w(100, 20).a(55, -15).tw(-0.65).ln(-0.04).sd(-0.05).st(0.12).spr(0.1),
+                    k(0.42).w(55, 8).a(35, -15).tw(-0.35).st(0.25),
+                    k(0.5).w(0, 0).a(10, -15).tw(0.1).ln(0.1).sd(0.04).st(0.33).spr(0.12),
+                    k(0.6).w(-75, -5).a(-40, -20).tw(0.55).ln(0.12).sd(0.06).st(0.33),
+                    k(0.75).w(-45, 10).a(-20, -20).tw(0.35).ln(0.06).st(0.25), rest(1));
+                // Up from the ground: sunk, its head low by its right foot, driven up through them, the body rising behind it.
+                case 2 -> filled(arm, rest(0), k(0.12).w(10, 40).a(25, -20).tw(0.05).ln(0.05),
+                    k(0.3).w(-35, -30).a(-20, -45).tw(0.4).ln(0.22).st(0.2).spr(0.18),
+                    k(0.42).w(-15, 0).a(0, -35).tw(0.2).ln(0.15).st(0.28).spr(0.18),
+                    k(0.5).w(0, 45).a(5, -10).tw(-0.05).ln(-0.05).st(0.35).spr(0.1),
+                    k(0.6).w(0, 85).a(5, 20).tw(-0.1).ln(-0.15).st(0.32),
+                    k(0.75).w(5, 70).a(15, -5).tw(-0.05).ln(-0.05).st(0.25), rest(1));
+                // A dip, raised high over and behind its head, brought down onto the ground in front with a long stride.
+                default -> filled(arm, rest(0), k(0.12).w(0, 40).a(25, -25).ln(0.05),
+                    k(0.3).w(0, 155).a(5, 140).tw(0.05).ln(-0.18).st(0.25).bk(),
+                    k(0.42).w(0, 90).a(5, 110).ln(-0.05).st(0.3),
+                    k(0.5).w(0, -36).a(0, -30).ln(0.22).st(0.48).spr(0.18),
+                    k(0.6).w(0, -38).a(0, -32).ln(0.22).st(0.48).spr(0.18),
+                    k(0.75).w(0, 0).a(10, -30).ln(0.12).st(0.32).spr(0.1), rest(1));
             };
             case BONE_SWORD -> switch (n) {
-                // Falling: from over its right shoulder down across to its left hip.
-                case 0 -> new double[][] {rest(arm, 0), k(0.3, -15, 55, -28, 70, 0.35, -0.05, -0.5, 0, 0), k(0.5, 25, -15, -10, -10, -0.3, 0.2, 2.5, 0.8, 0),
-                    k(0.68, 45, -35, 25, -45, -0.45, 0.25, 2.2, 1.0, 0), rest(arm, 1)};
+                // Falling: raised over its right shoulder, cut down across to its left hip with a stride.
+                case 0 -> filled(arm, rest(0), k(0.12).w(5, 50).a(30, -15).tw(-0.05),
+                    k(0.3).w(-50, 75).a(-25, 55).tw(0.45).ln(-0.08).st(0.08),
+                    k(0.42).w(-25, 30).a(-5, 25).tw(0.15).ln(0.05).st(0.22),
+                    k(0.5).w(10, -15).a(15, -10).tw(-0.3).ln(0.18).sd(-0.04).st(0.32),
+                    k(0.6).w(40, -45).a(30, -30).tw(-0.5).ln(0.22).st(0.32),
+                    k(0.75).w(25, -10).a(30, -25).tw(-0.25).ln(0.1).st(0.25), rest(1));
                 // Rising: from low on its left up across to high on its right.
-                case 1 -> new double[][] {rest(arm, 0), k(0.3, 45, -45, 33, -45, -0.4, 0.15, 0, 0.6, 0), k(0.5, 30, -5, 31, 20, 0.25, 0.05, 2.5, 0.2, 0),
-                    k(0.68, 0, 40, -10, 65, 0.4, -0.05, 2.0, 0, 0), rest(arm, 1)};
-                // Level: the blade flat out to its right, swept across.
-                case 2 -> new double[][] {rest(arm, 0), k(0.3, -30, -20, -57, 0, 0.55, -0.05, -0.5, 0.5, 0), k(0.5, 25, -15, 6, 0, -0.1, 0.12, 2.0, 0.8, 0),
-                    k(0.68, 60, -20, 62, -5, -0.6, 0.15, 1.8, 0.8, 0), rest(arm, 1)};
-                // A thrust: drawn back at the hip, driven straight out.
-                case 3 -> new double[][] {rest(arm, 0), k(0.3, 55, -45, 28, 5, 0.3, -0.05, -1.5, 0.3, 0), k(0.5, 15, -5, -8, 0, -0.35, 0.15, 5.5, 0.5, 0),
-                    k(0.68, 15, -5, -8, 0, -0.36, 0.16, 5.5, 0.5, 0), rest(arm, 1)};
+                case 1 -> filled(arm, rest(0), k(0.12).w(10, 20).a(30, -30).tw(0.05),
+                    k(0.3).w(45, -45).a(35, -40).tw(-0.45).ln(0.15).st(0.12).spr(0.1),
+                    k(0.42).w(25, -15).a(20, -25).tw(-0.2).ln(0.1).st(0.25),
+                    k(0.5).w(-5, 25).a(5, -5).tw(0.25).ln(0.02).st(0.32),
+                    k(0.6).w(-40, 65).a(-15, 30).tw(0.45).ln(-0.1).st(0.3),
+                    k(0.75).w(-20, 50).a(5, 0).tw(0.25).ln(-0.05).st(0.25), rest(1));
+                // Level: wound far round to its right, swept flat through them and on round to its left.
+                case 2 -> filled(arm, rest(0), k(0.12).w(10, 30).a(30, -20),
+                    k(0.3).w(-110, 5).a(-45, -10).tw(0.6).ln(-0.05).sd(0.06).st(0.12).spr(0.12),
+                    k(0.42).w(-55, 2).a(-20, -12).tw(0.3).st(0.25).spr(0.14),
+                    k(0.5).w(0, 0).a(10, -15).tw(-0.1).ln(0.12).st(0.33).spr(0.14),
+                    k(0.6).w(75, -5).a(45, -20).tw(-0.6).ln(0.14).sd(-0.06).st(0.33),
+                    k(0.75).w(45, 10).a(35, -20).tw(-0.3).ln(0.06).st(0.25), rest(1));
+                // A thrust: drawn back to its right hip, its point on them, driven straight out with a long stride.
+                case 3 -> filled(arm, rest(0), k(0.12).w(0, 25).a(30, -25).tw(0.05),
+                    k(0.3).w(0, 5).a(45, -45).tw(0.55).ln(-0.08).st(0.25).bk(),
+                    k(0.42).w(0, 3).a(25, -25).tw(0.1).st(0.3),
+                    k(0.5).w(0, 2).a(5, -5).tw(-0.35).ln(0.22).st(0.5),
+                    k(0.6).w(0, 2).a(5, -5).tw(-0.37).ln(0.23).st(0.5),
+                    k(0.75).w(0, 10).a(15, -20).tw(-0.15).ln(0.1).st(0.35), rest(1));
                 // A whole turn to its left, the blade level out to its right.
-                case 4 -> new double[][] {rest(arm, 0), k(0.2, -60, -15, -90, 0, 0.1, 0.05, 0, 1.0, 0.3), k(0.5, -60, -15, -90, 0, 0, 0.1, 1.5, 1.2, Math.PI),
-                    k(0.8, -60, -15, -90, 0, 0.1, 0.05, 1.0, 1.0, TURN - 0.4), rest(arm, 1, TURN)};
-                // Cleaving: raised behind its head, brought straight down the middle with a long step.
-                default -> new double[][] {rest(arm, 0), k(0.3, 15, 125, 11.5, 155, 0, -0.15, -1, 0, 0), k(0.5, 15, -10, 11.5, -15, 0, 0.3, 4, 0.6, 0),
-                    k(0.68, 15, -25, 11.5, -35, 0, 0.38, 4, 0.8, 0), rest(arm, 1)};
+                case 4 -> filled(arm, rest(0), k(0.12).w(-30, 15).a(-5, -20).tw(0.25).sp(-0.25),
+                    k(0.3).w(-95, 5).a(-70, -10).tw(0.15).sp(0.6).st(0.15).spr(0.14),
+                    k(0.5).w(-95, 0).a(-70, -10).tw(0.05).ln(0.05).sp(HALF).st(0.2).spr(0.14),
+                    k(0.7).w(-95, 0).a(-70, -10).sp(5.0).st(0.2).spr(0.14),
+                    k(0.85).w(-50, 15).a(-20, -15).sp(TURN - 0.2).st(0.15), rest(1, TURN));
+                // Cleaving: a dip, raised behind its head, brought straight down the middle with a long stride.
+                default -> filled(arm, rest(0), k(0.12).w(0, 50).a(25, -15).ln(0.04),
+                    k(0.3).w(0, 160).a(5, 130).ln(-0.16).st(0.22).bk(),
+                    k(0.42).w(0, 95).a(5, 100).ln(-0.05).st(0.3),
+                    k(0.5).w(0, -22).a(5, -14).ln(0.22).st(0.48).spr(0.12),
+                    k(0.6).w(0, -32).a(5, -24).ln(0.22).st(0.48).spr(0.12),
+                    k(0.75).w(0, 0).a(15, -25).ln(0.15).st(0.32), rest(1));
             };
         };
     }
 
     /** {@code ability}'s keys, over its whole length (0..1). */
     static double[][] keys(Arm arm, Arm.Ability ability) {
-        double total = ability.total;
+        double t = ability.total;
         return switch (ability) {
-            // Thrown: raised back, cast at them; held taut, dragging (leaning back, braced); whipped down for the slam.
-            case BIND -> new double[][] {rest(arm, 0), k(4 / total, -40, 60, -60, 90, 0.3, -0.1, -0.5, 0, 0), k(8 / total, 5, 0, 5, -10, -0.2, 0.15, 2, 0.3, 0),
-                k(13 / total, -20, -40, -30, -20, 0.2, -0.15, -1, 1.5, 0), k(21 / total, -25, -25, -40, -10, 0.25, -0.2, -1.5, 1.5, 0),
-                k(24 / total, 10, -60, 10, -80, -0.1, 0.35, 1.5, 2.0, 0), k(28 / total, 10, -55, 10, -70, -0.05, 0.3, 1.0, 1.8, 0), rest(arm, 1)};
+            // Raised back and cast; hauled on with both hands, leaning back, braced wide; raised; whipped down for the slam.
+            case BIND -> filled(arm, rest(0), k(3 / t).w(-30, 120).a(-20, 110).tw(0.3).ln(-0.12).st(0.05).l(30, -10),
+                k(8 / t).w(0, 5).a(0, 5).tw(-0.2).ln(0.15).st(0.3).l(-30, -60),
+                k(12 / t).w(0, -5).a(-10, -25).tw(0.1).ln(-0.15).st(0.28).bk().spr(0.12).l(0, -20),
+                k(18 / t).w(-10, -10).a(-25, -35).tw(0.25).ln(-0.2).st(0.32).bk().spr(0.16).l(10, -30),
+                k(22 / t).w(-20, 30).a(-15, 60).tw(0.2).ln(-0.15).st(0.25).bk().spr(0.12).l(20, -40),
+                k(24 / t).w(0, -50).a(0, -40).tw(-0.1).ln(0.3).st(0.35).spr(0.12).l(-20, -60),
+                k(28 / t).w(0, -30).a(5, -45).ln(0.18).st(0.3), rest(1));
             case FLAY -> flay(arm, ability);
-            // Drawn back over the shoulder (one-handed: the left hand points the way), thrown, the arm following through.
-            case JAVELIN -> new double[][] {rest(arm, 0), k(6 / total, -100, 60, 70, 10, 0.2, -0.1, -1, 0.5, 0), k(12 / total, -123, 45, 57, 15, 0.3, -0.15, -1.5, 0.5, 0),
-                k(14 / total, 57, 20, 57, 5, -0.8, 0.25, 3, 0.5, 0), k(17 / total, 6, -25, 6, -20, -0.9, 0.3, 3, 0.8, 0),
-                k(26 / total, 40, -30, 50, -5, -0.3, 0.1, 1, 0.3, 0), rest(arm, 1)};
-            // Crouched, drawn back; then driven through them, the whole body behind it.
-            case PIERCE -> new double[][] {rest(arm, 0), k(4 / total, 70, -45, 77, -3, 0.35, 0.2, -1.5, 3.0, 0), k(8 / total, 70, -45, 77, -3, 0.35, 0.25, -1.5, 3.0, 0),
-                k(9.5 / total, 35, -8, 34, 2, -0.4, 0.35, 6, 1.5, 0), k(15 / total, 35, -8, 34, 2, -0.4, 0.35, 6, 1.5, 0), rest(arm, 1)};
-            // Crouched with it raised, up off the ground, brought down on it.
-            case QUAKE -> new double[][] {rest(arm, 0), k(3 / total, 14, 110, 14, 140, 0, 0.1, 0, 3.0, 0), k(9 / total, 14, 125, 14, 155, 0, -0.15, 0, 0, 0),
-                k(14 / total, 14, -20, 14, -28, 0, 0.6, 2.5, 4.0, 0), k(19 / total, 14, -20, 14, -30, 0, 0.55, 2.5, 3.5, 0), rest(arm, 1)};
-            // Two whole turns to its left, held out level to its right.
-            case WHIRL -> new double[][] {rest(arm, 0), k(5 / total, -70, -5, -95, 0, 0.3, 0.05, 0, 1.0, 0), k(10 / total, -70, -5, -95, 0, 0.3, 0.05, 0.5, 1.2, 1.4),
-                k(22 / total, -70, -5, -95, 0, 0.3, 0.05, 0.5, 1.2, 2.0 * TURN - 1.4), k(27 / total, -70, -5, -95, 0, 0.3, 0.05, 0, 1.0, 2.0 * TURN),
-                rest(arm, 1, 2.0 * TURN)};
-            // Crouched with it raised, the leap, raised high in the air, brought down where it lands.
-            case LEAP -> new double[][] {rest(arm, 0), k(5 / total, 15, 110, 11, 150, 0, 0.15, 0, 3.5, 0), k(12 / total, 15, 125, 11, 160, 0, -0.1, 0, 0, 0),
-                k(17 / total, 15, -15, 11, -25, 0, 0.4, 2, 3.0, 0), k(22 / total, 15, -20, 11, -30, 0, 0.35, 2, 2.5, 0), rest(arm, 1)};
-            // Drawn far round to its right, the great sweep through everything in front, on round to its left.
-            case CLEAVE -> new double[][] {rest(arm, 0), k(8 / total, -40, -10, -73, 10, 0.8, -0.05, -0.5, 1.0, 0), k(12 / total, 25, -15, 11.5, 0, 0, 0.15, 3, 1.5, 0),
-                k(16 / total, 60, -20, 70, -5, -0.9, 0.2, 3, 1.5, 0), k(22 / total, 55, -20, 60, -5, -0.7, 0.15, 2, 1.0, 0), rest(arm, 1)};
+            // Drawn back over its right shoulder (the left hand off the shaft, pointing at them), thrown with a stride, followed through.
+            case JAVELIN -> filled(arm, rest(0), k(5 / t).w(0, 20).a(-160, 50).tw(0.5).ln(-0.1).st(0.1).l(5, 0),
+                k(12 / t).w(0, 12).a(-175, 40).tw(0.7).ln(-0.15).st(0.3).bk().spr(0.1).l(0, 5),
+                k(14 / t).w(0, 5).a(0, 25).tw(-0.5).ln(0.2).st(0.45).l(-30, -40),
+                k(17 / t).w(10, -30).a(10, -30).tw(-0.7).ln(0.28).st(0.45).l(-20, -60),
+                k(26 / t).w(0, 0).a(5, -30).tw(-0.2).ln(0.1).st(0.3), rest(1));
+            // Crouched and coiled; then a sprint through them, the spear driven out ahead (its legs running).
+            case PIERCE -> filled(arm, rest(0), k(4 / t).w(0, -2).a(15, -55).tw(0.6).ln(0.2).st(0.3).bk().spr(0.2),
+                k(8 / t).w(0, -2).a(15, -55).tw(0.6).ln(0.22).st(0.3).bk().spr(0.2),
+                k(9.5 / t).w(0, 4).a(0, -5).tw(-0.45).ln(0.3).st(0.5),
+                k(11 / t).w(0, 4).a(0, -5).tw(-0.45).ln(0.3).st(-0.45),
+                k(12.5 / t).w(0, 4).a(0, -5).tw(-0.45).ln(0.3).st(0.45),
+                k(14 / t).w(0, 4).a(0, -5).tw(-0.45).ln(0.3).st(-0.45),
+                k(15.5 / t).w(0, 4).a(0, -5).tw(-0.45).ln(0.28).st(0.4),
+                k(20 / t).w(0, 3).a(5, -20).tw(-0.2).ln(0.12).st(0.3), rest(1));
+            // Sunk wide with it raised; up, raised high behind the head; brought down on the ground in front.
+            case QUAKE -> filled(arm, rest(0), k(3 / t).w(0, 120).a(10, 100).ln(0.12).st(0.1).spr(0.22),
+                k(7 / t).w(0, 160).a(5, 140).ln(-0.18).st(0.0).spr(0.05),
+                k(11 / t).w(0, 100).a(5, 110).ln(0.0).st(0.15).spr(0.1),
+                k(14 / t).w(0, -36).a(0, -30).ln(0.22).st(0.42).spr(0.22),
+                k(19 / t).w(0, -38).a(0, -32).ln(0.22).st(0.42).spr(0.22),
+                k(25 / t).w(0, 10).a(15, -25).ln(0.15).st(0.25).spr(0.12), rest(1));
+            // Coiled to its right, then two whole turns to its left held out level, braced wide.
+            case WHIRL -> filled(arm, rest(0), k(5 / t).w(-80, 10).a(-50, -10).tw(0.35).sp(-0.3).st(0.12).spr(0.15),
+                k(10 / t).w(-95, 0).a(-70, -8).tw(0.2).sp(2.0).st(0.15).spr(0.18),
+                k(16 / t).w(-95, 0).a(-70, -8).tw(0.2).sp(5.6).st(0.15).spr(0.18),
+                k(22 / t).w(-95, 0).a(-70, -8).tw(0.2).sp(9.4).st(0.15).spr(0.18),
+                k(27 / t).w(-80, 5).a(-60, -8).tw(0.25).sp(2.0 * TURN).st(0.15).spr(0.16),
+                k(31 / t).w(-30, 30).a(-10, -15).sp(2.0 * TURN).st(0.15), rest(1, 2.0 * TURN));
+            // Sunk with it raised, the leap, raised high in the air, cut down where it lands with a stride.
+            case LEAP -> filled(arm, rest(0), k(4 / t).w(0, 100).a(10, 90).ln(0.15).st(0.1).spr(0.2),
+                k(6 / t).w(0, 140).a(5, 125).ln(-0.1).st(0.0).spr(0.05),
+                k(12 / t).w(0, 165).a(5, 140).ln(-0.2).st(0.2).spr(0.05),
+                k(15 / t).w(0, 80).a(5, 100).ln(0.0).st(0.3),
+                k(17 / t).w(0, -26).a(5, -18).ln(0.22).st(0.48).spr(0.15),
+                k(22 / t).w(0, -28).a(5, -20).ln(0.22).st(0.48).spr(0.15),
+                k(26 / t).w(0, 10).a(15, -25).ln(0.12).st(0.3), rest(1));
+            // Raised, drawn far round to its right (the blade behind it), the great sweep through everything in front, on round to its left.
+            case CLEAVE -> filled(arm, rest(0), k(5 / t).w(-60, 60).a(-30, 20).tw(0.5).ln(-0.08).st(0.1),
+                k(9 / t).w(-150, 15).a(-60, -5).tw(0.95).ln(-0.05).sd(0.08).st(0.25).bk().spr(0.15),
+                k(12 / t).w(0, 0).a(10, -15).tw(-0.05).ln(0.15).st(0.42).spr(0.16),
+                k(15 / t).w(110, -5).a(55, -20).tw(-0.95).ln(0.18).sd(-0.08).st(0.42).spr(0.16),
+                k(20 / t).w(80, 10).a(45, -20).tw(-0.7).ln(0.1).st(0.35), rest(1));
         };
     }
 
-    /** The Flay: a lash at each of its blows, across one way and back the other. */
+    /** The Flay: a lash at each of its blows, across one way and back the other, a short stride into each. */
     private static double[][] flay(Arm arm, Arm.Ability ability) {
         double total = ability.total;
-        java.util.List<double[]> out = new java.util.ArrayList<>();
-        out.add(rest(arm, 0));
+        java.util.List<K> out = new java.util.ArrayList<>();
+        out.add(rest(0));
         for (int i = 0; i < ability.hits.length; i++) {
-            boolean back = i % 2 == 1;
-            double side = back ? -1.0 : 1.0;
+            double side = i % 2 == 1 ? -1.0 : 1.0;
             double h = ability.hits[i];
-            out.add(k((h - 2.5) / total, -60 * side, 5, -90 * side, 10, 0.35 * side, 0, 0.5, 0.5, 0));
-            out.add(k(h / total, 45 * side, -10, 70 * side, -5, -0.3 * side, 0.1, 1.0, 0.8, 0));
+            out.add(k((h - 2.5) / total).w(-95 * side, 15).a(-60 * side, 5).tw(0.45 * side).ln(-0.03).st(0.18).l(40 * side, -35));
+            out.add(k(h / total).w(55 * side, -5).a(40 * side, -15).tw(-0.35 * side).ln(0.12).st(0.28).l(-40 * side, -45));
         }
-        out.add(rest(arm, 1));
-        return out.toArray(new double[0][]);
+        out.add(k((ability.total - 3.0) / total).w(20, -10).a(15, -40).ln(0.05).st(0.2));
+        out.add(rest(1));
+        return filled(arm, out.toArray(new K[0]));
     }
 
     /** {@code t} through a blow (0..1) as its keys run: its landing ({@code land}, 0..1) at 0.5. */
@@ -319,9 +547,9 @@ public final class WeaponPose {
         return c < l ? 0.5 * c / l : 0.5 + 0.5 * (c - l) / (1.0 - l);
     }
 
-    /** Its stance. */
+    /** Its stance: the quinque it takes after's, its feet set. */
     public static RigPose stance(Arm arm) {
-        return QuinquePose.hold(base(arm));
+        return posed(arm, filled(arm, rest(0), rest(1)), 0.0);
     }
 
     /** Its {@code step}th blow, {@code age} ticks in. */
@@ -332,13 +560,7 @@ public final class WeaponPose {
 
     /** {@code ability}, {@code age} ticks in. */
     public static RigPose ability(Arm arm, Arm.Ability ability, double age) {
-        RigPose p = posed(arm, keys(arm, ability), age / ability.total);
-        if (oneHanded(ability, age)) {
-            // The javelin's throw: the left hand off the shaft, pointing the way (the chest is turned to its right: forward is to its left).
-            QuinqueGrip.aimLeft(p, -1.35, -0.9, 0.0);
-            p.leftArmHold = 1.0F;
-        }
-        return p;
+        return posed(arm, keys(arm, ability), age / ability.total);
     }
 
     /** True while the left hand is off its grip ({@code ability} {@code age} ticks in): the javelin thrown one-handed, until it has grown back. */
@@ -359,24 +581,48 @@ public final class WeaponPose {
         double[] v = curve(keys, t);
         Quinque q = base(arm);
         RigPose p = QuinquePose.hold(q);
-        p.twist += (float)v[5];
-        p.lean += (float)v[6];
-        p.lunge += (float)v[7];
-        p.drop += (float)v[8];
-        p.spin += (float)v[9];
-        QuinquePose.step(p, q, (float)v[7]);
-        double[] arm1 = way(v[1], v[2]);
-        double[] weapon = way(v[3], v[4]);
-        // The keys' ways are the chest's as it turns, not as it leans: a level thrust stays level however far the body leans into it
-        // (the arm is drawn lean . Ry(twist) . its own turn).
-        double[][] lean = p.leanTurn();
-        if (lean != null) {
+        double lean = Math.max(-MOST_LEAN, Math.min(MOST_LEAN, v[LEAN]));
+        double side = Math.max(-MOST_SIDE, Math.min(MOST_SIDE, v[SIDE]));
+        p.twist += (float)v[TWIST];
+        p.lean += (float)lean;
+        p.side += (float)side;
+        p.spin += (float)v[SPIN];
+        // Its feet: a stride (the left foot forward for +, the right for -), the back foot where it stood; how wide apart.
+        double stride = v[STEP];
+        double spread = Math.max(0.0, v[SPREAD]);
+        p.leftLegX = (float)-stride;
+        p.rightLegX = (float)stride;
+        p.rightLegZ = (float)spread;
+        p.leftLegZ = (float)-spread;
+        p.legHold = 1.0F;
+        p.lunge += (float)(12.0 * Math.sin(Math.abs(stride)) * Math.max(-1.0, Math.min(1.0, v[SHIFT])));
+        p.drop += (float)(12.0 * (1.0 - Math.cos(stride) * Math.cos(spread)));
+        // The head on the foe: up against the lean, back against a part turn (a whole turn takes it round).
+        p.headX -= (float)(0.65 * lean);
+        double spin = v[SPIN];
+        p.headY -= (float)(spin * Math.max(0.0, 1.0 - Math.abs(spin) / 2.2) * 0.85);
+        // Its ways are relative to the foe: into the chest's frame (its twist, the stance's and the key's), then out of its lean.
+        double turn = Math.toDegrees(QuinqueHolds.of(q).twist() + v[TWIST]);
+        double[] armWay = way(v[A_AZ] + turn, v[A_EL]);
+        double[] weapon = way(v[W_AZ] + turn, v[W_EL]);
+        double[] free = way(v[L_AZ] + turn, v[L_EL]);
+        double[][] leanTurn = p.leanTurn();
+        if (leanTurn != null) {
             double[][] tw = RigPose.zyx(0.0, p.twist, 0.0);
-            double[][] fix = RigPose.multiply(QuinqueGrip.transpose(tw), RigPose.multiply(QuinqueGrip.transpose(lean), tw));
-            arm1 = QuinqueGrip.apply(fix, arm1);
+            double[][] fix = RigPose.multiply(QuinqueGrip.transpose(tw), RigPose.multiply(QuinqueGrip.transpose(leanTurn), tw));
+            armWay = QuinqueGrip.apply(fix, armWay);
             weapon = QuinqueGrip.apply(fix, weapon);
+            free = QuinqueGrip.apply(fix, free);
         }
-        point(p, arm, arm1, weapon);
+        point(p, arm, armWay, weapon);
+        if (!arm.twoHanded || v[L_AZ] != FREE_ARM[0] || v[L_EL] != FREE_ARM[1]) {
+            // A one-handed weapon's free arm swings against the blow (a two-handed one's is put on its grip after, but the javelin's).
+            float[] a = QuinqueGrip.angles(QuinqueGrip.between(new double[] {0.0, 1.0, 0.0}, unit(free)));
+            p.leftArmX = a[0];
+            p.leftArmY = a[1];
+            p.leftArmZ = a[2];
+            p.leftArmHold = 1.0F;
+        }
         return p;
     }
 

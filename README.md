@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.0.1 (HexGhoul): CCG weapons re-animated (footwork, no folding) and the greatsword, spear and hammer remodelled (testing)
+
+See `.github/release-notes-3.0.1.md`. The CCG weapons, redone after 3.0.0 shipped with animations that folded the body at the hips and a greatsword that looked like a strip of paper. Every blow and move of all four weapons is re-animated, and the sword, spear and hammer have new models. Not tested in game.
+
 ## 3.0.0 (HexGhoul): CCG rework: kagune-made weapons for the higher ranks (experimental) (testing)
 
 See `.github/release-notes-3.0.0.md`. Experimental. The CCG rework: investigators of Rank 4 and up may carry a weapon grown from a kagune (a tendril whip, a crystal spear, a flesh hammer, a bone greatsword), each with a long M1 string and two moves of its own that they use whenever they see fit. Not tested in game. Install matching versions on client and server (network protocol 87).

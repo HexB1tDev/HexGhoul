@@ -27,68 +27,92 @@ public class WeaponPosePreview {
     static final int W = 300;
     static final int H = 360;
 
+    /** Where in a blow its frames are drawn (its keys' times: 0.5 its landing). */
+    static final double[] KEYS = {0.0, 0.12, 0.3, 0.42, 0.5, 0.6, 0.75, 0.9};
+
     public static void main(String[] args) throws Exception {
         File out = new File(args.length > 0 ? args[0] : "build/weapon-preview");
+        double yaw = args.length > 1 ? Double.parseDouble(args[1]) : 40.0;
+        String tag = args.length > 2 ? args[2] : "";
         out.mkdirs();
+        int fw = 200;
+        int fh = 250;
         for (Arm arm : Arm.values()) {
-            List<String> labels = new ArrayList<>();
-            List<RigPose> poses = new ArrayList<>();
-            List<double[][]> whips = new ArrayList<>();
-            List<Float> grown = new ArrayList<>();
-            add(labels, poses, whips, grown, "stance", finish(arm, WeaponPose.stance(arm), false), arm, rest(arm), 1.0F);
+            List<String> rowNames = new ArrayList<>();
+            List<RigPose[]> rows = new ArrayList<>();
+            List<double[][][]> rowWhips = new ArrayList<>();
+            List<float[]> rowGrown = new ArrayList<>();
+            List<double[]> rowAges = new ArrayList<>();
             for (int step = 0; step < arm.length(); step++) {
                 Arm.Strike s = arm.strike(step);
-                for (double at : new double[] {s.land() * 0.55, s.land()}) {
-                    RigPose p = finish(arm, WeaponPose.strike(arm, step, at), false);
-                    double[][] w = arm == Arm.WHIP ? WhipPath.lash(step, at / s.total(), s.land() / (double)s.total(), WhipPath.length(false), at) : null;
-                    add(labels, poses, whips, grown, (at == s.land() ? "lands: " : "") + s.name(), p, arm, w, 1.0F);
+                double l = s.land() / (double)s.total();
+                RigPose[] frames = new RigPose[KEYS.length];
+                double[][][] whips = new double[KEYS.length][][];
+                float[] g = new float[KEYS.length];
+                double[] ages = new double[KEYS.length];
+                for (int i = 0; i < KEYS.length; i++) {
+                    double u = KEYS[i];
+                    double c = u < 0.5 ? u / 0.5 * l : l + (u - 0.5) / 0.5 * (1.0 - l);
+                    double age = c * s.total();
+                    ages[i] = age;
+                    frames[i] = finish(arm, WeaponPose.strike(arm, step, age), false);
+                    whips[i] = arm == Arm.WHIP ? WhipPath.lash(step, c, l, WhipPath.length(false), age) : null;
+                    g[i] = 1.0F;
                 }
+                rowNames.add((step + 1) + ". " + s.name());
+                rows.add(frames);
+                rowWhips.add(whips);
+                rowGrown.add(g);
+                rowAges.add(ages);
             }
             for (Arm.Ability a : arm.abilities()) {
-                double[] ages = switch (a) {
-                    case BIND -> new double[] {4, 8, 16, 24};
-                    case FLAY -> new double[] {6, 11, 16};
-                    case JAVELIN -> new double[] {12, 14, 22};
-                    case PIERCE -> new double[] {6, 11};
-                    case QUAKE -> new double[] {6, 14};
-                    case WHIRL -> new double[] {10, 13};
-                    case LEAP -> new double[] {5, 11, 17};
-                    case CLEAVE -> new double[] {8, 12, 15};
-                };
-                for (double age : ages) {
-                    RigPose p = finish(arm, WeaponPose.ability(arm, a, age), WeaponPose.oneHanded(a, age));
-                    double[][] w = a == Arm.Ability.BIND ? WhipPath.bind(age, new double[] {4.0, 0.0, -0.3}, 0.35, WhipPath.length(false), age)
+                RigPose[] frames = new RigPose[KEYS.length];
+                double[][][] whips = new double[KEYS.length][][];
+                float[] g = new float[KEYS.length];
+                double[] ages = new double[KEYS.length];
+                for (int i = 0; i < KEYS.length; i++) {
+                    double age = (i + 0.5) / KEYS.length * a.total;
+                    ages[i] = age;
+                    frames[i] = finish(arm, WeaponPose.ability(arm, a, age), WeaponPose.oneHanded(a, age));
+                    whips[i] = a == Arm.Ability.BIND ? WhipPath.bind(age, new double[] {4.0, 0.0, -0.3}, 0.35, WhipPath.length(false), age)
                         : a == Arm.Ability.FLAY ? WhipPath.flay(age, WhipPath.length(false), age) : null;
-                    add(labels, poses, whips, grown, a.title + " " + (int)age + "t", p, arm, w, WeaponPose.grown(a, age));
+                    g[i] = WeaponPose.grown(a, age);
                 }
+                rowNames.add(a.title);
+                rows.add(frames);
+                rowWhips.add(whips);
+                rowGrown.add(g);
+                rowAges.add(ages);
             }
-            int cols = 5;
-            int rows = (poses.size() + cols - 1) / cols;
-            BufferedImage sheet = new BufferedImage(W * cols, H * rows + 34, BufferedImage.TYPE_INT_RGB);
+            BufferedImage sheet = new BufferedImage(fw * KEYS.length + 150, fh * rows.size() + 34, BufferedImage.TYPE_INT_RGB);
             Graphics2D g = sheet.createGraphics();
             g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
             g.setColor(new Color(26, 26, 32));
             g.fillRect(0, 0, sheet.getWidth(), sheet.getHeight());
             g.setColor(Color.WHITE);
             g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 18));
-            g.drawString("3.0.0: " + arm.title + " (held as the " + WeaponPose.base(arm).name().toLowerCase() + ")", 10, 24);
-            for (int i = 0; i < poses.size(); i++) {
-                RigPose p = poses.get(i);
-                List<PoseRender.Tri> extra = new ArrayList<>();
-                weapon(extra, p, arm, grown.get(i));
-                if (arm == Arm.WHIP) {
-                    tendril(extra, p, whips.get(i));
-                }
-                BufferedImage img = PoseRender.render(p, PoseRender.orbit(i % 2 == 0 ? 35 : 55, 14, 7.2, 1.0), W, H, extra);
-                int x = (i % cols) * W;
-                int y = 34 + (i / cols) * H;
-                g.drawImage(img, x, y, null);
-                g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 13));
+            g.drawString("3.0.1: " + arm.title + " - every blow of its string and both moves, frame by frame (the 5th frame of a blow is where it lands)", 10, 24);
+            for (int r = 0; r < rows.size(); r++) {
+                g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 14));
                 g.setColor(Color.WHITE);
-                g.drawString(labels.get(i), x + 6, y + 16);
+                g.drawString(rowNames.get(r), 8, 34 + r * fh + fh / 2);
+                for (int i = 0; i < KEYS.length; i++) {
+                    RigPose p = rows.get(r)[i];
+                    List<PoseRender.Tri> extra = new ArrayList<>();
+                    weapon(extra, p, arm, rowGrown.get(r)[i]);
+                    if (arm == Arm.WHIP) {
+                        double[][] w = rowWhips.get(r)[i];
+                        tendril(extra, p, w == null ? rest(arm) : w);
+                    }
+                    BufferedImage img = PoseRender.render(p, PoseRender.orbit(yaw, 12, 7.8, 0.9), fw, fh, extra);
+                    g.drawImage(img, 150 + i * fw, 34 + r * fh, null);
+                    g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 11));
+                    g.setColor(new Color(220, 220, 220));
+                    g.drawString(String.format("%.1ft", rowAges.get(r)[i]), 150 + i * fw + 4, 34 + r * fh + 13);
+                }
             }
             g.dispose();
-            File file = new File(out, arm.name().toLowerCase() + "-poses-3.0.0.png");
+            File file = new File(out, arm.name().toLowerCase() + "-moves-3.0.1" + tag + ".png");
             ImageIO.write(sheet, "png", file);
             System.out.println(file);
         }

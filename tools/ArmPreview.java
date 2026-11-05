@@ -34,7 +34,7 @@ public class ArmPreview {
         g.fillRect(0, 0, sheet.getWidth(), sheet.getHeight());
         g.setColor(Color.WHITE);
         g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 20));
-        g.drawString("3.0.0: the higher ranks' quinques (top: Rank 4-7; bottom: Rank 8-9 masterworks)", 10, 28);
+        g.drawString("3.0.1: the higher ranks' quinques (top: Rank 4-7; bottom: Rank 8-9 masterworks)", 10, 28);
         for (int row = 0; row < 2; row++) {
             for (int i = 0; i < rigid.length; i++) {
                 boolean master = row == 1;
@@ -63,7 +63,7 @@ public class ArmPreview {
             }
         }
         g.dispose();
-        ImageIO.write(sheet, "png", new File(out, "arms-3.0.0.png"));
+        ImageIO.write(sheet, "png", new File(out, "arms-3.0.1.png"));
         // Big single shots, three-quarter.
         for (Arm arm : rigid) {
             if (arm == Arm.WHIP) {
@@ -75,7 +75,7 @@ public class ArmPreview {
             double mid = (span[0] + span[1]) / 2.0;
             s.camera(new double[] {0.0, 0.0, -mid}, Math.toRadians(-90.0 + 32.0), Math.toRadians(20.0), (span[1] - span[0]) * 1.1);
             s.mesh(mesh);
-            ImageIO.write(s.image, "png", new File(out, arm.name().toLowerCase() + "-3.0.0.png"));
+            ImageIO.write(s.image, "png", new File(out, arm.name().toLowerCase() + "-3.0.1.png"));
         }
         whips(out);
     }
@@ -92,7 +92,7 @@ public class ArmPreview {
         g.fillRect(0, 0, sheet.getWidth(), sheet.getHeight());
         g.setColor(Color.WHITE);
         g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 20));
-        g.drawString("3.0.0: the Tendril Whip (seen from above and behind; the investigator's fist at the dot, facing up the picture)", 10, 28);
+        g.drawString("3.0.1: the Tendril Whip (seen from above and behind; the investigator's fist at the dot, facing up the picture)", 10, 28);
         for (int i = 0; i < names.length; i++) {
             Scene s = new Scene(w, h);
             s.cameraWorld(new double[] {2.6, 0.0, 0.0}, Math.toRadians(180.0), Math.toRadians(62.0), 8.5);
@@ -116,7 +116,7 @@ public class ArmPreview {
             g.drawString(names[i], (i % 4) * w + 8, 40 + (i / 4) * h + h - 10);
         }
         g.dispose();
-        ImageIO.write(sheet, "png", new File(out, "whip-3.0.0.png"));
+        ImageIO.write(sheet, "png", new File(out, "whip-3.0.1.png"));
     }
 
     /** A path in the investigator's frame {forward, left, up} into the weapon's hand frame held level (x across, y down, z back), from its knot. */
