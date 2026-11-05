@@ -854,17 +854,16 @@ public final class EtoPose {
      */
     public static void crack(RigPose p, float t) {
         float w = crackWeight(t);
-        float press = crackPress(t);
-        float snap = crackSnap(t);
-        p.rightArmX = (CRACK_ARM_X - 0.08F * press + 0.12F * snap) * w;
-        p.rightArmY = (CRACK_ARM_Y - 0.08F * press) * w;
+        float r = crackRelease(t);
+        p.rightArmX = crackArmX(t) * w;
+        p.rightArmY = crackArmY(t) * w;
         p.rightArmZ = 0.03F * w;
-        p.rightElbow = (CRACK_ELBOW + 0.1F * snap) * w;
+        p.rightElbow = crackElbow(t) * r;
         p.leftArmX = 0.06F * w;
         p.leftArmY = 0.0F;
         p.leftArmZ = -0.06F * w;
         p.headX = 0.14F * w;
-        p.headZ = 0.3F * snap;
+        p.headZ = 0.3F * crackSnap(t);
     }
 
     /**
@@ -876,13 +875,40 @@ public final class EtoPose {
         if (w <= 0.0F) {
             return;
         }
-        float press = crackPress(t);
-        float snap = crackSnap(t);
-        p.rightArmX += (CRACK_ARM_X - 0.08F * press + 0.12F * snap - p.rightArmX) * w;
-        p.rightArmY += (CRACK_ARM_Y - 0.08F * press - p.rightArmY) * w;
+        float r = crackRelease(t);
+        p.rightArmX += (crackArmX(t) - p.rightArmX) * w;
+        p.rightArmY += (crackArmY(t) - p.rightArmY) * w;
         p.rightArmZ += (0.03F - p.rightArmZ) * w;
-        p.rightElbow += (CRACK_ELBOW + 0.1F * snap - p.rightElbow) * w;
-        p.headZ += 0.3F * snap;
+        p.rightElbow += (crackElbow(t) - p.rightElbow) * r * w;
+        p.headZ += 0.3F * crackSnap(t);
+    }
+
+    /**
+     * 2.5.3 (the owner: "make sure the arm stretches and bends smoothly"): the arm's swing at {@code t}: reached out straight first, well
+     * forward ({@link #CRACK_RISE}), then, as the elbow bends ({@link #crackBend}), settling a little lower and turning in toward the
+     * chest; the thumb's press and the crack's flick on top.
+     */
+    static float crackArmX(float t) {
+        return CRACK_REACH_X + (CRACK_ARM_X - CRACK_REACH_X) * crackBend(t) - 0.08F * crackPress(t) + 0.12F * crackSnap(t);
+    }
+
+    static float crackArmY(float t) {
+        return CRACK_REACH_Y + (CRACK_ARM_Y - CRACK_REACH_Y) * crackBend(t) - 0.08F * crackPress(t);
+    }
+
+    /** 2.5.3: the elbow: straight while the arm stretches out, then bending smoothly (the hand coming up), straightening as it lowers. */
+    static float crackElbow(float t) {
+        return CRACK_ELBOW * crackBend(t) + 0.1F * crackSnap(t);
+    }
+
+    /** 2.5.3: how far the elbow has bent (0 to 1, eased): from {@link #CRACK_BEND} ticks, once the arm is mostly out, until the press. */
+    static float crackBend(float t) {
+        return ease((t - CRACK_BEND) / (CRACK_AT - CRACK_BEND - 0.5F));
+    }
+
+    /** 2.5.3: how much is left as it lowers (1 until {@link #CRACK_DOWN}, eased to 0 by {@link #CRACK_END}). */
+    static float crackRelease(float t) {
+        return 1.0F - ease((t - CRACK_DOWN) / (CRACK_END - CRACK_DOWN));
     }
 
     /** 2.5.1: how much of the crack is on the body {@code t} ticks in: 0, eased up to 1 by {@link #CRACK_RISE}, held, eased back to 0. */
@@ -890,9 +916,7 @@ public final class EtoPose {
         if (t <= 0.0F || t >= CRACK_END) {
             return 0.0F;
         }
-        float up = ease(t / CRACK_RISE);
-        float down = ease((t - CRACK_DOWN) / (CRACK_END - CRACK_DOWN));
-        return up * (1.0F - down);
+        return ease(t / CRACK_RISE) * crackRelease(t);
     }
 
     /** 2.5.1: the thumb pressing into the finger before the crack (0 to 1, eased). */
@@ -907,14 +931,19 @@ public final class EtoPose {
 
     /** When the finger cracks (ticks into the gesture): the same moment its sound is played (EtoGesture.CRACK_SNAP). */
     public static final float CRACK_AT = com.hex.kagune.control.npc.EtoGesture.CRACK_SNAP;
-    /** 2.5.1: the arm all the way up by here; easing down from here; at rest again by here (ticks). */
-    public static final float CRACK_RISE = 18.0F;
+    /** 2.5.1: the arm all the way out by here (2.5.3: straight); easing down from here; at rest again by here (ticks). */
+    public static final float CRACK_RISE = 14.0F;
+    /** 2.5.3: the elbow starts bending here, the arm most of the way out. */
+    public static final float CRACK_BEND = 9.0F;
     public static final float CRACK_DOWN = 34.0F;
     public static final float CRACK_END = 52.0F;
     /** The arm at the crack: out about 50 degrees, a little in toward the chest, the elbow bent (a player's arm shows it). */
     static final float CRACK_ARM_X = -0.9F;
     static final float CRACK_ARM_Y = -0.3F;
     static final float CRACK_ELBOW = 0.75F;
+    /** 2.5.3: the arm stretched out before it bends: further forward, straight, barely turned in. */
+    static final float CRACK_REACH_X = -1.1F;
+    static final float CRACK_REACH_Y = -0.12F;
 
     /** Waiting for a kiss: hands behind her back, her top half leaning in by {@code lean}, chin up, on her toes, swaying a little. */
     private static void kiss(RigPose p, float lean, float t) {

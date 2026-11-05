@@ -198,7 +198,7 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/bone/finger_crack",
-        "volume": 1.0
+        "volume": 0.99
       }
     ]
   },
