@@ -46,7 +46,9 @@ public final class RinkakuIdleClient {
         }
         long key = (long)player.m_19879_() * 32L + limb;
         double[] state = WEIGHTS.computeIfAbsent(key, k -> new double[] {0.0, time});
-        boolean rest = view.active() && view.mode() == TendrilMode.IDLE;
+        // 3.0.5: holding someone, the tails not holding them rest as they do at peace (not the original's twitching coil).
+        boolean rest = view.active() && (view.mode() == TendrilMode.IDLE
+            || com.hex.kagune.control.client.render.StrikePaths.holding(view.mode()) && view.heldEntityId(limb) == 0);
         double dt = time - state[1];
         if (!(dt >= 0.0) || dt > 40.0) {
             state[0] = rest ? 1.0 : 0.0; // back after a long while (out of sight): as it is now

@@ -56,6 +56,14 @@ public final class StrikePaths {
     static final double ACTION_RESPONSE = 0.6;
     /** At rest only this share of the original's sway is kept round the calm shape (PathSmoother). */
     static final double IDLE_WIGGLE = 0.25;
+    /** 3.0.5: the tail holding someone: followed calmly, only this share of the original's sway kept. */
+    static final double HOLD_RESPONSE = 2.0;
+    static final double HOLD_WIGGLE = 0.35;
+
+    /** 3.0.5: the modes in which a tail holds someone (the others at rest meanwhile). */
+    public static boolean holding(TendrilMode mode) {
+        return mode == TendrilMode.HOLD || mode == TendrilMode.LIFT || mode == TendrilMode.CRUSH;
+    }
     private static final java.util.Map<TendrilChain, PathSmoother> SMOOTHERS = new java.util.WeakHashMap<>();
 
     /** {@code path} (world) smoothed in the player's own frame about its root, so his walking and turning carry it unsmoothed. */
@@ -157,9 +165,13 @@ public final class StrikePaths {
         // 3.1.0: the tentacles' own motion smoothed (PathSmoother), before the clearance so that still has the last word.
         boolean smoothed = !layout.segmented();
         if (smoothed) {
-            boolean idle = view.mode() == TendrilMode.IDLE;
-            path = smooth(chain, path, yaw, idle ? IDLE_RESPONSE : ACTION_RESPONSE, idle ? IDLE_WIGGLE : 1.0,
-                com.hex.kagune.control.client.ControlClient.worldTime(partialTick));
+            // 3.0.5 (the owner: "While Rinkaku is holding a target ... the tails are constantly shaking"): holding someone, the tails not
+            // holding them are at rest (they took the original's twitching, coiled motion at full strength), and the one holding is
+            // calmed too (its end is wrapped round them by the original after this).
+            boolean holds = holding(view.mode()) && view.heldEntityId(limb) != 0;
+            boolean idle = view.mode() == TendrilMode.IDLE || holding(view.mode()) && !holds;
+            path = smooth(chain, path, yaw, idle ? IDLE_RESPONSE : holds ? HOLD_RESPONSE : ACTION_RESPONSE,
+                idle ? IDLE_WIGGLE : holds ? HOLD_WIGGLE : 1.0, com.hex.kagune.control.client.ControlClient.worldTime(partialTick));
         }
         // 2.0.51: at rest, the shape the tails were drawn with (RinkakuIdle), not the original chain's coiled, twitching rest.
         if (!layout.segmented()) {
