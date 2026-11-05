@@ -160,9 +160,24 @@ public final class ChildRules {
         return stage.learns() && skill < SKILL_MOST && (lastLesson == Long.MIN_VALUE || now - lastLesson >= LESSON_EVERY);
     }
 
-    /** Whether it fights (old enough and taught at least once); otherwise it runs to its parent. */
+    /**
+     * Whether it fights; otherwise it runs to its parent. 2.5.4 (the owner: "Sons/Daughters should also attack mobs if they get close and on
+     * the line of sight"): any child old enough to be taught fights, taught or not (a lesson makes its blows harder, {@link #damage}); a
+     * baby or a toddler still runs.
+     */
     public static boolean fights(ChildStage stage, int skill) {
-        return stage.learns() && skill > 0;
+        return stage.learns();
+    }
+
+    /** 2.5.4: how close a monster has to come for it to go for it, if it can see it (blocks). */
+    public static final double SPOTS = 8.0;
+
+    /**
+     * 2.5.4: whether it goes for a monster {@code distance} blocks off that isn't after its family: close ({@link #SPOTS}) and in its line of
+     * sight ({@code seen}); never one behind a wall.
+     */
+    public static boolean spots(double distance, boolean seen) {
+        return seen && distance <= SPOTS;
     }
 
     /** What its blow deals. */

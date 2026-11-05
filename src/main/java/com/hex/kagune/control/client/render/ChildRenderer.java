@@ -422,7 +422,7 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
             // 1.3.79: its skin in the look nearest the hair and eyes its genes gave it (ChildLooks: other hair and eye colours).
             return texture(com.hex.kagune.control.family.ChildLooks.pick(skin.key(), view.genome().hair(), view.genome().eyes()).texture());
         }
-        boolean kakugan = view.turned() && view.genome().kakugan() != com.hex.kagune.control.family.Genome.NONE;
+        boolean kakugan = ChildClient.eyesOut(view); // 2.5.4: as it fights, and all night
         String key = view.genome().save() + "|" + view.stage().ordinal() + "|" + kakugan;
         ResourceLocation made = MADE.get(key);
         if (made == null) {
@@ -514,8 +514,8 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
                         1.0F, 1.0F, 1.0F, 1.0F);
                     return;
                 }
-                if (!view.turned()) {
-                    return;
+                if (!ChildClient.eyesOut(view)) {
+                    return; // 2.5.4: its kakugan out as it fights, and all night
                 }
                 int eyes = view.genome().kakugan();
                 for (String side : new String[] {"r", "l"}) {

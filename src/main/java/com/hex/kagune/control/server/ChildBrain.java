@@ -964,7 +964,8 @@ public final class ChildBrain {
             boolean family = target == npc || target instanceof ServerPlayer player && child.parent(Pregnancies.player(player.m_20148_()))
                 || target != null && SiblingLife.afterSibling(target, child, level); // 1.3.51: after a brother or sister: theirs to fight too
             double distance = body.m_20280_(npc);
-            if ((family || FightRules.notices(Math.sqrt(distance))) && distance < bestDistance) {
+            // 2.5.4: one after its family, wherever it is about; any other close and in its line of sight (ChildRules.spots).
+            if ((family || ChildRules.spots(Math.sqrt(distance), npc.m_142582_(body))) && distance < bestDistance) {
                 best = body;
                 bestDistance = distance;
             }

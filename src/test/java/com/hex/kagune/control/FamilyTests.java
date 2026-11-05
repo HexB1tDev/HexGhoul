@@ -1178,12 +1178,20 @@ check(com.hex.kagune.control.graft.GraftStage.TRANSPLANT.limbs(com.hex.kagune.co
             && com.hex.kagune.control.family.ChildRules.teachable(teen, 1, 100L, 100L + com.hex.kagune.control.family.ChildStage.DAY)
             && !com.hex.kagune.control.family.ChildRules.teachable(teen, com.hex.kagune.control.family.ChildRules.SKILL_MOST, Long.MIN_VALUE, 0L),
             "taught a lesson a day, child and teen only, up to the most");
-        check(!com.hex.kagune.control.family.ChildRules.fights(teen, 0) && com.hex.kagune.control.family.ChildRules.fights(teen, 1)
+        check(com.hex.kagune.control.family.ChildRules.fights(teen, 0) && com.hex.kagune.control.family.ChildRules.fights(teen, 1)
+            && com.hex.kagune.control.family.ChildRules.fights(com.hex.kagune.control.family.ChildStage.CHILD, 0)
+            && !com.hex.kagune.control.family.ChildRules.fights(baby, 3)
+            && !com.hex.kagune.control.family.ChildRules.fights(com.hex.kagune.control.family.ChildStage.TODDLER, 3)
+            && com.hex.kagune.control.family.ChildRules.damage(teen, 0, false) > 0.0F
+            && com.hex.kagune.control.family.ChildRules.damage(teen, 3, false) > com.hex.kagune.control.family.ChildRules.damage(teen, 0, false)
+            && com.hex.kagune.control.family.ChildRules.spots(6.0, true) && !com.hex.kagune.control.family.ChildRules.spots(6.0, false)
+            && !com.hex.kagune.control.family.ChildRules.spots(com.hex.kagune.control.family.ChildRules.SPOTS + 0.5, true)
             && com.hex.kagune.control.family.ChildRules.damage(baby, 5, true) == 0.0F
             && com.hex.kagune.control.family.ChildRules.damage(teen, 3, false) > com.hex.kagune.control.family.ChildRules.damage(
                 com.hex.kagune.control.family.ChildStage.CHILD, 3, false)
             && com.hex.kagune.control.family.ChildRules.damage(teen, 3, true) > com.hex.kagune.control.family.ChildRules.damage(teen, 3, false),
-            "it fights only once taught; a teen hits harder than a child, a ghoul harder still; a baby never");
+            "2.5.4: a child, a teen or a grown one fights a monster that comes close in its sight, taught or not (a lesson makes it hit harder); "
+                + "a teen hits harder than a child, a ghoul harder still; a baby or toddler never");
         boolean said = true;
         for (com.hex.kagune.control.family.ChildStage stage : com.hex.kagune.control.family.ChildStage.values()) {
             for (int seed = 0; seed < 6; seed++) {

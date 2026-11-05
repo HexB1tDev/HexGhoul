@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.5.4 (HexGhoul): Children fight monsters that come close in their sight; ghoul children's kakugan at night (testing)
+
+See `.github/release-notes-2.5.4.md`. Your sons and daughters stand their ground now: any child old enough to be taught (child, teen or grown) goes for a monster that comes close and that it can see, taught or not (lessons still make its blows harder); babies and toddlers still run to a parent. And at night a ghoul child's eyes turn to kakugan (the eye or eyes it was born with), not only while it fights.
+
 ## 2.5.3 (HexGhoul): The finger crack: the owner's sound; the arm stretches out, then bends, smoothly (testing)
 
 See `.github/release-notes-2.5.3.md`. The finger crack uses the owner's own sound now, and the arm stretches out straight first, then bends at the elbow (the hand curling up toward the chest) before the crack, all of it eased, never a jump; it straightens and lowers together afterwards.

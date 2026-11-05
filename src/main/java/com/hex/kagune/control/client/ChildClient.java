@@ -15,6 +15,21 @@ import net.minecraftforge.fml.common.Mod;
 /** 1.3.10: every child this client can see (fed only by the server, {@code S2CChild}): its name, looks, stage, who carries it, its kakugan. */
 @Mod.EventBusSubscriber(modid = "hexkagune", value = Dist.CLIENT)
 public final class ChildClient {
+    /**
+     * 2.5.4 (the owner: "At night their eyes are turn to kakugan"): a ghoul child's kakugan shows (the eye or eyes it has) while it fights,
+     * and all night long; a human child has none.
+     */
+    public static boolean eyesOut(View view) {
+        if (view == null || view.genome() == null || view.genome().kakugan() == Genome.NONE) {
+            return false;
+        }
+        if (view.turned()) {
+            return true;
+        }
+        net.minecraft.client.multiplayer.ClientLevel level = Minecraft.m_91087_().f_91073_;
+        return level != null && com.hex.kagune.control.npc.NpcRules.night(level.m_46468_());
+    }
+
     public record View(String name, Genome genome, ChildStage stage, int carrier, boolean turned, int ride,
                        com.hex.kagune.control.family.ChildMoment moment, long momentAt, double momentBegan, int partner,
                        com.hex.kagune.control.family.ChildCue cue, long cueAt, double cueBegan, float mother) {
