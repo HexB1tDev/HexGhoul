@@ -42,9 +42,43 @@ public final class ChildRenderer extends HumanoidMobRenderer<ChildNpc, PlayerMod
     /** 1.3.43: the children drawn this frame (their kagune is drawn after entities, as a wild ghoul's; cleared with theirs). */
     private static final java.util.Set<ChildNpc> DRAWN = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
 
-    /** 1.3.43: the children drawn so far this frame. */
+    /** 2.5.5: how near (blocks) a child with its kagune out has it drawn whether or not its body's draw was noted this frame. */
+    private static final double KAGUNE_ALWAYS = 48.0;
+
+    /**
+     * 1.3.43: the children drawn so far this frame. 2.5.5 (the owner: "Rinkaku on the kid still doesn't show"): and every living child
+     * within {@link #KAGUNE_ALWAYS} of the player with its kagune out (it fights: its kakugan out, or its kagune's own state), even if its
+     * body's draw was never noted (a mod that culls or replaces entity rendering, a body drawn by another path): the same fix the wild
+     * ghouls' tails had in 2.0.27.
+     */
     static java.util.List<ChildNpc> drawn() {
-        return new java.util.ArrayList<>(DRAWN);
+        java.util.List<ChildNpc> out = new java.util.ArrayList<>(DRAWN);
+        try {
+            net.minecraft.client.Minecraft minecraft = net.minecraft.client.Minecraft.m_91087_();
+            if (minecraft.f_91073_ != null && minecraft.f_91074_ != null) {
+                double clock = com.hex.kagune.control.client.PaleClient.clock(0.0F);
+                java.util.Set<ChildNpc> seen = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+                seen.addAll(out);
+                for (ChildNpc child : minecraft.f_91073_.m_6443_(ChildNpc.class, minecraft.f_91074_.m_20191_().m_82400_(KAGUNE_ALWAYS),
+                    living -> living.m_6084_() && !living.m_20145_())) {
+                    if (out.size() >= 256) {
+                        break;
+                    }
+                    ChildClient.View view = ChildClient.get(child.m_19879_());
+                    if (seen.contains(child) || view == null || !com.hex.kagune.control.family.KaguneGenes.any(view.genome().kagune())) {
+                        continue;
+                    }
+                    boolean out_ = view.turned() || com.hex.kagune.control.client.GhoulNpcClient.deploy(
+                        com.hex.kagune.control.client.GhoulNpcClient.get(child.m_19879_()), clock) > 0.005F;
+                    if (out_) {
+                        out.add(child);
+                    }
+                }
+            }
+        } catch (RuntimeException failure) {
+            com.hex.kagune.control.client.render.PlayerLayers.failed("the children near you", failure);
+        }
+        return out;
     }
 
     /** 1.3.43: the frame's list cleared (after both kagune renderers). */

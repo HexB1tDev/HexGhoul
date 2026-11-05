@@ -192,6 +192,7 @@ public final class GraftRenderer {
         // graft's toothed tails): one, drawn as a Rinkaku player's is (the original's tube, KaguneWorldRenderer.emitTubeLegacy), curled over
         // its head at rest as a player's first tentacle is, lashing on the beats of its string, at its size, in the colour it took.
         for (com.hex.kagune.control.npc.ChildNpc child : ChildRenderer.drawn()) {
+            try {
             com.hex.kagune.control.client.ChildClient.View kid = com.hex.kagune.control.client.ChildClient.get(child.m_19879_());
             com.hex.kagune.control.client.GhoulNpcClient.View seen = com.hex.kagune.control.client.GhoulNpcClient.get(child.m_19879_());
             if (kid == null || !com.hex.kagune.control.family.KaguneGenes.tails(kid.genome().kagune()) || !child.m_6084_()
@@ -220,6 +221,11 @@ public final class GraftRenderer {
                 // 2.3.7: its other parent's tentacle, over its other shoulder (at rest while the first lashes).
                 drawTentacle(1, out, matrix, normals, level, child, kid, GraftClient.View.NONE, limbs, deploy, body, frame,
                 camera, clock, partial);
+            }
+            } catch (RuntimeException failure) {
+                // 2.5.5: one child failing to draw never hides the others (logged), as the wild ghouls' and the Graft players'.
+                LIMBS.remove(child.m_20148_());
+                PlayerLayers.failed("a child's tentacle", failure);
             }
         }
         if (consumer[0] != null) {

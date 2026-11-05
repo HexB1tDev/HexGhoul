@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.5.5 (HexGhoul): A child's Rinkaku is drawn whenever it is out (testing)
+
+See `.github/release-notes-2.5.5.md`. A child's Rinkaku (and its wings) is now drawn whenever it is out, whether or not the child's body was drawn the usual way that frame. Before, the tentacle was only drawn for a child its body's renderer had noted during the same frame, so anything that skips or replaces that call (an entity-culling or performance mod, a body drawn some other way) left the kagune invisible even while the child fought with it. This is the fix the wild ghouls' tails got in 2.0.27, which children never had.
+
 ## 2.5.4 (HexGhoul): Children fight monsters that come close in their sight; ghoul children's kakugan at night (testing)
 
 See `.github/release-notes-2.5.4.md`. Your sons and daughters stand their ground now: any child old enough to be taught (child, teen or grown) goes for a monster that comes close and that it can see, taught or not (lessons still make its blows harder); babies and toddlers still run to a parent. And at night a ghoul child's eyes turn to kakugan (the eye or eyes it was born with), not only while it fights.

@@ -3,7 +3,7 @@
 `docs/handoff/next-ai-1.3.60.md` (house rules), then the top sections of `docs/handoff/companions-handoff.md` (one per version, newest first).
 
 Branch **`claude/loving-albattani-xld4zv`** (push only to the branch the session is given). Never push to `main`; no PR unless asked.
-Version **2.5.4** in `build.py` and `patch/KagunePatch.java`; the next is **2.5.5** (the last number never reaches 10). Protocol **"86"** (`ControlNetwork.PROTOCOL`; 2.5.0 bumped it for 2.4.8's S2CUkakuFx CRACK and 2.4.9's new EtoGesture ordinals; 2.4.5 added S2CThyDeath and C2SUkakuAction THY_DEATH; 2.3.0 added the mother's size to `S2CChild`; 2.2.4 added the kiss's mood to `S2CEto`; 2.1.9 added the synced AFRAID on CcgAgent and GhoulNpc; 2.1.7 added `C2SUkakuAction.REAPER_DASH`; 2.0.42
+Version **2.5.5** in `build.py` and `patch/KagunePatch.java`; the next is **2.5.6** (the last number never reaches 10). Protocol **"86"** (`ControlNetwork.PROTOCOL`; 2.5.0 bumped it for 2.4.8's S2CUkakuFx CRACK and 2.4.9's new EtoGesture ordinals; 2.4.5 added S2CThyDeath and C2SUkakuAction THY_DEATH; 2.3.0 added the mother's size to `S2CChild`; 2.2.4 added the kiss's mood to `S2CEto`; 2.1.9 added the synced AFRAID on CcgAgent and GhoulNpc; 2.1.7 added `C2SUkakuAction.REAPER_DASH`; 2.0.42
 added `S2CRinkakuBlock`, message id 48, and `C2SUkakuAction.BLOCK`; 2.0.48 `S2CUkakuFx.DAWN_RING`; 2.0.49 `CcgAgent.SOARING` on the flip). Nothing is tested in game.
 
 ## The owner's requests since 2.0.36 (their words, trimmed)
@@ -166,6 +166,8 @@ Previews: `dawn-bigger-2.0.47.png`, `dawn-aim-2.0.47.png`, `dawn-volley-2.0.48.p
   then bends (`EtoPose.crackBend`), then straightens and lowers.
 - **2.5.4** children (child/teen/grown) fight a monster close and in sight, taught or not (`ChildRules.fights`, `ChildRules.spots`);
   a ghoul child's kakugan shows all night (`ChildClient.eyesOut`).
+- **2.5.5** a child's kagune drawn whenever it is out (`ChildRenderer.drawn` also takes every child within 48 blocks with it out, as
+  `GhoulNpcRenderer.drawn` since 2.0.27); each child guarded in `GraftRenderer`/`UkakuWingRenderer`.
 - **2.3.1** the mood kisses rendered for the owner (`docs/handoff/*-mood-kisses-2.3.1.png`, `mood-kisses-waiting-2.3.1.gif`); possessive, giddy
   and tender reworked to read apart. Render poses with `tools/CompanionPreview.java <out> kisses` (stiff limbs, as in game).
 

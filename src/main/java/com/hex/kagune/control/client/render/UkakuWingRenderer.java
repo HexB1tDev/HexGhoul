@@ -344,6 +344,7 @@ public final class UkakuWingRenderer {
         // else the side its seed gives) or the pair,
         // at their size, aiming as they shoot, in the colour they took from a parent.
         for (com.hex.kagune.control.npc.ChildNpc child : ChildRenderer.drawn()) {
+            try {
             com.hex.kagune.control.client.ChildClient.View kid = com.hex.kagune.control.client.ChildClient.get(child.m_19879_());
             com.hex.kagune.control.client.GhoulNpcClient.View seen = com.hex.kagune.control.client.GhoulNpcClient.get(child.m_19879_());
             int wings = kid == null ? 0 : com.hex.kagune.control.family.ChildKaguneRules.wingCount(kid.genome().kagune(), kid.genome().seed()); // 1.3.46
@@ -396,6 +397,9 @@ public final class UkakuWingRenderer {
             }
             double[] scaled = {size, 0, 0, 0, size, 0, 0, 0, size, 0, 0, 0};
             emit(consumer, matrix, normals, quads, x, y, z, yaw, scaled, com.hex.kagune.control.client.KaguneTints.of(child));
+            } catch (RuntimeException failure) {
+                PlayerLayers.failed("a child's wings", failure); // 2.5.5: one child failing never hides the others
+            }
         }
         // Shards of Ukaku's fire and crystal spikes in flight (camera-relative, facing the camera).
         double[] eye = {0.0, 0.0, 0.0};
