@@ -39,6 +39,10 @@ public final class CompanionPreview {
             crack(out);
             return;
         }
+        if (args.length > 1 && args[1].equals("cooking")) {
+            cooking(out);
+            return;
+        }
         String textures = "src/main/resources/assets/hexkagune/textures/entity/";
         List<Shot> touka = new ArrayList<>();
         for (Object[] g : new Object[][] {{EtoGesture.CROSS, 40.0}, {EtoGesture.TAP, 20.0}, {EtoGesture.HUFF, 14.0}, {EtoGesture.SIP, 50.0},
@@ -146,6 +150,25 @@ public final class CompanionPreview {
         }
         for (Object[] who : new Object[][] {{"eto", "eto/eto.png", true, 0}, {"touka", "touka/touka.png", true, 2}, {"ken", "ken/ken.png", false, 1}}) {
             kissFrames(new File(out, who[0] + "-kisses-frames"), textures + who[1], (Boolean)who[2], (Integer)who[3]);
+        }
+    }
+
+    /** 2.4.9: the spouse at the stove (the fire fed, seasoning, a taste) and holding the food out, on Eto, Touka and Ken. */
+    static void cooking(File out) throws Exception {
+        String textures = "src/main/resources/assets/hexkagune/textures/entity/";
+        for (Object[] who : new Object[][] {{"Eto", "eto/eto.png", true, 0}, {"Touka", "touka/touka.png", true, 2}, {"Ken", "ken/ken.png", false, 1}}) {
+            List<Shot> shots = new ArrayList<>();
+            for (Object[] g : new Object[][] {{EtoGesture.STOKE, 8.0}, {EtoGesture.STOKE, 5.0}, {EtoGesture.SEASON, 20.0}, {EtoGesture.SEASON, 21.0},
+                {EtoGesture.TASTE, 10.0}, {EtoGesture.TASTE, 30.0}, {EtoGesture.TASTE, 42.0}, {EtoGesture.COOK, 40.0}, {EtoGesture.SERVE, 25.0},
+                {EtoGesture.SERVE, 25.0}}) {
+                EtoGesture gesture = (EtoGesture)g[0];
+                double t = (Double)g[1];
+                boolean side = shots.size() % 2 == 1;
+                shots.add(new Shot(gesture.name().toLowerCase() + " t" + (int)t + (side ? ", side" : ""), EtoPose.gesture(gesture, t, (Integer)who[3], 0),
+                    side ? 85.0 : 30.0));
+            }
+            sheet(new File(out, ((String)who[0]).toLowerCase() + "-cooking.png"), who[0] + ": at the stove, and handing the food over (2.4.9)",
+                textures + who[1], (Boolean)who[2], shots);
         }
     }
 

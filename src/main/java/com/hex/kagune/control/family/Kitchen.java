@@ -95,6 +95,54 @@ public final class Kitchen {
         return path.equals("furnace") || path.equals("smoker") || path.endsWith("campfire");
     }
 
+    /**
+     * 2.4.9 (the owner: "A furnace at home IS needed for the spouse to cook"): true for the stove it cooks at: a furnace or a smoker (a
+     * campfire, a table or the chest no longer do).
+     */
+    public static boolean oven(String blockText) {
+        String path = Chores.path(blockText);
+        return path.equals("furnace") || path.equals("smoker");
+    }
+
+    /**
+     * 2.4.9 (the owner: "SOMETIMES asking for a kiss afterwards (not always and depends on their mood)"): how likely, having handed its
+     * spouse the food, it asks for a kiss for it: {@code kissing} is how readily its mood kisses (MoodActs.kissing: 0 sulking or jealous,
+     * 1 happy, 2 affectionate), times its own way ({@code persona}, Persona.kissing). Never sure.
+     */
+    public static double kissAfterMeal(double kissing, double persona) {
+        return Math.max(0.0, Math.min(0.7, 0.3 * kissing * persona));
+    }
+
+    /** 2.4.9: what it says as it hands its spouse the food it just made (they're home: brought to them, not kept). */
+    public static String handed(String key, boolean ghoul, String what, int seed) {
+        String[] lines = switch (key) {
+            case "touka" -> ghoul ? new String[] {"*shoves the bundle at you* " + cap(what) + ". Raw. I cut it myself. Don't make it weird.",
+                "Here. " + cap(what) + ". ...Eat it before it goes off. I'm not doing this twice."}
+                : new String[] {"*holds the plate out, not looking at you* " + cap(what) + ". It's hot. Take it.",
+                "Here. " + cap(what) + ". I can't taste it, so if it's bad, lie to me."};
+            case "ken" -> ghoul ? new String[] {"*holds it out with both hands* " + cap(what) + ". Fresh. I know it's not easy. Eat anyway.",
+                "I put this aside for you. " + cap(what) + ". Sit down a minute."}
+                : new String[] {"*brings the plate over* " + cap(what) + ". Careful, it's hot. Tell me if it's good.",
+                "Here. " + cap(what) + ". I followed the book exactly. ...I hope."};
+            default -> ghoul ? new String[] {"*presents it with a bow* " + cap(what) + ", raw and lovely. The best cut went to you.",
+                "Delivery! " + cap(what) + ". Fresh. You may thank me now."}
+                : new String[] {"*holds the plate up to you* " + cap(what) + ", hot off the stove. Eat it all.",
+                "Here, love. " + cap(what) + ". I can't taste a thing, so you're my critic. Be kind."};
+        };
+        return lines[Math.floorMod(seed, lines.length)];
+    }
+
+    /** 2.4.9: what it says, having handed over the food, wanting a kiss for it. */
+    public static String kissForMeal(String key, int seed) {
+        String[] lines = switch (key) {
+            case "touka" -> new String[] {"...I cooked. That's worth a kiss. *looks away* One. Just one.",
+                "Don't just stand there eating. ...Do I get a thank-you kiss or not?"};
+            case "ken" -> new String[] {"...Is a kiss too much to ask for the cook?", "*smiles a little* I'll take a kiss as payment."};
+            default -> new String[] {"Payment, please. *taps her cheek* A kiss, right here.", "The chef demands a kiss. Those are the rules."};
+        };
+        return lines[Math.floorMod(seed, lines.length)];
+    }
+
     /** True if {@code blockText} burns without fuel (a campfire). */
     public static boolean free(String blockText) {
         return Chores.path(blockText).endsWith("campfire");
@@ -199,6 +247,45 @@ public final class Kitchen {
             n += pile.count();
         }
         return n;
+    }
+
+    /**
+     * 2.4.9: {@code piles} with {@code count} more of {@code id} (what it carries to the Food chest: no limit in all; a pile topped up to
+     * a stack, the rest in new ones, so it saves and loads whole).
+     */
+    public static List<Chores.Pile> heap(List<Chores.Pile> piles, String id, int count) {
+        List<Chores.Pile> out = new ArrayList<>(piles);
+        if (id == null || count <= 0) {
+            return out;
+        }
+        int left = count;
+        for (int i = 0; i < out.size() && left > 0; i++) {
+            Chores.Pile pile = out.get(i);
+            if (pile.key().equals(id) && pile.count() < 64) {
+                int put = Math.min(left, 64 - pile.count());
+                out.set(i, new Chores.Pile(id, pile.count() + put, 64));
+                left -= put;
+            }
+        }
+        while (left > 0) {
+            int put = Math.min(left, 64);
+            out.add(new Chores.Pile(id, put, 64));
+            left -= put;
+        }
+        return out;
+    }
+
+    /** 2.4.9: the main thing of {@code piles} (a dish of the cookbook before anything else, else the most of one thing), or null. */
+    public static String main(List<Chores.Pile> piles) {
+        Chores.Pile main = null;
+        for (Chores.Pile pile : piles) {
+            boolean dish = Dishes.byItem(pile.key()) != null;
+            boolean mainDish = main != null && Dishes.byItem(main.key()) != null;
+            if (main == null || dish && !mainDish || dish == mainDish && pile.count() > main.count()) {
+                main = pile;
+            }
+        }
+        return main == null ? null : main.key();
     }
 
     /** {@code meal} with {@code count} of {@code id} added, never past {@link #MEAL} portions in all; how many fit is the second value. */

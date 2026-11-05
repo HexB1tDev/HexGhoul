@@ -151,13 +151,89 @@ public final class Chores {
      * How long until the next chore (ticks): 15 to 35 seconds home alone; 20 to 45 with its spouse about (1.3.30, the owner: it should be
      * busy about the house, not hanging on them).
      */
-    /** 2.0.8 (the owner: "longer cooking animations over the furnace"): how many rounds of stirring at the stove (each the COOK gesture). */
-    public static final int COOK_LOOPS = 3;
-
-    /** 2.0.8: how long a step at {@code gesture} lasts: the stove's stirring {@link #COOK_LOOPS} times over, anything else once. */
+    /**
+     * 2.0.8: how long a step at {@code gesture} lasts: the stove's whole round of cooking (2.4.9: {@link #COOKING}, the fire fed, stirred,
+     * seasoned, tasted), anything else once.
+     */
     public static long stepTicks(EtoGesture gesture) {
-        return (gesture == EtoGesture.COOK ? COOK_LOOPS : 1) * (long)gesture.ticks - 4L;
+        return (gesture == EtoGesture.COOK ? cookingTicks() : (long)gesture.ticks) - 4L;
     }
+
+    /**
+     * 2.4.9 (the owner: "Spouse when cooking food has more animations"): what its hands do at the stove, in turn: the fire fed, stirred,
+     * a pinch of something shaken in, stirred again, a taste off the spoon, stirred once more. Each for its gesture's length.
+     */
+    public static final EtoGesture[] COOKING = {EtoGesture.STOKE, EtoGesture.COOK, EtoGesture.SEASON, EtoGesture.COOK, EtoGesture.TASTE,
+        EtoGesture.COOK};
+
+    /** 2.4.9: how long the whole of {@link #COOKING} takes (ticks). */
+    public static long cookingTicks() {
+        long sum = 0L;
+        for (EtoGesture g : COOKING) {
+            sum += g.ticks;
+        }
+        return sum;
+    }
+
+    /** 2.4.9: what its hands do {@code age} ticks into its time at the stove (the last of {@link #COOKING} once it has run through). */
+    public static EtoGesture cooking(long age) {
+        long at = Math.max(0L, age);
+        for (EtoGesture g : COOKING) {
+            if (at < g.ticks) {
+                return g;
+            }
+            at -= g.ticks;
+        }
+        return COOKING[COOKING.length - 1];
+    }
+
+    /** 2.4.9: when (ticks into its time at the stove) the gesture it is at began. */
+    public static long cookingFrom(long age) {
+        long start = 0L;
+        long at = Math.max(0L, age);
+        for (EtoGesture g : COOKING) {
+            if (at < g.ticks) {
+                return start;
+            }
+            at -= g.ticks;
+            start += g.ticks;
+        }
+        return start - COOKING[COOKING.length - 1].ticks;
+    }
+
+    /**
+     * 2.4.9 (the owner: "go directly infront of the furnace"): the way a stove faces, as a step from its block to the one in front of it
+     * ({@code state} as the game writes it: "Block{minecraft:furnace}[facing=north,lit=false]"): {dx, dz}, or null if it faces no way
+     * (a campfire faces one too, but has no front to stand at; it is not a stove now).
+     */
+    public static int[] front(String state) {
+        if (state == null) {
+            return null;
+        }
+        int i = state.indexOf("facing=");
+        if (i < 0) {
+            return null;
+        }
+        String rest = state.substring(i + 7);
+        if (rest.startsWith("north")) {
+            return new int[] {0, -1};
+        }
+        if (rest.startsWith("south")) {
+            return new int[] {0, 1};
+        }
+        if (rest.startsWith("west")) {
+            return new int[] {-1, 0};
+        }
+        if (rest.startsWith("east")) {
+            return new int[] {1, 0};
+        }
+        return null;
+    }
+
+    /** 2.4.9: how close to the spot in front of the stove counts as there (blocks, to its middle). */
+    public static final double FRONT = 0.6;
+    /** 2.4.9: how long it tries for the spot in front before it cooks from where it got to (ticks), as long as it is within reach. */
+    public static final long FRONT_TRY = 120L;
 
     /**
      * 2.0.8 (the owner: "with sizzling sounds"; vanilla's crackle, by their word, the one sound not from the hexkagune pack): the sound a

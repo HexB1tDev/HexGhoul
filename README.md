@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.4.9 (HexGhoul): Spouse cooking: a furnace needed, in front of it, a full routine; the food to the Food chest, handed to you at home, sometimes for a kiss (testing)
+
+See `.github/release-notes-2.4.9.md`. The spouse's cooking is redone. A furnace or smoker at home is now needed (a campfire, table or chest no longer counts). At the stove the spouse stands right in front of it (the way it faces) and goes through a whole routine: feeding the fire, stirring, seasoning, stirring, tasting off the spoon, stirring. When the food is done they carry it to the chest they labeled "Food" when sorting. If you're inside the home's grounds, they walk up and hand you your meal (holding it out), and sometimes, depending on their mood, ask for a kiss for it.
+
 ## 2.4.8 (HexGhoul): Ken's one-arm finger crack with a real bone crack; Ken's pull-out for kakuja users; no regeneration hearts (testing)
 
 See `.github/release-notes-2.4.8.md`. Ken's finger crack now puts one arm out (the right, held out low with the elbow bent; the left hangs at his side) and is heard: a real bone crack fetched from the web (Oculus Audio Pack 01, CC BY 4.0, credited in the pack). A player who has learned a kakuja (Centipede, Full Kakuja, Dragon or Final Kakuja) now brings their kagune out his way: the same one-arm crack, then the kagune tears out of their back with blood thrown out behind and up, a ripping crunch, and everything close shoved away. The heart particles that puffed behind the player when Rinkaku came out are gone.

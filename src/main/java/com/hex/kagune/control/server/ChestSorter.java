@@ -103,6 +103,50 @@ final class ChestSorter {
         return changed;
     }
 
+    /**
+     * 2.4.9 (the owner: "after the food is done they will put it in the chest they labeled as food items (when sorting)"): the home's
+     * chests with the ones it named "Food" first (nearest {@code near} first), then the rest as they were; a chest the player named
+     * anything else is left out (theirs).
+     */
+    static List<BlockPos> foodFirst(ServerLevel level, List<BlockPos> chests, BlockPos near) {
+        List<BlockPos> food = new ArrayList<>();
+        List<BlockPos> rest = new ArrayList<>();
+        for (Unit unit : units(level, chests)) {
+            if (unit.box().theirs()) {
+                continue;
+            }
+            (unit.box().kind() == ChestSort.Kind.FOOD ? food : rest).addAll(unit.halves());
+        }
+        if (near != null) {
+            food.sort(java.util.Comparator.comparingDouble(at -> d2(at, near)));
+        }
+        food.addAll(rest);
+        return food;
+    }
+
+    /** 2.4.9: the chest it named "Food" nearest {@code near}, or null if none is. */
+    static BlockPos food(ServerLevel level, List<BlockPos> chests, BlockPos near) {
+        BlockPos best = null;
+        for (Unit unit : units(level, chests)) {
+            if (unit.box().theirs() || unit.box().kind() != ChestSort.Kind.FOOD) {
+                continue;
+            }
+            for (BlockPos half : unit.halves()) {
+                if (best == null || near != null && d2(half, near) < d2(best, near)) {
+                    best = half;
+                }
+            }
+        }
+        return best;
+    }
+
+    private static double d2(BlockPos a, BlockPos b) {
+        double dx = a.m_123341_() - b.m_123341_();
+        double dy = a.m_123342_() - b.m_123342_();
+        double dz = a.m_123343_() - b.m_123343_();
+        return dx * dx + dy * dy + dz * dz;
+    }
+
     /** The home's chests as units: a double chest's halves together, each with what its name makes it. */
     private static List<Unit> units(ServerLevel level, List<BlockPos> chests) {
         List<Unit> out = new ArrayList<>();

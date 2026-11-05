@@ -86,6 +86,17 @@ public final class HomeChores {
         boolean ghoul;
         /** 1.3.42: the cookbook's dish it went to cook (its id), or null for the plain cooking. */
         String dish;
+        /**
+         * 2.4.9: the spot in front of each block's stove it stands at (null: none, near enough as before); which block of the round is the
+         * stove (-1 none) and whether it has cooked there; whom it brings the meal to after (null: no one), since when, and when it
+         * began holding it out.
+         */
+        final List<BlockPos> stands = new ArrayList<>();
+        int stove = -1;
+        boolean cooked;
+        java.util.UUID serveTo;
+        long serveSince = Long.MIN_VALUE;
+        long offerAt = Long.MIN_VALUE;
 
         Job(Chores.Kind kind, List<BlockPos> round, long now) {
             this(kind, round, null, null, now);
@@ -101,7 +112,13 @@ public final class HomeChores {
             for (int i = 0; i < round.size(); i++) {
                 this.expects.add(expects != null && i < expects.size() ? expects.get(i) : kind == Chores.Kind.SWEEP ? null : kind);
                 this.doings.add(doings != null && i < doings.size() ? doings.get(i) : kind.gesture);
+                this.stands.add(null);
             }
+        }
+
+        /** 2.4.9: the spot in front of the stove it stands at for this block, or null. */
+        BlockPos stand() {
+            return this.index < this.stands.size() ? this.stands.get(this.index) : null;
         }
 
         BlockPos at() {
@@ -150,6 +167,11 @@ public final class HomeChores {
         }
         BlockPos at = job.at();
         if (at == null) {
+            // 2.4.9 (the owner: "if the player is in the home perimeter they will manually give the food to the player"): the round done
+            // (the rest put in the Food chest), it brings its spouse the meal, if they're home.
+            if (job.serveTo != null) {
+                return serve(npc, mind, job, house, level, now);
+            }
             finish(npc, mind, level, partner, now);
             return false;
         }
@@ -162,10 +184,10 @@ public final class HomeChores {
                 next(job, now);
                 return true;
             }
-            if (close(npc, at, job.expect() == null ? job.kind : job.expect())) {
+            if (there(npc, job, at, now)) {
                 work(npc, mind, job, level, at, now);
             } else {
-                walk(npc, mind, job, house, level, at, now);
+                walk(npc, mind, job, house, level, job.stand() != null ? job.stand() : at, now);
             }
             return true;
         }
@@ -188,12 +210,15 @@ public final class HomeChores {
                     net.minecraft.sounds.SoundSource.PLAYERS, 0.8F, 0.9F + npc.m_217043_().m_188501_() * 0.2F);
             }
         }
+        // 2.4.9 (the owner: "Spouse when cooking food has more animations"): at the stove its hands go through the whole of the cooking
+        // (Chores.COOKING: the fire fed, stirred, seasoned, stirred, tasted, stirred), each in turn.
+        EtoGesture want = job.doing == EtoGesture.COOK ? Chores.cooking(age) : job.doing;
         if (age >= Chores.stepTicks(job.doing)) {
             job.did |= effect(npc, job, level, at, house, now);
             shut(level, job);
             next(job, now);
-        } else if (mind.gesture != job.doing || job.doing.over(now - mind.gestureAt)) {
-            EtoBrain.gesture(mind, job.doing, now); // back to it (another round of stirring, or after a word of her own)
+        } else if (mind.gesture != want || want.over(now - mind.gestureAt)) {
+            EtoBrain.gesture(mind, want, now); // the next of it (or back to it, after a word of her own)
         }
         return true;
     }
@@ -205,13 +230,19 @@ public final class HomeChores {
             return;
         }
         shut(level, job);
-        if (job.workSince != Long.MIN_VALUE && mind.gesture == job.doing) {
+        boolean cooking = job.doing == EtoGesture.COOK && java.util.Arrays.asList(Chores.COOKING).contains(mind.gesture);
+        if (job.workSince != Long.MIN_VALUE && (mind.gesture == job.doing || cooking)
+            || job.cooked && (mind.gesture == EtoGesture.SERVE || mind.gesture == EtoGesture.TIDY)) {
             mind.gesture = EtoGesture.NONE;
             mind.gestureAt = level.m_46467_();
             mind.dirty = true;
         }
         mind.chore = null;
         mind.lastChore = job.kind;
+        // 2.4.9: stopped with food in its hands (a fight, a talk, a kiss): it is put away there and then, never lost. A meal it was
+        // bringing its spouse it keeps for them (handed over when they next come home).
+        HomeKitchen.putAway(npc, level, job.chests, BlockPos.m_274561_(npc.m_20185_(), npc.m_20186_(), npc.m_20189_()));
+        mind.carry = null;
     }
 
     /**
@@ -249,7 +280,8 @@ public final class HomeChores {
         ServerPlayer partner = EtoBrain.player(level, EtoBrain.spouse(npc));
         boolean ghoul = HomeKitchen.ghoulSpouse(npc, partner);
         HomeKitchen.Plan plan = chests.isEmpty() ? HomeKitchen.Plan.NONE : HomeKitchen.plan(level, found, chests, ghoul,
-            com.hex.kagune.control.family.Kitchen.MEAL - com.hex.kagune.control.family.Kitchen.portions(HomeKitchen.meal(npc)));
+            com.hex.kagune.control.family.Kitchen.MEAL - com.hex.kagune.control.family.Kitchen.portions(HomeKitchen.meal(npc)),
+            home(house, level, partner));
         out.add("Can do now: " + (plan.cookAt() != null ? (ghoul ? "set aside raw cuts for you" : "cook") + ", " : "")
             + (plan.smeltAt() != null ? "smelt, " : "") + HomeKitchen.ripe(level, found, 64).size() + " ripe crops to pick"
             + (plan.noFuel() ? "; out of fuel (coal, charcoal, wood in a chest)" : "") + (chests.isEmpty() ? "; no plain chest or barrel to use" : ""));
@@ -290,6 +322,8 @@ public final class HomeChores {
         }
         shut(level, job);
         mind.lastChore = job.kind;
+        HomeKitchen.putAway(npc, level, job.chests, BlockPos.m_274561_(npc.m_20185_(), npc.m_20186_(), npc.m_20189_())); // 2.4.9: nothing left in its hands
+        mind.carry = null;
         if (job.items && !job.did) {
             mind.noSweepUntil = now + 6000L;
         }
@@ -336,8 +370,11 @@ public final class HomeChores {
         ServerPlayer partner = EtoBrain.player(level, EtoBrain.spouse(npc));
         boolean ghoul = HomeKitchen.ghoulSpouse(npc, partner);
         List<BlockPos> chests = HomeKitchen.chests(level, found);
+        // 2.4.9: food it was carrying when it was last stopped or unloaded: put away before anything else.
+        HomeKitchen.putAway(npc, level, chests, BlockPos.m_274561_(npc.m_20185_(), npc.m_20186_(), npc.m_20189_()));
         int mealRoom = com.hex.kagune.control.family.Kitchen.MEAL - com.hex.kagune.control.family.Kitchen.portions(HomeKitchen.meal(npc));
-        HomeKitchen.Plan plan = chests.isEmpty() ? HomeKitchen.Plan.NONE : HomeKitchen.plan(level, found, chests, ghoul, mealRoom);
+        HomeKitchen.Plan plan = chests.isEmpty() ? HomeKitchen.Plan.NONE
+            : HomeKitchen.plan(level, found, chests, ghoul, mealRoom, home(house, level, partner));
         List<BlockPos> ripe = chests.isEmpty() ? List.of() : HomeKitchen.ripe(level, found, 4);
         // 1.3.42: one of the cookbook's dishes, when the chests hold all it needs (a few a day, a while apart).
         HomeKitchen.Dinner dinner = HomeKitchen.dinner(npc, level, found, chests, ghoul, now);
@@ -367,6 +404,9 @@ public final class HomeChores {
             job.chests = chests;
             job.ghoul = ghoul;
             job.dish = dish ? dinner.cooking().dish().id() : null;
+            // 2.4.9 (the owner: "go directly infront of the furnace"): at the stove it stands right in front of it.
+            job.stove = steps.size() - 1;
+            job.stands.set(job.stove, front(level, at));
             return job;
         }
         if (kind == Chores.Kind.HARVEST) {
@@ -643,6 +683,137 @@ public final class HomeChores {
         }
     }
 
+    /**
+     * 2.4.9: done at the stove: what it carries goes to the chest it named "Food" (a step added to the round), and if its spouse is home
+     * and it kept them a meal, it brings it to them after ({@link #serve}).
+     */
+    private static void afterCooking(EtoNpc npc, Job job, ServerLevel level, BlockPos stove, ServerPlayer home, long now) {
+        job.cooked = true;
+        if (HomeKitchen.carrying(npc) != null && !job.chests.isEmpty()) {
+            BlockPos food = ChestSorter.food(level, job.chests, stove);
+            job.round.add(food != null ? food : HomeKitchen.nearest(job.chests, stove));
+            job.expects.add(Chores.Kind.TIDY);
+            job.doings.add(EtoGesture.TIDY);
+            job.stands.add(null);
+        }
+        if (home != null && HomeKitchen.keeping(npc) != null) {
+            job.serveTo = home.m_20148_();
+        }
+        if (npc.mind != null) {
+            String carry = HomeKitchen.carrying(npc);
+            npc.mind.carry = carry != null ? carry : HomeKitchen.keeping(npc);
+        }
+    }
+
+    /**
+     * 2.4.9 (the owner: "if the player is in the home perimeter they will manually give the food to the player, SOMETIMES asking for a
+     * kiss afterwards (not always and depends on their mood)"): it walks up to its spouse with the meal in its hands, holds it out
+     * (SERVE), hands it over and says so; and now and then, as its mood has it, asks for a kiss for it. Its spouse gone out of the
+     * home, or too long getting to them: it keeps the meal for when they're back. True while it is at it.
+     */
+    private static boolean serve(EtoNpc npc, EtoBrain.Mind mind, Job job, Households.Home house, ServerLevel level, long now) {
+        ServerPlayer partner = EtoBrain.player(level, job.serveTo);
+        if (job.serveSince == Long.MIN_VALUE) {
+            job.serveSince = now;
+            mind.carry = HomeKitchen.keeping(npc);
+        }
+        if (partner == null || !partner.m_6084_() || partner.m_5833_() || !home(house, level, partner) || HomeKitchen.keeping(npc) == null
+            || now - job.serveSince > Chores.WALK * 2L) {
+            job.serveTo = null;
+            finish(npc, mind, level, partner, now);
+            return false;
+        }
+        double far = partner.m_20280_(npc);
+        if (job.offerAt == Long.MIN_VALUE && far > 2.0 * 2.0) {
+            if (now >= job.nextPath) {
+                job.nextPath = now + 10L;
+                npc.m_21573_().m_26519_(partner.m_20185_(), partner.m_20186_(), partner.m_20189_(), SPEED);
+            }
+            return true;
+        }
+        npc.m_21573_().m_26573_();
+        EtoBrain.face(npc, partner);
+        npc.m_21563_().m_24960_(partner, 30.0F, 30.0F);
+        if (job.offerAt == Long.MIN_VALUE) {
+            job.offerAt = now;
+            EtoBrain.gesture(mind, EtoGesture.SERVE, now);
+            return true;
+        }
+        if (now - job.offerAt < EtoGesture.SERVE.ticks - 10L) {
+            return true;
+        }
+        // Handed over: into their hands (their feet, if their hands are full).
+        String main = HomeKitchen.hand(npc, partner);
+        job.serveTo = null;
+        mind.carry = null;
+        EtoBrain.gesture(mind, EtoGesture.NONE, now);
+        String key = npc.persona().key();
+        int seed = npc.m_217043_().m_188503_(1000);
+        String line = main == null ? null : com.hex.kagune.control.kitchen.Dishes.byItem(main) != null
+            ? com.hex.kagune.control.family.Kitchen.made(key, com.hex.kagune.control.family.Kitchen.name(main), true, seed)
+            : com.hex.kagune.control.family.Kitchen.handed(key, job.ghoul, com.hex.kagune.control.family.Kitchen.name(main), seed);
+        mind.choreSaid = now; // no "There." on top of it as the chore ends
+        finish(npc, mind, level, partner, now);
+        boolean kiss = line != null && EtoBrain.kissForMeal(npc, mind, partner, now);
+        if (line != null) {
+            EtoBrain.say(npc, partner, kiss ? line + " " + com.hex.kagune.control.family.Kitchen.kissForMeal(key, seed) : line);
+        }
+        if (kiss) {
+            EtoBrain.askKiss(npc, mind, partner, now);
+        }
+        return true;
+    }
+
+    /** 2.4.9: true if {@code player} is about the home (its grounds, as far as the family roams), in its world. */
+    static boolean home(Households.Home house, ServerLevel level, ServerPlayer player) {
+        if (house == null || player == null || !house.in(level) || player.m_9236_() != level) {
+            return false;
+        }
+        double dx = player.m_20185_() - (house.x() + 0.5);
+        double dz = player.m_20189_() - (house.z() + 0.5);
+        double reach = house.radius() + 2.0;
+        return dx * dx + dz * dz <= reach * reach && Math.abs(player.m_20186_() - house.y()) <= 8.0;
+    }
+
+    /**
+     * 2.4.9 (the owner: "go directly infront of the furnace"): the spot right in front of the stove at {@code at} (the way it faces), if
+     * it can stand there (room for its feet and head, a floor under it); else null (it cooks from beside it, as before).
+     */
+    static BlockPos front(ServerLevel level, BlockPos at) {
+        int[] way = Chores.front(String.valueOf(level.m_8055_(at)));
+        if (way == null) {
+            return null;
+        }
+        for (int dy = 0; dy >= -1; dy--) {
+            BlockPos spot = off(at, way[0], dy, way[1]);
+            if (open(level, spot) && open(level, off(spot, 0, 1, 0)) && !open(level, off(spot, 0, -1, 0))) {
+                return spot;
+            }
+        }
+        return null;
+    }
+
+    private static boolean open(ServerLevel level, BlockPos pos) {
+        return level.m_46805_(pos) && level.m_8055_(pos).m_60812_(level, pos).m_83281_();
+    }
+
+    /**
+     * 2.4.9: true once it has got to the block of this step: to the spot in front of a stove, when there is one (or near enough after a
+     * while of trying, if that spot can't be got to); else near enough to its block, as before.
+     */
+    private static boolean there(EtoNpc npc, Job job, BlockPos at, long now) {
+        Chores.Kind kind = job.expect() == null ? job.kind : job.expect();
+        BlockPos stand = job.stand();
+        if (stand == null) {
+            return close(npc, at, kind);
+        }
+        double dx = stand.m_123341_() + 0.5 - npc.m_20185_();
+        double dz = stand.m_123343_() + 0.5 - npc.m_20189_();
+        double dy = stand.m_123342_() - npc.m_20186_();
+        boolean onIt = dx * dx + dz * dz <= Chores.FRONT * Chores.FRONT && Math.abs(dy) < 1.2;
+        return onIt || now - job.walkSince >= Chores.FRONT_TRY && close(npc, at, kind);
+    }
+
     /** Its hands on {@code at}: its body and head turned to it. */
     private static void face(EtoNpc npc, BlockPos at) {
         double dx = at.m_123341_() + 0.5 - npc.m_20185_();
@@ -721,36 +892,25 @@ public final class HomeChores {
                 return false;
             }
             case COOK -> {
-                // 1.3.31: the chest it fetched from first, then the stove (or a table, a ghoul's meal): it cooks there.
-                if (!job.last()) {
+                // 1.3.31: the chest it fetched from first, then the stove: it cooks there. 2.4.9: then, carrying it, to the Food chest
+                // with what isn't its spouse's meal, and to its spouse with the meal if they're home.
+                if (job.cooked) {
+                    return HomeKitchen.putAway(npc, level, job.chests, at);
+                }
+                if (job.index != job.stove) {
                     return false;
                 }
+                ServerPlayer partner = EtoBrain.player(level, EtoBrain.spouse(npc));
+                boolean home = home(house, level, partner);
+                boolean made;
                 if (job.dish != null) {
-                    // 1.3.42: one of the cookbook's dishes, made for real; with its spouse there, handed over (or said where it is).
-                    ServerPlayer partner = EtoBrain.player(level, EtoBrain.spouse(npc));
-                    HomeKitchen.Made dish = HomeKitchen.cookDish(npc, level, job.chests, at, job.ghoul, job.dish, partner, now);
-                    if (dish == null) {
-                        return false;
-                    }
-                    if (partner != null && SceneServer.sees(npc, partner, 12.0)) {
-                        boolean kept = dish.kept() > 0 && HomeKitchen.hand(npc, partner) != null;
-                        if (npc.mind != null) {
-                            npc.mind.choreSaid = now; // no "There." on top of it as the chore ends
-                        }
-                        EtoBrain.say(npc, partner, com.hex.kagune.control.family.Kitchen.made(npc.persona().key(),
-                            com.hex.kagune.control.kitchen.Dishes.name(dish.cooking().dish().id()), kept, npc.m_217043_().m_188503_(1000)));
-                    }
-                    return true;
+                    // 1.3.42: one of the cookbook's dishes, made for real.
+                    made = HomeKitchen.cookDish(npc, level, job.chests, at, job.ghoul, job.dish, home, now) != null;
+                } else {
+                    made = HomeKitchen.cook(npc, level, job.chests, at, job.ghoul, home);
                 }
-                boolean made = HomeKitchen.cook(npc, level, job.chests, at, job.ghoul);
                 if (made) {
-                    ServerPlayer partner = EtoBrain.player(level, EtoBrain.spouse(npc));
-                    if (partner != null && SceneServer.sees(npc, partner, 12.0)) {
-                        String served = HomeKitchen.serve(npc, partner, level); // they're here: handed over warm
-                        if (served != null) {
-                            EtoBrain.say(npc, partner, served);
-                        }
-                    }
+                    afterCooking(npc, job, level, at, home ? partner : null, now);
                 }
                 return made;
             }

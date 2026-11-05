@@ -1572,11 +1572,78 @@ check(com.hex.kagune.control.graft.GraftStage.TRANSPLANT.limbs(com.hex.kagune.co
                 && com.hex.kagune.control.family.ChestSort.half("Block{minecraft:barrel}[facing=up,open=false]").isEmpty(),
                 "names read and written as the game saves them; a double chest's halves");
         }
-        // 2.0.8: the stove's stirring three rounds over, and its crackle (none at a table).
+        // 2.0.8: the stove's whole round of cooking (2.4.9: fed, stirred, seasoned, stirred, tasted, stirred), and its crackle (none at a table).
         check(com.hex.kagune.control.family.Chores.stepTicks(com.hex.kagune.control.npc.EtoGesture.COOK)
-            == 3L * com.hex.kagune.control.npc.EtoGesture.COOK.ticks - 4L
+            == com.hex.kagune.control.family.Chores.cookingTicks() - 4L
             && com.hex.kagune.control.family.Chores.stepTicks(com.hex.kagune.control.npc.EtoGesture.TIDY) == com.hex.kagune.control.npc.EtoGesture.TIDY.ticks - 4L,
-            "cooking at the stove lasts three rounds of stirring; other steps one");
+            "cooking at the stove lasts its whole round of cooking; other steps one");
+        {
+            // 2.4.9: what its hands do at the stove, in turn; standing right in front of it; a furnace or smoker needed; the food carried
+            // to the Food chest; a kiss asked for it now and then, by mood.
+            com.hex.kagune.control.npc.EtoGesture[] seq = com.hex.kagune.control.family.Chores.COOKING;
+            long total = 0L;
+            boolean inTurn = true;
+            for (com.hex.kagune.control.npc.EtoGesture g : seq) {
+                inTurn &= com.hex.kagune.control.family.Chores.cooking(total) == g && com.hex.kagune.control.family.Chores.cooking(total + g.ticks - 1) == g
+                    && com.hex.kagune.control.family.Chores.cookingFrom(total + 5) == total && g.ticks > 0;
+                total += g.ticks;
+            }
+            java.util.Set<com.hex.kagune.control.npc.EtoGesture> kinds = new java.util.HashSet<>(java.util.Arrays.asList(seq));
+            check(inTurn && total == com.hex.kagune.control.family.Chores.cookingTicks() && total >= 400L
+                && kinds.contains(com.hex.kagune.control.npc.EtoGesture.STOKE) && kinds.contains(com.hex.kagune.control.npc.EtoGesture.SEASON)
+                && kinds.contains(com.hex.kagune.control.npc.EtoGesture.TASTE) && kinds.contains(com.hex.kagune.control.npc.EtoGesture.COOK)
+                && com.hex.kagune.control.family.Chores.cooking(total + 50) == seq[seq.length - 1]
+                && com.hex.kagune.control.npc.EtoGesture.STOKE.still() && com.hex.kagune.control.npc.EtoGesture.SERVE.still(),
+                "at the stove: the fire fed, stirred, seasoned, stirred, tasted, stirred, each in turn, standing still for all of it");
+            int[] north = com.hex.kagune.control.family.Chores.front("Block{minecraft:furnace}[facing=north,lit=false]");
+            int[] east = com.hex.kagune.control.family.Chores.front("Block{minecraft:smoker}[facing=east,lit=true]");
+            int[] south = com.hex.kagune.control.family.Chores.front("Block{minecraft:furnace}[facing=south,lit=false]");
+            int[] west = com.hex.kagune.control.family.Chores.front("Block{minecraft:furnace}[facing=west,lit=false]");
+            check(north != null && north[0] == 0 && north[1] == -1 && east != null && east[0] == 1 && east[1] == 0 && south != null && south[1] == 1
+                && west != null && west[0] == -1 && com.hex.kagune.control.family.Chores.front("Block{minecraft:oak_planks}") == null
+                && com.hex.kagune.control.family.Chores.front(null) == null,
+                "the spot in front of a furnace is the way it faces (north is -z, east +x); a block facing no way has none");
+            java.util.function.Function<String, String> b = id -> "Block{minecraft:" + id + "}";
+            check(com.hex.kagune.control.family.Kitchen.oven(b.apply("furnace")) && com.hex.kagune.control.family.Kitchen.oven(b.apply("smoker"))
+                && !com.hex.kagune.control.family.Kitchen.oven(b.apply("campfire")) && !com.hex.kagune.control.family.Kitchen.oven(b.apply("soul_campfire"))
+                && !com.hex.kagune.control.family.Kitchen.oven(b.apply("blast_furnace")) && !com.hex.kagune.control.family.Kitchen.oven(b.apply("crafting_table")),
+                "cooking needs a furnace or a smoker: never a campfire, a blast furnace or a table");
+            java.util.List<com.hex.kagune.control.family.Chores.Pile> carried = new java.util.ArrayList<>();
+            carried = com.hex.kagune.control.family.Kitchen.heap(carried, "minecraft:cooked_beef", 40);
+            carried = com.hex.kagune.control.family.Kitchen.heap(carried, "minecraft:cooked_beef", 40);
+            carried = com.hex.kagune.control.family.Kitchen.heap(carried, "minecraft:baked_potato", 3);
+            java.util.List<com.hex.kagune.control.family.Chores.Pile> back = com.hex.kagune.control.family.Kitchen.load(com.hex.kagune.control.family.Kitchen.save(carried));
+            int beef = 0;
+            int beefBack = 0;
+            for (com.hex.kagune.control.family.Chores.Pile pile : carried) {
+                beef += pile.key().equals("minecraft:cooked_beef") ? pile.count() : 0;
+            }
+            for (com.hex.kagune.control.family.Chores.Pile pile : back) {
+                beefBack += pile.key().equals("minecraft:cooked_beef") ? pile.count() : 0;
+            }
+            check(beef == 80 && beefBack == 80 && carried.size() == 3 && "minecraft:cooked_beef".equals(com.hex.kagune.control.family.Kitchen.main(carried))
+                && com.hex.kagune.control.family.Kitchen.main(java.util.List.of()) == null,
+                "what it carries to the Food chest has no limit, is saved whole, and the most of one thing is what's in its hand");
+            double sulky = com.hex.kagune.control.family.Kitchen.kissAfterMeal(com.hex.kagune.control.npc.MoodActs.kissing(com.hex.kagune.control.npc.EtoMood.SULKY), 1.0);
+            double jealous = com.hex.kagune.control.family.Kitchen.kissAfterMeal(com.hex.kagune.control.npc.MoodActs.kissing(com.hex.kagune.control.npc.EtoMood.JEALOUS), 1.0);
+            double happy = com.hex.kagune.control.family.Kitchen.kissAfterMeal(com.hex.kagune.control.npc.MoodActs.kissing(com.hex.kagune.control.npc.EtoMood.HAPPY), 1.0);
+            double fond = com.hex.kagune.control.family.Kitchen.kissAfterMeal(com.hex.kagune.control.npc.MoodActs.kissing(com.hex.kagune.control.npc.EtoMood.AFFECTIONATE), 1.0);
+            double lonely = com.hex.kagune.control.family.Kitchen.kissAfterMeal(com.hex.kagune.control.npc.MoodActs.kissing(com.hex.kagune.control.npc.EtoMood.LONELY), 1.0);
+            check(sulky == 0.0 && jealous == 0.0 && happy > 0.1 && fond > happy && lonely < 1.0 && fond < 1.0,
+                "a kiss asked for the food: never sulking or jealous, sometimes happy, more often fond, never every time");
+            boolean said = true;
+            for (String key : new String[] {"eto", "touka", "ken"}) {
+                for (int seed = 0; seed < 4; seed++) {
+                    for (boolean ghoul : new boolean[] {true, false}) {
+                        String line = com.hex.kagune.control.family.Kitchen.handed(key, ghoul, "cooked beef", seed);
+                        said &= line != null && line.toLowerCase().contains("cooked beef");
+                    }
+                    String ask = com.hex.kagune.control.family.Kitchen.kissForMeal(key, seed);
+                    said &= ask != null && !ask.isEmpty() && ask.toLowerCase().contains("kiss");
+                }
+            }
+            check(said, "handing the food over names it; asking for a kiss for it says so, for each of them");
+        }
         check("block.furnace.fire_crackle".equals(com.hex.kagune.control.family.Chores.crackle("Block{minecraft:furnace}"))
             && "block.smoker.smoke".equals(com.hex.kagune.control.family.Chores.crackle("Block{minecraft:smoker}"))
             && "block.campfire.crackle".equals(com.hex.kagune.control.family.Chores.crackle("Block{minecraft:soul_campfire}"))

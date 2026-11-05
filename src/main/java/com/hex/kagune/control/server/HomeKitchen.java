@@ -93,7 +93,7 @@ final class HomeKitchen {
     }
 
     /** What it could cook or smelt now, from what the chests hold and the stations the home has. */
-    static Plan plan(ServerLevel level, HomeChores.Found found, List<BlockPos> chests, boolean ghoul, int mealRoom) {
+    static Plan plan(ServerLevel level, HomeChores.Found found, List<BlockPos> chests, boolean ghoul, int mealRoom, boolean home) {
         List<BlockPos> stations = found.blocks().getOrDefault(Chores.Kind.COOK, List.of());
         BlockPos cookChest = null;
         BlockPos cookAt = null;
@@ -102,19 +102,20 @@ final class HomeKitchen {
         boolean noFuel = false;
         int fuel = fuel(level, chests);
         if (ghoul) {
-            // A ghoul's meal: raw cuts set aside (prepared at a table, or at the stove, or by the chest itself).
-            BlockPos flesh = mealRoom > 0 ? holding(level, chests, id -> Kitchen.flesh(id)) : null;
-            if (flesh != null) {
+            // A ghoul's meal: raw cuts set aside at the stove (2.4.9: a furnace or smoker it must have; and only with its spouse home to
+            // be handed them: away, the cuts would only go from one chest to the Food chest).
+            BlockPos flesh = mealRoom > 0 && home ? holding(level, chests, id -> Kitchen.flesh(id)) : null;
+            BlockPos oven = flesh != null ? nearestWhere(level, stations, flesh, Kitchen::oven) : null;
+            if (oven != null) {
                 cookChest = flesh;
-                List<BlockPos> tables = found.blocks().getOrDefault(Chores.Kind.WIPE, List.of());
-                cookAt = !tables.isEmpty() ? nearest(tables, flesh) : !stations.isEmpty() ? nearest(stations, flesh) : flesh;
+                cookAt = oven;
             }
         } else {
             BlockPos raw = holding(level, chests, id -> Kitchen.cooked(id) != null);
             if (raw != null) {
-                BlockPos campfire = nearestWhere(level, stations, raw, text -> Kitchen.station(text, false) && Kitchen.free(text));
-                BlockPos stove = nearestWhere(level, stations, raw, text -> Kitchen.station(text, false));
-                BlockPos at = campfire != null ? campfire : fuel >= Kitchen.PER_ITEM ? stove : null;
+                // 2.4.9 (the owner: "A furnace at home IS needed for the spouse to cook"): a furnace or smoker, with fuel in the chests.
+                BlockPos stove = nearestWhere(level, stations, raw, Kitchen::oven);
+                BlockPos at = fuel >= Kitchen.PER_ITEM ? stove : null;
                 if (at != null) {
                     cookChest = raw;
                     cookAt = at;
@@ -160,13 +161,17 @@ final class HomeKitchen {
      * At the stove (or the table, for a ghoul's meal): a batch of raw food from the chests cooked (fuel taken from them for a furnace or a
      * smoker), a meal kept for its spouse, the rest put away. True if anything was made.
      */
-    static boolean cook(EtoNpc npc, ServerLevel level, List<BlockPos> chests, BlockPos at, boolean ghoul) {
+    static boolean cook(EtoNpc npc, ServerLevel level, List<BlockPos> chests, BlockPos at, boolean ghoul, boolean keep) {
         List<Chores.Pile> meal = meal(npc);
         if (ghoul) {
             int room = Kitchen.MEAL - Kitchen.portions(meal);
             List<ItemStack> cuts = take(level, chests, id -> Kitchen.flesh(id), room);
             if (cuts.isEmpty()) {
                 return false;
+            }
+            if (!keep) {
+                carry(npc, cuts); // its spouse went out meanwhile: into the Food chest
+                return true;
             }
             for (ItemStack cut : cuts) {
                 int[] took = new int[1];
@@ -203,7 +208,14 @@ final class HomeKitchen {
         if (!free) {
             burn(level, chests, count * Kitchen.PER_ITEM);
         }
-        // A meal kept for its spouse first, the rest put away.
+        // 2.4.9: its spouse away, it all goes in the Food chest (carried there; told of when they're back).
+        if (!keep) {
+            carry(npc, made);
+            news(npc, made);
+            smoke(level, at);
+            return !made.isEmpty();
+        }
+        // A meal kept for its spouse first (brought to them), the rest carried to the Food chest.
         List<ItemStack> rest = new ArrayList<>();
         for (ItemStack out : made) {
             int[] took = new int[1];
@@ -215,7 +227,7 @@ final class HomeKitchen {
             }
         }
         meal(npc, meal);
-        giveBack(npc, level, chests, rest);
+        carry(npc, rest);
         smoke(level, at);
         return !made.isEmpty();
     }
@@ -297,7 +309,7 @@ final class HomeKitchen {
         int seed = npc.m_217043_().m_188503_(1000);
         String main = hand(npc, partner);
         if (main == null) {
-            return news.isEmpty() || Dishes.byItem(news) == null ? null : Kitchen.madeWhileOut(key, Kitchen.name(news), seed);
+            return news.isEmpty() ? null : Kitchen.madeWhileOut(key, Kitchen.name(news), seed);
         }
         if (Dishes.byItem(main) != null) {
             return Kitchen.servedDish(key, Kitchen.name(main), !news.isEmpty(), seed);
@@ -383,10 +395,12 @@ final class HomeKitchen {
         }
         List<BlockPos> stations = found.blocks().getOrDefault(Chores.Kind.COOK, List.of());
         BlockPos from = chests.get(0);
-        BlockPos campfire = nearestWhere(level, stations, from, text -> Kitchen.station(text, false) && Kitchen.free(text));
-        BlockPos stove = nearestWhere(level, stations, from, text -> Kitchen.station(text, false));
-        BlockPos sears = campfire != null ? campfire : stove;
-        int searable = sears == null ? 0 : searable(level, sears, chests);
+        // 2.4.9 (the owner: "A furnace at home IS needed for the spouse to cook"): no furnace or smoker, no cooking.
+        BlockPos stove = nearestWhere(level, stations, from, Kitchen::oven);
+        if (stove == null) {
+            return null;
+        }
+        int searable = searable(level, stove, chests);
         Map<String, Integer> stock = stock(level, chests);
         CompoundTag tag = npc.getPersistentData();
         String last = tag.m_128461_(DISH_LAST).isEmpty() ? null : tag.m_128461_(DISH_LAST);
@@ -405,13 +419,7 @@ final class HomeKitchen {
         if (chest == null) {
             chest = from;
         }
-        BlockPos at;
-        if (cooking.seared() > 0) {
-            at = sears;
-        } else {
-            List<BlockPos> tables = found.blocks().getOrDefault(Chores.Kind.WIPE, List.of());
-            at = stove != null ? nearestWhere(level, stations, chest, text -> Kitchen.station(text, false)) : !tables.isEmpty() ? nearest(tables, chest) : chest;
-        }
+        BlockPos at = cooking.seared() > 0 ? stove : nearestWhere(level, stations, chest, Kitchen::oven);
         return at == null ? null : new Dinner(cooking, chest, at);
     }
 
@@ -422,9 +430,11 @@ final class HomeKitchen {
             return out;
         }
         List<BlockPos> stations = found.blocks().getOrDefault(Chores.Kind.COOK, List.of());
-        BlockPos campfire = nearestWhere(level, stations, chests.get(0), text -> Kitchen.station(text, false) && Kitchen.free(text));
-        BlockPos stove = campfire != null ? campfire : nearestWhere(level, stations, chests.get(0), text -> Kitchen.station(text, false));
-        int searable = stove == null ? 0 : searable(level, stove, chests);
+        BlockPos stove = nearestWhere(level, stations, chests.get(0), Kitchen::oven);
+        if (stove == null) {
+            return out;
+        }
+        int searable = searable(level, stove, chests);
         Map<String, Integer> stock = stock(level, chests);
         for (Dish dish : com.hex.kagune.control.kitchen.Menu.DISHES) {
             if (out.size() < most && Kitchen.cooks(dish, true) && Kitchen.cooking(dish, stock, searable) != null) {
@@ -446,7 +456,7 @@ final class HomeKitchen {
      * what was seared burnt, the buckets and bottles put back, the dish kept as its spouse's meal as far as there is room ({@link
      * Kitchen#MEAL}), the rest and any prep left over put in the chest. Null if nothing was made.
      */
-    static Made cookDish(EtoNpc npc, ServerLevel level, List<BlockPos> chests, BlockPos at, boolean ghoul, String dishId, ServerPlayer partner, long now) {
+    static Made cookDish(EtoNpc npc, ServerLevel level, List<BlockPos> chests, BlockPos at, boolean ghoul, String dishId, boolean keep, long now) {
         if (!ghoul || chests.isEmpty()) {
             return null;
         }
@@ -494,19 +504,25 @@ final class HomeKitchen {
         int kept = 0;
         int stored = 0;
         List<ItemStack> away = new ArrayList<>();
+        List<ItemStack> dish = new ArrayList<>();
         for (Map.Entry<String, Integer> out : cooking.yields().entrySet()) {
             int count = out.getValue();
             if (out.getKey().equals(cooking.item())) {
                 int[] took = new int[1];
-                meal = Kitchen.add(meal, out.getKey(), count, took);
+                if (keep) {
+                    meal = Kitchen.add(meal, out.getKey(), count, took);
+                }
                 kept = took[0];
                 count -= kept;
                 stored = count;
+                dish.addAll(stacks(out.getKey(), count)); // 2.4.9: carried to the Food chest
+                continue;
             }
             away.addAll(stacks(out.getKey(), count));
         }
         meal(npc, meal);
-        giveBack(npc, level, chests, away);
+        giveBack(npc, level, chests, away); // the prep left over, the buckets and bottles: back where they came from
+        carry(npc, dish);
         // What it remembers: what it made, whether that took the last of something, how many today, when.
         long day = Math.floorDiv(level.m_46468_(), 24000L);
         int today = tag.m_128454_(DISH_DAY) == day ? tag.m_128451_(DISH_COUNT) : 0;
@@ -515,8 +531,7 @@ final class HomeKitchen {
         tag.m_128356_(DISH_DAY, day);
         tag.m_128405_(DISH_COUNT, today + 1);
         tag.m_128356_(DISH_AT, now);
-        boolean there = partner != null && SceneServer.sees(npc, partner, 12.0);
-        if (stored > 0 && !there) {
+        if (stored > 0 && !keep) {
             tag.m_128359_(DISH_NEWS, cooking.item());
         }
         if (Kitchen.station(String.valueOf(level.m_8055_(at).m_60734_()), false)) {
@@ -534,6 +549,68 @@ final class HomeKitchen {
 
     private static void meal(EtoNpc npc, List<Chores.Pile> meal) {
         npc.getPersistentData().m_128359_(MEAL, Kitchen.save(meal));
+    }
+
+    // ---------------------------------------------------------------- 2.4.9: what it carries to the Food chest
+
+    /** Its saved data's key: the food it carries from the stove to the Food chest (kept, so none is lost if it is stopped or unloaded). */
+    static final String CARRY = "HexCarry";
+
+    /** What it carries now. */
+    static List<Chores.Pile> carried(EtoNpc npc) {
+        return Kitchen.load(npc.getPersistentData().m_128461_(CARRY));
+    }
+
+    /** {@code stacks} taken up to be carried. */
+    static void carry(EtoNpc npc, List<ItemStack> stacks) {
+        List<Chores.Pile> piles = carried(npc);
+        for (ItemStack stack : stacks) {
+            if (stack != null && !stack.m_41619_()) {
+                piles = Kitchen.heap(piles, id(stack), stack.m_41613_());
+            }
+        }
+        npc.getPersistentData().m_128359_(CARRY, Kitchen.save(piles));
+    }
+
+    /** The main thing it carries (shown in its hand), or null. */
+    static String carrying(EtoNpc npc) {
+        return Kitchen.main(carried(npc));
+    }
+
+    /** The main thing of the meal it keeps for its spouse, or null. */
+    static String keeping(EtoNpc npc) {
+        return Kitchen.main(meal(npc));
+    }
+
+    /**
+     * 2.4.9 (the owner: "they will put it in the chest they labeled as food items (when sorting)"): what it carries put away, into the
+     * chest it named "Food" first (the nearest {@code near}), then the others; what fits nowhere at its feet. True if it carried anything.
+     */
+    static boolean putAway(EtoNpc npc, ServerLevel level, List<BlockPos> chests, BlockPos near) {
+        List<Chores.Pile> piles = carried(npc);
+        npc.getPersistentData().m_128359_(CARRY, "");
+        if (piles.isEmpty()) {
+            return false;
+        }
+        List<ItemStack> stacks = new ArrayList<>();
+        for (Chores.Pile pile : piles) {
+            stacks.addAll(stacks(pile.key(), pile.count()));
+        }
+        List<BlockPos> order = chests.isEmpty() ? List.of() : ChestSorter.foodFirst(level, chests, near);
+        giveBack(npc, level, order.isEmpty() ? chests : order, stacks);
+        return true;
+    }
+
+    /** Told of when its spouse comes home: the main thing of {@code made}, put in the Food chest while they were out. */
+    private static void news(EtoNpc npc, List<ItemStack> made) {
+        List<Chores.Pile> piles = new ArrayList<>();
+        for (ItemStack stack : made) {
+            piles = Kitchen.heap(piles, id(stack), stack.m_41613_());
+        }
+        String main = Kitchen.main(piles);
+        if (main != null) {
+            npc.getPersistentData().m_128359_(DISH_NEWS, main);
+        }
     }
 
     // ---------------------------------------------------------------- the chests

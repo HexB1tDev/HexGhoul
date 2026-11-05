@@ -141,6 +141,9 @@ public final class EtoBrain {
         boolean partnerNear;
         /** The gesture her hands were last dressed for. */
         EtoGesture props = EtoGesture.NONE;
+        /** 2.4.9: the food she carries from the stove (an item id: in her hand as she walks and as she holds it out), and what was shown. */
+        String carry;
+        String propsCarry;
         long protectedAt = Long.MIN_VALUE;
         /** 1.3.3: when a player was last about her (away from home a day without one, she goes back). */
         long company = Long.MIN_VALUE;
@@ -1183,6 +1186,29 @@ public final class EtoBrain {
         return dx * dx + dz * dz <= (EtoRules.LEASH + 1.0) * (EtoRules.LEASH + 1.0);
     }
 
+    /**
+     * 2.4.9 (the owner: "SOMETIMES asking for a kiss afterwards (not always and depends on their mood)"): having just handed {@code
+     * partner} the food she made, whether she wants a kiss for it: never while she sulks or they're ignoring her, else by her mood's
+     * readiness (Kitchen.kissAfterMeal; none at all jealous, sulking or wary) and her own way.
+     */
+    static boolean kissForMeal(EtoNpc npc, Mind mind, ServerPlayer partner, long now) {
+        if (partner == null || mind.ignoring.containsKey(partner.m_20148_()) || until(mind.sulk, partner.m_20148_()) > now
+            || mind.kiss != null || mind.target != 0) {
+            return false;
+        }
+        double chance = com.hex.kagune.control.family.Kitchen.kissAfterMeal(
+            com.hex.kagune.control.npc.MoodActs.kissing(mood(npc, partner, now)), npc.persona().kissing());
+        return npc.m_217043_().m_188500_() < chance;
+    }
+
+    /** 2.4.9: she asks {@code partner} for a kiss now (the same as when she wants one by herself: the alert, the walk up, theirs to turn down). */
+    static void askKiss(EtoNpc npc, Mind mind, ServerPlayer partner, long now) {
+        mind.nextAsk.put(partner.m_20148_(), now + EtoRules.KISS_ASK_EVERY);
+        alert(npc, partner, Romance.Want.KISS, "");
+        walkUp(npc, mind, partner, EtoGesture.KISS, now);
+        mind.asked = true;
+    }
+
     /** Now and then, a player she is dating near her, and her twenty minutes since the last up: she wants a kiss. */
     private static void askForKiss(EtoNpc npc, Mind mind, ServerLevel level, long now) {
         mind.ignoring.values().removeIf(until -> until < now);
@@ -1776,11 +1802,15 @@ public final class EtoBrain {
     /** Her hands dressed for her gesture: the book, the quill and pocket book, the brush; emptied after. */
     private static void props(EtoNpc npc, Mind mind) {
         EtoGesture now = mind.target != 0 ? EtoGesture.NONE : mind.gesture;
-        if (now == mind.props) {
+        // 2.4.9: the food she carries, in her hand as she walks with it and as she holds it out.
+        String carry = mind.target == 0 && (now == EtoGesture.NONE || now == EtoGesture.SERVE) ? mind.carry : null;
+        if (now == mind.props && java.util.Objects.equals(carry, mind.propsCarry)) {
             return;
         }
         mind.props = now;
-        npc.m_21008_(InteractionHand.MAIN_HAND, stack(now.mainHand));
+        mind.propsCarry = carry;
+        ItemStack food = carry == null ? null : HomeKitchen.stack(carry, 1);
+        npc.m_21008_(InteractionHand.MAIN_HAND, food != null ? food : stack(now.mainHand));
         npc.m_21008_(InteractionHand.OFF_HAND, stack(now.offHand));
     }
 

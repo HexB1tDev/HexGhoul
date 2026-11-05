@@ -99,7 +99,15 @@ public enum EtoGesture {
      */
     FLINCH(70, false, false),
     /** 1.3.65 (Peace): her hands together low on her chest, her head tipped back to look up at it, a slow breath in and out. */
-    AWE(96, false, false);
+    AWE(96, false, false),
+    /** 2.4.9: bent to the stove's mouth, feeding the fire (a lump of coal pushed in, a poke, the hand drawn back). */
+    STOKE(60, false, false, "minecraft:coal", null),
+    /** 2.4.9: a pinch of something shaken over the pot from high up, the bowl held under it. */
+    SEASON(56, false, false, "minecraft:sugar", "minecraft:bowl"),
+    /** 2.4.9: a taste off the spoon: brought up, blown on, tasted, a little nod. */
+    TASTE(70, false, false, "minecraft:wooden_shovel", "minecraft:bowl"),
+    /** 2.4.9: what it made held out to its spouse in both hands (the food itself put in its hand by the server), a little bob. */
+    SERVE(50, false, false);
 
     public final int ticks;
     public final boolean eyesClosed;
@@ -141,6 +149,6 @@ public enum EtoGesture {
     public boolean still() {
         return this.mainHand != null || this == LEAN || this == STRETCH || this == POUT || this == YAWN || this == PET || this == LOOK || this == CROSS
             || this == TAP || this == SCOLD || this == SHY || this == CHIN || this == CRACK || this == BOW || this == KICKS || this == STEAL || this == TIDY
-            || this == COOK || this == FLINCH || this == AWE;
+            || this == COOK || this == FLINCH || this == AWE || this == SERVE;
     }
 }

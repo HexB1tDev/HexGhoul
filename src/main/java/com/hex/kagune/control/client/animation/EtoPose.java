@@ -718,6 +718,57 @@ public final class EtoPose {
                 p.leftArmY = 0.35F;
                 p.leftArmZ = -0.05F;
             }
+            case STOKE -> {
+                // 2.4.9: bent to the stove's mouth, a lump of coal in the right hand pushed in, a poke, the hand drawn back; the left braced
+                // on a knee; her head down to the fire.
+                float push = Math.max(0.0F, (float)Math.sin(t * 0.3));
+                p.lean = 0.5F;
+                p.headX = 0.38F;
+                p.rightArmX = -0.7F - 0.4F * push;
+                p.rightArmY = -0.08F;
+                p.rightArmZ = 0.06F;
+                p.leftArmX = -0.35F;
+                p.leftArmZ = -0.16F;
+            }
+            case SEASON -> {
+                // 2.4.9: the bowl held low in the left hand (as when stirring), the right hand high over it shaking a pinch in, quick and
+                // small; her head down, watching it fall.
+                float shake = (float)Math.sin(t * 1.7);
+                p.lean = 0.2F;
+                p.headX = 0.42F;
+                p.rightArmX = -1.45F + 0.08F * shake;
+                p.rightArmY = -0.15F;
+                p.rightArmZ = 0.12F + 0.06F * shake;
+                p.leftArmX = -0.85F;
+                p.leftArmY = 0.35F;
+                p.leftArmZ = -0.05F;
+            }
+            case TASTE -> {
+                // 2.4.9: a taste off the spoon: brought up to the mouth, blown on, tasted (the head up a little), a nod, the spoon back
+                // down to the pot; the bowl kept low in the other hand.
+                float up = ease(t / 18.0F) * (1.0F - ease((t - 50.0F) / 16.0F));
+                float nod = t >= 36.0F && t < 50.0F ? 0.18F * (float)Math.sin((t - 36.0F) / 14.0F * Math.PI * 2.0) : 0.0F;
+                p.rightArmX = -1.0F - 0.72F * up;
+                p.rightArmY = -0.42F * up;
+                p.rightArmZ = 0.05F;
+                p.leftArmX = -0.85F + 0.15F * up;
+                p.leftArmY = 0.35F;
+                p.leftArmZ = -0.05F;
+                p.headX = 0.3F - 0.38F * up + nod;
+                p.headZ = 0.06F * up;
+            }
+            case SERVE -> {
+                // 2.4.9: what it made held out to its spouse in both hands at the chest (never up at the face), a little bob, the head
+                // tipped to them.
+                float bob = 0.04F * (float)Math.sin(t * 0.25);
+                p.lean = 0.12F;
+                p.headX = 0.12F;
+                p.headZ = 0.08F;
+                p.rightArmX = -1.2F + bob;
+                p.leftArmX = -1.2F + bob;
+                p.rightArmY = -0.22F;
+                p.leftArmY = 0.22F;
+            }
             case TIDY -> {
                 // 1.3.29: bent over a chest, one hand then the other putting things where they go.
                 float a = (float)Math.sin(t * 0.22);
