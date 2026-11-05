@@ -407,6 +407,10 @@ public final class UkakuServer {
             RinkakuBlockServer.input(player, targetId); // 2.0.42: it checks for itself (a stunned body's block comes down)
             return;
         }
+        if (action == com.hex.kagune.control.network.C2SUkakuAction.THY_DEATH) {
+            ThyDeathServer.input(player, targetId); // 2.4.5
+            return;
+        }
         if (PaleStun.stunned(player)) {
             return; // 7.0.2: stunned, no kagune answers
         }

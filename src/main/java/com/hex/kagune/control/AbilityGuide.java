@@ -168,7 +168,7 @@ public final class AbilityGuide {
             rows.add(row(in, combo(form), full ? KAKUJA_RED : accent, 0, Key.ATTACK));
             // 6.0.4: each move unlocks with mastery (RinkakuUnlocks); a locked one shows dim with the mastery it needs.
             int m = in.mastery();
-            rows.add(row(in, kakuja ? "Rapid Strike (legs and tails)" : "Rapid Strike", TEXT, locked(m, RinkakuUnlocks.RAPID_STRIKE), Key.RAPID));
+            rows.add(row(in, kakuja ? "Thy Death (hold: legs and tails hunt on their own)" : "Thy Death (hold: every tail hunts on its own)", TEXT, locked(m, RinkakuUnlocks.RAPID_STRIKE), Key.RAPID));
             rows.add(row(in, "Grapple leap", TEXT, locked(m, RinkakuUnlocks.GRAPPLE), Key.SLINGSHOT));
             rows.add(row(in, "Grab · Throw", TEXT, locked(m, RinkakuUnlocks.GRAB), Key.GRAB, Key.THROW));
             rows.add(row(in, "Crush", TEXT, locked(m, RinkakuUnlocks.CRUSH), Key.CRUSH));

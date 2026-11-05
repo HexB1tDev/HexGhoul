@@ -84,8 +84,9 @@ public final class UkakuVortex {
             return; // 6.1.0: on Pale's path Z is Big Punch (C2SPaleAction); 7.0.0: Graft's Z is his own (C2SGraftAction)
         }
         if (!UkakuServer.isUkaku(player)) {
-            if (!RinkakuAutonomy.refuse(player) && UkakuGates.unlocked(player, "Rapid Strike", com.hex.kagune.control.RinkakuUnlocks.RAPID_STRIKE)) {
-                KaguneServerController.startRapidStrikeLegacy(player, hint);
+            // 2.4.5: Rapid Strike is Thy Death now (every tail out hunting on its own while Z is held: ThyDeathServer).
+            if (!RinkakuAutonomy.refuse(player) && UkakuGates.unlocked(player, "Thy Death", com.hex.kagune.control.RinkakuUnlocks.RAPID_STRIKE)) {
+                ThyDeathServer.input(player, 2);
             }
             return;
         }

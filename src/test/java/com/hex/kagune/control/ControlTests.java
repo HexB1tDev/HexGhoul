@@ -67,14 +67,14 @@ public final class ControlTests {
                 for (AbilityGuide.Row row : panel.rows()) {
                     anyMove |= moveKeys.contains(row.keys());
                 }
-                check(combo == null && !anyMove && find(panel, "Rapid Strike") == null && find(panel, "Grab") == null
+                check(combo == null && !anyMove && find(panel, "Thy Death") == null && find(panel, "Grab") == null
                     && find(panel, "Guard") == null && find(panel, "Grapple") == null, "the first kakuja lists no move he can make");
                 check(find(panel, "Centipede legs fight on their own") != null && find(panel, "You can only walk") != null
                     && find(panel, "Turn back") != null && find(panel, "Put it all away") != null,
                     "the first kakuja: the legs fight on their own, he walks, K and R still take him out of it");
             } else {
                 check(combo != null && combo.keys().equals("LMB"), forms[i] + ": the M1 is the " + combos[i] + " combo on the attack key");
-                check(find(panel, "Rapid Strike") != null && find(panel, "Rapid Strike").keys().equals("Z"), forms[i] + ": Z is Rapid Strike");
+                check(find(panel, "Thy Death") != null && find(panel, "Thy Death").keys().equals("Z"), forms[i] + ": Z is Thy Death");
                 check(find(panel, "Grab") != null && find(panel, "Grab").keys().equals("G·N"), forms[i] + ": grab and throw on G and N");
             }
             check((find(panel, "Centipede legs") != null) == forms[i].hasCentipedeLegs(), forms[i] + ": the legs' hunt only with legs");
@@ -125,7 +125,7 @@ public final class ControlTests {
         rebound.put(AbilityGuide.Key.TOGGLE, AbilityGuide.keyName("key.mouse.4", "NONE"));
         AbilityGuide.Panel moved = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.RINKAKU, AbilityGuide.State.OUT, 100,
             com.hex.kagune.gameplay.KaguneForm.RINKAKU_SEED, twin, false, rebound));
-        check(find(moved, "Rapid Strike").keys().equals("Ctrl+F"), "a rebound key shows as bound: " + find(moved, "Rapid Strike").keys());
+        check(find(moved, "Thy Death").keys().equals("Ctrl+F"), "a rebound key shows as bound: " + find(moved, "Thy Death").keys());
         check(find(moved, "Kakugan mode").keys().equals("M4") && find(moved, "Put it all away").keys().equals("LCtrl+M4"),
             "a mouse button shows as bound: kakugan mode on it, everything away on Ctrl with it");
         check(AbilityGuide.keyName("key.mouse.left", "NONE").equals("LMB") && AbilityGuide.keyName("key.mouse.right", "NONE").equals("RMB"),
@@ -467,6 +467,26 @@ public final class ControlTests {
         }
     }
 
+    /** 2.4.5: Thy Death: each tail's lunge, out and back, its point through the foe at the hit, its root never moving. */
+    static void thyDeath() {
+        check(com.hex.kagune.control.ThyDeath.reach(0) == 0.0 && com.hex.kagune.control.ThyDeath.reach(com.hex.kagune.control.ThyDeath.HIT_AT) == 1.0
+            && com.hex.kagune.control.ThyDeath.reach(com.hex.kagune.control.ThyDeath.STRIKE) == 0.0
+            && com.hex.kagune.control.ThyDeath.reach(3) > 0.0 && com.hex.kagune.control.ThyDeath.reach(9) > 0.0, "a lunge: out, through, back");
+        double[][] rest = new double[12][];
+        for (int i = 0; i < rest.length; i++) {
+            rest[i] = new double[] {0.3, 1.0 + i * 0.1, -0.3 - i * 0.05};
+        }
+        double[] foe = {0.0, 1.2, 4.0};
+        double[][] at = com.hex.kagune.control.ThyDeath.strike(rest, foe, com.hex.kagune.control.ThyDeath.HIT_AT, 1.0, -1.0, 0.0, 0.9);
+        double[] tip = at[at.length - 1];
+        check(java.util.Arrays.equals(at[0], rest[0]) && Math.abs(tip[0] - foe[0]) < 1e-9 && Math.abs(tip[1] - foe[1]) < 1e-9 && Math.abs(tip[2] - foe[2]) < 1e-9,
+            "at the hit its point is through the foe, its root where it was");
+        double[][] none = com.hex.kagune.control.ThyDeath.strike(rest, foe, 0.0, 1.0, -1.0, 0.0, 0.9);
+        check(java.util.Arrays.deepEquals(none, rest), "before it lunges, the tail as it was");
+        check(com.hex.kagune.control.ThyDeath.range(1000) > com.hex.kagune.control.ThyDeath.range(0) && com.hex.kagune.control.ThyDeath.damage(1000) == 10.0F
+            && com.hex.kagune.control.ThyDeath.first(100L, 3) > com.hex.kagune.control.ThyDeath.first(100L, 0), "reach and blows grow; tails staggered");
+    }
+
     static void rinkakuAlive() {
         // 2.1.6: each tail's side as the original lays it out (TendrilChain: its fanSide along its owner's LEFT; with none, an even tail on
         // his right), so its rest, root and guard are on the side its own motion carries it (else each blend swings it across his back).
@@ -626,6 +646,7 @@ public final class ControlTests {
     public static void main(String[] args) {
         kakujaPalette();
         rinkakuAlive();
+        thyDeath();
         reaperDash();
         rinkakuBlock();
         rinkakuRoot();

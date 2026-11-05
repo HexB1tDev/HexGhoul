@@ -188,6 +188,15 @@ public final class StrikePaths {
                 guarding = true;
             }
         }
+        // 2.4.5: Thy Death: the tail lunging at its own foe, over its own motion.
+        if (!layout.segmented()) {
+            double[][] lunging = com.hex.kagune.control.client.ThyDeathClient.apply(path, limb, player, layout.fanSide(), yaw,
+                com.hex.kagune.control.client.ControlClient.worldTime(partialTick), partialTick);
+            if (lunging != null) {
+                path = lunging;
+                guarding = true;
+            }
+        }
         boolean moved = BodyClearance.clear(path, feet, -Math.sin(yaw), Math.cos(yaw), player.m_20205_(), player.m_20206_(), radius, side);
         // 2.0.38: the tail grown out of his lower back (RinkakuRoot): its root sunk in it, its base leaving it, then its own motion.
         if (!layout.segmented()) {

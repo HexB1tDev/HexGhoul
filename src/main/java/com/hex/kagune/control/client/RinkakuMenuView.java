@@ -191,7 +191,7 @@ public final class RinkakuMenuView {
         // 6.0.4: his tendril moves unlock with mastery (RinkakuUnlocks), as Ukaku's do.
         c.text("UNLOCKS", x, y + 236, t.header(), false);
         int mastery = model.mastery();
-        String[][] moves = {{"J", "Grapple"}, {"Z", "Rapid Strike"}, {"G  N", "Grab  ·  Throw"}, {"H", "Crush"}, {"V", "Lift"}, {"B", "Slam"}};
+        String[][] moves = {{"J", "Grapple"}, {"Z", "Thy Death"}, {"G  N", "Grab  ·  Throw"}, {"H", "Crush"}, {"V", "Lift"}, {"B", "Slam"}};
         int[] needs = {RinkakuUnlocks.GRAPPLE, RinkakuUnlocks.RAPID_STRIKE, RinkakuUnlocks.GRAB, RinkakuUnlocks.CRUSH, RinkakuUnlocks.LIFT, RinkakuUnlocks.SLAM};
         for (int i = 0; i < moves.length; i++) {
             boolean open = RinkakuUnlocks.unlocked(mastery, needs[i]);

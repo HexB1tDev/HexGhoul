@@ -38,6 +38,8 @@ public record C2SUkakuAction(int action, int targetId) {
      * in tenths of a degree of world yaw ({@code ReaperDash.encode}).
      */
     public static final int REAPER_DASH = 8;
+    /** 2.4.5: Rinkaku's Thy Death (Z held): {@code targetId} 2 as it goes down, 1 every few ticks while held, 0 let go ({@code ThyDeathServer}). */
+    public static final int THY_DEATH = 9;
 
     public static void encode(C2SUkakuAction message, FriendlyByteBuf buffer) {
         buffer.writeByte(message.action);

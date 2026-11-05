@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.4.5 (HexGhoul): Rinkaku's Thy Death: every tail hunts on its own (testing)
+
+See `.github/release-notes-2.4.5.md`. Rinkaku's Rapid Strike is now **Thy Death**. Hold Z and every tail you have out hunts on its own.
+
 ## 2.4.4 (HexGhoul): better reactions to War and Peace (testing)
 
 See `.github/release-notes-2.4.4.md`. Better reactions to the final forms, War and Peace.
