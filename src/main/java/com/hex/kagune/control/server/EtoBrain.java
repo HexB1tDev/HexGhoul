@@ -515,6 +515,10 @@ public final class EtoBrain {
             mind.bed = null;
             return false;
         }
+        if (comesForBabyNight(npc, mind, level, now)) {
+            mind.bed = null;
+            return false; // (her walk to them goes on in her calm: closeIn)
+        }
         if (mind.bed == null || !HomeLife.free(level, mind.bed)) {
             mind.bed = HomeLife.spouseBed(level, house, now);
         }
@@ -556,11 +560,49 @@ public final class EtoBrain {
             return;
         }
         EtoTalk.Context c = context(npc, partner);
-        if (c.night() && !c.nightUsed() && c.married() && c.mixed() && c.family().wantsBaby() && !c.pregnant()) {
+        if (babyNightDue(c)) {
             mind.nextBabyNight = now + 1200L;
             mind.babyNight = null;
             EtoServer.night(partner, npc, c);
         }
+    }
+
+    /**
+     * 2.5.7 (the owner: after the first child, "the spouse says 'tonight it is' but when night comes she never initiates the action"): at
+     * the home they share she went straight to bed at nightfall and only waited there (her coming to them, {@link #together}, is her calm's,
+     * which the bed took the place of; before bedtime her chores held her). Now, the night they asked for, she comes to them first, out of
+     * bed if she was in it, as she does away from home: the night follows when she takes their arm. Already beside her in bed (or lying
+     * down by it), it follows as before ({@link #babyNightInBed}). True if she set off.
+     */
+    private static boolean comesForBabyNight(EtoNpc npc, Mind mind, ServerLevel level, long now) {
+        if (now % 20L != 11L || now < mind.nextBabyNight || mind.partner == null) {
+            return false;
+        }
+        ServerPlayer partner = player(level, mind.partner);
+        if (partner == null || !partner.m_6084_() || partner.m_9236_() != level || partner.m_5833_()) {
+            return false;
+        }
+        double d2 = partner.m_20280_(npc);
+        if (d2 > 32.0 * 32.0 || !reachable(npc, partner) || Sightings.finalOf(partner).terror()
+            || npc.m_5803_() && d2 <= BED_NEAR * BED_NEAR || partner.m_5803_() && d2 < BED_LYING * BED_LYING) {
+            return false;
+        }
+        EtoTalk.Context c = context(npc, partner);
+        if (!babyNightDue(c)) {
+            return false;
+        }
+        mind.nextBabyNight = now + 1200L;
+        mind.babyNight = partner.m_20148_();
+        HomeLife.wake(npc);
+        say(npc, partner, npc.persona().script().babyNight(c));
+        alert(npc, partner, Romance.Want.NIGHT, "");
+        walkUp(npc, mind, partner, EtoGesture.CLING, now);
+        return true;
+    }
+
+    /** The night they asked for a baby is due: dark, not had tonight, married, a woman and a man, nothing on the way yet. */
+    static boolean babyNightDue(EtoTalk.Context c) {
+        return c.night() && !c.nightUsed() && c.married() && c.mixed() && c.family().wantsBaby() && !c.pregnant();
     }
 
     /** 2.0.4: how near the bed they come for the baby night (blocks from her), and how near lying down in it. */
@@ -1054,7 +1096,7 @@ public final class EtoBrain {
         // 1.3.14: they asked for a baby: once it is dark she comes to them herself, and the night (and the child) follows.
         if (now % 40L == 17L && now >= mind.nextBabyNight && distance < 16.0) {
             EtoTalk.Context c = context(npc, partner);
-            if (c.night() && !c.nightUsed() && c.married() && c.mixed() && c.family().wantsBaby() && !c.pregnant()) {
+            if (babyNightDue(c)) {
                 mind.nextBabyNight = now + 1200L;
                 mind.babyNight = partner.m_20148_();
                 say(npc, partner, npc.persona().script().babyNight(c));

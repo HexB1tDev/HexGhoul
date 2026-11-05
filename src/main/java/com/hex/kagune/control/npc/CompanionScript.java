@@ -189,6 +189,10 @@ abstract class CompanionScript implements Script {
             String[] say = says[(start + i) % says.length];
             out.add(new EtoTalk.Option(NpcTalk.Choice.SAYS[i + 2], say[0], "sweet:" + say[1]));
         }
+        EtoTalk.Option baby = EtoTalk.babyOption(c); // 2.5.7: here, not among the topics
+        if (baby != null) {
+            out.add(baby);
+        }
         if (c.night()) {
             out.add(EtoTalk.Option.of(NpcTalk.Choice.NIGHT));
         }

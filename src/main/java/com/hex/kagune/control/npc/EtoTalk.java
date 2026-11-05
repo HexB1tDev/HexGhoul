@@ -141,7 +141,7 @@ public final class EtoTalk {
 
         /** 1.3.14: they could have a child together: married, opposite genders, not carrying one already, not asked yet. */
         public boolean babyOpen() {
-            return this.married() && this.mixed && !this.family.wantsBaby() && !this.pregnant();
+            return this.married() && this.mixed && !this.family.wantsBaby() && !this.pregnant() && !this.family.waiting();
         }
 
         /** 1.3.10: she is carrying their child. */
@@ -348,6 +348,10 @@ public final class EtoTalk {
             String[] say = SWEET_SAYS[(start + i) % SWEET_SAYS.length];
             out.add(new Option(NpcTalk.Choice.SAYS[i + 2], say[0], "sweet:" + say[1]));
         }
+        Option baby = babyOption(c);
+        if (baby != null) {
+            out.add(baby);
+        }
         if (c.night()) {
             out.add(Option.of(NpcTalk.Choice.NIGHT));
         }
@@ -390,9 +394,64 @@ public final class EtoTalk {
                 2, Effect.CLING, EtoGesture.CLING);
             case "smell" -> new Reply(EtoLines.one(seed, "It's old books and a little bit of blood. Thank you.", "You'd know. You're always sniffing me. ...I like it."),
                 1, Effect.NONE, EtoGesture.GIGGLE);
+            // 2.5.7: a baby asked for here (it was a topic of their talk), another once they have one, never too soon after the last.
+            case "baby", "tonight" -> babyAnswer(c, what, new String[] {"...Yes. Tonight, then. Don't make me wait.",
+                    "A baby. Ours. ...I've thought about it more than I'd admit. Yes. Come to me tonight.",
+                    "You'd be a good father. Annoyingly good. ...Yes. Tonight."},
+                new String[] {"Another? ...Our first still chews the corners of my books. ...Yes. Come to me tonight.",
+                    "A bigger family. More little monsters to read to. ...Yes. Tonight. Don't be late.",
+                    "You want another one with me. ...Of course you do. So do I. Tonight, then."},
+                days -> "Already? I've barely slept since the last one. ...Ask me again in " + days(days) + ". I'll still say yes.",
+                new String[] {"I haven't forgotten. I've been thinking about nothing else. Wait for the dark.",
+                    "Tonight. I said tonight. Don't look at me like that in front of the books."}, EtoGesture.HAIR, EtoGesture.GIGGLE);
             default -> new Reply("Hm?", 0, Effect.NONE);
         };
         return new Reply(EtoLines.fill(c, reply.line()), reply.regard(), reply.effect(), reply.gesture());
+    }
+
+    // ---------------------------------------------------------------- 2.5.7: a baby, on the sweet page
+
+    /**
+     * 2.5.7 (the owner: "The dialog for another baby should not be in the Talk category, should be in the 'Be sweet to your wife' tab, with
+     * custom dialogs about having another baby, perhaps a cooldown of 5 mc days"): the sweet page's ask, married, a woman and a man, nothing
+     * on the way: for a baby, or another once they have one; once asked, "About tonight...". Null: none now.
+     */
+    public static Option babyOption(Context c) {
+        if (!c.married() || !c.mixed() || c.pregnant()) {
+            return null;
+        }
+        if (c.family().wantsBaby()) {
+            return new Option(NpcTalk.Choice.SAY_7, "About tonight...", "sweet:tonight");
+        }
+        return new Option(NpcTalk.Choice.SAY_7, c.family().children() > 0 ? "Let's have another baby." : "Let's have a baby.", "sweet:baby");
+    }
+
+    /**
+     * 2.5.7: the answer to it ({@code what}: "baby" or "tonight"): yes, tonight ({@link Effect#BABY}: the next night it comes), in words for
+     * a first ({@code first}) or another ({@code another}); too soon after the last ({@link com.hex.kagune.control.family.FamilyView#BABY_WAIT}),
+     * not yet ({@code wait}, told the days left); asked already, about tonight ({@code tonight}).
+     */
+    public static Reply babyAnswer(Context c, String what, String[] first, String[] another, java.util.function.IntFunction<String> wait,
+                                   String[] tonight, EtoGesture yes, EtoGesture shy) {
+        int seed = c.seed();
+        if (!c.married() || !c.mixed()) {
+            return new Reply("...Let's not talk about that.", 0, Effect.NONE);
+        }
+        if (c.pregnant()) {
+            return new Reply("...One at a time. One's already on the way.", 1, Effect.NONE, shy);
+        }
+        if (c.family().wantsBaby() || what.equals("tonight")) {
+            return new Reply(EtoLines.one(seed, tonight), 2, Effect.NONE, shy);
+        }
+        if (c.family().waiting()) {
+            return new Reply(wait.apply(c.family().daysToWait()), 1, Effect.NONE, shy);
+        }
+        return new Reply(EtoLines.one(seed, c.family().children() > 0 ? another : first), 6, Effect.BABY, yes);
+    }
+
+    /** "a day", "3 days". */
+    public static String days(int days) {
+        return days <= 1 ? "a day" : days + " days";
     }
 
     // ---------------------------------------------------------------- answers

@@ -208,6 +208,15 @@ final class ToukaScript extends CompanionScript {
                 EtoGesture.SHY);
             case "strong" -> r(one(seed, "...Where'd that come from? ...Thanks. Nobody says that.", "I'm not. But thanks for thinking it."), 3,
                 EtoTalk.Effect.HUG, EtoGesture.HUG);
+            // 2.5.7: a baby asked for here, another once they have one (she carried the last: not straight away).
+            case "baby", "tonight" -> EtoTalk.babyAnswer(c, what, s("...You mean it. ...Okay. Yes. Tonight. Don't you dare make a joke right now.",
+                    "A kid. Ours. ...Yeah. Okay. Yes. Tonight. Stop grinning."),
+                s("Another one? One already runs me ragged. ...Yes. Tonight. Shut up.",
+                    "Are you trying to fill the whole house? ...Fine. Yes. Tonight. Don't make it weird.",
+                    "...Another one. With you. ...Okay. Yeah. I want that too. Tonight."),
+                days -> "Are you insane? I just had one. ...Ask me again in " + EtoTalk.days(days) + " and maybe I won't hit you.",
+                s("I know. I said tonight. Don't make me say it again.", "Tonight. ...Stop looking at me like that. People can see."),
+                EtoGesture.SHY, EtoGesture.SHY);
             default -> r("What?", 0);
         };
         return new EtoTalk.Reply(EtoLines.fill(c, reply.line()), reply.regard(), reply.effect(), reply.gesture());
@@ -578,12 +587,11 @@ final class ToukaScript extends CompanionScript {
                 new EtoTopics.Follow("Do you need anything?", c -> r("Coffee. I can't have coffee. Do you know what that's like? Rub my back.", 3, EtoGesture.HAIR)),
                 new EtoTopics.Follow("Are you scared?", c -> r("...Yeah. Don't leave.", 4, EtoTalk.Effect.CLING, EtoGesture.CLING)))),
 
-        new EtoTopics.Topic("family", c -> c.married() && c.mixed() && !c.pregnant(), c -> "Do you think about a family?",
+        new EtoTopics.Topic("family", c -> c.married() && c.mixed() && !c.pregnant() && c.family().children() == 0, c -> "Do you think about a family?",
             c -> c.family().wantsBaby() ? "Tonight. ...You asked. I said yes. Don't make me say it again."
                 : "...Sometimes. A small place. A cafe. A kid who kicks. Why?",
             List.of(
-                new EtoTopics.Follow("Let's have a baby.", c -> c.babyOpen(),
-                    c -> r("...You mean it. ...Okay. Yes. Tonight. Don't you dare make a joke right now.", 6, EtoTalk.Effect.BABY, EtoGesture.SHY)),
+                // 2.5.7: asking for one is on the sweet page now (EtoTalk.babyOption).
                 new EtoTopics.Follow("Someday.", c -> r("Someday. Okay. I'll hold you to it.", 2, EtoGesture.SHY)))));
 
     @Override

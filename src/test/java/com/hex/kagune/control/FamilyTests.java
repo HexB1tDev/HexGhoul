@@ -1115,18 +1115,53 @@ check(com.hex.kagune.control.graft.GraftStage.TRANSPLANT.limbs(com.hex.kagune.co
     static void talk() {
         EtoTalk.Context wed = EtoTests.full(100, NpcBonds.MET, true, Romance.Stage.MARRIED, null, 6000L, EtoMood.HAPPY, true, EtoRules.Pact.NONE, false,
             false, EtoRules.Lesson.KICK, 3);
+        // 2.5.7: asked for on the sweet page ("Be sweet to your wife."), never among the topics of their talk.
         com.hex.kagune.control.npc.EtoTopics.Topic us = com.hex.kagune.control.npc.EtoTopics.get("us");
-        check(us != null && us.open(wed).stream().anyMatch(f -> f.prompt().equals("Let's have a baby.")), "married: \"Let's have a baby.\" can be asked");
-        check(us.open(wed).stream().filter(f -> f.prompt().equals("Let's have a baby.")).findFirst().map(f -> f.reply().apply(wed).effect())
-            .orElse(null) == EtoTalk.Effect.BABY, "and it asks for one (the next night it comes)");
+        check(us != null && us.open(wed).stream().noneMatch(f -> f.prompt().contains("baby") || f.prompt().equals("About tonight...")),
+            "no baby asked for in the talk any more");
+        java.util.function.Function<EtoTalk.Context, EtoTalk.Option> sweetBaby = c -> EtoTalk.sweet(c, "").options().stream()
+            .filter(o -> o.key().equals("sweet:baby") || o.key().equals("sweet:tonight")).findFirst().orElse(null);
+        EtoTalk.Option ask = sweetBaby.apply(wed);
+        check(ask != null && ask.label().equals("Let's have a baby.") && EtoTalk.sweetly(wed, "baby").effect() == EtoTalk.Effect.BABY,
+            "married: \"Let's have a baby.\" on the sweet page, and it asks for one (the next night it comes)");
         EtoTalk.Context dating = EtoTests.full(100, NpcBonds.MET, true, Romance.Stage.DATING, null, 6000L, EtoMood.HAPPY, true, EtoRules.Pact.NONE, false,
             false, EtoRules.Lesson.KICK, 3);
-        check(us.open(dating).stream().noneMatch(f -> f.prompt().equals("Let's have a baby.")), "only married couples");
+        check(sweetBaby.apply(dating) == null, "only married couples");
         EtoTalk.Context asked = with(wed, new com.hex.kagune.control.family.FamilyView(-1.0, true, 0));
-        check(us.open(asked).stream().noneMatch(f -> f.prompt().equals("Let's have a baby.")) && us.open(asked).stream().anyMatch(f -> f.prompt()
-            .equals("About tonight...")), "asked already: only tonight to talk of");
+        check(sweetBaby.apply(asked) != null && sweetBaby.apply(asked).label().equals("About tonight...")
+            && EtoTalk.sweetly(asked, "tonight").effect() == EtoTalk.Effect.NONE, "asked already: only tonight to talk of");
         EtoTalk.Context carrying = with(wed, new com.hex.kagune.control.family.FamilyView(0.5, false, 0));
-        check(carrying.pregnant() && us.open(carrying).stream().noneMatch(f -> f.prompt().equals("Let's have a baby.")), "carrying: not asked again");
+        check(carrying.pregnant() && sweetBaby.apply(carrying) == null && EtoTalk.sweetly(carrying, "baby").effect() != EtoTalk.Effect.BABY,
+            "carrying: not asked again");
+        // Another, once they have one: its own words, and only five days after the last was born.
+        long day = 24000L;
+        EtoTalk.Context fresh = with(wed, new com.hex.kagune.control.family.FamilyView(-1.0, false, 1, 2L * day + 100L));
+        EtoTalk.Context rested = with(wed, new com.hex.kagune.control.family.FamilyView(-1.0, false, 1, 5L * day));
+        check(sweetBaby.apply(fresh).label().equals("Let's have another baby.") && sweetBaby.apply(rested).label().equals("Let's have another baby."),
+            "once they have one: \"Let's have another baby.\"");
+        EtoTalk.Reply tooSoon = EtoTalk.sweetly(fresh, "baby");
+        check(tooSoon.effect() == EtoTalk.Effect.NONE && tooSoon.line().contains("3 days"), "too soon after the last: not yet, the days told: "
+            + tooSoon.line());
+        check(EtoTalk.sweetly(rested, "baby").effect() == EtoTalk.Effect.BABY && !EtoTalk.sweetly(rested, "baby").line()
+            .equals(EtoTalk.sweetly(wed, "baby").line()), "five days on: yes, in words for another");
+        check(com.hex.kagune.control.family.FamilyView.BABY_WAIT == 5L * day && !com.hex.kagune.control.family.FamilyView.NONE.waiting()
+            && new com.hex.kagune.control.family.FamilyView(-1.0, false, 1, 5L * day - 1L).daysToWait() == 1, "the wait: five Minecraft days");
+        for (com.hex.kagune.control.npc.Persona p : new com.hex.kagune.control.npc.Persona[] {com.hex.kagune.control.npc.Persona.KEN,
+            com.hex.kagune.control.npc.Persona.TOUKA}) {
+            com.hex.kagune.control.npc.Script script = p.script();
+            boolean onSweet = script.sweet(wed, "").options().stream().anyMatch(o -> o.key().equals("sweet:baby"));
+            boolean inTopics = false;
+            for (String id : new String[] {"family", "us"}) {
+                com.hex.kagune.control.npc.EtoTopics.Topic t = script.topicOf(id);
+                inTopics |= t != null && t.open(wed).stream().anyMatch(f -> f.prompt().contains("baby"));
+            }
+            EtoTalk.Reply first = script.sweetly(wed, "baby");
+            EtoTalk.Reply again = script.sweetly(rested, "baby");
+            EtoTalk.Reply soon = script.sweetly(fresh, "baby");
+            check(onSweet && !inTopics && first.effect() == EtoTalk.Effect.BABY && again.effect() == EtoTalk.Effect.BABY
+                && !first.line().equals(again.line()) && soon.effect() == EtoTalk.Effect.NONE && soon.line().contains("3 days"),
+                p.key() + ": asked on the sweet page, its own words for another, not too soon");
+        }
         EtoTalk.Page page = EtoTalk.talk(carrying, "");
         check(!page.options().isEmpty() && page.options().get(0).key().equals("topic:baby"), "carrying: the baby is the first thing to talk about");
         check(EtoTalk.talk(wed, "").options().stream().noneMatch(o -> o.key().equals("topic:baby")), "and only then");

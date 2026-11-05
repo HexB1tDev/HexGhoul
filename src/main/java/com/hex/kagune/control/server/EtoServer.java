@@ -1076,8 +1076,11 @@ public final class EtoServer {
         String father = p.female() ? playerKey : npcKey;
         double along = carried != null && carried.father.equals(father)
             ? com.hex.kagune.control.family.Pregnancy.progress(carried.conceived, level.m_46467_()) : -1.0;
+        // 2.5.7: and how long since their last child was born (another only asked for some days after it).
+        long born = Children.lastBorn(level, npcKey, playerKey);
+        long since = born == Long.MIN_VALUE ? Long.MAX_VALUE : Math.max(0L, level.m_46467_() - born);
         return new com.hex.kagune.control.family.FamilyView(along, memory.get(p.key(), NpcMemory.BABY, 0L) == 1L,
-            (int)memory.get(p.key(), NpcMemory.CHILDREN, 0L));
+            (int)memory.get(p.key(), NpcMemory.CHILDREN, 0L), since);
     }
 
     static EtoTalk.Context context(ServerPlayer player, EtoNpc npc) {

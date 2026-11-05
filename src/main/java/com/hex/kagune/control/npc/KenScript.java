@@ -230,6 +230,15 @@ final class KenScript extends CompanionScript {
             case "why" -> r(one(seed, "The way you laugh when you're trying not to. How you always come back. That you've never once looked at me "
                 + "like I'm a monster. ...I could keep going. I'd like to.", "Everything. ...Okay. Your hands. Your stubbornness. How you look at me "
                 + "when you think I'm not looking. I'm always looking."), 4, EtoTalk.Effect.HUG, EtoGesture.HUG);
+            // 2.5.7: a baby asked for here, another once they have one (she carried the last: rest first).
+            case "baby", "tonight" -> EtoTalk.babyAnswer(c, what, s("...Yes. I'd like that more than anything. Tonight, then.",
+                    "A family. With you. ...I used to think I'd never get to want that. Yes. Tonight."),
+                s("Another one? ...I keep thinking I can't be this happy, and then you say things like that. Yes. Tonight.",
+                    "A little brother or sister for them... I'd like that. I'd like that a lot. Tonight, then.",
+                    "...Are you sure? You were so tired last time. ...You're sure. Okay. Tonight. I'll be gentle."),
+                days -> "So soon? You need to rest. We both do. ...Ask me again in " + EtoTalk.days(days) + ". I'll still say yes.",
+                s("I haven't forgotten. I've been nervous all day. ...Tonight.", "Tonight. I'll put the kettle on. ...I'm babbling. Sorry."),
+                EtoGesture.HUG, EtoGesture.BOW);
             default -> r("Hm?", 0);
         };
         return new EtoTalk.Reply(EtoLines.fill(c, reply.line()), reply.regard(), reply.effect(), reply.gesture());
@@ -571,12 +580,11 @@ final class KenScript extends CompanionScript {
                     EtoGesture.HUG)),
                 new EtoTopics.Follow("Hold me.", c -> r("Come here. Both of you.", 4, EtoTalk.Effect.CLING, EtoGesture.CLING)))),
 
-        new EtoTopics.Topic("family", c -> c.married() && c.mixed() && !c.pregnant(), c -> "Do you think about a family?",
+        new EtoTopics.Topic("family", c -> c.married() && c.mixed() && !c.pregnant() && c.family().children() == 0, c -> "Do you think about a family?",
             c -> c.family().wantsBaby() ? "Tonight. ...If you still want to. I do."
                 : "I never let myself. A family is something you can lose. ...With you, I think about it.",
             List.of(
-                new EtoTopics.Follow("Let's have a baby.", c -> c.babyOpen(),
-                    c -> r("...Yes. I'd like that more than anything. Tonight, then.", 6, EtoTalk.Effect.BABY, EtoGesture.HUG)),
+                // 2.5.7: asking for one is on the sweet page now (EtoTalk.babyOption).
                 new EtoTopics.Follow("Someday.", c -> r("Someday. I'll wait. I'm good at waiting.", 2, EtoGesture.BOW)))));
 
     @Override

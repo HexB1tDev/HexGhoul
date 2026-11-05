@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.5.7 (HexGhoul): Another baby on the sweet page, five days apart; the night comes at home (testing)
+
+See `.github/release-notes-2.5.7.md`. Another baby: asked for on the sweet page now, in each companion's own words, five Minecraft days after the last was born; and at the home you share, the night you asked for actually comes (she comes to you for it, as she did before you had a home).
+
 ## 2.5.6 (HexGhoul): Lag check: children's threat search and the kagune passes' scans throttled (testing)
 
 See `.github/release-notes-2.5.6.md`. Lag check. Two hot spots found, both from recent versions, both fixed: children looked for monsters with a line-of-sight ray to every monster within 10 blocks on every tick, and the kagune passes scanned for nearby children and wild ghouls up to six times a frame. Everything else that runs every tick or every frame was checked and is already throttled.

@@ -141,6 +141,17 @@ public final class Children {
         return UniqueNpcs.overworld(level).m_8895_().m_164861_(Data::load, () -> new Data(new LinkedHashMap<>()), NAME);
     }
 
+    /** 2.5.7: when the last child of {@code a} and {@code b} (parents' keys, either way round) was born, or {@link Long#MIN_VALUE} if none. */
+    public static long lastBorn(ServerLevel level, String a, String b) {
+        long last = Long.MIN_VALUE;
+        for (Child child : data(level).all.values()) {
+            if (a.equals(child.mother) && b.equals(child.father) || b.equals(child.mother) && a.equals(child.father)) {
+                last = Math.max(last, child.born);
+            }
+        }
+        return last;
+    }
+
     /** 1.3.21: every child the world knows (a copy). */
     public static List<Child> all(ServerLevel level) {
         return new ArrayList<>(data(level).all.values());
