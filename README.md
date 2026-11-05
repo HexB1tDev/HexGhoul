@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.4.6 (HexGhoul): Ukaku's Vortex: a slow, massive rolling blow (testing)
+
+See `.github/release-notes-2.4.6.md`. Ukaku's Vortex reworked to match the reference: a slow, massive, twisting blow instead of a fast horizontal tornado. The wing still leaves the shoulder blade, but now it rears up and comes down ahead, then rolls on along the ground in great upright loops, like the black mass in the reference, curling over each loop's top. The loops grow in as it lengthens, so it starts as a rising arch.
+
 ## 2.4.5 (HexGhoul): Rinkaku's Thy Death: every tail hunts on its own (testing)
 
 See `.github/release-notes-2.4.5.md`. Rinkaku's Rapid Strike is now **Thy Death**. Hold Z and every tail you have out hunts on its own.

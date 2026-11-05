@@ -640,7 +640,7 @@ public final class UkakuRules {
     // ------------------------------------------------------------------ Wing Vortex (Z)
 
     /** How far the Wing Vortex flies (blocks). */
-    public static final double VORTEX_RANGE = 25.0;
+    public static final double VORTEX_RANGE = 20.0; // 2.4.6: was 25 (a slow, massive rolling blow now)
     /** Ticks the body coils and the wing twirls up before it is thrown. */
     public static final int VORTEX_WINDUP = 5;
     /** Ticks a new wing takes to grow back out of the shoulder blade once the thrown one has faded. */
@@ -648,12 +648,13 @@ public final class UkakuRules {
     /** Ticks the thrown wing takes to unwind and fade at the end of its flight. */
     public static final int VORTEX_FADE_TICKS = 6;
     /** How hard the vortex throws what it hits: along its flight (blocks per tick) and up. */
-    public static final double VORTEX_KNOCKBACK = 2.1;
-    public static final double VORTEX_LIFT = 0.55;
+    public static final double VORTEX_KNOCKBACK = 1.6;
+    public static final double VORTEX_LIFT = 0.95; // 2.4.6: thrown up and over by the rolling mass
 
     /** Vortex speed in blocks per tick. */
     public static float vortexSpeed(int mastery) {
-        return 1.5F + 0.3F * Math.max(0, Math.min(1000, mastery)) / 1000.0F;
+        // 2.4.6 (the owner: "a slow massive twisting blow"): about 12 blocks a second (was 30 to 36).
+        return 0.55F + 0.15F * Math.max(0, Math.min(1000, mastery)) / 1000.0F;
     }
 
     /** Ticks the vortex takes to fly its whole range. */
@@ -663,12 +664,12 @@ public final class UkakuRules {
 
     /** Radius of the vortex (blocks): everything it passes this close to is caught. Wider with the full wings. */
     public static float vortexRadius(int mastery) {
-        return mastery >= 500 ? 1.55F : 1.2F;
+        return mastery >= 500 ? 2.6F : 2.1F; // 2.4.6: massive (was 1.55 and 1.2)
     }
 
     /** Damage to each body it catches. */
     public static float vortexDamage(int mastery) {
-        return meleeDamage(mastery) * 1.5F;
+        return meleeDamage(mastery) * 2.2F; // 2.4.6: one heavy blow (was 1.5)
     }
 
     public static int vortexBurnSeconds(int mastery) {

@@ -21,12 +21,12 @@ import static com.hex.kagune.control.ukaku.UkakuModel.smooth;
  */
 public final class WingVortex {
     /** Widest radius of a size-1 vortex (at its head), and how far back from the front its head rounds off (blocks). */
-    public static final double RADIUS = 1.1;
+    public static final double RADIUS = 1.5; // 2.4.6: a massive blow (was 1.1)
     public static final double POINT = 1.0;
     /** Flame tongues wound into it. */
     static final int TONGUES = 7;
     /** Turns a second, and turns of the spiral per block of its length. */
-    static final double SPIN = 3.2;
+    static final double SPIN = 0.9; // 2.4.6: slow, heavy turning (was 3.2)
     static final double TWIST = 0.32;
     /** Rings along the vortex: at least, and at most (long vortices are drawn with longer steps). */
     static final int FEWEST = 10;
@@ -62,21 +62,69 @@ public final class WingVortex {
         double spin = time * Math.PI * 2.0 * SPIN * (1.0 - 0.6 * loose);
         double twist = Math.PI * 2.0 * TWIST * (1.0 - 0.5 * loose) / Math.max(0.6, size);
         int stations = Math.max(FEWEST, Math.min(fine ? MOST : 16, (int)Math.round(length * (fine ? 2.4 : 1.0))));
-        Shape shape = new Shape(root, dir, u, v, length, radius, size, spin, twist);
+        Shape shape = new Shape(root, dir, u, v, length, radius, size, spin, twist, Coil.of(root, dir, length, size));
         for (int tongue = 0; tongue < TONGUES; tongue++) {
             double phase = Math.PI * 2.0 * tongue / TONGUES + 0.5 * hash(seed * 13 + tongue);
-            double width = size * (0.24 + 0.1 * hash(seed * 5 + tongue + 9)) * (1.0 + 0.4 * loose);
+            double width = size * (0.4 + 0.12 * hash(seed * 5 + tongue + 9)) * (1.0 + 0.4 * loose); // 2.4.6: broad, overlapping: one mass
             double offset = 0.85 + 0.15 * hash(seed * 7 + tongue + 3); // how far out on the vortex this tongue lies
             tube(sink, shape, phase, offset, width, stations, fine ? SIDES : 4, tongue + seed * 31, time, eye, alpha * (1.0 - 0.6 * loose * loose),
                 dusk);
         }
         body(sink, shape, stations, fine ? BODY_SIDES : 5, eye, alpha * (1.0 - 0.8 * loose), dusk);
-        core(sink, head, dir, size, eye, alpha * (1.0 - loose));
-        aura(sink, root, head, dir, radius, eye, alpha * (1.0 - 0.7 * loose));
+        double[] front = shape.coil().centre(1.0);
+        double[] frontWay = shape.coil().tangent(1.0);
+        core(sink, front, frontWay, size, eye, alpha * (1.0 - loose) * 0.35);
+        aura(sink, root, front, normalize(sub(front, root)), radius, eye, alpha * (1.0 - 0.7 * loose) * 0.6);
+    }
+
+    /**
+     * 2.4.6 (the owner: "the vortex move should be a slow massive twisting blow not a fast horizontal tornado, please check the reference
+     * gif and match it"): the line it follows. Out of the shoulder blade it rears up and comes down ahead, then rolls on along the ground
+     * in great upright loops (a prolate cycloid in the upright plane through its flight: {@link #centre}), as the reference's black-and-pink
+     * mass coils forward; the loops grow in as it lengthens, so a short one is a rising arch.
+     */
+    record Coil(double[] root, double[] forward, double[] side, double length, int loops, double coil, double drop) {
+        static final double[] UP = {0.0, 1.0, 0.0};
+        /** How far (blocks, a size-1 vortex) each loop carries it on, how tall a loop is (radius), how far down from the shoulder it rolls. */
+        static final double LOOP = 4.5;
+        static final double HEIGHT = 1.5;
+        static final double DROP = 1.05;
+
+        static Coil of(double[] root, double[] dir, double length, double size) {
+            double[] flat = {dir[0], 0.0, dir[2]};
+            double[] forward = dot(flat, flat) < 1.0E-6 ? dir : normalize(flat);
+            double[] side = normalize(cross(forward, UP));
+            if (dot(side, side) < 0.5) {
+                side = new double[] {1.0, 0.0, 0.0};
+            }
+            int loops = Math.max(1, (int)Math.round(length / (LOOP * Math.max(0.3, size))));
+            double grown = smooth(length / (4.0 * Math.max(0.3, size)));
+            return new Coil(root, forward, side, length, loops, HEIGHT * size * grown, DROP * size * grown);
+        }
+
+        /** Its line at {@code s} (0 the shoulder blade .. 1 its front). */
+        double[] centre(double s) {
+            double theta = 2.0 * Math.PI * this.loops * s;
+            // Forward along the bottom of each loop, curling back over its top (a breaking wave's roll): never back behind his shoulder.
+            double x = this.length * s + this.coil * Math.sin(theta);
+            double y = this.coil * (1.0 - Math.cos(theta)) - this.drop * smooth(s / 0.15);
+            return new double[] {this.root[0] + this.forward[0] * x, this.root[1] + y, this.root[2] + this.forward[2] * x};
+        }
+
+        /** Its way at {@code s}. */
+        double[] tangent(double s) {
+            double h = 0.004;
+            return normalize(sub(this.centre(Math.min(1.0, s + h)), this.centre(Math.max(0.0, s - h))));
+        }
+
+        /** Out from it in its upright plane, at {@code s}. */
+        double[] normal(double s) {
+            return normalize(cross(this.tangent(s), this.side));
+        }
     }
 
     /** The vortex's line and how it opens: shared by every tongue and the body. */
-    record Shape(double[] root, double[] dir, double[] u, double[] v, double length, double radius, double size, double spin, double twist) {
+    record Shape(double[] root, double[] dir, double[] u, double[] v, double length, double radius, double size, double spin, double twist, Coil coil) {
         /**
          * Radius at {@code s} (0 the shoulder blade .. 1 the head): a narrow jet out of the back, opening out like a tornado
          * along its length into the big spinning mass at its head, rounded at the very front.
@@ -95,12 +143,21 @@ public final class WingVortex {
         }
 
         double[] at(double s, double angle, double r) {
-            double along = s * this.length;
+            // 2.4.6: round its rolling line (Coil), not a straight one.
+            double[] centre = this.coil.centre(s);
+            double[] side = this.coil.side();
+            double[] out = this.coil.normal(s);
             double c = Math.cos(angle) * r;
             double n = Math.sin(angle) * r;
-            return new double[] {this.root[0] + this.dir[0] * along + this.u[0] * c + this.v[0] * n,
-                this.root[1] + this.dir[1] * along + this.u[1] * c + this.v[1] * n,
-                this.root[2] + this.dir[2] * along + this.u[2] * c + this.v[2] * n};
+            return new double[] {centre[0] + side[0] * c + out[0] * n, centre[1] + side[1] * c + out[1] * n, centre[2] + side[2] * c + out[2] * n};
+        }
+
+        /** 2.4.6: the outward way at {@code s}, {@code angle} round it. */
+        double[] normal(double s, double angle) {
+            double[] side = this.coil.side();
+            double[] out = this.coil.normal(s);
+            return normalize(new double[] {side[0] * Math.cos(angle) + out[0] * Math.sin(angle), side[1] * Math.cos(angle) + out[1] * Math.sin(angle),
+                side[2] * Math.cos(angle) + out[2] * Math.sin(angle)});
         }
     }
 
@@ -125,9 +182,9 @@ public final class WingVortex {
             double[] centre = spine(shape, phase, offset, s);
             double[] tangent = normalize(sub(spine(shape, phase, offset, Math.min(1.0, s + step)), spine(shape, phase, offset, Math.max(0.0, s - step))));
             // n1 points out from the flight line, n2 along the surface: a broad ribbon, so neighbouring tongues overlap.
-            double[] n1 = normalize(cross(tangent, shape.dir()));
-            if (dot(n1, n1) < 0.5) {
-                n1 = shape.u();
+            double[] n1 = normalize(cross(tangent, shape.coil().tangent(s)));
+            if (dot(n1, n1) < 0.5 || Math.abs(dot(tangent, shape.coil().tangent(s))) > 0.999) {
+                n1 = shape.coil().side();
             }
             double[] n2 = cross(tangent, n1);
             double grow = shape.radiusAt(s) / Math.max(1.0E-6, shape.radius());
@@ -167,9 +224,11 @@ public final class WingVortex {
         }
         c = mixInt(c, UkakuFlame.EMBER, (1.0 - dusk) * streak * 0.55 * smooth((g - 0.12) / 0.2));
         c = mixInt(c, UkakuFlame.CORE, 0.6 * (1.0 - smooth(g / 0.18)));
-        double edge = 1.0 - smooth(facing / 0.55);
-        c = mixInt(c, mixInt(UkakuFlame.RIM_HOT, UkakuFlame.RIM, 0.35 + 0.65 * dusk), edge * 0.8);
-        double a = 0.88 * (0.16 + 0.84 * smooth(facing / 0.6));
+        // 2.4.6: the reference's mass: near-black maroon through and through, its edges burning pink.
+        c = mixInt(c, 0x14040C, 0.78);
+        double edge = 1.0 - smooth(facing / 0.5);
+        c = mixInt(c, mixInt(0xFF5FC4, UkakuFlame.RIM, 0.25 + 0.5 * dusk), edge * 0.95);
+        double a = 0.94 * (0.55 + 0.45 * smooth(facing / 0.6)); // 2.4.6: solid, not see-through
         return argb(c, a * alpha);
     }
 
@@ -182,16 +241,16 @@ public final class WingVortex {
         int[][] colour = new int[stations + 1][sides];
         for (int k = 0; k <= stations; k++) {
             double s = k / (double)stations;
-            double r = shape.radiusAt(s) * 0.62;
+            double r = shape.radiusAt(s) * 0.85; // 2.4.6: a solid dark mass inside the coils
             double g = depth(shape, s);
             for (int j = 0; j < sides; j++) {
                 double theta = 2.0 * Math.PI * j / sides + shape.angleAt(s) * 0.7;
                 double[] point = shape.at(s, theta, r);
-                double[] normal = add(scale(shape.u(), Math.cos(theta)), scale(shape.v(), Math.sin(theta)));
+                double[] normal = shape.normal(s, theta);
                 double facing = Math.min(1.0, Math.abs(dot(normal, normalize(sub(eye, point)))));
                 double streak = Math.pow(Math.max(0.0, Math.sin(2.0 * theta + 3.0 * (1.0 - s) * shape.length())), 3.0);
-                int c = fire(0.15 + 0.85 * g, facing, streak, dusk, alpha * 0.75);
-                colour[k][j] = argb(mixInt(c & 0xFFFFFF, UkakuFlame.CRIMSON, 0.35), (c >>> 24) / 255.0);
+                int c = fire(0.15 + 0.85 * g, facing, streak, dusk, alpha * 0.98);
+                colour[k][j] = argb(mixInt(c & 0xFFFFFF, 0x0E0208, 0.4), (c >>> 24) / 255.0);
                 ring[k][j] = point;
             }
         }

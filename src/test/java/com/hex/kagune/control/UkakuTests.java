@@ -751,7 +751,7 @@ public final class UkakuTests {
         check(UkakuRules.vortexWing(launch, Long.MIN_VALUE, Long.MIN_VALUE)[1] == 1.0F, "no vortex yet: both wings there");
         for (int mastery = 0; mastery <= 1000; mastery += 10) {
             int flight = UkakuRules.vortexFlight(mastery);
-            check(flight * UkakuRules.vortexSpeed(mastery) >= UkakuRules.VORTEX_RANGE && UkakuRules.VORTEX_RANGE == 25.0, "the vortex flies 25 blocks");
+            check(flight * UkakuRules.vortexSpeed(mastery) >= UkakuRules.VORTEX_RANGE && UkakuRules.VORTEX_RANGE == 20.0 && flight >= 25, "the vortex rolls 20 blocks, slowly (2.4.6)");
             check(UkakuRules.vortexCooldown(mastery) > UkakuRules.VORTEX_WINDUP + flight + UkakuRules.VORTEX_FADE_TICKS + UkakuRules.REGROW_TICKS,
                 "he never throws a wing that hasn't grown back");
             check(UkakuRules.vortexBusy(mastery) > UkakuRules.VORTEX_WINDUP + flight + UkakuRules.VORTEX_FADE_TICKS + UkakuRules.REGROW_TICKS
@@ -829,10 +829,12 @@ public final class UkakuTests {
                     // Its glow reaches a little ahead of the point (more as it spreads, unwinding).
                     check(front <= length + size * (0.4 + 1.0 * (1.0 + 1.3 * unwind)) && back > -size * (1.0 + 1.3 * unwind),
                         "the vortex runs from the shoulder blade to its point " + name + ": " + back + " .. " + front);
-                    check(wide > 0.3 * WingVortex.RADIUS * size && wide < (1.9 + 2.4 * unwind) * WingVortex.RADIUS * size,
+                    // 2.4.6: it rolls on in great upright loops (Coil) round its flight line, so it stands further off it than a straight one.
+                    double loops = 2.0 * 1.5 * size + 1.05 * size;
+                    check(wide > 0.3 * WingVortex.RADIUS * size && wide < (1.9 + 2.4 * unwind) * WingVortex.RADIUS * size + loops,
                         "it is a vortex, not a line, and never a cloud " + name + ": " + wide);
                     if (unwind == 0.0 && length >= 10.0) {
-                        check(atRoot < 0.5 * wide, "it leaves the shoulder blade as a narrow jet and opens out " + name + ": " + atRoot + " of " + wide);
+                        check(atRoot < 0.75 * wide, "it leaves the shoulder blade narrower than it rolls on " + name + ": " + atRoot + " of " + wide);
                     }
                 }
             }
