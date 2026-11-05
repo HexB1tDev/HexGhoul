@@ -461,6 +461,13 @@ public final class AgentBrain {
             }
             return;
         }
+        if (mind.arm != null) {
+            // 3.0.6: at peace, its own weapon's case (the one it leaves when it falls).
+            if (ControlItems.armCase(held) != mind.arm) {
+                agent.m_21008_(InteractionHand.MAIN_HAND, ControlItems.armCaseStack(mind.arm, mind.master));
+            }
+            return;
+        }
         Quinque want = mind.kind;
         boolean right = mind.open ? ControlItems.quinqueWeapon(held) == want : ControlItems.quinqueCase(held) == want;
         if (!right) {
@@ -1867,7 +1874,8 @@ public final class AgentBrain {
         if (!byPlayer || mind == null || agent.m_217043_().m_188500_() >= AgentRules.caseChance(mind.kind, mind.arm, mind.master, looting)) {
             return;
         }
-        agent.m_19983_(new ItemStack(ControlItems.caseOf(mind.kind), 1));
+        // 3.0.6: a kagune-made weapon's own case (the owner: "it had the new spear ... but it dropped the old spear"), a masterwork's as one.
+        agent.m_19983_(mind.arm != null ? ControlItems.armCaseStack(mind.arm, mind.master) : new ItemStack(ControlItems.caseOf(mind.kind), 1));
     }
 
     /** 2.2.9: an investigator brought down by a ghoul: mastery for it, by its rank ({@link AgentRules#mastery}). */

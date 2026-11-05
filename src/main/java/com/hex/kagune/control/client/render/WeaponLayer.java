@@ -95,12 +95,14 @@ final class WeaponLayer extends RenderLayer<CcgAgent, PlayerModel<CcgAgent>> {
             pose.m_85849_();
         }
         if (arm == Arm.WHIP) {
-            whip(pose, buffers, light, agent, hand, slim, master, shown, swing, swingAge, ability, partial);
+            float size = AgentRules.size(look);
+            whip(pose, buffers, light, agent, agent.armTarget(), size, size * AgentRules.build(look), hand, slim, master, shown, swing, swingAge,
+                ability, partial);
         }
     }
 
     /** Its mesh, {@code k} of its size (grown out of the fist), in the right arm's frame. */
-    private static void mesh(PoseStack pose, VertexConsumer out, Arm arm, boolean master, float k, int light) {
+    static void mesh(PoseStack pose, VertexConsumer out, Arm arm, boolean master, float k, int light) {
         ArmMesh.Mesh mesh = ArmMesh.of(arm, master);
         float[][] placed = placed(arm, master, mesh);
         float[] at = placed[0];
@@ -143,8 +145,10 @@ final class WeaponLayer extends RenderLayer<CcgAgent, PlayerModel<CcgAgent>> {
 
     // ---------------------------------------------------------------- the whip's tendril
 
-    private static void whip(PoseStack pose, MultiBufferSource buffers, int light, CcgAgent agent, ModelPart hand, boolean slim, boolean master,
-                             float shown, int swing, double swingAge, Arm.Ability ability, float partial) {
+    /** 3.0.6: anyone's (an investigator's, a player's): {@code bound} whom its Bind holds (an entity id), {@code size} and {@code wide} its body's. */
+    static void whip(PoseStack pose, MultiBufferSource buffers, int light, net.minecraft.world.entity.LivingEntity agent, int bound, float size,
+                     float wide, ModelPart hand, boolean slim, boolean master, float shown, int swing, double swingAge, Arm.Ability ability,
+                     float partial) {
         double[] knot = WeaponPose.onBody(hand.f_104200_, hand.f_104201_, hand.f_104202_, hand.f_104203_, hand.f_104204_, hand.f_104205_, slim,
             WeaponPose.onArm(WeaponPose.meshToArm(Arm.WHIP), new double[] {0.0, 0.0, -ArmMesh.WHIP_ROOT}));
         double length = WhipPath.length(master);
@@ -166,17 +170,15 @@ final class WeaponLayer extends RenderLayer<CcgAgent, PlayerModel<CcgAgent>> {
         } else if (ability == Arm.Ability.BIND) {
             double[] target = {5.0, 0.0, -0.2};
             double girth = 0.35;
-            Entity bound = agent.armTarget() != 0 ? agent.m_9236_().m_6815_(agent.armTarget()) : null;
+            Entity held = bound != 0 ? agent.m_9236_().m_6815_(bound) : null;
             double yaw = agent.f_20884_ + wrap(agent.f_20883_ - agent.f_20884_) * partial;
-            float size = AgentRules.size(agent.look());
-            float wide = size * AgentRules.build(agent.look());
-            if (bound != null) {
-                double x = bound.f_19790_ + (bound.m_20185_() - bound.f_19790_) * partial - (agent.f_19790_ + (agent.m_20185_() - agent.f_19790_) * partial);
-                double y = bound.f_19791_ + (bound.m_20186_() - bound.f_19791_) * partial + bound.m_20206_() * 0.5
+            if (held != null) {
+                double x = held.f_19790_ + (held.m_20185_() - held.f_19790_) * partial - (agent.f_19790_ + (agent.m_20185_() - agent.f_19790_) * partial);
+                double y = held.f_19791_ + (held.m_20186_() - held.f_19791_) * partial + held.m_20206_() * 0.5
                     - (agent.f_19791_ + (agent.m_20186_() - agent.f_19791_) * partial);
-                double z = bound.f_19792_ + (bound.m_20189_() - bound.f_19792_) * partial - (agent.f_19792_ + (agent.m_20189_() - agent.f_19792_) * partial);
+                double z = held.f_19792_ + (held.m_20189_() - held.f_19792_) * partial - (agent.f_19792_ + (agent.m_20189_() - agent.f_19792_) * partial);
                 target = WeaponPose.toBody(knot, WeaponPose.toModel(new double[] {x, y, z}, yaw, wide, size));
-                girth = Math.max(0.2, bound.m_20205_() * 0.5 / wide);
+                girth = Math.max(0.2, held.m_20205_() * 0.5 / wide);
             }
             // Let go at its end, it falls back to its rest (not drawn back into the hand and out again).
             path = blend(rest, WhipPath.bind(Math.min(swingAge, ability.total - BLEND - 0.01), target, girth, length, time),
@@ -188,7 +190,7 @@ final class WeaponLayer extends RenderLayer<CcgAgent, PlayerModel<CcgAgent>> {
             // Never into the ground under its feet: what would go below lies along it.
             points[i] = new Vec3(at[0], Math.min(at[1], GROUND - 0.03), at[2]);
         }
-        double[] eye = eye(agent, partial);
+        double[] eye = eye(agent, size, wide, partial);
         RinkakuTube.emit(buffers.m_6299_(SOLID), pose.m_85850_().m_252922_(), pose.m_85850_().m_252943_(), points, WhipPath.thickness(master),
             master ? TENDRIL_MASTER : TENDRIL, light, agent.m_19879_() * 31 + 7, eye, time);
     }
@@ -220,14 +222,13 @@ final class WeaponLayer extends RenderLayer<CcgAgent, PlayerModel<CcgAgent>> {
     }
 
     /** The camera in the investigator's model frame (its tendril's gloss is seen from there). */
-    private static double[] eye(CcgAgent agent, float partial) {
+    private static double[] eye(net.minecraft.world.entity.LivingEntity agent, float size, float wide, float partial) {
         Vec3 camera = Minecraft.m_91087_().f_91063_.m_109153_().m_90583_();
         double x = camera.f_82479_ - (agent.f_19790_ + (agent.m_20185_() - agent.f_19790_) * partial);
         double y = camera.f_82480_ - (agent.f_19791_ + (agent.m_20186_() - agent.f_19791_) * partial);
         double z = camera.f_82481_ - (agent.f_19792_ + (agent.m_20189_() - agent.f_19792_) * partial);
         double yaw = agent.f_20884_ + wrap(agent.f_20883_ - agent.f_20884_) * partial;
-        float size = AgentRules.size(agent.look());
-        return WeaponPose.toModel(new double[] {x, y, z}, yaw, size * AgentRules.build(agent.look()), size);
+        return WeaponPose.toModel(new double[] {x, y, z}, yaw, wide, size);
     }
 
     private static double wrap(double degrees) {

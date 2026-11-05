@@ -48,6 +48,23 @@ public final class ControlItems {
         }
     }
 
+    /**
+     * 3.0.6: the investigators' kagune-made weapons ({@link com.hex.kagune.control.quinque.Arm}) as items: each its own case (shut, one to a
+     * stack) and its weapon (out; drawn from its mesh in the hand, ArmItemLayer, not from an item model), each a plain item: its blows and
+     * moves are its own (PlayerArms), not a sword's.
+     */
+    private static final java.util.Map<com.hex.kagune.control.quinque.Arm, RegistryObject<Item>> ARM_CASES =
+        new java.util.EnumMap<>(com.hex.kagune.control.quinque.Arm.class);
+    private static final java.util.Map<com.hex.kagune.control.quinque.Arm, RegistryObject<Item>> ARM_WEAPONS =
+        new java.util.EnumMap<>(com.hex.kagune.control.quinque.Arm.class);
+
+    static {
+        for (com.hex.kagune.control.quinque.Arm arm : com.hex.kagune.control.quinque.Arm.values()) {
+            ARM_CASES.put(arm, ITEMS.register(arm.caseId(), () -> new Item(new Item.Properties().m_41487_(1))));
+            ARM_WEAPONS.put(arm, ITEMS.register(arm.weaponId(), () -> new Item(new Item.Properties().m_41487_(1))));
+        }
+    }
+
     /** Home Living (1.3.40): the kitchen's dishes, by their item path, in the cookbook's order. */
     private static final java.util.Map<String, RegistryObject<Item>> DISHES = new java.util.LinkedHashMap<>();
     /** And its own effects, by key. */
@@ -168,6 +185,60 @@ public final class ControlItems {
         return null;
     }
 
+    /** 3.0.6: a kagune-made weapon's case item. */
+    public static Item armCaseOf(com.hex.kagune.control.quinque.Arm arm) {
+        return ARM_CASES.get(arm).get();
+    }
+
+    /** 3.0.6: a kagune-made weapon's weapon item. */
+    public static Item armWeaponOf(com.hex.kagune.control.quinque.Arm arm) {
+        return ARM_WEAPONS.get(arm).get();
+    }
+
+    /** 3.0.6: the kagune-made weapon {@code stack} is the case of, or null. */
+    public static com.hex.kagune.control.quinque.Arm armCase(ItemStack stack) {
+        return armIn(stack, ARM_CASES);
+    }
+
+    /** 3.0.6: the kagune-made weapon {@code stack} is (out of its case), or null. */
+    public static com.hex.kagune.control.quinque.Arm armWeapon(ItemStack stack) {
+        return armIn(stack, ARM_WEAPONS);
+    }
+
+    private static com.hex.kagune.control.quinque.Arm armIn(ItemStack stack,
+                                                          java.util.Map<com.hex.kagune.control.quinque.Arm, RegistryObject<Item>> items) {
+        if (stack == null || stack.m_41619_()) {
+            return null;
+        }
+        Item item = stack.m_41720_();
+        for (java.util.Map.Entry<com.hex.kagune.control.quinque.Arm, RegistryObject<Item>> e : items.entrySet()) {
+            if (e.getValue().get() == item) {
+                return e.getKey();
+            }
+        }
+        return null;
+    }
+
+    /** 3.0.6: the stack's tag: a masterwork (a rank 8 or 9 investigator's: darker, harder, further). */
+    public static final String MASTERWORK = "ArmMasterwork";
+
+    /** 3.0.6: true if {@code stack} (an arm's case or weapon) is a masterwork. */
+    public static boolean masterwork(ItemStack stack) {
+        net.minecraft.nbt.CompoundTag tag = stack == null ? null : stack.m_41783_();
+        return tag != null && tag.m_128471_(MASTERWORK);
+    }
+
+    /** 3.0.6: {@code arm}'s case, a masterwork or not. */
+    public static ItemStack armCaseStack(com.hex.kagune.control.quinque.Arm arm, boolean masterwork) {
+        ItemStack stack = new ItemStack(armCaseOf(arm), 1);
+        if (masterwork) {
+            net.minecraft.nbt.CompoundTag tag = new net.minecraft.nbt.CompoundTag();
+            tag.m_128379_(MASTERWORK, true);
+            stack.m_41751_(tag);
+        }
+        return stack;
+    }
+
     /** 1.3.41: true for Touka's cookbook. */
     public static boolean cookbook(ItemStack stack) {
         return stack != null && !stack.m_41619_() && stack.m_41720_() == COOKBOOK.get();
@@ -209,6 +280,11 @@ public final class ControlItems {
                 for (com.hex.kagune.control.quinque.Quinque q : com.hex.kagune.control.quinque.Quinque.values()) {
                     event.accept(CASES.get(q));
                     event.accept(WEAPONS.get(q));
+                }
+                // 3.0.6: and the investigators' kagune-made weapons, each case and its weapon.
+                for (com.hex.kagune.control.quinque.Arm arm : com.hex.kagune.control.quinque.Arm.values()) {
+                    event.accept(ARM_CASES.get(arm));
+                    event.accept(ARM_WEAPONS.get(arm));
                 }
             }
         }

@@ -11,5 +11,6 @@ public abstract class Player extends net.minecraft.world.entity.LivingEntity {
     /** getGameProfile */ public com.mojang.authlib.GameProfile m_36316_() { throw new UnsupportedOperationException(); }
     /** attack (7.0.0) */ public void m_5706_(net.minecraft.world.entity.Entity target) { throw new UnsupportedOperationException(); }
     /** disableShield(becauseOfAxe) (7.0.2: Owl's Execution breaks through a raised shield) */ public void m_36384_(boolean axe) { throw new UnsupportedOperationException(); }
+    /** getInventory (3.0.6) */ public Inventory m_150109_() { throw new UnsupportedOperationException(); }
     /** displayClientMessage */ public void m_5661_(net.minecraft.network.chat.Component message, boolean actionBar) { throw new UnsupportedOperationException(); }
 }

@@ -1,0 +1,7 @@
+{
+ "parent": "hexkagune:item/quinque/mace_case_open",
+ "textures": {
+  "q": "hexkagune:item/quinque_arm_tendril_whip",
+  "particle": "hexkagune:item/quinque_arm_tendril_whip"
+ }
+}

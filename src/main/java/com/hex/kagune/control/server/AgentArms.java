@@ -599,7 +599,7 @@ final class AgentArms {
 
     // ---------------------------------------------------------------- small things
 
-    private static String swingSound(Arm arm, boolean last) {
+    static String swingSound(Arm arm, boolean last) {
         return switch (arm) {
             case WHIP -> "hexkagune:kagune_whip";
             case CRYSTAL_SPEAR -> last ? "hexkagune:sfx.spike_heavy" : "hexkagune:sfx.blade_arc";
@@ -608,7 +608,7 @@ final class AgentArms {
         };
     }
 
-    private static String hitSound(Arm arm, int blow) {
+    static String hitSound(Arm arm, int blow) {
         if (blow == Arm.Strike.CRUSH) {
             return "hexkagune:sfx.crush";
         }
@@ -621,7 +621,7 @@ final class AgentArms {
         return arm == Arm.WHIP ? "hexkagune:sfx.slash_spray" : "hexkagune:flesh_impact";
     }
 
-    private static float pitch(Arm arm) {
+    static float pitch(Arm arm) {
         return switch (arm) {
             case WHIP -> 1.0F;
             case CRYSTAL_SPEAR -> 1.1F;

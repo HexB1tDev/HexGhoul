@@ -1045,3 +1045,10 @@ C net/minecraft/world/level/block/Rotation                                      
 
 # --- 2.0.42: Rinkaku's block --------------------------------------------------------------------------
 M net/minecraftforge/event/entity/living/LivingAttackEvent getAmount ()F            # [forge] event/entity/living/LivingAttackEvent.java (final float amount; getSource/getAmount): how hard the blocked blow was
+
+# --- 3.0.6: a player's kagune-made weapon folds back into its case when it is put away -------------------------------------------------
+C net/minecraft/world/entity/player/Inventory                                       # [srg] joined.tsrg byn net/minecraft/src/C_1140_ (Player.fN ()Lbyn; is getInventory)
+M net/minecraft/world/entity/player/Player m_150109_ ()Lnet/minecraft/world/entity/player/Inventory;  # [srg] getInventory: joined.tsrg byo.fN ()Lbyn; m_150109_
+M net/minecraft/world/entity/player/Inventory m_6643_ ()I                           # [srg] getContainerSize: joined.tsrg byn.b ()I m_6643_
+M net/minecraft/world/entity/player/Inventory m_8020_ (I)Lnet/minecraft/world/item/ItemStack;  # [srg] getItem: joined.tsrg byn.a (I)Lcfz; m_8020_
+M net/minecraft/world/entity/player/Inventory m_6836_ (ILnet/minecraft/world/item/ItemStack;)V  # [srg] setItem: joined.tsrg byn.a (ILcfz;)V m_6836_

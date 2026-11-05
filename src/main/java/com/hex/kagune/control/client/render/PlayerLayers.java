@@ -87,7 +87,10 @@ public final class PlayerLayers {
         // 2.0.40: where a Rinkaku's tails tear out of the lower back.
         RinkakuMarkLayer mark = new RinkakuMarkLayer(renderer);
         renderer.m_115326_(mark);
-        List<RenderLayer> ours = List.of(wounds, kakugan, armor, mask, blade, graft, king, figure, build, mark);
+        // 3.0.6: a kagune-made weapon in the hand (its own mesh, its whip's tendril).
+        ArmItemLayer arms = new ArmItemLayer(renderer);
+        renderer.m_115326_(arms);
+        List<RenderLayer> ours = List.of(wounds, kakugan, armor, mask, blade, graft, king, figure, build, mark, arms);
         ATTACHED.put(renderer, ours);
         return ours;
     }

@@ -51,6 +51,25 @@ public final class QuinqueServer {
         }
         Player player = event.getEntity();
         ItemStack held = player.m_21205_();
+        // 3.0.6: a kagune-made weapon's case tears open (its weapon's own right clicks are its moves: WeaponClient, PlayerArms).
+        com.hex.kagune.control.quinque.Arm armCase = ControlItems.armCase(held);
+        if (armCase != null) {
+            event.setCanceled(true);
+            event.setCancellationResult(InteractionResult.SUCCESS);
+            if (player instanceof ServerPlayer server && server.m_9236_() instanceof ServerLevel level && tapped(server, level.m_46467_())) {
+                try {
+                    PlayerArms.open(server, level, held, armCase);
+                } catch (RuntimeException failure) {
+                    com.hex.kagune.control.Safety.caught(failure, "a kagune weapon's case opening");
+                }
+            }
+            return;
+        }
+        if (ControlItems.armWeapon(held) != null) {
+            event.setCanceled(true); // (its moves come from WeaponClient; nothing else happens on a use that reached here)
+            event.setCancellationResult(InteractionResult.SUCCESS);
+            return;
+        }
         Quinque shut = ControlItems.quinqueCase(held);
         Quinque open = shut == null ? ControlItems.quinqueWeapon(held) : null;
         boolean fires = open != null && open.firesOnUse() && !player.m_6047_();

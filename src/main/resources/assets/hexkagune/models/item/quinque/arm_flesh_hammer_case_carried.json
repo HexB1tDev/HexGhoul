@@ -1,0 +1,7 @@
+{
+ "parent": "hexkagune:item/quinque/koukaku_case_carried",
+ "textures": {
+  "q": "hexkagune:item/quinque_arm_flesh_hammer",
+  "particle": "hexkagune:item/quinque_arm_flesh_hammer"
+ }
+}

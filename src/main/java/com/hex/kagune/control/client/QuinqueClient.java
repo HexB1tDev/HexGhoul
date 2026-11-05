@@ -47,6 +47,11 @@ public final class QuinqueClient {
                 put.invoke(null, ControlItems.caseOf(quinque), id, caseFrame);
                 put.invoke(null, ControlItems.weaponOf(quinque), id, weaponFrame);
             }
+            // 3.0.6: a kagune-made weapon's case (shut, or carried by an investigator).
+            for (com.hex.kagune.control.quinque.Arm arm : com.hex.kagune.control.quinque.Arm.values()) {
+                net.minecraft.client.renderer.item.ClampedItemPropertyFunction caseFrame = (stack, level, entity, seed) -> caseFrame(stack, entity);
+                put.invoke(null, ControlItems.armCaseOf(arm), id, caseFrame);
+            }
         } catch (ReflectiveOperationException | RuntimeException | LinkageError failure) {
             com.hex.kagune.control.Safety.caught(failure, "registering the quinques' turning frames");
         }
@@ -85,6 +90,26 @@ public final class QuinqueClient {
         @SubscribeEvent
         public static void tooltip(net.minecraftforge.event.entity.player.ItemTooltipEvent event) {
             ItemStack stack = event.getItemStack();
+            com.hex.kagune.control.quinque.Arm armCase = ControlItems.armCase(stack);
+            com.hex.kagune.control.quinque.Arm armOut = armCase == null ? ControlItems.armWeapon(stack) : null;
+            if (armCase != null || armOut != null) {
+                // 3.0.6: a kagune-made weapon: what it is, its string, its two moves, how it opens and shuts.
+                com.hex.kagune.control.quinque.Arm arm = armCase != null ? armCase : armOut;
+                java.util.List<Component> lines = event.getToolTip();
+                if (ControlItems.masterwork(stack)) {
+                    lines.add(Component.m_237115_("item.hexkagune.arm.masterwork"));
+                }
+                lines.add(Component.m_237115_("item.hexkagune.arm." + arm.key() + ".lore"));
+                lines.add(Component.m_237115_("item.hexkagune.quinque.ghoul"));
+                if (armCase != null) {
+                    lines.add(Component.m_237115_("item.hexkagune.arm.open"));
+                } else {
+                    lines.add(Component.m_237115_("item.hexkagune.arm.string"));
+                    lines.add(Component.m_237115_("item.hexkagune.arm." + arm.key() + ".moves"));
+                    lines.add(Component.m_237115_("item.hexkagune.arm.put_away"));
+                }
+                return;
+            }
             Quinque shut = ControlItems.quinqueCase(stack);
             Quinque open = shut == null ? ControlItems.quinqueWeapon(stack) : null;
             if (shut == null && open == null) {
@@ -118,8 +143,8 @@ public final class QuinqueClient {
     /** True while {@code player}'s body is a quinque's: a weapon out, or a case just shut (the arms coming down). */
     public static boolean posing(net.minecraft.world.entity.LivingEntity player) {
         ItemStack held = player.m_21205_();
-        if (ControlItems.quinqueWeapon(held) != null) {
-            return true;
+        if (ControlItems.quinqueWeapon(held) != null || ControlItems.armWeapon(held) != null) {
+            return true; // 3.0.6: or a kagune-made weapon
         }
         Quinque shut = ControlItems.quinqueCase(held);
         return shut != null && shown(held, false) > 0.0F;
@@ -143,6 +168,10 @@ public final class QuinqueClient {
         }
         swing.wasSwinging = swinging;
         swing.lastSwingTime = body.f_20913_;
+        com.hex.kagune.control.quinque.Arm arm = ControlItems.armWeapon(held);
+        if (arm != null) {
+            return WeaponClient.pose(body, held, arm, partial); // 3.0.6: a kagune-made weapon, as an investigator holds and swings it
+        }
         Quinque weapon = ControlItems.quinqueWeapon(held);
         if (weapon == null) {
             Quinque shut = ControlItems.quinqueCase(held);

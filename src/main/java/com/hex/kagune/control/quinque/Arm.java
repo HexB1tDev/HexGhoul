@@ -4,8 +4,9 @@ package com.hex.kagune.control.quinque;
  * 3.0.0 (the owner: "CCG rework, make the ccg moveset way more complex, better ranks get better custom weapons (super detailed with meshes
  * from the kagunes themselves, tendril whips that can cut and grab, crystal spears, big flesh hammers, big two handed swords made from flesh
  * and bone of kagunes all with long M1 chains and right click abilities that the investigators can use at will"): the higher ranks'
- * quinques, grown from the kagune they were cut from (pure). An investigator only (never an item): it carries its case at peace (the case
- * of the kind it was made from, {@link #carried}) and the weapon tears out of it in a fight.
+ * quinques, grown from the kagune they were cut from (pure). An investigator carries its case at peace and the weapon tears out of it in a
+ * fight; 3.0.6: a player's too ({@link #key}: its own case and weapon items), from an investigator's hand or /give. {@link #carried} is the
+ * regular quinque it is held and cuts a ghoul as.
  *
  * <p>Each has a long string of blows ({@link #chain}: four to six, each its own swing, reach, arc and weight) and two moves of its own
  * ({@link #abilities}) it uses as it sees fit, each on its own cooldown.
@@ -177,5 +178,46 @@ public enum Arm {
     public static Arm byOrdinal(int ordinal) {
         Arm[] all = values();
         return ordinal >= 0 && ordinal < all.length ? all[ordinal] : null;
+    }
+
+    // ---------------------------------------------------------------- 3.0.6: in a player's hands
+
+    /**
+     * 3.0.6 (the owner: "it had the new spear that we just created, but it dropped the old spear ... it's not in the game for the player,
+     * it's only for the NPCs"): each is an item too, its own case and the weapon out of it ({@link #caseId}, {@link #weaponId}), left by the
+     * investigators who carry one and given by /give, wielded by a player as an investigator wields it (its string on M1, its two moves
+     * on right click and Shift + right click). Its items' name.
+     */
+    public String key() {
+        return switch (this) {
+            case WHIP -> "tendril_whip";
+            case CRYSTAL_SPEAR -> "crystal_spear";
+            case FLESH_HAMMER -> "flesh_hammer";
+            case BONE_SWORD -> "bone_greatsword";
+        };
+    }
+
+    /** Its case's item id (shut). */
+    public String caseId() {
+        return "quinque_case_" + this.key();
+    }
+
+    /** Its weapon's item id (out of its case). */
+    public String weaponId() {
+        return "quinque_" + this.key();
+    }
+
+    /** The arm whose case or weapon has {@code id} ("hexkagune:..." or bare), or null. */
+    public static Arm byId(String id) {
+        if (id == null) {
+            return null;
+        }
+        String bare = id.startsWith("hexkagune:") ? id.substring("hexkagune:".length()) : id;
+        for (Arm arm : values()) {
+            if (arm.caseId().equals(bare) || arm.weaponId().equals(bare)) {
+                return arm;
+            }
+        }
+        return null;
     }
 }

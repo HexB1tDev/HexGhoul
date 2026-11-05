@@ -3,7 +3,7 @@
 `docs/handoff/next-ai-1.3.60.md` (house rules), then the top sections of `docs/handoff/companions-handoff.md` (one per version, newest first).
 
 Branch **`claude/loving-albattani-xld4zv`** (push only to the branch the session is given). Never push to `main`; no PR unless asked.
-Version **3.0.5** in `build.py` and `patch/KagunePatch.java`; the next is **3.0.6** (the last number never reaches 10). Protocol **"87"** (`ControlNetwork.PROTOCOL`; 3.0.0 bumped it for CcgAgent ARM, ARM_AT, ARM_TARGET and the ArmRules SWING codes; 2.5.0 bumped it for 2.4.8's S2CUkakuFx CRACK and 2.4.9's new EtoGesture ordinals; 2.4.5 added S2CThyDeath and C2SUkakuAction THY_DEATH; 2.3.0 added the mother's size to `S2CChild`; 2.2.4 added the kiss's mood to `S2CEto`; 2.1.9 added the synced AFRAID on CcgAgent and GhoulNpc; 2.1.7 added `C2SUkakuAction.REAPER_DASH`; 2.0.42
+Version **3.0.6** in `build.py` and `patch/KagunePatch.java`; the next is **3.0.7** (the last number never reaches 10). Protocol **"88"** (`ControlNetwork.PROTOCOL`; 3.0.6 bumped it for C2SArmAction (50) and S2CArmSwing (51); 3.0.0 bumped it for CcgAgent ARM, ARM_AT, ARM_TARGET and the ArmRules SWING codes; 2.5.0 bumped it for 2.4.8's S2CUkakuFx CRACK and 2.4.9's new EtoGesture ordinals; 2.4.5 added S2CThyDeath and C2SUkakuAction THY_DEATH; 2.3.0 added the mother's size to `S2CChild`; 2.2.4 added the kiss's mood to `S2CEto`; 2.1.9 added the synced AFRAID on CcgAgent and GhoulNpc; 2.1.7 added `C2SUkakuAction.REAPER_DASH`; 2.0.42
 added `S2CRinkakuBlock`, message id 48, and `C2SUkakuAction.BLOCK`; 2.0.48 `S2CUkakuFx.DAWN_RING`; 2.0.49 `CcgAgent.SOARING` on the flip). Nothing is tested in game.
 
 ## The owner's requests since 2.0.36 (their words, trimmed)
@@ -197,6 +197,7 @@ Previews: `dawn-bigger-2.0.47.png`, `dawn-aim-2.0.47.png`, `dawn-volley-2.0.48.p
   taken over by the body a player comes to (`EtoBrain.tick` first branch: dormant until `someoneAbout`, then `UniqueNpcs.adopt`).
 - **3.0.5** Rinkaku HOLD/LIFT/CRUSH: tails not holding (`view.heldEntityId(limb) == 0`) take the idle rest (RinkakuIdleClient) and idle
   smoothing; the holder HOLD_RESPONSE 2 / HOLD_WIGGLE 0.35 (`StrikePaths.clearOwner`).
+- **3.0.6** The four Arms are player items (`quinque_case_<key>` / `quinque_<key>`, `ControlItems.armCaseOf/armWeaponOf`, masterwork tag): opened by right click on the case (`PlayerArms.open`), folded back when put in another slot (`PlayerArms.fold`, needs `Player.getInventory` stub); M1 = string (`C2SArmAction.STRIKE`), right click / Shift + right click = moves; `S2CArmSwing` drives `WeaponClient.pose` and `ArmItemLayer` (third and first person). Investigators carry and drop the arm's own case. Untested in game; the first-person placement is hand-tuned and may need adjusting.
 - **2.3.1** the mood kisses rendered for the owner (`docs/handoff/*-mood-kisses-2.3.1.png`, `mood-kisses-waiting-2.3.1.gif`); possessive, giddy
   and tender reworked to read apart. Render poses with `tools/CompanionPreview.java <out> kisses` (stiff limbs, as in game).
 
