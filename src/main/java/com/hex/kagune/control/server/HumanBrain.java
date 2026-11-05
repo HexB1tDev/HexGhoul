@@ -629,6 +629,10 @@ public final class HumanBrain {
             gesture(human, com.hex.kagune.control.village.HumanGestures.dusk(human.m_217043_().m_188503_(100)), 0, now); // 1.3.77
         }
         mind.dusk = night;
+        // 2.4.7: now and then, by day, a favour asked of a player near (rare: HumanErrand).
+        if (!night && (now + human.m_19879_()) % 200L == 0L) {
+            HumanErrandServer.maybeAsk(human, level, now);
+        }
         if (night) {
             double dx = place.homeX() + 0.5 - human.m_20185_();
             double dz = place.homeZ() + 0.5 - human.m_20189_();

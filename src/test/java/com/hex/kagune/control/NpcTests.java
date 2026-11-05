@@ -40,6 +40,7 @@ public final class NpcTests {
         lives();
         romance214();
         approach226();
+        errands247();
         identity();
         blades();
         bubbles();
@@ -967,6 +968,42 @@ public final class NpcTests {
                 check(!thing.isBlank() && !thing.startsWith("a a") && !thing.startsWith("a e") && !thing.startsWith("a i"), job + ": " + thing);
             }
         }
+    }
+
+    /** 2.4.7: villagers' favours: what they ask, kept with the player, every temper's words. */
+    static void errands247() {
+        java.util.EnumMap<com.hex.kagune.control.village.HumanErrand.Kind, Integer> kinds = new java.util.EnumMap<>(com.hex.kagune.control.village.HumanErrand.Kind.class);
+        for (long roll = 0; roll < 4000; roll++) {
+            com.hex.kagune.control.village.HumanErrand.Errand errand = com.hex.kagune.control.village.HumanErrand.roll(roll * 7919L + (roll << 9), "Hana");
+            kinds.merge(errand.kind(), 1, Integer::sum);
+            check(errand.count() >= 1 && errand.emeralds() >= 2 && errand.emeralds() <= 8, "a favour pays in emeralds: " + errand);
+            if (errand.kind() == com.hex.kagune.control.village.HumanErrand.Kind.FETCH) {
+                check(errand.item().startsWith("minecraft:") && !errand.name().isEmpty(), "a thing to fetch: " + errand);
+            }
+            String line = com.hex.kagune.control.village.HumanErrand.save("u-1", "Mai", errand, 1, 500L);
+            com.hex.kagune.control.village.HumanErrand.Open back = com.hex.kagune.control.village.HumanErrand.load(line);
+            check(back != null && back.errand().equals(errand) && back.done() == 1 && back.until() == 500L && back.giverName().equals("Mai"),
+                "kept with the player and back: " + line);
+        }
+        check(kinds.size() == 3, "fetching, hunting and visiting all come up: " + kinds);
+        check(com.hex.kagune.control.village.HumanErrand.roll(5L, null).kind() != com.hex.kagune.control.village.HumanErrand.Kind.VISIT,
+            "no visit with no neighbour");
+        check(com.hex.kagune.control.village.HumanErrand.load("") == null && com.hex.kagune.control.village.HumanErrand.load("junk") == null, "none, or junk, is none");
+        java.util.regex.Pattern banned = java.util.regex.Pattern.compile("Kaneki|Ayato|Furuta|Takatsuki|Aogiri|Yoshimura");
+        for (com.hex.kagune.control.village.HumanPersona.Temper temper : com.hex.kagune.control.village.HumanPersona.Temper.values()) {
+            for (com.hex.kagune.control.village.HumanErrand.Kind kind : com.hex.kagune.control.village.HumanErrand.Kind.values()) {
+                for (int seed = 0; seed < 4; seed++) {
+                    com.hex.kagune.control.village.HumanErrand.Errand errand = new com.hex.kagune.control.village.HumanErrand.Errand(kind, "minecraft:coal",
+                        "coal", 6, "Hana", 3);
+                    String ask = com.hex.kagune.control.village.HumanErrand.ask(temper, errand, seed);
+                    check(ask.length() > 10 && !ask.contains("{") && !banned.matcher(ask).find(), temper + " " + kind + ": " + ask);
+                }
+            }
+            check(com.hex.kagune.control.village.HumanErrand.thanks(temper, 1).length() > 3 && com.hex.kagune.control.village.HumanErrand.dropped(temper, 1).length() > 3,
+                temper + ": thanks and a let-down");
+        }
+        check(com.hex.kagune.control.village.HumanErrand.visited("Mai", 2).contains("Mai"), "the neighbour knows who sent them");
+        check(com.hex.kagune.control.village.HumanErrand.OFFER_EVERY >= 6000L && com.hex.kagune.control.village.HumanErrand.CHANCE <= 0.05, "rare");
     }
 
     static void village() {

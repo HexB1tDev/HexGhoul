@@ -150,8 +150,10 @@ public final class HumanTalk {
             QuestServer.bond(player, key, bond.with(com.hex.kagune.control.npc.NpcBonds.MET, true));
         }
         int roll = human.m_217043_().m_188503_(1000);
+        // 2.4.7: the neighbour a favour sent them to see: its words for the one who sent them.
+        String visited = HumanErrandServer.visit(player, human);
         // 2.1.3: now and then caught at its odd habit first.
-        show(player, human, com.hex.kagune.control.village.HumanVoice.caught(HumanBrain.life(human), roll)
+        show(player, human, visited != null ? visited : com.hex.kagune.control.village.HumanVoice.caught(HumanBrain.life(human), roll)
             + HumanPersona.hello(temper, bond.regard(), bond.has(HumanPersona.PARTNER), roll));
         human.mind.with = player.m_20148_();
         HumanBrain.gesture(human, com.hex.kagune.control.village.HumanGestures.hello(temper, bond.has(HumanPersona.PARTNER), roll), 0, now); // 1.3.77
@@ -248,6 +250,19 @@ public final class HumanTalk {
         // hearts), with a line in a bubble.
         // 1.3.78: a date: it takes their hand and walks with them, glued at their side, inside the village; the talk ends so it can be
         // seen. Once a day it warms to them a little for it.
+        // 2.4.7: a favour handed in, or given up.
+        if (choice == NpcTalk.Choice.ACCEPT || choice == NpcTalk.Choice.DECLINE) {
+            com.hex.kagune.control.village.HumanErrand.Open favour = HumanErrandServer.theirs(player, human);
+            if (favour != null) {
+                boolean done = choice == NpcTalk.Choice.ACCEPT && HumanErrandServer.ready(player, favour);
+                String said = done ? HumanErrandServer.complete(player, human, favour) : choice == NpcTalk.Choice.DECLINE
+                    ? HumanErrandServer.drop(player, human) : HumanPersona.hello(temper, bond.regard(), bond.has(HumanPersona.PARTNER), roll);
+                HumanBrain.gesture(human, done ? com.hex.kagune.control.village.HumanGestures.yes(temper)
+                    : com.hex.kagune.control.village.HumanGestures.about(temper, roll), 0, now);
+                show(player, human, said);
+                return;
+            }
+        }
         // 2.3.4: the romance page, back from it, a ring.
         if (choice == NpcTalk.Choice.SWEET) {
             sweet(player, human, HumanPersona.hello(temper, bond.regard(), true, roll));
@@ -484,6 +499,17 @@ public final class HumanTalk {
         }
         offered.add(TRADE); // 2.0.13
         said.add("Let's trade.");
+        // 2.4.7: the favour it asked of them: handed in when it's done (or what it wanted is in their hand), or given up.
+        com.hex.kagune.control.village.HumanErrand.Open favour = HumanErrandServer.theirs(player, human);
+        if (favour != null) {
+            if (HumanErrandServer.ready(player, favour)) {
+                offered.add(NpcTalk.Choice.ACCEPT);
+                said.add(favour.errand().kind() == com.hex.kagune.control.village.HumanErrand.Kind.FETCH
+                    ? "Here's what you asked for. (the " + favour.errand().count() + " " + favour.errand().name() + " in your hand)" : "It's done. (your favour)");
+            }
+            offered.add(NpcTalk.Choice.DECLINE);
+            said.add("I can't do that favour after all.");
+        }
         if (!partner) {
             offered.add(NpcTalk.Choice.TEASE); // 2.1.4
             said.add(regard >= HumanPersona.CLOSE ? "Flirt with " + HumanBrain.name(human) + "." : "Flirt a little.");

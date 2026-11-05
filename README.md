@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.4.7 (HexGhoul): villagers' favours: rare mini quests, more village talk (testing)
+
+See `.github/release-notes-2.4.7.md`. Village humans now ask for favours: rare mini quests that come up through the alert banner, raise their regard and pay out. More village talk too.
+
 ## 2.4.6 (HexGhoul): Ukaku's Vortex: a slow, massive rolling blow (testing)
 
 See `.github/release-notes-2.4.6.md`. Ukaku's Vortex reworked to match the reference: a slow, massive, twisting blow instead of a fast horizontal tornado. The wing still leaves the shoulder blade, but now it rears up and comes down ahead, then rolls on along the ground in great upright loops, like the black mass in the reference, curling over each loop's top. The loops grow in as it lengthens, so it starts as a rising arch.

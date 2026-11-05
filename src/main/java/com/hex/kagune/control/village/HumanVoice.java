@@ -205,7 +205,14 @@ public final class HumanVoice {
         "A dog's been following the gravedigger everywhere. He pretends to hate it. He feeds it.", "Fog's coming in from the river every night now. Thick as milk.",
         "There's a new coffee shop rumour: a cafe in the city where the waitress kicks like a horse.", "The elder's nephew proposed at the well. She said maybe.",
         "Lanterns went missing from the gate. The watch blames the wind. The wind doesn't carry lanterns.",
-        "A merchant's selling 'ghoul-proof' charms. They're just rocks. People are buying them."};
+        "A merchant's selling 'ghoul-proof' charms. They're just rocks. People are buying them.",
+        // 2.4.7 (the owner: "Add even more lines"): more of the village's talk.
+        "The baker's oven caught fire again. Third time this month. The bread was still good.", "Someone painted a mask on the well. The elder scrubbed it off. It came back.",
+        "A Dove asked about you. I said I'd never seen you. ...You're welcome.", "The river froze over at the bend, in summer. Nobody can explain it.",
+        "Two strangers in long coats bought every lantern in the village. Then left. At night.", "The church bell rang by itself at midnight. Nobody was in the tower.",
+        "The fisherman pulled up a quinque case from the river. Empty. He threw it back.", "There's a cat that sits outside the CCG post every day. Just watching.",
+        "Somebody left flowers on the grave of a ghoul the Doves killed. Nobody admits to it.", "The tailor's apprentice ran off to the city. Left a note: 'Don't look for me.'",
+        "They say a ghoul in a white mask saved a child from the river last week. Then vanished.", "The harvest festival's moved up. The elder wants it done before the fog comes."};
 
     public static String news(int seed) {
         return pick(seed, NEWS);
@@ -225,7 +232,17 @@ public final class HumanVoice {
         "{other} the {job} lost someone last winter. Be gentle with them.", "{other} the {job} once fought off a wolf with a broom. True story. Ask them.",
         "My mother wants me to marry {other} the {job}. I'd rather marry the well.", "{other} the {job} keeps a light on all night. Every night. Afraid of something.",
         "{other}, the {job}? Kindest soul here. They'd give you the shirt off their back and apologise it wasn't warmer.",
-        "I think {other} the {job} is lonely. Go and say hello sometime."};
+        "I think {other} the {job} is lonely. Go and say hello sometime.",
+        // 2.4.7: more of them.
+        "{other} the {job} lends money to everyone and never asks for it back. Saint or fool, I can't decide.",
+        "{other} the {job} sings in the mornings. Badly. Loudly. I've grown to love it.", "Never play cards with {other} the {job}. Trust me.",
+        "{other} the {job} keeps a diary. Writes in it every night. I'd give a lot to read it.",
+        "{other} the {job} came back from the city with a scar and won't say how. Don't ask.",
+        "{other} the {job} feeds the stray dogs. All of them. There are a lot of dogs now.",
+        "{other} the {job} once stared down a Dove inspector until he left. Absolute legend.",
+        "{other} the {job} is braver than they look. And they look terrified most of the time.",
+        "{other} the {job} talks to the moon. I've seen it. I think the moon talks back.",
+        "If {other} the {job} offers you tea, say yes. If they offer you soup, run."};
 
     /** Gossip about {@code other} the {@code job}. */
     public static String gossip(String other, String job, int seed) {
