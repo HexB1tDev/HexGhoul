@@ -801,8 +801,6 @@ public final class KaguneBodyAnimation implements IAnimation {
             default -> {
             }
         }
-        // 2.4.8: Ken's way of pulling it out, taught with a kakuja: a finger cracked first, the right arm alone out in front.
-        com.hex.kagune.control.client.KenPullOutClient.apply(p, this.player.m_19879_(), time);
         float[] jolt = com.hex.kagune.control.client.RinkakuBlockClient.jolt(this.player, time);
         if (block > 0.0F || jolt[1] > 0.0F) {
             RinkakuBlockPose.apply(p, block, jolt[0], jolt[1]);
@@ -945,6 +943,13 @@ public final class KaguneBodyAnimation implements IAnimation {
             damp *= 0.5F;
         }
         this.p.settle(damp);
+        // 2.4.8: Ken's way of pulling it out, taught with a kakuja: a finger cracked first, the right arm alone out in front. 3.0.2 (the
+        // owner: "there's a weird stop when you first pull out the Kagune ... it just waits a little bit"): laid on after the layer's own
+        // fade-in (which starts from nothing as the crack begins and scaled the crack down to nearly nothing for its first ticks); the
+        // crack blends itself in from wherever the body is.
+        if (damp > 0.0F) {
+            com.hex.kagune.control.client.KenPullOutClient.apply(this.p, this.player.m_19879_(), time);
+        }
         if (steel > 0.0F && !lying) {
             this.carry(steel * Math.min(1.0F, this.fade), steel, time, tickDelta);
         }

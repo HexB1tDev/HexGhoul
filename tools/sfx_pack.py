@@ -157,13 +157,20 @@ def volume(path, gain):
     return round(max(0.2, min(1.0, gain * min(1.6, level))), 2)
 
 
-def sound(path, gain, stream=False):
+# 3.0.2 (the owner: a "weird stop when you first pull out the Kagune"): the pull-out's sounds are loaded with the pack, not on their
+# first play (the game reads a sound's file the first time it is played: the first crack of a session came late).
+PRELOAD = {"finger_crack", "kagune_burst", "gush"}
+
+
+def sound(path, gain, stream=False, preload=False):
     file = SOUNDS / "sfx" / (path + ".ogg")
     if not file.is_file():
         raise RuntimeError(f"missing {file}")
     entry = {"name": "hexkagune:sfx/" + path, "volume": volume(file, gain)}
     if stream:
         entry["stream"] = True
+    if preload:
+        entry["preload"] = True
     return entry
 
 
@@ -174,7 +181,7 @@ def event(target):
 def main():
     sounds = {}
     for name, (gain, files, subtitle) in POOLS.items():
-        sounds["sfx." + name] = {"subtitle": "subtitles.hexkagune.sfx." + name, "sounds": [sound(f, gain) for f in files]}
+        sounds["sfx." + name] = {"subtitle": "subtitles.hexkagune.sfx." + name, "sounds": [sound(f, gain, preload=name in PRELOAD) for f in files]}
     for form in FORMS:
         sounds["sfx.transform." + form] = {"subtitle": "subtitles.hexkagune.sfx.transform",
                                             "sounds": [sound(FORM + form, FORM_GAIN, stream=True)]}

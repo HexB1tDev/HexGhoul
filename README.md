@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.0.3 (HexGhoul): No pause at the start of the finger-crack pull-out (testing)
+
+See `.github/release-notes-3.0.3.md`. The pause at the start of the finger-crack pull-out is gone: the arm moves the moment you press the key, and the kagune comes out about a quarter of a second sooner. Not tested in game.
+
 ## 3.0.2 (HexGhoul): Investigators' case drops scaled by how common the case is (testing)
 
 See `.github/release-notes-3.0.2.md`. Investigators' case drops now follow how common the case is: the commoner the weapon an investigator fought with, the likelier its case drops. It used to be a flat 2.5% for every one of them. Not tested in game.

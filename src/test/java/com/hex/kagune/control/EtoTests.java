@@ -681,11 +681,15 @@ public final class EtoTests {
             "2.5.1: the finger crack is one flowing movement: from rest, one arm eased out low and bent (the other hanging), the crack, eased "
                 + "back to rest, never more than a sliver of a jump between quarter ticks; the crack lands with its sound");
         RigPose stretched = new RigPose();
-        EtoPose.crack(stretched, 9.0F);
+        EtoPose.crack(stretched, EtoPose.CRACK_BEND);
         RigPose bent = new RigPose();
         EtoPose.crack(bent, EtoPose.CRACK_AT - 1.0F);
         check(stretched.rightElbow == 0.0F && stretched.rightArmX < -0.75F && bent.rightElbow > 0.6F && bent.rightArmX > stretched.rightArmX - 0.4F,
             "2.5.3: the arm stretches out straight first, then the elbow bends (the hand coming up), smoothly");
+        RigPose early = new RigPose();
+        EtoPose.crack(early, 2.0F);
+        check(early.rightArmX < -0.3F && EtoPose.CRACK_AT <= 18.0F,
+            "3.0.2: no wait before it: two ticks in the arm is well on its way, the crack under a second in");
         RigPose stance = new RigPose();
         stance.rightArmX = -0.4F;
         stance.leftArmX = -0.3F;

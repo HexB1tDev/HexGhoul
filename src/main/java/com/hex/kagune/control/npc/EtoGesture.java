@@ -110,7 +110,7 @@ public enum EtoGesture {
     SERVE(50, false, false);
 
     /** 2.5.1: when, in a finger crack ({@link #CRACK}), the finger cracks (ticks): the pose's snap and its sound, together. */
-    public static final int CRACK_SNAP = 22;
+    public static final int CRACK_SNAP = 17; // 3.0.2: 22 before (the kagune came out a long second after the key)
 
     public final int ticks;
     public final boolean eyesClosed;

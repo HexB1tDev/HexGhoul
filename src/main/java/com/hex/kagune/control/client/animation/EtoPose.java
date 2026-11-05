@@ -911,12 +911,13 @@ public final class EtoPose {
         return 1.0F - ease((t - CRACK_DOWN) / (CRACK_END - CRACK_DOWN));
     }
 
-    /** 2.5.1: how much of the crack is on the body {@code t} ticks in: 0, eased up to 1 by {@link #CRACK_RISE}, held, eased back to 0. */
+    /** 2.5.1: how much of the crack is on the body {@code t} ticks in: 0, up to 1 by {@link #CRACK_RISE}, held, eased back to 0. */
     public static float crackWeight(float t) {
         if (t <= 0.0F || t >= CRACK_END) {
             return 0.0F;
         }
-        return ease(t / CRACK_RISE) * crackRelease(t);
+        // 3.0.2: the arm moves at once (eased out, never a slow start that reads as a wait), slowing into its reach.
+        return (float)Math.sin(Math.min(1.0F, t / CRACK_RISE) * Math.PI * 0.5) * crackRelease(t);
     }
 
     /** 2.5.1: the thumb pressing into the finger before the crack (0 to 1, eased). */
@@ -932,11 +933,11 @@ public final class EtoPose {
     /** When the finger cracks (ticks into the gesture): the same moment its sound is played (EtoGesture.CRACK_SNAP). */
     public static final float CRACK_AT = com.hex.kagune.control.npc.EtoGesture.CRACK_SNAP;
     /** 2.5.1: the arm all the way out by here (2.5.3: straight); easing down from here; at rest again by here (ticks). */
-    public static final float CRACK_RISE = 14.0F;
+    public static final float CRACK_RISE = 10.0F;
     /** 2.5.3: the elbow starts bending here, the arm most of the way out. */
-    public static final float CRACK_BEND = 9.0F;
-    public static final float CRACK_DOWN = 34.0F;
-    public static final float CRACK_END = 52.0F;
+    public static final float CRACK_BEND = 7.0F;
+    public static final float CRACK_DOWN = 29.0F;
+    public static final float CRACK_END = 47.0F;
     /** The arm at the crack: out about 50 degrees, a little in toward the chest, the elbow bent (a player's arm shows it). */
     static final float CRACK_ARM_X = -0.9F;
     static final float CRACK_ARM_Y = -0.3F;

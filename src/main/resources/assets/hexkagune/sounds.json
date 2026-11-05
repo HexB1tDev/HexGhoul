@@ -198,7 +198,8 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/bone/finger_crack",
-        "volume": 0.99
+        "volume": 0.99,
+        "preload": true
       }
     ]
   },
@@ -207,7 +208,8 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/bone/kagune_burst",
-        "volume": 1.0
+        "volume": 1.0,
+        "preload": true
       }
     ]
   },
@@ -496,19 +498,23 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/blood_and_gush/gushing_bursts/short_thick_gush",
-        "volume": 1.0
+        "volume": 1.0,
+        "preload": true
       },
       {
         "name": "hexkagune:sfx/blood_and_gush/gushing_bursts/deep_blood_gush",
-        "volume": 1.0
+        "volume": 1.0,
+        "preload": true
       },
       {
         "name": "hexkagune:sfx/blood_and_gush/gushing_bursts/pressurized_gush",
-        "volume": 1.0
+        "volume": 1.0,
+        "preload": true
       },
       {
         "name": "hexkagune:sfx/blood_and_gush/gushing_bursts/double_gush",
-        "volume": 0.88
+        "volume": 0.88,
+        "preload": true
       }
     ]
   },
