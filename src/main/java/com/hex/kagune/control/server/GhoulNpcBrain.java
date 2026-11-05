@@ -280,8 +280,8 @@ public final class GhoulNpcBrain {
 
     /** True if it goes for {@code body}: a grudge, its temper's attitude to a player, or an NPC its temper hunts. */
     static boolean wanted(GhoulNpc npc, NpcIdentity who, Mind mind, LivingEntity body, long now) {
-        if (body == npc || !body.m_6084_()) {
-            return false;
+        if (body == npc || !body.m_6084_() || ReviveForget.presumedDead(body, now)) {
+            return false; // 2.4.2: never one thought dead
         }
         if (body instanceof Player player && player.m_5833_()) {
             return false;

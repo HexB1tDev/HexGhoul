@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.4.2 (HexGhoul): Not That Easily: everything thinks you're dead (testing)
+
+See `.github/release-notes-2.4.2.md`. "You Thought You'd Get Rid of Me That Easily?" now makes everything think you're dead. That covers every path's version: Rinkaku's passive, Ukaku's, Graft's and Pale's mutations. Vanilla mobs already forgot you, but this mod's own fighters kept their own minds and came straight back for you.
+
 ## 2.4.1 (HexGhoul): partners come to you far less; no false talk alerts (testing)
 
 See `.github/release-notes-2.4.1.md`. Partners come to you far less, and the false "wants to talk to you" alert is gone. Spouses and partners were walking up to kiss, hug, cling and take your hand almost constantly. The biggest cause was a 1-in-100 chance every tick of clinging to you whenever they stood near you in a soft mood, which made it every few seconds.

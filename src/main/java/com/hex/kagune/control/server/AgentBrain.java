@@ -542,8 +542,8 @@ public final class AgentBrain {
      * investigator, nor anyone else's companion or child unless they struck first.
      */
     static boolean wanted(CcgAgent agent, Mind mind, CcgAgent partner, LivingEntity body, long now, boolean current) {
-        if (body == agent || !body.m_6084_() || body instanceof CcgAgent || body.m_5833_()) {
-            return false;
+        if (body == agent || !body.m_6084_() || body instanceof CcgAgent || body.m_5833_() || ReviveForget.presumedDead(body, now)) {
+            return false; // 2.4.2: and never one thought dead
         }
         if (body instanceof Player player && player.m_7500_()) {
             return false;

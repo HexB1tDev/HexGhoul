@@ -66,6 +66,61 @@ public final class ReviveForget {
                 }
             }
             forgetIn(mob.m_6274_(), player, id);
+            // 2.4.2 (the owner: "'Thought you'd get rid of me that easily?' Should make mobs forget about the player and assume they're
+            // dead"): this mod's own fighters keep their own minds: their prey, their grudges, cleared too.
+            int body = player.m_19879_();
+            if (mob instanceof com.hex.kagune.control.npc.CcgAgent agent && agent.mind != null) {
+                if (agent.mind.prey == body) {
+                    agent.mind.prey = 0;
+                }
+                if (agent.mind.target == body) {
+                    agent.mind.target = 0;
+                }
+                agent.mind.grudges.remove(id);
+            } else if (mob instanceof com.hex.kagune.control.npc.GhoulNpc ghoul && ghoul.mind != null) {
+                if (ghoul.mind.prey == body) {
+                    ghoul.mind.prey = 0;
+                }
+                ghoul.mind.grudges.remove(id);
+            } else if (mob instanceof com.hex.kagune.control.npc.EtoNpc companion && companion.mind != null) {
+                if (companion.mind.target == body) {
+                    companion.mind.target = 0;
+                    companion.mind.dirty = true;
+                }
+                companion.mind.grudges.remove(id);
+            } else if (mob instanceof com.hex.kagune.control.npc.HumanNpc human && human.mind != null && id.equals(human.mind.hurtBy)) {
+                human.mind.hurtBy = null;
+            }
+        }
+        PRESUMED.put(id, level.m_46467_() + DEAD_FOR);
+    }
+
+    /** 2.4.2: who is thought dead, and until when (unless they strike something first). */
+    private static final java.util.Map<UUID, Long> PRESUMED = new java.util.HashMap<>();
+    /** 2.4.2: how long (ticks) after they stand up whole they are still thought dead: half a minute. */
+    static final long DEAD_FOR = 600L;
+
+    /** 2.4.2: true while {@code body} is thought dead: no fighter of this mod's takes them as prey. */
+    public static boolean presumedDead(net.minecraft.world.entity.Entity body, long now) {
+        if (!(body instanceof ServerPlayer player)) {
+            return false;
+        }
+        Long until = PRESUMED.get(player.m_20148_());
+        if (until == null) {
+            return false;
+        }
+        if (now > until && !PaleRevive.down(player)) {
+            PRESUMED.remove(player.m_20148_());
+            return false;
+        }
+        return true;
+    }
+
+    /** 2.4.2: one thought dead who strikes something gives themselves away. */
+    @SubscribeEvent
+    public static void struck(net.minecraftforge.event.entity.living.LivingHurtEvent event) {
+        if (event.getSource().m_7639_() instanceof ServerPlayer player && !PaleRevive.down(player)) {
+            PRESUMED.remove(player.m_20148_());
         }
     }
 

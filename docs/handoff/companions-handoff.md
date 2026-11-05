@@ -1,4 +1,12 @@
-# START HERE (state after 2.4.1)
+# START HERE (state after 2.4.2)
+
+"You Thought You'd Get Rid of Me That Easily?" now makes everything think you're dead. That covers every path's version: Rinkaku's passive, Ukaku's, Graft's and Pale's mutations. Vanilla mobs already forgot you, but this mod's own fighters kept their own minds and came straight back for you.
+
+- **What forgets you**: CCG investigators drop you as prey, along with their grudge and the ghoul mark on you. Wild ghouls drop you as prey and their grudge. A companion fighting you stops. A human you hurt stops remembering it.
+- **Thought dead**: while you're in pieces, and for 30 seconds after you stand up, none of them takes you as prey again. Strike anything and they know you're alive.
+- **Code**: `ReviveForget` (the mod's own minds, `presumedDead`), checked by `AgentBrain.wanted` and `GhoulNpcBrain.wanted`. Protocol stays 84. Not tested in game.
+
+# State after 2.4.1
 
 Partners come to you far less, and the false "wants to talk to you" alert is gone. Spouses and partners were walking up to kiss, hug, cling and take your hand almost constantly. The biggest cause was a 1-in-100 chance every tick of clinging to you whenever they stood near you in a soft mood, which made it every few seconds.
 
