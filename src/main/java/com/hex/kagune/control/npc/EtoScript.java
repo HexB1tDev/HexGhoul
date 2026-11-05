@@ -204,7 +204,7 @@ final class EtoScript implements Script {
     public EtoGesture dreadGesture(FinalSight sight, boolean ours) {
         // Fascinated by War (hungry for it, on her partner), in awe of Peace, frightened for her partner by the rest.
         return switch (sight) {
-            case WAR -> ours ? EtoGesture.LICK : EtoGesture.CHIN;
+            case WAR -> ours ? EtoGesture.FLINCH : EtoGesture.CHIN; // 2.4.4: no relish for this one on her own; a stranger she studies from afar
             case PEACE -> EtoGesture.AWE;
             case DRAGON -> ours ? EtoGesture.HUG : EtoGesture.LOOK;
             case RINKAKU -> ours ? EtoGesture.HUG : EtoGesture.LICK;

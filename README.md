@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.4.4 (HexGhoul): better reactions to War and Peace (testing)
+
+See `.github/release-notes-2.4.4.md`. Better reactions to the final forms, War and Peace.
+
 ## 2.4.3 (HexGhoul): NPCs swim like players, never stuck in water (testing)
 
 See `.github/release-notes-2.4.3.md`. NPCs swim like players now and don't get stuck in water. This covers every NPC in the mod: companions, children, villagers, wild ghouls, investigators and thralls. Before, they only bobbed at the surface, crawled at the game's slow mob pace, and nosed at the bank without getting out.

@@ -396,13 +396,15 @@ public final class EtoLines {
     public static String dread(FinalSight sight, EtoVoice voice, boolean library, int seed) {
         boolean ours = voice.together();
         return switch (sight) {
-            case WAR -> ours ? one(seed, "Look at you. The King everyone whispers about... and you came home to me.",
-                "I could read you for years like this. ...Don't you dare forget my name in there.", "Mine. Even like that. Especially like that.")
-                : one(seed, "So that's the One-Eyed King. Taller than in the stories. Better, too.", "Oh, keep going. Show me everything. I'm taking notes.",
-                    library ? "The One-Eyed King, in my Library. I should charge admission." : "Everyone's running. I'm not. Isn't that interesting?");
-            case PEACE -> ours ? one(seed, "...Oh. You're beautiful. I didn't think a monster could look like a prayer.",
-                "Stay like that a moment. I want to remember it exactly.")
-                : one(seed, "Peace. How ironic. And how lovely.", "Even I can't think of anything clever to say. ...That's a first.");
+            // 2.4.4 (the owner: "spouses don't like the War form and are surprised to see the Peace form"; everyone else "scared and
+            // acknowledge they can't beat the player in that form"): even Eto's fascination stops at this one.
+            case WAR -> ours ? one(seed, "...No. I like monsters. Not this one. Not when it's you. Take it off.",
+                "I've read every ending. This is the bad one. Come back before it writes yours.", "Don't look at me with those. ...You're scaring me. Me.")
+                : one(seed, "Oh. Oh no. I can't win against that. Nobody can. I'm leaving.", "I'd love to take notes. From very, very far away.",
+                    library ? "Not in my Library. Not that. Out. ...Please." : "Even I know when a story's over. Excuse me.");
+            case PEACE -> ours ? one(seed, "...Oh. I— what? That's you? You're beautiful. I didn't think a monster could look like a prayer.",
+                "Wait, wait. Stay like that. I don't... I have no words. Me. No words.")
+                : one(seed, "...Peace? From you? I wouldn't stand a chance, would I. Lovely.", "Even I can't think of anything clever to say. ...That's a first.");
             case DRAGON -> ours ? one(seed, "Stop. Please. Look at me. ...You're still in there. I know you are.", "That's enough. Come back. Now.")
                 : one(seed, "...Well. That's new. Even I haven't read about that.", "Hm. So the stories were true. Stay away from my shelves.");
             case RINKAKU -> ours ? one(seed, "All of that is you? ...Come back to me before it eats the rest.", "Hey. You. Under all those legs. Come back.")

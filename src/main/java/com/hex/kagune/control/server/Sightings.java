@@ -197,6 +197,14 @@ public final class Sightings {
                 }
             }
         }
+        // 2.4.4: their own children near, before Peace as before War: the little ones shake where they stand, the grown back away.
+        String me = Pregnancies.player(player.m_20148_());
+        for (ChildNpc npc : level.m_6443_(ChildNpc.class, around, child -> child.m_6084_() && child.mind != null)) {
+            Children.Child child = Children.get(level, npc.childId());
+            if (child != null && child.parent(me) && (npc.m_20280_(player) <= 8.0 * 8.0 || npc.m_142582_(player))) {
+                ChildBrain.dread(npc, player, level, now);
+            }
+        }
         for (GhoulNpc npc : level.m_6443_(GhoulNpc.class, around, ghoul -> ghoul.m_6084_() && ghoul.mind != null && ghoul.identity() != null
                 && (ghoul.m_142582_(player) || ghoul.m_20280_(player) <= 10.0 * 10.0))) {
             if (player.m_20148_().equals(npc.mind.owner)) {
@@ -262,8 +270,8 @@ public final class Sightings {
             FinalSight sight = seen(player);
             int seed = npc.m_217043_().m_188503_(100);
             ChildBrain.say(player, npc, child, sight.any() ? FearLines.child(stage, call, sight, seed) : ReactionLines.child(stage, call, shown, seed));
-            if (sight.terror() && npc.mind != null) {
-                ChildBrain.dread(npc, player, level, now); // 1.3.65: it hides from them (behind the other parent)
+            if ((sight.terror() || sight == FinalSight.PEACE) && npc.mind != null) {
+                ChildBrain.dread(npc, player, level, now); // 1.3.65: frightened of them (2.4.4: Peace too; a little one shakes in place)
             }
         }
     }

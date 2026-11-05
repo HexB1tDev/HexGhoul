@@ -1028,6 +1028,15 @@ public final class EtoBrain {
         if (!npc.m_142582_(partner)) {
             return false;
         }
+        // 2.4.4 (the owner: "spouses don't like the War form"): nothing sweet started with them while they wear it (or the Dragon has
+        // them); she keeps a step back from it.
+        if (Sightings.finalOf(partner).terror()) {
+            if (distance < 4.0 && now % 10L == 3L) {
+                double[] away = com.hex.kagune.control.npc.HumanRules.fleeStep(npc.m_20185_(), npc.m_20189_(), partner.m_20185_(), partner.m_20189_(), 0.0, 3.0);
+                npc.m_21573_().m_26519_(away[0], npc.m_20186_(), away[1], 1.0);
+            }
+            return false;
+        }
         if (clingy && reach && distance > 3.5 && now % 15L == 0L && !mind.gesture.still() && mind.chore == null && !home) {
             npc.m_21573_().m_5624_(partner, 1.0);
         }

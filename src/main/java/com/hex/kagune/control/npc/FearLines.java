@@ -15,10 +15,13 @@ public final class FearLines {
     /** A wild ghoul that doesn't know them, at first sight. */
     public static String stranger(FinalSight sight, int seed) {
         return switch (sight) {
+            // 2.4.4: and they know they can't win.
             case WAR -> pick(seed, "That mask... the King. The One-Eyed King. RUN!", "Don't look at it. Don't let it look at you!",
-                "No. No no no. Not him. Not HIM.", "I heard the stories. I didn't believe the stories!");
+                "No. No no no. Not him. Not HIM.", "I heard the stories. I didn't believe the stories!",
+                "We can't beat that. Nobody can beat that. Go!", "I'm not dying here. Not to that. I'm out!");
             case PEACE -> pick(seed, "...It's beautiful. Why is it beautiful? Why am I shaking?", "Don't make it angry. Just... back away. Slowly.",
-                "That's not a kagune. That's a cathedral.");
+                "That's not a kagune. That's a cathedral.", "I couldn't scratch that if I tried. I'm not trying.",
+                "Okay. Okay. You win. You win. I'm going.");
             case DRAGON -> pick(seed, "Wh— what ARE you?!", "That's not a ghoul. Run. RUN!", "The ground's moving... it's ALIVE!");
             case RINKAKU -> pick(seed, "All those legs— it's eating itself! Get away!", "A centipede the size of a house. I'm out!",
                 "It's still growing. Why is it still growing?!");
@@ -109,8 +112,9 @@ public final class FearLines {
     public static String scream(FinalSight sight, int seed) {
         return switch (sight) {
             case WAR -> pick(seed, "AAAAAAAH!", "It's the King! The One-Eyed King! RUN!", "Help! Somebody HELP!", "*screams*",
-                "Don't let it see me don't let it see me—");
-            case PEACE -> pick(seed, "What— what is that?! RUN!", "*screams, and can't stop staring*", "An angel? A monster?! RUN!");
+                "Don't let it see me don't let it see me—", "Nobody can stop that! NOBODY!");
+            case PEACE -> pick(seed, "What— what is that?! RUN!", "*screams, and can't stop staring*", "An angel? A monster?! RUN!",
+                "The CCG can't stop that! Nobody can! RUN!");
             case DRAGON -> pick(seed, "AAAAAAAAAH!", "The world's ending! It's ENDING!", "*screams until its voice breaks*");
             case RINKAKU -> pick(seed, "Legs! Legs everywhere! AAAH!", "MONSTER! MONSTER!", "*screams*");
             case UKAKU -> pick(seed, "Fire! It's on FIRE! RUN!", "MONSTER!", "*screams*");

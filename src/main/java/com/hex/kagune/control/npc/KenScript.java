@@ -435,12 +435,12 @@ final class KenScript extends CompanionScript {
         // 1.3.65: he has walked War's road and knows where it goes; Peace is his own, and he knows what it cost.
         boolean ours = voice.together();
         return switch (sight) {
-            case WAR -> ours ? one(seed, "I know where that road goes. I walked it. ...Come back. I'll wait as long as it takes.",
-                "Listen to my voice. Only my voice. You're still you.", "I'll pull you out. Whatever it takes.")
-                : one(seed, "That's what I became. Don't become it.", "Run. Please. I know what that is.");
-            case PEACE -> ours ? one(seed, "...That's mine. How do you— ...It suits you better than it ever did me.",
-                "Peace. Then you know what it cost. I'm sorry. And I'm proud of you.")
-                : one(seed, "You found it too. ...Then you know what it costs.", "That's mine. Or it was. Where did you find it?");
+            case WAR -> ours ? one(seed, "I hate that. I hate seeing you like that. I walked that road. ...Come back. Please.",
+                "Listen to my voice. Only my voice. Take it off. You're still you.", "Not you. I won't lose you to that too.")
+                : one(seed, "I know what that is. I can't stop it. No one can. Run.", "That's what I became. Don't come any closer.");
+            case PEACE -> ours ? one(seed, "...What? That's— that's mine. How do you— ...It suits you better than it ever did me.",
+                "Peace? You? ...I didn't expect that. I'm proud of you. I'm a little afraid, too.")
+                : one(seed, "You found it too. ...I couldn't beat you like that. I wouldn't try.", "That's mine. Or it was. Where did you find it?");
             case DRAGON -> ours ? one(seed, "...I've been there. Come back. COME BACK.", "I'll pull you out. I did it once. I'll do it again.")
                 : one(seed, "That's... no. I know what that is. Run.", "Don't let it keep you. It keeps everyone.");
             case RINKAKU -> ours ? one(seed, "I know those legs. I grew them too. ...Come back before they're all that's left.",
@@ -455,7 +455,7 @@ final class KenScript extends CompanionScript {
     @Override
     public EtoGesture dreadGesture(FinalSight sight, boolean ours) {
         return switch (sight) {
-            case WAR, DRAGON -> ours ? EtoGesture.HUG : EtoGesture.FLINCH;
+            case WAR, DRAGON -> EtoGesture.FLINCH; // 2.4.4: he doesn't like it
             case PEACE -> EtoGesture.AWE;
             case RINKAKU -> EtoGesture.CRACK;
             case UKAKU -> ours ? EtoGesture.CHIN : EtoGesture.LOOK;

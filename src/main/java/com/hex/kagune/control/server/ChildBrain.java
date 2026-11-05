@@ -1098,13 +1098,16 @@ public final class ChildBrain {
             Conversation.end(npc, com.hex.kagune.control.family.Talks.End.INTERRUPTED, level, now);
         }
         ChildStage stage = child.stage(now);
-        LivingEntity shelter = stage.sits() ? null : shelter(npc, child, from, level);
+        // 2.4.4 (the owner: "kids shake but dont run away, adult kids are scared"): a child still growing stays where it is, shaking,
+        // crouched in on itself, its eyes on them; only a grown one backs away behind someone (or off).
+        boolean grown = stage == ChildStage.ADULT;
+        LivingEntity shelter = stage.sits() || !grown ? null : shelter(npc, child, from, level);
         Vec3 spot = null;
         if (shelter != null) {
             double[] at = FinalSight.behind(shelter.m_20185_(), shelter.m_20189_(), from.m_20185_(), from.m_20189_(),
                 FinalSight.BEHIND + shelter.m_20205_() * 0.5);
             spot = new Vec3(at[0], shelter.m_20186_(), at[1]);
-        } else if (!stage.sits() && from.m_20280_(npc) < FinalSight.KEEPS_OFF * FinalSight.KEEPS_OFF) {
+        } else if (grown && from.m_20280_(npc) < FinalSight.KEEPS_OFF * FinalSight.KEEPS_OFF) {
             double[] at = com.hex.kagune.control.npc.HumanRules.fleeStep(npc.m_20185_(), npc.m_20189_(), from.m_20185_(), from.m_20189_(), 0.0, 4.0);
             spot = new Vec3(at[0], npc.m_20186_(), at[1]);
         }
