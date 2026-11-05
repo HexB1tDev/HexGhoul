@@ -1,4 +1,12 @@
-# START HERE (state after 2.5.0)
+# START HERE (state after 2.5.1)
+
+The finger crack is now one flowing movement: the arm eases up over almost a second, the thumb presses into the finger, the finger cracks (a small flick of the hand, the head tipping with it), a moment held, then the arm eases back down to rest. On a player it starts and ends exactly where their body already was, instead of jumping to the pose. The crack sound is replaced with a cleaner, shorter knuckle-style crack.
+
+- `EtoPose.crack` (companions) and `EtoPose.crackOver` (players, blended over their stance): `crackWeight` eases in by tick 18, holds, eases out from 34 to 52; the press from 16 to 22; the crack at tick 22 (`EtoGesture.CRACK_SNAP`, shared with the sound on both sides). Before, the pose was held at full and then cut off, and on a player it overwrote the arm outright. `EtoGesture.CRACK` is 56 ticks now; the kagune bursts out 4 ticks after the crack (`KenPullOut.OUT_AT`).
+- `EtoTests`: never more than a sliver of a jump between quarter ticks; starts and ends at rest; on a player, starts and ends where the body was. Previews: `docs/handoff/ken-crack-2.5.1.png`, `docs/handoff/player-crack-2.5.1.png`.
+- `sounds/sfx/bone/finger_crack.ogg`: three short pops (a knuckle cracking, 0.17 s) cut from the same CC BY 4.0 pack, softly band-limited (brightness centre about 3.9 kHz, against 6.7 kHz for the old cut, which was more than half hiss and crunch above 6 kHz), and a little quieter. Credited in `CREDITS.txt`.
+
+# State after 2.5.0
 
 Final sweep for multiplayer and single player. Quitting a world and opening another in the same game session no longer carries over the last world's timers (ability cooldowns, kagune locks, "presumed dead", a companion's recall home, villagers coming up to you, scene and talk cooldowns, a Thy Death or finger crack under way), which could otherwise lock things in the new world for hours. A villager's favour now survives your death, letting go of Z while disconnecting no longer errors, and the network protocol is bumped so a client and server on different builds are refused cleanly.
 

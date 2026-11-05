@@ -24,8 +24,9 @@ public final class KenPullOut {
     private KenPullOut() {
     }
 
-    static final long CRACK_AT = 14L;
-    static final long OUT_AT = 20L;
+    /** 2.5.1: the finger cracks with the pose's crack (EtoGesture.CRACK_SNAP); the kagune bursts out just after. */
+    static final long CRACK_AT = com.hex.kagune.control.npc.EtoGesture.CRACK_SNAP;
+    static final long OUT_AT = CRACK_AT + 4L;
 
     private static final Map<UUID, Long> PENDING = WorldTimes.map();
 

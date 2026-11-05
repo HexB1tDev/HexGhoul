@@ -77,7 +77,7 @@ public enum EtoGesture {
     /** A hand to the chin, head tipped: thinking. Or hiding something. */
     CHIN(96, false, false),
     /** A thumb pressed to a finger until it cracks; the head tilts with it. */
-    CRACK(44, false, false),
+    CRACK(56, false, false),
     /** A small, polite bow. */
     BOW(36, false, false),
     /** A quick little kiss, given unasked: up on her toes, in, out, eyes shut and pink. */
@@ -108,6 +108,9 @@ public enum EtoGesture {
     TASTE(70, false, false, "minecraft:wooden_shovel", "minecraft:bowl"),
     /** 2.4.9: what it made held out to its spouse in both hands (the food itself put in its hand by the server), a little bob. */
     SERVE(50, false, false);
+
+    /** 2.5.1: when, in a finger crack ({@link #CRACK}), the finger cracks (ticks): the pose's snap and its sound, together. */
+    public static final int CRACK_SNAP = 22;
 
     public final int ticks;
     public final boolean eyesClosed;

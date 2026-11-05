@@ -15,7 +15,7 @@ public final class KenPullOutClient {
     }
 
     /** How long the crack is drawn (ticks): the burst follows at {@code KenPullOut.OUT_AT}. */
-    public static final double LASTS = 24.0;
+    public static final double LASTS = EtoPose.CRACK_END; // 2.5.1: the whole crack, eased up and back down
 
     private static final Map<Integer, Double> STARTS = new HashMap<>();
 
@@ -49,7 +49,7 @@ public final class KenPullOutClient {
         if (age < 0.0) {
             return false;
         }
-        EtoPose.crack(p, (float)age);
+        EtoPose.crackOver(p, (float)age); // 2.5.1: over what the body was doing, never a jump to it
         return true;
     }
 }

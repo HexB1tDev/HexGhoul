@@ -845,28 +845,76 @@ public final class EtoPose {
     }
 
     /**
-     * 2.4.8 (the owner: "better [Ken]'s crack finger animation so only one hand (arm) goes forward"): the right arm alone raised out in
-     * front, lower than level and a little bent, the thumb pressed into a finger, a jolt and a tilt of the head at the crack; the left arm hanging loose at the
-     * side, never brought up. Shared with a player Ken taught a kakuja, before the kagune bursts out ({@code KenPullOutClient}).
+     * 2.4.8 (the owner: "better [Ken]'s crack finger animation so only one hand (arm) goes forward"; "the arm should have a little bend and
+     * be lower"): the right arm alone out in front, about 50 degrees, turned a little in toward the chest, the elbow bent so the hand comes
+     * up; the left arm hanging loose at the side, never brought up. 2.5.1 (the owner: "anything but smooth, its an instant snap to that
+     * position"): one flowing movement, never a jump: the arm eases up ({@link #CRACK_RISE}), the thumb presses into a finger, the crack
+     * ({@link #CRACK_AT}: a small flick of the hand, the head tipping with it), a moment held, then it eases back down to nothing
+     * ({@link #CRACK_DOWN}). Shared with a player Ken taught a kakuja ({@link #crackOver}).
      */
     public static void crack(RigPose p, float t) {
-        float press = t < CRACK_AT ? ease(t / CRACK_AT) : 1.0F;
-        float snap = t >= CRACK_AT && t < CRACK_AT + 8.0F ? (float)Math.sin((t - CRACK_AT) / 8.0F * Math.PI) : 0.0F;
-        // 2.4.8 (the owner: "the arm should have a little bend and be lower"): out about 50 degrees, well under level, turned a little in toward
-        // the chest, the elbow bent so the hand comes up (a player's arm bends; a companion's stiff arm keeps the lower, inward angle).
-        p.rightArmX = -0.9F * press - 0.1F * snap;
-        p.rightArmY = -0.3F * press;
-        p.rightArmZ = 0.03F * press;
-        p.rightElbow = 0.75F * press + 0.1F * snap;
-        p.leftArmX = 0.06F;
+        float w = crackWeight(t);
+        float press = crackPress(t);
+        float snap = crackSnap(t);
+        p.rightArmX = (CRACK_ARM_X - 0.08F * press + 0.12F * snap) * w;
+        p.rightArmY = (CRACK_ARM_Y - 0.08F * press) * w;
+        p.rightArmZ = 0.03F * w;
+        p.rightElbow = (CRACK_ELBOW + 0.1F * snap) * w;
+        p.leftArmX = 0.06F * w;
         p.leftArmY = 0.0F;
-        p.leftArmZ = -0.06F;
-        p.headX = 0.14F * press;
+        p.leftArmZ = -0.06F * w;
+        p.headX = 0.14F * w;
         p.headZ = 0.3F * snap;
     }
 
-    /** 2.4.8: when the finger cracks (ticks into the gesture). */
-    public static final float CRACK_AT = 14.0F;
+    /**
+     * 2.5.1: the crack laid over what the body is already doing (a player's stance, the kagune's), never replacing it outright: the right
+     * arm drawn from wherever it was to the crack's and back again by {@link #crackWeight}, the head's tip at the crack added.
+     */
+    public static void crackOver(RigPose p, float t) {
+        float w = crackWeight(t);
+        if (w <= 0.0F) {
+            return;
+        }
+        float press = crackPress(t);
+        float snap = crackSnap(t);
+        p.rightArmX += (CRACK_ARM_X - 0.08F * press + 0.12F * snap - p.rightArmX) * w;
+        p.rightArmY += (CRACK_ARM_Y - 0.08F * press - p.rightArmY) * w;
+        p.rightArmZ += (0.03F - p.rightArmZ) * w;
+        p.rightElbow += (CRACK_ELBOW + 0.1F * snap - p.rightElbow) * w;
+        p.headZ += 0.3F * snap;
+    }
+
+    /** 2.5.1: how much of the crack is on the body {@code t} ticks in: 0, eased up to 1 by {@link #CRACK_RISE}, held, eased back to 0. */
+    public static float crackWeight(float t) {
+        if (t <= 0.0F || t >= CRACK_END) {
+            return 0.0F;
+        }
+        float up = ease(t / CRACK_RISE);
+        float down = ease((t - CRACK_DOWN) / (CRACK_END - CRACK_DOWN));
+        return up * (1.0F - down);
+    }
+
+    /** 2.5.1: the thumb pressing into the finger before the crack (0 to 1, eased). */
+    static float crackPress(float t) {
+        return ease((t - (CRACK_AT - 6.0F)) / 6.0F);
+    }
+
+    /** 2.5.1: the crack itself: a small flick and back over six ticks (0 outside it). */
+    static float crackSnap(float t) {
+        return t >= CRACK_AT && t < CRACK_AT + 6.0F ? (float)Math.sin((t - CRACK_AT) / 6.0F * Math.PI) : 0.0F;
+    }
+
+    /** When the finger cracks (ticks into the gesture): the same moment its sound is played (EtoGesture.CRACK_SNAP). */
+    public static final float CRACK_AT = com.hex.kagune.control.npc.EtoGesture.CRACK_SNAP;
+    /** 2.5.1: the arm all the way up by here; easing down from here; at rest again by here (ticks). */
+    public static final float CRACK_RISE = 18.0F;
+    public static final float CRACK_DOWN = 34.0F;
+    public static final float CRACK_END = 52.0F;
+    /** The arm at the crack: out about 50 degrees, a little in toward the chest, the elbow bent (a player's arm shows it). */
+    static final float CRACK_ARM_X = -0.9F;
+    static final float CRACK_ARM_Y = -0.3F;
+    static final float CRACK_ELBOW = 0.75F;
 
     /** Waiting for a kiss: hands behind her back, her top half leaning in by {@code lean}, chin up, on her toes, swaying a little. */
     private static void kiss(RigPose p, float lean, float t) {

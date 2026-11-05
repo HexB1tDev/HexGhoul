@@ -658,15 +658,44 @@ public final class EtoTests {
         check(EtoPose.gesture(EtoGesture.WAVE, 0).rightArmX == 0.0F && EtoPose.gesture(EtoGesture.WAVE, EtoGesture.WAVE.ticks).rightArmX == 0.0F,
             "an idle one eases in and out");
         boolean oneArm = true;
-        for (int t = 0; t <= 30; t++) {
+        float biggest = 0.0F;
+        RigPose before = new RigPose();
+        EtoPose.crack(before, 0.0F);
+        for (float t = 0.0F; t <= EtoPose.CRACK_END + 4.0F; t += 0.25F) {
             RigPose crack = new RigPose();
             EtoPose.crack(crack, t);
-            oneArm &= Math.abs(crack.leftArmX) < 0.15F && Math.abs(crack.leftArmY) < 0.05F && Math.abs(crack.rightArmY) <= 0.35F
+            oneArm &= Math.abs(crack.leftArmX) < 0.15F && Math.abs(crack.leftArmY) < 0.05F && Math.abs(crack.rightArmY) <= 0.4F
                 && crack.rightArmX > -1.3F && crack.rightElbow >= 0.0F;
+            biggest = Math.max(biggest, Math.max(Math.abs(crack.rightArmX - before.rightArmX), Math.abs(crack.rightElbow - before.rightElbow)));
+            before = crack;
         }
+        RigPose rest = new RigPose();
+        EtoPose.crack(rest, 0.0F);
+        RigPose done = new RigPose();
+        EtoPose.crack(done, EtoPose.CRACK_END);
         RigPose cracked = new RigPose();
-        EtoPose.crack(cracked, EtoPose.CRACK_AT + 2.0F);
-        check(oneArm && cracked.rightArmX < -0.9F && cracked.rightElbow > 0.4F && cracked.headZ > 0.0F,
-            "2.4.8: the finger crack puts one arm out in front, lower than level and bent, the other hanging at the side, the head tilting");
+        EtoPose.crack(cracked, EtoPose.CRACK_AT - 0.5F);
+        check(oneArm && cracked.rightArmX < -0.85F && cracked.rightElbow > 0.6F && rest.rightArmX == 0.0F && done.rightArmX == 0.0F
+            && biggest < 0.06F && EtoPose.CRACK_AT == com.hex.kagune.control.npc.EtoGesture.CRACK_SNAP
+            && EtoGesture.CRACK.ticks >= EtoPose.CRACK_END,
+            "2.5.1: the finger crack is one flowing movement: from rest, one arm eased out low and bent (the other hanging), the crack, eased "
+                + "back to rest, never more than a sliver of a jump between quarter ticks; the crack lands with its sound");
+        RigPose stance = new RigPose();
+        stance.rightArmX = -0.4F;
+        stance.leftArmX = -0.3F;
+        RigPose over = new RigPose();
+        over.rightArmX = -0.4F;
+        over.leftArmX = -0.3F;
+        EtoPose.crackOver(over, 0.0F);
+        RigPose overEnd = new RigPose();
+        overEnd.rightArmX = -0.4F;
+        EtoPose.crackOver(overEnd, EtoPose.CRACK_END);
+        RigPose overUp = new RigPose();
+        overUp.rightArmX = -0.4F;
+        overUp.leftArmX = -0.3F;
+        EtoPose.crackOver(overUp, EtoPose.CRACK_AT - 0.5F);
+        check(over.rightArmX == stance.rightArmX && overEnd.rightArmX == stance.rightArmX && overUp.rightArmX < -0.85F
+            && overUp.leftArmX == stance.leftArmX,
+            "2.5.1: on a player the crack starts and ends exactly where their body already was, and leaves the other arm to it");
     }
 }

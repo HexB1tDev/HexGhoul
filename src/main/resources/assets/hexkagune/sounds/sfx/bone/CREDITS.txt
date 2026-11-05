@@ -4,5 +4,7 @@ finger_crack.ogg and kagune_burst.ogg are cut from "Oculus Audio Pack 01" by Ocu
 (corpora/oculus-audio-pack): files renamed to the UCS naming convention; OGG previews transcoded from the original WAVs.
 
 Changes made here:
-- finger_crack.ogg: GOREBone_BonesBreaking_OS_01, 0.185 s to 0.425 s, high-passed at 220 Hz, faded out, peak-normalized, 44.1 kHz mono.
+- finger_crack.ogg (2.5.1): three short pops (a knuckle cracking) cut from GOREBone_BonesBreaking_OS_02 at 0.291 s, GOREBone_BonesBreaking_OS_01
+  at 0.408 s and GOREBone_SkullCracking_OS_02 at 0.465 s, each faded out within a few hundredths of a second, laid 42 and 81 ms apart at
+  falling levels, softly band-limited (160 Hz to 4.2 kHz), peak -3 dB, 44.1 kHz mono.
 - kagune_burst.ogg: GOREBone_SkullCracking_OS_01 from 0.08 s, faded out at the end, 44.1 kHz mono.

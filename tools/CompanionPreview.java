@@ -176,23 +176,23 @@ public final class CompanionPreview {
     static void crack(File out) throws Exception {
         String textures = "src/main/resources/assets/hexkagune/textures/entity/";
         List<Shot> shots = new ArrayList<>();
-        for (double t : new double[] {4.0, 10.0, 14.0, 16.0, 26.0}) {
+        for (double t : new double[] {4.0, 10.0, 16.0, 22.0, 30.0, 40.0, 48.0}) {
             RigPose pose = EtoPose.gesture(EtoGesture.CRACK, t, 1, 0);
             shots.add(new Shot("t" + (int)t + ": front", pose, 0.0));
             shots.add(new Shot("t" + (int)t + ": three-quarter", pose, 35.0));
             shots.add(new Shot("t" + (int)t + ": side", pose, 85.0));
         }
-        sheet(new File(out, "ken-crack.png"), "Ken: the finger crack, one arm out, lower (2.4.8)", textures + "ken/ken.png", false, shots);
+        sheet(new File(out, "ken-crack.png"), "Ken: the finger crack, one flowing movement (2.5.1)", textures + "ken/ken.png", false, shots);
         List<Shot> player = new ArrayList<>();
-        for (double t : new double[] {4.0, 10.0, 14.0, 16.0, 26.0}) {
+        for (double t : new double[] {4.0, 10.0, 16.0, 22.0, 30.0, 40.0, 48.0}) {
             RigPose pose = new RigPose();
-            EtoPose.crack(pose, (float)t);
+            EtoPose.crackOver(pose, (float)t);
             player.add(new Shot("t" + (int)t + ": front", pose, 0.0));
             player.add(new Shot("t" + (int)t + ": three-quarter", pose, 35.0));
             player.add(new Shot("t" + (int)t + ": side", pose, 85.0));
         }
         bendy = true;
-        sheet(new File(out, "player-crack.png"), "A player Ken taught: the same crack, the elbow bent (2.4.8)", textures + "ken/ken.png", false, player);
+        sheet(new File(out, "player-crack.png"), "A player Ken taught: the same crack over their stance, the elbow bent (2.5.1)", textures + "ken/ken.png", false, player);
         bendy = false;
     }
 

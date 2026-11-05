@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.5.1 (HexGhoul): The finger crack flows: eased up and down, never a snap; a cleaner crack sound (testing)
+
+See `.github/release-notes-2.5.1.md`. The finger crack is now one flowing movement: the arm eases up over almost a second, the thumb presses into the finger, the finger cracks (a small flick of the hand, the head tipping with it), a moment held, then the arm eases back down to rest. On a player it starts and ends exactly where their body already was, instead of jumping to the pose. The crack sound is replaced with a cleaner, shorter knuckle-style crack.
+
 ## 2.5.0 (HexGhoul): Final sweep: a new world never inherits the last one's timers; favours survive death; protocol 86 (testing)
 
 See `.github/release-notes-2.5.0.md`. Final sweep for multiplayer and single player. Quitting a world and opening another in the same game session no longer carries over the last world's timers (ability cooldowns, kagune locks, "presumed dead", a companion's recall home, villagers coming up to you, scene and talk cooldowns, a Thy Death or finger crack under way), which could otherwise lock things in the new world for hours. A villager's favour now survives your death, letting go of Z while disconnecting no longer errors, and the network protocol is bumped so a client and server on different builds are refused cleanly.
