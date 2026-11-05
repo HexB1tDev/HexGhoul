@@ -54,7 +54,10 @@ public final class ThyDeathClient {
         if (minecraft.f_91074_ == null || minecraft.f_91080_ != null) {
             if (held) {
                 held = false;
-                ControlNetwork.CHANNEL.sendToServer(new C2SUkakuAction(C2SUkakuAction.THY_DEATH, 0));
+                // 2.5.0: told only while still in a world (left it, there's no one to tell: the server lets go by itself).
+                if (minecraft.f_91074_ != null) {
+                    ControlNetwork.CHANNEL.sendToServer(new C2SUkakuAction(C2SUkakuAction.THY_DEATH, 0));
+                }
             }
             return;
         }

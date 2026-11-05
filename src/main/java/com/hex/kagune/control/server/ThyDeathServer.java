@@ -4,7 +4,6 @@ import com.hex.kagune.control.ThyDeath;
 import com.hex.kagune.control.network.ControlNetwork;
 import com.hex.kagune.control.network.S2CThyDeath;
 import com.hex.kagune.data.KaguneProfile;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import net.minecraft.server.level.ServerLevel;
@@ -36,7 +35,7 @@ public final class ThyDeathServer {
         final long[] start = new long[MOST];
     }
 
-    private static final Map<UUID, State> STATES = new HashMap<>();
+    private static final Map<UUID, State> STATES = WorldTimes.kept(); // 2.5.0: forgotten when its world stops
 
     /** Z: {@code phase} 2 pressed, 1 still held, 0 let go. */
     static void input(ServerPlayer player, int phase) {
@@ -75,7 +74,8 @@ public final class ThyDeathServer {
             return;
         }
         long now = level.m_46467_();
-        if (now > state.heldUntil || !allowed(player)) {
+        // 2.5.0: never held past what a ping gives (a clock that went back can't keep it going on its own).
+        if (now > state.heldUntil || state.heldUntil - now > ThyDeath.HELD || !allowed(player)) {
             stop(player);
             return;
         }

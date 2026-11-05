@@ -42,7 +42,7 @@ public final class Sightings {
     private static final Map<UUID, Display> SHOWN = new HashMap<>();
     /** 1.3.65: which of the worst sights each player was when last looked at, and when a ghoul last shouted about them. */
     private static final Map<UUID, FinalSight> SIGHT = new HashMap<>();
-    private static final Map<UUID, Long> SHOUTED = new HashMap<>();
+    private static final Map<UUID, Long> SHOUTED = WorldTimes.map();
     /** How far an NPC notices (blocks). */
     static final double NOTICE = 16.0;
 

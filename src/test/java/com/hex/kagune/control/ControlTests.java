@@ -643,7 +643,37 @@ public final class ControlTests {
         com.hex.kagune.control.ukaku.CentipedeTail.colours(red);
     }
 
+    /**
+     * 2.5.0: a world's moments are its own: every map of game times on the server is made by WorldTimes (forgotten when a world stops, so
+     * a single player's next world never inherits cooldowns or "until"s from the last); forgetting empties them all.
+     */
+    private static void worldTimes() {
+        java.util.Map<String, Long> times = com.hex.kagune.control.server.WorldTimes.map();
+        times.put("a", 123456789L);
+        com.hex.kagune.control.server.WorldTimes.forget();
+        check(times.isEmpty(), "a stopped world's moments are forgotten");
+        boolean all = true;
+        StringBuilder stray = new StringBuilder();
+        try (java.util.stream.Stream<java.nio.file.Path> files = java.nio.file.Files.list(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server"))) {
+            for (java.nio.file.Path file : (Iterable<java.nio.file.Path>)files::iterator) {
+                String text = java.nio.file.Files.readString(file);
+                java.util.regex.Matcher m = java.util.regex.Pattern.compile("static final (?:java\\.util\\.)?Map<[A-Za-z.]+, Long> ([A-Z_]+) = ([^;]+);").matcher(text);
+                while (m.find()) {
+                    if (!m.group(2).trim().equals("WorldTimes.map()")) {
+                        all = false;
+                        stray.append(' ').append(file.getFileName()).append(':').append(m.group(1));
+                    }
+                }
+            }
+        } catch (java.io.IOException failure) {
+            all = false;
+            stray.append(' ').append(failure);
+        }
+        check(all, "every map of game times on the server is WorldTimes' (forgotten with its world)" + stray);
+    }
+
     public static void main(String[] args) {
+        worldTimes();
         kakujaPalette();
         rinkakuAlive();
         thyDeath();

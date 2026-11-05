@@ -526,6 +526,7 @@ C net/minecraftforge/event/level/BlockEvent$BreakEvent                          
 M net/minecraftforge/event/level/BlockEvent$BreakEvent <init> (Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/entity/player/Player;)V  # [forge] same, BreakEvent(Level, BlockPos, BlockState, Player)
 M net/minecraftforge/eventbus/api/IEventBus post (Lnet/minecraftforge/eventbus/api/Event;)Z  # [forge] eventbus 6.0 IEventBus.post: true when cancelled
 C net/minecraftforge/event/server/ServerStoppingEvent                               # [forge] 1.20.1 event/server/ServerStoppingEvent.java, posted before the levels' final save
+C net/minecraftforge/event/server/ServerStoppedEvent                                # [forge] 1.20.1 event/server/ServerStoppedEvent.java, posted by ServerLifecycleHooks.handleServerStopped once the server has stopped and saved
 M net/minecraftforge/event/server/ServerLifecycleEvent getServer ()Lnet/minecraft/server/MinecraftServer;  # [forge] event/server/ServerLifecycleEvent.java
 
 

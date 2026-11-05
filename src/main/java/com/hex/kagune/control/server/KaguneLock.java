@@ -24,7 +24,7 @@ public final class KaguneLock {
     /** How long a spent kagune stays in (ticks). */
     public static final int TICKS = 200;
 
-    private static final Map<UUID, Long> UNTIL = new HashMap<>();
+    private static final Map<UUID, Long> UNTIL = WorldTimes.map();
     private static final Set<UUID> ACTIVE = new HashSet<>();
 
     private KaguneLock() {

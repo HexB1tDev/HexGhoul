@@ -253,7 +253,7 @@ public final class KingServer {
      * 1.0.22: K held with the kagune out: the kagune goes back in first (its own animation, ticks long), and the final kakuja comes
      * over him the moment it is in, if it is in by this tick.
      */
-    private static final Map<UUID, Long> PENDING = new HashMap<>();
+    private static final Map<UUID, Long> PENDING = WorldTimes.map();
     /** How long a pending final kakuja waits for the kagune to go in (ticks). */
     static final long PENDING_TICKS = 80L;
     /** 1.0.15: each final kakuja's kit, by form. */

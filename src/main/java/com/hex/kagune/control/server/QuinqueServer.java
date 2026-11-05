@@ -80,7 +80,7 @@ public final class QuinqueServer {
     }
 
     /** 1.3.33: each player's last right click on a quinque that turns it (game time), to tell a tap from the button held down. */
-    private static final java.util.Map<UUID, Long> USED = new java.util.HashMap<>();
+    private static final java.util.Map<UUID, Long> USED = WorldTimes.map();
     /** Vanilla repeats a held right click every four ticks: one this soon after the last is the button still held, not a new tap. */
     static final long HELD_REPEAT = 5L;
 
@@ -96,7 +96,7 @@ public final class QuinqueServer {
     // ---------------------------------------------------------------- 1.3.26: the launcher
 
     /** 1.3.33: the second shard of each pull's pair, due at this game time (fired from the player's tick). */
-    private static final java.util.Map<UUID, Long> SECOND = new java.util.HashMap<>();
+    private static final java.util.Map<UUID, Long> SECOND = WorldTimes.map();
 
     /** Each player's launcher: its heat, its last shot, when it is cool enough again after overheating. */
     private static final java.util.Map<UUID, long[]> HEAT = new java.util.HashMap<>();
@@ -139,8 +139,8 @@ public final class QuinqueServer {
     // ---------------------------------------------------------------- 2.0.32: Dawn's lightning in a player's hand
 
     /** Each player's Dawn: when its ball leaves (game time; the player's tick releases it), and when its last one left. */
-    private static final java.util.Map<UUID, Long> DAWN_DUE = new java.util.HashMap<>();
-    private static final java.util.Map<UUID, Long> DAWN_LAST = new java.util.HashMap<>();
+    private static final java.util.Map<UUID, Long> DAWN_DUE = WorldTimes.map();
+    private static final java.util.Map<UUID, Long> DAWN_LAST = WorldTimes.map();
 
     /**
      * 2.0.32: a right click with Dawn out: its point opens (its stack's {@link Quinque#DAWN_AT} / {@link Quinque#DAWN_FIRES}, drawn as its

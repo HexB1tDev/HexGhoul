@@ -27,11 +27,11 @@ public final class HumanApproachServer {
     }
 
     /** When each villager may next come over to each player (player + villager), when a player may next be come over to at all. */
-    private static final Map<String, Long> DUE = new HashMap<>();
-    private static final Map<UUID, Long> CROWDED = new HashMap<>();
+    private static final Map<String, Long> DUE = WorldTimes.map();
+    private static final Map<UUID, Long> CROWDED = WorldTimes.map();
     /** The day each villager last gave each player a gift, and last came over to them. */
-    private static final Map<String, Long> GIFTS = new HashMap<>();
-    private static final Map<String, Long> LAST = new HashMap<>();
+    private static final Map<String, Long> GIFTS = WorldTimes.map();
+    private static final Map<String, Long> LAST = WorldTimes.map();
 
     /** Its tick: true while it is coming over (nothing else of its day this tick). */
     static boolean tick(HumanNpc human, HumanBrain.Mind mind, VillagePlace.Place place, ServerLevel level, long now) {

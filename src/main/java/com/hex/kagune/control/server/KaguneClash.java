@@ -36,7 +36,7 @@ public final class KaguneClash {
 
     private static final Map<UUID, Swing> SWINGS = new HashMap<>();
     /** 1.0.42: when each body's last blow set out (kept after it lands: Rinkaku's grab asks whether one was swung since it set out). */
-    private static final Map<UUID, Long> LAST = new HashMap<>();
+    private static final Map<UUID, Long> LAST = WorldTimes.map();
     /** Blows long gone are let go of this many ticks after they could have landed. */
     private static final long FORGET = 200L;
 

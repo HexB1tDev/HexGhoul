@@ -56,20 +56,20 @@ public final class HumanTalk {
     }
 
     /** 2.1.4: the day each player last flirted with each human (player + human). */
-    private static final Map<String, Long> FLIRTED = new HashMap<>();
+    private static final Map<String, Long> FLIRTED = WorldTimes.map();
     /** 2.1.4: a partner's talk on the page (at most this many of them a time, the rest of the page its life's). */
     static final int OURS = 3;
 
     /** 2.1.3: the day each player last gave each human a gift (player + human). */
-    private static final Map<String, Long> GIFTED = new HashMap<>();
+    private static final Map<String, Long> GIFTED = WorldTimes.map();
 
     private static final Map<UUID, Talk> TALKS = new HashMap<>();
-    private static final Map<String, Long> PRAISED = new HashMap<>();
+    private static final Map<String, Long> PRAISED = WorldTimes.map();
     /** 1.3.74: a confession it doubts (player and human: waiting for the plea), and the day one was turned down (no more till tomorrow). */
     private static final java.util.Set<String> DOUBTED = new java.util.HashSet<>();
-    private static final Map<String, Long> REFUSED = new HashMap<>();
+    private static final Map<String, Long> REFUSED = WorldTimes.map();
     /** 1.3.78: the day each player last took each villager on a date (player + villager), and how much it warms to them for it. */
-    private static final Map<String, Long> DATED = new HashMap<>();
+    private static final Map<String, Long> DATED = WorldTimes.map();
     static final int DATE = 4;
 
     private HumanTalk() {

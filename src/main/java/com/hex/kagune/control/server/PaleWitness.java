@@ -31,7 +31,7 @@ import net.minecraft.world.phys.Vec3;
  */
 final class PaleWitness {
     /** Frozen bodies, by entity id: the game tick they are free again. */
-    private static final Map<Integer, Long> FROZEN = new HashMap<>();
+    private static final Map<Integer, Long> FROZEN = WorldTimes.map();
 
     private PaleWitness() {
     }

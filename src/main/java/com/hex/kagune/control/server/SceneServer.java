@@ -118,15 +118,15 @@ public final class SceneServer {
 
     private static final Map<UUID, Pending> PENDING = new HashMap<>();
     private static final Map<String, ArrayDeque<String>> RECENT_SAID = new HashMap<>();
-    private static final Map<UUID, Long> LAST = new HashMap<>();
+    private static final Map<UUID, Long> LAST = WorldTimes.map();
     /** When each speaker may next come up to each player ("eto|<uuid>", "child:<id>|<uuid>"). */
-    private static final Map<String, Long> NEXT = new HashMap<>();
+    private static final Map<String, Long> NEXT = WorldTimes.map();
     /** A child brushed off: sad until then (child id). */
-    private static final Map<String, Long> SAD = new HashMap<>();
+    private static final Map<String, Long> SAD = WorldTimes.map();
     /** A child praised or taught: proud until then. */
-    private static final Map<String, Long> PROUD = new HashMap<>();
+    private static final Map<String, Long> PROUD = WorldTimes.map();
     /** A topic's answer paid once a day ("<uuid>|<scene>|<page>|<i>" to its day). */
-    private static final Map<String, Long> PAID = new HashMap<>();
+    private static final Map<String, Long> PAID = WorldTimes.map();
 
     /** The one waiting on {@code player} if it is {@code npc} and still waiting, taken off them (its talk is opening now). */
     static Pending take(ServerPlayer player, int npc) {
@@ -141,7 +141,7 @@ public final class SceneServer {
     }
 
     /** When each player last hurt something or was hurt: nobody comes up to them in the middle of a fight. */
-    private static final Map<UUID, Long> FIGHTING = new HashMap<>();
+    private static final Map<UUID, Long> FIGHTING = WorldTimes.map();
     static final long FIGHT_QUIET = 200L;
 
     @SubscribeEvent

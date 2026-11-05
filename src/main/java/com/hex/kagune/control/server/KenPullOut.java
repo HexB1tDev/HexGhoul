@@ -3,7 +3,6 @@ package com.hex.kagune.control.server;
 import com.hex.kagune.control.network.S2CUkakuFx;
 import com.hex.kagune.control.quest.Gate;
 import com.hex.kagune.data.KaguneProfile;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import net.minecraft.server.level.ServerLevel;
@@ -28,7 +27,7 @@ public final class KenPullOut {
     static final long CRACK_AT = 14L;
     static final long OUT_AT = 20L;
 
-    private static final Map<UUID, Long> PENDING = new HashMap<>();
+    private static final Map<UUID, Long> PENDING = WorldTimes.map();
 
     /** True once Ken has taught {@code player} a kakuja (one of his lessons' gates open). */
     static boolean taught(ServerPlayer player) {
@@ -58,7 +57,7 @@ public final class KenPullOut {
             return;
         }
         long age = level.m_46467_() - start;
-        if (!player.m_6084_() || age > OUT_AT + 20L) {
+        if (!player.m_6084_() || age < 0L || age > OUT_AT + 20L) {
             PENDING.remove(player.m_20148_());
             return;
         }

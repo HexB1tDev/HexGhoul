@@ -23,18 +23,39 @@ public final class HumanErrandServer {
     static final String KEY = "HexErrand";
     static final String ASKED = "HexErrandAsked";
 
+    /**
+     * 2.5.0: where a player's favour is kept: the part of their data Forge carries over when they die and respawn ("PlayerPersisted"); a
+     * favour kept outside it before 2.5.0 is moved in.
+     */
+    static net.minecraft.nbt.CompoundTag data(ServerPlayer player) {
+        net.minecraft.nbt.CompoundTag root = player.getPersistentData();
+        if (!root.m_128441_("PlayerPersisted")) {
+            root.m_128365_("PlayerPersisted", new net.minecraft.nbt.CompoundTag());
+        }
+        net.minecraft.nbt.CompoundTag kept = root.m_128469_("PlayerPersisted");
+        if (root.m_128441_(KEY)) {
+            kept.m_128359_(KEY, root.m_128461_(KEY));
+            root.m_128473_(KEY);
+        }
+        if (root.m_128441_(ASKED)) {
+            kept.m_128405_(ASKED, root.m_128451_(ASKED));
+            root.m_128473_(ASKED);
+        }
+        return kept;
+    }
+
     /** {@code player}'s open favour, or null (lapsed ones dropped). */
     static HumanErrand.Open open(ServerPlayer player) {
-        HumanErrand.Open open = HumanErrand.load(player.getPersistentData().m_128461_(KEY));
+        HumanErrand.Open open = HumanErrand.load(data(player).m_128461_(KEY));
         if (open != null && player.m_9236_().m_46467_() > open.until()) {
-            player.getPersistentData().m_128359_(KEY, "");
+            data(player).m_128359_(KEY, "");
             return null;
         }
         return open;
     }
 
     static void keep(ServerPlayer player, HumanErrand.Open open) {
-        player.getPersistentData().m_128359_(KEY, open == null ? "" : HumanErrand.save(open.giver(), open.giverName(), open.errand(), open.done(), open.until()));
+        data(player).m_128359_(KEY, open == null ? "" : HumanErrand.save(open.giver(), open.giverName(), open.errand(), open.done(), open.until()));
     }
 
     /** Now and then (its village's day, called every ten seconds): a favour asked of the player near it, if it's their time. */
@@ -52,7 +73,7 @@ public final class HumanErrandServer {
                 best = player;
             }
         }
-        if (best == null || open(best) != null || now / 100L - best.getPersistentData().m_128451_(ASKED) < HumanErrand.OFFER_EVERY / 100L) {
+        if (best == null || open(best) != null || now / 100L - data(best).m_128451_(ASKED) < HumanErrand.OFFER_EVERY / 100L) {
             return;
         }
         String neighbour = null;
@@ -63,7 +84,7 @@ public final class HumanErrandServer {
         HumanErrand.Errand errand = HumanErrand.roll(((long)human.m_217043_().m_188503_(1 << 30) << 7) ^ human.m_217043_().m_188503_(1 << 20), neighbour);
         String name = HumanBrain.name(human);
         keep(best, new HumanErrand.Open(human.m_20148_().toString(), name, errand, 0, now + HumanErrand.LASTS));
-        best.getPersistentData().m_128405_(ASKED, (int)(now / 100L));
+        data(best).m_128405_(ASKED, (int)(now / 100L));
         HumanPersona.Temper temper = HumanBrain.temper(human);
         HumanBrain.face(human, best);
         HumanBrain.say(human, level, HumanErrand.ask(temper, errand, human.m_217043_().m_188503_(1000)));

@@ -96,7 +96,7 @@ public final class ReviveForget {
     }
 
     /** 2.4.2: who is thought dead, and until when (unless they strike something first). */
-    private static final java.util.Map<UUID, Long> PRESUMED = new java.util.HashMap<>();
+    private static final java.util.Map<UUID, Long> PRESUMED = WorldTimes.map();
     /** 2.4.2: how long (ticks) after they stand up whole they are still thought dead: half a minute. */
     static final long DEAD_FOR = 600L;
 

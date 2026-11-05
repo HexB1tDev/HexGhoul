@@ -1263,7 +1263,7 @@ public final class EtoBrain {
     }
 
     /** 2.2.0: when each player last struck something that wasn't a companion (mid-fight, a blow on her is an accident). */
-    private static final Map<UUID, Long> STRUCK = new HashMap<>();
+    private static final Map<UUID, Long> STRUCK = WorldTimes.map();
     /** 2.2.0: struck something else this recently (ticks): fighting. */
     static final long FIGHTING = 60L;
 
@@ -1889,7 +1889,7 @@ public final class EtoBrain {
     }
 
     /** 1.3.11: who last showed her what (by player), and when: she reacts once in a while, not at every flicker. */
-    private static final Map<UUID, Long> SEEN = new HashMap<>();
+    private static final Map<UUID, Long> SEEN = WorldTimes.map();
 
     /**
      * 1.3.11: {@code player} shows her what they are ({@link com.hex.kagune.control.npc.Display}): a word by who they are to her and where

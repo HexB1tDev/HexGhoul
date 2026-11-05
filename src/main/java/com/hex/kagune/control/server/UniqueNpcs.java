@@ -34,7 +34,7 @@ public final class UniqueNpcs {
     /** How each one is made again, by key. */
     private static final Map<String, Supplier<? extends EntityType<? extends Mob>>> KINDS = new LinkedHashMap<>();
     /** 1.3.3: when each last ticked (this server's run only): one ticking recently goes home herself. */
-    private static final Map<String, Long> TICKING = new java.util.HashMap<>();
+    private static final Map<String, Long> TICKING = WorldTimes.map();
 
     private UniqueNpcs() {
     }

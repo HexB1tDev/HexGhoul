@@ -27,7 +27,7 @@ public final class GhoulRegen {
     private static final Map<UUID, long[]> HURT = new HashMap<>(); // {tick of the last hit}
     private static final Map<UUID, float[]> MISSING = new HashMap<>(); // {health missing when regeneration began}
     /** 1.3.25: until when a quinque's cut holds a ghoul's regeneration back (RC suppression), by player. */
-    private static final Map<UUID, Long> SUPPRESSED = new HashMap<>();
+    private static final Map<UUID, Long> SUPPRESSED = WorldTimes.map();
     private static boolean healing;
 
     private GhoulRegen() {

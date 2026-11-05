@@ -19,7 +19,7 @@ import net.minecraft.world.phys.Vec3;
  */
 final class UkakuRush {
     /** Game time each player may next use it. */
-    private static final Map<UUID, Long> READY_AT = new HashMap<>();
+    private static final Map<UUID, Long> READY_AT = WorldTimes.map();
 
     private UkakuRush() {
     }

@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.5.0 (HexGhoul): Final sweep: a new world never inherits the last one's timers; favours survive death; protocol 86 (testing)
+
+See `.github/release-notes-2.5.0.md`. Final sweep for multiplayer and single player. Quitting a world and opening another in the same game session no longer carries over the last world's timers (ability cooldowns, kagune locks, "presumed dead", a companion's recall home, villagers coming up to you, scene and talk cooldowns, a Thy Death or finger crack under way), which could otherwise lock things in the new world for hours. A villager's favour now survives your death, letting go of Z while disconnecting no longer errors, and the network protocol is bumped so a client and server on different builds are refused cleanly.
+
 ## 2.4.9 (HexGhoul): Spouse cooking: a furnace needed, in front of it, a full routine; the food to the Food chest, handed to you at home, sometimes for a kiss (testing)
 
 See `.github/release-notes-2.4.9.md`. The spouse's cooking is redone. A furnace or smoker at home is now needed (a campfire, table or chest no longer counts). At the stove the spouse stands right in front of it (the way it faces) and goes through a whole routine: feeding the fire, stirring, seasoning, stirring, tasting off the spoon, stirring. When the food is done they carry it to the chest they labeled "Food" when sorting. If you're inside the home's grounds, they walk up and hand you your meal (holding it out), and sometimes, depending on their mood, ask for a kiss for it.
