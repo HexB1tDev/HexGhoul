@@ -31,11 +31,10 @@ final class UkakuCombat {
             case KICK -> KaguneServerController.playSelf(player, HexKaguneSounds.KAGUNE_WHIP, 0.45F,
                 KaguneServerController.vary(player, 1.6F, 0.08F));
             case STEEL_SWEEP, STEEL_RETURN, STEEL_EXECUTION -> {
-                // A heavy blade through the air, and the ring of steel.
+                // 3.0.7: recorded air only; the old trident layer brought the metallic ring back.
                 net.minecraft.world.phys.Vec3 at = player.m_146892_();
-                UkakuFire.sound(player.m_284548_(), at, "entity.player.attack.sweep", 1.0F,
+                UkakuFire.sound(player.m_284548_(), at, "hexkagune:sfx.blade_heavy", 1.0F,
                     KaguneServerController.vary(player, stage.pattern() == com.hex.kagune.control.StrikePattern.STEEL_EXECUTION ? 0.6F : 0.75F, 0.05F));
-                UkakuFire.sound(player.m_284548_(), at, "item.trident.throw", 0.7F, KaguneServerController.vary(player, 0.7F, 0.05F));
             }
             case FLAME_SHOT -> KaguneServerController.playSelf(player, HexKaguneSounds.KAGUNE_WHIP, 0.3F,
                 KaguneServerController.vary(player, 1.75F, 0.08F));

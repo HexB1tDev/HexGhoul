@@ -3,20 +3,20 @@
     "subtitle": "subtitles.hexkagune.sfx.blade_swing",
     "sounds": [
       {
-        "name": "hexkagune:sfx/combat/sword_swings/air_tear",
-        "volume": 0.6
+        "name": "hexkagune:sfx/recorded/air_swish_1",
+        "volume": 0.4103
       },
       {
-        "name": "hexkagune:sfx/combat/punch_swings/double_feint",
-        "volume": 0.25
+        "name": "hexkagune:sfx/recorded/air_swish_2",
+        "volume": 0.4776
       },
       {
-        "name": "hexkagune:sfx/combat/punch_swings/spinning_fist",
-        "volume": 0.35
+        "name": "hexkagune:sfx/recorded/air_swish_3",
+        "volume": 0.5742
       },
       {
-        "name": "hexkagune:sfx/combat/punch_swings/straight_cross",
-        "volume": 0.36
+        "name": "hexkagune:sfx/recorded/air_slash",
+        "volume": 0.253
       }
     ]
   },
@@ -24,20 +24,12 @@
     "subtitle": "subtitles.hexkagune.sfx.blade_heavy",
     "sounds": [
       {
-        "name": "hexkagune:sfx/combat/punch_swings/heavy_windup",
-        "volume": 0.31
+        "name": "hexkagune:sfx/recorded/air_heavy",
+        "volume": 0.5421
       },
       {
-        "name": "hexkagune:sfx/combat/punch_swings/charged_fist_swing",
-        "volume": 0.55
-      },
-      {
-        "name": "hexkagune:sfx/combat/punch_swings/rising_uppercut",
-        "volume": 0.37
-      },
-      {
-        "name": "hexkagune:sfx/combat/sword_swings/air_tear",
-        "volume": 0.8
+        "name": "hexkagune:sfx/recorded/air_swish_3",
+        "volume": 0.5742
       }
     ]
   },
@@ -45,12 +37,16 @@
     "subtitle": "subtitles.hexkagune.sfx.blade_arc",
     "sounds": [
       {
-        "name": "hexkagune:sfx/combat/sword_swings/spectral_sword_arc",
-        "volume": 0.76
+        "name": "hexkagune:sfx/recorded/air_swish_1",
+        "volume": 0.4445
       },
       {
-        "name": "hexkagune:sfx/combat/sword_swings/needle_edge",
-        "volume": 0.81
+        "name": "hexkagune:sfx/recorded/air_swish_2",
+        "volume": 0.4776
+      },
+      {
+        "name": "hexkagune:sfx/recorded/air_swish_3",
+        "volume": 0.5742
       }
     ]
   },
@@ -59,23 +55,23 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/combat/punch_swings/short_jab_air",
-        "volume": 0.47
+        "volume": 0.1183
       },
       {
         "name": "hexkagune:sfx/combat/punch_swings/straight_cross",
-        "volume": 0.36
+        "volume": 0.0897
       },
       {
         "name": "hexkagune:sfx/combat/punch_swings/left_hook",
-        "volume": 0.39
+        "volume": 0.0984
       },
       {
         "name": "hexkagune:sfx/combat/punch_swings/right_hook",
-        "volume": 0.37
+        "volume": 0.094
       },
       {
         "name": "hexkagune:sfx/combat/punch_swings/fast_fist_snap",
-        "volume": 0.58
+        "volume": 0.1455
       }
     ]
   },
@@ -84,23 +80,23 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/combat/punch_swings/rising_uppercut",
-        "volume": 0.32
+        "volume": 0.0803
       },
       {
         "name": "hexkagune:sfx/combat/punch_swings/heavy_windup",
-        "volume": 0.27
+        "volume": 0.0676
       },
       {
         "name": "hexkagune:sfx/combat/punch_swings/spinning_fist",
-        "volume": 0.41
+        "volume": 0.1035
       },
       {
         "name": "hexkagune:sfx/combat/punch_swings/charged_fist_swing",
-        "volume": 0.48
+        "volume": 0.1202
       },
       {
         "name": "hexkagune:sfx/combat/punch_swings/double_feint",
-        "volume": 0.29
+        "volume": 0.0732
       }
     ]
   },
@@ -109,23 +105,23 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/combat/punch_hits/face_smack",
-        "volume": 0.78
+        "volume": 0.16
       },
       {
         "name": "hexkagune:sfx/combat/punch_hits/short_jab",
-        "volume": 0.9
+        "volume": 0.16
       },
       {
         "name": "hexkagune:sfx/combat/punch_hits/rib_impact",
-        "volume": 0.75
+        "volume": 0.16
       },
       {
         "name": "hexkagune:sfx/combat/punch_hits/heavy_uppercut",
-        "volume": 0.74
+        "volume": 0.16
       },
       {
         "name": "hexkagune:sfx/combat/punch_hits/dry_fist_hit",
-        "volume": 0.38
+        "volume": 0.0955
       }
     ]
   },
@@ -134,19 +130,19 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/combat/punch_hits/heavy_body_blow",
-        "volume": 0.78
+        "volume": 0.1969
       },
       {
         "name": "hexkagune:sfx/combat/punch_hits/crushing_cross",
-        "volume": 0.89
+        "volume": 0.2235
       },
       {
         "name": "hexkagune:sfx/combat/punch_hits/knuckle_slam",
-        "volume": 0.66
+        "volume": 0.16
       },
       {
         "name": "hexkagune:sfx/combat/punch_hits/finishing_punch",
-        "volume": 1.0
+        "volume": 0.16
       }
     ]
   },
@@ -155,11 +151,11 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/combat/punch_hits/finishing_punch",
-        "volume": 1.0
+        "volume": 0.16
       },
       {
         "name": "hexkagune:sfx/combat/punch_hits/crushing_cross",
-        "volume": 0.99
+        "volume": 0.2366
       }
     ]
   },
@@ -168,11 +164,11 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/combat/punch_hits/bone_crack",
-        "volume": 0.92
+        "volume": 0.16
       },
       {
         "name": "hexkagune:sfx/combat/punch_hits/rib_impact",
-        "volume": 0.64
+        "volume": 0.16
       }
     ]
   },
@@ -181,15 +177,19 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/combat/punch_hits/crushing_cross",
-        "volume": 0.89
+        "volume": 0.2235
       },
       {
         "name": "hexkagune:sfx/combat/punch_hits/bone_crack",
-        "volume": 1.0
+        "volume": 0.16
       },
       {
-        "name": "hexkagune:sfx/blood_and_gush/blood_impacts/dense_squelch",
-        "volume": 0.64
+        "name": "hexkagune:sfx/recorded/flesh_rip_1",
+        "volume": 0.3707
+      },
+      {
+        "name": "hexkagune:sfx/recorded/flesh_rip_2",
+        "volume": 0.2393
       }
     ]
   },
@@ -198,7 +198,7 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/bone/finger_crack",
-        "volume": 0.99,
+        "volume": 1.0,
         "preload": true
       }
     ]
@@ -208,7 +208,7 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/bone/kagune_burst",
-        "volume": 1.0,
+        "volume": 0.1858,
         "preload": true
       }
     ]
@@ -218,19 +218,19 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/combat/running/concrete_footfall",
-        "volume": 0.4
+        "volume": 0.0997
       },
       {
         "name": "hexkagune:sfx/combat/running/leather_footfall",
-        "volume": 0.29
+        "volume": 0.0722
       },
       {
         "name": "hexkagune:sfx/combat/running/cloth_footfall",
-        "volume": 0.35
+        "volume": 0.0878
       },
       {
         "name": "hexkagune:sfx/combat/running/armor_footfall",
-        "volume": 0.44
+        "volume": 0.1106
       }
     ]
   },
@@ -239,11 +239,11 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/combat/running/armor_footfall",
-        "volume": 0.48
+        "volume": 0.1217
       },
       {
         "name": "hexkagune:sfx/combat/running/concrete_footfall",
-        "volume": 0.44
+        "volume": 0.1097
       }
     ]
   },
@@ -252,11 +252,11 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/combat/running/cloth_footfall",
-        "volume": 0.28
+        "volume": 0.0703
       },
       {
         "name": "hexkagune:sfx/combat/running/leather_footfall",
-        "volume": 0.23
+        "volume": 0.0578
       }
     ]
   },
@@ -264,12 +264,34 @@
     "subtitle": "subtitles.hexkagune.sfx.chitin",
     "sounds": [
       {
-        "name": "hexkagune:sfx/combat/running/armor_footfall",
-        "volume": 0.4
+        "name": "hexkagune:sfx/recorded/insect_chirr",
+        "volume": 0.0271,
+        "preload": true
       },
       {
-        "name": "hexkagune:sfx/combat/running/concrete_footfall",
-        "volume": 0.36
+        "name": "hexkagune:sfx/recorded/insect_click_1",
+        "volume": 0.2388,
+        "preload": true
+      },
+      {
+        "name": "hexkagune:sfx/recorded/insect_click_2",
+        "volume": 0.2416,
+        "preload": true
+      }
+    ]
+  },
+  "sfx.centipede_manifest": {
+    "subtitle": "subtitles.hexkagune.sfx.centipede_manifest",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/recorded/insect_hiss_1",
+        "volume": 0.0366,
+        "preload": true
+      },
+      {
+        "name": "hexkagune:sfx/recorded/insect_hiss_2",
+        "volume": 0.0415,
+        "preload": true
       }
     ]
   },
@@ -278,19 +300,19 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/combat/spike_throws/needle_flick",
-        "volume": 0.54
+        "volume": 0.1358
       },
       {
         "name": "hexkagune:sfx/combat/spike_throws/steel_spike",
-        "volume": 0.45
+        "volume": 0.113
       },
       {
         "name": "hexkagune:sfx/combat/spike_throws/fast_dart",
-        "volume": 0.62
+        "volume": 0.156
       },
       {
         "name": "hexkagune:sfx/combat/spike_throws/spinning_spike",
-        "volume": 0.53
+        "volume": 0.1343
       }
     ]
   },
@@ -299,15 +321,15 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/combat/spike_throws/heavy_throw",
-        "volume": 0.54
+        "volume": 0.1358
       },
       {
         "name": "hexkagune:sfx/combat/spike_throws/heavy_lance",
-        "volume": 0.74
+        "volume": 0.16
       },
       {
         "name": "hexkagune:sfx/combat/spike_throws/charged_spike",
-        "volume": 1.0
+        "volume": 0.16
       }
     ]
   },
@@ -316,15 +338,15 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/combat/spike_throws/double_throw",
-        "volume": 0.88
+        "volume": 0.16
       },
       {
         "name": "hexkagune:sfx/combat/spike_throws/triple_fan",
-        "volume": 0.84
+        "volume": 0.16
       },
       {
         "name": "hexkagune:sfx/combat/spike_throws/razor_volley",
-        "volume": 1.0
+        "volume": 0.16
       }
     ]
   },
@@ -333,15 +355,15 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/combat/punch_hits/short_jab",
-        "volume": 0.64
+        "volume": 0.16
       },
       {
         "name": "hexkagune:sfx/combat/punch_hits/rib_impact",
-        "volume": 0.54
+        "volume": 0.1345
       },
       {
         "name": "hexkagune:sfx/combat/spike_throws/needle_flick",
-        "volume": 0.45
+        "volume": 0.1132
       }
     ]
   },
@@ -350,11 +372,11 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/combat/spike_throws/steel_spike",
-        "volume": 0.52
+        "volume": 0.1318
       },
       {
         "name": "hexkagune:sfx/combat/spike_throws/heavy_lance",
-        "volume": 0.65
+        "volume": 0.16
       }
     ]
   },
@@ -363,11 +385,11 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/combat/spike_throws/charged_spike",
-        "volume": 1.0
+        "volume": 0.16
       },
       {
         "name": "hexkagune:sfx/combat/spike_throws/steel_spike",
-        "volume": 0.52
+        "volume": 0.1318
       }
     ]
   },
@@ -376,15 +398,15 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/combat/punch_hits/bone_crack",
-        "volume": 1.0
+        "volume": 0.16
       },
       {
         "name": "hexkagune:sfx/super_punch_collisions/close_dry_collision",
-        "volume": 0.43
+        "volume": 0.1078
       },
       {
         "name": "hexkagune:sfx/super_punch_collisions/fast_counter_clash",
-        "volume": 0.41
+        "volume": 0.1018
       }
     ]
   },
@@ -393,7 +415,7 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/combat/spike_throws/needle_flick",
-        "volume": 0.81
+        "volume": 0.16
       }
     ]
   },
@@ -401,28 +423,16 @@
     "subtitle": "subtitles.hexkagune.sfx.blood_splat",
     "sounds": [
       {
-        "name": "hexkagune:sfx/blood_and_gush/blood_impacts/small_wet_splat",
-        "volume": 0.37
+        "name": "hexkagune:sfx/recorded/flesh_slap_1",
+        "volume": 0.1567
       },
       {
-        "name": "hexkagune:sfx/blood_and_gush/blood_impacts/thick_blood_smack",
-        "volume": 0.45
+        "name": "hexkagune:sfx/recorded/flesh_slap_2",
+        "volume": 0.16
       },
       {
-        "name": "hexkagune:sfx/blood_and_gush/blood_impacts/heavy_wet_impact",
-        "volume": 0.45
-      },
-      {
-        "name": "hexkagune:sfx/blood_and_gush/blood_impacts/sharp_blood_slap",
-        "volume": 0.45
-      },
-      {
-        "name": "hexkagune:sfx/blood_and_gush/blood_impacts/wide_splatter_hit",
-        "volume": 0.5
-      },
-      {
-        "name": "hexkagune:sfx/blood_and_gush/blood_impacts/sudden_blood_burst",
-        "volume": 0.59
+        "name": "hexkagune:sfx/recorded/flesh_slap_3",
+        "volume": 0.1694
       }
     ]
   },
@@ -430,16 +440,16 @@
     "subtitle": "subtitles.hexkagune.sfx.blood_splat_big",
     "sounds": [
       {
-        "name": "hexkagune:sfx/blood_and_gush/blood_impacts/dense_squelch",
-        "volume": 0.64
+        "name": "hexkagune:sfx/recorded/flesh_slap_2",
+        "volume": 0.16
       },
       {
-        "name": "hexkagune:sfx/blood_and_gush/blood_impacts/big_anime_splat",
-        "volume": 0.98
+        "name": "hexkagune:sfx/recorded/flesh_rip_1",
+        "volume": 0.3707
       },
       {
-        "name": "hexkagune:sfx/blood_and_gush/blood_impacts/heavy_wet_impact",
-        "volume": 0.55
+        "name": "hexkagune:sfx/recorded/flesh_rip_2",
+        "volume": 0.2393
       }
     ]
   },
@@ -447,12 +457,16 @@
     "subtitle": "subtitles.hexkagune.sfx.grab",
     "sounds": [
       {
-        "name": "hexkagune:sfx/blood_and_gush/blood_impacts/thick_blood_smack",
-        "volume": 0.45
+        "name": "hexkagune:sfx/recorded/flesh_slap_1",
+        "volume": 0.1343
       },
       {
-        "name": "hexkagune:sfx/blood_and_gush/blood_impacts/sharp_blood_slap",
-        "volume": 0.45
+        "name": "hexkagune:sfx/recorded/flesh_slap_2",
+        "volume": 0.16
+      },
+      {
+        "name": "hexkagune:sfx/recorded/flesh_slap_3",
+        "volume": 0.1694
       }
     ]
   },
@@ -460,36 +474,20 @@
     "subtitle": "subtitles.hexkagune.sfx.blood_spray",
     "sounds": [
       {
-        "name": "hexkagune:sfx/blood_and_gush/blood_sprays/light_blood_spray",
-        "volume": 1.0
+        "name": "hexkagune:sfx/recorded/flesh_rip_short",
+        "volume": 0.9101
       },
       {
-        "name": "hexkagune:sfx/blood_and_gush/blood_sprays/sharp_blood_squirt",
-        "volume": 0.99
+        "name": "hexkagune:sfx/recorded/flesh_slap_1",
+        "volume": 0.1231
       },
       {
-        "name": "hexkagune:sfx/blood_and_gush/blood_sprays/sideways_spray",
-        "volume": 1.0
+        "name": "hexkagune:sfx/recorded/flesh_slap_2",
+        "volume": 0.16
       },
       {
-        "name": "hexkagune:sfx/blood_and_gush/blood_sprays/heavy_blood_spray",
-        "volume": 1.0
-      },
-      {
-        "name": "hexkagune:sfx/blood_and_gush/blood_sprays/double_spray",
-        "volume": 1.0
-      },
-      {
-        "name": "hexkagune:sfx/blood_and_gush/blood_sprays/triple_spray",
-        "volume": 1.0
-      },
-      {
-        "name": "hexkagune:sfx/blood_and_gush/blood_sprays/pressure_spray",
-        "volume": 1.0
-      },
-      {
-        "name": "hexkagune:sfx/blood_and_gush/blood_sprays/wide_blood_fan",
-        "volume": 1.0
+        "name": "hexkagune:sfx/recorded/flesh_slap_3",
+        "volume": 0.1694
       }
     ]
   },
@@ -497,23 +495,13 @@
     "subtitle": "subtitles.hexkagune.sfx.gush",
     "sounds": [
       {
-        "name": "hexkagune:sfx/blood_and_gush/gushing_bursts/short_thick_gush",
-        "volume": 1.0,
+        "name": "hexkagune:sfx/recorded/flesh_rip_1",
+        "volume": 0.3707,
         "preload": true
       },
       {
-        "name": "hexkagune:sfx/blood_and_gush/gushing_bursts/deep_blood_gush",
-        "volume": 1.0,
-        "preload": true
-      },
-      {
-        "name": "hexkagune:sfx/blood_and_gush/gushing_bursts/pressurized_gush",
-        "volume": 1.0,
-        "preload": true
-      },
-      {
-        "name": "hexkagune:sfx/blood_and_gush/gushing_bursts/double_gush",
-        "volume": 0.88,
+        "name": "hexkagune:sfx/recorded/flesh_rip_2",
+        "volume": 0.2393,
         "preload": true
       }
     ]
@@ -522,20 +510,12 @@
     "subtitle": "subtitles.hexkagune.sfx.gush_big",
     "sounds": [
       {
-        "name": "hexkagune:sfx/blood_and_gush/gushing_bursts/pulsing_gush",
-        "volume": 0.91
+        "name": "hexkagune:sfx/recorded/flesh_rip_1",
+        "volume": 0.3707
       },
       {
-        "name": "hexkagune:sfx/blood_and_gush/gushing_bursts/staggered_gush",
-        "volume": 1.0
-      },
-      {
-        "name": "hexkagune:sfx/blood_and_gush/gushing_bursts/rushing_blood_burst",
-        "volume": 1.0
-      },
-      {
-        "name": "hexkagune:sfx/blood_and_gush/gushing_bursts/dramatic_blood_gush",
-        "volume": 1.0
+        "name": "hexkagune:sfx/recorded/flesh_rip_2",
+        "volume": 0.2393
       }
     ]
   },
@@ -543,28 +523,12 @@
     "subtitle": "subtitles.hexkagune.sfx.gush_long",
     "sounds": [
       {
-        "name": "hexkagune:sfx/blood_and_gush/sustained_gushing/continuous_blood_gush",
-        "volume": 0.96
+        "name": "hexkagune:sfx/recorded/flesh_rip_1",
+        "volume": 0.3707
       },
       {
-        "name": "hexkagune:sfx/blood_and_gush/sustained_gushing/heavy_continuous_gush",
-        "volume": 0.96
-      },
-      {
-        "name": "hexkagune:sfx/blood_and_gush/sustained_gushing/thick_blood_flow",
-        "volume": 0.96
-      },
-      {
-        "name": "hexkagune:sfx/blood_and_gush/sustained_gushing/pulsing_blood_stream",
-        "volume": 0.96
-      },
-      {
-        "name": "hexkagune:sfx/blood_and_gush/sustained_gushing/long_tapering_gush",
-        "volume": 0.96
-      },
-      {
-        "name": "hexkagune:sfx/blood_and_gush/sustained_gushing/gush_fading_to_drips",
-        "volume": 0.96
+        "name": "hexkagune:sfx/recorded/flesh_rip_2",
+        "volume": 0.2393
       }
     ]
   },
@@ -573,15 +537,15 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/blood_and_gush/drips_and_pools/single_blood_drop",
-        "volume": 0.42
+        "volume": 0.1056
       },
       {
         "name": "hexkagune:sfx/blood_and_gush/drips_and_pools/thick_double_drop",
-        "volume": 0.4
+        "volume": 0.1009
       },
       {
         "name": "hexkagune:sfx/blood_and_gush/drips_and_pools/last_two_drops",
-        "volume": 0.59
+        "volume": 0.1475
       }
     ]
   },
@@ -590,15 +554,15 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/blood_and_gush/drips_and_pools/slow_blood_drips",
-        "volume": 0.8
+        "volume": 0.16
       },
       {
         "name": "hexkagune:sfx/blood_and_gush/drips_and_pools/fast_blood_drips",
-        "volume": 0.61
+        "volume": 0.1527
       },
       {
         "name": "hexkagune:sfx/blood_and_gush/drips_and_pools/drips_into_a_pool",
-        "volume": 0.64
+        "volume": 0.1599
       }
     ]
   },
@@ -606,12 +570,12 @@
     "subtitle": "subtitles.hexkagune.sfx.eat",
     "sounds": [
       {
-        "name": "hexkagune:sfx/blood_and_gush/blood_impacts/dense_squelch",
-        "volume": 0.56
+        "name": "hexkagune:sfx/recorded/flesh_rip_1",
+        "volume": 0.3707
       },
       {
-        "name": "hexkagune:sfx/blood_and_gush/blood_impacts/thick_blood_smack",
-        "volume": 0.48
+        "name": "hexkagune:sfx/recorded/flesh_rip_2",
+        "volume": 0.2393
       }
     ]
   },
@@ -619,8 +583,8 @@
     "subtitle": "subtitles.hexkagune.sfx.writhe",
     "sounds": [
       {
-        "name": "hexkagune:sfx/blood_and_gush/sustained_gushing/thick_blood_flow",
-        "volume": 0.48
+        "name": "hexkagune:sfx/recorded/flesh_rip_short",
+        "volume": 0.2046
       }
     ]
   },
@@ -628,12 +592,12 @@
     "subtitle": "subtitles.hexkagune.sfx.crush_kill",
     "sounds": [
       {
-        "name": "hexkagune:sfx/blood_and_gush/dramatic_combos/heavy_hit_and_gush",
-        "volume": 0.85
+        "name": "hexkagune:sfx/recorded/flesh_rip_1",
+        "volume": 0.3707
       },
       {
-        "name": "hexkagune:sfx/blood_and_gush/dramatic_combos/final_blood_burst",
-        "volume": 1.0
+        "name": "hexkagune:sfx/recorded/flesh_rip_2",
+        "volume": 0.2393
       }
     ]
   },
@@ -641,8 +605,8 @@
     "subtitle": "subtitles.hexkagune.sfx.slash_spray",
     "sounds": [
       {
-        "name": "hexkagune:sfx/blood_and_gush/dramatic_combos/slash_then_blood_spray",
-        "volume": 0.82
+        "name": "hexkagune:sfx/recorded/flesh_rip_short",
+        "volume": 0.9101
       }
     ]
   },
@@ -650,8 +614,16 @@
     "subtitle": "subtitles.hexkagune.sfx.blood_bursts",
     "sounds": [
       {
-        "name": "hexkagune:sfx/blood_and_gush/dramatic_combos/rapid_blood_bursts",
-        "volume": 0.64
+        "name": "hexkagune:sfx/recorded/flesh_slap_1",
+        "volume": 0.1567
+      },
+      {
+        "name": "hexkagune:sfx/recorded/flesh_slap_2",
+        "volume": 0.16
+      },
+      {
+        "name": "hexkagune:sfx/recorded/flesh_slap_3",
+        "volume": 0.1694
       }
     ]
   },
@@ -659,16 +631,16 @@
     "subtitle": "subtitles.hexkagune.sfx.whoosh",
     "sounds": [
       {
-        "name": "hexkagune:sfx/combat/sword_swings/air_tear",
-        "volume": 0.55
+        "name": "hexkagune:sfx/recorded/air_swish_1",
+        "volume": 0.3761
       },
       {
-        "name": "hexkagune:sfx/combat/punch_swings/double_feint",
-        "volume": 0.23
+        "name": "hexkagune:sfx/recorded/air_swish_2",
+        "volume": 0.4776
       },
       {
-        "name": "hexkagune:sfx/combat/punch_swings/spinning_fist",
-        "volume": 0.32
+        "name": "hexkagune:sfx/recorded/air_swish_3",
+        "volume": 0.5563
       }
     ]
   },
@@ -676,12 +648,16 @@
     "subtitle": "subtitles.hexkagune.sfx.dash",
     "sounds": [
       {
-        "name": "hexkagune:sfx/combat/sword_swings/air_tear",
-        "volume": 0.65
+        "name": "hexkagune:sfx/recorded/air_swish_1",
+        "volume": 0.4103
       },
       {
-        "name": "hexkagune:sfx/combat/punch_swings/double_feint",
-        "volume": 0.27
+        "name": "hexkagune:sfx/recorded/air_swish_2",
+        "volume": 0.4776
+      },
+      {
+        "name": "hexkagune:sfx/recorded/air_swish_3",
+        "volume": 0.5742
       }
     ]
   },
@@ -690,7 +666,7 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/super_punch_collisions/heavy_air_burst",
-        "volume": 0.53
+        "volume": 0.06
       }
     ]
   },
@@ -699,19 +675,19 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/clashes/clash_1",
-        "volume": 0.55
+        "volume": 0.0456
       },
       {
         "name": "hexkagune:sfx/clashes/clash_2",
-        "volume": 0.58
+        "volume": 0.035
       },
       {
         "name": "hexkagune:sfx/clashes/clash_3",
-        "volume": 0.86
+        "volume": 0.0829
       },
       {
         "name": "hexkagune:sfx/clashes/clash_4",
-        "volume": 0.59
+        "volume": 0.0587
       }
     ]
   },
@@ -720,15 +696,15 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/super_punch_collisions/titan_fist_clash",
-        "volume": 0.52
+        "volume": 0.1296
       },
       {
         "name": "hexkagune:sfx/super_punch_collisions/double_shock_impact",
-        "volume": 0.59
+        "volume": 0.1471
       },
       {
         "name": "hexkagune:sfx/super_punch_collisions/sonic_fist_crash",
-        "volume": 0.62
+        "volume": 0.1558
       }
     ]
   },
@@ -737,15 +713,15 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/super_punch_collisions/close_dry_collision",
-        "volume": 0.46
+        "volume": 0.1161
       },
       {
         "name": "hexkagune:sfx/super_punch_collisions/fast_counter_clash",
-        "volume": 0.44
+        "volume": 0.1096
       },
       {
         "name": "hexkagune:sfx/super_punch_collisions/heavy_air_burst",
-        "volume": 0.5
+        "volume": 0.1244
       }
     ]
   },
@@ -754,19 +730,19 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/super_punch_collisions/wide_air_shockwave",
-        "volume": 0.55
+        "volume": 0.1378
       },
       {
         "name": "hexkagune:sfx/super_punch_collisions/twin_fist_shockwave",
-        "volume": 0.58
+        "volume": 0.146
       },
       {
         "name": "hexkagune:sfx/super_punch_collisions/heavy_air_burst",
-        "volume": 0.6
+        "volume": 0.1511
       },
       {
         "name": "hexkagune:sfx/super_punch_collisions/double_shock_impact",
-        "volume": 0.52
+        "volume": 0.1316
       }
     ]
   },
@@ -775,11 +751,11 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/super_punch_collisions/ground_shaking_collision",
-        "volume": 1.0
+        "volume": 0.045
       },
       {
         "name": "hexkagune:sfx/super_punch_collisions/deep_pressure_collision",
-        "volume": 0.76
+        "volume": 0.045
       }
     ]
   },
@@ -788,19 +764,19 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/super_punch_collisions/ultimate_fist_collision",
-        "volume": 0.9
+        "volume": 0.16
       },
       {
         "name": "hexkagune:sfx/super_punch_collisions/thunder_punch_collision",
-        "volume": 0.8
+        "volume": 0.16
       },
       {
         "name": "hexkagune:sfx/super_punch_collisions/sky_splitting_clash",
-        "volume": 0.69
+        "volume": 0.16
       },
       {
         "name": "hexkagune:sfx/super_punch_collisions/charged_fist_collision",
-        "volume": 0.82
+        "volume": 0.16
       }
     ]
   },
@@ -809,7 +785,7 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/super_punch_collisions/thunder_punch_collision",
-        "volume": 0.8
+        "volume": 0.16
       }
     ]
   },
@@ -818,11 +794,11 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/quinque/case_open_1",
-        "volume": 0.86
+        "volume": 0.1795
       },
       {
         "name": "hexkagune:sfx/quinque/case_open_2",
-        "volume": 0.78
+        "volume": 0.1795
       }
     ]
   },
@@ -831,11 +807,11 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/quinque/case_close_1",
-        "volume": 0.73
+        "volume": 0.1795
       },
       {
         "name": "hexkagune:sfx/quinque/case_close_2",
-        "volume": 0.92
+        "volume": 0.1774
       }
     ]
   },
@@ -844,7 +820,7 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/super_punch_collisions/windup_to_massive_clash",
-        "volume": 0.77
+        "volume": 0.16
       }
     ]
   },
@@ -853,11 +829,11 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/super_punch_collisions/close_dry_collision",
-        "volume": 0.36
+        "volume": 0.0912
       },
       {
         "name": "hexkagune:sfx/combat/punch_hits/knuckle_slam",
-        "volume": 0.43
+        "volume": 0.1072
       }
     ]
   },
@@ -866,7 +842,7 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/combat/transformations/pressure_awakening",
-        "volume": 0.76,
+        "volume": 0.16,
         "stream": true
       }
     ]
@@ -876,7 +852,7 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/combat/transformations/organic_armor_shift",
-        "volume": 0.32,
+        "volume": 0.0809,
         "stream": true
       }
     ]
@@ -886,7 +862,7 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/combat/transformations/spectral_reveal",
-        "volume": 0.42,
+        "volume": 0.1066,
         "stream": true
       }
     ]
@@ -896,7 +872,7 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/combat/transformations/energy_metamorphosis",
-        "volume": 0.48,
+        "volume": 0.121,
         "stream": true
       }
     ]
@@ -905,9 +881,9 @@
     "subtitle": "subtitles.hexkagune.sfx.transform",
     "sounds": [
       {
-        "name": "hexkagune:sfx/combat/transformations/body_warp",
-        "volume": 0.44,
-        "stream": true
+        "name": "hexkagune:sfx/recorded/insect_hiss_1",
+        "volume": 0.0837,
+        "preload": true
       }
     ]
   },
@@ -916,7 +892,7 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/combat/transformations/dark_aura_release",
-        "volume": 0.63,
+        "volume": 0.1577,
         "stream": true
       }
     ]
@@ -925,9 +901,9 @@
     "subtitle": "subtitles.hexkagune.sfx.transform",
     "sounds": [
       {
-        "name": "hexkagune:sfx/combat/transformations/heavy_morph",
-        "volume": 0.41,
-        "stream": true
+        "name": "hexkagune:sfx/recorded/insect_hiss_2",
+        "volume": 0.0828,
+        "preload": true
       }
     ]
   },
@@ -936,7 +912,7 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/combat/transformations/overdrive_awakening",
-        "volume": 0.46,
+        "volume": 0.1156,
         "stream": true
       }
     ]
@@ -946,7 +922,7 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/combat/transformations/dimensional_shift",
-        "volume": 0.37,
+        "volume": 0.0939,
         "stream": true
       }
     ]
@@ -956,7 +932,7 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/combat/transformations/final_form",
-        "volume": 0.5,
+        "volume": 0.1253,
         "stream": true
       }
     ]
@@ -1006,7 +982,7 @@
     "subtitle": "subtitles.hexkagune.kagune_strain",
     "sounds": [
       {
-        "name": "hexkagune:sfx.punch_swing_heavy",
+        "name": "hexkagune:sfx.blade_heavy",
         "type": "event"
       }
     ]
@@ -1130,6 +1106,15 @@
       }
     ]
   },
+  "manifest_centipede": {
+    "subtitle": "subtitles.hexkagune.manifest_centipede",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx.centipede_manifest",
+        "type": "event"
+      }
+    ]
+  },
   "manifest_ukaku": {
     "subtitle": "subtitles.hexkagune.manifest_ukaku",
     "sounds": [
@@ -1162,7 +1147,8 @@
     "sounds": [
       {
         "name": "hexkagune:eye_open",
-        "stream": false
+        "stream": false,
+        "volume": 0.0379
       }
     ]
   }

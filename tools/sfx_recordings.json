@@ -1,0 +1,230 @@
+{
+  "description": "3.0.7: real recordings only; no synthesized or AI-generated sound. Conversion is performed only by tools/sfx_pack.py. Source metadata and clip edits are shipped with the sounds.",
+  "licence_sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499",
+  "sources": {
+    "beetle.wav": {
+      "title": "Beetle Squark5.wav (elephant beetle, Zoom H1)",
+      "author": "warrenXG",
+      "licence": "CC0-1.0",
+      "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_url": "https://freesound.org/people/warrenXG/sounds/502211/",
+      "licence_evidence": "https://freesound.org/people/warrenXG/sounds/502211/",
+      "download_url": "https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/502211__warrenxg__beetle-squark5.wav",
+      "source_filename": "Samples/502211__warrenxg__beetle-squark5.wav",
+      "sha256": "ec7ead384bdeca897c2c8576d23fe2b5d402b920ba57b7e74b67fee549d1e127",
+      "kind": "real recording"
+    },
+    "grasshopper.wav": {
+      "title": "Grasshopper close up recording (TASCAM DR100mk2 and Rode stereo mic; mirror excerpt)",
+      "author": "cregstorm",
+      "licence": "CC0-1.0",
+      "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_url": "https://freesound.org/people/cregstorm/sounds/827358/",
+      "licence_evidence": "https://freesound.org/people/cregstorm/sounds/827358/",
+      "download_url": "https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/827358__cregstorm__grasshopper-close-up-recording.wav",
+      "source_filename": "Samples/827358__cregstorm__grasshopper-close-up-recording.wav",
+      "sha256": "00389d39d946825bb0c7a61e16644b4b9f424150f0c6df10c9ee5df6642f6558",
+      "kind": "real recording"
+    },
+    "roach_a.wav": {
+      "title": "Insects - Madagascar Hissing Cockroach, Several Hisses (mirror excerpt a)",
+      "author": "TheKingOfGeeks360",
+      "licence": "CC0-1.0",
+      "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_url": "https://freesound.org/people/TheKingOfGeeks360/sounds/811205/",
+      "licence_evidence": "https://freesound.org/people/TheKingOfGeeks360/sounds/811205/",
+      "download_url": "https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/811205__thekingofgeeks360__insects-madagascar-hissing-cockroach-several-hisses_a.wav",
+      "source_filename": "Samples/811205__thekingofgeeks360__insects-madagascar-hissing-cockroach-several-hisses_a.wav",
+      "sha256": "9e94b8ddca55e9b8877da3ca77b962c03de45c01cae40d7db2f2debca595c532",
+      "kind": "real recording"
+    },
+    "roach_b.wav": {
+      "title": "Insects - Madagascar Hissing Cockroach, Several Hisses (mirror excerpt b)",
+      "author": "TheKingOfGeeks360",
+      "licence": "CC0-1.0",
+      "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_url": "https://freesound.org/people/TheKingOfGeeks360/sounds/811205/",
+      "licence_evidence": "https://freesound.org/people/TheKingOfGeeks360/sounds/811205/",
+      "download_url": "https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/811205__thekingofgeeks360__insects-madagascar-hissing-cockroach-several-hisses_b.wav",
+      "source_filename": "Samples/811205__thekingofgeeks360__insects-madagascar-hissing-cockroach-several-hisses_b.wav",
+      "sha256": "0707eb158a443400a826b92e36b17bb7f153cb15b22a1c3b1a101b4ef33308b6",
+      "kind": "real recording"
+    },
+    "swish1.wav": {
+      "title": "Micro Pack - Organic Wooshes / Classic Swish 1.wav",
+      "author": "Benjamin Burnes (Abstraction)",
+      "licence": "CC0-1.0",
+      "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_url": "https://abstractionmusic.com/",
+      "licence_evidence": "https://raw.githubusercontent.com/lavenderdotpet/CC0-Public-Domain-Sounds/f2b6264f9ab89fabc266914c3654685d68c5a39b/Micro%20Pack%20-%20Organic%20Wooshes/_README.txt",
+      "download_url": "https://raw.githubusercontent.com/lavenderdotpet/CC0-Public-Domain-Sounds/f2b6264f9ab89fabc266914c3654685d68c5a39b/Micro%20Pack%20-%20Organic%20Wooshes/Classic%20Swish%201.wav",
+      "source_filename": "Micro Pack - Organic Wooshes/Classic Swish 1.wav",
+      "sha256": "672db5f3decc2c6de750ac8d8d9095f9868c37d64af2ae518d0377c915ead1bd",
+      "kind": "real recording"
+    },
+    "swish2.wav": {
+      "title": "Micro Pack - Organic Wooshes / Classic Swish 2.wav",
+      "author": "Benjamin Burnes (Abstraction)",
+      "licence": "CC0-1.0",
+      "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_url": "https://abstractionmusic.com/",
+      "licence_evidence": "https://raw.githubusercontent.com/lavenderdotpet/CC0-Public-Domain-Sounds/f2b6264f9ab89fabc266914c3654685d68c5a39b/Micro%20Pack%20-%20Organic%20Wooshes/_README.txt",
+      "download_url": "https://raw.githubusercontent.com/lavenderdotpet/CC0-Public-Domain-Sounds/f2b6264f9ab89fabc266914c3654685d68c5a39b/Micro%20Pack%20-%20Organic%20Wooshes/Classic%20Swish%202.wav",
+      "source_filename": "Micro Pack - Organic Wooshes/Classic Swish 2.wav",
+      "sha256": "713cd3b0c389b5650e665aa359f061033fdeb329b7e1e23a5b231629b5b97c59",
+      "kind": "real recording"
+    },
+    "swish3.wav": {
+      "title": "Micro Pack - Organic Wooshes / Classic Swish 3.wav",
+      "author": "Benjamin Burnes (Abstraction)",
+      "licence": "CC0-1.0",
+      "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_url": "https://abstractionmusic.com/",
+      "licence_evidence": "https://raw.githubusercontent.com/lavenderdotpet/CC0-Public-Domain-Sounds/f2b6264f9ab89fabc266914c3654685d68c5a39b/Micro%20Pack%20-%20Organic%20Wooshes/_README.txt",
+      "download_url": "https://raw.githubusercontent.com/lavenderdotpet/CC0-Public-Domain-Sounds/f2b6264f9ab89fabc266914c3654685d68c5a39b/Micro%20Pack%20-%20Organic%20Wooshes/Classic%20Swish%203.wav",
+      "source_filename": "Micro Pack - Organic Wooshes/Classic Swish 3.wav",
+      "sha256": "09e4e4a44828a35a93a549bcc202cceb4f888d11d5f7f2cb30bd516d7659059d",
+      "kind": "real recording"
+    },
+    "swing_slow.wav": {
+      "title": "Micro Pack - Organic Wooshes / Swish 3.wav",
+      "author": "Benjamin Burnes (Abstraction)",
+      "licence": "CC0-1.0",
+      "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_url": "https://abstractionmusic.com/",
+      "licence_evidence": "https://raw.githubusercontent.com/lavenderdotpet/CC0-Public-Domain-Sounds/f2b6264f9ab89fabc266914c3654685d68c5a39b/Micro%20Pack%20-%20Organic%20Wooshes/_README.txt",
+      "download_url": "https://raw.githubusercontent.com/lavenderdotpet/CC0-Public-Domain-Sounds/f2b6264f9ab89fabc266914c3654685d68c5a39b/Micro%20Pack%20-%20Organic%20Wooshes/Swish%203.wav",
+      "source_filename": "Micro Pack - Organic Wooshes/Swish 3.wav",
+      "sha256": "59461c4daac23f50ccacbe1bfe39e9df6afdd4ebf4de55c3ff68efa34a3ab379",
+      "kind": "real recording"
+    },
+    "slash.wav": {
+      "title": "Micro Pack - Organic Wooshes / Slash.wav",
+      "author": "Benjamin Burnes (Abstraction)",
+      "licence": "CC0-1.0",
+      "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_url": "https://abstractionmusic.com/",
+      "licence_evidence": "https://raw.githubusercontent.com/lavenderdotpet/CC0-Public-Domain-Sounds/f2b6264f9ab89fabc266914c3654685d68c5a39b/Micro%20Pack%20-%20Organic%20Wooshes/_README.txt",
+      "download_url": "https://raw.githubusercontent.com/lavenderdotpet/CC0-Public-Domain-Sounds/f2b6264f9ab89fabc266914c3654685d68c5a39b/Micro%20Pack%20-%20Organic%20Wooshes/Slash.wav",
+      "source_filename": "Micro Pack - Organic Wooshes/Slash.wav",
+      "sha256": "7bad54c4fc2f16c88680946b305e886f5dcb5be1cc8b3939b273968bc6232222",
+      "kind": "real recording"
+    },
+    "splat1.wav": {
+      "title": "Micro Pack - CaptSubtle - Melon / Slap the Melon 1.wav",
+      "author": "Benjamin Burnes (Abstraction)",
+      "licence": "CC0-1.0",
+      "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_url": "https://abstractionmusic.com/",
+      "licence_evidence": "https://raw.githubusercontent.com/lavenderdotpet/CC0-Public-Domain-Sounds/f2b6264f9ab89fabc266914c3654685d68c5a39b/Micro%20Pack%20-%20CaptSubtle%20-%20Melon/_README.txt",
+      "download_url": "https://raw.githubusercontent.com/lavenderdotpet/CC0-Public-Domain-Sounds/f2b6264f9ab89fabc266914c3654685d68c5a39b/Micro%20Pack%20-%20CaptSubtle%20-%20Melon/Slap%20the%20Melon%201.wav",
+      "source_filename": "Micro Pack - CaptSubtle - Melon/Slap the Melon 1.wav",
+      "sha256": "49f1dd2ec3098714b1b9a281c4cc5b9ce9d4b80c4d3d9213159d1492eee11867",
+      "kind": "real recording"
+    },
+    "splat2.wav": {
+      "title": "Micro Pack - CaptSubtle - Melon / Slap the Melon 2.wav",
+      "author": "Benjamin Burnes (Abstraction)",
+      "licence": "CC0-1.0",
+      "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_url": "https://abstractionmusic.com/",
+      "licence_evidence": "https://raw.githubusercontent.com/lavenderdotpet/CC0-Public-Domain-Sounds/f2b6264f9ab89fabc266914c3654685d68c5a39b/Micro%20Pack%20-%20CaptSubtle%20-%20Melon/_README.txt",
+      "download_url": "https://raw.githubusercontent.com/lavenderdotpet/CC0-Public-Domain-Sounds/f2b6264f9ab89fabc266914c3654685d68c5a39b/Micro%20Pack%20-%20CaptSubtle%20-%20Melon/Slap%20the%20Melon%202.wav",
+      "source_filename": "Micro Pack - CaptSubtle - Melon/Slap the Melon 2.wav",
+      "sha256": "cb81037daad6e065b64e232f2089cba6ee6015d7ed8107cdeafc487457e23102",
+      "kind": "real recording"
+    },
+    "splat3.wav": {
+      "title": "Micro Pack - CaptSubtle - Melon / Slap the Melon 3.wav",
+      "author": "Benjamin Burnes (Abstraction)",
+      "licence": "CC0-1.0",
+      "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_url": "https://abstractionmusic.com/",
+      "licence_evidence": "https://raw.githubusercontent.com/lavenderdotpet/CC0-Public-Domain-Sounds/f2b6264f9ab89fabc266914c3654685d68c5a39b/Micro%20Pack%20-%20CaptSubtle%20-%20Melon/_README.txt",
+      "download_url": "https://raw.githubusercontent.com/lavenderdotpet/CC0-Public-Domain-Sounds/f2b6264f9ab89fabc266914c3654685d68c5a39b/Micro%20Pack%20-%20CaptSubtle%20-%20Melon/Slap%20the%20Melon%203.wav",
+      "source_filename": "Micro Pack - CaptSubtle - Melon/Slap the Melon 3.wav",
+      "sha256": "efb89ee06b4235cd729535c3f872a45005b0279ae7061b0515da516458ba2665",
+      "kind": "real recording"
+    },
+    "rip1.wav": {
+      "title": "Micro Pack - CaptSubtle - Melon / Rip and Tear 1.wav",
+      "author": "Benjamin Burnes (Abstraction)",
+      "licence": "CC0-1.0",
+      "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_url": "https://abstractionmusic.com/",
+      "licence_evidence": "https://raw.githubusercontent.com/lavenderdotpet/CC0-Public-Domain-Sounds/f2b6264f9ab89fabc266914c3654685d68c5a39b/Micro%20Pack%20-%20CaptSubtle%20-%20Melon/_README.txt",
+      "download_url": "https://raw.githubusercontent.com/lavenderdotpet/CC0-Public-Domain-Sounds/f2b6264f9ab89fabc266914c3654685d68c5a39b/Micro%20Pack%20-%20CaptSubtle%20-%20Melon/Rip%20and%20Tear%201.wav",
+      "source_filename": "Micro Pack - CaptSubtle - Melon/Rip and Tear 1.wav",
+      "sha256": "5fe1481e02bf1a7c4f0954a2c80740e368e5663937c046149cef878cf53778c4",
+      "kind": "real recording"
+    },
+    "rip2.wav": {
+      "title": "Micro Pack - CaptSubtle - Melon / Rip and Tear 2.wav",
+      "author": "Benjamin Burnes (Abstraction)",
+      "licence": "CC0-1.0",
+      "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_url": "https://abstractionmusic.com/",
+      "licence_evidence": "https://raw.githubusercontent.com/lavenderdotpet/CC0-Public-Domain-Sounds/f2b6264f9ab89fabc266914c3654685d68c5a39b/Micro%20Pack%20-%20CaptSubtle%20-%20Melon/_README.txt",
+      "download_url": "https://raw.githubusercontent.com/lavenderdotpet/CC0-Public-Domain-Sounds/f2b6264f9ab89fabc266914c3654685d68c5a39b/Micro%20Pack%20-%20CaptSubtle%20-%20Melon/Rip%20and%20Tear%202.wav",
+      "source_filename": "Micro Pack - CaptSubtle - Melon/Rip and Tear 2.wav",
+      "sha256": "3fa598de950d6b72b98bfeefb99379f15dfabafe6d835588c14a265251475da7",
+      "kind": "real recording"
+    }
+  },
+  "clips": {
+    "insect_chirr": {
+      "source": "beetle.wav"
+    },
+    "insect_hiss_1": {
+      "source": "roach_a.wav"
+    },
+    "insect_hiss_2": {
+      "source": "roach_b.wav"
+    },
+    "air_swish_1": {
+      "source": "swish1.wav"
+    },
+    "air_swish_2": {
+      "source": "swish2.wav"
+    },
+    "air_swish_3": {
+      "source": "swish3.wav"
+    },
+    "air_heavy": {
+      "source": "swing_slow.wav"
+    },
+    "air_slash": {
+      "source": "slash.wav"
+    },
+    "flesh_slap_1": {
+      "source": "splat1.wav"
+    },
+    "flesh_slap_2": {
+      "source": "splat2.wav"
+    },
+    "flesh_slap_3": {
+      "source": "splat3.wav"
+    },
+    "flesh_rip_1": {
+      "source": "rip1.wav"
+    },
+    "flesh_rip_2": {
+      "source": "rip2.wav"
+    },
+    "insect_click_1": {
+      "source": "grasshopper.wav",
+      "start": 0.02,
+      "end": 0.3
+    },
+    "insect_click_2": {
+      "source": "grasshopper.wav",
+      "start": 0.53,
+      "end": 0.86
+    },
+    "flesh_rip_short": {
+      "source": "rip2.wav",
+      "start": 0.12,
+      "end": 0.48
+    }
+  }
+}

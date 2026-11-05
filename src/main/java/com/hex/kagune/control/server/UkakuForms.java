@@ -218,6 +218,8 @@ public final class UkakuForms {
 
     private static void announce(ServerPlayer player, boolean on, String name, String sound) {
         player.m_5661_(Component.m_237110_(on ? "message.hexkagune.kakuja_on" : "message.hexkagune.kakuja_off", name), true);
-        UkakuFire.sound(player.m_284548_(), player.m_20182_().m_82520_(0.0, 1.0, 0.0), on ? sound : KAKUJA_OFF_SOUND, on ? 1.8F : 1.0F, 1.0F);
+        boolean centipede = sound.equals(CENTIPEDE_SOUND) || sound.equals(RINKAKU_KAKUJA_SOUND);
+        String selected = on ? sound : centipede ? "hexkagune:sfx.chitin" : KAKUJA_OFF_SOUND;
+        UkakuFire.sound(player.m_284548_(), player.m_20182_().m_82520_(0.0, 1.0, 0.0), selected, on ? 1.8F : 1.0F, 1.0F);
     }
 }

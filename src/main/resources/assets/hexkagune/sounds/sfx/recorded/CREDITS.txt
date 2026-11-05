@@ -1,0 +1,98 @@
+Recorded sound additions, 3.0.7. No synthesized or AI-generated audio.
+All sources: CC0 1.0 Universal, https://creativecommons.org/publicdomain/zero/1.0/
+
+insect_chirr.ogg: Beetle Squark5.wav (elephant beetle, Zoom H1) by warrenXG
+Licence: CC0-1.0
+Original: https://freesound.org/people/warrenXG/sounds/502211/
+GitHub recording: https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/502211__warrenxg__beetle-squark5.wav
+Excerpt 0.000000-0.484512 s; 3 ms fade-in, 20 ms fade-out; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering.
+
+insect_hiss_1.ogg: Insects - Madagascar Hissing Cockroach, Several Hisses (mirror excerpt a) by TheKingOfGeeks360
+Licence: CC0-1.0
+Original: https://freesound.org/people/TheKingOfGeeks360/sounds/811205/
+GitHub recording: https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/811205__thekingofgeeks360__insects-madagascar-hissing-cockroach-several-hisses_a.wav
+Excerpt 0.000000-0.692479 s; 3 ms fade-in, 20 ms fade-out; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering.
+
+insect_hiss_2.ogg: Insects - Madagascar Hissing Cockroach, Several Hisses (mirror excerpt b) by TheKingOfGeeks360
+Licence: CC0-1.0
+Original: https://freesound.org/people/TheKingOfGeeks360/sounds/811205/
+GitHub recording: https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/811205__thekingofgeeks360__insects-madagascar-hissing-cockroach-several-hisses_b.wav
+Excerpt 0.000000-0.540667 s; 3 ms fade-in, 20 ms fade-out; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering.
+
+air_swish_1.ogg: Micro Pack - Organic Wooshes / Classic Swish 1.wav by Benjamin Burnes (Abstraction)
+Licence: CC0-1.0
+Original: https://abstractionmusic.com/
+GitHub recording: https://raw.githubusercontent.com/lavenderdotpet/CC0-Public-Domain-Sounds/f2b6264f9ab89fabc266914c3654685d68c5a39b/Micro%20Pack%20-%20Organic%20Wooshes/Classic%20Swish%201.wav
+Excerpt 0.000000-0.369116 s; 3 ms fade-in, 20 ms fade-out; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering.
+
+air_swish_2.ogg: Micro Pack - Organic Wooshes / Classic Swish 2.wav by Benjamin Burnes (Abstraction)
+Licence: CC0-1.0
+Original: https://abstractionmusic.com/
+GitHub recording: https://raw.githubusercontent.com/lavenderdotpet/CC0-Public-Domain-Sounds/f2b6264f9ab89fabc266914c3654685d68c5a39b/Micro%20Pack%20-%20Organic%20Wooshes/Classic%20Swish%202.wav
+Excerpt 0.000000-0.339025 s; 3 ms fade-in, 20 ms fade-out; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering.
+
+air_swish_3.ogg: Micro Pack - Organic Wooshes / Classic Swish 3.wav by Benjamin Burnes (Abstraction)
+Licence: CC0-1.0
+Original: https://abstractionmusic.com/
+GitHub recording: https://raw.githubusercontent.com/lavenderdotpet/CC0-Public-Domain-Sounds/f2b6264f9ab89fabc266914c3654685d68c5a39b/Micro%20Pack%20-%20Organic%20Wooshes/Classic%20Swish%203.wav
+Excerpt 0.000000-0.502245 s; 3 ms fade-in, 20 ms fade-out; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering.
+
+air_heavy.ogg: Micro Pack - Organic Wooshes / Swish 3.wav by Benjamin Burnes (Abstraction)
+Licence: CC0-1.0
+Original: https://abstractionmusic.com/
+GitHub recording: https://raw.githubusercontent.com/lavenderdotpet/CC0-Public-Domain-Sounds/f2b6264f9ab89fabc266914c3654685d68c5a39b/Micro%20Pack%20-%20Organic%20Wooshes/Swish%203.wav
+Excerpt 0.000000-0.643288 s; 3 ms fade-in, 20 ms fade-out; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering.
+
+air_slash.ogg: Micro Pack - Organic Wooshes / Slash.wav by Benjamin Burnes (Abstraction)
+Licence: CC0-1.0
+Original: https://abstractionmusic.com/
+GitHub recording: https://raw.githubusercontent.com/lavenderdotpet/CC0-Public-Domain-Sounds/f2b6264f9ab89fabc266914c3654685d68c5a39b/Micro%20Pack%20-%20Organic%20Wooshes/Slash.wav
+Excerpt 0.000000-0.150000 s; 3 ms fade-in, 20 ms fade-out; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering.
+
+flesh_slap_1.ogg: Micro Pack - CaptSubtle - Melon / Slap the Melon 1.wav by Benjamin Burnes (Abstraction)
+Licence: CC0-1.0
+Original: https://abstractionmusic.com/
+GitHub recording: https://raw.githubusercontent.com/lavenderdotpet/CC0-Public-Domain-Sounds/f2b6264f9ab89fabc266914c3654685d68c5a39b/Micro%20Pack%20-%20CaptSubtle%20-%20Melon/Slap%20the%20Melon%201.wav
+Excerpt 0.000000-0.268753 s; 3 ms fade-in, 20 ms fade-out; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering.
+
+flesh_slap_2.ogg: Micro Pack - CaptSubtle - Melon / Slap the Melon 2.wav by Benjamin Burnes (Abstraction)
+Licence: CC0-1.0
+Original: https://abstractionmusic.com/
+GitHub recording: https://raw.githubusercontent.com/lavenderdotpet/CC0-Public-Domain-Sounds/f2b6264f9ab89fabc266914c3654685d68c5a39b/Micro%20Pack%20-%20CaptSubtle%20-%20Melon/Slap%20the%20Melon%202.wav
+Excerpt 0.000000-0.572948 s; 3 ms fade-in, 20 ms fade-out; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering.
+
+flesh_slap_3.ogg: Micro Pack - CaptSubtle - Melon / Slap the Melon 3.wav by Benjamin Burnes (Abstraction)
+Licence: CC0-1.0
+Original: https://abstractionmusic.com/
+GitHub recording: https://raw.githubusercontent.com/lavenderdotpet/CC0-Public-Domain-Sounds/f2b6264f9ab89fabc266914c3654685d68c5a39b/Micro%20Pack%20-%20CaptSubtle%20-%20Melon/Slap%20the%20Melon%203.wav
+Excerpt 0.000000-0.391156 s; 3 ms fade-in, 20 ms fade-out; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering.
+
+flesh_rip_1.ogg: Micro Pack - CaptSubtle - Melon / Rip and Tear 1.wav by Benjamin Burnes (Abstraction)
+Licence: CC0-1.0
+Original: https://abstractionmusic.com/
+GitHub recording: https://raw.githubusercontent.com/lavenderdotpet/CC0-Public-Domain-Sounds/f2b6264f9ab89fabc266914c3654685d68c5a39b/Micro%20Pack%20-%20CaptSubtle%20-%20Melon/Rip%20and%20Tear%201.wav
+Excerpt 0.000000-1.988186 s; 3 ms fade-in, 20 ms fade-out; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering.
+
+flesh_rip_2.ogg: Micro Pack - CaptSubtle - Melon / Rip and Tear 2.wav by Benjamin Burnes (Abstraction)
+Licence: CC0-1.0
+Original: https://abstractionmusic.com/
+GitHub recording: https://raw.githubusercontent.com/lavenderdotpet/CC0-Public-Domain-Sounds/f2b6264f9ab89fabc266914c3654685d68c5a39b/Micro%20Pack%20-%20CaptSubtle%20-%20Melon/Rip%20and%20Tear%202.wav
+Excerpt 0.000000-1.268934 s; 3 ms fade-in, 20 ms fade-out; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering.
+
+insect_click_1.ogg: Grasshopper close up recording (TASCAM DR100mk2 and Rode stereo mic; mirror excerpt) by cregstorm
+Licence: CC0-1.0
+Original: https://freesound.org/people/cregstorm/sounds/827358/
+GitHub recording: https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/827358__cregstorm__grasshopper-close-up-recording.wav
+Excerpt 0.020000-0.300000 s; 3 ms fade-in, 20 ms fade-out; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering.
+
+insect_click_2.ogg: Grasshopper close up recording (TASCAM DR100mk2 and Rode stereo mic; mirror excerpt) by cregstorm
+Licence: CC0-1.0
+Original: https://freesound.org/people/cregstorm/sounds/827358/
+GitHub recording: https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/827358__cregstorm__grasshopper-close-up-recording.wav
+Excerpt 0.530000-0.860000 s; 3 ms fade-in, 20 ms fade-out; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering.
+
+flesh_rip_short.ogg: Micro Pack - CaptSubtle - Melon / Rip and Tear 2.wav by Benjamin Burnes (Abstraction)
+Licence: CC0-1.0
+Original: https://abstractionmusic.com/
+GitHub recording: https://raw.githubusercontent.com/lavenderdotpet/CC0-Public-Domain-Sounds/f2b6264f9ab89fabc266914c3654685d68c5a39b/Micro%20Pack%20-%20CaptSubtle%20-%20Melon/Rip%20and%20Tear%202.wav
+Excerpt 0.120000-0.480000 s; 3 ms fade-in, 20 ms fade-out; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering.

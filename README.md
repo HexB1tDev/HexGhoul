@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.0.7 (HexGhoul): Recorded insect, swing and flesh sounds; finger crack leads the mix (testing)
+
+See `.github/release-notes-3.0.7.md`. Centipede legs use real insect recordings, both Rinkaku half-kakuja transformations are quiet hisses, and kagune swings use recorded air swishes. The synthetic flesh-impact, blood-spray and gush pools are replaced with recorded melon foley; stab samples stay the same. The owner's finger-crack recording is unchanged and plays at full gain, with every other pack sound mixed lower. All new recordings are CC0 and credited in the pack. Protocol 88, unchanged. Not tested in game.
+
 ## 3.0.6 (HexGhoul): The kagune-made weapons are real items (testing)
 
 See `.github/release-notes-3.0.6.md`. The four kagune-made weapons are real items now. The Tendril Whip, Crystal Spear, Flesh Hammer and Bone Greatsword each have their own case and weapon item: given by /give, in the Combat tab, and dropped by the investigators who carry them (their own case now, not the regular quinque case; a masterwork's stays a masterwork). Right click the case and the weapon tears out of it in your hand (drawn from the same mesh the investigators use). M1 runs its whole string of blows with the investigators' animations, right click is its first move and Shift + right click its second (Bind/Flay, Crystal Javelin/Piercing Charge, Quake/Whirlwind, Leaping Cut/Cleave), each on a cooldown. Put it in another slot and it folds back into its case. Investigators carry the new case at peace too.
