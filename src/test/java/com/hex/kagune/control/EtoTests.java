@@ -490,6 +490,15 @@ public final class EtoTests {
         UniqueNpc kept = UniqueNpc.loadAll(UniqueNpc.saveAll(all)).get("eto");
         check(kept != null && kept.origined && kept.originY == 70 && kept.company == 1000, "her home kept with the world");
         check(UniqueNpc.loadAll("eto|-|1|5|-9223372036854775808|1,2,3|-|-|0").get("eto").homeX == 1, "a save from before her own home reads");
+        // 3.0.4: whether anyone has met her, kept with the world (a save from before it: met if she has a partner).
+        home.met = true;
+        all.put("eto", home);
+        UniqueNpc metBack = UniqueNpc.loadAll(UniqueNpc.saveAll(all)).get("eto");
+        UniqueNpc fresh = new UniqueNpc();
+        all.put("eto", fresh);
+        check(metBack != null && metBack.met && !UniqueNpc.loadAll(UniqueNpc.saveAll(all)).get("eto").met
+            && !UniqueNpc.loadAll("eto|-|1|5|-9223372036854775808|1,2,3|-|-|0").get("eto").met,
+            "3.0.4: met or not, kept with the world (until then the library a player finds is hers)");
     }
 
     static void moods() {

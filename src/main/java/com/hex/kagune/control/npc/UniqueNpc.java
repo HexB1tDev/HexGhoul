@@ -36,6 +36,11 @@ public final class UniqueNpc {
     public boolean origined;
     public boolean away;
     public long company = Long.MIN_VALUE;
+    /**
+     * 3.0.4: someone has met her (talked to her). Until then, a body of hers a player comes upon may take her place (one of three libraries
+     * a world has, the one they actually find), and the unmet one elsewhere is sent away.
+     */
+    public boolean met;
 
     /** Whether {@code body}, ticking at {@code now}, may live: hers, or none of hers lives (or hers has gone quiet), and it takes her place. */
     public boolean claim(UUID body, long now) {
@@ -110,7 +115,8 @@ public final class UniqueNpc {
         return String.join("|", key, this.body == null ? "-" : this.body.toString(), this.alive ? "1" : "0", Long.toString(this.seen),
             Long.toString(this.diedAt), this.homed ? this.homeX + "," + this.homeY + "," + this.homeZ : "-",
             this.partner == null ? "-" : this.partner.toString(), this.partnerName.isEmpty() ? "-" : this.partnerName, Integer.toString(this.stage.ordinal()),
-            this.origined ? this.originX + "," + this.originY + "," + this.originZ : "-", this.away ? "1" : "0", Long.toString(this.company));
+            this.origined ? this.originX + "," + this.originY + "," + this.originZ : "-", this.away ? "1" : "0", Long.toString(this.company),
+            this.met ? "1" : "0");
     }
 
     /** Every NPC as one string, a line each. */
@@ -133,7 +139,7 @@ public final class UniqueNpc {
         }
         for (String line : saved.split("\n")) {
             String[] parts = line.split("\\|", -1);
-            if (parts.length != 9 && parts.length != 12 || parts[0].isEmpty()) {
+            if (parts.length != 9 && parts.length != 12 && parts.length != 13 || parts[0].isEmpty()) {
                 continue;
             }
             try {
@@ -155,7 +161,7 @@ public final class UniqueNpc {
                 if (npc.partner == null) {
                     npc.stage = Romance.Stage.NONE;
                 }
-                if (parts.length == 12) {
+                if (parts.length >= 12) {
                     if (!parts[9].equals("-")) {
                         String[] origin = parts[9].split(",");
                         npc.originX = Integer.parseInt(origin[0]);
@@ -166,6 +172,8 @@ public final class UniqueNpc {
                     npc.away = parts[10].equals("1");
                     npc.company = Long.parseLong(parts[11]);
                 }
+                // 3.0.4: met (saved before it was kept: met if she has a partner).
+                npc.met = parts.length >= 13 ? parts[12].equals("1") : npc.partner != null;
                 all.put(parts[0], npc);
             } catch (RuntimeException ignored) {
                 // dropped

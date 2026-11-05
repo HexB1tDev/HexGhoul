@@ -241,8 +241,19 @@ public final class EtoBrain {
             // 1.3.2: only one of her lives; any other body leaves on its first tick.
             BlockPos first = npc.home() != null ? npc.home() : npc.settle();
             if (!UniqueNpcs.claim(level, npc.persona().key(), npc.m_20148_(), first)) {
-                npc.m_146870_();
-                return;
+                // 3.0.4 (the owner: "I see the library, but Eto is not in it"): a world has three libraries, and whichever was loaded first
+                // (a player passing within range, unseen) took her; the one they then found sent its own body away. Until someone has met
+                // her, a body of hers waits where it was made, and the one a player comes to is her.
+                UniqueNpc slot = UniqueNpcs.get(level, npc.persona().key());
+                if (slot.met || slot.partner != null || metByAnyone(level, npc.persona().key())) {
+                    npc.m_146870_();
+                    return;
+                }
+                if (!someoneAbout(npc, level)) {
+                    npc.m_21573_().m_26573_();
+                    return;
+                }
+                UniqueNpcs.adopt(level, npc.persona().key(), npc, first);
             }
             mind = new Mind();
             npc.mind = mind;
@@ -1770,6 +1781,17 @@ public final class EtoBrain {
     }
 
     /** True if a player is about her (company: no reason to go home). */
+    /** 3.0.4: true if a player here has met companion {@code key} (one who met her before the world kept it). */
+    private static boolean metByAnyone(ServerLevel level, String key) {
+        for (ServerPlayer player : level.m_6907_()) {
+            if (QuestServer.bond(player, key).has(NpcBonds.MET)) {
+                UniqueNpcs.met(level, key);
+                return true;
+            }
+        }
+        return false;
+    }
+
     private static boolean someoneAbout(EtoNpc npc, ServerLevel level) {
         for (ServerPlayer player : level.m_6907_()) {
             if (!player.m_5833_() && player.m_20280_(npc) <= 24.0 * 24.0) {

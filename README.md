@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.0.4 (HexGhoul): Eto is in the library you find (testing)
+
+See `.github/release-notes-3.0.4.md`. Eto is in the library you find. A world has three libraries (placed in a ring, like strongholds), but only one Eto, and whichever library loaded first claimed her, often one a player only passed within range of without ever seeing it. The library they then found removed its own Eto on her first tick. Not tested in game.
+
 ## 3.0.3 (HexGhoul): No pause at the start of the finger-crack pull-out (testing)
 
 See `.github/release-notes-3.0.3.md`. The pause at the start of the finger-crack pull-out is gone: the arm moves the moment you press the key, and the kagune comes out about a quarter of a second sooner. Not tested in game.

@@ -167,6 +167,7 @@ public final class EtoServer {
         if (!bond.has(NpcBonds.MET)) {
             QuestServer.bond(player, npc.persona().key(), bond.with(NpcBonds.MET, true));
         }
+        UniqueNpcs.met(player.m_284548_(), npc.persona().key()); // 3.0.4: she stays the one they met
         migrate(player, npc);
         if (npc.m_5803_() && mind.bed != null) {
             // 1.3.37: asleep in her bed at night: a hand on her shoulder only half wakes her, drowsy (HomeLife leaves her lying there).

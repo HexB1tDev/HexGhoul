@@ -202,6 +202,15 @@ public final class UniqueNpcs {
         return true;
     }
 
+    /** 3.0.4: someone has met {@code key} (talked to her): from now on she stays the one they met. */
+    public static void met(ServerLevel level, String key) {
+        UniqueNpc npc = get(level, key);
+        if (!npc.met) {
+            npc.met = true;
+            changed(level);
+        }
+    }
+
     /** Claims a permanent world-wide slot until its holder dies. */
     public static boolean claimExclusive(ServerLevel level, String key, UUID body) {
         UniqueNpc npc = get(level, key);
