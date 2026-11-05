@@ -316,7 +316,8 @@ public final class KaguneBodyAnimation implements IAnimation {
 
     private boolean wants() {
         // 1.3.3: holding Eto's hand, the arm reaches out to her (whatever else the body is doing). 1.3.26: or a quinque (its stance, its M1s).
-        if (com.hex.kagune.control.client.EtoClient.handHeld(this.player.m_19879_()) > 0.0F
+        if (com.hex.kagune.control.client.KenPullOutClient.age(this.player.m_19879_(), com.hex.kagune.control.client.ControlClient.worldTime(0.0F)) >= 0.0
+            || com.hex.kagune.control.client.EtoClient.handHeld(this.player.m_19879_()) > 0.0F
             || com.hex.kagune.control.client.ChildClient.busy(this.player.m_19879_())
             || com.hex.kagune.control.client.QuinqueClient.posing(this.player)) {
             return this.player.m_6084_() && ControlConfig.bodyAnimations();
@@ -800,6 +801,8 @@ public final class KaguneBodyAnimation implements IAnimation {
             default -> {
             }
         }
+        // 2.4.8: Ken's way of pulling it out, taught with a kakuja: a finger cracked first, the right arm alone out in front.
+        com.hex.kagune.control.client.KenPullOutClient.apply(p, this.player.m_19879_(), time);
         float[] jolt = com.hex.kagune.control.client.RinkakuBlockClient.jolt(this.player, time);
         if (block > 0.0F || jolt[1] > 0.0F) {
             RinkakuBlockPose.apply(p, block, jolt[0], jolt[1]);

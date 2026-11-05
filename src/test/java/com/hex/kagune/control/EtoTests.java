@@ -657,5 +657,16 @@ public final class EtoTests {
         check(onward, "her twirl ends a whole turn round, never spun back as it fades");
         check(EtoPose.gesture(EtoGesture.WAVE, 0).rightArmX == 0.0F && EtoPose.gesture(EtoGesture.WAVE, EtoGesture.WAVE.ticks).rightArmX == 0.0F,
             "an idle one eases in and out");
+        boolean oneArm = true;
+        for (int t = 0; t <= 30; t++) {
+            RigPose crack = new RigPose();
+            EtoPose.crack(crack, t);
+            oneArm &= Math.abs(crack.leftArmX) < 0.15F && Math.abs(crack.leftArmY) < 0.05F && Math.abs(crack.rightArmY) <= 0.35F
+                && crack.rightArmX > -1.3F && crack.rightElbow >= 0.0F;
+        }
+        RigPose cracked = new RigPose();
+        EtoPose.crack(cracked, EtoPose.CRACK_AT + 2.0F);
+        check(oneArm && cracked.rightArmX < -0.9F && cracked.rightElbow > 0.4F && cracked.headZ > 0.0F,
+            "2.4.8: the finger crack puts one arm out in front, lower than level and bent, the other hanging at the side, the head tilting");
     }
 }

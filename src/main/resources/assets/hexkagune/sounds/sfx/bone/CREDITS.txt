@@ -1,0 +1,8 @@
+finger_crack.ogg and kagune_burst.ogg are cut from "Oculus Audio Pack 01" by Oculus VR, LLC
+(https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/), licensed under CC BY 4.0
+(https://creativecommons.org/licenses/by/4.0/), as published in facebookincubator/Meta-open-sound
+(corpora/oculus-audio-pack): files renamed to the UCS naming convention; OGG previews transcoded from the original WAVs.
+
+Changes made here:
+- finger_crack.ogg: GOREBone_BonesBreaking_OS_01, 0.185 s to 0.425 s, high-passed at 220 Hz, faded out, peak-normalized, 44.1 kHz mono.
+- kagune_burst.ogg: GOREBone_SkullCracking_OS_01 from 0.08 s, faded out at the end, 44.1 kHz mono.

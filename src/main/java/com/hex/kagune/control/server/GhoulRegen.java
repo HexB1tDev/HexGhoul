@@ -130,4 +130,13 @@ public final class GhoulRegen {
         HURT.remove(event.getEntity().m_20148_());
         MISSING.remove(event.getEntity().m_20148_());
     }
+
+    /**
+     * 2.4.8: the original's regeneration's particles (hearts at the player on every heal: the owner didn't want them): none drawn. Called
+     * in place of {@code ServerLevel.sendParticles} by the patched {@code tickRegeneration}.
+     */
+    public static int particles(net.minecraft.server.level.ServerLevel level, net.minecraft.core.particles.ParticleOptions type, double x, double y, double z, int count, double dx,
+                                double dy, double dz, double speed) {
+        return 0;
+    }
 }

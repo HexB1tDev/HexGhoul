@@ -35,6 +35,10 @@ public final class CompanionPreview {
             kisses(out);
             return;
         }
+        if (args.length > 1 && args[1].equals("crack")) {
+            crack(out);
+            return;
+        }
         String textures = "src/main/resources/assets/hexkagune/textures/entity/";
         List<Shot> touka = new ArrayList<>();
         for (Object[] g : new Object[][] {{EtoGesture.CROSS, 40.0}, {EtoGesture.TAP, 20.0}, {EtoGesture.HUFF, 14.0}, {EtoGesture.SIP, 50.0},
@@ -145,6 +149,30 @@ public final class CompanionPreview {
         }
     }
 
+    /** 2.4.8: Ken's finger crack, one arm out, through the gesture (front, three-quarter, side), as he does it (persona 1). */
+    static void crack(File out) throws Exception {
+        String textures = "src/main/resources/assets/hexkagune/textures/entity/";
+        List<Shot> shots = new ArrayList<>();
+        for (double t : new double[] {4.0, 10.0, 14.0, 16.0, 26.0}) {
+            RigPose pose = EtoPose.gesture(EtoGesture.CRACK, t, 1, 0);
+            shots.add(new Shot("t" + (int)t + ": front", pose, 0.0));
+            shots.add(new Shot("t" + (int)t + ": three-quarter", pose, 35.0));
+            shots.add(new Shot("t" + (int)t + ": side", pose, 85.0));
+        }
+        sheet(new File(out, "ken-crack.png"), "Ken: the finger crack, one arm out, lower (2.4.8)", textures + "ken/ken.png", false, shots);
+        List<Shot> player = new ArrayList<>();
+        for (double t : new double[] {4.0, 10.0, 14.0, 16.0, 26.0}) {
+            RigPose pose = new RigPose();
+            EtoPose.crack(pose, (float)t);
+            player.add(new Shot("t" + (int)t + ": front", pose, 0.0));
+            player.add(new Shot("t" + (int)t + ": three-quarter", pose, 35.0));
+            player.add(new Shot("t" + (int)t + ": side", pose, 85.0));
+        }
+        bendy = true;
+        sheet(new File(out, "player-crack.png"), "A player Ken taught: the same crack, the elbow bent (2.4.8)", textures + "ken/ken.png", false, player);
+        bendy = false;
+    }
+
     /** Frames of every kind of kiss waiting, side by side, moving, on one companion ({@code persona}: Persona.style). */
     static void kissFrames(File folder, String skin, boolean slim, int persona) throws Exception {
         folder.mkdirs();
@@ -184,10 +212,13 @@ public final class CompanionPreview {
         return com.hex.kagune.control.client.animation.MoodKissPose.apply(usual, style, gesture, age, persona);
     }
 
+    /** 2.4.8: drawn as a player is (elbows and knees bend), not as a companion's stiff limbs. */
+    static boolean bendy = false;
+
     static void sheet(File file, String title, String skin, boolean slim, List<Shot> shots) throws Exception {
         PoseRender.skin = ImageIO.read(new File(skin));
         PoseRender.slim = slim;
-        PoseRender.stiff = true;
+        PoseRender.stiff = !bendy;
         int w = 260;
         int h = 330;
         int columns = 5;

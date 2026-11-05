@@ -683,17 +683,7 @@ public final class EtoPose {
                 p.headZ = 0.12F;
                 p.headX = 0.1F + 0.05F * (float)Math.sin(t * 0.06);
             }
-            case CRACK -> {
-                // The right hand up at the chest, the thumb pressed into a finger; at the crack, a tilt of the head.
-                float press = t < 18.0F ? ease(t / 18.0F) : 1.0F;
-                float crack = t >= 18.0F && t < 30.0F ? (float)Math.sin((t - 18.0F) / 12.0F * Math.PI) : 0.0F;
-                p.rightArmX = -1.25F * press;
-                p.rightArmY = -0.6F * press;
-                p.rightArmZ = 0.1F * press;
-                p.headZ = 0.32F * crack;
-                p.headX = 0.12F * press;
-                p.leftArmZ = -0.08F;
-            }
+            case CRACK -> crack(p, t);
             case PECK -> {
                 // In fast, up on her toes, hands behind her back; a beat; back down.
                 float close = (float)Math.sin(Math.min(1.0, t / (double)EtoGesture.PECK.ticks) * Math.PI);
@@ -802,6 +792,30 @@ public final class EtoPose {
         p.rightArmY = 0.3F;
         p.leftArmY = -0.3F;
     }
+
+    /**
+     * 2.4.8 (the owner: "better [Ken]'s crack finger animation so only one hand (arm) goes forward"): the right arm alone raised out in
+     * front, lower than level and a little bent, the thumb pressed into a finger, a jolt and a tilt of the head at the crack; the left arm hanging loose at the
+     * side, never brought up. Shared with a player Ken taught a kakuja, before the kagune bursts out ({@code KenPullOutClient}).
+     */
+    public static void crack(RigPose p, float t) {
+        float press = t < CRACK_AT ? ease(t / CRACK_AT) : 1.0F;
+        float snap = t >= CRACK_AT && t < CRACK_AT + 8.0F ? (float)Math.sin((t - CRACK_AT) / 8.0F * Math.PI) : 0.0F;
+        // 2.4.8 (the owner: "the arm should have a little bend and be lower"): out about 50 degrees, well under level, turned a little in toward
+        // the chest, the elbow bent so the hand comes up (a player's arm bends; a companion's stiff arm keeps the lower, inward angle).
+        p.rightArmX = -0.9F * press - 0.1F * snap;
+        p.rightArmY = -0.3F * press;
+        p.rightArmZ = 0.03F * press;
+        p.rightElbow = 0.75F * press + 0.1F * snap;
+        p.leftArmX = 0.06F;
+        p.leftArmY = 0.0F;
+        p.leftArmZ = -0.06F;
+        p.headX = 0.14F * press;
+        p.headZ = 0.3F * snap;
+    }
+
+    /** 2.4.8: when the finger cracks (ticks into the gesture). */
+    public static final float CRACK_AT = 14.0F;
 
     /** Waiting for a kiss: hands behind her back, her top half leaning in by {@code lean}, chin up, on her toes, swaying a little. */
     private static void kiss(RigPose p, float lean, float t) {

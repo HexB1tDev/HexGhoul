@@ -95,6 +95,8 @@ public record S2CUkakuFx(int kind, int shooter, int id, double x, double y, doub
      * aimed at, {@code extra} its place in the ring times 100 plus its life (ticks).
      */
     public static final int DAWN_RING = 46;
+    /** 2.4.8: a player Ken taught a kakuja cracking a finger before the kagune bursts out ({@code shooter}: the player). */
+    public static final int CRACK = 47;
 
     public static void encode(S2CUkakuFx message, FriendlyByteBuf buffer) {
         buffer.writeByte(message.kind);

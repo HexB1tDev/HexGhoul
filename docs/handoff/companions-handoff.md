@@ -1,4 +1,14 @@
-# START HERE (state after 2.4.7)
+# START HERE (state after 2.4.8)
+
+Ken's finger crack now puts one arm out (the right, held out low with the elbow bent; the left hangs at his side) and is heard: a real bone crack fetched from the web (Oculus Audio Pack 01, CC BY 4.0, credited in the pack). A player who has learned a kakuja (Centipede, Full Kakuja, Dragon or Final Kakuja) now brings their kagune out his way: the same one-arm crack, then the kagune tears out of their back with blood thrown out behind and up, a ripping crunch, and everything close shoved away. The heart particles that puffed behind the player when Rinkaku came out are gone.
+
+- `EtoPose.crack`: the right arm alone held out about 50 degrees (well under level), turned a little in toward the chest, the elbow bent so the hand comes up; a jolt and a head tilt at the crack (tick 14); the left arm loose at the side, never brought up (tested: `EtoTests`). A player's arm shows the bend; a companion's arm is one rigid piece on the vanilla model, so Ken shows the lower, inward angle. Previews: `docs/handoff/ken-crack-2.4.8.png`, `docs/handoff/player-crack-2.4.8.png`.
+- New sounds in the mod's pack (`sounds/sfx/bone/`, `tools/sfx_pack.py`): `finger_crack` (a bone break cut to its single sharp crack) and `kagune_burst` (a skull-cracking crunch). Ken's crack gesture plays `finger_crack` at the snap; the player's pull-out plays both.
+- `KenPullOut` (server) + `KenPullOutClient`: turning the kagune on with a kakuja learned starts the crack (new effect `S2CUkakuFx.CRACK`, posed by `KaguneBodyAnimation`), and 20 ticks later the kagune comes out with the burst. Turning it off is unchanged.
+- The hearts came from the original's regeneration tick (healing puffed heart particles; the higher max health since 2.3.6 made it near constant). The patch now sends that one particle call to `GhoulRegen.particles`, which shows nothing; healing itself is unchanged.
+- Tried first and refused by this environment's network policy: bigsoundbank.com, opengameart.org, commons.wikimedia.org.
+
+# State after 2.4.7
 
 Village humans now ask for favours: rare mini quests that come up through the alert banner, raise their regard and pay out. More village talk too.
 

@@ -40,7 +40,7 @@ public final class KagunePatch implements Opcodes {
     private static final String COOLDOWN = "slingshotCooldownUntil";
     /** 3.0.0: the grapple's flight onto the grabbed block. */
     static final String SLINGSHOT = "com/hex/kagune/control/server/RinkakuSlingshot";
-    static final String VERSION = "2.4.7";
+    static final String VERSION = "2.4.8";
     private static final String PLAYER = "net/minecraft/server/level/ServerPlayer";
     private static final String VECTOR = "net/minecraft/world/phys/Vec3";
     // 1.1.0 kagune control expansion hooks
@@ -372,6 +372,20 @@ public final class KagunePatch implements Opcodes {
         trampoline(node, "toggleGuard", GATES, "toggleGuard");
         // 1.2.0: on the Ukaku path the tail-cycle key switches wing form.
         trampoline(node, "cycleTendrils", FORMS, "cycleTendrils");
+        // 2.4.8 (the owner: "While in rinkaku (when first pulling it out) a bunch of heart particles appear behind the player"): the
+        // original's regeneration puffed hearts at the player on every heal (and since 2.3.6 a ghoul's health is under its larger most for
+        // a long while): those particles go through GhoulRegen.particles, which draws none.
+        MethodNode regen = method(node, "tickRegeneration");
+        int puffs = 0;
+        for (AbstractInsnNode instruction : regen.instructions.toArray()) {
+            if (instruction instanceof MethodInsnNode call && call.getOpcode() == INVOKEVIRTUAL && call.name.equals("m_8767_")
+                    && call.owner.equals("net/minecraft/server/level/ServerLevel")) {
+                regen.instructions.set(call, new MethodInsnNode(INVOKESTATIC, "com/hex/kagune/control/server/GhoulRegen", "particles",
+                    "(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/particles/ParticleOptions;DDDIDDDD)I", false));
+                puffs++;
+            }
+        }
+        expect(puffs, 1, "regeneration hearts");
         // 3.0.3: a crush is once: when it ends, what it crushed is let go (RinkakuGrip) instead of held for the next one.
         MethodNode crush = method(node, "tickCrush");
         int ends = 0;

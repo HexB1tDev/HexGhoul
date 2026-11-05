@@ -193,6 +193,24 @@
       }
     ]
   },
+  "sfx.finger_crack": {
+    "subtitle": "subtitles.hexkagune.sfx.finger_crack",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/bone/finger_crack",
+        "volume": 1.0
+      }
+    ]
+  },
+  "sfx.kagune_burst": {
+    "subtitle": "subtitles.hexkagune.sfx.kagune_burst",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/bone/kagune_burst",
+        "volume": 1.0
+      }
+    ]
+  },
   "sfx.footfall": {
     "subtitle": "subtitles.hexkagune.sfx.footfall",
     "sounds": [
@@ -1111,6 +1129,24 @@
     "sounds": [
       {
         "name": "hexkagune:sfx.transform.spectral_reveal",
+        "type": "event"
+      }
+    ]
+  },
+  "finger_crack": {
+    "subtitle": "subtitles.hexkagune.finger_crack",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx.finger_crack",
+        "type": "event"
+      }
+    ]
+  },
+  "kagune_burst": {
+    "subtitle": "subtitles.hexkagune.kagune_burst",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx.kagune_burst",
         "type": "event"
       }
     ]

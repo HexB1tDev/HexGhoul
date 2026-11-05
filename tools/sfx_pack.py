@@ -34,6 +34,8 @@ CLASH = "super_punch_collisions/"
 QUINQUE = "quinque/"
 # 1.3.61: the owner's own clash sounds (Clashes.zip: Clash1..4.ogg, mono 48 kHz), every clash's impact.
 CLASHES = "clashes/"
+# 2.4.8: bone sounds the owner asked to be fetched from the web (CC BY 4.0, credited in sfx/bone/CREDITS.txt).
+BONE = "bone/"
 
 # pool: (gain, [files], subtitle). Frequent sounds get short files and a lower gain; the big ones the long, loud collisions.
 POOLS = {
@@ -51,6 +53,9 @@ POOLS = {
     "finisher": (0.95, [PHIT + "finishing_punch", PHIT + "crushing_cross"], "A finishing blow"),
     "crunch": (0.6, [PHIT + "bone_crack", PHIT + "rib_impact"], "Bone cracks"),
     "crush": (0.85, [PHIT + "crushing_cross", PHIT + "bone_crack", BLOOD + "dense_squelch"], "Bones crush"),
+    # 2.4.8: a finger cracked (Ken's, and a player he taught a kakuja), and the kagune tearing out of a back after it (bone/CREDITS.txt).
+    "finger_crack": (0.95, [BONE + "finger_crack"], "A finger cracks"),
+    "kagune_burst": (1.0, [BONE + "kagune_burst"], "Kagune tears out"),
     # Steps.
     "footfall": (0.5, [RUN + "concrete_footfall", RUN + "leather_footfall", RUN + "cloth_footfall", RUN + "armor_footfall"], "Footsteps"),
     "step_heavy": (0.55, [RUN + "armor_footfall", RUN + "concrete_footfall"], "Heavy footsteps"),
@@ -132,6 +137,8 @@ ORIGINAL = {
 EXPANSION = {
     "manifest_rinkaku": "gush",
     "manifest_ukaku": "transform.spectral_reveal",
+    "finger_crack": "finger_crack",
+    "kagune_burst": "kagune_burst",
 }
 
 

@@ -129,6 +129,16 @@ public final class PathServer {
             ControlNetwork.sendTo(player, new S2CPathPrompt());
             return;
         }
+        // 2.4.8: taught a kakuja by Ken, it comes out his way: a finger cracked, then it tears out of their back (KenPullOut).
+        if (!KaguneProfile.isActive(player)) {
+            if (KenPullOut.pending(player)) {
+                return;
+            }
+            if (KenPullOut.taught(player)) {
+                KenPullOut.start(player);
+                return;
+            }
+        }
         KaguneServerController.toggleLegacy(player);
     }
 

@@ -381,6 +381,11 @@ public final class EtoBrain {
         EtoArm.tick(npc, mind, level, now);
         // 1.3.8: the Owl's burst, and shedding it once the fight is long over.
         EtoOwlForm.tick(npc, mind, level, now);
+        // 2.4.8: a finger cracked is heard (the pack's finger_crack, at the moment the pose snaps).
+        if (mind.gesture == EtoGesture.CRACK && now - mind.gestureAt == KenPullOut.CRACK_AT) {
+            double yaw = Math.toRadians(npc.f_20883_);
+            UkakuFire.sound(level, npc.m_20182_().m_82520_(-Math.sin(yaw) * 0.5, 1.3, Math.cos(yaw) * 0.5), "hexkagune:finger_crack", 0.8F, 1.0F);
+        }
         // 1.3.30: a child in her arms is held the whole time (its cradle, PET, never runs out under it: it ran out and was begun again,
         // the arms dropping and coming back).
         boolean cradles = mind.cradling != null && mind.gesture == EtoGesture.PET;

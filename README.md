@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.4.8 (HexGhoul): Ken's one-arm finger crack with a real bone crack; Ken's pull-out for kakuja users; no regeneration hearts (testing)
+
+See `.github/release-notes-2.4.8.md`. Ken's finger crack now puts one arm out (the right, held out low with the elbow bent; the left hangs at his side) and is heard: a real bone crack fetched from the web (Oculus Audio Pack 01, CC BY 4.0, credited in the pack). A player who has learned a kakuja (Centipede, Full Kakuja, Dragon or Final Kakuja) now brings their kagune out his way: the same one-arm crack, then the kagune tears out of their back with blood thrown out behind and up, a ripping crunch, and everything close shoved away. The heart particles that puffed behind the player when Rinkaku came out are gone.
+
 ## 2.4.7 (HexGhoul): villagers' favours: rare mini quests, more village talk (testing)
 
 See `.github/release-notes-2.4.7.md`. Village humans now ask for favours: rare mini quests that come up through the alert banner, raise their regard and pay out. More village talk too.
