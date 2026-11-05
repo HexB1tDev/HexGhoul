@@ -26,7 +26,7 @@ public final class EtoInitiative {
     }
 
     /** At least this long between two things she starts herself (game ticks: a minute and a half), and only this close (blocks). */
-    public static final long EVERY = 1800L;
+    public static final long EVERY = 6000L; // 2.4.1 (the owner: partners "constantly" at them): five minutes apart at least, was 90 s
     public static final double NEAR = 10.0;
 
     private EtoInitiative() {

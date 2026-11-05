@@ -115,10 +115,11 @@ public enum EtoMood {
     /** How often (game ticks, about) she goes looking for them in this mood: 0 never. */
     public long seeks() {
         return switch (this) {
-            case CLINGY, AFFECTIONATE, LONELY -> 2400L;
-            case GIDDY, HAPPY -> 4800L;
-            case JEALOUS -> 3600L;
-            case BLOODTHIRSTY, SLEEPY -> 7200L;
+            // 2.4.1: four times as far apart (the owner: "they're not constantly running up to you").
+            case CLINGY, AFFECTIONATE, LONELY -> 9600L;
+            case GIDDY, HAPPY -> 19200L;
+            case JEALOUS -> 14400L;
+            case BLOODTHIRSTY, SLEEPY -> 28800L;
             default -> 0L;
         };
     }

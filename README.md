@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 2.4.1 (HexGhoul): partners come to you far less; no false talk alerts (testing)
+
+See `.github/release-notes-2.4.1.md`. Partners come to you far less, and the false "wants to talk to you" alert is gone. Spouses and partners were walking up to kiss, hug, cling and take your hand almost constantly. The biggest cause was a 1-in-100 chance every tick of clinging to you whenever they stood near you in a soft mood, which made it every few seconds.
+
 ## 2.4.0 (HexGhoul): final sweep: health kept across logins, children's halves only added (testing)
 
 See `.github/release-notes-2.4.0.md`. The final sweep after 2.3.2 to 2.3.9. All 34 test suites pass (millions of checks), the Minecraft API check passes, and two problems that would have shown up in play are fixed.

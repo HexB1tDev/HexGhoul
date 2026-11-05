@@ -204,10 +204,11 @@ public final class SceneServer {
     /** About how long between a companion coming up to its partner (ticks), by her mood; and to a friend. */
     static long every(EtoMood mood) {
         return switch (mood) {
-            case CLINGY, LONELY, AFFECTIONATE, GIDDY -> 3600L;
-            case JEALOUS, SULKY -> 5400L;
-            case SLEEPY, BORED -> 6000L;
-            default -> 4800L;
+            // 2.4.1: twice as far apart (the owner: partners at them "constantly").
+            case CLINGY, LONELY, AFFECTIONATE, GIDDY -> 7200L;
+            case JEALOUS, SULKY -> 10800L;
+            case SLEEPY, BORED -> 12000L;
+            default -> 9600L;
         };
     }
 

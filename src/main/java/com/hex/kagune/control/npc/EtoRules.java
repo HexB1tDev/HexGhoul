@@ -166,7 +166,7 @@ public final class EtoRules {
 
     /** She asks for one of her own at most this often per player (game ticks: twenty minutes), on a roll every few seconds. */
     public static final long KISS_ASK_EVERY = 24000L;
-    public static final double KISS_ASK_CHANCE = 0.12;
+    public static final double KISS_ASK_CHANCE = 0.03; // 2.4.1: was 0.12 (asked every few seconds once her 20 minutes were up)
     public static final double KISS_ASK_NEAR = 6.0;
     /** She leans in and waits this long; a shift shorter than {@link #KISS_TAP} is a peck, longer she blushes and holds it. */
     public static final int KISS_WAIT = 160;

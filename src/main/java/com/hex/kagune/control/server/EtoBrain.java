@@ -1078,9 +1078,8 @@ public final class EtoBrain {
                 if (does == act.gesture) {
                     say(npc, partner, npc.persona().script().initiative(act, npc.m_217043_().m_188503_(1000)));
                 }
-                if (does == EtoGesture.HAND) {
-                    alert(npc, partner, Romance.Want.TALK, "takes your hand.");
-                }
+                // 2.4.1 (the owner: "Spouse sometimes appear in the alert box 'Wants to talk to you' ... they DON'T want to talk to you"):
+                // no alert for what she does by herself; it's seen.
                 walkUp(npc, mind, partner, does, now);
                 return true;
             }
@@ -1090,13 +1089,18 @@ public final class EtoBrain {
         if (every > 0L && now >= mind.nextSeek && distance < 16.0) {
             mind.nextSeek = now + every + npc.m_217043_().m_188503_((int)Math.max(1L, every / 2L));
             EtoTalk.Context c = context(npc, partner);
+            // 2.4.1: a word as she comes over, and a wave: no "wants to talk" (she doesn't), and no grabbing hold of them every time.
             say(npc, partner, npc.persona().script().approach(c));
-            alert(npc, partner, Romance.Want.TALK, "");
-            walkUp(npc, mind, partner, clingy ? npc.persona().unasked(EtoGesture.CLING) : EtoGesture.WAVE, now);
+            walkUp(npc, mind, partner, EtoGesture.WAVE, now);
+            mind.initiativeAt = now;
             return true;
         }
         Long since = mind.nearSince.get(partner.m_20148_());
-        if (clingy && distance < 4.0 && since != null && now - since > 200L && mind.gesture == EtoGesture.NONE && npc.m_217043_().m_188500_() < 0.01) {
+        // 2.4.1 (the owner: "they're not constantly running up to you kissing you and grabbing you ... its too unrealistic"): once in a
+        // while at most (it was a 1 in 100 chance every tick she stood near them).
+        if (clingy && distance < 4.0 && since != null && now - since > 600L && mind.gesture == EtoGesture.NONE
+            && now - mind.initiativeAt >= com.hex.kagune.control.npc.EtoInitiative.EVERY && npc.m_217043_().m_188500_() < 0.0015) {
+            mind.initiativeAt = now;
             // 1.3.29: Touka's way: a kiss on the cheek, now and then their face turned to hers and a kiss stolen.
             EtoGesture does = npc.persona().unasked(npc.m_217043_().m_188500_() < 0.3 ? EtoGesture.DANCE : EtoGesture.CLING);
             walkUp(npc, mind, partner, does == EtoGesture.DANCE ? EtoGesture.CLING : does, now);
