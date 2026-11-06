@@ -303,7 +303,7 @@ public final class EtoBrain {
         }
         // 2.1.2: courtship chapters counted in time and place (a walk, a sit, somewhere high, dawn, the dead of night).
         CourtshipServer.tick(npc, level, now);
-        // 1.3.1: following a player, her home goes with her (never pulled back to the Library); she keeps up, or is put by them if far behind.
+        // 3.0.9: following a player, her home goes with her; she walks to keep up, regardless of distance.
         // 1.3.3: holding someone's hand, the same, at their side.
         UUID leaderId = mind.holding != null ? mind.holding : npc.following();
         if (leaderId != null) {
@@ -314,11 +314,7 @@ public final class EtoBrain {
             if (leader != null && mind.target == 0) {
                 Vec3 at = leader.m_20182_();
                 double far = npc.m_20238_(at);
-                if (far > 24.0 * 24.0) {
-                    npc.m_6021_(at.f_82479_, at.f_82480_, at.f_82481_);
-                    npc.m_21573_().m_26573_();
-                    home = npc.settle();
-                } else if (far > 9.0 && now % 10L == 0L && mind.toward == null && mind.kiss == null && mind.holding == null) {
+                if (far > 9.0 && now % 10L == 0L && mind.toward == null && mind.kiss == null && mind.holding == null) {
                     npc.m_21573_().m_5624_(leader, 1.1);
                 }
             }
@@ -337,7 +333,9 @@ public final class EtoBrain {
             : mind.partnerNear ? EtoRules.LEASH : EtoRules.HOME_RADIUS;
         boolean away = mind.target == 0 && mind.talking == null && mind.holding == null && npc.following() == null
             && npc.m_20238_(homeAt) > (house != null ? (leash + 4.0) * (leash + 4.0) : EtoRules.LOST * EtoRules.LOST);
-        if (!EtoOwl.carried(mind.owl) && mind.holding == null && Homeward.bugged(npc, level, homeAt, away, now)) {
+        boolean recoveryBusy = mind.target != 0 || mind.owl.busy() || EtoOwl.carried(mind.owl) || mind.holding != null
+            || npc.following() != null || mind.talking != null || mind.with != 0;
+        if (Homeward.bugged(npc, level, homeAt, away, recoveryBusy, now)) {
             Homeward.put(npc, homeAt);
             mind.target = 0;
         }
@@ -1687,16 +1685,13 @@ public final class EtoBrain {
         return new Vec3(player.m_20185_() - Math.cos(yaw) * out, player.m_20186_(), player.m_20189_() - Math.sin(yaw) * out);
     }
 
-    /** She keeps to the spot {@code out} to {@code player}'s right: walking there, or put there if left far behind. */
+    /** She keeps to the spot {@code out} to {@code player}'s right by walking, including when left behind or on a different floor. */
     private static void stayBeside(EtoNpc npc, ServerPlayer player, double out, long now) {
         Vec3 spot = beside(player, out);
         double dx = spot.f_82479_ - npc.m_20185_();
         double dz = spot.f_82481_ - npc.m_20189_();
         double off = Math.sqrt(dx * dx + dz * dz);
-        if (off > 5.0 || Math.abs(spot.f_82480_ - npc.m_20186_()) > 3.0) {
-            npc.m_21573_().m_26573_();
-            npc.m_6021_(spot.f_82479_, spot.f_82480_, spot.f_82481_);
-        } else if (off > 0.3) {
+        if (off > 0.3 || Math.abs(spot.f_82480_ - npc.m_20186_()) > 0.5) {
             if (now % 3L == 0L) {
                 npc.m_21573_().m_26519_(spot.f_82479_, spot.f_82480_, spot.f_82481_, Math.min(1.7, 0.9 + off * 0.35));
             }

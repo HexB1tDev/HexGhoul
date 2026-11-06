@@ -174,6 +174,8 @@ public final class ChildBrain {
             UniqueNpcs.claim(level, key, npc.m_20148_(), home);
         }
         boolean atHouse = house != null && house.at(home);
+        Vec3 homeAt = new Vec3(home.m_123341_() + 0.5, home.m_123342_() - 1.0, home.m_123343_() + 0.5);
+        boolean awayFromHome = false;
         if (npc.following() == null && mind.carrier == null) {
             // 2.0.7 (the owner: never teleported home for being far; out past its home by day, home by night): its leash wider by day (by its
             // age), its home's at night; far out, it walks back. Put home only stuck inside blocks, or out at night getting no nearer (unseen).
@@ -181,11 +183,12 @@ public final class ChildBrain {
             int leash = atHouse ? com.hex.kagune.control.family.HomeRules.leash(house.radius() - 2, night,
                 com.hex.kagune.control.family.HomeRules.roam(child.stage(now))) : 8;
             npc.m_21446_(home, leash);
-            Vec3 homeAt = new Vec3(home.m_123341_() + 0.5, home.m_123342_() - 1.0, home.m_123343_() + 0.5);
-            boolean away = atHouse && !npc.waiting() && npc.m_20238_(homeAt) > (leash + 4.0) * (leash + 4.0);
-            if (npc.carriedBy == 0 && Homeward.bugged(npc, level, homeAt, away, now)) {
-                Homeward.put(npc, homeAt);
-            }
+            awayFromHome = atHouse && !npc.waiting() && npc.m_20238_(homeAt) > (leash + 4.0) * (leash + 4.0);
+        }
+        boolean recoveryBusy = npc.following() != null || mind.carrier != null || npc.carriedBy != 0 || mind.target != 0
+            || mind.conversation != null || busy(mind, now);
+        if (Homeward.bugged(npc, level, homeAt, awayFromHome, recoveryBusy, now)) {
+            Homeward.put(npc, homeAt);
         }
         if (now % 200L == 11L) {
             if (!UniqueNpcs.claim(level, key, npc.m_20148_(), home)) {
@@ -925,11 +928,7 @@ public final class ChildBrain {
 
     private static void follow(ChildNpc npc, ServerPlayer leader) {
         double far = npc.m_20280_(leader);
-        if (far > ChildRules.FOLLOW_TELEPORT * ChildRules.FOLLOW_TELEPORT) {
-            Vec3 at = leader.m_20182_();
-            npc.m_6021_(at.f_82479_, at.f_82480_, at.f_82481_);
-            npc.m_21573_().m_26573_();
-        } else if (far > ChildRules.FOLLOW_FROM * ChildRules.FOLLOW_FROM) {
+        if (far > ChildRules.FOLLOW_FROM * ChildRules.FOLLOW_FROM) {
             npc.m_21573_().m_5624_(leader, 1.15);
         } else if (far < ChildRules.FOLLOW_STOP * ChildRules.FOLLOW_STOP) {
             npc.m_21573_().m_26573_();

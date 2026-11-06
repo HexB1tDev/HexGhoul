@@ -1,6 +1,7 @@
 package com.hex.kagune.control.server;
 
 import com.hex.kagune.control.family.HomeRules;
+import com.hex.kagune.control.family.HomeRecovery;
 import java.util.Map;
 import java.util.WeakHashMap;
 import net.minecraft.server.level.ServerLevel;
@@ -16,41 +17,22 @@ import net.minecraft.world.phys.Vec3;
  * near to see (stuck, not slow).
  */
 final class Homeward {
-    private static final class State {
-        int walled;
-        double best = Double.MAX_VALUE;
-        long since = Long.MIN_VALUE;
-    }
-
-    private static final Map<Entity, State> STATES = new WeakHashMap<>();
+    private static final Map<Entity, HomeRecovery> STATES = new WeakHashMap<>();
 
     private Homeward() {
     }
 
     /** Each tick (it looks every 10): true if {@code mob} must be put at {@code home} now ({@code away}: out when it should be home). */
-    static boolean bugged(PathfinderMob mob, ServerLevel level, Vec3 home, boolean away, long now) {
+    static boolean bugged(PathfinderMob mob, ServerLevel level, Vec3 home, boolean away, boolean busy, long now) {
         if (now % 10L != 0L) {
             return false;
         }
-        State state = STATES.computeIfAbsent(mob, any -> new State());
-        boolean inside = !mob.f_19794_ && !mob.m_5803_() && !level.m_45756_(mob, mob.m_20191_().m_82400_(-0.15));
-        state.walled = inside ? state.walled + 1 : 0;
-        if (state.walled >= HomeRules.WALLED) {
-            STATES.remove(mob);
-            return true;
-        }
-        if (!away) {
-            state.best = Double.MAX_VALUE;
-            state.since = Long.MIN_VALUE;
-            return false;
-        }
-        double far = Math.sqrt(mob.m_20238_(home));
-        if (state.since == Long.MIN_VALUE || far < state.best - 2.0) {
-            state.best = far;
-            state.since = now;
-            return false;
-        }
-        if (HomeRules.noHeadway(state.best, far, state.since, now) && !seen(mob, level)) {
+        HomeRecovery state = STATES.computeIfAbsent(mob, any -> new HomeRecovery());
+        // noCollision also considers other entities: a crowd or melee was mistaken for a wall. Only actual blocks count.
+        boolean inside = !busy && !mob.f_19794_ && !mob.m_5803_()
+            && level.m_186434_(mob, mob.m_20191_().m_82400_(-0.15)).iterator().hasNext();
+        HomeRecovery.Reason reason = state.sample(inside, away, busy, Math.sqrt(mob.m_20238_(home)), now);
+        if (reason == HomeRecovery.Reason.WALLED || reason == HomeRecovery.Reason.STALLED && !seen(mob, level)) {
             STATES.remove(mob);
             return true;
         }

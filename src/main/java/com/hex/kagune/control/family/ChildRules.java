@@ -27,7 +27,6 @@ public final class ChildRules {
     public static final long LESSON_EVERY = ChildStage.DAY;
     /** It follows when this far (blocks), is brought along when this far, and stops this close. */
     public static final double FOLLOW_FROM = 4.0;
-    public static final double FOLLOW_TELEPORT = 24.0;
     public static final double FOLLOW_STOP = 2.0;
     /**
      * Where a carried child is held: ahead of the chest, and how high its hips sit (blocks up from the carrier's feet, a player's size).

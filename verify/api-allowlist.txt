@@ -669,6 +669,7 @@ M net/minecraft/world/level/Level m_46472_ ()Lnet/minecraft/resources/ResourceKe
 F net/minecraft/world/level/Level f_46428_ Lnet/minecraft/resources/ResourceKey;        # [srg] OVERWORLD: cmm.h (field_25179)
 M net/minecraft/world/level/LevelReader m_6924_ (Lnet/minecraft/world/level/levelgen/Heightmap$Types;II)I  # [srg] getHeight(type, x, z): cmp.a (Ldhk$a;II)I (method_8624, yarn getTopY)
 M net/minecraft/world/level/CollisionGetter m_45786_ (Lnet/minecraft/world/entity/Entity;)Z  # [srg] noCollision(entity): clw.g (Lbfj;)Z (method_17892, yarn isSpaceEmpty)
+M net/minecraft/world/level/CollisionGetter m_186434_ (Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/phys/AABB;)Ljava/lang/Iterable;  # [srg] getBlockCollisions(entity, box): clw.d (Lbfj;Leed;)Ljava/lang/Iterable; (method_20812, yarn CollisionView.getBlockCollisions; tools/find_srg.py, joined.tsrg + intermediary 1.20.1)
 M net/minecraft/world/level/LevelWriter m_7967_ (Lnet/minecraft/world/entity/Entity;)Z  # [srg] addFreshEntity: cmu.b (Lbfj;)Z (method_8649, yarn ModifiableWorld.spawnEntity)
 C net/minecraft/world/level/levelgen/Heightmap$Types                                  # [srg] dhk$a C_2190_$C_2191_ (class_2902$class_2903, yarn Heightmap$Type)
 F net/minecraft/world/level/levelgen/Heightmap$Types MOTION_BLOCKING_NO_LEAVES Lnet/minecraft/world/level/levelgen/Heightmap$Types;  # [srg] dhk$a.f MOTION_BLOCKING_NO_LEAVES (enum constants keep their names)

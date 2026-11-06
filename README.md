@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.0.9 (HexGhoul): Family followers walk instead of teleporting (testing)
+
+See `.github/release-notes-3.0.9.md`. Spouses and children walk to catch up, including beyond 24 blocks; clinging no longer snaps to the player. Home recovery ignores followers and fighters and counts only block collisions. Not tested in game.
+
 ## 3.0.8 (HexGhoul): Jealousy preserves existing marriages (testing)
 
 See `.github/release-notes-3.0.8.md`. Marrying another companion by command keeps the previous spouse married. Jealousy is temporary and no longer drains affection. A surviving wedding record can recover a marriage erased by the old command when its companion is unclaimed. Not tested in game.

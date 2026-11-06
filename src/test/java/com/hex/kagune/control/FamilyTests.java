@@ -3,6 +3,8 @@ package com.hex.kagune.control;
 import com.hex.kagune.control.client.GenderView;
 import com.hex.kagune.control.client.PathChoiceLayout.Box;
 import com.hex.kagune.control.family.Chores;
+import com.hex.kagune.control.family.HomeRecovery;
+import com.hex.kagune.control.family.HomeRules;
 import com.hex.kagune.control.npc.EtoLines;
 import com.hex.kagune.control.npc.EtoMood;
 import com.hex.kagune.control.npc.EtoRules;
@@ -77,6 +79,7 @@ public final class FamilyTests {
         ownerSkins();
         moments();
         home();
+        homeRecovery();
         chores();
         speech();
         kitchen();
@@ -1848,6 +1851,52 @@ check(com.hex.kagune.control.graft.GraftStage.TRANSPLANT.limbs(com.hex.kagune.co
         }
         check(!Chores.start("touka", Chores.Kind.WATER, 0).equals(Chores.start("eto", Chores.Kind.WATER, 0))
             && !Chores.start("ken", Chores.Kind.WATER, 0).equals(Chores.start("eto", Chores.Kind.WATER, 0)), "each companion keeps house in its own words");
+    }
+
+    static void homeRecovery() {
+        HomeRecovery wall = new HomeRecovery();
+        for (int i = 0; i < HomeRules.WALLED - 1; i++) {
+            check(wall.sample(true, false, false, 0.0, i * 10L) == HomeRecovery.Reason.NONE, "wall trapping needs sustained observations");
+        }
+        check(wall.sample(true, false, false, 0.0, (HomeRules.WALLED - 1) * 10L) == HomeRecovery.Reason.WALLED,
+            "genuine persistent block trapping still permits recovery");
+        HomeRecovery crowd = new HomeRecovery();
+        HomeRecovery transientWall = new HomeRecovery();
+        for (int i = 0; i < 50; i++) {
+            check(crowd.sample(false, false, false, 1000.0, i * 10L) == HomeRecovery.Reason.NONE,
+                "other entities or distance without block trapping never trigger wall recovery");
+            check(transientWall.sample(i % 2 == 0, false, false, 0.0, i * 10L) == HomeRecovery.Reason.NONE,
+                "brushing a doorway then leaving it never accumulates a wall trap");
+        }
+        HomeRecovery busy = new HomeRecovery();
+        for (int i = 0; i < 4; i++) {
+            busy.sample(true, false, false, 0.0, i * 10L);
+        }
+        for (int i = 0; i < 300; i++) {
+            check(busy.sample(true, true, true, 500.0, 40L + i * 10L) == HomeRecovery.Reason.NONE,
+                "following, carrying, holding hands or fighting never causes recovery even far behind");
+        }
+        for (int i = 0; i < HomeRules.WALLED - 1; i++) {
+            check(busy.sample(true, false, false, 0.0, 4000L + i * 10L) == HomeRecovery.Reason.NONE,
+                "recovery does not carry a pre-fight wall counter into the end of a fight");
+        }
+        HomeRecovery stalled = new HomeRecovery();
+        check(stalled.sample(false, true, false, 40.0, 0L) == HomeRecovery.Reason.NONE
+            && stalled.sample(false, true, false, 40.0, HomeRules.NO_HEADWAY - 10L) == HomeRecovery.Reason.NONE
+            && stalled.sample(false, true, false, 40.0, HomeRules.NO_HEADWAY) == HomeRecovery.Reason.STALLED,
+            "the existing no-headway recovery waits two full minutes");
+        HomeRecovery walking = new HomeRecovery();
+        walking.sample(false, true, false, 40.0, 0L);
+        walking.sample(false, true, false, 37.0, 1200L);
+        check(walking.sample(false, true, false, 37.0, 2400L) == HomeRecovery.Reason.NONE
+            && walking.sample(false, true, false, 37.0, 3600L) == HomeRecovery.Reason.STALLED,
+            "real progress home restarts the recovery timeout");
+        HomeRecovery rolledBack = new HomeRecovery();
+        for (int i = 0; i < HomeRules.WALLED - 1; i++) {
+            rolledBack.sample(true, false, false, 0.0, 1000L + i * 10L);
+        }
+        check(rolledBack.sample(true, false, false, 0.0, 0L) == HomeRecovery.Reason.NONE,
+            "a clock moving backwards cannot carry observations from the previous time");
     }
 
     static void home() {
