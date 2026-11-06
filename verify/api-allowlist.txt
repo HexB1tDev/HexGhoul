@@ -1053,3 +1053,11 @@ M net/minecraft/world/entity/player/Player m_150109_ ()Lnet/minecraft/world/enti
 M net/minecraft/world/entity/player/Inventory m_6643_ ()I                           # [srg] getContainerSize: joined.tsrg byn.b ()I m_6643_
 M net/minecraft/world/entity/player/Inventory m_8020_ (I)Lnet/minecraft/world/item/ItemStack;  # [srg] getItem: joined.tsrg byn.a (I)Lcfz; m_8020_
 M net/minecraft/world/entity/player/Inventory m_6836_ (ILnet/minecraft/world/item/ItemStack;)V  # [srg] setItem: joined.tsrg byn.a (ILcfz;)V m_6836_
+
+# --- 3.1.3: quinque first-person item rendering ------------------------------------------------------
+C net/minecraft/client/renderer/entity/ItemRenderer # [srg] fpw = intermediary class_918 (yarn client/render/item/ItemRenderer); Forge patches/minecraft/net/minecraft/client/renderer/entity/ItemRenderer.java.patch
+C net/minecraft/world/item/ItemDisplayContext # [srg] cfw = intermediary class_811 (yarn client/render/model/json/ModelTransformationMode); imported by Forge ItemRenderer patch
+M net/minecraft/client/Minecraft m_91291_ ()Lnet/minecraft/client/renderer/entity/ItemRenderer; # [srg] getItemRenderer: enn method_1480; tools/find_srg.py MinecraftClient getItemRenderer
+M net/minecraft/client/renderer/entity/ItemRenderer m_269128_ (Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemDisplayContext;IILcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;Lnet/minecraft/world/level/Level;I)V # [srg] renderStatic: fpw.a (Lcfz;Lcfw;IILeij;Lfjx;Lcmm;I)V, class_918 renderItem; tools/find_srg.py
+F net/minecraft/world/item/ItemDisplayContext FIRST_PERSON_RIGHT_HAND Lnet/minecraft/world/item/ItemDisplayContext; # [srg] joined.tsrg cfw.e FIRST_PERSON_RIGHT_HAND (retained name, id 268667); intermediary field_4322
+M net/minecraftforge/client/event/RenderHandEvent getEquipProgress ()F # [forge] 1.20.x src/main/java/net/minecraftforge/client/event/RenderHandEvent.java, public equip progress getter

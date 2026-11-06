@@ -81,7 +81,7 @@ public final class PaleInput {
         }
         Minecraft minecraft = Minecraft.m_91087_();
         LocalPlayer player = minecraft.f_91074_;
-        if (player == null || minecraft.f_91080_ != null || !PaleClient.eyes(player)) {
+        if (player == null || minecraft.f_91080_ != null || !PaleClient.eyes(player) || QuinqueClient.armed(player)) {
             return;
         }
         HitResult hit = minecraft.f_91077_;

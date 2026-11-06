@@ -6,6 +6,7 @@ public class RenderHandEvent extends net.minecraftforge.eventbus.api.Event {
     public com.mojang.blaze3d.vertex.PoseStack getPoseStack() { throw new UnsupportedOperationException(); }
     public net.minecraft.client.renderer.MultiBufferSource getMultiBufferSource() { throw new UnsupportedOperationException(); }
     public int getPackedLight() { throw new UnsupportedOperationException(); }
+    public float getEquipProgress() { throw new UnsupportedOperationException(); }
     public float getPartialTick() { throw new UnsupportedOperationException(); }
     public float getInterpolatedPitch() { throw new UnsupportedOperationException(); }
     public net.minecraft.world.item.ItemStack getItemStack() { throw new UnsupportedOperationException(); }

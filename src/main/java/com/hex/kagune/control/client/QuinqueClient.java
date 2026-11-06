@@ -165,14 +165,17 @@ public final class QuinqueClient {
 
     /** Each body's quinque swings as this client sees them: its last swing's start (client clock), which of the three, its last shot. */
     static final class Swing {
-        boolean wasSwinging;
-        int lastSwingTime = Integer.MAX_VALUE;
-        double began = -1.0E9;
-        int step = -1;
+        final com.hex.kagune.control.client.animation.QuinqueOwn.Combo combo = new com.hex.kagune.control.client.animation.QuinqueOwn.Combo();
         double shot = -1.0E9;
     }
 
     private static final java.util.Map<Integer, Swing> SWINGS = new java.util.HashMap<>();
+
+    /** An open quinque owns its M1 input instead of the empty-hand eye-mode/final-form attack. */
+    public static boolean armed(net.minecraft.world.entity.LivingEntity body) {
+        ItemStack held = body.m_21205_();
+        return ControlItems.quinqueWeapon(held) != null || ControlItems.armWeapon(held) != null;
+    }
 
     /** True while {@code player}'s body is a quinque's: a weapon out, or a case just shut (the arms coming down). */
     public static boolean posing(net.minecraft.world.entity.LivingEntity player) {
@@ -191,17 +194,7 @@ public final class QuinqueClient {
     public static com.hex.kagune.control.client.animation.RigPose pose(net.minecraft.world.entity.LivingEntity body, float partial) {
         ItemStack held = body.m_21205_();
         double clock = PaleClient.clock(partial);
-        Swing swing = SWINGS.computeIfAbsent(body.m_19879_(), id -> new Swing());
-        if (SWINGS.size() > 512) {
-            SWINGS.clear();
-        }
-        boolean swinging = body.f_20911_;
-        if (swinging && (!swing.wasSwinging || body.f_20913_ < swing.lastSwingTime)) {
-            swing.step = Quinque.next(swing.step, (long)(clock - swing.began));
-            swing.began = clock;
-        }
-        swing.wasSwinging = swinging;
-        swing.lastSwingTime = body.f_20913_;
+        Swing swing = observe(body, clock);
         com.hex.kagune.control.quinque.Arm arm = ControlItems.armWeapon(held);
         if (arm != null) {
             return WeaponClient.pose(body, held, arm, partial); // 3.0.6: a kagune-made weapon, as an investigator holds and swings it
@@ -213,12 +206,12 @@ public final class QuinqueClient {
             return out > 0.0F ? com.hex.kagune.control.client.animation.QuinquePose.unfolding(shut, out) : null;
         }
         com.hex.kagune.control.client.animation.RigPose p;
-        double t = (clock - swing.began) / weapon.swing;
+        double t = (swing.combo.age(clock)) / weapon.swing;
         if (t >= 0.0 && t < 1.0) {
-            p = com.hex.kagune.control.client.animation.QuinquePose.swing(weapon, swing.step, t);
+            p = com.hex.kagune.control.client.animation.QuinquePose.swing(weapon, swing.combo.step(), t);
             if (weapon == Quinque.DAWN) {
                 // 2.0.31: its dark ribbons along the way its point goes.
-                com.hex.kagune.control.client.fx.DawnTrails.swing(body, swing.step, swing.began, t, partial);
+                com.hex.kagune.control.client.fx.DawnTrails.swing(body, swing.combo.step(), swing.combo.began(), t, partial);
             }
         } else {
             float out = shown(held, true);
@@ -244,6 +237,31 @@ public final class QuinqueClient {
             com.hex.kagune.control.client.animation.QuinqueGrip.reach(p, weapon, slim);
         }
         return p;
+    }
+
+    public record Attack(int step, double age) {
+    }
+
+    /** Also polled directly by the hand renderer: first-person attacks work with body animations disabled. */
+    public static Attack attack(net.minecraft.world.entity.LivingEntity body, float partial) {
+        double clock = PaleClient.clock(partial);
+        Swing swing = observe(body, clock);
+        return new Attack(swing.combo.step(), swing.combo.age(clock));
+    }
+
+    public static float recoil(net.minecraft.world.entity.LivingEntity body, float partial) {
+        Swing swing = SWINGS.get(body.m_19879_());
+        double since = swing == null ? -1.0 : PaleClient.clock(partial) - swing.shot;
+        return (float)Math.max(kick(since), kick(since - Quinque.SHOT_EVERY));
+    }
+
+    private static Swing observe(net.minecraft.world.entity.LivingEntity body, double clock) {
+        if (SWINGS.size() > 512) {
+            SWINGS.clear();
+        }
+        Swing swing = SWINGS.computeIfAbsent(body.m_19879_(), id -> new Swing());
+        swing.combo.observe(body.f_20911_, body.f_20913_, clock);
+        return swing;
     }
 
     /** A kick {@code since} ticks after its shot: sharp, gone in QuinquePose.KICK_TICKS. */

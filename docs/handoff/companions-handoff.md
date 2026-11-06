@@ -1,4 +1,18 @@
-# START HERE (state after 3.1.2)
+# START HERE (state after 3.1.3)
+
+First-person rendering now covers all six legacy quinques and all four kagune-made quinques. Legacy items use Minecraft's existing item renderer and their existing first-person model transforms, with camera-space combo motion and firing recoil. Their swing clock is observed directly by the hand pass as well as the body layer, so first-person attacks do not depend on third-person body animation being enabled. The shared pure Combo tracker avoids duplicate swings across render passes, resets on timeout/clock rollback, and preserves third-person combo timing.
+
+The newer weapons keep their meshes, timed strikes, abilities and javelin disappearance/regrowth. Camera-space sweeps, chops and thrusts have narrower, translated arcs so the impact stays in view. Whip forehand/backhand/sweeps are classified as lashes rather than overhead chops. Its first-person view now includes its complete tendril, anchored to the handle and animated through its existing lash/Flay/Bind paths. The ribbon is emitted in the hand pass with its normal skin and glowing veins, not queued to the world pass which has already run.
+
+Eye-mode M1 and final-form input now yield when an open quinque is held; they could intercept the older items' attack and suppress the vanilla swing. Closed cases and unrelated items retain their existing input handling. NPC carries and third-person weapon models/attack keys are unchanged.
+
+QuinqueOwnTests passed 20123 checks: direct first-person combo observations without a body tick, duplicate-pass prevention, combo wrap/timeout/clock rollback, finite continuous attack/recovery curves, actual regular/masterwork mesh visibility for every new-weapon M1 at FOV 55/70/100, and the whip's visible anchored path through attacks and abilities. QuinqueTests (918), ControlTests (19330) and WeaponCarryTests (2785) passed. The offline camera preview also rendered all 18 legacy M1 impacts at FOV 55/70/100 with their actual model transforms and required visible pixels. Reviewed the saved sheet docs/handoff/quinques-firstperson-3.1.3.png; regenerate with tools/QuinqueOwnPreview.java. These are off-game geometry checks, not game tests.
+
+Added compile stubs and six allowlist entries for ItemRenderer/ItemDisplayContext, Minecraft.getItemRenderer (m_91291_), public ItemRenderer.renderStatic (m_269128_), the retained FIRST_PERSON_RIGHT_HAND enum constant and Forge RenderHandEvent.getEquipProgress. Verified against MCPConfig joined.tsrg, intermediary/Yarn 1.20.1 (tools/find_srg.py), plus official MinecraftForge 1.20.x ItemRenderer patch and RenderHandEvent source. No new private API calls. This build includes 3.1.2's rebindable Y briefcase key and keeps protocol 89; existing right-click abilities remain available.
+
+Validation: full python3 build.py completed with EXIT 0 on Java 17, including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 89. Not tested in game.
+
+# State after 3.1.2
 
 Added Fold quinque into briefcase under the HexKagune controls, default Y (unused by the mod's existing key mappings). The key works on every open quinque in the main hand, old or new, and does nothing to an already closed case or unrelated item. Existing right-click and Shift + right-click abilities retain their bindings. The item tooltip displays the assigned fold key.
 

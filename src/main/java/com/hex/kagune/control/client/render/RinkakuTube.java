@@ -78,6 +78,37 @@ public final class RinkakuTube {
         }
     }
 
+    /** Camera-space tendril for the hand pass, emitted immediately with the same skin and veins as the world tendrils. */
+    public static void immediate(MultiBufferSource buffers, Matrix4f pose, Matrix3f normals, double[][] path, float thickness, int colour,
+                                 int light, int seed, double time) {
+        // 3.1.3: hands are rendered after AFTER_ENTITIES. A first-person whip must be emitted now, never queued for a world pass.
+        com.hex.kagune.control.RinkakuRibbon.Mesh mesh = com.hex.kagune.control.RinkakuRibbon.build(path, thickness, colour, seed,
+            new double[] {0, 0, 0}, time);
+        if (mesh == null) {
+            return;
+        }
+        VertexConsumer skin = buffers.m_6299_(SKIN);
+        int sides = com.hex.kagune.control.RinkakuRibbon.SIDES;
+        for (int r = 0; r < mesh.at().length - 1; r++) {
+            for (int k = 0; k < sides; k++) {
+                int[] ks = {k, k, k + 1, k + 1};
+                int[] rs = {r, r + 1, r + 1, r};
+                for (int v = 0; v < 4; v++) {
+                    int argb = com.hex.kagune.control.RinkakuRibbon.lifted(mesh.tint()[rs[v]][ks[v]]);
+                    vertex(skin, pose, normals, mesh.at()[rs[v]][ks[v]], mesh.way()[rs[v]][ks[v]], argb, light,
+                        com.hex.kagune.control.RinkakuRibbon.u(ks[v]), com.hex.kagune.control.RinkakuRibbon.v(mesh.along()[rs[v]]));
+                }
+            }
+        }
+        VertexConsumer glow = buffers.m_6299_(GLOW);
+        double[] up = {0, 1, 0};
+        for (com.hex.kagune.control.RinkakuRibbon.Glow g : com.hex.kagune.control.RinkakuRibbon.veins(mesh, seed, time)) {
+            for (int i = 0; i < 4; i++) {
+                vertex(glow, pose, normals, g.corners()[i], up, g.argb()[i], FULL_BRIGHT, 0.5F, 0.5F);
+            }
+        }
+    }
+
     /** After the original's tails: every tail's skin, then every tail's veins glowing over it. */
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void render(RenderLevelStageEvent event) {

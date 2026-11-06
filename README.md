@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.1.3 (HexGhoul): Show every quinque attack in first person (testing)
+
+See `.github/release-notes-3.1.3.md`. Dedicated first-person attacks for old and new quinques, with the full whip tendril, visible impact poses and direct swing tracking. Held quinques take M1 priority over eye-mode/final-form unarmed attacks. Not tested in game.
+
 ## 3.1.2 (HexGhoul): Add a rebindable briefcase key for every quinque (testing)
 
 See `.github/release-notes-3.1.2.md`. Y (rebindable in Controls) folds the held quinque into its briefcase. Both right-click abilities remain available. Applies to old and new quinques. Not tested in game.

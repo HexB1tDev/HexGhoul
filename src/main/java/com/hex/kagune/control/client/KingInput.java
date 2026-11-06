@@ -46,6 +46,10 @@ public final class KingInput {
      */
     @SubscribeEvent(priority = EventPriority.HIGH)
     public static void attackInput(InputEvent.InteractionKeyMappingTriggered event) {
+        net.minecraft.client.player.LocalPlayer wielder = Minecraft.m_91087_().f_91074_;
+        if (wielder != null && QuinqueClient.armed(wielder)) {
+            return;
+        }
         if (event.isUseItem()) {
             heavyInput(event);
             return;

@@ -78,136 +78,90 @@ public final class ArmItemLayer extends RenderLayer<AbstractClientPlayer, Entity
 
     // ---------------------------------------------------------------- first person
 
-    /**
-     * Its wielder's own view: the weapon in the right hand where vanilla holds a sword, point up and away, its broad face turned to them,
-     * swung as each blow goes (a sweep across the view, an overhead down through it, a thrust driven forward; the whip's handle alone),
-     * grown out of the hand as it tears out of its case, the javelin gone as it is thrown.
-     */
+    /** 3.1.3: every quinque's attacks in the camera view, independently of PlayerAnimator's third-person layer. */
     @net.minecraftforge.fml.common.Mod.EventBusSubscriber(modid = "hexkagune", value = net.minecraftforge.api.distmarker.Dist.CLIENT)
     public static final class FirstPerson {
         private FirstPerson() {
         }
 
-        @net.minecraftforge.eventbus.api.SubscribeEvent
+        @net.minecraftforge.eventbus.api.SubscribeEvent(priority = net.minecraftforge.eventbus.api.EventPriority.HIGH)
         public static void hand(net.minecraftforge.client.event.RenderHandEvent event) {
             if (event.getHand() != net.minecraft.world.InteractionHand.MAIN_HAND) {
                 return;
             }
-            Arm arm = ControlItems.armWeapon(event.getItemStack());
-            if (arm == null) {
+            ItemStack held = event.getItemStack();
+            Arm arm = ControlItems.armWeapon(held);
+            com.hex.kagune.control.quinque.Quinque legacy = ControlItems.quinqueWeapon(held);
+            if (arm == null && legacy == null) {
                 return;
             }
-            event.setCanceled(true); // its model draws nothing; this is it
+            net.minecraft.client.Minecraft minecraft = net.minecraft.client.Minecraft.m_91087_();
+            net.minecraft.client.player.LocalPlayer player = minecraft.f_91074_;
+            if (player == null) {
+                return;
+            }
+            event.setCanceled(true);
             try {
-                net.minecraft.client.player.LocalPlayer player = net.minecraft.client.Minecraft.m_91087_().f_91074_;
-                if (player == null) {
-                    return;
-                }
                 float partial = event.getPartialTick();
-                ItemStack held = event.getItemStack();
-                float shown = WeaponClient.shown(held, partial);
-                WeaponClient.View view = WeaponClient.view(player.m_19879_());
+                float equip = event.getEquipProgress();
+                WeaponClient.View view = arm == null ? null : WeaponClient.view(player.m_19879_());
                 double age = WeaponClient.age(view, partial);
                 int code = view == null ? -1 : view.code();
                 int step = ArmRules.step(code);
                 Arm.Ability ability = ArmRules.ability(code);
-                if (ability != null && (arm.slot(ability) < 0 || age < 0.0 || age >= ability.total)) {
+                if (ability != null && (arm == null || arm.slot(ability) < 0 || age < 0 || age >= ability.total)) {
                     ability = null;
                 }
-                float grown = ability == null ? 1.0F : com.hex.kagune.control.client.animation.WeaponPose.grown(ability, age);
-                float k = shown * grown;
-                if (k <= 0.002F) {
-                    return;
+                double[] motion;
+                float k = 1.0F;
+                if (arm != null) {
+                    float grown = ability == null ? 1.0F : com.hex.kagune.control.client.animation.WeaponPose.grown(ability, age);
+                    k = WeaponClient.shown(held, partial) * grown;
+                    motion = com.hex.kagune.control.client.animation.QuinqueOwn.arm(arm, step, ability, age);
+                } else {
+                    com.hex.kagune.control.client.QuinqueClient.Attack attack = com.hex.kagune.control.client.QuinqueClient.attack(player, partial);
+                    motion = com.hex.kagune.control.client.animation.QuinqueOwn.legacy(legacy, attack.step(), attack.age());
+                    if (legacy.firesOnUse()) {
+                        float recoil = com.hex.kagune.control.client.QuinqueClient.recoil(player, partial);
+                        motion[1] -= 5.0 * recoil;
+                        motion[5] += 0.08 * recoil;
+                    }
                 }
-                double[] swing = swing(arm, step, ability, age);
+                if (k <= 0.002F) {
+                    return; // the thrown javelin has not grown back yet
+                }
                 PoseStack pose = event.getPoseStack();
                 pose.m_85836_();
-                pose.m_85837_(0.56 + swing[3], -0.52 + swing[4], -0.72 + swing[5]);
-                pose.m_252781_(new org.joml.Quaternionf().rotateAxis((float)Math.toRadians(swing[0]), 0.0F, 1.0F, 0.0F)
-                    .rotateAxis((float)Math.toRadians(swing[1]), 1.0F, 0.0F, 0.0F).rotateAxis((float)Math.toRadians(swing[2]), 0.0F, 0.0F, 1.0F));
-                pose.m_252781_(new org.joml.Quaternionf().rotateAxis((float)Math.toRadians(15.0), 0.0F, 0.0F, 1.0F)
-                    .rotateAxis((float)Math.toRadians(-30.0), 1.0F, 0.0F, 0.0F).rotateAxis((float)Math.toRadians(-50.0), 0.0F, 1.0F, 0.0F)
-                    .rotateAxis((float)Math.toRadians(90.0), 1.0F, 0.0F, 0.0F));
-                float size = arm == Arm.CRYSTAL_SPEAR ? 0.55F : arm == Arm.WHIP ? 0.9F : 0.68F;
-                pose.m_85841_(size, size, size);
-                raw(pose, event.getMultiBufferSource().m_6299_(SOLID), arm, ControlItems.masterwork(held), k, event.getPackedLight());
-                pose.m_85849_();
+                try {
+                    pose.m_85837_(0.42 + motion[3], -0.43 + motion[4] - 0.6 * equip, -0.95 + motion[5]);
+                    pose.m_252781_(new org.joml.Quaternionf().rotateAxis((float)Math.toRadians(motion[0]), 0, 1, 0)
+                        .rotateAxis((float)Math.toRadians(motion[1]), 1, 0, 0).rotateAxis((float)Math.toRadians(motion[2]), 0, 0, 1));
+                    if (arm == null) {
+                        minecraft.m_91291_().m_269128_(held, net.minecraft.world.item.ItemDisplayContext.FIRST_PERSON_RIGHT_HAND,
+                            event.getPackedLight(), net.minecraft.client.renderer.texture.OverlayTexture.f_118083_, pose,
+                            event.getMultiBufferSource(), player.m_9236_(), player.m_19879_());
+                    } else {
+                        pose.m_252781_(new org.joml.Quaternionf().rotateAxis((float)Math.toRadians(15), 0, 0, 1)
+                            .rotateAxis((float)Math.toRadians(-30), 1, 0, 0).rotateAxis((float)Math.toRadians(-50), 0, 1, 0)
+                            .rotateAxis((float)Math.toRadians(90), 1, 0, 0));
+                        float size = com.hex.kagune.control.client.animation.QuinqueOwn.scale(arm);
+                        pose.m_85841_(size, size, size);
+                        raw(pose, event.getMultiBufferSource().m_6299_(SOLID), arm, ControlItems.masterwork(held), k, event.getPackedLight());
+                    }
+                } finally {
+                    pose.m_85849_();
+                }
+                if (arm == Arm.WHIP) {
+                    boolean master = ControlItems.masterwork(held);
+                    double time = player.f_19797_ + partial;
+                    double[][] path = com.hex.kagune.control.client.animation.QuinqueOwn.whip(motion, step, ability, age, master, k, equip, time);
+                    RinkakuTube.immediate(event.getMultiBufferSource(), pose.m_85850_().m_252922_(), pose.m_85850_().m_252943_(), path,
+                        com.hex.kagune.control.quinque.WhipPath.thickness(master) * k, master ? 0x6E0A14 : 0xA0101E,
+                        event.getPackedLight(), player.m_19879_() * 31 + 7, time);
+                }
             } catch (RuntimeException failure) {
-                PlayerLayers.failed("a kagune weapon (first person)", failure);
+                PlayerLayers.failed("a quinque (first person)", failure);
             }
-        }
-
-        /**
-         * Where a blow has it ({@code age} ticks in): {yaw, pitch, roll} turned about the hand (degrees), {x, y, z} moved (blocks): wound up
-         * to its landing's first half, through it by its landing, back by its end.
-         */
-        static double[] swing(Arm arm, int step, Arm.Ability ability, double age) {
-            double[] out = new double[6];
-            double total;
-            double land;
-            int kind; // 0 a sweep, 1 an overhead, 2 a thrust
-            boolean back = false;
-            int repeats = 1;
-            if (step >= 0) {
-                Arm.Strike strike = arm.strike(step);
-                total = strike.total();
-                land = strike.land();
-                kind = strike.blow() == Arm.Strike.STAB ? 2 : strike.arc() >= 100.0 ? 0 : 1;
-                back = step % 2 == 1;
-            } else if (ability != null) {
-                total = ability.total;
-                land = ability.hits[ability.hits.length - 1];
-                kind = switch (ability) {
-                    case JAVELIN, PIERCE -> 2;
-                    case QUAKE, LEAP -> 1;
-                    default -> 0;
-                };
-                if (ability == Arm.Ability.FLAY || ability == Arm.Ability.WHIRL) {
-                    repeats = ability.hits.length;
-                }
-            } else {
-                return out;
-            }
-            if (age < 0.0 || age >= total) {
-                return out;
-            }
-            double t = age / total;
-            double l = Math.max(0.05, Math.min(0.95, land / total));
-            double a;
-            if (repeats > 1) {
-                // A storm of blows: back and forth through the view, once a blow.
-                double phase = Math.min(1.0, t / l) * repeats;
-                a = Math.sin(phase * Math.PI) * (t < l ? 1.0 : 1.0 - ease((t - l) / (1.0 - l)));
-                a = a * 2.0 - 1.0;
-                a *= t < 0.08 ? ease(t / 0.08) : 1.0;
-            } else if (t < 0.6 * l) {
-                a = -ease(t / (0.6 * l));
-            } else if (t < l) {
-                a = -1.0 + 2.0 * ease((t - 0.6 * l) / (0.4 * l));
-            } else {
-                a = 1.0 - ease((t - l) / (1.0 - l));
-            }
-            switch (kind) {
-                case 0 -> {
-                    out[0] = (back ? -1.0 : 1.0) * (a < 0.0 ? 55.0 * a : 75.0 * a); // from the right across to the left (a backhand the other way)
-                    out[2] = -12.0 * a;
-                    out[3] = -0.12 * a * (back ? -1.0 : 1.0);
-                }
-                case 1 -> {
-                    out[1] = a < 0.0 ? -45.0 * a : -85.0 * a; // raised back, then down through the view
-                    out[4] = a < 0.0 ? -0.12 * a : -0.1 * a;
-                }
-                default -> {
-                    out[5] = a < 0.0 ? -0.18 * a : -0.65 * a; // drawn back, then driven forward
-                    out[1] = -10.0 * Math.max(0.0, a);
-                }
-            }
-            return out;
-        }
-
-        private static double ease(double x) {
-            double c = Math.max(0.0, Math.min(1.0, x));
-            return c * c * (3.0 - 2.0 * c);
         }
     }
 

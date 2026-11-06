@@ -16,6 +16,7 @@ public class Minecraft {
     /** renderBuffers */ public net.minecraft.client.renderer.RenderBuffers m_91269_() { throw new UnsupportedOperationException(); }
     /** getSoundManager */ public net.minecraft.client.sounds.SoundManager m_91106_() { throw new UnsupportedOperationException(); }
     /** getTextureManager */ public net.minecraft.client.renderer.texture.TextureManager m_91097_() { throw new UnsupportedOperationException(); }
+    /** getItemRenderer */ public net.minecraft.client.renderer.entity.ItemRenderer m_91291_() { throw new UnsupportedOperationException(); }
     /** getInstance */ public static Minecraft m_91087_() { throw new UnsupportedOperationException(); }
     /** setScreen */ public void m_91152_(net.minecraft.client.gui.screens.Screen screen) { throw new UnsupportedOperationException(); }
     /** isPaused */ public boolean m_91104_() { throw new UnsupportedOperationException(); }
