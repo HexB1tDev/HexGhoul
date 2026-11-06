@@ -419,4 +419,45 @@ public final class AgentPose {
     static float clamp01(float v) {
         return Float.isFinite(v) ? Math.max(0.0F, Math.min(1.0F, v)) : 0.0F;
     }
+
+    /**
+     * 3.1.0: the held weapon over the gait. Shared with the client and offline previews/tests: only channels held by the weapon may
+     * replace the walk/run. A one-handed carry leaves the other arm pumping; a blow can plant its feet for its own footwork.
+     */
+    public static void withWeapon(RigPose p, RigPose arms) {
+        if (arms.armHold > 0.0F || arms.rightArmHold > 0.0F) {
+            p.rightArmX = arms.rightArmX;
+            p.rightArmY = arms.rightArmY;
+            p.rightArmZ = arms.rightArmZ;
+            p.rightArmHold = 1.0F;
+        }
+        if (arms.armHold > 0.0F || arms.leftArmHold > 0.0F) {
+            p.leftArmX = arms.leftArmX;
+            p.leftArmY = arms.leftArmY;
+            p.leftArmZ = arms.leftArmZ;
+            p.leftArmHold = Math.max(arms.armHold, arms.leftArmHold);
+        }
+        if (p.armHold > 0.0F && arms.leftArmHold <= 0.0F && arms.armHold <= 0.0F) {
+            // A one-handed swing: the free arm keeps pumping with the run.
+            p.leftArmHold = Math.max(p.leftArmHold, p.armHold);
+        }
+        p.armHold = 0.0F;
+        p.twist += arms.twist;
+        p.lean += arms.lean;
+        p.side += arms.side;
+        p.lunge += arms.lunge;
+        p.drop += arms.drop;
+        p.spin += arms.spin;
+        p.headX += arms.headX;
+        p.headY += arms.headY;
+        p.headZ += arms.headZ;
+        if (arms.legHold > 0.0F) {
+            float k = Math.min(1.0F, arms.legHold);
+            p.rightLegX += (arms.rightLegX - p.rightLegX) * k;
+            p.leftLegX += (arms.leftLegX - p.leftLegX) * k;
+            p.rightLegZ += (arms.rightLegZ - p.rightLegZ) * k;
+            p.leftLegZ += (arms.leftLegZ - p.leftLegZ) * k;
+            p.legHold = Math.max(p.legHold, k);
+        }
+    }
 }

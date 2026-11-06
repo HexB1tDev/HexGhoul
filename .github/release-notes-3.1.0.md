@@ -1,0 +1,13 @@
+## 3.1.0 (HexGhoul): Investigators keep walking while carrying kagune quinques
+
+HexKagune 3.1.0 for Forge 1.20.1. Not tested in game.
+
+WeaponPose.stance planted both legs with legHold=1, so AgentClient.take replaced vanilla walking and the whip's running stride with static combat feet. WeaponPose.carry now releases those locks as the NPC moves, releases the whip user's free arm, and adds a little shoulder/holding-arm motion tied to the stride. Stopped stances, attack footwork, parries and existing two-handed running mechanics remain. The client uses the same pure AgentPose.withWeapon composition as the regression tests and preview (moved unchanged from AgentClient.take). The crystal spear's running carry is lifted to clear the floor at its full regular/masterwork mesh size.
+
+WhipPath.rest previously put the final 70% of the tendril flat on the ground. It now dips into a raised loose curl, anchored exactly to the handle's knot, with restrained sway. Its depth follows the knot's height, keeping the curve above the floor. Both the player and NPC renderers already share this rest path. Lash, Flay, Bind, attacking length, damage and cooldowns are unchanged.
+
+Checked the shipped metadata's PlayerAnimator [1.0.2-rc1,), bendy-lib [4.0.0,) and Photon [1.1.17,) declarations. Investigators use AgentModel (vanilla PlayerModel plus RigPose), not PlayerAnimator's AbstractClientPlayer animation stack. Confirmed that contract against the official 1.20 PlayerAnimationAccess source: https://github.com/KosmX/minecraftPlayerAnimator/blob/1.20/minecraft/common/src/main/java/dev/kosmx/playerAnim/minecraftApi/PlayerAnimationAccess.java . No dependency versions or player animation layer priorities changed.
+
+WeaponCarryTests checks real gait transforms while carrying every weapon at walking, transitional and sprint speeds, both classic/slim grips, full regular/masterwork mesh floor clearance, planted attack feet, and the whip's anchored root, finite curve, floor clearance and raised tip. Focused WeaponCarryTests (2547), AgentTests (48281), ControlTests (19330) and API verification passed. Reviewed front-quarter and side offline renders using stiff NPC limbs and the actual meshes, including the spear's corrected sprint. Reproduce with tools/WeaponCarryPreview.java (instructions in its header); saved front-quarter sheet: docs/handoff/weapon-carry-3.1.0.png. These are offline geometry checks, not game tests. No new external API or network fields.
+
+Validation: full python3 build.py completed with EXIT 0 on Java 17, including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 88 unchanged. Not tested in game.

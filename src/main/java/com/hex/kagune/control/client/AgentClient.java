@@ -176,9 +176,9 @@ public final class AgentClient {
         } else if (swing == CcgAgent.PARRY && swingAge >= 0.0 && swingAge < AgentPose.PARRY_TICKS) {
             arms = AgentPose.parry(base, swingAge / AgentPose.PARRY_TICKS);
         } else if (arm.twoHanded && run > 0.0F) {
-            AgentPose.stanceRun(p, base, phase, run);
+            com.hex.kagune.control.client.animation.WeaponPose.carryRun(p, arm, phase, run);
         } else {
-            arms = com.hex.kagune.control.client.animation.WeaponPose.stance(arm);
+            arms = com.hex.kagune.control.client.animation.WeaponPose.carry(arm, speed, phase);
         }
         if (arms != null) {
             take(p, arms);
@@ -290,39 +290,6 @@ public final class AgentClient {
      * against it, and its step's legs over the run's as far as it holds them).
      */
     static void take(RigPose p, RigPose arms) {
-        if (arms.armHold > 0.0F || arms.rightArmHold > 0.0F) {
-            p.rightArmX = arms.rightArmX;
-            p.rightArmY = arms.rightArmY;
-            p.rightArmZ = arms.rightArmZ;
-            p.rightArmHold = 1.0F;
-        }
-        if (arms.armHold > 0.0F || arms.leftArmHold > 0.0F) {
-            p.leftArmX = arms.leftArmX;
-            p.leftArmY = arms.leftArmY;
-            p.leftArmZ = arms.leftArmZ;
-            p.leftArmHold = Math.max(arms.armHold, arms.leftArmHold);
-        }
-        if (p.armHold > 0.0F && arms.leftArmHold <= 0.0F && arms.armHold <= 0.0F) {
-            // A one-handed swing: the free arm keeps pumping with the run.
-            p.leftArmHold = Math.max(p.leftArmHold, p.armHold);
-        }
-        p.armHold = 0.0F;
-        p.twist += arms.twist;
-        p.lean += arms.lean;
-        p.side += arms.side;
-        p.lunge += arms.lunge;
-        p.drop += arms.drop;
-        p.spin += arms.spin;
-        p.headX += arms.headX;
-        p.headY += arms.headY;
-        p.headZ += arms.headZ;
-        if (arms.legHold > 0.0F) {
-            float k = Math.min(1.0F, arms.legHold);
-            p.rightLegX += (arms.rightLegX - p.rightLegX) * k;
-            p.leftLegX += (arms.leftLegX - p.leftLegX) * k;
-            p.rightLegZ += (arms.rightLegZ - p.rightLegZ) * k;
-            p.leftLegZ += (arms.leftLegZ - p.leftLegZ) * k;
-            p.legHold = Math.max(p.legHold, k);
-        }
+        AgentPose.withWeapon(p, arms);
     }
 }

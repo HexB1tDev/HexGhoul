@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.1.0 (HexGhoul): Investigators keep walking while carrying kagune quinques (testing)
+
+See `.github/release-notes-3.1.0.md`. Moving investigators retain their walking legs and body motion with all four kagune-made quinques; the whip curls above the floor instead of lying flat, and the long spear clears the floor on a sprint. Not tested in game.
+
 ## 3.0.9 (HexGhoul): Family followers walk instead of teleporting (testing)
 
 See `.github/release-notes-3.0.9.md`. Spouses and children walk to catch up, including beyond 24 blocks; clinging no longer snaps to the player. Home recovery ignores followers and fighters and counts only block collisions. Not tested in game.

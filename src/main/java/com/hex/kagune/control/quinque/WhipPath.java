@@ -4,7 +4,7 @@ package com.hex.kagune.control.quinque;
  * 3.0.0: where the tendril whip's tendril lies (pure): drawn as a Rinkaku tail is (RinkakuRibbon), from its handle's knot of flesh out.
  * Every path is {@link #POINTS} points in the investigator's own frame, from its fist: {forward, left, up} (blocks).
  *
- * <p>At rest it hangs from the hand and trails on the ground ({@link #rest}). A lash ({@link #lash}) throws its tip round on an arc (each blow
+ * <p>At rest it curls ahead of the hand, clear of the ground ({@link #rest}). A lash ({@link #lash}) throws its tip round on an arc (each blow
  * of the string its own: forehand, backhand, overhead, low, a double, a full turn of the body), the tendril reaching out to its whole length as it
  * lands and the middle trailing behind the tip, so it curls as a whip does; a wave runs down it. The Flay is six quick lashes
  * ({@link #flay}); the Bind ({@link #bind}) flies out to its foe, coils round them while it drags them in, pulls taut for the slam, and comes
@@ -26,16 +26,20 @@ public final class WhipPath {
         return master ? 0.085F : 0.072F;
     }
 
-    /** At rest: down from the hand to the ground ({@code drop}: how high the hand is), then half its length trailing ahead, swaying. */
+    /**
+     * 3.1.0: a loose raised curl, from the handle's knot, dipping then turning up into its tip. {@code drop} is the knot's height:
+     * the curl stays clear of the floor, even with a low hand. A little sway keeps it alive without moving the anchored root.
+     */
     public static double[][] rest(double length, double drop, double time) {
         double[][] p = new double[POINTS][];
-        double trail = length * 0.5;
+        double reach = length * 0.27;
+        double depth = Math.max(0.04, Math.min(0.65, drop - 0.22));
         for (int i = 0; i < POINTS; i++) {
             double s = i / (double)(POINTS - 1);
-            double fall = Math.min(1.0, s / 0.3);
-            double sway = 0.25 * Math.sin(time * 0.05 + s * 3.0) * s;
-            double along = s <= 0.3 ? 0.25 * fall : 0.25 + (s - 0.3) / 0.7 * trail;
-            double up = -drop * (s <= 0.3 ? Math.sin(fall * Math.PI * 0.5) : 1.0) + 0.04;
+            double angle = s * Math.PI * 1.6;
+            double sway = 0.06 * Math.sin(time * 0.08 + s * 4.0) * Math.sin(Math.PI * s);
+            double along = reach * 0.5 * (1.0 - Math.cos(angle)) + 0.04 * Math.sin(time * 0.08) * s * s;
+            double up = -depth * Math.sin(angle);
             p[i] = new double[] {along, -0.35 * s + sway, up};
         }
         return p;
