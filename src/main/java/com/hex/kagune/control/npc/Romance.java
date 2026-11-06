@@ -2,7 +2,8 @@ package com.hex.kagune.control.npc;
 
 /**
  * 1.3.2: love with the one-of-a-kind NPCs (pure, tested), the same for every one of them (Eto first; any NPC made later uses it as
- * it is). An NPC has at most one partner in the whole world, and a player at most one spouse: dating, then married with a ring. Once
+ * it is). An NPC has at most one partner in the whole world: dating, then married with a ring. An additional wedding never erases
+ * an existing marriage. Once
  * begun it is for good, no breaking up, no divorce; only the partner killing the NPC ends it. A partner is never fought back (the NPC
  * is hurt, cross, and sulks instead), and gets the NPC's warm talk; every other player gets the cold, claimed one. Love for another
  * NPC behind a partner's back makes the partner jealous ({@link #jealousy}).
@@ -45,9 +46,9 @@ public final class Romance {
     /** At least this regard, and dating at least this many game days, before a ring is taken. */
     public static final int PROPOSE_REGARD = 90;
     public static final long PROPOSE_DAYS = 1L;
-    /** What a partner's jealousy costs: love shown to another NPC, more if seen, more again once married. */
-    public static final int JEALOUS_HEARD = -6;
-    public static final int JEALOUS_SEEN = -15;
+    /** 3.0.8: jealousy changes a partner's temporary mood, never their affection or marriage. */
+    public static final int JEALOUS_HEARD = 0;
+    public static final int JEALOUS_SEEN = 0;
     public static final int MARRIED_TWICE = 2;
     /** A partner's hit: her regard lost (she never hits back). */
     public static final int PARTNER_BLOW = -8;

@@ -515,8 +515,8 @@ final class ControlCommands {
      * 2.2.7 (the owner: "a command to fully marry [Touka, Eto and Ken] ... everything about that person's relationship is instantly maxed,
      * categorized as married, and everything's full"): {@code player} married to {@code persona} at once, as a ring taken would leave it
      * and more: regard at the most, every chapter of the courtship closed, dating since and wed today (earlier days kept), nothing held
-     * against them (no sulk, grudge, offence, jealousy or make-up owed), and giddy with them. A player has one spouse: one they were married
-     * to before is let go; so is anyone else this one was with. Operators only; the companion needn't be near.
+     * against them (no sulk, grudge, offence, jealousy or make-up owed), and giddy with them. Existing spouses remain married and feel
+     * jealous through RomanceServer. Operators only; the companion needn't be near.
      */
     private static int marry(CommandContext<CommandSourceStack> context, ServerPlayer player, com.hex.kagune.control.npc.Persona persona) {
         net.minecraft.server.level.ServerLevel level = player.m_284548_();
@@ -524,15 +524,7 @@ final class ControlCommands {
         long day = Math.floorDiv(level.m_46468_(), 24000L);
         String key = persona.key();
         List<String> notes = new java.util.ArrayList<>();
-        // One spouse each: a marriage to another of them ends.
-        String before = UniqueNpcs.spouseOf(level, player, key);
-        if (before != null) {
-            UniqueNpcs.pair(level, before, null, com.hex.kagune.control.npc.Romance.Stage.NONE);
-            com.hex.kagune.control.quest.QuestLog.Bond old = QuestServer.bond(player, before);
-            QuestServer.bond(player, before, old.with(com.hex.kagune.control.npc.EtoRules.DATING, false));
-            com.hex.kagune.control.npc.Persona other = com.hex.kagune.control.npc.Persona.of(before);
-            notes.add("Your marriage to " + (other == null ? before : other.name()) + " is over.");
-        }
+        // 3.0.8: another wedding must not clear the previous spouse's world slot or dating flag.
         com.hex.kagune.control.npc.UniqueNpc unique = UniqueNpcs.get(level, key);
         if (unique.claimedFrom(player.m_20148_())) {
             notes.add(persona.name() + " left " + (unique.partnerName.isEmpty() ? "their partner" : unique.partnerName) + " for you.");

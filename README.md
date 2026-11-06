@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.0.8 (HexGhoul): Jealousy preserves existing marriages (testing)
+
+See `.github/release-notes-3.0.8.md`. Marrying another companion by command keeps the previous spouse married. Jealousy is temporary and no longer drains affection. A surviving wedding record can recover a marriage erased by the old command when its companion is unclaimed. Not tested in game.
+
 ## 3.0.7 (HexGhoul): Recorded insect, swing and flesh sounds; finger crack leads the mix (testing)
 
 See `.github/release-notes-3.0.7.md`. Centipede legs use real insect recordings, both Rinkaku half-kakuja transformations are quiet hisses, and kagune swings use recorded air swishes. The synthetic flesh-impact, blood-spray and gush pools are replaced with recorded melon foley; stab samples stay the same. The owner's finger-crack recording is unchanged and plays at full gain, with every other pack sound mixed lower. All new recordings are CC0 and credited in the pack. Protocol 88, unchanged. Not tested in game.

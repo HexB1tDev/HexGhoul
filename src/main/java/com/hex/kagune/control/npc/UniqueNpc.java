@@ -109,6 +109,18 @@ public final class UniqueNpc {
         this.stage = stage.together() ? stage : Romance.Stage.NONE;
     }
 
+    /**
+     * 3.0.8: the old marry command erased a previous spouse's slot and dating flag but left their wedding record. Recover only that
+     * unclaimed state. A partner killing this NPC removes the wedding record, and somebody else's current partner stays theirs.
+     */
+    public boolean recoverWedding(UUID player, String name, long weddingDay, boolean datingFlag) {
+        if (player == null || weddingDay < 0L || datingFlag || this.partner != null || this.stage != Romance.Stage.NONE) {
+            return false;
+        }
+        this.pair(player, name, Romance.Stage.MARRIED);
+        return true;
+    }
+
     // ---------------------------------------------------------------- saved with the world: one line each
 
     String save(String key) {

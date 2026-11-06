@@ -123,8 +123,10 @@ public final class EtoServer {
             player.m_5661_(Component.m_237113_(npc.persona().script().busy()), true);
             return;
         }
+        migrate(player, npc);
         QuestLog.Bond bond = QuestServer.bond(player, npc.persona().key());
-        boolean enemy = !EtoTalk.talks(bond.regard());
+        boolean partner = UniqueNpcs.stage(player.m_284548_(), npc.persona().key(), player).together();
+        boolean enemy = !partner && !EtoTalk.talks(bond.regard());
         boolean cross = EtoBrain.ignoring(npc, player, now) || sulking(mind, player, now) || mind.grudges.containsKey(player.m_20148_())
             || mind.target == player.m_19879_();
         String line = null;
@@ -168,7 +170,6 @@ public final class EtoServer {
             QuestServer.bond(player, npc.persona().key(), bond.with(NpcBonds.MET, true));
         }
         UniqueNpcs.met(player.m_284548_(), npc.persona().key()); // 3.0.4: she stays the one they met
-        migrate(player, npc);
         if (npc.m_5803_() && mind.bed != null) {
             // 1.3.37: asleep in her bed at night: a hand on her shoulder only half wakes her, drowsy (HomeLife leaves her lying there).
             mind.drowsyUntil = now + DROWSY;
@@ -440,12 +441,19 @@ public final class EtoServer {
     /** 1.3.0's dating, kept in the player's bond alone, made the world's: she is theirs if she is no one else's yet. */
     private static void migrate(ServerPlayer player, EtoNpc npc) {
         QuestLog.Bond bond = QuestServer.bond(player, npc.persona().key());
-        if (!bond.has(EtoRules.DATING)) {
-            return;
-        }
         ServerLevel level = player.m_284548_();
         UniqueNpc unique = UniqueNpcs.get(level, npc.persona().key());
         if (unique.stageOf(player.m_20148_()).together()) {
+            return;
+        }
+        long wedding = NpcMemoryServer.of(player).get(npc.persona().key(), NpcMemory.WED, -1L);
+        if (unique.recoverWedding(player.m_20148_(), player.m_36316_().getName(), wedding, bond.has(EtoRules.DATING))) {
+            UniqueNpcs.changed(level);
+            QuestServer.bond(player, npc.persona().key(), bond.with(EtoRules.DATING, true));
+            EtoBrain.forgive(npc, player);
+            return;
+        }
+        if (!bond.has(EtoRules.DATING)) {
             return;
         }
         if (unique.claimedFrom(player.m_20148_()) || UniqueNpcs.spouseOf(level, player, npc.persona().key()) != null) {

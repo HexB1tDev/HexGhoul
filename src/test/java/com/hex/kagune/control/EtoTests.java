@@ -4,6 +4,7 @@ import com.hex.kagune.control.client.animation.EtoPose;
 import com.hex.kagune.control.client.animation.RigPose;
 import com.hex.kagune.control.kakugan.KakuganEyes;
 import com.hex.kagune.control.npc.EtoGesture;
+import com.hex.kagune.control.npc.Courtship;
 import com.hex.kagune.control.npc.EtoLines;
 import com.hex.kagune.control.npc.EtoMood;
 import com.hex.kagune.control.npc.EtoRules;
@@ -424,11 +425,53 @@ public final class EtoTests {
             && Romance.propose(Romance.Stage.MARRIED, false, false, 5, 100) == Romance.Refusal.ALREADY, "a ring is taken only when it should be");
         check(Romance.tag(Romance.Stage.DATING, "Steve").equals("Dating Steve") && Romance.tag(Romance.Stage.MARRIED, "Steve").equals("Married to Steve")
             && Romance.tag(Romance.Stage.NONE, "Steve").isEmpty(), "the line over her head");
-        check(Romance.jealousy(Romance.Stage.NONE, true) == 0 && Romance.jealousy(Romance.Stage.DATING, false) < 0
-            && Romance.jealousy(Romance.Stage.DATING, true) < Romance.jealousy(Romance.Stage.DATING, false)
-            && Romance.jealousy(Romance.Stage.MARRIED, true) < Romance.jealousy(Romance.Stage.DATING, true), "jealousy: worse seen, worse married");
+        for (Romance.Stage stage : Romance.Stage.values()) {
+            for (boolean seen : new boolean[] {false, true}) {
+                com.hex.kagune.control.quest.QuestLog.Bond before = Courtship.wed(com.hex.kagune.control.quest.QuestLog.Bond.NONE);
+                com.hex.kagune.control.quest.QuestLog.Bond after = before;
+                for (int i = 0; i < 200; i++) {
+                    after = after.regard(after.regard() + Romance.jealousy(stage, seen));
+                }
+                check(after.equals(before), "jealousy never drains affection, clears flags or resets courtship: " + stage + "/" + seen);
+            }
+        }
         check(!Romance.mayDate(true, false) && !Romance.mayDate(false, true) && Romance.mayDate(false, false), "one partner each, for good");
         check(Romance.days(3, 10) == 7 && Romance.days(-1, 10) == 0 && Romance.days(12, 10) == 0, "days together");
+        recoveredWeddings();
+    }
+
+    static void recoveredWeddings() {
+        java.util.UUID player = new java.util.UUID(30, 1);
+        java.util.UUID stranger = new java.util.UUID(30, 2);
+        NpcMemory memory = new NpcMemory().set("eto", NpcMemory.WED, 7L);
+        UniqueNpc first = new UniqueNpc();
+        UniqueNpc second = new UniqueNpc();
+        first.pair(player, "Steve", Romance.Stage.MARRIED);
+        second.pair(player, "Steve", Romance.Stage.MARRIED);
+        java.util.Map<String, UniqueNpc> family = new java.util.LinkedHashMap<>();
+        family.put("eto", first);
+        family.put("touka", second);
+        // The old command's precise damaged state: the first slot and dating flag cleared, wedding memory kept.
+        first.pair(null, "", Romance.Stage.NONE);
+        check(first.recoverWedding(player, "Steve", memory.get("eto", NpcMemory.WED, -1L), false), "an erased wedding with its record recovers");
+        family = UniqueNpc.loadAll(UniqueNpc.saveAll(family));
+        check(family.get("eto").stageOf(player) == Romance.Stage.MARRIED && family.get("touka").stageOf(player) == Romance.Stage.MARRIED,
+            "both marriages survive a save and reload");
+        for (com.hex.kagune.control.npc.Persona persona : com.hex.kagune.control.npc.Persona.ALL) {
+            EtoTalk.Context c = full(-60, NpcBonds.MET | EtoRules.DATING, true, Romance.Stage.MARRIED, null, 6000L, EtoMood.JEALOUS,
+                false, EtoRules.Pact.NONE, false, false, null, 1);
+            check(persona.script().main(c, "").options().stream().anyMatch(o -> o.choice() == NpcTalk.Choice.SWEET),
+                "a jealous spouse keeps the romance page even after old affection loss: " + persona.key());
+        }
+        UniqueNpc claimed = new UniqueNpc();
+        claimed.pair(stranger, "Alex", Romance.Stage.MARRIED);
+        check(!claimed.recoverWedding(player, "Steve", 7L, false) && claimed.stageOf(stranger) == Romance.Stage.MARRIED,
+            "recovery never takes somebody else's partner");
+        UniqueNpc free = new UniqueNpc();
+        check(!free.recoverWedding(player, "Steve", -1L, false) && !free.recoverWedding(player, "Steve", 7L, true),
+            "no wedding record or an ordinary legacy dating flag: no invented marriage");
+        memory.forget("eto", NpcMemory.WED); // The existing partner-killed callback removes this record.
+        check(!free.recoverWedding(player, "Steve", memory.get("eto", NpcMemory.WED, -1L), false), "a relationship ended by killing is not restored");
     }
 
     static void memory() {
