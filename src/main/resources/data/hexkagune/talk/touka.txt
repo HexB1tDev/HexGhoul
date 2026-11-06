@@ -1803,3 +1803,364 @@ say: *Touka catches your sleeve.* Hey. ...Earlier. That was stupid of me. I know
 > You were cute jealous. | +2 kicks
   - *She kicks your shin.* I was NOT. ...Was I? Shut up.
 ignored: *She lets go of your sleeve slowly, and stays close all the same.*
+
+# 3.1.4: additional conversations; original scenes retained. Private invitations are married-only.
+
+scene more_ordinary
+who: friend
+mood: happy bored
+when: day
+weight: 1
+say: Sit down. The place has been full of people talking over each other all day. You can take a turn actually listening.
+say: I finally got five quiet minutes. Don't waste them asking if I'm always this cheerful.
+> Stay and talk. | +1 talk
+  - Fine. But you talk too. I'm not putting on a show.
+> Busy day? | 0 look
+  - Busy enough that I forgot my own damn coffee. That's how you know.
+ignored: Fine. Catch you later. Try to have a less irritating afternoon than I did.
+
+scene more_bad_day
+who: friend
+mood: sulky
+weight: 1
+say: No, I'm not in a good mood. You don't have to solve it. Just don't poke at it.
+say: Some people hear 'leave it alone' and think it means 'keep asking'. Don't be one of them.
+> Want to tell me? | +1 talk
+  - ...Yeah. Thanks. It's been a shitty day and I'm tired of acting like it hasn't.
+> I can give you some space. | 0 wave
+  - That'd help. I'll come talk when I can do it without snapping.
+ignored: I'll cool off. You don't need to stand there waiting for me to smile.
+
+scene more_almost_flirting
+who: close
+mood: happy giddy
+weight: 1
+say: You keep showing up right when I take a break. Starting to think it isn't a coincidence.
+say: I saved the decent seat. Didn't say I saved it for you. You can sit there, though.
+> I came to see you. | +1 blush
+  - ...Oh. Good. I mean, you're allowed. Obviously.
+> Was that a compliment? | 0 laugh
+  - Don't get smug. Makes me want to take it back.
+ignored: Yeah, go on. ...It was good seeing you.
+
+scene more_looking_good
+who: together
+mood: happy giddy
+weight: 1
+say: You look good. There. I said it. Don't make it a whole fucking event.
+say: Come here a second. Nothing's wrong. I just wanted a better look at you.
+> You look damn good yourself. | +1 blush
+  - ...Shut up. I mean, thanks. You're such a pain.
+> Come closer, then. | +1 hand
+  - Yeah? Fine. But you're the one smiling like an idiot.
+ignored: Go do your thing. I can find you attractive without making you stand still all day.
+
+scene more_stolen_minute
+who: together
+mood: affectionate happy
+weight: 1
+say: I've been working all day. I want a kiss and about a minute where nobody asks me for anything.
+say: Put that down. I want you, right here, for one minute. Surely the world can manage that.
+> One minute. All yours. | +1 kiss
+  - ...Better. Okay. Maybe two minutes.
+> Can we save it for later? | 0 wave
+  - Fine. Later means later, though. Not 'oops, I forgot'.
+ignored: Later, then. Come find me when you're free.
+
+scene more_angry_words
+who: together
+mood: sulky
+weight: 1
+say: I'm pissed off. I'm still your partner. Stop acting like those are opposite things.
+say: Don't tell me to calm down before you've heard why I'm angry. That never fucking helps.
+> I am listening. Tell me. | +1 talk
+  - I needed you to take what I said seriously. Not laugh and wait for me to stop talking.
+> Let us cool down first. | 0 look
+  - Okay. But we're coming back to this. I'm not doing the silent-treatment bullshit.
+ignored: We can talk when we're ready. I'm not going anywhere over an argument.
+
+scene more_jealous_glance
+who: together
+mood: jealous
+weight: 1
+say: Yeah, I'm jealous. You can stop looking so shocked. It doesn't mean I stopped loving you.
+say: I saw where your attention went. I'm not going to pretend it didn't sting just to look easygoing.
+> You still matter to me. | +1 hand
+  - Then show it. Sit with me. Put some actual time behind the words.
+> Tell me what is bothering you. | 0 talk
+  - Feeling like I have to compete to be noticed in my own relationship. That's what.
+ignored: I'm still here. I'm jealous, not halfway out the door.
+
+scene more_jealous_honesty
+who: together
+mood: jealous
+weight: 1
+say: I'm not asking you to stop knowing other people. I'm asking you not to treat me like the spare option.
+say: You don't get to decide I'm fine just because I'm still here. Ask me. I'll tell you.
+> I want to make time for us. | +1 hand
+  - Good. An evening together would mean more than a stupid argument.
+> Let us talk without fighting. | 0 talk
+  - ...Yeah. I don't want to fight you. I want you to get it.
+ignored: Think about what I said. I want us to talk, not guess.
+
+scene more_missed_you
+who: together
+mood: lonely
+when: away
+weight: 1
+say: Took you long enough. ...I kept wanting to tell you things, then remembering you weren't here.
+say: I missed you, okay? Don't make me hide that behind being annoyed with you.
+> I missed you too. | +1 hug
+  - Come here. Let me have a minute before you start explaining everything.
+> Tell me about your day. | +1 talk
+  - Everything broke at once. I handled it. Would've been nice having you there.
+ignored: Later, then. Don't turn missing me into another job you have to finish.
+
+scene more_stay_near
+who: together
+mood: clingy
+weight: 1
+say: Can you just stay near me a bit? I'm asking normally. Don't make it weird.
+say: I don't need rescuing. I want your hand. Different thing.
+> Stay beside me a little. | +1 hand
+  - ...Thanks. Yeah. That's all I wanted.
+> I need a little room. | 0 look
+  - Okay. Tell me when you're coming back, then. I can handle a straight answer.
+ignored: Okay. I'll give you room. Just be straight with me.
+
+scene more_sleepy_truth
+who: together
+mood: sleepy
+weight: 1
+say: I'm not grumpy. I'm tired. ...All right, I'm both. Move over.
+say: If I start falling asleep on you, don't announce it like you've won something.
+> Rest your head here. | +1 hug
+  - You tell anyone about this and I'll deny it. ...You're warm.
+> Go get some rest. | 0 yawn
+  - Yeah. I should. The chores can survive until morning.
+ignored: I'm getting some rest. The world can cope for a bit.
+
+scene more_hungry_temper
+who: friendly close partner wife
+mood: hungry
+weight: 1
+say: I'm hungry and everyone seems to have chosen today to be an idiot. Dangerous combination.
+say: Before you ask: no, coffee doesn't fix everything. I hate finding that out too.
+> Let us take a break. | +1 look
+  - Good idea. Before I say something I can't be bothered apologising for.
+> You sound irritated. | 0 cross
+  - Because I am. It's not a riddle.
+ignored: Taking a break. That's probably best for everyone's damn afternoon.
+
+scene more_hurt_worry
+who: together
+when: hurt
+weight: 1
+say: Sit the hell down. You're hurt. I'm angry about how scared that made me, not at you for needing help.
+say: Look at me. You've got nothing to prove by bleeding all over the place.
+> I will sit down. Promise. | +1 hand
+  - Good. Thank you. Let me stop shaking before you try the brave face again.
+> Stay with me a minute. | +1 hug
+  - I'm here. I can be annoyed and hold your hand at the same time.
+ignored: Please look after yourself. I'm not good at watching you pretend it doesn't hurt.
+
+scene more_rain_company
+who: together
+mood: happy affectionate lonely
+when: rain
+weight: 1
+say: Great. Rain. Come under here before you look even more pathetic than usual.
+say: We can wait it out. For once, being stuck somewhere with you doesn't sound bad.
+> Stay under cover with me. | +1 hand
+  - Move over, then. You're taking the dry side.
+> You can have my coat. | +1 blush
+  - Keep it. Just stand close. I'm not having both of us freeze.
+ignored: Find somewhere dry, at least. You're no use to yourself shivering.
+
+scene more_married_home
+who: wife
+mood: happy affectionate
+when: home
+weight: 1
+say: Your shoes are in the way again. ...I like that they're here. Move them, though.
+say: Being married doesn't mean you can leave every boring job to me. Come help. We can distract each other when we're done.
+> I like this life with you. | +1 kiss
+  - Yeah. Me too. Even the annoying, normal bits.
+> What needs doing? | +1 talk
+  - Start with the mess by the door. Then sit with me when we're done.
+ignored: Come home when you can. And move those shoes when you get here.
+
+scene more_kids_home
+who: wife
+when: kids !home
+weight: 1
+say: Bring the kids home, will you? Before it gets late and I start worrying myself stupid.
+say: We need to get everyone home. Go find the kids; I'll head back and get things ready.
+> I will go and bring them home. | +1 wave
+  - Thanks. Don't rush them into a panic. Just get them back safe.
+> We can walk back together. | +1 hand
+  - Yeah. A normal walk home. That's all I want tonight.
+ignored: I'm heading back. Let's make sure the kids get home safe.
+
+scene more_kids_bedtime
+who: wife
+mood: happy sleepy affectionate
+when: kids night home
+weight: 1
+say: The kids need settling. If I hear 'but I'm not tired' one more time, I'm going to fucking scream into a pillow.
+say: Bedtime. Their bedtime. I know that look. One thing at a time.
+> I will handle bedtime. | +1 wave
+  - You are my favourite person right now. Go on. Save me.
+> We can do it together. | +1 hand
+  - Deal. You handle the questions, I'll find the missing blankets.
+ignored: I'll start bedtime. Help when you get a minute.
+
+scene more_kids_proud
+who: wife
+mood: happy giddy
+when: kids
+weight: 1
+say: Our kids are getting clever. That's good. It's also making it harder to win an argument about bedtime.
+say: I watched them figure something out on their own today. Had to look away before I started getting stupid about it.
+> They get that from you. | +1 blush
+  - They get plenty from you too. The good bits. Some of the irritating bits.
+> We make a good team. | +1 hug
+  - We do. Even when we're both tired and the house looks like a fight happened in it.
+ignored: Yeah. I'm proud of them. I can say that without getting weird about it.
+
+scene more_expecting
+who: wife
+mood: happy affectionate sleepy
+when: pregnant
+weight: 1
+say: I'm pregnant, not made of glass. But I could use a hand with the boring heavy stuff.
+say: Some days I feel brave about this. Today I'd settle for you sitting here and being normal with me.
+> What do you need? | +1 talk
+  - Water. Somewhere to sit. And no dramatic hovering, please.
+> You do not have to do this alone. | +1 hand
+  - ...I know. Thanks for saying it. I needed that today.
+ignored: I'm going to sit for a bit. Come find me when you're done.
+
+scene more_bed_invitation
+who: wife
+mood: happy giddy affectionate clingy
+when: night home
+weight: 1
+say: Come to bed. With me. Don't give me that innocent look; you know what I'm asking.
+say: Door shut. Chores tomorrow. I want a night with my spouse, if you're up for it.
+> Yes. Come to bed with me. | +1 night
+  - Good. Come here. And stop grinning like I just proposed again.
+> Just a cuddle tonight? | 0 hug
+  - Yeah. A cuddle's fine. I wanted you close, not a damn obligation.
+ignored: Another night is fine. I wasn't giving you a deadline.
+
+scene more_bed_teasing
+who: wife
+mood: happy giddy affectionate
+when: night home
+weight: 1
+say: I'm done hinting. Come to bed. I'd like to spend tonight with you, properly.
+say: You keep looking at me like that. If you mean it, come to bed and tell me somewhere private.
+> I would like that. Come here. | +1 night
+  - ...Yeah. That's what I wanted to hear.
+> I am too tired tonight. | 0 hand
+  - Okay. Then sleep. I'm not going to be angry because you're tired.
+ignored: All right. Get some rest. We can flirt when neither of us is half asleep.
+
+scene more_family_future
+who: wife
+mood: happy affectionate
+when: mixed !pregnant home
+weight: 1
+say: Sometimes I think about a baby with you and get this stupid smile I can't get rid of. Don't laugh.
+say: A family with you. It's a big thing to want. I want to know what you think before I get ahead of myself.
+> Let us talk about having a baby. | 0 sweet
+  - Then let's talk properly. No jokes until I've finished blushing.
+> I need more time to think. | 0 hand
+  - Okay. I want a real answer. Not one you say because you think I'll be upset.
+ignored: Think it through. I want us both to mean it.
+
+
+topic more_quiet_anger
+who: together
+prompt: Can we talk about what upset you?
+mood: sulky jealous
+weight: 1
+say: You want the truth? I'm hurt. The angry part is easier to show you.
+say: I don't need a perfect speech. I need you to stop brushing this off.
+> Tell me the difficult part. | +1 talk
+  - Sometimes I feel like being dependable makes me the easiest person to forget.
+> I need a moment, then we will talk. | 0 look
+  - Fine. A moment. Just don't disappear and make me chase the conversation.
+
+topic more_flirt_back
+who: together
+prompt: I cannot stop looking at you.
+mood: happy giddy affectionate
+weight: 1
+say: You trying to make me blush in public? Because it's fucking working, and I'm annoyed about it.
+say: Stop staring. ...Actually, don't. Just make it a little less obvious.
+> Then kiss me. | +1 kiss
+  - Here? ...Fine. Come closer.
+> You are making me blush. | +1 blush
+  - Good. Now we're both embarrassed. Fair's fair.
+
+topic more_private_night
+who: wife
+prompt: Come to bed. I want you close.
+mood: happy giddy affectionate clingy
+when: night home
+weight: 1
+say: Yeah. I mean come to bed, shut the door, and spend the night with me. Thought I'd save you the guessing.
+say: I want you tonight. If you want that too, stop standing over there looking surprised.
+> Yes. Just the two of us. | +1 night
+  - Good. Leave the day outside. I've had enough of it.
+> Can we just hold each other? | 0 hug
+  - Of course. Holding you counts. You don't have to earn being close to me.
+
+topic more_baby_talk
+who: wife
+prompt: How do you feel about having a baby?
+mood: happy affectionate
+when: mixed !pregnant
+weight: 1
+say: I want us to choose that together. Actually choose it. A kid isn't something you say yes to half listening.
+say: A baby? ...Yeah. I'd like to talk about it. Don't look so smug; I'm being serious.
+> I want to ask you properly. | 0 sweet
+  - Then ask me properly. I want to give you an answer without dodging the question.
+> We can take our time. | 0 hand
+  - We can. I'd rather wait than have you pretend you're ready.
+
+topic more_parent_team
+who: wife
+prompt: How are we doing as parents?
+when: kids
+weight: 1
+say: We're trying. We apologise when we screw up. That's a better start than pretending we never do.
+say: I want our kids to feel safe coming home, even when they've done something stupid. Especially then.
+> I can bring the kids home today. | +1 wave
+  - Please. Bring them back safe. I'll take the next trip.
+> What can I take off your hands? | +1 talk
+  - Do the next bedtime. I need a break before I turn into the person shouting about a missing sock.
+
+topic more_boundaries
+who: together
+prompt: What do you need from me right now?
+weight: 1
+say: Tell me what you're thinking. I can't keep guessing and then getting blamed for guessing wrong.
+say: A little help before I have to ask three times. And some time that's actually ours.
+> I can do that. | +1 talk
+  - Thanks. Seriously. I notice when you try.
+> Tell me when I get it wrong. | +1 hand
+  - I will. You can do the same. Just don't dress an insult up as honesty.
+
+topic more_ordinary_topic
+who: friend
+prompt: Tell me something that made you smile.
+weight: 1
+say: Someone finally got their order right without making me explain it twice. Low bar. Still made my morning.
+say: A regular remembered how I take my coffee. It's nice when people actually notice stuff.
+> I like hearing you talk like this. | +1 blush
+  - ...Then stick around. I'm not always yelling, you know.
+> There is more to you than I expected. | +1 look
+  - Yeah, well. People tend to stop looking once they've decided I'm difficult.

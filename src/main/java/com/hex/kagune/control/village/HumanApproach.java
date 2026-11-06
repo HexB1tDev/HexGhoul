@@ -181,18 +181,18 @@ public final class HumanApproach {
     // Each by temper, in Temper's order: cheerful, shy, bold, kind, grumpy, flirty, dreamy, nervous, playful, stoic, sarcastic, romantic.
 
     static final String[][] HELLO = {
-        {"There you are! I saw you from across the street and had to come say hi!", "Hi, hi, hi! Sorry. I'm just happy to see you."},
-        {"...Um. Hi. I saw you, and I thought... I'd say hello. That's all.", "*fidgets* H-hello. I practised that. Sort of."},
-        {"Hey! Thought I'd catch you before you vanished again.", "You. Stop right there. ...I just wanted to say hello. Ha!"},
-        {"Oh, it's you. I was hoping I'd see you today. Are you eating properly?", "Hello, dear. Just came to see how you're doing."},
-        {"Hmph. You again. ...Fine. Hello. Don't make it a thing.", "I came over to say hello. Don't ask me why. I don't know either."},
-        {"Well, look who's wandering my streets looking like that.", "I saw you and my feet just walked me over here. Funny, that."},
-        {"Oh! I was just thinking about you. Or about clouds. Both, maybe. Hello.", "Hello. The light's doing something lovely on you today."},
-        {"H-hi! Sorry! I didn't mean to sneak up. Did I sneak up? Hi.", "Oh good, it's you. I mean, hello. It feels safer with you around."},
-        {"Tag! ...You're it. Kidding. Hi!", "Boo! Ha! Got you. Hello, by the way."},
-        {"Hello.", "...I saw you. I came to say hello. That's all."},
-        {"Oh, look, a celebrity. Do I need to book a meeting?", "Fancy seeing you here. In the village. Where I live. Shocking."},
-        {"I knew it was you before I even turned around. Hello.", "The whole street got brighter. Then I saw why. Hello, you."}};
+        {"There you are! I saw you from across the street and had to come say hi!", "Hi, hi, hi! Sorry. I'm just happy to see you.", "There you are! Tell me one good thing about your day. I'll find one if you can't.", "I was just thinking this place needed a friendly face. Excellent timing!"},
+        {"...Um. Hi. I saw you, and I thought... I'd say hello. That's all.", "*fidgets* H-hello. I practised that. Sort of.", "...Hello. I wanted to say that before I talked myself out of coming over.", "I saw you and thought I might have the courage for a conversation today."},
+        {"Hey! Thought I'd catch you before you vanished again.", "You. Stop right there. ...I just wanted to say hello. Ha!", "Hey. Walk with me a minute? I could use a conversation with some life in it.", "You look like you've got a story. Come on, let's hear it."},
+        {"Oh, it's you. I was hoping I'd see you today. Are you eating properly?", "Hello, dear. Just came to see how you're doing.", "Hello, dear. Have you had a moment to breathe today?", "I'm glad I caught you. Nothing urgent. Just thought you might like some company."},
+        {"Hmph. You again. ...Fine. Hello. Don't make it a thing.", "I came over to say hello. Don't ask me why. I don't know either.", "Oh. You. ...Fine. I could use someone to complain to.", "Whole day full of idiots. You're a welcome change. Mostly."},
+        {"Well, look who's wandering my streets looking like that.", "I saw you and my feet just walked me over here. Funny, that.", "Well, hello. The village just got a little more interesting.", "There you are. I was running out of charming people to talk to."},
+        {"Oh! I was just thinking about you. Or about clouds. Both, maybe. Hello.", "Hello. The light's doing something lovely on you today.", "Hello. I was watching the light change and forgot to say anything to anyone.", "Have you ever taken the long way just because the afternoon looked lovely?"},
+        {"H-hi! Sorry! I didn't mean to sneak up. Did I sneak up? Hi.", "Oh good, it's you. I mean, hello. It feels safer with you around.", "Hi! I had a normal greeting planned. This is apparently it.", "Oh, good, it's you. I can usually manage a whole conversation with you."},
+        {"Tag! ...You're it. Kidding. Hi!", "Boo! Ha! Got you. Hello, by the way.", "There you are! Official report: the day needs fewer chores and better jokes.", "Quick question: how suspicious is a person offering perfectly ordinary conversation?"},
+        {"Hello.", "...I saw you. I came to say hello. That's all.", "Hello. I had a moment free. Thought I'd share it.", "Good to see you. How has the day treated you?"},
+        {"Oh, look, a celebrity. Do I need to book a meeting?", "Fancy seeing you here. In the village. Where I live. Shocking.", "Ah, a conversation that might require fewer deep breaths. Hello.", "I've had a long day. Please tell me you've brought a better plot."},
+        {"I knew it was you before I even turned around. Hello.", "The whole street got brighter. Then I saw why. Hello, you.", "Hello! Something about today feels like it should be remembered.", "There you are. I was hoping for a reason to stop hurrying."}};
 
     static final String[][] NEWS = {
         {"Ooh, have you heard? ", "Wait till you hear this! "},
@@ -237,18 +237,18 @@ public final class HumanApproach {
         {"I wrapped {thing} in my whole heart. Metaphorically. Here.", "{thing}, because you deserve something good today."}};
 
     static final String[][] WORRIED = {
-        {"Oh no, you're hurt! Sit, sit! Who did this? I'll go yell at them!", "You're bleeding! Come on, let me find you a bandage."},
-        {"Y-you're hurt... are you okay? I don't know what to do. Please be okay.", "*stares at your wounds* ...Does it hurt? Sorry. Stupid question."},
-        {"Who did that to you? Point. I'll handle it.", "You look terrible. Sit down before you fall down."},
-        {"Oh, sweetheart, look at you. Let me clean that up. Hold still.", "You're hurt. Come inside, I'll make you something warm."},
-        {"You look awful. ...Go rest. That's an order, not concern.", "Bleeding all over my street. Go get that looked at. Now."},
-        {"Who scratched up that pretty face? I want names.", "Hurt? Come here, I'll kiss it better. ...I'm only half joking."},
-        {"You've got blood on you... like a painting. A sad one. Are you alright?", "You're hurt. I dreamed something like this. I didn't like it."},
-        {"Y-you're bleeding! Was it a ghoul? Is it still here? Are YOU okay?!", "Oh no, oh no, you're hurt. Sit down, please sit down."},
-        {"Whoa, what happened? Lose a fight with a bear? ...Seriously, are you okay?", "Ow, that looks bad. No more playing tag for you."},
-        {"You're wounded. Rest.", "Sit. Breathe. You'll heal."},
-        {"Great look. Very 'almost died'. Go lie down, hero.", "You're bleeding on my shoes. ...Are you alright, though? Really?"},
-        {"My heart stopped when I saw you like this. Please, be careful.", "Don't you dare get hurt again. I can't bear it."}};
+        {"Oh no, you're hurt! Sit, sit! Who did this? I'll go yell at them!", "You're bleeding! Come on, let me find you a bandage.", "You look hurt. Sit down a minute; being cheerful can wait until you're steady."},
+        {"Y-you're hurt... are you okay? I don't know what to do. Please be okay.", "*stares at your wounds* ...Does it hurt? Sorry. Stupid question.", "...You're hurt. Please don't brush it off just because I'm quiet about asking."},
+        {"Who did that to you? Point. I'll handle it.", "You look terrible. Sit down before you fall down.", "Sit the hell down a second. Whatever happened can wait until you've caught your breath."},
+        {"Oh, sweetheart, look at you. Let me clean that up. Hold still.", "You're hurt. Come inside, I'll make you something warm.", "Oh, dear. Please rest. You don't have to earn help by pretending it doesn't hurt."},
+        {"You look awful. ...Go rest. That's an order, not concern.", "Bleeding all over my street. Go get that looked at. Now.", "You look like shit. Sit. That's concern, before you start an argument about my manners."},
+        {"Who scratched up that pretty face? I want names.", "Hurt? Come here, I'll kiss it better. ...I'm only half joking.", "The compliments can wait. You need a quiet minute and someone checking you're all right."},
+        {"You've got blood on you... like a painting. A sad one. Are you alright?", "You're hurt. I dreamed something like this. I didn't like it.", "You look a long way from all right. Come back to somewhere calm for a moment."},
+        {"Y-you're bleeding! Was it a ghoul? Is it still here? Are YOU okay?!", "Oh no, oh no, you're hurt. Sit down, please sit down.", "Oh, you're hurt. Okay. Don't panic. That's for me. You sit down, please."},
+        {"Whoa, what happened? Lose a fight with a bear? ...Seriously, are you okay?", "Ow, that looks bad. No more playing tag for you.", "No tough-person points today. You're hurt. Take a break before you make it worse."},
+        {"You're wounded. Rest.", "Sit. Breathe. You'll heal.", "You're hurt. Rest first. Talk after."},
+        {"Great look. Very 'almost died'. Go lie down, hero.", "You're bleeding on my shoes. ...Are you alright, though? Really?", "Brave face. Terrible disguise. Please sit down before I have to worry louder."},
+        {"My heart stopped when I saw you like this. Please, be careful.", "Don't you dare get hurt again. I can't bear it.", "Please rest. Whatever brought you home hurt doesn't get the rest of your strength too."}};
 
     static final String[][] MISSED = {
         {"THERE you are! I missed you so much! Where have you BEEN?", "You're back! I counted the days. Okay, I lost count. But I missed you!"},

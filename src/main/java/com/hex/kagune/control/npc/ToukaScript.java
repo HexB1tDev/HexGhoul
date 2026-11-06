@@ -210,12 +210,24 @@ final class ToukaScript extends CompanionScript {
                 EtoTalk.Effect.HUG, EtoGesture.HUG);
             // 2.5.7: a baby asked for here, another once they have one (she carried the last: not straight away).
             case "baby", "tonight" -> EtoTalk.babyAnswer(c, what, s("...You mean it. ...Okay. Yes. Tonight. Don't you dare make a joke right now.",
-                    "A kid. Ours. ...Yeah. Okay. Yes. Tonight. Stop grinning."),
+                    "A kid. Ours. ...Yeah. Okay. Yes. Tonight. Stop grinning.",
+                    "...Yeah. A baby with you. I want that. Come to bed tonight, and don't make me say it in front of everyone.",
+                    "You mean it? ...Good. Me too. Tonight. I'm smiling, shut up.",
+                    "A kid. Ours. That's scary as hell. ...It's also a yes. Come here tonight.",
+                    "Yeah. I've thought about it. A lot, actually. Let's do this together. Tonight."),
                 s("Another one? One already runs me ragged. ...Yes. Tonight. Shut up.",
                     "Are you trying to fill the whole house? ...Fine. Yes. Tonight. Don't make it weird.",
-                    "...Another one. With you. ...Okay. Yeah. I want that too. Tonight."),
+                    "...Another one. With you. ...Okay. Yeah. I want that too. Tonight.",
+                    "Another baby? ...Yeah. I know exactly how tired we'll be. I still want that with you. Tonight.",
+                    "We're going to need more space. More blankets. More fucking coffee. ...Yes. Tonight. I'm happy, okay?",
+                    "Another one with you. ...I like the sound of that. Bed tonight. No stupid victory speech.",
+                    "Yeah. A bigger family. But we share the tired nights, got it? ...Tonight. I'm glad you asked."),
                 days -> "Are you insane? I just had one. ...Ask me again in " + EtoTalk.days(days) + " and maybe I won't hit you.",
-                s("I know. I said tonight. Don't make me say it again.", "Tonight. ...Stop looking at me like that. People can see."),
+                s("I know. I said tonight. Don't make me say it again.", "Tonight. ...Stop looking at me like that. People can see.",
+                    "Tonight. I meant it. I've been trying not to grin about it all damn day.",
+                    "I said yes because I want this too. Come to bed tonight. Don't overthink it.",
+                    "When it's dark, come find me. ...And quit asking if I'm sure. I'm sure.",
+                    "I haven't changed my mind. Tonight, just us. The rest can wait."),
                 EtoGesture.SHY, EtoGesture.SHY);
             default -> r("What?", 0);
         };

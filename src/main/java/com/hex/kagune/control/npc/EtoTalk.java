@@ -397,13 +397,25 @@ public final class EtoTalk {
             // 2.5.7: a baby asked for here (it was a topic of their talk), another once they have one, never too soon after the last.
             case "baby", "tonight" -> babyAnswer(c, what, new String[] {"...Yes. Tonight, then. Don't make me wait.",
                     "A baby. Ours. ...I've thought about it more than I'd admit. Yes. Come to me tonight.",
-                    "You'd be a good father. Annoyingly good. ...Yes. Tonight."},
+                    "You'd be a good father. Annoyingly good. ...Yes. Tonight.",
+                    "A baby with you? ...Yes. Come to bed tonight, darling. Let us give that hope a beginning.",
+                    "You have thought about this, haven't you? Good. So have I. Yes. Tonight, just us.",
+                    "A little reader of our own. Or a magnificent menace. ...Yes, darling. I'd like that. Come to me tonight.",
+                    "Yes. The serious, inconvenient, lovely answer is yes. Tonight. Stop looking so pleased; you'll make me blush."},
                 new String[] {"Another? ...Our first still chews the corners of my books. ...Yes. Come to me tonight.",
                     "A bigger family. More little monsters to read to. ...Yes. Tonight. Don't be late.",
-                    "You want another one with me. ...Of course you do. So do I. Tonight, then."},
+                    "You want another one with me. ...Of course you do. So do I. Tonight, then.",
+                    "Another little voice in this house? ...Yes. Tonight. We'll need more shelf space and rather more patience.",
+                    "You want our family to grow. So do I, darling. Come to bed tonight, and leave the grand speeches outside.",
+                    "Another? Our home will be completely ungovernable. ...How lovely. Yes. Tonight.",
+                    "Yes. A bigger family, with you. I want the tired mornings too. Tonight, darling."},
                 days -> "Already? I've barely slept since the last one. ...Ask me again in " + days(days) + ". I'll still say yes.",
                 new String[] {"I haven't forgotten. I've been thinking about nothing else. Wait for the dark.",
-                    "Tonight. I said tonight. Don't look at me like that in front of the books."}, EtoGesture.HAIR, EtoGesture.GIGGLE);
+                    "Tonight. I said tonight. Don't look at me like that in front of the books.",
+                    "Yes, tonight. I have been trying to write an unrelated sentence all day. You are a terrible distraction.",
+                    "Come to bed when it's dark, darling. We both know what we agreed.",
+                    "I meant yes. I still mean yes. Tonight, when the door is closed and the day is finished.",
+                    "Tonight. Our little hope can have our whole attention. Until then, do let me finish this page."}, EtoGesture.HAIR, EtoGesture.GIGGLE);
             default -> new Reply("Hm?", 0, Effect.NONE);
         };
         return new Reply(EtoLines.fill(c, reply.line()), reply.regard(), reply.effect(), reply.gesture());

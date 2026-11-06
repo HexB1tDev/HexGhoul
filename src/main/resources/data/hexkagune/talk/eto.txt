@@ -1847,3 +1847,364 @@ say: *Eto is suddenly at your elbow.* I've thought about it. Whoever that was, t
 > Come here, you. | +3 kiss
   - *She pulls you down to her by the collar.* Mine. There. That's settled.
 ignored: *She stands a moment longer, then takes your sleeve, just two fingers, and doesn't let go.*
+
+# 3.1.4: additional conversations; original scenes retained. Private invitations are married-only.
+
+scene more_ordinary
+who: friend
+mood: happy bored
+when: day
+weight: 1
+say: A quiet afternoon. Suspicious, isn't it? Usually someone has ruined it by now. Sit down before we tempt fate.
+say: I've written three pages and crossed out four. That takes talent, darling. Or a very irritating pen.
+> Stay and talk. | +1 talk
+  - Good. Give me a subject that hasn't disappointed you yet.
+> Busy day? | 0 look
+  - The book is behaving badly. I understand its impulse.
+ignored: Another time, then. The afternoon and I shall try to behave until you're free.
+
+scene more_bad_day
+who: friend
+mood: sulky
+weight: 1
+say: If one more person tells me to cheer up, I'm putting them in a book. An extremely short one.
+say: Today has been a procession of little annoyances wearing very large shoes.
+> Want to tell me? | +1 talk
+  - You may listen. No cheerful little lesson at the end, please.
+> I can give you some space. | 0 wave
+  - Thank you. Even a monster appreciates someone who can read a room.
+ignored: Silence. An underrated contribution to a bad day. Thank you.
+
+scene more_almost_flirting
+who: close
+mood: happy giddy
+weight: 1
+say: You keep finding reasons to visit my desk. At this point I should start charging rent.
+say: I was about to pretend I hadn't noticed you. You made that rather difficult.
+> I came to see you. | +1 blush
+  - Me? How delightfully poor your judgement is. Stay.
+> Was that a compliment? | 0 laugh
+  - Possibly. Don't frighten it away by staring directly at it.
+ignored: Off you go. I shall invent a less embarrassing reason to look forward to your next visit.
+
+scene more_looking_good
+who: together
+mood: happy giddy
+weight: 1
+say: There you are. Looking like a perfectly good reason to abandon my responsibilities.
+say: Darling, do stand still. I was enjoying the view before you started being useful.
+> You look damn good yourself. | +1 blush
+  - Careful. Praise goes straight to my ego, and there's barely room left.
+> Come closer, then. | +1 hand
+  - With pleasure. Your terrible influence on my productivity continues.
+ignored: Yes, yes. Go be useful. I'll admire your terrible timing instead.
+
+scene more_stolen_minute
+who: together
+mood: affectionate happy
+weight: 1
+say: I have stolen a minute from the rest of the world. I thought we could spend it unwisely.
+say: Put down the serious face, darling. I'd like the person underneath it for a moment.
+> One minute. All yours. | +1 kiss
+  - Mm. An excellent use of stolen property.
+> Can we save it for later? | 0 wave
+  - Yes. I shall be insufferably charming about the delay.
+ignored: Later, darling. The stolen minute can keep.
+
+scene more_angry_words
+who: together
+mood: sulky
+weight: 1
+say: I'm angry, darling. That hasn't made me stop loving you. It has made me very bad company.
+say: Don't try to kiss the argument out of me. I have an actual sentence I'd like to finish.
+> I am listening. Tell me. | +1 talk
+  - Good. The part that hurt was feeling like an afterthought.
+> Let us cool down first. | 0 look
+  - Sensible. I'll put down the imaginary knife and find better words.
+ignored: We can finish this when we both have room to listen.
+
+scene more_jealous_glance
+who: together
+mood: jealous
+weight: 1
+say: Yes, I'm jealous. No, our relationship hasn't fallen off a cliff. I would simply like you to notice I'm standing here.
+say: I can share a room with my own jealousy, darling. I would prefer not to share your whole attention with it.
+> You still matter to me. | +1 hand
+  - I know. Hearing it still helps. Come sit beside me.
+> Tell me what is bothering you. | 0 talk
+  - Being the person you return to only when everybody else is asleep. There. Ugly, but honest.
+ignored: I'm still here, darling. This feeling doesn't change that.
+
+scene more_jealous_honesty
+who: together
+mood: jealous
+weight: 1
+say: My imagination is writing a very unpleasant story about being replaced. I'd like to discuss the plot before it gets ridiculous.
+say: I won't pretend I adore every arrangement you make. I do still adore you. Both things are inconveniently true.
+> I want to make time for us. | +1 hand
+  - Then choose a time and actually keep it. A promise needs legs.
+> Let us talk without fighting. | 0 talk
+  - Good. I'd rather be understood than win a beautifully vicious argument.
+ignored: Think about it. I'd like an answer when you're ready.
+
+scene more_missed_you
+who: together
+mood: lonely
+when: away
+weight: 1
+say: The library was too quiet without you. Even the dust had nothing interesting to say.
+say: I saved you a passage I thought you'd like. Then another. Then, annoyingly, half the book.
+> I missed you too. | +1 hug
+  - Come here, then. Let me stop missing you in person.
+> Tell me about your day. | +1 talk
+  - An editor argued with me. I won, naturally. It was less fun without someone to tell.
+ignored: Go on. I have your passage marked for when you have time.
+
+scene more_stay_near
+who: together
+mood: clingy
+weight: 1
+say: I know you have places to be. At present, I find that a very annoying character trait.
+say: May I borrow your hand? Mine has developed an unreasonable preference for it.
+> Stay beside me a little. | +1 hand
+  - Lovely. I shall pretend this was entirely casual.
+> I need a little room. | 0 look
+  - All right. Tell me when you're free; I can survive a little suspense.
+ignored: All right. I can entertain myself. Occasionally without causing trouble.
+
+scene more_sleepy_truth
+who: together
+mood: sleepy
+weight: 1
+say: I had a devastatingly clever remark prepared. Unfortunately, I appear to have fallen asleep halfway through it.
+say: If I close my eyes, do keep existing nearby. It's become a rather comforting habit.
+> Rest your head here. | +1 hug
+  - Mm. Don't tell anyone I'm easy to comfort. I have a reputation to mismanage.
+> Go get some rest. | 0 yawn
+  - Only if you stop trying to make the world end while I'm napping.
+ignored: Mm. I'm going to lose this argument with my eyelids.
+
+scene more_hungry_temper
+who: friendly close partner wife
+mood: hungry
+weight: 1
+say: My patience is thin and my appetite is not. A disastrous editorial combination.
+say: I'm hungry enough to consider the punctuation edible. Best not test my conversation just now.
+> Let us take a break. | +1 look
+  - Yes. Before I say something unnecessarily memorable.
+> You sound irritated. | 0 cross
+  - A fine observation. Perhaps don't make it twice.
+ignored: A break, then. Before my patience becomes a literary casualty.
+
+scene more_hurt_worry
+who: together
+when: hurt
+weight: 1
+say: Sit down. You're bleeding, darling, and I refuse to lose an argument because you fainted halfway through it.
+say: You look dreadful. I say that with love and a very sincere desire for you to stop leaking.
+> I will sit down. Promise. | +1 hand
+  - Good. You may be stubborn after you've stopped frightening me.
+> Stay with me a minute. | +1 hug
+  - Of course. My book can survive an unresolved ending for a little longer.
+ignored: Please take care of yourself. I rather like having you in one piece.
+
+scene more_rain_company
+who: together
+mood: happy affectionate lonely
+when: rain
+weight: 1
+say: Rain makes everyone else hurry. I rather like having an excuse to keep you still.
+say: We could dash through that downpour, or behave like two people with a functioning roof.
+> Stay under cover with me. | +1 hand
+  - A lovely plot: nothing happens, and we enjoy every page.
+> You can have my coat. | +1 blush
+  - How gallant. Now stand close enough that neither of us has to shiver.
+ignored: Stay dry, darling. The rain can have its own dramatic afternoon.
+
+scene more_married_home
+who: wife
+mood: happy affectionate
+when: home
+weight: 1
+say: Our home contains books, badly folded things, and you. I find it indecently satisfying.
+say: Being your wife has done terrible things to my taste for lonely endings.
+> I like this life with you. | +1 kiss
+  - So do I. Don't expect me to become less troublesome about it.
+> What needs doing? | +1 talk
+  - Help with the boring parts. That's where a shared life actually lives.
+ignored: Home will still be here when you're finished. So will the jobs, unfortunately.
+
+scene more_kids_home
+who: wife
+when: kids !home
+weight: 1
+say: Let's bring the kids home before the evening invents some trouble for them.
+say: We've been out long enough. Could you go and bring the kids home? I'd like everyone under one roof.
+> I will go and bring them home. | +1 wave
+  - Thank you. I'll head home too. Someone has to look convincingly responsible.
+> We can walk back together. | +1 hand
+  - Yes. A small procession of chaos, ending at our own door.
+ignored: I'll make my way home. Let's get everyone back safely.
+
+scene more_kids_bedtime
+who: wife
+mood: happy sleepy affectionate
+when: kids night home
+weight: 1
+say: Bedtime has become a negotiation with a much smaller, much louder editor.
+say: The kids need settling. Apparently 'one last story' is a legal term with no ending.
+> I will handle bedtime. | +1 wave
+  - My hero. Read the boring paragraph twice; it occasionally works.
+> We can do it together. | +1 hand
+  - Lovely. You take the wandering feet, I'll take the endless questions.
+ignored: I'll start settling things down. Join me when you're free.
+
+scene more_kids_proud
+who: wife
+mood: happy giddy
+when: kids
+weight: 1
+say: One of the kids asked a question so wickedly clever I nearly applauded. I remembered to look parental instead.
+say: Our family is noisy, inconvenient, and my favourite thing I've ever helped make.
+> They get that from you. | +1 blush
+  - Mm. Poor little things. Your good influence may yet save them.
+> We make a good team. | +1 hug
+  - We do. Even when the team is badly outnumbered by socks.
+ignored: We made something worth being proud of. Even on the impossible days.
+
+scene more_expecting
+who: wife
+mood: happy affectionate sleepy
+when: pregnant
+weight: 1
+say: I'm growing an entire person and somehow still expected to know where I put my pen. Outrageous.
+say: Come here. I'd like your company, not a lecture on how carefully I should be sitting.
+> What do you need? | +1 talk
+  - A chair, a quiet minute, and you within reach. A modest kingdom.
+> You do not have to do this alone. | +1 hand
+  - I know. Some days I need you to remind me anyway.
+ignored: I'll find somewhere comfortable. Come sit when you have a moment.
+
+scene more_bed_invitation
+who: wife
+mood: happy giddy affectionate clingy
+when: night home
+weight: 1
+say: Come to bed, darling. I have no intention of reading tonight, and I suspect you understand me perfectly.
+say: Shut the door and come here. I'd like a private ending to a very public day.
+> Yes. Come to bed with me. | +1 night
+  - Finally. Let the rest of the world wait outside our door.
+> Just a cuddle tonight? | 0 hug
+  - Of course. You don't owe me a performance. Come be comfortable with me.
+ignored: Another night, darling. An invitation can wait without becoming a tragedy.
+
+scene more_bed_teasing
+who: wife
+mood: happy giddy affectionate
+when: night home
+weight: 1
+say: I have put the book down. On purpose. Shall I make my intentions any clearer, darling?
+say: Come to bed. I was going to be subtle, but subtlety is taking too damn long.
+> I would like that. Come here. | +1 night
+  - Mm. Now that's a promising last line for the evening.
+> I am too tired tonight. | 0 hand
+  - Then we'll sleep. I like you tired and honest too.
+ignored: All right. Sleep is a perfectly respectable rival tonight.
+
+scene more_family_future
+who: wife
+mood: happy affectionate
+when: mixed !pregnant home
+weight: 1
+say: Sometimes I imagine another little voice in our home. Then I imagine the laundry. The voice usually wins.
+say: A child with you. It's a frighteningly hopeful thought. Would you like to talk about it properly?
+> Let us talk about having a baby. | 0 sweet
+  - Then ask me when you're certain. A family deserves more than a passing whim.
+> I need more time to think. | 0 hand
+  - Take it. I'd rather have an honest answer than a hurried yes.
+ignored: Think about it. I want the answer you actually mean.
+
+
+topic more_quiet_anger
+who: together
+prompt: Can we talk about what upset you?
+mood: sulky jealous
+weight: 1
+say: I can be jealous without wanting to stop being yours. I'd like us to understand that distinction.
+say: The clever version of this conversation would be cruel. Let us try the honest version instead.
+> Tell me the difficult part. | +1 talk
+  - I'm frightened of becoming optional to you. There. No metaphor to hide behind.
+> I need a moment, then we will talk. | 0 look
+  - All right. Come back to the conversation, though. Don't leave it to rot.
+
+topic more_flirt_back
+who: together
+prompt: I cannot stop looking at you.
+mood: happy giddy affectionate
+weight: 1
+say: Oh? Is there something particularly interesting on my face, or have you finally developed excellent taste?
+say: Do continue. I rarely object to being admired by my favourite distraction.
+> Then kiss me. | +1 kiss
+  - An admirably direct review. Come here.
+> You are making me blush. | +1 blush
+  - Good. I was beginning to think I had lost my touch.
+
+topic more_private_night
+who: wife
+prompt: Come to bed. I want you close.
+mood: happy giddy affectionate clingy
+when: night home
+weight: 1
+say: Come to bed, darling. Just us, the door closed, and no pretending you meant a nap.
+say: I want you close tonight. If you want that too, take my hand and leave the day outside.
+> Yes. Just the two of us. | +1 night
+  - Then tonight belongs to us. No audience, no clever explanations.
+> Can we just hold each other? | 0 hug
+  - Yes. Being held is a perfectly good reason to come to bed.
+
+topic more_baby_talk
+who: wife
+prompt: How do you feel about having a baby?
+mood: happy affectionate
+when: mixed !pregnant
+weight: 1
+say: I like the thought. I also like knowing we've chosen it together, with our eyes open.
+say: Let's talk about a baby as a real little person, darling. Not a cure for a bad week.
+> I want to ask you properly. | 0 sweet
+  - Ask me directly, darling. I want to answer the real question properly.
+> We can take our time. | 0 hand
+  - We can. There is no prize for racing our own lives.
+
+topic more_parent_team
+who: wife
+prompt: How are we doing as parents?
+when: kids
+weight: 1
+say: Some days we're excellent parents. Some days the house wins. Both count as showing up.
+say: I want the kids to remember that home was somewhere they could ask difficult questions.
+> I can bring the kids home today. | +1 wave
+  - Thank you. A calm walk home can do more than a grand speech.
+> What can I take off your hands? | +1 talk
+  - Take the next bedtime. I need ten minutes in which nobody needs an ending rewritten.
+
+topic more_boundaries
+who: together
+prompt: What do you need from me right now?
+weight: 1
+say: Ask me, rather than guessing what would make the prettiest story about us.
+say: Honesty, darling. And the occasional uninterrupted cup. I'm quite affordable, really.
+> I can do that. | +1 talk
+  - Then we shall be gloriously ordinary for a moment.
+> Tell me when I get it wrong. | +1 hand
+  - Oh, I will. I'd also like you to tell me when I do.
+
+topic more_ordinary_topic
+who: friend
+prompt: Tell me something that made you smile.
+weight: 1
+say: Someone returned a book with a pressed flower still inside. A whole love story abandoned on page forty.
+say: A reader complained that my villain sounded like them. I hadn't even met them. Delicious.
+> I like hearing you talk like this. | +1 blush
+  - How dangerous. I have an unreasonable number of things to say.
+> There is more to you than I expected. | +1 look
+  - There usually is. People are wonderfully bad at reading past the cover.

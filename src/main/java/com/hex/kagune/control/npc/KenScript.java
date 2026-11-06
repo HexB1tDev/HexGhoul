@@ -232,12 +232,24 @@ final class KenScript extends CompanionScript {
                 + "when you think I'm not looking. I'm always looking."), 4, EtoTalk.Effect.HUG, EtoGesture.HUG);
             // 2.5.7: a baby asked for here, another once they have one (she carried the last: rest first).
             case "baby", "tonight" -> EtoTalk.babyAnswer(c, what, s("...Yes. I'd like that more than anything. Tonight, then.",
-                    "A family. With you. ...I used to think I'd never get to want that. Yes. Tonight."),
+                    "A family. With you. ...I used to think I'd never get to want that. Yes. Tonight.",
+                    "A baby with you. ...Yes. I'm frightened and happy at the same time. Come to bed tonight.",
+                    "Yes. I'd like to make that future with you. Tonight, if you're still sure. I am.",
+                    "I've imagined a little hand holding ours. I didn't know if I should say it. ...Yes. Tonight.",
+                    "I want that too. Not to fix anything. Because I want a family with you. Come to me tonight."),
                 s("Another one? ...I keep thinking I can't be this happy, and then you say things like that. Yes. Tonight.",
                     "A little brother or sister for them... I'd like that. I'd like that a lot. Tonight, then.",
-                    "...Are you sure? You were so tired last time. ...You're sure. Okay. Tonight. I'll be gentle."),
+                    "...Are you sure? You were so tired last time. ...You're sure. Okay. Tonight. I'll be gentle.",
+                    "Another baby? ...Yes. I want to keep building this life with you. Tonight.",
+                    "I know we'll be tired. I also know I want to be there for every ordinary morning. Yes. Tonight.",
+                    "A bigger family. ...I can't stop smiling. Yes. Come to bed tonight, and we'll take this hope together.",
+                    "Yes. Another child with you. I want to share the work, not just the lovely moments. Tonight."),
                 days -> "So soon? You need to rest. We both do. ...Ask me again in " + EtoTalk.days(days) + ". I'll still say yes.",
-                s("I haven't forgotten. I've been nervous all day. ...Tonight.", "Tonight. I'll put the kettle on. ...I'm babbling. Sorry."),
+                s("I haven't forgotten. I've been nervous all day. ...Tonight.", "Tonight. I'll put the kettle on. ...I'm babbling. Sorry.",
+                    "Tonight. I keep thinking about what you asked, and smiling at absolutely nothing.",
+                    "I still mean yes. Come to bed tonight. We can take our time together.",
+                    "When the day is done, find me. ...I want this too. I hope that's clear.",
+                    "Yes. Tonight. I'm nervous because it matters, not because I've changed my mind."),
                 EtoGesture.HUG, EtoGesture.BOW);
             default -> r("Hm?", 0);
         };

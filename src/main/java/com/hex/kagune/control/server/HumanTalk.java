@@ -197,10 +197,20 @@ public final class HumanTalk {
             } else if (talking.ours() != null && slot >= talking.topics().size() && slot < talking.topics().size() + talking.ours().size()) {
                 // 2.1.4: its partner's talk.
                 com.hex.kagune.control.village.HumanRomance.Partner ours = talking.ours().get(slot - talking.topics().size());
-                HumanBrain.gesture(human, com.hex.kagune.control.village.HumanGestures.love(temper, roll), 0, now);
-                HumanBrain.hearts(human, level, 3);
+                com.hex.kagune.control.village.HumanPartnerTalk.Context context = partnerContext(player, human, bond);
+                if (!bond.has(HumanPersona.PARTNER)
+                    || !com.hex.kagune.control.village.HumanPartnerTalk.available(ours, context)) {
+                    show(player, human, HumanPersona.hello(temper, bond.regard(), bond.has(HumanPersona.PARTNER), roll));
+                    return;
+                }
+                HumanBrain.gesture(human, context.upset() || context.hurt()
+                    ? com.hex.kagune.control.village.HumanGestures.about(temper, roll)
+                    : com.hex.kagune.control.village.HumanGestures.love(temper, roll), 0, now);
+                if (!context.upset() && !context.hurt()) {
+                    HumanBrain.hearts(human, level, 3);
+                }
                 topics(player, human, com.hex.kagune.control.village.HumanRomance.partner(temper, ours, HumanPersona.taste(seed),
-                    HumanBrain.life(human).dream(), roll));
+                    HumanBrain.life(human).dream(), context, roll));
             }
             return;
         }
@@ -566,6 +576,8 @@ public final class HumanTalk {
         said.add("Kiss " + name + ".");
         offered.add(NpcTalk.Choice.HUG);
         said.add("Hug " + name + ".");
+        offered.add(NpcTalk.Choice.CHAT);
+        said.add("Talk about us.");
         if (human.mind == null || human.mind.holding == null) {
             offered.add(NpcTalk.Choice.INVITE);
             said.add("Let's go for a walk, hand in hand.");
@@ -633,6 +645,18 @@ public final class HumanTalk {
         return id == null ? "thing" : id.m_135815_().replace('_', ' ');
     }
 
+    /** 3.1.4: existing adult human state only; no persistent mood or new relationship effects. */
+    private static com.hex.kagune.control.village.HumanPartnerTalk.Context partnerContext(ServerPlayer player, HumanNpc human, QuestLog.Bond bond) {
+        long now = player.m_284548_().m_46467_();
+        long time = Math.floorMod(player.m_284548_().m_46468_(), 24000L);
+        boolean upset = bond.regard() < HumanPersona.WARM
+            || human.mind != null && player.m_20148_().equals(human.mind.hurtBy) && now < human.mind.hurtUntil;
+        boolean hurt = human.m_21223_() < human.m_21233_()
+            || human.mind != null && (now < human.mind.hurtUntil || now < human.mind.shakenUntil);
+        return new com.hex.kagune.control.village.HumanPartnerTalk.Context(bond.has(HumanPersona.MARRIED),
+            time >= 13000L && time < 23000L, hurt, upset);
+    }
+
     /** 2.1.3: the "Talk a while." page: what can be asked about its life now ({@code line}: its words). */
     private static void topics(ServerPlayer player, HumanNpc human, String line) {
         String key = human.m_20148_().toString();
@@ -643,7 +667,11 @@ public final class HumanTalk {
         // 2.1.4: its partner's talk too (a few a time), the page's room shared with its life's.
         List<com.hex.kagune.control.village.HumanRomance.Partner> ours = new java.util.ArrayList<>();
         if (bond.has(HumanPersona.PARTNER)) {
-            com.hex.kagune.control.village.HumanRomance.Partner[] all = com.hex.kagune.control.village.HumanRomance.Partner.values();
+            com.hex.kagune.control.village.HumanPartnerTalk.Context context = partnerContext(player, human, bond);
+            com.hex.kagune.control.village.HumanRomance.Partner[] all =
+                java.util.Arrays.stream(com.hex.kagune.control.village.HumanRomance.Partner.values())
+                    .filter(topic -> com.hex.kagune.control.village.HumanPartnerTalk.available(topic, context))
+                    .toArray(com.hex.kagune.control.village.HumanRomance.Partner[]::new);
             for (int i = 0; i < OURS; i++) {
                 ours.add(all[Math.floorMod(turn + i, all.length)]);
             }

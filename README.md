@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.1.4 (HexGhoul): Expand personality and mood dialogue (testing)
+
+See `.github/release-notes-3.1.4.md`. Over 730 additional spoken lines for Touka, Eto, Ken and every human temperament, retaining the original dialogue and relationship rules. Not tested in game.
+
 ## 3.1.3 (HexGhoul): Show every quinque attack in first person (testing)
 
 See `.github/release-notes-3.1.3.md`. Dedicated first-person attacks for old and new quinques, with the full whip tendril, visible impact poses and direct swing tracking. Held quinques take M1 priority over eye-mode/final-form unarmed attacks. Not tested in game.

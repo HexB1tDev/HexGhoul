@@ -1658,3 +1658,364 @@ say: *Ken sits down next to you.* About earlier. I was jealous. That's not fair 
 > *Kiss him.* | +4 kiss
   - *He goes still, then kisses you back.* ...That's a very good answer.
 ignored: *He sits beside you a while longer in silence, and that's an answer too.*
+
+# 3.1.4: additional conversations; original scenes retained. Private invitations are married-only.
+
+scene more_ordinary
+who: friend
+mood: happy bored
+when: day
+weight: 1
+say: I read the same paragraph three times and finally realised I was waiting for someone to talk to. Hello.
+say: The quiet is nice today. Not lonely quiet. Just... room to think. Would you like to sit?
+> Stay and talk. | +1 talk
+  - I'm glad. We don't have to talk about anything important.
+> Busy day? | 0 look
+  - Not especially. I'm trying to stop treating a peaceful day like something suspicious.
+ignored: Another time, then. I hope the rest of your day is kind to you.
+
+scene more_bad_day
+who: friend
+mood: sulky
+weight: 1
+say: I'm having a difficult day. I know I look calm. It isn't quite the same thing.
+say: I don't think I can make good conversation just now. That sounded rude. I didn't mean it that way.
+> Want to tell me? | +1 talk
+  - ...Thank you. Sometimes I get tired of being the person everyone thinks can bear it.
+> I can give you some space. | 0 wave
+  - That's kind of you. I'll find you when my thoughts are a little less tangled.
+ignored: Thank you for the space. I'll try again when I have better words.
+
+scene more_almost_flirting
+who: close
+mood: happy giddy
+weight: 1
+say: I was hoping you'd visit. I had a book to lend you. That's... only partly the reason.
+say: You make this place feel different when you come in. Brighter, I think. Sorry. That sounded rehearsed.
+> I came to see you. | +1 blush
+  - You did? ...I'm glad I didn't spend all morning inventing the book excuse, then.
+> Was that a compliment? | 0 laugh
+  - Yes. A rather clumsy one. I did mean it, though.
+ignored: I'll keep the book here. It was good to see you.
+
+scene more_looking_good
+who: together
+mood: happy giddy
+weight: 1
+say: You look lovely today. I wanted to say it before I lost my nerve.
+say: I keep forgetting what I was doing when you smile at me. It's becoming a small problem.
+> You look damn good yourself. | +1 blush
+  - ...Thank you. I don't think I'll manage a normal expression for a while now.
+> Come closer, then. | +1 hand
+  - All right. You make that sound very easy. It feels easy with you.
+ignored: You don't have to stay. I just wanted you to know what I was thinking.
+
+scene more_stolen_minute
+who: together
+mood: affectionate happy
+weight: 1
+say: Could I have a moment with you? Nothing's wrong. I'd like a good reason to hold you, for once.
+say: I keep saving the nice things for later. I'd rather tell you now: I love being here with you.
+> One minute. All yours. | +1 kiss
+  - ...There. That's better than whatever I thought was so urgent.
+> Can we save it for later? | 0 wave
+  - Of course. Find me when you're free. I'd like that.
+ignored: Later is all right. A good moment doesn't have to be a rushed one.
+
+scene more_angry_words
+who: together
+mood: sulky
+weight: 1
+say: I'm angry. I need to say that instead of going silent and making you guess.
+say: Please don't mistake me speaking quietly for this not mattering. It matters a damn lot to me.
+> I am listening. Tell me. | +1 talk
+  - I felt shut out. I can face difficult things. It's harder when you decide I shouldn't get to know.
+> Let us cool down first. | 0 look
+  - Yes. A little time would help. I do want to finish talking, though.
+ignored: We can talk when we're calmer. I still want to understand you.
+
+scene more_jealous_glance
+who: together
+mood: jealous
+weight: 1
+say: I'm jealous. I wish saying that didn't feel so small. It doesn't mean I've stopped loving you.
+say: I know other people matter to you. Sometimes I'm frightened there's less room left for me than I thought.
+> You still matter to me. | +1 hand
+  - Thank you. I needed to hear that without having to make a scene first.
+> Tell me what is bothering you. | 0 talk
+  - I start comparing myself to everyone else. Then I get quiet. I'd rather tell you before I do that.
+ignored: I'm still here. Please don't read this feeling as me leaving.
+
+scene more_jealous_honesty
+who: together
+mood: jealous
+weight: 1
+say: I don't want to make rules out of my fear. I would like some reassurance that I'm still part of your plans.
+say: I can be jealous and still trust you to talk to me. I'm trying to do the second thing more loudly.
+> I want to make time for us. | +1 hand
+  - I'd like that. Something ordinary together. Something we actually keep.
+> Let us talk without fighting. | 0 talk
+  - Thank you. I don't want the person I love to become someone I argue against.
+ignored: Take a moment. I'd rather we speak honestly than quickly.
+
+scene more_missed_you
+who: together
+mood: lonely
+when: away
+weight: 1
+say: I kept turning to tell you something. It's strange how an empty chair can take up so much space.
+say: You're back. ...I have a lot I wanted to say, and now I mostly want to hold you.
+> I missed you too. | +1 hug
+  - Come here, then. I don't need the right words for a moment.
+> Tell me about your day. | +1 talk
+  - I finished the book. I didn't like the ending. I was saving the complaint for you.
+ignored: I'll save the story for when you're free. I'm glad you're back.
+
+scene more_stay_near
+who: together
+mood: clingy
+weight: 1
+say: Would you mind if I stayed close for a while? I'm trying to ask instead of pretending I have a reason.
+say: Can I hold your hand? Today feels a little steadier when I do.
+> Stay beside me a little. | +1 hand
+  - Thank you. You don't have to fix anything. This helps.
+> I need a little room. | 0 look
+  - Of course. Needing space doesn't mean something's wrong. I know that. I'm learning it.
+ignored: All right. Thank you for the time you could share.
+
+scene more_sleepy_truth
+who: together
+mood: sleepy
+weight: 1
+say: I was going to finish this chapter. My eyes seem to have made another arrangement.
+say: If I start repeating myself, it's because I'm tired, not because I've suddenly become very wise.
+> Rest your head here. | +1 hug
+  - ...This is comfortable. I may not remember the rest of our conversation.
+> Go get some rest. | 0 yawn
+  - I will. Please rest too when you can. You don't have to outlast the day.
+ignored: I think I'll rest my eyes. Just for a little while.
+
+scene more_hungry_temper
+who: friendly close partner wife
+mood: hungry
+weight: 1
+say: I'm hungry. I should have said that sooner, before I started hearing everything as an argument.
+say: I think I need a break. Hunger makes my thoughts unkind, and I don't want to put that on you.
+> Let us take a break. | +1 look
+  - Yes. Thank you for understanding before I made a mess of it.
+> You sound irritated. | 0 cross
+  - I am. It's not your fault. Give me a little time to get myself together.
+ignored: I'll take a break before I let hunger do all the talking.
+
+scene more_hurt_worry
+who: together
+when: hurt
+weight: 1
+say: Please sit down. I'm scared shitless, and watching you pretend you're fine is making it worse.
+say: You're hurt. Come here. Being brave doesn't mean you have to stand through it alone.
+> I will sit down. Promise. | +1 hand
+  - Thank you. That's all I needed you to prove right now.
+> Stay with me a minute. | +1 hug
+  - I'm here. I'll stay. We can work out the rest after you've caught your breath.
+ignored: Please rest when you can. You don't have to prove you're all right to me.
+
+scene more_rain_company
+who: together
+mood: happy affectionate lonely
+when: rain
+weight: 1
+say: I like this sound when we're somewhere dry. It makes the rest of the world feel very far away.
+say: We could wait out the rain together. I'd rather be late than rush past a good moment with you.
+> Stay under cover with me. | +1 hand
+  - I'd like that. Tell me something small about your day.
+> You can have my coat. | +1 blush
+  - Only if you aren't cold. We can share the shelter instead.
+ignored: Stay somewhere dry. We can find another quiet moment later.
+
+scene more_married_home
+who: wife
+mood: happy affectionate
+when: home
+weight: 1
+say: I put two cups out without thinking. I like that my hands know you're part of my life now.
+say: This ordinary evening is something I used to think happened to other people. I'm glad I was wrong.
+> I like this life with you. | +1 kiss
+  - So do I. More than I manage to say without getting embarrassed.
+> What needs doing? | +1 talk
+  - Let's do the small jobs together. Then we can stop being useful for a while.
+ignored: I'll be here. I'm still very glad that this is our home.
+
+scene more_kids_home
+who: wife
+when: kids !home
+weight: 1
+say: Could you bring the kids home? I'd feel better knowing everyone was back before it gets late.
+say: Let's make our way home and gather the kids. I want a quiet evening with all of us safe.
+> I will go and bring them home. | +1 wave
+  - Thank you. No need to hurry them. Just bring everyone back together.
+> We can walk back together. | +1 hand
+  - Yes. We can take the long conversation and the short path.
+ignored: I'll head home too. Let's get everyone back before it grows late.
+
+scene more_kids_bedtime
+who: wife
+mood: happy sleepy affectionate
+when: kids night home
+weight: 1
+say: The kids need a story and a quiet room. I can manage one; would you help with the other?
+say: I've been asked to explain why bedtime happens every day. I admire the determination. I'm also exhausted.
+> I will handle bedtime. | +1 wave
+  - Thank you. I'll be here if they need another blanket. Or a second opinion about the moon.
+> We can do it together. | +1 hand
+  - I'd like that. Even the tired parts feel easier with you beside me.
+ignored: I'll start making things quiet. Join us when you can.
+
+scene more_kids_proud
+who: wife
+mood: happy giddy
+when: kids
+weight: 1
+say: I saw one of the kids being kind when they thought nobody was watching. I wanted you to know.
+say: Sometimes they laugh and I realise they're not afraid in their own home. I can't think of much that matters more.
+> They get that from you. | +1 blush
+  - They learn from you too. The way you come back. The way you keep trying.
+> We make a good team. | +1 hug
+  - We do. Not a perfect one. A team that keeps showing up.
+ignored: I'm proud of our family. I wanted to say that out loud.
+
+scene more_expecting
+who: wife
+mood: happy affectionate sleepy
+when: pregnant
+weight: 1
+say: I keep thinking of things we should prepare, then forgetting that I can ask how you're feeling first.
+say: A little life with us. Some days that feels so hopeful it frightens me. I'm glad we can say that to each other.
+> What do you need? | +1 talk
+  - Just a quiet minute together. We don't have to solve the whole future tonight.
+> You do not have to do this alone. | +1 hand
+  - Neither do you. We'll be frightened together when we need to be.
+ignored: We don't need to work everything out this moment. I'm here.
+
+scene more_bed_invitation
+who: wife
+mood: happy giddy affectionate clingy
+when: night home
+weight: 1
+say: Come to bed with me. I mean a night just for us, if you want it too. ...I'm trying to ask without hiding behind the book.
+say: I'd like to be close to you tonight. The private kind of close. You can tell me if you're too tired.
+> Yes. Come to bed with me. | +1 night
+  - ...Yes. Take my hand. We can leave everything else for the morning.
+> Just a cuddle tonight? | 0 hug
+  - Of course. Holding you is never a lesser answer.
+ignored: Another night is all right. You don't owe me an explanation for being tired.
+
+scene more_bed_teasing
+who: wife
+mood: happy giddy affectionate
+when: night home
+weight: 1
+say: I've been thinking about you all evening. Would you come to bed with me? I don't mean just to read.
+say: I put the book away. I want tonight with you more than I want to know how it ends.
+> I would like that. Come here. | +1 night
+  - I'm glad. Come here. We don't need to fill the quiet with words.
+> I am too tired tonight. | 0 hand
+  - Then let's sleep. You never have to apologise for needing rest with me.
+ignored: Let's rest, then. There will be other evenings for us.
+
+scene more_family_future
+who: wife
+mood: happy affectionate
+when: mixed !pregnant home
+weight: 1
+say: Sometimes I imagine teaching a child to read, and then I imagine you beside us. I'd like to talk about that future.
+say: A baby with you. I want to be careful with such a big hope. How do you feel about it?
+> Let us talk about having a baby. | 0 sweet
+  - Then ask me when you're ready. I want us both to mean it.
+> I need more time to think. | 0 hand
+  - We have time. I want a family chosen together, not an answer you felt pressed to give.
+ignored: Take your time. I want to hear what you really hope for.
+
+
+topic more_quiet_anger
+who: together
+prompt: Can we talk about what upset you?
+mood: sulky jealous
+weight: 1
+say: I want to tell you what's wrong before my silence starts sounding like punishment. It isn't what I want.
+say: I love you. I'm upset. I need to learn how to say both without making one erase the other.
+> Tell me the difficult part. | +1 talk
+  - I get frightened of asking for too much. Then I ask for nothing and feel hurt anyway. That's what I'm trying to change.
+> I need a moment, then we will talk. | 0 look
+  - All right. Thank you for telling me instead of walking away without a word.
+
+topic more_flirt_back
+who: together
+prompt: I cannot stop looking at you.
+mood: happy giddy affectionate
+weight: 1
+say: ...You're making it very hard to pretend I know what I was saying.
+say: If you keep looking at me that way, I may stop being quite so shy about holding your hand.
+> Then kiss me. | +1 kiss
+  - I'd like that. Very much.
+> You are making me blush. | +1 blush
+  - That makes two of us. We can be embarrassing together.
+
+topic more_private_night
+who: wife
+prompt: Come to bed. I want you close.
+mood: happy giddy affectionate clingy
+when: night home
+weight: 1
+say: Yes. I'd like that. A private night with you, without pretending we're only going to read.
+say: Come here. If we're both sure, I'd like to leave the rest of the world outside for tonight.
+> Yes. Just the two of us. | +1 night
+  - Then take my hand. I'm happy. Nervous too, but happy.
+> Can we just hold each other? | 0 hug
+  - Absolutely. I want you to feel safe telling me what you actually want.
+
+topic more_baby_talk
+who: wife
+prompt: How do you feel about having a baby?
+mood: happy affectionate
+when: mixed !pregnant
+weight: 1
+say: I want that future with you. I also want us to talk about the tired days, not only the lovely ones.
+say: A baby should be someone we choose to care for together. Not something either of us agrees to out of fear.
+> I want to ask you properly. | 0 sweet
+  - Ask me properly. I'd like to answer the real question without hiding behind a joke.
+> We can take our time. | 0 hand
+  - Yes. Taking our time doesn't make the hope any smaller.
+
+topic more_parent_team
+who: wife
+prompt: How are we doing as parents?
+when: kids
+weight: 1
+say: I think we do better when we admit we're tired and let each other help. I'd like the kids to learn that too.
+say: I want them to know they can come home after a mistake. They shouldn't have to be perfect to feel loved.
+> I can bring the kids home today. | +1 wave
+  - Thank you. That gives me time to get the house a little calmer for everyone.
+> What can I take off your hands? | +1 talk
+  - A bedtime, perhaps. And tell me if you need one in return. This belongs to both of us.
+
+topic more_boundaries
+who: together
+prompt: What do you need from me right now?
+weight: 1
+say: An honest answer, even when it's difficult. I'd rather hear you than spend the evening imagining the worst.
+say: A little reassurance. Not a grand promise. Just something we can actually do for each other today.
+> I can do that. | +1 talk
+  - Thank you. Small things count with me. They always have.
+> Tell me when I get it wrong. | +1 hand
+  - I will try. You can tell me too. I don't want kindness to mean swallowing every hurt.
+
+topic more_ordinary_topic
+who: friend
+prompt: Tell me something that made you smile.
+weight: 1
+say: Someone stopped to help a stranger pick up what they'd dropped. Nobody asked. I liked that.
+say: I found an old note in a book. Someone had written 'try again tomorrow'. I think I needed it.
+> I like hearing you talk like this. | +1 blush
+  - Then I'll try to say these things more often. I notice more than I say.
+> There is more to you than I expected. | +1 look
+  - There is. I'm still getting used to letting people see it.
