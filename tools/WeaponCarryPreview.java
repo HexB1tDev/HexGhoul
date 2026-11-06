@@ -15,7 +15,8 @@ import java.util.List;
 import javax.imageio.ImageIO;
 
 /**
- * 3.1.0: offline carry checks with the game's pose composition, real weapon meshes, vanilla walking input and stiff NPC limbs.
+ * 3.1.1: offline carry checks for the reported whip, heavy hammer and heavy sword, with the game's pose composition, real weapon
+ * meshes, vanilla walking input and stiff NPC limbs.
  * <pre>
  * javac -cp build/quick/classes -d build/carry-preview tools/PoseRender.java tools/WeaponPosePreview.java tools/WeaponCarryPreview.java
  * java -Djava.awt.headless=true -cp build/carry-preview:build/quick/classes WeaponCarryPreview &lt;out.png&gt; [yaw]
@@ -26,7 +27,7 @@ public final class WeaponCarryPreview {
         float run = AgentPose.running(speed);
         RigPose p = AgentPose.run(phase, run, arm.twoHanded ? AgentPose.Carry.STANCE : AgentPose.Carry.BLADE);
         if (arm.twoHanded && run > 0.0F) {
-            WeaponPose.carryRun(p, arm, phase, run);
+            AgentPose.stanceRun(p, WeaponPose.base(arm), phase, run);
         } else {
             AgentPose.withWeapon(p, WeaponPose.carry(arm, speed, phase));
         }
@@ -53,16 +54,18 @@ public final class WeaponCarryPreview {
         String[] labels = {"Stopped", "Walk: left", "Walk: passing", "Walk: right", "Walk: passing", "Sprint"};
         double[] phases = {0, 0, Math.PI * 0.5, Math.PI, Math.PI * 1.5, Math.PI * 0.5};
         double[] speeds = {0, 0.1, 0.1, 0.1, 0.1, 0.4};
-        BufferedImage sheet = new BufferedImage(w * labels.length, top + h * Arm.values().length, BufferedImage.TYPE_INT_RGB);
+        Arm[] reported = {Arm.WHIP, Arm.FLESH_HAMMER, Arm.BONE_SWORD};
+        BufferedImage sheet = new BufferedImage(w * labels.length, top + h * reported.length, BufferedImage.TYPE_INT_RGB);
         Graphics2D g = sheet.createGraphics();
         g.setColor(new Color(26, 26, 32));
         g.fillRect(0, 0, sheet.getWidth(), sheet.getHeight());
         g.setColor(Color.WHITE);
         g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 19));
-        g.drawString("3.1.0: investigator weapon carries - offline geometry preview, not an in-game test", 12, 24);
+        g.drawString("3.1.1: whip, heavy hammer and heavy sword - offline geometry preview, not an in-game test", 12, 24);
         g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 15));
         g.drawString("Vanilla walk under the held weapon; the existing sprint; both hands on two-handed grips; whip curled above the floor.", 12, 47);
-        for (Arm arm : Arm.values()) {
+        for (int row = 0; row < reported.length; row++) {
+            Arm arm = reported[row];
             for (int col = 0; col < labels.length; col++) {
                 RigPose p = pose(arm, speeds[col], phases[col]);
                 List<PoseRender.Tri> extra = new ArrayList<>();
@@ -76,7 +79,7 @@ public final class WeaponCarryPreview {
                 double[] shift = {-0.35, 0.0, 0.65};
                 PoseRender.Camera camera = new PoseRender.Camera(PoseRender.add(centered.eye(), shift), PoseRender.add(centered.target(), shift), 42);
                 BufferedImage cell = PoseRender.render(p, camera, w, h, extra);
-                int x = col * w, y = top + arm.ordinal() * h;
+                int x = col * w, y = top + row * h;
                 g.drawImage(cell, x, y, null);
                 g.setColor(Color.WHITE);
                 g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 14));
@@ -84,7 +87,7 @@ public final class WeaponCarryPreview {
             }
         }
         g.dispose();
-        File out = new File(args.length > 0 ? args[0] : "build/carry-preview/weapon-carry-3.1.0.png");
+        File out = new File(args.length > 0 ? args[0] : "build/carry-preview/weapon-carry-3.1.1.png");
         out.getAbsoluteFile().getParentFile().mkdirs();
         ImageIO.write(sheet, "png", out);
         System.out.println(out);

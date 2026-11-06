@@ -1,4 +1,16 @@
-# START HERE (state after 3.1.0)
+# START HERE (state after 3.1.1)
+
+The animation fix is limited to the three reported weapons: Arm.BONE_SWORD (Bone Greatsword), Arm.FLESH_HAMMER (Flesh Hammer) and Arm.WHIP (Tendril Whip). Their moving carries release the planted stance's legs and preserve the underlying walk/run, with restrained stride motion; the whip's free arm moves and its tendril rests in a raised anchored curl. Their combat poses are retained.
+
+The crystal spear uses its original stance and running carry again. Removed the extra spear running-angle adjustment from 3.1.0. Verified by source comparison with 3.0.9 that the legacy quinque pose path and every existing AgentPose method are unchanged, and that the extracted AgentPose.withWeapon composition is identical to the original AgentClient.take body. No dependency versions, packet fields or enum ordinals changed. Protocol 88 remains.
+
+Focused WeaponCarryTests (2785), AgentTests (48281) and ControlTests (19330) plus API verification passed. Added a regression comparing every crystal-spear pose channel with its original stance across movement speeds/phases. The reported weapons retain gait-transform, classic/slim grip, regular/masterwork floor-clearance and attack-footwork coverage. Reviewed the updated three-weapon offline sheet (stiff NPC limbs, real meshes): docs/handoff/weapon-carry-3.1.1.png, reproducible with tools/WeaponCarryPreview.java. This is an offline geometry check, not a game test.
+
+This build also contains 3.0.8's jealousy/marriage preservation and recovery and 3.0.9's family catch-up navigation/block-only recovery fixes.
+
+Validation: full python3 build.py completed with EXIT 0 on Java 17, including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 88 unchanged. Not tested in game.
+
+# State after 3.1.0
 
 WeaponPose.stance planted both legs with legHold=1, so AgentClient.take replaced vanilla walking and the whip's running stride with static combat feet. WeaponPose.carry now releases those locks as the NPC moves, releases the whip user's free arm, and adds a little shoulder/holding-arm motion tied to the stride. Stopped stances, attack footwork, parries and existing two-handed running mechanics remain. The client uses the same pure AgentPose.withWeapon composition as the regression tests and preview (moved unchanged from AgentClient.take). The crystal spear's running carry is lifted to clear the floor at its full regular/masterwork mesh size.
 

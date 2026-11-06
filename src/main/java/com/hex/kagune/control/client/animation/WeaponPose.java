@@ -555,9 +555,13 @@ public final class WeaponPose {
     /**
      * 3.1.0: carrying it between blows. Standing still keeps the planted stance; moving releases the feet to the walk/run underneath
      * and, for a one-handed weapon, the free arm. The holding arm and shoulders sway a little with the same stride.
+     * 3.1.1: only the owner's reported whip, heavy hammer and heavy sword; the crystal spear keeps its original stance.
      */
     public static RigPose carry(Arm arm, double speed, double phase) {
         RigPose p = stance(arm);
+        if (arm == Arm.CRYSTAL_SPEAR) {
+            return p;
+        }
         float moving = (float)Math.max(0.0, Math.min(1.0, speed / 0.04));
         moving = moving * moving * (3.0F - 2.0F * moving);
         float still = 1.0F - moving;
@@ -570,15 +574,6 @@ public final class WeaponPose {
             p.leftArmHold = still;
         }
         return p;
-    }
-
-    /** 3.1.0: the two-handed running carry, with the long crystal spear lifted so its point clears the floor under the running lean. */
-    public static void carryRun(RigPose p, Arm arm, double phase, float run) {
-        Quinque q = base(arm);
-        AgentPose.stanceRun(p, q, phase, run);
-        if (arm == Arm.CRYSTAL_SPEAR) {
-            QuinquePose.pitchBy(p, q, -0.6F * Math.max(0.0F, Math.min(1.0F, run)));
-        }
     }
 
     /** Its {@code step}th blow, {@code age} ticks in. */

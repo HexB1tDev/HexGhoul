@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.1.1 (HexGhoul): Limit weapon carry fixes to heavy sword, hammer and whip (testing)
+
+See `.github/release-notes-3.1.1.md`. The walking/carry fix targets only the heavy sword (Bone Greatsword), heavy hammer (Flesh Hammer) and Tendril Whip. Other quinques keep their existing poses. Includes the marriage and family pathfinding fixes. Not tested in game.
+
 ## 3.1.0 (HexGhoul): Investigators keep walking while carrying kagune quinques (testing)
 
 See `.github/release-notes-3.1.0.md`. Moving investigators retain their walking legs and body motion with all four kagune-made quinques; the whip curls above the floor instead of lying flat, and the long spear clears the floor on a sprint. Not tested in game.

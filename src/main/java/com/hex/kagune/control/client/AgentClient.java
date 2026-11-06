@@ -176,7 +176,7 @@ public final class AgentClient {
         } else if (swing == CcgAgent.PARRY && swingAge >= 0.0 && swingAge < AgentPose.PARRY_TICKS) {
             arms = AgentPose.parry(base, swingAge / AgentPose.PARRY_TICKS);
         } else if (arm.twoHanded && run > 0.0F) {
-            com.hex.kagune.control.client.animation.WeaponPose.carryRun(p, arm, phase, run);
+            AgentPose.stanceRun(p, base, phase, run);
         } else {
             arms = com.hex.kagune.control.client.animation.WeaponPose.carry(arm, speed, phase);
         }

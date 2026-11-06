@@ -10,6 +10,7 @@ import com.hex.kagune.control.quinque.WhipPath;
 
 /** 3.1.0: carrying a kagune-made quinque must not replace an investigator's walk with planted combat feet. Pure, off-game checks. */
 public final class WeaponCarryTests {
+    private static final Arm[] REPORTED = {Arm.WHIP, Arm.FLESH_HAMMER, Arm.BONE_SWORD};
     private static int passed;
 
     private static void check(boolean good, String message) {
@@ -21,13 +22,14 @@ public final class WeaponCarryTests {
 
     public static void main(String[] args) {
         walking();
+        unaffected();
         combat();
         whip();
         System.out.println("Weapon carry tests: " + passed + " checks passed");
     }
 
     private static void walking() {
-        for (Arm arm : Arm.values()) {
+        for (Arm arm : REPORTED) {
             RigPose stance = WeaponPose.stance(arm);
             RigPose idle = WeaponPose.carry(arm, 0.0, 1.7);
             check(idle.legHold == 1.0F && idle.rightArmX == stance.rightArmX && idle.twist == stance.twist,
@@ -43,7 +45,7 @@ public final class WeaponCarryTests {
                     RigPose held = WeaponPose.carry(arm, speed, phase);
                     check(held.legHold == 0.0F, arm + ": carry never plants moving feet");
                     if (arm.twoHanded && run > 0.0F) {
-                        WeaponPose.carryRun(p, arm, phase, run);
+                        AgentPose.stanceRun(p, WeaponPose.base(arm), phase, run);
                     } else {
                         AgentPose.withWeapon(p, held);
                     }
@@ -73,6 +75,22 @@ public final class WeaponCarryTests {
                             float[] back = p.transform("leftArm", RigPose.ROTATION, -0.5F, 0, 0);
                             check(Math.abs(forward[0] - back[0]) > 0.5F, "Whip: vanilla free-arm movement survives posing");
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    /** 3.1.1: the owner clarified that the other quinques are fine. The spear's carry must match its original stance exactly. */
+    private static void unaffected() {
+        RigPose original = WeaponPose.stance(Arm.CRYSTAL_SPEAR);
+        for (double speed : new double[] {0, 0.02, 0.1, 0.2, 0.4}) {
+            for (double phase : new double[] {0, 0.7, 1.6, 3.2}) {
+                RigPose carried = WeaponPose.carry(Arm.CRYSTAL_SPEAR, speed, phase);
+                for (String part : new String[] {"body", "head", "torso", "rightArm", "leftArm", "rightLeg", "leftLeg"}) {
+                    for (int type : new int[] {RigPose.POSITION, RigPose.ROTATION, RigPose.BEND}) {
+                        check(java.util.Arrays.equals(original.transform(part, type, 0.3F, 0.2F, 0.1F),
+                            carried.transform(part, type, 0.3F, 0.2F, 0.1F)), "Crystal spear: original carry channel " + part + "/" + type);
                     }
                 }
             }
