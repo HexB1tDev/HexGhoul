@@ -149,12 +149,37 @@ public final class PlayerArms {
 
     // ---------------------------------------------------------------- asked for
 
+    /** 3.1.2: the dedicated fold key: keep the stack's data, cancel pending hits/moves and draw the case closing. */
+    static void close(ServerPlayer player, ServerLevel level, ItemStack held, Arm arm) {
+        long now = level.m_46467_();
+        if (unfolding(held, now)) {
+            return;
+        }
+        ItemStack shut = new ItemStack(ControlItems.armCaseOf(arm), 1);
+        CompoundTag tag = held.m_41783_();
+        CompoundTag kept = tag == null ? new CompoundTag() : tag.m_6426_();
+        kept.m_128356_(Quinque.AT, now);
+        shut.m_41751_(kept);
+        Wield w = WIELDS.get(player.m_20148_());
+        if (w != null) {
+            finish(player, w, now);
+            w.striking = false;
+            w.queued = false;
+        }
+        player.m_21008_(InteractionHand.MAIN_HAND, shut);
+        UkakuFire.sound(level, hand(player), "hexkagune:sfx.case_close", 0.7F, 1.0F);
+    }
+
     /** {@code player} asks for a blow ({@link C2SArmAction#STRIKE}) or one of its moves, at {@code target} (0: none). */
     public static void request(ServerPlayer player, int kind, int target) {
         if (!(player.m_9236_() instanceof ServerLevel level) || !player.m_6084_() || player.m_5833_()) {
             return;
         }
         try {
+            if (kind == C2SArmAction.FOLD) {
+                QuinqueServer.fold(player, level);
+                return;
+            }
             long now = level.m_46467_();
             ItemStack held = player.m_21205_();
             Arm arm = ControlItems.armWeapon(held);

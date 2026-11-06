@@ -226,6 +226,21 @@ public final class QuinqueServer {
         hand(player, level, held, quinque, opening);
     }
 
+    /** 3.1.2: one dedicated key for every quinque, including the newer kagune-made items. Already shut is a no-op. */
+    static void fold(ServerPlayer player, ServerLevel level) {
+        ItemStack held = player.m_21205_();
+        com.hex.kagune.control.quinque.Arm arm = ControlItems.armWeapon(held);
+        if (arm != null) {
+            PlayerArms.close(player, level, held, arm);
+            return;
+        }
+        Quinque open = ControlItems.quinqueWeapon(held);
+        if (open != null && hand(player, level, held, open, false)) {
+            DAWN_DUE.remove(player.m_20148_());
+            SECOND.remove(player.m_20148_());
+        }
+    }
+
     /**
      * 1.3.27: the quinque in {@code who}'s hand ({@code held}) opens into its weapon or shuts into its case (a player's, an
      * investigator's): the stack keeps everything it carries and when it turned; the latch, the unfolding, the lock heard. False if it

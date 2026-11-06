@@ -66,6 +66,8 @@
   "message.hexkagune.graft.survived": "The kakuhou keeps you alive",
   "message.hexkagune.graft.no_grip": "Nothing solid to grip there",
   "key.categories.hexkagune": "HexKagune",
+  "key.hexkagune.fold_quinque": "Fold quinque into briefcase",
+  "item.hexkagune.quinque.fold": "§8%s: fold into briefcase",
   "key.hexkagune.menu": "Open HexKagune",
   "key.hexkagune.rapid_strike": "Ability 1",
   "key.hexkagune.slingshot": "Ability 2",

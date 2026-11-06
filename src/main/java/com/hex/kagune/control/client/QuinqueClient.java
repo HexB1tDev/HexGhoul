@@ -107,6 +107,7 @@ public final class QuinqueClient {
                     lines.add(Component.m_237115_("item.hexkagune.arm.string"));
                     lines.add(Component.m_237115_("item.hexkagune.arm." + arm.key() + ".moves"));
                     lines.add(Component.m_237115_("item.hexkagune.arm.put_away"));
+                    lines.add(foldHint());
                 }
                 return;
             }
@@ -117,6 +118,9 @@ public final class QuinqueClient {
             }
             Quinque quinque = shut != null ? shut : open;
             java.util.List<Component> lines = event.getToolTip();
+            if (open != null) {
+                lines.add(foldHint());
+            }
             lines.add(Component.m_237115_("item.hexkagune.quinque." + quinque.model + ".lore"));
             lines.add(Component.m_237115_("item.hexkagune.quinque.ghoul"));
             if (!quinque.ranged) {
@@ -124,6 +128,36 @@ public final class QuinqueClient {
             }
             lines.add(Component.m_237115_(shut != null ? "item.hexkagune.quinque.open" : quinque == Quinque.DAWN ? "item.hexkagune.quinque.dawn_fire"
                 : quinque.ranged ? "item.hexkagune.quinque.fire" : "item.hexkagune.quinque.close"));
+        }
+    }
+
+    private static Component foldHint() {
+        return Component.m_237110_("item.hexkagune.quinque.fold", Component.m_237115_(ControlKeys.FOLD_QUINQUE.m_90865_()));
+    }
+
+    @Mod.EventBusSubscriber(modid = "hexkagune", value = Dist.CLIENT)
+    public static final class FoldKey {
+        private FoldKey() {
+        }
+
+        @SubscribeEvent
+        public static void tick(net.minecraftforge.event.TickEvent.ClientTickEvent event) {
+            if (event.phase != net.minecraftforge.event.TickEvent.Phase.END) {
+                return;
+            }
+            boolean pressed = false;
+            while (ControlKeys.FOLD_QUINQUE.m_90859_()) {
+                pressed = true;
+            }
+            Minecraft minecraft = Minecraft.m_91087_();
+            if (!pressed || minecraft.f_91080_ != null || minecraft.f_91074_ == null) {
+                return;
+            }
+            ItemStack held = minecraft.f_91074_.m_21205_();
+            if (ControlItems.armWeapon(held) != null || ControlItems.quinqueWeapon(held) != null) {
+                com.hex.kagune.control.network.ControlNetwork.CHANNEL.sendToServer(
+                    new com.hex.kagune.control.network.C2SArmAction(com.hex.kagune.control.network.C2SArmAction.FOLD, 0));
+            }
         }
     }
 

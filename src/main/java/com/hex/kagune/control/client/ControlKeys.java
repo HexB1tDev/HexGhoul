@@ -24,6 +24,8 @@ public final class ControlKeys {
     /** 1.3.29: GLFW_KEY_O; answer someone who came up to you with something to say ({@link NpcApproachOverlay}). */
     private static final int KEY_O = 79;
     public static final KeyMapping ANSWER = new KeyMapping("key.hexkagune.answer", InputConstants.Type.KEYSYM, KEY_O, "key.categories.hexkagune");
+    /** 3.1.2: GLFW_KEY_Y; fold the quinque in the main hand, rebindable in Controls. */
+    public static final KeyMapping FOLD_QUINQUE = new KeyMapping("key.hexkagune.fold_quinque", InputConstants.Type.KEYSYM, 89, "key.categories.hexkagune");
 
     private ControlKeys() {
     }
@@ -54,6 +56,7 @@ public final class ControlKeys {
             event.register(UNLEASH);
             event.register(QUESTS);
             event.register(ANSWER);
+            event.register(FOLD_QUINQUE);
         }
     }
 }

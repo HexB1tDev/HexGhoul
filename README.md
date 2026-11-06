@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.1.2 (HexGhoul): Add a rebindable briefcase key for every quinque (testing)
+
+See `.github/release-notes-3.1.2.md`. Y (rebindable in Controls) folds the held quinque into its briefcase. Both right-click abilities remain available. Applies to old and new quinques. Not tested in game.
+
 ## 3.1.1 (HexGhoul): Limit weapon carry fixes to heavy sword, hammer and whip (testing)
 
 See `.github/release-notes-3.1.1.md`. The walking/carry fix targets only the heavy sword (Bone Greatsword), heavy hammer (Flesh Hammer) and Tendril Whip. Other quinques keep their existing poses. Includes the marriage and family pathfinding fixes. Not tested in game.

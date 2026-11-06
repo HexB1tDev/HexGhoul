@@ -15,6 +15,8 @@ public record C2SArmAction(int kind, int target) {
     public static final int STRIKE = 0;
     public static final int FIRST = 1;
     public static final int SECOND = 2;
+    /** 3.1.2: the dedicated key folds either kind of quinque; existing action numbers are unchanged. */
+    public static final int FOLD = 3;
 
     public static void encode(C2SArmAction message, FriendlyByteBuf buffer) {
         buffer.writeByte(message.kind);
