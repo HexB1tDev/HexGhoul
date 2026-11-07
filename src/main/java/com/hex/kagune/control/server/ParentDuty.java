@@ -24,7 +24,8 @@ import net.minecraft.world.phys.Vec3;
  * (in sight within {@link Parenting#NOTICES}, or gone from home a while) that has strayed too far, is out at night, or has gone on a
  * rampage with its kagune; it stops what it is doing (a chore, a cuddle) and goes after it, running for a rampage. Reached, it stops the
  * child (its fight over: {@link Parenting#CALMED}), and they have it out, back and forth in their bubbles; a toddler is picked up and
- * carried home, an older child walks home at its side; at the door, a line each. Its kagune coming out gets a word from a parent near.
+ * carried home, an older child walks home at its side; at the door, a line each (3.2.0: a back and forth that knows why it went after it,
+ * {@link Parenting#home}). Its kagune coming out gets a word from a parent near.
  * Asleep, a parent is woken by a child out at night or fighting too long (HomeLife). It never leaves a fight of its own for it.
  */
 final class ParentDuty {
@@ -151,8 +152,9 @@ final class ParentDuty {
                 child.mind.escort = null;
             }
             d.home = true;
+            // 3.2.0: the word at the door knows why it went after the child (d.why: it strayed, was out at night, or on a rampage).
             d.talk = Conversation.start(level, now, "parent home", child, List.of(child, npc), List.of(), lines(child, npc,
-                Parenting.talk(Parenting.Why.HOME, npc.persona().key(), stage, temper(known), known.name, ChildLines.call(stage, npc.persona().female()),
+                Parenting.home(d.why, npc.persona().key(), stage, temper(known), known.name, ChildLines.call(stage, npc.persona().female()),
                     npc.m_217043_().m_188503_(1 << 20)), TalkCues.Scene.HOME, temper(known)));
             if (d.talk == null) {
                 finish(npc, mind, child, level);

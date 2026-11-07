@@ -696,8 +696,11 @@ check(com.hex.kagune.control.graft.GraftStage.TRANSPLANT.limbs(com.hex.kagune.co
                         for (int seed = 0; seed < 6; seed++) {
                             java.util.List<com.hex.kagune.control.family.Parenting.Line> talk = com.hex.kagune.control.family.Parenting.talk(why, who, stage, temper,
                                 "Hana", "Mama", seed * 31 + 7);
-                            int want = why == com.hex.kagune.control.family.Parenting.Why.TRANSFORM ? 2 : why == com.hex.kagune.control.family.Parenting.Why.HOME ? 2 : 5;
+                            int want = why == com.hex.kagune.control.family.Parenting.Why.TRANSFORM ? 2 : why == com.hex.kagune.control.family.Parenting.Why.HOME ? 3 : 5;
                             shapes &= talk.size() >= want && talk.size() <= want + 1 && talk.get(0).parent() && !talk.get(1).parent();
+                            if (why == com.hex.kagune.control.family.Parenting.Why.HOME) {
+                                shapes &= talk.get(2).parent() && (talk.size() < 4 || !talk.get(3).parent()); // 3.2.0: the parent answers; the child's last word
+                            }
                             if (talk.size() >= 5) {
                                 shapes &= talk.get(2).parent() && !talk.get(3).parent() && talk.get(4).parent();
                             }
@@ -723,6 +726,99 @@ check(com.hex.kagune.control.graft.GraftStage.TRANSPLANT.limbs(com.hex.kagune.co
         check(one.equals(com.hex.kagune.control.family.Parenting.talk(wandered, "touka", kid, com.hex.kagune.control.family.ChildTemper.BOLD, "Hana", "Mom", 3))
             && !one.equals(com.hex.kagune.control.family.Parenting.talk(wandered, "touka", kid, com.hex.kagune.control.family.ChildTemper.BOLD, "Hana", "Mom", 4)),
             "the same seed, the same talk; another, another");
+        doorTalk(toddler, kid, teen);
+    }
+
+    /**
+     * 3.2.0: the word at the door, by who brought the child home and why: the parent knowing why (strayed, out at night, a rampage), the
+     * child in its temper's way about that, the parent's answer to that kind of child, now and then the child's last word.
+     */
+    static void doorTalk(com.hex.kagune.control.family.ChildStage toddler, com.hex.kagune.control.family.ChildStage kid,
+        com.hex.kagune.control.family.ChildStage teen) {
+        com.hex.kagune.control.family.Parenting.Why[] fetched = {com.hex.kagune.control.family.Parenting.Why.WANDERED,
+            com.hex.kagune.control.family.Parenting.Why.NIGHT, com.hex.kagune.control.family.Parenting.Why.RAMPAGE};
+        boolean shapes = true;
+        boolean richer = true;
+        boolean own = true;
+        boolean fits = true;
+        int lastWords = 0;
+        int talks = 0;
+        java.util.Set<String> heard = new java.util.HashSet<>();
+        for (String who : new String[] {"touka", "ken", "eto"}) {
+            for (com.hex.kagune.control.family.ChildStage stage : new com.hex.kagune.control.family.ChildStage[] {toddler, kid, teen}) {
+                java.util.Map<com.hex.kagune.control.family.ChildTemper, java.util.Set<String>> answers = new java.util.HashMap<>();
+                for (com.hex.kagune.control.family.ChildTemper temper : com.hex.kagune.control.family.ChildTemper.values()) {
+                    java.util.Set<String> plainDoor = new java.util.HashSet<>();
+                    java.util.Set<String> plainReply = new java.util.HashSet<>();
+                    for (int seed = 0; seed < 60; seed++) {
+                        java.util.List<com.hex.kagune.control.family.Parenting.Line> plain = com.hex.kagune.control.family.Parenting.home(null, who, stage, temper,
+                            "Hana", "Mama", seed);
+                        plainDoor.add(plain.get(0).text());
+                        plainReply.add(plain.get(1).text());
+                    }
+                    for (com.hex.kagune.control.family.Parenting.Why why : fetched) {
+                        if (why == com.hex.kagune.control.family.Parenting.Why.RAMPAGE && !stage.learns()) {
+                            continue; // a toddler never fights
+                        }
+                        java.util.Set<String> door = new java.util.HashSet<>();
+                        java.util.Set<String> reply = new java.util.HashSet<>();
+                        for (int seed = 0; seed < 60; seed++) {
+                            java.util.List<com.hex.kagune.control.family.Parenting.Line> talk = com.hex.kagune.control.family.Parenting.home(why, who, stage, temper,
+                                "Hana", "Mama", seed * 17 + 3);
+                            talks++;
+                            shapes &= (talk.size() == 3 || talk.size() == 4) && talk.get(0).parent() && !talk.get(1).parent() && talk.get(2).parent()
+                                && (talk.size() == 3 || !talk.get(3).parent());
+                            if (talk.size() == 4) {
+                                lastWords++;
+                            }
+                            door.add(talk.get(0).text());
+                            reply.add(talk.get(1).text());
+                            answers.computeIfAbsent(temper, t -> new java.util.HashSet<>()).add(talk.get(2).text());
+                            for (com.hex.kagune.control.family.Parenting.Line line : talk) {
+                                String low = line.text().toLowerCase(java.util.Locale.ROOT);
+                                fits &= !line.text().contains("{") && !line.text().contains("}") && !line.text().isBlank() && line.text().length() <= 140;
+                                for (String banned : new String[] {"kaneki", "ayato", "furuta", "takatsuki", "aogiri", "yoshimura"}) {
+                                    fits &= !low.contains(banned);
+                                }
+                                heard.add(line.text());
+                            }
+                        }
+                        // Knowing why: lines a plain homecoming never has, for every parent, reason, age and temper.
+                        java.util.Set<String> newDoor = new java.util.HashSet<>(door);
+                        newDoor.removeAll(plainDoor);
+                        java.util.Set<String> newReply = new java.util.HashSet<>(reply);
+                        newReply.removeAll(plainReply);
+                        richer &= !newDoor.isEmpty() && !newReply.isEmpty();
+                        if (newDoor.isEmpty() || newReply.isEmpty()) {
+                            System.err.println("  door talk without its own lines: " + who + " " + why + " " + stage + " " + temper);
+                        }
+                    }
+                }
+                // Each kind of child gets its own answer from each parent (no answer shared between two tempers).
+                for (com.hex.kagune.control.family.ChildTemper a : com.hex.kagune.control.family.ChildTemper.values()) {
+                    for (com.hex.kagune.control.family.ChildTemper b : com.hex.kagune.control.family.ChildTemper.values()) {
+                        if (a != b && answers.containsKey(a) && answers.containsKey(b)) {
+                            java.util.Set<String> shared = new java.util.HashSet<>(answers.get(a));
+                            shared.retainAll(answers.get(b));
+                            own &= shared.isEmpty() && answers.get(a).size() >= 2;
+                        }
+                    }
+                }
+            }
+        }
+        check(shapes, "the word at the door: the parent, the child, the parent's answer, now and then the child's last word");
+        check(richer, "the word at the door knows why: its own lines for every parent, reason, age and temper");
+        check(own, "each parent answers each kind of child in its own words");
+        check(fits, "every door line filled in, bubble-sized, and naming no one it mustn't");
+        check(lastWords > talks / 3 && lastWords < talks * 3 / 4, "the child has the last word now and then: " + lastWords + " of " + talks);
+        check(heard.size() > 380, "hundreds of different door lines heard: " + heard.size());
+        java.util.List<com.hex.kagune.control.family.Parenting.Line> once = com.hex.kagune.control.family.Parenting.home(
+            com.hex.kagune.control.family.Parenting.Why.NIGHT, "ken", kid, com.hex.kagune.control.family.ChildTemper.SHY, "Hana", "Dad", 9);
+        check(once.equals(com.hex.kagune.control.family.Parenting.home(com.hex.kagune.control.family.Parenting.Why.NIGHT, "ken", kid,
+            com.hex.kagune.control.family.ChildTemper.SHY, "Hana", "Dad", 9)), "the same seed, the same word at the door");
+        check(com.hex.kagune.control.family.Parenting.talk(com.hex.kagune.control.family.Parenting.Why.HOME, "touka", kid,
+            com.hex.kagune.control.family.ChildTemper.BOLD, "Hana", "Mom", 5).equals(com.hex.kagune.control.family.Parenting.home(null, "touka", kid,
+            com.hex.kagune.control.family.ChildTemper.BOLD, "Hana", "Mom", 5)), "a homecoming of no known reason is the plain word at the door");
     }
 
     /** 1.3.50: Eto's child: her flesh's rake, grab and club, and her Mutated Arm when it is badly hurt; never the Owl. */

@@ -141,8 +141,22 @@ public final class TalkCues {
                 case CURIOUS -> new ChildCue[] {ChildCue.SHRUG, ChildCue.THINK, ChildCue.SORRY};
                 case SERIOUS -> new ChildCue[] {ChildCue.SORRY, ChildCue.CROSS};
             });
-            case HOME -> pickOf(pick, me == ChildTemper.SUNNY ? new ChildCue[] {ChildCue.WAVE, ChildCue.CHEER} : me == ChildTemper.BOLD
-                ? new ChildCue[] {ChildCue.SHRUG, ChildCue.CROSS} : new ChildCue[] {ChildCue.SORRY, ChildCue.NONE});
+            // 3.2.0: its answer at the door (line 1) and, now and then, its last word (line 3), each in its temper's way.
+            case HOME -> index >= 3 ? pickOf(pick, switch (me) {
+                case SUNNY -> new ChildCue[] {ChildCue.CHEER, ChildCue.WAVE};
+                case BOLD -> new ChildCue[] {ChildCue.SHRUG, ChildCue.CROSS};
+                case MISCHIEF -> new ChildCue[] {ChildCue.GIGGLE, ChildCue.BLEH};
+                case CURIOUS -> new ChildCue[] {ChildCue.THINK};
+                case GENTLE -> new ChildCue[] {ChildCue.PAT, ChildCue.NONE};
+                case SHY, SERIOUS -> new ChildCue[] {ChildCue.NONE};
+            }) : pickOf(pick, switch (me) {
+                case SUNNY -> new ChildCue[] {ChildCue.WAVE, ChildCue.CHEER};
+                case BOLD -> new ChildCue[] {ChildCue.SHRUG, ChildCue.CROSS};
+                case MISCHIEF -> new ChildCue[] {ChildCue.GIGGLE, ChildCue.PLEAD};
+                case CURIOUS -> new ChildCue[] {ChildCue.THINK, ChildCue.SHRUG};
+                case SHY, GENTLE -> new ChildCue[] {ChildCue.SORRY, ChildCue.NONE};
+                case SERIOUS -> new ChildCue[] {ChildCue.NONE, ChildCue.SORRY};
+            });
             // The sorry after a squabble: most mean it; a mischievous one sticks its tongue out at the other when nobody's looking.
             case MAKE_UP -> me == ChildTemper.MISCHIEF ? (pick % 2 == 0 ? ChildCue.BLEH : ChildCue.SORRY) : me == ChildTemper.BOLD
                 ? (pick % 2 == 0 ? ChildCue.SHRUG : ChildCue.CROSS) : ChildCue.SORRY;
@@ -206,7 +220,14 @@ public final class TalkCues {
                 case "eto" -> pick == 0 ? EtoGesture.LAUGH : EtoGesture.CROSS;
                 default -> EtoGesture.SCOLD;
             };
-            case HOME -> "touka".equals(who) ? EtoGesture.CROSS : EtoGesture.NONE;
+            // 3.2.0: at the door (line 0), then its answer to the child (line 2): Touka's folded arms and a sigh, Ken's hand to his chin,
+            // Eto's chin in her hand and her laugh.
+            case HOME -> switch (who) {
+                case "touka" -> index == 0 ? EtoGesture.CROSS : pick == 0 ? EtoGesture.HUFF : EtoGesture.NONE;
+                case "ken" -> index == 0 ? EtoGesture.NONE : pick == 0 ? EtoGesture.CHIN : EtoGesture.NONE;
+                case "eto" -> index == 0 ? (pick == 0 ? EtoGesture.CHIN : EtoGesture.NONE) : pick == 1 ? EtoGesture.LAUGH : EtoGesture.NONE;
+                default -> EtoGesture.NONE;
+            };
             case CUT -> "touka".equals(who) ? EtoGesture.TAP : "eto".equals(who) ? EtoGesture.LAUGH : EtoGesture.HUFF;
             default -> EtoGesture.NONE;
         };

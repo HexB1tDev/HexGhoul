@@ -109,7 +109,7 @@ public final class Parenting {
      * What they say to each other ({@code persona}: the parent's key, "touka", "ken", "eto"; {@code name}: the child's; {@code call}: what
      * it calls that parent, "Mama", "Dad"...; {@code seed} picks among the lines): the parent first, then back and forth. A word about its
      * kagune is short (the parent, the child, now and then the parent again); a child brought back after straying, out at night or on a
-     * rampage is scolded and answers, is told why, answers again, and the parent has the last word; at the door, a line each.
+     * rampage is scolded and answers, is told why, answers again, and the parent has the last word; at the door, {@link #home} (3.2.0).
      */
     public static List<Line> talk(Why why, String persona, ChildStage stage, ChildTemper temper, String name, String call, int seed) {
         String who = persona == null ? "eto" : persona;
@@ -127,8 +127,7 @@ public final class Parenting {
                 }
             }
             case HOME -> {
-                add(out, true, ParentingLines.get("open", who, w, g), pick, name, call);
-                add(out, false, ParentingLines.get("reply", t, w, g), pick, name, call);
+                return home(null, persona, stage, temper, name, call, seed);
             }
             default -> {
                 add(out, true, ParentingLines.get("open", who, w, g), pick, name, call);
@@ -139,6 +138,43 @@ public final class Parenting {
             }
         }
         return out;
+    }
+
+    /** 3.2.0: how often the child has a last word at the door (in a hundred), after its parent's answer. */
+    public static final int LAST_WORD = 55;
+
+    /**
+     * 3.2.0: the word at the door, the owner: "more conversations, like bringing the child home ... depending on how the character is or who
+     * it is, the personality they have". Brought back for {@code fetched} (it strayed, it was out at night, it went on a rampage; null: not
+     * known), the parent says something about that (or something any homecoming would hear); the child answers in its temper's way, about
+     * that; the parent answers that kind of child (Touka to a bold one, Ken to a shy one, Eto to a mischievous one, each their own way); and
+     * now and then ({@link #LAST_WORD}) the child has the last word.
+     */
+    public static List<Line> home(Why fetched, String persona, ChildStage stage, ChildTemper temper, String name, String call, int seed) {
+        String who = persona == null ? "eto" : persona;
+        String g = group(stage);
+        String t = temper == null ? "sunny" : temper.word();
+        String why = fetched == Why.WANDERED || fetched == Why.NIGHT || fetched == Why.RAMPAGE ? fetched.name().toLowerCase(java.util.Locale.ROOT) : null;
+        List<Line> out = new ArrayList<>();
+        java.util.Random pick = new java.util.Random(seed * 0x9E3779B97F4A7C15L ^ Why.HOME.ordinal());
+        add(out, true, either(pick, why == null ? null : ParentingLines.get("door", who, why, g), ParentingLines.get("open", who, "home", g)), pick, name, call);
+        add(out, false, either(pick, why == null ? null : ParentingLines.get("doorreply", t, why, g), ParentingLines.get("reply", t, "home", g)), pick, name, call);
+        add(out, true, ParentingLines.get("answer", who, t, g), pick, name, call);
+        if (pick.nextInt(100) < LAST_WORD) {
+            add(out, false, ParentingLines.get("last", t, "home", g), pick, name, call);
+        }
+        return out;
+    }
+
+    /** 3.2.0: how often (in a hundred) a line that knows why is said rather than one any homecoming would hear. */
+    public static final int KNOWS_WHY = 70;
+
+    /** The lines that know why ({@code knowing}) {@link #KNOWS_WHY} times in a hundred, else the plain ones (either may be null). */
+    private static String[] either(java.util.Random pick, String[] knowing, String[] plain) {
+        if (knowing == null || knowing.length == 0) {
+            return plain;
+        }
+        return plain == null || plain.length == 0 || pick.nextInt(100) < KNOWS_WHY ? knowing : plain;
     }
 
     private static void add(List<Line> out, boolean parent, String[] lines, java.util.Random pick, String name, String call) {

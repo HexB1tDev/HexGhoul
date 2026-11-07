@@ -1,4 +1,17 @@
-# START HERE (state after 3.1.9)
+# START HERE (state after 3.2.0)
+
+The owner's ask (from the 3.1.7 list): "more conversations, like bringing the child home, like more diverse conversations, depending on how the character is or who it is, the personality they have ... make up your own shit." This version is the first half: the companion parent bringing the child home. (The second half, the player bringing it home, is 3.2.1.)
+
+- Pure `Parenting.home(Why fetched, persona, stage, temper, name, call, seed)`: the word at the door, 3 or 4 lines: the parent knowing why (`door:<parent>:<why>:<age>`, said `KNOWS_WHY` 70 times in 100, else the old `open:<parent>:home:<age>`), the child about that (`doorreply:<temper>:<why>:<age>`, else the old `reply:<temper>:home:<age>`), the parent's answer to that temper (`answer:<parent>:<temper>:<age>`, written to follow any reply that temper gives), and the child's last word `LAST_WORD` 55 times in 100 (`last:<temper>:home:<age>`). `fetched` null (unknown) gives the plain homecoming; `Parenting.talk(HOME, ...)` is now exactly that. Ages are little/child/teen (little falls back to child, as before); a rampage has no little lines (a toddler never fights).
+- `ParentingLines`: a second static block with the new keys, about 350 lines (door 72, doorreply 112, answer 126, last 42). Old lines untouched.
+- `ParentDuty.tick` at the door: `Parenting.home(d.why, ...)` (the duty's own reason, kept from when it set out).
+- `TalkCues` HOME: the parent by line (Touka arms crossed at the door, then a sigh now and then; Ken a hand to his chin on his answer; Eto chin in hand, then her laugh); the child by line and temper (its answer; its last word: sunny cheer, bold shrug, mischief giggle or tongue, curious think, gentle pat).
+- FamilyTests: the HOME shape (3 or 4 lines) in the old loop, and `doorTalk()`: every parent x reason x age x temper has lines a plain homecoming doesn't; no answer shared between two tempers for the same parent and age; shape; filled, at most 140 characters, no banned names; the last word between a third and three quarters of talks; over 380 distinct lines; seeded.
+- **Judgment calls:** the parent's answer is by temper, not by the exact reply (so it was written to fit any reply of that temper); 70/30 reason-aware vs old lines and 55% last word are first guesses.
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 92. Not tested in game.
+
+# State after 3.1.9
 
 The owner's relationships ask (see 3.1.7's section for their words): jealousy prominent, two wives and their kids reacting to each other, half-siblings talking about other mothers and fathers; "make up your own shit".
 

@@ -284,4 +284,261 @@ final class ParentingLines {
         put("close:serious:rampage:child", "...I lost count of how long I fought. That's bad.", "Understood. Stop when it runs. I'll remember.");
         put("close:serious:rampage:teen", "...You're right. I wasn't in control. I'll train it.", "Understood. Next time I'll disengage.");
     }
+
+    /*
+     * 3.2.0: the word at the door, longer and by who is talking. "door:<parent>:<why>:<age>" is what the parent says at the door knowing
+     * why it went after the child (it strayed, it was out at night, it went on a rampage; heard alongside the old "open:<parent>:home"
+     * lines); "doorreply:<temper>:<why>:<age>" the child's answer to that (alongside the old "reply:<temper>:home"); "answer:<parent>:
+     * <temper>:<age>" the parent to that kind of child, whatever it said; "last:<temper>:home:<age>" the child's last word, now and then.
+     */
+    static {
+        // ---- Touka at the door: blunt, counting the scrapes, soft the moment nobody's looking.
+        put("door:touka:wandered:little", "*sets {name} down inside and points at the floor* This is home. Your feet stay on this floor. Got it?",
+            "There. Inside. *checks {name}'s hands and knees* No scrapes. You got lucky, shorty.",
+            "Home. Next time you see a butterfly, you come get me. You don't chase it to the end of the world.");
+        put("door:touka:wandered:child", "In. Shoes off. You walked all that way, you can walk to the sink and wash up.",
+            "Home. You know how many places I checked before I found you? Too many. Way too many.",
+            "*holds the door open* After you, explorer. And wipe that look off your face.");
+        put("door:touka:wandered:teen", "Home. I'm not lecturing you at the door. I'm lecturing you over dinner.",
+            "*drops onto the step* I almost called in everyone I know. Over a walk. Sit down a second.",
+            "There. Back in one piece. That's the part I care about. The rest we fight about later.");
+        put("door:touka:night:little", "*carries {name} in and kicks the door shut behind them* There. The dark stays out there. You stay in here.",
+            "Home. Shh. Feel that? Warm. That's what inside is for at night.",
+            "*rubs {name}'s cold hands between hers* Ice cubes. You've got ice cubes for fingers. Bed.");
+        put("door:touka:night:child", "Inside. There's a lock going on that window tomorrow. Don't give me that look.",
+            "Home. It's the middle of the night, {name}. The moon isn't going anywhere. Neither are you.",
+            "*shuts the door, leans on it and lets out a long breath* ...Okay. You're in. Go get warm.");
+        put("door:touka:night:teen", "Home. Bed. If you're not asleep in ten minutes, I'm sitting on you.",
+            "There. Mud on your shoes and a look on your face. We're talking about both tomorrow.",
+            "*locks the door behind them* Next time you can't sleep, you knock on my door. Even if I bite your head off.");
+        put("door:touka:rampage:child", "Sit. *grabs a cloth* Hold still. You're getting cleaned up whether you like it or not.",
+            "Home. Let me see your hands. ...Shaking. That's normal. It stops. Breathe with me.",
+            "Inside. Nobody's chasing you in here, and you're not chasing anybody. It's done.");
+        put("door:touka:rampage:teen", "Sit down before you fall down. I'm getting the first-aid box. Don't argue.",
+            "Home. Your kakugan's still lit. Close your eyes. Count to twenty. I'll wait.",
+            "*tosses {name} a towel* Blood off your face first. Then food. Then we talk about what you almost did.");
+        // ---- Ken at the door: gentle, kneeling to their height, more frightened than he lets show.
+        put("door:ken:wandered:little", "*kneels and unbuttons {name}'s muddy coat* There we go. Home. Your little boots are full of forest.",
+            "Home. *sets {name} down by the fire* Warm your hands, okay? I'll sit right here.",
+            "There. Safe. *lets out a breath he'd been holding* I'm not angry. I was scared. Those are different.");
+        put("door:ken:wandered:child", "Home. Sit with me a minute? I'm not going to shout. I just want to hear about it.",
+            "*hangs up {name}'s coat* We're home. I made a list in my head of everywhere you could be. You weren't on it.",
+            "There. Thank you for walking back with me and not running off again. That meant a lot.");
+        put("door:ken:wandered:teen", "We're home. I'll make coffee, and you can tell me as much or as little as you want.",
+            "Home. I know you're not little anymore. I just... worry like you are. I'm working on it.",
+            "*holds the door* After you. ...You walked further than I ever did at your age. That isn't a compliment. Mostly.");
+        put("door:ken:night:little", "*wraps {name} in the blanket off the couch* There. All warm. The night can't get in here.",
+            "Home. Shh, shh. You're yawning. Your body knows what time it is, even if you don't.",
+            "*sits down with {name} in his lap* We're home. Let's stay right here a moment, you and me, until you're warm.");
+        put("door:ken:night:child", "Home. I'll warm some milk. Then bed, and I'll leave the hall light on.",
+            "*draws the curtains* There. In here the dark is just the dark. Out there it's... more. Do you understand?",
+            "We're back. I'm going to sit by your bed tonight. Not because you're in trouble. Because I want to.");
+        put("door:ken:night:teen", "Home. I won't sleep for a while anyway. Tea? We can just sit.",
+            "We're in. ...When I couldn't find you, I remembered every bad night I've ever had. Please don't do that to me.",
+            "Home. Go and rest. I'll be in the kitchen if you want to tell me what was out there.");
+        put("door:ken:rampage:child", "Sit here. *kneels with a damp cloth* Let me see. ...It's healing already. You're alright. You're alright.",
+            "Home. Your hands are still shaking. So are mine. Let's breathe together for a minute.",
+            "*wipes the blood from {name}'s chin* There. Nobody is going to hurt you here. And you don't have to hurt anyone.");
+        put("door:ken:rampage:teen", "Sit. I'll get bandages. ...And then I'll tell you about the first time I couldn't stop. You should know.",
+            "We're home. You stopped. Remember that more than anything you did before it.",
+            "Here. Eat something. The hunger lies to you after a fight. Food first, then we talk.");
+        // ---- Eto at the door: theatrical, possessive, a writer to the bone, and underneath it all, frightened for them.
+        put("door:eto:wandered:little", "*plops {name} on the couch like a sack of treasure* Home! Captured, returned and catalogued.",
+            "Home. Little legs, enormous ambitions. You get that from me, I'm afraid. Condolences.",
+            "There. The tiny explorer is back on the shelf where she keeps her favourite things. *pats {name}'s head*");
+        put("door:eto:wandered:child", "Home. Sit. I want the whole story from the very first step. Leave nothing out. I'm taking notes.",
+            "*closes the door with a flourish* And so the runaway returned, muddy and unrepentant. Chapter closed. Go wash.",
+            "Home. Next time you want an adventure, leave me a note. A good one. With foreshadowing.");
+        put("door:eto:wandered:teen", "Home. The mysterious disappearance only works if nobody can find you. I always can. Remember that.",
+            "*hangs up her coat* Welcome back. I've already written three versions of where you went. Tell me which is true.",
+            "Home. I'm not angry. I'm curious. That's so much worse, darling.");
+        put("door:eto:night:little", "*tucks {name} inside her coat* Shh. Home now. The night was lovely, I know. The night is also hungry.",
+            "Home. Look at you, all big eyes. The dark tried to keep you, didn't it? It can't. You're spoken for.",
+            "There. Inside. I'm going to read you the boring story. The one that always works.");
+        put("door:eto:night:child", "Home. You went out to meet the night alone? Rude. I'd have come. I adore the night.",
+            "*draws the curtains one by one* There. The dark is outside. The monsters are outside. Except me. Bed.",
+            "Home. It's very late, little moth. You flew toward something. Tomorrow you tell me what.");
+        put("door:eto:night:teen", "Home. A midnight walk. How gothic. I'm almost proud. Almost. Bed.",
+            "*leans in the doorway* There. Next time you sneak out, take me. I know better places. Safer, mostly.",
+            "Home. I didn't sleep either, if that helps. It shouldn't. Go to bed.");
+        put("door:eto:rampage:child", "Sit. *wipes {name}'s face with her sleeve* Look at you. Red to the elbows. What an entrance.",
+            "Home. Your kagune's tired. You're tired. I'm tired of being frightened. Let's all lie down.",
+            "*kneels, eye to eye with {name}* There. You came back. That's the only rule I really care about. Always come back.");
+        put("door:eto:rampage:teen", "Home. Sit and bleed quietly while I find the thread. Yes, I'm stitching. No, it won't be pretty.",
+            "There. You went somewhere just now, in your head. I know that place. I lived there. Don't move in.",
+            "*hands {name} a cup* Drink. Sleep. Tomorrow you tell me how it felt, and I'll tell you why that frightens me.");
+
+        // ---- The child's answer at the door, by its temper and what it did.
+        put("doorreply:sunny:wandered:little", "*bounces* I saw a rabbit! A BIG one!", "Home! *runs in a circle* Home home home!");
+        put("doorreply:sunny:wandered:child", "I found the best hill, {call}! Can we go together tomorrow? Please?",
+            "I wasn't lost! I was just really, really far. That's different!");
+        put("doorreply:sunny:wandered:teen", "Okay, okay. But the view from the ridge was amazing. You'd have loved it.",
+            "Sorry, {call}. I lost track of time. The sun was too nice.");
+        put("doorreply:sunny:night:little", "*yawns hugely* Stars...", "The moon followed me! *giggles*");
+        put("doorreply:sunny:night:child", "But the fireflies, {call}! There were SO many!", "I just wanted to see the moon up close. It's bigger outside.");
+        put("doorreply:sunny:night:teen", "I know, I know. The sky was just really clear tonight.", "Sorry. Couldn't sleep. The night was too pretty to waste.");
+        put("doorreply:sunny:rampage:child", "*sniffles, then smiles* I'm okay. See? I'm okay!", "Did you see me? I was so fast! ...Too fast, I guess.");
+        put("doorreply:sunny:rampage:teen", "I'm fine. Really. Mostly. It stings a bit.", "Sorry. I got carried away. I'll eat and I'll be good as new.");
+        put("doorreply:shy:wandered:little", "*hides face in {call}'s coat*", "*holds a fistful of {call}'s sleeve and won't let go*");
+        put("doorreply:shy:wandered:child", "...I didn't mean to go so far. Everything started to look the same.", "*very quietly* I thought you'd be mad.");
+        put("doorreply:shy:wandered:teen", "...Sorry. I needed somewhere quiet.", "*doesn't look up* I didn't think anyone would notice I was gone.");
+        put("doorreply:shy:night:little", "*whimpers and burrows in closer*", "*tiny voice* ...dark.");
+        put("doorreply:shy:night:child", "...There was a noise. I wanted to see. Then I couldn't find the way back.", "*clings* Can I sleep with the light on?");
+        put("doorreply:shy:night:teen", "...I just like it when everyone's asleep. It's easier.", "*mumbles* Sorry. I'll go to bed.");
+        put("doorreply:shy:rampage:child", "*trembling* I d-didn't want to... it just came out.", "...Are you scared of me now?");
+        put("doorreply:shy:rampage:teen", "...I didn't like how good it felt.", "*stares at the floor* Sorry. Sorry.");
+        put("doorreply:bold:wandered:little", "*squirms* Down! Go again!", "*stamps a tiny foot* Not done!");
+        put("doorreply:bold:wandered:child", "I wasn't lost. I knew exactly where I was. Mostly.", "I got all the way to the river on my own! Nobody's ever done that!");
+        put("doorreply:bold:wandered:teen", "I can look after myself, {call}. You know I can.", "It was a walk. People walk. It's allowed.");
+        put("doorreply:bold:night:little", "*growls at the dark window*", "Not sleepy! NOT!");
+        put("doorreply:bold:night:child", "I'm not scared of the dark. The dark should be scared of me.", "I was guarding the house. From outside. It's a strategy.");
+        put("doorreply:bold:night:teen", "There's nothing out there scarier than me.", "I'm not a kid. I can be out at night.");
+        put("doorreply:bold:rampage:child", "I was winning! I had it!", "It started it! I just finished it!");
+        put("doorreply:bold:rampage:teen", "I had it handled. You didn't have to drag me back.", "It wasn't a rampage. It was a hunt. There's a difference.");
+        put("doorreply:curious:wandered:little", "*holds up a snail* Look!", "Why house? Why not outside?");
+        put("doorreply:curious:wandered:child", "Did you know there's a cave past the hill? I counted the bats. Forty-two!",
+            "I followed a beetle. It went really far. Beetles are fast, {call}.");
+        put("doorreply:curious:wandered:teen", "I wanted to see where the old road goes. It goes somewhere weird.", "I was mapping the forest. I've got most of the north side now.");
+        put("doorreply:curious:night:little", "Why dark? Where sun go?", "*points at the window* Owl! Saw owl!");
+        put("doorreply:curious:night:child", "Did you know some flowers only open at night? I had to check.", "I wanted to see if the stars move. They do! A little!");
+        put("doorreply:curious:night:teen", "The night birds sound completely different. I was keeping track of which ones.",
+            "I wanted to see what the forest does when nobody's watching it.");
+        put("doorreply:curious:rampage:child", "Why did it keep wanting to go? My kagune. It wanted more.", "Is it always that loud in your head when it comes out?");
+        put("doorreply:curious:rampage:teen", "I couldn't stop. I need to know why I couldn't stop.", "I want to understand what happened. Will you explain it? Properly?");
+        put("doorreply:mischief:wandered:little", "*giggles and points the other way* Go there!", "Hehe. Hided!");
+        put("doorreply:mischief:wandered:child", "I wasn't running away, I was running TOWARD something. Totally different.",
+            "*innocent face* What? I was in the garden. A very big garden.");
+        put("doorreply:mischief:wandered:teen", "Technically I never left. I was just very far into the yard.", "You found me faster than last time. You're getting better.");
+        put("doorreply:mischief:night:little", "*giggles* Sneaky!", "Shhh! *puts a finger on {call}'s lips*");
+        put("doorreply:mischief:night:child", "I was being a ninja. Ninjas go out at night. It's the rules.", "*whispers* We don't have to tell anyone about this, right? Right?");
+        put("doorreply:mischief:night:teen", "I was getting snacks. From very, very far away.", "In my defence, the window was already open.");
+        put("doorreply:mischief:rampage:child", "*grins with red teeth* ...Was it cool though?", "Okay, but did you SEE it run?");
+        put("doorreply:mischief:rampage:teen", "Okay, that got a little out of hand. A little.", "I was going to stop. Like, any second.");
+        put("doorreply:gentle:wandered:little", "*pats {call}'s cheek* Sowwy.", "*holds out a squashed flower*");
+        put("doorreply:gentle:wandered:child", "I'm sorry I worried you. Were you scared? You look scared.",
+            "I picked these for you. That's why I went so far. *holds out wilted flowers*");
+        put("doorreply:gentle:wandered:teen", "I'm sorry, {call}. I should've told you. I hate making you worry.",
+            "I was helping a lost dog find its way home. Then I was the lost dog.");
+        put("doorreply:gentle:night:little", "*rubs eyes* {call} sad?", "*yawns and hugs {call}'s neck*");
+        put("doorreply:gentle:night:child", "I heard a bird crying. I wanted to help it. I'm sorry.", "Are you cold, {call}? You came out without your coat. That's my fault.");
+        put("doorreply:gentle:night:teen", "I'm sorry you had to come out in the cold. I'll make you something warm.", "I just needed air. I'm sorry I scared you.");
+        put("doorreply:gentle:rampage:child", "*crying* Is it hurt? The thing I hit? Is it okay?", "I'm sorry, I'm sorry. I didn't want to be like that.");
+        put("doorreply:gentle:rampage:teen", "I hurt it more than I had to. I know I did.", "Did I scare you? Tell me honestly.");
+        put("doorreply:serious:wandered:little", "*points firmly at the door* Home.", "*nods* Back.");
+        put("doorreply:serious:wandered:child", "I was making a survey of the area. I'll have it written up by tomorrow.",
+            "I worked out I'd be back before dark. I was wrong by an hour.");
+        put("doorreply:serious:wandered:teen", "I had a plan and a route. I should have shared them. That's on me.",
+            "Understood. Next time I'll leave a note with when I'll be back.");
+        put("doorreply:serious:night:little", "*very seriously* Monsters. Checked.", "*solemn* Dark. Big.");
+        put("doorreply:serious:night:child", "I was keeping watch. Someone has to keep watch at night.", "I wanted to test whether I can see in the dark. I can. Mostly.");
+        put("doorreply:serious:night:teen", "I was patrolling. I know how that sounds.", "It was a calculated risk. The calculation was bad.");
+        put("doorreply:serious:rampage:child", "I lost control. I need to practise more.", "That wasn't acceptable. I know.");
+        put("doorreply:serious:rampage:teen", "I went past what was necessary. It won't happen again.", "I need you to train me harder. So that doesn't happen again.");
+
+        // ---- The parent's answer to that kind of child (whatever it just said).
+        put("answer:touka:sunny:little", "*ruffles {name}'s hair* Yeah, yeah. You're very happy. Happy and grounded.",
+            "*can't keep a straight face* Stop smiling at me like that. I'm trying to be mad.");
+        put("answer:touka:sunny:child", "Don't grin at me. I'm still deciding how much trouble you're in.", "You're impossible to stay mad at. It's really annoying.");
+        put("answer:touka:sunny:teen", "You and that smile. Fine. Next time I come with you, and you show me.", "Don't charm your way out of this. ...It's working a little. Go eat.");
+        put("answer:touka:shy:little", "*holds {name} tighter* Hey. Hey. I've got you. Nobody's mad.", "*softly* It's okay, little one. You're home. That's all.");
+        put("answer:touka:shy:child", "I'm not mad at you. I was scared. Those look the same on me, I know.",
+            "*kneels* Look at me. You can always come back. Always. No matter what.");
+        put("answer:touka:shy:teen", "I always notice. You're kind of the main thing I notice.", "You want quiet, I'll find you quiet. Just not out there alone.");
+        put("answer:touka:bold:little", "*catches {name} mid-wriggle* Nope. Feet down. You're not going anywhere, tiny.", "Ha. You got my temper. Poor you.");
+        put("answer:touka:bold:child", "Tough, huh? Even tough kids tell their mother where they're going.", "Brave's good. Brave and stupid is how people get eaten. Learn the difference.");
+        put("answer:touka:bold:teen", "I know you can. So could I, at your age. I still nearly didn't come home a few times.",
+            "You want me to trust you out there? Then earn it. Start by telling me where 'out there' is.");
+        put("answer:touka:curious:little", "Questions, questions. You get one more and then it's bed. Choose wisely.", "Yes, very interesting. Interesting things can wait till morning.");
+        put("answer:touka:curious:child", "Write it down. All of it. And next time we go and look together.", "You can be curious from inside the house. Books exist. Read one. In bed.");
+        put("answer:touka:curious:teen", "Fine. Show me your notes tomorrow. If they're good, I'll show you the places that aren't on any map.",
+            "Curiosity's good. Getting killed for it isn't. Find the middle.");
+        put("answer:touka:mischief:little", "*narrows her eyes* I see you. I always see you.", "Giggle all you want. You're still going in the bath.");
+        put("answer:touka:mischief:child", "Uh-huh. You get that from somewhere and I refuse to believe it's me.", "Nice try. Dishes. All week.");
+        put("answer:touka:mischief:teen", "Cute. Grounded is also cute. You'll find out.", "Keep it up and I start locking the windows. All of them.");
+        put("answer:touka:gentle:little", "*catches {name}'s little hand* ...Thanks. Idiot. *kisses {name}'s forehead*", "*sighs and melts completely* How am I supposed to scold that face.");
+        put("answer:touka:gentle:child", "Don't worry about me. Worrying about you is my job. Get your own.", "I'm fine. Really. Now that you're here, I'm fine.");
+        put("answer:touka:gentle:teen", "You don't have to look after me. ...But thanks. Really.", "Next time worry about you first. I'm tougher than I look.");
+        put("answer:touka:serious:little", "*nods back, just as solemn* Good. Home. Report accepted.", "*fighting a smile* Yes, sir. Bedtime, sir.");
+        put("answer:touka:serious:child", "Look at you, taking it like a soldier. Fine. At ease. Go wash up.", "Good. Then you know what you did wrong and I don't have to yell. Nice.");
+        put("answer:touka:serious:teen", "Good. Plans are good. Plans I know about are better.", "Okay. I'll hold you to that. Not because I don't trust you. Because I've lost people.");
+        put("answer:ken:sunny:little", "*laughs softly* Yes, yes. You can tell me everything in the bath.", "You're so happy. I'm glad. ...Please don't do that again.");
+        put("answer:ken:sunny:child", "I love that you find wonderful things everywhere. I'd just like to be there when you do.", "You make it very hard to be stern, you know. I am trying.");
+        put("answer:ken:sunny:teen", "You always find the bright side. Keep that. Just bring it home before dark.", "I'm glad it was beautiful. I'm gladder you're home.");
+        put("answer:ken:shy:little", "*rubs {name}'s back in slow circles* Shh. I'm not going anywhere.", "It's alright. You can hold on as long as you like.");
+        put("answer:ken:shy:child", "I'm not mad. I promise. I was just... very worried. Come here.",
+            "You can always come home. Even when you think I'll be upset. Especially then.");
+        put("answer:ken:shy:teen", "I'd always notice. Always. You matter more than you think you do.",
+            "If you need quiet, I'll make some for you. You don't have to leave to find it.");
+        put("answer:ken:bold:little", "*sets {name} down, one hand still on {name}'s back* Not tonight, little lion.", "*smiles* So brave. And so very tired, I think.");
+        put("answer:ken:bold:child", "I know you're brave. Brave people still come home. That's the bravest part.", "You remind me of me. That's what worries me.");
+        put("answer:ken:bold:teen", "I believe you. I just need you to believe I'll worry anyway. Both things are true.",
+            "You can look after yourself. Let me look after you a little too. It's good for me.");
+        put("answer:ken:curious:little", "*listens very seriously* Wow. Tell me all about it in the morning. Every bit.", "So many whys. Those are tomorrow's whys. Tonight is for sleeping.");
+        put("answer:ken:curious:child", "That's fascinating. Truly. Write it down, and tomorrow I'll find you a book about it.",
+            "We can explore together next time. I'm a slow walker, but I'm a good listener.");
+        put("answer:ken:curious:teen", "I'd love to see your notes. And next time, I'd love to be asked along.", "Questions are good. Questions you ask from somewhere safe are better.");
+        put("answer:ken:mischief:little", "*scoops {name} back before the next escape begins* Oh no you don't.", "*smiles* I see that grin. Nobody's that pleased with themselves for nothing. Bath, little rascal.");
+        put("answer:ken:mischief:child", "That's... a very creative explanation. I almost believe it.", "That face is very convincing. I'm choosing not to be convinced.");
+        put("answer:ken:mischief:teen", "*sighs* You know I can't stay angry. Please don't use that against me.",
+            "I'll pretend I believe you, and you pretend to be sorry. Deal?");
+        put("answer:ken:gentle:little", "*holds {name}'s hand like something precious* Thank you. I'm alright now.", "You always think of everyone else first. Think of you, too. Okay?");
+        put("answer:ken:gentle:child", "I'm alright. You don't have to carry my worry. That one's mine.", "Thank you. Now let me look after you for a while.");
+        put("answer:ken:gentle:teen", "You didn't scare me. ...You did. But I'm alright now. Are you?", "Sit with me. You don't owe me anything. I just like having you near.");
+        put("answer:ken:serious:little", "*nods gravely* Thank you for your report, little captain.", "Very good. Home. Bath. Bed. In that order.");
+        put("answer:ken:serious:child", "Thank you for being honest. That's all I ever want from you.", "You're very hard on yourself. I know where that comes from. Go easy, okay?");
+        put("answer:ken:serious:teen", "Thank you for owning it. That's more than most grown-ups manage.", "You take responsibility like a grown-up. I'm proud of that. Still worried. But proud.");
+        put("answer:eto:sunny:little", "*squishes {name}'s cheeks* How are you this delighted after giving me a heart attack? Monstrous. I love it.",
+            "Yes, yes, yay. Home. The best place in any story.");
+        put("answer:eto:sunny:child", "Tomorrow, little sunbeam, I'll take you somewhere so wonderful you'll forget all about today.",
+            "You're impossible to scold. It's a superpower. Use it for evil sparingly.");
+        put("answer:eto:sunny:teen", "Hm. Next time take me. I'll bring snacks and bad opinions.", "Don't you smile at me like that. I wrote that smile. I know how it works.");
+        put("answer:eto:shy:little", "*hums against {name}'s hair* Shh. Mama's here. Nothing gets past her.", "*holds on just as tight* Mine. Safe. Shh.");
+        put("answer:eto:shy:child", "Mad? Darling, I'm never mad at you. I'm mad at the world for being so big.",
+            "*brushes {name}'s hair back* You can always come back to me. That isn't a rule. It's a promise.");
+        put("answer:eto:shy:teen", "Oh, sweetheart. I notice everything. You most of all.", "Quiet is precious. I'll make you a quiet room. With a lock. Only you and I get keys.");
+        put("answer:eto:bold:little", "*laughs* Look at that face. A villain already. My heart.", "No more conquering tonight, little tyrant. Tomorrow you may have the garden.");
+        put("answer:eto:bold:child", "Brave, reckless and very small. The first two you get from me. The third will pass.",
+            "Fearless heroes die in chapter three. Clever ones make it to the sequel. Be clever.");
+        put("answer:eto:bold:teen", "Oh, I know you can. That's exactly what frightens me.", "You're dangerous. Good. Dangerous people tell their mothers where they're going.");
+        put("answer:eto:curious:little", "Look at you, wondering at everything. A little scholar. A tiny, muddy scholar.", "Why? Because the world is enormous and you're a crumb. A wonderful crumb.");
+        put("answer:eto:curious:child", "Bring me your notes. We'll make them into a story. A true one. Those are the best.",
+            "Every time I think you can't surprise me, you find something new to wonder at. ...You're absolutely my child.");
+        put("answer:eto:curious:teen", "Show me your notes. I'll add the places I'm not supposed to know about.",
+            "Curiosity is my favourite sin. Just don't let it kill you. That's a terrible ending.");
+        put("answer:eto:mischief:little", "*gasps theatrically* A criminal! In my house!", "Fufu. That giggle is mine. You stole it. Give it back.");
+        put("answer:eto:mischief:child", "Oh, that's good. Structure, delivery, a hint of menace... seven out of ten. Now go to bed.", "You can't fool the woman who invented that face, darling.");
+        put("answer:eto:mischief:teen", "Brilliant. Utterly brilliant. Still grounded.", "I'd be proud if I weren't the victim. ...I'm still a little proud.");
+        put("answer:eto:gentle:little", "*kisses {name}'s little hand like a crown jewel* For me? That's going in my memoirs. The nice chapter.", "*melts* How did I make something this soft? I'm a monster. Allegedly.");
+        put("answer:eto:gentle:child", "Worried about me? Sweetheart, I'm the scariest thing in this forest. Worry about the forest.",
+            "Come here. A hug is a perfectly good apology. The only kind I take, actually.");
+        put("answer:eto:gentle:teen", "You didn't scare me. You terrified me. Which is very different and far more flattering.",
+            "Don't look after me. Let me look after you. I'm out of practice. Let me practise.");
+        put("answer:eto:serious:little", "*salutes gravely* Thank you, Captain. Dismissed to bed.", "Such a solemn little face. Like a tiny judge. I adore you.");
+        put("answer:eto:serious:child", "So grave. So dignified. So muddy. Go and wash, Your Honour.", "You're so serious. Where did I get you? ...Never mind. I know where.");
+        put("answer:eto:serious:teen", "Good. I like a child who takes responsibility. It makes it so much easier to blame you.",
+            "Rules, plans, notes. Yes. And also: come here. I was frightened.");
+
+        // ---- The child's last word, now and then.
+        put("last:sunny:home:little", "*yawns and giggles at the same time*", "Love you! *sloppy kiss*");
+        put("last:sunny:home:child", "Okay! Love you, {call}! Night!", "Yay! *hugs {call} around the middle*");
+        put("last:sunny:home:teen", "Love you. Don't tell anyone I said that.", "Okay. Thanks for coming to get me. Really.");
+        put("last:shy:home:little", "*falls asleep still holding on*", "*tiny* ...love.");
+        put("last:shy:home:child", "*whispers* ...Can you stay till I fall asleep?", "*nods, and hugs {call} quick and tight*");
+        put("last:shy:home:teen", "...Okay. Thanks.", "*small smile* ...I'm glad it was you who came.");
+        put("last:bold:home:little", "*yawns* ...not tired...", "*grumbles into {call}'s shoulder*");
+        put("last:bold:home:child", "Fine. But next time I'm going further. With you.", "*crosses arms* ...Okay. Fine. Sorry.");
+        put("last:bold:home:teen", "Yeah. Fine. ...Sorry.", "Okay, okay. I'll tell you next time.");
+        put("last:curious:home:little", "Why sleep?", "*looks out the window one last time, just to be sure*");
+        put("last:curious:home:child", "Can I at least write it down before bed?", "Okay. But tomorrow you have to answer three questions.");
+        put("last:curious:home:teen", "Fine. But you owe me an explanation. A real one.", "Okay. I'm still finishing those notes, though.");
+        put("last:mischief:home:little", "*giggles and wriggles* Again!", "Hehe. Night night.");
+        put("last:mischief:home:child", "Okay. ...Don't look under my bed. No reason.", "*salutes, already plotting*");
+        put("last:mischief:home:teen", "Grounded. Got it. *already looking at the window*", "You love me, though.");
+        put("last:gentle:home:little", "*pats {call}'s face* Night night.", "*kisses {call}'s cheek*");
+        put("last:gentle:home:child", "I love you. I'm sorry. I love you.", "*hugs {call}* You're warm.");
+        put("last:gentle:home:teen", "I'll make you tea tomorrow. To say sorry.", "Thanks for coming for me. I mean it.");
+        put("last:serious:home:little", "*nods once, satisfied*", "*solemn yawn*");
+        put("last:serious:home:child", "Understood. Goodnight.", "I'll do better. You'll see.");
+        put("last:serious:home:teen", "Noted. Goodnight, {call}.", "Thank you. I mean it. I'll do better.");
+    }
 }
