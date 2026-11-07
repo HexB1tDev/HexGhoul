@@ -89,7 +89,10 @@ public final class SfxTests {
         check(clashLeast == 1.0, "every clash sound plays at full gain: " + clashLeast);
         check(othersMost <= clashLeast, "nothing in the pack is set louder than a clash: " + othersMost);
         // 3.2.6 (the owner: "Crystals sound DOES not sound like crystals, it sounds like punches"): no punch, punch collision or bone in any
-        // crystal's sound; raised into a ring; a crystal's hit is a crystal's, not the stab's.
+        // crystal's sound. 3.3.5 (the owner: "Get the sounds from the web, don't generate them yourself"): real glass recordings, as recorded
+        // (no pitch: 3.2.6's raised steel is gone), each in the pack and credited; a crystal's hit is a crystal's, not the stab's.
+        String glassCredits = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of(
+            "src/main/resources/assets/hexkagune/sounds/sfx/recorded/CREDITS.txt")), java.nio.charset.StandardCharsets.UTF_8);
         Matcher crystal = Pattern.compile("^  \"sfx\\.(crystal_form|crystal_hit|shatter)\": \\{(.*?)^  }", Pattern.MULTILINE | Pattern.DOTALL).matcher(json);
         int crystals = 0;
         while (crystal.find()) {
@@ -97,14 +100,14 @@ public final class SfxTests {
             String body = crystal.group(2);
             check(!body.contains("punch_hits") && !body.contains("super_punch_collisions") && !body.contains("bone_crack") && !body.contains("punch_swings"),
                 "sfx." + crystal.group(1) + " has no punch or bone in it");
-            Matcher pitch = Pattern.compile("\"pitch\": ([0-9.]+)").matcher(body);
-            boolean raised = true;
-            int pitched = 0;
-            while (pitch.find()) {
-                raised &= Double.parseDouble(pitch.group(1)) >= 1.4;
-                pitched++;
+            check(!body.contains("\"pitch\"") && !body.contains("spike_throws"), "sfx." + crystal.group(1) + " is not made over from other sounds (no pitch, no steel)");
+            Matcher glass = Pattern.compile("sfx/recorded/(crystal_[a-z0-9_]+)\"").matcher(body);
+            int recordings = 0;
+            while (glass.find()) {
+                recordings++;
+                check(glassCredits.contains(glass.group(1) + ".ogg: "), glass.group(1) + " is credited");
             }
-            check(raised && pitched >= 3, "sfx." + crystal.group(1) + "'s sounds are raised into a ring: " + pitched);
+            check(recordings >= 3, "sfx." + crystal.group(1) + " is real glass recordings: " + recordings);
         }
         check(crystals == 3, "the crystal's three pools are there: " + crystals);
         // 3.3.3 (the owner: the Kakuja V2 Dragon is silent; "Get the sounds from the web, don't generate them yourself"): its own six pools,

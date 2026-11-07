@@ -87,10 +87,11 @@ POOLS = {
     # 3.2.6 (the owner: "Crystals sound DOES not sound like crystals, it sounds like punches"): the shatter was a bone crack and two punch
     # collisions, a crystal's hit the pack's punch hits. The pack has no glass of its own (and no recording whose CC0 licence can be checked
     # from here): its brightest steel, a needle's flick, a spinning spike, raised into a ring and a tinkle (a file's own pitch: (file, pitch)).
-    "crystal_form": (0.75, [(SPIKE + "steel_spike", 1.7), (SPIKE + "needle_flick", 1.5), (SPIKE + "spinning_spike", 1.6)], "Crystal forms"),
-    "shatter": (0.75, [(SPIKE + "needle_flick", 1.9), (SPIKE + "fast_dart", 1.8), (SPIKE + "steel_spike", 1.95), (SPIKE + "razor_volley", 1.6)],
-                "Crystal shatters"),
-    "crystal_hit": (0.6, [(SPIKE + "needle_flick", 1.6), (SPIKE + "steel_spike", 1.8), (SPIKE + "fast_dart", 1.7)], "A crystal strikes"),
+    # 3.3.5 (the owner on 3.3.3: "Get the sounds from the web, don't generate them yourself"): crystal from real glass recordings (CC0,
+    # tools/sfx_recordings.json), as recorded. 3.2.6 had raised the pack's steel and needle sounds into a ring: made over, gone.
+    "crystal_form": (0.75, [RECORDED + "crystal_clink_1", RECORDED + "crystal_clink_2", RECORDED + "crystal_crack"], "Crystal forms"),
+    "shatter": (0.75, [RECORDED + "crystal_shatter_1", RECORDED + "crystal_shatter_2", RECORDED + "crystal_shatter_3"], "Crystal shatters"),
+    "crystal_hit": (0.6, [RECORDED + "crystal_clink_1", RECORDED + "crystal_clink_2", RECORDED + "crystal_crack"], "A crystal strikes"),
     "cue": (0.9, [SPIKE + "needle_flick"], "A glint"),
     # Blood and flesh.
     "blood_splat": (0.7, SPLATS, "Flesh splits"),

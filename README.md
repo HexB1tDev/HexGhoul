@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.3.5 (HexGhoul): Crystal sounds from real glass (testing)
+
+See `.github/release-notes-3.3.5.md`. 3.2.6's crystal sounds were the pack's steel and needle sounds raised in pitch. Now real glass recordings from the web, as recorded: three glass breaks for the shatter, glasses clinking and a crack for forming and hits (CC0, freesound via the WilhelmSFX mirror, credited). Same loudness as before. Not tested in game.
+
 ## 3.3.4 (HexGhoul): One partner, for good (testing)
 
 See `.github/release-notes-3.3.4.md`. The owner's rule: one partner, no break-up, no divorce. While you have a partner (dating or married, Eto, Touka, Ken or a villager) nobody else will start anything with you, and no ring while you're married. Killing Eto, Touka or Ken no longer ends it: they come back, still yours. A villager partner's death is the only thing that frees you. Old saves keep the partners they have. Not tested in game.

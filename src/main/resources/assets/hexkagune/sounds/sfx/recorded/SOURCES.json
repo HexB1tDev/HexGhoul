@@ -325,6 +325,66 @@
       "source_filename": "Samples/816237__qubodup__crunch.wav",
       "sha256": "0e6fd4af978a352af581f02b6604c2eba0a247a28df05285038287204e6f519d",
       "kind": "real recording"
+    },
+    "crystal_glassbreak.wav": {
+      "title": "Glass Break (WilhelmSFX CC0 mirror)",
+      "author": "avrahamy",
+      "licence": "CC0-1.0",
+      "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_url": "https://freesound.org/people/avrahamy/sounds/141563/",
+      "licence_evidence": "https://freesound.org/people/avrahamy/sounds/141563/ (freesound was blocked from the importing session: CC0 per the mirror's licence, https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/LICENSE)",
+      "download_url": "https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/141563__avrahamy__glass-break.wav",
+      "source_filename": "Samples/141563__avrahamy__glass-break.wav",
+      "sha256": "3db40fe770b05ac6c71610d3ea89130f9cb44daf7cb9572c939a6ee7dac4c414",
+      "kind": "real recording"
+    },
+    "crystal_mirror.wav": {
+      "title": "Breaking Mirror (WilhelmSFX CC0 mirror)",
+      "author": "LazyLids",
+      "licence": "CC0-1.0",
+      "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_url": "https://freesound.org/people/LazyLids/sounds/369070/",
+      "licence_evidence": "https://freesound.org/people/LazyLids/sounds/369070/ (freesound was blocked from the importing session: CC0 per the mirror's licence, https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/LICENSE)",
+      "download_url": "https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/369070__lazylids__breaking_mirror.wav",
+      "source_filename": "Samples/369070__lazylids__breaking_mirror.wav",
+      "sha256": "553459efaadaf138efdcf7f654eaca9b0cd89bb3fa63fa8a51502fba2674332b",
+      "kind": "real recording"
+    },
+    "crystal_glassbreak4.wav": {
+      "title": "Glass Break 4 (WilhelmSFX CC0 mirror)",
+      "author": "mccormick_iain",
+      "licence": "CC0-1.0",
+      "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_url": "https://freesound.org/people/mccormick_iain/sounds/371091/",
+      "licence_evidence": "https://freesound.org/people/mccormick_iain/sounds/371091/ (freesound was blocked from the importing session: CC0 per the mirror's licence, https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/LICENSE)",
+      "download_url": "https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/371091__mccormick_iain__glass-break-4.wav",
+      "source_filename": "Samples/371091__mccormick_iain__glass-break-4.wav",
+      "sha256": "c93d2e39a97f85d1aabfa654cbcc448a907e23284a435667ba1672cd725d8194",
+      "kind": "real recording"
+    },
+    "crystal_clinking.wav": {
+      "title": "Glasses Clinking (WilhelmSFX CC0 mirror)",
+      "author": "waheegle",
+      "licence": "CC0-1.0",
+      "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_url": "https://freesound.org/people/waheegle/sounds/738633/",
+      "licence_evidence": "https://freesound.org/people/waheegle/sounds/738633/ (freesound was blocked from the importing session: CC0 per the mirror's licence, https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/LICENSE)",
+      "download_url": "https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/738633__waheegle__glasses-clinking.wav",
+      "source_filename": "Samples/738633__waheegle__glasses-clinking.wav",
+      "sha256": "a2a030272b689667037321de16bdaca17834042ca01fb6fd34c27dbde879ba4e",
+      "kind": "real recording"
+    },
+    "crystal_clink2.wav": {
+      "title": "Clink2 (WilhelmSFX CC0 mirror)",
+      "author": "BMacZero",
+      "licence": "CC0-1.0",
+      "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_url": "https://freesound.org/people/BMacZero/sounds/96135/",
+      "licence_evidence": "https://freesound.org/people/BMacZero/sounds/96135/ (freesound was blocked from the importing session: CC0 per the mirror's licence, https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/LICENSE)",
+      "download_url": "https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/96135__bmaczero__clink2.wav",
+      "source_filename": "Samples/96135__bmaczero__clink2.wav",
+      "sha256": "ecbf5a221f2aff32376b8584eea875d0b7d9963d22f6c16e237f5e7b63f51dc2",
+      "kind": "real recording"
     }
   },
   "clips": {
@@ -514,6 +574,49 @@
       "end": 0.39,
       "output_sha256": "ce247e69e385420e1c7bbc7fc1b51c1f5eb2b8f4cedadcfa5559f31409b0b28b",
       "changes": "Excerpt 0.000000-0.390000 s; 3 ms fade-in, 20 ms fade-out; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering."
+    },
+    "crystal_shatter_1": {
+      "source": "crystal_glassbreak.wav",
+      "start": 0.18,
+      "end": 1.78,
+      "gain_db": 6,
+      "output_sha256": "50bd72dbb1b27707812b703bb4b6f67650c071f2e9143ce1cf0518fee6829bbf",
+      "changes": "Excerpt 0.180000-1.780000 s; 3 ms fade-in, 20 ms fade-out; level raised 6 dB; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering."
+    },
+    "crystal_shatter_2": {
+      "source": "crystal_mirror.wav",
+      "start": 0.42,
+      "end": 1.98,
+      "output_sha256": "172b5e1d5aca84a30692aaec3564104f29c077913e049f1dd24199600e259c55",
+      "changes": "Excerpt 0.420000-1.980000 s; 3 ms fade-in, 20 ms fade-out; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering."
+    },
+    "crystal_shatter_3": {
+      "source": "crystal_glassbreak4.wav",
+      "start": 0.0,
+      "end": 1.05,
+      "output_sha256": "8e18d40634edd679e7b75a0cf389de96456e1c047820afe2809e427889749449",
+      "changes": "Excerpt 0.000000-1.050000 s; 3 ms fade-in, 20 ms fade-out; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering."
+    },
+    "crystal_clink_1": {
+      "source": "crystal_clinking.wav",
+      "start": 0.42,
+      "end": 0.98,
+      "output_sha256": "39412aa5d18a572196fbe04e6050815d5b93b859d4365e6403a139024c4cb57e",
+      "changes": "Excerpt 0.420000-0.980000 s; 3 ms fade-in, 20 ms fade-out; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering."
+    },
+    "crystal_clink_2": {
+      "source": "crystal_clink2.wav",
+      "start": 0.0,
+      "end": 0.25,
+      "output_sha256": "43becd4a4413d2c9dfdb1fc06d2303f7adc1ca20362dc24baa880f2b993df2a3",
+      "changes": "Excerpt 0.000000-0.250000 s; 3 ms fade-in, 20 ms fade-out; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering."
+    },
+    "crystal_crack": {
+      "source": "crystal_glassbreak4.wav",
+      "start": 0.0,
+      "end": 0.3,
+      "output_sha256": "8811154c8a86b323ed707d32accd44b383d6c485efa8d992ded8e09e51fc75c3",
+      "changes": "Excerpt 0.000000-0.300000 s; 3 ms fade-in, 20 ms fade-out; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering."
     }
   }
 }

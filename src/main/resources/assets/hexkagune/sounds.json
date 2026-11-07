@@ -384,19 +384,16 @@
     "subtitle": "subtitles.hexkagune.sfx.crystal_form",
     "sounds": [
       {
-        "name": "hexkagune:sfx/combat/spike_throws/steel_spike",
-        "volume": 0.1412,
-        "pitch": 1.7
+        "name": "hexkagune:sfx/recorded/crystal_clink_1",
+        "volume": 0.0645
       },
       {
-        "name": "hexkagune:sfx/combat/spike_throws/needle_flick",
-        "volume": 0.16,
-        "pitch": 1.5
+        "name": "hexkagune:sfx/recorded/crystal_clink_2",
+        "volume": 0.1135
       },
       {
-        "name": "hexkagune:sfx/combat/spike_throws/spinning_spike",
-        "volume": 0.16,
-        "pitch": 1.6
+        "name": "hexkagune:sfx/recorded/crystal_crack",
+        "volume": 0.0638
       }
     ]
   },
@@ -404,24 +401,16 @@
     "subtitle": "subtitles.hexkagune.sfx.shatter",
     "sounds": [
       {
-        "name": "hexkagune:sfx/combat/spike_throws/needle_flick",
-        "volume": 0.16,
-        "pitch": 1.9
+        "name": "hexkagune:sfx/recorded/crystal_shatter_1",
+        "volume": 0.138
       },
       {
-        "name": "hexkagune:sfx/combat/spike_throws/fast_dart",
-        "volume": 0.16,
-        "pitch": 1.8
+        "name": "hexkagune:sfx/recorded/crystal_shatter_2",
+        "volume": 0.0295
       },
       {
-        "name": "hexkagune:sfx/combat/spike_throws/steel_spike",
-        "volume": 0.1412,
-        "pitch": 1.95
-      },
-      {
-        "name": "hexkagune:sfx/combat/spike_throws/razor_volley",
-        "volume": 0.16,
-        "pitch": 1.6
+        "name": "hexkagune:sfx/recorded/crystal_shatter_3",
+        "volume": 0.1161
       }
     ]
   },
@@ -429,19 +418,16 @@
     "subtitle": "subtitles.hexkagune.sfx.crystal_hit",
     "sounds": [
       {
-        "name": "hexkagune:sfx/combat/spike_throws/needle_flick",
-        "volume": 0.1358,
-        "pitch": 1.6
+        "name": "hexkagune:sfx/recorded/crystal_clink_1",
+        "volume": 0.0516
       },
       {
-        "name": "hexkagune:sfx/combat/spike_throws/steel_spike",
-        "volume": 0.113,
-        "pitch": 1.8
+        "name": "hexkagune:sfx/recorded/crystal_clink_2",
+        "volume": 0.0908
       },
       {
-        "name": "hexkagune:sfx/combat/spike_throws/fast_dart",
-        "volume": 0.156,
-        "pitch": 1.7
+        "name": "hexkagune:sfx/recorded/crystal_crack",
+        "volume": 0.051
       }
     ]
   },

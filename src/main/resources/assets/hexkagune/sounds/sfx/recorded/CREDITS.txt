@@ -180,3 +180,39 @@ Licence: CC0-1.0
 Original: https://freesound.org/people/qubodup/sounds/816237/
 GitHub recording: https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/816237__qubodup__crunch.wav
 Excerpt 0.000000-0.390000 s; 3 ms fade-in, 20 ms fade-out; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering.
+
+crystal_shatter_1.ogg: Glass Break (WilhelmSFX CC0 mirror) by avrahamy
+Licence: CC0-1.0
+Original: https://freesound.org/people/avrahamy/sounds/141563/
+GitHub recording: https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/141563__avrahamy__glass-break.wav
+Excerpt 0.180000-1.780000 s; 3 ms fade-in, 20 ms fade-out; level raised 6 dB; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering.
+
+crystal_shatter_2.ogg: Breaking Mirror (WilhelmSFX CC0 mirror) by LazyLids
+Licence: CC0-1.0
+Original: https://freesound.org/people/LazyLids/sounds/369070/
+GitHub recording: https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/369070__lazylids__breaking_mirror.wav
+Excerpt 0.420000-1.980000 s; 3 ms fade-in, 20 ms fade-out; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering.
+
+crystal_shatter_3.ogg: Glass Break 4 (WilhelmSFX CC0 mirror) by mccormick_iain
+Licence: CC0-1.0
+Original: https://freesound.org/people/mccormick_iain/sounds/371091/
+GitHub recording: https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/371091__mccormick_iain__glass-break-4.wav
+Excerpt 0.000000-1.050000 s; 3 ms fade-in, 20 ms fade-out; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering.
+
+crystal_clink_1.ogg: Glasses Clinking (WilhelmSFX CC0 mirror) by waheegle
+Licence: CC0-1.0
+Original: https://freesound.org/people/waheegle/sounds/738633/
+GitHub recording: https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/738633__waheegle__glasses-clinking.wav
+Excerpt 0.420000-0.980000 s; 3 ms fade-in, 20 ms fade-out; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering.
+
+crystal_clink_2.ogg: Clink2 (WilhelmSFX CC0 mirror) by BMacZero
+Licence: CC0-1.0
+Original: https://freesound.org/people/BMacZero/sounds/96135/
+GitHub recording: https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/96135__bmaczero__clink2.wav
+Excerpt 0.000000-0.250000 s; 3 ms fade-in, 20 ms fade-out; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering.
+
+crystal_crack.ogg: Glass Break 4 (WilhelmSFX CC0 mirror) by mccormick_iain
+Licence: CC0-1.0
+Original: https://freesound.org/people/mccormick_iain/sounds/371091/
+GitHub recording: https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/371091__mccormick_iain__glass-break-4.wav
+Excerpt 0.000000-0.300000 s; 3 ms fade-in, 20 ms fade-out; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering.

@@ -1,4 +1,16 @@
-# START HERE (state after 3.3.4)
+# START HERE (state after 3.3.5)
+
+Still to do, in this order (each its own version): the rest of 3.2.2's list (a jealous animation, reconciliation talks, temper-aware door scenes, homecomings without a home, siblings, companion-child door talk, kids greeting you after days away). The owner, this session: "push an update asap": every version is pushed as it is built (the branch's release workflow publishes v<version> on GitHub).
+
+The owner on 3.3.3: "Get the sounds from the web, don't generate them yourself." 3.2.6's crystal pools were pitched-up steel/needle sounds; replaced.
+
+- 6 clips from 5 CC0 freesound recordings via the WilhelmSFX mirror (glass break by avrahamy +6 dB, breaking mirror by LazyLids, glass break 4 by mccormick_iain, glasses clinking by waheegle, clink2 by BMacZero; `crystal_shatter_1..3`, `crystal_clink_1..2`, `crystal_crack`), in `tools/sfx_recordings.json`, imported with `--import-recordings <dir> --only ...` (every earlier clip byte for byte).
+- `sfx_pack.py`: `crystal_form` and `crystal_hit` = clink_1, clink_2, crack; `shatter` = shatter_1..3; no pitch. Regenerated sounds.json: only those three pools changed; played mean loudness checked against 3.2.6's (the same, the shatters up to 4 dB louder).
+- Tests: SfxTests crystal checks rewritten (no pitch or spike_throws, real credited recordings, no punch or bone).
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 92. Not tested in game.
+
+# State after 3.3.4
 
 Still to do, in this order (each its own version): replace 3.2.6's pitched crystal sounds with real glass/crystal recordings from the web (the owner on 3.3.3: "Get the sounds from the web, don't generate them yourself"); then the rest of 3.2.2's list (a jealous animation, reconciliation talks, temper-aware door scenes, homecomings without a home, siblings, companion-child door talk, kids greeting you after days away).
 
