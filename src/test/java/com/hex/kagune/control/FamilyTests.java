@@ -900,6 +900,29 @@ check(com.hex.kagune.control.graft.GraftStage.TRANSPLANT.limbs(com.hex.kagune.co
         }
         check(com.hex.kagune.control.family.DoorTalk.AFTER > 0L && com.hex.kagune.control.family.DoorTalk.WAITS > com.hex.kagune.control.family.DoorTalk.AFTER,
             "the door talk waits for the player's scene, and not forever");
+        // 3.4.2 (the owner's list: kids greeting you after days away): by temper and age, more after a week; kept with the player.
+        check(com.hex.kagune.control.family.KidGreeting.days(Long.MIN_VALUE, 99999999L) == 0L
+            && com.hex.kagune.control.family.KidGreeting.days(0L, 2L * com.hex.kagune.control.family.KidGreeting.DAY) == 2L
+            && !com.hex.kagune.control.family.KidGreeting.greets(1L) && com.hex.kagune.control.family.KidGreeting.greets(2L), "two days away, or more, is a greeting");
+        check(com.hex.kagune.control.family.KidGreeting.key("lzx4k9q2ab").equals("kid_lzx4k9q2ab")
+            && com.hex.kagune.control.family.KidGreeting.key("A-very-long-child-id-0123456789").length() <= 24
+            && com.hex.kagune.control.family.KidGreeting.key("A-very-long-child-id-0123456789").matches("[a-z0-9_]+"), "kept under a word the NPC memory takes");
+        for (com.hex.kagune.control.family.ChildStage stage : com.hex.kagune.control.family.ChildStage.values()) {
+            for (com.hex.kagune.control.family.ChildTemper temper : com.hex.kagune.control.family.ChildTemper.values()) {
+                java.util.Set<String> said = new java.util.HashSet<>();
+                for (long days : new long[] {2L, 4L, 7L, 30L}) {
+                    for (int seed = 0; seed < 3; seed++) {
+                        String line = com.hex.kagune.control.family.KidGreeting.line(temper, stage, days, "Papa", seed);
+                        said.add(line);
+                        check(!line.contains("{") && !line.startsWith("*runs to"), "a " + temper + " " + stage + " greets you after " + days + " days: " + line);
+                    }
+                }
+                check(said.size() >= 3, "a " + temper + " " + stage + " has more than one way to greet you, and more after a week");
+            }
+        }
+        check(com.hex.kagune.control.family.KidGreeting.line(com.hex.kagune.control.family.ChildTemper.SERIOUS, com.hex.kagune.control.family.ChildStage.TEEN, 9L,
+            "Mama", 0).contains("nine"), "a serious one counted the days");
+        check(com.hex.kagune.control.family.KidGreeting.STAMP < com.hex.kagune.control.family.KidGreeting.DAY, "it notes them often enough to tell days");
         // 3.3.9: with no family home, the place it lives is home: past its leash there (8) and its play round it (4) before it is out.
         check(com.hex.kagune.control.family.Homecoming.NO_HOUSE >= 12.0, "a child with no home is out only past its leash and its play");
         check(com.hex.kagune.control.family.Homecoming.fresh(0L) && com.hex.kagune.control.family.Homecoming.fresh(com.hex.kagune.control.family.Homecoming.LASTS - 1L)

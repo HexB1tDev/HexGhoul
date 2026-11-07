@@ -64,6 +64,9 @@ public final class ChildBrain {
         UUID tuckBy;
         /** 1.3.21: the food it is given (eaten through its FEED moment). */
         net.minecraft.world.item.ItemStack food;
+        /** 3.4.2: whether it has looked, since a parent came near, at how long they were away (days: KidGreeting); when it last noted them. */
+        boolean awayChecked;
+        long seenStamp = Long.MIN_VALUE;
         /** 1.3.29: when a parent came back after a long while away (it missed them), or never. */
         long reunited = Long.MIN_VALUE;
         /** 1.3.43: its kagune in a fight (ChildKagune): out or not, its lash, its volley, its shots in flight. */
@@ -1046,6 +1049,7 @@ public final class ChildBrain {
             if (mind.parentAway == Long.MIN_VALUE) {
                 mind.parentAway = now;
             }
+            mind.awayChecked = false;
             return;
         }
         mind.company = now;
@@ -1054,6 +1058,26 @@ public final class ChildBrain {
         }
         int seed = npc.m_217043_().m_188503_(1000);
         String call = ChildLines.call(stage, isMother(child, parent));
+        // 3.4.2 (the owner's list: kids greeting you after days away): when it last saw them is kept with the player, so it outlasts this mind
+        // (gone while it was unloaded, with them far off); days away, it greets them by its temper, and runs in for its hug.
+        if (!mind.awayChecked || now - mind.seenStamp >= com.hex.kagune.control.family.KidGreeting.STAMP) {
+            String key = com.hex.kagune.control.family.KidGreeting.key(child.id);
+            long seen = NpcMemoryServer.of(parent).get(key, com.hex.kagune.control.npc.NpcMemory.SEEN, Long.MIN_VALUE);
+            boolean arriving = !mind.awayChecked;
+            mind.awayChecked = true;
+            mind.seenStamp = now;
+            NpcMemoryServer.set(parent, key, com.hex.kagune.control.npc.NpcMemory.SEEN, now);
+            long days = com.hex.kagune.control.family.KidGreeting.days(seen, now);
+            if (arriving && com.hex.kagune.control.family.KidGreeting.greets(days)) {
+                mind.reunited = now;
+                mind.parentAway = Long.MIN_VALUE;
+                say(parent, npc, child, com.hex.kagune.control.family.KidGreeting.line(com.hex.kagune.control.family.ChildTemper.of(child.id, child.mother, child.father), stage, days, call,
+                    seed));
+                mind.nextLine = now + 600L + npc.m_217043_().m_188503_(900);
+                welcome(npc, mind, parent, now);
+                return;
+            }
+        }
         if (mind.parentAway != Long.MIN_VALUE && now - mind.parentAway >= 6000L) {
             mind.reunited = now; // 1.3.29: away a long while: it missed them
         }

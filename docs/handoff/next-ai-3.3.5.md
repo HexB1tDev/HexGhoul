@@ -1,8 +1,8 @@
-# HANDOFF: HexGhoul after 3.4.1 (kept current as versions ship). Read this first.
+# HANDOFF: HexGhoul after 3.4.2 (kept current as versions ship). Read this first.
 
 Then, for the house rules and history: `docs/handoff/next-ai-3.2.1.md` and `docs/handoff/next-ai-3.1.9.md` (the two sessions before,
 their judgment calls), `docs/handoff/next-ai-2.0.45.md` (header: versions, protocol history, the 2.x/3.x log), `docs/handoff/next-ai-1.3.60.md`
-(the owner's house rules in full), and the top sections of `docs/handoff/companions-handoff.md` (one per version, newest first: 3.2.7 to 3.3.5
+(the owner's house rules in full), and the top sections of `docs/handoff/companions-handoff.md` (one per version, newest first: 3.2.7 to 3.4.2
 are this session's, with file-level detail).
 
 Note on the session before this one (3.2.2 to 3.2.6, branch `claude/magical-fermi-cec8n1`): it wrote a handoff at 3.2.1 and then went on
@@ -11,13 +11,13 @@ lost. **Commit and push every version as it is built, and keep this file current
 
 ## Where things are
 
-- **Branch:** **`claude/exciting-bell-3kklnc`** (pushed; 3.2.7 to 3.4.1 on top of 3.2.6 from `claude/magical-fermi-cec8n1`). The next session
+- **Branch:** **`claude/exciting-bell-3kklnc`** (pushed; 3.2.7 to 3.4.2 on top of 3.2.6 from `claude/magical-fermi-cec8n1`). The next session
   will be given its own branch: start it from `origin/claude/exciting-bell-3kklnc`
   (`git fetch origin claude/exciting-bell-3kklnc && git checkout -B <your-branch> origin/claude/exciting-bell-3kklnc`). Push only to the
   branch you are given; never to `main`; no PR unless asked.
 - **Releases:** `.github/workflows/release.yml` publishes `v<version>` on GitHub for every push to `claude/**` that adds
   `.github/release-notes-<version>.md` (about 5 minutes). The owner plays those. When they say "push an update", push what is built.
-- **Version 3.4.1** in `build.py` and `patch/KagunePatch.java`. **The next is 3.4.2** (the last number never reaches 10). **Protocol "93"** (3.3.6: EtoGesture JEALOUS appended).
+- **Version 3.4.2** in `build.py` and `patch/KagunePatch.java`. **The next is 3.4.3** (the last number never reaches 10). **Protocol "93"** (3.3.6: EtoGesture JEALOUS appended).
 - Full `python3 build.py` ended **EXIT 0** for every version (javac `--release 17` on JDK 21; about 5 minutes; run it in the background).
   **Nothing is tested in game. Never claim it is.**
 - The quick loop: `python3 tools/quick_check.py [--noverify] KingTests UkakuTests ...` (needs one full `build.py` first). It does **not**
@@ -42,6 +42,7 @@ lost. **Commit and push every version as it is built, and keep this file current
 | 3.3.9 | Homecomings without a home: the place a child lives counts (16 blocks); house-and-door homecoming scenes wait on `home`; new `!home` scenes (4 per companion, 7 for children). | `ChildBrain` home check, `Homecoming.NO_HOUSE`, `talk/*.txt`, SceneTests `HOUSE` |
 | 3.4.0 | Siblings at home react to the one brought back (the big one covers, the little one tells, "where WERE you?", left behind) and it answers, by temper and age. | `family/SiblingWelcome`, `HomecomingServer.siblings` |
 | 3.4.1 | After the player's door card, the companion and the child brought home talk in four turns (parent, child by temper, parent's answer, child's last word); a baby: the parent alone. | `family/DoorTalk`, `HomecomingServer.doorTalk` (a `Conversation`) |
+| 3.4.2 | Kids greet you after days away (2+ game days; more after a week), by temper and age; the last sight is kept in the player's NpcMemory so it outlasts an unloaded child. | `family/KidGreeting`, `ChildBrain.lines` |
 
 Previews (off-game, looked at honestly): `docs/handoff/peace-aegis-3.2.7.png`, `war-spire-first-person-3.2.8.png`, `ukaku-vortex-3.2.9.png`,
 `dawn-idle-3.3.2.png`, `jealous-3.3.6.png`. Tools: `tools/art-preview.sh <out> aegis|spire-fp|vortex`, `tools/QuinquePreview.java <out> dawn idle`.
@@ -62,7 +63,7 @@ Previews (off-game, looked at honestly): `docs/handoff/peace-aegis-3.2.7.png`, `
   synthesis: fetch real recordings (see below).
 - **"push an update asap"**: push each version the moment it builds.
 
-## Still open (do these next, each its own version; the owner's 3.2.2 list, what is left of it)
+## The owner's 3.2.2 list (all done by 3.4.2)
 
 From the owner's message after 3.2.1 (nine asks; 3.2.2 did "one at a time", break-up/divorce was replaced by 3.3.4):
 
@@ -72,7 +73,9 @@ From the owner's message after 3.2.1 (nine asks; 3.2.2 did "one at a time", brea
 4. ~~Homecomings without a home~~ (done: 3.3.9).
 5. ~~Siblings~~ (done: 3.4.0).
 6. ~~Companion-child door talk~~ (done: 3.4.1).
-7. **Kids greeting you after days away** (the child greeting the player who comes home after days away, by temper).
+7. ~~Kids greeting you after days away~~ (done: 3.4.2).
+
+**The list is done.** Nothing is queued: ask the owner what to do next (and whether the judgment calls below are right).
 
 Family/scene system notes are in `next-ai-3.1.9.md` and `next-ai-3.2.1.md` (scenes are data: `talk/*.txt`, `SceneBook`, `SceneWords`,
 validated by SceneTests).
@@ -91,6 +94,7 @@ validated by SceneTests).
   aside at ease instead; "hand on hip" is the left arm angled out.
 - **3.3.3 / 3.3.5:** which recordings: chosen by name and measured loudness, **never heard** (no audio here). freesound.org is blocked, so
   each sound's own page couldn't be re-checked: CC0 per the WilhelmSFX mirror's licence. Ask which sound wrong.
+- **3.4.2:** two game days to count, a week for the longer greeting; a save from before has no record (no greeting the first time).
 - **3.4.1:** the parent's answer by four temper groups; the talk is let go if it can't start within a minute.
 - **3.4.0:** which temper covers, asks or tells (my map); speech bubbles, nobody walks over.
 - **3.3.9:** a child put down elsewhere settles there, so that becomes the place it lives; the 16 blocks.
@@ -110,6 +114,11 @@ validated by SceneTests).
 - Dawn's idle starting after 1.5 s still and stopping on any move.
 - The Dragon's voice (volume, how often it roars: every 5.5 s) and the crystal sounds.
 - A second partner refused everywhere; killing Eto/Touka/Ken keeping the marriage.
+- 3.3.6: the jealous act (the turn, the glare's reach, how often the sulk replays: 1 in 5 checks every 100 ticks).
+- 3.3.7: "Can we talk about it?" on a cross companion's page; "Can we talk about earlier?" beside "It's only you.".
+- 3.3.8 / 3.3.9: which door scene comes up (temper, age, the old ones); homecomings with no house (16 blocks round where the child lives).
+- 3.4.0 / 3.4.1: siblings' bubbles after the child's call-out; the door talk starting once the card is done (the child must not be carried).
+- 3.4.2: the greeting after two in-game days away, and the hug after it.
 
 ## How to get sounds (the owner's rule: real recordings from the web)
 

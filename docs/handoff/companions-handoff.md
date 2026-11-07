@@ -1,4 +1,21 @@
-# START HERE (state after 3.4.1)
+# START HERE (state after 3.4.2)
+
+The owner's 3.2.2 list is done (3.2.2 to 3.4.2; break-up/divorce replaced by 3.3.4's one-partner rule). Nothing queued: ask the owner what next. The owner: "push an update asap": every version is pushed as it is built.
+
+From the owner's 3.2.2 list: kids greeting you after days away (`next-ai-3.2.1.md` "what to deepen next" 4: by temper).
+
+- Pure `family/KidGreeting`:
+  - `DAYS` 2, `LONG` 7, `STAMP` 1200, `DAY` 24000.
+  - `key(childId)` is `kid_<id>`: a word NpcMemory accepts, at most 24 characters.
+  - `days(seen, now)`, `greets(days)`.
+  - `line(temper, stage, days, call, seed)`: keys `baby`, `little` or temper, then `days` or `long`; `{days}` in words.
+- `ChildBrain.lines`, with a parent within 8 blocks: on arriving (`mind.awayChecked` false, reset whenever no parent is near), and every `STAMP` while near, it reads and then stamps the player's `NpcMemory` (`kid_<id>`, `SEEN`). On arriving after `DAYS` or more, it sets `reunited` (the MISSED mood), says `KidGreeting.line` and runs in (`welcome`), instead of the old one-minute `ChildLines.greet`.
+- Tests: FamilyTests (days, key, every temper x stage has 3 or more greetings across 2/4/7/30 days, the serious one counts).
+- **Judgment calls:** 2 days and a week; a save from before has no record (no greeting the first time).
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 93. Not tested in game.
+
+# State after 3.4.1
 
 Still to do, in this order (each its own version): the last of 3.2.2's list (kids greeting you after days away). The owner: "push an update asap": every version is pushed as it is built.
 
