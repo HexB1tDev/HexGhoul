@@ -327,7 +327,11 @@ public final class HumanTalk {
             case SAY_5, SAY_6 -> line = confess(player, human, temper, key, bond, choice == NpcTalk.Choice.SAY_6, day, roll);
             case SAY_7 -> {
                 HumanPersona.Attraction attraction = attraction(human);
-                if (HumanPersona.attracted(attraction, female(player))) {
+                if (Vows.partnerElsewhere(player.m_284548_(), player, key) != null) {
+                    // 3.3.4 (the owner: one partner, no matter what): spoken for already. No, and no asking again.
+                    line = TAKEN[Math.floorMod(roll, TAKEN.length)];
+                    turnedDown = true;
+                } else if (HumanPersona.attracted(attraction, female(player))) {
                     line = HumanPersona.yes(temper, roll);
                     QuestServer.bond(player, key, bond.with(HumanPersona.PARTNER, true));
                     player.m_5661_(Component.m_237113_("\u00a7d" + HumanBrain.name(human) + " and you are together now."), false);
@@ -602,6 +606,13 @@ public final class HumanTalk {
             S2CNpcTalk.HUMAN_FACE, line, ordinals, labels));
     }
 
+    /** 3.3.4: asked to be together while already someone else's (one partner, whoever it is). */
+    static final String[] TAKEN = {
+        "You're already with someone. I won't be the other one. ...I'm flattered, though.",
+        "No. You belong to someone. I know how that ends, and it's never well for the one asking.",
+        "You've got someone waiting at home. Go home to them.",
+        "I like you. Not enough to be a secret."};
+
     /** 2.3.4: a ring offered to a partner: married (the ring taken), one spouse at a time (no companion already). */
     private static void propose(ServerPlayer player, HumanNpc human, HumanPersona.Temper temper, String key, QuestLog.Bond bond, int roll, long now) {
         ServerLevel level = player.m_284548_();
@@ -609,7 +620,7 @@ public final class HumanTalk {
             sweet(player, human, com.hex.kagune.control.village.HumanRomance.loved(temper, roll));
             return;
         }
-        if (UniqueNpcs.spouseOf(level, player, null) != null) {
+        if (Vows.marriedElsewhere(level, player, key)) { // 3.3.4: a companion or another villager
             sweet(player, human, "You're already married. ...To someone else. I'm not doing that.");
             return;
         }

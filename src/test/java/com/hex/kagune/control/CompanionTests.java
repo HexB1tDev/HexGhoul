@@ -97,6 +97,7 @@ public final class CompanionTests {
         talk();
         courtship();
         proofs();
+        oneSpouse();
         tolerance();
         moods();
         moodKisses();
@@ -571,6 +572,28 @@ public final class CompanionTests {
             return (String)teach.invoke(words, lesson, null);
         } catch (ReflectiveOperationException failure) {
             throw new IllegalStateException(failure);
+        }
+    }
+
+    /**
+     * 3.3.4 (the owner: "you can only have one wife, no matter what ... There's no divorce button ... The only way you can remarry is if
+     * you kill them. But if it's an official NPC like Toka, Ken, or Ito, there's no way to unmarry"): nobody new while you have a partner;
+     * a companion's death never ends it, a villager's does; asked while someone else's, each companion says no in their own words.
+     */
+    static void oneSpouse() {
+        check(!Romance.mayDate(false, true) && !Romance.mayDate(true, false) && Romance.mayDate(false, false),
+            "nobody new while you have a partner anywhere, dating or married");
+        check(!Romance.endsWithDeath(true) && Romance.endsWithDeath(false), "a companion's death never ends it; a villager's does");
+        check(Romance.villagerKey("123e4567-e89b-12d3-a456-426614174000") && !Romance.villagerKey("eto")
+            && !Romance.villagerKey("touka") && !Romance.villagerKey("ken")
+            && !Romance.villagerKey(null), "a villager's bond is its id; a companion's is her name");
+        for (Persona p : new Persona[] {Persona.of("eto"), Persona.TOUKA, Persona.KEN}) {
+            EtoTalk.Context taken = new EtoTalk.Context(80, 0, 0, true, false, false, true, true, null, true, false, 7, Romance.Stage.NONE, null, false,
+                6000L, EtoMood.HAPPY, 0L, 0L, "wolf", true, true, true, EtoRules.Pact.NONE, 0, false, false, "Sam", true,
+                com.hex.kagune.control.family.FamilyView.NONE, Teaching.View.NONE, true);
+            EtoTalk.Reply no = p.script().answer(taken, NpcTalk.Choice.ASK_OUT);
+            check(!taken.mayDate() && no.effect() != EtoTalk.Effect.DATE && !no.line().isBlank() && !no.line().contains("married"),
+                p.key() + ": asked out by someone already someone else's: no (" + no.line() + ")");
         }
     }
 

@@ -3,8 +3,10 @@ package com.hex.kagune.control.npc;
 /**
  * 1.3.2: love with the one-of-a-kind NPCs (pure, tested), the same for every one of them (Eto first; any NPC made later uses it as
  * it is). An NPC has at most one partner in the whole world: dating, then married with a ring. An additional wedding never erases
- * an existing marriage. Once
- * begun it is for good, no breaking up, no divorce; only the partner killing the NPC ends it. A partner is never fought back (the NPC
+ * an existing marriage. Once begun it is for good, no breaking up, no divorce. 3.3.4 (the owner: "you can only have one wife, no
+ * matter what ... if it's an official NPC like Toka, Ken, or Ito, there's no way to unmarry ... You guys are stuck forever"): a player
+ * has one partner too ({@code server.Vows}), and not even killing a companion ends it ({@link #endsWithDeath}); only a villager
+ * partner's death frees them. A partner is never fought back (the NPC
  * is hurt, cross, and sulks instead), and gets the NPC's warm talk; every other player gets the cold, claimed one. Love for another
  * NPC behind a partner's back makes the partner jealous ({@link #jealousy}).
  */
@@ -86,9 +88,25 @@ public final class Romance {
         return regard < PROPOSE_REGARD ? Refusal.NOT_CLOSE : null;
     }
 
-    /** True if a player may begin dating an NPC: it has no partner and they are married to no one else. */
-    public static boolean mayDate(boolean claimed, boolean spouseElsewhere) {
-        return !claimed && !spouseElsewhere;
+    /**
+     * True if a player may begin dating an NPC: it has no partner and they have no other (3.3.4: {@code partnerElsewhere}, dating or
+     * married, a companion or a villager: one partner at a time).
+     */
+    public static boolean mayDate(boolean claimed, boolean partnerElsewhere) {
+        return !claimed && !partnerElsewhere;
+    }
+
+    /**
+     * 3.3.4: whether a partner's death ends what they had: a villager's does (the only way to marry again); a companion's ({@code official}:
+     * Eto, Touka, Ken) never does: she comes back, still theirs.
+     */
+    public static boolean endsWithDeath(boolean official) {
+        return !official;
+    }
+
+    /** 3.3.4: whether a bond's key is a villager's (its id); the companions' are their names. */
+    public static boolean villagerKey(String key) {
+        return key != null && key.length() == 36 && key.charAt(8) == '-' && key.charAt(13) == '-';
     }
 
     /** What a partner loses for love shown to another NPC: {@code seen} with their own eyes, {@code stage} theirs. */

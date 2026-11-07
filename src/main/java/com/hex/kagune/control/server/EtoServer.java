@@ -910,7 +910,9 @@ public final class EtoServer {
     private static void propose(ServerPlayer player, EtoNpc npc, EtoTalk.Context c) {
         ServerLevel level = player.m_284548_();
         long now = level.m_46467_();
-        Romance.Refusal refusal = Romance.propose(c.stage(), c.claimed(), c.spouseElsewhere(), c.daysTogether(), c.regard());
+        // 3.3.4: married to anyone else (a companion or a villager): no ring.
+        Romance.Refusal refusal = Romance.propose(c.stage(), c.claimed(), Vows.marriedElsewhere(level, player, npc.persona().key()), c.daysTogether(),
+            c.regard());
         if (refusal == null && !hasRing(player)) {
             show(player, npc, c, npc.persona().script().sweet(c, "A ring? Where? ...Don't tease me like that."), Kind.SWEET);
             return;
@@ -1131,7 +1133,7 @@ public final class EtoServer {
             puppy == null ? null : kind(puppy), hasRing(player), ControlItems.ghoulMeat(player.m_21205_()) || ControlItems.ghoulMeat(player.m_21206_()),
             holds(player, EtoRules::letter), pact, (int)memory.get(npc.persona().key(), NpcMemory.TRIAL_COUNT, 0L), trialDone,
             memory.get(npc.persona().key(), NpcMemory.NIGHT_DAY, -1L) == day, player.m_36316_().getName(),
-            UniqueNpcs.spouseOf(level, player, npc.persona().key()) != null, family(level, player, memory, persona), teaching,
+            Vows.partnerElsewhere(level, player, npc.persona().key()) != null, family(level, player, memory, persona), teaching, // 3.3.4
             persona.female() != com.hex.kagune.control.Genders.female(player), held(player, persona.key(), bond));
     }
 
@@ -1381,12 +1383,17 @@ public final class EtoServer {
             String key = npc.persona().key();
             ServerLevel level = killer.m_284548_();
             UniqueNpc unique = UniqueNpcs.get(level, key);
-            if (unique.stageOf(killer.m_20148_()).together()) {
+            if (unique.stageOf(killer.m_20148_()).together() && Romance.endsWithDeath(true)) {
                 // Their partner killed them: whatever they had is over, for good.
                 UniqueNpcs.pair(level, key, null, Romance.Stage.NONE);
                 NpcMemoryServer.of(killer).forget(key, NpcMemory.SINCE).forget(key, NpcMemory.WED);
                 NpcMemoryServer.save(killer);
                 killer.m_5661_(Component.m_237113_("\u00a74You killed " + npc.persona().her() + ". Whatever you had is over."), false);
+            } else if (unique.stageOf(killer.m_20148_()).together()) {
+                // 3.3.4 (the owner: "if it's an official NPC like Toka, Ken, or Ito, there's no way to unmarry ... You guys are stuck forever"):
+                // not even this ends it. She comes back, and she is still theirs.
+                killer.m_5661_(Component.m_237113_("\u00a74You killed " + npc.persona().her() + ". ..." + Character.toUpperCase(npc.persona().she().charAt(0))
+                    + npc.persona().she().substring(1) + "'ll come back. You're still bound to " + npc.persona().her() + ". That doesn't end."), false);
             }
             QuestServer.bond(killer, key, EtoRules.killedBy(QuestServer.bond(killer, key)));
             killer.m_5661_(Component.m_237113_(npc.displayName() + " will remember this."), true);

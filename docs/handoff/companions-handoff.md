@@ -1,4 +1,19 @@
-# START HERE (state after 3.3.3)
+# START HERE (state after 3.3.4)
+
+Still to do, in this order (each its own version): replace 3.2.6's pitched crystal sounds with real glass/crystal recordings from the web (the owner on 3.3.3: "Get the sounds from the web, don't generate them yourself"); then the rest of 3.2.2's list (a jealous animation, reconciliation talks, temper-aware door scenes, homecomings without a home, siblings, companion-child door talk, kids greeting you after days away).
+
+The owner (asked about break-ups/divorce this session): "From now on, you can only have one wife, no matter what ... There's no divorce button. No anything. When you're married to them, that's it. The only way you can remarry is if you kill them. But if it's an official NPC like Toka, Ken, or Ito, there's no way to unmarry or to anything. You guys are stuck forever." Break-up/divorce is dropped for good.
+
+- Before: `EtoTalk.Context.spouseElsewhere` was `UniqueNpcs.spouseOf` (married to another companion only), so dating several companions was allowed and villager partners never counted; `EtoServer.died` ended a companion romance when its partner killed her.
+- `Romance.mayDate(claimed, partnerElsewhere)` (same logic, the second argument broadened); `Romance.endsWithDeath(official)` (false for companions); `Romance.villagerKey(key)` (a villager's bond key is its UUID).
+- Server `Vows` (new, `@Mod.EventBusSubscriber`): `partnerElsewhere(level, player, except)` (any companion `UniqueNpcs.partnersOf`, or any villager bond with `HumanPersona.PARTNER`), `marriedElsewhere` (`UniqueNpcs.spouseOf` or a villager bond with `MARRIED`), `died(LivingDeathEvent)` (a `HumanNpc`: every partner online in its level loses PARTNER and MARRIED, told so).
+- `EtoServer`: the context's `spouseElsewhere` is now `Vows.partnerElsewhere(...) != null`; `propose` refuses on `Vows.marriedElsewhere` (so an old save dating two can still marry one); `died`: a partner killing a companion keeps it ("You're still bound to her"). `HumanTalk`: SAY_7 (be together) refused with `TAKEN` lines when `Vows.partnerElsewhere`; `propose` refused on `Vows.marriedElsewhere`. Eto's/Touka's/Ken's ASK_OUT refusal lines no longer say "married".
+- Tests: CompanionTests `oneSpouse()`.
+- **Judgment calls:** a villager partner's death frees you whoever killed it (the owner said "if you kill them"; a spouse killed by a zombie leaving you bound to no one forever seemed wrong): ask. Only partners online in its world when it dies are freed (bonds are kept with the player). Old saves keep extra partners.
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 92. Not tested in game.
+
+# State after 3.3.3
 
 Still to do, in this order (each its own version): the one-spouse rule (the owner, asked this session, replacing break-up/divorce: "you can only have one wife, no matter what ... There's no divorce button ... The only way you can remarry is if you kill them. But if it's an official NPC like Toka, Ken, or Ito, there's no way to unmarry ... You guys are stuck forever."); then the rest of 3.2.2's list (a jealous animation, reconciliation talks, temper-aware door scenes, homecomings without a home, siblings, companion-child door talk, kids greeting you after days away).
 

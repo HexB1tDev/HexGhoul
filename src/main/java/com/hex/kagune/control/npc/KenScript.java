@@ -118,7 +118,7 @@ final class KenScript extends CompanionScript {
                 "That's everything. ...Was there something you wanted to ask me? I'll listen. I'm good at listening.",
                 "You don't need to do anything for me. Just be here.",
                 "{partner} takes care of me. But thank you.", "You're married. Go home to them. Please.");
-            case ASK_OUT -> !c.mixed() ? r("...I'm flattered. Really. But not like that. Friends? I don't have many.", 0) : !c.mayDate() ? r(c.claimed() ? EtoLines.fill(c, "I'm {partner}'s. I'm sorry.") : "You're married. I can't.", 0)
+            case ASK_OUT -> !c.mixed() ? r("...I'm flattered. Really. But not like that. Friends? I don't have many.", 0) : !c.mayDate() ? r(c.claimed() ? EtoLines.fill(c, "I'm {partner}'s. I'm sorry.") : "You're with someone. I can't do that to them. ...Or to you.", 0)
                 : c.step() == EtoRules.Step.ASK ? new EtoTalk.Reply("...Me? You want... me? Even knowing what I am? ...Yes. Yes, I'd like that. "
                     + "Very much.", 0, EtoTalk.Effect.DATE, EtoGesture.BOW)
                 : r("Ask me what?", 0);

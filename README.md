@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.3.4 (HexGhoul): One partner, for good (testing)
+
+See `.github/release-notes-3.3.4.md`. The owner's rule: one partner, no break-up, no divorce. While you have a partner (dating or married, Eto, Touka, Ken or a villager) nobody else will start anything with you, and no ring while you're married. Killing Eto, Touka or Ken no longer ends it: they come back, still yours. A villager partner's death is the only thing that frees you. Old saves keep the partners they have. Not tested in game.
+
 ## 3.3.3 (HexGhoul): The Dragon has a voice: real recordings from the web (testing)
 
 See `.github/release-notes-3.3.3.md`. The Kakuja V2 Dragon only played the pack's quiet sounds (3-37% volume) and breathed once every 3.5 s: from the camera, silence. Now 14 real CC0 recordings from freesound (via the WilhelmSFX mirror), as recorded, at full volume: roars as it breaks out and every few seconds, a death cry as it shatters, its crawl (a growl-chitter and heavy stomps), earthquake crashes, crunching bites, its body cracking apart. Credited in sfx/recorded/CREDITS.txt. Not tested in game (and not listened to: tell me which sounds wrong).

@@ -115,7 +115,7 @@ final class ToukaScript extends CompanionScript {
                 "That's everything. ...Was there something you wanted to say? Say it before I change my mind.",
                 "You don't have to do chores for me anymore. Just... come by.",
                 "I don't need anything. {partner} takes care of it.", "Go home to your spouse, idiot.");
-            case ASK_OUT -> !c.mayDate() ? r(c.claimed() ? EtoLines.fill(c, "I'm {partner}'s. Are you deaf?") : "You're married. Go home.", 0)
+            case ASK_OUT -> !c.mayDate() ? r(c.claimed() ? EtoLines.fill(c, "I'm {partner}'s. Are you deaf?") : "You're taken. Go home to them.", 0)
                 : c.step() == EtoRules.Step.ASK ? new EtoTalk.Reply("...Took you long enough. Yes. Fine. Yes. Don't make it weird. ...You're making it weird.",
                     0, EtoTalk.Effect.DATE, EtoGesture.SHY)
                 : r("Ask me what?", 0);

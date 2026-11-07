@@ -496,7 +496,7 @@ public final class EtoTalk {
             case TRIAL -> trial(c);
             case FAVOUR -> favour(c);
             case ASK_OUT -> !c.mayDate() ? new Reply(c.claimed() ? EtoLines.fill(c, "I'm {partner}'s. Ask someone else.")
-                : "Go out with you? You're married. Go home.", 0, Effect.NONE)
+                : "Go out with you? You're someone else's. That doesn't come undone, not even by me. Go home.", 0, Effect.NONE)
                 : c.step() == EtoRules.Step.ASK ? new Reply("...Took you long enough. Yes. Obviously, yes.", 0, Effect.DATE, EtoGesture.GIGGLE)
                 : new Reply("Ask me what, exactly?", 0, Effect.NONE);
             case KISS -> c.dating() ? new Reply(EtoLines.one(seed, "Mm. Come here, then.", "Finally. I was about to ask myself."), 0, Effect.KISS)
