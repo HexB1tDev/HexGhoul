@@ -1,4 +1,20 @@
-# START HERE (state after 3.3.0)
+# START HERE (state after 3.3.1)
+
+Still to do, in this order (each its own version): Dawn's hold, ambient and M1s; the centipede dragon's sounds; break-up/divorce (the 3.2.3 stash was lost: rebuild); then the rest of 3.2.2's list (a jealous animation, reconciliation talks, temper-aware door scenes, homecomings without a home, siblings, companion-child door talk, kids greeting you after days away).
+
+The owner's ask (from the list after the kiss bug): "Ken teaching Impale and Rubble Hurl" with proofs. Built from the 3.2.6 session's research notes (new gates appended, Ken's lessons appended so the saved bits keep, `Teaching.view` by mastery, deeds counted in `UkakuGates.throwHeld`/`crush`).
+
+- `Gate`: `RINKAKU_HURL` ("rinkaku_hurl", `RinkakuUnlocks.HURL` 250) and `RINKAKU_IMPALE` ("rinkaku_impale", `IMPALE` 350) appended last (saved and synced by id). `QuestServer.had` returns false for both (never grandfathered, as the Dragon).
+- `Teaching`: `ken_hurl`, `ken_impale` (TALK) appended to `ALL` (Ken's bits: centipede 1, king 2, dragon 4, storm 8, hurl 16, impale 32: the old ones unchanged); `inOrder(teacher)` (stable sort by mastery) used by `view`; `before(RINKAKU_IMPALE)` = `RINKAKU_HURL`; `Deed` appended `THROWS`, `CRUSHES`; `proof("ken_hurl")` THROWS 5, `proof("ken_impale")` CRUSHES 5 (Ken's ask/progress lines), `Proof.bar` for both.
+- `KenScript.LESSONS.teach`: lines for RINKAKU_HURL and RINKAKU_IMPALE.
+- `HurlServer`/`ImpaleServer`: `QuestServer.pass(player, Gate.RINKAKU_HURL/IMPALE)` after the mastery check (it says who teaches it). `UkakuGates.throwHeld`/`crush`: `EtoServer.proved(player, Deed.THROWS/CRUSHES, 0)` after the original's throw/crush ran (only reached with someone held: `HurlServer.throwsHeld`, `ImpaleServer.crushes`).
+- `AbilityGuide.rinkaku`: with the gate in `shut` and the mastery reached, "Rubble Hurl (Ken teaches it)" / "Impale (Ken teaches it)" in DIM.
+- Tests: CompanionTests `lessons()`/`proofs()` (+ `kenTeaches` by reflection) and the LESSON dialogue checks; ControlTests guide rows.
+- **Judgment calls:** five of each; never grandfathered (the owner, maxed, would otherwise never see the lessons); the Hurl before the Impale. Side effect: `KaguneClash.strength`'s gate share now counts 11 Rinkaku-path gates (9 before), so a maxed player is at 9/11 until taught.
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 92. Not tested in game.
+
+# State after 3.3.0
 
 Still to do, in this order (each its own version): Ken teaching Impale and the Rubble Hurl with proofs; Dawn's hold, ambient and M1s; the centipede dragon's sounds; break-up/divorce (the 3.2.3 stash was lost: rebuild); then the rest of 3.2.2's list (a jealous animation, reconciliation talks, temper-aware door scenes, homecomings without a home, siblings, companion-child door talk, kids greeting you after days away).
 

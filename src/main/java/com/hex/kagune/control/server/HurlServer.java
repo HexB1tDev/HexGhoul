@@ -127,7 +127,7 @@ public final class HurlServer {
             || RinkakuBlockServer.up(player) || ImpaleServer.active(player)) {
             return; // someone held: N is the throw; or the tails are busy
         }
-        if (!UkakuGates.unlocked(player, "The rubble hurl", RinkakuUnlocks.HURL)) {
+        if (!UkakuGates.unlocked(player, "The rubble hurl", RinkakuUnlocks.HURL) || !QuestServer.pass(player, com.hex.kagune.control.quest.Gate.RINKAKU_HURL)) {
             return;
         }
         Long ready = READY_AT.get(player.m_20148_());

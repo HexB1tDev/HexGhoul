@@ -339,7 +339,17 @@ public final class CompanionTests {
                 check(!Teaching.taught(gate), quest.id() + ": opens no gate a companion teaches (" + gate.id() + ")");
             }
         }
-        check(Teaching.of("touka").size() == 3 && Teaching.of("ken").size() == 4 && Teaching.of("eto").isEmpty(), "Touka three lessons, Ken four");
+        check(Teaching.of("touka").size() == 3 && Teaching.of("ken").size() == 6 && Teaching.of("eto").isEmpty(), "Touka three lessons, Ken six");
+        // 3.3.1: Ken's Hurl and Impale appended (the old lessons keep their saved bits) and taught first (by mastery).
+        check(Teaching.bit(Teaching.byId("ken_centipede")) == 1L && Teaching.bit(Teaching.byId("ken_king")) == 2L && Teaching.bit(Teaching.byId("ken_dragon")) == 4L
+            && Teaching.bit(Teaching.byId("ken_storm")) == 8L && Teaching.bit(Teaching.byId("ken_hurl")) == 16L && Teaching.bit(Teaching.byId("ken_impale")) == 32L,
+            "Ken's old lessons keep their saved bits; the Hurl and the Impale take new ones");
+        check(Teaching.inOrder("ken").get(0).gate() == Gate.RINKAKU_HURL && Teaching.inOrder("ken").get(1).gate() == Gate.RINKAKU_IMPALE
+            && Teaching.inOrder("ken").get(2).gate() == Gate.RINKAKU_CENTIPEDE, "Ken teaches the Rubble Hurl first, then the Impale, then the centipede");
+        Gate[] gates = Gate.values();
+        check(gates[gates.length - 2] == Gate.RINKAKU_HURL && gates[gates.length - 1] == Gate.RINKAKU_IMPALE && Gate.fromId("rinkaku_hurl") == Gate.RINKAKU_HURL
+            && Gate.fromId("rinkaku_impale") == Gate.RINKAKU_IMPALE && Gate.RINKAKU_HURL.mastery() == com.hex.kagune.control.RinkakuUnlocks.HURL
+            && Gate.RINKAKU_IMPALE.mastery() == com.hex.kagune.control.RinkakuUnlocks.IMPALE, "the two new gates appended, at their moves' own mastery");
         check(Teaching.of("touka").stream().allMatch(l -> l.path() == KagunePath.UKAKU), "Touka teaches the wings only");
         check(Gate.fromId("ukaku_crystal") == Gate.UKAKU_CRYSTAL && Gate.UKAKU_CRYSTAL.mastery() == com.hex.kagune.control.ukaku.UkakuRules.CRYSTAL_MASTERY,
             "Crystal Wings is a gate, at crystal mode's own mastery");
@@ -364,6 +374,17 @@ public final class CompanionTests {
         check(storm.ready() && storm.next().gate() == Gate.UKAKU_FINAL_KAKUJA && storm.next().kind() == Teaching.Kind.TRIAL,
             "Ken takes the wings the last of the way: lived through");
         Set<Gate> tails = new HashSet<>();
+        Teaching.View feeble = Teaching.view("ken", true, KagunePath.RINKAKU, 100, tails::contains);
+        check(!feeble.ready() && feeble.refusal() == Teaching.Refusal.WEAK && feeble.next().gate() == Gate.RINKAKU_HURL && feeble.need() == 250,
+            "too weak for anything of Ken's: the Rubble Hurl named, at 250");
+        Teaching.View hurl = Teaching.view("ken", true, KagunePath.RINKAKU, 800, tails::contains);
+        check(hurl.ready() && hurl.next().gate() == Gate.RINKAKU_HURL && hurl.next().kind() == Teaching.Kind.TALK, "Ken's first: the Rubble Hurl, told");
+        tails.add(Gate.RINKAKU_HURL);
+        Teaching.View impale = Teaching.view("ken", true, KagunePath.RINKAKU, 800, tails::contains);
+        check(impale.ready() && impale.next().gate() == Gate.RINKAKU_IMPALE, "then the Impale");
+        Teaching.View impaleWeak = Teaching.view("ken", true, KagunePath.RINKAKU, 300, tails::contains);
+        check(!impaleWeak.ready() && impaleWeak.refusal() == Teaching.Refusal.WEAK && impaleWeak.need() == 350, "the Impale at 350");
+        tails.add(Gate.RINKAKU_IMPALE);
         Teaching.View before = Teaching.view("ken", true, KagunePath.RINKAKU, 800, tails::contains);
         check(!before.ready() && before.refusal() == Teaching.Refusal.BEFORE && before.before() == Gate.RINKAKU_FOUR,
             "the centipede only after the four tails (their quests)");
@@ -538,18 +559,44 @@ public final class CompanionTests {
         }
     }
 
+    /** 3.3.1: what Ken says as he teaches {@code lesson} (his LessonWords, package-private in npc: read by reflection). */
+    static String kenTeaches(Teaching.Lesson lesson) {
+        try {
+            java.lang.reflect.Field field = Class.forName("com.hex.kagune.control.npc.KenScript").getDeclaredField("LESSONS");
+            field.setAccessible(true);
+            Object words = field.get(null);
+            java.lang.reflect.Method teach = Class.forName("com.hex.kagune.control.npc.CompanionScript$LessonWords").getDeclaredMethod("teach", Teaching.Lesson.class,
+                com.hex.kagune.control.npc.EtoTalk.Context.class);
+            teach.setAccessible(true);
+            return (String)teach.invoke(words, lesson, null);
+        } catch (ReflectiveOperationException failure) {
+            throw new IllegalStateException(failure);
+        }
+    }
+
     /** 2.1.8: Ken's final kakujas need their proof first (Teaching.proof); everything else is taught as before. */
     static void proofs() {
         for (Teaching.Lesson lesson : Teaching.ALL) {
             Teaching.Proof proof = Teaching.proof(lesson);
             boolean finalOne = lesson.gate() == Gate.RINKAKU_FULL_KAKUJA || lesson.gate() == Gate.RINKAKU_DRAGON || lesson.gate() == Gate.UKAKU_FINAL_KAKUJA;
-            check(finalOne == (proof != null), lesson.id() + ": a proof first only for a final kakuja");
+            boolean kenMove = lesson.gate() == Gate.RINKAKU_HURL || lesson.gate() == Gate.RINKAKU_IMPALE; // 3.3.1
+            check((finalOne || kenMove) == (proof != null), lesson.id() + ": a proof first only for a final kakuja, and Ken's Hurl and Impale");
             if (proof != null) {
                 check(proof.need() >= 3 && !Teaching.fill(proof.ask(), proof, 0).contains("{") && Teaching.fill(proof.progress(), proof, 2).contains("2")
                     && proof.bar(proof.need()).contains("Go and see him") && !proof.bar(1).contains("Go and see"), lesson.id() + ": its proof said cleanly");
             }
         }
         check(Teaching.proof(Teaching.byId("ken_dragon")).rank() >= 6, "the Dragon wants Doves worth fearing");
+        Teaching.Proof throwing = Teaching.proof(Teaching.byId("ken_hurl"));
+        Teaching.Proof crushing = Teaching.proof(Teaching.byId("ken_impale"));
+        check(throwing.deed() == Teaching.Deed.THROWS && throwing.need() == 5 && throwing.bar(2).contains("thrown from your tails")
+            && crushing.deed() == Teaching.Deed.CRUSHES && crushing.need() == 5 && crushing.bar(5).contains("crushed in your tails"),
+            "3.3.1: the Hurl wants five bodies thrown from your tails, the Impale five crushed in them");
+        for (String id : new String[] {"ken_hurl", "ken_impale"}) {
+            Teaching.Lesson lesson = Teaching.byId(id);
+            String words = kenTeaches(lesson);
+            check(words.length() > 120 && !words.startsWith("Watch carefully") && words.contains("hold"), id + ": Ken teaches it in his own words, how to hold it");
+        }
     }
 
     /**
@@ -758,11 +805,14 @@ public final class CompanionTests {
         EtoTalk.Reply learn = Persona.TOUKA.script().answer(context(20, Romance.Stage.NONE, null, true, EtoMood.HAPPY, 1, ready, true, 6000L),
             NpcTalk.Choice.LESSON);
         check(learn.effect() == EtoTalk.Effect.LEARN && learn.line().contains("Crystal"), "Touka teaches the crystals: " + learn.line());
-        Teaching.View trial = Teaching.view("ken", true, KagunePath.RINKAKU, 800, gate -> gate == Gate.RINKAKU_FOUR);
+        // (3.3.1: past Ken's Hurl and Impale, his first two now)
+        Teaching.View trial = Teaching.view("ken", true, KagunePath.RINKAKU, 800, gate -> gate == Gate.RINKAKU_FOUR || gate == Gate.RINKAKU_HURL
+            || gate == Gate.RINKAKU_IMPALE);
         EtoTalk.Reply torture = Persona.KEN.script().answer(context(20, Romance.Stage.NONE, null, true, EtoMood.HAPPY, 1, trial, true, 6000L),
             NpcTalk.Choice.LESSON);
         check(torture.effect() == EtoTalk.Effect.TORTURE, "Ken's centipede is lived through, not told");
-        Teaching.View weak = Teaching.view("ken", true, KagunePath.RINKAKU, 300, gate -> gate == Gate.RINKAKU_FOUR);
+        Teaching.View weak = Teaching.view("ken", true, KagunePath.RINKAKU, 300, gate -> gate == Gate.RINKAKU_FOUR || gate == Gate.RINKAKU_HURL
+            || gate == Gate.RINKAKU_IMPALE);
         EtoTalk.Reply refused = Persona.KEN.script().answer(context(20, Romance.Stage.NONE, null, true, EtoMood.HAPPY, 1, weak, true, 6000L),
             NpcTalk.Choice.LESSON);
         check(refused.effect() == EtoTalk.Effect.NONE && refused.line().contains("750"), "too weak: told the mastery it takes: " + refused.line());

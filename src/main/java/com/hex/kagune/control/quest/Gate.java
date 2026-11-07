@@ -39,7 +39,11 @@ public enum Gate {
     GRAFT_APPETITE("graft_appetite", KagunePath.GRAFT, "Rize's Appetite (mutation)", 0, true),
     GRAFT_NOT_THAT_EASILY("graft_not_that_easily", KagunePath.GRAFT, "You Thought You'd Get Rid of Me That Easily? (mutation)", 0, true),
     /** 1.3.14: Crystal mode (V crystallizes the wings): Touka teaches it ({@code Teaching}); kept for saves already past its mastery. */
-    UKAKU_CRYSTAL("ukaku_crystal", KagunePath.UKAKU, "Crystal Wings (crystal mode)", com.hex.kagune.control.ukaku.UkakuRules.CRYSTAL_MASTERY, false);
+    UKAKU_CRYSTAL("ukaku_crystal", KagunePath.UKAKU, "Crystal Wings (crystal mode)", com.hex.kagune.control.ukaku.UkakuRules.CRYSTAL_MASTERY, false),
+    /** 3.3.1: Rinkaku's Rubble Hurl (N held, nothing held): Ken teaches it, after a proof ({@code Teaching}). Never grandfathered. */
+    RINKAKU_HURL("rinkaku_hurl", KagunePath.RINKAKU, "Rubble Hurl", com.hex.kagune.control.RinkakuUnlocks.HURL, false),
+    /** 3.3.1: Rinkaku's Impale (H held, nothing held): Ken teaches it, after the Hurl and a proof. Never grandfathered. */
+    RINKAKU_IMPALE("rinkaku_impale", KagunePath.RINKAKU, "Impale", com.hex.kagune.control.RinkakuUnlocks.IMPALE, false);
 
     private final String id;
     private final KagunePath path;

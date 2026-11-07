@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.3.1 (HexGhoul): Ken teaches the Rubble Hurl and the Impale, with proofs (testing)
+
+See `.github/release-notes-3.3.1.md`. The Rubble Hurl and the Impale now come from Ken, not mastery alone: past 250 and 350 he teaches them (the Hurl first), each after a proof in his words: throw five bodies from your tails, then crush five in them. Until then the key says who teaches it and the guide shows them greyed. New this week, so no save keeps them. Not tested in game.
+
 ## 3.3.0 (HexGhoul): The move guide shows what your keys do right now (Rinkaku) (testing)
 
 See `.github/release-notes-3.3.0.md`. The Rinkaku guide on the left crammed what G, N and H do with and without someone held onto shared lines, and showed Lift and Slam as ready when they need someone held. Now it follows your tails live: nothing held, Grab, Rubble Hurl (N held), Impale (H held), Lift · Slam greyed; a tail holding someone, Throw, Crush, Lift, Slam them and Grab another. Not tested in game.

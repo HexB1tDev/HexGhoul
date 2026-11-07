@@ -72,7 +72,11 @@ public final class Teaching {
         new Lesson("ken_centipede", KEN, Gate.RINKAKU_CENTIPEDE, Kind.TRIAL, "The Centipede"),
         new Lesson("ken_king", KEN, Gate.RINKAKU_FULL_KAKUJA, Kind.TALK, "The Full Kakuja"),
         new Lesson("ken_dragon", KEN, Gate.RINKAKU_DRAGON, Kind.TALK, "The Dragon"),
-        new Lesson("ken_storm", KEN, Gate.UKAKU_FINAL_KAKUJA, Kind.TRIAL, "The Final Kakuja"));
+        new Lesson("ken_storm", KEN, Gate.UKAKU_FINAL_KAKUJA, Kind.TRIAL, "The Final Kakuja"),
+        // 3.3.1 (the owner: Ken teaches the Impale and the Rubble Hurl, with proofs). Appended: each lesson's saved bit is its place
+        // among its teacher's, so the old ones keep theirs; he still teaches them first ({@link #view} goes by mastery).
+        new Lesson("ken_hurl", KEN, Gate.RINKAKU_HURL, Kind.TALK, "Rubble Hurl"),
+        new Lesson("ken_impale", KEN, Gate.RINKAKU_IMPALE, Kind.TALK, "Impale"));
 
     /**
      * What has to be open before a lesson's gate can be taught (the step before it on the path, whoever opened it), or null. Ken's
@@ -86,6 +90,7 @@ public final class Teaching {
             case RINKAKU_CENTIPEDE -> Gate.RINKAKU_FOUR;
             case RINKAKU_FULL_KAKUJA -> Gate.RINKAKU_CENTIPEDE;
             case RINKAKU_DRAGON -> Gate.RINKAKU_FULL_KAKUJA;
+            case RINKAKU_IMPALE -> Gate.RINKAKU_HURL;
             default -> null;
         };
     }
@@ -93,9 +98,14 @@ public final class Teaching {
     private Teaching() {
     }
 
-    /** The lessons {@code teacher} teaches, in order. */
+    /** The lessons {@code teacher} teaches, in the order they were added (each one's saved bit: {@link #bit}). */
     public static List<Lesson> of(String teacher) {
         return ALL.stream().filter(lesson -> lesson.teacher().equals(teacher)).toList();
+    }
+
+    /** 3.3.1: the lessons {@code teacher} teaches in the order they are taught: by the mastery they need (a stable sort: ties as added). */
+    public static List<Lesson> inOrder(String teacher) {
+        return of(teacher).stream().sorted(java.util.Comparator.comparingInt(Lesson::mastery)).toList();
     }
 
     /** The lesson that opens {@code gate}, or null when no one teaches it (it is opened by its quests, as before). */
@@ -132,7 +142,7 @@ public final class Teaching {
             return new View(null, Refusal.HUMAN, 0, null);
         }
         boolean knows = false;
-        for (Lesson lesson : of(teacher)) {
+        for (Lesson lesson : inOrder(teacher)) {
             if (lesson.path() != path) {
                 continue;
             }
@@ -199,7 +209,9 @@ public final class Teaching {
 
     /** What a proof asks for: ghoul meat eaten, Doves of a rank killed, wild ghouls killed in the first kakuja (Ukaku's). */
     public enum Deed {
-        EAT_GHOUL, DOVES, GHOULS_IN_KAKUJA
+        EAT_GHOUL, DOVES, GHOULS_IN_KAKUJA,
+        /** 3.3.1: bodies thrown from the tails (N, someone held); bodies crushed in them (H, someone held). */
+        THROWS, CRUSHES
     }
 
     /**
@@ -214,12 +226,14 @@ public final class Teaching {
                 case EAT_GHOUL -> "ghoul meat eaten";
                 case DOVES -> "Doves of Rank " + this.rank + "+ killed";
                 case GHOULS_IN_KAKUJA -> "ghouls killed in your kakuja";
+                case THROWS -> "bodies thrown from your tails";
+                case CRUSHES -> "bodies crushed in your tails";
             };
             return "Ken's proof: " + Math.min(done, this.need) + " of " + this.need + " " + what + (done >= this.need ? ". Go and see him." : "");
         }
     }
 
-    /** The proof {@code lesson} needs before it is taught, or null (Touka's lessons and the centipede: none). */
+    /** The proof {@code lesson} needs before it is taught, or null (Touka's lessons and the centipede: none; 3.3.1: Ken's Hurl and Impale have one). */
     public static Proof proof(Lesson lesson) {
         if (lesson == null) {
             return null;
@@ -233,6 +247,16 @@ public final class Teaching {
                 "The Dragon only wakes in someone who's stood at the edge and come back. Kill three Doves who are worth fearing. Rank 6 or above. "
                     + "Then come back alive, and we'll talk about dying.",
                 "{n} of three. Rank 6 or above. They'll find you. They always do.");
+            // 3.3.1: the Hurl is a throw with nothing in the tails but the ground; the Impale, a crush turned outward. He wants the plain
+            // ones first, done until they're not a thought any more.
+            case "ken_hurl" -> new Proof(Deed.THROWS, 5, 0,
+                "Before you throw the ground at anyone, throw something that fights back. Grab someone with your tails and throw them. Five "
+                    + "times. You have to know how the weight leaves you before there's no one in your grip but stone.",
+                "{n} of five. Grab, and throw. Don't think about where they land. That comes later.");
+            case "ken_impale" -> new Proof(Deed.CRUSHES, 5, 0,
+                "The Impale is a crush that doesn't wait for you to be close. You have to know what a tail feels like closing on someone "
+                    + "first. Crush five, in your tails. ...I know. I'm sorry. It's the only way it holds still long enough to learn.",
+                "{n} of five. In your tails. I'll be here. I'm not going anywhere.");
             case "ken_storm" -> new Proof(Deed.GHOULS_IN_KAKUJA, 10, 0,
                 "Your wings can go further. But the storm has to be fed first. Put on your kakuja and hunt your own: ten wild ghouls, with your "
                     + "first kakuja's wings out. Then come back, and sit down. It won't be gentle.",

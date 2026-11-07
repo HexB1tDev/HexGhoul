@@ -82,6 +82,13 @@ public final class ControlTests {
                     forms[i] + ": nothing held: grab on G, the Rubble Hurl on N held, the Impale on H held, lift and slam dim");
                 AbilityGuide.Panel holding = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.RINKAKU, AbilityGuide.State.OUT, 800, forms[i], twin, false,
                     keys, false, com.hex.kagune.control.graft.GraftStage.TRANSPLANT, false, java.util.Set.of(), true));
+                // 3.3.1: Ken teaches the Hurl and the Impale: until he has, past their mastery the board says so, dim.
+                AbilityGuide.Panel untaught = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.RINKAKU, AbilityGuide.State.OUT, 800, forms[i], twin, false,
+                    keys, false, com.hex.kagune.control.graft.GraftStage.TRANSPLANT, false,
+                    java.util.Set.of(com.hex.kagune.control.quest.Gate.RINKAKU_HURL, com.hex.kagune.control.quest.Gate.RINKAKU_IMPALE), false));
+                check(find(untaught, "Rubble Hurl (Ken teaches it)") != null && find(untaught, "Rubble Hurl (Ken teaches it)").colour() == AbilityGuide.DIM
+                    && find(untaught, "Impale (Ken teaches it)") != null && find(panel, "Rubble Hurl (Ken") == null,
+                    forms[i] + ": the Hurl and the Impale say Ken teaches them until he has");
                 check(find(holding, "Throw them").keys().equals("N") && find(holding, "Crush them").keys().equals("H") && find(holding, "Lift them").keys().equals("V")
                     && find(holding, "Slam them").keys().equals("B") && find(holding, "Grab another").keys().equals("G") && find(holding, "Rubble Hurl") == null
                     && find(holding, "Impale") == null && holding.subtitle().contains("holds someone"),

@@ -54,6 +54,7 @@ public final class UkakuGates {
         if (!refused(player, "message.hexkagune.ukaku.no_grapple") && !RinkakuAutonomy.refuse(player) && HurlServer.throwsHeld(player)
             && unlocked(player, "The throw", RinkakuUnlocks.GRAB)) {
             KaguneServerController.throwHeldLegacy(player);
+            EtoServer.proved(player, com.hex.kagune.control.npc.Teaching.Deed.THROWS, 0); // 3.3.1: Ken's proof before the Rubble Hurl
         }
     }
 
@@ -66,6 +67,7 @@ public final class UkakuGates {
         if (!refused(player, "message.hexkagune.ukaku.no_grapple") && !RinkakuAutonomy.refuse(player) && ImpaleServer.crushes(player)
             && unlocked(player, "The crush", RinkakuUnlocks.CRUSH)) {
             KaguneServerController.crushLegacy(player);
+            EtoServer.proved(player, com.hex.kagune.control.npc.Teaching.Deed.CRUSHES, 0); // 3.3.1: Ken's proof before the Impale
         }
     }
 

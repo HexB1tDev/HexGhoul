@@ -188,8 +188,13 @@ public final class AbilityGuide {
                 rows.add(row(in, "Grab another", TEXT, locked(m, RinkakuUnlocks.GRAB), Key.GRAB));
             } else {
                 rows.add(row(in, "Grab", TEXT, locked(m, RinkakuUnlocks.GRAB), Key.GRAB));
-                rows.add(new Row(key(in, Key.THROW) + " hold", "Rubble Hurl", TEXT, locked(m, RinkakuUnlocks.HURL)));
-                rows.add(new Row(key(in, Key.CRUSH) + " hold", "Impale", TEXT, locked(m, RinkakuUnlocks.IMPALE)));
+                // 3.3.1: Ken teaches these two; until he has, past their mastery they say so.
+                boolean hurlTaught = !in.shut().contains(com.hex.kagune.control.quest.Gate.RINKAKU_HURL);
+                boolean impaleTaught = !in.shut().contains(com.hex.kagune.control.quest.Gate.RINKAKU_IMPALE);
+                rows.add(new Row(key(in, Key.THROW) + " hold", hurlTaught || m < RinkakuUnlocks.HURL ? "Rubble Hurl" : "Rubble Hurl (Ken teaches it)",
+                    hurlTaught ? TEXT : DIM, locked(m, RinkakuUnlocks.HURL)));
+                rows.add(new Row(key(in, Key.CRUSH) + " hold", impaleTaught || m < RinkakuUnlocks.IMPALE ? "Impale" : "Impale (Ken teaches it)",
+                    impaleTaught ? TEXT : DIM, locked(m, RinkakuUnlocks.IMPALE)));
                 rows.add(row(in, "Lift · Slam (once a tail holds someone)", DIM, locked(m, RinkakuUnlocks.LIFT), Key.LIFT, Key.SLAM));
             }
             // 2.0.37: the tendril guard (C) is gone. 2.0.42: right click held blocks (RinkakuBlock); the final kakuja's dashes instead.

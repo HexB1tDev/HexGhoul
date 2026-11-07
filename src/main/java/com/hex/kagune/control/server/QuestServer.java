@@ -121,6 +121,9 @@ public final class QuestServer {
         if (gate == Gate.RINKAKU_DRAGON) {
             return false; // 1.0.4: the Dragon is earned by its quest, whatever the mastery
         }
+        if (gate == Gate.RINKAKU_HURL || gate == Gate.RINKAKU_IMPALE) {
+            return false; // 3.3.1: Ken teaches them (new this week: no save had them under the old progression)
+        }
         KagunePath path = PathServer.path(player);
         if (!gate.on(path) || !path.chosen() && gate.path() != null) {
             return false;

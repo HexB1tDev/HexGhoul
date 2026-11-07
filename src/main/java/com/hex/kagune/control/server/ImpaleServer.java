@@ -125,7 +125,7 @@ public final class ImpaleServer {
             || RinkakuBlockServer.up(player) || HurlServer.holding(player)) {
             return; // someone held: H is the crush; or the tails are all busy hunting, or up in the block
         }
-        if (!UkakuGates.unlocked(player, "The impale", RinkakuUnlocks.IMPALE)) {
+        if (!UkakuGates.unlocked(player, "The impale", RinkakuUnlocks.IMPALE) || !QuestServer.pass(player, com.hex.kagune.control.quest.Gate.RINKAKU_IMPALE)) {
             return;
         }
         Long ready = READY_AT.get(player.m_20148_());

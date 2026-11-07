@@ -167,6 +167,13 @@ final class KenScript extends CompanionScript {
                 case RINKAKU_DRAGON -> "...You want the last one. The Dragon. I'll tell you what it costs, and you'll do it anyway, because that's what "
                     + "we do. The next time you die, you won't. Something enormous will crawl out of you instead and it will eat the city. Come "
                     + "back. Whatever happens, come back. (The Dragon: your next death wakes it.)";
+                // 3.3.1: the two he teaches with his hands, not his past. Gentle, then a little proud of you, then sorry for it.
+                case RINKAKU_HURL -> "Grab the ground the way you grabbed them. Not the dirt. Under it. Feel where it's holding on, and pull "
+                    + "until it lets go. Hold it as long as you can stand to. The longer you hold, the bigger it gets. ...Then let go where you're "
+                    + "looking. It'll find them. (Rubble Hurl: hold N with nothing in your tails.)";
+                case RINKAKU_IMPALE -> "Pick one tail. Just one. Bring it up over your shoulder and make the end of it a point, like you're "
+                    + "closing a fist on nothing. Then let it go straight, the way you're looking, and don't pull it back until it's through. "
+                    + "Hold it and it goes further. ...You did that well. I wish you hadn't had to. (Impale: hold H with nothing in your tails.)";
                 default -> "Watch carefully. (" + lesson.name() + ")";
             };
         }
