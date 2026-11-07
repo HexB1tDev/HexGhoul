@@ -1,4 +1,17 @@
-# START HERE (state after 3.2.1)
+# START HERE (state after 3.2.2)
+
+The owner (after 3.2.1): "we also need to minimize the interactions. In terms of like not reduce the amount. It's just like if I'm being already interacted by someone giving me a hug, for example, like another one shouldn't be coming to do the same thing." The first of nine asks from that message (the rest: break up/divorce, a jealous animation, reconciliation talks, temper-aware door scenes, homecomings without a home, siblings, companion-child door talk, kids greeting you after days away).
+
+- Pure `npc/Turns`: `GAP` 80 ticks; `waits(me, who, last, ago, recent)` (someone else now; or someone else let go less than GAP ago, unless `recent` false).
+- Server `Engaged` (LevelTickEvent every 5 ticks: who has each player, kept in `LAST` via `WorldTimes.kept()`): `with(player, me, now)` scans 24 blocks for anyone other than `me` who has them (a companion: `toward`, `with`, `holding`, `talking` while `EtoServer.talkingWith`; a child: `moment` with them or `pending` for them, never carried/following; a villager: `comeTo`, a pending move before `pendingUntil`, a kiss, `holding`; anyone's card: `SceneServer.waitingFor`). `busy(player, me, now[, recent])`: a talk screen open with someone else, or `Turns.waits`. `taken`: someone else now.
+- Gates (only where an NPC starts something by itself): `EtoBrain.together` after `reach` (cached in `mind.busyFor`, checked every 5 ticks: baby night, night ask, make-up, scene tick, initiatives, moments, seeking, clinging), `nearness` welcome, `askForKiss`, `kissForMeal`, `comesForBabyNight`; `EtoBrain.own(...)` for every self-started walk-up (11 calls; `walkUp` itself sets `towardOwn` false) and `closeIn` lets an own walk go when `Engaged.taken`. `ChildBrain` own moments and `welcome`. `HumanApproachServer` loop (`busy`) and `come` (gives up on `taken`). `SceneServer.free(player, now, arrival, me)` (all approaches pass their own entity id; `due(..., me)`; a homecoming passes `recent` false).
+- Never gated: anything the player asks for (EtoServer answers, HumanTalk asks, the play page).
+- Tests: CompanionTests `turns()`.
+- **Judgment calls:** a 4-second breath after someone lets go; a companion walking arm in arm (CLING) or by the hand has you the whole time (others wait till she lets go); her rain/dusk/dawn remarks wait too while someone else has you (a dusk remark can be missed if you're held through its window).
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 92. Not tested in game.
+
+# State after 3.2.1
 
 The second half of the owner's "more conversations, like bringing the child home ... depending on how the character is or who it is, the personality they have": the player bringing the child home (3.2.0 was the companion parent doing it).
 

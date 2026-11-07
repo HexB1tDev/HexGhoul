@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.2.2 (HexGhoul): One at a time: nobody piles on (testing)
+
+See `.github/release-notes-3.2.2.md`. While someone has you (walking up, a hug, a kiss, on your arm, by the hand, a child's moment, a card or a talk), nobody else starts something with you by themselves; the next waits 4 seconds after they let go. Companions, children, villagers and ghouls alike; what you ask for is never held back. Not tested in game.
+
 ## 3.2.1 (HexGhoul): Bringing your child home yourself: who meets you at the door (testing)
 
 See `.github/release-notes-3.2.1.md`. Carry or walk a child of yours home after a while out: its other parent at home (Eto, Touka, Ken) meets you at the door, and it matters whether you found the child or the two of you were out together, the hour, carrying it, their mood, your other partner; the child calls out to them in its own temper. With nobody waiting, the child talks to you itself, by age and temper. 94 new scenes, about 950 lines. Not tested in game.

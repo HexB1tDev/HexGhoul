@@ -128,6 +128,12 @@ public final class SceneServer {
     /** A topic's answer paid once a day ("<uuid>|<scene>|<page>|<i>" to its day). */
     private static final Map<String, Long> PAID = WorldTimes.map();
 
+    /** 3.2.2: the one (an entity id) whose card waits on {@code player}'s answer now; 0: none. */
+    static int waitingFor(ServerPlayer player) {
+        Pending pending = PENDING.get(player.m_20148_());
+        return pending == null || player.m_9236_().m_46467_() > pending.until() ? 0 : pending.npc();
+    }
+
     /** The one waiting on {@code player} if it is {@code npc} and still waiting, taken off them (its talk is opening now). */
     static Pending take(ServerPlayer player, int npc) {
         Pending pending = PENDING.get(player.m_20148_());
@@ -159,11 +165,18 @@ public final class SceneServer {
      * the middle of a fight.
      */
     static boolean free(ServerPlayer player, long now) {
-        return free(player, now, false);
+        return free(player, now, false, 0);
     }
 
-    /** 3.2.1: the same, but a homecoming ({@code arrival}) doesn't wait out {@link #BETWEEN} after the last one who came up. */
-    static boolean free(ServerPlayer player, long now, boolean arrival) {
+    /**
+     * 3.2.1: the same, but a homecoming ({@code arrival}) doesn't wait out {@link #BETWEEN} after the last one who came up. 3.2.2: nor
+     * while someone other than {@code me} (an entity id; 0: whoever asks) has them, or has just let go ({@link Engaged}: one at a time;
+     * a homecoming waits only for someone with them now).
+     */
+    static boolean free(ServerPlayer player, long now, boolean arrival, int me) {
+        if (Engaged.busy(player, me, now, !arrival)) {
+            return false;
+        }
         Long last = LAST.get(player.m_20148_());
         Long fought = FIGHTING.get(player.m_20148_());
         if (fought != null && now - fought >= 0L && now - fought < FIGHT_QUIET) {
@@ -177,14 +190,14 @@ public final class SceneServer {
      * True if {@code who} may come up to {@code player} now: its own time has come ({@code every}: about how long between, ticks; the
      * first time it is set, a while off, so nobody comes the moment they arrive).
      */
-    static boolean due(String who, ServerPlayer player, long now, long every, java.util.Random random) {
+    static boolean due(String who, ServerPlayer player, long now, long every, java.util.Random random, int me) {
         String key = who + "|" + player.m_20148_();
         Long next = NEXT.get(key);
         if (next == null) {
             NEXT.put(key, now + every / 3 + (long)(random.nextDouble() * every / 2));
             return false;
         }
-        return now >= next && free(player, now);
+        return now >= next && free(player, now, false, me);
     }
 
     private static void later(String who, ServerPlayer player, long now, long every, java.util.Random random) {
@@ -224,7 +237,7 @@ public final class SceneServer {
         EtoMood mood = EtoBrain.mood(npc, partner, now);
         java.util.Random random = new java.util.Random(npc.m_217043_().m_188503_(Integer.MAX_VALUE));
         String who = npc.persona().key();
-        if (!due(who, partner, now, every(mood), random)) {
+        if (!due(who, partner, now, every(mood), random, npc.m_19879_())) {
             return false;
         }
         later(who, partner, now, every(mood), random);
@@ -235,7 +248,7 @@ public final class SceneServer {
     static boolean friendTick(EtoNpc npc, ServerPlayer friend, long now) {
         java.util.Random random = new java.util.Random(npc.m_217043_().m_188503_(Integer.MAX_VALUE));
         String who = npc.persona().key();
-        if (!due(who, friend, now, FRIEND_EVERY, random)) {
+        if (!due(who, friend, now, FRIEND_EVERY, random, npc.m_19879_())) {
             return false;
         }
         later(who, friend, now, FRIEND_EVERY, random);
@@ -255,7 +268,7 @@ public final class SceneServer {
 
     /** She comes up to {@code player} with something to say (a scene that fits them both now). False if nothing fits. */
     static boolean approach(EtoNpc npc, ServerPlayer player, long now) {
-        if (npc.mind == null || !free(player, now) || !sees(npc, player, SEES)) {
+        if (npc.mind == null || !free(player, now, false, npc.m_19879_()) || !sees(npc, player, SEES)) {
             return false;
         }
         EtoTalk.Context c = EtoServer.context(player, npc);
@@ -298,7 +311,7 @@ public final class SceneServer {
      * (found, an outing, carrying, the hour, her mood...). False if she can't now (they aren't free, she can't see them, nothing fits).
      */
     static boolean approachBrought(EtoNpc npc, ServerPlayer player, long now) {
-        if (npc.mind == null || !free(player, now, true) || !sees(npc, player, SEES)) {
+        if (npc.mind == null || !free(player, now, true, npc.m_19879_()) || !sees(npc, player, SEES)) {
             return false;
         }
         SceneContext sc = context(player, npc, EtoServer.context(player, npc));
@@ -315,7 +328,7 @@ public final class SceneServer {
      * up with, but this one in particular, and only if they are free and she can see them. False if she can't now.
      */
     static boolean approachMoment(EtoNpc npc, ServerPlayer player, Scene scene, long now) {
-        if (npc.mind == null || scene == null || !free(player, now) || !sees(npc, player, SEES)) {
+        if (npc.mind == null || scene == null || !free(player, now, false, npc.m_19879_()) || !sees(npc, player, SEES)) {
             return false;
         }
         EtoTalk.Context c = EtoServer.context(player, npc);
@@ -610,7 +623,7 @@ public final class SceneServer {
     static boolean childTick(ChildNpc npc, Children.Child child, ServerPlayer parent, long now) {
         java.util.Random random = new java.util.Random(npc.m_217043_().m_188503_(Integer.MAX_VALUE));
         String who = "child:" + child.id;
-        if (!due(who, parent, now, CHILD_EVERY, random)) {
+        if (!due(who, parent, now, CHILD_EVERY, random, npc.m_19879_())) {
             return false;
         }
         later(who, parent, now, CHILD_EVERY, random);
@@ -619,7 +632,7 @@ public final class SceneServer {
 
     /** The child comes up to its parent with something. */
     static boolean approach(ChildNpc npc, Children.Child child, ServerPlayer parent, long now) {
-        if (npc.mind == null || !free(parent, now) || npc.m_5803_() || !sees(npc, parent, SEES)) {
+        if (npc.mind == null || !free(parent, now, false, npc.m_19879_()) || npc.m_5803_() || !sees(npc, parent, SEES)) {
             return false;
         }
         SceneContext sc = context(parent, npc, child, now);
@@ -632,7 +645,7 @@ public final class SceneServer {
      * them, one of its {@code back} scenes (by its age, its temper, found or an outing, the hour). False if it can't now.
      */
     static boolean approachBack(ChildNpc npc, Children.Child child, ServerPlayer parent, long now) {
-        if (npc.mind == null || !free(parent, now, true) || npc.m_5803_() || !sees(npc, parent, SEES)) {
+        if (npc.mind == null || !free(parent, now, true, npc.m_19879_()) || npc.m_5803_() || !sees(npc, parent, SEES)) {
             return false;
         }
         SceneContext sc = context(parent, npc, child, now);
@@ -810,7 +823,7 @@ public final class SceneServer {
     static boolean allyTick(com.hex.kagune.control.npc.GhoulNpc npc, ServerPlayer owner, long now) {
         java.util.Random random = new java.util.Random(npc.m_217043_().m_188503_(Integer.MAX_VALUE));
         String who = "ally:" + npc.m_20148_();
-        if (!due(who, owner, now, ALLY_EVERY, random)) {
+        if (!due(who, owner, now, ALLY_EVERY, random, npc.m_19879_())) {
             return false;
         }
         later(who, owner, now, ALLY_EVERY, random);
@@ -820,7 +833,7 @@ public final class SceneServer {
     /** The ally comes up to its player with something. */
     static boolean approach(com.hex.kagune.control.npc.GhoulNpc npc, ServerPlayer player, long now) {
         com.hex.kagune.control.npc.NpcIdentity who = npc.identity();
-        if (npc.mind == null || who == null || !free(player, now) || !sees(npc, player, SEES)) {
+        if (npc.mind == null || who == null || !free(player, now, false, npc.m_19879_()) || !sees(npc, player, SEES)) {
             return false;
         }
         SceneContext sc = context(player, npc, now);

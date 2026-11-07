@@ -89,6 +89,10 @@ public final class EtoBrain {
         long nextGestureAt;
         /** Who she is walking up to (a kiss, a hug, to cling), and what for: null none. */
         UUID toward;
+        /** 3.2.2: that walk is one she set off on by herself (not asked for): she lets it go if someone else gets to them first. */
+        boolean towardOwn;
+        /** 3.2.2: until when someone else has her partner (checked every 5 ticks): nothing of her own till then. */
+        long busyFor = Long.MIN_VALUE;
         EtoGesture towardFor = EtoGesture.NONE;
         long towardSince;
         /** The kiss she is waiting on: its stage, since when, the shift key's hold. */
@@ -592,7 +596,7 @@ public final class EtoBrain {
             return false;
         }
         double d2 = partner.m_20280_(npc);
-        if (d2 > 32.0 * 32.0 || !reachable(npc, partner) || Sightings.finalOf(partner).terror()
+        if (d2 > 32.0 * 32.0 || !reachable(npc, partner) || Sightings.finalOf(partner).terror() || Engaged.busy(partner, npc.m_19879_(), now)
             || npc.m_5803_() && d2 <= BED_NEAR * BED_NEAR || partner.m_5803_() && d2 < BED_LYING * BED_LYING) {
             return false;
         }
@@ -605,7 +609,7 @@ public final class EtoBrain {
         HomeLife.wake(npc);
         say(npc, partner, npc.persona().script().babyNight(c));
         alert(npc, partner, Romance.Want.NIGHT, "");
-        walkUp(npc, mind, partner, EtoGesture.CLING, now);
+        own(npc, mind, partner, EtoGesture.CLING, now);
         return true;
     }
 
@@ -1049,7 +1053,7 @@ public final class EtoBrain {
             mind.welcomeFrom = Long.MIN_VALUE;
         }
         if (mind.welcomeFrom != Long.MIN_VALUE && partner != null && mind.target == 0 && mind.kiss == null && mind.holding == null
-            && SceneServer.sees(npc, partner, 12.0)) {
+            && SceneServer.sees(npc, partner, 12.0) && !Engaged.busy(partner, npc.m_19879_(), now)) { // 3.2.2: her welcome waits its turn
             mind.welcomeFrom = Long.MIN_VALUE;
             HomeChores.stop(npc, mind, level);
             EtoTalk.Context c = context(npc, partner);
@@ -1058,7 +1062,7 @@ public final class EtoBrain {
             say(npc, partner, served != null ? served : npc.persona().script().welcome(c));
             alert(npc, partner, Romance.Want.MISSED, "");
             if (reachable(npc, partner)) {
-                walkUp(npc, mind, partner, EtoGesture.HUG, now);
+                own(npc, mind, partner, EtoGesture.HUG, now);
             }
         }
         mind.partnerNear = near;
@@ -1102,6 +1106,13 @@ public final class EtoBrain {
         if (!reach) {
             return false;
         }
+        // 3.2.2: someone else has them now (or just let go): whatever she'd start by herself waits its turn.
+        if (now % 5L == 0L && Engaged.busy(partner, npc.m_19879_(), now)) {
+            mind.busyFor = now + 5L;
+        }
+        if (now < mind.busyFor) {
+            return false;
+        }
         // 1.3.14: they asked for a baby: once it is dark she comes to them herself, and the night (and the child) follows.
         if (now % 40L == 17L && now >= mind.nextBabyNight && distance < 16.0) {
             EtoTalk.Context c = context(npc, partner);
@@ -1110,7 +1121,7 @@ public final class EtoBrain {
                 mind.babyNight = partner.m_20148_();
                 say(npc, partner, npc.persona().script().babyNight(c));
                 alert(npc, partner, Romance.Want.NIGHT, "");
-                walkUp(npc, mind, partner, EtoGesture.CLING, now);
+                own(npc, mind, partner, EtoGesture.CLING, now);
                 return true;
             }
         }
@@ -1120,7 +1131,7 @@ public final class EtoBrain {
             if (!c.nightUsed()) {
                 say(npc, partner, npc.persona().script().approach(c));
                 alert(npc, partner, Romance.Want.NIGHT, "");
-                walkUp(npc, mind, partner, EtoGesture.CLING, now);
+                own(npc, mind, partner, EtoGesture.CLING, now);
                 return true;
             }
         }
@@ -1148,7 +1159,7 @@ public final class EtoBrain {
                 }
                 // 2.4.1 (the owner: "Spouse sometimes appear in the alert box 'Wants to talk to you' ... they DON'T want to talk to you"):
                 // no alert for what she does by herself; it's seen.
-                walkUp(npc, mind, partner, does, now);
+                own(npc, mind, partner, does, now);
                 return true;
             }
         }
@@ -1159,7 +1170,7 @@ public final class EtoBrain {
             EtoTalk.Context c = context(npc, partner);
             // 2.4.1: a word as she comes over, and a wave: no "wants to talk" (she doesn't), and no grabbing hold of them every time.
             say(npc, partner, npc.persona().script().approach(c));
-            walkUp(npc, mind, partner, EtoGesture.WAVE, now);
+            own(npc, mind, partner, EtoGesture.WAVE, now);
             mind.initiativeAt = now;
             return true;
         }
@@ -1171,7 +1182,7 @@ public final class EtoBrain {
             mind.initiativeAt = now;
             // 1.3.29: Touka's way: a kiss on the cheek, now and then their face turned to hers and a kiss stolen.
             EtoGesture does = npc.persona().unasked(npc.m_217043_().m_188500_() < 0.3 ? EtoGesture.DANCE : EtoGesture.CLING);
-            walkUp(npc, mind, partner, does == EtoGesture.DANCE ? EtoGesture.CLING : does, now);
+            own(npc, mind, partner, does == EtoGesture.DANCE ? EtoGesture.CLING : does, now);
             return true;
         }
         return false;
@@ -1202,7 +1213,7 @@ public final class EtoBrain {
             mind.hurtSaid = now;
             say(npc, partner, npc.persona().script().moment(com.hex.kagune.control.npc.EtoInitiative.Moment.HURT, true, seed));
             if (mind.gesture == EtoGesture.NONE && mind.holding == null) {
-                walkUp(npc, mind, partner, EtoGesture.HUG, now);
+                own(npc, mind, partner, EtoGesture.HUG, now);
             }
         }
     }
@@ -1244,7 +1255,7 @@ public final class EtoBrain {
      */
     static boolean kissForMeal(EtoNpc npc, Mind mind, ServerPlayer partner, long now) {
         if (partner == null || mind.ignoring.containsKey(partner.m_20148_()) || until(mind.sulk, partner.m_20148_()) > now
-            || mind.kiss != null || mind.target != 0) {
+            || mind.kiss != null || mind.target != 0 || Engaged.busy(partner, npc.m_19879_(), now)) { // 3.2.2: one at a time
             return false;
         }
         double chance = com.hex.kagune.control.family.Kitchen.kissAfterMeal(
@@ -1256,7 +1267,7 @@ public final class EtoBrain {
     static void askKiss(EtoNpc npc, Mind mind, ServerPlayer partner, long now) {
         mind.nextAsk.put(partner.m_20148_(), now + EtoRules.KISS_ASK_EVERY);
         alert(npc, partner, Romance.Want.KISS, "");
-        walkUp(npc, mind, partner, EtoGesture.KISS, now);
+        own(npc, mind, partner, EtoGesture.KISS, now);
         mind.asked = true;
     }
 
@@ -1267,7 +1278,7 @@ public final class EtoBrain {
         if (player == null || player.m_20280_(npc) > EtoRules.KISS_ASK_NEAR * EtoRules.KISS_ASK_NEAR || !player.m_6084_() || player.m_5833_()
             || !reachable(npc, player) || !npc.m_142582_(player)
             || mind.ignoring.containsKey(player.m_20148_()) || until(mind.sulk, player.m_20148_()) > now
-            || now < mind.nextAsk.getOrDefault(player.m_20148_(), Long.MIN_VALUE)) {
+            || now < mind.nextAsk.getOrDefault(player.m_20148_(), Long.MIN_VALUE) || Engaged.busy(player, npc.m_19879_(), now)) {
             return;
         }
         // 2.2.3: how readily by her mood (never when jealous; most when lonely or affectionate; little when sleepy or starving).
@@ -1276,12 +1287,12 @@ public final class EtoBrain {
             mind.nextAsk.put(player.m_20148_(), now + EtoRules.KISS_ASK_EVERY);
             // 1.3.14: Touka and Ken, more often than not, just walk up and give a quick one themselves.
             if (npc.persona().pecks() && npc.m_217043_().m_188500_() < 0.65) {
-                walkUp(npc, mind, player, EtoGesture.PECK, now);
+                own(npc, mind, player, EtoGesture.PECK, now);
                 return;
             }
             alert(npc, player, Romance.Want.KISS, "");
             say(npc, player, npc.persona().script().kissHint(npc.m_217043_().m_188503_(1000)));
-            walkUp(npc, mind, player, EtoGesture.KISS, now);
+            own(npc, mind, player, EtoGesture.KISS, now);
             mind.asked = true; // 2.3.9: hers to ask; theirs to turn down (walk off) without hurting her
         }
     }
@@ -1416,14 +1427,26 @@ public final class EtoBrain {
         mind.toward = player.m_20148_();
         mind.towardFor = what;
         mind.towardSince = now;
+        mind.towardOwn = false;
         mind.talking = null;
         gesture(mind, EtoGesture.NONE, now);
+    }
+
+    /** 3.2.2: she walks up to {@code player} for {@code what} by herself (one at a time: {@link Engaged}; she checked before setting off). */
+    private static void own(EtoNpc npc, Mind mind, ServerPlayer player, EtoGesture what, long now) {
+        walkUp(npc, mind, player, what, now);
+        mind.towardOwn = true;
     }
 
     /** Walking up to them, then the kiss, the hug, the clinging itself. */
     private static void closeIn(EtoNpc npc, Mind mind, ServerLevel level, long now) {
         ServerPlayer player = player(level, mind.toward);
         if (player == null || !player.m_6084_()) {
+            endKiss(npc, mind, null, now);
+            return;
+        }
+        // 3.2.2: on her way over by herself and someone else has them now (they asked for it, or got there first): another time.
+        if (mind.towardOwn && mind.kiss == null && mind.with != player.m_19879_() && now % 5L == 0L && Engaged.taken(player, npc.m_19879_(), now)) {
             endKiss(npc, mind, null, now);
             return;
         }

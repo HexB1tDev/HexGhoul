@@ -708,7 +708,7 @@ public final class ChildBrain {
             return;
         }
         ServerPlayer parent = nearestParent(npc, child, level, 6.0);
-        if (parent == null) {
+        if (parent == null || Engaged.busy(parent, npc.m_19879_(), now)) { // 3.2.2: someone else has them: its turn later
             return;
         }
         if (npc.m_217043_().m_188500_() < 0.12) {
@@ -722,7 +722,7 @@ public final class ChildBrain {
 
     /** 1.3.20: back from far off: it runs to them and hugs them (a baby claps). */
     static void welcome(ChildNpc npc, Mind mind, ServerPlayer parent, long now) {
-        if (mind.stage == null || busy(mind, now) || mind.carrier != null) {
+        if (mind.stage == null || busy(mind, now) || mind.carrier != null || Engaged.busy(parent, npc.m_19879_(), now)) { // 3.2.2: one at a time
             return;
         }
         if (ChildMoment.HUG.fits(mind.stage)) {

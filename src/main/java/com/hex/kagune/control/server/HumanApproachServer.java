@@ -59,6 +59,7 @@ public final class HumanApproachServer {
         for (ServerPlayer player : level.m_6907_()) {
             if (player.m_5833_() || !player.m_6084_() || player.m_20280_(human) > HumanApproach.NOTICE * HumanApproach.NOTICE
                 || HumanTalk.talking(player) || CROWDED.getOrDefault(player.m_20148_(), Long.MIN_VALUE) > now
+                || Engaged.busy(player, human.m_19879_(), now) // 3.2.2: someone else (of any kind) has them: one at a time
                 || player.m_20148_().equals(mind.hurtBy) || place != null && !place.inside(player.m_20185_(), player.m_20189_())
                 || !human.m_142582_(player)) {
                 continue;
@@ -118,7 +119,8 @@ public final class HumanApproachServer {
     static boolean come(HumanNpc human, HumanBrain.Mind mind, VillagePlace.Place place, ServerLevel level, long now) {
         net.minecraft.world.entity.Entity found = level.m_8791_(mind.comeTo);
         if (!(found instanceof ServerPlayer player) || !player.m_6084_() || player.m_5833_() || player.m_20280_(human) > 20.0 * 20.0
-            || now > mind.comeUntil || place != null && !place.inside(player.m_20185_(), player.m_20189_()) || HumanTalk.talking(player)) {
+            || now > mind.comeUntil || place != null && !place.inside(player.m_20185_(), player.m_20189_()) || HumanTalk.talking(player)
+            || now % 5L == 0L && Engaged.taken(player, human.m_19879_(), now)) { // 3.2.2: someone else got to them first
             mind.comeTo = null;
             human.m_21573_().m_26573_();
             return false;

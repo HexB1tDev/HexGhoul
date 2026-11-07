@@ -42,8 +42,25 @@ public final class CompanionTests {
         }
     }
 
+    /** 3.2.2: one at a time: nobody starts something with a player someone else has, nor right after they let go; their own turn never waits. */
+    static void turns() {
+        long gap = com.hex.kagune.control.npc.Turns.GAP;
+        check(!com.hex.kagune.control.npc.Turns.waits(7, 0, 0, -1L, true), "nobody has them: no waiting");
+        check(com.hex.kagune.control.npc.Turns.waits(7, 9, 0, -1L, true) && com.hex.kagune.control.npc.Turns.waits(7, 9, 0, -1L, false),
+            "someone else has them now: wait (even at the door)");
+        check(!com.hex.kagune.control.npc.Turns.waits(7, 7, 7, 0L, true), "the one who has them is never held back by itself");
+        check(com.hex.kagune.control.npc.Turns.waits(7, 0, 9, gap - 1L, true) && !com.hex.kagune.control.npc.Turns.waits(7, 0, 9, gap, true),
+            "just let go by someone else: a moment's breath, then free");
+        check(!com.hex.kagune.control.npc.Turns.waits(7, 0, 9, 10L, false), "a homecoming waits only for someone with them now");
+        check(!com.hex.kagune.control.npc.Turns.waits(7, 0, 7, 10L, true), "its own last turn is no reason to wait");
+        check(!com.hex.kagune.control.npc.Turns.waits(0, 0, 9, gap + 5L, true) && com.hex.kagune.control.npc.Turns.waits(0, 4, 0, -1L, true),
+            "whoever asks (0): only someone with them, or just gone, holds them back");
+        check(gap >= 40L && gap <= 200L, "the breath between two is a few seconds: " + gap);
+    }
+
     public static void main(String[] args) {
         hands();
+        turns();
         personas();
         lessons();
         talk();
