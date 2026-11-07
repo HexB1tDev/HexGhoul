@@ -184,6 +184,9 @@ public final class ArtPreview {
         if (wanted.contains("peace-rework")) {
             peaceRework(new File(out, "king-peace-rework.png"));
         }
+        if (wanted.contains("aegis")) {
+            aegis(new File(out, "king-peace-aegis.png"));
+        }
         if (wanted.contains("clash")) {
             clash(new File(out, "kagune-clash.png"));
         }
@@ -3801,6 +3804,37 @@ public final class ArtPreview {
             shots.add(new Shot((String) p[0], null, NO_WINGS, (double[]) p[6], new double[] {0.0, 1.0, 0.0}, tris));
         }
         sheet(file, "Rebirth's flesh men: Steve's shape (8x8x8 head, 8x12x4 body, 4x12x4 limbs), the flesh and the arm blades kept", shots, 4, 420, 460);
+    }
+
+    /** 3.2.7: Aegis of :Re's three bulwarks round him at rest from every side, and one swung out to meet a blow. */
+    static void aegis(File file) throws Exception {
+        List<Shot> shots = new ArrayList<>();
+        RigPose[] posed = new RigPose[1];
+        double[] chest = {0.0, 1.25, 0.0};
+        double[] ahead = {0.0, 0.0, 1.0};
+        double[] right = {-1.0, 0.0, 0.0};
+        double[][] eyes = {{0.0, 1.7, 5.0}, {-3.6, 2.6, 4.6}, {-5.0, 1.6, 0.2}, {2.5, 2.4, -4.6}, {0.6, 6.0, 1.6}, {4.4, 2.8, 5.4}};
+        String[] labels = {"front", "three quarters", "his right side", "behind", "from above", "the right one meeting a blow"};
+        for (int k = 0; k < eyes.length; k++) {
+            List<WingPreview.Tri> tris = new ArrayList<>(peaceIn(com.hex.kagune.control.king.KingMove.NONE, 0, 20.0, null, 0.0, posed));
+            boolean meet = k == eyes.length - 1;
+            tris.addAll(game(sink -> {
+                for (int i = 0; i < com.hex.kagune.control.king.PeaceRules.SHIELDS; i++) {
+                    double[] anchor = com.hex.kagune.control.king.PeaceFxModel.shieldRest(i, chest, ahead, right, 40.0);
+                    if (meet && i == com.hex.kagune.control.king.PeaceRules.SHIELD_RIGHT) {
+                        double[] from = unit3(new double[] {-2.0, 0.3, 2.0});
+                        anchor = new double[] {chest[0] + from[0] * 1.35, chest[1] + from[1] * 1.35, chest[2] + from[2] * 1.35};
+                    }
+                    com.hex.kagune.control.king.PeaceFxModel.aegisShield(sink, i, chest, ahead, right, anchor, 1.0, 40.0, true, 8);
+                }
+            }));
+            if (meet) {
+                tris.addAll(dummy(new double[] {2.4, 0.0, 2.4}, 0.6, 1.8, 0xFF2E4A2A));
+            }
+            tris.addAll(field(0.0, 8.0, null, 0.0, 0.0));
+            shots.add(new Shot("J Aegis: " + labels[k], posed[0], NO_WINGS, eyes[k], new double[] {0.0, 1.35, 0.0}, tris));
+        }
+        sheet(file, "Aegis of :Re (3.2.7): bulwarks grown on the tendrils", shots, 3, 640, 560);
     }
 
     static void peaceRework(File file) throws Exception {

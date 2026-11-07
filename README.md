@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.2.7 (HexGhoul): Fix: Peace's shields looked like shields and floated off the tails (testing)
+
+See `.github/release-notes-3.2.7.md`. Aegis of :Re's three shields were knight's heater shields (silver rim, red cross), held in the air off their tendrils' ends, the top one flat over his head. Now each tendril opens like a hand into a cupped fan of crimson flesh on seven white bone ribs that run on into claws, grown on a stalk at the tendril's end; the top one rises behind his head like a hood, the side ones hang close. Gameplay unchanged. Not tested in game.
+
 ## 3.2.6 (HexGhoul): Fix: crystals sounded like punches (testing)
 
 See `.github/release-notes-3.2.6.md`. The crystal's shatter was a bone crack and punch collisions, its hit the punch hits. Now crystal forms, hits and shatters from the pack's brightest steel and needle sounds raised into a ring, no punch or bone in any of it. The pack still has no real glass recording: send crystal sounds (or OK vanilla's amethyst) for the real thing. Not tested in game.

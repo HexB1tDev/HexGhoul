@@ -162,12 +162,20 @@ public final class PeaceFxModel {
         return normalize(new double[] {ahead[0] - right[0] * r * slant, ahead[1] + tilt, ahead[2] - right[2] * r * slant});
     }
 
-    // ================================================================== Aegis of :Re's shield
+    // ================================================================== Aegis of :Re's bulwarks
+
+    /** 3.2.7: how many white bone ribs hold a bulwark open (one straight up its long way, the rest spread evenly round). */
+    public static final int RIBS = 7;
+    /** 3.2.7: how far in the flesh between two ribs sags from the line through their tips (of the plate's reach). */
+    public static final double SAG = 0.24;
 
     /**
-     * A great shield at {@code centre} facing {@code face} (out from him), its top toward {@code up}, {@code size} blocks tall: a white
-     * heater shape (square shoulders, coming to a point below), bowed out, as thick as a hand, silver-rimmed, a crimson cross down and
-     * across its face with a red-hot heart where the arms meet, a ridge down its middle.
+     * 3.2.7 (the owner: the shields were "too shield-like" and floated above the tails): Aegis of :Re's bulwark at {@code centre}
+     * facing {@code face} (out from him), its long way toward {@code up}, {@code size} blocks tall. Not a knight's shield any more:
+     * its tendril's end opened out like a hand into a cupped fan of its own crimson flesh, {@link #RIBS} white bone ribs running out
+     * from a bone knot (a red core in it, beating) where the tendril comes in, the flesh sagging in between them to a scalloped edge,
+     * each rib running on past it into a curved claw (the top one longest, hooked over). It breathes: the webs swell and settle.
+     * The tendril meets it from behind in a flared stalk ({@link #stalk}), so it is grown on the tendril, never held off its end.
      */
     public static void shield(UkakuModel.Sink sink, double[] centre, double[] face, double[] up, double size, double time) {
         if (size < 0.05) {
@@ -176,91 +184,165 @@ public final class PeaceFxModel {
         double[] n = normalize(face);
         double[] u = normalize(sub(up, mul(n, dot(up, n))));
         double[] s = normalize(cross(u, n));
-        double h = size;
-        double w = size * 0.78;
-        double bow = size * 0.12;
-        double thick = size * 0.07;
-        int cols = 8;
-        int rows = 8;
-        double[][][] front = new double[cols + 1][rows + 1][];
-        double[][][] back = new double[cols + 1][rows + 1][];
-        for (int i = 0; i <= cols; i++) {
-            double a = -1.0 + 2.0 * i / cols;
-            for (int j = 0; j <= rows; j++) {
-                double v = (double)j / rows;
-                double half = outline(v);
-                double x = a * half;
-                double[] p = add(add(centre, mul(s, x * w * 0.5)), mul(u, (0.45 - v) * h));
-                double dome = bow * (1.0 - x * x) * (1.0 - 0.5 * v) - Math.abs(x) * thick * 0.6;
-                front[i][j] = add(p, mul(n, dome + thick * 0.5));
-                back[i][j] = add(p, mul(n, dome - thick * 0.5));
+        double breath = 1.0 + 0.035 * Math.sin(time * 0.09);
+        double halfH = size * 0.5 * breath;
+        double halfW = size * 0.43 * breath;
+        double bow = size * 0.17;
+        double thick = size * 0.06;
+        int rings = 6;
+        int spokes = RIBS * 4;
+        double[][][] front = new double[rings + 1][spokes + 1][];
+        double[][][] back = new double[rings + 1][spokes + 1][];
+        int[][] fc = new int[rings + 1][spokes + 1];
+        int[][] bc = new int[rings + 1][spokes + 1];
+        for (int j = 0; j <= rings; j++) {
+            double r = (double)j / rings;
+            for (int i = 0; i <= spokes; i++) {
+                double a = Math.PI * 2.0 * i / spokes;
+                double reach = edge(a, time);
+                double rib = ribness(a);
+                double x = Math.sin(a) * halfW * r * reach;
+                double y = Math.cos(a) * halfH * r * reach;
+                double cup = bow * (1.0 - r * r) + rib * size * 0.025 * r * (1.0 - r);
+                double t = thick * (1.0 - 0.55 * r);
+                double[] p = add(add(centre, mul(s, x)), mul(u, y));
+                front[j][i] = add(p, mul(n, cup + t * 0.5));
+                back[j][i] = add(p, mul(n, cup - t * 0.5));
+                double web = 1.0 - rib;
+                int c = PeaceModel.flesh(r * 0.8, a * RIBS, 61);
+                c = mix(c, PeaceModel.CRIMSON_L, 0.6 * web * (1.0 - 0.6 * r) * (0.8 + 0.2 * Math.sin(time * 0.09 + a * 3.0)));
+                c = mix(c, PeaceModel.BLADE_RED, 0.2 * web * (1.0 - r));
+                c = mix(c, PeaceModel.FIBRE, 0.4 * r * r);
+                fc[j][i] = c;
+                bc[j][i] = mix(PeaceModel.FIBRE, PeaceModel.CRIMSON, 0.35 + 0.3 * (1.0 - r));
             }
         }
         double[] inside = sub(centre, mul(n, size * 2.0));
         double[] outside = add(centre, mul(n, size * 2.0));
-        double beat = Math.pow(Math.max(0.0, Math.sin(time * 0.11)), 6.0);
-        for (int i = 0; i < cols; i++) {
-            for (int j = 0; j < rows; j++) {
-                double a = -1.0 + 2.0 * (i + 0.5) / cols;
-                double v = (j + 0.5) / rows;
-                boolean rim = i == 0 || i == cols - 1 || j == 0 || Math.abs(a) * outline(v) > 0.86;
-                boolean cross = Math.abs(a) < 0.16 || Math.abs(v - 0.3) < 0.07;
-                int c = rim ? PeaceModel.SILVER : cross ? mix(PeaceModel.CRIMSON_L, PeaceModel.BLADE_RED, 0.5) : mix(PeaceModel.WHITE, PeaceModel.RIM, Math.abs(a) * 0.6 + v * 0.3);
-                int c2 = rim ? PeaceModel.SHADOW : cross ? PeaceModel.CRIMSON : mix(PeaceModel.WHITE, PeaceModel.SILVER, Math.abs(a) * 0.7 + v * 0.3);
-                shaded(sink, front[i][j], front[i + 1][j], front[i + 1][j + 1], front[i][j + 1], inside, c, c, c2, c2);
-                shaded(sink, back[i][j], back[i][j + 1], back[i + 1][j + 1], back[i + 1][j], outside, PeaceModel.SHADOW, PeaceModel.UNDER_L, PeaceModel.UNDER_L,
-                    PeaceModel.SHADOW);
+        for (int j = 0; j < rings; j++) {
+            for (int i = 0; i < spokes; i++) {
+                shaded(sink, front[j][i], front[j][i + 1], front[j + 1][i + 1], front[j + 1][i], inside, fc[j][i], fc[j][i + 1], fc[j + 1][i + 1], fc[j + 1][i]);
+                shaded(sink, back[j][i], back[j + 1][i], back[j + 1][i + 1], back[j][i + 1], outside, bc[j][i], bc[j + 1][i], bc[j + 1][i + 1], bc[j][i + 1]);
             }
         }
-        // Its rim, all round between the faces.
-        for (int i = 0; i < cols; i++) {
-            shaded(sink, front[i][0], front[i + 1][0], back[i + 1][0], back[i][0], centre, PeaceModel.SILVER, PeaceModel.SILVER, PeaceModel.SHADOW, PeaceModel.SHADOW);
+        // Its thin edge, all round between the faces.
+        for (int i = 0; i < spokes; i++) {
+            shaded(sink, front[rings][i], front[rings][i + 1], back[rings][i + 1], back[rings][i], centre, PeaceModel.FIBRE, PeaceModel.FIBRE, PeaceModel.CRIMSON,
+                PeaceModel.CRIMSON);
         }
-        for (int j = 0; j < rows; j++) {
-            shaded(sink, front[0][j], front[0][j + 1], back[0][j + 1], back[0][j], centre, PeaceModel.SILVER, PeaceModel.SILVER, PeaceModel.SHADOW, PeaceModel.SHADOW);
-            shaded(sink, front[cols][j], front[cols][j + 1], back[cols][j + 1], back[cols][j], centre, PeaceModel.SILVER, PeaceModel.SILVER, PeaceModel.SHADOW,
-                PeaceModel.SHADOW);
+        // The ribs: white bone fingers from the knot out along the face, on past the edge into claws curling out toward what it meets.
+        for (int k = 0; k < RIBS; k++) {
+            double a = Math.PI * 2.0 * k / RIBS;
+            double reach = edge(a, time);
+            double[] radial = add(mul(s, Math.sin(a) * halfW), mul(u, Math.cos(a) * halfH));
+            double[] way = normalize(radial);
+            double lift = thick * 0.5 + size * 0.008;
+            double[] at0 = add(centre, mul(n, bow + lift));
+            double[] at1 = add(add(centre, mul(radial, 0.5 * reach)), mul(n, bow * 0.75 + lift + size * 0.01));
+            double[] at2 = add(add(centre, mul(radial, reach)), mul(n, lift * 0.6));
+            double claw = size * (k == 0 ? 0.34 : 0.2) * (1.0 + 0.04 * Math.sin(time * 0.09 + k));
+            double[] at3 = add(add(at2, mul(way, claw * 0.7)), mul(n, claw * (k == 0 ? 0.75 : 0.45)));
+            KakujaModel.Spine bone = WarModel.spine(new java.util.ArrayList<>(List.of(at0, at1, at2, at3)), 12, n);
+            double r0 = size * 0.045;
+            GraftMesh.tube(sink, bone, 0.0, 1.0, 12, 5, new GraftMesh.Surface() {
+                @Override
+                public double radius(double t, double around) {
+                    return r0 * (t < 0.7 ? 1.0 - 0.3 * t / 0.7 : Math.max(0.02, 0.7 * (1.0 - (t - 0.7) / 0.3)));
+                }
+
+                @Override
+                public int colour(double t, double around) {
+                    int c = mix(PeaceModel.WHITE, PeaceModel.SILVER, 0.5 + 0.5 * Math.sin(around));
+                    return t > 0.75 ? mix(c, PeaceModel.ICE, (t - 0.75) / 0.25) : c;
+                }
+            }, 1.0);
         }
-        // The heart where the cross's arms meet, red-hot, beating.
-        double[] heart = add(add(centre, mul(u, (0.45 - 0.3) * h)), mul(n, bow * 0.85 + thick * 0.5 + 0.02));
+        // The knot where the ribs meet: a white bone boss with a red core in it, beating.
+        double beat = Math.pow(Math.max(0.0, Math.sin(time * 0.11)), 6.0);
+        double[] base = add(centre, mul(n, bow + thick * 0.5));
+        double[] top = add(base, mul(n, size * 0.07));
+        double boss = size * 0.12;
+        double coreR = size * (0.05 + 0.015 * beat);
         int core = mix(PeaceModel.CORE, 0xFFFF9AA2, 0.5 * beat);
-        double r = size * (0.09 + 0.02 * beat);
         for (int k = 0; k < 8; k++) {
             double a0 = Math.PI * 2.0 * k / 8;
             double a1 = Math.PI * 2.0 * (k + 1) / 8;
-            double[] p0 = add(heart, add(mul(s, Math.cos(a0) * r), mul(u, Math.sin(a0) * r)));
-            double[] p1 = add(heart, add(mul(s, Math.cos(a1) * r), mul(u, Math.sin(a1) * r)));
-            glow(sink, heart, p0, p1, heart, 0xFFFFFFFF, core, core, 0xFFFFFFFF);
+            double[] o0 = add(mul(s, Math.cos(a0)), mul(u, Math.sin(a0)));
+            double[] o1 = add(mul(s, Math.cos(a1)), mul(u, Math.sin(a1)));
+            shaded(sink, add(base, mul(o0, boss)), add(base, mul(o1, boss)), add(top, mul(o1, coreR * 1.25)), add(top, mul(o0, coreR * 1.25)), inside,
+                PeaceModel.SILVER, PeaceModel.SILVER, PeaceModel.WHITE, PeaceModel.WHITE);
+            double[] lit = add(top, mul(n, 0.01));
+            glow(sink, lit, add(lit, mul(o0, coreR)), add(lit, mul(o1, coreR)), lit, 0xFFFFFFFF, core, core, 0xFFFFFFFF);
         }
+        // The stalk behind: the tendril's end flaring into the plate's back.
+        double[] from = stalk(centre, face, size);
+        double[] into = add(centre, mul(n, bow - thick * 0.5 + 0.01));
+        KakujaModel.Spine stem = WarModel.spine(new java.util.ArrayList<>(List.of(from, mix3(from, into, 0.5), into)), 8, u);
+        GraftMesh.tube(sink, stem, 0.0, 1.0, 6, 8, new GraftMesh.Surface() {
+            @Override
+            public double radius(double t, double around) {
+                return 0.12 + (size * 0.3 - 0.12) * t * t;
+            }
+
+            @Override
+            public int colour(double t, double around) {
+                return PeaceModel.flesh(t, around - time * 0.06, 67);
+            }
+        }, 1.0);
     }
 
-    /** Where Aegis shield {@code i} rests (world): over his head, or out at his side; {@code chest} his chest, his {@code ahead} and {@code right}. */
+    /** 3.2.7: where a bulwark's tendril ends (world), behind its plate at {@code centre} facing {@code face}, {@code size} tall. */
+    public static double[] stalk(double[] centre, double[] face, double size) {
+        return sub(centre, mul(normalize(face), size * 0.22));
+    }
+
+    /** 3.2.7: how far a bulwark reaches {@code a} round from its top (of its full reach): out to the ribs, sagging in between, the top rib further. */
+    public static double edge(double a, double time) {
+        double between = Math.pow(Math.abs(Math.sin(RIBS * a * 0.5)), 1.5);
+        double wrapped = Math.atan2(Math.sin(a), Math.cos(a));
+        double hook = 0.16 * Math.exp(-(wrapped * wrapped) / 0.09);
+        return (1.0 - (SAG + 0.03 * Math.sin(time * 0.09 + a * 2.0)) * between) * (1.0 + hook);
+    }
+
+    /** 3.2.7: how much of a rib there is {@code a} round from a bulwark's top: 1 on one, nothing a quarter of the way to the next. */
+    static double ribness(double a) {
+        return Math.pow(Math.max(0.0, Math.cos(RIBS * a)), 6.0);
+    }
+
+    /**
+     * Where Aegis bulwark {@code i} rests (world); {@code chest} his chest, his {@code ahead} and {@code right}. 3.2.7: no longer hung in
+     * the air over his head: the top one rises behind his head out of the kagune on his back like a hood, leaning over; the side ones
+     * hang close at his sides.
+     */
     public static double[] shieldRest(int i, double[] chest, double[] ahead, double[] right, double time) {
         double side = i == PeaceRules.SHIELD_LEFT ? -1.0 : i == PeaceRules.SHIELD_RIGHT ? 1.0 : 0.0;
         double sway = Math.sin(time * 0.07 + i * 2.1);
         double[] up = {0.0, 1.0, 0.0};
-        return i == PeaceRules.SHIELD_TOP ? add(add(chest, mul(up, 1.05 + 0.05 * sway)), mul(ahead, 0.45))
-            : add(add(add(chest, mul(right, side * (1.3 + 0.05 * sway))), mul(ahead, 0.3)), mul(up, -0.1));
+        return i == PeaceRules.SHIELD_TOP ? add(add(chest, mul(up, 0.78 + 0.04 * sway)), mul(ahead, -0.42))
+            : add(add(add(chest, mul(right, side * (1.12 + 0.04 * sway))), mul(ahead, 0.22)), mul(up, -0.05));
     }
 
     /**
-     * Aegis shield {@code i}'s tendril out of his back (between the shoulders) round to {@code anchor} (world), and the shield on its
-     * end there facing out from his chest ({@code shown}: drawn), out {@code grow}.
+     * Aegis bulwark {@code i}'s tendril out of his back (between the shoulders) round to {@code anchor} (world), and the bulwark grown on
+     * its end there facing out from his chest ({@code shown}: drawn), out {@code grow}. 3.2.7: the tendril runs right into the
+     * bulwark's stalk (it used to stop short of the shield, which hung off its end in the air).
      */
     public static void aegisShield(UkakuModel.Sink sink, int i, double[] chest, double[] ahead, double[] right, double[] anchor, double grow, double time,
                                    boolean shown, int sides) {
         double side = i == PeaceRules.SHIELD_LEFT ? -1.0 : i == PeaceRules.SHIELD_RIGHT ? 1.0 : 0.0;
+        boolean top = i == PeaceRules.SHIELD_TOP;
         double[] up = {0.0, 1.0, 0.0};
-        double[] face = normalize(new double[] {anchor[0] - chest[0], i == PeaceRules.SHIELD_TOP ? anchor[1] - chest[1] : (anchor[1] - chest[1]) * 0.3,
-            anchor[2] - chest[2]});
-        double[] shieldUp = i == PeaceRules.SHIELD_TOP && Math.abs(face[1]) > 0.7 ? ahead : up;
+        double[] face = normalize(new double[] {anchor[0] - chest[0], top ? anchor[1] - chest[1] : (anchor[1] - chest[1]) * 0.3, anchor[2] - chest[2]});
+        double[] shieldUp = top && Math.abs(face[1]) > 0.7 ? ahead : up;
+        double size = 1.15 * grow;
+        double[] centre = add(anchor, mul(face, 0.04));
         double[] root = add(add(add(chest, mul(ahead, -0.25)), mul(up, 0.2)), mul(right, side * 0.12));
-        double[] out = add(add(add(root, mul(ahead, -0.45)), mul(up, i == PeaceRules.SHIELD_TOP ? 0.6 : 0.25)), mul(right, side * 0.4));
-        double[] hold = sub(anchor, mul(face, 0.25));
-        double[] mid = add(add(mul(add(out, hold), 0.5), mul(up, 0.2)), mul(right, side * 0.3));
-        tendril(sink, List.of(root, out, mid, hold), 0.17, 0.11, grow, time, 30 + i * 7, sides);
+        double[] out = top ? add(add(root, mul(ahead, -0.3)), mul(up, 0.22)) : add(add(add(root, mul(ahead, -0.4)), mul(up, 0.2)), mul(right, side * 0.4));
+        double[] hold = shown ? stalk(centre, face, size) : sub(anchor, mul(face, 0.1));
+        double[] mid = add(add(mul(add(out, hold), 0.5), mul(up, top ? 0.08 : 0.15)), mul(right, side * 0.25));
+        tendril(sink, List.of(root, out, mid, add(hold, mul(face, shown ? 0.12 : 0.05))), 0.19, 0.13, grow, time, 30 + i * 7, sides);
         if (shown) {
-            shield(sink, add(anchor, mul(face, 0.04)), face, shieldUp, 1.15 * grow, time);
+            shield(sink, centre, face, shieldUp, size, time);
         }
     }
 
@@ -272,15 +354,6 @@ public final class PeaceFxModel {
         double[] out = add(add(add(root, mul(right, side * 0.9)), mul(up, 0.35)), mul(ahead, -0.35));
         double[] mid = add(mul(add(root, foot), 0.5), mul(right, side * 1.1));
         tendril(sink, List.of(root, out, mid, foot), 0.24, 0.15, grow, time, 50 + side, sides);
-    }
-
-    /** How wide the shield is {@code v} down it (0 its top, 1 its point), of its full width. */
-    static double outline(double v) {
-        if (v < 0.5) {
-            return 1.0 - 0.06 * (0.5 - v);
-        }
-        double k = (v - 0.5) / 0.5;
-        return Math.max(0.0, 1.0 - Math.pow(k, 1.6));
     }
 
     // ================================================================== the flesh torn up out of the ground

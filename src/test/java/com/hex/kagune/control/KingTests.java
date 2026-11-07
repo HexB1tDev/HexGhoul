@@ -67,6 +67,7 @@ public final class KingTests {
         combo();
         peace();
         peaceBlades();
+        aegisGrown();
         peaceArms();
         cloth();
         coming();
@@ -592,6 +593,211 @@ public final class KingTests {
      * 1.0.16: Peace's four blades in every move, frame by frame: never inside his body (chain or weapon), the roots never leaving his
      * back, every point finite, each blade striking where its move says, the hand-over between moves never jumping.
      */
+    /**
+     * 3.2.7 (the owner: the shields were "too shield-like and floating above the tails"): every Aegis bulwark is one piece with the
+     * tendril that grows it, at rest and swung out (nothing floats off its end); none rests over his head (the top one rises behind
+     * it, out of what is on his back); the side ones hang close; the plate is a fan, out to its ribs and sagging in between.
+     */
+    private static void aegisGrown() {
+        double[] chest = {0.0, 1.25, 0.0};
+        double[] ahead = {0.0, 0.0, 1.0};
+        double[] right = {-1.0, 0.0, 0.0};
+        boolean whole = true;
+        boolean placed = true;
+        String why = "";
+        for (int frame = 0; frame < 2; frame++) {
+            for (int i = 0; i < com.hex.kagune.control.king.PeaceRules.SHIELDS; i++) {
+                double[] anchor = com.hex.kagune.control.king.PeaceFxModel.shieldRest(i, chest, ahead, right, 40.0 + frame * 17.0);
+                if (frame == 1) {
+                    double[] from = {-0.69, 0.1, 0.69};
+                    anchor = new double[] {chest[0] + from[0] * 1.35, chest[1] + from[1] * 1.35, chest[2] + from[2] * 1.35};
+                } else {
+                    double[] off = {anchor[0] - chest[0], anchor[1] - chest[1], anchor[2] - chest[2]};
+                    double fore = off[2];
+                    double flat = Math.sqrt(off[0] * off[0] + off[2] * off[2]);
+                    if (i == com.hex.kagune.control.king.PeaceRules.SHIELD_TOP) {
+                        placed &= off[1] <= 0.9 && fore < -0.2;
+                    } else {
+                        placed &= flat <= 1.3 && Math.abs(off[1]) < 0.3;
+                    }
+                }
+                List<double[]> quads = new ArrayList<>();
+                com.hex.kagune.control.king.PeaceFxModel.aegisShield((a, b, c, d, n, ca, cb, cc, cd) -> quads.add(new double[] {a[0], a[1], a[2], b[0], b[1], b[2],
+                    c[0], c[1], c[2], d[0], d[1], d[2]}), i, chest, ahead, right, anchor, 1.0, 40.0, true, 8);
+                int pieces = pieces(quads, TOUCH);
+                if (pieces != 1) {
+                    whole = false;
+                    why += " shield " + i + (frame == 1 ? " swung" : " at rest") + ": " + pieces + " pieces";
+                }
+            }
+        }
+        check(whole, "each Aegis bulwark is one piece with its tendril, at rest and swung out" + why);
+        check(placed, "no Aegis bulwark rests over his head: the top one rises behind it, the side ones hang close at his sides");
+        boolean fan = true;
+        int ribs = com.hex.kagune.control.king.PeaceFxModel.RIBS;
+        for (int k = 0; k < ribs; k++) {
+            double a = Math.PI * 2.0 * k / ribs;
+            double between = a + Math.PI / ribs;
+            double next = a + Math.PI * 2.0 / ribs;
+            for (double t = 0.0; t < 200.0; t += 23.0) {
+                double here = com.hex.kagune.control.king.PeaceFxModel.edge(a, t);
+                double there = com.hex.kagune.control.king.PeaceFxModel.edge(next, t);
+                fan &= here >= (k == 0 ? 1.1 : 0.99);
+                fan &= com.hex.kagune.control.king.PeaceFxModel.edge(between, t) <= 0.85 * Math.min(here, there);
+            }
+        }
+        check(fan, "a bulwark is a fan of flesh: out to each rib (the top one hooked further), sagging in at least 15% between them");
+        // And the check above would see one floating: a plate (with its stalk) held 0.4 blocks off its tendril's end, as the old shield hung
+        // off it, is two pieces.
+        List<double[]> apart = new ArrayList<>();
+        com.hex.kagune.control.ukaku.UkakuModel.Sink into = (a, b, c, d, n, ca, cb, cc, cd) -> apart.add(new double[] {a[0], a[1], a[2], b[0], b[1], b[2], c[0], c[1],
+            c[2], d[0], d[1], d[2]});
+        double[] side = com.hex.kagune.control.king.PeaceFxModel.shieldRest(com.hex.kagune.control.king.PeaceRules.SHIELD_RIGHT, chest, ahead, right, 40.0);
+        com.hex.kagune.control.king.PeaceFxModel.aegisShield(into, com.hex.kagune.control.king.PeaceRules.SHIELD_RIGHT, chest, ahead, right, side, 1.0, 40.0, false, 8);
+        double[] way = {side[0] - chest[0], (side[1] - chest[1]) * 0.3, side[2] - chest[2]};
+        double len = Math.sqrt(way[0] * way[0] + way[1] * way[1] + way[2] * way[2]);
+        way = new double[] {way[0] / len, way[1] / len, way[2] / len};
+        double[] out = {side[0] + way[0] * 0.44, side[1] + way[1] * 0.44, side[2] + way[2] * 0.44};
+        com.hex.kagune.control.king.PeaceFxModel.shield(into, out, way, new double[] {0.0, 1.0, 0.0}, 1.15, 40.0);
+        check(pieces(apart, TOUCH) >= 2, "a bulwark held off its tendril's end would be seen as floating");
+    }
+
+    /** 3.2.7: how near two parts must come to count as touching (blocks: a corner of one to the surface of the other). */
+    static final double TOUCH = 0.03;
+
+    /**
+     * How many separate pieces {@code quads} (12 numbers each: four corners) make, two touching when a corner of either comes within
+     * {@code touch} of the other's surface (its two triangles).
+     */
+    static int pieces(List<double[]> quads, double touch) {
+        int n = quads.size();
+        int[] parent = new int[n];
+        for (int i = 0; i < n; i++) {
+            parent[i] = i;
+        }
+        double cellSize = 0.25;
+        java.util.Map<Long, List<Integer>> grid = new java.util.HashMap<>();
+        double[][] box = new double[n][];
+        for (int q = 0; q < n; q++) {
+            double[] p = quads.get(q);
+            double[] b = {1.0E9, 1.0E9, 1.0E9, -1.0E9, -1.0E9, -1.0E9};
+            for (int v = 0; v < 4; v++) {
+                for (int k = 0; k < 3; k++) {
+                    b[k] = Math.min(b[k], p[v * 3 + k] - touch);
+                    b[k + 3] = Math.max(b[k + 3], p[v * 3 + k] + touch);
+                }
+            }
+            box[q] = b;
+            for (long x = (long)Math.floor(b[0] / cellSize); x <= (long)Math.floor(b[3] / cellSize); x++) {
+                for (long y = (long)Math.floor(b[1] / cellSize); y <= (long)Math.floor(b[4] / cellSize); y++) {
+                    for (long z = (long)Math.floor(b[2] / cellSize); z <= (long)Math.floor(b[5] / cellSize); z++) {
+                        grid.computeIfAbsent((x & 0x1FFFFF) << 42 | (y & 0x1FFFFF) << 21 | (z & 0x1FFFFF), k -> new ArrayList<>()).add(q);
+                    }
+                }
+            }
+        }
+        java.util.Set<Long> tried = new java.util.HashSet<>();
+        for (List<Integer> cell : grid.values()) {
+            for (int i = 0; i < cell.size(); i++) {
+                for (int j = i + 1; j < cell.size(); j++) {
+                    int a = cell.get(i);
+                    int b = cell.get(j);
+                    if (root(parent, a) == root(parent, b) || !tried.add((long)Math.min(a, b) << 32 | Math.max(a, b)) || !overlap(box[a], box[b])) {
+                        continue;
+                    }
+                    if (near(quads.get(a), quads.get(b), touch) || near(quads.get(b), quads.get(a), touch)) {
+                        parent[root(parent, a)] = root(parent, b);
+                    }
+                }
+            }
+        }
+        java.util.Set<Integer> roots = new java.util.HashSet<>();
+        for (int q = 0; q < n; q++) {
+            roots.add(root(parent, q));
+        }
+        return roots.size();
+    }
+
+    private static boolean overlap(double[] a, double[] b) {
+        return a[0] <= b[3] && b[0] <= a[3] && a[1] <= b[4] && b[1] <= a[4] && a[2] <= b[5] && b[2] <= a[5];
+    }
+
+    /** Whether a corner of quad {@code p} lies within {@code touch} of quad {@code q}'s surface. */
+    private static boolean near(double[] p, double[] q, double touch) {
+        double[] a = {q[0], q[1], q[2]};
+        double[] b = {q[3], q[4], q[5]};
+        double[] c = {q[6], q[7], q[8]};
+        double[] d = {q[9], q[10], q[11]};
+        for (int v = 0; v < 4; v++) {
+            double[] x = {p[v * 3], p[v * 3 + 1], p[v * 3 + 2]};
+            if (gap(x, a, b, c) <= touch || gap(x, a, c, d) <= touch) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** How far point {@code p} is from triangle {@code a b c} (its nearest point, edges and corners included). */
+    static double gap(double[] p, double[] a, double[] b, double[] c) {
+        double[] ab = sub3(b, a);
+        double[] ac = sub3(c, a);
+        double[] ap = sub3(p, a);
+        double d1 = dot3(ab, ap);
+        double d2 = dot3(ac, ap);
+        double[] at;
+        if (d1 <= 0.0 && d2 <= 0.0) {
+            at = a;
+        } else {
+            double[] bp = sub3(p, b);
+            double d3 = dot3(ab, bp);
+            double d4 = dot3(ac, bp);
+            double[] cp = sub3(p, c);
+            double d5 = dot3(ab, cp);
+            double d6 = dot3(ac, cp);
+            double vc = d1 * d4 - d3 * d2;
+            double vb = d5 * d2 - d1 * d6;
+            double va = d3 * d6 - d5 * d4;
+            if (d3 >= 0.0 && d4 <= d3) {
+                at = b;
+            } else if (d6 >= 0.0 && d5 <= d6) {
+                at = c;
+            } else if (vc <= 0.0 && d1 >= 0.0 && d3 <= 0.0) {
+                at = lerp3(a, ab, d1 / (d1 - d3));
+            } else if (vb <= 0.0 && d2 >= 0.0 && d6 <= 0.0) {
+                at = lerp3(a, ac, d2 / (d2 - d6));
+            } else if (va <= 0.0 && d4 - d3 >= 0.0 && d5 - d6 >= 0.0) {
+                at = lerp3(b, sub3(c, b), (d4 - d3) / ((d4 - d3) + (d5 - d6)));
+            } else {
+                double den = 1.0 / (va + vb + vc);
+                double v = vb * den;
+                double w = vc * den;
+                at = new double[] {a[0] + ab[0] * v + ac[0] * w, a[1] + ab[1] * v + ac[1] * w, a[2] + ab[2] * v + ac[2] * w};
+            }
+        }
+        double[] off = sub3(p, at);
+        return Math.sqrt(dot3(off, off));
+    }
+
+    private static double[] sub3(double[] a, double[] b) {
+        return new double[] {a[0] - b[0], a[1] - b[1], a[2] - b[2]};
+    }
+
+    private static double dot3(double[] a, double[] b) {
+        return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+    }
+
+    private static double[] lerp3(double[] a, double[] way, double t) {
+        return new double[] {a[0] + way[0] * t, a[1] + way[1] * t, a[2] + way[2] * t};
+    }
+
+    private static int root(int[] parent, int i) {
+        while (parent[i] != i) {
+            parent[i] = parent[parent[i]];
+            i = parent[i];
+        }
+        return i;
+    }
+
     private static void peaceBlades() {
         com.hex.kagune.control.king.KingMove[] moves = {com.hex.kagune.control.king.KingMove.NONE, com.hex.kagune.control.king.KingMove.BLADES,
             com.hex.kagune.control.king.KingMove.WALTZ, com.hex.kagune.control.king.KingMove.AEGIS, com.hex.kagune.control.king.KingMove.AEGIS_OPEN,
