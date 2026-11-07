@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.2.5 (HexGhoul): Fix: clash impacts were barely audible (testing)
+
+See `.github/release-notes-3.2.5.md`. The clash sounds were set to 3.5-8% of their volume (a cap to keep three stacked from clipping); now every clash sound plays at full gain (21-29 dB louder), the loudest in the pack, and the ground rumble at 60%. Not tested in game.
+
 ## 3.2.4 (HexGhoul): Fix: a maxed ghoul thrown back in clashes by low-rank investigators (testing)
 
 See `.github/release-notes-3.2.4.md`. Clashes now measure both sides on one scale: an investigator by their rank, you from a fresh Rank 0's power up to the Reaper's with your mastery, the gates of your path opened by quests and lessons, and the ghoul meat in you (plus form and mutations). Fully progressed, you meet the Reaper as an equal, out-push every investigator up to Rank 7, and send Rank 0-1 flying. Not tested in game.

@@ -675,19 +675,19 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/clashes/clash_1",
-        "volume": 0.0456
+        "volume": 1.0
       },
       {
         "name": "hexkagune:sfx/clashes/clash_2",
-        "volume": 0.035
+        "volume": 1.0
       },
       {
         "name": "hexkagune:sfx/clashes/clash_3",
-        "volume": 0.0829
+        "volume": 1.0
       },
       {
         "name": "hexkagune:sfx/clashes/clash_4",
-        "volume": 0.0587
+        "volume": 1.0
       }
     ]
   },
@@ -696,15 +696,15 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/super_punch_collisions/titan_fist_clash",
-        "volume": 0.1296
+        "volume": 1.0
       },
       {
         "name": "hexkagune:sfx/super_punch_collisions/double_shock_impact",
-        "volume": 0.1471
+        "volume": 1.0
       },
       {
         "name": "hexkagune:sfx/super_punch_collisions/sonic_fist_crash",
-        "volume": 0.1558
+        "volume": 1.0
       }
     ]
   },
@@ -751,11 +751,11 @@
     "sounds": [
       {
         "name": "hexkagune:sfx/super_punch_collisions/ground_shaking_collision",
-        "volume": 0.045
+        "volume": 0.6
       },
       {
         "name": "hexkagune:sfx/super_punch_collisions/deep_pressure_collision",
-        "volume": 0.045
+        "volume": 0.6
       }
     ]
   },

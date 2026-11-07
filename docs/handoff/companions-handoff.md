@@ -1,4 +1,14 @@
-# START HERE (state after 3.2.4)
+# START HERE (state after 3.2.5)
+
+The owner's bug report: "the impact sounds, like when we clash, the sound has to be way higher ... Can barely hear it. That's meant to be like the loudest sound of the game."
+
+- Cause: `tools/sfx_pack.py`'s `volume()` capped the `clash` pool at a 0.035 peak (headroom for `KaguneClash.burst`'s three layers), so `sounds.json` played the owner's Clash1..4 at 0.035 to 0.083; `ClashRules.volume` above 1 only widens the range in Minecraft, never the gain.
+- `sfx_pack.py`: pools `clash` and `clash_big` at 1.0 (as `finger_crack`), `quake` at 0.6. Regenerated `sounds.json`: only `sfx.clash`, `sfx.clash_big`, `sfx.quake` changed (checked by diff). The owner's .ogg files untouched (Clash1..4 peak at -0.0 to -7.5 dB; layers rely on OpenAL Soft's output limiter).
+- SfxTests: every clash entry at 1.0, nothing louder.
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 92. Not tested in game.
+
+# State after 3.2.4
 
 The owner's bug report: "I keep getting pushed back on the clash ... CCG agents, even at low rank, are pushing back ... I'm at like maximum level, maximum mastery, maximum quests done, maximum ghoul meat eaten ... at max level, it should be able to be matching Arima."
 

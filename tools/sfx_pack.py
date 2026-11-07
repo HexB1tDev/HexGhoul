@@ -183,6 +183,13 @@ def volume(path, gain, pool):
     # No minimum gain: the former 0.2 floor defeated quiet transformations and eye cues.
     if pool == "finger_crack":
         return 1.0
+    # 3.2.5 (the owner: "the impact sounds, like when we clash, the sound has to be way higher ... Can barely hear it. That's meant to
+    # be like the loudest sound of the game"): their clash files at full gain, the huge clash too, as the finger crack is; the clash's
+    # rumble well up. (They were capped at a 0.035 peak to leave room for three layers: a clash came out at a few percent.)
+    if pool in {"clash", "clash_big"}:
+        return 1.0
+    if pool == "quake":
+        return 0.6
     quiet = pool in {"chitin", "centipede_manifest", "transform.body_warp", "transform.heavy_morph", "writhe"}
     target_mean, peak_ceiling = (-40.0, 0.06) if quiet else (-34.0, 0.16)
     # A huge clash requests three layers at up to 2.95 each, plus a gust and rumble.

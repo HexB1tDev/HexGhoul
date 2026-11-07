@@ -70,6 +70,24 @@ public final class SfxTests {
             }
         }
         check(files >= 100, "most of the user's pack is in use: " + files + " files");
+        // 3.2.5 (the owner: the clash "is meant to be like the loudest sound of the game"): every clash file at full gain, and no sound in
+        // the pack set louder than the quietest of them.
+        Matcher pool = Pattern.compile("^  \"([a-z0-9_.]+)\": \\{(.*?)^  }", Pattern.MULTILINE | Pattern.DOTALL).matcher(json);
+        double clashLeast = Double.MAX_VALUE;
+        double othersMost = 0.0;
+        while (pool.find()) {
+            Matcher volume = Pattern.compile("\"volume\": ([0-9.]+)").matcher(pool.group(2));
+            while (volume.find()) {
+                double v = Double.parseDouble(volume.group(1));
+                if (pool.group(1).equals("sfx.clash") || pool.group(1).equals("sfx.clash_big")) {
+                    clashLeast = Math.min(clashLeast, v);
+                } else {
+                    othersMost = Math.max(othersMost, v);
+                }
+            }
+        }
+        check(clashLeast == 1.0, "every clash sound plays at full gain: " + clashLeast);
+        check(othersMost <= clashLeast, "nothing in the pack is set louder than a clash: " + othersMost);
         // Every vanilla name the mod's code plays is drawn from the pack (but the journal's cues).
         Pattern literal = Pattern.compile("\"((?:entity|block|item|ui)\\.[a-z_.]+)\"");
         Set<String> named = new HashSet<>();
