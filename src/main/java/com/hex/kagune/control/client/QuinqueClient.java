@@ -170,6 +170,23 @@ public final class QuinqueClient {
     }
 
     private static final java.util.Map<Integer, Swing> SWINGS = new java.util.HashMap<>();
+    /** 3.3.2: since when (the clock) each body holding Dawn has stood at rest in its stance: not moving, swinging or aiming. */
+    private static final java.util.Map<Integer, Double> STILL = new java.util.HashMap<>();
+
+    /** 3.3.2: how long (ticks) {@code body} has stood at rest holding Dawn, {@code rest} whether it is at rest now. */
+    static double stillFor(net.minecraft.world.entity.LivingEntity body, boolean rest, double clock) {
+        if (STILL.size() > 256) {
+            STILL.clear();
+        }
+        double dx = body.m_20185_() - body.f_19790_;
+        double dz = body.m_20189_() - body.f_19792_;
+        if (!rest || dx * dx + dz * dz > 1.0E-4) {
+            STILL.put(body.m_19879_(), clock);
+            return 0.0;
+        }
+        Double since = STILL.putIfAbsent(body.m_19879_(), clock);
+        return since == null ? 0.0 : Math.max(0.0, clock - since);
+    }
 
     /** An open quinque owns its M1 input instead of the empty-hand eye-mode/final-form attack. */
     public static boolean armed(net.minecraft.world.entity.LivingEntity body) {
@@ -208,6 +225,9 @@ public final class QuinqueClient {
         com.hex.kagune.control.client.animation.RigPose p;
         double t = (swing.combo.age(clock)) / weapon.swing;
         if (t >= 0.0 && t < 1.0) {
+            if (weapon == Quinque.DAWN) {
+                stillFor(body, false, clock); // 3.3.2: a swing ends the idle
+            }
             p = com.hex.kagune.control.client.animation.QuinquePose.swing(weapon, swing.combo.step(), t);
             if (weapon == Quinque.DAWN) {
                 // 2.0.31: its dark ribbons along the way its point goes.
@@ -216,9 +236,12 @@ public final class QuinqueClient {
         } else {
             float out = shown(held, true);
             long[] open = weapon == Quinque.DAWN ? dawnOpen(held, null) : null;
+            // 3.3.2: Dawn at rest a while has its idle (QuinquePose.idle); 2.0.32: pointing Dawn as its ball gathers.
+            double still = weapon == Quinque.DAWN ? stillFor(body, open == null && out >= 1.0F, clock) : 0.0;
             p = open != null ? com.hex.kagune.control.client.animation.AgentPose.aimDawn(open[1] - open[0] + partial, body.m_146909_())
                 : out < 1.0F ? com.hex.kagune.control.client.animation.QuinquePose.unfolding(weapon, out)
-                : com.hex.kagune.control.client.animation.QuinquePose.hold(weapon); // 2.0.32: pointing Dawn as its ball gathers
+                : weapon == Quinque.DAWN ? com.hex.kagune.control.client.animation.QuinquePose.idle(weapon, still)
+                : com.hex.kagune.control.client.animation.QuinquePose.hold(weapon);
         }
         if (p != null && weapon.ranged) {
             // 1.3.33: the gun along the look (up or down with the head) unless it is clubbing; a kick for each shard of the pair a

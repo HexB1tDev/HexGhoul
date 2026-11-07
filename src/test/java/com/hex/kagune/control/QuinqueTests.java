@@ -101,6 +101,7 @@ public final class QuinqueTests {
         files();
         holds();
         dawn();
+        dawnIdle();
         dawnFire();
         dawnVolley();
         if (!FAILURES.isEmpty()) {
@@ -112,6 +113,61 @@ public final class QuinqueTests {
     }
 
     /** 2.0.31: Dawn's own string: its sweep takes the others in front, its thrust the others in its line; its ribbons follow each swing. */
+    /**
+     * 3.3.2 (the owner: Dawn needs an idle): at rest it starts from the stance and loops: the turn in the fingers, the raise aside and
+     * back; its three blocks never go down through the ground or through his head, the twirl never sweeps it round; the other quinques
+     * keep their stance.
+     */
+    static void dawnIdle() {
+        com.hex.kagune.control.client.animation.QuinqueHolds.Hold h = com.hex.kagune.control.client.animation.QuinqueHolds.of(Quinque.DAWN);
+        com.hex.kagune.control.client.animation.RigPose stance = com.hex.kagune.control.client.animation.QuinquePose.hold(Quinque.DAWN);
+        com.hex.kagune.control.client.animation.RigPose start = com.hex.kagune.control.client.animation.QuinquePose.idle(Quinque.DAWN, 0.0);
+        check(Math.abs(start.rightArmX - stance.rightArmX) < 1.0E-6 && Math.abs(start.rightArmY - stance.rightArmY) < 1.0E-6
+            && Math.abs(start.rightArmZ - stance.rightArmZ) < 1.0E-6, "Dawn's idle starts in its stance");
+        float[] grip = h.rightGrip();
+        float[] tip = {grip[0] + 44.0F, grip[1], grip[2]};
+        boolean aboveGround = true;
+        boolean offHead = true;
+        double highest = 0.0;
+        double turn = 0.0;
+        double[] restDir = dir(stance, h, grip, tip);
+        for (double t = 0.0; t < com.hex.kagune.control.client.animation.QuinquePose.DAWN_SETTLE + com.hex.kagune.control.client.animation.QuinquePose.DAWN_LOOP; t += 0.5) {
+            com.hex.kagune.control.client.animation.RigPose p = com.hex.kagune.control.client.animation.QuinquePose.idle(Quinque.DAWN, t);
+            for (int k = 0; k <= 8; k++) {
+                float[] at = {grip[0] + 44.0F * k / 8.0F, grip[1], grip[2]};
+                double[] w = com.hex.kagune.control.client.animation.QuinqueGrip.held(p, h, false, at);
+                aboveGround &= w[1] < 23.0; // model pixels, y down: the feet at 24
+                offHead &= !(Math.abs(w[0]) < 4.5 && w[1] > -8.5 && w[1] < 0.5 && Math.abs(w[2]) < 4.5);
+            }
+            highest = Math.max(highest, com.hex.kagune.control.client.animation.QuinquePose.dawnShoulder(t));
+            if (t > com.hex.kagune.control.client.animation.QuinquePose.DAWN_SETTLE + 55 && t < com.hex.kagune.control.client.animation.QuinquePose.DAWN_SETTLE + 97) {
+                double[] d = dir(p, h, grip, tip);
+                turn = Math.max(turn, Math.toDegrees(Math.acos(Math.max(-1.0, Math.min(1.0, d[0] * restDir[0] + d[1] * restDir[1] + d[2] * restDir[2])))));
+            }
+        }
+        check(aboveGround, "Dawn's idle: its whole length stays above the ground");
+        check(offHead, "Dawn's idle: never through his head");
+        check(highest == 1.0 && com.hex.kagune.control.client.animation.QuinquePose.dawnShoulder(com.hex.kagune.control.client.animation.QuinquePose.DAWN_SETTLE
+            + com.hex.kagune.control.client.animation.QuinquePose.DAWN_LOOP - 1) == 0.0, "Dawn's idle: raised aside, then back in the stance before the loop ends");
+        check(turn > 5.0 && turn < 45.0, "Dawn's idle: turned in the fingers, its point circling a little, never swept round (" + turn + " degrees)");
+        for (Quinque q : Quinque.values()) {
+            if (q == Quinque.DAWN || com.hex.kagune.control.client.animation.QuinquePose.hold(q) == null) {
+                continue;
+            }
+            com.hex.kagune.control.client.animation.RigPose a = com.hex.kagune.control.client.animation.QuinquePose.idle(q, 200.0);
+            com.hex.kagune.control.client.animation.RigPose b = com.hex.kagune.control.client.animation.QuinquePose.hold(q);
+            check(a.rightArmX == b.rightArmX && a.rightArmY == b.rightArmY && a.lean == b.lean, q + ": no idle of Dawn's, its own stance");
+        }
+    }
+
+    static double[] dir(com.hex.kagune.control.client.animation.RigPose p, com.hex.kagune.control.client.animation.QuinqueHolds.Hold h, float[] from, float[] to) {
+        double[] a = com.hex.kagune.control.client.animation.QuinqueGrip.held(p, h, false, from);
+        double[] b = com.hex.kagune.control.client.animation.QuinqueGrip.held(p, h, false, to);
+        double[] d = {b[0] - a[0], b[1] - a[1], b[2] - a[2]};
+        double l = Math.sqrt(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]);
+        return new double[] {d[0] / l, d[1] / l, d[2] / l};
+    }
+
     static void dawn() {
         check(Quinque.DAWN.arc(0) == 3.0 && Quinque.DAWN.arc(1) == 0.0 && Quinque.DAWN.arc(Quinque.FINISHER) == 0.0,
             "Dawn's first blow, the wide sweep, takes the others in front within its length");

@@ -249,6 +249,19 @@ public final class QuinquePreview {
             sheet(new File(dir, "quinque-dawn-ground.png"), "dawn", Quinque.DAWN, full, poses, labels, new double[][] {{-35, 10}, {-95, 4}, {40, 10}}, 300);
             return;
         }
+        if (args.length > 2 && args[2].equals("idle")) {
+            // 3.3.2: Dawn's idle (QuinquePose.idle): breathing, the twirl, up onto the shoulder, resting there, back down.
+            Model full = load("dawn", "dawn");
+            List<RigPose> poses = new ArrayList<>();
+            List<String> labels = new ArrayList<>();
+            double s = QuinquePose.DAWN_SETTLE;
+            for (double t : new double[] {0, s + 30, s + 70, s + 76, s + 84, s + 140, s + 170, s + 200, s + 232, s + 255}) {
+                poses.add(QuinquePose.idle(Quinque.DAWN, t));
+                labels.add("idle t" + (int)t);
+            }
+            sheet(new File(dir, "quinque-dawn-idle.png"), "dawn", Quinque.DAWN, full, poses, labels, new double[][] {{-35, 10}, {-95, 4}, {40, 10}}, 300);
+            return;
+        }
         if (args.length > 2 && args[2].equals("aim")) {
             // 2.0.32: Dawn pointed as its ball gathers (AgentPose.aimDawn), in its fire frame (its point parted about the light).
             Model fire = load("dawn", "dawn", "fire");

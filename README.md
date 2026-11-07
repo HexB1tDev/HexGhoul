@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.3.2 (HexGhoul): Dawn has an idle (testing)
+
+See `.github/release-notes-3.3.2.md`. Standing still with Dawn out, a slow loop: breathing, Dawn turned to and fro in your fingers, then carried up and aside at ease (point raised to your right, left hand on your hip, head tilted, the point tapping), and back down. Moving, swinging or aiming stops it. Hold and M1s unchanged. Not tested in game.
+
 ## 3.3.1 (HexGhoul): Ken teaches the Rubble Hurl and the Impale, with proofs (testing)
 
 See `.github/release-notes-3.3.1.md`. The Rubble Hurl and the Impale now come from Ken, not mastery alone: past 250 and 350 he teaches them (the Hurl first), each after a proof in his words: throw five bodies from your tails, then crush five in them. Until then the key says who teaches it and the guide shows them greyed. New this week, so no save keeps them. Not tested in game.

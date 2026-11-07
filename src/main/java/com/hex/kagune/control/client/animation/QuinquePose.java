@@ -217,6 +217,93 @@ public final class QuinquePose {
         return p;
     }
 
+    /** 3.3.2: Dawn's idle: how long a loop is, when it starts after he stops (ticks still), and its beats (ticks into the loop). */
+    public static final int DAWN_LOOP = 260;
+    public static final int DAWN_SETTLE = 30;
+    static final double TWIRL_FROM = 60.0;
+    static final double TWIRL_TO = 92.0;
+    static final double UP_FROM = 130.0;
+    static final double UP_TO = 150.0;
+    static final double DOWN_FROM = 222.0;
+    static final double DOWN_TO = 244.0;
+    /**
+     * Dawn carried aside at ease: the arm's pitch, yaw and roll from the stance's (found against its real held model: the hand at the
+     * chest out to his right, the lance raised some 30 degrees and turned out to his right). A stiff arm can't rest a lance this long on
+     * the shoulder (its hand would be over his head) nor point it down (it would be in the ground).
+     */
+    static final float SHOULDER_PITCH = -0.55F;
+    static final float SHOULDER_YAW = 0.38F;
+    static final float SHOULDER_ROLL = 0.3F;
+
+    /**
+     * 3.3.2 (the owner: Dawn needs an idle, an ambient): Dawn held at rest {@code still} ticks after he stopped moving (or swinging, or
+     * aiming), a slow loop every {@link #DAWN_LOOP}: breathing in the stance; the lance turned to and fro in his fingers, its point
+     * circling a little and lifting; back in the stance a while; then carried up and aside at ease, its point raised out to his right, his
+     * left hand on his hip, the head tilted, leaning back a little, the point tapping lazily, for a few seconds, before it comes back down
+     * into the stance. Relaxed: he knows he doesn't need to be ready. The other quinques keep their stance ({@link #hold}).
+     */
+    public static RigPose idle(Quinque q, double still) {
+        RigPose p = hold(q);
+        if (q != Quinque.DAWN || p == null || still < 0.0) {
+            return p;
+        }
+        QuinqueHolds.Hold h = QuinqueHolds.of(q);
+        double in = Math.max(0.0, still - DAWN_SETTLE);
+        double ease = smooth01(still / DAWN_SETTLE);
+        double t = in % DAWN_LOOP;
+        double breath = Math.sin(still * 0.09);
+        float pitch = (float)(0.035 * breath * ease);
+        float yaw = 0.0F;
+        float roll = 0.0F;
+        float lean = (float)(0.012 * breath * ease);
+        double shoulder = 0.0;
+        if (in > 0.0) {
+            if (t >= TWIRL_FROM && t < TWIRL_TO) {
+                double u = (t - TWIRL_FROM) / (TWIRL_TO - TWIRL_FROM);
+                // Turned to and fro in the fingers (a whole turn would sweep its three blocks down through the ground).
+                double envelope = Math.sin(Math.PI * u);
+                roll += (float)(0.85 * Math.sin(Math.PI * 4.0 * u) * envelope);
+                pitch -= (float)(0.22 * envelope);
+            }
+            shoulder = t < UP_FROM ? 0.0 : t < UP_TO ? smooth01((t - UP_FROM) / (UP_TO - UP_FROM))
+                : t < DOWN_FROM ? 1.0 : t < DOWN_TO ? 1.0 - smooth01((t - DOWN_FROM) / (DOWN_TO - DOWN_FROM)) : 0.0;
+        }
+        if (shoulder > 0.0) {
+            double tap = t >= UP_TO && t < DOWN_FROM ? Math.max(0.0, Math.sin((t - UP_TO) * 0.22)) : 0.0;
+            pitch += (float)(shoulder * SHOULDER_PITCH + 0.07 * tap * tap);
+            yaw += (float)(shoulder * SHOULDER_YAW);
+            roll += (float)(shoulder * SHOULDER_ROLL);
+            lean -= (float)(0.06 * shoulder);
+            p.headZ += (float)(0.12 * shoulder);
+            p.headX -= (float)(0.06 * shoulder);
+            // The free left hand on the hip.
+            p.leftArmX += (float)(-0.25 * shoulder);
+            p.leftArmY += (float)(0.1 * shoulder);
+            p.leftArmZ += (float)(-0.55 * shoulder);
+            p.leftElbow += (float)(0.9 * shoulder);
+            p.leftArmHold = Math.max(p.leftArmHold, (float)shoulder);
+        }
+        QuinqueGrip.aimRight(p, h.pitch() + pitch, h.yaw() + yaw, h.roll() + roll);
+        p.lean += lean;
+        return p;
+    }
+
+    /** How far through its shoulder rest Dawn's idle is at {@code still} (0 in the stance .. 1 on the shoulder): for tests and the renderer. */
+    public static double dawnShoulder(double still) {
+        double in = Math.max(0.0, still - DAWN_SETTLE);
+        if (in <= 0.0) {
+            return 0.0;
+        }
+        double t = in % DAWN_LOOP;
+        return t < UP_FROM ? 0.0 : t < UP_TO ? smooth01((t - UP_FROM) / (UP_TO - UP_FROM))
+            : t < DOWN_FROM ? 1.0 : t < DOWN_TO ? 1.0 - smooth01((t - DOWN_FROM) / (DOWN_TO - DOWN_FROM)) : 0.0;
+    }
+
+    static double smooth01(double x) {
+        double u = Math.max(0.0, Math.min(1.0, x));
+        return u * u * (3.0 - 2.0 * u);
+    }
+
     /**
      * A step in as the body lunges ({@code lunge} pixels): the leading foot forward, the other back (the right leading the blade and the
      * katana, the left the bladed stances), the hips lowered just as far as the split legs lower them (straight legs: an investigator's).

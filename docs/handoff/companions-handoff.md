@@ -1,4 +1,18 @@
-# START HERE (state after 3.3.1)
+# START HERE (state after 3.3.2)
+
+Still to do, in this order (each its own version): the Kakuja V2 Dragon's sounds (the owner, asked this session: it is silent); the one-spouse rule (the owner, asked this session, replacing break-up/divorce: "you can only have one wife, no matter what ... There's no divorce button ... The only way you can remarry is if you kill them. But if it's an official NPC like Toka, Ken, or Ito, there's no way to unmarry ... You guys are stuck forever."); then the rest of 3.2.2's list (a jealous animation, reconciliation talks, temper-aware door scenes, homecomings without a home, siblings, companion-child door talk, kids greeting you after days away).
+
+The owner's ask: "Dawn's hold, ambient and M1s"; asked this session which, they picked only "Add an idle/ambient".
+
+- Pure `QuinquePose.idle(q, still)`: Dawn only (others: `hold`). After `DAWN_SETTLE` (30 ticks) a `DAWN_LOOP` (260) loop: breathing (pitch 0.035, lean 0.012); `TWIRL_FROM`..`TO` (60..92) the roll 0.85 sin(4 pi u) in a sin envelope, the point lifting 0.22; `UP_FROM`..`UP_TO` (130..150) up to `SHOULDER_PITCH/YAW/ROLL` (-0.55, 0.38, 0.3: found by a search over `QuinqueGrip.held` for the hand at the chest out right, the lance 30-40 degrees up and out right), held to `DOWN_FROM` (222) with a tap (0.07 sin^2), back by `DOWN_TO` (244); while aside: headZ +0.12, headX -0.06, lean -0.06, the left arm out to the hip (leftArmX -0.25, Y 0.1, Z -0.55, elbow 0.9, `leftArmHold`). `dawnShoulder(still)` exposes the beat.
+- `QuinqueClient`: `STILL` (since when each body holding Dawn has stood at rest), `stillFor(body, rest, clock)` (reset by moving more than 0.01 a tick, a swing, aiming the ball, the case not fully open); at rest Dawn's pose is `QuinquePose.idle`.
+- Tools: `tools/QuinquePreview.java <out> dawn idle` writes `quinque-dawn-idle.png`.
+- Tests: QuinqueTests `dawnIdle()`.
+- **Judgment calls:** arms are stiff in game (no elbows), so the lance can't rest on the shoulder (the hand would be over the head) nor point down (3 blocks into the ground), and a full twirl swept it through the ground: tried and dropped (the first preview). "Hand on hip" is the left arm angled out (no elbow). The loop's timing (13 s) and the 1.5 s settle are guesses.
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 92. Not tested in game.
+
+# State after 3.3.1
 
 Still to do, in this order (each its own version): Dawn's hold, ambient and M1s; the centipede dragon's sounds; break-up/divorce (the 3.2.3 stash was lost: rebuild); then the rest of 3.2.2's list (a jealous animation, reconciliation talks, temper-aware door scenes, homecomings without a home, siblings, companion-child door talk, kids greeting you after days away).
 
