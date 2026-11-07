@@ -2076,7 +2076,7 @@ ignored: Never mind. Weird question.
 
 scene baby_back
 who: baby
-when: back
+when: back home
 say: *peeks out of your arms at the house, then grabs your collar and squeals*
 say: *pats your face with a sticky hand, very pleased with the whole trip*
 > We're home, little one. | +1 pat
@@ -2100,7 +2100,7 @@ ignored: *sleeps on, heavy and warm*
 
 scene baby_back_sibling
 who: baby
-when: back siblings
+when: back siblings home
 say: *hears {sib} somewhere in the house and kicks its legs, reaching that way*
 > Go and show {sib} the baby. | +1 up
   - *squeals at {sib} like it's been gone a hundred years*
@@ -2127,7 +2127,7 @@ ignored: *tells the empty room all about the trip*
 scene toddler_back_shy
 who: toddler
 temper: shy
-when: back !found
+when: back !found home
 say: *holds your hand with both hands, and won't let go even inside*
 say: *whispers* ...Was nice. With you.
 > I liked it too. | +2 pat
@@ -2141,7 +2141,7 @@ ignored: *stays close behind you, holding on*
 scene toddler_back_bold
 who: toddler
 temper: bold
-when: back !found
+when: back !found home
 say: *stamps inside* I walked ALL the way! No carry!
 say: Not tired. NOT. *yawns* ...Go out again.
 > All the way. Big kid. | +2 proud
@@ -2155,7 +2155,7 @@ ignored: *tries to open the door by itself*
 scene toddler_back_curious
 who: toddler
 temper: curious
-when: back !found
+when: back !found home
 say: *empties its pockets onto the floor: three stones, a snail shell, half a leaf* Mine. Found.
 say: Why house got door? Why outside got no door?
 > Let's see your treasures. | +2 pat
@@ -2169,7 +2169,7 @@ ignored: *lines its treasures up along the windowsill*
 scene toddler_back_mischief
 who: toddler
 temper: mischief
-when: back !found
+when: back !found home
 say: *giggles and hides something behind its back* Nothing!
 say: *runs straight back toward the door the moment its feet touch the floor* Hehe!
 > What's behind your back? | +1 tickle
@@ -2197,7 +2197,7 @@ ignored: *puts the flower in a cup of water, very carefully*
 scene toddler_back_serious
 who: toddler
 temper: serious
-when: back !found
+when: back !found home
 say: *stands in the doorway and inspects the house* ...Home. Good. Same.
 say: *very solemnly takes off one boot, then the other, and lines them up*
 > Everything in order? | +1 pat
@@ -2241,7 +2241,7 @@ ignored: *stays clinging to you, quiet*
 scene toddler_found_bold
 who: toddler
 temper: bold
-when: back found
+when: back found home
 say: Wasn't lost! Was EXPLORING! *kicks your arm* Down!
 say: *glares at the door as if it betrayed it* ...Too far. Was too far.
 > You can explore with me. | +2 hand
@@ -2255,7 +2255,7 @@ ignored: *sulks under the table*
 scene toddler_found_curious
 who: toddler
 temper: curious
-when: back found
+when: back found home
 say: Followed a beetle. Beetle went far. Where beetle go, {call}?
 say: *holds up a muddy something* Found THIS. Then lost. Then you.
 > Beetles go home, like us. | +2 pat
@@ -2269,7 +2269,7 @@ ignored: *goes to the window to look for the beetle*
 scene toddler_found_mischief
 who: toddler
 temper: mischief
-when: back found
+when: back found home
 say: *giggles* Hided! You took LONG.
 say: *looks very pleased with itself* Found me. Now me hide again.
 > No more hiding outside. | 0
@@ -2297,7 +2297,7 @@ ignored: *keeps patting your arm, worried*
 scene toddler_found_serious
 who: toddler
 temper: serious
-when: back found
+when: back found home
 say: *very solemn* Went too far. Bad.
 say: *looks at you, then at the floor* ...Sorry. Won't.
 > Thank you for saying sorry. | +2 pat
@@ -2312,7 +2312,7 @@ ignored: *sits by the door, keeping watch on itself*
 
 scene toddler_back
 who: toddler
-when: back
+when: back home
 say: *squirms to be put down and runs straight to its favourite spot*
 say: *drags you by the finger to show you something that has been there all along*
 > Go on, then. | down
@@ -2336,7 +2336,7 @@ ignored: *falls asleep wherever it's standing*
 
 scene toddler_back_sibling
 who: toddler
-when: back siblings
+when: back siblings home
 say: {sib}! *wriggles to get down* Gotta tell {sib}!
 say: *runs off looking for {sib}, then runs back* Where {sib}?
 > Go and find {sib}. | down
@@ -2347,7 +2347,7 @@ ignored: *goes off to find {sib}*
 
 scene toddler_back_other
 who: toddler
-when: back npcparent
+when: back npcparent home
 say: Where {other}? Gotta show {other}!
 say: *looks round the house* {other}? {other}! We home!
 > {other}'s around. Go and look. | down
@@ -2361,7 +2361,7 @@ ignored: *goes looking for {other}*
 scene child_back_sunny
 who: child
 temper: sunny
-when: back !found
+when: back !found home
 say: That was the BEST day! Can we go again tomorrow? And the day after? And every day?
 say: *kicks off its shoes in two directions* Home! I'm starving! What's for dinner? Can I help?
 > Same time tomorrow. | +2 high_five
@@ -2375,7 +2375,7 @@ ignored: *tells the walls all about the trip*
 scene child_back_shy
 who: child
 temper: shy
-when: back !found
+when: back !found home
 say: *lingers by the door* ...Thanks for taking me. I know I didn't talk much.
 say: *quietly* Can we go again? Just us? I liked that it was just us.
 > Just us. Anytime. | +3 hug
@@ -2431,7 +2431,7 @@ ignored: *hides the frog somewhere. You'll find out where.*
 scene child_back_gentle
 who: child
 temper: gentle
-when: back !found
+when: back !found home
 say: Sit down, {call}. You walked so much. I'll get you some water. *already running*
 say: I picked these for the house. *holds out a bunch of slightly squashed flowers* Can we put them where everyone can see?
 > Thank you. Sit with me. | +2 hug
@@ -2475,7 +2475,7 @@ ignored: *keeps smiling at you as if nothing happened*
 scene child_found_shy
 who: child
 temper: shy
-when: back found
+when: back found home
 say: *won't look at you* ...I'm sorry. Everything was so loud. I just wanted it to be quiet for a bit.
 say: *barely a whisper* I didn't think you'd come looking. I didn't think anyone would notice.
 > I'll always notice. | +3 hug
@@ -2545,7 +2545,7 @@ ignored: *makes you a cup of something warm, to say sorry*
 scene child_found_serious
 who: child
 temper: serious
-when: back found
+when: back found home
 say: I made a mistake. I thought I knew the way. I didn't. I'm sorry I made you come looking.
 say: I'd like to explain what went wrong, so it doesn't happen again. Step by step. If that's all right.
 > Thank you for owning it. | +2 proud
@@ -2565,7 +2565,7 @@ ignored: *writes a careful list of what went wrong*
 
 scene child_back
 who: child
-when: back
+when: back home
 say: Can I have a snack? I'm so hungry I could eat the door.
 say: *flops face down on the floor just inside the door* I'm home. I'm dead. Tell everyone I loved them.
 > Snack's in the kitchen. | +1 follow
@@ -2578,7 +2578,7 @@ ignored: *lies on the floor for a while, recovering*
 
 scene child_back_night
 who: child
-when: back night
+when: back night home
 say: *yawning* I'm not tired. I'm just... resting my eyes... standing up...
 say: It's so late. Is it the latest I've ever been up? I think it's the latest I've ever been up.
 > Straight to bed. | +2 bed
@@ -2611,7 +2611,7 @@ ignored: *goes looking for {other}*
 
 scene child_back_hurt
 who: child
-when: back hurt
+when: back hurt home
 say: You're bleeding. Did that happen out there? Was it because of me?
 say: Sit down. You're hurt. I'll get the bandages. I know where they are.
 > It's nothing. I'm fine. | +1
@@ -2627,7 +2627,7 @@ ignored: *hovers near you, worried*
 scene teen_back_sunny
 who: teen
 temper: sunny
-when: back !found
+when: back !found home
 say: Okay, that was actually really fun. Don't make it weird. ...But it was.
 say: We should do that every week. I'm serious. Put it on the calendar. In ink.
 > Every week. In ink. | +2 high_five
@@ -2655,7 +2655,7 @@ ignored: *goes quiet again, but it's a good quiet*
 scene teen_back_bold
 who: teen
 temper: bold
-when: back !found
+when: back !found home
 say: I could've handled all of that on my own, you know. But it was... fine. Having you there.
 say: Next time I'm picking the route. Yours was boring. No offence. Lots of offence.
 > Next time you pick. | +2 proud
@@ -2697,7 +2697,7 @@ ignored: *wanders off, smirking*
 scene teen_back_gentle
 who: teen
 temper: gentle
-when: back !found
+when: back !found home
 say: Sit down. I'll make tea. You always make it, so today I'm making it. Don't argue.
 say: Thanks for today. I know you're busy. It means a lot that you made the time.
 > Thank you. I'll sit. | +2 hug
@@ -2741,7 +2741,7 @@ ignored: *goes off humming, a bit sheepish*
 scene teen_found_shy
 who: teen
 temper: shy
-when: back found
+when: back found home
 say: ...You didn't have to come. I just needed to be somewhere nobody was looking at me.
 say: *doesn't meet your eyes* Sorry. I'm bad at saying when things are too much. So I just... go.
 > Tell me next time. Even just a word. | +2 pat
@@ -2755,7 +2755,7 @@ ignored: *goes to its room, but leaves the door open a crack*
 scene teen_found_bold
 who: teen
 temper: bold
-when: back found
+when: back found home
 say: I'm not a kid. You don't need to come and fetch me like a lost puppy.
 say: I had it under control. Totally. That wasn't panic you saw. That was strategy.
 > Then act like it and leave a note. | 0
@@ -2836,7 +2836,7 @@ ignored: *goes straight to its notes to work out the mistake*
 
 scene teen_back
 who: teen
-when: back
+when: back home
 say: I'm going to shower for about three hours. Don't wait up.
 say: Home. Finally. My feet hate you. My feet and I are not speaking to you.
 > Fair. | +1
@@ -2879,3 +2879,85 @@ say: Is {other} home? Did {othername} notice I was gone?
 > We'll tell {other} together. | +2 pat
   - *sighs* ...Fine. Together's better.
 ignored: *goes to find {other} and get it over with*
+
+# =====================================================================================================================================
+# 3.3.9 (the owner's list: homecomings without a home): back where it lives with you, when the family has no home of its own ("!home").
+# Homecoming scenes that speak of a house wait on "home".
+# =====================================================================================================================================
+
+scene baby_back_nohome
+who: baby
+when: back !home !found
+say: *peeks out of your arms at the trees and the sky, and squeals at a bird*
+say: *grabs a fistful of grass the moment you set it near the ground, and tries to eat it*
+> We're back, little one. | +1 pat
+  - *babbles at you very seriously, as if reporting the whole trip*
+> Look at the sky. | +2 tickle
+  - *reaches up at the clouds with both hands, furious that they won't come down*
+ignored: *falls asleep in your arms to the sound of the wind*
+
+scene toddler_back_nohome
+who: toddler
+when: back !home !found
+say: *runs to the big tree and slaps it with both hands* Back! Our tree! Hi tree!
+say: *flops down in the grass* Home! ...Is this home? Feels like home.
+> This is our spot. | +2 hug
+  - *nods very seriously* Our spot. Mine and yours and {other}.
+> Want to go up? | +2 up
+  - *arms up at once* UP! See EVERYTHING!
+ignored: *starts building a very small house out of sticks*
+
+scene toddler_found_nohome
+who: toddler
+when: back !home found
+say: *clings to you* Was big out there. Too big. No walls.
+say: *sniffles* Couldn't find the tree. All the trees same.
+> I'll always find you. | +2 hug
+  - *buries its face in your neck* ...Always?
+> Let's tie a ribbon on our tree. | +2 proud
+  - *watches you do it, very solemn* Red one. So I know.
+ignored: *won't let go of your hand for the rest of the day*
+
+scene toddler_nohome_where
+who: toddler
+when: back !home
+say: Where's our house? *looks around* Houses have DOORS. I saw one.
+say: Why we sleep outside? Birds sleep outside. Are we birds?
+> We're not birds. We'll build a house. | +2 hug
+  - A house! With a door! *claps* Can I knock on it?
+> Maybe we are birds. | +2 spin
+  - *flaps both arms and runs in circles* TWEET! TWEET!
+ignored: *practises being a bird for an hour*
+
+scene child_back_nohome
+who: child teen
+when: back !home !found
+say: Back to the camp. *drops onto the grass* I like it out here, you know. Even if it's not a real house.
+say: *stretches out by the fire* That was a good day. We should go even further next time.
+> Next time, further. | +2 hug
+  - Promise? *grins* I want to see where the river goes.
+> You like it out here? | +1
+  - Yeah. It's like every day's an adventure. ...Sometimes I'd like a bed, though. A real one.
+ignored: *falls asleep by the fire with their boots still on*
+
+scene child_found_nohome
+who: child teen
+when: back !home found
+say: I couldn't find my way back. *quietly* Everything out there looks the same. There's no house to see from far away.
+say: Sorry. *kicks the dirt* I thought I knew the way. Without a house there's nothing to aim for.
+> I'll always come for you. | +2 hug
+  - *nods, and leans on you* ...Yeah. I know. Thanks.
+> We'll mark the way. | +2 proud
+  - Like a trail? With stones? *perks up* I'll do it. I'll do the whole thing.
+ignored: *sits close to you by the fire and doesn't wander off again*
+
+scene child_nohome_where
+who: child teen
+when: back !home
+say: Are we ever going to have a real house? *pokes the fire* Not that this is bad. I'm just asking.
+say: Other kids have houses. With rooms. I'd want one with a window. Just saying.
+> We'll build one. Soon. | +2 hug
+  - Really? *sits up* Can I pick my room? I want the one at the top.
+> Do you want one? | +1
+  - ...Kind of. Somewhere to keep my stuff. Somewhere that's ours.
+ignored: *draws a house in the dirt with a stick: a door, a window, a room at the top*

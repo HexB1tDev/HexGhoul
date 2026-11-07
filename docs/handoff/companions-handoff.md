@@ -1,4 +1,20 @@
-# START HERE (state after 3.3.8)
+# START HERE (state after 3.3.9)
+
+Still to do, in this order (each its own version): the rest of 3.2.2's list (siblings reacting to the one brought back, companion-child door talk, kids greeting you after days away). The owner: "push an update asap": every version is pushed as it is built.
+
+From the owner's 3.2.2 list: homecomings without a home (3.2.1's home check needed `Households.forChild`; no home, no homecoming).
+
+- `ChildBrain` home check (every 20 ticks): the place is the family home, else `npc.home()` (where it was born, set down or told to wait). The reach is the home's radius, else `Homecoming.NO_HOUSE` (16; the homeless leash is 8).
+- Scenes: every brought/back scene whose lines mention a house now waits on `home`. That's the regex door|doors|doorway|doorframe|doorstep|house|houses|inside|stairs|step|threshold|porch|hallway|upstairs|kitchen|indoors: 45 scenes, tagged once, and SceneTests `HOUSE` keeps it so. 3.3.8's `door_*` lines were reworded to fit either way.
+- New `!home` scenes:
+  - each companion: `brought_nohome_found` and `brought_nohome_outing` (who friend together), `brought_nohome_night`, `brought_nohome_settle` (talk of building a home);
+  - the child: `baby_back_nohome`, `toddler_back_nohome`, `toddler_found_nohome`, `toddler_nohome_where`, `child_back_nohome`, `child_found_nohome`, `child_nohome_where`.
+- Tests: SceneTests `homecomings` (no-home loops, the house words); FamilyTests (`NO_HOUSE >= 12`).
+- **Judgment calls:** a child put down elsewhere settles there (unchanged), so that becomes its place; 16 blocks.
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 93. Not tested in game.
+
+# State after 3.3.8
 
 Still to do, in this order (each its own version): the rest of 3.2.2's list (homecomings without a home, siblings, companion-child door talk, kids greeting you after days away). The owner: "push an update asap": every version is pushed as it is built.
 

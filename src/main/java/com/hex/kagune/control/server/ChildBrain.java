@@ -363,8 +363,11 @@ public final class ChildBrain {
         ParentDuty.talk(npc, mind, level, now);
         if (now % 20L == 13L) {
             Households.Home family = Households.forChild(level, child);
-            boolean out = family != null && npc.m_20238_(new Vec3(family.pos().m_123341_() + 0.5, family.pos().m_123342_(),
-                family.pos().m_123343_() + 0.5)) > (double)family.radius() * family.radius();
+            // 3.3.9 (the owner's list: homecomings without a home): with no family home, the place it lives is its home (no home, no
+            // homecoming, before).
+            BlockPos place = family != null ? family.pos() : npc.home();
+            double reach = family != null ? (double)family.radius() : com.hex.kagune.control.family.Homecoming.NO_HOUSE;
+            boolean out = place != null && npc.m_20238_(new Vec3(place.m_123341_() + 0.5, place.m_123342_(), place.m_123343_() + 0.5)) > reach * reach;
             if (!out) {
                 if (mind.outsideSince != Long.MIN_VALUE) {
                     // 3.2.1: back in: brought home by a parent (carried in, or at their side) is a homecoming.

@@ -2075,7 +2075,7 @@ ignored: I'll check they're asleep. They never are.
 
 scene brought_found
 who: together
-when: kids brought found
+when: kids brought found home
 say: *is already halfway to the door* You found {kid}. Oh, thank god. Thank you. I checked everywhere. I'm sorry. I should have been watching.
 say: {kid}. *kneels and holds them at arm's length, checking every inch* Are you hurt? Anywhere? ...Okay. Okay.
 > It's not your fault. | +2 -> fault
@@ -2093,7 +2093,7 @@ ignored: *makes {kid} a hot drink with unsteady hands*
 
 scene brought_found_night
 who: together
-when: kids brought found night
+when: kids brought found night home
 say: *standing in the dark doorway* You found {kid}. At night. Out there. *very quietly* I was about to go. I was about to let it out to find them.
 say: I couldn't sleep. I couldn't sit. I kept walking to the door and back. You found them. You found them.
 > Let what out? | +1 -> it
@@ -2155,7 +2155,7 @@ ignored: *watches you both with a soft, helpless smile*
 
 scene brought_carrying_night
 who: together
-when: kids brought carrying night
+when: kids brought carrying night home
 say: *whispers* Shh. Is {kid} asleep? Here, I'll get the doors. Mind the step. Mind the creaky board. There's a creaky board.
 say: *very quietly* Look at them. Fast asleep on you. They trust you completely. ...So do I.
 > *nod* | +2 hearts
@@ -2213,7 +2213,7 @@ ignored: *falls asleep again with the book on his face*
 scene brought_clingy
 who: together
 mood: clingy lonely affectionate
-when: kids brought
+when: kids brought home
 say: *opens the door before you reach it* You're home. I heard you coming. I've been listening for you.
 say: The house is so quiet when you're both out. I don't like it. It reminds me of before.
 > We're here now. | +2 cling
@@ -2224,7 +2224,7 @@ ignored: *stays close all evening*
 
 scene brought_cowife
 who: together
-when: kids brought cowife !found
+when: kids brought cowife !found home
 say: Did you take {kid} to see {cowife}? That's good. That's... good. They should know their family.
 say: {kid} told me all about {cowife}'s house. And {cowife}'s cooking. *small smile* I'm told it's better than mine.
 > It isn't. | +2 -> cooking
@@ -2247,7 +2247,7 @@ ignored: *makes {kid}'s favourite dinner, without saying why*
 
 scene brought_friend
 who: friend
-when: kids brought
+when: kids brought home
 say: Thank you for bringing {kid} home. Whatever we are to each other now... I'm glad we're still good at this.
 say: {kid} looks happy. *smiles* You were always good at that. Making people happy without trying.
 > We'll always be their parents. | +2
@@ -2463,7 +2463,7 @@ say: Not lost. *he kneels to their height* Okay. I believe you. But I didn't kno
   - Thank you. *he holds out his hand, and they shake on it, very seriously*
 > That's fair to ask. | +2 hearts
   - I hope so. I don't want to stop them going. I just want them to come back.
-ignored: *walks {kid} through every path near the house the next morning, so they'll know the way*
+ignored: *walks {kid} along every path nearby the next morning, so they'll know the way*
 
 scene door_bold_outing
 who: together
@@ -2522,7 +2522,7 @@ say: *{kid} grins up at him, all innocence* ...That face. That's the face you ma
 > They think it was a game. | +2 laugh
   - A game. *he crouches down* It's only a game if everyone knows they're playing. I didn't know. I was very scared.
 page hid
-say: On purpose. *he goes quiet* ...You're very good at hiding. Too good. *gently* Can we only play hiding games inside the house? Where I can find you?
+say: On purpose. *he goes quiet* ...You're very good at hiding. Too good. *gently* Can we only play hiding games close by? Where I can find you?
 > They agreed. Grudgingly. | +2 laugh
   - Grudgingly is fine. Grudgingly still counts.
 > That was kind. | +2 hearts
@@ -2619,7 +2619,7 @@ scene door_little_found
 who: together
 when: kids brought found littlekid
 weight: 2
-say: *he scoops {kid} up the moment they're through the door* They're so small. How did they get so far? *he holds them close* I should have watched closer.
+say: *he scoops {kid} up the moment they're in reach* They're so small. How did they get so far? *he holds them close* I should have watched closer.
 > It wasn't your fault. | +2 -> fault
 > They're fine. Not a scratch. | +2 hug
   - *he checks anyway, every finger, every toe* ...Not a scratch. Thank you. Thank you.
@@ -2656,7 +2656,7 @@ say: I don't want them to feel terrible. *quietly, to {kid}* I want you to tell 
   - *{kid} nods, and he pulls them into a hug, and they let him*
 > You've thought about this. | +2 shy
   - All afternoon. I wrote it down. I threw the paper away. It was too long.
-ignored: *knocks on {kid}'s door later. They talk for a long time.*
+ignored: *finds {kid} later, alone. They talk for a long time.*
 
 scene door_big_outing
 who: together
@@ -2668,3 +2668,71 @@ say: *{kid} comes in behind you, trying to look bored* You two were gone all day
 > They asked if you'd come next time. | +3 hearts
   - *he goes quiet, and then very warm* ...I'd like that. If they really want me.
 ignored: *asks {kid} about their day over dinner, and actually gets an answer*
+
+# =====================================================================================================================================
+# 3.3.9 (the owner's list: homecomings without a home): a child brought back to where it lives when the family has no home of its own
+# ("!home"). Before, nothing happened without one. Homecoming scenes that speak of a house wait on "home".
+# =====================================================================================================================================
+
+scene brought_nohome_found
+who: friend together
+when: kids brought found !home
+say: *Ken has been standing at the edge of the trees, calling their name, and his voice breaks when he sees {kid}* There you are. Oh, thank you. Thank you.
+say: You found {kid}. *he sits down right where he is, in the grass* I'm sorry. Out here, I don't know where to look first. There's no front door to watch.
+> They're fine. They wandered. | +1 -> door
+> Breathe. They're right here. | +2 hug
+  - *he breathes, and it shakes on the way out, and he reaches for {kid}* ...Right here. Yes.
+page door
+say: There's no door. *he looks around at the open fields* I keep thinking that. If we had walls, I'd know where they ended. I'd know where to stand.
+> Then let's build some walls. | +2 hearts
+  - *he nods, slowly* Yes. I'd like that. Somewhere with a light in the window, so they can always find it.
+> They'll learn where we are. | +1
+  - I'll teach them to find north. And the way back. Every path, until they could walk it asleep.
+ignored: *stays close to {kid} all evening, and keeps glancing at the treeline*
+
+scene brought_nohome_outing
+who: friend together
+when: kids brought !found !home
+say: *Ken looks up from his book under the tree, and smiles* You're back. Both of you. *he marks his page* How was the world?
+say: There you two are. *he moves his things to make room on the blanket* I kept your place. It's not much of a place. But it's yours.
+> The world was big. | +2 -> big
+> {kid} wants to tell you everything. | +2 laugh
+  - Then I'm listening. *he puts the book down entirely* I want all of it.
+page big
+say: It is, isn't it. *he looks out at it* Sometimes I think we should have somewhere small. Just to come back to. So the big doesn't get too big.
+> Somewhere small, then. Ours. | +3 hearts
+  - *he smiles, soft* Ours. I like that word. I'm not used to it yet.
+> This spot's ours already. | +2
+  - It is. *he pats the grass* A tree and a blanket. It's a start. It's a good start.
+ignored: *reads to {kid} under the tree until the light goes*
+
+scene brought_nohome_night
+who: together
+when: kids brought !home night
+say: *Ken has a lantern lit and held up high, the way you'd hold one for someone lost* ...Oh. There you are. I was going to come looking. I'm glad I didn't have to.
+> Sorry. We lost track of time. | +2 -> time
+> Put the lantern down. We're here. | +2 hand
+  - *he sets it down, and takes your hand instead* ...Okay. Okay. You're here.
+page time
+say: It's okay. *he looks out into the dark* It's only... out here, the night's everywhere. I'd feel better with a wall at my back. For them.
+> We'll build one. Soon. | +3 hearts
+  - *he nods, and his shoulders come down* Soon. Yes. I'll hold you to it. Gently.
+> I'll keep watch tonight. | +2 hug
+  - We'll take turns. *he wraps {kid} in his coat* You first. I'll wake you. I always wake up anyway.
+ignored: *keeps the lantern burning all night, just in case*
+
+scene brought_nohome_settle
+who: together
+when: kids brought !home
+weight: 1
+say: *Ken watches {kid} play in the dirt* Do you think they mind? Not having a house? I didn't have much of one, growing up. I don't want that for them.
+> They don't mind. But we could build one. | +2 -> build
+> They have us. That's home. | +2 hearts
+  - *he smiles, a little sad, a little not* That's a very kind thing to say. I think I believe it. Mostly.
+page build
+say: A house. *he says it quietly* With a room full of books. A table we all fit around. A door that doesn't lock from the outside.
+> All of that. I promise. | +3 hand
+  - *he takes your hand* ...I'd like that more than anything. Thank you.
+> Start with the books. | +2 laugh
+  - *he laughs* I already have the books. Hundreds. They've just been waiting for shelves.
+ignored: *spends the evening drawing a little house in the margin of his book*

@@ -19,7 +19,8 @@ import net.minecraft.server.level.ServerPlayer;
  * both {@code found} if it had gone off on its own). Its other parent at home, if a companion who sees them (Eto, Touka, Ken: not out with
  * the player, not fighting, not asleep, not in another talk), meets them at the door with a {@code brought} scene while the child calls out
  * to them ({@link Homecoming#hello}); otherwise the child has its own {@code back} scene with the player. A companion still out looking
- * for that child stops: it is home.
+ * for that child stops: it is home. 3.3.9: a family with no home of its own has homecomings too, back at the place the child lives
+ * ({@link Homecoming#NO_HOUSE}); their scenes are the ones that never speak of a house ({@code !home}, or no {@code home}).
  */
 final class HomecomingServer {
     private HomecomingServer() {

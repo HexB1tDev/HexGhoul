@@ -21,6 +21,12 @@ public final class Homecoming {
     public static final long AGAIN = 6000L;
     public static final long LASTS = 1200L;
 
+    /**
+     * 3.3.9 (the owner's list: homecomings without a home): with no family home, how far round the place a child lives (where it was born or
+     * last set down) is still home (blocks): its leash there (8) and a little more, so it never counts as out while it plays.
+     */
+    public static final double NO_HOUSE = 16.0;
+
     /** True if coming back in after {@code away} ticks out, {@code since} ticks after its last homecoming, is a homecoming. */
     public static boolean counts(long away, long since) {
         return away >= AWAY && since >= AGAIN;

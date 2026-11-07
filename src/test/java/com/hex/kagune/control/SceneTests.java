@@ -429,6 +429,59 @@ public final class SceneTests {
                 }
             }
         }
+        // 3.3.9 (the owner's list: homecomings without a home): the same, for a family with no home ("home" never set): something always fits,
+        // and no homecoming scene that speaks of a house comes up but at one.
+        for (String speaker : SceneWords.COMPANIONS) {
+            List<Scene> brought = books.getOrDefault(speaker, List.of()).stream().filter(scene -> scene.when().contains("brought")).toList();
+            for (Map.Entry<String, List<String>> tier : MOODS.entrySet()) {
+                for (String mood : tier.getValue()) {
+                    for (String hour : new String[] {"day", "night"}) {
+                        if (hour.equals("day") && NIGHT_ONLY.contains(mood)) {
+                            continue;
+                        }
+                        for (boolean found : new boolean[] {false, true}) {
+                            for (boolean carrying : new boolean[] {false, true}) {
+                                Set<String> flags = new HashSet<>(Set.of(hour, "human", "man", "kids", "brought"));
+                                if (found) {
+                                    flags.add("found");
+                                }
+                                if (carrying) {
+                                    flags.add("carrying");
+                                }
+                                List<Scene> fit = SceneBook.fitting(brought, Scene.Kind.APPROACH, new SceneContext(tier.getKey(), mood, "", flags, names(), 7));
+                                check(!fit.isEmpty(), speaker + " meets a " + tier.getKey() + " (" + mood + ", " + hour + (found ? ", found" : ", an outing")
+                                    + (carrying ? ", carrying" : "") + ") bringing the child back with no home of their own");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        for (String tier : new String[] {"baby", "toddler", "child", "teen"}) {
+            for (String temper : SceneWords.TEMPERS) {
+                for (String hour : new String[] {"day", "night"}) {
+                    for (boolean found : new boolean[] {false, true}) {
+                        if (tier.equals("baby") && found) {
+                            continue;
+                        }
+                        Set<String> flags = new HashSet<>(Set.of(hour, "mother", "girl", "human", "back"));
+                        if (found) {
+                            flags.add("found");
+                        }
+                        SceneContext c = new SceneContext(tier, "happy", temper, flags, Map.of("call", "Mama", "me", "Mio", "other", "Papa"), 5);
+                        List<Scene> fit = SceneBook.fitting(back, Scene.Kind.APPROACH, c);
+                        check(fit.size() >= (tier.equals("baby") ? 1 : 2), "a " + temper + " " + tier + " brought back with no home has " + fit.size() + " scenes");
+                    }
+                }
+            }
+        }
+        for (Map.Entry<String, List<Scene>> book : books.entrySet()) {
+            for (Scene scene : book.getValue()) {
+                boolean homecoming = scene.when().contains("brought") || scene.when().contains("back");
+                check(!homecoming || scene.when().contains("home") || scene.when().contains("!home") || !HOUSE.matcher(said(scene)).find(),
+                    book.getKey() + "." + scene.id() + " speaks of a house, so it waits on one ('home')");
+            }
+        }
         for (Map.Entry<String, List<Scene>> book : books.entrySet()) {
             for (Scene scene : book.getValue()) {
                 boolean aboutFound = scene.when().contains("found") || scene.when().contains("!found");
@@ -436,6 +489,26 @@ public final class SceneTests {
                     book.getKey() + "." + scene.id() + ": 'found' only means something with a child brought home");
             }
         }
+    }
+
+    /** 3.3.9: words for a house (a door, the stairs, inside...): a homecoming scene with one waits on the family's home. */
+    static final java.util.regex.Pattern HOUSE = java.util.regex.Pattern.compile(
+        "\\b(door|doors|doorway|doorframe|doorstep|house|houses|inside|stairs|step|threshold|porch|hallway|upstairs|kitchen|indoors)\\b",
+        java.util.regex.Pattern.CASE_INSENSITIVE);
+
+    /** Everything a scene says (its lines, its replies, what it says unanswered). */
+    static String said(Scene scene) {
+        StringBuilder out = new StringBuilder();
+        List<Scene.Page> pages = new java.util.ArrayList<>(scene.pages().values());
+        pages.add(scene.first());
+        for (Scene.Page page : pages) {
+            page.lines().forEach(line -> out.append(line).append('\n'));
+            for (Scene.Option option : page.options()) {
+                option.replies().forEach(line -> out.append(line).append('\n'));
+            }
+        }
+        scene.ignored().forEach(line -> out.append(line).append('\n'));
+        return out.toString();
     }
 
     /** Every ally temper: something to come up with in every mood, by day and by night (hungry: at night); things to talk about. */

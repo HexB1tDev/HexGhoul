@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.3.9 (HexGhoul): Homecomings without a home (testing)
+
+See `.github/release-notes-3.3.9.md`. From the owner's list after 3.2.1: homecomings without a home. Bringing a child back used to need a family home; without one nothing happened. Now the place the child lives counts as home (16 blocks round it), with new scenes for the companions and the children that don't talk about a house, and the old house-and-door scenes kept for families that have one. Not tested in game.
+
 ## 3.3.8 (HexGhoul): Who's at the door (testing)
 
 See `.github/release-notes-3.3.8.md`. From the owner's list after 3.2.1: temper-aware door scenes. When you bring a child home, Eto, Touka or Ken now meet you at the door by who that child is: a scene for each of the seven tempers, found or back from an outing (42 new scenes), and by age (baby, toddler, child or teen). Not tested in game.

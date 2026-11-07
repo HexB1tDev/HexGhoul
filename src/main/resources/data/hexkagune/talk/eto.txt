@@ -2269,7 +2269,7 @@ ignored: I'll go and see what they're plotting.
 
 scene brought_found
 who: together
-when: kids brought found
+when: kids brought found home
 say: You found {kid}. *a long breath* I had three search parties planned and one revenge. I'm very relieved I won't need either.
 say: *watches {kid} come through the door, and only then sits down* There. Good. Now I can be furious in comfort.
 > {kid} was fine. Just wandered. | +1 -> wandered
@@ -2323,7 +2323,7 @@ ignored: *makes a note in her little book, smiling*
 
 scene brought_outing_night
 who: together
-when: kids brought !found night
+when: kids brought !found night home
 say: You took {kid} out at night. *leans in the doorway* Without me. The night is MY thing, darling. I'm deeply wounded.
 say: A moonlit walk with the little one? How romantic. How dangerous. How very like you.
 > They wanted to see the stars. | +2 -> stars
@@ -2354,7 +2354,7 @@ ignored: *watches you both, chin in hand*
 
 scene brought_carrying_night
 who: together
-when: kids brought carrying night
+when: kids brought carrying night home
 say: *whispers* Are they asleep? Don't answer, you'll wake them. Nod. ...Oh, look at that face.
 say: *very quietly, from the doorway* Shh. Bring them here. Slowly. If they wake, I'm blaming you, and then I'm kissing you.
 > *nod* | +2 hearts
@@ -2405,7 +2405,7 @@ ignored: *pointedly reads a book. Upside down.*
 scene brought_sleepy
 who: together
 mood: sleepy bored
-when: kids brought
+when: kids brought home
 say: *yawns from the couch* Oh, you're back. Good. Now the house is full and I can sleep properly.
 say: *half asleep* Is everyone in? Count them for me. I keep getting the number wrong.
 > Everyone's in. | +2 cling
@@ -2417,7 +2417,7 @@ ignored: *falls asleep mid-sentence*
 scene brought_clingy
 who: together
 mood: clingy lonely affectionate
-when: kids brought
+when: kids brought home
 say: *meets you at the door* Finally. The house was too quiet. I talked to the furniture. The furniture is a terrible listener.
 say: You were gone so long I started a story where you never came back. I burned it. Come here.
 > We missed you too. | +2 cling
@@ -2428,7 +2428,7 @@ ignored: *hovers near you both for the rest of the evening*
 
 scene brought_cowife
 who: together
-when: kids brought cowife !found
+when: kids brought cowife !found home
 say: Did you take {kid} to see {cowife}? I can smell someone else's tea on them.
 say: {kid} came home humming a song I didn't teach them. {cowife}'s song, I'd guess. How charming. How very charming.
 > They wanted to see their sibling. | +1 -> siblings
@@ -2705,7 +2705,7 @@ weight: 2
 say: *{kid} fires a question at her before hello* Why is moss green? Hm. *she considers it far too seriously* Because it's jealous of the trees. Next question.
 > That's not true. | +1 -> true
 > Answer it properly. | +2
-  - Fine. Light. Little green machines inside it, eating the sun. Like us, but polite. ...Happy?
+  - Fine. Light. Little green machines in it, eating the sun. Like us, but polite. ...Happy?
 page true
 say: Not true. Correct. *she beams at {kid}* Never believe anything I say until you've checked it in a book. That's the real lesson. I'm very proud you caught me.
 > You lied on purpose. | +2 giggle
@@ -2809,12 +2809,12 @@ scene door_baby
 who: together
 when: kids brought babykid !found
 weight: 2
-say: *she's reaching for {kid} before you're through the door* Give them here. *she breathes them in* ...They smell like outside. Like wind. I've missed them for two whole hours. Is that normal?
+say: *she's reaching for {kid} before you've even stopped walking* Give them here. *she breathes them in* ...They smell like outside. Like wind. I've missed them for two whole hours. Is that normal?
 > Completely normal. | +2 cling
   - Good. Then I'm normal. A first. *she rocks {kid} without thinking about it*
 > They missed you too. | +3 blush
   - They're a baby. They miss milk. *{kid} grabs her hair* ...Fine. Maybe a little me.
-ignored: *carries {kid} from room to room, telling them everything that happened in the house while they were gone*
+ignored: *carries {kid} about, telling them everything that happened while they were gone*
 
 scene door_little_found
 who: together
@@ -2857,7 +2857,7 @@ say: Do they. *she looks at {kid} a long time* ...I don't want terrible. I want 
   - *she does, quietly, and {kid} goes very still, and then hugs her*
 > You were the same at their age. | +2 giggle
   - Worse. Much worse. Nobody came looking for me. That's rather the point.
-ignored: *knocks on {kid}'s door later. They talk for an hour. She doesn't say about what.*
+ignored: *finds {kid} later, alone. They talk for an hour. She doesn't say about what.*
 
 scene door_big_outing
 who: together
@@ -2869,3 +2869,71 @@ say: *{kid} comes in behind you, cool as anything* Look at them. Pretending they
 > They asked if you'd come next time. | +3 blush
   - *she blinks at {kid}* Did you? ...Then I'm coming. I'll embarrass you terribly. It's my right.
 ignored: *sits beside {kid} at dinner and asks them twelve questions they pretend to hate*
+
+# =====================================================================================================================================
+# 3.3.9 (the owner's list: homecomings without a home): a child brought back to where it lives when the family has no home of its own
+# ("!home"). Before, nothing happened without one. Homecoming scenes that speak of a house wait on "home".
+# =====================================================================================================================================
+
+scene brought_nohome_found
+who: friend together
+when: kids brought found !home
+say: *Eto is sitting on a fallen log, very still, until she sees {kid}* ...Oh, there you are. I was about to burn the forest down to see better.
+say: You found {kid}. *she exhales* Out here, with no walls, everything is a way to get lost. I counted them. There are a great many.
+> They're fine. Just wandered. | +1 -> walls
+> Don't burn the forest. | +2 giggle
+  - Not even a little bit of it? *she sighs* Fine. It lives. For {kid}'s sake.
+page walls
+say: Wandered. *she looks around: trees, sky, nothing that closes* Darling, we should build something. Four walls and a door that sticks. Somewhere to come back to.
+> Let's build one. | +2 hearts
+  - *her eyes light up* With a library. And a cellar nobody asks about. And a room for {kid} with a lock on the outside. ...Joking. Mostly.
+> They'll learn where we are. | +1
+  - They will. I'll teach them the stars. The stars don't wander.
+ignored: *keeps one eye on {kid} for the rest of the day, and doesn't pretend not to*
+
+scene brought_nohome_outing
+who: friend together
+when: kids brought !found !home
+say: *Eto waves from where she's been reading in the grass* The wanderers return! Was it a good adventure? Did anyone get eaten?
+say: Back already? *she shades her eyes* {kid} looks like they've rolled in half the countryside. Good. That's the right amount of countryside.
+> Nobody got eaten. | +2 laugh
+  - Pity. A little danger is good for a story. *she pats the grass beside her* Sit. Tell me all of it.
+> We're back where we started. | +1 -> started
+page started
+say: *she looks around their little patch of world* Mm. Back to our spot. It's not much of a home. A tree, some grass, me. ...It'll do, as long as you both keep coming back to it.
+> We always will. | +3 hearts
+  - *she smiles, quietly pleased* Then it's a home. Homes are just places people come back to. The walls are optional.
+> We could build a real one. | +2
+  - We could. *she taps her chin* I'd want a very tall bookshelf. And a very short fence. For appearances.
+ignored: *goes back to her book, but sits a little closer to where {kid} is playing*
+
+scene brought_nohome_night
+who: together
+when: kids brought !home night
+say: *Eto has a little fire going, and she doesn't stand when you come, but she lets out a breath* Out after dark, with nowhere to lock the night out. Come here. Both of you. Close to the fire.
+> Sorry we're late. | +2 -> late
+> Room for two more? | +2 cling
+  - Always. *she lifts her coat and tucks {kid} under it, and leans into you* There. Now the night can do what it likes.
+page late
+say: You're here. That's the only kind of late that matters. *she pokes the fire* But I'd sleep better behind a door. I don't say that often. I'm saying it now.
+> Then we'll build one. | +3 hearts
+  - *she looks at you in the firelight* ...Yes. Let's. I'll design the dungeon. You do the nursery.
+> I'll keep watch tonight. | +2 hand
+  - We'll both keep watch. You sleep first. I'll wake you if anything wants dinner.
+ignored: *wraps {kid} up in her coat and watches the dark until morning*
+
+scene brought_nohome_settle
+who: together
+when: kids brought !home
+weight: 1
+say: *Eto watches {kid} run in circles round the tree* They need a door to slam, you know. Every child does. And a window to climb out of. Shall we give them one?
+> A home of our own? | +2 -> own
+> They seem happy out here. | +1
+  - They're happy anywhere you are. *she smiles* That's the trouble. They'd be happy in a cave. I'd like a little more than a cave.
+page own
+say: Of our own. *she says it like she's tasting it* I've never had one. Places I stayed. Places I hid. Never one I was meant to come back to.
+> Then we'll make you one. | +3 hearts
+  - *she doesn't answer for a while. Then she takes your hand, very hard.* ...Somewhere with a kitchen I'll never use. Yes.
+> Pick the spot. | +2 giggle
+  - Somewhere dramatic. A cliff. A ruin. Somewhere with a view of the end of the world. ...Fine. Somewhere near water.
+ignored: *draws a little house in the dirt with a stick, and a door, and three stick people*

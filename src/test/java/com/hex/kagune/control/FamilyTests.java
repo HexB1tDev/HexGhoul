@@ -831,6 +831,8 @@ check(com.hex.kagune.control.graft.GraftStage.TRANSPLANT.limbs(com.hex.kagune.co
             && !com.hex.kagune.control.family.Homecoming.counts(99999L, com.hex.kagune.control.family.Homecoming.AGAIN - 1L)
             && com.hex.kagune.control.family.Homecoming.counts(99999L, com.hex.kagune.control.family.Homecoming.AGAIN),
             "a homecoming: out long enough, and not again too soon");
+        // 3.3.9: with no family home, the place it lives is home: past its leash there (8) and its play round it (4) before it is out.
+        check(com.hex.kagune.control.family.Homecoming.NO_HOUSE >= 12.0, "a child with no home is out only past its leash and its play");
         check(com.hex.kagune.control.family.Homecoming.fresh(0L) && com.hex.kagune.control.family.Homecoming.fresh(com.hex.kagune.control.family.Homecoming.LASTS - 1L)
             && !com.hex.kagune.control.family.Homecoming.fresh(com.hex.kagune.control.family.Homecoming.LASTS) && !com.hex.kagune.control.family.Homecoming.fresh(-5L),
             "its moment lasts a while, then it's over");

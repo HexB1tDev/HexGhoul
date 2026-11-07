@@ -2225,7 +2225,7 @@ ignored: I'll go check they haven't burned the house down.
 
 scene brought_found
 who: together
-when: kids brought found
+when: kids brought found home
 say: *is at the door before you're through it, and grabs {kid} by both shoulders* Where. Were. You. ...Okay. Okay. You're fine.
 say: You found {kid}. *her jaw is tight* I was about to go out. I had my boots on. I've had them on for an hour.
 > They wandered. They're fine. | +1 -> fine
@@ -2243,7 +2243,7 @@ ignored: *goes to make {kid} something hot, muttering*
 
 scene brought_found_night
 who: together
-when: kids brought found night
+when: kids brought found night home
 say: The middle of the night. {kid}. Out there. *her voice cracks and she hates it* I checked the bed three times. Three. It was still empty.
 say: *sitting on the floor by the door, coat on, her kagune half out* ...You got them. Good. Give me a second. I can't stand up yet.
 > I've got them. Breathe. | +2 hug
@@ -2310,7 +2310,7 @@ ignored: *watches you both, then looks away fast*
 
 scene brought_carrying_night
 who: together
-when: kids brought carrying night
+when: kids brought carrying night home
 say: *whispers* Is {kid} asleep? Don't you dare wake them. I'll kill you. Quietly.
 say: *mouths* Asleep? *very carefully takes hold of the door so it won't bang*
 > *nod* | +2 hearts
@@ -2361,7 +2361,7 @@ ignored: *makes coffee, loudly*
 scene brought_sleepy
 who: together
 mood: sleepy bored
-when: kids brought
+when: kids brought home
 say: *yawns, sprawled on the couch* Oh. Good. You're both back. Now I can stop listening for the door.
 say: *half asleep at the table* ...Back? Good. Wake me if anyone needs kicking.
 > Go to bed. I've got {kid}. | +2 hearts
@@ -2373,7 +2373,7 @@ ignored: *falls asleep sitting up*
 scene brought_clingy
 who: together
 mood: clingy lonely affectionate
-when: kids brought
+when: kids brought home
 say: *is at the door the second it opens* Took you long enough. ...I wasn't waiting. I was just standing here. For an hour.
 say: The house was too quiet without you two. I hated it. I'm saying that once.
 > We missed you too. | +2 cling
@@ -2557,10 +2557,10 @@ scene door_sunny_outing
 who: together
 when: kids brought !found sunnykid !babykid
 weight: 2
-say: *{kid} is already talking before the door shuts* Okay, okay, breathe. I can't hear a single word when it all comes out at once.
+say: *{kid} is already talking before you've stopped walking* Okay, okay, breathe. I can't hear a single word when it all comes out at once.
 > They want to tell you everything. | +2 -> everything
 > Sit down. This'll take a while. | +2 laugh
-  - *she sits on the step with a sigh that isn't really a sigh* Fine. From the start. Slowly.
+  - *she sits down right there with a sigh that isn't really a sigh* Fine. From the start. Slowly.
 page everything
 say: Everything. *she watches {kid} wave their arms about* ...They get that from you. The happy part. Not from me.
 > They get the stubborn part from you. | +2 kicks
@@ -2617,7 +2617,7 @@ say: Not lost. Right. *she crouches nose to nose with {kid}* Then next time you 
   - They'd better. *she lets go, finally* I'm checking.
 > That was terrifying. Good. | +2 kicks
   - It's supposed to be. *she flicks {kid}'s forehead* Bath. Now.
-ignored: *follows {kid} round the house with her arms crossed for an hour*
+ignored: *follows {kid} everywhere with her arms crossed for an hour*
 
 scene door_bold_outing
 who: together
@@ -2764,12 +2764,12 @@ scene door_baby
 who: together
 when: kids brought babykid !found
 weight: 2
-say: *she holds out her arms for {kid} before you're even through the door* Give. Give them here. ...Hi. Hi, you. Did you see the whole world?
+say: *she holds out her arms for {kid} before you've even reached her* Give. Give them here. ...Hi. Hi, you. Did you see the whole world?
 > They slept through most of it. | +2 laugh
   - Figures. *she sniffs {kid}'s head* They smell like grass. Good. That's a good smell.
 > They looked for you the whole way. | +3 shy
   - *she goes pink* They did not. ...Did they? *she holds {kid} closer*
-ignored: *takes {kid} and walks them round the house, showing them everything she missed*
+ignored: *takes {kid} and walks them about, telling them everything they missed*
 
 scene door_little_found
 who: together
@@ -2784,7 +2784,7 @@ say: *she holds {kid} at arm's length and stares at them* You. You're getting a 
 > A bell's fair. | +2 laugh
   - Big bell. Loud bell. *she kisses {kid}'s head, hard* Little menace.
 > Or we fix the gate. | +2
-  - Both. Bell and gate. And I'm sleeping by the door.
+  - Both. Bell and gate. And I'm sleeping right next to them.
 ignored: *won't put {kid} down for the rest of the day*
 
 scene door_little_outing
@@ -2802,7 +2802,7 @@ scene door_big_found
 who: together
 when: kids brought found bigkid
 weight: 2
-say: *{kid} slouches in, and she's on them before they reach the stairs* Oh no. No. You're old enough to know better. Way old enough.
+say: *{kid} slouches in, and she's on them before they get two paces* Oh no. No. You're old enough to know better. Way old enough.
 > They know. They feel awful. | +2 -> awful
 > Let them sleep first. Talk tomorrow. | +2
   - *she stops, breathes* ...Fine. Tomorrow. First thing. And they're not getting out of it.
@@ -2812,15 +2812,83 @@ say: Good. *a long breath* ...No. Not good. I don't want them feeling awful. I w
   - *she does, quietly, and {kid} actually hugs her, which nearly knocks her over*
 > You did the same at their age. | +2 kicks
   - *she kicks your shin* Worse. Way worse. That's how I know.
-ignored: *knocks on {kid}'s door later, and they talk for a long time*
+ignored: *finds {kid} later, alone, and they talk for a long time*
 
 scene door_big_outing
 who: together
 when: kids brought !found bigkid
 weight: 2
-say: *{kid} comes in a step behind you, trying very hard not to look like they had fun with a parent* Look at them. Pretending it was boring. Too cool.
+say: *{kid} trails a pace behind you, trying very hard not to look like they had fun with a parent* Look at them. Pretending it was boring. Too cool.
 > They laughed the whole way. | +2 laugh
   - *she grins at {kid}* Did you? Gross. Laughing with your parent. Embarrassing.
 > They asked if you'd come next time. | +3 shy
   - They did not. *she looks at {kid}, who looks away* ...Okay. Maybe I'll come. If I'm not busy.
 ignored: *sits next to {kid} at dinner and steals their bread, like always*
+
+# =====================================================================================================================================
+# 3.3.9 (the owner's list: homecomings without a home): a child brought back to where it lives when the family has no home of its own
+# ("!home"). Before, nothing happened without one. Homecoming scenes that speak of a house wait on "home".
+# =====================================================================================================================================
+
+scene brought_nohome_found
+who: friend together
+when: kids brought found !home
+say: *Touka's been pacing the same ten steps of ground for an hour, and she stops dead when she sees {kid}* There. THERE. Where were you?
+say: You found them. *she kicks a rock, hard, into the trees* Out here there's nothing to stop them. No walls. No door. Nothing.
+> They wandered. They're fine. | +1 -> walls
+> You wore a path in the grass. | +2 laugh
+  - *she looks down at it* ...Shut up. I was thinking. Loudly.
+page walls
+say: Fine. Sure. *she rubs her face* We need walls. Real ones. A door I can lock and stand in front of. I'm not doing this again.
+> Then we build them. | +2 hearts
+  - Yeah. We do. *she nods, fierce* Soon. With a fence. A big one.
+> They'll learn to stay close. | +1
+  - They'd better. I'm teaching them a whistle. Two notes. They hear it, they come running.
+ignored: *sits down right next to {kid} and doesn't move for the rest of the day*
+
+scene brought_nohome_outing
+who: friend together
+when: kids brought !found !home
+say: *Touka looks up from the little fire she's been keeping going* You're back. Took your time. ...Did they have fun?
+say: Back to our sorry little camp. *she shoves over to make room* Sit. Both of you. I kept the coffee warm. Mostly warm.
+> They had the best day. | +2 -> day
+> Coffee's cold. | +1 laugh
+  - It's FINE. Drink it. *she's almost smiling* Ungrateful.
+page day
+say: Yeah? *she glances at {kid}, then looks into the fire* ...Good. Out here it's the only thing we've got. Days out. Each other.
+> That's not nothing. | +3 hearts
+  - No. *quietly* It's not. ...We still need a roof, though. A roof would be nice.
+> We'll get a roof. | +2
+  - Yeah, yeah. With a kitchen. I want a real kitchen. I'm sick of making coffee on a rock.
+ignored: *hands {kid} the last of the coffee, which is mostly milk*
+
+scene brought_nohome_night
+who: together
+when: kids brought !home night
+say: *Touka is wide awake by the fire, kagune half out, and it only goes away when she sees you* It's dark. There's nothing between us and anything out there. Get over here.
+> Sorry. We lost track of time. | +2 -> time
+> We're here now. | +2 hand
+  - *she grabs your hand and pulls you down beside her* Yeah. You are. Stay there.
+page time
+say: Yeah. I noticed. *she looks out at the dark* I keep listening for footsteps. You can't do that forever. Not with them.
+> We need a real home. | +3 hearts
+  - Yeah. We do. *she leans on you, finally* With a door. A thick one. I'm picking the lock.
+> I'll keep watch. Sleep. | +2 hug
+  - *she doesn't argue, which is how you know how tired she is* ...Wake me if anything moves.
+ignored: *sits up the whole night with {kid} asleep against her*
+
+scene brought_nohome_settle
+who: together
+when: kids brought !home
+weight: 1
+say: *Touka watches {kid} climb the same tree for the fourth time* They need their own room. Somewhere to stick their stupid drawings. ...I want somewhere to stick their stupid drawings.
+> A home, then. | +2 -> home
+> They like the tree. | +1 laugh
+  - They like falling out of the tree. *she winces as {kid} wobbles* I'd like a floor under them.
+page home
+say: A home. *she says it like it's a bit embarrassing* I had one. Once. A little one, upstairs from a coffee shop. It was the best place I ever lived.
+> We'll make one like it. | +3 hearts
+  - *she goes quiet, and pink* ...With a coffee machine. A good one. And a window that gets the morning.
+> I'm sorry you lost it. | +2 shy
+  - Don't. *she looks at {kid}* Just... let's make another. That's all.
+ignored: *starts sketching a floor plan on the back of an old receipt*
