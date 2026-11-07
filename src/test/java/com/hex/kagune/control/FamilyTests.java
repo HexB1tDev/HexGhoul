@@ -97,6 +97,7 @@ public final class FamilyTests {
         vitality();
         kit();
         parenting();
+        homecoming();
         etoChild();
         siblings();
         talks();
@@ -819,6 +820,54 @@ check(com.hex.kagune.control.graft.GraftStage.TRANSPLANT.limbs(com.hex.kagune.co
         check(com.hex.kagune.control.family.Parenting.talk(com.hex.kagune.control.family.Parenting.Why.HOME, "touka", kid,
             com.hex.kagune.control.family.ChildTemper.BOLD, "Hana", "Mom", 5).equals(com.hex.kagune.control.family.Parenting.home(null, "touka", kid,
             com.hex.kagune.control.family.ChildTemper.BOLD, "Hana", "Mom", 5)), "a homecoming of no known reason is the plain word at the door");
+    }
+
+    /** 3.2.1: a player bringing their child home: when it counts, found or an outing, and what the child calls out to its other parent. */
+    static void homecoming() {
+        java.util.UUID you = new java.util.UUID(1L, 2L);
+        java.util.UUID someone = new java.util.UUID(3L, 4L);
+        check(com.hex.kagune.control.family.Homecoming.counts(com.hex.kagune.control.family.Homecoming.AWAY, Long.MAX_VALUE)
+            && !com.hex.kagune.control.family.Homecoming.counts(com.hex.kagune.control.family.Homecoming.AWAY - 1L, Long.MAX_VALUE)
+            && !com.hex.kagune.control.family.Homecoming.counts(99999L, com.hex.kagune.control.family.Homecoming.AGAIN - 1L)
+            && com.hex.kagune.control.family.Homecoming.counts(99999L, com.hex.kagune.control.family.Homecoming.AGAIN),
+            "a homecoming: out long enough, and not again too soon");
+        check(com.hex.kagune.control.family.Homecoming.fresh(0L) && com.hex.kagune.control.family.Homecoming.fresh(com.hex.kagune.control.family.Homecoming.LASTS - 1L)
+            && !com.hex.kagune.control.family.Homecoming.fresh(com.hex.kagune.control.family.Homecoming.LASTS) && !com.hex.kagune.control.family.Homecoming.fresh(-5L),
+            "its moment lasts a while, then it's over");
+        check(com.hex.kagune.control.family.Homecoming.found(null, you) && com.hex.kagune.control.family.Homecoming.found(someone, you)
+            && !com.hex.kagune.control.family.Homecoming.found(you, you), "found if it went off alone or with someone else; else an outing together");
+        boolean filled = true;
+        boolean apart = true;
+        java.util.Set<String> heard = new java.util.HashSet<>();
+        for (com.hex.kagune.control.family.ChildStage stage : com.hex.kagune.control.family.ChildStage.values()) {
+            for (com.hex.kagune.control.family.ChildTemper temper : com.hex.kagune.control.family.ChildTemper.values()) {
+                java.util.Set<String> outing = new java.util.HashSet<>();
+                java.util.Set<String> found = new java.util.HashSet<>();
+                for (int seed = 0; seed < 8; seed++) {
+                    for (boolean wasFound : new boolean[] {false, true}) {
+                        String line = com.hex.kagune.control.family.Homecoming.hello(temper, stage, wasFound, "Mama", seed);
+                        String low = line.toLowerCase(java.util.Locale.ROOT);
+                        filled &= !line.isBlank() && !line.contains("{") && !line.contains("}") && line.length() <= 120 && !line.equals("*waves*");
+                        for (String banned : new String[] {"kaneki", "ayato", "furuta", "takatsuki", "aogiri", "yoshimura"}) {
+                            filled &= !low.contains(banned);
+                        }
+                        (wasFound ? found : outing).add(line);
+                        heard.add(line);
+                    }
+                }
+                if (stage != com.hex.kagune.control.family.ChildStage.BABY) {
+                    java.util.Set<String> both = new java.util.HashSet<>(outing);
+                    both.retainAll(found);
+                    apart &= both.isEmpty() && outing.size() >= 2 && found.size() >= 2;
+                }
+            }
+        }
+        check(filled, "the child's call at the door: filled in (what it calls them), bubble-sized, naming no one it mustn't, never the fallback");
+        check(apart, "found and back from an outing, it says different things, each its own way");
+        check(heard.size() >= 50, "many different calls at the door: " + heard.size());
+        check(com.hex.kagune.control.family.Homecoming.hello(com.hex.kagune.control.family.ChildTemper.SHY, com.hex.kagune.control.family.ChildStage.CHILD, true,
+            "Dad", 3).equals(com.hex.kagune.control.family.Homecoming.hello(com.hex.kagune.control.family.ChildTemper.SHY, com.hex.kagune.control.family.ChildStage.CHILD,
+            true, "Dad", 3)), "the same seed, the same call");
     }
 
     /** 1.3.50: Eto's child: her flesh's rake, grab and club, and her Mutated Arm when it is badly hurt; never the Owl. */

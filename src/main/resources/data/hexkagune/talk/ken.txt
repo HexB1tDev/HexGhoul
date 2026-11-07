@@ -2067,3 +2067,191 @@ say: I read the children a story tonight. All of them. Even the ones who say the
 > You're a good father to all of them. | +3 hug
   - ...I didn't have one, really. So I'm making it up as I go. I'm glad it looks right.
 ignored: I'll check they're asleep. They never are.
+
+# =====================================================================================================================================
+# 3.2.1: you walk in with a child of yours and his ({kid}) after a while out, and he is home ("brought"): "found" if it had gone off
+# on its own and you went and got it, else the two of you were out together; "carrying" if you carry it in. Never come up with but then.
+# =====================================================================================================================================
+
+scene brought_found
+who: together
+when: kids brought found
+say: *is already halfway to the door* You found {kid}. Oh, thank god. Thank you. I checked everywhere. I'm sorry. I should have been watching.
+say: {kid}. *kneels and holds them at arm's length, checking every inch* Are you hurt? Anywhere? ...Okay. Okay.
+> It's not your fault. | +2 -> fault
+> They're safe now. Breathe. | +2 hug
+  - *breathes, and it shakes a little on the way out* ...Thank you. I don't know what I'd... thank you.
+> We'll keep a closer eye, together. | +2 hand
+  - Together. Yes. I'd like that. I'm better at this with you.
+page fault
+say: I looked away for a minute. A minute. That's all it takes. I know that better than anyone.
+> And I looked for an hour. We're a team. | +3 hearts
+  - *a small, shaky smile* ...A team. Yes. Thank you. I needed that.
+> Stop blaming yourself. | +1 chin
+  - I'll try. I'm not very good at that. You know that.
+ignored: *makes {kid} a hot drink with unsteady hands*
+
+scene brought_found_night
+who: together
+when: kids brought found night
+say: *standing in the dark doorway* You found {kid}. At night. Out there. *very quietly* I was about to go. I was about to let it out to find them.
+say: I couldn't sleep. I couldn't sit. I kept walking to the door and back. You found them. You found them.
+> Let what out? | +1 -> it
+> I've got them. You can sit down now. | +2 hug
+  - *sits, finally, as if his legs gave up* ...Thank you. Stay close tonight? Both of you?
+> Come and help me tuck them in. | +2 hand
+  - *follows you, and stands over {kid}'s bed for a long time*
+page it
+say: The kagune. All of it. Whatever it takes to find them. It... frightens me, how ready I was.
+> That's what parents are. | +2 hearts
+  - Maybe. I'd rather be the kind that makes tea. ...I'll make tea.
+> You don't have to be that here. | +2 hug
+  - *leans into you* I know. With you, I know.
+ignored: *sits by {kid}'s bed until dawn*
+
+scene brought_outing
+who: together
+when: kids brought !found
+say: Welcome home, you two. I kept dinner warm. Where did you go? I want to hear everything. {kid} first.
+say: You're back! *wipes his hands on his apron* You both look sunburnt and happy. That's the best kind of tired.
+> We went to the river. | +1 -> river
+> Next time, you're coming too. | +2 hand
+  - I'd like that. I'll pack lunch. I'm good at lunches.
+> {kid} was wonderful company. | +2 hearts
+  - Of course they were. They're the best company. Apart from you.
+page river
+say: The river? Did you see the herons? There's a pair that nests near the bend. I go and watch them sometimes, when I can't think.
+> We saw them. | +2 hearts
+  - *lights up* You did? I'm so glad. I've wanted to show {kid} for ages.
+> Show us next time. | +2 hand
+  - I will. It's a date. A family date. Is that a thing? It's a thing now.
+ignored: *goes to warm dinner up, humming*
+
+scene brought_outing_night
+who: together
+when: kids brought !found night
+say: You took {kid} out at night? *a careful smile* I'm not going to fuss. ...I'm going to fuss a little. Are you both alright?
+say: It's so late. I kept the lamp in the window. Silly, I know. I just like you to have something to walk towards.
+> We followed your lamp. | +3 hearts
+  - *goes red* ...Really? I'll keep it lit, then. Every night.
+> We were careful. I promise. | +1
+  - I know you were. I worry anyway. It's the one thing I'm really good at.
+> Come out with us next time. | +2 hand
+  - At night? ...Alright. I'd like to see it with you two.
+ignored: *puts the kettle on, as if it were morning*
+
+scene brought_carrying
+who: together
+when: kids brought carrying !night
+say: *softly* Oh. Look at you, carrying {kid} like that. I don't think I've ever seen anything so... don't mind me. I'm fine. It's dust.
+say: Let me take them. Your arms must be aching. ...Actually, no. Stay like that a minute. I want to remember this.
+> Take a turn. | +2 hearts
+  - *takes {kid} as if they were made of glass, and smiles down at them* Hello, you.
+> Remember it, then. | +2
+  - *just looks, for a long moment, and smiles*
+> Hug us both. | +2 hug
+  - *wraps his arms round you both, careful of {kid}*
+ignored: *watches you both with a soft, helpless smile*
+
+scene brought_carrying_night
+who: together
+when: kids brought carrying night
+say: *whispers* Shh. Is {kid} asleep? Here, I'll get the doors. Mind the step. Mind the creaky board. There's a creaky board.
+say: *very quietly* Look at them. Fast asleep on you. They trust you completely. ...So do I.
+> *nod* | +2 hearts
+  - *tiptoes ahead, opening every door, and tucks {kid} in as if it were a ritual*
+> Help me tuck them in. | +2 hand
+  - *smooths {kid}'s blanket three times, then once more*
+> I trust you too. | +3 peck
+  - *a silent kiss in the dark* ...Bed. All of us.
+ignored: *keeps watching {kid} sleep*
+
+scene brought_hurt
+who: anyone
+when: kids brought hurt
+say: You're hurt. *goes pale* {kid}, go and wash up. ...Sit down. Please. Let me look. Please.
+say: That was for {kid}, wasn't it. You got hurt keeping them safe. *quietly* I know what that costs.
+> It's healing already. | +1
+  - *checks anyway, very carefully* ...Let me bandage it. For me.
+> It was worth it. | +2 -> worth
+> Just stay with me a minute. | +2 hug
+  - *holds you very gently, as if you might break*
+page worth
+say: I know. I'd do the same. I'd do worse. *a small, tired smile* We're very alike sometimes. That scares me a little.
+> We're alike in the good ways too. | +2 hearts
+  - ...Yes. I suppose we are. Thank you.
+> Then we look after each other. | +2 hug
+  - That's the deal. Always.
+ignored: *fetches bandages and won't let you get up*
+
+scene brought_jealous
+who: together
+mood: jealous sulky
+when: kids brought
+say: Oh. You're back. *smiles, a little too carefully* Did you have a nice time? I'm glad. Really.
+say: You and {kid} went out together. That's good. They should have time with you. *very quietly* I just wish I'd been asked.
+> I should have asked. I'm sorry. | +2 forgive
+  - ...It's alright. Thank you for saying so. That's all I wanted.
+> Come next time. Please. | +2 forgive hand
+  - *a real smile this time* I will. I'll make sandwiches.
+> You were working. | 0
+  - I know. *quietly* I'd have stopped.
+ignored: *goes back to the dishes, a little too quiet*
+
+scene brought_sleepy
+who: together
+mood: sleepy bored
+when: kids brought
+say: *rubbing his eyes, a book open on his chest* Mm? Oh. You're home. Good. I was waiting up. I think I fell asleep waiting up.
+say: *yawns* Welcome back. I made tea. It's cold now. I'm sorry. I'll make more.
+> Don't. Come to bed. | +2 cling
+  - Only if you come too. And {kid}. Everyone. A pile.
+> I'll make the tea. | +2 hearts
+  - *smiles sleepily* You're too good to me.
+ignored: *falls asleep again with the book on his face*
+
+scene brought_clingy
+who: together
+mood: clingy lonely affectionate
+when: kids brought
+say: *opens the door before you reach it* You're home. I heard you coming. I've been listening for you.
+say: The house is so quiet when you're both out. I don't like it. It reminds me of before.
+> We're here now. | +2 cling
+  - *holds you both, and doesn't say anything for a while*
+> Next time, come with us. | +2 hand
+  - I will. I don't want to be the one who waits any more.
+ignored: *stays close all evening*
+
+scene brought_cowife
+who: together
+when: kids brought cowife !found
+say: Did you take {kid} to see {cowife}? That's good. That's... good. They should know their family.
+say: {kid} told me all about {cowife}'s house. And {cowife}'s cooking. *small smile* I'm told it's better than mine.
+> It isn't. | +2 -> cooking
+> They wanted to see their sibling. | +2
+  - Of course. Of course they did. I'd want that too.
+> Are you alright with it? | +1 -> alright
+page cooking
+say: *laughs softly* You're a kind liar. ...Thank you. I'll make their favourite tonight. Just in case.
+> I'll help. | +2 hand
+  - I'd like that. You can chop. Badly.
+> They love your cooking. | +2 hearts
+  - ...They do, don't they. Alright.
+page alright
+say: I'm trying to be. I am, mostly. It's just... I spent so long without a family. Now there's so much of it. I'm afraid of being the one left over.
+> You'll never be left over. | +3 hug
+  - *holds on to you* ...Thank you. I needed to hear that more than I knew.
+> You're the heart of this house. | +3 hearts
+  - *goes very quiet* ...That's the nicest thing anyone's ever said to me.
+ignored: *makes {kid}'s favourite dinner, without saying why*
+
+scene brought_friend
+who: friend
+when: kids brought
+say: Thank you for bringing {kid} home. Whatever we are to each other now... I'm glad we're still good at this.
+say: {kid} looks happy. *smiles* You were always good at that. Making people happy without trying.
+> We'll always be their parents. | +2
+  - Always. That's one thing I'm sure of.
+> You're good at it too. | +2 blush
+  - *flustered* I... thank you. I try.
+ignored: *ruffles {kid}'s hair and goes back to the kitchen*

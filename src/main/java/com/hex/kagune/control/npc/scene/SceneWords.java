@@ -72,10 +72,15 @@ public final class SceneWords {
     public static final Set<String> COMPANION_FLAGS = union(SHARED_FLAGS, Set.of("pregnant", "kids", "baby", "toddler", "kid", "teen", "away", "new", "long",
         "meat", "book", "flower", "ownplace", "mixed", "taught", "cowife",
         // 2.2.3: never set by the moment itself: a scene with it only comes up when asked for by name (making up after a sulk, after jealousy)
-        "makeup"));
+        "makeup",
+        // 3.2.1: the player just brought a child of theirs home ({kid} is that one): "found" if it had gone out on its own (else an outing
+        // the two of them came back from); "carrying" if the player carries a child of theirs (in arms, on shoulders, by the hand)
+        "brought", "found", "carrying"));
     /** A child's: a ghoul or not, a girl or a boy, which parent it talks to, the other parent a companion, brothers and sisters, carried. */
     public static final Set<String> CHILD_FLAGS = union(SHARED_FLAGS, Set.of("girl", "boy", "mother", "father", "siblings", "halfsib", "npcparent", "eto", "touka", "ken",
-        "carried", "taught"));
+        "carried", "taught",
+        // 3.2.1: the one it talks to just brought it home; "found" if it had gone out on its own (else they went out together)
+        "back", "found"));
     /** An ally's: a boy or a girl, a friend of the player's (regard), not just someone who walks with them. */
     public static final Set<String> ALLY_FLAGS = union(SHARED_FLAGS, Set.of("boy", "girl", "friend"));
 

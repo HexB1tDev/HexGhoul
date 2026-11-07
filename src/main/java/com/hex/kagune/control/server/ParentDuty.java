@@ -171,6 +171,19 @@ final class ParentDuty {
         return true;
     }
 
+    /**
+     * 3.2.1: {@code child} was just brought home by a player: a companion parent still on its way to it (not reached it yet) stops; it is
+     * home. One that already reached it carries on (their talk, the walk home, the word at the door).
+     */
+    static void broughtHome(ChildNpc child, ServerLevel level) {
+        for (EtoNpc npc : level.m_6443_(EtoNpc.class, child.m_20191_().m_82400_(96.0), body -> body.mind != null && body.mind.duty != null)) {
+            if (child.m_20148_().equals(npc.mind.duty.child) && !npc.mind.duty.reached) {
+                finish(npc, npc.mind, child, level);
+                npc.m_21573_().m_26573_();
+            }
+        }
+    }
+
     /** Its duty over: whatever it carried put down, the child let go. */
     private static void finish(EtoNpc npc, EtoBrain.Mind mind, ChildNpc child, ServerLevel level) {
         Duty d = mind.duty;

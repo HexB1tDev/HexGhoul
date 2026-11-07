@@ -1,4 +1,19 @@
-# START HERE (state after 3.2.0)
+# START HERE (state after 3.2.1)
+
+The second half of the owner's "more conversations, like bringing the child home ... depending on how the character is or who it is, the personality they have": the player bringing the child home (3.2.0 was the companion parent doing it).
+
+- Pure `family/Homecoming`: `AWAY` 900 (out at least this long), `AGAIN` 6000 (per child), `LASTS` 1200 (the scenes' window); `counts`, `fresh`, `found(leftWith, broughtBy)` (found unless it went out with the one who brought it back); `hello(temper, stage, found, call, seed)`: what the child calls out to its waiting other parent (baby; toddler and child/teen x 7 tempers x found/outing, 2 each).
+- `ChildBrain` home check (every 20 ticks): on going out, `mind.leftWith = HomecomingServer.with(...)` (the player carrying it or that it follows, else null); on coming back in, `HomecomingServer.cameHome(...)` with the time out.
+- Server `HomecomingServer`: a homecoming if a parent of it (a player in the same level) carries it in or it follows them in and `Homecoming.counts`; remembered in `BROUGHT` (`WorldTimes.kept()`, by child id: player, time, found). `ParentDuty.broughtHome` drops any companion's unreached duty for that child. `greet`: a companion parent within 24 of the player (not following anyone, not fighting, asleep, talking or on a duty) gets `SceneServer.approachBrought`; if that works, the child's `hello` bubble goes in its talk queue; else `SceneServer.approachBack` (the child's own). Both skip `BETWEEN` (`free(player, now, true)`), never a pending card, a talk or a fight.
+- `SceneServer`: `waitingOn(book, flag)` (scenes whose `when` has it); `comeUp` split out of both `approach` methods; companion context: `brought` (+`found`) from `HomecomingServer.latest(kids, player)` unless she is following the player (she was there), `{kid}` that child; `carrying` when the player carries a child of theirs (the brought one if any). Child context: `back` (+`found`) while at home within `LASTS` of being brought by this player.
+- `SceneWords`: companion flags `brought`, `found`, `carrying`; child flags `back`, `found`.
+- Scripts: eto/touka/ken `brought_*` (12 each: found, found_night, outing, outing_night, carrying, carrying_night, hurt, jealous, sleepy, clingy, cowife, friend; all `when: kids brought ...`); child 58 (`baby_back*`, then per age `*_back_<temper>` `!found`, `*_found_<temper>` `found`, and any-temper `*_back`, `_night`, `_sibling`, `_other`, `_hurt`).
+- Tests: SceneTests `homecomings()` (coverage for every companion tier/mood/hour/found/carrying, every child age/temper/mood/hour/found with 2+ scenes and one of its temper; none fit without the flag; `found` only with `back`/`brought`); FamilyTests `homecoming()`.
+- **Judgment calls:** 45 s out, once per 5 min per child, the 1-minute window; friends-tier co-parents get one neutral scene ("whatever we are to each other"); outing vs found is decided by who it went out with (a child that went out with you and that you left outside, then fetched, still reads as an outing); the companion must see the player within 12 blocks, else the child talks instead.
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 92. Not tested in game.
+
+# State after 3.2.0
 
 The owner's ask (from the 3.1.7 list): "more conversations, like bringing the child home, like more diverse conversations, depending on how the character is or who it is, the personality they have ... make up your own shit." This version is the first half: the companion parent bringing the child home. (The second half, the player bringing it home, is 3.2.1.)
 

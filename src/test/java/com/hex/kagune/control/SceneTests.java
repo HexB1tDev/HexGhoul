@@ -55,6 +55,7 @@ public final class SceneTests {
         Map<String, List<Scene>> books = scripts();
         companions(books);
         children(books.getOrDefault("child", List.of()));
+        homecomings(books);
         allies(books.getOrDefault("ally", List.of()));
         picking();
         tempers();
@@ -280,6 +281,82 @@ public final class SceneTests {
                         check(fits, "child." + scene.id() + ": '" + effect + "' fits one of its ages " + scene.who());
                     }
                 }
+            }
+        }
+    }
+
+    /**
+     * 3.2.1: bringing a child home. Every companion meets the player at the door ("brought") whoever they are to each other, in every mood,
+     * found or back from an outing, carrying the child or not, by day and by night; every child of every age and temper has its own word
+     * ("back"), found or not, by day and by night. Nothing about a homecoming comes up but at one: "found" only with "brought" or "back".
+     */
+    static void homecomings(Map<String, List<Scene>> books) {
+        for (String speaker : SceneWords.COMPANIONS) {
+            List<Scene> book = books.getOrDefault(speaker, List.of());
+            List<Scene> brought = book.stream().filter(scene -> scene.when().contains("brought")).toList();
+            check(brought.size() >= 10, speaker + " has " + brought.size() + " scenes for a child brought home");
+            for (Map.Entry<String, List<String>> tier : MOODS.entrySet()) {
+                for (String mood : tier.getValue()) {
+                    for (String hour : new String[] {"day", "night"}) {
+                        if (hour.equals("day") && NIGHT_ONLY.contains(mood)) {
+                            continue;
+                        }
+                        for (boolean found : new boolean[] {false, true}) {
+                            for (boolean carrying : new boolean[] {false, true}) {
+                                Set<String> flags = new HashSet<>(Set.of(hour, "human", "man", "kids", "home", "brought"));
+                                if (found) {
+                                    flags.add("found");
+                                }
+                                if (carrying) {
+                                    flags.add("carrying");
+                                }
+                                int fit = SceneBook.fitting(brought, Scene.Kind.APPROACH, new SceneContext(tier.getKey(), mood, "", flags, names(), 7)).size();
+                                check(fit >= 1, speaker + " meets a " + tier.getKey() + " (" + mood + ", " + hour + (found ? ", found" : ", an outing")
+                                    + (carrying ? ", carrying" : "") + ") bringing the child home with " + fit + " scenes");
+                            }
+                        }
+                    }
+                }
+            }
+            for (Scene scene : brought) {
+                check(scene.kind() == Scene.Kind.APPROACH && !scene.fits(new SceneContext("wife", "happy", "", Set.of("day", "human", "man", "kids", "home"),
+                    names(), 1)), speaker + "." + scene.id() + " comes up only with a child just brought home");
+            }
+        }
+        List<Scene> child = books.getOrDefault("child", List.of());
+        List<Scene> back = child.stream().filter(scene -> scene.when().contains("back")).toList();
+        check(back.size() >= 50, "children have " + back.size() + " scenes for being brought home");
+        for (String tier : new String[] {"baby", "toddler", "child", "teen"}) {
+            for (String temper : SceneWords.TEMPERS) {
+                for (String mood : SceneWords.CHILD_MOODS) {
+                    for (String hour : new String[] {"day", "night"}) {
+                        for (boolean found : new boolean[] {false, true}) {
+                            if (tier.equals("baby") && found) {
+                                continue; // a baby goes nowhere on its own
+                            }
+                            Set<String> flags = new HashSet<>(Set.of(hour, "mother", "girl", "human", "home", "back"));
+                            if (found) {
+                                flags.add("found");
+                            }
+                            SceneContext c = new SceneContext(tier, mood, temper, flags, Map.of("call", "Mama", "me", "Mio", "other", "Papa"), 5);
+                            int fit = SceneBook.fitting(back, Scene.Kind.APPROACH, c).size();
+                            int want = tier.equals("baby") ? 1 : 2;
+                            check(fit >= want, "a " + temper + " " + tier + " (" + mood + ", " + hour + (found ? ", found" : ", an outing") + ") brought home has "
+                                + fit + " scenes");
+                            if (!tier.equals("baby")) {
+                                long own = SceneBook.fitting(back, Scene.Kind.APPROACH, c).stream().filter(scene -> scene.tempers().contains(temper)).count();
+                                check(own >= 1, "a " + temper + " " + tier + " brought home (" + (found ? "found" : "an outing") + ") has a scene of its own temper");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        for (Map.Entry<String, List<Scene>> book : books.entrySet()) {
+            for (Scene scene : book.getValue()) {
+                boolean aboutFound = scene.when().contains("found") || scene.when().contains("!found");
+                check(!aboutFound || scene.when().contains("back") || scene.when().contains("brought"),
+                    book.getKey() + "." + scene.id() + ": 'found' only means something with a child brought home");
             }
         }
     }

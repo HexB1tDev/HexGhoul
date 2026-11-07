@@ -85,6 +85,8 @@ public final class ChildBrain {
         UUID escort;
         long escortUntil = Long.MIN_VALUE;
         long outsideSince = Long.MIN_VALUE;
+        /** 3.2.1 (HomecomingServer): the player it went out with (carrying it, or it following them), or null: it went off on its own. */
+        UUID leftWith;
         long remarkedAt = Long.MIN_VALUE / 2;
         /**
          * 1.3.51 (SiblingLife): when it last had a moment with a brother or sister; the one it plays tag with (an entity id, 0 none),
@@ -364,9 +366,15 @@ public final class ChildBrain {
             boolean out = family != null && npc.m_20238_(new Vec3(family.pos().m_123341_() + 0.5, family.pos().m_123342_(),
                 family.pos().m_123343_() + 0.5)) > (double)family.radius() * family.radius();
             if (!out) {
+                if (mind.outsideSince != Long.MIN_VALUE) {
+                    // 3.2.1: back in: brought home by a parent (carried in, or at their side) is a homecoming.
+                    HomecomingServer.cameHome(npc, mind, child, mind.leftWith, level, now, now - mind.outsideSince);
+                }
                 mind.outsideSince = Long.MIN_VALUE;
+                mind.leftWith = null;
             } else if (mind.outsideSince == Long.MIN_VALUE) {
                 mind.outsideSince = now;
+                mind.leftWith = HomecomingServer.with(npc, mind, level);
             }
         }
         // 1.3.43: its kagune: its shots fly on; out of a fight, it goes back in.

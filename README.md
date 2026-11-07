@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.2.1 (HexGhoul): Bringing your child home yourself: who meets you at the door (testing)
+
+See `.github/release-notes-3.2.1.md`. Carry or walk a child of yours home after a while out: its other parent at home (Eto, Touka, Ken) meets you at the door, and it matters whether you found the child or the two of you were out together, the hour, carrying it, their mood, your other partner; the child calls out to them in its own temper. With nobody waiting, the child talks to you itself, by age and temper. 94 new scenes, about 950 lines. Not tested in game.
+
 ## 3.2.0 (HexGhoul): The word at the door: bringing the child home, by who is talking (testing)
 
 See `.github/release-notes-3.2.0.md`. When Eto, Touka or Ken brings a wandering, night-roaming or rampaging child home, the word at the door is now a real exchange that knows why: the parent on what happened, the child in its own temper, the parent's answer to that kind of child, sometimes the child's last word. About 350 new lines. Not tested in game.

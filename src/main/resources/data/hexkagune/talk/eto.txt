@@ -2261,3 +2261,196 @@ say: The children have formed a little gang. {kid} is the brains. I'm told I'm n
 > As long as they're happy. | +2 hug
   - They are. All of them. Even the ones that aren't mine. ...They're a little bit mine now, I suppose.
 ignored: I'll go and see what they're plotting.
+
+# =====================================================================================================================================
+# 3.2.1: you walk in with a child of yours and hers ({kid}) after a while out, and she is home ("brought"): "found" if it had gone off
+# on its own and you went and got it, else the two of you were out together; "carrying" if you carry it in. Never come up with but then.
+# =====================================================================================================================================
+
+scene brought_found
+who: together
+when: kids brought found
+say: You found {kid}. *a long breath* I had three search parties planned and one revenge. I'm very relieved I won't need either.
+say: *watches {kid} come through the door, and only then sits down* There. Good. Now I can be furious in comfort.
+> {kid} was fine. Just wandered. | +1 -> wandered
+> I'll always bring them home. | +3 hug
+  - I know. That's the most frightening thing about you. Come here.
+> Be furious later. Hug now. | +2 cling
+  - ...Later, then. *holds on rather longer than a hug needs*
+page wandered
+say: Just wandered. Darling, that's how all the worst stories start. 'The child just wandered off.' Chapter one. I've read it. I've written it.
+> This one has a happy ending. | +2 kiss
+  - So it does. You wrote it. Let me edit you a little. *kisses you*
+> Then we write them a better chapter one. | +2 hearts
+  - Hm. Together. With fences in it. A great many fences.
+ignored: *goes to check on {kid} herself. Twice.*
+
+scene brought_found_night
+who: together
+when: kids brought found night
+say: Out in the dark. Alone. {kid}. *her voice is very light, and her hands are shaking* Where?
+say: I was about to go out myself. I had my coat on. I'd already decided what I'd do to whatever had them.
+> Near the woods. They're fine. | +1 -> woods
+> It's over. They're home. | +2 hug
+  - Home. *says it like she's tasting the word* ...Yes. Hold me a moment. I'm not used to being frightened.
+> Take your coat off. Stay with me. | +2 cling
+  - *takes it off slowly* ...You're a terrible influence. Keep being one.
+page woods
+say: Near the woods. At night. *laughs, too brightly* The woods at night are where I used to go to be a monster. I know exactly what lives there. I am exactly what lives there.
+> Not any more. You live here. | +3 hearts
+  - ...With you. And a child who wanders. Yes. I suppose I do.
+> I'll put a bell on the door. | +1 laugh
+  - A bell. How quaint. Two bells.
+ignored: *sits by {kid}'s bed until they're asleep*
+
+scene brought_outing
+who: together
+when: kids brought !found
+say: And where have you two been? No, let me guess from the mud. ...The river. Then the hill. Then somewhere you promised not to go.
+say: *closes her book* You stole my child for an afternoon and didn't invite me. I'm writing you into the next chapter as the villain.
+> We went to the river. | +1 -> river
+> Next time, you're coming. | +2 hand
+  - I'd better be. I'll bring snacks and an unhealthy amount of commentary.
+> {kid} had a wonderful time. | +2 hearts
+  - Did they? *looks at {kid}, then at you, and something in her face goes soft* ...Good. Good.
+page river
+say: The river. Of course. Did they fall in? They fell in. Tell me they fell in. I need it for the book.
+> Only up to their knees. | +2 laugh
+  - Knees! Excellent. That's the comic chapter sorted.
+> No. They were very careful. | +1 chin
+  - Careful? Mine? ...You're a better influence than I am. Don't let it go to your head.
+ignored: *makes a note in her little book, smiling*
+
+scene brought_outing_night
+who: together
+when: kids brought !found night
+say: You took {kid} out at night. *leans in the doorway* Without me. The night is MY thing, darling. I'm deeply wounded.
+say: A moonlit walk with the little one? How romantic. How dangerous. How very like you.
+> They wanted to see the stars. | +2 -> stars
+> Come with us next time. | +2 hand
+  - Next time we go together, and I'll show them the places only monsters know.
+> We were careful. | +1
+  - I know you were. I still counted the minutes. Every one.
+page stars
+say: The stars. *softens* Did you show them the one I like? The red one, low down. I named it once. I won't tell you what. It's embarrassing.
+> I showed them. | +3 hearts
+  - ...You remembered. Of course you remembered. Ugh. Come here.
+> Tell me its name. | +1 giggle
+  - Never. Take it to your grave. ...Mine, ideally. Years from now. Together.
+ignored: *goes to tuck {kid} in, humming*
+
+scene brought_carrying
+who: together
+when: kids brought carrying !night
+say: Oh, look at the two of you. Don't move. I'm memorising this. Hold still. *she is actually getting her notebook*
+say: You carried {kid} all the way home? Your arms must be dead. Hand them over. No. Wait. Stay like that. One more minute.
+> Take a turn. | +2 hearts
+  - *takes {kid} from you very carefully* Heavy. Warm. Mine. Yours. Ours.
+> Write fast. | +2 write
+  - *scribbles* 'And the monster came home carrying the smallest one.' ...Good line. I'm keeping it.
+> They wanted carrying. Who am I to refuse? | +1 giggle
+  - A pushover. My favourite kind.
+ignored: *watches you both, chin in hand*
+
+scene brought_carrying_night
+who: together
+when: kids brought carrying night
+say: *whispers* Are they asleep? Don't answer, you'll wake them. Nod. ...Oh, look at that face.
+say: *very quietly, from the doorway* Shh. Bring them here. Slowly. If they wake, I'm blaming you, and then I'm kissing you.
+> *nod* | +2 hearts
+  - *tiptoes over and kisses {kid}'s forehead, then yours* Bed. Both of you.
+> Help me get them to bed. | +2 hand
+  - *takes your hand and leads the way, quiet as a thief*
+> Blame me. Then the other thing. | +2 peck
+  - *a silent kiss, smiling* Later, you. Later.
+ignored: *keeps watching {kid} sleep in your arms*
+
+scene brought_hurt
+who: anyone
+when: kids brought hurt
+say: You're bleeding. And {kid} is fine. So you got between them and something. *her voice goes very flat* What was it?
+say: Sit down. I don't care how it happened. Actually, I do. Sit down first.
+> Nothing I couldn't handle. | +1
+  - Clearly. You're dripping on my floor. Sit. I'll sew.
+> It's gone now. | +1 -> gone
+> Just sit with me. | +2 hug
+  - *sits much too close, and checks every cut twice*
+page gone
+say: Gone. Hm. *smiles, and it isn't a nice smile* Gone where? I only want to send it a letter. A very short one.
+> Let it go. We're home. | +2 hug
+  - ...Fine. For you. Tonight. *she makes no promises about tomorrow*
+> I'll show you tomorrow. | 0 crack
+  - *cracks her knuckles* Tomorrow, then. It's a date.
+ignored: *fetches bandages and a very sharp needle*
+
+scene brought_jealous
+who: together
+mood: jealous sulky
+when: kids brought
+say: Oh, how lovely. A family outing. I must have missed the invitation. Again.
+say: You and {kid}, out all afternoon. And here I was, at home, being decorative.
+> You're never decorative. Come next time. | +2 forgive hand
+  - *sniffs* ...I'll consider it. I'm considering it. Yes.
+> {kid} kept asking about you. | +2 -> asked
+> You were napping. I didn't want to wake you. | +1 pout
+  - Wake me. Always wake me. I'd rather be tired than left out.
+page asked
+say: ...They did? *she tries very hard not to look pleased* What did they ask?
+> If you'd like the stone they found you. | +3 forgive hearts
+  - *takes the stone from {kid} as if it were a jewel* ...I like it very much. I'm still sulking. Slightly less.
+> Whether you were still cross. | +1 giggle
+  - Tell them yes. Then tell them I'm softening. Then don't tell them anything.
+ignored: *pointedly reads a book. Upside down.*
+
+scene brought_sleepy
+who: together
+mood: sleepy bored
+when: kids brought
+say: *yawns from the couch* Oh, you're back. Good. Now the house is full and I can sleep properly.
+say: *half asleep* Is everyone in? Count them for me. I keep getting the number wrong.
+> Everyone's in. | +2 cling
+  - Mm. Good. *pats the cushion beside her* You too.
+> Go to bed. I'll settle {kid}. | +2 hearts
+  - You're the best thing I ever wrote. I didn't write you. Shush. *dozes off*
+ignored: *falls asleep mid-sentence*
+
+scene brought_clingy
+who: together
+mood: clingy lonely affectionate
+when: kids brought
+say: *meets you at the door* Finally. The house was too quiet. I talked to the furniture. The furniture is a terrible listener.
+say: You were gone so long I started a story where you never came back. I burned it. Come here.
+> We missed you too. | +2 cling
+  - *wraps herself round you and {kid} both* Good. Never again. Well. Rarely.
+> Next time, come with us. | +2 hand
+  - I will. I'll be insufferable. You'll love it.
+ignored: *hovers near you both for the rest of the evening*
+
+scene brought_cowife
+who: together
+when: kids brought cowife !found
+say: Did you take {kid} to see {cowife}? I can smell someone else's tea on them.
+say: {kid} came home humming a song I didn't teach them. {cowife}'s song, I'd guess. How charming. How very charming.
+> They wanted to see their sibling. | +1 -> siblings
+> We just went for a walk. | 0
+  - Of course. A walk. A walk that smelled of {cowife}'s kitchen.
+> {cowife} says hello. | +1 hair
+  - Does {cowife}. Hello back. With teeth.
+page siblings
+say: ...The siblings. Yes. *softer* They should know each other. I just want to be the one who tells them the good stories.
+> You'll always be the storyteller. | +3 hearts
+  - Hm. Good answer. You've been practising. Kiss me so I stop thinking about it.
+> They love you both. | +2 hug
+  - Both. That word again. ...I'm getting used to it. Slowly.
+ignored: *hums a different song, very loudly*
+
+scene brought_friend
+who: friend
+when: kids brought
+say: You brought {kid} home. Thank you. Whatever we are to each other these days, we're still good at this part.
+say: *nods at {kid}* Back in one piece. I'd ask where you went, but I'm trying to respect your privacy. It's agony.
+> We'll always be their parents. | +2
+  - We will. The best co-authors. A complicated book, a brilliant sequel.
+> We went to the river. | +1 chin
+  - The river. Did they fall in? ...No? Pity. Next time.
+ignored: *ruffles {kid}'s hair and goes back to her book*

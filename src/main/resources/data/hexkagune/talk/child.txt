@@ -2068,3 +2068,814 @@ say: Differently how? ...Actually, don't answer. I don't want to know the detail
 > The way you love your friends differently. | +1 pat
   - Huh. Yeah. That makes sense, actually. Annoyingly.
 ignored: Never mind. Weird question.
+
+# =====================================================================================================================================
+# 3.2.1: brought home by you ("back": carried in, or walking in at your side, after a while out). "found": it had gone off on its own
+# and you went and got it; "!found": the two of you went out together. By its age and its temper; never come up with but at that moment.
+# =====================================================================================================================================
+
+scene baby_back
+who: baby
+when: back
+say: *peeks out of your arms at the house, then grabs your collar and squeals*
+say: *pats your face with a sticky hand, very pleased with the whole trip*
+> We're home, little one. | +1 pat
+  - *babbles back at you, a long and very serious speech*
+> Nose to nose. | +2 tickle
+  - *shrieks and headbutts you, delighted*
+> Down you go. Crawl a bit. | down
+  - *sets off at once toward the nearest thing it shouldn't touch*
+ignored: *falls asleep with a fist full of your shirt*
+
+scene baby_back_night
+who: baby
+when: back night
+say: *yawns enormously against your chest, eyes already closing*
+say: *is fast asleep, breathing little warm breaths into your neck*
+> Carry it to bed. | +2 bed
+  - *doesn't even stir. One sock is missing. You'll find it in the morning.*
+> Rock it a little longer. | +2 pat
+  - *sighs in its sleep and holds on*
+ignored: *sleeps on, heavy and warm*
+
+scene baby_back_sibling
+who: baby
+when: back siblings
+say: *hears {sib} somewhere in the house and kicks its legs, reaching that way*
+> Go and show {sib} the baby. | +1 up
+  - *squeals at {sib} like it's been gone a hundred years*
+> {sib} missed you too. | +1 pat
+  - *babbles something that sounds a lot like the name*
+ignored: *keeps reaching toward {sib}'s voice*
+
+# ---- a toddler, back from an outing with you
+
+scene toddler_back_sunny
+who: toddler
+temper: sunny
+when: back !found
+say: HOME! *throws both arms up* We went SO FAR, {call}!
+say: *runs in circles round your legs* Again! Tomorrow again! Pwease?
+> Tomorrow, I promise. | +2 hug
+  - *hugs your knees so hard you nearly fall over*
+> Shoes off first. | +1 pat
+  - *tries to take them off while running. Falls over. Laughs.*
+> Spin you round? | +2 spin
+  - WHEEEE!
+ignored: *tells the empty room all about the trip*
+
+scene toddler_back_shy
+who: toddler
+temper: shy
+when: back !found
+say: *holds your hand with both hands, and won't let go even inside*
+say: *whispers* ...Was nice. With you.
+> I liked it too. | +2 pat
+  - *a tiny smile, half hidden behind your sleeve*
+> You were very brave out there. | +2 proud
+  - *goes pink and hides its face against your leg*
+> Want to be picked up? | +1 up
+  - *arms go up at once, without a word*
+ignored: *stays close behind you, holding on*
+
+scene toddler_back_bold
+who: toddler
+temper: bold
+when: back !found
+say: *stamps inside* I walked ALL the way! No carry!
+say: Not tired. NOT. *yawns* ...Go out again.
+> All the way. Big kid. | +2 proud
+  - *puffs out its chest, then sits down very suddenly*
+> No more going out today. | 0 sad
+  - *flops on the floor in protest*
+> Up you go! | +2 toss
+  - *shrieks* AGAIN! HIGHER!
+ignored: *tries to open the door by itself*
+
+scene toddler_back_curious
+who: toddler
+temper: curious
+when: back !found
+say: *empties its pockets onto the floor: three stones, a snail shell, half a leaf* Mine. Found.
+say: Why house got door? Why outside got no door?
+> Let's see your treasures. | +2 pat
+  - *explains each one very seriously. The snail shell is called Bob.*
+> Because outside is too big for a door. | +1
+  - *thinks about that for a long time* ...Big door.
+> Pockets empty before the wash. | 0
+  - *puts everything back in its pockets, one at a time, slowly*
+ignored: *lines its treasures up along the windowsill*
+
+scene toddler_back_mischief
+who: toddler
+temper: mischief
+when: back !found
+say: *giggles and hides something behind its back* Nothing!
+say: *runs straight back toward the door the moment its feet touch the floor* Hehe!
+> What's behind your back? | +1 tickle
+  - *shrieks and drops a muddy frog on your floor*
+> Catch the escapee. | +2 play
+  - *runs screaming with joy through the whole house*
+> Not so fast. Stay inside. | stay
+  - *pouts, then giggles, then stays. For now.*
+ignored: *sneaks back out to the garden*
+
+scene toddler_back_gentle
+who: toddler
+temper: gentle
+when: back !found
+say: *pats your arm* {call} tired? Sit. *pulls you toward a chair*
+say: *holds out a crumpled flower it carried the whole way home* For you. From outside.
+> Thank you, sweetheart. | +2 flower
+  - *beams so wide its eyes disappear*
+> Sit with me, then. | +2 hug
+  - *climbs up next to you and leans on your side*
+> I'm fine. Go and play. | 0
+  - *goes, but keeps looking back to check on you*
+ignored: *puts the flower in a cup of water, very carefully*
+
+scene toddler_back_serious
+who: toddler
+temper: serious
+when: back !found
+say: *stands in the doorway and inspects the house* ...Home. Good. Same.
+say: *very solemnly takes off one boot, then the other, and lines them up*
+> Everything in order? | +1 pat
+  - *nods once* Order.
+> Good job with the boots. | +2 proud
+  - *straightens them again, a tiny bit*
+> Hug for the trip? | +1 hug
+  - *accepts the hug with great dignity*
+ignored: *checks every room, then sits down, satisfied*
+
+# ---- a toddler you went and found
+
+scene toddler_found_sunny
+who: toddler
+temper: sunny
+when: back found
+say: You FOUND me! *claps* I was hiding! ...Not hiding. Lost. Now found!
+say: *beams at you as if being lost was a lovely game* Again?
+> Never again. You scared me. | +1 hug
+  - *hugs your neck* Sorry... *already smiling again*
+> You don't walk off alone. | 0
+  - *nods hard* Okay! With you!
+> I'm just glad you're home. | +2 pat
+  - Home! Yay!
+ignored: *tells everyone about being lost, as if it were a holiday*
+
+scene toddler_found_shy
+who: toddler
+temper: shy
+when: back found
+say: *won't let go of you. Not even a little bit.*
+say: *very small voice* ...Got lost. Scary. *hides its face in your shoulder*
+> You're safe now. | +2 pat
+  - *a long, shaky breath against your neck*
+> I'll always come and find you. | +3 hug
+  - *holds on tighter* ...Always?
+> Let's get you into bed. | +1 bed
+  - *nods without lifting its head*
+ignored: *stays clinging to you, quiet*
+
+scene toddler_found_bold
+who: toddler
+temper: bold
+when: back found
+say: Wasn't lost! Was EXPLORING! *kicks your arm* Down!
+say: *glares at the door as if it betrayed it* ...Too far. Was too far.
+> You can explore with me. | +2 hand
+  - *grumbles, but holds your hand*
+> Exploring alone isn't allowed. | 0 sad
+  - *pouts so hard its whole face scrunches up*
+> All right, down you go. | down
+  - *marches off with enormous dignity*
+ignored: *sulks under the table*
+
+scene toddler_found_curious
+who: toddler
+temper: curious
+when: back found
+say: Followed a beetle. Beetle went far. Where beetle go, {call}?
+say: *holds up a muddy something* Found THIS. Then lost. Then you.
+> Beetles go home, like us. | +2 pat
+  - Beetle got house? ...Beetle got {call}?
+> Show me what you found. | +1
+  - *it's a rock. It is the best rock. It has a face.*
+> Next time, tell me before the beetle. | 0
+  - *thinks very hard about how to explain that to a beetle*
+ignored: *goes to the window to look for the beetle*
+
+scene toddler_found_mischief
+who: toddler
+temper: mischief
+when: back found
+say: *giggles* Hided! You took LONG.
+say: *looks very pleased with itself* Found me. Now me hide again.
+> No more hiding outside. | 0
+  - *gasps, deeply wronged*
+> Tickle the culprit. | +2 tickle
+  - *shrieks with laughter and forgets the whole thing*
+> Inside hiding only. Deal? | +1 play
+  - *already running to hide behind the curtain*
+ignored: *hides somewhere in the house, giggling*
+
+scene toddler_found_gentle
+who: toddler
+temper: gentle
+when: back found
+say: *pats your cheek* {call} crying? Sorry. Sorry.
+say: Was finding a flower for you. Went far. *holds out an empty hand* ...Lost flower too.
+> I don't need a flower. I need you. | +3 hug
+  - *hugs you very hard, with its whole little body*
+> Thank you for thinking of me. | +2 pat
+  - *smiles, then remembers and looks worried again*
+> Next time we pick flowers together. | +1 hand
+  - *nods and holds on to your finger*
+ignored: *keeps patting your arm, worried*
+
+scene toddler_found_serious
+who: toddler
+temper: serious
+when: back found
+say: *very solemn* Went too far. Bad.
+say: *looks at you, then at the floor* ...Sorry. Won't.
+> Thank you for saying sorry. | +2 pat
+  - *nods once, very grave*
+> Stay where I can see you. | +1
+  - *points at its own eyes, then at you. Understood.*
+> Come here. | +2 hug
+  - *a stiff hug, then a not-stiff one*
+ignored: *sits by the door, keeping watch on itself*
+
+# ---- a toddler, whichever way
+
+scene toddler_back
+who: toddler
+when: back
+say: *squirms to be put down and runs straight to its favourite spot*
+say: *drags you by the finger to show you something that has been there all along*
+> Go on, then. | down
+  - *off like a shot*
+> Show me. | +1 pat
+  - *it's the rug. It is very proud of the rug.*
+> Snack first. | +1
+  - Snack! *runs to the kitchen*
+ignored: *plays happily at your feet*
+
+scene toddler_back_night
+who: toddler
+when: back night
+say: *drooping in your arms* ...Not sleepy... *yawns*
+say: *mumbles something about stars and is asleep before it finishes*
+> Bedtime. | +2 bed
+  - *a sleepy little hand on your face all the way to bed*
+> One story, then sleep. | +2 pat
+  - *asleep halfway through the first sentence*
+ignored: *falls asleep wherever it's standing*
+
+scene toddler_back_sibling
+who: toddler
+when: back siblings
+say: {sib}! *wriggles to get down* Gotta tell {sib}!
+say: *runs off looking for {sib}, then runs back* Where {sib}?
+> Go and find {sib}. | down
+  - *runs through the house shouting the name*
+> {sib} waited for you. | +1 pat
+  - *beams* Waited!
+ignored: *goes off to find {sib}*
+
+scene toddler_back_other
+who: toddler
+when: back npcparent
+say: Where {other}? Gotta show {other}!
+say: *looks round the house* {other}? {other}! We home!
+> {other}'s around. Go and look. | down
+  - *toddles off calling for {other}*
+> Show me first. | +1 pat
+  - *shows you a stick. It is a very good stick.*
+ignored: *goes looking for {other}*
+
+# ---- a child, back from an outing with you
+
+scene child_back_sunny
+who: child
+temper: sunny
+when: back !found
+say: That was the BEST day! Can we go again tomorrow? And the day after? And every day?
+say: *kicks off its shoes in two directions* Home! I'm starving! What's for dinner? Can I help?
+> Same time tomorrow. | +2 high_five
+  - YES! *a high five so hard it stings*
+> You can help with dinner. | +2 follow
+  - *marches after you to the kitchen, chattering the whole way*
+> Shoes. Properly. | +1
+  - *puts them side by side, then salutes them* Done!
+ignored: *tells the walls all about the trip*
+
+scene child_back_shy
+who: child
+temper: shy
+when: back !found
+say: *lingers by the door* ...Thanks for taking me. I know I didn't talk much.
+say: *quietly* Can we go again? Just us? I liked that it was just us.
+> Just us. Anytime. | +3 hug
+  - *a small, real smile* ...Okay.
+> You talked plenty. | +2 pat
+  - *goes red* ...You're just saying that.
+> I'm glad you came. | +2 proud
+  - *ducks its head, pleased*
+ignored: *goes to its room, humming quietly*
+
+scene child_back_bold
+who: child
+temper: bold
+when: back !found
+say: Did you see me climb that tree? The tall one? I was higher than YOU.
+say: I wasn't tired once. Not once. You were tired. I could tell.
+> You were very high. Too high. | +1
+  - That's the whole point of trees!
+> Next time, you lead. | +2 proud
+  - *already planning the route*
+> Race you to the table. | +2 play
+  - *gone before you finish the sentence*
+ignored: *practises climbing on the furniture*
+
+scene child_back_curious
+who: child
+temper: curious
+when: back !found
+say: I counted all the birds we saw. Thirty-one. Well, thirty. One might have been the same one twice.
+say: Why does the forest smell different after rain? And why do mushrooms come out at night? And why...
+> Let's look it up together. | +2 pat
+  - *runs for a book before you've even sat down*
+> One question at a time. | +1
+  - Okay. ONE. ...Why do mushrooms come out at night?
+> Write them down for later. | +1 proud
+  - *starts a list. It is already four pages long.*
+ignored: *starts drawing the birds from memory*
+
+scene child_back_mischief
+who: child
+temper: mischief
+when: back !found
+say: *whispers* Don't tell {other} about the river. I fell in. A little. Only up to here.
+say: That was fun. Want to know what was MORE fun? *pulls a frog out of its pocket*
+> Our secret. | +2
+  - *pinky-swears with a very wet pinky*
+> The frog goes back outside. | 0
+  - *sadly* Goodbye, Gerald the Second.
+> Race you to the bath! | +2 play
+  - *shrieks and runs*
+ignored: *hides the frog somewhere. You'll find out where.*
+
+scene child_back_gentle
+who: child
+temper: gentle
+when: back !found
+say: Sit down, {call}. You walked so much. I'll get you some water. *already running*
+say: I picked these for the house. *holds out a bunch of slightly squashed flowers* Can we put them where everyone can see?
+> Thank you. Sit with me. | +2 hug
+  - *curls up at your side and sighs, happy*
+> Let's find them a vase. | +2 flower
+  - *arranges them very carefully, one at a time*
+> You look after everyone. | +2 proud
+  - *shrugs, shy* Somebody has to look after you.
+ignored: *quietly fills a cup of water and leaves it by your chair*
+
+scene child_back_serious
+who: child
+temper: serious
+when: back !found
+say: Trip complete. No injuries. One scraped knee, but that doesn't count. I'll log it.
+say: I memorised the way back. I could do it alone now. Not that I will. I'm just saying I could.
+> Good work out there. | +2 proud
+  - *stands a little straighter* Thank you.
+> You don't have to log everything. | +1
+  - Yes I do. Somebody has to.
+> High five, navigator. | +2 high_five
+  - *a very precise high five*
+ignored: *writes the trip down in a small notebook*
+
+# ---- a child you went and found
+
+scene child_found_sunny
+who: child
+temper: sunny
+when: back found
+say: You found me! I knew you would! I wasn't even scared! ...Okay, a little, when it got dark.
+say: I'm sorry I went so far. But {call}, there's a field with a THOUSAND flowers. We have to go back. Together, I mean.
+> Together. Only together. | +2 hug
+  - *hugs you round the middle* Deal!
+> You scared me half to death. | 0 sad
+  - *the smile slips* ...I'm sorry. Really.
+> Tell me about the field. | +2 pat
+  - *tells you for ten minutes without stopping to breathe*
+ignored: *keeps smiling at you as if nothing happened*
+
+scene child_found_shy
+who: child
+temper: shy
+when: back found
+say: *won't look at you* ...I'm sorry. Everything was so loud. I just wanted it to be quiet for a bit.
+say: *barely a whisper* I didn't think you'd come looking. I didn't think anyone would notice.
+> I'll always notice. | +3 hug
+  - *a long hug. It doesn't let go first.*
+> Next time, find me. We'll be quiet together. | +2 pat
+  - *nods* ...Okay. I'd like that.
+> You had me worried sick. | 0 sad
+  - *shrinks* ...Sorry.
+ignored: *goes to its room and closes the door very softly*
+
+scene child_found_bold
+who: child
+temper: bold
+when: back found
+say: I didn't need finding. I knew exactly where I was. I was about to come back anyway.
+say: *crosses its arms* I'm not sorry. I wanted to see what's past the hill. Now I know. It's more hill.
+> You're grounded. | 0 sad
+  - WHAT? For a HILL?
+> Brave and smart aren't the same thing. | +1
+  - *scowls, but it's listening*
+> Next time we go past it together. | +2 hand
+  - *tries not to look pleased about it. Fails.*
+ignored: *stomps off to its room*
+
+scene child_found_curious
+who: child
+temper: curious
+when: back found
+say: I was following tracks. They kept going and going. I think it was a fox. Or a very small bear.
+say: I found a cave with drawings on the walls! Really old ones! I forgot what time it was. I'm sorry. But DRAWINGS.
+> Show me tomorrow. With me. | +2 pat
+  - *bounces* Really? You'll come?
+> Curious people still watch the time. | 0
+  - *sighs* ...You're right. I'll bring a clock next time.
+> Write down everything you saw. | +1 proud
+  - *already writing*
+ignored: *draws a map of where it went, very detailed*
+
+scene child_found_mischief
+who: child
+temper: mischief
+when: back found
+say: Okay, so technically I wasn't lost. I was hiding. For a really, really long time. And then I was lost.
+say: *innocent face* I was going to come back. I just had to finish my adventure first. You interrupted the ending.
+> Nice try. | 0
+  - *grins* Was it, though?
+> Dish duty. A week. | 0 sad
+  - A WEEK? That's a whole adventure of dishes.
+> How was the adventure going to end? | +2 pat
+  - *spins you a long tale with three dragons in it, and you*
+ignored: *already eyeing the window again*
+
+scene child_found_gentle
+who: child
+temper: gentle
+when: back found
+say: I'm sorry, I'm sorry. There was a hurt bird and I wanted to take it somewhere safe and then I didn't know where I was.
+say: Were you scared? You look like you were scared. I didn't want to make you scared.
+> I was. And I'm so glad you're okay. | +3 hug
+  - *hugs you and cries a little, and that's all right*
+> A kind thing, done the wrong way. | +1 pat
+  - *nods slowly* ...Next time I'll come and get you first.
+> Where's the bird now? | +1 gift:feather
+  - *gives you a little feather* It flew away. I hope it's okay.
+ignored: *makes you a cup of something warm, to say sorry*
+
+scene child_found_serious
+who: child
+temper: serious
+when: back found
+say: I made a mistake. I thought I knew the way. I didn't. I'm sorry I made you come looking.
+say: I'd like to explain what went wrong, so it doesn't happen again. Step by step. If that's all right.
+> Thank you for owning it. | +2 proud
+  - *nods, relieved* ...I'll do better.
+> Step by step, then. | +1 -> steps
+> Mistakes happen. Come here. | +2 hug
+  - *a stiff hug, then a real one*
+page steps
+say: One, I left at noon. Two, I went west because the light was better. Three... I stopped paying attention. That was the real mistake.
+> Then three is the one to remember. | +2 proud
+  - Three. Got it. *writes it down*
+> You did fine at one and two. | +1 pat
+  - *almost smiles*
+ignored: *writes a careful list of what went wrong*
+
+# ---- a child, whichever way
+
+scene child_back
+who: child
+when: back
+say: Can I have a snack? I'm so hungry I could eat the door.
+say: *flops face down on the floor just inside the door* I'm home. I'm dead. Tell everyone I loved them.
+> Snack's in the kitchen. | +1 follow
+  - *suddenly not dead at all*
+> Up you get, dramatic one. | +1 tickle
+  - *dies laughing instead*
+> Bath first. | +1
+  - *groans as if you've asked it to climb a mountain*
+ignored: *lies on the floor for a while, recovering*
+
+scene child_back_night
+who: child
+when: back night
+say: *yawning* I'm not tired. I'm just... resting my eyes... standing up...
+say: It's so late. Is it the latest I've ever been up? I think it's the latest I've ever been up.
+> Straight to bed. | +2 bed
+  - *drags its feet the whole way, but goes*
+> It's the latest. Now sleep. | +1 bed
+  - *asleep before you reach the door*
+ignored: *falls asleep sitting by the door*
+
+scene child_back_sibling
+who: child
+when: back siblings
+say: Is {sib} home? I have to tell {sib} everything. Before {sib} hears it wrong.
+say: Don't tell {sib} what happened out there. I'll tell it. My way. The better way.
+> Go and tell {sib}, then. | +1 stay
+  - *runs off shouting for {sib}*
+> Tell it the true way. | +1
+  - *sighs* The true way is less exciting.
+ignored: *goes off to find {sib}*
+
+scene child_back_other
+who: child
+when: back npcparent
+say: Is {other} home? I want to show {other} what I found!
+say: Do we have to tell {other}? ...About the mud? And the other thing?
+> Go and find {other}. | +1 stay
+  - *runs off calling for {other}*
+> What other thing? | +1
+  - *suddenly very interested in its shoes*
+ignored: *goes looking for {other}*
+
+scene child_back_hurt
+who: child
+when: back hurt
+say: You're bleeding. Did that happen out there? Was it because of me?
+say: Sit down. You're hurt. I'll get the bandages. I know where they are.
+> It's nothing. I'm fine. | +1
+  - *doesn't believe you at all* ...Sit anyway.
+> It's not your fault. | +2 hug
+  - *hugs you very carefully, round the hurt bits*
+> Bandages would help, thank you. | +2 proud
+  - *comes back with every bandage in the house*
+ignored: *hovers near you, worried*
+
+# ---- a teen, back from an outing with you
+
+scene teen_back_sunny
+who: teen
+temper: sunny
+when: back !found
+say: Okay, that was actually really fun. Don't make it weird. ...But it was.
+say: We should do that every week. I'm serious. Put it on the calendar. In ink.
+> Every week. In ink. | +2 high_five
+  - *grins and high-fives you* You're not getting out of it now.
+> I had fun too. | +2 hug
+  - *rolls its eyes, but hugs you back*
+> Don't tell your friends you had fun with me. | +1
+  - Too late. I told them. You're cool now. Congratulations.
+ignored: *hums all the way up the stairs*
+
+scene teen_back_shy
+who: teen
+temper: shy
+when: back !found
+say: ...Thanks. For today. I don't really know how to say it better than that.
+say: It's easier to talk when we're walking. I don't know why. Maybe because you're not looking at me.
+> Then we'll walk more. | +3 hug
+  - *a small nod* ...I'd like that.
+> You can always talk to me. | +2 pat
+  - I know. ...I'm getting better at it.
+> I liked listening. | +2 proud
+  - *looks away, smiling*
+ignored: *goes quiet again, but it's a good quiet*
+
+scene teen_back_bold
+who: teen
+temper: bold
+when: back !found
+say: I could've handled all of that on my own, you know. But it was... fine. Having you there.
+say: Next time I'm picking the route. Yours was boring. No offence. Lots of offence.
+> Next time you pick. | +2 proud
+  - Good. Bring better shoes.
+> My route kept us alive. | +1
+  - Alive is overrated. ...Kidding. Mostly.
+> Spar in the yard? | +2 play
+  - *already out the door*
+ignored: *drops its bag and goes straight back out to train*
+
+scene teen_back_curious
+who: teen
+temper: curious
+when: back !found
+say: Did you see the stones by the river were laid out in a pattern? Someone put them there. I want to know who.
+say: I've got about forty questions from today. Want them in order of importance, or order of weirdness?
+> Weirdness. Obviously. | +2
+  - *grins* Okay. Number one: why do the crows follow ghouls?
+> Let's go back and find out together. | +2 pat
+  - Really? You mean it?
+> Write them down. One a night. | +1 proud
+  - One a night? That's forty nights. ...Deal.
+ignored: *disappears into its notes*
+
+scene teen_back_mischief
+who: teen
+temper: mischief
+when: back !found
+say: So, about what happened at the market. Let's just agree it didn't happen. For everyone's sake.
+say: That was fun. Especially the part where you thought I was behind you and I wasn't. Classic.
+> It definitely happened. | 0
+  - *sighs* Fine. It happened. It was also legendary.
+> Our secret. | +2
+  - *fist bump* Partners in crime.
+> You'll pay for that one. | +1 play
+  - *grins* Bring it.
+ignored: *wanders off, smirking*
+
+scene teen_back_gentle
+who: teen
+temper: gentle
+when: back !found
+say: Sit down. I'll make tea. You always make it, so today I'm making it. Don't argue.
+say: Thanks for today. I know you're busy. It means a lot that you made the time.
+> Thank you. I'll sit. | +2 hug
+  - *brings you tea and sits with you, and it's quiet and nice*
+> I'll always make time for you. | +2 pat
+  - *a soft smile* I know. That's why I said thanks.
+> We'll both make the tea. | +1 follow
+  - *follows you to the kitchen, bumping your shoulder*
+ignored: *leaves a cup of tea by your chair*
+
+scene teen_back_serious
+who: teen
+temper: serious
+when: back !found
+say: That went well. I noted three things I'd do differently. Want to hear them?
+say: I watched how you moved out there. Where you looked, where you stepped. I'm going to practise it.
+> Tell me the three things. | +2 proud
+  - *lists them, precisely. They're all good.*
+> You noticed all that? | +2
+  - I notice everything you do. I'm learning from the best. ...Don't let it go to your head.
+> Train with me tomorrow. | +2 teach
+  - *a rare, real smile* Tomorrow. Early.
+ignored: *writes in its notebook until late*
+
+# ---- a teen you went and found
+
+scene teen_found_sunny
+who: teen
+temper: sunny
+when: back found
+say: Okay, I know. I know. I lost track of time. The sunset was really, really good, though.
+say: Sorry you had to come out. I'd have been fine! Probably! But it was nice that you came.
+> Next sunset, take me. | +2 hug
+  - Deal. You'll love it. Bring snacks.
+> Probably isn't good enough. | 0
+  - *the grin fades a little* ...Yeah. Fair. Sorry.
+> I'll always come. | +2 pat
+  - *bumps its head against your shoulder* I know.
+ignored: *goes off humming, a bit sheepish*
+
+scene teen_found_shy
+who: teen
+temper: shy
+when: back found
+say: ...You didn't have to come. I just needed to be somewhere nobody was looking at me.
+say: *doesn't meet your eyes* Sorry. I'm bad at saying when things are too much. So I just... go.
+> Tell me next time. Even just a word. | +2 pat
+  - ...A word. I can do a word.
+> I'll make you a quiet place here. | +3 hug
+  - *hugs you, fast and tight, before it can change its mind*
+> You scared me. | 0
+  - *flinches* ...I know. I'm sorry.
+ignored: *goes to its room, but leaves the door open a crack*
+
+scene teen_found_bold
+who: teen
+temper: bold
+when: back found
+say: I'm not a kid. You don't need to come and fetch me like a lost puppy.
+say: I had it under control. Totally. That wasn't panic you saw. That was strategy.
+> Then act like it and leave a note. | 0
+  - *scowls* ...Fine. A note.
+> Not because you're small. Because I love you. | +2 hug
+  - *goes still* ...Okay. Okay. Sorry.
+> Strategy. Sure. | +1
+  - *tries to stay angry. Laughs instead.*
+ignored: *slams its door. Opens it again. Closes it gently.*
+
+scene teen_found_curious
+who: teen
+temper: curious
+when: back found
+say: I found an old watchtower. Someone lived there once. There were letters, {call}. I had to read them.
+say: I know I should've been back hours ago. But I found something and I couldn't stop looking.
+> What did the letters say? | +1 -> letters
+> Curiosity like that gets people killed. | 0
+  - *quietly* ...I know. That's partly why I read them.
+> Next time, bring me along. | +2 pat
+  - *relieved* I was hoping you'd say that.
+page letters
+say: They're from someone waiting for somebody to come home. Years of them. The somebody never did. I couldn't stop reading.
+> That's why I came looking. Always. | +3 hug
+  - *goes quiet for a long moment* ...Yeah. I know. I think that's why I read them.
+> Show me tomorrow. | +2 proud
+  - *nods* I'll bring them back. Someone should keep them.
+ignored: *paces, thinking*
+
+scene teen_found_mischief
+who: teen
+temper: mischief
+when: back found
+say: In my defence, I left a note. In my head. I thought it really hard at you.
+say: You found me faster than last time. You're getting good at this. Should I be worried?
+> Very worried. | +1
+  - *grins* Noted. Next time I hide better.
+> There won't be a next time. | 0
+  - *salutes* Sir, yes, sir. *it is not convincing*
+> Where did you actually go? | +1 -> where
+page where
+say: ...Okay. I went to see the lights from the old bridge. It's the best view in the world. I wanted to see it alone, once.
+> Next time, let me see it too. | +2 hug
+  - *quiet for a second* ...Yeah. Okay. I'd like that.
+> That's actually kind of lovely. | +2 pat
+  - Don't tell anyone I'm capable of lovely.
+ignored: *flops on the couch as if nothing happened*
+
+scene teen_found_gentle
+who: teen
+temper: gentle
+when: back found
+say: I'm so sorry. Someone in the village needed help carrying things, and then it got dark, and I didn't want to leave them halfway.
+say: I hate that you were worried. I keep thinking about your face when you found me.
+> A good thing. Just tell me first. | +2 pat
+  - I will. I promise.
+> My face is fine now. Look. | +2 hug
+  - *laughs a little, and it's wet* ...Okay.
+> Next time I'll come and help too. | +2 proud
+  - Really? That'd be nice. They'd like you.
+ignored: *makes you tea to say sorry*
+
+scene teen_found_serious
+who: teen
+temper: serious
+when: back found
+say: I was out of line. I'm aware. I'd rather you were angry with me than worried. Angry I can fix.
+say: I followed a lead on a patrol route and misjudged the distance back. It was a tactical error. I'm sorry.
+> I'm not angry. I was worried. | +2 hug
+  - *quietly* ...That's worse.
+> What lead? | +1
+  - *explains, precisely. It's a good lead. That's what worries you.*
+> Tactical errors get people killed. | 0
+  - *nods* Understood. It won't happen again.
+ignored: *goes straight to its notes to work out the mistake*
+
+# ---- a teen, whichever way
+
+scene teen_back
+who: teen
+when: back
+say: I'm going to shower for about three hours. Don't wait up.
+say: Home. Finally. My feet hate you. My feet and I are not speaking to you.
+> Fair. | +1
+  - *limps off, dramatically*
+> I'll make something to eat. | +2
+  - ...Okay. My feet forgive you.
+> You walked further than me and you know it. | +1
+  - My feet know it. That's the problem.
+ignored: *disappears upstairs*
+
+scene teen_back_night
+who: teen
+when: back night
+say: It's late. I know. Night's when everything's quieter. I like it. ...I like it with you, too.
+say: I'm not tired. I'm wired. Is that normal? Tell me that's normal.
+> Totally normal. Go to bed. | +1 bed
+  - *groans, but goes*
+> Sit up with me a while. | +2 pat
+  - *sits, and the two of you watch the window until it's really late*
+ignored: *stays up by the window*
+
+scene teen_back_hurt
+who: teen
+when: back hurt
+say: You're hurt. Sit down. And don't say it's nothing, because it clearly isn't nothing.
+say: That happened because you came out for me, didn't it.
+> It's healing. I'm fine. | +1
+  - *patches you up anyway, very carefully, not looking at you*
+> I'd do it again. | +3 hug
+  - *goes quiet* ...I know. That's what scares me.
+ignored: *brings you bandages without a word*
+
+scene teen_back_other
+who: teen
+when: back npcparent found
+say: Please don't tell {other}. {othername} will make it a whole thing.
+say: Is {other} home? Did {othername} notice I was gone?
+> {othername} noticed. | 0
+  - *groans* ...How bad?
+> We'll tell {other} together. | +2 pat
+  - *sighs* ...Fine. Together's better.
+ignored: *goes to find {other} and get it over with*

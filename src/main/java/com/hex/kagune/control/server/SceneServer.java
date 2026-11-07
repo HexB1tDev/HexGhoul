@@ -159,12 +159,17 @@ public final class SceneServer {
      * the middle of a fight.
      */
     static boolean free(ServerPlayer player, long now) {
+        return free(player, now, false);
+    }
+
+    /** 3.2.1: the same, but a homecoming ({@code arrival}) doesn't wait out {@link #BETWEEN} after the last one who came up. */
+    static boolean free(ServerPlayer player, long now, boolean arrival) {
         Long last = LAST.get(player.m_20148_());
         Long fought = FIGHTING.get(player.m_20148_());
         if (fought != null && now - fought >= 0L && now - fought < FIGHT_QUIET) {
             return false;
         }
-        return !PENDING.containsKey(player.m_20148_()) && (last == null || now - last >= BETWEEN) && !EtoServer.talking(player)
+        return !PENDING.containsKey(player.m_20148_()) && (arrival || last == null || now - last >= BETWEEN) && !EtoServer.talking(player)
             && !ChildTalk.talking(player) && !GhoulNpcTalk.talking(player) && player.m_6084_() && !player.m_5803_();
     }
 
@@ -260,16 +265,49 @@ public final class SceneServer {
         }
         String speaker = npc.persona().key();
         Scene scene = SceneBook.pick(book(speaker), Scene.Kind.APPROACH, sc, npc.m_217043_().m_188500_(), recent(player, speaker));
+        return comeUp(npc, player, scene, sc, now);
+    }
+
+    /** She walks up to {@code player} with {@code scene} (filled by {@code sc}) and waits for an answer. False if there is none. */
+    private static boolean comeUp(EtoNpc npc, ServerPlayer player, Scene scene, SceneContext sc, long now) {
         if (scene == null) {
             return false;
         }
-        said(player, speaker, scene);
+        said(player, npc.persona().key(), scene);
         String line = SceneBook.fill(SceneBook.one(scene.first().lines(), sc.seed()), sc);
         PENDING.put(player.m_20148_(), new Pending(npc.m_19879_(), scene.key(), line, now + WAIT, "companion", sc.tier() + "|" + sc.mood()));
         LAST.put(player.m_20148_(), now);
         ControlNetwork.sendTo(player, new S2CNpcApproach(npc.m_19879_(), npc.displayName(), npc.persona().colour(), line, (int)WAIT));
         EtoBrain.walkUp(npc, npc.mind, player, EtoGesture.WAVE, now);
         return true;
+    }
+
+    /** 3.2.1: the scenes of {@code book} that wait on the moment {@code flag} (a homecoming's "brought", "back"). */
+    static List<Scene> waitingOn(List<Scene> book, String flag) {
+        List<Scene> out = new ArrayList<>();
+        for (Scene scene : book) {
+            if (scene.when().contains(flag)) {
+                out.add(scene);
+            }
+        }
+        return out;
+    }
+
+    /**
+     * 3.2.1: the player just walked in with a child of theirs and hers: she meets them at the door with one of her {@code brought} scenes
+     * (found, an outing, carrying, the hour, her mood...). False if she can't now (they aren't free, she can't see them, nothing fits).
+     */
+    static boolean approachBrought(EtoNpc npc, ServerPlayer player, long now) {
+        if (npc.mind == null || !free(player, now, true) || !sees(npc, player, SEES)) {
+            return false;
+        }
+        SceneContext sc = context(player, npc, EtoServer.context(player, npc));
+        if (!sc.has("brought") || !Set.of("friendly", "close", "partner", "wife").contains(sc.tier())) {
+            return false;
+        }
+        String speaker = npc.persona().key();
+        Scene scene = SceneBook.pick(waitingOn(book(speaker), "brought"), Scene.Kind.APPROACH, sc, npc.m_217043_().m_188500_(), recent(player, speaker));
+        return comeUp(npc, player, scene, sc, now);
     }
 
     /**
@@ -336,6 +374,26 @@ public final class SceneServer {
             Children.Child one = kids.get(Math.floorMod(c.seed(), kids.size()));
             names.put("kid", one.name);
             names.put("kids", kids.size() == 1 ? one.name : "the kids");
+            // 3.2.1: one of them just brought home by the player (that one is {kid}), found or back from an outing, while she was not out
+            // with them herself (she'd know where they had been); one carried now.
+            long at = level.m_46467_();
+            HomecomingServer.Brought brought = c.following() ? null : HomecomingServer.latest(kids, player, at);
+            Children.Child carried = HomecomingServer.carried(level, player, kids);
+            if (brought != null) {
+                flags.add("brought");
+                if (brought.found()) {
+                    flags.add("found");
+                }
+                for (Children.Child child : kids) {
+                    if (child.id.equals(brought.child())) {
+                        names.put("kid", child.name);
+                    }
+                }
+            }
+            if (carried != null && (brought == null || carried.id.equals(brought.child()))) {
+                flags.add("carrying");
+                names.put("kid", carried.name);
+            }
         }
         if (c.daysAway() >= 2L) {
             flags.add("away");
@@ -566,6 +624,27 @@ public final class SceneServer {
         }
         SceneContext sc = context(parent, npc, child, now);
         Scene scene = SceneBook.pick(book("child"), Scene.Kind.APPROACH, sc, npc.m_217043_().m_188500_(), recent(parent, "child:" + child.id));
+        return comeUp(npc, child, parent, scene, sc, now);
+    }
+
+    /**
+     * 3.2.1: brought home by {@code parent} (carried in, or at their side) with nobody else waiting at the door: it has its own word with
+     * them, one of its {@code back} scenes (by its age, its temper, found or an outing, the hour). False if it can't now.
+     */
+    static boolean approachBack(ChildNpc npc, Children.Child child, ServerPlayer parent, long now) {
+        if (npc.mind == null || !free(parent, now, true) || npc.m_5803_() || !sees(npc, parent, SEES)) {
+            return false;
+        }
+        SceneContext sc = context(parent, npc, child, now);
+        if (!sc.has("back")) {
+            return false;
+        }
+        Scene scene = SceneBook.pick(waitingOn(book("child"), "back"), Scene.Kind.APPROACH, sc, npc.m_217043_().m_188500_(), recent(parent, "child:" + child.id));
+        return comeUp(npc, child, parent, scene, sc, now);
+    }
+
+    /** It comes up to {@code parent} with {@code scene} (filled by {@code sc}) and waits for an answer. False if there is none. */
+    private static boolean comeUp(ChildNpc npc, Children.Child child, ServerPlayer parent, Scene scene, SceneContext sc, long now) {
         if (scene == null) {
             return false;
         }
@@ -639,6 +718,14 @@ public final class SceneServer {
         Households.Home home = Households.forChild(level, child);
         if (home != null && home.at(BlockPos.m_274561_(npc.m_20185_(), npc.m_20186_(), npc.m_20189_()))) {
             flags.add("home");
+            // 3.2.1: just brought home by the one it talks to; found (it had gone off on its own) or back from an outing together.
+            HomecomingServer.Brought back = HomecomingServer.of(child, player, now);
+            if (back != null) {
+                flags.add("back");
+                if (back.found()) {
+                    flags.add("found");
+                }
+            }
         }
         if (player.m_20148_().equals(npc.following())) {
             flags.add("following");
