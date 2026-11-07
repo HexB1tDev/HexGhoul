@@ -27,6 +27,21 @@ public final class EtoPose {
      * 1.3.14: the pose for {@code gesture}, {@code leads}: a man's way of holding someone (Ken's: {@link #led}) where he has one, else the
      * same as everyone's.
      */
+    /**
+     * 3.2.3: what is shown for {@code gesture} with {@code with} (who she holds on to, an entity id; 0: nobody): a blush with nobody to
+     * kiss is a shy blush (hands to her face), not a kiss leaned into; a kiss or a pull with nobody is nothing at all.
+     */
+    public static EtoGesture shown(EtoGesture gesture, int with) {
+        if (with != 0 || gesture == null) {
+            return gesture;
+        }
+        return switch (gesture) {
+            case BLUSH -> EtoGesture.SHY;
+            case KISS, PULL -> EtoGesture.NONE;
+            default -> gesture;
+        };
+    }
+
     public static RigPose gesture(EtoGesture gesture, double age, boolean leads) {
         return gesture(gesture, age, leads ? 1 : 0, 0);
     }

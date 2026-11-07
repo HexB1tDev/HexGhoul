@@ -264,6 +264,9 @@ public final class HumanBrain {
             human.gesture(0);
             return;
         }
+        if (mind.gestureUntil == Long.MAX_VALUE && mind.kiss == null && mind.holding == null) {
+            mind.gestureUntil = now; // 3.2.3: held for a kiss or a hand that's over: never left frozen in it
+        }
         if (now < mind.gestureUntil) {
             return;
         }

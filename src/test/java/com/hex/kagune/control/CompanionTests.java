@@ -42,6 +42,36 @@ public final class CompanionTests {
         }
     }
 
+    /** 3.2.3: never frozen in a kiss: a held pose with nothing holding it lets go; a blush with nobody to kiss is a shy one. */
+    static void stranded() {
+        long alone = com.hex.kagune.control.npc.EtoGesture.ALONE;
+        com.hex.kagune.control.npc.EtoGesture blush = com.hex.kagune.control.npc.EtoGesture.BLUSH;
+        com.hex.kagune.control.npc.EtoGesture kiss = com.hex.kagune.control.npc.EtoGesture.KISS;
+        com.hex.kagune.control.npc.EtoGesture pull = com.hex.kagune.control.npc.EtoGesture.PULL;
+        com.hex.kagune.control.npc.EtoGesture hand = com.hex.kagune.control.npc.EtoGesture.HAND;
+        check(blush.stranded(alone, false, false) && kiss.stranded(alone + 500L, false, false) && pull.stranded(alone, false, true),
+            "a blush, a kiss or a pull with no kiss behind it lets go (the bug: she stood frozen leaning in)");
+        check(!blush.stranded(alone - 1L, false, false), "a blush as a reaction is seen for a moment first");
+        check(!kiss.stranded(99999L, true, false) && !blush.stranded(99999L, true, false) && !pull.stranded(99999L, true, false),
+            "a kiss under way keeps its pose however long Shift is held");
+        check(hand.stranded(alone, true, false) && !hand.stranded(99999L, false, true), "a hand's pose lasts while the hand is held, no longer");
+        boolean timedNever = true;
+        for (com.hex.kagune.control.npc.EtoGesture g : com.hex.kagune.control.npc.EtoGesture.values()) {
+            if (!g.held()) {
+                timedNever &= !g.stranded(99999L, false, false);
+            } else {
+                timedNever &= g.stranded(alone, false, false) || g == hand;
+            }
+        }
+        check(timedNever, "only held gestures can be stranded, and every held one is let go of when nothing holds it");
+        check(com.hex.kagune.control.client.animation.EtoPose.shown(blush, 0) == com.hex.kagune.control.npc.EtoGesture.SHY
+            && com.hex.kagune.control.client.animation.EtoPose.shown(blush, 42) == blush
+            && com.hex.kagune.control.client.animation.EtoPose.shown(kiss, 0) == com.hex.kagune.control.npc.EtoGesture.NONE
+            && com.hex.kagune.control.client.animation.EtoPose.shown(kiss, 42) == kiss
+            && com.hex.kagune.control.client.animation.EtoPose.shown(com.hex.kagune.control.npc.EtoGesture.WAVE, 0) == com.hex.kagune.control.npc.EtoGesture.WAVE,
+            "drawn: a blush with nobody to kiss is shy; a kiss with nobody is nothing; anything else as it is");
+    }
+
     /** 3.2.2: one at a time: nobody starts something with a player someone else has, nor right after they let go; their own turn never waits. */
     static void turns() {
         long gap = com.hex.kagune.control.npc.Turns.GAP;
@@ -61,6 +91,7 @@ public final class CompanionTests {
     public static void main(String[] args) {
         hands();
         turns();
+        stranded();
         personas();
         lessons();
         talk();

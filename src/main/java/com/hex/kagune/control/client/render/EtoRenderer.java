@@ -104,7 +104,8 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
             return null;
         }
         // 1.3.29: each her own way (Persona.style), and a kiss not the same kiss every time (by when it began).
-        RigPose own = EtoPose.gesture(view.gesture(), view.gestureAge(clock), npc.persona().style(), (int)Math.floorMod(view.gestureAt(), 3L));
+        RigPose own = EtoPose.gesture(EtoPose.shown(view.gesture(), view.with()), view.gestureAge(clock), npc.persona().style(),
+            (int)Math.floorMod(view.gestureAt(), 3L)); // 3.2.3: a blush with nobody to kiss is a shy one
         // 2.2.4: the kiss as her mood gives it (MoodKiss): angry, possessive, giddy, tender, desperate, sleepy, hungry, teasing.
         own = com.hex.kagune.control.client.animation.MoodKissPose.apply(own, view.kiss(), view.gesture(), view.gestureAge(clock),
             npc.persona().style()); // 2.3.5: each companion's own way of it

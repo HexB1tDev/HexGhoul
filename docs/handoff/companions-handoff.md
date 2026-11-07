@@ -1,4 +1,17 @@
-# START HERE (state after 3.2.2)
+# START HERE (state after 3.2.3)
+
+The owner's bug report (with a screenshot of Eto alone, frozen leaning in): "whenever you finish kissing, sometimes the NPC gets stuck in that position after the kiss ... has to be fixed, like, ASAP." Fixed first, before the rest of their new list (in order: the clash pushing a maxed player back, the clash sound, the left guide's moves, Ken teaching Impale and Rubble Hurl, Dawn's hold, ambient and M1s, the centipede dragon's sounds). The break-up/divorce work begun as 3.2.3 is parked in `git stash` ("WIP break up / divorce (was 3.2.3)", also `wip-3.2.3-parting.patch` in the session scratchpad); resume it after this list, renumbered.
+
+- Cause: KISS, BLUSH, PULL and HAND are held gestures (`ticks` 0, `held()`): `EtoBrain`'s tick never runs them out; the kiss (`closeIn`, `endKiss`, `letGoOfKiss`) and the hand (`letGo`) end them. BLUSH was also set outside any kiss: as a scene answer's gesture word (`blush`: 16 in eto.txt, 14 touka.txt, 7 ken.txt) and `EtoBrain` reacting to a partner's kakugan (Display.EYES). Then nothing ended it (`endKiss` returns at once with no kiss and no walk-up), and Eto's BLUSH pose is the kiss lean (`EtoPose.kiss(p, BLUSH_LEAN, t)`).
+- `EtoGesture.ALONE` (80) and `stranded(age, kissing, holding)`; `EtoBrain`'s gesture expiry lets a stranded one go (kissing: `mind.kiss != null || mind.toward != null`; holding: `mind.holding != null`).
+- `EtoPose.shown(gesture, with)`: BLUSH with nobody (`with` 0) drawn as SHY; KISS/PULL with nobody as NONE (`EtoRenderer`). A real kiss always has `with` set (closeIn's KISS sets it; it is only cleared with no kiss).
+- `HumanBrain.gestures`: `gestureUntil == Long.MAX_VALUE` with no kiss and no hand held ends it (the villagers' `held(...)` and the walk's HAND).
+- Tests: CompanionTests `stranded()`.
+- Note for the parked break-up work: its villager `part` cleared `human.mind.kiss` directly; with this fix the held pose now ends anyway, but reset the gesture there too when resuming.
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 92. Not tested in game.
+
+# State after 3.2.2
 
 The owner (after 3.2.1): "we also need to minimize the interactions. In terms of like not reduce the amount. It's just like if I'm being already interacted by someone giving me a hug, for example, like another one shouldn't be coming to do the same thing." The first of nine asks from that message (the rest: break up/divorce, a jealous animation, reconciliation talks, temper-aware door scenes, homecomings without a home, siblings, companion-child door talk, kids greeting you after days away).
 

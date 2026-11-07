@@ -143,6 +143,19 @@ public enum EtoGesture {
         return this.ticks == 0 && this != NONE;
     }
 
+    /** 3.2.3: how long a held gesture lasts with nothing holding it (ticks). */
+    public static final long ALONE = 80L;
+
+    /**
+     * 3.2.3 (the owner: "whenever you finish kissing, sometimes the NPC gets stuck in that position after the kiss"): true if this held
+     * gesture (a kiss, a blush, the pull, a hand) has nothing holding it any more ({@code kissing}: a kiss under way or on its way;
+     * {@code holding}: a hand held) and has been up {@link #ALONE} ticks. A blush given as a reaction (an answer's, a partner's eyes) was
+     * such a one: held, it never ran out, and she stood frozen leaning in for a kiss nobody was giving.
+     */
+    public boolean stranded(long age, boolean kissing, boolean holding) {
+        return this.held() && age >= ALONE && (this == HAND ? !holding : !kissing);
+    }
+
     /** True if it is over {@code age} ticks in. */
     public boolean over(long age) {
         return this == NONE || this.ticks > 0 && age >= this.ticks;

@@ -408,6 +408,10 @@ public final class EtoBrain {
         if (mind.gesture.over(now - mind.gestureAt) && mind.gesture != EtoGesture.NONE && !mind.gesture.held() && !cradles) {
             gesture(mind, EtoGesture.NONE, now);
         }
+        // 3.2.3: a kiss's, a blush's or a hand's pose with no kiss or hand behind it any more: let go of after a moment (it never was).
+        if (mind.gesture.stranded(now - mind.gestureAt, mind.kiss != null || mind.toward != null, mind.holding != null)) {
+            gesture(mind, EtoGesture.NONE, now);
+        }
         if (mind.with != 0 && mind.gesture != EtoGesture.PULL && mind.gesture != EtoGesture.CLING && mind.gesture != EtoGesture.HUG
             && mind.gesture != EtoGesture.HAND && mind.gesture != EtoGesture.STEAL && mind.kiss == null) {
             mind.with = 0;

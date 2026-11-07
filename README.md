@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.2.3 (HexGhoul): Fix: companions frozen in the kiss pose (testing)
+
+See `.github/release-notes-3.2.3.md`. The owner's bug: a companion sometimes stayed stuck leaning in after a kiss. A blush given as a reaction (37 talk answers, your kakugan) used the kiss's held pose and never let go. Now a held pose with no kiss or hand behind it ends after 4 seconds, a reaction blush is drawn as a shy one, and villagers' kiss and hand poses end with the kiss. Not tested in game.
+
 ## 3.2.2 (HexGhoul): One at a time: nobody piles on (testing)
 
 See `.github/release-notes-3.2.2.md`. While someone has you (walking up, a hug, a kiss, on your arm, by the hand, a child's moment, a card or a talk), nobody else starts something with you by themselves; the next waits 4 seconds after they let go. Companions, children, villagers and ghouls alike; what you ask for is never held back. Not tested in game.
