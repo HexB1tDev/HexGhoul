@@ -16,7 +16,59 @@ public final class ClashTests {
         }
     }
 
+    /**
+     * 3.2.4 (the owner: a maxed ghoul thrown back by low-rank investigators): both sides on one scale; a fresh ghoul even with a Rank 0, a
+     * maxed one the Reaper's equal, and everything below the dangerous ranks the one sent flying by a maxed ghoul.
+     */
+    static void power() {
+        double max = com.hex.kagune.control.ClashPower.progress(1000, 1.0, 1000);
+        double fresh = com.hex.kagune.control.ClashPower.progress(0, 0.0, 0);
+        check(Math.abs(max - 1.0) < 1.0E-9 && fresh == 0.0, "progress runs 0 (fresh) to 1 (mastery, every gate, the ghoul meat)");
+        check(com.hex.kagune.control.ClashPower.progress(1000, 0.0, 0) < 0.6 && com.hex.kagune.control.ClashPower.progress(1000, 1.0, 0) < 0.9,
+            "mastery alone isn't all of it: the quests and the ghoul meat count too");
+        check(com.hex.kagune.control.ClashPower.power(1.0) == com.hex.kagune.control.npc.AgentRules.Rank.RANK_10.power
+            && com.hex.kagune.control.ClashPower.power(0.0) == com.hex.kagune.control.npc.AgentRules.Rank.RANK_0.power, "from a Rank 0's power to the Reaper's");
+        com.hex.kagune.control.quinque.Quinque dawn = com.hex.kagune.control.quinque.Quinque.DAWN;
+        double reaper = com.hex.kagune.control.ClashPower.agent(com.hex.kagune.control.npc.AgentRules.power(com.hex.kagune.control.npc.AgentRules.Rank.RANK_10, false),
+            com.hex.kagune.control.npc.AgentRules.damage(dawn, 0));
+        double maxed = com.hex.kagune.control.ClashPower.player(max, 1.0, 1.0);
+        double ratio = ClashRules.ratio(maxed, reaper);
+        check(ratio > 0.95 && ratio < 1.05, "a maxed ghoul's ordinary blow meets the Reaper's as an equal: " + ratio);
+        boolean outhits = true;
+        boolean flung = true;
+        for (com.hex.kagune.control.npc.AgentRules.Rank rank : com.hex.kagune.control.npc.AgentRules.Rank.values()) {
+            for (com.hex.kagune.control.quinque.Quinque q : com.hex.kagune.control.quinque.Quinque.values()) {
+                for (int step = 0; step < 3; step++) {
+                    double agent = com.hex.kagune.control.ClashPower.agent(com.hex.kagune.control.npc.AgentRules.power(rank, false),
+                        com.hex.kagune.control.npc.AgentRules.damage(q, step));
+                    if (rank.ordinal() <= com.hex.kagune.control.npc.AgentRules.Rank.RANK_7.ordinal()) {
+                        // Pushed less than the agent, whatever it swings.
+                        outhits &= ClashRules.push(1.5F, ClashRules.ratio(maxed, agent)) < ClashRules.push(1.5F, ClashRules.ratio(agent, maxed));
+                    }
+                    if (rank.ordinal() <= com.hex.kagune.control.npc.AgentRules.Rank.RANK_1.ordinal() && step == 0) {
+                        flung &= ClashRules.overwhelmed(ClashRules.ratio(agent, maxed));
+                    }
+                    flung &= !ClashRules.overwhelmed(ClashRules.ratio(maxed, agent)) || rank == com.hex.kagune.control.npc.AgentRules.Rank.RANK_10;
+                }
+            }
+        }
+        check(outhits, "a maxed ghoul is thrown back less than any investigator up to Rank 7, whatever weapon, whatever blow");
+        check(flung, "a Rank 0 or 1 is sent flying by a maxed ghoul's blow; no investigator but the Reaper ever sends a maxed ghoul flying");
+        double freshBlow = com.hex.kagune.control.ClashPower.player(fresh, 1.0, 1.0);
+        double rookie = com.hex.kagune.control.ClashPower.agent(com.hex.kagune.control.npc.AgentRules.power(com.hex.kagune.control.npc.AgentRules.Rank.RANK_0, false),
+            com.hex.kagune.control.npc.AgentRules.damage(com.hex.kagune.control.quinque.Quinque.BLADE, 0));
+        double freshRatio = ClashRules.ratio(freshBlow, rookie);
+        check(freshRatio > 0.8 && freshRatio < 1.25, "a fresh ghoul and a Rank 0 meet about even: " + freshRatio);
+        check(com.hex.kagune.control.ClashPower.player(0.5, 1.0, 1.0) > freshBlow && com.hex.kagune.control.ClashPower.player(0.5, 1.0, 1.0) < maxed,
+            "halfway, in between");
+        check(com.hex.kagune.control.ClashPower.build(0.5) == 1.0 && com.hex.kagune.control.ClashPower.build(1.69) > 1.29
+            && com.hex.kagune.control.ClashPower.build(10.0) == com.hex.kagune.control.ClashPower.BUILD_MOST, "form and mutations add, up to a ceiling");
+        check(com.hex.kagune.control.ClashPower.player(1.0, 1.0, 2.0) > maxed && com.hex.kagune.control.ClashPower.player(1.0, 1.0, 2.0) < maxed * 2.0,
+            "a heavier blow counts more, by its root");
+    }
+
     public static void main(String[] args) {
+        power();
         // The other blow on its way: from the tick it set out to the tick it lands, and no later.
         check(ClashRules.onItsWay(100, 106, 100) && ClashRules.onItsWay(100, 106, 103) && ClashRules.onItsWay(100, 106, 106),
             "a blow is on its way from its start to its landing");

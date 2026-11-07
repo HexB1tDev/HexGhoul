@@ -148,7 +148,8 @@ final class AgentArms {
         mind.landsAt = now + strike.land();
         int token = ++mind.token;
         Vec3 aim = UkakuFire.horizontal(prey.m_20182_().m_82546_(agent.m_20182_()));
-        float dealt = ArmRules.damage(arm, mind.step, mind.master) * AgentRules.power(mind.rank, mind.superior);
+        // 3.2.4: on the clash's shared scale: its rank's power, its weapon's heft counted by its root (ClashPower).
+        double dealt = com.hex.kagune.control.ClashPower.agent(AgentRules.power(mind.rank, mind.superior), ArmRules.damage(arm, mind.step, mind.master));
         KaguneClash.swing(agent, now, strike.land(), ArmRules.reach(arm, mind.step, mind.master) + 0.5, aim, prey.m_19879_(), dealt,
             () -> mind.token == token && mind.striking, () -> AgentBrain.stopped(agent, mind, token));
         agent.swing(ArmRules.stepCode(mind.step), now);

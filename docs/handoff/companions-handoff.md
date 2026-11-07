@@ -1,4 +1,16 @@
-# START HERE (state after 3.2.3)
+# START HERE (state after 3.2.4)
+
+The owner's bug report: "I keep getting pushed back on the clash ... CCG agents, even at low rank, are pushing back ... I'm at like maximum level, maximum mastery, maximum quests done, maximum ghoul meat eaten ... at max level, it should be able to be matching Arima."
+
+- Cause: `KaguneClash.meets` throws the weaker blow further by `ClashRules.ratio` of the two `hit`s (overwhelmed at 2.5: the Speed Kick's flight). An agent's `hit` was `AgentRules.damage(q, step) * power(rank, superior)` (raw quinque damage x rank power); a player's was `KaguneProfile.swipeDamage` (the original's `(6 + 0.006 mastery) x form x mutations`, then `DamageBalance.scale`, 0.55 at mastery 1000) x stage.damageMul, with no quests or ghoul meat in it. Rank 4 with a mace out-hit a mastered ghoul.
+- Pure `control/ClashPower`: `BLOW` (Dawn's 9 x 0.85), `progress(mastery, gates, eaten)` (0.55 / 0.30 / 0.15; ghoul meat by `GhoulMeat.growth`, 150 pieces all of it), `power(progress)` (Rank 0's 0.85 to Rank 10's 3.1), `build(factor)` (form and mutations, root, 1 to 1.6), `player(progress, build, weight)`, `agent(rankPower, blow)`, `heft(weight)` (root, 0.3 to 3 clamped).
+- `KaguneClash.strength(player, weight, kagune)`: mastery, the share of `Gate.values()` on their path (`gate.on(PathServer.path)`) that `QuestServer.open`, `GhoulMeatServer.eaten`; build from `KaguneProfile.swipeDamageLegacy / (6 + 0.006 mastery)` for kagune blows. Used by `KaguneCombat` (weight stage.damageMul), `PaleBlitz` (strike.damage x PaleServer.power, no build) and `GraftCombat` (beat power). Agents: `AgentBrain` (both quinque swings) and `AgentArms` use `ClashPower.agent(power(rank, superior), their damage)`. Wild ghouls (`GhoulNpcCombat`) and `MoveClash` (Pale vs the Owl) unchanged. Only the clash's push uses these numbers; real damage is untouched. The clash's size (`ClashRules.impact`) now grows with them too (bigger clashes at the top).
+- Tests: ClashTests `power()`.
+- **Judgment calls:** the 55/30/15 split; mutations and form capped at 1.6x; Rank 8-9 heavy finishers can still out-push a maxed ghoul without mutations (ratio up to about 1.4, never flung).
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 92. Not tested in game.
+
+# State after 3.2.3
 
 The owner's bug report (with a screenshot of Eto alone, frozen leaning in): "whenever you finish kissing, sometimes the NPC gets stuck in that position after the kiss ... has to be fixed, like, ASAP." Fixed first, before the rest of their new list (in order: the clash pushing a maxed player back, the clash sound, the left guide's moves, Ken teaching Impale and Rubble Hurl, Dawn's hold, ambient and M1s, the centipede dragon's sounds). The break-up/divorce work begun as 3.2.3 is parked in `git stash` ("WIP break up / divorce (was 3.2.3)", also `wip-3.2.3-parting.patch` in the session scratchpad); resume it after this list, renumbered.
 

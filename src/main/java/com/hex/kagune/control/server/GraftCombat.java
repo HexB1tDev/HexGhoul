@@ -92,7 +92,7 @@ final class GraftCombat {
             }
             long began = state.startedAt;
             // 1.3.62: as hard as its heaviest beat lands.
-            double hit = GraftRules.damage(KaguneProfile.mastery(player), GraftServer.stage(player)) * Math.max(0.5F, power);
+            double hit = KaguneClash.strength(player, Math.max(0.5F, power), true); // 3.2.4: on the CCG's scale
             KaguneClash.swing(player, now, lands + 1, reach, hit, () -> state.move == move && state.startedAt == began, () -> clashed(player, state));
         }
     }

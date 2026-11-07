@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.2.4 (HexGhoul): Fix: a maxed ghoul thrown back in clashes by low-rank investigators (testing)
+
+See `.github/release-notes-3.2.4.md`. Clashes now measure both sides on one scale: an investigator by their rank, you from a fresh Rank 0's power up to the Reaper's with your mastery, the gates of your path opened by quests and lessons, and the ghoul meat in you (plus form and mutations). Fully progressed, you meet the Reaper as an equal, out-push every investigator up to Rank 7, and send Rank 0-1 flying. Not tested in game.
+
 ## 3.2.3 (HexGhoul): Fix: companions frozen in the kiss pose (testing)
 
 See `.github/release-notes-3.2.3.md`. The owner's bug: a companion sometimes stayed stuck leaning in after a kiss. A blush given as a reaction (37 talk answers, your kakugan) used the kiss's held pose and never let go. Now a held pose with no kiss or hand behind it ends after 4 seconds, a reaction blush is drawn as a shy one, and villagers' kiss and hand poses end with the kiss. Not tested in game.

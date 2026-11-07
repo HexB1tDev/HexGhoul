@@ -188,6 +188,30 @@ public final class KaguneClash {
     public record Threat(LivingEntity who, long began, long until) {
     }
 
+    /**
+     * 3.2.4: {@code player}'s blow in a clash on the CCG's scale ({@link com.hex.kagune.control.ClashPower}): how far they have come
+     * (mastery, the share of their path's gates open, the ghoul meat in them), their form and mutations ({@code kagune}: a kagune's blow,
+     * which they make harder), {@code weight} how heavy this blow is next to an ordinary one.
+     */
+    public static double strength(ServerPlayer player, double weight, boolean kagune) {
+        int mastery = com.hex.kagune.data.KaguneProfile.mastery(player);
+        com.hex.kagune.control.KagunePath path = PathServer.path(player);
+        int on = 0;
+        int open = 0;
+        for (com.hex.kagune.control.quest.Gate gate : com.hex.kagune.control.quest.Gate.values()) {
+            if (gate.on(path)) {
+                on++;
+                if (QuestServer.open(player, gate)) {
+                    open++;
+                }
+            }
+        }
+        double gates = on == 0 ? 0.0 : (double)open / on;
+        double factor = kagune ? com.hex.kagune.data.KaguneProfile.swipeDamageLegacy(player) / (6.0 + 0.006 * mastery) : 1.0;
+        return com.hex.kagune.control.ClashPower.player(com.hex.kagune.control.ClashPower.progress(mastery, gates, GhoulMeatServer.eaten(player)),
+            com.hex.kagune.control.ClashPower.build(factor), weight);
+    }
+
     /** {@code swing} is aimed at {@code body}: at it by name, or (aimed at nothing in particular) facing it and reaching it. */
     private static boolean aimedAt(Swing swing, LivingEntity body, long now) {
         LivingEntity who = swing.who();
