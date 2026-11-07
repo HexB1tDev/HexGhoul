@@ -6,6 +6,9 @@ import com.hex.kagune.control.client.KingClient;
 import com.hex.kagune.control.client.animation.FirstPersonArms;
 import com.hex.kagune.control.king.KingForm;
 import com.hex.kagune.control.king.KingMove;
+import com.hex.kagune.control.king.SpireArm;
+import com.hex.kagune.control.king.WarHoldModel;
+import com.hex.kagune.control.king.WarRules;
 import com.hex.kagune.control.king.WarModel;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -21,6 +24,7 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.world.InteractionHand;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderArmEvent;
+import net.minecraftforge.client.event.RenderHandEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -97,55 +101,143 @@ public final class KingFirstPerson {
         }
         try {
             boolean right = ((Enum<?>)event.getArm()).ordinal() == 1;
-            boolean slim = "slim".equals(player.m_108564_());
-            WarModel.Part part = right ? WarModel.Part.RIGHT_ARM : WarModel.Part.LEFT_ARM;
-            List<float[]> quads = new ArrayList<>();
-            com.hex.kagune.control.ukaku.UkakuModel.Sink sink = (a, b, c, d, n, ca, cb, cc, cd) -> quads.add(new float[] {(float)a[0], (float)a[1],
-                (float)a[2], (float)b[0], (float)b[1], (float)b[2], (float)c[0], (float)c[1], (float)c[2], (float)d[0], (float)d[1], (float)d[2], (float)n[0],
-                (float)n[1], (float)n[2], ca, cb, cc, cd, n[0] == 0.0 && n[1] == 1.0 && n[2] == 0.0 ? 1.0F : 0.0F});
-            if (view.form() == KingForm.WAR) {
-                WarModel.build(sink, part, time, grow, 0.0, WarModel.Motion.STILL,
-                    WarModel.eyeOn(com.hex.kagune.control.client.KakuganClient.eyes(player)));
-            } else {
-                com.hex.kagune.control.king.PeaceModel.build(sink, part, time, grow, com.hex.kagune.control.king.PeaceMotion.State.REST, false, null,
-                    com.hex.kagune.control.king.PeaceModel.ARMOUR);
-            }
-            if (quads.isEmpty()) {
-                return;
-            }
-            PoseStack pose = event.getPoseStack();
-            pose.m_85836_();
-            // Where vanilla's model puts the arm it is about to draw: at its shoulder, swayed out a little (ModelPart's own turn).
-            pose.m_252880_((right ? -SHOULDER_X : SHOULDER_X) / 16.0F, (slim ? SLIM_Y : SHOULDER_Y) / 16.0F, 0.0F);
-            pose.m_252781_(new Quaternionf().rotateAxis(right ? SWAY : -SWAY, 0.0F, 0.0F, 1.0F));
-            Matrix4f matrix = pose.m_85850_().m_252922_();
-            Matrix3f normals = pose.m_85850_().m_252943_();
-            MultiBufferSource buffers = event.getMultiBufferSource();
-            int light = event.getPackedLight();
-            VertexConsumer shapes = buffers.m_6299_(SHAPES);
-            for (float[] q : quads) {
-                if (q[19] == 0.0F) {
-                    for (int k = 0; k < 4; k++) {
-                        vertex(shapes, matrix, normals, q, k, (int)q[15 + k], light);
-                    }
-                }
-            }
-            VertexConsumer burning = buffers.m_6299_(LIGHT);
-            for (float[] q : quads) {
-                if (q[19] != 0.0F) {
-                    for (int k = 0; k < 4; k++) {
-                        vertex(burning, matrix, normals, q, k, premultiplied((int)q[15 + k]), FULL_BRIGHT);
-                    }
-                }
-            }
-            pose.m_85849_();
+            form(event.getPoseStack(), event.getMultiBufferSource(), event.getPackedLight(), player, view, right, time, grow);
         } catch (RuntimeException failure) {
             PlayerLayers.failed("final kakuja arm (first person)", failure);
         }
     }
 
-    private static void vertex(VertexConsumer out, Matrix4f matrix, Matrix3f normals, float[] q, int corner, int colour, int light) {
-        out.m_252986_(matrix, q[corner * 3] / 16.0F, q[corner * 3 + 1] / 16.0F, q[corner * 3 + 2] / 16.0F)
+    /**
+     * The form's pieces of one arm ({@code right} or the left) drawn on it, {@code pose} where vanilla's model puts that arm (its
+     * shoulder, its little sway, added here). 3.2.8: out of {@link #arm} so the Spire Wave's left arm ({@link #spireArm}) has it too.
+     */
+    static void form(PoseStack pose, MultiBufferSource buffers, int light, AbstractClientPlayer player, KingClient.View view, boolean right, double time,
+                     double grow) {
+        boolean slim = "slim".equals(player.m_108564_());
+        WarModel.Part part = right ? WarModel.Part.RIGHT_ARM : WarModel.Part.LEFT_ARM;
+        List<float[]> quads = new ArrayList<>();
+        com.hex.kagune.control.ukaku.UkakuModel.Sink sink = collect(quads);
+        if (view.form() == KingForm.WAR) {
+            WarModel.build(sink, part, time, grow, 0.0, WarModel.Motion.STILL,
+                WarModel.eyeOn(com.hex.kagune.control.client.KakuganClient.eyes(player)));
+        } else {
+            com.hex.kagune.control.king.PeaceModel.build(sink, part, time, grow, com.hex.kagune.control.king.PeaceMotion.State.REST, false, null,
+                com.hex.kagune.control.king.PeaceModel.ARMOUR);
+        }
+        if (quads.isEmpty()) {
+            return;
+        }
+        pose.m_85836_();
+        // Where vanilla's model puts the arm it is about to draw: at its shoulder, swayed out a little (ModelPart's own turn).
+        pose.m_252880_((right ? -SHOULDER_X : SHOULDER_X) / 16.0F, (slim ? SLIM_Y : SHOULDER_Y) / 16.0F, 0.0F);
+        pose.m_252781_(new Quaternionf().rotateAxis(right ? SWAY : -SWAY, 0.0F, 0.0F, 1.0F));
+        emit(pose, buffers, light, quads, 1.0F / 16.0F);
+        pose.m_85849_();
+    }
+
+    /** A sink that keeps each quad as 20 floats: corners, normal, colours, and 1 if it burns (a normal of exactly straight up). */
+    static com.hex.kagune.control.ukaku.UkakuModel.Sink collect(List<float[]> quads) {
+        return (a, b, c, d, n, ca, cb, cc, cd) -> quads.add(new float[] {(float)a[0], (float)a[1], (float)a[2], (float)b[0], (float)b[1], (float)b[2],
+            (float)c[0], (float)c[1], (float)c[2], (float)d[0], (float)d[1], (float)d[2], (float)n[0], (float)n[1], (float)n[2], ca, cb, cc, cd,
+            n[0] == 0.0 && n[1] == 1.0 && n[2] == 0.0 ? 1.0F : 0.0F});
+    }
+
+    /** {@code quads} drawn at {@code pose}, their corners scaled by {@code scale} (1/16: model pixels; 1: blocks): lit, then the glow. */
+    static void emit(PoseStack pose, MultiBufferSource buffers, int light, List<float[]> quads, float scale) {
+        Matrix4f matrix = pose.m_85850_().m_252922_();
+        Matrix3f normals = pose.m_85850_().m_252943_();
+        VertexConsumer shapes = buffers.m_6299_(SHAPES);
+        for (float[] q : quads) {
+            if (q[19] == 0.0F) {
+                for (int k = 0; k < 4; k++) {
+                    vertex(shapes, matrix, normals, q, k, (int)q[15 + k], light, scale);
+                }
+            }
+        }
+        VertexConsumer burning = buffers.m_6299_(LIGHT);
+        for (float[] q : quads) {
+            if (q[19] != 0.0F) {
+                for (int k = 0; k < 4; k++) {
+                    vertex(burning, matrix, normals, q, k, premultiplied((int)q[15 + k]), FULL_BRIGHT, scale);
+                }
+            }
+        }
+    }
+
+    /**
+     * 3.2.8 (the owner: the Spire Wave "janky in first person"): War's free left arm in first person while B is held and as the mass
+     * goes out ({@link SpireArm}). Vanilla draws an empty off hand as nothing, so the charge's centipedes used to coil round the
+     * third-person body's arm, under the eyes and swinging with the body's lagging turn. Now the arm is drawn here, where vanilla puts a
+     * left arm (pushed out with the charge, thrust with the mass), in its own skin with War's sleeve on it, the centipedes round it;
+     * whatever the off hand holds is hidden meanwhile.
+     */
+    @SubscribeEvent
+    public static void spireArm(RenderHandEvent event) {
+        if (event.getHand() != InteractionHand.OFF_HAND) {
+            return;
+        }
+        Minecraft minecraft = Minecraft.m_91087_();
+        LocalPlayer player = minecraft.f_91074_;
+        if (player == null || minecraft.f_91066_ == null || !minecraft.f_91066_.m_92176_().m_90612_()) {
+            return;
+        }
+        KingClient.View view = KingClient.get(player);
+        if (view == null || !view.on() || view.form() != KingForm.WAR) {
+            return;
+        }
+        double now = ControlClient.worldTime(event.getPartialTick());
+        KingMove move = view.moveAt(now);
+        if (move != KingMove.SPIRE_AIM && move != KingMove.SPIRE_SEND) {
+            return;
+        }
+        double age = now - view.moveAt();
+        boolean held = move == KingMove.SPIRE_AIM;
+        double charge = held ? WarRules.spireCharge(age) : 1.0;
+        double thrust = 0.0;
+        if (!held) {
+            double[] ends = com.hex.kagune.control.client.fx.WarHoldFx.spireEnds(player);
+            thrust = ends == null ? SpireArm.thrust(age, 20.0, 40.0) : SpireArm.thrust(age, ends[0], ends[1]);
+        }
+        event.setCanceled(true);
+        try {
+            PoseStack pose = event.getPoseStack();
+            MultiBufferSource buffers = event.getMultiBufferSource();
+            int light = event.getPackedLight();
+            pose.m_85836_();
+            steps(pose, SpireArm.place(charge, thrust));
+            if (minecraft.m_91290_().m_114382_(player) instanceof net.minecraft.client.renderer.entity.player.PlayerRenderer renderer) {
+                renderer.m_117813_(pose, buffers, light, player);
+            }
+            form(pose, buffers, light, player, view, false, now, view.grow(now));
+            if (held) {
+                List<float[]> quads = new ArrayList<>();
+                WarHoldModel.draw(collect(quads), WarHoldModel.coils(SpireArm.elbow(), SpireArm.hand(), age, now, SpireArm.REACH, new double[] {0.0, 1.0, 0.0}, SpireArm.THICK),
+                    true);
+                pose.m_85836_();
+                steps(pose, SpireArm.shoulder());
+                steps(pose, SpireArm.along());
+                emit(pose, buffers, light, quads, 1.0F);
+                pose.m_85849_();
+            }
+            pose.m_85849_();
+        } catch (RuntimeException failure) {
+            PlayerLayers.failed("Spire Wave arm (first person)", failure);
+        }
+    }
+
+    /** {@code steps} applied to {@code pose} in order (moves in blocks, turns about their axes). */
+    static void steps(PoseStack pose, List<SpireArm.Step> steps) {
+        for (SpireArm.Step step : steps) {
+            if (step.turn()) {
+                pose.m_252781_(new Quaternionf().rotateAxis((float)step.a(), (float)step.x(), (float)step.y(), (float)step.z()));
+            } else {
+                pose.m_252880_((float)step.x(), (float)step.y(), (float)step.z());
+            }
+        }
+    }
+
+    private static void vertex(VertexConsumer out, Matrix4f matrix, Matrix3f normals, float[] q, int corner, int colour, int light, float scale) {
+        out.m_252986_(matrix, q[corner * 3] * scale, q[corner * 3 + 1] * scale, q[corner * 3 + 2] * scale)
             .m_6122_((colour >> 16) & 0xFF, (colour >> 8) & 0xFF, colour & 0xFF, colour >>> 24)
             .m_7421_(0.5F, 0.5F)
             .m_86008_(OverlayTexture.f_118083_)

@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.2.8 (HexGhoul): Fix: War's Spire Wave was a mess in first person (testing)
+
+See `.github/release-notes-3.2.8.md`. In first person the Spire Wave's charge centipedes coiled round the third-person body's arm under your eyes, and the beam bent back to it, a wall of centipede heads in your face. Now your own left arm is drawn (your skin, War's sleeve), reaching out as it charges and thrust with the beam, the centipedes coiled round it; the beam leaves your fist as a cone that widens away from you. Third person unchanged. Not tested in game.
+
 ## 3.2.7 (HexGhoul): Fix: Peace's shields looked like shields and floated off the tails (testing)
 
 See `.github/release-notes-3.2.7.md`. Aegis of :Re's three shields were knight's heater shields (silver rim, red cross), held in the air off their tendrils' ends, the top one flat over his head. Now each tendril opens like a hand into a cupped fan of crimson flesh on seven white bone ribs that run on into claws, grown on a stalk at the tendril's end; the top one rises behind his head like a hood, the side ones hang close. Gameplay unchanged. Not tested in game.

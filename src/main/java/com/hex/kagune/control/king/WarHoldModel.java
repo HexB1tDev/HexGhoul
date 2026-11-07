@@ -93,6 +93,15 @@ public final class WarHoldModel {
      * over its first ticks.
      */
     public static List<Arm> coils(double[] elbow, double[] hand, double age, double now) {
+        return coils(elbow, hand, age, now, 1.1, new double[] {0.0, 1.0, 0.0}, 1.0);
+    }
+
+    /**
+     * 3.2.8: the same, their heads gathering {@code reach} (blocks at full charge) past the hand, {@code up} a way across the arm to
+     * turn them from, {@code thick} their thickness and how far round the arm they wind (first person: {@link SpireArm#REACH} and
+     * {@link SpireArm#THICK}, drawn in the arm's own frame half a block from the eyes).
+     */
+    public static List<Arm> coils(double[] elbow, double[] hand, double age, double now, double reach, double[] up, double thick) {
         List<Arm> out = new ArrayList<>();
         double c = WarRules.spireCharge(age);
         double grown = Math.min(1.0, age / 6.0);
@@ -101,9 +110,9 @@ public final class WarHoldModel {
         }
         int n = WarRules.spireArms(c);
         double[] d = unit(sub(hand, elbow), new double[] {0.0, 0.0, 1.0});
-        double[] u1 = unit(Math.abs(d[1]) > 0.95 ? new double[] {1.0, 0.0, 0.0} : cross(d, new double[] {0.0, 1.0, 0.0}), new double[] {1.0, 0.0, 0.0});
+        double[] u1 = unit(Math.abs(dotOf(d, up)) > 0.95 ? new double[] {1.0, 0.0, 0.0} : cross(d, up), new double[] {1.0, 0.0, 0.0});
         double[] u2 = cross(u1, d);
-        double[] end = add(hand, mul(d, 0.3 + 1.1 * c));
+        double[] end = add(hand, mul(d, 0.3 * Math.min(1.0, reach / 1.1) + reach * c));
         for (int k = 0; k < n; k++) {
             int turn = k % 2 == 0 ? 1 : -1;
             List<double[]> path = new ArrayList<>();
@@ -112,11 +121,11 @@ public final class WarHoldModel {
                 double s = (double)j / points;
                 double[] along = add(elbow, mul(sub(end, elbow), s));
                 double flare = s < 0.72 ? 1.0 : 1.0 + (s - 0.72) / 0.28 * (1.4 + 1.6 * c);
-                double radius = (0.1 + 0.07 * c) * flare;
+                double radius = (0.1 + 0.07 * c) * flare * (0.6 + 0.4 * thick);
                 double ang = Math.PI * 2.0 * k / n + turn * s * Math.PI * 2.4 + now * 0.12 * (1.0 + c) * turn + 0.3 * Math.sin(now * 0.3 + k);
                 path.add(add(along, add(mul(u1, Math.cos(ang) * radius), mul(u2, Math.sin(ang) * radius))));
             }
-            out.add(new Arm(upTo(path, grown), 0.045 + 0.07 * c, 0.5 + 0.5 * Math.sin(now * 0.35 + k * 1.9), 61 + k, now * 1.3 + k));
+            out.add(new Arm(upTo(path, grown), (0.045 + 0.07 * c) * thick, 0.5 + 0.5 * Math.sin(now * 0.35 + k * 1.9), 61 + k, now * 1.3 + k));
         }
         return out;
     }
@@ -128,6 +137,19 @@ public final class WarHoldModel {
      */
     public static List<Arm> mass(double[] from, double[] dir, double[] hand, double reach, double size, double speed, double charge, int arms, int seed,
                                  double age, double now) {
+        return mass(from, dir, hand, reach, size, speed, charge, arms, seed, age, now, 1.0);
+    }
+
+    /**
+     * 3.2.8: the same, {@code near} (1 as anyone else sees it) how thick its centipedes are and how fast it spreads out of the hand:
+     * from his own eyes ({@link SpireArm#NEAR}) it comes out of the hand narrow and thinner, a stream that widens as it goes away from
+     * him, never a wall of centipede heads a block from the eyes.
+     */
+    /** 3.2.8: how fast the mass spreads out of the fist from his own eyes (its radius a block out, blocks). */
+    public static final double CONE = 0.26;
+
+    public static List<Arm> mass(double[] from, double[] dir, double[] hand, double reach, double size, double speed, double charge, int arms, int seed,
+                                 double age, double now, double near) {
         List<Arm> out = new ArrayList<>();
         double front = WarRules.spireFront(age, reach, speed);
         if (front <= 0.05) {
@@ -151,11 +173,17 @@ public final class WarHoldModel {
                 double close = crush * smooth(clamp01((t - 0.5) / 0.5));
                 double radius = size * 0.6 * Math.sqrt(t) * (1.0 - 0.9 * close);
                 double wob = size * 0.18 * Math.sin(x * 0.8 - now * 0.45 + k * 1.7) * t * (1.0 - close);
+                double spread = radius + wob;
+                if (near < 1.0) {
+                    // From his own eyes: a cone out of the fist, never wider than this far from it (its writhing too).
+                    double cap = 0.06 + x * CONE;
+                    spread = Math.max(-cap, Math.min(cap, spread));
+                }
                 double ang = Math.PI * 2.0 * k / arms + turn * x * 0.32 + now * 0.07 * turn + 0.5 * Math.sin(now * 0.17 + k * 1.3) + own;
-                path.add(add(axis, add(mul(r1, Math.cos(ang) * (radius + wob)), mul(r2, Math.sin(ang) * (radius + wob)))));
+                path.add(add(axis, add(mul(r1, Math.cos(ang) * spread), mul(r2, Math.sin(ang) * spread))));
             }
             double jaw = crush > 0.01 ? 1.0 - smooth(clamp01(crush * 2.0)) : 0.9;
-            out.add(new Arm(path.toArray(new double[0][]), (0.16 + 0.22 * charge) * (0.85 + 0.3 * own), jaw, 71 + k + Math.floorMod(seed, 13),
+            out.add(new Arm(path.toArray(new double[0][]), (0.16 + 0.22 * charge) * (0.85 + 0.3 * own) * near, jaw, 71 + k + Math.floorMod(seed, 13),
                 now * 1.6 + k * 2.1));
         }
         return out;
@@ -221,5 +249,9 @@ public final class WarHoldModel {
         h *= 0xFF51AFD7ED558CCDL;
         h ^= h >>> 33;
         return (h >>> 11) * 0x1.0p-53;
+    }
+
+    private static double dotOf(double[] a, double[] b) {
+        return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
     }
 }

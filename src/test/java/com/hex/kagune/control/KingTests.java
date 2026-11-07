@@ -68,6 +68,7 @@ public final class KingTests {
         peace();
         peaceBlades();
         aegisGrown();
+        spireFirstPerson();
         peaceArms();
         cloth();
         coming();
@@ -593,6 +594,119 @@ public final class KingTests {
      * 1.0.16: Peace's four blades in every move, frame by frame: never inside his body (chain or weapon), the roots never leaving his
      * back, every point finite, each blade striking where its move says, the hand-over between moves never jumping.
      */
+    /**
+     * 3.2.8 (the owner: War's Spire Wave, "the move that charges centipedes from the left arm and shoots them forwards in a beam", janky
+     * in first person): from his own eyes the held-out left arm is in view (lower left, in front of him) at every charge and thrust; its
+     * centipedes stay round it, out of the middle of the view and off the eyes; let go, the mass comes out of the fist as a cone and
+     * never comes near the eyes; third person is drawn as before.
+     */
+    private static void spireFirstPerson() {
+        double tanV = Math.tan(Math.toRadians(35.0));
+        double tanH = tanV * 16.0 / 9.0;
+        boolean seen = true;
+        boolean clear = true;
+        String why = "";
+        for (double charge = 0.0; charge <= 1.0; charge += 0.25) {
+            for (double thrust = 0.0; thrust <= 1.0; thrust += 0.25) {
+                List<com.hex.kagune.control.king.SpireArm.Step> frame = com.hex.kagune.control.king.SpireArm.coilFrame(charge, thrust);
+                double[] hand = com.hex.kagune.control.king.SpireArm.apply(frame, com.hex.kagune.control.king.SpireArm.hand());
+                double ahead = -hand[2];
+                boolean in = ahead > 0.35 && hand[0] < 0.0 && hand[1] < 0.0 && -hand[0] / ahead < tanH && -hand[1] / ahead < tanV;
+                if (!in) {
+                    seen = false;
+                    why += String.format(java.util.Locale.ROOT, " hand at c%.2f t%.2f: %.2f %.2f %.2f", charge, thrust, hand[0], hand[1], hand[2]);
+                }
+                if (thrust > 0.0) {
+                    continue;
+                }
+                for (double age = 2.0; age <= 100.0; age += 7.0) {
+                    for (com.hex.kagune.control.king.WarHoldModel.Arm arm : com.hex.kagune.control.king.WarHoldModel.coils(
+                        com.hex.kagune.control.king.SpireArm.elbow(), com.hex.kagune.control.king.SpireArm.hand(), age, 300.0 + age,
+                        com.hex.kagune.control.king.SpireArm.REACH, new double[] {0.0, 1.0, 0.0}, com.hex.kagune.control.king.SpireArm.THICK)) {
+                        for (double[] at : arm.path()) {
+                            double[] c = com.hex.kagune.control.king.SpireArm.apply(frame, at);
+                            double far = Math.sqrt(c[0] * c[0] + c[1] * c[1] + c[2] * c[2]);
+                            boolean middle = -c[2] > 0.0 && Math.abs(c[0] / -c[2]) < 0.18 && Math.abs(c[1] / -c[2]) < 0.18;
+                            if (far < 0.3 || middle) {
+                                clear = false;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        check(seen, "first person: the held-out left arm is in front of him, lower left, in view at every charge and thrust" + why);
+        check(clear, "first person: the charge's centipedes stay round the arm, off the eyes and out of the middle of the view");
+        // Let go: the mass out of the fist, as the server sends it (0.7 ahead, 0.45 down, 0.3 to the left of the eyes).
+        double[] eye = {0.0, 1.62, 0.0};
+        double[] dir = {0.0, 0.0, 1.0};
+        double[] from = {-0.3, 1.17, 0.7};
+        boolean cone = true;
+        boolean off = true;
+        for (double charge : new double[] {0.0, 0.5, 1.0}) {
+            double reach = WarRulesView.reach(charge);
+            double size = com.hex.kagune.control.king.WarRules.spireSize(charge);
+            double speed = com.hex.kagune.control.king.WarRules.spireSpeed(charge);
+            int arms = com.hex.kagune.control.king.WarRules.spireArms(charge);
+            for (double age = 1.0; age < com.hex.kagune.control.king.WarRules.spireTicks(reach, speed); age += 1.0) {
+                for (com.hex.kagune.control.king.WarHoldModel.Arm arm : com.hex.kagune.control.king.WarHoldModel.mass(from, dir, from, reach, size, speed, charge,
+                    arms, 5, age, 400.0 + age, com.hex.kagune.control.king.SpireArm.NEAR)) {
+                    for (double[] at : arm.path()) {
+                        double x = at[2] - from[2];
+                        double r = Math.hypot(at[0] - from[0], at[1] - from[1]);
+                        if (x < 3.0 && r > 0.06 + x * com.hex.kagune.control.king.WarHoldModel.CONE + 1.0E-6) {
+                            cone = false;
+                        }
+                        if (Math.sqrt(Math.pow(at[0] - eye[0], 2) + Math.pow(at[1] - eye[1], 2) + Math.pow(at[2] - eye[2], 2)) < 0.6) {
+                            off = false;
+                        }
+                    }
+                }
+            }
+        }
+        check(cone, "first person: let go, the mass comes out of the fist as a cone (never wider than 0.06 + 0.26 a block out, in its first 3 blocks)");
+        check(off, "first person: let go, no centipede of the mass comes within 0.6 blocks of the eyes");
+        // Third person (anyone else watching) as before: the old calls are the new ones at their old values.
+        double[] elbow = {0.2, 1.3, 0.3};
+        double[] hand = {0.25, 1.32, 0.9};
+        List<com.hex.kagune.control.king.WarHoldModel.Arm> a = com.hex.kagune.control.king.WarHoldModel.coils(elbow, hand, 33.0, 512.0);
+        List<com.hex.kagune.control.king.WarHoldModel.Arm> b = com.hex.kagune.control.king.WarHoldModel.coils(elbow, hand, 33.0, 512.0, 1.1, new double[] {0.0, 1.0, 0.0},
+            1.0);
+        List<com.hex.kagune.control.king.WarHoldModel.Arm> m = com.hex.kagune.control.king.WarHoldModel.mass(from, dir, hand, 20.0, 2.0, 0.9, 0.8, 7, 5, 9.0, 512.0);
+        List<com.hex.kagune.control.king.WarHoldModel.Arm> n = com.hex.kagune.control.king.WarHoldModel.mass(from, dir, hand, 20.0, 2.0, 0.9, 0.8, 7, 5, 9.0, 512.0, 1.0);
+        check(same(a, b) && same(m, n), "third person: the Spire Wave's coils and mass are drawn exactly as before");
+        double back = 40.0;
+        check(com.hex.kagune.control.king.SpireArm.thrust(0.0, 20.0, back) == 0.0 && com.hex.kagune.control.king.SpireArm.thrust(4.0, 20.0, back) == 1.0
+            && com.hex.kagune.control.king.SpireArm.thrust(20.0, 20.0, back) == 1.0 && com.hex.kagune.control.king.SpireArm.thrust(back, 20.0, back) == 0.0,
+            "first person: the arm is thrust out with the mass, held through the crush, drawn back as it comes home");
+    }
+
+    /** The Spire Wave's reach at {@code charge} (a stand-in name for reading). */
+    private static final class WarRulesView {
+        static double reach(double charge) {
+            return com.hex.kagune.control.king.WarRules.spireReach(charge);
+        }
+    }
+
+    private static boolean same(List<com.hex.kagune.control.king.WarHoldModel.Arm> a, List<com.hex.kagune.control.king.WarHoldModel.Arm> b) {
+        if (a.size() != b.size()) {
+            return false;
+        }
+        for (int i = 0; i < a.size(); i++) {
+            com.hex.kagune.control.king.WarHoldModel.Arm x = a.get(i);
+            com.hex.kagune.control.king.WarHoldModel.Arm y = b.get(i);
+            if (x.width() != y.width() || x.path().length != y.path().length) {
+                return false;
+            }
+            for (int j = 0; j < x.path().length; j++) {
+                if (!java.util.Arrays.equals(x.path()[j], y.path()[j])) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
     /**
      * 3.2.7 (the owner: the shields were "too shield-like and floating above the tails"): every Aegis bulwark is one piece with the
      * tendril that grows it, at rest and swung out (nothing floats off its end); none rests over his head (the top one rises behind

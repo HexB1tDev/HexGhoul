@@ -184,6 +184,9 @@ public final class ArtPreview {
         if (wanted.contains("peace-rework")) {
             peaceRework(new File(out, "king-peace-rework.png"));
         }
+        if (wanted.contains("spire-fp")) {
+            spireFirstPerson(new File(out, "war-spire-first-person.png"));
+        }
         if (wanted.contains("aegis")) {
             aegis(new File(out, "king-peace-aegis.png"));
         }
@@ -4084,6 +4087,99 @@ public final class ArtPreview {
      * rinkaku, on the body as posed, never the body itself): from his eyes, a 70 degree lens, looking ahead and down, at rest, at work
      * and running.
      */
+    /**
+     * 3.2.8: War's Spire Wave (B) from his own eyes, as the game draws it in first person (no body): before (3.2.7: the centipedes round
+     * the third-person body's arm, the mass bent back to its hand) and now (the left arm in the hand pass, SpireArm's placement: the arm
+     * in a stand-in skin box, War's sleeve on it, the centipedes round it; the mass straight on from where it is sent).
+     */
+    static void spireFirstPerson(File file) throws Exception {
+        List<Shot> shots = new ArrayList<>();
+        double[] eye = {0.0, 1.62, 0.0};
+        double[] ahead = {0.0, 1.45, 6.0};
+        double[] look = unit3(new double[] {ahead[0] - eye[0], ahead[1] - eye[1], ahead[2] - eye[2]});
+        double[] right = unit3(cross3(new double[] {0.0, 1.0, 0.0}, look));
+        double[] up = cross3(look, right);
+        com.hex.kagune.control.king.KingMove aim = com.hex.kagune.control.king.KingMove.SPIRE_AIM;
+        com.hex.kagune.control.king.KingMove send = com.hex.kagune.control.king.KingMove.SPIRE_SEND;
+        double charge = 1.0;
+        double reach = com.hex.kagune.control.king.WarRules.spireReach(charge);
+        double size = com.hex.kagune.control.king.WarRules.spireSize(charge);
+        double speed = com.hex.kagune.control.king.WarRules.spireSpeed(charge);
+        int armsN = com.hex.kagune.control.king.WarRules.spireArms(charge);
+        int arrive = com.hex.kagune.control.king.WarRules.spireArrive(reach, speed);
+        int back = com.hex.kagune.control.king.WarRules.spireTicks(reach, speed);
+        double[] dir = {0.0, 0.0, 1.0};
+        double[] from = {eye[0] - 0.3, eye[1] - 0.45, eye[2] + 0.7};
+        // {held (B down) or let go, age}
+        double[][] beats = {{1, 6.0}, {1, 30.0}, {1, 60.0}, {0, 3.0}, {0, 9.0}};
+        for (int row = 0; row < 2; row++) {
+            boolean now = row == 1;
+            for (double[] beat : beats) {
+                boolean held = beat[0] == 1;
+                double age = beat[1];
+                double t = 340.0 + age;
+                List<WingPreview.Tri> tris = new ArrayList<>();
+                if (!now) {
+                    RigPose pose = warHeld(held ? aim : send, 0, age, -1, t, false);
+                    double[] elbow = onPart(pose, "leftArm", com.hex.kagune.control.king.WarHoldModel.ELBOW);
+                    double[] hand = onPart(pose, "leftArm", com.hex.kagune.control.king.WarHoldModel.HAND);
+                    if (held) {
+                        tris.addAll(placedLit(sink -> com.hex.kagune.control.king.WarHoldModel.draw(sink,
+                            com.hex.kagune.control.king.WarHoldModel.coils(elbow, hand, age, t), true), q -> q));
+                    } else {
+                        tris.addAll(placedLit(sink -> com.hex.kagune.control.king.WarHoldModel.draw(sink,
+                            com.hex.kagune.control.king.WarHoldModel.mass(from, dir, hand, reach, size, speed, charge, armsN, 5, age, t), true), q -> q));
+                    }
+                } else {
+                    double c = held ? com.hex.kagune.control.king.WarRules.spireCharge(age) : 1.0;
+                    double thrust = held ? 0.0 : com.hex.kagune.control.king.SpireArm.thrust(age, arrive, back);
+                    List<com.hex.kagune.control.king.SpireArm.Step> place = com.hex.kagune.control.king.SpireArm.place(c, thrust);
+                    List<com.hex.kagune.control.king.SpireArm.Step> atShoulder = new ArrayList<>(place);
+                    atShoulder.addAll(com.hex.kagune.control.king.SpireArm.shoulder());
+                    List<com.hex.kagune.control.king.SpireArm.Step> coilFrame = com.hex.kagune.control.king.SpireArm.coilFrame(c, thrust);
+                    // camera space (x right, y up, -z ahead) into this world
+                    java.util.function.Function<double[], double[]> cam = v -> new double[] {eye[0] + right[0] * v[0] + up[0] * v[1] - look[0] * v[2],
+                        eye[1] + right[1] * v[0] + up[1] * v[1] - look[1] * v[2], eye[2] + right[2] * v[0] + up[2] * v[1] - look[2] * v[2]};
+                    // the arm in its skin (vanilla's box: 4 x 12 x 4 pixels from the pivot), a stand-in colour
+                    tris.addAll(placedLit(sink -> box(sink, new double[] {-1.0 / 16.0, -2.0 / 16.0, -2.0 / 16.0}, new double[] {3.0 / 16.0, 10.0 / 16.0, 2.0 / 16.0},
+                        0xFFC89A74), q -> cam.apply(com.hex.kagune.control.king.SpireArm.apply(atShoulder, q))));
+                    tris.addAll(placedLit(sink -> com.hex.kagune.control.king.WarModel.build(sink, com.hex.kagune.control.king.WarModel.Part.LEFT_ARM, t, 1.0, 0.0,
+                        com.hex.kagune.control.king.WarModel.Motion.STILL, null), q -> cam.apply(com.hex.kagune.control.king.SpireArm.apply(atShoulder,
+                        new double[] {q[0] / 16.0, q[1] / 16.0, q[2] / 16.0}))));
+                    if (held) {
+                        tris.addAll(placedLit(sink -> com.hex.kagune.control.king.WarHoldModel.draw(sink, com.hex.kagune.control.king.WarHoldModel.coils(
+                            com.hex.kagune.control.king.SpireArm.elbow(), com.hex.kagune.control.king.SpireArm.hand(), age, t,
+                            com.hex.kagune.control.king.SpireArm.REACH, new double[] {0.0, 1.0, 0.0}, com.hex.kagune.control.king.SpireArm.THICK), true),
+                            q -> cam.apply(com.hex.kagune.control.king.SpireArm.apply(coilFrame, q))));
+                    } else {
+                        tris.addAll(placedLit(sink -> com.hex.kagune.control.king.WarHoldModel.draw(sink,
+                            com.hex.kagune.control.king.WarHoldModel.mass(from, dir, from, reach, size, speed, charge, armsN, 5, age, t,
+                                com.hex.kagune.control.king.SpireArm.NEAR), true), q -> q));
+                    }
+                }
+                tris.addAll(field(0.0, 30.0, null, 0.0, 0.0));
+                String what = held ? String.format(java.util.Locale.ROOT, "B held, %.0f%% charged", 100.0 * com.hex.kagune.control.king.WarRules.spireCharge(age))
+                    : String.format(java.util.Locale.ROOT, "let go, %.0f t", age);
+                shots.add(new Shot((now ? "now: " : "3.2.7: ") + what, null, NO_WINGS, eye, ahead, seenFrom(tris, eye, 0.05)));
+            }
+        }
+        sheet(file, "3.2.8: War's Spire Wave in first person (top: before; bottom: now)", shots, 5, 400, 280);
+    }
+
+    /** An axis-aligned box from {@code lo} to {@code hi}, one colour, its faces lit out from its middle. */
+    static void box(com.hex.kagune.control.ukaku.UkakuModel.Sink sink, double[] lo, double[] hi, int colour) {
+        double[][] c = new double[8][];
+        for (int i = 0; i < 8; i++) {
+            c[i] = new double[] {(i & 1) == 0 ? lo[0] : hi[0], (i & 2) == 0 ? lo[1] : hi[1], (i & 4) == 0 ? lo[2] : hi[2]};
+        }
+        int[][] faces = {{0, 2, 6, 4}, {1, 5, 7, 3}, {0, 4, 5, 1}, {2, 3, 7, 6}, {0, 1, 3, 2}, {4, 6, 7, 5}};
+        double[][] normals = {{-1, 0, 0}, {1, 0, 0}, {0, -1, 0}, {0, 1.0E-4, 0}, {0, 0, -1}, {0, 0, 1}};
+        for (int f = 0; f < 6; f++) {
+            int[] q = faces[f];
+            sink.quad(c[q[0]], c[q[1]], c[q[2]], c[q[3]], normals[f], colour, colour, colour, colour);
+        }
+    }
+
     static void kingFirstPerson(File file) throws Exception {
         List<Shot> shots = new ArrayList<>();
         double[] eye = {0.0, 1.62, 0.0};
