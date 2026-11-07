@@ -1,3 +1,5 @@
+> **Superseded: read `docs/handoff/next-ai-3.3.5.md` first** (this session went on to 3.2.6 without updating this file; the next session took it to 3.3.5).
+
 # HANDOFF: HexGhoul after 3.2.1. Read this first.
 
 Then, for the house rules and history: `docs/handoff/next-ai-3.1.9.md` (the 3.1.5 to 3.1.9 session, its withheld work and judgment calls,

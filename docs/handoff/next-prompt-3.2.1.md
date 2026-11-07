@@ -1,3 +1,5 @@
+> **Superseded: read `docs/handoff/next-ai-3.3.5.md` first** (this session went on to 3.2.6 without updating this file; the next session took it to 3.3.5).
+
 # Prompt for the next AI (paste this as the first message)
 
 You're taking over HexGhoul, a Forge 1.20.1 mod (Tokyo-Ghoul-inspired kagune, companions, families). The latest work is on the branch
