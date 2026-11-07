@@ -705,6 +705,74 @@ public final class ControlTests {
         }
     }
 
+    /**
+     * 3.1.7 (the owner, with the 3.1.6 preview: "the tails are going through the body, bro"): every tail gripping the Rubble Hurl's
+     * chunk, as it comes up out of the ground (before him, to either side, further, lower), held at every charge, and whipping after it
+     * thrown, for every tail, seen by others and in his own first person: the ribbon, at its own breadth along it (with room for its swell),
+     * never meets his body (BodyClearance's torso, arms and head) once it has left his back; its end exactly on its grip.
+     */
+    static void hurlGrip() {
+        double rx = -1.0, rz = 0.0, fx = 0.0, fz = 1.0; // facing +z: his right is -x
+        double[] feet = {0.0, 0.0, 0.0};
+        double[] eye = {0.0, 1.62, 0.0};
+        double worst = Double.MAX_VALUE;
+        String where = "";
+        int paths = 0;
+        for (int limb = 0; limb < 4; limb++) {
+            for (boolean own : new boolean[] {false, true}) {
+                double side = RinkakuRoot.side(limb, 0.0);
+                double[] r = RinkakuRoot.root(limb, side, 1.8);
+                double[] root = {-r[0], r[1], r[2]};
+                double s = side >= 0.0 ? 1.0 : -1.0;
+                for (double charge = 0.0; charge <= 1.0001; charge += 0.25) {
+                    double size = RinkakuHurl.size(charge, 1);
+                    double[] hover = RinkakuHurl.hover(eye, 0.0, 1.0, size);
+                    java.util.List<double[]> targets = new java.util.ArrayList<>();
+                    for (double[] source : new double[][] {{0, -0.5, 1.8}, {0, -0.5, 1.0}, {0, -0.5, 2.6}, {2, -0.5, 1.8}, {-2, -0.5, 1.8},
+                        {0, 1.0, 6.5}, {0, -1.5, 3}, {1, 2.5, 4}}) {
+                        for (double age = 0.0; age <= RinkakuHurl.RISE; age += 0.5) {
+                            targets.add(RinkakuHurl.rising(source, hover, age));
+                        }
+                    }
+                    double[] pos = hover.clone();
+                    double[] vel = RinkakuHurl.aim(pos, new double[] {0, 1, 20}, RinkakuHurl.speed(charge));
+                    for (int t = 0; t < 6; t++) {
+                        RinkakuHurl.step(pos, vel);
+                        double dx = pos[0] - root[0], dy = pos[1] - root[1], dz = pos[2] - root[2];
+                        double d = Math.sqrt(dx * dx + dy * dy + dz * dz);
+                        double k = d > 4.5 ? 4.5 / d : 1.0;
+                        targets.add(new double[] {root[0] + dx * k, root[1] + dy * k, root[2] + dz * k});
+                    }
+                    for (double[] t : targets) {
+                        double[] grip = {t[0] + rx * s * size * 0.3, t[1], t[2]};
+                        double[][] path = RinkakuHurl.grip(root, feet, 1.8, side, rx, rz, fx, fz, grip, 46, own);
+                        paths++;
+                        double[] end = path[path.length - 1];
+                        check(java.util.Arrays.equals(path[0], root) && Math.abs(end[0] - grip[0]) + Math.abs(end[1] - grip[1]) + Math.abs(end[2] - grip[2]) < 1e-9,
+                            "a gripping tail leaves his back and ends on its grip");
+                        double[] arcs = new double[path.length];
+                        for (int i = 1; i < path.length; i++) {
+                            arcs[i] = arcs[i - 1] + Math.sqrt(Math.pow(path[i][0] - path[i - 1][0], 2) + Math.pow(path[i][1] - path[i - 1][1], 2)
+                                + Math.pow(path[i][2] - path[i - 1][2], 2));
+                        }
+                        for (int i = 1; i < path.length; i++) {
+                            if (arcs[i] < BodyClearance.ROOT_EASE) {
+                                continue; // leaving his back
+                            }
+                            double half = 0.125 * RinkakuRibbon.profile(arcs[i] / arcs[path.length - 1]) * RinkakuRibbon.WIDE * 1.3;
+                            double gap = BodyClearance.distance(path[i][0], path[i][1], path[i][2], 0.6, 1.8) - half;
+                            if (gap < worst) {
+                                worst = gap;
+                                where = "tail " + limb + (own ? " (first person)" : "") + " charge " + charge + " grip " + java.util.Arrays.toString(grip);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        check(worst > 0.0, "over " + paths + " grips the ribbon never meets his body (closest " + worst + ": " + where + ")");
+    }
+
     static void rinkakuAlive() {
         // 2.1.6: each tail's side as the original lays it out (TendrilChain: its fanSide along its owner's LEFT; with none, an even tail on
         // his right), so its rest, root and guard are on the side its own motion carries it (else each blend swings it across his back).
@@ -1103,6 +1171,7 @@ public final class ControlTests {
         thyDeath();
         impale();
         hurl();
+        hurlGrip();
         reaperDash();
         rinkakuBlock();
         rinkakuRoot();

@@ -186,6 +186,99 @@ public final class RinkakuHurl {
         return out;
     }
 
+    // ---------------------------------------------------------------- 3.1.7: the gripping tails, round him, never through him
+
+    /**
+     * 3.1.7 (the owner, with the 3.1.6 preview: "the tails are going through the body, bro"): where a gripping tail leaves round its
+     * owner (from his feet {@code feet}, {@code height} tall; {@code side} its side times his right {@code rightX}/{@code rightZ},
+     * {@code forwardX}/{@code forwardZ} his facing) for a grip {@code gripUp} above his feet: for anything at his shoulders or above, up
+     * over its own shoulder beside his head (as the Impale's spear leaves); for anything lower (the ground before him), lower and further
+     * out round his side, down to his waist ({@code grip} the point it reaches for). {@code own}: his own first person (lower, wider,
+     * out of his eyes).
+     */
+    public static double[] gripLaunch(double[] feet, double height, double side, double rightX, double rightZ, double forwardX, double forwardZ,
+                                      double[] grip, boolean own) {
+        double s = side >= 0.0 ? 1.0 : -1.0;
+        double gripUp = grip[1] - feet[1];
+        double ahead = 0.18;
+        double shoulder = height * (own ? 0.74 : 0.87);
+        double low = clamp01((shoulder - gripUp) / (shoulder * 0.9));
+        double up = shoulder - (shoulder - height * 0.5) * low;
+        // Above his shoulders it passes beside his head; any lower, wide of his arm with the tail's own breadth.
+        // (In his own first person it always leaves at his arms' height, out of his eyes: always wide of them.)
+        double out = own ? 0.76 : 0.52 + 0.22 * clamp01((shoulder - up) / (height * 0.06));
+        return new double[] {feet[0] + rightX * s * out + forwardX * ahead, feet[1] + up, feet[2] + rightZ * s * out + forwardZ * ahead};
+    }
+
+    /**
+     * 3.1.7: a gripping tail as drawn, {@code n} points: from its {@code root} back out of him, round its own side and up behind its
+     * shoulder to {@link #gripLaunch}, then on to {@code target} (its grip on the chunk, or after a thrown piece): straight, or bowed
+     * out ahead of him when the grip is across his body. Its points are spread by length; its end exactly on {@code target}.
+     */
+    public static double[][] grip(double[] root, double[] feet, double height, double side, double rightX, double rightZ, double forwardX,
+                                  double forwardZ, double[] target, int n, boolean own) {
+        int count = Math.max(4, n);
+        double s = side >= 0.0 ? 1.0 : -1.0;
+        double[] launch = gripLaunch(feet, height, side, rightX, rightZ, forwardX, forwardZ, target, own);
+        // The rise: back out of him first (well clear of his back), round its own side, up behind its shoulder, then forward over it.
+        double[] p1 = {root[0] - forwardX * GRIP_BACK + rightX * s * 0.25, root[1] + 0.1, root[2] - forwardZ * GRIP_BACK + rightZ * s * 0.25};
+        double[] p2 = {launch[0] - forwardX * (GRIP_BACK + 0.15), launch[1] + 0.15, launch[2] - forwardZ * (GRIP_BACK + 0.15)};
+        double rise = 0.0;
+        double[] last = root;
+        for (int k = 1; k <= 16; k++) {
+            double[] q = cubic(root, p1, p2, launch, k / 16.0);
+            rise += Math.sqrt(sq(q[0] - last[0]) + sq(q[1] - last[1]) + sq(q[2] - last[2]));
+            last = q;
+        }
+        // The reach: straight to its grip; a grip across his body (on his other side) bowed out ahead of him, before his face, not across it.
+        double across = -((target[0] - feet[0]) * rightX + (target[2] - feet[2]) * rightZ) * s;
+        double bow = clamp01(across / 0.6);
+        double[] bend = {(launch[0] + target[0]) * 0.5 + forwardX * 0.9 * bow, (launch[1] + target[1]) * 0.5,
+            (launch[2] + target[2]) * 0.5 + forwardZ * 0.9 * bow};
+        double run = 0.0;
+        last = launch;
+        for (int k = 1; k <= 16; k++) {
+            double[] q = quad(launch, bend, target, k / 16.0);
+            run += Math.sqrt(sq(q[0] - last[0]) + sq(q[1] - last[1]) + sq(q[2] - last[2]));
+            last = q;
+        }
+        double total = rise + run;
+        double[][] out = new double[count][];
+        for (int i = 0; i < count; i++) {
+            double at = total * i / (count - 1);
+            if (at <= rise || run <= 1.0E-9) {
+                out[i] = cubic(root, p1, p2, launch, rise <= 1.0E-9 ? 1.0 : Math.min(1.0, at / rise));
+            } else {
+                out[i] = quad(launch, bend, target, (at - rise) / run);
+            }
+        }
+        out[0] = root.clone();
+        out[count - 1] = target.clone();
+        return out;
+    }
+
+    /** 3.1.7: how far behind him a gripping tail swings as it rises (blocks): clear of his back with the tail's own breadth. */
+    public static final double GRIP_BACK = 0.55;
+
+    private static double[] quad(double[] a, double[] b, double[] c, double t) {
+        double u = 1.0 - t;
+        return new double[] {u * u * a[0] + 2.0 * u * t * b[0] + t * t * c[0], u * u * a[1] + 2.0 * u * t * b[1] + t * t * c[1],
+            u * u * a[2] + 2.0 * u * t * b[2] + t * t * c[2]};
+    }
+
+    private static double[] cubic(double[] a, double[] b, double[] c, double[] d, double t) {
+        double u = 1.0 - t;
+        double[] out = new double[3];
+        for (int k = 0; k < 3; k++) {
+            out[k] = u * u * u * a[k] + 3.0 * u * u * t * b[k] + 3.0 * u * t * t * c[k] + t * t * t * d[k];
+        }
+        return out;
+    }
+
+    private static double sq(double v) {
+        return v * v;
+    }
+
     /** How many lumps a chunk {@code size} across is drawn with: more the bigger. */
     public static int lumps(double size) {
         return 4 + (int)Math.floor(Math.max(0.0, size - 0.85) * 2.0);

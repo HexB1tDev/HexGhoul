@@ -1,4 +1,15 @@
-# START HERE (state after 3.1.6)
+# START HERE (state after 3.1.7)
+
+The owner, with the 3.1.6 preview (from behind: both tails gripping the chunk): "Again, we had already talked about this, but the tails are going through the body, bro." Fixed as its own version, before the rest of their new list (below).
+
+- `RinkakuHurl.gripLaunch`/`grip` route every gripping tail round him: a cubic rise from the root back out of him (`GRIP_BACK` 0.55 behind), round its own side, up behind its shoulder to the launch (above his shoulders: 0.52 out beside his head; lower: down to his waist and 0.74 out, wide of his arm; first person: 0.76 out, 0.74 of his height), then a quadratic reach to the grip, bowed out ahead of him by up to 0.9 when the grip is on his other side. `HurlClient.apply` blends its tail to that path by `ThyDeath.reach` (in, then out on the whip) and `StrikePaths` passes `feet`. BodyClearance still runs after.
+- ControlTests `hurlGrip()`: 4,400 grip paths (8 sources rising, 5 charges, the whip, 4 tails, first person or not); the ribbon at `0.125 x profile x WIDE x 1.3` must stay outside `BodyClearance.distance` past `ROOT_EASE`. Closest it comes is a few millimetres positive: keep it passing if the grip numbers change.
+- Preview `docs/handoff/rinkaku-hurl-3.1.7.png`: `tools/HurlPreview.java` now applies `BodyClearance.clear` and `RinkakuRoot.attach` as the game does (the 3.1.6 preview skipped the clearance).
+- **Still to do from the owner's same message** (their words, trimmed): "add more interactions ... improve the move sets of the briefcase [quinque] ... more conversations, like bringing the child home, like more diverse conversations, depending on ... the personality they have ... make the relationships even more complex ... jealousy is actually ... a really prominent thing ... if you have two wives ... the kids ... react to each other, like meeting each other, if they got like siblings from another mother, they interact and talk about it, like about other mothers and like other fathers ... as immersive as possible, so don't just quote what I'm saying. You gotta make up your own shit."
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 91. Not tested in game.
+
+# State after 3.1.6
 
 The owner asked for an idea for the Throw key (N) with nobody held. Two were offered (Rubble Hurl, and Reel In as a backup); the owner answered "Do that one", read as the main pitch, **Rubble Hurl**. If they meant Reel In, that is still open.
 

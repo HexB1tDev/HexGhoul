@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.1.7 (HexGhoul): Rubble Hurl tails go round the body, never through it (testing)
+
+See `.github/release-notes-3.1.7.md`. The tails gripping the Rubble Hurl's chunk cut straight through the torso and head; now they leave the back, go round their own side and up behind the shoulder beside the head, then to the chunk. A new check builds 4,400 grip poses and requires the tail never to touch the body. Not tested in game.
+
 ## 3.1.6 (HexGhoul): Rinkaku's Rubble Hurl on the Throw key (testing)
 
 See `.github/release-notes-3.1.6.md`. With nobody held, N is the Rubble Hurl: two tails tear a chunk out of the block you look at (or the ground before you; put back later, only where you may break it), hold N to make it bigger, let go to hurl it at what you aim at. It bursts on what it hits: damage, knockback, a short stun; in the final kakuja it splits in three. With someone held, N is still the throw. Protocol 91. Not tested in game.

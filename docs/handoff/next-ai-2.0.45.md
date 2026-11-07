@@ -1,9 +1,9 @@
-# HANDOFF: HexGhoul after 2.0.45 (updated through 3.1.6, see "3.1.5" and "3.1.6" at the end of "Since 2.1.0"; earlier through 2.1.2: see "Since 2.0.45" and "Since 2.1.0" below). Read this first, then `docs/handoff/next-ai-2.0.36.md` (2.0.27 to 2.0.36 and what to ask the owner),
+# HANDOFF: HexGhoul after 2.0.45 (updated through 3.1.7, see "3.1.5" to "3.1.7" at the end of "Since 2.1.0"; earlier through 2.1.2: see "Since 2.0.45" and "Since 2.1.0" below). Read this first, then `docs/handoff/next-ai-2.0.36.md` (2.0.27 to 2.0.36 and what to ask the owner),
 `docs/handoff/next-ai-2.0.21.md`, `docs/handoff/next-ai-2.0.9.md`, `docs/handoff/next-ai-2.0.5.md` (how the owner works),
 `docs/handoff/next-ai-1.3.60.md` (house rules), then the top sections of `docs/handoff/companions-handoff.md` (one per version, newest first).
 
 Branch **`claude/loving-albattani-xld4zv`** (push only to the branch the session is given). Never push to `main`; no PR unless asked.
-Version **3.1.6** in `build.py` and `patch/KagunePatch.java`; the next is **3.1.7** (the last number never reaches 10). Protocol **"91"** (`ControlNetwork.PROTOCOL`; 3.1.6 added C2SUkakuAction.HURL (11) and S2CHurl (53) for the Rubble Hurl; 3.1.5 added C2SUkakuAction.IMPALE (10) and S2CImpale (52) for Rinkaku's Impale; 3.1.2 added C2SArmAction.FOLD (3) for the dedicated briefcase key; 3.0.6 bumped it for C2SArmAction (50) and S2CArmSwing (51); 3.0.0 bumped it for CcgAgent ARM, ARM_AT, ARM_TARGET and the ArmRules SWING codes; 2.5.0 bumped it for 2.4.8's S2CUkakuFx CRACK and 2.4.9's new EtoGesture ordinals; 2.4.5 added S2CThyDeath and C2SUkakuAction THY_DEATH; 2.3.0 added the mother's size to `S2CChild`; 2.2.4 added the kiss's mood to `S2CEto`; 2.1.9 added the synced AFRAID on CcgAgent and GhoulNpc; 2.1.7 added `C2SUkakuAction.REAPER_DASH`; 2.0.42
+Version **3.1.7** in `build.py` and `patch/KagunePatch.java`; the next is **3.1.8** (the last number never reaches 10). Protocol **"91"** (`ControlNetwork.PROTOCOL`; 3.1.6 added C2SUkakuAction.HURL (11) and S2CHurl (53) for the Rubble Hurl; 3.1.5 added C2SUkakuAction.IMPALE (10) and S2CImpale (52) for Rinkaku's Impale; 3.1.2 added C2SArmAction.FOLD (3) for the dedicated briefcase key; 3.0.6 bumped it for C2SArmAction (50) and S2CArmSwing (51); 3.0.0 bumped it for CcgAgent ARM, ARM_AT, ARM_TARGET and the ArmRules SWING codes; 2.5.0 bumped it for 2.4.8's S2CUkakuFx CRACK and 2.4.9's new EtoGesture ordinals; 2.4.5 added S2CThyDeath and C2SUkakuAction THY_DEATH; 2.3.0 added the mother's size to `S2CChild`; 2.2.4 added the kiss's mood to `S2CEto`; 2.1.9 added the synced AFRAID on CcgAgent and GhoulNpc; 2.1.7 added `C2SUkakuAction.REAPER_DASH`; 2.0.42
 added `S2CRinkakuBlock`, message id 48, and `C2SUkakuAction.BLOCK`; 2.0.48 `S2CUkakuFx.DAWN_RING`; 2.0.49 `CcgAgent.SOARING` on the flip). Nothing is tested in game.
 
 ## The owner's requests since 2.0.36 (their words, trimmed)
@@ -209,6 +209,9 @@ Previews: `dawn-bigger-2.0.47.png`, `dawn-aim-2.0.47.png`, `dawn-volley-2.0.48.p
 - **3.1.6** The owner answered "Do that one": **Rubble Hurl built** on N with nobody held (details at the top of `companions-handoff.md`).
   Read as the main pitch; if they meant Reel In, it is still open. The torn block is taken out by `BlockSmash` (permission-checked,
   restored after the config's time, untouched when block smashing is off).
+- **3.1.7** fix: the Rubble Hurl's gripping tails went through his body (the owner's report on the 3.1.6 preview); now routed round his
+  shoulders (`RinkakuHurl.grip`), with 4,400 regression checks. **Next, in order:** the quinque (briefcase) movesets, more family
+  conversations by personality (bringing a child home), then jealousy, co-wives and half-siblings (see the top of `companions-handoff.md`).
 - **2.3.1** the mood kisses rendered for the owner (`docs/handoff/*-mood-kisses-2.3.1.png`, `mood-kisses-waiting-2.3.1.gif`); possessive, giddy
   and tender reworked to read apart. Render poses with `tools/CompanionPreview.java <out> kisses` (stiff limbs, as in game).
 

@@ -49,6 +49,10 @@ public final class HurlPreview {
             new Shot("a tap: a small chunk in the tails' grip", new double[] {-4.2, 2.6, 6.0}, new double[] {0.0, 1.9, 1.0}, 44, 10, 0.0, false, false),
             new Shot("held to full charge: two across", new double[] {-4.6, 2.8, 6.4}, new double[] {0.0, 2.3, 1.0}, 44, 40, 1.0, false, false),
             new Shot("from behind: both tails gripping it", new double[] {-1.8, 3.2, -4.8}, new double[] {0.0, 2.2, 1.4}, 46, 40, 1.0, false, false),
+            new Shot("straight from behind (3.1.7: round his shoulders, never through him)", new double[] {0.0, 2.6, -4.2}, new double[] {0.0, 2.0, 1.0},
+                44, 40, 1.0, false, false),
+            new Shot("from his side, held: out of his back, up behind his shoulder", new double[] {-6.0, 2.2, 0.6}, new double[] {0.0, 1.9, 0.9}, 44, 40,
+                1.0, false, false),
             new Shot("thrown at a mark 18 blocks off: its lob, every other tick", new double[] {-15.0, 4.0, 9.0}, new double[] {0.0, 2.0, 9.0}, 48, -3, 1.0,
                 false, true),
             new Shot("his own first person, full charge", new double[] {0.0, 1.62, 0.05}, new double[] {0.0, 2.3, 6.0}, 70, 40, 1.0, true, false));
@@ -154,9 +158,17 @@ public final class HurlPreview {
                 double k = d > 4.5 ? 4.5 / d : 1.0;
                 target = new double[] {root[0] + dx * k, root[1] + dy * k, root[2] + dz * k};
             }
-            // His right at yaw 0 is -x in this world, as in game.
+            // His right at yaw 0 is -x in this world, as in game. 3.1.7: round him to its grip (RinkakuHurl.grip), blended in by a lunge's
+            // reach (HurlClient.apply), then kept clear of him (BodyClearance, as StrikePaths does next).
             double[] grip = {target[0] - sx * size * 0.3, target[1], target[2]};
-            double[][] bent = tailAge < ThyDeath.STRIKE ? ThyDeath.strike(world, grip, tailAge, side, -1.0, 0.0, 0.7) : world;
+            double[][] bent = world;
+            if (tailAge < ThyDeath.STRIKE) {
+                double[][] round = RinkakuHurl.grip(world[0], new double[] {0.0, 0.0, 0.0}, 1.8, side, -1.0, 0.0, 0.0, 1.0, grip, world.length, s.own);
+                bent = com.hex.kagune.control.RinkakuImpale.blend(world, round, ThyDeath.reach(tailAge));
+            }
+            double thickness = (0.18 + 3.5E-5 * 500) * 0.6 * 0.94;
+            com.hex.kagune.control.BodyClearance.clear(bent, new double[] {0.0, 0.0, 0.0}, 0.0, 1.0, 0.6, 1.8, thickness,
+                RinkakuRoot.clearance(limb, 0.0));
             double[][] own = new double[bent.length][];
             for (int i = 0; i < bent.length; i++) {
                 own[i] = new double[] {-bent[i][0], bent[i][1], bent[i][2]};
@@ -166,7 +178,7 @@ public final class HurlPreview {
             for (int i = 0; i < grown.length; i++) {
                 drawn[i] = new double[] {-grown[i][0], grown[i][1], grown[i][2]};
             }
-            ImpalePreview.drawRibbon(canvas, drawn, (0.18 + 3.5E-5 * 500) * 0.6 * 0.94, COLOUR, limb * 131 + 7, cam, 0.0);
+            ImpalePreview.drawRibbon(canvas, drawn, thickness, COLOUR, limb * 131 + 7, cam, 0.0);
         }
         return canvas.image();
     }

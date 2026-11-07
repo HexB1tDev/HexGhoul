@@ -231,7 +231,7 @@ public final class StrikePaths {
         }
         // 3.1.6: the Rubble Hurl: the tails gripping its chunk, then whipping after it as it is thrown.
         if (!layout.segmented()) {
-            double[][] gripping = com.hex.kagune.control.client.HurlClient.apply(path, limb, player, layout.fanSide(), yaw,
+            double[][] gripping = com.hex.kagune.control.client.HurlClient.apply(path, limb, player, layout.fanSide(), feet, yaw,
                 com.hex.kagune.control.client.ControlClient.worldTime(partialTick));
             if (gripping != null) {
                 path = gripping;

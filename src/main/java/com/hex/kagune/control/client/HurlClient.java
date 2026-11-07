@@ -257,9 +257,11 @@ public final class HurlClient {
 
     /**
      * Tail {@code limb} of {@code owner}'s {@code path} (world, root first) gripping its chunk or whipping after it as it is thrown, or null
-     * when it isn't: {@code fanSide} its layout's, {@code yaw} his body yaw in radians, {@code time} the world's ticks.
+     * when it isn't: {@code fanSide} its layout's, {@code feet} his feet, {@code yaw} his body yaw in radians, {@code time} the world's
+     * ticks. 3.1.7 (the owner: "the tails are going through the body"): it goes round him ({@link RinkakuHurl#grip}: back out of him, up
+     * behind its own shoulder, then on to the chunk), never straight through him from his back.
      */
-    public static double[][] apply(double[][] path, int limb, Entity owner, double fanSide, double yaw, double time) {
+    public static double[][] apply(double[][] path, int limb, Entity owner, double fanSide, double[] feet, double yaw, double time) {
         if (HURLS.isEmpty() || path == null || path.length < 2 || owner == null) {
             return null;
         }
@@ -305,9 +307,13 @@ public final class HurlClient {
         if (!(age > 0.0)) {
             return null;
         }
-        // Each tail grips its own side of it.
+        // Each tail grips its own side of it, reaching round him to it: in by a lunge's reach, then (thrown) back out the same way.
         double s = side >= 0.0 ? 1.0 : -1.0;
         double[] grip = {target[0] + rightX * s * size * 0.3, target[1], target[2] + rightZ * s * size * 0.3};
-        return ThyDeath.strike(path, grip, age, side, rightX, rightZ, 0.7);
+        Minecraft minecraft = Minecraft.m_91087_();
+        boolean own = owner == minecraft.f_91074_ && minecraft.f_91066_.m_92176_().m_90612_();
+        double[][] round = RinkakuHurl.grip(path[0], feet, owner.m_20206_(), side, rightX, rightZ, -Math.sin(yaw), Math.cos(yaw), grip,
+            path.length, own);
+        return com.hex.kagune.control.RinkakuImpale.blend(path, round, ThyDeath.reach(age));
     }
 }
