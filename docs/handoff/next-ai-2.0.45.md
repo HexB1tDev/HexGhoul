@@ -1,3 +1,5 @@
+> **Newer handoff: read `docs/handoff/next-ai-3.1.9.md` first** (the 3.1.5 to 3.1.9 session; the prompt for the next AI is `docs/handoff/next-prompt-3.1.9.md`).
+
 # HANDOFF: HexGhoul after 2.0.45 (updated through 3.1.9, see "3.1.5" to "3.1.9" at the end of "Since 2.1.0"; earlier through 2.1.2: see "Since 2.0.45" and "Since 2.1.0" below). Read this first, then `docs/handoff/next-ai-2.0.36.md` (2.0.27 to 2.0.36 and what to ask the owner),
 `docs/handoff/next-ai-2.0.21.md`, `docs/handoff/next-ai-2.0.9.md`, `docs/handoff/next-ai-2.0.5.md` (how the owner works),
 `docs/handoff/next-ai-1.3.60.md` (house rules), then the top sections of `docs/handoff/companions-handoff.md` (one per version, newest first).
