@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.1.5 (HexGhoul): Rinkaku's Impale on the Crush key (testing)
+
+See `.github/release-notes-3.1.5.md`. With nobody held, H is the Impale: one random tail (never a centipede leg) rises over its shoulder and shoots straight out where you look, its end a sharp point; hold H and it keeps going (16 to 30 blocks). Whatever it runs through is impaled and dragged along, mobs and players; a wall pins them; let go and it tears out. With someone held, H is still the crush. Protocol 90. Not tested in game.
+
 ## 3.1.4 (HexGhoul): Expand personality and mood dialogue (testing)
 
 See `.github/release-notes-3.1.4.md`. Over 730 additional spoken lines for Touka, Eto, Ken and every human temperament, retaining the original dialogue and relationship rules. Not tested in game.

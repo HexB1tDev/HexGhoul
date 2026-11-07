@@ -171,7 +171,8 @@ public final class AbilityGuide {
             rows.add(row(in, kakuja ? "Thy Death (hold: legs and tails hunt on their own)" : "Thy Death (hold: every tail hunts on its own)", TEXT, locked(m, RinkakuUnlocks.RAPID_STRIKE), Key.RAPID));
             rows.add(row(in, "Grapple leap", TEXT, locked(m, RinkakuUnlocks.GRAPPLE), Key.SLINGSHOT));
             rows.add(row(in, "Grab · Throw", TEXT, locked(m, RinkakuUnlocks.GRAB), Key.GRAB, Key.THROW));
-            rows.add(row(in, "Crush", TEXT, locked(m, RinkakuUnlocks.CRUSH), Key.CRUSH));
+            // 3.1.5: H held with no one held is the Impale (RinkakuImpale); with someone held it is still the crush.
+            rows.add(row(in, "Impale (hold) · Crush what a tail holds", TEXT, locked(m, RinkakuUnlocks.IMPALE), Key.CRUSH));
             rows.add(row(in, "Lift", TEXT, locked(m, RinkakuUnlocks.LIFT), Key.LIFT));
             rows.add(row(in, "Slam", TEXT, locked(m, RinkakuUnlocks.SLAM), Key.SLAM));
             // 2.0.37: the tendril guard (C) is gone. 2.0.42: right click held blocks (RinkakuBlock); the final kakuja's dashes instead.

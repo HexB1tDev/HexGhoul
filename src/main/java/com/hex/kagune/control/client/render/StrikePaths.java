@@ -65,6 +65,14 @@ public final class StrikePaths {
         return mode == TendrilMode.HOLD || mode == TendrilMode.LIFT || mode == TendrilMode.CRUSH;
     }
     private static final java.util.Map<TendrilChain, PathSmoother> SMOOTHERS = new java.util.WeakHashMap<>();
+    /** 3.1.5: how far each tail drawn this frame has its end drawn to a point (an Impale); none: not at all. */
+    private static final java.util.Map<TendrilChain, Double> SHARP = new java.util.WeakHashMap<>();
+
+    /** 3.1.5: how far {@code chain}'s tail, as last laid out, is drawn to a point (0 .. 1; {@code CentipedeRenderer.emitTube}). */
+    public static double sharp(TendrilChain chain) {
+        Double sharp = SHARP.get(chain);
+        return sharp == null ? 0.0 : sharp;
+    }
 
     /** {@code path} (world) smoothed in the player's own frame about its root, so his walking and turning carry it unsmoothed. */
     static double[][] smooth(TendrilChain chain, double[][] path, double yaw, double response, double wiggle, double time) {
@@ -207,6 +215,18 @@ public final class StrikePaths {
             if (lunging != null) {
                 path = lunging;
                 guarding = true;
+            }
+        }
+        // 3.1.5: the Impale: the tail up over its shoulder and straight out along its line, its end drawn to a point (sharp, for the mesh).
+        if (!layout.segmented()) {
+            double[][] impaling = com.hex.kagune.control.client.ImpaleClient.apply(path, limb, player, layout.fanSide(), feet, yaw,
+                com.hex.kagune.control.client.ControlClient.worldTime(partialTick));
+            if (impaling != null) {
+                path = impaling;
+                guarding = true;
+                SHARP.put(chain, com.hex.kagune.control.client.ImpaleClient.sharp());
+            } else {
+                SHARP.remove(chain);
             }
         }
         boolean moved = BodyClearance.clear(path, feet, -Math.sin(yaw), Math.cos(yaw), player.m_20205_(), player.m_20206_(), radius, side);

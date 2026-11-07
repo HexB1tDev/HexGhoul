@@ -52,8 +52,13 @@ public final class UkakuGates {
         }
     }
 
+    /**
+     * H. 3.1.5 (the owner: "When someone is not being grabbed by the Kagune, the abilities crush ... becomes the new ability ... impale"):
+     * only with someone held is it the original's crush; with nobody held the key is the Impale ({@link ImpaleServer}, told by its own
+     * hold from the client), and the original's "no target" is never said.
+     */
     public static void crush(ServerPlayer player) {
-        if (!refused(player, "message.hexkagune.ukaku.no_grapple") && !RinkakuAutonomy.refuse(player)
+        if (!refused(player, "message.hexkagune.ukaku.no_grapple") && !RinkakuAutonomy.refuse(player) && ImpaleServer.crushes(player)
             && unlocked(player, "The crush", RinkakuUnlocks.CRUSH)) {
             KaguneServerController.crushLegacy(player);
         }

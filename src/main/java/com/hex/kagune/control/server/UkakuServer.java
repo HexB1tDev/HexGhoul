@@ -411,6 +411,10 @@ public final class UkakuServer {
             ThyDeathServer.input(player, targetId); // 2.4.5
             return;
         }
+        if (action == com.hex.kagune.control.network.C2SUkakuAction.IMPALE) {
+            ImpaleServer.input(player, targetId); // 3.1.5: it checks for itself (a let-go always gets through)
+            return;
+        }
         if (PaleStun.stunned(player)) {
             return; // 7.0.2: stunned, no kagune answers
         }

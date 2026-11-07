@@ -30,6 +30,8 @@
   "message.hexkagune.king.exhausted": "Exhausted: %s can't be called again for %s",
   "message.hexkagune.rinkaku_block.broken": "Guard broken - your tails need a moment",
   "message.hexkagune.rinkaku_block.recovering": "Your tails are still recovering from the broken guard",
+  "message.hexkagune.impale.recovering": "Your tail is still drawing back from the impale",
+  "message.hexkagune.impale.no_tail": "No tail is free to impale with",
   "message.hexkagune.kakuja_autonomous": "Your centipede legs fight on their own in the first kakuja - you can only walk (K to change back)",
   "message.hexkagune.ukaku.kakuja_no_wings": "Your kakuja is armored tentacles, not wings - turn back with K for that",
   "message.hexkagune.ukaku.gatling_crystal": "The Gatling fires crystal spikes - crystallize your wings first (V)",

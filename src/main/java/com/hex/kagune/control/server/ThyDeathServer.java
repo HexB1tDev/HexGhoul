@@ -58,10 +58,16 @@ public final class ThyDeathServer {
         state.heldUntil = now + ThyDeath.HELD;
     }
 
+    /** 3.1.5: true while {@code player}'s tails are hunting in Thy Death (an Impale waits for it). */
+    static boolean active(ServerPlayer player) {
+        return STATES.containsKey(player.m_20148_());
+    }
+
     /** True if {@code player} can use it now: a Rinkaku ghoul with the kagune out, alive. */
     static boolean allowed(ServerPlayer player) {
+        // 3.1.5: nor while a tail is out impaling (ImpaleServer: it waits for Thy Death the same way).
         return player.m_6084_() && KaguneProfile.isActive(player) && PathServer.path(player) == com.hex.kagune.control.KagunePath.RINKAKU
-            && !UkakuServer.isUkaku(player) && !PaleServer.isPale(player) && !GraftServer.isGraft(player);
+            && !UkakuServer.isUkaku(player) && !PaleServer.isPale(player) && !GraftServer.isGraft(player) && !ImpaleServer.active(player);
     }
 
     @SubscribeEvent

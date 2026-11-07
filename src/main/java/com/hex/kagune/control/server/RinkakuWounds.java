@@ -69,7 +69,9 @@ public final class RinkakuWounds {
             into = new Vec3(0.0, -1.0, 0.0);
         } else {
             StrikePattern pattern = mode == TendrilMode.SWIPE ? KaguneCombat.livePattern(player, state) : null;
-            blow = pattern == StrikePattern.THRUST || pattern == StrikePattern.IMPALE ? WoundBook.Blow.STAB : WoundBook.Blow.SLASH;
+            // 3.1.5: and a body the Impale has run through.
+            blow = pattern == StrikePattern.THRUST || pattern == StrikePattern.IMPALE || ImpaleServer.ran(player, target) ? WoundBook.Blow.STAB
+                : WoundBook.Blow.SLASH;
             if (pattern != null) {
                 angle = switch (pattern) {
                     case OVERHEAD -> Math.PI * 0.5;

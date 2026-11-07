@@ -64,6 +64,12 @@ public final class RinkakuTube {
      */
     public static void emit(VertexConsumer out, Matrix4f pose, Matrix3f normals, Vec3[] points, float thickness, int colour, int light, int seed,
                             double[] eye, double time) {
+        emit(out, pose, normals, points, thickness, colour, light, seed, eye, time, 0.0);
+    }
+
+    /** 3.1.5: the same, its end {@code sharp} (0 .. 1) of the way drawn to a point (a tail impaling: {@code RinkakuRibbon.width}). */
+    public static void emit(VertexConsumer out, Matrix4f pose, Matrix3f normals, Vec3[] points, float thickness, int colour, int light, int seed,
+                            double[] eye, double time, double sharp) {
         if (points == null || points.length < 2 || thickness <= 0.0F || PENDING.size() >= MOST) {
             return;
         }
@@ -72,7 +78,7 @@ public final class RinkakuTube {
             path[i] = new double[] {points[i].f_82479_, points[i].f_82480_, points[i].f_82481_};
         }
         com.hex.kagune.control.RinkakuRibbon.Mesh mesh = com.hex.kagune.control.RinkakuRibbon.build(path, thickness, colour, seed, eye,
-            eye == null ? Double.NaN : time);
+            eye == null ? Double.NaN : time, sharp);
         if (mesh != null) {
             PENDING.add(new Tail(new Matrix4f(pose), new Matrix3f(normals), mesh, light, seed, time));
         }

@@ -324,6 +324,31 @@ public final class RinkakuRibbon {
      * the way its end points), {@link #swell} as thick, its markings staying where they are on it.
      */
     public static Mesh build(double[][] points, double thickness, int colour, int seed, double[] eye, double time) {
+        return build(points, thickness, colour, seed, eye, time, 0.0);
+    }
+
+    /** 3.1.5: rings at most for a tail drawn to a point in an Impale (it runs out far longer), at {@code sharp} 1. */
+    public static final int SHARP_RINGS = 80;
+
+    /**
+     * How wide it is {@code t} along it, {@code length} blocks long, {@code sharp} (0 .. 1) of the way from its own leaf
+     * ({@link #profile}) to the Impale's spear ({@link RinkakuImpale#spearWidth}: its end drawn to a point).
+     */
+    public static double width(double t, double sharp, double length) {
+        double leaf = profile(t);
+        if (!(sharp > 0.0)) {
+            return leaf;
+        }
+        double k = Math.min(1.0, sharp);
+        return leaf + (RinkakuImpale.spearWidth(t, length, PEAK, ROOT_WIDTH) - leaf) * k;
+    }
+
+    /**
+     * 3.1.5: the same, {@code sharp} (0 .. 1) of the way to the Impale's spear: its end drawn to a point ({@link #width}), drawn exactly
+     * as long as its points go (its stretch faded out: its point is where it strikes), with more rings for its length.
+     */
+    public static Mesh build(double[][] points, double thickness, int colour, int seed, double[] eye, double time, double sharp) {
+        double keen = Double.isFinite(sharp) ? Math.max(0.0, Math.min(1.0, sharp)) : 0.0;
         if (points == null || points.length < 2 || !(thickness > 0.0)) {
             return null;
         }
@@ -336,11 +361,11 @@ public final class RinkakuRibbon {
             return null;
         }
         // 2.0.51: drawn as long as it is stretched now; past its last point it goes on along the way its end points.
-        double drawn = total * stretch(time, seed);
+        double drawn = total * (1.0 + (stretch(time, seed) - 1.0) * (1.0 - keen));
         int count = points.length;
         double[] end = unit(new double[] {points[count - 1][0] - points[count - 2][0], points[count - 1][1] - points[count - 2][1],
             points[count - 1][2] - points[count - 2][2]}, new double[] {0.0, 0.0, 1.0});
-        int rings = Math.max(4, Math.min(MOST_RINGS, (int)Math.ceil(drawn / STEP) + 1));
+        int rings = Math.max(4, Math.min(MOST_RINGS + (int)Math.round(SHARP_RINGS * keen), (int)Math.ceil(drawn / STEP) + 1));
         double[][] centre = new double[rings][];
         double[] along = new double[rings];
         int j = 0;
@@ -386,7 +411,7 @@ public final class RinkakuRibbon {
         for (int r = 0; r < rings; r++) {
             double[] n = thin[r];
             double[] w = cross(tangent[r], n); // across its faces
-            double size = thickness * profile(r / (double)(rings - 1)) * swell(r / (double)(rings - 1), time, seed);
+            double size = thickness * width(r / (double)(rings - 1), keen, drawn) * swell(r / (double)(rings - 1), time, seed);
             double a = size * WIDE;
             double c = size * THIN;
             wide[r] = w;

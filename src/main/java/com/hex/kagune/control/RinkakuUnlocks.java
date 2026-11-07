@@ -14,6 +14,8 @@ public final class RinkakuUnlocks {
     public static final int GRAB = 250;
     /** H: crushing what a tail holds. */
     public static final int CRUSH = 350;
+    /** 3.1.5: H with nothing held: the Impale ({@link RinkakuImpale}), on the same key, so it comes with it. */
+    public static final int IMPALE = CRUSH;
     /** V: lifting what a tail holds. */
     public static final int LIFT = 450;
     /** B: slamming what a tail holds (the Four-Tail's mastery). */

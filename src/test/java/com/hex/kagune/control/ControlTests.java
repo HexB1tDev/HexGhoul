@@ -487,6 +487,151 @@ public final class ControlTests {
             && com.hex.kagune.control.ThyDeath.first(100L, 3) > com.hex.kagune.control.ThyDeath.first(100L, 0), "reach and blows grow; tails staggered");
     }
 
+    /** 3.1.5: the Impale: its reach and pace, a tap and a hold, its point, what it carries, its tail, its sharpened end, its key. */
+    static void impale() {
+        check(RinkakuImpale.reach(0) == 16.0 && RinkakuImpale.reach(1000) == 30.0 && RinkakuImpale.reach(500) > RinkakuImpale.reach(0)
+            && RinkakuImpale.reach(5000) == 30.0, "it reaches 16 at mastery 0, 30 at 1000");
+        check(RinkakuImpale.reach(0) > 8.5 + 0.0065 * 1000 && RinkakuImpale.reach(0) > 15.0, "even at mastery 0 it reaches past any grab or strike");
+        check(RinkakuUnlocks.IMPALE == RinkakuUnlocks.CRUSH, "the Impale comes with the crush's key");
+        // A tap: held one tick, then let go: it still runs out a tap's length, then stays.
+        double tap = RinkakuImpale.step(0.0, true, 30.0);
+        for (int i = 0; i < 20; i++) {
+            tap = RinkakuImpale.step(tap, false, 30.0);
+        }
+        check(tap >= RinkakuImpale.TAP && tap < RinkakuImpale.TAP + RinkakuImpale.SPEED, "a tap still runs it out about " + RinkakuImpale.TAP + ": " + tap);
+        check(RinkakuImpale.spent(tap, false, 30.0) && !RinkakuImpale.spent(tap, true, 30.0), "let go past a tap it is spent; held, it is not");
+        // Held: the longer, the further, never past its reach.
+        double held = 0.0;
+        boolean growing = true;
+        for (int t = 1; t <= 40; t++) {
+            double next = RinkakuImpale.step(held, true, 24.0);
+            growing &= next >= held && next <= 24.0;
+            held = next;
+            if (t == 5) {
+                check(Math.abs(held - 5 * RinkakuImpale.SPEED) < 1e-9, "held five ticks: five steps out");
+            }
+        }
+        check(growing && held == 24.0 && RinkakuImpale.spent(held, true, 24.0), "held long enough it reaches its reach and stops there");
+        check(24.0 / RinkakuImpale.SPEED < 15.0, "fast: its whole reach in under 15 ticks");
+        check(RinkakuImpale.back(0) == 1.0 && RinkakuImpale.back(RinkakuImpale.RETRACT) == 0.0 && RinkakuImpale.back(2) > RinkakuImpale.back(4),
+            "it comes back smoothly, all the way");
+        // What it carries: the newest nearest its point, the first further up its shaft, never past its point or into him.
+        for (int count = 1; count <= RinkakuImpale.MOST_CARRIED; count++) {
+            double last = -1.0;
+            boolean order = true;
+            for (int k = 0; k < count; k++) {
+                double at = RinkakuImpale.slot(k, count, 12.0);
+                order &= at > last && at <= 12.0 && at >= RinkakuImpale.NEAREST;
+                last = at;
+            }
+            check(order && Math.abs(RinkakuImpale.slot(count - 1, count, 12.0) - (12.0 - RinkakuImpale.TIP_BACK)) < 1e-9,
+                count + " carried: in order up the shaft, the newest by its point");
+        }
+        check(RinkakuImpale.slot(0, 5, 2.0) <= 2.0 && RinkakuImpale.slot(0, 5, 2.0) >= 0.0, "a short spear never carries past its own point");
+        // Which tail: only a free one (never a centipede leg), each free one in its turn.
+        boolean[] free = {false, true, false, true};
+        java.util.Set<Integer> picked = new java.util.HashSet<>();
+        for (int i = 0; i < 100; i++) {
+            int limb = RinkakuImpale.pick(free, i / 100.0);
+            check(limb == 1 || limb == 3, "only a free tail goes: " + limb);
+            picked.add(limb);
+        }
+        check(picked.size() == 2 && RinkakuImpale.pick(new boolean[] {false, false}, 0.5) == -1 && RinkakuImpale.pick(new boolean[0], 0.3) == -1
+            && RinkakuImpale.pick(free, 0.99999) == 3, "every free tail can go; none free, none goes");
+        // It follows his look like a heavy spear.
+        double[] turned = RinkakuImpale.turn(new double[] {0, 0, 1}, new double[] {1, 0, 0}, RinkakuImpale.TURN);
+        double angle = Math.toDegrees(Math.acos(turned[2]));
+        check(Math.abs(angle - RinkakuImpale.TURN) < 1e-6 && Math.abs(Math.sqrt(turned[0] * turned[0] + turned[1] * turned[1] + turned[2] * turned[2]) - 1.0) < 1e-9,
+            "it turns at most " + RinkakuImpale.TURN + " degrees a tick");
+        double[] near = RinkakuImpale.turn(new double[] {0, 0, 1}, new double[] {0.05, 0, 1}, RinkakuImpale.TURN);
+        check(Math.abs(near[0] - 0.05 / Math.sqrt(1.0025)) < 1e-9, "a small turn it takes at once");
+        // Its point runs through what is in its way, nothing beside it, under it or over it.
+        double[] a = {0.0, 1.5, 0.0};
+        double[] b = {0.0, 1.5, 6.0};
+        check(RinkakuImpale.through(a, b, 0.0, 0.5, 2.3, 3.0, 0.3), "a body in its line is run through");
+        check(RinkakuImpale.through(a, b, 0.5, 0.5, 2.3, 3.0, 0.3), "a body half a block off its line too (its width)");
+        check(!RinkakuImpale.through(a, b, 2.0, 0.5, 2.3, 3.0, 0.3) && !RinkakuImpale.through(a, b, 0.0, 2.5, 4.0, 3.0, 0.3)
+            && !RinkakuImpale.through(a, b, 0.0, 0.5, 2.3, 9.0, 0.3), "nothing to the side, overhead or past its point");
+        // The tail as drawn: its root where it was, up over its own side's shoulder, then dead straight along its line to its point.
+        double[] feet = {10.0, 64.0, -3.0};
+        for (double side : new double[] {-1.0, 1.0}) {
+            double[] launch = RinkakuImpale.launch(feet, 1.8, side, -1.0, 0.0, 0.0, 1.0, false);
+            check(Math.signum(-(launch[0] - feet[0])) == Math.signum(side) && launch[1] > feet[1] + 1.5, "it leaves over its own side's shoulder");
+            double[] own = RinkakuImpale.launch(feet, 1.8, side, -1.0, 0.0, 0.0, 1.0, true);
+            check(own[1] < launch[1], "in his own first person it leaves lower, out of his eyes");
+            double[] root = {10.0 + 0.2 * side, 64.9, -3.25};
+            double[] way = {0.0, 0.0, 1.0};
+            double[][] spear = RinkakuImpale.spear(root, launch, way, 14.0, 24, side, -1.0, 0.0, 0.0, 1.0);
+            double[] tip = spear[spear.length - 1];
+            check(spear.length == 24 && java.util.Arrays.equals(spear[0], root), "as many points as the tail, its root kept");
+            check(Math.abs(tip[0] - launch[0]) < 1e-9 && Math.abs(tip[1] - launch[1]) < 1e-9 && Math.abs(tip[2] - (launch[2] + 14.0)) < 1e-9,
+                "its point exactly where the server's is: the launch, 14 along its line");
+            boolean straight = true;
+            boolean finite = true;
+            for (double[] q : spear) {
+                finite &= Double.isFinite(q[0]) && Double.isFinite(q[1]) && Double.isFinite(q[2]);
+                if (q[2] > launch[2] + 0.01) {
+                    straight &= Math.abs(q[0] - launch[0]) < 1e-9 && Math.abs(q[1] - launch[1]) < 1e-9;
+                }
+            }
+            check(straight && finite, "past the shoulder it is one straight line");
+            double[][] none = RinkakuImpale.blend(spear, spear, 0.0);
+            double[][] rest = new double[24][];
+            for (int i = 0; i < 24; i++) {
+                rest[i] = new double[] {root[0], root[1] + i * 0.05, root[2] - i * 0.04};
+            }
+            check(java.util.Arrays.deepEquals(RinkakuImpale.blend(rest, spear, 0.0), rest) && java.util.Arrays.deepEquals(none, spear)
+                && Math.abs(RinkakuImpale.blend(rest, spear, 1.0)[23][2] - tip[2]) < 1e-9, "blended in and out of its own motion");
+        }
+        double[] home = RinkakuImpale.spear(new double[] {0, 1, 0}, new double[] {0.5, 1.7, 0.2}, new double[] {0, 0, 1}, 0.0, 12, 1.0, -1, 0, 0, 1)[11];
+        check(Math.abs(home[0] - 0.5) < 1e-9 && Math.abs(home[2] - 0.2) < 1e-9, "come home, its end at the shoulder");
+        // Its sharpened end: drawn to a point; the leaf unchanged when it isn't impaling.
+        boolean same = true;
+        for (double t = 0.0; t <= 1.0; t += 0.05) {
+            same &= RinkakuRibbon.width(t, 0.0, 9.0) == RinkakuRibbon.profile(t);
+        }
+        check(same, "not impaling, the tail is the leaf it always was");
+        check(RinkakuImpale.spearWidth(1.0, 20.0, RinkakuRibbon.PEAK, RinkakuRibbon.ROOT_WIDTH) == 0.0
+            && RinkakuImpale.spearWidth(0.0, 20.0, RinkakuRibbon.PEAK, RinkakuRibbon.ROOT_WIDTH) < RinkakuRibbon.PEAK * 0.3, "thin at its root, a point at its end");
+        double tipStart = 1.0 - RinkakuImpale.POINT_LENGTH / 20.0;
+        boolean narrowing = true;
+        for (double t = tipStart + 0.005; t <= 1.0; t += 0.005) {
+            narrowing &= RinkakuImpale.spearWidth(t, 20.0, RinkakuRibbon.PEAK, RinkakuRibbon.ROOT_WIDTH)
+                < RinkakuImpale.spearWidth(t - 0.005, 20.0, RinkakuRibbon.PEAK, RinkakuRibbon.ROOT_WIDTH);
+        }
+        check(narrowing, "over its last " + RinkakuImpale.POINT_LENGTH + " blocks it narrows all the way to its point");
+        check(RinkakuImpale.spearWidth(0.5, 20.0, RinkakuRibbon.PEAK, RinkakuRibbon.ROOT_WIDTH) == RinkakuRibbon.PEAK,
+            "stretched out, its shaft is its full width");
+        double[][] line = new double[16][];
+        for (int i = 0; i < 16; i++) {
+            line[i] = new double[] {0.0, 1.5, i * 1.2};
+        }
+        RinkakuRibbon.Mesh leaf = RinkakuRibbon.build(line, 0.2, KaguneColours.DEFAULT, 7, new double[] {3, 3, 3}, 40.0);
+        RinkakuRibbon.Mesh leaf0 = RinkakuRibbon.build(line, 0.2, KaguneColours.DEFAULT, 7, new double[] {3, 3, 3}, 40.0, 0.0);
+        RinkakuRibbon.Mesh sharp = RinkakuRibbon.build(line, 0.2, KaguneColours.DEFAULT, 7, new double[] {3, 3, 3}, 40.0, 1.0);
+        check(java.util.Arrays.equals(leaf.half(), leaf0.half()) && java.util.Arrays.equals(leaf.along(), leaf0.along()), "sharp 0 builds the very same tail");
+        double drawn = sharp.along()[sharp.along().length - 1];
+        double[] end = sharp.centre()[sharp.centre().length - 1];
+        check(Math.abs(drawn - 18.0) < 1e-6 && Math.abs(end[2] - 18.0) < 1e-6, "impaling, it is drawn exactly as long as it goes (its point where it strikes)");
+        check(sharp.half().length > leaf.half().length && sharp.half()[sharp.half().length - 1] < 1e-9
+            && sharp.half()[sharp.half().length / 2] > leaf.half()[0], "more rings for its length, its end a point, its shaft broad");
+        // Its key: H, every form whose tails are his; the first kakuja's legs fight on their own.
+        java.util.Map<AbilityGuide.Key, String> keys = defaultKeys();
+        for (com.hex.kagune.gameplay.KaguneForm form : new com.hex.kagune.gameplay.KaguneForm[] {com.hex.kagune.gameplay.KaguneForm.RINKAKU_SEED,
+            com.hex.kagune.gameplay.KaguneForm.RINKAKU_DUAL, com.hex.kagune.gameplay.KaguneForm.RINKAKU_QUAD, com.hex.kagune.gameplay.KaguneForm.FULL_KAKUJA}) {
+            AbilityGuide.Panel panel = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.RINKAKU, AbilityGuide.State.OUT, 800, form,
+                com.hex.kagune.control.ukaku.WingForm.TWIN, false, keys));
+            check(find(panel, "Impale") != null && find(panel, "Impale").keys().equals("H") && find(panel, "Impale").needs() == 0,
+                form + ": H is the Impale (and the crush of what a tail holds)");
+        }
+        AbilityGuide.Panel low = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.RINKAKU, AbilityGuide.State.OUT, 300,
+            com.hex.kagune.gameplay.KaguneForm.RINKAKU_DUAL, com.hex.kagune.control.ukaku.WingForm.TWIN, false, keys));
+        check(find(low, "Impale").needs() == RinkakuUnlocks.IMPALE, "below its mastery the Impale shows when it comes");
+        AbilityGuide.Panel first = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.RINKAKU, AbilityGuide.State.OUT, 800,
+            com.hex.kagune.gameplay.KaguneForm.CENTIPEDE, com.hex.kagune.control.ukaku.WingForm.TWIN, false, keys));
+        check(find(first, "Impale") == null, "the first kakuja lists no Impale (its legs fight on their own)");
+    }
+
     static void rinkakuAlive() {
         // 2.1.6: each tail's side as the original lays it out (TendrilChain: its fanSide along its owner's LEFT; with none, an even tail on
         // his right), so its rest, root and guard are on the side its own motion carries it (else each blend swings it across his back).
@@ -883,6 +1028,7 @@ public final class ControlTests {
         kakujaPalette();
         rinkakuAlive();
         thyDeath();
+        impale();
         reaperDash();
         rinkakuBlock();
         rinkakuRoot();

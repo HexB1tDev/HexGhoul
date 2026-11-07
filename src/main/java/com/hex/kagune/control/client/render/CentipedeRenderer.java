@@ -74,8 +74,9 @@ public final class CentipedeRenderer {
         // only if that fails.
         try {
             Vec3 eye = Minecraft.m_91087_().f_91063_.m_109153_().m_90583_(); // the original draws in the world's frame
+            // 3.1.5: an impaling tail's end drawn to a point (StrikePaths.sharp).
             RinkakuTube.emit(consumer, pose, normalMatrix, points, state.limbThickness(state.form().limb(limbIndex)), state.color() & 0xFFFFFF,
-                light, seed + limbIndex * 131, new double[] {eye.f_82479_, eye.f_82480_, eye.f_82481_}, time);
+                light, seed + limbIndex * 131, new double[] {eye.f_82479_, eye.f_82480_, eye.f_82481_}, time, StrikePaths.sharp(chain));
         } catch (RuntimeException failure) {
             PlayerLayers.failed("a Rinkaku tail", failure);
             KaguneWorldRenderer.emitTubeLegacy(consumer, pose, normalMatrix, chain, points, state, limbIndex, light, time, seed);
