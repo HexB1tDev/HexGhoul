@@ -1,4 +1,18 @@
-# START HERE (state after 3.2.9)
+# START HERE (state after 3.3.0)
+
+Still to do, in this order (each its own version): Ken teaching Impale and the Rubble Hurl with proofs; Dawn's hold, ambient and M1s; the centipede dragon's sounds; break-up/divorce (the 3.2.3 stash was lost: rebuild); then the rest of 3.2.2's list (a jealous animation, reconciliation talks, temper-aware door scenes, homecomings without a home, siblings, companion-child door talk, kids greeting you after days away).
+
+The owner's ask (from the list after the kiss bug, 3.2.3's section): "the left guide's moves". The 3.2.6 session wrote it as `wip-3.2.6-guide.patch` in its scratchpad ("Rinkaku rows by whether a tail holds someone") and it was lost with that container; rebuilt here from that description.
+
+- Cause: `AbilityGuide.rinkaku` listed "Grab · Throw · Rubble Hurl (hold N, nothing held)" (G·N) and "Impale (hold) · Crush what a tail holds" (H), and Lift (V) and Slam (B) as plain moves; the original's `liftLegacy`/`slamLegacy` both refuse without `selectedHeldEntityId` ("message.hexkagune.need_target").
+- `AbilityGuide.Input` gained a last component `holding` (the old 11-argument constructor passes false, so every other caller is unchanged). `rinkaku()`: holding: "Throw them" N, "Crush them" H, "Lift them" V, "Slam them" B, "Grab another" G, subtitle "· a tail holds someone"; not: "Grab" G, "Rubble Hurl" "N hold", "Impale" "H hold", "Lift · Slam (once a tail holds someone)" V·B in DIM. Mastery locks as before (`RinkakuUnlocks`). The first kakuja's autonomous board is unchanged.
+- `AbilityHud`: `holding = path RINKAKU && view.active() && view.hasHeldEntities()` (KaguneClientState.View, already synced); the panel is rebuilt whenever the Input changes (it is a record).
+- Tests: ControlTests `abilityGuide()` (both states, every form) and the 3.1.5/3.1.6 Impale/Hurl key checks updated.
+- **Judgment calls:** Lift and Slam shown greyed (not hidden) with nothing held, so they're still learnable from the board; "Grab another" when holding (more tails can grab).
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 92. Not tested in game.
+
+# State after 3.2.9
 
 Still to do, in this order (each its own version): the move guide (Rinkaku rows by whether a tail holds someone; the 3.2.6 session's patch was lost: rebuild); Ken teaching Impale and the Rubble Hurl with proofs; Dawn's hold, ambient and M1s; the centipede dragon's sounds; break-up/divorce (the stash was lost: rebuild); then the rest of 3.2.2's list (a jealous animation, reconciliation talks, temper-aware door scenes, homecomings without a home, siblings, companion-child door talk, kids greeting you after days away).
 

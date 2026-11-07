@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.3.0 (HexGhoul): The move guide shows what your keys do right now (Rinkaku) (testing)
+
+See `.github/release-notes-3.3.0.md`. The Rinkaku guide on the left crammed what G, N and H do with and without someone held onto shared lines, and showed Lift and Slam as ready when they need someone held. Now it follows your tails live: nothing held, Grab, Rubble Hurl (N held), Impale (H held), Lift · Slam greyed; a tail holding someone, Throw, Crush, Lift, Slam them and Grab another. Not tested in game.
+
 ## 3.2.9 (HexGhoul): Fix: the Wing Vortex: thinner, round, straight forward, and you can see past it (testing)
 
 See `.github/release-notes-3.2.9.md`. The vortex was big rolling loops of flat ribbons (crumpled panels up close), aimed from the shoulder at a body's middle or the ground under the crosshair (so it often went into the ground a few blocks off and ended: "stays in place"), and in first person it and its launch burst filled the view. Now a thin round corkscrew (three round strands, a thin jet) flying straight forward along your look, only a little up or down; from your own eyes a see-through jet that opens as it goes, no burst or smoke at your eyes. Not tested in game.

@@ -72,8 +72,10 @@ public final class AbilityHud {
                 shut.add(gate);
             }
         }
+        // 3.3.0: whether a Rinkaku tail holds someone (G, N, H, V and B do other things then).
+        boolean holding = path == KagunePath.RINKAKU && view.active() && view.hasHeldEntities();
         AbilityGuide.Input input = new AbilityGuide.Input(path, state, view.mastery(), view.form(), wings, crystal, keys, blade,
-            graft.stage(), path == KagunePath.GRAFT && graft.kakuja(), shut);
+            graft.stage(), path == KagunePath.GRAFT && graft.kakuja(), shut, holding);
         GuiCanvas canvas = new GuiCanvas(event.getGuiGraphics(), minecraft.f_91062_, null);
         if (!input.equals(shown) || layout == null) {
             layout = AbilityHudView.layout(canvas, AbilityGuide.panel(input));

@@ -75,7 +75,17 @@ public final class ControlTests {
             } else {
                 check(combo != null && combo.keys().equals("LMB"), forms[i] + ": the M1 is the " + combos[i] + " combo on the attack key");
                 check(find(panel, "Thy Death") != null && find(panel, "Thy Death").keys().equals("Z"), forms[i] + ": Z is Thy Death");
-                check(find(panel, "Grab") != null && find(panel, "Grab").keys().equals("G·N"), forms[i] + ": grab and throw on G and N");
+                // 3.3.0: what G, N, H, V and B do, as it is now: with nothing held, and with a tail holding someone.
+                check(find(panel, "Grab") != null && find(panel, "Grab").keys().equals("G") && find(panel, "Rubble Hurl").keys().equals("N hold")
+                    && find(panel, "Impale").keys().equals("H hold") && find(panel, "Lift · Slam").keys().equals("V·B")
+                    && find(panel, "Lift · Slam").colour() == AbilityGuide.DIM && find(panel, "Throw them") == null && find(panel, "Crush them") == null,
+                    forms[i] + ": nothing held: grab on G, the Rubble Hurl on N held, the Impale on H held, lift and slam dim");
+                AbilityGuide.Panel holding = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.RINKAKU, AbilityGuide.State.OUT, 800, forms[i], twin, false,
+                    keys, false, com.hex.kagune.control.graft.GraftStage.TRANSPLANT, false, java.util.Set.of(), true));
+                check(find(holding, "Throw them").keys().equals("N") && find(holding, "Crush them").keys().equals("H") && find(holding, "Lift them").keys().equals("V")
+                    && find(holding, "Slam them").keys().equals("B") && find(holding, "Grab another").keys().equals("G") && find(holding, "Rubble Hurl") == null
+                    && find(holding, "Impale") == null && holding.subtitle().contains("holds someone"),
+                    forms[i] + ": a tail holding someone: throw, crush, lift, slam them on N, H, V, B, grab another on G, no Hurl or Impale");
             }
             check((find(panel, "Centipede legs") != null) == forms[i].hasCentipedeLegs(), forms[i] + ": the legs' hunt only with legs");
             accents.add(panel.accent());
@@ -621,8 +631,11 @@ public final class ControlTests {
             com.hex.kagune.gameplay.KaguneForm.RINKAKU_DUAL, com.hex.kagune.gameplay.KaguneForm.RINKAKU_QUAD, com.hex.kagune.gameplay.KaguneForm.FULL_KAKUJA}) {
             AbilityGuide.Panel panel = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.RINKAKU, AbilityGuide.State.OUT, 800, form,
                 com.hex.kagune.control.ukaku.WingForm.TWIN, false, keys));
-            check(find(panel, "Impale") != null && find(panel, "Impale").keys().equals("H") && find(panel, "Impale").needs() == 0,
-                form + ": H is the Impale (and the crush of what a tail holds)");
+            // 3.3.0: its own row (H held) with nothing held; the crush's row with someone held.
+            AbilityGuide.Panel holding = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.RINKAKU, AbilityGuide.State.OUT, 800, form,
+                com.hex.kagune.control.ukaku.WingForm.TWIN, false, keys, false, com.hex.kagune.control.graft.GraftStage.TRANSPLANT, false, java.util.Set.of(), true));
+            check(find(panel, "Impale") != null && find(panel, "Impale").keys().equals("H hold") && find(panel, "Impale").needs() == 0
+                && find(holding, "Crush them").keys().equals("H"), form + ": H held is the Impale, and the crush of what a tail holds");
         }
         AbilityGuide.Panel low = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.RINKAKU, AbilityGuide.State.OUT, 300,
             com.hex.kagune.gameplay.KaguneForm.RINKAKU_DUAL, com.hex.kagune.control.ukaku.WingForm.TWIN, false, keys));
@@ -700,8 +713,12 @@ public final class ControlTests {
             com.hex.kagune.gameplay.KaguneForm.RINKAKU_QUAD, com.hex.kagune.gameplay.KaguneForm.FULL_KAKUJA}) {
             AbilityGuide.Panel panel = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.RINKAKU, AbilityGuide.State.OUT, 800, form,
                 com.hex.kagune.control.ukaku.WingForm.TWIN, false, keys));
-            AbilityGuide.Row row = find(panel, "Grab");
-            check(row != null && row.name().contains("Rubble Hurl") && row.keys().equals("G·N"), form + ": N is the throw, or with nothing held the Rubble Hurl");
+            // 3.3.0: its own row (N held) with nothing held; the throw's row with someone held.
+            AbilityGuide.Panel held = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.RINKAKU, AbilityGuide.State.OUT, 800, form,
+                com.hex.kagune.control.ukaku.WingForm.TWIN, false, keys, false, com.hex.kagune.control.graft.GraftStage.TRANSPLANT, false, java.util.Set.of(), true));
+            AbilityGuide.Row row = find(panel, "Rubble Hurl");
+            check(row != null && row.keys().equals("N hold") && find(held, "Throw them").keys().equals("N"),
+                form + ": N is the throw, or with nothing held the Rubble Hurl");
         }
     }
 

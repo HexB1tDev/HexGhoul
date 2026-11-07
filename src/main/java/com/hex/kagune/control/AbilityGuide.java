@@ -48,11 +48,18 @@ public final class AbilityGuide {
      * @param ukaku      Ukaku's kagune form: his wings, or a kakuja (ignored on Rinkaku's path)
      * @param crystal    Ukaku's wings crystallized
      * @param keys       the player's name for each key ("R", "LMB", "Ctrl+G")
+     * @param holding    3.3.0: a Rinkaku tail holds someone (the keys G, N, H, V and B do other things then)
      */
     public record Input(KagunePath path, State state, int mastery, KaguneForm rinkaku, WingForm ukaku, boolean crystal, Map<Key, String> keys,
-                        boolean blade, GraftStage graft, boolean graftKakuja, java.util.Set<com.hex.kagune.control.quest.Gate> shut) {
+                        boolean blade, GraftStage graft, boolean graftKakuja, java.util.Set<com.hex.kagune.control.quest.Gate> shut, boolean holding) {
         public Input {
             shut = shut == null ? java.util.Set.of() : java.util.Set.copyOf(shut);
+        }
+
+        /** 3.3.0: as below, no tail holding anyone. */
+        public Input(KagunePath path, State state, int mastery, KaguneForm rinkaku, WingForm ukaku, boolean crystal, Map<Key, String> keys,
+                     boolean blade, GraftStage graft, boolean graftKakuja, java.util.Set<com.hex.kagune.control.quest.Gate> shut) {
+            this(path, state, mastery, rinkaku, ukaku, crystal, keys, blade, graft, graftKakuja, shut, false);
         }
 
         /** 7.0.1: as below, every gate open (a preview, a test). */
@@ -170,12 +177,21 @@ public final class AbilityGuide {
             int m = in.mastery();
             rows.add(row(in, kakuja ? "Thy Death (hold: legs and tails hunt on their own)" : "Thy Death (hold: every tail hunts on its own)", TEXT, locked(m, RinkakuUnlocks.RAPID_STRIKE), Key.RAPID));
             rows.add(row(in, "Grapple leap", TEXT, locked(m, RinkakuUnlocks.GRAPPLE), Key.SLINGSHOT));
-            // 3.1.6: N held with no one held is the Rubble Hurl (RinkakuHurl); with someone held it is still the throw.
-            rows.add(row(in, "Grab · Throw · Rubble Hurl (hold N, nothing held)", TEXT, locked(m, RinkakuUnlocks.HURL), Key.GRAB, Key.THROW));
-            // 3.1.5: H held with no one held is the Impale (RinkakuImpale); with someone held it is still the crush.
-            rows.add(row(in, "Impale (hold) · Crush what a tail holds", TEXT, locked(m, RinkakuUnlocks.IMPALE), Key.CRUSH));
-            rows.add(row(in, "Lift", TEXT, locked(m, RinkakuUnlocks.LIFT), Key.LIFT));
-            rows.add(row(in, "Slam", TEXT, locked(m, RinkakuUnlocks.SLAM), Key.SLAM));
+            // 3.3.0 (the owner: the left guide's moves): G, N, H, V and B do different things whether a tail holds someone or not
+            // (the Rubble Hurl and the Impale with nothing held, 3.1.5 and 3.1.6; the throw, crush, lift and slam on who is held, the
+            // last two nothing at all without), so the board shows what they do now instead of both crammed on one line.
+            if (in.holding()) {
+                rows.add(row(in, "Throw them", TEXT, locked(m, RinkakuUnlocks.GRAB), Key.THROW));
+                rows.add(row(in, "Crush them", TEXT, locked(m, RinkakuUnlocks.CRUSH), Key.CRUSH));
+                rows.add(row(in, "Lift them", TEXT, locked(m, RinkakuUnlocks.LIFT), Key.LIFT));
+                rows.add(row(in, "Slam them", TEXT, locked(m, RinkakuUnlocks.SLAM), Key.SLAM));
+                rows.add(row(in, "Grab another", TEXT, locked(m, RinkakuUnlocks.GRAB), Key.GRAB));
+            } else {
+                rows.add(row(in, "Grab", TEXT, locked(m, RinkakuUnlocks.GRAB), Key.GRAB));
+                rows.add(new Row(key(in, Key.THROW) + " hold", "Rubble Hurl", TEXT, locked(m, RinkakuUnlocks.HURL)));
+                rows.add(new Row(key(in, Key.CRUSH) + " hold", "Impale", TEXT, locked(m, RinkakuUnlocks.IMPALE)));
+                rows.add(row(in, "Lift · Slam (once a tail holds someone)", DIM, locked(m, RinkakuUnlocks.LIFT), Key.LIFT, Key.SLAM));
+            }
             // 2.0.37: the tendril guard (C) is gone. 2.0.42: right click held blocks (RinkakuBlock); the final kakuja's dashes instead.
             if (!full) {
                 rows.add(row(in, "Block (hold) · on time: stagger", TEXT, 0, Key.USE));
@@ -197,7 +213,11 @@ public final class AbilityGuide {
             case FULL_KAKUJA -> "FULL KAKUJA";
             default -> form.displayName().toUpperCase(java.util.Locale.ROOT);
         };
-        return new Panel(title, kakuja ? (full ? "Rinkaku · final kakuja" : "Rinkaku · first kakuja") : "Rinkaku · kagune out", accent, rows);
+        String subtitle = kakuja ? (full ? "Rinkaku · final kakuja" : "Rinkaku · first kakuja") : "Rinkaku · kagune out";
+        if (in.holding() && !RinkakuForms.autonomous(form)) {
+            subtitle += " · a tail holds someone";
+        }
+        return new Panel(title, subtitle, accent, rows);
     }
 
     /** Rinkaku's M1 for his form (ComboStyle's stages). */
