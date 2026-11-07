@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.3.8 (HexGhoul): Who's at the door (testing)
+
+See `.github/release-notes-3.3.8.md`. From the owner's list after 3.2.1: temper-aware door scenes. When you bring a child home, Eto, Touka or Ken now meet you at the door by who that child is: a scene for each of the seven tempers, found or back from an outing (42 new scenes), and by age (baby, toddler, child or teen). Not tested in game.
+
 ## 3.3.7 (HexGhoul): Talking it out (testing)
 
 See `.github/release-notes-3.3.7.md`. From the owner's list after 3.2.1: reconciliation talks. A companion who is cross with you, or a jealous partner, can now be asked "Can we talk about it?" (or "Are we okay?", "Are we still friends?", "Can we talk about earlier?"). It's a real talk with branches: owning it, being honest or offering to make it up ends it; "you're overreacting" or "you're being paranoid" makes it worse. New lines in each one's voice, and a second way each comes to make it up on their own (picked at random). Not tested in game.

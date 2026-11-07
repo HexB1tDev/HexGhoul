@@ -36,6 +36,24 @@ public final class Homecoming {
         return leftWith == null || !leftWith.equals(broughtBy);
     }
 
+    // ---------------------------------------------------------------- 3.3.8: who it is, for the one at the door
+
+    /** 3.3.8: the age flags a door scene may wait on: the one brought in a baby, a toddler, or a child or older. */
+    public static final java.util.List<String> AGE_FLAGS = java.util.List.of("babykid", "littlekid", "bigkid");
+
+    /**
+     * 3.3.8 (the owner's list: temper-aware door scenes): what its other parent's door scene knows of the child brought in: its temper
+     * ({@code "boldkid"}, {@code "shykid"}...) and its age ({@link #AGE_FLAGS}).
+     */
+    public static java.util.Set<String> flags(ChildTemper temper, ChildStage stage) {
+        String age = switch (stage == null ? ChildStage.CHILD : stage) {
+            case BABY -> "babykid";
+            case TODDLER -> "littlekid";
+            case CHILD, TEEN, ADULT -> "bigkid";
+        };
+        return java.util.Set.of((temper == null ? ChildTemper.SUNNY : temper).word() + "kid", age);
+    }
+
     // ---------------------------------------------------------------- what it calls out as it comes in
 
     private static final Map<String, String[]> HELLO = new HashMap<>();

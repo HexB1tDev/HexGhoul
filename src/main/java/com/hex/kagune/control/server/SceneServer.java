@@ -401,6 +401,8 @@ public final class SceneServer {
                 for (Children.Child child : kids) {
                     if (child.id.equals(brought.child())) {
                         names.put("kid", child.name);
+                        // 3.3.8 (the owner's list: temper-aware door scenes): who it is, its temper and its age
+                        flags.addAll(com.hex.kagune.control.family.Homecoming.flags(ChildTemper.of(child.id, child.mother, child.father), child.stage(at)));
                     }
                 }
             }

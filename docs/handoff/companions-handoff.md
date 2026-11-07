@@ -1,4 +1,23 @@
-# START HERE (state after 3.3.7)
+# START HERE (state after 3.3.8)
+
+Still to do, in this order (each its own version): the rest of 3.2.2's list (homecomings without a home, siblings, companion-child door talk, kids greeting you after days away). The owner: "push an update asap": every version is pushed as it is built.
+
+From the owner's 3.2.2 list: temper-aware door scenes (`next-ai-3.2.1.md`, "what to deepen next" 3: new companion flags for the brought child's temper and age).
+
+- Pure `Homecoming.flags(temper, stage)`: `<temper>kid` (sunnykid shykid boldkid curiouskid mischiefkid gentlekid seriouskid) and the age, one of `AGE_FLAGS` (babykid for a baby; littlekid for a toddler; bigkid for a child, teen or adult). `SceneWords.COMPANION_FLAGS` gains all ten.
+- `SceneServer` companion context: the brought child's flags are added where its `{kid}` name is set (only the one brought in, only while `brought`).
+- Scenes (`talk/eto|touka|ken.txt`, at the end, 19 each, `weight: 2`):
+  - `door_<temper>_found` (`when: kids brought found <t>kid !babykid`) and `door_<temper>_outing` (`!found`);
+  - `door_baby` (`babykid !found`);
+  - `door_little_found` / `door_little_outing`;
+  - `door_big_found` / `door_big_outing`.
+- Weights: against the old `brought_found` (5.5), a temper scene and an age scene weigh 14 each, so about 42% / 42% / 16%. `recent` rotates them.
+- Tests: SceneTests (every temper x found/outing x toddler/child/teen fits a temper scene and an age scene; never another child's flags; a baby gets `door_baby` and no temper scene; every `door_` scene is an APPROACH waiting on `brought`, with an ignored line, weight 2 or more).
+- **Judgment calls:** child and teen share the `bigkid` scenes; the weights.
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 93. Not tested in game.
+
+# State after 3.3.7
 
 Still to do, in this order (each its own version): the rest of 3.2.2's list (temper-aware door scenes, homecomings without a home, siblings, companion-child door talk, kids greeting you after days away). The owner: "push an update asap": every version is pushed as it is built.
 

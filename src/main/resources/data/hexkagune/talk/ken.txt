@@ -2379,3 +2379,292 @@ say: *Ken comes and stands close, not quite touching.* I made a list, earlier. O
 > *Kiss him.* | +4 kiss
   - *He kisses you back, a little surprised, and then not surprised at all.* ...That can go on the list.
 ignored: *He stays close a while, in the quiet, and that's enough for him.*
+
+# =====================================================================================================================================
+# 3.3.8 (the owner's list: temper-aware door scenes): the same homecoming, met by who {kid} is: their temper ("boldkid", "shykid"...)
+# and their age ("babykid", "littlekid": a toddler, "bigkid": a child or older). Only ever the one just brought in.
+# =====================================================================================================================================
+
+scene door_sunny_found
+who: together
+when: kids brought found sunnykid !babykid
+weight: 2
+say: *{kid} bounds in, smiling ear to ear, and Ken has to sit down* ...They're smiling. I was so sure something awful had happened, and they're smiling.
+> They had no idea they were lost. | +2 -> idea
+> Smile back. They're home. | +2 hug
+  - *he laughs, a little shakily, and pulls {kid} in* ...You're right. Hi. Hi. Welcome home.
+page idea
+say: No idea at all. *he watches {kid} chatter* I hope they never lose that. Not knowing to be afraid. I'd give a lot for them to keep it.
+> Then we'll do the being afraid. | +3 hearts
+  - *he nods, slowly* Yes. That's our job. I'm very qualified.
+> You're allowed to stop being afraid now. | +2 hand
+  - *he takes your hand and holds it hard* ...I'm working on it. Give me a minute.
+ignored: *makes {kid} their favourite drink, and spills half of it, hands still unsteady*
+
+scene door_sunny_outing
+who: together
+when: kids brought !found sunnykid !babykid
+weight: 2
+say: *{kid} is telling him about the whole day at once* Wait, wait, slowly. *he laughs* The bird did WHAT? Start at the beginning. I want all of it.
+> You'll be here a while. | +2 laugh
+  - That's okay. *he settles on the floor, cross-legged* I don't have anywhere better to be. I never do, when it's them.
+> They saved the best part for you. | +2 -> best
+page best
+say: For me? *he blinks* ...Oh. *he listens, and his face does that soft thing it does* That's the nicest thing anyone's saved for me in a long time.
+> They save a lot for you. | +3 hearts
+  - *he ducks his head* ...I'll try to deserve it.
+> Next time, come with us. | +2 hand
+  - I'd like that. I'll bring a book, in case I get tired. I won't get tired.
+ignored: *writes the story down afterwards, so they'll have it when they're grown*
+
+scene door_shy_found
+who: together
+when: kids brought found shykid !babykid
+weight: 2
+say: *{kid} hides behind you, too scared to look up* Oh. Oh, no, it's okay. *he kneels right down on the floor* Nobody's in trouble. I promise. I'm just glad you're here.
+> They thought you'd be cross. | +2 -> cross
+> Give them a moment. | +2
+  - Of course. *he stays where he is, very still, and waits* I'm good at waiting. Take all the time you want.
+page cross
+say: Cross? *his face falls* No. Never at you for being scared. *quietly* I used to hide too. When I thought I'd done something wrong. It's okay. You can come out.
+> They're coming out. | +3 hearts
+  - *{kid} edges out from behind you, and he opens his arms, and they walk into them*
+> You understand them. | +2 shy
+  - I think I do. I was a lot like them. I'm still a lot like them.
+ignored: *sits on the floor near {kid}, reading quietly, until they come and sit beside him*
+
+scene door_shy_outing
+who: together
+when: kids brought !found shykid !babykid
+weight: 2
+say: *{kid} gives him a tiny wave* Hi. *he waves back just as small* Was it a good day? You can just nod. Nodding counts.
+> They nodded twice. | +2 laugh
+  - Twice! *he beams* That's a very good day. That's practically a parade.
+> They were brave today. | +2 -> brave
+page brave
+say: Were they? *he looks at {kid}* ...I'm proud of you. Being brave is hardest when you're quiet. The loud ones make it look easy. It's not.
+> You know that from experience. | +2 shy
+  - *he smiles, small* A little. A lot. Yes.
+> Tell them more. | +3 hearts
+  - *he does, quietly, and {kid} listens to every word*
+ignored: *leaves a little note on {kid}'s pillow that just says "brave"*
+
+scene door_bold_found
+who: together
+when: kids brought found boldkid !babykid
+weight: 2
+say: *{kid} walks in like nothing happened, chin up* ...You're not even a little bit sorry, are you? *he rubs his eyes* I had my coat on. I had the lantern.
+> They say they weren't lost. | +1 -> lost
+> They get it from your side. | +2 laugh
+  - My side? *he tries to look offended* ...Maybe. I've been known to walk into things I shouldn't.
+page lost
+say: Not lost. *he kneels to their height* Okay. I believe you. But I didn't know where you were, and that felt the same to me. Can you tell me next time? Just so I know?
+> They nodded. | +2
+  - Thank you. *he holds out his hand, and they shake on it, very seriously*
+> That's fair to ask. | +2 hearts
+  - I hope so. I don't want to stop them going. I just want them to come back.
+ignored: *walks {kid} through every path near the house the next morning, so they'll know the way*
+
+scene door_bold_outing
+who: together
+when: kids brought !found boldkid !babykid
+weight: 2
+say: *{kid} marches in ahead, chest puffed out* Somebody looks very pleased with themselves. *he smiles* Did you win something?
+> They climbed the tallest tree. | +1 -> tree
+> They led the whole way home. | +2 hearts
+  - Without any help? *he looks impressed, really impressed* That's better than I can manage. I get lost in my own books.
+page tree
+say: The TALLEST? *he goes slightly pale* ...How tall. No. Don't tell me. *to {kid}* Were you careful? ...Then I'm very proud. And very old, suddenly.
+> They were careful. Mostly. | +2 laugh
+  - Mostly. *he sighs* I'll take mostly.
+> You'd have climbed it too. | +2 shy
+  - I'd have fallen out of it. That's the difference between us.
+ignored: *spends the evening reading {kid} a book about mountaineers, which only makes it worse*
+
+scene door_curious_found
+who: together
+when: kids brought found curiouskid !babykid
+weight: 2
+say: *{kid} comes in with full pockets and a hundred questions* You found something, didn't you. That's why. *he sighs, but he's smiling* What was it?
+> A cave full of crystals. | +2 -> cave
+> They followed a butterfly. For hours. | +2 laugh
+  - For hours. *he laughs helplessly* Of course. I'd have followed it too. Not for hours. For a while.
+page cave
+say: Crystals? *he leans in despite himself* ...No. Stop. You were lost. *a beat* What colour were they?
+> Purple. Hundreds of them. | +2 hearts
+  - *he closes his eyes* ...We're going back. All three of us. With a rope and a map. Never alone.
+> You're as bad as they are. | +2 shy
+  - Worse. I'd have brought a notebook and stayed till dark.
+ignored: *spreads {kid}'s finds out on the table and labels every single one with them*
+
+scene door_curious_outing
+who: together
+when: kids brought !found curiouskid !babykid
+weight: 2
+say: *{kid} asks him why rivers bend before they've even said hello* Why rivers bend... *he lights up* Oh. Oh, that's a good one. Sit down. I've got a book.
+> You always have a book. | +2 laugh
+  - It's true. *he's already pulling it off the shelf* I'm never more useful than when someone asks me why.
+> They asked me first. I didn't know. | +2 -> know
+page know
+say: That's okay. Nobody knows everything. *to {kid}* The best thing to say is "I don't know, let's find out." That's what being clever really is.
+> I'll remember that. | +2 hearts
+  - *he smiles* Me too. I need reminding sometimes.
+> You make it sound fun. | +2 shy
+  - It IS fun. That's the secret. Don't tell anyone, they'll all start doing it.
+ignored: *is still answering questions with {kid} long after the sun goes down*
+
+scene door_mischief_found
+who: together
+when: kids brought found mischiefkid !babykid
+weight: 2
+say: *{kid} grins up at him, all innocence* ...That face. That's the face you make right before something falls off a shelf. Where were you hiding?
+> They hid from me on purpose. | +1 -> hid
+> They think it was a game. | +2 laugh
+  - A game. *he crouches down* It's only a game if everyone knows they're playing. I didn't know. I was very scared.
+page hid
+say: On purpose. *he goes quiet* ...You're very good at hiding. Too good. *gently* Can we only play hiding games inside the house? Where I can find you?
+> They agreed. Grudgingly. | +2 laugh
+  - Grudgingly is fine. Grudgingly still counts.
+> That was kind. | +2 hearts
+  - I don't want them to stop being them. I just want to find them afterwards.
+ignored: *finds {kid} hidden in the linen cupboard that night, and pretends not to, for a long time*
+
+scene door_mischief_outing
+who: together
+when: kids brought !found mischiefkid !babykid
+weight: 2
+say: *you both come in grinning far too much* ...Why are you both looking at me like that? *he pats his face* Is there something on me?
+> No. Nothing. | +1 -> nothing
+> Check your coat pocket. | +2 laugh
+  - *he checks, and pulls out a very surprised frog* ...Oh! Hello. *he holds it carefully* Who's responsible for this frog?
+page nothing
+say: Nothing. *he narrows his eyes, which doesn't work well on him* ...I'm going to find out. I'm patient. I read the last page of mysteries first.
+> That's cheating. | +2 laugh
+  - It's not cheating. It's research.
+> You'll never find it. | +2 shy
+  - *he finds it an hour later in his shoe, and laughs until he cries*
+ignored: *checks his shoes very carefully before putting them on, for the next week*
+
+scene door_gentle_found
+who: together
+when: kids brought found gentlekid !babykid
+weight: 2
+say: *{kid} runs straight to him, saying sorry and sorry and sorry* Shh, it's okay. *he holds them close* You're home now. That's the only thing that matters. Stop saying sorry.
+> They were worried about you. | +3 -> worried
+> They picked you a flower on the way. | +2 hearts
+  - *he takes it like it's the most precious thing he's ever been given* ...Thank you. I'll press it. I'll keep it forever.
+page worried
+say: About me? *his voice catches* They were lost, and they were worried about me? *he holds {kid} tighter* ...I don't know where they got a heart like that.
+> From you. | +3 shy
+  - *he shakes his head, but he's smiling, and his eyes are wet* ...From both of us. I hope.
+> They love you a lot. | +2 hug
+  - *he reaches out and pulls you in too* ...I love you both more than I know how to say.
+ignored: *sits with {kid} in his lap by the window, and doesn't let go for a long time*
+
+scene door_gentle_outing
+who: together
+when: kids brought !found gentlekid !babykid
+weight: 2
+say: *{kid} holds out a little stone they've carried all the way home* For me? *he takes it in both hands* ...It's a perfect stone. You found me a perfect stone.
+> They searched a long time for it. | +3 hearts
+  - *he looks at the stone, then at {kid}, and has to look away for a second* ...Thank you. I'll keep it on my desk.
+> They said it looked like you. | +2 laugh
+  - Like me? *he turns it over* ...Grey and a bit chipped. That's fair. That's very fair.
+ignored: *puts the stone on his desk, right where he'll see it every morning*
+
+scene door_serious_found
+who: together
+when: kids brought found seriouskid !babykid
+weight: 2
+say: *{kid} stands straight and apologises, clearly practised* ...You thought about what to say, didn't you. All the way home.
+> They wanted to get it right. | +2 -> right
+> They mean it. | +2
+  - I know they do. *he kneels* I accept. Thank you for saying it properly.
+page right
+say: *he listens to {kid} explain everything, in order* ...That's a very good explanation. Better than mine would be. *gently* You don't have to be perfect, you know. You just have to come home.
+> Tell them they did well. | +3 hearts
+  - *he does, and {kid}'s shoulders come down, finally*
+> You're a lot alike. | +2 shy
+  - We are. I'm sorry about that. *he smiles* It's not all bad.
+ignored: *shakes {kid}'s hand very formally, then hugs them anyway*
+
+scene door_serious_outing
+who: together
+when: kids brought !found seriouskid !babykid
+weight: 2
+say: *{kid} reports: where you went, how long, back on time* Thank you. That's a very clear report. *he smiles* Did you have fun, though? That's allowed too.
+> They won't admit it. | +2 -> admit
+> They kept us on schedule. | +2 laugh
+  - I believe it. Someone has to. I'm always late.
+page admit
+say: *he crouches to {kid}'s height* You can say it was fun. It's not unserious. Even very serious people have fun. I have fun. ...Sometimes. In libraries.
+> That's not convincing. | +2 laugh
+  - *{kid} almost smiles* ...No. It wasn't. But it worked a little.
+> They're smiling. | +3 hearts
+  - *he smiles back* There. See? Fun. Officially.
+ignored: *writes the outing in a little notebook he keeps just for {kid}'s days*
+
+scene door_baby
+who: together
+when: kids brought babykid !found
+weight: 2
+say: *he takes {kid} so carefully, like they're made of paper* Hi. Hi, little one. Did you see the sky? *he looks up at you* Did they like it?
+> They slept most of the way. | +2 laugh
+  - *he smiles down at {kid}* That's okay. The sky will still be there next time.
+> They stared at the clouds the whole time. | +3 hearts
+  - Really? *he looks at {kid}, amazed* ...We'll go together next time. I want to see them see it.
+ignored: *rocks {kid} gently by the window, telling them the names of the clouds*
+
+scene door_little_found
+who: together
+when: kids brought found littlekid
+weight: 2
+say: *he scoops {kid} up the moment they're through the door* They're so small. How did they get so far? *he holds them close* I should have watched closer.
+> It wasn't your fault. | +2 -> fault
+> They're fine. Not a scratch. | +2 hug
+  - *he checks anyway, every finger, every toe* ...Not a scratch. Thank you. Thank you.
+page fault
+say: It doesn't matter whose fault. *he presses his cheek to {kid}'s head* We're putting a latch on the gate. A high one. And a bell. A soft one, so it doesn't frighten them.
+> A soft bell. That's very you. | +2 laugh
+  - *he smiles, a little sheepish* It's important. Loud bells are scary.
+> We'll do it tomorrow. Together. | +2 hand
+  - Together. Yes. *he takes your hand, with {kid} still in his arms*
+ignored: *won't put {kid} down until they fall asleep on his shoulder*
+
+scene door_little_outing
+who: together
+when: kids brought !found littlekid
+weight: 2
+say: *{kid} toddles in with mud everywhere* Oh. Oh no. *he's laughing* You look like you rolled down a hill. Did you roll down a hill?
+> Twice. On purpose. | +2 laugh
+  - Twice! *he scoops them up anyway, mud and all* That sounds wonderful. Bath time, though.
+> They kept asking for you. | +3 hearts
+  - *he goes very soft* Did they? ...I missed you too. So much.
+ignored: *gives {kid} a bath and gets completely soaked, and doesn't mind*
+
+scene door_big_found
+who: together
+when: kids brought found bigkid
+weight: 2
+say: *{kid} slouches in, not meeting his eyes* ...Hey. You're home. *he breathes out* I'm not going to shout. I just want to understand what happened.
+> They feel terrible. | +2 -> terrible
+> Let them rest. Talk tomorrow. | +2
+  - Tomorrow. Yes. *he nods* That's better. I'll make breakfast. We'll talk over breakfast.
+page terrible
+say: I don't want them to feel terrible. *quietly, to {kid}* I want you to tell me where you're going. Even if you think I'll say no. Especially then. I'd rather know.
+> That's a good deal. | +3 hearts
+  - *{kid} nods, and he pulls them into a hug, and they let him*
+> You've thought about this. | +2 shy
+  - All afternoon. I wrote it down. I threw the paper away. It was too long.
+ignored: *knocks on {kid}'s door later. They talk for a long time.*
+
+scene door_big_outing
+who: together
+when: kids brought !found bigkid
+weight: 2
+say: *{kid} comes in behind you, trying to look bored* You two were gone all day. *he smiles* Was it awful? Spending a day with a parent?
+> They laughed the whole way. | +2 laugh
+  - *he looks at {kid}, delighted* Did you? I'll never tell anyone. Not a soul.
+> They asked if you'd come next time. | +3 hearts
+  - *he goes quiet, and then very warm* ...I'd like that. If they really want me.
+ignored: *asks {kid} about their day over dinner, and actually gets an answer*

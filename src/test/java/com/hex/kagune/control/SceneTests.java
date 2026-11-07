@@ -219,6 +219,41 @@ public final class SceneTests {
                 check(made != null && made.when().contains("makeup") && !made.fits(new SceneContext("partner", "happy", "", Set.of("day", "human", "man"),
                     names(), 1)), speaker + " has " + id + ", only ever asked for by name");
             }
+            // 3.3.8 (the owner's list: temper-aware door scenes): a door scene for each temper, found or back from an outing, and for each age.
+            for (com.hex.kagune.control.family.ChildTemper temper : com.hex.kagune.control.family.ChildTemper.values()) {
+                for (boolean found : new boolean[] {true, false}) {
+                    for (com.hex.kagune.control.family.ChildStage stage : new com.hex.kagune.control.family.ChildStage[] {com.hex.kagune.control.family.ChildStage.TODDLER,
+                        com.hex.kagune.control.family.ChildStage.CHILD, com.hex.kagune.control.family.ChildStage.TEEN}) {
+                        java.util.Set<String> flags = new java.util.HashSet<>(Set.of("day", "human", "man", "kids", "brought"));
+                        if (found) {
+                            flags.add("found");
+                        }
+                        java.util.Set<String> who = com.hex.kagune.control.family.Homecoming.flags(temper, stage);
+                        check(SceneWords.COMPANION_FLAGS.containsAll(who), "the door knows " + who);
+                        flags.addAll(who);
+                        SceneContext c = new SceneContext("wife", "happy", "", flags, names(), 2);
+                        List<Scene> fit = SceneBook.fitting(book, Scene.Kind.APPROACH, c);
+                        String t = temper.word() + "kid";
+                        String age = stage == com.hex.kagune.control.family.ChildStage.TODDLER ? "littlekid" : "bigkid";
+                        check(fit.stream().anyMatch(s -> s.id().startsWith("door_") && s.when().contains(t)), speaker + " meets a " + t + " (" + (found ? "found" : "outing")
+                            + ", " + stage + ") by its temper");
+                        check(fit.stream().anyMatch(s -> s.id().startsWith("door_") && s.when().contains(age)), speaker + " meets a " + age + " by its age");
+                        check(fit.stream().filter(s -> s.id().startsWith("door_")).allMatch(s -> s.when().contains("brought")
+                            && s.when().stream().filter(w -> w.endsWith("kid") && !w.startsWith("!")).allMatch(flags::contains)), speaker + " never meets a child as another one");
+                    }
+                }
+            }
+            java.util.Set<String> baby = new java.util.HashSet<>(Set.of("day", "human", "man", "kids", "brought"));
+            baby.addAll(com.hex.kagune.control.family.Homecoming.flags(com.hex.kagune.control.family.ChildTemper.BOLD, com.hex.kagune.control.family.ChildStage.BABY));
+            List<Scene> babyFit = SceneBook.fitting(book, Scene.Kind.APPROACH, new SceneContext("partner", "happy", "", baby, names(), 2));
+            check(babyFit.stream().anyMatch(s -> s.id().equals("door_baby")) && babyFit.stream().noneMatch(s -> s.id().startsWith("door_bold")),
+                speaker + " meets a baby as a baby, not by a temper it can't show yet");
+            for (Scene scene : book) {
+                if (scene.id().startsWith("door_")) {
+                    check(scene.kind() == Scene.Kind.APPROACH && scene.when().contains("brought") && !scene.ignored().isEmpty() && scene.weight() >= 2,
+                        speaker + "." + scene.id() + " is a door scene, there only at a homecoming, weighed over the plain ones");
+                }
+            }
             // 3.3.7 (the owner's list: reconciliation talks): more ways to come and make up, and talks to talk it out when cross or jealous.
             for (String base : new String[] {"make_up", "jealous_over"}) {
                 List<Scene> ways = book.stream().filter(scene -> SceneBook.variantOf(scene.id(), base)).toList();
