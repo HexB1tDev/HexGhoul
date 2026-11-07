@@ -415,6 +415,10 @@ public final class UkakuServer {
             ImpaleServer.input(player, targetId); // 3.1.5: it checks for itself (a let-go always gets through)
             return;
         }
+        if (action == com.hex.kagune.control.network.C2SUkakuAction.HURL) {
+            HurlServer.input(player, targetId); // 3.1.6: it checks for itself (a let-go always gets through)
+            return;
+        }
         if (PaleStun.stunned(player)) {
             return; // 7.0.2: stunned, no kagune answers
         }

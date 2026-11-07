@@ -45,8 +45,13 @@ public final class UkakuGates {
         }
     }
 
+    /**
+     * N. 3.1.6 (the owner chose the idea for "the key of throw" with nothing to throw): only with someone held is it the original's throw;
+     * with nobody held the key is the Rubble Hurl ({@link HurlServer}, told by its own hold from the client), and the original's "no
+     * target" is never said.
+     */
     public static void throwHeld(ServerPlayer player) {
-        if (!refused(player, "message.hexkagune.ukaku.no_grapple") && !RinkakuAutonomy.refuse(player)
+        if (!refused(player, "message.hexkagune.ukaku.no_grapple") && !RinkakuAutonomy.refuse(player) && HurlServer.throwsHeld(player)
             && unlocked(player, "The throw", RinkakuUnlocks.GRAB)) {
             KaguneServerController.throwHeldLegacy(player);
         }

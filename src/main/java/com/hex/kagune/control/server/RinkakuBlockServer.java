@@ -118,8 +118,9 @@ public final class RinkakuBlockServer {
             return false;
         }
         KaguneRuntime.State state = KaguneRuntime.get(player.m_20148_());
-        // 3.1.5: nor while a tail is out impaling (ImpaleServer).
-        return state != null && state.mode == TendrilMode.IDLE && !state.hasManualHeldEntities() && !ImpaleServer.active(player);
+        // 3.1.5: nor while a tail is out impaling (ImpaleServer); 3.1.6: nor while the tails hold a chunk (HurlServer).
+        return state != null && state.mode == TendrilMode.IDLE && !state.hasManualHeldEntities() && !ImpaleServer.active(player)
+            && !HurlServer.holding(player);
     }
 
     /** True while {@code player}'s block is up. */

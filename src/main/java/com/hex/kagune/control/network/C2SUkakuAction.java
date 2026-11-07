@@ -45,6 +45,11 @@ public record C2SUkakuAction(int action, int targetId) {
      * ({@code ImpaleServer}).
      */
     public static final int IMPALE = 10;
+    /**
+     * 3.1.6: Rinkaku's Rubble Hurl (N held with nothing held): {@code targetId} 2 as it goes down, 1 every few ticks while held, 0 let go
+     * ({@code HurlServer}).
+     */
+    public static final int HURL = 11;
 
     public static void encode(C2SUkakuAction message, FriendlyByteBuf buffer) {
         buffer.writeByte(message.action);

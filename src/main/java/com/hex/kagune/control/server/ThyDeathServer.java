@@ -65,9 +65,11 @@ public final class ThyDeathServer {
 
     /** True if {@code player} can use it now: a Rinkaku ghoul with the kagune out, alive. */
     static boolean allowed(ServerPlayer player) {
-        // 3.1.5: nor while a tail is out impaling (ImpaleServer: it waits for Thy Death the same way).
+        // 3.1.5: nor while a tail is out impaling (ImpaleServer: it waits for Thy Death the same way); 3.1.6: nor while the tails hold
+        // a chunk for the Rubble Hurl (HurlServer).
         return player.m_6084_() && KaguneProfile.isActive(player) && PathServer.path(player) == com.hex.kagune.control.KagunePath.RINKAKU
-            && !UkakuServer.isUkaku(player) && !PaleServer.isPale(player) && !GraftServer.isGraft(player) && !ImpaleServer.active(player);
+            && !UkakuServer.isUkaku(player) && !PaleServer.isPale(player) && !GraftServer.isGraft(player) && !ImpaleServer.active(player)
+            && !HurlServer.holding(player);
     }
 
     @SubscribeEvent

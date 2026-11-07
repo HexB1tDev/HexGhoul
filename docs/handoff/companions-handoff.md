@@ -1,4 +1,18 @@
-# START HERE (state after 3.1.5)
+# START HERE (state after 3.1.6)
+
+The owner asked for an idea for the Throw key (N) with nobody held. Two were offered (Rubble Hurl, and Reel In as a backup); the owner answered "Do that one", read as the main pitch, **Rubble Hurl**. If they meant Reel In, that is still open.
+
+- **Rubble Hurl is on N** whenever no tail holds anyone (`UkakuGates.throwHeld` runs the original's throw only when `HurlServer.throwsHeld`: `state.hasManualHeldEntities()`, the original's own check).
+- Pure rules `RinkakuHurl` (ControlTests `hurl()`): `charge`/`size` (0.85 to 2 across over 30 ticks; pieces x0.75), `speed`, `radius`/`power`/`falloff`/`knock`/`lift`/`stun`, `hover` (before and above the eyes), `rising` (6 ticks out of the ground), `aim` (a whole number of ticks, so a tick of flight ends exactly on the mark, lobbed for `GRAVITY` 0.045), `step`, `spread` (kakuja pieces 8 degrees apart), `meets` (hit test), `pieces`/`lumps` (the drawn rubble).
+- Server `HurlServer`: `C2SUkakuAction.HURL` (11; 2/1/0 as the Impale), `start` (two free tails by `RinkakuImpale.pick`, the source by `traceBlock` within 7 else the ground 1.8 ahead, `BlockSmash.tear` (new: `smash` behind the usual permission checks, hardness 3, no block entity, the block under his feet never), the block's item key sent for drawing), `hold` (charge while held, thrown on release after `RISE` or at `MOST_HELD`), `hurl` (aim: a body under the crosshair via `traceLiving`, else the block, else 48 out), `fly` (clip, `meets`), `burst` (falloff damage with `bursting` set so `RinkakuWounds` makes it a CRUSH, `PaleStun.stun`, knockback and lift, levelEvent 2001 particles, `BlockSmash.crater` at charge 0.75+). Thy Death, the block and the Impale wait while a chunk is held (`HurlServer.holding`).
+- Client `HurlClient`: N's hold (`KaguneKeys.THROW`), `S2CHurl` (message 53, every tick: piece, phase HOLD/FLY/BURST/GONE, position, size, charge, the two limbs, the item key), drawn at `AFTER_ENTITIES` with `ItemRenderer.renderStatic(..., ItemDisplayContext.NONE, ...)` per lump (vanilla flushes the block sheets after that stage), the gripping tails by `ThyDeath.strike` (full grip in 3 ticks, then a whip after the thrown piece capped at 4.5 blocks), hooked in `StrikePaths.clearOwner` after the Impale.
+- API: `ItemDisplayContext.NONE` allowlisted (joined.tsrg cfw.a NONE, intermediary field_4315) and stubbed; the `Block` stub implements `ItemLike` (as the real class) for `new ItemStack(block, 1)`.
+- Preview: `docs/handoff/rinkaku-hurl-3.1.6.png` (`tools/HurlPreview.java`; grey cubes stand in for the block model). Off-game geometry only.
+- **Judgment calls to tell the owner:** the block really comes out of the world but is restored (BlockSmash rules, config off = world untouched); it unlocks with the throw (250); numbers are first guesses.
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 91. Not tested in game.
+
+# State after 3.1.5
 
 The owner asked (their words, trimmed): "When someone is not being grabbed by the Kagune, the abilities crush, throw ... becomes the new ability ... one of them is going to be impale, which is one random Kagune ... stretches further than ... all the others can ... dashes forward in the line, and like with its end sharpened, and impales whoever or whatever ... was in the way. This ability should drag mobs and players. It is a fast ability as well ... it's also a held, so ... the longer you hold it, the longer it goes ... you can use it like while you're in half kakuja form, just no centipede legs ... for the throw or crush, I don't remember which one this one was meant to replace. After that, I need you to give me an idea ... for the key of throw."
 

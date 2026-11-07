@@ -170,7 +170,8 @@ public final class AbilityGuide {
             int m = in.mastery();
             rows.add(row(in, kakuja ? "Thy Death (hold: legs and tails hunt on their own)" : "Thy Death (hold: every tail hunts on its own)", TEXT, locked(m, RinkakuUnlocks.RAPID_STRIKE), Key.RAPID));
             rows.add(row(in, "Grapple leap", TEXT, locked(m, RinkakuUnlocks.GRAPPLE), Key.SLINGSHOT));
-            rows.add(row(in, "Grab · Throw", TEXT, locked(m, RinkakuUnlocks.GRAB), Key.GRAB, Key.THROW));
+            // 3.1.6: N held with no one held is the Rubble Hurl (RinkakuHurl); with someone held it is still the throw.
+            rows.add(row(in, "Grab · Throw · Rubble Hurl (hold N, nothing held)", TEXT, locked(m, RinkakuUnlocks.HURL), Key.GRAB, Key.THROW));
             // 3.1.5: H held with no one held is the Impale (RinkakuImpale); with someone held it is still the crush.
             rows.add(row(in, "Impale (hold) · Crush what a tail holds", TEXT, locked(m, RinkakuUnlocks.IMPALE), Key.CRUSH));
             rows.add(row(in, "Lift", TEXT, locked(m, RinkakuUnlocks.LIFT), Key.LIFT));

@@ -60,7 +60,7 @@ public final class RinkakuWounds {
         WoundBook.Blow blow;
         double angle = (player.m_217043_().m_188500_() - 0.5) * 1.6;
         Vec3 at;
-        if (mode == TendrilMode.CRUSH) {
+        if (mode == TendrilMode.CRUSH || HurlServer.crushing(target)) { // 3.1.6: a Rubble Hurl's burst crushes too
             blow = WoundBook.Blow.CRUSH;
             at = center;
         } else if (mode == TendrilMode.SLAM) {

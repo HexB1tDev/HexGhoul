@@ -141,7 +141,12 @@ public final class ImpalePreview {
 
     /** The tail's mesh as RinkakuTube draws an impaling one (sharp 1): skin with its scales, then its veins. */
     static void drawRibbon(PoseRender.Canvas canvas, double[][] world, double thickness, int colour, int seed, PoseRender.Camera cam) {
-        RinkakuRibbon.Mesh m = RinkakuRibbon.build(world, thickness, colour, seed, cam.eye(), KaguneShowcase.time, 1.0);
+        drawRibbon(canvas, world, thickness, colour, seed, cam, 1.0);
+    }
+
+    /** 3.1.6: the same, {@code sharp} of the way to the Impale's point (0: a tail as it always is; {@code HurlPreview}). */
+    static void drawRibbon(PoseRender.Canvas canvas, double[][] world, double thickness, int colour, int seed, PoseRender.Camera cam, double sharp) {
+        RinkakuRibbon.Mesh m = RinkakuRibbon.build(world, thickness, colour, seed, cam.eye(), KaguneShowcase.time, sharp);
         if (m == null) {
             return;
         }

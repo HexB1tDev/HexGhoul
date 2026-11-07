@@ -122,7 +122,7 @@ public final class ImpaleServer {
         }
         KaguneRuntime.State state = KaguneRuntime.get(player.m_20148_());
         if (state == null || state.selectedHeldEntityId() != 0 || state.hasManualHeldEntities() || ThyDeathServer.active(player)
-            || RinkakuBlockServer.up(player)) {
+            || RinkakuBlockServer.up(player) || HurlServer.holding(player)) {
             return; // someone held: H is the crush; or the tails are all busy hunting, or up in the block
         }
         if (!UkakuGates.unlocked(player, "The impale", RinkakuUnlocks.IMPALE)) {

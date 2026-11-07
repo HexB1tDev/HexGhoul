@@ -632,6 +632,79 @@ public final class ControlTests {
         check(find(first, "Impale") == null, "the first kakuja lists no Impale (its legs fight on their own)");
     }
 
+    /** 3.1.6: the Rubble Hurl: its charge and size, its throw landing where he aims, its burst, its rubble, its key. */
+    static void hurl() {
+        check(RinkakuHurl.charge(0) == 0.0 && RinkakuHurl.charge(RinkakuHurl.CHARGE) == 1.0 && RinkakuHurl.charge(1000) == 1.0
+            && RinkakuHurl.charge(RinkakuHurl.CHARGE / 2.0) == 0.5, "held, it grows to its biggest over " + RinkakuHurl.CHARGE + " ticks");
+        check(RinkakuHurl.size(0.0, 1) == 0.85 && Math.abs(RinkakuHurl.size(1.0, 1) - 2.0) < 1e-9 && RinkakuHurl.size(1.0, 3) < RinkakuHurl.size(1.0, 1),
+            "from a block's worth to two across; in pieces each smaller");
+        check(RinkakuHurl.speed(1.0) < RinkakuHurl.speed(0.0) && RinkakuHurl.speed(1.0) > 1.0, "a big one a little slower, still fast");
+        check(RinkakuHurl.radius(2.0) > RinkakuHurl.radius(0.85) && RinkakuHurl.power(1.0) == 2.0 && RinkakuHurl.power(0.0) == 1.0
+            && RinkakuHurl.knock(1.0) > RinkakuHurl.knock(0.0) && RinkakuHurl.lift(1.0) > RinkakuHurl.lift(0.0)
+            && RinkakuHurl.stun(1.0) > RinkakuHurl.stun(0.0) && RinkakuHurl.stun(0.0) > 0, "charged: a wider, harder burst, a longer stun");
+        check(RinkakuHurl.falloff(0.0, 3.0) == 1.0 && Math.abs(RinkakuHurl.falloff(3.0, 3.0) - 0.4) < 1e-9 && RinkakuHurl.falloff(3.01, 3.0) == 0.0
+            && RinkakuHurl.falloff(1.0, 3.0) > RinkakuHurl.falloff(2.0, 3.0) && RinkakuHurl.falloff(Double.NaN, 3.0) == 0.0,
+            "all of it at its middle, 40% at its edge, nothing past");
+        check(RinkakuUnlocks.HURL == RinkakuUnlocks.GRAB, "the Rubble Hurl comes with the throw's key");
+        // Where it hangs: before and above his eyes, higher and further out the bigger it is.
+        double[] eye = {5.0, 70.62, -2.0};
+        double[] small = RinkakuHurl.hover(eye, 0.0, 1.0, 0.85);
+        double[] big = RinkakuHurl.hover(eye, 0.0, 1.0, 2.0);
+        check(small[1] > eye[1] && small[2] > eye[2] && Math.abs(small[0] - eye[0]) < 1e-9 && big[1] > small[1] && big[2] > small[2],
+            "it hangs before and above his eyes, a bigger one higher and further");
+        double[] ground = {7.5, 69.5, 1.5};
+        double[] up = RinkakuHurl.rising(ground, big, RinkakuHurl.RISE);
+        double[] start = RinkakuHurl.rising(ground, big, 0.0);
+        double[] mid = RinkakuHurl.rising(ground, big, RinkakuHurl.RISE / 2.0);
+        check(java.util.Arrays.equals(start, ground) && Math.abs(up[0] - big[0]) < 1e-9 && Math.abs(up[1] - big[1]) < 1e-9
+            && Math.abs(up[2] - big[2]) < 1e-9 && mid[1] > (ground[1] + big[1]) / 2.0, "it rises out of the ground into their grip, arcing up");
+        // Thrown, it lands where he aims: near, far, up, down.
+        double[][] targets = {{5.0, 70.0, 10.0}, {5.0, 64.0, 30.0}, {-12.0, 75.0, 20.0}, {5.0, 60.0, 4.0}, {30.0, 70.0, 30.0}};
+        for (double[] target : targets) {
+            for (double charge : new double[] {0.0, 1.0}) {
+                double[] pos = big.clone();
+                double[] vel = RinkakuHurl.aim(pos, target, RinkakuHurl.speed(charge));
+                double closest = Double.MAX_VALUE;
+                for (int t = 0; t < RinkakuHurl.FLIGHT; t++) {
+                    RinkakuHurl.step(pos, vel);
+                    double dx = pos[0] - target[0];
+                    double dy = pos[1] - target[1];
+                    double dz = pos[2] - target[2];
+                    closest = Math.min(closest, Math.sqrt(dx * dx + dy * dy + dz * dz));
+                }
+                check(closest < 1e-6, "thrown at " + java.util.Arrays.toString(target) + " (charge " + charge + ") it lands on the mark: " + closest);
+            }
+        }
+        double[] level = RinkakuHurl.aim(new double[] {0, 0, 0}, new double[] {0, 0, 20}, 1.9);
+        check(Math.abs(level[2] - 1.9) < 0.1 && level[1] > 0.0, "thrown level, about as fast as asked, lobbed a little to make up for its fall");
+        double[] turned = RinkakuHurl.spread(new double[] {0.0, 0.3, 1.5}, RinkakuHurl.SPREAD);
+        check(Math.abs(Math.hypot(turned[0], turned[2]) - 1.5) < 1e-9 && turned[1] == 0.3 && turned[0] < 0.0
+            && Math.abs(Math.toDegrees(Math.atan2(-turned[0], turned[2])) - RinkakuHurl.SPREAD) < 1e-6, "the kakuja's pieces fan out, as fast");
+        // What it meets on the way.
+        check(RinkakuHurl.meets(new double[] {0, 1, 0}, new double[] {0, 1, 2}, 0.0, 0.0, 1.8, 1.5, 0.3, 0.6), "it meets a body in its way");
+        check(RinkakuHurl.meets(new double[] {0, 1, 0}, new double[] {0, 1, 2}, 1.0, 0.0, 1.8, 1.5, 0.3, 0.9), "a big one meets a body beside its line");
+        check(!RinkakuHurl.meets(new double[] {0, 1, 0}, new double[] {0, 1, 2}, 2.0, 0.0, 1.8, 1.5, 0.3, 0.4)
+            && !RinkakuHurl.meets(new double[] {0, 4, 0}, new double[] {0, 4, 2}, 0.0, 0.0, 1.8, 1.5, 0.3, 0.4), "nothing beside or under it");
+        // The rubble as drawn: the same every frame, its core biggest, its lumps stuck close round it.
+        double[][] lumps = RinkakuHurl.pieces(77, 6);
+        check(java.util.Arrays.deepEquals(lumps, RinkakuHurl.pieces(77, 6)) && lumps.length == 6 && lumps[0][3] > 0.6, "the same rubble every frame, a big core");
+        boolean close = true;
+        for (int i = 1; i < lumps.length; i++) {
+            double r = Math.sqrt(lumps[i][0] * lumps[i][0] + lumps[i][1] * lumps[i][1] + lumps[i][2] * lumps[i][2]);
+            close &= r <= 0.35 && lumps[i][3] < lumps[0][3] && lumps[i][3] > 0.3 && Double.isFinite(lumps[i][4]);
+        }
+        check(close && RinkakuHurl.lumps(2.0) > RinkakuHurl.lumps(0.85) && RinkakuHurl.lumps(0.85) == 4, "smaller lumps stuck round it, more the bigger");
+        // Its key: N, every form whose tails are his; the first kakuja's legs fight on their own.
+        java.util.Map<AbilityGuide.Key, String> keys = defaultKeys();
+        for (com.hex.kagune.gameplay.KaguneForm form : new com.hex.kagune.gameplay.KaguneForm[] {com.hex.kagune.gameplay.KaguneForm.RINKAKU_SEED,
+            com.hex.kagune.gameplay.KaguneForm.RINKAKU_QUAD, com.hex.kagune.gameplay.KaguneForm.FULL_KAKUJA}) {
+            AbilityGuide.Panel panel = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.RINKAKU, AbilityGuide.State.OUT, 800, form,
+                com.hex.kagune.control.ukaku.WingForm.TWIN, false, keys));
+            AbilityGuide.Row row = find(panel, "Grab");
+            check(row != null && row.name().contains("Rubble Hurl") && row.keys().equals("G·N"), form + ": N is the throw, or with nothing held the Rubble Hurl");
+        }
+    }
+
     static void rinkakuAlive() {
         // 2.1.6: each tail's side as the original lays it out (TendrilChain: its fanSide along its owner's LEFT; with none, an even tail on
         // his right), so its rest, root and guard are on the side its own motion carries it (else each blend swings it across his back).
@@ -1029,6 +1102,7 @@ public final class ControlTests {
         rinkakuAlive();
         thyDeath();
         impale();
+        hurl();
         reaperDash();
         rinkakuBlock();
         rinkakuRoot();
