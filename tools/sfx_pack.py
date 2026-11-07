@@ -84,8 +84,13 @@ POOLS = {
     "spike_volley": (0.8, [SPIKE + "double_throw", SPIKE + "triple_fan", SPIKE + "razor_volley"], "A volley flies"),
     "stab": (0.5, [PHIT + "short_jab", PHIT + "rib_impact", SPIKE + "needle_flick"], "A spike sinks in"),
     "anchor": (0.7, [SPIKE + "steel_spike", SPIKE + "heavy_lance"], "Kagune anchors"),
-    "crystal_form": (0.7, [SPIKE + "charged_spike", SPIKE + "steel_spike"], "Crystal forms"),
-    "shatter": (0.65, [PHIT + "bone_crack", CLASH + "close_dry_collision", CLASH + "fast_counter_clash"], "Crystal shatters"),
+    # 3.2.6 (the owner: "Crystals sound DOES not sound like crystals, it sounds like punches"): the shatter was a bone crack and two punch
+    # collisions, a crystal's hit the pack's punch hits. The pack has no glass of its own (and no recording whose CC0 licence can be checked
+    # from here): its brightest steel, a needle's flick, a spinning spike, raised into a ring and a tinkle (a file's own pitch: (file, pitch)).
+    "crystal_form": (0.75, [(SPIKE + "steel_spike", 1.7), (SPIKE + "needle_flick", 1.5), (SPIKE + "spinning_spike", 1.6)], "Crystal forms"),
+    "shatter": (0.75, [(SPIKE + "needle_flick", 1.9), (SPIKE + "fast_dart", 1.8), (SPIKE + "steel_spike", 1.95), (SPIKE + "razor_volley", 1.6)],
+                "Crystal shatters"),
+    "crystal_hit": (0.6, [(SPIKE + "needle_flick", 1.6), (SPIKE + "steel_spike", 1.8), (SPIKE + "fast_dart", 1.7)], "A crystal strikes"),
     "cue": (0.9, [SPIKE + "needle_flick"], "A glint"),
     # Blood and flesh.
     "blood_splat": (0.7, SPLATS, "Flesh splits"),
@@ -208,10 +213,15 @@ PRELOAD = {"finger_crack", "kagune_burst", "gush", "chitin", "centipede_manifest
 
 
 def sound(path, gain, pool, stream=False, preload=False):
+    pitch = None
+    if isinstance(path, tuple):
+        path, pitch = path  # 3.2.6: a file played at its own pitch in this pool
     file = SOUNDS / "sfx" / (path + ".ogg")
     if not file.is_file():
         raise RuntimeError(f"missing {file}")
     entry = {"name": "hexkagune:sfx/" + path, "volume": volume(file, gain, pool)}
+    if pitch is not None:
+        entry["pitch"] = pitch
     if stream:
         entry["stream"] = True
     if preload:

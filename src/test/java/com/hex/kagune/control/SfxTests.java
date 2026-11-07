@@ -88,6 +88,27 @@ public final class SfxTests {
         }
         check(clashLeast == 1.0, "every clash sound plays at full gain: " + clashLeast);
         check(othersMost <= clashLeast, "nothing in the pack is set louder than a clash: " + othersMost);
+        // 3.2.6 (the owner: "Crystals sound DOES not sound like crystals, it sounds like punches"): no punch, punch collision or bone in any
+        // crystal's sound; raised into a ring; a crystal's hit is a crystal's, not the stab's.
+        Matcher crystal = Pattern.compile("^  \"sfx\\.(crystal_form|crystal_hit|shatter)\": \\{(.*?)^  }", Pattern.MULTILINE | Pattern.DOTALL).matcher(json);
+        int crystals = 0;
+        while (crystal.find()) {
+            crystals++;
+            String body = crystal.group(2);
+            check(!body.contains("punch_hits") && !body.contains("super_punch_collisions") && !body.contains("bone_crack") && !body.contains("punch_swings"),
+                "sfx." + crystal.group(1) + " has no punch or bone in it");
+            Matcher pitch = Pattern.compile("\"pitch\": ([0-9.]+)").matcher(body);
+            boolean raised = true;
+            int pitched = 0;
+            while (pitch.find()) {
+                raised &= Double.parseDouble(pitch.group(1)) >= 1.4;
+                pitched++;
+            }
+            check(raised && pitched >= 3, "sfx." + crystal.group(1) + "'s sounds are raised into a ring: " + pitched);
+        }
+        check(crystals == 3, "the crystal's three pools are there: " + crystals);
+        check(Sfx.play("block.amethyst_block.hit", 1.0F, 1.0F).path().equals("sfx.crystal_hit")
+            && Sfx.play("block.amethyst_block.break", 1.0F, 1.0F).path().equals("sfx.shatter"), "a crystal's hit and break play the crystal's pools");
         // Every vanilla name the mod's code plays is drawn from the pack (but the journal's cues).
         Pattern literal = Pattern.compile("\"((?:entity|block|item|ui)\\.[a-z_.]+)\"");
         Set<String> named = new HashSet<>();

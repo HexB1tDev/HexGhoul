@@ -1,4 +1,15 @@
-# START HERE (state after 3.2.5)
+# START HERE (state after 3.2.6)
+
+The owner's next batch of bug reports (each its own version, before the feature list from 3.2.3's message): Ukaku's crystal sounds like punches (this); Peace's shields too shield-like and floating above the tails; Peace's keys not matching the other forms'; War's centipede charge (B?) janky in first person; Ukaku's Wing Vortex glitched, not like the reference. Still queued after them: the move guide (written, set aside as `wip-3.2.6-guide.patch` in the session scratchpad: Rinkaku rows by whether a tail holds someone), Ken teaching Impale and the Rubble Hurl with proofs (researched: new gates appended, Ken's lessons appended so the saved bits keep, `Teaching.view` sorted by mastery, deeds counted in `UkakuGates.throwHeld`/`crush`), Dawn's hold, ambient and M1s, the centipede dragon's sounds, then the parked break-up/divorce stash.
+
+- Cause: `tools/sfx_pack.py`'s crystal pools were `crystal_form` (charged/steel spike), `shatter` (PHIT bone_crack, CLASH close_dry_collision, fast_counter_clash) and the amethyst hit/step remapped (`Sfx`) to `stab` (PHIT punch hits). The pack has no glass; freesound.org (the licence evidence of every recording in the pack) is blocked from this session, so no CC0 recording could be added and checked.
+- `sfx_pack.py`: a pool's file may be `(file, pitch)` (written as the sounds.json entry's own `pitch`); `crystal_form` steel_spike 1.7 / needle_flick 1.5 / spinning_spike 1.6; `shatter` needle_flick 1.9 / fast_dart 1.8 / steel_spike 1.95 / razor_volley 1.6; new `crystal_hit` needle_flick 1.6 / steel_spike 1.8 / fast_dart 1.7 (lang subtitle added). `Sfx`: amethyst hit and step to `crystal_hit` (stab stays the stab's). Regenerated sounds.json: only those three changed.
+- SfxTests: no punch, collision or bone in a crystal pool; all raised (>= 1.4); the amethyst hit/break go to the crystal pools.
+- **Ask the owner:** send real crystal/glass files (like Clashes.zip), or allow vanilla's amethyst sounds (a break from "sounds only from the hexkagune pack").
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 92. Not tested in game.
+
+# State after 3.2.5
 
 The owner's bug report: "the impact sounds, like when we clash, the sound has to be way higher ... Can barely hear it. That's meant to be like the loudest sound of the game."
 

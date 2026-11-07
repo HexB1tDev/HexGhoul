@@ -79,8 +79,8 @@ public final class Sfx {
         one("block.amethyst_cluster.break", "shatter");
         one("block.amethyst_block.break", "shatter");
         one("block.glass.break", "shatter");
-        one("block.amethyst_block.hit", "stab");
-        one("block.amethyst_block.step", "stab");
+        one("block.amethyst_block.hit", "crystal_hit"); // 3.2.6: a crystal strikes like crystal, not a fist
+        one("block.amethyst_block.step", "crystal_hit");
         one("block.amethyst_block.resonate", "transform.spectral_reveal");
         // Flesh and blood.
         two("entity.slime.squish", "blood_splat", 1.15F, "blood_splat_big");

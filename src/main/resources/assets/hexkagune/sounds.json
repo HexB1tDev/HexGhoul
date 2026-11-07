@@ -384,12 +384,19 @@
     "subtitle": "subtitles.hexkagune.sfx.crystal_form",
     "sounds": [
       {
-        "name": "hexkagune:sfx/combat/spike_throws/charged_spike",
-        "volume": 0.16
+        "name": "hexkagune:sfx/combat/spike_throws/steel_spike",
+        "volume": 0.1412,
+        "pitch": 1.7
       },
       {
-        "name": "hexkagune:sfx/combat/spike_throws/steel_spike",
-        "volume": 0.1318
+        "name": "hexkagune:sfx/combat/spike_throws/needle_flick",
+        "volume": 0.16,
+        "pitch": 1.5
+      },
+      {
+        "name": "hexkagune:sfx/combat/spike_throws/spinning_spike",
+        "volume": 0.16,
+        "pitch": 1.6
       }
     ]
   },
@@ -397,16 +404,44 @@
     "subtitle": "subtitles.hexkagune.sfx.shatter",
     "sounds": [
       {
-        "name": "hexkagune:sfx/combat/punch_hits/bone_crack",
-        "volume": 0.16
+        "name": "hexkagune:sfx/combat/spike_throws/needle_flick",
+        "volume": 0.16,
+        "pitch": 1.9
       },
       {
-        "name": "hexkagune:sfx/super_punch_collisions/close_dry_collision",
-        "volume": 0.1078
+        "name": "hexkagune:sfx/combat/spike_throws/fast_dart",
+        "volume": 0.16,
+        "pitch": 1.8
       },
       {
-        "name": "hexkagune:sfx/super_punch_collisions/fast_counter_clash",
-        "volume": 0.1018
+        "name": "hexkagune:sfx/combat/spike_throws/steel_spike",
+        "volume": 0.1412,
+        "pitch": 1.95
+      },
+      {
+        "name": "hexkagune:sfx/combat/spike_throws/razor_volley",
+        "volume": 0.16,
+        "pitch": 1.6
+      }
+    ]
+  },
+  "sfx.crystal_hit": {
+    "subtitle": "subtitles.hexkagune.sfx.crystal_hit",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/combat/spike_throws/needle_flick",
+        "volume": 0.1358,
+        "pitch": 1.6
+      },
+      {
+        "name": "hexkagune:sfx/combat/spike_throws/steel_spike",
+        "volume": 0.113,
+        "pitch": 1.8
+      },
+      {
+        "name": "hexkagune:sfx/combat/spike_throws/fast_dart",
+        "volume": 0.156,
+        "pitch": 1.7
       }
     ]
   },

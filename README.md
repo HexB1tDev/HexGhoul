@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.2.6 (HexGhoul): Fix: crystals sounded like punches (testing)
+
+See `.github/release-notes-3.2.6.md`. The crystal's shatter was a bone crack and punch collisions, its hit the punch hits. Now crystal forms, hits and shatters from the pack's brightest steel and needle sounds raised into a ring, no punch or bone in any of it. The pack still has no real glass recording: send crystal sounds (or OK vanilla's amethyst) for the real thing. Not tested in game.
+
 ## 3.2.5 (HexGhoul): Fix: clash impacts were barely audible (testing)
 
 See `.github/release-notes-3.2.5.md`. The clash sounds were set to 3.5-8% of their volume (a cap to keep three stacked from clipping); now every clash sound plays at full gain (21-29 dB louder), the loudest in the pack, and the ground rumble at 60%. Not tested in game.
