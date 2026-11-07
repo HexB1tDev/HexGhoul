@@ -23,7 +23,7 @@ public enum Arm {
         new Strike("low sweep", 6, 12, 0.85F, 0.95, 90.0, 0.1, 0.2, 0.25, Strike.SLASH),
         new Strike("double lash", 5, 12, 1.0F, 1.0, 60.0, 0.25, 0.3, 0.0, Strike.SLASH),
         new Strike("spinning lash", 9, 22, 1.45F, 0.9, 360.0, 0.0, 0.6, 0.15, Strike.SLASH)},
-        Ability.BIND, Ability.FLAY),
+        Ability.BIND, Ability.FLAY, Ability.SWING),
     /**
      * Ukaku: a crystal spear: a shaft of dark bone, crowned with Ukaku's crystal (a long blade of it, barbs of it round its foot). Five
      * blows; it throws a javelin of crystal (and grows another) and drives through a foe at a run.
@@ -34,7 +34,7 @@ public enum Arm {
         new Strike("rising sweep", 6, 12, 0.9F, 0.85, 120.0, 0.2, 0.3, 0.35, Strike.SLASH),
         new Strike("spinning butt", 6, 12, 0.9F, 0.8, 100.0, 0.1, 0.6, 0.0, Strike.BLUNT),
         new Strike("lunging thrust", 7, 19, 1.65F, 1.25, 25.0, 0.95, 0.7, 0.0, Strike.STAB)},
-        Ability.JAVELIN, Ability.PIERCE),
+        Ability.JAVELIN, Ability.PIERCE, null),
     /**
      * Koukaku: a flesh hammer: a long handle of jointed bone bound in sinew, and for a head a great swollen mass of kagune flesh, bone
      * spikes through it. Four slow, crushing blows; it shakes the ground (a slam that throws everyone near up) and whirls.
@@ -44,7 +44,7 @@ public enum Arm {
         new Strike("backswing", 9, 18, 1.2F, 1.0, 120.0, 0.2, 0.8, 0.1, Strike.CRUSH),
         new Strike("uppercut", 9, 20, 1.3F, 0.95, 60.0, 0.3, 0.3, 0.65, Strike.CRUSH),
         new Strike("overhead smash", 12, 28, 2.0F, 1.0, 50.0, 0.35, 0.5, 0.3, Strike.CRUSH)},
-        Ability.QUAKE, Ability.WHIRL),
+        Ability.QUAKE, Ability.WHIRL, Ability.FAULT),
     /**
      * Bikaku: a two-handed greatsword of bone and flesh: a serrated blade of bone with a living spine of flesh down it, a guard of curved
      * ribs, a grip bound in sinew. Six cuts; it leaps in with a crushing downward cut and cleaves (a great sweep that leaves wounds bleeding).
@@ -56,7 +56,7 @@ public enum Arm {
         new Strike("thrust", 6, 13, 1.1F, 1.15, 30.0, 0.55, 0.4, 0.0, Strike.STAB),
         new Strike("spinning cut", 8, 16, 1.1F, 0.95, 300.0, 0.1, 0.5, 0.0, Strike.SLASH),
         new Strike("overhead cleave", 10, 24, 1.9F, 1.05, 50.0, 0.45, 0.6, 0.2, Strike.SLASH)},
-        Ability.LEAP, Ability.CLEAVE);
+        Ability.LEAP, Ability.CLEAVE, Ability.GUARD);
 
     /**
      * One blow of a string: when it lands and how long the swing lasts (ticks, before its rank's pace), how much of the arm's damage it deals,
@@ -95,7 +95,20 @@ public enum Arm {
         /** A crouch, a leap at {@code hits[0]} at its foe, and a cut down onto them where it lands at {@code hits[1]}. */
         LEAP("Leaping Cut", 30, new int[] {6, 17}, 120, 4.0, 12.0, 2.2F),
         /** A great sweep at {@code hits[0]}, wider than any of its cuts, leaving what it cuts bleeding. */
-        CLEAVE("Cleave", 30, new int[] {12}, 115, 0.0, 4.8, 1.85F);
+        CLEAVE("Cleave", 30, new int[] {12}, 115, 0.0, 4.8, 1.85F),
+        /**
+         * 3.1.8 (the owner: "improve the move sets of the briefcase ... I meant the heavy blade, hammer and whip"): the whip's own (Sneak +
+         * M1): the tendril lashed onto the block aimed at ({@link Arm#SWING_REACH}), latched at {@code hits[0]}, and him hauled to it.
+         */
+        SWING("Tendril Swing", 22, new int[] {5}, 70, 0.0, 16.0, 0.0F),
+        /** 3.1.8: the hammer's own: driven into the ground at {@code hits[0]}, the ground breaking open on along a line, a blow at each hit. */
+        FAULT("Fault Line", 30, new int[] {11, 13, 15, 17, 19, 21}, 130, 0.0, 10.5, 1.25F),
+        /**
+         * 3.1.8: the greatsword's own: its flat raised before him as a wall. Blows that reach him through it are mostly stopped
+         * ({@link Arm#GUARD_TAKES}); one in its first {@link Arm#GUARD_PERFECT} ticks is parried outright, its striker staggered, and his next
+         * blow is the string's last (its overhead cleave).
+         */
+        GUARD("Bone Wall", 22, new int[] {1}, 80, 0.0, 0.0, 0.0F);
 
         public final String title;
         public final int total;
@@ -138,8 +151,11 @@ public enum Arm {
     public final float damage;
     private final Strike[] chain;
     private final Ability[] abilities;
+    /** 3.1.8: its own third move, on Sneak + M1 (none for the crystal spear); an investigator never uses it. */
+    private final Ability signature;
 
-    Arm(String title, String type, Quinque carried, boolean twoHanded, double reach, float damage, Strike[] chain, Ability first, Ability second) {
+    Arm(String title, String type, Quinque carried, boolean twoHanded, double reach, float damage, Strike[] chain, Ability first, Ability second,
+        Ability signature) {
         this.title = title;
         this.type = type;
         this.carried = carried;
@@ -148,7 +164,18 @@ public enum Arm {
         this.damage = damage;
         this.chain = chain;
         this.abilities = new Ability[] {first, second};
+        this.signature = signature;
     }
+
+    /** 3.1.8: its third move, on Sneak + M1 in a player's hand, or null. */
+    public Ability signature() {
+        return this.signature;
+    }
+
+    /** 3.1.8: how far the Tendril Swing lashes onto a block; the Bone Wall's perfect window (ticks) and what it lets through after. */
+    public static final double SWING_REACH = 16.0;
+    public static final int GUARD_PERFECT = 5;
+    public static final float GUARD_TAKES = 0.25F;
 
     /** How many blows its string has. */
     public int length() {
@@ -165,14 +192,14 @@ public enum Arm {
         return this.abilities.clone();
     }
 
-    /** Which of its two moves {@code ability} is (0 or 1), or -1 if it isn't one of its. */
+    /** Which of its moves {@code ability} is (0 or 1; 3.1.8: 2 its signature), or -1 if it isn't one of its. */
     public int slot(Ability ability) {
         for (int i = 0; i < this.abilities.length; i++) {
             if (this.abilities[i] == ability) {
                 return i;
             }
         }
-        return -1;
+        return ability != null && ability == this.signature ? 2 : -1;
     }
 
     public static Arm byOrdinal(int ordinal) {

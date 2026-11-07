@@ -1,4 +1,16 @@
-# START HERE (state after 3.1.7)
+# START HERE (state after 3.1.8)
+
+The owner's "improve the move sets of the briefcase", then: "I meant the heavy blade, hammer and whip" (the kagune-made Bone Greatsword, Flesh Hammer, Tendril Whip).
+
+- **Withheld, not shipped:** before that answer, two moves each were built for the four first melee quinques (Blade, Katana, Spear, Mace), with right click no longer folding them. It was not asked for and it would undo the owner's 1.3.33 ask (a tap of right click folds a melee quinque), so it was taken back out. If they want it, ask first; it would have to be rebuilt (it was not kept in the repository).
+- `Arm.Ability` appended SWING, FAULT, GUARD (ordinal-sent: appended only); `Arm` has a `signature()` (WHIP SWING, FLESH_HAMMER FAULT, BONE_SWORD GUARD, CRYSTAL_SPEAR none), `slot()` 2 for it, `abilities()` still the two an investigator chooses from; `SWING_REACH` 16, `GUARD_PERFECT` 5 ticks, `GUARD_TAKES` 0.25.
+- Input: `WeaponClient.input` sends `C2SArmAction.THIRD` on Sneak + M1 when the arm has a signature. Server `PlayerArms`: `move(..., 2)`, SWING's latch by `traceBlock` (`w.anchor`, packed into the S2CArmSwing `bound` by `WhipPath.packAnchor`), its haul in `feet` (finished when `arrived`), FAULT's line in `blow` (each hit 1.6 further, ground found within 3 below, `moveStruck` once each, CRUSH, lift 0.75), GUARD's `guarded` (LivingAttackEvent HIGH: the perfect parry, `PaleStun.stun` 24, next blow the string's last) and `guardedHurt` (x0.25).
+- Client: `WeaponPose.keys` SWING/FAULT/GUARD, `QuinqueOwn.arm` (GUARD its own raised blade), `WhipPath.swing` (thrown, latched taut to the latch, whipped back), `WeaponClient.anchor` (world latch from the packed offset), `WeaponLayer` and `QuinqueOwn.whip` draw it. Preview: `docs/handoff/weapon-signatures-3.1.8.png` (`tools/WeaponPosePreview.java` now includes the signature row).
+- **Next from the same message:** more family conversations by personality (bringing a child home), then jealousy, co-wives and half-siblings.
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 92. Not tested in game.
+
+# State after 3.1.7
 
 The owner, with the 3.1.6 preview (from behind: both tails gripping the chunk): "Again, we had already talked about this, but the tails are going through the body, bro." Fixed as its own version, before the rest of their new list (below).
 

@@ -183,6 +183,18 @@ final class WeaponLayer extends RenderLayer<CcgAgent, PlayerModel<CcgAgent>> {
             // Let go at its end, it falls back to its rest (not drawn back into the hand and out again).
             path = blend(rest, WhipPath.bind(Math.min(swingAge, ability.total - BLEND - 0.01), target, girth, length, time),
                 moving(swingAge, ability.total));
+        } else if (ability == Arm.Ability.SWING) {
+            // 3.1.8: stretched to where it bit.
+            double[] bit = com.hex.kagune.control.client.WeaponClient.anchor(agent.m_19879_());
+            if (bit != null) {
+                double yaw = agent.f_20884_ + wrap(agent.f_20883_ - agent.f_20884_) * partial;
+                double x = bit[0] - (agent.f_19790_ + (agent.m_20185_() - agent.f_19790_) * partial);
+                double y = bit[1] - (agent.f_19791_ + (agent.m_20186_() - agent.f_19791_) * partial);
+                double z = bit[2] - (agent.f_19792_ + (agent.m_20189_() - agent.f_19792_) * partial);
+                double[] target = WeaponPose.toBody(knot, WeaponPose.toModel(new double[] {x, y, z}, yaw, wide, size));
+                path = blend(rest, WhipPath.swing(Math.min(swingAge, ability.total - BLEND - 0.01), target, length, time),
+                    moving(swingAge, ability.total));
+            }
         }
         Vec3[] points = new Vec3[path.length];
         for (int i = 0; i < path.length; i++) {

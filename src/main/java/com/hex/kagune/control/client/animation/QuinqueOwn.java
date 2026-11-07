@@ -46,7 +46,20 @@ public final class QuinqueOwn {
         if (ability == null) {
             return new double[6];
         }
-        int kind = switch (ability) { case JAVELIN, PIERCE -> 2; case QUAKE, LEAP -> 1; default -> 0; };
+        if (ability == Arm.Ability.GUARD) {
+            // 3.1.8: the Bone Wall: the blade raised and turned flat across his view, held, then lowered.
+            double[] out = new double[6];
+            if (Double.isFinite(age) && age > 0.0 && age < ability.total) {
+                double up = Math.min(ease(age / 2.0), 1.0 - ease((age - (ability.total - 4.0)) / 4.0));
+                out[0] = 55.0 * up;
+                out[1] = -15.0 * up;
+                out[2] = -50.0 * up;
+                out[3] = -0.18 * up;
+                out[4] = 0.1 * up;
+            }
+            return out;
+        }
+        int kind = switch (ability) { case JAVELIN, PIERCE -> 2; case QUAKE, LEAP, FAULT, SWING -> 1; default -> 0; };
         int repeats = ability == Arm.Ability.FLAY || ability == Arm.Ability.WHIRL ? ability.hits.length : 1;
         return motion(kind, false, ability.total, ability.hits[ability.hits.length - 1], age, repeats);
     }
@@ -131,6 +144,9 @@ public final class QuinqueOwn {
             weight = weight(age, ability.total - 4);
         } else if (ability == Arm.Ability.BIND && age >= 0 && age < ability.total) {
             active = WhipPath.bind(age, new double[] {4, 0, 0}, 0.35, length, time);
+            weight = weight(age, ability.total - 4);
+        } else if (ability == Arm.Ability.SWING && age >= 0 && age < ability.total) {
+            active = WhipPath.swing(age, new double[] {9, 0, 3}, length, time); // 3.1.8: out ahead and up, where he aimed
             weight = weight(age, ability.total - 4);
         }
         double[][] out = new double[rest.length][];

@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.1.8 (HexGhoul): A signature move for the greatsword, the hammer and the whip (testing)
+
+See `.github/release-notes-3.1.8.md`. Sneak + M1: the Tendril Whip's Tendril Swing (lash a block, get hauled to it), the Flesh Hammer's Fault Line (the ground breaks open in a line ahead), the Bone Greatsword's Bone Wall (a guard; a perfect parry staggers them and readies the overhead cleave). Protocol 92. Not tested in game.
+
 ## 3.1.7 (HexGhoul): Rubble Hurl tails go round the body, never through it (testing)
 
 See `.github/release-notes-3.1.7.md`. The tails gripping the Rubble Hurl's chunk cut straight through the torso and head; now they leave the back, go round their own side and up behind the shoulder beside the head, then to the chunk. A new check builds 4,400 grip poses and requires the tail never to touch the body. Not tested in game.

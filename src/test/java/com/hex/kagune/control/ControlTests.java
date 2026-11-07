@@ -959,6 +959,75 @@ public final class ControlTests {
     }
 
     /** 3.0.0: the higher ranks' quinques: who carries them, their strings, their moves, their meshes and the whip's paths. */
+    /**
+     * 3.1.8 (the owner: "improve the move sets of the briefcase ... I meant the heavy blade, hammer and whip"): the whip, the hammer and
+     * the greatsword each have a third move of their own on Sneak + M1 (the crystal spear none); an investigator still chooses only its two.
+     */
+    static void armSignatures() {
+        com.hex.kagune.control.quinque.Arm whip = com.hex.kagune.control.quinque.Arm.WHIP;
+        com.hex.kagune.control.quinque.Arm hammer = com.hex.kagune.control.quinque.Arm.FLESH_HAMMER;
+        com.hex.kagune.control.quinque.Arm sword = com.hex.kagune.control.quinque.Arm.BONE_SWORD;
+        check(whip.signature() == com.hex.kagune.control.quinque.Arm.Ability.SWING && hammer.signature() == com.hex.kagune.control.quinque.Arm.Ability.FAULT
+            && sword.signature() == com.hex.kagune.control.quinque.Arm.Ability.GUARD && com.hex.kagune.control.quinque.Arm.CRYSTAL_SPEAR.signature() == null,
+            "the whip swings, the hammer breaks the ground open, the greatsword walls; the spear has none");
+        java.util.Set<Integer> codes = new java.util.HashSet<>();
+        for (com.hex.kagune.control.quinque.Arm.Ability a : com.hex.kagune.control.quinque.Arm.Ability.values()) {
+            int code = com.hex.kagune.control.npc.ArmRules.abilityCode(a);
+            check(codes.add(code) && code < 128 && com.hex.kagune.control.npc.ArmRules.ability(code) == a && com.hex.kagune.control.npc.ArmRules.step(code) < 0,
+                a + ": its own code, a byte, read back");
+            check(a.hits.length > 0 && a.hits[a.hits.length - 1] < a.total && a.cooldown > a.total, a + ": lands within it, rests longer than it runs");
+        }
+        for (com.hex.kagune.control.quinque.Arm arm : com.hex.kagune.control.quinque.Arm.values()) {
+            check(arm.abilities().length == 2 && (arm.signature() == null || arm.slot(arm.signature()) == 2)
+                && java.util.Arrays.stream(arm.abilities()).noneMatch(a -> a == arm.signature()), arm + ": two moves an investigator uses, its signature third");
+            if (arm.signature() == null) {
+                continue;
+            }
+            double[] start = com.hex.kagune.control.client.animation.QuinqueOwn.arm(arm, -1, arm.signature(), 0.0);
+            double[] end = com.hex.kagune.control.client.animation.QuinqueOwn.arm(arm, -1, arm.signature(), arm.signature().total);
+            double[] mid = com.hex.kagune.control.client.animation.QuinqueOwn.arm(arm, -1, arm.signature(), arm.signature().total * 0.5);
+            double moving = 0.0;
+            for (double v : mid) {
+                moving += Math.abs(v);
+            }
+            check(java.util.Arrays.stream(start).allMatch(v -> v == 0.0) && java.util.Arrays.stream(end).allMatch(v -> v == 0.0) && moving > 0.0
+                && java.util.Arrays.stream(mid).allMatch(Double::isFinite), arm + "'s signature in his own view: still at its ends, moving through it");
+        }
+        com.hex.kagune.control.quinque.Arm.Ability fault = com.hex.kagune.control.quinque.Arm.Ability.FAULT;
+        double last = 1.6 + 1.6 * (fault.hits.length - 1);
+        check(Math.abs(last - fault.farthest + 0.9) < 1.0 && fault.hits.length == 6, "the fault runs on 1.6 blocks a blow, about as far as it is used from: " + last);
+        com.hex.kagune.control.quinque.Arm.Ability guard = com.hex.kagune.control.quinque.Arm.Ability.GUARD;
+        check(com.hex.kagune.control.quinque.Arm.GUARD_PERFECT >= 3 && com.hex.kagune.control.quinque.Arm.GUARD_PERFECT < guard.total / 2
+            && com.hex.kagune.control.quinque.Arm.GUARD_TAKES > 0.0F && com.hex.kagune.control.quinque.Arm.GUARD_TAKES < 0.5F,
+            "the wall: a short perfect window, then most of a blow stopped");
+        check(com.hex.kagune.control.npc.ArmRules.next(sword, sword.length() - 2, 0L) == sword.length() - 1,
+            "after a parry his next blow is the string's last, its overhead cleave");
+        check(com.hex.kagune.control.quinque.Arm.SWING_REACH > com.hex.kagune.control.quinque.Arm.Ability.BIND.farthest,
+            "the swing lashes further than the bind catches");
+        // Where it bit, told to every client: within a quarter of a block anywhere it can reach.
+        boolean packs = true;
+        for (double dx = -15.5; dx <= 15.5; dx += 3.1) {
+            for (double dy = -15.5; dy <= 15.5; dy += 3.1) {
+                for (double dz = -15.5; dz <= 15.5; dz += 3.1) {
+                    double[] back = com.hex.kagune.control.quinque.WhipPath.anchor(com.hex.kagune.control.quinque.WhipPath.packAnchor(dx, dy, dz));
+                    packs &= back != null && Math.abs(back[0] - dx) <= 0.126 && Math.abs(back[1] - dy) <= 0.126 && Math.abs(back[2] - dz) <= 0.126;
+                }
+            }
+        }
+        check(packs && com.hex.kagune.control.quinque.WhipPath.anchor(0) == null && com.hex.kagune.control.quinque.WhipPath.anchor(1234) == null,
+            "a swing's latch survives the packet; a bind's target id is never read as one");
+        double[] bit = {11.0, 0.5, 3.0};
+        double[][] latched = com.hex.kagune.control.quinque.WhipPath.swing(10.0, bit, 6.0, 0.0);
+        double[][] thrown = com.hex.kagune.control.quinque.WhipPath.swing(2.0, bit, 6.0, 0.0);
+        double[][] back = com.hex.kagune.control.quinque.WhipPath.swing(com.hex.kagune.control.quinque.Arm.Ability.SWING.total - 0.01, bit, 6.0, 0.0);
+        double[] tip = latched[latched.length - 1];
+        check(Math.abs(tip[0] - bit[0]) < 1e-9 && Math.abs(tip[1] - bit[1]) < 1e-9 && Math.abs(tip[2] - bit[2]) < 1e-9 && latched[0][0] == 0.0,
+            "latched, the tendril runs from the hand to where it bit (stretched past its own length)");
+        double reached = Math.sqrt(thrown[thrown.length - 1][0] * thrown[thrown.length - 1][0] + thrown[thrown.length - 1][1] * thrown[thrown.length - 1][1]);
+        double home = Math.sqrt(back[back.length - 1][0] * back[back.length - 1][0] + back[back.length - 1][1] * back[back.length - 1][1]);
+        check(reached > 0.5 && reached < 11.0 && home < 0.5, "thrown, it is on its way out; let go, back in the hand");
+    }
+
     private static void arms() {
         com.hex.kagune.control.npc.AgentRules.Rank[] ranks = com.hex.kagune.control.npc.AgentRules.Rank.values();
         boolean gated = true;
@@ -1117,7 +1186,11 @@ public final class ControlTests {
                 }
                 ends.add(com.hex.kagune.control.client.animation.WeaponPose.strike(arm, step, strike.total()));
             }
-            for (com.hex.kagune.control.quinque.Arm.Ability ability : arm.abilities()) {
+            java.util.List<com.hex.kagune.control.quinque.Arm.Ability> moves = new java.util.ArrayList<>(java.util.List.of(arm.abilities()));
+            if (arm.signature() != null) {
+                moves.add(arm.signature()); // 3.1.8: its signature too
+            }
+            for (com.hex.kagune.control.quinque.Arm.Ability ability : moves) {
                 for (double age = 0.0; age <= ability.total; age += 0.5) {
                     finite &= finite(com.hex.kagune.control.client.animation.WeaponPose.ability(arm, ability, age));
                 }
@@ -1166,6 +1239,7 @@ public final class ControlTests {
     public static void main(String[] args) {
         worldTimes();
         arms();
+        armSignatures();
         kakujaPalette();
         rinkakuAlive();
         thyDeath();

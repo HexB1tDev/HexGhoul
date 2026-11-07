@@ -226,6 +226,59 @@ public final class WhipPath {
         return new double[] {Math.cos(pitch) * Math.cos(yaw), Math.cos(pitch) * Math.sin(yaw), Math.sin(pitch)};
     }
 
+    /**
+     * 3.1.8, the Tendril Swing ({@code target} where it bit, in the whip's own frame as {@link #bind}'s is: it is a Rinkaku tendril and
+     * stretches as far as it must): thrown, the tip flying out to it on a rising arc; latched, taut and straight to it, thrumming as he
+     * is hauled along it; let go at the end, whipped back to the hand.
+     */
+    public static double[][] swing(double age, double[] target, double length, double time) {
+        int hit = Arm.Ability.SWING.hits[0];
+        double total = Arm.Ability.SWING.total;
+        double[][] p = new double[POINTS][];
+        double far = Math.max(0.5, Math.sqrt(dot(target, target)));
+        for (int i = 0; i < POINTS; i++) {
+            double s = i / (double)(POINTS - 1);
+            double k;
+            double arc;
+            double thrum = 0.0;
+            if (age < hit) {
+                k = ease(age / hit);
+                arc = 0.7 * Math.sin(Math.PI * s) * (1.0 - 0.6 * k);
+            } else if (age > total - 4.0) {
+                k = ease((total - age) / 4.0);
+                arc = 0.3 * Math.sin(Math.PI * s) * k;
+            } else {
+                k = 1.0;
+                arc = 0.0;
+                thrum = 0.04 * Math.sin(Math.PI * s) * Math.sin(time * 2.1 + s * 6.0) * Math.min(1.0, far / 4.0);
+            }
+            double[] at = scale(target, s * k);
+            at[2] += arc + thrum;
+            p[i] = at;
+        }
+        return p;
+    }
+
+    /**
+     * 3.1.8: the Tendril Swing's latch, {@code dx}/{@code dy}/{@code dz} (blocks) from its swinger as it bit, packed into a swing's
+     * {@code bound} (bit 21 set; a quarter of a block, 16 either way at most), and read back ({@link #anchor}: null for none).
+     */
+    public static int packAnchor(double dx, double dy, double dz) {
+        return 1 << 21 | quarter(dx) | quarter(dy) << 7 | quarter(dz) << 14;
+    }
+
+    public static double[] anchor(int bound) {
+        if ((bound & (1 << 21)) == 0 || bound < 0) {
+            return null;
+        }
+        return new double[] {((bound & 127) - 64) / 4.0, ((bound >> 7 & 127) - 64) / 4.0, ((bound >> 14 & 127) - 64) / 4.0};
+    }
+
+    private static int quarter(double v) {
+        long q = Math.round(Math.max(-16.0, Math.min(15.75, Double.isFinite(v) ? v : 0.0)) * 4.0);
+        return (int)q + 64;
+    }
+
     static double ease(double t) {
         double k = Math.max(0.0, Math.min(1.0, t));
         return k * k * (3.0 - 2.0 * k);

@@ -17,6 +17,8 @@ public record C2SArmAction(int kind, int target) {
     public static final int SECOND = 2;
     /** 3.1.2: the dedicated key folds either kind of quinque; existing action numbers are unchanged. */
     public static final int FOLD = 3;
+    /** 3.1.8: Sneak + M1: its signature move ({@code Arm.signature}: Tendril Swing, Fault Line, Bone Wall). */
+    public static final int THIRD = 4;
 
     public static void encode(C2SArmAction message, FriendlyByteBuf buffer) {
         buffer.writeByte(message.kind);

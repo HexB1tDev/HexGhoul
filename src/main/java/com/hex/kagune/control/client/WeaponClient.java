@@ -50,8 +50,25 @@ public final class WeaponClient {
     public static void accept(S2CArmSwing message) {
         if (VIEWS.size() > 256) {
             VIEWS.clear();
+            ANCHORS.clear();
         }
         VIEWS.put(message.player(), new View(message.code(), message.at(), message.bound()));
+        // 3.1.8: a Tendril Swing's latch, from where its swinger was as it bit (they are hauled away from there).
+        double[] off = ArmRules.ability(message.code()) == Arm.Ability.SWING ? com.hex.kagune.control.quinque.WhipPath.anchor(message.bound()) : null;
+        net.minecraft.world.entity.Entity who = off == null || Minecraft.m_91087_().f_91073_ == null ? null
+            : Minecraft.m_91087_().f_91073_.m_6815_(message.player());
+        if (who != null) {
+            ANCHORS.put(message.player(), new double[] {who.m_20185_() + off[0], who.m_20186_() + off[1], who.m_20189_() + off[2]});
+        } else {
+            ANCHORS.remove(message.player());
+        }
+    }
+
+    private static final Map<Integer, double[]> ANCHORS = new HashMap<>();
+
+    /** 3.1.8: where {@code id}'s Tendril Swing bit (world), or null. */
+    public static double[] anchor(int id) {
+        return ANCHORS.get(id);
     }
 
     /** {@code id}'s weapon as last told, or null. */
@@ -132,8 +149,9 @@ public final class WeaponClient {
     // ---------------------------------------------------------------- the keys
 
     /**
-     * M1 with it out: at a living body or the air, the next blow of its string (no punch: the server swings it); on a block it mines. Right
-     * click: its first move (Shift: its second), at what is under the crosshair; a chest or a furnace is still used.
+     * M1 with it out: at a living body or the air, the next blow of its string (no punch: the server swings it); on a block it mines; 3.1.8
+     * Sneak + M1 its signature move. Right click: its first move (Shift: its second), at what is under the crosshair; a chest or a furnace
+     * is still used.
      */
     @SubscribeEvent(priority = EventPriority.HIGH)
     public static void input(InputEvent.InteractionKeyMappingTriggered event) {
@@ -157,7 +175,9 @@ public final class WeaponClient {
             }
             event.setCanceled(true);
             event.setSwingHand(false);
-            ControlNetwork.CHANNEL.sendToServer(new C2SArmAction(C2SArmAction.STRIKE, target));
+            // 3.1.8: Sneak + M1 is its signature move (the whip's Tendril Swing, the hammer's Fault Line, the greatsword's Bone Wall).
+            boolean signature = player.m_6047_() && arm.signature() != null;
+            ControlNetwork.CHANNEL.sendToServer(new C2SArmAction(signature ? C2SArmAction.THIRD : C2SArmAction.STRIKE, target));
         } else if (event.isUseItem()) {
             if (hit instanceof BlockHitResult block && hit.m_6662_() == HitResult.Type.BLOCK && usable(player, block)) {
                 return;

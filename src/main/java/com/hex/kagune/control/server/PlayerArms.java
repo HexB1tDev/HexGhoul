@@ -31,6 +31,9 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.living.LivingAttackEvent;
+import net.minecraftforge.event.entity.living.LivingHurtEvent;
+import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -78,7 +81,10 @@ public final class PlayerArms {
         boolean bound;
         Vec3 moveWay = Vec3.f_82478_;
         final Set<Integer> moveStruck = new HashSet<>();
-        final long[] moveReady = {Long.MIN_VALUE, Long.MIN_VALUE};
+        final long[] moveReady = {Long.MIN_VALUE, Long.MIN_VALUE, Long.MIN_VALUE};
+        /** 3.1.8: the Tendril Swing's latch (where the whip bit), and whether it has hauled him there. */
+        Vec3 anchor;
+        boolean arrived;
         final List<long[]> bleeds = new ArrayList<>();
         long safeUntil = Long.MIN_VALUE;
     }
@@ -202,6 +208,8 @@ public final class PlayerArms {
                 begin(player, level, w, target, now);
             } else if (kind == C2SArmAction.FIRST || kind == C2SArmAction.SECOND) {
                 move(player, level, w, kind == C2SArmAction.FIRST ? 0 : 1, target, now);
+            } else if (kind == C2SArmAction.THIRD && arm.signature() != null) {
+                move(player, level, w, 2, target, now); // 3.1.8: its signature (Sneak + M1)
             }
         } catch (RuntimeException failure) {
             com.hex.kagune.control.Safety.caught(failure, "a kagune weapon swung");
@@ -289,7 +297,10 @@ public final class PlayerArms {
         if (w.move != null || w.striking) {
             return;
         }
-        Arm.Ability ability = w.arm.abilities()[slot];
+        Arm.Ability ability = slot == 2 ? w.arm.signature() : w.arm.abilities()[slot];
+        if (ability == null) {
+            return;
+        }
         if (now < w.moveReady[slot]) {
             player.m_5661_(Component.m_237113_(String.format("§7%s again in %.1f s.", ability.title, (w.moveReady[slot] - now) / 20.0)), true);
             return;
@@ -299,6 +310,20 @@ public final class PlayerArms {
         if (ability == Arm.Ability.BIND && aimed == null) {
             player.m_5661_(Component.m_237113_("§7No one in reach to bind."), true);
             return;
+        }
+        w.anchor = null;
+        w.arrived = false;
+        if (ability == Arm.Ability.SWING) {
+            // 3.1.8: lashed onto the block he aims at (no body: it is a way to move).
+            net.minecraft.world.phys.BlockHitResult block = com.hex.kagune.gameplay.KaguneServerController.traceBlock(player, Arm.SWING_REACH);
+            if (block == null || block.m_6662_() != net.minecraft.world.phys.HitResult.Type.BLOCK) {
+                player.m_5661_(Component.m_237113_("§7Nothing in reach to lash onto."), true);
+                return;
+            }
+            w.anchor = block.m_82450_();
+            aimed = null;
+        } else if (ability == Arm.Ability.GUARD || ability == Arm.Ability.FAULT) {
+            aimed = null; // a guard raised, the ground struck: straight ahead, where he faces
         }
         start(player, level, w, ability, slot, aimed, now);
     }
@@ -318,7 +343,10 @@ public final class PlayerArms {
         }
         w.moveReady[slot] = now + ArmRules.cooldown(ability, PACE);
         w.safeUntil = now + ability.total + SAFE_AFTER;
-        ControlNetwork.broadcast(player, new S2CArmSwing(player.m_19879_(), ArmRules.abilityCode(ability), now, 0));
+        // 3.1.8: a Tendril Swing tells every client where it bit (so its tendril is drawn to it).
+        int bound = ability == Arm.Ability.SWING && w.anchor != null ? com.hex.kagune.control.quinque.WhipPath.packAnchor(
+            w.anchor.f_82479_ - player.m_20185_(), w.anchor.f_82480_ - player.m_20186_(), w.anchor.f_82481_ - player.m_20189_()) : 0;
+        ControlNetwork.broadcast(player, new S2CArmSwing(player.m_19879_(), ArmRules.abilityCode(ability), now, bound));
         Vec3 at = hand(player);
         switch (ability) {
             case BIND -> UkakuFire.sound(level, at, "hexkagune:kagune_whip", 0.9F, 0.8F);
@@ -329,6 +357,9 @@ public final class PlayerArms {
             case WHIRL -> UkakuFire.sound(level, at, "hexkagune:sfx.whoosh", 0.9F, 0.7F);
             case LEAP -> UkakuFire.sound(level, at, "hexkagune:sfx.step_heavy", 0.9F, 0.8F);
             case CLEAVE -> UkakuFire.sound(level, at, "hexkagune:sfx.windup_clash", 0.8F, 0.8F);
+            case SWING -> UkakuFire.sound(level, at, "hexkagune:kagune_whip", 1.0F, 1.1F);
+            case FAULT -> UkakuFire.sound(level, at, "hexkagune:kagune_strain", 1.0F, 0.6F);
+            case GUARD -> UkakuFire.sound(level, at, "hexkagune:sfx.blade_arc", 0.7F, 0.7F);
         }
     }
 
@@ -347,8 +378,8 @@ public final class PlayerArms {
                     }
                 }
             }
-            case PIERCE -> {
-                // A charge goes straight, as it set out.
+            case PIERCE, FAULT, SWING -> {
+                // A charge goes straight, as it set out; 3.1.8: so does the line the ground breaks along, and the swing to its latch.
             }
             default -> {
                 Vec3 look = UkakuFire.horizontal(player.m_20154_());
@@ -368,7 +399,8 @@ public final class PlayerArms {
         if (w.move == ability && ability == Arm.Ability.BIND && w.bound && age < ability.hits[1]) {
             drag(player, w, target);
         }
-        if (w.move == ability && (age >= ability.total || ability == Arm.Ability.BIND && !w.bound && age >= ability.hits[0] + 6L)) {
+        if (w.move == ability && (age >= ability.total || ability == Arm.Ability.BIND && !w.bound && age >= ability.hits[0] + 6L
+            || ability == Arm.Ability.SWING && w.arrived)) {
             finish(player, w, now);
         }
     }
@@ -412,6 +444,22 @@ public final class PlayerArms {
                     double vy = age == up ? 0.62 : age >= down - 2 ? Math.min(velocity.f_82480_, -0.8) : velocity.f_82480_;
                     player.m_20256_(new Vec3(flat.f_82479_ * speed, vy, flat.f_82481_ * speed));
                     player.f_19864_ = true;
+                }
+            }
+            case SWING -> {
+                // 3.1.8: hauled along the whip to where it bit, up and over what is in the way; stopped short of it.
+                if (age >= ability.hits[0] && w.anchor != null) {
+                    Vec3 to = w.anchor.m_82546_(player.m_20182_().m_82520_(0.0, 0.9, 0.0));
+                    double gap = Math.sqrt(to.m_82556_());
+                    if (gap < 1.8) {
+                        player.m_20256_(velocity.m_82490_(0.35));
+                        player.f_19864_ = true;
+                        w.arrived = true;
+                    } else {
+                        double speed = Math.min(1.35, 0.35 + gap * 0.18);
+                        player.m_20256_(new Vec3(to.f_82479_ / gap * speed, to.f_82480_ / gap * speed + 0.12, to.f_82481_ / gap * speed));
+                        player.f_19864_ = true;
+                    }
                 }
             }
             case WHIRL -> {
@@ -547,6 +595,42 @@ public final class PlayerArms {
                 } else {
                     UkakuFire.sound(level, from, "hexkagune:sfx.dash", 0.8F, 0.75F);
                 }
+            }
+            case SWING -> {
+                // 3.1.8: it bites into the block.
+                if (w.anchor != null) {
+                    UkakuFire.sound(level, w.anchor, "block.stone.hit", 1.0F, 0.8F);
+                    UkakuFire.sound(level, w.anchor, "hexkagune:kagune_whip", 0.8F, 1.3F);
+                }
+            }
+            case FAULT -> {
+                // 3.1.8: the ground breaks open a stretch further on at each blow; whatever stands on it is struck and thrown up.
+                double along = (1.6 + 1.6 * index) * edge;
+                Vec3 point = from.m_82549_(w.moveWay.m_82490_(along));
+                net.minecraft.core.BlockPos ground = null;
+                for (int dy = 1; dy >= -3 && ground == null; dy--) {
+                    net.minecraft.core.BlockPos pos = net.minecraft.core.BlockPos.m_274561_(point.f_82479_, point.f_82480_ - 0.5 + dy, point.f_82481_);
+                    if (!level.m_8055_(pos).m_60795_()) {
+                        ground = pos;
+                    }
+                }
+                if (ground == null) {
+                    return; // over a drop: the break runs out
+                }
+                level.m_46796_(2001, ground, net.minecraft.world.level.block.Block.m_49956_(level.m_8055_(ground)));
+                UkakuFire.sound(level, point, index == 0 ? "entity.generic.explode" : "block.stone.break", index == 0 ? 0.8F : 0.9F,
+                    0.7F + 0.05F * index);
+                for (LivingEntity body : foes(player, level, 0, along + 2.5)) {
+                    double dx = body.m_20185_() - point.f_82479_;
+                    double dz = body.m_20189_() - point.f_82481_;
+                    if (dx * dx + dz * dz <= 1.6 * 1.6 && Math.abs(body.m_20186_() - (ground.m_123342_() + 1.0)) <= 2.5
+                        && w.moveStruck.add(body.m_19879_())) {
+                        hit(player, w, body, dealt, Arm.Strike.CRUSH, point.m_82546_(w.moveWay), w.moveWay, 0.15, 0.75, level, now);
+                    }
+                }
+            }
+            case GUARD -> {
+                // 3.1.8: raised; Bone Wall's blows are what reach him (guarded / guardedHurt).
             }
             case CLEAVE -> {
                 double reach = ability.farthest * edge;
@@ -705,6 +789,58 @@ public final class PlayerArms {
             body.f_19864_ = true;
         }
         return true;
+    }
+
+    // ---------------------------------------------------------------- 3.1.8: the Bone Wall
+
+    /** {@code player}'s Bone Wall {@code age} ticks up, or -1 when it isn't. */
+    private static long guardAge(ServerPlayer player) {
+        Wield w = WIELDS.isEmpty() ? null : WIELDS.get(player.m_20148_());
+        if (w == null || w.move != Arm.Ability.GUARD || !(player.m_9236_() instanceof ServerLevel level)) {
+            return -1L;
+        }
+        long age = level.m_46467_() - w.moveAt;
+        return age >= 1L && age < Arm.Ability.GUARD.total - 3L ? age : -1L;
+    }
+
+    /** A blow in the Bone Wall's first ticks: parried outright, its striker staggered, his next blow the string's overhead cleave. */
+    @SubscribeEvent(priority = EventPriority.HIGH)
+    public static void guarded(LivingAttackEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer player) || !(player.m_9236_() instanceof ServerLevel level)) {
+            return;
+        }
+        long age = guardAge(player);
+        if (age < 0L || age > Arm.GUARD_PERFECT || !(event.getSource().m_7639_() instanceof LivingEntity striker) || striker == player) {
+            return;
+        }
+        event.setCanceled(true);
+        Wield w = WIELDS.get(player.m_20148_());
+        long now = level.m_46467_();
+        PaleStun.stun(striker, now, 24);
+        Vec3 away = UkakuFire.horizontal(striker.m_20182_().m_82546_(player.m_20182_()));
+        if (away.m_82556_() > 1.0E-6) {
+            striker.m_20256_(striker.m_20184_().m_82549_(away.m_82541_().m_82490_(0.7)).m_82520_(0.0, 0.2, 0.0));
+            striker.f_19864_ = true;
+        }
+        finish(player, w, now);
+        // The answer: the string's last blow, next (ArmRules.next goes on from the one before it).
+        w.step = w.arm.length() - 2;
+        w.stepAt = now;
+        w.readyAt = now;
+        UkakuFire.sound(level, hand(player), "hexkagune:sfx.blade_heavy", 1.0F, 1.4F);
+        player.m_5661_(Component.m_237113_("§cParried!"), true);
+    }
+
+    /** A blow on the Bone Wall after its first ticks: most of it stopped by the bone. */
+    @SubscribeEvent
+    public static void guardedHurt(LivingHurtEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player && event.getSource().m_7639_() != null && event.getSource().m_7639_() != player
+            && guardAge(player) >= 0L) {
+            event.setAmount(event.getAmount() * Arm.GUARD_TAKES);
+            if (player.m_9236_() instanceof ServerLevel level) {
+                UkakuFire.sound(level, hand(player), "hexkagune:sfx.blade_arc", 0.8F, 0.6F);
+            }
+        }
     }
 
     // ---------------------------------------------------------------- each tick

@@ -521,6 +521,23 @@ public final class WeaponPose {
                 k(12 / t).w(0, 0).a(10, -15).tw(-0.05).ln(0.15).st(0.42).spr(0.16),
                 k(15 / t).w(110, -5).a(55, -20).tw(-0.95).ln(0.18).sd(-0.08).st(0.42).spr(0.16),
                 k(20 / t).w(80, 10).a(45, -20).tw(-0.7).ln(0.1).st(0.35), rest(1));
+            // 3.1.8, the whip's Tendril Swing: drawn back and cast up ahead; then held high on the taut whip as he is hauled along it, leaning
+            // into the pull; let go as he lands.
+            case SWING -> filled(arm, rest(0), k(2 / t).w(-30, 120).a(-20, 110).tw(0.3).ln(-0.12).st(0.05).l(30, -10),
+                k(5 / t).w(0, 35).a(0, 45).tw(-0.25).ln(0.12).st(0.3).l(-20, -40),
+                k(9 / t).w(0, 55).a(0, 65).tw(-0.1).ln(0.28).st(0.1).l(-30, -50),
+                k(17 / t).w(0, 55).a(0, 65).ln(0.28).st(0.1).l(-30, -50),
+                k(20 / t).w(0, 10).a(10, -10).ln(0.1).st(0.15), rest(1));
+            // 3.1.8, the hammer's Fault Line: heaved high behind the head, driven down into the ground before him and held there, leaning on
+            // it, as the ground breaks open on ahead.
+            case FAULT -> filled(arm, rest(0), k(4 / t).w(0, 140).a(5, 120).ln(-0.14).st(0.12).spr(0.18),
+                k(9 / t).w(0, 165).a(5, 145).ln(-0.2).st(0.18).spr(0.18),
+                k(11 / t).w(0, -40).a(0, -34).ln(0.3).st(0.45).spr(0.22),
+                k(22 / t).w(0, -42).a(0, -35).ln(0.3).st(0.45).spr(0.22),
+                k(27 / t).w(0, 10).a(15, -25).ln(0.15).st(0.25).spr(0.12), rest(1));
+            // 3.1.8, the greatsword's Bone Wall: the blade brought up across before him, its flat a wall at his chest, braced, weight back.
+            case GUARD -> filled(arm, rest(0), k(2 / t).w(80, 20).a(25, 25).tw(-0.2).ln(-0.06).st(0.12).bk().spr(0.14),
+                k(17 / t).w(80, 20).a(25, 25).tw(-0.2).ln(-0.06).st(0.12).bk().spr(0.14), rest(1));
         };
     }
 

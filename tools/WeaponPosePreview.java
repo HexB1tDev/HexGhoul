@@ -65,7 +65,11 @@ public class WeaponPosePreview {
                 rowGrown.add(g);
                 rowAges.add(ages);
             }
-            for (Arm.Ability a : arm.abilities()) {
+            java.util.List<Arm.Ability> moves = new java.util.ArrayList<>(java.util.List.of(arm.abilities()));
+            if (arm.signature() != null) {
+                moves.add(arm.signature()); // 3.1.8: its signature (Sneak + M1)
+            }
+            for (Arm.Ability a : moves) {
                 RigPose[] frames = new RigPose[KEYS.length];
                 double[][][] whips = new double[KEYS.length][][];
                 float[] g = new float[KEYS.length];
@@ -75,7 +79,8 @@ public class WeaponPosePreview {
                     ages[i] = age;
                     frames[i] = finish(arm, WeaponPose.ability(arm, a, age), WeaponPose.oneHanded(a, age));
                     whips[i] = a == Arm.Ability.BIND ? WhipPath.bind(age, new double[] {4.0, 0.0, -0.3}, 0.35, WhipPath.length(false), age)
-                        : a == Arm.Ability.FLAY ? WhipPath.flay(age, WhipPath.length(false), age) : null;
+                        : a == Arm.Ability.FLAY ? WhipPath.flay(age, WhipPath.length(false), age)
+                        : a == Arm.Ability.SWING ? WhipPath.swing(age, new double[] {7.0, 0.0, 3.5}, WhipPath.length(false), age) : null;
                     g[i] = WeaponPose.grown(a, age);
                 }
                 rowNames.add(a.title);
