@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.3.3 (HexGhoul): The Dragon has a voice: real recordings from the web (testing)
+
+See `.github/release-notes-3.3.3.md`. The Kakuja V2 Dragon only played the pack's quiet sounds (3-37% volume) and breathed once every 3.5 s: from the camera, silence. Now 14 real CC0 recordings from freesound (via the WilhelmSFX mirror), as recorded, at full volume: roars as it breaks out and every few seconds, a death cry as it shatters, its crawl (a growl-chitter and heavy stomps), earthquake crashes, crunching bites, its body cracking apart. Credited in sfx/recorded/CREDITS.txt. Not tested in game (and not listened to: tell me which sounds wrong).
+
 ## 3.3.2 (HexGhoul): Dawn has an idle (testing)
 
 See `.github/release-notes-3.3.2.md`. Standing still with Dawn out, a slow loop: breathing, Dawn turned to and fro in your fingers, then carried up and aside at ease (point raised to your right, left hand on your hip, head tilted, the point tapping), and back down. Moving, swinging or aiming stops it. Hold and M1s unchanged. Not tested in game.

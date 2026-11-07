@@ -193,6 +193,25 @@ public final class DragonRigTest {
         check(DragonTimeline.phaseAt(DragonTimeline.RAMPAGE_END) == DragonTimeline.Phase.DESTABILIZE, "destabilizing starts at 60 s");
         check(DragonTimeline.phaseAt(DragonTimeline.END_TICK) == DragonTimeline.Phase.DONE, "sequence ends");
         check(!DragonTimeline.attacking(DragonTimeline.RAMPAGE_END), "no new attacks once destabilizing");
+        // 3.3.3 (the owner: the Dragon is silent): it roars as it breaks out and every few seconds of its rampage; its legs are heard as it goes.
+        int roars = 0;
+        int crawls = 0;
+        int longestQuiet = 0;
+        int quiet = 0;
+        for (int tick = 0; tick < DragonTimeline.RAMPAGE_END; tick++) {
+            if (DragonTimeline.roars(tick)) {
+                roars++;
+            }
+            if (DragonTimeline.crawls(tick) || DragonTimeline.roars(tick)) {
+                crawls++;
+                quiet = 0;
+            } else {
+                longestQuiet = Math.max(longestQuiet, ++quiet);
+            }
+        }
+        check(DragonTimeline.roars(0) && roars >= 10 && roars <= 14, "a roar as it breaks out, then one every five or six seconds: " + roars);
+        check(crawls >= (DragonTimeline.RAMPAGE_END - DragonTimeline.RAMPAGE_START) / DragonTimeline.CRAWL_EVERY && longestQuiet < DragonTimeline.CRAWL_EVERY, "never more than three quarters of a second without its sound: " + longestQuiet);
+        check(!DragonTimeline.roars(DragonTimeline.RAMPAGE_END) && !DragonTimeline.crawls(DragonTimeline.RAMPAGE_END), "it goes quiet as it comes apart (its cracking instead)");
 
         // The ground under the body: exact on slopes, blind to small obstacles and ditches.
         check(Math.abs(DragonRig.groundBelow(HILLS, 30.5, -12.5) - HILLS.surface(30.5, -12.5)) < 0.15, "ground estimate follows hills");

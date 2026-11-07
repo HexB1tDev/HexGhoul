@@ -31,6 +31,22 @@ public final class DragonTimeline {
     private DragonTimeline() {
     }
 
+    /** 3.3.3 (the owner: the Dragon is silent): how often it roars through its rampage, and when the first comes (ticks). */
+    public static final int ROAR_EVERY = 110;
+    public static final int ROAR_AT = 40;
+    /** 3.3.3: how often it is heard crawling, its chitter or a heavy step (ticks: its recordings last most of a second). */
+    public static final int CRAWL_EVERY = 14;
+
+    /** 3.3.3: whether it roars at {@code tick}: as it breaks out of the ground, then every {@link #ROAR_EVERY} through its rampage. */
+    public static boolean roars(int tick) {
+        return tick == 0 || tick > 0 && tick < RAMPAGE_END && tick % ROAR_EVERY == ROAR_AT;
+    }
+
+    /** 3.3.3: whether its legs are heard at {@code tick}: through its rampage, every {@link #CRAWL_EVERY} ticks. */
+    public static boolean crawls(int tick) {
+        return tick > 0 && tick < RAMPAGE_END && tick % CRAWL_EVERY == 0;
+    }
+
     public static Phase phaseAt(int tick) {
         if (tick < RAMPAGE_START) return Phase.ERUPTION;
         if (tick < RAMPAGE_END) return Phase.RAMPAGE;

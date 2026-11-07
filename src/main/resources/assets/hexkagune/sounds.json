@@ -872,6 +872,104 @@
       }
     ]
   },
+  "sfx.dragon_roar": {
+    "subtitle": "subtitles.hexkagune.sfx.dragon_roar",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/recorded/dragon_groan",
+        "volume": 1.0
+      },
+      {
+        "name": "hexkagune:sfx/recorded/dragon_demon_growl",
+        "volume": 1.0
+      },
+      {
+        "name": "hexkagune:sfx/recorded/dragon_lion_roar_1",
+        "volume": 1.0
+      },
+      {
+        "name": "hexkagune:sfx/recorded/dragon_lion_roar_2",
+        "volume": 1.0
+      },
+      {
+        "name": "hexkagune:sfx/recorded/dragon_monster_growl",
+        "volume": 1.0
+      },
+      {
+        "name": "hexkagune:sfx/recorded/dragon_beast_7",
+        "volume": 1.0
+      }
+    ]
+  },
+  "sfx.dragon_death": {
+    "subtitle": "subtitles.hexkagune.sfx.dragon_death",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/recorded/dragon_death",
+        "volume": 1.0
+      }
+    ]
+  },
+  "sfx.dragon_crawl": {
+    "subtitle": "subtitles.hexkagune.sfx.dragon_crawl",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/recorded/dragon_chitter",
+        "volume": 0.55
+      },
+      {
+        "name": "hexkagune:sfx/recorded/dragon_stomp",
+        "volume": 0.55
+      }
+    ]
+  },
+  "sfx.dragon_slam": {
+    "subtitle": "subtitles.hexkagune.sfx.dragon_slam",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/recorded/dragon_quake",
+        "volume": 1.0
+      },
+      {
+        "name": "hexkagune:sfx/recorded/dragon_rumble",
+        "volume": 1.0
+      },
+      {
+        "name": "hexkagune:sfx/recorded/dragon_stomp",
+        "volume": 1.0
+      }
+    ]
+  },
+  "sfx.dragon_bite": {
+    "subtitle": "subtitles.hexkagune.sfx.dragon_bite",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/recorded/dragon_crunch_1",
+        "volume": 1.0
+      },
+      {
+        "name": "hexkagune:sfx/recorded/dragon_crunch_2",
+        "volume": 1.0
+      },
+      {
+        "name": "hexkagune:sfx/recorded/dragon_beast_3",
+        "volume": 1.0
+      }
+    ]
+  },
+  "sfx.dragon_crack": {
+    "subtitle": "subtitles.hexkagune.sfx.dragon_crack",
+    "sounds": [
+      {
+        "name": "hexkagune:sfx/bone/kagune_burst",
+        "volume": 1.0
+      },
+      {
+        "name": "hexkagune:sfx/combat/punch_hits/bone_crack",
+        "volume": 1.0
+      }
+    ]
+  },
   "sfx.transform.pressure_awakening": {
     "subtitle": "subtitles.hexkagune.sfx.transform",
     "sounds": [

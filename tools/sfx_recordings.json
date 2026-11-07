@@ -169,6 +169,162 @@
       "source_filename": "Micro Pack - CaptSubtle - Melon/Rip and Tear 2.wav",
       "sha256": "3fa598de950d6b72b98bfeefb99379f15dfabafe6d835588c14a265251475da7",
       "kind": "real recording"
+    },
+    "dragon_groan.wav": {
+      "title": "Large Animal Groan Growl (WilhelmSFX CC0 mirror)",
+      "author": "Lewis.B.M",
+      "licence": "CC0-1.0",
+      "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_url": "https://freesound.org/people/Lewis.B.M/sounds/571386/",
+      "licence_evidence": "https://freesound.org/people/Lewis.B.M/sounds/571386/ (freesound was blocked from the importing session: CC0 per the mirror's licence, https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/LICENSE)",
+      "download_url": "https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/571386__lewisbm__large_animal_groan_growl.wav",
+      "source_filename": "Samples/571386__lewisbm__large_animal_groan_growl.wav",
+      "sha256": "b1a96f3f5d1281767ebccdf4a8d567098fefa1d5213e8b2f637809da0d2caf4b",
+      "kind": "real recording"
+    },
+    "dragon_demongrowl.wav": {
+      "title": "Demongrowl (WilhelmSFX CC0 mirror)",
+      "author": "dragonboi50120",
+      "licence": "CC0-1.0",
+      "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_url": "https://freesound.org/people/dragonboi50120/sounds/640467/",
+      "licence_evidence": "https://freesound.org/people/dragonboi50120/sounds/640467/ (freesound was blocked from the importing session: CC0 per the mirror's licence, https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/LICENSE)",
+      "download_url": "https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/640467__dragonboi50120__demongrowl.wav",
+      "source_filename": "Samples/640467__dragonboi50120__demongrowl.wav",
+      "sha256": "3db42449d88647936778bfad60ca282c27a07a7b3438e00990e143703ea93873",
+      "kind": "real recording"
+    },
+    "dragon_lion.wav": {
+      "title": "S01-09 Short Lion Roars (WilhelmSFX CC0 mirror)",
+      "author": "craigsmith",
+      "licence": "CC0-1.0",
+      "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_url": "https://freesound.org/people/craigsmith/sounds/675443/",
+      "licence_evidence": "https://freesound.org/people/craigsmith/sounds/675443/ (freesound was blocked from the importing session: CC0 per the mirror's licence, https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/LICENSE)",
+      "download_url": "https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/675443__craigsmith__s01-09_short-lion-roars.wav",
+      "source_filename": "Samples/675443__craigsmith__s01-09_short-lion-roars.wav",
+      "sha256": "330516d94efaeb2e8d3f25ec614eea075fcb136fcf61091faef43e2ea510de66",
+      "kind": "real recording"
+    },
+    "dragon_beast7.wav": {
+      "title": "Beast 7 (WilhelmSFX CC0 mirror)",
+      "author": "NearTheAtmoshphere",
+      "licence": "CC0-1.0",
+      "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_url": "https://freesound.org/people/NearTheAtmoshphere/sounds/676480/",
+      "licence_evidence": "https://freesound.org/people/NearTheAtmoshphere/sounds/676480/ (freesound was blocked from the importing session: CC0 per the mirror's licence, https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/LICENSE)",
+      "download_url": "https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/676480__neartheatmoshphere__beast-7.wav",
+      "source_filename": "Samples/676480__neartheatmoshphere__beast-7.wav",
+      "sha256": "8998a7d8d17c9e0ac02a2642fac93c812d4ad7e6f10aa0c8ef7985dcadd98b23",
+      "kind": "real recording"
+    },
+    "dragon_beast3.wav": {
+      "title": "Beast 3 (WilhelmSFX CC0 mirror)",
+      "author": "NearTheAtmoshphere",
+      "licence": "CC0-1.0",
+      "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_url": "https://freesound.org/people/NearTheAtmoshphere/sounds/676476/",
+      "licence_evidence": "https://freesound.org/people/NearTheAtmoshphere/sounds/676476/ (freesound was blocked from the importing session: CC0 per the mirror's licence, https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/LICENSE)",
+      "download_url": "https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/676476__neartheatmoshphere__beast-3.wav",
+      "source_filename": "Samples/676476__neartheatmoshphere__beast-3.wav",
+      "sha256": "1e9648942e5eaf59fa7678593599b7af433c915aed2c7a605444df15684264d8",
+      "kind": "real recording"
+    },
+    "dragon_monster.wav": {
+      "title": "Monster Growling (WilhelmSFX CC0 mirror)",
+      "author": "JoelEleven",
+      "licence": "CC0-1.0",
+      "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_url": "https://freesound.org/people/JoelEleven/sounds/705208/",
+      "licence_evidence": "https://freesound.org/people/JoelEleven/sounds/705208/ (freesound was blocked from the importing session: CC0 per the mirror's licence, https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/LICENSE)",
+      "download_url": "https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/705208__joeleleven__monster-growling.wav",
+      "source_filename": "Samples/705208__joeleleven__monster-growling.wav",
+      "sha256": "d191cfcc3c8ee1cd5e202ffcc104bac3fa44e16862c00f7d43615acfad45ee2a",
+      "kind": "real recording"
+    },
+    "dragon_death.wav": {
+      "title": "Monster Sound Big Death (WilhelmSFX CC0 mirror)",
+      "author": "Leadstarson",
+      "licence": "CC0-1.0",
+      "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_url": "https://freesound.org/people/Leadstarson/sounds/568000/",
+      "licence_evidence": "https://freesound.org/people/Leadstarson/sounds/568000/ (freesound was blocked from the importing session: CC0 per the mirror's licence, https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/LICENSE)",
+      "download_url": "https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/568000__leadstarson__monster_sound_big_death.wav",
+      "source_filename": "Samples/568000__leadstarson__monster_sound_big_death.wav",
+      "sha256": "cde697c60b8e19757e67bb3aa9afedc7f4e04e1ea4346cb024c13071345482c1",
+      "kind": "real recording"
+    },
+    "dragon_chitter.wav": {
+      "title": "Insect Animal Growl Chitter (WilhelmSFX CC0 mirror)",
+      "author": "SecureSubset",
+      "licence": "CC0-1.0",
+      "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_url": "https://freesound.org/people/SecureSubset/sounds/800277/",
+      "licence_evidence": "https://freesound.org/people/SecureSubset/sounds/800277/ (freesound was blocked from the importing session: CC0 per the mirror's licence, https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/LICENSE)",
+      "download_url": "https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/800277__securesubset__insect-animal-growl-chitter.wav",
+      "source_filename": "Samples/800277__securesubset__insect-animal-growl-chitter.wav",
+      "sha256": "e7a2a56b45423cd9546fbb5b26e8bc94228690b8c2e9c91b5295548106ff740b",
+      "kind": "real recording"
+    },
+    "dragon_stomp.wav": {
+      "title": "Big Monster Stomp (WilhelmSFX CC0 mirror)",
+      "author": "Yoyamen1212",
+      "licence": "CC0-1.0",
+      "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_url": "https://freesound.org/people/Yoyamen1212/sounds/812538/",
+      "licence_evidence": "https://freesound.org/people/Yoyamen1212/sounds/812538/ (freesound was blocked from the importing session: CC0 per the mirror's licence, https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/LICENSE)",
+      "download_url": "https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/812538__yoyamen1212__big-monster-stomp.wav",
+      "source_filename": "Samples/812538__yoyamen1212__big-monster-stomp.wav",
+      "sha256": "26c412892c382f9596ddbbeeae2a2695eea8e19a90169b730307ed04141dca23",
+      "kind": "real recording"
+    },
+    "dragon_quake.wav": {
+      "title": "Earthquake (WilhelmSFX CC0 mirror)",
+      "author": "anderlk",
+      "licence": "CC0-1.0",
+      "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_url": "https://freesound.org/people/anderlk/sounds/496839/",
+      "licence_evidence": "https://freesound.org/people/anderlk/sounds/496839/ (freesound was blocked from the importing session: CC0 per the mirror's licence, https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/LICENSE)",
+      "download_url": "https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/496839__anderlk__earthquake.wav",
+      "source_filename": "Samples/496839__anderlk__earthquake.wav",
+      "sha256": "0ea89accc672f8b200e4e1003d6a6c5b77ef9c87f1886f1d99f2b780da0e7aff",
+      "kind": "real recording"
+    },
+    "dragon_rumble.wav": {
+      "title": "Earth Rumble (WilhelmSFX CC0 mirror)",
+      "author": "Reitanna",
+      "licence": "CC0-1.0",
+      "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_url": "https://freesound.org/people/Reitanna/sounds/217657/",
+      "licence_evidence": "https://freesound.org/people/Reitanna/sounds/217657/ (freesound was blocked from the importing session: CC0 per the mirror's licence, https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/LICENSE)",
+      "download_url": "https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/217657__reitanna__earth-rumble.wav",
+      "source_filename": "Samples/217657__reitanna__earth-rumble.wav",
+      "sha256": "1d88604941ccdb0d78e7242911c44f3ae5048f13d7c5ecea4aac092153c48887",
+      "kind": "real recording"
+    },
+    "dragon_crunch_steenish.wav": {
+      "title": "Crunch (WilhelmSFX CC0 mirror)",
+      "author": "steenish",
+      "licence": "CC0-1.0",
+      "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_url": "https://freesound.org/people/steenish/sounds/528962/",
+      "licence_evidence": "https://freesound.org/people/steenish/sounds/528962/ (freesound was blocked from the importing session: CC0 per the mirror's licence, https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/LICENSE)",
+      "download_url": "https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/528962__steenish__crunch.wav",
+      "source_filename": "Samples/528962__steenish__crunch.wav",
+      "sha256": "9575fb66518395f42af8ffd19442b141fa5a541cbe1c4b772050891e48c3f964",
+      "kind": "real recording"
+    },
+    "dragon_crunch_qubodup.wav": {
+      "title": "Crunch (WilhelmSFX CC0 mirror)",
+      "author": "qubodup",
+      "licence": "CC0-1.0",
+      "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_url": "https://freesound.org/people/qubodup/sounds/816237/",
+      "licence_evidence": "https://freesound.org/people/qubodup/sounds/816237/ (freesound was blocked from the importing session: CC0 per the mirror's licence, https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/LICENSE)",
+      "download_url": "https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/816237__qubodup__crunch.wav",
+      "source_filename": "Samples/816237__qubodup__crunch.wav",
+      "sha256": "0e6fd4af978a352af581f02b6604c2eba0a247a28df05285038287204e6f519d",
+      "kind": "real recording"
     }
   },
   "clips": {
@@ -225,6 +381,79 @@
       "source": "rip2.wav",
       "start": 0.12,
       "end": 0.48
+    },
+    "dragon_groan": {
+      "source": "dragon_groan.wav",
+      "start": 0.4,
+      "end": 3.7
+    },
+    "dragon_demon_growl": {
+      "source": "dragon_demongrowl.wav",
+      "start": 0.28,
+      "end": 2.7
+    },
+    "dragon_lion_roar_1": {
+      "source": "dragon_lion.wav",
+      "start": 0.05,
+      "end": 1.05
+    },
+    "dragon_lion_roar_2": {
+      "source": "dragon_lion.wav",
+      "start": 1.25,
+      "end": 2.8
+    },
+    "dragon_beast_7": {
+      "source": "dragon_beast7.wav",
+      "start": 0.0,
+      "end": 1.25
+    },
+    "dragon_beast_3": {
+      "source": "dragon_beast3.wav",
+      "start": 0.0,
+      "end": 1.0
+    },
+    "dragon_monster_growl": {
+      "source": "dragon_monster.wav",
+      "start": 0.0,
+      "end": 2.17
+    },
+    "dragon_death": {
+      "source": "dragon_death.wav",
+      "start": 0.08,
+      "end": 1.6,
+      "gain_db": 14
+    },
+    "dragon_chitter": {
+      "source": "dragon_chitter.wav",
+      "start": 0.15,
+      "end": 1.65,
+      "gain_db": 15
+    },
+    "dragon_stomp": {
+      "source": "dragon_stomp.wav",
+      "start": 0.0,
+      "end": 0.79
+    },
+    "dragon_quake": {
+      "source": "dragon_quake.wav",
+      "start": 0.0,
+      "end": 1.63,
+      "gain_db": 3
+    },
+    "dragon_rumble": {
+      "source": "dragon_rumble.wav",
+      "start": 0.0,
+      "end": 1.57
+    },
+    "dragon_crunch_1": {
+      "source": "dragon_crunch_steenish.wav",
+      "start": 0.0,
+      "end": 0.42
+    },
+    "dragon_crunch_2": {
+      "source": "dragon_crunch_qubodup.wav",
+      "start": 0.0,
+      "end": 0.39
     }
   }
 }

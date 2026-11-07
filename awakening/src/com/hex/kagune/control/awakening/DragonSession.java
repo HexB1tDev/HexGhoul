@@ -111,6 +111,7 @@ final class DragonSession {
         if (tick == DragonTimeline.RAMPAGE_END) {
             event(S2CDragonEvent.Kind.CRACK, rig.centroid(), 1.0F);
             play(rig.centroid(), HexKaguneSounds.BONE_CRACK, 10.0F, 0.45F);
+            voice(rig.centroid(), CRACKING, 14.0F, 1.0F);
         }
         if (tick == DragonTimeline.SHATTER_TICK) shatter();
         AwakeningNetwork.toWatchers(owner, S2CDragonFrame.capture(ownerId, rig, emergence));
@@ -129,6 +130,22 @@ final class DragonSession {
     /** 1.2.7: the user's own transformations: the world bending as the turning begins, and the Dragon breaking out at the last scream. */
     private static final SoundEvent TURNING = vanilla("hexkagune:sfx.transform.dimensional_shift");
     private static final SoundEvent BREAKING_OUT = vanilla("hexkagune:sfx.transform.final_form");
+
+    /**
+     * 3.3.3 (the owner: the Kakuja V2 Dragon is silent; "Get the sounds from the web, don't generate them yourself"): its own voice,
+     * real CC0 creature and earth recordings (tools/sfx_recordings.json, sfx_pack.py dragon_*), at full gain, as recorded. What it played
+     * before were the pack's quiet sounds (3 to 37 percent), a strain and a click every 3.5 seconds: from the camera, nothing.
+     */
+    private static final SoundEvent ROAR = vanilla("hexkagune:sfx.dragon_roar");
+    private static final SoundEvent CRAWL = vanilla("hexkagune:sfx.dragon_crawl");
+    private static final SoundEvent QUAKE = vanilla("hexkagune:sfx.dragon_slam");
+    private static final SoundEvent CHOMP = vanilla("hexkagune:sfx.dragon_bite");
+    private static final SoundEvent CRACKING = vanilla("hexkagune:sfx.dragon_crack");
+    private static final SoundEvent DEATH = vanilla("hexkagune:sfx.dragon_death");
+
+    private void voice(V3 at, SoundEvent sound, float volume, float pitch) {
+        level.playSound(null, at.x(), at.y(), at.z(), sound, SoundSource.HOSTILE, volume, pitch);
+    }
 
     private static SoundEvent vanilla(String name) {
         // 1.2.2: drawn from the user's own pack (Sfx), as every sound of the mod is.
@@ -256,6 +273,7 @@ final class DragonSession {
                 play(at, HexKaguneSounds.MANIFEST_RIP, 10.0F, 0.5F);
                 play(at, HexKaguneSounds.BONE_CRACK, 8.0F, 0.5F);
                 play(at, HexKaguneSounds.KAGUNE_STRAIN, 8.0F, 0.45F);
+                voice(at, QUAKE, 14.0F, 1.0F);
                 mark(com.hex.kagune.control.king.KingMarkFx.QUAKE, at, V3.ZERO, 3.0, null);
                 mark(com.hex.kagune.control.king.KingMarkFx.GORE, at.add(0.0, 2.0, 0.0), new V3(0.0, 1.0, 0.0), 2.5, null);
                 event(S2CDragonEvent.Kind.ERUPTION, at, 1.0F);
@@ -269,6 +287,7 @@ final class DragonSession {
                 TerrainScars.of(level).carveSphere(owner, at, 2.8, at.y() - 3.0);
                 play(at, HexKaguneSounds.BONE_CRUSH, 5.0F, 0.6F);
                 play(at, HexKaguneSounds.FLESH_IMPACT, 4.0F, 0.5F);
+                voice(at, CHOMP, 9.0F, 1.0F + (float) (Math.random() * 0.15));
                 mark(com.hex.kagune.control.king.KingMarkFx.GORE, at, new V3(0.0, 1.0, 0.0), 1.5, null);
                 event(S2CDragonEvent.Kind.BITE, at, 0.6F);
             }
@@ -304,6 +323,7 @@ final class DragonSession {
                 if (h != null) {
                     hurt(h.entity, strike.damage(), at, 0.0, 0.0);
                     play(at, HexKaguneSounds.BONE_CRACK, 2.5F, 0.7F);
+                    voice(at, CHOMP, 4.0F, 1.15F);
                 }
             }
             case SLAM -> {
@@ -320,6 +340,7 @@ final class DragonSession {
                 TerrainScars.of(level).carveSphere(owner, at, 4.2, at.y() - 3.5);
                 play(at, HexKaguneSounds.KAGUNE_SLAM, 7.0F, 0.5F);
                 play(at, HexKaguneSounds.BONE_CRUSH, 5.0F, 0.55F);
+                voice(at, QUAKE, 12.0F, 1.0F);
                 mark(com.hex.kagune.control.king.KingMarkFx.QUAKE, at, V3.ZERO, 2.5, null);
                 event(S2CDragonEvent.Kind.SLAM, at, 0.8F);
             }
@@ -465,6 +486,13 @@ final class DragonSession {
     }
 
     private void ambience() {
+        // 3.3.3: its roar as it breaks out and every few seconds of its rampage; its legs clattering as it goes.
+        if (DragonTimeline.roars(tick)) {
+            voice(tick == 0 ? rig.centroid() : rig.lead(), ROAR, tick == 0 ? 16.0F : 13.0F, 0.95F + (float) (Math.random() * 0.15));
+        }
+        if (DragonTimeline.crawls(tick)) {
+            voice(rig.segment((tick * 3) % DragonRig.SEGMENTS), CRAWL, 7.0F, 0.92F + (float) (Math.random() * 0.16));
+        }
         if (tick > 0 && tick < DragonTimeline.RAMPAGE_END && tick % 70 == 0) {
             V3 c = rig.centroid();
             play(c, HexKaguneSounds.KAGUNE_STRAIN, 9.0F, 0.42F + (tick % 3) * 0.05F);
@@ -473,6 +501,7 @@ final class DragonSession {
         if (tick > DragonTimeline.RAMPAGE_END && tick < DragonTimeline.SHATTER_TICK && tick % 6 == 0) {
             V3 at = rig.segment((tick * 7) % DragonRig.SEGMENTS);
             play(at, HexKaguneSounds.BONE_CRACK, 6.0F, (float) (0.5 + DragonTimeline.instability(tick) * 0.4));
+            voice(at, CRACKING, 8.0F, (float) (1.0 + DragonTimeline.instability(tick) * 0.3));
             event(S2CDragonEvent.Kind.CRACK, at, (float) DragonTimeline.instability(tick));
         }
     }
@@ -499,6 +528,8 @@ final class DragonSession {
         play(at, HexKaguneSounds.KAGUNE_SLAM, 12.0F, 0.45F);
         play(at, HexKaguneSounds.BONE_CRUSH, 12.0F, 0.5F);
         play(at, HexKaguneSounds.MANIFEST_RIP, 12.0F, 0.6F);
+        voice(rig.centroid(), DEATH, 16.0F, 1.0F); // its last
+        voice(at, QUAKE, 14.0F, 1.0F);
         owner.teleportTo(at.x(), at.y(), at.z());
         FinalKakuja.unlock(owner);
         event(S2CDragonEvent.Kind.SHATTER, at, 1.0F);

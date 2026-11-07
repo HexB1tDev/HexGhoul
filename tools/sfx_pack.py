@@ -127,6 +127,15 @@ POOLS = {
     "case_close": (0.85, [QUINQUE + "case_close_1", QUINQUE + "case_close_2"], "A quinque case locks"),
     "windup_clash": (1.0, [CLASH + "windup_to_massive_clash"], "A massive clash"),
     "ground": (0.55, [CLASH + "close_dry_collision", PHIT + "knuckle_slam"], "Stone breaks"),
+    # 3.3.3 (the owner: the Kakuja V2 Dragon is silent; "Get the sounds from the web, don't generate them yourself"): its own voice, real
+    # creature and earth recordings (CC0, tools/sfx_recordings.json), each as recorded (no pitch change), at full gain.
+    "dragon_roar": (1.0, [RECORDED + n for n in ("dragon_groan", "dragon_demon_growl", "dragon_lion_roar_1", "dragon_lion_roar_2",
+                                                 "dragon_monster_growl", "dragon_beast_7")], "The Dragon roars"),
+    "dragon_death": (1.0, [RECORDED + "dragon_death"], "The Dragon's death cry"),
+    "dragon_crawl": (0.8, [RECORDED + "dragon_chitter", RECORDED + "dragon_stomp"], "The Dragon crawls"),
+    "dragon_slam": (1.0, [RECORDED + "dragon_quake", RECORDED + "dragon_rumble", RECORDED + "dragon_stomp"], "The Dragon crashes down"),
+    "dragon_bite": (1.0, [RECORDED + "dragon_crunch_1", RECORDED + "dragon_crunch_2", RECORDED + "dragon_beast_3"], "The Dragon bites"),
+    "dragon_crack": (1.0, [BONE + "kagune_burst", PHIT + "bone_crack"], "The Dragon's body cracks"),
 }
 # One transformation each (they are long: one at a time, never pooled).
 FORMS = ["pressure_awakening", "organic_armor_shift", "spectral_reveal", "energy_metamorphosis", "body_warp", "dark_aura_release",
@@ -195,6 +204,11 @@ def volume(path, gain, pool):
         return 1.0
     if pool == "quake":
         return 0.6
+    # 3.3.3: the Dragon's voice at full gain (its legs' clatter, heard every few ticks while it moves, at 0.55).
+    if pool == "dragon_crawl":
+        return 0.55
+    if pool.startswith("dragon_"):
+        return 1.0
     quiet = pool in {"chitin", "centipede_manifest", "transform.body_warp", "transform.heavy_morph", "writhe"}
     target_mean, peak_ceiling = (-40.0, 0.06) if quiet else (-34.0, 0.16)
     # A huge clash requests three layers at up to 2.95 each, plus a gust and rumble.
@@ -233,19 +247,39 @@ def event(target):
     return {"name": "hexkagune:sfx." + target, "type": "event"}
 
 
-def import_recordings(directory):
-    """Import verified real recordings; never generate an audio waveform."""
+def import_recordings(directory, only=None):
+    """Import verified real recordings; never generate an audio waveform. 3.3.3: {@code only} (clip names) imports just those, the others
+    kept as shipped (their files, checksums and notes from the shipped SOURCES.json), so earlier clips are never re-encoded."""
     manifest = json.loads(RECORDING_MANIFEST.read_text(encoding="utf-8"))
+    destination = SOUNDS / "sfx" / RECORDED
+    shipped = {}
+    if only:
+        shipped = json.loads((destination / "SOURCES.json").read_text(encoding="utf-8"))["clips"]
+        unknown = set(only) - set(manifest["clips"])
+        if unknown:
+            raise RuntimeError(f"no such clips: {sorted(unknown)}")
+    needed = {clip["source"] for name, clip in manifest["clips"].items() if not only or name in only}
     for name, source in manifest["sources"].items():
+        if name not in needed:
+            continue
         path = directory / name
         if hashlib.sha256(path.read_bytes()).hexdigest() != source["sha256"]:
             raise RuntimeError(f"recording checksum mismatch: {path}")
-    destination = SOUNDS / "sfx" / RECORDED
     destination.mkdir(parents=True, exist_ok=True)
-    credits = ["Recorded sound additions, 3.0.7. No synthesized or AI-generated audio.",
+    credits = ["Recorded sound additions (3.0.7; 3.3.3 the Kakuja V2 Dragon's). No synthesized or AI-generated audio.",
                "All sources: CC0 1.0 Universal, https://creativecommons.org/publicdomain/zero/1.0/", ""]
     for name, clip in manifest["clips"].items():
         source = manifest["sources"][clip["source"]]
+        if only and name not in only:
+            kept = shipped.get(name)
+            if kept is None or "changes" not in kept:
+                raise RuntimeError(f"{name} was never imported: import it too")
+            clip["output_sha256"] = kept["output_sha256"]
+            clip["changes"] = kept["changes"]
+            credits.extend([name + ".ogg: " + source["title"] + " by " + source["author"],
+                            "Licence: " + source["licence"], "Original: " + source["original_url"],
+                            "GitHub recording: " + source["download_url"], clip["changes"], ""])
+            continue
         path = directory / clip["source"]
         duration = float(subprocess.check_output(["ffprobe", "-v", "error", "-show_entries", "format=duration",
                                                   "-of", "default=nw=1:nk=1", str(path)], text=True))
@@ -254,11 +288,16 @@ def import_recordings(directory):
             raise RuntimeError(f"invalid excerpt: {name}")
         filters = (f"atrim=start={start}:end={end},asetpts=PTS-STARTPTS,"
                    f"afade=t=in:st=0:d=0.003,afade=t=out:st={max(0.003, end-start-0.02)}:d=0.02")
+        gain = clip.get("gain_db", 0.0)
+        if gain:
+            # 3.3.3: a quiet recording's level raised (its loudest sample to -3 dB at most); nothing else about it changed.
+            filters += f",volume={gain}dB"
         out = destination / (name + ".ogg")
         subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(path), "-map_metadata", "-1", "-vn",
                         "-af", filters, "-ac", "1", "-ar", "44100", "-c:a", "libvorbis", "-q:a", "5", str(out)], check=True)
         clip["output_sha256"] = hashlib.sha256(out.read_bytes()).hexdigest()
-        clip["changes"] = f"Excerpt {start:.6f}-{end:.6f} s; 3 ms fade-in, 20 ms fade-out; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering."
+        clip["changes"] = (f"Excerpt {start:.6f}-{end:.6f} s; 3 ms fade-in, 20 ms fade-out; " + (f"level raised {gain:g} dB; " if gain else "")
+                           + "mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering.")
         credits.extend([name + ".ogg: " + source["title"] + " by " + source["author"],
                         "Licence: " + source["licence"], "Original: " + source["original_url"],
                         "GitHub recording: " + source["download_url"], clip["changes"], ""])
@@ -274,9 +313,10 @@ def import_recordings(directory):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--import-recordings", type=pathlib.Path, metavar="SOURCE_DIRECTORY")
+    parser.add_argument("--only", metavar="CLIP,CLIP", help="3.3.3: import only these clips (the others kept as shipped)")
     args = parser.parse_args()
     if args.import_recordings:
-        import_recordings(args.import_recordings)
+        import_recordings(args.import_recordings, args.only.split(",") if args.only else None)
     sounds = {}
     for name, (gain, files, subtitle) in POOLS.items():
         sounds["sfx." + name] = {"subtitle": "subtitles.hexkagune.sfx." + name, "sounds": [sound(f, gain, name, preload=name in PRELOAD) for f in files]}

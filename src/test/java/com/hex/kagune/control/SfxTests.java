@@ -107,6 +107,39 @@ public final class SfxTests {
             check(raised && pitched >= 3, "sfx." + crystal.group(1) + "'s sounds are raised into a ring: " + pitched);
         }
         check(crystals == 3, "the crystal's three pools are there: " + crystals);
+        // 3.3.3 (the owner: the Kakuja V2 Dragon is silent; "Get the sounds from the web, don't generate them yourself"): its own six pools,
+        // loud, every sound as recorded (no pitch: real recordings, not made over), each subtitled; its voice credited CC0 recordings.
+        Matcher dragon = Pattern.compile("^  \"sfx\\.(dragon_[a-z]+)\": \\{(.*?)^  }", Pattern.MULTILINE | Pattern.DOTALL).matcher(json);
+        int dragons = 0;
+        String lang = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/resources/assets/hexkagune/lang/en_us.json")),
+            java.nio.charset.StandardCharsets.UTF_8);
+        String credits = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/resources/assets/hexkagune/sounds/sfx/recorded/CREDITS.txt")),
+            java.nio.charset.StandardCharsets.UTF_8);
+        while (dragon.find()) {
+            dragons++;
+            String dragonPool = dragon.group(1);
+            String body = dragon.group(2);
+            Matcher volume = Pattern.compile("\"volume\": ([0-9.]+)").matcher(body);
+            double least = Double.MAX_VALUE;
+            while (volume.find()) {
+                least = Math.min(least, Double.parseDouble(volume.group(1)));
+            }
+            check(least >= (dragonPool.equals("dragon_crawl") ? 0.5 : 1.0), "sfx." + dragonPool + " is loud: " + least);
+            check(!body.contains("\"pitch\""), "sfx." + dragonPool + " plays its recordings as recorded (no pitch change)");
+            check(lang.contains("\"subtitles.hexkagune.sfx." + dragonPool + "\""), "sfx." + dragonPool + " has a subtitle");
+            if (!dragonPool.equals("dragon_crack")) {
+                Matcher file = Pattern.compile("sfx/recorded/(dragon_[a-z0-9_]+)\"").matcher(body);
+                int dragonFiles = 0;
+                while (file.find()) {
+                    dragonFiles++;
+                    check(credits.contains(file.group(1) + ".ogg: ") && java.nio.file.Files.isRegularFile(java.nio.file.Path.of(
+                        "src/main/resources/assets/hexkagune/sounds/sfx/recorded/" + file.group(1) + ".ogg")), file.group(1) + " is there and credited");
+                }
+                check(dragonFiles >= 1, "sfx." + dragonPool + " is the web's recordings: " + dragonFiles);
+            }
+        }
+        check(dragons == 6, "the Dragon's six pools are there: " + dragons);
+        check(credits.contains("Licence: CC0-1.0") && !credits.contains("pitch changed"), "the Dragon's recordings are credited, CC0");
         check(Sfx.play("block.amethyst_block.hit", 1.0F, 1.0F).path().equals("sfx.crystal_hit")
             && Sfx.play("block.amethyst_block.break", 1.0F, 1.0F).path().equals("sfx.shatter"), "a crystal's hit and break play the crystal's pools");
         // Every vanilla name the mod's code plays is drawn from the pack (but the journal's cues).

@@ -1,4 +1,4 @@
-Recorded sound additions, 3.0.7. No synthesized or AI-generated audio.
+Recorded sound additions (3.0.7; 3.3.3 the Kakuja V2 Dragon's). No synthesized or AI-generated audio.
 All sources: CC0 1.0 Universal, https://creativecommons.org/publicdomain/zero/1.0/
 
 insect_chirr.ogg: Beetle Squark5.wav (elephant beetle, Zoom H1) by warrenXG
@@ -96,3 +96,87 @@ Licence: CC0-1.0
 Original: https://abstractionmusic.com/
 GitHub recording: https://raw.githubusercontent.com/lavenderdotpet/CC0-Public-Domain-Sounds/f2b6264f9ab89fabc266914c3654685d68c5a39b/Micro%20Pack%20-%20CaptSubtle%20-%20Melon/Rip%20and%20Tear%202.wav
 Excerpt 0.120000-0.480000 s; 3 ms fade-in, 20 ms fade-out; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering.
+
+dragon_groan.ogg: Large Animal Groan Growl (WilhelmSFX CC0 mirror) by Lewis.B.M
+Licence: CC0-1.0
+Original: https://freesound.org/people/Lewis.B.M/sounds/571386/
+GitHub recording: https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/571386__lewisbm__large_animal_groan_growl.wav
+Excerpt 0.400000-3.700000 s; 3 ms fade-in, 20 ms fade-out; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering.
+
+dragon_demon_growl.ogg: Demongrowl (WilhelmSFX CC0 mirror) by dragonboi50120
+Licence: CC0-1.0
+Original: https://freesound.org/people/dragonboi50120/sounds/640467/
+GitHub recording: https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/640467__dragonboi50120__demongrowl.wav
+Excerpt 0.280000-2.700000 s; 3 ms fade-in, 20 ms fade-out; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering.
+
+dragon_lion_roar_1.ogg: S01-09 Short Lion Roars (WilhelmSFX CC0 mirror) by craigsmith
+Licence: CC0-1.0
+Original: https://freesound.org/people/craigsmith/sounds/675443/
+GitHub recording: https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/675443__craigsmith__s01-09_short-lion-roars.wav
+Excerpt 0.050000-1.050000 s; 3 ms fade-in, 20 ms fade-out; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering.
+
+dragon_lion_roar_2.ogg: S01-09 Short Lion Roars (WilhelmSFX CC0 mirror) by craigsmith
+Licence: CC0-1.0
+Original: https://freesound.org/people/craigsmith/sounds/675443/
+GitHub recording: https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/675443__craigsmith__s01-09_short-lion-roars.wav
+Excerpt 1.250000-2.800000 s; 3 ms fade-in, 20 ms fade-out; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering.
+
+dragon_beast_7.ogg: Beast 7 (WilhelmSFX CC0 mirror) by NearTheAtmoshphere
+Licence: CC0-1.0
+Original: https://freesound.org/people/NearTheAtmoshphere/sounds/676480/
+GitHub recording: https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/676480__neartheatmoshphere__beast-7.wav
+Excerpt 0.000000-1.250000 s; 3 ms fade-in, 20 ms fade-out; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering.
+
+dragon_beast_3.ogg: Beast 3 (WilhelmSFX CC0 mirror) by NearTheAtmoshphere
+Licence: CC0-1.0
+Original: https://freesound.org/people/NearTheAtmoshphere/sounds/676476/
+GitHub recording: https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/676476__neartheatmoshphere__beast-3.wav
+Excerpt 0.000000-1.000000 s; 3 ms fade-in, 20 ms fade-out; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering.
+
+dragon_monster_growl.ogg: Monster Growling (WilhelmSFX CC0 mirror) by JoelEleven
+Licence: CC0-1.0
+Original: https://freesound.org/people/JoelEleven/sounds/705208/
+GitHub recording: https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/705208__joeleleven__monster-growling.wav
+Excerpt 0.000000-2.170000 s; 3 ms fade-in, 20 ms fade-out; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering.
+
+dragon_death.ogg: Monster Sound Big Death (WilhelmSFX CC0 mirror) by Leadstarson
+Licence: CC0-1.0
+Original: https://freesound.org/people/Leadstarson/sounds/568000/
+GitHub recording: https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/568000__leadstarson__monster_sound_big_death.wav
+Excerpt 0.080000-1.600000 s; 3 ms fade-in, 20 ms fade-out; level raised 14 dB; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering.
+
+dragon_chitter.ogg: Insect Animal Growl Chitter (WilhelmSFX CC0 mirror) by SecureSubset
+Licence: CC0-1.0
+Original: https://freesound.org/people/SecureSubset/sounds/800277/
+GitHub recording: https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/800277__securesubset__insect-animal-growl-chitter.wav
+Excerpt 0.150000-1.650000 s; 3 ms fade-in, 20 ms fade-out; level raised 15 dB; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering.
+
+dragon_stomp.ogg: Big Monster Stomp (WilhelmSFX CC0 mirror) by Yoyamen1212
+Licence: CC0-1.0
+Original: https://freesound.org/people/Yoyamen1212/sounds/812538/
+GitHub recording: https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/812538__yoyamen1212__big-monster-stomp.wav
+Excerpt 0.000000-0.790000 s; 3 ms fade-in, 20 ms fade-out; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering.
+
+dragon_quake.ogg: Earthquake (WilhelmSFX CC0 mirror) by anderlk
+Licence: CC0-1.0
+Original: https://freesound.org/people/anderlk/sounds/496839/
+GitHub recording: https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/496839__anderlk__earthquake.wav
+Excerpt 0.000000-1.630000 s; 3 ms fade-in, 20 ms fade-out; level raised 3 dB; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering.
+
+dragon_rumble.ogg: Earth Rumble (WilhelmSFX CC0 mirror) by Reitanna
+Licence: CC0-1.0
+Original: https://freesound.org/people/Reitanna/sounds/217657/
+GitHub recording: https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/217657__reitanna__earth-rumble.wav
+Excerpt 0.000000-1.570000 s; 3 ms fade-in, 20 ms fade-out; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering.
+
+dragon_crunch_1.ogg: Crunch (WilhelmSFX CC0 mirror) by steenish
+Licence: CC0-1.0
+Original: https://freesound.org/people/steenish/sounds/528962/
+GitHub recording: https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/528962__steenish__crunch.wav
+Excerpt 0.000000-0.420000 s; 3 ms fade-in, 20 ms fade-out; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering.
+
+dragon_crunch_2.ogg: Crunch (WilhelmSFX CC0 mirror) by qubodup
+Licence: CC0-1.0
+Original: https://freesound.org/people/qubodup/sounds/816237/
+GitHub recording: https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/816237__qubodup__crunch.wav
+Excerpt 0.000000-0.390000 s; 3 ms fade-in, 20 ms fade-out; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering.
