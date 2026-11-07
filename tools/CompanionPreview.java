@@ -35,6 +35,10 @@ public final class CompanionPreview {
             kisses(out);
             return;
         }
+        if (args.length > 1 && args[1].equals("jealous")) {
+            jealous(out);
+            return;
+        }
         if (args.length > 1 && args[1].equals("crack")) {
             crack(out);
             return;
@@ -173,6 +177,18 @@ public final class CompanionPreview {
     }
 
     /** 2.4.8: Ken's finger crack, one arm out, through the gesture (front, three-quarter, side), as he does it (persona 1). */
+    /** 3.3.6: a jealous companion's act (EtoGesture.JEALOUS), on Touka, seen from where the player stands and from the side. */
+    static void jealous(File out) throws Exception {
+        String textures = "src/main/resources/assets/hexkagune/textures/entity/";
+        List<Shot> shots = new ArrayList<>();
+        for (double t : new double[] {4.0, 12.0, 30.0, 50.0, 72.0, 95.0, 120.0, 138.0}) {
+            RigPose pose = EtoPose.gesture(EtoGesture.JEALOUS, t);
+            shots.add(new Shot("t" + (int)t + ": from you", pose, 0.0));
+            shots.add(new Shot("t" + (int)t + ": side", pose, 80.0));
+        }
+        sheet(new File(out, "jealous-3.3.6.png"), "3.3.6: jealous: back turned, a glare over the shoulder, a huff, the snub", textures + "touka/touka.png", true, shots);
+    }
+
     static void crack(File out) throws Exception {
         String textures = "src/main/resources/assets/hexkagune/textures/entity/";
         List<Shot> shots = new ArrayList<>();

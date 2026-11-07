@@ -52,6 +52,23 @@ public final class RomanceServer {
         return out;
     }
 
+    /**
+     * 3.3.6: {@code player}, who has a partner, tried it with someone else ({@code key}, {@code name}: asked a companion out, asked a villager to
+     * be together or confessed to them): their partners are jealous, and one who sees it acts it out ({@link BlendedServer#witnessed}).
+     */
+    public static void tempted(ServerPlayer player, String key, String name) {
+        ServerLevel level = player.m_284548_();
+        long now = level.m_46467_();
+        for (Map.Entry<String, Romance.Stage> other : UniqueNpcs.partnersOf(level, player, key).entrySet()) {
+            NpcMemoryServer.set(player, other.getKey(), NpcMemory.JEALOUS, now + JEALOUS_FOR);
+        }
+        try {
+            BlendedServer.witnessed(player, key, name, now);
+        } catch (RuntimeException failure) {
+            com.hex.kagune.control.Safety.caught(failure, "a partner seeing it");
+        }
+    }
+
     /** {@code player} was sweet on the NPC {@code key}: the others they are together with take it badly. */
     public static void romanced(ServerPlayer player, String key) {
         ServerLevel level = player.m_284548_();

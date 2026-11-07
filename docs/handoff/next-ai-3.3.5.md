@@ -1,4 +1,4 @@
-# HANDOFF: HexGhoul after 3.3.5. Read this first.
+# HANDOFF: HexGhoul after 3.3.6 (kept current as versions ship). Read this first.
 
 Then, for the house rules and history: `docs/handoff/next-ai-3.2.1.md` and `docs/handoff/next-ai-3.1.9.md` (the two sessions before,
 their judgment calls), `docs/handoff/next-ai-2.0.45.md` (header: versions, protocol history, the 2.x/3.x log), `docs/handoff/next-ai-1.3.60.md`
@@ -11,13 +11,13 @@ lost. **Commit and push every version as it is built, and keep this file current
 
 ## Where things are
 
-- **Branch:** **`claude/exciting-bell-3kklnc`** (pushed; 3.2.7 to 3.3.5 on top of 3.2.6 from `claude/magical-fermi-cec8n1`). The next session
+- **Branch:** **`claude/exciting-bell-3kklnc`** (pushed; 3.2.7 to 3.3.6 on top of 3.2.6 from `claude/magical-fermi-cec8n1`). The next session
   will be given its own branch: start it from `origin/claude/exciting-bell-3kklnc`
   (`git fetch origin claude/exciting-bell-3kklnc && git checkout -B <your-branch> origin/claude/exciting-bell-3kklnc`). Push only to the
   branch you are given; never to `main`; no PR unless asked.
 - **Releases:** `.github/workflows/release.yml` publishes `v<version>` on GitHub for every push to `claude/**` that adds
   `.github/release-notes-<version>.md` (about 5 minutes). The owner plays those. When they say "push an update", push what is built.
-- **Version 3.3.5** in `build.py` and `patch/KagunePatch.java`. **The next is 3.3.6** (the last number never reaches 10). **Protocol "92"**.
+- **Version 3.3.6** in `build.py` and `patch/KagunePatch.java`. **The next is 3.3.7** (the last number never reaches 10). **Protocol "93"** (3.3.6: EtoGesture JEALOUS appended).
 - Full `python3 build.py` ended **EXIT 0** for every version (javac `--release 17` on JDK 21; about 5 minutes; run it in the background).
   **Nothing is tested in game. Never claim it is.**
 - The quick loop: `python3 tools/quick_check.py [--noverify] KingTests UkakuTests ...` (needs one full `build.py` first). It does **not**
@@ -36,9 +36,10 @@ lost. **Commit and push every version as it is built, and keep this file current
 | 3.3.3 | The Kakuja V2 Dragon has a voice: 14 real CC0 recordings (roars, a death cry, crawl, quakes, bites). | `sfx_pack.py` `dragon_*`, `DragonTimeline.roars/crawls`, `DragonSession` |
 | 3.3.4 | One partner, for good (no break-up, no divorce): nobody new while you have a partner anywhere; killing Eto/Touka/Ken never ends it; a villager partner's death frees you. | `server/Vows`, `Romance.endsWithDeath/villagerKey`, `EtoServer`, `HumanTalk` |
 | 3.3.5 | Crystal sounds from real glass recordings (3.2.6's were pitched-up steel). | `sfx_pack.py` crystal pools, `sfx_recordings.json` |
+| 3.3.6 | A jealous partner acts it out (back turned, glare, huff, snub, foot tapping), when you ask someone else out or confess to a villager while spoken for; new lines in voice; replayed now and then while jealous. Protocol 93. | `EtoGesture.JEALOUS`, `EtoPose`, `RomanceServer.tempted`, `Blended.tempted`, `BlendedServer.sulks` |
 
 Previews (off-game, looked at honestly): `docs/handoff/peace-aegis-3.2.7.png`, `war-spire-first-person-3.2.8.png`, `ukaku-vortex-3.2.9.png`,
-`dawn-idle-3.3.2.png`. Tools: `tools/art-preview.sh <out> aegis|spire-fp|vortex`, `tools/QuinquePreview.java <out> dawn idle`.
+`dawn-idle-3.3.2.png`, `jealous-3.3.6.png`. Tools: `tools/art-preview.sh <out> aegis|spire-fp|vortex`, `tools/QuinquePreview.java <out> dawn idle`.
 
 ## The owner's words this session (binding)
 
@@ -60,7 +61,7 @@ Previews (off-game, looked at honestly): `docs/handoff/peace-aegis-3.2.7.png`, `
 
 From the owner's message after 3.2.1 (nine asks; 3.2.2 did "one at a time", break-up/divorce was replaced by 3.3.4):
 
-1. **A jealous animation** (a partner seeing you sweet on someone else; 3.1.9 gives them a jealous gesture and line: make it a real pose/act).
+1. ~~A jealous animation~~ (done: 3.3.6).
 2. **Reconciliation talks** (making up after a quarrel or a jealous spell: not after a break-up, which no longer exists).
 3. **Temper-aware door scenes:** the companion's door scene when you bring a child home depends on the child's temper and age (new
    companion scene flags for the brought child's temper and age; see `next-ai-3.2.1.md` "what to deepen next" 3).
@@ -87,6 +88,8 @@ validated by SceneTests).
   aside at ease instead; "hand on hip" is the left arm angled out.
 - **3.3.3 / 3.3.5:** which recordings: chosen by name and measured loudness, **never heard** (no audio here). freesound.org is blocked, so
   each sound's own page couldn't be re-checked: CC0 per the WilhelmSFX mirror's licence. Ask which sound wrong.
+- **3.3.6:** the turn away is about 55 degrees (the glare over the shoulder must reach you); villager partners don't act jealous (no
+  gestures); asking someone out / confessing while spoken for is the trigger (the one-partner rule leaves nobody to kiss).
 - **3.3.4:** a villager partner's death frees you whoever killed it (the owner said "if you kill them"); only partners online in its world
   when it dies are freed; old saves keep partners they already had.
 

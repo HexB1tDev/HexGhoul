@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.3.6 (HexGhoul): A jealous partner acts it out (testing)
+
+See `.github/release-notes-3.3.6.md`. From the owner's list after 3.2.1: a jealous animation. A jealous companion partner now acts it out (about 7 s): back turned, arms folded, a glare over the shoulder, a huff, the snub with a foot tapping, turning back round. It plays when you ask another companion out, or ask a villager to be together or confess to one, while they see it. They also say a new line about it in their own voice, and replay the act now and then while still jealous. Protocol 93. Not tested in game.
+
 ## 3.3.5 (HexGhoul): Crystal sounds from real glass (testing)
 
 See `.github/release-notes-3.3.5.md`. 3.2.6's crystal sounds were the pack's steel and needle sounds raised in pitch. Now real glass recordings from the web, as recorded: three glass breaks for the shatter, glasses clinking and a crack for forming and hits (CC0, freesound via the WilhelmSFX mirror, credited). Same loudness as before. Not tested in game.

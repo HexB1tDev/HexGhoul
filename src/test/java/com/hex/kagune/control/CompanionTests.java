@@ -98,6 +98,7 @@ public final class CompanionTests {
         courtship();
         proofs();
         oneSpouse();
+        jealous();
         tolerance();
         moods();
         moodKisses();
@@ -290,7 +291,7 @@ public final class CompanionTests {
         check(EtoGesture.CROSS.ordinal() == EtoGesture.HAND.ordinal() + 1 && EtoGesture.HAND.ordinal() > EtoGesture.LAUGH.ordinal()
             && EtoGesture.STEAL.ordinal() == EtoGesture.PECK.ordinal() + 1 && EtoGesture.TIDY.ordinal() == EtoGesture.COOK.ordinal() - 1
             && EtoGesture.FLINCH.ordinal() == EtoGesture.COOK.ordinal() + 1 && EtoGesture.STOKE.ordinal() == EtoGesture.AWE.ordinal() + 1
-            && EtoGesture.SERVE.ordinal() == EtoGesture.values().length - 1,
+            && EtoGesture.JEALOUS.ordinal() == EtoGesture.SERVE.ordinal() + 1 && EtoGesture.JEALOUS.ordinal() == EtoGesture.values().length - 1,
             "new gestures only ever at the end (sent by ordinal)");
         // 1.3.29: Touka's own ways: never round an arm; a kiss on the cheek or a kiss stolen instead; her own poses, not Eto's.
         check(Persona.ETO.clings() && Persona.KEN.clings() && !Persona.TOUKA.clings(), "Touka never winds round an arm");
@@ -573,6 +574,25 @@ public final class CompanionTests {
         } catch (ReflectiveOperationException failure) {
             throw new IllegalStateException(failure);
         }
+    }
+
+    /** 3.3.6 (the owner: a jealous animation): EtoGesture.JEALOUS, appended last, acted out in four beats and round again. */
+    static void jealous() {
+        EtoGesture[] all = EtoGesture.values();
+        check(all[all.length - 1] == EtoGesture.JEALOUS && EtoGesture.JEALOUS.ticks == 140, "JEALOUS is appended (the gestures before keep their numbers)");
+        com.hex.kagune.control.client.animation.RigPose glare = com.hex.kagune.control.client.animation.EtoPose.gesture(EtoGesture.JEALOUS, 40.0);
+        com.hex.kagune.control.client.animation.RigPose huff = com.hex.kagune.control.client.animation.EtoPose.gesture(EtoGesture.JEALOUS, 76.0);
+        com.hex.kagune.control.client.animation.RigPose snub = com.hex.kagune.control.client.animation.EtoPose.gesture(EtoGesture.JEALOUS, 100.0);
+        com.hex.kagune.control.client.animation.RigPose done = com.hex.kagune.control.client.animation.EtoPose.gesture(EtoGesture.JEALOUS, 140.0);
+        check(glare.spin > 0.8F && glare.headY < -0.8F && glare.rightArmX < -0.9F && glare.leftArmX < -0.9F,
+            "she turns away, arms folded, and glares back over her shoulder at you");
+        check(huff.drop < -0.5F, "a huff");
+        boolean tapped = false;
+        for (double t = 85.0; t < 130.0; t += 1.0) {
+            tapped |= com.hex.kagune.control.client.animation.EtoPose.gesture(EtoGesture.JEALOUS, t).rightLegX < -0.15F;
+        }
+        check(snub.headY > 0.2F && tapped, "then the snub: head turned away, a foot tapping");
+        check(Math.abs(done.spin) < 0.05F, "and round again at the end");
     }
 
     /**

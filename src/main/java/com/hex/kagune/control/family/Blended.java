@@ -87,6 +87,46 @@ public final class Blended {
         return new Said(0, fill(line[0], names), line[1]);
     }
 
+    /**
+     * 3.3.6: seen asking someone else out, or confessing to them, while spoken for (the one-partner rule leaves nobody else to kiss):
+     * lines of {text, gesture}, {@code {other}} who it was.
+     */
+    private static final Map<String, String[][]> TEMPTED = Map.of(
+        "eto", new String[][] {
+            {"Asking {other} out, {you}? With me standing right here? What a bold little chapter.", "lean"},
+            {"{other}? Really? I'd ask what they have that I don't, but we both know the answer.", "laugh"},
+            {"You're spoken for, {you}. I'd hate to have to write {other} out of the story.", "twirl"},
+            {"Did you think I wasn't listening? I'm always listening. Every word.", "look"},
+            {"Go on, finish your little speech to {other}. I'll wait. Patience is my worst quality.", "giggle"},
+            {"Mm. You know there's no getting rid of me, don't you? That was the whole point.", "cross"}},
+        "touka", new String[][] {
+            {"Are you serious? You're asking {other}? I'm RIGHT here.", "angry"},
+            {"Wow. Okay. Go ahead, ask {other}. Then don't come crying to me.", "cross"},
+            {"Tch. You've got some nerve, {you}.", "huff"},
+            {"Say that to {other} one more time. I want to hear how stupid it sounds.", "cross"},
+            {"...Forget it. I'm not talking to you.", "pout"},
+            {"You're with me, idiot. Or did you forget that already?", "huff"}},
+        "ken", new String[][] {
+            {"Oh. You were asking {other}... I thought we... no, it's fine.", "shy"},
+            {"{you}, I heard that. I'm not angry. I'm just going to stand over here for a bit.", "look"},
+            {"Was it something I did? You can tell me. Just maybe not right now.", "shy"},
+            {"I keep telling myself it doesn't mean anything. I'm not very convincing.", "look"},
+            {"You're with me, aren't you? ...Aren't you?", "cross"},
+            {"{other} seems nice. I hate that. I'm sorry. I hate that.", "shy"}});
+
+    /** {@code persona}'s words on seeing {@code player} ask someone else out (3.3.6): one of {@link #TEMPTED}, the fallback Touka's. */
+    public static Said tempted(String persona, int seed, Map<String, String> names) {
+        String[][] lines = TEMPTED.getOrDefault(persona, TEMPTED.get("touka"));
+        String[] line = lines[Math.floorMod(seed, lines.length)];
+        return new Said(0, fill(line[0], names), line[1]);
+    }
+
+    /** How many tempted lines {@code persona} has. */
+    public static int temptedCount(String persona) {
+        String[][] lines = TEMPTED.get(persona);
+        return lines == null ? 0 : lines.length;
+    }
+
     /** How many witnessed lines {@code persona} has. */
     public static int witnessedCount(String persona) {
         String[][] lines = WITNESSED.get(persona);

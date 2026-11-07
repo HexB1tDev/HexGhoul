@@ -324,13 +324,19 @@ public final class HumanTalk {
             }
             case SAY_2 -> line = HumanPersona.about(temper, roll);
             case SAY_3 -> line = HumanPersona.news(roll);
-            case SAY_5, SAY_6 -> line = confess(player, human, temper, key, bond, choice == NpcTalk.Choice.SAY_6, day, roll);
+            case SAY_5, SAY_6 -> {
+                line = confess(player, human, temper, key, bond, choice == NpcTalk.Choice.SAY_6, day, roll);
+                if (Vows.partnerElsewhere(player.m_284548_(), player, key) != null) {
+                    RomanceServer.tempted(player, key, HumanBrain.name(human)); // 3.3.6: confessing to someone else, with a partner
+                }
+            }
             case SAY_7 -> {
                 HumanPersona.Attraction attraction = attraction(human);
                 if (Vows.partnerElsewhere(player.m_284548_(), player, key) != null) {
                     // 3.3.4 (the owner: one partner, no matter what): spoken for already. No, and no asking again.
                     line = TAKEN[Math.floorMod(roll, TAKEN.length)];
                     turnedDown = true;
+                    RomanceServer.tempted(player, key, HumanBrain.name(human)); // 3.3.6: a partner who sees it is jealous
                 } else if (HumanPersona.attracted(attraction, female(player))) {
                     line = HumanPersona.yes(temper, roll);
                     QuestServer.bond(player, key, bond.with(HumanPersona.PARTNER, true));

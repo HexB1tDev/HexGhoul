@@ -1,4 +1,19 @@
-# START HERE (state after 3.3.5)
+# START HERE (state after 3.3.6)
+
+Still to do, in this order (each its own version): the rest of 3.2.2's list (reconciliation talks, temper-aware door scenes, homecomings without a home, siblings, companion-child door talk, kids greeting you after days away). The owner: "push an update asap": every version is pushed as it is built.
+
+From the owner's 3.2.2 list: a jealous animation (3.1.9 gave a jealous partner one line and one small gesture).
+
+- `EtoGesture.JEALOUS(140)` appended after SERVE (sent by ordinal: protocol 93); `still()`. `EtoPose` `case JEALOUS`: `folded`, `spin = JEALOUS_TURN (0.95) * away` (in over 14 ticks, back from 130), a glare back over the shoulder (`headY` past the turn, ticks 14-66), a huff (`drop -0.7`, 66-84), the snub (head away, a foot tapping `rightLegX`, 84-130).
+- Triggers (the one-partner rule leaves nobody to kiss): `RomanceServer.tempted(player, key, name)` sets every companion partner's `NpcMemory.JEALOUS` and calls `BlendedServer.witnessed(player, key, name, now)`. It's called from `EtoServer` (ASK_OUT with `!c.claimed() && !c.mayDate()`) and from `HumanTalk` (SAY_7 refused as TAKEN; SAY_5/6 confess while `Vows.partnerElsewhere`).
+- `witnessed`: with a name it says `Blended.tempted` lines (new, 6 per companion, in voice, naming who); the gesture is always JEALOUS now.
+- `BlendedServer.sulks` (every 100-tick check, 1 in `SULK_ODDS` 5): a jealous partner within 10 blocks who sees you, is free and idle (not busy, no kiss, hand or walk, no gesture running) plays JEALOUS again.
+- Tests: CompanionTests `jealous()` and the ordinal check; DialogueTests tempted lines. Preview `docs/handoff/jealous-3.3.6.png` (`tools/CompanionPreview.java <out> jealous`).
+- **Judgment calls:** the turn is about 55 degrees (the glare must reach you); villager partners don't act jealous (no gestures); asking out/confessing counts as the trigger.
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 93. Not tested in game.
+
+# State after 3.3.5
 
 Still to do, in this order (each its own version): the rest of 3.2.2's list (a jealous animation, reconciliation talks, temper-aware door scenes, homecomings without a home, siblings, companion-child door talk, kids greeting you after days away). The owner, this session: "push an update asap": every version is pushed as it is built (the branch's release workflow publishes v<version> on GitHub).
 

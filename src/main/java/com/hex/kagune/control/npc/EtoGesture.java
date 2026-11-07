@@ -107,7 +107,9 @@ public enum EtoGesture {
     /** 2.4.9: a taste off the spoon: brought up, blown on, tasted, a little nod. */
     TASTE(70, false, false, "minecraft:wooden_shovel", "minecraft:bowl"),
     /** 2.4.9: what it made held out to its spouse in both hands (the food itself put in its hand by the server), a little bob. */
-    SERVE(50, false, false);
+    SERVE(50, false, false),
+    /** 3.3.6 (the owner: a jealous animation): her back turned, a glare over her shoulder, a huff, the snub and a foot tapping. Appended. */
+    JEALOUS(140, false, false);
 
     /** 2.5.1: when, in a finger crack ({@link #CRACK}), the finger cracks (ticks): the pose's snap and its sound, together. */
     public static final int CRACK_SNAP = 17; // 3.0.2: 22 before (the kagune came out a long second after the key)
@@ -165,6 +167,6 @@ public enum EtoGesture {
     public boolean still() {
         return this.mainHand != null || this == LEAN || this == STRETCH || this == POUT || this == YAWN || this == PET || this == LOOK || this == CROSS
             || this == TAP || this == SCOLD || this == SHY || this == CHIN || this == CRACK || this == BOW || this == KICKS || this == STEAL || this == TIDY
-            || this == COOK || this == FLINCH || this == AWE || this == SERVE;
+            || this == COOK || this == FLINCH || this == AWE || this == SERVE || this == JEALOUS;
     }
 }

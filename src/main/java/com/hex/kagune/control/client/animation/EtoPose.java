@@ -623,6 +623,25 @@ public final class EtoPose {
                 p.headZ = -0.12F;
                 p.roll = 0.03F;
             }
+            case JEALOUS -> {
+                // 3.3.6 (the owner: a jealous animation): she turns her back on them, arms folding as she goes; glares back over her
+                // shoulder; a huff; then the snub, nose up, a foot tapping; and round again at the end. The body turns (spin), the head
+                // carries the glare back round to them.
+                folded(p);
+                float away = ease(Math.min(1.0F, t / 14.0F)) * (t > 130.0F ? 1.0F - ease(Math.min(1.0F, (t - 130.0F) / 10.0F)) : 1.0F);
+                p.spin = JEALOUS_TURN * away;
+                float glare = t < 14.0F ? 0.0F : t < 22.0F ? ease((t - 14.0F) / 8.0F) : t < 58.0F ? 1.0F : t < 66.0F ? 1.0F - ease((t - 58.0F) / 8.0F) : 0.0F;
+                p.headY = (-JEALOUS_TURN - 0.1F) * glare * away + 0.35F * (1.0F - glare) * away;
+                p.headX = -0.12F * glare + (t >= 66.0F ? -0.2F * away : 0.0F);
+                float huff = t < 66.0F ? 0.0F : t < 76.0F ? ease((t - 66.0F) / 10.0F) : t < 84.0F ? 1.0F - ease((t - 76.0F) / 8.0F) : 0.0F;
+                p.drop = -0.7F * huff;
+                if (t >= 84.0F && t <= 130.0F) {
+                    float tap = (float)Math.abs(Math.sin((t - 84.0F) * Math.PI / 7.0));
+                    p.rightLegX = -0.22F * tap;
+                    p.legHold = 1.0F;
+                    p.roll = 0.04F;
+                }
+            }
             case HUFF -> {
                 // Shoulders up on the breath in, dropped on the huff, head snapped away.
                 float breath = t < 10.0F ? ease(t / 10.0F) : 1.0F - ease(Math.min(1.0F, (t - 10.0F) / 6.0F));
@@ -850,6 +869,9 @@ public final class EtoPose {
     }
 
     /** 1.3.14: arms folded tight across the chest. */
+    /** 3.3.6: how far a jealous companion turns her back (radians). */
+    public static final float JEALOUS_TURN = 0.95F;
+
     private static void folded(RigPose p) {
         p.rightArmX = -1.05F;
         p.leftArmX = -1.05F;

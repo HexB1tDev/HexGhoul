@@ -54,9 +54,37 @@ public final class BlendedServer {
             try {
                 partners(player, level, now);
                 halfSiblings(player, level, now);
+                sulks(player, level, now);
             } catch (RuntimeException failure) {
                 com.hex.kagune.control.Safety.caught(failure, "a blended family's talk");
             }
+        }
+    }
+
+    // ---------------------------------------------------------------- 3.3.6: a jealous partner, sulking
+
+    /** In every this many of the partner checks (every 100 ticks) a jealous partner near enough and idle acts it out again (about 25 s). */
+    static final int SULK_ODDS = 5;
+
+    /**
+     * 3.3.6 (the owner: a jealous animation): while a partner of {@code player}'s is still jealous ({@link NpcMemory#JEALOUS}), now and then,
+     * near and seeing them, not busy, she turns her back on them again ({@link EtoGesture#JEALOUS}).
+     */
+    private static void sulks(ServerPlayer player, ServerLevel level, long now) {
+        Map<String, Romance.Stage> partners = UniqueNpcs.partnersOf(level, player, "");
+        if (partners.isEmpty()) {
+            return;
+        }
+        NpcMemory memory = NpcMemoryServer.of(player);
+        for (EtoNpc npc : level.m_6443_(EtoNpc.class, player.m_20191_().m_82400_(10.0), npc -> npc.m_6084_() && npc.mind != null)) {
+            String key = npc.persona().key();
+            if (!partners.containsKey(key) || memory.get(key, NpcMemory.JEALOUS, Long.MIN_VALUE) <= now || !SceneServer.sees(npc, player, 10.0)
+                || !Conversation.free(npc, level, now) || EtoBrain.busy(npc) || npc.mind.kiss != null || npc.mind.holding != null || npc.mind.toward != null
+                || npc.mind.gesture != null && npc.mind.gesture != EtoGesture.NONE && now - npc.mind.gestureAt < Math.max(npc.mind.gesture.ticks, 20)
+                || npc.m_217043_().m_188503_(SULK_ODDS) != 0) {
+                continue;
+            }
+            EtoBrain.gesture(npc.mind, EtoGesture.JEALOUS, now);
         }
     }
 
@@ -252,6 +280,14 @@ public final class BlendedServer {
      * theirs who is near and sees it says so to their face (with a gesture), and is jealous {@link #SEEN_LONGER} times as long.
      */
     static void witnessed(ServerPlayer player, String key, long now) {
+        witnessed(player, key, null, now);
+    }
+
+    /**
+     * The same, {@code name} who it was ({@code null}: the companion {@code key}'s name; 3.3.6: a villager's own, never "Eto"). With a
+     * {@code name} (3.3.6, {@code RomanceServer.tempted}) it was asking them out or confessing to them, and the words are for that.
+     */
+    static void witnessed(ServerPlayer player, String key, String name, long now) {
         ServerLevel level = player.m_284548_();
         Map<String, Romance.Stage> others = UniqueNpcs.partnersOf(level, player, key);
         if (others.isEmpty()) {
@@ -265,10 +301,11 @@ public final class BlendedServer {
             }
             Map<String, String> names = new HashMap<>();
             names.put("you", player.m_36316_().getName());
-            names.put("other", sweet == null ? "them" : sweet.name());
-            Blended.Said said = Blended.witnessed(own, npc.m_217043_().m_188503_(1000), names);
+            names.put("other", name != null ? name : Persona.known(key) ? sweet.name() : "them");
+            int seed = npc.m_217043_().m_188503_(1000);
+            Blended.Said said = name != null ? Blended.tempted(own, seed, names) : Blended.witnessed(own, seed, names);
             Conversation.say(level, npc, said.text(), 0);
-            EtoBrain.gesture(npc.mind, gesture(said.gesture()), now);
+            EtoBrain.gesture(npc.mind, EtoGesture.JEALOUS, now); // 3.3.6: the whole act, not one gesture
             NpcMemoryServer.set(player, own, NpcMemory.JEALOUS, now + RomanceServer.JEALOUS_FOR * SEEN_LONGER);
         }
     }

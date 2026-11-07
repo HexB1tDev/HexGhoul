@@ -55,6 +55,20 @@ public final class DialogueTests {
                 check(!said.gesture().isEmpty(), who + " shows it, too: " + said.text());
             }
             check(seen.size() == count, who + "'s words for it all differ");
+            // 3.3.6: and words for seeing you ask someone else out, naming them.
+            int asked = com.hex.kagune.control.family.Blended.temptedCount(who);
+            check(asked >= 5, who + " has words for seeing you ask someone else out (" + asked + ")");
+            java.util.Set<String> heard = new java.util.HashSet<>();
+            boolean named = false;
+            for (int seed = 0; seed < asked; seed++) {
+                com.hex.kagune.control.family.Blended.Said said = com.hex.kagune.control.family.Blended.tempted(who, seed, names);
+                heard.add(said.text());
+                all.add(said.text());
+                named |= said.text().contains(names.get("other"));
+                check(!said.gesture().isEmpty() && !said.text().contains("{") && !said.text().toLowerCase().contains("kiss"),
+                    who + " says it, filled in, about asking (not a kiss): " + said.text());
+            }
+            check(heard.size() == asked && named, who + "'s words for it all differ and name who it was");
         }
         check(com.hex.kagune.control.family.Blended.pairs().size() == 3, "every pair of the three has talks");
         for (int i = 0; i < keys.length; i++) {

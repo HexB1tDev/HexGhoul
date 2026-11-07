@@ -669,6 +669,10 @@ public final class EtoServer {
                 return;
             }
         }
+        if (choice == NpcTalk.Choice.ASK_OUT && !c.claimed() && !c.mayDate()) {
+            // 3.3.6: asked out while they have a partner: a partner who sees it is jealous.
+            RomanceServer.tempted(player, npc.persona().key(), npc.displayName());
+        }
         carry(player, npc, c, choice, script.answer(c, choice), after);
     }
 
