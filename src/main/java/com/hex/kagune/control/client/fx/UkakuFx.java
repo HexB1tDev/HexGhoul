@@ -392,7 +392,7 @@ public final class UkakuFx {
                         RANDOM.nextInt(1000)));
                 }
                 if (RcFx.near(at, VISIBLE)) {
-                    vortexLaunch(at, velocity, message.size());
+                    vortexLaunch(at, velocity, message.size(), ownFirstPerson(message.shooter()));
                 }
             }
             case S2CUkakuFx.VORTEX_HIT -> {
@@ -1002,9 +1002,27 @@ public final class UkakuFx {
     }
     // ------------------------------------------------------------------ the Wing Vortex
 
-    /** The wing tearing off the shoulder blade: a gout of fire and the pink flash where it leaves. */
-    private static void vortexLaunch(Vec3 at, Vec3 velocity, float size) {
+    /** 3.2.9: whether {@code shooter} is this client's own player, seen in first person. */
+    static boolean ownFirstPerson(int shooter) {
+        Minecraft minecraft = Minecraft.m_91087_();
+        return minecraft.f_91074_ != null && minecraft.f_91074_.m_19879_() == shooter && minecraft.f_91066_ != null
+            && minecraft.f_91066_.m_92176_().m_90612_();
+    }
+
+    /**
+     * The wing tearing off the shoulder blade: a gout of fire and the pink flash where it leaves. 3.2.9: from your own eyes ({@code own})
+     * it goes off two blocks ahead, smaller, with no flash or ring at your shoulder (they filled the view).
+     */
+    private static void vortexLaunch(Vec3 at, Vec3 velocity, float size, boolean own) {
         Vec3 dir = velocity.m_82556_() < 1.0E-6 ? new Vec3(0.0, 0.0, 1.0) : velocity.m_82541_();
+        if (own) {
+            Vec3 ahead = at.m_82549_(dir.m_82490_(2.2));
+            for (int i = RcFx.count(7 * size); i > 0; i--) {
+                flame(ahead.m_82549_(jitter(0.3)), dir.m_82490_(0.14 + 0.1 * RANDOM.nextDouble()).m_82549_(jitter(0.08)), (0.3F + 0.15F * RANDOM.nextFloat()) * size,
+                    7 + RANDOM.nextInt(5));
+            }
+            return;
+        }
         for (int i = RcFx.count(18 * size); i > 0; i--) {
             flame(at.m_82549_(jitter(0.4)), dir.m_82490_(0.12 + 0.12 * RANDOM.nextDouble()).m_82549_(jitter(0.12)), (0.4F + 0.2F * RANDOM.nextFloat()) * size,
                 8 + RANDOM.nextInt(6));
@@ -1026,11 +1044,14 @@ public final class UkakuFx {
         Vec3 u = dir.m_82537_(helper).m_82541_();
         Vec3 v = dir.m_82537_(u);
         float size = vortex.size;
-        double spin = (now - vortex.born) / 20.0 * Math.PI * 2.0 * 3.2; // the vortex's own spin (WingVortex.SPIN turns a second)
+        double spin = (now - vortex.born) / 20.0 * Math.PI * 2.0 * com.hex.kagune.control.ukaku.WingVortex.SPIN; // its own spin
+        // 3.2.9: from your own eyes nothing is shed within two blocks of them (it filled the view with fire and smoke).
+        boolean own = ownFirstPerson(vortex.shooter);
+        double skip = own && length > 1.0E-6 ? Math.min(0.9, 2.0 / length) : 0.0;
         for (int i = RcFx.count((4 + (float)Math.min(10.0, length * 0.5)) * size); i > 0; i--) {
-            double s = RANDOM.nextDouble();
+            double s = skip + (1.0 - skip) * RANDOM.nextDouble();
             double angle = spin + RANDOM.nextDouble() * Math.PI * 2.0;
-            double r = 0.9 * size * (s < 0.1 ? 0.4 : 1.0);
+            double r = com.hex.kagune.control.ukaku.WingVortex.RADIUS * size * (s < 0.1 ? 0.4 : 1.0);
             Vec3 out = u.m_82490_(Math.cos(angle)).m_82549_(v.m_82490_(Math.sin(angle)));
             Vec3 at = root.m_82549_(axis.m_82490_(s)).m_82549_(out.m_82490_(r));
             // Flung off the spin: outward and along it.
@@ -1044,7 +1065,7 @@ public final class UkakuFx {
             aura(head.m_82546_(dir.m_82490_(1.2 * size)), Vec3.f_82478_, 1.1F * size, 4);
         }
         if (RANDOM.nextFloat() < 0.35F) {
-            smoke(root.m_82549_(axis.m_82490_(RANDOM.nextDouble())), jitter(0.02), 0.6F * size, 22 + RANDOM.nextInt(10));
+            smoke(root.m_82549_(axis.m_82490_(skip + (1.0 - skip) * RANDOM.nextDouble())), jitter(0.02), (own ? 0.4F : 0.6F) * size, 22 + RANDOM.nextInt(10));
         }
     }
 

@@ -658,6 +658,31 @@ public final class UkakuRules {
     }
 
     /** Ticks the vortex takes to fly its whole range. */
+    /** 3.2.9: how far up or down from level the vortex may go with the look (the y of its unit heading), and how far off his look a body turns it. */
+    public static final double VORTEX_PITCH_DOWN = 0.22;
+    public static final double VORTEX_PITCH_UP = 0.3;
+    public static final double VORTEX_ASSIST = Math.cos(Math.toRadians(18.0));
+
+    /**
+     * 3.2.9 (the owner: "instead of going straight forward sometimes it stays in place"): the vortex's unit heading: straight
+     * forward along the look ({@code lx ly lz}), only a little up or down with it; a body {@code tx tz} off the launch (NaN: none)
+     * within {@link #VORTEX_ASSIST} of the look's way turns it level toward that body. It used to be aimed from the shoulder at the
+     * body's middle or the ground under the crosshair, down into the ground a few blocks on, where it ended.
+     */
+    public static double[] vortexHeading(double lx, double ly, double lz, double tx, double tz) {
+        double flat = Math.sqrt(lx * lx + lz * lz);
+        double fx = flat < 1.0E-6 ? 0.0 : lx / flat;
+        double fz = flat < 1.0E-6 ? 1.0 : lz / flat;
+        double tf = Math.sqrt(tx * tx + tz * tz);
+        if (Double.isFinite(tf) && tf > 1.0E-6 && (tx * fx + tz * fz) / tf >= VORTEX_ASSIST) {
+            fx = tx / tf;
+            fz = tz / tf;
+        }
+        double y = Math.max(-VORTEX_PITCH_DOWN, Math.min(VORTEX_PITCH_UP, ly));
+        double across = Math.sqrt(1.0 - y * y);
+        return new double[] {fx * across, y, fz * across};
+    }
+
     public static int vortexFlight(int mastery) {
         return (int)Math.ceil(VORTEX_RANGE / vortexSpeed(mastery));
     }

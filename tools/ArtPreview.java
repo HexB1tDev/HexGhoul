@@ -1704,11 +1704,16 @@ public final class ArtPreview {
     }
 
     static List<WingPreview.Tri> vortexTris(double[] root, double[] head, double size, double[] eye, double unwind, double dusk, double time) {
+        return vortexTris(root, head, size, eye, unwind, dusk, time, false);
+    }
+
+    /** 3.2.9: {@code own}: the thrower's own, from his own eyes (first person). */
+    static List<WingPreview.Tri> vortexTris(double[] root, double[] head, double size, double[] eye, double unwind, double dusk, double time, boolean own) {
         List<WingPreview.Tri> out = new ArrayList<>();
         com.hex.kagune.control.ukaku.WingVortex.build((a, b, c, d, ca, cb, cc, cd) -> {
             out.add(new WingPreview.Tri(new double[][] {a, b, c}, new int[] {ca, cb, cc}, new double[] {0, 1, 0}, false));
             out.add(new WingPreview.Tri(new double[][] {a, c, d}, new int[] {ca, cc, cd}, new double[] {0, 1, 0}, false));
-        }, root, head, size, time, 5, eye, 1.0, unwind, dusk, true);
+        }, root, head, size, time, 5, eye, 1.0, unwind, dusk, true, own);
         return out;
     }
 
@@ -1765,7 +1770,17 @@ public final class ArtPreview {
         double[] behind = {2.5, 3.0, -4.5};
         shots.add(new Shot("A new wing grows back (40%)", new RigPose(), thrownWings(300, 0.0F, 0.4F), behind, new double[] {0.3, 2.0, 0.0}, null));
         shots.add(new Shot("Grown back (80%)", new RigPose(), thrownWings(300, 0.0F, 0.8F), behind, new double[] {0.3, 2.0, 0.0}, null));
-        sheet(file, "Z: Wing Vortex. The wing shoots forward as a spinning vortex, attached until it ends, then detaches; a new one grows", shots, 3, 460, 400);
+        // 3.2.9: your own, from your own eyes: a thin jet by your shoulder, opening as it goes off (no body: first person).
+        double[] eyes = {0.0, 1.62, 0.0};
+        double[] launch = {root[0] + 0.35, root[1] + 0.15, root[2] + 0.75};
+        for (double out : new double[] {3.0, 8.0, 18.0}) {
+            List<WingPreview.Tri> mine = new ArrayList<>(vortexTris(root, new double[] {launch[0], launch[1], launch[2] + out}, 1.0, eyes, 0.0, 0.25, 1.6, true));
+            mine.addAll(field(0.0, 24.0, null, 0.0, 0.0));
+            shots.add(new Shot(String.format(java.util.Locale.ROOT, "Your own, first person, %.0f blocks out", out), null, NO_WINGS, eyes,
+                new double[] {0.0, 1.5, 10.0}, seenFrom(mine, eyes, 0.05)));
+        }
+        sheet(file, "Z: Wing Vortex (3.2.9: a thin round corkscrew straight along its flight). Attached until it ends, then detaches; a new one grows",
+            shots, 3, 460, 400);
     }
 
     /** Twin wings crystallized up to {@code front} (0 fire .. 1 crystal to the tips), optionally aiming. */

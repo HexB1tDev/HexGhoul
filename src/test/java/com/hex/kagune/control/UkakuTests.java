@@ -795,6 +795,8 @@ public final class UkakuTests {
         }
 
         // The vortex itself: from the shoulder blade (root) to its point (head), still attached.
+        // 3.2.9 (the owner: "less janky, thinner and more circular"): a round corkscrew straight along its flight line.
+        double strand = 0.2 * 1.15 * 1.4;
         for (double size : new double[] {0.6, 1.0, 1.3}) {
             for (double unwind : new double[] {0.0, 1.0}) {
                 for (double length : new double[] {1.5, 10.0, 25.0}) {
@@ -811,10 +813,12 @@ public final class UkakuTests {
                         true);
                     String name = "(" + size + ", " + unwind + ", " + length + ")";
                     check(good[0] && quads[0] > 0 && quads[0] <= WingVortex.QUADS, "the vortex is well formed within its budget " + name);
+                    double spiral = WingVortex.RADIUS * size * (1.0 + 1.3 * unwind);
                     double front = -Double.MAX_VALUE;
                     double back = Double.MAX_VALUE;
                     double wide = 0.0;
                     double atRoot = 0.0;
+                    boolean round = true;
                     for (double[] v : points) {
                         front = Math.max(front, v[2]);
                         back = Math.min(back, v[2]);
@@ -825,20 +829,62 @@ public final class UkakuTests {
                         if (v[2] < 0.15) {
                             atRoot = Math.max(atRoot, r);
                         }
+                        // Its middle: on the spiral's circle (a strand round it) or the thin jet down its line, nothing in between.
+                        if (unwind == 0.0 && length >= 10.0 && v[2] > 0.35 * length && v[2] < 0.65 * length) {
+                            boolean jet = r < 0.2 * size;
+                            boolean onCircle = Math.abs(r - spiral) <= strand * size;
+                            round &= jet || onCircle;
+                        }
                     }
                     // Its glow reaches a little ahead of the point (more as it spreads, unwinding).
                     check(front <= length + size * (0.4 + 1.0 * (1.0 + 1.3 * unwind)) && back > -size * (1.0 + 1.3 * unwind),
                         "the vortex runs from the shoulder blade to its point " + name + ": " + back + " .. " + front);
-                    // 2.4.6: it rolls on in great upright loops (Coil) round its flight line, so it stands further off it than a straight one.
-                    double loops = 2.0 * 1.5 * size + 1.05 * size;
-                    check(wide > 0.3 * WingVortex.RADIUS * size && wide < (1.9 + 2.4 * unwind) * WingVortex.RADIUS * size + loops,
-                        "it is a vortex, not a line, and never a cloud " + name + ": " + wide);
+                    check(wide > 0.3 * WingVortex.RADIUS * size && wide <= spiral + strand * size + 1.0E-9,
+                        "a thin vortex round its straight line, never a cloud " + name + ": " + wide + " (spiral " + spiral + ")");
                     if (unwind == 0.0 && length >= 10.0) {
-                        check(atRoot < 0.75 * wide, "it leaves the shoulder blade narrower than it rolls on " + name + ": " + atRoot + " of " + wide);
+                        check(atRoot < 0.75 * wide, "it leaves the shoulder blade narrower than it goes on " + name + ": " + atRoot + " of " + wide);
+                        check(round, "it is round: strands on one circle round its line, a thin jet down it, nothing between " + name);
                     }
                 }
             }
         }
+        // 3.2.9: from its own thrower's eyes (first person, beside the shoulder blade it leaves): nothing near the eyes, a thin jet near them.
+        double[] eyes = {0.45, 0.3, 0.55};
+        for (double length : new double[] {2.0, 8.0, 20.0}) {
+            boolean clearOfEyes = true;
+            boolean thinNear = true;
+            List<double[]> mine = new ArrayList<>();
+            WingVortex.build((a, b, c, d, ca, cb, cc, cd) -> {
+                for (double[] v : new double[][] {a, b, c, d}) {
+                    mine.add(v);
+                }
+            }, new double[] {0.0, 0.0, 0.0}, new double[] {0.0, 0.0, length}, 1.3, 2.0, 5, eyes, 1.0, 0.0, 0.5, true, true);
+            for (double[] v : mine) {
+                double far = Math.sqrt(Math.pow(v[0] - eyes[0], 2) + Math.pow(v[1] - eyes[1], 2) + Math.pow(v[2] - eyes[2], 2));
+                clearOfEyes &= far > WingVortex.CLEAR * 0.75;
+                double[] onLine = {0.0, 0.0, Math.max(0.0, Math.min(length, v[2]))};
+                double fromLine = Math.hypot(v[0], v[1]);
+                double lineFar = Math.sqrt(Math.pow(onLine[0] - eyes[0], 2) + Math.pow(onLine[1] - eyes[1], 2) + Math.pow(onLine[2] - eyes[2], 2));
+                if (lineFar < 2.5 && v[2] < length - 1.5) {
+                    thinNear &= fromLine <= Math.max(0.0, (lineFar - WingVortex.CLEAR) * WingVortex.NEAR_OPEN) + strand * 1.3 + 0.2;
+                }
+            }
+            check(clearOfEyes, "first person: nothing of your own vortex comes near your eyes (" + length + " blocks out)");
+            check(thinNear, "first person: near your eyes it is a thin jet, opening only as it goes off (" + length + " blocks out)");
+        }
+        // 3.2.9 (the owner: "instead of going straight forward sometimes it stays in place"): it flies straight forward, level-ish.
+        double[] level = UkakuRules.vortexHeading(0.0, -0.64, 0.77, Double.NaN, Double.NaN);
+        double[] below = UkakuRules.vortexHeading(0.0, -0.1, 0.99, 0.3, 3.0);
+        double[] aside = UkakuRules.vortexHeading(0.0, 0.0, 1.0, 3.0, 1.0);
+        double[] up = UkakuRules.vortexHeading(0.2, 0.9, 0.3, Double.NaN, Double.NaN);
+        boolean unit = true;
+        for (double[] h : new double[][] {level, below, aside, up}) {
+            unit &= Math.abs(Math.sqrt(h[0] * h[0] + h[1] * h[1] + h[2] * h[2]) - 1.0) < 1.0E-9;
+        }
+        check(unit && level[1] == -UkakuRules.VORTEX_PITCH_DOWN && level[2] > 0.95 && up[1] == UkakuRules.VORTEX_PITCH_UP,
+            "looking down (or up) it still flies on forward, only a little down (or up), never into the ground at your feet");
+        check(below[0] > 0.05 && below[1] == -0.1, "a body just off your look turns it toward it, level, not dived at its middle");
+        check(aside[0] == 0.0 && aside[2] == 1.0, "a body well off to the side doesn't turn it: straight forward");
         List<Double> turnA = new ArrayList<>();
         List<Double> turnB = new ArrayList<>();
         WingVortex.build((a, b, c, d, ca, cb, cc, cd) -> turnA.add(a[0]), new double[] {0, 0, 0}, new double[] {0, 0, 8}, 1.0, 1.0, 5,

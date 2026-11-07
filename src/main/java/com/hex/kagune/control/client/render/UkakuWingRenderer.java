@@ -437,12 +437,9 @@ public final class UkakuWingRenderer {
             if (away > MAX_DISTANCE_SQR) {
                 continue;
             }
-            if (vortex.shooter() == self.m_19879_() && minecraft.f_91066_.m_92176_().m_90612_() && vortex.unwind(time) <= 0.0F) {
-                // In first person, start it a little out from your own shoulder, so it doesn't fill the view.
-                Vec3 along = head.m_82546_(root);
-                double length = along.m_82553_();
-                root = length < 1.0E-6 ? root : root.m_82549_(along.m_82490_(Math.min(length * 0.8, 1.6) / length));
-            }
+            // 3.2.9: in first person your own is a thin jet near your eyes, opening only as it goes off (WingVortex own), instead of
+            // its root shoved 1.6 blocks out (it still filled the view).
+            boolean own = vortex.shooter() == self.m_19879_() && minecraft.f_91066_.m_92176_().m_90612_();
             if (consumer == null) {
                 consumer = buffers.m_6299_(TYPE);
             }
@@ -458,7 +455,7 @@ public final class UkakuWingRenderer {
             WingVortex.build(tinted(glowing(consumer, matrix, normals), com.hex.kagune.control.client.KaguneTints.of(vortex.shooter())),
                 new double[] {root.f_82479_, root.f_82480_, root.f_82481_},
                 new double[] {head.f_82479_, head.f_82480_, head.f_82481_}, vortex.size(), time / 20.0, vortex.seed(), eye, fade, unwind, dusk,
-                away < DETAIL_DISTANCE_SQR);
+                away < DETAIL_DISTANCE_SQR, own);
         }
         // Crystal spikes stuck in bodies: on the body as it moves and turns, the point inside it, glowing hotter as the burst comes.
         for (Map.Entry<Integer, UkakuSpikes.Body> entry : UkakuSpikes.bodies().entrySet()) {

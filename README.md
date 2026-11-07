@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.2.9 (HexGhoul): Fix: the Wing Vortex: thinner, round, straight forward, and you can see past it (testing)
+
+See `.github/release-notes-3.2.9.md`. The vortex was big rolling loops of flat ribbons (crumpled panels up close), aimed from the shoulder at a body's middle or the ground under the crosshair (so it often went into the ground a few blocks off and ended: "stays in place"), and in first person it and its launch burst filled the view. Now a thin round corkscrew (three round strands, a thin jet) flying straight forward along your look, only a little up or down; from your own eyes a see-through jet that opens as it goes, no burst or smoke at your eyes. Not tested in game.
+
 ## 3.2.8 (HexGhoul): Fix: War's Spire Wave was a mess in first person (testing)
 
 See `.github/release-notes-3.2.8.md`. In first person the Spire Wave's charge centipedes coiled round the third-person body's arm under your eyes, and the beam bent back to it, a wall of centipede heads in your face. Now your own left arm is drawn (your skin, War's sleeve), reaching out as it charges and thrust with the beam, the centipedes coiled round it; the beam leaves your fist as a cone that widens away from you. Third person unchanged. Not tested in game.

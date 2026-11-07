@@ -202,19 +202,19 @@ public final class UkakuVortex {
         int mastery = KaguneProfile.mastery(player);
         double range = UkakuRules.VORTEX_RANGE;
         Vec3 eye = player.m_146892_();
-        Vec3 aim = null;
+        Vec3 from = clearOfBlocks(player, eye, shoulder(player, state.vortexSide));
+        // 3.2.9 (the owner: "instead of going straight forward sometimes it stays in place"): straight forward along his look, a
+        // little up or down with it, never dived from the shoulder at a body's middle or at the ground under the crosshair (it was:
+        // a body near and below him took it into the ground just past it, where it ended and unwound, a few blocks off him).
+        Vec3 target = null;
         if (pending.targetId() > 0 && level.m_6815_(pending.targetId()) instanceof LivingEntity living && living.m_6084_()
             && living.m_20280_(player) <= (range + AIM_SLACK) * (range + AIM_SLACK)) {
-            aim = KaguneServerController.center(living);
+            target = KaguneServerController.center(living);
         }
-        if (aim == null) {
-            Vec3 end = eye.m_82549_(player.m_20154_().m_82490_(range));
-            BlockHitResult block = level.m_45547_(new ClipContext(eye, end, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player));
-            aim = block.m_6662_() == HitResult.Type.BLOCK ? block.m_82450_() : end;
-        }
-        Vec3 from = clearOfBlocks(player, eye, shoulder(player, state.vortexSide));
-        Vec3 heading = aim.m_82546_(from);
-        heading = heading.m_82556_() < 1.0E-6 ? player.m_20154_() : heading.m_82541_();
+        Vec3 look = player.m_20154_();
+        double[] way = UkakuRules.vortexHeading(look.f_82479_, look.f_82480_, look.f_82481_,
+            target == null ? Double.NaN : target.f_82479_ - from.f_82479_, target == null ? Double.NaN : target.f_82481_ - from.f_82481_);
+        Vec3 heading = new Vec3(way[0], way[1], way[2]);
         Vortex vortex = new Vortex();
         vortex.side = state.vortexSide;
         vortex.position = from;
