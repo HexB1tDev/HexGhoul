@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.4.0 (HexGhoul): Where WERE you? (testing)
+
+See `.github/release-notes-3.4.0.md`. From the owner's list after 3.2.1: siblings at home react to the one brought back. An older one covers for it or wants to know where it WAS, a younger one tells on it, one left behind from an outing minds it, and the one brought back answers, all by their tempers and ages (about 150 new lines). Not tested in game.
+
 ## 3.3.9 (HexGhoul): Homecomings without a home (testing)
 
 See `.github/release-notes-3.3.9.md`. From the owner's list after 3.2.1: homecomings without a home. Bringing a child back used to need a family home; without one nothing happened. Now the place the child lives counts as home (16 blocks round it), with new scenes for the companions and the children that don't talk about a house, and the old house-and-door scenes kept for families that have one. Not tested in game.

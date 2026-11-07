@@ -831,6 +831,51 @@ check(com.hex.kagune.control.graft.GraftStage.TRANSPLANT.limbs(com.hex.kagune.co
             && !com.hex.kagune.control.family.Homecoming.counts(99999L, com.hex.kagune.control.family.Homecoming.AGAIN - 1L)
             && com.hex.kagune.control.family.Homecoming.counts(99999L, com.hex.kagune.control.family.Homecoming.AGAIN),
             "a homecoming: out long enough, and not again too soon");
+        // 3.4.0 (the owner's list: siblings at home reacting to the one brought back): the big one covering, the little one telling, "where WERE
+        // you?", left behind; the one brought back answering; every temper and age has its words; babies say nothing yet.
+        {
+            com.hex.kagune.control.family.ChildStage[] ages = {com.hex.kagune.control.family.ChildStage.TODDLER, com.hex.kagune.control.family.ChildStage.CHILD,
+                com.hex.kagune.control.family.ChildStage.TEEN};
+            java.util.Set<com.hex.kagune.control.family.SiblingWelcome.Act> seen = java.util.EnumSet.noneOf(com.hex.kagune.control.family.SiblingWelcome.Act.class);
+            for (com.hex.kagune.control.family.ChildTemper temper : com.hex.kagune.control.family.ChildTemper.values()) {
+                for (com.hex.kagune.control.family.ChildStage speaker : ages) {
+                    for (com.hex.kagune.control.family.ChildStage brought : ages) {
+                        for (boolean found : new boolean[] {true, false}) {
+                            for (boolean older : new boolean[] {true, false}) {
+                                com.hex.kagune.control.family.SiblingWelcome.Act act = com.hex.kagune.control.family.SiblingWelcome.act(found, older, temper, speaker, brought);
+                                check(act != null, "a " + temper + " " + speaker + " reacts to a " + brought + " brought back");
+                                seen.add(act);
+                                check(found || act == (older ? com.hex.kagune.control.family.SiblingWelcome.Act.WITHOUT : com.hex.kagune.control.family.SiblingWelcome.Act.TAKEME),
+                                    "back from an outing: the older left behind, the younger wanting to go");
+                                for (int seed = 0; seed < 4; seed++) {
+                                    String open = com.hex.kagune.control.family.SiblingWelcome.open(act, temper, speaker, "Rin", seed);
+                                    check(!open.equals("...") && !open.contains("{") && (open.contains("Rin") || !open.contains("{name}")),
+                                        "a " + temper + " " + speaker + " has words to " + act + ": " + open);
+                                    for (com.hex.kagune.control.family.ChildTemper theirs : com.hex.kagune.control.family.ChildTemper.values()) {
+                                        String reply = com.hex.kagune.control.family.SiblingWelcome.reply(act, theirs, brought, "Hiro", seed);
+                                        check(!reply.equals("...") && !reply.contains("{"), "a " + theirs + " " + brought + " answers " + act + ": " + reply);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            check(seen.size() == com.hex.kagune.control.family.SiblingWelcome.Act.values().length, "every way to react comes up: " + seen);
+            check(com.hex.kagune.control.family.SiblingWelcome.act(true, true, com.hex.kagune.control.family.ChildTemper.GENTLE,
+                com.hex.kagune.control.family.ChildStage.TEEN, com.hex.kagune.control.family.ChildStage.CHILD) == com.hex.kagune.control.family.SiblingWelcome.Act.COVER
+                && com.hex.kagune.control.family.SiblingWelcome.act(true, false, com.hex.kagune.control.family.ChildTemper.MISCHIEF,
+                com.hex.kagune.control.family.ChildStage.TODDLER, com.hex.kagune.control.family.ChildStage.CHILD) == com.hex.kagune.control.family.SiblingWelcome.Act.TATTLE
+                && com.hex.kagune.control.family.SiblingWelcome.act(true, true, com.hex.kagune.control.family.ChildTemper.SERIOUS,
+                com.hex.kagune.control.family.ChildStage.TEEN, com.hex.kagune.control.family.ChildStage.CHILD) == com.hex.kagune.control.family.SiblingWelcome.Act.WHERE,
+                "the big one covers for it, the little one tells, the serious one asks where it WAS");
+            check(com.hex.kagune.control.family.SiblingWelcome.act(true, true, com.hex.kagune.control.family.ChildTemper.BOLD,
+                com.hex.kagune.control.family.ChildStage.BABY, com.hex.kagune.control.family.ChildStage.CHILD) == null
+                && com.hex.kagune.control.family.SiblingWelcome.act(false, true, com.hex.kagune.control.family.ChildTemper.BOLD,
+                com.hex.kagune.control.family.ChildStage.TEEN, com.hex.kagune.control.family.ChildStage.BABY) == null, "a baby says nothing, and is told nothing");
+            check(com.hex.kagune.control.family.SiblingWelcome.MOST >= 1 && com.hex.kagune.control.family.SiblingWelcome.FIRST > 8L
+                && com.hex.kagune.control.family.SiblingWelcome.GAP >= 20L, "after its call-out at the door, a line at a time");
+        }
         // 3.3.9: with no family home, the place it lives is home: past its leash there (8) and its play round it (4) before it is out.
         check(com.hex.kagune.control.family.Homecoming.NO_HOUSE >= 12.0, "a child with no home is out only past its leash and its play");
         check(com.hex.kagune.control.family.Homecoming.fresh(0L) && com.hex.kagune.control.family.Homecoming.fresh(com.hex.kagune.control.family.Homecoming.LASTS - 1L)

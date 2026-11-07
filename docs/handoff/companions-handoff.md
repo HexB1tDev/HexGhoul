@@ -1,4 +1,25 @@
-# START HERE (state after 3.3.9)
+# START HERE (state after 3.4.0)
+
+Still to do, in this order (each its own version): the rest of 3.2.2's list (companion-child door talk, kids greeting you after days away). The owner: "push an update asap": every version is pushed as it is built.
+
+From the owner's 3.2.2 list: siblings at home reacting to the one brought back ("where WERE you?", the little one tattling, the big one covering for it).
+
+- Pure `family/SiblingWelcome`:
+  - `Act` WHERE, COVER, TATTLE, WITHOUT, TAKEME.
+  - `act(found, older, temper, speaker, brought)`:
+    - outing: WITHOUT if older, else TAKEME;
+    - found, older: COVER for gentle, mischief and bold, else WHERE;
+    - found, younger: WHERE for gentle, shy and curious, else TATTLE;
+    - null for a baby on either side.
+  - `open` / `reply` lines keyed `part:act:temper`, with `little` for a toddler. About 150 lines.
+  - `NEAR` 16, `MOST` 2, `FIRST` 50, `GAP` 45.
+- `HomecomingServer.siblings` (from `greet`, before the door scene): siblings within 16 blocks of the one brought in (`SiblingLife.siblings`), awake, with an empty `mind.talk`, not carried by or following the player. For each: its line, then the brought child's answer, queued as `ParentDuty.Said` (speech bubbles) and spaced by `GAP`; the sibling turns to it (`Conversation.face`). Older = `born` earlier.
+- Tests: FamilyTests (every temper x toddler/child/teen x found/outing x older/younger has words both ways; all five acts reached; the mapping; babies; timing after the call-out).
+- **Judgment calls:** the temper-to-act map; bubbles rather than walking over (a carried child can't join a Conversation).
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 93. Not tested in game.
+
+# State after 3.3.9
 
 Still to do, in this order (each its own version): the rest of 3.2.2's list (siblings reacting to the one brought back, companion-child door talk, kids greeting you after days away). The owner: "push an update asap": every version is pushed as it is built.
 

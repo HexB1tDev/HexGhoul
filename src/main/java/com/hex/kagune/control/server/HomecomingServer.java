@@ -4,6 +4,7 @@ import com.hex.kagune.control.family.ChildLines;
 import com.hex.kagune.control.family.ChildStage;
 import com.hex.kagune.control.family.ChildTemper;
 import com.hex.kagune.control.family.Homecoming;
+import com.hex.kagune.control.family.SiblingWelcome;
 import com.hex.kagune.control.npc.ChildNpc;
 import com.hex.kagune.control.npc.EtoNpc;
 import java.util.List;
@@ -77,6 +78,7 @@ final class HomecomingServer {
 
     /** Its other parent meets them at the door, the child calling out to them; with nobody waiting, the child's own word. */
     private static void greet(ChildNpc npc, Children.Child child, ServerPlayer player, boolean found, ServerLevel level, long now) {
+        siblings(npc, child, player, found, level, now); // 3.4.0
         EtoNpc waiting = waiting(child, player, level);
         if (waiting != null && SceneServer.approachBrought(waiting, player, now)) {
             ChildStage stage = child.stage(now);
@@ -86,6 +88,43 @@ final class HomecomingServer {
             return;
         }
         SceneServer.approachBack(npc, child, player, now);
+    }
+
+    /**
+     * 3.4.0 (the owner's list: siblings at home reacting to the one brought back): its brothers and sisters near, who were not out with it
+     * (not carried by nor following {@code player}), awake and with nothing else to say, react to it ({@link SiblingWelcome}): one says its
+     * piece, the one brought back answers; at most {@link SiblingWelcome#MOST} of them, one after the other, after its call-out at the door.
+     */
+    private static void siblings(ChildNpc npc, Children.Child child, ServerPlayer player, boolean found, ServerLevel level, long now) {
+        if (npc.mind == null) {
+            return;
+        }
+        ChildStage stage = child.stage(now);
+        ChildTemper temper = ChildTemper.of(child.id, child.mother, child.father);
+        long at = now + SiblingWelcome.FIRST;
+        int spoke = 0;
+        for (ChildNpc other : level.m_6443_(ChildNpc.class, npc.m_20191_().m_82400_(SiblingWelcome.NEAR), body -> body != npc && body.m_6084_() && body.mind != null)) {
+            if (spoke >= SiblingWelcome.MOST) {
+                break;
+            }
+            Children.Child known = Children.get(level, other.childId());
+            if (known == null || !SiblingLife.siblings(child, known) || other.m_5803_() || !other.mind.talk.isEmpty()
+                || player.m_20148_().equals(other.mind.carrier) || player.m_20148_().equals(other.following())) {
+                continue;
+            }
+            ChildStage theirs = known.stage(now);
+            ChildTemper own = ChildTemper.of(known.id, known.mother, known.father);
+            SiblingWelcome.Act act = SiblingWelcome.act(found, known.born < child.born, own, theirs, stage);
+            if (act == null) {
+                continue;
+            }
+            int seed = other.m_217043_().m_188503_(1 << 20);
+            other.mind.talk.add(new ParentDuty.Said(other.m_19879_(), SiblingWelcome.open(act, own, theirs, child.name, seed), at));
+            npc.mind.talk.add(new ParentDuty.Said(npc.m_19879_(), SiblingWelcome.reply(act, temper, stage, known.name, seed + 1), at + SiblingWelcome.GAP));
+            Conversation.face(other, npc);
+            at += 2L * SiblingWelcome.GAP;
+            spoke++;
+        }
     }
 
     /** A companion parent of {@code child} at home near {@code player}, free to meet them (not out with them, fighting, asleep or talking). */
