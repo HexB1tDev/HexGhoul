@@ -2208,3 +2208,56 @@ say: A reader complained that my villain sounded like them. I hadn't even met th
   - How dangerous. I have an unreasonable number of things to say.
 > There is more to you than I expected. | +1 look
   - There usually is. People are wonderfully bad at reading past the cover.
+
+
+# =====================================================================================================================================
+# 3.1.9: the other one (another of the player's partners: {cowife})
+# =====================================================================================================================================
+
+scene cowife_curious
+who: together
+when: cowife
+say: Tell me about {cowife}. Everything. What they eat, how they sleep, what they say about me when I'm not in the room.
+say: I saw {cowife} at the market today. We smiled at each other. It was terrifying. I loved it.
+> You're not jealous? | +1 -> jealous
+> They like you, you know. | +2 giggle
+  - Of course they do. I'm delightful. ...Do they really?
+> Leave {cowife} alone, Eto. | -1 pout
+  - I wasn't going to DO anything. Probably. Mostly.
+page jealous
+say: Jealous? Darling, I'm fascinated. Jealousy is for people who think they own things. I just like to know where everything is.
+> That sounds like jealousy with extra steps. | +1 laugh
+  - ...You know me far too well. Kiss me before I start plotting.
+> Promise me you'll play nice. | +2 hug
+  - I promise to play. Nice is negotiable. ...Fine. Nice. For you.
+ignored: I'll just ask {cowife} myself then.
+
+scene cowife_rival
+who: together
+mood: jealous sulky
+when: cowife
+say: Did you have a lovely time with {cowife}? Don't answer. I can smell it on you.
+say: I wrote a new villain today. They have {cowife}'s laugh. Pure coincidence.
+> You're the only one who makes me laugh like that. | +3 forgive kiss
+  - ...Liar. A beautiful liar. Say it again, slower.
+> I love you both. That isn't going to change. | +1 -> both
+> Stop writing my partners into your books. | -2 sulk
+  - Then stop giving me such good material.
+page both
+say: Both. Such a small word. You say it like it doesn't weigh anything.
+> It weighs a lot. I carry it gladly. | +3 hug
+  - ...Gladly. Hm. All right. I'll allow it. Today.
+> Would you rather I lied? | +1 look
+  - Never. You're the only one who doesn't. Don't start now.
+ignored: Fine. Go back to {cowife}. I'll be here. Writing.
+
+scene cowife_kids
+who: together
+when: cowife kids
+say: {kid} has started calling {cowife}'s child their 'secret sibling'. I didn't teach them that. I'm so proud.
+say: The children have formed a little gang. {kid} is the brains. I'm told I'm not allowed to help.
+> They get it from you. | +2 giggle
+  - Obviously. The good bits are mine. The kind bits are yours. The chaos is shared.
+> As long as they're happy. | +2 hug
+  - They are. All of them. Even the ones that aren't mine. ...They're a little bit mine now, I suppose.
+ignored: I'll go and see what they're plotting.

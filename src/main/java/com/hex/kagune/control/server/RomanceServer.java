@@ -64,5 +64,11 @@ public final class RomanceServer {
             }
             NpcMemoryServer.set(player, other.getKey(), NpcMemory.JEALOUS, now + JEALOUS_FOR);
         }
+        // 3.1.9: and any of them who sees it says so to their face, jealous twice as long (BlendedServer).
+        try {
+            BlendedServer.witnessed(player, key, now);
+        } catch (RuntimeException failure) {
+            com.hex.kagune.control.Safety.caught(failure, "a partner seeing it");
+        }
     }
 }

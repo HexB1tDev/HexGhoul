@@ -2164,3 +2164,56 @@ say: A regular remembered how I take my coffee. It's nice when people actually n
   - ...Then stick around. I'm not always yelling, you know.
 > There is more to you than I expected. | +1 look
   - Yeah, well. People tend to stop looking once they've decided I'm difficult.
+
+
+# =====================================================================================================================================
+# 3.1.9: the other one (another of the player's partners: {cowife})
+# =====================================================================================================================================
+
+scene cowife_ask
+who: together
+when: cowife
+say: So. {cowife}. Do they make better coffee than me? Lie if you have to.
+say: I ran into {cowife} earlier. We nodded. Like two cats on a fence.
+> Nobody makes coffee like you. | +2 blush
+  - ...Good answer. Correct answer, actually.
+> They're different. You're both important to me. | +1 -> both
+> Why, are you worried? | -1 kicks
+  - Say worried one more time and see what happens.
+page both
+say: Different how. Be specific. I'm keeping score.
+> You're the one who makes me feel at home. | +3 hug
+  - ...Stop. Okay. Don't stop. Just don't say it where anyone can hear.
+> I'm not giving you ammunition. | +1 laugh
+  - Smart. You'd lose.
+ignored: Whatever. Forget I asked.
+
+scene cowife_rival
+who: together
+mood: jealous sulky
+when: cowife
+say: Don't. I saw you two. I'm not talking to you right now.
+say: You smell like {cowife}'s shampoo. Go away.
+> I'm sorry. I should've been more careful. | +2 forgive
+  - ...You should have. You owe me. A lot. Starting with dinner.
+> You know what this is. You agreed to it. | -1 -> agreed
+> Come here. | +1 hug
+  - Don't — ...Fine. Thirty seconds. I'm still angry.
+page agreed
+say: Agreeing to it and watching it are different things, idiot. My head knows. The rest of me didn't get the memo.
+> Then I'll be gentler about it. | +3 forgive hug
+  - ...Okay. Yeah. That's all I wanted. Don't make it weird.
+> I can't help how I feel either. | 0 cross
+  - Neither can I. So give me a minute to feel it.
+ignored: Go on. I'm sure {cowife}'s waiting.
+
+scene cowife_kids
+who: together
+when: cowife kids
+say: {kid} came home with bruised knuckles defending {cowife}'s kid at the market. I'm furious. I'm also buying {kid} a cake.
+say: The kids are all sleeping in one room tonight. They insisted. Something about 'blood pacts'.
+> That's family. | +2 hug
+  - Yeah. It is. Weird, loud, all over the place. Family.
+> Should we stop the blood pacts? | +1 laugh
+  - It's ketchup. I checked. Let them have it.
+ignored: I'll go check they haven't burned the house down.

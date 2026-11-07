@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.1.9 (HexGhoul): Jealousy you can see; co-wives and half-siblings who know about each other (testing)
+
+See `.github/release-notes-3.1.9.md`. A partner who sees you being sweet on another says so to your face. Two of your partners who meet talk (first meeting, rivalry, the kids, settled), and your children by different mothers or fathers talk about it. New conversations about the other wife and the half-siblings. Not tested in game.
+
 ## 3.1.8 (HexGhoul): A signature move for the greatsword, the hammer and the whip (testing)
 
 See `.github/release-notes-3.1.8.md`. Sneak + M1: the Tendril Whip's Tendril Swing (lash a block, get hauled to it), the Flesh Hammer's Fault Line (the ground breaks open in a line ahead), the Bone Greatsword's Bone Wall (a guard; a perfect parry staggers them and readies the overhead cleave). Protocol 92. Not tested in game.

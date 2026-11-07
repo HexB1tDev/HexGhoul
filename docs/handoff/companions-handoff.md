@@ -1,4 +1,15 @@
-# START HERE (state after 3.1.8)
+# START HERE (state after 3.1.9)
+
+The owner's relationships ask (see 3.1.7's section for their words): jealousy prominent, two wives and their kids reacting to each other, half-siblings talking about other mothers and fathers; "make up your own shit".
+
+- Pure `family/Blended`: `witnessed(persona, seed, names)` (6 lines each, with a gesture word), `coWives(a, b, Mood, seed, names)` (pairs eto+touka, eto+ken, ken+touka; moods FIRST, RIVAL, KIDS, EASY; who 0 the pair's earlier key, swapped when asked the other way round), `halfSiblings(Ages, seed, names)` (LITTLE, BIG, MIXED, who 0 the older), `fill` (unknown names read "them").
+- Server `BlendedServer`: every 100 ticks per player, partners (`UniqueNpcs.partnersOf`) within 9 of each other and free start a `Conversation` ("partners"; B walks to A); `mood` from memory `met_<other>` (set on the first), `NpcMemory.JEALOUS`, children by each (`kidBy`); half-siblings (`half`: siblings not sharing both parents, past babyhood) start "half siblings" talks. Per pair, once every `AGAIN` (12000). `witnessed` from `RomanceServer.romanced`: within 24 and seeing (`SceneServer.sees`): the line as a bubble, `EtoBrain.gesture`, jealous `2 x JEALOUS_FOR`.
+- Scenes: `SceneWords` gained companion flag/name `cowife`, child flag `halfsib` and names `halfsib`, `halfmom`; `SceneServer` computes them. New scenes: eto/touka/ken `cowife_*` (3 each), child `halfsib_*` (4).
+- **Not built yet from the same message:** more "bringing the child home" conversations by personality (task 9 of this session's list).
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 92. Not tested in game.
+
+# State after 3.1.8
 
 The owner's "improve the move sets of the briefcase", then: "I meant the heavy blade, hammer and whip" (the kagune-made Bone Greatsword, Flesh Hammer, Tendril Whip).
 

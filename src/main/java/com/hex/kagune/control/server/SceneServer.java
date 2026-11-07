@@ -372,6 +372,13 @@ public final class SceneServer {
         if (c.granted()) {
             flags.add("taught");
         }
+        // 3.1.9: the player has another partner too (her rival, or her co-wife): who.
+        Map<String, com.hex.kagune.control.npc.Romance.Stage> others = UniqueNpcs.partnersOf(level, player, npc.persona().key());
+        if (c.dating() && !others.isEmpty()) {
+            flags.add("cowife");
+            com.hex.kagune.control.npc.Persona rival = com.hex.kagune.control.npc.Persona.of(others.keySet().iterator().next());
+            names.put("cowife", rival == null ? "the other one" : rival.name());
+        }
         names.put("name", c.name());
         if (c.claimedBy() != null) {
             names.put("partner", c.claimedBy());
@@ -614,6 +621,15 @@ public final class SceneServer {
         if (!siblings.isEmpty()) {
             flags.add("siblings");
         }
+        // 3.1.9: a brother or sister by another mother or father: who, and that one's other parent (named below).
+        Children.Child halfSib = null;
+        for (Children.Child other : siblings) {
+            if (BlendedServer.half(child, other)) {
+                flags.add("halfsib");
+                halfSib = other;
+                break;
+            }
+        }
         if (npc.mind != null && player.m_20148_().equals(npc.mind.carrier)) {
             flags.add("carried");
         }
@@ -642,6 +658,10 @@ public final class SceneServer {
         names.put("othername", otherName == null || otherName.isEmpty() ? com.hex.kagune.control.family.ChildLines.call(stage, !mother) : otherName);
         names.put("me", child.name);
         names.put("name", player.m_36316_().getName());
+        if (halfSib != null) {
+            names.put("halfsib", halfSib.name);
+            names.put("halfmom", BlendedServer.otherParent(halfSib, player));
+        }
         if (!siblings.isEmpty()) {
             names.put("sib", siblings.get(npc.m_217043_().m_188503_(siblings.size())).name);
         }

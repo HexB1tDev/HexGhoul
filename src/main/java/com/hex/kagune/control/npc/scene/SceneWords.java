@@ -70,11 +70,11 @@ public final class SceneWords {
         "woman", "man", "home", "following");
     /** A companion's: their family together, how long, how long apart, what the player holds, her own place. */
     public static final Set<String> COMPANION_FLAGS = union(SHARED_FLAGS, Set.of("pregnant", "kids", "baby", "toddler", "kid", "teen", "away", "new", "long",
-        "meat", "book", "flower", "ownplace", "mixed", "taught",
+        "meat", "book", "flower", "ownplace", "mixed", "taught", "cowife",
         // 2.2.3: never set by the moment itself: a scene with it only comes up when asked for by name (making up after a sulk, after jealousy)
         "makeup"));
     /** A child's: a ghoul or not, a girl or a boy, which parent it talks to, the other parent a companion, brothers and sisters, carried. */
-    public static final Set<String> CHILD_FLAGS = union(SHARED_FLAGS, Set.of("girl", "boy", "mother", "father", "siblings", "npcparent", "eto", "touka", "ken",
+    public static final Set<String> CHILD_FLAGS = union(SHARED_FLAGS, Set.of("girl", "boy", "mother", "father", "siblings", "halfsib", "npcparent", "eto", "touka", "ken",
         "carried", "taught"));
     /** An ally's: a boy or a girl, a friend of the player's (regard), not just someone who walks with them. */
     public static final Set<String> ALLY_FLAGS = union(SHARED_FLAGS, Set.of("boy", "girl", "friend"));
@@ -105,9 +105,9 @@ public final class SceneWords {
     // ---------------------------------------------------------------- what may be put in a line
 
     /** Names a companion's lines may hold: the player, a child of theirs, the children, who she belongs to. */
-    public static final Set<String> COMPANION_NAMES = Set.of("name", "kid", "kids", "partner", "she", "her", "self");
+    public static final Set<String> COMPANION_NAMES = Set.of("name", "kid", "kids", "partner", "she", "her", "self", "cowife");
     /** A child's: what it calls the one it talks to, the other parent (what it calls them, their name), its own name, a brother or sister. */
-    public static final Set<String> CHILD_NAMES = Set.of("call", "other", "othername", "me", "sib", "name");
+    public static final Set<String> CHILD_NAMES = Set.of("call", "other", "othername", "me", "sib", "name", "halfsib", "halfmom");
     /** An ally's: the player's name, its own. */
     public static final Set<String> ALLY_NAMES = Set.of("name", "me");
     /** A name that needs a moment to hold (else there is no one to name). */
@@ -116,6 +116,8 @@ public final class SceneWords {
             case "kid", "kids" -> "kids";
             case "sib" -> "siblings";
             case "partner" -> "claimed";
+            case "cowife" -> "cowife"; // 3.1.9: another of the player's partners
+            case "halfsib", "halfmom" -> "halfsib"; // 3.1.9: a brother or sister by another mother or father, and that one's
             default -> null;
         };
     }

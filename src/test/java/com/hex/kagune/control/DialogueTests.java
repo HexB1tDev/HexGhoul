@@ -24,6 +24,87 @@ import java.util.Set;
 public final class DialogueTests {
     private static int passed;
 
+    /**
+     * 3.1.9 (the owner: "jealousy is actually ... a really prominent thing ... if you have two wives ... the kids ... react to each other
+     * ... siblings from another mother ... talk about it"): every partner has words for seeing the player with another; every pair of
+     * partners a talk for every way they stand (first meeting, rivalry, the children, settled), both speaking, turn about; children by
+     * different mothers or fathers a talk at every age; every name filled; no banned name; each line short enough for a bubble.
+     */
+    private static void blended() {
+        java.util.Map<String, String> names = new java.util.HashMap<>();
+        names.put("you", "Sam");
+        names.put("other", "Touka");
+        names.put("akid", "Rin");
+        names.put("bkid", "Hiro");
+        names.put("a", "Rin");
+        names.put("b", "Hiro");
+        names.put("amom", "Eto");
+        names.put("bmom", "Touka");
+        names.put("par", "Papa");
+        java.util.List<String> banned = java.util.List.of("kaneki", "ayato", "furuta", "takatsuki", "aogiri", "yoshimura");
+        java.util.List<String> all = new java.util.ArrayList<>();
+        String[] keys = {"eto", "touka", "ken"};
+        for (String who : keys) {
+            int count = com.hex.kagune.control.family.Blended.witnessedCount(who);
+            check(count >= 5, who + " has words for seeing it (" + count + ")");
+            java.util.Set<String> seen = new java.util.HashSet<>();
+            for (int seed = 0; seed < count; seed++) {
+                com.hex.kagune.control.family.Blended.Said said = com.hex.kagune.control.family.Blended.witnessed(who, seed, names);
+                seen.add(said.text());
+                all.add(said.text());
+                check(!said.gesture().isEmpty(), who + " shows it, too: " + said.text());
+            }
+            check(seen.size() == count, who + "'s words for it all differ");
+        }
+        check(com.hex.kagune.control.family.Blended.pairs().size() == 3, "every pair of the three has talks");
+        for (int i = 0; i < keys.length; i++) {
+            for (int j = 0; j < keys.length; j++) {
+                if (i == j) {
+                    continue;
+                }
+                for (com.hex.kagune.control.family.Blended.Mood mood : com.hex.kagune.control.family.Blended.Mood.values()) {
+                    int count = com.hex.kagune.control.family.Blended.coWifeCount(keys[i], keys[j], mood);
+                    check(count >= 1, keys[i] + " and " + keys[j] + " have a talk when " + mood);
+                    for (int seed = 0; seed < count; seed++) {
+                        java.util.List<com.hex.kagune.control.family.Blended.Said> talk = com.hex.kagune.control.family.Blended.coWives(keys[i], keys[j], mood, seed, names);
+                        boolean both = talk.stream().anyMatch(x -> x.who() == 0) && talk.stream().anyMatch(x -> x.who() == 1);
+                        boolean turns = true;
+                        for (int k = 1; k < talk.size(); k++) {
+                            turns &= talk.get(k).who() != talk.get(k - 1).who();
+                        }
+                        check(talk.size() >= 4 && both && turns, keys[i] + "/" + keys[j] + " " + mood + ": both speak, in turn");
+                        talk.forEach(x -> all.add(x.text()));
+                    }
+                }
+                // Either way round, the same talk with the speakers swapped.
+                java.util.List<com.hex.kagune.control.family.Blended.Said> ab = com.hex.kagune.control.family.Blended.coWives(keys[i], keys[j], com.hex.kagune.control.family.Blended.Mood.FIRST, 0, names);
+                java.util.List<com.hex.kagune.control.family.Blended.Said> ba = com.hex.kagune.control.family.Blended.coWives(keys[j], keys[i], com.hex.kagune.control.family.Blended.Mood.FIRST, 0, names);
+                boolean mirrored = ab.size() == ba.size();
+                for (int k = 0; mirrored && k < ab.size(); k++) {
+                    mirrored = ab.get(k).text().equals(ba.get(k).text()) && ab.get(k).who() == 1 - ba.get(k).who();
+                }
+                check(mirrored, keys[i] + "/" + keys[j] + ": each says their own lines whichever comes first");
+            }
+        }
+        for (com.hex.kagune.control.family.Blended.Ages ages : com.hex.kagune.control.family.Blended.Ages.values()) {
+            int count = com.hex.kagune.control.family.Blended.halfCount(ages);
+            check(count >= 2, "children by different mothers talk when " + ages);
+            for (int seed = 0; seed < count; seed++) {
+                java.util.List<com.hex.kagune.control.family.Blended.Said> talk = com.hex.kagune.control.family.Blended.halfSiblings(ages, seed, names);
+                check(talk.size() >= 3 && talk.stream().anyMatch(x -> x.who() == 0) && talk.stream().anyMatch(x -> x.who() == 1),
+                    ages + " talk " + seed + ": both speak");
+                talk.forEach(x -> all.add(x.text()));
+            }
+        }
+        for (String line : all) {
+            String low = line.toLowerCase(java.util.Locale.ROOT);
+            check(!line.contains("{") && !line.contains("}") && line.length() <= 150 && banned.stream().noneMatch(low::contains),
+                "filled, bubble-sized, no banned name: " + line);
+        }
+        check(com.hex.kagune.control.family.Blended.fill("{you} and {nobody}", java.util.Map.of("you", "Sam")).equals("Sam and them"),
+            "a name not known reads 'them', never a brace");
+    }
+
     private static void check(boolean ok, String why) {
         if (!ok) {
             throw new AssertionError(why);
@@ -35,6 +116,7 @@ public final class DialogueTests {
         sceneConditions();
         humanConditions();
         babyRequests();
+        blended();
         System.out.println("Dialogue tests: " + passed + " checks passed");
     }
 

@@ -2019,3 +2019,51 @@ say: I found an old note in a book. Someone had written 'try again tomorrow'. I 
   - Then I'll try to say these things more often. I notice more than I say.
 > There is more to you than I expected. | +1 look
   - There is. I'm still getting used to letting people see it.
+
+
+# =====================================================================================================================================
+# 3.1.9: the other one (another of the player's partners: {cowife})
+# =====================================================================================================================================
+
+scene cowife_ask
+who: together
+when: cowife
+say: Can I ask you something? Does {cowife}... do they make you happy? I want you to be happy. Even if it's not just me.
+say: I bumped into {cowife} today. I apologised four times. I'm not sure what for.
+> Yes. And so do you. Differently. | +2 shy
+  - Differently. I can live with differently. I think I can live with a lot, if I'm part of it.
+> Why do you always put yourself last? | +1 -> last
+> You don't have to be friends with them. | 0 look
+  - I know. I'd like to try, though. Lonely people should stick together.
+page last
+say: I don't know. Habit. If I put myself last, nobody has to push me there.
+> Nobody's pushing you. You're here, with me. | +3 hug
+  - ...Okay. I'm going to remember you said that. For the bad nights.
+> Then I'll put you first today. | +3 hand
+  - Today. That's... that's a lot, actually. Thank you.
+ignored: Sorry. Forget I asked. I'm fine.
+
+scene cowife_rival
+who: together
+mood: jealous sulky lonely
+when: cowife
+say: I'm not angry. I'm... I'm a little sad. I know I'm not supposed to be. I'm sorry.
+say: I waited up again. You were with {cowife}. That's fine. It's fine.
+> Don't apologise for feeling it. | +2 forgive
+  - ...Okay. Then I feel it. It's heavy. Will you sit with me a while?
+> I should have told you I'd be late. | +2 forgive hand
+  - That's all. Just tell me. I can wait for anything if I know it's coming.
+> I can't be in two places at once, Ken. | -1 look
+  - I know. I know. I'm being selfish. I'll be fine.
+ignored: I'll just read until I fall asleep. It's fine.
+
+scene cowife_kids
+who: together
+when: cowife kids
+say: {kid} asked me if {cowife} was their mother too. I said 'sort of'. Was that wrong?
+say: I read the children a story tonight. All of them. Even the ones who say they're too old for stories. They stayed.
+> 'Sort of' is perfect. | +2 shy
+  - I thought so. Families don't fit in neat boxes. I should know.
+> You're a good father to all of them. | +3 hug
+  - ...I didn't have one, really. So I'm making it up as I go. I'm glad it looks right.
+ignored: I'll check they're asleep. They never are.

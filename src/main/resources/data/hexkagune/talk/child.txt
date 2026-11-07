@@ -2000,3 +2000,71 @@ say: Yes. Please. Black. Like my soul. ...That's a joke. {other} says it all the
   - Coffee with you. Okay. That's actually nice.
 > Black like your soul? | +1
   - It's a family joke. You wouldn't get it. You married into it.
+
+
+# =====================================================================================================================================
+# 3.1.9: a brother or sister by another mother or father ({halfsib}, whose other parent is {halfmom})
+# =====================================================================================================================================
+
+scene halfsib_why
+who: talking
+when: halfsib
+say: {call}, why does {halfsib} have {halfmom} and I have {othername}?
+say: {call}, is {halfmom} my mama too? {halfsib} said I could borrow her.
+> Because I love {othername} and {halfmom} both. | +1 hug
+  - Both? Like two desserts?
+  - Okay. Then {halfsib} is half mine. I'm keeping the good half.
+> You can have more than one family, sweetheart. | +1 -> more
+> That's a grown-up thing. Go play. | sad
+  - *goes off, still thinking very hard about it*
+page more
+say: More than one? Do I get double birthdays?
+> Nice try. | +1 play
+  - *giggles* Worth asking.
+> You get double people who love you. That's better. | +2 hug
+  - ...Okay. That IS better. But birthdays too?
+ignored: *goes to ask {halfsib} instead*
+
+scene halfsib_fight
+who: talking
+mood: sad hurt
+when: halfsib
+say: {halfsib} said {halfmom} is cooler than {othername}! Take it back! Tell them to take it back!
+say: {halfsib} won't share and says it's because I'm only HALF.
+> Nobody is half anything in this family. | +2 hug
+  - ...Even {halfsib}?
+  - Then I'm telling {halfsib} that. Right now.
+> I'll talk to {halfsib}. | +1 pat
+  - Good. And tell them {othername} can beat {halfmom} at arm wrestling.
+> Work it out between you. | sad
+  - *stomps off muttering*
+ignored: *sulks in a corner with arms folded*
+
+scene halfsib_proud
+who: big
+when: halfsib
+say: Taught {halfsib} to throw a proper punch today. {halfmom} saw. I think they almost smiled at me.
+say: Don't tell {othername}, but {halfmom} is actually kind of nice. In a terrifying way.
+> I'm proud of you for looking out for them. | +2 proud
+  - Yeah, well. Somebody has to. {halfsib}'s a menace.
+> Your secret's safe. | +1 play
+  - It better be. I have a reputation.
+ignored: Whatever. Forget I said anything.
+
+scene halfsib_question
+who: big
+when: halfsib
+say: Can I ask you something weird? Do you love {halfmom} the same as {othername}?
+say: Did you ever think about what it's like for us? Two mothers. Two of everything. It's a lot.
+> Differently, but just as much. | +1 -> diff
+> It's a lot for me too. We figure it out together. | +2 hug
+  - ...Yeah. Okay. Together. That I can do.
+> That's between me and them. | 0
+  - Fine. Just... don't make us choose sides. Ever.
+page diff
+say: Differently how? ...Actually, don't answer. I don't want to know the details.
+> Smart kid. | +1 play
+  - I get it from {othername}.
+> The way you love your friends differently. | +1 pat
+  - Huh. Yeah. That makes sense, actually. Annoyingly.
+ignored: Never mind. Weird question.
