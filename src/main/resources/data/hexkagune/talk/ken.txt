@@ -2255,3 +2255,127 @@ say: {kid} looks happy. *smiles* You were always good at that. Making people hap
 > You're good at it too. | +2 blush
   - *flustered* I... thank you. I try.
 ignored: *ruffles {kid}'s hair and goes back to the kitchen*
+
+# =====================================================================================================================================
+# 3.3.7: TALKING IT OUT (the owner's list: reconciliation talks). Cross or jealous, he can be asked "Can we talk about it?" (EtoServer:
+# the put-out page, the jealous one's first page): a talk that goes well or badly by what is said. "mend" ends the sulk or the jealousy.
+# And more ways he comes to make up himself (make_up_2, jealous_over_2: EtoBrain.makeUp picks among them).
+# =====================================================================================================================================
+
+topic mend_hurt
+prompt: Can we talk about it?
+who: together
+mood: sulky
+say: *Ken looks up, and then down again.* Yes. I'd like that. I've been going over it in my head and I keep getting it wrong. Maybe out loud will be better.
+say: ...Okay. *He closes his book on one finger to keep the page.* I'm listening. I'm not angry. I'm just a little hurt, and I don't know where to put it.
+> I'm sorry. I mean it. | +2 -> owned
+> It was an accident. | 0 -> accident
+> I'll make it up to you. | +1 -> price
+> You're overreacting. | -3 sulk look
+  - ...Maybe I am. *He opens his book again and doesn't read it.* I'd like to be alone for a while, I think.
+page owned
+say: *He's quiet for a moment.* ...Thank you. You didn't have to say it like that. Like you mean it. It helps more than you know.
+> Come here. | +3 mend hug
+  - *He comes, and holds on, carefully at first and then not carefully at all.* ...Okay. We're okay.
+> It won't happen again. | +2 mend bow
+  - I believe you. *He smiles, small.* I'd believe you even if I shouldn't. That's my problem, not yours.
+page accident
+say: I know. I know it was. *He rubs his wrist.* I think I knew right away. It still hurt, though. Both things are true.
+> You're right. I'm sorry. | +2 mend shy
+  - *His shoulders loosen.* ...Thank you. That's all I needed. Really.
+> Then why are you still upset? | -2 sulk look
+  - I don't know. I'm sorry. Maybe I'll know after a walk. Alone, if that's okay.
+page price
+say: Make it up to me? *He blinks, surprised anyone would offer.* ...Walk with me a while? No talking about it. Just walking.
+> Let's walk. | +3 mend follow
+  - *He falls in beside you, close enough that your arms brush.* ...This is nice. This is enough.
+> Can I just say sorry instead? | +1 mend bow
+  - Of course. *He smiles.* Sorry is plenty. The walk was for me, really.
+
+topic mend_why
+prompt: Are we okay?
+who: together
+mood: sulky
+say: I want us to be. *He turns his cup round in his hands.* Can I ask why? Not to blame you. I just want to understand it, so it doesn't happen again.
+> I wasn't thinking. | +1 -> thinking
+> I don't know. I'm sorry. | +2 -> honest
+> We're fine. Drop it. | -3 sulk
+  - ...Okay. *He says it very quietly.* I'll drop it. I don't think I can put it down yet, though.
+page thinking
+say: That's... honest. *He breathes out.* I don't think about things enough, either. Or I think about them far too much. There's no middle with me.
+> Be the middle with me. | +3 mend hand
+  - *He laughs, and takes your hand.* That's a very strange sentence. ...I'd like that. Yes.
+> I'll be more careful. | +2 mend bow
+  - Thank you. *He means it, you can tell.* Me too. With you.
+page honest
+say: *He looks at you a long time.* ...Somehow that's better than an excuse. People always have excuses. You just had the truth.
+> Forgive me? | +3 mend hug
+  - You never needed to ask. *He pulls you in.* But I'm glad you did.
+> Let me make you coffee. | +2 mend
+  - *His face lights up.* You'd do that? ...Black, a little sugar. Today it can be a little more sugar. Thank you.
+
+topic mend_friend
+prompt: Are we still friends?
+who: friend
+mood: sulky
+say: Of course we are. *He hesitates.* I think. I'm sorry, I'm not good at this. I was hurt. I'm still a little hurt. But of course we are.
+> I'm sorry. Really. | +2 mend bow
+  - *He bows a little, back.* Thank you. Then it's done. Let's not let it get in the way.
+> It won't happen again. | +2 mend
+  - I believe you. I'm told I believe people too easily. I'd rather that than the other way.
+> It wasn't a big deal. | -2 sulk look
+  - ...Maybe not to you. I'll be fine. Just give me a little while.
+
+topic mend_jealous
+prompt: Can we talk about earlier?
+who: together
+mood: jealous
+say: *Ken fidgets with his sleeve.* About earlier. I'm sorry, I know I've been strange. I saw, and I didn't know what to do with it, so I didn't do anything. Badly.
+say: Yes. Please. *He sits down hard.* I keep telling myself I'm being stupid. It isn't working. Can you tell me instead?
+> Nobody. It's only you. | +2 -> only
+> I was just being friendly. | 0 -> friendly
+> Are you jealous? | +1 -> jealous
+> You're being paranoid. | -3 sulk look
+  - ...Maybe I am. *He stands up.* I'm sorry. I think I'll go for a walk.
+page only
+say: *He lets out a long breath.* ...Only me. Could you say it once more? I'm sorry. I know. Once more.
+> *Hold his hands.* It's only you. | +4 mend hand
+  - *He holds on so tight.* ...Okay. Okay. I'm going to remember the way you said that, for the bad nights.
+> Only you. Always. | +3 mend shy
+  - *He goes red, and smiles at the floor.* Always. ...I've read that word a thousand times. It's different out loud.
+page friendly
+say: Friendly. Yes. *He nods, too many times.* That's... that's fine. People are friendly. I'm friendly. I'm sorry. I think I just wanted to be sure.
+> Be sure. You're the one. | +3 mend hug
+  - *He hugs you, sudden and fierce.* ...Thank you. I'm sure now. I'm sure.
+> You're reading too much into it. | -1 look
+  - I do that. I read too much into everything. *A small, tired smile.* I'll try to read less.
+page jealous
+say: *He winces.* ...Yes. I'm sorry. I didn't think I'd be the jealous kind. I didn't think I'd ever have anyone to be jealous over.
+> I'm glad you do. | +3 mend hug
+  - *He laughs, a little wet.* That's a very strange thing to be glad about. ...Come here.
+> You don't need to be. | +3 mend hand
+  - *He takes your hand and looks at it like it's something rare.* I know. I'll keep knowing it. Thank you.
+
+scene make_up_2
+who: together
+when: makeup
+say: *Ken holds out a book with a slip of paper sticking out of it.* I marked a page for you. It says what I wanted to say better than I could. ...It's an apology. Mostly. Partly a recommendation.
+> I'm sorry too. | +3 hug
+  - *He hugs you, book and all.* Then we're both sorry. You can still read the page.
+> What does the page say? | +2 read
+  - *He reads it aloud, softly, and doesn't stammer once.* ...That. That's what I meant.
+> *Take his hand.* | +3 hand
+  - *He laces his fingers with yours, and the book slips under his arm.* ...Okay. That's better than the page.
+ignored: *He leaves the book beside you, the slip of paper sticking out, and goes.*
+
+scene jealous_over_2
+who: together
+when: makeup
+say: *Ken comes and stands close, not quite touching.* I made a list, earlier. Of reasons not to be jealous. It was very long. Every one of them was you. ...So I think I'm done now.
+> You're the only one. | +4 cling
+  - *He leans into you, slowly, like he's still asking permission.* ...I know. Thank you for saying it anyway.
+> Can I see the list? | +2 shy
+  - Absolutely not. *He goes pink.* Maybe. Someday. When it's longer.
+> *Kiss him.* | +4 kiss
+  - *He kisses you back, a little surprised, and then not surprised at all.* ...That can go on the list.
+ignored: *He stays close a while, in the quiet, and that's enough for him.*

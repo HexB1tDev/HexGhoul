@@ -2454,3 +2454,127 @@ say: *nods at {kid}* Back in one piece. I'd ask where you went, but I'm trying t
 > We went to the river. | +1 chin
   - The river. Did they fall in? ...No? Pity. Next time.
 ignored: *ruffles {kid}'s hair and goes back to her book*
+
+# =====================================================================================================================================
+# 3.3.7: TALKING IT OUT (the owner's list: reconciliation talks). Cross or jealous, they can be asked "Can we talk about it?" (EtoServer:
+# the put-out page, the jealous one's first page): a talk that goes well or badly by what is said. "mend" ends the sulk or the jealousy.
+# And more ways she comes to make up herself (make_up_2, jealous_over_2: EtoBrain.makeUp picks among them).
+# =====================================================================================================================================
+
+topic mend_hurt
+prompt: Can we talk about it?
+who: together
+mood: sulky
+say: *Eto doesn't look up from her book.* Talk. You want to talk. ...Fine. Sit. You have one page to convince me, and I'm a very harsh critic.
+say: *She snaps her book shut.* Oh, now you want a conversation. Go on, then. I'm listening. I'm always listening. That's the problem.
+> I'm sorry. I mean it. | +2 -> owned
+> It was an accident. | 0 -> accident
+> I'll make it up to you. | +1 -> price
+> You're overreacting. | -3 sulk huff
+  - Overreacting. *She opens the book again.* Wonderful. Come back when you've found a better word. I'll be here, overreacting.
+page owned
+say: *She looks at you over the top of the page for a long moment.* ...You do mean it. You've got that face. The honest one. I hate how well it works on me.
+> Come here. | +3 mend hug
+  - *She tosses the book aside and walks straight into you.* Fine. Forgiven. Do it again and I'll put you in a book and kill you off in chapter two.
+> It won't happen again. | +2 mend giggle
+  - Promises, promises. ...I'll hold you to that one. In ink.
+page accident
+say: Accidents are just intentions nobody admits to. ...That's from a book. Mine. Still true.
+> You're right. I'm sorry. | +2 mend lean
+  - *Her shoulders come down.* ...There. Was that so hard? Okay. We're fine. Mostly fine. Getting there.
+> Then why are you still mad? | -2 sulk cross
+  - Because you're still arguing. Go away and come back with an apology instead of a defence.
+page price
+say: Make it up to me. Mm. *She taps her chin.* You'll read to me tonight. Out loud. Every voice. Even the villain's. Especially the villain's.
+> Deal. Every voice. | +3 mend giggle
+  - *She brightens like a struck match.* Good. I'll pick something with a lot of screaming. ...Thank you. I mean it too.
+> Can I just say sorry instead? | +1 mend pout
+  - You can. You just did. ...Fine. Accepted. But I'm still picking the book.
+
+topic mend_why
+prompt: Are we okay?
+who: together
+mood: sulky
+say: Okay? *She laughs, short.* I don't know. You tell me. Why did you do it? I'd like the real version, not the one you rehearsed on the way over.
+> I wasn't thinking. | +1 -> thinking
+> I don't know. I'm sorry. | +2 -> honest
+> We're fine. Drop it. | -3 sulk cross
+  - *Her smile goes thin.* Dropped. Like your manners. ...Go on. Go. I'll pick it back up when you're gone.
+page thinking
+say: No. You weren't. *She sighs.* I don't need you clever all the time, you know. I need you careful with me. I'm not as hard to break as I look. ...No. I'm harder. You know what I mean.
+> I'll be careful with you. | +3 mend cling
+  - *She hooks her arm through yours, very firmly.* Good. Start now. I'm fragile and important and I've decided to forgive you.
+> I know what you mean. | +2 mend lean
+  - *She leans her head on your shoulder for a second.* ...Of course you do. That's why I keep you.
+page honest
+say: *She blinks.* ...Huh. "I don't know." That's the first true thing anyone's said to me all week. I don't know what to do with it.
+> Forgive me? | +3 mend hug
+  - *She steps in and holds on.* Yes. Annoyingly. Immediately. Don't tell anyone how easy that was.
+> Let me make you tea. | +2 mend
+  - Tea, an apology and a confession. You're writing a very good chapter today. ...Fine. Two sugars. I'm still a little cross.
+
+topic mend_friend
+prompt: Are we still friends?
+who: friend
+mood: sulky
+say: Friends. *She turns a page she hasn't read.* I don't have many. I'm careful with them. I'd thought you were careful with me, too.
+> I wasn't. I'm sorry. | +2 mend bow
+  - ...Well. At least you're an honest disappointment. *She almost smiles.* Fine. Still friends. Bring me a book next time, as interest.
+> It won't happen again. | +2 mend
+  - It had better not. I have a long memory and a short list of friends. Don't make it shorter.
+> It wasn't a big deal. | -2 sulk cross
+  - Not to you. That's rather the point. Go away for a while, please.
+
+topic mend_jealous
+prompt: Can we talk about earlier?
+who: together
+mood: jealous
+say: Earlier. You mean the part where your eyes wandered and I pretended not to see? I saw. I see everything. It's a curse. Go on, explain. I love a good excuse.
+say: *Eto smiles at you, all teeth.* Oh, earlier. Yes. Let's talk about earlier. Who were they? Should I be worried, or should they?
+> Nobody. It's only you. | +2 -> only
+> I was just being friendly. | 0 -> friendly
+> Are you jealous? | +1 -> jealous
+> You're being paranoid. | -3 sulk
+  - Paranoid. *Her smile doesn't move at all.* Then I'll be paranoid somewhere else. Quietly. Sharpening things.
+page only
+say: Only me. *She says it slowly, testing it.* ...Say it again. No. Look at me when you say it.
+> *Look at her.* It's only you. | +4 mend cling
+  - *She holds your gaze a long time, then hooks herself onto your arm.* ...Fine. I believe you. I'm keeping this arm as collateral.
+> Only you. Always. | +3 mend blush
+  - *She goes pink, which she'll deny.* ...Always is a big word. I'm a writer. I'll hold you to every letter of it.
+page friendly
+say: Friendly. *She rolls the word around.* I'm friendly. I'm friendly with knives. Friendly doesn't usually come with that look on your face.
+> It meant nothing. You're the one. | +3 mend lean
+  - ...Mm. Good answer. Better than the first one. *She leans into you.* I'll stop sharpening, then.
+> You're reading too much into it. | -1 cross
+  - I read too much into everything. It's how I make a living. ...Fine. I'll read less. For now.
+page jealous
+say: Jealous? Me? *She scoffs.* I'm the most secure monster in the ward. ...Yes. Horribly. Happy now?
+> A little, yes. | +2 mend giggle
+  - *She swats you.* Beast. ...Fine. It's nice that you care that I care. Come here, then.
+> You don't need to be. | +3 mend hug
+  - *She steps into you.* I know. I know that. Tell me anyway, every so often. I like it in your voice.
+
+scene make_up_2
+who: together
+when: makeup
+say: *Eto appears at your side with two cups and holds one out without a word.* ...It's tea. It's not poisoned. That's the apology. That's the whole apology.
+> Thank you. I'm sorry too. | +3 hug
+  - *She sets her cup down and holds on to you instead.* Good. We're both terrible. Drink your tea.
+> Are you sure it isn't poisoned? | +2 giggle
+  - Mostly sure. Drink it and find out. ...It's fine. I want you alive. That's the whole problem.
+> *Kiss her.* | +3 kiss
+  - *The tea goes cold.* ...Well. That settles that.
+ignored: *She leaves the cup beside you anyway, and goes, and looks back once.*
+
+scene jealous_over_2
+who: together
+when: makeup
+say: *Eto drops onto the seat beside you and stares at nothing.* I've decided jealousy is very bad for my writing. Everything I wrote today was about stabbing. ...I'd like to be done with it now. Will you help?
+> It's only you. It always is. | +4 cling
+  - *She folds herself against your side.* There. The stabbing chapter's cut. ...Say it once more and I'll write you a love scene instead.
+> What can I do? | +3 hand
+  - Hold my hand and say nothing clever. *She laces her fingers through yours.* ...That. Exactly that.
+> The stabbing sounded fun. | +2 laugh
+  - It was. That's the problem. *She bumps you with her shoulder.* Fine. I feel better. Don't tell anyone.
+ignored: *She sits a while longer, and leaves a folded note on your knee: one line, crossed out, and "sorry" underneath.*

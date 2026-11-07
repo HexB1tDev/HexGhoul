@@ -219,6 +219,48 @@ public final class SceneTests {
                 check(made != null && made.when().contains("makeup") && !made.fits(new SceneContext("partner", "happy", "", Set.of("day", "human", "man"),
                     names(), 1)), speaker + " has " + id + ", only ever asked for by name");
             }
+            // 3.3.7 (the owner's list: reconciliation talks): more ways to come and make up, and talks to talk it out when cross or jealous.
+            for (String base : new String[] {"make_up", "jealous_over"}) {
+                List<Scene> ways = book.stream().filter(scene -> SceneBook.variantOf(scene.id(), base)).toList();
+                check(ways.size() >= 2 && ways.stream().allMatch(scene -> scene.when().contains("makeup") && scene.kind() == Scene.Kind.APPROACH),
+                    speaker + " has " + ways.size() + " ways to come with " + base + ", each only asked for by name");
+            }
+            check(SceneBook.variantOf("make_up_2", "make_up") && SceneBook.variantOf("make_up", "make_up") && !SceneBook.variantOf("make_up_x", "make_up")
+                && !SceneBook.variantOf("make_up_", "make_up") && !SceneBook.variantOf("jealous_over_2", "make_up"), "make-up variants are the base or base_<number>");
+            check(SceneWords.effect(speaker, "mend") && !SceneWords.effect("child", "mend"), "talking it out is a companion's deed");
+            for (String[] cross : new String[][] {{"partner", "sulky"}, {"wife", "sulky"}, {"friendly", "sulky"}, {"close", "sulky"}, {"partner", "jealous"},
+                {"wife", "jealous"}}) {
+                SceneContext c = new SceneContext(cross[0], cross[1], "", Set.of("day", "human", "man"), names(), 4);
+                List<Scene> talks = SceneBook.fitting(book, Scene.Kind.TOPIC, c).stream().filter(scene -> scene.id().startsWith("mend_")).toList();
+                check(talks.size() >= (cross[0].equals("partner") && cross[1].equals("sulky") ? 2 : 1), speaker + " can talk it out with a " + cross[0] + " when "
+                    + cross[1] + " (" + talks.size() + ")");
+            }
+            for (String calm : new String[] {"happy", "giddy", "lonely", "bored"}) {
+                SceneContext c = new SceneContext("wife", calm, "", Set.of("day", "human", "man"), names(), 4);
+                check(SceneBook.fitting(book, Scene.Kind.TOPIC, c).stream().noneMatch(scene -> scene.id().startsWith("mend_")),
+                    speaker + " has nothing to talk out when " + calm);
+            }
+            for (Scene scene : book) {
+                if (!scene.id().startsWith("mend_")) {
+                    continue;
+                }
+                check(scene.kind() == Scene.Kind.TOPIC && scene.prompt() != null && !scene.moods().isEmpty() && scene.moods().stream().allMatch(m -> m.equals("sulky")
+                    || m.equals("jealous")), speaker + "." + scene.id() + " is a talk brought up only when cross or jealous");
+                boolean mends = false;
+                boolean sours = false;
+                List<Scene.Page> pages = new java.util.ArrayList<>(scene.pages().values());
+                pages.add(scene.first());
+                for (Scene.Page page : pages) {
+                    for (Scene.Option option : page.options()) {
+                        boolean mend = option.effects().contains("mend");
+                        mends |= mend;
+                        sours |= option.effects().contains("sulk");
+                        check(!mend || option.regard() > 0, speaker + "." + scene.id() + ": talking it out is kind: " + option.label());
+                        check(option.next() != null || !option.replies().isEmpty(), speaker + "." + scene.id() + ": every answer is answered: " + option.label());
+                    }
+                }
+                check(mends && sours, speaker + "." + scene.id() + " can go well (mend) or badly (sulk)");
+            }
             long dates = book.stream().filter(scene -> scene.kind() == Scene.Kind.DATE).count();
             check(dates >= 6, speaker + " has " + dates + " dates");
             for (String tier : new String[] {"partner", "wife"}) {

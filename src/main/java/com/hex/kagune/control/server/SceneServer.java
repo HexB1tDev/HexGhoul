@@ -12,6 +12,7 @@ import com.hex.kagune.control.npc.EtoMood;
 import com.hex.kagune.control.npc.EtoNpc;
 import com.hex.kagune.control.npc.EtoTalk;
 import com.hex.kagune.control.npc.EtoVoice;
+import com.hex.kagune.control.npc.NpcMemory;
 import com.hex.kagune.control.npc.NpcTalk;
 import com.hex.kagune.control.npc.scene.Scene;
 import com.hex.kagune.control.npc.scene.SceneBook;
@@ -515,6 +516,7 @@ public final class SceneServer {
                     }
                 }
                 case "sulk" -> npc.mind.sulk.put(player.m_20148_(), now + 2400L);
+                case "mend" -> mend(player, npc); // 3.3.7
                 case "giddy" -> EtoBrain.giddy(npc, player, now);
                 case "hearts" -> EtoBrain.hearts(player.m_284548_(), npc, player, 5);
                 default -> {
@@ -556,6 +558,55 @@ public final class SceneServer {
             PAID.clear();
         }
         return was == null || was != day;
+    }
+
+    // ---------------------------------------------------------------- 3.3.7: talking it out
+
+    /** The id every talking-it-out topic starts with ({@code mend_hurt}, {@code mend_jealous}...). */
+    static final String MEND = "mend_";
+
+    /**
+     * 3.3.7 (the owner's list: reconciliation talks): one of her talking-it-out topics that fits now ({@code c}'s mood: sulky, jealous; who
+     * they are to her), picked by {@code seed}; null if none fits (she isn't cross with them, or has no words for it).
+     */
+    static Scene mend(ServerPlayer player, EtoNpc npc, EtoTalk.Context c, int seed) {
+        List<Scene> fit = new java.util.ArrayList<>();
+        for (Scene scene : topics(player, npc, c)) {
+            if (scene.id().startsWith(MEND)) {
+                fit.add(scene);
+            }
+        }
+        return fit.isEmpty() ? null : fit.get(Math.floorMod(seed, fit.size()));
+    }
+
+    /** The answer that offers {@code scene} ({@link #mend}) on her page, its prompt its words. */
+    static EtoTalk.Option mendOption(ServerPlayer player, EtoNpc npc, EtoTalk.Context c, Scene scene, NpcTalk.Choice slot) {
+        return new EtoTalk.Option(slot, SceneBook.fill(scene.prompt(), context(player, npc, c)), "t:" + scene.key());
+    }
+
+    /** Talked it out ({@code mend}): nothing held against {@code player} any more, no jealousy, no make-up owed. */
+    static void mend(ServerPlayer player, EtoNpc npc) {
+        EtoBrain.forgive(npc, player);
+        if (npc.mind != null) {
+            npc.mind.makeUp.remove(player.m_20148_());
+            npc.mind.offences.remove(player.m_20148_());
+        }
+        NpcMemoryServer.of(player).forget(npc.persona().key(), NpcMemory.JEALOUS);
+        NpcMemoryServer.save(player);
+    }
+
+    /**
+     * 3.3.7: one of {@code speaker}'s ways to come and make up ({@code base}: {@code make_up}, {@code jealous_over}; and its variants,
+     * {@code base_2}, {@code base_3}...), picked by {@code seed}; null if there is none.
+     */
+    static Scene variant(String speaker, String base, int seed) {
+        List<Scene> all = new java.util.ArrayList<>();
+        for (Scene scene : book(speaker)) {
+            if (SceneBook.variantOf(scene.id(), base)) {
+                all.add(scene);
+            }
+        }
+        return all.isEmpty() ? null : all.get(Math.floorMod(seed, all.size()));
     }
 
     /** The topics of hers that fit now, as answers on her talk page ({@code room}: how many at most), a different few each time. */

@@ -1,4 +1,24 @@
-# START HERE (state after 3.3.6)
+# START HERE (state after 3.3.7)
+
+Still to do, in this order (each its own version): the rest of 3.2.2's list (temper-aware door scenes, homecomings without a home, siblings, companion-child door talk, kids greeting you after days away). The owner: "push an update asap": every version is pushed as it is built.
+
+From the owner's 3.2.2 list: reconciliation talks (no break-ups exist: making up after a quarrel or a jealous spell). Before: "I'm sorry." (`sorry`, Tolerance), "It's only you." (`reassure`), and one `make_up` / `jealous_over` scene each.
+
+- Scenes (data, `talk/eto|touka|ken.txt`, at the end): topics `mend_hurt` and `mend_why` (who together, mood sulky), `mend_friend` (friend, sulky), `mend_jealous` (together, jealous). Each is 3-4 answers and 2-3 pages. Kind answers carry the new effect word `mend`; rude ones carry `sulk` (2 minutes more) or no fix. Plus come-to-you variants `make_up_2` and `jealous_over_2` (when makeup).
+- `SceneWords.COMPANION_EFFECTS` + `mend`.
+- `SceneServer`:
+  - `mend(player, npc)`: `EtoBrain.forgive`, the `makeUp` entry and offences removed, `NpcMemory.JEALOUS` forgotten. It's applied in `answer` without taking the answer's one Effect slot, so a mend can also hug.
+  - `mend(player, npc, c, seed)`: a fitting topic starting `mend_`.
+  - `mendOption` (its prompt, key `t:<scene>`).
+  - `variant(speaker, base, seed)`, using pure `SceneBook.variantOf(id, base)` (base or base_<digits>).
+- `EtoServer`: the put-out page (cross, not an enemy) adds SAY_3 = a mend topic when she is sulking or ignoring them. `show` (MAIN, dating, jealous) adds SAY_4 = a mend topic beside REASSURE (SAY_5).
+- `EtoBrain.makeUp`: `SceneServer.variant` instead of the one scene.
+- Tests: SceneTests (variants, mend fits only when sulky/jealous, each talk can go well and badly, mend answers have regard > 0, every answer answered).
+- **Judgment calls:** the talk doesn't know the cause (a hit or a bad answer); the mend talks also show in "Talk to me"'s topics when the mood fits; villager partners have none.
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 93. Not tested in game.
+
+# State after 3.3.6
 
 Still to do, in this order (each its own version): the rest of 3.2.2's list (reconciliation talks, temper-aware door scenes, homecomings without a home, siblings, companion-child door talk, kids greeting you after days away). The owner: "push an update asap": every version is pushed as it is built.
 

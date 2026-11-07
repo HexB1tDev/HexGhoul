@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.3.7 (HexGhoul): Talking it out (testing)
+
+See `.github/release-notes-3.3.7.md`. From the owner's list after 3.2.1: reconciliation talks. A companion who is cross with you, or a jealous partner, can now be asked "Can we talk about it?" (or "Are we okay?", "Are we still friends?", "Can we talk about earlier?"). It's a real talk with branches: owning it, being honest or offering to make it up ends it; "you're overreacting" or "you're being paranoid" makes it worse. New lines in each one's voice, and a second way each comes to make it up on their own (picked at random). Not tested in game.
+
 ## 3.3.6 (HexGhoul): A jealous partner acts it out (testing)
 
 See `.github/release-notes-3.3.6.md`. From the owner's list after 3.2.1: a jealous animation. A jealous companion partner now acts it out (about 7 s): back turned, arms folded, a glare over the shoulder, a huff, the snub with a foot tapping, turning back round. It plays when you ask another companion out, or ask a villager to be together or confess to one, while they see it. They also say a new line about it in their own voice, and replay the act now and then while still jealous. Protocol 93. Not tested in game.

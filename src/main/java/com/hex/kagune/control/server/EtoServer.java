@@ -156,6 +156,12 @@ public final class EtoServer {
                 List<EtoTalk.Option> options = new java.util.ArrayList<>();
                 options.add(new EtoTalk.Option(NpcTalk.Choice.SAY_1, "I'm sorry.", "sorry"));
                 options.add(new EtoTalk.Option(NpcTalk.Choice.SAY_2, "It was an accident. I swear.", "sorry"));
+                // 3.3.7 (the owner's list: reconciliation talks): or talk it out, if they're not too far gone to.
+                com.hex.kagune.control.npc.scene.Scene mend = sulking(mind, player, now) || EtoBrain.ignoring(npc, player, now)
+                    ? SceneServer.mend(player, npc, c, npc.m_217043_().m_188503_(1000)) : null;
+                if (mend != null) {
+                    options.add(SceneServer.mendOption(player, npc, c, mend, NpcTalk.Choice.SAY_3));
+                }
                 options.add(new EtoTalk.Option(NpcTalk.Choice.LEAVE, "", ""));
                 show(player, npc, c, new EtoTalk.Page(com.hex.kagune.control.npc.Tolerance.putOut(npc.persona().key(), npc.m_217043_().m_188503_(100)),
                     options), Kind.MAIN);
@@ -1292,6 +1298,11 @@ public final class EtoServer {
             // 2.2.3: jealous: they can tell them it's only them.
             List<EtoTalk.Option> out = new java.util.ArrayList<>(page.options());
             out.add(Math.max(0, out.size() - 1), new EtoTalk.Option(NpcTalk.Choice.SAY_5, com.hex.kagune.control.npc.MoodActs.REASSURE, "reassure"));
+            // 3.3.7: or talk it out properly ("Can we talk about earlier?").
+            com.hex.kagune.control.npc.scene.Scene mend = SceneServer.mend(player, npc, context, context.seed());
+            if (mend != null) {
+                out.add(Math.max(0, out.size() - 1), SceneServer.mendOption(player, npc, context, mend, NpcTalk.Choice.SAY_4));
+            }
             page = new EtoTalk.Page(page.line(), out);
         }
         if (kind == Kind.MAIN) {

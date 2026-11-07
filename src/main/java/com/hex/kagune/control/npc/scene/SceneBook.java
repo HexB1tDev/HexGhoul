@@ -49,6 +49,15 @@ public final class SceneBook {
     private SceneBook() {
     }
 
+    /** 3.3.7: true if {@code id} is {@code base} or one of its numbered variants ({@code make_up}, {@code make_up_2}, {@code make_up_3}...). */
+    public static boolean variantOf(String id, String base) {
+        if (id.equals(base)) {
+            return true;
+        }
+        String rest = id.startsWith(base + "_") ? id.substring(base.length() + 1) : "";
+        return !rest.isEmpty() && rest.chars().allMatch(ch -> ch >= '0' && ch <= '9');
+    }
+
     /** A script read: its scenes, and its mistakes ("line 12: ..."). */
     public record Parsed(List<Scene> scenes, List<String> errors) {
     }

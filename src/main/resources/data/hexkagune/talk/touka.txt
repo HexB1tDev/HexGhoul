@@ -2410,3 +2410,127 @@ say: Thanks for having them today. They look happy. You look tired. Both good si
 > They missed you. | +2 blush
   - ...They did? *looks away* Okay. Good.
 ignored: *ruffles {kid}'s hair and gets back to work*
+
+# =====================================================================================================================================
+# 3.3.7: TALKING IT OUT (the owner's list: reconciliation talks). Cross or jealous, she can be asked "Can we talk about it?" (EtoServer:
+# the put-out page, the jealous one's first page): a talk that goes well or badly by what is said. "mend" ends the sulk or the jealousy.
+# And more ways she comes to make up herself (make_up_2, jealous_over_2: EtoBrain.makeUp picks among them).
+# =====================================================================================================================================
+
+topic mend_hurt
+prompt: Can we talk about it?
+who: together
+mood: sulky
+say: *Touka crosses her arms and doesn't look at you.* Talk about what? About how you're an idiot? Sure. Let's talk about that.
+say: *She glares.* Oh, NOW you want to talk. Fine. You've got about ten seconds before I go back to being mad.
+> I'm sorry. I really am. | +2 -> owned
+> It was an accident. | 0 -> accident
+> I'll make it up to you. | +1 -> price
+> You're overreacting. | -3 sulk angry
+  - Overreacting?! *She turns on her heel.* Great. Wonderful. Don't follow me.
+page owned
+say: *She keeps glaring, but it's wobbling.* ...You really are. Ugh. You've got that face. I hate that face. It always works.
+> Come here. | +3 mend hug
+  - *She grumbles something and lets herself be hugged, then hugs back, hard.* ...Okay. We're fine. Don't make me say it twice.
+> It won't happen again. | +2 mend huff
+  - It better not. *She bumps her forehead against your chest.* ...Idiot. Fine. Forgiven.
+page accident
+say: Accident. *She snorts.* You know what else is an accident? Me kicking you. Happens all the time.
+> Okay. It was my fault. Sorry. | +2 mend shy
+  - ...There. Was that so hard? *Quieter.* Thanks for not making it a fight.
+> Then why are you still mad? | -2 sulk kicks
+  - *She kicks your shin.* That's why. Go away and come back smarter.
+page price
+say: Make it up to me? *She narrows her eyes.* You're doing the dishes. All of them. For a week. And you're not complaining once.
+> Deal. A week of dishes. | +3 mend laugh
+  - *She tries not to smile and fails.* ...You're so dumb. Fine. Deal. I'm adding the coffee pot.
+> Can I just say sorry instead? | +1 mend pout
+  - You just did. Doesn't get you out of the dishes. ...Fine. We're good.
+
+topic mend_why
+prompt: Are we okay?
+who: together
+mood: sulky
+say: Are we okay. *She stares at you.* I don't know. Why'd you do it? And don't give me some speech. Just tell me.
+> I wasn't thinking. | +1 -> thinking
+> I don't know. I'm sorry. | +2 -> honest
+> We're fine. Drop it. | -3 sulk cross
+  - Dropped. *She walks off.* You can pick it up yourself later.
+page thinking
+say: No kidding. *She rubs her face.* Look. I can take a hit. I'm not made of glass. That's not the point. The point is it was you.
+> It won't be me again. | +3 mend hug
+  - *She steps in, grabs a fistful of your shirt and just holds on.* ...Okay. Okay. I'm holding you to that.
+> I get it. I'm sorry. | +2 mend shy
+  - ...Yeah. You do. *She nudges your foot with hers.* We're okay.
+page honest
+say: *She opens her mouth to yell, and closes it again.* ...That's actually the worst answer and somehow the best one. Ugh.
+> Forgive me? | +3 mend hug
+  - *She groans and hugs you.* Yes. Stupidly. Don't tell anyone.
+> Let me make you coffee. | +2 mend
+  - You make terrible coffee. *She takes the cup anyway.* ...Fine. Terrible coffee and an apology. We're even.
+
+topic mend_friend
+prompt: Are we still friends?
+who: friend
+mood: sulky
+say: *Touka eyes you.* Friends don't do that. ...Usually. Okay, I've done worse to friends. Still.
+> I'm sorry. Really. | +2 mend huff
+  - *She huffs.* Fine. You're forgiven. Barely. You're buying the next coffee.
+> It won't happen again. | +2 mend
+  - It better not. I don't keep many friends. Don't make me regret this one.
+> It wasn't a big deal. | -2 sulk kicks
+  - *She kicks your shin.* Now it's a big deal. Bye.
+
+topic mend_jealous
+prompt: Can we talk about earlier?
+who: together
+mood: jealous
+say: *Touka's arms are crossed so tight it looks like it hurts.* Earlier. Yeah. Let's talk about who that was, and why you looked so happy about it.
+say: Oh, you want to talk? *She laughs, without anything funny in it.* Great. Start with who. Then tell me why I shouldn't be mad.
+> Nobody. It's only you. | +2 -> only
+> I was just being friendly. | 0 -> friendly
+> Are you jealous? | +1 -> jealous
+> You're being paranoid. | -3 sulk angry
+  - Paranoid. Right. *She turns away.* Go be friendly with someone else, then.
+page only
+say: ...Only me. *She finally looks at you.* You'd better not be saying that just to shut me up.
+> *Look at her.* It's only you. | +4 mend hand
+  - *She grabs your hand, rough, and doesn't let go.* ...Okay. I believe you. Shut up. I believe you.
+> Only you. Always. | +3 mend shy
+  - *She goes red to the ears.* ...Always. Okay. Don't say stuff like that out loud. ...Say it again later.
+page friendly
+say: Friendly. *Her jaw sets.* I'm friendly. I don't look at people like that when I'm being friendly.
+> It meant nothing. You're the one. | +3 mend shy
+  - ...Fine. *She looks at her shoes.* Okay. You're the one too. Don't make me say that again.
+> You're reading too much into it. | -1 cross
+  - Maybe. I don't care. ...Give me a minute. I'll get over it.
+page jealous
+say: Jealous? *She goes scarlet.* I'm not— ...Yes. Okay? Yes. Happy?
+> A little, yes. | +2 mend kicks
+  - *She kicks your shin.* Jerk. ...I'm still glad you asked. Come here.
+> You don't need to be. | +3 mend hug
+  - *She hugs you so hard it hurts.* ...I know. I know. Just... remind me sometimes.
+
+scene make_up_2
+who: together
+when: makeup
+say: *Touka sits down next to you, bumps your shoulder with hers, and says nothing for a while.* ...I'm not good at this part. So. That's me saying it. The bump. That was it.
+> I'm sorry too. | +3 hug
+  - *She leans in and lets you hold her.* ...Yeah. I know. We're okay.
+> That was a very good apology. | +2 laugh
+  - Shut up. It was perfect. *She bumps you again, harder.*
+> *Bump her back.* | +3 hand
+  - *She snorts, and her hand finds yours.* ...Okay. Good. We're good.
+ignored: *She stays beside you until it isn't awkward anymore, then goes, lighter.*
+
+scene jealous_over_2
+who: together
+when: makeup
+say: *Touka shoves her hands in her pockets.* I was being stupid. Earlier. I know you're not going anywhere. I just... I've lost a lot of people. Okay? That's all. Forget I said it.
+> You're not losing me. | +4 hug
+  - *She leans into you, quiet.* ...Okay. Okay. You'd better mean that.
+> I'm not forgetting that. | +3 shy
+  - *She glares at you, eyes wet.* ...Jerk. Fine. Remember it. Just don't bring it up.
+> *Hold her hand.* | +3 hand
+  - *She holds on hard.* ...Thanks. Don't look at me.
+ignored: *She stands there a while longer, then tugs your sleeve, once, and goes.*

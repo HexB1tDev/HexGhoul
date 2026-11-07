@@ -92,7 +92,9 @@ public final class SceneWords {
         "angry", "ring");
     /** A companion's deeds: walking up for a hug, an arm, a hand, a kiss; following or staying; on to her topics or her sweet page. */
     public static final Set<String> COMPANION_EFFECTS = Set.of("hug", "cling", "hand", "kiss", "peck", "steal", "follow", "stay", "talk", "sweet", "forgive",
-        "night", "close", "sulk", "giddy", "hearts");
+        "night", "close", "sulk", "giddy", "hearts",
+        // 3.3.7: talked it out: the sulk, the grudge, the jealousy and any make-up owed all over, whatever else the answer does
+        "mend");
     /** Of those, the ones only for a couple (a scene that does them is for partners and spouses alone). */
     public static final Set<String> TOGETHER_ONLY = Set.of("cling", "hand", "kiss", "peck", "steal", "sweet", "night");
     /** A child's moments (ChildMoment, lower case) and deeds: picked up, carried on shoulders, by the hand, following, staying, to bed. */

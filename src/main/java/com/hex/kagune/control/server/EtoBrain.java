@@ -1316,7 +1316,8 @@ public final class EtoBrain {
         if (scene == null || mood == EtoMood.SULKY) {
             return false;
         }
-        com.hex.kagune.control.npc.scene.Scene made = SceneServer.scene(npc.persona().key() + "." + scene);
+        // 3.3.7: one of her ways to come and make up (make_up, make_up_2...), not always the same.
+        com.hex.kagune.control.npc.scene.Scene made = SceneServer.variant(npc.persona().key(), scene, npc.m_217043_().m_188503_(1000));
         if (made == null) {
             mind.makeUp.remove(id);
             return false;
