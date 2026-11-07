@@ -1,4 +1,23 @@
-# START HERE (state after 3.4.0)
+# START HERE (state after 3.4.1)
+
+Still to do, in this order (each its own version): the last of 3.2.2's list (kids greeting you after days away). The owner: "push an update asap": every version is pushed as it is built.
+
+From the owner's 3.2.2 list: the companion and the child talking to each other at the door after the player's scene (a Conversation, as `BlendedServer` does).
+
+- Pure `family/DoorTalk`:
+  - `talk(persona, found, temper, stage, kid, call, seed)` returns `Siblings.Line`s, who 1 the parent, 2 the child.
+  - For a toddler, child or teen: open (persona x found x little/big), answer (found x temper or little), back (persona x found x group: soft = shy/gentle, wild = bold/mischief, bright = sunny/curious, steady = serious, or little), last (found x temper or little).
+  - For a baby: two of the parent's lines.
+  - `AFTER` 100 ticks, `WAITS` 1200.
+- `HomecomingServer`:
+  - `greet` records a `Door(companion, child, player, at, found)` in `DOORS` (by child id) when a companion meets them.
+  - `doorTalk(npc, child, level, now)` is called from `ChildBrain`'s 20-tick home check. It waits AFTER, then until `SceneServer.waitingFor(player)` is not that companion and `EtoServer.talkingWith` is false. Both must be free (`Conversation.free`), the child not carried, its `mind.talk` empty (the siblings first), within 16 blocks. Then it starts `Conversation.start(..., "door talk", parent, [parent, child], [child], lines)`; let go after WAITS.
+- Tests: FamilyTests (all personas x found x tempers x toddler/child/teen: four lines alternating, filled; a baby: the parent alone; AFTER < WAITS).
+- **Judgment calls:** four temper groups for the parent's answer; let go after a minute.
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 93. Not tested in game.
+
+# State after 3.4.0
 
 Still to do, in this order (each its own version): the rest of 3.2.2's list (companion-child door talk, kids greeting you after days away). The owner: "push an update asap": every version is pushed as it is built.
 

@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.4.1 (HexGhoul): A word at the door (testing)
+
+See `.github/release-notes-3.4.1.md`. From the owner's list after 3.2.1: the companion and the child talk to each other at the door after your scene. Once you've answered the companion's door card, they and the child brought home have a four-line talk: the parent in their voice, found or after an outing, to a toddler or a bigger child; the child by its temper; the parent's answer to that; the child's last word. To a baby the parent talks alone. Not tested in game.
+
 ## 3.4.0 (HexGhoul): Where WERE you? (testing)
 
 See `.github/release-notes-3.4.0.md`. From the owner's list after 3.2.1: siblings at home react to the one brought back. An older one covers for it or wants to know where it WAS, a younger one tells on it, one left behind from an outing minds it, and the one brought back answers, all by their tempers and ages (about 150 new lines). Not tested in game.

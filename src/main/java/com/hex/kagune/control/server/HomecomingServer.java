@@ -34,6 +34,12 @@ final class HomecomingServer {
     /** The last homecoming of each child (by its id). */
     private static final Map<String, Brought> BROUGHT = WorldTimes.kept();
 
+    /** 3.4.1: a word owed at the door between the companion who met them and the child, after the player's scene: by the child's id. */
+    record Door(int companion, int child, UUID player, long at, boolean found) {
+    }
+
+    private static final Map<String, Door> DOORS = WorldTimes.kept();
+
     /** How far off its other parent may be to meet them at the door (blocks). */
     static final double WAITING = 24.0;
 
@@ -85,6 +91,7 @@ final class HomecomingServer {
             ChildTemper temper = ChildTemper.of(child.id, child.mother, child.father);
             String call = ChildLines.call(stage, waiting.persona().female());
             npc.mind.talk.add(new ParentDuty.Said(npc.m_19879_(), Homecoming.hello(temper, stage, found, call, npc.m_217043_().m_188503_(1 << 20)), now + 8L));
+            DOORS.put(child.id, new Door(waiting.m_19879_(), npc.m_19879_(), player.m_20148_(), now, found)); // 3.4.1: their own word, after
             return;
         }
         SceneServer.approachBack(npc, child, player, now);
@@ -125,6 +132,46 @@ final class HomecomingServer {
             at += 2L * SiblingWelcome.GAP;
             spoke++;
         }
+    }
+
+    /**
+     * 3.4.1 (the owner's list: the companion and the child talking to each other at the door after the player's scene): from the child's
+     * home check. Once the player's card from its companion parent is answered or let go, and the two of them are free and near, they talk
+     * ({@link com.hex.kagune.control.family.DoorTalk}, a {@code Conversation}); let go after {@link com.hex.kagune.control.family.DoorTalk#WAITS}.
+     */
+    static void doorTalk(ChildNpc npc, Children.Child child, ServerLevel level, long now) {
+        Door door = DOORS.get(child.id);
+        if (door == null) {
+            return;
+        }
+        if (now - door.at() > com.hex.kagune.control.family.DoorTalk.WAITS || npc.m_19879_() != door.child()
+            || !(level.m_6815_(door.companion()) instanceof EtoNpc parent) || !parent.m_6084_() || parent.mind == null) {
+            DOORS.remove(child.id);
+            return;
+        }
+        if (now - door.at() < com.hex.kagune.control.family.DoorTalk.AFTER) {
+            return;
+        }
+        ServerPlayer player = ChildBrain.player(level, door.player());
+        if (player != null && (SceneServer.waitingFor(player) == parent.m_19879_() || EtoServer.talkingWith(player, parent))) {
+            return; // the player's scene with it first
+        }
+        if (npc.mind == null || npc.mind.carrier != null || npc.carriedBy != 0 || npc.m_5803_() || parent.m_5803_() || npc.m_20280_(parent) > 16.0 * 16.0
+            || !npc.mind.talk.isEmpty() || !Conversation.free(npc, level, now) || !Conversation.free(parent, level, now)) {
+            return;
+        }
+        DOORS.remove(child.id);
+        ChildStage stage = child.stage(now);
+        ChildTemper temper = ChildTemper.of(child.id, child.mother, child.father);
+        String call = ChildLines.call(stage, parent.persona().female());
+        List<com.hex.kagune.control.family.Siblings.Line> talk = com.hex.kagune.control.family.DoorTalk.talk(parent.persona().key(), door.found(), temper, stage,
+            child.name, call, parent.m_217043_().m_188503_(1 << 20));
+        List<Conversation.Line> lines = new java.util.ArrayList<>();
+        for (com.hex.kagune.control.family.Siblings.Line line : talk) {
+            lines.add(new Conversation.Line(line.who() == 1 ? parent.m_19879_() : npc.m_19879_(), line.text(), com.hex.kagune.control.family.ChildCue.NONE,
+                com.hex.kagune.control.npc.EtoGesture.NONE));
+        }
+        Conversation.start(level, now, "door talk", parent, List.of(parent, npc), List.of(npc), lines);
     }
 
     /** A companion parent of {@code child} at home near {@code player}, free to meet them (not out with them, fighting, asleep or talking). */

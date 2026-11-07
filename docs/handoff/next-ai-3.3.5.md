@@ -1,4 +1,4 @@
-# HANDOFF: HexGhoul after 3.4.0 (kept current as versions ship). Read this first.
+# HANDOFF: HexGhoul after 3.4.1 (kept current as versions ship). Read this first.
 
 Then, for the house rules and history: `docs/handoff/next-ai-3.2.1.md` and `docs/handoff/next-ai-3.1.9.md` (the two sessions before,
 their judgment calls), `docs/handoff/next-ai-2.0.45.md` (header: versions, protocol history, the 2.x/3.x log), `docs/handoff/next-ai-1.3.60.md`
@@ -11,13 +11,13 @@ lost. **Commit and push every version as it is built, and keep this file current
 
 ## Where things are
 
-- **Branch:** **`claude/exciting-bell-3kklnc`** (pushed; 3.2.7 to 3.4.0 on top of 3.2.6 from `claude/magical-fermi-cec8n1`). The next session
+- **Branch:** **`claude/exciting-bell-3kklnc`** (pushed; 3.2.7 to 3.4.1 on top of 3.2.6 from `claude/magical-fermi-cec8n1`). The next session
   will be given its own branch: start it from `origin/claude/exciting-bell-3kklnc`
   (`git fetch origin claude/exciting-bell-3kklnc && git checkout -B <your-branch> origin/claude/exciting-bell-3kklnc`). Push only to the
   branch you are given; never to `main`; no PR unless asked.
 - **Releases:** `.github/workflows/release.yml` publishes `v<version>` on GitHub for every push to `claude/**` that adds
   `.github/release-notes-<version>.md` (about 5 minutes). The owner plays those. When they say "push an update", push what is built.
-- **Version 3.4.0** in `build.py` and `patch/KagunePatch.java`. **The next is 3.4.1** (the last number never reaches 10). **Protocol "93"** (3.3.6: EtoGesture JEALOUS appended).
+- **Version 3.4.1** in `build.py` and `patch/KagunePatch.java`. **The next is 3.4.2** (the last number never reaches 10). **Protocol "93"** (3.3.6: EtoGesture JEALOUS appended).
 - Full `python3 build.py` ended **EXIT 0** for every version (javac `--release 17` on JDK 21; about 5 minutes; run it in the background).
   **Nothing is tested in game. Never claim it is.**
 - The quick loop: `python3 tools/quick_check.py [--noverify] KingTests UkakuTests ...` (needs one full `build.py` first). It does **not**
@@ -41,6 +41,7 @@ lost. **Commit and push every version as it is built, and keep this file current
 | 3.3.8 | Door scenes by the brought child's temper (7, found or outing) and age (baby, toddler, child or older): 19 `door_*` scenes per companion. | `Homecoming.flags`, `SceneWords` (`<t>kid`, `babykid/littlekid/bigkid`), `SceneServer` |
 | 3.3.9 | Homecomings without a home: the place a child lives counts (16 blocks); house-and-door homecoming scenes wait on `home`; new `!home` scenes (4 per companion, 7 for children). | `ChildBrain` home check, `Homecoming.NO_HOUSE`, `talk/*.txt`, SceneTests `HOUSE` |
 | 3.4.0 | Siblings at home react to the one brought back (the big one covers, the little one tells, "where WERE you?", left behind) and it answers, by temper and age. | `family/SiblingWelcome`, `HomecomingServer.siblings` |
+| 3.4.1 | After the player's door card, the companion and the child brought home talk in four turns (parent, child by temper, parent's answer, child's last word); a baby: the parent alone. | `family/DoorTalk`, `HomecomingServer.doorTalk` (a `Conversation`) |
 
 Previews (off-game, looked at honestly): `docs/handoff/peace-aegis-3.2.7.png`, `war-spire-first-person-3.2.8.png`, `ukaku-vortex-3.2.9.png`,
 `dawn-idle-3.3.2.png`, `jealous-3.3.6.png`. Tools: `tools/art-preview.sh <out> aegis|spire-fp|vortex`, `tools/QuinquePreview.java <out> dawn idle`.
@@ -70,8 +71,7 @@ From the owner's message after 3.2.1 (nine asks; 3.2.2 did "one at a time", brea
 3. ~~Temper-aware door scenes~~ (done: 3.3.8).
 4. ~~Homecomings without a home~~ (done: 3.3.9).
 5. ~~Siblings~~ (done: 3.4.0).
-6. **Companion-child door talk:** the companion and the child talking to each other at the door after the player's scene (a `Conversation`,
-   as `BlendedServer` does).
+6. ~~Companion-child door talk~~ (done: 3.4.1).
 7. **Kids greeting you after days away** (the child greeting the player who comes home after days away, by temper).
 
 Family/scene system notes are in `next-ai-3.1.9.md` and `next-ai-3.2.1.md` (scenes are data: `talk/*.txt`, `SceneBook`, `SceneWords`,
@@ -91,6 +91,7 @@ validated by SceneTests).
   aside at ease instead; "hand on hip" is the left arm angled out.
 - **3.3.3 / 3.3.5:** which recordings: chosen by name and measured loudness, **never heard** (no audio here). freesound.org is blocked, so
   each sound's own page couldn't be re-checked: CC0 per the WilhelmSFX mirror's licence. Ask which sound wrong.
+- **3.4.1:** the parent's answer by four temper groups; the talk is let go if it can't start within a minute.
 - **3.4.0:** which temper covers, asks or tells (my map); speech bubbles, nobody walks over.
 - **3.3.9:** a child put down elsewhere settles there, so that becomes the place it lives; the 16 blocks.
 - **3.3.8:** a child and a teen share the `bigkid` scenes; weights (about 4 in 10 by temper, 4 in 10 by age, the rest the old ones).

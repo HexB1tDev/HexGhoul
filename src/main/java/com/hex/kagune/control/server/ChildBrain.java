@@ -379,6 +379,7 @@ public final class ChildBrain {
                 mind.outsideSince = now;
                 mind.leftWith = HomecomingServer.with(npc, mind, level);
             }
+            HomecomingServer.doorTalk(npc, child, level, now); // 3.4.1
         }
         // 1.3.43: its kagune: its shots fly on; out of a fight, it goes back in.
         ChildKagune.tick(npc, mind, mind.kaguneFought, level, now);

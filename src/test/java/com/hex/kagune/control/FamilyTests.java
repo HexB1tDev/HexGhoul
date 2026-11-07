@@ -876,6 +876,30 @@ check(com.hex.kagune.control.graft.GraftStage.TRANSPLANT.limbs(com.hex.kagune.co
             check(com.hex.kagune.control.family.SiblingWelcome.MOST >= 1 && com.hex.kagune.control.family.SiblingWelcome.FIRST > 8L
                 && com.hex.kagune.control.family.SiblingWelcome.GAP >= 20L, "after its call-out at the door, a line at a time");
         }
+        // 3.4.1 (the owner's list: the companion and the child talking at the door after the player's scene): the parent, the child, the
+        // parent, the child, by who the parent is, found or back from an outing, the child's temper and age; to a baby, the parent alone.
+        for (String persona : new String[] {"eto", "touka", "ken"}) {
+            for (boolean found : new boolean[] {true, false}) {
+                for (com.hex.kagune.control.family.ChildTemper temper : com.hex.kagune.control.family.ChildTemper.values()) {
+                    for (com.hex.kagune.control.family.ChildStage stage : new com.hex.kagune.control.family.ChildStage[] {com.hex.kagune.control.family.ChildStage.TODDLER,
+                        com.hex.kagune.control.family.ChildStage.CHILD, com.hex.kagune.control.family.ChildStage.TEEN}) {
+                        for (int seed = 0; seed < 3; seed++) {
+                            List<com.hex.kagune.control.family.Siblings.Line> talk = com.hex.kagune.control.family.DoorTalk.talk(persona, found, temper, stage, "Rin", "Mama", seed);
+                            boolean turns = talk.size() == 4;
+                            for (int i = 0; i < talk.size(); i++) {
+                                turns &= talk.get(i).who() == (i % 2 == 0 ? 1 : 2) && !talk.get(i).text().equals("...") && !talk.get(i).text().contains("{");
+                            }
+                            check(turns, persona + " and a " + temper + " " + stage + " (" + (found ? "found" : "an outing") + ") talk in turn: " + talk);
+                        }
+                    }
+                }
+            }
+            List<com.hex.kagune.control.family.Siblings.Line> baby = com.hex.kagune.control.family.DoorTalk.talk(persona, false,
+                com.hex.kagune.control.family.ChildTemper.SUNNY, com.hex.kagune.control.family.ChildStage.BABY, "Rin", "Mama", 1);
+            check(baby.size() == 2 && baby.stream().allMatch(line -> line.who() == 1 && !line.text().equals("...")), persona + " talks to a baby alone");
+        }
+        check(com.hex.kagune.control.family.DoorTalk.AFTER > 0L && com.hex.kagune.control.family.DoorTalk.WAITS > com.hex.kagune.control.family.DoorTalk.AFTER,
+            "the door talk waits for the player's scene, and not forever");
         // 3.3.9: with no family home, the place it lives is home: past its leash there (8) and its play round it (4) before it is out.
         check(com.hex.kagune.control.family.Homecoming.NO_HOUSE >= 12.0, "a child with no home is out only past its leash and its play");
         check(com.hex.kagune.control.family.Homecoming.fresh(0L) && com.hex.kagune.control.family.Homecoming.fresh(com.hex.kagune.control.family.Homecoming.LASTS - 1L)
