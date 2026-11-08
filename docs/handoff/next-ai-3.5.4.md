@@ -27,8 +27,29 @@ Binding; quoted exactly as written. Kept current as that session goes.
   on the form. That's what I'm trying to go for here. Try to adapt these changes once you're done with the final form that you currently
   making. And then we can continue."** (Also in `docs/BIKAKU_PATH.md`. Asked them: is "more flexible ... more alive" about the kakuja
   pictures or the worm in game, and does "done with the final form" mean after 3.5.4 or after 3.5.5 too.)
+- Their answer, on seeing the kakuja previews: **"I quite like the kakuji that you made, if I'm being honest. When I say more flexible,
+  I mean, like, make sure that the tentacles don't go through a player's body. I noticed that a few are doing that. Just, like, a few
+  moves. Like the predatory drag looks a little strange when you send it and it goes through the player's body instead of going around
+  it. And again, the range is really the problem because it shouldn't go far. Like, it should be a held move that the longer you hold it
+  for, the longer it goes for. And I, if you ask me, this specific kagune should have a lot of range, like covering up to like 30 blocks.
+  Of course, attacks are not able to be performed until the kagune is pulled fully back. So that's the only disadvantage that this
+  kagune has. It should adapt to blocks, and that's where I say flexibility, like go around blocks like a worm, sort of, and actually go
+  around them. It's being able to adapt to the terrain itself and pulling people back and shit, you know what I mean? Just carry on, do
+  what you're doing, and then cover everything that I said. But so far, so good, though. I'm, like, happy with the results. Just cover
+  all this that I told you and adapt the changes in the new forms, and then we'll see."**
+  So the kakuja shipped as it was (3.5.4). The order taken (a judgment call, told them): 3.5.4 the kakuja; then the reported bug first
+  (the worm through his own body, Predatory Drag above all); then the kakuja's four abilities and passives; then the range (held, up to
+  about 30 blocks, round blocks, no attack until it is fully back); then the forms (two worms, three, the walking form), each with its
+  own moves.
 
-## Where things are
+## State now (kept current by the session on `claude/hopeful-noether-5c2wex`)
+
+- **3.5.4 shipped** (the kakuja as the last session left it; the owner liked it). Versions 3.5.4; protocol "97"; next free message id 56.
+- **Next: 3.5.5, the owner's report:** the worm going through the player's own body on some moves, Predatory Drag above all. Then the
+  kakuja's four moves and passives, then the range (held, up to about 30 blocks, round blocks, no attack until it is fully back), then the
+  forms (two worms, three, the walking form), each with its own moves.
+
+## Where things were when this note was written (after 3.5.3)
 
 - **Branch:** `claude/peaceful-ramanujan-eldmlu` (pushed). Start yours from it:
   `git fetch origin claude/peaceful-ramanujan-eldmlu && git checkout -B <your-branch> origin/claude/peaceful-ramanujan-eldmlu`.

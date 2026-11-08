@@ -228,6 +228,16 @@ After 3.5.3, with the kakuja still unreleased (binding; to be done after the kak
   changing to something else whenever you have like depending on the form. That's what I'm trying to go for here. Try to adapt these
   changes once you're done with the final form that you currently making. And then we can continue."** Not started. (Keep the film
   character's name out of anything visible in game.)
+- On the kakuja previews (it shipped as it was, 3.5.4): **"I quite like the kakuji that you made, if I'm being honest. When I say more
+  flexible, I mean, like, make sure that the tentacles don't go through a player's body. I noticed that a few are doing that. Just, like,
+  a few moves. Like the predatory drag looks a little strange when you send it and it goes through the player's body instead of going
+  around it. And again, the range is really the problem because it shouldn't go far. Like, it should be a held move that the longer you
+  hold it for, the longer it goes for. And I, if you ask me, this specific kagune should have a lot of range, like covering up to like 30
+  blocks. Of course, attacks are not able to be performed until the kagune is pulled fully back. So that's the only disadvantage that
+  this kagune has. It should adapt to blocks, and that's where I say flexibility, like go around blocks like a worm, sort of, and
+  actually go around them. It's being able to adapt to the terrain itself and pulling people back and shit, you know what I mean? Just
+  carry on, do what you're doing, and then cover everything that I said. But so far, so good, though. I'm, like, happy with the results.
+  Just cover all this that I told you and adapt the changes in the new forms, and then we'll see."**
 
 ## Decisions made (tell the owner; change if they say)
 
@@ -251,10 +261,10 @@ After 3.5.3, with the kakuja still unreleased (binding; to be done after the kak
    point).
 4. **3.5.3** (Done; 3.5.2 was a fix: the small heals): Monstrous Regeneration (the active, with tissue-strand visuals over the body) and the three passives (Abnormal Regeneration
    through `GhoulRegen`, Pain Suppression: knockback resistance and less stagger, Predatory Feeding if not done in 1).
-5. **3.5.4** (started, unreleased: `MawKakuja`, the kakuja in `BikakuServer`/`BikakuRenderer`; see `docs/handoff/next-ai-3.5.4.md`): The kakuja: the central mass (4 to 5 blocks, irregular, asymmetric, pulsating, covered in lipped mouths with flat teeth, ref 3)
+5. **3.5.4** (Done; the owner: "I quite like the kakuji that you made": `MawKakuja`, the kakuja in `BikakuServer`/`BikakuRenderer`; see `docs/handoff/next-ai-3.5.4.md`): The kakuja: the central mass (4 to 5 blocks, irregular, asymmetric, pulsating, covered in lipped mouths with flat teeth, ref 3)
    with its tentacles, the transformation (the worm swells, more tendrils wrap him, a fused mass swallows him, mouths grow, the
    tentacles burst out), rooted or very slow, and its resistances.
-6. **3.5.5:** The kakuja's four abilities and its passives (Autonomous Predation bites on their own, at sensible intervals).
+6. **After the owner's report is fixed (3.5.5: the worm through his own body):** The kakuja's four abilities and its passives (Autonomous Predation bites on their own, at sensible intervals).
 
 Proposed mastery gates (a judgment call; ask or tell): 0 the worm, M1 and Devouring Maw; 150 Predatory Drag; 300 Ravenous Pursuit;
 450 Carrion Eruption; 600 Monstrous Regeneration; 1000 the kakuja.

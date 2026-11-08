@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.5.4 (HexGhoul): Bikaku: the kakuja (testing)
+
+See `.github/release-notes-3.5.4.md`. K at mastery 1000: you grow into a lopsided mass about 4.8 blocks high, covered in grinning mouths, with the worm's maw and six great tentacles (3 s in, 1.5 s out). In it you barely move, take 45% of every blow, can't be knocked back and regenerate; M1 is a tentacle's bite up to 14 blocks out. 25 RC, then 1 RC a second; 60 s cooldown. Protocol 97. Previews: `docs/handoff/bikaku-kakuja-3.5.4.png`, `bikaku-kakuja-close-3.5.4.png`.
+
 ## 3.5.3 (HexGhoul): Bikaku: Monstrous Regeneration and the passives (testing)
 
 See `.github/release-notes-3.5.3.md`. Monstrous Regeneration (C, mastery 600): 8 s of strong regeneration, strands of the kagune crawling over your body and knitting it; 45 s cooldown, not invincible. With the worm out: Abnormal Regeneration (a ghoul's regeneration sooner and faster) and Pain Suppression (hard to knock back, stuns half as long). Protocol 96. Preview: `docs/handoff/bikaku-regeneration-3.5.3.png`.

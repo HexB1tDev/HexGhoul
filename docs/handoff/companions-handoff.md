@@ -1,8 +1,20 @@
-# START HERE (state after 3.5.3)
+# START HERE (state after 3.5.4)
 
-**After 3.5.3 (unreleased):** the Bikaku kakuja's body, transformation and gameplay were started and committed without a version; the session was stopped before 3.5.4 was finished. Read `docs/handoff/next-ai-3.5.4.md` first: what is done, what is left, and the owner's previews to ask about.
+Branch `claude/hopeful-noether-5c2wex` (started from `claude/peaceful-ramanujan-eldmlu` at its unversioned kakuja commit). Read `docs/handoff/next-ai-3.5.4.md` first: the owner's words this session (binding, quoted exactly), the order taken, and what's next.
 
-Branch `claude/peaceful-ramanujan-eldmlu`. Next: **3.5.4: the kakuja's body and transformation (K)**, then 3.5.5 its abilities and passives. Plan: `docs/BIKAKU_PATH.md`; handoff `docs/handoff/next-ai-3.4.8.md` (kept current). Mastery alone opens everything (the owner: a custom NPC will teach it later).
+The owner on the kakuja previews: "I quite like the kakuji that you made, if I'm being honest." It shipped as the last session left it (nothing in its code changed); this version only released it. Their same message reported the worm going through the player's own body on some moves ("the predatory drag looks a little strange when you send it and it goes through the player's body instead of going around it") and asked for held reach up to about 30 blocks that goes round blocks, then new forms (two worms, three, a walking form): all in `docs/BIKAKU_PATH.md`.
+
+Next: **3.5.5: fix the worm through his own body** (the owner's report: bugs first), then the kakuja's four abilities and passives, then the range rework, then the forms.
+
+- What the kakuja is (unchanged from the last session's commit, which `next-ai-3.5.4.md` "Unfinished" describes file by file): pure `bikaku/MawKakuja` (body, mouths, maw, tentacles, wrap, `growth`, `tentacle`/`lunge`); `BikakuRules` KAKUJA_* (cost 25, drain 0.05/tick, cooldown 1200, taken 0.45, reach 14 from `KAKUJA_CENTRE`, regen 1 per 8 ticks, Slowness amplifier 5, knockback resistance +1.0), `Bite.TENTACLE`; `BikakuServer.kakujaKey/leaveKakuja/kakujaTick/hurt`, M1 in it the tentacle bite from the centre; `S2CBikakuState` kakuja/kakujaAt (protocol 97); `BikakuRenderer` (in its body frame, nothing within `KAKUJA_CLEAR` 2.6 of the eyes in first person); board and menu lines.
+- Versions 3.5.4 in `build.py` and `patch/KagunePatch.java`. Next free message id 56.
+- **Judgment calls (told the owner):** its look and timing (the owner liked the look), all its numbers, jumping not blocked, the moves "not yet" in it.
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 97. Not tested in game.
+
+# State after 3.5.3
+
+Branch `claude/peaceful-ramanujan-eldmlu`. Next (then): **3.5.4: the kakuja's body and transformation (K)**, then 3.5.5 its abilities and passives. Plan: `docs/BIKAKU_PATH.md`; handoff `docs/handoff/next-ai-3.4.8.md` (kept current). Mastery alone opens everything (the owner: a custom NPC will teach it later).
 
 - `BikakuMove.REGENERATION` (C, 600, lasts 160 ticks, 900 cooldown, 15 RC); `occupies()` false for it: `BikakuMoves.key` runs `regenerate` (sets `state.regenAt`, no worm move), and `onAction` doesn't queue it behind a busy worm.
 - `BikakuRules`: `REGEN_HEAL` 1.0 every `REGEN_EVERY` 5 ticks (32 health); passives `REGEN_WAIT_SHARE` 0.4, `REGEN_HEAL_SHARE` 0.5, `KNOCKBACK_RESIST` 0.6, `STUN_SHARE` 0.5.
