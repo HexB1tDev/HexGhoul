@@ -87,6 +87,9 @@ public final class PalePreview {
         if (wanted.isEmpty() || wanted.contains("owl")) {
             owl(new File(out, "pale-owl.png"));
         }
+        if (wanted.contains("owl-mask")) {
+            owlMask(new File(out, "pale-owl-mask.png"));
+        }
         if (wanted.isEmpty() || wanted.contains("owl-anim")) {
             owlAnim(new File(out, "pale-owl-anim.png"));
         }
@@ -487,6 +490,40 @@ public final class PalePreview {
         } finally {
             ArtPreview.bodyScale = 1.0;
             PoseRender.bulk = 0.0;
+        }
+    }
+
+    /** 3.4.8: the Owl's mask alone (built of blocks, {@link com.hex.kagune.control.pale.OwlMask}), its jaw {@code jaw} open. */
+    static List<WingPreview.Tri> maskTris(double jaw) {
+        List<WingPreview.Tri> tris = new ArrayList<>();
+        com.hex.kagune.control.pale.OwlMask.draw((a, b, c, d, n, ca, cb, cc, cd) -> {
+            tris.add(new WingPreview.Tri(new double[][] {a, b, c}, new int[] {ca, cb, cc}, n, true));
+            tris.add(new WingPreview.Tri(new double[][] {a, c, d}, new int[] {ca, cc, cd}, n, true));
+        }, new com.hex.kagune.control.pale.OwlMask.Frame(new double[] {0.0, 2.0, 0.0}, new double[] {1.0, 0.0, 0.0}, new double[] {0.0, 1.0, 0.0},
+            new double[] {0.0, 0.0, 1.0}, 1.0), jaw);
+        return tris;
+    }
+
+    /** 3.4.8: the Owl's mask alone, all round, its jaw shut and dropped open (the first piece of the Owl's rebuild, for the owner to approve). */
+    static void owlMask(File file) throws Exception {
+        List<ArtPreview.Shot> shots = new ArrayList<>();
+        List<WingPreview.Tri> shut = maskTris(0.0);
+        List<WingPreview.Tri> open = maskTris(1.0);
+        double[] at = {0.0, 2.0, 0.0};
+        shots.add(new ArtPreview.Shot("front", null, ArtPreview.NO_WINGS, new double[] {0.0, 2.1, 6.0}, at, shut));
+        shots.add(new ArtPreview.Shot("three quarters", null, ArtPreview.NO_WINGS, new double[] {3.6, 2.6, 4.8}, at, shut));
+        shots.add(new ArtPreview.Shot("side", null, ArtPreview.NO_WINGS, new double[] {6.0, 2.2, 0.3}, at, shut));
+        shots.add(new ArtPreview.Shot("from below (as a player looks up at it)", null, ArtPreview.NO_WINGS, new double[] {-1.8, 0.0, 5.2}, at, shut));
+        shots.add(new ArtPreview.Shot("its jaw dropped open", null, ArtPreview.NO_WINGS, new double[] {0.0, 2.1, 6.0}, at, open));
+        shots.add(new ArtPreview.Shot("open, three quarters", null, ArtPreview.NO_WINGS, new double[] {-3.6, 2.4, 4.8}, at, open));
+        shots.add(new ArtPreview.Shot("its face up close", null, ArtPreview.NO_WINGS, new double[] {0.6, 2.2, 3.0}, new double[] {0.0, 1.9, 0.0}, shut));
+        shots.add(new ArtPreview.Shot("from above", null, ArtPreview.NO_WINGS, new double[] {1.2, 6.0, 3.0}, at, shut));
+        double saved = ArtPreview.fov;
+        ArtPreview.fov = 40.0;
+        try {
+            ArtPreview.sheet(file, "3.4.8: the Owl's mask, built of blocks (piece 1)", shots, 4, 400, 460);
+        } finally {
+            ArtPreview.fov = saved;
         }
     }
 
