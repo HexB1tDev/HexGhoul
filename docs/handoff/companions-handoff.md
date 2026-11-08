@@ -1,6 +1,6 @@
 # START HERE (state after 3.4.8)
 
-Branch `claude/wizardly-hopper-h08wf2` (started from v3.4.7; the two unapproved Owl commits after 3.4.7 on `claude/exciting-bell-3kklnc` are not in it). Next: Noro's Bikaku path (the owner's spec, with reference pictures). The owner: "push an update asap": every version is pushed as it is built.
+Branch `claude/wizardly-hopper-h08wf2` (started from v3.4.7; the two unapproved Owl commits after 3.4.7 on `claude/exciting-bell-3kklnc` are not in it). Next: the Bikaku path (the owner's spec word for word, what is built so far and the plan: `docs/BIKAKU_PATH.md`; handoff `docs/handoff/next-ai-3.4.8.md`, prompt `next-prompt-3.4.8.md`). After 3.4.8, an unversioned commit added the worm's pure model and motion (`control/bikaku/MawWorm`, `MawMotion`), `tools/MawPreview.java`, `BikakuWormTests` and `docs/handoff/bikaku-worm-*-wip.png`: nothing of it is in the game yet. The owner: "push an update asap": every version is pushed as it is built.
 
 The owner's report: "You need to fix the animations of the three new [quinques] the heavy sword, the whip, and the hammer. Especially the heavy sword, if you look at the moves, if you look at the sheet, you can tell that the moves are ridiculously stupidly broken ... It is completely botched." Then: "You can leave the hammer and the whip as they are, they're good."
 

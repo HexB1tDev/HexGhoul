@@ -1,3 +1,5 @@
+> **Newer handoff: read `docs/handoff/next-ai-3.4.8.md` first** (3.4.8 and the Bikaku path started; its prompt is `docs/handoff/next-prompt-3.4.8.md`).
+
 # HANDOFF: HexGhoul after 3.4.8 (kept current as versions ship). Read this first.
 
 Then, for the house rules and history: `docs/handoff/next-ai-3.2.1.md` and `docs/handoff/next-ai-3.1.9.md` (the two sessions before,
