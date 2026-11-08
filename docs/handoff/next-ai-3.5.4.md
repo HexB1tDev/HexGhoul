@@ -4,6 +4,30 @@ Then `docs/BIKAKU_PATH.md` (the owner's whole Bikaku spec word for word, the pla
 session before: its words, judgment calls and house rules, kept current through 3.5.3), `docs/handoff/next-ai-1.3.60.md` (the house rules
 in full), and the top sections of `docs/handoff/companions-handoff.md` (one per version, newest first, file-level detail).
 
+## The session after this note (branch `claude/hopeful-noether-5c2wex`, started from `7b0b94d`): its owner's words
+
+Binding; quoted exactly as written. Kept current as that session goes.
+
+- The ask: **"What I want next: first show me the kakuja previews (docs/handoff/bikaku-kakuja-3.5.4.png and
+  `bikaku-kakuja-close-3.5.4.png`) and ask me what I think before you ship it; fix what I say, then ship it as 3.5.4. Then the kakuja's
+  four abilities and its passives (3.5.5), all opened by mastery alone (a custom NPC will teach them later). Leave the hammer and the
+  whip as they are. Show me previews of what you make before you go far. If I report bugs, fix those first, each its own version; if my
+  exact words for a report aren't in the handoff, ask me. When a version is done, tell me plainly what you made, what you guessed at, and
+  what's next."**
+- Before the previews were sent again (the last session had sent them): **"Gotta say, before you continue, all the attacks that we
+  currently have, they need way more range. This is meant to be basically more range than the Rinkaku, and yeah, I like the look of the
+  mod, like, so far I like this new design. I actually quite love it, it's just it needs a little a few touches, it needs to be more
+  flexible. The thing must feel a little more alive, if you get what I mean. I'm struggling to describe what I want exactly, but as well
+  as we need more forms. Currently there's only one one of these things, but another form should have like two worms. The third should
+  have three, and honestly this is where it gets hard, but I think that the fourth before the Kakuja should be like the player no longer
+  even like walks with their own legs, like they get like two separate appendages on either, like both sides emerging from the same spot
+  as the worms, that when the player walks his body doesn't move, but like he controls these tentacles that walk around adapt to
+  terrain. Being able to climb anything, like Dr. Octopus pretty much. If you look up Dr. Octopus from Spider-Man, you can look at how he
+  walks. That's kind of what I'm trying to describe. The moves, of course, changing to something else whenever you have like depending
+  on the form. That's what I'm trying to go for here. Try to adapt these changes once you're done with the final form that you currently
+  making. And then we can continue."** (Also in `docs/BIKAKU_PATH.md`. Asked them: is "more flexible ... more alive" about the kakuja
+  pictures or the worm in game, and does "done with the final form" mean after 3.5.4 or after 3.5.5 too.)
+
 ## Where things are
 
 - **Branch:** `claude/peaceful-ramanujan-eldmlu` (pushed). Start yours from it:

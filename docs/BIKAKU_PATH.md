@@ -214,6 +214,21 @@ Then, mid-build (binding):
   (it had ended 1.5% short, which on an 8-block worm left a 0.12-block gap), and the ring of "crown" spurs whose ends showed as
   hexagons is gone.
 
+After 3.5.3, with the kakuja still unreleased (binding; to be done after the kakuja, "once you're done with the final form"):
+
+- **"Gotta say, before you continue, all the attacks that we currently have, they need way more range. This is meant to be basically
+  more range than the Rinkaku, and yeah, I like the look of the mod, like, so far I like this new design. I actually quite love it, it's
+  just it needs a little a few touches, it needs to be more flexible. The thing must feel a little more alive, if you get what I mean.
+  I'm struggling to describe what I want exactly, but as well as we need more forms. Currently there's only one one of these things, but
+  another form should have like two worms. The third should have three, and honestly this is where it gets hard, but I think that the
+  fourth before the Kakuja should be like the player no longer even like walks with their own legs, like they get like two separate
+  appendages on either, like both sides emerging from the same spot as the worms, that when the player walks his body doesn't move, but
+  like he controls these tentacles that walk around adapt to terrain. Being able to climb anything, like Dr. Octopus pretty much. If you
+  look up Dr. Octopus from Spider-Man, you can look at how he walks. That's kind of what I'm trying to describe. The moves, of course,
+  changing to something else whenever you have like depending on the form. That's what I'm trying to go for here. Try to adapt these
+  changes once you're done with the final form that you currently making. And then we can continue."** Not started. (Keep the film
+  character's name out of anything visible in game.)
+
 ## Decisions made (tell the owner; change if they say)
 
 - **GeckoLib:** the mod does not ship the GeckoLib library (the Dragon uses the in-house GeckoLib-format reader,
