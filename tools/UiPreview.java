@@ -628,7 +628,7 @@ public class UiPreview {
                 king ? (com.hex.kagune.control.AbilityGuide.Panel)tiles[i][1]
                     : com.hex.kagune.control.AbilityGuide.panel((com.hex.kagune.control.AbilityGuide.Input)tiles[i][1]), king);
             int chatTop = th - 40 - 90;
-            com.hex.kagune.control.client.AbilityHudView.draw(c, layout, 2, chatTop - 4, 0.75F, king ? (double[])tiles[i][2] : null,
+            com.hex.kagune.control.client.AbilityHudView.draw(c, layout, 2, chatTop - 4, com.hex.kagune.control.client.AbilityHud.SCALE, king ? (double[])tiles[i][2] : null,
                 king ? (long[])tiles[i][3] : null);
             c.pop();
         }

@@ -8,20 +8,30 @@ import java.util.List;
  * The abilities panel drawn on any {@link UiCanvas} (the game's GUI or the preview's image): a small dark card with the form's
  * colour down its left edge, its title, and one line a move: the player's keys in little chips, the move's name in its colour;
  * a move not reached yet dim, with the mastery it needs. Laid out once per panel ({@link Layout}), so a frame only fills and
- * writes.
+ * writes. 3.4.6 (the owner: "it's time to redo the GUI. This looks super, super clanky. As in, like, it's too big. We need to summarize
+ * things a bit more."): the panel in brief ({@link AbilityGuide#brief}), its title and subtitle on one line, and past
+ * {@link #ONE_COLUMN} moves in two columns (down the first, then the second), so the card is about half as tall as it was.
  */
 public final class AbilityHudView {
     static final int PAD = 4;
     static final int LINE = 10;
     static final int CHIP_PAD = 3;
-    static final int GAP = 5;
+    static final int GAP = 4;
+    /** 3.4.6: between the title and the subtitle, between the two columns; the most moves in one column. */
+    static final int TITLE_GAP = 5;
+    static final int COLUMN_GAP = 9;
+    public static final int ONE_COLUMN = 5;
     static final int BACK = 0xC0100C13;
     static final int EDGE = 0x30FFFFFF;
     static final int CHIP = 0xFF2A2430;
     static final int CHIP_SHADE = 0xFF17131B;
 
-    /** Where everything goes, worked out once per panel; {@code tail}: room kept at the right for a cooldown (1.0.22). */
-    public record Layout(AbilityGuide.Panel panel, int width, int height, int keyWidth, String[] needs, int tail) {
+    /**
+     * Where everything goes, worked out once per panel (the panel in brief): its size, how many columns and moves to a column, each column's
+     * left edge, key column and name column widths; {@code tail}: room kept after each name for a cooldown (1.0.22).
+     */
+    public record Layout(AbilityGuide.Panel panel, int width, int height, int columns, int perColumn, int[] left, int[] keyWidth, int[] nameWidth,
+                         String[] needs, int tail) {
     }
 
     /** The widest cooldown a row shows ({@link #seconds}). */
@@ -36,22 +46,34 @@ public final class AbilityHudView {
     }
 
     /** 1.0.22: the same, with room for each row's cooldown ({@code cooldowns}: War's and Peace's abilities). */
-    public static Layout layout(UiCanvas canvas, AbilityGuide.Panel panel, boolean cooldowns) {
-        int keyWidth = 0;
-        int nameWidth = 0;
+    public static Layout layout(UiCanvas canvas, AbilityGuide.Panel full, boolean cooldowns) {
+        AbilityGuide.Panel panel = AbilityGuide.brief(full);
         List<AbilityGuide.Row> rows = panel.rows();
-        String[] needs = new String[rows.size()];
-        for (int i = 0; i < rows.size(); i++) {
+        int n = rows.size();
+        int columns = n > ONE_COLUMN ? 2 : 1;
+        int per = Math.max(1, (n + columns - 1) / columns);
+        int[] keyWidth = new int[columns];
+        int[] nameWidth = new int[columns];
+        String[] needs = new String[n];
+        for (int i = 0; i < n; i++) {
             AbilityGuide.Row row = rows.get(i);
-            keyWidth = Math.max(keyWidth, canvas.width(row.keys()) + 2 * CHIP_PAD);
+            int column = Math.min(columns - 1, i / per);
+            keyWidth[column] = Math.max(keyWidth[column], canvas.width(row.keys()) + 2 * CHIP_PAD);
             needs[i] = row.locked() ? " " + row.needs() : "";
-            nameWidth = Math.max(nameWidth, canvas.width(row.name() + needs[i]));
+            nameWidth[column] = Math.max(nameWidth[column], canvas.width(row.name() + needs[i]));
         }
-        int header = Math.max(canvas.width(panel.title()) + 1, canvas.width(panel.subtitle()));
         int tail = cooldowns ? canvas.width(WIDEST) : 0;
-        int width = 2 + PAD + Math.max(keyWidth + GAP + nameWidth + (tail > 0 ? GAP + tail : 0), header) + PAD + 2;
-        int height = PAD + 9 + 9 + 3 + rows.size() * LINE + PAD - 1;
-        return new Layout(panel, width, height, keyWidth, needs, tail);
+        int[] left = new int[columns];
+        int x = 2 + PAD;
+        for (int column = 0; column < columns; column++) {
+            left[column] = x;
+            x += keyWidth[column] + GAP + nameWidth[column] + (tail > 0 ? GAP + tail : 0) + COLUMN_GAP;
+        }
+        int body = x - COLUMN_GAP - (2 + PAD);
+        int header = canvas.width(panel.title()) + 1 + (panel.subtitle().isEmpty() ? 0 : TITLE_GAP + canvas.width(panel.subtitle()));
+        int width = 2 + PAD + Math.max(body, header) + PAD + 2;
+        int height = PAD + 9 + 3 + per * LINE + PAD - 1;
+        return new Layout(panel, width, height, columns, per, left, keyWidth, nameWidth, needs, tail);
     }
 
     /** Draws the panel with its bottom-left corner at ({@code left}, {@code bottom}), {@code scale} times its size. */
@@ -61,7 +83,7 @@ public final class AbilityHudView {
 
     /**
      * 1.0.22: the same, each row {@code i} with how far its cooldown has come ({@code ready[i]}, 0..1; 1 or past the end: ready),
-     * shown as its key cap's underline filling back up and its name dim, and how long is left ({@code wait[i]}, ticks) at the right.
+     * shown as its key cap's underline filling back up and its name dim, and how long is left ({@code wait[i]}, ticks) after its name.
      */
     public static void draw(UiCanvas c, Layout layout, int left, int bottom, float scale, double[] ready, long[] wait) {
         AbilityGuide.Panel panel = layout.panel();
@@ -78,20 +100,26 @@ public final class AbilityHudView {
         c.fill(0, 1, 2, h - 1, panel.accent());
         int x = 2 + PAD;
         int y = PAD;
+        // 3.4.6: the title and what the form is, on one line.
         c.text(panel.title(), x, y, panel.accent(), true);
-        c.text(panel.subtitle(), x, y + 9, AbilityGuide.DIM, false);
-        y += 9 + 9 + 1;
+        if (!panel.subtitle().isEmpty()) {
+            c.text(panel.subtitle(), x + c.width(panel.title()) + 1 + TITLE_GAP, y, AbilityGuide.DIM, false);
+        }
+        y += 9 + 1;
         c.fill(x, y, w - PAD, y + 1, (panel.accent() & 0x00FFFFFF) | 0x50000000);
         y += 2;
         List<AbilityGuide.Row> rows = panel.rows();
         for (int i = 0; i < rows.size(); i++) {
             AbilityGuide.Row row = rows.get(i);
-            int top = y + i * LINE;
+            int column = Math.min(layout.columns() - 1, i / layout.perColumn());
+            int top = y + (i - column * layout.perColumn()) * LINE;
+            int keys = layout.left()[column];
+            int keyWidth = layout.keyWidth()[column];
             int chip = c.width(row.keys()) + 2 * CHIP_PAD;
             double share = ready == null || i >= ready.length ? 1.0 : Math.max(0.0, Math.min(1.0, ready[i]));
             boolean waiting = share < 1.0;
-            // The chip, right-aligned in the key column so the names line up.
-            int chipLeft = x + layout.keyWidth() - chip;
+            // The chip, right-aligned in its column's keys so the names line up.
+            int chipLeft = keys + keyWidth - chip;
             // A little key cap: lit face, the move's colour as its underline (filling back up while it recharges).
             c.fill(chipLeft, top - 1, chipLeft + chip, top + 8, row.locked() ? CHIP_SHADE : CHIP);
             c.fill(chipLeft, top + 8, chipLeft + chip, top + 9, row.locked() || waiting ? CHIP_SHADE : (row.colour() & 0x00FFFFFF) | 0xA0000000);
@@ -99,14 +127,14 @@ public final class AbilityHudView {
                 c.fill(chipLeft, top + 8, chipLeft + (int)Math.round(chip * share), top + 9, (row.colour() & 0x00FFFFFF) | 0x70000000);
             }
             c.text(row.keys(), chipLeft + CHIP_PAD, top, row.locked() || waiting ? AbilityGuide.DIM : AbilityGuide.TEXT, false);
-            int nameX = x + layout.keyWidth() + GAP;
+            int nameX = keys + keyWidth + GAP;
             c.text(row.name(), nameX, top, row.locked() || waiting ? AbilityGuide.DIM : row.colour(), false);
             if (row.locked()) {
                 c.text(layout.needs()[i], nameX + c.width(row.name()), top, 0xFF5A5260, false);
             }
             if (waiting && wait != null && i < wait.length && layout.tail() > 0) {
                 String tail = seconds(wait[i]);
-                c.text(tail, w - PAD - 2 - c.width(tail), top, AbilityGuide.DIM, false);
+                c.text(tail, nameX + layout.nameWidth()[column] + GAP + layout.tail() - c.width(tail), top, AbilityGuide.DIM, false);
             }
         }
         c.pop();

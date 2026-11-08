@@ -29,8 +29,8 @@ import net.minecraftforge.fml.common.Mod;
  */
 @Mod.EventBusSubscriber(modid = "hexkagune", value = Dist.CLIENT)
 public final class AbilityHud {
-    /** The panel's size on screen (GUI pixels per panel pixel). */
-    static final float SCALE = 0.75F;
+    /** The panel's size on screen (GUI pixels per panel pixel). 3.4.6: 0.75 before (the owner: "it's too big"). */
+    public static final float SCALE = 0.7F;
     private static final long KEY_NANOS = 500_000_000L;
     private static Map<AbilityGuide.Key, String> keys = Map.of();
     private static long keysAt = Long.MIN_VALUE;

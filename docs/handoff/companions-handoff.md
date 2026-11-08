@@ -1,4 +1,22 @@
-# START HERE (state after 3.4.5)
+# START HERE (state after 3.4.6)
+
+Nothing queued: ask the owner what next. The owner: "push an update asap": every version is pushed as it is built.
+
+The owner (with a screenshot of War's board): "Also, it's time to redo the GUI. This looks super, super clanky. As in, like, it's too big. We need to summarize things a bit more."
+
+- Pure `AbilityGuide`:
+  - `brief(Panel)`: same rows, keys, colours and needs; names via `brief(name, keys)`; subtitle via `briefSubtitle`.
+  - `brief(name, keys)`: the `BRIEF` table (Eyes only, Put away, Air juggle, Legs hunt...). Then "(Ken teaches it)" becomes "(Ken)" and "(needs its quest)" becomes "(quest)", other brackets are dropped, a name is cut at ": ", and on a single key it is cut at " · " (two keys keep both parts).
+  - `briefSubtitle`: the second " · " part, plus " · holding" when a tail holds someone.
+- `AbilityHudView` (all boards, `AbilityHud` and `KingHud`): `layout` draws `AbilityGuide.brief(panel)`, in two columns past `ONE_COLUMN` 5 (column-major, `perColumn` = ceil(n/2)), the header on one line, the cooldown tail per column. `Layout` record changed (columns, perColumn, left[], keyWidth[], nameWidth[]). `GAP` 5 to 4.
+- `AbilityHud.SCALE` 0.75 to 0.7, now public (UiPreview uses it).
+- Preview: `tools/UiPreview.java <out> hud`; before/after `docs/handoff/move-guide-3.4.6.png`. FULL KAKUJA 13 lines to 6, WAR 12 to 6.
+- Tests: ControlTests `briefBoard()`.
+- **Judgment calls:** the brief names; dropping the explanations from the board; two columns at more than five moves; scale 0.7.
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 93. Not tested in game.
+
+# State after 3.4.5
 
 Next: the owner's move guide redo (3.4.6: "it's time to redo the GUI. This looks super, super clanky. As in, like, it's too big. We need to summarize things a bit more."). The owner: "push an update asap": every version is pushed as it is built.
 

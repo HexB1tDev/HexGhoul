@@ -1260,7 +1260,110 @@ public final class ControlTests {
             && Float.isFinite(p.lean) && Float.isFinite(p.lunge) && Float.isFinite(p.drop) && Float.isFinite(p.spin) && Float.isFinite(p.leftArmX);
     }
 
+    /**
+     * 3.4.6 (the owner: "it's time to redo the GUI. This looks super, super clanky. As in, like, it's too big. We need to summarize things a
+     * bit more."): every board in brief keeps every move on its keys, in its order and colour, locked or not, each named in a word or two;
+     * past five moves it is two columns, about half as tall as one.
+     */
+    static void briefBoard() {
+        java.util.Map<AbilityGuide.Key, String> keys = new java.util.EnumMap<>(AbilityGuide.Key.class);
+        String[] names = {"LMB", "RMB", "R", "P", "G", "N", "Z", "J", "K", "H", "V", "B", "C", "LCtrl", "U"};
+        for (AbilityGuide.Key key : AbilityGuide.Key.values()) {
+            keys.put(key, names[key.ordinal()]);
+        }
+        List<AbilityGuide.Panel> panels = new ArrayList<>();
+        panels.add(AbilityGuide.king(keys, false));
+        panels.add(AbilityGuide.king(keys, true));
+        for (KagunePath path : KagunePath.values()) {
+            for (AbilityGuide.State state : AbilityGuide.State.values()) {
+                for (KaguneForm form : KaguneForm.values()) {
+                    for (com.hex.kagune.control.ukaku.WingForm wings : com.hex.kagune.control.ukaku.WingForm.values()) {
+                        for (int mastery : new int[] {0, 400, 1000}) {
+                            for (boolean flag : new boolean[] {false, true}) {
+                                java.util.Set<com.hex.kagune.control.quest.Gate> shut = flag ? java.util.EnumSet.allOf(com.hex.kagune.control.quest.Gate.class)
+                                    : java.util.Set.of();
+                                panels.add(AbilityGuide.panel(new AbilityGuide.Input(path, state, mastery, form, wings, flag, keys, flag,
+                                    com.hex.kagune.control.graft.GraftStage.TRANSPLANT, false, shut, flag)));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        boolean same = true;
+        boolean short_ = true;
+        String longest = "";
+        com.hex.kagune.control.client.ui.UiCanvas measure = new com.hex.kagune.control.client.ui.UiCanvas() {
+            public void fill(int x0, int y0, int x1, int y1, int argb) {
+            }
+            public void gradient(int x0, int y0, int x1, int y1, int top, int bottom) {
+            }
+            public void text(String text, int x, int y, int argb, boolean shadow) {
+            }
+            public void centered(String text, int centerX, int y, int argb) {
+            }
+            public int width(String text) {
+                return text.length() * 5;
+            }
+            public void face(int x, int y, int size) {
+            }
+            public void hat(int x, int y, int size, int[] hole) {
+            }
+            public void push() {
+            }
+            public void translate(float x, float y) {
+            }
+            public void scale(float factor) {
+            }
+            public void pop() {
+            }
+            public void batch(Runnable draw) {
+                draw.run();
+            }
+        };
+        boolean halved = true;
+        for (AbilityGuide.Panel panel : panels) {
+            AbilityGuide.Panel brief = AbilityGuide.brief(panel);
+            same &= brief.rows().size() == panel.rows().size() && brief.title().equals(panel.title()) && brief.accent() == panel.accent();
+            for (int i = 0; i < panel.rows().size() && i < brief.rows().size(); i++) {
+                AbilityGuide.Row was = panel.rows().get(i);
+                AbilityGuide.Row now = brief.rows().get(i);
+                same &= now.keys().equals(was.keys()) && now.colour() == was.colour() && now.needs() == was.needs();
+                String name = now.name();
+                boolean ok = !name.isEmpty() && name.length() <= 20 && (!name.contains("(") || name.endsWith(" (Ken)") || name.endsWith(" (quest)")
+                    || name.equals("Buffs (drains RC)"));
+                if (!ok || name.length() > longest.length()) {
+                    longest = ok ? name : "BAD: " + name;
+                }
+                short_ &= ok;
+            }
+            com.hex.kagune.control.client.AbilityHudView.Layout layout = com.hex.kagune.control.client.AbilityHudView.layout(measure, panel);
+            int rows = panel.rows().size();
+            if (rows > com.hex.kagune.control.client.AbilityHudView.ONE_COLUMN) {
+                halved &= layout.columns() == 2 && layout.perColumn() == (rows + 1) / 2;
+            } else {
+                halved &= layout.columns() == 1;
+            }
+        }
+        check(same, "in brief every board keeps every move on its keys, in its order, colour and mastery");
+        check(short_, "every move in a word or two (the longest: " + longest + ")");
+        check(halved, "past five moves, two columns: half as many lines");
+        check(AbilityGuide.brief("Fists: chain · Space held: launch", "LMB").equals("Fists")
+            && AbilityGuide.brief("Heavy · hold: charge · after a blow: ender", "RMB").equals("Heavy")
+            && AbilityGuide.brief("Lift · Slam (once a tail holds someone)", "V·B").equals("Lift · Slam")
+            && AbilityGuide.brief("Mutated Arm · Sphere", "N tap · hold").equals("Mutated Arm · Sphere")
+            && AbilityGuide.brief("Aegis of :Re", "J").equals("Aegis of :Re")
+            && AbilityGuide.brief("Impale (Ken teaches it)", "H hold").equals("Impale (Ken)")
+            && AbilityGuide.brief("Thy Death (hold: every tail hunts on its own)", "Z").equals("Thy Death")
+            && AbilityGuide.brief("Kakugan mode (eyes stay open)", "R").equals("Eyes only"), "the briefs read right");
+        check(AbilityGuide.briefSubtitle("Rinkaku · final kakuja · One-Eyed King").equals("final kakuja")
+            && AbilityGuide.briefSubtitle("Rinkaku · kagune out · a tail holds someone").equals("kagune out · holding")
+            && AbilityGuide.briefSubtitle("Kagune sheathed").equals("Kagune sheathed"), "the subtitle cut to what the form is");
+        check(com.hex.kagune.control.client.AbilityHud.SCALE < 0.75F, "and a little smaller on screen");
+    }
+
     public static void main(String[] args) {
+        briefBoard();
         worldTimes();
         arms();
         armSignatures();

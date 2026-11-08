@@ -147,6 +147,92 @@ public final class AbilityGuide {
         };
     }
 
+    // ---------------------------------------------------------------- 3.4.6: the board in brief
+
+    /**
+     * 3.4.6 (the owner: "it's time to redo the GUI. This looks super, super clanky. As in, like, it's too big. We need to summarize
+     * things a bit more."): the panel as the board draws it: the same moves on the same keys, in the same order and colours, each named in
+     * a word or two ({@link #brief(String, String)}), and the subtitle cut to what the form is ({@link #briefSubtitle}).
+     */
+    public static Panel brief(Panel panel) {
+        List<Row> rows = new ArrayList<>();
+        for (Row row : panel.rows()) {
+            rows.add(new Row(row.keys(), brief(row.name(), row.keys()), row.colour(), row.needs()));
+        }
+        return new Panel(panel.title(), briefSubtitle(panel.subtitle()), panel.accent(), rows);
+    }
+
+    /** 3.4.6: the long names and what each is in brief. */
+    private static final String[][] BRIEF = {
+        {"Kakugan mode (eyes stay open)", "Eyes only"},
+        {"Put it all away", "Put away"},
+        {"Ghoul eyes (kakugan)", "Ghoul eyes"},
+        {"Close the kakugan", "Close eyes"},
+        {"Unleash the kagune", "Unleash"},
+        {"Kagune menu", "Menu"},
+        {"Resistance I · Strength I · drains RC", "Buffs (drains RC)"},
+        {"Juggle, ends in a spike", "Air juggle"},
+        {"Centipede legs hunt and grab", "Legs hunt"},
+        {"Centipede legs fight on their own", "Legs fight"},
+        {"You can only walk", "Walk only"},
+        {"Choose your kagune path", "Choose a path"},
+        {"Lift · Slam (once a tail holds someone)", "Lift · Slam"},
+        {"Reaper's dash: 3 charges, 1 back each 5 s", "Reaper's dash"},
+    };
+
+    /**
+     * 3.4.6: {@code name} (on {@code keys}) in a word or two: a known long one its short form ({@link #BRIEF}); "(Ken teaches it)" and
+     * "(needs its quest)" as "(Ken)" and "(quest)"; any other aside in brackets dropped; a string's name before its colon ("Fists: chain ·
+     * Space held: launch" is "Fists"); on one key, only the first of the things it does ("Heavy · hold: charge" is "Heavy"), on two keys
+     * ("V·B", "N tap · hold") both.
+     */
+    public static String brief(String name, String keys) {
+        if (name == null) {
+            return "";
+        }
+        for (String[] known : BRIEF) {
+            if (known[0].equals(name)) {
+                return known[1];
+            }
+        }
+        String out = name.replace(" (Ken teaches it)", " (Ken)").replace(" (needs its quest)", " (quest)");
+        String kept = out.endsWith(" (Ken)") ? " (Ken)" : out.endsWith(" (quest)") ? " (quest)" : "";
+        if (!kept.isEmpty()) {
+            out = out.substring(0, out.length() - kept.length());
+        }
+        int bracket = out.indexOf(" (");
+        if (bracket > 0) {
+            out = out.substring(0, bracket);
+        }
+        int colon = out.indexOf(": "); // (a colon with a space after it: "Aegis of :Re" is a name)
+        if (colon > 0) {
+            out = out.substring(0, colon);
+        }
+        int dot = out.indexOf(" · ");
+        if (dot > 0 && (keys == null || keys.indexOf('·') < 0)) {
+            out = out.substring(0, dot);
+        }
+        return out.trim() + kept;
+    }
+
+    /** 3.4.6: a subtitle cut to what the form is ("Rinkaku · final kakuja · One-Eyed King" is "final kakuja"; a tail holding someone kept). */
+    public static String briefSubtitle(String subtitle) {
+        if (subtitle == null) {
+            return "";
+        }
+        String[] parts = subtitle.split(" · ");
+        if (parts.length < 2) {
+            return subtitle;
+        }
+        String out = parts[1];
+        for (int i = 2; i < parts.length; i++) {
+            if (parts[i].equals("a tail holds someone")) {
+                out += " · holding";
+            }
+        }
+        return out;
+    }
+
     /** The accent of the form the ghoul would be in. */
     static int accent(Input in) {
         if (in.path() == KagunePath.PALE) {
