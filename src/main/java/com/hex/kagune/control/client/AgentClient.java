@@ -235,6 +235,9 @@ public final class AgentClient {
                 float w = (float)(k * k * (3.0 - 2.0 * k));
                 f.from.spin = p.spin + (float)Math.IEEEremainder(f.from.spin - p.spin, Math.PI * 2.0);
                 out = new RigPose().add(f.from, 1.0F - w).add(p, w);
+                if (turned(f.from) || turned(p)) {
+                    blendTurns(out, f.from, p, w);
+                }
                 out.legHold = Math.max(f.from.legHold, p.legHold);
                 out.rightArmHold = Math.max(f.from.rightArmHold, p.rightArmHold);
                 out.leftArmHold = Math.max(f.from.leftArmHold, p.leftArmHold);
@@ -244,6 +247,33 @@ public final class AgentClient {
         f.last = new RigPose().add(out, 1.0F);
         f.drawnAt = clock;
         return out;
+    }
+
+    /** 3.4.8: true if {@code p} has a weapon turned in its fist (the greatsword's hold, WeaponPose.hold). */
+    private static boolean turned(RigPose p) {
+        return p.weaponX != 0.0F || p.weaponY != 0.0F || p.weaponZ != 0.0F;
+    }
+
+    /**
+     * 3.4.8: {@code out}'s arms and the weapon in the fist {@code w} of the way from {@code from} to {@code to}, each turned the shortest way
+     * round (their angles blended went the long way, through poses neither had, when the greatsword's next blow began).
+     */
+    private static void blendTurns(RigPose out, RigPose from, RigPose to, float w) {
+        float[] right = com.hex.kagune.control.client.animation.QuinqueGrip.blendTurn(from.rightArmX, from.rightArmY, from.rightArmZ,
+            to.rightArmX, to.rightArmY, to.rightArmZ, w);
+        float[] left = com.hex.kagune.control.client.animation.QuinqueGrip.blendTurn(from.leftArmX, from.leftArmY, from.leftArmZ,
+            to.leftArmX, to.leftArmY, to.leftArmZ, w);
+        float[] held = com.hex.kagune.control.client.animation.QuinqueGrip.blendTurn(from.weaponX, from.weaponY, from.weaponZ,
+            to.weaponX, to.weaponY, to.weaponZ, w);
+        out.rightArmX = right[0];
+        out.rightArmY = right[1];
+        out.rightArmZ = right[2];
+        out.leftArmX = left[0];
+        out.leftArmY = left[1];
+        out.leftArmZ = left[2];
+        out.weaponX = held[0];
+        out.weaponY = held[1];
+        out.weaponZ = held[2];
     }
 
     /** 1.3.33: a dash's afterimages: how long each lasts (ticks), how see-through it starts, its colour (a cold white), how often one. */

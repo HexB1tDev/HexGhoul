@@ -96,7 +96,7 @@ public class WeaponPosePreview {
             g.fillRect(0, 0, sheet.getWidth(), sheet.getHeight());
             g.setColor(Color.WHITE);
             g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 18));
-            g.drawString("3.0.1: " + arm.title + " - every blow of its string and both moves, frame by frame (the 5th frame of a blow is where it lands)", 10, 24);
+            g.drawString("3.4.8: " + arm.title + " - every blow of its string and its moves, frame by frame (the 5th frame of a blow is where it lands)", 10, 24);
             for (int r = 0; r < rows.size(); r++) {
                 g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 14));
                 g.setColor(Color.WHITE);
@@ -117,7 +117,7 @@ public class WeaponPosePreview {
                 }
             }
             g.dispose();
-            File file = new File(out, arm.name().toLowerCase() + "-moves-3.0.1" + tag + ".png");
+            File file = new File(out, arm.name().toLowerCase() + "-moves-3.4.8" + tag + ".png");
             ImageIO.write(sheet, "png", file);
             System.out.println(file);
         }
@@ -155,7 +155,8 @@ public class WeaponPosePreview {
             double[][] v = new double[4][];
             for (int c = 0; c < 4; c++) {
                 int i = (q * 4 + c) * 3;
-                double[] a = WeaponPose.onArm(placed, new double[] {mesh.pos[i], mesh.pos[i + 1], mesh.pos[i + 2]});
+                // 3.4.8: turned in the fist as the pose has it (WeaponLayer draws it so).
+                double[] a = WeaponPose.wristed(pose, arm, WeaponPose.onArm(placed, new double[] {mesh.pos[i], mesh.pos[i + 1], mesh.pos[i + 2]}));
                 for (int j = 0; j < 3; j++) {
                     a[j] = fist[j] + (a[j] - fist[j]) * k;
                 }
@@ -181,7 +182,7 @@ public class WeaponPosePreview {
         if (path == null) {
             return;
         }
-        double[] knotArm = WeaponPose.onArm(WeaponPose.meshToArm(Arm.WHIP), new double[] {0.0, 0.0, -ArmMesh.WHIP_ROOT});
+        double[] knotArm = WeaponPose.wristed(pose, Arm.WHIP, WeaponPose.onArm(WeaponPose.meshToArm(Arm.WHIP), new double[] {0.0, 0.0, -ArmMesh.WHIP_ROOT}));
         double[] knot = PoseRender.point(pose, "rightArm", new double[] {knotArm[0] * 16.0, knotArm[1] * 16.0, knotArm[2] * 16.0});
         float[] rot = pose.transform("body", RigPose.ROTATION, 0, 0, 0);
         double[][] world = new double[path.length][];

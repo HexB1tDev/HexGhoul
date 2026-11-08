@@ -186,7 +186,15 @@ public final class WeaponPose {
     private static final int L_EL = 12;
     /** Which foot is planted in its stride: +1 the back one (the body carried forward over the front), -1 the front (its weight rocked back). */
     private static final int SHIFT = 13;
-    private static final int CHANNELS = 14;
+    /**
+     * 3.4.8, a two-handed one ({@link #gripped}): where its hands are round the chest (degrees: 0 out in front at the shoulders' height,
+     * + up, - down; both on its grip wherever its blade points, {@link #hands}), and the plane its blow cuts in (its normal's azimuth and
+     * elevation relative to the foe, as its blade's are): its edge leads round it ({@link #hold}).
+     */
+    private static final int HAND = 14;
+    private static final int N_AZ = 15;
+    private static final int N_EL = 16;
+    private static final int CHANNELS = 17;
     /** The most a body leans forward or back, and to a side (radians): further, and straight legs read as folding at the hips. */
     static final double MOST_LEAN = 0.26;
     static final double MOST_SIDE = 0.2;
@@ -253,6 +261,31 @@ public final class WeaponPose {
             return this;
         }
 
+        /** 3.4.8: where a two-handed one's hands are round the chest (degrees: + up). */
+        K h(double el) {
+            this.v[HAND] = el;
+            return this;
+        }
+
+        /** 3.4.8: the plane a two-handed one cuts in: its normal (azimuth, elevation relative to the foe), its edge leading round it. */
+        K n(double az, double el) {
+            this.v[N_AZ] = az;
+            this.v[N_EL] = el;
+            return this;
+        }
+
+        /**
+         * 3.4.8: the plane a blade swung from {@code az1, el1} toward {@code az2, el2} cuts in (its normal: the edge leading from the first
+         * toward the second).
+         */
+        K cut(double az1, double el1, double az2, double el2) {
+            double[] a = way(az1, el1);
+            double[] b = way(az2, el2);
+            double[] c = {a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]};
+            double[] w = angles(c);
+            return this.n(w[0], w[1]);
+        }
+
         /** Its weight rocked back onto its back foot (the front one planted): drawn back before a blow. */
         K bk() {
             this.v[SHIFT] = -1.0;
@@ -282,8 +315,16 @@ public final class WeaponPose {
 
     /** {@code keys} filled in: every unset channel its stance's. */
     static double[][] filled(Arm arm, K... keys) {
+        Grip g = gripped(arm) ? grip(arm) : null;
+        return filled(arm, g == null ? 0.0 : g.hand, g == null ? 0.0 : g.nAz, g == null ? 0.0 : g.nEl, keys);
+    }
+
+    private static double[][] filled(Arm arm, double hand, double nAz, double nEl, K... keys) {
         double[] stance = stanceToFoe(arm);
         double[] defaults = new double[CHANNELS];
+        defaults[HAND] = hand;
+        defaults[N_AZ] = nAz;
+        defaults[N_EL] = nEl;
         defaults[W_AZ] = stance[0];
         defaults[W_EL] = stance[1];
         defaults[A_AZ] = stance[2];
@@ -420,47 +461,49 @@ public final class WeaponPose {
                     k(0.75).w(0, 0).a(10, -30).ln(0.12).st(0.32).spr(0.1), rest(1));
             };
             case BONE_SWORD -> switch (n) {
-                // Falling: raised over its right shoulder, cut down across to its left hip with a stride.
-                case 0 -> filled(arm, rest(0), k(0.12).w(5, 50).a(30, -15).tw(-0.05),
-                    k(0.3).w(-50, 75).a(-25, 55).tw(0.45).ln(-0.08).st(0.08),
-                    k(0.42).w(-25, 30).a(-5, 25).tw(0.15).ln(0.05).st(0.22),
-                    k(0.5).w(10, -15).a(15, -10).tw(-0.3).ln(0.18).sd(-0.04).st(0.32),
-                    k(0.6).w(40, -45).a(30, -30).tw(-0.5).ln(0.22).st(0.32),
-                    k(0.75).w(25, -10).a(30, -25).tw(-0.25).ln(0.1).st(0.25), rest(1));
-                // Rising: from low on its left up across to high on its right.
-                case 1 -> filled(arm, rest(0), k(0.12).w(10, 20).a(30, -30).tw(0.05),
-                    k(0.3).w(45, -45).a(35, -40).tw(-0.45).ln(0.15).st(0.12).spr(0.1),
-                    k(0.42).w(25, -15).a(20, -25).tw(-0.2).ln(0.1).st(0.25),
-                    k(0.5).w(-5, 25).a(5, -5).tw(0.25).ln(0.02).st(0.32),
-                    k(0.6).w(-40, 65).a(-15, 30).tw(0.45).ln(-0.1).st(0.3),
-                    k(0.75).w(-20, 50).a(5, 0).tw(0.25).ln(-0.05).st(0.25), rest(1));
-                // Level: wound far round to its right, swept flat through them and on round to its left.
-                case 2 -> filled(arm, rest(0), k(0.12).w(10, 30).a(30, -20),
-                    k(0.3).w(-110, 5).a(-45, -10).tw(0.6).ln(-0.05).sd(0.06).st(0.12).spr(0.12),
-                    k(0.42).w(-55, 2).a(-20, -12).tw(0.3).st(0.25).spr(0.14),
-                    k(0.5).w(0, 0).a(10, -15).tw(-0.1).ln(0.12).st(0.33).spr(0.14),
-                    k(0.6).w(75, -5).a(45, -20).tw(-0.6).ln(0.14).sd(-0.06).st(0.33),
-                    k(0.75).w(45, 10).a(35, -20).tw(-0.3).ln(0.06).st(0.25), rest(1));
-                // A thrust: drawn back to its right hip, its point on them, driven straight out with a long stride.
-                case 3 -> filled(arm, rest(0), k(0.12).w(0, 25).a(30, -25).tw(0.05),
-                    k(0.3).w(0, 5).a(45, -45).tw(0.55).ln(-0.08).st(0.25).bk(),
-                    k(0.42).w(0, 3).a(25, -25).tw(0.1).st(0.3),
-                    k(0.5).w(0, 2).a(5, -5).tw(-0.35).ln(0.22).st(0.5),
-                    k(0.6).w(0, 2).a(5, -5).tw(-0.37).ln(0.23).st(0.5),
-                    k(0.75).w(0, 10).a(15, -20).tw(-0.15).ln(0.1).st(0.35), rest(1));
-                // A whole turn to its left, the blade level out to its right.
-                case 4 -> filled(arm, rest(0), k(0.12).w(-30, 15).a(-5, -20).tw(0.25).sp(-0.25),
-                    k(0.3).w(-95, 5).a(-70, -10).tw(0.15).sp(0.6).st(0.15).spr(0.14),
-                    k(0.5).w(-95, 0).a(-70, -10).tw(0.05).ln(0.05).sp(HALF).st(0.2).spr(0.14),
-                    k(0.7).w(-95, 0).a(-70, -10).sp(5.0).st(0.2).spr(0.14),
-                    k(0.85).w(-50, 15).a(-20, -15).sp(TURN - 0.2).st(0.15), rest(1, TURN));
-                // Cleaving: a dip, raised behind its head, brought straight down the middle with a long stride.
-                default -> filled(arm, rest(0), k(0.12).w(0, 50).a(25, -15).ln(0.04),
-                    k(0.3).w(0, 160).a(5, 130).ln(-0.16).st(0.22).bk(),
-                    k(0.42).w(0, 95).a(5, 100).ln(-0.05).st(0.3),
-                    k(0.5).w(0, -22).a(5, -14).ln(0.22).st(0.48).spr(0.12),
-                    k(0.6).w(0, -32).a(5, -24).ln(0.22).st(0.48).spr(0.12),
-                    k(0.75).w(0, 0).a(15, -25).ln(0.15).st(0.32), rest(1));
+                // 3.4.8, rebuilt with both hands on the grip (the hands' place {@code h}, the cut's plane {@code cut}: its edge leads).
+                // Falling: raised over its right shoulder, the hands up before its face; cut down across to its left hip with a stride.
+                case 0 -> filled(arm, rest(0), k(0.14).w(-35, 55).h(-15).cut(-60, 75, 55, -45).tw(0.15),
+                    k(0.32).w(-60, 75).h(35).cut(-60, 75, 55, -45).tw(0.45).ln(-0.06).st(0.08).bk(),
+                    k(0.43).w(-35, 45).h(15).cut(-60, 75, 55, -45).tw(0.2).st(0.2),
+                    k(0.5).w(15, -5).h(-20).cut(-60, 75, 55, -45).tw(-0.25).ln(0.15).sd(-0.04).st(0.32),
+                    k(0.6).w(55, -45).h(-50).cut(-60, 75, 55, -45).tw(-0.5).ln(0.2).sd(-0.04).st(0.32),
+                    k(0.78).w(35, -20).h(-50).cut(-60, 75, 55, -45).tw(-0.25).ln(0.1).st(0.25), rest(1));
+                // Rising: down to low on its left, then up across to high on its right.
+                case 1 -> filled(arm, rest(0), k(0.14).w(25, 5).h(-45).cut(60, -40, -45, 60).tw(-0.15),
+                    k(0.32).w(60, -40).h(-50).cut(60, -40, -45, 60).tw(-0.45).ln(0.12).st(0.12).spr(0.1),
+                    k(0.43).w(35, -18).h(-40).cut(60, -40, -45, 60).tw(-0.2).ln(0.08).st(0.25),
+                    k(0.5).w(-10, 15).h(-15).cut(60, -40, -45, 60).tw(0.2).ln(0.04).st(0.32),
+                    k(0.6).w(-45, 60).h(20).cut(60, -40, -45, 60).tw(0.45).ln(-0.08).st(0.3),
+                    k(0.78).w(-25, 50).h(-10).cut(60, -40, -45, 60).tw(0.25).ln(-0.04).st(0.25), rest(1));
+                // Level: wound round to its right, swept flat through them at chest height and on round to its left.
+                case 2 -> filled(arm, rest(0), k(0.14).w(-30, 25).h(-35).cut(-110, 8, 80, -5).tw(0.2),
+                    k(0.32).w(-110, 8).h(-25).cut(-110, 8, 80, -5).tw(0.6).ln(-0.05).sd(0.06).st(0.12).spr(0.12),
+                    k(0.43).w(-60, 4).h(-25).cut(-110, 8, 80, -5).tw(0.3).st(0.25).spr(0.14),
+                    k(0.5).w(0, 0).h(-25).cut(-110, 8, 80, -5).tw(-0.1).ln(0.12).st(0.33).spr(0.14),
+                    k(0.6).w(80, -5).h(-25).cut(-110, 8, 80, -5).tw(-0.6).ln(0.14).sd(-0.06).st(0.33),
+                    k(0.78).w(45, 10).h(-35).cut(-110, 8, 80, -5).tw(-0.3).ln(0.06).st(0.25), rest(1));
+                // A thrust: drawn back low, its point on them, driven straight out with a long stride, held, recovered.
+                case 3 -> filled(arm, rest(0), k(0.14).w(0, 20).h(-45).tw(0.1),
+                    k(0.32).w(0, 4).h(-45).tw(0.45).ln(-0.08).st(0.25).bk(),
+                    k(0.43).w(0, 3).h(-30).tw(0.15).st(0.3),
+                    k(0.5).w(0, 2).h(-10).tw(-0.3).ln(0.22).st(0.5),
+                    k(0.62).w(0, 2).h(-10).tw(-0.32).ln(0.23).st(0.5),
+                    k(0.78).w(0, 15).h(-35).tw(-0.12).ln(0.1).st(0.35), rest(1));
+                // A whole turn to its right, the blade level out to its right: its back to them, then the blade round into them three
+                // quarters of the way, and on round to face them again.
+                case 4 -> filled(arm, rest(0), k(0.12).w(-40, 20).h(-35).n(0, -90).tw(-0.1).sp(0.15),
+                    k(0.3).w(-85, 4).h(-25).n(0, -90).sp(-1.7).st(0.15).spr(0.14),
+                    k(0.5).w(-85, 0).h(-25).n(0, -90).ln(0.05).sp(-1.5 * Math.PI).st(0.2).spr(0.14),
+                    k(0.7).w(-80, 0).h(-25).n(0, -90).sp(-1.85 * Math.PI).st(0.2).spr(0.14),
+                    k(0.86).w(-40, 20).h(-35).n(0, -90).sp(-TURN - 0.1).st(0.15), rest(1, -TURN));
+                // Cleaving: a dip, raised high (the hands up before its brow), brought straight down the middle with a long stride.
+                default -> filled(arm, rest(0), k(0.12).w(0, 25).h(-55).ln(0.04).st(0.1),
+                    k(0.3).w(0, 100).h(50).ln(-0.12).st(0.2).bk(),
+                    k(0.42).w(0, 65).h(30).ln(-0.02).st(0.3),
+                    k(0.5).w(0, -10).h(-15).ln(0.22).st(0.48).spr(0.12),
+                    k(0.6).w(0, -40).h(-40).ln(0.24).st(0.48).spr(0.12),
+                    k(0.78).w(0, -25).h(-45).ln(0.15).st(0.32), rest(1));
             };
         };
     }
@@ -507,20 +550,22 @@ public final class WeaponPose {
                 k(22 / t).w(-95, 0).a(-70, -8).tw(0.2).sp(9.4).st(0.15).spr(0.18),
                 k(27 / t).w(-80, 5).a(-60, -8).tw(0.25).sp(2.0 * TURN).st(0.15).spr(0.16),
                 k(31 / t).w(-30, 30).a(-10, -15).sp(2.0 * TURN).st(0.15), rest(1, 2.0 * TURN));
-            // Sunk with it raised, the leap, raised high in the air, cut down where it lands with a stride.
-            case LEAP -> filled(arm, rest(0), k(4 / t).w(0, 100).a(10, 90).ln(0.15).st(0.1).spr(0.2),
-                k(6 / t).w(0, 140).a(5, 125).ln(-0.1).st(0.0).spr(0.05),
-                k(12 / t).w(0, 165).a(5, 140).ln(-0.2).st(0.2).spr(0.05),
-                k(15 / t).w(0, 80).a(5, 100).ln(0.0).st(0.3),
-                k(17 / t).w(0, -26).a(5, -18).ln(0.22).st(0.48).spr(0.15),
-                k(22 / t).w(0, -28).a(5, -20).ln(0.22).st(0.48).spr(0.15),
-                k(26 / t).w(0, 10).a(15, -25).ln(0.12).st(0.3), rest(1));
-            // Raised, drawn far round to its right (the blade behind it), the great sweep through everything in front, on round to its left.
-            case CLEAVE -> filled(arm, rest(0), k(5 / t).w(-60, 60).a(-30, 20).tw(0.5).ln(-0.08).st(0.1),
-                k(9 / t).w(-150, 15).a(-60, -5).tw(0.95).ln(-0.05).sd(0.08).st(0.25).bk().spr(0.15),
-                k(12 / t).w(0, 0).a(10, -15).tw(-0.05).ln(0.15).st(0.42).spr(0.16),
-                k(15 / t).w(110, -5).a(55, -20).tw(-0.95).ln(0.18).sd(-0.08).st(0.42).spr(0.16),
-                k(20 / t).w(80, 10).a(45, -20).tw(-0.7).ln(0.1).st(0.35), rest(1));
+            // Sunk with it raised, the leap, raised high in the air (the hands up before its brow), cut down where it lands with a stride.
+            case LEAP -> filled(arm, rest(0), k(3 / t).w(0, 70).h(5).ln(0.15).st(0.1).spr(0.2),
+                k(6 / t).w(0, 100).h(45).ln(-0.08).st(0.0).spr(0.05),
+                k(12 / t).w(0, 108).h(50).ln(-0.16).st(0.15).spr(0.05),
+                k(15 / t).w(0, 60).h(30).ln(0.0).st(0.3),
+                k(17 / t).w(0, -20).h(-20).ln(0.22).st(0.48).spr(0.15),
+                k(21 / t).w(0, -40).h(-45).ln(0.24).st(0.48).spr(0.15),
+                k(26 / t).w(0, -10).h(-50).ln(0.12).st(0.3), rest(1));
+            // Drawn far round to its right (the blade behind it, the chest coiled), the great sweep through everything in front at chest
+            // height, on round to its left.
+            case CLEAVE -> filled(arm, rest(0), k(4 / t).w(-50, 40).h(-15).cut(-150, 18, 100, -10).tw(0.4).ln(-0.05).st(0.08),
+                k(9 / t).w(-150, 18).h(-20).cut(-150, 18, 100, -10).tw(0.95).ln(-0.05).sd(0.08).st(0.25).bk().spr(0.15),
+                k(11 / t).w(-75, 8).h(-22).cut(-150, 18, 100, -10).tw(0.45).st(0.38).spr(0.16),
+                k(12 / t).w(0, 0).h(-22).cut(-150, 18, 100, -10).tw(-0.05).ln(0.15).st(0.42).spr(0.16),
+                k(15 / t).w(100, -10).h(-25).cut(-150, 18, 100, -10).tw(-0.95).ln(0.18).sd(-0.08).st(0.42).spr(0.16),
+                k(20 / t).w(75, 0).h(-35).cut(-150, 18, 100, -10).tw(-0.7).ln(0.1).st(0.35), rest(1));
             // 3.1.8, the whip's Tendril Swing: drawn back and cast up ahead; then held high on the taut whip as he is hauled along it, leaning
             // into the pull; let go as he lands.
             case SWING -> filled(arm, rest(0), k(2 / t).w(-30, 120).a(-20, 110).tw(0.3).ln(-0.12).st(0.05).l(30, -10),
@@ -536,8 +581,9 @@ public final class WeaponPose {
                 k(22 / t).w(0, -42).a(0, -35).ln(0.3).st(0.45).spr(0.22),
                 k(27 / t).w(0, 10).a(15, -25).ln(0.15).st(0.25).spr(0.12), rest(1));
             // 3.1.8, the greatsword's Bone Wall: the blade brought up across before him, its flat a wall at his chest, braced, weight back.
-            case GUARD -> filled(arm, rest(0), k(2 / t).w(80, 20).a(25, 25).tw(-0.2).ln(-0.06).st(0.12).bk().spr(0.14),
-                k(17 / t).w(80, 20).a(25, 25).tw(-0.2).ln(-0.06).st(0.12).bk().spr(0.14), rest(1));
+            // 3.4.8: its point out past his right shoulder, its flat square to them (both hands on its grip before his chest).
+            case GUARD -> filled(arm, rest(0), k(2 / t).w(-80, 18).h(-10).n(0, 0).tw(-0.15).ln(-0.06).st(0.12).bk().spr(0.14),
+                k(17 / t).w(-80, 18).h(-10).n(0, 0).tw(-0.15).ln(-0.06).st(0.12).bk().spr(0.14), rest(1));
         };
     }
 
@@ -619,6 +665,11 @@ public final class WeaponPose {
 
     /** The pose at {@code t} along {@code keys}. */
     static RigPose posed(Arm arm, double[][] keys, double t) {
+        return posed(arm, keys, t, gripped(arm));
+    }
+
+    /** The pose at {@code t} along {@code keys}; {@code both} with both hands on its grip ({@link #hold}), else as its quinque is held. */
+    private static RigPose posed(Arm arm, double[][] keys, double t, boolean both) {
         double[] v = curve(keys, t);
         Quinque q = base(arm);
         RigPose p = QuinquePose.hold(q);
@@ -655,7 +706,16 @@ public final class WeaponPose {
             weapon = QuinqueGrip.apply(fix, weapon);
             free = QuinqueGrip.apply(fix, free);
         }
-        point(p, arm, armWay, weapon);
+        if (both) {
+            double[] plane = way(v[N_AZ] + turn, v[N_EL]);
+            if (leanTurn != null) {
+                double[][] tw = RigPose.zyx(0.0, p.twist, 0.0);
+                plane = QuinqueGrip.apply(RigPose.multiply(QuinqueGrip.transpose(tw), RigPose.multiply(QuinqueGrip.transpose(leanTurn), tw)), plane);
+            }
+            hold(p, arm, weapon, plane, v[HAND]);
+        } else {
+            point(p, arm, armWay, weapon);
+        }
         if (!arm.twoHanded || v[L_AZ] != FREE_ARM[0] || v[L_EL] != FREE_ARM[1]) {
             // A one-handed weapon's free arm swings against the blow (a two-handed one's is put on its grip after, but the javelin's).
             float[] a = QuinqueGrip.angles(QuinqueGrip.between(new double[] {0.0, 1.0, 0.0}, unit(free)));
@@ -665,6 +725,177 @@ public final class WeaponPose {
             p.leftArmHold = 1.0F;
         }
         return p;
+    }
+
+    // ---------------------------------------------------------------- 3.4.8: both hands on the grip, the weapon turned in them
+
+    /*
+     * 3.4.8 (the owner, of the heavy sword's sheet: "the moves are ridiculously stupidly broken ... It is completely botched"): an arm here
+     * is a straight stick, and set in its fist the weapon could only point at one angle to it. So in most of a blow the left hand could not
+     * reach the grip (it hung up to half a block off it) and the blade went where the arm's turn sent it. Now a two-handed one is held as
+     * a two-handed weapon is: its blade points where the key says, both hands are on its grip (the right where it is gripped, the left the
+     * grip's length down it), and the weapon turns in the fist to make up the rest (RigPose.weapon*, drawn by its layers).
+     *
+     * With the shoulders where they are and both arms their length, two hands a grip's length apart along a blade pointing anywhere lie
+     * on a circle round the chest (out in front, up before the face, down before the belly): a key says where on it ({@code HAND}).
+     */
+
+    /** Which hold: both hands on the grip and the weapon turned in them (the greatsword; the owner: the hammer and whip "are good"). */
+    static boolean gripped(Arm arm) {
+        return arm == Arm.BONE_SWORD;
+    }
+
+    /** The shoulders' pivots in the chest's frame (pixels), and the point between them. */
+    private static final double[] RIGHT_SHOULDER = {-RigPose.ARM_PIVOT, 2.0, 0.0};
+    private static final double[] LEFT_SHOULDER = {RigPose.ARM_PIVOT, 2.0, 0.0};
+
+    /**
+     * What a two-handed hold works from: the stance's right arm (its turn: the hold keeps its roll), where the weapon is gripped on the
+     * right arm (pixels, its own frame), how far that is from the shoulder, how far down the weapon the left hand holds it (pixels), how
+     * far the left hand is from its shoulder (pixels: as in the stance, its shoulder reaching a little toward the grip as QuinqueGrip.reach
+     * lets it), the mesh's turn onto the arm, and the stance's hands' place and cut plane (so a key left at them is the stance exactly).
+     */
+    record Grip(double[][] stanceArm, double[] onArm, double reach, double gap, double leftReach, double[][] mesh, double hand, double nAz,
+                double nEl) {
+    }
+
+    private static final Grip[] GRIPS = new Grip[Arm.values().length];
+
+    static synchronized Grip grip(Arm arm) {
+        if (GRIPS[arm.ordinal()] != null) {
+            return GRIPS[arm.ordinal()];
+        }
+        double[][] placed = meshToArm(arm);
+        double[] onArm = {placed[3][0] * 16.0, placed[3][1] * 16.0, placed[3][2] * 16.0};
+        double[][] mesh = {placed[0], placed[1], placed[2]};
+        QuinqueHolds.Hold h = QuinqueHolds.of(base(arm));
+        float[] r = h.rightGrip();
+        float[] l = h.leftGrip();
+        double gap = h.scale() * Math.sqrt((r[0] - l[0]) * (r[0] - l[0]) + (r[1] - l[1]) * (r[1] - l[1]) + (r[2] - l[2]) * (r[2] - l[2]));
+        // The stance as its quinque is held (the hold below reproduces it exactly).
+        RigPose st = posed(arm, filled(arm, 0.0, 0.0, 0.0, rest(0), rest(1)), 0.0, false);
+        double[][] a = RigPose.zyx(st.rightArmX, st.rightArmY, st.rightArmZ);
+        double[] b = unit(QuinqueGrip.apply(a, line(arm)));
+        double[] across = unit(QuinqueGrip.apply(a, QuinqueGrip.apply(mesh, new double[] {0.0, -1.0, 0.0})));
+        double[] n = cross(across, b);
+        // Its stance has no lean: a chest-frame way is the foe's turned by the stance's twist.
+        double turn = Math.toDegrees(h.twist());
+        double[] na = angles(n);
+        // Where its hands are on their circle: the place whose way, laid flat on it, is the stance's.
+        double[] fist = add(RIGHT_SHOULDER, QuinqueGrip.apply(a, onArm));
+        double leftReach = QuinqueGrip.length(sub(sub(fist, new double[] {gap * b[0], gap * b[1], gap * b[2]}), LEFT_SHOULDER));
+        double[][] circle = circle(QuinqueGrip.length(onArm), gap, leftReach, b);
+        double[] u = unit(sub(fist, circle[0]));
+        double[] k = cross(circle[2], u);
+        double hand = Math.toDegrees(Math.atan2(-k[2], k[1]));
+        double[] w = way(0.0, hand);
+        if (w[0] * u[0] + w[1] * u[1] + w[2] * u[2] < 0.0) {
+            hand += 180.0;
+        }
+        hand = Math.IEEEremainder(hand, 360.0);
+        Grip g = new Grip(a, onArm, QuinqueGrip.length(onArm), gap, leftReach, mesh, hand, na[0] - turn, na[1]);
+        GRIPS[arm.ordinal()] = g;
+        return g;
+    }
+
+    /**
+     * The circle the right grip can be on with the left hand {@code gap} pixels down the weapon along {@code b} (chest frame): its centre,
+     * {radius, 0, 0}, and the normal of its plane.
+     */
+    static double[][] circle(double reach, double gap, double leftReach, double[] b) {
+        double[] c2 = {LEFT_SHOULDER[0] + gap * b[0], LEFT_SHOULDER[1] + gap * b[1], LEFT_SHOULDER[2] + gap * b[2]};
+        double[] d = sub(c2, RIGHT_SHOULDER);
+        double far = QuinqueGrip.length(d);
+        double[] n = {d[0] / far, d[1] / far, d[2] / far};
+        double a = (reach * reach - leftReach * leftReach + far * far) / (2.0 * far);
+        double radius = Math.sqrt(Math.max(0.0, reach * reach - a * a));
+        return new double[][] {add(RIGHT_SHOULDER, new double[] {n[0] * a, n[1] * a, n[2] * a}), {radius, 0.0, 0.0}, n};
+    }
+
+    /** Where the right grip is (chest frame, pixels) with both hands on it, the weapon along {@code b}, its hands at {@code hand} round the chest. */
+    static double[] hands(Grip g, double[] b, double hand) {
+        double[][] c = circle(g.reach, g.gap, g.leftReach, b);
+        double[] u = flat(way(0.0, hand), c[2]);
+        if (QuinqueGrip.length(u) < 1.0E-6) {
+            u = flat(new double[] {0.0, 0.0, -1.0}, c[2]);
+        }
+        u = unit(u);
+        return add(c[0], new double[] {u[0] * c[1][0], u[1] * c[1][0], u[2] * c[1][0]});
+    }
+
+    /**
+     * {@code p}'s right arm and its weapon's turn in the fist: the weapon along {@code b} (chest frame), its edge leading round {@code plane}
+     * (the normal of the plane it cuts in), both hands on its grip at {@code hand} round the chest. The right arm points its grip there,
+     * keeping the stance's roll; the left is put on the grip after (QuinqueGrip.reach), as it always is.
+     */
+    static void hold(RigPose p, Arm arm, double[] b, double[] plane, double hand) {
+        Grip g = grip(arm);
+        b = unit(b);
+        double[] grip = hands(g, b, hand);
+        double[] from = unit(QuinqueGrip.apply(g.stanceArm, g.onArm));
+        double[] to = unit(sub(grip, RIGHT_SHOULDER));
+        double[][] a = from[0] * to[0] + from[1] * to[1] + from[2] * to[2] > 1.0 - 1.0E-12 ? g.stanceArm
+            : RigPose.multiply(QuinqueGrip.between(from, to), g.stanceArm);
+        // The weapon's frame: along it its line, across it its edge's way (the edge leading round the plane), through it the rest.
+        double[] across = cross(b, plane);
+        if (QuinqueGrip.length(across) < 1.0E-6) {
+            across = cross(b, Math.abs(b[1]) < 0.9 ? new double[] {0.0, 1.0, 0.0} : new double[] {1.0, 0.0, 0.0});
+        }
+        across = unit(across);
+        double[] through = cross(across, b);
+        double[][] frame = {{through[0], -across[0], -b[0]}, {through[1], -across[1], -b[1]}, {through[2], -across[2], -b[2]}};
+        double[][] wrist = RigPose.multiply(QuinqueGrip.transpose(a), RigPose.multiply(frame, QuinqueGrip.transpose(g.mesh)));
+        float[] arms = QuinqueGrip.angles(a);
+        // Nothing turned in the fist when it is held as it is set there (its stance): drawn exactly as before.
+        boolean none = Math.abs(wrist[0][1]) < 1.0E-6 && Math.abs(wrist[0][2]) < 1.0E-6 && Math.abs(wrist[1][2]) < 1.0E-6 && wrist[0][0] > 0.0
+            && wrist[1][1] > 0.0 && wrist[2][2] > 0.0;
+        float[] turn = none ? new float[3] : QuinqueGrip.angles(wrist);
+        p.rightArmX = arms[0];
+        p.rightArmY = arms[1];
+        p.rightArmZ = arms[2];
+        p.weaponX = turn[0];
+        p.weaponY = turn[1];
+        p.weaponZ = turn[2];
+        p.rightArmHold = 1.0F;
+    }
+
+    /** 3.4.8: {@code onArm} (a point of {@code arm}'s mesh on the right arm, blocks) where {@code p}'s turn of it in the fist puts it. */
+    public static double[] wristed(RigPose p, Arm arm, double[] onArm) {
+        double[][] w = wrist(p);
+        if (w == null) {
+            return onArm;
+        }
+        double[] f = meshToArm(arm)[3];
+        return add(f, QuinqueGrip.apply(w, sub(onArm, f)));
+    }
+
+    /**
+     * 3.4.8: where the point {@code along} blocks up {@code arm}'s line from where it is gripped (- toward its butt) is drawn for {@code p}
+     * (model pixels, as QuinqueGrip has its grips: the lean and the chest's twist in, the body's spin, drop and lunge not), turned in the
+     * fist as its layers draw it.
+     */
+    public static double[] alongLine(RigPose p, Arm arm, double along) {
+        double[] onArm = wristed(p, arm, onArm(meshToArm(arm), new double[] {0.0, 0.0, -along}));
+        double[] turned = QuinqueGrip.apply(QuinqueGrip.armTurn(p, true), onArm);
+        double[] o = QuinqueGrip.pivot(p, true);
+        return new double[] {o[0] + 16.0 * turned[0], o[1] + 16.0 * turned[1], o[2] + 16.0 * turned[2]};
+    }
+
+    /** 3.4.8: {@code p}'s turn of the weapon in its fist (the right arm's frame), or null with none. */
+    public static double[][] wrist(RigPose p) {
+        return p == null || p.weaponX == 0.0F && p.weaponY == 0.0F && p.weaponZ == 0.0F ? null : RigPose.zyx(p.weaponX, p.weaponY, p.weaponZ);
+    }
+
+    private static double[] cross(double[] a, double[] b) {
+        return new double[] {a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]};
+    }
+
+    private static double[] add(double[] a, double[] b) {
+        return new double[] {a[0] + b[0], a[1] + b[1], a[2] + b[2]};
+    }
+
+    private static double[] sub(double[] a, double[] b) {
+        return new double[] {a[0] - b[0], a[1] - b[1], a[2] - b[2]};
     }
 
     /** The keys' values at {@code t} on a smooth curve through them (Catmull-Rom, still at the first and last). */

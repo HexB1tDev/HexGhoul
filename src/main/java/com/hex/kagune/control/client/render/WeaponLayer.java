@@ -91,23 +91,44 @@ final class WeaponLayer extends RenderLayer<CcgAgent, PlayerModel<CcgAgent>> {
                 pose.m_85837_(0.5 / 16.0, 0.0, 0.0); // PlayerModel.translateToHand: a slim arm's half pixel
             }
             hand.m_104299_(pose);
-            mesh(pose, buffers.m_6299_(SOLID), arm, master, k, light);
+            mesh(pose, buffers.m_6299_(SOLID), arm, master, k, light, AgentModel.pose);
             pose.m_85849_();
         }
         if (arm == Arm.WHIP) {
             float size = AgentRules.size(look);
             whip(pose, buffers, light, agent, agent.armTarget(), size, size * AgentRules.build(look), hand, slim, master, shown, swing, swingAge,
-                ability, partial);
+                ability, partial, AgentModel.pose);
         }
     }
 
-    /** Its mesh, {@code k} of its size (grown out of the fist), in the right arm's frame. */
-    static void mesh(PoseStack pose, VertexConsumer out, Arm arm, boolean master, float k, int light) {
+    /**
+     * Its mesh, {@code k} of its size (grown out of the fist), in the right arm's frame; 3.4.8 turned in the fist as {@code posed} has it
+     * (WeaponPose: both hands on a two-handed one's grip wherever its blade points), or as it is set in the fist with no pose.
+     */
+    static void mesh(PoseStack pose, VertexConsumer out, Arm arm, boolean master, float k, int light, com.hex.kagune.control.client.animation.RigPose posed) {
         ArmMesh.Mesh mesh = ArmMesh.of(arm, master);
         float[][] placed = placed(arm, master, mesh);
         float[] at = placed[0];
         float[] turned = placed[1];
         float[] fist = placed[2];
+        boolean wrist = posed != null && (posed.weaponX != 0.0F || posed.weaponY != 0.0F || posed.weaponZ != 0.0F);
+        if (wrist) {
+            pose.m_85836_();
+            pose.m_85837_(fist[0], fist[1], fist[2]);
+            pose.m_252781_(new org.joml.Quaternionf().rotateAxis(posed.weaponZ, 0.0F, 0.0F, 1.0F).rotateAxis(posed.weaponY, 0.0F, 1.0F, 0.0F)
+                .rotateAxis(posed.weaponX, 1.0F, 0.0F, 0.0F));
+            pose.m_85837_(-fist[0], -fist[1], -fist[2]);
+        }
+        try {
+            emit(pose, out, mesh, at, turned, fist, k, light);
+        } finally {
+            if (wrist) {
+                pose.m_85849_();
+            }
+        }
+    }
+
+    private static void emit(PoseStack pose, VertexConsumer out, ArmMesh.Mesh mesh, float[] at, float[] turned, float[] fist, float k, int light) {
         Matrix4f m = pose.m_85850_().m_252922_();
         Matrix3f n = pose.m_85850_().m_252943_();
         for (int q = 0; q < mesh.quads; q++) {
@@ -148,9 +169,9 @@ final class WeaponLayer extends RenderLayer<CcgAgent, PlayerModel<CcgAgent>> {
     /** 3.0.6: anyone's (an investigator's, a player's): {@code bound} whom its Bind holds (an entity id), {@code size} and {@code wide} its body's. */
     static void whip(PoseStack pose, MultiBufferSource buffers, int light, net.minecraft.world.entity.LivingEntity agent, int bound, float size,
                      float wide, ModelPart hand, boolean slim, boolean master, float shown, int swing, double swingAge, Arm.Ability ability,
-                     float partial) {
+                     float partial, com.hex.kagune.control.client.animation.RigPose posed) {
         double[] knot = WeaponPose.onBody(hand.f_104200_, hand.f_104201_, hand.f_104202_, hand.f_104203_, hand.f_104204_, hand.f_104205_, slim,
-            WeaponPose.onArm(WeaponPose.meshToArm(Arm.WHIP), new double[] {0.0, 0.0, -ArmMesh.WHIP_ROOT}));
+            WeaponPose.wristed(posed, Arm.WHIP, WeaponPose.onArm(WeaponPose.meshToArm(Arm.WHIP), new double[] {0.0, 0.0, -ArmMesh.WHIP_ROOT})));
         double length = WhipPath.length(master);
         double time = agent.f_19797_ + partial;
         double drop = Math.max(0.2, GROUND - knot[1]);

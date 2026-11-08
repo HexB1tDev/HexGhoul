@@ -42,6 +42,8 @@ public final class RigPose {
     public static final float UPPER_PIVOT = 0.375F;
     /** Where the upper body leans from: the hips, model pixels down from the neck (the bottom of the torso). */
     public static final float HIP_Y = 12.0F;
+    /** 3.4.8: how far a held weapon's turn in the fist may go (each angle): the whole way round. */
+    static final float WEAPON_TURN = (float)Math.PI + 0.01F;
 
     public float headX, headY, headZ;
     public float lean, side, twist, drop, lunge, flip, roll, spin;
@@ -105,6 +107,13 @@ public final class RigPose {
      * brought down outside her head. Drawn as nothing.
      */
     public float cut;
+    /**
+     * 3.4.8: a kagune-made weapon turned in the right fist (radians, ModelPart's Rz Ry Rx in the right arm's own frame, about where it is
+     * gripped: WeaponPose.meshToArm's fist). An arm here is a straight stick with the weapon set in its fist; with the weapon's own turn the
+     * blade can point anywhere while both hands stay on its grip. Drawn by the weapon's layers and followed by QuinqueGrip.held. Added
+     * and scaled like any channel.
+     */
+    public float weaponX, weaponY, weaponZ;
 
     public RigPose clear() {
         this.headX = this.headY = this.headZ = 0.0F;
@@ -120,6 +129,7 @@ public final class RigPose {
         this.headHold = 0.0F;
         this.bulk = 0.0F;
         this.cut = 0.0F;
+        this.weaponX = this.weaponY = this.weaponZ = 0.0F;
         this.bladeFit = 0.0F;
         this.bladeReach = 1.0F;
         this.bladeSlim = false;
@@ -169,6 +179,9 @@ public final class RigPose {
         this.legHold += other.legHold * weight;
         this.bulk += other.bulk * weight;
         this.cut += other.cut * weight;
+        this.weaponX += other.weaponX * weight;
+        this.weaponY += other.weaponY * weight;
+        this.weaponZ += other.weaponZ * weight;
         return this;
     }
 
@@ -256,6 +269,9 @@ public final class RigPose {
         this.headHold = Float.isFinite(this.headHold) ? Math.max(0.0F, Math.min(1.0F, this.headHold * damp)) : 0.0F;
         this.bulk = Float.isFinite(this.bulk) ? Math.max(0.0F, Math.min(1.0F, this.bulk)) : 0.0F;
         this.blade = Float.isFinite(this.blade) ? Math.max(0.0F, Math.min(1.1F, this.blade)) : 0.0F;
+        this.weaponX = clamp(this.weaponX * damp, WEAPON_TURN);
+        this.weaponY = clamp(this.weaponY * damp, WEAPON_TURN);
+        this.weaponZ = clamp(this.weaponZ * damp, WEAPON_TURN);
     }
 
     public boolean isZero() {

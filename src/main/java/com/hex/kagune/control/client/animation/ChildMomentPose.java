@@ -453,6 +453,10 @@ public final class ChildMomentPose {
             p.rightArmY += (m.rightArmY - p.rightArmY) * k;
             p.rightArmZ += (m.rightArmZ - p.rightArmZ) * k;
             p.rightArmHold = Math.max(p.rightArmHold, k);
+            // 3.4.8: a kagune-made weapon turned in that fist (WeaponPose) goes with it.
+            p.weaponX += (m.weaponX - p.weaponX) * k;
+            p.weaponY += (m.weaponY - p.weaponY) * k;
+            p.weaponZ += (m.weaponZ - p.weaponZ) * k;
         }
         if (m.armHold > 0.0F || m.leftArmHold > 0.0F) {
             float k = w * Math.max(m.armHold, m.leftArmHold);

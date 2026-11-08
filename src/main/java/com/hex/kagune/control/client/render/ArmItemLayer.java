@@ -55,6 +55,8 @@ public final class ArmItemLayer extends RenderLayer<AbstractClientPlayer, Entity
             }
             float grown = ability == null ? 1.0F : com.hex.kagune.control.client.animation.WeaponPose.grown(ability, age);
             float k = shown * grown;
+            // 3.4.8: the body as it is posed this frame: the weapon turned in the fist as its blow has it (both hands on its grip).
+            com.hex.kagune.control.client.animation.RigPose posed = com.hex.kagune.control.client.animation.KaguneBodyAnimation.current(player, partial);
             pose.m_85836_();
             PlayerLayers.upperBody(pose, player, partial);
             if (k > 0.002F) {
@@ -63,12 +65,12 @@ public final class ArmItemLayer extends RenderLayer<AbstractClientPlayer, Entity
                     pose.m_85837_(0.5 / 16.0, 0.0, 0.0); // PlayerModel.translateToHand: a slim arm's half pixel
                 }
                 model.f_102811_.m_104299_(pose);
-                WeaponLayer.mesh(pose, buffers.m_6299_(SOLID), arm, master, k, light);
+                WeaponLayer.mesh(pose, buffers.m_6299_(SOLID), arm, master, k, light, posed);
                 pose.m_85849_();
             }
             if (arm == Arm.WHIP) {
                 WeaponLayer.whip(pose, buffers, light, player, view == null ? 0 : view.bound(), 1.0F, 1.0F, model.f_102811_, slim, master, shown, code,
-                    age, ability, partial);
+                    age, ability, partial, posed);
             }
             pose.m_85849_();
         } catch (RuntimeException failure) {

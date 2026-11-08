@@ -1,4 +1,20 @@
-# START HERE (state after 3.4.7)
+# START HERE (state after 3.4.8)
+
+Branch `claude/wizardly-hopper-h08wf2` (started from v3.4.7; the two unapproved Owl commits after 3.4.7 on `claude/exciting-bell-3kklnc` are not in it). Next: Noro's Bikaku path (the owner's spec, with reference pictures). The owner: "push an update asap": every version is pushed as it is built.
+
+The owner's report: "You need to fix the animations of the three new [quinques] the heavy sword, the whip, and the hammer. Especially the heavy sword, if you look at the moves, if you look at the sheet, you can tell that the moves are ridiculously stupidly broken ... It is completely botched." Then: "You can leave the hammer and the whip as they are, they're good."
+
+- Measured on 3.4.7 (tools: `WeaponPosePreview`, plus off-game checks): the greatsword's left hand missed its grip by up to 9 px (the arm a stick, the sword set in the fist at one angle: most blade ways can't be held two-handed); `RigPose.settle`'s arm z clamp (1.6) turned the overhead blows' arms up to 88 degrees in game (the preview never settles). The hammer had the same problems; left as it is on the owner's word.
+- `WeaponPose.hold` (only `gripped`: BONE_SWORD): a key gives the blade's way (`w`, foe frame), where the hands are round the chest (`h`, degrees: 0 out in front at the shoulders, + up), and the cut's plane (`n`/`cut`: the edge leads round it). Both hands a grip's length apart along any blade way lie on a circle (`circle`: the right grip's reach from its shoulder, the left's as in the stance, 9.17 px: its shoulder reaches as QuinqueGrip.reach lets it); the right arm points at it keeping the stance's roll; the weapon is turned in the fist to match (`RigPose.weaponX/Y/Z`, ZYX about the grip, `WeaponPose.wristed`). `Grip` (cached) makes a key left at the stance's values the stance exactly (no turn).
+- The turn is drawn by `WeaponLayer.mesh` (a PoseStack turn about the fist; investigators read `AgentModel.pose`, players' `ArmItemLayer` reads `KaguneBodyAnimation.current`), followed by `QuinqueGrip.held` (so `reach` puts the left hand on the turned grip), carried by `RigPose.add/clear/settle`, `AgentPose.withWeapon` and `ChildMomentPose.blend`. `AgentClient.flow` blends turns the shortest way (`QuinqueGrip.blendTurn`, a slerp) only when a pose has a weapon turn (so the hammer, whip and spear blend as before). `settle`'s arm clamps are unchanged (the new greatsword stays inside them).
+- New keys for all six blows and LEAP, CLEAVE, GUARD. The hammer, whip and spear are byte for byte as before (every pose sampled and diffed).
+- Sheet: `docs/handoff/bone_sword-moves-3.4.8.png` (`tools/WeaponPosePreview.java`, now drawing the turn; titled 3.4.8).
+- Tests: `GreatswordTests` (grip on every frame within 0.35 px, the grip drawn where the hand is, no blade through the chest, no jump over 35 degrees a quarter tick, ends in the stance; the stance and the other weapons turn nothing).
+- **Judgment calls:** each blow's angles and timing; the spinning cut now turns right (the blade meets them three-quarters round, so it lands at its landing tick); the Leaping Cut's raise grazes the head top by under a pixel.
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 93. Not tested in game.
+
+# State after 3.4.7
 
 Next: the owner's Owl kakuja rebuild (Eto's, at 100 HP). The owner saw renders of the in-progress rebuild and said: "Wtf is that model. That looks like shit, all of it". That in-progress rebuild (`OwlBeast`, `OwlBeastMesh`) was never committed: ask the owner what exactly looks wrong before rebuilding. The owner: "push an update asap": every version is pushed as it is built.
 

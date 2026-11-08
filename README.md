@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.4.8 (HexGhoul): Fix: the Bone Greatsword's moves rebuilt (testing)
+
+See `.github/release-notes-3.4.8.md`. The greatsword's six blows and its three moves are rebuilt with both hands on the grip: the sword turns in the hands (an arm here is a stiff stick, and set at one angle in the fist the left hand hung up to half a block off the grip and the blade flicked about). The stance, the hammer, the whip and the spear are unchanged. Sheet: `docs/handoff/bone_sword-moves-3.4.8.png`.
+
 ## 3.4.7 (HexGhoul): Fix: the move guide is one narrow column again (testing)
 
 See `.github/release-notes-3.4.7.md`. The move guide above the chat is one narrow vertical column again (3.4.6's two columns made it wider, not smaller), drawn at 60% of its size with tighter spacing; every move is still a word or two.

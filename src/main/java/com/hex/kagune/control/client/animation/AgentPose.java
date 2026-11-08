@@ -430,6 +430,10 @@ public final class AgentPose {
             p.rightArmY = arms.rightArmY;
             p.rightArmZ = arms.rightArmZ;
             p.rightArmHold = 1.0F;
+            // 3.4.8: and the weapon as it is turned in that fist.
+            p.weaponX = arms.weaponX;
+            p.weaponY = arms.weaponY;
+            p.weaponZ = arms.weaponZ;
         }
         if (arms.armHold > 0.0F || arms.leftArmHold > 0.0F) {
             p.leftArmX = arms.leftArmX;

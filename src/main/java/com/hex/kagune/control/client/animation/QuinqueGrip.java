@@ -89,6 +89,21 @@ public final class QuinqueGrip {
 
     /** Where a point of the quinque's model ({@code point}: model pixels) is drawn, held in the right hand of {@code p} (pixels). */
     public static double[] held(RigPose p, QuinqueHolds.Hold h, boolean slim, float[] point) {
+        double[] layer = onArm(h, point);
+        if (p.weaponX != 0.0F || p.weaponY != 0.0F || p.weaponZ != 0.0F) {
+            // 3.4.8: a kagune-made weapon turned in the fist (RigPose.weapon*), about where the right hand grips it.
+            double[] grip = onArm(h, h.rightGrip());
+            double[] d = apply(RigPose.zyx(p.weaponX, p.weaponY, p.weaponZ), new double[] {layer[0] - grip[0], layer[1] - grip[1], layer[2] - grip[2]});
+            layer = new double[] {grip[0] + d[0], grip[1] + d[1], grip[2] + d[2]};
+        }
+        double[] turned = apply(armTurn(p, true), layer);
+        double[] o = pivot(p, true);
+        // PlayerModel.translateToHand: a slim arm's pivot half a pixel out for the item.
+        return new double[] {o[0] + (slim ? 0.5 : 0.0) + 16.0 * turned[0], o[1] + 16.0 * turned[1], o[2] + 16.0 * turned[2]};
+    }
+
+    /** A point of the quinque's model (model pixels) on the right arm, in its own frame (blocks, from its pivot; a slim arm's half pixel aside). */
+    private static double[] onArm(QuinqueHolds.Hold h, float[] point) {
         double[][] r = RigPose.multiply(RigPose.zyx(Math.toRadians(h.rotation()[0]), 0.0, 0.0),
             RigPose.multiply(RigPose.zyx(0.0, Math.toRadians(h.rotation()[1]), 0.0), RigPose.zyx(0.0, 0.0, Math.toRadians(h.rotation()[2]))));
         double s = h.scale();
@@ -96,11 +111,7 @@ public final class QuinqueGrip {
         double[] local = {1.0 / 16.0 + h.translation()[0] / 16.0 + m[0], 0.125 + h.translation()[1] / 16.0 + m[1],
             -0.625 + h.translation()[2] / 16.0 + m[2]};
         // ItemInHandLayer: Rx(-90) then Ry(180).
-        double[] layer = apply(RigPose.multiply(RigPose.zyx(Math.toRadians(-90.0), 0.0, 0.0), RigPose.zyx(0.0, Math.PI, 0.0)), local);
-        double[] turned = apply(armTurn(p, true), layer);
-        double[] o = pivot(p, true);
-        // PlayerModel.translateToHand: a slim arm's pivot half a pixel out for the item.
-        return new double[] {o[0] + (slim ? 0.5 : 0.0) + 16.0 * turned[0], o[1] + 16.0 * turned[1], o[2] + 16.0 * turned[2]};
+        return apply(RigPose.multiply(RigPose.zyx(Math.toRadians(-90.0), 0.0, 0.0), RigPose.zyx(0.0, Math.PI, 0.0)), local);
     }
 
     /** Where {@code q}'s left grip is drawn for {@code p} (pixels), or null (one-handed). */
@@ -252,6 +263,82 @@ public final class QuinqueGrip {
         p.leftArmY = was[1] + (own[1] - was[1]) * weight;
         p.leftArmZ = was[2] + (own[2] - was[2]) * weight;
         p.leftArmHold = Math.max(hold, weight);
+    }
+
+    /**
+     * 3.4.8: {@code w} of the way from one turn to another (ModelPart's angles, Rz Ry Rx), the shortest way round: blending the angles
+     * themselves sends an arm raised over the head (or a weapon turned in the fist) the long way, through poses neither had.
+     */
+    public static float[] blendTurn(float ax, float ay, float az, float bx, float by, float bz, float w) {
+        if (w <= 0.0F) {
+            return new float[] {ax, ay, az};
+        }
+        if (w >= 1.0F) {
+            return new float[] {bx, by, bz};
+        }
+        double[] qa = quaternion(RigPose.zyx(ax, ay, az));
+        double[] qb = quaternion(RigPose.zyx(bx, by, bz));
+        double dot = qa[0] * qb[0] + qa[1] * qb[1] + qa[2] * qb[2] + qa[3] * qb[3];
+        if (dot < 0.0) {
+            qb = new double[] {-qb[0], -qb[1], -qb[2], -qb[3]};
+            dot = -dot;
+        }
+        double ka;
+        double kb;
+        if (dot > 0.9995) {
+            ka = 1.0 - w;
+            kb = w;
+        } else {
+            double angle = Math.acos(Math.min(1.0, dot));
+            double sin = Math.sin(angle);
+            ka = Math.sin((1.0 - w) * angle) / sin;
+            kb = Math.sin(w * angle) / sin;
+        }
+        double[] q = {ka * qa[0] + kb * qb[0], ka * qa[1] + kb * qb[1], ka * qa[2] + kb * qb[2], ka * qa[3] + kb * qb[3]};
+        double n = Math.sqrt(q[0] * q[0] + q[1] * q[1] + q[2] * q[2] + q[3] * q[3]);
+        double x = q[0] / n;
+        double y = q[1] / n;
+        double z = q[2] / n;
+        double r = q[3] / n;
+        double[][] m = {{1 - 2 * (y * y + z * z), 2 * (x * y - z * r), 2 * (x * z + y * r)},
+            {2 * (x * y + z * r), 1 - 2 * (x * x + z * z), 2 * (y * z - x * r)},
+            {2 * (x * z - y * r), 2 * (y * z + x * r), 1 - 2 * (x * x + y * y)}};
+        return angles(m);
+    }
+
+    /** A turn as a unit quaternion {x, y, z, w}. */
+    private static double[] quaternion(double[][] m) {
+        double trace = m[0][0] + m[1][1] + m[2][2];
+        double x;
+        double y;
+        double z;
+        double w;
+        if (trace > 0.0) {
+            double s = Math.sqrt(trace + 1.0) * 2.0;
+            w = 0.25 * s;
+            x = (m[2][1] - m[1][2]) / s;
+            y = (m[0][2] - m[2][0]) / s;
+            z = (m[1][0] - m[0][1]) / s;
+        } else if (m[0][0] > m[1][1] && m[0][0] > m[2][2]) {
+            double s = Math.sqrt(1.0 + m[0][0] - m[1][1] - m[2][2]) * 2.0;
+            w = (m[2][1] - m[1][2]) / s;
+            x = 0.25 * s;
+            y = (m[0][1] + m[1][0]) / s;
+            z = (m[0][2] + m[2][0]) / s;
+        } else if (m[1][1] > m[2][2]) {
+            double s = Math.sqrt(1.0 + m[1][1] - m[0][0] - m[2][2]) * 2.0;
+            w = (m[0][2] - m[2][0]) / s;
+            x = (m[0][1] + m[1][0]) / s;
+            y = 0.25 * s;
+            z = (m[1][2] + m[2][1]) / s;
+        } else {
+            double s = Math.sqrt(1.0 + m[2][2] - m[0][0] - m[1][1]) * 2.0;
+            w = (m[1][0] - m[0][1]) / s;
+            x = (m[0][2] + m[2][0]) / s;
+            y = (m[1][2] + m[2][1]) / s;
+            z = 0.25 * s;
+        }
+        return new double[] {x, y, z, w};
     }
 
     /** The least turn taking unit {@code a} to unit {@code b}. */
