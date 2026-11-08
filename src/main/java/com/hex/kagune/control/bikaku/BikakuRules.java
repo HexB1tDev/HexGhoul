@@ -22,7 +22,9 @@ public final class BikakuRules {
         /** Reared up high and brought down on it. */
         LUNGE(13, 7, 1.0F, 0.4F),
         /** Drawn back further, thrown wide, clamped, shaken: harder, it stuns. */
-        MAUL(18, 8, 1.5F, 0.6F);
+        MAUL(18, 8, 1.5F, 0.6F),
+        /** 3.5.4: in the kakuja, M1 is one of its tentacles thrown far out at what he aims at, biting it. */
+        TENTACLE(18, 9, 1.8F, 0.5F);
 
         private final int ticks;
         private final int land;
@@ -66,6 +68,7 @@ public final class BikakuRules {
             return switch (this) {
                 case SNAP -> LUNGE;
                 case LUNGE -> MAUL;
+                case TENTACLE -> TENTACLE;
                 default -> SNAP;
             };
         }
@@ -122,6 +125,22 @@ public final class BikakuRules {
     public static final double REGEN_HEAL_SHARE = 0.5;
     public static final double KNOCKBACK_RESIST = 0.6;
     public static final double STUN_SHARE = 0.5;
+
+    /**
+     * 3.5.4, the kakuja: the RC to go into it and what it drains a tick, its cooldown after it ends, the share of every blow he still takes
+     * in it (Abnormal Flesh), how far its tentacles reach (from its middle), its regeneration (1 health every so many ticks), how slow it
+     * is (Slowness, its amplifier: Immovable Horror).
+     */
+    public static final float KAKUJA_COST = 25.0F;
+    public static final float KAKUJA_DRAIN = 0.05F;
+    public static final int KAKUJA_COOLDOWN = 1200;
+    public static final float KAKUJA_TAKEN = 0.45F;
+    public static final double KAKUJA_REACH = 14.0;
+    public static final int KAKUJA_REGEN_EVERY = 8;
+    public static final int KAKUJA_SLOW = 5;
+    public static final double KAKUJA_STEADY = 1.0;
+    /** Its middle (the body frame): where its tentacles' reach is measured from. */
+    public static final double[] KAKUJA_CENTRE = {0.0, 2.4, 0.0};
 
     /** A bite at nothing in particular takes what is within this of its mouth when it shuts. */
     public static final double MOUTH_RADIUS = 1.1;

@@ -1,5 +1,7 @@
 # START HERE (state after 3.5.3)
 
+**After 3.5.3 (unreleased):** the Bikaku kakuja's body, transformation and gameplay were started and committed without a version; the session was stopped before 3.5.4 was finished. Read `docs/handoff/next-ai-3.5.4.md` first: what is done, what is left, and the owner's previews to ask about.
+
 Branch `claude/peaceful-ramanujan-eldmlu`. Next: **3.5.4: the kakuja's body and transformation (K)**, then 3.5.5 its abilities and passives. Plan: `docs/BIKAKU_PATH.md`; handoff `docs/handoff/next-ai-3.4.8.md` (kept current). Mastery alone opens everything (the owner: a custom NPC will teach it later).
 
 - `BikakuMove.REGENERATION` (C, 600, lasts 160 ticks, 900 cooldown, 15 RC); `occupies()` false for it: `BikakuMoves.key` runs `regenerate` (sets `state.regenAt`, no worm move), and `onAction` doesn't queue it behind a busy worm.

@@ -117,7 +117,10 @@ public final class BikakuRenderer {
         int seed = BikakuClient.seed(player);
         double age = view.age(clock);
         double[] target = null;
-        if (view.bite() != BikakuRules.Bite.NONE && age < view.bite().ticks()) {
+        // 3.5.4: the kakuja (or its growing or falling away): how far each part of it has grown, the worm swelling into it.
+        com.hex.kagune.control.bikaku.MawKakuja.Growth growth = com.hex.kagune.control.bikaku.MawKakuja.growth(view.kakuja(), view.kakujaAge(clock));
+        boolean tentacle = view.bite() == BikakuRules.Bite.TENTACLE;
+        if (view.bite() != BikakuRules.Bite.NONE && !tentacle && age < view.bite().ticks()) {
             Entity followed = view.targetId() != 0 ? level.m_6815_(view.targetId()) : null;
             target = frame.rig(followed != null ? centre(followed, partial) : new double[] {view.x(), view.y(), view.z()});
         }
@@ -157,7 +160,7 @@ public final class BikakuRenderer {
         };
         int tint = KaguneTints.of(player);
         for (MawMotion.Worm worm : worms) {
-            double grown = GraftMesh.smooth(deploy) * worm.grown();
+            double grown = GraftMesh.smooth(deploy) * worm.grown() * growth.worm();
             if (grown <= 0.002) {
                 continue;
             }
@@ -172,9 +175,43 @@ public final class BikakuRenderer {
             for (int i = 0; i < rig.length; i++) {
                 world[i] = frame.place(rig[i], camera);
             }
-            MawWorm.build(sink, new MawWorm.Pose(world, frame.turn(worm.shape().dorsal()), grown, worm.shape().aperture(), worm.girth(), worm.seed(), clock),
-                tint, fine);
+            MawWorm.build(sink, new MawWorm.Pose(world, frame.turn(worm.shape().dorsal()), grown, worm.shape().aperture(),
+                worm.girth() * (1.0 + growth.swell()), worm.seed(), clock), tint, fine);
         }
+        if (growth.shows()) {
+            // 3.5.4: the kakuja, built in his body's frame and placed in the world; in first person nothing of it near the eyes (he is
+            // inside it: he sees out).
+            double[] lunge = null;
+            int biter = -1;
+            double reach = 0.0;
+            double bite = 0.0;
+            if (tentacle && age < view.bite().ticks()) {
+                Entity followed = view.targetId() != 0 ? level.m_6815_(view.targetId()) : null;
+                lunge = frame.rig(followed != null ? centre(followed, partial) : new double[] {view.x(), view.y(), view.z()});
+                biter = com.hex.kagune.control.bikaku.MawKakuja.biter(lunge, clock);
+                reach = com.hex.kagune.control.bikaku.MawKakuja.lunge(age);
+                bite = com.hex.kagune.control.bikaku.MawKakuja.lungeMouth(age);
+            }
+            double clearSq = KAKUJA_CLEAR * KAKUJA_CLEAR;
+            UkakuModel.Sink placed = (a, b, c, d, n, ca, cb, cc, cd) -> {
+                double[] pa = frame.place(a, camera);
+                double[] pb = frame.place(b, camera);
+                double[] pc = frame.place(c, camera);
+                double[] pd = frame.place(d, camera);
+                if (near != null && (sq(pa) < clearSq || sq(pb) < clearSq || sq(pc) < clearSq || sq(pd) < clearSq)) {
+                    return;
+                }
+                quad(out, matrix, normals, pa, pb, pc, pd, frame.turn(n), ca, cb, cc, cd, light);
+            };
+            com.hex.kagune.control.bikaku.MawKakuja.build(placed, growth, clock, seed, tint, fine, biter, lunge, reach, bite);
+        }
+    }
+
+    /** 3.5.4: in first person, nothing of the kakuja this near his eyes (he is inside its mass). */
+    private static final double KAKUJA_CLEAR = 2.6;
+
+    private static double sq(double[] p) {
+        return p[0] * p[0] + p[1] * p[1] + p[2] * p[2];
     }
 
     /** 3.5.3: Monstrous Regeneration's strands, each laid on the part of his body it crawls over, as that part is posed now. */

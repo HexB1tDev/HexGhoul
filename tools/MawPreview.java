@@ -58,6 +58,9 @@ public class MawPreview {
         if (which.equals("regen") || which.equals("all")) {
             regen(new File(out, "maw-regen.png"));
         }
+        if (which.equals("kakuja") || which.equals("all")) {
+            kakuja(new File(out, "maw-kakuja.png"));
+        }
         if (which.equals("grow") || which.equals("all")) {
             grow(new File(out, "maw-grow.png"));
         }
@@ -265,7 +268,7 @@ public class MawPreview {
     /** As PoseRender.render on a wider floor (what is under it hidden, as the ground hides it in game). */
     static BufferedImage big(PoseRender.Camera cam, int w, int h, List<PoseRender.Tri> extra) {
         PoseRender.Canvas canvas = new PoseRender.Canvas(w, h, 2, cam, 0x3A4450);
-        canvas.floor(11, 0x58626C, 0x4E5862);
+        canvas.floor(16, 0x58626C, 0x4E5862);
         for (PoseRender.Tri t : PoseRender.model(new RigPose())) {
             canvas.tri(t, true);
         }
@@ -333,6 +336,84 @@ public class MawPreview {
             tris.add(new PoseRender.Tri(new double[][] {w(a), w(c), w(d)}, rgb, w(n)));
         }, placed, radii, 0xA50F37);
         return tris;
+    }
+
+    /** 3.5.4: the kakuja, grown (from round about), growing into it, and coming out of it. */
+    static void kakuja(File file) throws Exception {
+        int fw = 330;
+        int fh = 330;
+        int cols = 6;
+        BufferedImage img = new BufferedImage(fw * cols, fh * 4 + 34, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = sheet(img, "Bikaku 3.5.4: the kakuja: a lopsided heaving mass round him (about 4.8 high) covered in grinning mouths and a great maw, six tentacles; growing into it (3 s), out (1.5 s); M1: a tentacle's bite");
+        double[][] views = {{20, 12}, {70, 18}, {140, 10}, {200, 15}, {-70, 8}, {-20, 35}};
+        for (int i = 0; i < cols; i++) {
+            double time = 40 + i * 9;
+            List<PoseRender.Tri> tris = kakujaTris(com.hex.kagune.control.bikaku.MawKakuja.growth(true, 200), time, null);
+            g.drawImage(bigAt(views[i][0], views[i][1], 34.0, 3.6, fw, fh, tris), i * fw, 34, null);
+            label(g, String.format("grown, from %.0f°", views[i][0]), i * fw, 34);
+        }
+        double[] ins = {6, 16, 26, 36, 46, 60};
+        for (int i = 0; i < cols; i++) {
+            double time = 40 + ins[i];
+            com.hex.kagune.control.bikaku.MawKakuja.Growth gr = com.hex.kagune.control.bikaku.MawKakuja.growth(true, ins[i]);
+            g.drawImage(bigAt(30, 12, 30.0, 3.2, fw, fh, kakujaTris(gr, time, gr)), i * fw, 34 + fh, null);
+            label(g, String.format("growing into it %.0ft", ins[i]), i * fw, 34 + fh);
+        }
+        double[] outs = {0, 5, 10, 16, 22, 30};
+        for (int i = 0; i < cols; i++) {
+            double time = 140 + outs[i];
+            com.hex.kagune.control.bikaku.MawKakuja.Growth gr = com.hex.kagune.control.bikaku.MawKakuja.growth(false, outs[i]);
+            g.drawImage(bigAt(30, 12, 30.0, 3.2, fw, fh, kakujaTris(gr, time, gr)), i * fw, 34 + 2 * fh, null);
+            label(g, String.format("coming out %.0ft", outs[i]), i * fw, 34 + 2 * fh);
+        }
+        double[] bites = {0, 3, 6, 9, 13, 18};
+        double[] prey = {6.5, 0.99, 7.5};
+        for (int i = 0; i < cols; i++) {
+            double age = bites[i];
+            double time = 240 + age;
+            List<PoseRender.Tri> tris = new ArrayList<>();
+            UkakuModel.Sink sink = (a, b, c, d, n, ca, cb, cc, cd) -> {
+                int rgb = avg(ca, cb, cc, cd);
+                tris.add(new PoseRender.Tri(new double[][] {w(a), w(b), w(c)}, rgb, w(n)));
+                tris.add(new PoseRender.Tri(new double[][] {w(a), w(c), w(d)}, rgb, w(n)));
+            };
+            int biter = com.hex.kagune.control.bikaku.MawKakuja.biter(prey, time);
+            com.hex.kagune.control.bikaku.MawKakuja.build(sink, com.hex.kagune.control.bikaku.MawKakuja.growth(true, 200), time, SEED, 0xA50F37, true, biter,
+                prey, com.hex.kagune.control.bikaku.MawKakuja.lunge(age), com.hex.kagune.control.bikaku.MawKakuja.lungeMouth(age));
+            tris.addAll(prey(new double[] {prey[0], 0.0, prey[2]}));
+            g.drawImage(bigAt(-10, 14, 30.0, 3.2, fw, fh, tris), i * fw, 34 + 3 * fh, null);
+            label(g, String.format("tentacle bite %.0ft%s", age, age == com.hex.kagune.control.bikaku.BikakuRules.Bite.TENTACLE.land() ? "  BITES" : ""),
+                i * fw, 34 + 3 * fh);
+        }
+        g.dispose();
+        ImageIO.write(img, "png", file);
+        System.out.println(file);
+    }
+
+    /** The kakuja as grown, and (through a transformation) the worm swollen and showing as much as it still does. */
+    static List<PoseRender.Tri> kakujaTris(com.hex.kagune.control.bikaku.MawKakuja.Growth growth, double time, com.hex.kagune.control.bikaku.MawKakuja.Growth worm) {
+        List<PoseRender.Tri> tris = new ArrayList<>();
+        UkakuModel.Sink sink = (a, b, c, d, n, ca, cb, cc, cd) -> {
+            int rgb = avg(ca, cb, cc, cd);
+            tris.add(new PoseRender.Tri(new double[][] {w(a), w(b), w(c)}, rgb, w(n)));
+            tris.add(new PoseRender.Tri(new double[][] {w(a), w(c), w(d)}, rgb, w(n)));
+        };
+        com.hex.kagune.control.bikaku.MawKakuja.build(sink, growth, time, SEED, 0xA50F37, true, -1, null, 0.0, 0.0);
+        if (worm != null && worm.worm() > 0.002) {
+            MawMotion.Shape s = MawMotion.idle(time * (1.0 + worm.swell()), SEED);
+            MawWorm.build(sink, new MawWorm.Pose(MawMotion.grown(s.path(), worm.worm()), s.dorsal(), worm.worm(), s.aperture(), 1.0 + worm.swell(), SEED,
+                time), 0xA50F37, true);
+        }
+        return tris;
+    }
+
+    /** A camera orbiting him at {@code yaw}/{@code pitch}, {@code distance} out, looking at {@code y}; the wide floor. */
+    static BufferedImage bigAt(double yawDegrees, double pitchDegrees, double distance, double y, int w, int h, List<PoseRender.Tri> tris) {
+        double yaw = Math.toRadians(yawDegrees);
+        double pitch = Math.toRadians(pitchDegrees);
+        double[] target = {0.0, y, 0.0};
+        double[] eye = {Math.sin(yaw) * Math.cos(pitch) * distance, y + Math.sin(pitch) * distance, Math.cos(yaw) * Math.cos(pitch) * distance};
+        return big(new PoseRender.Camera(eye, target, 40), w, h, tris);
     }
 
     /** As {@link #framed}, looking at {@code share} of the way out to what he bites. */

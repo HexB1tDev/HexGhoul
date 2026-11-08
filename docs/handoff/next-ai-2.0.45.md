@@ -1,4 +1,4 @@
-> **Newest handoff: read `docs/handoff/next-ai-3.4.8.md` first** (then `BIKAKU_PATH.md`). Before it: **`docs/handoff/next-ai-3.3.5.md`** (the 3.2.7 to 3.3.5 session; the prompt for the next AI is `docs/handoff/next-prompt-3.3.5.md`; before it, `next-ai-3.2.1.md` (3.2.0 to 3.2.6) and `next-ai-3.1.9.md` (3.1.5 to 3.1.9)).
+> **Newest handoff: read `docs/handoff/next-ai-3.5.4.md` first** (then `BIKAKU_PATH.md`; the prompt for the next AI is `docs/handoff/next-prompt-3.5.4.md`). Before it: `docs/handoff/next-ai-3.4.8.md` (3.4.8 to 3.5.3), `docs/handoff/next-ai-3.3.5.md` (the 3.2.7 to 3.3.5 session).
 
 # HANDOFF: HexGhoul after 2.0.45 (updated through 3.5.3, see "3.1.5" to "3.5.3" at the end of "Since 2.1.0"; earlier through 2.1.2: see "Since 2.0.45" and "Since 2.1.0" below). Read this first, then `docs/handoff/next-ai-2.0.36.md` (2.0.27 to 2.0.36 and what to ask the owner),
 `docs/handoff/next-ai-2.0.21.md`, `docs/handoff/next-ai-2.0.9.md`, `docs/handoff/next-ai-2.0.5.md` (how the owner works),

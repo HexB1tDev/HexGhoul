@@ -100,6 +100,8 @@ public final class AbilityGuide {
     static final int GRAFT_BURN = 0xFFFF5A3C;
     /** 3.4.9: Bikaku's worm. */
     static final int BIKAKU_RED = 0xFFE0386A;
+    /** 3.5.4: the Bikaku kakuja. */
+    static final int BIKAKU_KAKUJA = 0xFFFF4A6E;
 
     /** The kakuja need these. */
     public static final int FIRST_KAKUJA = 750;
@@ -484,6 +486,14 @@ public final class AbilityGuide {
      */
     static Panel bikaku(Input in, List<Row> rows) {
         int accent = accent(in);
+        if (in.graftKakuja()) {
+            // 3.5.4: in the kakuja (the Input's kakuja flag is the Bikaku kakuja on this path).
+            rows.add(row(in, "Tentacle bite (far reach)", BIKAKU_KAKUJA, 0, Key.ATTACK));
+            rows.add(new Row("auto", "Rooted · tough · regenerating", TEXT, 0));
+            rows.add(new Row(key(in, Key.CYCLE) + " tap", "Turn back", accent, 0));
+            away(in, rows);
+            return new Panel("KAKUJA", "Bikaku · kakuja", BIKAKU_KAKUJA, rows);
+        }
         rows.add(row(in, "Bites: Snap · Lunge · Maul", accent, 0, Key.ATTACK));
         // 3.5.0: its moves on the original's kagune keys, each dim with the mastery it needs until then (mastery alone opens them).
         for (com.hex.kagune.control.bikaku.BikakuMove move : com.hex.kagune.control.bikaku.BikakuMove.values()) {
@@ -494,6 +504,7 @@ public final class AbilityGuide {
         }
         rows.add(new Row("auto", "Bites heal you", TEXT, 0));
         rows.add(new Row("auto", "Fast regeneration · hard to knock back", TEXT, 0)); // 3.5.3: its passives
+        rows.add(new Row(key(in, Key.CYCLE) + " tap", "Kakuja", BIKAKU_KAKUJA, locked(in.mastery(), com.hex.kagune.control.bikaku.BikakuRules.KAKUJA)));
         away(in, rows);
         return new Panel("BIKAKU", "Bikaku · the worm", accent, rows);
     }

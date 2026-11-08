@@ -1,4 +1,4 @@
-# HANDOFF: HexGhoul after 3.5.3, the Bikaku path being built (kept current as versions ship). Read this first.
+# (Superseded by `next-ai-3.5.4.md`.) HANDOFF: HexGhoul after 3.5.3, the Bikaku path being built (kept current as versions ship). Read this first.
 
 Then `docs/BIKAKU_PATH.md` (the owner's whole spec for the new path, word for word, what is built, the plan, and every place a path
 hooks into). Then, for the house rules and history: `docs/handoff/next-ai-3.3.5.md` (the session before: its judgment calls, how to

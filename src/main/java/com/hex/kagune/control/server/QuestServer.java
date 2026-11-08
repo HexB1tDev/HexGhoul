@@ -251,7 +251,7 @@ public final class QuestServer {
             boolean kakuja = switch (path) {
                 case UKAKU -> UkakuServer.form(player).kakuja();
                 case GRAFT -> GraftServer.kakuja(player);
-                case BIKAKU -> false; // 3.4.9: its kakuja comes later
+                case BIKAKU -> BikakuServer.kakuja(player); // 3.5.4
                 default -> RinkakuForms.kakuja(KaguneProfile.form(player));
             };
             if (kakuja) {

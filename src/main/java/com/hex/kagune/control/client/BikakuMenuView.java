@@ -42,7 +42,7 @@ public final class BikakuMenuView {
     /** The plan's moves still to come (the owner's spec), each with the mastery it is meant to need (3.5.0: the built ones are moves). */
     static final Object[][] PLANNED = {
         {"Devouring Maw", BikakuRules.MAW}, {"Predatory Drag", BikakuRules.DRAG}, {"Ravenous Pursuit", BikakuRules.PURSUIT},
-        {"Carrion Eruption", BikakuRules.ERUPTION}, {"Monstrous Regeneration", BikakuRules.REGENERATION}, {"Kakuja", BikakuRules.KAKUJA}};
+        {"Carrion Eruption", BikakuRules.ERUPTION}, {"Monstrous Regeneration", BikakuRules.REGENERATION}, {"The kakuja's own moves", BikakuRules.KAKUJA}};
 
     /** The planned moves not built yet. */
     static java.util.List<Object[]> coming() {
@@ -134,6 +134,12 @@ public final class BikakuMenuView {
         row(c, "A kill", "+" + half(BikakuRules.KILL_HEAL) + " hearts more", x, y + 92);
         c.text("Bites make them bleed; the third stuns", x, y + 108, MUTED, false);
 
+        // 3.5.4: the kakuja.
+        c.text("KAKUJA  (K, mastery " + BikakuRules.KAKUJA + ")", x, y + 222, HEADER, false);
+        c.text(Math.round(BikakuRules.KAKUJA_COST) + " RC, then it drains; " + BikakuRules.KAKUJA_COOLDOWN / 20 + " s to come back", x, y + 238, TRAIT, false);
+        c.text("Rooted, " + Math.round((1.0F - BikakuRules.KAKUJA_TAKEN) * 100) + "% less from every blow,", x, y + 252, MUTED, false);
+        c.text("regenerating; its tentacles bite " + Math.round(BikakuRules.KAKUJA_REACH) + " blocks out", x, y + 266, MUTED, false);
+
         // 3.5.3: its passives while the worm is out.
         c.text("WHILE THE WORM IS OUT", x, y + 134, HEADER, false);
         c.text("Abnormal Regeneration: you heal far", x, y + 152, TRAIT, false);
@@ -141,7 +147,7 @@ public final class BikakuMenuView {
         c.text("Pain Suppression: hard to knock back,", x, y + 184, TRAIT, false);
         c.text("stuns last half as long", x, y + 198, TRAIT, false);
 
-        button(c, hits, "eyes", "ADJUST KAKUGAN", x, y + 262, 220, mouseX, mouseY, time);
+        button(c, hits, "eyes", "ADJUST KAKUGAN", x, y + 296, 220, mouseX, mouseY, time);
     }
 
     /** Its moves now, and the plan's still to come. */

@@ -32,13 +32,19 @@ public final class BikakuClient {
      * began here, its point, the bodies it goes after and the one it holds.
      */
     public record View(Bite bite, long startedAt, double began, double x, double y, double z, int targetId, BikakuMove move, long moveAt,
-                       double moveBegan, double mx, double my, double mz, int[] targets, int heldId, boolean caught, long regenAt, double regenBegan) {
+                       double moveBegan, double mx, double my, double mz, int[] targets, int heldId, boolean caught, long regenAt, double regenBegan,
+                       boolean kakuja, long kakujaAt, double kakujaBegan) {
         public static final View NONE = new View(Bite.NONE, Long.MIN_VALUE, 0.0, 0.0, 0.0, 0.0, 0, BikakuMove.NONE, Long.MIN_VALUE, 0.0, 0.0, 0.0,
-            0.0, new int[S2CBikakuState.TARGETS], 0, false, -1_000_000L, -1.0E6);
+            0.0, new int[S2CBikakuState.TARGETS], 0, false, -1_000_000L, -1.0E6, false, -1_000_000L, -1.0E6);
 
         /** Ticks since the bite began ({@code clock}: {@link PaleClient#clock}); MAX_VALUE for none. */
         public double age(double clock) {
             return this.bite == Bite.NONE || this.startedAt == Long.MIN_VALUE ? Double.MAX_VALUE : Math.max(0.0, clock - this.began);
+        }
+
+        /** 3.5.4: ticks since it last went into the kakuja or came out of it. */
+        public double kakujaAge(double clock) {
+            return Math.max(0.0, clock - this.kakujaBegan);
         }
 
         /** 3.5.3: ticks since Monstrous Regeneration began. */
@@ -79,7 +85,17 @@ public final class BikakuClient {
         }
         VIEWS.put(message.playerId(), new View(Bite.byOrdinal(message.bite()), message.startedAt(), began, message.x(), message.y(), message.z(),
             message.targetId(), BikakuMove.byOrdinal(message.move()), message.moveAt(), moveBegan, message.mx(), message.my(), message.mz(),
-            message.targets(), message.heldId(), message.caught(), message.regenAt(), regenBegan));
+            message.targets(), message.heldId(), message.caught(), message.regenAt(), regenBegan, message.kakuja(), message.kakujaAt(),
+            kakujaBegan(before, message, world, clock)));
+    }
+
+    /** When (the client clock) the kakuja last went in or out here: from its first frame if just begun, its clock running on if told again. */
+    private static double kakujaBegan(View before, S2CBikakuState message, long world, double clock) {
+        if (before != null && before.kakujaAt() == message.kakujaAt()) {
+            return before.kakujaBegan();
+        }
+        long behind = world - message.kakujaAt();
+        return clock - (behind > JUST_BEGUN ? Math.min(behind, 100_000L) : 0L);
     }
 
     public static View get(Player player) {

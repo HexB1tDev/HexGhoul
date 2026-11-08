@@ -436,7 +436,7 @@ public final class UkakuServer {
                 // 7.0.0: tapped, his kakuja (in or out); held, his next base stage.
                 GraftServer.kakujaKey(player, hold);
             } else if (BikakuServer.isBikaku(player)) {
-                BikakuServer.notYet(player); // 3.4.9: the worm's kakuja comes later
+                BikakuServer.kakujaKey(player, hold); // 3.5.4: its kakuja, tapped or held
             }
             return;
         }

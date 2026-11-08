@@ -30,6 +30,7 @@ public final class BikakuWormTests {
         grabs();
         pursuit();
         eruption();
+        kakuja();
         System.out.println("Bikaku worm tests: " + passed + " checks passed");
     }
 
@@ -415,5 +416,87 @@ public final class BikakuWormTests {
             MawMotion.Shape rest = MawMotion.idle(84, 7);
             check(distance(end.path()[end.path().length - 1], rest.path()[rest.path().length - 1]) < 1.0E-6, "Carrion Eruption ends at rest");
         }
+    }
+
+    /**
+     * 3.5.4: the kakuja: 4 to 5 blocks tall round him, lopsided, its tentacles reaching far, most with mouths; growing into it and out of
+     * it never jumps, ends whole either way; a tentacle's bite lands on its target; finite, sane meshes.
+     */
+    private static void kakuja() {
+        com.hex.kagune.control.bikaku.MawKakuja.Growth full = com.hex.kagune.control.bikaku.MawKakuja.growth(true, 500);
+        double[] lo = {1e9, 1e9, 1e9};
+        double[] hi = {-1e9, -1e9, -1e9};
+        int[] quads = {0};
+        boolean[] finite = {true};
+        UkakuModel.Sink sink = (a, b, c, d, n, ca, cb, cc, cd) -> {
+            quads[0]++;
+            for (double[] q : new double[][] {a, b, c, d}) {
+                finite[0] &= Double.isFinite(q[0]) && Double.isFinite(q[1]) && Double.isFinite(q[2]);
+            }
+        };
+        UkakuModel.Sink massOnly = (a, b, c, d, n, ca, cb, cc, cd) -> {
+            for (double[] q : new double[][] {a, b, c, d}) {
+                for (int k = 0; k < 3; k++) {
+                    lo[k] = Math.min(lo[k], q[k]);
+                    hi[k] = Math.max(hi[k], q[k]);
+                }
+            }
+        };
+        com.hex.kagune.control.bikaku.MawKakuja.Growth bodyOnly = new com.hex.kagune.control.bikaku.MawKakuja.Growth(0, 0, 0, full.lumps(), 0, 0);
+        com.hex.kagune.control.bikaku.MawKakuja.build(massOnly, bodyOnly, 40, 7, 0xA50F37, false, -1, null, 0, 0);
+        check(hi[1] >= 4.0 && hi[1] <= 5.4 && lo[1] < 0.2, "its body is 4 to 5 blocks tall, on the ground (" + lo[1] + " to " + hi[1] + ")");
+        check(hi[0] - lo[0] >= 3.5 && hi[2] - lo[2] >= 3.0, "its body is wide round him");
+        check(Math.abs(hi[0] + lo[0]) > 0.3 || Math.abs(hi[2] + lo[2]) > 0.3, "lopsided, not symmetrical");
+        com.hex.kagune.control.bikaku.MawKakuja.build(sink, full, 40, 7, 0xA50F37, true, -1, null, 0, 0);
+        check(finite[0] && quads[0] > 4000 && quads[0] < 80000, "the kakuja is finite quads, a sane number (" + quads[0] + ")");
+        int mouthed = 0;
+        double farthest = 0.0;
+        double[] centre = {0.0, 2.4, 0.0};
+        for (int i = 0; i < com.hex.kagune.control.bikaku.MawKakuja.tentacles(); i++) {
+            mouthed += com.hex.kagune.control.bikaku.MawKakuja.mouthed(i) ? 1 : 0;
+            double[][] line = com.hex.kagune.control.bikaku.MawKakuja.tentacle(i, 40, null, 0);
+            farthest = Math.max(farthest, distance(line[line.length - 1], centre));
+        }
+        check(mouthed >= 4 && mouthed < com.hex.kagune.control.bikaku.MawKakuja.tentacles(), "most tentacles end in mouths, not all");
+        check(farthest >= 7.0, "its tentacles reach far beyond its body (" + farthest + ")");
+        for (boolean in : new boolean[] {true, false}) {
+            com.hex.kagune.control.bikaku.MawKakuja.Growth last = null;
+            int end = in ? com.hex.kagune.control.bikaku.MawKakuja.IN : com.hex.kagune.control.bikaku.MawKakuja.OUT;
+            for (double age = 0; age <= end + 2; age += 0.5) {
+                com.hex.kagune.control.bikaku.MawKakuja.Growth g = com.hex.kagune.control.bikaku.MawKakuja.growth(in, age);
+                if (last != null) {
+                    double jump = Math.max(Math.abs(g.worm() - last.worm()), Math.max(Math.abs(g.mouths() - last.mouths()), Math.abs(g.tentacles() - last.tentacles())));
+                    for (int i = 0; i < g.lumps().length; i++) {
+                        jump = Math.max(jump, Math.abs(g.lumps()[i] - last.lumps()[i]));
+                    }
+                    check(jump < 0.2, "growing " + (in ? "into" : "out of") + " it never jumps (" + jump + " at " + age + ")");
+                }
+                last = g;
+            }
+            check(in ? last.worm() < 1e-9 && last.mouths() > 0.999 && Math.abs(last.tentacles() - 1.0) < 1e-6 && !(last.wrap() > 1e-9)
+                : last.worm() > 0.999 && !last.shows(), "it ends " + (in ? "grown, the worm swallowed" : "gone, the worm back"));
+        }
+        com.hex.kagune.control.bikaku.MawKakuja.Growth start = com.hex.kagune.control.bikaku.MawKakuja.growth(true, 0);
+        check(start.worm() > 0.999 && !start.shows(), "it starts as the worm");
+        com.hex.kagune.control.bikaku.MawKakuja.Growth wrapping = com.hex.kagune.control.bikaku.MawKakuja.growth(true, 22);
+        check(wrapping.wrap() > 0.5 && wrapping.swell() > 0.9, "growing into it, the worm swells and tendrils wrap round him");
+        double[][] targets = {{8.0, 1.0, 6.0}, {-9.0, 3.0, 2.0}, {0.0, 1.0, 12.0}, {2.0, 6.0, -8.0}};
+        int land = com.hex.kagune.control.bikaku.BikakuRules.Bite.TENTACLE.land();
+        for (double[] target : targets) {
+            int biter = com.hex.kagune.control.bikaku.MawKakuja.biter(target, 40);
+            check(com.hex.kagune.control.bikaku.MawKakuja.mouthed(biter), "a tentacle with a mouth bites");
+            double[][] line = com.hex.kagune.control.bikaku.MawKakuja.tentacle(biter, 40, target, com.hex.kagune.control.bikaku.MawKakuja.lunge(land));
+            check(distance(line[line.length - 1], target) < 0.01, "its mouth is on its target as it bites");
+            check(com.hex.kagune.control.bikaku.MawKakuja.lungeMouth(land) < 0.1 && com.hex.kagune.control.bikaku.MawKakuja.lungeMouth(land - 2) > 0.9,
+                "thrown wide, snapped shut as it lands");
+            check(com.hex.kagune.control.bikaku.MawKakuja.lunge(com.hex.kagune.control.bikaku.BikakuRules.Bite.TENTACLE.ticks()) < 1e-9
+                && com.hex.kagune.control.bikaku.MawKakuja.lunge(0) == 0.0, "it starts and ends where it was");
+        }
+        int[] taper = {0};
+        MawMotion.Shape s = MawMotion.idle(14, 7);
+        MawWorm.build((a, b, c, d, n, ca, cb, cc, cd) -> taper[0]++, new MawWorm.Pose(s.path(), s.dorsal(), 1.0, 0.0, 1.5, 7, 14), 0xA50F37, false, false);
+        int[] mouth = {0};
+        MawWorm.build((a, b, c, d, n, ca, cb, cc, cd) -> mouth[0]++, new MawWorm.Pose(s.path(), s.dorsal(), 1.0, 0.0, 1.5, 7, 14), 0xA50F37, false, true);
+        check(taper[0] > 100 && taper[0] < mouth[0], "a mouthless tentacle is drawn without its mouth");
     }
 }

@@ -71,6 +71,11 @@ public final class MawWorm {
 
     /** The whole worm into {@code sink} ({@code tint}: the owner's kagune colour, 0xRRGGBB); {@code fine} close up (more of everything). */
     public static void build(UkakuModel.Sink sink, Pose pose, int tint, boolean fine) {
+        build(sink, pose, tint, fine, true);
+    }
+
+    /** 3.5.4: as above; {@code mouth} false: no mouth, its end tapering to a blunt tip (one of the kakuja's tentacles). */
+    public static void build(UkakuModel.Sink sink, Pose pose, int tint, boolean fine, boolean mouth) {
         if (pose.grown() <= 0.002 || pose.path().length < 2) {
             return;
         }
@@ -88,10 +93,10 @@ public final class MawWorm {
             KaguneTint.recolour(cc, tint), KaguneTint.recolour(cd, tint));
         double g = pose.girth() * (0.35 + 0.65 * GraftMesh.smooth(pose.grown()));
         double open = GraftMesh.clamp01(pose.aperture());
-        body(flesh, spine, pose, g, open, fine);
-        veins(flesh, spine, pose, g, open, fine);
-        spurs(sink, spine, pose, g, fine);
-        if (pose.grown() > 0.35) {
+        body(flesh, spine, pose, g, open, fine, mouth);
+        veins(flesh, spine, pose, g, open, fine, mouth);
+        spurs(sink, spine, pose, g, fine, mouth);
+        if (mouth && pose.grown() > 0.35) {
             mouth(sink, flesh, spine, pose, g, open, fine);
         }
     }
@@ -140,6 +145,13 @@ public final class MawWorm {
         return r + (lip - r) * into;
     }
 
+    /** 3.5.4: a mouthless tentacle's radius {@code u} of the way along it: out of its root as the worm's, tapering over its last third. */
+    static double tip(double u, double length) {
+        double at = GraftMesh.clamp01(u) * length;
+        double base = ROOT_RADIUS + (BODY_RADIUS - ROOT_RADIUS) * GraftMesh.smooth(at / 0.6);
+        return base * (0.12 + 0.88 * (1.0 - GraftMesh.smooth(GraftMesh.clamp01((u - 0.62) / 0.38))));
+    }
+
     /** The lip's radius: the head flares as the mouth is thrown wide. */
     public static double lipRadius(double open) {
         return LIP_RADIUS * (1.0 + 0.42 * GraftMesh.smooth(GraftMesh.clamp01((open - 0.45) / 0.55)));
@@ -162,7 +174,7 @@ public final class MawWorm {
         return Math.pow(Math.max(0.0, crest), 2.2);
     }
 
-    private static void body(UkakuModel.Sink sink, KakujaModel.Spine spine, Pose pose, double g, double open, boolean fine) {
+    private static void body(UkakuModel.Sink sink, KakujaModel.Spine spine, Pose pose, double g, double open, boolean fine, boolean mouth) {
         double length = spine.length();
         int seed = pose.seed();
         double t = pose.time();
@@ -175,7 +187,7 @@ public final class MawWorm {
             @Override
             public double radius(double s, double a) {
                 double at = s * length;
-                double r = MawWorm.radius(s, length, open);
+                double r = mouth ? MawWorm.radius(s, length, open) : tip(s, length);
                 double crest = ridge(at, a, seed);
                 double fold = 0.035 * Math.sin(a * 5.0 + 2.6 * GraftMesh.noise(seed + 3, at * 1.7, 0.0)) * GraftMesh.smooth(at / 0.4);
                 double lump = 0.07 * (GraftMesh.noise(seed + 11, at * 3.2, a * 1.3) - 0.5);
@@ -202,7 +214,7 @@ public final class MawWorm {
     }
 
     /** Glowing veins wandering down it, a pulse of RC running along them toward the mouth. */
-    private static void veins(UkakuModel.Sink sink, KakujaModel.Spine spine, Pose pose, double g, double open, boolean fine) {
+    private static void veins(UkakuModel.Sink sink, KakujaModel.Spine spine, Pose pose, double g, double open, boolean fine, boolean mouth) {
         double length = spine.length();
         int count = fine ? 6 : 4;
         int steps = (int)Math.ceil(length * (fine ? 9.0 : 4.0));
@@ -217,7 +229,7 @@ public final class MawWorm {
                 double at = s * length;
                 double a = a0 + 0.55 * Math.sin(at * 2.3 + v * 1.9) + 0.9 * (GraftMesh.noise(pose.seed() + 40 + v, at * 1.6, 0.0) - 0.5)
                     + 0.18 * Math.sin(at * 9.0 + v);
-                double r = g * radius(s, length, open) * (1.0 + 0.1 * ridge(at, a, pose.seed())) + 0.006;
+                double r = g * (mouth ? radius(s, length, open) : tip(s, length)) * (1.0 + 0.1 * ridge(at, a, pose.seed())) + 0.006;
                 double[][] f = spine.at(s);
                 double[] out = GraftMesh.add(GraftMesh.mul(f[3], Math.cos(a)), GraftMesh.mul(f[2], Math.sin(a)));
                 double[] round = GraftMesh.add(GraftMesh.mul(f[3], -Math.sin(a)), GraftMesh.mul(f[2], Math.cos(a)));
@@ -240,7 +252,7 @@ public final class MawWorm {
     }
 
     /** Grey bone spurs raked back along its top, a crown of them round the back of its head. */
-    private static void spurs(UkakuModel.Sink sink, KakujaModel.Spine spine, Pose pose, double g, boolean fine) {
+    private static void spurs(UkakuModel.Sink sink, KakujaModel.Spine spine, Pose pose, double g, boolean fine, boolean mouth) {
         double length = spine.length();
         int sides = fine ? 6 : 4;
         int stations = fine ? 4 : 2;
@@ -248,7 +260,7 @@ public final class MawWorm {
         for (double at = 0.38; at < length - 0.62; at += 0.27, n++) {
             double s = at / length;
             double a = Math.PI * 0.5 + (n % 2 == 0 ? 0.55 : -0.55) + 0.25 * (GraftMesh.hash(pose.seed() * 17 + n) - 0.5);
-            double r = g * radius(s, length, 0.0);
+            double r = g * (mouth ? radius(s, length, 0.0) : tip(s, length));
             double[][] on = GraftMesh.onSurface(spine, s, a, r * 0.86);
             double[] dir = GraftMesh.normalize(GraftMesh.sub(GraftMesh.mul(on[1], 0.85), GraftMesh.mul(on[2], 0.55)));
             double len = g * (0.17 + 0.1 * GraftMesh.hash(pose.seed() * 5 + n));

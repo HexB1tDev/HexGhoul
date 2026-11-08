@@ -236,7 +236,7 @@ Then, mid-build (binding):
    point).
 4. **3.5.3** (Done; 3.5.2 was a fix: the small heals): Monstrous Regeneration (the active, with tissue-strand visuals over the body) and the three passives (Abnormal Regeneration
    through `GhoulRegen`, Pain Suppression: knockback resistance and less stagger, Predatory Feeding if not done in 1).
-5. **3.5.4:** The kakuja: the central mass (4 to 5 blocks, irregular, asymmetric, pulsating, covered in lipped mouths with flat teeth, ref 3)
+5. **3.5.4** (started, unreleased: `MawKakuja`, the kakuja in `BikakuServer`/`BikakuRenderer`; see `docs/handoff/next-ai-3.5.4.md`): The kakuja: the central mass (4 to 5 blocks, irregular, asymmetric, pulsating, covered in lipped mouths with flat teeth, ref 3)
    with its tentacles, the transformation (the worm swells, more tendrils wrap him, a fused mass swallows him, mouths grow, the
    tentacles burst out), rooted or very slow, and its resistances.
 6. **3.5.5:** The kakuja's four abilities and its passives (Autonomous Predation bites on their own, at sensible intervals).

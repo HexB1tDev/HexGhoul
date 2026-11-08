@@ -71,6 +71,10 @@ public final class BikakuServer {
         int done;
         final java.util.EnumMap<BikakuMove, Long> readyAt = new java.util.EnumMap<>(BikakuMove.class);
         /** A move key pressed while the worm was busy: it waits this long for it. */
+        /** 3.5.4: in the kakuja; when it last went in or out (long ago to start with); when it can be gone into again. */
+        boolean kakuja;
+        long kakujaAt = -1_000_000L;
+        long kakujaReadyAt = Long.MIN_VALUE;
         /** 3.5.3: when Monstrous Regeneration last began (long ago to start with). */
         long regenAt = -1_000_000L;
         /** 3.5.1: what Carrion Eruption came up under (server only: the clients are told where, not whom). */
@@ -145,16 +149,118 @@ public final class BikakuServer {
 
     /** 3.5.3, Pain Suppression: knockback resistance while the worm is out ({@code on}), taken off when it isn't. */
     static void steady(ServerPlayer player, boolean on) {
+        steady(player, on, BikakuRules.KNOCKBACK_RESIST);
+    }
+
+    /** 3.5.4: as above, {@code amount} of it (the kakuja's Abnormal Flesh: all of it). */
+    static void steady(ServerPlayer player, boolean on, double amount) {
         net.minecraft.world.entity.ai.attributes.AttributeInstance resist = player.m_21051_(net.minecraft.world.entity.ai.attributes.Attributes.f_22278_);
         if (resist == null) {
             return;
         }
-        boolean has = resist.m_22111_(STEADY) != null;
-        if (on && !has) {
-            resist.m_22118_(new net.minecraft.world.entity.ai.attributes.AttributeModifier(STEADY, "Bikaku pain suppression", BikakuRules.KNOCKBACK_RESIST,
-                net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADDITION));
-        } else if (!on && has) {
+        net.minecraft.world.entity.ai.attributes.AttributeModifier had = resist.m_22111_(STEADY);
+        Double applied = STEADY_AMOUNT.get(player.m_20148_());
+        if (had != null && (!on || applied == null || applied != amount)) {
             resist.m_22120_(STEADY);
+            had = null;
+        }
+        if (on && had == null) {
+            resist.m_22118_(new net.minecraft.world.entity.ai.attributes.AttributeModifier(STEADY, "Bikaku pain suppression", amount,
+                net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADDITION));
+            STEADY_AMOUNT.put(player.m_20148_(), amount);
+        } else if (!on) {
+            STEADY_AMOUNT.remove(player.m_20148_());
+        }
+    }
+
+    /** The knockback resistance each player's modifier was made with. */
+    private static final Map<UUID, Double> STEADY_AMOUNT = new HashMap<>();
+
+    // ---------------------------------------------------------------- 3.5.4: the kakuja
+
+    /** True while {@code player} is in the kakuja (growing into it, or grown). */
+    public static boolean kakuja(ServerPlayer player) {
+        State state = STATES.get(player.m_20148_());
+        return state != null && state.kakuja;
+    }
+
+    /** K (through {@code UkakuServer}): into the kakuja (its mastery, its RC, its cooldown) or out of it. */
+    public static void kakujaKey(ServerPlayer player, boolean hold) {
+        if (!ready(player) || PaleStun.stunned(player) || PaleRevive.down(player)) {
+            return;
+        }
+        State state = state(player);
+        long now = player.m_9236_().m_46467_();
+        long since = now - state.kakujaAt;
+        if (since >= 0 && since < (state.kakuja ? com.hex.kagune.control.bikaku.MawKakuja.IN : com.hex.kagune.control.bikaku.MawKakuja.OUT)) {
+            return; // mid-transformation
+        }
+        if (state.kakuja) {
+            leaveKakuja(player, state, now);
+            return;
+        }
+        if (KaguneProfile.mastery(player) < BikakuRules.KAKUJA) {
+            notice(player, state, Component.m_237110_("message.hexkagune.bikaku.locked", "The kakuja", BikakuRules.KAKUJA));
+            return;
+        }
+        if (now < state.kakujaReadyAt) {
+            notice(player, state, Component.m_237110_("message.hexkagune.bikaku.cooldown", "The kakuja", (state.kakujaReadyAt - now + 19) / 20));
+            return;
+        }
+        if (!KaguneServerController.useEnergy(player, BikakuRules.KAKUJA_COST, true)) {
+            return;
+        }
+        BikakuMoves.release(player, state, false);
+        state.move = BikakuMove.NONE;
+        state.moveAt = Long.MIN_VALUE;
+        state.bite = Bite.NONE;
+        state.startedAt = Long.MIN_VALUE;
+        state.kakuja = true;
+        state.kakujaAt = now;
+        UkakuFire.sound(player.m_284548_(), player.m_20182_(), "hexkagune:sfx.transform.heavy_morph", 1.0F, 0.85F);
+        KaguneNetwork.sendTo(player, player);
+        broadcast(player, state);
+    }
+
+    static void leaveKakuja(ServerPlayer player, State state, long now) {
+        if (!state.kakuja) {
+            return;
+        }
+        state.kakuja = false;
+        state.kakujaAt = now;
+        state.bite = Bite.NONE;
+        state.startedAt = Long.MIN_VALUE;
+        state.kakujaReadyAt = now + Cooldowns.of(player, (long)BikakuRules.KAKUJA_COOLDOWN);
+        KaguneServerController.playSelf(player, HexKaguneSounds.KAGUNE_RESHAPE, 1.0F, KaguneServerController.vary(player, 0.6F, 0.05F));
+        broadcast(player, state);
+    }
+
+    /** Each tick in the kakuja: its RC drain (out when it runs dry), rooted (Immovable Horror), regenerating (Monstrous Regeneration). */
+    private static void kakujaTick(ServerPlayer player, State state, long now) {
+        if (!KaguneProfile.consumeEnergy(player, BikakuRules.KAKUJA_DRAIN) || KaguneProfile.mastery(player) < BikakuRules.KAKUJA) {
+            KaguneProfile.setEnergy(player, 0.0F);
+            leaveKakuja(player, state, now);
+            player.m_5661_(Component.m_237115_("message.hexkagune.bikaku.kakuja_spent"), true);
+            return;
+        }
+        if (now % 10L == 0L) {
+            KaguneServerController.refreshFormEffect(player, net.minecraft.world.effect.MobEffects.f_19597_, BikakuRules.KAKUJA_SLOW);
+            KaguneNetwork.sendTo(player, player);
+        }
+        if ((now - state.kakujaAt) % BikakuRules.KAKUJA_REGEN_EVERY == 0L && player.m_21223_() < player.m_21233_()) {
+            GhoulRegen.healOwn(player, 1.0F);
+        }
+    }
+
+    /** 3.5.4, Abnormal Flesh: in the kakuja he takes a share of every blow. */
+    @SubscribeEvent(priority = EventPriority.LOW)
+    public static void hurt(net.minecraftforge.event.entity.living.LivingHurtEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer player) || STATES.isEmpty() || event.getAmount() <= 0.0F || event.getAmount() > 1000.0F) {
+            return;
+        }
+        State state = STATES.get(player.m_20148_());
+        if (state != null && state.kakuja && isBikaku(player)) {
+            event.setAmount(event.getAmount() * BikakuRules.KAKUJA_TAKEN);
         }
     }
 
@@ -188,7 +294,7 @@ public final class BikakuServer {
     static S2CBikakuState snapshot(ServerPlayer player, State state) {
         return new S2CBikakuState(player.m_20148_(), state.bite.ordinal(), state.startedAt, state.aim.f_82479_, state.aim.f_82480_, state.aim.f_82481_,
             state.targetId, state.move.ordinal(), state.moveAt, state.movePoint.f_82479_, state.movePoint.f_82480_, state.movePoint.f_82481_,
-            state.targets.clone(), state.heldId, state.caught, state.regenAt);
+            state.targets.clone(), state.heldId, state.caught, state.regenAt, state.kakuja, state.kakujaAt);
     }
 
     static void broadcast(ServerPlayer player, State state) {
@@ -238,6 +344,10 @@ public final class BikakuServer {
         long now = player.m_9236_().m_46467_();
         Entity hint = targetId > 0 ? player.m_284548_().m_6815_(targetId) : null;
         KakujaPassive.attacked(player);
+        if (state.kakuja) {
+            notYet(player); // 3.5.4: the kakuja's own moves come next
+            return;
+        }
         if ((out(state, now) || BikakuMoves.busy(state, now)) && BikakuMove.of(slots[arg]).occupies()) {
             state.queuedSlot = slots[arg];
             state.queuedSlotAt = now;
@@ -287,16 +397,21 @@ public final class BikakuServer {
     }
 
     private static void begin(ServerPlayer player, State state, Entity hint, long now) {
+        boolean big = state.kakuja;
+        if (big && now - state.kakujaAt < com.hex.kagune.control.bikaku.MawKakuja.IN) {
+            return; // 3.5.4: still growing into it
+        }
         boolean chained = state.lastBite != null && now <= state.chainEndsAt + BikakuRules.CHAIN_WINDOW;
-        Bite bite = chained ? state.lastBite.next() : Bite.SNAP;
+        Bite bite = big ? Bite.TENTACLE : chained && state.lastBite != Bite.TENTACLE ? state.lastBite.next() : Bite.SNAP;
         if (!KaguneServerController.useEnergy(player, bite.cost(), true)) {
             return;
         }
-        LivingEntity target = aim(player, hint);
+        LivingEntity target = big ? aimFrom(player, hint, kakujaCentre(player), BikakuRules.KAKUJA_REACH) : aim(player, hint);
         state.bite = bite;
         state.startedAt = now;
         state.targetId = target == null ? 0 : target.m_19879_();
-        state.aim = target == null ? ahead(player) : KaguneServerController.center(target);
+        state.aim = target == null ? (big ? player.m_146892_().m_82549_(player.m_20154_().m_82490_(BikakuRules.KAKUJA_REACH * 0.8)) : ahead(player))
+            : KaguneServerController.center(target);
         state.landed = false;
         state.lastBite = bite;
         state.chainEndsAt = now + bite.ticks();
@@ -306,7 +421,7 @@ public final class BikakuServer {
         // 1.0.40 (as every path's M1): another's M1 landing on him before this bite shuts meets it, and both stop.
         long began = state.startedAt;
         double hit = KaguneClash.strength(player, bite.power(), true);
-        KaguneClash.swing(player, now, bite.land() + 1, BikakuRules.REACH, hit, () -> state.bite == bite && state.startedAt == began,
+        KaguneClash.swing(player, now, bite.land() + 1, big ? BikakuRules.KAKUJA_REACH : BikakuRules.REACH, hit, () -> state.bite == bite && state.startedAt == began,
             () -> clashed(player, state));
         broadcast(player, state);
     }
@@ -332,8 +447,16 @@ public final class BikakuServer {
 
     /** What a bite goes after: the hinted body if fair game, in reach and in sight, else the nearest in front of him. */
     static LivingEntity aim(ServerPlayer player, Entity hint) {
-        Vec3 from = shoulder(player);
-        double reach = BikakuRules.REACH;
+        return aimFrom(player, hint, shoulder(player), BikakuRules.REACH);
+    }
+
+    /** 3.5.4: the kakuja's middle (the world): its tentacles' reach is measured from here. */
+    static Vec3 kakujaCentre(ServerPlayer player) {
+        return world(player, BikakuRules.KAKUJA_CENTRE);
+    }
+
+    /** What a bite from {@code from} reaching {@code reach} goes after: the hinted body, else the nearest in front. */
+    static LivingEntity aimFrom(ServerPlayer player, Entity hint, Vec3 from, double reach) {
         if (hint instanceof LivingEntity living && hint != player && KaguneServerController.validSwipeTarget(player, living)
             && KaguneServerController.center(living).m_82554_(from) <= reach + living.m_20205_() && KaguneServerController.clearLineTo(player, living)) {
             return living;
@@ -395,9 +518,19 @@ public final class BikakuServer {
             // His profile keeps the neutral seed: whatever Rinkaku form or mutation found its way in is parked within a second.
             RinkakuStash.stash(player);
         }
+        // 3.5.4: the kakuja: it ends with the kagune or his life; it drains RC, roots him, regenerates him.
+        if (state.kakuja) {
+            if (!KaguneProfile.isActive(player) || !player.m_6084_()) {
+                state.kakuja = false;
+                state.kakujaAt = now;
+                state.dirty = true;
+            } else {
+                kakujaTick(player, state, now);
+            }
+        }
         // 3.5.3: Pain Suppression: hard to throw while the worm is out (and Monstrous Regeneration's healing while it lasts).
         if (now % 10L == 0L) {
-            steady(player, KaguneProfile.isActive(player) && player.m_6084_());
+            steady(player, KaguneProfile.isActive(player) && player.m_6084_(), state.kakuja ? BikakuRules.KAKUJA_STEADY : BikakuRules.KNOCKBACK_RESIST);
         }
         if (regenerating(state, now) && player.m_6084_() && (now - state.regenAt) % BikakuRules.REGEN_EVERY == 0L
             && player.m_21223_() < player.m_21233_()) {
@@ -462,15 +595,17 @@ public final class BikakuServer {
 
     /** The mouth shuts: on its target if it is still in reach and in sight, else on whatever is at the mouth. */
     private static void land(ServerPlayer player, State state, long now) {
-        Vec3 from = shoulder(player);
+        boolean big = state.bite == Bite.TENTACLE;
+        Vec3 from = big ? kakujaCentre(player) : shoulder(player);
+        double reach = big ? BikakuRules.KAKUJA_REACH : BikakuRules.REACH;
         LivingEntity body = null;
         if (state.targetId != 0 && player.m_284548_().m_6815_(state.targetId) instanceof LivingEntity target && target.m_6084_()
             && KaguneServerController.validSwipeTarget(player, target)
-            && KaguneServerController.center(target).m_82554_(from) <= BikakuRules.REACH + target.m_20205_()
+            && KaguneServerController.center(target).m_82554_(from) <= reach + target.m_20205_()
             && KaguneServerController.clearLineTo(player, target)) {
             body = target;
         }
-        Vec3 mouth = body != null ? KaguneServerController.center(body) : mouth(from, state.aim);
+        Vec3 mouth = body != null ? KaguneServerController.center(body) : mouth(from, state.aim, reach);
         if (body == null) {
             double best = BikakuRules.MOUTH_RADIUS * BikakuRules.MOUTH_RADIUS;
             double r = BikakuRules.MOUTH_RADIUS + 1.0;
@@ -493,9 +628,14 @@ public final class BikakuServer {
 
     /** Where a bite at {@code aim} shuts: the aim, or as far toward it as the worm reaches from over the shoulder. */
     static Vec3 mouth(Vec3 from, Vec3 aim) {
+        return mouth(from, aim, BikakuRules.REACH);
+    }
+
+    /** Where a bite from {@code from} at {@code aim} shuts: the aim, or as far toward it as {@code reach}. */
+    static Vec3 mouth(Vec3 from, Vec3 aim, double reach) {
         Vec3 to = aim.m_82546_(from);
         double distance = to.m_82553_();
-        return distance <= BikakuRules.REACH || distance < 1.0E-6 ? aim : from.m_82549_(to.m_82490_(BikakuRules.REACH / distance));
+        return distance <= reach || distance < 1.0E-6 ? aim : from.m_82549_(to.m_82490_(reach / distance));
     }
 
     /** The teeth close on {@code body}: its damage, its wound (punctures), bleeding, the heavy bite's stun and shake, and his feeding. */
@@ -564,6 +704,7 @@ public final class BikakuServer {
             if (state != null) {
                 BikakuMoves.release(player, state, false);
                 state.calm();
+                state.kakuja = false;
                 if (isBikaku(player)) {
                     broadcast(player, state);
                 }
@@ -578,6 +719,7 @@ public final class BikakuServer {
             if (state != null) {
                 BikakuMoves.release(player, state, false);
                 state.calm();
+                state.kakuja = false;
                 if (isBikaku(player)) {
                     broadcast(player, state);
                 }
