@@ -39,10 +39,25 @@ public final class BikakuMenuView {
     public record Model(int mastery, boolean active, float energy, float maxEnergy) {
     }
 
-    /** The plan's moves still to come (the owner's spec), each with the mastery it is meant to need. */
-    static final Object[][] COMING = {
+    /** The plan's moves still to come (the owner's spec), each with the mastery it is meant to need (3.5.0: the built ones are moves). */
+    static final Object[][] PLANNED = {
         {"Devouring Maw", BikakuRules.MAW}, {"Predatory Drag", BikakuRules.DRAG}, {"Ravenous Pursuit", BikakuRules.PURSUIT},
         {"Carrion Eruption", BikakuRules.ERUPTION}, {"Monstrous Regeneration", BikakuRules.REGENERATION}, {"Kakuja", BikakuRules.KAKUJA}};
+
+    /** The planned moves not built yet. */
+    static java.util.List<Object[]> coming() {
+        java.util.List<Object[]> out = new java.util.ArrayList<>();
+        for (Object[] planned : PLANNED) {
+            boolean built = false;
+            for (com.hex.kagune.control.bikaku.BikakuMove move : com.hex.kagune.control.bikaku.BikakuMove.values()) {
+                built |= move.displayName().equals(planned[0]);
+            }
+            if (!built) {
+                out.add(planned);
+            }
+        }
+        return out;
+    }
 
     private BikakuMenuView() {
     }
@@ -65,8 +80,8 @@ public final class BikakuMenuView {
         });
         c.centered("B I K A K U", centerX, top + 18, TITLE);
         c.centered("THE WORM KAGUNE  /  A MOUTH OF FANGS", centerX, top + 34, SUBTITLE);
-        c.centered("M1 bites (a string of three)  •  each bite that lands heals you  •  its other moves come in later updates", centerX, top + 51,
-            0xFF94506A);
+        c.centered("M1 bites (a string of three)  •  its moves on your kagune keys, opened by mastery  •  each bite that lands heals you", centerX,
+            top + 51, 0xFF94506A);
 
         identity(c, model, left + 24, top + 68);
         middle(c, model, hits, mouseX, mouseY, left + 295, top + 76, time);
@@ -126,18 +141,32 @@ public final class BikakuMenuView {
     private static void moves(UiCanvas c, Model model, int x, int y) {
         c.text("MOVES", x, y, HEADER, false);
         int rowY = y + 20;
-        String[][] now = {{"M1", "Snap"}, {"M1", "Lunge"}, {"M1", "Maul (stuns)"}};
+        String[][] now = {{"M1", "Snap · Lunge · Maul (stuns)"}};
         for (String[] move : now) {
             c.text(move[0], x, rowY, LABEL, false);
             c.text(move[1], x + 40, rowY, VALUE, false);
             rowY += 16;
         }
-        c.text("Click again as a bite ends to go on", x, rowY + 6, MUTED, false);
-        c.text("the string; the worm reaches far", x, rowY + 20, MUTED, false);
+        // 3.5.0: the moves on its keys (the original's kagune keys), each with its mastery and cooldown.
+        for (com.hex.kagune.control.bikaku.BikakuMove move : com.hex.kagune.control.bikaku.BikakuMove.values()) {
+            if (move == com.hex.kagune.control.bikaku.BikakuMove.NONE) {
+                continue;
+            }
+            boolean open = move.unlocked(model.mastery());
+            c.text(move.slot().name(), x, rowY, open ? LABEL : FAINT, false);
+            c.text(move.displayName(), x + 40, rowY, open ? VALUE : FAINT, false);
+            c.text(open ? (move.cooldown() / 20) + " s" : Integer.toString(move.mastery()), x + 240, rowY, open ? TRAIT : FAINT, false);
+            rowY += 16;
+        }
+        c.text("Keys are your kagune keys (Controls)", x, rowY + 6, MUTED, false);
 
-        c.text("COMING IN LATER UPDATES", x, rowY + 46, HEADER, false);
-        int trackY = rowY + 64;
-        for (Object[] move : COMING) {
+        java.util.List<Object[]> coming = coming();
+        if (coming.isEmpty()) {
+            return;
+        }
+        c.text("COMING IN LATER UPDATES", x, rowY + 32, HEADER, false);
+        int trackY = rowY + 50;
+        for (Object[] move : coming) {
             int needs = (Integer)move[1];
             c.text(needs + "", x, trackY, FAINT, false);
             c.text((String)move[0], x + 40, trackY, model.mastery() >= needs ? SOON : MUTED, false);

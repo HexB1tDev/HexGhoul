@@ -114,6 +114,16 @@ public final class BikakuRenderer {
             target = frame.rig(followed != null ? centre(followed, partial) : new double[] {view.x(), view.y(), view.z()});
         }
         MawMotion.Shape shape = MawMotion.of(clock, seed, view.bite(), age, target);
+        // 3.5.0: a move, while it is being made, over a bite.
+        double moveAge = view.moveAge(clock);
+        com.hex.kagune.control.bikaku.BikakuMove move = view.move();
+        if (move != com.hex.kagune.control.bikaku.BikakuMove.NONE && moveAge < move.ticks() + 2) {
+            Entity aimed = view.targets()[0] != 0 ? level.m_6815_(view.targets()[0]) : null;
+            double[] aim = frame.rig(aimed != null ? centre(aimed, partial) : new double[] {view.mx(), view.my(), view.mz()});
+            Entity heldEntity = view.heldId() != 0 ? level.m_6815_(view.heldId()) : null;
+            double[] held = heldEntity != null ? frame.rig(centre(heldEntity, partial)) : null;
+            shape = MawMotion.move(clock, seed, move, moveAge, aim, held, view.caught());
+        }
         // His body as drawn (hunched, leaning): the worm's root rides it.
         com.hex.kagune.control.client.animation.RigPose posed = com.hex.kagune.control.client.animation.KaguneBodyAnimation.body(player,
             com.hex.kagune.control.client.ControlClient.worldTime(partial));

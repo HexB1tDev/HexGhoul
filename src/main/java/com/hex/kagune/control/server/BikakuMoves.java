@@ -1,0 +1,311 @@
+package com.hex.kagune.control.server;
+
+import com.hex.kagune.control.bikaku.BikakuMove;
+import com.hex.kagune.control.bikaku.BikakuRules;
+import com.hex.kagune.control.bikaku.MawMotion;
+import com.hex.kagune.data.KaguneProfile;
+import com.hex.kagune.gameplay.KaguneServerController;
+import com.hex.kagune.network.KaguneNetwork;
+import com.hex.kagune.sound.HexKaguneSounds;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+
+/**
+ * 3.5.0: the Bikaku worm's moves on the server (its keys: {@link BikakuMove}): each checked (mastery alone opens them: the owner's "a
+ * custom NPC" will teach them later), paid for, aimed, and run beat by beat on the motion's own timing ({@link MawMotion}), so what the
+ * clients draw and what the server does stay together. Devouring Maw and Predatory Drag hold what they catch at the worm's mouth, where
+ * {@link MawMotion#mawHeld} and {@link MawMotion#dragHeld} put it, moving it there every tick.
+ */
+final class BikakuMoves {
+    private BikakuMoves() {
+    }
+
+    /** True while a move is still being made (the worm is busy). */
+    static boolean busy(BikakuServer.State state, long now) {
+        return state.move != BikakuMove.NONE;
+    }
+
+    /** A move key: the move on it, if it is open, off cooldown and paid for. */
+    static void key(ServerPlayer player, BikakuServer.State state, BikakuMove.Slot slot, Entity hint, long now) {
+        BikakuMove move = BikakuMove.of(slot);
+        if (move == BikakuMove.NONE) {
+            BikakuServer.notYet(player);
+            return;
+        }
+        if (!move.unlocked(KaguneProfile.mastery(player))) {
+            BikakuServer.notice(player, state, Component.m_237110_("message.hexkagune.bikaku.locked", move.displayName(), move.mastery()));
+            return;
+        }
+        Long ready = state.readyAt.get(move);
+        if (ready != null && now < ready && now >= ready - 100000L) {
+            BikakuServer.notice(player, state, Component.m_237110_("message.hexkagune.bikaku.cooldown", move.displayName(), (ready - now + 19) / 20));
+            return;
+        }
+        if (!KaguneServerController.useEnergy(player, move.cost(), true)) {
+            return;
+        }
+        start(player, state, move, hint, now);
+    }
+
+    private static void start(ServerPlayer player, BikakuServer.State state, BikakuMove move, Entity hint, long now) {
+        LivingEntity target = move == BikakuMove.DRAG ? aimDrag(player, hint) : BikakuServer.aim(player, hint);
+        state.move = move;
+        state.moveAt = now;
+        java.util.Arrays.fill(state.targets, 0);
+        state.targets[0] = target == null ? 0 : target.m_19879_();
+        state.movePoint = target != null ? KaguneServerController.center(target) : move == BikakuMove.DRAG ? groundAhead(player) : BikakuServer.ahead(player);
+        state.heldId = 0;
+        state.caught = false;
+        state.heldAt = null;
+        state.done = 0;
+        state.readyAt.put(move, now + Cooldowns.of(player, (long)move.cooldown()));
+        KaguneServerController.playSelf(player, HexKaguneSounds.KAGUNE_WHIP, 0.95F, KaguneServerController.vary(player, 0.7F, 0.05F));
+        BikakuServer.broadcast(player, state);
+    }
+
+    /** Each tick of the move it is making: its beats, what it holds, its end. */
+    static void tick(ServerPlayer player, BikakuServer.State state, long now) {
+        long age = now - state.moveAt;
+        BikakuMove move = state.move;
+        if (age < 0) {
+            finish(player, state);
+            return;
+        }
+        if (state.done == 0 && age >= move.land()) {
+            state.done = 1;
+            land(player, state, move, now);
+        }
+        if (state.heldId != 0) {
+            long until = move == BikakuMove.MAW ? BikakuMove.MAW_RELEASE : BikakuMove.DRAG_SLAM;
+            if (age < until) {
+                double[] at = move == BikakuMove.MAW ? MawMotion.mawHeld(state.heldAt, age + 1) : MawMotion.dragHeld(state.heldAt, age + 1);
+                hold(player, state, at);
+            }
+        }
+        if (state.done == 1 && state.caught) {
+            if (move == BikakuMove.MAW && age >= BikakuMove.MAW_RELEASE) {
+                state.done = 2;
+                fling(player, state, now);
+            } else if (move == BikakuMove.DRAG && age >= BikakuMove.DRAG_SLAM) {
+                state.done = 2;
+                slam(player, state, now);
+            }
+        }
+        if (age >= (state.caught ? move.ticks() : move.missedTicks())) {
+            finish(player, state);
+        }
+    }
+
+    private static void finish(ServerPlayer player, BikakuServer.State state) {
+        release(player, state, false);
+        state.move = BikakuMove.NONE;
+        state.moveAt = Long.MIN_VALUE;
+        java.util.Arrays.fill(state.targets, 0);
+        state.caught = false;
+        state.heldAt = null;
+        state.done = 0;
+        BikakuServer.broadcast(player, state);
+    }
+
+    /** Lets go of what it holds ({@code thrown}: it keeps the speed it was thrown at; else it is stopped where it is). */
+    static void release(ServerPlayer player, BikakuServer.State state, boolean thrown) {
+        if (state.heldId != 0 && !thrown) {
+            Entity entity = player.m_9236_().m_6815_(state.heldId);
+            if (entity != null) {
+                entity.m_20256_(Vec3.f_82478_);
+                entity.f_19864_ = true;
+                entity.f_19789_ = 0.0F;
+            }
+        }
+        state.heldId = 0;
+    }
+
+    // ---------------------------------------------------------------- the bite and the catch
+
+    /** The mouth shuts: on its target if it is still in reach and in sight, else on whatever is at the mouth; caught, it holds on. */
+    private static void land(ServerPlayer player, BikakuServer.State state, BikakuMove move, long now) {
+        LivingEntity body = null;
+        Vec3 mouth;
+        if (move == BikakuMove.DRAG) {
+            Vec3 feet = player.m_20182_();
+            if (state.targets[0] != 0 && player.m_284548_().m_6815_(state.targets[0]) instanceof LivingEntity target && fair(player, target)
+                && flat(KaguneServerController.center(target).m_82546_(feet)) <= BikakuRules.DRAG_REACH + target.m_20205_()) {
+                body = target;
+            }
+            double[] reach = MawMotion.dragReach(BikakuServer.rig(player, state.movePoint));
+            mouth = BikakuServer.world(player, reach);
+        } else {
+            Vec3 from = BikakuServer.shoulder(player);
+            if (state.targets[0] != 0 && player.m_284548_().m_6815_(state.targets[0]) instanceof LivingEntity target && fair(player, target)
+                && KaguneServerController.center(target).m_82554_(from) <= BikakuRules.REACH + target.m_20205_()) {
+                body = target;
+            }
+            mouth = BikakuServer.mouth(from, state.movePoint);
+        }
+        if (body == null) {
+            body = nearest(player, mouth);
+        }
+        if (body == null) {
+            KaguneServerController.playAt(player, mouth, HexKaguneSounds.KAGUNE_WHIP, 0.6F, KaguneServerController.vary(player, 0.6F, 0.05F));
+            BikakuServer.broadcast(player, state);
+            return;
+        }
+        boolean maw = move == BikakuMove.MAW;
+        int held = maw ? BikakuMove.MAW_RELEASE - move.land() + BikakuRules.GRAB_STUN_AFTER : BikakuMove.DRAG_SLAM - move.land() + 4;
+        boolean bit = hurt(player, body, maw ? BikakuRules.MAW_POWER : BikakuRules.DRAG_BITE_POWER, maw ? 4 : 2, held,
+            maw ? BikakuRules.MAW_HEAL : BikakuRules.BITE_HEAL, now, maw);
+        state.caught = true;
+        state.targets[0] = body.m_19879_();
+        if (bit && body.m_6084_()) {
+            state.heldId = body.m_19879_();
+            state.heldAt = BikakuServer.rig(player, KaguneServerController.center(body));
+            KaguneServerController.playAt(player, body, HexKaguneSounds.KAGUNE_GRAB, 0.9F, KaguneServerController.vary(player, 0.85F, 0.05F));
+        } else {
+            state.caught = bit; // killed by the bite: nothing left to hold, the worm draws back as from a catch
+        }
+        BikakuServer.broadcast(player, state);
+    }
+
+    /** What it holds is kept at the mouth: moved toward {@code middle} (the body's frame) each tick, or let go if it is gone. */
+    private static void hold(ServerPlayer player, BikakuServer.State state, double[] middle) {
+        Entity entity = player.m_9236_().m_6815_(state.heldId);
+        if (!(entity instanceof LivingEntity body) || !body.m_6084_() || body.m_213877_() || body.m_20280_(player) > 24.0 * 24.0) {
+            state.heldId = 0;
+            BikakuServer.broadcast(player, state);
+            return;
+        }
+        Vec3 at = BikakuServer.world(player, middle);
+        GraftCombat.carry(body, at.m_82520_(0.0, -body.m_20206_() * 0.52, 0.0));
+    }
+
+    /** Devouring Maw lets go with a powerful sideways throw: out to his right and up. */
+    private static void fling(ServerPlayer player, BikakuServer.State state, long now) {
+        Entity entity = state.heldId != 0 ? player.m_9236_().m_6815_(state.heldId) : null;
+        state.heldId = 0;
+        if (entity instanceof LivingEntity body && body.m_6084_()) {
+            double yaw = Math.toRadians(player.f_20883_);
+            Vec3 right = new Vec3(-Math.cos(yaw), 0.0, -Math.sin(yaw));
+            Vec3 ahead = new Vec3(-Math.sin(yaw), 0.0, Math.cos(yaw));
+            body.m_20256_(right.m_82490_(1.25).m_82549_(ahead.m_82490_(0.2)).m_82520_(0.0, 0.5, 0.0));
+            body.f_19864_ = true;
+            KaguneServerController.playAt(player, body, HexKaguneSounds.KAGUNE_WHIP, 1.0F, KaguneServerController.vary(player, 0.6F, 0.05F));
+        }
+        BikakuServer.broadcast(player, state);
+    }
+
+    /** Predatory Drag's slam: driven down onto the ground before him, hurt, stunned, let go. */
+    private static void slam(ServerPlayer player, BikakuServer.State state, long now) {
+        Entity entity = state.heldId != 0 ? player.m_9236_().m_6815_(state.heldId) : null;
+        state.heldId = 0;
+        if (entity instanceof LivingEntity body && body.m_6084_()) {
+            state.slamming = true;
+            hurt(player, body, BikakuRules.DRAG_SLAM_POWER, 4, BikakuRules.SLAM_STUN, BikakuRules.BITE_HEAL, now, true);
+            state.slamming = false;
+            body.m_20256_(new Vec3(0.0, 0.12, 0.0));
+            body.f_19864_ = true;
+            KaguneServerController.playAt(player, body, HexKaguneSounds.KAGUNE_SLAM, 1.0F, KaguneServerController.vary(player, 0.85F, 0.05F));
+        }
+        BikakuServer.broadcast(player, state);
+    }
+
+    /**
+     * One of the worm's blows on {@code body}: its damage by mastery ({@code power} its share; a player takes {@link BikakuRules#PVP_SHARE}),
+     * bleeding, a stun, Predatory Feeding ({@code heal}, more on a kill), mastery. True if it landed.
+     */
+    static boolean hurt(ServerPlayer player, LivingEntity body, float power, int bleed, int stun, float heal, long now, boolean heavy) {
+        float damage = BikakuRules.damage(KaguneProfile.mastery(player)) * power;
+        if (body instanceof net.minecraft.world.entity.player.Player) {
+            damage *= BikakuRules.PVP_SHARE;
+        }
+        body.f_19802_ = 0;
+        if (!body.m_6469_(player.m_269291_().m_269075_(player), damage)) {
+            return false;
+        }
+        UkakuCrystalCombat.graftBleed(body, player, bleed, now);
+        if (stun > 0) {
+            PaleStun.stun(body, now, stun);
+        }
+        KaguneServerController.playAt(player, KaguneServerController.center(body), heavy ? HexKaguneSounds.BONE_CRUSH : HexKaguneSounds.FLESH_IMPACT,
+            0.9F, KaguneServerController.vary(player, heavy ? 0.85F : 1.0F, 0.08F));
+        float healed = heal + (body.m_6084_() ? 0.0F : BikakuRules.KILL_HEAL);
+        if (healed > 0.0F && player.m_21223_() < player.m_21233_()) {
+            player.m_5634_(healed);
+            KaguneNetwork.sendTo(player, player);
+        }
+        KaguneProfile.addMastery(player, "Bikaku", 1);
+        ControlServer.onKaguneHit(player, 1);
+        return true;
+    }
+
+    // ---------------------------------------------------------------- aim
+
+    /** A body the worm may bite. */
+    static boolean fair(ServerPlayer player, LivingEntity body) {
+        return body != player && body.m_6084_() && KaguneServerController.validSwipeTarget(player, body) && KaguneServerController.clearLineTo(player, body);
+    }
+
+    /** The nearest fair body within {@link BikakuRules#MOUTH_RADIUS} of {@code mouth}, or null. */
+    static LivingEntity nearest(ServerPlayer player, Vec3 mouth) {
+        double r = BikakuRules.MOUTH_RADIUS + 1.0;
+        AABB area = new AABB(mouth.f_82479_ - r, mouth.f_82480_ - r, mouth.f_82481_ - r, mouth.f_82479_ + r, mouth.f_82480_ + r, mouth.f_82481_ + r);
+        LivingEntity best = null;
+        double bestDistance = BikakuRules.MOUTH_RADIUS * BikakuRules.MOUTH_RADIUS;
+        for (LivingEntity near : player.m_284548_().m_6443_(LivingEntity.class, area, living -> fair(player, living))) {
+            double d = KaguneServerController.center(near).m_82557_(mouth);
+            if (d <= bestDistance) {
+                bestDistance = d;
+                best = near;
+            }
+        }
+        return best;
+    }
+
+    /** Predatory Drag's target: the hinted body if fair and within its reach along the ground, else the nearest in front. */
+    static LivingEntity aimDrag(ServerPlayer player, Entity hint) {
+        Vec3 feet = player.m_20182_();
+        double reach = BikakuRules.DRAG_REACH;
+        if (hint instanceof LivingEntity living && fair(player, living) && flat(KaguneServerController.center(living).m_82546_(feet)) <= reach + living.m_20205_()
+            && Math.abs(living.m_20186_() - player.m_20186_()) < 4.0) {
+            return living;
+        }
+        Vec3 look = player.m_20154_();
+        Vec3 ahead = new Vec3(look.f_82479_, 0.0, look.f_82481_);
+        ahead = ahead.m_82556_() < 1.0E-6 ? new Vec3(0.0, 0.0, 1.0) : ahead.m_82541_();
+        LivingEntity best = null;
+        double bestScore = Double.MAX_VALUE;
+        AABB area = player.m_20191_().m_82400_(reach + 1.0);
+        for (LivingEntity body : player.m_284548_().m_6443_(LivingEntity.class, area, living -> fair(player, living))) {
+            Vec3 to = KaguneServerController.center(body).m_82546_(feet);
+            double distance = flat(to);
+            if (distance > reach + body.m_20205_() * 0.5 || distance < 1.0E-3 || Math.abs(body.m_20186_() - player.m_20186_()) >= 4.0) {
+                continue;
+            }
+            double facing = (to.f_82479_ * ahead.f_82479_ + to.f_82481_ * ahead.f_82481_) / distance;
+            if (facing < 0.8) {
+                continue;
+            }
+            double score = distance * (2.0 - facing);
+            if (score < bestScore) {
+                bestScore = score;
+                best = body;
+            }
+        }
+        return best;
+    }
+
+    /** Predatory Drag at nothing: along the ground ahead, as far as it reaches. */
+    static Vec3 groundAhead(ServerPlayer player) {
+        Vec3 look = player.m_20154_();
+        Vec3 ahead = new Vec3(look.f_82479_, 0.0, look.f_82481_);
+        ahead = ahead.m_82556_() < 1.0E-6 ? new Vec3(0.0, 0.0, 1.0) : ahead.m_82541_();
+        return player.m_20182_().m_82549_(ahead.m_82490_(BikakuRules.DRAG_REACH * 0.8)).m_82520_(0.0, 0.9, 0.0);
+    }
+
+    private static double flat(Vec3 v) {
+        return Math.sqrt(v.f_82479_ * v.f_82479_ + v.f_82481_ * v.f_82481_);
+    }
+}

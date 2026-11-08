@@ -484,9 +484,31 @@ public final class AbilityGuide {
     static Panel bikaku(Input in, List<Row> rows) {
         int accent = accent(in);
         rows.add(row(in, "Bites: Snap · Lunge · Maul", accent, 0, Key.ATTACK));
+        // 3.5.0: its moves on the original's kagune keys, each dim with the mastery it needs until then (mastery alone opens them).
+        for (com.hex.kagune.control.bikaku.BikakuMove move : com.hex.kagune.control.bikaku.BikakuMove.values()) {
+            Key key = bikakuKey(move.slot());
+            if (key != null) {
+                rows.add(row(in, move.displayName(), TEXT, locked(in.mastery(), move.mastery()), key));
+            }
+        }
         rows.add(new Row("auto", "Bites heal you", TEXT, 0));
         away(in, rows);
         return new Panel("BIKAKU", "Bikaku · the worm", accent, rows);
+    }
+
+    /** 3.5.0: the board's key for a Bikaku move's slot (null: none). */
+    static Key bikakuKey(com.hex.kagune.control.bikaku.BikakuMove.Slot slot) {
+        return switch (slot) {
+            case Z -> Key.RAPID;
+            case J -> Key.SLINGSHOT;
+            case V -> Key.LIFT;
+            case B -> Key.SLAM;
+            case N -> Key.THROW;
+            case H -> Key.CRUSH;
+            case G -> Key.GRAB;
+            case C -> Key.GUARD;
+            default -> null;
+        };
     }
 
     /** K into and out of the kakuja (tap: the first, hold: the final, from the first too), R to kakugan mode, Ctrl + R all away. */

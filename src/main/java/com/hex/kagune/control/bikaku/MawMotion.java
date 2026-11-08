@@ -241,6 +241,225 @@ public final class MawMotion {
         return new Shape(path(head, look, time, seed, reach), dorsal(), GraftMesh.clamp01(mouth));
     }
 
+    // ---------------------------------------------------------------- 3.5.0: Devouring Maw and Predatory Drag
+
+    /**
+     * 3.5.0: the worm making {@code move}, {@code age} ticks in, at {@code target} (body frame), holding what is at {@code held} (null: none
+     * seen), having caught something or not; past its end (or no move), at rest.
+     */
+    public static Shape move(double time, int seed, BikakuMove move, double age, double[] target, double[] held, boolean caught) {
+        if (move == null || target == null || !(age >= 0.0) || age >= (caught ? move.ticks() : move.missedTicks())) {
+            return idle(time, seed);
+        }
+        return switch (move) {
+            case MAW -> maw(time, seed, target, held, age, caught);
+            case DRAG -> drag(time, seed, target, held, age, caught);
+            default -> idle(time, seed);
+        };
+    }
+
+    /** Devouring Maw: where its catch is held up before him to be shaken (the body's frame, its middle). */
+    public static final double[] MAW_HOLD = {0.85, 2.45, 2.5};
+    /** Predatory Drag: beside his right heel, where the worm runs down to the ground on its way out along it. */
+    static final double[] GROUND_ANCHOR = {0.5, 0.3, -0.35};
+    /** Predatory Drag: lifted high before him, then slammed down here. */
+    public static final double[] DRAG_LIFT = {0.7, 3.4, 2.1};
+    public static final double[] DRAG_SLAMMED = {0.55, 0.55, 2.2};
+    /** How far into what it bites a grabbing mouth sits (blocks short of its middle). */
+    static final double GRIP = 0.42;
+
+    /**
+     * Devouring Maw's catch, {@code age} ticks in (the body's frame, its middle), bitten where it stood ({@code at}): pulled up before him,
+     * shaken violently side to side, flung out to his right (let go at {@link BikakuMove#MAW_RELEASE}). The server holds it here.
+     */
+    public static double[] mawHeld(double[] at, double age) {
+        int land = BikakuMove.MAW.land();
+        double w = GraftMesh.smooth(GraftMesh.clamp01((age - land) / (double)(BikakuMove.MAW_PULLED - land)));
+        double[] p = GraftMesh.lerp(at, MAW_HOLD, w);
+        if (age >= land && age < BikakuMove.MAW_SHAKE_END) {
+            double envelope = Math.min(1.0, (age - land) / 3.0) * Math.min(1.0, (BikakuMove.MAW_SHAKE_END - age) / 2.0);
+            p = GraftMesh.add(p, new double[] {0.42 * Math.sin((age - land) * 2.5) * envelope, 0.1 * Math.sin((age - land) * 3.7) * envelope, 0.0});
+        }
+        if (age >= BikakuMove.MAW_SHAKE_END) {
+            double t = GraftMesh.smooth(GraftMesh.clamp01((age - BikakuMove.MAW_SHAKE_END) / (double)(BikakuMove.MAW_RELEASE - BikakuMove.MAW_SHAKE_END)));
+            p = GraftMesh.add(p, new double[] {1.6 * t, 0.35 * t, -0.2 * t});
+        }
+        return p;
+    }
+
+    /**
+     * Devouring Maw, {@code age} ticks in, at {@code target} (body frame); {@code held} where its catch is now (the client's own sight of it,
+     * or null: {@link #mawHeld}); {@code caught} whether it caught anything. Drawn far back, its mouth opening extremely wide; thrown out
+     * and snapped shut round it; holding it up, shaking; the fling; back to rest. Missed, it snaps on nothing and draws back.
+     */
+    public static Shape maw(double time, int seed, double[] target, double[] held, double age, boolean caught) {
+        BikakuMove move = BikakuMove.MAW;
+        int land = move.land();
+        double[] restHead = idleHead(time, seed);
+        double[] restLook = idleLook(time, seed);
+        double[] aim = BikakuRules.reach(target);
+        double[] toward = way(SHOULDER, aim);
+        double[] coiled = GraftMesh.add(GraftMesh.add(restHead, new double[] {0.25, 0.55, -0.75}), GraftMesh.mul(toward, -0.45));
+        double[] bitten = GraftMesh.sub(aim, GraftMesh.mul(toward, GRIP));
+        double[] head;
+        double[] look;
+        double mouth;
+        boolean free = true;
+        if (age < BikakuMove.MAW_WINDUP) {
+            double w = GraftMesh.smooth(age / BikakuMove.MAW_WINDUP);
+            head = GraftMesh.lerp(restHead, coiled, w);
+            look = GraftMesh.normalize(GraftMesh.lerp(restLook, toward, w));
+            mouth = lerp(idleMouth(time, seed), 1.0, w);
+        } else if (age < land) {
+            double w = (age - BikakuMove.MAW_WINDUP) / (double)(land - BikakuMove.MAW_WINDUP);
+            head = GraftMesh.lerp(coiled, bitten, w * w * (3.0 - 2.0 * w));
+            look = toward;
+            mouth = age < land - 1.0 ? 1.0 : lerp(1.0, 0.04, age - (land - 1.0));
+        } else if (!caught) {
+            double back = Math.max(1.0, move.missedTicks() - land - 3.0);
+            if (age < land + 3.0) {
+                head = GraftMesh.add(bitten, new double[] {0.12 * Math.sin((age - land) * 2.6), 0.0, 0.0});
+                look = toward;
+                mouth = 0.04;
+            } else {
+                double w = GraftMesh.smooth(GraftMesh.clamp01((age - land - 3.0) / back));
+                head = GraftMesh.lerp(bitten, restHead, w);
+                look = GraftMesh.normalize(GraftMesh.lerp(toward, restLook, w));
+                mouth = lerp(0.04, idleMouth(time, seed), w);
+            }
+        } else if (age < BikakuMove.MAW_RELEASE) {
+            // Clamped on it: wherever it is, the mouth is on it, its own head thrashing on top.
+            double[] victim = held != null ? held : mawHeld(aim, age);
+            look = way(SHOULDER, victim);
+            head = GraftMesh.sub(victim, GraftMesh.mul(look, GRIP));
+            double thrash = age < BikakuMove.MAW_SHAKE_END ? 0.1 * Math.sin(age * 3.3) : 0.0;
+            head = GraftMesh.add(head, new double[] {thrash, 0.5 * thrash, 0.0});
+            mouth = 0.04;
+            free = false;
+        } else {
+            double[] last = mawHeld(aim, BikakuMove.MAW_RELEASE);
+            double[] lastLook = way(SHOULDER, last);
+            double[] from = GraftMesh.sub(last, GraftMesh.mul(lastLook, GRIP));
+            double w = GraftMesh.smooth(GraftMesh.clamp01((age - BikakuMove.MAW_RELEASE) / (double)(move.ticks() - BikakuMove.MAW_RELEASE)));
+            head = GraftMesh.lerp(from, restHead, w);
+            look = GraftMesh.normalize(GraftMesh.lerp(lastLook, restLook, w));
+            // Let go: the jaws spring open, then settle.
+            mouth = lerp(0.04 + 0.6 * Math.sin(Math.PI * Math.min(1.0, w * 3.0)), idleMouth(time, seed), w);
+        }
+        if (free && (age < land - 1.0 || age > land + 3.0)) {
+            head = clear(head);
+        }
+        double reach = GraftMesh.smooth(GraftMesh.clamp01(GraftMesh.length3(GraftMesh.sub(head, restHead)) / 2.0));
+        return new Shape(path(head, look, time, seed, reach), dorsal(), GraftMesh.clamp01(mouth));
+    }
+
+    /**
+     * Predatory Drag's catch, {@code age} ticks in (the body's frame, its middle), bitten where it stood ({@code at}): dragged back across
+     * the ground to before him (keeping to its own ground), lifted high, slammed down at {@link BikakuMove#DRAG_SLAM}. The server moves it
+     * here.
+     */
+    public static double[] dragHeld(double[] at, double age) {
+        int land = BikakuMove.DRAG.land();
+        double[] home = {0.55, at[1], 1.9};
+        if (age < BikakuMove.DRAG_HOME) {
+            double w = GraftMesh.smooth(GraftMesh.clamp01((age - land) / (double)(BikakuMove.DRAG_HOME - land)));
+            double jerk = 0.14 * Math.sin((age - land) * 1.9) * Math.sin(Math.PI * w);
+            return GraftMesh.add(GraftMesh.lerp(at, home, w), new double[] {jerk, 0.0, 0.0});
+        }
+        if (age < BikakuMove.DRAG_LIFTED) {
+            double w = GraftMesh.smooth((age - BikakuMove.DRAG_HOME) / (double)(BikakuMove.DRAG_LIFTED - BikakuMove.DRAG_HOME));
+            return GraftMesh.lerp(home, DRAG_LIFT, w);
+        }
+        if (age < BikakuMove.DRAG_SLAM) {
+            double w = (age - BikakuMove.DRAG_LIFTED) / (double)(BikakuMove.DRAG_SLAM - BikakuMove.DRAG_LIFTED);
+            return GraftMesh.lerp(DRAG_LIFT, DRAG_SLAMMED, w * w);
+        }
+        return DRAG_SLAMMED.clone();
+    }
+
+    /**
+     * Predatory Drag, {@code age} ticks in, at {@code target} (body frame); {@code held} where its catch is now (or null: {@link #dragHeld});
+     * {@code caught} whether it caught anything. Down to the ground before him, then along the ground at it, mouth open and teeth bared,
+     * weaving like a snake; it bites on low, drags it back across the ground to him, lifts it high and slams it down, lets go, back to rest.
+     */
+    public static Shape drag(double time, int seed, double[] target, double[] held, double age, boolean caught) {
+        BikakuMove move = BikakuMove.DRAG;
+        int land = move.land();
+        double[] restHead = idleHead(time, seed);
+        double[] restLook = idleLook(time, seed);
+        double[] aim = dragReach(target);
+        double[] flat = way(new double[] {0.0, 0.0, 0.0}, new double[] {aim[0], 0.0, aim[2]});
+        double[] side = GraftMesh.normalize(GraftMesh.cross(new double[] {0.0, 1.0, 0.0}, flat));
+        double[] low = {0.6, 0.35, 0.9};
+        double[] bitten = GraftMesh.add(GraftMesh.sub(aim, GraftMesh.mul(flat, GRIP)), new double[] {0.0, -0.45, 0.0});
+        bitten[1] = Math.max(0.3, bitten[1]);
+        double[] head;
+        double[] look;
+        double mouth;
+        boolean free = true;
+        if (age < BikakuMove.DRAG_DOWN) {
+            double w = GraftMesh.smooth(age / BikakuMove.DRAG_DOWN);
+            head = GraftMesh.lerp(restHead, low, w);
+            look = GraftMesh.normalize(GraftMesh.lerp(restLook, GraftMesh.normalize(GraftMesh.add(flat, new double[] {0.0, -0.3, 0.0})), w));
+            mouth = lerp(idleMouth(time, seed), 0.85, w);
+        } else if (age < land) {
+            double w = (age - BikakuMove.DRAG_DOWN) / (double)(land - BikakuMove.DRAG_DOWN);
+            double weave = 0.5 * Math.sin(Math.PI * w * 3.0) * (1.0 - w);
+            head = GraftMesh.add(GraftMesh.lerp(low, bitten, w), GraftMesh.mul(side, weave));
+            look = GraftMesh.normalize(GraftMesh.add(flat, GraftMesh.mul(side, 0.6 * Math.cos(Math.PI * w * 3.0) * (1.0 - w))));
+            mouth = age < land - 1.0 ? 1.0 : lerp(1.0, 0.04, age - (land - 1.0));
+        } else if (!caught) {
+            double w = GraftMesh.smooth(GraftMesh.clamp01((age - land - 2.0) / (double)(move.missedTicks() - land - 2)));
+            head = GraftMesh.lerp(bitten, restHead, w);
+            look = GraftMesh.normalize(GraftMesh.lerp(flat, restLook, w));
+            mouth = lerp(0.04, idleMouth(time, seed), w);
+        } else if (age <= BikakuMove.DRAG_SLAM) {
+            double[] victim = held != null ? held : dragHeld(aim, age);
+            if (age < BikakuMove.DRAG_HOME) {
+                // Dragging: its mouth on their legs, pulling back along the ground.
+                look = way(new double[] {0.0, 0.0, 0.0}, new double[] {victim[0], 0.0, victim[2]});
+                head = GraftMesh.add(GraftMesh.sub(victim, GraftMesh.mul(look, GRIP)), new double[] {0.0, -0.45, 0.0});
+                head[1] = Math.max(0.3, head[1]);
+            } else {
+                // Lifted and slammed: gripping them from below.
+                look = GraftMesh.normalize(GraftMesh.add(way(SHOULDER, victim), new double[] {0.0, 0.35, 0.0}));
+                head = GraftMesh.sub(victim, GraftMesh.mul(look, GRIP));
+            }
+            mouth = 0.04;
+            free = false;
+        } else {
+            double[] lastLook = GraftMesh.normalize(GraftMesh.add(way(SHOULDER, DRAG_SLAMMED), new double[] {0.0, 0.35, 0.0}));
+            double[] from = GraftMesh.sub(DRAG_SLAMMED, GraftMesh.mul(lastLook, GRIP));
+            double w = GraftMesh.smooth(GraftMesh.clamp01((age - BikakuMove.DRAG_SLAM) / (double)(move.ticks() - BikakuMove.DRAG_SLAM)));
+            head = GraftMesh.lerp(from, restHead, w);
+            look = GraftMesh.normalize(GraftMesh.lerp(lastLook, restLook, w));
+            mouth = lerp(0.04 + 0.5 * Math.sin(Math.PI * Math.min(1.0, w * 3.0)), idleMouth(time, seed), w);
+        }
+        if (free) {
+            head = clear(head);
+        }
+        double reach = GraftMesh.smooth(GraftMesh.clamp01(GraftMesh.length3(GraftMesh.sub(head, restHead)) / 2.0));
+        // Out along the ground, it runs down beside his heel; lifted, back over his shoulder.
+        double[] anchor = GraftMesh.lerp(GROUND_ANCHOR, SHOULDER, GraftMesh.smooth(GraftMesh.clamp01((head[1] - 0.8) / 1.8)));
+        return new Shape(path(head, look, time, seed, reach, anchor), dorsal(), GraftMesh.clamp01(mouth));
+    }
+
+    /** Predatory Drag's reach: along the ground, as far as {@link BikakuRules#DRAG_REACH} from his feet. */
+    public static double[] dragReach(double[] target) {
+        double flat = Math.hypot(target[0], target[2]);
+        if (flat <= BikakuRules.DRAG_REACH || flat < 1.0E-9) {
+            return target;
+        }
+        double k = BikakuRules.DRAG_REACH / flat;
+        return new double[] {target[0] * k, target[1], target[2] * k};
+    }
+
+    /** The unit way from {@code from} to {@code to} (ahead if they are the same). */
+    static double[] way(double[] from, double[] to) {
+        double[] d = GraftMesh.sub(to, from);
+        return GraftMesh.dot(d, d) < 1.0E-12 ? new double[] {0.0, 0.0, 1.0} : GraftMesh.normalize(d);
+    }
+
     // ---------------------------------------------------------------- its body between root and head
 
     /** Its back faces up out of his back (its spurs up, its belly down). */
@@ -276,6 +495,14 @@ public final class MawMotion {
      * drawn in a little (they gave the front its length). Never into his own head or body.
      */
     static double[][] path(double[] head, double[] look, double time, int seed, double reach) {
+        return path(head, look, time, seed, reach, SHOULDER);
+    }
+
+    /**
+     * 3.5.0: as above, the worm thrown out from {@code anchor} on its way to the head instead of over his shoulder (Predatory Drag: down
+     * beside his right heel and along the ground).
+     */
+    static double[][] path(double[] head, double[] look, double time, int seed, double reach, double[] anchor) {
         double t = time + seed * 43.0;
         double wave = 1.0 - 0.6 * reach;
         double[] out = add(ROOT, new double[] {0.02, 0.05, -0.34});
@@ -283,8 +510,8 @@ public final class MawMotion {
         double[] neck = clear(GraftMesh.sub(head, GraftMesh.mul(GraftMesh.normalize(look), neckLength)));
         int n = ZIGZAG.length;
         double straighten = GraftMesh.smooth(reach);
-        double need = GraftMesh.length3(GraftMesh.sub(neck, SHOULDER)) + 0.4;
-        double[] way = GraftMesh.sub(neck, SHOULDER);
+        double need = GraftMesh.length3(GraftMesh.sub(neck, anchor)) + 0.4;
+        double[] way = GraftMesh.sub(neck, anchor);
         way = GraftMesh.dot(way, way) < 1.0E-9 ? new double[] {0.0, 0.0, 1.0} : GraftMesh.normalize(way);
         double[] sideways = GraftMesh.cross(way, new double[] {0.0, 1.0, 0.0});
         sideways = GraftMesh.dot(sideways, sideways) < 0.04 ? new double[] {1.0, 0.0, 0.0} : GraftMesh.normalize(sideways);
@@ -302,7 +529,7 @@ public final class MawMotion {
             double w = GraftMesh.smooth(GraftMesh.clamp01((need + 0.9 - ARC[k]) / 1.8)) * straighten;
             double f = Math.max(0.06, Math.min(0.94, 1.0 - ARC[k] / need));
             double taper = Math.sqrt(Math.sin(Math.PI * f));
-            double[] on = GraftMesh.add(GraftMesh.lerp(SHOULDER, neck, f), GraftMesh.add(GraftMesh.mul(sideways, 0.32 * taper * sign),
+            double[] on = GraftMesh.add(GraftMesh.lerp(anchor, neck, f), GraftMesh.add(GraftMesh.mul(sideways, 0.32 * taper * sign),
                 new double[] {0.0, -0.1 * taper * sign, 0.0}));
             double[] stay = GraftMesh.lerp(rest, add(rest, new double[] {0.0, -0.3, 0.45}), 0.5 * straighten);
             coils[k] = clear(GraftMesh.lerp(stay, on, w));
@@ -325,6 +552,8 @@ public final class MawMotion {
     static final double TORSO_HALF = 0.72;
     static final double TORSO_BACK = -0.4;
     static final double TORSO_FRONT = 0.4;
+    static final double LEGS_HALF = 0.5;
+    static final double LEGS_DEPTH = 0.37;
 
     /** 3.4.9: {@code p} kept out of his head (pushed out from its middle) and his torso (pushed out behind him, or in front). */
     static double[] clear(double[] p) {
@@ -337,6 +566,10 @@ public final class MawMotion {
         }
         if (out[1] > 0.6 && out[1] < 1.55 && Math.abs(out[0]) < TORSO_HALF && out[2] > TORSO_BACK && out[2] < TORSO_FRONT) {
             out = new double[] {out[0], out[1], out[2] < 0.0 ? TORSO_BACK : TORSO_FRONT};
+        }
+        // 3.5.0: and his legs (the worm runs along the ground beside them): pushed out to the side.
+        if (out[1] >= -0.5 && out[1] <= 0.6 && Math.abs(out[0]) < LEGS_HALF && Math.abs(out[2]) < LEGS_DEPTH) {
+            out = new double[] {out[0] < 0.0 ? -LEGS_HALF : LEGS_HALF, out[1], out[2]};
         }
         return out;
     }

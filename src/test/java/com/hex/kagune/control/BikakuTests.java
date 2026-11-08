@@ -26,6 +26,7 @@ public final class BikakuTests {
         bites();
         card();
         guide();
+        moves();
         System.out.println("Bikaku tests: " + passed + " checks passed");
     }
 
@@ -109,11 +110,55 @@ public final class BikakuTests {
             com.hex.kagune.gameplay.KaguneForm.RINKAKU_SEED, com.hex.kagune.control.ukaku.WingForm.TWIN, false, keys));
         check(out.title().equals("BIKAKU") && out.rows().get(0).keys().equals("LMB") && out.rows().get(0).name().startsWith("Bites"),
             "kagune out: the bites are on M1");
-        check(out.rows().stream().noneMatch(row -> row.keys().contains(keys.get(AbilityGuide.Key.GRAB))), "no Rinkaku grab on the board");
+        check(out.rows().stream().noneMatch(row -> row.name().equals("Grab") || row.name().startsWith("Thy Death") || row.name().startsWith("Rubble")),
+            "no Rinkaku moves on the board");
         AbilityGuide.Panel brief = AbilityGuide.brief(out);
         check(brief.rows().size() == out.rows().size() && brief.rows().get(0).name().equals("Bites"), "in brief: Bites");
         AbilityGuide.Panel in = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.BIKAKU, AbilityGuide.State.CLOSED, 0,
             com.hex.kagune.gameplay.KaguneForm.RINKAKU_SEED, com.hex.kagune.control.ukaku.WingForm.TWIN, false, keys));
         check(in.title().equals("BIKAKU"), "kagune in: the board is Bikaku's");
+    }
+
+    /** 3.5.0: the moves on their keys, opened by mastery alone, each landing partway through, cooling down longer than it lasts. */
+    private static void moves() {
+        java.util.Set<com.hex.kagune.control.bikaku.BikakuMove.Slot> slots = java.util.EnumSet.noneOf(com.hex.kagune.control.bikaku.BikakuMove.Slot.class);
+        for (com.hex.kagune.control.bikaku.BikakuMove move : com.hex.kagune.control.bikaku.BikakuMove.values()) {
+            check(com.hex.kagune.control.bikaku.BikakuMove.byOrdinal(move.ordinal()) == move, "each move reads back");
+            if (move == com.hex.kagune.control.bikaku.BikakuMove.NONE) {
+                continue;
+            }
+            check(slots.add(move.slot()) && move.slot() != com.hex.kagune.control.bikaku.BikakuMove.Slot.NONE, move + " has its own key");
+            check(com.hex.kagune.control.bikaku.BikakuMove.of(move.slot()) == move, move + " is what its key does");
+            check(move.land() > 0 && move.land() < move.missedTicks() && move.missedTicks() <= move.ticks(), move + " bites partway through");
+            check(move.cooldown() > move.ticks() && move.cost() > 0.0F, move + " cools down longer than it lasts, and costs RC");
+            check(!move.unlocked(move.mastery() - 1) && move.unlocked(move.mastery()) && move.unlocked(1000), move + " opens at its mastery");
+        }
+        check(com.hex.kagune.control.bikaku.BikakuMove.of(com.hex.kagune.control.bikaku.BikakuMove.Slot.G) == com.hex.kagune.control.bikaku.BikakuMove.MAW
+            && com.hex.kagune.control.bikaku.BikakuMove.of(com.hex.kagune.control.bikaku.BikakuMove.Slot.J) == com.hex.kagune.control.bikaku.BikakuMove.DRAG,
+            "G is Devouring Maw, J Predatory Drag");
+        check(com.hex.kagune.control.bikaku.BikakuMove.MAW.mastery() == BikakuRules.MAW && com.hex.kagune.control.bikaku.BikakuMove.DRAG.mastery() == BikakuRules.DRAG,
+            "they open at the plan's mastery");
+        check(com.hex.kagune.control.bikaku.BikakuMove.MAW_WINDUP < com.hex.kagune.control.bikaku.BikakuMove.MAW.land()
+            && com.hex.kagune.control.bikaku.BikakuMove.MAW.land() < com.hex.kagune.control.bikaku.BikakuMove.MAW_PULLED
+            && com.hex.kagune.control.bikaku.BikakuMove.MAW_PULLED < com.hex.kagune.control.bikaku.BikakuMove.MAW_SHAKE_END
+            && com.hex.kagune.control.bikaku.BikakuMove.MAW_SHAKE_END < com.hex.kagune.control.bikaku.BikakuMove.MAW_RELEASE
+            && com.hex.kagune.control.bikaku.BikakuMove.MAW_RELEASE < com.hex.kagune.control.bikaku.BikakuMove.MAW.ticks(), "Devouring Maw's beats come in order");
+        check(com.hex.kagune.control.bikaku.BikakuMove.DRAG_DOWN < com.hex.kagune.control.bikaku.BikakuMove.DRAG.land()
+            && com.hex.kagune.control.bikaku.BikakuMove.DRAG.land() < com.hex.kagune.control.bikaku.BikakuMove.DRAG_HOME
+            && com.hex.kagune.control.bikaku.BikakuMove.DRAG_HOME < com.hex.kagune.control.bikaku.BikakuMove.DRAG_LIFTED
+            && com.hex.kagune.control.bikaku.BikakuMove.DRAG_LIFTED < com.hex.kagune.control.bikaku.BikakuMove.DRAG_SLAM
+            && com.hex.kagune.control.bikaku.BikakuMove.DRAG_SLAM < com.hex.kagune.control.bikaku.BikakuMove.DRAG.ticks(), "Predatory Drag's beats come in order");
+        Map<AbilityGuide.Key, String> keys = new EnumMap<>(AbilityGuide.Key.class);
+        for (AbilityGuide.Key key : AbilityGuide.Key.values()) {
+            keys.put(key, key.name());
+        }
+        for (int mastery : new int[] {0, 149, 150, 1000}) {
+            AbilityGuide.Panel out = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.BIKAKU, AbilityGuide.State.OUT, mastery,
+                com.hex.kagune.gameplay.KaguneForm.RINKAKU_SEED, com.hex.kagune.control.ukaku.WingForm.TWIN, false, keys));
+            AbilityGuide.Row maw = out.rows().stream().filter(r -> r.name().equals("Devouring Maw")).findFirst().orElse(null);
+            AbilityGuide.Row drag = out.rows().stream().filter(r -> r.name().equals("Predatory Drag")).findFirst().orElse(null);
+            check(maw != null && maw.keys().equals("GRAB") && !maw.locked(), "the board shows Devouring Maw on G, open");
+            check(drag != null && drag.keys().equals("SLINGSHOT") && drag.locked() == mastery < BikakuRules.DRAG, "the board shows Predatory Drag on J, dim until 150");
+        }
     }
 }

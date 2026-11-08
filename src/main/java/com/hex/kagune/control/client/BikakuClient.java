@@ -2,6 +2,7 @@ package com.hex.kagune.control.client;
 
 import com.hex.kagune.client.KaguneClientState;
 import com.hex.kagune.control.KagunePath;
+import com.hex.kagune.control.bikaku.BikakuMove;
 import com.hex.kagune.control.bikaku.BikakuRules;
 import com.hex.kagune.control.bikaku.BikakuRules.Bite;
 import com.hex.kagune.control.network.S2CBikakuState;
@@ -26,13 +27,23 @@ public final class BikakuClient {
     /** A bite this few ticks old when it gets here is played from its first frame (it was sent as it began). */
     static final long JUST_BEGUN = 4L;
 
-    /** One player's worm as the server last said, with when (on the client clock) its bite began here. */
-    public record View(Bite bite, long startedAt, double began, double x, double y, double z, int targetId) {
-        public static final View NONE = new View(Bite.NONE, Long.MIN_VALUE, 0.0, 0.0, 0.0, 0.0, 0);
+    /**
+     * One player's worm as the server last said, with when (on the client clock) its bite began here; 3.5.0: and its move, when that
+     * began here, its point, the bodies it goes after and the one it holds.
+     */
+    public record View(Bite bite, long startedAt, double began, double x, double y, double z, int targetId, BikakuMove move, long moveAt,
+                       double moveBegan, double mx, double my, double mz, int[] targets, int heldId, boolean caught) {
+        public static final View NONE = new View(Bite.NONE, Long.MIN_VALUE, 0.0, 0.0, 0.0, 0.0, 0, BikakuMove.NONE, Long.MIN_VALUE, 0.0, 0.0, 0.0,
+            0.0, new int[S2CBikakuState.TARGETS], 0, false);
 
         /** Ticks since the bite began ({@code clock}: {@link PaleClient#clock}); MAX_VALUE for none. */
         public double age(double clock) {
             return this.bite == Bite.NONE || this.startedAt == Long.MIN_VALUE ? Double.MAX_VALUE : Math.max(0.0, clock - this.began);
+        }
+
+        /** Ticks since the move began; MAX_VALUE for none. */
+        public double moveAge(double clock) {
+            return this.move == BikakuMove.NONE || this.moveAt == Long.MIN_VALUE ? Double.MAX_VALUE : Math.max(0.0, clock - this.moveBegan);
         }
     }
 
@@ -51,8 +62,14 @@ public final class BikakuClient {
         if (before != null && before.startedAt() == message.startedAt() && before.bite().ordinal() == message.bite()) {
             began = before.began(); // the same bite, told again: its clock runs on
         }
+        long moveBehind = message.moveAt() == Long.MIN_VALUE ? 0L : world - message.moveAt();
+        double moveBegan = clock - (moveBehind > JUST_BEGUN ? moveBehind : 0L);
+        if (before != null && before.moveAt() == message.moveAt() && before.move().ordinal() == message.move()) {
+            moveBegan = before.moveBegan(); // the same move, told again (it caught something, it let go): its clock runs on
+        }
         VIEWS.put(message.playerId(), new View(Bite.byOrdinal(message.bite()), message.startedAt(), began, message.x(), message.y(), message.z(),
-            message.targetId()));
+            message.targetId(), BikakuMove.byOrdinal(message.move()), message.moveAt(), moveBegan, message.mx(), message.my(), message.mz(),
+            message.targets(), message.heldId(), message.caught()));
     }
 
     public static View get(Player player) {

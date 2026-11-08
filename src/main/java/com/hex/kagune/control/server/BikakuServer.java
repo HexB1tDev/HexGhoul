@@ -2,6 +2,7 @@ package com.hex.kagune.control.server;
 
 import com.hex.kagune.KaguneMod;
 import com.hex.kagune.control.KagunePath;
+import com.hex.kagune.control.bikaku.BikakuMove;
 import com.hex.kagune.control.bikaku.BikakuRules;
 import com.hex.kagune.control.bikaku.BikakuRules.Bite;
 import com.hex.kagune.control.network.ControlNetwork;
@@ -57,8 +58,34 @@ public final class BikakuServer {
         int queuedHint;
         long nextNoticeAt = Long.MIN_VALUE;
         boolean dirty = true;
+        /** 3.5.0: the move it is making, when it began, its point (the world), the bodies it goes after, what it holds. */
+        BikakuMove move = BikakuMove.NONE;
+        long moveAt = Long.MIN_VALUE;
+        Vec3 movePoint = Vec3.f_82478_;
+        final int[] targets = new int[S2CBikakuState.TARGETS];
+        int heldId;
+        /** Whether its bite caught anything, and where (the body's frame) the catch was when it was bitten. */
+        boolean caught;
+        double[] heldAt;
+        /** The beats of the move already done (each once). */
+        int done;
+        final java.util.EnumMap<BikakuMove, Long> readyAt = new java.util.EnumMap<>(BikakuMove.class);
+        /** A move key pressed while the worm was busy: it waits this long for it. */
+        /** True for the moment of Predatory Drag's slam (its wound is a slam's). */
+        boolean slamming;
+        BikakuMove.Slot queuedSlot;
+        long queuedSlotAt = Long.MIN_VALUE;
+        int queuedSlotHint;
 
         void calm() {
+            this.move = BikakuMove.NONE;
+            this.moveAt = Long.MIN_VALUE;
+            java.util.Arrays.fill(this.targets, 0);
+            this.heldId = 0;
+            this.caught = false;
+            this.heldAt = null;
+            this.done = 0;
+            this.queuedSlot = null;
             this.bite = Bite.NONE;
             this.startedAt = Long.MIN_VALUE;
             this.targetId = 0;
@@ -85,15 +112,48 @@ public final class BikakuServer {
         return STATES.computeIfAbsent(player.m_20148_(), ignored -> new State());
     }
 
-    /** True this tick while one of his bites is shutting on something (its wounds are the teeth's punctures). */
+    /** True this tick while one of his bites is shutting on something (its wounds are the teeth's punctures; 3.5.0: a move's bite too). */
     public static boolean biting(ServerPlayer player) {
         State state = STATES.get(player.m_20148_());
-        return state != null && state.bite != Bite.NONE && player.m_9236_().m_46467_() - state.startedAt == state.bite.land();
+        if (state == null) {
+            return false;
+        }
+        long now = player.m_9236_().m_46467_();
+        return state.bite != Bite.NONE && now - state.startedAt == state.bite.land()
+            || state.move != BikakuMove.NONE && now - state.moveAt == state.move.land();
+    }
+
+    /** 3.5.0: true for the moment of Predatory Drag's slam. */
+    public static boolean slamming(ServerPlayer player) {
+        State state = STATES.get(player.m_20148_());
+        return state != null && state.slamming;
+    }
+
+    /** 3.5.0: {@code rig} (his body's frame: blocks from his feet, x to his right, y up, z ahead) in the world. */
+    static Vec3 world(ServerPlayer player, double[] rig) {
+        double yaw = Math.toRadians(player.f_20883_);
+        double fx = -Math.sin(yaw);
+        double fz = Math.cos(yaw);
+        double rx = -Math.cos(yaw);
+        double rz = -Math.sin(yaw);
+        return player.m_20182_().m_82520_(rx * rig[0] + fx * rig[2], rig[1], rz * rig[0] + fz * rig[2]);
+    }
+
+    /** 3.5.0: a point of the world in his body's frame. */
+    static double[] rig(ServerPlayer player, Vec3 world) {
+        double yaw = Math.toRadians(player.f_20883_);
+        double fx = -Math.sin(yaw);
+        double fz = Math.cos(yaw);
+        double rx = -Math.cos(yaw);
+        double rz = -Math.sin(yaw);
+        Vec3 d = world.m_82546_(player.m_20182_());
+        return new double[] {d.f_82479_ * rx + d.f_82481_ * rz, d.f_82480_, d.f_82479_ * fx + d.f_82481_ * fz};
     }
 
     static S2CBikakuState snapshot(ServerPlayer player, State state) {
         return new S2CBikakuState(player.m_20148_(), state.bite.ordinal(), state.startedAt, state.aim.f_82479_, state.aim.f_82480_, state.aim.f_82481_,
-            state.targetId);
+            state.targetId, state.move.ordinal(), state.moveAt, state.movePoint.f_82479_, state.movePoint.f_82480_, state.movePoint.f_82481_,
+            state.targets.clone(), state.heldId, state.caught);
     }
 
     static void broadcast(ServerPlayer player, State state) {
@@ -115,11 +175,56 @@ public final class BikakuServer {
     static void onPathChanged(ServerPlayer player) {
         State state = STATES.remove(player.m_20148_());
         if (state != null) {
+            BikakuMoves.release(player, state, false);
             state.calm();
             ControlNetwork.broadcast(player, snapshot(player, state));
         }
         if (isBikaku(player)) {
             broadcast(player, state(player));
+        }
+    }
+
+    // ---------------------------------------------------------------- 3.5.0: the move keys
+
+    /** A Bikaku input from {@code C2SBikakuAction}. */
+    public static void onAction(ServerPlayer player, int action, int arg, int targetId) {
+        if (!isBikaku(player) || PaleWitness.frozen(player) || PaleRevive.down(player) || PaleStun.stunned(player) || !ready(player)) {
+            return;
+        }
+        if (action != com.hex.kagune.control.network.C2SBikakuAction.KEY) {
+            return;
+        }
+        BikakuMove.Slot[] slots = BikakuMove.Slot.values();
+        if (arg <= 0 || arg >= slots.length) {
+            return;
+        }
+        State state = state(player);
+        long now = player.m_9236_().m_46467_();
+        Entity hint = targetId > 0 ? player.m_284548_().m_6815_(targetId) : null;
+        KakujaPassive.attacked(player);
+        if (out(state, now) || BikakuMoves.busy(state, now)) {
+            state.queuedSlot = slots[arg];
+            state.queuedSlotAt = now;
+            state.queuedSlotHint = targetId;
+            return;
+        }
+        BikakuMoves.key(player, state, slots[arg], hint, now);
+    }
+
+    /** "{@code key}" on the action bar with its arguments, at most every few seconds. */
+    static void notice(ServerPlayer player, State state, Component message) {
+        long now = player.m_9236_().m_46467_();
+        if (now >= state.nextNoticeAt || now < state.nextNoticeAt - NOTICE_TICKS) {
+            state.nextNoticeAt = now + NOTICE_TICKS;
+            player.m_5661_(message, true);
+        }
+    }
+
+    /** Every running cooldown of his, over now ({@link Cooldowns}). */
+    static void clearCooldowns(ServerPlayer player) {
+        State state = STATES.get(player.m_20148_());
+        if (state != null) {
+            state.readyAt.clear();
         }
     }
 
@@ -132,7 +237,7 @@ public final class BikakuServer {
         }
         State state = state(player);
         long now = player.m_9236_().m_46467_();
-        if (out(state, now)) {
+        if (out(state, now) || BikakuMoves.busy(state, now)) {
             state.queuedAt = now;
             state.queuedHint = hint == null ? 0 : hint.m_19879_();
             return;
@@ -181,13 +286,7 @@ public final class BikakuServer {
 
     /** Over his right shoulder, where the worm passes him when it is thrown out (the world). */
     static Vec3 shoulder(ServerPlayer player) {
-        double yaw = Math.toRadians(player.f_20883_);
-        double[] s = com.hex.kagune.control.bikaku.MawMotion.shoulder();
-        double fx = -Math.sin(yaw);
-        double fz = Math.cos(yaw);
-        double rx = -Math.cos(yaw);
-        double rz = -Math.sin(yaw);
-        return player.m_20182_().m_82520_(rx * s[0] + fx * s[2], s[1], rz * s[0] + fz * s[2]);
+        return world(player, com.hex.kagune.control.bikaku.MawMotion.shoulder());
     }
 
     /** A bite at nothing: ahead along his look, as far as the worm reaches from over his shoulder. */
@@ -261,11 +360,30 @@ public final class BikakuServer {
             RinkakuStash.stash(player);
         }
         if (!KaguneProfile.isActive(player) || !player.m_6084_()) {
-            if (state.bite != Bite.NONE) {
+            if (state.bite != Bite.NONE || state.move != BikakuMove.NONE) {
+                BikakuMoves.release(player, state, false);
                 state.calm();
                 broadcast(player, state);
             }
             return;
+        }
+        // 3.5.0: the move it is making; when it ends, a key or a click waiting for it.
+        if (state.move != BikakuMove.NONE) {
+            BikakuMoves.tick(player, state, now);
+            if (state.move == BikakuMove.NONE) {
+                if (state.queuedSlot != null && now - state.queuedSlotAt <= BikakuRules.BUFFER + 40) {
+                    BikakuMove.Slot slot = state.queuedSlot;
+                    state.queuedSlot = null;
+                    Entity hint = state.queuedSlotHint > 0 ? player.m_284548_().m_6815_(state.queuedSlotHint) : null;
+                    BikakuMoves.key(player, state, slot, hint, now);
+                } else if (state.queuedAt != Long.MIN_VALUE && now - state.queuedAt <= BikakuRules.BUFFER + 40) {
+                    Entity hint = state.queuedHint > 0 ? player.m_284548_().m_6815_(state.queuedHint) : null;
+                    state.queuedAt = Long.MIN_VALUE;
+                    begin(player, state, hint, now);
+                }
+                state.queuedSlot = null;
+                state.queuedAt = Long.MIN_VALUE;
+            }
         }
         if (state.bite != Bite.NONE) {
             long age = now - state.startedAt;
@@ -278,12 +396,19 @@ public final class BikakuServer {
                 state.startedAt = Long.MIN_VALUE;
                 state.targetId = 0;
                 state.dirty = true;
-                if (state.queuedAt != Long.MIN_VALUE && now - state.queuedAt <= BikakuRules.BUFFER + state.lastBite.ticks()) {
+                if (state.queuedSlot != null && now - state.queuedSlotAt <= BikakuRules.BUFFER + state.lastBite.ticks()) {
+                    // 3.5.0: a move key pressed during the bite goes first.
+                    BikakuMove.Slot slot = state.queuedSlot;
+                    state.queuedSlot = null;
+                    Entity hint = state.queuedSlotHint > 0 ? player.m_284548_().m_6815_(state.queuedSlotHint) : null;
+                    BikakuMoves.key(player, state, slot, hint, now);
+                } else if (state.queuedAt != Long.MIN_VALUE && now - state.queuedAt <= BikakuRules.BUFFER + state.lastBite.ticks()) {
                     Entity hint = state.queuedHint > 0 ? player.m_284548_().m_6815_(state.queuedHint) : null;
                     state.queuedAt = Long.MIN_VALUE;
                     begin(player, state, hint, now);
                 }
                 state.queuedAt = Long.MIN_VALUE;
+                state.queuedSlot = null;
             }
         }
         if (state.dirty) {
@@ -393,6 +518,7 @@ public final class BikakuServer {
         if (event.getEntity() instanceof ServerPlayer player) {
             State state = STATES.get(player.m_20148_());
             if (state != null) {
+                BikakuMoves.release(player, state, false);
                 state.calm();
                 if (isBikaku(player)) {
                     broadcast(player, state);
@@ -406,6 +532,7 @@ public final class BikakuServer {
         if (event.getEntity() instanceof ServerPlayer player) {
             State state = STATES.get(player.m_20148_());
             if (state != null) {
+                BikakuMoves.release(player, state, false);
                 state.calm();
                 if (isBikaku(player)) {
                     broadcast(player, state);
@@ -416,6 +543,9 @@ public final class BikakuServer {
 
     @SubscribeEvent
     public static void loggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
-        STATES.remove(event.getEntity().m_20148_());
+        State state = STATES.remove(event.getEntity().m_20148_());
+        if (state != null && event.getEntity() instanceof ServerPlayer player) {
+            BikakuMoves.release(player, state, false);
+        }
     }
 }

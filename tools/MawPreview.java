@@ -1,3 +1,4 @@
+import com.hex.kagune.control.bikaku.BikakuMove;
 import com.hex.kagune.control.bikaku.BikakuRules;
 import com.hex.kagune.control.bikaku.MawMotion;
 import com.hex.kagune.control.bikaku.MawWorm;
@@ -45,6 +46,9 @@ public class MawPreview {
         if (which.equals("firstperson") || which.equals("all")) {
             firstPerson(new File(out, "maw-firstperson.png"));
         }
+        if (which.equals("grabs") || which.equals("all")) {
+            grabs(new File(out, "maw-grabs.png"));
+        }
         if (which.equals("grow") || which.equals("all")) {
             grow(new File(out, "maw-grow.png"));
         }
@@ -58,11 +62,16 @@ public class MawPreview {
 
     /** Something to bite: a stand-in figure at {@link #PREY_FEET}, facing him, a zombie's green. */
     static List<PoseRender.Tri> prey() {
+        return prey(PREY_FEET);
+    }
+
+    /** 3.5.0: the stand-in with its feet at {@code feet} (the body's frame). */
+    static List<PoseRender.Tri> prey(double[] feet) {
         List<PoseRender.Tri> out = new ArrayList<>();
         for (PoseRender.Tri t : PoseRender.model(new RigPose())) {
             double[][] v = new double[3][];
             for (int k = 0; k < 3; k++) {
-                v[k] = new double[] {-t.v()[k][0] - PREY_FEET[0], t.v()[k][1], -t.v()[k][2] + PREY_FEET[2]};
+                v[k] = new double[] {-t.v()[k][0] - feet[0], t.v()[k][1] + feet[1], -t.v()[k][2] + feet[2]};
             }
             int rgb = mix(t.rgb(), 0x4E8A3E, 0.55);
             out.add(new PoseRender.Tri(v, rgb, new double[] {-t.n()[0], t.n()[1], -t.n()[2]}));
@@ -113,6 +122,54 @@ public class MawPreview {
         double yaw = Math.toRadians(yawDegrees);
         double pitch = Math.toRadians(pitchDegrees);
         double[] target = {-PREY[0] * 0.5, 1.5, PREY[2] * 0.45};
+        double[] eye = {target[0] + Math.sin(yaw) * Math.cos(pitch) * distance, target[1] + Math.sin(pitch) * distance,
+            target[2] + Math.cos(yaw) * Math.cos(pitch) * distance};
+        return new PoseRender.Camera(eye, target, 34);
+    }
+
+    /** 3.5.0: Devouring Maw (top two rows) and Predatory Drag (bottom two), frame by frame, the catch held where the server holds it. */
+    static void grabs(File file) throws Exception {
+        int fw = 250;
+        int fh = 300;
+        int cols = 10;
+        BufferedImage img = new BufferedImage(fw * cols, fh * 4 + 34, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = sheet(img, "Bikaku 3.5.0: Devouring Maw (G: thrown wide, clamped, pulled up, shaken, flung right) and Predatory Drag (J: along the ground, dragged in, lifted, slammed)");
+        double[] mawAges = {0, 4, 7, 9, 12, 16, 21, 27, 30, 38};
+        double[] dragAges = {0, 4, 8, 11, 16, 22, 28, 31, 34, 42};
+        double[] far = {0.2, 0.99, 6.5};
+        for (int r = 0; r < 4; r++) {
+            boolean maw = r < 2;
+            boolean side = r % 2 == 1;
+            double[] target = maw ? PREY : far;
+            for (int i = 0; i < cols; i++) {
+                double age = maw ? mawAges[i] : dragAges[i];
+                double time = 30 + age;
+                BikakuMove move = maw ? BikakuMove.MAW : BikakuMove.DRAG;
+                double[] held = age < move.land() ? target : maw ? MawMotion.mawHeld(BikakuRules.reach(target), age)
+                    : MawMotion.dragHeld(MawMotion.dragReach(target), Math.min(age, BikakuMove.DRAG_SLAM));
+                MawMotion.Shape s = maw ? MawMotion.maw(time, SEED, target, age >= move.land() ? held : null, age, true)
+                    : MawMotion.drag(time, SEED, target, age >= move.land() ? held : null, age, true);
+                List<PoseRender.Tri> tris = worm(s, 1.0, time, 0xA50F37, true);
+                boolean let = maw ? age > BikakuMove.MAW_RELEASE : age > BikakuMove.DRAG_SLAM;
+                if (!let) {
+                    tris.addAll(prey(new double[] {held[0], held[1] - 0.99, held[2]}));
+                }
+                PoseRender.Camera cam = side ? framedAt(-90, 6, 14.5, maw ? 0.45 : 0.6) : framedAt(40, 14, 14.5, maw ? 0.45 : 0.6);
+                g.drawImage(PoseRender.render(new RigPose(), cam, fw, fh, tris), i * fw, 34 + r * fh, null);
+                label(g, String.format("%s %.0ft  mouth %.2f%s", maw ? "Maw" : "Drag", age, s.aperture(), age == move.land() ? "  BITES"
+                    : !maw && age == BikakuMove.DRAG_SLAM ? "  SLAM" : maw && age == BikakuMove.MAW_RELEASE ? "  FLUNG" : ""), i * fw, 34 + r * fh);
+            }
+        }
+        g.dispose();
+        ImageIO.write(img, "png", file);
+        System.out.println(file);
+    }
+
+    /** As {@link #framed}, looking at {@code share} of the way out to what he bites. */
+    static PoseRender.Camera framedAt(double yawDegrees, double pitchDegrees, double distance, double share) {
+        double yaw = Math.toRadians(yawDegrees);
+        double pitch = Math.toRadians(pitchDegrees);
+        double[] target = {-0.3, 1.6, 4.0 * share};
         double[] eye = {target[0] + Math.sin(yaw) * Math.cos(pitch) * distance, target[1] + Math.sin(pitch) * distance,
             target[2] + Math.cos(yaw) * Math.cos(pitch) * distance};
         return new PoseRender.Camera(eye, target, 34);

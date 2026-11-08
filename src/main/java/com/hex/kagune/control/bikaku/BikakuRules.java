@@ -89,6 +89,18 @@ public final class BikakuRules {
 
     /** How far the mouth reaches from over the right shoulder (blocks): the worm is long. */
     public static final double REACH = 6.5;
+    /** 3.5.0: how far along the ground Predatory Drag reaches (blocks from his feet), and Devouring Maw's reach (from over his shoulder). */
+    public static final double DRAG_REACH = 10.0;
+    /** 3.5.0: the grabs' damage shares: Devouring Maw's bite, Predatory Drag's bite and its slam. */
+    public static final float MAW_POWER = 2.2F;
+    public static final float DRAG_BITE_POWER = 0.8F;
+    public static final float DRAG_SLAM_POWER = 1.8F;
+    /** 3.5.0: what a grab's catch is stunned for after it is let go, and the slam's stun (ticks). */
+    public static final int GRAB_STUN_AFTER = 8;
+    public static final int SLAM_STUN = 24;
+    /** 3.5.0: Devouring Maw heals more (its spec: "minor healing from successful bites"). */
+    public static final float MAW_HEAL = 2.0F;
+
     /** A bite at nothing in particular takes what is within this of its mouth when it shuts. */
     public static final double MOUTH_RADIUS = 1.1;
 

@@ -27,6 +27,7 @@ public final class BikakuWormTests {
         string();
         growing();
         firstPerson();
+        grabs();
         System.out.println("Bikaku worm tests: " + passed + " checks passed");
     }
 
@@ -226,5 +227,71 @@ public final class BikakuWormTests {
                 check(mid[0] > 0.25, "in first person the worm comes in from his right, not over the middle of his view");
             }
         }
+    }
+
+    /**
+     * 3.5.0: Devouring Maw and Predatory Drag, posed as the renderer poses them with the catch where the server holds it: the mouth gapes
+     * on the way, shuts on its target, stays on its catch, never jumps, never passes through him, ends at rest; missed, it draws back.
+     */
+    private static void grabs() {
+        double[][] targets = {{0.1, 0.99, 3.6}, {-1.5, 0.9, 2.5}, {0.6, 1.2, 6.0}, {0.0, 0.9, 9.5}};
+        for (com.hex.kagune.control.bikaku.BikakuMove move : new com.hex.kagune.control.bikaku.BikakuMove[] {
+            com.hex.kagune.control.bikaku.BikakuMove.MAW, com.hex.kagune.control.bikaku.BikakuMove.DRAG}) {
+            boolean maw = move == com.hex.kagune.control.bikaku.BikakuMove.MAW;
+            for (double[] target : targets) {
+                double[] aim = maw ? com.hex.kagune.control.bikaku.BikakuRules.reach(target) : MawMotion.dragReach(target);
+                for (boolean caught : new boolean[] {true, false}) {
+                    double[] last = null;
+                    double widest = 0.0;
+                    int end = caught ? move.ticks() : move.missedTicks();
+                    for (double age = 0.0; age < end; age += 0.25) {
+                        double[] held = age < move.land() || !caught ? null
+                            : maw ? MawMotion.mawHeld(aim, age) : MawMotion.dragHeld(aim, Math.min(age, com.hex.kagune.control.bikaku.BikakuMove.DRAG_SLAM));
+                        MawMotion.Shape s = MawMotion.move(40 + age, 7, move, age, target, held, caught);
+                        double[] tip = s.path()[s.path().length - 1];
+                        widest = Math.max(widest, s.aperture());
+                        if (last != null) {
+                            check(distance(tip, last) < 0.9, move + " never jumps (" + distance(tip, last) + " at " + age + ", caught " + caught + ")");
+                        }
+                        last = tip;
+                        boolean gripping = caught && age >= move.land() && age <= (maw ? com.hex.kagune.control.bikaku.BikakuMove.MAW_RELEASE
+                            : com.hex.kagune.control.bikaku.BikakuMove.DRAG_SLAM);
+                        if (gripping && held != null) {
+                            check(distance(tip, held) < 0.75, move + " keeps its mouth on its catch (" + distance(tip, held) + " at " + age + ")");
+                            check(s.aperture() < 0.1, move + " keeps its jaws shut on its catch");
+                        }
+                        for (int i = 2; i < s.path().length - 2; i++) {
+                            double[] p = s.path()[i];
+                            check(distance(p, new double[] {0.0, 1.72, 0.0}) > 0.6 - 1.0E-9, move + ": nothing through his head (" + i + " at " + age + ")");
+                            check(!(p[1] > 0.6 && p[1] < 1.55 && Math.abs(p[0]) < 0.72 && p[2] > -0.4 + 1.0E-9 && p[2] < 0.4 - 1.0E-9),
+                                move + ": nothing through his torso (" + i + " at " + age + ")");
+                            check(!(p[1] >= -0.5 && p[1] <= 0.6 && Math.abs(p[0]) < 0.5 - 1.0E-9 && Math.abs(p[2]) < 0.37), move + ": nothing through his legs ("
+                                + i + " at " + age + ": " + p[0] + ", " + p[1] + ", " + p[2] + ")");
+                        }
+                    }
+                    check(widest > 0.95, move + " opens its mouth wide on the way");
+                    MawMotion.Shape shut = MawMotion.move(40 + move.land(), 7, move, move.land(), target, null, caught);
+                    check(shut.aperture() < 0.1, move + " is shut as it bites");
+                    double[] bitHead = shut.path()[shut.path().length - 1];
+                    check(distance(bitHead, aim) < (maw ? 0.6 : 0.8), move + "'s mouth is on its target as it bites (" + distance(bitHead, aim) + ")");
+                    MawMotion.Shape after = MawMotion.move(40 + end, 7, move, end, target, null, caught);
+                    MawMotion.Shape rest = MawMotion.idle(40 + end, 7);
+                    check(distance(after.path()[after.path().length - 1], rest.path()[rest.path().length - 1]) < 1.0E-9, move + " ends at rest");
+                    MawMotion.Shape near = MawMotion.move(40 + end - 0.25, 7, move, end - 0.25, target, null, caught);
+                    check(distance(near.path()[near.path().length - 1], rest.path()[rest.path().length - 1]) < 0.3, move + " comes back to rest smoothly");
+                }
+            }
+        }
+        // Where the catch is held does not depend on where it was bitten once pulled in (the clients and the server agree).
+        double[] a = MawMotion.mawHeld(new double[] {0, 1, 3}, com.hex.kagune.control.bikaku.BikakuMove.MAW_RELEASE);
+        double[] b = MawMotion.mawHeld(new double[] {-2, 0.5, 6}, com.hex.kagune.control.bikaku.BikakuMove.MAW_RELEASE);
+        check(distance(a, b) < 1.0E-9 && a[0] > MawMotion.MAW_HOLD[0] + 1.0, "Devouring Maw flings its catch out to his right");
+        double[] slammed = MawMotion.dragHeld(new double[] {0, 1, 8}, com.hex.kagune.control.bikaku.BikakuMove.DRAG_SLAM);
+        double[] lifted = MawMotion.dragHeld(new double[] {0, 1, 8}, com.hex.kagune.control.bikaku.BikakuMove.DRAG_LIFTED);
+        check(distance(slammed, MawMotion.DRAG_SLAMMED) < 1.0E-9 && lifted[1] > 3.0 && slammed[1] < 1.0, "Predatory Drag lifts its catch high, then slams it down");
+        double[] dragged = MawMotion.dragHeld(new double[] {0, 1, 8}, com.hex.kagune.control.bikaku.BikakuMove.DRAG_HOME);
+        check(Math.abs(dragged[1] - 1.0) < 1.0E-9 && dragged[2] < 2.5, "Predatory Drag drags its catch along its own ground to him");
+        check(Math.hypot(MawMotion.dragReach(new double[] {0, 1, 30})[0], MawMotion.dragReach(new double[] {0, 1, 30})[2])
+            <= com.hex.kagune.control.bikaku.BikakuRules.DRAG_REACH + 1.0E-9, "Predatory Drag reaches as far as it reaches");
     }
 }
