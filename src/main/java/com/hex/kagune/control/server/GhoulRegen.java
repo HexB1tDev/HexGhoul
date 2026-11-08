@@ -113,6 +113,11 @@ public final class GhoulRegen {
             wait = (int)Math.round(wait * com.hex.kagune.control.graft.GraftRules.waitShare(mastery, kakuja) * overdrive);
             heal = Math.max(1, (int)Math.round(heal * com.hex.kagune.control.graft.GraftRules.healShare(mastery, kakuja) * overdrive));
         }
+        if (BikakuServer.abnormal(player)) {
+            // 3.5.3, Abnormal Regeneration: a Bikaku ghoul's wounds close far sooner and faster while the worm is out.
+            wait = (int)Math.round(wait * com.hex.kagune.control.bikaku.BikakuRules.REGEN_WAIT_SHARE);
+            heal = Math.max(1, (int)Math.round(heal * com.hex.kagune.control.bikaku.BikakuRules.REGEN_HEAL_SHARE));
+        }
         if (since < wait) {
             return;
         }

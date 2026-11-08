@@ -28,7 +28,13 @@ public enum BikakuMove {
      * and bursts up under what he aims at with its jaws thrown wide, biting it and throwing it up into the air; it sinks back underground
      * and comes back out of the ground to him. A knock-up, bleeding.
      */
-    ERUPTION("Carrion Eruption", Slot.B, BikakuRules.ERUPTION, 54, 24, 280, 6.0F);
+    ERUPTION("Carrion Eruption", Slot.B, BikakuRules.ERUPTION, 54, 24, 280, 6.0F),
+    /**
+     * 3.5.3, Monstrous Regeneration: for a while ({@link #ticks()}) his body regenerates far faster than any ghoul's, strands of kagune
+     * tissue crawling over it and knitting it back. It does not make him invincible (nothing it takes off a blow) and it cools down long.
+     * It does not take the worm: it bites and moves on meanwhile.
+     */
+    REGENERATION("Monstrous Regeneration", Slot.C, BikakuRules.REGENERATION, 160, 1, 900, 15.0F);
 
     /** The original's kagune keys, as the move keys of this path. */
     public enum Slot {
@@ -88,6 +94,11 @@ public enum BikakuMove {
     /** How long it lasts when its bite misses (a grab draws back from there; 3.5.1: the others run their whole course). */
     public int missedTicks() {
         return this.grabs() ? this.land + 15 : this.ticks;
+    }
+
+    /** 3.5.3: true if it is something the worm does (the worm is busy until it ends); false: Monstrous Regeneration runs alongside. */
+    public boolean occupies() {
+        return this != NONE && this != REGENERATION;
     }
 
     /** 3.5.1: a grab (it holds what it catches). */

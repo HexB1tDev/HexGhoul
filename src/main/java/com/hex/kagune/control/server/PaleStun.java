@@ -72,7 +72,9 @@ public final class PaleStun {
             stun.immuneUntil = now + StunRules.PLAYER_IMMUNE;
             return false;
         }
-        stun.until = StunRules.renewed(stun.until, now, ticks);
+        // 3.5.3: a Bikaku player with the worm out shrugs half a stun off (Pain Suppression).
+        int taken = (int)Math.max(1L, Math.round(ticks * BikakuServer.stunShare(body)));
+        stun.until = StunRules.renewed(stun.until, now, taken);
         hold(body);
         return true;
     }

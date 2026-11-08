@@ -48,7 +48,19 @@ final class BikakuMoves {
         if (!KaguneServerController.useEnergy(player, move.cost(), true)) {
             return;
         }
+        if (!move.occupies()) {
+            regenerate(player, state, move, now);
+            return;
+        }
         start(player, state, move, hint, now);
+    }
+
+    /** 3.5.3: Monstrous Regeneration begins (the worm keeps doing what it does). */
+    private static void regenerate(ServerPlayer player, BikakuServer.State state, BikakuMove move, long now) {
+        state.regenAt = now;
+        state.readyAt.put(move, now + Cooldowns.of(player, (long)move.cooldown()));
+        KaguneServerController.playSelf(player, HexKaguneSounds.KAGUNE_RESHAPE, 1.0F, KaguneServerController.vary(player, 0.7F, 0.05F));
+        BikakuServer.broadcast(player, state);
     }
 
     private static void start(ServerPlayer player, BikakuServer.State state, BikakuMove move, Entity hint, long now) {

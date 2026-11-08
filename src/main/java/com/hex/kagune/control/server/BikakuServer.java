@@ -71,6 +71,8 @@ public final class BikakuServer {
         int done;
         final java.util.EnumMap<BikakuMove, Long> readyAt = new java.util.EnumMap<>(BikakuMove.class);
         /** A move key pressed while the worm was busy: it waits this long for it. */
+        /** 3.5.3: when Monstrous Regeneration last began (long ago to start with). */
+        long regenAt = -1_000_000L;
         /** 3.5.1: what Carrion Eruption came up under (server only: the clients are told where, not whom). */
         int eruptVictim;
         /** True for the moment of Predatory Drag's slam (its wound is a slam's). */
@@ -124,6 +126,38 @@ public final class BikakuServer {
         return state.bite != Bite.NONE && now - state.startedAt == state.bite.land() || BikakuMoves.biting(state, now);
     }
 
+    /** 3.5.3: true while Monstrous Regeneration lasts. */
+    static boolean regenerating(State state, long now) {
+        return now >= state.regenAt && now - state.regenAt < BikakuMove.REGENERATION.ticks();
+    }
+
+    /** 3.5.3, Abnormal Regeneration: true while {@code player}'s worm is out (their ghoul's regeneration is far faster). */
+    public static boolean abnormal(ServerPlayer player) {
+        return ready(player);
+    }
+
+    /** 3.5.3, Pain Suppression: the share of a stun {@code body} still takes (a Bikaku player with the worm out shrugs half of it off). */
+    public static double stunShare(net.minecraft.world.entity.LivingEntity body) {
+        return body instanceof ServerPlayer player && ready(player) ? BikakuRules.STUN_SHARE : 1.0;
+    }
+
+    private static final UUID STEADY = UUID.fromString("5e2b8b0c-7d55-4f1e-9a0b-1c0de5a10b1c");
+
+    /** 3.5.3, Pain Suppression: knockback resistance while the worm is out ({@code on}), taken off when it isn't. */
+    static void steady(ServerPlayer player, boolean on) {
+        net.minecraft.world.entity.ai.attributes.AttributeInstance resist = player.m_21051_(net.minecraft.world.entity.ai.attributes.Attributes.f_22278_);
+        if (resist == null) {
+            return;
+        }
+        boolean has = resist.m_22111_(STEADY) != null;
+        if (on && !has) {
+            resist.m_22118_(new net.minecraft.world.entity.ai.attributes.AttributeModifier(STEADY, "Bikaku pain suppression", BikakuRules.KNOCKBACK_RESIST,
+                net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADDITION));
+        } else if (!on && has) {
+            resist.m_22120_(STEADY);
+        }
+    }
+
     /** 3.5.0: true for the moment of Predatory Drag's slam. */
     public static boolean slamming(ServerPlayer player) {
         State state = STATES.get(player.m_20148_());
@@ -154,7 +188,7 @@ public final class BikakuServer {
     static S2CBikakuState snapshot(ServerPlayer player, State state) {
         return new S2CBikakuState(player.m_20148_(), state.bite.ordinal(), state.startedAt, state.aim.f_82479_, state.aim.f_82480_, state.aim.f_82481_,
             state.targetId, state.move.ordinal(), state.moveAt, state.movePoint.f_82479_, state.movePoint.f_82480_, state.movePoint.f_82481_,
-            state.targets.clone(), state.heldId, state.caught);
+            state.targets.clone(), state.heldId, state.caught, state.regenAt);
     }
 
     static void broadcast(ServerPlayer player, State state) {
@@ -174,6 +208,7 @@ public final class BikakuServer {
 
     /** Called through {@code UkakuServer.onPathChanged}: whatever was in flight stops and every client learns his worm anew. */
     static void onPathChanged(ServerPlayer player) {
+        steady(player, false); // 3.5.3: off the path, nothing of Pain Suppression stays
         State state = STATES.remove(player.m_20148_());
         if (state != null) {
             BikakuMoves.release(player, state, false);
@@ -203,7 +238,7 @@ public final class BikakuServer {
         long now = player.m_9236_().m_46467_();
         Entity hint = targetId > 0 ? player.m_284548_().m_6815_(targetId) : null;
         KakujaPassive.attacked(player);
-        if (out(state, now) || BikakuMoves.busy(state, now)) {
+        if ((out(state, now) || BikakuMoves.busy(state, now)) && BikakuMove.of(slots[arg]).occupies()) {
             state.queuedSlot = slots[arg];
             state.queuedSlotAt = now;
             state.queuedSlotHint = targetId;
@@ -359,6 +394,14 @@ public final class BikakuServer {
         if (now % 20L == 0L) {
             // His profile keeps the neutral seed: whatever Rinkaku form or mutation found its way in is parked within a second.
             RinkakuStash.stash(player);
+        }
+        // 3.5.3: Pain Suppression: hard to throw while the worm is out (and Monstrous Regeneration's healing while it lasts).
+        if (now % 10L == 0L) {
+            steady(player, KaguneProfile.isActive(player) && player.m_6084_());
+        }
+        if (regenerating(state, now) && player.m_6084_() && (now - state.regenAt) % BikakuRules.REGEN_EVERY == 0L
+            && player.m_21223_() < player.m_21233_()) {
+            GhoulRegen.healOwn(player, BikakuRules.REGEN_HEAL);
         }
         if (!KaguneProfile.isActive(player) || !player.m_6084_()) {
             if (state.bite != Bite.NONE || state.move != BikakuMove.NONE) {

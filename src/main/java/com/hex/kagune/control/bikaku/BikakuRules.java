@@ -111,6 +111,18 @@ public final class BikakuRules {
     public static final float ERUPTION_POWER = 1.6F;
     public static final double ERUPTION_LAUNCH = 0.85;
 
+    /** 3.5.3: Monstrous Regeneration heals this much every so many ticks while it lasts (32 health over its 8 s). */
+    public static final float REGEN_HEAL = 1.0F;
+    public static final int REGEN_EVERY = 5;
+    /**
+     * 3.5.3, the passives while the worm is out: Abnormal Regeneration (a ghoul's regeneration starts after this share of its usual wait,
+     * and heals in this share of its usual time), Pain Suppression (knockback resistance added, the share of a stun he still takes).
+     */
+    public static final double REGEN_WAIT_SHARE = 0.4;
+    public static final double REGEN_HEAL_SHARE = 0.5;
+    public static final double KNOCKBACK_RESIST = 0.6;
+    public static final double STUN_SHARE = 0.5;
+
     /** A bite at nothing in particular takes what is within this of its mouth when it shuts. */
     public static final double MOUTH_RADIUS = 1.1;
 

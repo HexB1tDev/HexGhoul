@@ -55,6 +55,9 @@ public class MawPreview {
         if (which.equals("eruption") || which.equals("all")) {
             eruption(new File(out, "maw-eruption.png"));
         }
+        if (which.equals("regen") || which.equals("all")) {
+            regen(new File(out, "maw-regen.png"));
+        }
         if (which.equals("grow") || which.equals("all")) {
             grow(new File(out, "maw-grow.png"));
         }
@@ -283,6 +286,52 @@ public class MawPreview {
             double[] p1 = w(new double[] {at[0] + 0.6 * Math.cos(a1), at[1] + 0.02, at[2] + 0.6 * Math.sin(a1)});
             tris.add(new PoseRender.Tri(new double[][] {p0, p1, top}, 0x6E5A44, new double[] {0, 1, 0}));
         }
+        return tris;
+    }
+
+    /** 3.5.3: Monstrous Regeneration's strands crawling over him (the worm at rest), at times through it, from the front and behind. */
+    static void regen(File file) throws Exception {
+        int fw = 260;
+        int fh = 320;
+        double[] ages = {2, 8, 20, 40, 70, 100, 140, 152, 158};
+        BufferedImage img = new BufferedImage(fw * ages.length, fh * 2 + 34, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = sheet(img, "Bikaku 3.5.3: Monstrous Regeneration (C): strands of the kagune crawling over his body and knitting it (8 s), then withering (bottom: from behind, the worm left out)");
+        for (int r = 0; r < 2; r++) {
+            for (int i = 0; i < ages.length; i++) {
+                double age = ages[i];
+                double time = 30 + age;
+                List<PoseRender.Tri> tris = r == 0 ? worm(MawMotion.idle(time, SEED), 1.0, time, 0xA50F37, false) : new ArrayList<>();
+                tris.addAll(tissue(time, age));
+                PoseRender.Camera cam = r == 0 ? PoseRender.orbit(25, 8, 4.6, 1.05) : PoseRender.orbit(200, 8, 4.6, 1.05);
+                g.drawImage(PoseRender.render(new RigPose(), cam, fw, fh, tris), i * fw, 34 + r * fh, null);
+                label(g, String.format("%.0ft (%.1f s)  shows %.2f", age, age / 20.0, com.hex.kagune.control.bikaku.MawTissue.shown(age)), i * fw, 34 + r * fh);
+            }
+        }
+        g.dispose();
+        ImageIO.write(img, "png", file);
+        System.out.println(file);
+    }
+
+    /** The strands, placed on the body at rest as the renderer places them (BodyFrame), as PoseRender triangles. */
+    static List<PoseRender.Tri> tissue(double time, double age) {
+        RigPose rest = new RigPose();
+        List<double[][]> placed = new ArrayList<>();
+        List<Double> radii = new ArrayList<>();
+        for (com.hex.kagune.control.bikaku.MawTissue.Strand strand : com.hex.kagune.control.bikaku.MawTissue.strands(time, age, SEED)) {
+            double[][] points = new double[strand.local().length][];
+            for (int i = 0; i < points.length; i++) {
+                points[i] = com.hex.kagune.control.client.animation.BodyFrame.world(rest,
+                    com.hex.kagune.control.client.animation.BodyFrame.model(rest, strand.part(), strand.local()[i]));
+            }
+            placed.add(points);
+            radii.add(strand.radius());
+        }
+        List<PoseRender.Tri> tris = new ArrayList<>();
+        com.hex.kagune.control.bikaku.MawTissue.build((a, b, c, d, n, ca, cb, cc, cd) -> {
+            int rgb = avg(ca, cb, cc, cd);
+            tris.add(new PoseRender.Tri(new double[][] {w(a), w(b), w(c)}, rgb, w(n)));
+            tris.add(new PoseRender.Tri(new double[][] {w(a), w(c), w(d)}, rgb, w(n)));
+        }, placed, radii, 0xA50F37);
         return tris;
     }
 

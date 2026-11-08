@@ -12,10 +12,10 @@ import net.minecraftforge.network.NetworkEvent;
  * ({@code BikakuRules.Bite} ordinal, 0 none) and the game tick it began, where it is thrown (a point in the world: the target's middle when
  * it began, or the air ahead), and the body it goes after (an entity id, 0 none: the clients follow it as it moves). 3.5.0: and the move
  * it is making ({@code BikakuMove} ordinal, 0 none), the tick it began, its point (the world), the bodies it goes after ({@link #TARGETS},
- * 0 none), the body it holds (0 none: missed, or let go) and whether its bite caught anything. Every client draws the worm from these alone.
+ * 0 none), the body it holds (0 none: missed, or let go) and whether its bite caught anything; 3.5.3: when Monstrous Regeneration last began. Every client draws the worm from these alone.
  */
 public record S2CBikakuState(UUID playerId, int bite, long startedAt, double x, double y, double z, int targetId, int move, long moveAt,
-                             double mx, double my, double mz, int[] targets, int heldId, boolean caught) {
+                             double mx, double my, double mz, int[] targets, int heldId, boolean caught, long regenAt) {
     /** How many bodies a move can go after at once. */
     public static final int TARGETS = 3;
 
@@ -37,6 +37,7 @@ public record S2CBikakuState(UUID playerId, int bite, long startedAt, double x, 
         }
         buffer.writeInt(message.heldId);
         buffer.writeBoolean(message.caught);
+        buffer.m_130103_(message.regenAt);
     }
 
     public static S2CBikakuState decode(FriendlyByteBuf buffer) {
@@ -57,7 +58,8 @@ public record S2CBikakuState(UUID playerId, int bite, long startedAt, double x, 
             targets[i] = buffer.readInt();
         }
         int heldId = buffer.readInt();
-        return new S2CBikakuState(id, bite, startedAt, x, y, z, targetId, move, moveAt, mx, my, mz, targets, heldId, buffer.readBoolean());
+        boolean caught = buffer.readBoolean();
+        return new S2CBikakuState(id, bite, startedAt, x, y, z, targetId, move, moveAt, mx, my, mz, targets, heldId, caught, buffer.m_130258_());
     }
 
     public static void handle(S2CBikakuState message, Supplier<NetworkEvent.Context> supplier) {

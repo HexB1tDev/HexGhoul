@@ -1,4 +1,19 @@
-# START HERE (state after 3.5.2)
+# START HERE (state after 3.5.3)
+
+Branch `claude/peaceful-ramanujan-eldmlu`. Next: **3.5.4: the kakuja's body and transformation (K)**, then 3.5.5 its abilities and passives. Plan: `docs/BIKAKU_PATH.md`; handoff `docs/handoff/next-ai-3.4.8.md` (kept current). Mastery alone opens everything (the owner: a custom NPC will teach it later).
+
+- `BikakuMove.REGENERATION` (C, 600, lasts 160 ticks, 900 cooldown, 15 RC); `occupies()` false for it: `BikakuMoves.key` runs `regenerate` (sets `state.regenAt`, no worm move), and `onAction` doesn't queue it behind a busy worm.
+- `BikakuRules`: `REGEN_HEAL` 1.0 every `REGEN_EVERY` 5 ticks (32 health); passives `REGEN_WAIT_SHARE` 0.4, `REGEN_HEAL_SHARE` 0.5, `KNOCKBACK_RESIST` 0.6, `STUN_SHARE` 0.5.
+- `BikakuServer`: heals through `GhoulRegen.healOwn` while `regenerating(state, now)` (whether the worm is out or not); `steady(player, on)` (a knockback-resistance modifier, UUID ...0b1c, every 10 ticks while the worm is out; off on path change); `abnormal(player)` (used by `GhoulRegen.playerTick` to shorten the wait and the heal time); `stunShare(body)` (used by `PaleStun.stun`). `S2CBikakuState` carries `regenAt` (protocol 96); `BikakuClient.View.regenAge`.
+- Pure `bikaku/MawTissue`: `shown(age)` (in over 6 ticks, out over the last 24), `strands(time, age, seed)` (21 strands: torso 9, head 4, each limb 3; each a helix laid on its part's box in its own pixels, `OUT` 0.55 px off the skin, crawling over `CRAWL` 26 ticks, `SHOWS` 0.6 of its way at once; on a limb only the top `LIMB_REACH` 0.45 (vanilla's walk swing isn't in the posed rig)), `build(sink, placed, radii, tint)` (a flesh tube and a glowing thread). `BikakuRenderer.tissue` places them with `BodyFrame.model`/`world` on `KaguneBodyAnimation.body` (rest pose if none), not in one's own first person.
+- Board: "Fast regeneration · hard to knock back" (auto); `AbilityGuide.BRIEF` "Monstrous Regeneration" -> "Regeneration" (the board's word-or-two rule, ControlTests). Menu: "WHILE THE WORM IS OUT" with both passives.
+- Preview: `tools/MawPreview.java regen`; `docs/handoff/bikaku-regeneration-3.5.3.png`.
+- Tests: BikakuTests (1,332).
+- **Judgment calls:** the heal, cooldown, RC; the passives' numbers; strand count and thickness; strands only near the joints on limbs.
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 96. Not tested in game.
+
+# State after 3.5.2
 
 Branch `claude/peaceful-ramanujan-eldmlu`. Next: **3.5.3: Monstrous Regeneration (C) and the passives** (Abnormal Regeneration, Pain Suppression), then the kakuja (3.5.4 body and transformation, 3.5.5 its abilities). Plan: `docs/BIKAKU_PATH.md`; handoff `docs/handoff/next-ai-3.4.8.md` (kept current).
 

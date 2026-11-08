@@ -182,6 +182,7 @@ public final class AbilityGuide {
         {"Choose your kagune path", "Choose a path"},
         {"Lift · Slam (once a tail holds someone)", "Lift · Slam"},
         {"Reaper's dash: 3 charges, 1 back each 5 s", "Reaper's dash"},
+        {"Monstrous Regeneration", "Regeneration"},
     };
 
     /**
@@ -492,6 +493,7 @@ public final class AbilityGuide {
             }
         }
         rows.add(new Row("auto", "Bites heal you", TEXT, 0));
+        rows.add(new Row("auto", "Fast regeneration · hard to knock back", TEXT, 0)); // 3.5.3: its passives
         away(in, rows);
         return new Panel("BIKAKU", "Bikaku · the worm", accent, rows);
     }

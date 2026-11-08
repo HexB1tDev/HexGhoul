@@ -134,6 +134,13 @@ public final class BikakuMenuView {
         row(c, "A kill", "+" + half(BikakuRules.KILL_HEAL) + " hearts more", x, y + 92);
         c.text("Bites make them bleed; the third stuns", x, y + 108, MUTED, false);
 
+        // 3.5.3: its passives while the worm is out.
+        c.text("WHILE THE WORM IS OUT", x, y + 134, HEADER, false);
+        c.text("Abnormal Regeneration: you heal far", x, y + 152, TRAIT, false);
+        c.text("sooner and faster", x, y + 166, TRAIT, false);
+        c.text("Pain Suppression: hard to knock back,", x, y + 184, TRAIT, false);
+        c.text("stuns last half as long", x, y + 198, TRAIT, false);
+
         button(c, hits, "eyes", "ADJUST KAKUGAN", x, y + 262, 220, mouseX, mouseY, time);
     }
 

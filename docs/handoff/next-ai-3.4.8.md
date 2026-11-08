@@ -1,4 +1,4 @@
-# HANDOFF: HexGhoul after 3.5.2, the Bikaku path being built (kept current as versions ship). Read this first.
+# HANDOFF: HexGhoul after 3.5.3, the Bikaku path being built (kept current as versions ship). Read this first.
 
 Then `docs/BIKAKU_PATH.md` (the owner's whole spec for the new path, word for word, what is built, the plan, and every place a path
 hooks into). Then, for the house rules and history: `docs/handoff/next-ai-3.3.5.md` (the session before: its judgment calls, how to
@@ -18,10 +18,10 @@ get sounds, the house rules), `docs/handoff/next-ai-1.3.60.md` (the house rules 
   environment refused `--force-with-lease`, so don't reach for it.
 - **Releases:** `.github/workflows/release.yml` publishes `v<version>` for every push to `claude/**` that adds
   `.github/release-notes-<version>.md`. The owner plays those.
-- **Version 3.5.2** in `build.py` and `patch/KagunePatch.java`. **The next is 3.5.3** (the last number never reaches 10). **Protocol
-  "95"** (3.4.9: KagunePath BIKAKU, S2CBikakuState message 54; 3.5.0: C2SBikakuAction message 55, the move in S2CBikakuState; the next
+- **Version 3.5.3** in `build.py` and `patch/KagunePatch.java`. **The next is 3.5.4** (the last number never reaches 10). **Protocol
+  "96"** (3.5.3: regenAt in S2CBikakuState) (3.4.9: KagunePath BIKAKU, S2CBikakuState message 54; 3.5.0: C2SBikakuAction message 55, the move in S2CBikakuState; the next
   free message id is 56).
-- Full `python3 build.py` ended **EXIT 0** for 3.5.2, 3.5.1, 3.5.0, 3.4.9 and 3.4.8 (about 5 minutes; run it in the background, don't edit sources while it runs).
+- Full `python3 build.py` ended **EXIT 0** for 3.5.3, 3.5.2, 3.5.1, 3.5.0, 3.4.9 and 3.4.8 (about 5 minutes; run it in the background, don't edit sources while it runs).
   The quick loop: `python3 tools/quick_check.py [--noverify] Suite ...`. **Nothing is tested in game. Never claim it is.**
 - The commit after 3.4.8 ("Bikaku path started") adds the work in progress below. It has no version and no release, and the tree
   compiles and verifies (`quick_check`, `BikakuWormTests` 26 checks, `GreatswordTests` 49).
@@ -32,6 +32,7 @@ get sounds, the house rules), `docs/handoff/next-ai-1.3.60.md` (the house rules 
 |---|---|---|
 | 3.4.8 | **Fix:** the Bone Greatsword's moves rebuilt with both hands on the grip. A stick arm with the sword set in the fist at one angle can't hold most blade ways two-handed (the left hand hung up to 9 px off the grip), and `settle`'s arm clamp twisted the overhead blows up to 88 degrees in game. Now the weapon turns in the fist (`RigPose.weaponX/Y/Z`). Keys give the blade's way, the hands' place round the chest and the cut's plane, and all six blows and three moves are rekeyed. The hammer, whip and spear are byte for byte as before (every pose diffed), and `settle` is unchanged. | `WeaponPose.hold/Grip/wristed/alongLine`, `RigPose.weapon*`, `WeaponLayer.mesh` (+`ArmItemLayer`), `QuinqueGrip.held/blendTurn`, `AgentClient.flow` (slerp only with a turn), `GreatswordTests`, `docs/handoff/bone_sword-moves-3.4.8.png` |
 | (no version) | **The Bikaku path started:** the worm kagune's model and motion (pure), their preview and tests. Nothing is in the game yet. | `control/bikaku/MawWorm`, `MawMotion`, `tools/MawPreview.java`, `BikakuWormTests`, `docs/BIKAKU_PATH.md`, `docs/handoff/bikaku-worm-*-wip.png` |
+| 3.5.3 | **Monstrous Regeneration (C, 600)** with kagune strands crawling over the body; the passives (Abnormal Regeneration, Pain Suppression). Protocol 96. | `MawTissue`, `BikakuServer.regenerating/steady/abnormal/stunShare`, `GhoulRegen`, `PaleStun`, `docs/handoff/bikaku-regeneration-3.5.3.png` |
 | 3.5.2 | **Fix** (found by reading): Bikaku's small heals were cancelled as food's natural regeneration; `GhoulRegen.healOwn`. | `GhoulRegen.healOwn`, `BikakuServer.bite`, `BikakuMoves.hurt` |
 | 3.5.1 | **Ravenous Pursuit (Z, 300) and Carrion Eruption (B, 450)**: three thinner worms biting bodies on their own sides in snaking lunges; a tunnel under the ground (the ground heaving over it) bursting up under its mark and throwing it up. | `MawMotion.pursuit/eruption`, `BikakuMoves.pursuitTick/eruptionTick`, `client/fx/BikakuFx`, `docs/handoff/bikaku-{pursuit,eruption}-3.5.1.png` |
 | 3.5.0 | **Devouring Maw (G) and Predatory Drag (J, 150)**: the worm's moves on the original's kagune keys, opened by mastery alone; grabs held at the mouth by the server, flung right or dragged in, lifted and slammed. Protocol 95. | `BikakuMove`, `MawMotion.move/maw/mawHeld/drag/dragHeld`, `BikakuMoves`, `C2SBikakuAction`, `BikakuInput`, `docs/handoff/bikaku-grabs-3.5.0.png` |
@@ -71,14 +72,16 @@ get sounds, the house rules), `docs/handoff/next-ai-1.3.60.md` (the house rules 
 
 3.4.9 put the path and the worm in the game (details: the top section of `companions-handoff.md`). Next, in the versions planned in
 `docs/BIKAKU_PATH.md`: 3.5.0 built Devouring Maw (G) and Predatory Drag (J) and the key plumbing (`BikakuInput`, `C2SBikakuAction`,
-`BikakuMove`, `BikakuMoves`); 3.5.1 Ravenous Pursuit (Z) and Carrion Eruption (B). 3.5.2 fixed its small heals. Next **3.5.3: Monstrous Regeneration (C)
-and the passives**, then 3.5.4 the kakuja's body and transformation (K), 3.5.5 its abilities. Add each to `BikakuMove` (its key, mastery, beats),
+`BikakuMove`, `BikakuMoves`); 3.5.1 Ravenous Pursuit (Z) and Carrion Eruption (B). 3.5.2 fixed its small heals; 3.5.3 Monstrous Regeneration (C) and
+the passives. Next **3.5.4: the kakuja's body and transformation (K)**, then 3.5.5 its abilities. Add each to `BikakuMove` (its key, mastery, beats),
 its motion to `MawMotion.move`, its server beats to `BikakuMoves.tick`. Mastery alone opens them (the owner: a custom NPC will teach them
 later; no Ken/Eto lessons, no quest gates). Show the owner previews early: they look closely at pictures and say plainly when something is broken.
 Ask them about 3.4.9's previews if they haven't answered (the shut mouth too: see below).
 
 ## Judgment calls the owner hasn't confirmed (tell them, ask if unsure)
 
+- **3.5.3:** Monstrous Regeneration's heal (32 health over 8 s), 45 s cooldown, 15 RC; the passives' numbers (wait 40%, heal time 50%,
+  knockback resistance 0.6, stuns halved); the strands' count and thickness, only near the joints on limbs.
 - **3.5.1:** the three worms' places and thickness, bite timing and snaking; tunnel depth 1.5, rise 2.6, launch 0.85, radius 1.6; reaches
   7 and 12; cooldowns 12 s and 14 s; RC 5 and 6; sounds; the tunnel can show through caves or drops.
 - **3.5.0:** Devouring Maw's and Predatory Drag's beats, damage (2.2; 0.8 bite + 1.8 slam), stuns, the fling (to his right, 1.25

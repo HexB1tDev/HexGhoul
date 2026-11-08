@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.5.3 (HexGhoul): Bikaku: Monstrous Regeneration and the passives (testing)
+
+See `.github/release-notes-3.5.3.md`. Monstrous Regeneration (C, mastery 600): 8 s of strong regeneration, strands of the kagune crawling over your body and knitting it; 45 s cooldown, not invincible. With the worm out: Abnormal Regeneration (a ghoul's regeneration sooner and faster) and Pain Suppression (hard to knock back, stuns half as long). Protocol 96. Preview: `docs/handoff/bikaku-regeneration-3.5.3.png`.
+
 ## 3.5.2 (HexGhoul): Fix: Bikaku's bites heal again (testing)
 
 See `.github/release-notes-3.5.2.md`. A Bikaku bite's half a heart (Predatory Feeding) was cancelled by the ghoul's regeneration, which takes any small heal it didn't make for food's natural regeneration. Every Bikaku heal now goes through as the ghoul's own.

@@ -234,7 +234,7 @@ Then, mid-build (binding):
 3. **3.5.1:** (Done: Z and B; `MawMotion.pursuit/eruption`, `client/fx/BikakuFx`.) Ravenous Pursuit (the worm splits into three thinner worms from the same root, `MawWorm.Pose.girth` about 0.6, snaking paths)
    and Carrion Eruption (into the ground at the feet, a travelling bulge of debris, up under the target; a path through a ground
    point).
-4. **3.5.3** (3.5.2 was a fix: the small heals): Monstrous Regeneration (the active, with tissue-strand visuals over the body) and the three passives (Abnormal Regeneration
+4. **3.5.3** (Done; 3.5.2 was a fix: the small heals): Monstrous Regeneration (the active, with tissue-strand visuals over the body) and the three passives (Abnormal Regeneration
    through `GhoulRegen`, Pain Suppression: knockback resistance and less stagger, Predatory Feeding if not done in 1).
 5. **3.5.4:** The kakuja: the central mass (4 to 5 blocks, irregular, asymmetric, pulsating, covered in lipped mouths with flat teeth, ref 3)
    with its tentacles, the transformation (the worm swells, more tendrils wrap him, a fused mass swallows him, mouths grow, the

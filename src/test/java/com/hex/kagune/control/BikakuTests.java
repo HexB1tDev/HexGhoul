@@ -27,6 +27,7 @@ public final class BikakuTests {
         card();
         guide();
         moves();
+        regeneration();
         System.out.println("Bikaku tests: " + passed + " checks passed");
     }
 
@@ -181,5 +182,49 @@ public final class BikakuTests {
             check(maw != null && maw.keys().equals("GRAB") && !maw.locked(), "the board shows Devouring Maw on G, open");
             check(drag != null && drag.keys().equals("SLINGSHOT") && drag.locked() == mastery < BikakuRules.DRAG, "the board shows Predatory Drag on J, dim until 150");
         }
+    }
+
+    /** 3.5.3: Monstrous Regeneration (C) and the passives; its strands on his body. */
+    private static void regeneration() {
+        com.hex.kagune.control.bikaku.BikakuMove regen = com.hex.kagune.control.bikaku.BikakuMove.REGENERATION;
+        check(com.hex.kagune.control.bikaku.BikakuMove.of(com.hex.kagune.control.bikaku.BikakuMove.Slot.C) == regen && regen.mastery() == BikakuRules.REGENERATION,
+            "C is Monstrous Regeneration, at mastery 600");
+        check(!regen.occupies() && com.hex.kagune.control.bikaku.BikakuMove.MAW.occupies(), "it runs alongside the worm (the worm keeps biting)");
+        float total = BikakuRules.REGEN_HEAL * regen.ticks() / BikakuRules.REGEN_EVERY;
+        check(total >= 20.0F && total <= 40.0F && regen.cooldown() >= regen.ticks() * 4, "strong for a while (" + total + " health), then a long cooldown");
+        check(BikakuRules.REGEN_WAIT_SHARE > 0.0 && BikakuRules.REGEN_WAIT_SHARE < 1.0 && BikakuRules.REGEN_HEAL_SHARE > 0.0 && BikakuRules.REGEN_HEAL_SHARE < 1.0,
+            "Abnormal Regeneration: a ghoul's regeneration sooner and faster");
+        check(BikakuRules.KNOCKBACK_RESIST > 0.0 && BikakuRules.KNOCKBACK_RESIST <= 1.0 && BikakuRules.STUN_SHARE > 0.0 && BikakuRules.STUN_SHARE < 1.0,
+            "Pain Suppression: harder to throw, stuns shorter (never none)");
+        check(com.hex.kagune.control.bikaku.MawTissue.shown(-1) == 0.0 && com.hex.kagune.control.bikaku.MawTissue.shown(regen.ticks()) == 0.0
+            && com.hex.kagune.control.bikaku.MawTissue.shown(80) > 0.99, "its strands show while it lasts");
+        boolean finite = true;
+        boolean onSkin = true;
+        int most = 0;
+        for (double age = 0; age < regen.ticks(); age += 3) {
+            java.util.List<com.hex.kagune.control.bikaku.MawTissue.Strand> strands = com.hex.kagune.control.bikaku.MawTissue.strands(40 + age, age, 7);
+            most = Math.max(most, strands.size());
+            for (com.hex.kagune.control.bikaku.MawTissue.Strand strand : strands) {
+                check(strand.local().length >= 2 && strand.radius() > 0.0 && strand.radius() < 0.08, "a strand is a thin line of points");
+                for (double[] p : strand.local()) {
+                    finite &= Double.isFinite(p[0]) && Double.isFinite(p[1]) && Double.isFinite(p[2]);
+                    // Off the skin: outside its part's box (in x or z) by most of the gap it keeps.
+                    double[][] box = switch (strand.part()) {
+                        case "torso" -> new double[][] {{-4, 0, -2}, {4, 12, 2}};
+                        case "head" -> new double[][] {{-4, -8, -4}, {4, 0, 4}};
+                        case "rightArm" -> new double[][] {{-3, -2, -2}, {1, 10, 2}};
+                        case "leftArm" -> new double[][] {{-1, -2, -2}, {3, 10, 2}};
+                        default -> new double[][] {{-2, 0, -2}, {2, 12, 2}};
+                    };
+                    boolean outside = p[0] < box[0][0] - 0.1 || p[0] > box[1][0] + 0.1 || p[2] < box[0][2] - 0.1 || p[2] > box[1][2] + 0.1;
+                    boolean height = p[1] >= box[0][1] && p[1] <= box[1][1];
+                    boolean nearJoint = !(strand.part().endsWith("Arm") || strand.part().endsWith("Leg")) || p[1] <= box[0][1] + 0.6 * (box[1][1] - box[0][1]);
+                    onSkin &= outside && height && nearJoint;
+                }
+            }
+        }
+        check(finite && onSkin, "every strand lies just off its part's skin (on an arm or leg, near its joint)");
+        check(most >= 12, "many strands crawl over him (" + most + ")");
+        check(com.hex.kagune.control.bikaku.MawTissue.strands(40, regen.ticks() + 5, 7).isEmpty(), "none once it is over");
     }
 }

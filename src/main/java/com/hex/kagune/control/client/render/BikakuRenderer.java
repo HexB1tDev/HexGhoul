@@ -79,15 +79,23 @@ public final class BikakuRenderer {
                     || com.hex.kagune.control.client.ReviveClient.apart(player, partial)) {
                     continue;
                 }
-                float deploy = BikakuClient.deploy(player, partial);
-                if (deploy <= 0.005F) {
-                    continue;
-                }
                 double distance = player.m_20280_(self);
                 if (distance > MAX_DISTANCE_SQR) {
                     continue;
                 }
                 boolean firstPerson = player == self && minecraft.f_91066_.m_92176_().m_90612_();
+                // 3.5.3: Monstrous Regeneration's strands over his body (his own body isn't drawn in first person: nor are they).
+                BikakuClient.View view = BikakuClient.get(player);
+                if (!firstPerson && com.hex.kagune.control.bikaku.MawTissue.shown(view.regenAge(clock)) > 0.002) {
+                    if (out == null) {
+                        out = buffers.m_6299_(TYPE);
+                    }
+                    tissue(out, matrix, normals, level, player, partial, clock, camera, view);
+                }
+                float deploy = BikakuClient.deploy(player, partial);
+                if (deploy <= 0.005F) {
+                    continue;
+                }
                 if (out == null) {
                     out = buffers.m_6299_(TYPE);
                 }
@@ -167,6 +175,33 @@ public final class BikakuRenderer {
             MawWorm.build(sink, new MawWorm.Pose(world, frame.turn(worm.shape().dorsal()), grown, worm.shape().aperture(), worm.girth(), worm.seed(), clock),
                 tint, fine);
         }
+    }
+
+    /** 3.5.3: Monstrous Regeneration's strands, each laid on the part of his body it crawls over, as that part is posed now. */
+    private static void tissue(VertexConsumer out, Matrix4f matrix, Matrix3f normals, ClientLevel level, AbstractClientPlayer player, float partial,
+                               double clock, Vec3 camera, BikakuClient.View view) {
+        Frame frame = Frame.of(player, partial);
+        com.hex.kagune.control.client.animation.RigPose posed = com.hex.kagune.control.client.animation.KaguneBodyAnimation.body(player,
+            com.hex.kagune.control.client.ControlClient.worldTime(partial));
+        if (posed == null) {
+            posed = new com.hex.kagune.control.client.animation.RigPose();
+        }
+        java.util.List<double[][]> placed = new java.util.ArrayList<>();
+        java.util.List<Double> radii = new java.util.ArrayList<>();
+        for (com.hex.kagune.control.bikaku.MawTissue.Strand strand : com.hex.kagune.control.bikaku.MawTissue.strands(clock, view.regenAge(clock),
+            BikakuClient.seed(player))) {
+            double[][] points = new double[strand.local().length][];
+            for (int i = 0; i < points.length; i++) {
+                double[] rig = com.hex.kagune.control.client.animation.BodyFrame.world(posed,
+                    com.hex.kagune.control.client.animation.BodyFrame.model(posed, strand.part(), strand.local()[i]));
+                points[i] = frame.place(rig, camera);
+            }
+            placed.add(points);
+            radii.add(strand.radius());
+        }
+        int light = LevelRenderer.m_109541_(level, BlockPos.m_274561_(player.m_20185_(), player.m_20186_() + 1.0, player.m_20189_()));
+        com.hex.kagune.control.bikaku.MawTissue.build((a, b, c, d, n, ca, cb, cc, cd) -> quad(out, matrix, normals, a, b, c, d, n, ca, cb, cc, cd, light),
+            placed, radii, KaguneTints.of(player));
     }
 
     private static boolean closer(double[] p, double[] eye) {

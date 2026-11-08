@@ -32,13 +32,18 @@ public final class BikakuClient {
      * began here, its point, the bodies it goes after and the one it holds.
      */
     public record View(Bite bite, long startedAt, double began, double x, double y, double z, int targetId, BikakuMove move, long moveAt,
-                       double moveBegan, double mx, double my, double mz, int[] targets, int heldId, boolean caught) {
+                       double moveBegan, double mx, double my, double mz, int[] targets, int heldId, boolean caught, long regenAt, double regenBegan) {
         public static final View NONE = new View(Bite.NONE, Long.MIN_VALUE, 0.0, 0.0, 0.0, 0.0, 0, BikakuMove.NONE, Long.MIN_VALUE, 0.0, 0.0, 0.0,
-            0.0, new int[S2CBikakuState.TARGETS], 0, false);
+            0.0, new int[S2CBikakuState.TARGETS], 0, false, -1_000_000L, -1.0E6);
 
         /** Ticks since the bite began ({@code clock}: {@link PaleClient#clock}); MAX_VALUE for none. */
         public double age(double clock) {
             return this.bite == Bite.NONE || this.startedAt == Long.MIN_VALUE ? Double.MAX_VALUE : Math.max(0.0, clock - this.began);
+        }
+
+        /** 3.5.3: ticks since Monstrous Regeneration began. */
+        public double regenAge(double clock) {
+            return Math.max(0.0, clock - this.regenBegan);
         }
 
         /** Ticks since the move began; MAX_VALUE for none. */
@@ -67,9 +72,14 @@ public final class BikakuClient {
         if (before != null && before.moveAt() == message.moveAt() && before.move().ordinal() == message.move()) {
             moveBegan = before.moveBegan(); // the same move, told again (it caught something, it let go): its clock runs on
         }
+        long regenBehind = world - message.regenAt();
+        double regenBegan = clock - (regenBehind > JUST_BEGUN ? Math.min(regenBehind, 100_000L) : 0L);
+        if (before != null && before.regenAt() == message.regenAt()) {
+            regenBegan = before.regenBegan();
+        }
         VIEWS.put(message.playerId(), new View(Bite.byOrdinal(message.bite()), message.startedAt(), began, message.x(), message.y(), message.z(),
             message.targetId(), BikakuMove.byOrdinal(message.move()), message.moveAt(), moveBegan, message.mx(), message.my(), message.mz(),
-            message.targets(), message.heldId(), message.caught()));
+            message.targets(), message.heldId(), message.caught(), message.regenAt(), regenBegan));
     }
 
     public static View get(Player player) {
