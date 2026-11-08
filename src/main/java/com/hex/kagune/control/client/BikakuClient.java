@@ -33,9 +33,27 @@ public final class BikakuClient {
      */
     public record View(Bite bite, long startedAt, double began, double x, double y, double z, int targetId, BikakuMove move, long moveAt,
                        double moveBegan, double mx, double my, double mz, int[] targets, int heldId, boolean caught, long regenAt, double regenBegan,
-                       boolean kakuja, long kakujaAt, double kakujaBegan) {
+                       boolean kakuja, long kakujaAt, double kakujaBegan, long undyingAt, double undyingBegan, long[] autoAt, double[] autoBegan,
+                       int[] autoTarget) {
         public static final View NONE = new View(Bite.NONE, Long.MIN_VALUE, 0.0, 0.0, 0.0, 0.0, 0, BikakuMove.NONE, Long.MIN_VALUE, 0.0, 0.0, 0.0,
-            0.0, new int[S2CBikakuState.TARGETS], 0, false, -1_000_000L, -1.0E6, false, -1_000_000L, -1.0E6);
+            0.0, new int[S2CBikakuState.TARGETS], 0, false, -1_000_000L, -1.0E6, false, -1_000_000L, -1.0E6, -1_000_000L, -1.0E6,
+            new long[S2CBikakuState.AUTOS], filled(-1.0E6), new int[S2CBikakuState.AUTOS]);
+
+        /** 3.5.7: ticks since Undying Abomination began. */
+        public double undyingAge(double clock) {
+            return Math.max(0.0, clock - this.undyingBegan);
+        }
+
+        /** 3.5.7: ticks since tentacle {@code i}'s last bite of its own began. */
+        public double autoAge(int i, double clock) {
+            return i < 0 || i >= this.autoBegan.length ? Double.MAX_VALUE : Math.max(0.0, clock - this.autoBegan[i]);
+        }
+
+        private static double[] filled(double value) {
+            double[] out = new double[S2CBikakuState.AUTOS];
+            java.util.Arrays.fill(out, value);
+            return out;
+        }
 
         /** Ticks since the bite began ({@code clock}: {@link PaleClient#clock}); MAX_VALUE for none. */
         public double age(double clock) {
@@ -86,7 +104,28 @@ public final class BikakuClient {
         VIEWS.put(message.playerId(), new View(Bite.byOrdinal(message.bite()), message.startedAt(), began, message.x(), message.y(), message.z(),
             message.targetId(), BikakuMove.byOrdinal(message.move()), message.moveAt(), moveBegan, message.mx(), message.my(), message.mz(),
             message.targets(), message.heldId(), message.caught(), message.regenAt(), regenBegan, message.kakuja(), message.kakujaAt(),
-            kakujaBegan(before, message, world, clock)));
+            kakujaBegan(before, message, world, clock), message.undyingAt(), began(before == null ? null : before.undyingAt(), before == null ? 0.0
+                : before.undyingBegan(), message.undyingAt(), world, clock), message.autoAt(), autoBegan(before, message, world, clock), message.autoTarget()));
+    }
+
+    /** 3.5.7: when (the client clock) something that began at {@code at} began here: its clock running on if it is told again. */
+    private static double began(Long beforeAt, double beforeBegan, long at, long world, double clock) {
+        if (beforeAt != null && beforeAt == at) {
+            return beforeBegan;
+        }
+        long behind = at == Long.MIN_VALUE ? 100_000L : world - at;
+        return clock - (behind > JUST_BEGUN ? Math.min(behind, 100_000L) : 0L);
+    }
+
+    /** 3.5.7: when each tentacle's own bite began here. */
+    private static double[] autoBegan(View before, S2CBikakuState message, long world, double clock) {
+        double[] out = new double[S2CBikakuState.AUTOS];
+        for (int i = 0; i < out.length; i++) {
+            long at = message.autoAt() != null && i < message.autoAt().length ? message.autoAt()[i] : Long.MIN_VALUE;
+            boolean same = before != null && before.autoAt() != null && i < before.autoAt().length && before.autoAt()[i] == at;
+            out[i] = began(same ? at : null, same ? before.autoBegan()[i] : 0.0, at, world, clock);
+        }
+        return out;
     }
 
     /** When (the client clock) the kakuja last went in or out here: from its first frame if just begun, its clock running on if told again. */

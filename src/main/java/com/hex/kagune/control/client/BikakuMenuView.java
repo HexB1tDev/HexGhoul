@@ -42,7 +42,7 @@ public final class BikakuMenuView {
     /** The plan's moves still to come (the owner's spec), each with the mastery it is meant to need (3.5.0: the built ones are moves). */
     static final Object[][] PLANNED = {
         {"Devouring Maw", BikakuRules.MAW}, {"Predatory Drag", BikakuRules.DRAG}, {"Ravenous Pursuit", BikakuRules.PURSUIT},
-        {"Carrion Eruption", BikakuRules.ERUPTION}, {"Monstrous Regeneration", BikakuRules.REGENERATION}, {"The kakuja's own moves", BikakuRules.KAKUJA}};
+        {"Carrion Eruption", BikakuRules.ERUPTION}, {"Monstrous Regeneration", BikakuRules.REGENERATION}};
 
     /** The planned moves not built yet. */
     static java.util.List<Object[]> coming() {
@@ -138,7 +138,8 @@ public final class BikakuMenuView {
         c.text("KAKUJA  (K, mastery " + BikakuRules.KAKUJA + ")", x, y + 222, HEADER, false);
         c.text(Math.round(BikakuRules.KAKUJA_COST) + " RC, then it drains; " + BikakuRules.KAKUJA_COOLDOWN / 20 + " s to come back", x, y + 238, TRAIT, false);
         c.text("Rooted, " + Math.round((1.0F - BikakuRules.KAKUJA_TAKEN) * 100) + "% less from every blow,", x, y + 252, MUTED, false);
-        c.text("regenerating; its tentacles bite " + Math.round(BikakuRules.KAKUJA_REACH) + " blocks out", x, y + 266, MUTED, false);
+        c.text("regenerating; its tentacles bite " + Math.round(BikakuRules.KAKUJA_REACH) + " blocks out,", x, y + 266, MUTED, false);
+        c.text("and bite what comes at it on their own", x, y + 280, MUTED, false);
 
         // 3.5.3: its passives while the worm is out.
         c.text("WHILE THE WORM IS OUT", x, y + 134, HEADER, false);
@@ -160,16 +161,23 @@ public final class BikakuMenuView {
             c.text(move[1], x + 40, rowY, VALUE, false);
             rowY += 16;
         }
-        // 3.5.0: the moves on its keys (the original's kagune keys), each with its mastery and cooldown.
-        for (com.hex.kagune.control.bikaku.BikakuMove move : com.hex.kagune.control.bikaku.BikakuMove.values()) {
-            if (move == com.hex.kagune.control.bikaku.BikakuMove.NONE) {
-                continue;
+        // 3.5.0: the moves on its keys (the original's kagune keys), each with its mastery and cooldown; 3.5.7: then the kakuja's own.
+        for (boolean kakuja : new boolean[] {false, true}) {
+            if (kakuja) {
+                rowY += 8;
+                c.text("IN THE KAKUJA", x, rowY, HEADER, false);
+                rowY += 18;
             }
-            boolean open = move.unlocked(model.mastery());
-            c.text(move.slot().name(), x, rowY, open ? LABEL : FAINT, false);
-            c.text(move.displayName(), x + 40, rowY, open ? VALUE : FAINT, false);
-            c.text(open ? (move.cooldown() / 20) + " s" : Integer.toString(move.mastery()), x + 240, rowY, open ? TRAIT : FAINT, false);
-            rowY += 16;
+            for (com.hex.kagune.control.bikaku.BikakuMove move : com.hex.kagune.control.bikaku.BikakuMove.values()) {
+                if (move == com.hex.kagune.control.bikaku.BikakuMove.NONE || move.kakuja() != kakuja) {
+                    continue;
+                }
+                boolean open = move.unlocked(model.mastery());
+                c.text(move.slot().name(), x, rowY, open ? LABEL : FAINT, false);
+                c.text(move.displayName(), x + 40, rowY, open ? VALUE : FAINT, false);
+                c.text(open ? (move.cooldown() / 20) + " s" : Integer.toString(move.mastery()), x + 240, rowY, open ? TRAIT : FAINT, false);
+                rowY += 16;
+            }
         }
         c.text("Keys are your kagune keys (Controls)", x, rowY + 6, MUTED, false);
 

@@ -142,6 +142,53 @@ public final class BikakuRules {
     /** Its middle (the body frame): where its tentacles' reach is measured from. */
     public static final double[] KAKUJA_CENTRE = {0.0, 2.4, 0.0};
 
+    /**
+     * 3.5.7, the kakuja's moves (shares of a bite's damage, heals in health). Thousand Jaws: each tentacle's bite and what it heals; its
+     * grins snap at what is within {@link #GRIN_REACH} of its middle (a big bite, a stun).
+     */
+    public static final float JAWS_POWER = 0.4F;
+    public static final float JAWS_HEAL = 0.5F;
+    public static final double GRIN_REACH = 4.4;
+    public static final float GRIN_POWER = 1.0F;
+    public static final int GRIN_STUN = 16;
+    /** Endless Hunger: each bite while it holds its catch and what it heals; the maw's crushing bite and what it heals; its stun after. */
+    public static final float HUNGER_POWER = 0.8F;
+    public static final float HUNGER_HEAL = 2.0F;
+    public static final float HUNGER_CRUSH_POWER = 3.0F;
+    public static final float HUNGER_CRUSH_HEAL = 6.0F;
+    public static final int HUNGER_STUN = 30;
+    /**
+     * Flesh Cataclysm: what is within {@link #CATA_NEAR} of its middle as it bursts is hurled out ({@link #CATA_NEAR_POWER}); what a
+     * sweeping tentacle passes (within {@link #CATA_ARC} of its way, as far as its mouth and a little more) is hit hard ({@link #CATA_POWER});
+     * both stunned; how hard they are thrown (out, up).
+     */
+    public static final double CATA_NEAR = 5.0;
+    public static final float CATA_NEAR_POWER = 1.4F;
+    public static final float CATA_POWER = 2.4F;
+    public static final int CATA_STUN = 30;
+    public static final double CATA_ARC = Math.toRadians(16.0);
+    public static final double CATA_THROW_NEAR = 1.4;
+    public static final double CATA_THROW = 1.0;
+    /**
+     * Undying Abomination: 1 health every {@link #UNDYING_EVERY} ticks over the kakuja's own; the share of a blow it still takes over the
+     * kakuja's; a blow of {@link #UNDYING_HEAVY} or more slows it to every {@link #UNDYING_SLOW_EVERY} ticks for {@link #UNDYING_SLOWED}.
+     */
+    public static final float UNDYING_HEAL = 1.0F;
+    public static final int UNDYING_EVERY = 4;
+    public static final float UNDYING_TAKEN = 0.6F;
+    public static final float UNDYING_HEAVY = 8.0F;
+    public static final int UNDYING_SLOW_EVERY = 12;
+    public static final int UNDYING_SLOWED = 40;
+    /**
+     * Autonomous Predation: its mouthed tentacles bite, on their own, hostile bodies within {@link #AUTO_REACH} of its middle: each at most
+     * every {@link #AUTO_EVERY} ticks (and a little more for each), never two starting within {@link #AUTO_GAP} ticks of each other.
+     */
+    public static final double AUTO_REACH = 12.0;
+    public static final float AUTO_POWER = 0.8F;
+    public static final float AUTO_HEAL = 0.5F;
+    public static final int AUTO_EVERY = 45;
+    public static final int AUTO_GAP = 8;
+
     /** A bite at nothing in particular takes what is within this of its mouth when it shuts. */
     public static final double MOUTH_RADIUS = 1.1;
 

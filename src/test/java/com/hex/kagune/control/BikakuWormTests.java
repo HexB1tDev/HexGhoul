@@ -32,6 +32,7 @@ public final class BikakuWormTests {
         eruption();
         kakuja();
         roundHim();
+        kakujaMoves();
         System.out.println("Bikaku worm tests: " + passed + " checks passed");
     }
 
@@ -487,6 +488,149 @@ public final class BikakuWormTests {
             }
         }
         return least;
+    }
+
+    // ---------------------------------------------------------------- 3.5.7: the kakuja's own moves
+
+    /**
+     * 3.5.7 (the owner's spec): Thousand Jaws' tentacles each bite their own body again and again, shut on it as they bite; Endless Hunger's
+     * three mouths bite its catch from round it, a tentacle coiled round it, the catch pulled into the great maw, which shuts on it;
+     * Flesh Cataclysm draws in, bursts out with its tentacles thrown far and level, sweeps them round and comes back, every mouth roaring;
+     * Undying Abomination's mending shows and goes; a bite of its own lands on its body. Every frame finite, built, and never jumping.
+     */
+    private static void kakujaMoves() {
+        com.hex.kagune.control.bikaku.MawKakuja.Growth full = com.hex.kagune.control.bikaku.MawKakuja.growth(true, 500);
+        int tentacles = com.hex.kagune.control.bikaku.MawKakuja.tentacles();
+        // Thousand Jaws: each mouthed tentacle after its own body round it.
+        double[][] bodies = new double[tentacles][];
+        double[][] round = {{7.0, 1.0, 6.0}, {-7.5, 1.0, 4.0}, {2.0, 1.0, -8.0}, null, {1.0, 1.0, 3.2}, {-5.0, 1.0, -6.5}};
+        System.arraycopy(round, 0, bodies, 0, tentacles);
+        com.hex.kagune.control.bikaku.BikakuMove jaws = com.hex.kagune.control.bikaku.BikakuMove.JAWS;
+        for (int i = 0; i < tentacles; i++) {
+            java.util.List<Integer> starts = com.hex.kagune.control.bikaku.BikakuMove.jawsStarts(i);
+            if (!com.hex.kagune.control.bikaku.MawKakuja.mouthed(i)) {
+                check(starts.isEmpty(), "Thousand Jaws: the mouthless tentacle doesn't bite");
+                continue;
+            }
+            check(starts.size() >= 4, "Thousand Jaws: every mouthed tentacle bites again and again (" + starts.size() + ")");
+            for (int start : starts) {
+                int bite = start + com.hex.kagune.control.bikaku.BikakuMove.JAWS_BITE;
+                check(bite < jaws.ticks() && com.hex.kagune.control.bikaku.BikakuMove.jawsBites(i, bite), "each bite inside the move");
+                com.hex.kagune.control.bikaku.MawKakuja.Act act = com.hex.kagune.control.bikaku.KakujaActs.act(jaws, bite, 300 + bite, bodies, null, null, true);
+                double[][] line = com.hex.kagune.control.bikaku.MawKakuja.tentacle(i, 300 + bite, act.lunge()[i], act.reach()[i]);
+                if (bite >= 4 && bite <= jaws.ticks() - 8) {
+                    check(distance(line[line.length - 1], bodies[i]) < 0.05, "Thousand Jaws: tentacle " + i + "'s mouth is on its body as it bites (at " + bite + ")");
+                }
+                check(act.bite()[i] < 0.1, "Thousand Jaws: shut as it bites");
+            }
+        }
+        com.hex.kagune.control.bikaku.MawKakuja.Act snap = com.hex.kagune.control.bikaku.KakujaActs.act(jaws, com.hex.kagune.control.bikaku.BikakuMove.JAWS_SNAPS[0] - 1,
+            300, bodies, null, null, true);
+        check(snap.grins() > 0.7, "Thousand Jaws: its grins open wide before they snap");
+        // Endless Hunger.
+        com.hex.kagune.control.bikaku.BikakuMove hunger = com.hex.kagune.control.bikaku.BikakuMove.HUNGER;
+        double[] caught = {2.5, 1.0, 7.0};
+        int[] biters = com.hex.kagune.control.bikaku.KakujaActs.hungerBiters(caught);
+        check(biters.length == 3 && biters[0] != biters[1] && biters[1] != biters[2] && biters[0] >= 0, "Endless Hunger: three mouths go after it");
+        for (int b : biters) {
+            check(com.hex.kagune.control.bikaku.MawMotion.class != null && com.hex.kagune.control.bikaku.MawKakuja.mouthed(b) && b != com.hex.kagune.control.bikaku.KakujaActs.WRAPPER,
+                "each of them a mouth, not the coiling tentacle");
+        }
+        check(hunger.land() < com.hex.kagune.control.bikaku.BikakuMove.HUNGER_COILED
+            && com.hex.kagune.control.bikaku.BikakuMove.HUNGER_BITES[com.hex.kagune.control.bikaku.BikakuMove.HUNGER_BITES.length - 1] < com.hex.kagune.control.bikaku.BikakuMove.HUNGER_PULL
+            && com.hex.kagune.control.bikaku.BikakuMove.HUNGER_PULL < com.hex.kagune.control.bikaku.BikakuMove.HUNGER_CRUSH
+            && com.hex.kagune.control.bikaku.BikakuMove.HUNGER_CRUSH < com.hex.kagune.control.bikaku.BikakuMove.HUNGER_RELEASE
+            && com.hex.kagune.control.bikaku.BikakuMove.HUNGER_RELEASE < hunger.ticks(), "Endless Hunger's beats come in order");
+        for (int n = 0; n < com.hex.kagune.control.bikaku.BikakuMove.HUNGER_BITES.length; n++) {
+            int at = com.hex.kagune.control.bikaku.BikakuMove.HUNGER_BITES[n];
+            int k = com.hex.kagune.control.bikaku.KakujaActs.hungerBiter(n);
+            double[] held = com.hex.kagune.control.bikaku.KakujaActs.hungerHeld(caught, at);
+            com.hex.kagune.control.bikaku.MawKakuja.Act act = com.hex.kagune.control.bikaku.KakujaActs.act(hunger, at, 400 + at, null, held, caught, true);
+            double[][] line = com.hex.kagune.control.bikaku.MawKakuja.tentacle(biters[k], 400 + at, act.lunge()[biters[k]], act.reach()[biters[k]]);
+            check(distance(line[line.length - 1], held) < 0.6 && act.bite()[biters[k]] < 0.1, "Endless Hunger: each bite on the catch, shut ("
+                + distance(line[line.length - 1], held) + ")");
+            check(distance(held, caught) < 1e-9, "the catch is held where it was caught while it is bitten");
+        }
+        double[] coiledAt = com.hex.kagune.control.bikaku.KakujaActs.hungerHeld(caught, 20);
+        com.hex.kagune.control.bikaku.MawKakuja.Act coiling = com.hex.kagune.control.bikaku.KakujaActs.act(hunger, 20, 420, null, coiledAt, caught, true);
+        check(coiling.wrapper() == com.hex.kagune.control.bikaku.KakujaActs.WRAPPER && coiling.wrap() > 0.99, "Endless Hunger: a tentacle is coiled round its catch");
+        double[][] coil = com.hex.kagune.control.bikaku.MawKakuja.wrapped(coiling.wrapper(), 420, coiling.wrapAt(), coiling.wrap());
+        int round0 = 0;
+        for (int k = coil.length - 10; k < coil.length; k++) {
+            double flat = Math.hypot(coil[k][0] - caught[0], coil[k][2] - caught[2]);
+            round0 += flat > 0.35 && flat < 0.85 && Math.abs(coil[k][1] - caught[1]) < 1.0 ? 1 : 0;
+        }
+        check(round0 >= 9, "its coil winds round the catch, close about it (" + round0 + ")");
+        double[] inMaw = com.hex.kagune.control.bikaku.KakujaActs.hungerHeld(caught, com.hex.kagune.control.bikaku.BikakuMove.HUNGER_CRUSH);
+        com.hex.kagune.control.bikaku.MawKakuja.Act crush = com.hex.kagune.control.bikaku.KakujaActs.act(hunger, com.hex.kagune.control.bikaku.BikakuMove.HUNGER_CRUSH, 446,
+            null, inMaw, caught, true);
+        com.hex.kagune.control.bikaku.MawKakuja.Act gaping = com.hex.kagune.control.bikaku.KakujaActs.act(hunger, com.hex.kagune.control.bikaku.BikakuMove.HUNGER_CRUSH - 2, 444,
+            null, inMaw, caught, true);
+        check(distance(inMaw, com.hex.kagune.control.bikaku.KakujaActs.MAW_GRIP) < 1e-9 && crush.maw() < 0.1 && gaping.maw() > 0.9,
+            "Endless Hunger: pulled into the great maw, which gapes and shuts on it");
+        com.hex.kagune.control.bikaku.MawKakuja.Act missed = com.hex.kagune.control.bikaku.KakujaActs.act(hunger, hunger.missedTicks() + 1, 500, null, null, caught, false);
+        check(missed.lunge()[biters[0]] == null, "Endless Hunger missed draws back and ends");
+        // Flesh Cataclysm.
+        com.hex.kagune.control.bikaku.BikakuMove cata = com.hex.kagune.control.bikaku.BikakuMove.CATACLYSM;
+        check(com.hex.kagune.control.bikaku.KakujaActs.squeeze(com.hex.kagune.control.bikaku.BikakuMove.CATA_DRAWN) < 0.85
+            && com.hex.kagune.control.bikaku.KakujaActs.squeeze(cata.land() + 1) > 1.08, "Flesh Cataclysm draws in, then bursts out");
+        check(com.hex.kagune.control.bikaku.KakujaActs.roar(cata.land()) > 0.99, "every mouth on it roars as it bursts");
+        check(Math.abs(com.hex.kagune.control.bikaku.KakujaActs.turn(com.hex.kagune.control.bikaku.BikakuMove.CATA_SWEPT) - com.hex.kagune.control.bikaku.KakujaActs.SWEEP) < 1e-9
+            && com.hex.kagune.control.bikaku.KakujaActs.turn(cata.ticks()) < 1e-9 && com.hex.kagune.control.bikaku.KakujaActs.thrown(cata.ticks()) < 1e-9
+            && Math.abs(com.hex.kagune.control.bikaku.KakujaActs.squeeze(cata.ticks()) - 1.0) < 1e-6, "it sweeps round, then is back as it was");
+        for (int i = 0; i < tentacles; i++) {
+            double[] head = com.hex.kagune.control.bikaku.KakujaActs.cataclysmHead(i, cata.land() + 2, 500);
+            check(Math.hypot(head[0], head[2]) > 9.0 && head[1] > -0.5 && head[1] < 4.0, "Flesh Cataclysm: tentacle " + i + " thrown far out and level ("
+                + Math.hypot(head[0], head[2]) + ", " + head[1] + ")");
+        }
+        // Undying Abomination.
+        com.hex.kagune.control.bikaku.BikakuMove undying = com.hex.kagune.control.bikaku.BikakuMove.UNDYING;
+        check(com.hex.kagune.control.bikaku.KakujaActs.mend(0) < 1e-9 && com.hex.kagune.control.bikaku.KakujaActs.mend(100) > 0.99
+            && com.hex.kagune.control.bikaku.KakujaActs.mend(undying.ticks()) < 1e-6, "Undying Abomination's mending shows, then goes");
+        // A bite of its own lands on its body.
+        double[] near = {5.5, 1.0, 5.0};
+        int land = com.hex.kagune.control.bikaku.BikakuRules.Bite.TENTACLE.land();
+        com.hex.kagune.control.bikaku.MawKakuja.Act own = com.hex.kagune.control.bikaku.KakujaActs.withAuto(com.hex.kagune.control.bikaku.MawKakuja.Act.still(), 4, near, land);
+        double[][] ownLine = com.hex.kagune.control.bikaku.MawKakuja.tentacle(4, 700, own.lunge()[4], own.reach()[4]);
+        check(distance(ownLine[ownLine.length - 1], near) < 0.01 && own.bite()[4] < 0.1, "a bite of its own lands on its body, shut");
+        check(com.hex.kagune.control.bikaku.KakujaActs.withAuto(own, 4, new double[] {-5, 1, -5}, 3).lunge()[4] == near,
+            "a tentacle already busy isn't taken for another bite");
+        // Every frame of every move: finite, built, its tentacles never jumping.
+        for (com.hex.kagune.control.bikaku.BikakuMove move : new com.hex.kagune.control.bikaku.BikakuMove[] {jaws, hunger, cata, undying}) {
+            double[][][] last = null;
+            for (double age = 0.0; age < move.ticks(); age += 0.25) {
+                double[] held = move == hunger ? com.hex.kagune.control.bikaku.KakujaActs.hungerHeld(caught, age) : null;
+                com.hex.kagune.control.bikaku.MawKakuja.Act act = com.hex.kagune.control.bikaku.KakujaActs.act(move, age, 300 + age, bodies, held, caught, true);
+                double[][][] lines = new double[tentacles][][];
+                for (int i = 0; i < tentacles; i++) {
+                    lines[i] = i == act.wrapper() && act.wrap() > 0.0 ? com.hex.kagune.control.bikaku.MawKakuja.resampleForTests(
+                        com.hex.kagune.control.bikaku.MawKakuja.wrapped(i, 300 + age, act.wrapAt(), act.wrap()), 9)
+                        : com.hex.kagune.control.bikaku.MawKakuja.tentacle(i, 300 + age, act.lunge()[i], act.reach()[i], act.squeeze(), act.straight(), act.turn());
+                }
+                if (last != null) {
+                    double most = 0.0;
+                    for (int i = 0; i < tentacles; i++) {
+                        for (int k = 0; k < lines[i].length; k++) {
+                            most = Math.max(most, distance(lines[i][k], last[i][k]));
+                        }
+                    }
+                    boolean burst = move == cata && age > com.hex.kagune.control.bikaku.BikakuMove.CATA_DRAWN && age <= cata.land() + 1;
+                    check(most < (burst ? 4.0 : 1.6), move + " never jumps (" + most + " at " + age + ")");
+                }
+                last = lines;
+                if (age == Math.floor(age) && ((int)age) % 8 == 0) {
+                    boolean[] finite = {true};
+                    int[] quads = {0};
+                    com.hex.kagune.control.bikaku.MawKakuja.build((a, b, c, d, n, ca, cb, cc, cd) -> {
+                        quads[0]++;
+                        for (double[] q : new double[][] {a, b, c, d}) {
+                            finite[0] &= Double.isFinite(q[0]) && Double.isFinite(q[1]) && Double.isFinite(q[2]);
+                        }
+                    }, full, 300 + age, 7, 0xA50F37, false, act);
+                    check(finite[0] && quads[0] > 1500, move + " is built of finite quads (" + quads[0] + " at " + age + ")");
+                }
+            }
+        }
     }
 
     private static boolean inside(double[] p) {

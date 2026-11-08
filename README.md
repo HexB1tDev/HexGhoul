@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.5.7 (HexGhoul): Bikaku: the kakuja's four moves and its passives (testing)
+
+See `.github/release-notes-3.5.7.md`. In the kakuja (mastery 1000, mastery alone): Thousand Jaws (Z: every mouthed tentacle biting its own body again and again, the grins snapping at what is close), Endless Hunger (G: three mouths and a coiling tentacle hold one body and bite it, then the great maw crushes it; every bite heals), Flesh Cataclysm (B: draws in, bursts out roaring, tentacles flung out and swept round: close bodies hurled, struck ones hit hard), Undying Abomination (C: 10 s of extraordinary regeneration and still less damage, slowed but never stopped by a heavy blow). Autonomous Predation: its tentacles bite hostile bodies near it on their own. Protocol 98. Previews: `docs/handoff/bikaku-kakuja-moves-3.5.7.png`, `bikaku-kakuja-undying-3.5.7.png`.
+
 ## 3.5.6 (HexGhoul): Fix: Predatory Drag swings out wide round you (testing)
 
 See `.github/release-notes-3.5.6.md`. Your words on 3.5.5's Drag: "why not make a bigger angle? it's going too close to the body". The Drag's worm now swings out in a wide arc to your right (its coils, the point it comes down past, where it meets the ground, where it holds its catch from), grips its catch from its own side, and swings wide on the way back: about 0.6 blocks clear of you typically, never under about 0.25 (it was about 5 cm). Protocol 97. Preview: `docs/handoff/bikaku-drag-wide-3.5.6.png`.

@@ -34,7 +34,30 @@ public enum BikakuMove {
      * tissue crawling over it and knitting it back. It does not make him invincible (nothing it takes off a blow) and it cools down long.
      * It does not take the worm: it bites and moves on meanwhile.
      */
-    REGENERATION("Monstrous Regeneration", Slot.C, BikakuRules.REGENERATION, 160, 1, 900, 15.0F);
+    REGENERATION("Monstrous Regeneration", Slot.C, BikakuRules.REGENERATION, 160, 1, 900, 15.0F),
+    /**
+     * 3.5.7, the kakuja's (the owner's spec), Thousand Jaws: every mouthed tentacle thrown out at the bodies round it, each biting again and
+     * again on its own rhythm from its own side; the grinning mouths of its body snapping at whatever is close to it (a big bite: a brief
+     * stun). Several hits, bleeding. On the worm's Z.
+     */
+    JAWS("Thousand Jaws", Slot.Z, BikakuRules.KAKUJA, 64, 6, 400, 12.0F),
+    /**
+     * 3.5.7, the kakuja's Endless Hunger: three of its mouths and a tentacle that coils round it go after one body; held, it is bitten from
+     * every side, then pulled into the great maw, which shuts on it: a crushing last bite, then it is let go. Every bite heals him. On G.
+     */
+    HUNGER("Endless Hunger", Slot.G, BikakuRules.KAKUJA, 62, 10, 360, 10.0F),
+    /**
+     * 3.5.7, the kakuja's Flesh Cataclysm: the whole mass draws in on itself, then bursts out, its tentacles flung out straight and swept
+     * round it while every mouth on it roars: what is close is hurled away, what the tentacles strike is hit hard. Area damage, knockback,
+     * a stun. On B.
+     */
+    CATACLYSM("Flesh Cataclysm", Slot.B, BikakuRules.KAKUJA, 50, 16, 500, 14.0F),
+    /**
+     * 3.5.7, the kakuja's Undying Abomination: for a while it regenerates at an extraordinary rate, strands of new flesh crawling over its
+     * body and tentacles, and takes still less from every blow; a heavy blow slows the regeneration for a moment, never stops it. It runs
+     * alongside the rest. On C.
+     */
+    UNDYING("Undying Abomination", Slot.C, BikakuRules.KAKUJA, 200, 1, 1200, 20.0F);
 
     /** The original's kagune keys, as the move keys of this path. */
     public enum Slot {
@@ -98,12 +121,17 @@ public enum BikakuMove {
 
     /** 3.5.3: true if it is something the worm does (the worm is busy until it ends); false: Monstrous Regeneration runs alongside. */
     public boolean occupies() {
-        return this != NONE && this != REGENERATION;
+        return this != NONE && this != REGENERATION && this != UNDYING;
     }
 
-    /** 3.5.1: a grab (it holds what it catches). */
+    /** 3.5.1: a grab (it holds what it catches). 3.5.7: Endless Hunger too. */
     public boolean grabs() {
-        return this == MAW || this == DRAG;
+        return this == MAW || this == DRAG || this == HUNGER;
+    }
+
+    /** 3.5.7: one of the kakuja's own moves (made only in it; the worm's are made only out of it). */
+    public boolean kakuja() {
+        return this == JAWS || this == HUNGER || this == CATACLYSM || this == UNDYING;
     }
 
     /** True if {@code mastery} has opened it. */
@@ -111,10 +139,15 @@ public enum BikakuMove {
         return this != NONE && mastery >= this.mastery;
     }
 
-    /** The move on {@code slot} (none if nothing is on it). */
+    /** The worm's move on {@code slot} (none if nothing is on it). */
     public static BikakuMove of(Slot slot) {
+        return of(slot, false);
+    }
+
+    /** 3.5.7: the move on {@code slot} in the kakuja ({@code kakuja}) or out of it (none if nothing is on it). */
+    public static BikakuMove of(Slot slot, boolean kakuja) {
         for (BikakuMove move : values()) {
-            if (move != NONE && move.slot == slot) {
+            if (move != NONE && move.slot == slot && move.kakuja() == kakuja) {
                 return move;
             }
         }
@@ -171,4 +204,48 @@ public enum BikakuMove {
     public static final int ERUPT_HOLD = 32;
     public static final int ERUPT_SUNK = 40;
     public static final int ERUPT_BACK = 46;
+
+    // ---------------------------------------------------------------- 3.5.7: the kakuja's moves' beats
+
+    /** Thousand Jaws: each mouthed tentacle's bite comes round this often, shutting this far into it; when each starts (by tentacle). */
+    public static final int JAWS_CYCLE = 12;
+    public static final int JAWS_BITE = 6;
+    static final int[] JAWS_START = {0, 4, 8, -1, 2, 6};
+    /** Thousand Jaws: the grinning mouths of its body snap shut at these ticks (opening over the ticks before). */
+    public static final int[] JAWS_SNAPS = {14, 30, 46};
+
+    /** The ticks Thousand Jaws' tentacle {@code i} begins a bite (none for the mouthless one). */
+    public static java.util.List<Integer> jawsStarts(int i) {
+        java.util.List<Integer> out = new java.util.ArrayList<>();
+        int first = i >= 0 && i < JAWS_START.length ? JAWS_START[i] : -1;
+        if (first < 0) {
+            return out;
+        }
+        for (int at = first; at + JAWS_CYCLE <= JAWS.ticks; at += JAWS_CYCLE) {
+            out.add(at);
+        }
+        return out;
+    }
+
+    /** True if Thousand Jaws' tentacle {@code i} shuts on something {@code age} ticks in. */
+    public static boolean jawsBites(int i, long age) {
+        for (int start : jawsStarts(i)) {
+            if (age == start + JAWS_BITE) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Endless Hunger: coiled round its catch by this tick; its three mouths bite at these ticks (in turn); pulled into the maw from
+     *  {@link #HUNGER_PULL}, the maw shutting on it at {@link #HUNGER_CRUSH}; let go at {@link #HUNGER_RELEASE}. */
+    public static final int HUNGER_COILED = 14;
+    public static final int[] HUNGER_BITES = {14, 18, 22, 26, 30, 34};
+    public static final int HUNGER_PULL = 36;
+    public static final int HUNGER_CRUSH = 46;
+    public static final int HUNGER_RELEASE = 52;
+
+    /** Flesh Cataclysm: drawn in by this tick; burst out at {@link #land()}; swept round until {@link #CATA_SWEPT}; back by its end. */
+    public static final int CATA_DRAWN = 13;
+    public static final int CATA_SWEPT = 34;
 }

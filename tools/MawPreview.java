@@ -58,6 +58,9 @@ public class MawPreview {
         if (which.equals("regen") || which.equals("all")) {
             regen(new File(out, "maw-regen.png"));
         }
+        if (which.equals("kakujamoves") || which.equals("all")) {
+            kakujaMoves(new File(out, "maw-kakuja-moves.png"));
+        }
         if (which.equals("kakuja") || which.equals("all")) {
             kakuja(new File(out, "maw-kakuja.png"));
         }
@@ -388,6 +391,127 @@ public class MawPreview {
         g.dispose();
         ImageIO.write(img, "png", file);
         System.out.println(file);
+    }
+
+    /** 3.5.7: the kakuja's own moves (Thousand Jaws, Endless Hunger, Flesh Cataclysm, Undying Abomination) and its bites on its own. */
+    static void kakujaMoves(File file) throws Exception {
+        int fw = 300;
+        int fh = 300;
+        int cols = 7;
+        BufferedImage img = new BufferedImage(fw * cols, fh * 5 + 34, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = sheet(img, "Bikaku 3.5.7: the kakuja's moves: Thousand Jaws (Z), Endless Hunger (G), Flesh Cataclysm (B), Undying Abomination (C), and its tentacles biting on their own");
+        com.hex.kagune.control.bikaku.MawKakuja.Growth grown = com.hex.kagune.control.bikaku.MawKakuja.growth(true, 200);
+        com.hex.kagune.control.bikaku.BikakuMove jaws = com.hex.kagune.control.bikaku.BikakuMove.JAWS;
+        // Thousand Jaws: five bodies round it, one close.
+        double[][] round = {{7.0, 0.99, 6.0}, {-7.5, 0.99, 4.0}, {2.0, 0.99, -8.0}, {-5.0, 0.99, -6.5}, {1.0, 0.99, 3.2}};
+        double[][] perTentacle = new double[6][];
+        int[] who = {0, 1, 2, -1, 4, 3};
+        for (int i = 0; i < 6; i++) {
+            perTentacle[i] = who[i] < 0 ? null : round[who[i]];
+        }
+        double[] jawsAges = {0, 6, 10, 14, 24, 30, 54};
+        for (int i = 0; i < cols; i++) {
+            double age = jawsAges[i];
+            double time = 300 + age;
+            com.hex.kagune.control.bikaku.MawKakuja.Act act = com.hex.kagune.control.bikaku.KakujaActs.act(jaws, age, time, perTentacle, null, null, true);
+            List<PoseRender.Tri> tris = actTris(grown, time, act);
+            for (double[] body : round) {
+                tris.addAll(prey(new double[] {body[0], 0.0, body[2]}));
+            }
+            g.drawImage(bigAt(25, 38, 40.0, 2.0, fw, fh, tris), i * fw, 34, null);
+            label(g, String.format("Thousand Jaws %.0ft%s", age, snaps(age) ? "  GRINS SNAP" : ""), i * fw, 34);
+        }
+        // Endless Hunger on one body before it.
+        double[] caught = {2.5, 0.99, 7.0};
+        com.hex.kagune.control.bikaku.BikakuMove hunger = com.hex.kagune.control.bikaku.BikakuMove.HUNGER;
+        double[] hungerAges = {0, 6, 12, 22, 40, 46, 56};
+        for (int i = 0; i < cols; i++) {
+            double age = hungerAges[i];
+            double time = 400 + age;
+            double[] held = com.hex.kagune.control.bikaku.KakujaActs.hungerHeld(caught, age);
+            com.hex.kagune.control.bikaku.MawKakuja.Act act = com.hex.kagune.control.bikaku.KakujaActs.act(hunger, age, time, null, held, caught, true);
+            List<PoseRender.Tri> tris = actTris(grown, time, act);
+            if (age < com.hex.kagune.control.bikaku.BikakuMove.HUNGER_RELEASE) {
+                tris.addAll(prey(new double[] {held[0], held[1] - 0.99, held[2]}));
+            }
+            g.drawImage(bigAt(-70, 32, 26.0, 2.0, fw, fh, tris), i * fw, 34 + fh, null);
+            label(g, String.format("Endless Hunger %.0ft%s", age, age == hunger.land() ? "  CAUGHT" : age == com.hex.kagune.control.bikaku.BikakuMove.HUNGER_CRUSH
+                ? "  THE MAW SHUTS" : bitesAt(age) ? "  BITES" : ""), i * fw, 34 + fh);
+        }
+        // Flesh Cataclysm.
+        com.hex.kagune.control.bikaku.BikakuMove cata = com.hex.kagune.control.bikaku.BikakuMove.CATACLYSM;
+        double[] cataAges = {0, 8, 13, 16, 22, 30, 42};
+        for (int i = 0; i < cols; i++) {
+            double age = cataAges[i];
+            double time = 500 + age;
+            com.hex.kagune.control.bikaku.MawKakuja.Act act = com.hex.kagune.control.bikaku.KakujaActs.act(cata, age, time, null, null, null, true);
+            List<PoseRender.Tri> tris = actTris(grown, time, act);
+            for (double[] body : new double[][] {{3.5, 0.99, 3.5}, {-9.0, 0.99, 2.0}, {6.0, 0.99, -7.0}}) {
+                tris.addAll(prey(new double[] {body[0], 0.0, body[2]}));
+            }
+            g.drawImage(bigAt(25, 42, 42.0, 2.0, fw, fh, tris), i * fw, 34 + 2 * fh, null);
+            label(g, String.format("Flesh Cataclysm %.0ft%s", age, age == cata.land() ? "  BURSTS, ROARS" : age < com.hex.kagune.control.bikaku.BikakuMove.CATA_DRAWN
+                && age > 0 ? "  DRAWING IN" : age > cata.land() && age < com.hex.kagune.control.bikaku.BikakuMove.CATA_SWEPT ? "  SWEEPING" : ""), i * fw, 34 + 2 * fh);
+        }
+        // Undying Abomination: up close.
+        com.hex.kagune.control.bikaku.BikakuMove undying = com.hex.kagune.control.bikaku.BikakuMove.UNDYING;
+        double[] mendAges = {0, 6, 30, 70, 120, 175, 196};
+        for (int i = 0; i < cols; i++) {
+            double age = mendAges[i];
+            double time = 600 + age;
+            com.hex.kagune.control.bikaku.MawKakuja.Act act = com.hex.kagune.control.bikaku.KakujaActs.act(undying, age, time, null, null, null, true);
+            g.drawImage(bigAt(30, 16, 24.0, 2.6, fw, fh, actTris(grown, time, act)), i * fw, 34 + 3 * fh, null);
+            label(g, String.format("Undying Abomination %.0ft  mending %.0f%%", age, act.mend() * 100), i * fw, 34 + 3 * fh);
+        }
+        // Autonomous Predation: two bodies near it, two tentacles going for them on their own, at their own times.
+        double[] near1 = {5.5, 0.99, 5.0};
+        double[] near2 = {-6.0, 0.99, -3.0};
+        double[] autoAges = {0, 4, 9, 12, 16, 20, 26};
+        for (int i = 0; i < cols; i++) {
+            double t = autoAges[i];
+            double time = 700 + t;
+            com.hex.kagune.control.bikaku.MawKakuja.Act act = com.hex.kagune.control.bikaku.MawKakuja.Act.still();
+            act = com.hex.kagune.control.bikaku.KakujaActs.withAuto(act, 4, near1, t);
+            act = com.hex.kagune.control.bikaku.KakujaActs.withAuto(act, 1, near2, t - 8);
+            List<PoseRender.Tri> tris = actTris(grown, time, act);
+            tris.addAll(prey(new double[] {near1[0], 0.0, near1[2]}));
+            tris.addAll(prey(new double[] {near2[0], 0.0, near2[2]}));
+            g.drawImage(bigAt(10, 30, 38.0, 2.0, fw, fh, tris), i * fw, 34 + 4 * fh, null);
+            label(g, String.format("on its own %.0ft%s", t, t == 9 || t == 17 ? "  BITES" : ""), i * fw, 34 + 4 * fh);
+        }
+        g.dispose();
+        ImageIO.write(img, "png", file);
+        System.out.println(file);
+    }
+
+    private static boolean snaps(double age) {
+        for (int snap : com.hex.kagune.control.bikaku.BikakuMove.JAWS_SNAPS) {
+            if (age == snap) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean bitesAt(double age) {
+        for (int bite : com.hex.kagune.control.bikaku.BikakuMove.HUNGER_BITES) {
+            if (age == bite) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** The kakuja grown, doing {@code act}. */
+    static List<PoseRender.Tri> actTris(com.hex.kagune.control.bikaku.MawKakuja.Growth growth, double time, com.hex.kagune.control.bikaku.MawKakuja.Act act) {
+        List<PoseRender.Tri> tris = new ArrayList<>();
+        UkakuModel.Sink sink = (a, b, c, d, n, ca, cb, cc, cd) -> {
+            int rgb = avg(ca, cb, cc, cd);
+            tris.add(new PoseRender.Tri(new double[][] {w(a), w(b), w(c)}, rgb, w(n)));
+            tris.add(new PoseRender.Tri(new double[][] {w(a), w(c), w(d)}, rgb, w(n)));
+        };
+        com.hex.kagune.control.bikaku.MawKakuja.build(sink, growth, time, SEED, 0xA50F37, true, act);
+        return tris;
     }
 
     /** The kakuja as grown, and (through a transformation) the worm swollen and showing as much as it still does. */

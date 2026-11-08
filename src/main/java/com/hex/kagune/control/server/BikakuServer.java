@@ -77,6 +77,31 @@ public final class BikakuServer {
         long kakujaReadyAt = Long.MIN_VALUE;
         /** 3.5.3: when Monstrous Regeneration last began (long ago to start with). */
         long regenAt = -1_000_000L;
+        /** 3.5.7: when Undying Abomination last began (long ago to start with); until when a heavy blow slows its healing. */
+        long undyingAt = -1_000_000L;
+        long undyingSlowUntil = Long.MIN_VALUE;
+        /** 3.5.7, Autonomous Predation: for each tentacle, when its last bite of its own began, at whom, whether it has shut, when it may bite again. */
+        final long[] autoAt = filledLongs(Long.MIN_VALUE);
+        final int[] autoTarget = new int[S2CBikakuState.AUTOS];
+        final boolean[] autoShut = new boolean[S2CBikakuState.AUTOS];
+        final long[] autoReadyAt = filledLongs(Long.MIN_VALUE);
+        long nextAutoAt = Long.MIN_VALUE;
+        /** 3.5.7, Flesh Cataclysm: the bodies it has already struck (each once). */
+        final java.util.Set<Integer> struck = new java.util.HashSet<>();
+
+        private static long[] filledLongs(long value) {
+            long[] out = new long[S2CBikakuState.AUTOS];
+            java.util.Arrays.fill(out, value);
+            return out;
+        }
+
+        /** 3.5.7: no bite of its own running or waiting. */
+        void calmAutos() {
+            java.util.Arrays.fill(this.autoAt, Long.MIN_VALUE);
+            java.util.Arrays.fill(this.autoTarget, 0);
+            java.util.Arrays.fill(this.autoShut, false);
+            java.util.Arrays.fill(this.autoReadyAt, Long.MIN_VALUE);
+        }
         /** 3.5.1: what Carrion Eruption came up under (server only: the clients are told where, not whom). */
         int eruptVictim;
         /** True for the moment of Predatory Drag's slam (its wound is a slam's). */
@@ -100,6 +125,10 @@ public final class BikakuServer {
             this.landed = false;
             this.lastBite = null;
             this.queuedAt = Long.MIN_VALUE;
+            this.undyingAt = -1_000_000L; // 3.5.7
+            this.undyingSlowUntil = Long.MIN_VALUE;
+            this.calmAutos();
+            this.struck.clear();
             this.dirty = true;
         }
     }
@@ -231,6 +260,7 @@ public final class BikakuServer {
         state.bite = Bite.NONE;
         state.startedAt = Long.MIN_VALUE;
         state.kakujaReadyAt = now + Cooldowns.of(player, (long)BikakuRules.KAKUJA_COOLDOWN);
+        endKakujaMoves(player, state);
         KaguneServerController.playSelf(player, HexKaguneSounds.KAGUNE_RESHAPE, 1.0F, KaguneServerController.vary(player, 0.6F, 0.05F));
         broadcast(player, state);
     }
@@ -250,6 +280,39 @@ public final class BikakuServer {
         if ((now - state.kakujaAt) % BikakuRules.KAKUJA_REGEN_EVERY == 0L && player.m_21223_() < player.m_21233_()) {
             GhoulRegen.healOwn(player, 1.0F);
         }
+        // 3.5.7, Undying Abomination: far more on top (slowed a while by a heavy blow, never stopped).
+        if (undying(state, now)) {
+            int every = now < state.undyingSlowUntil ? BikakuRules.UNDYING_SLOW_EVERY : BikakuRules.UNDYING_EVERY;
+            if ((now - state.undyingAt) % every == 0L && player.m_21223_() < player.m_21233_()) {
+                GhoulRegen.healOwn(player, BikakuRules.UNDYING_HEAL);
+            }
+        }
+        // 3.5.7, Autonomous Predation (grown into it).
+        if (now - state.kakujaAt >= com.hex.kagune.control.bikaku.MawKakuja.IN) {
+            BikakuMoves.autoTick(player, state, now);
+        }
+    }
+
+    /** 3.5.7: true while Undying Abomination lasts. */
+    static boolean undying(State state, long now) {
+        return state.kakuja && now >= state.undyingAt && now - state.undyingAt < BikakuMove.UNDYING.ticks();
+    }
+
+    /** 3.5.7: out of the kakuja, its own moves end: what Endless Hunger holds is let go, Undying Abomination and its own bites stop. */
+    static void endKakujaMoves(ServerPlayer player, State state) {
+        if (state.move.kakuja()) {
+            BikakuMoves.release(player, state, false);
+            state.move = BikakuMove.NONE;
+            state.moveAt = Long.MIN_VALUE;
+            java.util.Arrays.fill(state.targets, 0);
+            state.caught = false;
+            state.heldAt = null;
+            state.done = 0;
+        }
+        state.undyingAt = -1_000_000L;
+        state.undyingSlowUntil = Long.MIN_VALUE;
+        state.calmAutos();
+        state.struck.clear();
     }
 
     /** 3.5.4, Abnormal Flesh: in the kakuja he takes a share of every blow. */
@@ -260,7 +323,17 @@ public final class BikakuServer {
         }
         State state = STATES.get(player.m_20148_());
         if (state != null && state.kakuja && isBikaku(player)) {
-            event.setAmount(event.getAmount() * BikakuRules.KAKUJA_TAKEN);
+            float blow = event.getAmount();
+            float taken = BikakuRules.KAKUJA_TAKEN;
+            long now = player.m_9236_().m_46467_();
+            if (undying(state, now)) {
+                // 3.5.7, Undying Abomination: it takes still less, and a heavy blow slows its mending a while.
+                taken *= BikakuRules.UNDYING_TAKEN;
+                if (blow >= BikakuRules.UNDYING_HEAVY) {
+                    state.undyingSlowUntil = now + BikakuRules.UNDYING_SLOWED;
+                }
+            }
+            event.setAmount(blow * taken);
         }
     }
 
@@ -294,7 +367,8 @@ public final class BikakuServer {
     static S2CBikakuState snapshot(ServerPlayer player, State state) {
         return new S2CBikakuState(player.m_20148_(), state.bite.ordinal(), state.startedAt, state.aim.f_82479_, state.aim.f_82480_, state.aim.f_82481_,
             state.targetId, state.move.ordinal(), state.moveAt, state.movePoint.f_82479_, state.movePoint.f_82480_, state.movePoint.f_82481_,
-            state.targets.clone(), state.heldId, state.caught, state.regenAt, state.kakuja, state.kakujaAt);
+            state.targets.clone(), state.heldId, state.caught, state.regenAt, state.kakuja, state.kakujaAt, state.undyingAt, state.autoAt.clone(),
+            state.autoTarget.clone());
     }
 
     static void broadcast(ServerPlayer player, State state) {
@@ -344,11 +418,10 @@ public final class BikakuServer {
         long now = player.m_9236_().m_46467_();
         Entity hint = targetId > 0 ? player.m_284548_().m_6815_(targetId) : null;
         KakujaPassive.attacked(player);
-        if (state.kakuja) {
-            notYet(player); // 3.5.4: the kakuja's own moves come next
-            return;
+        if (state.kakuja && now - state.kakujaAt < com.hex.kagune.control.bikaku.MawKakuja.IN) {
+            return; // 3.5.7: still growing into it
         }
-        if ((out(state, now) || BikakuMoves.busy(state, now)) && BikakuMove.of(slots[arg]).occupies()) {
+        if ((out(state, now) || BikakuMoves.busy(state, now)) && BikakuMove.of(slots[arg], state.kakuja).occupies()) {
             state.queuedSlot = slots[arg];
             state.queuedSlotAt = now;
             state.queuedSlotHint = targetId;
@@ -523,6 +596,7 @@ public final class BikakuServer {
             if (!KaguneProfile.isActive(player) || !player.m_6084_()) {
                 state.kakuja = false;
                 state.kakujaAt = now;
+                endKakujaMoves(player, state);
                 state.dirty = true;
             } else {
                 kakujaTick(player, state, now);

@@ -183,16 +183,41 @@ public final class BikakuRenderer {
         if (growth.shows()) {
             // 3.5.4: the kakuja, built in his body's frame and placed in the world; in first person nothing of it near the eyes (he is
             // inside it: he sees out).
-            double[] lunge = null;
-            int biter = -1;
-            double reach = 0.0;
-            double bite = 0.0;
+            // 3.5.7: what it does this frame: its own move (each tentacle after its own body, Endless Hunger's catch where the client sees it),
+            // Undying Abomination's mending, M1's tentacle bite, and its tentacles' bites of their own, each tentacle doing one thing.
+            com.hex.kagune.control.bikaku.MawKakuja.Act act = com.hex.kagune.control.bikaku.MawKakuja.Act.still();
+            com.hex.kagune.control.bikaku.BikakuMove kakujaMove = view.move();
+            if (kakujaMove.kakuja()) {
+                double[][] aims = new double[com.hex.kagune.control.bikaku.MawKakuja.tentacles()][];
+                for (int i = 0; i < aims.length && i < view.targets().length; i++) {
+                    Entity aimed = view.targets()[i] != 0 ? level.m_6815_(view.targets()[i]) : null;
+                    aims[i] = aimed != null ? frame.rig(centre(aimed, partial)) : null;
+                }
+                Entity heldEntity = view.heldId() != 0 ? level.m_6815_(view.heldId()) : null;
+                double[] heldAt = heldEntity != null ? frame.rig(centre(heldEntity, partial)) : null;
+                act = com.hex.kagune.control.bikaku.KakujaActs.act(kakujaMove, view.moveAge(clock), clock, aims, heldAt,
+                    frame.rig(new double[] {view.mx(), view.my(), view.mz()}), view.caught());
+            }
+            double undyingAge = view.undyingAge(clock);
+            if (undyingAge < com.hex.kagune.control.bikaku.BikakuMove.UNDYING.ticks()) {
+                act = com.hex.kagune.control.bikaku.KakujaActs.withMend(act, com.hex.kagune.control.bikaku.KakujaActs.mend(undyingAge));
+            }
             if (tentacle && age < view.bite().ticks()) {
                 Entity followed = view.targetId() != 0 ? level.m_6815_(view.targetId()) : null;
-                lunge = frame.rig(followed != null ? centre(followed, partial) : new double[] {view.x(), view.y(), view.z()});
-                biter = com.hex.kagune.control.bikaku.MawKakuja.biter(lunge, clock);
-                reach = com.hex.kagune.control.bikaku.MawKakuja.lunge(age);
-                bite = com.hex.kagune.control.bikaku.MawKakuja.lungeMouth(age);
+                double[] lunge = frame.rig(followed != null ? centre(followed, partial) : new double[] {view.x(), view.y(), view.z()});
+                int biter = com.hex.kagune.control.bikaku.MawKakuja.biter(lunge, clock);
+                if (act.lunge()[biter] == null && biter != act.wrapper()) {
+                    act = act.lunging(biter, lunge, com.hex.kagune.control.bikaku.MawKakuja.lunge(age), com.hex.kagune.control.bikaku.MawKakuja.lungeMouth(age));
+                }
+            }
+            for (int i = 0; i < com.hex.kagune.control.bikaku.MawKakuja.tentacles() && i < view.autoTarget().length; i++) {
+                double autoAge = view.autoAge(i, clock);
+                if (autoAge < com.hex.kagune.control.bikaku.KakujaActs.autoTicks() && view.autoTarget()[i] != 0) {
+                    Entity prey = level.m_6815_(view.autoTarget()[i]);
+                    if (prey != null) {
+                        act = com.hex.kagune.control.bikaku.KakujaActs.withAuto(act, i, frame.rig(centre(prey, partial)), autoAge);
+                    }
+                }
             }
             double clearSq = KAKUJA_CLEAR * KAKUJA_CLEAR;
             UkakuModel.Sink placed = (a, b, c, d, n, ca, cb, cc, cd) -> {
@@ -205,7 +230,7 @@ public final class BikakuRenderer {
                 }
                 quad(out, matrix, normals, pa, pb, pc, pd, frame.turn(n), ca, cb, cc, cd, light);
             };
-            com.hex.kagune.control.bikaku.MawKakuja.build(placed, growth, clock, seed, tint, fine, biter, lunge, reach, bite);
+            com.hex.kagune.control.bikaku.MawKakuja.build(placed, growth, clock, seed, tint, fine, act);
         }
     }
 

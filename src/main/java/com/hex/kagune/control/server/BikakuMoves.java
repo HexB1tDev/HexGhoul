@@ -31,9 +31,13 @@ final class BikakuMoves {
 
     /** A move key: the move on it, if it is open, off cooldown and paid for. */
     static void key(ServerPlayer player, BikakuServer.State state, BikakuMove.Slot slot, Entity hint, long now) {
-        BikakuMove move = BikakuMove.of(slot);
+        BikakuMove move = BikakuMove.of(slot, state.kakuja); // 3.5.7: in the kakuja, its own moves on the same keys
         if (move == BikakuMove.NONE) {
-            BikakuServer.notYet(player);
+            if (state.kakuja) {
+                BikakuServer.notice(player, state, Component.m_237115_("message.hexkagune.bikaku.kakuja_none"));
+            } else {
+                BikakuServer.notYet(player);
+            }
             return;
         }
         if (!move.unlocked(KaguneProfile.mastery(player))) {
@@ -48,11 +52,25 @@ final class BikakuMoves {
         if (!KaguneServerController.useEnergy(player, move.cost(), true)) {
             return;
         }
+        if (move == BikakuMove.UNDYING) {
+            undying(player, state, move, now);
+            return;
+        }
         if (!move.occupies()) {
             regenerate(player, state, move, now);
             return;
         }
         start(player, state, move, hint, now);
+    }
+
+    /** 3.5.7: Undying Abomination begins (its tentacles keep doing what they do). */
+    private static void undying(ServerPlayer player, BikakuServer.State state, BikakuMove move, long now) {
+        state.undyingAt = now;
+        state.undyingSlowUntil = Long.MIN_VALUE;
+        state.readyAt.put(move, now + Cooldowns.of(player, (long)move.cooldown()));
+        UkakuFire.sound(player.m_284548_(), player.m_20182_(), "hexkagune:sfx.transform.organic_armor_shift", 1.0F, 0.75F);
+        KaguneServerController.playSelf(player, HexKaguneSounds.KAGUNE_RESHAPE, 1.0F, KaguneServerController.vary(player, 0.6F, 0.05F));
+        BikakuServer.broadcast(player, state);
     }
 
     /** 3.5.3: Monstrous Regeneration begins (the worm keeps doing what it does). */
@@ -64,6 +82,10 @@ final class BikakuMoves {
     }
 
     private static void start(ServerPlayer player, BikakuServer.State state, BikakuMove move, Entity hint, long now) {
+        if (move.kakuja()) {
+            startKakuja(player, state, move, hint, now);
+            return;
+        }
         LivingEntity target = switch (move) {
             case DRAG -> aimGround(player, hint, BikakuRules.DRAG_REACH);
             case ERUPTION -> aimGround(player, hint, BikakuRules.ERUPTION_REACH);
@@ -103,6 +125,9 @@ final class BikakuMoves {
             case MAW, DRAG -> grabTick(player, state, move, age, now);
             case PURSUIT -> pursuitTick(player, state, age, now);
             case ERUPTION -> eruptionTick(player, state, age, now);
+            case JAWS -> jawsTick(player, state, age, now);
+            case HUNGER -> hungerTick(player, state, age, now);
+            case CATACLYSM -> cataclysmTick(player, state, age, now);
             default -> {
             }
         }
@@ -121,6 +146,31 @@ final class BikakuMoves {
                 }
             }
             return false;
+        }
+        // 3.5.7: the kakuja's bites.
+        if (state.move == BikakuMove.JAWS) {
+            for (int i = 0; i < com.hex.kagune.control.bikaku.MawKakuja.tentacles(); i++) {
+                if (BikakuMove.jawsBites(i, age)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        if (state.move == BikakuMove.HUNGER) {
+            for (int bite : BikakuMove.HUNGER_BITES) {
+                if (age == bite) {
+                    return true;
+                }
+            }
+            return age == BikakuMove.HUNGER.land() || age == BikakuMove.HUNGER_CRUSH;
+        }
+        if (state.move == BikakuMove.CATACLYSM) {
+            return false;
+        }
+        for (int i = 0; i < state.autoAt.length; i++) {
+            if (state.autoAt[i] != Long.MIN_VALUE && now - state.autoAt[i] == BikakuRules.Bite.TENTACLE.land()) {
+                return true;
+            }
         }
         return state.move != BikakuMove.NONE && age == state.move.land();
     }
@@ -283,6 +333,339 @@ final class BikakuMoves {
             }
         }
         state.heldId = 0;
+    }
+
+    // ---------------------------------------------------------------- 3.5.7: the kakuja's own moves
+
+    /** One of the kakuja's moves begins: its bodies chosen, its point, its sound. */
+    private static void startKakuja(ServerPlayer player, BikakuServer.State state, BikakuMove move, Entity hint, long now) {
+        Vec3 centre = BikakuServer.kakujaCentre(player);
+        state.move = move;
+        state.moveAt = now;
+        java.util.Arrays.fill(state.targets, 0);
+        state.eruptVictim = 0;
+        state.heldId = 0;
+        state.caught = false;
+        state.heldAt = null;
+        state.done = 0;
+        state.struck.clear();
+        LivingEntity aimed = BikakuServer.aimFrom(player, hint, centre, BikakuRules.KAKUJA_REACH);
+        switch (move) {
+            case JAWS -> {
+                jawsTargets(player, state, aimed, centre);
+                state.movePoint = aimed != null ? KaguneServerController.center(aimed) : centre;
+                UkakuFire.sound(player.m_284548_(), centre, "hexkagune:sfx.writhe", 1.2F, 0.7F);
+            }
+            case HUNGER -> {
+                state.targets[0] = aimed == null ? 0 : aimed.m_19879_();
+                state.movePoint = aimed != null ? KaguneServerController.center(aimed)
+                    : player.m_146892_().m_82549_(player.m_20154_().m_82490_(BikakuRules.KAKUJA_REACH * 0.7));
+                UkakuFire.sound(player.m_284548_(), centre, "hexkagune:sfx.writhe", 1.2F, 0.6F);
+            }
+            default -> { // Flesh Cataclysm: drawing in
+                state.movePoint = centre;
+                UkakuFire.sound(player.m_284548_(), centre, "hexkagune:sfx.transform.body_warp", 1.3F, 0.7F);
+            }
+        }
+        state.readyAt.put(move, now + Cooldowns.of(player, (long)move.cooldown()));
+        BikakuServer.broadcast(player, state);
+    }
+
+    /** True if {@code body} is in the kakuja's reach (from its middle) and fair game. */
+    private static boolean inKakujaReach(ServerPlayer player, LivingEntity body, Vec3 centre, double reach) {
+        return body != null && fair(player, body) && KaguneServerController.center(body).m_82554_(centre) <= reach + body.m_20205_();
+    }
+
+    /**
+     * Thousand Jaws' bodies: one for each mouthed tentacle, the body round it nearest the way that tentacle faces out of the mass (the aimed
+     * one first, each body taken once while there are more; fewer, and they share).
+     */
+    private static void jawsTargets(ServerPlayer player, BikakuServer.State state, LivingEntity aimed, Vec3 centre) {
+        java.util.List<LivingEntity> bodies = new java.util.ArrayList<>(player.m_284548_().m_6443_(LivingEntity.class,
+            box(centre, BikakuRules.KAKUJA_REACH + 1.0), living -> inKakujaReach(player, living, centre, BikakuRules.KAKUJA_REACH)));
+        java.util.Set<Integer> taken = new java.util.HashSet<>();
+        for (int i = 0; i < com.hex.kagune.control.bikaku.MawKakuja.tentacles(); i++) {
+            if (!com.hex.kagune.control.bikaku.MawKakuja.mouthed(i)) {
+                continue;
+            }
+            LivingEntity best = null;
+            double bestScore = -9.0;
+            for (LivingEntity body : bodies) {
+                double score = facing(player, i, body) + (body == aimed ? 0.6 : 0.0) - (taken.contains(body.m_19879_()) ? 2.0 : 0.0);
+                if (score > bestScore) {
+                    bestScore = score;
+                    best = body;
+                }
+            }
+            state.targets[i] = best == null ? 0 : best.m_19879_();
+            if (best != null) {
+                taken.add(best.m_19879_());
+            }
+        }
+    }
+
+    /** How much tentacle {@code i} faces {@code body} (the level way out of the mass toward it, -1 .. 1). */
+    private static double facing(ServerPlayer player, int i, LivingEntity body) {
+        double[] at = BikakuServer.rig(player, KaguneServerController.center(body));
+        double[] way = com.hex.kagune.control.bikaku.MawKakuja.sweepWay(i);
+        double flat = Math.hypot(at[0], at[2]);
+        return flat < 1.0E-6 ? 0.0 : (at[0] * way[0] + at[2] * way[2]) / flat;
+    }
+
+    private static void jawsTick(ServerPlayer player, BikakuServer.State state, long age, long now) {
+        Vec3 centre = BikakuServer.kakujaCentre(player);
+        boolean told = false;
+        for (int i = 0; i < com.hex.kagune.control.bikaku.MawKakuja.tentacles(); i++) {
+            if (!com.hex.kagune.control.bikaku.MawKakuja.mouthed(i)) {
+                continue;
+            }
+            for (int start : BikakuMove.jawsStarts(i)) {
+                if (age == start) {
+                    // Each bite: its body still there, or the next one its way.
+                    LivingEntity had = state.targets[i] != 0 && player.m_284548_().m_6815_(state.targets[i]) instanceof LivingEntity body ? body : null;
+                    if (!inKakujaReach(player, had, centre, BikakuRules.KAKUJA_REACH)) {
+                        int before = state.targets[i];
+                        LivingEntity next = nearestFacing(player, i, centre, BikakuRules.KAKUJA_REACH);
+                        state.targets[i] = next == null ? 0 : next.m_19879_();
+                        told |= before != state.targets[i];
+                    }
+                }
+            }
+            if (BikakuMove.jawsBites(i, age)) {
+                LivingEntity body = state.targets[i] != 0 && player.m_284548_().m_6815_(state.targets[i]) instanceof LivingEntity target ? target : null;
+                if (inKakujaReach(player, body, centre, BikakuRules.KAKUJA_REACH)) {
+                    hurt(player, body, BikakuRules.JAWS_POWER, 2, 0, BikakuRules.JAWS_HEAL, now, false);
+                } else {
+                    KaguneServerController.playAt(player, centre, HexKaguneSounds.KAGUNE_WHIP, 0.5F, KaguneServerController.vary(player, 0.9F, 0.1F));
+                }
+            }
+        }
+        // Its grins snap at whatever is close to it: a big bite, a stun, pulled in against it.
+        for (int snap : BikakuMove.JAWS_SNAPS) {
+            if (age == snap) {
+                AABB near = box(centre, BikakuRules.GRIN_REACH + 1.0);
+                for (LivingEntity body : player.m_284548_().m_6443_(LivingEntity.class, near, living -> inKakujaReach(player, living, centre,
+                    BikakuRules.GRIN_REACH))) {
+                    if (hurt(player, body, BikakuRules.GRIN_POWER, 3, BikakuRules.GRIN_STUN, BikakuRules.BITE_HEAL, now, true) && body.m_6084_()) {
+                        Vec3 in = centre.m_82546_(body.m_20182_());
+                        Vec3 pull = new Vec3(in.f_82479_, 0.0, in.f_82481_);
+                        body.m_20256_(pull.m_82556_() < 1.0E-6 ? Vec3.f_82478_ : pull.m_82541_().m_82490_(0.35));
+                        body.f_19864_ = true;
+                    }
+                }
+                UkakuFire.sound(player.m_284548_(), centre, "hexkagune:sfx.dragon_bite", 1.1F, 0.8F);
+            }
+        }
+        if (told) {
+            BikakuServer.broadcast(player, state);
+        }
+    }
+
+    /** The fair body in reach that tentacle {@code i} faces most (or null). */
+    private static LivingEntity nearestFacing(ServerPlayer player, int i, Vec3 centre, double reach) {
+        LivingEntity best = null;
+        double bestScore = -9.0;
+        for (LivingEntity body : player.m_284548_().m_6443_(LivingEntity.class, box(centre, reach + 1.0),
+            living -> inKakujaReach(player, living, centre, reach))) {
+            double score = facing(player, i, body);
+            if (score > bestScore) {
+                bestScore = score;
+                best = body;
+            }
+        }
+        return best;
+    }
+
+    private static void hungerTick(ServerPlayer player, BikakuServer.State state, long age, long now) {
+        Vec3 centre = BikakuServer.kakujaCentre(player);
+        int land = BikakuMove.HUNGER.land();
+        if (state.done == 0 && age >= land) {
+            state.done = 1;
+            LivingEntity body = state.targets[0] != 0 && player.m_284548_().m_6815_(state.targets[0]) instanceof LivingEntity target ? target : null;
+            if (!inKakujaReach(player, body, centre, BikakuRules.KAKUJA_REACH)) {
+                body = nearest(player, state.movePoint);
+            }
+            int held = BikakuMove.HUNGER_RELEASE - land + 4;
+            if (body != null && hurt(player, body, BikakuRules.HUNGER_POWER, 3, held, BikakuRules.HUNGER_HEAL, now, false)) {
+                state.caught = true;
+                state.targets[0] = body.m_19879_();
+                if (body.m_6084_()) {
+                    state.heldId = body.m_19879_();
+                    state.heldAt = BikakuServer.rig(player, KaguneServerController.center(body));
+                    KaguneServerController.playAt(player, body, HexKaguneSounds.KAGUNE_GRAB, 1.0F, KaguneServerController.vary(player, 0.75F, 0.05F));
+                }
+            } else {
+                KaguneServerController.playAt(player, state.movePoint, HexKaguneSounds.KAGUNE_WHIP, 0.7F, KaguneServerController.vary(player, 0.6F, 0.05F));
+            }
+            BikakuServer.broadcast(player, state);
+        }
+        if (!state.caught) {
+            return;
+        }
+        if (state.heldId != 0 && state.heldAt != null && age < BikakuMove.HUNGER_RELEASE) {
+            hold(player, state, com.hex.kagune.control.bikaku.KakujaActs.hungerHeld(state.heldAt, age + 1));
+        }
+        Entity entity = state.heldId != 0 ? player.m_9236_().m_6815_(state.heldId) : null;
+        LivingEntity held = entity instanceof LivingEntity living && living.m_6084_() ? living : null;
+        for (int bite : BikakuMove.HUNGER_BITES) {
+            if (age == bite && held != null) {
+                hurt(player, held, BikakuRules.HUNGER_POWER, 3, 0, BikakuRules.HUNGER_HEAL, now, false);
+            }
+        }
+        if (age == BikakuMove.HUNGER_CRUSH) {
+            if (held != null) {
+                hurt(player, held, BikakuRules.HUNGER_CRUSH_POWER, 5, BikakuRules.HUNGER_STUN, BikakuRules.HUNGER_CRUSH_HEAL, now, true);
+            }
+            UkakuFire.sound(player.m_284548_(), BikakuServer.world(player, com.hex.kagune.control.bikaku.KakujaActs.MAW_GRIP), "hexkagune:sfx.dragon_bite",
+                1.4F, 0.65F);
+        }
+        if (age == BikakuMove.HUNGER_RELEASE && state.heldId != 0) {
+            // Let go: spat out before it.
+            state.heldId = 0;
+            if (held != null) {
+                double yaw = Math.toRadians(player.f_20883_);
+                Vec3 ahead = new Vec3(-Math.sin(yaw), 0.0, Math.cos(yaw));
+                held.m_20256_(ahead.m_82490_(0.9).m_82520_(0.0, 0.45, 0.0));
+                held.f_19864_ = true;
+            }
+            BikakuServer.broadcast(player, state);
+        }
+    }
+
+    private static void cataclysmTick(ServerPlayer player, BikakuServer.State state, long age, long now) {
+        Vec3 centre = BikakuServer.kakujaCentre(player);
+        Vec3 feet = player.m_20182_();
+        int burst = BikakuMove.CATACLYSM.land();
+        double reach = BikakuRules.KAKUJA_REACH * 1.15;
+        if (age == burst) {
+            // It bursts out: every mouth roars; what is close is hurled away.
+            UkakuFire.sound(player.m_284548_(), centre, "hexkagune:sfx.dragon_roar", 2.0F, 0.6F);
+            UkakuFire.sound(player.m_284548_(), centre, "hexkagune:kagune_burst", 1.4F, 0.6F);
+            for (LivingEntity body : player.m_284548_().m_6443_(LivingEntity.class, box(centre, BikakuRules.CATA_NEAR + 1.0),
+                living -> inKakujaReach(player, living, centre, BikakuRules.CATA_NEAR))) {
+                state.struck.add(body.m_19879_());
+                if (hurt(player, body, BikakuRules.CATA_NEAR_POWER, 2, BikakuRules.CATA_STUN, 0.0F, now, true)) {
+                    throwOut(body, feet, BikakuRules.CATA_THROW_NEAR, 0.55);
+                }
+            }
+        }
+        if (age > burst && age <= BikakuMove.CATA_SWEPT) {
+            // Its tentacles sweep round it: whatever one passes is struck hard, once.
+            double time = player.m_9236_().m_46467_();
+            java.util.List<double[]> heads = new java.util.ArrayList<>();
+            for (int i = 0; i < com.hex.kagune.control.bikaku.MawKakuja.tentacles(); i++) {
+                heads.add(com.hex.kagune.control.bikaku.KakujaActs.cataclysmHead(i, age, time));
+            }
+            for (LivingEntity body : player.m_284548_().m_6443_(LivingEntity.class, box(centre, reach + 1.0),
+                living -> !state.struck.contains(living.m_19879_()) && inKakujaReach(player, living, centre, reach))) {
+                double[] at = BikakuServer.rig(player, KaguneServerController.center(body));
+                double angle = Math.atan2(at[2], at[0]);
+                double far = Math.hypot(at[0], at[2]);
+                for (double[] head : heads) {
+                    double headAngle = Math.atan2(head[2], head[0]);
+                    double off = Math.abs(Math.atan2(Math.sin(angle - headAngle), Math.cos(angle - headAngle)));
+                    if (off <= BikakuRules.CATA_ARC && far <= Math.hypot(head[0], head[2]) + 1.5 && at[1] < head[1] + 3.5) {
+                        state.struck.add(body.m_19879_());
+                        if (hurt(player, body, BikakuRules.CATA_POWER, 3, BikakuRules.CATA_STUN, 0.0F, now, true)) {
+                            throwOut(body, feet, BikakuRules.CATA_THROW, 0.35);
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    /** A box {@code r} out each way round {@code at}. */
+    private static AABB box(Vec3 at, double r) {
+        return new AABB(at.f_82479_ - r, at.f_82480_ - r, at.f_82481_ - r, at.f_82479_ + r, at.f_82480_ + r, at.f_82481_ + r);
+    }
+
+    /** {@code body} thrown out from {@code from} (level, {@code out} hard) and up. */
+    private static void throwOut(LivingEntity body, Vec3 from, double out, double up) {
+        if (!body.m_6084_()) {
+            return;
+        }
+        Vec3 away = body.m_20182_().m_82546_(from);
+        Vec3 flat = new Vec3(away.f_82479_, 0.0, away.f_82481_);
+        flat = flat.m_82556_() < 1.0E-6 ? new Vec3(1.0, 0.0, 0.0) : flat.m_82541_();
+        body.m_20256_(flat.m_82490_(out).m_82520_(0.0, up, 0.0));
+        body.f_19864_ = true;
+    }
+
+    // ---------------------------------------------------------------- 3.5.7: Autonomous Predation
+
+    /**
+     * Each tick in the kakuja: its mouthed tentacles bite hostile bodies near it on their own, each at its own pace and never several at
+     * once ({@link BikakuRules#AUTO_EVERY}, {@link BikakuRules#AUTO_GAP}); never one a move of its own is using.
+     */
+    static void autoTick(ServerPlayer player, BikakuServer.State state, long now) {
+        Vec3 centre = BikakuServer.kakujaCentre(player);
+        int lands = BikakuRules.Bite.TENTACLE.land();
+        boolean told = false;
+        double[] point = state.move.kakuja() ? BikakuServer.rig(player, state.movePoint) : null;
+        java.util.List<LivingEntity> hostiles = null;
+        for (int i = 0; i < com.hex.kagune.control.bikaku.MawKakuja.tentacles() && i < state.autoAt.length; i++) {
+            if (!com.hex.kagune.control.bikaku.MawKakuja.mouthed(i)) {
+                continue;
+            }
+            long since = state.autoAt[i] == Long.MIN_VALUE ? Long.MAX_VALUE : now - state.autoAt[i];
+            if (since < com.hex.kagune.control.bikaku.KakujaActs.autoTicks()) {
+                if (!state.autoShut[i] && since >= lands) {
+                    state.autoShut[i] = true;
+                    LivingEntity body = state.autoTarget[i] != 0 && player.m_284548_().m_6815_(state.autoTarget[i]) instanceof LivingEntity target ? target : null;
+                    if (inKakujaReach(player, body, centre, BikakuRules.AUTO_REACH)) {
+                        hurt(player, body, BikakuRules.AUTO_POWER, 2, 0, BikakuRules.AUTO_HEAL, now, false);
+                    }
+                }
+                continue;
+            }
+            if (now < state.autoReadyAt[i] || now < state.nextAutoAt || now % 5L != i % 5L
+                || com.hex.kagune.control.bikaku.KakujaActs.uses(state.move, i, point)) {
+                continue;
+            }
+            if (hostiles == null) {
+                hostiles = new java.util.ArrayList<>(player.m_284548_().m_6443_(LivingEntity.class, box(centre, BikakuRules.AUTO_REACH
+                    + 1.0), living -> hostile(player, living) && inKakujaReach(player, living, centre, BikakuRules.AUTO_REACH)));
+            }
+            LivingEntity best = null;
+            double bestScore = 0.0;
+            for (LivingEntity body : hostiles) {
+                double score = facing(player, i, body);
+                if (best == null || score > bestScore) {
+                    best = body;
+                    bestScore = score;
+                }
+            }
+            if (best == null || bestScore < -0.2) {
+                continue;
+            }
+            state.autoAt[i] = now;
+            state.autoTarget[i] = best.m_19879_();
+            state.autoShut[i] = false;
+            state.autoReadyAt[i] = now + BikakuRules.AUTO_EVERY + 7L * i;
+            state.nextAutoAt = now + BikakuRules.AUTO_GAP;
+            KaguneServerController.playAt(player, centre, HexKaguneSounds.KAGUNE_WHIP, 0.7F, KaguneServerController.vary(player, 0.75F, 0.08F));
+            told = true;
+        }
+        if (told) {
+            BikakuServer.broadcast(player, state);
+        }
+    }
+
+    /** 3.5.7: a body that has come for him (as the Owl's partner judges it): a monster that isn't merely neutral, one hunting him, or what last hurt him. */
+    static boolean hostile(ServerPlayer player, LivingEntity body) {
+        if (body == player || !body.m_6084_()) {
+            return false;
+        }
+        if (player.m_21188_() == body) {
+            return true;
+        }
+        if (body instanceof net.minecraft.world.entity.Mob mob && mob.m_5448_() == player) {
+            return true;
+        }
+        return body instanceof net.minecraft.world.entity.monster.Enemy
+            && (!(body instanceof net.minecraft.world.entity.NeutralMob) || body instanceof net.minecraft.world.entity.Mob mob && mob.m_5448_() != null);
     }
 
     // ---------------------------------------------------------------- the bite and the catch

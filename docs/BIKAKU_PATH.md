@@ -26,6 +26,10 @@ its catch to its own side (`dragSide`). Details: the top of `docs/handoff/compan
 **3.5.6 (the owner: "why not make a bigger angle? it's going too close to the body"):** Predatory Drag's worm swings out in a wide arc
 round his right side (its spots widened, its coils spread from there, its mouth gripping from its own side, wide on the way back).
 
+**3.5.7:** the kakuja's own moves on Z, G, B, C in it (Thousand Jaws, Endless Hunger, Flesh Cataclysm, Undying Abomination) and
+Autonomous Predation (its tentacles biting hostile bodies on their own); its other passives were in since 3.5.4. Previews
+`docs/handoff/bikaku-kakuja-moves-3.5.7.png`, `bikaku-kakuja-undying-3.5.7.png`.
+
 **Before 3.4.9 (the pure worm, unchanged since except as above):**
 
 - `control/bikaku/MawWorm.java`: the worm as a mesh (pure). A thick muscular tube along a spine resampled evenly by length
@@ -272,7 +276,7 @@ After 3.5.3, with the kakuja still unreleased (binding; to be done after the kak
 5. **3.5.4** (Done; the owner: "I quite like the kakuji that you made": `MawKakuja`, the kakuja in `BikakuServer`/`BikakuRenderer`; see `docs/handoff/next-ai-3.5.4.md`): The kakuja: the central mass (4 to 5 blocks, irregular, asymmetric, pulsating, covered in lipped mouths with flat teeth, ref 3)
    with its tentacles, the transformation (the worm swells, more tendrils wrap him, a fused mass swallows him, mouths grow, the
    tentacles burst out), rooted or very slow, and its resistances.
-6. **After the owner's report is fixed (3.5.5: the worm through his own body):** The kakuja's four abilities and its passives (Autonomous Predation bites on their own, at sensible intervals).
+6. **3.5.7** (Done; after the owner's reports, 3.5.5 and 3.5.6: `KakujaActs`, `MawKakuja.Act`, `BikakuMoves` startKakuja/jawsTick/hungerTick/cataclysmTick/autoTick): The kakuja's four abilities and its passives (Autonomous Predation bites on their own, at sensible intervals).
 
 Proposed mastery gates (a judgment call; ask or tell): 0 the worm, M1 and Devouring Maw; 150 Predatory Drag; 300 Ravenous Pursuit;
 450 Carrion Eruption; 600 Monstrous Regeneration; 1000 the kakuja.

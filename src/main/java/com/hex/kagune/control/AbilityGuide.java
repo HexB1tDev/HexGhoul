@@ -185,6 +185,7 @@ public final class AbilityGuide {
         {"Lift · Slam (once a tail holds someone)", "Lift · Slam"},
         {"Reaper's dash: 3 charges, 1 back each 5 s", "Reaper's dash"},
         {"Monstrous Regeneration", "Regeneration"},
+        {"Its tentacles bite on their own", "Bites on its own"},
     };
 
     /**
@@ -489,6 +490,14 @@ public final class AbilityGuide {
         if (in.graftKakuja()) {
             // 3.5.4: in the kakuja (the Input's kakuja flag is the Bikaku kakuja on this path).
             rows.add(row(in, "Tentacle bite (far reach)", BIKAKU_KAKUJA, 0, Key.ATTACK));
+            // 3.5.7: its own four moves on the worm's keys (mastery alone opens them, with it), and its tentacles biting on their own.
+            for (com.hex.kagune.control.bikaku.BikakuMove move : com.hex.kagune.control.bikaku.BikakuMove.values()) {
+                Key key = move.kakuja() ? bikakuKey(move.slot()) : null;
+                if (key != null) {
+                    rows.add(row(in, move.displayName(), TEXT, locked(in.mastery(), move.mastery()), key));
+                }
+            }
+            rows.add(new Row("auto", "Its tentacles bite on their own", TEXT, 0));
             rows.add(new Row("auto", "Rooted · tough · regenerating", TEXT, 0));
             rows.add(new Row(key(in, Key.CYCLE) + " tap", "Turn back", accent, 0));
             away(in, rows);
@@ -497,7 +506,7 @@ public final class AbilityGuide {
         rows.add(row(in, "Bites: Snap · Lunge · Maul", accent, 0, Key.ATTACK));
         // 3.5.0: its moves on the original's kagune keys, each dim with the mastery it needs until then (mastery alone opens them).
         for (com.hex.kagune.control.bikaku.BikakuMove move : com.hex.kagune.control.bikaku.BikakuMove.values()) {
-            Key key = bikakuKey(move.slot());
+            Key key = move.kakuja() ? null : bikakuKey(move.slot());
             if (key != null) {
                 rows.add(row(in, move.displayName(), TEXT, locked(in.mastery(), move.mastery()), key));
             }

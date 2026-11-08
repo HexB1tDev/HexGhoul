@@ -90,6 +90,89 @@ public final class MawKakuja {
         return TENTACLES[i].mouth();
     }
 
+    /** 3.5.7: how much tighter its tentacles curl for each share it is drawn in; how much longer one thrown out straight is than its own length. */
+    static final double SQUEEZE_CURL = 3.0;
+    static final double STRAIGHT_LONGER = 1.15;
+    /** 3.5.7: how high a tentacle thrown out straight ends (it slopes there from its root: it sweeps at a body's height round him). */
+    static final double SWEEP_HEIGHT = 1.1;
+
+    /** 3.5.7: the level way tentacle {@code i} is thrown out straight: out from its middle through its root. */
+    public static double[] sweepWay(int i) {
+        double[] root = TENTACLES[i].root();
+        double[] way = {root[0] - BODY[0] + 0.3 * TENTACLES[i].way()[0], 0.0, root[2] - BODY[2] + 0.3 * TENTACLES[i].way()[2]};
+        double flat = Math.hypot(way[0], way[2]);
+        return flat < 1.0E-6 ? new double[] {1.0, 0.0, 0.0} : new double[] {way[0] / flat, 0.0, way[2] / flat};
+    }
+
+    /** 3.5.7: {@code p} turned round the kakuja's upright middle by {@code turn} (radians, from his right toward ahead). */
+    public static double[] turned(double[] p, double turn) {
+        double c = Math.cos(turn);
+        double sn = Math.sin(turn);
+        double x = p[0] - BODY[0];
+        double z = p[2] - BODY[2];
+        return new double[] {BODY[0] + x * c - z * sn, p[1], BODY[2] + x * sn + z * c};
+    }
+
+    /**
+     * 3.5.7: tentacle {@code i} coiled round what it holds ({@code at}, its middle, body frame), {@code amount} 0 (as it is) .. 1 (wound
+     * round it, Endless Hunger): out from the mass to it and round and round it from its feet to its shoulders, restraining it.
+     */
+    public static double[][] wrapped(int i, double time, double[] at, double amount) {
+        double[][] rest = resample(tentacle(i, time, null, 0.0), WRAP_POINTS);
+        if (amount <= 0.0 || at == null) {
+            return rest;
+        }
+        double[][] coiled = new double[WRAP_POINTS][];
+        int approach = 7;
+        coiled[0] = rest[0];
+        coiled[1] = rest[1];
+        coiled[2] = rest[2];
+        double[] start = GraftMesh.add(at, new double[] {0.0, -WRAP_HIGH, 0.0});
+        double[] from = rest[2];
+        double[] to = GraftMesh.sub(at, start);
+        double startAngle = Math.atan2(from[2] - at[2], from[0] - at[0]);
+        double[] coilStart = {at[0] + Math.cos(startAngle) * WRAP_RADIUS, start[1], at[2] + Math.sin(startAngle) * WRAP_RADIUS};
+        for (int k = 3; k < approach; k++) {
+            double f = (k - 2) / (double)(approach - 2);
+            double[] line = GraftMesh.lerp(from, coilStart, f);
+            line[1] += 1.2 * Math.sin(Math.PI * f);
+            coiled[k] = line;
+        }
+        int turns = WRAP_POINTS - approach;
+        for (int k = 0; k < turns; k++) {
+            double f = k / (double)(turns - 1);
+            double a = startAngle + f * WRAP_TURNS * Math.PI * 2.0 + 0.05 * Math.sin(time * 0.4 + k);
+            double r = WRAP_RADIUS * (1.0 - 0.18 * f) + 0.04 * Math.sin(time * 0.5 + k * 1.7);
+            coiled[approach + k] = new double[] {at[0] + Math.cos(a) * r, start[1] + f * 2.0 * WRAP_HIGH, at[2] + Math.sin(a) * r};
+        }
+        double w = GraftMesh.smooth(GraftMesh.clamp01(amount));
+        double[][] out = new double[WRAP_POINTS][];
+        for (int k = 0; k < WRAP_POINTS; k++) {
+            out[k] = GraftMesh.lerp(rest[k], coiled[k], w);
+        }
+        return out;
+    }
+
+    /** 3.5.7: how many points a coiling tentacle's line has; how far round its catch, how far up and down it winds, how many turns. */
+    static final int WRAP_POINTS = 22;
+    static final double WRAP_RADIUS = 0.62;
+    static final double WRAP_HIGH = 0.8;
+    static final double WRAP_TURNS = 2.6;
+
+    /** {@code line} as {@code count} points along the curve through it (for the tests: a coiling tentacle compared frame to frame). */
+    public static double[][] resampleForTests(double[][] line, int count) {
+        return resample(line, count);
+    }
+
+    /** {@code line} as {@code count} points along the curve through it. */
+    static double[][] resample(double[][] line, int count) {
+        double[][] out = new double[count][];
+        for (int k = 0; k < count; k++) {
+            out[k] = com.hex.kagune.control.ukaku.CentipedeTail.catmullRom(line, k / (double)(count - 1));
+        }
+        return out;
+    }
+
     // ---------------------------------------------------------------- its growth
 
     /**
@@ -140,18 +223,44 @@ public final class MawKakuja {
      * and writhing; lunging ({@code lunge} its target, {@code reach} 0 .. 1 how far into the lunge) its last part pulled straight at it.
      */
     public static double[][] tentacle(int i, double time, double[] lunge, double reach) {
+        return tentacle(i, time, lunge, reach, 1.0, 0.0, 0.0);
+    }
+
+    /**
+     * 3.5.7: as above, the whole kakuja drawn in ({@code squeeze} under 1: each tentacle shorter and curled tighter round it) or burst out
+     * (over 1), the tentacle thrown out straight and level from its root ({@code straight} 0 .. 1: Flesh Cataclysm), all of it turned
+     * round its middle by {@code turn} (radians, + from his right toward ahead: the sweep). ({@code thrown}: how far thrown out straight.)
+     */
+    public static double[][] tentacle(int i, double time, double[] lunge, double reach, double squeeze, double thrown, double turn) {
         Tentacle t = TENTACLES[i];
         int n = 9;
         double[][] points = new double[n][];
-        points[0] = t.root();
+        points[0] = GraftMesh.lerp(BODY, t.root(), squeeze);
         double[] d = GraftMesh.normalize(t.way());
         double[] axis = GraftMesh.normalize(t.curl());
-        double step = t.length() / (n - 1);
+        double tight = squeeze < 1.0 ? 1.0 + (1.0 - squeeze) * SQUEEZE_CURL : 1.0;
+        double step = t.length() * Math.min(1.0, squeeze) / (n - 1);
         for (int k = 1; k < n; k++) {
             double writhe = 0.22 * Math.sin(time * t.rate() * 6.0 + k * 0.9 + i * 1.7);
-            d = GraftMesh.rotate(d, axis, t.bend() / (n - 1) + writhe * 0.35);
+            d = GraftMesh.rotate(d, axis, t.bend() * tight / (n - 1) + writhe * 0.35);
             d = GraftMesh.normalize(GraftMesh.rotate(d, new double[] {0.0, 1.0, 0.0}, 0.09 * Math.sin(time * t.rate() * 4.0 + k * 1.3 + i)));
             points[k] = GraftMesh.add(points[k - 1], GraftMesh.mul(d, step));
+        }
+        if (thrown > 0.0) {
+            // Thrown out straight and level, its full length and more, the way its root faces out of the mass.
+            double[] out = sweepWay(i);
+            double longer = t.length() * STRAIGHT_LONGER / (n - 1);
+            for (int k = 1; k < n; k++) {
+                double[] line = GraftMesh.add(points[0], GraftMesh.mul(out, longer * k));
+                line[1] = points[0][1] + (SWEEP_HEIGHT - points[0][1]) * k / (n - 1.0);
+                line[1] += 0.12 * Math.sin(time * 0.9 + k * 1.3 + i);
+                points[k] = GraftMesh.lerp(points[k], line, thrown);
+            }
+        }
+        if (turn != 0.0) {
+            for (int k = 0; k < n; k++) {
+                points[k] = turned(points[k], turn);
+            }
         }
         if (lunge != null && reach > 0.0) {
             // Thrown at it: its line from its third point pulled straight at the target, the mouth on it.
@@ -246,21 +355,60 @@ public final class MawKakuja {
     // ---------------------------------------------------------------- the mesh
 
     /**
+     * 3.5.7: what the kakuja is doing this frame, over what it always does: drawn in or burst out ({@code squeeze}, 1 as it is), its
+     * tentacles thrown out straight ({@code straight}) and turned round it ({@code turn}, radians), its grins thrown at least
+     * {@code grins} open (-1: as they are), its maw exactly {@code maw} open (-1: as it is), each tentacle's lunge ({@code lunge[i]} its target or null, {@code reach[i]} how far into
+     * it, {@code bite[i]} its mouth, -1 its own), one tentacle coiled round a catch ({@code wrapper}, -1 none, at {@code wrapAt}, by
+     * {@code wrap}), and its flesh mending ({@code mend} 0 .. 1).
+     */
+    public record Act(double squeeze, double straight, double turn, double grins, double maw, double[][] lunge, double[] reach, double[] bite, int wrapper,
+                      double[] wrapAt, double wrap, double mend) {
+        /** Nothing over what it always does. */
+        public static Act still() {
+            int n = TENTACLES.length;
+            double[] none = new double[n];
+            java.util.Arrays.fill(none, -1.0);
+            return new Act(1.0, 0.0, 0.0, -1.0, -1.0, new double[n][], new double[n], none, -1, null, 0.0, 0.0);
+        }
+
+        /** As this, tentacle {@code i} lunging at {@code target}, {@code reach} into it, its mouth {@code bite}. */
+        public Act lunging(int i, double[] target, double reach, double bite) {
+            double[][] lunges = this.lunge.clone();
+            double[] reaches = this.reach.clone();
+            double[] bites = this.bite.clone();
+            lunges[i] = target;
+            reaches[i] = reach;
+            bites[i] = bite;
+            return new Act(this.squeeze, this.straight, this.turn, this.grins, this.maw, lunges, reaches, bites, this.wrapper, this.wrapAt, this.wrap, this.mend);
+        }
+    }
+
+    /**
      * The kakuja into {@code sink} (body frame) as grown ({@code growth}), {@code time} ticks into the world, {@code seed} his, in
      * {@code tint}; {@code biter} the tentacle lunging ({@code -1} none) at {@code lunge} ({@code reach} how far into its lunge, its mouth
      * {@code bite} open).
      */
     public static void build(UkakuModel.Sink sink, Growth growth, double time, int seed, int tint, boolean fine, int biter, double[] lunge, double reach,
                              double bite) {
+        Act act = Act.still();
+        if (biter >= 0 && lunge != null) {
+            act = act.lunging(biter, lunge, reach, bite);
+        }
+        build(sink, growth, time, seed, tint, fine, act);
+    }
+
+    /** 3.5.7: the kakuja into {@code sink} as grown, doing {@code act}. */
+    public static void build(UkakuModel.Sink sink, Growth growth, double time, int seed, int tint, boolean fine, Act act) {
         UkakuModel.Sink flesh = (a, b, c, d, n, ca, cb, cc, cd) -> sink.quad(a, b, c, d, n, KaguneTint.recolour(ca, tint), KaguneTint.recolour(cb, tint),
             KaguneTint.recolour(cc, tint), KaguneTint.recolour(cd, tint));
-        // Its body: the lumps, each breathing.
+        double squeeze = act.squeeze();
+        // Its body: the lumps, each breathing (3.5.7: drawn in toward its middle, or burst out).
         for (int i = 0; i < LUMPS.length; i++) {
             double grown = growth.lumps()[i];
             if (grown <= 0.002) {
                 continue;
             }
-            Lump lump = place(LUMPS[i], grown);
+            Lump lump = squeezed(place(LUMPS[i], grown), squeeze);
             double breathe = 1.0 + 0.055 * Math.sin(time * 0.12 + i * 1.9) + 0.02 * Math.sin(time * 0.31 + i);
             double k = grown * breathe;
             GraftMesh.blob(flesh, lump.centre(), new double[] {1.0, 0.0, 0.0}, new double[] {0.0, 1.0, 0.0}, new double[] {0.0, 0.0, 1.0},
@@ -276,11 +424,14 @@ public final class MawKakuja {
                 if (lumpGrown <= 0.05) {
                     continue;
                 }
-                grin(sink, flesh, grin, lumpGrown, growth.mouths(), grinOpen(i, time), fine);
+                double open = act.grins() >= 0.0 ? Math.max(grinOpen(i, time), act.grins()) : grinOpen(i, time);
+                grin(sink, flesh, grin, lumpGrown, growth.mouths(), open, fine, squeeze);
             }
-            double[][] maw = {MAW_ROOT, GraftMesh.lerp(MAW_ROOT, MAW_HEAD, 0.55), MAW_HEAD};
-            MawWorm.build(sink, new MawWorm.Pose(maw, new double[] {0.0, 1.0, 0.0}, growth.mouths(), mawOpen(time), MAW_GIRTH * growth.mouths(), seed + 5,
-                time), tint, fine);
+            double[] mawRoot = squeezedPoint(MAW_ROOT, squeeze);
+            double[] mawHead = squeezedPoint(MAW_HEAD, squeeze);
+            double[][] maw = {mawRoot, GraftMesh.lerp(mawRoot, mawHead, 0.55), mawHead};
+            MawWorm.build(sink, new MawWorm.Pose(maw, new double[] {0.0, 1.0, 0.0}, growth.mouths(), act.maw() >= 0.0 ? act.maw() : mawOpen(time),
+                MAW_GIRTH * growth.mouths(), seed + 5, time), tint, fine);
         }
         // Growing into it: thinner tendrils out of his back wrapping round him, before the mass swallows them.
         if (growth.wrap() > 0.002) {
@@ -291,18 +442,153 @@ public final class MawKakuja {
             }
         }
         // Its tentacles, bursting out.
+        java.util.List<double[][]> mending = new java.util.ArrayList<>();
+        java.util.List<Double> mendRadii = new java.util.ArrayList<>();
         if (growth.tentacles() > 0.002) {
             for (int i = 0; i < TENTACLES.length; i++) {
                 Tentacle t = TENTACLES[i];
-                boolean lunging = i == biter && lunge != null;
-                double[][] line = tentacle(i, time, lunging ? lunge : null, lunging ? reach : 0.0);
+                boolean lunging = act.lunge()[i] != null && act.reach()[i] > 0.0;
+                double[][] line = i == act.wrapper() && act.wrap() > 0.0 ? wrapped(i, time, act.wrapAt(), act.wrap())
+                    : tentacle(i, time, lunging ? act.lunge()[i] : null, lunging ? act.reach()[i] : 0.0, squeeze, act.straight(), act.turn());
                 double shown = Math.min(1.0, growth.tentacles());
                 line = MawMotion.grown(line, shown);
-                double open = lunging ? bite : 0.12 + 0.5 * Math.pow(Math.max(0.0, Math.sin(time * 0.06 + i * 2.3)), 4.0);
+                double own = 0.12 + 0.5 * Math.pow(Math.max(0.0, Math.sin(time * 0.06 + i * 2.3)), 4.0);
+                double open = act.bite()[i] >= 0.0 ? act.bite()[i] : act.grins() >= 0.0 ? Math.max(own, act.grins()) : own;
                 MawWorm.build(sink, new MawWorm.Pose(line, new double[] {0.0, 1.0, 0.0}, shown, open, t.girth() * Math.max(0.3, growth.tentacles()),
                     seed + 61 * (i + 1), time), tint, fine, t.mouth());
+                if (act.mend() > 0.002) {
+                    tentacleMending(mending, mendRadii, line, t.girth(), time, i, act.mend());
+                }
             }
         }
+        // 3.5.7, Undying Abomination: strands of new flesh crawling over its lumps and down its tentacles, knitting them.
+        if (act.mend() > 0.002) {
+            for (int i = 0; i < LUMPS.length; i++) {
+                if (growth.lumps()[i] > 0.05) {
+                    lumpMending(mending, mendRadii, squeezed(place(LUMPS[i], growth.lumps()[i]), squeeze), time, i, act.mend());
+                }
+            }
+            mendStrands(sink, mending, mendRadii, tint, time);
+        }
+    }
+
+    /**
+     * 3.5.7: Undying Abomination's strands into {@code sink}: a tube of new, lighter flesh, swelling toward its growing end, a thick thread
+     * of RC glowing along it, its growing end glowing hottest (made to show on the mass, where {@link MawTissue}'s darker strands did not).
+     */
+    private static void mendStrands(UkakuModel.Sink sink, java.util.List<double[][]> placed, java.util.List<Double> radii, int tint, double time) {
+        UkakuModel.Sink flesh = (a, b, c, d, n, ca, cb, cc, cd) -> sink.quad(a, b, c, d, n, KaguneTint.recolour(ca, tint), KaguneTint.recolour(cb, tint),
+            KaguneTint.recolour(cc, tint), KaguneTint.recolour(cd, tint));
+        for (int k = 0; k < placed.size(); k++) {
+            double[][] points = placed.get(k);
+            double radius = radii.get(k);
+            if (points.length < 2 || radius <= 1.0E-4) {
+                continue;
+            }
+            com.hex.kagune.control.ukaku.KakujaModel.Spine spine = MawWorm.spine(points,
+                GraftMesh.perpendicular(GraftMesh.normalize(GraftMesh.sub(points[points.length - 1], points[0]))), 16);
+            if (spine.length() < 0.02) {
+                continue;
+            }
+            GraftMesh.tube(flesh, spine, 0.0, 1.0, 16, 6, new GraftMesh.Surface() {
+                @Override
+                public double radius(double s, double a) {
+                    return radius * (0.45 + 0.55 * Math.sin(Math.PI * Math.min(1.0, s * 1.1)));
+                }
+
+                @Override
+                public int colour(double s, double a) {
+                    return GraftMesh.mix(MawWorm.LIP, MawWorm.FLESH_LIGHT, 0.4 + 0.6 * s);
+                }
+            }, 1.0);
+            double[][] prev = null;
+            int prevColour = 0;
+            for (int i = 0; i <= 12; i++) {
+                double s = i / 12.0;
+                double[][] f = spine.at(s);
+                double w = radius * 0.75;
+                double[] centre = GraftMesh.add(f[0], GraftMesh.mul(f[2], radius * 0.85));
+                double[][] edge = {GraftMesh.sub(centre, GraftMesh.mul(f[3], w)), GraftMesh.add(centre, GraftMesh.mul(f[3], w))};
+                double pulse = 0.6 + 0.4 * Math.sin(time * 0.5 - s * 6.0 + k);
+                int colour = KaguneTint.recolour(GraftMesh.argb(GraftMesh.mix(MawWorm.VEIN, MawWorm.VEIN_HOT, Math.min(1.0, s * s * pulse + 0.25)), 1.0), tint);
+                if (prev != null) {
+                    GraftMesh.glow(sink, prev[0], edge[0], edge[1], prev[1], prevColour, colour, colour, prevColour);
+                }
+                prev = edge;
+                prevColour = colour;
+            }
+        }
+    }
+
+    /** 3.5.7: lump {@code lump} drawn in toward its middle ({@code squeeze} under 1) or burst out (over 1). */
+    static Lump squeezed(Lump lump, double squeeze) {
+        if (squeeze == 1.0) {
+            return lump;
+        }
+        double size = 1.0 + (squeeze - 1.0) * 0.45;
+        return new Lump(squeezedPoint(lump.centre(), squeeze), new double[] {lump.radii()[0] * size, lump.radii()[1] * size, lump.radii()[2] * size},
+            lump.seed());
+    }
+
+    /** 3.5.7: a point of its body drawn in toward its middle by {@code squeeze}. */
+    static double[] squeezedPoint(double[] p, double squeeze) {
+        return squeeze == 1.0 ? p : GraftMesh.lerp(BODY, p, squeeze);
+    }
+
+    /** 3.5.7: how many mending strands crawl over each lump; how thick they are. */
+    static final int MEND_STRANDS = 6;
+    static final double MEND_RADIUS = 0.14;
+
+    /** 3.5.7: strands of new flesh crawling over a lump: each a spiral laid on its skin, growing along over its time and starting again. */
+    private static void lumpMending(java.util.List<double[][]> out, java.util.List<Double> radii, Lump lump, double time, int index, double mend) {
+        for (int k = 0; k < MEND_STRANDS; k++) {
+            double cycle = (time * 0.045 + GraftMesh.hash(index * 17 + k * 5) ) % 1.0;
+            double grown = GraftMesh.smooth(GraftMesh.clamp01(cycle * 1.6)) * mend;
+            if (grown <= 0.02) {
+                continue;
+            }
+            double a0 = Math.PI * 2.0 * GraftMesh.hash(index * 31 + k * 7);
+            double tilt = 0.5 + 0.8 * GraftMesh.hash(index * 13 + k);
+            int n = 14;
+            double[][] line = new double[n][];
+            for (int j = 0; j < n; j++) {
+                double u = j / (n - 1.0) * grown;
+                double a = a0 + u * Math.PI * 2.2;
+                double y = -0.75 + 1.5 * u * tilt;
+                double ring = Math.sqrt(Math.max(0.05, 1.0 - y * y));
+                line[j] = new double[] {lump.centre()[0] + Math.cos(a) * ring * lump.radii()[0] * 1.04, lump.centre()[1] + y * lump.radii()[1] * 1.04,
+                    lump.centre()[2] + Math.sin(a) * ring * lump.radii()[2] * 1.04};
+            }
+            out.add(line);
+            radii.add(MEND_RADIUS * (0.6 + 0.4 * mend));
+        }
+    }
+
+    /** 3.5.7: a strand of new flesh winding down a tentacle from its root, crawling out along it. */
+    private static void tentacleMending(java.util.List<double[][]> out, java.util.List<Double> radii, double[][] line, double girth, double time, int i,
+                                        double mend) {
+        if (line.length < 3) {
+            return;
+        }
+        double cycle = (time * 0.05 + 0.37 * i) % 1.0;
+        double grown = GraftMesh.smooth(GraftMesh.clamp01(cycle * 1.5)) * mend;
+        if (grown <= 0.02) {
+            return;
+        }
+        KakujaModelSpine spine = new KakujaModelSpine(MawWorm.spine(line, new double[] {0.0, 1.0, 0.0}, 24));
+        int n = 16;
+        double[][] strand = new double[n][];
+        double r = MawWorm.BODY_RADIUS * girth * 1.05;
+        for (int j = 0; j < n; j++) {
+            double s = 0.05 + 0.75 * grown * j / (n - 1.0);
+            strand[j] = GraftMesh.onSurface(spine.spine, s, j * 0.9 + i, r)[0];
+        }
+        out.add(strand);
+        radii.add(MEND_RADIUS * girth * 0.55);
+    }
+
+    /** A spine held for {@link #tentacleMending}. */
+    private record KakujaModelSpine(com.hex.kagune.control.ukaku.KakujaModel.Spine spine) {
     }
 
     /** Lump {@code lump} as far as it has grown: swelling out of his middle to its own place (and back into it). */
@@ -354,8 +640,9 @@ public final class MawKakuja {
      * A grinning mouth on a lump: thick lips round a wide opening ({@code open} 0 a clenched grin .. 1 thrown open), a row of big flat teeth
      * along each lip, a dark mouth behind them.
      */
-    private static void grin(UkakuModel.Sink sink, UkakuModel.Sink flesh, Grin grin, double lumpGrown, double grown, double open, boolean fine) {
-        Lump lump = place(LUMPS[grin.lump()], lumpGrown);
+    private static void grin(UkakuModel.Sink sink, UkakuModel.Sink flesh, Grin grin, double lumpGrown, double grown, double open, boolean fine,
+                             double squeeze) {
+        Lump lump = squeezed(place(LUMPS[grin.lump()], lumpGrown), squeeze);
         double[] w = GraftMesh.normalize(grin.way());
         double[] r = {lump.radii()[0] * lumpGrown, lump.radii()[1] * lumpGrown, lump.radii()[2] * lumpGrown};
         double[] at = GraftMesh.add(lump.centre(), new double[] {w[0] * r[0], w[1] * r[1], w[2] * r[2]});

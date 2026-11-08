@@ -28,6 +28,7 @@ public final class BikakuTests {
         guide();
         moves();
         regeneration();
+        kakujaMoves();
         System.out.println("Bikaku tests: " + passed + " checks passed");
     }
 
@@ -127,13 +128,17 @@ public final class BikakuTests {
     /** 3.5.0: the moves on their keys, opened by mastery alone, each landing partway through, cooling down longer than it lasts. */
     private static void moves() {
         java.util.Set<com.hex.kagune.control.bikaku.BikakuMove.Slot> slots = java.util.EnumSet.noneOf(com.hex.kagune.control.bikaku.BikakuMove.Slot.class);
+        java.util.Set<com.hex.kagune.control.bikaku.BikakuMove.Slot> kakujaSlots = java.util.EnumSet.noneOf(com.hex.kagune.control.bikaku.BikakuMove.Slot.class);
         for (com.hex.kagune.control.bikaku.BikakuMove move : com.hex.kagune.control.bikaku.BikakuMove.values()) {
             check(com.hex.kagune.control.bikaku.BikakuMove.byOrdinal(move.ordinal()) == move, "each move reads back");
             if (move == com.hex.kagune.control.bikaku.BikakuMove.NONE) {
                 continue;
             }
-            check(slots.add(move.slot()) && move.slot() != com.hex.kagune.control.bikaku.BikakuMove.Slot.NONE, move + " has its own key");
-            check(com.hex.kagune.control.bikaku.BikakuMove.of(move.slot()) == move, move + " is what its key does");
+            // 3.5.7: the worm's moves each on its own key; the kakuja's on the same keys, each its own among them.
+            check((move.kakuja() ? kakujaSlots : slots).add(move.slot()) && move.slot() != com.hex.kagune.control.bikaku.BikakuMove.Slot.NONE,
+                move + " has its own key");
+            check(com.hex.kagune.control.bikaku.BikakuMove.of(move.slot(), move.kakuja()) == move, move + " is what its key does");
+            check(move.kakuja() || com.hex.kagune.control.bikaku.BikakuMove.of(move.slot()) == move, move + " is what its key does out of the kakuja");
             check(move.land() > 0 && move.land() < move.missedTicks() && move.missedTicks() <= move.ticks(), move + " bites partway through");
             check(move.cooldown() > move.ticks() && move.cost() > 0.0F, move + " cools down longer than it lasts, and costs RC");
             check(!move.unlocked(move.mastery() - 1) && move.unlocked(move.mastery()) && move.unlocked(1000), move + " opens at its mastery");
@@ -226,5 +231,64 @@ public final class BikakuTests {
         check(finite && onSkin, "every strand lies just off its part's skin (on an arm or leg, near its joint)");
         check(most >= 12, "many strands crawl over him (" + most + ")");
         check(com.hex.kagune.control.bikaku.MawTissue.strands(40, regen.ticks() + 5, 7).isEmpty(), "none once it is over");
+    }
+
+    /**
+     * 3.5.7, the kakuja's own moves (the owner's spec; mastery alone opens them, with the kakuja): Thousand Jaws, Endless Hunger, Flesh
+     * Cataclysm and Undying Abomination on the worm's Z, G, B and C in it; nothing else in it; Undying Abomination alongside the rest;
+     * the board shows them in the kakuja only, with its tentacles biting on their own; its numbers hang together.
+     */
+    private static void kakujaMoves() {
+        com.hex.kagune.control.bikaku.BikakuMove[] own = {com.hex.kagune.control.bikaku.BikakuMove.JAWS, com.hex.kagune.control.bikaku.BikakuMove.HUNGER,
+            com.hex.kagune.control.bikaku.BikakuMove.CATACLYSM, com.hex.kagune.control.bikaku.BikakuMove.UNDYING};
+        com.hex.kagune.control.bikaku.BikakuMove.Slot[] on = {com.hex.kagune.control.bikaku.BikakuMove.Slot.Z, com.hex.kagune.control.bikaku.BikakuMove.Slot.G,
+            com.hex.kagune.control.bikaku.BikakuMove.Slot.B, com.hex.kagune.control.bikaku.BikakuMove.Slot.C};
+        int kakujaMoves = 0;
+        for (com.hex.kagune.control.bikaku.BikakuMove move : com.hex.kagune.control.bikaku.BikakuMove.values()) {
+            kakujaMoves += move.kakuja() ? 1 : 0;
+        }
+        check(kakujaMoves == 4, "the kakuja has four moves of its own");
+        for (int i = 0; i < own.length; i++) {
+            check(own[i].kakuja() && own[i].slot() == on[i] && com.hex.kagune.control.bikaku.BikakuMove.of(on[i], true) == own[i], own[i] + " on its key in the kakuja");
+            check(com.hex.kagune.control.bikaku.BikakuMove.of(on[i]) != own[i], own[i] + " not out of it");
+            check(own[i].mastery() == BikakuRules.KAKUJA && !own[i].unlocked(BikakuRules.KAKUJA - 1) && own[i].unlocked(BikakuRules.KAKUJA),
+                own[i] + " opens by mastery alone, with the kakuja");
+        }
+        check(com.hex.kagune.control.bikaku.BikakuMove.of(com.hex.kagune.control.bikaku.BikakuMove.Slot.J, true) == com.hex.kagune.control.bikaku.BikakuMove.NONE,
+            "nothing on J in the kakuja");
+        check(!com.hex.kagune.control.bikaku.BikakuMove.UNDYING.occupies() && com.hex.kagune.control.bikaku.BikakuMove.JAWS.occupies()
+            && com.hex.kagune.control.bikaku.BikakuMove.HUNGER.grabs() && com.hex.kagune.control.bikaku.BikakuMove.CATACLYSM.occupies(),
+            "Undying Abomination runs alongside; the others take its tentacles; Endless Hunger holds what it catches");
+        // The board.
+        Map<AbilityGuide.Key, String> keys = new EnumMap<>(AbilityGuide.Key.class);
+        for (AbilityGuide.Key key : AbilityGuide.Key.values()) {
+            keys.put(key, key == AbilityGuide.Key.ATTACK ? "LMB" : key.name());
+        }
+        AbilityGuide.Panel in = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.BIKAKU, AbilityGuide.State.OUT, 1000,
+            com.hex.kagune.gameplay.KaguneForm.RINKAKU_SEED, com.hex.kagune.control.ukaku.WingForm.TWIN, false, keys, false, null, true, null, false));
+        AbilityGuide.Panel out = AbilityGuide.panel(new AbilityGuide.Input(KagunePath.BIKAKU, AbilityGuide.State.OUT, 1000,
+            com.hex.kagune.gameplay.KaguneForm.RINKAKU_SEED, com.hex.kagune.control.ukaku.WingForm.TWIN, false, keys, false, null, false, null, false));
+        String[] boardKeys = {"RAPID", "GRAB", "SLAM", "GUARD"};
+        for (int i = 0; i < own.length; i++) {
+            String name = own[i].displayName();
+            String key = boardKeys[i];
+            check(in.title().equals("KAKUJA") && in.rows().stream().anyMatch(r -> r.name().equals(name) && r.keys().equals(key) && !r.locked()),
+                "in the kakuja the board shows " + name + " on " + key);
+            check(out.rows().stream().noneMatch(r -> r.name().equals(name)), "the worm's board doesn't show " + name);
+        }
+        check(in.rows().stream().anyMatch(r -> r.name().equals("Its tentacles bite on their own")), "the kakuja's board shows its tentacles biting on their own");
+        check(AbilityGuide.brief("Its tentacles bite on their own", "auto").equals("Bites on its own") && AbilityGuide.brief("Undying Abomination", "GUARD")
+            .equals("Undying Abomination"), "in brief, a word or two");
+        // Its numbers.
+        check(BikakuRules.UNDYING_TAKEN < 1.0F && BikakuRules.KAKUJA_TAKEN * BikakuRules.UNDYING_TAKEN < 0.3F, "Undying Abomination takes still less");
+        check(BikakuRules.UNDYING_EVERY < BikakuRules.KAKUJA_REGEN_EVERY && BikakuRules.UNDYING_SLOW_EVERY > BikakuRules.UNDYING_EVERY
+            && BikakuRules.UNDYING_SLOWED < com.hex.kagune.control.bikaku.BikakuMove.UNDYING.ticks(), "it heals far faster; a heavy blow only slows it, a while");
+        check(BikakuRules.AUTO_EVERY > com.hex.kagune.control.bikaku.KakujaActs.autoTicks() && BikakuRules.AUTO_GAP > 0 && BikakuRules.AUTO_REACH <= BikakuRules.KAKUJA_REACH,
+            "its bites of its own come at sensible intervals, within its reach");
+        check(BikakuRules.CATA_POWER > BikakuRules.CATA_NEAR_POWER && BikakuRules.HUNGER_CRUSH_POWER > BikakuRules.HUNGER_POWER
+            && BikakuRules.JAWS_POWER < BikakuRules.HUNGER_POWER, "the sweep and the crush hit hardest; Thousand Jaws' many bites each lightly");
+        for (com.hex.kagune.control.bikaku.BikakuMove move : own) {
+            check(move.cooldown() >= 300 && move.cost() >= 10.0F, move + " cools down long and costs RC");
+        }
     }
 }

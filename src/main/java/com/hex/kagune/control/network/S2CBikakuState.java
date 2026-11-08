@@ -12,13 +12,15 @@ import net.minecraftforge.network.NetworkEvent;
  * ({@code BikakuRules.Bite} ordinal, 0 none) and the game tick it began, where it is thrown (a point in the world: the target's middle when
  * it began, or the air ahead), and the body it goes after (an entity id, 0 none: the clients follow it as it moves). 3.5.0: and the move
  * it is making ({@code BikakuMove} ordinal, 0 none), the tick it began, its point (the world), the bodies it goes after ({@link #TARGETS},
- * 0 none), the body it holds (0 none: missed, or let go) and whether its bite caught anything; 3.5.3: when Monstrous Regeneration last began; 3.5.4: whether it is in the kakuja and when it last went in or out. Every client draws the worm from these alone.
+ * 0 none), the body it holds (0 none: missed, or let go) and whether its bite caught anything; 3.5.3: when Monstrous Regeneration last began; 3.5.4: whether it is in the kakuja and when it last went in or out. 3.5.7: {@link #TARGETS} is one body for each of the kakuja's tentacles (Thousand Jaws; Ravenous Pursuit uses the first three); when Undying Abomination last began; for each tentacle, when its last bite of its own began (Autonomous Predation) and the body it went after. Every client draws the worm from these alone.
  */
 public record S2CBikakuState(UUID playerId, int bite, long startedAt, double x, double y, double z, int targetId, int move, long moveAt,
                              double mx, double my, double mz, int[] targets, int heldId, boolean caught, long regenAt,
-                             boolean kakuja, long kakujaAt) {
-    /** How many bodies a move can go after at once. */
-    public static final int TARGETS = 3;
+                             boolean kakuja, long kakujaAt, long undyingAt, long[] autoAt, int[] autoTarget) {
+    /** How many bodies a move can go after at once (3.5.7: one for each of the kakuja's tentacles). */
+    public static final int TARGETS = 6;
+    /** 3.5.7: how many of the kakuja's tentacles can bite on their own (one entry each). */
+    public static final int AUTOS = 6;
 
     public static void encode(S2CBikakuState message, FriendlyByteBuf buffer) {
         buffer.m_130077_(message.playerId);
@@ -41,6 +43,11 @@ public record S2CBikakuState(UUID playerId, int bite, long startedAt, double x, 
         buffer.m_130103_(message.regenAt);
         buffer.writeBoolean(message.kakuja);
         buffer.m_130103_(message.kakujaAt);
+        buffer.m_130103_(message.undyingAt);
+        for (int i = 0; i < AUTOS; i++) {
+            buffer.m_130103_(message.autoAt != null && i < message.autoAt.length ? message.autoAt[i] : Long.MIN_VALUE);
+            buffer.writeInt(message.autoTarget != null && i < message.autoTarget.length ? message.autoTarget[i] : 0);
+        }
     }
 
     public static S2CBikakuState decode(FriendlyByteBuf buffer) {
@@ -64,8 +71,16 @@ public record S2CBikakuState(UUID playerId, int bite, long startedAt, double x, 
         boolean caught = buffer.readBoolean();
         long regenAt = buffer.m_130258_();
         boolean kakuja = buffer.readBoolean();
-        return new S2CBikakuState(id, bite, startedAt, x, y, z, targetId, move, moveAt, mx, my, mz, targets, heldId, caught, regenAt, kakuja,
-            buffer.m_130258_());
+        long kakujaAt = buffer.m_130258_();
+        long undyingAt = buffer.m_130258_();
+        long[] autoAt = new long[AUTOS];
+        int[] autoTarget = new int[AUTOS];
+        for (int i = 0; i < AUTOS; i++) {
+            autoAt[i] = buffer.m_130258_();
+            autoTarget[i] = buffer.readInt();
+        }
+        return new S2CBikakuState(id, bite, startedAt, x, y, z, targetId, move, moveAt, mx, my, mz, targets, heldId, caught, regenAt, kakuja, kakujaAt,
+            undyingAt, autoAt, autoTarget);
     }
 
     public static void handle(S2CBikakuState message, Supplier<NetworkEvent.Context> supplier) {
