@@ -141,15 +141,20 @@ public final class WarHoldFx {
                     AbstractClientPlayer who = WarPathFx.player(level, owner);
                     double[] from = {data[0], data[1], data[2]};
                     double[] hand = from;
-                    // 3.2.8: in his own first person the arm it leaves is drawn in the hand pass (KingFirstPerson.spireArm), out at the
-                    // left hand's place, about where the server sends it from: straight on from there, never bent back to the body's
-                    // hand under the eyes.
-                    if (who != null && !ownFirstPerson(who)) {
+                    Vec3 camera = minecraft.f_91063_.m_109153_().m_90583_();
+                    if (who != null && ownFirstPerson(who)) {
+                        // 3.4.5 (the owner: "It detaches from your hand if you move"): in his own first person it leaves the fist the hand
+                        // pass draws (KingFirstPerson.spireArm), found again every frame from his eyes and his look; 3.2.8 left it on the
+                        // server's spot, so walking off left the mass hanging where it set out.
+                        double[] ends = spireEnds(who);
+                        double yaw = who.f_19859_ + (who.m_146908_() - who.f_19859_) * partial;
+                        double pitch = who.f_19860_ + (who.m_146909_() - who.f_19860_) * partial;
+                        hand = SpireArm.fist(new double[] {camera.f_82479_, camera.f_82480_, camera.f_82481_}, yaw, pitch, SpireArm.thrust(age, ends[0], ends[1]));
+                    } else if (who != null) {
                         RigPose pose = KaguneBodyAnimation.current(who, partial);
                         hand = new Body(who, partial, pose == null ? new RigPose() : pose).at("leftArm", WarHoldModel.HAND);
                     }
                     double front = WarRules.spireFront(age, data[6], data[8]);
-                    Vec3 camera = minecraft.f_91063_.m_109153_().m_90583_();
                     double mx = data[0] + data[3] * front * 0.5 - camera.f_82479_;
                     double my = data[1] + data[4] * front * 0.5 - camera.f_82480_;
                     double mz = data[2] + data[5] * front * 0.5 - camera.f_82481_;

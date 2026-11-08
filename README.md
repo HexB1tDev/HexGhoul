@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.4.5 (HexGhoul): Fix: the Spire Wave stays on your hand (testing)
+
+See `.github/release-notes-3.4.5.md`. Fix (the owner's report): War's Spire Wave came loose from your hand in first person when you moved. 3.2.8 started the mass at the spot it set out from. It now starts at the fist you see, found again every frame from your eyes and look, so it stays on your hand as you move and turn. Not tested in game.
+
 ## 3.4.4 (HexGhoul): Fix: a crystal forming sounds like crystal (testing)
 
 See `.github/release-notes-3.4.4.md`. Fix (the owner: 3.3.5's crystal forming sounds were bad): a crystal forming is now a rubbed wine glass singing (three swells) or a small bell's ring. These are real CC0 freesound recordings by ani_music and AlaskaRobotics, from Sonic Pi's sample library, used as recorded. A crystal's hit and shatter are unchanged. Not tested in game.

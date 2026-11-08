@@ -69,6 +69,7 @@ public final class KingTests {
         peaceBlades();
         aegisGrown();
         spireFirstPerson();
+        spireAttached();
         peaceArms();
         cloth();
         coming();
@@ -600,6 +601,54 @@ public final class KingTests {
      * centipedes stay round it, out of the middle of the view and off the eyes; let go, the mass comes out of the fist as a cone and
      * never comes near the eyes; third person is drawn as before.
      */
+    /**
+     * 3.4.5 (the owner: "Spirewave now is kind of bugged. It detaches from your hand if you move. Like, before it was fine"): as he sees it
+     * himself, the mass leaves the fist the hand pass draws, found from his eyes and look every frame, so it goes where he goes and turns
+     * as he turns; the server's spot (where it set out) is only where its path runs from.
+     */
+    private static void spireAttached() {
+        double[] eye = {10.0, 70.0, -4.0};
+        boolean front = true;
+        boolean follows = true;
+        boolean turns = true;
+        for (double yaw = -180.0; yaw < 180.0; yaw += 30.0) {
+            for (double pitch = -60.0; pitch <= 60.0; pitch += 30.0) {
+                for (double thrust = 0.0; thrust <= 1.0; thrust += 0.5) {
+                    double[] fist = com.hex.kagune.control.king.SpireArm.fist(eye, yaw, pitch, thrust);
+                    double y = Math.toRadians(yaw);
+                    double p = Math.toRadians(pitch);
+                    double[] look = {-Math.sin(y) * Math.cos(p), -Math.sin(p), Math.cos(y) * Math.cos(p)};
+                    double[] right = {-Math.cos(y), 0.0, -Math.sin(y)};
+                    double[] d = {fist[0] - eye[0], fist[1] - eye[1], fist[2] - eye[2]};
+                    double ahead = d[0] * look[0] + d[1] * look[1] + d[2] * look[2];
+                    double side = d[0] * right[0] + d[2] * right[2];
+                    front &= ahead > 0.35 && side < 0.0 && Math.sqrt(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]) < 2.0;
+                    // Walked three blocks and stepped up one: the fist with him, exactly.
+                    double[] moved = com.hex.kagune.control.king.SpireArm.fist(new double[] {eye[0] + 3.0, eye[1] + 1.0, eye[2] - 2.0}, yaw, pitch, thrust);
+                    follows &= Math.abs(moved[0] - fist[0] - 3.0) < 1.0E-9 && Math.abs(moved[1] - fist[1] - 1.0) < 1.0E-9 && Math.abs(moved[2] - fist[2] + 2.0) < 1.0E-9;
+                    // Turned: the same distance from the eyes, somewhere else.
+                    double[] turned = com.hex.kagune.control.king.SpireArm.fist(eye, yaw + 90.0, pitch, thrust);
+                    double[] t = {turned[0] - eye[0], turned[1] - eye[1], turned[2] - eye[2]};
+                    turns &= Math.abs(Math.sqrt(t[0] * t[0] + t[1] * t[1] + t[2] * t[2]) - Math.sqrt(d[0] * d[0] + d[1] * d[1] + d[2] * d[2])) < 1.0E-9
+                        && Math.abs(turned[0] - fist[0]) + Math.abs(turned[2] - fist[2]) > 0.2;
+                }
+            }
+        }
+        check(front, "his fist is ahead of his eyes, to the left, within reach, whichever way he looks");
+        check(follows, "walking and climbing, the fist goes with him exactly");
+        check(turns, "turning, the fist turns with him");
+        // The mass leaves that fist, however far he has walked from where it set out.
+        double[] from = {0.0, 64.0, 0.0};
+        double[] fist = com.hex.kagune.control.king.SpireArm.fist(new double[] {6.0, 65.6, 4.0}, 0.0, 0.0, 0.8);
+        boolean leaves = true;
+        for (com.hex.kagune.control.king.WarHoldModel.Arm arm : com.hex.kagune.control.king.WarHoldModel.mass(from, new double[] {0.0, 0.0, 1.0}, fist, 8.0, 1.2,
+            0.6, 1.0, 6, 3, 6.0, 100.0, com.hex.kagune.control.king.SpireArm.NEAR)) {
+            double[] first = arm.path()[0];
+            leaves &= Math.abs(first[0] - fist[0]) + Math.abs(first[1] - fist[1]) + Math.abs(first[2] - fist[2]) < 1.0E-6;
+        }
+        check(leaves, "every centipede of the mass starts at his fist, not where it set out");
+    }
+
     private static void spireFirstPerson() {
         double tanV = Math.tan(Math.toRadians(35.0));
         double tanH = tanV * 16.0 / 9.0;

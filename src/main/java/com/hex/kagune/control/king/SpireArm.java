@@ -115,6 +115,30 @@ public final class SpireArm {
         return q;
     }
 
+    /**
+     * 3.4.5 (the owner: "Spirewave now is kind of bugged. It detaches from your hand if you move"): {@code p}, a point in the hand pass's
+     * frame (+x right, +y up, -z ahead), carried out into the world from the eyes at {@code eye} looking {@code yaw}, {@code pitch}
+     * (Minecraft's degrees: yaw 0 south, pitch down positive). The hand pass draws in the camera's frame, so this is where its arm is.
+     */
+    public static double[] toWorld(double[] eye, double yaw, double pitch, double[] p) {
+        double y = Math.toRadians(yaw);
+        double x = Math.toRadians(pitch);
+        double[] f = {-Math.sin(y) * Math.cos(x), -Math.sin(x), Math.cos(y) * Math.cos(x)};
+        double[] r = {-Math.cos(y), 0.0, -Math.sin(y)};
+        double[] u = {r[1] * f[2] - r[2] * f[1], r[2] * f[0] - r[0] * f[2], r[0] * f[1] - r[1] * f[0]};
+        return new double[] {eye[0] + r[0] * p[0] + u[0] * p[1] - f[0] * p[2], eye[1] + r[1] * p[0] + u[1] * p[1] - f[1] * p[2],
+            eye[2] + r[2] * p[0] + u[2] * p[1] - f[2] * p[2]};
+    }
+
+    /**
+     * 3.4.5: the fist of the arm the hand pass draws ({@link #coilFrame} at full charge, {@code thrust} out; the coils' {@link #hand} end)
+     * in the world this frame, from the eyes as {@link #toWorld}: where the mass leaves from as he sees it, so it stays on his hand as he
+     * moves (3.2.8 left it where it set out, on the server's spot, and walking off left it hanging there).
+     */
+    public static double[] fist(double[] eye, double yaw, double pitch, double thrust) {
+        return toWorld(eye, yaw, pitch, apply(coilFrame(1.0, thrust), hand()));
+    }
+
     /** {@code p} turned by {@code a} radians about the unit axis {@code (x, y, z)} (right-handed, as JOML's rotateAxis). */
     static double[] rotate(double[] p, double a, double x, double y, double z) {
         double c = Math.cos(a);

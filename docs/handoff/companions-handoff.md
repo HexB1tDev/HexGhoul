@@ -1,4 +1,18 @@
-# START HERE (state after 3.4.4)
+# START HERE (state after 3.4.5)
+
+Next: the owner's move guide redo (3.4.6: "it's time to redo the GUI. This looks super, super clanky. As in, like, it's too big. We need to summarize things a bit more."). The owner: "push an update asap": every version is pushed as it is built.
+
+The owner's report (with a screenshot of the mass out ahead, away from the first-person arm): "In the Warpath, Spirewave now is kind of bugged. It detaches from your hand if you move. Like, before it was fine, you could, like, move and it would still be attached to your body. But now when you leave, like, whenever you move around, that detaches."
+
+- Cause: 3.2.8's `WarHoldFx.draw` (SPIRE_WAVE) set `hand = from` (the server's launch point) in one's own first person, so the mass's near end (`WarHoldModel.mass`: axis = from + dir*x + (hand - from)*(1 - x/3)) stayed at the launch spot. Third person used the body's live `leftArm` HAND.
+- Pure `SpireArm.toWorld(eye, yaw, pitch, p)` (hand-pass frame, +x right +y up -z ahead, to the world) and `SpireArm.fist(eye, yaw, pitch, thrust)` (`apply(coilFrame(1, thrust), hand())`, carried out).
+- `WarHoldFx.draw`, own first person: `hand = SpireArm.fist(camera position, interpolated yaw/pitch, SpireArm.thrust(age, spireEnds))`, every frame.
+- Tests: KingTests `spireAttached` (ahead-left within 2 blocks at every yaw/pitch/thrust; follows translation exactly; turns with yaw; each arm's first path point is the fist).
+- **Judgment calls:** view bobbing and the hand pass's sway/FOV aren't matched (as in 3.2.8).
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 93. Not tested in game.
+
+# State after 3.4.4
 
 Nothing queued after this fix: ask the owner what next (and whether `crystal_hit`, still 3.3.5's clinks, should go too). The owner: "push an update asap": every version is pushed as it is built.
 

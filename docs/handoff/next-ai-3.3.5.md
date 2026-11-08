@@ -1,8 +1,8 @@
-# HANDOFF: HexGhoul after 3.4.4 (kept current as versions ship). Read this first.
+# HANDOFF: HexGhoul after 3.4.5 (kept current as versions ship). Read this first.
 
 Then, for the house rules and history: `docs/handoff/next-ai-3.2.1.md` and `docs/handoff/next-ai-3.1.9.md` (the two sessions before,
 their judgment calls), `docs/handoff/next-ai-2.0.45.md` (header: versions, protocol history, the 2.x/3.x log), `docs/handoff/next-ai-1.3.60.md`
-(the owner's house rules in full), and the top sections of `docs/handoff/companions-handoff.md` (one per version, newest first: 3.2.7 to 3.4.4
+(the owner's house rules in full), and the top sections of `docs/handoff/companions-handoff.md` (one per version, newest first: 3.2.7 to 3.4.5
 are this session's, with file-level detail).
 
 Note on the session before this one (3.2.2 to 3.2.6, branch `claude/magical-fermi-cec8n1`): it wrote a handoff at 3.2.1 and then went on
@@ -11,13 +11,13 @@ lost. **Commit and push every version as it is built, and keep this file current
 
 ## Where things are
 
-- **Branch:** **`claude/exciting-bell-3kklnc`** (pushed; 3.2.7 to 3.4.4 on top of 3.2.6 from `claude/magical-fermi-cec8n1`). The next session
+- **Branch:** **`claude/exciting-bell-3kklnc`** (pushed; 3.2.7 to 3.4.5 on top of 3.2.6 from `claude/magical-fermi-cec8n1`). The next session
   will be given its own branch: start it from `origin/claude/exciting-bell-3kklnc`
   (`git fetch origin claude/exciting-bell-3kklnc && git checkout -B <your-branch> origin/claude/exciting-bell-3kklnc`). Push only to the
   branch you are given; never to `main`; no PR unless asked.
 - **Releases:** `.github/workflows/release.yml` publishes `v<version>` on GitHub for every push to `claude/**` that adds
   `.github/release-notes-<version>.md` (about 5 minutes). The owner plays those. When they say "push an update", push what is built.
-- **Version 3.4.4** in `build.py` and `patch/KagunePatch.java`. **The next is 3.4.5** (the last number never reaches 10). **Protocol "93"** (3.3.6: EtoGesture JEALOUS appended).
+- **Version 3.4.5** in `build.py` and `patch/KagunePatch.java`. **The next is 3.4.6** (the last number never reaches 10). **Protocol "93"** (3.3.6: EtoGesture JEALOUS appended).
 - Full `python3 build.py` ended **EXIT 0** for every version (javac `--release 17` on JDK 21; about 5 minutes; run it in the background).
   **Nothing is tested in game. Never claim it is.**
 - The quick loop: `python3 tools/quick_check.py [--noverify] KingTests UkakuTests ...` (needs one full `build.py` first). It does **not**
@@ -45,6 +45,7 @@ lost. **Commit and push every version as it is built, and keep this file current
 | 3.4.2 | Kids greet you after days away (2+ game days; more after a week), by temper and age; the last sight is kept in the player's NpcMemory so it outlasts an unloaded child. | `family/KidGreeting`, `ChildBrain.lines` |
 | 3.4.3 | **Fix:** clashes threw both sides by the clash's size (both blows together), so a stronger player was thrown harder, a maxed ghoul and the Reaper a block a tick, everyone lifted alike; one eye didn't count. Now by the gap alone: the stronger stands its ground at 2x, the weaker flies at `GAP` 2.0, an even clash is a short push; one eye x1.15. | `ClashRules.thrown/lifted`, `KaguneClash.apart/strength`, `ClashPower.ONE_EYED`, ClashTests `gap` |
 | 3.4.4 | **Fix:** a crystal forming (3.3.5's kitchen clinks) is now a rubbed wine glass singing (3 swells, ani_music) and a small bell (AlaskaRobotics): CC0 freesound recordings from Sonic Pi's samples. `crystal_hit`/`shatter` unchanged. | `sfx_recordings.json` `crystal_glassrub.flac`/`crystal_bell.flac`, `crystal_form_1..4`, `sfx_pack.py` POOLS |
+| 3.4.5 | **Fix:** War's Spire Wave mass came loose from the first-person fist when moving (3.2.8 started it at the server's launch spot): now `SpireArm.fist` (eyes + look, every frame). | `SpireArm.toWorld/fist`, `WarHoldFx.draw`, KingTests `spireAttached` |
 
 Previews (off-game, looked at honestly): `docs/handoff/peace-aegis-3.2.7.png`, `war-spire-first-person-3.2.8.png`, `ukaku-vortex-3.2.9.png`,
 `dawn-idle-3.3.2.png`, `jealous-3.3.6.png`. Tools: `tools/art-preview.sh <out> aegis|spire-fp|vortex`, `tools/QuinquePreview.java <out> dawn idle`.
@@ -71,6 +72,10 @@ Previews (off-game, looked at honestly): `docs/handoff/peace-aegis-3.2.7.png`, `
   you flying regardless."**
 - Crystal forming (3.4.4): **"Your crystal sounds from the internet. The ones you added for the crystal form are fucking dog shit, bro.
   Just download better ones."**
+- Spire Wave (3.4.5): **"In the Warpath, Spirewave now is kind of bugged. It detaches from your hand if you move. Like, before it was
+  fine, you could, like, move and it would still be attached to your body. But now when you leave, like, whenever you move around, that
+  detaches."** The move guide (3.4.6): **"it's time to redo the GUI. This looks super, super clanky. As in, like, it's too big. We need to
+  summarize things a bit more."**
 
 ## The owner's 3.2.2 list (all done by 3.4.2)
 
