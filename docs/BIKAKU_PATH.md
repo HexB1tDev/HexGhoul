@@ -1,13 +1,24 @@
-# Path design: Bikaku (the worm kagune with the mouth) — work in progress
+# Path design: Bikaku (the worm kagune with the mouth) — in the game since 3.4.9, being built
 
 The owner asked for an entirely new playable path (after 3.4.8), a Bikaku kagune modelled on Noro from Tokyo Ghoul. This file holds
 their spec word for word, what the reference pictures show, what is built so far, the plan, and every place in the code a new path
-hooks into (found while starting it). **Nothing of it is in the game yet**: only the pure model and motion and their preview and tests.
+hooks into (found while starting it). **3.4.9 put the path in the game**: choosable, the worm drawn (in the owner's colour, alive, long),
+its M1 bites with Predatory Feeding, its card, menu and move guide. Its other moves, passives and kakuja are still to come (the plan below).
 
 Visible names follow the house rule from 1.2.5 (no character names on screen: the paths show as "Rinkaku", "Ukaku"): the path is
 **Bikaku** (id `bikaku`). "Noro" is not in the banned list (`build.py` `FORBIDDEN`), but keep it out of visible text all the same.
 
-## Built so far (not wired into the game)
+## Built so far
+
+**3.4.9 (in the game):** `KagunePath.BIKAKU`; `bikaku/BikakuRules` (the M1 string Snap/Lunge/Maul, reach 6.5, damage, bleeding, the
+Maul's stun, Predatory Feeding, the plan's gates); `MawMotion.of` (a bite in three styles, or rest), `path` (thrown out it uncoils from the
+head back only as far as the bite needs, the rest staying in zigzags behind; nothing through his own head or torso), `grown`,
+`firstPerson`; `server/BikakuServer`, `network/S2CBikakuState` (54, protocol 94), `client/BikakuClient`, `client/render/BikakuRenderer`,
+`client/BikakuMenuView`/`BikakuMenuScreen`, `PathCards`/`PathSilhouette.bikaku`, `AbilityGuide.bikaku`; every hook below wired (the
+original's tendrils hidden, its other keys saying "Your worm only bites for now"). Previews `docs/handoff/bikaku-*-3.4.9.png`; tests
+`BikakuTests`, `BikakuWormTests`. Details: the top of `docs/handoff/companions-handoff.md`.
+
+**Before 3.4.9 (the pure worm, unchanged since except as above):**
 
 - `control/bikaku/MawWorm.java`: the worm as a mesh (pure). A thick muscular tube along a spine resampled evenly by length
   (`spine`), with annular ridges every 0.16 blocks (`ridge`), folds and lumps, a breathing swell. Its radius by length (`radius`):
@@ -32,8 +43,8 @@ Visible names follow the house rule from 1.2.5 (no character names on screen: th
 - `src/test/java/.../BikakuWormTests.java` (26 checks): long, rooted, zigzagging, finite quads, a mouth that grows open and
   still reads shut, recolouring, and a bite landing on its target shut and ending at rest.
 
-Known to check: mid-lunge, the leftover coils bunch up close behind the head (see the bite sheet's side row); in first person the
-head rests about 1.3 blocks above the eyes to the right, seen only looking up.
+Known to check: (fixed in 3.4.9: the coils no longer bunch up behind the head mid-lunge, and a bite no longer covers the first-person
+view) in first person the head rests about 1.3 blocks above the eyes to the right, seen only looking up.
 
 ## The reference pictures (the owner's `Reference.zip`; not in the repo, ask them for it again)
 
@@ -211,24 +222,24 @@ Then, mid-build (binding):
 - The name on screen: "Bikaku".
 - The look: 6 great fangs plus 3 rings of teeth; grey bone; red palette recoloured; about 8 blocks long at rest (owner's ask).
 
-## Plan (each its own version, pushed as built)
+## Plan (each its own version, pushed as built; after 3.4.9 comes 3.5.0)
 
-1. **3.4.9: the path and the worm in game.** `KagunePath.BIKAKU` (choosable), its starting-screen card and silhouette, its menu
+1. **3.4.9: the path and the worm in game.** (Done.) `KagunePath.BIKAKU` (choosable), its starting-screen card and silhouette, its menu
    (stages and mastery), its move guide. `BikakuServer` (state, M1 bites using `MawMotion.bite`'s timing, Predatory Feeding:
    heal on a bite, more on a kill, gates). `S2CBikakuState` sync, `BikakuClient`, and `BikakuRenderer`: the worm out of the lower
    back riding the body's pose, third and first person, `KaguneTints.of(player)`, growing out as the kagune comes out. The
    original Rinkaku tendrils hidden for the path. Protocol 94.
-2. Devouring Maw and Predatory Drag (grabs: hold the target at the mouth, shake, throw sideways; drag along the ground, lift,
+2. **3.5.0:** Devouring Maw and Predatory Drag (grabs: hold the target at the mouth, shake, throw sideways; drag along the ground, lift,
    slam).
-3. Ravenous Pursuit (the worm splits into three thinner worms from the same root, `MawWorm.Pose.girth` about 0.6, snaking paths)
+3. **3.5.1:** Ravenous Pursuit (the worm splits into three thinner worms from the same root, `MawWorm.Pose.girth` about 0.6, snaking paths)
    and Carrion Eruption (into the ground at the feet, a travelling bulge of debris, up under the target; a path through a ground
    point).
-4. Monstrous Regeneration (the active, with tissue-strand visuals over the body) and the three passives (Abnormal Regeneration
+4. **3.5.2:** Monstrous Regeneration (the active, with tissue-strand visuals over the body) and the three passives (Abnormal Regeneration
    through `GhoulRegen`, Pain Suppression: knockback resistance and less stagger, Predatory Feeding if not done in 1).
-5. The kakuja: the central mass (4 to 5 blocks, irregular, asymmetric, pulsating, covered in lipped mouths with flat teeth, ref 3)
+5. **3.5.3:** The kakuja: the central mass (4 to 5 blocks, irregular, asymmetric, pulsating, covered in lipped mouths with flat teeth, ref 3)
    with its tentacles, the transformation (the worm swells, more tendrils wrap him, a fused mass swallows him, mouths grow, the
    tentacles burst out), rooted or very slow, and its resistances.
-6. The kakuja's four abilities and its passives (Autonomous Predation bites on their own, at sensible intervals).
+6. **3.5.4:** The kakuja's four abilities and its passives (Autonomous Predation bites on their own, at sensible intervals).
 
 Proposed mastery gates (a judgment call; ask or tell): 0 the worm, M1 and Devouring Maw; 150 Predatory Drag; 300 Ravenous Pursuit;
 450 Carrion Eruption; 600 Monstrous Regeneration; 1000 the kakuja.
@@ -250,7 +261,7 @@ Proposed mastery gates (a judgment call; ask or tell): 0 the worm, M1 and Devour
   `UkakuServer.isUkaku` / `PaleServer.isPale` / `GraftServer.isGraft`: add the new path's check beside them.
 - Client: `UkakuClient.tendrilView` (line 134: the original's tendrils and writhing are not drawn for these paths),
   `ManifestSounds.limb` (58).
-- Network: `ControlNetwork` (the next message ids are 54 and 55; `PROTOCOL` "93" to "94", with its note).
+- Network: `ControlNetwork` (3.4.9 took 54 for S2CBikakuState and protocol "94"; the next free id is 55, for a `C2SBikakuAction`).
 - Server template: `GraftServer` (state map, `broadcast`, `startTracking`, `loggedIn`, `respawned`, `changedDimension`, `loggedOut`),
   `GraftCombat.strikeBody` (damage by mastery with a PvP share, `WoundHits.expect`, `UkakuCrystalCombat.graftBleed`, `PaleStun.stun`,
   `KaguneClash`, `KaguneProfile.addMastery`, `ControlServer.onKaguneHit`), `GraftCombat.aim` (target choice), the bite's sounds

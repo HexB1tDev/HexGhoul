@@ -1,0 +1,154 @@
+package com.hex.kagune.control.bikaku;
+
+import com.hex.kagune.control.DamageBalance;
+import com.hex.kagune.control.graft.GraftMesh;
+
+/**
+ * 3.4.9, the Bikaku path's numbers (pure, tested): its M1 bites (a string of three, each timed as {@link MawMotion#bite} draws it), how far
+ * the worm reaches, what a bite does (its damage by mastery, a player's share, the bleeding, the third bite's stun), Predatory Feeding
+ * (a bite that lands heals a little, a kill with the worm more), and the mastery each of the path's moves unlocks at.
+ */
+public final class BikakuRules {
+    private BikakuRules() {
+    }
+
+    // ---------------------------------------------------------------- the M1 string
+
+    /** The bites of the M1 string, in order: two quick bites from different sides, then a heavy one that shakes what it caught. */
+    public enum Bite {
+        NONE(0, 0, 0.0F, 0.0F),
+        /** Thrown out low from over the shoulder. */
+        SNAP(12, 6, 1.0F, 0.4F),
+        /** Reared up high and brought down on it. */
+        LUNGE(13, 7, 1.0F, 0.4F),
+        /** Drawn back further, thrown wide, clamped, shaken: harder, it stuns. */
+        MAUL(18, 8, 1.5F, 0.6F);
+
+        private final int ticks;
+        private final int land;
+        private final float power;
+        private final float cost;
+
+        Bite(int ticks, int land, float power, float cost) {
+            this.ticks = ticks;
+            this.land = land;
+            this.power = power;
+            this.cost = cost;
+        }
+
+        /** How long the whole bite takes (ticks): drawn back, thrown, shut, back to rest. */
+        public int ticks() {
+            return this.ticks;
+        }
+
+        /** The tick its mouth snaps shut on what it bites. */
+        public int land() {
+            return this.land;
+        }
+
+        /** Its share of a bite's damage. */
+        public float power() {
+            return this.power;
+        }
+
+        /** The RC it costs. */
+        public float cost() {
+            return this.cost;
+        }
+
+        /** The heavy bite: it stuns, and is shaken. */
+        public boolean heavy() {
+            return this == MAUL;
+        }
+
+        /** The next bite of the string after this one (after the last, the first again). */
+        public Bite next() {
+            return switch (this) {
+                case SNAP -> LUNGE;
+                case LUNGE -> MAUL;
+                default -> SNAP;
+            };
+        }
+
+        /** The bite with ordinal {@code ordinal} (none for anything unknown). */
+        public static Bite byOrdinal(int ordinal) {
+            Bite[] all = values();
+            return ordinal >= 0 && ordinal < all.length ? all[ordinal] : NONE;
+        }
+
+        /** Which way of drawing back {@link MawMotion#bite} gives it (0 low, 1 high, 2 heavy). */
+        public int style() {
+            return this == LUNGE ? 1 : this == MAUL ? 2 : 0;
+        }
+    }
+
+    /** A click within this many ticks of a bite's end goes on with the string; later, it starts again. */
+    public static final int CHAIN_WINDOW = 9;
+    /** A click while a bite is still out waits this long for it (then it is dropped). */
+    public static final int BUFFER = 6;
+
+    /** How far the mouth reaches from over the right shoulder (blocks): the worm is long. */
+    public static final double REACH = 6.5;
+    /** A bite at nothing in particular takes what is within this of its mouth when it shuts. */
+    public static final double MOUTH_RADIUS = 1.1;
+
+    /** A bite's damage at {@code mastery}, before its share. */
+    public static float damage(int mastery) {
+        int m = Math.max(0, Math.min(1000, mastery));
+        return (5.5F + m * 0.0065F) * DamageBalance.scale(m);
+    }
+
+    /** The share of a bite another player takes (a player is not a mob; as Graft DNA's). */
+    public static final float PVP_SHARE = 0.45F;
+    /** The heavy bite's stun (ticks). */
+    public static final int STUN = 12;
+
+    /** Bleeding stacks a bite leaves. */
+    public static int bleedStacks(Bite bite) {
+        return bite.heavy() ? 4 : 2;
+    }
+
+    // ---------------------------------------------------------------- Predatory Feeding
+
+    /** Health a bite that lands gives back. */
+    public static final float BITE_HEAL = 1.0F;
+    /** Health a kill with the worm gives back (on top of the bite's). */
+    public static final float KILL_HEAL = 4.0F;
+
+    // ---------------------------------------------------------------- what unlocks when (the plan's gates; only M1 is built so far)
+
+    public static final int MAW = 0;
+    public static final int DRAG = 150;
+    public static final int PURSUIT = 300;
+    public static final int ERUPTION = 450;
+    public static final int REGENERATION = 600;
+    public static final int KAKUJA = 1000;
+
+    // ---------------------------------------------------------------- where the bite goes
+
+    /**
+     * Where a bite at {@code target} goes, in the body's frame: the target itself, or, past the worm's reach from over the shoulder, as far
+     * toward it as the worm reaches.
+     */
+    public static double[] reach(double[] target) {
+        double[] from = MawMotion.SHOULDER;
+        double[] to = GraftMesh.sub(target, from);
+        double distance = GraftMesh.length3(to);
+        if (distance <= REACH || distance < 1.0E-9) {
+            return target;
+        }
+        return GraftMesh.add(from, GraftMesh.mul(to, REACH / distance));
+    }
+
+    /** Where a bite at nothing goes: ahead along the look, as far as it reaches (body frame, from the eyes). */
+    public static double[] ahead(double eyeHeight, double pitchRadians) {
+        double reach = REACH * 0.85;
+        return reach(new double[] {0.0, eyeHeight - Math.sin(pitchRadians) * reach, Math.cos(pitchRadians) * reach});
+    }
+
+    /** The worm's look for a player: its seed (ridges, spurs, teeth, rhythm), the same on every client. */
+    public static int seed(long most, long least) {
+        long mixed = most * 31L + least;
+        return (int)((mixed ^ (mixed >>> 32)) & 0x7FFF);
+    }
+}

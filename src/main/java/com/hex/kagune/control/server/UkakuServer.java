@@ -305,7 +305,8 @@ public final class UkakuServer {
         // Graft DNA's).
         PaleServer.onPathChanged(player);
         GraftServer.onPathChanged(player);
-        if (ukaku || path == KagunePath.PALE || path == KagunePath.GRAFT) {
+        BikakuServer.onPathChanged(player); // 3.4.9
+        if (ukaku || path == KagunePath.PALE || path == KagunePath.GRAFT || path == KagunePath.BIKAKU) {
             RinkakuStash.stash(player);
         } else {
             RinkakuStash.restore(player);
@@ -434,6 +435,8 @@ public final class UkakuServer {
             } else if (GraftServer.isGraft(player)) {
                 // 7.0.0: tapped, his kakuja (in or out); held, his next base stage.
                 GraftServer.kakujaKey(player, hold);
+            } else if (BikakuServer.isBikaku(player)) {
+                BikakuServer.notYet(player); // 3.4.9: the worm's kakuja comes later
             }
             return;
         }

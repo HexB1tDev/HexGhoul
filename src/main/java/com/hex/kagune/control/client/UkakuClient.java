@@ -131,7 +131,9 @@ public final class UkakuClient {
         KaguneClientState.View view = KaguneClientState.get(player);
         // 6.1.0: Pale's base form keeps her human shape: no tendrils, no writhing (her flesh is drawn by PaleFleshRenderer).
         // 7.0.0: Graft DNA's limbs are its own (GraftRenderer): the original's tendrils and their writhing are not drawn.
-        return view.active() && (isUkaku(player) || PaleClient.isPale(player) || GraftClient.isGraft(player)) ? inactiveView() : view;
+        // 3.4.9: nor Bikaku's: its worm is its own (BikakuRenderer).
+        return view.active() && (isUkaku(player) || PaleClient.isPale(player) || GraftClient.isGraft(player) || BikakuClient.isBikaku(player))
+            ? inactiveView() : view;
     }
 
     /** The original's own "nothing manifested" state (same values as {@code KaguneClientState}'s empty view). */

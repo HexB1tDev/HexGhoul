@@ -2447,8 +2447,8 @@ public final class PaleTests {
         check(KagunePath.PALE.id().equals("owl") && KagunePath.PALE.displayName().equals("Owl DNA") && KagunePath.fromId("owl") == KagunePath.NONE
             && KagunePath.fromId(" OWL ") == KagunePath.NONE && KagunePath.fromId("graft") == KagunePath.NONE && KagunePath.fromId("ito") == KagunePath.NONE
             && KagunePath.fromId("rinkaku") == KagunePath.RINKAKU && KagunePath.fromId("ukaku") == KagunePath.UKAKU
-            && KagunePath.choosable().equals(List.of(KagunePath.RINKAKU, KagunePath.UKAKU)),
-            "the dormant paths are never pickable and their ids read as none; Rinkaku and Ukaku are the paths to choose");
+            && KagunePath.choosable().equals(List.of(KagunePath.RINKAKU, KagunePath.UKAKU, KagunePath.BIKAKU)),
+            "the dormant paths are never pickable and their ids read as none; Rinkaku, Ukaku and (3.4.9) Bikaku are the paths to choose");
         java.util.regex.Pattern named = java.util.regex.Pattern.compile("(?i)\\b(takatsuki|aogiri|yoshimura)\\b");
         for (int mastery : new int[] {0, 250, 500, 750, 1000}) {
             check(!named.matcher(com.hex.kagune.control.pale.PaleUnlock.stageName(mastery)).find(), "its stage names are its own: " + com.hex.kagune.control.pale.PaleUnlock.stageName(mastery));

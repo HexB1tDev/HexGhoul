@@ -420,6 +420,120 @@ public final class PathSilhouette {
         return points;
     }
 
+    /** 3.4.9, Bikaku: the worm's crimson-purple flesh, its dark folds, its red veins and its grey fangs. */
+    public static final int BIKAKU = 0x8A1A3E;
+    public static final int BIKAKU_DARK = 0x3C0716;
+    public static final int BIKAKU_VEIN = 0xFF3040;
+    public static final int BIKAKU_FANG = 0xC8C2B8;
+
+    /**
+     * Bikaku card art (3.4.9): him from behind, and out of his lower back one thick worm climbing in zigzags high over his head and
+     * round over his right shoulder, its round mouth of fangs at the end, a wave running up its coils. Selected, the mouth gapes.
+     */
+    public static List<Mark> bikaku(PathChoiceLayout.Box box, double time, float intensity, boolean selected, int bg) {
+        List<Mark> marks = new ArrayList<>();
+        Figure f = Figure.in(box, 0.5F);
+        float rootX = f.cx;
+        float rootY = f.waistY - f.size * 0.04F;
+        double speed = 0.8 + 1.0 * intensity;
+        float[][][] envelope = new float[16][][];
+        for (int j = 0; j < 16; j++) {
+            envelope[j] = worm(j * Math.PI / 8.0);
+        }
+        // Beyond its line the worm is at most its body's half-width (~0.06) or the open mouth's fangs (~0.11) in unit terms.
+        float length = fit(box, rootX, rootY, Math.min(box.width() * 0.9F, box.height() * 0.95F), 0.11F, 1.0F, envelope);
+        if (length <= 0.5F) {
+            figure(marks, f, bg, intensity);
+            return marks;
+        }
+        float strength = 0.45F + 0.55F * intensity;
+        float[][] curve = worm(time * speed);
+        int n = curve.length;
+        for (int s = 0; s + 1 < n; s++) {
+            float a = s / (float)(n - 1);
+            float b = (s + 1) / (float)(n - 1);
+            float x0 = rootX + curve[s][0] * length;
+            float y0 = rootY + curve[s][1] * length;
+            float x1 = rootX + curve[s + 1][0] * length;
+            float y1 = rootY + curve[s + 1][1] * length;
+            float w0 = length * wormRadius(a);
+            float w1 = length * wormRadius(b);
+            // Ridged: dark folds between the bands, a vein glowing along it here and there.
+            marks.add(new Stroke(x0, y0, x1, y1, w0 * 2.0F, w1 * 2.0F, blend(bg, s % 3 == 0 ? BIKAKU_DARK : BIKAKU, strength)));
+            if (s % 3 == 1 && s > 1 && s < n - 4) {
+                marks.add(new Stroke(x0, y0, x1, y1, Math.max(0.6F, w0 * 0.25F), Math.max(0.6F, w1 * 0.25F), blend(bg, BIKAKU_VEIN, strength * 0.8F)));
+            }
+        }
+        // He stands in front of its coils (it rises from his back); its head is over his shoulder, in front of everything.
+        figure(marks, f, bg, intensity);
+        // The mouth: a dark hole ringed by its lip, a crown of fangs round it (shut: leaning in; selected: thrown wide).
+        float[] head = curve[n - 1];
+        float[] before = curve[n - 3];
+        double dx = head[0] - before[0];
+        double dy = head[1] - before[1];
+        double unit = Math.max(1.0E-6, Math.hypot(dx, dy));
+        dx /= unit;
+        dy /= unit;
+        float hx = rootX + head[0] * length;
+        float hy = rootY + head[1] * length;
+        float open = selected ? (float)(0.55 + 0.4 * Math.max(0.0, Math.sin(time * 1.6))) : 0.15F;
+        float lip = length * wormRadius(1.0F) * (1.0F + 0.35F * open);
+        marks.add(new Disc(hx, hy, lip, blend(bg, BIKAKU, strength)));
+        marks.add(new Disc(hx + (float)dx * lip * 0.25F, hy + (float)dy * lip * 0.25F, lip * (0.25F + 0.55F * open), blend(bg, 0x120205, strength)));
+        for (int k = 0; k < 6; k++) {
+            double angle = Math.PI * 2.0 * k / 6.0 + 0.4;
+            double cx = Math.cos(angle);
+            double sy = Math.sin(angle);
+            // Round the mouth (its ring seen a little from the side) and out ahead of it, splaying as it opens.
+            double px = -dy * cx * 0.9;
+            double py = dx * cx * 0.9;
+            float bx = hx + (float)(px * lip + dx * lip * 0.2 * sy);
+            float by = hy + (float)(py * lip + dy * lip * 0.2 * sy);
+            double ahead = 0.9 - 0.3 * open;
+            double out = -0.35 + 0.95 * open;
+            float tx = bx + (float)((dx * ahead + px * out) * lip * 1.2);
+            float ty = by + (float)((dy * ahead + py * out) * lip * 1.2);
+            marks.add(new Stroke(bx, by, tx, ty, Math.max(0.8F, lip * 0.32F), 0.5F, blend(bg, BIKAKU_FANG, strength)));
+        }
+        return marks;
+    }
+
+    /** The worm's thickness along it (unit, {@code a} 0 at his back .. 1 its mouth): thin out of the back, thick, a swollen head. */
+    private static float wormRadius(float a) {
+        float body = 0.02F + 0.035F * Math.min(1.0F, a * 6.0F);
+        float head = a > 0.88F ? 0.02F * (float)Math.sin(Math.PI * (a - 0.88F) / 0.24F) : 0.0F;
+        return body + head;
+    }
+
+    /** The worm's line (unit, 40 points): up out of his back in zigzag coils high over his head, round over his right shoulder. */
+    private static float[][] worm(double phase) {
+        double[][] knots = {{0.0, 0.0}, {0.05, -0.08}, {0.32, -0.2}, {-0.3, -0.36}, {0.34, -0.52}, {-0.24, -0.68}, {0.22, -0.84}, {0.52, -0.78},
+            {0.62, -0.6}};
+        int count = 40;
+        float[][] points = new float[count][];
+        for (int i = 0; i < count; i++) {
+            double t = i / (double)(count - 1) * (knots.length - 1);
+            int k = Math.min(knots.length - 2, (int)Math.floor(t));
+            double u = t - k;
+            double[] p0 = knots[Math.max(0, k - 1)];
+            double[] p1 = knots[k];
+            double[] p2 = knots[k + 1];
+            double[] p3 = knots[Math.min(knots.length - 1, k + 2)];
+            double x = catmull(p0[0], p1[0], p2[0], p3[0], u);
+            double y = catmull(p0[1], p1[1], p2[1], p3[1], u);
+            // A wave running up its coils (it slithers), none at the root.
+            double along = i / (double)(count - 1);
+            x += 0.06 * Math.sin(phase - along * 7.0) * Math.min(1.0, along * 4.0);
+            y += 0.02 * Math.sin(phase * 0.8 - along * 5.0) * Math.min(1.0, along * 4.0);
+            points[i] = new float[] {(float)x, (float)y};
+        }
+        return points;
+    }
+
+    private static double catmull(double p0, double p1, double p2, double p3, double u) {
+        return 0.5 * (2.0 * p1 + (-p0 + p2) * u + (2.0 * p0 - 5.0 * p1 + 4.0 * p2 - p3) * u * u + (-p0 + 3.0 * p1 - 3.0 * p2 + p3) * u * u * u);
+    }
+
     /** Opaque mix of {@code fg} over {@code bg} at {@code alpha} (0..1). */
     public static int blend(int bg, int fg, float alpha) {
         float a = Math.max(0.0F, Math.min(1.0F, alpha));

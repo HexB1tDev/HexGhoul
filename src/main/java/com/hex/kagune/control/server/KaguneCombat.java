@@ -118,6 +118,10 @@ public final class KaguneCombat {
             GraftServer.strike(player, hint); // 7.0.0: Graft's limbs' string, or his blade and the kagune
             return;
         }
+        if (BikakuServer.isBikaku(player)) {
+            BikakuServer.strike(player, hint); // 3.4.9: the worm's string of bites
+            return;
+        }
         if (RinkakuAutonomy.refuse(player)) {
             return; // the first kakuja's legs fight on their own; he has no M1 in it
         }
@@ -142,8 +146,8 @@ public final class KaguneCombat {
 
     /** Instinct-forced strike at {@code prey}. Returns true if the kagune actually lashed out. */
     static boolean startInvoluntary(ServerPlayer player, LivingEntity prey) {
-        if (PaleServer.isPale(player) || GraftServer.isGraft(player)) {
-            return false; // 6.1.0: Pale's flesh never lashes out on its own (7.0.0: nor Graft's limbs: he is in control)
+        if (PaleServer.isPale(player) || GraftServer.isGraft(player) || BikakuServer.isBikaku(player)) {
+            return false; // 6.1.0: Pale's flesh never lashes out on its own (7.0.0: nor Graft's limbs: he is in control; 3.4.9: nor the worm)
         }
         KaguneRuntime.State state = KaguneRuntime.get(player.m_20148_());
         long now = player.m_9236_().m_46467_();

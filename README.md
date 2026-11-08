@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.4.9 (HexGhoul): Bikaku, the worm kagune, in the game (testing)
+
+See `.github/release-notes-3.4.9.md`. A third path on the starting screen: Bikaku. One thick worm out of the lower back (about 8 blocks of zigzag coils, a round mouth of fangs over the right shoulder), alive at rest, in your kagune colour, with a string of three M1 bites (Snap, Lunge, Maul) that heal you a little when they land. Its other moves and its kakuja come next. Protocol 94. Previews: `docs/handoff/bikaku-*-3.4.9.png`.
+
 ## 3.4.8 (HexGhoul): Fix: the Bone Greatsword's moves rebuilt (testing)
 
 See `.github/release-notes-3.4.8.md`. The greatsword's six blows and its three moves are rebuilt with both hands on the grip: the sword turns in the hands (an arm here is a stiff stick, and set at one angle in the fist the left hand hung up to half a block off the grip and the blade flicked about). The stance, the hammer, the whip and the spear are unchanged. Sheet: `docs/handoff/bone_sword-moves-3.4.8.png`.

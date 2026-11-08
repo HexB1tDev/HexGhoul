@@ -168,9 +168,12 @@ public final class PathScreenTests {
                     List<PathSilhouette.Mark> crystal = PathSilhouette.ukaku(box, time, intensity, true, bg);
                     List<PathSilhouette.Mark> pale = PathSilhouette.pale(box, time, intensity, false, bg);
                     List<PathSilhouette.Mark> paleOut = PathSilhouette.pale(box, time, intensity, true, bg);
-                    check(!rinkaku.isEmpty() && !gaseous.isEmpty() && !crystal.isEmpty() && !pale.isEmpty() && !paleOut.isEmpty(),
-                        "silhouettes draw something" + at);
-                    for (List<PathSilhouette.Mark> marks : List.of(rinkaku, gaseous, crystal, pale, paleOut)) {
+                    // 3.4.9: Bikaku's worm, at rest and selected (its mouth gaping).
+                    List<PathSilhouette.Mark> bikaku = PathSilhouette.bikaku(box, time, intensity, false, bg);
+                    List<PathSilhouette.Mark> bikakuOut = PathSilhouette.bikaku(box, time, intensity, true, bg);
+                    check(!rinkaku.isEmpty() && !gaseous.isEmpty() && !crystal.isEmpty() && !pale.isEmpty() && !paleOut.isEmpty()
+                        && !bikaku.isEmpty() && !bikakuOut.isEmpty(), "silhouettes draw something" + at);
+                    for (List<PathSilhouette.Mark> marks : List.of(rinkaku, gaseous, crystal, pale, paleOut, bikaku, bikakuOut)) {
                         for (PathSilhouette.Mark mark : marks) {
                             check(inside(mark, box), "mark stays inside its card: " + mark + at);
                             check(color(mark) >= 0 && color(mark) <= 0xFFFFFF, "colours are opaque RGB" + at);

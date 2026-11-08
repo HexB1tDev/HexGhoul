@@ -47,8 +47,11 @@ public final class PathTests {
             && KagunePath.GRAFT.active() == KagunePath.NONE && !KagunePath.RINKAKU.dormant() && !KagunePath.UKAKU.dormant(),
             "Owl DNA and Graft DNA are dormant");
         check(KagunePath.fromId("owl") == KagunePath.NONE && KagunePath.fromId("graft") == KagunePath.NONE, "a dormant path's id reads as none");
-        check(KagunePath.choosable().equals(java.util.List.of(KagunePath.RINKAKU, KagunePath.UKAKU)),
-            "the starting screen offers Rinkaku and Ukaku, never a dormant path");
+        // 3.4.9: and Bikaku (the owner's new path).
+        check(KagunePath.choosable().equals(java.util.List.of(KagunePath.RINKAKU, KagunePath.UKAKU, KagunePath.BIKAKU)),
+            "the starting screen offers Rinkaku, Ukaku and Bikaku, never a dormant path");
+        check(KagunePath.fromId("bikaku") == KagunePath.BIKAKU && !KagunePath.BIKAKU.dormant() && KagunePath.BIKAKU.displayName().equals("Bikaku"),
+            "Bikaku's id reads back; it is pickable, named by its kagune type");
         check(KagunePath.fromId("rinkaku") == KagunePath.RINKAKU && KagunePath.fromId("ukaku") == KagunePath.UKAKU,
             "the saved ids read back (1.2.5: new ids; older saves choose again)");
         check(KagunePath.fromId(null) == KagunePath.NONE, "a missing id means undecided");

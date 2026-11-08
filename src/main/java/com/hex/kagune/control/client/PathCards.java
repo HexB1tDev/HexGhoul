@@ -56,6 +56,19 @@ public final class PathCards {
             "Heals fast, at the cost of RC", "The kakuja: armor, a grin, two colossi"),
         "MELEE · REGEN · RANGE", GRAFT_ACCENT, "GRAFT DNA", GRAFT_STAGES, GRAFT_MASTERY, PathSilhouette::graft);
 
+    /** 3.4.9: Bikaku's stages: the worm, then what the plan opens as mastery grows (all but the worm still to come). */
+    static final List<String> BIKAKU_STAGES = List.of("The Worm", "Drag (coming soon)", "Three Mouths (coming soon)", "Burrow (coming soon)",
+        "Regeneration (coming soon)", "Kakuja (coming soon)");
+    static final List<Integer> BIKAKU_MASTERY = List.of(com.hex.kagune.control.bikaku.BikakuRules.MAW, com.hex.kagune.control.bikaku.BikakuRules.DRAG,
+        com.hex.kagune.control.bikaku.BikakuRules.PURSUIT, com.hex.kagune.control.bikaku.BikakuRules.ERUPTION,
+        com.hex.kagune.control.bikaku.BikakuRules.REGENERATION, com.hex.kagune.control.bikaku.BikakuRules.KAKUJA);
+    /** Bikaku's accent: the worm's crimson. */
+    public static final int BIKAKU_ACCENT = 0xC02A50;
+    private static final Card BIKAKU = new Card(KagunePath.BIKAKU, "BIKAKU", "Bikaku · Worm Kagune",
+        List.of("One huge worm from the lower back", "A round mouth of fangs that bites", "Long reach; its bites heal you",
+            "Splits, burrows, drags (coming)", "Kakuja: a mass of mouths (coming)"),
+        "MELEE · REACH · REGEN", BIKAKU_ACCENT, "BIKAKU", BIKAKU_STAGES, BIKAKU_MASTERY, PathSilhouette::bikaku);
+
     private PathCards() {
     }
 
@@ -67,6 +80,7 @@ public final class PathCards {
         return switch (path) {
             case UKAKU -> UKAKU;
             case PALE, GRAFT -> GRAFT;
+            case BIKAKU -> BIKAKU; // 3.4.9
             case RINKAKU, NONE -> RINKAKU;
         };
     }

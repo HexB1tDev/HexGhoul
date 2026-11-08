@@ -70,7 +70,9 @@ public final class RinkakuWounds {
         } else {
             StrikePattern pattern = mode == TendrilMode.SWIPE ? KaguneCombat.livePattern(player, state) : null;
             // 3.1.5: and a body the Impale has run through.
-            blow = pattern == StrikePattern.THRUST || pattern == StrikePattern.IMPALE || ImpaleServer.ran(player, target) ? WoundBook.Blow.STAB
+            // 3.4.9: and a Bikaku worm's bite (its teeth).
+            blow = pattern == StrikePattern.THRUST || pattern == StrikePattern.IMPALE || ImpaleServer.ran(player, target) || BikakuServer.biting(player)
+                ? WoundBook.Blow.STAB
                 : WoundBook.Blow.SLASH;
             if (pattern != null) {
                 angle = switch (pattern) {

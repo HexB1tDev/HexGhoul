@@ -140,7 +140,7 @@ public final class KaguneBodyAnimation implements IAnimation {
     private boolean feral() {
         // 6.1.0: nor is Pale: her base form is all play and control. 7.0.0: nor Graft, whose kakuhou was put in him to be used.
         KagunePath path = PathClient.get(this.player);
-        return path != KagunePath.UKAKU && path != KagunePath.PALE && path != KagunePath.GRAFT;
+        return path != KagunePath.UKAKU && path != KagunePath.PALE && path != KagunePath.GRAFT && path != KagunePath.BIKAKU; // 3.4.9: nor Bikaku
     }
 
     /**

@@ -32,7 +32,13 @@ public enum KagunePath {
      * living armor (see {@code control/graft}). 1.2.5: dormant, never pickable (the user's ask): its code stays, and what others use
      * of it stays theirs (the wild ghouls' tails and lashes, the revive passive the other paths took from it).
      */
-    GRAFT("graft", "Graft DNA", 0.78F);
+    GRAFT("graft", "Graft DNA", 0.78F),
+    /**
+     * 3.4.9, Bikaku: one massive, thick worm of a kagune out of the lower back, a lamprey's round mouth of teeth at its end, that bites
+     * (see {@code control/bikaku} and {@code docs/BIKAKU_PATH.md}: the owner's spec; its moves, regeneration and kakuja come in the next
+     * versions).
+     */
+    BIKAKU("bikaku", "Bikaku", 0.72F);
 
     private final String id;
     private final String displayName;

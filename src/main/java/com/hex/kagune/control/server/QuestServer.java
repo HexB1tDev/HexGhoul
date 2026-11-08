@@ -244,12 +244,14 @@ public final class QuestServer {
             String form = switch (path) {
                 case UKAKU -> UkakuServer.form(player).id();
                 case GRAFT -> GraftServer.stage(player).id();
+                case BIKAKU -> "bikaku_worm"; // 3.4.9
                 default -> KaguneProfile.form(player).id();
             };
             tags.add(Tags.form(form));
             boolean kakuja = switch (path) {
                 case UKAKU -> UkakuServer.form(player).kakuja();
                 case GRAFT -> GraftServer.kakuja(player);
+                case BIKAKU -> false; // 3.4.9: its kakuja comes later
                 default -> RinkakuForms.kakuja(KaguneProfile.form(player));
             };
             if (kakuja) {
@@ -549,8 +551,9 @@ public final class QuestServer {
         Reward reward = quest.reward();
         int mastery = reward.mastery();
         int points = reward.points();
-        if (points > 0 && PathServer.path(player) == KagunePath.RINKAKU) {
-            mastery += points * Reward.RINKAKU_POINT_MASTERY; // his mutations come with mastery tiers, not points
+        boolean asMastery = PathServer.path(player) == KagunePath.RINKAKU || PathServer.path(player) == KagunePath.BIKAKU;
+        if (points > 0 && asMastery) {
+            mastery += points * Reward.RINKAKU_POINT_MASTERY; // his mutations come with mastery tiers, not points (3.4.9: Bikaku has none yet)
         }
         if (mastery > 0) {
             KaguneProfile.addMastery(player, mastery);
@@ -566,7 +569,7 @@ public final class QuestServer {
         if (mastery > 0) {
             pays.append(mastery).append(" mastery");
         }
-        if (points > 0 && PathServer.path(player) != KagunePath.RINKAKU) {
+        if (points > 0 && !asMastery) {
             pays.append(pays.length() > 0 ? ", " : "").append(points).append(" mutation point").append(points == 1 ? "" : "s");
         }
         if (reward.ghoulMeat() > 0) {

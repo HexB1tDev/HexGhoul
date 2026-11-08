@@ -98,6 +98,8 @@ public final class AbilityGuide {
     /** 7.0.0: Graft DNA's crimson, and the kakuja's burning slashes. */
     static final int GRAFT_RED = 0xFFD8283A;
     static final int GRAFT_BURN = 0xFFFF5A3C;
+    /** 3.4.9: Bikaku's worm. */
+    static final int BIKAKU_RED = 0xFFE0386A;
 
     /** The kakuja need these. */
     public static final int FIRST_KAKUJA = 750;
@@ -135,6 +137,7 @@ public final class AbilityGuide {
                 case UKAKU -> "UKAKU";
                 case PALE -> "ONE-EYED OWL";
                 case GRAFT -> "GRAFT DNA";
+                case BIKAKU -> "BIKAKU";
                 default -> "RINKAKU";
             };
             return new Panel(title, eyes ? "Ghoul eyes open" : "Kagune sheathed", eyes ? EYES : CLOSED, rows);
@@ -143,6 +146,7 @@ public final class AbilityGuide {
             case UKAKU -> ukaku(in, rows);
             case PALE -> pale(in, rows);
             case GRAFT -> graft(in, rows);
+            case BIKAKU -> bikaku(in, rows);
             default -> rinkaku(in, rows);
         };
     }
@@ -240,6 +244,9 @@ public final class AbilityGuide {
         }
         if (in.path() == KagunePath.GRAFT) {
             return in.graftKakuja() ? GRAFT_BURN : GRAFT_RED;
+        }
+        if (in.path() == KagunePath.BIKAKU) {
+            return BIKAKU_RED;
         }
         if (in.path() == KagunePath.UKAKU) {
             WingForm form = in.ukaku();
@@ -468,6 +475,18 @@ public final class AbilityGuide {
         }
         away(in, rows);
         return new Panel(kakuja ? "KAKUJA" : stage.displayName().toUpperCase(java.util.Locale.ROOT), "Graft DNA · right kakugan", accent, rows);
+    }
+
+    /**
+     * 3.4.9, Bikaku: the worm's string of bites on M1 (the owner's: "with its M1 bites"), and that they heal (Predatory Feeding). Its
+     * other moves and its kakuja come in the next versions: until then the board shows only what it has.
+     */
+    static Panel bikaku(Input in, List<Row> rows) {
+        int accent = accent(in);
+        rows.add(row(in, "Bites: Snap · Lunge · Maul", accent, 0, Key.ATTACK));
+        rows.add(new Row("auto", "Bites heal you", TEXT, 0));
+        away(in, rows);
+        return new Panel("BIKAKU", "Bikaku · the worm", accent, rows);
     }
 
     /** K into and out of the kakuja (tap: the first, hold: the final, from the first too), R to kakugan mode, Ctrl + R all away. */

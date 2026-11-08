@@ -198,6 +198,28 @@ public class UiPreview {
         System.out.println("wrote " + out);
     }
 
+    /** 3.4.9: the Bikaku menu (960 x 540 at 2x), at {@code mastery}, the mouse at ({@code mouseX}, {@code mouseY}). */
+    static void bikakuMenu(File out, int mastery, double mouseX, double mouseY) throws Exception {
+        int w = 960;
+        int h = 540;
+        BufferedImage image = new BufferedImage(w * 2, h * 2, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = graphics(image, 2);
+        ImageCanvas c = new ImageCanvas(g, false);
+        c.gradient(0, 0, w, h, 0xE8080306, 0xF0180610);
+        float scale = Math.min(1.0F, Math.min((w - 12.0F) / com.hex.kagune.control.client.BikakuMenuView.UI_WIDTH,
+            (h - 12.0F) / com.hex.kagune.control.client.BikakuMenuView.UI_HEIGHT));
+        float ox = (w - com.hex.kagune.control.client.BikakuMenuView.UI_WIDTH * scale) * 0.5F;
+        float oy = (h - com.hex.kagune.control.client.BikakuMenuView.UI_HEIGHT * scale) * 0.5F;
+        c.push();
+        c.translate(ox, oy);
+        c.scale(scale);
+        com.hex.kagune.control.client.BikakuMenuView.draw(c, new com.hex.kagune.control.client.BikakuMenuView.Model(mastery, true, 64.0F, 100.0F),
+            mouseX, mouseY, 1.3);
+        c.pop();
+        ImageIO.write(image, "png", out);
+        System.out.println("wrote " + out);
+    }
+
     /** 7.0.0: the Graft DNA menu (960 x 540 at 2x), at {@code mastery} with {@code mutations} taken, the mouse at ({@code mouseX}, {@code mouseY}). */
     static void graftMenu(File out, int mastery, int mutations, double mouseX, double mouseY) throws Exception {
         int w = 960;
@@ -521,6 +543,11 @@ public class UiPreview {
             abilities(new File(dir, "abilities-hud.png"));
             return;
         }
+        if (args.length > 1 && args[1].equals("bikaku")) {
+            bikakuMenu(new File(dir, "bikaku-menu-120.png"), 120, 0, 0);
+            bikakuMenu(new File(dir, "bikaku-menu-500.png"), 500, 380, 345);
+            return;
+        }
         if (args.length > 1 && args[1].equals("graft")) {
             graftMenu(new File(dir, "graft-menu-300.png"), 300, 0, 0, 0);
             graftMenu(new File(dir, "graft-menu-900.png"), 900, com.hex.kagune.control.graft.GraftMutation.NOT_THAT_EASILY.bit(), 400, 300);
@@ -587,6 +614,8 @@ public class UiPreview {
             {"Ukaku, final kakuja (1000)", new com.hex.kagune.control.AbilityGuide.Input(KagunePath.UKAKU, unleashed, 1000, seed, WingForm.FINAL_KAKUJA, false, keys)},
             {"Graft, two tails (200)", new com.hex.kagune.control.AbilityGuide.Input(KagunePath.GRAFT, unleashed, 200, seed, twin, false, keys, false,
                 com.hex.kagune.control.graft.GraftStage.TRANSPLANT, false)},
+            {"Bikaku, the worm out (120)", new com.hex.kagune.control.AbilityGuide.Input(KagunePath.BIKAKU, unleashed, 120, seed, twin, false, keys)},
+            {"Bikaku, kagune in", new com.hex.kagune.control.AbilityGuide.Input(KagunePath.BIKAKU, com.hex.kagune.control.AbilityGuide.State.CLOSED, 120, seed, twin, false, keys)},
             {"Rebound keys follow Controls (Ctrl+F, M4, LAlt)", new com.hex.kagune.control.AbilityGuide.Input(KagunePath.RINKAKU, unleashed, 300, seed, twin, false, rebound)},
             {"Undecided path", new com.hex.kagune.control.AbilityGuide.Input(KagunePath.NONE, com.hex.kagune.control.AbilityGuide.State.CLOSED, 0, seed, twin, false, keys)},
             // 1.0.22: War and Peace on the same card, two abilities recharging.

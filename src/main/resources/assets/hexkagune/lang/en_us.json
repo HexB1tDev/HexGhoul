@@ -60,6 +60,7 @@
   "message.hexkagune.pale.no_target": "Nothing there to reach",
   "message.hexkagune.graft.locked": "%s unlocks at mastery %s",
   "message.hexkagune.graft.no_move": "Nothing on that key at this stage",
+  "message.hexkagune.bikaku.not_yet": "Your worm only bites for now: its other moves come in later updates",
   "message.hexkagune.graft.no_vault": "Nothing behind you to drive the tails into",
   "message.hexkagune.graft.no_prey": "Nothing in reach to play with",
   "message.hexkagune.graft.recovering": "Your body is knitting: nothing else until it is done (the key again stops it)",

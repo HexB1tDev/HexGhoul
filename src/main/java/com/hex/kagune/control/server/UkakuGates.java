@@ -30,6 +30,10 @@ public final class UkakuGates {
     /** J: Rinkaku's grapple; on the Ukaku path the key is the Gatling, held (its trigger comes as {@code C2SUkakuAction.GATLING}). */
     public static void slingshot(ServerPlayer player) {
         // 6.1.0: on Pale's path J is her flesh (C2SPaleAction, timed by her client): the original's grapple never runs for her.
+        if (BikakuServer.isBikaku(player)) {
+            BikakuServer.notYet(player); // 3.4.9: the worm's own moves come later
+            return;
+        }
         if (!UkakuServer.isUkaku(player) && !PaleServer.isPale(player) && !GraftServer.isGraft(player) && !RinkakuAutonomy.refuse(player)
             && unlocked(player, "The grapple", RinkakuUnlocks.GRAPPLE)) {
             KaguneServerController.slingshotLegacy(player);
@@ -78,6 +82,9 @@ public final class UkakuGates {
         } else if (PaleServer.isPale(player) || GraftServer.isGraft(player)) {
             // 6.1.0: V is her kicks (C2SPaleAction, timed by her client); 7.0.0: Graft's V is his own (C2SGraftAction).
             return;
+        } else if (BikakuServer.isBikaku(player)) {
+            BikakuServer.notYet(player); // 3.4.9
+            return;
         } else if (!RinkakuAutonomy.refuse(player) && unlocked(player, "The lift", RinkakuUnlocks.LIFT)) {
             KaguneServerController.liftLegacy(player);
         }
@@ -86,6 +93,10 @@ public final class UkakuGates {
     public static void slam(ServerPlayer player) {
         if (PaleServer.isPale(player) || GraftServer.isGraft(player)) {
             return; // 6.2.0: B is her Watch This (C2SPaleAction, from her client); 7.0.0: Graft's B is his own
+        }
+        if (BikakuServer.isBikaku(player)) {
+            BikakuServer.notYet(player); // 3.4.9
+            return;
         }
         if (!refused(player, "message.hexkagune.ukaku.no_grapple") && !RinkakuAutonomy.refuse(player)
             && unlocked(player, "The slam", RinkakuUnlocks.SLAM)) {
@@ -99,8 +110,8 @@ public final class UkakuGates {
      * thing that ever raised it) is never called again; a guard somehow still up is let down. Rinkaku's block is its right click now.
      */
     public static void toggleGuard(ServerPlayer player) {
-        if (PaleServer.isPale(player) || GraftServer.isGraft(player)) {
-            return; // 6.1.0: Pale has no tendril guard; C does nothing on her path (7.0.0: Graft's C is his own guard)
+        if (PaleServer.isPale(player) || GraftServer.isGraft(player) || BikakuServer.isBikaku(player)) {
+            return; // 6.1.0: Pale has no tendril guard; C does nothing on her path (7.0.0: Graft's C is his own guard; 3.4.9: nor the worm)
         }
         if (UkakuServer.isUkaku(player)) {
             // 5.0.18: C is the final kakuja's Steel Blade.
@@ -127,7 +138,8 @@ public final class UkakuGates {
      */
     public static boolean tryStartFallArrest(ServerPlayer player, KaguneRuntime.State state, long now) {
         // 6.1.0: nor on Pale's path: her flesh never comes out to catch her (she lands her flips on her feet).
-        return !UkakuServer.isUkaku(player) && !PaleServer.isPale(player) && !GraftServer.isGraft(player) && !KakujaPassive.vanished(player)
+        return !UkakuServer.isUkaku(player) && !PaleServer.isPale(player) && !GraftServer.isGraft(player) && !BikakuServer.isBikaku(player)
+            && !KakujaPassive.vanished(player)
             && KaguneServerController.tryStartFallArrestLegacy(player, state, now);
     }
 
@@ -147,6 +159,10 @@ public final class UkakuGates {
     private static boolean refused(ServerPlayer player, String message) {
         if (GraftServer.isGraft(player)) {
             return true; // 7.0.0: his keys are his own moves (C2SGraftAction); the original's grab, throw, crush never run for him
+        }
+        if (BikakuServer.isBikaku(player)) {
+            BikakuServer.notYet(player); // 3.4.9: the original's grab, throw, crush, threat never run for the worm
+            return true;
         }
         if (PaleServer.isPale(player)) {
             PaleServer.notice(player, PaleServer.state(player), Component.m_237115_("message.hexkagune.pale.no_tendrils"));

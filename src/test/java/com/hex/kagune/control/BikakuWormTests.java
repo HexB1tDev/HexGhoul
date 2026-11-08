@@ -6,8 +6,8 @@ import com.hex.kagune.control.ukaku.KakujaModel;
 import com.hex.kagune.control.ukaku.UkakuModel;
 
 /**
- * Work in progress (after 3.4.8): the Bikaku path's worm (MawWorm, MawMotion), not wired into the game yet. Pure, off-game checks of its
- * shape, its mouth, its colours and how it moves.
+ * 3.4.9: the Bikaku path's worm (MawWorm, MawMotion; in the game since 3.4.9). Pure, off-game checks of its shape, its mouth, its colours
+ * and how it moves: at rest, through each bite of the M1 string, growing out, and in its owner's own first person.
  */
 public final class BikakuWormTests {
     private static int passed;
@@ -24,6 +24,9 @@ public final class BikakuWormTests {
         mouth();
         colours();
         motion();
+        string();
+        growing();
+        firstPerson();
         System.out.println("Bikaku worm tests: " + passed + " checks passed");
     }
 
@@ -124,5 +127,104 @@ public final class BikakuWormTests {
         double[] a = end.path()[end.path().length - 1];
         double[] b = rest.path()[rest.path().length - 1];
         check(Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) + Math.abs(a[2] - b[2]) < 1.0E-6, "a bite ends back at rest");
+    }
+
+    private static double distance(double[] a, double[] b) {
+        return Math.sqrt((a[0] - b[0]) * (a[0] - b[0]) + (a[1] - b[1]) * (a[1] - b[1]) + (a[2] - b[2]) * (a[2] - b[2]));
+    }
+
+    /** The worm's length along its spine. */
+    private static double length(MawMotion.Shape s) {
+        return MawWorm.spine(s.path(), s.dorsal(), 60).length();
+    }
+
+    /**
+     * 3.4.9: each bite of the M1 string (as the renderer poses it, MawMotion.of) lands on its target shut, gapes on the way, never jumps,
+     * ends at rest; thrown out it stays long (the owner: "make sure it's long"), the coils it doesn't need still zigzagging behind him; none
+     * of its points ever goes into his head or torso; a target out of reach is bitten as far as it reaches.
+     */
+    private static void string() {
+        double[][] targets = {{0.1, 0.99, 3.6}, {-1.2, 0.6, 2.2}, {0.8, 1.8, 5.5}, {0.0, 0.3, 1.6}};
+        for (com.hex.kagune.control.bikaku.BikakuRules.Bite bite : new com.hex.kagune.control.bikaku.BikakuRules.Bite[] {
+            com.hex.kagune.control.bikaku.BikakuRules.Bite.SNAP, com.hex.kagune.control.bikaku.BikakuRules.Bite.LUNGE,
+            com.hex.kagune.control.bikaku.BikakuRules.Bite.MAUL}) {
+            check(bite.land() > 2 && bite.land() < bite.ticks() - 3, bite + " shuts partway through, with time to shake and draw back");
+            for (double[] target : targets) {
+                double[] at = com.hex.kagune.control.bikaku.BikakuRules.reach(target);
+                MawMotion.Shape shut = MawMotion.of(40 + bite.land(), 7, bite, bite.land(), target);
+                double[] head = shut.path()[shut.path().length - 1];
+                check(distance(head, at) < 0.2, bite + " lands on its target (" + distance(head, at) + " off)");
+                check(shut.aperture() < 0.1, bite + " is shut as it lands");
+                check(length(shut) > 6.5, bite + " thrown out is still long (" + length(shut) + " blocks)");
+                // The coils it didn't need stay behind him, swinging from side to side.
+                double[] low = shut.path()[2];
+                double[] next = shut.path()[3];
+                check(low[2] < -0.4 && next[2] < -0.3 && Math.signum(low[0]) != Math.signum(next[0]), bite + "'s first coils stay zigzagging behind him");
+                double widest = 0.0;
+                double[] last = null;
+                for (double age = 0.0; age <= bite.ticks(); age += 0.25) {
+                    MawMotion.Shape s = MawMotion.of(40 + age, 7, bite, age, target);
+                    widest = Math.max(widest, s.aperture());
+                    double[] tip = s.path()[s.path().length - 1];
+                    if (last != null) {
+                        check(distance(tip, last) < 0.75, bite + " never jumps (" + distance(tip, last) + " in a quarter tick at " + age + ")");
+                    }
+                    last = tip;
+                    for (int i = 2; i < s.path().length; i++) {
+                        double[] p = s.path()[i];
+                        check(distance(p, new double[] {0.0, 1.72, 0.0}) > 0.6 - 1.0E-9, bite + ": nothing of it through his head (" + i + " at " + age + ")");
+                        check(!(p[1] > 0.6 && p[1] < 1.55 && Math.abs(p[0]) < 0.72 && p[2] > -0.4 + 1.0E-9 && p[2] < 0.4 - 1.0E-9),
+                            bite + ": nothing of it through his torso (" + i + " at " + age + ")");
+                    }
+                }
+                check(widest > 0.85, bite + " gapes on its way in");
+                MawMotion.Shape end = MawMotion.of(40 + bite.ticks(), 7, bite, bite.ticks(), target);
+                MawMotion.Shape rest = MawMotion.idle(40 + bite.ticks(), 7);
+                check(distance(end.path()[end.path().length - 1], rest.path()[rest.path().length - 1]) < 1.0E-9, bite + " ends at rest");
+            }
+        }
+        double[] far = com.hex.kagune.control.bikaku.BikakuRules.reach(new double[] {0.0, 1.0, 30.0});
+        check(Math.abs(distance(far, MawMotion.shoulder()) - com.hex.kagune.control.bikaku.BikakuRules.REACH) < 1.0E-9,
+            "something out of reach is bitten as far as the worm reaches");
+        check(MawMotion.of(10, 7, com.hex.kagune.control.bikaku.BikakuRules.Bite.SNAP, 99, new double[] {0, 1, 3}).aperture()
+            == MawMotion.idle(10, 7).aperture(), "a bite that is over is the worm at rest");
+    }
+
+    /** Coming out of his back: cut along its own line, longer the further out, exactly the whole worm when out. */
+    private static void growing() {
+        MawMotion.Shape s = MawMotion.idle(14, 7);
+        check(MawMotion.grown(s.path(), 1.0) == s.path(), "fully out it is the whole worm");
+        double last = 0.0;
+        boolean longer = true;
+        for (double g = 0.05; g < 1.0; g += 0.05) {
+            double[][] cut = MawMotion.grown(s.path(), g);
+            longer &= cut.length >= 2 && distance(cut[0], MawMotion.ROOT) < 1.0E-9;
+            double len = 0.0;
+            for (int i = 1; i < cut.length; i++) {
+                len += distance(cut[i], cut[i - 1]);
+            }
+            longer &= len > last;
+            last = len;
+        }
+        check(longer, "it grows out of his lower back, longer the further out");
+    }
+
+    /** His own first person: nothing within reach of his eyes, the near part aside to the right, the bite still on its target. */
+    private static void firstPerson() {
+        double[] eye = {0.0, 1.62, 0.0};
+        double[] target = {0.1, 0.99, 3.6};
+        for (double age = 0.0; age <= 12.0; age += 0.5) {
+            MawMotion.Shape s = MawMotion.of(30 + age, 7, com.hex.kagune.control.bikaku.BikakuRules.Bite.SNAP, age, target);
+            double[][] seen = MawMotion.firstPerson(s.path(), eye);
+            for (double[] p : seen) {
+                check(distance(p, eye) >= MawMotion.FIRST_PERSON_CLEAR - 1.0E-9, "in first person nothing of the worm comes near the eyes");
+            }
+            if (age == 6.0) {
+                double[] head = seen[seen.length - 1];
+                check(distance(head, target) < 0.35, "in first person the bite still lands on what it bites (" + distance(head, target) + ")");
+                double[] mid = seen[seen.length - 3];
+                check(mid[0] > 0.25, "in first person the worm comes in from his right, not over the middle of his view");
+            }
+        }
     }
 }

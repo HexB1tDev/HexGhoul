@@ -95,7 +95,8 @@ public final class BodyAnimations {
     public static void playManifestPain(AbstractClientPlayer player, int duration, int limbs) {
         ModifierLayer<IAnimation> layer = KaguneManifestationEffects.bodyEffectLayer(player);
         KagunePath path = PathClient.get(player);
-        if (layer == null || path == KagunePath.UKAKU || path == KagunePath.PALE || path == KagunePath.GRAFT) {
+        // 3.4.9: nor Bikaku (the owner's spec: "Noro barely reacts to injuries").
+        if (layer == null || path == KagunePath.UKAKU || path == KagunePath.PALE || path == KagunePath.GRAFT || path == KagunePath.BIKAKU) {
             // Ukaku's wings unfold without the host doubling over: he is never the kagune's victim. Nor is Graft (7.0.0).
             return;
         }
