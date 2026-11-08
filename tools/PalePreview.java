@@ -493,13 +493,13 @@ public final class PalePreview {
         }
     }
 
-    /** 3.4.8: the Owl's mask alone (built of blocks, {@link com.hex.kagune.control.pale.OwlMask}), its jaw {@code jaw} open. */
+    /** 3.4.8: the Owl's mask alone (sculpted, {@link com.hex.kagune.control.pale.OwlMask}), its jaw {@code jaw} open. */
     static List<WingPreview.Tri> maskTris(double jaw) {
         List<WingPreview.Tri> tris = new ArrayList<>();
         com.hex.kagune.control.pale.OwlMask.draw((a, b, c, d, n, ca, cb, cc, cd) -> {
             tris.add(new WingPreview.Tri(new double[][] {a, b, c}, new int[] {ca, cb, cc}, n, true));
             tris.add(new WingPreview.Tri(new double[][] {a, c, d}, new int[] {ca, cc, cd}, n, true));
-        }, new com.hex.kagune.control.pale.OwlMask.Frame(new double[] {0.0, 2.0, 0.0}, new double[] {1.0, 0.0, 0.0}, new double[] {0.0, 1.0, 0.0},
+        }, skinTris(tris), new com.hex.kagune.control.pale.OwlMask.Frame(new double[] {0.0, 2.0, 0.0}, new double[] {1.0, 0.0, 0.0}, new double[] {0.0, 1.0, 0.0},
             new double[] {0.0, 0.0, 1.0}, 1.0), jaw);
         return tris;
     }
@@ -521,7 +521,7 @@ public final class PalePreview {
         double saved = ArtPreview.fov;
         ArtPreview.fov = 40.0;
         try {
-            ArtPreview.sheet(file, "3.4.8: the Owl's mask, built of blocks (piece 1)", shots, 4, 400, 460);
+            ArtPreview.sheet(file, "3.4.8: the Owl's mask, sculpted (piece 1)", shots, 4, 400, 460);
         } finally {
             ArtPreview.fov = saved;
         }

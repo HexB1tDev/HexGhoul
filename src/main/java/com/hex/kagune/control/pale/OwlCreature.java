@@ -577,7 +577,9 @@ public final class OwlCreature {
     /** Its textures (tools/owl_smooth.py bakes them out of the model): all of it, and what of it burns (drawn again, adding light). */
     public enum Tex {
         OWL("one_eyed_owl", false, false), CREST("one_eyed_owl", false, true), OWL_GLOW("one_eyed_owl_glow", true, true),
-        HALO("owl_halo", true, true);
+        HALO("owl_halo", true, true),
+        /** 3.4.8: plain white, for the rebuilt Owl's smooth parts (their colour in each corner's tint, lit corner by corner). */
+        PLAIN("owl_white", false, false);
 
         public final String file;
         /** Drawn adding light (the crest's red, the eye, the slashes). */
