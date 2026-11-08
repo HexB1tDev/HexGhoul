@@ -120,16 +120,22 @@ public final class BikakuRenderer {
         // 3.5.4: the kakuja (or its growing or falling away): how far each part of it has grown, the worm swelling into it.
         com.hex.kagune.control.bikaku.MawKakuja.Growth growth = com.hex.kagune.control.bikaku.MawKakuja.growth(view.kakuja(), view.kakujaAge(clock));
         boolean tentacle = view.bite() == BikakuRules.Bite.TENTACLE;
-        if (view.bite() != BikakuRules.Bite.NONE && !tentacle && age < view.bite().ticks()) {
+        double biteSlower = tentacle ? 1.0 : BikakuRules.slower(view.reach(), BikakuRules.REACH); // 3.5.8: thrown further, slower
+        if (view.bite() != BikakuRules.Bite.NONE && !tentacle && age < view.bite().ticks() * biteSlower) {
             Entity followed = view.targetId() != 0 ? level.m_6815_(view.targetId()) : null;
             target = frame.rig(followed != null ? centre(followed, partial) : new double[] {view.x(), view.y(), view.z()});
         }
-        MawMotion.Shape shape = MawMotion.of(clock, seed, view.bite(), age, target);
+        MawMotion.Shape shape = MawMotion.of(clock, seed, view.bite(), age, target, view.reach());
+        if (target == null && view.charge() >= 0 && !view.kakuja()) {
+            // 3.5.8: a key held: the worm winds up.
+            shape = MawMotion.charging(clock, seed, view.charged(clock));
+        }
         MawMotion.Worm[] worms = {new MawMotion.Worm(shape, 1.0, 1.0, seed)};
         // 3.5.0: a move, while it is being made, over a bite.
         double moveAge = view.moveAge(clock);
         com.hex.kagune.control.bikaku.BikakuMove move = view.move();
-        if (move != com.hex.kagune.control.bikaku.BikakuMove.NONE && moveAge < move.ticks() + 2) {
+        double moveSlower = move.held() ? BikakuRules.slower(view.moveReach(), move.baseReach()) : 1.0;
+        if (move != com.hex.kagune.control.bikaku.BikakuMove.NONE && moveAge < (move.ticks() + 2) * moveSlower) {
             double[] point = {view.mx(), view.my(), view.mz()};
             if (move == com.hex.kagune.control.bikaku.BikakuMove.PURSUIT) {
                 // 3.5.1: three worms, each after its own body.
@@ -138,13 +144,14 @@ public final class BikakuRenderer {
                     Entity aimed = view.targets()[i] != 0 ? level.m_6815_(view.targets()[i]) : null;
                     aims[i] = frame.rig(aimed != null ? centre(aimed, partial) : point);
                 }
-                worms = MawMotion.pursuit(clock, seed, aims, moveAge);
+                worms = MawMotion.pursuit(clock, seed, aims, moveAge, Math.max(move.baseReach(), view.moveReach()));
             } else {
                 Entity aimed = view.targets()[0] != 0 ? level.m_6815_(view.targets()[0]) : null;
                 double[] aim = frame.rig(aimed != null ? centre(aimed, partial) : point);
                 Entity heldEntity = view.heldId() != 0 ? level.m_6815_(view.heldId()) : null;
                 double[] held = heldEntity != null ? frame.rig(centre(heldEntity, partial)) : null;
-                worms[0] = new MawMotion.Worm(MawMotion.move(clock, seed, move, moveAge, aim, held, view.caught()), 1.0, 1.0, seed);
+                worms[0] = new MawMotion.Worm(MawMotion.move(clock, seed, move, moveAge, aim, held, view.caught(), Math.max(move.baseReach(), view.moveReach())),
+                    1.0, 1.0, seed);
             }
         }
         // His body as drawn (hunched, leaning): the worm's root rides it.

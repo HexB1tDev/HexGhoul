@@ -29,6 +29,7 @@ public final class BikakuTests {
         moves();
         regeneration();
         kakujaMoves();
+        held();
         System.out.println("Bikaku tests: " + passed + " checks passed");
     }
 
@@ -289,6 +290,34 @@ public final class BikakuTests {
             && BikakuRules.JAWS_POWER < BikakuRules.HUNGER_POWER, "the sweep and the crush hit hardest; Thousand Jaws' many bites each lightly");
         for (com.hex.kagune.control.bikaku.BikakuMove move : own) {
             check(move.cooldown() >= 300 && move.cost() >= 10.0F, move + " cools down long and costs RC");
+        }
+    }
+
+    /**
+     * 3.5.8 (the owner: "it should be a held move that the longer you hold it for, the longer it goes for ... covering up to like 30
+     * blocks. Of course, attacks are not able to be performed until the kagune is pulled fully back"): a tap reaches what it always did, a
+     * full hold 30 blocks, the longer the further; a longer throw takes longer; the worm's thrown moves are held, the rest aren't.
+     */
+    private static void held() {
+        for (double base : new double[] {BikakuRules.REACH, BikakuRules.DRAG_REACH, BikakuRules.PURSUIT_REACH, BikakuRules.ERUPTION_REACH}) {
+            check(Math.abs(BikakuRules.heldReach(base, 0) - base) < 1e-9, "a tap reaches what it always did");
+            check(Math.abs(BikakuRules.heldReach(base, BikakuRules.CHARGE_FULL) - 30.0) < 1e-9
+                && Math.abs(BikakuRules.heldReach(base, BikakuRules.CHARGE_FULL * 3) - 30.0) < 1e-9, "a full hold reaches 30 blocks, no more");
+            double last = -1.0;
+            for (int t = 0; t <= BikakuRules.CHARGE_FULL; t++) {
+                double r = BikakuRules.heldReach(base, t);
+                check(r > last, "the longer it is held, the further it goes");
+                last = r;
+            }
+            check(Math.abs(BikakuRules.slower(base, base) - 1.0) < 1e-9 && BikakuRules.slower(30.0, base) > 1.5
+                && BikakuRules.slower(20.0, base) < BikakuRules.slower(30.0, base), "a tap takes as long as ever; further takes longer");
+        }
+        check(BikakuRules.HELD_REACH >= 30.0 && BikakuRules.CHARGE_FULL >= 20 && BikakuRules.CHARGE_GIVE_UP > BikakuRules.CHARGE_FULL,
+            "up to 30 blocks, a second or more to get there, let go by itself only long after");
+        for (com.hex.kagune.control.bikaku.BikakuMove move : com.hex.kagune.control.bikaku.BikakuMove.values()) {
+            boolean thrown = move == com.hex.kagune.control.bikaku.BikakuMove.MAW || move == com.hex.kagune.control.bikaku.BikakuMove.DRAG
+                || move == com.hex.kagune.control.bikaku.BikakuMove.PURSUIT || move == com.hex.kagune.control.bikaku.BikakuMove.ERUPTION;
+            check(move.held() == thrown, move + (thrown ? " is held to throw it further" : " isn't held"));
         }
     }
 }

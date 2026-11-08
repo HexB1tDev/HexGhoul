@@ -86,6 +86,20 @@ public final class BikakuServer {
         final boolean[] autoShut = new boolean[S2CBikakuState.AUTOS];
         final long[] autoReadyAt = filledLongs(Long.MIN_VALUE);
         long nextAutoAt = Long.MIN_VALUE;
+        /**
+         * 3.5.8: how far the bite out was thrown and how many times slower it is for it ({@link BikakuRules#slower}); the move's likewise;
+         * a key held to wind up a throw ({@link #CHARGE_ATTACK} M1, else its {@code BikakuMove.Slot} ordinal; -1 none), since when, at
+         * whom; how far the waiting click and move key go.
+         */
+        double biteReach = BikakuRules.REACH;
+        double biteSlower = 1.0;
+        double moveReach;
+        double moveSlower = 1.0;
+        int charge = -1;
+        long chargeAt = Long.MIN_VALUE;
+        int chargeHint;
+        double queuedReach = BikakuRules.REACH;
+        double queuedSlotReach;
         /** 3.5.7, Flesh Cataclysm: the bodies it has already struck (each once). */
         final java.util.Set<Integer> struck = new java.util.HashSet<>();
 
@@ -125,6 +139,8 @@ public final class BikakuServer {
             this.landed = false;
             this.lastBite = null;
             this.queuedAt = Long.MIN_VALUE;
+            this.charge = -1; // 3.5.8
+            this.chargeAt = Long.MIN_VALUE;
             this.undyingAt = -1_000_000L; // 3.5.7
             this.undyingSlowUntil = Long.MIN_VALUE;
             this.calmAutos();
@@ -156,7 +172,7 @@ public final class BikakuServer {
             return false;
         }
         long now = player.m_9236_().m_46467_();
-        return state.bite != Bite.NONE && now - state.startedAt == state.bite.land() || BikakuMoves.biting(state, now);
+        return state.bite != Bite.NONE && now - state.startedAt == (long)Math.ceil(state.bite.land() * state.biteSlower) || BikakuMoves.biting(state, now);
     }
 
     /** 3.5.3: true while Monstrous Regeneration lasts. */
@@ -368,7 +384,7 @@ public final class BikakuServer {
         return new S2CBikakuState(player.m_20148_(), state.bite.ordinal(), state.startedAt, state.aim.f_82479_, state.aim.f_82480_, state.aim.f_82481_,
             state.targetId, state.move.ordinal(), state.moveAt, state.movePoint.f_82479_, state.movePoint.f_82480_, state.movePoint.f_82481_,
             state.targets.clone(), state.heldId, state.caught, state.regenAt, state.kakuja, state.kakujaAt, state.undyingAt, state.autoAt.clone(),
-            state.autoTarget.clone());
+            state.autoTarget.clone(), (float)state.biteReach, (float)state.moveReach, state.charge, state.chargeAt);
     }
 
     static void broadcast(ServerPlayer player, State state) {
@@ -407,6 +423,25 @@ public final class BikakuServer {
         if (!isBikaku(player) || PaleWitness.frozen(player) || PaleRevive.down(player) || PaleStun.stunned(player) || !ready(player)) {
             return;
         }
+        State state = state(player);
+        long now = player.m_9236_().m_46467_();
+        Entity hint = targetId > 0 ? player.m_284548_().m_6815_(targetId) : null;
+        // 3.5.8: M1 and the worm's thrown moves are held: the press winds it up, letting go throws it as far as it was held for.
+        if (action == com.hex.kagune.control.network.C2SBikakuAction.ATTACK) {
+            if (state.kakuja) {
+                strike(player, hint);
+            } else {
+                windUp(player, state, CHARGE_ATTACK, targetId, now);
+            }
+            return;
+        }
+        if (action == com.hex.kagune.control.network.C2SBikakuAction.ATTACK_UP || action == com.hex.kagune.control.network.C2SBikakuAction.KEY_UP) {
+            int which = action == com.hex.kagune.control.network.C2SBikakuAction.ATTACK_UP ? CHARGE_ATTACK : arg;
+            if (state.charge == which) {
+                letGo(player, state, targetId, now);
+            }
+            return;
+        }
         if (action != com.hex.kagune.control.network.C2SBikakuAction.KEY) {
             return;
         }
@@ -414,10 +449,12 @@ public final class BikakuServer {
         if (arg <= 0 || arg >= slots.length) {
             return;
         }
-        State state = state(player);
-        long now = player.m_9236_().m_46467_();
-        Entity hint = targetId > 0 ? player.m_284548_().m_6815_(targetId) : null;
         KakujaPassive.attacked(player);
+        BikakuMove pressed = BikakuMove.of(slots[arg], state.kakuja);
+        if (!state.kakuja && pressed.held()) {
+            windUp(player, state, arg, targetId, now);
+            return;
+        }
         if (state.kakuja && now - state.kakujaAt < com.hex.kagune.control.bikaku.MawKakuja.IN) {
             return; // 3.5.7: still growing into it
         }
@@ -425,9 +462,10 @@ public final class BikakuServer {
             state.queuedSlot = slots[arg];
             state.queuedSlotAt = now;
             state.queuedSlotHint = targetId;
+            state.queuedSlotReach = pressed.baseReach();
             return;
         }
-        BikakuMoves.key(player, state, slots[arg], hint, now);
+        BikakuMoves.key(player, state, slots[arg], hint, now, pressed.baseReach());
     }
 
     /** "{@code key}" on the action bar with its arguments, at most every few seconds. */
@@ -451,6 +489,11 @@ public final class BikakuServer {
 
     /** Trampoline target of the original M1 (through {@code KaguneCombat.startSwipe}): the next bite of the string. */
     public static void strike(ServerPlayer player, Entity hint) {
+        strike(player, hint, BikakuRules.REACH);
+    }
+
+    /** 3.5.8: the next bite, thrown as far as {@code reach} (a click waiting for the worm to be back waits with it). */
+    static void strike(ServerPlayer player, Entity hint, double reach) {
         if (!ready(player) || PaleWitness.frozen(player) || PaleRevive.down(player) || PaleStun.stunned(player)) {
             return;
         }
@@ -459,18 +502,68 @@ public final class BikakuServer {
         if (out(state, now) || BikakuMoves.busy(state, now)) {
             state.queuedAt = now;
             state.queuedHint = hint == null ? 0 : hint.m_19879_();
+            state.queuedReach = reach;
             return;
         }
-        begin(player, state, hint, now);
+        begin(player, state, hint, now, reach);
+    }
+
+    // ---------------------------------------------------------------- 3.5.8: held to throw it further
+
+    /** A wind-up of M1 (as opposed to a move key's slot ordinal). */
+    static final int CHARGE_ATTACK = 9;
+
+    /** M1 or a thrown move's key goes down: the worm winds up (every client sees it), until it is let go. */
+    private static void windUp(ServerPlayer player, State state, int which, int hint, long now) {
+        state.charge = which;
+        state.chargeAt = now;
+        state.chargeHint = hint;
+        broadcast(player, state);
+    }
+
+    /** Let go: thrown as far as it was held for ({@link BikakuRules#heldReach}); if the worm is still out, when it is back. */
+    private static void letGo(ServerPlayer player, State state, int hintId, long now) {
+        int which = state.charge;
+        long held = Math.max(0L, now - state.chargeAt);
+        state.charge = -1;
+        state.chargeAt = Long.MIN_VALUE;
+        int aimed = hintId > 0 ? hintId : state.chargeHint;
+        Entity hint = aimed > 0 ? player.m_284548_().m_6815_(aimed) : null;
+        broadcast(player, state);
+        if (which == CHARGE_ATTACK) {
+            strike(player, hint, BikakuRules.heldReach(BikakuRules.REACH, held));
+            return;
+        }
+        BikakuMove.Slot[] slots = BikakuMove.Slot.values();
+        if (which <= 0 || which >= slots.length) {
+            return;
+        }
+        BikakuMove move = BikakuMove.of(slots[which], state.kakuja);
+        double reach = move.held() ? BikakuRules.heldReach(move.baseReach(), held) : move.baseReach();
+        if ((out(state, now) || BikakuMoves.busy(state, now)) && move.occupies()) {
+            state.queuedSlot = slots[which];
+            state.queuedSlotAt = now;
+            state.queuedSlotHint = aimed;
+            state.queuedSlotReach = reach;
+            return;
+        }
+        BikakuMoves.key(player, state, slots[which], hint, now, reach);
     }
 
     /** True while a bite is still out (until it is back at rest). */
     static boolean out(State state, long now) {
-        return state.bite != Bite.NONE && now - state.startedAt < state.bite.ticks() && now >= state.startedAt;
+        return state.bite != Bite.NONE && now - state.startedAt < state.bite.ticks() * state.biteSlower && now >= state.startedAt;
     }
 
     private static void begin(ServerPlayer player, State state, Entity hint, long now) {
+        begin(player, state, hint, now, BikakuRules.REACH);
+    }
+
+    /** 3.5.8: a bite thrown as far as {@code reach} (the kakuja's tentacle as far as it always does). */
+    private static void begin(ServerPlayer player, State state, Entity hint, long now, double reach) {
         boolean big = state.kakuja;
+        state.biteReach = big ? BikakuRules.KAKUJA_REACH : Math.max(BikakuRules.REACH, reach);
+        state.biteSlower = big ? 1.0 : BikakuRules.slower(state.biteReach, BikakuRules.REACH);
         if (big && now - state.kakujaAt < com.hex.kagune.control.bikaku.MawKakuja.IN) {
             return; // 3.5.4: still growing into it
         }
@@ -479,11 +572,11 @@ public final class BikakuServer {
         if (!KaguneServerController.useEnergy(player, bite.cost(), true)) {
             return;
         }
-        LivingEntity target = big ? aimFrom(player, hint, kakujaCentre(player), BikakuRules.KAKUJA_REACH) : aim(player, hint);
+        LivingEntity target = big ? aimFrom(player, hint, kakujaCentre(player), BikakuRules.KAKUJA_REACH) : aimFrom(player, hint, shoulder(player), state.biteReach);
         state.bite = bite;
         state.startedAt = now;
         state.targetId = target == null ? 0 : target.m_19879_();
-        state.aim = target == null ? (big ? player.m_146892_().m_82549_(player.m_20154_().m_82490_(BikakuRules.KAKUJA_REACH * 0.8)) : ahead(player))
+        state.aim = target == null ? player.m_146892_().m_82549_(player.m_20154_().m_82490_((big ? BikakuRules.KAKUJA_REACH : state.biteReach) * (big ? 0.8 : 0.85)))
             : KaguneServerController.center(target);
         state.landed = false;
         state.lastBite = bite;
@@ -494,7 +587,7 @@ public final class BikakuServer {
         // 1.0.40 (as every path's M1): another's M1 landing on him before this bite shuts meets it, and both stop.
         long began = state.startedAt;
         double hit = KaguneClash.strength(player, bite.power(), true);
-        KaguneClash.swing(player, now, bite.land() + 1, big ? BikakuRules.KAKUJA_REACH : BikakuRules.REACH, hit, () -> state.bite == bite && state.startedAt == began,
+        KaguneClash.swing(player, now, (int)Math.ceil(bite.land() * state.biteSlower) + 1, state.biteReach, hit, () -> state.bite == bite && state.startedAt == began,
             () -> clashed(player, state));
         broadcast(player, state);
     }
@@ -618,6 +711,16 @@ public final class BikakuServer {
             }
             return;
         }
+        // 3.5.8: a wind-up held too long (its letting go lost, or forgotten) goes by itself; while held, how far it will go, on the action bar.
+        if (state.charge >= 0 && now - state.chargeAt > BikakuRules.CHARGE_GIVE_UP) {
+            letGo(player, state, 0, now);
+        } else if (state.charge >= 0 && (now - state.chargeAt) % 3L == 0L) {
+            double base = state.charge == CHARGE_ATTACK ? BikakuRules.REACH : state.charge > 0 && state.charge < BikakuMove.Slot.values().length
+                ? BikakuMove.of(BikakuMove.Slot.values()[state.charge], false).baseReach() : 0.0;
+            if (base > 0.0) {
+                player.m_5661_(Component.m_237110_("message.hexkagune.bikaku.reach", Math.round(BikakuRules.heldReach(base, now - state.chargeAt))), true);
+            }
+        }
         // 3.5.0: the move it is making; when it ends, a key or a click waiting for it.
         if (state.move != BikakuMove.NONE) {
             BikakuMoves.tick(player, state, now);
@@ -626,11 +729,11 @@ public final class BikakuServer {
                     BikakuMove.Slot slot = state.queuedSlot;
                     state.queuedSlot = null;
                     Entity hint = state.queuedSlotHint > 0 ? player.m_284548_().m_6815_(state.queuedSlotHint) : null;
-                    BikakuMoves.key(player, state, slot, hint, now);
+                    BikakuMoves.key(player, state, slot, hint, now, state.queuedSlotReach);
                 } else if (state.queuedAt != Long.MIN_VALUE && now - state.queuedAt <= BikakuRules.BUFFER + 40) {
                     Entity hint = state.queuedHint > 0 ? player.m_284548_().m_6815_(state.queuedHint) : null;
                     state.queuedAt = Long.MIN_VALUE;
-                    begin(player, state, hint, now);
+                    begin(player, state, hint, now, state.queuedReach);
                 }
                 state.queuedSlot = null;
                 state.queuedAt = Long.MIN_VALUE;
@@ -638,25 +741,25 @@ public final class BikakuServer {
         }
         if (state.bite != Bite.NONE) {
             long age = now - state.startedAt;
-            if (!state.landed && age >= state.bite.land()) {
+            if (!state.landed && age >= state.bite.land() * state.biteSlower) {
                 state.landed = true;
                 land(player, state, now);
             }
-            if (age >= state.bite.ticks() || age < 0) {
+            if (age >= state.bite.ticks() * state.biteSlower || age < 0) {
                 state.bite = Bite.NONE;
                 state.startedAt = Long.MIN_VALUE;
                 state.targetId = 0;
                 state.dirty = true;
-                if (state.queuedSlot != null && now - state.queuedSlotAt <= BikakuRules.BUFFER + state.lastBite.ticks()) {
+                if (state.queuedSlot != null && now - state.queuedSlotAt <= BikakuRules.BUFFER + state.lastBite.ticks() * state.biteSlower) {
                     // 3.5.0: a move key pressed during the bite goes first.
                     BikakuMove.Slot slot = state.queuedSlot;
                     state.queuedSlot = null;
                     Entity hint = state.queuedSlotHint > 0 ? player.m_284548_().m_6815_(state.queuedSlotHint) : null;
-                    BikakuMoves.key(player, state, slot, hint, now);
-                } else if (state.queuedAt != Long.MIN_VALUE && now - state.queuedAt <= BikakuRules.BUFFER + state.lastBite.ticks()) {
+                    BikakuMoves.key(player, state, slot, hint, now, state.queuedSlotReach);
+                } else if (state.queuedAt != Long.MIN_VALUE && now - state.queuedAt <= BikakuRules.BUFFER + state.lastBite.ticks() * state.biteSlower) {
                     Entity hint = state.queuedHint > 0 ? player.m_284548_().m_6815_(state.queuedHint) : null;
                     state.queuedAt = Long.MIN_VALUE;
-                    begin(player, state, hint, now);
+                    begin(player, state, hint, now, state.queuedReach);
                 }
                 state.queuedAt = Long.MIN_VALUE;
                 state.queuedSlot = null;
@@ -671,7 +774,7 @@ public final class BikakuServer {
     private static void land(ServerPlayer player, State state, long now) {
         boolean big = state.bite == Bite.TENTACLE;
         Vec3 from = big ? kakujaCentre(player) : shoulder(player);
-        double reach = big ? BikakuRules.KAKUJA_REACH : BikakuRules.REACH;
+        double reach = big ? BikakuRules.KAKUJA_REACH : state.biteReach;
         LivingEntity body = null;
         if (state.targetId != 0 && player.m_284548_().m_6815_(state.targetId) instanceof LivingEntity target && target.m_6084_()
             && KaguneServerController.validSwipeTarget(player, target)

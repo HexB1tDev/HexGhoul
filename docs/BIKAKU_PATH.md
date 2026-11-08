@@ -30,6 +30,9 @@ round his right side (its spots widened, its coils spread from there, its mouth 
 Autonomous Predation (its tentacles biting hostile bodies on their own); its other passives were in since 3.5.4. Previews
 `docs/handoff/bikaku-kakuja-moves-3.5.7.png`, `bikaku-kakuja-undying-3.5.7.png`.
 
+**3.5.8 (the owner's range, first half):** M1 and the worm's thrown moves are held: wound up while held, thrown as far as they were held
+for (a tap as before, 30 blocks after 2 s), every beat slower for a longer throw, nothing else until it is back. Round blocks: 3.5.9.
+
 **Before 3.4.9 (the pure worm, unchanged since except as above):**
 
 - `control/bikaku/MawWorm.java`: the worm as a mesh (pure). A thick muscular tube along a spine resampled evenly by length

@@ -231,13 +231,40 @@ public final class BikakuRules {
      * toward it as the worm reaches.
      */
     public static double[] reach(double[] target) {
+        return reach(target, REACH);
+    }
+
+    /** 3.5.8: {@code target} held to {@code reach} from over his shoulder (a bite thrown as far as it was held for). */
+    public static double[] reach(double[] target, double reach) {
         double[] from = MawMotion.SHOULDER;
         double[] to = GraftMesh.sub(target, from);
         double distance = GraftMesh.length3(to);
-        if (distance <= REACH || distance < 1.0E-9) {
+        if (distance <= reach || distance < 1.0E-9) {
             return target;
         }
-        return GraftMesh.add(from, GraftMesh.mul(to, REACH / distance));
+        return GraftMesh.add(from, GraftMesh.mul(to, reach / distance));
+    }
+
+    /**
+     * 3.5.8 (the owner: "it should be a held move that the longer you hold it for, the longer it goes for ... this specific kagune should
+     * have a lot of range, like covering up to like 30 blocks. Of course, attacks are not able to be performed until the kagune is pulled
+     * fully back"): held, a bite or a move reaches from its own reach on a tap to {@link #HELD_REACH} after {@link #CHARGE_FULL} ticks; held
+     * past {@link #CHARGE_GIVE_UP}, it goes by itself.
+     */
+    public static final double HELD_REACH = 30.0;
+    public static final int CHARGE_FULL = 40;
+    public static final int CHARGE_GIVE_UP = 240;
+    /** 3.5.8: how much longer (a share of its time) a throw takes for each block it reaches past its own reach: out and back. */
+    public static final double SLOWER_PER_BLOCK = 0.05;
+
+    /** 3.5.8: how far a bite or move whose own reach is {@code base} goes after a hold of {@code held} ticks. */
+    public static double heldReach(double base, double held) {
+        return base + (HELD_REACH - base) * Math.max(0.0, Math.min(1.0, held / CHARGE_FULL));
+    }
+
+    /** 3.5.8: how many times longer a throw to {@code reach} takes than one to its own {@code base} reach (every beat of it). */
+    public static double slower(double reach, double base) {
+        return 1.0 + Math.max(0.0, reach - base) * SLOWER_PER_BLOCK;
     }
 
     /** Where a bite at nothing goes: ahead along the look, as far as it reaches (body frame, from the eyes). */

@@ -129,6 +129,22 @@ public enum BikakuMove {
         return this == MAW || this == DRAG || this == HUNGER;
     }
 
+    /** 3.5.8: its reach on a tap (held, it goes further: {@link BikakuRules#heldReach}); 0 for a move that isn't thrown. */
+    public double baseReach() {
+        return switch (this) {
+            case MAW -> BikakuRules.REACH;
+            case DRAG -> BikakuRules.DRAG_REACH;
+            case PURSUIT -> BikakuRules.PURSUIT_REACH;
+            case ERUPTION -> BikakuRules.ERUPTION_REACH;
+            default -> 0.0;
+        };
+    }
+
+    /** 3.5.8: true for a move held to throw it further (its key's press winds it up, letting go throws it). */
+    public boolean held() {
+        return this.baseReach() > 0.0;
+    }
+
     /** 3.5.7: one of the kakuja's own moves (made only in it; the worm's are made only out of it). */
     public boolean kakuja() {
         return this == JAWS || this == HUNGER || this == CATACLYSM || this == UNDYING;

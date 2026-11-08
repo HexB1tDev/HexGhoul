@@ -76,7 +76,9 @@ public final class BikakuFx {
             SEEN.remove(id);
             return;
         }
-        double age = view.moveAge(clock);
+        // 3.5.8: thrown further, every beat of it slower (on its own beats here).
+        double reach = Math.max(BikakuMove.ERUPTION.baseReach(), view.moveReach());
+        double age = view.moveAge(clock) / com.hex.kagune.control.bikaku.BikakuRules.slower(reach, BikakuMove.ERUPTION.baseReach());
         if (age > BikakuMove.ERUPTION.ticks() + 2) {
             return;
         }
@@ -96,20 +98,20 @@ public final class BikakuFx {
         double yaw = Math.toRadians(player.f_20883_);
         double[] target = rig(player, yaw, mark);
         for (int tick = Math.max(0, last + 1); tick <= now; tick++) {
-            beat(minecraft, level, player, yaw, target, tick);
+            beat(minecraft, level, player, yaw, target, tick, reach);
         }
     }
 
     /** What the ground does on tick {@code tick} of the eruption. */
-    private static void beat(Minecraft minecraft, ClientLevel level, AbstractClientPlayer player, double yaw, double[] target, int tick) {
-        double[] spot = MawMotion.eruptSpot(target);
+    private static void beat(Minecraft minecraft, ClientLevel level, AbstractClientPlayer player, double yaw, double[] target, int tick, double reach) {
+        double[] spot = MawMotion.eruptSpot(target, reach);
         Vec3 entry = world(player, yaw, new double[] {0.45, 0.05, 1.2});
         if (tick == 6 || tick == BikakuMove.ERUPT_BACK + 1) {
             // It goes into the ground before him (and comes back out there).
             dust(entry, 10, 0.9);
             chips(entry, 8, 0.5);
         }
-        double[] bulge = MawMotion.eruptBulge(target, tick);
+        double[] bulge = MawMotion.eruptBulge(target, tick, reach);
         if (bulge != null) {
             // The ground heaving over its head as it tunnels.
             Vec3 at = world(player, yaw, bulge).m_82520_(0.0, 0.1, 0.0);

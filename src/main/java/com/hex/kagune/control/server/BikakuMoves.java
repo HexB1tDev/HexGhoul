@@ -31,6 +31,11 @@ final class BikakuMoves {
 
     /** A move key: the move on it, if it is open, off cooldown and paid for. */
     static void key(ServerPlayer player, BikakuServer.State state, BikakuMove.Slot slot, Entity hint, long now) {
+        key(player, state, slot, hint, now, BikakuMove.of(slot, state.kakuja).baseReach());
+    }
+
+    /** 3.5.8: as above, a thrown move thrown as far as {@code reach} (held for). */
+    static void key(ServerPlayer player, BikakuServer.State state, BikakuMove.Slot slot, Entity hint, long now, double reach) {
         BikakuMove move = BikakuMove.of(slot, state.kakuja); // 3.5.7: in the kakuja, its own moves on the same keys
         if (move == BikakuMove.NONE) {
             if (state.kakuja) {
@@ -60,7 +65,7 @@ final class BikakuMoves {
             regenerate(player, state, move, now);
             return;
         }
-        start(player, state, move, hint, now);
+        start(player, state, move, hint, now, reach);
     }
 
     /** 3.5.7: Undying Abomination begins (its tentacles keep doing what they do). */
@@ -81,24 +86,30 @@ final class BikakuMoves {
         BikakuServer.broadcast(player, state);
     }
 
-    private static void start(ServerPlayer player, BikakuServer.State state, BikakuMove move, Entity hint, long now) {
+    private static void start(ServerPlayer player, BikakuServer.State state, BikakuMove move, Entity hint, long now, double held) {
         if (move.kakuja()) {
+            state.moveReach = BikakuRules.KAKUJA_REACH;
+            state.moveSlower = 1.0;
             startKakuja(player, state, move, hint, now);
             return;
         }
+        // 3.5.8: as far as it was held for, every beat slower for it.
+        double reach = Math.max(move.baseReach(), held);
+        state.moveReach = reach;
+        state.moveSlower = BikakuRules.slower(reach, move.baseReach());
         LivingEntity target = switch (move) {
-            case DRAG -> aimGround(player, hint, BikakuRules.DRAG_REACH);
-            case ERUPTION -> aimGround(player, hint, BikakuRules.ERUPTION_REACH);
-            default -> BikakuServer.aim(player, hint);
+            case DRAG -> aimGround(player, hint, reach);
+            case ERUPTION -> aimGround(player, hint, reach);
+            default -> BikakuServer.aimFrom(player, hint, BikakuServer.shoulder(player), reach);
         };
         state.move = move;
         state.moveAt = now;
         java.util.Arrays.fill(state.targets, 0);
         state.targets[0] = target == null ? 0 : target.m_19879_();
         state.movePoint = target != null ? KaguneServerController.center(target) : switch (move) {
-            case DRAG -> groundAhead(player, BikakuRules.DRAG_REACH * 0.8);
-            case ERUPTION -> groundAhead(player, BikakuRules.ERUPTION_REACH * 0.7);
-            default -> BikakuServer.ahead(player);
+            case DRAG -> groundAhead(player, reach * 0.8);
+            case ERUPTION -> groundAhead(player, reach * 0.7);
+            default -> player.m_146892_().m_82549_(player.m_20154_().m_82490_(reach * 0.85));
         };
         if (move == BikakuMove.PURSUIT) {
             pursuitTargets(player, state, target);
@@ -115,14 +126,18 @@ final class BikakuMoves {
 
     /** Each tick of the move it is making: its beats, what it holds, its end. */
     static void tick(ServerPlayer player, BikakuServer.State state, long now) {
-        long age = now - state.moveAt;
+        long real = now - state.moveAt;
         BikakuMove move = state.move;
-        if (age < 0) {
+        if (real < 0) {
             finish(player, state);
             return;
         }
+        // 3.5.8: a move thrown further runs every beat slower ({@code age} on its own beats; what it holds moved to the next real tick's).
+        double k = Math.max(1.0, state.moveSlower);
+        long age = (long)Math.floor(real / k);
+        double next = (real + 1) / k;
         switch (move) {
-            case MAW, DRAG -> grabTick(player, state, move, age, now);
+            case MAW, DRAG -> grabTick(player, state, move, age, next, now);
             case PURSUIT -> pursuitTick(player, state, age, now);
             case ERUPTION -> eruptionTick(player, state, age, now);
             case JAWS -> jawsTick(player, state, age, now);
@@ -138,7 +153,7 @@ final class BikakuMoves {
 
     /** True this tick while one of its moves' mouths is shutting on something (its wounds are the teeth's punctures). */
     static boolean biting(BikakuServer.State state, long now) {
-        long age = now - state.moveAt;
+        long age = (long)Math.floor((now - state.moveAt) / Math.max(1.0, state.moveSlower)); // 3.5.8: on its own beats
         if (state.move == BikakuMove.PURSUIT) {
             for (int i = 0; i < BikakuMove.PURSUIT_WORMS; i++) {
                 if (age == BikakuMove.pursuitLands(i)) {
@@ -176,7 +191,7 @@ final class BikakuMoves {
     }
 
     /** A grab's beats: its bite, what it holds, the fling or the slam. */
-    private static void grabTick(ServerPlayer player, BikakuServer.State state, BikakuMove move, long age, long now) {
+    private static void grabTick(ServerPlayer player, BikakuServer.State state, BikakuMove move, long age, double next, long now) {
         if (state.done == 0 && age >= move.land()) {
             state.done = 1;
             land(player, state, move, now);
@@ -184,7 +199,7 @@ final class BikakuMoves {
         if (state.heldId != 0) {
             long until = move == BikakuMove.MAW ? BikakuMove.MAW_RELEASE : BikakuMove.DRAG_SLAM;
             if (age < until) {
-                double[] at = move == BikakuMove.MAW ? MawMotion.mawHeld(state.heldAt, age + 1) : MawMotion.dragHeld(state.heldAt, age + 1);
+                double[] at = move == BikakuMove.MAW ? MawMotion.mawHeld(state.heldAt, next) : MawMotion.dragHeld(state.heldAt, next);
                 hold(player, state, at);
             }
         }
@@ -209,7 +224,7 @@ final class BikakuMoves {
         }
         Vec3 eye = player.m_146892_();
         Vec3 look = player.m_20154_();
-        double reach = BikakuRules.PURSUIT_REACH;
+        double reach = state.moveReach;
         java.util.List<LivingEntity> near = new java.util.ArrayList<>(player.m_284548_().m_6443_(LivingEntity.class, player.m_20191_().m_82400_(reach + 1.0),
             living -> fair(player, living) && KaguneServerController.center(living).m_82554_(eye) <= reach + living.m_20205_()));
         near.sort(java.util.Comparator.comparingDouble(body -> body.m_20280_(player)));
@@ -254,13 +269,13 @@ final class BikakuMoves {
             Vec3 eye = player.m_146892_();
             LivingEntity body = null;
             if (state.targets[i] != 0 && player.m_284548_().m_6815_(state.targets[i]) instanceof LivingEntity target && fair(player, target)
-                && KaguneServerController.center(target).m_82554_(eye) <= BikakuRules.PURSUIT_REACH + target.m_20205_()) {
+                && KaguneServerController.center(target).m_82554_(eye) <= state.moveReach + target.m_20205_()) {
                 body = target;
             }
             if (body == null) {
                 Vec3 to = state.movePoint.m_82546_(eye);
                 double d = to.m_82553_();
-                Vec3 mouth = d <= BikakuRules.PURSUIT_REACH || d < 1.0E-6 ? state.movePoint : eye.m_82549_(to.m_82490_(BikakuRules.PURSUIT_REACH / d));
+                Vec3 mouth = d <= state.moveReach || d < 1.0E-6 ? state.movePoint : eye.m_82549_(to.m_82490_(state.moveReach / d));
                 body = nearest(player, mouth);
             }
             if (body != null) {
@@ -278,7 +293,7 @@ final class BikakuMoves {
             // It has come under its mark: where it bursts up is fixed (where its mark stands now), and every client is told.
             state.done = 1;
             if (state.targets[0] != 0 && player.m_284548_().m_6815_(state.targets[0]) instanceof LivingEntity target && target.m_6084_()
-                && flat(target.m_20182_().m_82546_(player.m_20182_())) <= BikakuRules.ERUPTION_REACH + 2.0) {
+                && flat(target.m_20182_().m_82546_(player.m_20182_())) <= state.moveReach + 2.0) {
                 state.movePoint = KaguneServerController.center(target);
                 state.eruptVictim = target.m_19879_();
             }
@@ -288,7 +303,7 @@ final class BikakuMoves {
         }
         if (state.done == 1 && age >= BikakuMove.ERUPTION.land()) {
             state.done = 2;
-            double[] spot = MawMotion.eruptSpot(BikakuServer.rig(player, state.movePoint));
+            double[] spot = MawMotion.eruptSpot(BikakuServer.rig(player, state.movePoint), state.moveReach);
             Vec3 at = BikakuServer.world(player, spot);
             double r = BikakuRules.ERUPTION_RADIUS;
             AABB area = new AABB(at.f_82479_ - r, at.f_82480_ - 0.6, at.f_82481_ - r, at.f_82479_ + r, at.f_82480_ + 3.2, at.f_82481_ + r);
@@ -677,18 +692,18 @@ final class BikakuMoves {
         if (move == BikakuMove.DRAG) {
             Vec3 feet = player.m_20182_();
             if (state.targets[0] != 0 && player.m_284548_().m_6815_(state.targets[0]) instanceof LivingEntity target && fair(player, target)
-                && flat(KaguneServerController.center(target).m_82546_(feet)) <= BikakuRules.DRAG_REACH + target.m_20205_()) {
+                && flat(KaguneServerController.center(target).m_82546_(feet)) <= state.moveReach + target.m_20205_()) {
                 body = target;
             }
-            double[] reach = MawMotion.dragReach(BikakuServer.rig(player, state.movePoint));
+            double[] reach = MawMotion.dragReach(BikakuServer.rig(player, state.movePoint), state.moveReach);
             mouth = BikakuServer.world(player, reach);
         } else {
             Vec3 from = BikakuServer.shoulder(player);
             if (state.targets[0] != 0 && player.m_284548_().m_6815_(state.targets[0]) instanceof LivingEntity target && fair(player, target)
-                && KaguneServerController.center(target).m_82554_(from) <= BikakuRules.REACH + target.m_20205_()) {
+                && KaguneServerController.center(target).m_82554_(from) <= state.moveReach + target.m_20205_()) {
                 body = target;
             }
-            mouth = BikakuServer.mouth(from, state.movePoint);
+            mouth = BikakuServer.mouth(from, state.movePoint, state.moveReach);
         }
         if (body == null) {
             body = nearest(player, mouth);

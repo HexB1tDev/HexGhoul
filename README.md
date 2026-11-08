@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.5.8 (HexGhoul): Bikaku: hold to throw further, up to 30 blocks (testing)
+
+See `.github/release-notes-3.5.8.md`. Your words: "it should be a held move that the longer you hold it for, the longer it goes for ... up to like 30 blocks. Of course, attacks are not able to be performed until the kagune is pulled fully back." M1 and the worm's thrown moves (G, J, Z, B) wind up while held and are thrown as far as they were held for: a tap as before, 30 blocks after 2 s; a longer throw is slower out and back, nothing else until it is back; the reach on the action bar. Not round blocks yet (next). Protocol 99. Preview: `docs/handoff/bikaku-held-3.5.8.png`.
+
 ## 3.5.7 (HexGhoul): Bikaku: the kakuja's four moves and its passives (testing)
 
 See `.github/release-notes-3.5.7.md`. In the kakuja (mastery 1000, mastery alone): Thousand Jaws (Z: every mouthed tentacle biting its own body again and again, the grins snapping at what is close), Endless Hunger (G: three mouths and a coiling tentacle hold one body and bite it, then the great maw crushes it; every bite heals), Flesh Cataclysm (B: draws in, bursts out roaring, tentacles flung out and swept round: close bodies hurled, struck ones hit hard), Undying Abomination (C: 10 s of extraordinary regeneration and still less damage, slowed but never stopped by a heavy blow). Autonomous Predation: its tentacles bite hostile bodies near it on their own. Protocol 98. Previews: `docs/handoff/bikaku-kakuja-moves-3.5.7.png`, `bikaku-kakuja-undying-3.5.7.png`.

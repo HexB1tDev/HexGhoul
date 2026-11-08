@@ -55,9 +55,13 @@ Binding; quoted exactly as written. Kept current as that session goes.
 - **3.5.7 shipped:** the kakuja's four moves and Autonomous Predation (`MawKakuja.Act`, `KakujaActs`, `BikakuMoves`). The preview was
   sent to the owner before the server side (`docs/handoff/bikaku-kakuja-moves-3.5.7.png`, `bikaku-kakuja-undying-3.5.7.png`); no answer
   before it was pushed. Versions 3.5.7; protocol "98"; next free message id 56.
-- **Next: the range** (the owner: "it should be a held move that the longer you hold it for, the longer it goes for ... covering up to like
-  30 blocks. Of course, attacks are not able to be performed until the kagune is pulled fully back ... go around blocks like a worm"),
-  then **the forms** (two worms, three, the walking form), each with its own moves. Show previews before going far.
+- Then **"PROCEED"**. **3.5.8 shipped:** held to throw further (M1 and G/J/Z/B; a tap as before, 30 blocks after 2 s; slower out and back;
+  nothing else until it is back). Preview sent first (`docs/handoff/bikaku-held-3.5.8.png`). Versions 3.5.8; protocol "99".
+- **Next: 3.5.9, round blocks** (the owner: "It should adapt to blocks, and that's where I say flexibility, like go around blocks like a
+  worm, sort of, and actually go around them. It's being able to adapt to the terrain itself and pulling people back and shit"): the
+  server finds a way through the air round blocks to what it bites (a short search on the block grid, smoothed), sends it to the
+  clients, the worm is drawn along it, and a catch is pulled back along it. Then **the forms** (two worms, three, the walking form), each
+  with its own moves. Show previews before going far.
 
 ## Where things were when this note was written (after 3.5.3)
 

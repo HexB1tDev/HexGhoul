@@ -65,6 +65,7 @@
   "message.hexkagune.bikaku.cooldown": "%s is ready in %s s",
   "message.hexkagune.bikaku.kakuja_spent": "Your RC ran dry: the kakuja falls away",
   "message.hexkagune.bikaku.kakuja_none": "Nothing on that key in the kakuja",
+  "message.hexkagune.bikaku.reach": "Reach: %s blocks",
   "message.hexkagune.graft.no_vault": "Nothing behind you to drive the tails into",
   "message.hexkagune.graft.no_prey": "Nothing in reach to play with",
   "message.hexkagune.graft.recovering": "Your body is knitting: nothing else until it is done (the key again stops it)",

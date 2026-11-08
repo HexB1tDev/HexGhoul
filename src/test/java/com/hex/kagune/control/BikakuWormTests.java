@@ -33,6 +33,7 @@ public final class BikakuWormTests {
         kakuja();
         roundHim();
         kakujaMoves();
+        heldFar();
         System.out.println("Bikaku worm tests: " + passed + " checks passed");
     }
 
@@ -630,6 +631,73 @@ public final class BikakuWormTests {
                     check(finite[0] && quads[0] > 1500, move + " is built of finite quads (" + quads[0] + " at " + age + ")");
                 }
             }
+        }
+    }
+
+    /**
+     * 3.5.8: held, each throw goes as far as it was held for: M1 bites, Devouring Maw and Predatory Drag land on bodies up to 30 blocks
+     * out (on their own beats, slower), Ravenous Pursuit's worms at 20; the worm thrown far stays whole, snakes along its whole length, never
+     * jumps, keeps out of his body and ends at rest; wound up, it draws back as it is held.
+     */
+    private static void heldFar() {
+        double[] far = {1.0, 0.99, 28.0};
+        for (com.hex.kagune.control.bikaku.BikakuRules.Bite bite : new com.hex.kagune.control.bikaku.BikakuRules.Bite[] {
+            com.hex.kagune.control.bikaku.BikakuRules.Bite.SNAP, com.hex.kagune.control.bikaku.BikakuRules.Bite.LUNGE,
+            com.hex.kagune.control.bikaku.BikakuRules.Bite.MAUL}) {
+            double k = com.hex.kagune.control.bikaku.BikakuRules.slower(30.0, com.hex.kagune.control.bikaku.BikakuRules.REACH);
+            MawMotion.Shape shut = MawMotion.of(40 + bite.land() * k, 7, bite, bite.land() * k, far, 30.0);
+            double[] head = shut.path()[shut.path().length - 1];
+            check(distance(head, far) < 0.25 && shut.aperture() < 0.1, bite + " held full lands on a body 28 blocks out, shut (" + distance(head, far) + ")");
+            check(length(shut) > 25.0, bite + " thrown 28 blocks is that long (" + length(shut) + ")");
+            check(MawMotion.of(40, 7, bite, bite.ticks() * k + 0.01, far, 30.0).path().length == MawMotion.idle(40, 7).path().length
+                && distance(MawMotion.of(40, 7, bite, bite.ticks() * k + 0.01, far, 30.0).path()[0], MawMotion.idle(40, 7).path()[0]) < 1e-9,
+                bite + " held full is back at rest only after its longer time");
+            MawMotion.Shape last = null;
+            for (double age = 0.0; age < bite.ticks() * k; age += 0.25) {
+                MawMotion.Shape s = MawMotion.of(40 + age, 7, bite, age, far, 30.0);
+                double[][] drawn = MawMotion.around(s.path(), 1.0, s.aperture());
+                check(depthInHim(drawn, 1.0, s.aperture()) < 0.03, bite + " thrown far is drawn round him (" + age + ")");
+                if (last != null) {
+                    // (it covers 30 blocks in about 7 ticks: over a block a quarter tick is its speed; a flip through him would be several)
+                    check(moved(last.path(), s.path()) < 2.6, bite + " thrown far never jumps (" + moved(last.path(), s.path()) + " at " + age + ")");
+                }
+                last = s;
+            }
+            // It snakes along its whole length: well off the straight line in its first half too.
+            KakujaModel.Spine spine = MawWorm.spine(shut.path(), shut.dorsal(), 120);
+            double off = 0.0;
+            for (int i = 10; i < 60; i++) {
+                off = Math.max(off, Math.abs(spine.p()[i][0] - (MawMotion.shoulder()[0] + (far[0] - MawMotion.shoulder()[0]) * (spine.p()[i][2] - MawMotion.shoulder()[2])
+                    / (far[2] - MawMotion.shoulder()[2]))));
+            }
+            check(off > 0.4, bite + " thrown far snakes along its first half too (" + off + ")");
+        }
+        double[] ground = {1.0, 0.99, 28.0};
+        for (com.hex.kagune.control.bikaku.BikakuMove move : new com.hex.kagune.control.bikaku.BikakuMove[] {com.hex.kagune.control.bikaku.BikakuMove.MAW,
+            com.hex.kagune.control.bikaku.BikakuMove.DRAG}) {
+            double k = com.hex.kagune.control.bikaku.BikakuRules.slower(30.0, move.baseReach());
+            MawMotion.Shape shut = MawMotion.move(40, 7, move, move.land() * k, ground, null, true, 30.0);
+            double[] head = shut.path()[shut.path().length - 1];
+            double[] aim = move == com.hex.kagune.control.bikaku.BikakuMove.MAW ? com.hex.kagune.control.bikaku.BikakuRules.reach(ground, 30.0)
+                : MawMotion.dragReach(ground, 30.0);
+            check(distance(head, aim) < 0.9 && shut.aperture() < 0.1, move + " held full bites 28 blocks out (" + distance(head, aim) + ")");
+            double[] end = MawMotion.move(40, 7, move, move.ticks() * k + 0.01, ground, null, true, 30.0).path()[0];
+            check(distance(end, MawMotion.idle(40, 7).path()[0]) < 1e-9, move + " ends at rest after its longer time");
+        }
+        double[][] three = {{6.0, 0.99, 17.0}, {-7.0, 0.99, 16.0}, {0.5, 0.99, 19.0}};
+        double pk = com.hex.kagune.control.bikaku.BikakuRules.slower(20.0, com.hex.kagune.control.bikaku.BikakuRules.PURSUIT_REACH);
+        for (int i = 0; i < 3; i++) {
+            double lands = com.hex.kagune.control.bikaku.BikakuMove.pursuitLands(i) * pk;
+            MawMotion.Worm[] worms = MawMotion.pursuit(40 + lands, 7, three, lands, 20.0);
+            double[] head = worms[i].shape().path()[worms[i].shape().path().length - 1];
+            check(distance(head, three[i]) < 0.6, "Ravenous Pursuit held to 20: worm " + i + " bites its body (" + distance(head, three[i]) + ")");
+        }
+        // Wound up: drawn back further the longer it is held; finite.
+        double before = MawMotion.charging(40, 7, 0.0).path()[MawMotion.charging(40, 7, 0.0).path().length - 1][2];
+        double after = MawMotion.charging(40, 7, 1.0).path()[MawMotion.charging(40, 7, 1.0).path().length - 1][2];
+        check(after < before - 0.8, "wound up, its head draws back behind him (" + before + " to " + after + ")");
+        for (double[] q : MawMotion.charging(77, 7, 0.6).path()) {
+            check(Double.isFinite(q[0]) && Double.isFinite(q[1]) && Double.isFinite(q[2]), "its wind-up is finite");
         }
     }
 

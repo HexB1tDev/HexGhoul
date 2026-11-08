@@ -98,10 +98,32 @@ public final class MawMotion {
      * held to its reach), or at rest when it makes none or the bite is over. The renderer and the previews both pose it here.
      */
     public static Shape of(double time, int seed, BikakuRules.Bite bite, double age, double[] target) {
-        if (bite == null || bite == BikakuRules.Bite.NONE || target == null || !(age >= 0.0) || age >= bite.ticks()) {
+        return of(time, seed, bite, age, target, BikakuRules.REACH);
+    }
+
+    /**
+     * 3.5.8: as above, thrown as far as {@code reach} (held: up to {@link BikakuRules#HELD_REACH}); a longer throw takes longer, every beat of
+     * it ({@link BikakuRules#slower}), out and back.
+     */
+    public static Shape of(double time, int seed, BikakuRules.Bite bite, double age, double[] target, double reach) {
+        double k = BikakuRules.slower(reach, BikakuRules.REACH);
+        if (bite == null || bite == BikakuRules.Bite.NONE || target == null || !(age >= 0.0) || age >= bite.ticks() * k) {
             return idle(time, seed);
         }
-        return bite(time, seed, BikakuRules.reach(target), age, bite.ticks(), bite.land(), bite.style());
+        return bite(time, seed, BikakuRules.reach(target, reach), age / k, bite.ticks(), bite.land(), bite.style());
+    }
+
+    /**
+     * 3.5.8: the worm wound up while its key is held ({@code charge} 0 .. 1, how far toward its farthest): drawn back and up behind his
+     * shoulder, coiled, trembling, its mouth slowly opening.
+     */
+    public static Shape charging(double time, int seed, double charge) {
+        double c = GraftMesh.smooth(GraftMesh.clamp01(charge));
+        double[] head = GraftMesh.add(idleHead(time, seed), new double[] {-0.1 * c + 0.05 * c * Math.sin(time * 2.3), 0.5 * c + 0.04 * c * Math.sin(time * 3.1),
+            -1.05 * c});
+        double[] look = GraftMesh.normalize(GraftMesh.lerp(idleLook(time, seed), new double[] {0.0, 0.25, 1.0}, 0.8 * c));
+        double mouth = lerp(idleMouth(time, seed), 0.35 + 0.35 * c + 0.06 * Math.sin(time * 2.7), c);
+        return new Shape(path(head, look, time, seed, 0.0), dorsal(), GraftMesh.clamp01(mouth));
     }
 
     /** First person: how far the near part of the worm is kept to the right and up (blocks, at the eyes), and how far out that fades. */
@@ -252,13 +274,23 @@ public final class MawMotion {
      * seen), having caught something or not; past its end (or no move), at rest.
      */
     public static Shape move(double time, int seed, BikakuMove move, double age, double[] target, double[] held, boolean caught) {
-        if (move == null || target == null || !(age >= 0.0) || age >= (caught ? move.ticks() : move.missedTicks())) {
+        return move(time, seed, move, age, target, held, caught, move == null ? 0.0 : move.baseReach());
+    }
+
+    /** 3.5.8: as above, thrown as far as {@code reach}; every beat of it slower for a longer throw ({@link BikakuRules#slower}). */
+    public static Shape move(double time, int seed, BikakuMove move, double age, double[] target, double[] held, boolean caught, double reach) {
+        if (move == null || target == null || !(age >= 0.0)) {
             return idle(time, seed);
         }
+        double k = BikakuRules.slower(reach, move.baseReach());
+        if (age >= (caught ? move.ticks() : move.missedTicks()) * k) {
+            return idle(time, seed);
+        }
+        double a = age / k;
         return switch (move) {
-            case MAW -> maw(time, seed, target, held, age, caught);
-            case DRAG -> drag(time, seed, target, held, age, caught);
-            case ERUPTION -> eruption(time, seed, target, age);
+            case MAW -> maw(time, seed, target, held, a, caught, reach);
+            case DRAG -> drag(time, seed, target, held, a, caught, reach);
+            case ERUPTION -> eruption(time, seed, target, a, reach);
             default -> idle(time, seed);
         };
     }
@@ -308,11 +340,16 @@ public final class MawMotion {
      * and snapped shut round it; holding it up, shaking; the fling; back to rest. Missed, it snaps on nothing and draws back.
      */
     public static Shape maw(double time, int seed, double[] target, double[] held, double age, boolean caught) {
+        return maw(time, seed, target, held, age, caught, BikakuRules.REACH);
+    }
+
+    /** 3.5.8: as above, thrown as far as {@code range} ({@code age} already on its own beats). */
+    public static Shape maw(double time, int seed, double[] target, double[] held, double age, boolean caught, double range) {
         BikakuMove move = BikakuMove.MAW;
         int land = move.land();
         double[] restHead = idleHead(time, seed);
         double[] restLook = idleLook(time, seed);
-        double[] aim = BikakuRules.reach(target);
+        double[] aim = BikakuRules.reach(target, range);
         double[] toward = way(SHOULDER, aim);
         double[] coiled = GraftMesh.add(GraftMesh.add(restHead, new double[] {0.25, 0.55, -0.75}), GraftMesh.mul(toward, -0.45));
         double[] bitten = GraftMesh.sub(aim, GraftMesh.mul(toward, GRIP));
@@ -416,11 +453,16 @@ public final class MawMotion {
      * weaving like a snake; it bites on low, drags it back across the ground to him, lifts it high and slams it down, lets go, back to rest.
      */
     public static Shape drag(double time, int seed, double[] target, double[] held, double age, boolean caught) {
+        return drag(time, seed, target, held, age, caught, BikakuRules.DRAG_REACH);
+    }
+
+    /** 3.5.8: as above, along the ground as far as {@code range} ({@code age} already on its own beats). */
+    public static Shape drag(double time, int seed, double[] target, double[] held, double age, boolean caught, double range) {
         BikakuMove move = BikakuMove.DRAG;
         int land = move.land();
         double[] restHead = idleHead(time, seed);
         double[] restLook = idleLook(time, seed);
-        double[] aim = dragReach(target);
+        double[] aim = dragReach(target, range);
         double[] flat = way(new double[] {0.0, 0.0, 0.0}, new double[] {aim[0], 0.0, aim[2]});
         double[] side = GraftMesh.normalize(GraftMesh.cross(new double[] {0.0, 1.0, 0.0}, flat));
         // 3.5.5: down to the ground beside his right foot on the target's side (it always went down before him, then back through his
@@ -510,11 +552,16 @@ public final class MawMotion {
 
     /** Predatory Drag's reach: along the ground, as far as {@link BikakuRules#DRAG_REACH} from his feet. */
     public static double[] dragReach(double[] target) {
+        return dragReach(target, BikakuRules.DRAG_REACH);
+    }
+
+    /** 3.5.8: Predatory Drag's reach held to {@code reach}. */
+    public static double[] dragReach(double[] target, double reach) {
         double flat = Math.hypot(target[0], target[2]);
-        if (flat <= BikakuRules.DRAG_REACH || flat < 1.0E-9) {
+        if (flat <= reach || flat < 1.0E-9) {
             return target;
         }
-        double k = BikakuRules.DRAG_REACH / flat;
+        double k = reach / flat;
         return new double[] {target[0] * k, target[1], target[2] * k};
     }
 
@@ -579,6 +626,12 @@ public final class MawMotion {
      * its own body in a fast snaking lunge, bites, and goes back; then the two draw back into the root and the worm is whole again.
      */
     public static Worm[] pursuit(double time, int seed, double[][] targets, double age) {
+        return pursuit(time, seed, targets, age, BikakuRules.PURSUIT_REACH);
+    }
+
+    /** 3.5.8: as above, each worm thrown as far as {@code reach}; every beat slower for a longer throw ({@code held} ticks in). */
+    public static Worm[] pursuit(double time, int seed, double[][] targets, double held, double reach) {
+        double age = held / BikakuRules.slower(reach, BikakuRules.PURSUIT_REACH);
         double split = GraftMesh.smooth(GraftMesh.clamp01(age / BikakuMove.PURSUIT_SPLIT))
             * (1.0 - GraftMesh.smooth(GraftMesh.clamp01((age - BikakuMove.PURSUIT_MERGE) / (double)(BikakuMove.PURSUIT.ticks() - BikakuMove.PURSUIT_MERGE))));
         double thin = lerp(1.0, BikakuRules.PURSUIT_GIRTH, split);
@@ -599,7 +652,7 @@ public final class MawMotion {
             // The main worm moves out into its lane as it splits (and back as they merge); the others grow out already in theirs.
             double into = i == 0 ? out : 1.0;
             if (biteAge >= 0.0 && biteAge < total) {
-                double[] there = pursuitUnframe(i, BikakuRules.reach(pursuitReach(target)), into);
+                double[] there = pursuitUnframe(i, BikakuRules.reach(pursuitReach(target, reach), Math.max(BikakuRules.REACH, reach)), into);
                 mine = bite(time, own, there, biteAge, total, BikakuMove.PURSUIT_LEAD, 3);
             } else {
                 mine = idle(time, own);
@@ -620,10 +673,15 @@ public final class MawMotion {
 
     /** Ravenous Pursuit's reach: as far as {@link BikakuRules#PURSUIT_REACH} from his eyes. */
     public static double[] pursuitReach(double[] target) {
+        return pursuitReach(target, BikakuRules.PURSUIT_REACH);
+    }
+
+    /** 3.5.8: Ravenous Pursuit's reach held to {@code reach} (from his eyes). */
+    public static double[] pursuitReach(double[] target, double reach) {
         double[] eye = {0.0, 1.62, 0.0};
         double[] to = GraftMesh.sub(target, eye);
         double d = GraftMesh.length3(to);
-        return d <= BikakuRules.PURSUIT_REACH || d < 1.0E-9 ? target : GraftMesh.add(eye, GraftMesh.mul(to, BikakuRules.PURSUIT_REACH / d));
+        return d <= reach || d < 1.0E-9 ? target : GraftMesh.add(eye, GraftMesh.mul(to, reach / d));
     }
 
     // ---------------------------------------------------------------- 3.5.1: Carrion Eruption
@@ -638,9 +696,14 @@ public final class MawMotion {
 
     /** Where Carrion Eruption bursts up (the body's frame, on the ground: {@code target} its mark's middle), held to its reach. */
     public static double[] eruptSpot(double[] target) {
+        return eruptSpot(target, BikakuRules.ERUPTION_REACH);
+    }
+
+    /** 3.5.8: where Carrion Eruption bursts up, held to {@code reach}. */
+    public static double[] eruptSpot(double[] target, double reach) {
         double ground = target[1] - 0.99;
         double flat = Math.hypot(target[0], target[2]);
-        double k = flat > BikakuRules.ERUPTION_REACH && flat > 1.0E-9 ? BikakuRules.ERUPTION_REACH / flat : 1.0;
+        double k = flat > reach && flat > 1.0E-9 ? reach / flat : 1.0;
         return new double[] {target[0] * k, ground, target[2] * k};
     }
 
@@ -684,11 +747,16 @@ public final class MawMotion {
 
     /** Where the ground heaves over its head as it tunnels (the body's frame), or null while its head is not under the ground. */
     public static double[] eruptBulge(double[] target, double age) {
+        return eruptBulge(target, age, BikakuRules.ERUPTION_REACH);
+    }
+
+    /** 3.5.8: as above, its mark held to {@code reach} ({@code age} already on its own beats). */
+    public static double[] eruptBulge(double[] target, double age, double reach) {
         double knot = eruptKnot(age);
         if (knot < 4.0 || knot > 5.0) {
             return null;
         }
-        double[] spot = eruptSpot(target);
+        double[] spot = eruptSpot(target, reach);
         double[] p = onTrack(eruptTrack(new double[] {0.0, 0.0, 0.0}, spot), knot);
         double w = knot - 4.0;
         return new double[] {p[0], lerp(0.0, spot[1], w), p[2]};
@@ -701,9 +769,14 @@ public final class MawMotion {
      * the ground to rest. What is under the ground is hidden by the ground itself.
      */
     public static Shape eruption(double time, int seed, double[] target, double age) {
+        return eruption(time, seed, target, age, BikakuRules.ERUPTION_REACH);
+    }
+
+    /** 3.5.8: as above, as far as {@code reach} ({@code age} already on its own beats). */
+    public static Shape eruption(double time, int seed, double[] target, double age, double reach) {
         double[] restHead = idleHead(time, seed);
         double[] restLook = idleLook(time, seed);
-        double[] spot = eruptSpot(target);
+        double[] spot = eruptSpot(target, reach);
         double[][] track = eruptTrack(restHead, spot);
         double knot = eruptKnot(age);
         double[] head = onTrack(track, knot);
@@ -832,12 +905,17 @@ public final class MawMotion {
             // Uncoiled if the bite needs it (from the head back), placed along the way over the shoulder by how far it is from the head.
             double w = GraftMesh.smooth(GraftMesh.clamp01((need + 0.9 - ARC[k]) / 1.8)) * straighten;
             // 3.5.6: past a {@code via}, a long throw's coils spread over the whole way from there (its first coils had gone far out along
-            // the ground, the worm running from his back straight past his hip to them).
-            double spread = via == null ? need : Math.min(need, ARC[0] / 0.94);
+            // the ground, the worm running from his back straight past his hip to them). 3.5.8: so for any throw longer than the worm is
+            // (held far, the coils all crowded at its head, the rest of it one straight line).
+            double spread = Math.min(need, ARC[0] / 0.94);
             double f = Math.max(0.06, Math.min(0.94, 1.0 - ARC[k] / spread));
             double taper = Math.sqrt(Math.sin(Math.PI * f));
-            double[] on = GraftMesh.add(onLine(line, f), GraftMesh.add(GraftMesh.mul(sideways, 0.32 * taper * sign),
-                new double[] {0.0, -0.1 * taper * sign, 0.0}));
+            // 3.5.8: thrown far, it snakes wider (a long straight worm looked like a rod), the wave running down it as it goes.
+            double far = GraftMesh.clamp01((need - 8.0) / 10.0);
+            double sway = Math.min(LONG_SWAY_MOST, 0.32 + LONG_SWAY * Math.max(0.0, need - 8.0));
+            double side = far <= 0.0 ? sign : Math.cos(k * Math.PI - t * LONG_SLITHER * far);
+            double[] on = GraftMesh.add(onLine(line, f), GraftMesh.add(GraftMesh.mul(sideways, sway * taper * side),
+                new double[] {0.0, -0.1 * taper * side, 0.0}));
             double[] stay = GraftMesh.lerp(rest, add(rest, new double[] {0.0, -0.3, 0.45}), 0.5 * straighten);
             if (via != null) {
                 // 3.5.5: on the way down his side, the coils it leaves behind him draw in to his right (a coil on his left had the worm
@@ -857,6 +935,12 @@ public final class MawMotion {
         path[n + 4] = head;
         return path;
     }
+
+    /** 3.5.8: how much wider a worm thrown far sways, for each block past 8 it needs to reach, and at most. */
+    static final double LONG_SWAY = 0.035;
+    static final double LONG_SWAY_MOST = 1.1;
+    /** 3.5.8: how fast the wave runs down a worm thrown far (radians a tick). */
+    static final double LONG_SLITHER = 0.3;
 
     /** 3.5.5: how much more of the worm uncoils for a way past a {@code via}, for each block from there to the anchor. */
     static final double VIA_SLACK = 1.6;

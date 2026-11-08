@@ -34,10 +34,15 @@ public final class BikakuClient {
     public record View(Bite bite, long startedAt, double began, double x, double y, double z, int targetId, BikakuMove move, long moveAt,
                        double moveBegan, double mx, double my, double mz, int[] targets, int heldId, boolean caught, long regenAt, double regenBegan,
                        boolean kakuja, long kakujaAt, double kakujaBegan, long undyingAt, double undyingBegan, long[] autoAt, double[] autoBegan,
-                       int[] autoTarget) {
+                       int[] autoTarget, double reach, double moveReach, int charge, long chargeAt, double chargeBegan) {
         public static final View NONE = new View(Bite.NONE, Long.MIN_VALUE, 0.0, 0.0, 0.0, 0.0, 0, BikakuMove.NONE, Long.MIN_VALUE, 0.0, 0.0, 0.0,
             0.0, new int[S2CBikakuState.TARGETS], 0, false, -1_000_000L, -1.0E6, false, -1_000_000L, -1.0E6, -1_000_000L, -1.0E6,
-            new long[S2CBikakuState.AUTOS], filled(-1.0E6), new int[S2CBikakuState.AUTOS]);
+            new long[S2CBikakuState.AUTOS], filled(-1.0E6), new int[S2CBikakuState.AUTOS], BikakuRules.REACH, 0.0, -1, Long.MIN_VALUE, 0.0);
+
+        /** 3.5.8: how far toward its farthest the wind-up is (0 .. 1; 0 none). */
+        public double charged(double clock) {
+            return this.charge < 0 ? 0.0 : Math.max(0.0, Math.min(1.0, (clock - this.chargeBegan) / BikakuRules.CHARGE_FULL));
+        }
 
         /** 3.5.7: ticks since Undying Abomination began. */
         public double undyingAge(double clock) {
@@ -105,7 +110,9 @@ public final class BikakuClient {
             message.targetId(), BikakuMove.byOrdinal(message.move()), message.moveAt(), moveBegan, message.mx(), message.my(), message.mz(),
             message.targets(), message.heldId(), message.caught(), message.regenAt(), regenBegan, message.kakuja(), message.kakujaAt(),
             kakujaBegan(before, message, world, clock), message.undyingAt(), began(before == null ? null : before.undyingAt(), before == null ? 0.0
-                : before.undyingBegan(), message.undyingAt(), world, clock), message.autoAt(), autoBegan(before, message, world, clock), message.autoTarget()));
+                : before.undyingBegan(), message.undyingAt(), world, clock), message.autoAt(), autoBegan(before, message, world, clock), message.autoTarget(),
+            message.reach(), message.moveReach(), message.charge(), message.chargeAt(), began(before == null ? null : before.chargeAt(), before == null ? 0.0
+                : before.chargeBegan(), message.chargeAt(), world, clock)));
     }
 
     /** 3.5.7: when (the client clock) something that began at {@code at} began here: its clock running on if it is told again. */

@@ -58,6 +58,9 @@ public class MawPreview {
         if (which.equals("regen") || which.equals("all")) {
             regen(new File(out, "maw-regen.png"));
         }
+        if (which.equals("held") || which.equals("all")) {
+            held(new File(out, "maw-held.png"));
+        }
         if (which.equals("kakujamoves") || which.equals("all")) {
             kakujaMoves(new File(out, "maw-kakuja-moves.png"));
         }
@@ -391,6 +394,82 @@ public class MawPreview {
         g.dispose();
         ImageIO.write(img, "png", file);
         System.out.println(file);
+    }
+
+    /** 3.5.8: held to throw it further: the wind-up, a bite thrown 30 blocks, Predatory Drag 30 blocks along the ground, Ravenous Pursuit at 20. */
+    static void held(File file) throws Exception {
+        int fw = 300;
+        int fh = 280;
+        int cols = 7;
+        BufferedImage img = new BufferedImage(fw * cols, fh * 4 + 34, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = sheet(img, "Bikaku 3.5.8: held to throw further (a tap as before, a full 2 s hold 30 blocks; slower out and back, nothing else until it is back)");
+        double[] charges = {0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.0};
+        for (int i = 0; i < cols; i++) {
+            double time = 50 + i * 7;
+            MawMotion.Shape s = MawMotion.charging(time, SEED, charges[i]);
+            double reach = BikakuRules.heldReach(BikakuRules.REACH, charges[i] * BikakuRules.CHARGE_FULL);
+            g.drawImage(PoseRender.render(new RigPose(), framedAt(-60, 8, 9.0, 0.1), fw, fh, worm(s, 1.0, time, 0xA50F37, true)), i * fw, 34, null);
+            label(g, String.format("held %.1f s: reach %.0f blocks", charges[i] * BikakuRules.CHARGE_FULL / 20.0, reach), i * fw, 34);
+        }
+        // Snap thrown 30 blocks at a body 28 out.
+        double[] far = {1.0, 0.99, 28.0};
+        BikakuRules.Bite snap = BikakuRules.Bite.SNAP;
+        double k = BikakuRules.slower(30.0, BikakuRules.REACH);
+        double[] snapAges = {0, 0.25, 0.4, 0.5, 0.65, 0.85, 1.0};
+        for (int i = 0; i < cols; i++) {
+            double age = snapAges[i] * snap.ticks() * k;
+            double time = 120 + age;
+            MawMotion.Shape s = MawMotion.of(time, SEED, snap, age, far, 30.0);
+            List<PoseRender.Tri> tris = worm(s, 1.0, time, 0xA50F37, true);
+            tris.addAll(prey(new double[] {far[0], 0.0, far[2]}));
+            g.drawImage(PoseRender.render(new RigPose(), wideAt(-90, 10, 44.0, 14.0, 1.8), fw, fh, tris), i * fw, 34 + fh, null);
+            label(g, String.format("M1 held full: %.0ft of %.0f%s", age, snap.ticks() * k, Math.abs(age - snap.land() * k) < 0.6 ? "  BITES" : ""), i * fw, 34 + fh);
+        }
+        // Predatory Drag 30 blocks along the ground.
+        com.hex.kagune.control.bikaku.BikakuMove drag = com.hex.kagune.control.bikaku.BikakuMove.DRAG;
+        double[] ground = {1.0, 0.99, 28.0};
+        double dk = BikakuRules.slower(30.0, drag.baseReach());
+        double[] dragAges = {0.05, 0.15, 0.24, 0.4, 0.55, 0.72, 0.8};
+        for (int i = 0; i < cols; i++) {
+            double age = dragAges[i] * drag.ticks() * dk;
+            double time = 200 + age;
+            double scaled = age / dk;
+            double[] held = scaled < drag.land() ? ground : MawMotion.dragHeld(MawMotion.dragReach(ground, 30.0), Math.min(scaled, com.hex.kagune.control.bikaku.BikakuMove.DRAG_SLAM));
+            MawMotion.Shape s = MawMotion.move(time, SEED, drag, age, ground, scaled >= drag.land() ? held : null, true, 30.0);
+            List<PoseRender.Tri> tris = worm(s, 1.0, time, 0xA50F37, true);
+            if (scaled <= com.hex.kagune.control.bikaku.BikakuMove.DRAG_SLAM) {
+                tris.addAll(prey(new double[] {held[0], held[1] - 0.99, held[2]}));
+            }
+            g.drawImage(PoseRender.render(new RigPose(), wideAt(-90, 14, 44.0, 14.0, 1.4), fw, fh, tris), i * fw, 34 + 2 * fh, null);
+            label(g, String.format("Drag held full: %.0ft of %.0f", age, drag.ticks() * dk), i * fw, 34 + 2 * fh);
+        }
+        // Ravenous Pursuit at 20 blocks, three bodies.
+        double[][] three = {{6.0, 0.99, 17.0}, {-7.0, 0.99, 16.0}, {0.5, 0.99, 19.0}};
+        double pk = BikakuRules.slower(20.0, BikakuRules.PURSUIT_REACH);
+        double[] pursuitAges = {0.05, 0.2, 0.3, 0.42, 0.55, 0.7, 0.9};
+        for (int i = 0; i < cols; i++) {
+            double age = pursuitAges[i] * com.hex.kagune.control.bikaku.BikakuMove.PURSUIT.ticks() * pk;
+            double time = 300 + age;
+            List<PoseRender.Tri> tris = worms(MawMotion.pursuit(time, SEED, three, age, 20.0), time);
+            for (double[] t : three) {
+                tris.addAll(prey(new double[] {t[0], 0.0, t[2]}));
+            }
+            g.drawImage(PoseRender.render(new RigPose(), wideAt(-30, 28, 40.0, 9.0, 1.2), fw, fh, tris), i * fw, 34 + 3 * fh, null);
+            label(g, String.format("Pursuit at 20: %.0ft of %.0f", age, com.hex.kagune.control.bikaku.BikakuMove.PURSUIT.ticks() * pk), i * fw, 34 + 3 * fh);
+        }
+        g.dispose();
+        ImageIO.write(img, "png", file);
+        System.out.println(file);
+    }
+
+    /** A camera {@code distance} out at {@code yaw}/{@code pitch} round a point {@code ahead} blocks before him at height {@code y}. */
+    static PoseRender.Camera wideAt(double yawDegrees, double pitchDegrees, double distance, double ahead, double y) {
+        double yaw = Math.toRadians(yawDegrees);
+        double pitch = Math.toRadians(pitchDegrees);
+        double[] target = {0.0, y, ahead};
+        double[] eye = {target[0] + Math.sin(yaw) * Math.cos(pitch) * distance, target[1] + Math.sin(pitch) * distance,
+            target[2] + Math.cos(yaw) * Math.cos(pitch) * distance};
+        return new PoseRender.Camera(eye, target, 50);
     }
 
     /** 3.5.7: the kakuja's own moves (Thousand Jaws, Endless Hunger, Flesh Cataclysm, Undying Abomination) and its bites on its own. */

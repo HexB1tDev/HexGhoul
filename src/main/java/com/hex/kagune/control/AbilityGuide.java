@@ -186,6 +186,7 @@ public final class AbilityGuide {
         {"Reaper's dash: 3 charges, 1 back each 5 s", "Reaper's dash"},
         {"Monstrous Regeneration", "Regeneration"},
         {"Its tentacles bite on their own", "Bites on its own"},
+        {"Hold one to throw it further", "Hold: further"},
     };
 
     /**
@@ -511,6 +512,7 @@ public final class AbilityGuide {
                 rows.add(row(in, move.displayName(), TEXT, locked(in.mastery(), move.mastery()), key));
             }
         }
+        rows.add(new Row("hold", "Hold one to throw it further", TEXT, 0)); // 3.5.8: up to 30 blocks
         rows.add(new Row("auto", "Bites heal you", TEXT, 0));
         rows.add(new Row("auto", "Fast regeneration · hard to knock back", TEXT, 0)); // 3.5.3: its passives
         rows.add(new Row(key(in, Key.CYCLE) + " tap", "Kakuja", BIKAKU_KAKUJA, locked(in.mastery(), com.hex.kagune.control.bikaku.BikakuRules.KAKUJA)));

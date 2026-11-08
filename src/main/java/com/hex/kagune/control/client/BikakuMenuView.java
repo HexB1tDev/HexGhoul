@@ -180,6 +180,9 @@ public final class BikakuMenuView {
             }
         }
         c.text("Keys are your kagune keys (Controls)", x, rowY + 6, MUTED, false);
+        c.text("Hold M1 or a thrown move's key to throw it further:", x, rowY + 20, MUTED, false);
+        c.text("up to " + Math.round(BikakuRules.HELD_REACH) + " blocks after " + BikakuRules.CHARGE_FULL / 20 + " s (it is back slower)", x, rowY + 32, MUTED, false);
+        rowY += 26;
 
         java.util.List<Object[]> coming = coming();
         if (coming.isEmpty()) {
