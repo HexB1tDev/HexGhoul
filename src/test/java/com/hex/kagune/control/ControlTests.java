@@ -1338,16 +1338,13 @@ public final class ControlTests {
                 short_ &= ok;
             }
             com.hex.kagune.control.client.AbilityHudView.Layout layout = com.hex.kagune.control.client.AbilityHudView.layout(measure, panel);
+            // 3.4.7: one column top to bottom (the owner: "it should be vertical"), every move on its own line.
             int rows = panel.rows().size();
-            if (rows > com.hex.kagune.control.client.AbilityHudView.ONE_COLUMN) {
-                halved &= layout.columns() == 2 && layout.perColumn() == (rows + 1) / 2;
-            } else {
-                halved &= layout.columns() == 1;
-            }
+            halved &= layout.columns() == 1 && layout.perColumn() == rows && layout.left().length == 1;
         }
         check(same, "in brief every board keeps every move on its keys, in its order, colour and mastery");
         check(short_, "every move in a word or two (the longest: " + longest + ")");
-        check(halved, "past five moves, two columns: half as many lines");
+        check(halved, "one column, top to bottom: vertical, never side by side");
         check(AbilityGuide.brief("Fists: chain · Space held: launch", "LMB").equals("Fists")
             && AbilityGuide.brief("Heavy · hold: charge · after a blow: ender", "RMB").equals("Heavy")
             && AbilityGuide.brief("Lift · Slam (once a tail holds someone)", "V·B").equals("Lift · Slam")
@@ -1359,7 +1356,7 @@ public final class ControlTests {
         check(AbilityGuide.briefSubtitle("Rinkaku · final kakuja · One-Eyed King").equals("final kakuja")
             && AbilityGuide.briefSubtitle("Rinkaku · kagune out · a tail holds someone").equals("kagune out · holding")
             && AbilityGuide.briefSubtitle("Kagune sheathed").equals("Kagune sheathed"), "the subtitle cut to what the form is");
-        check(com.hex.kagune.control.client.AbilityHud.SCALE < 0.75F, "and a little smaller on screen");
+        check(com.hex.kagune.control.client.AbilityHud.SCALE <= 0.6F, "and smaller on screen than it ever was (3.4.6's 0.7, 0.75 before)");
     }
 
     public static void main(String[] args) {

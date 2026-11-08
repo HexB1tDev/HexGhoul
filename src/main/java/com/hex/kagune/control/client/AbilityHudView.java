@@ -9,26 +9,26 @@ import java.util.List;
  * colour down its left edge, its title, and one line a move: the player's keys in little chips, the move's name in its colour;
  * a move not reached yet dim, with the mastery it needs. Laid out once per panel ({@link Layout}), so a frame only fills and
  * writes. 3.4.6 (the owner: "it's time to redo the GUI. This looks super, super clanky. As in, like, it's too big. We need to summarize
- * things a bit more."): the panel in brief ({@link AbilityGuide#brief}), its title and subtitle on one line, and past
- * {@link #ONE_COLUMN} moves in two columns (down the first, then the second), so the card is about half as tall as it was.
+ * things a bit more."): the panel in brief ({@link AbilityGuide#brief}), its title and subtitle on one line. 3.4.7 (the owner, of
+ * 3.4.6's two columns: "it should be vertical, and you made it horizontal ... It looks like shit"): one narrow column again, its
+ * rows packed closer, drawn smaller ({@link AbilityHud#SCALE}).
  */
 public final class AbilityHudView {
-    static final int PAD = 4;
+    static final int PAD = 3;
     static final int LINE = 10;
-    static final int CHIP_PAD = 3;
-    static final int GAP = 4;
-    /** 3.4.6: between the title and the subtitle, between the two columns; the most moves in one column. */
-    static final int TITLE_GAP = 5;
+    static final int CHIP_PAD = 2;
+    static final int GAP = 3;
+    /** 3.4.6: between the title and the subtitle; between columns (3.4.7: there is only ever one). */
+    static final int TITLE_GAP = 4;
     static final int COLUMN_GAP = 9;
-    public static final int ONE_COLUMN = 5;
     static final int BACK = 0xC0100C13;
     static final int EDGE = 0x30FFFFFF;
     static final int CHIP = 0xFF2A2430;
     static final int CHIP_SHADE = 0xFF17131B;
 
     /**
-     * Where everything goes, worked out once per panel (the panel in brief): its size, how many columns and moves to a column, each column's
-     * left edge, key column and name column widths; {@code tail}: room kept after each name for a cooldown (1.0.22).
+     * Where everything goes, worked out once per panel (the panel in brief): its size, how many columns (3.4.7: one) and moves to a
+     * column, each column's left edge, key column and name column widths; {@code tail}: room kept after each name for a cooldown (1.0.22).
      */
     public record Layout(AbilityGuide.Panel panel, int width, int height, int columns, int perColumn, int[] left, int[] keyWidth, int[] nameWidth,
                          String[] needs, int tail) {
@@ -50,7 +50,8 @@ public final class AbilityHudView {
         AbilityGuide.Panel panel = AbilityGuide.brief(full);
         List<AbilityGuide.Row> rows = panel.rows();
         int n = rows.size();
-        int columns = n > ONE_COLUMN ? 2 : 1;
+        // 3.4.7: one column, top to bottom, whatever its length.
+        int columns = 1;
         int per = Math.max(1, (n + columns - 1) / columns);
         int[] keyWidth = new int[columns];
         int[] nameWidth = new int[columns];

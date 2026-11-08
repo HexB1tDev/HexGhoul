@@ -1,8 +1,8 @@
-# HANDOFF: HexGhoul after 3.4.6 (kept current as versions ship). Read this first.
+# HANDOFF: HexGhoul after 3.4.7 (kept current as versions ship). Read this first.
 
 Then, for the house rules and history: `docs/handoff/next-ai-3.2.1.md` and `docs/handoff/next-ai-3.1.9.md` (the two sessions before,
 their judgment calls), `docs/handoff/next-ai-2.0.45.md` (header: versions, protocol history, the 2.x/3.x log), `docs/handoff/next-ai-1.3.60.md`
-(the owner's house rules in full), and the top sections of `docs/handoff/companions-handoff.md` (one per version, newest first: 3.2.7 to 3.4.6
+(the owner's house rules in full), and the top sections of `docs/handoff/companions-handoff.md` (one per version, newest first: 3.2.7 to 3.4.7
 are this session's, with file-level detail).
 
 Note on the session before this one (3.2.2 to 3.2.6, branch `claude/magical-fermi-cec8n1`): it wrote a handoff at 3.2.1 and then went on
@@ -11,13 +11,13 @@ lost. **Commit and push every version as it is built, and keep this file current
 
 ## Where things are
 
-- **Branch:** **`claude/exciting-bell-3kklnc`** (pushed; 3.2.7 to 3.4.6 on top of 3.2.6 from `claude/magical-fermi-cec8n1`). The next session
+- **Branch:** **`claude/exciting-bell-3kklnc`** (pushed; 3.2.7 to 3.4.7 on top of 3.2.6 from `claude/magical-fermi-cec8n1`). The next session
   will be given its own branch: start it from `origin/claude/exciting-bell-3kklnc`
   (`git fetch origin claude/exciting-bell-3kklnc && git checkout -B <your-branch> origin/claude/exciting-bell-3kklnc`). Push only to the
   branch you are given; never to `main`; no PR unless asked.
 - **Releases:** `.github/workflows/release.yml` publishes `v<version>` on GitHub for every push to `claude/**` that adds
   `.github/release-notes-<version>.md` (about 5 minutes). The owner plays those. When they say "push an update", push what is built.
-- **Version 3.4.6** in `build.py` and `patch/KagunePatch.java`. **The next is 3.4.7** (the last number never reaches 10). **Protocol "93"** (3.3.6: EtoGesture JEALOUS appended).
+- **Version 3.4.7** in `build.py` and `patch/KagunePatch.java`. **The next is 3.4.8** (the last number never reaches 10). **Protocol "93"** (3.3.6: EtoGesture JEALOUS appended).
 - Full `python3 build.py` ended **EXIT 0** for every version (javac `--release 17` on JDK 21; about 5 minutes; run it in the background).
   **Nothing is tested in game. Never claim it is.**
 - The quick loop: `python3 tools/quick_check.py [--noverify] KingTests UkakuTests ...` (needs one full `build.py` first). It does **not**
@@ -47,9 +47,10 @@ lost. **Commit and push every version as it is built, and keep this file current
 | 3.4.4 | **Fix:** a crystal forming (3.3.5's kitchen clinks) is now a rubbed wine glass singing (3 swells, ani_music) and a small bell (AlaskaRobotics): CC0 freesound recordings from Sonic Pi's samples. `crystal_hit`/`shatter` unchanged. | `sfx_recordings.json` `crystal_glassrub.flac`/`crystal_bell.flac`, `crystal_form_1..4`, `sfx_pack.py` POOLS |
 | 3.4.5 | **Fix:** War's Spire Wave mass came loose from the first-person fist when moving (3.2.8 started it at the server's launch spot): now `SpireArm.fist` (eyes + look, every frame). | `SpireArm.toWorld/fist`, `WarHoldFx.draw`, KingTests `spireAttached` |
 | 3.4.6 | The move guide redone: every move in a word or two, two columns past five, one-line header, scale 0.7 (every board; War's and Peace's too). About half the size. | `AbilityGuide.brief/briefSubtitle`, `AbilityHudView` (columns), `AbilityHud.SCALE`, ControlTests `briefBoard` |
+| 3.4.7 | **Fix:** the owner: 3.4.6's two columns made the board wider ("it should be vertical, and you made it horizontal"). One column on every board, scale 0.6, tighter spacing. | `AbilityHudView.layout` (one column), `AbilityHud.SCALE`, ControlTests `briefBoard` |
 
 Previews (off-game, looked at honestly): `docs/handoff/peace-aegis-3.2.7.png`, `war-spire-first-person-3.2.8.png`, `ukaku-vortex-3.2.9.png`,
-`dawn-idle-3.3.2.png`, `jealous-3.3.6.png`, `move-guide-3.4.6.png`. Tools: `tools/art-preview.sh <out> aegis|spire-fp|vortex`, `tools/QuinquePreview.java <out> dawn idle`.
+`dawn-idle-3.3.2.png`, `jealous-3.3.6.png`, `move-guide-3.4.6.png`, `move-guide-3.4.7.png`. Tools: `tools/art-preview.sh <out> aegis|spire-fp|vortex`, `tools/QuinquePreview.java <out> dawn idle`.
 
 ## The owner's words this session (binding)
 
@@ -77,6 +78,13 @@ Previews (off-game, looked at honestly): `docs/handoff/peace-aegis-3.2.7.png`, `
   fine, you could, like, move and it would still be attached to your body. But now when you leave, like, whenever you move around, that
   detaches."** The move guide (3.4.6): **"it's time to redo the GUI. This looks super, super clanky. As in, like, it's too big. We need to
   summarize things a bit more."**
+- The move guide again (3.4.7), of 3.4.6's two columns: **"I said the menu was cluttered and your solution is to make it like even bigger
+  on the screen ... it should be vertical, and you made it horizontal, bro. No one wants the menu like this."** Keep it one narrow column.
+- The Owl kakuja (Eto's form at 100 HP), asked for with reference pictures (Owl.zip, not in the repo): **"redoing and bettering as much as
+  possible the owl DNA's transformation currently being used by Eto ... It has to look identical to it ... it has to be beautiful ... Just
+  like the dragon Kakuja ... Every limb has to be animated ... For now, just focus on movements, jumping, and whatsoever, and the looks
+  mainly."** Shown renders of an in-progress procedural rebuild (never committed), the owner: **"Wtf is that model. That looks like shit,
+  all of it."** Ask what they want before rebuilding it.
 
 ## The owner's 3.2.2 list (all done by 3.4.2)
 
@@ -109,6 +117,7 @@ validated by SceneTests).
   aside at ease instead; "hand on hip" is the left arm angled out.
 - **3.3.3 / 3.3.5:** which recordings: chosen by name and measured loudness, **never heard** (no audio here). freesound.org is blocked, so
   each sound's own page couldn't be re-checked: CC0 per the WilhelmSFX mirror's licence. Ask which sound wrong.
+- **3.4.7:** scale 0.6 for the one-column board (the owner was angry that 3.4.6 made it wider). Preview `docs/handoff/move-guide-3.4.7.png`.
 - **3.4.6:** the brief names (the board no longer shows the explanations: "Space held: launch", "on time: stagger"); two columns past
   five moves; scale 0.7. Preview `docs/handoff/move-guide-3.4.6.png` (`tools/UiPreview.java <out> hud`).
 - **3.4.5:** view bobbing and the hand pass's sway aren't followed by the mass's start (a hair off the fist while sprinting).

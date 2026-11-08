@@ -1,4 +1,20 @@
-# START HERE (state after 3.4.6)
+# START HERE (state after 3.4.7)
+
+Next: the owner's Owl kakuja rebuild (Eto's, at 100 HP). The owner saw renders of the in-progress rebuild and said: "Wtf is that model. That looks like shit, all of it". That in-progress rebuild (`OwlBeast`, `OwlBeastMesh`) was never committed: ask the owner what exactly looks wrong before rebuilding. The owner: "push an update asap": every version is pushed as it is built.
+
+The owner's report (with a screenshot of War's board in two columns): "I said the menu was cluttered and your solution is to make it like even bigger on the screen ... it should be vertical, and you made it horizontal, bro. No one wants the menu like this. It looks like shit."
+
+- `AbilityHudView.layout`: always one column (`columns` 1, `perColumn` = every row); `ONE_COLUMN` removed. The `Layout` record is unchanged (columns/left[]/keyWidth[]/nameWidth[] arrays of one).
+- Spacing: `PAD` 4 to 3, `CHIP_PAD` 3 to 2, `GAP` 4 to 3, `TITLE_GAP` 5 to 4; `LINE` stays 10 (chips don't touch).
+- `AbilityHud.SCALE` 0.7 to 0.6 (KingHud uses it too).
+- Still brief (`AbilityGuide.brief`, 3.4.6), header on one line.
+- Preview: `tools/UiPreview.java <out> hud` (after `tools/quick_check.py` compiles main into `build/quick/classes`); before/after of War's board `docs/handoff/move-guide-3.4.7.png`.
+- Tests: ControlTests `briefBoard()` (one column, every row on its own line; SCALE <= 0.6).
+- **Judgment calls:** scale 0.6.
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 93. Not tested in game.
+
+# State after 3.4.6
 
 Nothing queued: ask the owner what next. The owner: "push an update asap": every version is pushed as it is built.
 

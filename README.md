@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.4.7 (HexGhoul): Fix: the move guide is one narrow column again (testing)
+
+See `.github/release-notes-3.4.7.md`. The move guide above the chat is one narrow vertical column again (3.4.6's two columns made it wider, not smaller), drawn at 60% of its size with tighter spacing; every move is still a word or two.
+
 ## 3.4.6 (HexGhoul): A smaller move guide (testing)
 
 See `.github/release-notes-3.4.6.md`. The owner's ask: the move guide was too big and clanky. Now every move is named in a word or two ("Fists", "Heavy", "Thy Death", "Eyes only"), the board goes to two columns past five moves, the title and form share one line, and it's a little smaller. Same moves, keys, colours and cooldowns, about half the size. Not tested in game.
