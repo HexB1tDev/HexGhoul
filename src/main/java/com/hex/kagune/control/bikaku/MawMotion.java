@@ -269,14 +269,14 @@ public final class MawMotion {
      * Predatory Drag: where the worm runs down to the ground on its way out along it. 3.5.5: before his right foot, clear of his legs (it
      * was behind his right heel, so to reach a body on his left it ran through his legs).
      */
-    static final double[] GROUND_ANCHOR = {0.62, 0.3, 0.55};
+    static final double[] GROUND_ANCHOR = {1.45, 0.3, 1.0};
     /**
      * 3.5.5, Predatory Drag: before his right shoulder, where the worm comes from to hold its catch up (it came from over his shoulder,
      * behind it: to a catch on his left, through his head).
      */
-    static final double[] DRAG_SHOULDER = {0.8, 1.95, 0.3};
+    static final double[] DRAG_SHOULDER = {1.35, 2.0, 0.45};
     /** 3.5.5, Predatory Drag: at his right side, by his knee, clear of him: the worm comes down past here on its way to the ground. */
-    static final double[] GROUND_SIDE = {0.85, 0.55, -0.1};
+    static final double[] GROUND_SIDE = {1.75, 0.8, -0.5};
     /** Predatory Drag: lifted high before him, then slammed down here. */
     public static final double[] DRAG_LIFT = {0.7, 3.4, 2.1};
     public static final double[] DRAG_SLAMMED = {0.55, 0.55, 2.2};
@@ -425,11 +425,14 @@ public final class MawMotion {
         double[] side = GraftMesh.normalize(GraftMesh.cross(new double[] {0.0, 1.0, 0.0}, flat));
         // 3.5.5: down to the ground beside his right foot on the target's side (it always went down before him, then back through his
         // legs); for a body on his left, before his feet.
-        double[] low = {0.6 + 0.9 * flat[0], 0.35, 0.9 * flat[2]};
-        if (Math.abs(low[0]) < 0.6 && Math.abs(low[2]) < 0.6) {
-            low[2] = 0.6;
+        double[] low = {1.3 + 1.0 * flat[0], 0.35, 1.0 * flat[2]};
+        if (Math.abs(low[0]) < 1.1 && Math.abs(low[2]) < 1.1) {
+            low[2] = 1.1;
         }
-        double[] bitten = GraftMesh.add(GraftMesh.sub(aim, GraftMesh.mul(flat, GRIP)), new double[] {0.0, -0.45, 0.0});
+        // 3.5.6: its mouth comes at its catch from its own side (from where it runs along the ground, out before his right foot), not
+        // from him: holding a catch it had brought in, it lay along his shins.
+        double[] grip = gripWay(aim);
+        double[] bitten = GraftMesh.add(GraftMesh.sub(aim, GraftMesh.mul(grip, GRIP)), new double[] {0.0, -0.45, 0.0});
         bitten[1] = Math.max(0.3, bitten[1]);
         double[] head;
         double[] look;
@@ -444,18 +447,18 @@ public final class MawMotion {
             double w = (age - BikakuMove.DRAG_DOWN) / (double)(land - BikakuMove.DRAG_DOWN);
             double weave = 0.5 * Math.sin(Math.PI * w * 3.0) * (1.0 - w);
             head = GraftMesh.add(GraftMesh.lerp(low, bitten, w), GraftMesh.mul(side, weave));
-            look = GraftMesh.normalize(GraftMesh.add(flat, GraftMesh.mul(side, 0.6 * Math.cos(Math.PI * w * 3.0) * (1.0 - w))));
+            look = GraftMesh.normalize(GraftMesh.add(GraftMesh.lerp(flat, grip, w), GraftMesh.mul(side, 0.6 * Math.cos(Math.PI * w * 3.0) * (1.0 - w))));
             mouth = age < land - 1.0 ? 1.0 : lerp(1.0, 0.04, age - (land - 1.0));
         } else if (!caught) {
             double w = GraftMesh.smooth(GraftMesh.clamp01((age - land - 2.0) / (double)(move.missedTicks() - land - 2)));
-            head = GraftMesh.lerp(bitten, restHead, w);
-            look = GraftMesh.normalize(GraftMesh.lerp(flat, restLook, w));
+            head = wideBack(bitten, restHead, w);
+            look = GraftMesh.normalize(GraftMesh.lerp(grip, restLook, w));
             mouth = lerp(0.04, idleMouth(time, seed), w);
         } else if (age <= BikakuMove.DRAG_SLAM) {
             double[] victim = held != null ? held : dragHeld(aim, age);
             if (age < BikakuMove.DRAG_HOME) {
                 // Dragging: its mouth on their legs, pulling back along the ground.
-                look = way(new double[] {0.0, 0.0, 0.0}, new double[] {victim[0], 0.0, victim[2]});
+                look = gripWay(victim);
                 head = GraftMesh.add(GraftMesh.sub(victim, GraftMesh.mul(look, GRIP)), new double[] {0.0, -0.45, 0.0});
                 head[1] = Math.max(0.3, head[1]);
             } else {
@@ -470,7 +473,7 @@ public final class MawMotion {
             double[] lastLook = GraftMesh.normalize(GraftMesh.add(way(DRAG_SHOULDER, slammed), new double[] {0.0, 0.35, 0.0}));
             double[] from = GraftMesh.sub(slammed, GraftMesh.mul(lastLook, GRIP));
             double w = GraftMesh.smooth(GraftMesh.clamp01((age - BikakuMove.DRAG_SLAM) / (double)(move.ticks() - BikakuMove.DRAG_SLAM)));
-            head = GraftMesh.lerp(from, restHead, w);
+            head = wideBack(from, restHead, w);
             look = GraftMesh.normalize(GraftMesh.lerp(lastLook, restLook, w));
             mouth = lerp(0.04 + 0.5 * Math.sin(Math.PI * Math.min(1.0, w * 3.0)), idleMouth(time, seed), w);
         }
@@ -482,6 +485,27 @@ public final class MawMotion {
         double up = GraftMesh.smooth(GraftMesh.clamp01((head[1] - 0.8) / 1.8));
         double[] anchor = GraftMesh.lerp(GROUND_ANCHOR, DRAG_SHOULDER, up);
         return new Shape(path(head, look, time, seed, reach, anchor, GraftMesh.lerp(GROUND_SIDE, anchor, up)), dorsal(), GraftMesh.clamp01(mouth));
+    }
+
+    /** 3.5.6: how far out from him Predatory Drag's head swings on its way back to rest (blocks, at the middle of the way), and up. */
+    static final double DRAG_WIDE = 1.1;
+    static final double DRAG_WIDE_UP = 0.3;
+
+    /**
+     * 3.5.6 (the owner, of 3.5.5's Drag: "why not make a bigger angle? it's going too close to the body"): the head's way from {@code from}
+     * back to {@code rest}, {@code w} of the way, swung out wide from him in the middle (it went straight, past his face).
+     */
+    static double[] wideBack(double[] from, double[] rest, double w) {
+        double[] mid = GraftMesh.lerp(from, rest, 0.5);
+        double flat = Math.hypot(mid[0], mid[2]);
+        double[] out = flat < 1.0E-6 ? new double[] {0.0, 0.0, 1.0} : new double[] {mid[0] / flat, 0.0, mid[2] / flat};
+        double bulge = Math.sin(Math.PI * w);
+        return GraftMesh.add(GraftMesh.lerp(from, rest, w), new double[] {out[0] * DRAG_WIDE * bulge, DRAG_WIDE_UP * bulge, out[2] * DRAG_WIDE * bulge});
+    }
+
+    /** 3.5.6: the level way Predatory Drag's mouth comes at {@code at} from: from before his right foot ({@link #GROUND_ANCHOR}). */
+    static double[] gripWay(double[] at) {
+        return way(new double[] {GROUND_ANCHOR[0], 0.0, GROUND_ANCHOR[2]}, new double[] {at[0], 0.0, at[2]});
     }
 
     /** Predatory Drag's reach: along the ground, as far as {@link BikakuRules#DRAG_REACH} from his feet. */
@@ -807,7 +831,10 @@ public final class MawMotion {
             }
             // Uncoiled if the bite needs it (from the head back), placed along the way over the shoulder by how far it is from the head.
             double w = GraftMesh.smooth(GraftMesh.clamp01((need + 0.9 - ARC[k]) / 1.8)) * straighten;
-            double f = Math.max(0.06, Math.min(0.94, 1.0 - ARC[k] / need));
+            // 3.5.6: past a {@code via}, a long throw's coils spread over the whole way from there (its first coils had gone far out along
+            // the ground, the worm running from his back straight past his hip to them).
+            double spread = via == null ? need : Math.min(need, ARC[0] / 0.94);
+            double f = Math.max(0.06, Math.min(0.94, 1.0 - ARC[k] / spread));
             double taper = Math.sqrt(Math.sin(Math.PI * f));
             double[] on = GraftMesh.add(onLine(line, f), GraftMesh.add(GraftMesh.mul(sideways, 0.32 * taper * sign),
                 new double[] {0.0, -0.1 * taper * sign, 0.0}));
@@ -834,7 +861,7 @@ public final class MawMotion {
     /** 3.5.5: how much more of the worm uncoils for a way past a {@code via}, for each block from there to the anchor. */
     static final double VIA_SLACK = 1.6;
     /** 3.5.5: with a {@code via}, where the coils left behind him go across (x to {@code [0] + [1] x}: all on his right). */
-    static final double[] VIA_COILS = {0.55, 0.35};
+    static final double[] VIA_COILS = {1.3, 0.35};
 
     /**
      * Its neck, {@code length} back from {@code head} along {@code look}, kept out of him. 3.5.5: if that falls in him, shortened until it

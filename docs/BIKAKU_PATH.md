@@ -23,6 +23,9 @@ round his head, torso and arms, and legs, the shorter way, smoothed where moved;
 right side (`GROUND_SIDE`) to before his right foot (`GROUND_ANCHOR`), holds from before his right shoulder (`DRAG_SHOULDER`) and drags
 its catch to its own side (`dragSide`). Details: the top of `docs/handoff/companions-handoff.md`.
 
+**3.5.6 (the owner: "why not make a bigger angle? it's going too close to the body"):** Predatory Drag's worm swings out in a wide arc
+round his right side (its spots widened, its coils spread from there, its mouth gripping from its own side, wide on the way back).
+
 **Before 3.4.9 (the pure worm, unchanged since except as above):**
 
 - `control/bikaku/MawWorm.java`: the worm as a mesh (pure). A thick muscular tube along a spine resampled evenly by length

@@ -449,6 +449,44 @@ public final class BikakuWormTests {
         }
         double[] home = MawMotion.dragHeld(new double[] {0, 1, 8}, com.hex.kagune.control.bikaku.BikakuMove.DRAG_HOME);
         check(Math.abs(home[0] - 0.55) < 1.0E-9 && Math.abs(home[2] - 1.9) < 1.0E-9, "a catch straight ahead is dragged where it always was");
+        // 3.5.6 (the owner, of 3.5.5's Drag: "why not make a bigger angle? it's going too close to the body"): past its first 1.6 blocks
+        // out of his back, Predatory Drag's worm keeps well clear of him: never under 0.2, and 0.45 or more in at least half its frames
+        // (3.5.5: under 0.1 in half its frames, touching in some).
+        for (double[] target : new double[][] {{0.2, 0.99, 6.0}, {0.0, 0.99, 10.0}, {-3.0, 0.99, 3.0}, {3.0, 0.99, 3.0}, {-6.0, 0.99, 6.0},
+            {0.0, 0.99, 3.0}}) {
+            java.util.List<Double> gaps = new java.util.ArrayList<>();
+            com.hex.kagune.control.bikaku.BikakuMove drag = com.hex.kagune.control.bikaku.BikakuMove.DRAG;
+            for (double age = 0.0; age < drag.ticks(); age += 0.5) {
+                double[] held = age < drag.land() ? null : MawMotion.dragHeld(MawMotion.dragReach(target), Math.min(age, com.hex.kagune.control.bikaku.BikakuMove.DRAG_SLAM));
+                MawMotion.Shape s = MawMotion.move(40 + age, 7, drag, age, target, held, true);
+                gaps.add(clearOf(MawMotion.around(s.path(), 1.0, s.aperture()), s.aperture(), 1.6));
+            }
+            java.util.Collections.sort(gaps);
+            check(gaps.get(0) > 0.2, "Predatory Drag swings out wide of him (closest " + gaps.get(0) + ", " + target[0] + ", " + target[2] + ")");
+            check(gaps.get(gaps.size() / 2) > 0.45, "Predatory Drag keeps well clear of him most of the time (" + gaps.get(gaps.size() / 2) + ")");
+        }
+    }
+
+    /** How far the worm drawn along {@code path} keeps its skin from his body at its closest, past the first {@code from} blocks out of his back. */
+    private static double clearOf(double[][] path, double open, double from) {
+        KakujaModel.Spine spine = MawWorm.spine(path, new double[] {0, 1, 0}, 160);
+        double length = spine.length();
+        double least = Double.MAX_VALUE;
+        for (int i = 0; i < spine.p().length; i++) {
+            double u = i / (double)(spine.p().length - 1);
+            if (u * length < from) {
+                continue;
+            }
+            double r = MawWorm.radius(u, length, open);
+            for (double[] b : BODY) {
+                double[] q = spine.p()[i];
+                double dx = Math.max(Math.max(b[0] - q[0], 0.0), q[0] - b[3]);
+                double dy = Math.max(Math.max(b[1] - q[1], 0.0), q[1] - b[4]);
+                double dz = Math.max(Math.max(b[2] - q[2], 0.0), q[2] - b[5]);
+                least = Math.min(least, Math.sqrt(dx * dx + dy * dy + dz * dz) - r);
+            }
+        }
+        return least;
     }
 
     private static boolean inside(double[] p) {

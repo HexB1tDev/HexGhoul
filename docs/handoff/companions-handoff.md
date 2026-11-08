@@ -1,4 +1,21 @@
-# START HERE (state after 3.5.5)
+# START HERE (state after 3.5.6)
+
+Branch `claude/hopeful-noether-5c2wex`. Read `docs/handoff/next-ai-3.5.4.md` first (the owner's words this session at its top, quoted exactly).
+
+The owner, after "Continue", with a crop of 3.5.5's preview (the Drag from above): "why not make a bigger angle? it's going too close to the body". Measured (past the first 1.6 blocks out of his back, the drawn worm's skin to the player boxes): 3.5.5's Drag was under 0.1 in half its frames, touching in some; 3.5.6: about 0.6 in half, never under about 0.25 (six targets in front).
+
+- `MawMotion` Drag spots widened: `GROUND_SIDE` (0.85, 0.55, -0.1) -> (1.75, 0.8, -0.5); `GROUND_ANCHOR` (0.62, 0.3, 0.55) -> (1.45, 0.3, 1.0); `DRAG_SHOULDER` (0.8, 1.95, 0.3) -> (1.35, 2.0, 0.45); `VIA_COILS` {0.55, 0.35} -> {1.3, 0.35}; `low` = (1.3 + fx, 0.35, fz), z 1.1 if within 1.1 of him.
+- `path(..., via)`: with a via the coils spread over the whole way from it (`spread` = min(need, ARC[0] / 0.94)): on a long throw every coil had gone far along the line and the worm ran from his back past his hip to the first.
+- `gripWay(at)`: the Drag's mouth comes at its catch from `GROUND_ANCHOR`'s side (bitten point, approach look's end, dragging look, missed look); it had come from his middle, so a catch brought in had the worm along his shins.
+- `wideBack(from, rest, w)`: the head's way back to rest (after the slam, after a miss) bulges out from him (`DRAG_WIDE` 1.1, `DRAG_WIDE_UP` 0.3 at the middle).
+- `dragHeld`, `dragSide`, home, lift, slam: unchanged.
+- Tests: BikakuWormTests `roundHim()` adds the gap (`clearOf`): never under 0.2, the median over 0.45 (105,678).
+- Preview: `docs/handoff/bikaku-drag-wide-3.5.6.png` (3.5.5 against 3.5.6, the same frames; scratch `DragCompare` against each build's classes).
+- **Judgment calls:** the widths; the arc round his right. Other moves unchanged.
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 97. Not tested in game.
+
+# State after 3.5.5
 
 Branch `claude/hopeful-noether-5c2wex`. Read `docs/handoff/next-ai-3.5.4.md` first (the owner's words this session, quoted exactly, at its top; the order taken; what's next).
 

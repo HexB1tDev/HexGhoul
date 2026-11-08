@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.5.6 (HexGhoul): Fix: Predatory Drag swings out wide round you (testing)
+
+See `.github/release-notes-3.5.6.md`. Your words on 3.5.5's Drag: "why not make a bigger angle? it's going too close to the body". The Drag's worm now swings out in a wide arc to your right (its coils, the point it comes down past, where it meets the ground, where it holds its catch from), grips its catch from its own side, and swings wide on the way back: about 0.6 blocks clear of you typically, never under about 0.25 (it was about 5 cm). Protocol 97. Preview: `docs/handoff/bikaku-drag-wide-3.5.6.png`.
+
 ## 3.5.5 (HexGhoul): Fix: the Bikaku worm goes round your body, not through it (testing)
 
 See `.github/release-notes-3.5.5.md`. Your report: Predatory Drag (and a few moves) went through the player's body. Every Bikaku worm is now drawn round you (the stretch that would pass through you swept round your side, smoothed; unchanged where it doesn't come near you). Predatory Drag comes down your right side to in front of your right foot, and drags its catch in to the side it came from. Protocol 97. Preview: `docs/handoff/bikaku-drag-round-3.5.5.png`.

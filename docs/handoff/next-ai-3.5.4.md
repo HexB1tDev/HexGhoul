@@ -42,12 +42,17 @@ Binding; quoted exactly as written. Kept current as that session goes.
   about 30 blocks, round blocks, no attack until it is fully back); then the forms (two worms, three, the walking form), each with its
   own moves.
 
+- After 3.5.5, then **"Continue"**, then, with a crop of 3.5.5's preview (`bikaku-drag-round-3.5.5.png`, the "AFTER, ahead, from above"
+  row: the Drag's worm coming out of his back round his right side, hugging it): **"why not make a bigger angle? it's going too close to
+  the body"**. Taken as a report on 3.5.5, so first (3.5.6): the Drag's worm swings out wide round his right side; the kakuja's moves after.
+
 ## State now (kept current by the session on `claude/hopeful-noether-5c2wex`)
 
 - **3.5.4 shipped** (the kakuja as the last session left it; the owner liked it).
 - **3.5.5 shipped:** the owner's report fixed (the worm through the player's own body; `MawMotion.around`, the Drag rerouted, its catch
-  dragged to its own side). Versions 3.5.5; protocol "97"; next free message id 56.
-- **Next: the kakuja's four moves and passives** (3.5.6 on), then the range (held, up to about 30 blocks, round blocks, no attack until it
+  dragged to its own side). Protocol "97"; next free message id 56.
+- **3.5.6 shipped:** the owner's "bigger angle" (Predatory Drag swung out wide round his right). Versions 3.5.6.
+- **Next: the kakuja's four moves and passives** (3.5.7 on), then the range (held, up to about 30 blocks, round blocks, no attack until it
   is fully back), then the forms (two worms, three, the walking form), each with its own moves. Show previews before going far.
 
 ## Where things were when this note was written (after 3.5.3)
