@@ -71,6 +71,8 @@ public final class BikakuServer {
         int done;
         final java.util.EnumMap<BikakuMove, Long> readyAt = new java.util.EnumMap<>(BikakuMove.class);
         /** A move key pressed while the worm was busy: it waits this long for it. */
+        /** 3.5.1: what Carrion Eruption came up under (server only: the clients are told where, not whom). */
+        int eruptVictim;
         /** True for the moment of Predatory Drag's slam (its wound is a slam's). */
         boolean slamming;
         BikakuMove.Slot queuedSlot;
@@ -119,8 +121,7 @@ public final class BikakuServer {
             return false;
         }
         long now = player.m_9236_().m_46467_();
-        return state.bite != Bite.NONE && now - state.startedAt == state.bite.land()
-            || state.move != BikakuMove.NONE && now - state.moveAt == state.move.land();
+        return state.bite != Bite.NONE && now - state.startedAt == state.bite.land() || BikakuMoves.biting(state, now);
     }
 
     /** 3.5.0: true for the moment of Predatory Drag's slam. */

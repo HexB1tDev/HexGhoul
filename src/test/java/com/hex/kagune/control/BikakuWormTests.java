@@ -28,6 +28,8 @@ public final class BikakuWormTests {
         growing();
         firstPerson();
         grabs();
+        pursuit();
+        eruption();
         System.out.println("Bikaku worm tests: " + passed + " checks passed");
     }
 
@@ -293,5 +295,125 @@ public final class BikakuWormTests {
         check(Math.abs(dragged[1] - 1.0) < 1.0E-9 && dragged[2] < 2.5, "Predatory Drag drags its catch along its own ground to him");
         check(Math.hypot(MawMotion.dragReach(new double[] {0, 1, 30})[0], MawMotion.dragReach(new double[] {0, 1, 30})[2])
             <= com.hex.kagune.control.bikaku.BikakuRules.DRAG_REACH + 1.0E-9, "Predatory Drag reaches as far as it reaches");
+    }
+
+    private static boolean inside(double[] p) {
+        return distance(p, new double[] {0.0, 1.72, 0.0}) < 0.6 - 1.0E-9
+            || p[1] > 0.6 && p[1] < 1.55 && Math.abs(p[0]) < 0.72 && p[2] > -0.4 + 1.0E-9 && p[2] < 0.4 - 1.0E-9
+            || p[1] >= -0.5 && p[1] <= 0.6 && Math.abs(p[0]) < 0.5 - 1.0E-9 && Math.abs(p[2]) < 0.37;
+    }
+
+    /**
+     * 3.5.1: Ravenous Pursuit: three worms, each on its own body as it bites (in turn), shut; the worm thins as two more grow out and is
+     * whole again at the end; none jumps or passes through him.
+     */
+    private static void pursuit() {
+        double[][][] cases = {{{2.6, 0.99, 3.2}, {-2.3, 0.99, 3.0}, {0.2, 0.99, 4.3}}, {{0.1, 0.99, 3.6}, {0.1, 0.99, 3.6}, {0.1, 0.99, 3.6}},
+            {{4.0, 0.5, 4.0}, {-5.0, 2.0, 2.0}, {0.0, 0.3, 1.8}}};
+        for (double[][] targets : cases) {
+            for (int i = 0; i < com.hex.kagune.control.bikaku.BikakuMove.PURSUIT_WORMS; i++) {
+                int land = com.hex.kagune.control.bikaku.BikakuMove.pursuitLands(i);
+                MawMotion.Worm[] w = MawMotion.pursuit(30 + land, 7, targets, land);
+                double[] head = w[i].shape().path()[w[i].shape().path().length - 1];
+                double[] at = com.hex.kagune.control.bikaku.BikakuRules.reach(MawMotion.pursuitReach(targets[i]));
+                check(distance(head, at) < 0.3, "Ravenous Pursuit's worm " + i + " is on its own body as it bites (" + distance(head, at) + ")");
+                check(w[i].shape().aperture() < 0.1, "Ravenous Pursuit's worm " + i + " is shut as it bites");
+            }
+            double[][] last = new double[3][];
+            for (double age = 0.0; age < com.hex.kagune.control.bikaku.BikakuMove.PURSUIT.ticks(); age += 0.25) {
+                MawMotion.Worm[] w = MawMotion.pursuit(30 + age, 7, targets, age);
+                check(w.length == 3, "it is three worms");
+                for (int i = 0; i < 3; i++) {
+                    double[][] path = w[i].shape().path();
+                    double[] tip = path[path.length - 1];
+                    if (last[i] != null) {
+                        check(distance(tip, last[i]) < 0.9, "Ravenous Pursuit's worm " + i + " never jumps (" + distance(tip, last[i]) + " at " + age + ")");
+                    }
+                    last[i] = tip;
+                    for (int k = 2; k < path.length - 2; k++) {
+                        check(!inside(path[k]), "Ravenous Pursuit's worm " + i + ": nothing through him (" + k + " at " + age + ")");
+                    }
+                }
+            }
+            // The owner: "they're too close up to each other ... forming a kind of mass in the back ... separate them more ... just so it
+            // doesn't create that mass in the back ever": past their shared root, no two of them ever come within 0.85 of each other behind
+            // him (each as far as it has grown out), at any moment.
+            for (double age = 0.0; age <= com.hex.kagune.control.bikaku.BikakuMove.PURSUIT.ticks(); age += 0.5) {
+                MawMotion.Worm[] w = MawMotion.pursuit(30 + age, 7, targets, age);
+                java.util.List<java.util.List<double[]>> drawn = new java.util.ArrayList<>();
+                for (MawMotion.Worm worm : w) {
+                    java.util.List<double[]> points = new java.util.ArrayList<>();
+                    if (worm.grown() > 0.05) {
+                        KakujaModel.Spine spine = MawWorm.spine(MawMotion.grown(worm.shape().path(), worm.grown()), worm.shape().dorsal(), 80);
+                        for (int k = 0; k <= 80; k++) {
+                            double u = k / 80.0;
+                            double[] at = spine.at(u)[0];
+                            if (u * spine.length() >= 1.2 && at[2] < -0.3) {
+                                points.add(at);
+                            }
+                        }
+                    }
+                    drawn.add(points);
+                }
+                double closest = Double.MAX_VALUE;
+                for (int i = 0; i < drawn.size(); i++) {
+                    for (int j = i + 1; j < drawn.size(); j++) {
+                        for (double[] a : drawn.get(i)) {
+                            for (double[] b : drawn.get(j)) {
+                                closest = Math.min(closest, distance(a, b));
+                            }
+                        }
+                    }
+                }
+                check(closest >= 0.85, "Ravenous Pursuit's worms never bunch up behind him (" + closest + " apart at " + age + ")");
+            }
+            MawMotion.Worm[] mid = MawMotion.pursuit(50, 7, targets, 15);
+            check(mid[0].girth() < 0.7 && mid[1].girth() < 0.7 && mid[1].grown() > 0.99 && mid[2].grown() > 0.99, "split, it is three thin worms");
+            MawMotion.Worm[] start = MawMotion.pursuit(30, 7, targets, 0);
+            MawMotion.Worm[] end = MawMotion.pursuit(74, 7, targets, com.hex.kagune.control.bikaku.BikakuMove.PURSUIT.ticks());
+            check(start[0].girth() == 1.0 && start[1].grown() == 0.0 && end[0].girth() > 0.999 && end[1].grown() < 0.001 && end[2].grown() < 0.001,
+                "it starts and ends as the one worm");
+        }
+    }
+
+    /**
+     * 3.5.1: Carrion Eruption: into the ground before him, under its mark (the ground heaving over it), up over its mark shut as it bites,
+     * back the same way to rest; it never jumps; what shows above the ground never passes through him.
+     */
+    private static void eruption() {
+        double[][] marks = {{0.4, 0.99, 5.5}, {-3.0, 0.99, 8.0}, {0.0, 0.99, 30.0}, {2.0, 1.99, 2.5}};
+        int land = com.hex.kagune.control.bikaku.BikakuMove.ERUPTION.land();
+        for (double[] mark : marks) {
+            double[] spot = MawMotion.eruptSpot(mark);
+            check(Math.hypot(spot[0], spot[2]) <= com.hex.kagune.control.bikaku.BikakuRules.ERUPTION_REACH + 1.0E-9, "it tunnels as far as it reaches");
+            MawMotion.Shape shut = MawMotion.eruption(30 + land, 7, mark, land);
+            double[] head = shut.path()[shut.path().length - 1];
+            check(Math.hypot(head[0] - spot[0], head[2] - spot[2]) < 0.1 && head[1] > spot[1] + 2.0 && shut.aperture() < 0.1,
+                "it bursts up over its mark and is shut as it bites");
+            MawMotion.Shape rising = MawMotion.eruption(30 + land - 1.5, 7, mark, land - 1.5);
+            check(rising.aperture() > 0.9, "its jaws are thrown wide as it bursts up");
+            for (double age = com.hex.kagune.control.bikaku.BikakuMove.ERUPT_DIVE + 1; age < com.hex.kagune.control.bikaku.BikakuMove.ERUPT_RISE; age += 1.0) {
+                MawMotion.Shape s = MawMotion.eruption(30 + age, 7, mark, age);
+                double[] tip = s.path()[s.path().length - 1];
+                check(tip[1] < Math.min(0.0, spot[1]) - 0.5, "tunnelling, its head is under the ground (" + tip[1] + " at " + age + ")");
+                check(MawMotion.eruptBulge(mark, age) != null, "the ground heaves over it as it tunnels");
+            }
+            check(MawMotion.eruptBulge(mark, 2) == null && MawMotion.eruptBulge(mark, land) == null, "the ground heaves only while it tunnels");
+            double[] last = null;
+            for (double age = 0.0; age <= com.hex.kagune.control.bikaku.BikakuMove.ERUPTION.ticks(); age += 0.25) {
+                MawMotion.Shape s = MawMotion.eruption(30 + age, 7, mark, age);
+                double[] tip = s.path()[s.path().length - 1];
+                if (last != null) {
+                    check(distance(tip, last) < 1.2, "Carrion Eruption never jumps (" + distance(tip, last) + " at " + age + ")");
+                }
+                last = tip;
+                for (int k = 2; k < s.path().length - 2; k++) {
+                    check(!inside(s.path()[k]), "Carrion Eruption: nothing through him (" + k + " at " + age + ")");
+                }
+            }
+            MawMotion.Shape end = MawMotion.eruption(84, 7, mark, com.hex.kagune.control.bikaku.BikakuMove.ERUPTION.ticks());
+            MawMotion.Shape rest = MawMotion.idle(84, 7);
+            check(distance(end.path()[end.path().length - 1], rest.path()[rest.path().length - 1]) < 1.0E-6, "Carrion Eruption ends at rest");
+        }
     }
 }

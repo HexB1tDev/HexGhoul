@@ -231,7 +231,7 @@ Then, mid-build (binding):
    original Rinkaku tendrils hidden for the path. Protocol 94.
 2. **3.5.0:** (Done: G and J, `BikakuMove`, `BikakuMoves`, `BikakuInput`.) Devouring Maw and Predatory Drag (grabs: hold the target at the mouth, shake, throw sideways; drag along the ground, lift,
    slam).
-3. **3.5.1:** Ravenous Pursuit (the worm splits into three thinner worms from the same root, `MawWorm.Pose.girth` about 0.6, snaking paths)
+3. **3.5.1:** (Done: Z and B; `MawMotion.pursuit/eruption`, `client/fx/BikakuFx`.) Ravenous Pursuit (the worm splits into three thinner worms from the same root, `MawWorm.Pose.girth` about 0.6, snaking paths)
    and Carrion Eruption (into the ground at the feet, a travelling bulge of debris, up under the target; a path through a ground
    point).
 4. **3.5.2:** Monstrous Regeneration (the active, with tissue-strand visuals over the body) and the three passives (Abnormal Regeneration

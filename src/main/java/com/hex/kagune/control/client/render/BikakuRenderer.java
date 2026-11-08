@@ -114,42 +114,59 @@ public final class BikakuRenderer {
             target = frame.rig(followed != null ? centre(followed, partial) : new double[] {view.x(), view.y(), view.z()});
         }
         MawMotion.Shape shape = MawMotion.of(clock, seed, view.bite(), age, target);
+        MawMotion.Worm[] worms = {new MawMotion.Worm(shape, 1.0, 1.0, seed)};
         // 3.5.0: a move, while it is being made, over a bite.
         double moveAge = view.moveAge(clock);
         com.hex.kagune.control.bikaku.BikakuMove move = view.move();
         if (move != com.hex.kagune.control.bikaku.BikakuMove.NONE && moveAge < move.ticks() + 2) {
-            Entity aimed = view.targets()[0] != 0 ? level.m_6815_(view.targets()[0]) : null;
-            double[] aim = frame.rig(aimed != null ? centre(aimed, partial) : new double[] {view.mx(), view.my(), view.mz()});
-            Entity heldEntity = view.heldId() != 0 ? level.m_6815_(view.heldId()) : null;
-            double[] held = heldEntity != null ? frame.rig(centre(heldEntity, partial)) : null;
-            shape = MawMotion.move(clock, seed, move, moveAge, aim, held, view.caught());
+            double[] point = {view.mx(), view.my(), view.mz()};
+            if (move == com.hex.kagune.control.bikaku.BikakuMove.PURSUIT) {
+                // 3.5.1: three worms, each after its own body.
+                double[][] aims = new double[view.targets().length][];
+                for (int i = 0; i < aims.length; i++) {
+                    Entity aimed = view.targets()[i] != 0 ? level.m_6815_(view.targets()[i]) : null;
+                    aims[i] = frame.rig(aimed != null ? centre(aimed, partial) : point);
+                }
+                worms = MawMotion.pursuit(clock, seed, aims, moveAge);
+            } else {
+                Entity aimed = view.targets()[0] != 0 ? level.m_6815_(view.targets()[0]) : null;
+                double[] aim = frame.rig(aimed != null ? centre(aimed, partial) : point);
+                Entity heldEntity = view.heldId() != 0 ? level.m_6815_(view.heldId()) : null;
+                double[] held = heldEntity != null ? frame.rig(centre(heldEntity, partial)) : null;
+                worms[0] = new MawMotion.Worm(MawMotion.move(clock, seed, move, moveAge, aim, held, view.caught()), 1.0, 1.0, seed);
+            }
         }
         // His body as drawn (hunched, leaning): the worm's root rides it.
         com.hex.kagune.control.client.animation.RigPose posed = com.hex.kagune.control.client.animation.KaguneBodyAnimation.body(player,
             com.hex.kagune.control.client.ControlClient.worldTime(partial));
-        double[][] rig = com.hex.kagune.control.client.animation.GraftPose.ride(posed, shape.path());
-        double grown = GraftMesh.smooth(deploy);
-        // Drawn out of his back along its own curve, mouth first: only its first part shows while it grows (or goes back in).
-        rig = MawMotion.grown(rig, grown);
-        double[] eye = null;
-        if (firstPerson) {
-            // The camera is at his eyes: the worm passes him to the top right of his view, never into it.
-            eye = new double[] {0.0, 0.0, 0.0};
-            rig = MawMotion.firstPerson(rig, frame.rig(new double[] {camera.f_82479_, camera.f_82480_, camera.f_82481_}));
-        }
-        double[][] world = new double[rig.length][];
-        for (int i = 0; i < rig.length; i++) {
-            world[i] = frame.place(rig[i], camera);
-        }
         int light = LevelRenderer.m_109541_(level, BlockPos.m_274561_(player.m_20185_(), player.m_20186_() + 1.0, player.m_20189_()));
-        double[] near = eye;
+        double[] near = firstPerson ? new double[] {0.0, 0.0, 0.0} : null; // in first person the camera is at his eyes
         UkakuModel.Sink sink = (a, b, c, d, n, ca, cb, cc, cd) -> {
             if (near != null && (closer(a, near) || closer(b, near) || closer(c, near) || closer(d, near))) {
                 return;
             }
             quad(out, matrix, normals, a, b, c, d, n, ca, cb, cc, cd, light);
         };
-        MawWorm.build(sink, new MawWorm.Pose(world, frame.turn(shape.dorsal()), grown, shape.aperture(), 1.0, seed, clock), KaguneTints.of(player), fine);
+        int tint = KaguneTints.of(player);
+        for (MawMotion.Worm worm : worms) {
+            double grown = GraftMesh.smooth(deploy) * worm.grown();
+            if (grown <= 0.002) {
+                continue;
+            }
+            double[][] rig = com.hex.kagune.control.client.animation.GraftPose.ride(posed, worm.shape().path());
+            // Drawn out of his back along its own curve, mouth first: only its first part shows while it grows (or goes back in).
+            rig = MawMotion.grown(rig, grown);
+            if (firstPerson) {
+                // The worm passes him to the top right of his view, never into it.
+                rig = MawMotion.firstPerson(rig, frame.rig(new double[] {camera.f_82479_, camera.f_82480_, camera.f_82481_}));
+            }
+            double[][] world = new double[rig.length][];
+            for (int i = 0; i < rig.length; i++) {
+                world[i] = frame.place(rig[i], camera);
+            }
+            MawWorm.build(sink, new MawWorm.Pose(world, frame.turn(worm.shape().dorsal()), grown, worm.shape().aperture(), worm.girth(), worm.seed(), clock),
+                tint, fine);
+        }
     }
 
     private static boolean closer(double[] p, double[] eye) {

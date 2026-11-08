@@ -211,10 +211,14 @@ public final class MawMotion {
             double arc = Math.sin(Math.PI * fast);
             if (style == 1) {
                 head = GraftMesh.add(head, new double[] {0.0, 0.7 * arc, 0.0});
+            } else if (style == 3) {
+                // 3.5.1: a fast snaking lunge (Ravenous Pursuit): weaving side to side as it comes, the weave dying out as it bites.
+                double weave = 0.55 * Math.sin(Math.PI * fast * 2.5) * Math.sqrt(1.0 - fast);
+                head = GraftMesh.add(head, GraftMesh.add(GraftMesh.mul(side, weave), new double[] {0.0, 0.25 * arc, 0.0}));
             } else if (style == 2) {
                 head = GraftMesh.add(head, GraftMesh.add(GraftMesh.mul(side, 0.8 * arc), new double[] {0.0, 0.25 * arc, 0.0}));
             }
-            look = style == 0 ? toward : GraftMesh.normalize(GraftMesh.sub(at, GraftMesh.lerp(coiled, at, Math.max(0.0, fast - 0.25))));
+            look = style == 0 || style == 3 ? toward : GraftMesh.normalize(GraftMesh.sub(at, GraftMesh.lerp(coiled, at, Math.max(0.0, fast - 0.25))));
             if (GraftMesh.dot(look, look) < 1.0E-9 || !Double.isFinite(look[0])) {
                 look = toward;
             }
@@ -254,6 +258,7 @@ public final class MawMotion {
         return switch (move) {
             case MAW -> maw(time, seed, target, held, age, caught);
             case DRAG -> drag(time, seed, target, held, age, caught);
+            case ERUPTION -> eruption(time, seed, target, age);
             default -> idle(time, seed);
         };
     }
@@ -458,6 +463,235 @@ public final class MawMotion {
     static double[] way(double[] from, double[] to) {
         double[] d = GraftMesh.sub(to, from);
         return GraftMesh.dot(d, d) < 1.0E-12 ? new double[] {0.0, 0.0, 1.0} : GraftMesh.normalize(d);
+    }
+
+    // ---------------------------------------------------------------- 3.5.1: Ravenous Pursuit
+
+    /** One of several worms drawn at once: its shape, how thick (1 the kagune's own), how far grown out (0 .. 1), its own seed. */
+    public record Worm(Shape shape, double girth, double grown, int seed) {
+    }
+
+    /**
+     * 3.5.1 (the owner: "they're too close up to each other ... forming a kind of mass in the back ... separate them more, make them
+     * further away from the body if need be, just so it doesn't create that mass in the back ever"): each of Ravenous Pursuit's worms
+     * keeps to its own lane, well apart. The side worms' lanes are {@link #LANE} out to his right and left, their zigzag drawn in to
+     * {@link #LANE_SQUEEZE} of its width so it stays in its lane; the middle worm's is narrow and {@link #MIDDLE_LIFT} higher and
+     * {@link #MIDDLE_BACK} further back.
+     */
+    static final double LANE = 1.5;
+    static final double LANE_SQUEEZE = 0.45;
+    static final double MIDDLE_SQUEEZE = 0.3;
+    static final double MIDDLE_LIFT = 1.1;
+    static final double MIDDLE_BACK = 0.5;
+
+    /**
+     * Ravenous Pursuit's worm {@code i}'s own frame into his ({@code s}: how far into its lane, 0 .. 1): 0 the worm out in the lane past
+     * his right shoulder, 1 the same mirrored past his left, 2 high and further back behind his head. Its own frame is the main worm's, so
+     * each poses and bites as the worm does.
+     */
+    static double[] pursuitFrame(int i, double[] p, double s) {
+        return switch (i) {
+            case 1 -> new double[] {-lane(p[0], s), p[1], p[2]};
+            case 2 -> new double[] {p[0] * (1.0 - s * (1.0 - MIDDLE_SQUEEZE)), p[1] + MIDDLE_LIFT * s, p[2] - MIDDLE_BACK * s};
+            default -> new double[] {lane(p[0], s), p[1], p[2]};
+        };
+    }
+
+    /** The inverse of {@link #pursuitFrame}: a point of the body's frame in worm {@code i}'s own. */
+    static double[] pursuitUnframe(int i, double[] p, double s) {
+        return switch (i) {
+            case 1 -> new double[] {unlane(-p[0], s), p[1], p[2]};
+            case 2 -> new double[] {p[0] / (1.0 - s * (1.0 - MIDDLE_SQUEEZE)), p[1] - MIDDLE_LIFT * s, p[2] + MIDDLE_BACK * s};
+            default -> new double[] {unlane(p[0], s), p[1], p[2]};
+        };
+    }
+
+    private static double lane(double x, double s) {
+        return x * (1.0 - s * (1.0 - LANE_SQUEEZE)) + s * LANE;
+    }
+
+    private static double unlane(double x, double s) {
+        return (x - s * LANE) / (1.0 - s * (1.0 - LANE_SQUEEZE));
+    }
+
+    /**
+     * Ravenous Pursuit, {@code age} ticks in: three worms (worm {@code i} after {@code targets[i]}, body frame; null: the air ahead). The
+     * worm thins as two more grow out of the same root; each, on its turn ({@link BikakuMove#pursuitLands}), is drawn back and thrown at
+     * its own body in a fast snaking lunge, bites, and goes back; then the two draw back into the root and the worm is whole again.
+     */
+    public static Worm[] pursuit(double time, int seed, double[][] targets, double age) {
+        double split = GraftMesh.smooth(GraftMesh.clamp01(age / BikakuMove.PURSUIT_SPLIT))
+            * (1.0 - GraftMesh.smooth(GraftMesh.clamp01((age - BikakuMove.PURSUIT_MERGE) / (double)(BikakuMove.PURSUIT.ticks() - BikakuMove.PURSUIT_MERGE))));
+        double thin = lerp(1.0, BikakuRules.PURSUIT_GIRTH, split);
+        // The main worm goes out into its lane first, before the others grow (so it never crosses where they come up); at the end they
+        // draw back into the root before it comes back to its place.
+        int end = BikakuMove.PURSUIT.ticks();
+        double out = GraftMesh.smooth(GraftMesh.clamp01(age / 3.0)) * (1.0 - GraftMesh.smooth(GraftMesh.clamp01((age - (end - 4)) / 4.0)));
+        double grow = GraftMesh.smooth(GraftMesh.clamp01((age - 1.0) / (BikakuMove.PURSUIT_SPLIT - 1.0)))
+            * (1.0 - GraftMesh.smooth(GraftMesh.clamp01((age - BikakuMove.PURSUIT_MERGE) / 5.0)));
+        Worm[] worms = new Worm[BikakuMove.PURSUIT_WORMS];
+        for (int i = 0; i < worms.length; i++) {
+            int own = seed + 101 * i;
+            double[] target = targets != null && i < targets.length && targets[i] != null ? targets[i] : new double[] {0.0, 1.4, 5.0};
+            int lands = BikakuMove.pursuitLands(i);
+            double biteAge = age - (lands - BikakuMove.PURSUIT_LEAD);
+            int total = BikakuMove.PURSUIT_LEAD + BikakuMove.PURSUIT_AFTER;
+            Shape mine;
+            // The main worm moves out into its lane as it splits (and back as they merge); the others grow out already in theirs.
+            double into = i == 0 ? out : 1.0;
+            if (biteAge >= 0.0 && biteAge < total) {
+                double[] there = pursuitUnframe(i, BikakuRules.reach(pursuitReach(target)), into);
+                mine = bite(time, own, there, biteAge, total, BikakuMove.PURSUIT_LEAD, 3);
+            } else {
+                mine = idle(time, own);
+            }
+            double[][] path = new double[mine.path().length][];
+            for (int k = 0; k < path.length; k++) {
+                // Out of the one root, fanning out at once to its own lane.
+                double fan = k == 0 ? 0.0 : k == 1 ? 0.5 : 1.0;
+                path[k] = pursuitFrame(i, mine.path()[k], into * fan);
+                if (k >= 2 && k < path.length - 1) {
+                    path[k] = clear(path[k]); // its own frame kept it clear of the main worm's body, not his: kept clear here
+                }
+            }
+            worms[i] = new Worm(new Shape(path, mine.dorsal(), mine.aperture()), i == 0 ? thin : BikakuRules.PURSUIT_GIRTH, i == 0 ? 1.0 : grow, own);
+        }
+        return worms;
+    }
+
+    /** Ravenous Pursuit's reach: as far as {@link BikakuRules#PURSUIT_REACH} from his eyes. */
+    public static double[] pursuitReach(double[] target) {
+        double[] eye = {0.0, 1.62, 0.0};
+        double[] to = GraftMesh.sub(target, eye);
+        double d = GraftMesh.length3(to);
+        return d <= BikakuRules.PURSUIT_REACH || d < 1.0E-9 ? target : GraftMesh.add(eye, GraftMesh.mul(to, BikakuRules.PURSUIT_REACH / d));
+    }
+
+    // ---------------------------------------------------------------- 3.5.1: Carrion Eruption
+
+    /** Over his right shoulder and down in front of him to the ground, where it goes in; and where it is under the ground in front of him. */
+    static final double[] ERUPT_FRONT = {0.7, 1.25, 0.8};
+    static final double[] ERUPT_ENTRY = {0.45, 0.05, 1.2};
+    static final double[] ERUPT_DIVE = {0.45, -1.35, 2.0};
+    /** How deep it tunnels under its mark, and how high over its mark it bursts up. */
+    static final double ERUPT_DEPTH = 1.5;
+    static final double ERUPT_HEIGHT = 2.6;
+
+    /** Where Carrion Eruption bursts up (the body's frame, on the ground: {@code target} its mark's middle), held to its reach. */
+    public static double[] eruptSpot(double[] target) {
+        double ground = target[1] - 0.99;
+        double flat = Math.hypot(target[0], target[2]);
+        double k = flat > BikakuRules.ERUPTION_REACH && flat > 1.0E-9 ? BikakuRules.ERUPTION_REACH / flat : 1.0;
+        return new double[] {target[0] * k, ground, target[2] * k};
+    }
+
+    /** Its way there and back: from its head at rest over the shoulder, down into the ground before him, under its mark, up over it. */
+    static double[][] eruptTrack(double[] restHead, double[] spot) {
+        double[] under = {spot[0], spot[1] - ERUPT_DEPTH, spot[2]};
+        double[] above = {spot[0], spot[1] + ERUPT_HEIGHT, spot[2]};
+        return new double[][] {restHead, SHOULDER, ERUPT_FRONT, ERUPT_ENTRY, ERUPT_DIVE, under, above};
+    }
+
+    /** How far along its track ({@link #eruptTrack}, by its knots: 0 at rest .. 6 burst up over its mark) its head is, {@code age} in. */
+    public static double eruptKnot(double age) {
+        if (age < BikakuMove.ERUPT_DIVE) {
+            return 4.0 * GraftMesh.smooth(age / BikakuMove.ERUPT_DIVE);
+        }
+        if (age < BikakuMove.ERUPT_RISE) {
+            return 4.0 + (age - BikakuMove.ERUPT_DIVE) / (double)(BikakuMove.ERUPT_RISE - BikakuMove.ERUPT_DIVE);
+        }
+        int land = BikakuMove.ERUPTION.land();
+        if (age < land) {
+            double w = (age - BikakuMove.ERUPT_RISE) / (double)(land - BikakuMove.ERUPT_RISE);
+            return 5.0 + w * w * (3.0 - 2.0 * w);
+        }
+        if (age < BikakuMove.ERUPT_HOLD) {
+            return 6.0;
+        }
+        if (age < BikakuMove.ERUPT_SUNK) {
+            return 6.0 - GraftMesh.smooth((age - BikakuMove.ERUPT_HOLD) / (double)(BikakuMove.ERUPT_SUNK - BikakuMove.ERUPT_HOLD));
+        }
+        if (age < BikakuMove.ERUPT_BACK) {
+            return 5.0 - GraftMesh.smooth((age - BikakuMove.ERUPT_SUNK) / (double)(BikakuMove.ERUPT_BACK - BikakuMove.ERUPT_SUNK));
+        }
+        return 4.0 * (1.0 - GraftMesh.smooth(GraftMesh.clamp01((age - BikakuMove.ERUPT_BACK) / (double)(BikakuMove.ERUPTION.ticks() - BikakuMove.ERUPT_BACK))));
+    }
+
+    /** The point {@code knot} of the way along {@code track} (by its knots). */
+    static double[] onTrack(double[][] track, double knot) {
+        int k = (int)Math.max(0, Math.min(track.length - 2, Math.floor(knot)));
+        return GraftMesh.lerp(track[k], track[k + 1], GraftMesh.clamp01(knot - k));
+    }
+
+    /** Where the ground heaves over its head as it tunnels (the body's frame), or null while its head is not under the ground. */
+    public static double[] eruptBulge(double[] target, double age) {
+        double knot = eruptKnot(age);
+        if (knot < 4.0 || knot > 5.0) {
+            return null;
+        }
+        double[] spot = eruptSpot(target);
+        double[] p = onTrack(eruptTrack(new double[] {0.0, 0.0, 0.0}, spot), knot);
+        double w = knot - 4.0;
+        return new double[] {p[0], lerp(0.0, spot[1], w), p[2]};
+    }
+
+    /**
+     * Carrion Eruption, {@code age} ticks in, at {@code target} (body frame, its mark's middle): its head goes down over his shoulder into
+     * the ground before him and along under the surface (its body following the same way, as a worm burrows), bursts up under its mark with
+     * its jaws thrown wide and shuts at {@link BikakuMove#land()}, held up there shaking, sinks back the way it came and comes back out of
+     * the ground to rest. What is under the ground is hidden by the ground itself.
+     */
+    public static Shape eruption(double time, int seed, double[] target, double age) {
+        double[] restHead = idleHead(time, seed);
+        double[] restLook = idleLook(time, seed);
+        double[] spot = eruptSpot(target);
+        double[][] track = eruptTrack(restHead, spot);
+        double knot = eruptKnot(age);
+        double[] head = onTrack(track, knot);
+        int land = BikakuMove.ERUPTION.land();
+        if (age >= land && age < BikakuMove.ERUPT_HOLD) {
+            double shake = Math.sin((age - land) * 2.4) * 0.22 * (1.0 - (age - land) / (double)(BikakuMove.ERUPT_HOLD - land));
+            head = GraftMesh.add(head, new double[] {shake, 0.0, 0.5 * shake});
+        }
+        // It looks the way its track goes on (up out of the ground over its mark), turning back to its rest at the end.
+        int k = (int)Math.max(0, Math.min(track.length - 2, Math.floor(Math.max(knot, 0.01))));
+        double[] along = way(track[k], track[k + 1]);
+        double home = GraftMesh.smooth(GraftMesh.clamp01(1.0 - knot / 1.5));
+        double[] look = GraftMesh.normalize(GraftMesh.lerp(along, restLook, home));
+        double mouth;
+        if (age < BikakuMove.ERUPT_RISE) {
+            mouth = lerp(idleMouth(time, seed), 0.15, GraftMesh.smooth(GraftMesh.clamp01(age / 4.0)));
+        } else if (age < land) {
+            mouth = age < land - 1.0 ? lerp(0.15, 1.0, GraftMesh.smooth(GraftMesh.clamp01((age - BikakuMove.ERUPT_RISE) / 1.5))) : lerp(1.0, 0.04, age - (land - 1.0));
+        } else if (age < BikakuMove.ERUPT_HOLD) {
+            mouth = 0.04;
+        } else {
+            mouth = lerp(0.3, idleMouth(time, seed), home);
+        }
+        // Its body: its coils behind him, then the track it has gone along, behind its head.
+        Shape rest = idle(time, seed);
+        int n = ZIGZAG.length;
+        java.util.List<double[]> points = new java.util.ArrayList<>();
+        for (int i = 0; i < n + 3; i++) {
+            points.add(rest.path()[i]);
+        }
+        double pulled = GraftMesh.smooth(GraftMesh.clamp01(knot / 1.2));
+        if (pulled > 0.0) {
+            // As it goes, its curl straightens toward over the shoulder.
+            points.set(n + 2, GraftMesh.lerp(rest.path()[n + 2], GraftMesh.lerp(ZIGZAG[n - 1], SHOULDER, 0.5), pulled));
+        }
+        for (int i = 1; i < track.length && i < knot - 0.05; i++) {
+            points.add(track[i]);
+        }
+        double[] neck = GraftMesh.sub(head, GraftMesh.mul(look, 0.6));
+        if (knot < 1.0) {
+            neck = GraftMesh.lerp(rest.path()[n + 3], neck, GraftMesh.clamp01(knot));
+        } else {
+            neck = clear(neck);
+        }
+        points.add(neck);
+        points.add(head);
+        return new Shape(points.toArray(new double[0][]), dorsal(), GraftMesh.clamp01(mouth));
     }
 
     // ---------------------------------------------------------------- its body between root and head

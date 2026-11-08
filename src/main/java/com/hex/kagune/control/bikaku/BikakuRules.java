@@ -101,6 +101,16 @@ public final class BikakuRules {
     /** 3.5.0: Devouring Maw heals more (its spec: "minor healing from successful bites"). */
     public static final float MAW_HEAL = 2.0F;
 
+    /** 3.5.1: Ravenous Pursuit: how far its worms reach (from his eyes), each bite's share, how thick each worm is. */
+    public static final double PURSUIT_REACH = 7.0;
+    public static final float PURSUIT_POWER = 1.1F;
+    public static final double PURSUIT_GIRTH = 0.62;
+    /** 3.5.1: Carrion Eruption: how far it tunnels (along the ground from his feet), how wide it bursts up, its share, its throw up. */
+    public static final double ERUPTION_REACH = 12.0;
+    public static final double ERUPTION_RADIUS = 1.6;
+    public static final float ERUPTION_POWER = 1.6F;
+    public static final double ERUPTION_LAUNCH = 0.85;
+
     /** A bite at nothing in particular takes what is within this of its mouth when it shuts. */
     public static final double MOUTH_RADIUS = 1.1;
 

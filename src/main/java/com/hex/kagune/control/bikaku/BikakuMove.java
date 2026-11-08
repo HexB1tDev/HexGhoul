@@ -16,7 +16,19 @@ public enum BikakuMove {
      * Predatory Drag: along the ground to what he aims at, mouth open; it bites on and drags it back across the ground to him, lifts it
      * high and slams it down before letting go. A grab and a slam: stun, bleed.
      */
-    DRAG("Predatory Drag", Slot.J, BikakuRules.DRAG, 46, 11, 200, 4.0F);
+    DRAG("Predatory Drag", Slot.J, BikakuRules.DRAG, 46, 11, 200, 4.0F),
+    /**
+     * 3.5.1, Ravenous Pursuit: the worm splits into three thinner mouth-bearing worms out of the same root, each going after its own body
+     * near him in fast, snaking lunges from its own side (one over each shoulder, one rearing high behind his head); against one body, all
+     * three bite it one after another. Bleed, several hits.
+     */
+    PURSUIT("Ravenous Pursuit", Slot.Z, BikakuRules.PURSUIT, 44, 12, 240, 5.0F),
+    /**
+     * 3.5.1, Carrion Eruption: driven into the ground before him, it tunnels under the surface (the ground heaving and breaking above it)
+     * and bursts up under what he aims at with its jaws thrown wide, biting it and throwing it up into the air; it sinks back underground
+     * and comes back out of the ground to him. A knock-up, bleeding.
+     */
+    ERUPTION("Carrion Eruption", Slot.B, BikakuRules.ERUPTION, 54, 24, 280, 6.0F);
 
     /** The original's kagune keys, as the move keys of this path. */
     public enum Slot {
@@ -73,9 +85,14 @@ public enum BikakuMove {
         return this.cost;
     }
 
-    /** How long it lasts when its bite misses (it draws back from there). */
+    /** How long it lasts when its bite misses (a grab draws back from there; 3.5.1: the others run their whole course). */
     public int missedTicks() {
-        return this.land + 15;
+        return this.grabs() ? this.land + 15 : this.ticks;
+    }
+
+    /** 3.5.1: a grab (it holds what it catches). */
+    public boolean grabs() {
+        return this == MAW || this == DRAG;
     }
 
     /** True if {@code mastery} has opened it. */
@@ -115,4 +132,32 @@ public enum BikakuMove {
     public static final int DRAG_HOME = 24;
     public static final int DRAG_LIFTED = 31;
     public static final int DRAG_SLAM = 34;
+
+    // ---------------------------------------------------------------- 3.5.1: Ravenous Pursuit's beats
+
+    /** Split into three by this tick (merged back into one from {@link #PURSUIT_MERGE} over the last ticks). */
+    public static final int PURSUIT_SPLIT = 6;
+    public static final int PURSUIT_MERGE = 36;
+    /** The first worm bites at {@link #land()}, each of the others this many ticks after the one before. */
+    public static final int PURSUIT_EVERY = 5;
+    /** How many worms it splits into. */
+    public static final int PURSUIT_WORMS = 3;
+    /** Each worm's own bite: drawn back this many ticks before it shuts, back at rest this many after. */
+    public static final int PURSUIT_LEAD = 7;
+    public static final int PURSUIT_AFTER = 10;
+
+    /** The tick worm {@code i} of Ravenous Pursuit bites. */
+    public static int pursuitLands(int i) {
+        return PURSUIT.land + PURSUIT_EVERY * i;
+    }
+
+    // ---------------------------------------------------------------- 3.5.1: Carrion Eruption's beats
+
+    /** Into the ground by this tick; tunnelled under its mark by {@link #ERUPT_RISE}; burst up and shut at {@link #land()}. */
+    public static final int ERUPT_DIVE = 8;
+    public static final int ERUPT_RISE = 20;
+    /** Held up, shaking, until this tick; sunk back under the ground by {@link #ERUPT_SUNK}; back under him by {@link #ERUPT_BACK}. */
+    public static final int ERUPT_HOLD = 32;
+    public static final int ERUPT_SUNK = 40;
+    public static final int ERUPT_BACK = 46;
 }

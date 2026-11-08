@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.5.1 (HexGhoul): Bikaku: Ravenous Pursuit and Carrion Eruption (testing)
+
+See `.github/release-notes-3.5.1.md`. Ravenous Pursuit (Z, mastery 300): the worm splits into three thinner worms that lunge in snakes at up to three bodies (all three on one). Carrion Eruption (B, mastery 450): it tunnels under the ground (the ground heaving over it) and bursts up under its mark, biting and throwing it into the air. Previews: `docs/handoff/bikaku-pursuit-3.5.1.png`, `bikaku-eruption-3.5.1.png`.
+
 ## 3.5.0 (HexGhoul): Bikaku: Devouring Maw and Predatory Drag (testing)
 
 See `.github/release-notes-3.5.0.md`. The worm's moves are on your kagune keys, opened by mastery alone. Devouring Maw (G): thrown wide, it clamps on, holds them up and shakes them, then flings them aside. Predatory Drag (J, mastery 150): along the ground, it drags them back to you, lifts them and slams them down. Protocol 95. Preview: `docs/handoff/bikaku-grabs-3.5.0.png`.

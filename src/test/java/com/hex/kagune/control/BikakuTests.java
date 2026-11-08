@@ -138,6 +138,23 @@ public final class BikakuTests {
             "G is Devouring Maw, J Predatory Drag");
         check(com.hex.kagune.control.bikaku.BikakuMove.MAW.mastery() == BikakuRules.MAW && com.hex.kagune.control.bikaku.BikakuMove.DRAG.mastery() == BikakuRules.DRAG,
             "they open at the plan's mastery");
+        // 3.5.1
+        check(com.hex.kagune.control.bikaku.BikakuMove.of(com.hex.kagune.control.bikaku.BikakuMove.Slot.Z) == com.hex.kagune.control.bikaku.BikakuMove.PURSUIT
+            && com.hex.kagune.control.bikaku.BikakuMove.of(com.hex.kagune.control.bikaku.BikakuMove.Slot.B) == com.hex.kagune.control.bikaku.BikakuMove.ERUPTION
+            && com.hex.kagune.control.bikaku.BikakuMove.PURSUIT.mastery() == BikakuRules.PURSUIT
+            && com.hex.kagune.control.bikaku.BikakuMove.ERUPTION.mastery() == BikakuRules.ERUPTION, "Z is Ravenous Pursuit (300), B Carrion Eruption (450)");
+        check(!com.hex.kagune.control.bikaku.BikakuMove.PURSUIT.grabs() && com.hex.kagune.control.bikaku.BikakuMove.PURSUIT.missedTicks()
+            == com.hex.kagune.control.bikaku.BikakuMove.PURSUIT.ticks() && com.hex.kagune.control.bikaku.BikakuMove.MAW.grabs(), "only the grabs draw back early");
+        check(com.hex.kagune.control.bikaku.BikakuMove.pursuitLands(2) + com.hex.kagune.control.bikaku.BikakuMove.PURSUIT_AFTER
+            <= com.hex.kagune.control.bikaku.BikakuMove.PURSUIT_MERGE + 1 && com.hex.kagune.control.bikaku.BikakuMove.pursuitLands(0)
+            - com.hex.kagune.control.bikaku.BikakuMove.PURSUIT_LEAD >= com.hex.kagune.control.bikaku.BikakuMove.PURSUIT_SPLIT - 1,
+            "Ravenous Pursuit's worms bite between its split and its merge");
+        check(com.hex.kagune.control.bikaku.BikakuMove.ERUPT_DIVE < com.hex.kagune.control.bikaku.BikakuMove.ERUPT_RISE
+            && com.hex.kagune.control.bikaku.BikakuMove.ERUPT_RISE < com.hex.kagune.control.bikaku.BikakuMove.ERUPTION.land()
+            && com.hex.kagune.control.bikaku.BikakuMove.ERUPTION.land() < com.hex.kagune.control.bikaku.BikakuMove.ERUPT_HOLD
+            && com.hex.kagune.control.bikaku.BikakuMove.ERUPT_HOLD < com.hex.kagune.control.bikaku.BikakuMove.ERUPT_SUNK
+            && com.hex.kagune.control.bikaku.BikakuMove.ERUPT_SUNK < com.hex.kagune.control.bikaku.BikakuMove.ERUPT_BACK
+            && com.hex.kagune.control.bikaku.BikakuMove.ERUPT_BACK < com.hex.kagune.control.bikaku.BikakuMove.ERUPTION.ticks(), "Carrion Eruption's beats come in order");
         check(com.hex.kagune.control.bikaku.BikakuMove.MAW_WINDUP < com.hex.kagune.control.bikaku.BikakuMove.MAW.land()
             && com.hex.kagune.control.bikaku.BikakuMove.MAW.land() < com.hex.kagune.control.bikaku.BikakuMove.MAW_PULLED
             && com.hex.kagune.control.bikaku.BikakuMove.MAW_PULLED < com.hex.kagune.control.bikaku.BikakuMove.MAW_SHAKE_END

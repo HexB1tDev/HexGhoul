@@ -1,4 +1,4 @@
-# HANDOFF: HexGhoul after 3.5.0, the Bikaku path being built (kept current as versions ship). Read this first.
+# HANDOFF: HexGhoul after 3.5.1, the Bikaku path being built (kept current as versions ship). Read this first.
 
 Then `docs/BIKAKU_PATH.md` (the owner's whole spec for the new path, word for word, what is built, the plan, and every place a path
 hooks into). Then, for the house rules and history: `docs/handoff/next-ai-3.3.5.md` (the session before: its judgment calls, how to
@@ -18,10 +18,10 @@ get sounds, the house rules), `docs/handoff/next-ai-1.3.60.md` (the house rules 
   environment refused `--force-with-lease`, so don't reach for it.
 - **Releases:** `.github/workflows/release.yml` publishes `v<version>` for every push to `claude/**` that adds
   `.github/release-notes-<version>.md`. The owner plays those.
-- **Version 3.5.0** in `build.py` and `patch/KagunePatch.java`. **The next is 3.5.1** (the last number never reaches 10). **Protocol
+- **Version 3.5.1** in `build.py` and `patch/KagunePatch.java`. **The next is 3.5.2** (the last number never reaches 10). **Protocol
   "95"** (3.4.9: KagunePath BIKAKU, S2CBikakuState message 54; 3.5.0: C2SBikakuAction message 55, the move in S2CBikakuState; the next
   free message id is 56).
-- Full `python3 build.py` ended **EXIT 0** for 3.5.0, 3.4.9 and 3.4.8 (about 5 minutes; run it in the background, don't edit sources while it runs).
+- Full `python3 build.py` ended **EXIT 0** for 3.5.1, 3.5.0, 3.4.9 and 3.4.8 (about 5 minutes; run it in the background, don't edit sources while it runs).
   The quick loop: `python3 tools/quick_check.py [--noverify] Suite ...`. **Nothing is tested in game. Never claim it is.**
 - The commit after 3.4.8 ("Bikaku path started") adds the work in progress below. It has no version and no release, and the tree
   compiles and verifies (`quick_check`, `BikakuWormTests` 26 checks, `GreatswordTests` 49).
@@ -32,6 +32,7 @@ get sounds, the house rules), `docs/handoff/next-ai-1.3.60.md` (the house rules 
 |---|---|---|
 | 3.4.8 | **Fix:** the Bone Greatsword's moves rebuilt with both hands on the grip. A stick arm with the sword set in the fist at one angle can't hold most blade ways two-handed (the left hand hung up to 9 px off the grip), and `settle`'s arm clamp twisted the overhead blows up to 88 degrees in game. Now the weapon turns in the fist (`RigPose.weaponX/Y/Z`). Keys give the blade's way, the hands' place round the chest and the cut's plane, and all six blows and three moves are rekeyed. The hammer, whip and spear are byte for byte as before (every pose diffed), and `settle` is unchanged. | `WeaponPose.hold/Grip/wristed/alongLine`, `RigPose.weapon*`, `WeaponLayer.mesh` (+`ArmItemLayer`), `QuinqueGrip.held/blendTurn`, `AgentClient.flow` (slerp only with a turn), `GreatswordTests`, `docs/handoff/bone_sword-moves-3.4.8.png` |
 | (no version) | **The Bikaku path started:** the worm kagune's model and motion (pure), their preview and tests. Nothing is in the game yet. | `control/bikaku/MawWorm`, `MawMotion`, `tools/MawPreview.java`, `BikakuWormTests`, `docs/BIKAKU_PATH.md`, `docs/handoff/bikaku-worm-*-wip.png` |
+| 3.5.1 | **Ravenous Pursuit (Z, 300) and Carrion Eruption (B, 450)**: three thinner worms biting bodies on their own sides in snaking lunges; a tunnel under the ground (the ground heaving over it) bursting up under its mark and throwing it up. | `MawMotion.pursuit/eruption`, `BikakuMoves.pursuitTick/eruptionTick`, `client/fx/BikakuFx`, `docs/handoff/bikaku-{pursuit,eruption}-3.5.1.png` |
 | 3.5.0 | **Devouring Maw (G) and Predatory Drag (J, 150)**: the worm's moves on the original's kagune keys, opened by mastery alone; grabs held at the mouth by the server, flung right or dragged in, lifted and slammed. Protocol 95. | `BikakuMove`, `MawMotion.move/maw/mawHeld/drag/dragHeld`, `BikakuMoves`, `C2SBikakuAction`, `BikakuInput`, `docs/handoff/bikaku-grabs-3.5.0.png` |
 | 3.4.9 | **Bikaku in the game** (next session): a third choosable path; the worm drawn in the owner's kagune colour, alive at rest, out of the lower back as the kagune comes out, kept long (a bite uncoils it only as far as it needs; the rest stays zigzagging behind); M1 a string of three bites (Snap, Lunge, Maul) with Predatory Feeding; first person kept clear; card, menu, move guide; the original's tendrils and other keys refused. Protocol 94. | `BikakuRules`, `MawMotion.of/path/firstPerson/grown`, `BikakuServer`, `S2CBikakuState`, `BikakuClient`, `BikakuRenderer`, `BikakuMenuView`, `PathSilhouette.bikaku`, `AbilityGuide.bikaku`, `BikakuTests`, `docs/handoff/bikaku-*-3.4.9.png` |
 
@@ -58,19 +59,27 @@ get sounds, the house rules), `docs/handoff/next-ai-1.3.60.md` (the house rules 
   taught by anyone currently in the mod. We're going to advance to that later. It's going to be a custom NPC. So"** (cut off after
   "So"; asked what followed). So: build the abilities and the kakuja; they unlock by mastery alone: no Ken/Eto lessons, no quest gates
   (a custom NPC will teach them later).
+- On Ravenous Pursuit's preview (the three worms seen from behind, before 3.5.1 shipped; binding): **"Being completely honest, it
+  looks like a mess. Don't be afraid to separate the more and make them wider, like away from the body. That's a mess, bro. Everyone
+  can tell that is a big"** (cut off), then, when my summary added things they hadn't said: **"Dude, I don't know what the fuck this
+  translation is. I said none of that. I said that they're too close up to each other to make it's like forming a kind of mass in the
+  back. I tried to tell you that it just like separate them more, make them further away from the body if need be, just so it doesn't
+  create that mass in the back ever."** Lesson: quote the owner's words as they are; don't dress them up.
 
 ## What's next
 
 3.4.9 put the path and the worm in the game (details: the top section of `companions-handoff.md`). Next, in the versions planned in
 `docs/BIKAKU_PATH.md`: 3.5.0 built Devouring Maw (G) and Predatory Drag (J) and the key plumbing (`BikakuInput`, `C2SBikakuAction`,
-`BikakuMove`, `BikakuMoves`). Next **3.5.1: Ravenous Pursuit (Z) and Carrion Eruption (B)**, then 3.5.2 Monstrous Regeneration (C) and
-the passives, 3.5.3 the kakuja's body and transformation (K), 3.5.4 its abilities. Add each to `BikakuMove` (its key, mastery, beats),
+`BikakuMove`, `BikakuMoves`); 3.5.1 Ravenous Pursuit (Z) and Carrion Eruption (B). Next **3.5.2: Monstrous Regeneration (C) and the
+passives**, then 3.5.3 the kakuja's body and transformation (K), 3.5.4 its abilities. Add each to `BikakuMove` (its key, mastery, beats),
 its motion to `MawMotion.move`, its server beats to `BikakuMoves.tick`. Mastery alone opens them (the owner: a custom NPC will teach them
 later; no Ken/Eto lessons, no quest gates). Show the owner previews early: they look closely at pictures and say plainly when something is broken.
 Ask them about 3.4.9's previews if they haven't answered (the shut mouth too: see below).
 
 ## Judgment calls the owner hasn't confirmed (tell them, ask if unsure)
 
+- **3.5.1:** the three worms' places and thickness, bite timing and snaking; tunnel depth 1.5, rise 2.6, launch 0.85, radius 1.6; reaches
+  7 and 12; cooldowns 12 s and 14 s; RC 5 and 6; sounds; the tunnel can show through caves or drops.
 - **3.5.0:** Devouring Maw's and Predatory Drag's beats, damage (2.2; 0.8 bite + 1.8 slam), stuns, the fling (to his right, 1.25
   sideways and 0.5 up), the hold height, reaches (6.5 from the shoulder; 10 along the ground), cooldowns (8 s, 10 s), RC (3, 4).
 - **3.4.9:** the three bites (Snap 12 ticks landing at 6, Lunge 13 at 7 reared up high, Maul 18 at 8 hooked in from the right, shaken,
@@ -91,6 +100,7 @@ Ask them about 3.4.9's previews if they haven't answered (the shut mouth too: se
 
 ## Things to watch when the owner plays (all untested in game)
 
+- 3.5.1: the eruption's debris, crater and shake; the tunnel hidden by the ground; each Pursuit worm biting the body on its side.
 - 3.5.0: a catch held at the mouth (mobs and players; a player held is moved by velocity each tick), the fling and the slam, the
   keys taken from the original (G, J; the rest say there's nothing on them yet), the cooldown and locked messages.
 - 3.4.9: the worm on a player in multiplayer and single player: out of the lower back as the kagune comes out (mouth first), its colour,

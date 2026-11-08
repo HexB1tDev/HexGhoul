@@ -49,6 +49,12 @@ public class MawPreview {
         if (which.equals("grabs") || which.equals("all")) {
             grabs(new File(out, "maw-grabs.png"));
         }
+        if (which.equals("pursuit") || which.equals("all")) {
+            pursuit(new File(out, "maw-pursuit.png"));
+        }
+        if (which.equals("eruption") || which.equals("all")) {
+            eruption(new File(out, "maw-eruption.png"));
+        }
         if (which.equals("grow") || which.equals("all")) {
             grow(new File(out, "maw-grow.png"));
         }
@@ -163,6 +169,121 @@ public class MawPreview {
         g.dispose();
         ImageIO.write(img, "png", file);
         System.out.println(file);
+    }
+
+    /** The worms of a move drawn at once (each its own thickness, growth and seed), as the renderer draws them. */
+    static List<PoseRender.Tri> worms(MawMotion.Worm[] worms, double time) {
+        List<PoseRender.Tri> tris = new ArrayList<>();
+        for (MawMotion.Worm worm : worms) {
+            if (worm.grown() <= 0.002) {
+                continue;
+            }
+            double[][] path = MawMotion.grown(worm.shape().path(), worm.grown());
+            UkakuModel.Sink sink = (a, b, c, d, n, ca, cb, cc, cd) -> {
+                int rgb = avg(ca, cb, cc, cd);
+                tris.add(new PoseRender.Tri(new double[][] {w(a), w(b), w(c)}, rgb, w(n)));
+                tris.add(new PoseRender.Tri(new double[][] {w(a), w(c), w(d)}, rgb, w(n)));
+            };
+            MawWorm.build(sink, new MawWorm.Pose(path, worm.shape().dorsal(), worm.grown(), worm.shape().aperture(), worm.girth(), worm.seed(), time),
+                0xA50F37, true);
+        }
+        return tris;
+    }
+
+    /** 3.5.1: Ravenous Pursuit at three bodies (top two rows, two views) and all three worms on one (bottom). */
+    static void pursuit(File file) throws Exception {
+        int fw = 250;
+        int fh = 300;
+        double[] ages = {0, 4, 8, 12, 15, 17, 22, 26, 33, 40};
+        double[][] three = {{2.6, 0.99, 3.2}, {-2.3, 0.99, 3.0}, {0.2, 0.99, 4.3}};
+        double[][] one = {PREY, PREY, PREY};
+        BufferedImage img = new BufferedImage(fw * ages.length, fh * 4 + 34, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = sheet(img, "Bikaku 3.5.1: Ravenous Pursuit (Z): three thinner worms from one root, each in its own lane well apart, lunging in snakes at its own body (bites at 12, 17, 22)");
+        for (int r = 0; r < 4; r++) {
+            double[][] targets = r < 2 || r == 3 ? three : one;
+            for (int i = 0; i < ages.length; i++) {
+                double time = 30 + ages[i];
+                List<PoseRender.Tri> tris = worms(MawMotion.pursuit(time, SEED, targets, ages[i]), time);
+                java.util.Set<String> placed = new java.util.HashSet<>();
+                for (double[] t : targets) {
+                    if (placed.add(t[0] + "," + t[2])) {
+                        tris.addAll(prey(new double[] {t[0], 0.0, t[2]}));
+                    }
+                }
+                PoseRender.Camera cam = r == 1 ? framedAt(170, 22, 15.5, 0.4) : r == 3 ? framedAt(180, 4, 13.0, 0.1) : framedAt(30, 18, 15.5, 0.45);
+                g.drawImage(PoseRender.render(new RigPose(), cam, fw, fh, tris), i * fw, 34 + r * fh, null);
+                label(g, String.format("%s %.0ft%s", r == 2 ? "one body" : r == 1 ? "from behind" : r == 3 ? "straight behind" : "three bodies", ages[i],
+                    ages[i] == 12 || ages[i] == 17 || ages[i] == 22 ? "  BITES" : ""), i * fw, 34 + r * fh);
+            }
+        }
+        g.dispose();
+        ImageIO.write(img, "png", file);
+        System.out.println(file);
+    }
+
+    /** 3.5.1: Carrion Eruption: into the ground, under it (the ground heaving: brown marks), up under its mark, the mark thrown up. */
+    static void eruption(File file) throws Exception {
+        int fw = 250;
+        int fh = 320;
+        double[] ages = {0, 4, 7, 11, 16, 20, 22, 24, 28, 36, 44, 50};
+        double[] mark = {0.4, 0.99, 5.5};
+        BufferedImage img = new BufferedImage(fw * ages.length, fh * 2 + 34, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = sheet(img, "Bikaku 3.5.1: Carrion Eruption (B): into the ground before him, tunnelling under it (brown: where the ground heaves), bursting up under its mark, the mark thrown up, back the same way");
+        for (int r = 0; r < 2; r++) {
+            for (int i = 0; i < ages.length; i++) {
+                double age = ages[i];
+                double time = 30 + age;
+                MawMotion.Shape s = MawMotion.eruption(time, SEED, mark, age);
+                List<PoseRender.Tri> tris = worm(s, 1.0, time, 0xA50F37, true);
+                double up = 0.0;
+                int land = BikakuMove.ERUPTION.land();
+                // Thrown up as Minecraft moves a body: its speed, then 0.08 a tick of gravity, 2% drag.
+                double v = BikakuRules.ERUPTION_LAUNCH;
+                for (int t = land; t < age; t++) {
+                    up = Math.max(0.0, up + v);
+                    v = (v - 0.08) * 0.98;
+                }
+                tris.addAll(prey(new double[] {mark[0], up, mark[2]}));
+                double[] bulge = MawMotion.eruptBulge(mark, age);
+                if (bulge != null) {
+                    tris.addAll(mound(bulge));
+                }
+                PoseRender.Camera cam = r == 1 ? framedAt(-90, 8, 20.0, 0.75) : framedAt(35, 24, 18.0, 0.75);
+                g.drawImage(big(cam, fw, fh, tris), i * fw, 34 + r * fh, null);
+                label(g, String.format("%.0ft  mouth %.2f%s", age, s.aperture(), age == land ? "  SHUT" : age == BikakuMove.ERUPT_RISE ? "  BURSTS" : ""),
+                    i * fw, 34 + r * fh);
+            }
+        }
+        g.dispose();
+        ImageIO.write(img, "png", file);
+        System.out.println(file);
+    }
+
+    /** As PoseRender.render on a wider floor (what is under it hidden, as the ground hides it in game). */
+    static BufferedImage big(PoseRender.Camera cam, int w, int h, List<PoseRender.Tri> extra) {
+        PoseRender.Canvas canvas = new PoseRender.Canvas(w, h, 2, cam, 0x3A4450);
+        canvas.floor(11, 0x58626C, 0x4E5862);
+        for (PoseRender.Tri t : PoseRender.model(new RigPose())) {
+            canvas.tri(t, true);
+        }
+        for (PoseRender.Tri t : extra) {
+            canvas.tri(t, true);
+        }
+        return canvas.image();
+    }
+
+    /** A low brown heap on the ground at {@code at} (the body's frame): where the ground heaves over the worm (a stand-in for the dust). */
+    static List<PoseRender.Tri> mound(double[] at) {
+        List<PoseRender.Tri> tris = new ArrayList<>();
+        double[] top = w(new double[] {at[0], at[1] + 0.35, at[2]});
+        for (int k = 0; k < 6; k++) {
+            double a0 = Math.PI * 2.0 * k / 6.0;
+            double a1 = Math.PI * 2.0 * (k + 1) / 6.0;
+            double[] p0 = w(new double[] {at[0] + 0.6 * Math.cos(a0), at[1] + 0.02, at[2] + 0.6 * Math.sin(a0)});
+            double[] p1 = w(new double[] {at[0] + 0.6 * Math.cos(a1), at[1] + 0.02, at[2] + 0.6 * Math.sin(a1)});
+            tris.add(new PoseRender.Tri(new double[][] {p0, p1, top}, 0x6E5A44, new double[] {0, 1, 0}));
+        }
+        return tris;
     }
 
     /** As {@link #framed}, looking at {@code share} of the way out to what he bites. */
