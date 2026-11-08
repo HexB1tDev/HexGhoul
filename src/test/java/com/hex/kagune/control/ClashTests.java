@@ -43,17 +43,17 @@ public final class ClashTests {
                         com.hex.kagune.control.npc.AgentRules.damage(q, step));
                     if (rank.ordinal() <= com.hex.kagune.control.npc.AgentRules.Rank.RANK_7.ordinal()) {
                         // Pushed less than the agent, whatever it swings.
-                        outhits &= ClashRules.push(1.5F, ClashRules.ratio(maxed, agent)) < ClashRules.push(1.5F, ClashRules.ratio(agent, maxed));
+                        outhits &= ClashRules.thrown(1.5F, ClashRules.ratio(maxed, agent)) < ClashRules.thrown(1.5F, ClashRules.ratio(agent, maxed));
                     }
                     if (rank.ordinal() <= com.hex.kagune.control.npc.AgentRules.Rank.RANK_1.ordinal() && step == 0) {
                         flung &= ClashRules.overwhelmed(ClashRules.ratio(agent, maxed));
                     }
-                    flung &= !ClashRules.overwhelmed(ClashRules.ratio(maxed, agent)) || rank == com.hex.kagune.control.npc.AgentRules.Rank.RANK_10;
+                    flung &= !ClashRules.overwhelmed(ClashRules.ratio(maxed, agent)); // 3.4.3: the Reaper neither
                 }
             }
         }
         check(outhits, "a maxed ghoul is thrown back less than any investigator up to Rank 7, whatever weapon, whatever blow");
-        check(flung, "a Rank 0 or 1 is sent flying by a maxed ghoul's blow; no investigator but the Reaper ever sends a maxed ghoul flying");
+        check(flung, "a Rank 0 or 1 is sent flying by a maxed ghoul's blow; no investigator, not even the Reaper, ever sends a maxed ghoul flying");
         double freshBlow = com.hex.kagune.control.ClashPower.player(fresh, 1.0, 1.0);
         double rookie = com.hex.kagune.control.ClashPower.agent(com.hex.kagune.control.npc.AgentRules.power(com.hex.kagune.control.npc.AgentRules.Rank.RANK_0, false),
             com.hex.kagune.control.npc.AgentRules.damage(com.hex.kagune.control.quinque.Quinque.BLADE, 0));
@@ -67,8 +67,79 @@ public final class ClashTests {
             "a heavier blow counts more, by its root");
     }
 
+    /**
+     * 3.4.3 (the owner: "no matter how strong you are, what CCG investigators are just gonna send you flying during clashes ... If you're
+     * stronger than investigators, then you should send them flying in the same for players. If you're max mastery, I don't think that the
+     * Reaper should be able to even send you flying ... Even at max mastery, one-eyed, and with max ghoul meat eaten, he still ignores that"):
+     * how far each is thrown follows the gap between them, never their own strength; the stronger stands its ground, the weaker flies.
+     */
+    static void gap() {
+        double max = com.hex.kagune.control.ClashPower.progress(1000, 1.0, 1000);
+        com.hex.kagune.control.npc.AgentRules.Rank reaper = com.hex.kagune.control.npc.AgentRules.Rank.RANK_10;
+        double maxed = com.hex.kagune.control.ClashPower.player(max, 1.0, 1.0);
+        double oneEye = com.hex.kagune.control.ClashPower.player(max, 1.0, 1.0, true);
+        check(oneEye > maxed && com.hex.kagune.control.ClashPower.player(max, 1.0, 1.0, false) == maxed, "one eye counts");
+        // Before: an even clash between two strong ones threw both a block a tick; the winner never less than a third of it.
+        float big = ClashRules.impact(maxed, maxed);
+        check(ClashRules.thrown(big, 1.0) <= 0.55 && ClashRules.lifted(1.0) <= 0.16, "an even clash, even a huge one, throws both a short way apart: "
+            + ClashRules.thrown(big, 1.0));
+        check(ClashRules.thrown(1.5F, 0.5) == 0.0 && ClashRules.lifted(0.5) == 0.0 && ClashRules.thrown(1.5F, 0.7) < ClashRules.thrown(1.5F, 1.0) * 0.5,
+            "the stronger is thrown far less, and twice as strong stands its ground");
+        boolean flat = true;
+        for (com.hex.kagune.control.npc.AgentRules.Rank rank : com.hex.kagune.control.npc.AgentRules.Rank.values()) {
+            double agent = com.hex.kagune.control.ClashPower.agent(com.hex.kagune.control.npc.AgentRules.power(rank, false),
+                com.hex.kagune.control.npc.AgentRules.damage(com.hex.kagune.control.quinque.Quinque.DAWN, 0));
+            double last = Double.MAX_VALUE;
+            for (int mastery = 0; mastery <= 1000; mastery += 50) {
+                double me = com.hex.kagune.control.ClashPower.player(com.hex.kagune.control.ClashPower.progress(mastery, mastery / 1000.0, mastery / 5), 1.0, 1.0);
+                double ratio = ClashRules.ratio(me, agent);
+                double thrown = ClashRules.overwhelmed(ratio) ? 99.0 : ClashRules.thrown(ClashRules.impact(me, agent), ratio); // flung: furthest of all
+                flat &= thrown <= last + 1.0E-9;
+                last = thrown;
+            }
+        }
+        check(flat, "the stronger a player grows, the less any investigator throws them (never the more for their own strength)");
+        boolean reaperFlings = false;
+        boolean reaperOutThrows = false;
+        for (com.hex.kagune.control.quinque.Quinque q : com.hex.kagune.control.quinque.Quinque.values()) {
+            for (int step = 0; step < 3; step++) {
+                double him = com.hex.kagune.control.ClashPower.agent(com.hex.kagune.control.npc.AgentRules.power(reaper, false),
+                    com.hex.kagune.control.npc.AgentRules.damage(q, step));
+                reaperFlings |= ClashRules.overwhelmed(ClashRules.ratio(maxed, him)) || ClashRules.overwhelmed(ClashRules.ratio(oneEye, him));
+                if (q == com.hex.kagune.control.quinque.Quinque.DAWN) {
+                    float power = ClashRules.impact(oneEye, him);
+                    reaperOutThrows |= ClashRules.thrown(power, ClashRules.ratio(oneEye, him)) > ClashRules.thrown(power, 1.0) * 1.05
+                        || ClashRules.lifted(ClashRules.ratio(oneEye, him)) > ClashRules.EVEN_LIFT * 1.05;
+                }
+            }
+        }
+        check(!reaperFlings, "the Reaper never sends a maxed ghoul flying, whatever he swings");
+        check(!reaperOutThrows, "a maxed one-eyed ghoul is thrown no further than an even clash throws, by any of the Reaper's Dawn blows");
+        boolean rookiesFly = true;
+        for (com.hex.kagune.control.npc.AgentRules.Rank rank : com.hex.kagune.control.npc.AgentRules.Rank.values()) {
+            if (rank.ordinal() > com.hex.kagune.control.npc.AgentRules.Rank.RANK_3.ordinal()) {
+                continue;
+            }
+            for (com.hex.kagune.control.quinque.Quinque q : com.hex.kagune.control.quinque.Quinque.values()) {
+                double agent = com.hex.kagune.control.ClashPower.agent(com.hex.kagune.control.npc.AgentRules.power(rank, false),
+                    com.hex.kagune.control.npc.AgentRules.damage(q, 0));
+                rookiesFly &= ClashRules.overwhelmed(ClashRules.ratio(agent, maxed)) && ClashRules.thrown(ClashRules.impact(maxed, agent),
+                    ClashRules.ratio(maxed, agent)) == 0.0;
+            }
+        }
+        check(rookiesFly, "a maxed ghoul sends every Rank 0 to 3 flying, whatever it swings, and stands its ground");
+        double dawn5 = com.hex.kagune.control.ClashPower.agent(com.hex.kagune.control.npc.AgentRules.power(com.hex.kagune.control.npc.AgentRules.Rank.RANK_5, false),
+            com.hex.kagune.control.npc.AgentRules.damage(com.hex.kagune.control.quinque.Quinque.DAWN, 0));
+        check(ClashRules.overwhelmed(ClashRules.ratio(dawn5, maxed)), "and a Rank 5 with a blade like Dawn's");
+        // The same for players: the weaker of two flies, the stronger stands.
+        double fresh = com.hex.kagune.control.ClashPower.player(0.0, 1.0, 1.0);
+        check(ClashRules.overwhelmed(ClashRules.ratio(fresh, maxed)) && !ClashRules.overwhelmed(ClashRules.ratio(maxed, fresh))
+            && ClashRules.thrown(ClashRules.impact(fresh, maxed), ClashRules.ratio(maxed, fresh)) == 0.0, "between players too: a fresh ghoul flies off a maxed one");
+    }
+
     public static void main(String[] args) {
         power();
+        gap();
         // The other blow on its way: from the tick it set out to the tick it lands, and no later.
         check(ClashRules.onItsWay(100, 106, 100) && ClashRules.onItsWay(100, 106, 103) && ClashRules.onItsWay(100, 106, 106),
             "a blow is on its way from its start to its landing");
@@ -132,9 +203,8 @@ public final class ClashTests {
             && ClashRules.shown(2.0F) > ClashRules.shown(1.0F), "the clash louder (laid over itself when hard) and drawn bigger, the harder the bigger");
         check(Math.abs(ClashRules.ratio(7.0, 7.0) - 1.0) < 1.0E-9 && ClashRules.ratio(4.0, 12.0) > 1.0 && ClashRules.ratio(12.0, 4.0) < 1.0,
             "the gap between two blows");
-        check(Math.abs(ClashRules.push(ClashRules.ORDINARY, 1.0) - ClashRules.PUSH) < 1.0E-6
-            && ClashRules.push(1.5F, ClashRules.ratio(4.0, 12.0)) > ClashRules.push(1.5F, 1.0)
-            && ClashRules.push(1.5F, ClashRules.ratio(12.0, 4.0)) < ClashRules.push(1.5F, 1.0), "the weaker thrown further, the stronger less");
+        check(ClashRules.thrown(1.5F, ClashRules.ratio(4.0, 12.0)) > ClashRules.thrown(1.5F, 1.0)
+            && ClashRules.thrown(1.5F, ClashRules.ratio(12.0, 4.0)) < ClashRules.thrown(1.5F, 1.0), "the weaker thrown further, the stronger less");
         check(!ClashRules.overwhelmed(ClashRules.ratio(7.0, 12.0)) && ClashRules.overwhelmed(ClashRules.ratio(4.0, 10.0))
             && !ClashRules.overwhelmed(ClashRules.ratio(10.0, 4.0)), "only a big enough gap overwhelms, and only the weaker");
         // 2.0.12: every clash shakes the view, harder, longer and further the harder it is (an ordinary one about 6 degrees).

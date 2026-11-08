@@ -110,20 +110,49 @@ public final class ClashRules {
         return Math.max(0.1, other) / Math.max(0.1, own);
     }
 
-    /** 2.0.11: how hard one is thrown back by the gap ({@link #ratio}): the weaker further, the stronger less (0.35 to 2.2 times). */
-    public static double push(float power, double ratio) {
-        return push(power) * Math.max(0.35, Math.min(2.2, Math.pow(ratio, 0.8)));
-    }
-
     /**
      * 2.0.11: the gap from which the weaker is overwhelmed (the owner: "its pretty much the same effect entirely of the kick without the
      * animation, send them through blocks"): flown off as the Speed Kick sends a body, through what it can break, down and stunned.
      */
-    public static final double GAP = 2.5;
+    public static final double GAP = 2.0; // 3.4.3: 2.5 before (a maxed ghoul flung only Rank 0 to 3: "If you're stronger than investigators, then you should send them flying")
 
     public static boolean overwhelmed(double ratio) {
         return ratio >= GAP;
     }
+
+    /**
+     * 3.4.3 (the owner: "no matter how strong you are, what CCG investigators are just gonna send you flying during clashes ... the master
+     * should be more reflective of how strong the clash is ... If you're max mastery, I don't think that the Reaper should be able to even
+     * send you flying"): how hard one is thrown back from a clash ({@code ratio}: how much harder the other's blow was than its own, as
+     * {@link #ratio}; {@code power}: how big the clash was). Before, both were thrown by the size of the clash, which is both blows together:
+     * the stronger you were, the harder you were thrown yourself, even winning (a maxed ghoul and the Reaper flew a block a tick each way),
+     * and the stronger never threw less than a third of it. Now an even clash throws both a short way apart ({@link #EVEN_PUSH}, a little
+     * more for a huge one); the stronger is thrown less by the square of the gap and stands its ground once it is twice as strong
+     * ({@link #STANDS}); the weaker further, by the gap; and past {@link #GAP} the weaker is flung as by the kick ({@link #overwhelmed}).
+     */
+    public static double thrown(float power, double ratio) {
+        double r = Math.max(0.0, ratio);
+        if (r <= STANDS) {
+            return 0.0;
+        }
+        double even = EVEN_PUSH + EVEN_GROWS * (Math.max(LEAST, Math.min(MOST, power)) - ORDINARY);
+        return even * (r < 1.0 ? r * r : Math.min(2.4, Math.pow(r, 1.2))); // (2.4: past GAP's, so it never stops growing before the fling)
+    }
+
+    /** 3.4.3: how far up one is thrown with it: {@link #EVEN_LIFT} for an even clash, less for the stronger, more for the weaker (to twice). */
+    public static double lifted(double ratio) {
+        double r = Math.max(0.0, ratio);
+        if (r <= STANDS) {
+            return 0.0;
+        }
+        return EVEN_LIFT * (r < 1.0 ? r * r : Math.min(2.0, r));
+    }
+
+    /** 3.4.3: an even clash's throw (blocks a tick across) and rise; how much a huge clash adds to it; the gap from which the stronger stands. */
+    public static final double EVEN_PUSH = 0.42;
+    public static final double EVEN_GROWS = 0.06;
+    public static final double EVEN_LIFT = 0.15;
+    public static final double STANDS = 0.5;
 
     public static float pitch(float power) {
         return Math.max(0.65F, 1.0F + (ORDINARY - power) * 0.15F);

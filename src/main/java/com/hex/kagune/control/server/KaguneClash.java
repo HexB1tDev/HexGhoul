@@ -208,8 +208,9 @@ public final class KaguneClash {
         }
         double gates = on == 0 ? 0.0 : (double)open / on;
         double factor = kagune ? com.hex.kagune.data.KaguneProfile.swipeDamageLegacy(player) / (6.0 + 0.006 * mastery) : 1.0;
+        boolean oneEyed = KakuganServer.eyes(player).oneEyed(); // 3.4.3: one eye counts
         return com.hex.kagune.control.ClashPower.player(com.hex.kagune.control.ClashPower.progress(mastery, gates, GhoulMeatServer.eaten(player)),
-            com.hex.kagune.control.ClashPower.build(factor), weight);
+            com.hex.kagune.control.ClashPower.build(factor), weight, oneEyed);
     }
 
     /** {@code swing} is aimed at {@code body}: at it by name, or (aimed at nothing in particular) facing it and reaching it. */
@@ -264,7 +265,14 @@ public final class KaguneClash {
      */
     private static void apart(LivingEntity who, LivingEntity from, float power, double ratio, double strongerHit, long now) {
         if (!ClashRules.overwhelmed(ratio)) {
-            push(who, from, ClashRules.push(power, ratio), ClashRules.LIFT);
+            // 3.4.3: by the gap alone: the stronger barely moved (standing its ground at twice the other), the weaker thrown further.
+            double thrown = ClashRules.thrown(power, ratio);
+            if (thrown > 0.0) {
+                push(who, from, thrown, ClashRules.lifted(ratio));
+            } else {
+                who.m_20256_(new Vec3(0.0, Math.min(0.0, who.m_20184_().f_82480_), 0.0)); // stopped where it stands
+                who.f_19864_ = true;
+            }
             return;
         }
         double resist = Math.max(0.0, Math.min(1.0, who.m_21133_(net.minecraft.world.entity.ai.attributes.Attributes.f_22278_)));

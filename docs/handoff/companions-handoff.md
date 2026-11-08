@@ -1,4 +1,21 @@
-# START HERE (state after 3.4.2)
+# START HERE (state after 3.4.3)
+
+Nothing queued after this fix (the 3.2.2 list was done by 3.4.2): ask the owner what next. The owner: "push an update asap": every version is pushed as it is built.
+
+The owner's report: "no matter how strong you are, what CCG investigators are just gonna send you flying during clashes for some reason. This should be balanced, that the master should be more reflective of how strong the clash is. If you're stronger than investigators, then you should send them flying in the same for players. If you're max mastery, I don't think that the Reaper should be able to even send you flying, but currently he does. Even at max mastery, one-eyed, and with max ghoul meat eaten, he still ignores that and sends you flying regardless."
+
+- Cause: 3.2.4's `ClashPower` scale was right, but `KaguneClash.apart` threw each side `ClashRules.push(power, ratio)`. That is `push(power)` (it grows with `impact`, the sum of both blows) times max(0.35, ratio^0.8), plus a constant `LIFT` 0.3. So a stronger player was thrown harder for being strong: a maxed ghoul vs the Reaper's Dawn finisher took 1.12 blocks/tick and 0.3 up. The winner kept a third of it, everyone was lifted the same, and one eye counted for nothing.
+- `ClashRules.thrown(power, ratio)`: `EVEN_PUSH` 0.42 + `EVEN_GROWS` 0.06 x (power - ORDINARY), times r^2 below 1 or min(2.4, r^1.2) above; 0 at r <= `STANDS` 0.5. `lifted(ratio)`: `EVEN_LIFT` 0.15 x r^2 below 1, x min(2, r) above, 0 at STANDS. `GAP` 2.5 to 2.0. The old `push(power, ratio)` is removed; `push(power)` stays for `collide` (MoveClash, the Pale kit).
+- `KaguneClash.apart`: thrown/lifted, or stopped in place at 0; overwhelmed as before.
+- `ClashPower.ONE_EYED` 1.15, `player(progress, build, weight, oneEyed)`; `KaguneClash.strength` passes `KakuganServer.eyes(player).oneEyed()`.
+- Numbers (scratchpad probe): maxed vs the Reaper's Dawn: 0.49-0.59 b/t, 0.15-0.17 up (one-eyed 0.38-0.51). It flings Rank 0-3 with anything; Rank 4-5 with Dawn-like blades (one-eyed: to 6).
+- Tests: ClashTests `gap()` (monotone in the player's strength, the Reaper never flings, one-eyed vs the Reaper's Dawn no further than even, Rank 0-3 flung while the player stands, between players, one eye counts); `power()` updated (no rank at all flings a maxed ghoul).
+- Untouched: the Reaper's kick (`AgentBrain.kickLands`), a landed finisher's vanilla knockback (`QuinqueServer.finisher` 0.6/0.8).
+- **Judgment calls:** the constants; one eye 15%; Rinkaku's two Ken lessons still count toward the gate share.
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 93. Not tested in game.
+
+# State after 3.4.2
 
 The owner's 3.2.2 list is done (3.2.2 to 3.4.2; break-up/divorce replaced by 3.3.4's one-partner rule). Nothing queued: ask the owner what next. The owner: "push an update asap": every version is pushed as it is built.
 

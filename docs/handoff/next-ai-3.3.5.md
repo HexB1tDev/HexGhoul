@@ -1,8 +1,8 @@
-# HANDOFF: HexGhoul after 3.4.2 (kept current as versions ship). Read this first.
+# HANDOFF: HexGhoul after 3.4.3 (kept current as versions ship). Read this first.
 
 Then, for the house rules and history: `docs/handoff/next-ai-3.2.1.md` and `docs/handoff/next-ai-3.1.9.md` (the two sessions before,
 their judgment calls), `docs/handoff/next-ai-2.0.45.md` (header: versions, protocol history, the 2.x/3.x log), `docs/handoff/next-ai-1.3.60.md`
-(the owner's house rules in full), and the top sections of `docs/handoff/companions-handoff.md` (one per version, newest first: 3.2.7 to 3.4.2
+(the owner's house rules in full), and the top sections of `docs/handoff/companions-handoff.md` (one per version, newest first: 3.2.7 to 3.4.3
 are this session's, with file-level detail).
 
 Note on the session before this one (3.2.2 to 3.2.6, branch `claude/magical-fermi-cec8n1`): it wrote a handoff at 3.2.1 and then went on
@@ -11,13 +11,13 @@ lost. **Commit and push every version as it is built, and keep this file current
 
 ## Where things are
 
-- **Branch:** **`claude/exciting-bell-3kklnc`** (pushed; 3.2.7 to 3.4.2 on top of 3.2.6 from `claude/magical-fermi-cec8n1`). The next session
+- **Branch:** **`claude/exciting-bell-3kklnc`** (pushed; 3.2.7 to 3.4.3 on top of 3.2.6 from `claude/magical-fermi-cec8n1`). The next session
   will be given its own branch: start it from `origin/claude/exciting-bell-3kklnc`
   (`git fetch origin claude/exciting-bell-3kklnc && git checkout -B <your-branch> origin/claude/exciting-bell-3kklnc`). Push only to the
   branch you are given; never to `main`; no PR unless asked.
 - **Releases:** `.github/workflows/release.yml` publishes `v<version>` on GitHub for every push to `claude/**` that adds
   `.github/release-notes-<version>.md` (about 5 minutes). The owner plays those. When they say "push an update", push what is built.
-- **Version 3.4.2** in `build.py` and `patch/KagunePatch.java`. **The next is 3.4.3** (the last number never reaches 10). **Protocol "93"** (3.3.6: EtoGesture JEALOUS appended).
+- **Version 3.4.3** in `build.py` and `patch/KagunePatch.java`. **The next is 3.4.4** (the last number never reaches 10). **Protocol "93"** (3.3.6: EtoGesture JEALOUS appended).
 - Full `python3 build.py` ended **EXIT 0** for every version (javac `--release 17` on JDK 21; about 5 minutes; run it in the background).
   **Nothing is tested in game. Never claim it is.**
 - The quick loop: `python3 tools/quick_check.py [--noverify] KingTests UkakuTests ...` (needs one full `build.py` first). It does **not**
@@ -43,6 +43,7 @@ lost. **Commit and push every version as it is built, and keep this file current
 | 3.4.0 | Siblings at home react to the one brought back (the big one covers, the little one tells, "where WERE you?", left behind) and it answers, by temper and age. | `family/SiblingWelcome`, `HomecomingServer.siblings` |
 | 3.4.1 | After the player's door card, the companion and the child brought home talk in four turns (parent, child by temper, parent's answer, child's last word); a baby: the parent alone. | `family/DoorTalk`, `HomecomingServer.doorTalk` (a `Conversation`) |
 | 3.4.2 | Kids greet you after days away (2+ game days; more after a week), by temper and age; the last sight is kept in the player's NpcMemory so it outlasts an unloaded child. | `family/KidGreeting`, `ChildBrain.lines` |
+| 3.4.3 | **Fix:** clashes threw both sides by the clash's size (both blows together), so a stronger player was thrown harder, a maxed ghoul and the Reaper a block a tick, everyone lifted alike; one eye didn't count. Now by the gap alone: the stronger stands its ground at 2x, the weaker flies at `GAP` 2.0, an even clash is a short push; one eye x1.15. | `ClashRules.thrown/lifted`, `KaguneClash.apart/strength`, `ClashPower.ONE_EYED`, ClashTests `gap` |
 
 Previews (off-game, looked at honestly): `docs/handoff/peace-aegis-3.2.7.png`, `war-spire-first-person-3.2.8.png`, `ukaku-vortex-3.2.9.png`,
 `dawn-idle-3.3.2.png`, `jealous-3.3.6.png`. Tools: `tools/art-preview.sh <out> aegis|spire-fp|vortex`, `tools/QuinquePreview.java <out> dawn idle`.
@@ -62,6 +63,11 @@ Previews (off-game, looked at honestly): `docs/handoff/peace-aegis-3.2.7.png`, `
 - Sounds: **"Get the sounds from the web, don't generate them yourself. You suck at that."** Never make a sound by pitching, layering or
   synthesis: fetch real recordings (see below).
 - **"push an update asap"**: push each version the moment it builds.
+- Clashes (3.4.3): **"no matter how strong you are, what CCG investigators are just gonna send you flying during clashes for some reason.
+  This should be balanced, that the master should be more reflective of how strong the clash is. If you're stronger than investigators,
+  then you should send them flying in the same for players. If you're max mastery, I don't think that the Reaper should be able to even
+  send you flying, but currently he does. Even at max mastery, one-eyed, and with max ghoul meat eaten, he still ignores that and sends
+  you flying regardless."**
 
 ## The owner's 3.2.2 list (all done by 3.4.2)
 
@@ -94,6 +100,8 @@ validated by SceneTests).
   aside at ease instead; "hand on hip" is the left arm angled out.
 - **3.3.3 / 3.3.5:** which recordings: chosen by name and measured loudness, **never heard** (no audio here). freesound.org is blocked, so
   each sound's own page couldn't be re-checked: CC0 per the WilhelmSFX mirror's licence. Ask which sound wrong.
+- **3.4.3:** the constants (an even clash 0.42 b/t, stands at 2x, flung at 2x, one eye 15%); the Reaper's kick and a landed
+  finisher's knockback untouched (not clashes); Rinkaku's two Ken lessons still count in the gate share.
 - **3.4.2:** two game days to count, a week for the longer greeting; a save from before has no record (no greeting the first time).
 - **3.4.1:** the parent's answer by four temper groups; the talk is let go if it can't start within a minute.
 - **3.4.0:** which temper covers, asks or tells (my map); speech bubbles, nobody walks over.
@@ -119,6 +127,7 @@ validated by SceneTests).
 - 3.3.8 / 3.3.9: which door scene comes up (temper, age, the old ones); homecomings with no house (16 blocks round where the child lives).
 - 3.4.0 / 3.4.1: siblings' bubbles after the child's call-out; the door talk starting once the card is done (the child must not be carried).
 - 3.4.2: the greeting after two in-game days away, and the hug after it.
+- 3.4.3: clashes with investigators and the Reaper: who is thrown, how far, who is flung.
 
 ## How to get sounds (the owner's rule: real recordings from the web)
 

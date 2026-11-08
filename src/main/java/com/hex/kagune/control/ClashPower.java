@@ -29,6 +29,11 @@ public final class ClashPower {
     public static final int MEAT_FULL = 150;
     /** The most a player's form and mutations add (times). */
     public static final double BUILD_MOST = 1.6;
+    /**
+     * 3.4.3 (the owner: "Even at max mastery, one-eyed, and with max ghoul meat eaten, he still ignores that"): what a one-eyed ghoul's
+     * kakugan adds (times): a maxed one-eyed ghoul a little past the Reaper.
+     */
+    public static final double ONE_EYED = 1.15;
 
     /**
      * How far a player has come, 0 to 1: {@code mastery} (of 1000), {@code gates} (the share of their path's gates open: quests and
@@ -58,7 +63,12 @@ public final class ClashPower {
 
     /** A player's blow in a clash: {@code progress}, {@code build}, {@code weight} (how heavy this blow is next to an ordinary one: 1). */
     public static double player(double progress, double build, double weight) {
-        return BLOW * power(progress) * build * heft(weight);
+        return player(progress, build, weight, false);
+    }
+
+    /** 3.4.3: as above, {@code oneEyed} counted ({@link #ONE_EYED}). */
+    public static double player(double progress, double build, double weight, boolean oneEyed) {
+        return BLOW * power(progress) * build * heft(weight) * (oneEyed ? ONE_EYED : 1.0);
     }
 
     /** An agent's blow in a clash: {@code rankPower} (its rank's, a superior's included), {@code blow} its weapon's own damage for it. */

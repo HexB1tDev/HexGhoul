@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.4.3 (HexGhoul): Fix: clashes follow who's stronger (testing)
+
+See `.github/release-notes-3.4.3.md`. Fix (the owner's report: investigators, even the Reaper, sent a maxed ghoul flying in clashes): clash throws now follow only the gap between the two. The stronger stands its ground, the weaker is thrown, and at twice as strong it's flung. An even clash pushes both a short way apart, and one eye counts. A maxed ghoul flings Rank 0 to 3 and is never flung by the Reaper. Not tested in game.
+
 ## 3.4.2 (HexGhoul): Welcome home (testing)
 
 See `.github/release-notes-3.4.2.md`. From the owner's list after 3.2.1, the last of it: kids greet you after days away. Each child now remembers (kept with your save) when it last saw you. After two or more in-game days away, it greets you by its temper and age, with more to say after a week, then runs in for its hug. Not tested in game.
