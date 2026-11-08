@@ -110,6 +110,14 @@ public final class SfxTests {
             check(recordings >= 3, "sfx." + crystal.group(1) + " is real glass recordings: " + recordings);
         }
         check(crystals == 3, "the crystal's three pools are there: " + crystals);
+        // 3.4.4 (the owner: "The ones you added for the crystal form are fucking dog shit, bro. Just download better ones."): a crystal forming
+        // is a rubbed wine glass singing and a small bell ringing, never 3.3.5's glasses clinking, cup and saucer or glass break's crack.
+        Matcher form = Pattern.compile("^  \"sfx\\.crystal_form\": \\{(.*?)^  }", Pattern.MULTILINE | Pattern.DOTALL).matcher(json);
+        check(form.find() && !form.group(1).contains("crystal_clink") && !form.group(1).contains("crystal_crack")
+            && form.group(1).split("crystal_form_", -1).length - 1 >= 4, "a crystal forms with its own recordings, not kitchen clinks");
+        check(glassCredits.contains("crystal_form_1.ogg: Glass rub") && glassCredits.contains("by ani_music")
+            && glassCredits.contains("crystal_form_4.ogg: Bell") && glassCredits.contains("by AlaskaRobotics")
+            && glassCredits.contains("sonic-pi-net/sonic-pi"), "the glass and the bell are credited, with where they were downloaded");
         // 3.3.3 (the owner: the Kakuja V2 Dragon is silent; "Get the sounds from the web, don't generate them yourself"): its own six pools,
         // loud, every sound as recorded (no pitch: real recordings, not made over), each subtitled; its voice credited CC0 recordings.
         Matcher dragon = Pattern.compile("^  \"sfx\\.(dragon_[a-z]+)\": \\{(.*?)^  }", Pattern.MULTILINE | Pattern.DOTALL).matcher(json);

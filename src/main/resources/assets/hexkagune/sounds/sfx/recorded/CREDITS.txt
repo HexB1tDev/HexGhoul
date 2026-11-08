@@ -216,3 +216,27 @@ Licence: CC0-1.0
 Original: https://freesound.org/people/mccormick_iain/sounds/371091/
 GitHub recording: https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/Samples/371091__mccormick_iain__glass-break-4.wav
 Excerpt 0.000000-0.300000 s; 3 ms fade-in, 20 ms fade-out; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering.
+
+crystal_form_1.ogg: Glass rub (Sonic Pi's ambi_glass_rub, CC0) by ani_music
+Licence: CC0-1.0
+Original: https://freesound.org/people/ani_music/sounds/198403/
+GitHub recording: https://raw.githubusercontent.com/sonic-pi-net/sonic-pi/d1393a06266f74dc216bfd8a7e9a8eb7135b4941/etc/samples/ambi_glass_rub.flac
+Excerpt 1.370000-1.660000 s; 3 ms fade-in, 20 ms fade-out; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering.
+
+crystal_form_2.ogg: Glass rub (Sonic Pi's ambi_glass_rub, CC0) by ani_music
+Licence: CC0-1.0
+Original: https://freesound.org/people/ani_music/sounds/198403/
+GitHub recording: https://raw.githubusercontent.com/sonic-pi-net/sonic-pi/d1393a06266f74dc216bfd8a7e9a8eb7135b4941/etc/samples/ambi_glass_rub.flac
+Excerpt 2.760000-3.130000 s; 3 ms fade-in, 20 ms fade-out; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering.
+
+crystal_form_3.ogg: Glass rub (Sonic Pi's ambi_glass_rub, CC0) by ani_music
+Licence: CC0-1.0
+Original: https://freesound.org/people/ani_music/sounds/198403/
+GitHub recording: https://raw.githubusercontent.com/sonic-pi-net/sonic-pi/d1393a06266f74dc216bfd8a7e9a8eb7135b4941/etc/samples/ambi_glass_rub.flac
+Excerpt 0.740000-1.120000 s; 3 ms fade-in, 20 ms fade-out; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering.
+
+crystal_form_4.ogg: Bell (Sonic Pi's perc_bell, CC0) by AlaskaRobotics
+Licence: CC0-1.0
+Original: https://freesound.org/people/AlaskaRobotics/sounds/221515/
+GitHub recording: https://raw.githubusercontent.com/sonic-pi-net/sonic-pi/d1393a06266f74dc216bfd8a7e9a8eb7135b4941/etc/samples/perc_bell.flac
+Excerpt 0.000000-1.200000 s; 3 ms fade-in, 20 ms fade-out; mono 44.1 kHz OGG Vorbis; tags removed. No pitch change, synthesis or layering.

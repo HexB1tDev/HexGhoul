@@ -1,4 +1,25 @@
-# START HERE (state after 3.4.3)
+# START HERE (state after 3.4.4)
+
+Nothing queued after this fix: ask the owner what next (and whether `crystal_hit`, still 3.3.5's clinks, should go too). The owner: "push an update asap": every version is pushed as it is built.
+
+The owner's report: "Your crystal sounds from the internet. The ones you added for the crystal form are fucking dog shit, bro. Just download better ones."
+
+- 3.3.5's `crystal_form` pool was `crystal_clink_1` (glasses clinking), `crystal_clink_2` (a cup and saucer, BMacZero's clink2) and `crystal_crack` (a glass break's start). WilhelmSFX had nothing crystalline.
+- New source: **Sonic Pi's samples** (`github.com/sonic-pi-net/sonic-pi`, commit d1393a06, `etc/samples/`). Its README says every non-arovane sample is a CC0 freesound recording and links each one's page.
+  - `ambi_glass_rub.flac` (ani_music, freesound 198403): a rubbed wine glass, about 738 Hz, swelling every 0.65 s.
+  - `perc_bell.flac` (AlaskaRobotics, freesound 221515): one bright strike (partials around 3.6 and 6.7 kHz), ringing down.
+- Clips:
+  - `crystal_form_1` glass rub 1.37-1.66 s, `_2` 2.76-3.13 s, `_3` 0.74-1.12 s (single swells, cut at their quiet points);
+  - `_4` bell 0-1.2 s.
+- Imported with `--only` (every earlier clip byte for byte, checked by md5). `POOLS["crystal_form"]` is the four of them; regenerating sounds.json changed only that pool, levelled by `volume()` like the rest.
+- `crystal_hit` and `shatter` are untouched.
+- Tests: SfxTests (crystal_form has no clink/crack and four crystal_form_ clips; ani_music and AlaskaRobotics credited with the sonic-pi download).
+- Handoff, "How to get sounds": `git clone --depth 1 --filter=blob:none --sparse` works for public GitHub (and GitLab) repos. Sonic Pi's samples are a CC0 source. Rejected here: VoxeLibre amethyst (no licence given), TidalCycles Dirt-Samples (none), Veloren ice_crack ("Unknown" author).
+- **Judgment calls:** the four excerpts (never heard); a bell in the pool with the glass.
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 93. Not tested in game.
+
+# State after 3.4.3
 
 Nothing queued after this fix (the 3.2.2 list was done by 3.4.2): ask the owner what next. The owner: "push an update asap": every version is pushed as it is built.
 

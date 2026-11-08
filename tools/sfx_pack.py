@@ -89,7 +89,10 @@ POOLS = {
     # from here): its brightest steel, a needle's flick, a spinning spike, raised into a ring and a tinkle (a file's own pitch: (file, pitch)).
     # 3.3.5 (the owner on 3.3.3: "Get the sounds from the web, don't generate them yourself"): crystal from real glass recordings (CC0,
     # tools/sfx_recordings.json), as recorded. 3.2.6 had raised the pack's steel and needle sounds into a ring: made over, gone.
-    "crystal_form": (0.75, [RECORDED + "crystal_clink_1", RECORDED + "crystal_clink_2", RECORDED + "crystal_crack"], "Crystal forms"),
+    # 3.4.4 (the owner: "The ones you added for the crystal form are fucking dog shit, bro. Just download better ones."): 3.3.5's were glasses
+    # clinking, a cup and saucer, a glass break's crack. Now a rubbed wine glass singing (three of its swells) and a small bell's ring.
+    "crystal_form": (0.75, [RECORDED + "crystal_form_1", RECORDED + "crystal_form_2", RECORDED + "crystal_form_3", RECORDED + "crystal_form_4"],
+                     "Crystal forms"),
     "shatter": (0.75, [RECORDED + "crystal_shatter_1", RECORDED + "crystal_shatter_2", RECORDED + "crystal_shatter_3"], "Crystal shatters"),
     "crystal_hit": (0.6, [RECORDED + "crystal_clink_1", RECORDED + "crystal_clink_2", RECORDED + "crystal_crack"], "A crystal strikes"),
     "cue": (0.9, [SPIKE + "needle_flick"], "A glint"),

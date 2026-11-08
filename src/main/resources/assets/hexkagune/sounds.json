@@ -384,16 +384,20 @@
     "subtitle": "subtitles.hexkagune.sfx.crystal_form",
     "sounds": [
       {
-        "name": "hexkagune:sfx/recorded/crystal_clink_1",
-        "volume": 0.0645
+        "name": "hexkagune:sfx/recorded/crystal_form_1",
+        "volume": 0.0327
       },
       {
-        "name": "hexkagune:sfx/recorded/crystal_clink_2",
-        "volume": 0.1135
+        "name": "hexkagune:sfx/recorded/crystal_form_2",
+        "volume": 0.0412
       },
       {
-        "name": "hexkagune:sfx/recorded/crystal_crack",
-        "volume": 0.0638
+        "name": "hexkagune:sfx/recorded/crystal_form_3",
+        "volume": 0.0367
+      },
+      {
+        "name": "hexkagune:sfx/recorded/crystal_form_4",
+        "volume": 0.2113
       }
     ]
   },

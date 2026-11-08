@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.4.4 (HexGhoul): Fix: a crystal forming sounds like crystal (testing)
+
+See `.github/release-notes-3.4.4.md`. Fix (the owner: 3.3.5's crystal forming sounds were bad): a crystal forming is now a rubbed wine glass singing (three swells) or a small bell's ring. These are real CC0 freesound recordings by ani_music and AlaskaRobotics, from Sonic Pi's sample library, used as recorded. A crystal's hit and shatter are unchanged. Not tested in game.
+
 ## 3.4.3 (HexGhoul): Fix: clashes follow who's stronger (testing)
 
 See `.github/release-notes-3.4.3.md`. Fix (the owner's report: investigators, even the Reaper, sent a maxed ghoul flying in clashes): clash throws now follow only the gap between the two. The stronger stands its ground, the weaker is thrown, and at twice as strong it's flung. An even clash pushes both a short way apart, and one eye counts. A maxed ghoul flings Rank 0 to 3 and is never flung by the Reaper. Not tested in game.

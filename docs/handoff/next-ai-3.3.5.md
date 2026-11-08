@@ -1,8 +1,8 @@
-# HANDOFF: HexGhoul after 3.4.3 (kept current as versions ship). Read this first.
+# HANDOFF: HexGhoul after 3.4.4 (kept current as versions ship). Read this first.
 
 Then, for the house rules and history: `docs/handoff/next-ai-3.2.1.md` and `docs/handoff/next-ai-3.1.9.md` (the two sessions before,
 their judgment calls), `docs/handoff/next-ai-2.0.45.md` (header: versions, protocol history, the 2.x/3.x log), `docs/handoff/next-ai-1.3.60.md`
-(the owner's house rules in full), and the top sections of `docs/handoff/companions-handoff.md` (one per version, newest first: 3.2.7 to 3.4.3
+(the owner's house rules in full), and the top sections of `docs/handoff/companions-handoff.md` (one per version, newest first: 3.2.7 to 3.4.4
 are this session's, with file-level detail).
 
 Note on the session before this one (3.2.2 to 3.2.6, branch `claude/magical-fermi-cec8n1`): it wrote a handoff at 3.2.1 and then went on
@@ -11,13 +11,13 @@ lost. **Commit and push every version as it is built, and keep this file current
 
 ## Where things are
 
-- **Branch:** **`claude/exciting-bell-3kklnc`** (pushed; 3.2.7 to 3.4.3 on top of 3.2.6 from `claude/magical-fermi-cec8n1`). The next session
+- **Branch:** **`claude/exciting-bell-3kklnc`** (pushed; 3.2.7 to 3.4.4 on top of 3.2.6 from `claude/magical-fermi-cec8n1`). The next session
   will be given its own branch: start it from `origin/claude/exciting-bell-3kklnc`
   (`git fetch origin claude/exciting-bell-3kklnc && git checkout -B <your-branch> origin/claude/exciting-bell-3kklnc`). Push only to the
   branch you are given; never to `main`; no PR unless asked.
 - **Releases:** `.github/workflows/release.yml` publishes `v<version>` on GitHub for every push to `claude/**` that adds
   `.github/release-notes-<version>.md` (about 5 minutes). The owner plays those. When they say "push an update", push what is built.
-- **Version 3.4.3** in `build.py` and `patch/KagunePatch.java`. **The next is 3.4.4** (the last number never reaches 10). **Protocol "93"** (3.3.6: EtoGesture JEALOUS appended).
+- **Version 3.4.4** in `build.py` and `patch/KagunePatch.java`. **The next is 3.4.5** (the last number never reaches 10). **Protocol "93"** (3.3.6: EtoGesture JEALOUS appended).
 - Full `python3 build.py` ended **EXIT 0** for every version (javac `--release 17` on JDK 21; about 5 minutes; run it in the background).
   **Nothing is tested in game. Never claim it is.**
 - The quick loop: `python3 tools/quick_check.py [--noverify] KingTests UkakuTests ...` (needs one full `build.py` first). It does **not**
@@ -44,6 +44,7 @@ lost. **Commit and push every version as it is built, and keep this file current
 | 3.4.1 | After the player's door card, the companion and the child brought home talk in four turns (parent, child by temper, parent's answer, child's last word); a baby: the parent alone. | `family/DoorTalk`, `HomecomingServer.doorTalk` (a `Conversation`) |
 | 3.4.2 | Kids greet you after days away (2+ game days; more after a week), by temper and age; the last sight is kept in the player's NpcMemory so it outlasts an unloaded child. | `family/KidGreeting`, `ChildBrain.lines` |
 | 3.4.3 | **Fix:** clashes threw both sides by the clash's size (both blows together), so a stronger player was thrown harder, a maxed ghoul and the Reaper a block a tick, everyone lifted alike; one eye didn't count. Now by the gap alone: the stronger stands its ground at 2x, the weaker flies at `GAP` 2.0, an even clash is a short push; one eye x1.15. | `ClashRules.thrown/lifted`, `KaguneClash.apart/strength`, `ClashPower.ONE_EYED`, ClashTests `gap` |
+| 3.4.4 | **Fix:** a crystal forming (3.3.5's kitchen clinks) is now a rubbed wine glass singing (3 swells, ani_music) and a small bell (AlaskaRobotics): CC0 freesound recordings from Sonic Pi's samples. `crystal_hit`/`shatter` unchanged. | `sfx_recordings.json` `crystal_glassrub.flac`/`crystal_bell.flac`, `crystal_form_1..4`, `sfx_pack.py` POOLS |
 
 Previews (off-game, looked at honestly): `docs/handoff/peace-aegis-3.2.7.png`, `war-spire-first-person-3.2.8.png`, `ukaku-vortex-3.2.9.png`,
 `dawn-idle-3.3.2.png`, `jealous-3.3.6.png`. Tools: `tools/art-preview.sh <out> aegis|spire-fp|vortex`, `tools/QuinquePreview.java <out> dawn idle`.
@@ -68,6 +69,8 @@ Previews (off-game, looked at honestly): `docs/handoff/peace-aegis-3.2.7.png`, `
   then you should send them flying in the same for players. If you're max mastery, I don't think that the Reaper should be able to even
   send you flying, but currently he does. Even at max mastery, one-eyed, and with max ghoul meat eaten, he still ignores that and sends
   you flying regardless."**
+- Crystal forming (3.4.4): **"Your crystal sounds from the internet. The ones you added for the crystal form are fucking dog shit, bro.
+  Just download better ones."**
 
 ## The owner's 3.2.2 list (all done by 3.4.2)
 
@@ -100,6 +103,8 @@ validated by SceneTests).
   aside at ease instead; "hand on hip" is the left arm angled out.
 - **3.3.3 / 3.3.5:** which recordings: chosen by name and measured loudness, **never heard** (no audio here). freesound.org is blocked, so
   each sound's own page couldn't be re-checked: CC0 per the WilhelmSFX mirror's licence. Ask which sound wrong.
+- **3.4.4:** which recordings and excerpts (never heard: no audio here); a bell among the glass. Ask whether `crystal_hit` (still the
+  clinks) should be replaced too.
 - **3.4.3:** the constants (an even clash 0.42 b/t, stands at 2x, flung at 2x, one eye 15%); the Reaper's kick and a landed
   finisher's knockback untouched (not clashes); Rinkaku's two Ken lessons still count in the gate share.
 - **3.4.2:** two game days to count, a week for the longer greeting; a save from before has no record (no greeting the first time).
@@ -131,7 +136,12 @@ validated by SceneTests).
 
 ## How to get sounds (the owner's rule: real recordings from the web)
 
-- freesound.org, OpenGameArt, Wikimedia, Pixabay and Sonniss are blocked from these sessions; `raw.githubusercontent.com` is not.
+- freesound.org, OpenGameArt, Wikimedia, Pixabay, Sonniss, archive.org, Hugging Face, Zenodo and kenney.nl are blocked from these
+  sessions; `raw.githubusercontent.com`, public GitHub and GitLab git (`git clone --depth 1 --filter=blob:none --sparse <url>` then
+  `git sparse-checkout set --no-cone /path/file`) and the npm/PyPI registries are not.
+- 3.4.4: **Sonic Pi's samples** (`github.com/sonic-pi-net/sonic-pi`, `etc/samples/`, README links every original) are CC0 freesound
+  recordings (glass rub, glass hum, bells, drums...). Rejected for want of a licence: VoxeLibre's amethyst sounds, TidalCycles
+  Dirt-Samples, Veloren's ice_crack (author "Unknown").
 - The WilhelmSFX sound bank mirrors freesound recordings on GitHub under CC0:
   `https://raw.githubusercontent.com/Wh1teDuke/WilhelmSFX/ec4875a35d265b5431e3ba81fef6cc0ca0281bfc/` (`LICENSE` is CC0; `config.yaml`
   names every sample, `Samples/<id>__<user>__<name>.wav`; `README.md` links each to its freesound page: take authors from those links).
