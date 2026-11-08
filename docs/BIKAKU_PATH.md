@@ -18,6 +18,11 @@ head back only as far as the bite needs, the rest staying in zigzags behind; not
 original's tendrils hidden, its other keys saying "Your worm only bites for now"). Previews `docs/handoff/bikaku-*-3.4.9.png`; tests
 `BikakuTests`, `BikakuWormTests`. Details: the top of `docs/handoff/companions-handoff.md`.
 
+**3.5.5 (the owner's report: the worm through the player's body):** every worm is drawn through `MawMotion.around` (its curve swept
+round his head, torso and arms, and legs, the shorter way, smoothed where moved; unchanged elsewhere); Predatory Drag comes down his
+right side (`GROUND_SIDE`) to before his right foot (`GROUND_ANCHOR`), holds from before his right shoulder (`DRAG_SHOULDER`) and drags
+its catch to its own side (`dragSide`). Details: the top of `docs/handoff/companions-handoff.md`.
+
 **Before 3.4.9 (the pure worm, unchanged since except as above):**
 
 - `control/bikaku/MawWorm.java`: the worm as a mesh (pure). A thick muscular tube along a spine resampled evenly by length

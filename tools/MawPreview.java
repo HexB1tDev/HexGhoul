@@ -184,7 +184,7 @@ public class MawPreview {
             if (worm.grown() <= 0.002) {
                 continue;
             }
-            double[][] path = MawMotion.grown(worm.shape().path(), worm.grown());
+            double[][] path = MawMotion.grown(MawMotion.around(worm.shape().path(), worm.girth(), worm.shape().aperture()), worm.grown());
             UkakuModel.Sink sink = (a, b, c, d, n, ca, cb, cc, cd) -> {
                 int rgb = avg(ca, cb, cc, cd);
                 tris.add(new PoseRender.Tri(new double[][] {w(a), w(b), w(c)}, rgb, w(n)));
@@ -401,7 +401,7 @@ public class MawPreview {
         com.hex.kagune.control.bikaku.MawKakuja.build(sink, growth, time, SEED, 0xA50F37, true, -1, null, 0.0, 0.0);
         if (worm != null && worm.worm() > 0.002) {
             MawMotion.Shape s = MawMotion.idle(time * (1.0 + worm.swell()), SEED);
-            MawWorm.build(sink, new MawWorm.Pose(MawMotion.grown(s.path(), worm.worm()), s.dorsal(), worm.worm(), s.aperture(), 1.0 + worm.swell(), SEED,
+            MawWorm.build(sink, new MawWorm.Pose(MawMotion.grown(MawMotion.around(s.path(), 1.0, s.aperture()), worm.worm()), s.dorsal(), worm.worm(), s.aperture(), 1.0 + worm.swell(), SEED,
                 time), 0xA50F37, true);
         }
         return tris;
@@ -429,7 +429,7 @@ public class MawPreview {
     /** As the renderer does in first person: the line kept 1.25 from the eyes, no quad with a corner within 0.6. */
     static List<PoseRender.Tri> firstPersonWorm(MawMotion.Shape shape, double time, int tint) {
         double[] eye = {0.0, 1.62, 0.0};
-        double[][] path = MawMotion.firstPerson(shape.path(), eye);
+        double[][] path = MawMotion.firstPerson(MawMotion.around(shape.path(), 1.0, shape.aperture()), eye);
         List<PoseRender.Tri> tris = new ArrayList<>();
         UkakuModel.Sink sink = (a, b, c, d, n, ca, cb, cc, cd) -> {
             for (double[] q : new double[][] {a, b, c, d}) {
@@ -499,10 +499,8 @@ public class MawPreview {
     /** The worm's quads as PoseRender triangles (the body frame's x is to the right; PoseRender's to the left). */
     static List<PoseRender.Tri> worm(MawMotion.Shape shape, double grown, double time, int tint, boolean fine) {
         List<PoseRender.Tri> tris = new ArrayList<>();
-        double[][] path = new double[shape.path().length][];
-        for (int i = 0; i < path.length; i++) {
-            path[i] = shape.path()[i];
-        }
+        // 3.5.5: drawn along the curve the game draws it along (round his body).
+        double[][] path = MawMotion.around(shape.path(), 1.0, shape.aperture());
         UkakuModel.Sink sink = (a, b, c, d, n, ca, cb, cc, cd) -> {
             double[] pa = w(a);
             double[] pb = w(b);

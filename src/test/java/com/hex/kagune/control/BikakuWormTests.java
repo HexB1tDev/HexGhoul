@@ -31,6 +31,7 @@ public final class BikakuWormTests {
         pursuit();
         eruption();
         kakuja();
+        roundHim();
         System.out.println("Bikaku worm tests: " + passed + " checks passed");
     }
 
@@ -296,6 +297,158 @@ public final class BikakuWormTests {
         check(Math.abs(dragged[1] - 1.0) < 1.0E-9 && dragged[2] < 2.5, "Predatory Drag drags its catch along its own ground to him");
         check(Math.hypot(MawMotion.dragReach(new double[] {0, 1, 30})[0], MawMotion.dragReach(new double[] {0, 1, 30})[2])
             <= com.hex.kagune.control.bikaku.BikakuRules.DRAG_REACH + 1.0E-9, "Predatory Drag reaches as far as it reaches");
+    }
+
+    // ---------------------------------------------------------------- 3.5.5: drawn round him, never through him
+
+    /** Minecraft's player in the body's frame: head, torso, right arm, left arm, legs ({minX, minY, minZ, maxX, maxY, maxZ}). */
+    private static final double[][] BODY = {
+        {-0.25, 1.5, -0.25, 0.25, 2.0, 0.25}, {-0.25, 0.75, -0.125, 0.25, 1.5, 0.125}, {0.25, 0.75, -0.125, 0.5, 1.5, 0.125},
+        {-0.5, 0.75, -0.125, -0.25, 1.5, 0.125}, {-0.25, 0.0, -0.125, 0.25, 0.75, 0.125}};
+
+    /**
+     * How deep the worm drawn along {@code path} ({@code girth}, mouth {@code open}) goes into his body at its deepest: its line as the mesh
+     * draws it, its thickness there, past the first 0.45 blocks out of his back.
+     */
+    private static double depthInHim(double[][] path, double girth, double open) {
+        KakujaModel.Spine spine = MawWorm.spine(path, new double[] {0, 1, 0}, 160);
+        double length = spine.length();
+        double deepest = 0.0;
+        for (int i = 0; i < spine.p().length; i++) {
+            double u = i / (double)(spine.p().length - 1);
+            if (u * length < 0.45) {
+                continue;
+            }
+            double r = MawWorm.radius(u, length, open) * girth;
+            for (double[] b : BODY) {
+                double[] q = spine.p()[i];
+                double dx = Math.max(Math.max(b[0] - q[0], 0.0), q[0] - b[3]);
+                double dy = Math.max(Math.max(b[1] - q[1], 0.0), q[1] - b[4]);
+                double dz = Math.max(Math.max(b[2] - q[2], 0.0), q[2] - b[5]);
+                deepest = Math.max(deepest, r - Math.sqrt(dx * dx + dy * dy + dz * dz));
+            }
+        }
+        return deepest;
+    }
+
+    /** How far the worm drawn along {@code a} and {@code b} moves at its most (each cut into 80 even lengths). */
+    private static double moved(double[][] a, double[][] b) {
+        KakujaModel.Spine sa = MawWorm.spine(a, new double[] {0, 1, 0}, 80);
+        KakujaModel.Spine sb = MawWorm.spine(b, new double[] {0, 1, 0}, 80);
+        double most = 0.0;
+        for (int i = 0; i < sa.p().length; i++) {
+            most = Math.max(most, distance(sa.p()[i], sb.p()[i]));
+        }
+        return most;
+    }
+
+    /**
+     * 3.5.5 (the owner: "make sure that the tentacles don't go through a player's body ... the predatory drag looks a little strange when
+     * you send it and it goes through the player's body instead of going around it"): every move, drawn as the game draws it
+     * (MawMotion.around), keeps the worm out of his head, torso, arms and legs (2 cm of leeway: Predatory Drag had gone through him in about
+     * half its frames, by the worm's whole thickness); it is drawn round him without jumping (a quarter tick apart, no more than 0.3 further
+     * than its points move, for bodies before him); its root stays where it is, its mouth on what it bites (only nudged off his face in
+     * flight); Predatory Drag drags its catch in to its own side.
+     */
+    private static void roundHim() {
+        double leeway = 0.03;
+        // Before him (as M1 and the moves aim: where he looks), near and far, high and low; and beside and behind him for the depth.
+        double[][] before = {{0.2, 0.99, 4.0}, {0.0, 0.99, 6.5}, {3.0, 0.99, 3.0}, {-3.0, 0.99, 3.0}, {0.0, 3.5, 3.0}, {1.0, 0.3, 1.5},
+            {-1.0, 0.3, 1.5}, {0.0, 0.99, 1.4}, {0.0, 0.99, 10.0}, {-6.0, 0.99, 6.0}, {0.5, -2.0, 4.0}, {2.0, 0.99, 1.2}};
+        double[][] around = {{4.0, 0.99, 0.0}, {-4.0, 0.99, 0.0}, {-3.0, 0.99, -3.0}, {3.0, 0.99, -3.0}, {0.0, 0.99, -4.0}, {-1.5, 0.99, 0.5}};
+        for (double[][] set : new double[][][] {before, around}) {
+            boolean ahead = set == before;
+            for (double[] target : set) {
+                for (com.hex.kagune.control.bikaku.BikakuRules.Bite bite : new com.hex.kagune.control.bikaku.BikakuRules.Bite[] {
+                    com.hex.kagune.control.bikaku.BikakuRules.Bite.SNAP, com.hex.kagune.control.bikaku.BikakuRules.Bite.LUNGE,
+                    com.hex.kagune.control.bikaku.BikakuRules.Bite.MAUL}) {
+                    MawMotion.Shape last = null;
+                    for (double age = 0.0; age < bite.ticks(); age += 0.25) {
+                        MawMotion.Shape s = MawMotion.of(40 + age, 7, bite, age, target);
+                        double[][] drawn = MawMotion.around(s.path(), 1.0, s.aperture());
+                        check(depthInHim(drawn, 1.0, s.aperture()) < leeway, bite + " is drawn round him, not through him (at " + age + ")");
+                        double mouthMoved = distance(drawn[drawn.length - 1], s.path()[s.path().length - 1]);
+                        check(distance(drawn[0], s.path()[0]) < 1.0E-12, bite + ": its root stays where it is");
+                        check(age == bite.land() ? mouthMoved < 1.0E-12 : mouthMoved < 0.25, bite + ": its mouth stays on what it bites, and is only "
+                            + "nudged off his face in flight (" + mouthMoved + " at " + age + ")");
+                        if (ahead && last != null) {
+                            double raw = moved(last.path(), s.path());
+                            double drawnMove = moved(MawMotion.around(last.path(), 1.0, last.aperture()), drawn);
+                            check(drawnMove < raw + 0.3, bite + " drawn round him doesn't jump (" + drawnMove + " against " + raw + " at " + age + ")");
+                        }
+                        last = s;
+                    }
+                }
+                for (com.hex.kagune.control.bikaku.BikakuMove move : new com.hex.kagune.control.bikaku.BikakuMove[] {
+                    com.hex.kagune.control.bikaku.BikakuMove.MAW, com.hex.kagune.control.bikaku.BikakuMove.DRAG}) {
+                    boolean maw = move == com.hex.kagune.control.bikaku.BikakuMove.MAW;
+                    double[] t = maw ? target : new double[] {target[0], Math.min(target[1], 0.99), target[2]};
+                    double[] aim = maw ? com.hex.kagune.control.bikaku.BikakuRules.reach(t) : MawMotion.dragReach(t);
+                    for (boolean caught : new boolean[] {true, false}) {
+                        int end = caught ? move.ticks() : move.missedTicks();
+                        MawMotion.Shape last = null;
+                        for (double age = 0.0; age < end; age += 0.25) {
+                            double[] held = age < move.land() || !caught ? null
+                                : maw ? MawMotion.mawHeld(aim, age) : MawMotion.dragHeld(aim, Math.min(age, com.hex.kagune.control.bikaku.BikakuMove.DRAG_SLAM));
+                            MawMotion.Shape s = MawMotion.move(40 + age, 7, move, age, t, held, caught);
+                            double[][] drawn = MawMotion.around(s.path(), 1.0, s.aperture());
+                            check(depthInHim(drawn, 1.0, s.aperture()) < leeway, move + " is drawn round him, not through him (at " + age + ", caught "
+                                + caught + ", " + t[0] + ", " + t[2] + ")");
+                            if (ahead && last != null) {
+                                double raw = moved(last.path(), s.path());
+                                double drawnMove = moved(MawMotion.around(last.path(), 1.0, last.aperture()), drawn);
+                                check(drawnMove < raw + 0.3, move + " drawn round him doesn't jump (" + drawnMove + " against " + raw + " at " + age
+                                    + ", caught " + caught + ", " + t[0] + ", " + t[2] + ")");
+                            }
+                            last = s;
+                        }
+                    }
+                }
+            }
+        }
+        // Ravenous Pursuit's three and Carrion Eruption (what shows above the ground) are drawn round him too.
+        double[][][] sets = {{{2.6, 0.99, 3.2}, {-2.3, 0.99, 3.0}, {0.2, 0.99, 4.3}}, {{0.2, 0.99, 4.0}, {0.2, 0.99, 4.0}, {0.2, 0.99, 4.0}}};
+        for (double[][] targets : sets) {
+            for (double age = 0.0; age < com.hex.kagune.control.bikaku.BikakuMove.PURSUIT.ticks(); age += 0.5) {
+                for (MawMotion.Worm worm : MawMotion.pursuit(40 + age, 7, targets, age)) {
+                    double[][] drawn = MawMotion.grown(MawMotion.around(worm.shape().path(), worm.girth(), worm.shape().aperture()), worm.grown());
+                    if (worm.grown() > 0.002 && drawn.length >= 2) {
+                        check(depthInHim(drawn, worm.girth(), worm.shape().aperture()) < leeway, "Ravenous Pursuit's worms are drawn round him (at " + age + ")");
+                    }
+                }
+            }
+        }
+        for (double age = 0.0; age < com.hex.kagune.control.bikaku.BikakuMove.ERUPTION.ticks(); age += 0.5) {
+            MawMotion.Shape s = MawMotion.move(40 + age, 7, com.hex.kagune.control.bikaku.BikakuMove.ERUPTION, age, new double[] {0.2, 0.99, 4.0}, null, true);
+            java.util.List<double[]> shown = new java.util.ArrayList<>();
+            for (double[] q : MawMotion.around(s.path(), 1.0, s.aperture())) {
+                if (q[1] < -0.2) {
+                    break;
+                }
+                shown.add(q);
+            }
+            if (shown.size() >= 2) {
+                check(depthInHim(shown.toArray(new double[0][]), 1.0, s.aperture()) < leeway, "Carrion Eruption is drawn round him (at " + age + ")");
+            }
+        }
+        // At rest it never comes near him, so the pass leaves its line as it was.
+        for (double time : new double[] {0, 50, 333}) {
+            MawMotion.Shape rest = MawMotion.idle(time, 7);
+            check(moved(rest.path(), MawMotion.around(rest.path(), 1.0, rest.aperture())) < 0.02, "at rest it is drawn where it always was");
+        }
+        // Predatory Drag drags its catch in to the side it came from: straight ahead as before; from his left, to his left, never through him.
+        int land = com.hex.kagune.control.bikaku.BikakuMove.DRAG.land();
+        for (double[] at : new double[][] {{0, 1, 8}, {-6, 1, 2}, {6, 1, 2}, {-4, 1, -4}}) {
+            for (int age = land; age <= com.hex.kagune.control.bikaku.BikakuMove.DRAG_SLAM; age++) {
+                double[] held = MawMotion.dragHeld(at, age);
+                check(Math.hypot(held[0], held[2]) > 1.2, "Predatory Drag never drags its catch through him (" + at[0] + ", " + at[2] + " at " + age + ")");
+                if (age > land + 4) {
+                    check(held[0] * at[0] + held[2] * at[2] > 0.0, "Predatory Drag drags its catch in to its own side");
+                }
+            }
+        }
+        double[] home = MawMotion.dragHeld(new double[] {0, 1, 8}, com.hex.kagune.control.bikaku.BikakuMove.DRAG_HOME);
+        check(Math.abs(home[0] - 0.55) < 1.0E-9 && Math.abs(home[2] - 1.9) < 1.0E-9, "a catch straight ahead is dragged where it always was");
     }
 
     private static boolean inside(double[] p) {

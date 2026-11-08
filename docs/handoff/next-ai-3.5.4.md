@@ -44,10 +44,11 @@ Binding; quoted exactly as written. Kept current as that session goes.
 
 ## State now (kept current by the session on `claude/hopeful-noether-5c2wex`)
 
-- **3.5.4 shipped** (the kakuja as the last session left it; the owner liked it). Versions 3.5.4; protocol "97"; next free message id 56.
-- **Next: 3.5.5, the owner's report:** the worm going through the player's own body on some moves, Predatory Drag above all. Then the
-  kakuja's four moves and passives, then the range (held, up to about 30 blocks, round blocks, no attack until it is fully back), then the
-  forms (two worms, three, the walking form), each with its own moves.
+- **3.5.4 shipped** (the kakuja as the last session left it; the owner liked it).
+- **3.5.5 shipped:** the owner's report fixed (the worm through the player's own body; `MawMotion.around`, the Drag rerouted, its catch
+  dragged to its own side). Versions 3.5.5; protocol "97"; next free message id 56.
+- **Next: the kakuja's four moves and passives** (3.5.6 on), then the range (held, up to about 30 blocks, round blocks, no attack until it
+  is fully back), then the forms (two worms, three, the walking form), each with its own moves. Show previews before going far.
 
 ## Where things were when this note was written (after 3.5.3)
 

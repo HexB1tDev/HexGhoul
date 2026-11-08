@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.5.5 (HexGhoul): Fix: the Bikaku worm goes round your body, not through it (testing)
+
+See `.github/release-notes-3.5.5.md`. Your report: Predatory Drag (and a few moves) went through the player's body. Every Bikaku worm is now drawn round you (the stretch that would pass through you swept round your side, smoothed; unchanged where it doesn't come near you). Predatory Drag comes down your right side to in front of your right foot, and drags its catch in to the side it came from. Protocol 97. Preview: `docs/handoff/bikaku-drag-round-3.5.5.png`.
+
 ## 3.5.4 (HexGhoul): Bikaku: the kakuja (testing)
 
 See `.github/release-notes-3.5.4.md`. K at mastery 1000: you grow into a lopsided mass about 4.8 blocks high, covered in grinning mouths, with the worm's maw and six great tentacles (3 s in, 1.5 s out). In it you barely move, take 45% of every blow, can't be knocked back and regenerate; M1 is a tentacle's bite up to 14 blocks out. 25 RC, then 1 RC a second; 60 s cooldown. Protocol 97. Previews: `docs/handoff/bikaku-kakuja-3.5.4.png`, `bikaku-kakuja-close-3.5.4.png`.

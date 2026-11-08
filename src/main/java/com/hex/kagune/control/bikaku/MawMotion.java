@@ -265,8 +265,18 @@ public final class MawMotion {
 
     /** Devouring Maw: where its catch is held up before him to be shaken (the body's frame, its middle). */
     public static final double[] MAW_HOLD = {0.85, 2.45, 2.5};
-    /** Predatory Drag: beside his right heel, where the worm runs down to the ground on its way out along it. */
-    static final double[] GROUND_ANCHOR = {0.5, 0.3, -0.35};
+    /**
+     * Predatory Drag: where the worm runs down to the ground on its way out along it. 3.5.5: before his right foot, clear of his legs (it
+     * was behind his right heel, so to reach a body on his left it ran through his legs).
+     */
+    static final double[] GROUND_ANCHOR = {0.62, 0.3, 0.55};
+    /**
+     * 3.5.5, Predatory Drag: before his right shoulder, where the worm comes from to hold its catch up (it came from over his shoulder,
+     * behind it: to a catch on his left, through his head).
+     */
+    static final double[] DRAG_SHOULDER = {0.8, 1.95, 0.3};
+    /** 3.5.5, Predatory Drag: at his right side, by his knee, clear of him: the worm comes down past here on its way to the ground. */
+    static final double[] GROUND_SIDE = {0.85, 0.55, -0.1};
     /** Predatory Drag: lifted high before him, then slammed down here. */
     public static final double[] DRAG_LIFT = {0.7, 3.4, 2.1};
     public static final double[] DRAG_SLAMMED = {0.55, 0.55, 2.2};
@@ -365,21 +375,39 @@ public final class MawMotion {
      */
     public static double[] dragHeld(double[] at, double age) {
         int land = BikakuMove.DRAG.land();
-        double[] home = {0.55, at[1], 1.9};
+        // 3.5.5: dragged in to his side it came from (it was always to before him: from beside or behind him, through him).
+        double[] home = dragSide(new double[] {0.55, at[1], 1.9}, at);
+        double[] lift = dragSide(DRAG_LIFT, at);
+        double[] slammed = dragSide(DRAG_SLAMMED, at);
         if (age < BikakuMove.DRAG_HOME) {
             double w = GraftMesh.smooth(GraftMesh.clamp01((age - land) / (double)(BikakuMove.DRAG_HOME - land)));
             double jerk = 0.14 * Math.sin((age - land) * 1.9) * Math.sin(Math.PI * w);
-            return GraftMesh.add(GraftMesh.lerp(at, home, w), new double[] {jerk, 0.0, 0.0});
+            double[] across = dragSide(new double[] {1.0, 0.0, 0.0}, at);
+            return GraftMesh.add(GraftMesh.lerp(at, home, w), GraftMesh.mul(across, jerk));
         }
         if (age < BikakuMove.DRAG_LIFTED) {
             double w = GraftMesh.smooth((age - BikakuMove.DRAG_HOME) / (double)(BikakuMove.DRAG_LIFTED - BikakuMove.DRAG_HOME));
-            return GraftMesh.lerp(home, DRAG_LIFT, w);
+            return GraftMesh.lerp(home, lift, w);
         }
         if (age < BikakuMove.DRAG_SLAM) {
             double w = (age - BikakuMove.DRAG_LIFTED) / (double)(BikakuMove.DRAG_SLAM - BikakuMove.DRAG_LIFTED);
-            return GraftMesh.lerp(DRAG_LIFT, DRAG_SLAMMED, w * w);
+            return GraftMesh.lerp(lift, slammed, w * w);
         }
-        return DRAG_SLAMMED.clone();
+        return slammed;
+    }
+
+    /**
+     * 3.5.5: {@code p}, a place of Predatory Drag's as it is for a catch straight ahead (x right, z ahead), turned round him to face the
+     * way the catch {@code at} was bitten (level): the same for a catch ahead, to his side for one at his side.
+     */
+    public static double[] dragSide(double[] p, double[] at) {
+        double flat = Math.hypot(at[0], at[2]);
+        if (flat < 1.0E-6) {
+            return p.clone();
+        }
+        double fx = at[0] / flat;
+        double fz = at[2] / flat;
+        return new double[] {p[0] * fz + p[2] * fx, p[1], -p[0] * fx + p[2] * fz};
     }
 
     /**
@@ -395,7 +423,12 @@ public final class MawMotion {
         double[] aim = dragReach(target);
         double[] flat = way(new double[] {0.0, 0.0, 0.0}, new double[] {aim[0], 0.0, aim[2]});
         double[] side = GraftMesh.normalize(GraftMesh.cross(new double[] {0.0, 1.0, 0.0}, flat));
-        double[] low = {0.6, 0.35, 0.9};
+        // 3.5.5: down to the ground beside his right foot on the target's side (it always went down before him, then back through his
+        // legs); for a body on his left, before his feet.
+        double[] low = {0.6 + 0.9 * flat[0], 0.35, 0.9 * flat[2]};
+        if (Math.abs(low[0]) < 0.6 && Math.abs(low[2]) < 0.6) {
+            low[2] = 0.6;
+        }
         double[] bitten = GraftMesh.add(GraftMesh.sub(aim, GraftMesh.mul(flat, GRIP)), new double[] {0.0, -0.45, 0.0});
         bitten[1] = Math.max(0.3, bitten[1]);
         double[] head;
@@ -427,14 +460,15 @@ public final class MawMotion {
                 head[1] = Math.max(0.3, head[1]);
             } else {
                 // Lifted and slammed: gripping them from below.
-                look = GraftMesh.normalize(GraftMesh.add(way(SHOULDER, victim), new double[] {0.0, 0.35, 0.0}));
+                look = GraftMesh.normalize(GraftMesh.add(way(DRAG_SHOULDER, victim), new double[] {0.0, 0.35, 0.0}));
                 head = GraftMesh.sub(victim, GraftMesh.mul(look, GRIP));
             }
             mouth = 0.04;
             free = false;
         } else {
-            double[] lastLook = GraftMesh.normalize(GraftMesh.add(way(SHOULDER, DRAG_SLAMMED), new double[] {0.0, 0.35, 0.0}));
-            double[] from = GraftMesh.sub(DRAG_SLAMMED, GraftMesh.mul(lastLook, GRIP));
+            double[] slammed = dragSide(DRAG_SLAMMED, aim);
+            double[] lastLook = GraftMesh.normalize(GraftMesh.add(way(DRAG_SHOULDER, slammed), new double[] {0.0, 0.35, 0.0}));
+            double[] from = GraftMesh.sub(slammed, GraftMesh.mul(lastLook, GRIP));
             double w = GraftMesh.smooth(GraftMesh.clamp01((age - BikakuMove.DRAG_SLAM) / (double)(move.ticks() - BikakuMove.DRAG_SLAM)));
             head = GraftMesh.lerp(from, restHead, w);
             look = GraftMesh.normalize(GraftMesh.lerp(lastLook, restLook, w));
@@ -444,9 +478,10 @@ public final class MawMotion {
             head = clear(head);
         }
         double reach = GraftMesh.smooth(GraftMesh.clamp01(GraftMesh.length3(GraftMesh.sub(head, restHead)) / 2.0));
-        // Out along the ground, it runs down beside his heel; lifted, back over his shoulder.
-        double[] anchor = GraftMesh.lerp(GROUND_ANCHOR, SHOULDER, GraftMesh.smooth(GraftMesh.clamp01((head[1] - 0.8) / 1.8)));
-        return new Shape(path(head, look, time, seed, reach, anchor), dorsal(), GraftMesh.clamp01(mouth));
+        // Out along the ground, it runs down his right side to before his right foot; lifted, from before his right shoulder.
+        double up = GraftMesh.smooth(GraftMesh.clamp01((head[1] - 0.8) / 1.8));
+        double[] anchor = GraftMesh.lerp(GROUND_ANCHOR, DRAG_SHOULDER, up);
+        return new Shape(path(head, look, time, seed, reach, anchor, GraftMesh.lerp(GROUND_SIDE, anchor, up)), dorsal(), GraftMesh.clamp01(mouth));
     }
 
     /** Predatory Drag's reach: along the ground, as far as {@link BikakuRules#DRAG_REACH} from his feet. */
@@ -737,14 +772,25 @@ public final class MawMotion {
      * beside his right heel and along the ground).
      */
     static double[][] path(double[] head, double[] look, double time, int seed, double reach, double[] anchor) {
+        return path(head, look, time, seed, reach, anchor, null);
+    }
+
+    /**
+     * 3.5.5: as above, the worm thrown out down past {@code via} first (null: none), then {@code anchor}, on its way to the head
+     * (Predatory Drag: down his right side, then before his right foot and along the ground; it had gone from its coils behind him
+     * straight to before him, through him).
+     */
+    static double[][] path(double[] head, double[] look, double time, int seed, double reach, double[] anchor, double[] via) {
         double t = time + seed * 43.0;
         double wave = 1.0 - 0.6 * reach;
         double[] out = add(ROOT, new double[] {0.02, 0.05, -0.34});
         double neckLength = 0.6 + 0.3 * reach;
-        double[] neck = clear(GraftMesh.sub(head, GraftMesh.mul(GraftMesh.normalize(look), neckLength)));
+        double[] neck = neck(head, look, neckLength);
         int n = ZIGZAG.length;
         double straighten = GraftMesh.smooth(reach);
-        double need = GraftMesh.length3(GraftMesh.sub(neck, anchor)) + 0.4;
+        double[][] line = via == null ? new double[][] {anchor, neck} : new double[][] {via, anchor, neck};
+        // Past {@code via} it uncoils as much more again as it takes to come down from its coils to there (its coils high behind him).
+        double need = polyLength(line) + 0.4 + (via == null ? 0.0 : VIA_SLACK * GraftMesh.length3(GraftMesh.sub(via, anchor)));
         double[] way = GraftMesh.sub(neck, anchor);
         way = GraftMesh.dot(way, way) < 1.0E-9 ? new double[] {0.0, 0.0, 1.0} : GraftMesh.normalize(way);
         double[] sideways = GraftMesh.cross(way, new double[] {0.0, 1.0, 0.0});
@@ -763,9 +809,14 @@ public final class MawMotion {
             double w = GraftMesh.smooth(GraftMesh.clamp01((need + 0.9 - ARC[k]) / 1.8)) * straighten;
             double f = Math.max(0.06, Math.min(0.94, 1.0 - ARC[k] / need));
             double taper = Math.sqrt(Math.sin(Math.PI * f));
-            double[] on = GraftMesh.add(GraftMesh.lerp(anchor, neck, f), GraftMesh.add(GraftMesh.mul(sideways, 0.32 * taper * sign),
+            double[] on = GraftMesh.add(onLine(line, f), GraftMesh.add(GraftMesh.mul(sideways, 0.32 * taper * sign),
                 new double[] {0.0, -0.1 * taper * sign, 0.0}));
             double[] stay = GraftMesh.lerp(rest, add(rest, new double[] {0.0, -0.3, 0.45}), 0.5 * straighten);
+            if (via != null) {
+                // 3.5.5: on the way down his side, the coils it leaves behind him draw in to his right (a coil on his left had the worm
+                // cut across behind and through him to get there).
+                stay[0] = lerp(stay[0], VIA_COILS[0] + VIA_COILS[1] * stay[0], straighten);
+            }
             coils[k] = clear(GraftMesh.lerp(stay, on, w));
         }
         double[] curl = GraftMesh.lerp(coils[n - 1], neck, 0.5);
@@ -780,6 +831,60 @@ public final class MawMotion {
         return path;
     }
 
+    /** 3.5.5: how much more of the worm uncoils for a way past a {@code via}, for each block from there to the anchor. */
+    static final double VIA_SLACK = 1.6;
+    /** 3.5.5: with a {@code via}, where the coils left behind him go across (x to {@code [0] + [1] x}: all on his right). */
+    static final double[] VIA_COILS = {0.55, 0.35};
+
+    /**
+     * Its neck, {@code length} back from {@code head} along {@code look}, kept out of him. 3.5.5: if that falls in him, shortened until it
+     * doesn't (pushed out, a neck behind a head close before him went out his back: the worm then ran through him between them).
+     */
+    static double[] neck(double[] head, double[] look, double length) {
+        double[] way = GraftMesh.normalize(look);
+        double[] neck = GraftMesh.sub(head, GraftMesh.mul(way, length));
+        if (GraftMesh.length3(GraftMesh.sub(clear(neck), neck)) < 1.0E-9) {
+            return neck;
+        }
+        if (GraftMesh.length3(GraftMesh.sub(clear(head), head)) > 1.0E-9) {
+            return clear(neck); // the head itself is on something in him (never, free): as before
+        }
+        double lo = 0.0;
+        double hi = length;
+        for (int i = 0; i < 20; i++) {
+            double mid = (lo + hi) * 0.5;
+            double[] at = GraftMesh.sub(head, GraftMesh.mul(way, mid));
+            if (GraftMesh.length3(GraftMesh.sub(clear(at), at)) < 1.0E-9) {
+                lo = mid;
+            } else {
+                hi = mid;
+            }
+        }
+        return GraftMesh.sub(head, GraftMesh.mul(way, lo));
+    }
+
+    /** How long the line through {@code line}'s points is. */
+    private static double polyLength(double[][] line) {
+        double total = 0.0;
+        for (int i = 1; i < line.length; i++) {
+            total += GraftMesh.length3(GraftMesh.sub(line[i], line[i - 1]));
+        }
+        return total;
+    }
+
+    /** The point {@code f} (0 .. 1) of the way along the line through {@code line}'s points, by length. */
+    private static double[] onLine(double[][] line, double f) {
+        double want = polyLength(line) * f;
+        for (int i = 1; i < line.length; i++) {
+            double step = GraftMesh.length3(GraftMesh.sub(line[i], line[i - 1]));
+            if (want <= step || i == line.length - 1) {
+                return GraftMesh.lerp(line[i - 1], line[i], step < 1.0E-9 ? 1.0 : GraftMesh.clamp01(want / step));
+            }
+            want -= step;
+        }
+        return line[line.length - 1].clone();
+    }
+
     /** Where his head is (its middle) and how far the worm's middle keeps from it; his torso's half-width with the worm's thickness. */
     static final double[] HEAD_CENTRE = {0.0, 1.72, 0.0};
     static final double HEAD_CLEAR = 0.62;
@@ -789,7 +894,7 @@ public final class MawMotion {
     static final double LEGS_HALF = 0.5;
     static final double LEGS_DEPTH = 0.37;
 
-    /** 3.4.9: {@code p} kept out of his head (pushed out from its middle) and his torso (pushed out behind him, or in front). */
+    /** 3.4.9: {@code p} kept out of his head (pushed out from its middle), his torso and his legs ({@link #outOfBox}). */
     static double[] clear(double[] p) {
         double[] out = p;
         double[] from = GraftMesh.sub(out, HEAD_CENTRE);
@@ -799,13 +904,319 @@ public final class MawMotion {
             out = GraftMesh.add(HEAD_CENTRE, GraftMesh.mul(way, HEAD_CLEAR));
         }
         if (out[1] > 0.6 && out[1] < 1.55 && Math.abs(out[0]) < TORSO_HALF && out[2] > TORSO_BACK && out[2] < TORSO_FRONT) {
-            out = new double[] {out[0], out[1], out[2] < 0.0 ? TORSO_BACK : TORSO_FRONT};
+            out = outOfBox(out, TORSO_HALF, TORSO_FRONT);
         }
-        // 3.5.0: and his legs (the worm runs along the ground beside them): pushed out to the side.
+        // 3.5.0: and his legs (the worm runs along the ground beside them).
         if (out[1] >= -0.5 && out[1] <= 0.6 && Math.abs(out[0]) < LEGS_HALF && Math.abs(out[2]) < LEGS_DEPTH) {
-            out = new double[] {out[0] < 0.0 ? -LEGS_HALF : LEGS_HALF, out[1], out[2]};
+            out = outOfBox(out, LEGS_HALF, LEGS_DEPTH);
         }
         return out;
+    }
+
+    /**
+     * 3.5.5: {@code p}, inside the level box {@code half} wide each way and {@code depth} deep each way round his middle, moved out of it
+     * along the line from a little left of his middle ({@link #AROUND_RIGHT}) through it, to the box's side (level). It had been pushed
+     * straight out behind or before him by which side of his middle it was on (sideways for his legs, by which side), so a coil passing
+     * his middle jumped from one side of him to the other; this moves points beside each other together.
+     */
+    static double[] outOfBox(double[] p, double half, double depth) {
+        double cx = -AROUND_RIGHT * half;
+        double wx = p[0] - cx;
+        double wz = p[2];
+        double len = Math.hypot(wx, wz);
+        if (len < 1.0E-9) {
+            wx = 1.0;
+            wz = 0.0;
+        } else {
+            wx /= len;
+            wz /= len;
+        }
+        // How far along it the line leaves the box: the nearer of the side it heads for and the face it heads for.
+        double toSide = Math.abs(wx) < 1.0E-12 ? Double.MAX_VALUE : ((wx > 0.0 ? half : -half) - cx) / wx;
+        double toFace = Math.abs(wz) < 1.0E-12 ? Double.MAX_VALUE : (wz > 0.0 ? depth : -depth) / wz;
+        double t = Math.min(toSide, toFace) + 1.0E-9;
+        return new double[] {cx + wx * t, p[1], wz * t};
+    }
+
+    // ---------------------------------------------------------------- 3.5.5: the drawn worm goes round him, never through him
+
+    /**
+     * 3.5.5 (the owner: "make sure that the tentacles don't go through a player's body. I noticed that a few are doing that. Just, like, a
+     * few moves. Like the predatory drag looks a little strange when you send it and it goes through the player's body instead of going
+     * around it."): {@link #clear} kept the control points out of him, but the curve drawn through them still cut through his legs, chest
+     * and head between them (Predatory Drag in about half its frames, the bites and Devouring Maw in some). A point every
+     * {@link #AROUND_STEP} along the curve drawn through {@code points} (the same curve the mesh follows, so drawn through these it is the same worm),
+     * each kept out of his head, torso and arms, and legs by the worm's own thickness there ({@code girth}, its mouth {@code open}) and
+     * {@link #AROUND_MARGIN} more. Where it crosses his torso or legs, the whole crossing is swept round his side as one ({@link
+     * #sweepRound}: pushing each point out on its own sent those behind him out the back and those before him out the front, the line
+     * between them still through him), the shorter way round; what is left is pushed
+     * out sideways, and out of his head straight away from its middle. Smoothed where it was moved, so it bends round him rather than
+     * folding, and kept out again; where it never comes near him it is exactly the line it was. The
+     * root and the mouth stay where they are; the first {@link #AROUND_FREE} of it leaves his back as before. Every step moves
+     * nearby points together, so it moves smoothly frame to frame. Body frame (the feet at 0, x right, z ahead).
+     */
+    public static double[][] around(double[][] points, double girth, double open) {
+        if (points.length < 2) {
+            return points;
+        }
+        int spans = points.length - 1;
+        java.util.List<double[]> line = new java.util.ArrayList<>();
+        line.add(points[0].clone());
+        for (int k = 0; k < spans; k++) {
+            int sub = Math.max(2, Math.min(AROUND_MOST, (int)Math.ceil(GraftMesh.length3(GraftMesh.sub(points[k + 1], points[k])) / AROUND_STEP)));
+            for (int j = 1; j <= sub; j++) {
+                line.add(k == spans - 1 && j == sub ? points[spans].clone()
+                    : com.hex.kagune.control.ukaku.CentipedeTail.catmullRom(points, (k + j / (double)sub) / spans));
+            }
+        }
+        int dense = line.size() - 1;
+        double[][] p = line.toArray(new double[0][]);
+        double[] along = new double[dense + 1];
+        for (int i = 1; i <= dense; i++) {
+            along[i] = along[i - 1] + GraftMesh.length3(GraftMesh.sub(p[i], p[i - 1]));
+        }
+        double total = Math.max(1.0E-6, along[dense]);
+        double[] reach = new double[dense + 1];
+        double[] weight = new double[dense + 1];
+        for (int i = 0; i <= dense; i++) {
+            reach[i] = MawWorm.radius(along[i] / total, total, open) * girth + AROUND_MARGIN;
+            weight[i] = i == 0 ? 0.0 : GraftMesh.smooth(GraftMesh.clamp01((along[i] - AROUND_FREE) / AROUND_RAMP));
+        }
+        double[] touched = new double[dense + 1];
+        for (int pass = 0; pass < 3; pass++) {
+            double[][] before = p.clone();
+            sweepRound(p, along, reach, weight);
+            for (int i = 1; i <= dense; i++) {
+                if (weight[i] > 0.0) {
+                    p[i] = GraftMesh.lerp(p[i], outOfBody(p[i], reach[i]), weight[i]);
+                }
+                if (GraftMesh.length3(GraftMesh.sub(p[i], before[i])) > 1.0E-9) {
+                    touched[i] = 1.0;
+                }
+            }
+            if (pass == 2) {
+                break;
+            }
+            // Smoothed only where it was moved round him (and a little either side), so the rest of it is exactly as it was.
+            double[][] smoothed = p.clone();
+            for (int i = 1; i < dense; i++) {
+                double near = 0.0;
+                for (int k = Math.max(1, i - AROUND_SMOOTH); k <= Math.min(dense, i + AROUND_SMOOTH); k++) {
+                    near = Math.max(near, touched[k] * (1.0 - Math.abs(k - i) / (AROUND_SMOOTH + 1.0)));
+                }
+                if (near > 0.0) {
+                    double[] mid = GraftMesh.add(GraftMesh.mul(GraftMesh.add(p[i - 1], p[i + 1]), 0.25), GraftMesh.mul(p[i], 0.5));
+                    smoothed[i] = GraftMesh.lerp(p[i], mid, weight[i] * near);
+                }
+            }
+            p = smoothed;
+        }
+        return p;
+    }
+
+    /** {@link #around}: a point about every this much of the curve (at least 2 a span, at most {@link #AROUND_MOST}); the leeway past the
+     *  worm's skin; how far out of his back it is left alone, then eased in over. */
+    public static final double AROUND_STEP = 0.15;
+    static final int AROUND_MOST = 40;
+    static final double AROUND_MARGIN = 0.04;
+    static final double AROUND_FREE = 0.22;
+    static final double AROUND_RAMP = 0.35;
+    /** {@link #around}: how many points either side of where it was moved round him are smoothed with it (fading out). */
+    static final int AROUND_SMOOTH = 4;
+    /**
+     * His body as {@link #around} keeps the worm out of it (Minecraft's player: blocks, the body's frame): the head (a ball round its
+     * middle, between its faces and its corners, so it turns with him), the torso with both arms, the legs; arms and legs a little deeper
+     * than they are, for their swing.
+     */
+    static final double[] BODY_HEAD = {0.0, 1.75, 0.0};
+    static final double BODY_HEAD_RADIUS = 0.4;
+    static final double[] BODY_TORSO = {0.5, 0.75, 1.5, 0.19};
+    static final double[] BODY_LEGS = {0.25, 0.0, 0.75, 0.19};
+    /** How far left of his middle the worm is pushed out from (a share of the half-width): what passes through his middle goes round his right. */
+    static final double AROUND_RIGHT = 0.35;
+
+    /**
+     * How much further round (radians) the way round his right may be than the short way before the short way is taken: next to nothing
+     * (the shorter way, his right only when both are the same). The way round flips only where the two are the same length, where the
+     * worm would cross him through his very middle, which its moves keep away from; a wide preference for his right put that flip where
+     * Predatory Drag goes to a body on his left.
+     */
+    static final double AROUND_SLACK = 1.0E-6;
+
+    /**
+     * {@link #around}'s sweep: each run of points inside his torso or legs (those it isn't leaving him alone at) laid on their rounded
+     * outline at their own heights, round his middle from the angle of the point before the run to the angle of the point after it, by
+     * how far along the run each is ({@link #roundWay}). A run that reaches the mouth is left to the push.
+     */
+    static void sweepRound(double[][] p, double[] along, double[] reach, double[] weight) {
+        int last = p.length - 1;
+        int i = 1;
+        while (i <= last) {
+            if (weight[i] <= 0.0 || !inColumn(p[i], reach[i])) {
+                i++;
+                continue;
+            }
+            int a = i;
+            while (i <= last && weight[i] > 0.0 && inColumn(p[i], reach[i])) {
+                i++;
+            }
+            int b = i - 1;
+            if (b >= last) {
+                return;
+            }
+            double from = Math.atan2(p[a - 1][2], p[a - 1][0]);
+            double way = roundWay(from, Math.atan2(p[b + 1][2], p[b + 1][0]));
+            double start = along[a - 1];
+            double span = Math.max(1.0E-6, along[b + 1] - start);
+            for (int k = a; k <= b; k++) {
+                double angle = from + way * (along[k] - start) / span;
+                double r = rim(angle, p[k][1], reach[k]);
+                double[] swept = {r * Math.cos(angle), p[k][1], r * Math.sin(angle)};
+                p[k] = GraftMesh.lerp(p[k], swept, weight[k]);
+            }
+        }
+    }
+
+    /**
+     * How far round (radians, + toward ahead from his right) to go from {@code from} to {@code to} (angles round his middle, 0 his right,
+     * +90 degrees ahead): the shorter way; past his right if they are the same ({@link #AROUND_SLACK}).
+     */
+    static double roundWay(double from, double to) {
+        double near = to - from;
+        while (near > Math.PI) {
+            near -= 2.0 * Math.PI;
+        }
+        while (near <= -Math.PI) {
+            near += 2.0 * Math.PI;
+        }
+        double far = near - Math.signum(near == 0.0 ? 1.0 : near) * 2.0 * Math.PI;
+        if (passesRight(from, near)) {
+            return near;
+        }
+        return Math.abs(far) - Math.abs(near) > AROUND_SLACK ? near : far;
+    }
+
+    /** True if going {@code way} round from {@code from} passes his right (angle 0). */
+    private static boolean passesRight(double from, double way) {
+        double lo = Math.min(from, from + way);
+        double hi = Math.max(from, from + way);
+        for (double zero = -2.0 * Math.PI; zero <= 2.0 * Math.PI; zero += 2.0 * Math.PI) {
+            if (lo <= zero && zero <= hi) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** True if {@code p} is within {@code reach} of his torso and arms, or his legs. */
+    static boolean inColumn(double[] p, double reach) {
+        for (double[] box : new double[][] {BODY_TORSO, BODY_LEGS}) {
+            double round = slice(box, p[1], reach);
+            if (round > 0.0 && rounded(p[0], p[2], box[0], box[3], round) < 0.0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** How far out from his middle the outline of his torso or legs (whichever is wider there) is, {@code reach} out, at {@code angle}. */
+    static double rim(double angle, double y, double reach) {
+        double cx = Math.cos(angle);
+        double cz = Math.sin(angle);
+        double out = 0.0;
+        for (double[] box : new double[][] {BODY_TORSO, BODY_LEGS}) {
+            double round = slice(box, y, reach);
+            if (round <= 0.0) {
+                continue;
+            }
+            double lo = 0.0;
+            double hi = box[0] + box[3] + round + 1.0;
+            for (int i = 0; i < 26; i++) {
+                double mid = (lo + hi) * 0.5;
+                if (rounded(cx * mid, cz * mid, box[0], box[3], round) < 0.0) {
+                    lo = mid;
+                } else {
+                    hi = mid;
+                }
+            }
+            out = Math.max(out, hi);
+        }
+        return out;
+    }
+
+    /** How far the outline of {@code box} grown by {@code reach} reaches out at height {@code y} (0: not at all). */
+    private static double slice(double[] box, double y, double reach) {
+        double half = (box[2] - box[1]) * 0.5;
+        double dy = Math.max(0.0, Math.abs(y - (box[1] + half)) - half);
+        return dy >= reach ? 0.0 : Math.sqrt(reach * reach - dy * dy);
+    }
+
+    /** {@code p} kept {@code reach} out of his head, torso and arms, and legs (twice over, as one can push it into another). */
+    static double[] outOfBody(double[] p, double reach) {
+        double[] out = p;
+        for (int k = 0; k < 2; k++) {
+            out = outOfHead(out, reach);
+            out = outOfColumn(out, BODY_TORSO, reach);
+            out = outOfColumn(out, BODY_LEGS, reach);
+        }
+        return out;
+    }
+
+    private static double[] outOfHead(double[] p, double reach) {
+        double[] from = GraftMesh.sub(p, BODY_HEAD);
+        double d = GraftMesh.length3(from);
+        double keep = BODY_HEAD_RADIUS + reach;
+        if (d >= keep) {
+            return p;
+        }
+        double[] way = d < 1.0E-6 ? new double[] {0.0, 0.0, -1.0} : GraftMesh.mul(from, 1.0 / d);
+        return GraftMesh.add(BODY_HEAD, GraftMesh.mul(way, keep));
+    }
+
+    /**
+     * {@code p} kept {@code reach} out of a block of his body ({@code box}: half-width, bottom, top, half-depth; centred on his middle),
+     * moved sideways (level): out along the line from a little left of his middle through it, to where that line leaves the block's
+     * rounded outline at its height. Moves nothing outside it; nearby points move together (no jump).
+     */
+    static double[] outOfColumn(double[] p, double[] box, double reach) {
+        double half = (box[2] - box[1]) * 0.5;
+        double dy = Math.max(0.0, Math.abs(p[1] - (box[1] + half)) - half);
+        if (dy >= reach) {
+            return p;
+        }
+        double round = Math.sqrt(reach * reach - dy * dy);
+        if (rounded(p[0], p[2], box[0], box[3], round) >= 0.0) {
+            return p;
+        }
+        double cx = -AROUND_RIGHT * box[0];
+        double wx = p[0] - cx;
+        double wz = p[2];
+        double len = Math.hypot(wx, wz);
+        if (len < 1.0E-9) {
+            wx = 1.0;
+            wz = 0.0;
+        } else {
+            wx /= len;
+            wz /= len;
+        }
+        double lo = 0.0;
+        double hi = box[0] + box[3] + round + 1.0;
+        for (int i = 0; i < 26; i++) {
+            double mid = (lo + hi) * 0.5;
+            if (rounded(cx + wx * mid, wz * mid, box[0], box[3], round) < 0.0) {
+                lo = mid;
+            } else {
+                hi = mid;
+            }
+        }
+        return new double[] {cx + wx * hi, p[1], wz * hi};
+    }
+
+    /** How far (x, z) is outside a rectangle (half-width {@code hx}, half-depth {@code hz}) grown by {@code round} (negative: inside). */
+    private static double rounded(double x, double z, double hx, double hz, double round) {
+        double qx = Math.abs(x) - hx;
+        double qz = Math.abs(z) - hz;
+        return Math.hypot(Math.max(qx, 0.0), Math.max(qz, 0.0)) + Math.min(Math.max(qx, qz), 0.0) - round;
     }
 
     private static double[] add(double[] a, double[] b) {

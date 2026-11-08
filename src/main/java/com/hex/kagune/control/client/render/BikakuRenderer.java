@@ -164,7 +164,9 @@ public final class BikakuRenderer {
             if (grown <= 0.002) {
                 continue;
             }
-            double[][] rig = com.hex.kagune.control.client.animation.GraftPose.ride(posed, worm.shape().path());
+            // 3.5.5: the curve it is drawn along, round his body rather than through it; then carried with his torso's pose.
+            double[][] rig = com.hex.kagune.control.client.animation.GraftPose.ride(posed,
+                MawMotion.around(worm.shape().path(), worm.girth(), worm.shape().aperture()));
             // Drawn out of his back along its own curve, mouth first: only its first part shows while it grows (or goes back in).
             rig = MawMotion.grown(rig, grown);
             if (firstPerson) {
