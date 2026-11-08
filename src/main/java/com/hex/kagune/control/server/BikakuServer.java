@@ -488,7 +488,7 @@ public final class BikakuServer {
         // Predatory Feeding: a bite gives back a little, a kill more.
         float heal = BikakuRules.BITE_HEAL + (body.m_6084_() ? 0.0F : BikakuRules.KILL_HEAL);
         if (player.m_21223_() < player.m_21233_()) {
-            player.m_5634_(heal);
+            GhoulRegen.healOwn(player, heal); // 3.5.2: a ghoul's own heal (half a heart was taken for food's and cancelled)
             KaguneNetwork.sendTo(player, player);
         }
         KaguneProfile.addMastery(player, "Bikaku", 1);

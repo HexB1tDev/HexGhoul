@@ -74,6 +74,10 @@ public final class BikakuTests {
         check(BikakuRules.STUN > 0, "the Maul stuns");
         check(BikakuRules.BITE_HEAL > 0.0F && BikakuRules.KILL_HEAL > BikakuRules.BITE_HEAL && BikakuRules.BITE_HEAL <= 2.0F,
             "Predatory Feeding: a bite heals a little, a kill more");
+        // 3.5.2: a ghoul's heals of 1.5 or less are taken for food's natural regeneration and cancelled unless the mod marks them its own
+        // (GhoulRegen.healOwn); a bite's half a heart is one of them.
+        check(com.hex.kagune.control.wound.Regeneration.natural(BikakuRules.BITE_HEAL, false, false)
+            && !com.hex.kagune.control.wound.Regeneration.natural(BikakuRules.BITE_HEAL, false, true), "a bite's heal must go through as the mod's own");
         check(BikakuRules.REACH >= 5.0 && BikakuRules.MOUTH_RADIUS > 0.5, "the worm reaches far");
         double[] near = {0.3, 1.0, 2.0};
         check(BikakuRules.reach(near) == near, "something in reach is bitten where it is");

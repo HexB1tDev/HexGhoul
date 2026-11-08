@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.5.2 (HexGhoul): Fix: Bikaku's bites heal again (testing)
+
+See `.github/release-notes-3.5.2.md`. A Bikaku bite's half a heart (Predatory Feeding) was cancelled by the ghoul's regeneration, which takes any small heal it didn't make for food's natural regeneration. Every Bikaku heal now goes through as the ghoul's own.
+
 ## 3.5.1 (HexGhoul): Bikaku: Ravenous Pursuit and Carrion Eruption (testing)
 
 See `.github/release-notes-3.5.1.md`. Ravenous Pursuit (Z, mastery 300): the worm splits into three thinner worms that lunge in snakes at up to three bodies (all three on one). Carrion Eruption (B, mastery 450): it tunnels under the ground (the ground heaving over it) and bursts up under its mark, biting and throwing it into the air. Previews: `docs/handoff/bikaku-pursuit-3.5.1.png`, `bikaku-eruption-3.5.1.png`.

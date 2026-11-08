@@ -1,4 +1,15 @@
-# START HERE (state after 3.5.1)
+# START HERE (state after 3.5.2)
+
+Branch `claude/peaceful-ramanujan-eldmlu`. Next: **3.5.3: Monstrous Regeneration (C) and the passives** (Abnormal Regeneration, Pain Suppression), then the kakuja (3.5.4 body and transformation, 3.5.5 its abilities). Plan: `docs/BIKAKU_PATH.md`; handoff `docs/handoff/next-ai-3.4.8.md` (kept current).
+
+A fix found by reading (not reported): `GhoulRegen.heal` cancels every heal of 1.5 or less on a ghoul that it didn't make itself (`Regeneration.natural`: food's natural regeneration), so Predatory Feeding's half a heart per bite (`BikakuRules.BITE_HEAL` 1.0) never landed since 3.4.9.
+
+- `GhoulRegen.healOwn(player, amount)`: a heal marked as the mod's own (`healing` true around `m_5634_`). `BikakuServer.bite` and `BikakuMoves.hurt` heal through it. Any future small heal on a ghoul should too.
+- Tests: BikakuTests (79: `Regeneration.natural(BITE_HEAL, false, false)` is true and `(..., true)` false).
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 95. Not tested in game.
+
+# State after 3.5.1
 
 Branch `claude/peaceful-ramanujan-eldmlu`. Next: **3.5.2: Monstrous Regeneration (C) and the passives** (Abnormal Regeneration, Pain Suppression), then the kakuja (3.5.3 body and transformation, 3.5.4 its abilities). Plan: `docs/BIKAKU_PATH.md`; handoff `docs/handoff/next-ai-3.4.8.md` (kept current). Mastery alone opens the moves (the owner: a custom NPC will teach them later).
 

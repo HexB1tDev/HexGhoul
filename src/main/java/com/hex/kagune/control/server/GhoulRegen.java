@@ -41,6 +41,22 @@ public final class GhoulRegen {
         }
     }
 
+    /**
+     * 3.5.2: a heal of the mod's own on a ghoul (Bikaku's Predatory Feeding): never taken for food's natural regeneration, which
+     * {@link #heal} cancels (any heal of 1.5 or less it didn't make itself).
+     */
+    public static void healOwn(ServerPlayer player, float amount) {
+        if (amount <= 0.0F) {
+            return;
+        }
+        healing = true;
+        try {
+            player.m_5634_(amount);
+        } finally {
+            healing = false;
+        }
+    }
+
     /** 1.3.25: a quinque cut {@code player}: their regeneration holds back until {@code until} (game time); the later of two cuts. */
     public static void suppress(ServerPlayer player, long until) {
         SUPPRESSED.merge(player.m_20148_(), until, Math::max);

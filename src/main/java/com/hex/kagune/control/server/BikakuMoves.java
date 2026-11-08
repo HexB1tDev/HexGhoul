@@ -382,7 +382,7 @@ final class BikakuMoves {
             0.9F, KaguneServerController.vary(player, heavy ? 0.85F : 1.0F, 0.08F));
         float healed = heal + (body.m_6084_() ? 0.0F : BikakuRules.KILL_HEAL);
         if (healed > 0.0F && player.m_21223_() < player.m_21233_()) {
-            player.m_5634_(healed);
+            GhoulRegen.healOwn(player, healed); // 3.5.2: a ghoul's own heal (half a heart was taken for food's and cancelled)
             KaguneNetwork.sendTo(player, player);
         }
         KaguneProfile.addMastery(player, "Bikaku", 1);
