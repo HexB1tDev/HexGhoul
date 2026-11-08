@@ -58,6 +58,9 @@ public class MawPreview {
         if (which.equals("regen") || which.equals("all")) {
             regen(new File(out, "maw-regen.png"));
         }
+        if (which.equals("round") || which.equals("all")) {
+            round(new File(out, "maw-round.png"));
+        }
         if (which.equals("held") || which.equals("all")) {
             held(new File(out, "maw-held.png"));
         }
@@ -460,6 +463,110 @@ public class MawPreview {
         g.dispose();
         ImageIO.write(img, "png", file);
         System.out.println(file);
+    }
+
+    /**
+     * 3.5.9: round blocks: a wall 7 wide and 4 high between him and a body 10 out; M1 (held), Devouring Maw and Predatory Drag each go round
+     * it on the way WormRoute finds (laid along it as the renderer lays it), and Predatory Drag pulls its catch back round it.
+     */
+    static void round(File file) throws Exception {
+        int fw = 300;
+        int fh = 300;
+        int cols = 7;
+        BufferedImage img = new BufferedImage(fw * cols, fh * 3 + 34, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = sheet(img, "Bikaku 3.5.9: round blocks: a wall between him and what it goes after; it goes round, and pulls what it catches back round");
+        com.hex.kagune.control.bikaku.WormRoute.Open walled = (x, y, z) -> y >= 0 && !(z == 5 && x >= -4 && x <= 2 && y <= 3);
+        List<PoseRender.Tri> wall = new ArrayList<>();
+        for (int x = -4; x <= 2; x++) {
+            for (int y = 0; y <= 3; y++) {
+                wall.addAll(cube(new double[] {x, y, 5}, 0x7A7F86));
+            }
+        }
+        double[] target = {0.5, 0.99, 10.0};
+        // M1 held to 16.
+        double[] from = MawMotion.shoulder();
+        double[][] route = com.hex.kagune.control.bikaku.WormRoute.find(from, target, 30.0, walled);
+        BikakuRules.Bite snap = BikakuRules.Bite.SNAP;
+        double k = BikakuRules.slower(16.0, BikakuRules.REACH);
+        double[] snapAges = {0, 0.3, 0.42, 0.5, 0.65, 0.85, 1.0};
+        for (int i = 0; i < cols; i++) {
+            double age = snapAges[i] * snap.ticks() * k;
+            double time = 60 + age;
+            MawMotion.Shape s = MawMotion.of(time, SEED, snap, age, target, 16.0);
+            double[][] laid = MawMotion.along(MawMotion.dense(s.path()), from, BikakuRules.reach(target, 16.0), route);
+            List<PoseRender.Tri> tris = worm(new MawMotion.Shape(laid, s.dorsal(), s.aperture()), 1.0, time, 0xA50F37, true);
+            tris.addAll(wall);
+            tris.addAll(prey(new double[] {target[0], 0.0, target[2]}));
+            g.drawImage(PoseRender.render(new RigPose(), wideAt(-55, 40, 24.0, 5.0, 1.5), fw, fh, tris), i * fw, 34, null);
+            label(g, String.format("M1 held: %.0ft%s", age, Math.abs(age - snap.land() * k) < 0.6 ? "  BITES (round the wall)" : ""), i * fw, 34);
+        }
+        // Devouring Maw: round it, the catch pulled back round it.
+        com.hex.kagune.control.bikaku.BikakuMove maw = com.hex.kagune.control.bikaku.BikakuMove.MAW;
+        double mk = BikakuRules.slower(16.0, maw.baseReach());
+        double[] mawAges = {0.1, 0.2, 0.3, 0.38, 0.5, 0.65, 0.95};
+        for (int i = 0; i < cols; i++) {
+            double age = mawAges[i] * maw.ticks() * mk;
+            double time = 160 + age;
+            double scaled = age / mk;
+            double[] aim = BikakuRules.reach(target, 16.0);
+            double[] held = scaled < maw.land() ? null : MawMotion.along(MawMotion.mawHeld(aim, scaled), from, aim, route);
+            MawMotion.Shape s = MawMotion.move(time, SEED, maw, age, target, held, true, 16.0);
+            double[][] laid = MawMotion.along(MawMotion.dense(s.path()), from, aim, route);
+            List<PoseRender.Tri> tris = worm(new MawMotion.Shape(laid, s.dorsal(), s.aperture()), 1.0, time, 0xA50F37, true);
+            tris.addAll(wall);
+            if (scaled <= com.hex.kagune.control.bikaku.BikakuMove.MAW_RELEASE) {
+                double[] at = held != null ? held : target;
+                tris.addAll(prey(new double[] {at[0], at[1] - 0.99, at[2]}));
+            }
+            g.drawImage(PoseRender.render(new RigPose(), wideAt(-55, 40, 24.0, 5.0, 1.5), fw, fh, tris), i * fw, 34 + fh, null);
+            label(g, String.format("Devouring Maw: %.0ft", age), i * fw, 34 + fh);
+        }
+        // Predatory Drag: along the ground round it, dragging the catch back round it.
+        com.hex.kagune.control.bikaku.BikakuMove drag = com.hex.kagune.control.bikaku.BikakuMove.DRAG;
+        double[] anchor = {1.45, 0.3, 1.0};
+        double[] low = {target[0], 0.4, target[2]};
+        double[][] groundRoute = com.hex.kagune.control.bikaku.WormRoute.find(anchor, low, 30.0, walled);
+        double dk = BikakuRules.slower(16.0, drag.baseReach());
+        double[] dragAges = {0.08, 0.16, 0.24, 0.32, 0.42, 0.55, 0.72};
+        for (int i = 0; i < cols; i++) {
+            double age = dragAges[i] * drag.ticks() * dk;
+            double time = 260 + age;
+            double scaled = age / dk;
+            double[] aim = MawMotion.dragReach(target, 16.0);
+            double[] held = scaled < drag.land() ? null : MawMotion.along(MawMotion.dragHeld(aim, Math.min(scaled, com.hex.kagune.control.bikaku.BikakuMove.DRAG_SLAM)),
+                anchor, low, groundRoute);
+            MawMotion.Shape s = MawMotion.move(time, SEED, drag, age, target, held, true, 16.0);
+            double[][] laid = MawMotion.along(MawMotion.dense(s.path()), anchor, low, groundRoute);
+            List<PoseRender.Tri> tris = worm(new MawMotion.Shape(laid, s.dorsal(), s.aperture()), 1.0, time, 0xA50F37, true);
+            tris.addAll(wall);
+            if (scaled <= com.hex.kagune.control.bikaku.BikakuMove.DRAG_SLAM) {
+                double[] at = held != null ? held : target;
+                tris.addAll(prey(new double[] {at[0], at[1] - 0.99, at[2]}));
+            }
+            g.drawImage(PoseRender.render(new RigPose(), wideAt(-55, 40, 24.0, 5.0, 1.5), fw, fh, tris), i * fw, 34 + 2 * fh, null);
+            label(g, String.format("Predatory Drag: %.0ft", age), i * fw, 34 + 2 * fh);
+        }
+        g.dispose();
+        ImageIO.write(img, "png", file);
+        System.out.println(file);
+    }
+
+    /** A block at {@code at} (its corner), in grey. */
+    static List<PoseRender.Tri> cube(double[] at, int rgb) {
+        List<PoseRender.Tri> out = new ArrayList<>();
+        double[][] c = new double[8][];
+        for (int i = 0; i < 8; i++) {
+            c[i] = w(new double[] {at[0] + (i & 1), at[1] + (i >> 1 & 1), at[2] + (i >> 2 & 1)});
+        }
+        int[][] faces = {{0, 1, 3, 2}, {4, 6, 7, 5}, {0, 4, 5, 1}, {2, 3, 7, 6}, {0, 2, 6, 4}, {1, 5, 7, 3}};
+        double[][] normals = {{0, 0, -1}, {0, 0, 1}, {0, -1, 0}, {0, 1, 0}, {-1, 0, 0}, {1, 0, 0}};
+        for (int f = 0; f < 6; f++) {
+            double[] n = w(normals[f]);
+            int[] q = faces[f];
+            out.add(new PoseRender.Tri(new double[][] {c[q[0]], c[q[1]], c[q[2]]}, rgb, n));
+            out.add(new PoseRender.Tri(new double[][] {c[q[0]], c[q[2]], c[q[3]]}, rgb, n));
+        }
+        return out;
     }
 
     /** A camera {@code distance} out at {@code yaw}/{@code pitch} round a point {@code ahead} blocks before him at height {@code y}. */

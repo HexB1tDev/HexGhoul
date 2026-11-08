@@ -57,11 +57,11 @@ Binding; quoted exactly as written. Kept current as that session goes.
   before it was pushed. Versions 3.5.7; protocol "98"; next free message id 56.
 - Then **"PROCEED"**. **3.5.8 shipped:** held to throw further (M1 and G/J/Z/B; a tap as before, 30 blocks after 2 s; slower out and back;
   nothing else until it is back). Preview sent first (`docs/handoff/bikaku-held-3.5.8.png`). Versions 3.5.8; protocol "99".
-- **Next: 3.5.9, round blocks** (the owner: "It should adapt to blocks, and that's where I say flexibility, like go around blocks like a
-  worm, sort of, and actually go around them. It's being able to adapt to the terrain itself and pulling people back and shit"): the
-  server finds a way through the air round blocks to what it bites (a short search on the block grid, smoothed), sends it to the
-  clients, the worm is drawn along it, and a catch is pulled back along it. Then **the forms** (two worms, three, the walking form), each
-  with its own moves. Show previews before going far.
+- **3.5.9 shipped:** round blocks (`WormRoute`, `BikakuRoutes`, `MawMotion.along`; M1, Maw, Drag, Pursuit; catches pulled back along the
+  way). Preview sent first (`docs/handoff/bikaku-round-3.5.9.png`). Versions 3.5.9; protocol "100". **The next version is 3.6.0.**
+- **Next: the forms** (the owner's words above: two worms, three, then the walking form before the kakuja, "the moves, of course, changing
+  to something else ... depending on the form"). A plan for the owner first (how a form is chosen, its mastery, which moves each has), then
+  previews before going far.
 
 ## Where things were when this note was written (after 3.5.3)
 

@@ -12,12 +12,15 @@ import net.minecraftforge.network.NetworkEvent;
  * ({@code BikakuRules.Bite} ordinal, 0 none) and the game tick it began, where it is thrown (a point in the world: the target's middle when
  * it began, or the air ahead), and the body it goes after (an entity id, 0 none: the clients follow it as it moves). 3.5.0: and the move
  * it is making ({@code BikakuMove} ordinal, 0 none), the tick it began, its point (the world), the bodies it goes after ({@link #TARGETS},
- * 0 none), the body it holds (0 none: missed, or let go) and whether its bite caught anything; 3.5.3: when Monstrous Regeneration last began; 3.5.4: whether it is in the kakuja and when it last went in or out. 3.5.8: how far the bite and the move out were thrown, and a key held to wind one up ({@code charge}: 9 M1, else its {@code BikakuMove.Slot} ordinal; -1 none) since when. 3.5.7: {@link #TARGETS} is one body for each of the kakuja's tentacles (Thousand Jaws; Ravenous Pursuit uses the first three); when Undying Abomination last began; for each tentacle, when its last bite of its own began (Autonomous Predation) and the body it went after. Every client draws the worm from these alone.
+ * 0 none), the body it holds (0 none: missed, or let go) and whether its bite caught anything; 3.5.3: when Monstrous Regeneration last began; 3.5.4: whether it is in the kakuja and when it last went in or out. 3.5.9: the ways round blocks (the world; none for a straight line). 3.5.8: how far the bite and the move out were thrown, and a key held to wind one up ({@code charge}: 9 M1, else its {@code BikakuMove.Slot} ordinal; -1 none) since when. 3.5.7: {@link #TARGETS} is one body for each of the kakuja's tentacles (Thousand Jaws; Ravenous Pursuit uses the first three); when Undying Abomination last began; for each tentacle, when its last bite of its own began (Autonomous Predation) and the body it went after. Every client draws the worm from these alone.
  */
 public record S2CBikakuState(UUID playerId, int bite, long startedAt, double x, double y, double z, int targetId, int move, long moveAt,
                              double mx, double my, double mz, int[] targets, int heldId, boolean caught, long regenAt,
                              boolean kakuja, long kakujaAt, long undyingAt, long[] autoAt, int[] autoTarget, float reach, float moveReach, int charge,
-                             long chargeAt) {
+                             long chargeAt, double[][][] routes) {
+    /** 3.5.9: how many ways round blocks it carries (the bite's, then the move's: one for each of Ravenous Pursuit's worms), and their points. */
+    public static final int ROUTES = 4;
+    public static final int ROUTE_POINTS = 8;
     /** How many bodies a move can go after at once (3.5.7: one for each of the kakuja's tentacles). */
     public static final int TARGETS = 6;
     /** 3.5.7: how many of the kakuja's tentacles can bite on their own (one entry each). */
@@ -53,6 +56,16 @@ public record S2CBikakuState(UUID playerId, int bite, long startedAt, double x, 
         buffer.writeFloat(message.moveReach);
         buffer.writeByte(message.charge);
         buffer.m_130103_(message.chargeAt);
+        for (int r = 0; r < ROUTES; r++) {
+            double[][] route = message.routes != null && r < message.routes.length ? message.routes[r] : null;
+            int count = route == null ? 0 : Math.min(ROUTE_POINTS, route.length);
+            buffer.writeByte(count);
+            for (int i = 0; i < count; i++) {
+                buffer.writeDouble(route[i][0]);
+                buffer.writeDouble(route[i][1]);
+                buffer.writeDouble(route[i][2]);
+            }
+        }
     }
 
     public static S2CBikakuState decode(FriendlyByteBuf buffer) {
@@ -87,8 +100,20 @@ public record S2CBikakuState(UUID playerId, int bite, long startedAt, double x, 
         float reach = buffer.readFloat();
         float moveReach = buffer.readFloat();
         int charge = buffer.readByte();
+        long chargeAt = buffer.m_130258_();
+        double[][][] routes = new double[ROUTES][][];
+        for (int r = 0; r < ROUTES; r++) {
+            int count = Math.max(0, Math.min(ROUTE_POINTS, buffer.readByte()));
+            if (count == 0) {
+                continue;
+            }
+            routes[r] = new double[count][];
+            for (int i = 0; i < count; i++) {
+                routes[r][i] = new double[] {buffer.readDouble(), buffer.readDouble(), buffer.readDouble()};
+            }
+        }
         return new S2CBikakuState(id, bite, startedAt, x, y, z, targetId, move, moveAt, mx, my, mz, targets, heldId, caught, regenAt, kakuja, kakujaAt,
-            undyingAt, autoAt, autoTarget, reach, moveReach, charge, buffer.m_130258_());
+            undyingAt, autoAt, autoTarget, reach, moveReach, charge, chargeAt, routes);
     }
 
     public static void handle(S2CBikakuState message, Supplier<NetworkEvent.Context> supplier) {

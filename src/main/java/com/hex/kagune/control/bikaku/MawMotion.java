@@ -27,6 +27,16 @@ public final class MawMotion {
     /** Over the right shoulder: where a worm thrown out ahead passes him (never through him). */
     static final double[] SHOULDER = {0.62, 2.15, -0.25};
 
+    /** 3.5.9: Predatory Drag's {@link #GROUND_ANCHOR} (where its way along the ground starts), for the server and the renderer. */
+    public static double[] groundAnchor() {
+        return GROUND_ANCHOR.clone();
+    }
+
+    /** 3.5.9: Ravenous Pursuit's worm {@code i}'s own shoulder in its lane (where its way round blocks starts). */
+    public static double[] pursuitShoulder(int i) {
+        return pursuitFrame(i, SHOULDER, 1.0);
+    }
+
     /** 3.4.9: {@link #SHOULDER}, for the server (where the worm's reach is measured from) and the renderer. */
     public static double[] shoulder() {
         return SHOULDER.clone();
@@ -1047,6 +1057,73 @@ public final class MawMotion {
         double toFace = Math.abs(wz) < 1.0E-12 ? Double.MAX_VALUE : (wz > 0.0 ? depth : -depth) / wz;
         double t = Math.min(toSide, toFace) + 1.0E-9;
         return new double[] {cx + wx * t, p[1], wz * t};
+    }
+
+    // ---------------------------------------------------------------- 3.5.9: round blocks
+
+    /**
+     * 3.5.9 (the owner: "go around blocks like a worm ... adapt to the terrain itself and pulling people back"): {@code points} (body frame)
+     * laid along {@code route} (body frame, from {@code origin}'s end to {@code target}'s: the way round the blocks {@link WormRoute} found)
+     * instead of the straight line from {@code origin} to {@code target}: each point that far along the straight line is that far along the
+     * way, keeping how far off the line it was (its sway). Points behind {@code origin} (the coils behind him) are left where they are,
+     * those just past it eased on, those past {@code target} carried on from the way's end. A straight way changes nothing.
+     */
+    public static double[][] along(double[][] points, double[] origin, double[] target, double[][] route) {
+        if (route == null || route.length < 3) {
+            return points;
+        }
+        double[][] out = new double[points.length][];
+        for (int i = 0; i < points.length; i++) {
+            out[i] = along(points[i], origin, target, route);
+        }
+        return out;
+    }
+
+    /** One point of {@link #along(double[][], double[], double[], double[][])} (the server lays what a move holds along the way so). */
+    public static double[] along(double[] p, double[] origin, double[] target, double[][] route) {
+        if (route == null || route.length < 3) {
+            return p;
+        }
+        double[] line = GraftMesh.sub(target, origin);
+        double straight = GraftMesh.length3(line);
+        if (straight < 1.0E-6) {
+            return p;
+        }
+        double[] u = GraftMesh.mul(line, 1.0 / straight);
+        double t = GraftMesh.dot(GraftMesh.sub(p, origin), u) / straight;
+        if (t <= 0.0) {
+            return p;
+        }
+        double[] onLine = GraftMesh.add(origin, GraftMesh.mul(u, t * straight));
+        double[] off = GraftMesh.sub(p, onLine);
+        double length = WormRoute.length(route);
+        double[] onRoute = t <= 1.0 ? WormRoute.at(route, t * length)
+            : GraftMesh.add(route[route.length - 1], GraftMesh.mul(GraftMesh.normalize(GraftMesh.sub(route[route.length - 1], route[route.length - 2])),
+                (t - 1.0) * straight));
+        double[] laid = GraftMesh.add(onRoute, off);
+        double w = GraftMesh.smooth(GraftMesh.clamp01(t / ALONG_EASE));
+        return GraftMesh.lerp(p, laid, w);
+    }
+
+    /** 3.5.9: how much of the throw (a share of it) the worm takes to come onto its way round. */
+    static final double ALONG_EASE = 0.08;
+
+    /** 3.5.9: {@code points}, a point about every {@link #AROUND_STEP} along the curve through them (to lay them along a way round). */
+    public static double[][] dense(double[][] points) {
+        if (points.length < 2) {
+            return points;
+        }
+        int spans = points.length - 1;
+        java.util.List<double[]> line = new java.util.ArrayList<>();
+        line.add(points[0].clone());
+        for (int k = 0; k < spans; k++) {
+            int sub = Math.max(2, Math.min(AROUND_MOST, (int)Math.ceil(GraftMesh.length3(GraftMesh.sub(points[k + 1], points[k])) / AROUND_STEP)));
+            for (int j = 1; j <= sub; j++) {
+                line.add(k == spans - 1 && j == sub ? points[spans].clone()
+                    : com.hex.kagune.control.ukaku.CentipedeTail.catmullRom(points, (k + j / (double)sub) / spans));
+            }
+        }
+        return line.toArray(new double[0][]);
     }
 
     // ---------------------------------------------------------------- 3.5.5: the drawn worm goes round him, never through him

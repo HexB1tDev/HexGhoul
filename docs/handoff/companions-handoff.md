@@ -1,4 +1,20 @@
-# START HERE (state after 3.5.8)
+# START HERE (state after 3.5.9)
+
+Branch `claude/hopeful-noether-5c2wex`. Read `docs/handoff/next-ai-3.5.4.md` first (the owner's words this session at its top, quoted exactly; the state now). Next: **the forms** (the owner: "another form should have like two worms. The third should have three, and ... the fourth before the Kakuja should be like the player no longer even like walks with their own legs ... two separate appendages on either ... both sides emerging from the same spot as the worms ... tentacles that walk around adapt to terrain. Being able to climb anything ... The moves, of course, changing to something else whenever you have like depending on the form"). The owner's range ask is now covered (3.5.8 held, 3.5.9 round blocks).
+
+The owner's words for this: "It should adapt to blocks, and that's where I say flexibility, like go around blocks like a worm, sort of, and actually go around them. It's being able to adapt to the terrain itself and pulling people back and shit, you know what I mean?" Preview sent before the plumbing (`docs/handoff/bikaku-round-3.5.9.png`; no answer before it was pushed).
+
+- Pure `bikaku/WormRoute`: `find(from, to, most, Open)` (straight `{from, to}` if `clear`; else A* over blocks, 26 neighbours, no corner cutting, `WALL_COST` 0.35 a step beside a solid block, at most `MOST_LOOKED` 6000 blocks and 1.25 x most of cost, then `taut` (from each point straight to the farthest clear later one; at most `MOST_POINTS` 6, else null); null if none within `most`); `clear` (every `STEP` 0.2), `length`, `at`, `upTo`; keys pack signed coordinates.
+- `MawMotion.along(points | point, origin, target, route)`: a point t of the way along origin -> target goes t of the way along the route (by length), its offset off the line kept; t <= 0 left alone (the coils behind), eased on over `ALONG_EASE` 0.08, past the end carried on; a 2-point route changes nothing. `MawMotion.dense(points)` (a point every `AROUND_STEP`). `groundAnchor()`, `pursuitShoulder(i)`.
+- Server `BikakuRoutes`: `open(level)` (loaded and `m_60812_(..).m_83281_()`: no collision box), `route`, `clipped` (as far as the straight line runs), `atEnd(route, centre, slack)` (near the way's end, the last leg clear to it), `rig`, `bends` (3+ points). `BikakuServer.Aim` + `aimRouted(player, hint, from, reach)` (the hint if a way in reach exists, else `aimFrom` with its way); `State.biteRoute`, `moveRoutes[3]`; `begin` (worm bites routed; the empty throw `clipped`), `land` (routed: the target if `atEnd`, else nothing); `BikakuMoves.start` (MAW `aimRouted`; DRAG `aimGround` or the hint with `groundRoute` (from `GROUND_ANCHOR` to the feet + 0.4); PURSUIT each worm from `pursuitShoulder(i)`), `land` (routed check), the hold laid `along` the way (`grabTick`), `pursuitTick` (routed check), `finish` clears them.
+- Network: `S2CBikakuState.routes` (`ROUTES` 4: the bite's, the move's 1..3; `ROUTE_POINTS` 8; world doubles); protocol 100. `BikakuClient.View.route(r)`. `BikakuRenderer`: each worm `along(dense(path), start, way end, way)` before `around` (starts: shoulder; Drag `groundAnchor`; Pursuit `pursuitShoulder(i)`).
+- Preview: `tools/MawPreview.java round` (a wall of `cube`s); `docs/handoff/bikaku-round-3.5.9.png`.
+- Tests: BikakuWormTests `routes()` (108,146 in all).
+- **Judgment calls:** the search limits, the wall cost, pulling catches back along the way, the end slack. **Approximated:** the way is found once as the throw begins; the worm's sway can graze a wall's edge; the worm counts as thin for gaps.
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 100. Not tested in game.
+
+# State after 3.5.8
 
 Branch `claude/hopeful-noether-5c2wex`. Read `docs/handoff/next-ai-3.5.4.md` first (the owner's words this session at its top, quoted exactly; the state now). Next: **3.5.9, round blocks** (the owner: "It should adapt to blocks, and that's where I say flexibility, like go around blocks like a worm, sort of, and actually go around them. It's being able to adapt to the terrain itself and pulling people back"), then the forms.
 

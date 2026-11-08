@@ -100,6 +100,9 @@ public final class BikakuServer {
         int chargeHint;
         double queuedReach = BikakuRules.REACH;
         double queuedSlotReach;
+        /** 3.5.9: the way round blocks the bite out takes, and the move's (one for each of Ravenous Pursuit's worms), in the world; null straight. */
+        double[][] biteRoute;
+        final double[][][] moveRoutes = new double[3][][];
         /** 3.5.7, Flesh Cataclysm: the bodies it has already struck (each once). */
         final java.util.Set<Integer> struck = new java.util.HashSet<>();
 
@@ -139,6 +142,8 @@ public final class BikakuServer {
             this.landed = false;
             this.lastBite = null;
             this.queuedAt = Long.MIN_VALUE;
+            this.biteRoute = null; // 3.5.9
+            java.util.Arrays.fill(this.moveRoutes, null);
             this.charge = -1; // 3.5.8
             this.chargeAt = Long.MIN_VALUE;
             this.undyingAt = -1_000_000L; // 3.5.7
@@ -384,7 +389,8 @@ public final class BikakuServer {
         return new S2CBikakuState(player.m_20148_(), state.bite.ordinal(), state.startedAt, state.aim.f_82479_, state.aim.f_82480_, state.aim.f_82481_,
             state.targetId, state.move.ordinal(), state.moveAt, state.movePoint.f_82479_, state.movePoint.f_82480_, state.movePoint.f_82481_,
             state.targets.clone(), state.heldId, state.caught, state.regenAt, state.kakuja, state.kakujaAt, state.undyingAt, state.autoAt.clone(),
-            state.autoTarget.clone(), (float)state.biteReach, (float)state.moveReach, state.charge, state.chargeAt);
+            state.autoTarget.clone(), (float)state.biteReach, (float)state.moveReach, state.charge, state.chargeAt,
+            new double[][][] {state.biteRoute, state.moveRoutes[0], state.moveRoutes[1], state.moveRoutes[2]});
     }
 
     static void broadcast(ServerPlayer player, State state) {
@@ -572,12 +578,16 @@ public final class BikakuServer {
         if (!KaguneServerController.useEnergy(player, bite.cost(), true)) {
             return;
         }
-        LivingEntity target = big ? aimFrom(player, hint, kakujaCentre(player), BikakuRules.KAKUJA_REACH) : aimFrom(player, hint, shoulder(player), state.biteReach);
+        // 3.5.9: the worm's bite goes round blocks to what it goes after (the kakuja's tentacles as they always did).
+        Aim routed = big ? new Aim(aimFrom(player, hint, kakujaCentre(player), BikakuRules.KAKUJA_REACH), null) : aimRouted(player, hint, shoulder(player),
+            state.biteReach);
+        LivingEntity target = routed.body();
+        state.biteRoute = big || !BikakuRoutes.bends(routed.route()) ? null : routed.route();
         state.bite = bite;
         state.startedAt = now;
         state.targetId = target == null ? 0 : target.m_19879_();
-        state.aim = target == null ? player.m_146892_().m_82549_(player.m_20154_().m_82490_((big ? BikakuRules.KAKUJA_REACH : state.biteReach) * (big ? 0.8 : 0.85)))
-            : KaguneServerController.center(target);
+        Vec3 air = player.m_146892_().m_82549_(player.m_20154_().m_82490_((big ? BikakuRules.KAKUJA_REACH : state.biteReach) * (big ? 0.8 : 0.85)));
+        state.aim = target != null ? KaguneServerController.center(target) : big ? air : BikakuRoutes.clipped(player, shoulder(player), air);
         state.landed = false;
         state.lastBite = bite;
         state.chainEndsAt = now + bite.ticks();
@@ -619,6 +629,26 @@ public final class BikakuServer {
     /** 3.5.4: the kakuja's middle (the world): its tentacles' reach is measured from here. */
     static Vec3 kakujaCentre(ServerPlayer player) {
         return world(player, BikakuRules.KAKUJA_CENTRE);
+    }
+
+    /** 3.5.9: a body to go after and the way round blocks to it (null: a straight line; both null: nothing). */
+    record Aim(LivingEntity body, double[][] route) {
+    }
+
+    /**
+     * 3.5.9: what a bite or move from {@code from} reaching {@code reach} goes after, and its way there: the hinted body if there is a way
+     * round blocks to it in reach, else (as before) the hinted or nearest one in front in a clear line.
+     */
+    static Aim aimRouted(ServerPlayer player, Entity hint, Vec3 from, double reach) {
+        if (hint instanceof LivingEntity living && hint != player && living.m_6084_() && KaguneServerController.validSwipeTarget(player, living)
+            && KaguneServerController.center(living).m_82554_(from) <= reach + living.m_20205_()) {
+            double[][] route = BikakuRoutes.route(player, from, KaguneServerController.center(living), reach + living.m_20205_());
+            if (route != null) {
+                return new Aim(living, route);
+            }
+        }
+        LivingEntity body = aimFrom(player, hint, from, reach);
+        return new Aim(body, body == null ? null : BikakuRoutes.route(player, from, KaguneServerController.center(body), reach + body.m_20205_()));
     }
 
     /** What a bite from {@code from} reaching {@code reach} goes after: the hinted body, else the nearest in front. */
@@ -776,6 +806,19 @@ public final class BikakuServer {
         Vec3 from = big ? kakujaCentre(player) : shoulder(player);
         double reach = big ? BikakuRules.KAKUJA_REACH : state.biteReach;
         LivingEntity body = null;
+        if (state.biteRoute != null && !big) {
+            // 3.5.9: round blocks: what it went after, if it is still where its way ends.
+            if (state.targetId != 0 && player.m_284548_().m_6815_(state.targetId) instanceof LivingEntity target && target.m_6084_()
+                && KaguneServerController.validSwipeTarget(player, target)
+                && BikakuRoutes.atEnd(player, state.biteRoute, KaguneServerController.center(target), BikakuRules.MOUTH_RADIUS + 1.0 + target.m_20205_())) {
+                bite(player, state, target, now);
+            } else {
+                double[] end = state.biteRoute[state.biteRoute.length - 1];
+                KaguneServerController.playAt(player, new Vec3(end[0], end[1], end[2]), HexKaguneSounds.KAGUNE_WHIP, 0.6F,
+                    KaguneServerController.vary(player, 0.6F, 0.05F));
+            }
+            return;
+        }
         if (state.targetId != 0 && player.m_284548_().m_6815_(state.targetId) instanceof LivingEntity target && target.m_6084_()
             && KaguneServerController.validSwipeTarget(player, target)
             && KaguneServerController.center(target).m_82554_(from) <= reach + target.m_20205_()

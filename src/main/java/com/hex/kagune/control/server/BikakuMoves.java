@@ -97,11 +97,27 @@ final class BikakuMoves {
         double reach = Math.max(move.baseReach(), held);
         state.moveReach = reach;
         state.moveSlower = BikakuRules.slower(reach, move.baseReach());
-        LivingEntity target = switch (move) {
-            case DRAG -> aimGround(player, hint, reach);
-            case ERUPTION -> aimGround(player, hint, reach);
-            default -> BikakuServer.aimFrom(player, hint, BikakuServer.shoulder(player), reach);
-        };
+        java.util.Arrays.fill(state.moveRoutes, null);
+        LivingEntity target;
+        switch (move) {
+            case DRAG -> {
+                // 3.5.9: along the ground round blocks: the hinted body if there is a way to it, else as before.
+                target = aimGround(player, hint, reach);
+                if (hint instanceof LivingEntity living && living != target && living.m_6084_() && KaguneServerController.validSwipeTarget(player, living)
+                    && flat(KaguneServerController.center(living).m_82546_(player.m_20182_())) <= reach + living.m_20205_()
+                    && groundRoute(player, living, reach) != null) {
+                    target = living;
+                }
+                state.moveRoutes[0] = target == null ? null : bending(groundRoute(player, target, reach));
+            }
+            case ERUPTION -> target = aimGround(player, hint, reach);
+            case PURSUIT -> target = BikakuServer.aimFrom(player, hint, BikakuServer.shoulder(player), reach);
+            default -> {
+                BikakuServer.Aim aim = BikakuServer.aimRouted(player, hint, BikakuServer.shoulder(player), reach);
+                target = aim.body();
+                state.moveRoutes[0] = bending(aim.route());
+            }
+        }
         state.move = move;
         state.moveAt = now;
         java.util.Arrays.fill(state.targets, 0);
@@ -109,10 +125,18 @@ final class BikakuMoves {
         state.movePoint = target != null ? KaguneServerController.center(target) : switch (move) {
             case DRAG -> groundAhead(player, reach * 0.8);
             case ERUPTION -> groundAhead(player, reach * 0.7);
-            default -> player.m_146892_().m_82549_(player.m_20154_().m_82490_(reach * 0.85));
+            // 3.5.9: at nothing, thrown along the look as far as the first block (not through it).
+            default -> BikakuRoutes.clipped(player, BikakuServer.shoulder(player), player.m_146892_().m_82549_(player.m_20154_().m_82490_(reach * 0.85)));
         };
         if (move == BikakuMove.PURSUIT) {
             pursuitTargets(player, state, target);
+            // 3.5.9: each worm's way round blocks from its own lane.
+            for (int i = 0; i < BikakuMove.PURSUIT_WORMS; i++) {
+                if (state.targets[i] != 0 && player.m_284548_().m_6815_(state.targets[i]) instanceof LivingEntity body) {
+                    state.moveRoutes[i] = bending(BikakuRoutes.route(player, BikakuServer.world(player, MawMotion.pursuitShoulder(i)),
+                        KaguneServerController.center(body), reach + body.m_20205_()));
+                }
+            }
         }
         state.eruptVictim = 0;
         state.heldId = 0;
@@ -200,6 +224,11 @@ final class BikakuMoves {
             long until = move == BikakuMove.MAW ? BikakuMove.MAW_RELEASE : BikakuMove.DRAG_SLAM;
             if (age < until) {
                 double[] at = move == BikakuMove.MAW ? MawMotion.mawHeld(state.heldAt, next) : MawMotion.dragHeld(state.heldAt, next);
+                if (state.moveRoutes[0] != null) {
+                    // 3.5.9: pulled back the way it went, round the blocks.
+                    double[][] route = BikakuRoutes.rig(player, state.moveRoutes[0]);
+                    at = MawMotion.along(at, move == BikakuMove.MAW ? MawMotion.shoulder() : MawMotion.groundAnchor(), route[route.length - 1], route);
+                }
                 hold(player, state, at);
             }
         }
@@ -268,8 +297,10 @@ final class BikakuMoves {
             state.done |= bit;
             Vec3 eye = player.m_146892_();
             LivingEntity body = null;
-            if (state.targets[i] != 0 && player.m_284548_().m_6815_(state.targets[i]) instanceof LivingEntity target && fair(player, target)
-                && KaguneServerController.center(target).m_82554_(eye) <= state.moveReach + target.m_20205_()) {
+            if (state.targets[i] != 0 && player.m_284548_().m_6815_(state.targets[i]) instanceof LivingEntity target && target.m_6084_()
+                && (state.moveRoutes[i] != null ? BikakuRoutes.atEnd(player, state.moveRoutes[i], KaguneServerController.center(target),
+                    BikakuRules.MOUTH_RADIUS + 1.0 + target.m_20205_()) : fair(player, target)
+                    && KaguneServerController.center(target).m_82554_(eye) <= state.moveReach + target.m_20205_())) {
                 body = target;
             }
             if (body == null) {
@@ -327,6 +358,7 @@ final class BikakuMoves {
     }
 
     private static void finish(ServerPlayer player, BikakuServer.State state) {
+        java.util.Arrays.fill(state.moveRoutes, null); // 3.5.9
         release(player, state, false);
         state.move = BikakuMove.NONE;
         state.moveAt = Long.MIN_VALUE;
@@ -591,6 +623,17 @@ final class BikakuMoves {
         }
     }
 
+    /** 3.5.9: Predatory Drag's way along the ground round blocks, from before his right foot to {@code body}'s feet (null: none in reach). */
+    private static double[][] groundRoute(ServerPlayer player, LivingEntity body, double reach) {
+        return BikakuRoutes.route(player, BikakuServer.world(player, MawMotion.groundAnchor()), body.m_20182_().m_82520_(0.0, 0.4, 0.0),
+            reach + body.m_20205_() + 2.0);
+    }
+
+    /** {@code route} if it bends round something, else null (a straight line). */
+    private static double[][] bending(double[][] route) {
+        return BikakuRoutes.bends(route) ? route : null;
+    }
+
     /** A box {@code r} out each way round {@code at}. */
     private static AABB box(Vec3 at, double r) {
         return new AABB(at.f_82479_ - r, at.f_82480_ - r, at.f_82481_ - r, at.f_82479_ + r, at.f_82480_ + r, at.f_82481_ + r);
@@ -705,7 +748,15 @@ final class BikakuMoves {
             }
             mouth = BikakuServer.mouth(from, state.movePoint, state.moveReach);
         }
-        if (body == null) {
+        if (state.moveRoutes[0] != null) {
+            // 3.5.9: round blocks: what it went after, if it is still where its way ends (else nothing).
+            double[][] route = state.moveRoutes[0];
+            body = state.targets[0] != 0 && player.m_284548_().m_6815_(state.targets[0]) instanceof LivingEntity target && target.m_6084_()
+                && KaguneServerController.validSwipeTarget(player, target) && BikakuRoutes.atEnd(player, route, KaguneServerController.center(target),
+                BikakuRules.MOUTH_RADIUS + 1.6 + target.m_20205_()) ? target : null;
+            double[] end = route[route.length - 1];
+            mouth = new Vec3(end[0], end[1], end[2]);
+        } else if (body == null) {
             body = nearest(player, mouth);
         }
         if (body == null) {

@@ -34,6 +34,7 @@ public final class BikakuWormTests {
         roundHim();
         kakujaMoves();
         heldFar();
+        routes();
         System.out.println("Bikaku worm tests: " + passed + " checks passed");
     }
 
@@ -699,6 +700,98 @@ public final class BikakuWormTests {
         for (double[] q : MawMotion.charging(77, 7, 0.6).path()) {
             check(Double.isFinite(q[0]) && Double.isFinite(q[1]) && Double.isFinite(q[2]), "its wind-up is finite");
         }
+    }
+
+    /**
+     * 3.5.9 (the owner: "go around blocks like a worm, sort of, and actually go around them"): the way round blocks: straight when nothing is
+     * in the way; round a wall when one is, every leg of it clear, no longer than its reach, a few points; none out of a sealed box, none
+     * past its reach, none through a gap only a corner wide; the same wherever in the world (negative places too).
+     */
+    private static void routes() {
+        com.hex.kagune.control.bikaku.WormRoute.Open air = (x, y, z) -> y >= 0;
+        double[][] straight = com.hex.kagune.control.bikaku.WormRoute.find(new double[] {0.5, 1.5, 0.5}, new double[] {0.5, 1.5, 20.5}, 30.0, air);
+        check(straight != null && straight.length == 2, "nothing in the way: a straight line");
+        for (int[] at : new int[][] {{0, 0, 0}, {-3000, 0, -77}, {12345, 64, -9876}}) {
+            int ox = at[0];
+            int oy = at[1];
+            int oz = at[2];
+            // A wall 7 wide and 5 high across the way, 5 out.
+            com.hex.kagune.control.bikaku.WormRoute.Open walled = (x, y, z) -> y >= oy && !(z == oz + 5 && x >= ox - 3 && x <= ox + 3 && y <= oy + 4);
+            double[] from = {ox + 0.5, oy + 1.5, oz + 0.5};
+            double[] to = {ox + 0.5, oy + 1.5, oz + 10.5};
+            double[][] round = com.hex.kagune.control.bikaku.WormRoute.find(from, to, 30.0, walled);
+            check(round != null && round.length >= 3 && round.length <= com.hex.kagune.control.bikaku.WormRoute.MOST_POINTS, "a wall in the way: round it ("
+                + (round == null ? "none" : round.length + " points") + " at " + ox + ")");
+            if (round != null) {
+                for (int i = 1; i < round.length; i++) {
+                    check(com.hex.kagune.control.bikaku.WormRoute.clear(round[i - 1], round[i], walled), "every leg of the way round is clear");
+                }
+                double length = com.hex.kagune.control.bikaku.WormRoute.length(round);
+                check(length > 10.0 && length <= 30.0, "the way round is longer than straight, within its reach (" + length + ")");
+                check(distance(round[0], from) < 1e-9 && distance(round[round.length - 1], to) < 1e-9, "it starts and ends where it was asked");
+                double[] half = com.hex.kagune.control.bikaku.WormRoute.at(round, length / 2.0);
+                check(Double.isFinite(half[0]) && distance(com.hex.kagune.control.bikaku.WormRoute.at(round, length + 5.0), to) < 1e-9
+                    && com.hex.kagune.control.bikaku.WormRoute.upTo(round, length * 0.5).length >= 2, "points along it");
+            }
+            check(com.hex.kagune.control.bikaku.WormRoute.find(from, to, 10.5, walled) == null, "no way round within too short a reach");
+        }
+        // Sealed in a box: no way out.
+        com.hex.kagune.control.bikaku.WormRoute.Open box = (x, y, z) -> !(Math.abs(x) == 3 || Math.abs(y - 2) == 3 || Math.abs(z) == 3) || Math.abs(x) > 3
+            || Math.abs(y - 2) > 3 || Math.abs(z) > 3;
+        check(com.hex.kagune.control.bikaku.WormRoute.find(new double[] {0.5, 2.5, 0.5}, new double[] {0.5, 2.5, 10.5}, 30.0, box) == null, "sealed in: no way out");
+        // A gap only a corner wide (two solid columns touching at a corner, a wall either side): never through it.
+        com.hex.kagune.control.bikaku.WormRoute.Open corner = (x, y, z) -> {
+            if (y < 0 || y > 6) {
+                return y > 6;
+            }
+            if (z == 5) {
+                return x == 0; // a hole one wide at x 0 in the wall at z 5 ...
+            }
+            if (z == 6) {
+                return x == 1; // ... but the next wall's hole is one over: only their corners meet
+            }
+            return true;
+        };
+        double[][] squeezed = com.hex.kagune.control.bikaku.WormRoute.find(new double[] {0.5, 3.5, 0.5}, new double[] {0.5, 3.5, 12.5}, 30.0, corner);
+        if (squeezed != null) {
+            for (int i = 1; i < squeezed.length; i++) {
+                check(com.hex.kagune.control.bikaku.WormRoute.clear(squeezed[i - 1], squeezed[i], corner), "never through a corner-wide gap");
+            }
+        }
+        check(true, "corner gap handled");
+        // Laid along a way round: unchanged for a straight way; the start and the end on the way's; halfway along the line halfway along it.
+        double[] origin = MawMotion.shoulder();
+        double[] end = {0.5, 0.99, 10.0};
+        double[][] wayStraight = {origin, end};
+        double[] mid = {(origin[0] + end[0]) / 2, (origin[1] + end[1]) / 2, (origin[2] + end[2]) / 2};
+        check(distance(MawMotion.along(mid, origin, end, wayStraight), mid) < 1e-12, "a straight way changes nothing");
+        com.hex.kagune.control.bikaku.WormRoute.Open wall = (x, y, z) -> y >= 0 && !(z == 5 && x >= -4 && x <= 2 && y <= 3);
+        double[][] way = com.hex.kagune.control.bikaku.WormRoute.find(origin, end, 30.0, wall);
+        check(way != null && way.length >= 3, "a way round the wall");
+        check(distance(MawMotion.along(end, origin, end, way), end) < 1e-9 && distance(MawMotion.along(origin, origin, end, way), origin) < 1e-9,
+            "its start and its end stay where they are");
+        double[] laidMid = MawMotion.along(mid, origin, end, way);
+        check(distance(laidMid, com.hex.kagune.control.bikaku.WormRoute.at(way, com.hex.kagune.control.bikaku.WormRoute.length(way) / 2.0)) < 1e-6,
+            "halfway along the line is halfway along the way");
+        double[] behind = {0.5, 1.0, -1.5};
+        check(distance(MawMotion.along(behind, origin, end, way), behind) < 1e-12, "the coils behind him stay where they are");
+        // A bite held to 16 round the wall: its drawn line never in the wall, its mouth where the way ends as it bites.
+        com.hex.kagune.control.bikaku.BikakuRules.Bite snap = com.hex.kagune.control.bikaku.BikakuRules.Bite.SNAP;
+        double k = com.hex.kagune.control.bikaku.BikakuRules.slower(16.0, com.hex.kagune.control.bikaku.BikakuRules.REACH);
+        int inWall = 0;
+        int points = 0;
+        for (double age = 0.0; age < snap.ticks() * k; age += 0.5) {
+            MawMotion.Shape bitten = MawMotion.of(60 + age, 7, snap, age, end, 16.0);
+            double[][] laid = MawMotion.along(MawMotion.dense(bitten.path()), origin, end, way);
+            for (double[] q : laid) {
+                points++;
+                inWall += wall.open((int)Math.floor(q[0]), (int)Math.floor(q[1]), (int)Math.floor(q[2])) ? 0 : 1;
+            }
+            if (Math.abs(age - snap.land() * k) < 0.26) {
+                check(distance(laid[laid.length - 1], end) < 0.3, "round the wall, it bites where its way ends (" + distance(laid[laid.length - 1], end) + ")");
+            }
+        }
+        check(inWall == 0, "round the wall, none of it goes into the wall (" + inWall + " of " + points + ")");
     }
 
     private static boolean inside(double[] p) {

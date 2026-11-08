@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.5.9 (HexGhoul): Bikaku: the worm goes round blocks (testing)
+
+See `.github/release-notes-3.5.9.md`. Your words: "go around blocks like a worm, sort of, and actually go around them. It's being able to adapt to the terrain itself and pulling people back". M1's bites, Devouring Maw, Predatory Drag (along the ground) and Ravenous Pursuit find a way round what is between them and their target (the server's search through the open blocks, sent to everyone), are drawn along it, bite where it ends, and pull what they catch back round it; the way counts toward the reach. Protocol 100. Preview: `docs/handoff/bikaku-round-3.5.9.png`.
+
 ## 3.5.8 (HexGhoul): Bikaku: hold to throw further, up to 30 blocks (testing)
 
 See `.github/release-notes-3.5.8.md`. Your words: "it should be a held move that the longer you hold it for, the longer it goes for ... up to like 30 blocks. Of course, attacks are not able to be performed until the kagune is pulled fully back." M1 and the worm's thrown moves (G, J, Z, B) wind up while held and are thrown as far as they were held for: a tap as before, 30 blocks after 2 s; a longer throw is slower out and back, nothing else until it is back; the reach on the action bar. Not round blocks yet (next). Protocol 99. Preview: `docs/handoff/bikaku-held-3.5.8.png`.

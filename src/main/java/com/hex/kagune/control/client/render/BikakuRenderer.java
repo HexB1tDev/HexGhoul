@@ -131,6 +131,9 @@ public final class BikakuRenderer {
             shape = MawMotion.charging(clock, seed, view.charged(clock));
         }
         MawMotion.Worm[] worms = {new MawMotion.Worm(shape, 1.0, 1.0, seed)};
+        // 3.5.9: each worm's way round blocks (the world) and where its throw starts (body frame); none: a straight line.
+        double[][][] ways = {target != null ? view.route(0) : null};
+        double[][] starts = {MawMotion.shoulder()};
         // 3.5.0: a move, while it is being made, over a bite.
         double moveAge = view.moveAge(clock);
         com.hex.kagune.control.bikaku.BikakuMove move = view.move();
@@ -145,6 +148,12 @@ public final class BikakuRenderer {
                     aims[i] = frame.rig(aimed != null ? centre(aimed, partial) : point);
                 }
                 worms = MawMotion.pursuit(clock, seed, aims, moveAge, Math.max(move.baseReach(), view.moveReach()));
+                ways = new double[worms.length][][];
+                starts = new double[worms.length][];
+                for (int i = 0; i < worms.length; i++) {
+                    ways[i] = view.route(1 + i);
+                    starts[i] = MawMotion.pursuitShoulder(i);
+                }
             } else {
                 Entity aimed = view.targets()[0] != 0 ? level.m_6815_(view.targets()[0]) : null;
                 double[] aim = frame.rig(aimed != null ? centre(aimed, partial) : point);
@@ -152,6 +161,8 @@ public final class BikakuRenderer {
                 double[] held = heldEntity != null ? frame.rig(centre(heldEntity, partial)) : null;
                 worms[0] = new MawMotion.Worm(MawMotion.move(clock, seed, move, moveAge, aim, held, view.caught(), Math.max(move.baseReach(), view.moveReach())),
                     1.0, 1.0, seed);
+                ways[0] = move == com.hex.kagune.control.bikaku.BikakuMove.MAW || move == com.hex.kagune.control.bikaku.BikakuMove.DRAG ? view.route(1) : null;
+                starts[0] = move == com.hex.kagune.control.bikaku.BikakuMove.DRAG ? MawMotion.groundAnchor() : MawMotion.shoulder();
             }
         }
         // His body as drawn (hunched, leaning): the worm's root rides it.
@@ -166,14 +177,24 @@ public final class BikakuRenderer {
             quad(out, matrix, normals, a, b, c, d, n, ca, cb, cc, cd, light);
         };
         int tint = KaguneTints.of(player);
-        for (MawMotion.Worm worm : worms) {
+        for (int w = 0; w < worms.length; w++) {
+            MawMotion.Worm worm = worms[w];
             double grown = GraftMesh.smooth(deploy) * worm.grown() * growth.worm();
             if (grown <= 0.002) {
                 continue;
             }
+            double[][] line = worm.shape().path();
+            double[][] way = w < ways.length ? ways[w] : null;
+            if (way != null && way.length >= 3) {
+                // 3.5.9: laid along its way round the blocks.
+                double[][] wayRig = new double[way.length][];
+                for (int i = 0; i < way.length; i++) {
+                    wayRig[i] = frame.rig(way[i]);
+                }
+                line = MawMotion.along(MawMotion.dense(line), starts[w], wayRig[wayRig.length - 1], wayRig);
+            }
             // 3.5.5: the curve it is drawn along, round his body rather than through it; then carried with his torso's pose.
-            double[][] rig = com.hex.kagune.control.client.animation.GraftPose.ride(posed,
-                MawMotion.around(worm.shape().path(), worm.girth(), worm.shape().aperture()));
+            double[][] rig = com.hex.kagune.control.client.animation.GraftPose.ride(posed, MawMotion.around(line, worm.girth(), worm.shape().aperture()));
             // Drawn out of his back along its own curve, mouth first: only its first part shows while it grows (or goes back in).
             rig = MawMotion.grown(rig, grown);
             if (firstPerson) {

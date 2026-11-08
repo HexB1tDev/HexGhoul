@@ -33,6 +33,10 @@ Autonomous Predation (its tentacles biting hostile bodies on their own); its oth
 **3.5.8 (the owner's range, first half):** M1 and the worm's thrown moves are held: wound up while held, thrown as far as they were held
 for (a tap as before, 30 blocks after 2 s), every beat slower for a longer throw, nothing else until it is back. Round blocks: 3.5.9.
 
+**3.5.9 (the owner's range, second half):** the worm goes round blocks to what it goes after (`WormRoute`, found by the server, sent to
+everyone, the worm laid along it with `MawMotion.along`) and pulls what it catches back round them; M1, Maw, Drag (along the ground),
+Pursuit. Next: the forms.
+
 **Before 3.4.9 (the pure worm, unchanged since except as above):**
 
 - `control/bikaku/MawWorm.java`: the worm as a mesh (pure). A thick muscular tube along a spine resampled evenly by length
@@ -253,6 +257,21 @@ After 3.5.3, with the kakuja still unreleased (binding; to be done after the kak
   actually go around them. It's being able to adapt to the terrain itself and pulling people back and shit, you know what I mean? Just
   carry on, do what you're doing, and then cover everything that I said. But so far, so good, though. I'm, like, happy with the results.
   Just cover all this that I told you and adapt the changes in the new forms, and then we'll see."**
+
+## The forms: the plan put to the owner after 3.5.9 (not started; their answers decide it)
+
+The owner's words (above): two worms, three worms, then a fourth before the kakuja that walks on two tentacles from the worms' root,
+climbs anything, "The moves, of course, changing to something else ... depending on the form". Proposed (like the Rinkaku's forms: each
+opens with mastery, picked in the menu, K for the kakuja as now):
+
+1. One Worm (0): as it is (M1 bites, Maw G, Drag J, Pursuit Z, Eruption B, Regeneration C).
+2. Twin Worms (250): two worms out of the same root, one over each shoulder; M1 alternates them; its own moves.
+3. Three Worms (500): three; its own moves.
+4. The Walker (750): two walking tentacles out of the same root carry him (his legs off the ground, his body steady as he walks), feet
+   finding the ground and walls round him, climbing anything; its own moves.
+
+Asked the owner: whether the existing moves stay with the one worm (each form then has a set of its own) or each form keeps some; and
+whether they have moves in mind for forms 2 to 4 or want them designed and previewed first.
 
 ## Decisions made (tell the owner; change if they say)
 
