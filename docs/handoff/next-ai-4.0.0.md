@@ -1,28 +1,39 @@
-# HANDOFF: HexGhoul 4.0.0 "The Great Exploration" (in progress). READ THIS FIRST.
+# HANDOFF: HexGhoul 4.0.0 "The Great Exploration" (released). READ THIS FIRST.
 
 Branch: `claude/tender-brahmagupta-yhr1ga` (started from 3.7.3, `origin/claude/hopeful-noether-5c2wex` 9c5dcc8). Push only there.
 
-The owner's whole request is the 4.0.0 spec they pasted (new villages, Aogiri hideouts, armour and masks, ranked wild ghouls, Ayato
-Kirishima, Noro). They asked for ONE release: **4.0.0, The Great Exploration** (not one version per feature this time). Their files are in
-`art/exploration/` (the three schematics, Ayato's and Noro's skins) and `art/outfits/` (the two outfits and 24 masks, canonical geometry).
+The owner's whole request was the 4.0.0 spec they pasted (new villages, Aogiri hideouts, armour and masks, ranked wild ghouls, Ayato
+Kirishima, Noro), as ONE release: **4.0.0, The Great Exploration**. Their files are in `art/exploration/` (the three schematics, Ayato's
+and Noro's skins) and `art/outfits/` (the two outfits and 24 masks, canonical geometry; never edit them: the fitting is in the baker).
+Release notes: `.github/release-notes-4.0.0.md`. Protocol 105. Not tested in game.
 
-## Done (each an unversioned commit, quick-checked; no full build yet)
+## Where things are
 
 1. Structures: `tools/exploration_structures.py` -> `data/hexkagune/structures/{village_1,village_2,aogiri_hideout}/t_i_j.nbt`,
    `village/SiteMaps.java`; placed by `ControlStructures.Site` (types `hexkagune:site_<id>`, beard_box); old village's structure_set removed.
-2. Outfits: `tools/outfit_models.py` -> `models/outfits.bin`, textures, icons; `outfit/{OutfitModels,Outfits,OutfitItem}`,
-   `client/render/{OutfitLayer,OutfitFirstPerson}`, items in `ControlItems` (Combat tab), `OutfitTests`. Build's name guard no longer bans Ayato.
-3. Investigators wear the Formal Outfit (`server/OutfitServer`, `AgentBrain`), Reaper excepted; per-piece drops.
-4. Wild ghouls ranked D..SS (`NpcRules`, `NpcIdentity` packs rank/mask/faction), generic masks; `NpcTests` rewritten.
+2. Outfits and masks: `tools/outfit_models.py` (bakes `models/outfits.bin` v2: each cube carries its texture net, so fitted cubes keep
+   their texture; `fit_mask`: half masks squashed below the eyes, full masks' eye bands moved to y -3.5, 5% girth; `fit_outfit`: x/z
+   drawn in past 0.3 to 45%, Formal Cap out past the hat layer, slim-arm sleeves as bones 6 and 7; the generic masks drawn on a
+   quarter-pixel grid: `Face`, `clown()` ... `kabuki()`). Before shipping a change, render the baked cubes (with `faces()`) front, side
+   and three-quarter on a Steve-like head and body and look at them (4.0.0 did this with a scratch script, not kept in the repo).
+   `outfit/{OutfitModels,Outfits,OutfitItem}`,
+   `client/render/{OutfitLayer,OutfitFirstPerson}` (`OutfitLayer.slim(model)` registers an NPC renderer's slim-armed model; players by
+   their skin), `OutfitTests`.
+3. Investigators in the Formal Outfit (`server/OutfitServer`, `AgentBrain`), Reaper excepted; per-piece drops.
+4. Wild ghouls ranked D..SS (`NpcRules`, `NpcIdentity` packs rank/mask/faction), nine generic masks (`Outfits.GENERIC_MASKS`: append
+   only, a saved ghoul's mask is its index).
 5. Aogiri members (`GhoulNpcBrain`: `HexAogiri`, `aogiriFoe`, comrades' call, hideout leash; mask via `OutfitLayer.faction`).
+6. Ayato (Persona AYATO, `AyatoNpc`, `AyatoScript`, `talk/ayato.txt`, Courtship chapters, `NpcWings` kakuja, Ukaku first-kakuja trial
+   with cutscene `S2CCutscene.AYATO_KAKUJA`).
+7. Noro (Persona NORO, `NoroScript`, Bikaku gates in `BikakuServer`/`quest/Gate`, `NpcWorms` fight, drawn by `BikakuRenderer.drawNpc`).
+8. The owner's to-do list: Bikaku regeneration free (`BikakuPotential`, `BikakuMove.regenerates()`, `GhoulRegen`); The Walker
+   (`WalkerLegs.shape/carried/raised`, `MawWorm.legRadius`); children (`KaguneGenes.WORM/WORM_TWIN`, `ONE_KIND` a third,
+   `Children.both` no longer adds halves, `ChildWorm` fight, `BikakuRenderer` draws a child's worm).
 
-## Still to do (in this order)
+## Next
 
-6. Ayato (Persona AYATO, `AyatoNpc`, script, romance lines in every per-companion table, Ukaku wings stronger, kakuja below a third of
-   his health, questline: respect lessons then the Ukaku first kakuja as a TRIAL with its own cutscene; Touka no longer teaches it).
-7. Noro (Persona NORO, not romantic, quiet; Bikaku gates taught by him; three worms in a fight via S2CBikakuState with his UUID and
-   BikakuRenderer drawing NPCs; undying regeneration).
-8. Version 4.0.0 (both version strings, protocol bump), release notes `.github/release-notes-4.0.0.md`, README, full `python3 build.py`.
+Nothing outstanding from the owner. If they report in-game problems with the fit, adjust `HALF_TOP`, `MASK_EYES`, `EYE_Y`, `CLEAR`,
+`SNUG` in `tools/outfit_models.py` and rebake (`python3 -I tools/outfit_models.py`), never their art files.
 
 House rules as in `next-ai-3.6.6.md` (nothing tested in game; answer in English; quote the owner exactly).
 

@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.0.0 (HexGhoul): The Great Exploration (testing)
+
+See `.github/release-notes-4.0.0.md`. Your 4.0.0 spec, as one release: the human town (`hexkagune:village_1`), the CCG settlement (`hexkagune:village_2`) and the Aogiri Tree hideout (`hexkagune:aogiri_hideout`) from your schematics; the Formal and Crimson outfits and your 24 masks as real items (first and third person, players and NPCs), plus nine generic masks for wild ghouls; wild ghouls ranked D to SS; investigators in the Formal Outfit (each piece its own small drop); Aogiri members in the Crimson Outfit and their faction's mask; Ayato Kirishima (Ukaku, his kakuja, a romance on Ken's animations, the Ukaku kakuja questline and its cutscene); Noro (quiet, never romanced, the Bikaku teacher, three worms in a fight). Your to-do list too: masks fitted (half masks below the eyes, eye holes on the skin's eyes, more detail), armour snug and slim-armed for Alex skins, Bikaku regeneration free of energy, The Walker's legs arched and eased, a Bikaku parent's children (a worm; one parent's kind or both, by chance). Protocol 105.
+
 ## 3.7.3 (HexGhoul): Bikaku: Potential Unlock, torn apart and pulled back together (testing)
 
 See `.github/release-notes-3.7.3.md`. Your request is in `docs/handoff/owner-words-mutations.md`; on the preview: "Continue Im still at 96". With energy, a blow that would kill you leaves you at one heart and tears a part off (an arm, a leg, now and then the head); a single blow of half your health does too. Each part is thrown, lies there in your skin, and strands of your kagune in your kagune colour reach it, wrap it and haul it back upright; whole in about 5 s, then a small heal; no energy, it waits. Off your model until then. Protocol 104.
