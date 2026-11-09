@@ -1,3 +1,8 @@
+# READ FIRST: `docs/handoff/next-ai-3.6.3.md`
+
+3.6.3 (Grand Devouring and the Bikaku mutations) is in progress, unversioned. GeckoLib, Photon and PlayerAnimator are the mod's
+dependencies: use them wherever they make the mod smoother (the owner). The section below is the last shipped version's.
+
 # START HERE (state after 3.6.2)
 
 Branch `claude/hopeful-noether-5c2wex`. Read `docs/handoff/next-ai-3.5.4.md` first (the owner's words this session at its top, quoted exactly; the state now). The owner's forms ask is done (One, Twin, Three, The Walker). Next: the owner's answer on The Walker (asked: two tentacles in all or two each side; whether its legs should add anything to the moves), else ask them what's next.

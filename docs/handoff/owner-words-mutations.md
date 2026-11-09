@@ -243,3 +243,12 @@ Then, on that preview (a crop of its swallowing and digesting frames):
 Im not very happy wit hthe shape ngl
 
 its not arching smoothly it's very.... weird
+
+Then, after being told GeckoLib was not used by the mod:
+
+use geckolib it is meant to be a requirement
+
+Then:
+
+when the next task is done prepare a handoff and prompt for the next ai to take over (Post the prompt here in chat)
+Make the handoff very clear from now on that we are using Geckolib as a dependancy along with Photon and player animator. We should use any of these libs whenever needed to smooth out the mod as much as possible.

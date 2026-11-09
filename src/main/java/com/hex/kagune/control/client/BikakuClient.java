@@ -35,11 +35,24 @@ public final class BikakuClient {
                        double moveBegan, double mx, double my, double mz, int[] targets, int heldId, boolean caught, long regenAt, double regenBegan,
                        boolean kakuja, long kakujaAt, double kakujaBegan, long undyingAt, double undyingBegan, long[] autoAt, double[] autoBegan,
                        int[] autoTarget, double reach, double moveReach, int charge, long chargeAt, double chargeBegan, double[][][] routes,
-                       com.hex.kagune.control.bikaku.BikakuForm form, int moveWorms, int[] held, int caughtBits, double[][] points) {
+                       com.hex.kagune.control.bikaku.BikakuForm form, int moveWorms, int[] held, int caughtBits, double[][] points, int mutations,
+                       int devourVictim, int devourWorm, long devourAt, double devourBegan, double[] devourSpot, double devourWidth, double devourHeight) {
         public static final View NONE = new View(Bite.NONE, Long.MIN_VALUE, 0.0, 0.0, 0.0, 0.0, 0, BikakuMove.NONE, Long.MIN_VALUE, 0.0, 0.0, 0.0,
             0.0, new int[S2CBikakuState.TARGETS], 0, false, -1_000_000L, -1.0E6, false, -1_000_000L, -1.0E6, -1_000_000L, -1.0E6,
             new long[S2CBikakuState.AUTOS], filled(-1.0E6), new int[S2CBikakuState.AUTOS], BikakuRules.REACH, 0.0, -1, Long.MIN_VALUE, 0.0,
-            new double[S2CBikakuState.ROUTES][][], com.hex.kagune.control.bikaku.BikakuForm.ONE, 1, new int[3], 0, new double[3][]);
+            new double[S2CBikakuState.ROUTES][][], com.hex.kagune.control.bikaku.BikakuForm.ONE, 1, new int[3], 0, new double[3][], 0, 0, -1,
+            Long.MIN_VALUE, 0.0, null, 0.6, 1.8);
+
+        /** 3.6.3: ticks into Grand Devouring (-1 none). */
+        public double devourAge(double clock) {
+            return this.devourVictim == 0 || this.devourAt == Long.MIN_VALUE ? -1.0 : Math.max(0.0, clock - this.devourBegan);
+        }
+
+        /** 3.6.3: the worm feeding (-1 none). */
+        public int busyWorm(double clock) {
+            double age = this.devourAge(clock);
+            return age >= 0.0 && com.hex.kagune.control.bikaku.GrandDevour.busy(age) ? this.devourWorm : -1;
+        }
 
         /** 3.5.9: way {@code r} round blocks (0 the bite's, 1 .. 3 the move's), in the world; null for a straight line. */
         public double[][] route(int r) {
@@ -120,7 +133,29 @@ public final class BikakuClient {
                 : before.undyingBegan(), message.undyingAt(), world, clock), message.autoAt(), autoBegan(before, message, world, clock), message.autoTarget(),
             message.reach(), message.moveReach(), message.charge(), message.chargeAt(), began(before == null ? null : before.chargeAt(), before == null ? 0.0
                 : before.chargeBegan(), message.chargeAt(), world, clock), message.routes(), com.hex.kagune.control.bikaku.BikakuForm.byOrdinal(message.form()),
-            message.moveWorms(), message.held(), message.caughtBits(), message.points()));
+            message.moveWorms(), message.held(), message.caughtBits(), message.points(), message.mutations(), message.devourVictim(),
+            message.devourWorm(), message.devourAt(), began(before == null || before.devourVictim() != message.devourVictim() ? null : before.devourAt(),
+                before == null ? 0.0 : before.devourBegan(), message.devourAt(), world, clock), message.devourSpot(), message.devourWidth(),
+            message.devourHeight()));
+    }
+
+    /**
+     * 3.6.3: how far into being devoured {@code entity} is (ticks, by whoever is feeding on it; -1 if nobody is), on the clock {@code clock}
+     * ({@code PaleClient.clock}).
+     */
+    public static double devoured(int entity, double clock) {
+        if (entity == 0) {
+            return -1.0;
+        }
+        for (View view : VIEWS.values()) {
+            if (view.devourVictim() == entity) {
+                double age = view.devourAge(clock);
+                if (age >= 0.0 && age < com.hex.kagune.control.bikaku.GrandDevour.KILL + 40) {
+                    return age;
+                }
+            }
+        }
+        return -1.0;
     }
 
     /** 3.5.7: when (the client clock) something that began at {@code at} began here: its clock running on if it is told again. */

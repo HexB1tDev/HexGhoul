@@ -54,6 +54,11 @@ final class BikakuMoves {
             BikakuServer.notice(player, state, Component.m_237110_("message.hexkagune.bikaku.cooldown", move.displayName(), (ready - now + 19) / 20));
             return;
         }
+        // 3.6.3: a worm move needs a worm that isn't feeding (Grand Devouring): in One Worm it waits until it has fed.
+        if (move.occupies() && !move.kakuja() && BikakuServer.worms(player, state) - (BikakuDevour.busyWorm(state) >= 0 ? 1 : 0) <= 0) {
+            BikakuServer.notice(player, state, Component.m_237115_("message.hexkagune.bikaku.feeding"));
+            return;
+        }
         if (!KaguneServerController.useEnergy(player, move.cost(), true)) {
             return;
         }
@@ -431,7 +436,14 @@ final class BikakuMoves {
         LivingEntity[] bodies = wormBodies(player, move, first, reach, worms);
         Vec3 ahead = move == BikakuMove.DRAG ? groundAhead(player, reach * 0.8) : move == BikakuMove.ERUPTION ? groundAhead(player, reach * 0.7)
             : BikakuRoutes.clipped(player, BikakuServer.shoulder(player, state, 0), player.m_146892_().m_82549_(player.m_20154_().m_82490_(reach * 0.85)));
+        state.moveSkip = BikakuDevour.busyWorm(state); // 3.6.3: a feeding worm makes no part of it
         for (int i = 0; i < worms; i++) {
+            if (i == state.moveSkip) {
+                state.targets[i] = 0;
+                state.points[i] = null;
+                state.moveRoutes[i] = null;
+                continue;
+            }
             LivingEntity body = bodies[i];
             state.targets[i] = body == null ? 0 : body.m_19879_();
             state.points[i] = body != null ? KaguneServerController.center(body) : ahead;
@@ -445,7 +457,7 @@ final class BikakuMoves {
             }
         }
         // Worm 0's part, for the single fields.
-        state.movePoint = state.points[0];
+        state.movePoint = state.points[0] != null ? state.points[0] : state.points[1] != null ? state.points[1] : ahead;
         state.eruptVictim = 0;
         state.heldId = 0;
         state.caught = false;
@@ -514,6 +526,9 @@ final class BikakuMoves {
         double k = Math.max(1.0, state.moveSlower);
         boolean going = false;
         for (int i = 0; i < state.moveWorms; i++) {
+            if (i == state.moveSkip) {
+                continue; // 3.6.3: feeding
+            }
             long mine = real - (long)i * move.stagger();
             if (mine < 0) {
                 going = true;
@@ -553,7 +568,7 @@ final class BikakuMoves {
         double k = Math.max(1.0, state.moveSlower);
         for (int i = 0; i < state.moveWorms; i++) {
             long mine = now - state.moveAt - (long)i * state.move.stagger();
-            if (mine < 0) {
+            if (mine < 0 || i == state.moveSkip) {
                 continue;
             }
             long age = (long)Math.floor(mine / k);

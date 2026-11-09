@@ -81,6 +81,7 @@ Binding; quoted exactly as written. Kept current as that session goes.
 - **3.6.2 shipped:** The Walker (750: two walking tentacles from the worms' root, one each side; his legs hang still, lifted a little;
   feet stepping on the blocks round him; climbs any wall he walks into; no fall damage; Three Worms' moves). A draft preview was sent
   before building it (no answer yet), then `docs/handoff/bikaku-walker-3.6.2.png`. Versions 3.6.2; protocol "102" (unchanged).
+- **Superseded: read `docs/handoff/next-ai-3.6.3.md` first** (the newest state, the dependencies, what is left of 3.6.3).
 - **In progress, unversioned (3.6.3 to be):** Grand Devouring. Done so far: the worm mesh's feeding mode (`MawWorm.Feed`: swollen body,
   a bell of a mouth round a cavity sized to the victim, rows of teeth down it, a bulge) and the pure timeline `GrandDevour` (one smooth
   arch per pose, reshaped after the owner's "its not arching smoothly it's very.... weird"); preview `tools/MawPreview.java devour`,

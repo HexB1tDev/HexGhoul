@@ -404,6 +404,17 @@ public final class AgentBrain {
         }
         long now = level.m_46467_();
         Mind mind = agent.mind == null ? wake(agent, level, now) : agent.mind;
+        if (BikakuDevour.held(agent)) {
+            // 3.6.3: being devoured: whatever it was doing stops, its kagune-made weapon back in its case, nothing more.
+            if (mind.armOut) {
+                AgentArms.sheathe(agent, mind, level, now);
+            }
+            AgentArms.cancel(agent, mind, now);
+            cancelKick(agent, mind, now);
+            cancelLightning(agent, mind, now);
+            cancelGround(agent, mind, now);
+            return;
+        }
         arm(agent, mind, now);
         CcgAgent partner = partner(agent, mind, level, now);
         if (lost(agent, mind, partner, level, now)) {

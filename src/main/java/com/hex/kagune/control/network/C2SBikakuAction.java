@@ -23,6 +23,8 @@ public record C2SBikakuAction(int action, int arg, int targetId) {
     public static final int ATTACK_UP = 4;
     /** 3.6.0: a form picked in the menu ({@code arg} its {@code BikakuForm} ordinal). */
     public static final int FORM = 5;
+    /** 3.6.3: a mutation picked in the menu ({@code slot}: its {@code BikakuMutation} ordinal), paid with a mutation point. */
+    public static final int MUTATION = 6;
 
     public static void encode(C2SBikakuAction message, FriendlyByteBuf buffer) {
         buffer.writeByte(message.action);

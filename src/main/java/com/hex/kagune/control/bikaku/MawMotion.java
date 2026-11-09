@@ -53,10 +53,15 @@ public final class MawMotion {
      * string ({@link BikakuForm#biter}) making {@code bite} at {@code target} (body frame) as far as {@code reach}, the rest at rest.
      */
     public static Worm[] form(double time, int seed, int worms, BikakuRules.Bite bite, double age, double[] target, double reach) {
+        return form(time, seed, worms, bite, age, target, reach, -1);
+    }
+
+    /** 3.6.3: as above, worm {@code busy} (feeding; -1 none) passed over for the bite (drawn by whoever feeds it). */
+    public static Worm[] form(double time, int seed, int worms, BikakuRules.Bite bite, double age, double[] target, double reach, int busy) {
         if (worms <= 1) {
-            return new Worm[] {new Worm(of(time, seed, bite, age, target, reach), 1.0, 1.0, seed)};
+            return new Worm[] {new Worm(of(time, seed, bite, age, busy == 0 ? null : target, reach), 1.0, 1.0, seed)};
         }
-        int biter = BikakuForm.biter(bite, worms);
+        int biter = BikakuForm.biter(bite, worms, busy);
         Worm[] out = new Worm[worms];
         for (int i = 0; i < worms; i++) {
             int own = seed + 101 * i;

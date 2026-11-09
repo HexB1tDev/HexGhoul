@@ -127,10 +127,14 @@ public final class BikakuRenderer {
         }
         // 3.6.0: his form's worms (one in the kakuja: the worm it grows from), the one whose turn it is making the bite.
         int count = view.kakuja() ? 1 : view.form().worms();
-        MawMotion.Worm[] worms = MawMotion.form(clock, seed, count, view.bite(), age, target, view.reach());
-        if (target == null && view.charge() >= 0 && !view.kakuja()) {
+        // 3.6.3: a worm feeding (Grand Devouring) does nothing else: the bite is the next worm's, the wind-up too.
+        int busy = view.kakuja() ? -1 : view.busyWorm(clock);
+        MawMotion.Worm[] worms = MawMotion.form(clock, seed, count, view.bite(), age, target, view.reach(), busy);
+        int winder = busy == 0 ? (count > 1 ? 1 : -1) : 0;
+        if (target == null && view.charge() >= 0 && !view.kakuja() && winder >= 0) {
             // 3.5.8: a key held: the worm (the first, in a form of several) winds up.
-            worms[0] = new MawMotion.Worm(MawMotion.framed(count, 0, MawMotion.charging(clock, seed, view.charged(clock))), 1.0, 1.0, seed);
+            worms[winder] = new MawMotion.Worm(MawMotion.framed(count, winder, MawMotion.charging(clock, count > 1 ? seed + 101 * winder : seed,
+                view.charged(clock))), 1.0, 1.0, count > 1 ? seed + 101 * winder : seed);
         }
         // 3.5.9: each worm's way round blocks (the world) and where its throw starts (body frame); none: a straight line.
         double[][][] ways = new double[worms.length][][];
@@ -138,8 +142,9 @@ public final class BikakuRenderer {
         for (int i = 0; i < worms.length; i++) {
             starts[i] = MawMotion.wormShoulder(count, i);
         }
-        if (target != null) {
-            ways[com.hex.kagune.control.bikaku.BikakuForm.biter(view.bite(), count)] = view.route(0);
+        int biteWorm = com.hex.kagune.control.bikaku.BikakuForm.biter(view.bite(), count, busy);
+        if (target != null && biteWorm >= 0) {
+            ways[biteWorm] = view.route(0);
         }
         // 3.5.0: a move, while it is being made, over a bite.
         double moveAge = view.moveAge(clock);
@@ -215,6 +220,18 @@ public final class BikakuRenderer {
             quad(out, matrix, normals, a, b, c, d, n, ca, cb, cc, cd, light);
         };
         int tint = KaguneTints.of(player);
+        // 3.6.3: Grand Devouring: the feeding worm, whatever the others are doing (its swelling, its great mouth, the bulge going down it).
+        MawWorm.Feed[] feeds = new MawWorm.Feed[worms.length];
+        double[] clears = new double[worms.length];
+        if (busy >= 0 && busy < worms.length && view.devourSpot() != null) {
+            int own = count > 1 ? seed + 101 * busy : seed;
+            com.hex.kagune.control.bikaku.GrandDevour.Feeding feeding = com.hex.kagune.control.bikaku.GrandDevour.at(clock, own, count, busy,
+                frame.rig(view.devourSpot()), view.devourWidth(), view.devourHeight(), view.devourAge(clock));
+            worms[busy] = new MawMotion.Worm(feeding.shape(), 1.0, 1.0, own);
+            feeds[busy] = feeding.feed();
+            clears[busy] = feeding.clearGirth();
+            ways[busy] = null;
+        }
         for (int w = 0; w < worms.length; w++) {
             MawMotion.Worm worm = worms[w];
             double grown = GraftMesh.smooth(deploy) * worm.grown() * growth.worm();
@@ -232,7 +249,8 @@ public final class BikakuRenderer {
                 line = MawMotion.along(MawMotion.dense(line), starts[w], wayRig[wayRig.length - 1], wayRig);
             }
             // 3.5.5: the curve it is drawn along, round his body rather than through it; then carried with his torso's pose.
-            double[][] rig = com.hex.kagune.control.client.animation.GraftPose.ride(posed, MawMotion.around(line, worm.girth(), worm.shape().aperture()));
+            double clear = feeds[w] != null ? clears[w] : worm.girth();
+            double[][] rig = com.hex.kagune.control.client.animation.GraftPose.ride(posed, MawMotion.around(line, clear, worm.shape().aperture()));
             // Drawn out of his back along its own curve, mouth first: only its first part shows while it grows (or goes back in).
             rig = MawMotion.grown(rig, grown);
             if (firstPerson) {
@@ -244,7 +262,7 @@ public final class BikakuRenderer {
                 world[i] = frame.place(rig[i], camera);
             }
             MawWorm.build(sink, new MawWorm.Pose(world, frame.turn(worm.shape().dorsal()), grown, worm.shape().aperture(),
-                worm.girth() * (1.0 + growth.swell()), worm.seed(), clock), tint, fine);
+                worm.girth() * (1.0 + growth.swell()), worm.seed(), clock, feeds[w]), tint, fine);
         }
         if (!view.kakuja() && view.form().walks() && growth.worm() > 0.002) {
             // 3.6.2: The Walker's two walking tentacles, out of the same root, down onto where their feet stand.

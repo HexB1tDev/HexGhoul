@@ -991,6 +991,11 @@ public final class KagunePatch implements Opcodes {
         patchFormMenu(screen);
         entries.put(SCREEN + ".class", write(screen));
         replaceText(entries, "META-INF/mods.toml", "version=\"1.0.0\"", "version=\"" + VERSION + "\"");
+        // 3.6.3 (the owner: "use geckolib it is meant to be a requirement"; "we are using Geckolib as a dependancy along with Photon and
+        // player animator"): GeckoLib 4 is required alongside PlayerAnimator, bendylib and Photon, on both sides.
+        replaceText(entries, "META-INF/mods.toml", "modId=\"photon\"\nmandatory=true\nversionRange=\"[1.1.17,)\"\nordering=\"AFTER\"\nside=\"CLIENT\"\n",
+            "modId=\"photon\"\nmandatory=true\nversionRange=\"[1.1.17,)\"\nordering=\"AFTER\"\nside=\"CLIENT\"\n\n[[dependencies.hexkagune]]\nmodId=\"geckolib\"\n"
+                + "mandatory=true\nversionRange=\"[4.4,)\"\nordering=\"AFTER\"\nside=\"BOTH\"\n");
         replaceText(entries, "META-INF/MANIFEST.MF", "Implementation-Version: 1.0.0", "Implementation-Version: " + VERSION);
         Path output = Path.of(args[1]);
         Files.createDirectories(output.toAbsolutePath().getParent());

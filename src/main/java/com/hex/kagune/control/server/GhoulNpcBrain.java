@@ -170,6 +170,13 @@ public final class GhoulNpcBrain {
         if (dawn(npc, level, now)) {
             return;
         }
+        if (BikakuDevour.held(npc)) {
+            // 3.6.3: being devoured: its kagune in at once, it does nothing at all.
+            calm(npc, mind, now, true);
+            mind.fleeing = false;
+            sync(npc, mind, who);
+            return;
+        }
         GhoulNpcCombat.fly(npc, who, mind, level, now);
         if (PaleStun.stunned(npc)) {
             sync(npc, mind, who);

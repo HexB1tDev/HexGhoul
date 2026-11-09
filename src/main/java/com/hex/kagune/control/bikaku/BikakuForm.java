@@ -83,4 +83,16 @@ public enum BikakuForm {
         }
         return Math.floorMod(bite.ordinal() - 1, worms);
     }
+
+    /**
+     * 3.6.3: as {@link #biter(BikakuRules.Bite, int)}, worm {@code busy} (feeding: Grand Devouring; -1 none) passed over for the next one.
+     * -1 when there is no other worm to make it.
+     */
+    public static int biter(BikakuRules.Bite bite, int worms, int busy) {
+        int biter = biter(bite, worms);
+        if (busy < 0 || biter != busy) {
+            return biter;
+        }
+        return worms <= 1 ? -1 : (biter + 1) % worms;
+    }
 }
