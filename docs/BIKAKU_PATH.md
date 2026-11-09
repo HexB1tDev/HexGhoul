@@ -40,6 +40,13 @@ Pursuit. Next: the forms.
 **3.6.0 (the forms, first part):** One Worm, Twin Worms (250), Three Worms (500) picked in the menu (The Walker, 750, shown, not built);
 the worms each in their own lane; M1's bites take turns. Next: 3.6.1 every move by all the worms; 3.6.2 The Walker.
 
+**3.6.1 (every move by all the worms):** in Twin and Three Worms each worm makes the move from its own lane, a beat after the one before
+(`BikakuMove.stagger`: Maw and Drag 3 ticks, Pursuit 2, Eruption 6), after its own body (the aimed one first, then the nearest fair ones
+in front in reach; Pursuit by side; fewer bodies: the rest go for the first, one worm holding it, the others biting it). Maw and Drag a
+catch per worm (flung right, left, ahead-up); Pursuit each full-size worm biting its body three times (`MawMotion.chain`,
+`BikakuMove.CHAIN_*`); Carrion Eruption once per worm under its own body. One Worm, Regeneration and the kakuja unchanged. Pure
+`MawMotion.formMoves` (one worm: exactly the classic moves). Next: 3.6.2 The Walker.
+
 **Before 3.4.9 (the pure worm, unchanged since except as above):**
 
 - `control/bikaku/MawWorm.java`: the worm as a mesh (pure). A thick muscular tube along a spine resampled evenly by length

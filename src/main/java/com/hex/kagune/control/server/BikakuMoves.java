@@ -98,6 +98,12 @@ final class BikakuMoves {
         state.moveReach = reach;
         state.moveSlower = BikakuRules.slower(reach, move.baseReach());
         java.util.Arrays.fill(state.moveRoutes, null);
+        state.calmWorms();
+        int worms = BikakuServer.worms(player, state);
+        if (worms >= 2) {
+            formStart(player, state, move, hint, now, reach, worms); // 3.6.1: every worm of the form makes it
+            return;
+        }
         LivingEntity target;
         switch (move) {
             case DRAG -> {
@@ -157,6 +163,10 @@ final class BikakuMoves {
             finish(player, state);
             return;
         }
+        if (state.moveWorms >= 2 && !move.kakuja()) {
+            formTick(player, state, move, real, now);
+            return;
+        }
         // 3.5.8: a move thrown further runs every beat slower ({@code age} on its own beats; what it holds moved to the next real tick's).
         double k = Math.max(1.0, state.moveSlower);
         long age = (long)Math.floor(real / k);
@@ -178,6 +188,9 @@ final class BikakuMoves {
 
     /** True this tick while one of its moves' mouths is shutting on something (its wounds are the teeth's punctures). */
     static boolean biting(BikakuServer.State state, long now) {
+        if (state.moveWorms >= 2 && !state.move.kakuja()) {
+            return formBiting(state, now);
+        }
         long age = (long)Math.floor((now - state.moveAt) / Math.max(1.0, state.moveSlower)); // 3.5.8: on its own beats
         if (state.move == BikakuMove.PURSUIT) {
             for (int i = 0; i < BikakuMove.PURSUIT_WORMS; i++) {
@@ -363,6 +376,7 @@ final class BikakuMoves {
     private static void finish(ServerPlayer player, BikakuServer.State state) {
         java.util.Arrays.fill(state.moveRoutes, null); // 3.5.9
         release(player, state, false);
+        state.calmWorms(); // 3.6.1
         state.move = BikakuMove.NONE;
         state.moveAt = Long.MIN_VALUE;
         java.util.Arrays.fill(state.targets, 0);
@@ -374,6 +388,9 @@ final class BikakuMoves {
 
     /** Lets go of what it holds ({@code thrown}: it keeps the speed it was thrown at; else it is stopped where it is). */
     static void release(ServerPlayer player, BikakuServer.State state, boolean thrown) {
+        for (int i = 0; i < state.held.length; i++) {
+            letWormGo(player, state, i, thrown); // 3.6.1: every worm's catch
+        }
         if (state.heldId != 0 && !thrown) {
             Entity entity = player.m_9236_().m_6815_(state.heldId);
             if (entity != null) {
@@ -383,6 +400,383 @@ final class BikakuMoves {
             }
         }
         state.heldId = 0;
+    }
+
+    // ---------------------------------------------------------------- 3.6.1: every worm of the form making the move
+
+    /**
+     * 3.6.1 (the owner: "to do enhanced versions of themselves whenever they're, like, in different transformations ... you can send all
+     * three of them ... the thing that sends the worm underground and then up can be like more than one"): a worm move in a form of
+     * several: each worm goes after its own body (the aimed one first, then the nearest others in front in reach; fewer bodies, and they all
+     * go after the first), from its own lane, its part {@link BikakuMove#stagger} ticks after the worm before.
+     */
+    private static void formStart(ServerPlayer player, BikakuServer.State state, BikakuMove move, Entity hint, long now, double reach, int worms) {
+        state.move = move;
+        state.moveAt = now;
+        state.moveWorms = worms;
+        java.util.Arrays.fill(state.targets, 0);
+        LivingEntity first = switch (move) {
+            case DRAG, ERUPTION -> {
+                LivingEntity ground = aimGround(player, hint, reach);
+                if (move == BikakuMove.DRAG && hint instanceof LivingEntity living && living != ground && living.m_6084_()
+                    && KaguneServerController.validSwipeTarget(player, living)
+                    && flat(KaguneServerController.center(living).m_82546_(player.m_20182_())) <= reach + living.m_20205_()
+                    && wormGroundRoute(player, worms, 0, living, reach) != null) {
+                    ground = living;
+                }
+                yield ground;
+            }
+            default -> BikakuServer.aimRouted(player, hint, BikakuServer.shoulder(player, state, 0), reach).body();
+        };
+        LivingEntity[] bodies = wormBodies(player, move, first, reach, worms);
+        Vec3 ahead = move == BikakuMove.DRAG ? groundAhead(player, reach * 0.8) : move == BikakuMove.ERUPTION ? groundAhead(player, reach * 0.7)
+            : BikakuRoutes.clipped(player, BikakuServer.shoulder(player, state, 0), player.m_146892_().m_82549_(player.m_20154_().m_82490_(reach * 0.85)));
+        for (int i = 0; i < worms; i++) {
+            LivingEntity body = bodies[i];
+            state.targets[i] = body == null ? 0 : body.m_19879_();
+            state.points[i] = body != null ? KaguneServerController.center(body) : ahead;
+            if (body != null) {
+                state.moveRoutes[i] = switch (move) {
+                    case DRAG -> bending(wormGroundRoute(player, worms, i, body, reach));
+                    case ERUPTION -> null;
+                    default -> bending(BikakuRoutes.route(player, BikakuServer.shoulder(player, state, i), KaguneServerController.center(body),
+                        reach + body.m_20205_()));
+                };
+            }
+        }
+        // Worm 0's part, for the single fields.
+        state.movePoint = state.points[0];
+        state.eruptVictim = 0;
+        state.heldId = 0;
+        state.caught = false;
+        state.heldAt = null;
+        state.done = 0;
+        state.readyAt.put(move, now + Cooldowns.of(player, (long)move.cooldown()));
+        KaguneServerController.playSelf(player, HexKaguneSounds.KAGUNE_WHIP, 1.0F, KaguneServerController.vary(player, 0.62F, 0.05F));
+        BikakuServer.broadcast(player, state);
+    }
+
+    /**
+     * The bodies a form's worms go after: the first (the aimed one), then the nearest fair others in front in reach (by side for Ravenous
+     * Pursuit: the rightmost to the worm out to his right, the leftmost to the one to his left, between to the one behind his head); fewer, and
+     * the rest go after the first (all of them on one body when there is only one).
+     */
+    private static LivingEntity[] wormBodies(ServerPlayer player, BikakuMove move, LivingEntity first, double reach, int worms) {
+        java.util.List<LivingEntity> picked = new java.util.ArrayList<>();
+        if (first != null) {
+            picked.add(first);
+        }
+        Vec3 eye = player.m_146892_();
+        Vec3 look = player.m_20154_();
+        boolean ground = move == BikakuMove.DRAG || move == BikakuMove.ERUPTION;
+        java.util.List<LivingEntity> near = new java.util.ArrayList<>(player.m_284548_().m_6443_(LivingEntity.class, player.m_20191_().m_82400_(reach + 1.0),
+            living -> fair(player, living) && (ground ? flat(KaguneServerController.center(living).m_82546_(player.m_20182_())) <= reach + living.m_20205_()
+                && Math.abs(living.m_20186_() - player.m_20186_()) < 4.0 : KaguneServerController.center(living).m_82554_(eye) <= reach + living.m_20205_())));
+        near.sort(java.util.Comparator.comparingDouble(body -> body.m_20280_(player)));
+        for (LivingEntity body : near) {
+            if (picked.size() >= worms) {
+                break;
+            }
+            Vec3 to = KaguneServerController.center(body).m_82546_(eye);
+            if (picked.contains(body) || to.m_82556_() < 1.0E-6 || to.m_82541_().m_82526_(look) < 0.2) {
+                continue;
+            }
+            picked.add(body);
+        }
+        LivingEntity[] out = new LivingEntity[worms];
+        if (picked.isEmpty()) {
+            return out;
+        }
+        if (move == BikakuMove.PURSUIT && picked.size() >= 2) {
+            java.util.List<LivingEntity> bySide = new java.util.ArrayList<>(picked);
+            bySide.sort(java.util.Comparator.comparingDouble(body -> -BikakuServer.rig(player, KaguneServerController.center(body))[0]));
+            out[0] = bySide.get(0);
+            out[1] = bySide.get(bySide.size() - 1);
+            if (worms > 2) {
+                out[2] = bySide.size() >= 3 ? bySide.get(1) : picked.get(0);
+            }
+            return out;
+        }
+        for (int i = 0; i < worms; i++) {
+            out[i] = i < picked.size() ? picked.get(i) : picked.get(0);
+        }
+        return out;
+    }
+
+    /** Worm {@code i}'s way along the ground round blocks, from before its own right foot (in its lane) to {@code body}'s feet. */
+    private static double[][] wormGroundRoute(ServerPlayer player, int worms, int i, LivingEntity body, double reach) {
+        return BikakuRoutes.route(player, BikakuServer.world(player, MawMotion.wormPoint(worms, i, MawMotion.groundAnchor())),
+            body.m_20182_().m_82520_(0.0, 0.4, 0.0), reach + body.m_20205_() + 2.0);
+    }
+
+    /** Each tick of a form's worm move: every worm's part on its own beats; the move ends when the last worm's has. */
+    private static void formTick(ServerPlayer player, BikakuServer.State state, BikakuMove move, long real, long now) {
+        double k = Math.max(1.0, state.moveSlower);
+        boolean going = false;
+        for (int i = 0; i < state.moveWorms; i++) {
+            long mine = real - (long)i * move.stagger();
+            if (mine < 0) {
+                going = true;
+                continue;
+            }
+            long age = (long)Math.floor(mine / k);
+            double next = (mine + 1) / k;
+            long end;
+            switch (move) {
+                case MAW, DRAG -> {
+                    wormGrab(player, state, move, i, age, next, now);
+                    end = state.caughts[i] ? move.ticks() : move.missedTicks();
+                }
+                case PURSUIT -> {
+                    wormChain(player, state, i, age, now);
+                    end = BikakuMove.chainLands(BikakuMove.CHAIN_BITES - 1) + 3 + BikakuMove.CHAIN_AFTER;
+                }
+                case ERUPTION -> {
+                    wormErupt(player, state, i, age, now);
+                    end = move.ticks();
+                }
+                default -> end = 0;
+            }
+            if (age < end) {
+                going = true;
+            } else if (state.held[i] != 0) {
+                letWormGo(player, state, i, false);
+            }
+        }
+        if (!going) {
+            finish(player, state);
+        }
+    }
+
+    /** True this tick while one of a form's worms is shutting its mouth on something (its wound is a bite's). */
+    private static boolean formBiting(BikakuServer.State state, long now) {
+        double k = Math.max(1.0, state.moveSlower);
+        for (int i = 0; i < state.moveWorms; i++) {
+            long mine = now - state.moveAt - (long)i * state.move.stagger();
+            if (mine < 0) {
+                continue;
+            }
+            long age = (long)Math.floor(mine / k);
+            if (state.move == BikakuMove.PURSUIT) {
+                for (int j = 0; j < BikakuMove.CHAIN_BITES; j++) {
+                    if (age == BikakuMove.chainLands(j)) {
+                        return true;
+                    }
+                }
+            } else if (age == state.move.land()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Worm {@code i}'s Devouring Maw or Predatory Drag: its bite, what it holds (in its own lane), the fling or the slam. */
+    private static void wormGrab(ServerPlayer player, BikakuServer.State state, BikakuMove move, int i, long age, double next, long now) {
+        if (state.dones[i] == 0 && age >= move.land()) {
+            state.dones[i] = 1;
+            landWorm(player, state, move, i, now);
+        }
+        if (state.held[i] != 0 && state.heldAts[i] != null) {
+            long until = move == BikakuMove.MAW ? BikakuMove.MAW_RELEASE : BikakuMove.DRAG_SLAM;
+            if (age < until) {
+                int worms = state.moveWorms;
+                // Held where its own worm holds it (worked out in its own lane, as every client draws it), along its way round blocks.
+                double[] own = MawMotion.wormUnpoint(worms, i, state.heldAts[i]);
+                double[] at = MawMotion.wormPoint(worms, i, move == BikakuMove.MAW ? MawMotion.mawHeld(own, next) : MawMotion.dragHeld(own, next));
+                if (state.moveRoutes[i] != null) {
+                    double[][] route = BikakuRoutes.rig(player, state.moveRoutes[i]);
+                    at = MawMotion.along(at, move == BikakuMove.MAW ? MawMotion.wormShoulder(worms, i) : MawMotion.wormPoint(worms, i, MawMotion.groundAnchor()),
+                        route[route.length - 1], route);
+                }
+                holdWorm(player, state, i, at);
+            }
+        }
+        if (state.dones[i] == 1 && state.caughts[i]) {
+            if (move == BikakuMove.MAW && age >= BikakuMove.MAW_RELEASE) {
+                state.dones[i] = 2;
+                flingWorm(player, state, i);
+            } else if (move == BikakuMove.DRAG && age >= BikakuMove.DRAG_SLAM) {
+                state.dones[i] = 2;
+                slamWorm(player, state, i, now);
+            }
+        }
+    }
+
+    /** Worm {@code i}'s mouth shuts: on its body if it is still in reach (round blocks, along its way), else on whatever is at its mouth. */
+    private static void landWorm(ServerPlayer player, BikakuServer.State state, BikakuMove move, int i, long now) {
+        LivingEntity body = state.targets[i] != 0 && player.m_284548_().m_6815_(state.targets[i]) instanceof LivingEntity target && target.m_6084_()
+            && KaguneServerController.validSwipeTarget(player, target) ? target : null;
+        Vec3 mouth = state.points[i] != null ? state.points[i] : player.m_146892_();
+        if (body != null) {
+            Vec3 centre = KaguneServerController.center(body);
+            boolean reached;
+            if (state.moveRoutes[i] != null) {
+                reached = BikakuRoutes.atEnd(player, state.moveRoutes[i], centre, BikakuRules.MOUTH_RADIUS + 1.6 + body.m_20205_());
+            } else if (move == BikakuMove.DRAG) {
+                reached = fair(player, body) && flat(centre.m_82546_(player.m_20182_())) <= state.moveReach + body.m_20205_();
+            } else {
+                reached = fair(player, body) && centre.m_82554_(BikakuServer.shoulder(player, state, i)) <= state.moveReach + body.m_20205_();
+            }
+            body = reached ? body : null;
+        } else {
+            body = nearest(player, mouth);
+        }
+        if (body == null) {
+            KaguneServerController.playAt(player, mouth, HexKaguneSounds.KAGUNE_WHIP, 0.6F, KaguneServerController.vary(player, 0.6F, 0.05F));
+            syncWorm0(state);
+            BikakuServer.broadcast(player, state);
+            return;
+        }
+        boolean maw = move == BikakuMove.MAW;
+        int heldFor = maw ? BikakuMove.MAW_RELEASE - move.land() + BikakuRules.GRAB_STUN_AFTER : BikakuMove.DRAG_SLAM - move.land() + 4;
+        boolean bit = hurt(player, body, maw ? BikakuRules.MAW_POWER : BikakuRules.DRAG_BITE_POWER, maw ? 4 : 2, heldFor,
+            maw ? BikakuRules.MAW_HEAL : BikakuRules.BITE_HEAL, now, maw);
+        // Only one worm holds a body: the others bite it and draw back (on one body, it is bitten once by each worm).
+        boolean holdingAlready = false;
+        for (int j = 0; j < state.moveWorms; j++) {
+            holdingAlready |= j != i && state.held[j] == body.m_19879_();
+        }
+        if (bit && body.m_6084_() && !holdingAlready) {
+            state.caughts[i] = true;
+            state.held[i] = body.m_19879_();
+            state.heldAts[i] = BikakuServer.rig(player, KaguneServerController.center(body));
+            KaguneServerController.playAt(player, body, HexKaguneSounds.KAGUNE_GRAB, 0.9F, KaguneServerController.vary(player, 0.85F, 0.05F));
+        }
+        syncWorm0(state);
+        BikakuServer.broadcast(player, state);
+    }
+
+    /** What worm {@code i} holds kept at its mouth, moved toward {@code middle} (the body's frame), or let go if it is gone. */
+    private static void holdWorm(ServerPlayer player, BikakuServer.State state, int i, double[] middle) {
+        Entity entity = player.m_9236_().m_6815_(state.held[i]);
+        if (!(entity instanceof LivingEntity body) || !body.m_6084_() || body.m_213877_() || body.m_20280_(player) > 40.0 * 40.0) {
+            state.held[i] = 0;
+            syncWorm0(state);
+            BikakuServer.broadcast(player, state);
+            return;
+        }
+        Vec3 at = BikakuServer.world(player, middle);
+        GraftCombat.carry(body, at.m_82520_(0.0, -body.m_20206_() * 0.52, 0.0));
+    }
+
+    /** Worm {@code i} of Devouring Maw lets go with a throw to its own side: the first out to his right, the second to his left, the third ahead and up. */
+    private static void flingWorm(ServerPlayer player, BikakuServer.State state, int i) {
+        Entity entity = state.held[i] != 0 ? player.m_9236_().m_6815_(state.held[i]) : null;
+        state.held[i] = 0;
+        if (entity instanceof LivingEntity body && body.m_6084_()) {
+            double yaw = Math.toRadians(player.f_20883_);
+            Vec3 right = new Vec3(-Math.cos(yaw), 0.0, -Math.sin(yaw));
+            Vec3 ahead = new Vec3(-Math.sin(yaw), 0.0, Math.cos(yaw));
+            Vec3 throwWay = i == 1 ? right.m_82490_(-1.25).m_82549_(ahead.m_82490_(0.2)).m_82520_(0.0, 0.5, 0.0)
+                : i == 2 ? ahead.m_82490_(1.1).m_82520_(0.0, 0.75, 0.0) : right.m_82490_(1.25).m_82549_(ahead.m_82490_(0.2)).m_82520_(0.0, 0.5, 0.0);
+            body.m_20256_(throwWay);
+            body.f_19864_ = true;
+            KaguneServerController.playAt(player, body, HexKaguneSounds.KAGUNE_WHIP, 1.0F, KaguneServerController.vary(player, 0.6F, 0.05F));
+        }
+        syncWorm0(state);
+        BikakuServer.broadcast(player, state);
+    }
+
+    /** Worm {@code i}'s Predatory Drag slams what it holds down, hurts and stuns it, lets go. */
+    private static void slamWorm(ServerPlayer player, BikakuServer.State state, int i, long now) {
+        Entity entity = state.held[i] != 0 ? player.m_9236_().m_6815_(state.held[i]) : null;
+        state.held[i] = 0;
+        if (entity instanceof LivingEntity body && body.m_6084_()) {
+            state.slamming = true;
+            hurt(player, body, BikakuRules.DRAG_SLAM_POWER, 4, BikakuRules.SLAM_STUN, BikakuRules.BITE_HEAL, now, true);
+            state.slamming = false;
+            body.m_20256_(new Vec3(0.0, 0.12, 0.0));
+            body.f_19864_ = true;
+            KaguneServerController.playAt(player, body, HexKaguneSounds.KAGUNE_SLAM, 1.0F, KaguneServerController.vary(player, 0.85F, 0.05F));
+        }
+        syncWorm0(state);
+        BikakuServer.broadcast(player, state);
+    }
+
+    /** Lets go of what worm {@code i} holds ({@code thrown}: it keeps its speed; else it is stopped where it is). */
+    private static void letWormGo(ServerPlayer player, BikakuServer.State state, int i, boolean thrown) {
+        if (state.held[i] != 0 && !thrown) {
+            Entity entity = player.m_9236_().m_6815_(state.held[i]);
+            if (entity != null) {
+                entity.m_20256_(Vec3.f_82478_);
+                entity.f_19864_ = true;
+                entity.f_19789_ = 0.0F;
+            }
+        }
+        state.held[i] = 0;
+    }
+
+    /** Worm {@code i}'s chain of Ravenous Pursuit bites at its body (each once, on its own beats). */
+    private static void wormChain(ServerPlayer player, BikakuServer.State state, int i, long age, long now) {
+        for (int j = 0; j < BikakuMove.CHAIN_BITES; j++) {
+            int bit = 1 << j;
+            if ((state.dones[i] & bit) != 0 || age < BikakuMove.chainLands(j)) {
+                continue;
+            }
+            state.dones[i] |= bit;
+            LivingEntity body = state.targets[i] != 0 && player.m_284548_().m_6815_(state.targets[i]) instanceof LivingEntity target && target.m_6084_()
+                && KaguneServerController.validSwipeTarget(player, target) ? target : null;
+            if (body != null) {
+                Vec3 centre = KaguneServerController.center(body);
+                boolean reached = state.moveRoutes[i] != null
+                    ? BikakuRoutes.atEnd(player, state.moveRoutes[i], centre, BikakuRules.MOUTH_RADIUS + 1.6 + body.m_20205_())
+                    : fair(player, body) && centre.m_82554_(player.m_146892_()) <= state.moveReach + body.m_20205_() + 1.0;
+                body = reached ? body : null;
+            }
+            if (body != null) {
+                hurt(player, body, BikakuRules.PURSUIT_POWER, 3, 0, BikakuRules.BITE_HEAL, now, false);
+            } else {
+                KaguneServerController.playSelf(player, HexKaguneSounds.KAGUNE_WHIP, 0.6F, KaguneServerController.vary(player, 1.0F, 0.1F));
+            }
+        }
+    }
+
+    /** Worm {@code i}'s Carrion Eruption: under its own body (its mark fixed as it comes under it), bursting up and throwing it. */
+    private static void wormErupt(ServerPlayer player, BikakuServer.State state, int i, long age, long now) {
+        if ((state.dones[i] & 1) == 0 && age >= BikakuMove.ERUPT_RISE) {
+            state.dones[i] |= 1;
+            if (state.targets[i] != 0 && player.m_284548_().m_6815_(state.targets[i]) instanceof LivingEntity target && target.m_6084_()
+                && flat(target.m_20182_().m_82546_(player.m_20182_())) <= state.moveReach + 2.0) {
+                state.points[i] = KaguneServerController.center(target);
+                state.victims[i] = target.m_19879_();
+            }
+            state.targets[i] = 0;
+            KaguneServerController.playAt(player, state.points[i], HexKaguneSounds.KAGUNE_ANCHOR, 1.0F, KaguneServerController.vary(player, 0.7F, 0.05F));
+            syncWorm0(state);
+            BikakuServer.broadcast(player, state);
+        }
+        if ((state.dones[i] & 2) == 0 && age >= BikakuMove.ERUPTION.land()) {
+            state.dones[i] |= 2;
+            double[] spot = MawMotion.eruptSpot(BikakuServer.rig(player, state.points[i]), state.moveReach);
+            Vec3 at = BikakuServer.world(player, spot);
+            double r = BikakuRules.ERUPTION_RADIUS;
+            AABB area = new AABB(at.f_82479_ - r, at.f_82480_ - 0.6, at.f_82481_ - r, at.f_82479_ + r, at.f_82480_ + 3.2, at.f_82481_ + r);
+            boolean any = false;
+            for (LivingEntity body : player.m_284548_().m_6443_(LivingEntity.class, area, living -> living != player && living.m_6084_()
+                && KaguneServerController.validSwipeTarget(player, living))) {
+                if (flat(body.m_20182_().m_82546_(at)) > r + body.m_20205_() * 0.5) {
+                    continue;
+                }
+                boolean first = !any;
+                if (hurt(player, body, BikakuRules.ERUPTION_POWER, 3, 0, first ? BikakuRules.BITE_HEAL : 0.0F, now, true)) {
+                    any = true;
+                    Vec3 out = body.m_20182_().m_82546_(at);
+                    Vec3 aside = flat(out) < 1.0E-3 ? Vec3.f_82478_ : new Vec3(out.f_82479_, 0.0, out.f_82481_).m_82541_().m_82490_(0.2);
+                    body.m_20256_(body.m_20184_().m_82490_(0.2).m_82549_(aside).m_82520_(0.0, BikakuRules.ERUPTION_LAUNCH, 0.0));
+                    body.f_19864_ = true;
+                }
+            }
+            KaguneServerController.playAt(player, at, HexKaguneSounds.BONE_CRUSH, 1.0F, KaguneServerController.vary(player, 0.7F, 0.05F));
+        }
+    }
+
+    /** Worm 0's part copied into the single fields (the clients' and the wounds' as before). */
+    private static void syncWorm0(BikakuServer.State state) {
+        state.heldId = state.held[0];
+        state.caught = state.caughts[0];
+        state.heldAt = state.heldAts[0];
+        state.movePoint = state.points[0] != null ? state.points[0] : state.movePoint;
+        state.eruptVictim = state.victims[0];
     }
 
     // ---------------------------------------------------------------- 3.5.7: the kakuja's own moves

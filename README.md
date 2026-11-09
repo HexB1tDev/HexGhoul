@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.6.1 (HexGhoul): Bikaku: every move made by all the worms (testing)
+
+See `.github/release-notes-3.6.1.md`. Your words: "to basically become overpowered, like, to do enhanced versions of themselves whenever they're, like, in different transformations, such as, like, the move that, like, drag pursuit, you can send all three of them, all three of the worm-like things, and the thing that sends the worm underground and then up can be like more than one, and whatsoever." In Twin Worms and Three Worms every move is made by all the worms, each from its own lane and a beat after the one before. Devouring Maw and Predatory Drag catch a body per worm. Ravenous Pursuit sends every worm after its own body, three bites each. Carrion Eruption comes up once per worm, under each one's body. One Worm is as before. Protocol 102. Preview: `docs/handoff/bikaku-form-moves-3.6.1.png`.
+
 ## 3.6.0 (HexGhoul): Bikaku: the forms (Twin Worms, Three Worms) (testing)
 
 See `.github/release-notes-3.6.0.md`. Your words: "another form should have like two worms. The third should have three". Forms picked in the menu: One Worm, Twin Worms (250), Three Worms (500); The Walker (750) shown, coming. The worms come out of one root, each in its own lane; M1's bites take turns among them. The moves are made by the first worm for now (every worm in 3.6.1). Protocol 101. Preview: `docs/handoff/bikaku-forms-3.6.0.png`.

@@ -221,6 +221,32 @@ public enum BikakuMove {
     public static final int ERUPT_SUNK = 40;
     public static final int ERUPT_BACK = 46;
 
+    // ---------------------------------------------------------------- 3.6.1: the forms' worms each making the move
+
+    /**
+     * 3.6.1 (the owner: "to do enhanced versions of themselves whenever they're, like, in different transformations ... you can send all
+     * three of them ... the thing that sends the worm underground and then up can be like more than one"): in a form of several worms each
+     * makes the move, this many ticks after the worm before it (its own part on its own beats).
+     */
+    public int stagger() {
+        return switch (this) {
+            case MAW, DRAG -> 3;
+            case ERUPTION -> 6;
+            case PURSUIT -> 2;
+            default -> 0;
+        };
+    }
+
+    /** 3.6.1: Ravenous Pursuit in a form of several: each worm's chain of bites at its body (on its own beats), and back after the last. */
+    public static final int CHAIN_BITES = 3;
+    public static final int CHAIN_EVERY = 8;
+    public static final int CHAIN_AFTER = 10;
+
+    /** 3.6.1: the tick of a worm's {@code j}th bite of Ravenous Pursuit's chain (on its own beats). */
+    public static int chainLands(int j) {
+        return PURSUIT.land + CHAIN_EVERY * j;
+    }
+
     // ---------------------------------------------------------------- 3.5.7: the kakuja's moves' beats
 
     /** Thousand Jaws: each mouthed tentacle's bite comes round this often, shutting this far into it; when each starts (by tentacle). */

@@ -35,11 +35,11 @@ public final class BikakuClient {
                        double moveBegan, double mx, double my, double mz, int[] targets, int heldId, boolean caught, long regenAt, double regenBegan,
                        boolean kakuja, long kakujaAt, double kakujaBegan, long undyingAt, double undyingBegan, long[] autoAt, double[] autoBegan,
                        int[] autoTarget, double reach, double moveReach, int charge, long chargeAt, double chargeBegan, double[][][] routes,
-                       com.hex.kagune.control.bikaku.BikakuForm form) {
+                       com.hex.kagune.control.bikaku.BikakuForm form, int moveWorms, int[] held, int caughtBits, double[][] points) {
         public static final View NONE = new View(Bite.NONE, Long.MIN_VALUE, 0.0, 0.0, 0.0, 0.0, 0, BikakuMove.NONE, Long.MIN_VALUE, 0.0, 0.0, 0.0,
             0.0, new int[S2CBikakuState.TARGETS], 0, false, -1_000_000L, -1.0E6, false, -1_000_000L, -1.0E6, -1_000_000L, -1.0E6,
             new long[S2CBikakuState.AUTOS], filled(-1.0E6), new int[S2CBikakuState.AUTOS], BikakuRules.REACH, 0.0, -1, Long.MIN_VALUE, 0.0,
-            new double[S2CBikakuState.ROUTES][][], com.hex.kagune.control.bikaku.BikakuForm.ONE);
+            new double[S2CBikakuState.ROUTES][][], com.hex.kagune.control.bikaku.BikakuForm.ONE, 1, new int[3], 0, new double[3][]);
 
         /** 3.5.9: way {@code r} round blocks (0 the bite's, 1 .. 3 the move's), in the world; null for a straight line. */
         public double[][] route(int r) {
@@ -119,7 +119,8 @@ public final class BikakuClient {
             kakujaBegan(before, message, world, clock), message.undyingAt(), began(before == null ? null : before.undyingAt(), before == null ? 0.0
                 : before.undyingBegan(), message.undyingAt(), world, clock), message.autoAt(), autoBegan(before, message, world, clock), message.autoTarget(),
             message.reach(), message.moveReach(), message.charge(), message.chargeAt(), began(before == null ? null : before.chargeAt(), before == null ? 0.0
-                : before.chargeBegan(), message.chargeAt(), world, clock), message.routes(), com.hex.kagune.control.bikaku.BikakuForm.byOrdinal(message.form())));
+                : before.chargeBegan(), message.chargeAt(), world, clock), message.routes(), com.hex.kagune.control.bikaku.BikakuForm.byOrdinal(message.form()),
+            message.moveWorms(), message.held(), message.caughtBits(), message.points()));
     }
 
     /** 3.5.7: when (the client clock) something that began at {@code at} began here: its clock running on if it is told again. */

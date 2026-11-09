@@ -36,6 +36,7 @@ public final class BikakuWormTests {
         heldFar();
         routes();
         forms();
+        formMoves();
         System.out.println("Bikaku worm tests: " + passed + " checks passed");
     }
 
@@ -856,6 +857,105 @@ public final class BikakuWormTests {
     }
 
     private static final double[] PREY_AT = {0.1, 0.99, 3.6};
+
+    /**
+     * 3.6.1 (the owner: "to do enhanced versions of themselves whenever they're, like, in different transformations"): in a form of several
+     * worms every move is made by all of them, each in its lane after its own body, a beat after the one before: each lands on its own body
+     * at its own beat, shut; Ravenous Pursuit's worms bite theirs three times each; Carrion Eruption bursts up under each; none jumps or is
+     * drawn through him; each is at rest before its beat and after its move; one worm makes every move exactly as before.
+     */
+    private static void formMoves() {
+        com.hex.kagune.control.bikaku.BikakuMove[] moves = {com.hex.kagune.control.bikaku.BikakuMove.MAW, com.hex.kagune.control.bikaku.BikakuMove.DRAG,
+            com.hex.kagune.control.bikaku.BikakuMove.PURSUIT, com.hex.kagune.control.bikaku.BikakuMove.ERUPTION};
+        double[][][] cases = {{{3.0, 0.99, 4.8}, {-3.1, 0.99, 4.6}, {0.3, 0.99, 6.0}}, {PREY_AT, PREY_AT, PREY_AT},
+            {{2.0, 0.99, 3.5}, {-1.5, 0.99, 5.5}, {4.0, 0.99, 3.0}}};
+        for (com.hex.kagune.control.bikaku.BikakuMove move : moves) {
+            double reach = move.baseReach();
+            // One worm: the move as it always was.
+            for (double age = 0.0; age < move.ticks(); age += 1.5) {
+                MawMotion.Worm[] one = MawMotion.formMoves(30 + age, 7, 1, move, age, new double[][] {PREY_AT, PREY_AT, PREY_AT}, null, new boolean[] {false}, reach);
+                MawMotion.Worm[] was = move == com.hex.kagune.control.bikaku.BikakuMove.PURSUIT
+                    ? MawMotion.pursuit(30 + age, 7, new double[][] {PREY_AT, PREY_AT, PREY_AT}, age, reach)
+                    : new MawMotion.Worm[] {new MawMotion.Worm(MawMotion.move(30 + age, 7, move, age, PREY_AT, null, false, reach), 1.0, 1.0, 7)};
+                boolean same = one.length == was.length;
+                for (int w = 0; same && w < one.length; w++) {
+                    double[][] a = one[w].shape().path();
+                    double[][] b = was[w].shape().path();
+                    same = a.length == b.length && distance(a[a.length - 1], b[b.length - 1]) < 1.0E-12 && distance(a[2], b[2]) < 1.0E-12;
+                }
+                check(same, "with one worm " + move + " is made as it always was (" + age + ")");
+            }
+            for (int worms = 2; worms <= 3; worms++) {
+                for (double[][] bodies : cases) {
+                    boolean[] caught = new boolean[worms];
+                    java.util.Arrays.fill(caught, true);
+                    int stagger = move.stagger();
+                    check(stagger > 0, move + "'s worms go a beat apart");
+                    for (int i = 0; i < worms; i++) {
+                        double[] own = MawMotion.wormUnpoint(worms, i, bodies[i]);
+                        int[] lands = move == com.hex.kagune.control.bikaku.BikakuMove.PURSUIT
+                            ? new int[] {com.hex.kagune.control.bikaku.BikakuMove.chainLands(0), com.hex.kagune.control.bikaku.BikakuMove.chainLands(1),
+                                com.hex.kagune.control.bikaku.BikakuMove.chainLands(2)} : new int[] {move.land()};
+                        for (int land : lands) {
+                            double age = land + i * stagger;
+                            MawMotion.Worm[] all = MawMotion.formMoves(30 + age, 7, worms, move, age, bodies, null, caught, reach);
+                            check(all.length == worms, "every worm of the form makes " + move);
+                            MawMotion.Shape s = all[i].shape();
+                            double[] head = MawMotion.wormUnpoint(worms, i, s.path()[s.path().length - 1]);
+                            if (move == com.hex.kagune.control.bikaku.BikakuMove.ERUPTION) {
+                                double[] spot = MawMotion.eruptSpot(own, reach);
+                                check(Math.hypot(head[0] - spot[0], head[2] - spot[2]) < 0.15 && head[1] > spot[1] + 2.0,
+                                    "in a form of " + worms + ", worm " + i + " bursts up under its own body at its own beat");
+                            } else {
+                                double[] at = move == com.hex.kagune.control.bikaku.BikakuMove.PURSUIT
+                                    ? com.hex.kagune.control.bikaku.BikakuRules.reach(MawMotion.wormUnpoint(worms, i, MawMotion.pursuitReach(bodies[i], reach)),
+                                        Math.max(com.hex.kagune.control.bikaku.BikakuRules.REACH, reach))
+                                    : move == com.hex.kagune.control.bikaku.BikakuMove.DRAG ? MawMotion.dragReach(own, reach)
+                                    : com.hex.kagune.control.bikaku.BikakuRules.reach(own, reach);
+                                // Where one worm's mouth shuts on that body (on its near side: Predatory Drag low, at its legs), worked out in its lane.
+                                double[] alone = move == com.hex.kagune.control.bikaku.BikakuMove.PURSUIT ? at
+                                    : MawMotion.move(30 + land, 7 + 101 * i, move, land, own, null, true, reach).path()[s.path().length - 1];
+                                check(distance(head, alone) < (move == com.hex.kagune.control.bikaku.BikakuMove.PURSUIT ? 0.35 : 0.05)
+                                    && distance(head, at) < 0.7, "in a form of " + worms + ", worm " + i + "'s " + move
+                                    + " lands on its own body at its own beat (" + distance(head, at) + " off at " + age + ")");
+                            }
+                            check(s.aperture() < 0.1, "worm " + i + "'s " + move + " is shut as it lands");
+                        }
+                        if (i > 0) {
+                            double before = i * stagger - 0.5;
+                            MawMotion.Worm[] early = MawMotion.formMoves(30 + before, 7, worms, move, before, bodies, null, caught, reach);
+                            MawMotion.Shape rest = MawMotion.framed(worms, i, MawMotion.idle(30 + before, 7 + 101 * i));
+                            check(distance(early[i].shape().path()[rest.path().length - 1], rest.path()[rest.path().length - 1]) < 1.0E-9,
+                                "worm " + i + " is at rest until its beat");
+                        }
+                    }
+                    double[][] last = new double[worms][];
+                    double end = move.ticks() + (worms - 1) * stagger;
+                    for (double age = 0.0; age <= end + 0.01; age += 0.25) {
+                        MawMotion.Worm[] all = MawMotion.formMoves(30 + age, 7, worms, move, age, bodies, null, caught, reach);
+                        for (int i = 0; i < worms; i++) {
+                            MawMotion.Shape s = all[i].shape();
+                            double[] tip = s.path()[s.path().length - 1];
+                            if (last[i] != null) {
+                                check(distance(tip, last[i]) < 1.2, move + "'s worm " + i + " never jumps (" + distance(tip, last[i]) + " at " + age + ")");
+                            }
+                            last[i] = tip;
+                            if (((int)(age * 4)) % 4 == 0) {
+                                double[][] drawn = MawMotion.around(s.path(), all[i].girth(), s.aperture());
+                                check(depthInHim(drawn, all[i].girth(), s.aperture()) < 0.03, move + "'s worm " + i + " is never drawn through him (" + age + ")");
+                            }
+                        }
+                    }
+                    MawMotion.Worm[] after = MawMotion.formMoves(30 + end, 7, worms, move, end, bodies, null, caught, reach);
+                    for (int i = 0; i < worms; i++) {
+                        MawMotion.Shape rest = MawMotion.framed(worms, i, MawMotion.idle(30 + end, 7 + 101 * i));
+                        double[][] p = after[i].shape().path();
+                        check(distance(p[p.length - 1], rest.path()[rest.path().length - 1]) < 1.0E-6, move + "'s worm " + i + " is back at rest at the end");
+                    }
+                }
+            }
+        }
+    }
 
     private static boolean inside(double[] p) {
         return distance(p, new double[] {0.0, 1.72, 0.0}) < 0.6 - 1.0E-9

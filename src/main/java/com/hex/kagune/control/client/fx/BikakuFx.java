@@ -77,35 +77,46 @@ public final class BikakuFx {
             return;
         }
         // 3.5.8: thrown further, every beat of it slower (on its own beats here).
+        // 3.6.1: in a form of several worms each erupts in turn under its own body, a beat after the one before (seen per worm).
         double reach = Math.max(BikakuMove.ERUPTION.baseReach(), view.moveReach());
-        double age = view.moveAge(clock) / com.hex.kagune.control.bikaku.BikakuRules.slower(reach, BikakuMove.ERUPTION.baseReach());
-        if (age > BikakuMove.ERUPTION.ticks() + 2) {
-            return;
-        }
-        double[] seen = SEEN.computeIfAbsent(id, ignored -> new double[] {view.moveAt(), -1.0});
+        double k = com.hex.kagune.control.bikaku.BikakuRules.slower(reach, BikakuMove.ERUPTION.baseReach());
+        int worms = view.kakuja() ? 1 : Math.max(1, Math.min(3, view.moveWorms()));
+        double[] seen = SEEN.computeIfAbsent(id, ignored -> new double[] {view.moveAt(), -1.0, -1.0, -1.0});
         if (seen[0] != view.moveAt()) {
             seen[0] = view.moveAt();
             seen[1] = -1.0;
+            seen[2] = -1.0;
+            seen[3] = -1.0;
         }
-        int last = (int)Math.floor(seen[1]);
-        int now = (int)Math.floor(age);
-        seen[1] = age;
-        if (now <= last) {
-            return;
-        }
-        Entity aimed = view.targets()[0] != 0 ? level.m_6815_(view.targets()[0]) : null;
-        Vec3 mark = aimed != null ? aimed.m_20182_().m_82520_(0.0, aimed.m_20206_() * 0.52, 0.0) : new Vec3(view.mx(), view.my(), view.mz());
         double yaw = Math.toRadians(player.f_20883_);
-        double[] target = rig(player, yaw, mark);
-        for (int tick = Math.max(0, last + 1); tick <= now; tick++) {
-            beat(minecraft, level, player, yaw, target, tick, reach);
+        for (int w = 0; w < worms; w++) {
+            double age = (view.moveAge(clock) - (worms >= 2 ? w * BikakuMove.ERUPTION.stagger() : 0)) / k;
+            if (age < 0.0 || age > BikakuMove.ERUPTION.ticks() + 2) {
+                continue;
+            }
+            int last = (int)Math.floor(seen[1 + w]);
+            int now = (int)Math.floor(age);
+            seen[1 + w] = age;
+            if (now <= last) {
+                continue;
+            }
+            Entity aimed = w < view.targets().length && view.targets()[w] != 0 ? level.m_6815_(view.targets()[w]) : null;
+            double[] own = worms >= 2 && w < view.points().length ? view.points()[w] : null;
+            Vec3 mark = aimed != null ? aimed.m_20182_().m_82520_(0.0, aimed.m_20206_() * 0.52, 0.0)
+                : own != null ? new Vec3(own[0], own[1], own[2]) : new Vec3(view.mx(), view.my(), view.mz());
+            double[] target = MawMotion.wormUnpoint(worms, w, rig(player, yaw, mark));
+            for (int tick = Math.max(0, last + 1); tick <= now; tick++) {
+                beat(minecraft, level, player, yaw, target, tick, reach, worms, w);
+            }
         }
     }
 
     /** What the ground does on tick {@code tick} of the eruption. */
-    private static void beat(Minecraft minecraft, ClientLevel level, AbstractClientPlayer player, double yaw, double[] target, int tick, double reach) {
-        double[] spot = MawMotion.eruptSpot(target, reach);
-        Vec3 entry = world(player, yaw, new double[] {0.45, 0.05, 1.2});
+    private static void beat(Minecraft minecraft, ClientLevel level, AbstractClientPlayer player, double yaw, double[] target, int tick, double reach,
+                             int worms, int w) {
+        // 3.6.1: worked out in worm w's own lane ({@code target} is in it), placed back in his body's frame.
+        double[] spot = MawMotion.wormPoint(worms, w, MawMotion.eruptSpot(target, reach));
+        Vec3 entry = world(player, yaw, MawMotion.wormPoint(worms, w, new double[] {0.45, 0.05, 1.2}));
         if (tick == 6 || tick == BikakuMove.ERUPT_BACK + 1) {
             // It goes into the ground before him (and comes back out there).
             dust(entry, 10, 0.9);
@@ -114,7 +125,7 @@ public final class BikakuFx {
         double[] bulge = MawMotion.eruptBulge(target, tick, reach);
         if (bulge != null) {
             // The ground heaving over its head as it tunnels.
-            Vec3 at = world(player, yaw, bulge).m_82520_(0.0, 0.1, 0.0);
+            Vec3 at = world(player, yaw, MawMotion.wormPoint(worms, w, bulge)).m_82520_(0.0, 0.1, 0.0);
             dust(at, 3, 0.5);
             chips(at, 3, 0.35);
         }

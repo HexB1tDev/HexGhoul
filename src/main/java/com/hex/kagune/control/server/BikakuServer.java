@@ -100,6 +100,30 @@ public final class BikakuServer {
         int chargeHint;
         double queuedReach = BikakuRules.REACH;
         double queuedSlotReach;
+        /**
+         * 3.6.1: a worm move made by several worms (a form of several): how many; each worm's part of it (its body is {@code targets[i]},
+         * its way {@code moveRoutes[i]}): whom it holds, where (the body's frame) it caught it, whether it caught, its beats done, its mark
+         * (the world), what Carrion Eruption came up under. Worm 0's part is copied into the single fields above for the clients.
+         */
+        int moveWorms = 1;
+        final int[] held = new int[3];
+        final double[][] heldAts = new double[3][];
+        final boolean[] caughts = new boolean[3];
+        final int[] dones = new int[3];
+        final Vec3[] points = new Vec3[3];
+        final int[] victims = new int[3];
+
+        /** 3.6.1: no worm's part of a move left. */
+        void calmWorms() {
+            this.moveWorms = 1;
+            java.util.Arrays.fill(this.held, 0);
+            java.util.Arrays.fill(this.heldAts, null);
+            java.util.Arrays.fill(this.caughts, false);
+            java.util.Arrays.fill(this.dones, 0);
+            java.util.Arrays.fill(this.points, null);
+            java.util.Arrays.fill(this.victims, 0);
+        }
+
         /** 3.6.0: the form (read from his profile on first use; null until then). */
         com.hex.kagune.control.bikaku.BikakuForm form;
         /** 3.5.9: the way round blocks the bite out takes, and the move's (one for each of Ravenous Pursuit's worms), in the world; null straight. */
@@ -144,6 +168,7 @@ public final class BikakuServer {
             this.landed = false;
             this.lastBite = null;
             this.queuedAt = Long.MIN_VALUE;
+            this.calmWorms(); // 3.6.1
             this.biteRoute = null; // 3.5.9
             java.util.Arrays.fill(this.moveRoutes, null);
             this.charge = -1; // 3.5.8
@@ -392,7 +417,27 @@ public final class BikakuServer {
             state.targetId, state.move.ordinal(), state.moveAt, state.movePoint.f_82479_, state.movePoint.f_82480_, state.movePoint.f_82481_,
             state.targets.clone(), state.heldId, state.caught, state.regenAt, state.kakuja, state.kakujaAt, state.undyingAt, state.autoAt.clone(),
             state.autoTarget.clone(), (float)state.biteReach, (float)state.moveReach, state.charge, state.chargeAt,
-            new double[][][] {state.biteRoute, state.moveRoutes[0], state.moveRoutes[1], state.moveRoutes[2]}, form(player, state).ordinal());
+            new double[][][] {state.biteRoute, state.moveRoutes[0], state.moveRoutes[1], state.moveRoutes[2]}, form(player, state).ordinal(),
+            state.moveWorms, state.held.clone(), caughtBits(state), pointsOf(state));
+    }
+
+    /** 3.6.1: which worms caught (a bit each). */
+    private static int caughtBits(State state) {
+        int bits = 0;
+        for (int i = 0; i < state.caughts.length; i++) {
+            bits |= state.caughts[i] ? 1 << i : 0;
+        }
+        return bits;
+    }
+
+    /** 3.6.1: each worm's mark (the world; null none). */
+    private static double[][] pointsOf(State state) {
+        double[][] out = new double[state.points.length][];
+        for (int i = 0; i < out.length; i++) {
+            Vec3 p = state.points[i];
+            out[i] = p == null ? null : new double[] {p.f_82479_, p.f_82480_, p.f_82481_};
+        }
+        return out;
     }
 
     static void broadcast(ServerPlayer player, State state) {

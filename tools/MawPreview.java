@@ -61,6 +61,9 @@ public class MawPreview {
         if (which.equals("forms") || which.equals("all")) {
             forms(new File(out, "maw-forms.png"));
         }
+        if (which.equals("formmoves") || which.equals("all")) {
+            formMoves(new File(out, "maw-form-moves.png"));
+        }
         if (which.equals("round") || which.equals("all")) {
             round(new File(out, "maw-round.png"));
         }
@@ -583,6 +586,86 @@ public class MawPreview {
                 g.drawImage(PoseRender.render(new RigPose(), framedAt(35, 14, 14.5, 0.45), fw, fh, tris), i * fw, 34 + (2 + r) * fh, null);
                 label(g, String.format("%s: %s by worm %d%s", worms == 2 ? "Twin" : "Three", bite.name().charAt(0) + bite.name().substring(1).toLowerCase(),
                     com.hex.kagune.control.bikaku.BikakuForm.biter(bite, worms) + 1, age == bite.land() ? "  BITES" : ""), i * fw, 34 + (2 + r) * fh);
+            }
+        }
+        g.dispose();
+        ImageIO.write(img, "png", file);
+        System.out.println(file);
+    }
+
+    /**
+     * 3.6.1: every move made by all the form's worms: Devouring Maw on three bodies (Three Worms) and on one (Twin Worms), Predatory Drag on
+     * three, Ravenous Pursuit's chains of bites on three, Carrion Eruption once under each.
+     */
+    static void formMoves(File file) throws Exception {
+        int fw = 300;
+        int fh = 300;
+        int cols = 8;
+        BufferedImage img = new BufferedImage(fw * cols, fh * 5 + 34, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = sheet(img, "Bikaku 3.6.1: every move made by all the worms (Three Worms: one body each, a beat apart; Twin Worms with only one body: both on it)");
+        double[][] mawBodies = {{3.0, 0.99, 4.8}, {-3.1, 0.99, 4.6}, {0.3, 0.99, 6.0}};
+        double[][] dragBodies = {{3.4, 0.99, 5.4}, {-3.6, 0.99, 5.0}, {0.4, 0.99, 5.9}};
+        double[][] chainBodies = {{3.0, 0.99, 4.2}, {-2.8, 0.99, 4.0}, {0.2, 0.99, 5.4}};
+        double[][] eruptBodies = {{3.5, 0.99, 4.8}, {-4.0, 0.99, 4.4}, {0.5, 0.99, 5.8}};
+        String[] titles = {"Three: Maw", "Twin, one body: Maw", "Three: Drag", "Three: Pursuit", "Three: Eruption"};
+        double[][] ages = {{0, 6, 9, 12, 15, 22, 34, 46}, {0, 6, 9, 12, 18, 28, 33, 40}, {0, 8, 11, 14, 20, 30, 37, 44},
+            {0, 8, 12, 16, 20, 26, 30, 40}, {0, 12, 21, 26, 30, 36, 46, 62}};
+        BikakuMove[] moves = {BikakuMove.MAW, BikakuMove.MAW, BikakuMove.DRAG, BikakuMove.PURSUIT, BikakuMove.ERUPTION};
+        for (int r = 0; r < 5; r++) {
+            BikakuMove move = moves[r];
+            int worms = r == 1 ? 2 : 3;
+            double[][] stands = switch (r) {
+                case 0 -> mawBodies;
+                case 1 -> new double[][] {PREY, PREY};
+                case 2 -> dragBodies;
+                case 3 -> chainBodies;
+                default -> eruptBodies;
+            };
+            for (int i = 0; i < cols; i++) {
+                double age = ages[r][i];
+                double time = 60 + r * 40 + age;
+                double[][] held = new double[worms][];
+                boolean[] caught = new boolean[worms];
+                double[][] shown = new double[worms][]; // where each body is drawn (held, or where it stands)
+                double[][] bodies = new double[worms][]; // where each worm aims: its body where it is now (the twin row's one body, held by the first)
+                StringBuilder note = new StringBuilder();
+                for (int w = 0; w < worms; w++) {
+                    double a = age - w * move.stagger();
+                    // With one body for them all (the twin row) only the first worm holds it; the others bite it.
+                    boolean holds = r != 1 || w == 0;
+                    bodies[w] = r == 1 && w > 0 ? shown[0] : stands[w];
+                    shown[w] = bodies[w];
+                    if ((move == BikakuMove.MAW || move == BikakuMove.DRAG) && holds) {
+                        caught[w] = true;
+                        if (a >= move.land()) {
+                            double[] own = MawMotion.wormUnpoint(worms, w, bodies[w]);
+                            double[] at = move == BikakuMove.MAW ? MawMotion.mawHeld(BikakuRules.reach(own), a)
+                                : MawMotion.dragHeld(MawMotion.dragReach(own, move.baseReach()), Math.min(a, BikakuMove.DRAG_SLAM));
+                            held[w] = MawMotion.wormPoint(worms, w, at);
+                            shown[w] = held[w];
+                        }
+                    }
+                    if (a == move.land() || move == BikakuMove.PURSUIT && (a == BikakuMove.chainLands(1) || a == BikakuMove.chainLands(2))) {
+                        note.append(" ").append(w + 1).append(move == BikakuMove.ERUPTION ? " BURSTS" : " BITES");
+                    }
+                }
+                List<PoseRender.Tri> tris = worms(MawMotion.formMoves(time, SEED, worms, move, age, bodies, held, caught, move.baseReach()), time);
+                java.util.Set<String> placed = new java.util.HashSet<>();
+                for (int w = 0; w < worms; w++) {
+                    boolean let = move == BikakuMove.MAW ? age - w * move.stagger() > BikakuMove.MAW_RELEASE
+                        : move == BikakuMove.DRAG && age - w * move.stagger() > BikakuMove.DRAG_SLAM;
+                    double[] b = let ? stands[w] : shown[w];
+                    if (placed.add(Math.round(b[0] * 10) + "," + Math.round(b[1] * 10) + "," + Math.round(b[2] * 10))) {
+                        tris.addAll(prey(new double[] {b[0], b[1] - 0.99, b[2]}));
+                    }
+                }
+                PoseRender.Camera cam = switch (r) {
+                    case 1 -> framedAt(35, 14, 14.5, 0.45);
+                    case 4 -> wideAt(28, 24, 14.5, 2.6, 1.0);
+                    default -> wideAt(28, 24, 12.5, 2.4, 1.4);
+                };
+                g.drawImage(PoseRender.render(new RigPose(), cam, fw, fh, tris), i * fw, 34 + r * fh, null);
+                label(g, String.format("%s %.0ft%s", titles[r], age, note), i * fw, 34 + r * fh);
             }
         }
         g.dispose();

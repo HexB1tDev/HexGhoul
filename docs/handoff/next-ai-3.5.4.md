@@ -52,6 +52,10 @@ Binding; quoted exactly as written. Kept current as that session goes.
   can be like more than one, and whatsoever."** So every form keeps the moves, each made stronger by its worms (Drag and Pursuit with all
   three worms in the three-worm form; Carrion Eruption more than one).
 
+- After 3.6.0 (its report gave the plan for 3.6.1: Maw and Drag a catch per worm, all on one body if fewer; Pursuit in the twin and three
+  forms each full-size worm after its own body, three snaking bites each, no thin worms added; Carrion Eruption once per worm under its
+  own body, in turn; Regeneration unchanged; then The Walker): **"approved, continue"**.
+
 ## State now (kept current by the session on `claude/hopeful-noether-5c2wex`)
 
 - **3.5.4 shipped** (the kakuja as the last session left it; the owner liked it).
@@ -67,9 +71,11 @@ Binding; quoted exactly as written. Kept current as that session goes.
   way). Preview sent first (`docs/handoff/bikaku-round-3.5.9.png`). Versions 3.5.9; protocol "100". **The next version is 3.6.0.**
 - **3.6.0 shipped:** the forms (One, Twin 250, Three 500; The Walker 750 shown, not built), picked in the menu; M1's bites take turns;
   moves by the first worm for now. Preview sent first (`docs/handoff/bikaku-forms-3.6.0.png`). Versions 3.6.0; protocol "101".
-- **Next: 3.6.1, every move made by all the form's worms** (the owner's answer above: Maw and Drag a catch per worm, Pursuit with all the
-  worms, Carrion Eruption more than one), then **3.6.2, The Walker** (two walking tentacles from the worms' root, his body steady, feet
-  finding the ground and walls, climbing). Previews before going far.
+- **3.6.1 shipped:** every move made by all the form's worms (approved plan: Maw and Drag a catch per worm, all on one body if fewer;
+  Pursuit each full-size worm after its own body, three bites each; Carrion Eruption once per worm under its own body, in turn;
+  Regeneration unchanged). Preview sent (`docs/handoff/bikaku-form-moves-3.6.1.png`). Versions 3.6.1; protocol "102".
+- **Next: 3.6.2, The Walker** (two walking tentacles from the worms' root, his body steady, feet finding the ground and walls, climbing;
+  its moves made stronger too). Previews before going far.
 
 ## Where things were when this note was written (after 3.5.3)
 

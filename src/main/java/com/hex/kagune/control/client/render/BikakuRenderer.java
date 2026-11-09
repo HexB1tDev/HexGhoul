@@ -145,9 +145,34 @@ public final class BikakuRenderer {
         double moveAge = view.moveAge(clock);
         com.hex.kagune.control.bikaku.BikakuMove move = view.move();
         double moveSlower = move.held() ? BikakuRules.slower(view.moveReach(), move.baseReach()) : 1.0;
-        if (move != com.hex.kagune.control.bikaku.BikakuMove.NONE && moveAge < (move.ticks() + 2) * moveSlower) {
+        int moveWorms = view.kakuja() ? 1 : view.moveWorms();
+        // 3.6.1: each worm after the first a beat later.
+        double moveLater = moveWorms >= 2 ? (moveWorms - 1) * move.stagger() : 0.0;
+        if (move != com.hex.kagune.control.bikaku.BikakuMove.NONE && moveAge < (move.ticks() + 2) * moveSlower + moveLater) {
             double[] point = {view.mx(), view.my(), view.mz()};
-            if (move == com.hex.kagune.control.bikaku.BikakuMove.PURSUIT) {
+            if (moveWorms >= 2 && (move == com.hex.kagune.control.bikaku.BikakuMove.MAW || move == com.hex.kagune.control.bikaku.BikakuMove.DRAG
+                || move == com.hex.kagune.control.bikaku.BikakuMove.PURSUIT || move == com.hex.kagune.control.bikaku.BikakuMove.ERUPTION)) {
+                // 3.6.1: every worm of his form makes it, each in its lane after its own body (or the first's), a beat after the one before.
+                double[][] aims = new double[moveWorms][];
+                double[][] helds = new double[moveWorms][];
+                boolean[] caughts = new boolean[moveWorms];
+                for (int i = 0; i < moveWorms; i++) {
+                    Entity aimed = i < view.targets().length && view.targets()[i] != 0 ? level.m_6815_(view.targets()[i]) : null;
+                    double[] own = i < view.points().length && view.points()[i] != null ? view.points()[i] : point;
+                    aims[i] = frame.rig(aimed != null ? centre(aimed, partial) : own);
+                    Entity heldEntity = i < view.held().length && view.held()[i] != 0 ? level.m_6815_(view.held()[i]) : null;
+                    helds[i] = heldEntity != null ? frame.rig(centre(heldEntity, partial)) : null;
+                    caughts[i] = (view.caughtBits() >> i & 1) != 0;
+                }
+                worms = MawMotion.formMoves(clock, seed, moveWorms, move, moveAge, aims, helds, caughts, Math.max(move.baseReach(), view.moveReach()));
+                ways = new double[worms.length][][];
+                starts = new double[worms.length][];
+                for (int i = 0; i < worms.length; i++) {
+                    ways[i] = move == com.hex.kagune.control.bikaku.BikakuMove.ERUPTION ? null : view.route(1 + i);
+                    starts[i] = move == com.hex.kagune.control.bikaku.BikakuMove.DRAG ? MawMotion.wormPoint(moveWorms, i, MawMotion.groundAnchor())
+                        : MawMotion.wormShoulder(moveWorms, i);
+                }
+            } else if (move == com.hex.kagune.control.bikaku.BikakuMove.PURSUIT) {
                 // 3.5.1: three worms, each after its own body.
                 double[][] aims = new double[view.targets().length][];
                 for (int i = 0; i < aims.length; i++) {

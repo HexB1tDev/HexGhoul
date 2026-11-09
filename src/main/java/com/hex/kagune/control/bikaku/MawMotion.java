@@ -100,6 +100,127 @@ public final class MawMotion {
         return out;
     }
 
+    /**
+     * 3.6.1: a form's worms all making {@code move} (the owner's "enhanced versions of themselves ... you can send all three of them"): worm
+     * {@code i} {@link BikakuMove#stagger} ticks after the one before, at {@code targets[i]} (body frame), holding what is at {@code held[i]}
+     * (null: none seen), having caught or not ({@code caught[i]}); Ravenous Pursuit as a chain of bites by each ({@link #chain}). One worm:
+     * the move as it always was ({@link #move}; Ravenous Pursuit splitting as before, {@link #pursuit}).
+     */
+    public static Worm[] formMoves(double time, int seed, int worms, BikakuMove move, double age, double[][] targets, double[][] held, boolean[] caught,
+                                   double reach) {
+        if (worms <= 1) {
+            if (move == BikakuMove.PURSUIT) {
+                return pursuit(time, seed, targets, age, reach);
+            }
+            return new Worm[] {new Worm(move(time, seed, move, age, pick(targets, 0), pick(held, 0), caught != null && caught.length > 0 && caught[0], reach),
+                1.0, 1.0, seed)};
+        }
+        Worm[] out = new Worm[worms];
+        for (int i = 0; i < worms; i++) {
+            int own = seed + 101 * i;
+            double a = age - i * move.stagger();
+            double[] target = pick(targets, i);
+            Shape mine;
+            if (move == BikakuMove.PURSUIT) {
+                double k = BikakuRules.slower(reach, BikakuRules.PURSUIT_REACH);
+                double[] there = target == null ? null : BikakuRules.reach(pursuitUnframe(i, pursuitReach(target, reach), 1.0), Math.max(BikakuRules.REACH, reach));
+                mine = there == null || a < 0.0 ? idle(time, own) : chain(time, own, there, a / k);
+            } else {
+                mine = target == null ? idle(time, own) : move(time, own, move, a, pursuitUnframe(i, target, 1.0), wormUnpoint(worms, i, pick(held, i)),
+                    caught != null && i < caught.length && caught[i], reach);
+            }
+            out[i] = new Worm(framed(worms, i, mine), 1.0, 1.0, own);
+        }
+        return out;
+    }
+
+    private static double[] pick(double[][] points, int i) {
+        return points == null || i >= points.length ? null : points[i];
+    }
+
+    /**
+     * 3.6.1: one worm's chain of Ravenous Pursuit bites at {@code target} (its own frame), {@code age} ticks in (its own beats): drawn back,
+     * thrown at it snaking; between bites drawn a little back and up, out to one side and then the other, and thrown in again; after the last,
+     * back to rest. Its mouth gapes on the way to each and snaps shut on it.
+     */
+    public static Shape chain(double time, int seed, double[] target, double age) {
+        double[] restHead = idleHead(time, seed);
+        double[] restLook = idleLook(time, seed);
+        double[] toward = GraftMesh.normalize(GraftMesh.sub(target, SHOULDER));
+        double[] side = GraftMesh.cross(new double[] {0.0, 1.0, 0.0}, toward);
+        side = GraftMesh.dot(side, side) < 1.0E-9 ? new double[] {1.0, 0.0, 0.0} : GraftMesh.normalize(side);
+        double[] at = GraftMesh.sub(target, GraftMesh.mul(toward, 0.08));
+        int lead = BikakuMove.PURSUIT_LEAD;
+        int[] lands = new int[BikakuMove.CHAIN_BITES];
+        for (int j = 0; j < lands.length; j++) {
+            lands[j] = BikakuMove.chainLands(j);
+        }
+        double end = lands[lands.length - 1] + 3 + BikakuMove.CHAIN_AFTER;
+        if (age >= end || age < lands[0] - lead) {
+            return idle(time, seed);
+        }
+        double[] coiled = GraftMesh.add(GraftMesh.add(restHead, new double[] {0.08, 0.3, -0.35}), GraftMesh.mul(toward, -0.1));
+        java.util.List<double[]> keys = new java.util.ArrayList<>(); // {tick, x, y, z}
+        keys.add(new double[] {lands[0] - lead, restHead[0], restHead[1], restHead[2]});
+        keys.add(new double[] {lands[0] - lead * 0.55, coiled[0], coiled[1], coiled[2]});
+        for (int j = 0; j < lands.length; j++) {
+            keys.add(new double[] {lands[j], at[0], at[1], at[2]});
+            if (j + 1 < lands.length) {
+                double sign = j % 2 == 0 ? 1.0 : -1.0;
+                double[] back = GraftMesh.add(GraftMesh.add(at, GraftMesh.mul(toward, -CHAIN_BACK)), GraftMesh.add(GraftMesh.mul(side, CHAIN_SIDE * sign),
+                    new double[] {0.0, CHAIN_UP, 0.0}));
+                keys.add(new double[] {(lands[j] + lands[j + 1]) * 0.5, back[0], back[1], back[2]});
+            }
+        }
+        keys.add(new double[] {lands[lands.length - 1] + 3, at[0], at[1], at[2]});
+        keys.add(new double[] {end, restHead[0], restHead[1], restHead[2]});
+        double[] head = keys.get(keys.size() - 1);
+        head = new double[] {head[1], head[2], head[3]};
+        for (int k = 1; k < keys.size(); k++) {
+            double[] a = keys.get(k - 1);
+            double[] b = keys.get(k);
+            if (age <= b[0]) {
+                double w = GraftMesh.smooth(GraftMesh.clamp01((age - a[0]) / Math.max(1.0E-6, b[0] - a[0])));
+                head = GraftMesh.lerp(new double[] {a[1], a[2], a[3]}, new double[] {b[1], b[2], b[3]}, w);
+                break;
+            }
+        }
+        // Snaking on the way in to the first bite.
+        if (age < lands[0]) {
+            double f = GraftMesh.clamp01((age - (lands[0] - lead * 0.55)) / (lead * 0.55));
+            head = GraftMesh.add(head, GraftMesh.mul(side, 0.55 * Math.sin(Math.PI * f * 2.5) * Math.sqrt(1.0 - f)));
+        }
+        double home = GraftMesh.smooth(GraftMesh.clamp01((age - (lands[lands.length - 1] + 3)) / BikakuMove.CHAIN_AFTER));
+        double[] look = GraftMesh.dot(GraftMesh.sub(at, head), GraftMesh.sub(at, head)) > 0.04 ? GraftMesh.normalize(GraftMesh.sub(at, head)) : toward;
+        look = GraftMesh.normalize(GraftMesh.lerp(look, restLook, home));
+        if (age < lands[0] - lead * 0.55) {
+            look = GraftMesh.normalize(GraftMesh.lerp(restLook, toward, GraftMesh.clamp01((age - (lands[0] - lead)) / (lead * 0.45))));
+        }
+        double mouth = 0.2;
+        for (int land : lands) {
+            if (age >= land - 4.0 && age < land - 0.5) {
+                mouth = Math.max(mouth, GraftMesh.clamp01((age - (land - 4.0)) / 2.5));
+            } else if (age >= land - 0.5 && age < land + 1.0) {
+                mouth = 0.04;
+            }
+        }
+        mouth = lerp(mouth, idleMouth(time, seed), home);
+        boolean onIt = false;
+        for (int land : lands) {
+            onIt |= Math.abs(age - land) < 1.0;
+        }
+        if (!onIt) {
+            head = clear(head);
+        }
+        double reach = GraftMesh.smooth(GraftMesh.clamp01(GraftMesh.length3(GraftMesh.sub(head, restHead)) / 2.0));
+        return new Shape(path(head, look, time, seed, reach), dorsal(), GraftMesh.clamp01(mouth));
+    }
+
+    /** 3.6.1: between a chain's bites, how far its head draws back, out to the side, and up. */
+    static final double CHAIN_BACK = 1.7;
+    static final double CHAIN_SIDE = 0.9;
+    static final double CHAIN_UP = 0.4;
+
     /** 3.5.9: Predatory Drag's {@link #GROUND_ANCHOR} (where its way along the ground starts), for the server and the renderer. */
     public static double[] groundAnchor() {
         return GROUND_ANCHOR.clone();

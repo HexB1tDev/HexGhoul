@@ -1,4 +1,20 @@
-# START HERE (state after 3.6.0)
+# START HERE (state after 3.6.1)
+
+Branch `claude/hopeful-noether-5c2wex`. Read `docs/handoff/next-ai-3.5.4.md` first (the owner's words this session at its top, quoted exactly; the state now). Next: **3.6.2, The Walker** (the owner: "the fourth before the Kakuja should be like the player no longer even like walks with their own legs, like they get like two separate appendages on either, like both sides emerging from the same spot as the worms, that when the player walks his body doesn't move, but like he controls these tentacles that walk around adapt to terrain. Being able to climb anything, like Dr. Octopus pretty much."). Previews first.
+
+- 3.6.1 asked by the owner: "to basically become overpowered, like, to do enhanced versions of themselves whenever they're, like, in different transformations, such as, like, the move that, like, drag pursuit, you can send all three of them, all three of the worm-like things, and the thing that sends the worm underground and then up can be like more than one, and whatsoever."; the plan approved: "approved, continue".
+- Pure `BikakuMove`: `stagger()` (MAW, DRAG 3; PURSUIT 2; ERUPTION 6: each worm after the first that many ticks later), `CHAIN_BITES` 3, `CHAIN_EVERY` 8, `CHAIN_AFTER` 10, `chainLands(j)`.
+- Pure `MawMotion.formMoves(time, seed, worms, move, age, targets[], held[], caught[], reach)`: one worm: exactly `move(...)` / `pursuit(...)`; several: worm i at `age - i * stagger` with its own seed (`seed + 101 i`), its target and catch unframed into its lane (`pursuitUnframe(i, .., 1)`), `framed` back; Pursuit: `chain(time, seed, target, age)` (keyframed head: coiled, thrown at it, between bites drawn back `CHAIN_BACK`, out to alternate sides `CHAIN_SIDE`, up `CHAIN_UP`; snaps shut at each `chainLands`).
+- Server `BikakuMoves`: `start` calls `state.calmWorms()` then, for 2+ worms (not the kakuja), `formStart` (bodies by `wormBodies`, a route per worm: `moveRoutes[i]`, Drag `wormGroundRoute`); `tick` -> `formTick` (each worm its own age; finish when none is still going), `formBiting` -> `wormGrab` (Maw/Drag: `landWorm` (one worm holds a body; others just bite it), `holdWorm` along its way, `flingWorm` (0 right, 1 left, 2 ahead-up), `slamWorm`), `wormChain` (Pursuit's three bites), `wormErupt` (bit 1 risen, bit 2 burst); `syncWorm0` keeps the single fields (heldId, caught, heldAt, movePoint, eruptVictim) on worm 0; `release` lets every worm's catch go (`letWormGo`). `BikakuServer.State`: `moveWorms`, `held[3]`, `heldAts[3]`, `caughts[3]`, `dones[3]`, `points[3]`, `victims[3]`, `calmWorms()`.
+- Network: `S2CBikakuState` appends `moveWorms`, `held[3]`, `caughtBits`, `points[3]`; protocol 102. `BikakuClient.View` the same.
+- Client: `BikakuRenderer` draws `formMoves` for Maw/Drag/Pursuit/Eruption when `moveWorms >= 2` (targets per worm: its body or its point; each worm's way `route(1 + i)`, start its shoulder or Drag's ground anchor in its lane), drawn until the last worm is done; `BikakuFx` eruption per worm (its own age and mark, worked out in its lane).
+- Preview: `tools/MawPreview.java formmoves`; `docs/handoff/bikaku-form-moves-3.6.1.png`.
+- Tests: BikakuWormTests `formMoves()` (124,414 in all), BikakuTests, ControlTests, PathTests, PathScreenTests.
+- **Judgment calls:** the beats between worms; which bodies they pick; each worm at full damage; Pursuit's three bites per worm, 8 ticks apart; the fling directions; cooldowns unchanged.
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 102. Not tested in game.
+
+# State after 3.6.0
 
 Branch `claude/hopeful-noether-5c2wex`. Read `docs/handoff/next-ai-3.5.4.md` first (the owner's words this session at its top, quoted exactly; the state now). Next: **3.6.1, every move made by all the form's worms** (the owner: "to basically become overpowered, like, to do enhanced versions of themselves whenever they're, like, in different transformations, such as, like, the move that, like, drag pursuit, you can send all three of them, all three of the worm-like things, and the thing that sends the worm underground and then up can be like more than one, and whatsoever."), then **3.6.2, The Walker**.
 
