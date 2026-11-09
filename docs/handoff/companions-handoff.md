@@ -1,9 +1,19 @@
-# READ FIRST: `docs/handoff/next-ai-3.6.3.md`
+# READ FIRST: `docs/handoff/next-ai-3.6.6.md`
 
 GeckoLib, Photon and PlayerAnimator are the mod's dependencies: use them wherever they make the mod smoother (the owner). Then the owner's
-words in `docs/handoff/owner-words-mutations.md`.
+words in `docs/handoff/owner-words-mutations.md`. There is no RC bar: energy and food are one bar.
 
-# START HERE (state after 3.6.5)
+# START HERE (state after 3.6.6)
+
+Branch `claude/hopeful-noether-5c2wex`. Read `docs/handoff/next-ai-3.6.3.md` first. Next: **Potential Unlock, first part** (3.6.7: the mutation, three times the RC, the one bar purple: the owner, "Should be Purple, the bar, my bad"; there is no RC bar).
+
+- 3.6.6, the owner (on a preview that showed "RC bar (no diet)" rows): "The RC bar does not exist and is not meant to be a thing anymore, the energy and FOOD bar are the same, RC bar IS NOT A THING".
+- `ReserveHud.energyHud` (the hook the patcher puts in `KaguneEnergyHud.render`) is empty: the original RC bar (`KaguneEnergyHud.renderLegacy`) is never drawn (it was in creative and with the diet off, while the kagune was out). Told the owner that with the diet off nothing shows energy on screen now.
+- Tests: GhoulMeatTests `noRcBar()` (8,027): the hook is empty and nothing calls `KaguneEnergyHud.renderLegacy`. The full suite.
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 103. Not tested in game.
+
+# State after 3.6.5
 
 Branch `claude/hopeful-noether-5c2wex`. Read `docs/handoff/next-ai-3.6.3.md` first. Next: **Potential Unlock** (3.6.6 on; the owner's words in `docs/handoff/owner-words-mutations.md`; quest-unlocked like Grand Devouring, `BikakuDevour.grant`). Grand Devouring is not in the kakuja (the owner: "Grand devouring should not be in the kakuja form by the way.").
 

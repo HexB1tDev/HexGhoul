@@ -1,3 +1,5 @@
+> **Superseded: read `docs/handoff/next-ai-3.6.6.md` first** (the newest state; 3.6.3 to 3.6.6 shipped; Potential Unlock in progress).
+
 # HANDOFF: HexGhoul after 3.6.3 (Grand Devouring shipped). READ THIS FIRST.
 
 ## The session after this note (same branch): the owner's words, and where it got to
@@ -49,6 +51,13 @@ version): "I like the inside of the mouth, proceed wit hthe mod". So the version
 **3.6.5 shipped** (Grand Devouring from inside the mouth: the mod's first GeckoLib model; details in the top section of
 `companions-handoff.md`). Then the owner: "Grand devouring should not be in the kakuja form by the way." So the kakuja part below is
 dropped (it already never starts there).
+
+**3.6.6 shipped** (a fix: the owner, "The RC bar does not exist and is not meant to be a thing anymore, the energy and FOOD bar are
+the same, RC bar IS NOT A THING": the original RC bar is never drawn). There is ONE bar: energy and food (the flesh reserve). Never make
+or mention an "RC bar". Potential Unlock (the owner answered the plan with "proceed", and "Should be Purple, the bar, my bad") is next:
+(1) 3.6.7: the mutation, three times the RC, the one bar purple; (2) surviving lethal blows while RC lasts, and rare tearing-off of parts
+that fall with his skin and vanish from his model; (3) the strands in his kagune colour pulling each part back over about 5 s. A stash
+`potential-unlock-part1-wip` may hold the first part's work if the session was cut short.
 
 **Next, in this order (as it was before 3.6.5; items 1's kakuja part dropped):**
 1. **3.6.5 (done):** the victim's first-person view from inside the mouth (GeckoLib; matching `GrandDevour` exactly: the same `at(...)`, the

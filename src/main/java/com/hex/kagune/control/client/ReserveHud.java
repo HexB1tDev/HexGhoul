@@ -101,13 +101,11 @@ public final class ReserveHud {
     }
 
     /**
-     * 7.0.0: the original RC bar's listener (bytecode hook, {@code KaguneEnergyHud.render}): RC is the shared bar now, so its own
-     * bar is not drawn while this one shows; without the diet (or in creative) it draws as it always did.
+     * 7.0.0: the original RC bar's listener (bytecode hook, {@code KaguneEnergyHud.render}): RC is the shared bar now. 3.6.6 (the
+     * owner: "The RC bar does not exist and is not meant to be a thing anymore, the energy and FOOD bar are the same, RC bar IS NOT A
+     * THING"): it is never drawn (it still was in creative and without the diet).
      */
     public static void energyHud(RenderGuiOverlayEvent.Post event) {
-        if (!showing(Minecraft.m_91087_())) {
-            com.hex.kagune.client.KaguneEnergyHud.renderLegacy(event);
-        }
     }
 
     private static boolean showing(Minecraft minecraft) {

@@ -21,6 +21,7 @@ public final class GhoulMeatTests {
         food();
         text();
         tank();
+        noRcBar();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -71,6 +72,31 @@ public final class GhoulMeatTests {
     }
 
     /** 2.0: a ghoul is a living tank: mastery, meat and form each cut a blow, together to about a quarter; a new ghoul takes it all. */
+    /**
+     * 3.6.6 (the owner: "The RC bar does not exist and is not meant to be a thing anymore, the energy and FOOD bar are the same, RC bar IS
+     * NOT A THING"): the original RC bar's hook draws nothing, ever, and nothing else of the mod draws it.
+     */
+    private static void noRcBar() {
+        try {
+            String hud = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get("src/main/java/com/hex/kagune/control/client/ReserveHud.java")),
+                java.nio.charset.StandardCharsets.UTF_8);
+            String hook = hud.substring(hud.indexOf("public static void energyHud("));
+            hook = hook.substring(0, hook.indexOf("\n    }\n") + 6);
+            check(!hook.contains("renderLegacy") && hook.replaceAll("\\s", "").endsWith("{}"), "the RC bar's hook draws nothing");
+            int callers = 0;
+            try (java.util.stream.Stream<java.nio.file.Path> files = java.nio.file.Files.walk(java.nio.file.Paths.get("src/main/java"))) {
+                for (java.nio.file.Path file : (Iterable<java.nio.file.Path>)files.filter(f -> f.toString().endsWith(".java"))::iterator) {
+                    if (new String(java.nio.file.Files.readAllBytes(file), java.nio.charset.StandardCharsets.UTF_8).contains("KaguneEnergyHud.renderLegacy")) {
+                        callers++;
+                    }
+                }
+            }
+            check(callers == 0, "nothing of the mod draws the original RC bar (" + callers + ")");
+        } catch (java.io.IOException failure) {
+            check(false, "the sources can't be read: " + failure);
+        }
+    }
+
     private static void tank() {
         check(com.hex.kagune.control.GhoulTank.taken(0, 0, 0.0) == 1.0, "a new ghoul with its kagune in takes a blow whole");
         double most = com.hex.kagune.control.GhoulTank.taken(1000, 100000, com.hex.kagune.control.GhoulTank.form(true, 5, true, true));

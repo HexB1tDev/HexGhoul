@@ -297,3 +297,18 @@ Then, while the view from inside was being built (the next version had been plan
 Grand devouring should not be in the kakuja form by the way.
 
 (It never starts in the kakuja, and going into the kakuja is refused while a worm feeds; nothing was changed for it.)
+
+After 3.6.5, told the plan for Potential Unlock (three versions: the mutation, its bar's colour and triple RC; surviving and tearing off;
+the strands pulling parts back) and asked what colour the bar should turn, the owner:
+
+proceed
+
+Then:
+
+Should be Purple, the bar, my bad
+
+Then, on a preview of the purple bar that showed both the flesh reserve and the original's "RC" bar (drawn with the diet off), interrupting:
+
+The RC bar does not exist and is not meant to be a thing anymore, the energy and FOOD bar are the same, RC bar IS NOT A THING
+
+(So 3.6.6 stopped the original RC bar being drawn at all, and Potential Unlock turns the one bar, energy and food, purple.)
