@@ -76,6 +76,7 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
         this.blush = texture(key, key + "_blush");
         this.m_115326_(new Face(this));
         this.m_115326_(new Kakuja(this));
+        this.m_115326_(new OutfitLayer<>(this)); // 4.0.0: a companion's mask (Noro's always; Ayato's in a fight) and anything worn
     }
 
     /** 1.3.19: a final kakuja worn (Ken's Peace) on the body's posed parts, as a player's is drawn. */

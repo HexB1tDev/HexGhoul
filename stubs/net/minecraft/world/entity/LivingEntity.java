@@ -35,6 +35,7 @@ public abstract class LivingEntity extends Entity {
     /** addEffect(effect, source) */ public boolean m_147207_(net.minecraft.world.effect.MobEffectInstance effect, Entity source) { throw new UnsupportedOperationException(); }
     /** getMainHandItem */ public net.minecraft.world.item.ItemStack m_21205_() { throw new UnsupportedOperationException(); }
     /** getItemBySlot */ public net.minecraft.world.item.ItemStack m_6844_(EquipmentSlot slot) { throw new UnsupportedOperationException(); }
+    /** setItemSlot (4.0.0: an NPC's outfit and mask) */ public void m_8061_(EquipmentSlot slot, net.minecraft.world.item.ItemStack stack) { throw new UnsupportedOperationException(); }
     /** getOffhandItem */ public net.minecraft.world.item.ItemStack m_21206_() { throw new UnsupportedOperationException(); }
     /** knockback */ public void m_147240_(double strength, double x, double z) { throw new UnsupportedOperationException(); }
     /** getAttributeValue */ public double m_21133_(net.minecraft.world.entity.ai.attributes.Attribute attribute) { throw new UnsupportedOperationException(); }

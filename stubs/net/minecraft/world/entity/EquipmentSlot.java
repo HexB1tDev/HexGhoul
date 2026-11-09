@@ -2,5 +2,5 @@
 package net.minecraft.world.entity;
 
 public enum EquipmentSlot {
-    CHEST
+    MAINHAND, OFFHAND, FEET, LEGS, CHEST, HEAD
 }

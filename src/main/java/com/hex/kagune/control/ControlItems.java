@@ -254,6 +254,24 @@ public final class ControlItems {
         EFFECTS.register(modBus);
     }
 
+    /**
+     * 4.0.0 (The Great Exploration): the owner's outfits and masks as items (each one to a stack, iron's protection): the Formal Outfit,
+     * the Crimson Outfit, their 24 masks and the generic masks ({@link com.hex.kagune.control.outfit.Outfits}), in the Combat tab.
+     */
+    private static final java.util.Map<String, RegistryObject<Item>> OUTFITS = new java.util.LinkedHashMap<>();
+
+    static {
+        for (com.hex.kagune.control.outfit.Outfits.Piece piece : com.hex.kagune.control.outfit.Outfits.ALL) {
+            OUTFITS.put(piece.id(), ITEMS.register(piece.id(), () -> new com.hex.kagune.control.outfit.OutfitItem(piece, new Item.Properties().m_41487_(1))));
+        }
+    }
+
+    /** 4.0.0: a fresh stack of the outfit piece or mask {@code id} (empty if there is none). */
+    public static ItemStack outfit(String id) {
+        RegistryObject<Item> item = id == null ? null : OUTFITS.get(id);
+        return item == null ? ItemStack.f_41583_ : new ItemStack(item.get(), 1);
+    }
+
     /** True for a stack of Ghoul Meat. */
     public static boolean ghoulMeat(ItemStack stack) {
         return stack != null && !stack.m_41619_() && stack.m_41720_() == GHOUL_MEAT.get();
@@ -285,6 +303,10 @@ public final class ControlItems {
                 for (com.hex.kagune.control.quinque.Arm arm : com.hex.kagune.control.quinque.Arm.values()) {
                     event.accept(ARM_CASES.get(arm));
                     event.accept(ARM_WEAPONS.get(arm));
+                }
+                // 4.0.0: the outfits and the masks.
+                for (RegistryObject<Item> outfit : OUTFITS.values()) {
+                    event.accept(outfit);
                 }
             }
         }

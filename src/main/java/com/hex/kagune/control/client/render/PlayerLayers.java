@@ -90,7 +90,10 @@ public final class PlayerLayers {
         // 3.0.6: a kagune-made weapon in the hand (its own mesh, its whip's tendril).
         ArmItemLayer arms = new ArmItemLayer(renderer);
         renderer.m_115326_(arms);
-        List<RenderLayer> ours = List.of(wounds, kakugan, armor, mask, blade, graft, king, figure, build, mark, arms);
+        // 4.0.0: the owner's outfits and masks, worn.
+        OutfitLayer outfit = new OutfitLayer(renderer);
+        renderer.m_115326_(outfit);
+        List<RenderLayer> ours = List.of(wounds, kakugan, armor, mask, blade, graft, king, figure, build, mark, arms, outfit);
         ATTACHED.put(renderer, ours);
         return ours;
     }

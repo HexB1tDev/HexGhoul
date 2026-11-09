@@ -77,6 +77,7 @@ NEW_PREFIXES = (
     "com/hex/kagune/control/",
     "assets/hexkagune/textures/",
     "assets/hexkagune/models/one_eyed_owl.bin",
+    "assets/hexkagune/models/outfits.bin",  # 4.0.0: the owner's outfits and masks, baked (tools/outfit_models.py)
     "assets/hexkagune/models/item/",  # 7.0.1: the expansion's item models (Ghoul Meat)
     "assets/hexkagune/sounds/",
     "assets/hexkagune/geo/",  # 3.6.5: GeckoLib models (Grand Devouring's inside)
@@ -160,7 +161,8 @@ def assemble():
 # 1.2.5: no character of the show is named anywhere in the mod's jar (the user's ask): not in a class, a text, a resource or a file
 # name. These are the only places the names are written (to be looked for); the original jar's own are renamed by KagunePatch.
 # 1.3.0: the user allowed "Eto" (the Library's NPC), so her name is no longer looked for.
-FORBIDDEN = re.compile(rb"Kaneki|KANEKI|kaneki|Ayato|AYATO|ayato|Furuta|FURUTA|furuta")
+# 4.0.0: the owner asked for "Ayato Kirishima" as an NPC of his own (The Great Exploration), so his name is no longer looked for either.
+FORBIDDEN = re.compile(rb"Kaneki|KANEKI|kaneki|Furuta|FURUTA|furuta")
 
 
 def check_names():

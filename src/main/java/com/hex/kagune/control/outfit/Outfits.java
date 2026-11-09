@@ -1,0 +1,114 @@
+package com.hex.kagune.control.outfit;
+
+import java.util.List;
+
+/**
+ * 4.0.0 (The Great Exploration): every outfit piece and mask there is as an item (pure, tested): its id, the model it is drawn from
+ * ({@link OutfitModels}) and the slot it is worn in. The owner's two outfits (the CCG's Formal Outfit, Aogiri Tree's Crimson Outfit), four
+ * pieces each, and their 24 masks; and the generic masks (made for 4.0.0: a clown's, a gas mask, a skull, a fox, an oni, a cloth wrap), the
+ * only ones a wild ghoul is ever found in. Every mask is a helmet: worn in the head slot (a hood and a mask, one at a time, as the owner's
+ * own mod has it).
+ */
+public final class Outfits {
+    /** One item: its id, its model, its slot ({@link OutfitModels#HELMET} ...), and whether it is a mask. */
+    public record Piece(String id, String model, int slot, boolean mask) {
+        /** Its texture's path in the mod's assets. */
+        public String texture() {
+            return "textures/outfit/" + this.model + ".png";
+        }
+    }
+
+    public static final String FORMAL = "formal";
+    public static final String CRIMSON = "crimson";
+
+    /** The Formal Outfit (every CCG investigator's but the White Reaper's): cap, overcoat, trousers, shoes. */
+    public static final List<Piece> FORMAL_SET = set(FORMAL);
+    /** The Crimson Outfit (every Aogiri Tree member's): hood, coat, coat tails and trousers, boots. */
+    public static final List<Piece> CRIMSON_SET = set(CRIMSON);
+
+    /** The owner's 24 masks, in their reference sheet's order (the first is Eyepatch's: its folder's name kept out of the mod). */
+    public static final List<String> CHARACTER_MASKS = List.of("mask_eyepatch", "mask_touka", "mask_ayato", "mask_noro", "mask_yamori", "mask_eto",
+        "mask_tatara", "mask_bin_brothers", "mask_roma", "mask_shachi", "mask_rize", "mask_uta", "mask_itori", "mask_yomo", "mask_yoshimura",
+        "mask_nishiki", "mask_tsukiyama", "mask_kanae", "mask_donato", "mask_koori", "mask_amon", "mask_seidou", "mask_akira", "mask_arima");
+
+    /**
+     * The generic masks: belonging to no one (the owner: "clown masks, gas masks, and other non-faction-specific masks"). The only ones a
+     * wild ghoul ever wears.
+     */
+    public static final List<String> GENERIC_MASKS = List.of("mask_clown", "mask_gas", "mask_skull", "mask_fox", "mask_oni", "mask_cloth");
+
+    /**
+     * Aogiri Tree's own masks a member wears under its hood (the owner: "the appropriate faction masks"): the Laughing Mask and the Fanged
+     * Mask, the faction's rank and file; never an executive's (Ayato's, Noro's, Eto's, the Hockey Mask, the Red Muzzle, the Jester).
+     */
+    public static final List<String> AOGIRI_MASKS = List.of("mask_bin_brothers", "mask_shachi");
+
+    /** Every piece, outfits first, then every mask. */
+    public static final List<Piece> ALL;
+
+    static {
+        java.util.ArrayList<Piece> all = new java.util.ArrayList<>(FORMAL_SET);
+        all.addAll(CRIMSON_SET);
+        for (String mask : CHARACTER_MASKS) {
+            all.add(new Piece(mask, mask, OutfitModels.HELMET, true));
+        }
+        for (String mask : GENERIC_MASKS) {
+            all.add(new Piece(mask, mask, OutfitModels.HELMET, true));
+        }
+        ALL = List.copyOf(all);
+    }
+
+    private Outfits() {
+    }
+
+    private static List<Piece> set(String style) {
+        return List.of(new Piece(style + "_helmet", style, OutfitModels.HELMET, false), new Piece(style + "_chestplate", style, OutfitModels.CHESTPLATE, false),
+            new Piece(style + "_leggings", style, OutfitModels.LEGGINGS, false), new Piece(style + "_boots", style, OutfitModels.BOOTS, false));
+    }
+
+    /** The piece with {@code id}, or null. */
+    public static Piece of(String id) {
+        for (Piece piece : ALL) {
+            if (piece.id().equals(id)) {
+                return piece;
+            }
+        }
+        return null;
+    }
+
+    /** The mask {@code index} names among {@link #GENERIC_MASKS} (1-based: 0 is none), or null. */
+    public static String generic(int index) {
+        return index >= 1 && index <= GENERIC_MASKS.size() ? GENERIC_MASKS.get(index - 1) : null;
+    }
+
+    /** The mask {@code index} names among {@link #AOGIRI_MASKS} (1-based: 0 is none), or null. */
+    public static String aogiri(int index) {
+        return index >= 1 && index <= AOGIRI_MASKS.size() ? AOGIRI_MASKS.get(index - 1) : null;
+    }
+
+    /**
+     * A wild ghoul's mask for a roll {@code r} in 0..1 (1-based among the generic masks; 0: none). The owner: "a chance to spawn wearing
+     * randomly selected masks": {@link #WILD_MASK_CHANCE} of them wear one, each mask as likely.
+     */
+    public static int wildMask(double r) {
+        if (r >= WILD_MASK_CHANCE) {
+            return 0;
+        }
+        return 1 + Math.min(GENERIC_MASKS.size() - 1, (int)(r / WILD_MASK_CHANCE * GENERIC_MASKS.size()));
+    }
+
+    /** How many wild ghouls wear a mask. */
+    public static final double WILD_MASK_CHANCE = 0.6;
+
+    /**
+     * Each piece's own chance of falling when an investigator (or an Aogiri member, or a masked ghoul) is killed by a player (the owner:
+     * "a small chance to drop individual pieces ... calculated separately for each piece ... low enough to make collecting the full set
+     * rewarding"): one in twenty-five, each piece its own roll.
+     */
+    public static final float DROP_CHANCE = 0.04F;
+
+    /** The armour the Formal and Crimson outfits give together (iron's: 2 + 6 + 5 + 2), taken off an NPC's own so a dressed one fights as before. */
+    public static final double SET_ARMOR = 15.0;
+    /** And a mask alone (an iron helmet's). */
+    public static final double MASK_ARMOR = 2.0;
+}

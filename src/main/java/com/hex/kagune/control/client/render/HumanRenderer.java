@@ -59,6 +59,7 @@ public final class HumanRenderer extends HumanoidMobRenderer<HumanNpc, PlayerMod
         this.slim = slim;
         this.m_115326_(new Blink(this));
         this.m_115326_(new Figure(this));
+        this.m_115326_(new OutfitLayer<>(this)); // 4.0.0: anything a person is wearing
     }
 
     /** 2.0.34: a village woman's bust (the shared female figure's, as the CCG's women have it) in her own skin, bouncing as she moves. */

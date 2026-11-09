@@ -2,6 +2,7 @@
 package net.minecraft.world.entity;
 
 public abstract class Mob extends LivingEntity {
+    /** setDropChance (4.0.0: each piece of an NPC's outfit its own small chance) */ public void m_21409_(EquipmentSlot slot, float chance) { throw new UnsupportedOperationException(); }
     /** goalSelector */ protected final net.minecraft.world.entity.ai.goal.GoalSelector f_21345_ = null;
     /** removeWhenFarAway (1.3.27) */ public boolean m_6785_(double distanceSqr) { throw new UnsupportedOperationException(); }
     /** registerGoals */ protected void m_8099_() { throw new UnsupportedOperationException(); }

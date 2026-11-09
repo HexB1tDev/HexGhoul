@@ -1138,3 +1138,20 @@ F net/minecraft/world/level/block/Rotation NONE Lnet/minecraft/world/level/block
 F net/minecraft/world/level/block/Rotation CLOCKWISE_90 Lnet/minecraft/world/level/block/Rotation;  # [srg] joined.tsrg cvz b CLOCKWISE_90
 F net/minecraft/world/level/block/Rotation CLOCKWISE_180 Lnet/minecraft/world/level/block/Rotation;  # [srg] joined.tsrg cvz c CLOCKWISE_180
 F net/minecraft/world/level/block/Rotation COUNTERCLOCKWISE_90 Lnet/minecraft/world/level/block/Rotation;  # [srg] joined.tsrg cvz d COUNTERCLOCKWISE_90
+
+# --- 4.0.0: the owner's outfits and masks as items (outfit/OutfitItem), drawn by the mod's own layer (OutfitLayer, OutfitFirstPerson) ----
+# cdj = ArmorItem, cdj$a = ArmorItem$Type, cdk = ArmorMaterial, cdl = ArmorMaterials, bfo = EquipmentSlot, fkf = RenderType (joined.tsrg).
+C net/minecraft/world/item/ArmorItem                                                # [srg] cdj C_1313_ (class_1738, yarn ArmorItem)
+M net/minecraft/world/item/ArmorItem <init> (Lnet/minecraft/world/item/ArmorMaterial;Lnet/minecraft/world/item/ArmorItem$Type;Lnet/minecraft/world/item/Item$Properties;)V  # [srg] joined.tsrg cdj <init> (Lcdk;Lcdj$a;Lcfu$a;)V 40385 (yarn ArmorItem(ArmorMaterial, ArmorItem.Type, Item.Settings)); Forge's getArmorTexture (IForgeItem) overridden for a clear texture
+C net/minecraft/world/item/ArmorItem$Type                                           # [srg] cdj$a C_1313_$C_265803_ (class_1738$class_8051, yarn ArmorItem$Type), an enum
+F net/minecraft/world/item/ArmorItem$Type HELMET Lnet/minecraft/world/item/ArmorItem$Type;  # [srg] joined.tsrg cdj$a a HELMET (enum constants keep their names)
+F net/minecraft/world/item/ArmorItem$Type CHESTPLATE Lnet/minecraft/world/item/ArmorItem$Type;  # [srg] joined.tsrg cdj$a b CHESTPLATE
+F net/minecraft/world/item/ArmorItem$Type LEGGINGS Lnet/minecraft/world/item/ArmorItem$Type;  # [srg] joined.tsrg cdj$a c LEGGINGS
+F net/minecraft/world/item/ArmorItem$Type BOOTS Lnet/minecraft/world/item/ArmorItem$Type;  # [srg] joined.tsrg cdj$a d BOOTS
+C net/minecraft/world/item/ArmorMaterial                                            # [srg] cdk C_1315_ (class_1741, yarn ArmorMaterial), an interface
+C net/minecraft/world/item/ArmorMaterials                                           # [srg] cdl C_1318_ (class_1740, yarn ArmorMaterials), an enum implementing cdk
+F net/minecraft/world/item/ArmorMaterials IRON Lnet/minecraft/world/item/ArmorMaterials;  # [srg] joined.tsrg cdl c IRON (enum constants keep their names): the owner's own mod gives them iron's values
+F net/minecraft/world/entity/EquipmentSlot HEAD Lnet/minecraft/world/entity/EquipmentSlot;  # [srg] joined.tsrg bfo f HEAD (enum constants keep their names)
+F net/minecraft/world/entity/EquipmentSlot LEGS Lnet/minecraft/world/entity/EquipmentSlot;  # [srg] joined.tsrg bfo d LEGS
+F net/minecraft/world/entity/EquipmentSlot FEET Lnet/minecraft/world/entity/EquipmentSlot;  # [srg] joined.tsrg bfo c FEET
+M net/minecraft/client/renderer/RenderType m_110431_ (Lnet/minecraft/resources/ResourceLocation;)Lnet/minecraft/client/renderer/RenderType;  # [srg] armorCutoutNoCull: joined.tsrg fkf a (Lacq;)Lfkf; m_110431_ (yarn getArmorCutoutNoCull)

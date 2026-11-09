@@ -68,6 +68,7 @@ public final class GhoulNpcRenderer extends HumanoidMobRenderer<GhoulNpc, Player
         this.slim = slim;
         this.m_115326_(new Eyes(this));
         this.m_115326_(new BladeArmLayer(this));
+        this.m_115326_(new OutfitLayer<>(this)); // 4.0.0: its mask; an Aogiri member's outfit
     }
 
     /**

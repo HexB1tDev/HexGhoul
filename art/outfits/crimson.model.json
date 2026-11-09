@@ -1,0 +1,2919 @@
+{
+  "style": "crimson",
+  "texture_width": 512,
+  "texture_height": 512,
+  "pivots": {
+    "head": [
+      0,
+      0,
+      0
+    ],
+    "body": [
+      0,
+      0,
+      0
+    ],
+    "right_arm": [
+      -5,
+      2,
+      0
+    ],
+    "left_arm": [
+      5,
+      2,
+      0
+    ],
+    "right_leg": [
+      -1.9,
+      12,
+      0
+    ],
+    "left_leg": [
+      1.9,
+      12,
+      0
+    ]
+  },
+  "cubes": [
+    {
+      "name": "back_upper",
+      "bone": "body",
+      "slot": "chestplate",
+      "pos": [
+        -4.45,
+        0,
+        2.04
+      ],
+      "size": [
+        8.9,
+        11.9,
+        0.72
+      ],
+      "mat": "red",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        -4.45,
+        0,
+        2.04
+      ],
+      "uv": [
+        2,
+        2
+      ]
+    },
+    {
+      "name": "right_torso_side",
+      "bone": "body",
+      "slot": "chestplate",
+      "pos": [
+        -4.5,
+        0,
+        -2.3
+      ],
+      "size": [
+        0.7,
+        12,
+        4.7
+      ],
+      "mat": "red_dark",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        -4.5,
+        0,
+        -2.3
+      ],
+      "uv": [
+        26,
+        2
+      ]
+    },
+    {
+      "name": "right_front_overlap",
+      "bone": "body",
+      "slot": "chestplate",
+      "pos": [
+        -4.45,
+        0,
+        -2.94
+      ],
+      "size": [
+        4.32,
+        12,
+        0.9
+      ],
+      "mat": "red",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        -4.45,
+        0,
+        -2.94
+      ],
+      "uv": [
+        41,
+        2
+      ]
+    },
+    {
+      "name": "right_placket_edge",
+      "bone": "body",
+      "slot": "chestplate",
+      "pos": [
+        -0.34,
+        0.35,
+        -3.06
+      ],
+      "size": [
+        0.22,
+        11.65,
+        0.18
+      ],
+      "mat": "red_edge",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        -0.34,
+        0.35,
+        -3.06
+      ],
+      "uv": [
+        56,
+        2
+      ]
+    },
+    {
+      "name": "right_sleeve",
+      "bone": "right_arm",
+      "slot": "chestplate",
+      "pos": [
+        -8.85,
+        0.0,
+        -2.5
+      ],
+      "size": [
+        4.8,
+        10.55,
+        5.0
+      ],
+      "mat": "red",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        -8.85,
+        0.0,
+        -2.5
+      ],
+      "uv": [
+        61,
+        2
+      ]
+    },
+    {
+      "name": "right_outer_sleeve_seam",
+      "bone": "right_arm",
+      "slot": "chestplate",
+      "pos": [
+        -8.94,
+        2.7,
+        -2.1
+      ],
+      "size": [
+        0.18,
+        7.7,
+        4.3
+      ],
+      "mat": "red_dark",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        -8.94,
+        2.7,
+        -2.1
+      ],
+      "uv": [
+        85,
+        2
+      ]
+    },
+    {
+      "name": "right_cuff",
+      "bone": "right_arm",
+      "slot": "chestplate",
+      "pos": [
+        -8.969999999999999,
+        10.05,
+        -2.68
+      ],
+      "size": [
+        5.04,
+        1.15,
+        5.36
+      ],
+      "mat": "red_edge",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        -8.969999999999999,
+        10.05,
+        -2.68
+      ],
+      "uv": [
+        98,
+        2
+      ]
+    },
+    {
+      "name": "right_cuff_lower_edge",
+      "bone": "right_arm",
+      "slot": "chestplate",
+      "pos": [
+        -9.0,
+        11.0,
+        -2.7
+      ],
+      "size": [
+        5.1,
+        0.22,
+        5.4
+      ],
+      "mat": "red_dark",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        -9.0,
+        11.0,
+        -2.7
+      ],
+      "uv": [
+        123,
+        2
+      ]
+    },
+    {
+      "name": "right_shoulder_pad",
+      "bone": "right_arm",
+      "slot": "chestplate",
+      "pos": [
+        -9.2,
+        -0.65,
+        -2.85
+      ],
+      "size": [
+        5.3,
+        3.15,
+        5.7
+      ],
+      "mat": "red",
+      "rot": [
+        0,
+        0,
+        -4
+      ],
+      "pivot": [
+        -4.1,
+        -0.65,
+        0
+      ],
+      "uv": [
+        148,
+        2
+      ]
+    },
+    {
+      "name": "right_shoulder_lower_rim",
+      "bone": "right_arm",
+      "slot": "chestplate",
+      "pos": [
+        -9.26,
+        2.32,
+        -2.94
+      ],
+      "size": [
+        5.42,
+        0.48,
+        5.88
+      ],
+      "mat": "red_dark",
+      "rot": [
+        0,
+        0,
+        -4
+      ],
+      "pivot": [
+        -4.1,
+        -0.65,
+        0
+      ],
+      "uv": [
+        174,
+        2
+      ]
+    },
+    {
+      "name": "right_shoulder_top",
+      "bone": "right_arm",
+      "slot": "chestplate",
+      "pos": [
+        -9.0,
+        -0.83,
+        -2.6
+      ],
+      "size": [
+        4.9,
+        0.3,
+        5.2
+      ],
+      "mat": "red_edge",
+      "rot": [
+        0,
+        0,
+        -4
+      ],
+      "pivot": [
+        -4.1,
+        -0.65,
+        0
+      ],
+      "uv": [
+        201,
+        2
+      ]
+    },
+    {
+      "name": "right_trouser",
+      "bone": "right_leg",
+      "slot": "leggings",
+      "pos": [
+        -3.96,
+        12.0,
+        -2.09
+      ],
+      "size": [
+        4.12,
+        8.1,
+        4.18
+      ],
+      "mat": "black",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        -3.96,
+        12.0,
+        -2.09
+      ],
+      "uv": [
+        226,
+        2
+      ]
+    },
+    {
+      "name": "right_coat_front",
+      "bone": "right_leg",
+      "slot": "leggings",
+      "pos": [
+        -4.47,
+        11.8,
+        -3.05
+      ],
+      "size": [
+        4.2,
+        9.6,
+        0.65
+      ],
+      "mat": "red",
+      "rot": [
+        0,
+        0,
+        3
+      ],
+      "pivot": [
+        -0.27,
+        11.8,
+        -3.05
+      ],
+      "uv": [
+        247,
+        2
+      ]
+    },
+    {
+      "name": "right_front_hem",
+      "bone": "right_leg",
+      "slot": "leggings",
+      "pos": [
+        -4.47,
+        21.0,
+        -3.1
+      ],
+      "size": [
+        4.2,
+        0.42,
+        0.75
+      ],
+      "mat": "red_edge",
+      "rot": [
+        0,
+        0,
+        3
+      ],
+      "pivot": [
+        -0.27,
+        11.8,
+        -3.05
+      ],
+      "uv": [
+        261,
+        2
+      ]
+    },
+    {
+      "name": "right_front_inner_edge",
+      "bone": "right_leg",
+      "slot": "leggings",
+      "pos": [
+        -0.48,
+        11.85,
+        -3.12
+      ],
+      "size": [
+        0.22,
+        9.4,
+        0.8
+      ],
+      "mat": "red_dark",
+      "rot": [
+        0,
+        0,
+        3
+      ],
+      "pivot": [
+        -0.27,
+        11.8,
+        -3.05
+      ],
+      "uv": [
+        275,
+        2
+      ]
+    },
+    {
+      "name": "right_front_gusset",
+      "bone": "right_leg",
+      "slot": "leggings",
+      "pos": [
+        -4.45,
+        11.8,
+        -3.1
+      ],
+      "size": [
+        1.35,
+        9.6,
+        0.72
+      ],
+      "mat": "red",
+      "rot": [
+        0,
+        0,
+        7.5
+      ],
+      "pivot": [
+        -3.1,
+        11.8,
+        -3.1
+      ],
+      "uv": [
+        282,
+        2
+      ]
+    },
+    {
+      "name": "right_front_gusset_hem",
+      "bone": "right_leg",
+      "slot": "leggings",
+      "pos": [
+        -4.45,
+        21.0,
+        -3.14
+      ],
+      "size": [
+        1.35,
+        0.42,
+        0.8
+      ],
+      "mat": "red_edge",
+      "rot": [
+        0,
+        0,
+        7.5
+      ],
+      "pivot": [
+        -3.1,
+        11.8,
+        -3.1
+      ],
+      "uv": [
+        291,
+        2
+      ]
+    },
+    {
+      "name": "right_coat_side",
+      "bone": "right_leg",
+      "slot": "leggings",
+      "pos": [
+        -4.49,
+        11.78,
+        -2.4
+      ],
+      "size": [
+        0.68,
+        9.62,
+        5.2
+      ],
+      "mat": "red",
+      "rot": [
+        0,
+        0,
+        7.5
+      ],
+      "pivot": [
+        -4.15,
+        11.78,
+        0
+      ],
+      "uv": [
+        300,
+        2
+      ]
+    },
+    {
+      "name": "right_side_hem",
+      "bone": "right_leg",
+      "slot": "leggings",
+      "pos": [
+        -4.550000000000001,
+        21.0,
+        -2.45
+      ],
+      "size": [
+        0.8,
+        0.42,
+        5.3
+      ],
+      "mat": "red_edge",
+      "rot": [
+        0,
+        0,
+        7.5
+      ],
+      "pivot": [
+        -4.15,
+        11.78,
+        0
+      ],
+      "uv": [
+        316,
+        2
+      ]
+    },
+    {
+      "name": "right_coat_back",
+      "bone": "right_leg",
+      "slot": "leggings",
+      "pos": [
+        -4.45,
+        11.8,
+        2.12
+      ],
+      "size": [
+        4.37,
+        9.6,
+        0.72
+      ],
+      "mat": "red",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        -4.45,
+        11.8,
+        2.12
+      ],
+      "uv": [
+        333,
+        2
+      ]
+    },
+    {
+      "name": "right_back_hem",
+      "bone": "right_leg",
+      "slot": "leggings",
+      "pos": [
+        -4.45,
+        21.0,
+        2.1
+      ],
+      "size": [
+        4.37,
+        0.42,
+        0.8
+      ],
+      "mat": "red_edge",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        -4.45,
+        21.0,
+        2.1
+      ],
+      "uv": [
+        348,
+        2
+      ]
+    },
+    {
+      "name": "right_back_seam",
+      "bone": "right_leg",
+      "slot": "leggings",
+      "pos": [
+        -0.14,
+        11.8,
+        2.86
+      ],
+      "size": [
+        0.12,
+        9.5,
+        0.08
+      ],
+      "mat": "red_dark",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        -0.14,
+        11.8,
+        2.86
+      ],
+      "uv": [
+        363,
+        2
+      ]
+    },
+    {
+      "name": "right_back_gusset",
+      "bone": "right_leg",
+      "slot": "leggings",
+      "pos": [
+        -4.45,
+        11.8,
+        2.16
+      ],
+      "size": [
+        1.35,
+        9.6,
+        0.72
+      ],
+      "mat": "red",
+      "rot": [
+        0,
+        0,
+        7.5
+      ],
+      "pivot": [
+        -3.1,
+        11.8,
+        2.16
+      ],
+      "uv": [
+        368,
+        2
+      ]
+    },
+    {
+      "name": "right_boot_shaft",
+      "bone": "right_leg",
+      "slot": "boots",
+      "pos": [
+        -4.18,
+        19.6,
+        -2.25
+      ],
+      "size": [
+        4.28,
+        3.3,
+        4.5
+      ],
+      "mat": "black",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        -4.18,
+        19.6,
+        -2.25
+      ],
+      "uv": [
+        377,
+        2
+      ]
+    },
+    {
+      "name": "right_boot_toe",
+      "bone": "right_leg",
+      "slot": "boots",
+      "pos": [
+        -4.26,
+        22.0,
+        -3.15
+      ],
+      "size": [
+        4.44,
+        1.55,
+        5.5
+      ],
+      "mat": "black",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        -4.26,
+        22.0,
+        -3.15
+      ],
+      "uv": [
+        399,
+        2
+      ]
+    },
+    {
+      "name": "right_boot_sole",
+      "bone": "right_leg",
+      "slot": "boots",
+      "pos": [
+        -4.33,
+        23.45,
+        -3.25
+      ],
+      "size": [
+        4.58,
+        0.55,
+        5.7
+      ],
+      "mat": "sole",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        -4.33,
+        23.45,
+        -3.25
+      ],
+      "uv": [
+        423,
+        2
+      ]
+    },
+    {
+      "name": "right_boot_ankle_seam",
+      "bone": "right_leg",
+      "slot": "boots",
+      "pos": [
+        -4.22,
+        21.8,
+        -2.3
+      ],
+      "size": [
+        4.36,
+        0.24,
+        4.6
+      ],
+      "mat": "button",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        -4.22,
+        21.8,
+        -2.3
+      ],
+      "uv": [
+        448,
+        2
+      ]
+    },
+    {
+      "name": "left_torso_side",
+      "bone": "body",
+      "slot": "chestplate",
+      "pos": [
+        3.8000000000000003,
+        0,
+        -2.3
+      ],
+      "size": [
+        0.7,
+        12,
+        4.7
+      ],
+      "mat": "red_dark",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        3.8000000000000003,
+        0,
+        -2.3
+      ],
+      "uv": [
+        470,
+        2
+      ]
+    },
+    {
+      "name": "left_front_overlap",
+      "bone": "body",
+      "slot": "chestplate",
+      "pos": [
+        0.12,
+        0,
+        -2.94
+      ],
+      "size": [
+        4.32,
+        12,
+        0.9
+      ],
+      "mat": "red",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        0.12,
+        0,
+        -2.94
+      ],
+      "uv": [
+        485,
+        2
+      ]
+    },
+    {
+      "name": "left_placket_edge",
+      "bone": "body",
+      "slot": "chestplate",
+      "pos": [
+        0.12,
+        0.35,
+        -3.06
+      ],
+      "size": [
+        0.22,
+        11.65,
+        0.18
+      ],
+      "mat": "red_edge",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        0.12,
+        0.35,
+        -3.06
+      ],
+      "uv": [
+        500,
+        2
+      ]
+    },
+    {
+      "name": "left_sleeve",
+      "bone": "left_arm",
+      "slot": "chestplate",
+      "pos": [
+        4.05,
+        0.0,
+        -2.5
+      ],
+      "size": [
+        4.8,
+        10.55,
+        5.0
+      ],
+      "mat": "red",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        4.05,
+        0.0,
+        -2.5
+      ],
+      "uv": [
+        2,
+        23
+      ]
+    },
+    {
+      "name": "left_outer_sleeve_seam",
+      "bone": "left_arm",
+      "slot": "chestplate",
+      "pos": [
+        8.76,
+        2.7,
+        -2.1
+      ],
+      "size": [
+        0.18,
+        7.7,
+        4.3
+      ],
+      "mat": "red_dark",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        8.76,
+        2.7,
+        -2.1
+      ],
+      "uv": [
+        26,
+        23
+      ]
+    },
+    {
+      "name": "left_cuff",
+      "bone": "left_arm",
+      "slot": "chestplate",
+      "pos": [
+        3.9299999999999997,
+        10.05,
+        -2.68
+      ],
+      "size": [
+        5.04,
+        1.15,
+        5.36
+      ],
+      "mat": "red_edge",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        3.9299999999999997,
+        10.05,
+        -2.68
+      ],
+      "uv": [
+        39,
+        23
+      ]
+    },
+    {
+      "name": "left_cuff_lower_edge",
+      "bone": "left_arm",
+      "slot": "chestplate",
+      "pos": [
+        3.9,
+        11.0,
+        -2.7
+      ],
+      "size": [
+        5.1,
+        0.22,
+        5.4
+      ],
+      "mat": "red_dark",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        3.9,
+        11.0,
+        -2.7
+      ],
+      "uv": [
+        64,
+        23
+      ]
+    },
+    {
+      "name": "left_shoulder_pad",
+      "bone": "left_arm",
+      "slot": "chestplate",
+      "pos": [
+        3.9,
+        -0.65,
+        -2.85
+      ],
+      "size": [
+        5.3,
+        3.15,
+        5.7
+      ],
+      "mat": "red",
+      "rot": [
+        0,
+        0,
+        4
+      ],
+      "pivot": [
+        4.1,
+        -0.65,
+        0
+      ],
+      "uv": [
+        89,
+        23
+      ]
+    },
+    {
+      "name": "left_shoulder_lower_rim",
+      "bone": "left_arm",
+      "slot": "chestplate",
+      "pos": [
+        3.84,
+        2.32,
+        -2.94
+      ],
+      "size": [
+        5.42,
+        0.48,
+        5.88
+      ],
+      "mat": "red_dark",
+      "rot": [
+        0,
+        0,
+        4
+      ],
+      "pivot": [
+        4.1,
+        -0.65,
+        0
+      ],
+      "uv": [
+        115,
+        23
+      ]
+    },
+    {
+      "name": "left_shoulder_top",
+      "bone": "left_arm",
+      "slot": "chestplate",
+      "pos": [
+        4.1,
+        -0.83,
+        -2.6
+      ],
+      "size": [
+        4.9,
+        0.3,
+        5.2
+      ],
+      "mat": "red_edge",
+      "rot": [
+        0,
+        0,
+        4
+      ],
+      "pivot": [
+        4.1,
+        -0.65,
+        0
+      ],
+      "uv": [
+        142,
+        23
+      ]
+    },
+    {
+      "name": "left_trouser",
+      "bone": "left_leg",
+      "slot": "leggings",
+      "pos": [
+        -0.16,
+        12.0,
+        -2.09
+      ],
+      "size": [
+        4.12,
+        8.1,
+        4.18
+      ],
+      "mat": "black",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        -0.16,
+        12.0,
+        -2.09
+      ],
+      "uv": [
+        167,
+        23
+      ]
+    },
+    {
+      "name": "left_coat_front",
+      "bone": "left_leg",
+      "slot": "leggings",
+      "pos": [
+        0.27,
+        11.8,
+        -3.05
+      ],
+      "size": [
+        4.2,
+        9.6,
+        0.65
+      ],
+      "mat": "red",
+      "rot": [
+        0,
+        0,
+        -3
+      ],
+      "pivot": [
+        0.27,
+        11.8,
+        -3.05
+      ],
+      "uv": [
+        188,
+        23
+      ]
+    },
+    {
+      "name": "left_front_hem",
+      "bone": "left_leg",
+      "slot": "leggings",
+      "pos": [
+        0.27,
+        21.0,
+        -3.1
+      ],
+      "size": [
+        4.2,
+        0.42,
+        0.75
+      ],
+      "mat": "red_edge",
+      "rot": [
+        0,
+        0,
+        -3
+      ],
+      "pivot": [
+        0.27,
+        11.8,
+        -3.05
+      ],
+      "uv": [
+        202,
+        23
+      ]
+    },
+    {
+      "name": "left_front_inner_edge",
+      "bone": "left_leg",
+      "slot": "leggings",
+      "pos": [
+        0.27,
+        11.85,
+        -3.12
+      ],
+      "size": [
+        0.22,
+        9.4,
+        0.8
+      ],
+      "mat": "red_dark",
+      "rot": [
+        0,
+        0,
+        -3
+      ],
+      "pivot": [
+        0.27,
+        11.8,
+        -3.05
+      ],
+      "uv": [
+        216,
+        23
+      ]
+    },
+    {
+      "name": "left_front_gusset",
+      "bone": "left_leg",
+      "slot": "leggings",
+      "pos": [
+        3.1,
+        11.8,
+        -3.1
+      ],
+      "size": [
+        1.35,
+        9.6,
+        0.72
+      ],
+      "mat": "red",
+      "rot": [
+        0,
+        0,
+        -7.5
+      ],
+      "pivot": [
+        3.1,
+        11.8,
+        -3.1
+      ],
+      "uv": [
+        223,
+        23
+      ]
+    },
+    {
+      "name": "left_front_gusset_hem",
+      "bone": "left_leg",
+      "slot": "leggings",
+      "pos": [
+        3.1,
+        21.0,
+        -3.14
+      ],
+      "size": [
+        1.35,
+        0.42,
+        0.8
+      ],
+      "mat": "red_edge",
+      "rot": [
+        0,
+        0,
+        -7.5
+      ],
+      "pivot": [
+        3.1,
+        11.8,
+        -3.1
+      ],
+      "uv": [
+        232,
+        23
+      ]
+    },
+    {
+      "name": "left_coat_side",
+      "bone": "left_leg",
+      "slot": "leggings",
+      "pos": [
+        3.8100000000000005,
+        11.78,
+        -2.4
+      ],
+      "size": [
+        0.68,
+        9.62,
+        5.2
+      ],
+      "mat": "red",
+      "rot": [
+        0,
+        0,
+        -7.5
+      ],
+      "pivot": [
+        4.15,
+        11.78,
+        0
+      ],
+      "uv": [
+        241,
+        23
+      ]
+    },
+    {
+      "name": "left_side_hem",
+      "bone": "left_leg",
+      "slot": "leggings",
+      "pos": [
+        3.7500000000000004,
+        21.0,
+        -2.45
+      ],
+      "size": [
+        0.8,
+        0.42,
+        5.3
+      ],
+      "mat": "red_edge",
+      "rot": [
+        0,
+        0,
+        -7.5
+      ],
+      "pivot": [
+        4.15,
+        11.78,
+        0
+      ],
+      "uv": [
+        257,
+        23
+      ]
+    },
+    {
+      "name": "left_coat_back",
+      "bone": "left_leg",
+      "slot": "leggings",
+      "pos": [
+        0.08,
+        11.8,
+        2.12
+      ],
+      "size": [
+        4.37,
+        9.6,
+        0.72
+      ],
+      "mat": "red",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        0.08,
+        11.8,
+        2.12
+      ],
+      "uv": [
+        274,
+        23
+      ]
+    },
+    {
+      "name": "left_back_hem",
+      "bone": "left_leg",
+      "slot": "leggings",
+      "pos": [
+        0.08,
+        21.0,
+        2.1
+      ],
+      "size": [
+        4.37,
+        0.42,
+        0.8
+      ],
+      "mat": "red_edge",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        0.08,
+        21.0,
+        2.1
+      ],
+      "uv": [
+        289,
+        23
+      ]
+    },
+    {
+      "name": "left_back_seam",
+      "bone": "left_leg",
+      "slot": "leggings",
+      "pos": [
+        0.08,
+        11.8,
+        2.86
+      ],
+      "size": [
+        0.12,
+        9.5,
+        0.08
+      ],
+      "mat": "red_dark",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        0.08,
+        11.8,
+        2.86
+      ],
+      "uv": [
+        304,
+        23
+      ]
+    },
+    {
+      "name": "left_back_gusset",
+      "bone": "left_leg",
+      "slot": "leggings",
+      "pos": [
+        3.1,
+        11.8,
+        2.16
+      ],
+      "size": [
+        1.35,
+        9.6,
+        0.72
+      ],
+      "mat": "red",
+      "rot": [
+        0,
+        0,
+        -7.5
+      ],
+      "pivot": [
+        3.1,
+        11.8,
+        2.16
+      ],
+      "uv": [
+        309,
+        23
+      ]
+    },
+    {
+      "name": "left_boot_shaft",
+      "bone": "left_leg",
+      "slot": "boots",
+      "pos": [
+        -0.1,
+        19.6,
+        -2.25
+      ],
+      "size": [
+        4.28,
+        3.3,
+        4.5
+      ],
+      "mat": "black",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        -0.1,
+        19.6,
+        -2.25
+      ],
+      "uv": [
+        318,
+        23
+      ]
+    },
+    {
+      "name": "left_boot_toe",
+      "bone": "left_leg",
+      "slot": "boots",
+      "pos": [
+        -0.18,
+        22.0,
+        -3.15
+      ],
+      "size": [
+        4.44,
+        1.55,
+        5.5
+      ],
+      "mat": "black",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        -0.18,
+        22.0,
+        -3.15
+      ],
+      "uv": [
+        340,
+        23
+      ]
+    },
+    {
+      "name": "left_boot_sole",
+      "bone": "left_leg",
+      "slot": "boots",
+      "pos": [
+        -0.25,
+        23.45,
+        -3.25
+      ],
+      "size": [
+        4.58,
+        0.55,
+        5.7
+      ],
+      "mat": "sole",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        -0.25,
+        23.45,
+        -3.25
+      ],
+      "uv": [
+        364,
+        23
+      ]
+    },
+    {
+      "name": "left_boot_ankle_seam",
+      "bone": "left_leg",
+      "slot": "boots",
+      "pos": [
+        -0.14,
+        21.8,
+        -2.3
+      ],
+      "size": [
+        4.36,
+        0.24,
+        4.6
+      ],
+      "mat": "button",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        -0.14,
+        21.8,
+        -2.3
+      ],
+      "uv": [
+        389,
+        23
+      ]
+    },
+    {
+      "name": "clasp_1_-1_bracket",
+      "bone": "body",
+      "slot": "chestplate",
+      "pos": [
+        -2.02,
+        2.0,
+        -3.38
+      ],
+      "size": [
+        0.92,
+        1.08,
+        0.38
+      ],
+      "mat": "metal",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        -2.02,
+        2.0,
+        -3.38
+      ],
+      "uv": [
+        411,
+        23
+      ]
+    },
+    {
+      "name": "clasp_1_-1_stud",
+      "bone": "body",
+      "slot": "chestplate",
+      "pos": [
+        -1.72,
+        2.35,
+        -3.49
+      ],
+      "size": [
+        0.3,
+        0.3,
+        0.14
+      ],
+      "mat": "metal_light",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        -1.72,
+        2.35,
+        -3.49
+      ],
+      "uv": [
+        418,
+        23
+      ]
+    },
+    {
+      "name": "clasp_1_1_bracket",
+      "bone": "body",
+      "slot": "chestplate",
+      "pos": [
+        1.1,
+        2.0,
+        -3.38
+      ],
+      "size": [
+        0.92,
+        1.08,
+        0.38
+      ],
+      "mat": "metal",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        1.1,
+        2.0,
+        -3.38
+      ],
+      "uv": [
+        423,
+        23
+      ]
+    },
+    {
+      "name": "clasp_1_1_stud",
+      "bone": "body",
+      "slot": "chestplate",
+      "pos": [
+        1.4000000000000001,
+        2.35,
+        -3.49
+      ],
+      "size": [
+        0.3,
+        0.3,
+        0.14
+      ],
+      "mat": "metal_light",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        1.4000000000000001,
+        2.35,
+        -3.49
+      ],
+      "uv": [
+        430,
+        23
+      ]
+    },
+    {
+      "name": "clasp_1_bridge",
+      "bone": "body",
+      "slot": "chestplate",
+      "pos": [
+        -1.24,
+        2.32,
+        -3.43
+      ],
+      "size": [
+        2.48,
+        0.39,
+        0.3
+      ],
+      "mat": "metal_light",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        -1.24,
+        2.32,
+        -3.43
+      ],
+      "uv": [
+        435,
+        23
+      ]
+    },
+    {
+      "name": "clasp_1_bridge_shadow",
+      "bone": "body",
+      "slot": "chestplate",
+      "pos": [
+        -1.24,
+        2.7,
+        -3.39
+      ],
+      "size": [
+        2.48,
+        0.12,
+        0.16
+      ],
+      "mat": "metal_dark",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        -1.24,
+        2.7,
+        -3.39
+      ],
+      "uv": [
+        445,
+        23
+      ]
+    },
+    {
+      "name": "clasp_2_-1_bracket",
+      "bone": "body",
+      "slot": "chestplate",
+      "pos": [
+        -2.02,
+        4.45,
+        -3.38
+      ],
+      "size": [
+        0.92,
+        1.08,
+        0.38
+      ],
+      "mat": "metal",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        -2.02,
+        4.45,
+        -3.38
+      ],
+      "uv": [
+        455,
+        23
+      ]
+    },
+    {
+      "name": "clasp_2_-1_stud",
+      "bone": "body",
+      "slot": "chestplate",
+      "pos": [
+        -1.72,
+        4.8,
+        -3.49
+      ],
+      "size": [
+        0.3,
+        0.3,
+        0.14
+      ],
+      "mat": "metal_light",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        -1.72,
+        4.8,
+        -3.49
+      ],
+      "uv": [
+        462,
+        23
+      ]
+    },
+    {
+      "name": "clasp_2_1_bracket",
+      "bone": "body",
+      "slot": "chestplate",
+      "pos": [
+        1.1,
+        4.45,
+        -3.38
+      ],
+      "size": [
+        0.92,
+        1.08,
+        0.38
+      ],
+      "mat": "metal",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        1.1,
+        4.45,
+        -3.38
+      ],
+      "uv": [
+        467,
+        23
+      ]
+    },
+    {
+      "name": "clasp_2_1_stud",
+      "bone": "body",
+      "slot": "chestplate",
+      "pos": [
+        1.4000000000000001,
+        4.8,
+        -3.49
+      ],
+      "size": [
+        0.3,
+        0.3,
+        0.14
+      ],
+      "mat": "metal_light",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        1.4000000000000001,
+        4.8,
+        -3.49
+      ],
+      "uv": [
+        474,
+        23
+      ]
+    },
+    {
+      "name": "clasp_2_bridge",
+      "bone": "body",
+      "slot": "chestplate",
+      "pos": [
+        -1.24,
+        4.7700000000000005,
+        -3.43
+      ],
+      "size": [
+        2.48,
+        0.39,
+        0.3
+      ],
+      "mat": "metal_light",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        -1.24,
+        4.7700000000000005,
+        -3.43
+      ],
+      "uv": [
+        479,
+        23
+      ]
+    },
+    {
+      "name": "clasp_2_bridge_shadow",
+      "bone": "body",
+      "slot": "chestplate",
+      "pos": [
+        -1.24,
+        5.15,
+        -3.39
+      ],
+      "size": [
+        2.48,
+        0.12,
+        0.16
+      ],
+      "mat": "metal_dark",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        -1.24,
+        5.15,
+        -3.39
+      ],
+      "uv": [
+        489,
+        23
+      ]
+    },
+    {
+      "name": "clasp_3_-1_bracket",
+      "bone": "body",
+      "slot": "chestplate",
+      "pos": [
+        -2.02,
+        6.9,
+        -3.38
+      ],
+      "size": [
+        0.92,
+        1.08,
+        0.38
+      ],
+      "mat": "metal",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        -2.02,
+        6.9,
+        -3.38
+      ],
+      "uv": [
+        499,
+        23
+      ]
+    },
+    {
+      "name": "clasp_3_-1_stud",
+      "bone": "body",
+      "slot": "chestplate",
+      "pos": [
+        -1.72,
+        7.25,
+        -3.49
+      ],
+      "size": [
+        0.3,
+        0.3,
+        0.14
+      ],
+      "mat": "metal_light",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        -1.72,
+        7.25,
+        -3.49
+      ],
+      "uv": [
+        506,
+        23
+      ]
+    },
+    {
+      "name": "clasp_3_1_bracket",
+      "bone": "body",
+      "slot": "chestplate",
+      "pos": [
+        1.1,
+        6.9,
+        -3.38
+      ],
+      "size": [
+        0.92,
+        1.08,
+        0.38
+      ],
+      "mat": "metal",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        1.1,
+        6.9,
+        -3.38
+      ],
+      "uv": [
+        2,
+        43
+      ]
+    },
+    {
+      "name": "clasp_3_1_stud",
+      "bone": "body",
+      "slot": "chestplate",
+      "pos": [
+        1.4000000000000001,
+        7.25,
+        -3.49
+      ],
+      "size": [
+        0.3,
+        0.3,
+        0.14
+      ],
+      "mat": "metal_light",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        1.4000000000000001,
+        7.25,
+        -3.49
+      ],
+      "uv": [
+        9,
+        43
+      ]
+    },
+    {
+      "name": "clasp_3_bridge",
+      "bone": "body",
+      "slot": "chestplate",
+      "pos": [
+        -1.24,
+        7.220000000000001,
+        -3.43
+      ],
+      "size": [
+        2.48,
+        0.39,
+        0.3
+      ],
+      "mat": "metal_light",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        -1.24,
+        7.220000000000001,
+        -3.43
+      ],
+      "uv": [
+        14,
+        43
+      ]
+    },
+    {
+      "name": "clasp_3_bridge_shadow",
+      "bone": "body",
+      "slot": "chestplate",
+      "pos": [
+        -1.24,
+        7.6000000000000005,
+        -3.39
+      ],
+      "size": [
+        2.48,
+        0.12,
+        0.16
+      ],
+      "mat": "metal_dark",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        -1.24,
+        7.6000000000000005,
+        -3.39
+      ],
+      "uv": [
+        24,
+        43
+      ]
+    },
+    {
+      "name": "clasp_4_-1_bracket",
+      "bone": "body",
+      "slot": "chestplate",
+      "pos": [
+        -2.02,
+        9.35,
+        -3.38
+      ],
+      "size": [
+        0.92,
+        1.08,
+        0.38
+      ],
+      "mat": "metal",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        -2.02,
+        9.35,
+        -3.38
+      ],
+      "uv": [
+        34,
+        43
+      ]
+    },
+    {
+      "name": "clasp_4_-1_stud",
+      "bone": "body",
+      "slot": "chestplate",
+      "pos": [
+        -1.72,
+        9.7,
+        -3.49
+      ],
+      "size": [
+        0.3,
+        0.3,
+        0.14
+      ],
+      "mat": "metal_light",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        -1.72,
+        9.7,
+        -3.49
+      ],
+      "uv": [
+        41,
+        43
+      ]
+    },
+    {
+      "name": "clasp_4_1_bracket",
+      "bone": "body",
+      "slot": "chestplate",
+      "pos": [
+        1.1,
+        9.35,
+        -3.38
+      ],
+      "size": [
+        0.92,
+        1.08,
+        0.38
+      ],
+      "mat": "metal",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        1.1,
+        9.35,
+        -3.38
+      ],
+      "uv": [
+        46,
+        43
+      ]
+    },
+    {
+      "name": "clasp_4_1_stud",
+      "bone": "body",
+      "slot": "chestplate",
+      "pos": [
+        1.4000000000000001,
+        9.7,
+        -3.49
+      ],
+      "size": [
+        0.3,
+        0.3,
+        0.14
+      ],
+      "mat": "metal_light",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        1.4000000000000001,
+        9.7,
+        -3.49
+      ],
+      "uv": [
+        53,
+        43
+      ]
+    },
+    {
+      "name": "clasp_4_bridge",
+      "bone": "body",
+      "slot": "chestplate",
+      "pos": [
+        -1.24,
+        9.67,
+        -3.43
+      ],
+      "size": [
+        2.48,
+        0.39,
+        0.3
+      ],
+      "mat": "metal_light",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        -1.24,
+        9.67,
+        -3.43
+      ],
+      "uv": [
+        58,
+        43
+      ]
+    },
+    {
+      "name": "clasp_4_bridge_shadow",
+      "bone": "body",
+      "slot": "chestplate",
+      "pos": [
+        -1.24,
+        10.049999999999999,
+        -3.39
+      ],
+      "size": [
+        2.48,
+        0.12,
+        0.16
+      ],
+      "mat": "metal_dark",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        -1.24,
+        10.049999999999999,
+        -3.39
+      ],
+      "uv": [
+        68,
+        43
+      ]
+    },
+    {
+      "name": "hood_crown",
+      "bone": "head",
+      "slot": "helmet",
+      "pos": [
+        -4.1,
+        -10.05,
+        -4.8
+      ],
+      "size": [
+        8.2,
+        1.35,
+        9.6
+      ],
+      "mat": "red_light",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        -4.1,
+        -10.05,
+        -4.8
+      ],
+      "uv": [
+        78,
+        43
+      ]
+    },
+    {
+      "name": "hood_crown_rear_lip",
+      "bone": "head",
+      "slot": "helmet",
+      "pos": [
+        -4.0,
+        -10.14,
+        2.65
+      ],
+      "size": [
+        8.0,
+        0.35,
+        2.0
+      ],
+      "mat": "red",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        -4.0,
+        -10.14,
+        2.65
+      ],
+      "uv": [
+        118,
+        43
+      ]
+    },
+    {
+      "name": "hood_back_center",
+      "bone": "head",
+      "slot": "helmet",
+      "pos": [
+        -4.0,
+        -9.1,
+        3.95
+      ],
+      "size": [
+        8.0,
+        10.0,
+        1.02
+      ],
+      "mat": "red",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        -4.0,
+        -9.1,
+        3.95
+      ],
+      "uv": [
+        142,
+        43
+      ]
+    },
+    {
+      "name": "hood_-1_back_slope",
+      "bone": "head",
+      "slot": "helmet",
+      "pos": [
+        -4.1,
+        -9.1,
+        3.97
+      ],
+      "size": [
+        3.2,
+        10.186756107809787,
+        1.04
+      ],
+      "mat": "red",
+      "rot": [
+        0,
+        0,
+        13.626994859891541
+      ],
+      "pivot": [
+        -2.5,
+        -9.1,
+        3.97
+      ],
+      "uv": [
+        165,
+        43
+      ]
+    },
+    {
+      "name": "hood_1_back_slope",
+      "bone": "head",
+      "slot": "helmet",
+      "pos": [
+        0.8999999999999999,
+        -9.1,
+        3.97
+      ],
+      "size": [
+        3.2,
+        10.186756107809787,
+        1.04
+      ],
+      "mat": "red",
+      "rot": [
+        0,
+        0,
+        -13.626994859891541
+      ],
+      "pivot": [
+        2.5,
+        -9.1,
+        3.97
+      ],
+      "uv": [
+        178,
+        43
+      ]
+    },
+    {
+      "name": "hood_-1_shell",
+      "bone": "head",
+      "slot": "helmet",
+      "pos": [
+        -4.4399999999999995,
+        -9.35,
+        -4.7
+      ],
+      "size": [
+        1.42,
+        8.554092587761719,
+        9.35
+      ],
+      "mat": "red",
+      "rot": [
+        0,
+        0,
+        18.7526670793267
+      ],
+      "pivot": [
+        -3.73,
+        -9.35,
+        -4.7
+      ],
+      "uv": [
+        191,
+        43
+      ]
+    },
+    {
+      "name": "hood_-1_lining",
+      "bone": "head",
+      "slot": "helmet",
+      "pos": [
+        -3.87,
+        -8.6,
+        -4.85
+      ],
+      "size": [
+        0.48,
+        7.564456358523063,
+        8.6
+      ],
+      "mat": "lining",
+      "rot": [
+        0,
+        0,
+        16.03903337260027
+      ],
+      "pivot": [
+        -3.63,
+        -8.6,
+        -4.85
+      ],
+      "uv": [
+        217,
+        43
+      ]
+    },
+    {
+      "name": "hood_-1_upper_rim",
+      "bone": "head",
+      "slot": "helmet",
+      "pos": [
+        0.050973834423309605,
+        -8.812049810987563,
+        -5.96
+      ],
+      "size": [
+        1.22,
+        5.1483329627982615,
+        1.3
+      ],
+      "mat": "red_light",
+      "rot": [
+        0,
+        0,
+        80.78897345918332
+      ],
+      "pivot": [
+        0.6609738344233096,
+        -8.812049810987563,
+        -5.96
+      ],
+      "uv": [
+        240,
+        43
+      ]
+    },
+    {
+      "name": "hood_-1_outer_rim",
+      "bone": "head",
+      "slot": "helmet",
+      "pos": [
+        -4.085026526552127,
+        -8.74993368361968,
+        -5.9
+      ],
+      "size": [
+        1.23,
+        8.4545658973462,
+        1.3
+      ],
+      "mat": "red_edge",
+      "rot": [
+        0,
+        0,
+        21.80140948635181
+      ],
+      "pivot": [
+        -3.4700265265521275,
+        -8.74993368361968,
+        -5.9
+      ],
+      "uv": [
+        250,
+        43
+      ]
+    },
+    {
+      "name": "hood_-1_chin_rim",
+      "bone": "head",
+      "slot": "helmet",
+      "pos": [
+        -7.439311573607207,
+        -2.019377768452668,
+        -5.84
+      ],
+      "size": [
+        1.14,
+        4.904639781775011,
+        1.3
+      ],
+      "mat": "red",
+      "rot": [
+        0,
+        0,
+        -47.89126959622056
+      ],
+      "pivot": [
+        -6.869311573607207,
+        -2.019377768452668,
+        -5.84
+      ],
+      "uv": [
+        260,
+        43
+      ]
+    },
+    {
+      "name": "hood_-1_neck_fold",
+      "bone": "head",
+      "slot": "helmet",
+      "pos": [
+        -4.1,
+        0.2,
+        -4.2
+      ],
+      "size": [
+        1.4,
+        1.3,
+        7.9
+      ],
+      "mat": "red_dark",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        -4.1,
+        0.2,
+        -4.2
+      ],
+      "uv": [
+        269,
+        43
+      ]
+    },
+    {
+      "name": "hood_1_shell",
+      "bone": "head",
+      "slot": "helmet",
+      "pos": [
+        3.02,
+        -9.35,
+        -4.7
+      ],
+      "size": [
+        1.42,
+        8.554092587761719,
+        9.35
+      ],
+      "mat": "red",
+      "rot": [
+        0,
+        0,
+        -18.7526670793267
+      ],
+      "pivot": [
+        3.73,
+        -9.35,
+        -4.7
+      ],
+      "uv": [
+        292,
+        43
+      ]
+    },
+    {
+      "name": "hood_1_lining",
+      "bone": "head",
+      "slot": "helmet",
+      "pos": [
+        3.3899999999999997,
+        -8.6,
+        -4.85
+      ],
+      "size": [
+        0.48,
+        7.564456358523063,
+        8.6
+      ],
+      "mat": "lining",
+      "rot": [
+        0,
+        0,
+        -16.03903337260027
+      ],
+      "pivot": [
+        3.63,
+        -8.6,
+        -4.85
+      ],
+      "uv": [
+        318,
+        43
+      ]
+    },
+    {
+      "name": "hood_1_upper_rim",
+      "bone": "head",
+      "slot": "helmet",
+      "pos": [
+        -1.2709738344233097,
+        -8.812049810987563,
+        -5.99
+      ],
+      "size": [
+        1.22,
+        5.1483329627982615,
+        1.3
+      ],
+      "mat": "red_light",
+      "rot": [
+        0,
+        0,
+        -80.78897345918332
+      ],
+      "pivot": [
+        -0.6609738344233096,
+        -8.812049810987563,
+        -5.99
+      ],
+      "uv": [
+        341,
+        43
+      ]
+    },
+    {
+      "name": "hood_1_outer_rim",
+      "bone": "head",
+      "slot": "helmet",
+      "pos": [
+        2.8550265265521277,
+        -8.74993368361968,
+        -5.930000000000001
+      ],
+      "size": [
+        1.23,
+        8.4545658973462,
+        1.3
+      ],
+      "mat": "red_edge",
+      "rot": [
+        0,
+        0,
+        -21.80140948635181
+      ],
+      "pivot": [
+        3.4700265265521275,
+        -8.74993368361968,
+        -5.930000000000001
+      ],
+      "uv": [
+        351,
+        43
+      ]
+    },
+    {
+      "name": "hood_1_chin_rim",
+      "bone": "head",
+      "slot": "helmet",
+      "pos": [
+        6.2993115736072065,
+        -2.019377768452668,
+        -5.87
+      ],
+      "size": [
+        1.14,
+        4.904639781775011,
+        1.3
+      ],
+      "mat": "red",
+      "rot": [
+        0,
+        0,
+        47.89126959622056
+      ],
+      "pivot": [
+        6.869311573607207,
+        -2.019377768452668,
+        -5.87
+      ],
+      "uv": [
+        361,
+        43
+      ]
+    },
+    {
+      "name": "hood_1_neck_fold",
+      "bone": "head",
+      "slot": "helmet",
+      "pos": [
+        2.7,
+        0.2,
+        -4.2
+      ],
+      "size": [
+        1.4,
+        1.3,
+        7.9
+      ],
+      "mat": "red_dark",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        2.7,
+        0.2,
+        -4.2
+      ],
+      "uv": [
+        370,
+        43
+      ]
+    },
+    {
+      "name": "hood_recessed_shadow_lining",
+      "bone": "head",
+      "slot": "helmet",
+      "pos": [
+        -4.2,
+        -8.1,
+        -4.3
+      ],
+      "size": [
+        8.4,
+        8.6,
+        0.12
+      ],
+      "mat": "lining",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        -4.2,
+        -8.1,
+        -4.3
+      ],
+      "uv": [
+        393,
+        43
+      ]
+    },
+    {
+      "name": "hood_neck_shadow",
+      "bone": "head",
+      "slot": "helmet",
+      "pos": [
+        -3.7,
+        0.1,
+        -4.5
+      ],
+      "size": [
+        7.4,
+        0.65,
+        8.6
+      ],
+      "mat": "lining",
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "pivot": [
+        -3.7,
+        0.1,
+        -4.5
+      ],
+      "uv": [
+        415,
+        43
+      ]
+    }
+  ]
+}
