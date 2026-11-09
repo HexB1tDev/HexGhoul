@@ -105,9 +105,123 @@ public final class BikakuRenderer {
                 PlayerLayers.failed("a Bikaku player's worm", failure);
             }
         }
+        // 4.0.0: Noro's three worms (the owner: "his maximum Bikaku combat configuration, consisting of three powerful tendrils ... fully
+        // animated"): drawn as a Three Worms player's are, from the same state, under his own id.
+        for (int id : com.hex.kagune.control.client.NpcWingsClient.ids()) {
+            try {
+                if (!(level.m_6815_(id) instanceof com.hex.kagune.control.npc.EtoNpc npc) || !npc.persona().worms() || !npc.m_6084_() || npc.m_20145_()) {
+                    continue;
+                }
+                com.hex.kagune.control.client.NpcWingsClient.View wings = com.hex.kagune.control.client.NpcWingsClient.get(id);
+                float deploy = com.hex.kagune.control.client.NpcWingsClient.deploy(wings, clock);
+                double distance = npc.m_20280_(self);
+                if (distance > MAX_DISTANCE_SQR) {
+                    continue;
+                }
+                if (out == null) {
+                    out = buffers.m_6299_(TYPE);
+                }
+                drawNpc(out, matrix, normals, level, npc, partial, clock, camera, distance <= DETAIL_DISTANCE_SQR, deploy,
+                    com.hex.kagune.control.client.NpcWingsClient.mending(wings, clock));
+            } catch (RuntimeException failure) {
+                PlayerLayers.failed("Noro's worms", failure);
+            }
+        }
         if (out != null) {
             buffers.m_109912_(TYPE);
         }
+    }
+
+    /** 4.0.0: Noro's worms' colour: his kagune, a black red. */
+    private static final int NORO_TINT = 0xFF4A1A22;
+
+    /**
+     * 4.0.0: an NPC's three worms (Noro's), as {@link #draw} draws a Three Worms player's: at rest, biting, every move made by all three; his
+     * size carrying them; while he mends, strands of them over him ({@link com.hex.kagune.control.bikaku.MawTissue}).
+     */
+    private static void drawNpc(VertexConsumer out, Matrix4f matrix, Matrix3f normals, ClientLevel level, com.hex.kagune.control.npc.EtoNpc npc,
+                                float partial, double clock, Vec3 camera, boolean fine, float deploy, double mendAge) {
+        Frame frame = Frame.of(npc, partial);
+        double size = npc.persona().size();
+        BikakuClient.View view = BikakuClient.get(npc.m_20148_());
+        int seed = BikakuRules.seed(npc.m_20148_().getMostSignificantBits(), npc.m_20148_().getLeastSignificantBits());
+        int light = LevelRenderer.m_109541_(level, BlockPos.m_274561_(npc.m_20185_(), npc.m_20186_() + 1.0, npc.m_20189_()));
+        UkakuModel.Sink sink = (a, b, c, d, n, ca, cb, cc, cd) -> quad(out, matrix, normals, a, b, c, d, n, ca, cb, cc, cd, light);
+        if (mendAge < 70.0) {
+            // His mend: strands of his worms crawling over him as he pulls himself back together (Monstrous Regeneration's, on his body).
+            com.hex.kagune.control.client.animation.RigPose posed = new com.hex.kagune.control.client.animation.RigPose();
+            java.util.List<double[][]> placed = new java.util.ArrayList<>();
+            java.util.List<Double> radii = new java.util.ArrayList<>();
+            for (com.hex.kagune.control.bikaku.MawTissue.Strand strand : com.hex.kagune.control.bikaku.MawTissue.strands(clock, mendAge, seed)) {
+                double[][] points = new double[strand.local().length][];
+                for (int i = 0; i < points.length; i++) {
+                    double[] rig = com.hex.kagune.control.client.animation.BodyFrame.world(posed,
+                        com.hex.kagune.control.client.animation.BodyFrame.model(posed, strand.part(), strand.local()[i]));
+                    points[i] = frame.place(scale(rig, size), camera);
+                }
+                placed.add(points);
+                radii.add(strand.radius() * size);
+            }
+            com.hex.kagune.control.bikaku.MawTissue.build(sink, placed, radii, NORO_TINT);
+        }
+        if (deploy <= 0.005F) {
+            return;
+        }
+        int count = 3;
+        double age = view.age(clock);
+        double[] target = null;
+        if (view.bite() != BikakuRules.Bite.NONE && age < view.bite().ticks()) {
+            Entity followed = view.targetId() != 0 ? level.m_6815_(view.targetId()) : null;
+            target = unscale(frame.rig(followed != null ? centre(followed, partial) : new double[] {view.x(), view.y(), view.z()}), size);
+        }
+        MawMotion.Worm[] worms = MawMotion.form(clock, seed, count, view.bite(), age, target, view.reach(), -1);
+        double[][] starts = new double[count][];
+        for (int i = 0; i < count; i++) {
+            starts[i] = MawMotion.wormShoulder(count, i);
+        }
+        double moveAge = view.moveAge(clock);
+        com.hex.kagune.control.bikaku.BikakuMove move = view.move();
+        if (move != com.hex.kagune.control.bikaku.BikakuMove.NONE && moveAge < move.ticks() + 2 + (count - 1) * move.stagger()) {
+            double[][] aims = new double[count][];
+            double[][] helds = new double[count][];
+            boolean[] caughts = new boolean[count];
+            double[] point = {view.mx(), view.my(), view.mz()};
+            for (int i = 0; i < count; i++) {
+                Entity aimed = i < view.targets().length && view.targets()[i] != 0 ? level.m_6815_(view.targets()[i]) : null;
+                double[] own = i < view.points().length && view.points()[i] != null ? view.points()[i] : point;
+                aims[i] = unscale(frame.rig(aimed != null ? centre(aimed, partial) : own), size);
+                Entity heldEntity = i < view.held().length && view.held()[i] != 0 ? level.m_6815_(view.held()[i]) : null;
+                helds[i] = heldEntity != null ? unscale(frame.rig(centre(heldEntity, partial)), size) : null;
+                caughts[i] = (view.caughtBits() >> i & 1) != 0;
+            }
+            worms = MawMotion.formMoves(clock, seed, count, move, moveAge, aims, helds, caughts, Math.max(move.baseReach(), view.moveReach()) / size);
+            for (int i = 0; i < worms.length; i++) {
+                starts[i] = move == com.hex.kagune.control.bikaku.BikakuMove.DRAG ? MawMotion.wormPoint(count, i, MawMotion.groundAnchor())
+                    : MawMotion.wormShoulder(count, i);
+            }
+        }
+        for (int w = 0; w < worms.length; w++) {
+            MawMotion.Worm worm = worms[w];
+            double grown = GraftMesh.smooth(deploy) * worm.grown();
+            if (grown <= 0.002) {
+                continue;
+            }
+            double[][] rig = MawMotion.grown(MawMotion.around(worm.shape().path(), worm.girth(), worm.shape().aperture()), grown);
+            double[][] world = new double[rig.length][];
+            for (int i = 0; i < rig.length; i++) {
+                world[i] = frame.place(scale(rig[i], size), camera);
+            }
+            MawWorm.build(sink, new MawWorm.Pose(world, frame.turn(worm.shape().dorsal()), grown, worm.shape().aperture(), worm.girth() * size, worm.seed(),
+                clock), NORO_TINT, fine);
+        }
+    }
+
+    private static double[] scale(double[] p, double size) {
+        return new double[] {p[0] * size, p[1] * size, p[2] * size};
+    }
+
+    private static double[] unscale(double[] p, double size) {
+        return new double[] {p[0] / size, p[1] / size, p[2] / size};
     }
 
     private static void draw(VertexConsumer out, Matrix4f matrix, Matrix3f normals, ClientLevel level, AbstractClientPlayer player, float partial,

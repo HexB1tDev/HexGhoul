@@ -25,3 +25,20 @@ Kirishima, Noro). They asked for ONE release: **4.0.0, The Great Exploration** (
 8. Version 4.0.0 (both version strings, protocol bump), release notes `.github/release-notes-4.0.0.md`, README, full `python3 build.py`.
 
 House rules as in `next-ai-3.6.6.md` (nothing tested in game; answer in English; quote the owner exactly).
+
+## The owner's words during this session (quoted exactly)
+
+- On the failing CI: "note that all the latest pushed failed!" (fixed: two name checks in the tests predated the owner allowing Ayato and
+  Aogiri; the dotted mask's id; every push since builds with EXIT 0 locally first).
+- "Ayato romance should be quite similar to kaneki, animations can be the same. Noro is taller than the average player and is very brief,
+  barely talks." (Ayato: Ken's style and household words; Noro: size 1.15, nearly silent.)
+- "Add to the to-do list: bugs and needed fixes: Bikaku: Sometimes the limbs break and dont regenerate cause of the lack of energy, so let me
+  specify, Bikaku users dont have the same regeneration as regular wounds, they either regenerate with this mutation or with their other
+  ability to regenerate, wounds appear like any other ghoul but regen for them does not cost energy at all, it works with cooldowns, and
+  waiting. The walker legs needs more flluidity and better arching, it walks super robotic, sure it works but it's super ugly to see, the
+  legs look like sticks, and dont move naturally. Make sure The child of a Bikaku user with all the other combinations matches perfectly.
+  Children: Kids work with chances now, depending on the parents, assuming for example a Bikaku user and a Ukaku user, the child has a
+  chance to come out with only 1 kagune type like just 2 ukaku wings, just Bikaku worm tendrils, or both. Armor and Masks: Armor is too
+  bulky, if the player is alex model it should adapt to it as well as the male body's muscle shape. Masks are… very very lack luster, half
+  masks are covering most of the face instead of being lower, way lower. The other masks are very basic and lack details, not only that
+  but the eye position of the masks are very off."

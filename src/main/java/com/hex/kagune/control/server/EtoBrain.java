@@ -80,6 +80,8 @@ public final class EtoBrain {
         final KenPeace.State peace = new KenPeace.State();
         /** 1.3.19: Touka's wings ({@link NpcWings}). */
         final NpcWings.State wings = new NpcWings.State();
+        /** 4.0.0: Noro's three worms. */
+        final NpcWorms.State worms = new NpcWorms.State();
         /** 1.3.49: a child of hers she is going after (ParentDuty), or null. */
         ParentDuty.Duty duty;
         /** 1.3.53: a talk she stays for (her children's, hers with them: Conversation), or null. */
@@ -348,6 +350,8 @@ public final class EtoBrain {
         KenPeace.tick(npc, mind, target, level, now);
         // 1.3.19: her wings' spikes in flight, and the wings going back in once the fight is long over (Touka's).
         NpcWings.tick(npc, mind, level, now);
+        // 4.0.0: Noro's worms, his regeneration and his mend.
+        NpcWorms.tick(npc, mind, level, now);
         // Her partner about, she may wander as far as her leash to be near them.
         // 1.3.24: fighting, as far as the chase goes (it keeps after what it fights till it is dead or gone).
         int chase = (int)com.hex.kagune.control.npc.FightRules.CHASE;
@@ -751,6 +755,10 @@ public final class EtoBrain {
             // 1.3.19: in Peace: its shields take what they meet, and it takes off a share of the rest (nothing while it comes over him).
             event.setAmount(KenPeace.hurt(npc, source.m_7639_(), source.m_7640_(), event.getAmount()));
         }
+        if (npc.persona().worms()) {
+            // 4.0.0: Noro: the blow that should kill him doesn't (his mend), and while he mends almost nothing lands.
+            event.setAmount(NpcWorms.hurt(npc, mind.worms, event.getAmount(), now));
+        }
         Entity cause = source.m_7639_();
         if (!(cause instanceof LivingEntity attacker) || attacker == npc) {
             return;
@@ -911,6 +919,9 @@ public final class EtoBrain {
             }
         }
         npc.m_21563_().m_24960_(target, 30.0F, 30.0F);
+        if (NpcWorms.fight(npc, mind, target, level, now)) {
+            return; // 4.0.0: Noro's three worms
+        }
         if (NpcWings.fight(npc, mind, target, level, now)) {
             return; // 1.3.19: Touka's crystal spikes
         }
@@ -1925,6 +1936,7 @@ public final class EtoBrain {
         EtoOwlForm.forget(npc);
         KenPeace.forget(npc);
         NpcWings.forget(npc, npc.mind);
+        NpcWorms.forget(npc, npc.mind);
         if (npc.mind != null) {
             EtoFlesh.release(level, npc.mind.owl);
             HomeChores.stop(npc, npc.mind, level); // 1.3.29: a chest's lid she had up, shut
@@ -2069,6 +2081,7 @@ public final class EtoBrain {
             EtoArm.tracked(player, npc);
             EtoOwlForm.tracked(player, npc);
             NpcWings.tracked(player, npc);
+            NpcWorms.tracked(player, npc);
         }
     }
 }

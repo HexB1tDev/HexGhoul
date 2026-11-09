@@ -250,6 +250,11 @@ public final class BikakuClient {
         return player == null ? View.NONE : VIEWS.getOrDefault(player.m_36316_().getId(), View.NONE);
     }
 
+    /** 4.0.0: anyone's worm by their id (Noro's: the server sends his under his own). */
+    public static View get(UUID id) {
+        return id == null ? View.NONE : VIEWS.getOrDefault(id, View.NONE);
+    }
+
     public static boolean isBikaku(Player player) {
         return player instanceof AbstractClientPlayer client && PathClient.get(client) == KagunePath.BIKAKU;
     }

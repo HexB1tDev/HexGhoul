@@ -390,7 +390,7 @@ final class NpcWings {
 
     /** A player starts seeing her: they are told how her wings are. */
     static void tracked(ServerPlayer player, EtoNpc npc) {
-        if ((npc.persona().wings() || npc.persona().worms()) && npc.mind != null) {
+        if (npc.persona().wings() && npc.mind != null) {
             ControlNetwork.sendTo(player, message(npc, npc.mind.wings));
         }
     }
