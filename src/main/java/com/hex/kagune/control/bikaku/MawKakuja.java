@@ -216,6 +216,42 @@ public final class MawKakuja {
         return new Growth(age >= OUT ? 0.0 : swell, age >= OUT ? 1.0 : worm, 0.0, lumps, mouths, tentacles);
     }
 
+    // ---------------------------------------------------------------- 3.6.8: his view in it
+
+    /**
+     * 3.6.8 (the owner: "IN kakuja form you cant see anything, the camera needs to adapt to the new size."): where his view is in it
+     * (body frame): on its crest, a little forward, where a thing its size would see from.
+     */
+    public static final double[] EYES = {0.0, 4.4, 0.8};
+    /** 3.6.8: how far behind its eyes the third-person camera sits (blocks; Minecraft's own is 4). */
+    public static final double VIEW_BACK = 9.0;
+    /** 3.6.8: how near his view (first or third person) nothing of it is drawn (blocks): what is left of it this near would fill the screen. */
+    public static final double VIEW_CLEAR = 2.6;
+
+    /** 3.6.8: how grown its body is, 0 .. 1 (its lumps on average, their overshoot taken off). */
+    public static double grown(Growth growth) {
+        double[] lumps = growth.lumps();
+        if (lumps.length == 0) {
+            return 0.0;
+        }
+        double sum = 0.0;
+        for (double lump : lumps) {
+            sum += GraftMesh.clamp01(lump);
+        }
+        return sum / lumps.length;
+    }
+
+    /** 3.6.8: where his view is lifted to (body frame), from his own eyes {@code eyeHeight} above his feet, as far as it has grown. */
+    public static double[] eyes(Growth growth, double eyeHeight) {
+        double k = grown(growth);
+        return new double[] {EYES[0] * k, eyeHeight + (EYES[1] - eyeHeight) * k, EYES[2] * k};
+    }
+
+    /** 3.6.8: how far behind its eyes the third-person camera sits, as far as it has grown (Minecraft's 4 blocks out of it). */
+    public static double viewBack(Growth growth) {
+        return 4.0 + (VIEW_BACK - 4.0) * grown(growth);
+    }
+
     // ---------------------------------------------------------------- its tentacles' motion
 
     /**

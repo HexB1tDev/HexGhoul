@@ -3,6 +3,7 @@ package net.minecraftforge.client.event;
 
 public abstract class ViewportEvent extends net.minecraftforge.eventbus.api.Event {
     public double getPartialTick() { throw new UnsupportedOperationException(); }
+    /** 3.6.8 */ public net.minecraft.client.Camera getCamera() { throw new UnsupportedOperationException(); }
 
     public static class ComputeCameraAngles extends ViewportEvent {
         public float getYaw() { throw new UnsupportedOperationException(); }

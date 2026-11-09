@@ -1,9 +1,23 @@
-# READ FIRST: `docs/handoff/next-ai-3.6.6.md` (kept current through 3.6.7)
+# READ FIRST: `docs/handoff/next-ai-3.6.6.md` (kept current through 3.6.8)
 
 GeckoLib, Photon and PlayerAnimator are the mod's dependencies: use them wherever they make the mod smoother (the owner). Then the owner's
 words in `docs/handoff/owner-words-mutations.md`. There is no RC bar: energy and food are one bar.
 
-# START HERE (state after 3.6.7)
+# START HERE (state after 3.6.8)
+
+Branch `claude/hopeful-noether-5c2wex`. Read `docs/handoff/next-ai-3.6.6.md` first. Next: the owner's other reports, each its own version (their words at the end of `docs/handoff/owner-words-mutations.md`): the kakuja's shatter on turning back; The Walker; then their new thing (buffs when an entity is absorbed); then Potential Unlock's tearing-off and strands (preview first).
+
+- 3.6.8, the owner: "IN kakuja form you cant see anything, the camera needs to adapt to the new size."
+- **Pure** (`bikaku/MawKakuja`): `EYES` {0, 4.4, 0.8} (body frame: on its crest, a little forward), `VIEW_BACK` 9, `VIEW_CLEAR` 2.6; `grown(growth)` (lumps on average, clamped), `eyes(growth, eyeHeight)`, `viewBack(growth)` (4 out of it).
+- **Client** `client/BikakuCamera` (`ViewportEvent.ComputeCameraAngles`, the local player when he is the camera entity, Bikaku, the kakuja grown at all): first person, the camera at his lifted eyes; third person, back `viewBack` from them along the camera's own look (front view too), each stopped short of blocks (`Level.clip`, 8 rays 0.1 apart as Minecraft's own; 0.3 short going up). The camera's protected `setPosition(Vec3)` (`m_90581_`) through `ObfuscationReflectionHelper.findMethod`; any failure: `Safety.caught`, the view left as Minecraft's own from then on.
+- **Renderer** `BikakuRenderer`: the kakuja's quads within `VIEW_CLEAR` of the camera are skipped for the local player's own kakuja when he is the camera entity, in either view (was: first person only, `KAKUJA_CLEAR`, removed).
+- Stubs: `Minecraft.m_91288_` (getCameraEntity), `ViewportEvent.getCamera`; allowlist entries ([srg], [forge]).
+- Tests: BikakuWormTests `kakujaView()` (ray-cast fans over the built kakuja at 40, 77, 133 t: old third-person spot had flesh within 2 blocks over 21-66% of the view; the new none, 37-54% covered; first person from the crest under 25% blocked). The full suite.
+- **Judgment calls:** the numbers; lifting first person too. Known limit: in first person Minecraft still picks blocks and the crosshair entity from his real eyes (the kakuja's bites use a wide cone from them).
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 103. Not tested in game.
+
+# State after 3.6.7
 
 Branch `claude/hopeful-noether-5c2wex`. Read `docs/handoff/next-ai-3.6.6.md` first. Next: **the owner's bug reports, each its own version** (their words at the end of `docs/handoff/owner-words-mutations.md`): the Bikaku kakuja's camera ("IN kakuja form you cant see anything, the camera needs to adapt to the new size."), the kakuja's shatter on turning back ("Also Kakuja detransformation needs a simple shatter animation like the rinkaku has."), The Walker (higher, any terrain, arms never swinging, tap K; hold K the full kakuja); then their new thing (buffs when an entity is absorbed); then Potential Unlock's tearing-off and strands (preview first).
 

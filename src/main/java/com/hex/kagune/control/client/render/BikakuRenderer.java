@@ -307,13 +307,17 @@ public final class BikakuRenderer {
                     }
                 }
             }
-            double clearSq = KAKUJA_CLEAR * KAKUJA_CLEAR;
+            // 3.6.8 (the owner: "IN kakuja form you cant see anything, the camera needs to adapt to the new size."): his own view sits on its
+            // crest in first person and well behind it in third (BikakuCamera); either way nothing of it this near the lens is drawn.
+            Minecraft minecraft = Minecraft.m_91087_();
+            boolean own = player == minecraft.f_91074_ && minecraft.m_91288_() == player;
+            double clearSq = com.hex.kagune.control.bikaku.MawKakuja.VIEW_CLEAR * com.hex.kagune.control.bikaku.MawKakuja.VIEW_CLEAR;
             UkakuModel.Sink placed = (a, b, c, d, n, ca, cb, cc, cd) -> {
                 double[] pa = frame.place(a, camera);
                 double[] pb = frame.place(b, camera);
                 double[] pc = frame.place(c, camera);
                 double[] pd = frame.place(d, camera);
-                if (near != null && (sq(pa) < clearSq || sq(pb) < clearSq || sq(pc) < clearSq || sq(pd) < clearSq)) {
+                if (own && (sq(pa) < clearSq || sq(pb) < clearSq || sq(pc) < clearSq || sq(pd) < clearSq)) {
                     return;
                 }
                 quad(out, matrix, normals, pa, pb, pc, pd, frame.turn(n), ca, cb, cc, cd, light);
@@ -321,9 +325,6 @@ public final class BikakuRenderer {
             com.hex.kagune.control.bikaku.MawKakuja.build(placed, growth, clock, seed, tint, fine, act);
         }
     }
-
-    /** 3.5.4: in first person, nothing of the kakuja this near his eyes (he is inside its mass). */
-    private static final double KAKUJA_CLEAR = 2.6;
 
     private static double sq(double[] p) {
         return p[0] * p[0] + p[1] * p[1] + p[2] * p[2];

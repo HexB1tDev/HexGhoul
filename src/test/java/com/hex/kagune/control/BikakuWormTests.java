@@ -33,6 +33,7 @@ public final class BikakuWormTests {
         pursuit();
         eruption();
         kakuja();
+        kakujaView();
         roundHim();
         kakujaMoves();
         heldFar();
@@ -1378,6 +1379,118 @@ public final class BikakuWormTests {
      * 3.5.4: the kakuja: 4 to 5 blocks tall round him, lopsided, its tentacles reaching far, most with mouths; growing into it and out of
      * it never jumps, ends whole either way; a tentacle's bite lands on its target; finite, sane meshes.
      */
+    /**
+     * 3.6.8 (the owner: "IN kakuja form you cant see anything, the camera needs to adapt to the new size."): his view in it. It is his own
+     * out of it and grows with it, never jumping; in third person, the camera that sat 4 blocks behind his eyes had flesh right at the
+     * lens (inside its back tentacle), and the one behind its crest has none (what is left near the lens is not drawn); in first person,
+     * from its crest, most of the view ahead is clear.
+     */
+    private static void kakujaView() {
+        com.hex.kagune.control.bikaku.MawKakuja.Growth none = com.hex.kagune.control.bikaku.MawKakuja.growth(false, 500);
+        com.hex.kagune.control.bikaku.MawKakuja.Growth full = com.hex.kagune.control.bikaku.MawKakuja.growth(true, 500);
+        double[] own = com.hex.kagune.control.bikaku.MawKakuja.eyes(none, 1.62);
+        check(com.hex.kagune.control.bikaku.MawKakuja.grown(none) == 0.0 && distance(own, new double[] {0.0, 1.62, 0.0}) < 1e-9
+            && com.hex.kagune.control.bikaku.MawKakuja.viewBack(none) == 4.0, "out of it, his view is his own (his eyes, 4 blocks back)");
+        check(com.hex.kagune.control.bikaku.MawKakuja.grown(full) > 0.999
+            && distance(com.hex.kagune.control.bikaku.MawKakuja.eyes(full, 1.62), com.hex.kagune.control.bikaku.MawKakuja.EYES) < 1e-6
+            && Math.abs(com.hex.kagune.control.bikaku.MawKakuja.viewBack(full) - com.hex.kagune.control.bikaku.MawKakuja.VIEW_BACK) < 1e-6,
+            "grown, his view is on its crest, the camera " + com.hex.kagune.control.bikaku.MawKakuja.VIEW_BACK + " blocks back");
+        check(com.hex.kagune.control.bikaku.MawKakuja.EYES[1] >= 4.0 && com.hex.kagune.control.bikaku.MawKakuja.VIEW_BACK >= 8.0,
+            "sized to it: its eyes 4 blocks up or more, the camera twice as far back or more");
+        for (boolean in : new boolean[] {true, false}) {
+            double[] last = null;
+            double lastBack = -1.0;
+            int end = in ? com.hex.kagune.control.bikaku.MawKakuja.IN : com.hex.kagune.control.bikaku.MawKakuja.OUT;
+            for (double age = 0; age <= end + 2; age += 0.5) {
+                com.hex.kagune.control.bikaku.MawKakuja.Growth g = com.hex.kagune.control.bikaku.MawKakuja.growth(in, age);
+                double[] eyes = com.hex.kagune.control.bikaku.MawKakuja.eyes(g, 1.62);
+                double back = com.hex.kagune.control.bikaku.MawKakuja.viewBack(g);
+                if (last != null) {
+                    check(distance(eyes, last) < 0.3 && Math.abs(back - lastBack) < 0.6, "his view " + (in ? "rising" : "coming down") + " never jumps (at " + age + ")");
+                }
+                last = eyes;
+                lastBack = back;
+            }
+        }
+        double clear = com.hex.kagune.control.bikaku.MawKakuja.VIEW_CLEAR;
+        for (double time : new double[] {40, 77, 133}) {
+            java.util.List<double[][]> tris = new java.util.ArrayList<>();
+            com.hex.kagune.control.bikaku.MawKakuja.build((a, b, c, d, n, ca, cb, cc, cd) -> {
+                tris.add(new double[][] {a, b, c});
+                tris.add(new double[][] {a, c, d});
+            }, full, time, 7, 0xA50F37, false, com.hex.kagune.control.bikaku.MawKakuja.Act.still());
+            double worstOld = 0.0;
+            for (int pitch : new int[] {0, 25}) {
+                double p = Math.toRadians(pitch);
+                double[] look = {0.0, -Math.sin(p), Math.cos(p)};
+                double[] before = {-look[0] * 4.0, 1.62 - look[1] * 4.0, -look[2] * 4.0};
+                double back = com.hex.kagune.control.bikaku.MawKakuja.VIEW_BACK;
+                double[] eyes = com.hex.kagune.control.bikaku.MawKakuja.EYES;
+                double[] after = {eyes[0] - look[0] * back, eyes[1] - look[1] * back, eyes[2] - look[2] * back};
+                worstOld = Math.max(worstOld, seen(tris, before, look, 35, 20, 0.0, 2.0));
+                double nearNow = seen(tris, after, look, 35, 20, clear, 2.0);
+                double coveredNow = seen(tris, after, look, 35, 20, clear, 40.0);
+                check(nearNow == 0.0, "third person: no flesh within 2 blocks of the lens (" + nearNow + " at " + time + "t, pitch " + pitch + ")");
+                check(coveredNow > 0.15 && coveredNow < 0.75, "third person: the kakuja in view, not filling it (" + coveredNow + ")");
+            }
+            check(worstOld > 0.15, "(before: Minecraft's camera had flesh at the lens over " + worstOld + " of the view)");
+            double ahead = seen(tris, com.hex.kagune.control.bikaku.MawKakuja.EYES, new double[] {0.0, 0.0, 1.0}, 60, 25, clear, 40.0);
+            check(ahead < 0.25, "first person from its crest: the view ahead mostly clear (" + ahead + " blocked at " + time + "t)");
+        }
+    }
+
+    /**
+     * 3.6.8: the share of a fan of rays from {@code from} round {@code look} (yaw +-{@code yaw} degrees, pitch +-{@code pitch}) that meet a
+     * triangle closer than {@code within}, leaving out triangles with a corner within {@code clear} of {@code from} (as the renderer does).
+     */
+    private static double seen(java.util.List<double[][]> tris, double[] from, double[] look, int yaw, int pitch, double clear, double within) {
+        double baseYaw = Math.atan2(look[0], look[2]);
+        double basePitch = Math.asin(look[1]);
+        int hit = 0;
+        int all = 0;
+        for (int y = -yaw; y <= yaw; y += 7) {
+            for (int p = -pitch; p <= pitch; p += 5) {
+                double ry = baseYaw + Math.toRadians(y);
+                double rp = basePitch + Math.toRadians(p);
+                double[] d = {Math.sin(ry) * Math.cos(rp), Math.sin(rp), Math.cos(ry) * Math.cos(rp)};
+                all++;
+                for (double[][] t : tris) {
+                    if (clear > 0.0 && (distance(t[0], from) < clear || distance(t[1], from) < clear || distance(t[2], from) < clear)) {
+                        continue;
+                    }
+                    double h = rayHit(from, d, t);
+                    if (h > 0.0 && h < within) {
+                        hit++;
+                        break;
+                    }
+                }
+            }
+        }
+        return (double)hit / all;
+    }
+
+    /** 3.6.8: how far along the ray {@code o} + t {@code d} it meets triangle {@code t} (Moller-Trumbore); negative if it doesn't. */
+    private static double rayHit(double[] o, double[] d, double[][] t) {
+        double[] e1 = {t[1][0] - t[0][0], t[1][1] - t[0][1], t[1][2] - t[0][2]};
+        double[] e2 = {t[2][0] - t[0][0], t[2][1] - t[0][1], t[2][2] - t[0][2]};
+        double[] p = {d[1] * e2[2] - d[2] * e2[1], d[2] * e2[0] - d[0] * e2[2], d[0] * e2[1] - d[1] * e2[0]};
+        double det = e1[0] * p[0] + e1[1] * p[1] + e1[2] * p[2];
+        if (Math.abs(det) < 1e-12) {
+            return -1.0;
+        }
+        double[] s = {o[0] - t[0][0], o[1] - t[0][1], o[2] - t[0][2]};
+        double u = (s[0] * p[0] + s[1] * p[1] + s[2] * p[2]) / det;
+        if (u < 0.0 || u > 1.0) {
+            return -1.0;
+        }
+        double[] q = {s[1] * e1[2] - s[2] * e1[1], s[2] * e1[0] - s[0] * e1[2], s[0] * e1[1] - s[1] * e1[0]};
+        double v = (d[0] * q[0] + d[1] * q[1] + d[2] * q[2]) / det;
+        if (v < 0.0 || u + v > 1.0) {
+            return -1.0;
+        }
+        return (e2[0] * q[0] + e2[1] * q[1] + e2[2] * q[2]) / det;
+    }
+
     private static void kakuja() {
         com.hex.kagune.control.bikaku.MawKakuja.Growth full = com.hex.kagune.control.bikaku.MawKakuja.growth(true, 500);
         double[] lo = {1e9, 1e9, 1e9};

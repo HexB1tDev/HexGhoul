@@ -3,7 +3,8 @@
 ## The session after this note (same branch): where it is
 
 - **3.6.7 shipped** (Potential Unlock's first part: three times the energy, the one bar purple; the Bikaku menu's bar labelled
-  "ENERGY"). Version 3.6.7, protocol 103; the next is **3.6.8**.
+  "ENERGY").
+- **3.6.8 shipped** (fix: the kakuja's camera sized to it: `client/BikakuCamera`). Version 3.6.8, protocol 103; the next is **3.6.9**.
 - The owner then sent new words (quoted exactly at the end of `docs/handoff/owner-words-mutations.md`): a new thing ("Whenever an entity
   is absorbed, the player gains a speed buff for 15 seconds and some of our custom effects from foods, any that give special strength and
   buffs also for 15 seconds"), two bugs ("IN kakuja form you cant see anything, the camera needs to adapt to the new size."; "Also Kakuja

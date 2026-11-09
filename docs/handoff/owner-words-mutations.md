@@ -331,3 +331,10 @@ Also Kakuja detransformation needs a simple shatter animation like the rinkaku h
 Then:
 
 Also the walker should lift the player way higher up (like 3-4 blocks up)  and adapt better to literally any terrain, the arms should not swing at any point (they currently do). the walker is the first tap K half kakuja, the full kakuja is the hold K
+
+Asked three questions, the owner chose (the option labels, exactly):
+- The Walker on tap K, its cost: "Half the kakuja's cost (Recommended)" (about half the kakuja's price to go in and half its drain; out
+  when the energy runs dry).
+- Which moments give the absorbing buffs: "Grand Devouring only (Recommended)" (when the swallowed body's bulge reaches his back and the
+  bar refills).
+- Which effects, besides Speed: "Strength, Resistance, Refreshed, Replenished (Recommended)".

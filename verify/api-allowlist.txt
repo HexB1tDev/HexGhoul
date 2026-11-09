@@ -119,6 +119,8 @@ F net/minecraftforge/event/TickEvent$RenderTickEvent renderTickTime F           
 C net/minecraftforge/event/TickEvent$RenderTickEvent                                 # [forge]
 C net/minecraftforge/client/event/ViewportEvent$ComputeCameraAngles                  # [forge] ViewportEvent.java
 M net/minecraftforge/client/event/ViewportEvent getPartialTick ()D                   # [forge]
+M net/minecraftforge/client/event/ViewportEvent getCamera ()Lnet/minecraft/client/Camera;  # [forge] 1.20.1 client/event/ViewportEvent.java getCamera (3.6.8: the Bikaku kakuja's view)
+M net/minecraft/client/Minecraft m_91288_ ()Lnet/minecraft/world/entity/Entity;  # [srg] getCameraEntity: joined.tsrg enn.al ()Lbfj; m_91288_, intermediary method_1560, yarn MinecraftClient.getCameraEntity (3.6.8)
 M net/minecraftforge/client/event/ViewportEvent$ComputeCameraAngles getPitch ()F    # [forge]
 M net/minecraftforge/client/event/ViewportEvent$ComputeCameraAngles setPitch (F)V   # [forge]
 M net/minecraftforge/client/event/ViewportEvent$ComputeCameraAngles getRoll ()F     # [forge]

@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.6.8 (HexGhoul): Fix: the Bikaku kakuja's camera fits its size (testing)
+
+See `.github/release-notes-3.6.8.md`. Your words: "IN kakuja form you cant see anything, the camera needs to adapt to the new size." In the Bikaku kakuja the third-person camera turns round its crest and sits 9 blocks behind it (Minecraft's own sat inside its back); in first person your view is lifted to its crest. It grows in and comes back down with the kakuja; nothing of it is drawn within 2.6 blocks of the lens. Protocol 103.
+
 ## 3.6.7 (HexGhoul): Bikaku: Potential Unlock, first part (testing)
 
 See `.github/release-notes-3.6.7.md`. Your words: "The maximum energy capacity is also permanently multiplied by 3", "Upon unlocking Potential Unlock, the player's energy bar permanently changes color", then "Should be Purple, the bar, my bad". Potential Unlock (unlocked by the NPC's quest; operators meanwhile: `/kagune bikaku mutation potential_unlock on|off`): three times the energy (everything spends a third of the bar; the menu reads "192 / 300"), the one bar (energy and food) purple, the menu's too; kept through death, relogging and restarts; Bikaku only. The Bikaku menu's bar reads "ENERGY" now (your words: "RC bar IS NOT A THING"). Coming: surviving, tearing off and the strands. Protocol 103. Previews: `docs/handoff/potential-bar-3.6.7.png`, `bikaku-menu-potential-3.6.7.png`.

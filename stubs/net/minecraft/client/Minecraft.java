@@ -20,5 +20,6 @@ public class Minecraft {
     /** getInstance */ public static Minecraft m_91087_() { throw new UnsupportedOperationException(); }
     /** setScreen */ public void m_91152_(net.minecraft.client.gui.screens.Screen screen) { throw new UnsupportedOperationException(); }
     /** isPaused */ public boolean m_91104_() { throw new UnsupportedOperationException(); }
+    /** getCameraEntity (3.6.8) */ public net.minecraft.world.entity.Entity m_91288_() { throw new UnsupportedOperationException(); }
     /** getFrameTime (partial tick) */ public float m_91296_() { throw new UnsupportedOperationException(); }
 }

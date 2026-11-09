@@ -77,6 +77,10 @@ on|off`): three times the energy (every price a third), the one bar (energy and 
 kept for good. Next: the owner's reports (the kakuja's camera and its shatter, The Walker), absorbing's buffs, then Potential Unlock's
 tearing-off and strands.
 
+**3.6.8 (fix; the owner: "IN kakuja form you cant see anything, the camera needs to adapt to the new size."):** in the kakuja his
+third-person camera turns round its crest and sits 9 blocks behind it; in first person his view is on its crest. Both grow and shrink with
+it and stop short of blocks; nothing of it is drawn within 2.6 blocks of the lens.
+
 **Before 3.4.9 (the pure worm, unchanged since except as above):**
 
 - `control/bikaku/MawWorm.java`: the worm as a mesh (pure). A thick muscular tube along a spine resampled evenly by length
