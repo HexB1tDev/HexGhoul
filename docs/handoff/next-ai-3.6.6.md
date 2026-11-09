@@ -5,8 +5,9 @@
 - **3.6.7 shipped** (Potential Unlock's first part: three times the energy, the one bar purple; the Bikaku menu's bar labelled
   "ENERGY").
 - **3.6.8 shipped** (fix: the kakuja's camera sized to it: `client/BikakuCamera`).
-- **3.6.9 shipped** (fix: the kakuja shatters on turning back, through Rinkaku's machinery). Version 3.6.9, protocol 103; the next is
-  **3.7.0** (after 3.6.9 comes 3.7.0: the last number never reaches 10).
+- **3.6.9 shipped** (fix: the kakuja shatters on turning back, through Rinkaku's machinery).
+- **3.7.0 shipped** (fix: The Walker's arms never swing). Version 3.7.0, protocol 103; the next is **3.7.1** (The Walker reworked; its
+  preview was sent).
 - The owner's choices (asked): The Walker on tap K costs "Half the kakuja's cost (Recommended)"; the absorbing buffs come from "Grand
   Devouring only (Recommended)"; the effects "Strength, Resistance, Refreshed, Replenished (Recommended)" with Speed, 15 s.
 - The owner then sent new words (quoted exactly at the end of `docs/handoff/owner-words-mutations.md`): a new thing ("Whenever an entity

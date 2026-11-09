@@ -1026,6 +1026,17 @@ public final class BikakuWormTests {
      * up steps and off them; climbing a wall, on the wall's face; a teleport puts them down at once; drawn, never through him.
      */
     private static void walker() {
+        // 3.7.0 (the owner: "the arms should not swing at any point (they currently do)"): his arms are all the pose's (none of Minecraft's
+        // own walking or attack swing), hanging at his sides, swaying no more than his legs; his legs as before.
+        for (double t = 0.0; t <= 400.0; t += 0.5) {
+            com.hex.kagune.control.client.animation.RigPose p = new com.hex.kagune.control.client.animation.RigPose();
+            p.rightArmX = -1.4F; // whatever else was posing them (a bite's reach, a stance)
+            p.leftArmX = 0.9F;
+            com.hex.kagune.control.client.animation.WalkerPose.legs(p, t, 1.0F);
+            check(p.armHold == 1.0F && p.legHold == 1.0F, "The Walker: none of Minecraft's own swing on his arms or legs (at " + t + ")");
+            check(Math.abs(p.rightArmX) <= 0.05F && Math.abs(p.leftArmX) <= 0.05F && p.rightArmZ > 0.0F && p.leftArmZ < 0.0F,
+                "The Walker: his arms hang at his sides, a little out, barely swaying (" + p.rightArmX + ", " + p.leftArmX + ")");
+        }
         com.hex.kagune.control.bikaku.BikakuForm walker = com.hex.kagune.control.bikaku.BikakuForm.WALKER;
         check(walker.walks() && walker.worms() == 3 && !com.hex.kagune.control.bikaku.BikakuForm.THREE.walks(),
             "The Walker walks on its tentacles and makes its moves with three worms");

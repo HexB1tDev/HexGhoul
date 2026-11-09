@@ -1,9 +1,20 @@
-# READ FIRST: `docs/handoff/next-ai-3.6.6.md` (kept current through 3.6.9)
+# READ FIRST: `docs/handoff/next-ai-3.6.6.md` (kept current through 3.7.0)
 
 GeckoLib, Photon and PlayerAnimator are the mod's dependencies: use them wherever they make the mod smoother (the owner). Then the owner's
 words in `docs/handoff/owner-words-mutations.md`. There is no RC bar: energy and food are one bar.
 
-# START HERE (state after 3.6.9)
+# START HERE (state after 3.7.0)
+
+Branch `claude/hopeful-noether-5c2wex`. Read `docs/handoff/next-ai-3.6.6.md` first. Next: **3.7.1 The Walker reworked** (the owner: "the walker should lift the player way higher up (like 3-4 blocks up)  and adapt better to literally any terrain ... the walker is the first tap K half kakuja, the full kakuja is the hold K"; cost: "Half the kakuja's cost (Recommended)"). Its preview was sent (made from a scratch prototype: `WalkerLegs.HEIGHT` 3.5, `ride(feet, blocks)`, OUT 2.1, REACH 6.6, a wall climbed only when the block before his body has solid under it, a roof's underside ducked); then the absorbing buffs; then Potential Unlock's tearing-off and strands (preview first).
+
+- 3.7.0, the owner: "the arms should not swing at any point (they currently do)".
+- `client/animation/WalkerPose.legs`: also the arms: `rightArmX`/`leftArmX` lerped to a sway of 0.04 (the legs' rate), Y 0, Z out `ARM_OUT` 0.1 (right +, left -), elbows `ELBOW` 0.15, `armHold` 1 (none of the vanilla swing, attack included). Applied last in `KaguneBodyAnimation` (after every other pose), so nothing else moves them in The Walker.
+- Tests: BikakuWormTests `walker()` (arms held and hanging at every half tick over 400). The full suite.
+- **Judgment calls:** the arms' hang and bend.
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 103. Not tested in game.
+
+# State after 3.6.9
 
 Branch `claude/hopeful-noether-5c2wex`. Read `docs/handoff/next-ai-3.6.6.md` first. Next: The Walker (3.7.0 its arms never swinging; then tap K the Walker as a half kakuja, hold K the kakuja, lifted 3-4 blocks, any terrain: the owner chose "Half the kakuja's cost (Recommended)"; preview first); then the absorbing buffs (the owner chose "Grand Devouring only (Recommended)" and "Strength, Resistance, Refreshed, Replenished (Recommended)", with Speed, 15 s); then Potential Unlock's tearing-off and strands (preview first).
 

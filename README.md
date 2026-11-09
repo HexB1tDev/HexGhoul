@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.7.0 (HexGhoul): Fix: The Walker's arms never swing (testing)
+
+See `.github/release-notes-3.7.0.md`. Your words: "the arms should not swing at any point (they currently do)". In The Walker your arms hang still at your sides (none of Minecraft's walking or attack swing), as your legs do. Protocol 103.
+
 ## 3.6.9 (HexGhoul): Fix: the Bikaku kakuja shatters when you turn back (testing)
 
 See `.github/release-notes-3.6.9.md`. Your words: "Also Kakuja detransformation needs a simple shatter animation like the rinkaku has." Turning back, the kakuja breaks into pieces that fly off, spin, bounce once and fade, with the glass, as the Rinkaku's does (the same machinery); the worm grows back out of you. Protocol 103. Preview: `docs/handoff/bikaku-shatter-3.6.9.png`.
