@@ -1,0 +1,7 @@
+{
+  "type": "hexkagune:site_village_2",
+  "biomes": "#hexkagune:has_structure/village_2",
+  "step": "surface_structures",
+  "spawn_overrides": {},
+  "terrain_adaptation": "beard_box"
+}

@@ -1,14 +1,14 @@
 {
   "structures": [
     {
-      "structure": "hexkagune:village",
+      "structure": "hexkagune:aogiri_hideout",
       "weight": 1
     }
   ],
   "placement": {
     "type": "minecraft:random_spread",
-    "spacing": 40,
-    "separation": 20,
-    "salt": 1371206533
+    "spacing": 44,
+    "separation": 22,
+    "salt": 1873602243
   }
 }

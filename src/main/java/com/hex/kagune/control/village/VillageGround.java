@@ -55,4 +55,28 @@ public final class VillageGround {
     static boolean edge(int i) {
         return i < SAMPLES.length && (Math.abs(SAMPLES[i][0]) == EDGE || Math.abs(SAMPLES[i][1]) == EDGE);
     }
+
+    /**
+     * 4.0.0: as {@link #suits}, for an {@code n} x {@code n} grid of samples over a place's whole footprint (sample i * n + j at row i,
+     * column j): its edge is the grid's outer ring.
+     */
+    public static boolean suitsGrid(int[] surface, int[] floor, int n) {
+        int lo = Integer.MAX_VALUE;
+        int hi = Integer.MIN_VALUE;
+        int wet = 0;
+        for (int k = 0; k < surface.length; k++) {
+            if (surface[k] > floor[k]) {
+                int i = k / n;
+                int j = k % n;
+                boolean edge = i == 0 || j == 0 || i == n - 1 || j == n - 1;
+                if (!edge || ++wet > WET_EDGE) {
+                    return false;
+                }
+                continue;
+            }
+            lo = Math.min(lo, floor[k]);
+            hi = Math.max(hi, floor[k]);
+        }
+        return surface.length > 0 && hi >= lo && hi - lo <= FLAT;
+    }
 }

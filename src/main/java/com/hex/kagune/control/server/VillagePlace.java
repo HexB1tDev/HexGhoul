@@ -16,18 +16,36 @@ final class VillagePlace {
     static final String KEY = "HexVillage";
 
     /** The village's middle (block x, y, z), its turn (quarter turns clockwise), this one's home (block x, y, z; a human's). */
-    record Place(int x, int y, int z, int turns, int homeX, int homeY, int homeZ, boolean brick) {
+    record Place(int x, int y, int z, int turns, int homeX, int homeY, int homeZ, boolean brick, int map) {
+        Place(int x, int y, int z, int turns, int homeX, int homeY, int homeZ, boolean brick) {
+            this(x, y, z, turns, homeX, homeY, homeZ, brick, brick ? 0 : 2);
+        }
+
+        /** 4.0.0: the owner's new place it belongs to (the human town, the CCG settlement, the hideout), or null for the older villages. */
+        com.hex.kagune.control.village.SiteMaps.Site site() {
+            return this.map >= 3 ? com.hex.kagune.control.village.SiteMaps.byMap(this.map) : null;
+        }
+
         /** 2.0.1: its village's streets, patrol and perimeter (the new village's; a Brick Village's, built before 2.0.1, its own). */
         int[][] streets() {
-            return this.brick ? BrickVillage.STREETS : VillageMap.STREETS;
+            com.hex.kagune.control.village.SiteMaps.Site site = this.site();
+            return site != null ? site.streets() : this.brick ? BrickVillage.STREETS : VillageMap.STREETS;
         }
 
         int[][] route() {
-            return this.brick ? BrickVillage.ROUTE : VillageMap.ROUTE;
+            com.hex.kagune.control.village.SiteMaps.Site site = this.site();
+            return site != null ? site.route() : this.brick ? BrickVillage.ROUTE : VillageMap.ROUTE;
         }
 
         int perimeter() {
-            return this.brick ? BrickVillage.PERIMETER : VillageMap.PERIMETER;
+            com.hex.kagune.control.village.SiteMaps.Site site = this.site();
+            return site != null ? site.perimeter() : this.brick ? BrickVillage.PERIMETER : VillageMap.PERIMETER;
+        }
+
+        /** 4.0.0: the hideout's (its members keep to it; Ayato and Noro come home to it). */
+        boolean hideout() {
+            com.hex.kagune.control.village.SiteMaps.Site site = this.site();
+            return site != null && site.id().equals("aogiri_hideout");
         }
 
         /** The map's spot {@code at} ({dx, dy, dz} from the middle, the template's frame) in the world: {x + 0.5, y, z + 0.5}. */
@@ -86,6 +104,6 @@ final class VillagePlace {
             data.m_128365_(KEY, v);
         }
         return new Place(v.m_128451_("MidX"), v.m_128451_("MidY"), v.m_128451_("MidZ"), v.m_128451_("Turns"), v.m_128451_("HomeX"), v.m_128451_("HomeY"),
-            v.m_128451_("HomeZ"), !v.m_128441_("Map"));
+            v.m_128451_("HomeZ"), !v.m_128441_("Map"), v.m_128441_("Map") ? v.m_128451_("Map") : 0);
     }
 }

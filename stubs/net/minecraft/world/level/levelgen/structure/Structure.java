@@ -12,15 +12,27 @@ public abstract class Structure {
         net.minecraft.world.level.levelgen.structure.pieces.PiecesContainer pieces) { throw new UnsupportedOperationException(); }
     /** Forge */ public net.minecraftforge.common.world.ModifiableStructureInfo modifiableStructureInfo() { throw new UnsupportedOperationException(); }
 
+    /** simpleCodec (4.0.0: the owner's places, ControlStructures.Site) */
+    public static <S extends Structure> com.mojang.serialization.Codec<S> m_226607_(java.util.function.Function<Structure.StructureSettings, S> factory) {
+        throw new UnsupportedOperationException();
+    }
+
     public static final class StructureSettings {
     }
 
     public static final class GenerationStub {
+        public GenerationStub(net.minecraft.core.BlockPos position,
+            java.util.function.Consumer<net.minecraft.world.level.levelgen.structure.pieces.StructurePiecesBuilder> generator) {
+            throw new UnsupportedOperationException();
+        }
     }
 
     public static final class GenerationContext {
         /** chunkGenerator */ public net.minecraft.world.level.chunk.ChunkGenerator f_226622_() { throw new UnsupportedOperationException(); }
         /** randomState */ public net.minecraft.world.level.levelgen.RandomState f_226624_() { throw new UnsupportedOperationException(); }
+        /** structureTemplateManager */
+        public net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager f_226625_() { throw new UnsupportedOperationException(); }
+        /** random */ public net.minecraft.world.level.levelgen.WorldgenRandom f_226626_() { throw new UnsupportedOperationException(); }
         /** chunkPos */ public net.minecraft.world.level.ChunkPos f_226628_() { throw new UnsupportedOperationException(); }
         /** heightAccessor */ public net.minecraft.world.level.LevelHeightAccessor f_226629_() { throw new UnsupportedOperationException(); }
     }

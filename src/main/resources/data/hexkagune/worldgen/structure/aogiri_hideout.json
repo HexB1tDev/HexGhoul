@@ -1,0 +1,7 @@
+{
+  "type": "hexkagune:site_aogiri_hideout",
+  "biomes": "#hexkagune:has_structure/aogiri_hideout",
+  "step": "surface_structures",
+  "spawn_overrides": {},
+  "terrain_adaptation": "beard_box"
+}
