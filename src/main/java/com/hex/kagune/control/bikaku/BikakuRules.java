@@ -143,6 +143,19 @@ public final class BikakuRules {
      * (fed, or let go before it swallowed).
      */
     public static final int DEVOUR_COOLDOWN = 1200;
+    /**
+     * 3.6.6, Potential Unlock (the owner: "The maximum energy capacity is also permanently multiplied by 3"; "Upon unlocking Potential
+     * Unlock, the player's energy bar permanently changes color"; then "Should be Purple, the bar, my bad"): how many times the RC he holds,
+     * and his bar's colour. RC stays on the bar's own scale (the original's clamps, sync and rest-time recovery all assume it); every
+     * price is that much less of it, and it reads that many times more.
+     */
+    public static final int POTENTIAL_CAPACITY = 3;
+    public static final int POTENTIAL_PURPLE = 0x8A2BE2;
+
+    /** 3.6.6: how many times the RC a Bikaku with {@code mutations} (BikakuMutation bits) holds. */
+    public static int capacity(int mutations) {
+        return BikakuMutation.POTENTIAL_UNLOCK.in(mutations) ? POTENTIAL_CAPACITY : 1;
+    }
     public static final double KAKUJA_STEADY = 1.0;
     /** Its middle (the body frame): where its tentacles' reach is measured from. */
     public static final double[] KAKUJA_CENTRE = {0.0, 2.4, 0.0};

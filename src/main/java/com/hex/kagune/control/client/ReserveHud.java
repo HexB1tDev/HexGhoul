@@ -145,7 +145,12 @@ public final class ReserveHud {
             GhoulReserve.hunger(reserve), ControlClient.worldTime(minecraft.m_91296_()));
         int x = event.getWindow().m_85445_() / 2 + 10;
         int y = event.getWindow().m_85446_() - 39;
-        ReserveBarView.draw(new GuiCanvas(event.getGuiGraphics(), minecraft.f_91062_, null), x, y, frame);
+        com.hex.kagune.control.client.ui.UiCanvas canvas = new GuiCanvas(event.getGuiGraphics(), minecraft.f_91062_, null);
+        if (BikakuClient.capacity(minecraft.f_91074_) > 1) {
+            // Potential Unlock (3.6.7, in progress): the one bar, energy and food, purple (the owner: "Should be Purple, the bar, my bad").
+            canvas = new com.hex.kagune.control.client.ui.TintedCanvas(canvas, com.hex.kagune.control.bikaku.BikakuRules.POTENTIAL_PURPLE);
+        }
+        ReserveBarView.draw(canvas, x, y, frame);
     }
 
     @SubscribeEvent

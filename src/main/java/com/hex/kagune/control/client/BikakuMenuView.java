@@ -156,9 +156,12 @@ public final class BikakuMenuView {
         c.text("RC", x, y, HEADER, false);
         float share = model.maxEnergy() <= 0.0F ? 0.0F : Math.max(0.0F, Math.min(1.0F, model.energy() / model.maxEnergy()));
         c.text(Math.round(model.energy()) + " / " + Math.round(model.maxEnergy()), x + 126, y, VALUE, false);
+        // 3.6.6: Potential Unlock: purple (the owner: "Should be Purple, the bar, my bad").
+        boolean purple = com.hex.kagune.control.bikaku.BikakuMutation.POTENTIAL_UNLOCK.in(model.mutations());
+        int rc = purple ? com.hex.kagune.control.KaguneTint.recolour(RC, com.hex.kagune.control.bikaku.BikakuRules.POTENTIAL_PURPLE) : RC;
         c.batch(() -> {
             UkakuMenuView.capsule(c, x, y + 19, 205, 8, BAR_BACK);
-            UkakuMenuView.capsule(c, x, y + 19, Math.max(8, Math.round(205.0F * share)), 8, RC);
+            UkakuMenuView.capsule(c, x, y + 19, Math.max(8, Math.round(205.0F * share)), 8, rc);
         });
         c.text("One bar: RC, healing and food. Eat to fill it", x, y + 33, MUTED, false);
 

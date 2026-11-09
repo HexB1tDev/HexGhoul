@@ -14,8 +14,12 @@ public enum BikakuMutation {
      */
     GRAND_DEVOURING("grand_devouring", "Grand Devouring",
         "A body within 10 blocks at 1 heart or less: a worm swallows it whole and your bar refills. 60 s cooldown.", true),
-    /** Potential Unlock: torn apart, he pulls himself back together while his RC lasts; three times the RC. Not built yet. */
-    POTENTIAL_UNLOCK("potential_unlock", "Potential Unlock", "Torn apart, you pull yourself back together while RC lasts; triple RC.", false);
+    /**
+     * Potential Unlock: three times the RC, his bar purple (3.6.6); torn apart, he pulls himself back together while his RC lasts
+     * (to come).
+     */
+    POTENTIAL_UNLOCK("potential_unlock", "Potential Unlock",
+        "Three times the energy; your bar turns purple. Coming: torn apart, you pull yourself back together while energy lasts.", true);
 
     private final String id;
     private final String displayName;

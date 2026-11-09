@@ -81,7 +81,25 @@ public final class BikakuTests {
             && com.hex.kagune.control.bikaku.BikakuMutation.byId("nope") == null, "each mutation reads back by its id");
         check(devour.bit() != unlock.bit() && devour.in(devour.bit()) && !unlock.in(devour.bit())
             && com.hex.kagune.control.bikaku.BikakuMutation.all() == (devour.bit() | unlock.bit()), "a bit each");
-        check(devour.built() && !unlock.built(), "Grand Devouring is built; Potential Unlock is still to come");
+        check(devour.built() && unlock.built(), "both are built (3.6.6: Potential Unlock's first part)");
+        // 3.6.6, Potential Unlock (the owner: "The maximum energy capacity is also permanently multiplied by 3"; "Should be Purple, the bar,
+        // my bad"): three times the RC with it, once without; Grand Devouring alone changes nothing.
+        check(com.hex.kagune.control.bikaku.BikakuRules.capacity(0) == 1 && com.hex.kagune.control.bikaku.BikakuRules.capacity(devour.bit()) == 1
+            && com.hex.kagune.control.bikaku.BikakuRules.capacity(unlock.bit()) == 3
+            && com.hex.kagune.control.bikaku.BikakuRules.capacity(devour.bit() | unlock.bit()) == 3, "Potential Unlock: three times the RC");
+        int purple = com.hex.kagune.control.bikaku.BikakuRules.POTENTIAL_PURPLE;
+        int pr = purple >> 16 & 255;
+        int pg = purple >> 8 & 255;
+        int pb = purple & 255;
+        check(pb > pg + 100 && pr > pg + 60, "its bar's colour is purple (red and blue, little green)");
+        // The bar drawn through the tint comes out purple: each of the original bar's reds turned to purple's hue.
+        for (int red : new int[] {0xFFE64045, 0xFFE05B4C, 0xFFB8173E, 0xD92A0712, 0xFFC8204E}) {
+            int c = com.hex.kagune.control.KaguneTint.recolour(red, purple);
+            int r = c >> 16 & 255;
+            int g = c >> 8 & 255;
+            int b = c & 255;
+            check(b > r * 0.7 && b > g && (c >>> 24) == (red >>> 24), "a red of the bar turns purple, its alpha kept (" + Integer.toHexString(c) + ")");
+        }
         check(com.hex.kagune.control.bikaku.BikakuMutation.byOrdinal(0) == devour && com.hex.kagune.control.bikaku.BikakuMutation.byOrdinal(9) == null,
             "read back by ordinal");
         for (com.hex.kagune.control.bikaku.BikakuMutation mutation : com.hex.kagune.control.bikaku.BikakuMutation.values()) {

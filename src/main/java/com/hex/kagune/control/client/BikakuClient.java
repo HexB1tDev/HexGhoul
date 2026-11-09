@@ -159,6 +159,11 @@ public final class BikakuClient {
         return -1.0;
     }
 
+    /** 3.6.6: how many times the RC {@code player}'s bar holds (Potential Unlock, on the Bikaku path: three; else one). */
+    public static int capacity(Player player) {
+        return player != null && isBikaku(player) ? BikakuRules.capacity(get(player).mutations()) : 1;
+    }
+
     /** 3.6.5: the player whose worm is feeding on {@code entity} (by its id) now, on the clock {@code clock}; null if none. */
     public static net.minecraft.client.player.AbstractClientPlayer devourer(int entity, double clock) {
         net.minecraft.client.multiplayer.ClientLevel level = net.minecraft.client.Minecraft.m_91087_().f_91073_;

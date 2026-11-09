@@ -218,8 +218,9 @@ public class UiPreview {
         c.push();
         c.translate(ox, oy);
         c.scale(scale);
-        com.hex.kagune.control.client.BikakuMenuView.draw(c, new com.hex.kagune.control.client.BikakuMenuView.Model(mastery, true, 64.0F, 100.0F,
-            mastery >= 750 ? 3 : mastery >= 500 ? 2 : 0, mutations, devourWait), mouseX, mouseY, 1.3);
+        int capacity = com.hex.kagune.control.bikaku.BikakuRules.capacity(mutations); // 3.6.6: Potential Unlock reads three times the RC
+        com.hex.kagune.control.client.BikakuMenuView.draw(c, new com.hex.kagune.control.client.BikakuMenuView.Model(mastery, true, 64.0F * capacity,
+            100.0F * capacity, mastery >= 750 ? 3 : mastery >= 500 ? 2 : 0, mutations, devourWait), mouseX, mouseY, 1.3);
         c.pop();
         ImageIO.write(image, "png", out);
         System.out.println("wrote " + out);
@@ -554,6 +555,9 @@ public class UiPreview {
             // 3.6.3: its mutations (unlocked by a quest): none yet, and Grand Devouring on, cooling down.
             bikakuMenu(new File(dir, "bikaku-menu-600.png"), 600, 0, 0L, 0, 0);
             bikakuMenu(new File(dir, "bikaku-menu-1000.png"), 1000, 1, 840L, 0, 0);
+            // 3.6.6: Potential Unlock too: three times the RC, the bar purple.
+            bikakuMenu(new File(dir, "bikaku-menu-potential.png"), 1000, 3, 0L, 0, 0);
+            potential(new File(dir, "potential-bars.png"));
             return;
         }
         if (args.length > 1 && args[1].equals("graft")) {
@@ -713,6 +717,39 @@ public class UiPreview {
         c.scale(1.6F);
         hud(c, 0.62F);
         c.pop();
+        ImageIO.write(image, "png", out);
+        System.out.println("wrote " + out);
+    }
+
+    /**
+     * 3.6.7, Potential Unlock's purple bar (the owner: "Should be Purple, the bar, my bad"): each bar as it is and with it, at 4x: the flesh
+     * reserve, the one bar (energy and food), full, hungry and low. There is no RC bar (the owner: "RC bar IS NOT A THING").
+     */
+    static void potential(File out) throws Exception {
+        int w = 760;
+        int h = 250;
+        BufferedImage image = new BufferedImage(w * 2, h * 2, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = graphics(image, 2);
+        ImageCanvas c = new ImageCanvas(g, false);
+        c.fill(0, 0, w, h, 0xFF141016);
+        c.text("POTENTIAL UNLOCK: the one bar (energy and food) purple (left as it is, right with Potential Unlock), at 4x", 8, 6, 0xFFC890F0, false);
+        float[][] reserve = {{1.0F, 0.0F, 40.0F}, {0.4F, 0.55F, 120.0F}, {0.15F, 0.85F, 31.5F}};
+        String[] names = {"full", "hungry (40%)", "low (15%): it beats"};
+        for (int k = 0; k < 3; k++) {
+            for (int side = 0; side < 2; side++) {
+                int x = 10 + side * 380;
+                int y = 26 + k * 70;
+                c.text((side == 0 ? "Flesh reserve, " : "With Potential Unlock, ") + names[k], x, y, 0xFFE6D2DA, false);
+                c.push();
+                c.translate(x, y + 12);
+                c.scale(4.0F);
+                com.hex.kagune.control.client.ui.UiCanvas onto = side == 0 ? c
+                    : new com.hex.kagune.control.client.ui.TintedCanvas(c, com.hex.kagune.control.bikaku.BikakuRules.POTENTIAL_PURPLE);
+                com.hex.kagune.control.client.ReserveBarView.draw(onto, 0, 0, new com.hex.kagune.control.client.ReserveBarView.Frame(reserve[k][0],
+                    reserve[k][0], 0.0F, 0.0F, reserve[k][1], reserve[k][2]));
+                c.pop();
+            }
+        }
         ImageIO.write(image, "png", out);
         System.out.println("wrote " + out);
     }
