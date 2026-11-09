@@ -110,7 +110,8 @@ public final class BikakuMenuView {
         com.hex.kagune.control.bikaku.BikakuForm current = com.hex.kagune.control.bikaku.BikakuForm.byOrdinal(model.form());
         c.text("CURRENT KAGUNE", x, y, HEADER, false);
         row(c, "Type", "Bikaku", x, y + 25);
-        row(c, "Kagune", current.worms() == 1 ? "One worm, lower back" : current.worms() + " worms, one root", x, y + 43);
+        row(c, "Kagune", current.walks() ? "3 worms, 2 legs, one root" // 3.6.2: The Walker's walking tentacles
+            : current.worms() == 1 ? "One worm, lower back" : current.worms() + " worms, one root", x, y + 43);
         row(c, "Length", "About 8 blocks", x, y + 61);
         row(c, "Mouth", "Six fangs, three rings", x, y + 79);
         row(c, "Colour", "Your kagune colour", x, y + 97);
@@ -134,7 +135,8 @@ public final class BikakuMenuView {
             c.fill(x - 1, by - 1, x + 206, by + 19, picked ? VEIN_BRIGHT : PANEL_EDGE);
             c.fill(x, by, x + 205, by + 18, picked ? BUTTON_HOVER : hover ? BUTTON_HOVER : BUTTON);
             c.text(form.displayName().toUpperCase(java.util.Locale.ROOT), x + 8, by + 5, open ? (picked ? TITLE : VALUE) : FAINT, false);
-            c.text(open ? (picked ? "ON" : form.worms() + (form.worms() == 1 ? " worm" : " worms")) : !form.built() ? "soon" : Integer.toString(form.mastery()),
+            c.text(open ? (picked ? "ON" : form.walks() ? "walks" : form.worms() + (form.worms() == 1 ? " worm" : " worms")) // 3.6.2
+                : !form.built() ? "soon" : Integer.toString(form.mastery()),
                 x + 150, by + 5, open ? TRAIT : FAINT, false);
             if (open) {
                 hits.put("form" + form.ordinal(), rect);

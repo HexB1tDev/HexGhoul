@@ -1,4 +1,21 @@
-# START HERE (state after 3.6.1)
+# START HERE (state after 3.6.2)
+
+Branch `claude/hopeful-noether-5c2wex`. Read `docs/handoff/next-ai-3.5.4.md` first (the owner's words this session at its top, quoted exactly; the state now). The owner's forms ask is done (One, Twin, Three, The Walker). Next: the owner's answer on The Walker (asked: two tentacles in all or two each side; whether its legs should add anything to the moves), else ask them what's next.
+
+- 3.6.2 asked by the owner: "the fourth before the Kakuja should be like the player no longer even like walks with their own legs, like they get like two separate appendages on either, like both sides emerging from the same spot as the worms, that when the player walks his body doesn't move, but like he controls these tentacles that walk around adapt to terrain. Being able to climb anything, like Dr. Octopus pretty much."
+- `BikakuForm.WALKER` built (3 worms, 750), `walks()`; the menu's Kagune row "3 worms, 2 legs, one root", its button "walks"; the card's bullet "Two worms, then three, then legs".
+- Pure `bikaku/WalkerLegs`: `Legs` (each foot, the face it stands on, its step), `update(legs, feet, right, ahead, going, climbing, time, blocks)` (fresh or far moved: both put down at once; else the foot furthest from where it would go steps when more than `STEP` 0.85 off, one at a time unless stretched past `REACH` 3.2; a step `STEP_TICKS` 5 long, arcing `ARC` 0.55 off the faces), `hold(i, ...)` (ground: the top of the highest block under the spot `OUT` 1.35 to its side, `AHEAD` 0.2 and `LEAD` 6 ticks of his going ahead, from `UP` 1.3 above to `DOWN` 2.6 below; else a wall that way within `WALL` 2.4; climbing: the wall before him first, raised with his climb), `foot`, `face`, `stepping`, `shape(i, foot, face, stepping, time, seed)` (root, out to its side, a knee arched up and out, over the foot along the face, the foot; mouth shut 0.04, open 0.55 stepping; `GIRTH` 0.72).
+- `client/BikakuWalk` (ClientTickEvent, own player): in The Walker with the kagune out, a wall felt `FEEL` 0.45 before him at 0.2 or 1.2 up: forward climbs (`CLIMB` 0.2 a tick), sneak hangs (y >= 0), else slides (`SLIDE` -0.07). Block reads through `ClientLevel.m_8055_` (the original JAR links it; added to the ClientLevel stub only). `BikakuClient.walking(player, partial)`.
+- `client/animation/WalkerPose.legs` (legs hang, knees bent a little, `legHold`, `drop` -3), hooked in `KaguneBodyAnimation.setupAnim` for Bikaku walking.
+- `BikakuRenderer.legs` (a `Legs` per player in a WeakHashMap; going from x - xOld; climbing when rising with a wall before him; each leg ridden with the torso near the root, round his body, grown with the kagune, kept out of first-person eyes).
+- Server `BikakuServer.tick`: The Walker out (not the kakuja): `fallDistance` 0 every tick.
+- Preview: `tools/MawPreview.java walker`; `docs/handoff/bikaku-walker-3.6.2.png` (a draft of it was sent to the owner first).
+- Tests: BikakuWormTests `walker()` (143,274 in all), `forms()` updated (The Walker at 750), BikakuTests, ControlTests, PathTests, PathScreenTests.
+- **Judgment calls:** two tentacles in all; legs hanging, lifted a fifth of a block; walls only (no ceilings); no fall damage; Three Worms' moves; 750; the feet's mouths biting the blocks.
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 102. Not tested in game.
+
+# State after 3.6.1
 
 Branch `claude/hopeful-noether-5c2wex`. Read `docs/handoff/next-ai-3.5.4.md` first (the owner's words this session at its top, quoted exactly; the state now). Next: **3.6.2, The Walker** (the owner: "the fourth before the Kakuja should be like the player no longer even like walks with their own legs, like they get like two separate appendages on either, like both sides emerging from the same spot as the worms, that when the player walks his body doesn't move, but like he controls these tentacles that walk around adapt to terrain. Being able to climb anything, like Dr. Octopus pretty much."). Previews first.
 

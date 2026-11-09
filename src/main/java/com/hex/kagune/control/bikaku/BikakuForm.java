@@ -11,8 +11,11 @@ public enum BikakuForm {
     ONE("One Worm", 1, 0, true),
     TWIN("Twin Worms", 2, 250, true),
     THREE("Three Worms", 3, 500, true),
-    /** The walking form: not built yet (its legs come in their own version); it can't be picked until then. */
-    WALKER("The Walker", 3, 750, false);
+    /**
+     * 3.6.2: The Walker: three worms as Three Worms, and two walking tentacles out of the same root that carry him (his own legs hang
+     * still), finding the ground round him and climbing walls ({@link WalkerLegs}).
+     */
+    WALKER("The Walker", 3, 750, true);
 
     private final String displayName;
     private final int worms;
@@ -26,7 +29,7 @@ public enum BikakuForm {
         this.built = built;
     }
 
-    /** False for a form still to come (shown, not picked). */
+    /** False for a form still to come (shown, not picked); every form is built since 3.6.2. */
     public boolean built() {
         return this.built;
     }
@@ -35,7 +38,7 @@ public enum BikakuForm {
         return this.displayName;
     }
 
-    /** How many worms it has. */
+    /** How many worms it has (The Walker's walking tentacles are not counted: they carry him and make no move). */
     public int worms() {
         return this.worms;
     }
@@ -43,6 +46,11 @@ public enum BikakuForm {
     /** The mastery it opens at. */
     public int mastery() {
         return this.mastery;
+    }
+
+    /** 3.6.2: true for The Walker: walking tentacles carry him. */
+    public boolean walks() {
+        return this == WALKER;
     }
 
     public boolean unlocked(int mastery) {

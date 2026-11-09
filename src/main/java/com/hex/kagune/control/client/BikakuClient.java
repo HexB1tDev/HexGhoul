@@ -165,6 +165,18 @@ public final class BikakuClient {
         return UkakuClient.deploy(KaguneClientState.get(player), ControlClient.worldTime(partial));
     }
 
+    /**
+     * 3.6.2: true while {@code player} is in The Walker with the kagune out (not in the kakuja): its walking tentacles carry him, his own
+     * legs hang still, and (his own client) he climbs walls.
+     */
+    public static boolean walking(Player player, float partial) {
+        if (!isBikaku(player)) {
+            return false;
+        }
+        View view = get(player);
+        return view.form().walks() && !view.kakuja() && deploy(player, partial) > 0.5F;
+    }
+
     /** The worm's seed for {@code player}: the same on every client. */
     public static int seed(Player player) {
         UUID id = player.m_36316_().getId();

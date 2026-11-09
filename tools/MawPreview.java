@@ -64,6 +64,9 @@ public class MawPreview {
         if (which.equals("formmoves") || which.equals("all")) {
             formMoves(new File(out, "maw-form-moves.png"));
         }
+        if (which.equals("walker") || which.equals("all")) {
+            walker(new File(out, "maw-walker.png"));
+        }
         if (which.equals("round") || which.equals("all")) {
             round(new File(out, "maw-round.png"));
         }
@@ -671,6 +674,156 @@ public class MawPreview {
         g.dispose();
         ImageIO.write(img, "png", file);
         System.out.println(file);
+    }
+
+    // ---------------------------------------------------------------- 3.6.2: The Walker
+
+    record WalkerScene(String name, java.util.Set<String> blocks, int[] ticks, double yaw, double pitch, double distance) {
+    }
+
+    static java.util.Set<String> walkerBlocks(int[][] boxes) {
+        java.util.Set<String> out = new java.util.HashSet<>();
+        for (int[] b : boxes) {
+            for (int x = b[0]; x < b[3]; x++) {
+                for (int y = b[1]; y < b[4]; y++) {
+                    for (int z = b[2]; z < b[5]; z++) {
+                        out.add(x + "," + y + "," + z);
+                    }
+                }
+            }
+        }
+        return out;
+    }
+
+    static boolean walkerSolid(java.util.Set<String> blocks, int x, int y, int z) {
+        return y < 0 || blocks.contains(x + "," + y + "," + z);
+    }
+
+    /** His body on The Walker, as the game poses it (WalkerPose). */
+    static RigPose hanging(double time) {
+        RigPose p = new RigPose();
+        com.hex.kagune.control.client.animation.WalkerPose.legs(p, time, 1.0F);
+        return p;
+    }
+
+    static void walker(File out) throws Exception {
+        int fw = 280;
+        int fh = 300;
+        int cols = 8;
+        int[] walkTicks = {0, 3, 6, 9, 12, 15, 18, 21};
+        WalkerScene[] scenes = {
+            new WalkerScene("walking", walkerBlocks(new int[][] {}), walkTicks, 60, 22, 17.0),
+            new WalkerScene("up two steps", walkerBlocks(new int[][] {{-3, 0, 4, 4, 1, 12}, {-3, 1, 7, 4, 2, 12}}), new int[] {0, 6, 12, 16, 20, 26, 32, 40}, 60, 24, 17.0),
+            new WalkerScene("up a wall", walkerBlocks(new int[][] {{-3, 0, 3, 4, 9, 4}}), new int[] {0, 6, 10, 16, 22, 28, 36, 44}, 205, 18, 17.0),
+            new WalkerScene("off a ledge", walkerBlocks(new int[][] {{-3, 0, -6, 4, 2, 3}}), new int[] {0, 6, 10, 13, 16, 20, 26, 34}, 60, 24, 17.0),
+        };
+        BufferedImage img = new BufferedImage(fw * cols, fh * (scenes.length + 1) + 34, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = sheet(img, "Bikaku 3.6.2: The Walker (750): two walking tentacles out of the worms' root, his legs hanging still; the worms as Three Worms");
+        double[][] views = {{0, 10}, {40, 14}, {90, 10}, {140, 14}, {180, 10}, {220, 14}, {270, 10}, {320, 25}};
+        for (int i = 0; i < cols; i++) {
+            double time = 50 + i * 7;
+            com.hex.kagune.control.bikaku.WalkerLegs.Legs legs = new com.hex.kagune.control.bikaku.WalkerLegs.Legs();
+            com.hex.kagune.control.bikaku.WalkerLegs.Blocks flat = (x, y, z) -> y < 0;
+            com.hex.kagune.control.bikaku.WalkerLegs.update(legs, new double[] {0.5, 0.0, 0.5}, new double[] {1, 0, 0}, new double[] {0, 0, 1}, new double[3], false, time, flat);
+            List<PoseRender.Tri> tris = worms(MawMotion.form(time, SEED, 3, BikakuRules.Bite.NONE, 0, null, BikakuRules.REACH), time);
+            tris.addAll(legTris(legs, new double[] {0.5, 0.0, 0.5}, time));
+            g.drawImage(PoseRender.render(hanging(time), PoseRender.orbit(views[i][0], views[i][1], 12.0, 1.4), fw, fh, tris), i * fw, 34, null);
+            label(g, String.format("The Walker at rest, from %.0f°", views[i][0]), i * fw, 34);
+        }
+        for (int s = 0; s < scenes.length; s++) {
+            WalkerScene scene = scenes[s];
+            com.hex.kagune.control.bikaku.WalkerLegs.Legs legs = new com.hex.kagune.control.bikaku.WalkerLegs.Legs();
+            com.hex.kagune.control.bikaku.WalkerLegs.Blocks blocks = (x, y, z) -> walkerSolid(scene.blocks(), x, y, z);
+            double[] at = {0.5, s == 3 ? 2.0 : 0.0, s == 2 ? 0.2 : -1.0};
+            int last = scene.ticks()[scene.ticks().length - 1];
+            int shown = 0;
+            for (int t = 0; t <= last; t++) {
+                // His own going: ahead at walking pace, up what is before him (climbing), down when nothing is under him.
+                double[] was = at.clone();
+                boolean wallAhead = walkerSolid(scene.blocks(), (int)Math.floor(at[0]), (int)Math.floor(at[1] + 0.05), (int)Math.floor(at[2] + 0.35))
+                    || walkerSolid(scene.blocks(), (int)Math.floor(at[0]), (int)Math.floor(at[1] + 1.0), (int)Math.floor(at[2] + 0.35));
+                boolean ground = walkerSolid(scene.blocks(), (int)Math.floor(at[0]), (int)Math.floor(at[1] - 0.01), (int)Math.floor(at[2]));
+                boolean climbing = wallAhead;
+                if (wallAhead) {
+                    at[1] += 0.2;
+                } else {
+                    at[2] += 0.2;
+                    if (!ground) {
+                        at[1] = Math.max(Math.floor(at[1] - 0.01) <= -1 ? 0.0 : at[1] - 0.35, walkerTopUnder(scene.blocks(), at));
+                    } else {
+                        at[1] = Math.max(at[1], walkerTopUnder(scene.blocks(), at));
+                    }
+                }
+                double[] going = {at[0] - was[0], at[1] - was[1], at[2] - was[2]};
+                com.hex.kagune.control.bikaku.WalkerLegs.update(legs, at, new double[] {1, 0, 0}, new double[] {0, 0, 1}, going, climbing, 200 + t, blocks);
+                if (shown < cols && t == scene.ticks()[shown]) {
+                    double time = 200 + t;
+                    List<PoseRender.Tri> tris = worms(MawMotion.form(time, SEED, 3, BikakuRules.Bite.NONE, 0, null, BikakuRules.REACH), time);
+                    tris.addAll(legTris(legs, at, time));
+                    for (String b : scene.blocks()) {
+                        String[] c = b.split(",");
+                        double[] corner = {Integer.parseInt(c[0]) - at[0], Integer.parseInt(c[1]) - at[1], Integer.parseInt(c[2]) - at[2]};
+                        if (Math.abs(corner[2]) < 6 && corner[1] > -5 && corner[1] < 6) {
+                            tris.addAll(cube(corner, 0x7A746C));
+                        }
+                    }
+                    PoseRender.Camera cam = PoseRender.orbit(scene.yaw(), scene.pitch(), scene.distance(), 1.2);
+                    g.drawImage(onGround(hanging(time), cam, fw, fh, tris, at), shown * fw, 34 + (s + 1) * fh, null);
+                    label(g, String.format("%s %dt%s", scene.name(), t, climbing ? "  CLIMBING" : ""), shown * fw, 34 + (s + 1) * fh);
+                    shown++;
+                }
+            }
+        }
+        g.dispose();
+        ImageIO.write(img, "png", out);
+        System.out.println(out);
+    }
+
+    /** As PoseRender.render, but the ground is the world's (y 0, checkered, round where he is), not a floor at his feet. */
+    static BufferedImage onGround(RigPose pose, PoseRender.Camera cam, int w, int h, List<PoseRender.Tri> extra, double[] at) {
+        PoseRender.Canvas canvas = new PoseRender.Canvas(w, h, 2, cam, 0x3A4450);
+        int cx = (int)Math.floor(at[0]);
+        int cz = (int)Math.floor(at[2]);
+        double y = -at[1];
+        for (int x = cx - 7; x <= cx + 7; x++) {
+            for (int z = cz - 7; z <= cz + 7; z++) {
+                int rgb = ((x + z) & 1) == 0 ? 0x58626C : 0x4E5862;
+                double x0 = x - at[0];
+                double z0 = z - at[2];
+                double[] a = w(new double[] {x0, y, z0});
+                double[] b = w(new double[] {x0 + 1, y, z0});
+                double[] c = w(new double[] {x0 + 1, y, z0 + 1});
+                double[] d = w(new double[] {x0, y, z0 + 1});
+                canvas.tri(new PoseRender.Tri(new double[][] {a, b, c}, rgb, new double[] {0, 1, 0}), true);
+                canvas.tri(new PoseRender.Tri(new double[][] {a, c, d}, rgb, new double[] {0, 1, 0}), true);
+            }
+        }
+        for (PoseRender.Tri t : PoseRender.model(pose)) canvas.tri(t, true);
+        for (PoseRender.Tri t : extra) canvas.tri(t, true);
+        return canvas.image();
+    }
+
+    static double walkerTopUnder(java.util.Set<String> blocks, double[] at) {
+        for (int y = (int)Math.floor(at[1] + 0.5); y >= -1; y--) {
+            if (walkerSolid(blocks, (int)Math.floor(at[0]), y, (int)Math.floor(at[2]))) {
+                return y + 1.0;
+            }
+        }
+        return 0.0;
+    }
+
+    static List<PoseRender.Tri> legTris(com.hex.kagune.control.bikaku.WalkerLegs.Legs legs, double[] at, double time) {
+        List<PoseRender.Tri> tris = new ArrayList<>();
+        for (int i = 0; i < com.hex.kagune.control.bikaku.WalkerLegs.LEGS; i++) {
+            double[] foot = com.hex.kagune.control.bikaku.WalkerLegs.foot(legs, i, time);
+            if (foot == null) {
+                continue;
+            }
+            double[] body = {foot[0] - at[0], foot[1] - at[1], foot[2] - at[2]};
+            MawMotion.Shape shape = com.hex.kagune.control.bikaku.WalkerLegs.shape(i, body, com.hex.kagune.control.bikaku.WalkerLegs.face(legs, i), com.hex.kagune.control.bikaku.WalkerLegs.stepping(legs, i, time), time, SEED);
+            tris.addAll(worms(new MawMotion.Worm[] {new MawMotion.Worm(shape, com.hex.kagune.control.bikaku.WalkerLegs.GIRTH, 1.0, SEED + 31 * i)}, time));
+        }
+        return tris;
     }
 
     /** A block at {@code at} (its corner), in grey. */

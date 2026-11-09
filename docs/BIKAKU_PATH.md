@@ -47,6 +47,12 @@ catch per worm (flung right, left, ahead-up); Pursuit each full-size worm biting
 `BikakuMove.CHAIN_*`); Carrion Eruption once per worm under its own body. One Worm, Regeneration and the kakuja unchanged. Pure
 `MawMotion.formMoves` (one worm: exactly the classic moves). Next: 3.6.2 The Walker.
 
+**3.6.2 (The Walker, 750):** two walking tentacles out of the worms' root, one each side (`WalkerLegs`: each foot planted on the top of
+a block out to its side and a little ahead, stepping one at a time when it falls behind, onto a wall's face when climbing, hanging when
+nothing is in reach; its shape arching out over his hip and down, its mouth shut on the block); his legs hang still, lifted 3 model pixels
+(`WalkerPose`); his client climbs any wall he walks into (`BikakuWalk`: a ladder's pace, sneak to hang, slide slowly); no fall damage while
+it is out (server). Its moves: Three Worms'. Forms done; the kakuja unchanged.
+
 **Before 3.4.9 (the pure worm, unchanged since except as above):**
 
 - `control/bikaku/MawWorm.java`: the worm as a mesh (pure). A thick muscular tube along a spine resampled evenly by length

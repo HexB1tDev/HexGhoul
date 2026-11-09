@@ -63,7 +63,7 @@ public final class PathCards {
     public static final int BIKAKU_ACCENT = 0xC02A50;
     private static final Card BIKAKU = new Card(KagunePath.BIKAKU, "BIKAKU", "Bikaku · Worm Kagune",
         List.of("One huge worm from the lower back", "A round mouth of fangs that bites", "Long reach; its bites heal you",
-            "Two worms, then three, as it grows", "Kakuja: a mass of mouths"),
+            "Two worms, then three, then legs", "Kakuja: a mass of mouths"),
         "MELEE · REACH · REGEN", BIKAKU_ACCENT, "BIKAKU", BIKAKU_STAGES, BIKAKU_MASTERY, PathSilhouette::bikaku);
 
     private PathCards() {

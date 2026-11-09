@@ -246,6 +246,12 @@ public final class BikakuRenderer {
             MawWorm.build(sink, new MawWorm.Pose(world, frame.turn(worm.shape().dorsal()), grown, worm.shape().aperture(),
                 worm.girth() * (1.0 + growth.swell()), worm.seed(), clock), tint, fine);
         }
+        if (!view.kakuja() && view.form().walks() && growth.worm() > 0.002) {
+            // 3.6.2: The Walker's two walking tentacles, out of the same root, down onto where their feet stand.
+            legs(sink, frame, posed, level, player, partial, clock, camera, fine, firstPerson, deploy, seed, tint);
+        } else {
+            LEGS.remove(player);
+        }
         if (growth.shows()) {
             // 3.5.4: the kakuja, built in his body's frame and placed in the world; in first person nothing of it near the eyes (he is
             // inside it: he sees out).
@@ -346,6 +352,47 @@ public final class BikakuRenderer {
         return new double[] {entity.f_19790_ + (entity.m_20185_() - entity.f_19790_) * partial,
             entity.f_19791_ + (entity.m_20186_() - entity.f_19791_) * partial + entity.m_20206_() * 0.52,
             entity.f_19792_ + (entity.m_20189_() - entity.f_19792_) * partial};
+    }
+
+    /** 3.6.2: each player's walking feet (kept from frame to frame: they stay planted until they step). */
+    private static final java.util.Map<AbstractClientPlayer, com.hex.kagune.control.bikaku.WalkerLegs.Legs> LEGS = new java.util.WeakHashMap<>();
+
+    /** 3.6.2: The Walker's legs: his feet moved on (stepping as he goes, up walls he climbs), each tentacle drawn from the root to its foot. */
+    private static void legs(UkakuModel.Sink sink, Frame frame, com.hex.kagune.control.client.animation.RigPose posed, ClientLevel level,
+                             AbstractClientPlayer player, float partial, double clock, Vec3 camera, boolean fine, boolean firstPerson, float deploy, int seed,
+                             int tint) {
+        com.hex.kagune.control.bikaku.WalkerLegs.Legs legs = LEGS.computeIfAbsent(player, ignored -> new com.hex.kagune.control.bikaku.WalkerLegs.Legs());
+        double[] feet = {frame.x(), frame.y(), frame.z()};
+        double[] right = {frame.rightX(), 0.0, frame.rightZ()};
+        double[] ahead = {frame.forwardX(), 0.0, frame.forwardZ()};
+        double[] going = {player.m_20185_() - player.f_19790_, player.m_20186_() - player.f_19791_, player.m_20189_() - player.f_19792_};
+        boolean climbing = going[1] > 0.04 && com.hex.kagune.control.client.BikakuWalk.wallAhead(level, feet[0], feet[1], feet[2], ahead[0], ahead[2]);
+        com.hex.kagune.control.bikaku.WalkerLegs.update(legs, feet, right, ahead, going, climbing, clock,
+            (x, y, z) -> com.hex.kagune.control.client.BikakuWalk.solid(level, x, y, z));
+        double grown = GraftMesh.smooth(deploy);
+        for (int i = 0; i < com.hex.kagune.control.bikaku.WalkerLegs.LEGS; i++) {
+            double[] foot = com.hex.kagune.control.bikaku.WalkerLegs.foot(legs, i, clock);
+            if (foot == null) {
+                continue;
+            }
+            double[] face = com.hex.kagune.control.bikaku.WalkerLegs.face(legs, i);
+            double[] footRig = frame.rig(foot);
+            double[] faceRig = GraftMesh.sub(frame.rig(GraftMesh.add(foot, face)), footRig);
+            MawMotion.Shape shape = com.hex.kagune.control.bikaku.WalkerLegs.shape(i, footRig, faceRig,
+                com.hex.kagune.control.bikaku.WalkerLegs.stepping(legs, i, clock), clock, seed);
+            double girth = com.hex.kagune.control.bikaku.WalkerLegs.GIRTH;
+            // Round his body rather than through it, carried with his torso near the root; grown out with the kagune.
+            double[][] rig = com.hex.kagune.control.client.animation.GraftPose.ride(posed, MawMotion.around(shape.path(), girth, shape.aperture()));
+            rig = MawMotion.grown(rig, grown);
+            if (firstPerson) {
+                rig = MawMotion.firstPerson(rig, frame.rig(new double[] {camera.f_82479_, camera.f_82480_, camera.f_82481_}));
+            }
+            double[][] world = new double[rig.length][];
+            for (int k = 0; k < rig.length; k++) {
+                world[k] = frame.place(rig[k], camera);
+            }
+            MawWorm.build(sink, new MawWorm.Pose(world, frame.turn(shape.dorsal()), grown, shape.aperture(), girth, seed + 31 * (i + 1), clock), tint, fine);
+        }
     }
 
     /** A player's rig frame for this frame: feet in the world, and the body's forward and right (as the other kagune renderers'). */

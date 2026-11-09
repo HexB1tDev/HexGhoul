@@ -816,6 +816,10 @@ public final class BikakuServer {
                 kakujaTick(player, state, now);
             }
         }
+        // 3.6.2: The Walker: his walking tentacles take a fall for him (no fall damage while they are out); his client climbs walls on them.
+        if (!state.kakuja && KaguneProfile.isActive(player) && player.m_6084_() && form(player, state).walks()) {
+            player.f_19789_ = 0.0F;
+        }
         // 3.5.3: Pain Suppression: hard to throw while the worm is out (and Monstrous Regeneration's healing while it lasts).
         if (now % 10L == 0L) {
             steady(player, KaguneProfile.isActive(player) && player.m_6084_(), state.kakuja ? BikakuRules.KAKUJA_STEADY : BikakuRules.KNOCKBACK_RESIST);

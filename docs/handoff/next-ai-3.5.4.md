@@ -74,8 +74,11 @@ Binding; quoted exactly as written. Kept current as that session goes.
 - **3.6.1 shipped:** every move made by all the form's worms (approved plan: Maw and Drag a catch per worm, all on one body if fewer;
   Pursuit each full-size worm after its own body, three bites each; Carrion Eruption once per worm under its own body, in turn;
   Regeneration unchanged). Preview sent (`docs/handoff/bikaku-form-moves-3.6.1.png`). Versions 3.6.1; protocol "102".
-- **Next: 3.6.2, The Walker** (two walking tentacles from the worms' root, his body steady, feet finding the ground and walls, climbing;
-  its moves made stronger too). Previews before going far.
+- **3.6.2 shipped:** The Walker (750: two walking tentacles from the worms' root, one each side; his legs hang still, lifted a little;
+  feet stepping on the blocks round him; climbs any wall he walks into; no fall damage; Three Worms' moves). A draft preview was sent
+  before building it (no answer yet), then `docs/handoff/bikaku-walker-3.6.2.png`. Versions 3.6.2; protocol "102" (unchanged).
+- **Next:** the owner's answer on The Walker (asked whether "two separate appendages on either" means two in all or two each side, and
+  whether its legs should add anything to the moves); otherwise ask them what's next. The forms ask is done.
 
 ## Where things were when this note was written (after 3.5.3)
 

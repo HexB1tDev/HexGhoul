@@ -37,6 +37,7 @@ public final class BikakuWormTests {
         routes();
         forms();
         formMoves();
+        walker();
         System.out.println("Bikaku worm tests: " + passed + " checks passed");
     }
 
@@ -848,15 +849,155 @@ public final class BikakuWormTests {
             "one worm is the worm as it always was");
         check(com.hex.kagune.control.bikaku.BikakuForm.ONE.worms() == 1 && com.hex.kagune.control.bikaku.BikakuForm.TWIN.worms() == 2
             && com.hex.kagune.control.bikaku.BikakuForm.THREE.worms() == 3 && com.hex.kagune.control.bikaku.BikakuForm.TWIN.mastery() == 250
-            && com.hex.kagune.control.bikaku.BikakuForm.THREE.mastery() == 500 && !com.hex.kagune.control.bikaku.BikakuForm.WALKER.unlocked(1000),
-            "two worms at 250, three at 500; the walking form not yet");
+            && com.hex.kagune.control.bikaku.BikakuForm.THREE.mastery() == 500 && com.hex.kagune.control.bikaku.BikakuForm.WALKER.unlocked(750)
+            && !com.hex.kagune.control.bikaku.BikakuForm.WALKER.unlocked(749),
+            "two worms at 250, three at 500; The Walker at 750");
         check(com.hex.kagune.control.bikaku.BikakuForm.allowed(com.hex.kagune.control.bikaku.BikakuForm.THREE, 300) == com.hex.kagune.control.bikaku.BikakuForm.TWIN
             && com.hex.kagune.control.bikaku.BikakuForm.allowed(com.hex.kagune.control.bikaku.BikakuForm.TWIN, 0) == com.hex.kagune.control.bikaku.BikakuForm.ONE
-            && com.hex.kagune.control.bikaku.BikakuForm.allowed(com.hex.kagune.control.bikaku.BikakuForm.WALKER, 1000) == com.hex.kagune.control.bikaku.BikakuForm.THREE,
+            && com.hex.kagune.control.bikaku.BikakuForm.allowed(com.hex.kagune.control.bikaku.BikakuForm.WALKER, 700) == com.hex.kagune.control.bikaku.BikakuForm.THREE
+            && com.hex.kagune.control.bikaku.BikakuForm.allowed(com.hex.kagune.control.bikaku.BikakuForm.WALKER, 1000) == com.hex.kagune.control.bikaku.BikakuForm.WALKER,
             "a form his mastery hasn't opened falls back to the strongest it has");
     }
 
     private static final double[] PREY_AT = {0.1, 0.99, 3.6};
+
+    /**
+     * 3.6.2 (the owner: "the player no longer even like walks with their own legs ... tentacles that walk around adapt to terrain. Being
+     * able to climb anything"): The Walker's two walking tentacles: standing, a foot planted on the ground out to each side; walking, the
+     * feet step one at a time, never jump, are always put down on top of a block with open air over it, never further than they reach;
+     * up steps and off them; climbing a wall, on the wall's face; a teleport puts them down at once; drawn, never through him.
+     */
+    private static void walker() {
+        com.hex.kagune.control.bikaku.BikakuForm walker = com.hex.kagune.control.bikaku.BikakuForm.WALKER;
+        check(walker.walks() && walker.worms() == 3 && !com.hex.kagune.control.bikaku.BikakuForm.THREE.walks(),
+            "The Walker walks on its tentacles and makes its moves with three worms");
+        double[] right = {1.0, 0.0, 0.0};
+        double[] ahead = {0.0, 0.0, 1.0};
+        com.hex.kagune.control.bikaku.WalkerLegs.Blocks flat = (x, y, z) -> y < 0;
+        com.hex.kagune.control.bikaku.WalkerLegs.Legs legs = new com.hex.kagune.control.bikaku.WalkerLegs.Legs();
+        double[] feet = {0.5, 0.0, 0.5};
+        for (double t = 100.0; t <= 200.0; t += 0.25) {
+            com.hex.kagune.control.bikaku.WalkerLegs.update(legs, feet, right, ahead, new double[3], false, t, flat);
+            for (int i = 0; i < 2; i++) {
+                double[] foot = com.hex.kagune.control.bikaku.WalkerLegs.foot(legs, i, t);
+                check(Math.abs(foot[1]) < 1.0E-9 && !com.hex.kagune.control.bikaku.WalkerLegs.stepping(legs, i, t), "standing, its foot " + i + " stays planted on the ground");
+                check((i == 0 ? foot[0] - feet[0] : feet[0] - foot[0]) > 1.0, "standing, foot " + i + " is out to its own side");
+            }
+        }
+        // Walking, then running, on flat ground, up two steps and off a ledge, as drawn frame by frame.
+        java.util.Set<String> steps = new java.util.HashSet<>();
+        for (int z = 4; z < 40; z++) {
+            for (int x = -6; x < 7; x++) {
+                steps.add(x + ",0," + z);
+                if (z >= 7 && z < 20) {
+                    steps.add(x + ",1," + z);
+                }
+            }
+        }
+        com.hex.kagune.control.bikaku.WalkerLegs.Blocks stairs = (x, y, z) -> y < 0 || steps.contains(x + "," + y + "," + z);
+        for (com.hex.kagune.control.bikaku.WalkerLegs.Blocks ground : new com.hex.kagune.control.bikaku.WalkerLegs.Blocks[] {flat, stairs}) {
+            for (double pace : new double[] {0.1, 0.22, 0.29}) {
+                legs = new com.hex.kagune.control.bikaku.WalkerLegs.Legs();
+                feet = new double[] {0.5, 0.0, -2.0};
+                double[][] last = new double[2][];
+                int[] stepped = new int[2];
+                boolean[] was = new boolean[2];
+                for (double t = 0.0; t <= 140.0; t += 0.25) {
+                    double[] before = feet.clone();
+                    feet[2] += pace * 0.25;
+                    double top = 0.0;
+                    for (int y = 3; y >= 0; y--) {
+                        if (ground.solid((int)Math.floor(feet[0]), y - 1, (int)Math.floor(feet[2]))) {
+                            top = y;
+                            break;
+                        }
+                    }
+                    feet[1] = top;
+                    double[] going = {(feet[0] - before[0]) * 4.0, (feet[1] - before[1]) * 4.0, (feet[2] - before[2]) * 4.0};
+                    com.hex.kagune.control.bikaku.WalkerLegs.update(legs, feet, right, ahead, going, false, t, ground);
+                    boolean both = true;
+                    for (int i = 0; i < 2; i++) {
+                        double[] foot = com.hex.kagune.control.bikaku.WalkerLegs.foot(legs, i, t);
+                        boolean stepping = com.hex.kagune.control.bikaku.WalkerLegs.stepping(legs, i, t);
+                        both &= stepping;
+                        if (stepping && !was[i]) {
+                            stepped[i]++;
+                        }
+                        was[i] = stepping;
+                        if (last[i] != null) {
+                            check(distance(foot, last[i]) < 0.75, "a walking foot never jumps (" + distance(foot, last[i]) + " at " + t + ", pace " + pace + ")");
+                        }
+                        last[i] = foot;
+                        if (!stepping) {
+                            int fx = (int)Math.floor(foot[0]);
+                            int fy = (int)Math.round(foot[1]);
+                            int fz = (int)Math.floor(foot[2]);
+                            check(Math.abs(foot[1] - fy) < 1.0E-9 && ground.solid(fx, fy - 1, fz) && !ground.solid(fx, fy, fz),
+                                "a planted foot stands on top of a block, open over it (" + java.util.Arrays.toString(foot) + ")");
+                            double[] hip = {feet[0], feet[1] + MawMotion.ROOT[1], feet[2]};
+                            check(distance(foot, hip) <= com.hex.kagune.control.bikaku.WalkerLegs.REACH + 0.35,
+                                "a planted foot is never further than it reaches (" + distance(foot, hip) + ")");
+                        }
+                    }
+                    check(!both, "its feet step one at a time (" + t + ", pace " + pace + ")");
+                }
+                check(stepped[0] >= 4 && stepped[1] >= 4 && Math.abs(stepped[0] - stepped[1]) <= 2,
+                    "walking, both feet step, in turn (" + stepped[0] + ", " + stepped[1] + ")");
+            }
+        }
+        // Up a wall before him: the feet go onto its face.
+        com.hex.kagune.control.bikaku.WalkerLegs.Blocks wall = (x, y, z) -> y < 0 || z == 3 && y < 12;
+        legs = new com.hex.kagune.control.bikaku.WalkerLegs.Legs();
+        feet = new double[] {0.5, 0.0, 2.7};
+        int onWall = 0;
+        int frames = 0;
+        double[][] last = new double[2][];
+        for (double t = 0.0; t <= 40.0; t += 0.25) {
+            feet[1] = t * 0.2;
+            com.hex.kagune.control.bikaku.WalkerLegs.update(legs, feet, right, ahead, new double[] {0.0, 0.2, 0.0}, true, t, wall);
+            for (int i = 0; i < 2; i++) {
+                double[] foot = com.hex.kagune.control.bikaku.WalkerLegs.foot(legs, i, t);
+                if (last[i] != null) {
+                    check(distance(foot, last[i]) < 0.75, "a climbing foot never jumps (" + distance(foot, last[i]) + ")");
+                }
+                last[i] = foot;
+                if (feet[1] > 2.5 && !com.hex.kagune.control.bikaku.WalkerLegs.stepping(legs, i, t)) {
+                    frames++;
+                    double[] face = com.hex.kagune.control.bikaku.WalkerLegs.face(legs, i);
+                    if (Math.abs(foot[2] - 3.0) < 1.0E-9 && face[2] < -0.5) {
+                        onWall++;
+                    }
+                }
+            }
+        }
+        check(frames > 0 && onWall == frames, "climbing a wall, its feet hold onto the wall's face (" + onWall + " of " + frames + ")");
+        // Somewhere else at once (a teleport): its feet are put down there, no step across.
+        com.hex.kagune.control.bikaku.WalkerLegs.update(legs, new double[] {40.5, 0.0, 40.5}, right, ahead, new double[3], false, 41.0, flat);
+        for (int i = 0; i < 2; i++) {
+            double[] foot = com.hex.kagune.control.bikaku.WalkerLegs.foot(legs, i, 41.0);
+            check(Math.abs(foot[0] - 40.5) < 2.0 && Math.abs(foot[2] - 40.5) < 2.0 && !com.hex.kagune.control.bikaku.WalkerLegs.stepping(legs, i, 41.0),
+                "moved far at once, its feet are put down where he is");
+        }
+        // Drawn: from the root to its foot, never through him, standing, stepping, on a wall.
+        double[][][] spots = {{{1.35, 0.0, 0.2}, {0.0, 1.0, 0.0}}, {{-1.35, 0.0, 0.2}, {0.0, 1.0, 0.0}}, {{1.8, 0.3, 1.2}, {0.0, 1.0, 0.0}},
+            {{-1.0, -1.6, 0.9}, {0.0, 1.0, 0.0}}, {{0.6, 1.4, 0.3}, {0.0, 0.0, -1.0}}, {{-0.6, 0.6, 0.3}, {0.0, 0.0, -1.0}}, {{1.1, 0.0, -1.0}, {0.0, 1.0, 0.0}}};
+        for (double[][] spot : spots) {
+            for (int i = 0; i < 2; i++) {
+                for (boolean stepping : new boolean[] {false, true}) {
+                    double[] foot = spot[0].clone();
+                    if (i == 1) {
+                        foot[0] = -foot[0];
+                    }
+                    MawMotion.Shape leg = com.hex.kagune.control.bikaku.WalkerLegs.shape(i, foot, spot[1], stepping, 33, 7);
+                    double[][] path = leg.path();
+                    check(distance(path[0], MawMotion.ROOT) < 1.0E-9 && distance(path[path.length - 1], foot) < 1.0E-9, "a leg runs from the root to its foot");
+                    double[][] drawn = MawMotion.around(path, com.hex.kagune.control.bikaku.WalkerLegs.GIRTH, leg.aperture());
+                    check(depthInHim(drawn, com.hex.kagune.control.bikaku.WalkerLegs.GIRTH, leg.aperture()) < 0.03,
+                        "a walking tentacle is never drawn through him (" + java.util.Arrays.toString(foot) + ")");
+                }
+            }
+        }
+    }
 
     /**
      * 3.6.1 (the owner: "to do enhanced versions of themselves whenever they're, like, in different transformations"): in a form of several

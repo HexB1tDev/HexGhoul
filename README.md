@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.6.2 (HexGhoul): Bikaku: The Walker (testing)
+
+See `.github/release-notes-3.6.2.md`. Your words: "the fourth before the Kakuja should be like the player no longer even like walks with their own legs, like they get like two separate appendages on either, like both sides emerging from the same spot as the worms, that when the player walks his body doesn't move, but like he controls these tentacles that walk around adapt to terrain. Being able to climb anything, like Dr. Octopus pretty much." The Walker (750): two walking tentacles out of the worms' root, one on each side, carry you. Your legs hang still, the feet step on the blocks around you (steps, ledges), and you climb any wall you walk into (sneak to hang on). No fall damage while it is out. Its moves are Three Worms'. Protocol 102. Preview: `docs/handoff/bikaku-walker-3.6.2.png`.
+
 ## 3.6.1 (HexGhoul): Bikaku: every move made by all the worms (testing)
 
 See `.github/release-notes-3.6.1.md`. Your words: "to basically become overpowered, like, to do enhanced versions of themselves whenever they're, like, in different transformations, such as, like, the move that, like, drag pursuit, you can send all three of them, all three of the worm-like things, and the thing that sends the worm underground and then up can be like more than one, and whatsoever." In Twin Worms and Three Worms every move is made by all the worms, each from its own lane and a beat after the one before. Devouring Maw and Predatory Drag catch a body per worm. Ravenous Pursuit sends every worm after its own body, three bites each. Carrion Eruption comes up once per worm, under each one's body. One Worm is as before. Protocol 102. Preview: `docs/handoff/bikaku-form-moves-3.6.1.png`.
