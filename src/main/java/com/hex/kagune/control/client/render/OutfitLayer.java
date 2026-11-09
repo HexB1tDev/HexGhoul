@@ -63,6 +63,25 @@ public final class OutfitLayer<T extends LivingEntity, M extends EntityModel<T>>
     /** 4.0.0: a companion's own mask (Noro's always; Ayato's in a fight), told by the companions' client. */
     public static Function<LivingEntity, String> COMPANION = wearer -> null;
 
+    /** 4.0.0: the models drawn on slim (three-pixel) arms, as their renderers built them (a player's is told by its skin). */
+    private static final java.util.Set<Object> SLIM = java.util.Collections.newSetFromMap(new java.util.WeakHashMap<>());
+
+    /** 4.0.0: {@code model} has slim arms (a renderer says so of its own as it makes it); returns it. */
+    public static <X> X slim(X model) {
+        if (model != null) {
+            SLIM.add(model);
+        }
+        return model;
+    }
+
+    /** Whether {@code wearer}, drawn on {@code model}, has slim arms: a player by its skin, anyone else by the model it is drawn on. */
+    static boolean slim(LivingEntity wearer, Object model) {
+        if (wearer instanceof AbstractClientPlayer player) {
+            return "slim".equals(player.m_108564_());
+        }
+        return SLIM.contains(model);
+    }
+
     public OutfitLayer(RenderLayerParent<T, M> parent) {
         super(parent);
     }
@@ -76,32 +95,33 @@ public final class OutfitLayer<T extends LivingEntity, M extends EntityModel<T>>
             }
             ModelPart[] bones = {model.f_102808_, model.f_102810_, model.f_102811_, model.f_102812_, model.f_102813_, model.f_102814_};
             AbstractClientPlayer player = wearer instanceof AbstractClientPlayer p ? p : null;
+            boolean slim = slim(wearer, model);
             for (EquipmentSlot slot : SLOTS) {
                 ItemStack stack = wearer.m_6844_(slot);
                 if (stack.m_41720_() instanceof OutfitItem item) {
                     Outfits.Piece piece = item.piece();
-                    draw(pose, buffers, light, bones, player, partialTick, piece.model(), piece.mask() ? -1 : piece.slot());
+                    draw(pose, buffers, light, bones, player, partialTick, piece.model(), piece.mask() ? -1 : piece.slot(), slim);
                 }
             }
             String extra = EXTRA.apply(wearer);
             if (extra != null) {
-                draw(pose, buffers, light, bones, player, partialTick, extra, -1);
+                draw(pose, buffers, light, bones, player, partialTick, extra, -1, slim);
             }
         } catch (RuntimeException failure) {
             PlayerLayers.failed("an outfit", failure);
         }
     }
 
-    /** {@code model}'s cubes in {@code slot} (any: -1) on {@code bones}, as they are posed. */
+    /** {@code model}'s cubes in {@code slot} (any: -1) on {@code bones}, as they are posed (the sleeves for slim arms on a slim wearer). */
     static void draw(PoseStack pose, MultiBufferSource buffers, int light, ModelPart[] bones, AbstractClientPlayer player, float partial, String modelId,
-                     int slot) {
+                     int slot, boolean slim) {
         OutfitModels.Model model = OutfitModels.get(modelId);
         if (model == null) {
             return;
         }
         VertexConsumer out = buffers.m_6299_(type(modelId));
         for (int bone = 0; bone < bones.length; bone++) {
-            List<OutfitModels.Cube> cubes = model.on(bone, slot);
+            List<OutfitModels.Cube> cubes = model.on(arm(bone, slim), slot);
             if (cubes.isEmpty() || bones[bone] == null) {
                 continue;
             }
@@ -114,6 +134,14 @@ public final class OutfitLayer<T extends LivingEntity, M extends EntityModel<T>>
             emit(out, pose, cubes, light);
             pose.m_85849_();
         }
+    }
+
+    /** The bone whose cubes go on {@code bone}'s part: a slim wearer's arms take the slim sleeves. */
+    static int arm(int bone, boolean slim) {
+        if (!slim) {
+            return bone;
+        }
+        return bone == OutfitModels.RIGHT_ARM ? OutfitModels.RIGHT_ARM_SLIM : bone == OutfitModels.LEFT_ARM ? OutfitModels.LEFT_ARM_SLIM : bone;
     }
 
     /** The cubes' faces, from where their bone's part stands (sixteenths: the pose is in blocks). */

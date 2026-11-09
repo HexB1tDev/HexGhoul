@@ -28,9 +28,18 @@ public final class MawWorm {
      * has grown out (0 .. 1), how wide its mouth is (0 shut .. 1 thrown wide), how thick it is (1 the kagune's own), its seed (each worm's
      * ridges, spurs and teeth its own) and the time (ticks) its flesh moves by.
      */
-    public record Pose(double[][] path, double[] dorsal, double grown, double aperture, double girth, int seed, double time, Feed feed) {
+    public record Pose(double[][] path, double[] dorsal, double grown, double aperture, double girth, int seed, double time, Feed feed, boolean leg) {
         public Pose(double[][] path, double[] dorsal, double grown, double aperture, double girth, int seed, double time) {
-            this(path, dorsal, grown, aperture, girth, seed, time, null);
+            this(path, dorsal, grown, aperture, girth, seed, time, null, false);
+        }
+
+        public Pose(double[][] path, double[] dorsal, double grown, double aperture, double girth, int seed, double time, Feed feed) {
+            this(path, dorsal, grown, aperture, girth, seed, time, feed, false);
+        }
+
+        /** 4.0.0: one of The Walker's legs ({@link #legRadius}: thick at the hip, tapering to its foot). */
+        public Pose leg(boolean leg) {
+            return new Pose(this.path, this.dorsal, this.grown, this.aperture, this.girth, this.seed, this.time, this.feed, leg);
         }
     }
 
@@ -255,6 +264,30 @@ public final class MawWorm {
         return feed == null ? g : g + (feed.hole() / holeRadius(1.0) - g) * GraftMesh.clamp01(feed.head());
     }
 
+    /** Its radius {@code u} of the way along it as {@code pose} has it: feeding, a Walker's leg, a worm's, or a mouthless tentacle's. */
+    static double profile(Pose pose, double u, double length, double open, boolean mouth) {
+        if (pose.feed() != null) {
+            return feedRadius(u, length, open, pose.feed());
+        }
+        if (!mouth) {
+            return tip(u, length);
+        }
+        return pose.leg() ? legRadius(u, length, open) : radius(u, length, open);
+    }
+
+    /**
+     * 4.0.0 (the owner: "the legs look like sticks"): a Walker's leg's radius {@code u} of the way along it: out of his hip as the worm, swelling
+     * at once into a thick, muscled thigh (three quarters again as wide), tapering down its length to a worm's girth at the shin, a little
+     * swell at the bend, its foot the worm's head and mouth.
+     */
+    public static double legRadius(double u, double length, double open) {
+        double at = GraftMesh.clamp01(u) * length;
+        double share = GraftMesh.clamp01(u);
+        double thigh = 0.75 * GraftMesh.smooth(GraftMesh.clamp01(at / 0.9)) * (1.0 - GraftMesh.smooth(GraftMesh.clamp01((share - 0.3) / 0.55)));
+        double bend = 0.12 * bump(share - 0.5, 0.09);
+        return radius(u, length, open) * (1.0 + thigh + bend);
+    }
+
     /** 3.5.4: a mouthless tentacle's radius {@code u} of the way along it: out of its root as the worm's, tapering over its last third. */
     static double tip(double u, double length) {
         double at = GraftMesh.clamp01(u) * length;
@@ -297,7 +330,7 @@ public final class MawWorm {
             @Override
             public double radius(double s, double a) {
                 double at = s * length;
-                double r = pose.feed() != null ? feedRadius(s, length, open, pose.feed()) : mouth ? MawWorm.radius(s, length, open) : tip(s, length);
+                double r = profile(pose, s, length, open, mouth);
                 double crest = ridge(at, a, seed);
                 double fold = 0.035 * Math.sin(a * 5.0 + 2.6 * GraftMesh.noise(seed + 3, at * 1.7, 0.0)) * GraftMesh.smooth(at / 0.4);
                 double lump = 0.07 * (GraftMesh.noise(seed + 11, at * 3.2, a * 1.3) - 0.5);
@@ -339,7 +372,7 @@ public final class MawWorm {
                 double at = s * length;
                 double a = a0 + 0.55 * Math.sin(at * 2.3 + v * 1.9) + 0.9 * (GraftMesh.noise(pose.seed() + 40 + v, at * 1.6, 0.0) - 0.5)
                     + 0.18 * Math.sin(at * 9.0 + v);
-                double r = g * (pose.feed() != null ? feedRadius(s, length, open, pose.feed()) : mouth ? radius(s, length, open) : tip(s, length))
+                double r = g * profile(pose, s, length, open, mouth)
                     * (1.0 + 0.1 * ridge(at, a, pose.seed())) + 0.006;
                 double[][] f = spine.at(s);
                 double[] out = GraftMesh.add(GraftMesh.mul(f[3], Math.cos(a)), GraftMesh.mul(f[2], Math.sin(a)));
@@ -371,7 +404,7 @@ public final class MawWorm {
         for (double at = 0.38; at < length - 0.62; at += 0.27, n++) {
             double s = at / length;
             double a = Math.PI * 0.5 + (n % 2 == 0 ? 0.55 : -0.55) + 0.25 * (GraftMesh.hash(pose.seed() * 17 + n) - 0.5);
-            double r = g * (pose.feed() != null ? feedRadius(s, length, 0.0, pose.feed()) : mouth ? radius(s, length, 0.0) : tip(s, length));
+            double r = g * profile(pose, s, length, 0.0, mouth);
             double[][] on = GraftMesh.onSurface(spine, s, a, r * 0.86);
             double[] dir = GraftMesh.normalize(GraftMesh.sub(GraftMesh.mul(on[1], 0.85), GraftMesh.mul(on[2], 0.55)));
             double len = g * (0.17 + 0.1 * GraftMesh.hash(pose.seed() * 5 + n));

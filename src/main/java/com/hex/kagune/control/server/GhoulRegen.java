@@ -20,7 +20,9 @@ import net.minecraftforge.fml.common.Mod;
  * A ghoul's regeneration on the server ({@link Regeneration}): the wait after the last hit, then the missing health back over a
  * short stretch (each player's wounds close on every client as it comes back, see {@code WoundClient}). Food's natural
  * regeneration no longer heals a ghoul; potions of healing and regeneration effects still do. Healing is paid from the flesh
- * reserve ({@link GhoulReserve}, with the ghoul diet on), and a ghoul with none left does not regenerate.
+ * reserve ({@link GhoulReserve}, with the ghoul diet on), and a ghoul with none left does not regenerate. 4.0.0: but a Bikaku ghoul's
+ * (the owner: "wounds appear like any other ghoul but regen for them does not cost energy at all, it works with cooldowns, and
+ * waiting"): its wounds show and close as anyone's, after the same wait, and cost it nothing.
  */
 @Mod.EventBusSubscriber(modid = "hexkagune")
 public final class GhoulRegen {
@@ -93,7 +95,8 @@ public final class GhoulRegen {
             HURT.put(id, new long[] {now}); // and then the usual wait, from when it wears off
         }
         long[] hurt = HURT.computeIfAbsent(id, ignored -> new long[] {now});
-        boolean diet = GhoulReserveServer.applies(player);
+        // 4.0.0: a Bikaku body knits for nothing (the wait is all it asks): never paid from the reserve, never held back by an empty one.
+        boolean diet = !BikakuServer.isBikaku(player) && GhoulReserveServer.applies(player);
         float reserve = diet ? GhoulReserveServer.get(player) : 0.0F;
         if (diet && reserve <= 0.0F) {
             return;

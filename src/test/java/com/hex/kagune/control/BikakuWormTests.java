@@ -1740,8 +1740,15 @@ public final class BikakuWormTests {
                 "a blow that would kill him doesn't while his bar has energy; without, it does");
             check(server.contains("PotentialRules.HEAVY_BLOW * player.m_21233_()") && server.contains("BikakuDevour.held(player)"),
                 "a heavy blow tears a part off; not while Grand Devouring holds him");
-            check(server.contains("SharedBar.consumeEnergy(player, PotentialRules.PULL_DRAIN)") && server.contains("t.paused = !paid")
-                && server.contains("GhoulRegen.healOwn(player, PotentialRules.HEAL)"), "the pull draws energy, waits without it, heals once whole");
+            // 4.0.0 (the owner: "Sometimes the limbs break and dont regenerate cause of the lack of energy ... regen for them does not cost
+            // energy at all"): the pull draws nothing and never waits on the bar.
+            check(!server.contains("PULL_DRAIN") && !server.contains("t.paused = !paid") && server.contains("t.age += 1.0;")
+                && server.contains("GhoulRegen.healOwn(player, PotentialRules.HEAL)"), "the pull costs nothing, never waits on the bar, heals once whole");
+            String regen = read("src/main/java/com/hex/kagune/control/server/GhoulRegen.java");
+            check(regen.contains("boolean diet = !BikakuServer.isBikaku(player) && GhoulReserveServer.applies(player);"),
+                "a Bikaku ghoul's wounds close after the wait for nothing");
+            String moves = read("src/main/java/com/hex/kagune/control/server/BikakuMoves.java");
+            check(moves.contains("move.cost() > 0.0F && !KaguneServerController.useEnergy(player, move.cost(), true)"), "a free regeneration is never refused for an empty bar");
             String network = read("src/main/java/com/hex/kagune/control/network/ControlNetwork.java");
             check(network.contains("registerMessage(56, S2CPotential.class") && network.contains("PROTOCOL = \"104\""), "every client is told (message 56, protocol 104)");
             String client = read("src/main/java/com/hex/kagune/control/client/PotentialClient.java");

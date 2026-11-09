@@ -56,7 +56,7 @@ public final class HumanRenderer extends HumanoidMobRenderer<HumanNpc, PlayerMod
     private HumanRenderer(EntityRendererProvider.Context context, Model wide, Model slim) {
         super(context, wide, 0.5F);
         this.wide = wide;
-        this.slim = slim;
+        this.slim = OutfitLayer.slim(slim); // 4.0.0: its outfit's sleeves for slim arms
         this.m_115326_(new Blink(this));
         this.m_115326_(new Figure(this));
         this.m_115326_(new OutfitLayer<>(this)); // 4.0.0: anything a person is wearing

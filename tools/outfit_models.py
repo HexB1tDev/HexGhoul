@@ -5,8 +5,10 @@
 
 Reads the owner's canonical geometry (art/outfits/: formal.model.json and crimson.model.json, the 24 masks' masks/<name>/<name>.model.json,
 each with its 512 x 512 texture; Minecraft model units, Java Y-down, absolute positions in the player model's frame, each cube on one bone
-with its own pivot and rotation and its box-UV offset), adds the generic masks (GENERIC, made here: a clown's, a gas mask, a skull, a fox,
-an oni, a cloth wrap; no character's), and writes:
+with its own pivot and rotation and its box-UV offset), fits them to the game's player (fit_mask, fit_outfit: the masks' eyes on the
+skin's, the half masks down over the mouth, the coats drawn in, the sleeves again for slim arms), adds the generic masks (GENERIC, drawn
+here: a clown's, a gas mask, a skull, a fox, an oni, a cloth wrap, a porcelain face, a bandage wrap, a kabuki face; no character's), and
+writes:
 
   src/main/resources/assets/hexkagune/models/outfits.bin       every model, baked (OutfitModels reads it)
   src/main/resources/assets/hexkagune/textures/outfit/<id>.png  every model's texture (the owner's as they are; the generic ones painted)
@@ -29,10 +31,10 @@ ROOT = Path(__file__).resolve().parent.parent
 ART = ROOT / "art" / "outfits"
 ASSETS = ROOT / "src" / "main" / "resources" / "assets" / "hexkagune"
 BIN = ASSETS / "models" / "outfits.bin"
-BONES = ["head", "body", "right_arm", "left_arm", "right_leg", "left_leg"]
+BONES = ["head", "body", "right_arm", "left_arm", "right_leg", "left_leg", "right_arm_slim", "left_arm_slim"]
 SLOTS = ["helmet", "chestplate", "leggings", "boots"]
 PIVOTS = {"head": (0, 0, 0), "body": (0, 0, 0), "right_arm": (-5, 2, 0), "left_arm": (5, 2, 0), "right_leg": (-1.9, 12, 0),
-          "left_leg": (1.9, 12, 0)}
+          "left_leg": (1.9, 12, 0), "right_arm_slim": (-5, 2, 0), "left_arm_slim": (5, 2, 0)}
 
 # The owner's masks: (their folder, the item's id, its name in game). Kaneki's is "eyepatch" (the build keeps that name out of the jar).
 MASKS = [
@@ -54,118 +56,392 @@ OUTFITS = [
                  ("crimson_boots", "Crimson Boots")]),
 ]
 
-# ---------------------------------------------------------------- the generic masks (a wild ghoul's), made here
+# ---------------------------------------------------------------- the generic masks (a wild ghoul's), drawn here
 
-COLOURS = {"white": (232, 230, 224), "bone": (221, 212, 190), "black": (24, 24, 28), "red": (178, 28, 36), "dark_red": (110, 18, 24),
-           "blue": (60, 110, 200), "grey": (120, 122, 128), "dark_grey": (58, 60, 66), "olive": (92, 100, 58), "lens": (40, 70, 72),
-           "gold": (212, 168, 62), "ivory": (236, 226, 196), "cloth": (46, 48, 60), "cloth_dark": (30, 31, 40), "strap": (34, 30, 28),
-           "pink": (214, 120, 140)}
+# 4.0.0 (the owner, on the first ones: "very basic and lack details, not only that but the eye position of the masks are very off"):
+# each is drawn on a grid of quarter pixels in front of the face, cell by cell (a material, how far forward it stands), its edges shaded,
+# its middle standing further forward than its sides (a face's curve), its eye holes on the skin's own eyes (the face's fifth row of
+# eight: y -4 to -3, the eyes at x 1 to 3 either side), so a ghoul's kakugan shows through. Each run of like cells is one cube, from its
+# face back to just in front of the skin's hat layer (which stands half a pixel off the head).
 
-
-def strap():
-    return [((-4.38, -4.1, -3.9), (0.3, 1.1, 8.2), "strap", None, "side_strap"), ((4.08, -4.1, -3.9), (0.3, 1.1, 8.2), "strap", None, "side_strap"),
-            ((-4.38, -4.1, 4.08), (8.76, 1.1, 0.25), "strap", None, "rear_strap")]
-
-
-def pair(pos, size, mat, rot=None):
-    """A cube and its mirror across the face's middle (x)."""
-    x, y, z = pos
-    w = size[0]
-    out = [(pos, size, mat) + ((rot,) if rot else ())]
-    mirrored = None if rot is None else (rot[0], -rot[1], -rot[2])
-    out.append(((-x - w, y, z), size, mat) + ((mirrored,) if mirrored else ()))
-    return out
+COLOURS = {"white": (232, 230, 224), "bone": (221, 212, 190), "bone_dark": (176, 164, 136), "black": (24, 24, 28), "void": (12, 10, 12),
+           "red": (178, 28, 36), "dark_red": (110, 18, 24), "blue": (60, 110, 200), "grey": (120, 122, 128), "dark_grey": (58, 60, 66),
+           "olive": (92, 100, 58), "olive_dark": (62, 68, 40), "lens": (40, 70, 72), "lens_light": (92, 140, 140), "gold": (212, 168, 62),
+           "ivory": (236, 226, 196), "cloth": (46, 48, 60), "cloth_dark": (30, 31, 40), "cloth_light": (66, 68, 84), "strap": (34, 30, 28),
+           "pink": (214, 120, 140), "rubber": (40, 42, 46), "steel": (150, 154, 160), "porcelain": (244, 240, 234), "crack": (90, 88, 92),
+           "brown": (70, 46, 34), "bandage": (226, 218, 198), "bandage_dark": (178, 168, 146), "stain": (128, 32, 30), "chalk": (246, 244, 240)}
+CELL = 0.25
+GX0, GY0 = -4.75, -11.0  # the grid's top left corner (x, y): 38 columns to x 4.75, 47 rows to y 0.75
+COLS, ROWS = 38, 47
+BACK = -4.53  # every front cube's back: just in front of the hat layer (z -4.5)
+EYE_Y = -3.5  # the skin's eyes' row (y -4 to -3)
 
 
-GENERIC = {
-    "mask_clown": ("Clown Mask", strap() + [
-        ((-4.25, -8.1, -4.45), (8.5, 8.2, 0.35), "white"),
-        ((-0.75, -4.2, -5.0), (1.5, 1.5, 0.6), "red"),
-        *pair((-3.1, -5.9, -4.52), (1.4, 1.4, 0.1), "black", (0, 0, 45)),
-        *pair((-3.4, -7.2, -4.52), (2.2, 0.35, 0.1), "black", (0, 0, -12)),
-        *pair((-2.9, -4.3, -4.52), (0.6, 0.9, 0.1), "blue"),
-        ((-2.6, -2.3, -4.52), (5.2, 0.7, 0.1), "red"),
-        *pair((-3.4, -2.9, -4.52), (1.0, 0.6, 0.1), "red", (0, 0, 30)),
-        ((-2.0, -1.65, -4.53), (4.0, 0.35, 0.1), "black"),
-        *pair((-3.9, -3.4, -4.51), (1.1, 1.1, 0.1), "pink"),
-    ]),
-    "mask_gas": ("Gas Mask", strap() + [
-        ((-4.2, -7.0, -4.5), (8.4, 7.2, 0.45), "black"),
-        *pair((-3.4, -6.0, -4.8), (2.5, 2.3, 0.35), "grey"),
-        *pair((-3.1, -5.7, -4.86), (1.9, 1.7, 0.1), "lens"),
-        ((-1.3, -3.4, -5.7), (2.6, 2.6, 1.3), "olive"),
-        ((-1.5, -3.6, -5.05), (3.0, 3.0, 0.5), "dark_grey"),
-        ((-0.9, -3.0, -5.75), (1.8, 1.8, 0.1), "black"),
-        *pair((-4.0, -2.8, -4.4), (1.2, 1.6, 1.2), "olive"),
-        ((-3.4, -0.6, -4.55), (6.8, 0.6, 0.6), "black"),
-    ]),
-    "mask_skull": ("Skull Mask", strap() + [
-        ((-4.2, -8.0, -4.45), (8.4, 8.1, 0.35), "bone"),
-        *pair((-3.3, -6.0, -4.52), (2.3, 2.1, 0.1), "black"),
-        ((-0.6, -4.0, -4.52), (1.2, 1.1, 0.1), "black"),
-        ((-2.7, -2.1, -4.52), (5.4, 1.4, 0.1), "black"),
-        *[((-2.5 + i * 0.9, -2.05, -4.56), (0.7, 1.3, 0.1), "bone") for i in range(6)],
-        *pair((-4.0, -4.2, -4.5), (1.4, 0.4, 0.1), "grey"),
-        ((-0.2, -7.9, -4.51), (0.4, 1.6, 0.1), "grey"),
-    ]),
-    "mask_fox": ("Fox Mask", strap() + [
-        ((-4.2, -7.6, -4.45), (8.4, 7.0, 0.35), "white"),
-        ((-1.6, -3.9, -5.6), (3.2, 2.4, 1.2), "white"),
-        ((-0.5, -3.1, -5.72), (1.0, 0.6, 0.15), "black"),
-        *pair((-4.0, -10.2, -4.3), (2.2, 2.7, 0.6), "white"),
-        *pair((-3.6, -9.6, -4.36), (1.4, 1.9, 0.1), "red"),
-        *pair((-3.5, -5.6, -4.52), (2.5, 0.4, 0.1), "red", (0, 0, 18)),
-        *pair((-3.3, -5.25, -4.53), (1.7, 0.35, 0.1), "black", (0, 0, 18)),
-        ((-0.35, -7.4, -4.51), (0.7, 1.4, 0.1), "red"),
-        *pair((-3.8, -2.5, -4.52), (1.6, 0.3, 0.1), "red", (0, 0, -15)),
-    ]),
-    "mask_oni": ("Oni Mask", strap() + [
-        ((-4.25, -8.0, -4.45), (8.5, 8.1, 0.4), "red"),
-        *pair((-3.7, -10.8, -3.6), (1.1, 3.0, 1.1), "ivory", (0, 0, 10)),
-        ((-3.9, -6.7, -4.9), (7.8, 0.75, 0.5), "dark_red"),
-        *pair((-3.1, -5.7, -4.53), (2.0, 1.1, 0.1), "gold"),
-        *pair((-2.5, -5.55, -4.56), (0.7, 0.8, 0.1), "black"),
-        ((-0.85, -4.3, -5.0), (1.7, 1.5, 0.6), "dark_red"),
-        ((-2.9, -2.3, -4.55), (5.8, 1.3, 0.1), "black"),
-        *pair((-2.5, -2.7, -4.6), (0.6, 1.6, 0.15), "ivory"),
-        *pair((-1.3, -1.25, -4.6), (0.5, 0.4, 0.12), "ivory"),
-    ]),
-    "mask_cloth": ("Cloth Mask", [
-        ((-4.32, -4.4, -4.55), (8.64, 4.5, 0.45), "cloth"),
-        ((-4.32, -4.4, -4.2), (0.35, 4.5, 8.5), "cloth"),
-        ((3.97, -4.4, -4.2), (0.35, 4.5, 8.5), "cloth"),
-        ((-4.32, -4.4, 4.0), (8.64, 2.0, 0.35), "cloth"),
-        ((-4.36, -2.9, -4.62), (8.72, 0.25, 0.1), "cloth_dark"),
-        ((-4.36, -1.5, -4.62), (8.72, 0.25, 0.1), "cloth_dark"),
-        ((-1.1, -4.3, 4.3), (2.2, 1.7, 0.8), "cloth_dark"),
-        ((-0.9, -2.7, 4.4), (0.8, 3.2, 0.25), "cloth", (12, 0, 8)),
-        ((0.2, -2.7, 4.4), (0.8, 2.8, 0.25), "cloth", (12, 0, -10)),
-    ]),
-}
+def curve(x):
+    """How far forward the shell stands at {@code x} (its middle further than its sides): the face's front, in four bands."""
+    a = abs(x)
+    return -4.86 if a < 1.25 else -4.79 if a < 2.5 else -4.71 if a < 3.5 else -4.62
+
+
+class Face:
+    """A mask's front, cell by cell: a material each (None: nothing; "hole": open), how far each stands forward of the shell."""
+
+    def __init__(self):
+        self.mat = [[None] * COLS for _ in range(ROWS)]
+        self.lift = [[0.0] * COLS for _ in range(ROWS)]
+        self.extra = []
+
+    @staticmethod
+    def centre(r, c):
+        return GX0 + (c + 0.5) * CELL, GY0 + (r + 0.5) * CELL
+
+    def paint(self, test, mat, lift=None, only=None):
+        """Every cell {@code test(x, y)} holds: {@code mat} (and its lift); {@code only}: just cells already of those materials."""
+        for r in range(ROWS):
+            for c in range(COLS):
+                x, y = self.centre(r, c)
+                if test(x, y) and (only is None or self.mat[r][c] in only):
+                    self.mat[r][c] = mat
+                    if lift is not None:
+                        self.lift[r][c] = lift(x, y) if callable(lift) else lift
+
+    def ring(self, inside, mat, width=1, lift=None):
+        """The cells just around those {@code inside} holds (within {@code width} cells), as {@code mat}: an outline."""
+        hit = [[inside(*self.centre(r, c)) for c in range(COLS)] for r in range(ROWS)]
+        for r in range(ROWS):
+            for c in range(COLS):
+                if hit[r][c] or self.mat[r][c] is None:
+                    continue
+                if any(hit[r + dr][c + dc] for dr in range(-width, width + 1) for dc in range(-width, width + 1)
+                       if 0 <= r + dr < ROWS and 0 <= c + dc < COLS):
+                    self.mat[r][c] = mat
+                    if lift is not None:
+                        self.lift[r][c] = lift
+
+    def cubes(self, outline=True):
+        """The front as cubes: like cells in a row one cube, rows alike stacked into one; each cell at the edge of the shell darker."""
+        key = [[None] * COLS for _ in range(ROWS)]
+        for r in range(ROWS):
+            for c in range(COLS):
+                m = self.mat[r][c]
+                if m is None or m == "hole":
+                    continue
+                x, _ = self.centre(r, c)
+                edge = outline and any(not (0 <= r + dr < ROWS and 0 <= c + dc < COLS) or self.mat[r + dr][c + dc] in (None, "hole")
+                                       for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)))
+                key[r][c] = (m, round(curve(x) - self.lift[r][c], 3), edge)
+        runs = []
+        for r in range(ROWS):
+            c = 0
+            while c < COLS:
+                k = key[r][c]
+                if k is None:
+                    c += 1
+                    continue
+                c1 = c
+                while c1 + 1 < COLS and key[r][c1 + 1] == k:
+                    c1 += 1
+                runs.append([r, r, c, c1, k])
+                c = c1 + 1
+        # Stack each run on the one just above it, alike and as wide.
+        merged = []
+        open_runs = {}
+        for run in runs:
+            r, _, c0, c1, k = run
+            above = open_runs.get((r - 1, c0, c1, k))
+            if above is not None:
+                above[1] = r
+                del open_runs[(r - 1, c0, c1, k)]
+                open_runs[(r, c0, c1, k)] = above
+            else:
+                merged.append(run)
+                open_runs[(r, c0, c1, k)] = run
+        out = []
+        for r0, r1, c0, c1, (m, front, edge) in merged:
+            x0, y0 = GX0 + c0 * CELL, GY0 + r0 * CELL
+            w, h = (c1 - c0 + 1) * CELL, (r1 - r0 + 1) * CELL
+            out.append(((x0, y0, front), (w, h, BACK - front), m, None, "edge" if edge else "front"))
+        return out + self.extra
+
+
+def ellipse(cx, cy, rx, ry):
+    return lambda x, y: ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 <= 1.0
+
+
+def both(test):
+    """{@code test} and its mirror across the face's middle."""
+    return lambda x, y: test(x, y) or test(-x, y)
+
+
+def blob(cx, cy, rx, ry, p=2.6):
+    """A rounded square (a superellipse): a face's outline."""
+    return lambda x, y: abs((x - cx) / rx) ** p + abs((y - cy) / ry) ** p <= 1.0
+
+
+def rect(x0, y0, x1, y1):
+    return lambda x, y: x0 <= x <= x1 and y0 <= y <= y1
+
+
+def line(x0, y0, x1, y1, width):
+    """Within {@code width / 2} of the segment."""
+    def test(x, y):
+        dx, dy = x1 - x0, y1 - y0
+        t = max(0.0, min(1.0, ((x - x0) * dx + (y - y0) * dy) / (dx * dx + dy * dy)))
+        return math.hypot(x - (x0 + t * dx), y - (y0 + t * dy)) <= width / 2
+    return test
+
+
+def path(points, width):
+    tests = [line(*points[i], *points[i + 1], width) for i in range(len(points) - 1)]
+    return lambda x, y: any(t(x, y) for t in tests)
+
+
+def poly(points):
+    """Inside the polygon (even-odd)."""
+    def test(x, y):
+        inside = False
+        n = len(points)
+        for i in range(n):
+            (xa, ya), (xb, yb) = points[i], points[(i + 1) % n]
+            if (ya > y) != (yb > y) and x < (xb - xa) * (y - ya) / (yb - ya) + xa:
+                inside = not inside
+        return inside
+    return test
+
+
+def any_of(*tests):
+    return lambda x, y: any(t(x, y) for t in tests)
+
+
+def straps(y0=-4.3, h=1.1, mat="strap"):
+    """The band round the head: a side each (just off the hat layer), and across the back."""
+    return [((-4.9, y0, -4.5), (0.2, h, 9.4), mat, None, "side_strap"), ((4.7, y0, -4.5), (0.2, h, 9.4), mat, None, "side_strap"),
+            ((-4.9, y0, 4.7), (9.8, h, 0.2), mat, None, "rear_strap")]
+
+
+def temples(y0, y1, mat, z0=-4.56, z1=-2.6):
+    """The mask's sides turning back along the temples (seen from the side, a shell, not a plate), behind the front's edge, under the strap."""
+    return [((-4.68, y0, z0), (0.16, y1 - y0, z1 - z0), mat, None, "temple_return"),
+            ((4.52, y0, z0), (0.16, y1 - y0, z1 - z0), mat, None, "temple_return")]
+
+
+FACE = blob(0.0, -4.05, 4.62, 4.32)  # a full mask's outline: the whole face, rounded, a little past the hat layer's edge
+EYES = both(ellipse(2.0, EYE_Y, 0.95, 0.55))  # the skin's eyes
+
+
+def clown():
+    f = Face()
+    f.paint(FACE, "white")
+    f.paint(both(lambda x, y: abs(x - 2.0) / 1.45 + abs(y - EYE_Y) / 1.35 <= 1.0), "black", 0.04)        # the diamonds round the eyes
+    f.paint(both(ellipse(2.0, -1.85, 0.32, 0.42)), "blue", 0.04)                                        # a tear under each
+    f.paint(both(path([(0.8, -5.35), (1.6, -6.05), (2.5, -6.2), (3.4, -5.7)], 0.38)), "red", 0.08)      # arched brows
+    f.paint(both(ellipse(3.35, -2.45, 0.62, 0.55)), "pink", 0.02)                                      # cheeks
+    smile = lambda x: -1.05 - 0.085 * x * x
+    f.paint(lambda x, y: abs(x) <= 3.3 and abs(y - smile(x)) <= 0.5, "red", 0.1)                       # the smile
+    f.paint(lambda x, y: abs(x) <= 2.9 and abs(y - smile(x)) <= 0.14, "void", -0.12)                    # its slit
+    f.paint(ellipse(0.0, -2.35, 0.78, 0.72), "red", 0.55)                                              # the nose, a ball
+    f.paint(ellipse(0.0, -2.4, 0.5, 0.48), "red", 0.85)
+    f.paint(ellipse(-0.22, -2.62, 0.16, 0.16), "white", 0.87)
+    f.paint(both(ellipse(3.65, -7.5, 1.05, 0.95)), "red", lambda x, y: 0.25 + 0.12 * ((int((x + 9) * 2) + int((y + 12) * 2)) % 2))  # hair tufts
+    f.paint(EYES, "hole")
+    f.extra += straps() + temples(-6.8, -1.2, "white")
+    return f.cubes()
+
+
+def gas():
+    f = Face()
+    f.paint(blob(0.0, -3.9, 4.6, 4.4), "rubber")
+    f.paint(rect(-0.32, -5.2, 0.32, -2.5), "rubber", 0.18)                                              # the bridge between the lenses
+    f.paint(both(ellipse(2.05, -3.55, 1.28, 1.2)), "steel", 0.36)                                       # lens rims
+    f.paint(both(ellipse(2.05, -3.55, 1.0, 0.93)), "lens", 0.16)                                        # the glass
+    f.paint(both(lambda x, y: abs((x - 1.75) + (y + 3.85)) < 0.2 and ellipse(2.05, -3.55, 0.9, 0.85)(x, y)), "lens_light", 0.17)
+    f.paint(ellipse(0.0, -1.25, 1.45, 1.25), "dark_grey", 0.3)                                        # the filter's seat
+    f.paint(ellipse(0.0, -1.25, 1.1, 0.98), "olive", 0.95)                                            # the filter
+    f.paint(ellipse(0.0, -1.25, 0.82, 0.72), "olive_dark", 1.18)
+    f.paint(lambda x, y: ellipse(0.0, -1.25, 0.7, 0.6)(x, y) and int((y + 12) * 4) % 2 == 0, "black", 1.2)  # its grille
+    f.paint(both(ellipse(3.55, -1.5, 0.62, 0.6)), "olive", 0.5)                                       # cheek valves
+    f.paint(both(ellipse(3.55, -1.5, 0.3, 0.28)), "black", 0.52)
+    f.paint(both(any_of(ellipse(1.25, -6.7, 0.15, 0.15), ellipse(3.0, -6.25, 0.15, 0.15), ellipse(3.85, -3.55, 0.15, 0.15))), "steel", 0.1)
+    f.paint(rect(-3.6, -7.35, 3.6, -7.1), "black", 0.05)                                              # a seam
+    f.extra += straps(-4.1, 1.2) + straps(-6.9, 0.8) + temples(-6.4, -0.8, "rubber") + [
+        ((-0.6, -8.84, -4.6), (1.2, 0.3, 9.2), "strap", None, "head_strap")]
+    return f.cubes()
+
+
+def skull():
+    f = Face()
+    f.paint(any_of(blob(0.0, -5.0, 4.62, 3.4), blob(0.0, -1.6, 3.2, 1.9, 3.0), blob(0.0, -2.6, 4.0, 1.4, 2.4)), "bone")
+    f.paint(both(ellipse(3.6, -2.6, 0.75, 0.9)), "bone_dark", 0.0)                                    # the cheekbones' shadow
+    f.paint(both(ellipse(2.0, -3.55, 1.45, 1.2)), "bone_dark", 0.06)                                   # round the sockets
+    f.paint(both(ellipse(2.0, -3.55, 1.12, 0.85)), "hole")                                             # the sockets, on the eyes
+    f.paint(any_of(both(ellipse(0.28, -2.3, 0.3, 0.33)), poly([(-0.55, -2.25), (0.55, -2.25), (0.0, -1.35)])), "void", -0.1)  # the nose
+    f.paint(rect(-2.5, -1.05, 2.5, 0.05), "void", -0.12)                                              # the mouth
+    f.paint(lambda x, y: -2.5 <= x <= 2.5 and -1.0 <= y <= 0.0 and (int((x + 8) * 2) % 2 == 0) and abs(y + 0.5) > 0.12, "bone", 0.04)
+    f.paint(path([(1.0, -7.95), (1.4, -7.2), (1.1, -6.6), (1.7, -5.9)], 0.18), "bone_dark", 0.0)       # cracks
+    f.paint(path([(-3.2, -7.0), (-2.6, -6.5), (-2.9, -5.9)], 0.18), "bone_dark", 0.0)
+    f.paint(both(rect(3.4, -6.6, 4.4, -6.35)), "bone_dark", 0.0)
+    f.extra += straps() + temples(-7.0, -2.2, "bone")
+    return f.cubes()
+
+
+def fox():
+    f = Face()
+    f.paint(blob(0.0, -4.0, 4.6, 4.3), "white")
+    ear = poly([(-4.35, -7.2), (-3.35, -10.7), (-1.55, -7.75)])
+    inner = poly([(-3.75, -7.75), (-3.3, -9.85), (-2.25, -7.95)])
+    f.paint(both(ear), "white", 0.05)
+    f.paint(both(inner), "red", 0.08)
+    f.paint(path([(-0.95, -2.9), (0.0, -3.2), (0.95, -2.9)], 0.01), "white")
+    f.paint(poly([(-1.25, -3.1), (1.25, -3.1), (0.7, -0.35), (-0.7, -0.35)]), "white", lambda x, y: 0.35 + 0.65 * max(0.0, (y + 3.1) / 2.75))
+    f.paint(ellipse(0.0, -0.75, 0.42, 0.32), "black", 1.05)                                            # the nose's tip
+    f.paint(path([(-1.45, -0.15), (-0.7, -0.05), (0.0, -0.3), (0.7, -0.05), (1.45, -0.15)], 0.16), "black", 0.1)
+    eye = poly([(1.0, -3.3), (1.9, -3.85), (3.15, -4.1), (2.65, -3.15), (1.5, -3.0)])
+    eyes = both(eye)
+    f.ring(eyes, "red", 1, 0.08)                                                                       # red round the eyes
+    f.paint(both(path([(2.65, -4.0), (3.5, -4.6), (4.1, -4.8)], 0.3)), "red", 0.08)                   # flicked up at the corners
+    f.paint(eyes, "hole")
+    f.paint(both(ellipse(1.65, -5.2, 0.5, 0.2)), "red", 0.06)                                          # brows
+    f.paint(ellipse(0.0, -6.5, 0.32, 0.85), "red", 0.06)                                               # the flame on the brow
+    f.paint(both(ellipse(0.62, -7.15, 0.17, 0.17)), "gold", 0.08)
+    for a, b in (((2.6, -2.35), (3.95, -2.6)), ((2.65, -1.8), (4.0, -1.75)), ((2.55, -1.25), (3.85, -0.9))):
+        f.paint(both(line(*a, *b, 0.18)), "red", 0.06)                                                # whiskers
+    f.extra += straps() + temples(-6.8, -1.4, "white")
+    return f.cubes()
+
+
+def oni():
+    f = Face()
+    f.paint(blob(0.0, -4.0, 4.66, 4.3, 2.3), "red")
+    f.paint(both(poly([(0.45, -4.75), (3.75, -5.75), (3.9, -5.05), (0.65, -4.25)])), "dark_red", 0.38)   # brows, knitted
+    f.paint(both(ellipse(2.05, -3.45, 1.05, 0.72)), "gold", 0.16)                                      # the eyes' gold
+    f.paint(both(poly([(1.15, -3.55), (2.0, -3.95), (2.95, -3.75), (2.6, -3.1), (1.4, -3.05)])), "hole")
+    f.paint(ellipse(0.0, -2.25, 1.05, 0.7), "dark_red", 0.5)                                          # the nose
+    f.paint(both(ellipse(0.48, -2.0, 0.2, 0.15)), "void", 0.3)
+    f.paint(blob(0.0, -0.7, 2.75, 0.68, 2.2), "void", -0.12)                                           # the open mouth
+    f.paint(lambda x, y: abs(x) <= 2.2 and -1.35 <= y <= -1.05 and int((x + 8) * 2) % 2 == 0, "ivory", 0.05)  # teeth
+    f.paint(both(poly([(1.55, -0.05), (2.15, -0.05), (1.75, -1.5)])), "ivory", 0.32)                   # tusks
+    f.paint(both(path([(2.9, -2.3), (3.6, -1.6), (3.7, -0.8)], 0.2)), "dark_red", 0.02)                 # creases
+    f.paint(both(path([(0.6, -6.6), (1.5, -6.9), (2.4, -6.7)], 0.2)), "dark_red", 0.02)
+    f.paint(ellipse(0.0, -6.0, 0.35, 0.35), "gold", 0.1)
+    # The horns: three blocks each, narrowing and leaning out.
+    for side in (-1, 1):
+        f.extra += [((side * 2.75 - 0.55, -8.6, -4.7), (1.1, 1.3, 1.1), "ivory", (0, 0, side * 12), "horn"),
+                    ((side * 3.0 - 0.42, -9.75, -4.6), (0.84, 1.3, 0.84), "ivory", (0, 0, side * 22), "horn"),
+                    ((side * 3.35 - 0.28, -10.75, -4.5), (0.56, 1.1, 0.56), "bone_dark", (0, 0, side * 32), "horn")]
+    f.extra += straps() + temples(-6.8, -1.2, "red")
+    return f.cubes()
+
+
+def cloth():
+    f = Face()
+    top = -2.6
+    f.paint(rect(-4.62, top, 4.62, 0.5), "cloth", lambda x, y: 0.08 if int((y - top) / 0.75) % 2 else 0.0)  # folds
+    f.paint(lambda x, y: -4.62 <= x <= 4.62 and top <= y <= 0.5 and (y - top) % 0.75 < 0.25, "cloth_dark")
+    f.paint(path([(-3.0, -1.2), (-2.5, -0.7), (-2.0, -1.2), (-1.5, -0.7), (-1.0, -1.2), (-0.5, -0.7), (0.0, -1.2), (0.5, -0.7),
+                  (1.0, -1.2), (1.5, -0.7), (2.0, -1.2), (2.5, -0.7), (3.0, -1.2)], 0.2), "cloth_light", 0.1)  # a grin, stitched
+    f.paint(rect(-0.25, top, 0.25, top + 0.5), "cloth", 0.22)                                           # over the nose
+    f.extra += [((-4.8, top, -4.55), (0.28, 0.5 - top, 9.35), "cloth", None, "wrap"), ((4.52, top, -4.55), (0.28, 0.5 - top, 9.35), "cloth", None, "wrap"),
+                ((-4.8, top, 4.52), (9.6, 0.5 - top, 0.28), "cloth", None, "wrap"),
+                ((-0.7, top + 0.2, 4.8), (1.4, 1.2, 0.6), "cloth_dark", None, "knot"),
+                ((-0.65, top + 1.2, 4.95), (0.5, 3.4, 0.2), "cloth", (14, 0, 9), "tail"), ((0.15, top + 1.2, 4.95), (0.5, 3.0, 0.2), "cloth", (14, 0, -12), "tail")]
+    return f.cubes()
+
+
+def porcelain():
+    f = Face()
+    f.paint(blob(0.0, -4.0, 4.5, 4.3, 2.2), "porcelain")
+    f.paint(rect(-0.4, -4.6, 0.4, -2.0), "porcelain", 0.14)                                            # the nose's bridge
+    f.paint(rect(-0.62, -2.35, 0.62, -1.95), "porcelain", 0.2)
+    eye = ellipse(2.0, EYE_Y, 0.95, 0.5)
+    f.ring(both(eye), "black", 1, 0.03)                                                                # liner
+    for dx, dy in ((0.0, -0.45), (0.7, -0.4), (1.2, -0.25)):
+        f.paint(both(line(1.5 + dx, EYE_Y - 0.5, 1.5 + dx + 0.25, EYE_Y - 0.5 + dy - 0.35, 0.16)), "black", 0.04)  # lashes
+    f.paint(both(eye), "hole")
+    f.paint(both(path([(0.9, -5.25), (2.0, -5.65), (3.1, -5.4)], 0.17)), "brown", 0.04)                 # brows, painted
+    f.paint(both(ellipse(3.0, -2.15, 0.7, 0.45)), "pink", 0.02)                                        # blush
+    f.paint(any_of(both(ellipse(0.32, -1.2, 0.38, 0.2)), ellipse(0.0, -0.88, 0.55, 0.22)), "red", 0.08)   # lips
+    f.paint(rect(-0.55, -1.05, 0.55, -0.98), "dark_red", 0.09)
+    # A crack from the brow down through the eye, and a piece broken off at the top right.
+    f.paint(path([(-0.6, -7.9), (-1.0, -6.9), (-0.7, -6.2), (-1.5, -5.3), (-1.35, -4.2)], 0.17), "crack", 0.0)
+    f.paint(path([(-1.0, -6.9), (-1.9, -6.6), (-2.6, -6.9)], 0.15), "crack", 0.0)
+    f.paint(path([(-1.6, -2.9), (-2.1, -2.0), (-1.8, -1.2)], 0.15), "crack", 0.0)
+    chip = poly([(2.4, -8.6), (4.8, -8.6), (4.8, -5.9), (3.9, -6.4), (3.4, -7.1), (2.6, -7.4)])
+    f.ring(chip, "crack", 1)
+    f.paint(chip, None)
+    f.extra += straps() + temples(-5.8, -1.6, "porcelain")
+    return f.cubes()
+
+
+def bandage():
+    f = Face()
+    wrap = lambda x, y: y + (0.25 if x > 1.5 else 0.0) - (0.25 if x < -1.5 else 0.0)  # each turn a little askew
+    f.paint(blob(0.0, -4.0, 4.66, 4.4, 4.0), "bandage", lambda x, y: 0.1 * (int(math.floor(wrap(x, y) / 1.0)) % 2))
+    f.paint(lambda x, y: blob(0.0, -4.0, 4.66, 4.4, 4.0)(x, y) and wrap(x, y) % 1.0 < 0.25, "bandage_dark")  # the turns' edges
+    f.paint(ellipse(2.0, EYE_Y, 0.95, 0.52), "hole")                                                    # one eye left out
+    f.ring(ellipse(2.0, EYE_Y, 0.95, 0.52), "bandage_dark", 1)
+    f.paint(any_of(ellipse(-2.0, -3.4, 0.85, 0.6), ellipse(-1.7, -2.7, 0.35, 0.5)), "stain", 0.06)      # seeping through over the other
+    f.paint(ellipse(-2.0, -3.4, 0.45, 0.3), "dark_red", 0.07)
+    f.paint(any_of(ellipse(1.6, -0.9, 0.42, 0.3), ellipse(1.9, -0.55, 0.2, 0.25)), "stain", 0.06)
+    f.paint(rect(-3.9, -6.9, -2.6, -6.65), "steel", 0.16)                                             # a safety pin
+    f.paint(ellipse(-2.55, -6.78, 0.22, 0.22), "steel", 0.16)
+    f.extra += [((-4.8, -8.4, -4.56), (0.28, 8.8, 9.36), "bandage", None, "wrap"), ((4.52, -8.4, -4.56), (0.28, 8.8, 9.36), "bandage", None, "wrap"),
+                ((-4.8, -8.4, 4.52), (9.6, 8.8, 0.28), "bandage", None, "wrap")]
+    for i in range(8):
+        y = -8.25 + i * 1.0
+        f.extra += [((-4.88, y + 0.25, -4.5), (0.08, 0.25, 9.3), "bandage_dark", None, "wrap_edge"), ((4.8, y, -4.5), (0.08, 0.25, 9.3), "bandage_dark", None, "wrap_edge"),
+                    ((-4.8, y + 0.12, 4.8), (9.6, 0.25, 0.08), "bandage_dark", None, "wrap_edge")]
+    f.extra += [((1.2, -6.0, 4.8), (0.9, 4.6, 0.18), "bandage", (10, 0, -8), "loose_end")]
+    return f.cubes()
+
+
+def kabuki():
+    f = Face()
+    f.paint(blob(0.0, -4.0, 4.55, 4.3, 2.4), "chalk")
+    f.paint(both(path([(1.0, -3.95), (2.1, -4.7), (3.2, -5.9), (4.0, -7.0)], 0.42)), "red", 0.06)      # the kumadori, swept up
+    f.paint(both(path([(3.0, -3.3), (3.7, -2.6), (4.1, -1.8)], 0.34)), "red", 0.06)
+    f.paint(both(path([(1.1, -1.9), (1.8, -1.2), (1.6, -0.4)], 0.26)), "red", 0.06)
+    f.paint(both(poly([(0.7, -5.35), (2.9, -6.6), (3.3, -6.1), (0.9, -4.95)])), "black", 0.12)       # brows, raised in anger
+    eye = ellipse(2.0, EYE_Y, 0.95, 0.48)
+    f.ring(both(eye), "red", 1, 0.05)
+    f.paint(both(eye), "hole")
+    f.paint(rect(-0.18, -5.9, 0.18, -2.4), "chalk", 0.12)
+    f.paint(ellipse(0.0, -6.7, 0.3, 0.3), "red", 0.08)
+    f.paint(any_of(both(ellipse(0.35, -1.25, 0.4, 0.2)), ellipse(0.0, -0.95, 0.55, 0.24)), "red", 0.1)  # lips
+    f.paint(rect(-0.62, -1.12, 0.62, -1.05), "black", 0.11)
+    f.extra += straps() + temples(-6.5, -1.4, "chalk")
+    return f.cubes()
+
+
+GENERIC_MAKERS = [("mask_clown", "Clown Mask", clown), ("mask_gas", "Gas Mask", gas), ("mask_skull", "Skull Mask", skull),
+                  ("mask_fox", "Fox Mask", fox), ("mask_oni", "Oni Mask", oni), ("mask_cloth", "Cloth Mask", cloth),
+                  ("mask_porcelain", "Porcelain Mask", porcelain), ("mask_bandage", "Bandage Mask", bandage), ("mask_kabuki", "Kabuki Mask", kabuki)]
+GENERIC = {item: (label, make()) for item, label, make in GENERIC_MAKERS}
 
 
 def generic_model(cubes):
-    """Cubes on the head bone, packed into a 128 x 128 atlas (each net at its own offset), painted by material."""
+    """Cubes on the head bone, packed into an atlas (each net at its own offset), painted by material."""
     size = 128
-    out, x, y, row = [], 2, 2, 0
-    for c in cubes:
-        pos, dims, mat = c[0], c[1], c[2]
-        rot = c[3] if len(c) > 3 and c[3] else (0, 0, 0)
-        w, h, d = dims
-        nw = math.ceil(2 * (w + d)) + 2
-        nh = math.ceil(d + h) + 2
-        if x + nw > size:
-            x, y, row = 2, y + row, 0
-        out.append({"name": c[4] if len(c) > 4 else mat, "bone": "head", "slot": "helmet", "pos": list(pos), "size": list(dims), "mat": mat, "uv": [x, y], "rot": list(rot),
-                    "pivot": [pos[0] + w / 2, pos[1] + h / 2, pos[2] + d / 2] if any(rot) else list(pos)})
-        x += nw
-        row = max(row, nh)
-    assert y + row <= size, "atlas too small"
-    return {"texture_width": size, "texture_height": size, "pivots": PIVOTS, "cubes": out}
+    while True:
+        out, x, y, row = [], 2, 2, 0
+        for c in cubes:
+            pos, dims, mat = c[0], c[1], c[2]
+            rot = c[3] if len(c) > 3 and c[3] else (0, 0, 0)
+            w, h, d = dims
+            nw = math.ceil(2 * (w + d)) + 2
+            nh = math.ceil(d + h) + 2
+            if x + nw > size:
+                x, y, row = 2, y + row, 0
+            out.append({"name": c[4] if len(c) > 4 else mat, "bone": "head", "slot": "helmet", "pos": list(pos), "size": list(dims), "mat": mat,
+                        "uv": [x, y], "rot": list(rot), "pivot": [pos[0] + w / 2, pos[1] + h / 2, pos[2] + d / 2] if any(rot) else list(pos)})
+            x += nw
+            row = max(row, nh)
+        if y + row <= size:
+            return {"texture_width": size, "texture_height": size, "pivots": PIVOTS, "cubes": out}
+        size *= 2
 
 
 def paint(model, seed):
-    """Each cube's net filled with its material's colour, a little grain, its edges a shade darker."""
+    """Each cube's net filled with its material's colour, a little grain; a cube at the shell's edge a shade darker."""
     size = model["texture_width"]
     img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     px = img.load()
@@ -174,14 +450,129 @@ def paint(model, seed):
         u, v = c["uv"]
         w, h, d = c["size"]
         base = COLOURS[c["mat"]]
+        tone = (0.8 if c["name"] == "edge" else 1.0) * rng.uniform(0.96, 1.03)
         x1, y1 = math.ceil(u + 2 * (w + d)), math.ceil(v + d + h)
         for x in range(int(u), min(size, x1 + 1)):
             for y in range(int(v), min(size, y1 + 1)):
-                g = rng.uniform(-7, 7)
-                edge = x in (int(u), x1) or y in (int(v), y1)
-                f = 0.86 if edge else 1.0
-                px[x, y] = tuple(max(0, min(255, int(ch * f + g))) for ch in base) + (255,)
+                g = rng.uniform(-5, 5)
+                px[x, y] = tuple(max(0, min(255, int(ch * tone + g))) for ch in base) + (255,)
     return img
+
+
+# ---------------------------------------------------------------- fitting the owner's geometry to the game's player
+
+# The owner (after seeing them worn): "Armor is too bulky, if the player is alex model it should adapt to it as well as the male body's
+# muscle shape. Masks are... very very lack luster, half masks are covering most of the face instead of being lower, way lower ... the
+# eye position of the masks are very off." Their files stay as they are; what is baked is fitted:
+#
+#  - a full mask's eyes moved onto the skin's eyes (y -4 to -3): the band its eyes are in kept as tall as it is, the brow above stretched
+#    down to meet it, the nose and mouth below drawn up under it; the masks with no eyes (Noro's) and Touka's (already there) as they are;
+#  - a half mask (over the mouth) drawn down so it starts below the nose's row (y -2.75), not over the eyes;
+#  - every mask a little wider and deeper (5%) so it stands clear of the skin's hat layer, never through it;
+#  - the outfits' coats, sleeves and trousers drawn in to the body (whatever stood more than 0.3 off a part, 45% as far: snug, still over
+#    the skin's outer layer), the Formal Cap out past the hat layer;
+#  - each sleeve again for slim arms (Alex's three pixels: the outer side in by one), drawn instead on a slim-armed wearer.
+
+HALF_MASKS = {"kaneki", "ayato", "nishiki", "shachi", "tatara", "yomo", "rize", "yoshimura"}
+HALF_TOP = -2.75
+# Each full mask's eyes, where the owner's model has them (the band from their top to their bottom, y).
+MASK_EYES = {"akira": (-4.75, -4.125), "amon": (-4.875, -4.375), "arima": (-4.625, -4.125), "bin_brothers": (-5.5, -4.375),
+             "donato": (-5.25, -3.5), "eto": (-4.75, -3.5), "itori": (-4.375, -3.25), "kanae": (-4.75, -4.125), "koori": (-4.5, -4.0),
+             "roma": (-5.875, -4.125), "tsukiyama": (-5.25, -4.0), "uta": (-5.5, -2.75), "yamori": (-5.75, -3.875), "seidou": (-4.625, -4.125)}
+MASK_GIRTH = 1.05
+BASES = {"head": ((-4, -8, -4), (4, 0, 4)), "body": ((-4, 0, -2), (4, 12, 2)), "right_arm": ((-8, 0, -2), (-4, 12, 2)),
+         "left_arm": ((4, 0, -2), (8, 12, 2)), "right_leg": ((-3.9, 12, -2), (0.1, 24, 2)), "left_leg": ((-0.1, 12, -2), (3.9, 24, 2))}
+CLEAR, SNUG = 0.3, 0.45
+CAP_GIRTH = 1.075
+
+
+def refit(model, fx=None, fy=None, fz=None):
+    """Every cube's corners (and pivot) through the maps given (each monotonic along its axis); its texture's net kept as it was."""
+    out = []
+    for c in model["cubes"]:
+        c = dict(c)
+        c.setdefault("net", list(c["size"]))
+        pos, size, pivot = list(c["pos"]), list(c["size"]), list(c["pivot"])
+        for axis, f in enumerate((fx, fy, fz)):
+            if f is None:
+                continue
+            lo, hi = f(pos[axis], c), f(pos[axis] + size[axis], c)
+            pos[axis], size[axis] = lo, hi - lo
+            pivot[axis] = f(pivot[axis], c)
+        c["pos"], c["size"], c["pivot"] = pos, size, pivot
+        out.append(c)
+    return dict(model, cubes=out)
+
+
+def piecewise(knots):
+    """The map through ({@code from}, {@code to}) knots (sorted by {@code from}), each end's piece carried on past it."""
+    def f(v, _c=None):
+        i = 0
+        while i < len(knots) - 2 and v > knots[i + 1][0]:
+            i += 1
+        (a0, b0), (a1, b1) = knots[i], knots[i + 1]
+        return b0 + (v - a0) * (b1 - b0) / (a1 - a0)
+    return f
+
+
+def fit_mask(folder, model):
+    cubes = [c for c in model["cubes"] if "strap" not in c["name"]]
+    top = min(c["pos"][1] for c in cubes)
+    bottom = max(c["pos"][1] + c["size"][1] for c in cubes)
+    if folder in HALF_MASKS:
+        model = refit(model, fy=piecewise([(top, HALF_TOP), (bottom, bottom)]))
+    elif folder in MASK_EYES:
+        e0, e1 = MASK_EYES[folder]
+        half = (e1 - e0) / 2
+        model = refit(model, fy=piecewise([(top, top), (e0, EYE_Y - half), (e1, EYE_Y + half), (bottom, bottom)]))
+    return refit(model, fx=lambda v, c: v * MASK_GIRTH, fz=lambda v, c: v * MASK_GIRTH)
+
+
+def snug(lo, hi, clear=CLEAR, keep=SNUG):
+    """Along one axis of a part from {@code lo} to {@code hi}: whatever stands more than {@code clear} off it, drawn in to {@code keep}."""
+    def f(v, _c=None):
+        if v > hi + clear:
+            return hi + clear + (v - hi - clear) * keep
+        if v < lo - clear:
+            return lo - clear - (lo - clear - v) * keep
+        return v
+    return f
+
+
+def fit_outfit(style, model):
+    def along(axis):
+        def f(v, c):
+            if c["bone"] == "head":
+                return v * CAP_GIRTH if style == "formal" else v
+            lo, hi = BASES[c["bone"]][0][axis], BASES[c["bone"]][1][axis]
+            return snug(lo, hi)(v)
+        return f
+    model = refit(model, fx=along(0), fz=along(2))
+    if style == "crimson":
+        # The hood's shadow over the face in front of the hat layer, so nothing of the skin's shows through it.
+        for c in model["cubes"]:
+            if c["name"] == "hood_recessed_shadow_lining":
+                c["pos"][2] = -4.6
+                c["pivot"][2] = -4.6
+    slim = []
+    for c in model["cubes"]:
+        if c["bone"] not in ("right_arm", "left_arm"):
+            continue
+        sign = -1 if c["bone"] == "right_arm" else 1
+        inner, outer = 4.0 * sign, 8.0 * sign
+
+        def squeeze(v, _c=None, inner=inner, outer=outer, sign=sign):
+            # Alex's arm is three wide: its inner side where Steve's is, its outer one pixel in.
+            if (v - outer) * sign >= 0:
+                return v - sign
+            if (v - inner) * sign >= 0:
+                return inner + (v - inner) * 0.75
+            return v
+        one = refit({"cubes": [c]}, fx=squeeze)["cubes"][0]
+        one["bone"] = c["bone"] + "_slim"
+        slim.append(one)
+    model["cubes"] = model["cubes"] + slim
+    return model
 
 
 # ---------------------------------------------------------------- box UV (the game's own) and the icons
@@ -192,6 +583,7 @@ def faces(cube, texw, texh):
     w, h, d = cube["size"]
     x1, y1, z1 = x0 + w, y0 + h, z0 + d
     u, v = cube["uv"]
+    w, h, d = cube.get("net", cube["size"])  # the texture's net: the cube's size as the owner made it (fitted, its texture stays put)
     f4, f5, f6, f7, f8, f9 = u, u + d, u + d + w, u + d + w + w, u + d + w + d, u + d + w + d + w
     f10, f11, f12 = v, v + d, v + d + h
     v0, v1, v2, v3 = (x0, y0, z0), (x1, y0, z0), (x1, y1, z0), (x0, y1, z0)
@@ -229,7 +621,8 @@ def icon(model, texture, slot, size=32, yaw=-28.0, pitch=0.0):
     tw, th = model["texture_width"], model["texture_height"]
     tpx = tex.load()
     # A mask's straps round the head are left out of its icon (seen from the front they stick out sideways).
-    cubes = [c for c in model["cubes"] if c.get("slot", "helmet") == slot and "strap" not in c.get("name", "")]
+    cubes = [c for c in model["cubes"] if c.get("slot", "helmet") == slot and "strap" not in c.get("name", "")
+             and not c.get("bone", "head").endswith("_slim")]
     pts = []
     a = math.radians(yaw)
     ca, sa = math.cos(a), math.sin(a)
@@ -292,14 +685,14 @@ def icon(model, texture, slot, size=32, yaw=-28.0, pitch=0.0):
 
 def bake(models):
     out = bytearray(b"HXOF")
-    out += struct.pack(">HH", 1, len(models))
+    out += struct.pack(">HH", 2, len(models))
     for mid, model in models:
         name = mid.encode("utf-8")
         out += struct.pack(">H", len(name)) + name
         out += struct.pack(">HHH", model["texture_width"], model["texture_height"], len(model["cubes"]))
         for c in model["cubes"]:
             out += struct.pack(">BB", BONES.index(c["bone"]), SLOTS.index(c.get("slot", "helmet")))
-            out += struct.pack(">14f", *c["pos"], *c["size"], *c["pivot"], *c["rot"], *c["uv"])
+            out += struct.pack(">17f", *c["pos"], *c["size"], *c["pivot"], *c["rot"], *c["uv"], *c.get("net", c["size"]))
     BIN.parent.mkdir(parents=True, exist_ok=True)
     BIN.write_bytes(bytes(out))
 
@@ -319,7 +712,7 @@ def main():
     items.mkdir(parents=True, exist_ok=True)
     previews = []
     for style, pieces in OUTFITS:
-        model = json.loads((ART / f"{style}.model.json").read_text())
+        model = fit_outfit(style, json.loads((ART / f"{style}.model.json").read_text()))
         tex = Image.open(ART / f"{style}.png")
         tex.save(textures / f"{style}.png")
         models.append((style, model))
@@ -330,7 +723,7 @@ def main():
             item_model(item)
             previews.append((item, img))
     for folder, item, label in MASKS:
-        model = json.loads((ART / "masks" / folder / f"{folder}.model.json").read_text())
+        model = fit_mask(folder, json.loads((ART / "masks" / folder / f"{folder}.model.json").read_text()))
         tex = Image.open(ART / "masks" / folder / f"{folder}.png")
         tex.save(textures / f"{item}.png")
         models.append((item, model))

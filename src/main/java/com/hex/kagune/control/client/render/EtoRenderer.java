@@ -68,6 +68,9 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
             persona.legs()),
             0.5F * persona.size());
         this.persona = persona;
+        if (persona.slim()) {
+            OutfitLayer.slim(this.f_115290_); // 4.0.0: anything worn, its sleeves for slim arms
+        }
         String key = persona.key();
         this.skin = texture(key, key);
         this.kakugan = texture(key, key + "_kakugan");

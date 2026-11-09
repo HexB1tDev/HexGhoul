@@ -31,8 +31,9 @@ import net.minecraftforge.fml.common.Mod;
  * <p>A blow that would kill him, while his bar has energy, doesn't: he is left at one heart, it costs {@link PotentialRules#SURVIVE_COST}
  * energy, and it tears a part off him. A single blow of half his full health or more that doesn't kill him tears one off too (rare: never an
  * ordinary blow). Without energy nothing protects him and nothing is torn. A part already off is never torn again; every part off has its
- * own timeline ({@link PotentialRules}): thrown, lying, its strands reaching it and hauling it back; while they pull it draws energy, and
- * with none it waits where it is until there is; back on and whole, he gets a small heal. Every client is told and draws it ({@link
+ * own timeline ({@link PotentialRules}): thrown, lying, its strands reaching it and hauling it back (4.0.0: drawing no energy, never
+ * waiting on the bar: the owner's "regen for them does not cost energy at all, it works with cooldowns, and waiting"); back on and whole,
+ * he gets a small heal. Every client is told and draws it ({@link
  * S2CPotential}). Not while Grand Devouring holds him (that death takes), nor out of the world or by /kill.
  */
 @Mod.EventBusSubscriber(modid = "hexkagune")
@@ -168,19 +169,12 @@ public final class BikakuPotential {
         for (Iterator<Torn> it = torn.iterator(); it.hasNext(); ) {
             Torn t = it.next();
             double was = t.age;
-            if (PotentialRules.pulling(t.age)) {
-                // The strands draw energy while they reach and haul; with none they hold where they are until there is.
-                boolean paid = SharedBar.consumeEnergy(player, PotentialRules.PULL_DRAIN);
-                if (paid == t.paused) {
-                    t.paused = !paid;
-                    changed = true;
-                }
-                if (paid) {
-                    t.age += 1.0;
-                }
-            } else {
-                t.age += 1.0;
+            // 4.0.0: the strands reach and haul for nothing: a part off always comes back, on its own time.
+            if (t.paused) {
+                t.paused = false;
+                changed = true;
             }
+            t.age += 1.0;
             if (was < PotentialRules.HAUL_AT && t.age >= PotentialRules.HAUL_AT) {
                 UkakuFire.sound(level, player.m_20182_().m_82520_(0.0, 1.0, 0.0), "hexkagune:sfx.writhe", 0.8F, 1.0F); // they take hold and haul
             }

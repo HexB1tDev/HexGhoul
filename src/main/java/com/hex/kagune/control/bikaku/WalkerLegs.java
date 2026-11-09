@@ -14,6 +14,12 @@ import com.hex.kagune.control.graft.GraftMesh;
  * "the walker is the first tap K half kakuja, the full kakuja is the hold K"): the legs carry him {@link #HEIGHT} blocks up, standing wide
  * and reaching far; how high he is carried over the ground round him ({@link #ride}), how fast he is brought there ({@link #lift}), and
  * what he climbs ({@link #climbable}: a wall, never the underside of a roof, which he is let down under).
+ *
+ * <p>4.0.0 (the owner: "The walker legs needs more fluidity and better arching, it walks super robotic, sure it works but it's super ugly
+ * to see, the legs look like sticks, and dont move naturally"): a step takes longer and is eased in and out (the foot lifting quickly,
+ * carried, set down softly, higher the longer the stride), the next foot going the moment the last lands; each leg one smooth arch (up and
+ * out of his hip, over, and down onto its foot along the face it stands on), lifting higher while its foot is in the air, a slow wave
+ * running down it; drawn thick at the hip, tapering to the foot ({@code MawWorm}'s leg).
  */
 public final class WalkerLegs {
     public static final int LEGS = 2;
@@ -25,9 +31,10 @@ public final class WalkerLegs {
     /** A planted foot this far from where it would be put now steps (one at a time); further than {@link #REACH} from the root, at once. */
     public static final double STEP = 1.1;
     public static final double REACH = 6.6;
-    /** A step: how long (ticks) and how high its arc (off the face it leaves and lands on). */
-    public static final double STEP_TICKS = 6.0;
-    public static final double ARC = 0.8;
+    /** A step: how long (ticks) and how high its arc (off the face it leaves and lands on), and how much higher for each block of stride. */
+    public static final double STEP_TICKS = 8.0;
+    public static final double ARC = 0.7;
+    public static final double ARC_PER_BLOCK = 0.22;
     /** How far below his feet and above them a foot looks for ground; how far out from the root for a wall. */
     static final double DOWN = 2.6 + 3.5;
     static final double UP = 1.3;
@@ -211,9 +218,25 @@ public final class WalkerLegs {
             return legs.foot[i].clone();
         }
         double t = GraftMesh.clamp01((time - legs.stepAt[i]) / STEP_TICKS);
-        double e = GraftMesh.smooth(t);
         double[] lift = GraftMesh.normalize(GraftMesh.add(legs.fromFace[i], legs.face[i]));
-        return GraftMesh.add(GraftMesh.lerp(legs.from[i], legs.foot[i], e), GraftMesh.mul(lift, ARC * Math.sin(Math.PI * t)));
+        double stride = GraftMesh.length3(GraftMesh.sub(legs.foot[i], legs.from[i]));
+        return GraftMesh.add(GraftMesh.lerp(legs.from[i], legs.foot[i], carried(t)), GraftMesh.mul(lift, (ARC + ARC_PER_BLOCK * Math.min(3.0, stride)) * raised(t)));
+    }
+
+    /** 4.0.0: how far along its way a stepping foot is, {@code t} of the way through the step: eased in and out (quintic), never snapping. */
+    public static double carried(double t) {
+        double x = GraftMesh.clamp01(t);
+        return x * x * x * (x * (x * 6.0 - 15.0) + 10.0);
+    }
+
+    /** 4.0.0: how high it is off the faces (0..1): up quickly, held, set down softly (the top a little before halfway). */
+    public static double raised(double t) {
+        return Math.sin(Math.PI * Math.pow(GraftMesh.clamp01(t), 0.8));
+    }
+
+    /** 4.0.0: how far through its step foot {@code i} is at {@code time} (0..1), or NaN while it is planted. */
+    public static double progress(Legs legs, int i, double time) {
+        return stepping(legs, i, time) ? GraftMesh.clamp01((time - legs.stepAt[i]) / STEP_TICKS) : Double.NaN;
     }
 
     /** The face foot {@code i} stands on (or is stepping to). */
@@ -310,25 +333,48 @@ public final class WalkerLegs {
         return GraftMesh.add(GraftMesh.add(feet, GraftMesh.mul(right, side * OUT * 0.8)), new double[] {0.0, -1.6, 0.0});
     }
 
-    /**
-     * Walking tentacle {@code i}'s shape (his body's frame: x right, y up, z ahead): out of the worms' root to its side, arching up and out
-     * over his hip and down onto {@code foot}, its last part coming in along the face it stands on ({@code face}); its mouth shut on the
-     * block ({@code open} while it steps).
-     */
+    /** Walking tentacle {@code i}'s shape, its foot in the air ({@code stepping}: halfway through the step) or planted. */
     public static MawMotion.Shape shape(int i, double[] foot, double[] face, boolean stepping, double time, int seed) {
+        return shape(i, foot, face, stepping ? 0.5 : Double.NaN, time, seed);
+    }
+
+    /**
+     * Walking tentacle {@code i}'s shape (his body's frame: x right, y up, z ahead), its foot {@code step} of the way through a step (NaN:
+     * planted). 4.0.0: one smooth arch out of the worms' root: up and out over his hip, over, and down onto {@code foot}, its last stretch
+     * coming in along the face it stands on ({@code face}); the further the foot, the higher and wider it arches, higher still while the
+     * foot is in the air; a slow wave running down it; its mouth opening as the foot lifts and shutting on the block as it lands.
+     */
+    public static MawMotion.Shape shape(int i, double[] foot, double[] face, double step, double time, int seed) {
         double side = i == 0 ? 1.0 : -1.0;
         double[] root = MawMotion.ROOT;
-        double[] out = {root[0] + side * 0.28, root[1] + 0.08, root[2] - 0.2};
-        double[] toFoot = GraftMesh.sub(foot, out);
-        double reach = GraftMesh.length3(toFoot);
-        double sway = 0.06 * Math.sin(time * 0.11 + seed * 1.7 + i * 2.1);
-        // 3.7.1: long legs: the knee high and well out to its side, as a spider's (or the doctor's) arm stands.
-        double[] knee = GraftMesh.add(GraftMesh.lerp(out, foot, 0.4), new double[] {side * (0.42 + 0.12 * reach + sway), 0.5 + 0.3 * reach, -0.12});
-        double[] over = GraftMesh.add(foot, GraftMesh.mul(GraftMesh.normalize(face), 0.55 + 0.1 * reach));
-        double[] down = GraftMesh.add(foot, GraftMesh.mul(GraftMesh.normalize(face), 0.18));
-        double[][] path = {root.clone(), out, knee, GraftMesh.lerp(knee, over, 0.6), over, down, foot.clone()};
+        double[] out = {root[0] + side * 0.3, root[1] + 0.06, root[2] - 0.22};
+        double[] normal = GraftMesh.normalize(face);
+        double reach = GraftMesh.length3(GraftMesh.sub(foot, out));
+        double lifted = Double.isNaN(step) ? 0.0 : Math.sin(Math.PI * GraftMesh.clamp01(step));
+        double sway = Math.sin(time * 0.11 + seed * 1.7 + i * 2.1);
+        // Leaving the hip up and out (a little back), as a spider's leg stands; coming down onto the foot from over it, a little outside it
+        // on the ground (the arch's top out past the foot), straight in along a wall's face.
+        double rise = 0.55 + 0.3 * reach + 0.4 * lifted;
+        double[] p1 = GraftMesh.add(out, GraftMesh.mul(GraftMesh.normalize(new double[] {side * (0.95 + 0.06 * sway), 1.0, -0.22}), rise));
+        double drop = 0.5 + 0.36 * reach + 0.3 * lifted;
+        double[] p2 = GraftMesh.add(foot, GraftMesh.mul(normal, drop));
+        p2 = GraftMesh.add(p2, new double[] {side * 0.16 * reach * Math.abs(normal[1]), 0.0, 0.0});
+        int n = 10;
+        double[][] path = new double[n + 2][];
+        path[0] = root.clone();
+        for (int k = 0; k <= n; k++) {
+            double u = k / (double)n;
+            double a = 1.0 - u;
+            double[] p = GraftMesh.add(GraftMesh.add(GraftMesh.mul(out, a * a * a), GraftMesh.mul(p1, 3.0 * a * a * u)),
+                GraftMesh.add(GraftMesh.mul(p2, 3.0 * a * u * u), GraftMesh.mul(foot, u * u * u)));
+            // A slow wave down it (none at its ends: they stay on the hip and the foot).
+            double wave = 0.07 * Math.sin(time * 0.16 + seed * 1.3 + i * 2.0 - u * 5.5) * 4.0 * u * a * (1.0 - 0.6 * lifted);
+            p = GraftMesh.add(p, new double[] {side * 0.45 * wave, 0.85 * wave, 0.3 * wave});
+            path[k + 1] = k == n ? foot.clone() : p;
+        }
         // Its back faces out from him on the ground, up on a wall (never along the way it comes in).
         double[] dorsal = Math.abs(face[1]) > 0.5 ? new double[] {side, 0.0, 0.0} : new double[] {0.0, 1.0, 0.0};
-        return new MawMotion.Shape(path, dorsal, stepping ? 0.55 : 0.04);
+        double open = Double.isNaN(step) ? 0.04 : 0.04 + 0.5 * Math.sin(Math.PI * Math.min(1.0, GraftMesh.clamp01(step) * 1.15));
+        return new MawMotion.Shape(path, dorsal, open);
     }
 }

@@ -44,7 +44,7 @@ public final class OutfitTests {
     }
 
     static void catalogue(Map<String, OutfitModels.Model> models) {
-        check(Outfits.ALL.size() == 8 + 24 + 6, "eight outfit pieces, 24 owner's masks, six generic: " + Outfits.ALL.size());
+        check(Outfits.ALL.size() == 8 + 24 + 9, "eight outfit pieces, 24 owner's masks, nine generic: " + Outfits.ALL.size());
         Set<String> ids = new HashSet<>();
         for (Outfits.Piece piece : Outfits.ALL) {
             check(ids.add(piece.id()), piece.id() + ": one item each");
@@ -79,8 +79,9 @@ public final class OutfitTests {
             && models.get("mask_eyepatch").cubes().size() == 183, "Ayato's 128 cubes, Noro's 48, Eyepatch's 183");
     }
 
+    /** The cubes in {@code slot} as the owner made them (the slim sleeves, made from theirs, left out). */
     private static int count(OutfitModels.Model model, int slot) {
-        return (int)model.cubes().stream().filter(c -> c.slot() == slot).count();
+        return (int)model.cubes().stream().filter(c -> c.slot() == slot && c.bone() < OutfitModels.RIGHT_ARM_SLIM).count();
     }
 
     static void geometry(Map<String, OutfitModels.Model> models) {
@@ -112,12 +113,82 @@ public final class OutfitTests {
         float[] turned = {0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 90, 0, 0, 0};
         float[] corner = cubeOf(turned).faces()[0].corners(); // east face, its first corner was (2, 0, 2)
         check(near(corner[0], 2.0F) && near(corner[2], -2.0F), "a quarter turn about y as a model part turns: " + corner[0] + ", " + corner[2]);
+        fit(models);
         // The right arm's cubes are near its shoulder (relative to its pivot), as the arm part carries them.
         for (OutfitModels.Cube arm : models.get("formal").on(OutfitModels.RIGHT_ARM, -1)) {
             for (float c : arm.faces()[4].corners()) {
                 check(Math.abs(c) < 14.0F, "the overcoat's right sleeve sits on the right arm: " + c);
             }
         }
+    }
+
+    /**
+     * The owner's "Armor is too bulky, if the player is alex model it should adapt to it ... half masks are covering most of the face
+     * instead of being lower, way lower ... the eye position of the masks are very off": each sleeve again for slim arms, as many and
+     * narrower; the half masks below the eyes; the coats close to the body; the masks clear of the skin's hat layer.
+     */
+    static void fit(Map<String, OutfitModels.Model> models) {
+        for (String style : List.of("formal", "crimson")) {
+            OutfitModels.Model model = models.get(style);
+            for (int[] arm : new int[][] {{OutfitModels.RIGHT_ARM, OutfitModels.RIGHT_ARM_SLIM}, {OutfitModels.LEFT_ARM, OutfitModels.LEFT_ARM_SLIM}}) {
+                List<OutfitModels.Cube> wide = model.on(arm[0], -1);
+                List<OutfitModels.Cube> slim = model.on(arm[1], -1);
+                check(!wide.isEmpty() && wide.size() == slim.size(), style + ": a slim sleeve for every wide one's cube: " + wide.size() + ", " + slim.size());
+                check(span(slim, 0) < span(wide, 0) - 0.5F, style + ": the slim sleeve narrower: " + span(slim, 0) + " < " + span(wide, 0));
+                check(Math.abs(span(slim, 1) - span(wide, 1)) < 1.0E-3F, style + ": as long");
+            }
+            // The coat's sleeve: never more than a pixel and a half off the arm (the owner's stood up to 1.26 out, then deeper with the bands).
+            for (OutfitModels.Cube cube : model.on(OutfitModels.RIGHT_ARM, -1)) {
+                for (OutfitModels.Face face : cube.faces()) {
+                    for (int k = 0; k < 4; k++) {
+                        float z = face.corners()[k * 3 + 2];
+                        check(Math.abs(z) < 2.0F + 0.3F + 1.2F, style + ": the sleeve snug to the arm: " + z);
+                    }
+                }
+            }
+        }
+        // A half mask starts under the skin's eyes (the face's fifth row, y -4 to -3), a full one's front clears the hat layer.
+        for (String half : List.of("mask_eyepatch", "mask_ayato", "mask_nishiki", "mask_shachi", "mask_tatara", "mask_yomo", "mask_rize", "mask_dotted")) {
+            check(top(models.get(half)) >= -3.0F, half + ": over the mouth, below the eyes: " + top(models.get(half)));
+        }
+        for (String mask : Outfits.GENERIC_MASKS) {
+            OutfitModels.Model model = models.get(mask);
+            float front = 0;
+            for (OutfitModels.Cube cube : model.cubes()) {
+                front = Math.min(front, cube.faces()[4].corners()[2]);
+            }
+            check(front < -4.5F, mask + ": in front of the hat layer: " + front);
+        }
+    }
+
+    /** How far {@code cubes} reach along {@code axis}. */
+    private static float span(List<OutfitModels.Cube> cubes, int axis) {
+        float lo = Float.MAX_VALUE;
+        float hi = -Float.MAX_VALUE;
+        for (OutfitModels.Cube cube : cubes) {
+            for (OutfitModels.Face face : cube.faces()) {
+                for (int k = 0; k < 4; k++) {
+                    lo = Math.min(lo, face.corners()[k * 3 + axis]);
+                    hi = Math.max(hi, face.corners()[k * 3 + axis]);
+                }
+            }
+        }
+        return hi - lo;
+    }
+
+    /** The highest point of {@code model}'s front (y down; its straps left out: they are at its top edge's height anyway). */
+    private static float top(OutfitModels.Model model) {
+        float top = Float.MAX_VALUE;
+        for (OutfitModels.Cube cube : model.cubes()) {
+            for (OutfitModels.Face face : cube.faces()) {
+                for (int k = 0; k < 4; k++) {
+                    if (face.corners()[k * 3 + 2] < -4.0F) {
+                        top = Math.min(top, face.corners()[k * 3 + 1]);
+                    }
+                }
+            }
+        }
+        return top;
     }
 
     private static OutfitModels.Cube cubeOf(float[] v) {

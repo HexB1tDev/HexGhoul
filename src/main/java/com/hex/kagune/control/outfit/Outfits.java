@@ -5,8 +5,8 @@ import java.util.List;
 /**
  * 4.0.0 (The Great Exploration): every outfit piece and mask there is as an item (pure, tested): its id, the model it is drawn from
  * ({@link OutfitModels}) and the slot it is worn in. The owner's two outfits (the CCG's Formal Outfit, Aogiri Tree's Crimson Outfit), four
- * pieces each, and their 24 masks; and the generic masks (made for 4.0.0: a clown's, a gas mask, a skull, a fox, an oni, a cloth wrap), the
- * only ones a wild ghoul is ever found in. Every mask is a helmet: worn in the head slot (a hood and a mask, one at a time, as the owner's
+ * pieces each, and their 24 masks; and the generic masks (made for 4.0.0: a clown's, a gas mask, a skull, a fox, an oni, a cloth wrap, a
+ * cracked porcelain face, a bandage wrap, a kabuki face), the only ones a wild ghoul is ever found in. Every mask is a helmet: worn in the head slot (a hood and a mask, one at a time, as the owner's
  * own mod has it).
  */
 public final class Outfits {
@@ -35,7 +35,8 @@ public final class Outfits {
      * The generic masks: belonging to no one (the owner: "clown masks, gas masks, and other non-faction-specific masks"). The only ones a
      * wild ghoul ever wears.
      */
-    public static final List<String> GENERIC_MASKS = List.of("mask_clown", "mask_gas", "mask_skull", "mask_fox", "mask_oni", "mask_cloth");
+    public static final List<String> GENERIC_MASKS = List.of("mask_clown", "mask_gas", "mask_skull", "mask_fox", "mask_oni", "mask_cloth",
+        "mask_porcelain", "mask_bandage", "mask_kabuki"); // the last three since the owner found the first "very basic": a saved ghoul's index keeps its mask
 
     /**
      * Aogiri Tree's own masks a member wears under its hood (the owner: "the appropriate faction masks"): the Laughing Mask and the Fanged

@@ -32,9 +32,10 @@ public enum BikakuMove {
     /**
      * 3.5.3, Monstrous Regeneration: for a while ({@link #ticks()}) his body regenerates far faster than any ghoul's, strands of kagune
      * tissue crawling over it and knitting it back. It does not make him invincible (nothing it takes off a blow) and it cools down long.
-     * It does not take the worm: it bites and moves on meanwhile.
+     * It does not take the worm: it bites and moves on meanwhile. 4.0.0 (the owner: "regen for them does not cost energy at all, it works
+     * with cooldowns, and waiting"): it costs no RC; its cooldown is its price.
      */
-    REGENERATION("Monstrous Regeneration", Slot.C, BikakuRules.REGENERATION, 160, 1, 900, 15.0F),
+    REGENERATION("Monstrous Regeneration", Slot.C, BikakuRules.REGENERATION, 160, 1, 900, 0.0F),
     /**
      * 3.5.7, the kakuja's (the owner's spec), Thousand Jaws: every mouthed tentacle thrown out at the bodies round it, each biting again and
      * again on its own rhythm from its own side; the grinning mouths of its body snapping at whatever is close to it (a big bite: a brief
@@ -55,9 +56,9 @@ public enum BikakuMove {
     /**
      * 3.5.7, the kakuja's Undying Abomination: for a while it regenerates at an extraordinary rate, strands of new flesh crawling over its
      * body and tentacles, and takes still less from every blow; a heavy blow slows the regeneration for a moment, never stops it. It runs
-     * alongside the rest. On C.
+     * alongside the rest. On C. 4.0.0: a regeneration, so no RC (the kakuja's own drain goes on); its cooldown is its price.
      */
-    UNDYING("Undying Abomination", Slot.C, BikakuRules.KAKUJA, 200, 1, 1200, 20.0F);
+    UNDYING("Undying Abomination", Slot.C, BikakuRules.KAKUJA, 200, 1, 1200, 0.0F);
 
     /** The original's kagune keys, as the move keys of this path. */
     public enum Slot {
@@ -112,6 +113,11 @@ public enum BikakuMove {
 
     public float cost() {
         return this.cost;
+    }
+
+    /** 4.0.0: true if it is a Bikaku body's regeneration (Monstrous Regeneration, Undying Abomination): no RC, a cooldown and waiting. */
+    public boolean regenerates() {
+        return this == REGENERATION || this == UNDYING;
     }
 
     /** How long it lasts when its bite misses (a grab draws back from there; 3.5.1: the others run their whole course). */

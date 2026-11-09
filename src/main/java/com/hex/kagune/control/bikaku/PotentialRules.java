@@ -5,9 +5,11 @@ package com.hex.kagune.control.bikaku;
  * "While the player still has energy remaining, they gain the ability to survive devastating injuries that would ordinarily cause death,
  * including the physical destruction or separation of body parts"; "dismemberment must NOT happen frequently"; "Every detached limb takes
  * approximately 5 seconds to completely reattach"; "Every time a severed body part successfully reattaches, the player receives a small
- * health boost"; "If the player's energy runs out during regeneration, the process must be interrupted until sufficient energy becomes
- * available"). The parts that come off whole, the timeline of each (ticks from the blow; the drawing is {@code Reattach}), what it costs,
- * and which part a blow takes. The server keeps each part's age, paused while the bar is empty during the pull.
+ * health boost"). The parts that come off whole, the timeline of each (ticks from the blow; the drawing is {@code Reattach}), what it
+ * costs, and which part a blow takes. 4.0.0 (the owner: "Sometimes the limbs break and dont regenerate cause of the lack of energy ...
+ * Bikaku users dont have the same regeneration as regular wounds, they either regenerate with this mutation or with their other ability
+ * to regenerate ... regen for them does not cost energy at all, it works with cooldowns, and waiting"): the pull draws nothing and never
+ * waits on the bar; every part off comes back on its own timeline. The bar still decides whether a killing blow is survived.
  */
 public final class PotentialRules {
     /** A part torn off whole: the head at the neck, an arm at the shoulder, a leg at the hip. */
@@ -34,8 +36,6 @@ public final class PotentialRules {
     /** The health he is left with when a blow that would have killed him doesn't (one heart), and the energy that costs. */
     public static final float SURVIVE_HEALTH = 2.0F;
     public static final float SURVIVE_COST = 20.0F;
-    /** The energy each part's strands draw a tick while they reach and haul (from {@link #REACH_AT} to {@link #HOME_AT}). */
-    public static final float PULL_DRAIN = 0.15F;
     /** A single blow this much of his full health or more tears a part off (rare: never an ordinary blow). */
     public static final float HEAVY_BLOW = 0.5F;
     /** The small heal when a part is back on (one heart), only once it is whole. */
@@ -47,7 +47,7 @@ public final class PotentialRules {
     private PotentialRules() {
     }
 
-    /** True while a part's strands reach and haul (they draw energy; with none, the part waits where it is). */
+    /** True while a part's strands reach and haul (4.0.0: drawing nothing: the part comes back whatever the bar holds). */
     public static boolean pulling(double age) {
         return age >= REACH_AT && age < HOME_AT;
     }

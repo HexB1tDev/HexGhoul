@@ -530,10 +530,10 @@ public final class BikakuRenderer {
             double[] footRig = frame.rig(foot);
             double[] faceRig = GraftMesh.sub(frame.rig(GraftMesh.add(foot, face)), footRig);
             MawMotion.Shape shape = com.hex.kagune.control.bikaku.WalkerLegs.shape(i, footRig, faceRig,
-                com.hex.kagune.control.bikaku.WalkerLegs.stepping(legs, i, clock), clock, seed);
+                com.hex.kagune.control.bikaku.WalkerLegs.progress(legs, i, clock), clock, seed);
             double girth = com.hex.kagune.control.bikaku.WalkerLegs.GIRTH;
-            // Round his body rather than through it, carried with his torso near the root; grown out with the kagune.
-            double[][] rig = com.hex.kagune.control.client.animation.GraftPose.ride(posed, MawMotion.around(shape.path(), girth, shape.aperture()));
+            // Round his body rather than through it (kept off by its thigh's girth), carried with his torso near the root; grown out with the kagune.
+            double[][] rig = com.hex.kagune.control.client.animation.GraftPose.ride(posed, MawMotion.around(shape.path(), girth * 1.6, shape.aperture()));
             rig = MawMotion.grown(rig, grown);
             if (firstPerson) {
                 rig = MawMotion.firstPerson(rig, frame.rig(new double[] {camera.f_82479_, camera.f_82480_, camera.f_82481_}));
@@ -542,7 +542,8 @@ public final class BikakuRenderer {
             for (int k = 0; k < rig.length; k++) {
                 world[k] = frame.place(rig[k], camera);
             }
-            MawWorm.build(sink, new MawWorm.Pose(world, frame.turn(shape.dorsal()), grown, shape.aperture(), girth, seed + 31 * (i + 1), clock), tint, fine);
+            MawWorm.build(sink, new MawWorm.Pose(world, frame.turn(shape.dorsal()), grown, shape.aperture(), girth, seed + 31 * (i + 1), clock).leg(true),
+                tint, fine);
         }
     }
 

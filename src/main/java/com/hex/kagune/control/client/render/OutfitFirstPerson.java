@@ -41,12 +41,12 @@ public final class OutfitFirstPerson {
             if (model == null) {
                 return;
             }
-            List<OutfitModels.Cube> cubes = model.on(right ? OutfitModels.RIGHT_ARM : OutfitModels.LEFT_ARM, piece.slot());
+            boolean slim = "slim".equals(player.m_108564_());
+            List<OutfitModels.Cube> cubes = model.on(OutfitLayer.arm(right ? OutfitModels.RIGHT_ARM : OutfitModels.LEFT_ARM, slim), piece.slot());
             if (cubes.isEmpty()) {
                 return;
             }
             PoseStack pose = event.getPoseStack();
-            boolean slim = "slim".equals(player.m_108564_());
             pose.m_85836_();
             // Where vanilla's model puts the arm it is about to draw: at its shoulder, swayed out a little (as KingFirstPerson places War's).
             pose.m_252880_((right ? -KingFirstPerson.SHOULDER_X : KingFirstPerson.SHOULDER_X) / 16.0F,

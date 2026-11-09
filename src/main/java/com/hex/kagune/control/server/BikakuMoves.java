@@ -64,7 +64,8 @@ final class BikakuMoves {
             BikakuServer.notice(player, state, Component.m_237115_("message.hexkagune.bikaku.feeding"));
             return;
         }
-        if (!KaguneServerController.useEnergy(player, move.cost(), true)) {
+        // 4.0.0: a regeneration costs nothing (its cooldown is its price); every other move its RC.
+        if (move.cost() > 0.0F && !KaguneServerController.useEnergy(player, move.cost(), true)) {
             return;
         }
         if (move == BikakuMove.UNDYING) {

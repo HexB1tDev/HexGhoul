@@ -65,7 +65,7 @@ public final class GhoulNpcRenderer extends HumanoidMobRenderer<GhoulNpc, Player
     private GhoulNpcRenderer(EntityRendererProvider.Context context, GhoulModel wide, GhoulModel slim) {
         super(context, wide, 0.5F);
         this.wide = wide;
-        this.slim = slim;
+        this.slim = OutfitLayer.slim(slim); // 4.0.0: a coat's sleeves for slim arms
         this.m_115326_(new Eyes(this));
         this.m_115326_(new BladeArmLayer(this));
         this.m_115326_(new OutfitLayer<>(this)); // 4.0.0: its mask; an Aogiri member's outfit

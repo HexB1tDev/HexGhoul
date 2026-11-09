@@ -101,17 +101,17 @@
         },
         {
           "type": "minecraft:item",
-          "name": "hexkagune:crimson_hood",
+          "name": "hexkagune:crimson_helmet",
           "weight": 1
         },
         {
           "type": "minecraft:item",
-          "name": "hexkagune:crimson_coat",
+          "name": "hexkagune:crimson_chestplate",
           "weight": 1
         },
         {
           "type": "minecraft:item",
-          "name": "hexkagune:crimson_trousers",
+          "name": "hexkagune:crimson_leggings",
           "weight": 1
         },
         {

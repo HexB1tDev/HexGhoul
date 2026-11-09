@@ -263,7 +263,9 @@ public final class BikakuTests {
             check(com.hex.kagune.control.bikaku.BikakuMove.of(move.slot(), move.kakuja()) == move, move + " is what its key does");
             check(move.kakuja() || com.hex.kagune.control.bikaku.BikakuMove.of(move.slot()) == move, move + " is what its key does out of the kakuja");
             check(move.land() > 0 && move.land() < move.missedTicks() && move.missedTicks() <= move.ticks(), move + " bites partway through");
-            check(move.cooldown() > move.ticks() && move.cost() > 0.0F, move + " cools down longer than it lasts, and costs RC");
+            // 4.0.0 (the owner: "regen for them does not cost energy at all, it works with cooldowns, and waiting"): a regeneration costs none.
+            check(move.cooldown() > move.ticks() && (move.regenerates() ? move.cost() == 0.0F : move.cost() > 0.0F),
+                move + " cools down longer than it lasts, and costs RC (a regeneration none)");
             check(!move.unlocked(move.mastery() - 1) && move.unlocked(move.mastery()) && move.unlocked(1000), move + " opens at its mastery");
         }
         check(com.hex.kagune.control.bikaku.BikakuMove.of(com.hex.kagune.control.bikaku.BikakuMove.Slot.G) == com.hex.kagune.control.bikaku.BikakuMove.MAW
@@ -411,7 +413,8 @@ public final class BikakuTests {
         check(BikakuRules.CATA_POWER > BikakuRules.CATA_NEAR_POWER && BikakuRules.HUNGER_CRUSH_POWER > BikakuRules.HUNGER_POWER
             && BikakuRules.JAWS_POWER < BikakuRules.HUNGER_POWER, "the sweep and the crush hit hardest; Thousand Jaws' many bites each lightly");
         for (com.hex.kagune.control.bikaku.BikakuMove move : own) {
-            check(move.cooldown() >= 300 && move.cost() >= 10.0F, move + " cools down long and costs RC");
+            check(move.cooldown() >= 300 && (move.regenerates() ? move.cost() == 0.0F : move.cost() >= 10.0F),
+                move + " cools down long and costs RC (Undying Abomination, a regeneration, none)");
         }
     }
 

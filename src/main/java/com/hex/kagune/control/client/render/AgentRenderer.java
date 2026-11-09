@@ -55,8 +55,8 @@ public final class AgentRenderer extends HumanoidMobRenderer<CcgAgent, PlayerMod
     private AgentRenderer(EntityRendererProvider.Context context, AgentModel wide, AgentModel slim, AgentModel female) {
         super(context, wide, 0.5F);
         this.wide = wide;
-        this.slim = slim;
-        this.female = female;
+        this.slim = OutfitLayer.slim(slim); // 4.0.0: the overcoat's sleeves for slim arms
+        this.female = OutfitLayer.slim(female);
         this.m_115326_(new Figure(this));
         this.m_115326_(new Build(this));
         this.m_115326_(new WeaponLayer(this)); // 3.0.0: a higher rank's kagune-made weapon

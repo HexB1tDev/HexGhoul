@@ -25,8 +25,14 @@ public final class OutfitModels {
     public static final int LEFT_ARM = 3;
     public static final int RIGHT_LEG = 4;
     public static final int LEFT_LEG = 5;
+    /**
+     * 4.0.0 (the owner: "if the player is alex model it should adapt to it"): each sleeve again for slim arms (three pixels wide, its outer
+     * side one in), drawn on a slim-armed wearer's arm part in place of the wide one.
+     */
+    public static final int RIGHT_ARM_SLIM = 6;
+    public static final int LEFT_ARM_SLIM = 7;
     /** Each bone's pivot in the player model (sixteenths, y down). */
-    public static final float[][] PIVOTS = {{0, 0, 0}, {0, 0, 0}, {-5, 2, 0}, {5, 2, 0}, {-1.9F, 12, 0}, {1.9F, 12, 0}};
+    public static final float[][] PIVOTS = {{0, 0, 0}, {0, 0, 0}, {-5, 2, 0}, {5, 2, 0}, {-1.9F, 12, 0}, {1.9F, 12, 0}, {-5, 2, 0}, {5, 2, 0}};
     /** The armour slots, in the baked order: helmet, chestplate, leggings, boots. */
     public static final int HELMET = 0;
     public static final int CHESTPLATE = 1;
@@ -88,9 +94,11 @@ public final class OutfitModels {
             throw new IOException("not an outfits file");
         }
         int version = in.readUnsignedShort();
-        if (version != 1) {
+        if (version != 1 && version != 2) {
             throw new IOException("outfits file version " + version);
         }
+        // 2: each cube's texture net after it (the size the owner made it: a cube fitted to the player keeps its texture where it was).
+        int floats = version == 2 ? 17 : 14;
         int count = in.readUnsignedShort();
         Map<String, Model> out = new HashMap<>();
         for (int m = 0; m < count; m++) {
@@ -104,9 +112,12 @@ public final class OutfitModels {
             for (int c = 0; c < cubes; c++) {
                 int bone = in.readUnsignedByte();
                 int slot = in.readUnsignedByte();
-                float[] v = new float[14];
-                for (int k = 0; k < 14; k++) {
+                float[] v = new float[17];
+                for (int k = 0; k < floats; k++) {
                     v[k] = in.readFloat();
+                }
+                if (floats == 14) {
+                    System.arraycopy(v, 3, v, 14, 3);
                 }
                 list.add(cube(bone, slot, v, tw, th));
             }
@@ -117,7 +128,8 @@ public final class OutfitModels {
 
     /**
      * A cube's six faces as the game's {@code ModelPart.Cube} makes them, from {@code v}: its least corner (3), size (3), pivot (3), rotation
-     * in degrees (3: x, y, z, turned as a model part is: x first, then y, then z) and box-UV offset (2), all in the model's frame.
+     * in degrees (3: x, y, z, turned as a model part is: x first, then y, then z), box-UV offset (2), all in the model's frame, and (if
+     * given) the size its texture's net is laid out for (3; else its own size).
      */
     static Cube cube(int bone, int slot, float[] v, int tw, int th) {
         float x0 = v[0];
@@ -126,9 +138,10 @@ public final class OutfitModels {
         float x1 = x0 + v[3];
         float y1 = y0 + v[4];
         float z1 = z0 + v[5];
-        float w = v[3];
-        float h = v[4];
-        float d = v[5];
+        boolean net = v.length >= 17;
+        float w = net ? v[14] : v[3];
+        float h = net ? v[15] : v[4];
+        float d = net ? v[16] : v[5];
         float u = v[12];
         float vv = v[13];
         float f4 = u;
