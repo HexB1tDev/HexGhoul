@@ -469,8 +469,9 @@ def paint(model, seed):
 #    down to meet it, the nose and mouth below drawn up under it; the masks with no eyes (Noro's) and Touka's (already there) as they are;
 #  - a half mask (over the mouth) drawn down so it starts below the nose's row (y -2.75), not over the eyes;
 #  - every mask a little wider and deeper (5%) so it stands clear of the skin's hat layer, never through it;
-#  - the outfits' coats, sleeves and trousers drawn in to the body (whatever stood more than 0.3 off a part, 45% as far: snug, still over
-#    the skin's outer layer), the Formal Cap out past the hat layer;
+#  - the outfits' coats, sleeves and trousers drawn in to the body (4.0.1: whatever stands more than 0.27 off a part, a quarter as far,
+#    each layer still over the one under it), the Formal Cap out past the hat layer; 4.0.1: their trims, buttons and the Formal shirt and
+#    trousers in colour, and details of their own ({@link #details}: belts, badges, a pocket square, epaulettes, laces, straps);
 #  - each sleeve again for slim arms (Alex's three pixels: the outer side in by one), drawn instead on a slim-armed wearer.
 
 HALF_MASKS = {"kaneki", "ayato", "nishiki", "shachi", "tatara", "yomo", "rize", "yoshimura"}
@@ -482,7 +483,9 @@ MASK_EYES = {"akira": (-4.75, -4.125), "amon": (-4.875, -4.375), "arima": (-4.62
 MASK_GIRTH = 1.05
 BASES = {"head": ((-4, -8, -4), (4, 0, 4)), "body": ((-4, 0, -2), (4, 12, 2)), "right_arm": ((-8, 0, -2), (-4, 12, 2)),
          "left_arm": ((4, 0, -2), (8, 12, 2)), "right_leg": ((-3.9, 12, -2), (0.1, 24, 2)), "left_leg": ((-0.1, 12, -2), (3.9, 24, 2))}
-CLEAR, SNUG = 0.3, 0.45
+# 4.0.1 (the owner: "They seem a little too thick ... not so thick in general"): what stands more than CLEAR off a part (just over the
+# skin's outer layer, 0.25 off it) keeps SNUG of its distance, each layer at least LAYER over the one under it (or as far as it was).
+CLEAR, SNUG, LAYER = 0.27, 0.24, 0.03
 CAP_GIRTH = 1.075
 
 
@@ -528,24 +531,217 @@ def fit_mask(folder, model):
     return refit(model, fx=lambda v, c: v * MASK_GIRTH, fz=lambda v, c: v * MASK_GIRTH)
 
 
-def snug(lo, hi, clear=CLEAR, keep=SNUG):
-    """Along one axis of a part from {@code lo} to {@code hi}: whatever stands more than {@code clear} off it, drawn in to {@code keep}."""
-    def f(v, _c=None):
-        if v > hi + clear:
-            return hi + clear + (v - hi - clear) * keep
-        if v < lo - clear:
-            return lo - clear - (lo - clear - v) * keep
-        return v
-    return f
+def layers(offsets):
+    """The knots a part's side is drawn in through: each distance off it (past CLEAR) its cubes' faces stand at, and where it goes."""
+    knots = [(CLEAR, CLEAR)]
+    for o in sorted(set(round(o, 3) for o in offsets if o > CLEAR + 1.0E-6)):
+        last_o, last_m = knots[-1]
+        knots.append((o, max(CLEAR + (o - CLEAR) * SNUG, last_m + min(LAYER, o - last_o))))
+    return knots
+
+
+def through(knots, o):
+    """Distance {@code o} off a part, drawn in through {@code knots} (nothing within CLEAR moves)."""
+    if o <= knots[0][0]:
+        return o
+    for (a0, b0), (a1, b1) in zip(knots, knots[1:]):
+        if o <= a1:
+            return b0 + (o - a0) * (b1 - b0) / (a1 - a0)
+    a, b = knots[-1]
+    return b + (o - a) * SNUG
+
+
+def snugger(model):
+    """Each part's sides' knots ({@link #layers}), from where every cube of the outfit stands off it (x and z; the head as it is)."""
+    out = {}
+    for bone, ((x0, _, z0), (x1, _, z1)) in BASES.items():
+        for axis, lo, hi in ((0, x0, x1), (2, z0, z1)):
+            ups, downs = [], []
+            for c in model["cubes"]:
+                if c["bone"] != bone:
+                    continue
+                for v in (c["pos"][axis], c["pos"][axis] + c["size"][axis]):
+                    ups.append(v - hi)
+                    downs.append(lo - v)
+            out[(bone, axis)] = (lo, hi, layers(ups), layers(downs))
+    return out
+
+
+# ---------------------------------------------------------------- 4.0.1: the outfits finished
+
+# The owner: "Can you add more details to it as well to make it as polished"; "you could add like a color or something to the formal
+# outfit. For example, to make it look a bit more complex." Their models and textures stay as they are: what is added is cubes of its own
+# (each net painted in a free part of the outfit's texture, below the owner's), and a few of their cubes' nets painted another colour
+# (its shading kept: each texel's light against its old colour's).
+
+TRIMS = {"navy": (36, 47, 76), "navy_light": (58, 72, 108), "shirt": (236, 238, 242), "silver": (204, 208, 216), "silver_dark": (140, 146, 160),
+         "leather": (40, 30, 27), "leather_light": (78, 58, 48), "square": (176, 24, 34), "lace": (88, 88, 98), "shine": (70, 70, 82),
+         "trouser": (40, 45, 64), "seam": (108, 108, 120), "stitch": (64, 8, 20), "piping": (36, 18, 24), "strap": (30, 28, 32)}
+DETAIL_V = 72  # the owner's nets end above this row of their 512 x 512 texture
+
+
+def box(name, bone, slot, pos, size, mat, rot=(0, 0, 0), pivot=None):
+    return {"name": "detail_" + name, "bone": bone, "slot": slot, "pos": list(pos), "size": list(size), "mat": mat, "rot": list(rot),
+            "pivot": list(pivot) if pivot else list(pos)}
+
+
+def mirrored(c):
+    """A limb's cube on the other side (x mirrored about the body's middle)."""
+    out = json.loads(json.dumps(c))
+    out["bone"] = c["bone"].replace("right_", "left_")
+    out["name"] = c["name"].replace("_right_", "_left_")
+    out["pos"][0] = -(c["pos"][0] + c["size"][0])
+    out["pivot"][0] = -c["pivot"][0]
+    out["rot"] = [c["rot"][0], -c["rot"][1], -c["rot"][2]]
+    return out
+
+
+def details(style):
+    """The cubes 4.0.1 adds to an outfit (in the owner's frame, fitted with theirs), each with its own net below the owner's."""
+    out = []
+    pad = (-4.1, -0.65, 0)  # the shoulder pad's pivot (the owner's): the epaulette turns with it
+    if style == "formal":
+        out += [
+            # A white shirt's collar points beside the knot; a navy-welted breast pocket with a red square; a silver badge.
+            box("collar_point_r", "body", "chestplate", (-1.55, -0.05, -3.12), (0.7, 0.8, 0.1), "shirt", (0, 0, 25), (-0.85, -0.05, -3.12)),
+            box("collar_point_l", "body", "chestplate", (0.85, -0.05, -3.12), (0.7, 0.8, 0.1), "shirt", (0, 0, -25), (0.85, -0.05, -3.12)),
+            box("breast_pocket", "body", "chestplate", (2.05, 4.7, -3.04), (1.55, 0.24, 0.1), "navy"),
+            box("pocket_square", "body", "chestplate", (2.3, 4.15, -3.02), (0.65, 0.58, 0.08), "square"),
+            box("pocket_square_tip", "body", "chestplate", (2.43, 3.93, -3.02), (0.4, 0.24, 0.08), "square"),
+            box("badge", "body", "chestplate", (-3.3, 4.35, -3.06), (0.8, 0.85, 0.12), "silver"),
+            box("badge_centre", "body", "chestplate", (-3.08, 4.58, -3.12), (0.36, 0.39, 0.06), "navy"),
+            box("back_seam", "body", "chestplate", (-0.06, 0.6, 2.76), (0.12, 10.0, 0.06), "seam"),
+            # A leather belt round the coat between the second and third buttons, its buckle silver.
+            box("belt_front", "body", "chestplate", (-4.47, 9.3, -3.24), (8.94, 0.62, 0.3), "leather"),
+            box("belt_side_r", "body", "chestplate", (-4.62, 9.3, -2.94), (0.12, 0.62, 5.82), "leather"),
+            box("belt_side_l", "body", "chestplate", (4.5, 9.3, -2.94), (0.12, 0.62, 5.82), "leather"),
+            box("belt_back", "body", "chestplate", (-4.62, 9.3, 2.76), (9.24, 0.62, 0.14), "leather"),
+            box("buckle", "body", "chestplate", (-0.62, 9.12, -3.34), (1.24, 0.98, 0.1), "silver"),
+            box("buckle_tongue", "body", "chestplate", (-0.36, 9.36, -3.4), (0.72, 0.5, 0.06), "leather_light"),
+            # Navy epaulettes on the shoulders, a silver button on each; two silver buttons on each cuff.
+            box("right_epaulette", "right_arm", "chestplate", (-8.75, -0.98, -0.55), (3.6, 0.15, 1.1), "navy", (0, 0, -4), pad),
+            box("right_epaulette_button", "right_arm", "chestplate", (-5.75, -1.06, -0.2), (0.4, 0.08, 0.4), "silver", (0, 0, -4), pad),
+            box("right_cuff_button_0", "right_arm", "chestplate", (-9.06, 10.35, -1.05), (0.09, 0.35, 0.35), "silver"),
+            box("right_cuff_button_1", "right_arm", "chestplate", (-9.06, 10.35, -0.35), (0.09, 0.35, 0.35), "silver"),
+            # Laced, polished shoes.
+            box("right_lace_0", "right_leg", "boots", (-3.1, 21.9, -2.95), (2.1, 0.1, 0.1), "lace"),
+            box("right_lace_1", "right_leg", "boots", (-3.1, 21.9, -2.7), (2.1, 0.1, 0.1), "lace"),
+            box("right_lace_2", "right_leg", "boots", (-3.1, 21.9, -2.45), (2.1, 0.1, 0.1), "lace"),
+            box("right_toe_shine", "right_leg", "boots", (-3.7, 22.25, -3.21), (2.6, 0.5, 0.06), "shine"),
+            # The cap: a navy band, a silver badge, a short black visor.
+            box("cap_band_front", "head", "helmet", (-4.42, -6.6, -4.42), (8.84, 0.5, 0.12), "navy"),
+            box("cap_band_back", "head", "helmet", (-4.42, -6.6, 4.3), (8.84, 0.5, 0.12), "navy"),
+            box("cap_band_r", "head", "helmet", (-4.42, -6.6, -4.3), (0.12, 0.5, 8.6), "navy"),
+            box("cap_band_l", "head", "helmet", (4.3, -6.6, -4.3), (0.12, 0.5, 8.6), "navy"),
+            box("cap_badge", "head", "helmet", (-0.5, -7.75, -4.46), (1.0, 1.0, 0.16), "silver"),
+            box("cap_badge_centre", "head", "helmet", (-0.22, -7.47, -4.52), (0.44, 0.44, 0.06), "navy"),
+            box("cap_visor", "head", "helmet", (-3.4, -6.15, -5.5), (6.8, 0.18, 1.2), "leather", (12, 0, 0), (0.0, -6.15, -4.3)),
+        ]
+    else:
+        out += [
+            # A black belt with a silver buckle between the third and fourth clasps; a stitched seam down the back and the hood.
+            box("belt_front", "body", "chestplate", (-4.47, 8.15, -3.1), (8.94, 0.6, 0.16), "leather"),
+            box("belt_side_r", "body", "chestplate", (-4.62, 8.15, -2.94), (0.12, 0.6, 5.82), "leather"),
+            box("belt_side_l", "body", "chestplate", (4.5, 8.15, -2.94), (0.12, 0.6, 5.82), "leather"),
+            box("belt_back", "body", "chestplate", (-4.62, 8.15, 2.76), (9.24, 0.6, 0.14), "leather"),
+            box("buckle", "body", "chestplate", (-0.55, 7.99, -3.2), (1.1, 0.92, 0.1), "silver"),
+            box("buckle_tongue", "body", "chestplate", (-0.32, 8.22, -3.26), (0.64, 0.46, 0.06), "leather_light"),
+            box("back_seam", "body", "chestplate", (-0.06, 0.6, 2.76), (0.12, 10.0, 0.06), "stitch"),
+            box("hood_back_seam", "head", "helmet", (-0.06, -9.0, 4.97), (0.12, 9.6, 0.06), "stitch"),
+            # A strap with a silver buckle round each cuff; one round each boot below the coat.
+            box("right_cuff_strap_out", "right_arm", "chestplate", (-9.07, 10.3, -2.78), (0.1, 0.32, 5.56), "strap"),
+            box("right_cuff_strap_front", "right_arm", "chestplate", (-8.97, 10.3, -2.78), (5.04, 0.32, 0.1), "strap"),
+            box("right_cuff_strap_back", "right_arm", "chestplate", (-8.97, 10.3, 2.68), (5.04, 0.32, 0.1), "strap"),
+            box("right_cuff_strap_in", "right_arm", "chestplate", (-3.93, 10.3, -2.78), (0.1, 0.32, 5.56), "strap"),
+            box("right_cuff_buckle", "right_arm", "chestplate", (-9.13, 10.22, -0.3), (0.06, 0.48, 0.6), "silver"),
+            box("right_boot_strap_out", "right_leg", "boots", (-4.28, 21.5, -2.35), (0.1, 0.28, 4.7), "strap"),
+            box("right_boot_strap_front", "right_leg", "boots", (-4.18, 21.5, -2.35), (4.2, 0.28, 0.1), "strap"),
+            box("right_boot_strap_back", "right_leg", "boots", (-4.18, 21.5, 2.25), (4.2, 0.28, 0.1), "strap"),
+            box("right_boot_buckle", "right_leg", "boots", (-4.34, 21.42, -0.3), (0.06, 0.44, 0.6), "silver"),
+        ]
+    out += [mirrored(c) for c in out if c["bone"].startswith("right_")]
+    # Each net below the owner's, in rows.
+    x, y, row = 2, DETAIL_V, 0
+    for c in out:
+        w, h, d = c["size"]
+        nw = math.ceil(2 * (w + d)) + 2
+        nh = math.ceil(d + h) + 2
+        if x + nw > 510:
+            x, y, row = 2, y + row, 0
+        c["uv"] = [x, y]
+        x += nw
+        row = max(row, nh)
+    assert y + row <= 512, "no room for the details' nets"
+    return out
+
+
+def named(*parts, bones=None):
+    """A test of a cube: its name holds one of {@code parts} (on one of {@code bones}, if given)."""
+    return lambda c: any(part in c["name"] for part in parts) and (bones is None or c["bone"] in bones)
+
+
+LIMBS_AND_BODY = ("body", "right_arm", "left_arm", "right_leg", "left_leg")
+# Which of the owner's cubes are painted another colour: (a test, the colour).
+RECOLOUR = {
+    "formal": [(named("placket_edge", "outer_edge", "asymmetric_overlap", "_hem", bones=LIMBS_AND_BODY), "navy"),
+               (named("_cuff", bones=LIMBS_AND_BODY), "navy"),
+               (lambda c: c["name"].startswith("front_button"), "silver"),
+               (named("shirt_insert"), "shirt"),
+               (named("_trouser"), "trouser")],
+    "crimson": [(named("placket_edge", "_hem", bones=LIMBS_AND_BODY), "piping")],
+}
+
+
+def finish(style, model, texture):
+    """The outfit's texture as the game draws it: the owner's, the recoloured cubes' nets repainted, the details' nets painted."""
+    img = texture.convert("RGBA").copy()
+    px = img.load()
+    size = img.size[0]
+    rng = random.Random(11 if style == "formal" else 12)
+    for c in model["cubes"]:
+        u, v = c["uv"]
+        w, h, d = c.get("net", c["size"])
+        x1, y1 = min(size - 1, math.ceil(u + 2 * (w + d))), min(img.size[1] - 1, math.ceil(v + d + h))
+        if c["name"].startswith("detail_"):
+            base = TRIMS[c["mat"]]
+            for x in range(int(u), x1 + 1):
+                for y in range(int(v), y1 + 1):
+                    g = rng.uniform(-4, 4)
+                    edge = x in (int(u), x1) or y in (int(v), y1)
+                    px[x, y] = tuple(max(0, min(255, int(ch * (0.86 if edge else 1.0) + g))) for ch in base) + (255,)
+        elif "paint" in c:
+            target = TRIMS[c["paint"]]
+            texels = [(x, y) for x in range(int(u), x1 + 1) for y in range(int(v), y1 + 1) if px[x, y][3] > 0]
+            if not texels:
+                continue
+            mean = sum(sum(px[x, y][:3]) for x, y in texels) / (3.0 * len(texels))
+            for x, y in texels:
+                r, g, b, a = px[x, y]
+                shade = ((r + g + b) / 3.0) / max(1.0, mean)
+                px[x, y] = tuple(max(0, min(255, int(ch * shade))) for ch in target) + (a,)
+    return img
 
 
 def fit_outfit(style, model):
+    model = dict(model, cubes=model["cubes"] + details(style))
+    recolour = RECOLOUR[style]
+    for c in model["cubes"]:
+        for test, mat in recolour:
+            if test(c):
+                c["paint"] = mat
+                break
+    sides = snugger(model)
+
     def along(axis):
         def f(v, c):
             if c["bone"] == "head":
                 return v * CAP_GIRTH if style == "formal" else v
-            lo, hi = BASES[c["bone"]][0][axis], BASES[c["bone"]][1][axis]
-            return snug(lo, hi)(v)
+            lo, hi, ups, downs = sides[(c["bone"], axis)]
+            if v > hi:
+                return hi + through(ups, v - hi)
+            if v < lo:
+                return lo - through(downs, lo - v)
+            return v
         return f
     model = refit(model, fx=along(0), fz=along(2))
     if style == "crimson":
@@ -713,7 +909,7 @@ def main():
     previews = []
     for style, pieces in OUTFITS:
         model = fit_outfit(style, json.loads((ART / f"{style}.model.json").read_text()))
-        tex = Image.open(ART / f"{style}.png")
+        tex = finish(style, model, Image.open(ART / f"{style}.png"))
         tex.save(textures / f"{style}.png")
         models.append((style, model))
         for slot, (item, label) in zip(SLOTS, pieces):

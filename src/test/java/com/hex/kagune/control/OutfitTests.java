@@ -70,11 +70,12 @@ public final class OutfitTests {
         }
         check(Outfits.of("formal_chestplate") != null && Outfits.of("formal_chestplate").slot() == OutfitModels.CHESTPLATE, "the overcoat is a chestplate");
         check(Outfits.of("crimson_helmet") != null && !Outfits.of("crimson_helmet").mask(), "the hood is no mask");
-        // The owner's counts (their build-verification.txt): the outfits' slots and three masks.
-        check(count(models.get("formal"), OutfitModels.CHESTPLATE) == 73 && count(models.get("formal"), OutfitModels.HELMET) == 4,
-            "the Formal Outfit as the owner's: 73 coat cubes, 4 cap cubes");
-        check(count(models.get("crimson"), OutfitModels.HELMET) == 19 && count(models.get("crimson"), OutfitModels.CHESTPLATE) == 45,
-            "the Crimson Outfit as the owner's: 19 hood cubes, 45 coat cubes");
+        // The owner's counts (their build-verification.txt): the outfits' slots and three masks. 4.0.1: every one of theirs, and the
+        // details added (the owner: "add more details to it as well to make it as polished").
+        check(count(models.get("formal"), OutfitModels.CHESTPLATE) > 73 && count(models.get("formal"), OutfitModels.HELMET) > 4,
+            "the Formal Outfit: the owner's 73 coat cubes and 4 cap cubes, and its details");
+        check(count(models.get("crimson"), OutfitModels.HELMET) > 19 && count(models.get("crimson"), OutfitModels.CHESTPLATE) > 45,
+            "the Crimson Outfit: the owner's 19 hood cubes and 45 coat cubes, and its details");
         check(models.get("mask_ayato").cubes().size() == 128 && models.get("mask_noro").cubes().size() == 48
             && models.get("mask_eyepatch").cubes().size() == 183, "Ayato's 128 cubes, Noro's 48, Eyepatch's 183");
     }
@@ -135,14 +136,23 @@ public final class OutfitTests {
                 List<OutfitModels.Cube> slim = model.on(arm[1], -1);
                 check(!wide.isEmpty() && wide.size() == slim.size(), style + ": a slim sleeve for every wide one's cube: " + wide.size() + ", " + slim.size());
                 check(span(slim, 0) < span(wide, 0) - 0.5F, style + ": the slim sleeve narrower: " + span(slim, 0) + " < " + span(wide, 0));
-                check(Math.abs(span(slim, 1) - span(wide, 1)) < 1.0E-3F, style + ": as long");
+                check(Math.abs(span(slim, 1) - span(wide, 1)) < 0.1F, style + ": as long (a turned piece's height a hair less, narrower)");
             }
-            // The coat's sleeve: never more than a pixel and a half off the arm (the owner's stood up to 1.26 out, then deeper with the bands).
+            // The coat's sleeve: 4.0.1 (the owner: "They seem a little too thick"): under a pixel off the arm, front and back (the owner's
+            // stood nearly one out, its bands further).
             for (OutfitModels.Cube cube : model.on(OutfitModels.RIGHT_ARM, -1)) {
                 for (OutfitModels.Face face : cube.faces()) {
                     for (int k = 0; k < 4; k++) {
                         float z = face.corners()[k * 3 + 2];
-                        check(Math.abs(z) < 2.0F + 0.3F + 1.2F, style + ": the sleeve snug to the arm: " + z);
+                        check(Math.abs(z) < 2.0F + 0.8F, style + ": the sleeve snug to the arm: " + z);
+                    }
+                }
+            }
+            // And the coat's front, with its lapels, belt and buttons: within a pixel of the chest.
+            for (OutfitModels.Cube cube : model.on(OutfitModels.BODY, OutfitModels.CHESTPLATE)) {
+                for (OutfitModels.Face face : cube.faces()) {
+                    for (int k = 0; k < 4; k++) {
+                        check(face.corners()[k * 3 + 2] > -2.0F - 1.0F, style + ": the coat close to the chest: " + face.corners()[k * 3 + 2]);
                     }
                 }
             }
