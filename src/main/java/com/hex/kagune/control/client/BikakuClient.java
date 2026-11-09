@@ -127,6 +127,9 @@ public final class BikakuClient {
         if (before != null && before.regenAt() == message.regenAt()) {
             regenBegan = before.regenBegan();
         }
+        if (before != null && before.kakuja() && !message.kakuja()) {
+            shatter(message.playerId(), before, clock); // 3.6.9: turning back, the kakuja breaks
+        }
         VIEWS.put(message.playerId(), new View(Bite.byOrdinal(message.bite()), message.startedAt(), began, message.x(), message.y(), message.z(),
             message.targetId(), BikakuMove.byOrdinal(message.move()), message.moveAt(), moveBegan, message.mx(), message.my(), message.mz(),
             message.targets(), message.heldId(), message.caught(), message.regenAt(), regenBegan, message.kakuja(), message.kakujaAt(),
@@ -138,6 +141,32 @@ public final class BikakuClient {
             message.devourWorm(), message.devourAt(), began(before == null || before.devourVictim() != message.devourVictim() ? null : before.devourAt(),
                 before == null ? 0.0 : before.devourBegan(), message.devourAt(), world, clock), message.devourSpot(), message.devourWidth(),
             message.devourHeight(), message.devourReadyAt()));
+    }
+
+    /**
+     * 3.6.9 (the owner: "Also Kakuja detransformation needs a simple shatter animation like the rinkaku has."): his kakuja, as far as it had
+     * grown, breaks into pieces that fly off him, spin, bounce and fade, with the glass (as Rinkaku's does). A failure here never stops the
+     * game (logged); the kakuja is then simply gone.
+     */
+    private static void shatter(UUID id, View before, double clock) {
+        Minecraft minecraft = Minecraft.m_91087_();
+        if (minecraft.f_91073_ == null) {
+            return;
+        }
+        try {
+            for (net.minecraft.world.entity.player.Player player : minecraft.f_91073_.m_6907_()) {
+                if (player.m_20148_().equals(id) && player instanceof net.minecraft.client.player.AbstractClientPlayer client) {
+                    com.hex.kagune.control.bikaku.MawKakuja.Growth grown = com.hex.kagune.control.bikaku.MawKakuja.growth(true, before.kakujaAge(clock));
+                    if (grown.shows()) {
+                        com.hex.kagune.control.client.fx.KakujaFx.shatterBikaku(client,
+                            com.hex.kagune.control.client.render.BikakuRenderer.kakujaQuads(client, grown, clock));
+                    }
+                    return;
+                }
+            }
+        } catch (RuntimeException failure) {
+            com.hex.kagune.control.Safety.caught(failure, "the Bikaku kakuja shattering");
+        }
     }
 
     /**

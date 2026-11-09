@@ -268,7 +268,9 @@ public final class BikakuRenderer {
         } else {
             LEGS.remove(player);
         }
-        if (growth.shows()) {
+        // 3.6.9 (the owner: "Also Kakuja detransformation needs a simple shatter animation like the rinkaku has."): turning back, it is not
+        // drawn falling away: it broke into pieces (KakujaFx.shatterBikaku), and only the worm grows back out of him.
+        if (growth.shows() && view.kakuja()) {
             // 3.5.4: the kakuja, built in his body's frame and placed in the world; in first person nothing of it near the eyes (he is
             // inside it: he sees out).
             // 3.5.7: what it does this frame: its own move (each tentacle after its own body, Endless Hunger's catch where the client sees it),
@@ -324,6 +326,22 @@ public final class BikakuRenderer {
             };
             com.hex.kagune.control.bikaku.MawKakuja.build(placed, growth, clock, seed, tint, fine, act);
         }
+    }
+
+    /**
+     * 3.6.9 (the owner: "Also Kakuja detransformation needs a simple shatter animation like the rinkaku has."): the kakuja as it stood,
+     * grown {@code growth}, at low detail, as quads in the world where {@code player} stands: what breaks into pieces when he turns back.
+     */
+    public static java.util.List<com.hex.kagune.control.KakujaBurst.Quad> kakujaQuads(AbstractClientPlayer player, com.hex.kagune.control.bikaku.MawKakuja.Growth growth,
+                                                                                 double clock) {
+        Frame frame = Frame.of(player, 1.0F);
+        Vec3 world = new Vec3(0.0, 0.0, 0.0);
+        java.util.List<com.hex.kagune.control.KakujaBurst.Quad> quads = new java.util.ArrayList<>();
+        com.hex.kagune.control.bikaku.MawKakuja.build((a, b, c, d, n, ca, cb, cc, cd) -> quads.add(new com.hex.kagune.control.KakujaBurst.Quad(
+            frame.place(a, world), frame.place(b, world), frame.place(c, world), frame.place(d, world), frame.turn(n), ca, cb, cc, cd,
+            n[0] == 0.0 && n[1] == 1.0 && n[2] == 0.0)), growth, clock, BikakuClient.seed(player), KaguneTints.of(player), false,
+            com.hex.kagune.control.bikaku.MawKakuja.Act.still());
+        return quads;
     }
 
     private static double sq(double[] p) {

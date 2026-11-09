@@ -1,9 +1,23 @@
-# READ FIRST: `docs/handoff/next-ai-3.6.6.md` (kept current through 3.6.8)
+# READ FIRST: `docs/handoff/next-ai-3.6.6.md` (kept current through 3.6.9)
 
 GeckoLib, Photon and PlayerAnimator are the mod's dependencies: use them wherever they make the mod smoother (the owner). Then the owner's
 words in `docs/handoff/owner-words-mutations.md`. There is no RC bar: energy and food are one bar.
 
-# START HERE (state after 3.6.8)
+# START HERE (state after 3.6.9)
+
+Branch `claude/hopeful-noether-5c2wex`. Read `docs/handoff/next-ai-3.6.6.md` first. Next: The Walker (3.7.0 its arms never swinging; then tap K the Walker as a half kakuja, hold K the kakuja, lifted 3-4 blocks, any terrain: the owner chose "Half the kakuja's cost (Recommended)"; preview first); then the absorbing buffs (the owner chose "Grand Devouring only (Recommended)" and "Strength, Resistance, Refreshed, Replenished (Recommended)", with Speed, 15 s); then Potential Unlock's tearing-off and strands (preview first).
+
+- 3.6.9, the owner: "Also Kakuja detransformation needs a simple shatter animation like the rinkaku has."
+- `BikakuClient.accept`: a player's view going from `kakuja` to not: `shatter(id, before, clock)` finds him in the level and calls `KakujaFx.shatterBikaku(player, BikakuRenderer.kakujaQuads(player, growth, clock))` with the growth he had reached (`MawKakuja.growth(true, before.kakujaAge(clock))`); any failure `Safety.caught`.
+- `BikakuRenderer.kakujaQuads`: `MawKakuja.build` coarse (`fine` false), `Act.still()`, his seed and tint, placed in the world (`Frame.of(player, 1)`); glow for the straight-up normals (veins). The kakuja is no longer drawn on the way out (`growth.shows() && view.kakuja()`): only the worm grows back.
+- `KakujaFx.shatterBikaku`: within `SEEN_SQR`; `KakujaBurst.shatter(quads, BIKAKU_PIECE 0.7, middle BIKAKU_MIDDLE 2.2 up, floor, 1.0, seed)`, `glass(player)` (the pack's `sfx.shatter`); drawn with every other piece (`MAX_QUADS` 24000).
+- Preview: `tools/MawPreview.java <out> shatter` (`docs/handoff/bikaku-shatter-3.6.9.png`).
+- Tests: BikakuWormTests `kakujaShatter()`. The full suite.
+- **Judgment calls:** the piece size; broken as it stands (tentacles still); the Rinkaku's force and fall.
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 103. Not tested in game.
+
+# State after 3.6.8
 
 Branch `claude/hopeful-noether-5c2wex`. Read `docs/handoff/next-ai-3.6.6.md` first. Next: the owner's other reports, each its own version (their words at the end of `docs/handoff/owner-words-mutations.md`): the kakuja's shatter on turning back; The Walker; then their new thing (buffs when an entity is absorbed); then Potential Unlock's tearing-off and strands (preview first).
 

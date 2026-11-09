@@ -4,7 +4,11 @@
 
 - **3.6.7 shipped** (Potential Unlock's first part: three times the energy, the one bar purple; the Bikaku menu's bar labelled
   "ENERGY").
-- **3.6.8 shipped** (fix: the kakuja's camera sized to it: `client/BikakuCamera`). Version 3.6.8, protocol 103; the next is **3.6.9**.
+- **3.6.8 shipped** (fix: the kakuja's camera sized to it: `client/BikakuCamera`).
+- **3.6.9 shipped** (fix: the kakuja shatters on turning back, through Rinkaku's machinery). Version 3.6.9, protocol 103; the next is
+  **3.7.0** (after 3.6.9 comes 3.7.0: the last number never reaches 10).
+- The owner's choices (asked): The Walker on tap K costs "Half the kakuja's cost (Recommended)"; the absorbing buffs come from "Grand
+  Devouring only (Recommended)"; the effects "Strength, Resistance, Refreshed, Replenished (Recommended)" with Speed, 15 s.
 - The owner then sent new words (quoted exactly at the end of `docs/handoff/owner-words-mutations.md`): a new thing ("Whenever an entity
   is absorbed, the player gains a speed buff for 15 seconds and some of our custom effects from foods, any that give special strength and
   buffs also for 15 seconds"), two bugs ("IN kakuja form you cant see anything, the camera needs to adapt to the new size."; "Also Kakuja

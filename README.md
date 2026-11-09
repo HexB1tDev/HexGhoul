@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.6.9 (HexGhoul): Fix: the Bikaku kakuja shatters when you turn back (testing)
+
+See `.github/release-notes-3.6.9.md`. Your words: "Also Kakuja detransformation needs a simple shatter animation like the rinkaku has." Turning back, the kakuja breaks into pieces that fly off, spin, bounce once and fade, with the glass, as the Rinkaku's does (the same machinery); the worm grows back out of you. Protocol 103. Preview: `docs/handoff/bikaku-shatter-3.6.9.png`.
+
 ## 3.6.8 (HexGhoul): Fix: the Bikaku kakuja's camera fits its size (testing)
 
 See `.github/release-notes-3.6.8.md`. Your words: "IN kakuja form you cant see anything, the camera needs to adapt to the new size." In the Bikaku kakuja the third-person camera turns round its crest and sits 9 blocks behind it (Minecraft's own sat inside its back); in first person your view is lifted to its crest. It grows in and comes back down with the kakuja; nothing of it is drawn within 2.6 blocks of the lens. Protocol 103.

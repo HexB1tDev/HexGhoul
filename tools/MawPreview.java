@@ -18,7 +18,7 @@ import javax.imageio.ImageIO;
  * 3.4.9: the Bikaku path's worm off-game, exactly as MawMotion poses it and MawWorm builds it, on the player model (PoseRender).
  * <pre>
  * javac -nowarn -cp build/quick/classes -d build/maw-preview tools/PoseRender.java tools/MawPreview.java
- * java -Djava.awt.headless=true -cp build/maw-preview:build/quick/classes MawPreview &lt;out-dir&gt; [look|mouth|bite|colours|bites|firstperson|grow|all]
+ * java -Djava.awt.headless=true -cp build/maw-preview:build/quick/classes MawPreview &lt;out-dir&gt; [look|mouth|bite|colours|bites|firstperson|grow|kakuja|shatter|all]
  * </pre>
  */
 public class MawPreview {
@@ -84,6 +84,9 @@ public class MawPreview {
         }
         if (which.equals("grow") || which.equals("all")) {
             grow(new File(out, "maw-grow.png"));
+        }
+        if (which.equals("shatter") || which.equals("all")) {
+            shatter(new File(out, "maw-shatter.png"));
         }
     }
 
@@ -409,6 +412,76 @@ public class MawPreview {
         g.dispose();
         ImageIO.write(img, "png", file);
         System.out.println(file);
+    }
+
+    /**
+     * 3.6.9 (the owner: "Also Kakuja detransformation needs a simple shatter animation like the rinkaku has."): turning back, the kakuja
+     * breaks into pieces (KakujaBurst.shatter, as Rinkaku's: 0.7-block pieces off its middle, spinning, one low bounce, fading over the last
+     * 18 of 44 ticks) and the worm grows back out of him; two views.
+     */
+    static void shatter(File file) throws Exception {
+        int fw = 330;
+        int fh = 330;
+        int cols = 7;
+        BufferedImage img = new BufferedImage(fw * cols, fh * 2 + 34, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = sheet(img, "Bikaku 3.6.9: turning back, the kakuja shatters (as the Rinkaku's does): pieces fly off, spin, bounce once, fade; the worm grows back out of him");
+        com.hex.kagune.control.bikaku.MawKakuja.Growth full = com.hex.kagune.control.bikaku.MawKakuja.growth(true, 500);
+        double time = 140;
+        List<com.hex.kagune.control.KakujaBurst.Quad> quads = new ArrayList<>();
+        com.hex.kagune.control.bikaku.MawKakuja.build((a, b, c, d, n, ca, cb, cc, cd) -> quads.add(new com.hex.kagune.control.KakujaBurst.Quad(a, b, c, d, n,
+            ca, cb, cc, cd, false)), full, time, SEED, 0xA50F37, false, com.hex.kagune.control.bikaku.MawKakuja.Act.still());
+        double[] ages = {-1, 0, 4, 8, 14, 24, 36};
+        double[][] views = {{30, 14}, {200, 18}};
+        for (int row = 0; row < views.length; row++) {
+            List<com.hex.kagune.control.KakujaBurst.Shard> shards = com.hex.kagune.control.KakujaBurst.shatter(quads, 0.7, new double[] {0.0, 2.2, 0.0}, 0.03, 1.0, 42L);
+            int stepped = 0;
+            for (int i = 0; i < cols; i++) {
+                List<PoseRender.Tri> tris;
+                if (ages[i] < 0) {
+                    tris = kakujaTris(full, time, null);
+                } else {
+                    while (stepped < ages[i]) {
+                        shards.forEach(com.hex.kagune.control.KakujaBurst.Shard::step);
+                        stepped++;
+                    }
+                    tris = shardTris(shards);
+                    com.hex.kagune.control.bikaku.MawKakuja.Growth back = com.hex.kagune.control.bikaku.MawKakuja.growth(false, ages[i]);
+                    tris.addAll(kakujaTris(new com.hex.kagune.control.bikaku.MawKakuja.Growth(back.swell(), back.worm(), 0.0, new double[full.lumps().length], 0.0, 0.0),
+                        time + ages[i], back));
+                }
+                tris.addAll(body(new double[] {0.0, 0.0, 0.0}, 0.6, 1.8, 0x3B6EA5));
+                g.drawImage(bigAt(views[row][0], views[row][1], 30.0, 2.4, fw, fh, tris), i * fw, 34 + row * fh, null);
+                label(g, ages[i] < 0 ? "in the kakuja" : String.format("turning back %.0ft%s", ages[i], ages[i] == 0 ? "  SHATTERS" : ""), i * fw, 34 + row * fh);
+            }
+        }
+        g.dispose();
+        ImageIO.write(img, "png", file);
+        System.out.println(file);
+    }
+
+    /** 3.6.9: the flying pieces as they are (each turned on its own axis, shrunk as it fades). */
+    static List<PoseRender.Tri> shardTris(List<com.hex.kagune.control.KakujaBurst.Shard> shards) {
+        List<PoseRender.Tri> tris = new ArrayList<>();
+        for (com.hex.kagune.control.KakujaBurst.Shard shard : shards) {
+            double fade = shard.fade(0.0);
+            if (shard.dead() || fade <= 0.0) {
+                continue;
+            }
+            double[] at = shard.position(0.0);
+            double[] rotation = shard.rotation(0.0);
+            for (int q = 0; q < shard.quads(); q++) {
+                double[][] c = new double[4][];
+                for (int k = 0; k < 4; k++) {
+                    double[] r = shard.corner(q, k, rotation, fade);
+                    c[k] = new double[] {at[0] + r[0], at[1] + r[1], at[2] + r[2]};
+                }
+                double[] n = shard.normal(q, rotation);
+                int rgb = avg(shard.colour(q, 0), shard.colour(q, 1), shard.colour(q, 2), shard.colour(q, 3));
+                tris.add(new PoseRender.Tri(new double[][] {w(c[0]), w(c[1]), w(c[2])}, rgb, w(n)));
+                tris.add(new PoseRender.Tri(new double[][] {w(c[0]), w(c[2]), w(c[3])}, rgb, w(n)));
+            }
+        }
+        return tris;
     }
 
     /** 3.5.8: held to throw it further: the wind-up, a bite thrown 30 blocks, Predatory Drag 30 blocks along the ground, Ravenous Pursuit at 20. */

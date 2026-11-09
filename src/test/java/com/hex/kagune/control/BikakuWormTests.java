@@ -34,6 +34,7 @@ public final class BikakuWormTests {
         eruption();
         kakuja();
         kakujaView();
+        kakujaShatter();
         roundHim();
         kakujaMoves();
         heldFar();
@@ -1489,6 +1490,63 @@ public final class BikakuWormTests {
             return -1.0;
         }
         return (e2[0] * q[0] + e2[1] * q[1] + e2[2] * q[2]) / det;
+    }
+
+    /**
+     * 3.6.9 (the owner: "Also Kakuja detransformation needs a simple shatter animation like the rinkaku has."): the kakuja broken as
+     * Rinkaku's is (KakujaBurst.shatter, pieces of {@code KakujaFx.BIKAKU_PIECE} 0.7 blocks off its middle 2.2 up): its low-detail mesh fits
+     * the pieces' budget whole ({@code KakujaFx.MAX_QUADS} 24000), every quad goes into a piece, the pieces fly off it, come down to the
+     * ground and fade; and turning back, the kakuja is not drawn falling away (it broke), the worm grows back.
+     */
+    private static void kakujaShatter() {
+        com.hex.kagune.control.bikaku.MawKakuja.Growth full = com.hex.kagune.control.bikaku.MawKakuja.growth(true, 500);
+        java.util.List<com.hex.kagune.control.KakujaBurst.Quad> quads = new java.util.ArrayList<>();
+        com.hex.kagune.control.bikaku.MawKakuja.build((a, b, c, d, n, ca, cb, cc, cd) -> quads.add(new com.hex.kagune.control.KakujaBurst.Quad(a, b, c, d,
+            n, ca, cb, cc, cd, false)), full, 77, 7, 0xA50F37, false, com.hex.kagune.control.bikaku.MawKakuja.Act.still());
+        check(quads.size() > 2000 && quads.size() < 24000, "its low-detail mesh fits the pieces' budget whole (" + quads.size() + ")");
+        double[] body = {0.0, 2.2, 0.0};
+        java.util.List<com.hex.kagune.control.KakujaBurst.Shard> shards = com.hex.kagune.control.KakujaBurst.shatter(quads, 0.7, body, 0.03, 1.0, 42L);
+        int inPieces = 0;
+        double[] before = new double[shards.size()];
+        for (int i = 0; i < shards.size(); i++) {
+            inPieces += shards.get(i).quads();
+            double[] at = shards.get(i).position(0.0);
+            before[i] = Math.hypot(at[0], at[2]);
+        }
+        check(inPieces == quads.size() && shards.size() > 100, "every quad goes into a piece (" + shards.size() + " pieces)");
+        for (int tick = 0; tick < 12; tick++) {
+            shards.forEach(com.hex.kagune.control.KakujaBurst.Shard::step);
+        }
+        int out = 0;
+        double moved = 0.0;
+        double lowest = Double.MAX_VALUE;
+        for (int i = 0; i < shards.size(); i++) {
+            double[] at = shards.get(i).position(0.0);
+            double now = Math.hypot(at[0], at[2]);
+            out += now > before[i] ? 1 : 0;
+            moved += (now - before[i]) / shards.size();
+            lowest = Math.min(lowest, at[1]);
+        }
+        check(out >= shards.size() * 0.9 && moved > 0.5, "the pieces fly off it (" + out + " of " + shards.size() + " further out, " + moved
+            + " blocks on average in 12 ticks)");
+        check(lowest >= 0.03 - 1e-9, "none goes into the ground");
+        for (int tick = 12; tick < com.hex.kagune.control.KakujaBurst.SHARD_LIFE; tick++) {
+            shards.forEach(com.hex.kagune.control.KakujaBurst.Shard::step);
+        }
+        check(shards.stream().allMatch(com.hex.kagune.control.KakujaBurst.Shard::dead), "they are gone after " + com.hex.kagune.control.KakujaBurst.SHARD_LIFE + " ticks");
+        com.hex.kagune.control.bikaku.MawKakuja.Growth back = com.hex.kagune.control.bikaku.MawKakuja.growth(false, 40);
+        check(back.worm() > 0.999, "turning back, the worm grows out again");
+        try {
+            String renderer = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(
+                "src/main/java/com/hex/kagune/control/client/render/BikakuRenderer.java")), java.nio.charset.StandardCharsets.UTF_8);
+            check(renderer.contains("if (growth.shows() && view.kakuja()) {"), "turning back, the kakuja is not drawn falling away (it broke)");
+            String client = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(
+                "src/main/java/com/hex/kagune/control/client/BikakuClient.java")), java.nio.charset.StandardCharsets.UTF_8);
+            check(client.contains("before != null && before.kakuja() && !message.kakuja()") && client.contains("KakujaFx.shatterBikaku("),
+                "it breaks on every client the moment it is told he turned back");
+        } catch (java.io.IOException failure) {
+            check(false, "read the sources: " + failure);
+        }
     }
 
     private static void kakuja() {

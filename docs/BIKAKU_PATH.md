@@ -81,6 +81,9 @@ tearing-off and strands.
 third-person camera turns round its crest and sits 9 blocks behind it; in first person his view is on its crest. Both grow and shrink with
 it and stop short of blocks; nothing of it is drawn within 2.6 blocks of the lens.
 
+**3.6.9 (fix; the owner: "Also Kakuja detransformation needs a simple shatter animation like the rinkaku has."):** turning back, the
+kakuja breaks into pieces as the Rinkaku's does (they fly off, spin, bounce once and fade, with the glass); the worm grows back out of him.
+
 **Before 3.4.9 (the pure worm, unchanged since except as above):**
 
 - `control/bikaku/MawWorm.java`: the worm as a mesh (pure). A thick muscular tube along a spine resampled evenly by length

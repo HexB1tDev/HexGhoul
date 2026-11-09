@@ -281,6 +281,27 @@ public final class KakujaFx {
         glass(player);
     }
 
+    /**
+     * 3.6.9 (the owner: "Also Kakuja detransformation needs a simple shatter animation like the rinkaku has."): the Bikaku kakuja breaking
+     * the way Rinkaku's does: what it was ({@code quads}, the world) into pieces flying off his middle, with the glass.
+     */
+    public static void shatterBikaku(AbstractClientPlayer player, List<KakujaBurst.Quad> quads) {
+        Minecraft minecraft = Minecraft.m_91087_();
+        if (quads.isEmpty() || minecraft.f_91074_ == null || player.m_20280_(minecraft.f_91074_) > SEEN_SQR) {
+            return;
+        }
+        double feetY = player.m_20186_();
+        double[] body = {player.m_20185_(), feetY + BIKAKU_MIDDLE, player.m_20189_()};
+        double floor = player.m_20096_() ? feetY + 0.03 : feetY - 2.5;
+        double now = player.m_9236_().m_46467_();
+        add(KakujaBurst.shatter(quads, BIKAKU_PIECE, body, floor, 1.0, player.m_19879_() * 0x9E3779B97F4A7C15L + (long)now));
+        glass(player);
+    }
+
+    /** 3.6.9: the Bikaku kakuja's middle above his feet (it is about 4.8 high), and how big its pieces are (blocks across). */
+    public static final double BIKAKU_MIDDLE = 2.2;
+    public static final double BIKAKU_PIECE = 0.7;
+
     private record LegShot(double[][] world, double[] dorsal, int side, CentipedeTail.Look look, long tick) {
     }
 
