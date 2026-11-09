@@ -39,4 +39,4 @@ Your words (the whole request is in `docs/handoff/owner-words-mutations.md`), am
   - the server, network and drawing wiring (read from the sources).
   - Also the full suite.
 
-Validation: pushed at the owner's request ("please push it directly I dont have time or usage to wait for your local build") before the full python3 build.py finished: it was still running. Passed before the push: the compile, the API/bytecode verifier and the name check (tools/quick_check.py), BikakuTests (1,665) and BikakuWormTests (2,446,941). Protocol 104. Not tested in game.
+Validation: pushed at the owner's request ("please push it directly I dont have time or usage to wait for your local build") before the full python3 build.py finished; it then completed with EXIT 0 on the same sources (javac --release 17, the regression suites, API/bytecode and archive checks, dedicated-server loading checks). Protocol 104. Not tested in game.

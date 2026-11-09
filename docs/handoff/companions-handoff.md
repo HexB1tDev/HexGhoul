@@ -16,7 +16,7 @@ Branch `claude/hopeful-noether-5c2wex`. Read `docs/handoff/next-ai-3.6.6.md` fir
 - Tests: BikakuWormTests `potential()`. The full suite.
 - **Judgment calls:** every number above; the head's odds; no torso pieces yet; held items and armour on a missing part may still draw; the wound on the standing body.
 
-Validation: pushed at the owner's request ("please push it directly I dont have time or usage to wait for your local build") before the full python3 build.py finished: it was still running. Passed before the push: the compile, the API/bytecode verifier and the name check (tools/quick_check.py), BikakuTests (1,665) and BikakuWormTests (2,446,941). Protocol 104. Not tested in game. **The next AI: run the full build first and fix anything it finds (its own version).**
+Validation: pushed at the owner's request ("please push it directly I dont have time or usage to wait for your local build") before the full python3 build.py finished; it then completed with EXIT 0 on the same sources (javac --release 17, the regression suites, API/bytecode and archive checks, dedicated-server loading checks). Protocol 104. Not tested in game.
 
 # State after 3.7.2
 

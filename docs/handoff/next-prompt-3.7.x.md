@@ -7,7 +7,7 @@ Dependencies: we are using GeckoLib as a dependency along with Photon and Player
 There is no RC bar. Energy and food are one bar.
 
 What to do:
-1. 3.7.3 was pushed before its full build finished. Run `python3 build.py` first; if it doesn't end with EXIT 0, fix that as its own version.
+1. If the version the handoff says is in progress isn't pushed yet, finish it (a full build to EXIT 0, commit, push).
 2. Then ask me what's next. Potential Unlock shipped in 3.7.3, without torso pieces. Ignore the NPC quest: it's in my next big rework.
 
 Follow the house rules exactly:

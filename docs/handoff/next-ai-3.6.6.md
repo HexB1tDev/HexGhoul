@@ -12,9 +12,8 @@
 - **3.7.2 shipped** (absorbing a body: Speed, Strength, Resistance, Refreshed, Replenished for 15 s, Grand Devouring only).
 - **3.7.3 shipped** (Potential Unlock torn apart and pulled back: `BikakuPotential`, `Reattach`, `S2CPotential`, `PotentialRenderer`; the
   owner on its preview: "Continue Im still at 96"). Version 3.7.3, protocol **104**; the next is **3.7.4**.
-  **Pushed before its full build finished** (the owner: "please push it directly I dont have time or usage to wait for your local build");
-  the compile, the verifier and the Bikaku suites passed. **First thing for the next AI: run `python3 build.py`; if it doesn't end with
-  EXIT 0, fix that as its own version.**
+  Pushed before its full build finished (the owner: "please push it directly I dont have time or usage to wait for your local build");
+  the build then ended with EXIT 0 on the same sources.
 - The owner: "ignore the NPC quest still, Its in the next big rework I got prepared." Next: whatever they say. Open: torso pieces for
   Potential Unlock.
 - **The prompt for the next AI:** `docs/handoff/next-prompt-3.7.x.md` (keep it and this section current with every version; the owner:
