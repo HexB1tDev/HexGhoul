@@ -288,26 +288,10 @@ public final class Children {
 
     /**
      * 2.3.7 (the owner: "they're going to have one of each, both parents. If they're both ghouls, you get both halves"): a child born
-     * before, of two ghoul parents, that took only one parent's kind (2.0.6's roll) or one tentacle of two Rinkaku parents, now has both
-     * halves (worked out once both parents are known: a companion always, a player while they are about); its colour kept.
+     * before that took only one parent's kind was given the other half once both parents were known. 4.0.0 (the owner: "Kids work with
+     * chances now"): no longer: what a child took (one parent's kind whole, or both) is its own, never added to later.
      */
     static Genome both(ServerLevel level, Child child, Genome genome) {
-        if (!genome.ghoul() || genome.half() || genome.kagune() <= com.hex.kagune.control.family.KaguneGenes.NONE) {
-            return genome;
-        }
-        int[] mother = kagune(level, child.mother);
-        int[] father = kagune(level, child.father);
-        if (mother[0] <= 0 || father[0] <= 0) {
-            return genome;
-        }
-        int bits = com.hex.kagune.control.family.KaguneGenes.inherit(mother[0], father[0]);
-        // Only ever the half it lacked added (never a kind taken away, nor changed when a player parent later changes path).
-        if (bits == genome.kagune() || bits <= 0 || (bits & genome.kagune()) != genome.kagune()) {
-            return genome;
-        }
-        genome = genome.withKagune(bits, genome.colour());
-        child.genome = genome.save();
-        changed(level);
         return genome;
     }
 

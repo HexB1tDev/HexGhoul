@@ -103,6 +103,9 @@ public final class ChildKaguneRules {
         if (wings > 0 && KaguneGenes.tails(bits)) {
             return layout(bits, seed) == Layout.TAIL ? 2 : 1;
         }
+        if (wings > 0 && KaguneGenes.worms(bits) > 0) {
+            return 2; // 4.0.0: its worm low out of its back, as a tail: room for both wings above it
+        }
         return wings;
     }
 
@@ -228,6 +231,11 @@ public final class ChildKaguneRules {
     /** 1.3.46: what it has as it carries it, in words ("a Rinkaku tentacle as a tail and Ukaku wings"), for {@code /kagune children}. */
     public static String describe(int bits, long seed) {
         if (!KaguneGenes.tails(bits)) {
+            int worms = KaguneGenes.worms(bits);
+            if (worms > 0 && KaguneGenes.wings(bits) > 0) {
+                // 4.0.0: wings over a worm carried low as a tail.
+                return "Ukaku wings and " + (worms == 2 ? "two Bikaku worms" : "a Bikaku worm") + (KaguneGenes.owl(bits) ? " and Eto's flesh" : "");
+            }
             return KaguneGenes.describe(bits);
         }
         Layout layout = layout(bits, seed);
@@ -238,7 +246,28 @@ public final class ChildKaguneRules {
         };
         int wings = wingCount(bits, seed);
         String rest = wings == 2 ? " and Ukaku wings" : wings == 1 ? " and an Ukaku wing on its " + (wingSide(bits, seed) > 0 ? "right" : "left") : "";
-        return tentacle + rest + (KaguneGenes.owl(bits) ? " and Eto's flesh" : "");
+        int worms = KaguneGenes.worms(bits);
+        return tentacle + rest + (KaguneGenes.owl(bits) ? " and Eto's flesh" : "") + (worms == 2 ? " and two Bikaku worms" : worms == 1 ? " and a Bikaku worm" : "");
+    }
+
+    // ---------------------------------------------------------------- 4.0.0: a Bikaku parent's child
+
+    /**
+     * 4.0.0 (the owner: "Make sure The child of a Bikaku user with all the other combinations matches perfectly"): its worm (or its two,
+     * one from each Bikaku parent) out of the small of its back as a Bikaku player's, at its size, in its colour; in a fight it bites in
+     * turn (a snap, a lunge, a maul: Bikaku's own bites) whatever comes within {@link #WORM_REACH} (a grown body's, before its size), each
+     * bite feeding it a little ({@link #WORM_HEAL}); further off its wings shoot, or it closes in. With a tentacle too, the worm bites
+     * whenever it is ready and the tentacle lashes between. Never a kakuja, never a worm move.
+     */
+    public static final double WORM_REACH = 5.0;
+    /** Ticks between one bite's end and the next; a bite's blow against its lash's unit; the health each bite gives it back. */
+    public static final int WORM_PAUSE = 10;
+    public static final float WORM_SHARE = 1.25F;
+    public static final float WORM_HEAL = 1.0F;
+
+    /** True if its worm bites now: it has one, sees its prey within the worm's reach ({@code reach}, at its size), and the worm is ready. */
+    public static boolean bites(int bits, double distance, boolean sees, double reach, long now, long ready) {
+        return KaguneGenes.worms(bits) > 0 && sees && distance <= reach && now >= ready;
     }
 
     // ---------------------------------------------------------------- 1.3.48: the rest of its parents' kit (never a kakuja)

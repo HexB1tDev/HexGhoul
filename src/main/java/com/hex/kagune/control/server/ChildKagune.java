@@ -78,6 +78,8 @@ final class ChildKagune {
         /** 1.3.50: Eto's child's flesh (her moves), and when its arm turns again. */
         final ChildFlesh.Flesh flesh = new ChildFlesh.Flesh();
         long armReady = Long.MIN_VALUE;
+        /** 4.0.0: a Bikaku parent's child's worm. */
+        final ChildWorm.Worm worm = new ChildWorm.Worm();
     }
 
     /** A fire shot in flight. */
@@ -148,6 +150,10 @@ final class ChildKagune {
         }
         // 1.3.50: Eto's child: her flesh first (its rake, its grab, its club; its arm turned when it is badly hurt).
         if (KaguneGenes.owl(bits) && f.move == GraftMove.NONE && flesh(npc, f, stage, damage, threat, level, now, bits)) {
+            return;
+        }
+        // 4.0.0: its worm (a Bikaku parent's): it bites whenever it reaches and is ready; between bites its tentacle lashes, its wings shoot.
+        if (f.move == GraftMove.NONE && f.heldId == 0 && ChildWorm.fight(npc, f.worm, bits, scale, damage, threat, level, now)) {
             return;
         }
         if (f.move != GraftMove.NONE) {
@@ -265,7 +271,7 @@ final class ChildKagune {
                 return true;
             }
             default -> {
-                if (KaguneGenes.tails(bits) || KaguneGenes.wings(bits) > 0) {
+                if (KaguneGenes.tails(bits) || KaguneGenes.wings(bits) > 0 || KaguneGenes.worms(bits) > 0) {
                     return false; // its father's kagune, then
                 }
                 npc.m_21573_().m_5624_(threat, 1.2);
@@ -449,6 +455,18 @@ final class ChildKagune {
         }
         if (f.flip >= 0 && now - f.flipAt > com.hex.kagune.control.npc.NpcRules.FLIP_POSED) {
             f.flip = -1;
+        }
+        // 4.0.0: its worm's bite let go out of a fight; every client told how its worm is.
+        if (!fighting) {
+            ChildWorm.calm(f.worm);
+        }
+        if (f.worm.dirty) {
+            Children.Child kid = Children.get(level, npc.childId());
+            if (kid != null) {
+                ChildWorm.send(npc, f.worm, kid.genome().kagune());
+            } else {
+                f.worm.dirty = false;
+            }
         }
         if (f.dirty) {
             f.dirty = false;

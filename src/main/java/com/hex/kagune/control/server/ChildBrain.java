@@ -1285,6 +1285,9 @@ public final class ChildBrain {
                     ChildFlesh.tracked(viewer, npc, npc.mind.kagune.flesh); // 1.3.50: Eto's child's flesh, and its arm if it is out
                     ChildArm.tracked(viewer, npc);
                 }
+                if (npc.mind != null) {
+                    ChildWorm.tracked(viewer, npc, npc.mind.kagune.worm, child.genome().kagune()); // 4.0.0: a Bikaku parent's child's worm
+                }
             }
         }
     }

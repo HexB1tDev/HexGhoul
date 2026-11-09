@@ -8,6 +8,12 @@ import java.util.Random;
  * or the Ukaku pair; Touka her wings, Ken his tails, Eto her Owl kagune); a child of two of the same kind has it whole, a child of two
  * kinds has both, its wings down to one (the owner: a Rinkaku father and an Ukaku mother, the tails and one wing, with the moves of both).
  * 2.0.6: of two kinds, a chance: 40% the mother's alone, 40% the father's alone, 20% both ({@link #inherit(int, int, double)}).
+ *
+ * <p>4.0.0 (the owner: "Make sure The child of a Bikaku user with all the other combinations matches perfectly. Children: Kids work with
+ * chances now, depending on the parents, assuming for example a Bikaku user and a Ukaku user, the child has a chance to come out with only
+ * 1 kagune type like just 2 ukaku wings, just Bikaku worm tendrils, or both"): a Bikaku parent passes on its worm ({@link #WORM}; two
+ * Bikaku parents, a worm from each, {@link #WORM_TWIN}); of two kinds, a third of children take their mother's whole, a third their
+ * father's whole, a third both (the wings down to one beside anything else).
  */
 public final class KaguneGenes {
     /** Not known (a child from before this: worked out from its parents when it next thinks). */
@@ -29,17 +35,24 @@ public final class KaguneGenes {
      * one from each Rinkaku parent (only with {@link #TAILS}).
      */
     public static final int TWIN = 16;
-    private static final int ALL = TAILS | WINGS | OWL | TWIN;
+    /** 4.0.0: a Bikaku worm (its mouth, its bites). */
+    public static final int WORM = 32;
+    /** 4.0.0: a second worm, one from each Bikaku parent (only with {@link #WORM}). */
+    public static final int WORM_TWIN = 64;
+    private static final int ALL = TAILS | WINGS | OWL | TWIN | WORM | WORM_TWIN;
 
     private KaguneGenes() {
     }
 
-    /** What a parent on {@code path} (a {@code KagunePath} id: "rinkaku", "ukaku"...) passes on; a ghoul still choosing passes on the tails (the original's Rinkaku). */
+    /**
+     * What a parent on {@code path} (a {@code KagunePath} id: "rinkaku", "ukaku"...) passes on; a ghoul still choosing passes on the tails
+     * (the original's Rinkaku). 4.0.0: a Bikaku ghoul its worm.
+     */
     public static int ofPath(String path, boolean ghoul) {
         if (!ghoul) {
             return NONE;
         }
-        return "ukaku".equals(path) ? WINGS : TAILS;
+        return "ukaku".equals(path) ? WINGS : "bikaku".equals(path) ? WORM : TAILS;
     }
 
     /**
@@ -49,23 +62,26 @@ public final class KaguneGenes {
     public static int inherit(int mother, int father) {
         int m = clean(mother);
         int f = clean(father);
-        // 2.3.7: two Rinkaku parents, a tentacle from each.
-        boolean twin = (m & TAILS) != 0 && (f & TAILS) != 0;
+        // 2.3.7: two Rinkaku parents, a tentacle from each. 4.0.0: two Bikaku parents, a worm from each.
+        int twin = ((m & TAILS) != 0 && (f & TAILS) != 0 ? TWIN : 0) | ((m & WORM) != 0 && (f & WORM) != 0 ? WORM_TWIN : 0);
         if (m == NONE || m == f) {
-            return twin ? f | TWIN : f;
+            return f == NONE ? NONE : f | twin;
         }
         if (f == NONE) {
             return m;
         }
-        int both = m | f | (twin ? TWIN : 0);
-        if ((both & WING) != 0 && (both & (TAILS | OWL)) != 0) {
+        int both = m | f | twin;
+        if ((both & WING) != 0 && (both & (TAILS | OWL | WORM)) != 0) {
             both &= ~PAIR;
         }
         return both;
     }
 
-    /** 2.0.6: the share of children of two kinds who take only their mother's kind (as many take only their father's; the rest both). */
-    public static final double ONE_KIND = 0.0; // 2.3.7: was 0.4 (2.0.6); now both parents' halves, always
+    /**
+     * 2.0.6: the share of children of two kinds who take only their mother's kind (as many take only their father's; the rest both). 2.3.7:
+     * none (both always). 4.0.0 (the owner: "Kids work with chances now"): a third.
+     */
+    public static final double ONE_KIND = 1.0 / 3.0;
 
     /**
      * 2.0.6 (the owner: kids should "have a chance to enherit both kagunes"; chosen 40/40/20): of two different kinds, {@code roll} in
@@ -107,7 +123,15 @@ public final class KaguneGenes {
         if ((out & TAILS) == 0) {
             out &= ~TWIN;
         }
+        if ((out & WORM) == 0) {
+            out &= ~WORM_TWIN;
+        }
         return out;
+    }
+
+    /** 4.0.0: how many Bikaku worms: 0, 1, or 2 (one from each Bikaku parent). */
+    public static int worms(int bits) {
+        return bits <= 0 || (bits & WORM) == 0 ? 0 : (bits & WORM_TWIN) != 0 ? 2 : 1;
     }
 
     public static boolean tails(int bits) {
@@ -175,6 +199,10 @@ public final class KaguneGenes {
         }
         if (owl(bits)) {
             out.append(out.length() == 0 ? "" : " and ").append("Eto's flesh");
+        }
+        int worms = worms(bits);
+        if (worms > 0) {
+            out.append(out.length() == 0 ? "" : " and ").append(worms == 2 ? "two Bikaku worms" : "a Bikaku worm");
         }
         return out.length() == 0 ? "none" : out.toString();
     }

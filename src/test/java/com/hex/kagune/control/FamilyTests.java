@@ -450,22 +450,58 @@ public final class FamilyTests {
         }
         check(same, "deciding the kagune changes nothing else a child of the same night would have been");
         check(mixed, "Touka and a Rinkaku father: her wings, his tail, or the tail and one wing; its colour from whose kind it took");
-        check(onlyMother == 0 && onlyFather == 0 && both == 2000,
-            "2.3.7 (the owner: \"one of each, both parents\"): two kinds, always both: " + onlyMother + "/" + onlyFather + "/" + both);
+        // 4.0.0 (the owner: "Kids work with chances now ... just 2 ukaku wings, just Bikaku worm tendrils, or both"): a third each.
+        check(Math.abs(onlyMother / 2000.0 - 1.0 / 3.0) < 0.05 && Math.abs(onlyFather / 2000.0 - 1.0 / 3.0) < 0.05 && Math.abs(both / 2000.0 - 1.0 / 3.0) < 0.05,
+            "two kinds: the mother's whole, the father's whole, or both, a third each: " + onlyMother + "/" + onlyFather + "/" + both);
         check(both > 0 && Math.abs(fromMother / (double)both - 0.5) < 0.12, "with both, either parent's colour, evenly: " + fromMother + " of " + both);
         // 2.0.6: each pairing (a roll low, middle, high): the same kind or a parent with none never changes; two kinds by the roll.
         java.util.function.IntBinaryOperator low = (m, f) -> com.hex.kagune.control.family.KaguneGenes.inherit(m, f, 0.1);
         java.util.function.IntBinaryOperator middle = (m, f) -> com.hex.kagune.control.family.KaguneGenes.inherit(m, f, 0.5);
         java.util.function.IntBinaryOperator high = (m, f) -> com.hex.kagune.control.family.KaguneGenes.inherit(m, f, 0.9);
-        check(low.applyAsInt(wings, tails) == (tails | wing) && middle.applyAsInt(wings, tails) == (tails | wing) && high.applyAsInt(wings, tails) == (tails | wing),
-            "Touka x a Rinkaku player: her wing and his tail, always (2.3.7)");
+        check(low.applyAsInt(wings, tails) == wings && middle.applyAsInt(wings, tails) == tails && high.applyAsInt(wings, tails) == (tails | wing),
+            "Touka x a Rinkaku player: her wings whole, his tail, or his tail and one wing (4.0.0: by chance)");
         check(low.applyAsInt(wings, wings) == wings && middle.applyAsInt(wings, wings) == wings && high.applyAsInt(wings, wings) == wings,
             "Touka x an Ukaku player: always wings (the owner's Ukaku-only children)");
         check(low.applyAsInt(wings, none) == wings && high.applyAsInt(none, wings) == wings, "Touka x a human player: always her wings");
-        check(low.applyAsInt(tails, wings) == (tails | wing) && middle.applyAsInt(tails, wings) == (tails | wing),
-            "Ken x an Ukaku player: his tail and a wing, always (2.3.7)");
-        check(low.applyAsInt(owl, tails) == (owl | tails) && middle.applyAsInt(owl, tails) == (owl | tails)
-            && high.applyAsInt(owl, wings) == (owl | wing), "Eto x a Rinkaku or Ukaku player: hers and theirs, always (2.3.7)");
+        check(low.applyAsInt(tails, wings) == tails && middle.applyAsInt(tails, wings) == wings && high.applyAsInt(tails, wings) == (tails | wing),
+            "Ken x an Ukaku player: his tail, the wings whole, or his tail and a wing (4.0.0: by chance)");
+        check(low.applyAsInt(owl, tails) == owl && middle.applyAsInt(owl, tails) == tails
+            && high.applyAsInt(owl, wings) == (owl | wing), "Eto x a Rinkaku or Ukaku player: hers, theirs, or both (4.0.0: by chance)");
+        // 4.0.0 (the owner: "Make sure The child of a Bikaku user with all the other combinations matches perfectly"): a Bikaku parent
+        // passes on its worm; with each other kind, its worm whole, the other whole, or both; two Bikaku parents, a worm from each.
+        int worm = com.hex.kagune.control.family.KaguneGenes.WORM;
+        int twinWorms = worm | com.hex.kagune.control.family.KaguneGenes.WORM_TWIN;
+        check(com.hex.kagune.control.family.KaguneGenes.ofPath("bikaku", true) == worm && com.hex.kagune.control.family.KaguneGenes.ofPath("bikaku", false) == none
+            && com.hex.kagune.control.npc.Persona.NORO.kagune() == worm && com.hex.kagune.control.npc.Persona.AYATO.kagune() == wings,
+            "a Bikaku player (and Noro) passes on the worm; Ayato his wings");
+        check(inherit.applyAsInt(worm, worm) == twinWorms && com.hex.kagune.control.family.KaguneGenes.worms(twinWorms) == 2 && com.hex.kagune.control.family.KaguneGenes.worms(worm) == 1
+            && com.hex.kagune.control.family.KaguneGenes.worms(tails) == 0 && com.hex.kagune.control.family.KaguneGenes.clean(com.hex.kagune.control.family.KaguneGenes.WORM_TWIN) == none,
+            "two Bikaku parents: two worms, one from each (never a second worm without the first)");
+        check(low.applyAsInt(worm, wings) == worm && middle.applyAsInt(worm, wings) == wings && high.applyAsInt(worm, wings) == (worm | wing)
+            && low.applyAsInt(wings, worm) == wings && middle.applyAsInt(wings, worm) == worm,
+            "Bikaku x Ukaku: just the worm, just the two wings, or both (the owner's own example)");
+        check(low.applyAsInt(worm, tails) == worm && middle.applyAsInt(worm, tails) == tails && high.applyAsInt(worm, tails) == (worm | tails)
+            && high.applyAsInt(owl, worm) == (owl | worm) && middle.applyAsInt(owl, worm) == worm && low.applyAsInt(worm, none) == worm
+            && high.applyAsInt(none, worm) == worm && high.applyAsInt(worm, worm) == twinWorms,
+            "Bikaku x Rinkaku, x Eto, x a human, x Bikaku: each pairing as the rest");
+        check(com.hex.kagune.control.family.KaguneGenes.describe(worm | wing).equals("an Ukaku wing and a Bikaku worm") && com.hex.kagune.control.family.KaguneGenes.describe(twinWorms).equals("two Bikaku worms")
+            && com.hex.kagune.control.family.ChildKaguneRules.wingCount(worm | wing, 7L) == 2
+            && com.hex.kagune.control.family.ChildKaguneRules.describe(tails | worm, 7L).contains("and a Bikaku worm"),
+            "in words; a worm low out of its back leaves room for both wings");
+        check(com.hex.kagune.control.family.ChildKaguneRules.bites(worm, 3.0, true, com.hex.kagune.control.family.ChildKaguneRules.WORM_REACH * 0.6, 10L, 5L)
+            && !com.hex.kagune.control.family.ChildKaguneRules.bites(worm, 3.5, true, com.hex.kagune.control.family.ChildKaguneRules.WORM_REACH * 0.6, 10L, 5L)
+            && !com.hex.kagune.control.family.ChildKaguneRules.bites(worm, 1.0, false, 5.0, 10L, 5L)
+            && !com.hex.kagune.control.family.ChildKaguneRules.bites(worm, 1.0, true, 5.0, 4L, 5L)
+            && !com.hex.kagune.control.family.ChildKaguneRules.bites(tails | wing, 1.0, true, 5.0, 10L, 5L),
+            "its worm bites what it sees within its reach (at its size) once it is ready; no worm, no bite");
+        try {
+            String fight = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/ChildKagune.java")));
+            String drawn = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/client/render/BikakuRenderer.java")));
+            check(fight.contains("ChildWorm.fight(npc, f.worm, bits, scale, damage, threat, level, now)") && fight.contains("ChildWorm.send(npc, f.worm")
+                && drawn.contains("com.hex.kagune.control.family.KaguneGenes.worms(bits), tint"), "a child's worm fights and is drawn");
+        } catch (java.io.IOException failure) {
+            check(false, "read the sources: " + failure);
+        }
         check(com.hex.kagune.control.family.KaguneGenes.colourOf(wings, wings, 0x111111, tails, 0x222222, 0x222222) == 0x111111
             && com.hex.kagune.control.family.KaguneGenes.colourOf(tails, wings, 0x111111, tails, 0x222222, 0x111111) == 0x222222
             && com.hex.kagune.control.family.KaguneGenes.colourOf(tails | wing, wings, 0x111111, tails, 0x222222, 0x222222) == 0x222222

@@ -103,6 +103,9 @@ public abstract class Persona {
         if (this.owlKit()) {
             return com.hex.kagune.control.family.KaguneGenes.OWL;
         }
+        if (this.worms()) {
+            return com.hex.kagune.control.family.KaguneGenes.WORM; // 4.0.0: a Bikaku one's worm
+        }
         return this.wings() ? com.hex.kagune.control.family.KaguneGenes.WINGS : com.hex.kagune.control.family.KaguneGenes.TAILS;
     }
 
@@ -935,7 +938,7 @@ public abstract class Persona {
 
         @Override
         public int kagune() {
-            return com.hex.kagune.control.family.KaguneGenes.TAILS;
+            return com.hex.kagune.control.family.KaguneGenes.WORM; // 4.0.0: his worm (were he ever a parent)
         }
 
         @Override

@@ -121,10 +121,35 @@ public final class BikakuRenderer {
                 if (out == null) {
                     out = buffers.m_6299_(TYPE);
                 }
-                drawNpc(out, matrix, normals, level, npc, partial, clock, camera, distance <= DETAIL_DISTANCE_SQR, deploy,
-                    com.hex.kagune.control.client.NpcWingsClient.mending(wings, clock));
+                drawNpc(out, matrix, normals, level, npc, npc.persona().size(), 3, NORO_TINT, partial, clock, camera, distance <= DETAIL_DISTANCE_SQR,
+                    deploy, com.hex.kagune.control.client.NpcWingsClient.mending(wings, clock));
             } catch (RuntimeException failure) {
                 PlayerLayers.failed("Noro's worms", failure);
+            }
+        }
+        // 4.0.0 (the owner: "Make sure The child of a Bikaku user with all the other combinations matches perfectly"): a Bikaku parent's
+        // child's worm (or two, one from each Bikaku parent), out whenever it fights, as a Bikaku player's is drawn, at its size, in its colour.
+        for (com.hex.kagune.control.npc.ChildNpc child : ChildRenderer.drawn()) {
+            try {
+                com.hex.kagune.control.client.ChildClient.View kid = com.hex.kagune.control.client.ChildClient.get(child.m_19879_());
+                int bits = kid == null ? 0 : kid.genome().kagune();
+                if (com.hex.kagune.control.family.KaguneGenes.worms(bits) <= 0 || !child.m_6084_() || child.m_20145_() || child.m_5803_()) {
+                    continue;
+                }
+                com.hex.kagune.control.client.GhoulNpcClient.View seen = com.hex.kagune.control.client.GhoulNpcClient.get(child.m_19879_());
+                float deploy = Math.max(seen == null ? 0.0F : com.hex.kagune.control.client.GhoulNpcClient.deploy(seen, clock), kid.turned() ? 1.0F : 0.0F);
+                double distance = child.m_20280_(self);
+                if (deploy <= 0.005F || distance > MAX_DISTANCE_SQR) {
+                    continue;
+                }
+                int tint = kid.genome().colour() < 0 ? com.hex.kagune.control.KaguneColours.DEFAULT : kid.genome().colour() & 0xFFFFFF;
+                if (out == null) {
+                    out = buffers.m_6299_(TYPE);
+                }
+                drawNpc(out, matrix, normals, level, child, com.hex.kagune.control.family.ChildKaguneRules.scale(kid.stage()),
+                    com.hex.kagune.control.family.KaguneGenes.worms(bits), tint, partial, clock, camera, distance <= DETAIL_DISTANCE_SQR, deploy, 1.0E9);
+            } catch (RuntimeException failure) {
+                PlayerLayers.failed("a child's worm", failure);
             }
         }
         if (out != null) {
@@ -136,13 +161,13 @@ public final class BikakuRenderer {
     private static final int NORO_TINT = 0xFF4A1A22;
 
     /**
-     * 4.0.0: an NPC's three worms (Noro's), as {@link #draw} draws a Three Worms player's: at rest, biting, every move made by all three; his
-     * size carrying them; while he mends, strands of them over him ({@link com.hex.kagune.control.bikaku.MawTissue}).
+     * 4.0.0: an NPC's {@code count} worms (Noro's three; a Bikaku parent's child's one or two), as {@link #draw} draws a player's in that
+     * form: at rest, biting, every move made by all of them; its {@code size} carrying them, in {@code tint}; while it mends, strands of
+     * them over it ({@link com.hex.kagune.control.bikaku.MawTissue}).
      */
-    private static void drawNpc(VertexConsumer out, Matrix4f matrix, Matrix3f normals, ClientLevel level, com.hex.kagune.control.npc.EtoNpc npc,
-                                float partial, double clock, Vec3 camera, boolean fine, float deploy, double mendAge) {
+    private static void drawNpc(VertexConsumer out, Matrix4f matrix, Matrix3f normals, ClientLevel level, net.minecraft.world.entity.LivingEntity npc,
+                                double size, int count, int tint, float partial, double clock, Vec3 camera, boolean fine, float deploy, double mendAge) {
         Frame frame = Frame.of(npc, partial);
-        double size = npc.persona().size();
         BikakuClient.View view = BikakuClient.get(npc.m_20148_());
         int seed = BikakuRules.seed(npc.m_20148_().getMostSignificantBits(), npc.m_20148_().getLeastSignificantBits());
         int light = LevelRenderer.m_109541_(level, BlockPos.m_274561_(npc.m_20185_(), npc.m_20186_() + 1.0, npc.m_20189_()));
@@ -162,12 +187,11 @@ public final class BikakuRenderer {
                 placed.add(points);
                 radii.add(strand.radius() * size);
             }
-            com.hex.kagune.control.bikaku.MawTissue.build(sink, placed, radii, NORO_TINT);
+            com.hex.kagune.control.bikaku.MawTissue.build(sink, placed, radii, tint);
         }
         if (deploy <= 0.005F) {
             return;
         }
-        int count = 3;
         double age = view.age(clock);
         double[] target = null;
         if (view.bite() != BikakuRules.Bite.NONE && age < view.bite().ticks()) {
@@ -212,7 +236,7 @@ public final class BikakuRenderer {
                 world[i] = frame.place(scale(rig[i], size), camera);
             }
             MawWorm.build(sink, new MawWorm.Pose(world, frame.turn(worm.shape().dorsal()), grown, worm.shape().aperture(), worm.girth() * size, worm.seed(),
-                clock), NORO_TINT, fine);
+                clock), tint, fine);
         }
     }
 
