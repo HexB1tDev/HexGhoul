@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.7.2 (HexGhoul): Bikaku: absorbing a body gives Speed and the food's strength buffs for 15 s (testing)
+
+See `.github/release-notes-3.7.2.md`. Your words: "Whenever an entity is absorbed, the player gains a speed buff for 15 seconds and some of our custom effects from foods, any that give special strength and buffs also for 15 seconds"; you chose "Grand Devouring only (Recommended)" and "Strength, Resistance, Refreshed, Replenished (Recommended)". When a body Grand Devouring swallowed is in you: Speed, Strength, Resistance, Refreshed and Replenished, level I, 15 seconds. Protocol 103.
+
 ## 3.7.1 (HexGhoul): Bikaku: The Walker on tap K, carried 3.5 blocks up over any ground (testing)
 
 See `.github/release-notes-3.7.1.md`. Your words: "the walker should lift the player way higher up (like 3-4 blocks up)  and adapt better to literally any terrain ... the walker is the first tap K half kakuja, the full kakuja is the hold K"; its cost: "Half the kakuja's cost (Recommended)". K tapped: The Walker (12.5 energy, then half the kakuja's drain); K held: the kakuja. Carried 3.5 blocks up for real on two long legs, over the highest ground round you, let down under roofs, climbing walls, at a walking pace; no fall damage; not kicked for floating. Protocol 103. Preview: `docs/handoff/bikaku-walker-3.7.1.png`.

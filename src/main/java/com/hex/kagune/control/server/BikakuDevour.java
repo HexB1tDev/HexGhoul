@@ -318,6 +318,23 @@ public final class BikakuDevour {
         SharedBar.setEnergy(player, Math.min(KaguneProfile.MAX_ENERGY, SharedBar.energy(player) + worth));
         UkakuFire.sound(player.m_284548_(), player.m_20182_().m_82520_(0.0, 1.0, 0.0), "hexkagune:sfx.dragon_roar", 0.6F, 0.9F);
         KaguneServerController.playSelf(player, HexKaguneSounds.KAGUNE_RESHAPE, 0.8F, KaguneServerController.vary(player, 0.55F, 0.05F));
+        absorbed(player);
+    }
+
+    /**
+     * 3.7.2 (the owner: "Whenever an entity is absorbed, the player gains a speed buff for 15 seconds and some of our custom effects from
+     * foods, any that give special strength and buffs also for 15 seconds"; they chose "Grand Devouring only (Recommended)" and "Strength,
+     * Resistance, Refreshed, Replenished (Recommended)"): the body in him, Speed, Strength, Resistance, Refreshed and Replenished, level I,
+     * for 15 seconds (as the dishes give them; a longer or stronger one he already has is kept).
+     */
+    static void absorbed(ServerPlayer player) {
+        for (String key : com.hex.kagune.control.bikaku.BikakuRules.ABSORBED) {
+            net.minecraft.world.effect.MobEffect effect = com.hex.kagune.control.ControlItems.effect(key);
+            if (effect != null) {
+                player.m_147207_(new net.minecraft.world.effect.MobEffectInstance(effect, com.hex.kagune.control.bikaku.BikakuRules.ABSORBED_TICKS, 0,
+                    false, true, true), player);
+            }
+        }
     }
 
     /** Let go before it was swallowed: everything given back; the worm is itself again. */

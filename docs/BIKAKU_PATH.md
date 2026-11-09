@@ -93,6 +93,11 @@ K tapped: The Walker (750; 12.5 energy, then half the kakuja's drain); K held: t
 standing wide, over the highest ground round him (up onto steps, ledges, roofs), let down under a roof or ceiling, climbing walls (never a
 roof's underside), at a walking pace; no fall damage while carried and for 3 s after; never kicked for floating. No longer a menu form.
 
+**3.7.2 (the owner: "Whenever an entity is absorbed, the player gains a speed buff for 15 seconds and some of our custom effects from
+foods, any that give special strength and buffs also for 15 seconds"; chosen "Grand Devouring only (Recommended)", "Strength, Resistance,
+Refreshed, Replenished (Recommended)"):** when a body Grand Devouring swallowed is in him: Speed, Strength, Resistance, Refreshed and
+Replenished, level I, 15 s. Next: Potential Unlock's tearing-off and strands (preview sent; ask first).
+
 **Before 3.4.9 (the pure worm, unchanged since except as above):**
 
 - `control/bikaku/MawWorm.java`: the worm as a mesh (pure). A thick muscular tube along a spine resampled evenly by length

@@ -32,6 +32,7 @@ public final class BikakuTests {
         held();
         mutations();
         cooldownsOff();
+        absorbed();
         System.out.println("Bikaku tests: " + passed + " checks passed");
     }
 
@@ -40,6 +41,38 @@ public final class BikakuTests {
      * keeps cooldowns of its own ({@code static void clearCooldowns(ServerPlayer)}) is cleared by {@code Cooldowns.clear}; the Bikaku
      * path's clears its moves', the kakuja's and Grand Devouring's.
      */
+    /**
+     * 3.7.2 (the owner: "Whenever an entity is absorbed, the player gains a speed buff for 15 seconds and some of our custom effects from
+     * foods, any that give special strength and buffs also for 15 seconds"; chosen: "Grand Devouring only (Recommended)", "Strength,
+     * Resistance, Refreshed, Replenished (Recommended)"): Speed and those four, 15 seconds, each one a dish gives (so it is found by the same
+     * key), given when a body Grand Devouring swallowed is in him.
+     */
+    private static void absorbed() {
+        java.util.Set<String> wanted = java.util.Set.of("speed", "strength", "resistance", "refreshed", "replenished");
+        check(new java.util.HashSet<>(java.util.Arrays.asList(com.hex.kagune.control.bikaku.BikakuRules.ABSORBED)).equals(wanted)
+            && com.hex.kagune.control.bikaku.BikakuRules.ABSORBED.length == wanted.size(), "absorbing gives Speed, Strength, Resistance, Refreshed, Replenished");
+        check(com.hex.kagune.control.bikaku.BikakuRules.ABSORBED_TICKS == 15 * 20, "for 15 seconds");
+        java.util.Set<String> fromFood = new java.util.HashSet<>();
+        for (com.hex.kagune.control.kitchen.Dish dish : com.hex.kagune.control.kitchen.Menu.DISHES) {
+            for (com.hex.kagune.control.kitchen.Dish.Effect effect : dish.effects()) {
+                fromFood.add(effect.key());
+            }
+        }
+        for (String key : com.hex.kagune.control.bikaku.BikakuRules.ABSORBED) {
+            check(fromFood.contains(key), "\"" + key + "\" is an effect our food gives (found the same way)");
+        }
+        try {
+            String devour = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get("src/main/java/com/hex/kagune/control/server/BikakuDevour.java")),
+                java.nio.charset.StandardCharsets.UTF_8);
+            String fed = devour.substring(devour.indexOf("private static void fed(ServerPlayer player, BikakuServer.State state)"));
+            fed = fed.substring(0, fed.indexOf("\n    }\n"));
+            check(fed.contains("absorbed(player);"), "given when the swallowed body is in him (fed)");
+            check(devour.split("absorbed\\(player\\);", -1).length == 2, "and nowhere else");
+        } catch (java.io.IOException failure) {
+            check(false, "read the sources: " + failure);
+        }
+    }
+
     private static void cooldownsOff() {
         try {
             java.nio.file.Path server = java.nio.file.Paths.get("src/main/java/com/hex/kagune/control/server");

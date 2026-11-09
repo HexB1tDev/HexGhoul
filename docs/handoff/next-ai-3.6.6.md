@@ -8,7 +8,9 @@
 - **3.6.9 shipped** (fix: the kakuja shatters on turning back, through Rinkaku's machinery).
 - **3.7.0 shipped** (fix: The Walker's arms never swing).
 - **3.7.1 shipped** (The Walker on K tapped, a half kakuja; K held the kakuja; carried 3.5 blocks up over any ground). Version 3.7.1,
-  protocol 103; the next is **3.7.2** (the absorbing buffs).
+  protocol 103.
+- **3.7.2 shipped** (absorbing a body: Speed, Strength, Resistance, Refreshed, Replenished for 15 s, Grand Devouring only). Version
+  3.7.2, protocol 103; the next is **3.7.3**.
 - **The prompt for the next AI:** `docs/handoff/next-prompt-3.7.x.md` (keep it and this section current with every version; the owner:
   "as soon as the weekly limit touches 99% push a handoff and a prompt to continue with another AI." The AI can't see the usage meter.)
 - **Potential Unlock's tearing-off and strands: preview sent, not built.** `docs/handoff/potential-reattach-preview.png` (rows: the right

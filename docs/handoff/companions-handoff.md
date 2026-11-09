@@ -1,9 +1,20 @@
-# READ FIRST: `docs/handoff/next-ai-3.6.6.md` (kept current through 3.7.1)
+# READ FIRST: `docs/handoff/next-ai-3.6.6.md` (kept current through 3.7.2)
 
 GeckoLib, Photon and PlayerAnimator are the mod's dependencies: use them wherever they make the mod smoother (the owner). Then the owner's
 words in `docs/handoff/owner-words-mutations.md`. There is no RC bar: energy and food are one bar.
 
-# START HERE (state after 3.7.1)
+# START HERE (state after 3.7.2)
+
+Branch `claude/hopeful-noether-5c2wex`. Read `docs/handoff/next-ai-3.6.6.md` first. Next: **Potential Unlock's tearing-off and strands**: preview sent (`docs/handoff/potential-reattach-preview.png`, prototype `docs/handoff/potential-prototype/`); ask the owner before building it. Then the NPC's quest, when the owner says. The prompt for the next AI: `docs/handoff/next-prompt-3.7.x.md`.
+
+- 3.7.2, the owner: "Whenever an entity is absorbed, the player gains a speed buff for 15 seconds and some of our custom effects from foods, any that give special strength and buffs also for 15 seconds"; chosen: "Grand Devouring only (Recommended)", "Strength, Resistance, Refreshed, Replenished (Recommended)".
+- `BikakuRules.ABSORBED` {"speed", "strength", "resistance", "refreshed", "replenished"} (the dishes' keys), `ABSORBED_TICKS` 300. `BikakuDevour.fed` calls `absorbed(player)`: each through `ControlItems.effect(key)` (the kitchen's own, else Minecraft's by path), `MobEffectInstance(effect, 300, 0, false, true, true)` via `addEffect(…, player)`.
+- Tests: BikakuTests `absorbed()`. The full suite.
+- **Judgment calls:** level I; at the refill (the end of digestion).
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 103. Not tested in game.
+
+# State after 3.7.1
 
 Branch `claude/hopeful-noether-5c2wex`. Read `docs/handoff/next-ai-3.6.6.md` first. Next: **3.7.2 the absorbing buffs** (the owner chose "Grand Devouring only (Recommended)" and "Strength, Resistance, Refreshed, Replenished (Recommended)", with Speed, 15 s); then Potential Unlock's tearing-off and strands (preview first).
 

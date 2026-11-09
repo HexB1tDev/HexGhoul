@@ -152,6 +152,14 @@ public final class BikakuRules {
      */
     public static final int DEVOUR_COOLDOWN = 1200;
     /**
+     * 3.7.2 (the owner: "Whenever an entity is absorbed, the player gains a speed buff for 15 seconds and some of our custom effects from
+     * foods, any that give special strength and buffs also for 15 seconds"; asked, they chose "Grand Devouring only (Recommended)" and
+     * "Strength, Resistance, Refreshed, Replenished (Recommended)"): what a body Grand Devouring swallows gives him when it is in him (by the
+     * dishes' own keys: Minecraft's Speed, Strength and Resistance; the kitchen's Refreshed and Replenished), level I, for 15 seconds.
+     */
+    public static final String[] ABSORBED = {"speed", "strength", "resistance", "refreshed", "replenished"};
+    public static final int ABSORBED_TICKS = 300;
+    /**
      * 3.6.7, Potential Unlock (the owner: "The maximum energy capacity is also permanently multiplied by 3"; "Upon unlocking Potential
      * Unlock, the player's energy bar permanently changes color"; then "Should be Purple, the bar, my bad"): how many times the energy he holds,
      * and his bar's colour. Energy stays on the bar's own scale (the original's clamps, sync and rest-time recovery all assume it); every
