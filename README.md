@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.0.1 (HexGhoul): Outfits thinner and finished; The Walker strides (testing)
+
+See `.github/release-notes-4.0.1.md`. Your words: "They seem a little too thick ... add more details"; "add like a color or something to the formal outfit"; on The Walker: "One leg at a time, not two in front at once ... They don't go back like further back enough or forward enough ... you can always tell where the next step is gonna be". Both outfits drawn close to the body; the Formal Outfit in navy piping, a white shirt, silver buttons and badges, a red pocket square, a belt, epaulettes, polished shoes and a visored cap; the Crimson Outfit with dark piping, a belt and buckled straps. The Walker strides one leg at a time, each foot from well ahead to well behind, every step's length, landing, height and speed random, the legs springy tentacle S-curves, your body swaying over them. Protocol 105.
+
 ## 4.0.0 (HexGhoul): The Great Exploration (testing)
 
 See `.github/release-notes-4.0.0.md`. Your 4.0.0 spec, as one release: the human town (`hexkagune:village_1`), the CCG settlement (`hexkagune:village_2`) and the Aogiri Tree hideout (`hexkagune:aogiri_hideout`) from your schematics; the Formal and Crimson outfits and your 24 masks as real items (first and third person, players and NPCs), plus nine generic masks for wild ghouls; wild ghouls ranked D to SS; investigators in the Formal Outfit (each piece its own small drop); Aogiri members in the Crimson Outfit and their faction's mask; Ayato Kirishima (Ukaku, his kakuja, a romance on Ken's animations, the Ukaku kakuja questline and its cutscene); Noro (quiet, never romanced, the Bikaku teacher, three worms in a fight). Your to-do list too: masks fitted (half masks below the eyes, eye holes on the skin's eyes, more detail), armour snug and slim-armed for Alex skins, Bikaku regeneration free of energy, The Walker's legs arched and eased, a Bikaku parent's children (a worm; one parent's kind or both, by chance). Protocol 105.

@@ -1116,11 +1116,72 @@ public final class BikakuWormTests {
                                 "a planted foot is never further than it reaches (" + distance(foot, hip) + ")");
                         }
                     }
-                    check(!both, "its feet step one at a time (" + t + ", pace " + pace + ")");
+                    check(!both, "its feet step one at a time (" + t + ", pace " + pace + ")"); // 4.0.1, the owner: "One leg at a time"
                 }
                 check(stepped[0] >= 4 && stepped[1] >= 4 && Math.abs(stepped[0] - stepped[1]) <= 2,
                     "walking, both feet step, in turn (" + stepped[0] + ", " + stepped[1] + ")");
             }
+        }
+        // 4.0.1 (the owner: "the steps should vary in length ... it should always be random ... a longer distance than the other"): walking
+        // on, its strides are not all alike: some short, some long, never the same twice running for long.
+        {
+            com.hex.kagune.control.bikaku.WalkerLegs.Legs walk = new com.hex.kagune.control.bikaku.WalkerLegs.Legs(42L);
+            double[] at = {0.5, 3.5, 0.5};
+            boolean[] up = new boolean[2];
+            double[][] lifted = new double[2][];
+            java.util.List<Double> strides = new java.util.ArrayList<>();
+            for (double t = 0.0; t <= 300.0; t += 0.5) {
+                at[2] += 0.15 * 0.5;
+                com.hex.kagune.control.bikaku.WalkerLegs.update(walk, at, right, ahead, new double[] {0.0, 0.0, 0.15}, false, t, flat);
+                for (int i = 0; i < 2; i++) {
+                    boolean now = com.hex.kagune.control.bikaku.WalkerLegs.stepping(walk, i, t);
+                    double[] f = com.hex.kagune.control.bikaku.WalkerLegs.foot(walk, i, t);
+                    if (now && !up[i]) {
+                        lifted[i] = f;
+                    } else if (!now && up[i] && lifted[i] != null) {
+                        strides.add(Math.hypot(f[0] - lifted[i][0], f[2] - lifted[i][2]));
+                    }
+                    up[i] = now;
+                }
+            }
+            double least = strides.stream().mapToDouble(Double::doubleValue).min().orElse(0.0);
+            double most = strides.stream().mapToDouble(Double::doubleValue).max().orElse(0.0);
+            int alike = 0;
+            for (int k = 1; k < strides.size(); k++) {
+                alike += Math.abs(strides.get(k) - strides.get(k - 1)) < 0.1 ? 1 : 0;
+            }
+            check(strides.size() >= 10 && most - least > 0.8 && alike < strides.size() / 3,
+                "its strides vary, short and long by chance (" + strides.size() + " steps, " + least + " to " + most + ", " + alike + " alike)");
+            // And the owner's "One leg at a time, not two in front at once ... They don't go back like further back enough or forward
+            // enough": walking, a foot is put down well ahead of him and lifts only once it is well behind him, the feet out of step.
+            com.hex.kagune.control.bikaku.WalkerLegs.Legs stride = new com.hex.kagune.control.bikaku.WalkerLegs.Legs(7L);
+            double[] on = {0.5, 3.5, 0.5};
+            double back = 0.0;
+            double front = 0.0;
+            int together = 0;
+            int frames = 0;
+            for (double t = 0.0; t <= 300.0; t += 0.5) {
+                on[2] += 0.2 * 0.5;
+                com.hex.kagune.control.bikaku.WalkerLegs.update(stride, on, right, ahead, new double[] {0.0, 0.0, 0.2}, false, t, flat);
+                if (t < 40.0) {
+                    continue;
+                }
+                frames++;
+                int inFront = 0;
+                for (int i = 0; i < 2; i++) {
+                    if (!com.hex.kagune.control.bikaku.WalkerLegs.stepping(stride, i, t)) {
+                        double along = com.hex.kagune.control.bikaku.WalkerLegs.foot(stride, i, t)[2] - on[2];
+                        back = Math.min(back, along);
+                        front = Math.max(front, along);
+                        inFront += along > 0.3 ? 1 : 0;
+                    }
+                }
+                together += inFront == 2 ? 1 : 0;
+            }
+            check(back < -1.5 && front > 1.2 && together < frames / 10,
+                "its feet reach well ahead and go well behind him, out of step (" + back + " to " + front + ", both in front " + together + " of " + frames + ")");
+            double[] body = com.hex.kagune.control.bikaku.WalkerLegs.body(walk, 300.0);
+            check(Math.abs(body[0]) < 0.3 && body[1] >= 0.0 && body[1] < 2.5, "his body sways and dips a little with the steps, no more");
         }
         // Up a wall before him: the feet go onto its face.
         com.hex.kagune.control.bikaku.WalkerLegs.Blocks wall = (x, y, z) -> y < 0 || z == 3 && y < 12;

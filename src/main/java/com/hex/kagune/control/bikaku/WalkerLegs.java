@@ -20,6 +20,14 @@ import com.hex.kagune.control.graft.GraftMesh;
  * carried, set down softly, higher the longer the stride), the next foot going the moment the last lands; each leg one smooth arch (up and
  * out of his hip, over, and down onto its foot along the face it stands on), lifting higher while its foot is in the air, a slow wave
  * running down it; drawn thick at the hip, tapering to the foot ({@code MawWorm}'s leg).
+ *
+ * <p>4.0.1 (the owner: "the walking is way too weird, bro. It's too robotic, too slow. Like the steps should be like they should vary in
+ * length ... it should always be random and like feel like more of a wobble, like a longer distance than the other ... it still feels like
+ * it's two sticks walking"): every step its own, by chance ({@link #roll}): how far the foot lets itself be left before it goes (some
+ * short, some long), where it lands (a little ahead or behind, in or out), how high it is lifted and how fast it goes (quicker the
+ * shorter); the feet in turn, one stride longer than the other as it falls; the middle of each leg on a spring ({@link #wobble}), lagging
+ * behind as he goes and shaken as a foot lifts and lands; each leg a tentacle's S, out of his hip up to a high knee and bowing out and
+ * down onto its foot; his body swaying over the foot it stands on and dipping as the other goes ({@link #body}).
  */
 public final class WalkerLegs {
     public static final int LEGS = 2;
@@ -35,12 +43,42 @@ public final class WalkerLegs {
     public static final double STEP_TICKS = 8.0;
     public static final double ARC = 0.7;
     public static final double ARC_PER_BLOCK = 0.22;
+    /**
+     * 4.0.1 (the owner: "One leg at a time, not two in front at once ... They don't go back like further back enough or forward enough ...
+     * you can always tell where the next step is gonna be, which is what I don't want"): walking, a true stride, one leg at a time: a foot
+     * is put down well ahead of him, stays where it is as he goes over it, and only lifts once it is well behind him; the other goes
+     * meanwhile. How long a stride is ({@link #STRIDE_BASE}, and {@link #STRIDE_PER_SPEED} more for each block a tick he goes), and each
+     * step's by chance: mostly {@link #STRIDE_LEAST} to {@link #STRIDE_MOST} of that, now and then a stutter ({@link #STUTTER}) or a
+     * lunge ({@link #LUNGE}); how far behind him it lets itself go before it lifts (half its stride, give or take {@link #LEAVE_SPREAD});
+     * how far in or out it lands ({@link #LAND_OUT}); how long a step takes (ticks: {@link #STEP_BASE} and {@link #STEP_PER_BLOCK} for each
+     * block it swings, between {@link #STEP_LEAST} and {@link #STEP_MOST}, give or take a little).
+     */
+    public static final double STRIDE_BASE = 1.6;
+    public static final double STRIDE_PER_SPEED = 8.0;
+    public static final double STRIDE_LEAST = 0.7;
+    public static final double STRIDE_MOST = 1.3;
+    public static final double STUTTER = 0.45;
+    public static final double LUNGE = 1.55;
+    public static final double LEAVE_SPREAD = 0.3;
+    public static final double LAND_OUT = 0.45;
+    public static final double STEP_BASE = 3.0;
+    public static final double STEP_PER_BLOCK = 0.9;
+    public static final double STEP_LEAST = 3.5;
+    public static final double STEP_MOST = 9.0;
+    /** 4.0.1: slower than this (blocks a tick) he is standing: a foot steps only to put itself back beside him, once this far off. */
+    public static final double STANDING = 0.02;
+    public static final double SETTLE = 0.9;
+    /** 4.0.1: the legs' middles' spring: how stiff, how damped (a tick), how far it lags behind his going, the most it swings (blocks). */
+    static final double WOBBLE_STIFF = 0.2;
+    static final double WOBBLE_DAMP = 0.32;
+    static final double WOBBLE_LAG = 3.2;
+    static final double WOBBLE_MOST = 1.1;
     /** How far below his feet and above them a foot looks for ground; how far out from the root for a wall. */
     static final double DOWN = 2.6 + 3.5;
     static final double UP = 1.3;
     static final double WALL = 3.0;
     /** How thick a walking tentacle is (the worm's is 1). */
-    public static final double GIRTH = 0.85;
+    public static final double GIRTH = 1.0; // 4.0.1: thicker (the owner: "two sticks")
 
     /**
      * 3.7.1 (the owner: "the walker should lift the player way higher up (like 3-4 blocks up)  and adapt better to literally any terrain"):
@@ -148,6 +186,34 @@ public final class WalkerLegs {
         final double[] stepAt = {Double.NaN, Double.NaN};
         double[] lastFeet;
         double last = Double.NaN;
+        /** 4.0.1: each foot's step: how long it takes, how high it goes (and the body dips), how far behind him it lets itself go next. */
+        final double[] stepTicks = {STEP_TICKS, STEP_TICKS};
+        final double[] lift = {1.0, 1.0};
+        final double[] stride = {STEP, STEP};
+        /** 4.0.1: each leg's middle on its spring (the world): how far it is swung, how fast. */
+        final double[][] swing = {{0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}};
+        final double[][] swingSpeed = {{0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}};
+        /** 4.0.1: how many steps so far (each one's chances from it and the seed); which foot went last. */
+        int steps;
+        int lastFoot = -1;
+        long seed;
+
+        public Legs() {
+        }
+
+        /** 4.0.1: one whose chances are its own ({@code seed}: its player's). */
+        public Legs(long seed) {
+            this.seed = seed;
+        }
+    }
+
+    /** 4.0.1: a number in [0, 1) for step {@code n}'s chance {@code k} on {@code legs} (the same every time it is asked). */
+    static double roll(Legs legs, int n, int k) {
+        long z = legs.seed * 0x9E3779B97F4A7C15L + n * 0xBF58476D1CE4E5B9L + k * 0x94D049BB133111EBL + 0x2545F4914F6CDD1DL;
+        z = (z ^ (z >>> 30)) * 0xBF58476D1CE4E5B9L;
+        z = (z ^ (z >>> 27)) * 0x94D049BB133111EBL;
+        z ^= z >>> 31;
+        return (z >>> 11) * 0x1.0p-53;
     }
 
     /** A foothold: where, and the face's outward normal (up for the ground, out of a wall for a wall). */
@@ -159,6 +225,7 @@ public final class WalkerLegs {
      * (both level, unit), going {@code going} a tick; {@code climbing} when he is going up a wall before him.
      */
     public static void update(Legs legs, double[] feet, double[] right, double[] ahead, double[] going, boolean climbing, double time, Blocks blocks) {
+        double before = legs.last;
         boolean fresh = Double.isNaN(legs.last) || time < legs.last || time - legs.last > 40.0
             || legs.lastFeet == null || GraftMesh.length3(GraftMesh.sub(feet, legs.lastFeet)) > 6.0;
         legs.last = time;
@@ -170,15 +237,33 @@ public final class WalkerLegs {
                 legs.foot[i] = hold == null ? dangle(i, feet, right) : hold.at();
                 legs.face[i] = hold == null ? new double[] {0.0, 1.0, 0.0} : hold.face();
                 legs.stepAt[i] = Double.NaN;
+                legs.swing[i] = new double[3];
+                legs.swingSpeed[i] = new double[3];
             }
+            legs.lastFoot = -1;
             return;
         }
+        double dt = Math.max(0.0, Math.min(2.0, time - before));
         for (int i = 0; i < LEGS; i++) {
-            if (!Double.isNaN(legs.stepAt[i]) && time >= legs.stepAt[i] + STEP_TICKS) {
+            if (!Double.isNaN(legs.stepAt[i]) && time >= legs.stepAt[i] + legs.stepTicks[i]) {
                 legs.stepAt[i] = Double.NaN;
+                // 4.0.1: it lands: the leg's middle is thrown down and out by it.
+                double side = i == 0 ? 1.0 : -1.0;
+                legs.swingSpeed[i] = GraftMesh.add(legs.swingSpeed[i], GraftMesh.add(new double[] {0.0, -0.2 * legs.lift[i], 0.0},
+                    GraftMesh.mul(right, side * 0.08 * legs.lift[i])));
             }
         }
-        // The foot furthest from where it would be put now steps first; the other waits for it to land (unless it is stretched too far).
+        // 4.0.1: each leg's middle on its spring: lagging behind as he goes, swinging back past where it hangs, settling.
+        for (int i = 0; i < LEGS; i++) {
+            double[] target = GraftMesh.mul(going, -WOBBLE_LAG);
+            double[] pull = GraftMesh.sub(GraftMesh.mul(GraftMesh.sub(target, legs.swing[i]), WOBBLE_STIFF), GraftMesh.mul(legs.swingSpeed[i], WOBBLE_DAMP));
+            legs.swingSpeed[i] = GraftMesh.add(legs.swingSpeed[i], GraftMesh.mul(pull, dt));
+            legs.swing[i] = GraftMesh.add(legs.swing[i], GraftMesh.mul(legs.swingSpeed[i], dt));
+            double length = GraftMesh.length3(legs.swing[i]);
+            if (length > WOBBLE_MOST) {
+                legs.swing[i] = GraftMesh.mul(legs.swing[i], WOBBLE_MOST / length);
+            }
+        }
         double[] off = new double[LEGS];
         Hold[] holds = new Hold[LEGS];
         for (int i = 0; i < LEGS; i++) {
@@ -186,7 +271,15 @@ public final class WalkerLegs {
             double[] wanted = holds[i] == null ? dangle(i, feet, right) : holds[i].at();
             off[i] = GraftMesh.length3(GraftMesh.sub(legs.foot[i], wanted));
         }
-        int first = off[1] > off[0] ? 1 : 0;
+        double speed = Math.hypot(going[0], going[2]);
+        double[] way = speed > 1.0E-6 ? new double[] {going[0] / speed, 0.0, going[2] / speed} : ahead;
+        // How far ahead of him each foot is, the way he goes (behind: less than nothing).
+        double[] along = new double[LEGS];
+        for (int i = 0; i < LEGS; i++) {
+            along[i] = (legs.foot[i][0] - feet[0]) * way[0] + (legs.foot[i][2] - feet[2]) * way[2];
+        }
+        // One at a time: the foot further behind goes first (the other is the one he stands on); never both, unless one is stretched.
+        int first = along[0] < along[1] ? 0 : along[1] < along[0] ? 1 : legs.lastFoot >= 0 ? 1 - legs.lastFoot : 0;
         for (int n = 0; n < LEGS; n++) {
             int i = n == 0 ? first : 1 - first;
             if (!Double.isNaN(legs.stepAt[i])) {
@@ -194,19 +287,105 @@ public final class WalkerLegs {
             }
             boolean stretched = GraftMesh.length3(GraftMesh.sub(legs.foot[i], hip)) > REACH;
             boolean otherStepping = !Double.isNaN(legs.stepAt[1 - i]);
-            if (off[i] > STEP && (!otherStepping || stretched)) {
-                legs.from[i] = foot(legs, i, time);
-                legs.fromFace[i] = legs.face[i];
-                legs.foot[i] = holds[i] == null ? dangle(i, feet, right) : holds[i].at();
-                legs.face[i] = holds[i] == null ? new double[] {0.0, 1.0, 0.0} : holds[i].face();
-                legs.stepAt[i] = time;
+            if (otherStepping && !stretched) {
+                continue;
+            }
+            boolean due;
+            if (climbing || speed < STANDING) {
+                // On a wall, or standing: a foot goes back beside him once it is well off where it would be (the one further off first).
+                due = off[i] > (climbing ? STEP : SETTLE) && (n == 0 || off[i] >= off[1 - i] || stretched);
+            } else {
+                // Walking: the rear foot, once it is as far behind him as it lets itself go this time (or far off its line: he turned).
+                due = (i == first && -along[i] > legs.stride[i]) || off[i] > REACH * 0.6 || stretched;
+            }
+            if (due) {
+                step(legs, i, holds[i], feet, right, ahead, going, climbing, time, blocks);
+                break;
             }
         }
     }
 
+    /**
+     * 4.0.1: foot {@code i} steps now, this step its own by chance: walking, how long a stride (now and then a stutter or a lunge), where
+     * it lands (half that ahead of where he will be when it does, in or out a little), how high and fast it goes, how far behind him it
+     * lets itself go before its next; on a wall or standing, back to where it would be.
+     */
+    private static void step(Legs legs, int i, Hold plain, double[] feet, double[] right, double[] ahead, double[] going, boolean climbing, double time,
+                             Blocks blocks) {
+        int n = legs.steps++;
+        double side = i == 0 ? 1.0 : -1.0;
+        double speed = Math.hypot(going[0], going[2]);
+        double[] hip = GraftMesh.add(feet, new double[] {0.0, MawMotion.ROOT[1], 0.0});
+        double[] from = foot(legs, i, time);
+        Hold hold = plain;
+        double ticks;
+        double chance = roll(legs, n, 0);
+        double stride = (STRIDE_BASE + STRIDE_PER_SPEED * speed)
+            * (chance < 0.1 ? STUTTER : chance > 0.9 ? LUNGE : STRIDE_LEAST + (STRIDE_MOST - STRIDE_LEAST) * roll(legs, n, 1));
+        if (!climbing && speed >= STANDING) {
+            double[] way = {going[0] / speed, 0.0, going[2] / speed};
+            double behind = Math.max(0.0, -((from[0] - feet[0]) * way[0] + (from[2] - feet[2]) * way[2]));
+            // Its swing's length (ticks) for the way it has to go, worked out with how far he goes meanwhile.
+            ticks = Math.max(STEP_LEAST, Math.min(STEP_MOST, (STEP_BASE + STEP_PER_BLOCK * (stride / 2.0 + behind)) / Math.max(0.2, 1.0 - STEP_PER_BLOCK * speed)));
+            double reachAhead = speed * ticks + stride / 2.0;
+            double out = side * (roll(legs, n, 2) * 2.0 - 1.0) * LAND_OUT;
+            // Never further than the leg reaches (from where his hip will be when it lands).
+            for (int k = 0; k < 6; k++) {
+                double[] spot = GraftMesh.add(GraftMesh.add(feet, GraftMesh.mul(way, reachAhead)), GraftMesh.mul(right, side * OUT + out));
+                double[] lands = GraftMesh.add(hip, GraftMesh.mul(way, speed * ticks));
+                double[] nudge = GraftMesh.sub(spot, GraftMesh.add(GraftMesh.add(feet, GraftMesh.mul(right, side * OUT)),
+                    GraftMesh.add(GraftMesh.mul(ahead, AHEAD), GraftMesh.mul(new double[] {going[0], 0.0, going[2]}, LEAD))));
+                Hold there = hold(i, feet, right, ahead, going, false, blocks, nudge);
+                if (there != null && GraftMesh.length3(GraftMesh.sub(there.at(), lands)) <= REACH - 0.4
+                    && GraftMesh.length3(GraftMesh.sub(there.at(), hip)) <= REACH) {
+                    hold = there;
+                    break;
+                }
+                reachAhead *= 0.75;
+            }
+        } else {
+            ticks = STEP_BASE + STEP_PER_BLOCK * (hold == null ? 1.0 : GraftMesh.length3(GraftMesh.sub(hold.at(), from)));
+        }
+        legs.from[i] = from;
+        legs.fromFace[i] = legs.face[i];
+        legs.foot[i] = hold == null ? dangle(i, feet, right) : hold.at();
+        legs.face[i] = hold == null ? new double[] {0.0, 1.0, 0.0} : hold.face();
+        legs.stepTicks[i] = Math.max(STEP_LEAST, Math.min(STEP_MOST, ticks * (0.88 + 0.24 * roll(legs, n, 3))));
+        legs.lift[i] = 0.7 + 0.65 * roll(legs, n, 4);
+        // How far behind him it lets itself go before it lifts next: about half this stride, give or take, by chance.
+        legs.stride[i] = Math.max(0.3, stride / 2.0 * (1.0 + LEAVE_SPREAD * (roll(legs, n, 5) * 2.0 - 1.0)));
+        legs.stepAt[i] = time;
+        legs.lastFoot = i;
+        // Lifting off, the leg's middle is thrown up and on.
+        legs.swingSpeed[i] = GraftMesh.add(legs.swingSpeed[i], GraftMesh.add(new double[] {0.0, 0.14 * legs.lift[i], 0.0}, GraftMesh.mul(ahead, 0.06)));
+    }
+
+    /** 4.0.1: how far leg {@code i}'s middle is swung on its spring (the world, blocks). */
+    public static double[] wobble(Legs legs, int i) {
+        return legs.swing[i].clone();
+    }
+
+    /**
+     * 4.0.1: how his body rides his steps at {@code time}: {roll (radians, + to his left: over his left foot while his right is up), drop
+     * (model pixels, + down: dipping while a foot is up)}, a slow sway on top.
+     */
+    public static double[] body(Legs legs, double time) {
+        double roll = 0.025 * Math.sin(time * 0.13 + (legs.seed & 63L));
+        double drop = 0.0;
+        for (int i = 0; i < LEGS; i++) {
+            double p = progress(legs, i, time);
+            if (!Double.isNaN(p)) {
+                double s = Math.sin(Math.PI * p) * legs.lift[i];
+                roll += (i == 0 ? 1.0 : -1.0) * 0.11 * s;
+                drop += 1.2 * s;
+            }
+        }
+        return new double[] {roll, drop};
+    }
+
     /** True while foot {@code i} is in the air, stepping. */
     public static boolean stepping(Legs legs, int i, double time) {
-        return !Double.isNaN(legs.stepAt[i]) && time < legs.stepAt[i] + STEP_TICKS;
+        return !Double.isNaN(legs.stepAt[i]) && time < legs.stepAt[i] + legs.stepTicks[i];
     }
 
     /** Where foot {@code i} is at {@code time} (the world): planted, or on its arc from the last hold to the next. */
@@ -217,10 +396,11 @@ public final class WalkerLegs {
         if (!stepping(legs, i, time) || legs.from[i] == null) {
             return legs.foot[i].clone();
         }
-        double t = GraftMesh.clamp01((time - legs.stepAt[i]) / STEP_TICKS);
+        double t = GraftMesh.clamp01((time - legs.stepAt[i]) / legs.stepTicks[i]);
         double[] lift = GraftMesh.normalize(GraftMesh.add(legs.fromFace[i], legs.face[i]));
         double stride = GraftMesh.length3(GraftMesh.sub(legs.foot[i], legs.from[i]));
-        return GraftMesh.add(GraftMesh.lerp(legs.from[i], legs.foot[i], carried(t)), GraftMesh.mul(lift, (ARC + ARC_PER_BLOCK * Math.min(3.0, stride)) * raised(t)));
+        return GraftMesh.add(GraftMesh.lerp(legs.from[i], legs.foot[i], carried(t)),
+            GraftMesh.mul(lift, (ARC + ARC_PER_BLOCK * Math.min(3.0, stride)) * legs.lift[i] * raised(t)));
     }
 
     /** 4.0.0: how far along its way a stepping foot is, {@code t} of the way through the step: eased in and out (quintic), never snapping. */
@@ -229,14 +409,15 @@ public final class WalkerLegs {
         return x * x * x * (x * (x * 6.0 - 15.0) + 10.0);
     }
 
-    /** 4.0.0: how high it is off the faces (0..1): up quickly, held, set down softly (the top a little before halfway). */
+    /** 4.0.0: how high it is off the faces (0..1): up quickly, set down softly (the top a little before halfway; never a snap). */
     public static double raised(double t) {
-        return Math.sin(Math.PI * Math.pow(GraftMesh.clamp01(t), 0.8));
+        double x = GraftMesh.clamp01(t);
+        return Math.sin(Math.PI * x * (1.25 - 0.25 * x));
     }
 
     /** 4.0.0: how far through its step foot {@code i} is at {@code time} (0..1), or NaN while it is planted. */
     public static double progress(Legs legs, int i, double time) {
-        return stepping(legs, i, time) ? GraftMesh.clamp01((time - legs.stepAt[i]) / STEP_TICKS) : Double.NaN;
+        return stepping(legs, i, time) ? GraftMesh.clamp01((time - legs.stepAt[i]) / legs.stepTicks[i]) : Double.NaN;
     }
 
     /** The face foot {@code i} stands on (or is stepping to). */
@@ -249,10 +430,16 @@ public final class WalkerLegs {
      * him as he goes), up a step or down off an edge; failing that, on a wall out that way; climbing, on the wall before him first.
      */
     public static Hold hold(int i, double[] feet, double[] right, double[] ahead, double[] going, boolean climbing, Blocks blocks) {
+        return hold(i, feet, right, ahead, going, climbing, blocks, new double[3]);
+    }
+
+    /** As {@link #hold(int, double[], double[], double[], double[], boolean, Blocks)}, its spot on the ground put {@code nudge} off (the world). */
+    public static Hold hold(int i, double[] feet, double[] right, double[] ahead, double[] going, boolean climbing, Blocks blocks, double[] nudge) {
         double side = i == 0 ? 1.0 : -1.0;
         double[] level = {going[0], 0.0, going[2]};
         double[] lead = GraftMesh.mul(level, LEAD);
-        double[] home = GraftMesh.add(GraftMesh.add(feet, GraftMesh.mul(right, side * OUT)), GraftMesh.add(GraftMesh.mul(ahead, AHEAD), lead));
+        double[] home = GraftMesh.add(GraftMesh.add(GraftMesh.add(feet, GraftMesh.mul(right, side * OUT)), GraftMesh.add(GraftMesh.mul(ahead, AHEAD), lead)),
+            nudge);
         double[] hip = GraftMesh.add(feet, new double[] {0.0, MawMotion.ROOT[1], 0.0});
         if (climbing) {
             double[] from = GraftMesh.add(hip, new double[] {0.0, 0.45 + Math.max(0.0, going[1]) * LEAD, 0.0});
@@ -338,13 +525,19 @@ public final class WalkerLegs {
         return shape(i, foot, face, stepping ? 0.5 : Double.NaN, time, seed);
     }
 
+    /** As {@link #shape(int, double[], double[], double, double, int, double[])}, its middle not swung. */
+    public static MawMotion.Shape shape(int i, double[] foot, double[] face, double step, double time, int seed) {
+        return shape(i, foot, face, step, time, seed, new double[3]);
+    }
+
     /**
      * Walking tentacle {@code i}'s shape (his body's frame: x right, y up, z ahead), its foot {@code step} of the way through a step (NaN:
-     * planted). 4.0.0: one smooth arch out of the worms' root: up and out over his hip, over, and down onto {@code foot}, its last stretch
-     * coming in along the face it stands on ({@code face}); the further the foot, the higher and wider it arches, higher still while the
-     * foot is in the air; a slow wave running down it; its mouth opening as the foot lifts and shutting on the block as it lands.
+     * planted), its middle swung {@code wobble} on its spring (his body's frame). 4.0.1 (the owner: "it still feels like it's two sticks
+     * walking"): a tentacle's S: out of the worms' root up and out over his hip to a high knee (leaning the way its foot is, higher the
+     * further the foot and while it is up), on out from there and bowing down onto {@code foot}, its last stretch along the face it
+     * stands on ({@code face}); swung in the middle, a slow wave running down it; its mouth opening as the foot lifts, shutting as it lands.
      */
-    public static MawMotion.Shape shape(int i, double[] foot, double[] face, double step, double time, int seed) {
+    public static MawMotion.Shape shape(int i, double[] foot, double[] face, double step, double time, int seed, double[] wobble) {
         double side = i == 0 ? 1.0 : -1.0;
         double[] root = MawMotion.ROOT;
         double[] out = {root[0] + side * 0.3, root[1] + 0.06, root[2] - 0.22};
@@ -352,25 +545,33 @@ public final class WalkerLegs {
         double reach = GraftMesh.length3(GraftMesh.sub(foot, out));
         double lifted = Double.isNaN(step) ? 0.0 : Math.sin(Math.PI * GraftMesh.clamp01(step));
         double sway = Math.sin(time * 0.11 + seed * 1.7 + i * 2.1);
-        // Leaving the hip up and out (a little back), as a spider's leg stands; coming down onto the foot from over it, a little outside it
-        // on the ground (the arch's top out past the foot), straight in along a wall's face.
-        double rise = 0.55 + 0.3 * reach + 0.4 * lifted;
-        double[] p1 = GraftMesh.add(out, GraftMesh.mul(GraftMesh.normalize(new double[] {side * (0.95 + 0.06 * sway), 1.0, -0.22}), rise));
-        double drop = 0.5 + 0.36 * reach + 0.3 * lifted;
-        double[] p2 = GraftMesh.add(foot, GraftMesh.mul(normal, drop));
-        p2 = GraftMesh.add(p2, new double[] {side * 0.16 * reach * Math.abs(normal[1]), 0.0, 0.0});
-        int n = 10;
-        double[][] path = new double[n + 2][];
+        double[] knee = GraftMesh.add(out, new double[] {side * (0.4 + 0.16 * reach + 0.05 * sway), 0.4 + 0.2 * reach + 0.45 * lifted,
+            0.3 * (foot[2] - out[2]) - 0.1});
+        // Leaving the hip up and out; level through the knee, going on out (and toward its foot); coming down onto the foot from over it.
+        double[] leave = GraftMesh.normalize(new double[] {side * 0.75, 1.0, -0.2});
+        double[] across = GraftMesh.sub(foot, knee);
+        double flat = Math.max(1.0E-6, Math.hypot(across[0], across[2]));
+        double[] through = GraftMesh.normalize(new double[] {side * 0.7 + 0.5 * across[0] / flat, 0.05, 0.5 * across[2] / flat});
+        double up = GraftMesh.length3(GraftMesh.sub(knee, out));
+        double down = GraftMesh.length3(across);
+        double[][] a = {out, GraftMesh.add(out, GraftMesh.mul(leave, 0.45 * up)), GraftMesh.sub(knee, GraftMesh.mul(through, 0.4 * up)), knee};
+        double[] over = GraftMesh.add(foot, GraftMesh.mul(normal, 0.3 * down + 0.25 * lifted));
+        over = GraftMesh.add(over, new double[] {side * 0.12 * down * Math.abs(normal[1]), 0.0, 0.0});
+        double[][] b = {knee, GraftMesh.add(knee, GraftMesh.mul(through, 0.45 * down)), over, foot};
+        int n = 7;
+        double[][] path = new double[2 * n + 2][];
         path[0] = root.clone();
-        for (int k = 0; k <= n; k++) {
-            double u = k / (double)n;
-            double a = 1.0 - u;
-            double[] p = GraftMesh.add(GraftMesh.add(GraftMesh.mul(out, a * a * a), GraftMesh.mul(p1, 3.0 * a * a * u)),
-                GraftMesh.add(GraftMesh.mul(p2, 3.0 * a * u * u), GraftMesh.mul(foot, u * u * u)));
-            // A slow wave down it (none at its ends: they stay on the hip and the foot).
-            double wave = 0.07 * Math.sin(time * 0.16 + seed * 1.3 + i * 2.0 - u * 5.5) * 4.0 * u * a * (1.0 - 0.6 * lifted);
-            p = GraftMesh.add(p, new double[] {side * 0.45 * wave, 0.85 * wave, 0.3 * wave});
-            path[k + 1] = k == n ? foot.clone() : p;
+        for (int k = 0; k <= 2 * n; k++) {
+            double[][] seg = k <= n ? a : b;
+            double u = k <= n ? k / (double)n : (k - n) / (double)n;
+            double v = 1.0 - u;
+            double[] p = GraftMesh.add(GraftMesh.add(GraftMesh.mul(seg[0], v * v * v), GraftMesh.mul(seg[1], 3.0 * v * v * u)),
+                GraftMesh.add(GraftMesh.mul(seg[2], 3.0 * v * u * u), GraftMesh.mul(seg[3], u * u * u)));
+            double g = k / (2.0 * n); // along the whole leg: none at the hip or the foot, the most in the middle
+            double hang = Math.sin(Math.PI * g);
+            double wave = 0.08 * Math.sin(time * 0.17 + seed * 1.3 + i * 2.0 - g * 6.0) * hang * (1.0 - 0.5 * lifted);
+            p = GraftMesh.add(p, GraftMesh.add(GraftMesh.mul(wobble, hang), new double[] {side * 0.45 * wave, 0.85 * wave, 0.3 * wave}));
+            path[k + 1] = k == 2 * n ? foot.clone() : p;
         }
         // Its back faces out from him on the ground, up on a wall (never along the way it comes in).
         double[] dorsal = Math.abs(face[1]) > 0.5 ? new double[] {side, 0.0, 0.0} : new double[] {0.0, 1.0, 0.0};

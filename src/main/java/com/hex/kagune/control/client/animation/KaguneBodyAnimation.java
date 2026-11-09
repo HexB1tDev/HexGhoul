@@ -542,7 +542,8 @@ public final class KaguneBodyAnimation implements IAnimation {
         }
         // 3.6.2: The Walker: its tentacles carry him: his own legs hang still, and he is lifted a little off the ground.
         if (PathClient.get(this.player) == KagunePath.BIKAKU && com.hex.kagune.control.client.BikakuClient.walking(this.player, tickDelta)) {
-            WalkerPose.legs(p, com.hex.kagune.control.client.PaleClient.clock(tickDelta), this.fade);
+            double walkerClock = com.hex.kagune.control.client.PaleClient.clock(tickDelta);
+            WalkerPose.legs(p, walkerClock, this.fade, com.hex.kagune.control.client.render.BikakuRenderer.walkerBody(this.player, walkerClock));
         }
         // 6.2.0: just whole again after her death that did not take, she stands as the pieces went back together and eases into it.
         float risen = com.hex.kagune.control.client.ReviveClient.risen(this.player, com.hex.kagune.control.client.PaleClient.clock(tickDelta));

@@ -529,6 +529,12 @@ public final class BikakuRenderer {
             entity.f_19792_ + (entity.m_20189_() - entity.f_19792_) * partial};
     }
 
+    /** 4.0.1: how {@code player}'s body rides The Walker's steps now ({@code WalkerLegs.body}: roll, drop), or null if it isn't walking. */
+    public static double[] walkerBody(AbstractClientPlayer player, double clock) {
+        com.hex.kagune.control.bikaku.WalkerLegs.Legs legs = LEGS.get(player);
+        return legs == null ? null : com.hex.kagune.control.bikaku.WalkerLegs.body(legs, clock);
+    }
+
     /** 3.6.2: each player's walking feet (kept from frame to frame: they stay planted until they step). */
     private static final java.util.Map<AbstractClientPlayer, com.hex.kagune.control.bikaku.WalkerLegs.Legs> LEGS = new java.util.WeakHashMap<>();
 
@@ -536,7 +542,8 @@ public final class BikakuRenderer {
     private static void legs(UkakuModel.Sink sink, Frame frame, com.hex.kagune.control.client.animation.RigPose posed, ClientLevel level,
                              AbstractClientPlayer player, float partial, double clock, Vec3 camera, boolean fine, boolean firstPerson, float deploy,
                              double walkerGrown, int seed, int tint) {
-        com.hex.kagune.control.bikaku.WalkerLegs.Legs legs = LEGS.computeIfAbsent(player, ignored -> new com.hex.kagune.control.bikaku.WalkerLegs.Legs());
+        com.hex.kagune.control.bikaku.WalkerLegs.Legs legs = LEGS.computeIfAbsent(player,
+            ignored -> new com.hex.kagune.control.bikaku.WalkerLegs.Legs(player.m_20148_().getLeastSignificantBits())); // 4.0.1: his own chances
         double[] feet = {frame.x(), frame.y(), frame.z()};
         double[] right = {frame.rightX(), 0.0, frame.rightZ()};
         double[] ahead = {frame.forwardX(), 0.0, frame.forwardZ()};
@@ -553,8 +560,10 @@ public final class BikakuRenderer {
             double[] face = com.hex.kagune.control.bikaku.WalkerLegs.face(legs, i);
             double[] footRig = frame.rig(foot);
             double[] faceRig = GraftMesh.sub(frame.rig(GraftMesh.add(foot, face)), footRig);
+            // 4.0.1: its middle swung on its spring, turned into his body's frame.
+            double[] wobble = GraftMesh.sub(frame.rig(GraftMesh.add(feet, com.hex.kagune.control.bikaku.WalkerLegs.wobble(legs, i))), frame.rig(feet));
             MawMotion.Shape shape = com.hex.kagune.control.bikaku.WalkerLegs.shape(i, footRig, faceRig,
-                com.hex.kagune.control.bikaku.WalkerLegs.progress(legs, i, clock), clock, seed);
+                com.hex.kagune.control.bikaku.WalkerLegs.progress(legs, i, clock), clock, seed, wobble);
             double girth = com.hex.kagune.control.bikaku.WalkerLegs.GIRTH;
             // Round his body rather than through it (kept off by its thigh's girth), carried with his torso near the root; grown out with the kagune.
             double[][] rig = com.hex.kagune.control.client.animation.GraftPose.ride(posed, MawMotion.around(shape.path(), girth * 1.6, shape.aperture()));

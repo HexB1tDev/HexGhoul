@@ -34,6 +34,17 @@ Previews (renders of the baked geometry outside the game, a Steve-like mannequin
 `docs/handoff/generic-masks-4.0.0.png`, `owner-masks-fitted-4.0.0.png`, `outfits-fitted-4.0.0.png` (wide and slim arms),
 `walker-legs-4.0.0.png` (leg paths, front and side).
 
+## 4.0.1 (released)
+
+The owner, after 4.0.0, on the outfits: "They seem a little too thick. Can you add more details to it as well to make it as polished and
+like not so thick in general?"; "you could add like a color or something to the formal outfit". On The Walker: "the walking is way too
+weird, bro. It's too robotic, too slow. Like the steps should be like they should vary in length ... it still feels like it's two sticks
+walking"; then "See, there's the issue. One leg at a time, not two in front at once. Come on, bro ... They don't go back like further back
+enough or forward enough. This feels very unrealistic, and it's always you can always tell where the next step is gonna be, which is what I
+don't want." Done in `tools/outfit_models.py` (`layers`/`through`/`snugger`, `details`, `RECOLOUR`, `finish`) and
+`bikaku/WalkerLegs.java` (`update`/`step`: a true alternating stride by chance; `wobble`, `body`, the S `shape`); `WalkerPose` takes the
+body's roll and dip from `BikakuRenderer.walkerBody`.
+
 ## Next
 
 Nothing outstanding from the owner. If they report in-game problems with the fit, adjust `HALF_TOP`, `MASK_EYES`, `EYE_Y`, `CLEAR`,

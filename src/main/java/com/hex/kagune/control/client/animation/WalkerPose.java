@@ -16,10 +16,22 @@ public final class WalkerPose {
 
     /** Puts his legs hanging on {@code p} ({@code weight} of it: 1 all of it), {@code time} ticks into his clock. */
     public static void legs(RigPose p, double time, float weight) {
+        legs(p, time, weight, null);
+    }
+
+    /**
+     * As {@link #legs(RigPose, double, float)}; 4.0.1 (the owner: "feel like more of a wobble"): his body riding the steps
+     * ({@code body}: {@code WalkerLegs.body}'s roll and drop, null for none): swaying over the foot he stands on, dipping as the other goes.
+     */
+    public static void legs(RigPose p, double time, float weight, double[] body) {
         if (weight <= 0.0F) {
             return;
         }
         float k = Math.min(1.0F, weight);
+        if (body != null && body.length >= 2) {
+            p.roll += (float)body[0] * k;
+            p.drop += (float)body[1] * k;
+        }
         p.rightLegX = lerp(p.rightLegX, (float)(-0.18 + 0.05 * Math.sin(time * 0.09)), k);
         p.leftLegX = lerp(p.leftLegX, (float)(0.08 + 0.05 * Math.sin(time * 0.09 + 2.0)), k);
         p.rightLegZ = lerp(p.rightLegZ, 0.06F, k);
