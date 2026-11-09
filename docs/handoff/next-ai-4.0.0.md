@@ -30,6 +30,10 @@ Release notes: `.github/release-notes-4.0.0.md`. Protocol 105. Not tested in gam
    (`WalkerLegs.shape/carried/raised`, `MawWorm.legRadius`); children (`KaguneGenes.WORM/WORM_TWIN`, `ONE_KIND` a third,
    `Children.both` no longer adds halves, `ChildWorm` fight, `BikakuRenderer` draws a child's worm).
 
+Previews (renders of the baked geometry outside the game, a Steve-like mannequin, the skin's eye row marked red at the sides):
+`docs/handoff/generic-masks-4.0.0.png`, `owner-masks-fitted-4.0.0.png`, `outfits-fitted-4.0.0.png` (wide and slim arms),
+`walker-legs-4.0.0.png` (leg paths, front and side).
+
 ## Next
 
 Nothing outstanding from the owner. If they report in-game problems with the fit, adjust `HALF_TOP`, `MASK_EYES`, `EYE_Y`, `CLEAR`,
