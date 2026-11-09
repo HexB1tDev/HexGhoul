@@ -134,6 +134,14 @@ public final class BikakuRules {
     public static final float KAKUJA_COST = 25.0F;
     public static final float KAKUJA_DRAIN = 0.05F;
     public static final int KAKUJA_COOLDOWN = 1200;
+    /**
+     * 3.7.1, The Walker on K (the owner: "the walker is the first tap K half kakuja, the full kakuja is the hold K"; asked its cost: "Half
+     * the kakuja's cost (Recommended)"): the energy to go into it and what it drains a tick (half the kakuja's; out when it runs dry); how
+     * long after it ends a fall still does him no harm (he is let down from its height).
+     */
+    public static final float WALKER_COST = KAKUJA_COST * 0.5F;
+    public static final float WALKER_DRAIN = KAKUJA_DRAIN * 0.5F;
+    public static final int WALKER_FALL_GRACE = 60;
     public static final float KAKUJA_TAKEN = 0.45F;
     public static final double KAKUJA_REACH = 14.0;
     public static final int KAKUJA_REGEN_EVERY = 8;

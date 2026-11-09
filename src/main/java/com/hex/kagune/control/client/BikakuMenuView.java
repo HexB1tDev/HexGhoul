@@ -143,13 +143,17 @@ public final class BikakuMenuView {
             c.fill(x - 1, by - 1, x + 206, by + 19, picked ? VEIN_BRIGHT : PANEL_EDGE);
             c.fill(x, by, x + 205, by + 18, picked ? BUTTON_HOVER : hover ? BUTTON_HOVER : BUTTON);
             c.text(form.displayName().toUpperCase(java.util.Locale.ROOT), x + 8, by + 5, open ? (picked ? TITLE : VALUE) : FAINT, false);
-            c.text(open ? (picked ? "ON" : form.walks() ? "walks" : form.worms() + (form.worms() == 1 ? " worm" : " worms")) // 3.6.2
+            c.text(open ? (picked ? "ON" : !form.picked() ? "tap K" : form.worms() + (form.worms() == 1 ? " worm" : " worms")) // 3.6.2, 3.7.1
                 : !form.built() ? "soon" : Integer.toString(form.mastery()),
                 x + 150, by + 5, open ? TRAIT : FAINT, false);
-            if (open) {
-                hits.put("form" + form.ordinal(), rect);
+            if (open && form.picked()) {
+                hits.put("form" + form.ordinal(), rect); // 3.7.1: The Walker is K tapped, not clicked
             }
         }
+        // 3.7.1 (the owner: "the walker is the first tap K half kakuja, the full kakuja is the hold K"): what it is and costs.
+        int below = y + 196 + com.hex.kagune.control.bikaku.BikakuForm.values().length * 22 + 4;
+        c.text("The Walker: tap K, a half kakuja. " + BikakuRules.WALKER_COST + " energy,", x, below, MUTED, false);
+        c.text("then half its drain; carried " + com.hex.kagune.control.bikaku.WalkerLegs.HEIGHT + " blocks up", x, below + 14, MUTED, false);
     }
 
     private static void middle(UiCanvas c, Model model, Map<String, UkakuMenuView.Rect> hits, double mouseX, double mouseY, int x, int y, double time) {
@@ -171,7 +175,7 @@ public final class BikakuMenuView {
         c.text("Bites make them bleed; the third stuns", x, y + 108, MUTED, false);
 
         // 3.5.4: the kakuja.
-        c.text("KAKUJA  (K, mastery " + BikakuRules.KAKUJA + ")", x, y + 222, HEADER, false);
+        c.text("KAKUJA  (hold K, mastery " + BikakuRules.KAKUJA + ")", x, y + 222, HEADER, false); // 3.7.1: K held
         c.text(Math.round(BikakuRules.KAKUJA_COST) + " energy, then it drains; " + BikakuRules.KAKUJA_COOLDOWN / 20 + " s to come back", x, y + 238, TRAIT, false);
         c.text("Rooted, " + Math.round((1.0F - BikakuRules.KAKUJA_TAKEN) * 100) + "% less from every blow,", x, y + 252, MUTED, false);
         c.text("regenerating; its tentacles bite " + Math.round(BikakuRules.KAKUJA_REACH) + " blocks out,", x, y + 266, MUTED, false);

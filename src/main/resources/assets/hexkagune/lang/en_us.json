@@ -64,6 +64,8 @@
   "message.hexkagune.bikaku.locked": "%s unlocks at mastery %s",
   "message.hexkagune.bikaku.cooldown": "%s is ready in %s s",
   "message.hexkagune.bikaku.kakuja_spent": "Your RC ran dry: the kakuja falls away",
+  "message.hexkagune.bikaku.walker_spent": "Your energy ran dry: The Walker lets you down",
+  "message.hexkagune.bikaku.walker_key": "The Walker: tap K (hold K: the kakuja)",
   "message.hexkagune.bikaku.kakuja_none": "Nothing on that key in the kakuja",
   "message.hexkagune.bikaku.reach": "Reach: %s blocks",
   "message.hexkagune.bikaku.feeding": "Your worm is feeding",

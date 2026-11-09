@@ -96,6 +96,10 @@ public final class BikakuServer {
         boolean kakuja;
         long kakujaAt = -1_000_000L;
         long kakujaReadyAt = Long.MIN_VALUE;
+        /** 3.7.1: carried in The Walker (K tapped); when he last went in and came out (long ago to start with). */
+        boolean walker;
+        long walkerAt = -1_000_000L;
+        long walkerLeftAt = -1_000_000L;
         /** 3.5.3: when Monstrous Regeneration last began (long ago to start with). */
         long regenAt = -1_000_000L;
         /** 3.5.7: when Undying Abomination last began (long ago to start with); until when a heavy blow slows its healing. */
@@ -282,7 +286,11 @@ public final class BikakuServer {
         return state != null && state.kakuja;
     }
 
-    /** K (through {@code UkakuServer}): into the kakuja (its mastery, its RC, its cooldown) or out of it. */
+    /**
+     * K (through {@code UkakuServer}): into the kakuja (its mastery, its RC, its cooldown) or out of it. 3.7.1 (the owner: "the walker is
+     * the first tap K half kakuja, the full kakuja is the hold K"): tapped, into The Walker or out of it; held, into the kakuja (out of The
+     * Walker into it); either, out of the kakuja.
+     */
     public static void kakujaKey(ServerPlayer player, boolean hold) {
         if (!ready(player) || PaleStun.stunned(player) || PaleRevive.down(player)) {
             return;
@@ -295,6 +303,14 @@ public final class BikakuServer {
         }
         if (state.kakuja) {
             leaveKakuja(player, state, now);
+            return;
+        }
+        if (!hold) {
+            if (state.walker) {
+                leaveWalker(player, state, now);
+            } else {
+                enterWalker(player, state, now);
+            }
             return;
         }
         if (KaguneProfile.mastery(player) < BikakuRules.KAKUJA) {
@@ -317,11 +333,81 @@ public final class BikakuServer {
         state.moveAt = Long.MIN_VALUE;
         state.bite = Bite.NONE;
         state.startedAt = Long.MIN_VALUE;
+        if (state.walker) {
+            state.walker = false; // 3.7.1: out of The Walker into it (its walking tentacles go into it)
+            state.walkerLeftAt = now;
+        }
         state.kakuja = true;
         state.kakujaAt = now;
         UkakuFire.sound(player.m_284548_(), player.m_20182_(), "hexkagune:sfx.transform.heavy_morph", 1.0F, 0.85F);
         KaguneNetwork.sendTo(player, player);
         broadcast(player, state);
+    }
+
+    /** 3.7.1: K tapped: into The Walker (its mastery, half the kakuja's energy; not while a worm feeds). */
+    private static void enterWalker(ServerPlayer player, State state, long now) {
+        com.hex.kagune.control.bikaku.BikakuForm walker = com.hex.kagune.control.bikaku.BikakuForm.WALKER;
+        if (!walker.unlocked(KaguneProfile.mastery(player))) {
+            notice(player, state, Component.m_237110_("message.hexkagune.bikaku.locked", walker.displayName(), walker.mastery()));
+            return;
+        }
+        if (state.devourVictim != 0) {
+            notice(player, state, Component.m_237115_("message.hexkagune.bikaku.feeding")); // as a form change: not while a worm feeds
+            return;
+        }
+        if (!KaguneServerController.useEnergy(player, BikakuRules.WALKER_COST, true)) {
+            return;
+        }
+        BikakuMoves.release(player, state, false);
+        state.move = BikakuMove.NONE;
+        state.moveAt = Long.MIN_VALUE;
+        state.bite = Bite.NONE;
+        state.startedAt = Long.MIN_VALUE;
+        state.walker = true;
+        state.walkerAt = now;
+        UkakuFire.sound(player.m_284548_(), player.m_20182_(), "hexkagune:sfx.transform.heavy_morph", 0.8F, 1.15F);
+        broadcast(player, state);
+    }
+
+    /** 3.7.1: out of The Walker (K tapped again, its energy run dry): let down from its height, no fall damage for it. */
+    static void leaveWalker(ServerPlayer player, State state, long now) {
+        if (!state.walker) {
+            return;
+        }
+        BikakuMoves.release(player, state, false);
+        state.move = BikakuMove.NONE;
+        state.moveAt = Long.MIN_VALUE;
+        state.bite = Bite.NONE;
+        state.startedAt = Long.MIN_VALUE;
+        state.walker = false;
+        state.walkerLeftAt = now;
+        KaguneServerController.playSelf(player, HexKaguneSounds.KAGUNE_RESHAPE, 0.9F, KaguneServerController.vary(player, 0.7F, 0.05F));
+        broadcast(player, state);
+    }
+
+    /** 3.7.1: true while he is carried in The Walker or just let down from it (no fall damage; not thrown out for floating). */
+    static boolean carried(State state, long now) {
+        return state.walker || now - state.walkerLeftAt < BikakuRules.WALKER_FALL_GRACE;
+    }
+
+    private static boolean floatingFailed;
+
+    /**
+     * 3.7.1: carried in The Walker he is off the ground for as long as it lasts: a server without flight allowed would throw him out for
+     * floating after 4 seconds. Its count is set back each tick (through Forge's {@code ObfuscationReflectionHelper}; if that ever fails,
+     * logged once, and only such a server's own rule applies).
+     */
+    private static void notFloating(ServerPlayer player) {
+        if (floatingFailed || player.f_8906_ == null) {
+            return;
+        }
+        try {
+            net.minecraftforge.fml.util.ObfuscationReflectionHelper.setPrivateValue(net.minecraft.server.network.ServerGamePacketListenerImpl.class,
+                player.f_8906_, 0, "f_9737_");
+        } catch (RuntimeException | LinkageError failure) {
+            floatingFailed = true;
+            com.hex.kagune.control.Safety.caught(failure, "keeping a player carried by The Walker from being thrown out for floating");
+        }
     }
 
     static void leaveKakuja(ServerPlayer player, State state, long now) {
@@ -565,7 +651,8 @@ public final class BikakuServer {
         }
         com.hex.kagune.control.bikaku.BikakuForm allowed = com.hex.kagune.control.bikaku.BikakuForm.allowed(state.form, KaguneProfile.mastery(player));
         state.form = allowed;
-        return allowed;
+        // 3.7.1: The Walker is not picked: K tapped carries him in it (its moves are Three Worms').
+        return state.walker ? com.hex.kagune.control.bikaku.BikakuForm.WALKER : allowed;
     }
 
     /** How many worms his form has (one in the kakuja: the worm it grows from). */
@@ -578,6 +665,10 @@ public final class BikakuServer {
         com.hex.kagune.control.bikaku.BikakuForm wanted = com.hex.kagune.control.bikaku.BikakuForm.byOrdinal(ordinal);
         if (state.devourVictim != 0) {
             notice(player, state, Component.m_237115_("message.hexkagune.bikaku.feeding")); // 3.6.3: not while a worm feeds
+            return;
+        }
+        if (!wanted.picked()) {
+            notice(player, state, Component.m_237115_("message.hexkagune.bikaku.walker_key")); // 3.7.1: The Walker is K tapped
             return;
         }
         if (!wanted.unlocked(KaguneProfile.mastery(player))) {
@@ -864,9 +955,23 @@ public final class BikakuServer {
                 kakujaTick(player, state, now);
             }
         }
+        // 3.7.1: The Walker (K tapped): it ends with the kagune or his life; it drains half the kakuja's energy (out when it runs dry).
+        if (state.walker) {
+            if (!KaguneProfile.isActive(player) || !player.m_6084_() || state.kakuja) {
+                state.walker = false;
+                state.walkerLeftAt = now;
+                state.dirty = true;
+            } else if (!KaguneProfile.consumeEnergy(player, BikakuRules.WALKER_DRAIN)
+                || KaguneProfile.mastery(player) < com.hex.kagune.control.bikaku.BikakuForm.WALKER.mastery()) {
+                leaveWalker(player, state, now);
+                player.m_5661_(Component.m_237115_("message.hexkagune.bikaku.walker_spent"), true);
+            }
+        }
         // 3.6.2: The Walker: his walking tentacles take a fall for him (no fall damage while they are out); his client climbs walls on them.
-        if (!state.kakuja && KaguneProfile.isActive(player) && player.m_6084_() && form(player, state).walks()) {
+        // 3.7.1: they carry him well off the ground: nor for a moment after, as he is let down; and he is never thrown out for floating.
+        if (carried(state, now) && player.m_6084_()) {
             player.f_19789_ = 0.0F;
+            notFloating(player);
         }
         // 3.5.3: Pain Suppression: hard to throw while the worm is out (and Monstrous Regeneration's healing while it lasts).
         if (now % 10L == 0L) {

@@ -35,6 +35,7 @@ public final class BikakuWormTests {
         kakuja();
         kakujaView();
         kakujaShatter();
+        walkerLift();
         roundHim();
         kakujaMoves();
         heldFar();
@@ -860,8 +861,14 @@ public final class BikakuWormTests {
         check(com.hex.kagune.control.bikaku.BikakuForm.allowed(com.hex.kagune.control.bikaku.BikakuForm.THREE, 300) == com.hex.kagune.control.bikaku.BikakuForm.TWIN
             && com.hex.kagune.control.bikaku.BikakuForm.allowed(com.hex.kagune.control.bikaku.BikakuForm.TWIN, 0) == com.hex.kagune.control.bikaku.BikakuForm.ONE
             && com.hex.kagune.control.bikaku.BikakuForm.allowed(com.hex.kagune.control.bikaku.BikakuForm.WALKER, 700) == com.hex.kagune.control.bikaku.BikakuForm.THREE
-            && com.hex.kagune.control.bikaku.BikakuForm.allowed(com.hex.kagune.control.bikaku.BikakuForm.WALKER, 1000) == com.hex.kagune.control.bikaku.BikakuForm.WALKER,
+            && com.hex.kagune.control.bikaku.BikakuForm.allowed(com.hex.kagune.control.bikaku.BikakuForm.THREE, 1000) == com.hex.kagune.control.bikaku.BikakuForm.THREE,
             "a form his mastery hasn't opened falls back to the strongest it has");
+        // 3.7.1 (the owner: "the walker is the first tap K half kakuja, the full kakuja is the hold K"): The Walker is never picked (K tapped
+        // carries him in it); an old pick of it (a profile from 3.6.2 to 3.7.0) is Three Worms.
+        check(!com.hex.kagune.control.bikaku.BikakuForm.WALKER.picked() && com.hex.kagune.control.bikaku.BikakuForm.THREE.picked()
+            && com.hex.kagune.control.bikaku.BikakuForm.allowed(com.hex.kagune.control.bikaku.BikakuForm.WALKER, 1000) == com.hex.kagune.control.bikaku.BikakuForm.THREE
+            && com.hex.kagune.control.bikaku.BikakuForm.allowed(null, 1000) == com.hex.kagune.control.bikaku.BikakuForm.THREE,
+            "The Walker is K tapped, never picked: an old pick of it is Three Worms");
     }
 
     private static final double[] PREY_AT = {0.1, 0.99, 3.6};
@@ -1144,7 +1151,8 @@ public final class BikakuWormTests {
         com.hex.kagune.control.bikaku.WalkerLegs.update(legs, new double[] {40.5, 0.0, 40.5}, right, ahead, new double[3], false, 41.0, flat);
         for (int i = 0; i < 2; i++) {
             double[] foot = com.hex.kagune.control.bikaku.WalkerLegs.foot(legs, i, 41.0);
-            check(Math.abs(foot[0] - 40.5) < 2.0 && Math.abs(foot[2] - 40.5) < 2.0 && !com.hex.kagune.control.bikaku.WalkerLegs.stepping(legs, i, 41.0),
+            double near = com.hex.kagune.control.bikaku.WalkerLegs.OUT + 0.6; // (3.7.1: a wider stance)
+            check(Math.abs(foot[0] - 40.5) < near && Math.abs(foot[2] - 40.5) < near && !com.hex.kagune.control.bikaku.WalkerLegs.stepping(legs, i, 41.0),
                 "moved far at once, its feet are put down where he is");
         }
         // Drawn: from the root to its foot, never through him, standing, stepping, on a wall.
@@ -1558,6 +1566,90 @@ public final class BikakuWormTests {
         } catch (java.io.IOException failure) {
             check(false, "read the sources: " + failure);
         }
+    }
+
+    /**
+     * 3.7.1 (the owner: "the walker should lift the player way higher up (like 3-4 blocks up)  and adapt better to literally any terrain";
+     * "the walker is the first tap K half kakuja, the full kakuja is the hold K"; its cost: "Half the kakuja's cost (Recommended)").
+     */
+    private static void walkerLift() {
+        double height = com.hex.kagune.control.bikaku.WalkerLegs.HEIGHT;
+        check(height >= 3.0 && height <= 4.0, "carried 3 to 4 blocks up (" + height + ")");
+        com.hex.kagune.control.bikaku.WalkerLegs.Blocks flat = (x, y, z) -> y < 0;
+        check(Math.abs(com.hex.kagune.control.bikaku.WalkerLegs.ride(new double[] {0.5, 0.0, 0.5}, flat) - height) < 1e-9
+            && Math.abs(com.hex.kagune.control.bikaku.WalkerLegs.ride(new double[] {0.5, height, 0.5}, flat) - height) < 1e-9,
+            "on flat ground, carried " + height + " up (from the ground, and staying there)");
+        com.hex.kagune.control.bikaku.WalkerLegs.Blocks step = (x, y, z) -> y < 0 || (z == 1 && y < 2);
+        check(Math.abs(com.hex.kagune.control.bikaku.WalkerLegs.ride(new double[] {0.5, height, 0.5}, step) - (2.0 + height)) < 1e-9,
+            "a 2-high step beside him: carried up onto it");
+        com.hex.kagune.control.bikaku.WalkerLegs.Blocks roof = (x, y, z) -> y < 0 || (y >= 4 && z >= 1);
+        double under = com.hex.kagune.control.bikaku.WalkerLegs.ride(new double[] {0.5, height, 0.5}, roof);
+        check(Math.abs(under - 2.0) < 1e-9, "a cave roof 4 up just ahead: let down so his head clears it (" + under + ")");
+        check(!com.hex.kagune.control.bikaku.WalkerLegs.climbable(roof, 0, 4, 1) && com.hex.kagune.control.bikaku.WalkerLegs.climbable(step, 0, 1, 1),
+            "a roof's underside is not climbed; a wall is");
+        com.hex.kagune.control.bikaku.WalkerLegs.Blocks trunk = (x, y, z) -> y < 0 || (x == 1 && z == 0 && y < 12);
+        check(Math.abs(com.hex.kagune.control.bikaku.WalkerLegs.ride(new double[] {0.5, height, 0.5}, trunk) - height) < 1e-9,
+            "a trunk beside him (solid down to the ground) neither lifts nor lowers him");
+        com.hex.kagune.control.bikaku.WalkerLegs.Blocks bridge = (x, y, z) -> y < 0 || (y == 4 && z == 1);
+        check(Math.abs(com.hex.kagune.control.bikaku.WalkerLegs.ride(new double[] {0.5, height, 0.5}, bridge) - (5.0 + height)) < 1e-9,
+            "a ledge or a bridge within his reach above: carried up onto it");
+        com.hex.kagune.control.bikaku.WalkerLegs.Blocks room = (x, y, z) -> y < 0 || y == 4;
+        check(Math.abs(com.hex.kagune.control.bikaku.WalkerLegs.ride(new double[] {0.5, height, 0.5}, room) - 2.0) < 1e-9,
+            "a room's ceiling over him (a floor on top of it): let down under it, never carried up through it");
+        com.hex.kagune.control.bikaku.WalkerLegs.Blocks none = (x, y, z) -> false;
+        check(Double.isNaN(com.hex.kagune.control.bikaku.WalkerLegs.ride(new double[] {0.5, 10.0, 0.5}, none)), "nothing in the legs' reach below: he falls");
+        // The spring: up and down, never faster than its pace, never past the height.
+        double y = 0.0;
+        double ride = height;
+        int ticks = 0;
+        while (Math.abs(y - ride) > 0.01 && ticks < 200) {
+            double up = com.hex.kagune.control.bikaku.WalkerLegs.lift(y, ride);
+            check(up <= com.hex.kagune.control.bikaku.WalkerLegs.RISE + 1e-9 && y + up <= ride + 1e-9, "rising, never faster than its pace nor past it");
+            y += up;
+            ticks++;
+        }
+        check(ticks > 5 && ticks < 40, "lifted to its height in a moment (" + ticks + " ticks), not at once");
+        double down = com.hex.kagune.control.bikaku.WalkerLegs.lift(height, 2.0);
+        check(down < 0.0 && down >= -com.hex.kagune.control.bikaku.WalkerLegs.SINK - 1e-9, "let down under a roof as fast as its pace");
+        // Standing carried at its height: both feet on the ground, wide, within the legs' reach.
+        com.hex.kagune.control.bikaku.WalkerLegs.Legs legs = new com.hex.kagune.control.bikaku.WalkerLegs.Legs();
+        double[] at = {0.5, height, 0.5};
+        for (double t = 10.0; t <= 60.0; t += 0.5) {
+            com.hex.kagune.control.bikaku.WalkerLegs.update(legs, at, new double[] {1, 0, 0}, new double[] {0, 0, 1}, new double[3], false, t, flat);
+        }
+        for (int i = 0; i < 2; i++) {
+            double[] foot = com.hex.kagune.control.bikaku.WalkerLegs.foot(legs, i, 60.0);
+            check(Math.abs(foot[1]) < 1e-9 && Math.abs(foot[0] - at[0]) > 1.5, "carried " + height + " up, foot " + i + " stands wide on the ground");
+            check(distance(foot, new double[] {at[0], at[1] + MawMotion.ROOT[1], at[2]}) <= com.hex.kagune.control.bikaku.WalkerLegs.REACH,
+                "within the legs' reach of his back");
+            double[] body = {foot[0] - at[0], foot[1] - at[1], foot[2] - at[2]};
+            double[][] path = com.hex.kagune.control.bikaku.WalkerLegs.shape(i, body, new double[] {0, 1, 0}, false, 60.0, 7).path();
+            check(distance(path[path.length - 1], body) < 1e-9 && path[2][1] > path[0][1] - 0.5, "the leg arches out high and comes down onto its foot");
+        }
+        // Its cost, the keys, the menu and the server (read from the sources): half the kakuja's; tapped The Walker, held the kakuja.
+        check(Math.abs(com.hex.kagune.control.bikaku.BikakuRules.WALKER_COST * 2.0F - com.hex.kagune.control.bikaku.BikakuRules.KAKUJA_COST) < 1e-6
+            && Math.abs(com.hex.kagune.control.bikaku.BikakuRules.WALKER_DRAIN * 2.0F - com.hex.kagune.control.bikaku.BikakuRules.KAKUJA_DRAIN) < 1e-9,
+            "The Walker costs half the kakuja: half its price, half its drain");
+        try {
+            String server = read("src/main/java/com/hex/kagune/control/server/BikakuServer.java");
+            String key = server.substring(server.indexOf("public static void kakujaKey(ServerPlayer player, boolean hold)"));
+            key = key.substring(0, key.indexOf("\n    }\n"));
+            check(key.contains("if (!hold) {") && key.contains("enterWalker(player, state, now)") && key.contains("leaveWalker(player, state, now)")
+                && key.indexOf("if (!hold) {") < key.indexOf("BikakuRules.KAKUJA_COST"), "K tapped is The Walker, K held the kakuja");
+            check(server.contains("BikakuRules.WALKER_COST") && server.contains("BikakuRules.WALKER_DRAIN") && server.contains("\"f_9737_\"")
+                && server.contains("carried(state, now)"), "The Walker pays and drains, takes no fall and is never thrown out for floating");
+            String input = read("src/main/java/com/hex/kagune/control/client/UkakuInput.java");
+            check(input.contains("path == KagunePath.BIKAKU ? view.mastery() >= com.hex.kagune.control.bikaku.BikakuRules.KAKUJA"),
+                "Bikaku's K is timed (tap or hold) once the kakuja is open");
+            String menu = read("src/main/java/com/hex/kagune/control/client/BikakuMenuView.java");
+            check(menu.contains("open && form.picked()") && menu.contains("(hold K, mastery "), "the menu: The Walker is K tapped, not clicked; the kakuja K held");
+        } catch (java.io.IOException failure) {
+            check(false, "read the sources: " + failure);
+        }
+    }
+
+    private static String read(String path) throws java.io.IOException {
+        return new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(path)), java.nio.charset.StandardCharsets.UTF_8);
     }
 
     private static void kakuja() {

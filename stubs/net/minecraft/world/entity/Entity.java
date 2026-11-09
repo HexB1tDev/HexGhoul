@@ -49,6 +49,7 @@ public abstract class Entity {
     /** setDeltaMovement */ public void m_20256_(net.minecraft.world.phys.Vec3 motion) { throw new UnsupportedOperationException(); }
     /** setPos(Vec3) */ public final void m_146884_(net.minecraft.world.phys.Vec3 position) { throw new UnsupportedOperationException(); }
     /** onGround */ public boolean m_20096_() { throw new UnsupportedOperationException(); }
+    /** setOnGround (3.7.1) */ public void m_6853_(boolean onGround) { throw new UnsupportedOperationException(); }
     /** isInWater */ public boolean m_20072_() { throw new UnsupportedOperationException(); }
     /** discard */ public void m_146870_() { throw new UnsupportedOperationException(); }
     /** isInWater (the touching-water check vanilla's sprint particles use) */ public boolean m_20069_() { throw new UnsupportedOperationException(); }

@@ -103,6 +103,8 @@ public final class BikakuClient {
     }
 
     private static final Map<UUID, View> VIEWS = new HashMap<>();
+    /** 3.7.1: for each player, when his walking tentacles last came out or went in (client clock), and whether they are out (1) or not. */
+    private static final Map<UUID, double[]> WALKER = new HashMap<>();
 
     private BikakuClient() {
     }
@@ -126,6 +128,13 @@ public final class BikakuClient {
         double regenBegan = clock - (regenBehind > JUST_BEGUN ? Math.min(regenBehind, 100_000L) : 0L);
         if (before != null && before.regenAt() == message.regenAt()) {
             regenBegan = before.regenBegan();
+        }
+        // 3.7.1: the walking tentacles growing out of him (The Walker, K tapped) or going back in.
+        boolean walks = com.hex.kagune.control.bikaku.BikakuForm.byOrdinal(message.form()).walks() && !message.kakuja();
+        boolean walked = before != null && before.form().walks() && !before.kakuja();
+        if (before == null || walks != walked) {
+            WALKER.put(message.playerId(), new double[] {before == null && walks ? clock - com.hex.kagune.control.bikaku.WalkerLegs.GROW : clock,
+                walks ? 1.0 : 0.0});
         }
         if (before != null && before.kakuja() && !message.kakuja()) {
             shatter(message.playerId(), before, clock); // 3.6.9: turning back, the kakuja breaks
@@ -262,6 +271,17 @@ public final class BikakuClient {
         return view.form().walks() && !view.kakuja() && deploy(player, partial) > 0.5F;
     }
 
+    /** 3.7.1: how far {@code player}'s walking tentacles are grown out of him (0 .. 1), at {@code clock}: out over a moment, in again as fast. */
+    public static double walkerGrown(Player player, double clock) {
+        double[] walker = WALKER.get(player.m_20148_());
+        if (walker == null) {
+            return 0.0;
+        }
+        double t = Math.max(0.0, Math.min(1.0, (clock - walker[0]) / com.hex.kagune.control.bikaku.WalkerLegs.GROW));
+        double grown = t * t * (3.0 - 2.0 * t);
+        return walker[1] > 0.5 ? grown : 1.0 - grown;
+    }
+
     /** The worm's seed for {@code player}: the same on every client. */
     public static int seed(Player player) {
         UUID id = player.m_36316_().getId();
@@ -271,5 +291,6 @@ public final class BikakuClient {
     @SubscribeEvent
     public static void loggingOut(ClientPlayerNetworkEvent.LoggingOut event) {
         VIEWS.clear();
+        WALKER.clear();
     }
 }

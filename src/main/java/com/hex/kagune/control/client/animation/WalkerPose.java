@@ -2,13 +2,11 @@ package com.hex.kagune.control.client.animation;
 
 /**
  * 3.6.2 (the owner: "when the player walks his body doesn't move, but like he controls these tentacles that walk around"): The Walker's
- * body: his own legs hang still (none of the walk's swing), knees a little bent, swaying only slightly; he is lifted a little off the ground,
- * carried by the walking tentacles. 3.7.0 (the owner: "the arms should not swing at any point (they currently do)"): his arms hang still
+ * body: his own legs hang still (none of the walk's swing), knees a little bent, swaying only slightly. (3.7.1: he is carried off the
+ * ground for real, {@code WalkerLegs.HEIGHT} up: the model is no longer lifted.) 3.7.0 (the owner: "the arms should not swing at any point (they currently do)"): his arms hang still
  * too, none of Minecraft's own swing (walking, attacking, the bob), only the slight sway the legs have.
  */
 public final class WalkerPose {
-    /** How far he is lifted (model pixels). */
-    static final float LIFT = 3.0F;
     /** 3.7.0: how far his arms hang out from his sides, and how bent his elbows are (radians). */
     static final float ARM_OUT = 0.1F;
     static final float ELBOW = 0.15F;
@@ -39,7 +37,6 @@ public final class WalkerPose {
         p.rightElbow = lerp(p.rightElbow, ELBOW, k);
         p.leftElbow = lerp(p.leftElbow, ELBOW, k);
         p.armHold = Math.max(p.armHold, k);
-        p.drop -= LIFT * k;
     }
 
     private static float lerp(float a, float b, float t) {

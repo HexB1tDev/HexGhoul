@@ -48,6 +48,14 @@ public enum BikakuForm {
         return this.mastery;
     }
 
+    /**
+     * 3.7.1: picked in the menu (One Worm, Twin Worms, Three Worms). The Walker is not: K tapped carries him in it, a half kakuja (the
+     * owner: "the walker is the first tap K half kakuja, the full kakuja is the hold K").
+     */
+    public boolean picked() {
+        return this != WALKER;
+    }
+
     /** 3.6.2: true for The Walker: walking tentacles carry him. */
     public boolean walks() {
         return this == WALKER;
@@ -62,14 +70,14 @@ public enum BikakuForm {
         return ordinal >= 0 && ordinal < all.length ? all[ordinal] : ONE;
     }
 
-    /** {@code wanted} if {@code mastery} has opened it, else the strongest form it has. */
+    /** {@code wanted} if {@code mastery} has opened it, else the strongest form it has (3.7.1: of those picked: never The Walker). */
     public static BikakuForm allowed(BikakuForm wanted, int mastery) {
-        if (wanted != null && wanted.unlocked(mastery)) {
+        if (wanted != null && wanted.picked() && wanted.unlocked(mastery)) {
             return wanted;
         }
         BikakuForm best = ONE;
         for (BikakuForm form : values()) {
-            if (form.unlocked(mastery) && (wanted == null || form.ordinal() < wanted.ordinal())) {
+            if (form.picked() && form.unlocked(mastery) && (wanted == null || form.ordinal() < wanted.ordinal())) {
                 best = form;
             }
         }

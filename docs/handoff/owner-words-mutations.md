@@ -338,3 +338,10 @@ Asked three questions, the owner chose (the option labels, exactly):
 - Which moments give the absorbing buffs: "Grand Devouring only (Recommended)" (when the swallowed body's bulge reaches his back and the
   bar refills).
 - Which effects, besides Speed: "Strength, Resistance, Refreshed, Replenished (Recommended)".
+
+Then, while The Walker's rework was being built:
+
+as soon as the weekly limit touches 99% push a handoff and a prompt to continue with another AI.
+
+(The AI can't see the usage meter: told the owner so, and keeps the handoff and `docs/handoff/next-prompt-3.7.x.md` current and pushed with
+every version.)

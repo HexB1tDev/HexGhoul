@@ -18,7 +18,7 @@ import javax.imageio.ImageIO;
  * 3.4.9: the Bikaku path's worm off-game, exactly as MawMotion poses it and MawWorm builds it, on the player model (PoseRender).
  * <pre>
  * javac -nowarn -cp build/quick/classes -d build/maw-preview tools/PoseRender.java tools/MawPreview.java
- * java -Djava.awt.headless=true -cp build/maw-preview:build/quick/classes MawPreview &lt;out-dir&gt; [look|mouth|bite|colours|bites|firstperson|grow|kakuja|shatter|all]
+ * java -Djava.awt.headless=true -cp build/maw-preview:build/quick/classes MawPreview &lt;out-dir&gt; [look|mouth|bite|colours|bites|firstperson|grow|kakuja|shatter|walkerlift|all]
  * </pre>
  */
 public class MawPreview {
@@ -87,6 +87,9 @@ public class MawPreview {
         }
         if (which.equals("shatter") || which.equals("all")) {
             shatter(new File(out, "maw-shatter.png"));
+        }
+        if (which.equals("walkerlift") || which.equals("all")) {
+            walkerLift(new File(out, "maw-walker-lift.png"));
         }
     }
 
@@ -482,6 +485,102 @@ public class MawPreview {
             }
         }
         return tris;
+    }
+
+    /**
+     * 3.7.1 (the owner: "the walker should lift the player way higher up (like 3-4 blocks up)  and adapt better to literally any terrain, the
+     * arms should not swing at any point"): The Walker carrying him WalkerLegs.HEIGHT over the ground, over steps and rough ground, let down
+     * under a cave roof, up a wall, off a ledge; his arms and legs hanging still. His going as his client's: a walking pace, climbing only a
+     * wall before his body (WalkerLegs.climbable), carried to WalkerLegs.ride by WalkerLegs.lift.
+     */
+    record LiftScene(String name, java.util.Set<String> blocks, int[] ticks, double yaw, double pitch, double distance, double[] start) {
+    }
+
+    static void walkerLift(File file) throws Exception {
+        int fw = 300;
+        int fh = 330;
+        int cols = 8;
+        LiftScene[] scenes = {
+            new LiftScene("walking", walkerBlocks(new int[][] {}), new int[] {0, 4, 8, 12, 16, 20, 24, 28}, 60, 12, 20.0, new double[] {0.5, 0.0, -2.0}),
+            new LiftScene("up steps and rough ground", walkerBlocks(new int[][] {{-3, 0, 2, 4, 1, 4}, {-3, 0, 4, 4, 2, 6}, {-3, 0, 6, 0, 3, 7},
+                {1, 0, 6, 4, 1, 9}, {-3, 0, 9, 4, 2, 12}}), new int[] {0, 8, 14, 20, 26, 32, 40, 50}, 70, 14, 21.0, new double[] {0.5, 0.0, -1.0}),
+            new LiftScene("under a cave roof (4 high)", walkerBlocks(new int[][] {{-4, 4, 3, 5, 10, 16}}), new int[] {0, 8, 14, 18, 22, 26, 34, 44},
+                80, 8, 20.0, new double[] {0.5, 0.0, -2.0}),
+            new LiftScene("up a wall", walkerBlocks(new int[][] {{-4, 0, 3, 5, 9, 6}}), new int[] {0, 6, 12, 20, 30, 40, 52, 64}, 230, 14, 22.0,
+                new double[] {0.5, 0.0, -1.5}),
+            new LiftScene("off a ledge", walkerBlocks(new int[][] {{-4, 0, -8, 5, 3, 2}}), new int[] {0, 6, 10, 14, 18, 24, 30, 40}, 70, 12, 21.0,
+                new double[] {0.5, 3.0, -2.0}),
+        };
+        BufferedImage img = new BufferedImage(fw * cols, fh * (scenes.length + 1) + 34, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = sheet(img, "Bikaku 3.7.1: The Walker (tap K, a half kakuja) carries him " + com.hex.kagune.control.bikaku.WalkerLegs.HEIGHT
+            + " blocks up on two long legs, over any ground; lowered under a ceiling, up walls; his arms and legs hang still");
+        double[][] views = {{0, 8}, {40, 12}, {90, 8}, {140, 12}, {180, 8}, {220, 12}, {270, 8}, {320, 30}};
+        for (int i = 0; i < cols; i++) {
+            double time = 50 + i * 7;
+            com.hex.kagune.control.bikaku.WalkerLegs.Legs legs = new com.hex.kagune.control.bikaku.WalkerLegs.Legs();
+            com.hex.kagune.control.bikaku.WalkerLegs.Blocks flat = (x, y, z) -> y < 0;
+            double[] at = {0.5, com.hex.kagune.control.bikaku.WalkerLegs.ride(new double[] {0.5, 0.0, 0.5}, flat), 0.5};
+            com.hex.kagune.control.bikaku.WalkerLegs.update(legs, at, new double[] {1, 0, 0}, new double[] {0, 0, 1}, new double[3], false, time, flat);
+            List<PoseRender.Tri> tris = worms(MawMotion.form(time, SEED, 3, BikakuRules.Bite.NONE, 0, null, BikakuRules.REACH), time);
+            tris.addAll(legTris(legs, at, time));
+            PoseRender.Camera cam = PoseRender.orbit(views[i][0], views[i][1], 17.0, -0.8);
+            g.drawImage(onGround(hanging(time), cam, fw, fh, tris, at), i * fw, 34, null);
+            label(g, String.format("carried %.1f up, from %.0f°", at[1], views[i][0]), i * fw, 34);
+        }
+        for (int s = 0; s < scenes.length; s++) {
+            LiftScene scene = scenes[s];
+            com.hex.kagune.control.bikaku.WalkerLegs.Legs legs = new com.hex.kagune.control.bikaku.WalkerLegs.Legs();
+            com.hex.kagune.control.bikaku.WalkerLegs.Blocks blocks = (x, y, z) -> walkerSolid(scene.blocks(), x, y, z);
+            double[] at = scene.start().clone();
+            double first = com.hex.kagune.control.bikaku.WalkerLegs.ride(at, blocks);
+            at[1] = Double.isNaN(first) ? at[1] : first;
+            int last = scene.ticks()[scene.ticks().length - 1];
+            int shown = 0;
+            for (int t = 0; t <= last; t++) {
+                double[] was = at.clone();
+                // Ahead at walking pace unless his body meets a block (then he climbs it); carried to the ride height, or falling.
+                // A wall before his body (a block with solid under it, going down) is climbed; the underside of a roof is not.
+                boolean wall = false;
+                for (double h = 0.1; h < 1.8; h += 0.4) {
+                    int cx = (int)Math.floor(at[0]);
+                    int cy = (int)Math.floor(at[1] + h);
+                    int cz = (int)Math.floor(at[2] + 0.45);
+                    wall |= walkerSolid(scene.blocks(), cx, cy, cz) && walkerSolid(scene.blocks(), cx, cy - 1, cz);
+                }
+                double ride = com.hex.kagune.control.bikaku.WalkerLegs.ride(at, blocks);
+                if (wall) {
+                    at[1] += 0.2;
+                } else {
+                    boolean head = false;
+                    for (double h = 0.1; h < 1.8; h += 0.4) {
+                        head |= walkerSolid(scene.blocks(), (int)Math.floor(at[0]), (int)Math.floor(at[1] + h), (int)Math.floor(at[2] + 0.45));
+                    }
+                    at[2] += head ? 0.0 : 0.2; // (Minecraft's own collision: held back until he is low enough)
+                    at[1] += Double.isNaN(ride) ? -0.35 : com.hex.kagune.control.bikaku.WalkerLegs.lift(at[1], ride);
+                }
+                double[] going = {at[0] - was[0], at[1] - was[1], at[2] - was[2]};
+                com.hex.kagune.control.bikaku.WalkerLegs.update(legs, at, new double[] {1, 0, 0}, new double[] {0, 0, 1}, going, wall, 200 + t, blocks);
+                if (shown < cols && t == scene.ticks()[shown]) {
+                    double time = 200 + t;
+                    List<PoseRender.Tri> tris = worms(MawMotion.form(time, SEED, 3, BikakuRules.Bite.NONE, 0, null, BikakuRules.REACH), time);
+                    tris.addAll(legTris(legs, at, time));
+                    for (String b : scene.blocks()) {
+                        String[] c = b.split(",");
+                        double[] corner = {Integer.parseInt(c[0]) - at[0], Integer.parseInt(c[1]) - at[1], Integer.parseInt(c[2]) - at[2]};
+                        if (Math.abs(corner[2]) < 8 && corner[1] > -8 && corner[1] < 7 && (corner[0] < 1.5 || scene.name().startsWith("up a wall"))) {
+                            tris.addAll(cube(corner, 0x7A746C));
+                        }
+                    }
+                    PoseRender.Camera cam = PoseRender.orbit(scene.yaw(), scene.pitch(), scene.distance(), -0.6);
+                    g.drawImage(onGround(hanging(time), cam, fw, fh, tris, at), shown * fw, 34 + (s + 1) * fh, null);
+                    label(g, String.format("%s %dt%s", scene.name(), t, wall ? "  CLIMBING" : ""), shown * fw, 34 + (s + 1) * fh);
+                    shown++;
+                }
+            }
+        }
+        g.dispose();
+        ImageIO.write(img, "png", file);
+        System.out.println(file);
     }
 
     /** 3.5.8: held to throw it further: the wind-up, a bite thrown 30 blocks, Predatory Drag 30 blocks along the ground, Ravenous Pursuit at 20. */

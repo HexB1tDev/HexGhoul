@@ -87,6 +87,12 @@ kakuja breaks into pieces as the Rinkaku's does (they fly off, spin, bounce once
 **3.7.0 (fix; the owner: "the arms should not swing at any point (they currently do)"):** in The Walker his arms hang still at his sides
 (none of Minecraft's swing), as his legs do.
 
+**3.7.1 (The Walker on K; the owner: "the walker should lift the player way higher up (like 3-4 blocks up)  and adapt better to literally
+any terrain ... the walker is the first tap K half kakuja, the full kakuja is the hold K"; cost "Half the kakuja's cost (Recommended)"):**
+K tapped: The Walker (750; 12.5 energy, then half the kakuja's drain); K held: the kakuja. Carried 3.5 blocks up for real on two long legs
+standing wide, over the highest ground round him (up onto steps, ledges, roofs), let down under a roof or ceiling, climbing walls (never a
+roof's underside), at a walking pace; no fall damage while carried and for 3 s after; never kicked for floating. No longer a menu form.
+
 **Before 3.4.9 (the pure worm, unchanged since except as above):**
 
 - `control/bikaku/MawWorm.java`: the worm as a mesh (pure). A thick muscular tube along a spine resampled evenly by length

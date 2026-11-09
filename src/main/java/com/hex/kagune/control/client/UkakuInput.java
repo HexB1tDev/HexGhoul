@@ -164,7 +164,9 @@ public final class UkakuInput {
         boolean down = minecraft.f_91080_ == null && KaguneKeys.CYCLE_TENDRILS.m_90857_();
         // 7.0.0: Graft DNA's K hold picks his next base stage, at any mastery.
         // 1.0.10: Rinkaku's K held is his final kakuja (War or Peace) once he has chosen it, whatever his mastery.
-        boolean finalUnlocked = path == KagunePath.GRAFT || (path == KagunePath.UKAKU ? WingForm.FINAL_KAKUJA.unlocked(view.mastery())
+        // 3.7.1: Bikaku's K held is its kakuja once open (tapped, The Walker).
+        boolean finalUnlocked = path == KagunePath.GRAFT || (path == KagunePath.BIKAKU ? view.mastery() >= com.hex.kagune.control.bikaku.BikakuRules.KAKUJA
+            : path == KagunePath.UKAKU ? WingForm.FINAL_KAKUJA.unlocked(view.mastery())
             : RinkakuForms.finalKakuja().isUnlocked(view.mastery()) || KingClient.chosen().built());
         int sent = KAKUJA_KEY.tick(pressed, down, finalUnlocked);
         if (sent != KakujaKey.NONE) {

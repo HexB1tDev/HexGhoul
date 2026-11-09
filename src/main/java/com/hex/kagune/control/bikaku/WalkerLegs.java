@@ -9,26 +9,41 @@ import com.hex.kagune.control.graft.GraftMesh;
  * pretty much."): The Walker's two walking tentacles (pure). Where each one's foot is planted on the blocks round him (the ground, a
  * step, a wall he climbs), when it steps and where to, one at a time as he goes; and each tentacle's shape from the worms' root, arching
  * out over his side and down onto its foot, its mouth biting the block it stands on.
+ *
+ * <p>3.7.1 (the owner: "the walker should lift the player way higher up (like 3-4 blocks up)  and adapt better to literally any terrain";
+ * "the walker is the first tap K half kakuja, the full kakuja is the hold K"): the legs carry him {@link #HEIGHT} blocks up, standing wide
+ * and reaching far; how high he is carried over the ground round him ({@link #ride}), how fast he is brought there ({@link #lift}), and
+ * what he climbs ({@link #climbable}: a wall, never the underside of a roof, which he is let down under).
  */
 public final class WalkerLegs {
     public static final int LEGS = 2;
     /** How far out to his side (blocks, from his middle) a foot is planted at rest, and how far ahead of him. */
-    public static final double OUT = 1.35;
-    public static final double AHEAD = 0.2;
+    public static final double OUT = 2.1;
+    public static final double AHEAD = 0.35;
     /** A stepping foot is put down this many ticks of his going ahead of him. */
     public static final double LEAD = 6.0;
     /** A planted foot this far from where it would be put now steps (one at a time); further than {@link #REACH} from the root, at once. */
-    public static final double STEP = 0.85;
-    public static final double REACH = 3.2;
+    public static final double STEP = 1.1;
+    public static final double REACH = 6.6;
     /** A step: how long (ticks) and how high its arc (off the face it leaves and lands on). */
-    public static final double STEP_TICKS = 5.0;
-    public static final double ARC = 0.55;
+    public static final double STEP_TICKS = 6.0;
+    public static final double ARC = 0.8;
     /** How far below his feet and above them a foot looks for ground; how far out from the root for a wall. */
-    static final double DOWN = 2.6;
+    static final double DOWN = 2.6 + 3.5;
     static final double UP = 1.3;
-    static final double WALL = 2.4;
+    static final double WALL = 3.0;
     /** How thick a walking tentacle is (the worm's is 1). */
-    public static final double GIRTH = 0.72;
+    public static final double GIRTH = 0.85;
+
+    /**
+     * 3.7.1 (the owner: "the walker should lift the player way higher up (like 3-4 blocks up)  and adapt better to literally any terrain"):
+     * how high his feet are carried over the ground (blocks); how far round him the ground he is carried over is felt (blocks, from his
+     * middle); how far above his feet ground still counts (he is carried up onto it; higher, he climbs it); the room kept over his head.
+     */
+    public static final double HEIGHT = 3.5;
+    static final double FEEL = 1.2;
+    static final double RIDE_UP = 2.5;
+    static final double HEADROOM = 2.0;
 
     private WalkerLegs() {
     }
@@ -36,6 +51,85 @@ public final class WalkerLegs {
     /** The blocks round him: whether the block at (x, y, z) is solid to stand on or grip. */
     public interface Blocks {
         boolean solid(int x, int y, int z);
+    }
+
+    /**
+     * 3.7.1: how high his feet should be carried now (the world's y): {@link #HEIGHT} over the highest ground under and round him (within
+     * {@link #FEEL}: a step, a rock, a ledge, a roof, the top of anything up to {@link #RIDE_UP} above his feet; down to {@link #DOWN} below
+     * them), lowered so his head keeps {@link #HEADROOM} under a ceiling (never below that ground); NaN with no ground in the legs' reach
+     * (he falls).
+     */
+    public static double ride(double[] feet, Blocks blocks) {
+        // A roof right over his own head (a solid block with open air under it): nothing above it can be stood on from here.
+        int x0 = (int)Math.floor(feet[0]);
+        int z0 = (int)Math.floor(feet[2]);
+        double over = Double.POSITIVE_INFINITY;
+        for (int y = (int)Math.floor(feet[1]) + 1; y <= (int)Math.floor(feet[1] + RIDE_UP + HEIGHT + HEADROOM); y++) {
+            if (blocks.solid(x0, y, z0)) {
+                if (!blocks.solid(x0, y - 1, z0)) {
+                    over = y;
+                }
+                break;
+            }
+        }
+        // Each of the nine columns felt: the first block from RIDE_UP above his feet down to DOWN below with open air on top (and under
+        // that roof); the highest of them is what he is carried over.
+        double[] tops = new double[9];
+        double top = Double.NEGATIVE_INFINITY;
+        int high = (int)Math.floor(feet[1] + RIDE_UP);
+        int low = (int)Math.floor(feet[1] - DOWN);
+        for (int c = 0; c < 9; c++) {
+            int x = (int)Math.floor(feet[0] + (c / 3 - 1) * FEEL);
+            int z = (int)Math.floor(feet[2] + (c % 3 - 1) * FEEL);
+            tops[c] = Double.NEGATIVE_INFINITY;
+            for (int y = high; y >= low; y--) {
+                if (blocks.solid(x, y, z) && !blocks.solid(x, y + 1, z) && y + 1.0 <= over) {
+                    tops[c] = y + 1.0;
+                    top = Math.max(top, y + 1.0);
+                    break;
+                }
+            }
+        }
+        if (top == Double.NEGATIVE_INFINITY) {
+            return Double.NaN;
+        }
+        // A ceiling over him or about to be (a solid block with open air under it, above his feet, in any of the columns felt), lowering
+        // him; a wall or a trunk beside him (solid on down) is not one, nor what a column was found to be stood on.
+        double carried = top + HEIGHT;
+        int roof = (int)Math.floor(carried + HEADROOM);
+        for (int c = 0; c < 9; c++) {
+            int x = (int)Math.floor(feet[0] + (c / 3 - 1) * FEEL);
+            int z = (int)Math.floor(feet[2] + (c % 3 - 1) * FEEL);
+            for (int y = (int)Math.floor(Math.min(feet[1], carried)) + 1; y <= roof; y++) {
+                if (blocks.solid(x, y, z)) {
+                    if (!blocks.solid(x, y - 1, z) && tops[c] != y + 1.0) {
+                        carried = Math.min(carried, y - HEADROOM);
+                    }
+                    break;
+                }
+            }
+        }
+        return Math.max(top, carried);
+    }
+
+    /** 3.7.1: how fast (blocks a tick) he is brought to the height he is carried at: a spring, no faster up than this, nor down. */
+    static final double SPRING = 0.3;
+    public static final double RISE = 0.4;
+    public static final double SINK = 0.45;
+    /** 3.7.1: how long (ticks) the walking tentacles take to grow out of him (and go back in). */
+    public static final double GROW = 14.0;
+
+    /** 3.7.1: his upward speed (blocks a tick) to be carried from {@code y} toward {@code ride} ({@link #ride}). */
+    public static double lift(double y, double ride) {
+        return Math.max(-SINK, Math.min(RISE, (ride - y) * SPRING));
+    }
+
+    /**
+     * 3.7.1: a block before his body he climbs: solid, with solid under it (a wall going down to the ground). The underside of a roof (open
+     * under it) is not: he is let down under it ({@link #ride}).
+     */
+    public static boolean climbable(Blocks blocks, int x, int y, int z) {
+        return blocks.solid(x, y, z) && blocks.solid(x, y - 1, z);
     }
 
     /** Where his two feet are (the world), stepping or planted; one per player, kept by whoever draws him. */
@@ -213,7 +307,7 @@ public final class WalkerLegs {
     /** Nothing to stand on: the foot hangs out to its side, below his root. */
     static double[] dangle(int i, double[] feet, double[] right) {
         double side = i == 0 ? 1.0 : -1.0;
-        return GraftMesh.add(GraftMesh.add(feet, GraftMesh.mul(right, side * OUT * 0.8)), new double[] {0.0, -0.3, 0.0});
+        return GraftMesh.add(GraftMesh.add(feet, GraftMesh.mul(right, side * OUT * 0.8)), new double[] {0.0, -1.6, 0.0});
     }
 
     /**
@@ -228,7 +322,8 @@ public final class WalkerLegs {
         double[] toFoot = GraftMesh.sub(foot, out);
         double reach = GraftMesh.length3(toFoot);
         double sway = 0.06 * Math.sin(time * 0.11 + seed * 1.7 + i * 2.1);
-        double[] knee = GraftMesh.add(GraftMesh.lerp(out, foot, 0.42), new double[] {side * (0.42 + sway), 0.5 + 0.22 * reach, -0.12});
+        // 3.7.1: long legs: the knee high and well out to its side, as a spider's (or the doctor's) arm stands.
+        double[] knee = GraftMesh.add(GraftMesh.lerp(out, foot, 0.4), new double[] {side * (0.42 + 0.12 * reach + sway), 0.5 + 0.3 * reach, -0.12});
         double[] over = GraftMesh.add(foot, GraftMesh.mul(GraftMesh.normalize(face), 0.55 + 0.1 * reach));
         double[] down = GraftMesh.add(foot, GraftMesh.mul(GraftMesh.normalize(face), 0.18));
         double[][] path = {root.clone(), out, knee, GraftMesh.lerp(knee, over, 0.6), over, down, foot.clone()};

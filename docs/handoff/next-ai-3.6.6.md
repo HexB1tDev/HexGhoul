@@ -6,8 +6,14 @@
   "ENERGY").
 - **3.6.8 shipped** (fix: the kakuja's camera sized to it: `client/BikakuCamera`).
 - **3.6.9 shipped** (fix: the kakuja shatters on turning back, through Rinkaku's machinery).
-- **3.7.0 shipped** (fix: The Walker's arms never swing). Version 3.7.0, protocol 103; the next is **3.7.1** (The Walker reworked; its
-  preview was sent).
+- **3.7.0 shipped** (fix: The Walker's arms never swing).
+- **3.7.1 shipped** (The Walker on K tapped, a half kakuja; K held the kakuja; carried 3.5 blocks up over any ground). Version 3.7.1,
+  protocol 103; the next is **3.7.2** (the absorbing buffs).
+- **The prompt for the next AI:** `docs/handoff/next-prompt-3.7.x.md` (keep it and this section current with every version; the owner:
+  "as soon as the weekly limit touches 99% push a handoff and a prompt to continue with another AI." The AI can't see the usage meter.)
+- **Potential Unlock's tearing-off and strands: preview sent, not built.** `docs/handoff/potential-reattach-preview.png` (rows: the right
+  arm, the head, both arms with a blue kagune; close-ups), made from the pure prototype in `docs/handoff/potential-prototype/`
+  (`Reattach.java`, `PotentialPreview.java`, a README with the commands). No answer from the owner yet: ask before building it.
 - The owner's choices (asked): The Walker on tap K costs "Half the kakuja's cost (Recommended)"; the absorbing buffs come from "Grand
   Devouring only (Recommended)"; the effects "Strength, Resistance, Refreshed, Replenished (Recommended)" with Speed, 15 s.
 - The owner then sent new words (quoted exactly at the end of `docs/handoff/owner-words-mutations.md`): a new thing ("Whenever an entity

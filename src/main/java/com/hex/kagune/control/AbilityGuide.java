@@ -515,7 +515,10 @@ public final class AbilityGuide {
         rows.add(new Row("hold", "Hold one to throw it further", TEXT, 0)); // 3.5.8: up to 30 blocks
         rows.add(new Row("auto", "Bites heal you", TEXT, 0));
         rows.add(new Row("auto", "Fast regeneration · hard to knock back", TEXT, 0)); // 3.5.3: its passives
-        rows.add(new Row(key(in, Key.CYCLE) + " tap", "Kakuja", BIKAKU_KAKUJA, locked(in.mastery(), com.hex.kagune.control.bikaku.BikakuRules.KAKUJA)));
+        // 3.7.1 (the owner: "the walker is the first tap K half kakuja, the full kakuja is the hold K").
+        rows.add(new Row(key(in, Key.CYCLE) + " tap", "The Walker (in · out)", accent,
+            locked(in.mastery(), com.hex.kagune.control.bikaku.BikakuForm.WALKER.mastery())));
+        rows.add(new Row(key(in, Key.CYCLE) + " hold", "Kakuja", BIKAKU_KAKUJA, locked(in.mastery(), com.hex.kagune.control.bikaku.BikakuRules.KAKUJA)));
         away(in, rows);
         return new Panel("BIKAKU", "Bikaku · the worm", accent, rows);
     }

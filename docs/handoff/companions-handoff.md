@@ -1,9 +1,26 @@
-# READ FIRST: `docs/handoff/next-ai-3.6.6.md` (kept current through 3.7.0)
+# READ FIRST: `docs/handoff/next-ai-3.6.6.md` (kept current through 3.7.1)
 
 GeckoLib, Photon and PlayerAnimator are the mod's dependencies: use them wherever they make the mod smoother (the owner). Then the owner's
 words in `docs/handoff/owner-words-mutations.md`. There is no RC bar: energy and food are one bar.
 
-# START HERE (state after 3.7.0)
+# START HERE (state after 3.7.1)
+
+Branch `claude/hopeful-noether-5c2wex`. Read `docs/handoff/next-ai-3.6.6.md` first. Next: **3.7.2 the absorbing buffs** (the owner chose "Grand Devouring only (Recommended)" and "Strength, Resistance, Refreshed, Replenished (Recommended)", with Speed, 15 s); then Potential Unlock's tearing-off and strands (preview first).
+
+- 3.7.1, the owner: "the walker should lift the player way higher up (like 3-4 blocks up)  and adapt better to literally any terrain, the arms should not swing at any point (they currently do). the walker is the first tap K half kakuja, the full kakuja is the hold K"; cost: "Half the kakuja's cost (Recommended)".
+- **Pure** `bikaku/WalkerLegs`: `HEIGHT` 3.5, `OUT` 2.1, `AHEAD` 0.35, `STEP` 1.1, `REACH` 6.6, `STEP_TICKS` 6, `ARC` 0.8, `DOWN` 6.1, `WALL` 3.0, `GIRTH` 0.85; the knee high and out (`0.42 + 0.12 reach` out, `0.5 + 0.3 reach` up); `ride(feet, blocks)` (the highest ground top in 9 columns `FEEL` 1.2 apart, from `RIDE_UP` 2.5 above his feet down to `DOWN`, under any roof over his own column; + `HEIGHT`; capped `HEADROOM` 2.0 under any ceiling in those columns: a solid block with open air under it that is not that column's ground; NaN with no ground), `lift(y, ride)` (spring 0.3, `RISE` 0.4, `SINK` 0.45), `climbable` (solid with solid under it), `GROW` 14 ticks.
+- `BikakuRules.WALKER_COST` 12.5, `WALKER_DRAIN` 0.025, `WALKER_FALL_GRACE` 60. `BikakuForm.picked()` (not WALKER); `allowed` never returns WALKER (an old pick: Three Worms).
+- **Server** `BikakuServer`: `State.walker`, `walkerAt`, `walkerLeftAt`; `form()` returns WALKER while `walker`; `kakujaKey(hold)`: in the kakuja either leaves it; tapped `enterWalker`/`leaveWalker`; held the kakuja (out of The Walker into it). `enterWalker`: mastery 750, not feeding, `useEnergy(WALKER_COST)`, moves released, `sfx.transform.heavy_morph`. Tick: ends with the kagune/life/kakuja; drains `WALKER_DRAIN` (out when dry, `message.hexkagune.bikaku.walker_spent`). `carried(state, now)` (in it or within the grace): `fallDistance` 0 and `notFloating` (`ObfuscationReflectionHelper.setPrivateValue(ServerGamePacketListenerImpl, connection, 0, "f_9737_")`, once-logged failure). `pickForm` refuses WALKER (`message.hexkagune.bikaku.walker_key`).
+- **Client:** `UkakuInput` times Bikaku's K once mastery >= 1000 (`finalUnlocked`); `BikakuClient.walkerGrown(player, clock)` (map `WALKER` of when the legs came out/went in, set in `accept`); `BikakuRenderer` grows the legs with it; `BikakuWalk`: START `setOnGround(true)` near the carried height (walking pace), END the spring to `ride`, climbing only `climbable` walls (forward), hanging (sneak), sliding with no ground in reach; `WalkerPose` no drawn lift.
+- **Menu/guide:** `BikakuMenuView` The Walker row "tap K"/"ON", not clickable; two muted lines under the forms; KAKUJA "(hold K, mastery 1000)". `AbilityGuide.bikaku`: K tap The Walker (in · out), K hold Kakuja.
+- Stubs: `Entity.m_6853_` (setOnGround), `ObfuscationReflectionHelper.setPrivateValue`; allowlist entries.
+- Preview: `tools/MawPreview.java <out> walkerlift` (`docs/handoff/bikaku-walker-3.7.1.png`, sent first from a scratch prototype of the same code).
+- Tests: BikakuWormTests `walkerLift()`, `forms()` updated (an old Walker pick is Three Worms), `walker()` teleport bound `OUT + 0.6`. The full suite.
+- **Judgment calls:** every number above; no Walker cooldown; the floating-kick reset.
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 103. Not tested in game.
+
+# State after 3.7.0
 
 Branch `claude/hopeful-noether-5c2wex`. Read `docs/handoff/next-ai-3.6.6.md` first. Next: **3.7.1 The Walker reworked** (the owner: "the walker should lift the player way higher up (like 3-4 blocks up)  and adapt better to literally any terrain ... the walker is the first tap K half kakuja, the full kakuja is the hold K"; cost: "Half the kakuja's cost (Recommended)"). Its preview was sent (made from a scratch prototype: `WalkerLegs.HEIGHT` 3.5, `ride(feet, blocks)`, OUT 2.1, REACH 6.6, a wall climbed only when the block before his body has solid under it, a roof's underside ducked); then the absorbing buffs; then Potential Unlock's tearing-off and strands (preview first).
 

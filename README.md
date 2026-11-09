@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.7.1 (HexGhoul): Bikaku: The Walker on tap K, carried 3.5 blocks up over any ground (testing)
+
+See `.github/release-notes-3.7.1.md`. Your words: "the walker should lift the player way higher up (like 3-4 blocks up)  and adapt better to literally any terrain ... the walker is the first tap K half kakuja, the full kakuja is the hold K"; its cost: "Half the kakuja's cost (Recommended)". K tapped: The Walker (12.5 energy, then half the kakuja's drain); K held: the kakuja. Carried 3.5 blocks up for real on two long legs, over the highest ground round you, let down under roofs, climbing walls, at a walking pace; no fall damage; not kicked for floating. Protocol 103. Preview: `docs/handoff/bikaku-walker-3.7.1.png`.
+
 ## 3.7.0 (HexGhoul): Fix: The Walker's arms never swing (testing)
 
 See `.github/release-notes-3.7.0.md`. Your words: "the arms should not swing at any point (they currently do)". In The Walker your arms hang still at your sides (none of Minecraft's walking or attack swing), as your legs do. Protocol 103.

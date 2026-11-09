@@ -262,9 +262,11 @@ public final class BikakuRenderer {
             MawWorm.build(sink, new MawWorm.Pose(world, frame.turn(worm.shape().dorsal()), grown, worm.shape().aperture(),
                 worm.girth() * (1.0 + growth.swell()), worm.seed(), clock, feeds[w]), tint, fine);
         }
-        if (!view.kakuja() && view.form().walks() && growth.worm() > 0.002) {
+        // 3.7.1: K tapped, they grow out of him (and back in when he leaves it).
+        double walkerGrown = BikakuClient.walkerGrown(player, clock);
+        if (!view.kakuja() && walkerGrown > 0.002 && growth.worm() > 0.002) {
             // 3.6.2: The Walker's two walking tentacles, out of the same root, down onto where their feet stand.
-            legs(sink, frame, posed, level, player, partial, clock, camera, fine, firstPerson, deploy, seed, tint);
+            legs(sink, frame, posed, level, player, partial, clock, camera, fine, firstPerson, deploy, walkerGrown, seed, tint);
         } else {
             LEGS.remove(player);
         }
@@ -394,8 +396,8 @@ public final class BikakuRenderer {
 
     /** 3.6.2: The Walker's legs: his feet moved on (stepping as he goes, up walls he climbs), each tentacle drawn from the root to its foot. */
     private static void legs(UkakuModel.Sink sink, Frame frame, com.hex.kagune.control.client.animation.RigPose posed, ClientLevel level,
-                             AbstractClientPlayer player, float partial, double clock, Vec3 camera, boolean fine, boolean firstPerson, float deploy, int seed,
-                             int tint) {
+                             AbstractClientPlayer player, float partial, double clock, Vec3 camera, boolean fine, boolean firstPerson, float deploy,
+                             double walkerGrown, int seed, int tint) {
         com.hex.kagune.control.bikaku.WalkerLegs.Legs legs = LEGS.computeIfAbsent(player, ignored -> new com.hex.kagune.control.bikaku.WalkerLegs.Legs());
         double[] feet = {frame.x(), frame.y(), frame.z()};
         double[] right = {frame.rightX(), 0.0, frame.rightZ()};
@@ -404,7 +406,7 @@ public final class BikakuRenderer {
         boolean climbing = going[1] > 0.04 && com.hex.kagune.control.client.BikakuWalk.wallAhead(level, feet[0], feet[1], feet[2], ahead[0], ahead[2]);
         com.hex.kagune.control.bikaku.WalkerLegs.update(legs, feet, right, ahead, going, climbing, clock,
             (x, y, z) -> com.hex.kagune.control.client.BikakuWalk.solid(level, x, y, z));
-        double grown = GraftMesh.smooth(deploy);
+        double grown = GraftMesh.smooth(deploy) * walkerGrown; // 3.7.1: grown out with The Walker (K tapped), back in as it ends
         for (int i = 0; i < com.hex.kagune.control.bikaku.WalkerLegs.LEGS; i++) {
             double[] foot = com.hex.kagune.control.bikaku.WalkerLegs.foot(legs, i, clock);
             if (foot == null) {
