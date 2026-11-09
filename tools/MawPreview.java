@@ -64,6 +64,9 @@ public class MawPreview {
         if (which.equals("formmoves") || which.equals("all")) {
             formMoves(new File(out, "maw-form-moves.png"));
         }
+        if (which.equals("devour") || which.equals("all")) {
+            devour(new File(out, "maw-devour.png"));
+        }
         if (which.equals("walker") || which.equals("all")) {
             walker(new File(out, "maw-walker.png"));
         }
@@ -674,6 +677,101 @@ public class MawPreview {
         g.dispose();
         ImageIO.write(img, "png", file);
         System.out.println(file);
+    }
+
+    // ---------------------------------------------------------------- 3.6.3: Grand Devouring
+
+    /** A feeding worm drawn as the game draws it (girth 1: its feeding radii are its own), round his body. */
+    static List<PoseRender.Tri> feeding(com.hex.kagune.control.bikaku.GrandDevour.Feeding f, double time) {
+        List<PoseRender.Tri> tris = new ArrayList<>();
+        double[][] path = MawMotion.around(f.shape().path(), f.clearGirth(), f.shape().aperture());
+        UkakuModel.Sink sink = (a, b, c, d, n, ca, cb, cc, cd) -> {
+            int rgb = avg(ca, cb, cc, cd);
+            tris.add(new PoseRender.Tri(new double[][] {w(a), w(b), w(c)}, rgb, w(n)));
+            tris.add(new PoseRender.Tri(new double[][] {w(a), w(c), w(d)}, rgb, w(n)));
+        };
+        MawWorm.build(sink, new MawWorm.Pose(path, f.shape().dorsal(), 1.0, f.shape().aperture(), 1.0, SEED, time, f.feed()), 0xA50F37, true);
+        return tris;
+    }
+
+    /** A plain box of a body, {@code width} by {@code height}, its feet at {@code feet} (a small mob or a giant). */
+    static List<PoseRender.Tri> body(double[] feet, double width, double height, int rgb) {
+        List<PoseRender.Tri> out = new ArrayList<>();
+        double h = width / 2.0;
+        double[][] c = new double[8][];
+        for (int i = 0; i < 8; i++) {
+            c[i] = w(new double[] {feet[0] + ((i & 1) == 0 ? -h : h), feet[1] + ((i >> 1 & 1) == 0 ? 0.0 : height), feet[2] + ((i >> 2 & 1) == 0 ? -h : h)});
+        }
+        int[][] faces = {{0, 1, 3, 2}, {4, 6, 7, 5}, {0, 4, 5, 1}, {2, 3, 7, 6}, {0, 2, 6, 4}, {1, 5, 7, 3}};
+        double[][] normals = {{0, 0, -1}, {0, 0, 1}, {0, -1, 0}, {0, 1, 0}, {-1, 0, 0}, {1, 0, 0}};
+        for (int f = 0; f < 6; f++) {
+            int[] q = faces[f];
+            out.add(new PoseRender.Tri(new double[][] {c[q[0]], c[q[1]], c[q[2]]}, rgb, w(normals[f])));
+            out.add(new PoseRender.Tri(new double[][] {c[q[0]], c[q[2]], c[q[3]]}, rgb, w(normals[f])));
+        }
+        return out;
+    }
+
+    /** 3.6.3: Grand Devouring: a player-sized body through the whole of it, then a small mob and a giant. */
+    static void devour(File file) throws Exception {
+        int fw = 300;
+        int fh = 330;
+        int cols = 8;
+        BufferedImage img = new BufferedImage(fw * cols, fh * 4 + 34, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = sheet(img, "Bikaku 3.6.3 preview: Grand Devouring (at one heart or less): rears up swelling, arches over, comes down over it, jaws close, gulp, the bulge runs to his back");
+        com.hex.kagune.control.bikaku.GrandDevour.Feeding f;
+        double[][] rows = {{0, 25, 50, 65, 80, 95, 110, 150}, {175, 195, 210, 225, 270, 330, 395, 425}};
+        double[] victim = {0.4, 0.0, 4.2};
+        for (int r = 0; r < 2; r++) {
+            for (int i = 0; i < cols; i++) {
+                double age = rows[r][i];
+                double time = 100 + age;
+                f = com.hex.kagune.control.bikaku.GrandDevour.at(time, SEED, 1, 0, victim, 0.6, 1.8, age);
+                List<PoseRender.Tri> tris = feeding(f, time);
+                if (com.hex.kagune.control.bikaku.GrandDevour.shown(age)) {
+                    tris.addAll(prey(new double[] {victim[0], victim[1] + com.hex.kagune.control.bikaku.GrandDevour.lift(age, 1.8), victim[2]}));
+                }
+                // Side on (his right), as the owner's drawing; the digestion from behind his right shoulder, the whole worm in view.
+                PoseRender.Camera cam = r == 0 ? wideAt(-88, 8, 14.0, 2.2, 2.4) : wideAt(-130, 18, 11.0, 0.8, 2.4);
+                g.drawImage(PoseRender.render(new RigPose(), cam, fw, fh, tris), i * fw, 34 + r * fh, null);
+                label(g, String.format("player-sized %.0ft  %s", age, devourPhase(age)), i * fw, 34 + r * fh);
+            }
+        }
+        // A small mob (0.4 by 0.7) and a giant (3.6 by 12).
+        double[][] sizes = {{0.4, 0.7}, {3.6, 12.0}};
+        double[][] spots = {{1.2, 0.0, 3.0}, {0.0, 0.0, 9.0}};
+        double[] ages = {40, 100, 140, 215, 240, 330, 410, 0};
+        for (int r = 0; r < 2; r++) {
+            for (int i = 0; i < cols; i++) {
+                double age = i == cols - 1 ? 120 : ages[i];
+                double time = 300 + age;
+                double wd = sizes[r][0];
+                double ht = sizes[r][1];
+                f = com.hex.kagune.control.bikaku.GrandDevour.at(time, SEED, 1, 0, spots[r], wd, ht, age);
+                List<PoseRender.Tri> tris = feeding(f, time);
+                if (com.hex.kagune.control.bikaku.GrandDevour.shown(age)) {
+                    tris.addAll(body(new double[] {spots[r][0], spots[r][1] + com.hex.kagune.control.bikaku.GrandDevour.lift(age, ht), spots[r][2]}, wd, ht,
+                        r == 0 ? 0xE8E2D8 : 0x3E7A3A));
+                }
+                PoseRender.Camera cam = r == 0 ? (i == cols - 1 ? wideAt(20, 70, 9.0, 1.8, 0.6) : wideAt(-60, 14, 10.0, 1.4, 1.6))
+                    : (i == cols - 1 ? wideAt(15, 72, 40.0, 7.0, 4.0) : wideAt(-62, 10, 52.0, 4.5, 9.0));
+                g.drawImage(PoseRender.render(new RigPose(), cam, fw, fh, tris), i * fw, 34 + (2 + r) * fh, null);
+                label(g, String.format("%s %.0ft  %s", r == 0 ? "small mob" : "giant (12 tall)", age, i == cols - 1 ? "from above: inside the mouth" : devourPhase(age)),
+                    i * fw, 34 + (2 + r) * fh);
+            }
+        }
+        g.dispose();
+        ImageIO.write(img, "png", file);
+        System.out.println(file);
+    }
+
+    static String devourPhase(double age) {
+        return age < com.hex.kagune.control.bikaku.GrandDevour.RISE ? "RISING, SWELLING"
+            : age < com.hex.kagune.control.bikaku.GrandDevour.RISE + com.hex.kagune.control.bikaku.GrandDevour.REACH ? "OVER IT"
+            : age < com.hex.kagune.control.bikaku.GrandDevour.CAUGHT ? "COMING DOWN"
+            : age < com.hex.kagune.control.bikaku.GrandDevour.SHUT ? "TRAPPED, JAWS CLOSING"
+            : age < com.hex.kagune.control.bikaku.GrandDevour.KILL ? "SWALLOWING"
+            : age < com.hex.kagune.control.bikaku.GrandDevour.FED ? "DIGESTING (bulge)" : "BACK TO ITSELF";
     }
 
     // ---------------------------------------------------------------- 3.6.2: The Walker

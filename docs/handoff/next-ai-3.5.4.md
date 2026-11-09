@@ -56,6 +56,10 @@ Binding; quoted exactly as written. Kept current as that session goes.
   forms each full-size worm after its own body, three snaking bites each, no thin worms added; Carrion Eruption once per worm under its
   own body, in turn; Regeneration unchanged; then The Walker): **"approved, continue"**.
 
+- After 3.6.2: the owner asked for two Bikaku mutations, **Grand Devouring** and **Potential Unlock**. Their whole message, quoted
+  exactly, and their later words on it are in `docs/handoff/owner-words-mutations.md`, with their three pictures in
+  `docs/handoff/owner-refs/`. Read it all before touching either mutation.
+
 ## State now (kept current by the session on `claude/hopeful-noether-5c2wex`)
 
 - **3.5.4 shipped** (the kakuja as the last session left it; the owner liked it).
@@ -77,6 +81,12 @@ Binding; quoted exactly as written. Kept current as that session goes.
 - **3.6.2 shipped:** The Walker (750: two walking tentacles from the worms' root, one each side; his legs hang still, lifted a little;
   feet stepping on the blocks round him; climbs any wall he walks into; no fall damage; Three Worms' moves). A draft preview was sent
   before building it (no answer yet), then `docs/handoff/bikaku-walker-3.6.2.png`. Versions 3.6.2; protocol "102" (unchanged).
+- **In progress, unversioned (3.6.3 to be):** Grand Devouring. Done so far: the worm mesh's feeding mode (`MawWorm.Feed`: swollen body,
+  a bell of a mouth round a cavity sized to the victim, rows of teeth down it, a bulge) and the pure timeline `GrandDevour` (one smooth
+  arch per pose, reshaped after the owner's "its not arching smoothly it's very.... weird"); preview `tools/MawPreview.java devour`,
+  `docs/handoff/bikaku-devour-3.6.3.png` (sent). Still to do for 3.6.3: the mutation points and menu, the server (trigger at 2 HP within
+  10 blocks, the worm busy for everything, the victim held, stunned and stripped, killed at the swallow, the bar refilled when fed), the
+  sync and drawing, sounds, tests. Then the victim's view from inside, then Potential Unlock.
 - **Next:** the owner's answer on The Walker (asked whether "two separate appendages on either" means two in all or two each side, and
   whether its legs should add anything to the moves); otherwise ask them what's next. The forms ask is done.
 

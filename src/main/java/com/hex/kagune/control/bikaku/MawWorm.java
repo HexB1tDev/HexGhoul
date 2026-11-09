@@ -28,7 +28,29 @@ public final class MawWorm {
      * has grown out (0 .. 1), how wide its mouth is (0 shut .. 1 thrown wide), how thick it is (1 the kagune's own), its seed (each worm's
      * ridges, spurs and teeth its own) and the time (ticks) its flesh moves by.
      */
-    public record Pose(double[][] path, double[] dorsal, double grown, double aperture, double girth, int seed, double time) {
+    public record Pose(double[][] path, double[] dorsal, double grown, double aperture, double girth, int seed, double time, Feed feed) {
+        public Pose(double[][] path, double[] dorsal, double grown, double aperture, double girth, int seed, double time) {
+            this(path, dorsal, grown, aperture, girth, seed, time, null);
+        }
+    }
+
+    /**
+     * 3.6.3, Grand Devouring (the owner: "dramatically expanding in thickness, length, and overall mass. Its mouth becomes enormous,
+     * stretching its jaws unnaturally wide and exposing multiple rows of sharp teeth"): a worm swollen to feed. Its body thickened to
+     * {@code body} (radius, blocks) {@code swell} of the way; its head grown {@code head} of the way into a great bell of a mouth round a
+     * cavity {@code hole} wide (radius) and {@code depth} deep, rows of teeth down its walls; a bulge {@code bulge} thick (radius) and
+     * {@code bulgeLength} long at {@code bulgeAt} (0 the root .. 1 the mouth, by length), the flesh stretched over it. All in blocks.
+     */
+    public record Feed(double hole, double depth, double body, double swell, double head, double bulgeAt, double bulge, double bulgeLength) {
+        /** The wall of the bell round its cavity. */
+        public double wall() {
+            return 0.16 + 0.14 * this.hole;
+        }
+
+        /** The bell's outer radius. */
+        public double headRadius() {
+            return this.hole + this.wall();
+        }
     }
 
     // ---------------------------------------------------------------- its palette (the red one; the flesh is recoloured)
@@ -66,6 +88,8 @@ public final class MawWorm {
     public static final double FANG_LENGTH = 0.42;
     /** The hooked teeth down its throat: how many in each ring. */
     static final int[] TEETH = {14, 12, 9};
+    /** 3.6.3: rows of teeth down a feeding worm's cavity. */
+    static final int FEED_TEETH_ROWS = 6;
     /** How far apart its ridges are along it (blocks). */
     static final double RIDGE = 0.16;
 
@@ -145,6 +169,68 @@ public final class MawWorm {
         return r + (lip - r) * into;
     }
 
+    /**
+     * 3.6.3: a feeding worm's radius {@code u} of the way along it ({@link Feed}): out of his back narrow, thickening into its swollen
+     * body; over its last stretch the bell round the cavity, rounding into the lip at the mouth and into the neck behind; the bulge where
+     * it is, the flesh stretched over it and squeezed in just behind it (pushing it on).
+     */
+    public static double feedRadius(double u, double length, double open, Feed feed) {
+        double normal = radius(u, length, open);
+        double at = GraftMesh.clamp01(u) * length;
+        double from = Math.max(0.0, length - at);
+        double bodyR = BODY_RADIUS + (Math.max(BODY_RADIUS, feed.body()) - BODY_RADIUS) * GraftMesh.clamp01(feed.swell());
+        double swollen = normal * bodyR / BODY_RADIUS;
+        double r = swollen;
+        double head = GraftMesh.clamp01(feed.head());
+        if (head > 0.0) {
+            double headR = feed.headRadius();
+            double rootR = Math.max(ROOT_RADIUS, 0.35 * bodyR);
+            double base = rootR + (bodyR - rootR) * GraftMesh.smooth(at / (0.6 + bodyR));
+            double back = feed.depth() + 0.15 * headR;
+            double taper = 0.55 * headR + 0.3;
+            double bell = GraftMesh.smooth(GraftMesh.clamp01((back + taper - from) / taper));
+            double target = base + (headR - base) * bell;
+            // Its last stretch rounds into the lip, wide or shut.
+            double lip = mouthScale(feed, 1.0) * lipRadius(open);
+            double rim = Math.max(0.12, feed.wall() * 0.8);
+            double into = GraftMesh.smooth(GraftMesh.clamp01((rim - from) / rim));
+            target += (lip - target) * into;
+            r = swollen + (target - swollen) * head;
+        }
+        if (feed.bulge() > 0.0 && feed.bulgeLength() > 0.0) {
+            double x = (at - feed.bulgeAt() * length) / (0.5 * feed.bulgeLength());
+            double shape = Math.exp(-x * x);
+            double squeeze = 1.0 - 0.14 * Math.exp(-(x + 1.7) * (x + 1.7)) * Math.min(1.0, feed.bulge() / Math.max(0.05, bodyR));
+            r = Math.max(r * squeeze, feed.bulge() * shape) + 0.07 * feed.bulge() * shape;
+        }
+        return r;
+    }
+
+    /**
+     * 3.6.3: the throat's radius {@code w} of the way in: a plain worm's narrows to its end; a feeding worm's ({@code head} of the way)
+     * is a cavity {@code cavity} wide, its walls almost straight and rippling as they work, out of the jaws' hole at its mouth.
+     */
+    static double throatRadius(double hole, double cavity, double head, double w, double time, int seed) {
+        double plain = hole * (1.0 - 0.82 * w) * (1.0 + 0.08 * Math.sin(w * Math.PI * 3.0));
+        if (head <= 0.0) {
+            return plain;
+        }
+        double work = 0.045 * Math.sin(w * Math.PI * 5.0 - time * 0.21 + seed) + 0.03 * Math.sin(time * 0.13 + w * 9.0);
+        double walls = cavity * (1.0 - 0.14 * w * w) * (1.0 + work);
+        // Out of the jaws' hole (closing or wide) into the cavity just behind them.
+        double behind = GraftMesh.smooth(GraftMesh.clamp01(w / 0.1));
+        double feeding = hole + (walls - hole) * behind;
+        return plain + (feeding - plain) * head;
+    }
+
+    /**
+     * 3.6.3: how much bigger than a plain worm's (girth 1) a feeding worm's mouth is drawn: its hole thrown wide is the cavity's, as far
+     * as its head has grown ({@code g} the plain worm's).
+     */
+    static double mouthScale(Feed feed, double g) {
+        return feed == null ? g : g + (feed.hole() / holeRadius(1.0) - g) * GraftMesh.clamp01(feed.head());
+    }
+
     /** 3.5.4: a mouthless tentacle's radius {@code u} of the way along it: out of its root as the worm's, tapering over its last third. */
     static double tip(double u, double length) {
         double at = GraftMesh.clamp01(u) * length;
@@ -187,7 +273,7 @@ public final class MawWorm {
             @Override
             public double radius(double s, double a) {
                 double at = s * length;
-                double r = mouth ? MawWorm.radius(s, length, open) : tip(s, length);
+                double r = pose.feed() != null ? feedRadius(s, length, open, pose.feed()) : mouth ? MawWorm.radius(s, length, open) : tip(s, length);
                 double crest = ridge(at, a, seed);
                 double fold = 0.035 * Math.sin(a * 5.0 + 2.6 * GraftMesh.noise(seed + 3, at * 1.7, 0.0)) * GraftMesh.smooth(at / 0.4);
                 double lump = 0.07 * (GraftMesh.noise(seed + 11, at * 3.2, a * 1.3) - 0.5);
@@ -229,7 +315,8 @@ public final class MawWorm {
                 double at = s * length;
                 double a = a0 + 0.55 * Math.sin(at * 2.3 + v * 1.9) + 0.9 * (GraftMesh.noise(pose.seed() + 40 + v, at * 1.6, 0.0) - 0.5)
                     + 0.18 * Math.sin(at * 9.0 + v);
-                double r = g * (mouth ? radius(s, length, open) : tip(s, length)) * (1.0 + 0.1 * ridge(at, a, pose.seed())) + 0.006;
+                double r = g * (pose.feed() != null ? feedRadius(s, length, open, pose.feed()) : mouth ? radius(s, length, open) : tip(s, length))
+                    * (1.0 + 0.1 * ridge(at, a, pose.seed())) + 0.006;
                 double[][] f = spine.at(s);
                 double[] out = GraftMesh.add(GraftMesh.mul(f[3], Math.cos(a)), GraftMesh.mul(f[2], Math.sin(a)));
                 double[] round = GraftMesh.add(GraftMesh.mul(f[3], -Math.sin(a)), GraftMesh.mul(f[2], Math.cos(a)));
@@ -260,7 +347,7 @@ public final class MawWorm {
         for (double at = 0.38; at < length - 0.62; at += 0.27, n++) {
             double s = at / length;
             double a = Math.PI * 0.5 + (n % 2 == 0 ? 0.55 : -0.55) + 0.25 * (GraftMesh.hash(pose.seed() * 17 + n) - 0.5);
-            double r = g * (mouth ? radius(s, length, 0.0) : tip(s, length));
+            double r = g * (pose.feed() != null ? feedRadius(s, length, 0.0, pose.feed()) : mouth ? radius(s, length, 0.0) : tip(s, length));
             double[][] on = GraftMesh.onSurface(spine, s, a, r * 0.86);
             double[] dir = GraftMesh.normalize(GraftMesh.sub(GraftMesh.mul(on[1], 0.85), GraftMesh.mul(on[2], 0.55)));
             double len = g * (0.17 + 0.1 * GraftMesh.hash(pose.seed() * 5 + n));
@@ -277,8 +364,13 @@ public final class MawWorm {
         double[] dorsal = f[2];
         double[] edge = f[3];
         double grown = GraftMesh.smooth(GraftMesh.clamp01((pose.grown() - 0.35) / 0.65));
+        // 3.6.3: a feeding worm's mouth as big as its cavity (its jaws close over it; the cavity stays).
+        Feed feed = pose.feed();
+        double head = feed == null ? 0.0 : GraftMesh.clamp01(feed.head());
+        g = mouthScale(feed, g);
         double lip = g * lipRadius(open);
         double hole = g * holeRadius(open) * (0.4 + 0.6 * grown);
+        double cavity = feed == null ? hole : hole + (feed.hole() - hole) * head;
         int sides = fine ? 20 : 12;
         // The lip: rolled forward round the hole, a darker inner edge going in.
         int rows = fine ? 5 : 3;
@@ -307,13 +399,16 @@ public final class MawWorm {
         }
         // The throat: in from the hole, narrowing and going dark; its walls ridged.
         double depth = g * (0.32 + 0.12 * open);
-        int deep = fine ? 6 : 3;
+        if (feed != null) {
+            depth += (feed.depth() - depth) * head;
+        }
+        int deep = fine ? (feed != null ? 10 : 6) : (feed != null ? 5 : 3);
         double[][][] throat = new double[deep + 1][sides][];
         int[] shade = new int[deep + 1];
         double[] lipIn = GraftMesh.add(centre, GraftMesh.mul(fwd, -g * 0.02));
         for (int i = 0; i <= deep; i++) {
             double w = i / (double)deep;
-            double r = hole * (1.0 - 0.82 * w) * (1.0 + 0.08 * Math.sin(w * Math.PI * 3.0));
+            double r = throatRadius(hole, cavity, head, w, pose.time(), pose.seed());
             double[] c = GraftMesh.add(lipIn, GraftMesh.mul(fwd, -depth * w));
             for (int j = 0; j < sides; j++) {
                 double a = Math.PI * 2.0 * j / sides;
@@ -338,21 +433,26 @@ public final class MawWorm {
             GraftMesh.facet(sink, throat[deep][j], throat[deep][k], bottom, bottom, GraftMesh.add(bottom, GraftMesh.mul(fwd, -1.0)),
                 shade[deep], shade[deep], GraftMesh.argb(THROAT_DEEP, 1.0), GraftMesh.argb(THROAT_DEEP, 1.0));
         }
-        // Rings of hooked teeth down the throat, pointing in and down it (what is bitten goes one way).
+        // Rings of hooked teeth down the throat, pointing in and down it (what is bitten goes one way). 3.6.3: a feeding worm's cavity
+        // has more rows, all down its walls, and more teeth in each (as many as its wider ring takes).
         int toothSides = fine ? 5 : 4;
-        for (int r = 0; r < TEETH.length; r++) {
-            int count = fine ? TEETH[r] : Math.max(6, TEETH[r] - 4);
-            double w = 0.06 + 0.3 * r;
-            double radius = hole * (1.0 - 0.82 * w) * 0.98;
+        int toothRows = feed != null && head > 0.5 ? FEED_TEETH_ROWS : TEETH.length;
+        for (int r = 0; r < toothRows; r++) {
+            int plain = TEETH[Math.min(r, TEETH.length - 1)];
+            double w = toothRows == TEETH.length ? 0.06 + 0.3 * r : 0.05 + 0.82 * r / (toothRows - 1.0);
+            double radius = throatRadius(hole, cavity, head, w, pose.time(), pose.seed()) * 0.98;
+            int count = toothRows == TEETH.length ? (fine ? plain : Math.max(6, plain - 4))
+                : (int)Math.max(plain, Math.min(fine ? 44 : 24, Math.round(Math.PI * 2.0 * radius / (g * (fine ? 0.085 : 0.15)))));
             double[] c = GraftMesh.add(lipIn, GraftMesh.mul(fwd, -depth * w));
-            double len = g * (0.1 - 0.022 * r) * (0.55 + 0.45 * grown);
+            int rr = toothRows == TEETH.length ? r : Math.min(2, r / 2);
+            double len = g * (0.1 - 0.022 * rr) * (0.55 + 0.45 * grown);
             for (int k = 0; k < count; k++) {
                 double a = Math.PI * 2.0 * (k + 0.5 * r) / count + 0.2 * GraftMesh.hash(pose.seed() * 13 + r * 41 + k);
                 double[] out = GraftMesh.add(GraftMesh.mul(edge, Math.cos(a)), GraftMesh.mul(dorsal, Math.sin(a)));
                 double[] base = GraftMesh.add(c, GraftMesh.mul(out, radius));
                 double[] dir = GraftMesh.normalize(GraftMesh.sub(GraftMesh.mul(out, -0.72), GraftMesh.mul(fwd, 0.55)));
                 double l = len * (0.75 + 0.5 * GraftMesh.hash(pose.seed() * 7 + r * 29 + k));
-                GraftMesh.horn(sink, base, dir, GraftMesh.mul(fwd, -1.0), l, g * (0.019 - 0.003 * r), toothSides, fine ? 3 : 2, TOOTH_ROOT, TOOTH_TIP, 1.0);
+                GraftMesh.horn(sink, base, dir, GraftMesh.mul(fwd, -1.0), l, g * (0.019 - 0.003 * rr), toothSides, fine ? 3 : 2, TOOTH_ROOT, TOOTH_TIP, 1.0);
             }
         }
         // The crown of great fangs on the lip: shut, they lean in and meet over the hole; open, they splay out, hooked at their points.
