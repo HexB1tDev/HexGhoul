@@ -115,7 +115,7 @@ public final class Kitchen {
 
     /** 2.4.9: what it says as it hands its spouse the food it just made (they're home: brought to them, not kept). */
     public static String handed(String key, boolean ghoul, String what, int seed) {
-        String[] lines = switch (key) {
+        String[] lines = switch (household(key)) {
             case "touka" -> ghoul ? new String[] {"*shoves the bundle at you* " + cap(what) + ". Raw. I cut it myself. Don't make it weird.",
                 "Here. " + cap(what) + ". ...Eat it before it goes off. I'm not doing this twice."}
                 : new String[] {"*holds the plate out, not looking at you* " + cap(what) + ". It's hot. Take it.",
@@ -134,7 +134,7 @@ public final class Kitchen {
 
     /** 2.4.9: what it says, having handed over the food, wanting a kiss for it. */
     public static String kissForMeal(String key, int seed) {
-        String[] lines = switch (key) {
+        String[] lines = switch (household(key)) {
             case "touka" -> new String[] {"...I cooked. That's worth a kiss. *looks away* One. Just one.",
                 "Don't just stand there eating. ...Do I get a thank-you kiss or not?"};
             case "ken" -> new String[] {"...Is a kiss too much to ask for the cook?", "*smiles a little* I'll take a kiss as payment."};
@@ -552,7 +552,7 @@ public final class Kitchen {
 
     /** What it says handing over the meal it kept ({@code ghoul}: their spouse is a ghoul: the raw cuts; {@code what}: the main thing). */
     public static String served(String key, boolean ghoul, String what, int seed) {
-        String[] lines = switch (key) {
+        String[] lines = switch (household(key)) {
             case "touka" -> ghoul ? new String[] {"*shoves a wrapped package at you* " + cap(what) + ". Raw. Don't make it weird. ...Eat.",
                 "I put the good cuts aside for you. " + cap(what) + ". Don't tell me I never do anything."}
                 : new String[] {"*pushes a plate into your hands* I can't taste any of it, so if it's bad, lie. " + cap(what) + ".",
@@ -574,7 +574,7 @@ public final class Kitchen {
      * it is keeping it for them (handed over now); else it is in the chest (the meal it keeps for them is full).
      */
     public static String made(String key, String what, boolean kept, int seed) {
-        String[] lines = switch (key) {
+        String[] lines = switch (household(key)) {
             case "touka" -> kept ? new String[] {"*pushes a plate at you* " + what + ". I made it from the book. Eat it while it's hot.",
                 "I made " + what + ". Don't look at me like that. Just eat."}
                 : new String[] {"I made " + what + ". It's in the chest. ...You're welcome.", "There's " + what + " in the chest. Don't let it go to waste."};
@@ -590,12 +590,12 @@ public final class Kitchen {
 
     /** 1.3.42: what it says handing over a dish of the cookbook it kept for them ({@code more}: it put more in the chest, too). */
     public static String servedDish(String key, String what, boolean more, int seed) {
-        String rest = more ? switch (key) {
+        String rest = more ? switch (household(key)) {
             case "touka" -> " There's more in the chest.";
             case "ken" -> " I put the rest in the chest.";
             default -> " The rest is in the chest. I spoil you.";
         } : "";
-        String[] lines = switch (key) {
+        String[] lines = switch (household(key)) {
             case "touka" -> new String[] {"You're back. I made " + what + ". It's still warm. ...Mostly.",
                 "*hands you a plate* " + what + ". Out of the book. Don't tell me if it's bad."};
             case "ken" -> new String[] {"Welcome home. I made " + what + " while you were out. I kept it warm for you.",
@@ -608,7 +608,7 @@ public final class Kitchen {
 
     /** 1.3.42: what it says when they come home and it put what it made in the chest (it kept no meal for them this time). */
     public static String madeWhileOut(String key, String what, int seed) {
-        String[] lines = switch (key) {
+        String[] lines = switch (household(key)) {
             case "touka" -> new String[] {"You're back. I made " + what + ". It's in the chest.", "Took you long enough. There's " + what + " in the chest."};
             case "ken" -> new String[] {"Welcome home. I made " + what + " while you were out. It's in the chest.",
                 "You're back. There's " + what + " in the chest, if you're hungry."};
@@ -620,7 +620,7 @@ public final class Kitchen {
 
     /** What it says when there's nothing to burn for the stove. */
     public static String noFuel(String key, int seed) {
-        String[] lines = switch (key) {
+        String[] lines = switch (household(key)) {
             case "touka" -> new String[] {"We're out of coal. Again. I'm not burning the furniture.", "No fuel. Get coal or eat it raw."};
             case "ken" -> new String[] {"We're out of coal. ...Could you bring some home?", "The furnace is cold. We need coal, or wood."};
             default -> new String[] {"No coal, no cooking. Bring me fuel and I'll make you something wonderful.", "The stove's empty. I refuse to rub sticks together."};
@@ -630,5 +630,10 @@ public final class Kitchen {
 
     private static String cap(String text) {
         return text == null || text.isEmpty() ? "" : Character.toUpperCase(text.charAt(0)) + text.substring(1);
+    }
+
+    /** 4.0.0: whose household words {@code key} speaks: Ayato Ken's (the owner: his romance "quite similar to kaneki"), the rest their own. */
+    static String household(String key) {
+        return "ayato".equals(key) ? "ken" : key;
     }
 }

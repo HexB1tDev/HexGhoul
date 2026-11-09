@@ -39,6 +39,9 @@ public final class Drowsy {
         return switch (persona) {
             case "touka" -> pick(TOUKA, seed);
             case "ken" -> pick(KEN, seed);
+            case "ayato" -> pick(new String[] {"*one eye opens, red* ...What. Who's here?", "...Mm? *already half out of bed* Doves?",
+                "*mumbles* ...if this isn't important I'm biting you."}, seed);
+            case "noro" -> pick(new String[] {"*He was not asleep.*", "..."}, seed);
             default -> pick(ETO, seed);
         };
     }
@@ -48,6 +51,8 @@ public final class Drowsy {
         return switch (persona) {
             case "touka" -> pick(new String[] {"*already asleep again*", "...Idiot. *turns over*", "*a muffled grumble, then even breathing*"}, seed);
             case "ken" -> pick(new String[] {"...Okay. Goodnight. *settles back*", "*a sleepy smile* ...night.", "*nods, eyes already closing*"}, seed);
+            case "ayato" -> pick(new String[] {"...Tch. *turns over, pulls the blanket with him*", "*already asleep again, scowling*"}, seed);
+            case "noro" -> pick(new String[] {"*He doesn't move.*", "..."}, seed);
             default -> pick(new String[] {"*mumbles something about plot twists and burrows back in*", "...Mm. *already gone*",
                 "*pats around for your hand, then gives up and sleeps*"}, seed);
         };
@@ -58,6 +63,7 @@ public final class Drowsy {
         return switch (persona) {
             case "touka" -> pick(new String[] {"*her ears go red in the dark* ...G'night.", "...Mm. *pretends she's still asleep, smiling*"}, seed);
             case "ken" -> pick(new String[] {"*smiles without opening his eyes* ...Night.", "*squeezes your hand* ...Love you. Night."}, seed);
+            case "ayato" -> pick(new String[] {"*pulls you down next to him without opening his eyes* ...Stay.", "...Mm. Night. Don't tell anyone."}, seed);
             default -> pick(new String[] {"*smiles without opening her eyes* ...Again tomorrow.", "...Mm. That's a good ending. Night."}, seed);
         };
     }
@@ -67,6 +73,8 @@ public final class Drowsy {
         return switch (persona) {
             case "touka" -> pick(new String[] {"*sits up, all at once awake* ...What happened?", "...Fine. I'm up. What is it?"}, seed);
             case "ken" -> pick(new String[] {"*already on his feet* What is it? What's wrong?", "...I'm up. Tell me."}, seed);
+            case "ayato" -> pick(new String[] {"*on his feet, wings half out* Who? Where?", "...I'm up. Who do I kill?"}, seed);
+            case "noro" -> pick(new String[] {"*He is standing. You didn't see him get up.*"}, seed);
             default -> pick(new String[] {"*sits up, rubbing her eyes* ...Okay. I'm up. What's wrong?", "...Alright, alright. I'm awake. Tell me."}, seed);
         };
     }

@@ -1,0 +1,234 @@
+# Ayato's scenes (4.0.0, The Great Exploration). Read by SceneBook (see its comment for the form; SceneWords for every word allowed).
+# His voice: arrogant, sarcastic, quick to threaten, slow to trust. Touka's little brother, Aogiri Tree's, an Ukaku. He calls everyone
+# weak and then checks they got home. With the one he loves: the same insults, and now and then, once, quietly, the thing under them.
+# The owner: his romance "should not suddenly become affectionate ... his dialogue and behavior should gradually change as the relationship
+# develops, revealing his more protective, jealous, teasing, and vulnerable sides while preserving his usual personality".
+
+# =====================================================================================================================================
+# A FEW OF HIS OWN
+# =====================================================================================================================================
+
+scene stray_dove
+who: friend
+say: *He drops a bloodied CCG badge at your feet.* Found a Dove sniffing around. Thought you'd want to know he's not sniffing anymore.
+> You did that for me? | +2 -> why
+> Show-off. | +1
+  - *He snorts.* You're welcome, by the way.
+page why
+say: *He looks away.* Don't flatter yourself. He was in my way. ...He was also asking about you. So.
+> Thanks, Ayato. | +3 huff
+  - Don't thank me. Just stop being so easy to follow.
+ignored: *He kicks the badge into the gutter and walks off.*
+
+scene spar
+who: friend
+when: ghoul
+say: You. Fight me. Wings only. I want to see if you've gotten less pathetic.
+> You're on. | +2 -> after
+> Not today. | -1
+  - Coward. ...Fine. Tomorrow. Don't think I'll forget.
+page after
+say: *He's breathing hard, and grinning, which is worse.* ...Okay. Not pathetic. Annoying. Do that again tomorrow.
+> You were holding back. | +2 cross
+  - *He scoffs.* Obviously. ...A little. Less than I meant to.
+ignored: Tch. Whatever.
+
+scene sister_news
+who: close
+say: *He's leaning on the wall, arms crossed, not looking at you.* ...You've been to the cafe. With the rabbit. My sister. ...Is she eating?
+> She's fine. She asked about you. | +3 -> asked
+> Ask her yourself. | +1
+  - *He clicks his tongue.* ...Maybe. Someday. Don't hold your breath.
+page asked
+say: *He goes very still.* ...She did? ...She didn't. You're making that up. ...What did she say? Exactly. Word for word.
+> That she misses her little brother. | +4 shy
+  - *He turns his face to the wall.* ...Stupid. She's so stupid. ...Thanks for telling me. Forget I asked.
+ignored: *He pretends he didn't ask.*
+
+scene jealous_look
+who: together
+mood: jealous sulky
+say: Who was that? The one you were talking to. Laughing with. Don't tell me "nobody". I'm not stupid.
+> Nobody matters like you do. | +3 mend -> good
+> Are you jealous? | +1 -> admit
+page good
+say: *He stares at you a long moment, then exhales.* ...Good. Say that more. ...And if they touch you, they lose the hand.
+> Deal. | +2 hand
+  - *He takes your hand. Hard. Like he's making a point in front of the whole ward.*
+page admit
+say: Yes. Obviously. Happy now? ...I don't share. You know that. I'm not asking you to change. I'm telling you I hate it.
+> Come here, then. | +3 mend hug
+  - *He lets you pull him in, stiff for a second, then not.* ...Idiot.
+ignored: *He storms off, then comes back two minutes later and stands next to you without a word.*
+
+scene night_watch
+who: together
+when: night
+say: *He's sitting on the edge of a roof, wings half out, crystal catching the moonlight.* Sit. I'm on watch. Doves love nights like this.
+> *Sit close to him.* | +3 cling
+  - *His wing curls around you, just a little, like he didn't decide to.* ...Don't fall asleep. ...Okay, you can fall asleep.
+> You never sleep. | +2 -> sleep
+page sleep
+say: Not since I was a kid. Someone has to watch. ...Before you, nobody was watching my back. Now you're here. It's weird. ...Good weird.
+> I'll watch yours. | +4 hug
+  - *He snorts, but he leans on you anyway.* ...Yeah. Okay.
+ignored: *He keeps watching the street, but he's sitting closer than before.*
+
+topic rabbit
+prompt: Why do they call you the black rabbit?
+who: anyone
+say: The Doves needed a name. "Rabbit" was my sister's mask. I wore one too. Black. ...Rabbits are supposed to be harmless. That's the joke.
+> It suits you. | +1 huff
+  - Say that again and see how harmless I am.
+> Is your sister the other rabbit? | +2
+  - The white one. ...Don't tell her I told you.
+
+# =====================================================================================================================================
+# HIS COURTSHIP: each chapter's moment (Courtship.AYATO)
+# =====================================================================================================================================
+
+moment ayato_meal
+say: *He takes the pies, sniffs one suspiciously, and eats it in four bites without sitting down.* ...It's not terrible. *He's already on the second.*
+> You were starving. | +2 -> hungry
+> I made them myself. | +2 -> hungry
+ignored: *He finishes all three and pretends that was nothing.*
+page hungry
+say: *Quietly, not looking at you.* My sister used to cook for us. After Dad. Badly. She'd burn everything and make me eat it anyway. ...Nobody's fed me since. Stupid, right? ...Don't answer that.
+> It's not stupid. | +4 shy
+  - *He clicks his tongue, but he doesn't argue.* ...There are wild ghouls out there who think this ward is theirs. Three of them. Show me you can fight.
+> I'll make more. | +3 huff
+  - Don't make it a habit. ...Okay, make it a habit. Now go kill three wild ghouls who think they own the ward. Prove you're not useless.
+
+moment ayato_ghouls
+say: *He's waiting at the edge of the street, arms crossed, watching you walk back covered in someone else's blood. For once he doesn't say anything mean right away.* ...You came back.
+> Told you I would. | +3 -> kept
+> Worried? | +2 -> kept
+ignored: *He shakes his head and starts walking. He waits for you to catch up.*
+page kept
+say: *He looks away.* Don't get cocky. They were weak. ...But you didn't run. Most people run. ...Nobody stays.
+> I'll always stay. | +4 shy
+  - *He goes red and scowls about it.* Shut up. ...Take me somewhere high. Away from all this. Above everything.
+> You were watching the whole time. | +3 cross
+  - ...Somebody had to. ...Fine. Take me somewhere high. Somewhere the Doves can't see.
+
+moment ayato_roof
+say: *The whole ward is small below you. He sits on the edge, legs dangling, wings folded, quiet for a long time.* ...When I was a kid I thought if I got high enough, nobody could ever find us. Me and my sister.
+> Did it work? | +2 -> work
+> You're not a kid anymore. | +2 -> work
+ignored: *He just watches the lights below, and doesn't make you leave.*
+page work
+say: No. They found Dad anyway. ...But up here it's quiet. Nobody wants anything. *He glances at you.* ...You're the first person I've brought up here. Don't make it weird.
+> I'm honoured. | +4 shy
+  - *He bumps your shoulder with his.* ...There's a Dove hunting me. Rank 5, maybe more. When he comes, I want you next to me.
+> It's ours now. | +4 hand
+  - *He doesn't pull his hand away.* ...Yeah. Ours. ...Hey. There's a Dove hunting the black rabbit. When he comes, stand with me.
+
+moment ayato_rabbit
+say: *The investigator's quinque is in pieces. Ayato is standing over it, chest heaving, one wing cracked and already knitting. He turns to you so fast it's almost violent.* Are you hurt? Don't lie to me.
+> I'm fine. Are you? | +3 -> fine
+> A little. | +3 -> fine
+ignored: *He checks you over himself, rough and thorough, and only lets go when he's sure.*
+page fine
+say: *He exhales, and it shakes.* ...Don't do that. Don't stand where he can hit you. I don't care how strong you are. ...I've lost enough people to Doves.
+> You won't lose me. | +5 hug
+  - *He grabs your collar and presses his forehead to yours.* ...You'd better mean that. ...Come to the hideout tonight. Late. I've got something to say.
+> I stood next to you. Like you asked. | +4 cross
+  - ...Yeah. You did. *Quietly:* Come to the hideout tonight. Late, when it's quiet. I'll only say it once.
+
+moment ayato_deep
+say: *The hideout is silent. He's sitting against the wall, mask in his hands, turning it over and over. He doesn't look up when you come in.* ...You came.
+> You asked me to. | +2 -> say
+> What did you want to say? | +2 -> say
+ignored: *He sets the mask down and stares at it for a long time.*
+page say
+say: *He takes a breath like he's about to jump.* I don't do this. I don't let people in. Everyone I let in, the Doves take, or they leave. ...You didn't leave. So. *He finally looks at you.* I want you. Not as a partner in a fight. As mine. ...That's it. That's the thing.
+> I'm yours. | +5 hug
+  - *He lets out a breath he must have been holding for weeks.* ...Okay. Good. ...Ask me out, then. Properly. I'm not doing that part too.
+> Took you long enough. | +4 laugh
+  - *He laughs, actually laughs, and covers his face.* Shut up. ...Ask me out. Properly. Before I change my mind.
+
+# =====================================================================================================================================
+# DATES (who: together)
+# =====================================================================================================================================
+
+date ayato_rooftop
+prompt: Rooftops tonight. Just us.
+who: together
+when: night
+say: *He takes you up three buildings, faster than you can follow, then waits at the top pretending he wasn't waiting.* Slow. ...Sit. The city looks better from up here. Everything does.
+> You look better from up here. | +3 -> look
+> *Lean on his shoulder.* | +3 cling
+  - *He goes stiff, then doesn't.* ...Fine. Stay there. Don't fall asleep. ...You can fall asleep.
+page look
+say: *He chokes.* Where do you even come up with— ...shut up. *He's quiet a moment.* ...You too. Obviously. Don't make me say it twice.
+> Say it twice. | +4 kiss
+  - *He grabs your collar and kisses you instead.* ...There. That's twice.
+
+date ayato_arcade
+prompt: There's an arcade in the ward. Fight me.
+who: together
+say: *He's terrible at the claw machine and furious about it.* It's rigged. It's RIGGED. ...Don't laugh. Don't you dare laugh.
+> *Win him the rabbit plush.* | +4 -> plush
+> I'll beat you at the fighting game. | +3 -> fight
+page plush
+say: *He stares at the black rabbit plush in your hands like it's a live grenade.* ...Why would I want that. *He takes it.* I'm not keeping it. *He's keeping it.*
+> It looks like you. | +3 huff
+  - It does NOT. ...Its ears are too long. ...Shut up.
+page fight
+say: *Three rounds later he's lost twice and is pretending the controller is broken.* Again. Best of five. Best of seven. I'm not leaving until I win.
+> *Let him win.* | +2 laugh
+  - *He wins and looks suspicious about it.* ...You let me win. Don't. ...Thanks.
+> *Beat him again.* | +3 laugh
+  - *He drops his forehead onto your shoulder in defeat.* ...I hate you. ...Not really.
+
+date ayato_ramen
+prompt: Late-night ramen stand. My treat.
+who: together
+when: night
+say: *Ghouls can't eat it, so he orders one anyway, pushes it in front of you, and watches you eat with his chin in his hand.* What. I'm not staring. ...Is it good?
+> Want to try? | +2 laugh
+  - *He takes one bite, chews, and goes slowly green.* ...How do humans DO this. ...Keep eating. I like watching you.
+> You're definitely staring. | +3 -> stare
+page stare
+say: ...So what if I am. You're the only thing worth looking at in this whole ward. *He turns red the second he hears himself.* Forget I said that.
+> Never. | +4 kiss
+  - *He groans and pulls you in by the scarf.* ...Fine. Remember it. Just don't repeat it.
+
+date ayato_park
+prompt: Walk with me through the park.
+who: together
+when: day
+say: *He walks with his hands in his pockets, glaring at every couple you pass.* People are so loud in daylight. ...But it's fine. You're here.
+> Hold my hand. | +3 hand
+  - *He takes it like it's a dare.* ...Happy? Everyone can see. ...Good. Let them.
+> You're glaring at everyone. | +2 -> glare
+page glare
+say: They keep looking at you. I'm making sure they stop. *He bumps you with his shoulder.* ...Somebody has to.
+> My protector. | +4 hug
+  - Don't call me that. ...Okay. Call me that. Only you.
+
+date ayato_spar_date
+prompt: Spar with me. That's a date to us.
+who: together
+when: ghoul
+say: *He takes his coat off, rolls his shoulders, and crystal crackles across his wings.* No holding back. If you go easy on me I'll never forgive you.
+> *Fight him for real.* | +4 -> after
+> *Kiss him mid-fight.* | +3 kiss
+  - *He freezes completely, crystal shattering in midair.* ...Cheater. That's cheating. ...Do it again.
+page after
+say: *You're both on the ground, laughing, bruised. He's still holding your wrist.* ...Best date ever. Don't tell anyone that's what I think a date is.
+> It's our secret. | +4 cling
+  - *He pulls you closer on the cold ground.* ...Yeah. Ours.
+
+date ayato_stars
+prompt: Lie on the roof and watch the stars.
+who: together
+when: night !rain
+say: *He lies back on the roof tiles, wings spread out beside him like a blanket, and pats the space next to him without looking.* ...Here. There's room.
+> *Lie in his wing.* | +4 cling
+  - *His wing folds over you, warm and faintly glowing.* ...Don't move. It took forever to get comfortable.
+> Do you know any constellations? | +2 -> stars
+page stars
+say: *He points at a random cluster.* That one's the rabbit. ...I made that up. Dad used to make them up too. He said if you can't remember the real names, invent better ones.
+> Then that one's us. | +5 kiss
+  - *He stares at the stars a long time.* ...Yeah. That one's us. *He kisses you without looking away from the sky.*

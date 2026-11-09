@@ -493,11 +493,11 @@ final class ChildKagune {
     static com.hex.kagune.control.network.S2CNpcWings wings(ChildNpc npc, ChildBrain.Mind mind) {
         if (mind == null) {
             return new com.hex.kagune.control.network.S2CNpcWings(npc.m_19879_(), false, Long.MIN_VALUE, false, Long.MIN_VALUE, 0, Long.MIN_VALUE, 1,
-                Long.MIN_VALUE);
+                Long.MIN_VALUE, false, Long.MIN_VALUE, Long.MIN_VALUE);
         }
         Fight f = mind.kagune;
         return new com.hex.kagune.control.network.S2CNpcWings(npc.m_19879_(), f.out, f.outAt, f.crystal, f.crystalAt, f.prey, f.shotAt, f.shotSide,
-            f.volleyAt);
+            f.volleyAt, false, Long.MIN_VALUE, Long.MIN_VALUE);
     }
 
     // ---------------------------------------------------------------- the tails

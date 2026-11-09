@@ -35,6 +35,10 @@ COMPANIONS = {
     # 1.3.17: her skin's right eye is painted as a ghoul's: by day it is the mirror of her left (as Eto's is), turning only as a kakugan.
     "touka": {"turns": ("right", "left"), "slim": True, "mirror": True},
     "ken": {"turns": ("left",), "slim": True},
+    # 4.0.0: Ayato (the owner's skin, art/exploration/Ayato_skin.png): both eyes turn; Noro (Noro_skin.webp): his face is his stitched
+    # mask, its two dark eye-holes turn red.
+    "ayato": {"turns": ("right", "left"), "slim": True},
+    "noro": {"turns": ("right", "left"), "slim": True},
 }
 # Eye pixels by hand, if detection is wrong for a skin: {key: {"right": [(x, y), ...], "left": [...], "white": [...]}} in 64px face
 # coordinates (0..7 across the face front, 0..7 down).
@@ -48,6 +52,14 @@ EYES = {
     "ken": {"right": [(1, 5), (2, 5), (1, 6), (2, 6)], "left": [(5, 5), (6, 5), (5, 6), (6, 6)], "white": [(1, 5), (1, 6), (6, 5), (6, 6)],
             "lash": [(2, 4), (5, 4)]},
 }
+
+EYES.update({
+    # 4.0.0: Ayato's eyes are the face's row 4 and 5: the white outside, the dark iris inside.
+    "ayato": {"right": [(1, 4), (2, 4), (1, 5), (2, 5)], "left": [(5, 4), (6, 4), (5, 5), (6, 5)], "white": [(1, 4), (1, 5), (6, 4), (6, 5)],
+              "lash": []},
+    # 4.0.0: Noro's mask's eye-holes (row 5, the dark stitches' ends).
+    "noro": {"right": [(1, 5), (2, 5)], "left": [(5, 5), (6, 5)], "white": [], "lash": []},
+})
 
 BLACK = (12, 4, 8, 255)
 LID = (14, 12, 16, 255)  # 1.3.30: the shut lid's line, black

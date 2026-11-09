@@ -255,14 +255,16 @@ public final class CompanionTests {
     }
 
     /** The build's own name filter (build.py check_names): none of these may reach the jar. */
-    static final Pattern FORBIDDEN = Pattern.compile("Kaneki|KANEKI|kaneki|Ayato|AYATO|ayato|Furuta|FURUTA|furuta");
+    // 4.0.0: Ayato is no longer kept out (the owner asked for him by name).
+    static final Pattern FORBIDDEN = Pattern.compile("Kaneki|KANEKI|kaneki|Furuta|FURUTA|furuta");
 
     static void personas() {
         Set<String> keys = new HashSet<>();
         for (Persona p : Persona.ALL) {
             check(keys.add(p.key()) && Persona.of(p.key()) == p && Persona.known(p.key()), p.key() + ": one key, found by it");
             check(!FORBIDDEN.matcher(p.name()).find() && !FORBIDDEN.matcher(p.key()).find(), p.key() + ": its name passes the name filter");
-            check(p.size() > 0.7F && p.size() <= 1.0F && p.health() > 100.0F && p.armor() > 0.0, p.key() + ": a sane body");
+            // 4.0.0: Noro taller than a player (the owner: "Noro is taller than the average player").
+            check(p.size() > 0.7F && p.size() <= (p == Persona.NORO ? 1.25F : 1.0F) && p.health() > 100.0F && p.armor() > 0.0, p.key() + ": a sane body");
             for (EtoMood mood : EtoMood.values()) {
                 check(p.idles(mood).length > 0, p.key() + ": something to do " + mood);
             }
@@ -341,7 +343,22 @@ public final class CompanionTests {
                 check(!Teaching.taught(gate), quest.id() + ": opens no gate a companion teaches (" + gate.id() + ")");
             }
         }
-        check(Teaching.of("touka").size() == 3 && Teaching.of("ken").size() == 6 && Teaching.of("eto").isEmpty(), "Touka three lessons, Ken six");
+        // 4.0.0: the first kakuja is Ayato's now (his three: two of respect, then it); Noro teaches the Bikaku (five).
+        check(Teaching.of("touka").size() == 2 && Teaching.of("ken").size() == 6 && Teaching.of("eto").isEmpty() && Teaching.of("ayato").size() == 3
+            && Teaching.of("noro").size() == 5, "Touka two lessons, Ken six, Ayato three, Noro five");
+        check(Teaching.teaching(Gate.UKAKU_KAKUJA).teacher().equals("ayato") && Teaching.teaching(Gate.UKAKU_KAKUJA).kind() == Teaching.Kind.TRIAL
+            && Teaching.before(Gate.UKAKU_KAKUJA) == Gate.UKAKU_AYATO_HUNT && Teaching.before(Gate.UKAKU_AYATO_HUNT) == Gate.UKAKU_AYATO_DOVES
+            && Teaching.before(Gate.UKAKU_AYATO_DOVES) == Gate.UKAKU_GATLING && Teaching.before(Gate.UKAKU_FINAL_KAKUJA) == Gate.UKAKU_KAKUJA,
+            "Ayato's road: Touka's Gatling, his two proofs of respect, then the first kakuja lived through; Ken's final kakuja after it");
+        check(Teaching.before(Gate.BIKAKU_WALKER) == Gate.BIKAKU_WORMS && Teaching.before(Gate.BIKAKU_KAKUJA) == Gate.BIKAKU_WALKER
+            && Teaching.before(Gate.BIKAKU_DEVOURING) == Gate.BIKAKU_KAKUJA && Teaching.before(Gate.BIKAKU_POTENTIAL) == Gate.BIKAKU_DEVOURING,
+            "Noro's road: no stage skipped");
+        for (Teaching.Lesson lesson : Teaching.of("ayato")) {
+            check(Teaching.proof(lesson) != null, lesson.id() + ": Ayato's respect is earned (a proof)");
+        }
+        for (Teaching.Lesson lesson : Teaching.of("noro")) {
+            check(Teaching.proof(lesson) != null, lesson.id() + ": Noro's training (a proof)");
+        }
         // 3.3.1: Ken's Hurl and Impale appended (the old lessons keep their saved bits) and taught first (by mastery).
         check(Teaching.bit(Teaching.byId("ken_centipede")) == 1L && Teaching.bit(Teaching.byId("ken_king")) == 2L && Teaching.bit(Teaching.byId("ken_dragon")) == 4L
             && Teaching.bit(Teaching.byId("ken_storm")) == 8L && Teaching.bit(Teaching.byId("ken_hurl")) == 16L && Teaching.bit(Teaching.byId("ken_impale")) == 32L,
@@ -349,7 +366,8 @@ public final class CompanionTests {
         check(Teaching.inOrder("ken").get(0).gate() == Gate.RINKAKU_HURL && Teaching.inOrder("ken").get(1).gate() == Gate.RINKAKU_IMPALE
             && Teaching.inOrder("ken").get(2).gate() == Gate.RINKAKU_CENTIPEDE, "Ken teaches the Rubble Hurl first, then the Impale, then the centipede");
         Gate[] gates = Gate.values();
-        check(gates[gates.length - 2] == Gate.RINKAKU_HURL && gates[gates.length - 1] == Gate.RINKAKU_IMPALE && Gate.fromId("rinkaku_hurl") == Gate.RINKAKU_HURL
+        check(Gate.RINKAKU_IMPALE.ordinal() == Gate.RINKAKU_HURL.ordinal() + 1 && gates[gates.length - 1] == Gate.BIKAKU_POTENTIAL
+            && Gate.UKAKU_AYATO_DOVES.ordinal() == Gate.RINKAKU_IMPALE.ordinal() + 1 && Gate.fromId("rinkaku_hurl") == Gate.RINKAKU_HURL
             && Gate.fromId("rinkaku_impale") == Gate.RINKAKU_IMPALE && Gate.RINKAKU_HURL.mastery() == com.hex.kagune.control.RinkakuUnlocks.HURL
             && Gate.RINKAKU_IMPALE.mastery() == com.hex.kagune.control.RinkakuUnlocks.IMPALE, "the two new gates appended, at their moves' own mastery");
         check(Teaching.of("touka").stream().allMatch(l -> l.path() == KagunePath.UKAKU), "Touka teaches the wings only");
@@ -623,7 +641,15 @@ public final class CompanionTests {
             Teaching.Proof proof = Teaching.proof(lesson);
             boolean finalOne = lesson.gate() == Gate.RINKAKU_FULL_KAKUJA || lesson.gate() == Gate.RINKAKU_DRAGON || lesson.gate() == Gate.UKAKU_FINAL_KAKUJA;
             boolean kenMove = lesson.gate() == Gate.RINKAKU_HURL || lesson.gate() == Gate.RINKAKU_IMPALE; // 3.3.1
-            check((finalOne || kenMove) == (proof != null), lesson.id() + ": a proof first only for a final kakuja, and Ken's Hurl and Impale");
+            // 4.0.0: every one of Ayato's and Noro's is earned (the owner: respect, "meaningful challenges", "progression challenges").
+            boolean earned = lesson.teacher().equals("ayato") || lesson.teacher().equals("noro");
+            check((finalOne || kenMove || earned) == (proof != null), lesson.id() + ": a proof first only for a final kakuja, Ken's Hurl and Impale, and Ayato's and Noro's");
+            if (proof != null && earned) {
+                check(proof.need() >= 1 && !Teaching.fill(proof.ask(), proof, 0).contains("{") && !Teaching.fill(proof.progress(), proof, 0).contains("{")
+                    && proof.bar(lesson.teacher(), proof.need()).contains("Go and see him") && !proof.bar(lesson.teacher(), 0).contains("Go and see"),
+                    lesson.id() + ": its proof said cleanly");
+                continue;
+            }
             if (proof != null) {
                 check(proof.need() >= 3 && !Teaching.fill(proof.ask(), proof, 0).contains("{") && Teaching.fill(proof.progress(), proof, 2).contains("2")
                     && proof.bar(proof.need()).contains("Go and see him") && !proof.bar(1).contains("Go and see"), lesson.id() + ": its proof said cleanly");
@@ -649,9 +675,15 @@ public final class CompanionTests {
     static void courtship() {
         Set<String> ids = new HashSet<>();
         Set<String> asks = new HashSet<>();
-        java.util.regex.Pattern banned = java.util.regex.Pattern.compile("Kaneki|Ayato|Furuta|Takatsuki|Aogiri|Yoshimura", java.util.regex.Pattern.CASE_INSENSITIVE);
+        // 4.0.0: Ayato and Aogiri are named by the owner's ask (The Great Exploration).
+        java.util.regex.Pattern banned = java.util.regex.Pattern.compile("Kaneki|Furuta|Takatsuki|Yoshimura", java.util.regex.Pattern.CASE_INSENSITIVE);
         for (Persona p : Persona.ALL) {
             List<com.hex.kagune.control.npc.Courtship.Chapter> chapters = com.hex.kagune.control.npc.Courtship.of(p.key());
+            if (!p.romanceable()) {
+                // 4.0.0: Noro: no romance (the owner): no courtship at all.
+                check(chapters.isEmpty(), p.key() + ": no courtship");
+                continue;
+            }
             check(chapters.size() == com.hex.kagune.control.npc.Courtship.CHAPTERS, p.key() + " has five chapters");
             Set<com.hex.kagune.control.npc.Courtship.Task> tasks = new HashSet<>();
             for (com.hex.kagune.control.npc.Courtship.Chapter chapter : chapters) {
@@ -774,7 +806,7 @@ public final class CompanionTests {
     }
 
     static void talk() {
-        for (Persona p : new Persona[] {Persona.TOUKA, Persona.KEN}) {
+        for (Persona p : new Persona[] {Persona.TOUKA, Persona.KEN, Persona.AYATO}) {
             Script script = p.script();
             Set<String> topicIds = new HashSet<>();
             int words = 0;

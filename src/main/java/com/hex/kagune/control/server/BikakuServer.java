@@ -317,6 +317,9 @@ public final class BikakuServer {
             notice(player, state, Component.m_237110_("message.hexkagune.bikaku.locked", "The kakuja", BikakuRules.KAKUJA));
             return;
         }
+        if (!QuestServer.pass(player, com.hex.kagune.control.quest.Gate.BIKAKU_KAKUJA)) {
+            return; // 4.0.0: Noro teaches it
+        }
         if (state.devourVictim != 0) {
             notice(player, state, Component.m_237115_("message.hexkagune.bikaku.feeding")); // 3.6.3: its worm is feeding
             return;
@@ -347,6 +350,9 @@ public final class BikakuServer {
     /** 3.7.1: K tapped: into The Walker (its mastery, half the kakuja's energy; not while a worm feeds). */
     private static void enterWalker(ServerPlayer player, State state, long now) {
         com.hex.kagune.control.bikaku.BikakuForm walker = com.hex.kagune.control.bikaku.BikakuForm.WALKER;
+        if (walker.unlocked(KaguneProfile.mastery(player)) && !QuestServer.pass(player, com.hex.kagune.control.quest.Gate.BIKAKU_WALKER)) {
+            return; // 4.0.0: Noro teaches it (the half kakuja)
+        }
         if (!walker.unlocked(KaguneProfile.mastery(player))) {
             notice(player, state, Component.m_237110_("message.hexkagune.bikaku.locked", walker.displayName(), walker.mastery()));
             return;
@@ -643,6 +649,19 @@ public final class BikakuServer {
     /** Where his form is kept in his profile (death carries it; a reset clears it). */
     static final String FORM_KEY = "BikakuForm";
 
+    /**
+     * 4.0.0: true if {@code move} is his to make: the Maw and the Drag always (the worm's own); Ravenous Pursuit, Carrion Eruption and Monstrous
+     * Regeneration once Noro has taught the Worms; the kakuja's own once he has taught the kakuja. False (after saying who teaches it) if not.
+     */
+    static boolean taught(ServerPlayer player, com.hex.kagune.control.bikaku.BikakuMove move) {
+        com.hex.kagune.control.quest.Gate gate = switch (move) {
+            case PURSUIT, ERUPTION, REGENERATION -> com.hex.kagune.control.quest.Gate.BIKAKU_WORMS;
+            case JAWS, HUNGER, CATACLYSM, UNDYING -> com.hex.kagune.control.quest.Gate.BIKAKU_KAKUJA;
+            default -> null;
+        };
+        return gate == null || QuestServer.pass(player, gate);
+    }
+
     /** His form: as he picked it (kept in his profile), or the strongest his mastery has opened below it. */
     static com.hex.kagune.control.bikaku.BikakuForm form(ServerPlayer player, State state) {
         if (state.form == null) {
@@ -650,6 +669,9 @@ public final class BikakuServer {
             state.form = com.hex.kagune.control.bikaku.BikakuForm.byOrdinal(root.m_128441_(FORM_KEY) ? root.m_128451_(FORM_KEY) : 0);
         }
         com.hex.kagune.control.bikaku.BikakuForm allowed = com.hex.kagune.control.bikaku.BikakuForm.allowed(state.form, KaguneProfile.mastery(player));
+        if (allowed.worms() > 1 && !QuestServer.open(player, com.hex.kagune.control.quest.Gate.BIKAKU_WORMS)) {
+            allowed = com.hex.kagune.control.bikaku.BikakuForm.ONE; // 4.0.0: more worms than one are Noro's to teach
+        }
         state.form = allowed;
         // 3.7.1: The Walker is not picked: K tapped carries him in it (its moves are Three Worms').
         return state.walker ? com.hex.kagune.control.bikaku.BikakuForm.WALKER : allowed;
@@ -674,6 +696,9 @@ public final class BikakuServer {
         if (!wanted.unlocked(KaguneProfile.mastery(player))) {
             notice(player, state, Component.m_237110_("message.hexkagune.bikaku.locked", wanted.displayName(), wanted.mastery()));
             return;
+        }
+        if (wanted.worms() > 1 && !QuestServer.pass(player, com.hex.kagune.control.quest.Gate.BIKAKU_WORMS)) {
+            return; // 4.0.0: Noro teaches the forms
         }
         state.form = wanted;
         KaguneProfile.root(player).m_128405_(FORM_KEY, wanted.ordinal());

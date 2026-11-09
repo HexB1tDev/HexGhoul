@@ -19,6 +19,10 @@ public record S2CCutscene(int script, String words) {
     public static final int BIRTH = 2;
     /** 1.3.14: Ken's trial: the torture he lived through, lived through ({@code CutsceneOverlay.TORTURE}). */
     public static final int TORTURE = 3;
+    /** 4.0.0: Ayato's lesson: the first kakuja torn out of you ({@code CutsceneOverlay.AYATO_KAKUJA}). */
+    public static final int AYATO_KAKUJA = 4;
+    /** 4.0.0: Noro's lessons: the worm eating its way through you, and you coming back ({@code CutsceneOverlay.NORO}). */
+    public static final int NORO = 5;
 
     public static void encode(S2CCutscene message, FriendlyByteBuf buffer) {
         buffer.writeByte(message.script);

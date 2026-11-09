@@ -16,6 +16,11 @@ public final class SceneWords {
 
     /** The speakers with a script, and which family each is. */
     public static final Set<String> COMPANIONS = Set.of("eto", "touka", "ken");
+    /**
+     * 4.0.0: every speaker whose script may hold courtship moments and dates: the three, and Ayato (his script, talk/ayato.txt, is his
+     * courtship's moments, his dates and a few scenes of his own: not yet every mood of every tier as theirs are).
+     */
+    public static final Set<String> ROMANCE_SCRIPTS = Set.of("eto", "touka", "ken", "ayato");
     public static final String CHILD = "child";
     /** The wild ghouls who walk with a player (any of them: by its temper). */
     public static final String ALLY = "ally";

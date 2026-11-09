@@ -47,6 +47,8 @@ public final class ThrallRenderGuard {
         event.registerEntityRenderer(ControlEntities.ETO.get(), EtoRenderer::new);
         event.registerEntityRenderer(ControlEntities.TOUKA.get(), context -> new EtoRenderer(context, com.hex.kagune.control.npc.Persona.TOUKA));
         event.registerEntityRenderer(ControlEntities.KEN.get(), context -> new EtoRenderer(context, com.hex.kagune.control.npc.Persona.KEN));
+            event.registerEntityRenderer(ControlEntities.AYATO.get(), context -> new EtoRenderer(context, com.hex.kagune.control.npc.Persona.AYATO));
+            event.registerEntityRenderer(ControlEntities.NORO.get(), context -> new EtoRenderer(context, com.hex.kagune.control.npc.Persona.NORO));
         event.registerEntityRenderer(ControlEntities.CHILD.get(), ChildRenderer::new);
         event.registerEntityRenderer(ControlEntities.AGENT.get(), AgentRenderer::new);
     }

@@ -286,8 +286,8 @@ public final class UkakuWingRenderer {
         // 1.3.19: a companion's wings (Touka's): a lesser pair at her size, riding her torso as it was drawn, crystal as she throws.
         for (int id : com.hex.kagune.control.client.NpcWingsClient.ids()) {
             com.hex.kagune.control.client.NpcWingsClient.View wings = com.hex.kagune.control.client.NpcWingsClient.get(id);
-            if (!(level.m_6815_(id) instanceof com.hex.kagune.control.npc.EtoNpc npc) || !npc.m_6084_() || npc.m_20145_()) {
-                continue;
+            if (!(level.m_6815_(id) instanceof com.hex.kagune.control.npc.EtoNpc npc) || !npc.m_6084_() || npc.m_20145_() || !npc.persona().wings()) {
+                continue; // 4.0.0: (Noro's view says when his worms are out: no wings of his)
             }
             float deploy = com.hex.kagune.control.client.NpcWingsClient.deploy(wings, clock);
             double distance = npc.m_20280_(self);
@@ -323,6 +323,11 @@ public final class UkakuWingRenderer {
             WingRig.Input input = com.hex.kagune.control.npc.WingRules.companion(deploy, time / 20.0, crystal, !wings.out(), aimed, aim,
                 com.hex.kagune.control.client.NpcWingsClient.kick(wings, 1, clock), com.hex.kagune.control.client.NpcWingsClient.kick(wings, -1, clock),
                 distance > DETAIL_DISTANCE_SQR ? 0.3F : 1.0F);
+            // 4.0.0: Ayato's wings are a full pair; badly hurt, his kakuja (the first kakuja's armoured tentacles, as an Ukaku player's).
+            float grownKakuja = com.hex.kagune.control.client.NpcWingsClient.kakuja(wings, clock);
+            if (npc.persona().kakuja()) {
+                input = com.hex.kagune.control.npc.WingRules.full(input, grownKakuja > 0.02F);
+            }
             List<WingRig.Quad> quads = WingRig.build(input, eye);
             if (quads.isEmpty()) {
                 continue;

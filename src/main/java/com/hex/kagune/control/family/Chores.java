@@ -364,7 +364,7 @@ public final class Chores {
 
     /** What it says starting a chore ({@code key}: the companion's), to its spouse near it; {@code seed} picks among its lines. */
     public static String start(String key, Kind kind, int seed) {
-        String[] lines = switch (key) {
+        String[] lines = switch (household(key)) {
             case "touka" -> switch (kind) {
                 case TIDY -> new String[] {"*opens the chest* Seriously, how do you find anything in here? ...Don't touch it. I'm doing it.",
                     "*digs through the chest* Who throws dirt in with the food? You. Only you."};
@@ -417,7 +417,7 @@ public final class Chores {
 
     /** What it says when it is done ({@code more}: the sweeping put things from the floor away; the tidying put a chest in order). */
     public static String done(String key, Kind kind, boolean more, int seed) {
-        String[] lines = switch (key) {
+        String[] lines = switch (household(key)) {
             case "touka" -> switch (kind) {
                 case TIDY -> more ? new String[] {"*shuts the lid* Done. Mess it up again and I'm putting you in the chest."}
                     : new String[] {"*shuts the lid* ...Huh. You kept it tidy. Don't let it go to your head."};
@@ -451,7 +451,7 @@ public final class Chores {
      * home's name).
      */
     public static String goingHome(String key, boolean married, String place, int seed) {
-        String[] lines = switch (key) {
+        String[] lines = switch (household(key)) {
             case "touka" -> married ? new String[] {"Fine. I'm going. ...Don't stay out too late, idiot.", "Home. Right. I'll leave a light on. Not for you."}
                 : new String[] {"Fine. Back to " + place + ". Somebody has to work.", "Whatever. I'm going. ...Come by sometime."};
             case "ken" -> married ? new String[] {"Okay. I'll head home. I'll have something warm waiting.", "Alright. Be careful out here. I'll see you at home."}
@@ -460,5 +460,10 @@ public final class Chores {
                 : new String[] {"Back to " + place + ", then. Visit me. Bring a book.", "Sent home like a cat. Rude. ...I'll go."};
         };
         return lines[Math.floorMod(seed, lines.length)];
+    }
+
+    /** 4.0.0: whose household words {@code key} speaks: Ayato Ken's (the owner: his romance "quite similar to kaneki"), the rest their own. */
+    static String household(String key) {
+        return "ayato".equals(key) ? "ken" : key;
     }
 }

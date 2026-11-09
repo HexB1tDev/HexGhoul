@@ -26,6 +26,9 @@ import net.minecraftforge.fml.common.Mod;
 public final class TortureServer {
     /** How long it runs (game ticks): the cutscene's length. */
     public static final long LENGTH = 46L * 20L;
+    /** 4.0.0: Ayato's and Noro's cutscenes' lengths (game ticks). */
+    public static final long AYATO_LENGTH = 30L * 20L;
+    public static final long NORO_LENGTH = 26L * 20L;
 
     private record Trial(long endsAt, String lesson, String teacher, String name) {
     }
@@ -43,9 +46,16 @@ public final class TortureServer {
         long now = player.m_9236_().m_46467_();
         EtoTalk.Context c = EtoServer.context(player, npc);
         String words = npc.persona().script().trialWords(lesson, c);
-        TRIALS.put(player.m_20148_(), new Trial(now + LENGTH, lesson.id(), npc.persona().key(), npc.displayName()));
-        ControlNetwork.sendTo(player, new S2CCutscene(S2CCutscene.TORTURE, words));
-        int ticks = (int)LENGTH;
+        long length = Teaching.AYATO.equals(lesson.teacher()) ? AYATO_LENGTH : Teaching.NORO.equals(lesson.teacher()) ? NORO_LENGTH : LENGTH;
+        TRIALS.put(player.m_20148_(), new Trial(now + length, lesson.id(), npc.persona().key(), npc.displayName()));
+        // 4.0.0: each teacher's own: Ken's ten days; Ayato's kakuja tearing out of you; Noro's worm eating its way through you.
+        int cutscene = switch (lesson.teacher()) {
+            case Teaching.AYATO -> S2CCutscene.AYATO_KAKUJA;
+            case Teaching.NORO -> S2CCutscene.NORO;
+            default -> S2CCutscene.TORTURE;
+        };
+        ControlNetwork.sendTo(player, new S2CCutscene(cutscene, words));
+        int ticks = (int)length;
         player.m_7292_(new MobEffectInstance(MobEffects.f_19597_, ticks, 6, false, false, false));
         player.m_7292_(new MobEffectInstance(MobEffects.f_19603_, ticks, 128, false, false, false));
         player.m_7292_(new MobEffectInstance(MobEffects.f_19606_, ticks, 4, false, false, false));

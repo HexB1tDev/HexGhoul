@@ -276,7 +276,7 @@ public final class SceneBook {
         if (draft.kind == Scene.Kind.DATE && (draft.who.isEmpty() || !SceneWords.tiers("together").containsAll(draft.who))) {
             errors.add(where + ": a date is for a couple alone (who: together)");
         }
-        if ((draft.kind == Scene.Kind.MOMENT || draft.kind == Scene.Kind.DATE) && !SceneWords.COMPANIONS.contains(speaker)) {
+        if ((draft.kind == Scene.Kind.MOMENT || draft.kind == Scene.Kind.DATE) && !SceneWords.ROMANCE_SCRIPTS.contains(speaker)) {
             errors.add(where + ": only a companion has moments and dates");
         }
         if (draft.prompt != null && draft.prompt.length() > LABEL_MOST) {
@@ -321,7 +321,7 @@ public final class SceneBook {
                 if (option.next != null && !pageIds.contains(option.next)) {
                     errors.add(where + " line " + option.line + ": leads to a page it doesn't have: " + option.next);
                 }
-                if (SceneWords.COMPANIONS.contains(speaker) && !together) {
+                if (SceneWords.ROMANCE_SCRIPTS.contains(speaker) && !together) {
                     for (String effect : option.effects) {
                         if (SceneWords.TOGETHER_ONLY.contains(effect)) {
                             errors.add(where + " line " + option.line + ": '" + effect + "' is for a couple alone (who: partner/wife/together)");

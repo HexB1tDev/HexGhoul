@@ -13,7 +13,7 @@ import net.minecraft.client.Minecraft;
 public final class NpcWingsClient {
     /** Her wings as the server last said; {@code ...Began} are client clock times. */
     public record View(boolean out, double outBegan, boolean crystal, double crystalBegan, int prey, long shotAt, double shotBegan, int shotSide,
-                       long volleyAt, double volleyBegan) {
+                       long volleyAt, double volleyBegan, boolean kakuja, double kakujaBegan, double mendBegan) {
     }
 
     private static final Map<Integer, View> VIEWS = new HashMap<>();
@@ -27,7 +27,7 @@ public final class NpcWingsClient {
         double clock = PaleClient.clock(0.0F);
         VIEWS.put(message.id(), new View(message.out(), began(world, clock, message.outAt()), message.crystal(), began(world, clock, message.crystalAt()),
             message.prey(), message.shotAt(), began(world, clock, message.shotAt()), message.shotSide(), message.volleyAt(),
-            began(world, clock, message.volleyAt())));
+            began(world, clock, message.volleyAt()), message.kakuja(), began(world, clock, message.kakujaAt()), began(world, clock, message.mendAt())));
     }
 
     private static double began(long world, double clock, long at) {
@@ -49,6 +49,21 @@ public final class NpcWingsClient {
         double t = Math.max(0.0, Math.min(1.0, (clock - view.outBegan()) / WingRules.DEPLOY_TICKS));
         double eased = t * t * (3.0 - 2.0 * t);
         return (float)(view.out() ? eased : 1.0 - eased);
+    }
+
+    /** 4.0.0: how far into his kakuja a companion is (Ayato: 0..1, grown in over a second, broken off as fast). */
+    public static float kakuja(View view, double clock) {
+        if (view == null) {
+            return 0.0F;
+        }
+        double t = Math.max(0.0, Math.min(1.0, (clock - view.kakujaBegan()) / 20.0));
+        double eased = t * t * (3.0 - 2.0 * t);
+        return (float)(view.kakuja() ? eased : 1.0 - eased);
+    }
+
+    /** 4.0.0: ticks since a companion's body began knitting back (Noro), or a great many. */
+    public static double mending(View view, double clock) {
+        return view == null ? 1.0E6 : Math.max(0.0, clock - view.mendBegan());
     }
 
     /** How crystal they are (0..1). */

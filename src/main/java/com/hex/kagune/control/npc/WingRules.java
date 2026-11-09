@@ -90,6 +90,17 @@ public final class WingRules {
     }
 
     /**
+     * 4.0.0: Ayato's: {@code in} as a full pair (both wings, a stronger Ukaku's size), or, {@code kakuja}, the first kakuja (its armoured
+     * tentacles, drawn by the kakuja's own rig).
+     */
+    public static com.hex.kagune.control.ukaku.WingRig.Input full(com.hex.kagune.control.ukaku.WingRig.Input in, boolean kakuja) {
+        return new com.hex.kagune.control.ukaku.WingRig.Input(kakuja ? com.hex.kagune.control.ukaku.WingForm.KAKUJA : com.hex.kagune.control.ukaku.WingForm.TWIN,
+            kakuja ? 800 : 420, in.deploy(), in.time(), in.crystalRight(), in.crystalLeft(), in.motion(), in.progress(), in.impact(), in.volley(),
+            in.recoil(), in.crouching(), in.detail(), in.alpha(), in.dissolving(), in.aimRight(), in.aimLeft(), in.aim(), in.kickRight(), in.kickLeft(),
+            in.coilRight(), in.coilLeft(), 1.0F, 1.0F);
+    }
+
+    /**
      * 1.3.43: a ghoul child's wing or wings (Ukaku inherited) as the rig draws them at {@code mastery} (its stage's): the pair, or one
      * alone on {@code side} (1 its right, -1 its left; the other grown to nothing), aiming as it shoots.
      */

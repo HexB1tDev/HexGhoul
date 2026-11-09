@@ -75,6 +75,8 @@ public final class Tolerance {
                 "Watch your aim. I'm not a training dummy."};
             case "ken" -> new String[] {"Ah— it's okay. I'm okay. Accidents happen.", "That was me, you know. ...It's fine. Really.",
                 "Careful. I heal fast, but still."};
+            case "ayato" -> new String[] {"Hey! Watch it. ...Once. You get one.", "Do that again and I hit back.", "Tch. Sloppy. Aim better."};
+            case "noro" -> new String[] {"*He doesn't react.*", "*His head turns. Slowly.*"};
             default -> new String[] {"Ow."};
         });
     }
@@ -85,6 +87,8 @@ public final class Tolerance {
             case "eto" -> new String[] {"...Really? Rude. I'll collect it later. With interest.", "Hm. Your loss. I'll ask again when you deserve it."};
             case "touka" -> new String[] {"...Fine. Whatever. Not like I wanted one.", "Seriously? ...You owe me one. Later."};
             case "ken" -> new String[] {"Oh. ...That's okay. Another time.", "Ah, you're busy. It's alright. I'll wait."};
+            case "ayato" -> new String[] {"...Fine. Whatever. Your loss.", "Tch. Didn't want one anyway."};
+            case "noro" -> new String[] {"*He doesn't move.*"};
             default -> new String[] {"Hm."};
         });
     }
@@ -96,6 +100,8 @@ public final class Tolerance {
                 case "eto" -> new String[] {"Sorry. Sorry, sorry, sorry. You say it a lot lately. ...Give me a minute. Then come back and say it better."};
                 case "touka" -> new String[] {"...I know you are. Just. Give me a minute, okay? I'm not leaving. I'm just... a minute."};
                 case "ken" -> new String[] {"I believe you. I just need a moment. That's all. Come back in a little while?"};
+                case "ayato" -> new String[] {"...I heard you. Go away for a bit. I'm not leaving. I just need to hit something first."};
+                case "noro" -> new String[] {"*He turns away. Later.*"};
                 default -> new String[] {"Give me a minute."};
             });
         }
@@ -106,6 +112,9 @@ public final class Tolerance {
                 "You're sorry? ...Yeah. Me too. Let's forget it."};
             case "ken" -> new String[] {"It's okay. Really. I was never really angry.", "Thank you for saying it. That means more than you think.",
                 "Already forgotten. Come here."};
+            case "ayato" -> new String[] {"...Fine. Forgiven. Don't make it a habit.", "Tch. I can't stay mad at you. It's annoying.",
+                "Sorry? ...Yeah. Okay. Come here, idiot."};
+            case "noro" -> new String[] {"*A nod.*", "*He looks at you. Then nods.*"};
             default -> new String[] {"Okay."};
         });
     }
@@ -116,6 +125,8 @@ public final class Tolerance {
             case "eto" -> new String[] {"Oh, it's you. The one who hits me. ...What?", "I'm not talking to you. ...I'm talking to you, but I'm not happy about it."};
             case "touka" -> new String[] {"What. I'm still mad. A little.", "Hmph. Say what you came to say."};
             case "ken" -> new String[] {"...Hi. I'm alright. Just a little hurt. Not the body kind.", "You came. ...Okay. I'm listening."};
+            case "ayato" -> new String[] {"What. I'm still mad.", "Oh. It's you. ...Say what you came to say."};
+            case "noro" -> new String[] {"*Silence. Even for him.*"};
             default -> new String[] {"Hm."};
         });
     }

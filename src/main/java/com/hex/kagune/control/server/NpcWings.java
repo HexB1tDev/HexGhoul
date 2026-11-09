@@ -67,7 +67,25 @@ final class NpcWings {
         long foughtAt = Long.MIN_VALUE;
         final List<Spike> spikes = new ArrayList<>();
         boolean dirty;
+        /** 4.0.0: Ayato's kakuja (since when; out with the fight), his crystal burst's next, and (Noro) his body knitting back since when. */
+        boolean kakuja;
+        long kakujaAt = Long.MIN_VALUE;
+        long burstReady = Long.MIN_VALUE;
+        long mendAt = Long.MIN_VALUE;
     }
+
+    /**
+     * 4.0.0 (the owner: "When Ayato's health drops sufficiently low, he must activate his Kakuja form, significantly increasing his combat
+     * capabilities and changing his available attacks"): below this share of his health, his kakuja; in it his spikes hit this much harder,
+     * the fan is this wide, the barrage comes this much sooner; up close, a crystal burst every {@link #BURST_EVERY} ticks.
+     */
+    static final double KAKUJA_BELOW = 0.35;
+    static final double KAKUJA_POWER = 1.6;
+    static final int KAKUJA_FAN = 9;
+    static final double KAKUJA_BARRAGE = 0.4;
+    static final int BURST_EVERY = 70;
+    static final double BURST_REACH = 4.0;
+    static final float BURST_DAMAGE = 9.0F;
 
     private NpcWings() {
     }
@@ -88,6 +106,13 @@ final class NpcWings {
         if (st.out && now - st.foughtAt > WingRules.PUT_AWAY) {
             st.out = false;
             st.outAt = now;
+            if (st.kakuja) {
+                // 4.0.0: his kakuja breaks off him with the fight's end.
+                st.kakuja = false;
+                st.kakujaAt = now;
+                fx(npc, S2CUkakuFx.CRYSTALLIZE, 0, back(npc), Vec3.f_82478_, 1.6F, 0);
+                UkakuFire.sound(level, back(npc), "block.amethyst_block.break", 1.0F, 0.8F);
+            }
             if (st.crystal) {
                 st.crystal = false;
                 st.crystalAt = now;
@@ -128,6 +153,34 @@ final class NpcWings {
             st.prey = target.m_19879_();
             st.dirty = true;
         }
+        // 4.0.0: Ayato, badly hurt: his kakuja tears out of his back (crystal everywhere), and stays out until the fight is over.
+        if (npc.persona().kakuja() && !st.kakuja && npc.m_21223_() < npc.m_21233_() * KAKUJA_BELOW) {
+            st.kakuja = true;
+            st.kakujaAt = now;
+            st.dirty = true;
+            st.barrageReady = now + 30L;
+            fx(npc, S2CUkakuFx.CRYSTALLIZE, 0, back(npc), Vec3.f_82478_, 2.2F, 1);
+            UkakuFire.sound(level, back(npc), "block.amethyst_block.resonate", 1.4F, 0.6F);
+            UkakuFire.sound(level, back(npc), "entity.ender_dragon.flap", 1.2F, 0.7F);
+            npc.m_7292_(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.f_19606_, 20 * 120, 1, false, false, false));
+            npc.m_7292_(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.f_19596_, 20 * 120, 1, false, false, false));
+            EtoBrain.bark(npc, level, npc.persona().script().maniac(npc.m_217043_().m_188503_(100)));
+        }
+        if (st.kakuja && now >= st.burstReady && EtoOwl.gap(npc, target) <= BURST_REACH && !mind.owl.busy()) {
+            // 4.0.0: up close in his kakuja: a crystal burst out of every wing at once, everything near thrown back and cut.
+            st.burstReady = now + BURST_EVERY;
+            fx(npc, S2CUkakuFx.CRYSTALLIZE, 0, back(npc), Vec3.f_82478_, 2.6F, 1);
+            UkakuFire.sound(level, back(npc), "block.amethyst_cluster.break", 1.3F, 0.7F);
+            for (LivingEntity body : level.m_6443_(LivingEntity.class, npc.m_20191_().m_82400_(BURST_REACH),
+                b -> b != npc && b.m_6084_() && EtoBrain.foe(npc, b))) {
+                if (body.m_6469_(npc.m_269291_().m_269333_(npc), BURST_DAMAGE)) {
+                    Vec3 push = UkakuFire.horizontal(body.m_20182_().m_82546_(npc.m_20182_())).m_82490_(1.1);
+                    body.m_20256_(body.m_20184_().m_82549_(new Vec3(push.f_82479_, 0.45, push.f_82481_)));
+                    body.f_19864_ = true;
+                }
+            }
+            return true;
+        }
         if (mind.owl.busy()) {
             return false;
         }
@@ -163,17 +216,18 @@ final class NpcWings {
         switch (act) {
             case BARRAGE -> {
                 st.barrageUntil = now + (long)WingRules.BARRAGE_SPIKES * WingRules.BARRAGE_EVERY_TICK;
-                st.barrageReady = now + WingRules.BARRAGE_EVERY;
+                st.barrageReady = now + every(npc, st, WingRules.BARRAGE_EVERY) / (st.kakuja ? 2 : 1);
                 st.volleyAt = now;
                 st.dirty = true;
                 UkakuFire.sound(level, back(npc), "entity.ender_dragon.flap", 0.9F, 1.7F);
             }
             case FAN -> {
-                for (int i = 0; i < WingRules.FAN_SPIKES; i++) {
-                    throwSpike(npc, st, target, level, now, FAN, WingRules.fan(i, WingRules.FAN_SPIKES), WingRules.FAN);
+                int spikes = st.kakuja ? KAKUJA_FAN : WingRules.FAN_SPIKES;
+                for (int i = 0; i < spikes; i++) {
+                    throwSpike(npc, st, target, level, now, FAN, WingRules.fan(i, spikes), WingRules.FAN);
                 }
-                st.fanReady = now + WingRules.FAN_EVERY;
-                st.nextShot = now + WingRules.VOLLEY_REST;
+                st.fanReady = now + every(npc, st, WingRules.FAN_EVERY);
+                st.nextShot = now + every(npc, st, WingRules.VOLLEY_REST);
                 UkakuFire.sound(level, back(npc), "block.amethyst_cluster.break", 1.0F, 1.3F);
             }
             case VOLLEY -> {
@@ -187,11 +241,11 @@ final class NpcWings {
                 }
                 throwSpike(npc, st, target, level, now, SHOT, 0.0, WingRules.SHOT);
                 st.shots++;
-                st.nextShot = now + WingRules.SHOT_EVERY;
-                if (st.shots >= WingRules.VOLLEY) {
+                st.nextShot = now + every(npc, st, WingRules.SHOT_EVERY);
+                if (st.shots >= WingRules.VOLLEY + (npc.persona().wingPower() > 1.0 ? 2 : 0)) {
                     st.shots = 0;
                     st.volleyAt = Long.MIN_VALUE;
-                    st.nextShot = now + WingRules.VOLLEY_REST;
+                    st.nextShot = now + every(npc, st, WingRules.VOLLEY_REST);
                     st.dirty = true;
                 }
             }
@@ -199,6 +253,12 @@ final class NpcWings {
             }
         }
         return true;
+    }
+
+    /** 4.0.0: {@code ticks} as the companion throws: a full Ukaku (Ayato) sooner, his kakuja sooner still. */
+    static long every(EtoNpc npc, State st, int ticks) {
+        double power = npc.persona().wingPower() * (st.kakuja ? 1.0 / (1.0 - KAKUJA_BARRAGE) : 1.0);
+        return Math.max(2L, Math.round(ticks / power));
     }
 
     /** Thrown in close, she gives ground; far, she closes; between, she holds where she is. */
@@ -233,7 +293,8 @@ final class NpcWings {
         spike.position = from;
         spike.velocity = way.m_82490_(WingRules.SPEED);
         spike.life = (int)Math.ceil(WingRules.RANGE / WingRules.SPEED);
-        spike.damage = damage;
+        // 4.0.0: Ayato's are a full Ukaku's (Persona.wingPower), harder still in his kakuja.
+        spike.damage = (float)(damage * npc.persona().wingPower() * (st.kakuja ? KAKUJA_POWER : 1.0));
         st.spikes.add(spike);
         st.shotAt = now;
         st.shotSide = side;
@@ -323,12 +384,13 @@ final class NpcWings {
     // ---------------------------------------------------------------- what her clients are told
 
     static S2CNpcWings message(EtoNpc npc, State st) {
-        return new S2CNpcWings(npc.m_19879_(), st.out, st.outAt, st.crystal, st.crystalAt, st.prey, st.shotAt, st.shotSide, st.volleyAt);
+        return new S2CNpcWings(npc.m_19879_(), st.out, st.outAt, st.crystal, st.crystalAt, st.prey, st.shotAt, st.shotSide, st.volleyAt, st.kakuja,
+            st.kakujaAt, st.mendAt);
     }
 
     /** A player starts seeing her: they are told how her wings are. */
     static void tracked(ServerPlayer player, EtoNpc npc) {
-        if (npc.persona().wings() && npc.mind != null) {
+        if ((npc.persona().wings() || npc.persona().worms()) && npc.mind != null) {
             ControlNetwork.sendTo(player, message(npc, npc.mind.wings));
         }
     }

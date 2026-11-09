@@ -50,7 +50,7 @@ public class EtoNpc extends PathfinderMob implements UniqueBody {
     public static AttributeSupplier.Builder attributes(Persona persona) {
         return Mob.m_21552_()
             .m_22268_(Attributes.f_22276_, persona.health())
-            .m_22268_(Attributes.f_22279_, 0.32)
+            .m_22268_(Attributes.f_22279_, persona.speed())
             .m_22268_(Attributes.f_22277_, 32.0)
             .m_22268_(Attributes.f_22284_, persona.armor())
             .m_22268_(Attributes.f_22278_, 0.6);

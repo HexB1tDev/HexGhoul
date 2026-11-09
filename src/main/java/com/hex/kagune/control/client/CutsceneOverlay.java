@@ -126,6 +126,74 @@ public final class CutsceneOverlay {
         {36.6, 39.4, "You crack a finger with your thumb. You don't remember starting."}}, 39.8, 0.3,
         new double[] {5.0, 9.8, 10.4, 10.9, 12.0, 17.9, 22.2, 26.8, 34.4});
 
+    /**
+     * 4.0.0 (the owner: "eventually unlock their Kakuja through a custom cinematic cutscene"): Ayato's lesson. A rooftop at night, the wind;
+     * he throws you off it; your wings open too late; the fall, the crystal, his voice; the kakuja tears out of your back and wraps you, and
+     * you land on your feet. A white flash at every break.
+     */
+    static final Script AYATO_KAKUJA = new Script(30.0, 1.4, 27.0, new Object[][] {
+        {1.6, "minecraft", "entity.ender_dragon.flap", 0.4F, 1.8F},
+        {3.2, "minecraft", "entity.warden.heartbeat", 0.6F, 0.9F},
+        {5.6, "minecraft", "entity.player.attack.knockback", 1.0F, 0.8F},
+        {6.4, "minecraft", "entity.ender_dragon.flap", 0.9F, 1.2F},
+        {7.0, "minecraft", "entity.ender_dragon.flap", 0.9F, 1.4F},
+        {8.6, "minecraft", "entity.warden.heartbeat", 0.8F, 1.3F},
+        {9.4, "minecraft", "entity.warden.heartbeat", 0.8F, 1.5F},
+        {10.4, "minecraft", "entity.ender_dragon.flap", 1.0F, 1.6F},
+        {11.6, "minecraft", "block.amethyst_block.resonate", 1.0F, 0.9F},
+        {13.2, "hexkagune", "manifest_rip", 1.0F, 0.8F},
+        {13.6, "hexkagune", "bone_crack", 1.0F, 0.9F},
+        {14.4, "minecraft", "block.amethyst_cluster.break", 1.0F, 0.7F},
+        {15.4, "hexkagune", "sfx.writhe", 0.9F, 0.8F},
+        {16.6, "minecraft", "block.amethyst_block.resonate", 1.0F, 0.6F},
+        {17.6, "hexkagune", "manifest_rip", 1.0F, 0.6F},
+        {18.2, "minecraft", "entity.ender_dragon.flap", 1.0F, 0.8F},
+        {19.6, "minecraft", "block.amethyst_cluster.break", 1.0F, 0.5F},
+        {20.8, "minecraft", "entity.warden.heartbeat", 0.7F, 1.0F},
+        {22.4, "hexkagune", "bone_crush", 1.0F, 0.6F},
+        {24.0, "minecraft", "block.amethyst_block.chime", 0.8F, 0.8F}}, new Object[][] {
+        {1.6, 3.8, "A rooftop. Night. The wind."},
+        {4.0, 5.6, "\"You want it? Then fall.\""},
+        {5.8, 7.6, "He pushes you off the edge."},
+        {7.8, 9.8, "Your wings open. Too slow. Too small."},
+        {10.0, 12.2, "\"Stop holding back, idiot!\""},
+        {12.4, 14.2, "Something tears out of your back."},
+        {14.4, 16.4, "Crystal. Everywhere. Over your arms, your face."},
+        {16.6, 18.6, "It doesn't stop at the wings."},
+        {18.8, 21.0, "It wraps you like armour. Like a second body."},
+        {21.2, 23.4, "You hit the ground on your feet. The street cracks."},
+        {23.6, 25.6, "Above you, on the roof, he's grinning."}}, 25.8, 0.3,
+        new double[] {5.6, 13.2, 14.4, 17.6, 19.6, 22.4});
+
+    /**
+     * 4.0.0: Noro's lessons: he doesn't explain; his worm does. It takes you whole, the dark inside it, being eaten and not dying, the worm in
+     * you answering, and you climbing back out with it. A red flash at every bite.
+     */
+    static final Script NORO = new Script(26.0, 1.4, 23.0, new Object[][] {
+        {1.8, "minecraft", "entity.warden.heartbeat", 0.5F, 0.7F},
+        {3.4, "hexkagune", "sfx.writhe", 0.9F, 0.7F},
+        {5.0, "hexkagune", "sfx.crunch", 1.0F, 0.7F},
+        {5.6, "hexkagune", "bone_crush", 1.0F, 0.8F},
+        {7.4, "hexkagune", "sfx.gush", 0.8F, 0.8F},
+        {9.2, "minecraft", "entity.warden.heartbeat", 0.8F, 0.8F},
+        {10.4, "hexkagune", "sfx.writhe", 1.0F, 0.6F},
+        {12.0, "hexkagune", "sfx.crunch", 1.0F, 0.9F},
+        {13.6, "hexkagune", "manifest_rip", 1.0F, 0.7F},
+        {15.2, "hexkagune", "sfx.writhe", 1.0F, 0.5F},
+        {16.8, "hexkagune", "bone_crack", 1.0F, 0.8F},
+        {18.4, "minecraft", "entity.warden.heartbeat", 0.6F, 1.2F},
+        {20.0, "hexkagune", "sfx.drips", 0.7F, 0.9F}}, new Object[][] {
+        {1.6, 3.4, "He opens his coat."},
+        {3.6, 5.4, "It takes you whole."},
+        {5.6, 7.6, "Dark. Wet. Teeth."},
+        {7.8, 9.6, "You should be dead."},
+        {9.8, 11.8, "You're not."},
+        {12.0, 13.6, "Something in you bites back."},
+        {13.8, 15.8, "Your worm. Answering his."},
+        {16.0, 18.0, "You eat your way out."},
+        {18.2, 20.2, "He is waiting. He has not moved."}}, 20.6, 0.3,
+        new double[] {5.0, 5.6, 12.0, 13.6, 16.8});
+
     private static Script playing;
     private static String words = "";
     private static long began = Long.MIN_VALUE;
@@ -135,7 +203,8 @@ public final class CutsceneOverlay {
     }
 
     public static void begin(int script, String said) {
-        playing = script == S2CCutscene.NIGHT ? NIGHT : script == S2CCutscene.BIRTH ? BIRTH : script == S2CCutscene.TORTURE ? TORTURE : SURGERY;
+        playing = script == S2CCutscene.NIGHT ? NIGHT : script == S2CCutscene.BIRTH ? BIRTH : script == S2CCutscene.TORTURE ? TORTURE
+            : script == S2CCutscene.AYATO_KAKUJA ? AYATO_KAKUJA : script == S2CCutscene.NORO ? NORO : SURGERY;
         words = said == null ? "" : said;
         began = System.nanoTime();
         played = 0;
@@ -204,7 +273,7 @@ public final class CutsceneOverlay {
         }
         int red = Math.round(150 * flash(script, t));
         if (red > 0) {
-            graphics.m_280509_(0, 0, width, height, red << 24 | 0x8A0010);
+            graphics.m_280509_(0, 0, width, height, red << 24 | (script == AYATO_KAKUJA ? 0xBFD4FF : 0x8A0010)); // 4.0.0: his crystal's white
         }
         for (Object[] caption : script.captions()) {
             float shown = clear(t, (Double)caption[0], (Double)caption[1], script.fade());

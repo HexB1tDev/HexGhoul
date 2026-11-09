@@ -219,7 +219,7 @@ public final class EtoServer {
             memory.set(key, NpcMemory.PROOF, bit).set(key, NpcMemory.PROOF_COUNT, 0L);
             NpcMemoryServer.save(player);
             player.m_5661_(Component.m_237113_(npc.persona().colour() + npc.displayName() + "'s proof before " + next.name() + ": "
-                + proof.bar(0)), false);
+                + proof.bar(npc.persona().name(), 0)), false);
             show(player, npc, c, npc.persona().script().main(c, com.hex.kagune.control.npc.Teaching.fill(proof.ask(), proof, 0)), Kind.MAIN);
             return true;
         }
@@ -250,7 +250,7 @@ public final class EtoServer {
                 if (done < proof.need()) {
                     memory.set(persona.key(), NpcMemory.PROOF_COUNT, done + 1);
                     NpcMemoryServer.save(player);
-                    player.m_5661_(Component.m_237113_(persona.colour() + proof.bar((int)done + 1)), true);
+                    player.m_5661_(Component.m_237113_(persona.colour() + proof.bar(persona.name(), (int)done + 1)), true);
                 }
             }
         }
@@ -1339,6 +1339,12 @@ public final class EtoServer {
             return;
         }
         QuestServer.grant(player, lesson.gate());
+        // 4.0.0: Noro's last two are the Bikaku's mutations themselves: taught is had.
+        if (lesson.gate() == com.hex.kagune.control.quest.Gate.BIKAKU_DEVOURING) {
+            BikakuDevour.grant(player, com.hex.kagune.control.bikaku.BikakuMutation.GRAND_DEVOURING, true);
+        } else if (lesson.gate() == com.hex.kagune.control.quest.Gate.BIKAKU_POTENTIAL) {
+            BikakuDevour.grant(player, com.hex.kagune.control.bikaku.BikakuMutation.POTENTIAL_UNLOCK, true);
+        }
         // 1.3.29: remembered as this teacher's (asked again, they never say it was known some other way).
         long told = NpcMemoryServer.of(player).get(persona.key(), NpcMemory.TAUGHT, 0L);
         NpcMemoryServer.set(player, persona.key(), NpcMemory.TAUGHT, told | com.hex.kagune.control.npc.Teaching.bit(lesson));
@@ -1421,6 +1427,13 @@ public final class EtoServer {
         }
         if (dead instanceof GhoulNpc && UkakuServer.isUkaku(killer) && KaguneProfile.isActive(killer) && UkakuServer.form(killer).kakuja()) {
             proved(killer, com.hex.kagune.control.npc.Teaching.Deed.GHOULS_IN_KAKUJA, 0);
+        }
+        // 4.0.0: Ayato's and Noro's proofs: wild ghouls (and Aogiri's) of a rank; anything a Bikaku's worm brings down (it eats them).
+        if (dead instanceof GhoulNpc ghoul && ghoul.identity() != null) {
+            proved(killer, com.hex.kagune.control.npc.Teaching.Deed.GHOUL_RANK, ghoul.identity().tier());
+        }
+        if (BikakuServer.isBikaku(killer) && KaguneProfile.isActive(killer)) {
+            proved(killer, com.hex.kagune.control.npc.Teaching.Deed.DEVOURED, 0);
         }
         // 2.1.2: a courtship chapter of kills counts. 2.1.5: Doves of a rank (alone or with the companion along), Pack ghouls, ghouls
         // preying on a village, as well as before (at night, at night with them along, any wild ghoul).

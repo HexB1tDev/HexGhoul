@@ -14,7 +14,10 @@ public abstract class Persona {
     public static final Persona ETO = new Eto();
     public static final Persona TOUKA = new Touka();
     public static final Persona KEN = new Ken();
-    public static final List<Persona> ALL = List.of(ETO, TOUKA, KEN);
+    /** 4.0.0 (The Great Exploration): Ayato Kirishima and Noro, Aogiri Tree's, after the three (the talk screen's faces go by this order). */
+    public static final Persona AYATO = new Ayato();
+    public static final Persona NORO = new Noro();
+    public static final List<Persona> ALL = List.of(ETO, TOUKA, KEN, AYATO, NORO);
 
     /** Its key: its bond in each player's quest log, its memory, its one place in the world ({@code UniqueNpcs}), its textures. */
     public abstract String key();
@@ -106,6 +109,43 @@ public abstract class Persona {
     /** 1.3.43: its kagune's colour, as a child may take it: the original's crimson (Touka's wings, Ken's tails); Eto's pale flesh. */
     public int kaguneColour() {
         return this.owlKit() ? 0xD8CCBC : com.hex.kagune.control.KaguneColours.DEFAULT;
+    }
+
+    /**
+     * 4.0.0: whether it can be dated at all (the owner: Noro "will not have romance options. His interactions will focus entirely on
+     * dialogue, combat, training, and progression"): a friend and a teacher, never more.
+     */
+    public boolean romanceable() {
+        return true;
+    }
+
+    /** 4.0.0: its pace (the mob's movement attribute): a player's for most; Ayato quicker; Noro slow and deliberate. */
+    public double speed() {
+        return 0.32;
+    }
+
+    /** 4.0.0: how hard its wings hit and how fast they throw, against Touka's lesser pair (Ayato's are a full Ukaku's). */
+    public double wingPower() {
+        return 1.0;
+    }
+
+    /** 4.0.0: whether, badly hurt in a fight, it bursts into its own Ukaku kakuja (Ayato). */
+    public boolean kakuja() {
+        return false;
+    }
+
+    /** 4.0.0: whether it fights with the Bikaku's worms (Noro: three, his whole kagune). */
+    public boolean worms() {
+        return false;
+    }
+
+    /** 4.0.0: the mask it wears (an item id): always, or in a fight only ({@link #maskInFight}); null for none. */
+    public String mask() {
+        return null;
+    }
+
+    public boolean maskInFight() {
+        return false;
     }
 
     /** True for Eto alone: the Owl DNA kit in a fight (the flesh, Watch This, the Mutated Arm, the Owl). */
@@ -627,6 +667,339 @@ public abstract class Persona {
         public boolean flower(String id) {
             return "minecraft:white_tulip".equals(id) || "minecraft:lily_of_the_valley".equals(id) || "minecraft:oxeye_daisy".equals(id)
                 || "minecraft:azure_bluet".equals(id);
+        }
+    }
+
+    // ---------------------------------------------------------------- 4.0.0: Ayato: the black rabbit
+
+    /**
+     * 4.0.0 (the owner: "edgy, arrogant, confrontational, confident, sarcastic, and occasionally aggressive"; on his romance: "quite similar
+     * to kaneki, animations can be the same"): Touka's little brother, Aogiri Tree's. Ukaku: his wings a full pair, faster and harder than
+     * hers; his kakuja when he is losing. He leads as Ken does (Ken's way of holding someone, his animations), but slowly: he asks for less,
+     * starts less, and means more by it.
+     */
+    private static final class Ayato extends Persona {
+        private Script script;
+
+        @Override
+        public String key() {
+            return Teaching.AYATO;
+        }
+
+        @Override
+        public String name() {
+            return "Ayato";
+        }
+
+        @Override
+        public String colour() {
+            return "\u00a79";
+        }
+
+        /** Shorter than most, and touchy about it. */
+        @Override
+        public float size() {
+            return 0.92F;
+        }
+
+        @Override
+        public boolean female() {
+            return false;
+        }
+
+        @Override
+        public float health() {
+            return 300.0F;
+        }
+
+        @Override
+        public double armor() {
+            return 13.0;
+        }
+
+        @Override
+        public float might() {
+            return 0.8F;
+        }
+
+        @Override
+        public boolean wings() {
+            return true;
+        }
+
+        @Override
+        public double wingPower() {
+            return 1.7;
+        }
+
+        @Override
+        public boolean kakuja() {
+            return true;
+        }
+
+        /** The owner: "noticeably faster and more dangerous than that of ordinary wild ghouls". */
+        @Override
+        public double speed() {
+            return 0.38;
+        }
+
+        @Override
+        public String mask() {
+            return "mask_ayato";
+        }
+
+        /** His respirator goes on when he fights; off it, his face (and the scowl) for everyone to see. */
+        @Override
+        public boolean maskInFight() {
+            return true;
+        }
+
+        @Override
+        public int hair() {
+            return 0x3A1C66;
+        }
+
+        @Override
+        public int eyes() {
+            return 0x2B2F5C;
+        }
+
+        @Override
+        public int skin() {
+            return 0xF9E8DC;
+        }
+
+        @Override
+        public boolean oneEyed() {
+            return false;
+        }
+
+        /** He'd rather die than ask first. Later, he asks anyway, scowling. */
+        @Override
+        public double kissing() {
+            return 0.55;
+        }
+
+        @Override
+        public double forward() {
+            return 0.65;
+        }
+
+        /** Ken's way with someone he holds (the owner: "animations can be the same"). */
+        @Override
+        public int style() {
+            return 1;
+        }
+
+        @Override
+        public boolean clings() {
+            return false;
+        }
+
+        @Override
+        public String home() {
+            return "the hideout";
+        }
+
+        @Override
+        public EtoGesture[] idles(EtoMood mood) {
+            return switch (mood) {
+                case GIDDY -> new EtoGesture[] {EtoGesture.HUFF, EtoGesture.HAIR, EtoGesture.CROSS, EtoGesture.HUM};
+                case SULKY, JEALOUS -> new EtoGesture[] {EtoGesture.CROSS, EtoGesture.HUFF, EtoGesture.TAP, EtoGesture.KICKS};
+                case LONELY, BORED -> new EtoGesture[] {EtoGesture.LOOK, EtoGesture.KICKS, EtoGesture.STRETCH, EtoGesture.CROSS};
+                case CLINGY, AFFECTIONATE -> new EtoGesture[] {EtoGesture.HAIR, EtoGesture.CROSS, EtoGesture.LOOK, EtoGesture.SHY};
+                case SLEEPY -> new EtoGesture[] {EtoGesture.YAWN, EtoGesture.STRETCH, EtoGesture.CROSS};
+                case BLOODTHIRSTY -> new EtoGesture[] {EtoGesture.CRACK, EtoGesture.KICKS, EtoGesture.LOOK};
+                case CLAIMED, WARY -> new EtoGesture[] {EtoGesture.CROSS, EtoGesture.HUFF, EtoGesture.TAP, EtoGesture.SCOLD};
+                default -> new EtoGesture[] {EtoGesture.CROSS, EtoGesture.LOOK, EtoGesture.HUFF, EtoGesture.KICKS, EtoGesture.STRETCH};
+            };
+        }
+
+        @Override
+        public EtoGesture[] anyIdle() {
+            return new EtoGesture[] {EtoGesture.CROSS, EtoGesture.HUFF, EtoGesture.TAP, EtoGesture.KICKS, EtoGesture.LOOK, EtoGesture.STRETCH,
+                EtoGesture.CRACK, EtoGesture.SCOLD};
+        }
+
+        @Override
+        public Script script() {
+            if (this.script == null) {
+                this.script = new AyatoScript();
+            }
+            return this.script;
+        }
+
+        /** Feathers: his wings shed them; he collects the black ones and would kill anyone who said so. */
+        @Override
+        public boolean errandItem(String id) {
+            return "minecraft:feather".equals(id);
+        }
+
+        /** A wither rose: nothing softer would do. */
+        @Override
+        public boolean flower(String id) {
+            return "minecraft:wither_rose".equals(id);
+        }
+    }
+
+    // ---------------------------------------------------------------- 4.0.0: Noro
+
+    /**
+     * 4.0.0 (the owner: "extremely quiet, unsettling, and difficult to read ... limited speech, deliberate movements, and an intimidating
+     * presence"; "Noro is taller than the average player and is very brief, barely talks"): Aogiri Tree's, masked always, a head taller than
+     * anyone. Bikaku: three worms, the whole of it, and a body that will not stay dead. A teacher, never a lover.
+     */
+    private static final class Noro extends Persona {
+        private Script script;
+
+        @Override
+        public String key() {
+            return Teaching.NORO;
+        }
+
+        @Override
+        public String name() {
+            return "Noro";
+        }
+
+        @Override
+        public String colour() {
+            return "\u00a78";
+        }
+
+        @Override
+        public float size() {
+            return 1.15F;
+        }
+
+        @Override
+        public boolean female() {
+            return false;
+        }
+
+        @Override
+        public float health() {
+            return 520.0F;
+        }
+
+        @Override
+        public double armor() {
+            return 16.0;
+        }
+
+        @Override
+        public float might() {
+            return 0.9F;
+        }
+
+        @Override
+        public boolean romanceable() {
+            return false;
+        }
+
+        @Override
+        public boolean worms() {
+            return true;
+        }
+
+        /** "deliberate movements": he walks; his worms do the running. */
+        @Override
+        public double speed() {
+            return 0.27;
+        }
+
+        @Override
+        public String mask() {
+            return "mask_noro";
+        }
+
+        @Override
+        public int hair() {
+            return 0x1C1A24;
+        }
+
+        @Override
+        public int eyes() {
+            return 0x8A1A1A;
+        }
+
+        @Override
+        public int skin() {
+            return 0xF5F2F5;
+        }
+
+        @Override
+        public boolean oneEyed() {
+            return false;
+        }
+
+        @Override
+        public int kagune() {
+            return com.hex.kagune.control.family.KaguneGenes.TAILS;
+        }
+
+        @Override
+        public double kissing() {
+            return 0.0;
+        }
+
+        @Override
+        public double forward() {
+            return 0.0;
+        }
+
+        @Override
+        public boolean likes(boolean woman) {
+            return false;
+        }
+
+        @Override
+        public boolean clings() {
+            return false;
+        }
+
+        @Override
+        public boolean pecks() {
+            return false;
+        }
+
+        @Override
+        public String home() {
+            return "the hideout";
+        }
+
+        /** Still. Now and then his head turns. */
+        @Override
+        public EtoGesture[] idles(EtoMood mood) {
+            return switch (mood) {
+                case BLOODTHIRSTY -> new EtoGesture[] {EtoGesture.LOOK, EtoGesture.CRACK};
+                case SLEEPY -> new EtoGesture[] {EtoGesture.LOOK, EtoGesture.STRETCH};
+                default -> new EtoGesture[] {EtoGesture.LOOK, EtoGesture.LOOK, EtoGesture.TAP};
+            };
+        }
+
+        @Override
+        public EtoGesture[] anyIdle() {
+            return new EtoGesture[] {EtoGesture.LOOK, EtoGesture.LOOK, EtoGesture.TAP, EtoGesture.CRACK, EtoGesture.STRETCH};
+        }
+
+        @Override
+        public Script script() {
+            if (this.script == null) {
+                this.script = new NoroScript();
+            }
+            return this.script;
+        }
+
+        /** Meat. Ghoul meat. */
+        @Override
+        public boolean errandItem(String id) {
+            return "hexkagune:ghoul_meat".equals(id);
+        }
+
+        @Override
+        public boolean flower(String id) {
+            return "minecraft:bone".equals(id);
         }
     }
 }

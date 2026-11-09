@@ -186,7 +186,8 @@ final class KenScript extends CompanionScript {
                     + "or wings.";
                 case WEAK -> "Not yet. It would kill you, and I'd have to watch. Get stronger. (" + view.next().name() + ": mastery " + view.need() + ")";
                 case BEFORE -> "You're not there yet. Get " + (view.before() == null ? "what comes before" : view.before().displayName())
-                    + " first. " + (view.before() != null && view.before().path() == com.hex.kagune.control.KagunePath.UKAKU
+                    + " first. " + (view.before() == com.hex.kagune.control.quest.Gate.UKAKU_KAKUJA ? "Touka's brother teaches that. Ayato. Be patient "
+                    + "with him." : view.before() != null && view.before().path() == com.hex.kagune.control.KagunePath.UKAKU
                     ? "Touka can teach you that." : "Your tails will tell you how.");
                 case ALL_TAUGHT -> "There's nothing left I can teach you. ...I'm sorry. I wish there was less.";
             };

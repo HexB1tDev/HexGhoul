@@ -204,12 +204,43 @@ public final class Courtship {
             "Dawn. Be with me when the sun comes up. That's all.",
             "Be with Ken when the sun comes up (at dawn)"));
 
+    /**
+     * 4.0.0 (the owner: his romance "should not suddenly become affectionate ... his dialogue and behavior should gradually change as the
+     * relationship develops, revealing his more protective, jealous, teasing, and vulnerable sides"): his. Feathers he'll never admit he
+     * collects; a night's fight at his side; the rooftops where the Doves can't see; the Dove hunting the black rabbit, fought together; and
+     * the hideout in the dead of night, where he says the one thing he won't say twice.
+     */
+    static final List<Chapter> AYATO = List.of(
+        new Chapter("ayato_meal", "Something that isn't garbage", Task.GIVE, 3, Set.of("hexkagune:ghouls_pie"), "the pies",
+            "You want something to do? Feed me. Three ghoul's pies. Made right, not that slop they sell. ...Don't ask why. And don't tell my sister.",
+            "{n} of three. You're slow.",
+            "Bring Ayato ghoul's pies: {n} of {need}"),
+        new Chapter("ayato_ghouls", "The ward isn't theirs", Task.GHOUL, 3, Set.of(), "",
+            "There are wild ghouls out there who think this ward is theirs. Three of them. Show them it isn't. If you can.",
+            "{n} of three. Faster. I'm getting bored.",
+            "Kill three wild ghouls for Ayato: {n} of {need}"),
+        new Chapter("ayato_roof", "Where they can't see", Task.HIGH, 1, Set.of(), "",
+            "...Take me somewhere high. Above everything. The Doves never look up. I want to sit somewhere they can't see me. With you. "
+                + "Shut up, that's not weird.",
+            "Higher. Somewhere the whole ward looks small.",
+            "Take Ayato somewhere high (him following you)"),
+        new Chapter("ayato_rabbit", "Hunting the black rabbit", Task.DOVES_WITH, 1, Set.of(), "",
+            "There's a Dove who's been hunting the black rabbit. Me. Rank 5 or worse. He'll come. When he does, you stand next to me. Not "
+                + "behind. Next to.",
+            "He hasn't come yet. Stay close. Rank 5 or above.",
+            "With Ayato following you, kill a CCG investigator of Rank 5 or above", 5),
+        new Chapter("ayato_deep", "The dead of night", Task.DEEP, 1, Set.of(), "",
+            "Come to the hideout. Late. After everyone's asleep. ...I've got something to say and I'm only saying it once. Don't be late.",
+            "Late. The hideout. When it's dead quiet. Don't make me wait.",
+            "Be with Ayato at the hideout in the dead of night"));
+
     /** {@code key}'s chapters, in order (none for one who has none). */
     public static List<Chapter> of(String key) {
         return switch (key == null ? "" : key) {
             case "eto" -> ETO;
             case "touka" -> TOUKA;
             case "ken" -> KEN;
+            case "ayato" -> AYATO;
             default -> List.of();
         };
     }
@@ -382,6 +413,8 @@ public final class Courtship {
                 "You want to go out? With me? ...Okay. Where. Quickly, before I change my mind.", "Fine. One date. Where are we going?"};
             case "ken" -> new String[] {"A date? I'd love that. Where would you like to go?", "Somewhere with you? ...Yes. Anywhere. You choose.",
                 "I'm not very good at dates. But I'd like to try. With you."};
+            case "ayato" -> new String[] {"A date. ...Fine. Where. Somewhere without people.", "You want to go out? With me? ...Yeah. Pick. Fast.",
+                "Don't call it a date. ...Okay, it's a date. Where?"};
             default -> new String[] {"Where to?"};
         };
         return lines[Math.floorMod(seed, lines.length)];
@@ -395,6 +428,7 @@ public final class Courtship {
             case "touka" -> new String[] {"We went out already. Twice in one day? People will talk. ...Tomorrow.", "Tomorrow. I have a shift. And homework. And you."};
             case "ken" -> new String[] {"We already went out today. ...Tomorrow? I'll be looking forward to it all night.",
                 "Tomorrow. I want to have something to look forward to."};
+            case "ayato" -> new String[] {"Twice in one day? Greedy. ...Tomorrow.", "Tomorrow. Don't forget. I won't."};
             default -> new String[] {"Tomorrow."};
         };
         return lines[Math.floorMod(seed, lines.length)];

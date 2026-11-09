@@ -63,12 +63,15 @@ public final class Teaching {
 
     public static final String TOUKA = "touka";
     public static final String KEN = "ken";
+    /** 4.0.0: Ayato (Ukaku: his respect, then the first kakuja) and Noro (Bikaku: everything past the worm's first bites). */
+    public static final String AYATO = "ayato";
+    public static final String NORO = "noro";
 
     /** Every lesson, in the order each teacher teaches them. */
     public static final List<Lesson> ALL = List.of(
         new Lesson("touka_crystal", TOUKA, Gate.UKAKU_CRYSTAL, Kind.TALK, "Crystal Wings"),
         new Lesson("touka_gatling", TOUKA, Gate.UKAKU_GATLING, Kind.TALK, "Gatling"),
-        new Lesson("touka_kakuja", TOUKA, Gate.UKAKU_KAKUJA, Kind.TALK, "The First Kakuja"),
+        // 4.0.0: the first kakuja is Ayato's to teach now (the owner); Touka's lesson of it is gone (it was her last: her others keep their bits).
         new Lesson("ken_centipede", KEN, Gate.RINKAKU_CENTIPEDE, Kind.TRIAL, "The Centipede"),
         new Lesson("ken_king", KEN, Gate.RINKAKU_FULL_KAKUJA, Kind.TALK, "The Full Kakuja"),
         new Lesson("ken_dragon", KEN, Gate.RINKAKU_DRAGON, Kind.TALK, "The Dragon"),
@@ -76,7 +79,19 @@ public final class Teaching {
         // 3.3.1 (the owner: Ken teaches the Impale and the Rubble Hurl, with proofs). Appended: each lesson's saved bit is its place
         // among its teacher's, so the old ones keep theirs; he still teaches them first ({@link #view} goes by mastery).
         new Lesson("ken_hurl", KEN, Gate.RINKAKU_HURL, Kind.TALK, "Rubble Hurl"),
-        new Lesson("ken_impale", KEN, Gate.RINKAKU_IMPALE, Kind.TALK, "Impale"));
+        new Lesson("ken_impale", KEN, Gate.RINKAKU_IMPALE, Kind.TALK, "Impale"),
+        // 4.0.0 (the owner: "players must earn his respect, complete meaningful challenges, and eventually unlock their Kakuja through a
+        // custom cinematic cutscene"): Ayato's road, each step a proof; the last lived through (its cutscene).
+        new Lesson("ayato_doves", AYATO, Gate.UKAKU_AYATO_DOVES, Kind.TALK, "Respect: Doves"),
+        new Lesson("ayato_hunt", AYATO, Gate.UKAKU_AYATO_HUNT, Kind.TALK, "Respect: the Hunt"),
+        new Lesson("ayato_kakuja", AYATO, Gate.UKAKU_KAKUJA, Kind.TRIAL, "The First Kakuja"),
+        // 4.0.0 (the owner: Noro teaches "its normal form, Half-Kakuja, Full-Kakuja, and unlockable mutations ... through dedicated quests,
+        // training, and progression challenges"): each a proof; The Walker and the kakuja lived through (their cutscenes).
+        new Lesson("noro_worms", NORO, Gate.BIKAKU_WORMS, Kind.TALK, "The Worms"),
+        new Lesson("noro_walker", NORO, Gate.BIKAKU_WALKER, Kind.TRIAL, "The Walker"),
+        new Lesson("noro_kakuja", NORO, Gate.BIKAKU_KAKUJA, Kind.TRIAL, "The Kakuja"),
+        new Lesson("noro_devouring", NORO, Gate.BIKAKU_DEVOURING, Kind.TALK, "Grand Devouring"),
+        new Lesson("noro_potential", NORO, Gate.BIKAKU_POTENTIAL, Kind.TRIAL, "Potential Unlock"));
 
     /**
      * What has to be open before a lesson's gate can be taught (the step before it on the path, whoever opened it), or null. Ken's
@@ -85,7 +100,13 @@ public final class Teaching {
     public static Gate before(Gate gate) {
         return switch (gate) {
             case UKAKU_GATLING -> Gate.UKAKU_CRYSTAL;
-            case UKAKU_KAKUJA -> Gate.UKAKU_GATLING;
+            case UKAKU_AYATO_DOVES -> Gate.UKAKU_GATLING;
+            case UKAKU_AYATO_HUNT -> Gate.UKAKU_AYATO_DOVES;
+            case UKAKU_KAKUJA -> Gate.UKAKU_AYATO_HUNT;
+            case BIKAKU_WALKER -> Gate.BIKAKU_WORMS;
+            case BIKAKU_KAKUJA -> Gate.BIKAKU_WALKER;
+            case BIKAKU_DEVOURING -> Gate.BIKAKU_KAKUJA;
+            case BIKAKU_POTENTIAL -> Gate.BIKAKU_DEVOURING;
             case UKAKU_FINAL_KAKUJA -> Gate.UKAKU_KAKUJA;
             case RINKAKU_CENTIPEDE -> Gate.RINKAKU_FOUR;
             case RINKAKU_FULL_KAKUJA -> Gate.RINKAKU_CENTIPEDE;
@@ -195,6 +216,9 @@ public final class Teaching {
         String what = names(names);
         boolean one = names.size() <= 1;
         String[] lines = switch (teacher) {
+            case AYATO -> new String[] {"You already know " + what + ". What, you want a medal? Next.",
+                what + "? You've got " + (one ? "that" : "those") + ". Don't make me repeat myself, I hate it."};
+            case NORO -> new String[] {"...Known.", "..."};
             case TOUKA -> new String[] {"You already know " + what + ". Don't waste my time. ...Fine. Next.",
                 what + "? You've got " + (one ? "that one" : "those") + " already. I'm not saying it twice."};
             case KEN -> new String[] {"You already know " + what + ". You don't need me for " + (one ? "that one" : "those") + ". Let's move on.",
@@ -211,7 +235,11 @@ public final class Teaching {
     public enum Deed {
         EAT_GHOUL, DOVES, GHOULS_IN_KAKUJA,
         /** 3.3.1: bodies thrown from the tails (N, someone held); bodies crushed in them (H, someone held). */
-        THROWS, CRUSHES
+        THROWS, CRUSHES,
+        /** 4.0.0: wild ghouls of a rank (the proof's {@code rank}: D 0 .. SS 5) killed; Aogiri's own too. */
+        GHOUL_RANK,
+        /** 4.0.0: bodies brought down with the Bikaku's worm out (it eats them). */
+        DEVOURED
     }
 
     /**
@@ -222,14 +250,21 @@ public final class Teaching {
     public record Proof(Deed deed, int need, int rank, String ask, String progress) {
         /** What the game says on the action bar as one is done. */
         public String bar(int done) {
+            return bar("Ken", done);
+        }
+
+        /** 4.0.0: the same, for any teacher ({@code teacher}: their name). */
+        public String bar(String teacher, int done) {
             String what = switch (this.deed) {
                 case EAT_GHOUL -> "ghoul meat eaten";
                 case DOVES -> "Doves of Rank " + this.rank + "+ killed";
                 case GHOULS_IN_KAKUJA -> "ghouls killed in your kakuja";
                 case THROWS -> "bodies thrown from your tails";
                 case CRUSHES -> "bodies crushed in your tails";
+                case GHOUL_RANK -> "ghouls of " + com.hex.kagune.control.npc.NpcRules.rankName(this.rank) + "-rank or above killed";
+                case DEVOURED -> "bodies brought down by your worm";
             };
-            return "Ken's proof: " + Math.min(done, this.need) + " of " + this.need + " " + what + (done >= this.need ? ". Go and see him." : "");
+            return teacher + "'s proof: " + Math.min(done, this.need) + " of " + this.need + " " + what + (done >= this.need ? ". Go and see him." : "");
         }
     }
 
@@ -257,6 +292,25 @@ public final class Teaching {
                 "The Impale is a crush that doesn't wait for you to be close. You have to know what a tail feels like closing on someone "
                     + "first. Crush five, in your tails. ...I know. I'm sorry. It's the only way it holds still long enough to learn.",
                 "{n} of five. In your tails. I'll be here. I'm not going anywhere.");
+            // 4.0.0: Ayato's: he doesn't teach anyone he can't respect. Doves first; then ghouls worth fearing; the kakuja last, after an S.
+            case "ayato_doves" -> new Proof(Deed.DOVES, 3, 3,
+                "You want something from me? Earn it. Three Doves. Rank 3 or higher, not the paper-pushers. Kill them and come back. If you "
+                    + "come back.",
+                "{n} of three. Rank 3 or up. Stop wasting my time and go.");
+            case "ayato_hunt" -> new Proof(Deed.GHOUL_RANK, 3, com.hex.kagune.control.npc.NpcRules.A,
+                "Doves are easy. Our own kind isn't. Three wild ghouls, A-rank or worse. The ones that actually fight back. Show me your wings "
+                    + "can take a real hit.",
+                "{n} of three A-ranks. Don't come crying to me if one of them eats you.");
+            case "ayato_kakuja" -> new Proof(Deed.GHOUL_RANK, 1, com.hex.kagune.control.npc.NpcRules.S,
+                "Fine. You're not completely useless. Last thing. Find an S-rank. Or an SS, if you've got a death wish. Kill it. Then we'll see "
+                    + "if your wings have more in them.",
+                "Still nothing? An S-rank. They're out there. Hunt.");
+            // 4.0.0: Noro's: few words. Feed the worm; then the hunt; then the strong.
+            case "noro_worms" -> new Proof(Deed.EAT_GHOUL, 3, 0, "...Eat. Three. Ghoul.", "...{n}.");
+            case "noro_walker" -> new Proof(Deed.GHOUL_RANK, 3, com.hex.kagune.control.npc.NpcRules.B, "...Hunt. Three. Strong ones.", "...{n}.");
+            case "noro_kakuja" -> new Proof(Deed.GHOUL_RANK, 1, com.hex.kagune.control.npc.NpcRules.S, "...One. The strongest you find.", "...Not yet.");
+            case "noro_devouring" -> new Proof(Deed.DEVOURED, 10, 0, "...Let it eat. Ten. Worm out.", "...{n}. More.");
+            case "noro_potential" -> new Proof(Deed.DOVES, 3, 6, "...Three Doves. Rank six. Come back in pieces. Or don't.", "...{n}.");
             case "ken_storm" -> new Proof(Deed.GHOULS_IN_KAKUJA, 10, 0,
                 "Your wings can go further. But the storm has to be fed first. Put on your kakuja and hunt your own: ten wild ghouls, with your "
                     + "first kakuja's wings out. Then come back, and sit down. It won't be gentle.",

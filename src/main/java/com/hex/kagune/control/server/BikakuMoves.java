@@ -49,6 +49,11 @@ final class BikakuMoves {
             BikakuServer.notice(player, state, Component.m_237110_("message.hexkagune.bikaku.locked", move.displayName(), move.mastery()));
             return;
         }
+        // 4.0.0 (the owner: Noro teaches the Bikaku "through dedicated quests, training, and progression challenges"): past the worm's first
+        // two (the Maw and the Drag), his lesson as well as the mastery; the kakuja's own come with the kakuja he teaches.
+        if (!BikakuServer.taught(player, move)) {
+            return;
+        }
         Long ready = state.readyAt.get(move);
         if (ready != null && now < ready && now >= ready - 100000L) {
             BikakuServer.notice(player, state, Component.m_237110_("message.hexkagune.bikaku.cooldown", move.displayName(), (ready - now + 19) / 20));

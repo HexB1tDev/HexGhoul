@@ -552,6 +552,7 @@ public final class EtoBrain {
                 String line = switch (npc.persona().key()) {
                     case "touka" -> "*gets into bed and pulls the covers up* ...You coming or what?";
                     case "ken" -> "*lies down on his side of the bed* I kept your side warm.";
+                    case "ayato" -> "*drops onto the bed, arms crossed* ...You coming, or do I have to drag you?";
                     default -> "*curls up on her side of the bed* Come to bed, love. Don't make me wait.";
                 };
                 say(npc, partner, line);

@@ -172,8 +172,8 @@ final class ToukaScript extends CompanionScript {
                 case WRONG_PATH -> "Those aren't wings. I don't know what to do with tails. Ask someone who has them. ...Ask Ken.";
                 case WEAK -> "Not yet. You'd tear yourself apart. Come back stronger. (" + view.next().name() + ": mastery " + view.need() + ")";
                 case BEFORE -> "You skipped a step. Get " + (view.before() == null ? "the basics" : view.before().displayName()) + " first.";
-                case ALL_TAUGHT -> "I've taught you everything I know. The last one... you'd have to go through hell for. Ken knows the way. "
-                    + "I wish he didn't.";
+                case ALL_TAUGHT -> "That's all I've got. The kakuja... go find my brother. Ayato. Aogiri's hideout. He's a brat and he'll make you "
+                    + "earn it. ...Tell him to eat properly. Don't tell him I said that.";
             };
         }
     };

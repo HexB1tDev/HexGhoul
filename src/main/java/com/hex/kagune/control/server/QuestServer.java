@@ -124,6 +124,15 @@ public final class QuestServer {
         if (gate == Gate.RINKAKU_HURL || gate == Gate.RINKAKU_IMPALE) {
             return false; // 3.3.1: Ken teaches them (new this week: no save had them under the old progression)
         }
+        if (gate == Gate.UKAKU_AYATO_DOVES || gate == Gate.UKAKU_AYATO_HUNT) {
+            // 4.0.0: Ayato's respect is earned, never had; one who has the first kakuja already passed it.
+            return KaguneProfile.mastery(player) >= Gate.UKAKU_KAKUJA.mastery() && PathServer.path(player) == KagunePath.UKAKU;
+        }
+        if (gate == Gate.BIKAKU_DEVOURING || gate == Gate.BIKAKU_POTENTIAL) {
+            // 4.0.0: a mutation an operator already gave stays.
+            return BikakuDevour.has(player, gate == Gate.BIKAKU_DEVOURING ? com.hex.kagune.control.bikaku.BikakuMutation.GRAND_DEVOURING
+                : com.hex.kagune.control.bikaku.BikakuMutation.POTENTIAL_UNLOCK);
+        }
         KagunePath path = PathServer.path(player);
         if (!gate.on(path) || !path.chosen() && gate.path() != null) {
             return false;

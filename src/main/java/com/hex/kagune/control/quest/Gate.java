@@ -43,7 +43,25 @@ public enum Gate {
     /** 3.3.1: Rinkaku's Rubble Hurl (N held, nothing held): Ken teaches it, after a proof ({@code Teaching}). Never grandfathered. */
     RINKAKU_HURL("rinkaku_hurl", KagunePath.RINKAKU, "Rubble Hurl", com.hex.kagune.control.RinkakuUnlocks.HURL, false),
     /** 3.3.1: Rinkaku's Impale (H held, nothing held): Ken teaches it, after the Hurl and a proof. Never grandfathered. */
-    RINKAKU_IMPALE("rinkaku_impale", KagunePath.RINKAKU, "Impale", com.hex.kagune.control.RinkakuUnlocks.IMPALE, false);
+    RINKAKU_IMPALE("rinkaku_impale", KagunePath.RINKAKU, "Impale", com.hex.kagune.control.RinkakuUnlocks.IMPALE, false),
+    /**
+     * 4.0.0 (the owner: Ayato "the main NPC responsible for unlocking the Ukaku Kakuja progression ... players must earn his respect, complete
+     * meaningful challenges"): his respect, earned in two steps before he teaches the first kakuja ({@code Teaching}). No move of their
+     * own: the road to the kakuja. Never grandfathered.
+     */
+    UKAKU_AYATO_DOVES("ukaku_ayato_doves", KagunePath.UKAKU, "Ayato's Respect: Doves", 600, false),
+    UKAKU_AYATO_HUNT("ukaku_ayato_hunt", KagunePath.UKAKU, "Ayato's Respect: the Hunt", 680, false),
+    /**
+     * 4.0.0 (the owner: Noro "the primary progression NPC for the new Bikaku path, teaching players the abilities associated with its normal
+     * form, Half-Kakuja, Full-Kakuja, and unlockable mutations"): the worms' forms and their later moves (Twin and Three Worms, Ravenous
+     * Pursuit, Carrion Eruption, Monstrous Regeneration), The Walker (the half kakuja), the kakuja, and the two mutations. A save already past
+     * a move's mastery keeps it (it had it); the mutations' only if it has them already.
+     */
+    BIKAKU_WORMS("bikaku_worms", KagunePath.BIKAKU, "Bikaku: the Worms (forms, Pursuit, Eruption, Regeneration)", 250, false),
+    BIKAKU_WALKER("bikaku_walker", KagunePath.BIKAKU, "Bikaku: The Walker (half kakuja)", 750, false),
+    BIKAKU_KAKUJA("bikaku_kakuja", KagunePath.BIKAKU, "Bikaku: the Kakuja", 1000, false),
+    BIKAKU_DEVOURING("bikaku_devouring", KagunePath.BIKAKU, "Grand Devouring (mutation)", 0, true),
+    BIKAKU_POTENTIAL("bikaku_potential", KagunePath.BIKAKU, "Potential Unlock (mutation)", 0, true);
 
     private final String id;
     private final KagunePath path;

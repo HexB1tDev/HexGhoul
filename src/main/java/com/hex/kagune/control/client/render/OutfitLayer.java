@@ -49,6 +49,14 @@ public final class OutfitLayer<T extends LivingEntity, M extends EntityModel<T>>
             com.hex.kagune.control.client.GhoulNpcClient.View view = com.hex.kagune.control.client.GhoulNpcClient.get(wearer.m_19879_());
             return view != null && view.identity().aogiri() ? view.identity().maskItem() : null;
         }
+        if (wearer instanceof com.hex.kagune.control.npc.EtoNpc npc && npc.persona().mask() != null) {
+            // 4.0.0: Noro never shows his face; Ayato's respirator goes on when his kagune comes out.
+            if (!npc.persona().maskInFight()) {
+                return npc.persona().mask();
+            }
+            com.hex.kagune.control.client.NpcWingsClient.View wings = com.hex.kagune.control.client.NpcWingsClient.get(npc.m_19879_());
+            return wings != null && wings.out() ? npc.persona().mask() : null;
+        }
         return COMPANION.apply(wearer);
     }
 
