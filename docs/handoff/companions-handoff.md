@@ -1,9 +1,23 @@
-# READ FIRST: `docs/handoff/next-ai-3.6.6.md`
+# READ FIRST: `docs/handoff/next-ai-3.6.6.md` (kept current through 3.6.7)
 
 GeckoLib, Photon and PlayerAnimator are the mod's dependencies: use them wherever they make the mod smoother (the owner). Then the owner's
 words in `docs/handoff/owner-words-mutations.md`. There is no RC bar: energy and food are one bar.
 
-# START HERE (state after 3.6.6)
+# START HERE (state after 3.6.7)
+
+Branch `claude/hopeful-noether-5c2wex`. Read `docs/handoff/next-ai-3.6.6.md` first. Next: **the owner's bug reports, each its own version** (their words at the end of `docs/handoff/owner-words-mutations.md`): the Bikaku kakuja's camera ("IN kakuja form you cant see anything, the camera needs to adapt to the new size."), the kakuja's shatter on turning back ("Also Kakuja detransformation needs a simple shatter animation like the rinkaku has."), The Walker (higher, any terrain, arms never swinging, tap K; hold K the full kakuja); then their new thing (buffs when an entity is absorbed); then Potential Unlock's tearing-off and strands (preview first).
+
+- 3.6.7, the owner: "Upon unlocking Potential Unlock, the player's energy bar permanently changes color", "The maximum energy capacity is also permanently multiplied by 3", "The increased maximum energy capacity must persist after death, relogging, and server restarts.", then "Should be Purple, the bar, my bad"; and "RC bar IS NOT A THING".
+- **Mutation:** `BikakuMutation.POTENTIAL_UNLOCK` built (description: "Three times the energy; your bar turns purple. Coming: torn apart, you pull yourself back together while energy lasts."); `BikakuDevour.grant` and `/kagune bikaku mutation potential_unlock on|off`; kept in the profile (`BikakuMutations`).
+- **Energy:** `BikakuRules.POTENTIAL_CAPACITY` 3, `capacity(mutations)`; server `SharedBar.capacity(player)` (Bikaku only) divides `SharedBar.price` (so `consumeEnergy` and `refund`) by it. Energy stays on the bar's own 0..100 scale (the original's clamps, rest recovery and sync assume it). Healing off the reserve (`GhoulRegen`, `GhoulReserve.afterHeal`) is unchanged.
+- **Purple:** `BikakuRules.POTENTIAL_PURPLE` 0x8A2BE2. `client/ui/TintedCanvas` (a `UiCanvas` that `KaguneTint.recolour`s every colour drawn through it); `ReserveHud.render` draws `ReserveBarView` through it when `BikakuClient.capacity(player) > 1`. Menu: `BikakuMenuScreen` passes energy and max times the capacity; `BikakuMenuView` bar purple, labelled "ENERGY", "One bar: energy, healing and food. Eat to fill it", kakuja "25 energy, then it drains" (Rinkaku and Graft menus still say "RC": not changed).
+- Previews: `tools/UiPreview.java <out> bikaku` (compiled against `build/classes:build/base.jar:build/stubs`): `potential-bars.png` -> `docs/handoff/potential-bar-3.6.7.png`, `bikaku-menu-potential.png` -> `docs/handoff/bikaku-menu-potential-3.6.7.png`.
+- Tests: BikakuTests `mutations()` (capacity 1/3, purple, the bar's reds turn purple with alpha kept). The full suite.
+- **Judgment calls:** the shade; a third of the price rather than a longer bar; Bikaku only; healing unchanged; only the Bikaku menu relabelled.
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 103. Not tested in game.
+
+# State after 3.6.6
 
 Branch `claude/hopeful-noether-5c2wex`. Read `docs/handoff/next-ai-3.6.3.md` first. Next: **Potential Unlock, first part** (3.6.7: the mutation, three times the RC, the one bar purple: the owner, "Should be Purple, the bar, my bad"; there is no RC bar).
 

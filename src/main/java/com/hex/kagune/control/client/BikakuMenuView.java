@@ -153,17 +153,17 @@ public final class BikakuMenuView {
     }
 
     private static void middle(UiCanvas c, Model model, Map<String, UkakuMenuView.Rect> hits, double mouseX, double mouseY, int x, int y, double time) {
-        c.text("RC", x, y, HEADER, false);
+        c.text("ENERGY", x, y, HEADER, false); // 3.6.7: the one bar, energy and food (the owner: "RC bar IS NOT A THING")
         float share = model.maxEnergy() <= 0.0F ? 0.0F : Math.max(0.0F, Math.min(1.0F, model.energy() / model.maxEnergy()));
         c.text(Math.round(model.energy()) + " / " + Math.round(model.maxEnergy()), x + 126, y, VALUE, false);
-        // 3.6.6: Potential Unlock: purple (the owner: "Should be Purple, the bar, my bad").
+        // 3.6.7: Potential Unlock: purple (the owner: "Should be Purple, the bar, my bad").
         boolean purple = com.hex.kagune.control.bikaku.BikakuMutation.POTENTIAL_UNLOCK.in(model.mutations());
         int rc = purple ? com.hex.kagune.control.KaguneTint.recolour(RC, com.hex.kagune.control.bikaku.BikakuRules.POTENTIAL_PURPLE) : RC;
         c.batch(() -> {
             UkakuMenuView.capsule(c, x, y + 19, 205, 8, BAR_BACK);
             UkakuMenuView.capsule(c, x, y + 19, Math.max(8, Math.round(205.0F * share)), 8, rc);
         });
-        c.text("One bar: RC, healing and food. Eat to fill it", x, y + 33, MUTED, false);
+        c.text("One bar: energy, healing and food. Eat to fill it", x, y + 33, MUTED, false);
 
         c.text("PREDATORY FEEDING", x, y + 58, HEADER, false);
         row(c, "A bite", "+" + half(BikakuRules.BITE_HEAL) + " heart", x, y + 76);
@@ -172,7 +172,7 @@ public final class BikakuMenuView {
 
         // 3.5.4: the kakuja.
         c.text("KAKUJA  (K, mastery " + BikakuRules.KAKUJA + ")", x, y + 222, HEADER, false);
-        c.text(Math.round(BikakuRules.KAKUJA_COST) + " RC, then it drains; " + BikakuRules.KAKUJA_COOLDOWN / 20 + " s to come back", x, y + 238, TRAIT, false);
+        c.text(Math.round(BikakuRules.KAKUJA_COST) + " energy, then it drains; " + BikakuRules.KAKUJA_COOLDOWN / 20 + " s to come back", x, y + 238, TRAIT, false);
         c.text("Rooted, " + Math.round((1.0F - BikakuRules.KAKUJA_TAKEN) * 100) + "% less from every blow,", x, y + 252, MUTED, false);
         c.text("regenerating; its tentacles bite " + Math.round(BikakuRules.KAKUJA_REACH) + " blocks out,", x, y + 266, MUTED, false);
         c.text("and bite what comes at it on their own", x, y + 280, MUTED, false);

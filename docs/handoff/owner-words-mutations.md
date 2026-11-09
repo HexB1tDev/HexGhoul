@@ -312,3 +312,22 @@ Then, on a preview of the purple bar that showed both the flesh reserve and the 
 The RC bar does not exist and is not meant to be a thing anymore, the energy and FOOD bar are the same, RC bar IS NOT A THING
 
 (So 3.6.6 stopped the original RC bar being drawn at all, and Potential Unlock turns the one bar, energy and food, purple.)
+
+---
+
+The session after 3.6.6 (same branch). While 3.6.7 (Potential Unlock's first part) was being finished, the owner sent, in one message:
+
+new thing I want added:
+
+Whenever an entity is absorbed, the player gains a speed buff for 15 seconds and some of our custom effects from foods, any that give special strength and buffs also for 15 seconds
+
+
+bug:
+
+IN kakuja form you cant see anything, the camera needs to adapt to the new size.
+
+Also Kakuja detransformation needs a simple shatter animation like the rinkaku has.
+
+Then:
+
+Also the walker should lift the player way higher up (like 3-4 blocks up)  and adapt better to literally any terrain, the arms should not swing at any point (they currently do). the walker is the first tap K half kakuja, the full kakuja is the hold K

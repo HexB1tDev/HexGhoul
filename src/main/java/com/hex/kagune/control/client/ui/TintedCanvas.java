@@ -3,8 +3,8 @@ package com.hex.kagune.control.client.ui;
 import com.hex.kagune.control.KaguneTint;
 
 /**
- * 3.6.6: a canvas that draws everything drawn on it in another colour ({@link KaguneTint#recolour}: a red palette's hues turned to
- * {@code target}'s, its lights and darks kept), over another canvas. Potential Unlock's purple RC bar is the bar as it always was, drawn
+ * 3.6.7: a canvas that draws everything drawn on it in another colour ({@link KaguneTint#recolour}: a red palette's hues turned to
+ * {@code target}'s, its lights and darks kept), over another canvas. Potential Unlock's purple bar (energy and food) is the bar as it always was, drawn
  * through this.
  */
 public final class TintedCanvas implements UiCanvas {

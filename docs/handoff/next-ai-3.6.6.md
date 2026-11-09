@@ -1,4 +1,18 @@
-# HANDOFF: HexGhoul after 3.6.6 (Potential Unlock's first part in progress). READ THIS FIRST.
+# HANDOFF: HexGhoul after 3.6.6, kept current through 3.6.7. READ THIS FIRST.
+
+## The session after this note (same branch): where it is
+
+- **3.6.7 shipped** (Potential Unlock's first part: three times the energy, the one bar purple; the Bikaku menu's bar labelled
+  "ENERGY"). Version 3.6.7, protocol 103; the next is **3.6.8**.
+- The owner then sent new words (quoted exactly at the end of `docs/handoff/owner-words-mutations.md`): a new thing ("Whenever an entity
+  is absorbed, the player gains a speed buff for 15 seconds and some of our custom effects from foods, any that give special strength and
+  buffs also for 15 seconds"), two bugs ("IN kakuja form you cant see anything, the camera needs to adapt to the new size."; "Also Kakuja
+  detransformation needs a simple shatter animation like the rinkaku has."), and The Walker ("the walker should lift the player way higher
+  up (like 3-4 blocks up)  and adapt better to literally any terrain, the arms should not swing at any point (they currently do). the
+  walker is the first tap K half kakuja, the full kakuja is the hold K").
+- **Order (bugs first, each its own version):** the kakuja's camera; the kakuja's shatter; The Walker's arms; The Walker on tap K, higher
+  and on any terrain; then the absorbing buffs; then Potential Unlock's tearing-off and strands (preview first).
+
 
 Branch **`claude/hopeful-noether-5c2wex`** (push only there; never `main`; no PR unless the owner asks). Start from it:
 `git fetch origin claude/hopeful-noether-5c2wex && git checkout -B <your-branch> origin/claude/hopeful-noether-5c2wex`
@@ -32,7 +46,7 @@ Version **3.6.6**; protocol **"103"**. The next version is **3.6.7**.
 
 **There is ONE bar: energy and food (the flesh reserve, where the food bar was). Never make, draw or mention an "RC bar".**
 
-## In progress: Potential Unlock, first part (to ship as 3.6.7)
+## Shipped as 3.6.7: Potential Unlock, first part (what was in progress; kept for the record)
 
 The owner answered the plan (three parts: (1) the mutation, the bar purple, three times the energy; (2) surviving and tearing off;
 (3) the strands pulling parts back) with "proceed", then "Should be Purple, the bar, my bad", then the RC-bar message above.

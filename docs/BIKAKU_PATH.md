@@ -71,6 +71,12 @@ mouth: breathing walls in the eater's kagune colour, rows of fangs, the throat i
 worm; placed along the worm's own curve. Not in the kakuja (the owner: "Grand devouring should not be in the kakuja form by the way.").
 Next: Potential Unlock.
 
+**3.6.7 (Potential Unlock, first part; the owner: "The maximum energy capacity is also permanently multiplied by 3"; "Should be
+Purple, the bar, my bad"):** the second Bikaku mutation (quest-unlocked; operators meanwhile `/kagune bikaku mutation potential_unlock
+on|off`): three times the energy (every price a third), the one bar (energy and food) purple, the menu's too ("ENERGY", "192 / 300");
+kept for good. Next: the owner's reports (the kakuja's camera and its shatter, The Walker), absorbing's buffs, then Potential Unlock's
+tearing-off and strands.
+
 **Before 3.4.9 (the pure worm, unchanged since except as above):**
 
 - `control/bikaku/MawWorm.java`: the worm as a mesh (pure). A thick muscular tube along a spine resampled evenly by length

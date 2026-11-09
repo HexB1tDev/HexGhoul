@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.6.7 (HexGhoul): Bikaku: Potential Unlock, first part (testing)
+
+See `.github/release-notes-3.6.7.md`. Your words: "The maximum energy capacity is also permanently multiplied by 3", "Upon unlocking Potential Unlock, the player's energy bar permanently changes color", then "Should be Purple, the bar, my bad". Potential Unlock (unlocked by the NPC's quest; operators meanwhile: `/kagune bikaku mutation potential_unlock on|off`): three times the energy (everything spends a third of the bar; the menu reads "192 / 300"), the one bar (energy and food) purple, the menu's too; kept through death, relogging and restarts; Bikaku only. The Bikaku menu's bar reads "ENERGY" now (your words: "RC bar IS NOT A THING"). Coming: surviving, tearing off and the strands. Protocol 103. Previews: `docs/handoff/potential-bar-3.6.7.png`, `bikaku-menu-potential-3.6.7.png`.
+
 ## 3.6.6 (HexGhoul): Fix: no RC bar (testing)
 
 See `.github/release-notes-3.6.6.md`. Your words: "The RC bar does not exist and is not meant to be a thing anymore, the energy and FOOD bar are the same, RC bar IS NOT A THING". The original's RC bar is never drawn now (it still was in creative and with the diet switched off, while the kagune was out). One bar: energy and food. Protocol 103.

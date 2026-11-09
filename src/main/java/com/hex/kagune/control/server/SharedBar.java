@@ -71,14 +71,14 @@ public final class SharedBar {
     }
 
     /**
-     * What {@code cost} really takes from the bar: less with mastery, and with every piece of Ghoul Meat eaten; 3.6.6: a third as much of
+     * What {@code cost} really takes from the bar: less with mastery, and with every piece of Ghoul Meat eaten; 3.6.7: a third as much of
      * it with Potential Unlock (three times the RC: {@link #capacity}).
      */
     private static float price(ServerPlayer player, float cost) {
         return cost * EnergyBalance.costScale(KaguneProfile.mastery(player)) / GhoulMeatServer.endurance(player) / capacity(player);
     }
 
-    /** 3.6.6: how many times the RC the bar holds for {@code player} (Potential Unlock, on the Bikaku path: three; else one). */
+    /** 3.6.7: how many times the energy the bar holds for {@code player} (Potential Unlock, on the Bikaku path: three; else one). */
     public static int capacity(ServerPlayer player) {
         return BikakuServer.isBikaku(player) ? com.hex.kagune.control.bikaku.BikakuRules.capacity(BikakuDevour.mutations(player)) : 1;
     }

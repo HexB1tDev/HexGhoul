@@ -81,8 +81,8 @@ public final class BikakuTests {
             && com.hex.kagune.control.bikaku.BikakuMutation.byId("nope") == null, "each mutation reads back by its id");
         check(devour.bit() != unlock.bit() && devour.in(devour.bit()) && !unlock.in(devour.bit())
             && com.hex.kagune.control.bikaku.BikakuMutation.all() == (devour.bit() | unlock.bit()), "a bit each");
-        check(devour.built() && unlock.built(), "both are built (3.6.6: Potential Unlock's first part)");
-        // 3.6.6, Potential Unlock (the owner: "The maximum energy capacity is also permanently multiplied by 3"; "Should be Purple, the bar,
+        check(devour.built() && unlock.built(), "both are built (3.6.7: Potential Unlock's first part)");
+        // 3.6.7, Potential Unlock (the owner: "The maximum energy capacity is also permanently multiplied by 3"; "Should be Purple, the bar,
         // my bad"): three times the RC with it, once without; Grand Devouring alone changes nothing.
         check(com.hex.kagune.control.bikaku.BikakuRules.capacity(0) == 1 && com.hex.kagune.control.bikaku.BikakuRules.capacity(devour.bit()) == 1
             && com.hex.kagune.control.bikaku.BikakuRules.capacity(unlock.bit()) == 3

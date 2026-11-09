@@ -159,7 +159,7 @@ public final class BikakuClient {
         return -1.0;
     }
 
-    /** 3.6.6: how many times the RC {@code player}'s bar holds (Potential Unlock, on the Bikaku path: three; else one). */
+    /** 3.6.7: how many times the energy {@code player}'s bar holds (Potential Unlock, on the Bikaku path: three; else one). */
     public static int capacity(Player player) {
         return player != null && isBikaku(player) ? BikakuRules.capacity(get(player).mutations()) : 1;
     }

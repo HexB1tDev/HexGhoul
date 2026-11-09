@@ -218,7 +218,7 @@ public class UiPreview {
         c.push();
         c.translate(ox, oy);
         c.scale(scale);
-        int capacity = com.hex.kagune.control.bikaku.BikakuRules.capacity(mutations); // 3.6.6: Potential Unlock reads three times the RC
+        int capacity = com.hex.kagune.control.bikaku.BikakuRules.capacity(mutations); // 3.6.7: Potential Unlock reads three times the energy
         com.hex.kagune.control.client.BikakuMenuView.draw(c, new com.hex.kagune.control.client.BikakuMenuView.Model(mastery, true, 64.0F * capacity,
             100.0F * capacity, mastery >= 750 ? 3 : mastery >= 500 ? 2 : 0, mutations, devourWait), mouseX, mouseY, 1.3);
         c.pop();
@@ -555,7 +555,7 @@ public class UiPreview {
             // 3.6.3: its mutations (unlocked by a quest): none yet, and Grand Devouring on, cooling down.
             bikakuMenu(new File(dir, "bikaku-menu-600.png"), 600, 0, 0L, 0, 0);
             bikakuMenu(new File(dir, "bikaku-menu-1000.png"), 1000, 1, 840L, 0, 0);
-            // 3.6.6: Potential Unlock too: three times the RC, the bar purple.
+            // 3.6.7: Potential Unlock too: three times the energy, the bar purple.
             bikakuMenu(new File(dir, "bikaku-menu-potential.png"), 1000, 3, 0L, 0, 0);
             potential(new File(dir, "potential-bars.png"));
             return;

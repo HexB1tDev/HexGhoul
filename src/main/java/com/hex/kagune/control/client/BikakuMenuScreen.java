@@ -39,7 +39,7 @@ public final class BikakuMenuScreen extends Screen {
         BikakuClient.View view = player == null ? BikakuClient.View.NONE : BikakuClient.get(player);
         long world = minecraft.f_91073_ == null ? 0L : minecraft.f_91073_.m_46467_();
         long wait = view.devourReadyAt() == Long.MIN_VALUE ? 0L : Math.max(0L, view.devourReadyAt() - world);
-        // 3.6.6: Potential Unlock: three times the RC (the bar's own scale, read three times over).
+        // 3.6.7: Potential Unlock: three times the energy (the bar's own scale, read three times over).
         int capacity = BikakuClient.capacity(player);
         BikakuMenuView.Model model = new BikakuMenuView.Model(state.mastery(), state.active(), state.energy() * capacity,
             KaguneProfile.MAX_ENERGY * capacity, view.form().ordinal(), view.mutations(), wait);
