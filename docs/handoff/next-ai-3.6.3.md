@@ -46,8 +46,12 @@ had not said whether the new shape is right when 3.6.3 was pushed: ask. Details:
 first draft of the view from inside the mouth (`docs/handoff/devour-inside-draft-3.6.5.png`; its generator and preview in the next
 version): "I like the inside of the mouth, proceed wit hthe mod". So the versions moved on by one:
 
-**Next, in this order:**
-1. **3.6.5:** the victim's first-person view from inside the mouth (GeckoLib; matching `GrandDevour` exactly: the same `at(...)`, the
+**3.6.5 shipped** (Grand Devouring from inside the mouth: the mod's first GeckoLib model; details in the top section of
+`companions-handoff.md`). Then the owner: "Grand devouring should not be in the kakuja form by the way." So the kakuja part below is
+dropped (it already never starts there).
+
+**Next, in this order (as it was before 3.6.5; items 1's kakuja part dropped):**
+1. **3.6.5 (done):** the victim's first-person view from inside the mouth (GeckoLib; matching `GrandDevour` exactly: the same `at(...)`, the
    jaws' aperture, the cavity's `hole`/`depth`, the devourer's kagune colour), and Grand Devouring in the kakuja (one of its six tentacles
    feeds) as **3.6.6**, its own version.
 2. **Potential Unlock** (below), unlocked the same way (`BikakuDevour.grant`; quest-only, not mastery).

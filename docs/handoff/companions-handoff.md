@@ -3,7 +3,22 @@
 GeckoLib, Photon and PlayerAnimator are the mod's dependencies: use them wherever they make the mod smoother (the owner). Then the owner's
 words in `docs/handoff/owner-words-mutations.md`.
 
-# START HERE (state after 3.6.4)
+# START HERE (state after 3.6.5)
+
+Branch `claude/hopeful-noether-5c2wex`. Read `docs/handoff/next-ai-3.6.3.md` first. Next: **Potential Unlock** (3.6.6 on; the owner's words in `docs/handoff/owner-words-mutations.md`; quest-unlocked like Grand Devouring, `BikakuDevour.grant`). Grand Devouring is not in the kakuja (the owner: "Grand devouring should not be in the kakuja form by the way.").
+
+- 3.6.5 asked by the owner: "If the victim is another player, they must experience a special first-person perspective from inside the kagune's mouth" (and the rest of that passage in `owner-words-mutations.md`); on the first draft: "I like the inside of the mouth, proceed wit hthe mod".
+- **GeckoLib, first use.** Stubs `stubs/software/bernie/geckolib/**` (15 files, each with its source path); `verify/api-allowlist.txt` `[geckolib]` key and block (signatures read from bernie-g/geckolib branch 1.20.1, 4.8.4). `build.py` `NEW_PREFIXES` + `assets/hexkagune/geo/`, `assets/hexkagune/animations/`.
+- **Model:** `tools/devour_cavity.py` writes `geo/devour_cavity.geo.json` (bones `wall0..5` with `tooth0..5`, `throat0..2`, `cap`, `jaw0..7` > `hinge0..7` > `fang0..7`; 41 bones, 1,578 quads; canonical radius 16 px, walls 36 px), `animations/devour_cavity.animation.json` (`animation.hexkagune.devour_cavity.pulse`, 2.4 s loop, catmullrom), `textures/geo/devour_cavity.png` (128; light flesh, bone teeth, dark throat).
+- **Client:** `client/render/DevourInside` (Dist.CLIENT): `Cavity implements GeoAnimatable` (one; open, gulp, tint, clock), `Model extends GeoModel` (`setCustomAnimations`: hinges `setRotX(WIDE * open)`, WIDE -100 degrees (negative: the flap's inner end swings down); the gulp squeezes rings in turn), `Renderer extends GeoObjectRenderer` (`getRenderColor` the devourer's tint; `renderCubesOfBone` tooth/fang bones white). `RenderLevelStageEvent` AFTER_ENTITIES, first person only, while the local player is devoured (`BikakuClient.devourer`), age from `CAUGHT - 0.35 ENGULF` to `KILL`: placed at `BikakuRenderer.feedingMouth` (the same feeding, `around` with the feed, `GraftPose.ride`, `grown`; `GrandDevour.mouthAxis`), turned with `rotateAxis`, scaled hole x 0.95 across and depth / 2.25 along, preRender's (0.5, 0.51, 0.5) undone, `entityTranslucent` (no cull) flushed itself.
+- **World change:** `GrandDevour.at` SWALLOW keeps `down`; the lift into `carry` is over `LIFTS` 25 ticks after `KILL` (the eye test found the head swinging off the held body).
+- Previews: `tools/CavityPreview.java` (baked with `awakening/.../geo`), `docs/handoff/devour-inside-3.6.5.png`; `docs/handoff/bikaku-devour-3.6.5.png`.
+- Tests: `awakening/test/.../geo/DevourCavityTest` (138,186), BikakuWormTests (2,419,779), BikakuTests (1,649), the full suite.
+- **Judgment calls:** the model's look and numbers, the flaps' swing, the gulp, first person only, starting a little before the mouth reaches the ground.
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 103. Not tested in game.
+
+# State after 3.6.4
 
 Branch `claude/hopeful-noether-5c2wex`. Read `docs/handoff/next-ai-3.6.3.md` first. Next: **3.6.5**, the victim's view from inside the mouth (GeckoLib; the owner on its first draft: "I like the inside of the mouth, proceed wit hthe mod"); then 3.6.6 Grand Devouring in the kakuja; then Potential Unlock.
 

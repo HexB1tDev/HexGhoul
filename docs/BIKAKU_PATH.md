@@ -66,6 +66,11 @@ steadily bigger to the mouth (`MawWorm.horn`). A minute's cooldown. Unlocked by 
 **3.6.4 (fix; the owner: "it should."):** `/kagune cooldowns off` (and creative) now ends the Bikaku cooldowns already running (moves,
 kakuja, Grand Devouring). Next: 3.6.5 the view from inside the mouth (GeckoLib); 3.6.6 Grand Devouring in the kakuja; then Potential Unlock.
 
+**3.6.5 (Grand Devouring from inside; the mod's first GeckoLib model):** a player being eaten sees, in first person, the inside of the
+mouth: breathing walls in the eater's kagune colour, rows of fangs, the throat into darkness, the jaws closing in step with the world
+worm; placed along the worm's own curve. Not in the kakuja (the owner: "Grand devouring should not be in the kakuja form by the way.").
+Next: Potential Unlock.
+
 **Before 3.4.9 (the pure worm, unchanged since except as above):**
 
 - `control/bikaku/MawWorm.java`: the worm as a mesh (pure). A thick muscular tube along a spine resampled evenly by length

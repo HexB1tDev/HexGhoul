@@ -11,6 +11,10 @@
 #           Lombok @Getter/@Setter generate the accessors named below). Photon's own members keep their names in its Forge
 #           jar; members it overrides from Minecraft's Particle are reobfuscated to SRG (setPos, isAlive). Hex God of Death's
 #           client/fx/DeathFx.java makes the same calls against photon-forge-1.20.1:1.1.17 in its CI build.
+#   [geckolib] GeckoLib 4.8.4 sources (bernie-g/geckolib, branch 1.20.1, gradle.properties version=4.8.4; read from
+#           raw.githubusercontent.com: core/src/main/java for software.bernie.geckolib.core.*, Forge/src/main/java for the rest).
+#           GeckoLib's own members keep their names in its Forge jar (none of these override Minecraft's). The owner made GeckoLib a
+#           requirement (3.6.3 mods.toml: mandatory, both sides, versionRange [4.4,)).
 # The build fails if an entry is missing for a new reference, or if an entry is no longer used.
 
 # --- ghoul diet: food and effects -------------------------------------------------------------------
@@ -1063,3 +1067,44 @@ M net/minecraft/client/renderer/entity/ItemRenderer m_269128_ (Lnet/minecraft/wo
 F net/minecraft/world/item/ItemDisplayContext FIRST_PERSON_RIGHT_HAND Lnet/minecraft/world/item/ItemDisplayContext; # [srg] joined.tsrg cfw.e FIRST_PERSON_RIGHT_HAND (retained name, id 268667); intermediary field_4322
 F net/minecraft/world/item/ItemDisplayContext NONE Lnet/minecraft/world/item/ItemDisplayContext; # [srg] joined.tsrg cfw.a NONE (retained name, id 268634); intermediary field_4315 (class_811 = yarn ModelTransformationMode); 3.1.6 Rubble Hurl draws the torn block's own model untransformed
 M net/minecraftforge/client/event/RenderHandEvent getEquipProgress ()F # [forge] 1.20.x src/main/java/net/minecraftforge/client/event/RenderHandEvent.java, public equip progress getter
+
+# --- 3.6.5: GeckoLib: Grand Devouring's inside (client/render/DevourInside) ------------------------------------------------------------
+C software/bernie/geckolib/core/animatable/GeoAnimatable                             # [geckolib] core/.../core/animatable/GeoAnimatable.java (public interface GeoAnimatable)
+M software/bernie/geckolib/core/animatable/GeoAnimatable registerControllers (Lsoftware/bernie/geckolib/core/animation/AnimatableManager$ControllerRegistrar;)V  # [geckolib] GeoAnimatable.java: void registerControllers(AnimatableManager.ControllerRegistrar controllers)
+M software/bernie/geckolib/core/animatable/GeoAnimatable getAnimatableInstanceCache ()Lsoftware/bernie/geckolib/core/animatable/instance/AnimatableInstanceCache;  # [geckolib] GeoAnimatable.java: AnimatableInstanceCache getAnimatableInstanceCache()
+M software/bernie/geckolib/core/animatable/GeoAnimatable getTick (Ljava/lang/Object;)D  # [geckolib] GeoAnimatable.java: double getTick(Object object)
+C software/bernie/geckolib/core/animatable/instance/AnimatableInstanceCache          # [geckolib] core/.../animatable/instance/AnimatableInstanceCache.java (public abstract class)
+M software/bernie/geckolib/core/animatable/model/CoreGeoModel setCustomAnimations (Lsoftware/bernie/geckolib/core/animatable/GeoAnimatable;JLsoftware/bernie/geckolib/core/animation/AnimationState;)V  # [geckolib] core/.../animatable/model/CoreGeoModel.java:58 default void setCustomAnimations(E animatable, long instanceId, AnimationState<E> animationState)
+C software/bernie/geckolib/core/animation/AnimatableManager$ControllerRegistrar      # [geckolib] core/.../animation/AnimatableManager.java:169 public static final class ControllerRegistrar
+M software/bernie/geckolib/core/animation/AnimatableManager$ControllerRegistrar add ([Lsoftware/bernie/geckolib/core/animation/AnimationController;)Lsoftware/bernie/geckolib/core/animation/AnimatableManager$ControllerRegistrar;  # [geckolib] AnimatableManager.java:175 public ControllerRegistrar add(AnimationController<?>... controllers)
+C software/bernie/geckolib/core/animation/AnimationController                        # [geckolib] core/.../animation/AnimationController.java:37 public class AnimationController<T extends GeoAnimatable>
+M software/bernie/geckolib/core/animation/AnimationController <init> (Lsoftware/bernie/geckolib/core/animatable/GeoAnimatable;Ljava/lang/String;ILsoftware/bernie/geckolib/core/animation/AnimationController$AnimationStateHandler;)V  # [geckolib] AnimationController.java:111 public AnimationController(T animatable, String name, int transitionTickTime, AnimationStateHandler<T> animationHandler)
+C software/bernie/geckolib/core/animation/AnimationController$AnimationStateHandler   # [geckolib] AnimationController.java:785 public interface AnimationStateHandler<A extends GeoAnimatable>
+M software/bernie/geckolib/core/animation/AnimationController$AnimationStateHandler handle (Lsoftware/bernie/geckolib/core/animation/AnimationState;)Lsoftware/bernie/geckolib/core/object/PlayState;  # [geckolib] AnimationController.java:791 PlayState handle(AnimationState<A> state)
+C software/bernie/geckolib/core/animation/AnimationState                             # [geckolib] core/.../animation/AnimationState.java:16 public class AnimationState<T extends GeoAnimatable>
+M software/bernie/geckolib/core/animation/AnimationState setAndContinue (Lsoftware/bernie/geckolib/core/animation/RawAnimation;)Lsoftware/bernie/geckolib/core/object/PlayState;  # [geckolib] AnimationState.java:128 public PlayState setAndContinue(RawAnimation animation)
+C software/bernie/geckolib/core/animation/RawAnimation                               # [geckolib] core/.../animation/RawAnimation.java:23 public final class RawAnimation
+M software/bernie/geckolib/core/animation/RawAnimation begin ()Lsoftware/bernie/geckolib/core/animation/RawAnimation;  # [geckolib] RawAnimation.java:42 public static RawAnimation begin()
+M software/bernie/geckolib/core/animation/RawAnimation thenLoop (Ljava/lang/String;)Lsoftware/bernie/geckolib/core/animation/RawAnimation;  # [geckolib] RawAnimation.java:59 public RawAnimation thenLoop(String animationName)
+C software/bernie/geckolib/core/object/PlayState                                     # [geckolib] core/.../object/PlayState.java:6 public enum PlayState
+C software/bernie/geckolib/core/object/Color                                         # [geckolib] core/.../object/Color.java:9 public record Color(int argbInt)
+M software/bernie/geckolib/core/object/Color ofRGB (III)Lsoftware/bernie/geckolib/core/object/Color;  # [geckolib] Color.java:41 public static Color ofRGB(int r, int g, int b)
+C software/bernie/geckolib/cache/object/GeoBone                                      # [geckolib] Forge/.../cache/object/GeoBone.java:19 public class GeoBone implements CoreGeoBone
+M software/bernie/geckolib/cache/object/GeoBone getName ()Ljava/lang/String;       # [geckolib] GeoBone.java:79 public String getName()
+M software/bernie/geckolib/cache/object/GeoBone setRotX (F)V                        # [geckolib] GeoBone.java:134 public void setRotX(float value)
+M software/bernie/geckolib/cache/object/GeoBone getScaleX ()F                       # [geckolib] GeoBone.java:119 public float getScaleX()
+M software/bernie/geckolib/cache/object/GeoBone getScaleZ ()F                       # [geckolib] GeoBone.java:129 public float getScaleZ()
+M software/bernie/geckolib/cache/object/GeoBone setScaleX (F)V                      # [geckolib] GeoBone.java:176 public void setScaleX(float value)
+M software/bernie/geckolib/cache/object/GeoBone setScaleZ (F)V                      # [geckolib] GeoBone.java:190 public void setScaleZ(float value)
+C software/bernie/geckolib/model/GeoModel                                            # [geckolib] Forge/.../model/GeoModel.java:39 public abstract class GeoModel<T extends GeoAnimatable> implements CoreGeoModel<T>
+M software/bernie/geckolib/model/GeoModel getBone (Ljava/lang/String;)Ljava/util/Optional;  # [geckolib] GeoModel.java:129 public Optional<software.bernie.geckolib.cache.object.GeoBone> getBone(String name)
+M software/bernie/geckolib/model/GeoModel getModelResource (Lsoftware/bernie/geckolib/core/animatable/GeoAnimatable;)Lnet/minecraft/resources/ResourceLocation;  # [geckolib] Forge/.../model/GeoModel.java:57 public abstract ResourceLocation getModelResource(T animatable)
+M software/bernie/geckolib/model/GeoModel getTextureResource (Lsoftware/bernie/geckolib/core/animatable/GeoAnimatable;)Lnet/minecraft/resources/ResourceLocation;  # [geckolib] GeoModel.java:69 public abstract ResourceLocation getTextureResource(T animatable)
+M software/bernie/geckolib/model/GeoModel getAnimationResource (Lsoftware/bernie/geckolib/core/animatable/GeoAnimatable;)Lnet/minecraft/resources/ResourceLocation;  # [geckolib] GeoModel.java:74 public abstract ResourceLocation getAnimationResource(T animatable)
+M software/bernie/geckolib/renderer/GeoRenderer getRenderColor (Lsoftware/bernie/geckolib/core/animatable/GeoAnimatable;FI)Lsoftware/bernie/geckolib/core/object/Color;  # [geckolib] Forge/.../renderer/GeoRenderer.java:68 default Color getRenderColor(T animatable, float partialTick, int packedLight)
+M software/bernie/geckolib/renderer/GeoRenderer renderCubesOfBone (Lcom/mojang/blaze3d/vertex/PoseStack;Lsoftware/bernie/geckolib/cache/object/GeoBone;Lcom/mojang/blaze3d/vertex/VertexConsumer;IIFFFF)V  # [geckolib] GeoRenderer.java:262 default void renderCubesOfBone(PoseStack, GeoBone, VertexConsumer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha); GeoObjectRenderer does not override it
+C software/bernie/geckolib/renderer/GeoObjectRenderer                                # [geckolib] Forge/.../renderer/GeoObjectRenderer.java:32 public class GeoObjectRenderer<T extends GeoAnimatable> implements GeoRenderer<T>
+M software/bernie/geckolib/renderer/GeoObjectRenderer <init> (Lsoftware/bernie/geckolib/model/GeoModel;)V  # [geckolib] Forge/.../renderer/GeoObjectRenderer.java:43 public GeoObjectRenderer(GeoModel<T> model)
+M software/bernie/geckolib/renderer/GeoObjectRenderer render (Lcom/mojang/blaze3d/vertex/PoseStack;Lsoftware/bernie/geckolib/core/animatable/GeoAnimatable;Lnet/minecraft/client/renderer/MultiBufferSource;Lnet/minecraft/client/renderer/RenderType;Lcom/mojang/blaze3d/vertex/VertexConsumer;I)V  # [geckolib] GeoObjectRenderer.java:116 public void render(PoseStack, T animatable, MultiBufferSource, RenderType, VertexConsumer, int packedLight)
+C software/bernie/geckolib/util/GeckoLibUtil                                         # [geckolib] Forge/.../util/GeckoLibUtil.java:18 public final class GeckoLibUtil
+M software/bernie/geckolib/util/GeckoLibUtil createInstanceCache (Lsoftware/bernie/geckolib/core/animatable/GeoAnimatable;)Lsoftware/bernie/geckolib/core/animatable/instance/AnimatableInstanceCache;  # [geckolib] Forge/.../util/GeckoLibUtil.java:23 public static AnimatableInstanceCache createInstanceCache(GeoAnimatable animatable)

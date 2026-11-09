@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.6.5 (HexGhoul): Bikaku: Grand Devouring from inside the mouth (GeckoLib) (testing)
+
+See `.github/release-notes-3.6.5.md`. Your words: "If the victim is another player, they must experience a special first-person perspective from inside the kagune's mouth"; on the draft: "I like the inside of the mouth, proceed wit hthe mod". A player being eaten sees, in first person, the inside of the mouth drawn with GeckoLib: breathing walls of flesh in the eater's kagune colour, rows of fangs, the throat into darkness, and the jaws closing in step with the world worm until the outside is shut out; the gulp squeezes up the throat. It is placed along the worm's own curve. The worm's head now stays down over the body until it is swallowed. Your words: "Grand devouring should not be in the kakuja form by the way." (it isn't). Protocol 103. Previews: `docs/handoff/devour-inside-3.6.5.png`, `bikaku-devour-3.6.5.png`.
+
 ## 3.6.4 (HexGhoul): Fix: /kagune cooldowns off ends the Bikaku cooldowns (testing)
 
 See `.github/release-notes-3.6.4.md`. Your words, on `/kagune cooldowns off` not ending the Bikaku cooldowns already running: "it should." It now ends every Bikaku cooldown that is running (each move's, the kakuja's, Grand Devouring's), and switching to creative does too. Protocol 103.

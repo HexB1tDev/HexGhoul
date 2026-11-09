@@ -411,6 +411,41 @@ public final class BikakuRenderer {
         }
     }
 
+    /**
+     * 3.6.5: the feeding worm's mouth this frame, for the player inside it ({@link DevourInside}): where its mouth and the back of its cavity
+     * are in the world, worked out exactly as {@link #draw} lays the worm (the same feeding, round his body, carried with his torso's pose,
+     * grown with his kagune), how wide its jaws are, its cavity's size, his kagune colour and how far into the feeding it is; null when no
+     * worm of his is feeding.
+     */
+    public record Mouth(double[] mouth, double[] back, double aperture, double hole, double depth, int tint, double age) {
+    }
+
+    public static Mouth feedingMouth(AbstractClientPlayer player, float partial, double clock) {
+        BikakuClient.View view = BikakuClient.get(player);
+        int busy = view.kakuja() ? -1 : view.busyWorm(clock);
+        if (busy < 0 || view.devourSpot() == null) {
+            return null;
+        }
+        Frame frame = Frame.of(player, partial);
+        int seed = BikakuClient.seed(player);
+        int count = view.kakuja() ? 1 : view.form().worms();
+        int own = count > 1 ? seed + 101 * busy : seed;
+        double age = view.devourAge(clock);
+        com.hex.kagune.control.bikaku.GrandDevour.Feeding feeding = com.hex.kagune.control.bikaku.GrandDevour.at(clock, own, count, busy,
+            frame.rig(view.devourSpot()), view.devourWidth(), view.devourHeight(), age);
+        com.hex.kagune.control.bikaku.MawKakuja.Growth growth = com.hex.kagune.control.bikaku.MawKakuja.growth(view.kakuja(), view.kakujaAge(clock));
+        double grown = GraftMesh.smooth(BikakuClient.deploy(player, partial)) * growth.worm();
+        com.hex.kagune.control.client.animation.RigPose posed = com.hex.kagune.control.client.animation.KaguneBodyAnimation.body(player,
+            com.hex.kagune.control.client.ControlClient.worldTime(partial));
+        double[][] rig = com.hex.kagune.control.client.animation.GraftPose.ride(posed, MawMotion.around(feeding.shape().path(), 1.0,
+            feeding.shape().aperture(), feeding.feed()));
+        rig = MawMotion.grown(rig, grown);
+        double[][] axis = com.hex.kagune.control.bikaku.GrandDevour.mouthAxis(rig, feeding.feed().depth());
+        Vec3 origin = Vec3.f_82478_;
+        return new Mouth(frame.place(axis[0], origin), frame.place(axis[1], origin), feeding.shape().aperture(), feeding.feed().hole(),
+            feeding.feed().depth(), KaguneTints.of(player), age);
+    }
+
     /** A player's rig frame for this frame: feet in the world, and the body's forward and right (as the other kagune renderers'). */
     private record Frame(double x, double y, double z, double forwardX, double forwardZ, double rightX, double rightZ) {
         static Frame of(LivingEntity player, float partial) {

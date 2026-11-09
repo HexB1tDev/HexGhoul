@@ -159,6 +159,21 @@ public final class BikakuClient {
         return -1.0;
     }
 
+    /** 3.6.5: the player whose worm is feeding on {@code entity} (by its id) now, on the clock {@code clock}; null if none. */
+    public static net.minecraft.client.player.AbstractClientPlayer devourer(int entity, double clock) {
+        net.minecraft.client.multiplayer.ClientLevel level = net.minecraft.client.Minecraft.m_91087_().f_91073_;
+        if (entity == 0 || level == null) {
+            return null;
+        }
+        for (net.minecraft.client.player.AbstractClientPlayer player : level.m_6907_()) {
+            View view = VIEWS.get(player.m_36316_().getId());
+            if (view != null && view.devourVictim() == entity && view.devourAge(clock) >= 0.0) {
+                return player;
+            }
+        }
+        return null;
+    }
+
     /** 3.5.7: when (the client clock) something that began at {@code at} began here: its clock running on if it is told again. */
     private static double began(Long beforeAt, double beforeBegan, long at, long world, double clock) {
         if (beforeAt != null && beforeAt == at) {

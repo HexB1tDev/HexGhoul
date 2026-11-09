@@ -49,6 +49,8 @@ public final class GrandDevour {
      * high over the back of its head as this share of the rest of the way (most of a quarter turn down into it).
      */
     static final double CREST_AT = 0.4;
+    /** 3.6.5: how long (ticks) it takes to lift into its arch once it has swallowed. */
+    static final double LIFTS = 25.0;
     static final double CREST_RISE = 0.55;
 
     private GrandDevour() {
@@ -149,13 +151,14 @@ public final class GrandDevour {
             // The jaws close slowly under it (its feet drawn up past them).
             open = 1.0 - 0.92 * GraftMesh.smooth((age - CAUGHT) / TRAPPED);
         } else if (age < KILL) {
-            // The gulp: it stays down over it until it is in out of sight, then lifts.
-            double k = GraftMesh.smooth(GraftMesh.clamp01((age - SHUT - SWALLOW * 0.35) / (SWALLOW * 0.65)));
-            path = mix(down, carry, k);
+            // The gulp: it stays down over it, round the body it holds, until it is swallowed (3.6.5: the player inside sees out of
+            // nothing: the head never swings away from where the body is held).
+            path = down;
             open = 0.08 * (1.0 - GraftMesh.smooth((age - SHUT) / SWALLOW));
         } else if (age < FED) {
-            // Shut, held in its arch while the bulge runs down it, swaying a little as it works (eased in).
-            path = sway(carry, time, seed, 0.12 * GraftMesh.smooth(GraftMesh.clamp01((age - KILL) / 20.0)));
+            // Swallowed: it lifts into its arch, held there shut while the bulge runs down it, swaying a little as it works (eased in).
+            double k = GraftMesh.smooth(GraftMesh.clamp01((age - KILL) / LIFTS));
+            path = sway(mix(down, carry, k), time, seed, 0.12 * GraftMesh.smooth(GraftMesh.clamp01((age - KILL) / 20.0)));
             open = 0.0;
         } else {
             path = mix(sway(carry, time, seed, 0.12), idle, GraftMesh.smooth(GraftMesh.clamp01((age - FED) / RETURN)));
@@ -304,6 +307,24 @@ public final class GrandDevour {
             out.add(k == n ? b.clone() : GraftMesh.add(centre, GraftMesh.add(GraftMesh.mul(normal, -radius * Math.cos(phi)),
                 GraftMesh.mul(t, radius * Math.sin(phi)))));
         }
+    }
+
+    /**
+     * 3.6.5: its mouth and the back of its cavity along the worm as it is drawn ({@code drawn}: its points, root first, the mouth last):
+     * the mouth, and the point {@code depth} back along it from there (its head is straight, so the two give the cavity's axis). What the
+     * player inside it sees is drawn along these ({@code DevourInside}).
+     */
+    public static double[][] mouthAxis(double[][] drawn, double depth) {
+        double[] mouth = drawn[drawn.length - 1].clone();
+        double left = depth;
+        for (int i = drawn.length - 1; i > 0; i--) {
+            double span = GraftMesh.length3(GraftMesh.sub(drawn[i - 1], drawn[i]));
+            if (span >= left) {
+                return new double[][] {mouth, GraftMesh.lerp(drawn[i], drawn[i - 1], left / Math.max(1.0E-9, span))};
+            }
+            left -= span;
+        }
+        return new double[][] {mouth, drawn[0].clone()};
     }
 
     /** A slow sway through its arch (its head and its middle, never its root), {@code amount} blocks. */

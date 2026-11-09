@@ -291,3 +291,9 @@ it should.
 And, on the first draft of the view from inside the mouth (a GeckoLib model; `docs/handoff/devour-inside-draft-3.6.5.png`):
 
 I like the inside of the mouth, proceed wit hthe mod
+
+Then, while the view from inside was being built (the next version had been planned as Grand Devouring in the kakuja):
+
+Grand devouring should not be in the kakuja form by the way.
+
+(It never starts in the kakuja, and going into the kakuja is refused while a worm feeds; nothing was changed for it.)

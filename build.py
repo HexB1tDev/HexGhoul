@@ -24,7 +24,7 @@ import sys
 import zipfile
 
 ROOT = Path(__file__).resolve().parent
-VERSION = "3.6.4"
+VERSION = "3.6.5"
 INPUT = ROOT / "input" / "hexkagune-1.0.0.jar"
 BUILD = Path(os.environ.get("HEXKAGUNE_BUILD_DIR", ROOT / "build"))
 OUTPUT = BUILD / f"hexkagune-{VERSION}.jar"
@@ -79,6 +79,8 @@ NEW_PREFIXES = (
     "assets/hexkagune/models/one_eyed_owl.bin",
     "assets/hexkagune/models/item/",  # 7.0.1: the expansion's item models (Ghoul Meat)
     "assets/hexkagune/sounds/",
+    "assets/hexkagune/geo/",  # 3.6.5: GeckoLib models (Grand Devouring's inside)
+    "assets/hexkagune/animations/",  # 3.6.5: GeckoLib animations
     "data/hexkagune/",
 )
 
