@@ -37,14 +37,25 @@ public final class GrandDevour {
     public static final int FED = KILL + DIGEST + SINK;
     public static final int END = FED + RETURN;
     /** Points along its arch, and control points of its whole spine (the root, out of his back, the arch, its head's three). */
-    static final int ARCH = 10;
+    static final int ARCH = 14;
     static final int POINTS = ARCH + 5;
+    /**
+     * The owner: "it's not progressively getting bigger at all it jumps into a massive size  insantly". It swells on through its rise and
+     * while it arches over: its body all the way by {@link #GROWN}, its mouth (the bell round the cavity) by the time it is over its victim.
+     */
+    public static final int GROWN = RISE + REACH / 2;
+    /**
+     * Its arch's crest, where it hangs its mouth down over its victim (the owner's drawing): this far along the way to its head, and as
+     * high over the back of its head as this share of the rest of the way (most of a quarter turn down into it).
+     */
+    static final double CREST_AT = 0.4;
+    static final double CREST_RISE = 0.55;
 
     private GrandDevour() {
     }
 
-    /** One feeding worm this frame: its shape, its swelling, the girth it is kept clear of his body by. */
-    public record Feeding(MawMotion.Shape shape, MawWorm.Feed feed, double clearGirth) {
+    /** One feeding worm this frame: its shape and its swelling (3.6.3: kept clear of his body by its own feeding radii, {@code MawMotion.around}). */
+    public record Feeding(MawMotion.Shape shape, MawWorm.Feed feed) {
     }
 
     // ---------------------------------------------------------------- its size, from its victim's
@@ -105,18 +116,19 @@ public final class GrandDevour {
         double bodyR = body(width, height);
         MawMotion.Shape rest = MawMotion.framed(worms, i, MawMotion.idle(time, seed));
         double[][] idle = resample(rest.path(), POINTS);
-        double swell = age < RISE ? GraftMesh.smooth(GraftMesh.clamp01(age / RISE)) : age < FED ? 1.0
+        double swell = age < GROWN ? GraftMesh.smooth(GraftMesh.clamp01(age / GROWN)) : age < FED ? 1.0
             : 1.0 - GraftMesh.smooth(GraftMesh.clamp01((age - FED) / RETURN));
-        double head = age < RISE ? GraftMesh.smooth(GraftMesh.clamp01((age - 5.0) / (RISE - 5.0)))
-            : age < KILL ? 1.0
-            // Emptied as the bulge leaves it, the bell shrinks back (a little of it kept until he is fed).
-            : age < FED ? 1.0 - 0.75 * GraftMesh.smooth(GraftMesh.clamp01((age - KILL) / (DIGEST * 0.4)))
-            : 0.25 * (1.0 - GraftMesh.smooth(GraftMesh.clamp01((age - FED) / RETURN)));
-        MawWorm.Feed probe = new MawWorm.Feed(hole, depth, bodyR, swell, head, 0.0, 0.0, 0.0);
+        // Swollen until the bulge is in him (the owner: "Once the digestion animation finishes, the tentacle gradually returns to its normal
+        // size and position").
+        double head = age < RISE + REACH ? GraftMesh.smooth(GraftMesh.clamp01((age - 5.0) / (RISE + REACH - 5.0)))
+            : age < FED ? 1.0
+            : 1.0 - GraftMesh.smooth(GraftMesh.clamp01((age - FED) / RETURN));
+        MawWorm.Feed probe = new MawWorm.Feed(hole, depth, bodyR, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0);
         double headLen = depth + 0.3 * probe.headRadius();
-        // Its poses, each one smooth arch out of his back and over into its head (the owner's drawing): reared up, hanging open over its
-        // victim, down over it, and carried up shut with it inside while it digests.
-        double[][] raised = raised(side, victim, hole, depth, headLen);
+        // Its poses, each one smooth arch out of his back, leaning back as it leaves it and curving over into its head (the owner's
+        // drawing, and: "when I said arch smoothly the image describes exactly what I mean"): reared up over him, hanging open over its
+        // victim, down over it, and shut with it inside, lifted a little, while it digests.
+        double[][] raised = raised(side, victim, headLen);
         double[][] over = hang(side, victim, headLen, height + 0.3 + 0.1 * height);
         double[][] down = hang(side, victim, headLen, -0.05 + lift(age, height));
         double[][] carry = carry(side, victim, height, headLen);
@@ -137,36 +149,36 @@ public final class GrandDevour {
             // The jaws close slowly under it (its feet drawn up past them).
             open = 1.0 - 0.92 * GraftMesh.smooth((age - CAUGHT) / TRAPPED);
         } else if (age < KILL) {
-            double k = GraftMesh.smooth((age - SHUT) / SWALLOW);
+            // The gulp: it stays down over it until it is in out of sight, then lifts.
+            double k = GraftMesh.smooth(GraftMesh.clamp01((age - SHUT - SWALLOW * 0.35) / (SWALLOW * 0.65)));
             path = mix(down, carry, k);
-            open = 0.08 * (1.0 - k);
+            open = 0.08 * (1.0 - GraftMesh.smooth((age - SHUT) / SWALLOW));
         } else if (age < FED) {
-            // Shut, held up in its arch while the bulge runs down it, swaying a little as it works.
-            path = sway(carry, time, seed, 0.12);
+            // Shut, held in its arch while the bulge runs down it, swaying a little as it works (eased in).
+            path = sway(carry, time, seed, 0.12 * GraftMesh.smooth(GraftMesh.clamp01((age - KILL) / 20.0)));
             open = 0.0;
         } else {
             path = mix(sway(carry, time, seed, 0.12), idle, GraftMesh.smooth(GraftMesh.clamp01((age - FED) / RETURN)));
             open = rest.aperture() * GraftMesh.smooth(GraftMesh.clamp01((age - FED) / RETURN));
         }
-        // The bulge: forming in the head as it gulps, down the whole worm, into his back.
-        double bulgeR = bulge(width, height);
-        double bulge = 0.0;
+        // The bulge: forming at the back of its cavity as it gulps, down the whole worm, into his back.
+        double bulgeShown = 0.0;
         double bulgeAt = 1.0;
         double length = length(path);
-        double inHead = GraftMesh.clamp01(1.0 - (0.5 * depth) / Math.max(0.5, length));
+        double inHead = GraftMesh.clamp01(1.0 - (0.85 * depth) / Math.max(0.5, length));
         if (age >= KILL - SWALLOW * 0.5 && age < FED) {
-            bulge = bulgeR * GraftMesh.smooth(GraftMesh.clamp01((age - (KILL - SWALLOW * 0.5)) / (SWALLOW * 0.5)));
+            bulgeShown = GraftMesh.smooth(GraftMesh.clamp01((age - (KILL - SWALLOW * 0.5)) / (SWALLOW * 0.5)));
             double run = GraftMesh.smooth(GraftMesh.clamp01((age - KILL) / DIGEST));
             bulgeAt = inHead + (0.03 - inHead) * run;
             if (age >= KILL + DIGEST) {
                 // Into his back: it shrinks away into him.
-                bulge *= 1.0 - GraftMesh.smooth(GraftMesh.clamp01((age - KILL - DIGEST) / SINK));
-                bulgeAt = 0.03 * (1.0 - GraftMesh.smooth(GraftMesh.clamp01((age - KILL - DIGEST) / SINK)));
+                double sunk = GraftMesh.smooth(GraftMesh.clamp01((age - KILL - DIGEST) / SINK));
+                bulgeShown *= 1.0 - sunk;
+                bulgeAt = 0.03 * (1.0 - sunk);
             }
         }
-        MawWorm.Feed feed = new MawWorm.Feed(hole, depth, bodyR, swell, head, bulgeAt, bulge, bulgeLength(width, height));
-        double clear = 1.0 + (bodyR / MawWorm.BODY_RADIUS - 1.0) * swell;
-        return new Feeding(new MawMotion.Shape(path, MawMotion.dorsal(), GraftMesh.clamp01(open)), feed, clear);
+        MawWorm.Feed feed = new MawWorm.Feed(hole, depth, bodyR, swell, head, bulgeAt, bulge(width, height), bulgeLength(width, height), bulgeShown);
+        return new Feeding(new MawMotion.Shape(path, MawMotion.dorsal(), GraftMesh.clamp01(open)), feed);
     }
 
     /** Out of his back, its arch's foot: just out of the root to its side, a little up and back. */
@@ -174,56 +186,64 @@ public final class GrandDevour {
         return new double[] {MawMotion.ROOT[0] + side * 0.3, MawMotion.ROOT[1] + 0.3, MawMotion.ROOT[2] - 0.32};
     }
 
-    /** The way its arch leaves his back: up, out to its side and back. */
+    /** The way its arch leaves his back (the owner, on its going straight up: "the kagune is literally VERTICAL from the point of origin"): back and up, leaning out to its side. */
     static double[] rising(double side) {
-        return GraftMesh.normalize(new double[] {side * 0.35, 1.0, -0.45});
+        return GraftMesh.normalize(new double[] {side * 0.4, 0.62, -0.68});
     }
 
-    /** Reared up high over its own side, its head turned toward its victim and a little up, gaping. */
-    static double[][] raised(double side, double[] victim, double hole, double depth, double headLen) {
-        double[] crest = {side * 0.9, 3.6 + 0.5 * hole + 0.35 * depth, -0.3};
-        double[] dir = GraftMesh.normalize(GraftMesh.add(GraftMesh.mul(level(GraftMesh.sub(victim, crest)), 0.85), new double[] {0.0, 0.3, 0.0}));
-        double[] mouth = GraftMesh.add(crest, GraftMesh.mul(dir, 0.3 * headLen));
-        double[] back = GraftMesh.sub(mouth, GraftMesh.mul(dir, headLen));
-        return build(side, back, dir, mouth, 0.55);
+    /**
+     * Reared up over him: the back of its head over and a little behind his back, its head turned up and out toward its victim, gaping
+     * (its arch leaning back out of his back and curling up into it).
+     */
+    static double[][] raised(double side, double[] victim, double headLen) {
+        double[] from = exit(side);
+        double[] back = {from[0] + side * 0.4, from[1] + 1.6 + 0.35 * headLen, from[2] - 0.4 - 0.15 * headLen};
+        double[] dir = GraftMesh.normalize(GraftMesh.add(GraftMesh.mul(level(GraftMesh.sub(victim, back)), 0.75), new double[] {0.0, 0.65, 0.0}));
+        double[] mouth = GraftMesh.add(back, GraftMesh.mul(dir, headLen));
+        return build(side, back, dir, mouth, false);
     }
 
     /** Its mouth hanging open straight down, {@code rim} blocks over its victim's feet (over its head, or down over it to the ground). */
     static double[][] hang(double side, double[] victim, double headLen, double rim) {
         double[] mouth = {victim[0], victim[1] + rim, victim[2]};
         double[] back = GraftMesh.add(mouth, new double[] {0.0, headLen, 0.0});
-        return build(side, back, new double[] {0.0, -1.0, 0.0}, mouth, 0.0);
+        return build(side, back, new double[] {0.0, -1.0, 0.0}, mouth, true);
     }
 
-    /** Shut with its victim inside, its head lifted off the ground and drawn a little back toward him, hanging down and forward. */
+    /** Shut with its victim inside: its head lifted a little off the ground where it caught it, tilted a little out, its arch over to it. */
     static double[][] carry(double side, double[] victim, double height, double headLen) {
-        double[] mouth = {victim[0] * 0.75 + side * 0.25, victim[1] + 0.45 * height + 1.5, victim[2] * 0.75};
-        double[] dir = GraftMesh.normalize(GraftMesh.add(new double[] {0.0, -1.0, 0.0}, GraftMesh.mul(level(mouth), 0.45)));
+        double[] mouth = {victim[0] * 0.92, victim[1] + 0.2 * height + 0.6, victim[2] * 0.92};
+        double[] dir = GraftMesh.normalize(GraftMesh.add(new double[] {0.0, -1.0, 0.0}, GraftMesh.mul(level(mouth), 0.25)));
         double[] back = GraftMesh.sub(mouth, GraftMesh.mul(dir, headLen));
-        return build(side, back, dir, mouth, 0.0);
+        return build(side, back, dir, mouth, true);
     }
 
     /**
-     * Its spine: the root, out of his back, one smooth arch (a curve with no corner: up out of his back, over, and coming round into its
-     * head along {@code dir}) to the back of its head {@code back}, then its head straight on to its mouth. {@code reach} 0: the arch
-     * goes high over (a head hanging down); more: it comes in from behind (a head turned forward).
+     * Its spine: the root, out of his back, one smooth arch to the back of its head {@code back} (arriving along {@code dir}), then its head
+     * straight on to its mouth. The arch is made of circular arcs meeting without a corner: leaving his back leaning back and up
+     * ({@link #rising}) and curving over; {@code crest}: through a crest on the way, level there, before it turns down into its head
+     * (a mouth hanging down over its victim), or else straight round into its head (a head turned toward its victim).
      */
-    static double[][] build(double side, double[] back, double[] dir, double[] mouth, double reach) {
+    static double[][] build(double side, double[] back, double[] dir, double[] mouth, boolean crest) {
         double[] from = exit(side);
         double[] up = rising(side);
-        double span = Math.hypot(back[0] - from[0], back[2] - from[2]);
-        // As high over as it is long (the owner: "dont be afraid to make it stretch arch longer"): the arch's top well over both its feet.
-        double top = Math.max(from[1], back[1]) + 1.1 + 0.35 * span;
-        double a = Math.max(0.8, (top - from[1]) * 1.25);
-        double b = reach > 0.0 ? Math.max(0.8, reach * GraftMesh.length3(GraftMesh.sub(back, from))) : Math.max(0.6, (top - back[1]) * 1.25);
-        double[] c1 = GraftMesh.add(from, GraftMesh.mul(up, a));
-        double[] c2 = GraftMesh.sub(back, GraftMesh.mul(dir, b));
-        double[][] arch = bezier(from, c1, c2, back, ARCH);
+        java.util.List<double[]> dense = new java.util.ArrayList<>();
+        dense.add(from.clone());
+        if (crest) {
+            double[] flat = level(GraftMesh.sub(back, from));
+            double span = Math.hypot(back[0] - from[0], back[2] - from[2]);
+            double[] top = GraftMesh.add(from, GraftMesh.mul(flat, CREST_AT * span));
+            top[1] = Math.max(back[1] + CREST_RISE * (1.0 - CREST_AT) * span + 0.25, from[1] + 1.0 + 0.25 * span);
+            biarc(dense, from, up, top, flat, 40);
+            biarc(dense, top, flat, back, dir, 40);
+        } else {
+            biarc(dense, from, up, back, dir, 60);
+        }
+        double[][] arch = resample(dense.toArray(new double[0][]), ARCH + 1);
         double[][] out = new double[POINTS][];
         out[0] = MawMotion.ROOT.clone();
-        out[1] = from;
-        for (int k = 0; k < ARCH; k++) {
-            out[2 + k] = arch[k];
+        for (int k = 0; k <= ARCH; k++) {
+            out[1 + k] = arch[k];
         }
         out[2 + ARCH] = GraftMesh.lerp(back, mouth, 1.0 / 3.0);
         out[3 + ARCH] = GraftMesh.lerp(back, mouth, 2.0 / 3.0);
@@ -231,33 +251,59 @@ public final class GrandDevour {
         return out;
     }
 
-    /** A cubic curve from {@code p0} to {@code p3}, {@code n} points along it evenly by length (the first after {@code p0}, the last {@code p3}). */
-    static double[][] bezier(double[] p0, double[] p1, double[] p2, double[] p3, int n) {
-        int fine = 96;
-        double[][] ps = new double[fine + 1][];
-        double[] at = new double[fine + 1];
-        for (int i = 0; i <= fine; i++) {
-            double u = i / (double)fine;
-            double v = 1.0 - u;
-            ps[i] = new double[3];
-            for (int k = 0; k < 3; k++) {
-                ps[i][k] = v * v * v * p0[k] + 3 * v * v * u * p1[k] + 3 * v * u * u * p2[k] + u * u * u * p3[k];
-            }
-            if (i > 0) {
-                at[i] = at[i - 1] + GraftMesh.length3(GraftMesh.sub(ps[i], ps[i - 1]));
-            }
+    /**
+     * Two circular arcs from {@code p0} (leaving along {@code t0}) to {@code p1} (arriving along {@code t1}; both unit), meeting without a
+     * corner: {@code n} points each after {@code p0} into {@code out}, the last {@code p1}.
+     */
+    static void biarc(java.util.List<double[]> out, double[] p0, double[] t0, double[] p1, double[] t1, int n) {
+        double[] v = GraftMesh.sub(p1, p0);
+        double vv = GraftMesh.dot(v, v);
+        if (vv < 1.0E-12) {
+            out.add(p1.clone());
+            return;
         }
-        double[][] out = new double[n][];
-        int j = 0;
+        double denom = 2.0 * (1.0 - GraftMesh.dot(t0, t1));
+        double d;
+        if (denom < 1.0E-6) {
+            double vt = GraftMesh.dot(v, t1);
+            d = Math.abs(vt) < 1.0E-9 ? 0.5 * Math.sqrt(vv) : vv / (4.0 * vt);
+        } else {
+            double vt = GraftMesh.dot(v, GraftMesh.add(t0, t1));
+            d = (-vt + Math.sqrt(vt * vt + denom * vv)) / denom;
+        }
+        double[] joint = GraftMesh.mul(GraftMesh.add(GraftMesh.add(p0, p1), GraftMesh.mul(GraftMesh.sub(t0, t1), d)), 0.5);
+        arc(out, p0, t0, joint, n);
+        // The second from its far end backward, then turned round.
+        java.util.List<double[]> back = new java.util.ArrayList<>();
+        arc(back, p1, GraftMesh.mul(t1, -1.0), joint, n);
+        for (int k = back.size() - 2; k >= 0; k--) {
+            out.add(back.get(k));
+        }
+        out.add(p1.clone());
+    }
+
+    /** A circular arc from {@code a} (leaving along {@code t}, unit) to {@code b}: {@code n} points after {@code a} into {@code out}, the last {@code b}. */
+    static void arc(java.util.List<double[]> out, double[] a, double[] t, double[] b, int n) {
+        double[] c = GraftMesh.sub(b, a);
+        double len = GraftMesh.length3(c);
+        double along = GraftMesh.dot(c, t);
+        double[] aside = GraftMesh.sub(c, GraftMesh.mul(t, along));
+        double off = GraftMesh.length3(aside);
+        if (len < 1.0E-9 || off < 1.0E-6 * len) {
+            for (int k = 1; k <= n; k++) {
+                out.add(GraftMesh.lerp(a, b, k / (double)n));
+            }
+            return;
+        }
+        double[] normal = GraftMesh.mul(aside, 1.0 / off);
+        double half = Math.atan2(off / len, along / len);
+        double radius = len / (2.0 * (off / len));
+        double[] centre = GraftMesh.add(a, GraftMesh.mul(normal, radius));
         for (int k = 1; k <= n; k++) {
-            double want = at[fine] * k / n;
-            while (j < fine - 1 && at[j + 1] < want) {
-                j++;
-            }
-            double seg = Math.max(1.0E-9, at[j + 1] - at[j]);
-            out[k - 1] = GraftMesh.lerp(ps[j], ps[j + 1], GraftMesh.clamp01((want - at[j]) / seg));
+            double phi = 2.0 * half * k / n;
+            out.add(k == n ? b.clone() : GraftMesh.add(centre, GraftMesh.add(GraftMesh.mul(normal, -radius * Math.cos(phi)),
+                GraftMesh.mul(t, radius * Math.sin(phi)))));
         }
-        return out;
     }
 
     /** A slow sway through its arch (its head and its middle, never its root), {@code amount} blocks. */

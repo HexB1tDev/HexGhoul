@@ -52,8 +52,9 @@ final class WeaponLayer extends RenderLayer<CcgAgent, PlayerModel<CcgAgent>> {
     @Override
     public void m_6494_(PoseStack pose, MultiBufferSource buffers, int light, CcgAgent agent, float limbSwing, float limbSwingAmount, float partial,
                         float ageInTicks, float netHeadYaw, float headPitch) {
-        if (agent.m_20145_() || agent.m_9236_() == null) {
-            return;
+        if (agent.m_20145_() || agent.m_9236_() == null
+            || com.hex.kagune.control.client.BikakuClient.devoured(agent.m_19879_(), com.hex.kagune.control.client.PaleClient.clock(partial)) >= 0.0) {
+            return; // 3.6.3: devoured (Grand Devouring): its weapon gone from view at once
         }
         Arm arm = agent.weapon();
         if (arm == null || !agent.m_21205_().m_41619_()) {

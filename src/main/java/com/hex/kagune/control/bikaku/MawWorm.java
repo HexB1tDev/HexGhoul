@@ -39,9 +39,11 @@ public final class MawWorm {
      * stretching its jaws unnaturally wide and exposing multiple rows of sharp teeth"): a worm swollen to feed. Its body thickened to
      * {@code body} (radius, blocks) {@code swell} of the way; its head grown {@code head} of the way into a great bell of a mouth round a
      * cavity {@code hole} wide (radius) and {@code depth} deep, rows of teeth down its walls; a bulge {@code bulge} thick (radius) and
-     * {@code bulgeLength} long at {@code bulgeAt} (0 the root .. 1 the mouth, by length), the flesh stretched over it. All in blocks.
+     * {@code bulgeLength} long at {@code bulgeAt} (0 the root .. 1 the mouth, by length), the flesh stretched over it, {@code bulgeShown} of
+     * the way formed (0 none, 1 all of it; it forms as it is swallowed and goes as it sinks into him). All in blocks.
      */
-    public record Feed(double hole, double depth, double body, double swell, double head, double bulgeAt, double bulge, double bulgeLength) {
+    public record Feed(double hole, double depth, double body, double swell, double head, double bulgeAt, double bulge, double bulgeLength,
+                       double bulgeShown) {
         /** The wall of the bell round its cavity. */
         public double wall() {
             return 0.16 + 0.14 * this.hole;
@@ -170,40 +172,62 @@ public final class MawWorm {
     }
 
     /**
-     * 3.6.3: a feeding worm's radius {@code u} of the way along it ({@link Feed}): out of his back narrow, thickening into its swollen
-     * body; over its last stretch the bell round the cavity, rounding into the lip at the mouth and into the neck behind; the bulge where
-     * it is, the flesh stretched over it and squeezed in just behind it (pushing it on).
+     * 3.6.3: a feeding worm's radius {@code u} of the way along it ({@link Feed}): out of his back as thin as a plain worm, growing steadily
+     * the whole way along it into the bell round the cavity ({@link #horn}), rounding into the lip at the mouth; the bulge where it is, the
+     * flesh stretched over it and squeezed in just behind it (pushing it on).
      */
     public static double feedRadius(double u, double length, double open, Feed feed) {
         double normal = radius(u, length, open);
         double at = GraftMesh.clamp01(u) * length;
-        double from = Math.max(0.0, length - at);
-        double bodyR = BODY_RADIUS + (Math.max(BODY_RADIUS, feed.body()) - BODY_RADIUS) * GraftMesh.clamp01(feed.swell());
-        double swollen = normal * bodyR / BODY_RADIUS;
-        double r = swollen;
-        double head = GraftMesh.clamp01(feed.head());
-        if (head > 0.0) {
-            double headR = feed.headRadius();
-            double rootR = Math.max(ROOT_RADIUS, 0.35 * bodyR);
-            double base = rootR + (bodyR - rootR) * GraftMesh.smooth(at / (0.6 + bodyR));
-            double back = feed.depth() + 0.15 * headR;
-            double taper = 0.55 * headR + 0.3;
-            double bell = GraftMesh.smooth(GraftMesh.clamp01((back + taper - from) / taper));
-            double target = base + (headR - base) * bell;
-            // Its last stretch rounds into the lip, wide or shut.
-            double lip = mouthScale(feed, 1.0) * lipRadius(open);
-            double rim = Math.max(0.12, feed.wall() * 0.8);
-            double into = GraftMesh.smooth(GraftMesh.clamp01((rim - from) / rim));
-            target += (lip - target) * into;
-            r = swollen + (target - swollen) * head;
-        }
-        if (feed.bulge() > 0.0 && feed.bulgeLength() > 0.0) {
-            double x = (at - feed.bulgeAt() * length) / (0.5 * feed.bulgeLength());
-            double shape = Math.exp(-x * x);
-            double squeeze = 1.0 - 0.14 * Math.exp(-(x + 1.7) * (x + 1.7)) * Math.min(1.0, feed.bulge() / Math.max(0.05, bodyR));
-            r = Math.max(r * squeeze, feed.bulge() * shape) + 0.07 * feed.bulge() * shape;
+        double r = normal + (horn(at, length, open, feed) - normal) * GraftMesh.clamp01(feed.swell());
+        double shown = GraftMesh.clamp01(feed.bulgeShown());
+        if (shown > 0.0 && feed.bulge() > 0.0 && feed.bulgeLength() > 0.0) {
+            // The body swallowed, squeezed thinner and longer as the worm narrows toward his back (as a snake's prey), always wider than
+            // the worm round it; over its last stretch into his back it is taken in, down to just wider than the worm there.
+            double centre = GraftMesh.clamp01(feed.bulgeAt()) * length;
+            double round = Math.max(BODY_RADIUS, horn(centre, length, open, feed));
+            double fit = Math.pow(GraftMesh.clamp01(round / Math.max(BODY_RADIUS, feed.headRadius())), 0.3);
+            double b = Math.min(Math.max(1.45 * round, feed.bulge() * fit), 3.0 * round + 0.2);
+            b = (1.3 * round + (b - 1.3 * round) * GraftMesh.smooth(GraftMesh.clamp01(centre / (BULGE_TAKEN_IN + feed.bulge())))) * shown;
+            // The body's length, its ends falling off sharply; nowhere more than half again as wide as the worm round it, and none of it
+            // in its first half block out of his back (it goes into him there).
+            double x = (at - centre) / (0.5 * feed.bulgeLength());
+            double room = GraftMesh.smooth(GraftMesh.clamp01((at - 0.45) / 1.2));
+            double here = Math.min(b * Math.exp(-x * x * x * x), r * (1.0 + 0.6 * room) + 0.08 * room);
+            double squeeze = 1.0 - 0.14 * Math.exp(-(x + 1.7) * (x + 1.7)) * shown;
+            r = Math.max(r * squeeze, here) + 0.07 * here;
         }
         return r;
+    }
+
+    /** 3.6.3: how far out of his back (blocks) a feeding worm is still a plain worm's size; how much of its head the bell rises over. */
+    static final double FEED_PLAIN = 0.6;
+    static final double BELL_RISE = 0.35;
+    /** 3.6.3: over its last this many blocks into his back (and its own radius more) the bulge is taken in (the owner on its root: "its not meant to be that big"). */
+    static final double BULGE_TAKEN_IN = 3.0;
+
+    /** 3.6.3: a feeding worm's bell (outer radius) as far as its head has grown. */
+    static double bell(Feed feed) {
+        return HEAD_RADIUS + (feed.headRadius() - HEAD_RADIUS) * GraftMesh.clamp01(feed.head());
+    }
+
+    /**
+     * 3.6.3 (the owner: "why is it not arching and progressively increasing size, it's doing all at once", and on its root: "its not meant
+     * to be that big at all, never even close"): a feeding worm's shape {@code at} blocks along it ({@code length} long), swollen: out of
+     * his back a plain worm's thickness, then growing steadily all the way along it (slowly at first) to its bell's width a little way
+     * into its head, the bell round the cavity to the mouth, rounding into its lip.
+     */
+    static double horn(double at, double length, double open, Feed feed) {
+        double head = GraftMesh.clamp01(feed.head());
+        double bell = bell(feed);
+        double headLength = 0.62 + (feed.depth() + 0.15 * feed.headRadius() - 0.62) * head;
+        double full = Math.max(FEED_PLAIN + 0.5, length - (1.0 - BELL_RISE) * headLength);
+        double base = ROOT_RADIUS + (BODY_RADIUS - ROOT_RADIUS) * GraftMesh.smooth(GraftMesh.clamp01(at / 0.6));
+        double r = base + (bell - BODY_RADIUS) * GraftMesh.smooth(GraftMesh.clamp01((at - FEED_PLAIN) / (full - FEED_PLAIN)));
+        double from = Math.max(0.0, length - at);
+        double lip = mouthScale(feed, 1.0) * lipRadius(open);
+        double rim = 0.09 + (Math.max(0.12, feed.wall() * 0.8) - 0.09) * head;
+        return r + (lip - r) * GraftMesh.smooth(GraftMesh.clamp01((rim - from) / rim));
     }
 
     /**

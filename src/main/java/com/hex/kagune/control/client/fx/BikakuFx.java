@@ -1,6 +1,7 @@
 package com.hex.kagune.control.client.fx;
 
 import com.hex.kagune.control.bikaku.BikakuMove;
+import com.hex.kagune.control.bikaku.GrandDevour;
 import com.hex.kagune.control.bikaku.MawMotion;
 import com.hex.kagune.control.client.BikakuClient;
 import com.hex.kagune.control.client.PaleClient;
@@ -61,8 +62,14 @@ public final class BikakuFx {
             } catch (RuntimeException failure) {
                 SEEN.remove(player.m_36316_().getId());
             }
+            try {
+                devour(player, clock);
+            } catch (RuntimeException failure) {
+                WET.remove(player.m_36316_().getId());
+            }
         }
         SEEN.keySet().retainAll(here);
+        WET.keySet().retainAll(here);
     }
 
     private static void eruption(Minecraft minecraft, ClientLevel level, AbstractClientPlayer player, double clock) {
@@ -170,6 +177,85 @@ public final class BikakuFx {
             Vec3 v = new Vec3(RANDOM.nextDouble() - 0.5, 0.8 + RANDOM.nextDouble() * 0.7, RANDOM.nextDouble() - 0.5).m_82490_(0.3 + 0.25 * RANDOM.nextDouble());
             RcFx.at(RcFx.ASH, false, 22 + RANDOM.nextInt(14), at).velocity(v).colors(RANDOM.nextBoolean() ? FLESH : FLESH_DARK, RcFx.clear(FLESH_DARK))
                 .size(0.22F, 0.14F).fall(0.06F).spawn();
+        }
+    }
+
+    // ---------------------------------------------------------------- 3.6.3: Grand Devouring
+
+    /** 3.6.3: each feeding seen (when it began, how far into it the last tick was). */
+    private static final Map<UUID, double[]> WET = new HashMap<>();
+    static final int SALIVA = 0xD8D9B9B0;
+    static final int SALIVA_FADE = 0x00A07870;
+
+    /**
+     * 3.6.3, Grand Devouring's wet (the owner: "Include appropriate wet biological sounds", and the libraries "to smooth out the mod"):
+     * drool off its mouth as it hangs open over its victim, a splash as it comes down over it, drips while the jaws close, a spray as they
+     * shut and at the gulp; more for a bigger mouth. Where its mouth is comes from the same feeding the worm is drawn by.
+     */
+    private static void devour(AbstractClientPlayer player, double clock) {
+        UUID id = player.m_36316_().getId();
+        BikakuClient.View view = BikakuClient.isBikaku(player) ? BikakuClient.get(player) : null;
+        double age = view == null ? -1.0 : view.devourAge(clock);
+        if (view == null || age < 0.0 || age >= GrandDevour.KILL || view.devourSpot() == null || !RcFx.near(player.m_20182_(), RANGE)) {
+            WET.remove(id);
+            return;
+        }
+        double[] seen = WET.computeIfAbsent(id, ignored -> new double[] {view.devourAt(), age});
+        if (seen[0] != view.devourAt()) {
+            seen[0] = view.devourAt();
+            seen[1] = age;
+        }
+        int last = (int)Math.floor(seen[1]);
+        int now = (int)Math.floor(age);
+        seen[1] = age;
+        if (now <= last) {
+            return;
+        }
+        double yaw = Math.toRadians(player.f_20883_);
+        double[] spot = view.devourSpot();
+        int count = view.kakuja() ? 1 : view.form().worms();
+        GrandDevour.Feeding feeding = GrandDevour.at(clock, 0, count, Math.max(0, view.devourWorm()), rig(player, yaw, new Vec3(spot[0], spot[1],
+            spot[2])), view.devourWidth(), view.devourHeight(), age);
+        double[][] path = feeding.shape().path();
+        Vec3 mouth = world(player, yaw, path[path.length - 1]);
+        double hole = GrandDevour.hole(view.devourWidth(), view.devourHeight());
+        for (int tick = Math.max(0, last + 1); tick <= now; tick++) {
+            if (tick >= GrandDevour.RISE && tick < GrandDevour.CAUGHT && tick % 3 == 0) {
+                drool(mouth, hole, 2);
+            } else if (tick == GrandDevour.CAUGHT) {
+                splash(mouth, hole, 16);
+            } else if (tick > GrandDevour.CAUGHT && tick < GrandDevour.SHUT && tick % 6 == 0) {
+                drool(mouth, hole * feeding.shape().aperture(), 2);
+            } else if (tick == GrandDevour.SHUT) {
+                splash(mouth, hole * 0.5, 10);
+            } else if (tick == GrandDevour.SHUT + GrandDevour.SWALLOW / 2) {
+                splash(mouth, hole * 0.4, 10); // the gulp
+            }
+        }
+    }
+
+    /** Drops of drool falling off the rim of its mouth. */
+    private static void drool(Vec3 mouth, double hole, int wanted) {
+        int n = RcFx.count(wanted * (float)(0.6 + hole));
+        for (int i = 0; i < n; i++) {
+            double a = RANDOM.nextDouble() * Math.PI * 2.0;
+            double r = Math.max(0.15, hole) * (0.6 + 0.35 * RANDOM.nextDouble());
+            Vec3 at = mouth.m_82520_(Math.cos(a) * r, -0.05, Math.sin(a) * r);
+            RcFx.at(RcFx.MOTE, false, 26 + RANDOM.nextInt(14), at).velocity(new Vec3(0.0, -0.02, 0.0)).colors(SALIVA, RcFx.clear(SALIVA_FADE))
+                .size(0.12F, 0.06F).fall(0.04F).spawn();
+        }
+    }
+
+    /** Spit and blood thrown out round its mouth. */
+    private static void splash(Vec3 mouth, double hole, int wanted) {
+        int n = RcFx.count(wanted * (float)(0.6 + hole));
+        for (int i = 0; i < n; i++) {
+            double a = RANDOM.nextDouble() * Math.PI * 2.0;
+            Vec3 out = new Vec3(Math.cos(a), 0.0, Math.sin(a));
+            Vec3 at = mouth.m_82549_(out.m_82490_(Math.max(0.15, hole) * 0.9));
+            Vec3 v = out.m_82490_(0.08 + 0.1 * RANDOM.nextDouble()).m_82520_(0.0, 0.06 + 0.08 * RANDOM.nextDouble(), 0.0);
+            RcFx.at(RcFx.ASH, false, 20 + RANDOM.nextInt(12), at).velocity(v).colors(RANDOM.nextBoolean() ? FLESH : SALIVA, RcFx.clear(FLESH_DARK))
+                .size(0.18F, 0.1F).fall(0.06F).spawn();
         }
     }
 

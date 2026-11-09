@@ -1,5 +1,7 @@
 package com.hex.kagune.control;
 
+import com.hex.kagune.control.bikaku.GrandDevour;
+import com.hex.kagune.control.graft.GraftMesh;
 import com.hex.kagune.control.bikaku.MawMotion;
 import com.hex.kagune.control.bikaku.MawWorm;
 import com.hex.kagune.control.ukaku.KakujaModel;
@@ -38,6 +40,7 @@ public final class BikakuWormTests {
         forms();
         formMoves();
         walker();
+        devour();
         System.out.println("Bikaku worm tests: " + passed + " checks passed");
     }
 
@@ -860,6 +863,159 @@ public final class BikakuWormTests {
     }
 
     private static final double[] PREY_AT = {0.1, 0.99, 3.6};
+
+    /**
+     * 3.6.3, Grand Devouring (the owner's words in docs/handoff/owner-words-mutations.md), for a player-sized body, a small mob and a giant
+     * 12 tall, by every worm of every form, drawn as the game draws it: every frame finite and never jumping; never through him; the body
+     * inside the worm (never clipping out of the mouth) from just after it is caught until it is out of sight; the worm busy until the
+     * end; the bulge forming as it gulps and running down to his back, never back up. And the owner's reports on its shape: thin out of his
+     * back ("its not meant to be that big at all, never even close"), growing steadily along its whole length with no jump ("it's not
+     * progressively getting bigger at all it jumps into a massive size  insantly"), leaving his back leaning back, not straight up ("the
+     * kagune is literally VERTICAL from the point of origin"), the bulge taken in at his back; growing over time, never all at once.
+     */
+    private static void devour() {
+        double[][] sizes = {{0.6, 1.8}, {0.4, 0.7}, {3.6, 12.0}};
+        double[][] spots = {{0.4, 0.0, 4.2}, {1.2, 0.0, 3.0}, {0.0, 0.0, 9.0}};
+        for (int k = 0; k < sizes.length; k++) {
+            double width = sizes[k][0];
+            double height = sizes[k][1];
+            for (int worms = 1; worms <= 3; worms++) {
+                for (int i = 0; i < worms; i++) {
+                    double[][] last = null;
+                    double lastAt = 2.0;
+                    double lastSwell = -1.0;
+                    for (double age = 0.0; age <= GrandDevour.END + 0.5; age += 0.5) {
+                        GrandDevour.Feeding f = GrandDevour.at(100 + age, 7, worms, i, spots[k], width, height, age);
+                        MawWorm.Feed feed = f.feed();
+                        double open = f.shape().aperture();
+                        double[][] raw = f.shape().path();
+                        double[][] drawn = MawMotion.around(raw, 1.0, open, feed);
+                        String at = " (" + width + " by " + height + ", worm " + i + " of " + worms + ", at " + age + ")";
+                        boolean finite = true;
+                        for (double[] q : drawn) {
+                            finite &= Double.isFinite(q[0]) && Double.isFinite(q[1]) && Double.isFinite(q[2]);
+                        }
+                        check(finite, "every point of it is finite" + at);
+                        check(Math.abs(raw[0][0] - MawMotion.ROOT[0]) < 1.0E-9 && Math.abs(raw[0][1] - MawMotion.ROOT[1]) < 1.0E-9,
+                            "it leaves him at the worms' root" + at);
+                        if (last != null) {
+                            double jump = moved(last, drawn);
+                            check(jump < 0.3 + 0.1 * height, "it never jumps (" + jump + ")" + at);
+                        }
+                        last = drawn;
+                        check(GrandDevour.busy(age) == (age < GrandDevour.END), "its worm does nothing else until it is done" + at);
+                        check(depthInHimFed(drawn, open, feed) < 0.04, "it is drawn round him, never through him" + at);
+                        // Growing over time, never all at once, and back again.
+                        check(lastSwell < 0.0 || Math.abs(feed.swell() - lastSwell) < 0.05, "it swells and goes back slowly" + at);
+                        lastSwell = feed.swell();
+                        if (age >= GrandDevour.RISE + GrandDevour.REACH) {
+                            // Out of his back leaning back and up, as the owner's picture (never straight up).
+                            double[] lean = GraftMesh.sub(raw[2], raw[1]);
+                            check(lean[2] < -0.15 * GraftMesh.length3(lean) && lean[1] > 0.0, "it leaves his back leaning back and up" + at);
+                        }
+                        double length = MawWorm.spine(drawn, new double[] {0, 1, 0}, 160).length();
+                        boolean bulging = feed.bulgeShown() > 0.0;
+                        if (!bulging) {
+                            // Thin out of his back: a plain worm's thickness over its first 0.6 blocks.
+                            for (double s = 0.0; s <= 0.6; s += 0.05) {
+                                check(MawWorm.feedRadius(s / length, length, open, feed) <= MawWorm.BODY_RADIUS + 0.01,
+                                    "it is thin out of his back (" + s + ")" + at);
+                            }
+                        }
+                        if (age >= GrandDevour.GROWN && age < GrandDevour.KILL - GrandDevour.SWALLOW) {
+                            // Growing steadily along its whole length into its mouth: never thinner further on, never a jump.
+                            double rim = 0.12 + 0.2 * GrandDevour.hole(width, height);
+                            double before = MawWorm.feedRadius(0.0, length, open, feed);
+                            for (double s = 0.1; s < length - rim; s += 0.1) {
+                                double r = MawWorm.feedRadius(s / length, length, open, feed);
+                                check(r >= before - 1.0E-6, "it only grows toward its mouth (" + s + " of " + length + ")" + at);
+                                check(r - before < 0.07, "it grows steadily, never a jump (" + (r - before) + " over 0.1 at " + s + ")" + at);
+                                before = r;
+                            }
+                        }
+                        if (age >= GrandDevour.CAUGHT + 4 && GrandDevour.shown(age)) {
+                            // Its body is inside it, nothing of it out of the mouth.
+                            double lift = GrandDevour.lift(age, height);
+                            double[] feet = {spots[k][0], spots[k][1] + lift, spots[k][2]};
+                            check(insideWorm(drawn, open, feed, feet, width, height) < -0.02, "the body is inside the mouth" + at);
+                        }
+                        if (age >= GrandDevour.KILL && age < GrandDevour.FED) {
+                            check(bulging && feed.bulgeAt() <= lastAt + 1.0E-9, "the bulge only ever goes down toward his back" + at);
+                            lastAt = feed.bulgeAt();
+                        }
+                        if (age < GrandDevour.KILL - GrandDevour.SWALLOW * 0.5 || age >= GrandDevour.FED) {
+                            check(!bulging, "no bulge before it gulps, none once it is in him" + at);
+                        }
+                        if (bulging && feed.bulgeAt() < 0.1) {
+                            // Taken in at his back: never much wider there than a plain worm.
+                            check(MawWorm.feedRadius(0.02, length, open, feed) < 0.5, "the bulge is taken in at his back" + at);
+                        }
+                    }
+                    check(lastAt < 0.05, "the bulge reached his back" + " (" + width + " by " + height + ")");
+                }
+            }
+        }
+        // Its size from its victim's: a giant's mouth and bulge far bigger than a player's.
+        check(GrandDevour.hole(3.6, 12.0) > 3.0 * GrandDevour.hole(0.6, 1.8) && GrandDevour.bulge(3.6, 12.0) > 2.0 * GrandDevour.bulge(0.6, 1.8),
+            "the mouth and the bulge scale with the body");
+        check(!GrandDevour.busy(-1.0) && !GrandDevour.busy(GrandDevour.END), "busy only while it feeds");
+        // No feed: exactly the plain worm.
+        MawMotion.Shape plain = MawMotion.idle(40, 7);
+        java.util.List<double[]> a = new java.util.ArrayList<>();
+        java.util.List<double[]> b = new java.util.ArrayList<>();
+        MawWorm.build((p0, p1, p2, p3, n, c0, c1, c2, c3) -> a.add(p0), new MawWorm.Pose(plain.path(), plain.dorsal(), 1.0, plain.aperture(), 1.0, 7, 40),
+            0xA50F37, true);
+        MawWorm.build((p0, p1, p2, p3, n, c0, c1, c2, c3) -> b.add(p0), new MawWorm.Pose(plain.path(), plain.dorsal(), 1.0, plain.aperture(), 1.0, 7, 40,
+            null), 0xA50F37, true);
+        boolean same = a.size() == b.size();
+        for (int i = 0; same && i < a.size(); i++) {
+            same = distance(a.get(i), b.get(i)) < 1.0E-12;
+        }
+        check(same, "a worm not feeding is the plain worm");
+    }
+
+    /** {@link #depthInHim} for a feeding worm: by its feeding radii. */
+    private static double depthInHimFed(double[][] path, double open, MawWorm.Feed feed) {
+        KakujaModel.Spine spine = MawWorm.spine(path, new double[] {0, 1, 0}, 160);
+        double length = spine.length();
+        double deepest = 0.0;
+        for (int i = 0; i < spine.p().length; i++) {
+            double u = i / (double)(spine.p().length - 1);
+            if (u * length < 0.45) {
+                continue;
+            }
+            double r = MawWorm.feedRadius(u, length, open, feed);
+            for (double[] b : BODY) {
+                double[] q = spine.p()[i];
+                double dx = Math.max(Math.max(b[0] - q[0], 0.0), q[0] - b[3]);
+                double dy = Math.max(Math.max(b[1] - q[1], 0.0), q[1] - b[4]);
+                double dz = Math.max(Math.max(b[2] - q[2], 0.0), q[2] - b[5]);
+                deepest = Math.max(deepest, r - Math.sqrt(dx * dx + dy * dy + dz * dz));
+            }
+        }
+        return deepest;
+    }
+
+    /**
+     * How far the body ({@code feet}, {@code width} by {@code height}) sticks out of the feeding worm at its worst: each of its corners'
+     * distance to the worm's skin, negative inside.
+     */
+    private static double insideWorm(double[][] path, double open, MawWorm.Feed feed, double[] feet, double width, double height) {
+        KakujaModel.Spine spine = MawWorm.spine(path, new double[] {0, 1, 0}, 320);
+        double length = spine.length();
+        double worst = -1.0E9;
+        double h = width / 2.0;
+        for (int c = 0; c < 8; c++) {
+            double[] corner = {feet[0] + ((c & 1) == 0 ? -h : h), feet[1] + ((c >> 1 & 1) == 0 ? 0.0 : height), feet[2] + ((c >> 2 & 1) == 0 ? -h : h)};
+            double best = 1.0E9;
+            for (int i = 0; i < spine.p().length; i++) {
+                double u = i / (double)(spine.p().length - 1);
+                best = Math.min(best, distance(corner, spine.p()[i]) - MawWorm.feedRadius(u, length, open, feed));
+            }
+            worst = Math.max(worst, best);
+        }
+        return worst;
+    }
 
     /**
      * 3.6.2 (the owner: "the player no longer even like walks with their own legs ... tentacles that walk around adapt to terrain. Being

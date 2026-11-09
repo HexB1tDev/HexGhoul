@@ -138,6 +138,11 @@ public final class BikakuRules {
     public static final double KAKUJA_REACH = 14.0;
     public static final int KAKUJA_REGEN_EVERY = 8;
     public static final int KAKUJA_SLOW = 5;
+    /**
+     * 3.6.3, Grand Devouring's cooldown (the owner: "Grand Devour should have a cooldown of 1 minute"), from when its worm is itself again
+     * (fed, or let go before it swallowed).
+     */
+    public static final int DEVOUR_COOLDOWN = 1200;
     public static final double KAKUJA_STEADY = 1.0;
     /** Its middle (the body frame): where its tentacles' reach is measured from. */
     public static final double[] KAKUJA_CENTRE = {0.0, 2.4, 0.0};

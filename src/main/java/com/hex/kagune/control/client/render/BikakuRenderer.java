@@ -222,14 +222,12 @@ public final class BikakuRenderer {
         int tint = KaguneTints.of(player);
         // 3.6.3: Grand Devouring: the feeding worm, whatever the others are doing (its swelling, its great mouth, the bulge going down it).
         MawWorm.Feed[] feeds = new MawWorm.Feed[worms.length];
-        double[] clears = new double[worms.length];
         if (busy >= 0 && busy < worms.length && view.devourSpot() != null) {
             int own = count > 1 ? seed + 101 * busy : seed;
             com.hex.kagune.control.bikaku.GrandDevour.Feeding feeding = com.hex.kagune.control.bikaku.GrandDevour.at(clock, own, count, busy,
                 frame.rig(view.devourSpot()), view.devourWidth(), view.devourHeight(), view.devourAge(clock));
             worms[busy] = new MawMotion.Worm(feeding.shape(), 1.0, 1.0, own);
             feeds[busy] = feeding.feed();
-            clears[busy] = feeding.clearGirth();
             ways[busy] = null;
         }
         for (int w = 0; w < worms.length; w++) {
@@ -249,8 +247,8 @@ public final class BikakuRenderer {
                 line = MawMotion.along(MawMotion.dense(line), starts[w], wayRig[wayRig.length - 1], wayRig);
             }
             // 3.5.5: the curve it is drawn along, round his body rather than through it; then carried with his torso's pose.
-            double clear = feeds[w] != null ? clears[w] : worm.girth();
-            double[][] rig = com.hex.kagune.control.client.animation.GraftPose.ride(posed, MawMotion.around(line, clear, worm.shape().aperture()));
+            double[][] rig = com.hex.kagune.control.client.animation.GraftPose.ride(posed, MawMotion.around(line, worm.girth(), worm.shape().aperture(),
+                feeds[w]));
             // Drawn out of his back along its own curve, mouth first: only its first part shows while it grows (or goes back in).
             rig = MawMotion.grown(rig, grown);
             if (firstPerson) {

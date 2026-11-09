@@ -35,11 +35,19 @@ public final class BikakuMenuView {
     static final int BUTTON_HOVER = 0xFF581630;
     static final int SOON = 0xFFB08A50;
 
-    /** What the menu shows. */
-    public record Model(int mastery, boolean active, float energy, float maxEnergy, int form) {
+    /**
+     * What the menu shows. 3.6.3: his mutations ({@code BikakuMutation} bits) and how long until Grand Devouring can feed again (ticks; 0
+     * ready).
+     */
+    public record Model(int mastery, boolean active, float energy, float maxEnergy, int form, int mutations, long devourWait) {
         /** As before 3.6.0 (the one worm). */
         public Model(int mastery, boolean active, float energy, float maxEnergy) {
             this(mastery, active, energy, maxEnergy, 0);
+        }
+
+        /** As before 3.6.3 (no mutations). */
+        public Model(int mastery, boolean active, float energy, float maxEnergy, int form) {
+            this(mastery, active, energy, maxEnergy, form, 0, 0L);
         }
     }
 
@@ -89,7 +97,7 @@ public final class BikakuMenuView {
 
         identity(c, model, hits, mouseX, mouseY, left + 24, top + 68);
         middle(c, model, hits, mouseX, mouseY, left + 295, top + 76, time);
-        moves(c, model, left + 566, top + 70);
+        moves(c, model, hits, mouseX, mouseY, left + 566, top + 70);
 
         c.centered(model.active() ? "R  RETRACT" : "ALT + R  MANIFEST", centerX, top + panelHeight - 16, model.active() ? 0xFFFF4A70 : 0xFFB0405A);
 
@@ -176,8 +184,8 @@ public final class BikakuMenuView {
         button(c, hits, "eyes", "ADJUST KAKUGAN", x, y + 296, 220, mouseX, mouseY, time);
     }
 
-    /** Its moves now, and the plan's still to come. */
-    private static void moves(UiCanvas c, Model model, int x, int y) {
+    /** Its moves now, and the plan's still to come; 3.6.3: then its mutations. */
+    private static void moves(UiCanvas c, Model model, Map<String, UkakuMenuView.Rect> hits, double mouseX, double mouseY, int x, int y) {
         c.text("MOVES", x, y, HEADER, false);
         int rowY = y + 20;
         String[][] now = {{"M1", "Snap · Lunge · Maul (stuns)"}};
@@ -210,17 +218,52 @@ public final class BikakuMenuView {
         rowY += 26;
 
         java.util.List<Object[]> coming = coming();
-        if (coming.isEmpty()) {
-            return;
-        }
-        c.text("COMING IN LATER UPDATES", x, rowY + 32, HEADER, false);
         int trackY = rowY + 50;
-        for (Object[] move : coming) {
-            int needs = (Integer)move[1];
-            c.text(needs + "", x, trackY, FAINT, false);
-            c.text((String)move[0], x + 40, trackY, model.mastery() >= needs ? SOON : MUTED, false);
-            trackY += 15;
+        if (!coming.isEmpty()) {
+            c.text("COMING IN LATER UPDATES", x, rowY + 32, HEADER, false);
+            for (Object[] move : coming) {
+                int needs = (Integer)move[1];
+                c.text(needs + "", x, trackY, FAINT, false);
+                c.text((String)move[0], x + 40, trackY, model.mastery() >= needs ? SOON : MUTED, false);
+                trackY += 15;
+            }
         }
+        mutations(c, model, hits, mouseX, mouseY, x, trackY - 2);
+    }
+
+    /**
+     * 3.6.3: its mutations, each unlocked by a quest (the owner: "these mutations are NOT unlocked through mastery they're gonna be unlocked
+     * through an NPC's quest"): one he has says it is on (and Grand Devouring how long until it can feed again), one he hasn't that it is
+     * locked, one still to come that it is coming.
+     */
+    private static void mutations(UiCanvas c, Model model, Map<String, UkakuMenuView.Rect> hits, double mouseX, double mouseY, int x, int y) {
+        c.text("MUTATIONS", x, y, HEADER, false);
+        c.text("each unlocked by a quest", x + 86, y, MUTED, false);
+        int width = 300;
+        int height = 38;
+        for (com.hex.kagune.control.bikaku.BikakuMutation mutation : com.hex.kagune.control.bikaku.BikakuMutation.values()) {
+            int top = y + 15 + mutation.ordinal() * (height + 5);
+            boolean owned = mutation.in(model.mutations());
+            c.fill(x, top, x + width, top + height, owned ? 0xFFC8204E : PANEL_EDGE);
+            c.fill(x + 1, top + 1, x + width - 1, top + height - 1, owned ? 0xFF3A0C1C : BUTTON);
+            String tag = !mutation.built() ? "SOON" : owned ? devourTag(mutation, model.devourWait()) : "LOCKED";
+            int tagWidth = c.width(tag);
+            c.text(c.fit(mutation.displayName().toUpperCase(java.util.Locale.ROOT), width - 26 - tagWidth), x + 7, top + 5,
+                owned ? TITLE : mutation.built() ? VALUE : FAINT, false);
+            c.text(tag, x + width - 7 - tagWidth, top + 5, !mutation.built() ? SOON : owned ? 0xFFFF4A70 : MUTED, false);
+            int line = 0;
+            for (String row : UkakuMenuView.wrap(c, mutation.description(), width - 14)) {
+                if (line < 2) {
+                    c.text(row, x + 7, top + 16 + line * 10, owned ? TRAIT : mutation.built() ? MUTED : FAINT, false);
+                }
+                line++;
+            }
+        }
+    }
+
+    /** 3.6.3: a mutation he has: on, and Grand Devouring's wait until it can feed again. */
+    static String devourTag(com.hex.kagune.control.bikaku.BikakuMutation mutation, long wait) {
+        return mutation == com.hex.kagune.control.bikaku.BikakuMutation.GRAND_DEVOURING && wait > 0L ? "ON · " + (wait + 19L) / 20L + " s" : "ON";
     }
 
     private static String half(float health) {
@@ -246,6 +289,9 @@ public final class BikakuMenuView {
 
     private static String tooltip(Map<String, UkakuMenuView.Rect> hits, double x, double y) {
         UkakuMenuView.Rect eyes = hits.get("eyes");
-        return eyes != null && eyes.contains(x, y) ? "Place the kakugan on your skin's eyes" : null;
+        if (eyes != null && eyes.contains(x, y)) {
+            return "Place the kakugan on your skin's eyes";
+        }
+        return null;
     }
 }

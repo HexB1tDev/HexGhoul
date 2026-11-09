@@ -200,6 +200,11 @@ public class UiPreview {
 
     /** 3.4.9: the Bikaku menu (960 x 540 at 2x), at {@code mastery}, the mouse at ({@code mouseX}, {@code mouseY}). */
     static void bikakuMenu(File out, int mastery, double mouseX, double mouseY) throws Exception {
+        bikakuMenu(out, mastery, 0, 0L, mouseX, mouseY);
+    }
+
+    /** 3.6.3: as above, with {@code mutations} (BikakuMutation bits) and Grand Devouring's wait ({@code devourWait} ticks). */
+    static void bikakuMenu(File out, int mastery, int mutations, long devourWait, double mouseX, double mouseY) throws Exception {
         int w = 960;
         int h = 540;
         BufferedImage image = new BufferedImage(w * 2, h * 2, BufferedImage.TYPE_INT_RGB);
@@ -213,8 +218,8 @@ public class UiPreview {
         c.push();
         c.translate(ox, oy);
         c.scale(scale);
-        com.hex.kagune.control.client.BikakuMenuView.draw(c, new com.hex.kagune.control.client.BikakuMenuView.Model(mastery, true, 64.0F, 100.0F, mastery >= 500 ? 2 : 0),
-            mouseX, mouseY, 1.3);
+        com.hex.kagune.control.client.BikakuMenuView.draw(c, new com.hex.kagune.control.client.BikakuMenuView.Model(mastery, true, 64.0F, 100.0F,
+            mastery >= 750 ? 3 : mastery >= 500 ? 2 : 0, mutations, devourWait), mouseX, mouseY, 1.3);
         c.pop();
         ImageIO.write(image, "png", out);
         System.out.println("wrote " + out);
@@ -546,6 +551,9 @@ public class UiPreview {
         if (args.length > 1 && args[1].equals("bikaku")) {
             bikakuMenu(new File(dir, "bikaku-menu-120.png"), 120, 0, 0);
             bikakuMenu(new File(dir, "bikaku-menu-500.png"), 500, 380, 345);
+            // 3.6.3: its mutations (unlocked by a quest): none yet, and Grand Devouring on, cooling down.
+            bikakuMenu(new File(dir, "bikaku-menu-600.png"), 600, 0, 0L, 0, 0);
+            bikakuMenu(new File(dir, "bikaku-menu-1000.png"), 1000, 1, 840L, 0, 0);
             return;
         }
         if (args.length > 1 && args[1].equals("graft")) {

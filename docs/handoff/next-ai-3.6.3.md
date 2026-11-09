@@ -1,4 +1,65 @@
-# HANDOFF: HexGhoul after 3.6.2, with 3.6.3 (Grand Devouring) in progress. READ THIS FIRST.
+# HANDOFF: HexGhoul after 3.6.3 (Grand Devouring shipped). READ THIS FIRST.
+
+## The session after this note (same branch): the owner's words, and where it got to
+
+Binding; quoted exactly. The ask that started it:
+
+> You're taking over HexGhoul, a Forge 1.20.1 Tokyo-Ghoul-inspired kagune mod (HexKagune), from another AI. Work on branch
+> `claude/hopeful-noether-5c2wex`. Push only there; never push to main; no PR unless I ask.
+>
+> Read `docs/handoff/next-ai-3.6.3.md` first and do what it says, in its order. Then read `docs/handoff/owner-words-mutations.md` (my
+> words for the two Bikaku mutations, quoted exactly, with my pictures in `docs/handoff/owner-refs/`) and `docs/handoff/next-ai-3.5.4.md`
+> (the house rules and my earlier words).
+>
+> Dependencies: we are using GeckoLib as a dependency along with Photon and PlayerAnimator. Use any of these libs whenever needed to smooth
+> out the mod as much as possible. GeckoLib is a requirement; its mods.toml entry is already in the work in progress, and the handoff says
+> how to stub and allowlist it.
+>
+> What to do:
+> 1. Finish 3.6.3 (Grand Devouring and the Bikaku mutations). The server, the network and the drawing are written and compile. Still to
+>    do: the mutations in the Bikaku menu, the tests, then the version paperwork, a full `python3 build.py` to EXIT 0, commit, push. Ask
+>    me first whether the reshaped arch in `docs/handoff/bikaku-devour-3.6.3.png` is right.
+> 2. Then 3.6.4: the victim's view from inside the mouth (with GeckoLib), and Grand Devouring in the kakuja.
+> 3. Then Potential Unlock, built on Pale's "You Thought You'd Get Rid of Me That Easily?" pieces, with my kagune colour on the strands.
+>
+> Follow the house rules exactly:
+> - Each fix or feature is its own version (the last number never reaches 10), with release notes, a README entry, the handoff sections,
+>   both version strings, a full build ending with EXIT 0, a commit and a push.
+> - Nothing is tested in game: never claim it.
+> - Answer me in English. Quote my words exactly as I wrote them; don't add things I didn't say.
+> - Show me previews of what you make before you go far.
+> - If I report bugs, fix those first, each its own version; if my exact words for a report aren't in the handoff, ask me.
+> - When a version is done, tell me plainly what you made, what you guessed at, and what's next.
+
+Their words on the arch preview, the cooldown, The Walker and how the mutations unlock are at the end of
+`docs/handoff/owner-words-mutations.md` (quoted exactly). In short (exact): "its not meant to be that big at all, never even close";
+"the kagune is literally VERTICAL from the point of origin, strange as fuck why is it not arching and progressively increasing size";
+"Forgot to mention but Grand Devour should have a cooldown of 1 minute"; "feel free to improve the walker if you think it's viable and a
+better choice  using geckolib"; "these mutations are NOT unlocked through mastery they're gonna be unlocked through an NPC's quest
+introduced later today." They chose an operator command until the quest is in, and will say later who builds the quest.
+
+**3.6.3 shipped** (Grand Devouring; protocol 103; the version is 3.6.3, the next 3.6.4). The reports on the unreleased preview were fixed
+inside 3.6.3 (as 3.5.1's Pursuit was), and the owner was sent `docs/handoff/bikaku-devour-before-after-3.6.3.png` and the new sheet; they
+had not said whether the new shape is right when 3.6.3 was pushed: ask. Details: the top section of `docs/handoff/companions-handoff.md`.
+
+**Next, in this order:**
+1. **3.6.4:** the victim's first-person view from inside the mouth (GeckoLib; matching `GrandDevour` exactly: the same `at(...)`, the
+   jaws' aperture, the cavity's `hole`/`depth`, the devourer's kagune colour), and Grand Devouring in the kakuja (one of its six tentacles
+   feeds).
+2. **Potential Unlock** (below), unlocked the same way (`BikakuDevour.grant`; quest-only, not mastery).
+3. The NPC's quest that unlocks the mutations, when the owner says (they will tell you; `BikakuDevour.grant(player, mutation, true)` is
+   ready for it).
+4. The Walker with GeckoLib, only if it is clearly better (the owner: "feel free to improve the walker if you think it's viable and a
+   better choice  using geckolib"). The judgment so far, told the owner: its feet are placed on blocks by code each tick, which keyframed
+   animation can't do alone; a GeckoLib model with code-driven bones would be about what `WalkerLegs` already is. Weigh it, and ask before
+   changing it.
+
+**Found by reading, not fixed (told the owner):** `/kagune cooldowns off` never ends Bikaku cooldowns already running:
+`BikakuServer.clearCooldowns` is never called (`Cooldowns.clear` calls the other paths'). New ones are skipped (`Cooldowns.of`).
+
+---
+
+# (The note as the session before left it; its "still to do" for 3.6.3 is done.)
 
 Branch **`claude/hopeful-noether-5c2wex`** (push only there; never `main`; no PR unless the owner asks). Start yours from it:
 `git fetch origin claude/hopeful-noether-5c2wex && git checkout -B <your-branch> origin/claude/hopeful-noether-5c2wex`
@@ -202,6 +263,7 @@ Done, compiling, passing the API verifier and the worm tests (`quick_check Bikak
 
 ## Open questions for the owner (ask; don't guess further)
 
-- Is Grand Devouring's reshaped arch right (`docs/handoff/bikaku-devour-3.6.3.png`)?
-- The Walker: "two separate appendages on either": two in all (built), or two on each side?
-- The mutation milestones (600 and 900 are guesses).
+- Is Grand Devouring's new shape right (`docs/handoff/bikaku-devour-3.6.3.png`, `bikaku-devour-before-after-3.6.3.png`)? (Sent; no answer
+  when 3.6.3 was pushed.)
+- The Walker: "two separate appendages on either": two in all (built), or two on each side? (Asked again; they answered with other things.)
+- The mutation milestones: gone. The owner: "these mutations are NOT unlocked through mastery".

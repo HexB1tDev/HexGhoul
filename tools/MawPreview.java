@@ -684,7 +684,7 @@ public class MawPreview {
     /** A feeding worm drawn as the game draws it (girth 1: its feeding radii are its own), round his body. */
     static List<PoseRender.Tri> feeding(com.hex.kagune.control.bikaku.GrandDevour.Feeding f, double time) {
         List<PoseRender.Tri> tris = new ArrayList<>();
-        double[][] path = MawMotion.around(f.shape().path(), f.clearGirth(), f.shape().aperture());
+        double[][] path = MawMotion.around(f.shape().path(), 1.0, f.shape().aperture(), f.feed());
         UkakuModel.Sink sink = (a, b, c, d, n, ca, cb, cc, cd) -> {
             int rgb = avg(ca, cb, cc, cd);
             tris.add(new PoseRender.Tri(new double[][] {w(a), w(b), w(c)}, rgb, w(n)));
@@ -741,9 +741,11 @@ public class MawPreview {
         double[][] sizes = {{0.4, 0.7}, {3.6, 12.0}};
         double[][] spots = {{1.2, 0.0, 3.0}, {0.0, 0.0, 9.0}};
         double[] ages = {40, 100, 140, 215, 240, 330, 410, 0};
+        // The giant through its growing (the owner: "it's not progressively getting bigger at all"), then feeding.
+        double[] giantAges = {15, 40, 65, 100, 140, 230, 330, 410};
         for (int r = 0; r < 2; r++) {
             for (int i = 0; i < cols; i++) {
-                double age = i == cols - 1 ? 120 : ages[i];
+                double age = r == 1 ? giantAges[i] : i == cols - 1 ? 120 : ages[i];
                 double time = 300 + age;
                 double wd = sizes[r][0];
                 double ht = sizes[r][1];
@@ -754,9 +756,9 @@ public class MawPreview {
                         r == 0 ? 0xE8E2D8 : 0x3E7A3A));
                 }
                 PoseRender.Camera cam = r == 0 ? (i == cols - 1 ? wideAt(20, 70, 9.0, 1.8, 0.6) : wideAt(-60, 14, 10.0, 1.4, 1.6))
-                    : (i == cols - 1 ? wideAt(15, 72, 40.0, 7.0, 4.0) : wideAt(-62, 10, 52.0, 4.5, 9.0));
+                    : wideAt(-75, 10, 60.0, 4.5, 10.0);
                 g.drawImage(PoseRender.render(new RigPose(), cam, fw, fh, tris), i * fw, 34 + (2 + r) * fh, null);
-                label(g, String.format("%s %.0ft  %s", r == 0 ? "small mob" : "giant (12 tall)", age, i == cols - 1 ? "from above: inside the mouth" : devourPhase(age)),
+                label(g, String.format("%s %.0ft  %s", r == 0 ? "small mob" : "giant (12 tall)", age, r == 0 && i == cols - 1 ? "from above: inside the mouth" : devourPhase(age)),
                     i * fw, 34 + (2 + r) * fh);
             }
         }

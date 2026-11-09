@@ -252,3 +252,33 @@ Then:
 
 when the next task is done prepare a handoff and prompt for the next ai to take over (Post the prompt here in chat)
 Make the handoff very clear from now on that we are using Geckolib as a dependancy along with Photon and player animator. We should use any of these libs whenever needed to smooth out the mod as much as possible.
+
+---
+
+The next session (3.6.3 shipped; branch `claude/hopeful-noether-5c2wex`). Asked whether the reshaped arch was right, the owner sent a crop
+of the digesting frames 225t to 395t with the root at his back circled at 270t and 330t (kept as
+`docs/handoff/owner-refs/devour-root-too-big-report.png`):
+
+this is a bug that bothers me a ton, it's super large on the back and point of origin for no reason, its not meant to be that big at all, never even close.
+
+Then, with three pictures (not saved as files): a crop of the 65t "OVER IT" frame (the worm out of his back leaning back and up, curving
+over into its head, thin at his back and growing to its mouth); the giant's frames 100t, 140t, 215t, 240t; and the same giant frames with
+the join of its arch into its huge mouth circled at 100t and 140t:
+
+also when I said arch smoothly the image describes exactly what I mean, the kagune is literally VERTICAL from the point of origin, strange as fuck why is it not arching and progressively increasing size, it's doing all at once.also the giant, is literally covering the user's body, and look at it, it's not progressively getting bigger at all it jumps into a massive size  insantly.
+
+Then:
+
+Forgot to mention but Grand Devour should have a cooldown of 1 minute
+
+Then:
+
+feel free to improve the walker if you think it's viable and a better choice  using geckolib
+
+Then:
+
+these mutations are NOT unlocked through mastery they're gonna be unlocked through an NPC's quest introduced later today.
+
+Asked how they could be turned on until that quest is in, they chose "Operator command" (an op-only testing shortcut; the menu shows each
+mutation locked or on, no click to unlock). Asked who builds the quest, they chose "You will tell me later" (a single server call is left
+ready for it: `BikakuDevour.grant`).

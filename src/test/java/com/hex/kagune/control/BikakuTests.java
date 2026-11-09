@@ -30,7 +30,44 @@ public final class BikakuTests {
         regeneration();
         kakujaMoves();
         held();
+        mutations();
         System.out.println("Bikaku tests: " + passed + " checks passed");
+    }
+
+    /**
+     * 3.6.3: the Bikaku mutations, unlocked by a quest (the owner: "these mutations are NOT unlocked through mastery"): read back by their
+     * ids, a bit each; Grand Devouring built, Potential Unlock still to come; its cooldown a minute (the owner: "Grand Devour should have a
+     * cooldown of 1 minute"); M1's bite passed over the feeding worm to the next one, or none in One Worm.
+     */
+    private static void mutations() {
+        com.hex.kagune.control.bikaku.BikakuMutation devour = com.hex.kagune.control.bikaku.BikakuMutation.GRAND_DEVOURING;
+        com.hex.kagune.control.bikaku.BikakuMutation unlock = com.hex.kagune.control.bikaku.BikakuMutation.POTENTIAL_UNLOCK;
+        check(com.hex.kagune.control.bikaku.BikakuMutation.byId("grand_devouring") == devour
+            && com.hex.kagune.control.bikaku.BikakuMutation.byId("potential_unlock") == unlock
+            && com.hex.kagune.control.bikaku.BikakuMutation.byId("nope") == null, "each mutation reads back by its id");
+        check(devour.bit() != unlock.bit() && devour.in(devour.bit()) && !unlock.in(devour.bit())
+            && com.hex.kagune.control.bikaku.BikakuMutation.all() == (devour.bit() | unlock.bit()), "a bit each");
+        check(devour.built() && !unlock.built(), "Grand Devouring is built; Potential Unlock is still to come");
+        check(com.hex.kagune.control.bikaku.BikakuMutation.byOrdinal(0) == devour && com.hex.kagune.control.bikaku.BikakuMutation.byOrdinal(9) == null,
+            "read back by ordinal");
+        for (com.hex.kagune.control.bikaku.BikakuMutation mutation : com.hex.kagune.control.bikaku.BikakuMutation.values()) {
+            String shown = (mutation.displayName() + " " + mutation.description()).toLowerCase(java.util.Locale.ROOT);
+            check(!shown.contains("noro") && !shown.contains("mastery"), "no character's name, and no mastery, in what it shows: " + mutation);
+        }
+        check(com.hex.kagune.control.bikaku.BikakuRules.DEVOUR_COOLDOWN == 1200, "Grand Devouring's cooldown is a minute");
+        com.hex.kagune.control.bikaku.BikakuRules.Bite[] string = {com.hex.kagune.control.bikaku.BikakuRules.Bite.SNAP,
+            com.hex.kagune.control.bikaku.BikakuRules.Bite.LUNGE, com.hex.kagune.control.bikaku.BikakuRules.Bite.MAUL};
+        for (int worms = 1; worms <= 3; worms++) {
+            for (com.hex.kagune.control.bikaku.BikakuRules.Bite bite : string) {
+                check(com.hex.kagune.control.bikaku.BikakuForm.biter(bite, worms, -1) == com.hex.kagune.control.bikaku.BikakuForm.biter(bite, worms),
+                    "with no worm feeding the bites take turns as before");
+                for (int busy = 0; busy < worms; busy++) {
+                    int biter = com.hex.kagune.control.bikaku.BikakuForm.biter(bite, worms, busy);
+                    check(biter != busy, "the feeding worm never bites (" + worms + " worms, " + busy + " feeding)");
+                    check(worms == 1 ? biter == -1 : biter >= 0 && biter < worms, "another worm bites in its place, none in One Worm");
+                }
+            }
+        }
     }
 
     /** A path to choose on the starting screen, saved by its own id, named by its kagune type (no character's name on screen). */

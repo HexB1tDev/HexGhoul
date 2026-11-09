@@ -35,8 +35,12 @@ public final class BikakuMenuScreen extends Screen {
         LocalPlayer player = minecraft.f_91074_;
         GuiCanvas canvas = new GuiCanvas(graphics, minecraft.f_91062_, player == null ? null : player.m_108560_());
         KaguneClientState.View state = KaguneClientState.self();
+        // 3.6.3: his mutations, and how long until Grand Devouring can feed again.
+        BikakuClient.View view = player == null ? BikakuClient.View.NONE : BikakuClient.get(player);
+        long world = minecraft.f_91073_ == null ? 0L : minecraft.f_91073_.m_46467_();
+        long wait = view.devourReadyAt() == Long.MIN_VALUE ? 0L : Math.max(0L, view.devourReadyAt() - world);
         BikakuMenuView.Model model = new BikakuMenuView.Model(state.mastery(), state.active(), state.energy(), KaguneProfile.MAX_ENERGY,
-            player == null ? 0 : BikakuClient.get(player).form().ordinal());
+            view.form().ordinal(), view.mutations(), wait);
         canvas.push();
         canvas.translate(this.originX, this.originY);
         canvas.scale(this.scale);

@@ -143,7 +143,8 @@ public final class GhoulNpcRenderer extends HumanoidMobRenderer<GhoulNpc, Player
 
     /** 2.0.27: {@code npc} noted as drawn this frame (its kagune is drawn after entities). */
     private static void note(GhoulNpc npc) {
-        if (DRAWN.size() < 256) {
+        // 3.6.3: not while it is being devoured (Grand Devouring): its kagune off at once.
+        if (DRAWN.size() < 256 && com.hex.kagune.control.client.BikakuClient.devoured(npc.m_19879_(), PaleClient.clock(0.0F)) < 0.0) {
             DRAWN.add(npc);
         }
     }
@@ -225,8 +226,8 @@ public final class GhoulNpcRenderer extends HumanoidMobRenderer<GhoulNpc, Player
         @Override
         public void m_6494_(PoseStack pose, MultiBufferSource buffers, int packedLight, GhoulNpc npc, float limbSwing, float limbSwingAmount,
                             float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
-            if (npc.m_20145_()) {
-                return;
+            if (npc.m_20145_() || com.hex.kagune.control.client.BikakuClient.devoured(npc.m_19879_(), PaleClient.clock(partialTick)) >= 0.0) {
+                return; // 3.6.3: devoured (Grand Devouring): its kagune off at once
             }
             try {
                 GhoulNpcClient.View view = GhoulNpcClient.get(npc.m_19879_());

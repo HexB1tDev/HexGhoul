@@ -1,9 +1,31 @@
 # READ FIRST: `docs/handoff/next-ai-3.6.3.md`
 
-3.6.3 (Grand Devouring and the Bikaku mutations) is in progress, unversioned. GeckoLib, Photon and PlayerAnimator are the mod's
-dependencies: use them wherever they make the mod smoother (the owner). The section below is the last shipped version's.
+GeckoLib, Photon and PlayerAnimator are the mod's dependencies: use them wherever they make the mod smoother (the owner). Then the owner's
+words in `docs/handoff/owner-words-mutations.md`.
 
-# START HERE (state after 3.6.2)
+# START HERE (state after 3.6.3)
+
+Branch `claude/hopeful-noether-5c2wex`. Read `docs/handoff/next-ai-3.6.3.md` first. Next: **3.6.4**, the victim's view from inside the mouth (GeckoLib) and Grand Devouring in the kakuja; then Potential Unlock; the NPC's quest that unlocks the mutations when the owner gives it.
+
+- 3.6.3 asked by the owner: the whole of `docs/handoff/owner-words-mutations.md` (Mutation 1, its PS, and their words on the previews, quoted exactly there). This session's: "this is a bug that bothers me a ton, it's super large on the back and point of origin for no reason, its not meant to be that big at all, never even close."; "also when I said arch smoothly the image describes exactly what I mean, the kagune is literally VERTICAL from the point of origin, strange as fuck why is it not arching and progressively increasing size, it's doing all at once.also the giant, is literally covering the user's body, and look at it, it's not progressively getting bigger at all it jumps into a massive size  insantly."; "Forgot to mention but Grand Devour should have a cooldown of 1 minute"; "these mutations are NOT unlocked through mastery they're gonna be unlocked through an NPC's quest introduced later today."
+- **Shape (pure, `bikaku/GrandDevour`, `MawWorm`):**
+  - `MawWorm.horn(at, length, open, feed)`: a plain worm's root, then one smoothstep from `FEED_PLAIN` 0.6 blocks to `BELL_RISE` 0.35 into its head (the bell's width `bell(feed)` as far as its head has grown), the lip rounding at the mouth. `feedRadius` = plain + (horn - plain) * swell, plus the bulge.
+  - The bulge: centre `bulgeAt`, width `max(1.45 round, bulge * (round / headR)^0.3)` capped at `3 round + 0.2`, taken in over the last `BULGE_TAKEN_IN` 3 + its radius blocks, its shape `exp(-x^4)` over `bulgeLength`, nowhere wider than `1.6 r + 0.08`, none in its first 0.45 blocks; `Feed.bulgeShown` (new field) forms and sinks it.
+  - `GrandDevour.build(side, back, dir, mouth, crest)`: biarcs (`biarc`, `arc`: two circular arcs meeting without a corner) from `exit` leaving along `rising` (back and up, out to its side); crest poses (`hang`, `carry`) through a level crest `CREST_AT` 0.4 of the way, `CREST_RISE` 0.55 of the rest over the head's back; `raised` straight round into a head turned up toward its victim over his back. `ARCH` 14 points, `POINTS` 19.
+  - Timing: body grows over `GROWN` (65 ticks), the bell to the end of REACH (80); swollen until `FED`, back to plain over `RETURN`. Carry: lifted `0.2 h + 0.6`, tilted out a little; it lifts only after the body is out of sight (`SHUT + 0.35 SWALLOW`); the digest sway eased in over 20 ticks.
+  - `Feeding(shape, feed)` (the clear girth is gone): `MawMotion.around(points, girth, open, feed)` keeps it out of him by its own feeding radii (renderer, preview).
+- **Mutations:** not by mastery (the owner). `BikakuMutation` has no milestones or points; `byId`. `BikakuDevour.grant(player, mutation, on)` is what the quest will call; `/kagune bikaku mutation <id> on|off [player]` (operators, `ControlCommands.bikakuMutation`). `C2SBikakuAction.MUTATION` removed. Lang `.no_point` removed.
+- **Cooldown:** `BikakuRules.DEVOUR_COOLDOWN` 1200 from `BikakuDevour.end` (`Cooldowns.of`); `State.devourReadyAt`, checked in `tick`; cleared by `BikakuServer.clearCooldowns` (which nothing calls yet: found by reading, told the owner). `S2CBikakuState.devourReadyAt`, `BikakuClient.View.devourReadyAt`.
+- **Menu:** `BikakuMenuView` MUTATIONS under the moves ("each unlocked by a quest"; LOCKED / ON / "ON · 42 s" / SOON); `Model.mutations`, `devourWait`; `BikakuMenuScreen` reads them from `BikakuClient`.
+- **Held bodies, client:** `WeaponLayer` (an investigator's kagune weapon) and `GhoulNpcRenderer` (`note`: a wild ghoul's kagune; `BladeArmLayer`) skip a body `BikakuClient.devoured`.
+- **Photon:** `BikakuFx.devour` (drool, splash, drips, spray at the shut and the gulp; RcFx motes).
+- Previews: `tools/MawPreview.java devour` (`docs/handoff/bikaku-devour-3.6.3.png`, the giant's row 15t to 410t), `docs/handoff/bikaku-devour-before-after-3.6.3.png`; `tools/UiPreview.java <out> bikaku` (`bikaku-menu-3.6.3.png`, `bikaku-menu-on-3.6.3.png`).
+- Tests: BikakuWormTests `devour()` (2,419,779 in all), BikakuTests `mutations()` (1,640), the full suite.
+- **Judgment calls:** the timings; the cooldown from the end; the bulge squeezed and taken in; the bar 35 + 2 x its full health; 2 mastery; the carry pose; the wet particles; an operator command until the quest (the owner chose it).
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 103. Not tested in game.
+
+# State after 3.6.2
 
 Branch `claude/hopeful-noether-5c2wex`. Read `docs/handoff/next-ai-3.5.4.md` first (the owner's words this session at its top, quoted exactly; the state now). The owner's forms ask is done (One, Twin, Three, The Walker). Next: the owner's answer on The Walker (asked: two tentacles in all or two each side; whether its legs should add anything to the moves), else ask them what's next.
 

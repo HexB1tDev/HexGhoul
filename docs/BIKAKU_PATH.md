@@ -53,6 +53,16 @@ nothing is in reach; its shape arching out over his hip and down, its mouth shut
 (`WalkerPose`); his client climbs any wall he walks into (`BikakuWalk`: a ladder's pace, sneak to hang, slide slowly); no fall damage while
 it is out (server). Its moves: Three Worms'. Forms done; the kakuja unchanged.
 
+**3.6.3 (Grand Devouring, the first Bikaku mutation; the owner's words in `docs/handoff/owner-words-mutations.md`):** at 1 heart or less
+within 10 blocks a free worm, chosen at random, feeds on its own: it rises swelling, arches over, comes down over the body, closes slowly,
+gulps, and a bulge the size of the body runs down to his back; his bar refills; then it goes back to itself. That worm does nothing else
+until it is done. The body is held, stunned and stripped (its kagune off, its weapons out of sight and kept). Its shape was redone after
+the owner's reports ("its not meant to be that big at all, never even close"; "the kagune is literally VERTICAL from the point of
+origin ... why is it not arching and progressively increasing size"): thin out of his back, one smooth arch (biarcs through a crest),
+steadily bigger to the mouth (`MawWorm.horn`). A minute's cooldown. Unlocked by an NPC's quest, not mastery (the owner); until then
+`/kagune bikaku mutation <id> on|off`. Menu MUTATIONS. GeckoLib is now a requirement. Next: 3.6.4 the view from inside the mouth
+(GeckoLib) and Grand Devouring in the kakuja; then Potential Unlock.
+
 **Before 3.4.9 (the pure worm, unchanged since except as above):**
 
 - `control/bikaku/MawWorm.java`: the worm as a mesh (pure). A thick muscular tube along a spine resampled evenly by length

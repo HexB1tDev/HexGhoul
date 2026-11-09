@@ -1343,6 +1343,11 @@ public final class MawMotion {
      * nearby points together, so it moves smoothly frame to frame. Body frame (the feet at 0, x right, z ahead).
      */
     public static double[][] around(double[][] points, double girth, double open) {
+        return around(points, girth, open, null);
+    }
+
+    /** 3.6.3: as above; a feeding worm ({@code feed} not null) kept out of him by its own feeding radii ({@link MawWorm#feedRadius}). */
+    public static double[][] around(double[][] points, double girth, double open, MawWorm.Feed feed) {
         if (points.length < 2) {
             return points;
         }
@@ -1366,7 +1371,8 @@ public final class MawMotion {
         double[] reach = new double[dense + 1];
         double[] weight = new double[dense + 1];
         for (int i = 0; i <= dense; i++) {
-            reach[i] = MawWorm.radius(along[i] / total, total, open) * girth + AROUND_MARGIN;
+            reach[i] = (feed != null ? MawWorm.feedRadius(along[i] / total, total, open, feed) : MawWorm.radius(along[i] / total, total, open) * girth)
+                + AROUND_MARGIN;
             weight[i] = i == 0 ? 0.0 : GraftMesh.smooth(GraftMesh.clamp01((along[i] - AROUND_FREE) / AROUND_RAMP));
         }
         double[] touched = new double[dense + 1];

@@ -68,7 +68,6 @@
   "message.hexkagune.bikaku.reach": "Reach: %s blocks",
   "message.hexkagune.bikaku.feeding": "Your worm is feeding",
   "message.hexkagune.bikaku.mutation": "Mutation: %s",
-  "message.hexkagune.bikaku.no_point": "No mutation point left (one at 600 mastery, another at 900)",
   "message.hexkagune.graft.no_vault": "Nothing behind you to drive the tails into",
   "message.hexkagune.graft.no_prey": "Nothing in reach to play with",
   "message.hexkagune.graft.recovering": "Your body is knitting: nothing else until it is done (the key again stops it)",

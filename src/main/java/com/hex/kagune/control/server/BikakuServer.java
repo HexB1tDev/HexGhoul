@@ -65,6 +65,8 @@ public final class BikakuServer {
         float devourWorth;
         boolean devourKilled;
         boolean devourFed;
+        /** 3.6.3: when Grand Devouring can feed again (its cooldown). */
+        long devourReadyAt = Long.MIN_VALUE;
         /** 3.6.3: the worm a form's move was made without (feeding when it began; -1 none). */
         int moveSkip = -1;
         Vec3 aim = Vec3.f_82478_;
@@ -443,7 +445,7 @@ public final class BikakuServer {
             new double[][][] {state.biteRoute, state.moveRoutes[0], state.moveRoutes[1], state.moveRoutes[2]}, form(player, state).ordinal(),
             state.moveWorms, state.held.clone(), caughtBits(state), pointsOf(state), BikakuDevour.mutations(player), state.devourVictim,
             state.devourWorm, state.devourAt, state.devourSpot == null ? null : new double[] {state.devourSpot.f_82479_, state.devourSpot.f_82480_,
-                state.devourSpot.f_82481_}, state.devourWidth, state.devourHeight);
+                state.devourSpot.f_82481_}, state.devourWidth, state.devourHeight, state.devourReadyAt);
     }
 
     /** 3.6.1: which worms caught (a bit each). */
@@ -500,10 +502,6 @@ public final class BikakuServer {
     public static void onAction(ServerPlayer player, int action, int arg, int targetId) {
         if (action == com.hex.kagune.control.network.C2SBikakuAction.FORM && isBikaku(player)) {
             pickForm(player, state(player), arg); // 3.6.0: from the menu, out or not
-            return;
-        }
-        if (action == com.hex.kagune.control.network.C2SBikakuAction.MUTATION && isBikaku(player)) {
-            BikakuDevour.pick(player, state(player), arg); // 3.6.3: from the menu
             return;
         }
         if (!isBikaku(player) || PaleWitness.frozen(player) || PaleRevive.down(player) || PaleStun.stunned(player) || !ready(player)) {
@@ -611,6 +609,7 @@ public final class BikakuServer {
         State state = STATES.get(player.m_20148_());
         if (state != null) {
             state.readyAt.clear();
+            state.devourReadyAt = Long.MIN_VALUE;
         }
     }
 

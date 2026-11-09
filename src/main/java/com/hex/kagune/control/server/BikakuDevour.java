@@ -29,7 +29,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 /**
- * 3.6.3: the Bikaku mutations ({@link BikakuMutation}: points from mastery milestones, picked in the menu, kept in the profile) and the
+ * 3.6.3: the Bikaku mutations ({@link BikakuMutation}: unlocked by a quest, {@link #grant}, kept in the profile) and the
  * first of them, Grand Devouring ({@link GrandDevour}; the owner's words in {@code docs/handoff/owner-words-mutations.md}).
  *
  * <p>A body within {@link #RANGE} blocks at one heart or less ({@link #THRESHOLD}) is fed on by one of his free worms, chosen at random,
@@ -74,25 +74,29 @@ public final class BikakuDevour {
         return mutation.in(mutations(player));
     }
 
-    /** A mutation picked in the menu: a point paid for it, kept in his profile. */
-    static void pick(ServerPlayer player, BikakuServer.State state, int ordinal) {
-        BikakuMutation mutation = BikakuMutation.byOrdinal(ordinal);
+    /**
+     * A mutation unlocked ({@code on}) or taken away, kept in his profile: what the quest that unlocks them calls (the owner: "they're
+     * gonna be unlocked through an NPC's quest introduced later today"), and the operators' {@code /kagune bikaku mutation}. False if it
+     * was already so, or is still to come.
+     */
+    public static boolean grant(ServerPlayer player, BikakuMutation mutation, boolean on) {
         int mask = mutations(player);
-        if (mutation == null || mutation.in(mask)) {
-            return;
+        if (mutation == null || !mutation.built() || mutation.in(mask) == on) {
+            return false;
         }
-        if (!mutation.built()) {
-            BikakuServer.notYet(player);
-            return;
+        KaguneProfile.root(player).m_128405_(MUTATIONS_KEY, on ? mask | mutation.bit() : mask & ~mutation.bit());
+        if (on) {
+            KaguneServerController.playSelf(player, HexKaguneSounds.KAGUNE_RESHAPE, 1.0F, KaguneServerController.vary(player, 0.6F, 0.05F));
+            player.m_5661_(Component.m_237110_("message.hexkagune.bikaku.mutation", mutation.displayName()), true);
         }
-        if (!BikakuMutation.canPick(mutation, mask, KaguneProfile.mastery(player))) {
-            BikakuServer.notice(player, state, Component.m_237115_("message.hexkagune.bikaku.no_point"));
-            return;
+        if (BikakuServer.isBikaku(player)) {
+            BikakuServer.State state = BikakuServer.state(player);
+            if (!on && mutation == BikakuMutation.GRAND_DEVOURING && state.devourVictim != 0 && !state.devourKilled) {
+                cancel(player, state, null);
+            }
+            BikakuServer.broadcast(player, state);
         }
-        KaguneProfile.root(player).m_128405_(MUTATIONS_KEY, mask | mutation.bit());
-        KaguneServerController.playSelf(player, HexKaguneSounds.KAGUNE_RESHAPE, 1.0F, KaguneServerController.vary(player, 0.6F, 0.05F));
-        player.m_5661_(Component.m_237110_("message.hexkagune.bikaku.mutation", mutation.displayName()), true);
-        BikakuServer.broadcast(player, state);
+        return true;
     }
 
     // ---------------------------------------------------------------- Grand Devouring
@@ -112,7 +116,8 @@ public final class BikakuDevour {
             feed(player, state, now);
             return;
         }
-        if (now % 4L != 0L || state.kakuja || !player.m_6084_() || !KaguneProfile.isActive(player) || !has(player, BikakuMutation.GRAND_DEVOURING)) {
+        if (now % 4L != 0L || now < state.devourReadyAt || state.kakuja || !player.m_6084_() || !KaguneProfile.isActive(player)
+            || !has(player, BikakuMutation.GRAND_DEVOURING)) {
             return;
         }
         int worm = freeWorm(player, state, now);
@@ -331,6 +336,8 @@ public final class BikakuDevour {
 
     private static void end(ServerPlayer player, BikakuServer.State state) {
         HELD.remove(state.devourVictim);
+        // 3.6.3: its cooldown, from now (the owner: "Grand Devour should have a cooldown of 1 minute").
+        state.devourReadyAt = player.m_9236_().m_46467_() + Cooldowns.of(player, (long)com.hex.kagune.control.bikaku.BikakuRules.DEVOUR_COOLDOWN);
         state.devourVictim = 0;
         state.devourWorm = -1;
         state.devourAt = Long.MIN_VALUE;

@@ -29,6 +29,25 @@ final class ControlCommands {
     private ControlCommands() {
     }
 
+    /** 3.6.3: {@code /kagune bikaku mutation <id> on|off [player]}. */
+    private static int bikakuMutation(CommandContext<CommandSourceStack> context, ServerPlayer player, boolean on) {
+        String id = StringArgumentType.getString(context, "mutation");
+        com.hex.kagune.control.bikaku.BikakuMutation mutation = com.hex.kagune.control.bikaku.BikakuMutation.byId(id);
+        if (mutation == null) {
+            context.getSource().m_81352_(Component.m_237113_("No such Bikaku mutation: " + id));
+            return 0;
+        }
+        if (!mutation.built()) {
+            context.getSource().m_81352_(Component.m_237113_(mutation.displayName() + " is still to come."));
+            return 0;
+        }
+        boolean changed = BikakuDevour.grant(player, mutation, on);
+        String who = player.m_36316_().getName();
+        context.getSource().m_288197_(() -> Component.m_237113_(mutation.displayName() + (changed ? (on ? " unlocked for " : " taken from ") : (on
+            ? " was already unlocked for " : " was already locked for ")) + who), true);
+        return 1;
+    }
+
     static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.m_82127_("kagune").then(Commands.m_82127_("control")
             .executes(ControlCommands::report)
@@ -47,6 +66,17 @@ final class ControlCommands {
             .then(Commands.m_82127_("on").executes(context -> cooldowns(context, false, context.getSource().m_81375_()))
                 .then(Commands.m_82129_("player", EntityArgument.m_91466_())
                     .executes(context -> cooldowns(context, false, EntityArgument.m_91474_(context, "player")))))));
+        // 3.6.3: a Bikaku mutation on or off (a testing shortcut for operators until the quest that unlocks them is in).
+        dispatcher.register(Commands.m_82127_("kagune").then(Commands.m_82127_("bikaku").requires(source -> source.m_6761_(2))
+            .then(Commands.m_82127_("mutation").then(Commands.m_82129_("mutation", StringArgumentType.word())
+                .suggests((context, builder) -> SharedSuggestionProvider.m_82970_(java.util.Arrays.stream(
+                    com.hex.kagune.control.bikaku.BikakuMutation.values()).map(com.hex.kagune.control.bikaku.BikakuMutation::id).toList(), builder))
+                .then(Commands.m_82127_("on").executes(context -> bikakuMutation(context, context.getSource().m_81375_(), true))
+                    .then(Commands.m_82129_("player", EntityArgument.m_91466_())
+                        .executes(context -> bikakuMutation(context, EntityArgument.m_91474_(context, "player"), true))))
+                .then(Commands.m_82127_("off").executes(context -> bikakuMutation(context, context.getSource().m_81375_(), false))
+                    .then(Commands.m_82129_("player", EntityArgument.m_91466_())
+                        .executes(context -> bikakuMutation(context, EntityArgument.m_91474_(context, "player"), false))))))));
         // 3.1.0: the abilities board above the chat, on and off (each player's own, kept in their client config).
         dispatcher.register(Commands.m_82127_("kagune").then(Commands.m_82127_("hud").then(Commands.m_82127_("toggle")
             .executes(ControlCommands::toggleHud))));

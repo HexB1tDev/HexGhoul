@@ -36,12 +36,13 @@ public final class BikakuClient {
                        boolean kakuja, long kakujaAt, double kakujaBegan, long undyingAt, double undyingBegan, long[] autoAt, double[] autoBegan,
                        int[] autoTarget, double reach, double moveReach, int charge, long chargeAt, double chargeBegan, double[][][] routes,
                        com.hex.kagune.control.bikaku.BikakuForm form, int moveWorms, int[] held, int caughtBits, double[][] points, int mutations,
-                       int devourVictim, int devourWorm, long devourAt, double devourBegan, double[] devourSpot, double devourWidth, double devourHeight) {
+                       int devourVictim, int devourWorm, long devourAt, double devourBegan, double[] devourSpot, double devourWidth, double devourHeight,
+                       long devourReadyAt) {
         public static final View NONE = new View(Bite.NONE, Long.MIN_VALUE, 0.0, 0.0, 0.0, 0.0, 0, BikakuMove.NONE, Long.MIN_VALUE, 0.0, 0.0, 0.0,
             0.0, new int[S2CBikakuState.TARGETS], 0, false, -1_000_000L, -1.0E6, false, -1_000_000L, -1.0E6, -1_000_000L, -1.0E6,
             new long[S2CBikakuState.AUTOS], filled(-1.0E6), new int[S2CBikakuState.AUTOS], BikakuRules.REACH, 0.0, -1, Long.MIN_VALUE, 0.0,
             new double[S2CBikakuState.ROUTES][][], com.hex.kagune.control.bikaku.BikakuForm.ONE, 1, new int[3], 0, new double[3][], 0, 0, -1,
-            Long.MIN_VALUE, 0.0, null, 0.6, 1.8);
+            Long.MIN_VALUE, 0.0, null, 0.6, 1.8, Long.MIN_VALUE);
 
         /** 3.6.3: ticks into Grand Devouring (-1 none). */
         public double devourAge(double clock) {
@@ -136,7 +137,7 @@ public final class BikakuClient {
             message.moveWorms(), message.held(), message.caughtBits(), message.points(), message.mutations(), message.devourVictim(),
             message.devourWorm(), message.devourAt(), began(before == null || before.devourVictim() != message.devourVictim() ? null : before.devourAt(),
                 before == null ? 0.0 : before.devourBegan(), message.devourAt(), world, clock), message.devourSpot(), message.devourWidth(),
-            message.devourHeight()));
+            message.devourHeight(), message.devourReadyAt()));
     }
 
     /**
