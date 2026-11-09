@@ -133,6 +133,24 @@ public final class GhoulNpcBrain {
         boolean frenzied;
     }
 
+    /** 4.0.0: set (by its hideout's template) on one of Aogiri Tree's members. */
+    static final String AOGIRI = "HexAogiri";
+    /** 4.0.0: how long an Aogiri member holds it against whoever attacked it or its own (ticks): five minutes. */
+    static final int AOGIRI_GRUDGE = 6000;
+    /** 4.0.0: how far a hurt member's call reaches its comrades (blocks). */
+    static final double AOGIRI_CALL = 24.0;
+
+    /**
+     * 4.0.0: {@code rolled} made one of Aogiri Tree's: the Pack's temper (violent, loyal to its own), its faction's mask (the Laughing Mask or
+     * the Fanged Mask), a trained fighter's rank: C now and then, mostly B and A, an S one in ten ({@code a}, {@code b} rolls in 0..1).
+     */
+    static NpcIdentity aogiri(NpcIdentity rolled, double a, double b) {
+        int rank = a < 0.2 ? NpcRules.C : a < 0.6 ? NpcRules.B : a < 0.9 ? NpcRules.A : NpcRules.S;
+        int mask = 1 + Math.min(com.hex.kagune.control.outfit.Outfits.AOGIRI_MASKS.size() - 1,
+            (int)(b * com.hex.kagune.control.outfit.Outfits.AOGIRI_MASKS.size()));
+        return new NpcIdentity(rolled.kind(), NpcTemper.PACK, rank, rolled.skin(), rolled.name(), rolled.seed(), mask, true);
+    }
+
     /** Where an ally's player and whether it waits are kept in its saved data. */
     static final String ALLY = "HexGhoulAlly";
     static final String WAITS = "HexGhoulWaits";
@@ -150,6 +168,10 @@ public final class GhoulNpcBrain {
         if (who == null) {
             // Summoned or hatched, not spawned at night: it becomes someone now.
             who = NpcIdentity.roll(0, () -> npc.m_217043_().m_188500_());
+            if (npc.getPersistentData().m_128471_(AOGIRI)) {
+                // 4.0.0: one of Aogiri Tree's, placed with its hideout: the faction's own temper, mask and rank, its Crimson Outfit.
+                who = aogiri(who, npc.m_217043_().m_188500_(), npc.m_217043_().m_188500_());
+            }
             npc.identify(who);
             dress(npc);
         }
@@ -193,7 +215,7 @@ public final class GhoulNpcBrain {
         }
         LivingEntity prey = prey(npc, who, mind, level, now);
         // 1.3.68: a wild ghoul prowls by night (its kakugan on) and hides what it is by day: anything it would fight, it runs from instead.
-        boolean wild = mind.owner == null;
+        boolean wild = mind.owner == null && !who.aogiri(); // 4.0.0: Aogiri's own neither prowl nor hide: they hold their hideout
         boolean eyes = NpcRules.prowls(wild, level.m_46468_());
         if (eyes != mind.eyes) {
             mind.eyes = eyes;
@@ -326,6 +348,11 @@ public final class GhoulNpcBrain {
         if (body instanceof Player player && player.m_7500_()) {
             return false;
         }
+        if (who.aogiri()) {
+            // 4.0.0 (the owner: "Its members must ONLY attack CCG investigators and entities that are actively hostile toward them"): no
+            // neutral human, no peaceful NPC, no player who has not provoked them (a grudge, above, is provocation).
+            return aogiriFoe(body);
+        }
         ServerPlayer owner = owner(npc, mind);
         if (owner != null) {
             // An ally follows its player's lead: what hurts them, what hunts them, the monsters round them; never them or theirs.
@@ -353,6 +380,15 @@ public final class GhoulNpcBrain {
         return body instanceof GhoulNpc other && other.identity() != null && who.temper().hunts(other.identity().temper());
     }
 
+    /** 4.0.0: true for what an Aogiri member goes for unprovoked: an investigator, or anything going for one of Aogiri's own. */
+    static boolean aogiriFoe(LivingEntity body) {
+        if (body instanceof com.hex.kagune.control.npc.CcgAgent) {
+            return true;
+        }
+        return body instanceof Mob mob && mob.m_5448_() instanceof GhoulNpc target && target.identity() != null && target.identity().aogiri()
+            && !(body instanceof GhoulNpc kin && kin.identity() != null && kin.identity().aogiri());
+    }
+
     /** How it takes to {@code player}: its temper's way with what they are and the side they took, over how it regards them. */
     static NpcTemper.Attitude attitude(GhoulNpc npc, NpcIdentity who, ServerPlayer player) {
         NpcTemper.Attitude base = who.temper().toward(KaguneProfile.isUnlocked(player), side(player));
@@ -374,6 +410,9 @@ public final class GhoulNpcBrain {
         }
         if (wanted(npc, who, mind, body, now)) {
             return true;
+        }
+        if (who.aogiri()) {
+            return false; // 4.0.0: an Aogiri member's blows land only on what it is fighting
         }
         if (body instanceof ServerPlayer player) {
             return !player.m_7500_() && !player.equals(owner(npc, mind)) && attitude(npc, who, player) != NpcTemper.Attitude.FRIENDLY;
@@ -492,6 +531,13 @@ public final class GhoulNpcBrain {
             }
         }
         if (now < mind.wanderAt || !npc.m_21573_().m_26571_()) {
+            return;
+        }
+        // 4.0.0: an Aogiri member keeps to its hideout: wandered past its edge, it walks back to its post.
+        VillagePlace.Place place = who.aogiri() ? VillagePlace.of(npc) : null;
+        if (place != null && !place.inside(npc.m_20185_(), npc.m_20189_())) {
+            mind.wanderAt = now + 60L;
+            npc.m_21573_().m_26519_(place.homeX() + 0.5, place.homeY(), place.homeZ() + 0.5, 0.8);
             return;
         }
         mind.wanderAt = now + 80L + (long)(npc.m_217043_().m_188500_() * 160.0);
@@ -757,6 +803,18 @@ public final class GhoulNpcBrain {
                 QuestServer.bond(player, key, bond.regard(after));
                 holds = after < 0;
                 listen(npc, mind, null, now);
+            }
+            if (who.aogiri()) {
+                // 4.0.0: an Aogiri member always defends itself, and its comrades near it take up its fight.
+                holds = true;
+                grudge = AOGIRI_GRUDGE;
+                if (!(attacker instanceof GhoulNpc kin && kin.identity() != null && kin.identity().aogiri())) {
+                    for (GhoulNpc comrade : npc.m_9236_().m_6443_(GhoulNpc.class, npc.m_20191_().m_82400_(AOGIRI_CALL),
+                        other -> other != npc && other.m_6084_() && other.identity() != null && other.identity().aogiri() && other.mind != null)) {
+                        comrade.mind.grudges.put(attacker.m_20148_(), now + AOGIRI_GRUDGE);
+                        comrade.mind.preySought = Long.MIN_VALUE;
+                    }
+                }
             }
             if (holds) {
                 mind.grudges.put(attacker.m_20148_(), grudge == Integer.MAX_VALUE ? Long.MAX_VALUE : now + grudge);

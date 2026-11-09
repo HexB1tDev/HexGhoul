@@ -38,7 +38,22 @@ public final class OutfitLayer<T extends LivingEntity, M extends EntityModel<T>>
     private static final EquipmentSlot[] SLOTS = {EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET};
     private static final Map<String, RenderType> TYPES = new HashMap<>();
     /** 4.0.0: a mask drawn over whatever is on the head (an item id), by whoever knows of one for the wearer; null for none. */
-    public static Function<LivingEntity, String> EXTRA = wearer -> null;
+    public static Function<LivingEntity, String> EXTRA = OutfitLayer::faction;
+
+    /**
+     * 4.0.0: the mask a wearer has over its hood or its face that is no item it holds: an Aogiri member's faction mask under the Crimson
+     * Hood (its identity, as every client is told it), a companion's own ({@link #COMPANION}).
+     */
+    static String faction(LivingEntity wearer) {
+        if (wearer instanceof com.hex.kagune.control.npc.GhoulNpc) {
+            com.hex.kagune.control.client.GhoulNpcClient.View view = com.hex.kagune.control.client.GhoulNpcClient.get(wearer.m_19879_());
+            return view != null && view.identity().aogiri() ? view.identity().maskItem() : null;
+        }
+        return COMPANION.apply(wearer);
+    }
+
+    /** 4.0.0: a companion's own mask (Noro's always; Ayato's in a fight), told by the companions' client. */
+    public static Function<LivingEntity, String> COMPANION = wearer -> null;
 
     public OutfitLayer(RenderLayerParent<T, M> parent) {
         super(parent);
