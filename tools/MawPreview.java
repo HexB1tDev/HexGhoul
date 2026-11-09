@@ -58,6 +58,9 @@ public class MawPreview {
         if (which.equals("regen") || which.equals("all")) {
             regen(new File(out, "maw-regen.png"));
         }
+        if (which.equals("forms") || which.equals("all")) {
+            forms(new File(out, "maw-forms.png"));
+        }
         if (which.equals("round") || which.equals("all")) {
             round(new File(out, "maw-round.png"));
         }
@@ -545,6 +548,42 @@ public class MawPreview {
             }
             g.drawImage(PoseRender.render(new RigPose(), wideAt(-55, 40, 24.0, 5.0, 1.5), fw, fh, tris), i * fw, 34 + 2 * fh, null);
             label(g, String.format("Predatory Drag: %.0ft", age), i * fw, 34 + 2 * fh);
+        }
+        g.dispose();
+        ImageIO.write(img, "png", file);
+        System.out.println(file);
+    }
+
+    /** 3.6.0: the forms: Twin Worms and Three Worms at rest from round about, and the M1 string's bites taking turns among their worms. */
+    static void forms(File file) throws Exception {
+        int fw = 300;
+        int fh = 300;
+        int cols = 6;
+        BufferedImage img = new BufferedImage(fw * cols, fh * 4 + 34, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = sheet(img, "Bikaku 3.6.0: the forms: Twin Worms (250) and Three Worms (500), each worm in its own lane; M1's bites take turns among them");
+        double[][] views = {{150, 12}, {180, 25}, {210, 12}, {60, 10}, {-40, 15}, {0, 30}};
+        for (int r = 0; r < 2; r++) {
+            int worms = r == 0 ? 2 : 3;
+            for (int i = 0; i < cols; i++) {
+                double time = 40 + i * 11;
+                List<PoseRender.Tri> tris = worms(MawMotion.form(time, SEED, worms, BikakuRules.Bite.NONE, 0, null, BikakuRules.REACH), time);
+                g.drawImage(PoseRender.render(new RigPose(), PoseRender.orbit(views[i][0], views[i][1], 13.0, 2.0), fw, fh, tris), i * fw, 34 + r * fh, null);
+                label(g, String.format("%s at rest, from %.0f°", worms == 2 ? "Twin Worms" : "Three Worms", views[i][0]), i * fw, 34 + r * fh);
+            }
+        }
+        BikakuRules.Bite[] string = {BikakuRules.Bite.SNAP, BikakuRules.Bite.LUNGE, BikakuRules.Bite.MAUL};
+        for (int r = 0; r < 2; r++) {
+            int worms = r == 0 ? 2 : 3;
+            for (int i = 0; i < cols; i++) {
+                BikakuRules.Bite bite = string[i / 2];
+                double age = i % 2 == 0 ? bite.land() * 0.6 : bite.land();
+                double time = 120 + i * 9;
+                List<PoseRender.Tri> tris = worms(MawMotion.form(time, SEED, worms, bite, age, PREY, BikakuRules.REACH), time);
+                tris.addAll(prey());
+                g.drawImage(PoseRender.render(new RigPose(), framedAt(35, 14, 14.5, 0.45), fw, fh, tris), i * fw, 34 + (2 + r) * fh, null);
+                label(g, String.format("%s: %s by worm %d%s", worms == 2 ? "Twin" : "Three", bite.name().charAt(0) + bite.name().substring(1).toLowerCase(),
+                    com.hex.kagune.control.bikaku.BikakuForm.biter(bite, worms) + 1, age == bite.land() ? "  BITES" : ""), i * fw, 34 + (2 + r) * fh);
+            }
         }
         g.dispose();
         ImageIO.write(img, "png", file);

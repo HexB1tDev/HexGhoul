@@ -1,4 +1,19 @@
-# START HERE (state after 3.5.9)
+# START HERE (state after 3.6.0)
+
+Branch `claude/hopeful-noether-5c2wex`. Read `docs/handoff/next-ai-3.5.4.md` first (the owner's words this session at its top, quoted exactly; the state now). Next: **3.6.1, every move made by all the form's worms** (the owner: "to basically become overpowered, like, to do enhanced versions of themselves whenever they're, like, in different transformations, such as, like, the move that, like, drag pursuit, you can send all three of them, all three of the worm-like things, and the thing that sends the worm underground and then up can be like more than one, and whatsoever."), then **3.6.2, The Walker**.
+
+- Pure `bikaku/BikakuForm`: ONE (1 worm, 0), TWIN (2, 250), THREE (3, 500), WALKER (3, 750, `built` false: shown "soon", `unlocked` false); `allowed(wanted, mastery)` (the strongest opened below it), `biter(bite, worms)` (Snap 0, Lunge 1, Maul 2, mod worms).
+- `MawMotion`: `wormPoint/wormUnpoint(worms, i, p)` (worm i's own frame <-> his: Pursuit's lanes, `pursuitFrame(i, p, 1)`; identity for one worm), `wormShoulder(worms, i)`, `form(time, seed, worms, bite, age, target, reach)` (its turn's worm bites in its own frame, the rest idle, each `framed`: the root shared, fanning out at once, interior points `clear`ed), `framed`, `formMove(...)` (the first worm makes the move in its frame, what it goes after and holds unframed; the rest idle).
+- Server: `BikakuServer.State.form` (read from `KaguneProfile.root` "BikakuForm" on first use; `form()` falls back by mastery each time), `worms()` (1 in the kakuja), `pickForm` (C2SBikakuAction FORM 5, works with the kagune put away; locked: the `bikaku.locked` notice; saved; broadcast), `shoulder(player, state, worm)`; M1 thrown from its turn's worm's shoulder (`begin`, `land`); Maw from worm 0's, Drag's ground anchor worm 0's (`groundRoute`, the hold `along`).
+- Network: `S2CBikakuState.form`; protocol 101. `BikakuClient.View.form`.
+- Client: `BikakuRenderer` draws `MawMotion.form` (the wind-up on worm 0, framed), moves with `formMove` (Pursuit as before), each worm's way start `wormShoulder` (Drag `wormPoint(.., groundAnchor)`). `BikakuMenuView` FORM buttons (`Model.form`; hits "form0".."form3"), the Kagune row by form; `BikakuMenuScreen` sends FORM. `PathCards` Bikaku stages: the forms then the kakuja; bullets updated.
+- Preview: `tools/MawPreview.java forms`; `docs/handoff/bikaku-forms-3.6.0.png`.
+- Tests: BikakuWormTests `forms()` (108,209), BikakuTests, PathTests, PathScreenTests, ControlTests.
+- **Judgment calls:** 250 / 500; the lanes; the bites' turn order; the first worm making the moves until 3.6.1; The Walker held back until built.
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 101. Not tested in game.
+
+# State after 3.5.9
 
 Branch `claude/hopeful-noether-5c2wex`. Read `docs/handoff/next-ai-3.5.4.md` first (the owner's words this session at its top, quoted exactly; the state now). Next: **the forms** (the owner: "another form should have like two worms. The third should have three, and ... the fourth before the Kakuja should be like the player no longer even like walks with their own legs ... two separate appendages on either ... both sides emerging from the same spot as the worms ... tentacles that walk around adapt to terrain. Being able to climb anything ... The moves, of course, changing to something else whenever you have like depending on the form"). The owner's range ask is now covered (3.5.8 held, 3.5.9 round blocks).
 

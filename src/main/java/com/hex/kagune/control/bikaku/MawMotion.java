@@ -27,6 +27,79 @@ public final class MawMotion {
     /** Over the right shoulder: where a worm thrown out ahead passes him (never through him). */
     static final double[] SHOULDER = {0.62, 2.15, -0.25};
 
+    // ---------------------------------------------------------------- 3.6.0: the forms' worms
+
+    /**
+     * 3.6.0: a point of a worm's own frame ({@code p}) where it is for worm {@code i} of a form of {@code worms} worms: itself for one worm;
+     * else in worm {@code i}'s own lane (Ravenous Pursuit's: right, left, high behind his head; the owner's "separate them more ... just so
+     * it doesn't create that mass in the back").
+     */
+    public static double[] wormPoint(int worms, int i, double[] p) {
+        return worms <= 1 ? p.clone() : pursuitFrame(i, p, 1.0);
+    }
+
+    /** 3.6.0: as {@link #wormPoint}, the other way: a point of his body's frame in worm {@code i}'s own. */
+    public static double[] wormUnpoint(int worms, int i, double[] p) {
+        return worms <= 1 || p == null ? p : pursuitUnframe(i, p, 1.0);
+    }
+
+    /** 3.6.0: where worm {@code i} of a form of {@code worms} throws from: its own shoulder. */
+    public static double[] wormShoulder(int worms, int i) {
+        return wormPoint(worms, i, SHOULDER);
+    }
+
+    /**
+     * 3.6.0: a form's worms ({@code worms} of them, out of the one root, each in its own lane, full size): the one whose turn it is in the M1
+     * string ({@link BikakuForm#biter}) making {@code bite} at {@code target} (body frame) as far as {@code reach}, the rest at rest.
+     */
+    public static Worm[] form(double time, int seed, int worms, BikakuRules.Bite bite, double age, double[] target, double reach) {
+        if (worms <= 1) {
+            return new Worm[] {new Worm(of(time, seed, bite, age, target, reach), 1.0, 1.0, seed)};
+        }
+        int biter = BikakuForm.biter(bite, worms);
+        Worm[] out = new Worm[worms];
+        for (int i = 0; i < worms; i++) {
+            int own = seed + 101 * i;
+            Shape mine = i == biter && target != null ? of(time, own, bite, age, pursuitUnframe(i, target, 1.0), reach) : idle(time, own);
+            out[i] = new Worm(framed(worms, i, mine), 1.0, 1.0, own);
+        }
+        return out;
+    }
+
+    /** 3.6.0: worm {@code i}'s shape, made in its own frame, placed in its lane (its root shared, fanning out at once; kept out of him). */
+    public static Shape framed(int worms, int i, Shape mine) {
+        if (worms <= 1) {
+            return mine;
+        }
+        double[][] path = new double[mine.path().length][];
+        for (int k = 0; k < path.length; k++) {
+            double fan = k == 0 ? 0.0 : k == 1 ? 0.5 : 1.0;
+            path[k] = pursuitFrame(i, mine.path()[k], fan);
+            if (k >= 2 && k < path.length - 1) {
+                path[k] = clear(path[k]);
+            }
+        }
+        return new Shape(path, mine.dorsal(), mine.aperture());
+    }
+
+    /**
+     * 3.6.0: a form's worms while one of the worm's moves is made: the first makes it (in its own lane: what it goes after and what it
+     * holds taken into its frame), the rest at rest. (3.6.1 makes every worm make it.)
+     */
+    public static Worm[] formMove(double time, int seed, int worms, BikakuMove move, double age, double[] target, double[] held, boolean caught,
+                                  double reach) {
+        if (worms <= 1) {
+            return new Worm[] {new Worm(move(time, seed, move, age, target, held, caught, reach), 1.0, 1.0, seed)};
+        }
+        Worm[] out = new Worm[worms];
+        for (int i = 0; i < worms; i++) {
+            int own = seed + 101 * i;
+            Shape mine = i == 0 ? move(time, own, move, age, pursuitUnframe(i, target, 1.0), wormUnpoint(worms, i, held), caught, reach) : idle(time, own);
+            out[i] = new Worm(framed(worms, i, mine), 1.0, 1.0, own);
+        }
+        return out;
+    }
+
     /** 3.5.9: Predatory Drag's {@link #GROUND_ANCHOR} (where its way along the ground starts), for the server and the renderer. */
     public static double[] groundAnchor() {
         return GROUND_ANCHOR.clone();

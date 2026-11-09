@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.6.0 (HexGhoul): Bikaku: the forms (Twin Worms, Three Worms) (testing)
+
+See `.github/release-notes-3.6.0.md`. Your words: "another form should have like two worms. The third should have three". Forms picked in the menu: One Worm, Twin Worms (250), Three Worms (500); The Walker (750) shown, coming. The worms come out of one root, each in its own lane; M1's bites take turns among them. The moves are made by the first worm for now (every worm in 3.6.1). Protocol 101. Preview: `docs/handoff/bikaku-forms-3.6.0.png`.
+
 ## 3.5.9 (HexGhoul): Bikaku: the worm goes round blocks (testing)
 
 See `.github/release-notes-3.5.9.md`. Your words: "go around blocks like a worm, sort of, and actually go around them. It's being able to adapt to the terrain itself and pulling people back". M1's bites, Devouring Maw, Predatory Drag (along the ground) and Ravenous Pursuit find a way round what is between them and their target (the server's search through the open blocks, sent to everyone), are drawn along it, bite where it ends, and pull what they catch back round it; the way counts toward the reach. Protocol 100. Preview: `docs/handoff/bikaku-round-3.5.9.png`.

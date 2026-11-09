@@ -125,15 +125,22 @@ public final class BikakuRenderer {
             Entity followed = view.targetId() != 0 ? level.m_6815_(view.targetId()) : null;
             target = frame.rig(followed != null ? centre(followed, partial) : new double[] {view.x(), view.y(), view.z()});
         }
-        MawMotion.Shape shape = MawMotion.of(clock, seed, view.bite(), age, target, view.reach());
+        // 3.6.0: his form's worms (one in the kakuja: the worm it grows from), the one whose turn it is making the bite.
+        int count = view.kakuja() ? 1 : view.form().worms();
+        MawMotion.Worm[] worms = MawMotion.form(clock, seed, count, view.bite(), age, target, view.reach());
         if (target == null && view.charge() >= 0 && !view.kakuja()) {
-            // 3.5.8: a key held: the worm winds up.
-            shape = MawMotion.charging(clock, seed, view.charged(clock));
+            // 3.5.8: a key held: the worm (the first, in a form of several) winds up.
+            worms[0] = new MawMotion.Worm(MawMotion.framed(count, 0, MawMotion.charging(clock, seed, view.charged(clock))), 1.0, 1.0, seed);
         }
-        MawMotion.Worm[] worms = {new MawMotion.Worm(shape, 1.0, 1.0, seed)};
         // 3.5.9: each worm's way round blocks (the world) and where its throw starts (body frame); none: a straight line.
-        double[][][] ways = {target != null ? view.route(0) : null};
-        double[][] starts = {MawMotion.shoulder()};
+        double[][][] ways = new double[worms.length][][];
+        double[][] starts = new double[worms.length][];
+        for (int i = 0; i < worms.length; i++) {
+            starts[i] = MawMotion.wormShoulder(count, i);
+        }
+        if (target != null) {
+            ways[com.hex.kagune.control.bikaku.BikakuForm.biter(view.bite(), count)] = view.route(0);
+        }
         // 3.5.0: a move, while it is being made, over a bite.
         double moveAge = view.moveAge(clock);
         com.hex.kagune.control.bikaku.BikakuMove move = view.move();
@@ -159,10 +166,16 @@ public final class BikakuRenderer {
                 double[] aim = frame.rig(aimed != null ? centre(aimed, partial) : point);
                 Entity heldEntity = view.heldId() != 0 ? level.m_6815_(view.heldId()) : null;
                 double[] held = heldEntity != null ? frame.rig(centre(heldEntity, partial)) : null;
-                worms[0] = new MawMotion.Worm(MawMotion.move(clock, seed, move, moveAge, aim, held, view.caught(), Math.max(move.baseReach(), view.moveReach())),
-                    1.0, 1.0, seed);
+                // 3.6.0: its first worm makes it (in its lane), the rest at rest.
+                worms = MawMotion.formMove(clock, seed, count, move, moveAge, aim, held, view.caught(), Math.max(move.baseReach(), view.moveReach()));
+                ways = new double[worms.length][][];
+                starts = new double[worms.length][];
+                for (int i = 0; i < worms.length; i++) {
+                    starts[i] = MawMotion.wormShoulder(count, i);
+                }
                 ways[0] = move == com.hex.kagune.control.bikaku.BikakuMove.MAW || move == com.hex.kagune.control.bikaku.BikakuMove.DRAG ? view.route(1) : null;
-                starts[0] = move == com.hex.kagune.control.bikaku.BikakuMove.DRAG ? MawMotion.groundAnchor() : MawMotion.shoulder();
+                starts[0] = move == com.hex.kagune.control.bikaku.BikakuMove.DRAG ? MawMotion.wormPoint(count, 0, MawMotion.groundAnchor())
+                    : MawMotion.wormShoulder(count, 0);
             }
         }
         // His body as drawn (hunched, leaning): the worm's root rides it.

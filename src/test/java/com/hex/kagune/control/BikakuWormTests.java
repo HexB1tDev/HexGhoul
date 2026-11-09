@@ -35,6 +35,7 @@ public final class BikakuWormTests {
         kakujaMoves();
         heldFar();
         routes();
+        forms();
         System.out.println("Bikaku worm tests: " + passed + " checks passed");
     }
 
@@ -793,6 +794,68 @@ public final class BikakuWormTests {
         }
         check(inWall == 0, "round the wall, none of it goes into the wall (" + inWall + " of " + points + ")");
     }
+
+    /**
+     * 3.6.0: the forms' worms: as many as the form has, each in its own lane, kept well apart behind him (the owner's "just so it doesn't
+     * create that mass in the back ever"), drawn round his body; the M1 string's bites taking turns among them, each landing on its target
+     * and the rest at rest; one worm exactly the worm as it always was.
+     */
+    private static void forms() {
+        for (int worms = 1; worms <= 3; worms++) {
+            for (double time : new double[] {0, 90, 333}) {
+                MawMotion.Worm[] rest = MawMotion.form(time, 7, worms, com.hex.kagune.control.bikaku.BikakuRules.Bite.NONE, 0, null, 6.5);
+                check(rest.length == worms, "a form has its worms");
+                for (MawMotion.Worm w : rest) {
+                    double[][] drawn = MawMotion.around(w.shape().path(), w.girth(), w.shape().aperture());
+                    check(depthInHim(drawn, w.girth(), w.shape().aperture()) < 0.03, "every worm of a form at rest keeps out of his body");
+                }
+                for (int a = 0; a < worms; a++) {
+                    for (int b = a + 1; b < worms; b++) {
+                        double[][] pa = rest[a].shape().path();
+                        double[][] pb = rest[b].shape().path();
+                        double closest = 9.0;
+                        for (int i = 3; i < pa.length; i++) {
+                            for (int j = 3; j < pb.length; j++) {
+                                closest = Math.min(closest, distance(pa[i], pb[j]));
+                            }
+                        }
+                        check(closest > 0.85, "its worms keep well apart behind him (" + closest + ")");
+                    }
+                }
+            }
+            com.hex.kagune.control.bikaku.BikakuRules.Bite[] string = {com.hex.kagune.control.bikaku.BikakuRules.Bite.SNAP,
+                com.hex.kagune.control.bikaku.BikakuRules.Bite.LUNGE, com.hex.kagune.control.bikaku.BikakuRules.Bite.MAUL};
+            java.util.Set<Integer> biters = new java.util.HashSet<>();
+            for (com.hex.kagune.control.bikaku.BikakuRules.Bite bite : string) {
+                int biter = com.hex.kagune.control.bikaku.BikakuForm.biter(bite, worms);
+                biters.add(biter);
+                MawMotion.Worm[] biting = MawMotion.form(40 + bite.land(), 7, worms, bite, bite.land(), PREY_AT, 6.5);
+                double[][] line = biting[biter].shape().path();
+                check(distance(line[line.length - 1], com.hex.kagune.control.bikaku.BikakuRules.reach(PREY_AT)) < 0.25,
+                    "in a form of " + worms + ", its turn's worm bites its target (" + bite + ")");
+                for (int i = 0; i < worms; i++) {
+                    if (i != biter) {
+                        double[] head = biting[i].shape().path()[biting[i].shape().path().length - 1];
+                        check(distance(head, PREY_AT) > 2.0, "the others stay at rest");
+                    }
+                }
+            }
+            check(biters.size() == Math.min(worms, 3), "the bites take turns among its worms");
+        }
+        MawMotion.Shape one = MawMotion.form(40, 7, 1, com.hex.kagune.control.bikaku.BikakuRules.Bite.NONE, 0, null, 6.5)[0].shape();
+        check(distance(one.path()[one.path().length - 1], MawMotion.idle(40, 7).path()[MawMotion.idle(40, 7).path().length - 1]) < 1e-12,
+            "one worm is the worm as it always was");
+        check(com.hex.kagune.control.bikaku.BikakuForm.ONE.worms() == 1 && com.hex.kagune.control.bikaku.BikakuForm.TWIN.worms() == 2
+            && com.hex.kagune.control.bikaku.BikakuForm.THREE.worms() == 3 && com.hex.kagune.control.bikaku.BikakuForm.TWIN.mastery() == 250
+            && com.hex.kagune.control.bikaku.BikakuForm.THREE.mastery() == 500 && !com.hex.kagune.control.bikaku.BikakuForm.WALKER.unlocked(1000),
+            "two worms at 250, three at 500; the walking form not yet");
+        check(com.hex.kagune.control.bikaku.BikakuForm.allowed(com.hex.kagune.control.bikaku.BikakuForm.THREE, 300) == com.hex.kagune.control.bikaku.BikakuForm.TWIN
+            && com.hex.kagune.control.bikaku.BikakuForm.allowed(com.hex.kagune.control.bikaku.BikakuForm.TWIN, 0) == com.hex.kagune.control.bikaku.BikakuForm.ONE
+            && com.hex.kagune.control.bikaku.BikakuForm.allowed(com.hex.kagune.control.bikaku.BikakuForm.WALKER, 1000) == com.hex.kagune.control.bikaku.BikakuForm.THREE,
+            "a form his mastery hasn't opened falls back to the strongest it has");
+    }
+
+    private static final double[] PREY_AT = {0.1, 0.99, 3.6};
 
     private static boolean inside(double[] p) {
         return distance(p, new double[] {0.0, 1.72, 0.0}) < 0.6 - 1.0E-9

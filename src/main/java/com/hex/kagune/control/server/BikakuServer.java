@@ -100,6 +100,8 @@ public final class BikakuServer {
         int chargeHint;
         double queuedReach = BikakuRules.REACH;
         double queuedSlotReach;
+        /** 3.6.0: the form (read from his profile on first use; null until then). */
+        com.hex.kagune.control.bikaku.BikakuForm form;
         /** 3.5.9: the way round blocks the bite out takes, and the move's (one for each of Ravenous Pursuit's worms), in the world; null straight. */
         double[][] biteRoute;
         final double[][][] moveRoutes = new double[3][][];
@@ -390,7 +392,7 @@ public final class BikakuServer {
             state.targetId, state.move.ordinal(), state.moveAt, state.movePoint.f_82479_, state.movePoint.f_82480_, state.movePoint.f_82481_,
             state.targets.clone(), state.heldId, state.caught, state.regenAt, state.kakuja, state.kakujaAt, state.undyingAt, state.autoAt.clone(),
             state.autoTarget.clone(), (float)state.biteReach, (float)state.moveReach, state.charge, state.chargeAt,
-            new double[][][] {state.biteRoute, state.moveRoutes[0], state.moveRoutes[1], state.moveRoutes[2]});
+            new double[][][] {state.biteRoute, state.moveRoutes[0], state.moveRoutes[1], state.moveRoutes[2]}, form(player, state).ordinal());
     }
 
     static void broadcast(ServerPlayer player, State state) {
@@ -426,6 +428,10 @@ public final class BikakuServer {
 
     /** A Bikaku input from {@code C2SBikakuAction}. */
     public static void onAction(ServerPlayer player, int action, int arg, int targetId) {
+        if (action == com.hex.kagune.control.network.C2SBikakuAction.FORM && isBikaku(player)) {
+            pickForm(player, state(player), arg); // 3.6.0: from the menu, out or not
+            return;
+        }
         if (!isBikaku(player) || PaleWitness.frozen(player) || PaleRevive.down(player) || PaleStun.stunned(player) || !ready(player)) {
             return;
         }
@@ -472,6 +478,45 @@ public final class BikakuServer {
             return;
         }
         BikakuMoves.key(player, state, slots[arg], hint, now, pressed.baseReach());
+    }
+
+    // ---------------------------------------------------------------- 3.6.0: the forms
+
+    /** Where his form is kept in his profile (death carries it; a reset clears it). */
+    static final String FORM_KEY = "BikakuForm";
+
+    /** His form: as he picked it (kept in his profile), or the strongest his mastery has opened below it. */
+    static com.hex.kagune.control.bikaku.BikakuForm form(ServerPlayer player, State state) {
+        if (state.form == null) {
+            net.minecraft.nbt.CompoundTag root = KaguneProfile.root(player);
+            state.form = com.hex.kagune.control.bikaku.BikakuForm.byOrdinal(root.m_128441_(FORM_KEY) ? root.m_128451_(FORM_KEY) : 0);
+        }
+        com.hex.kagune.control.bikaku.BikakuForm allowed = com.hex.kagune.control.bikaku.BikakuForm.allowed(state.form, KaguneProfile.mastery(player));
+        state.form = allowed;
+        return allowed;
+    }
+
+    /** How many worms his form has (one in the kakuja: the worm it grows from). */
+    static int worms(ServerPlayer player, State state) {
+        return state.kakuja ? 1 : form(player, state).worms();
+    }
+
+    /** A form picked in the menu: taken if his mastery has opened it, kept in his profile, every client told. */
+    private static void pickForm(ServerPlayer player, State state, int ordinal) {
+        com.hex.kagune.control.bikaku.BikakuForm wanted = com.hex.kagune.control.bikaku.BikakuForm.byOrdinal(ordinal);
+        if (!wanted.unlocked(KaguneProfile.mastery(player))) {
+            notice(player, state, Component.m_237110_("message.hexkagune.bikaku.locked", wanted.displayName(), wanted.mastery()));
+            return;
+        }
+        state.form = wanted;
+        KaguneProfile.root(player).m_128405_(FORM_KEY, wanted.ordinal());
+        KaguneServerController.playSelf(player, HexKaguneSounds.KAGUNE_RESHAPE, 0.9F, KaguneServerController.vary(player, 0.8F, 0.05F));
+        broadcast(player, state);
+    }
+
+    /** 3.6.0: the shoulder (the world) worm {@code worm} of his form throws from. */
+    static Vec3 shoulder(ServerPlayer player, State state, int worm) {
+        return world(player, com.hex.kagune.control.bikaku.MawMotion.wormShoulder(worms(player, state), worm));
     }
 
     /** "{@code key}" on the action bar with its arguments, at most every few seconds. */
@@ -579,7 +624,8 @@ public final class BikakuServer {
             return;
         }
         // 3.5.9: the worm's bite goes round blocks to what it goes after (the kakuja's tentacles as they always did).
-        Aim routed = big ? new Aim(aimFrom(player, hint, kakujaCentre(player), BikakuRules.KAKUJA_REACH), null) : aimRouted(player, hint, shoulder(player),
+        Vec3 throwFrom = big ? kakujaCentre(player) : shoulder(player, state, com.hex.kagune.control.bikaku.BikakuForm.biter(bite, worms(player, state)));
+        Aim routed = big ? new Aim(aimFrom(player, hint, kakujaCentre(player), BikakuRules.KAKUJA_REACH), null) : aimRouted(player, hint, throwFrom,
             state.biteReach);
         LivingEntity target = routed.body();
         state.biteRoute = big || !BikakuRoutes.bends(routed.route()) ? null : routed.route();
@@ -587,7 +633,7 @@ public final class BikakuServer {
         state.startedAt = now;
         state.targetId = target == null ? 0 : target.m_19879_();
         Vec3 air = player.m_146892_().m_82549_(player.m_20154_().m_82490_((big ? BikakuRules.KAKUJA_REACH : state.biteReach) * (big ? 0.8 : 0.85)));
-        state.aim = target != null ? KaguneServerController.center(target) : big ? air : BikakuRoutes.clipped(player, shoulder(player), air);
+        state.aim = target != null ? KaguneServerController.center(target) : big ? air : BikakuRoutes.clipped(player, throwFrom, air);
         state.landed = false;
         state.lastBite = bite;
         state.chainEndsAt = now + bite.ticks();
@@ -803,7 +849,7 @@ public final class BikakuServer {
     /** The mouth shuts: on its target if it is still in reach and in sight, else on whatever is at the mouth. */
     private static void land(ServerPlayer player, State state, long now) {
         boolean big = state.bite == Bite.TENTACLE;
-        Vec3 from = big ? kakujaCentre(player) : shoulder(player);
+        Vec3 from = big ? kakujaCentre(player) : shoulder(player, state, com.hex.kagune.control.bikaku.BikakuForm.biter(state.bite, worms(player, state)));
         double reach = big ? BikakuRules.KAKUJA_REACH : state.biteReach;
         LivingEntity body = null;
         if (state.biteRoute != null && !big) {

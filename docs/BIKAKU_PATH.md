@@ -37,6 +37,9 @@ for (a tap as before, 30 blocks after 2 s), every beat slower for a longer throw
 everyone, the worm laid along it with `MawMotion.along`) and pulls what it catches back round them; M1, Maw, Drag (along the ground),
 Pursuit. Next: the forms.
 
+**3.6.0 (the forms, first part):** One Worm, Twin Worms (250), Three Worms (500) picked in the menu (The Walker, 750, shown, not built);
+the worms each in their own lane; M1's bites take turns. Next: 3.6.1 every move by all the worms; 3.6.2 The Walker.
+
 **Before 3.4.9 (the pure worm, unchanged since except as above):**
 
 - `control/bikaku/MawWorm.java`: the worm as a mesh (pure). A thick muscular tube along a spine resampled evenly by length
@@ -271,7 +274,10 @@ opens with mastery, picked in the menu, K for the kakuja as now):
    finding the ground and walls round him, climbing anything; its own moves.
 
 Asked the owner: whether the existing moves stay with the one worm (each form then has a set of its own) or each form keeps some; and
-whether they have moves in mind for forms 2 to 4 or want them designed and previewed first.
+whether they have moves in mind for forms 2 to 4 or want them designed and previewed first. Their answer (binding): **"to basically
+become overpowered, like, to do enhanced versions of themselves whenever they're, like, in different transformations, such as, like, the
+move that, like, drag pursuit, you can send all three of them, all three of the worm-like things, and the thing that sends the worm
+underground and then up can be like more than one, and whatsoever."**
 
 ## Decisions made (tell the owner; change if they say)
 

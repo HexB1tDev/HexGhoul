@@ -21,6 +21,8 @@ public record C2SBikakuAction(int action, int arg, int targetId) {
     /** 3.5.8: M1 pressed (the worm winds up a bite) and let go (thrown as far as it was held for); {@code targetId} under the crosshair. */
     public static final int ATTACK = 3;
     public static final int ATTACK_UP = 4;
+    /** 3.6.0: a form picked in the menu ({@code arg} its {@code BikakuForm} ordinal). */
+    public static final int FORM = 5;
 
     public static void encode(C2SBikakuAction message, FriendlyByteBuf buffer) {
         buffer.writeByte(message.action);

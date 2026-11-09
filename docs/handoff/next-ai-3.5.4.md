@@ -46,6 +46,12 @@ Binding; quoted exactly as written. Kept current as that session goes.
   row: the Drag's worm coming out of his back round his right side, hugging it): **"why not make a bigger angle? it's going too close to
   the body"**. Taken as a report on 3.5.5, so first (3.5.6): the Drag's worm swings out wide round his right side; the kakuja's moves after.
 
+- After 3.5.9, asked whether the forms keep the worm's moves or get their own, the owner: **"to basically become overpowered, like, to do
+  enhanced versions of themselves whenever they're, like, in different transformations, such as, like, the move that, like, drag
+  pursuit, you can send all three of them, all three of the worm-like things, and the thing that sends the worm underground and then up
+  can be like more than one, and whatsoever."** So every form keeps the moves, each made stronger by its worms (Drag and Pursuit with all
+  three worms in the three-worm form; Carrion Eruption more than one).
+
 ## State now (kept current by the session on `claude/hopeful-noether-5c2wex`)
 
 - **3.5.4 shipped** (the kakuja as the last session left it; the owner liked it).
@@ -59,9 +65,11 @@ Binding; quoted exactly as written. Kept current as that session goes.
   nothing else until it is back). Preview sent first (`docs/handoff/bikaku-held-3.5.8.png`). Versions 3.5.8; protocol "99".
 - **3.5.9 shipped:** round blocks (`WormRoute`, `BikakuRoutes`, `MawMotion.along`; M1, Maw, Drag, Pursuit; catches pulled back along the
   way). Preview sent first (`docs/handoff/bikaku-round-3.5.9.png`). Versions 3.5.9; protocol "100". **The next version is 3.6.0.**
-- **Next: the forms** (the owner's words above: two worms, three, then the walking form before the kakuja, "the moves, of course, changing
-  to something else ... depending on the form"). A plan for the owner first (how a form is chosen, its mastery, which moves each has), then
-  previews before going far.
+- **3.6.0 shipped:** the forms (One, Twin 250, Three 500; The Walker 750 shown, not built), picked in the menu; M1's bites take turns;
+  moves by the first worm for now. Preview sent first (`docs/handoff/bikaku-forms-3.6.0.png`). Versions 3.6.0; protocol "101".
+- **Next: 3.6.1, every move made by all the form's worms** (the owner's answer above: Maw and Drag a catch per worm, Pursuit with all the
+  worms, Carrion Eruption more than one), then **3.6.2, The Walker** (two walking tentacles from the worms' root, his body steady, feet
+  finding the ground and walls, climbing). Previews before going far.
 
 ## Where things were when this note was written (after 3.5.3)
 

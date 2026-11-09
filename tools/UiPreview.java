@@ -213,7 +213,7 @@ public class UiPreview {
         c.push();
         c.translate(ox, oy);
         c.scale(scale);
-        com.hex.kagune.control.client.BikakuMenuView.draw(c, new com.hex.kagune.control.client.BikakuMenuView.Model(mastery, true, 64.0F, 100.0F),
+        com.hex.kagune.control.client.BikakuMenuView.draw(c, new com.hex.kagune.control.client.BikakuMenuView.Model(mastery, true, 64.0F, 100.0F, mastery >= 500 ? 2 : 0),
             mouseX, mouseY, 1.3);
         c.pop();
         ImageIO.write(image, "png", out);

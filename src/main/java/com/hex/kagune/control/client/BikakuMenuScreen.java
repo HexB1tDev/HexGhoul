@@ -35,7 +35,8 @@ public final class BikakuMenuScreen extends Screen {
         LocalPlayer player = minecraft.f_91074_;
         GuiCanvas canvas = new GuiCanvas(graphics, minecraft.f_91062_, player == null ? null : player.m_108560_());
         KaguneClientState.View state = KaguneClientState.self();
-        BikakuMenuView.Model model = new BikakuMenuView.Model(state.mastery(), state.active(), state.energy(), KaguneProfile.MAX_ENERGY);
+        BikakuMenuView.Model model = new BikakuMenuView.Model(state.mastery(), state.active(), state.energy(), KaguneProfile.MAX_ENERGY,
+            player == null ? 0 : BikakuClient.get(player).form().ordinal());
         canvas.push();
         canvas.translate(this.originX, this.originY);
         canvas.scale(this.scale);
@@ -55,6 +56,15 @@ public final class BikakuMenuScreen extends Screen {
         if (eyes != null && eyes.contains(x, y)) {
             Minecraft.m_91087_().m_91152_(new KakuganScreen());
             return true;
+        }
+        // 3.6.0: a form picked (the server checks its mastery).
+        for (com.hex.kagune.control.bikaku.BikakuForm form : com.hex.kagune.control.bikaku.BikakuForm.values()) {
+            UkakuMenuView.Rect rect = this.hits.get("form" + form.ordinal());
+            if (rect != null && rect.contains(x, y)) {
+                com.hex.kagune.control.network.ControlNetwork.CHANNEL.sendToServer(new com.hex.kagune.control.network.C2SBikakuAction(
+                    com.hex.kagune.control.network.C2SBikakuAction.FORM, form.ordinal(), 0));
+                return true;
+            }
         }
         return false;
     }

@@ -36,7 +36,11 @@ public final class BikakuMenuView {
     static final int SOON = 0xFFB08A50;
 
     /** What the menu shows. */
-    public record Model(int mastery, boolean active, float energy, float maxEnergy) {
+    public record Model(int mastery, boolean active, float energy, float maxEnergy, int form) {
+        /** As before 3.6.0 (the one worm). */
+        public Model(int mastery, boolean active, float energy, float maxEnergy) {
+            this(mastery, active, energy, maxEnergy, 0);
+        }
     }
 
     /** The plan's moves still to come (the owner's spec), each with the mastery it is meant to need (3.5.0: the built ones are moves). */
@@ -83,7 +87,7 @@ public final class BikakuMenuView {
         c.centered("M1 bites (a string of three)  •  its moves on your kagune keys, opened by mastery  •  each bite that lands heals you", centerX,
             top + 51, 0xFF94506A);
 
-        identity(c, model, left + 24, top + 68);
+        identity(c, model, hits, mouseX, mouseY, left + 24, top + 68);
         middle(c, model, hits, mouseX, mouseY, left + 295, top + 76, time);
         moves(c, model, left + 566, top + 70);
 
@@ -101,11 +105,12 @@ public final class BikakuMenuView {
         return hits;
     }
 
-    private static void identity(UiCanvas c, Model model, int x, int y) {
+    private static void identity(UiCanvas c, Model model, Map<String, UkakuMenuView.Rect> hits, double mouseX, double mouseY, int x, int y) {
         int mastery = model.mastery();
+        com.hex.kagune.control.bikaku.BikakuForm current = com.hex.kagune.control.bikaku.BikakuForm.byOrdinal(model.form());
         c.text("CURRENT KAGUNE", x, y, HEADER, false);
         row(c, "Type", "Bikaku", x, y + 25);
-        row(c, "Kagune", "One worm, lower back", x, y + 43);
+        row(c, "Kagune", current.worms() == 1 ? "One worm, lower back" : current.worms() + " worms, one root", x, y + 43);
         row(c, "Length", "About 8 blocks", x, y + 61);
         row(c, "Mouth", "Six fangs, three rings", x, y + 79);
         row(c, "Colour", "Your kagune colour", x, y + 97);
@@ -117,6 +122,24 @@ public final class BikakuMenuView {
             UkakuMenuView.capsule(c, x, y + 140, Math.max(8, Math.round(205.0F * Math.min(1000, mastery) / 1000.0F)), 8, BAR);
         });
         c.text("Every bite that lands grows it", x, y + 154, MUTED, false);
+
+        // 3.6.0: its forms (each opens with mastery; every move made by all its worms).
+        c.text("FORM", x, y + 180, HEADER, false);
+        for (com.hex.kagune.control.bikaku.BikakuForm form : com.hex.kagune.control.bikaku.BikakuForm.values()) {
+            int by = y + 196 + form.ordinal() * 22;
+            boolean open = form.unlocked(mastery);
+            boolean picked = form == current;
+            UkakuMenuView.Rect rect = new UkakuMenuView.Rect(x, by, 205, 18);
+            boolean hover = open && rect.contains(mouseX, mouseY);
+            c.fill(x - 1, by - 1, x + 206, by + 19, picked ? VEIN_BRIGHT : PANEL_EDGE);
+            c.fill(x, by, x + 205, by + 18, picked ? BUTTON_HOVER : hover ? BUTTON_HOVER : BUTTON);
+            c.text(form.displayName().toUpperCase(java.util.Locale.ROOT), x + 8, by + 5, open ? (picked ? TITLE : VALUE) : FAINT, false);
+            c.text(open ? (picked ? "ON" : form.worms() + (form.worms() == 1 ? " worm" : " worms")) : !form.built() ? "soon" : Integer.toString(form.mastery()),
+                x + 150, by + 5, open ? TRAIT : FAINT, false);
+            if (open) {
+                hits.put("form" + form.ordinal(), rect);
+            }
+        }
     }
 
     private static void middle(UiCanvas c, Model model, Map<String, UkakuMenuView.Rect> hits, double mouseX, double mouseY, int x, int y, double time) {
