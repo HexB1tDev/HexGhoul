@@ -170,14 +170,15 @@ public final class GraftRenderer {
             GraftClient.View view = com.hex.kagune.control.client.GhoulNpcClient.graft(seen);
             Limbs limbs = LIMBS.computeIfAbsent(npc.m_20148_(), id -> new Limbs());
             limbs.seen = level.m_46467_();
-            limbs.stage = GraftStage.TRANSPLANT;
+            GraftStage ranked = com.hex.kagune.control.npc.NpcRules.graftStage(seen.identity().tier()); // 4.0.0: S three tails, SS four
+            limbs.stage = ranked;
             Frame frame = Frame.of(npc, partial);
             GraftRig.Body body = body(npc, partial, clock, frame, prey(level, npc, limbs, partial, frame));
             VertexConsumer out = consumer[0] == null ? (consumer[0] = buffers.m_6299_(TYPE)) : consumer[0];
             // 1.0.41: its tails turned over with it as it flips (carried on its torso, as a player's are). 1.3.35: in its own colour.
             tint = com.hex.kagune.control.KaguneTint.wild(seen.identity().seed());
             try {
-                drawSet(out, matrix, normals, level, npc, view, GraftStage.TRANSPLANT, limbs.base, deploy, view, body, frame, camera, clock, partial,
+                drawSet(out, matrix, normals, level, npc, view, ranked, limbs.base, deploy, view, body, frame, camera, clock, partial,
                     seen.identity().lookMastery(), distance <= DETAIL_DISTANCE_SQR, null,
                     com.hex.kagune.control.client.GhoulNpcClient.flip(seen, clock, npc.m_20096_()));
             } finally {
@@ -211,7 +212,8 @@ public final class GraftRenderer {
             }
             Limbs limbs = LIMBS.computeIfAbsent(child.m_20148_(), id -> new Limbs());
             limbs.seen = level.m_46467_();
-            limbs.stage = GraftStage.TRANSPLANT;
+            GraftStage ranked = com.hex.kagune.control.npc.NpcRules.graftStage(seen.identity().tier()); // 4.0.0: S three tails, SS four
+            limbs.stage = ranked;
             Frame frame = Frame.of(child, partial, com.hex.kagune.control.family.ChildKaguneRules.scale(kid.stage()));
             GraftRig.Body body = body(child, partial, clock, frame, prey(level, child, limbs, partial, frame));
             VertexConsumer out = consumer[0] == null ? (consumer[0] = buffers.m_6299_(TYPE)) : consumer[0];

@@ -1155,3 +1155,5 @@ F net/minecraft/world/entity/EquipmentSlot HEAD Lnet/minecraft/world/entity/Equi
 F net/minecraft/world/entity/EquipmentSlot LEGS Lnet/minecraft/world/entity/EquipmentSlot;  # [srg] joined.tsrg bfo d LEGS
 F net/minecraft/world/entity/EquipmentSlot FEET Lnet/minecraft/world/entity/EquipmentSlot;  # [srg] joined.tsrg bfo c FEET
 M net/minecraft/client/renderer/RenderType m_110431_ (Lnet/minecraft/resources/ResourceLocation;)Lnet/minecraft/client/renderer/RenderType;  # [srg] armorCutoutNoCull: joined.tsrg fkf a (Lacq;)Lfkf; m_110431_ (yarn getArmorCutoutNoCull)
+M net/minecraft/world/entity/LivingEntity m_8061_ (Lnet/minecraft/world/entity/EquipmentSlot;Lnet/minecraft/world/item/ItemStack;)V  # [srg] setItemSlot: joined.tsrg bfz a (Lbfo;Lcfz;)V m_8061_ 21035 (abstract on LivingEntity, bgb Mob's own a (Lbfo;Lcfz;)V m_8061_; yarn equipStack): an NPC's outfit and mask
+M net/minecraft/world/entity/Mob m_21409_ (Lnet/minecraft/world/entity/EquipmentSlot;F)V  # [srg] setDropChance: joined.tsrg bgb a (Lbfo;F)V m_21409_ (yarn MobEntity.setEquipmentDropChance)

@@ -115,84 +115,209 @@ public final class NpcRules {
         return nearest >= ALONE && crowd <= CROWD_MOST;
     }
 
-    /** The tier a ghoul met by someone at {@code mastery} has, for a roll {@code r} in 0..1: the stronger they are, the stronger it is. */
-    public static int tier(int mastery, double r) {
-        double m = Math.max(0, Math.min(1000, mastery)) / 1000.0;
-        double strong = 0.05 + 0.35 * m;
-        double middling = 0.30 + 0.20 * m;
-        return r < strong ? 2 : r < strong + middling ? 1 : 0;
+    // ---------------------------------------------------------------- 4.0.0: ranks D to SS
+
+    /**
+     * 4.0.0 (the owner: "a completely reworked ranking system, similar to the existing CCG investigator ranking system. Their ranks will
+     * range from D to SS"): a wild ghoul's rank (its {@code tier}, 0..5) by name.
+     */
+    public static final String[] RANKS = {"D", "C", "B", "A", "S", "SS"};
+    public static final int D = 0;
+    public static final int C = 1;
+    public static final int B = 2;
+    public static final int A = 3;
+    public static final int S = 4;
+    public static final int SS = 5;
+
+    /** Its rank's name ("B"). */
+    public static String rankName(int tier) {
+        return RANKS[clamp(tier)];
     }
 
-    /** Health, armor, speed (the mob's movement attribute) by tier. */
+    /**
+     * The rank a ghoul met by someone at {@code mastery} has, for a roll {@code r} in 0..1: the stronger they are, the stronger it is; an
+     * S or an SS is rare even for the strongest (about one in five), a D gone once they are strong.
+     */
+    public static int tier(int mastery, double r) {
+        double m = Math.max(0, Math.min(1000, mastery)) / 1000.0;
+        double[] chance = {0.0, 0.30, 0.18 + 0.10 * m, 0.08 + 0.15 * m, 0.03 + 0.10 * m, 0.01 + 0.05 * m};
+        double cumulative = 0.0;
+        for (int rank = SS; rank >= C; rank--) {
+            cumulative += chance[rank];
+            if (r < cumulative) {
+                return rank;
+            }
+        }
+        return D;
+    }
+
+    /** The share of ghouls met at {@code mastery} of rank {@code rank} or above (for tests and the guide). */
+    public static double atLeast(int mastery, int rank) {
+        double m = Math.max(0, Math.min(1000, mastery)) / 1000.0;
+        double[] chance = {0.0, 0.30, 0.18 + 0.10 * m, 0.08 + 0.15 * m, 0.03 + 0.10 * m, 0.01 + 0.05 * m};
+        double total = 0.0;
+        for (int k = Math.max(C, rank); k <= SS; k++) {
+            total += chance[k];
+        }
+        return rank <= D ? 1.0 : total;
+    }
+
+    private static final float[] HEALTH = {30.0F, 45.0F, 65.0F, 90.0F, 135.0F, 200.0F};
+    private static final double[] ARMOR = {2.0, 4.0, 6.0, 8.0, 11.0, 14.0};
+    private static final double[] SPEED = {0.27, 0.30, 0.32, 0.34, 0.36, 0.39};
+    private static final float[] DAMAGE = {2.5F, 3.5F, 4.5F, 5.5F, 6.75F, 7.5F};
+
+    /** Health, armor, speed (the mob's movement attribute) by rank: a D weaker than a player in a fight, an SS a wall. */
     public static float health(int tier) {
-        return switch (clamp(tier)) {
-            case 0 -> 40.0F;
-            case 1 -> 60.0F;
-            default -> 85.0F;
-        };
+        return HEALTH[clamp(tier)];
     }
 
     public static double armor(int tier) {
-        return 4.0 + 2.0 * clamp(tier);
+        return ARMOR[clamp(tier)];
     }
 
     public static double speed(int tier) {
-        return 0.30 + 0.02 * clamp(tier);
+        return SPEED[clamp(tier)];
     }
 
     /** Damage for each unit of a lash's power, or of one shot (before the difficulty's scaling, as every mob's). */
     public static float damage(int tier) {
-        return 3.0F + clamp(tier);
+        return DAMAGE[clamp(tier)];
     }
 
-    /** The mastery its tails are drawn at: one at the lowest tier, two above it. */
+    /** The mastery its tails are drawn at: one at D and C, two at B and A; an S's and an SS's are a stage further ({@link #graftStage}). */
     public static int tailMastery(int tier) {
         return switch (clamp(tier)) {
-            case 0 -> 0;
-            case 1 -> 150;
-            default -> 240;
+            case D -> 0;
+            case C -> 80;
+            case B -> 150;
+            case A -> 240;
+            case S -> 400;
+            default -> 600;
         };
     }
 
-    /** The mastery its wings are drawn at. */
+    /**
+     * 4.0.0: the rinkaku's tails by rank, from the existing kagune: the transplant's one or two up to A, the centipede's three at S, the four
+     * thorns at SS (each stage's own string of lashes and reach, as a player's).
+     */
+    public static com.hex.kagune.control.graft.GraftStage graftStage(int tier) {
+        return switch (clamp(tier)) {
+            case S -> com.hex.kagune.control.graft.GraftStage.CENTIPEDE;
+            case SS -> com.hex.kagune.control.graft.GraftStage.THORNS;
+            default -> com.hex.kagune.control.graft.GraftStage.TRANSPLANT;
+        };
+    }
+
+    /** The mastery its wings are drawn at (bigger with its rank; never crystal or embers: those are a player's). */
     public static int wingMastery(int tier) {
         return switch (clamp(tier)) {
-            case 0 -> 100;
-            case 1 -> 200;
-            default -> 350;
+            case D -> 60;
+            case C -> 100;
+            case B -> 200;
+            case A -> 300;
+            case S -> 380;
+            default -> 440;
         };
     }
 
     /** How many lashes of the string it throws before it pauses (the stronger, the longer), or shots in a volley. */
     public static int string(int tier) {
-        return 3 + clamp(tier);
+        return 2 + clamp(tier);
     }
 
-    /** 1.0.41: ticks between its flips (the stronger, the more often). */
+    /** 1.0.41: ticks between its flips (the stronger, the more often); a D never flips ({@link #flips}). */
     public static int flipEvery(int tier) {
         return switch (clamp(tier)) {
-            case 0 -> 80;
-            case 1 -> 60;
-            default -> 45;
+            case D -> 110;
+            case C -> 80;
+            case B -> 60;
+            case A -> 48;
+            case S -> 38;
+            default -> 30;
         };
     }
 
     /** 1.0.41: how likely it meets a blow coming at it with its own (a rinkaku with the blow's owner in reach), or flips clear of it. */
     public static double counter(int tier) {
-        return 0.25 + 0.2 * clamp(tier);
+        return 0.05 + 0.13 * clamp(tier);
     }
 
     public static double dodge(int tier) {
-        return 0.2 + 0.15 * clamp(tier);
+        return 0.08 + 0.12 * clamp(tier);
     }
 
-    /** 1.0.41: ticks between its heavies. */
+    /** 1.0.41: ticks between its heavies (a D's and a C's never come: {@link #heavies}). */
     public static int heavyEvery(int tier) {
         return switch (clamp(tier)) {
-            case 0 -> 260;
-            case 1 -> 200;
-            default -> 150;
+            case D -> 360;
+            case C -> 300;
+            case B -> 230;
+            case A -> 180;
+            case S -> 130;
+            default -> 95;
         };
+    }
+
+    /**
+     * 4.0.0: what each rank can do at all (the owner: "D-rank ghouls ... basic attacks"; higher ranks "more aggressive and intelligent
+     * combat behavior, improved reactions, and access to increasingly powerful kagune abilities"): a D only its basic string; from C it
+     * flips and dodges; from B it meets blows with its own (a clash) and throws its heavy; from S it frenzies when hurt ({@link #frenzies});
+     * its string's pause shortens all the way up ({@link #pause}).
+     */
+    public static boolean flips(int tier) {
+        return clamp(tier) >= C;
+    }
+
+    public static boolean dodges(int tier) {
+        return clamp(tier) >= C;
+    }
+
+    public static boolean counters(int tier) {
+        return clamp(tier) >= B;
+    }
+
+    public static boolean heavies(int tier) {
+        return clamp(tier) >= B;
+    }
+
+    /** 4.0.0: an S and an SS, badly hurt, frenzy once a fight: faster and harder for {@link #FRENZY_TICKS}, healing faster. */
+    public static boolean frenzies(int tier) {
+        return clamp(tier) >= S;
+    }
+
+    /** Below this share of its health an S or SS frenzies, for this long. */
+    public static final double FRENZY_BELOW = 0.4;
+    public static final int FRENZY_TICKS = 200;
+
+    /** 4.0.0: its pause between strings (ticks) for a roll {@code r} in 0..1: a D sizes its prey up long, an SS hardly at all. */
+    public static long pause(int tier, double r) {
+        double scale = switch (clamp(tier)) {
+            case D -> 1.5;
+            case C -> 1.15;
+            case B -> 1.0;
+            case A -> 0.85;
+            case S -> 0.65;
+            default -> 0.5;
+        };
+        return Math.round((PAUSE_LEAST + r * (PAUSE_MOST - PAUSE_LEAST)) * scale);
+    }
+
+    /** 4.0.0: how often it knits back a health when unhurt (ticks): an SS three times as fast as a D. */
+    public static int regenEvery(int tier) {
+        return switch (clamp(tier)) {
+            case D -> 40;
+            case C -> 32;
+            case B -> 28;
+            case A -> 24;
+            case S -> 18;
+            default -> 13;
+        };
+    }
+
+    /** 4.0.0: how far it sees prey and chases (blocks): the stronger, the keener. */
+    public static double sight(int tier) {
+        return SIGHT + 2.0 * clamp(tier);
     }
 
     /** 1.0.41: its way of fighting, from its seed: a rinkaku lancer opens from the full length of its tails; an ukaku sniper keeps far off. */
@@ -209,13 +334,11 @@ public final class NpcRules {
         return Math.max(FLIP_FORWARD_LEAST, Math.min(FLIP_FORWARD_MOST, gap / FLIP_CARRY));
     }
 
-    /** Pieces of Ghoul Meat it leaves, for a roll {@code r} in 0..1: one, up to two, two or three. */
+    /** Pieces of Ghoul Meat it leaves, for a roll {@code r} in 0..1: one from a D, up to five from an SS. */
     public static int meat(int tier, double r) {
-        return switch (clamp(tier)) {
-            case 0 -> 1;
-            case 1 -> r < 0.5 ? 1 : 2;
-            default -> r < 0.5 ? 2 : 3;
-        };
+        int t = clamp(tier);
+        int least = 1 + t / 2;
+        return least + (r < 0.5 ? 0 : 1) * (t >= 1 ? 1 : 0);
     }
 
     /** Where around a player it turns up, for rolls {@code a} and {@code b} in 0..1: {x, z} offsets in blocks. */

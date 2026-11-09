@@ -175,14 +175,14 @@ final class ControlCommands {
                     .executes(context -> summonArmed(context, StringArgumentType.getString(context, "weapon"),
                         com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "rank")))))));
         // 7.0.2: a ghoul NPC five blocks ahead (an operator's: to meet one without waiting for the night), its kagune, temper and tier
-        // as asked (rinkaku/ukaku; feral, gourmet, pack, drifter, scavenger, anteiku; 0 to 2), else rolled.
+        // as asked (rinkaku/ukaku; feral, gourmet, pack, drifter, scavenger, anteiku; 4.0.0: its rank 0 to 5, D to SS), else rolled.
         dispatcher.register(Commands.m_82127_("kagune").then(Commands.m_82127_("npc").requires(source -> source.m_6761_(2))
             .executes(context -> spawnNpc(context, null, null, -1))
             .then(Commands.m_82129_("kind", StringArgumentType.word())
                 .executes(context -> spawnNpc(context, StringArgumentType.getString(context, "kind"), null, -1))
                 .then(Commands.m_82129_("temper", StringArgumentType.word())
                     .executes(context -> spawnNpc(context, StringArgumentType.getString(context, "kind"), StringArgumentType.getString(context, "temper"), -1))
-                    .then(Commands.m_82129_("tier", com.mojang.brigadier.arguments.IntegerArgumentType.integer(0, 2))
+                    .then(Commands.m_82129_("tier", com.mojang.brigadier.arguments.IntegerArgumentType.integer(0, 5))
                         .executes(context -> spawnNpc(context, StringArgumentType.getString(context, "kind"), StringArgumentType.getString(context, "temper"),
                             com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "tier"))))))));
     }
@@ -225,12 +225,12 @@ final class ControlCommands {
             }
         }
         com.hex.kagune.control.npc.NpcIdentity who = new com.hex.kagune.control.npc.NpcIdentity(k, t, tier < 0 ? rolled.tier() : tier, rolled.skin(),
-            rolled.name(), rolled.seed());
+            rolled.name(), rolled.seed(), rolled.mask(), false);
         net.minecraft.world.phys.Vec3 ahead = UkakuFire.horizontal(player.m_20154_()).m_82490_(5.0);
         com.hex.kagune.control.npc.GhoulNpc npc = GhoulNpcSpawner.place(player.m_284548_(), player.m_20185_() + ahead.f_82479_,
             player.m_20189_() + ahead.f_82481_, who);
         String said = npc == null ? "No room for a ghoul there." : "A ghoul: " + who.displayName() + " (" + who.kind().name().toLowerCase(java.util.Locale.ROOT)
-            + ", tier " + who.tier() + ").";
+            + ", " + who.rank() + "-rank" + (who.maskItem() == null ? "" : ", masked") + ").";
         context.getSource().m_288197_(() -> Component.m_237113_(said), false);
         return npc == null ? 0 : 1;
     }

@@ -128,6 +128,9 @@ public final class GhoulNpcBrain {
         /** 1.0.41: when its heavy is ready again, and the blow coming at it it last answered (when that set out). */
         long heavyReadyAt = Long.MIN_VALUE;
         long answered = Long.MIN_VALUE;
+        /** 4.0.0: an S's or SS's frenzy (until when), and whether this fight's is spent. */
+        long frenzyUntil = Long.MIN_VALUE;
+        boolean frenzied;
     }
 
     /** Where an ally's player and whether it waits are kept in its saved data. */
@@ -219,17 +222,37 @@ public final class GhoulNpcBrain {
         sync(npc, mind, who);
     }
 
-    /** Puts its tier on it (health, armor, speed), heals it whole and names it. */
+    /**
+     * Puts its rank on it (health, armor, speed), heals it whole and names it (4.0.0: with its rank). 4.0.0: its mask on its head (a wild
+     * ghoul's generic one, an Aogiri member's faction one under the Crimson Outfit's hood), each piece's drop its own small chance; their
+     * protection is taken off its own, so its rank alone says how tough it is.
+     */
     public static void dress(GhoulNpc npc) {
         NpcIdentity who = npc.identity();
         if (who == null) {
             return;
         }
+        if (who.aogiri()) {
+            OutfitServer.dress(npc, com.hex.kagune.control.outfit.Outfits.CRIMSON_SET);
+        } else if (who.maskItem() != null) {
+            OutfitServer.mask(npc, who.maskItem());
+        }
+        for (net.minecraft.world.entity.EquipmentSlot slot : new net.minecraft.world.entity.EquipmentSlot[] {net.minecraft.world.entity.EquipmentSlot.HEAD,
+            net.minecraft.world.entity.EquipmentSlot.CHEST, net.minecraft.world.entity.EquipmentSlot.LEGS, net.minecraft.world.entity.EquipmentSlot.FEET}) {
+            npc.m_21409_(slot, com.hex.kagune.control.outfit.Outfits.DROP_CHANCE);
+        }
         npc.m_21051_(Attributes.f_22276_).m_22100_(NpcRules.health(who.tier()));
-        npc.m_21051_(Attributes.f_22284_).m_22100_(NpcRules.armor(who.tier()));
+        npc.m_21051_(Attributes.f_22284_).m_22100_(OutfitServer.armour(npc, NpcRules.armor(who.tier())));
         npc.m_21051_(Attributes.f_22279_).m_22100_(NpcRules.speed(who.tier()));
         npc.m_21153_(npc.m_21233_());
-        npc.m_6593_(Component.m_237113_(who.displayName()));
+        npc.m_6593_(Component.m_237113_(who.tagName()));
+    }
+
+    /** 4.0.0: how hard each unit of its blows lands: its rank's damage, a third more in an S's or SS's frenzy. */
+    static float damage(GhoulNpc npc, NpcIdentity who) {
+        float base = NpcRules.damage(who.tier());
+        Mind mind = npc.mind;
+        return mind != null && npc.m_9236_().m_46467_() < mind.frenzyUntil ? base * 1.35F : base;
     }
 
     /** What it leaves when it dies: Ghoul Meat. */
@@ -267,10 +290,11 @@ public final class GhoulNpcBrain {
                 current = owner.m_21188_(); // whatever just hurt its player
                 best = 0.0;
             }
-            for (LivingEntity body : level.m_6443_(LivingEntity.class, npc.m_20191_().m_82400_(NpcRules.SIGHT),
+            double sight = NpcRules.sight(who.tier()); // 4.0.0: the stronger, the keener
+            for (LivingEntity body : level.m_6443_(LivingEntity.class, npc.m_20191_().m_82400_(sight),
                 living -> living != npc && living.m_6084_())) {
                 double distance = body.m_20280_(npc);
-                if (distance < best && distance <= NpcRules.SIGHT * NpcRules.SIGHT && wanted(npc, who, mind, body, now) && npc.m_142582_(body)) {
+                if (distance < best && distance <= sight * sight && wanted(npc, who, mind, body, now) && npc.m_142582_(body)) {
                     best = distance;
                     current = body;
                 }
@@ -377,6 +401,15 @@ public final class GhoulNpcBrain {
 
     private static void fight(GhoulNpc npc, NpcIdentity who, Mind mind, LivingEntity prey, ServerLevel level, long now) {
         mind.foughtAt = now;
+        // 4.0.0: an S or an SS, badly hurt, frenzies once a fight: faster, harder, knitting faster (NpcRules.frenzies).
+        if (NpcRules.frenzies(who.tier()) && !mind.frenzied && npc.m_21223_() < npc.m_21233_() * NpcRules.FRENZY_BELOW) {
+            mind.frenzied = true;
+            mind.frenzyUntil = now + NpcRules.FRENZY_TICKS;
+            npc.m_7292_(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.f_19596_, NpcRules.FRENZY_TICKS, 1,
+                false, false, false));
+            level.m_6263_(null, npc.m_20185_(), npc.m_20186_() + 1.0, npc.m_20189_(), HexKaguneSounds.KAGUNE_WHIP.get(), SoundSource.HOSTILE, 1.4F, 0.55F);
+            mind.dirty = true;
+        }
         if (!mind.out) {
             mind.out = true;
             mind.outAt = now;
@@ -485,6 +518,7 @@ public final class GhoulNpcBrain {
             mind.dirty = true;
         }
         if (mind.out && (hide || now - mind.foughtAt > NpcRules.CALM_TICKS)) {
+            mind.frenzied = false; // 4.0.0: the next fight may frenzy it again
             mind.out = false;
             mind.outAt = now;
             mind.dirty = true;
@@ -665,7 +699,14 @@ public final class GhoulNpcBrain {
 
     private static void regen(GhoulNpc npc, Mind mind, long now) {
         boolean rested = mind.hurtAt == Long.MIN_VALUE || now - mind.hurtAt >= NpcRules.REGEN_AFTER; // 1.0.15: the same overflow
-        if (rested && now % NpcRules.REGEN_EVERY == 0L && npc.m_21223_() < npc.m_21233_()) {
+        // 4.0.0: the stronger, the faster it knits (its rank); an S or SS in its frenzy faster still.
+        NpcIdentity who = npc.identity();
+        int every = who == null ? NpcRules.REGEN_EVERY : NpcRules.regenEvery(who.tier());
+        if (now < mind.frenzyUntil) {
+            every = Math.max(6, every / 2);
+            rested = true;
+        }
+        if (rested && now % every == 0L && npc.m_21223_() < npc.m_21233_()) {
             npc.m_5634_(1.0F);
         }
     }

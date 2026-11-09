@@ -106,7 +106,7 @@ public final class NpcTests {
         check(before.skin() >= 0 && before.skin() < NpcLook.SKINS.length && before.equals(NpcIdentity.unpack(old)) && before.name() == 17
             && before.seed() == 4242 && NpcIdentity.unpack(before.pack()).equals(before), "an old save's ghoul gets one of the new skins, for good");
         NpcIdentity wild = new NpcIdentity(NpcIdentity.Kind.UKAKU, NpcTemper.ANTEIKU, 9, -1, 999, 0x7FFFFFFF);
-        check(wild.tier() == 2 && wild.skin() == NpcLook.SKINS.length - 1 && wild.name() < NpcNames.count() && wild.seed() <= 0xFFFF,
+        check(wild.tier() == NpcIdentity.TIERS - 1 && wild.skin() == NpcLook.SKINS.length - 1 && wild.name() < NpcNames.count() && wild.seed() <= 0xFFFF,
             "numbers out of range are brought in: " + wild);
         Random random = new Random(7);
         Map<NpcTemper, Integer> seen = new EnumMap<>(NpcTemper.class);
@@ -193,29 +193,47 @@ public final class NpcTests {
         check(expected >= 0.25 && expected <= 0.6, "rare: " + expected + " a night before spacing");
     }
 
-    /** The stronger the player, the stronger the ghoul; each tier tougher; the string hurts but does not shred. */
+    /**
+     * 4.0.0: ranks D to SS. The stronger the player, the stronger the ghoul (an S or SS rare even then); each rank tougher, quicker and
+     * keener; a D only its basic string; the string hurts but does not shred; an old save's three tiers are C, B and A.
+     */
     static void strength() {
         Random random = new Random(11);
         for (int mastery : new int[] {0, 500, 1000}) {
-            int[] tiers = new int[3];
-            for (int i = 0; i < 20000; i++) {
-                tiers[NpcRules.tier(mastery, random.nextDouble())]++;
+            int[] ranks = new int[NpcIdentity.TIERS];
+            for (int i = 0; i < 40000; i++) {
+                ranks[NpcRules.tier(mastery, random.nextDouble())]++;
             }
-            double strong = tiers[2] / 20000.0;
-            double expected = 0.05 + 0.35 * mastery / 1000.0;
-            check(Math.abs(strong - expected) < 0.02, "strong ones at mastery " + mastery + ": " + strong);
+            double top = (ranks[NpcRules.S] + ranks[NpcRules.SS]) / 40000.0;
+            check(Math.abs(top - NpcRules.atLeast(mastery, NpcRules.S)) < 0.01, "S or SS at mastery " + mastery + ": " + top);
+            check(top < 0.2, "an S or an SS stays rare: " + top);
+            check(ranks[NpcRules.SS] < ranks[NpcRules.S], "SS rarer than S at mastery " + mastery);
+            check(mastery < 1000 || ranks[NpcRules.D] == 0, "no D for the strongest");
+            check(mastery > 0 || ranks[NpcRules.D] > ranks[NpcRules.A], "a beginner meets Ds more than As");
         }
+        check(NpcRules.RANKS.length == NpcIdentity.TIERS && NpcRules.rankName(0).equals("D") && NpcRules.rankName(5).equals("SS"), "D to SS");
         for (int tier = 1; tier < NpcIdentity.TIERS; tier++) {
             check(NpcRules.health(tier) > NpcRules.health(tier - 1) && NpcRules.damage(tier) > NpcRules.damage(tier - 1)
-                && NpcRules.armor(tier) > NpcRules.armor(tier - 1), "tier " + tier + " is tougher");
-            check(NpcRules.string(tier) > NpcRules.string(tier - 1), "tier " + tier + " strings longer");
+                && NpcRules.armor(tier) > NpcRules.armor(tier - 1) && NpcRules.speed(tier) > NpcRules.speed(tier - 1), "rank " + tier + " is tougher");
+            check(NpcRules.string(tier) > NpcRules.string(tier - 1), "rank " + tier + " strings longer");
+            check(NpcRules.regenEvery(tier) < NpcRules.regenEvery(tier - 1) && NpcRules.sight(tier) > NpcRules.sight(tier - 1),
+                "rank " + tier + " knits faster and sees further");
+            check(NpcRules.pause(tier, 0.5) < NpcRules.pause(tier - 1, 0.5), "rank " + tier + " pauses less between strings");
         }
+        check(NpcRules.health(NpcRules.SS) >= 6.0F * NpcRules.health(NpcRules.D), "an SS is a wall next to a D");
+        check(!NpcRules.flips(NpcRules.D) && !NpcRules.dodges(NpcRules.D) && !NpcRules.counters(NpcRules.D) && !NpcRules.heavies(NpcRules.D),
+            "a D has only its basic string");
+        check(NpcRules.flips(NpcRules.C) && !NpcRules.heavies(NpcRules.C) && NpcRules.heavies(NpcRules.B) && NpcRules.counters(NpcRules.B),
+            "flips from C, heavies and clashes from B");
+        check(!NpcRules.frenzies(NpcRules.A) && NpcRules.frenzies(NpcRules.S) && NpcRules.frenzies(NpcRules.SS), "an S and an SS frenzy");
         check(NpcRules.health(0) > 20.0F, "a ghoul outlasts a player's health");
         for (int tier = 0; tier < NpcIdentity.TIERS; tier++) {
-            int limbs = GraftStage.TRANSPLANT.limbs(NpcRules.tailMastery(tier));
-            check(limbs == (tier == 0 ? 1 : 2), "tier " + tier + ": " + limbs + " tails");
+            GraftStage stage = NpcRules.graftStage(tier);
+            int limbs = stage.limbs(NpcRules.tailMastery(tier));
+            int want = tier <= NpcRules.C ? 1 : tier <= NpcRules.A ? 2 : tier == NpcRules.S ? 3 : 4;
+            check(limbs == want, "rank " + tier + ": " + limbs + " tails");
             // One string and the pause after it: the damage a second it averages (before armour and difficulty).
-            GraftMove move = GraftMove.firstStrike(GraftStage.TRANSPLANT);
+            GraftMove move = GraftMove.firstStrike(stage);
             double power = 0.0;
             int ticks = 0;
             for (int i = 0; i < NpcRules.string(tier); i++) {
@@ -223,20 +241,39 @@ public final class NpcTests {
                     power += beat.power();
                 }
                 ticks += move.ticks();
-                move = GraftMove.nextStrike(move, GraftStage.TRANSPLANT);
+                move = GraftMove.nextStrike(move, stage);
             }
-            ticks += (NpcRules.PAUSE_LEAST + NpcRules.PAUSE_MOST) / 2;
+            ticks += NpcRules.pause(tier, 0.5);
             double perSecond = power * NpcRules.damage(tier) * 20.0 / ticks;
-            check(perSecond >= 2.0 && perSecond <= 8.0, "tier " + tier + " lashes for " + perSecond + " a second");
+            check(perSecond >= 1.5 && perSecond <= 22.0, "rank " + tier + " lashes for " + perSecond + " a second");
             double shots = NpcRules.string(tier) * NpcRules.damage(tier) * 20.0
-                / (NpcRules.string(tier) * NpcRules.SHOT_EVERY + 6 + (NpcRules.PAUSE_LEAST + NpcRules.PAUSE_MOST) / 2.0);
-            check(shots >= 2.0 && shots <= 8.0, "tier " + tier + " shoots for " + shots + " a second (and burns)");
+                / (NpcRules.string(tier) * NpcRules.SHOT_EVERY + 6 + NpcRules.pause(tier, 0.5));
+            check(shots >= 1.0 && shots <= 14.0, "rank " + tier + " shoots for " + shots + " a second (and burns)");
             for (double r : new double[] {0.0, 0.49, 0.5, 0.99}) {
                 int meat = NpcRules.meat(tier, r);
-                check(meat >= 1 + (tier == 2 ? 1 : 0) && meat <= 1 + tier, "tier " + tier + " leaves " + meat + " Ghoul Meat");
+                check(meat >= 1 + tier / 2 && meat <= 2 + tier / 2, "rank " + tier + " leaves " + meat + " Ghoul Meat");
             }
         }
-        check(NpcRules.wingMastery(2) < 450, "the wings stay the plain twin wings (no crystal, no embers)");
+        check(NpcRules.wingMastery(NpcRules.SS) < 450, "the wings stay the plain twin wings (no crystal, no embers)");
+        // An old save's ghoul (three tiers, no rank flag): its tier one up, no mask; and back the same.
+        for (int old = 0; old < 3; old++) {
+            long packed = 1L | 2L << 1 | (long)old << 4 | 3L << 6 | 17L << 10 | 4242L << 18 | 1L << 35;
+            NpcIdentity before = NpcIdentity.unpack(packed);
+            check(before.tier() == old + 1 && before.mask() == 0 && !before.aogiri(), "an old tier " + old + " is " + before.rank() + "-rank now");
+            check(NpcIdentity.unpack(before.pack()).equals(before), "and stays so once saved again");
+        }
+        for (int tier = 0; tier < NpcIdentity.TIERS; tier++) {
+            for (int mask = 0; mask <= com.hex.kagune.control.outfit.Outfits.GENERIC_MASKS.size(); mask++) {
+                for (boolean aogiri : new boolean[] {false, true}) {
+                    NpcIdentity who = new NpcIdentity(NpcIdentity.Kind.KOUKAKU, NpcTemper.PACK, tier, 5, 9, 1234, mask, aogiri);
+                    check(NpcIdentity.unpack(who.pack()).equals(who), "rank, mask and faction saved and read back: " + who);
+                }
+            }
+        }
+        NpcIdentity masked = new NpcIdentity(NpcIdentity.Kind.UKAKU, NpcTemper.FERAL, NpcRules.S, 1, 2, 3, 2, false);
+        check("mask_gas".equals(masked.maskItem()) && masked.tagName().endsWith("S-rank"), "a wild one's mask is generic: " + masked.maskItem());
+        NpcIdentity member = masked.member(1, NpcRules.B);
+        check(member.aogiri() && "mask_bin_brothers".equals(member.maskItem()) && member.tagName().contains("Aogiri"), "a member's mask is its faction's");
     }
 
     /**

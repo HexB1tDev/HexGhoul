@@ -384,7 +384,14 @@ public final class AgentBrain {
         }
         agent.m_21051_(net.minecraft.world.entity.ai.attributes.Attributes.f_22276_).m_22100_(AgentRules.health(mind.rank, mind.superior));
         agent.m_21051_(net.minecraft.world.entity.ai.attributes.Attributes.f_22279_).m_22100_(mind.rank.speed);
-        agent.m_21051_(net.minecraft.world.entity.ai.attributes.Attributes.f_22284_).m_22100_(mind.rank.armor);
+        // 4.0.0 (the owner: "All naturally spawning CCG investigators will now wear ... the complete Formal Outfit ... The White Reaper is the
+        // only exception"): the whole Formal Outfit on every one but him; its protection taken off its rank's own, so it fights as before.
+        if (!reaper) {
+            OutfitServer.dress(agent, com.hex.kagune.control.outfit.Outfits.FORMAL_SET);
+        } else {
+            OutfitServer.undress(agent); // he keeps his own look, always
+        }
+        agent.m_21051_(net.minecraft.world.entity.ai.attributes.Attributes.f_22284_).m_22100_(OutfitServer.armour(agent, mind.rank.armor));
         if (fresh || reaper && !saved.m_128441_(REAPER_INITIALIZED)) {
             agent.m_21153_(agent.m_21233_());
             if (reaper) {
@@ -1873,6 +1880,8 @@ public final class AgentBrain {
                 agent.m_19983_(food);
             }
         }
+        // 4.0.0: each piece of its Formal Outfit its own small chance (the owner: "calculated separately for each piece").
+        OutfitServer.drop(agent, looting, byPlayer);
         if (reaper(agent)) {
             HumanBrain.drop(agent, looting);
             // 2.0.32: whoever brings him down by their own hand may take Dawn, shut in its black case (2.2.9: one time in five).

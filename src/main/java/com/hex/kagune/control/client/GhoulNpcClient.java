@@ -84,7 +84,7 @@ public final class GhoulNpcClient {
     public static GraftClient.View graft(View view) {
         int[] targets = new int[S2CGraftState.TARGETS];
         targets[0] = view.prey();
-        return new GraftClient.View(GraftStage.TRANSPLANT, false, Long.MIN_VALUE, -1.0E6, view.move(), view.moveAt(), view.moveBegan(), 0.0F, view.x(),
+        return new GraftClient.View(com.hex.kagune.control.npc.NpcRules.graftStage(view.identity().tier()), false, Long.MIN_VALUE, -1.0E6, view.move(), view.moveAt(), view.moveBegan(), 0.0F, view.x(),
             view.y(), view.z(), targets, 0, 0);
     }
 

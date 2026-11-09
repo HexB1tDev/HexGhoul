@@ -96,9 +96,9 @@ public enum FinalSight {
         return rank <= 4 ? Nerve.RUN : rank <= 7 ? Nerve.SHAKE : Nerve.STAND;
     }
 
-    /** A wild ghoul of tier {@code tier} (0 the weakest, {@code tiers} - 1 the strongest): all but the strongest run; the strongest shake. */
+    /** A wild ghoul of rank {@code tier} (0 the weakest, {@code tiers} - 1 the strongest): all but the two strongest run; those shake. */
     public static Nerve ghoul(int tier, int tiers) {
-        return tier < tiers - 1 ? Nerve.RUN : Nerve.SHAKE;
+        return tier < tiers - 2 ? Nerve.RUN : Nerve.SHAKE; // 4.0.0: an S and an SS shake, the rest run
     }
 
     /** How far off (blocks) Peace or War is felt; how far a runner gets before it stops to look back. */

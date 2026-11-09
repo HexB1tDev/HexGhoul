@@ -6,7 +6,7 @@ package com.hex.kagune.control.npc;
  * random about it. Rolled once when it is spawned and kept in its saved data as one number ({@link #pack}), sent to every client as
  * it is.
  */
-public record NpcIdentity(Kind kind, NpcTemper temper, int tier, int skin, int name, int seed) {
+public record NpcIdentity(Kind kind, NpcTemper temper, int tier, int skin, int name, int seed, int mask, boolean aogiri) {
     /**
      * Its kagune: the transplant's rinkaku tails, or the ukaku's twin wings; 1.3.36 (appended: sent and saved by ordinal) the arm blade, a
      * koukaku no player can take ({@link BladeArm}).
@@ -20,10 +20,17 @@ public record NpcIdentity(Kind kind, NpcTemper temper, int tier, int skin, int n
         }
     }
 
-    public static final int TIERS = 3;
+    /** 4.0.0: its rank, D to SS ({@link NpcRules#RANKS}): six of them (three tiers before). */
+    public static final int TIERS = 6;
+
+    /** One without a mask, of no faction (every one before 4.0.0). */
+    public NpcIdentity(Kind kind, NpcTemper temper, int tier, int skin, int name, int seed) {
+        this(kind, temper, tier, skin, name, seed, 0, false);
+    }
 
     public NpcIdentity {
         tier = Math.max(0, Math.min(TIERS - 1, tier));
+        mask = Math.max(0, Math.min(15, mask));
         skin = Math.floorMod(skin, NpcLook.SKINS.length);
         name = Math.floorMod(name, NpcNames.count());
         seed &= 0xFFFF;
@@ -36,9 +43,17 @@ public record NpcIdentity(Kind kind, NpcTemper temper, int tier, int skin, int n
      */
     public long pack() {
         int kind = this.kind.ordinal();
-        return (long)(kind & 1) | (long)this.temper.ordinal() << 1 | (long)this.tier << 4 | (long)(this.skin & 15) << 6 | (long)this.name << 10
-            | (long)this.seed << 18 | (long)(this.skin >> 4 & 1) << 34 | OWN_SKIN | (long)(kind >> 1 & 1) << 36;
+        return (long)(kind & 1) | (long)this.temper.ordinal() << 1 | (long)(this.tier & 3) << 4 | (long)(this.skin & 15) << 6 | (long)this.name << 10
+            | (long)this.seed << 18 | (long)(this.skin >> 4 & 1) << 34 | OWN_SKIN | (long)(kind >> 1 & 1) << 36
+            | (long)(this.tier >> 2 & 1) << 37 | RANKED | (long)this.mask << 39 | (this.aogiri ? AOGIRI : 0L);
     }
+
+    /**
+     * 4.0.0: set in a packed identity saved with its rank (D to SS: the rank's third bit at 37, its mask at 39 to 42, Aogiri at 43). One
+     * saved before had three tiers: 0, 1 and 2 are C, B and A now (as strong as they were), with no mask.
+     */
+    private static final long RANKED = 1L << 38;
+    private static final long AOGIRI = 1L << 43;
 
     /** 1.0.41: set in a packed identity whose skin is one of {@link NpcLook}'s own. */
     private static final long OWN_SKIN = 1L << 35;
@@ -49,7 +64,11 @@ public record NpcIdentity(Kind kind, NpcTemper temper, int tier, int skin, int n
         // 1.0.41: one saved before it wore one of its own skins is given one now, the same every time.
         int skin = (packed & OWN_SKIN) != 0L ? (int)(packed >> 6 & 15L) | (int)(packed >> 34 & 1L) << 4 : seed * 7 + name;
         int kind = (int)(packed & 1L) | (int)(packed >> 36 & 1L) << 1;
-        return new NpcIdentity(Kind.byOrdinal(kind), NpcTemper.byOrdinal((int)(packed >> 1 & 7L)), (int)(packed >> 4 & 3L), skin, name, seed);
+        boolean ranked = (packed & RANKED) != 0L;
+        int tier = ranked ? (int)(packed >> 4 & 3L) | (int)(packed >> 37 & 1L) << 2 : (int)(packed >> 4 & 3L) + 1;
+        int mask = ranked ? (int)(packed >> 39 & 15L) : 0;
+        return new NpcIdentity(Kind.byOrdinal(kind), NpcTemper.byOrdinal((int)(packed >> 1 & 7L)), tier, skin, name, seed, mask,
+            ranked && (packed & AOGIRI) != 0L);
     }
 
     /** 1.0.41: a girl (her skin on the slim arms, a girl's name) or a boy. */
@@ -75,12 +94,42 @@ public record NpcIdentity(Kind kind, NpcTemper temper, int tier, int skin, int n
         int skin = (int)(roll.getAsDouble() * NpcLook.SKINS.length);
         int name = (int)(roll.getAsDouble() * NpcNames.count());
         int seed = (int)(roll.getAsDouble() * 65536.0);
-        return new NpcIdentity(kind, temper, tier, skin, name, seed);
+        // 4.0.0: a chance of a mask, one of the generic ones (never a character's or a faction's).
+        int mask = com.hex.kagune.control.outfit.Outfits.wildMask(roll.getAsDouble());
+        return new NpcIdentity(kind, temper, tier, skin, name, seed, mask, false);
+    }
+
+    /** 4.0.0: the same, of rank {@code tier}. */
+    public NpcIdentity ranked(int tier) {
+        return new NpcIdentity(this.kind, this.temper, tier, this.skin, this.name, this.seed, this.mask, this.aogiri);
+    }
+
+    /**
+     * 4.0.0: an Aogiri Tree member (its faction's mask, {@link com.hex.kagune.control.outfit.Outfits#AOGIRI_MASKS}, 1-based), its temper
+     * Aogiri's own (the pack: violent, loyal to its own), of rank C to S.
+     */
+    public NpcIdentity member(int mask, int tier) {
+        return new NpcIdentity(this.kind, this.temper, tier, this.skin, this.name, this.seed, mask, true);
+    }
+
+    /** 4.0.0: the mask it wears (an item id), or null: an Aogiri member's faction mask, a wild ghoul's generic one. */
+    public String maskItem() {
+        return this.aogiri ? com.hex.kagune.control.outfit.Outfits.aogiri(this.mask) : com.hex.kagune.control.outfit.Outfits.generic(this.mask);
+    }
+
+    /** 4.0.0: its rank's name ("B"). */
+    public String rank() {
+        return NpcRules.rankName(this.tier);
     }
 
     /** What it is called: a given name, and for the ones who hunt, the name the streets gave it. */
     public String displayName() {
         return NpcNames.name(this.name, this.temper, girl());
+    }
+
+    /** 4.0.0: its name over its head: its name and its rank ("Kaito, B-rank"); Aogiri's own say so. */
+    public String tagName() {
+        return displayName() + ", " + rank() + "-rank" + (this.aogiri ? " (Aogiri)" : "");
     }
 
     /** The mastery its kagune is drawn at (how big and how many tails, how big the wings; the arm blade is its own size). */
