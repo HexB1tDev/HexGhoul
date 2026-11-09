@@ -41,7 +41,7 @@ MASKS = [
     ("tatara", "mask_tatara", "Red Muzzle Mask"), ("bin_brothers", "mask_bin_brothers", "Laughing Mask"),
     ("roma", "mask_roma", "Jester Mask"), ("shachi", "mask_shachi", "Fanged Mask"), ("rize", "mask_rize", "White Muzzle Mask"),
     ("uta", "mask_uta", "Crescent Mask"), ("itori", "mask_itori", "Red Vine Mask"), ("yomo", "mask_yomo", "Black Respirator"),
-    ("yoshimura", "mask_yoshimura", "Dotted Mask"), ("nishiki", "mask_nishiki", "Black Grin Mask"),
+    ("yoshimura", "mask_dotted", "Dotted Mask"), ("nishiki", "mask_nishiki", "Black Grin Mask"),
     ("tsukiyama", "mask_tsukiyama", "Gourmet's Half Mask"), ("kanae", "mask_kanae", "Rose Filigree Mask"),
     ("donato", "mask_donato", "Priest's Mask"), ("koori", "mask_koori", "Slit Mask"), ("amon", "mask_amon", "Bolted Mask"),
     ("seidou", "mask_seidou", "Purple Grin Mask"), ("akira", "mask_akira", "Violet Mask"), ("arima", "mask_arima", "White Line Mask"),

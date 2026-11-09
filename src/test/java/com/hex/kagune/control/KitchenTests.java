@@ -151,7 +151,8 @@ public final class KitchenTests {
         }
         check(lang.contains("\"entity.hexkagune.human\":"), "The Human has a name");
         String menu = read("src/main/java/com/hex/kagune/control/kitchen/Menu.java").toLowerCase();
-        for (String banned : new String[] {"kaneki", "ayato", "furuta", "takatsuki", "aogiri", "yoshimura"}) {
+        // 4.0.0: the owner asked for Ayato Kirishima and Aogiri Tree by name (The Great Exploration): no longer kept out.
+        for (String banned : new String[] {"kaneki", "furuta", "takatsuki", "yoshimura"}) {
             check(!menu.contains(banned) && !lang.toLowerCase().contains(banned), "no " + banned + " in the kitchen");
         }
         String plains = read("src/main/resources/data/hexkagune/tags/worldgen/biome/has_structure/anteiku.json");

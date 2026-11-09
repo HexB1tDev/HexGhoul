@@ -2449,7 +2449,8 @@ public final class PaleTests {
             && KagunePath.fromId("rinkaku") == KagunePath.RINKAKU && KagunePath.fromId("ukaku") == KagunePath.UKAKU
             && KagunePath.choosable().equals(List.of(KagunePath.RINKAKU, KagunePath.UKAKU, KagunePath.BIKAKU)),
             "the dormant paths are never pickable and their ids read as none; Rinkaku, Ukaku and (3.4.9) Bikaku are the paths to choose");
-        java.util.regex.Pattern named = java.util.regex.Pattern.compile("(?i)\\b(takatsuki|aogiri|yoshimura)\\b");
+        // 4.0.0: the owner asked for Aogiri Tree by name (its hideouts, its members): no longer kept out of what a player sees.
+        java.util.regex.Pattern named = java.util.regex.Pattern.compile("(?i)\\b(takatsuki|yoshimura)\\b");
         for (int mastery : new int[] {0, 250, 500, 750, 1000}) {
             check(!named.matcher(com.hex.kagune.control.pale.PaleUnlock.stageName(mastery)).find(), "its stage names are its own: " + com.hex.kagune.control.pale.PaleUnlock.stageName(mastery));
         }

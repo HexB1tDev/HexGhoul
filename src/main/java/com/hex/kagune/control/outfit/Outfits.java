@@ -28,7 +28,7 @@ public final class Outfits {
 
     /** The owner's 24 masks, in their reference sheet's order (the first is Eyepatch's: its folder's name kept out of the mod). */
     public static final List<String> CHARACTER_MASKS = List.of("mask_eyepatch", "mask_touka", "mask_ayato", "mask_noro", "mask_yamori", "mask_eto",
-        "mask_tatara", "mask_bin_brothers", "mask_roma", "mask_shachi", "mask_rize", "mask_uta", "mask_itori", "mask_yomo", "mask_yoshimura",
+        "mask_tatara", "mask_bin_brothers", "mask_roma", "mask_shachi", "mask_rize", "mask_uta", "mask_itori", "mask_yomo", "mask_dotted",
         "mask_nishiki", "mask_tsukiyama", "mask_kanae", "mask_donato", "mask_koori", "mask_amon", "mask_seidou", "mask_akira", "mask_arima");
 
     /**

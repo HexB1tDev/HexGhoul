@@ -47,8 +47,9 @@ public final class AgentTests {
         }
         int tiers = com.hex.kagune.control.npc.NpcIdentity.TIERS;
         for (int tier = 0; tier < tiers; tier++) {
-            check(com.hex.kagune.control.npc.FinalSight.ghoul(tier, tiers) == (tier < tiers - 1 ? com.hex.kagune.control.npc.FinalSight.Nerve.RUN
-                : com.hex.kagune.control.npc.FinalSight.Nerve.SHAKE), "wild ghoul tier " + tier);
+            // 4.0.0: ranks D to SS: the S and the SS shake before Peace or War, the rest run.
+            check(com.hex.kagune.control.npc.FinalSight.ghoul(tier, tiers) == (tier < tiers - 2 ? com.hex.kagune.control.npc.FinalSight.Nerve.RUN
+                : com.hex.kagune.control.npc.FinalSight.Nerve.SHAKE), "wild ghoul rank " + tier);
         }
         int breaks = 0;
         for (long t = 0; t < 900; t++) {
