@@ -63,6 +63,9 @@ steadily bigger to the mouth (`MawWorm.horn`). A minute's cooldown. Unlocked by 
 `/kagune bikaku mutation <id> on|off`. Menu MUTATIONS. GeckoLib is now a requirement. Next: 3.6.4 the view from inside the mouth
 (GeckoLib) and Grand Devouring in the kakuja; then Potential Unlock.
 
+**3.6.4 (fix; the owner: "it should."):** `/kagune cooldowns off` (and creative) now ends the Bikaku cooldowns already running (moves,
+kakuja, Grand Devouring). Next: 3.6.5 the view from inside the mouth (GeckoLib); 3.6.6 Grand Devouring in the kakuja; then Potential Unlock.
+
 **Before 3.4.9 (the pure worm, unchanged since except as above):**
 
 - `control/bikaku/MawWorm.java`: the worm as a mesh (pure). A thick muscular tube along a spine resampled evenly by length

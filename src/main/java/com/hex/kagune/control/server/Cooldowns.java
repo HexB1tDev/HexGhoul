@@ -62,6 +62,7 @@ public final class Cooldowns {
         GraftServer.clearCooldowns(player);
         PaleRevive.clearCooldown(player);
         UkakuServer.clearCooldowns(player);
+        BikakuServer.clearCooldowns(player); // 3.6.4: the Bikaku path's too (the owner: "it should.")
         UkakuRush.forget(player);
         KaguneCombat.clearCooldowns(player);
         KakujaPassive.clearCooldowns(player);

@@ -31,7 +31,41 @@ public final class BikakuTests {
         kakujaMoves();
         held();
         mutations();
+        cooldownsOff();
         System.out.println("Bikaku tests: " + passed + " checks passed");
+    }
+
+    /**
+     * 3.6.4 (the owner, on /kagune cooldowns off not ending the Bikaku cooldowns already running: "it should."): every path's server that
+     * keeps cooldowns of its own ({@code static void clearCooldowns(ServerPlayer)}) is cleared by {@code Cooldowns.clear}; the Bikaku
+     * path's clears its moves', the kakuja's and Grand Devouring's.
+     */
+    private static void cooldownsOff() {
+        try {
+            java.nio.file.Path server = java.nio.file.Paths.get("src/main/java/com/hex/kagune/control/server");
+            String cooldowns = new String(java.nio.file.Files.readAllBytes(server.resolve("Cooldowns.java")), java.nio.charset.StandardCharsets.UTF_8);
+            String clear = cooldowns.substring(cooldowns.indexOf("static void clear(ServerPlayer player)"));
+            clear = clear.substring(0, clear.indexOf("\n    }\n"));
+            int paths = 0;
+            try (java.util.stream.Stream<java.nio.file.Path> files = java.nio.file.Files.list(server)) {
+                for (java.nio.file.Path file : (Iterable<java.nio.file.Path>)files.filter(f -> f.toString().endsWith(".java"))::iterator) {
+                    String source = new String(java.nio.file.Files.readAllBytes(file), java.nio.charset.StandardCharsets.UTF_8);
+                    if (source.contains("static void clearCooldowns(ServerPlayer player)")) {
+                        String name = file.getFileName().toString().replace(".java", "");
+                        check(clear.contains(name + ".clearCooldowns(player)"), "/kagune cooldowns off ends " + name + "'s running cooldowns");
+                        paths++;
+                    }
+                }
+            }
+            check(paths >= 4, "every path's cooldowns are found (" + paths + ")");
+            String bikaku = new String(java.nio.file.Files.readAllBytes(server.resolve("BikakuServer.java")), java.nio.charset.StandardCharsets.UTF_8);
+            String reset = bikaku.substring(bikaku.indexOf("static void clearCooldowns(ServerPlayer player)"));
+            reset = reset.substring(0, reset.indexOf("\n    }\n"));
+            check(reset.contains("readyAt.clear()") && reset.contains("kakujaReadyAt = Long.MIN_VALUE")
+                && reset.contains("devourReadyAt = Long.MIN_VALUE"), "the Bikaku path's moves', kakuja's and Grand Devouring's cooldowns all end");
+        } catch (java.io.IOException failure) {
+            throw new AssertionError("the sources can't be read: " + failure);
+        }
     }
 
     /**

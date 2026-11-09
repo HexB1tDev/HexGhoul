@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.6.4 (HexGhoul): Fix: /kagune cooldowns off ends the Bikaku cooldowns (testing)
+
+See `.github/release-notes-3.6.4.md`. Your words, on `/kagune cooldowns off` not ending the Bikaku cooldowns already running: "it should." It now ends every Bikaku cooldown that is running (each move's, the kakuja's, Grand Devouring's), and switching to creative does too. Protocol 103.
+
 ## 3.6.3 (HexGhoul): Bikaku: Grand Devouring (testing)
 
 See `.github/release-notes-3.6.3.md`. Your words are in `docs/handoff/owner-words-mutations.md`. GeckoLib is now required (your words: "use geckolib it is meant to be a requirement"). Grand Devouring: a body within 10 blocks at 1 heart or less is swallowed whole by one of your worms on its own. It rises and swells, arches over, comes down over the body, closes slowly, gulps, and a bulge runs down to your back; your bar refills. It is reshaped after your reports: thin out of your back, one smooth arch, steadily bigger to the mouth. 1-minute cooldown (your words: "Forgot to mention but Grand Devour should have a cooldown of 1 minute"). Not opened by mastery (your words: "these mutations are NOT unlocked through mastery they're gonna be unlocked through an NPC's quest introduced later today"); until then `/kagune bikaku mutation grand_devouring on|off` (operators). The body caught is held and stripped; its things are given back if it lives. The feeding worm does nothing else. Protocol 103. Previews: `docs/handoff/bikaku-devour-3.6.3.png`, `bikaku-devour-before-after-3.6.3.png`, `bikaku-menu-3.6.3.png`.

@@ -42,10 +42,14 @@ introduced later today." They chose an operator command until the quest is in, a
 inside 3.6.3 (as 3.5.1's Pursuit was), and the owner was sent `docs/handoff/bikaku-devour-before-after-3.6.3.png` and the new sheet; they
 had not said whether the new shape is right when 3.6.3 was pushed: ask. Details: the top section of `docs/handoff/companions-handoff.md`.
 
+**3.6.4 shipped** (a fix: the owner, on `/kagune cooldowns off` not ending running Bikaku cooldowns: "it should."). The owner, on the
+first draft of the view from inside the mouth (`docs/handoff/devour-inside-draft-3.6.5.png`; its generator and preview in the next
+version): "I like the inside of the mouth, proceed wit hthe mod". So the versions moved on by one:
+
 **Next, in this order:**
-1. **3.6.4:** the victim's first-person view from inside the mouth (GeckoLib; matching `GrandDevour` exactly: the same `at(...)`, the
+1. **3.6.5:** the victim's first-person view from inside the mouth (GeckoLib; matching `GrandDevour` exactly: the same `at(...)`, the
    jaws' aperture, the cavity's `hole`/`depth`, the devourer's kagune colour), and Grand Devouring in the kakuja (one of its six tentacles
-   feeds).
+   feeds) as **3.6.6**, its own version.
 2. **Potential Unlock** (below), unlocked the same way (`BikakuDevour.grant`; quest-only, not mastery).
 3. The NPC's quest that unlocks the mutations, when the owner says (they will tell you; `BikakuDevour.grant(player, mutation, true)` is
    ready for it).
@@ -54,8 +58,7 @@ had not said whether the new shape is right when 3.6.3 was pushed: ask. Details:
    animation can't do alone; a GeckoLib model with code-driven bones would be about what `WalkerLegs` already is. Weigh it, and ask before
    changing it.
 
-**Found by reading, not fixed (told the owner):** `/kagune cooldowns off` never ends Bikaku cooldowns already running:
-`BikakuServer.clearCooldowns` is never called (`Cooldowns.clear` calls the other paths'). New ones are skipped (`Cooldowns.of`).
+**Fixed in 3.6.4:** `/kagune cooldowns off` didn't end Bikaku cooldowns already running (the owner: "it should.").
 
 ---
 

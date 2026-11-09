@@ -604,12 +604,20 @@ public final class BikakuServer {
         }
     }
 
-    /** Every running cooldown of his, over now ({@link Cooldowns}). */
+    /**
+     * Every running cooldown of his, over now ({@link Cooldowns}): his moves', the kakuja's and Grand Devouring's. 3.6.4 (the owner, on
+     * {@code /kagune cooldowns off} not ending them: "it should."): called by {@link Cooldowns#clear} with every other path's, and his
+     * clients told (the menu's wait).
+     */
     static void clearCooldowns(ServerPlayer player) {
         State state = STATES.get(player.m_20148_());
         if (state != null) {
             state.readyAt.clear();
+            state.kakujaReadyAt = Long.MIN_VALUE;
             state.devourReadyAt = Long.MIN_VALUE;
+            if (isBikaku(player)) {
+                broadcast(player, state);
+            }
         }
     }
 

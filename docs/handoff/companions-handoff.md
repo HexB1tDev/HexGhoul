@@ -3,7 +3,17 @@
 GeckoLib, Photon and PlayerAnimator are the mod's dependencies: use them wherever they make the mod smoother (the owner). Then the owner's
 words in `docs/handoff/owner-words-mutations.md`.
 
-# START HERE (state after 3.6.3)
+# START HERE (state after 3.6.4)
+
+Branch `claude/hopeful-noether-5c2wex`. Read `docs/handoff/next-ai-3.6.3.md` first. Next: **3.6.5**, the victim's view from inside the mouth (GeckoLib; the owner on its first draft: "I like the inside of the mouth, proceed wit hthe mod"); then 3.6.6 Grand Devouring in the kakuja; then Potential Unlock.
+
+- 3.6.4, the owner's report (on being told `/kagune cooldowns off` doesn't end Bikaku cooldowns already running): "it should."
+- `Cooldowns.clear` now calls `BikakuServer.clearCooldowns` (it called every other path's). `BikakuServer.clearCooldowns` clears `readyAt` (the moves), `kakujaReadyAt` and `devourReadyAt`, and broadcasts (the menu's wait). Creative clears it too (through `Cooldowns.clear`). `autoReadyAt` (Autonomous Predation's pace) is left alone: not a cooldown.
+- Tests: BikakuTests `cooldownsOff()` (1,649): reads the sources; every `control/server` class with `static void clearCooldowns(ServerPlayer player)` (seven) must be called in `Cooldowns.clear`; Bikaku's clears all three. The full suite.
+
+Validation: full python3 build.py completed with EXIT 0 (javac --release 17), including the regression suites, API/bytecode and archive checks, and dedicated-server loading checks. Protocol 103. Not tested in game.
+
+# State after 3.6.3
 
 Branch `claude/hopeful-noether-5c2wex`. Read `docs/handoff/next-ai-3.6.3.md` first. Next: **3.6.4**, the victim's view from inside the mouth (GeckoLib) and Grand Devouring in the kakuja; then Potential Unlock; the NPC's quest that unlocks the mutations when the owner gives it.
 

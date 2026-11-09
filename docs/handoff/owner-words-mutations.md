@@ -282,3 +282,12 @@ these mutations are NOT unlocked through mastery they're gonna be unlocked throu
 Asked how they could be turned on until that quest is in, they chose "Operator command" (an op-only testing shortcut; the menu shows each
 mutation locked or on, no click to unlock). Asked who builds the quest, they chose "You will tell me later" (a single server call is left
 ready for it: `BikakuDevour.grant`).
+
+After 3.6.3 was pushed, told "Found, not changed: /kagune cooldowns off doesn't end Bikaku cooldowns that are already running. Tell me if
+you want it fixed as its own version", the owner quoted that and wrote:
+
+it should.
+
+And, on the first draft of the view from inside the mouth (a GeckoLib model; `docs/handoff/devour-inside-draft-3.6.5.png`):
+
+I like the inside of the mouth, proceed wit hthe mod
