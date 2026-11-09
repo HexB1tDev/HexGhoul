@@ -9,13 +9,18 @@
 - **3.7.0 shipped** (fix: The Walker's arms never swing).
 - **3.7.1 shipped** (The Walker on K tapped, a half kakuja; K held the kakuja; carried 3.5 blocks up over any ground). Version 3.7.1,
   protocol 103.
-- **3.7.2 shipped** (absorbing a body: Speed, Strength, Resistance, Refreshed, Replenished for 15 s, Grand Devouring only). Version
-  3.7.2, protocol 103; the next is **3.7.3**.
+- **3.7.2 shipped** (absorbing a body: Speed, Strength, Resistance, Refreshed, Replenished for 15 s, Grand Devouring only).
+- **3.7.3 shipped** (Potential Unlock torn apart and pulled back: `BikakuPotential`, `Reattach`, `S2CPotential`, `PotentialRenderer`; the
+  owner on its preview: "Continue Im still at 96"). Version 3.7.3, protocol **104**; the next is **3.7.4**.
+  **Pushed before its full build finished** (the owner: "please push it directly I dont have time or usage to wait for your local build");
+  the compile, the verifier and the Bikaku suites passed. **First thing for the next AI: run `python3 build.py`; if it doesn't end with
+  EXIT 0, fix that as its own version.**
+- The owner: "ignore the NPC quest still, Its in the next big rework I got prepared." Next: whatever they say. Open: torso pieces for
+  Potential Unlock.
 - **The prompt for the next AI:** `docs/handoff/next-prompt-3.7.x.md` (keep it and this section current with every version; the owner:
   "as soon as the weekly limit touches 99% push a handoff and a prompt to continue with another AI." The AI can't see the usage meter.)
-- **Potential Unlock's tearing-off and strands: preview sent, not built.** `docs/handoff/potential-reattach-preview.png` (rows: the right
-  arm, the head, both arms with a blue kagune; close-ups), made from the pure prototype in `docs/handoff/potential-prototype/`
-  (`Reattach.java`, `PotentialPreview.java`, a README with the commands). No answer from the owner yet: ask before building it.
+- Potential Unlock's tearing-off and strands: built in 3.7.3 from the previewed prototype (`docs/handoff/potential-prototype/`, now
+  superseded by `client/animation/Reattach` and `bikaku/PotentialRules`).
 - The owner's choices (asked): The Walker on tap K costs "Half the kakuja's cost (Recommended)"; the absorbing buffs come from "Grand
   Devouring only (Recommended)"; the effects "Strength, Resistance, Refreshed, Replenished (Recommended)" with Speed, 15 s.
 - The owner then sent new words (quoted exactly at the end of `docs/handoff/owner-words-mutations.md`): a new thing ("Whenever an entity

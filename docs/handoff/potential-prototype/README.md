@@ -1,3 +1,6 @@
+**Built in 3.7.3** (`src/main/java/com/hex/kagune/control/client/animation/Reattach.java`, `bikaku/PotentialRules.java`): this folder is the
+prototype the preview was made from, kept for the record (its `Part` enum is now `PotentialRules.Part`).
+
 # Potential Unlock, tearing-off and strands: the prototype the preview was made from (not built into the mod yet)
 
 - `Reattach.java` (package `com.hex.kagune.control.client.animation`, pure): a part torn off whole (arm at the shoulder, leg at the hip, the

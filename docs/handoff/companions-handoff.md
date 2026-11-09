@@ -1,9 +1,24 @@
-# READ FIRST: `docs/handoff/next-ai-3.6.6.md` (kept current through 3.7.2)
+# READ FIRST: `docs/handoff/next-ai-3.6.6.md` (kept current through 3.7.3)
 
 GeckoLib, Photon and PlayerAnimator are the mod's dependencies: use them wherever they make the mod smoother (the owner). Then the owner's
 words in `docs/handoff/owner-words-mutations.md`. There is no RC bar: energy and food are one bar.
 
-# START HERE (state after 3.7.2)
+# START HERE (state after 3.7.3)
+
+Branch `claude/hopeful-noether-5c2wex`. Read `docs/handoff/next-ai-3.6.6.md` first. Next: whatever the owner says (the NPC's quest is in their next big rework: "ignore the NPC quest still, Its in the next big rework I got prepared."). Open: torso pieces for Potential Unlock (not built). The prompt for the next AI: `docs/handoff/next-prompt-3.7.x.md`.
+
+- 3.7.3, the owner's request (Mutation 2 in `owner-words-mutations.md`) and, on the preview `docs/handoff/potential-reattach-preview.png`: "Continue Im still at 96".
+- **Pure** `bikaku/PotentialRules` (`Part` HEAD, RIGHT_ARM, LEFT_ARM, RIGHT_LEG, LEFT_LEG with `bit()`; timeline `REACH_AT` 14, `GRIP_AT` 40, `HAUL_AT` 48, `HOME_AT` 88, `WHOLE` 100; `SURVIVE_HEALTH` 2, `SURVIVE_COST` 20, `PULL_DRAIN` 0.15, `HEAVY_BLOW` 0.5, `HEAL` 2, `HEAD_LETHAL` 0.2, `HEAD_HEAVY` 0.05; `pulling(age)`, `pick(missing, lethal, side, roll, pick)`); `client/animation/Reattach` (from `docs/handoff/potential-prototype/`, made of `Remains` pieces: `thrown`, `place` with `Anchor` (where he stood then from him now, his turn since), `strands`, `strandWidth`, `tissue`, `wound`, `end`, `onHim`).
+- **Server** `server/BikakuPotential`: `LivingDeathEvent` HIGHEST (Bikaku + mutation, not creative, not held by Grand Devouring, not outOfWorld/genericKill, energy > 0.5: cancelled, health 2, `consumeEnergy(SURVIVE_COST)` else bar 0, `tear(lethal)`); `LivingDamageEvent` LOWEST (amount >= half max health and < health, energy: `tear`); `tear`: the blow's way in his body frame then, side, `pick`, anchor = where he stood/faced, `PaleRevive.ground`, sounds; tick: each part ages (while `pulling`, only if `consumeEnergy(PULL_DRAIN)`, else `paused`), sounds at hold and back on, at `WHOLE` removed and `GhoulRegen.healOwn(HEAL)`; sync on change; cleared on death, respawn, a new dimension, logout; `startTracking` sends.
+- **Network** `S2CPotential` (message 56): player, up to 5 parts (part, seed, blow x/z, anchor xyz, yaw, ground, age, paused). Protocol **104**.
+- **Client** `client/PotentialClient` (each player's parts; age runs on unless paused; `missing`; `RenderPlayerEvent.Pre` LOWEST hides the parts off (and their outer layer) on the shared model, `Post` (and the next Pre) restores; `RenderHandEvent` hides the hand of an arm that is off (main arm by `getMainArm` ordinal)); `client/render/PotentialRenderer` (AFTER_ENTITIES: each part off in his skin (`m_108560_`) and raw ends, the wound disc, the strands (his `KaguneTints` colour, every other darker), the tissue; his frame now, the part anchored where it fell).
+- Stubs/allowlist: `LivingEntity.m_5737_` (getMainArm).
+- Tests: BikakuWormTests `potential()`. The full suite.
+- **Judgment calls:** every number above; the head's odds; no torso pieces yet; held items and armour on a missing part may still draw; the wound on the standing body.
+
+Validation: pushed at the owner's request ("please push it directly I dont have time or usage to wait for your local build") before the full python3 build.py finished: it was still running. Passed before the push: the compile, the API/bytecode verifier and the name check (tools/quick_check.py), BikakuTests (1,665) and BikakuWormTests (2,446,941). Protocol 104. Not tested in game. **The next AI: run the full build first and fix anything it finds (its own version).**
+
+# State after 3.7.2
 
 Branch `claude/hopeful-noether-5c2wex`. Read `docs/handoff/next-ai-3.6.6.md` first. Next: **Potential Unlock's tearing-off and strands**: preview sent (`docs/handoff/potential-reattach-preview.png`, prototype `docs/handoff/potential-prototype/`); ask the owner before building it. Then the NPC's quest, when the owner says. The prompt for the next AI: `docs/handoff/next-prompt-3.7.x.md`.
 

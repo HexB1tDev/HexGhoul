@@ -36,6 +36,7 @@ public final class BikakuWormTests {
         kakujaView();
         kakujaShatter();
         walkerLift();
+        potential();
         roundHim();
         kakujaMoves();
         heldFar();
@@ -1650,6 +1651,112 @@ public final class BikakuWormTests {
 
     private static String read(String path) throws java.io.IOException {
         return new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(path)), java.nio.charset.StandardCharsets.UTF_8);
+    }
+
+    /**
+     * 3.7.3, Potential Unlock torn apart and pulled back (the owner's words in {@code docs/handoff/owner-words-mutations.md}; the preview went
+     * ahead with "Continue").
+     */
+    private static void potential() {
+        com.hex.kagune.control.bikaku.PotentialRules.Part[] parts = com.hex.kagune.control.bikaku.PotentialRules.Part.values();
+        // Which part a blow takes: never one already off; none when all are; the head now and then; the side the blow came from.
+        java.util.Random random = new java.util.Random(5);
+        int heads = 0;
+        int heavyHeads = 0;
+        int right = 0;
+        int left = 0;
+        for (int i = 0; i < 20000; i++) {
+            int missing = random.nextInt(32);
+            com.hex.kagune.control.bikaku.PotentialRules.Part p = com.hex.kagune.control.bikaku.PotentialRules.pick(missing, i % 2 == 0, 1.0, random.nextDouble(),
+                random.nextDouble());
+            check(missing == 31 ? p == null : p != null && (missing & p.bit()) == 0, "a part already off is never torn again; none left, none taken");
+            if (p == com.hex.kagune.control.bikaku.PotentialRules.Part.HEAD) {
+                heads++;
+                heavyHeads += i % 2 == 0 ? 0 : 1;
+            }
+            right += p == com.hex.kagune.control.bikaku.PotentialRules.Part.RIGHT_ARM || p == com.hex.kagune.control.bikaku.PotentialRules.Part.RIGHT_LEG ? 1 : 0;
+            left += p == com.hex.kagune.control.bikaku.PotentialRules.Part.LEFT_ARM || p == com.hex.kagune.control.bikaku.PotentialRules.Part.LEFT_LEG ? 1 : 0;
+        }
+        check(heads > 0 && heads < 20000 / 4 && heavyHeads < heads / 2, "the head now and then, mostly from blows that would have killed (" + heads + ")");
+        check(right > left * 2, "a blow from his right takes his right side more often (" + right + " to " + left + ")");
+        check(!com.hex.kagune.control.bikaku.PotentialRules.pulling(com.hex.kagune.control.bikaku.PotentialRules.REACH_AT - 1)
+            && com.hex.kagune.control.bikaku.PotentialRules.pulling(com.hex.kagune.control.bikaku.PotentialRules.HAUL_AT)
+            && !com.hex.kagune.control.bikaku.PotentialRules.pulling(com.hex.kagune.control.bikaku.PotentialRules.HOME_AT),
+            "energy is drawn while the strands reach and haul, not while it flies or knits");
+        check(com.hex.kagune.control.bikaku.PotentialRules.WHOLE >= 90 && com.hex.kagune.control.bikaku.PotentialRules.WHOLE <= 110,
+            "about 5 seconds a part (" + com.hex.kagune.control.bikaku.PotentialRules.WHOLE + " ticks)");
+        for (com.hex.kagune.control.bikaku.PotentialRules.Part part : parts) {
+            for (boolean slim : new boolean[] {false, true}) {
+                double[] blow = {0.8, 0.0, -0.6};
+                com.hex.kagune.control.client.animation.Reattach.Flight flight = com.hex.kagune.control.client.animation.Reattach.thrown(part, 99L + part.ordinal(),
+                    blow, 0.0, slim);
+                double[] home = com.hex.kagune.control.client.animation.Reattach.centre(part, slim);
+                double lastDistance = Double.MAX_VALUE;
+                for (double age = 0.0; age <= com.hex.kagune.control.bikaku.PotentialRules.WHOLE; age += 0.5) {
+                    com.hex.kagune.control.client.animation.Remains.Placed placed = com.hex.kagune.control.client.animation.Reattach.place(part, flight, age, slim);
+                    check(placed.at()[1] > -0.05 && Double.isFinite(placed.at()[0]), part + ": never in the ground (" + age + ")");
+                    double d = distance(placed.at(), home);
+                    if (age > com.hex.kagune.control.bikaku.PotentialRules.HAUL_AT) {
+                        check(d <= lastDistance + 1e-6, part + ": hauled ever nearer (" + age + ")");
+                        lastDistance = d;
+                    }
+                    check(com.hex.kagune.control.client.animation.Reattach.onHim(age) == (age >= com.hex.kagune.control.bikaku.PotentialRules.HOME_AT),
+                        part + ": off him until it is back in place");
+                }
+                check(distance(com.hex.kagune.control.client.animation.Reattach.place(part, flight, 20.0, slim).at(), home) > 0.8, part + ": thrown off him");
+                double[] a = com.hex.kagune.control.client.animation.Reattach.place(part, flight, 44.0, slim).at();
+                double[] b = com.hex.kagune.control.client.animation.Reattach.place(part, flight, 47.0, slim).at();
+                check(distance(a, b) < 0.05, part + ": lying still before it is hauled");
+                check(distance(com.hex.kagune.control.client.animation.Reattach.place(part, flight, com.hex.kagune.control.bikaku.PotentialRules.HOME_AT, slim).at(), home)
+                    < 1e-9, part + ": back exactly where it belongs");
+                check(com.hex.kagune.control.client.animation.Reattach.strands(part, 3L, flight, com.hex.kagune.control.bikaku.PotentialRules.REACH_AT - 0.5, 0.0, slim)
+                    == null && com.hex.kagune.control.client.animation.Reattach.strands(part, 3L, flight, com.hex.kagune.control.bikaku.PotentialRules.WHOLE, 0.0, slim)
+                    == null, part + ": no strands before they come out, none once whole");
+                double[][] wound = com.hex.kagune.control.client.animation.Reattach.wound(part, slim);
+                double[][][] gripping = com.hex.kagune.control.client.animation.Reattach.strands(part, 3L, flight, 46.0, 10.0, slim);
+                com.hex.kagune.control.client.animation.Remains.Placed lying = com.hex.kagune.control.client.animation.Reattach.place(part, flight, 46.0, slim);
+                double[][] end = com.hex.kagune.control.client.animation.Reattach.end(part, slim);
+                double[] tornAt = add(lying.at(), com.hex.kagune.control.client.animation.Remains.rotate(lying.turn(), end[0]));
+                check(gripping.length == com.hex.kagune.control.client.animation.Reattach.STRANDS, part + ": its strands");
+                for (double[][] line : gripping) {
+                    check(distance(line[0], wound[0]) < 0.2, part + ": each strand comes out of the wound");
+                    check(distance(line[line.length - 1], tornAt) < 0.3, part + ": each has hold of its torn end");
+                }
+                // Lying where it fell while he moved on: shifted with where he stood, hauled to where he is.
+                com.hex.kagune.control.client.animation.Reattach.Anchor moved = new com.hex.kagune.control.client.animation.Reattach.Anchor(new double[] {2.0, 0.0, -3.0}, 0.7);
+                double[] here = com.hex.kagune.control.client.animation.Reattach.place(part, flight, 30.0, slim).at();
+                double[] there = com.hex.kagune.control.client.animation.Reattach.place(part, flight, 30.0, slim, moved).at();
+                check(Math.abs(distance(there, new double[] {2.0, 0.0, -3.0}) - Math.hypot(Math.hypot(here[0], here[2]), here[1])) < 1e-6,
+                    part + ": it lies where it fell, from wherever he is now");
+                check(distance(com.hex.kagune.control.client.animation.Reattach.place(part, flight, com.hex.kagune.control.bikaku.PotentialRules.HOME_AT, slim, moved).at(),
+                    home) < 1e-9, part + ": and comes back to where he is");
+            }
+        }
+        // The server, the network and the drawing (read from the sources).
+        try {
+            String server = read("src/main/java/com/hex/kagune/control/server/BikakuPotential.java");
+            check(server.contains("@SubscribeEvent(priority = EventPriority.HIGHEST)") && server.contains("event.setCanceled(true);")
+                && server.contains("SharedBar.energy(player) <= 0.5F") && server.contains("PotentialRules.SURVIVE_HEALTH"),
+                "a blow that would kill him doesn't while his bar has energy; without, it does");
+            check(server.contains("PotentialRules.HEAVY_BLOW * player.m_21233_()") && server.contains("BikakuDevour.held(player)"),
+                "a heavy blow tears a part off; not while Grand Devouring holds him");
+            check(server.contains("SharedBar.consumeEnergy(player, PotentialRules.PULL_DRAIN)") && server.contains("t.paused = !paid")
+                && server.contains("GhoulRegen.healOwn(player, PotentialRules.HEAL)"), "the pull draws energy, waits without it, heals once whole");
+            String network = read("src/main/java/com/hex/kagune/control/network/ControlNetwork.java");
+            check(network.contains("registerMessage(56, S2CPotential.class") && network.contains("PROTOCOL = \"104\""), "every client is told (message 56, protocol 104)");
+            String client = read("src/main/java/com/hex/kagune/control/client/PotentialClient.java");
+            check(client.contains("model.f_102811_, model.f_103375_") && client.contains("model.f_102808_, model.f_102809_") && client.contains("event.setCanceled(true)"),
+                "a part off isn't drawn on him, nor its hand in first person");
+            String renderer = read("src/main/java/com/hex/kagune/control/client/render/PotentialRenderer.java");
+            check(renderer.contains("KaguneTints.of(player)") && renderer.contains("Reattach.strands(") && renderer.contains("player.m_108560_()"),
+                "the parts in his skin, the strands in his kagune colour");
+        } catch (java.io.IOException failure) {
+            check(false, "read the sources: " + failure);
+        }
+    }
+
+    private static double[] add(double[] a, double[] b) {
+        return new double[] {a[0] + b[0], a[1] + b[1], a[2] + b[2]};
     }
 
     private static void kakuja() {

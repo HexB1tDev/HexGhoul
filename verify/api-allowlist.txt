@@ -438,6 +438,7 @@ M net/minecraftforge/client/event/RenderHandEvent setCanceled (Z)V              
 C net/minecraft/world/entity/HumanoidArm                                            # [srg] bft (yarn class_1306 Arm; joined.tsrg C_520_): LEFT, RIGHT, RenderArmEvent.getArm's type (read only as an Enum's ordinal)
 C net/minecraftforge/client/event/RenderArmEvent                                    # [forge] 1.20.1 client/event/RenderArmEvent.java (@Cancelable; posted by ForgeHooksClient.renderSpecificFirstPersonArm from ItemInHandRenderer.renderPlayerArm, before an empty hand's arm)
 M net/minecraftforge/client/event/RenderArmEvent getArm ()Lnet/minecraft/world/entity/HumanoidArm;  # [forge] RenderArmEvent.getArm
+M net/minecraft/world/entity/LivingEntity m_5737_ ()Lnet/minecraft/world/entity/HumanoidArm;  # [srg] getMainArm: joined.tsrg bfz.fh ()Lbft; m_5737_, intermediary method_6068, yarn LivingEntity.getMainArm (3.7.3; read as its ordinal)
 M net/minecraftforge/client/event/RenderArmEvent getPoseStack ()Lcom/mojang/blaze3d/vertex/PoseStack;  # [forge] RenderArmEvent.getPoseStack
 M net/minecraftforge/client/event/RenderArmEvent getMultiBufferSource ()Lnet/minecraft/client/renderer/MultiBufferSource;  # [forge] RenderArmEvent.getMultiBufferSource
 M net/minecraftforge/client/event/RenderArmEvent getPackedLight ()I                  # [forge] RenderArmEvent.getPackedLight

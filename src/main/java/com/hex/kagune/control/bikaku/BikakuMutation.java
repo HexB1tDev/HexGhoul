@@ -16,10 +16,10 @@ public enum BikakuMutation {
         "A body within 10 blocks at 1 heart or less: a worm swallows it whole and your bar refills. 60 s cooldown.", true),
     /**
      * Potential Unlock: three times the energy, his bar purple (3.6.7); torn apart, he pulls himself back together while his energy lasts
-     * (to come).
+     * (3.7.3: BikakuPotential).
      */
     POTENTIAL_UNLOCK("potential_unlock", "Potential Unlock",
-        "Three times the energy; your bar turns purple. Coming: torn apart, you pull yourself back together while energy lasts.", true);
+        "Three times the energy; your bar turns purple. Torn apart, you pull yourself back together while energy lasts.", true);
 
     private final String id;
     private final String displayName;

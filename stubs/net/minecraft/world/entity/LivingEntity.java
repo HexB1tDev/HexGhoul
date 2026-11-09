@@ -2,6 +2,7 @@
 package net.minecraft.world.entity;
 
 public abstract class LivingEntity extends Entity {
+    /** getMainArm (3.7.3) */ public net.minecraft.world.entity.HumanoidArm m_5737_() { throw new UnsupportedOperationException(); }
     /** dropCustomDeathLoot(source, looting, recentlyHit) (7.0.2) */ protected void m_7472_(net.minecraft.world.damagesource.DamageSource source, int looting, boolean recentlyHit) { throw new UnsupportedOperationException(); }
     /** getAttribute (7.0.2) */ public net.minecraft.world.entity.ai.attributes.AttributeInstance m_21051_(net.minecraft.world.entity.ai.attributes.Attribute attribute) { throw new UnsupportedOperationException(); }
     /** getRandom (declared here, not on Entity) */ public net.minecraft.util.RandomSource m_217043_() { throw new UnsupportedOperationException(); }

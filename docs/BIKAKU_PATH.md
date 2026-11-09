@@ -96,7 +96,13 @@ roof's underside), at a walking pace; no fall damage while carried and for 3 s a
 **3.7.2 (the owner: "Whenever an entity is absorbed, the player gains a speed buff for 15 seconds and some of our custom effects from
 foods, any that give special strength and buffs also for 15 seconds"; chosen "Grand Devouring only (Recommended)", "Strength, Resistance,
 Refreshed, Replenished (Recommended)"):** when a body Grand Devouring swallowed is in him: Speed, Strength, Resistance, Refreshed and
-Replenished, level I, 15 s. Next: Potential Unlock's tearing-off and strands (preview sent; ask first).
+Replenished, level I, 15 s.
+
+**3.7.3 (Potential Unlock, torn apart and pulled back; the owner's Mutation 2; on its preview: "Continue Im still at 96"):** with energy, a
+blow that would kill him leaves him at one heart (20 energy) and tears a part off; a single blow of half his health tears one off too.
+Arms, legs, now and then the head: thrown, lying in his skin, pulled back by strands of his kagune in his kagune colour over about 5 s,
+each on its own; energy while they pull, waiting without; a small heal when whole; off his model and his hand until then. Not yet: torso
+pieces. The NPC's quest is in the owner's next big rework.
 
 **Before 3.4.9 (the pure worm, unchanged since except as above):**
 

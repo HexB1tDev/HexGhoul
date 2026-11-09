@@ -7,9 +7,8 @@ Dependencies: we are using GeckoLib as a dependency along with Photon and Player
 There is no RC bar. Energy and food are one bar.
 
 What to do:
-1. If the version the handoff says is in progress isn't pushed yet, finish it (a full build to EXIT 0, commit, push).
-2. Potential Unlock's tearing-off and the strands in my kagune colour pulling each part back. Its preview was sent to me (`docs/handoff/potential-reattach-preview.png`, made from `docs/handoff/potential-prototype/`). Ask me what I think of it before you build it, and fix what I say.
-3. Then the NPC's quest that unlocks the mutations, when I tell you.
+1. 3.7.3 was pushed before its full build finished. Run `python3 build.py` first; if it doesn't end with EXIT 0, fix that as its own version.
+2. Then ask me what's next. Potential Unlock shipped in 3.7.3, without torso pieces. Ignore the NPC quest: it's in my next big rework.
 
 Follow the house rules exactly:
 - Each fix or feature is its own version (the last number never reaches 10), with release notes, a README entry, the handoff sections, both version strings, a full build ending with EXIT 0, a commit and a push.

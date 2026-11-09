@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 3.7.3 (HexGhoul): Bikaku: Potential Unlock, torn apart and pulled back together (testing)
+
+See `.github/release-notes-3.7.3.md`. Your request is in `docs/handoff/owner-words-mutations.md`; on the preview: "Continue Im still at 96". With energy, a blow that would kill you leaves you at one heart and tears a part off (an arm, a leg, now and then the head); a single blow of half your health does too. Each part is thrown, lies there in your skin, and strands of your kagune in your kagune colour reach it, wrap it and haul it back upright; whole in about 5 s, then a small heal; no energy, it waits. Off your model until then. Protocol 104.
+
 ## 3.7.2 (HexGhoul): Bikaku: absorbing a body gives Speed and the food's strength buffs for 15 s (testing)
 
 See `.github/release-notes-3.7.2.md`. Your words: "Whenever an entity is absorbed, the player gains a speed buff for 15 seconds and some of our custom effects from foods, any that give special strength and buffs also for 15 seconds"; you chose "Grand Devouring only (Recommended)" and "Strength, Resistance, Refreshed, Replenished (Recommended)". When a body Grand Devouring swallowed is in you: Speed, Strength, Resistance, Refreshed and Replenished, level I, 15 seconds. Protocol 103.

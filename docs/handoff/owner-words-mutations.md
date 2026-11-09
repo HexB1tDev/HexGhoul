@@ -345,3 +345,15 @@ as soon as the weekly limit touches 99% push a handoff and a prompt to continue 
 
 (The AI can't see the usage meter: told the owner so, and keeps the handoff and `docs/handoff/next-prompt-3.7.x.md` current and pushed with
 every version.)
+
+After 3.7.2 (Potential Unlock's tearing-off preview, `docs/handoff/potential-reattach-preview.png`, had been sent):
+
+Continue Im still at 96
+
+(Taken as going ahead with Potential Unlock's tearing-off and strands as previewed.) Then:
+
+ignore the NPC quest still, Its in the next big rework I got prepared.
+
+Then, while 3.7.3's full build ran:
+
+please push it directly I dont have time or usage to wait for your local build
