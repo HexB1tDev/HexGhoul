@@ -1,0 +1,1395 @@
+From 5fce4c1a8de0c977193ced4fcba31809630b1b94 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Tue, 10 Nov 2026 12:18:52 +0000
+Subject: [PATCH] HexKagune 4.1.1: no structure in water
+
+- Every structure checks the land under it and 8 blocks round it: no wet biome
+  (hexkagune:wet: seas, rivers, beaches, swamps) every 4 blocks, no water over the
+  ground every 16 (village/DryLand, pure and tested).
+- The Aogiri hideout: its structure set is a random spread; the world's one hideout is
+  built only at the nearest offer on dry land in its biomes (DryLand.hideoutOffers and
+  choose, worked out once per world in ControlStructures.Site.hideout). It used to be
+  built at its ring's spot whatever the ground (the sea floor).
+- The villages try up to 9 spots within their start chunk's reach. Anteiku, the library
+  and Ken's tower are a new type, hexkagune:dry_place: the vanilla jigsaw moved a chunk
+  at a time (up to 5) to dry land, kept within reach.
+- API allowlist: GenerationContext's constructor and accessors, GenerationStub,
+  StructurePiecesBuilder and BoundingBox accessors, BiomeSource.getNoiseBiome,
+  RandomState.sampler, Holder.is, TagKey.create, Registries.BIOME. Protocol 110.
+- NpcTests: the columns' cover, lakes, wet patches and rivers anywhere, the game's
+  spread written out, the hideout's choice, every structure's type.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_018kcYHECCipSV28FpRzFLbh
+---
+ .github/release-notes-4.1.1.md                |  58 ++++
+ README.md                                     |   4 +
+ build.py                                      |   2 +-
+ docs/handoff/next-ai-4.0.0.md                 |  12 +
+ patch/KagunePatch.java                        |   2 +-
+ .../hex/kagune/control/ControlStructures.java | 245 ++++++++++++--
+ .../control/network/ControlNetwork.java       |   2 +-
+ .../hex/kagune/control/village/DryLand.java   | 256 +++++++++++++++
+ .../hexkagune/tags/worldgen/biome/wet.json    |  18 +
+ .../hexkagune/worldgen/structure/anteiku.json |   2 +-
+ .../worldgen/structure/cyber_tower.json       |   2 +-
+ .../hexkagune/worldgen/structure/library.json |   2 +-
+ .../structure_set/aogiri_hideout.json         |   8 +-
+ .../hex/kagune/control/BikakuWormTests.java   |   2 +-
+ .../java/com/hex/kagune/control/NpcTests.java | 309 +++++++++++++++++-
+ stubs/net/minecraft/core/Holder.java          |   7 +
+ stubs/net/minecraft/core/RegistryAccess.java  |   5 +
+ .../minecraft/core/registries/Registries.java |   1 +
+ stubs/net/minecraft/tags/TagKey.java          |   3 +
+ stubs/net/minecraft/world/level/ChunkPos.java |   3 +
+ .../world/level/biome/BiomeSource.java        |   7 +
+ .../minecraft/world/level/biome/Climate.java  |   7 +
+ .../world/level/levelgen/RandomState.java     |   2 +
+ .../level/levelgen/structure/BoundingBox.java |   4 +
+ .../level/levelgen/structure/Structure.java   |  15 +
+ .../pieces/StructurePiecesBuilder.java        |   2 +
+ verify/api-allowlist.txt                      |  27 ++
+ 27 files changed, 967 insertions(+), 40 deletions(-)
+ create mode 100644 .github/release-notes-4.1.1.md
+ create mode 100644 src/main/java/com/hex/kagune/control/village/DryLand.java
+ create mode 100644 src/main/resources/data/hexkagune/tags/worldgen/biome/wet.json
+ create mode 100644 stubs/net/minecraft/core/Holder.java
+ create mode 100644 stubs/net/minecraft/core/RegistryAccess.java
+ create mode 100644 stubs/net/minecraft/world/level/biome/BiomeSource.java
+ create mode 100644 stubs/net/minecraft/world/level/biome/Climate.java
+
+diff --git a/.github/release-notes-4.1.1.md b/.github/release-notes-4.1.1.md
+new file mode 100644
+index 0000000..94256b3
+--- /dev/null
++++ b/.github/release-notes-4.1.1.md
+@@ -0,0 +1,58 @@
++## 4.1.1 (HexGhoul): No structure in water
++
++HexKagune 4.1.1 for Forge 1.20.1. Not tested in game.
++
++Your words: "bug, make sure NONE of the structures spawns in water or collides with water bodies, the mansion is currently happily resting at the very bottom of the ocean..."
++
++### Why the mansion was in the sea
++
++- The hideout had one fixed spot in each world. In 4.0.2 I let it be built there whatever the ground, so that every world would have one. When that spot was the sea, it went on the sea floor.
++- The villages looked at the ground only 25 times over 272 blocks, and allowed a little water at their edge.
++- Anteiku, the library and Ken's tower never looked at the ground at all.
++
++### Now
++
++- **Every structure checks the land under it and 8 blocks out round it.** Where there's any water, it isn't built there:
++  - **Biomes, every 4 blocks** (the biomes' own grain): no sea, river, beach, stony shore or swamp (mangrove swamps included, and Biomes O' Plenty's marsh, bog, wetland and floodplain).
++  - **The ground, every 16 blocks:** no water lying on it (a lake or a pond).
++- **The Aogiri hideout (the mansion):**
++  - Each world now offers it a spread of possible spots, one in every 640 × 640 blocks. They're the game's own spots for the hideout's structure set.
++  - It's built at the nearest one to the middle of the world (at least 512 blocks out) that is dry land in one of its biomes.
++  - There's still exactly one per world, and every part of the world agrees which spot it is.
++  - It prefers fairly flat land. If no spot is flat, it takes the first dry one and fits the ground to it.
++  - `/locate structure hexkagune:aogiri_hideout` finds it.
++- **The two villages:** if the spot they start at is wet, they try up to 8 others nearby (32 blocks apart) and take the first that's dry, fairly flat and in one of their biomes.
++- **Anteiku, the library and Ken's tower:**
++  - Each is moved a chunk at a time, up to 5 chunks away and nearest first, to the first dry spot in one of its biomes.
++  - Each stays within reach of its start, so it's built whole.
++
++### Your worlds
++
++- Chunks already made don't change: the mansion on your sea floor stays there.
++- In a world made before 4.1.1, a second hideout can be built on dry land far off, in land not yet explored.
++- For a dry hideout, make a new world.
++
++### My guesses
++
++- How closely the ground is looked at (every 4 blocks for the biomes, every 16 for water on the ground). A pond under 16 blocks across that isn't in a wet biome could still slip between two looks.
++- Which biomes count as wet: `data/hexkagune/tags/worldgen/biome/wet.json`.
++- How far the places may move (8 tries for the villages, 5 chunks for the others), and the hideout's spacing (640 blocks).
++
++### Known limits
++
++- A world with no dry land in any of its hideout's 64 offered spots (for example a world of all ocean) has no hideout.
++- A village whose spot and nearby spots are all wet isn't built there. Villages may be a little rarer by the coast and rivers.
++
++### Network and tests
++
++- **Network:** protocol 110. There's a new structure type (the registries differ), so clients and the server must both be on 4.1.1.
++- **NpcTests:**
++  - the columns looked at cover every structure and the ground 8 blocks round it, never further apart than their step;
++  - a lake 16 blocks across, a wet biome's patch, or a river, anywhere under a structure or at its edge (tried at every block), keeps it from being built there;
++  - the sea is seen at the first look;
++  - the hideout's spots are the game's own (its random written out step by step), nearest first;
++  - the hideout takes the first dry, flat spot, then the first dry steep one, and none if all are wet;
++  - every structure uses a dry-land type, and none of their biome lists has a wet biome.
++- **The full suite.**
++
++Validation: the full `python3 build.py` completed with EXIT 0 on these sources before this was pushed. Not tested in game.
+diff --git a/README.md b/README.md
+index d3fb8e5..f113104 100644
+--- a/README.md
++++ b/README.md
+@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
+ autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
+ 
+ 
++## 4.1.1 (HexGhoul): No structure in water (testing)
++
++See `.github/release-notes-4.1.1.md`. Your words: "bug, make sure NONE of the structures spawns in water or collides with water bodies, the mansion is currently happily resting at the very bottom of the ocean..." Every structure checks the land under it and 8 blocks round it: no wet biome (sea, river, beach, swamp) every 4 blocks, no water on the ground every 16. The mansion is built at the nearest of its world's offered spots that is dry land, still one per world; the villages try nearby spots, and Anteiku, the library and Ken's tower move up to 5 chunks to dry land. Chunks already made don't change. Protocol 110.
++
+ ## 4.1.0 (HexGhoul): Ayato's way of bringing the kagune out (testing)
+ 
+ See `.github/release-notes-4.1.0.md`. Your words: "after training with Ayato (Ukaku kakuja quest) the player gains a new pull out kagune animation sort of like Ken gives the player. the player lifts both hands god like and then they're unleashed." Once Ayato has taught you the First Kakuja, you bring the kagune out his way: up on your toes, both arms lifted out wide, palms to the sky, chin up, and the wings are unleashed. Protocol 109.
+diff --git a/build.py b/build.py
+index 504e46d..673b1b6 100644
+--- a/build.py
++++ b/build.py
+@@ -24,7 +24,7 @@ import sys
+ import zipfile
+ 
+ ROOT = Path(__file__).resolve().parent
+-VERSION = "4.1.0"
++VERSION = "4.1.1"
+ INPUT = ROOT / "input" / "hexkagune-1.0.0.jar"
+ BUILD = Path(os.environ.get("HEXKAGUNE_BUILD_DIR", ROOT / "build"))
+ OUTPUT = BUILD / f"hexkagune-{VERSION}.jar"
+diff --git a/docs/handoff/next-ai-4.0.0.md b/docs/handoff/next-ai-4.0.0.md
+index b1fab60..b69f95e 100644
+--- a/docs/handoff/next-ai-4.0.0.md
++++ b/docs/handoff/next-ai-4.0.0.md
+@@ -147,6 +147,18 @@ picture: arms out wide and low, palms up, floating). `server/AyatoPullOut` (taug
+ `client/AyatoPullOutClient.lift`, `S2CUkakuFx.UNLEASH` (49), `PathServer.toggle` (Noro, then Ayato, then Ken), `KaguneBodyAnimation`.
+ Protocol 109.
+ 
++## 4.1.1 (released)
++
++The owner (quoted exactly): "bug, make sure NONE of the structures spawns in water or collides with water bodies, the mansion is currently
++happily resting at the very bottom of the ocean..." Cause: 4.0.2 built the one hideout at its concentric ring's spot whatever the ground;
++the villages' 5 x 5 check allowed water at the rim; the jigsaw places never checked. `village/DryLand` (pure: `columns`, `dry` (the wet
++biome tag every 4 blocks, water over the ground every 16, footprint and 8 out), `spreadChunk` (RandomSpreadStructurePlacement's linear
++offer, java.util.Random), `hideoutOffers`, `choose`, `shifts`, `runs`, `spots`, `reachable`). `ControlStructures.Site`: the hideout only
++at `hideout(context)` (cached per seed and generator; its structure set is now `random_spread` 40/20, the same numbers as `DryLand`);
++other sites try `TRIES` spots `SHIFT` apart. `ControlStructures.DryPlace` (`hexkagune:dry_place`, Anteiku, library, cyber tower): the
++vanilla jigsaw run in a `GenerationContext` moved up to 5 chunks, its pieces' box kept within the start chunk's reach. Tag
++`hexkagune:wet`. Protocol 110. Old worlds keep what they generated.
++
+ ## Next
+ 
+ Nothing outstanding from the owner. If they report in-game problems with the outfits' fit, adjust `CLEAR`, `SNUG`, the drape
+diff --git a/patch/KagunePatch.java b/patch/KagunePatch.java
+index 411d131..d250cdb 100644
+--- a/patch/KagunePatch.java
++++ b/patch/KagunePatch.java
+@@ -40,7 +40,7 @@ public final class KagunePatch implements Opcodes {
+     private static final String COOLDOWN = "slingshotCooldownUntil";
+     /** 3.0.0: the grapple's flight onto the grabbed block. */
+     static final String SLINGSHOT = "com/hex/kagune/control/server/RinkakuSlingshot";
+-    static final String VERSION = "4.1.0";
++    static final String VERSION = "4.1.1";
+     private static final String PLAYER = "net/minecraft/server/level/ServerPlayer";
+     private static final String VECTOR = "net/minecraft/world/phys/Vec3";
+     // 1.1.0 kagune control expansion hooks
+diff --git a/src/main/java/com/hex/kagune/control/ControlStructures.java b/src/main/java/com/hex/kagune/control/ControlStructures.java
+index 6bee54c..1096d8b 100644
+--- a/src/main/java/com/hex/kagune/control/ControlStructures.java
++++ b/src/main/java/com/hex/kagune/control/ControlStructures.java
+@@ -1,5 +1,6 @@
+ package com.hex.kagune.control;
+ 
++import com.hex.kagune.control.village.DryLand;
+ import com.hex.kagune.control.village.VillageGround;
+ import com.hex.kagune.control.village.VillageRules;
+ import com.hex.kagune.control.village.VillageTops;
+@@ -36,6 +37,8 @@ public final class ControlStructures {
+     private static final DeferredRegister<StructureType<?>> TYPES = DeferredRegister.create(Registries.f_256938_, "hexkagune");
+     /** hexkagune:dry_jigsaw. */
+     public static final StructureType<DryJigsaw> DRY_JIGSAW = () -> DryJigsaw.CODEC;
++    /** 4.1.1: hexkagune:dry_place (Anteiku, the library, Ken's tower): a jigsaw place moved, near its start, onto dry land. */
++    public static final StructureType<DryPlace> DRY_PLACE = () -> DryPlace.CODEC;
+ 
+     /**
+      * 4.0.0 (The Great Exploration): the owner's three new places, each its own type ({@link Site}): hexkagune:site_village_1 (the human
+@@ -45,6 +48,7 @@ public final class ControlStructures {
+ 
+     static {
+         TYPES.register("dry_jigsaw", () -> DRY_JIGSAW);
++        TYPES.register("dry_place", () -> DRY_PLACE);
+         for (com.hex.kagune.control.village.SiteMaps.Site site : com.hex.kagune.control.village.SiteMaps.ALL) {
+             Codec<Site> codec = Structure.m_226607_(settings -> new Site(settings, site));
+             StructureType<Site> type = () -> codec;
+@@ -89,13 +93,17 @@ public final class ControlStructures {
+             if (!VillageGround.suits(surface, floor)) {
+                 return Optional.empty();
+             }
+-            // 2.0.2: vanilla's own placing called straight (public in vanilla's jigsaw), by name if the game says it may not be.
++            return run(this.inner, context);
++        }
++
++        /** 2.0.2: vanilla's own placing called straight (public in vanilla's jigsaw), by name if the game says it may not be. */
++        static Optional<Structure.GenerationStub> run(JigsawStructure inner, Structure.GenerationContext context) {
+             try {
+-                return this.inner.m_214086_(context);
++                return inner.m_214086_(context);
+             } catch (IllegalAccessError denied) {
+                 try {
+                     @SuppressWarnings("unchecked")
+-                    Optional<Structure.GenerationStub> stub = (Optional<Structure.GenerationStub>)find().invoke(this.inner, context);
++                    Optional<Structure.GenerationStub> stub = (Optional<Structure.GenerationStub>)find().invoke(inner, context);
+                     return stub;
+                 } catch (ReflectiveOperationException | RuntimeException | LinkageError failure) {
+                     Safety.caught(failure, "ControlStructures.DryJigsaw");
+@@ -194,35 +202,46 @@ public final class ControlStructures {
+         }
+ 
+         private Optional<Structure.GenerationStub> place(Structure.GenerationContext context) {
+-            ChunkGenerator generator = context.f_226622_();
+             ChunkPos chunk = context.f_226628_();
+             int turns = context.f_226626_().m_188503_(4);
+             boolean across = (turns & 1) == 1;
+             int sizeX = across ? this.site.depth() : this.site.width();
+             int sizeZ = across ? this.site.width() : this.site.depth();
+-            // Its footprint, turned, centred on what the start chunk reaches (never past it).
+-            int minX = clampMin(chunk.m_45604_() + 8 - sizeX / 2, chunk.m_45604_(), sizeX);
+-            int minZ = clampMin(chunk.m_45605_() + 8 - sizeZ / 2, chunk.m_45605_(), sizeZ);
+-            // The ground under it, on a 5 x 5 grid over its footprint: dry and fairly flat, or it is not built here.
+-            int n = 5;
+-            int[] surface = new int[n * n];
+-            int[] floor = new int[n * n];
+-            for (int i = 0; i < n; i++) {
+-                for (int j = 0; j < n; j++) {
+-                    int x = minX + 2 + (sizeX - 5) * i / (n - 1);
+-                    int z = minZ + 2 + (sizeZ - 5) * j / (n - 1);
+-                    surface[i * n + j] = generator.m_214096_(x, z, Heightmap.Types.WORLD_SURFACE_WG, context.f_226629_(), context.f_226624_());
+-                    floor[i * n + j] = generator.m_214096_(x, z, Heightmap.Types.OCEAN_FLOOR_WG, context.f_226629_(), context.f_226624_());
++            if (unique(this.site)) {
++                // 4.1.1 (the owner: "the mansion is currently happily resting at the very bottom of the ocean"): the world's one hideout
++                // is built only at the first of its offers on dry land (worked out once a world, the same in every chunk that asks).
++                int[] chosen = hideout(context);
++                if (chosen == null || chosen[0] != chunk.f_45578_ || chosen[1] != chunk.f_45579_) {
++                    return Optional.empty();
+                 }
++                int minX = clampMin(chunk.m_45604_() + 8 - sizeX / 2, chunk.m_45604_(), sizeX);
++                int minZ = clampMin(chunk.m_45605_() + 8 - sizeZ / 2, chunk.m_45605_(), sizeZ);
++                return Optional.of(this.stub(context, turns, minX, minZ, sizeX, sizeZ, chosen[2]));
+             }
+-            // 4.0.2 (the owner: "Aogiri Tree only has one hideout"): the hideout is the world's one (its structure set's ring puts it in
+-            // one place, near the ground it likes): it is built there whatever the ground, its terrain adaptation fitting the world to it.
+-            if (!unique(this.site) && !VillageGround.suitsGrid(surface, floor, n)) {
+-                return Optional.empty();
++            // 4.1.1: every other place at the first spot its start chunk reaches (from the middle out) on dry, fairly flat land, with no
++            // water under it or at its edge, in a biome it may stand in; or not here.
++            DryLand.Ground ground = ground(context);
++            int[] xs = DryLand.runs(chunk.m_45604_() + 8 - sizeX / 2, chunk.m_45604_(), sizeX, SHIFT);
++            int[] zs = DryLand.runs(chunk.m_45605_() + 8 - sizeZ / 2, chunk.m_45605_(), sizeZ, SHIFT);
++            for (int[] at : DryLand.spots(xs, zs, TRIES)) {
++                int[] floor = grid(ground, at[0], at[1], sizeX, sizeZ);
++                if (floor == null || !flat(floor)) {
++                    continue;
++                }
++                int middle = DryLand.median(floor);
++                if (biome(context, at[0] + sizeX / 2, middle, at[1] + sizeZ / 2) && DryLand.dry(ground, middle, at[0], at[1], sizeX, sizeZ)) {
++                    return Optional.of(this.stub(context, turns, at[0], at[1], sizeX, sizeZ, middle));
++                }
+             }
+-            // Its ground on the world's: the middle of the dry ground's heights (the first free height: its ground block one under it).
+-            int[] dry = java.util.Arrays.stream(floor).sorted().toArray();
+-            int base = dry[dry.length / 2] - 1 - this.site.ground();
++            return Optional.empty();
++        }
++
++        /**
++         * The place laid with its footprint's least corner at ({@code minX}, {@code minZ}), turned {@code turns}, its ground on the world's
++         * at {@code middle} (the middle of the dry ground's heights: the first free height, its ground block one under it).
++         */
++        private Structure.GenerationStub stub(Structure.GenerationContext context, int turns, int minX, int minZ, int sizeX, int sizeZ, int middle) {
++            int base = middle - 1 - this.site.ground();
+             net.minecraft.world.level.block.Rotation rotation = TURNS[turns];
+             // The template's corner (its x 0, z 0) as the turn takes it: the turned footprint's least corner is (minX, minZ).
+             int[] least = com.hex.kagune.control.village.SiteMaps.turnedLeast(this.site.width(), this.site.depth(), turns);
+@@ -231,7 +250,7 @@ public final class ControlStructures {
+             net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager templates = context.f_226625_();
+             com.hex.kagune.control.village.SiteMaps.Site site = this.site;
+             BlockPos start = new BlockPos(minX + sizeX / 2, base + site.ground() + 1, minZ + sizeZ / 2);
+-            return Optional.of(new Structure.GenerationStub(start, builder -> {
++            return new Structure.GenerationStub(start, builder -> {
+                 for (int i = 0; i < site.across(); i++) {
+                     for (int j = 0; j < site.down(); j++) {
+                         int[] corner = VillageRules.turn(site.xEdges()[i], site.zEdges()[j], turns);
+@@ -244,7 +263,83 @@ public final class ControlStructures {
+                         builder.m_142679_(new PoolElementStructurePiece(templates, element, at, site.ground() + 1, rotation, box));
+                     }
+                 }
+-            }));
++            });
++        }
++
++        /** 4.1.1: how far apart (blocks) the spots a place may be moved to are, and how many are tried before it gives up there. */
++        static final int SHIFT = 32;
++        static final int TRIES = 9;
++        /** 4.1.1: the hideout's start chunk and ground ({x, z, height}) for each world (its seed, its generator), once worked out. */
++        private static final java.util.Map<java.util.List<Object>, int[]> HIDEOUTS = new java.util.HashMap<>();
++        private static final int[] NOWHERE = new int[0];
++
++        /** 4.1.1: the world's one hideout's start chunk and ground ({x, z, height}), or null if there is no dry land among its offers. */
++        static int[] hideout(Structure.GenerationContext context) {
++            java.util.List<Object> world = java.util.List.of(context.f_226627_(), context.f_226622_());
++            synchronized (HIDEOUTS) {
++                int[] known = HIDEOUTS.get(world);
++                if (known == null) {
++                    known = chooseHideout(context);
++                    if (HIDEOUTS.size() >= 4) {
++                        HIDEOUTS.clear();
++                    }
++                    HIDEOUTS.put(world, known);
++                }
++                return known.length == 0 ? null : known;
++            }
++        }
++
++        /**
++         * 4.1.1: the first of the hideout's offers ({@link DryLand#hideoutOffers}, nearest the world's middle first) where all its start chunk
++         * reaches (the mansion is that wide, whichever way it turns) is dry land in a biome it may stand in, fairly flat; failing that, the
++         * first dry one however steep (its terrain adaptation fits the ground to it): {@link DryLand#choose}.
++         */
++        private static int[] chooseHideout(Structure.GenerationContext context) {
++            DryLand.Ground ground = ground(context);
++            int span = DryLand.REACH_BACK + DryLand.REACH_ON + 1;
++            int[] chosen = DryLand.choose(DryLand.hideoutOffers(context.f_226627_()), new DryLand.Judge() {
++                @Override
++                public int[] grid(int chunkX, int chunkZ) {
++                    return Site.grid(ground, (chunkX << 4) - DryLand.REACH_BACK, (chunkZ << 4) - DryLand.REACH_BACK, span, span);
++                }
++
++                @Override
++                public boolean biome(int chunkX, int chunkZ, int y) {
++                    return ControlStructures.biome(context, (chunkX << 4) + 8, y, (chunkZ << 4) + 8);
++                }
++
++                @Override
++                public boolean dry(int chunkX, int chunkZ, int y) {
++                    return DryLand.dry(ground, y, (chunkX << 4) - DryLand.REACH_BACK, (chunkZ << 4) - DryLand.REACH_BACK, span, span);
++                }
++            }, VillageGround.FLAT);
++            return chosen == null ? NOWHERE : chosen;
++        }
++
++        /**
++         * The world's dry ground on a 5 x 5 grid over a footprint (sample i * 5 + j at row i, column j), or null if there is water over the
++         * ground at any of them.
++         */
++        static int[] grid(DryLand.Ground ground, int minX, int minZ, int sizeX, int sizeZ) {
++            int n = 5;
++            int[] floor = new int[n * n];
++            for (int i = 0; i < n; i++) {
++                for (int j = 0; j < n; j++) {
++                    int x = minX + 2 + (sizeX - 5) * i / (n - 1);
++                    int z = minZ + 2 + (sizeZ - 5) * j / (n - 1);
++                    int at = ground.floor(x, z);
++                    if (ground.surface(x, z) > at) {
++                        return null;
++                    }
++                    floor[i * n + j] = at;
++                }
++            }
++            return floor;
++        }
++
++        /** True if the dry ground's highest and lowest are no more than {@link VillageGround#FLAT} apart. */
++        static boolean flat(int[] floor) {
++            return floor.length > 0 && DryLand.spread(floor) <= VillageGround.FLAT;
+         }
+ 
+         /** 4.0.2: true if {@code site} is the world's one of its kind (placed by a ring, never turned away): the Aogiri Tree's hideout. */
+@@ -264,4 +359,102 @@ public final class ControlStructures {
+             return SITES.get(this.site.id());
+         }
+     }
++
++    /** 4.1.1: the biomes no structure may stand in or beside (a sea, a river, a beach, a swamp): data/hexkagune/tags/worldgen/biome/wet.json. */
++    static final net.minecraft.tags.TagKey<?> WET = net.minecraft.tags.TagKey.m_203882_(Registries.f_256952_,
++        net.minecraft.resources.ResourceLocation.m_214293_("hexkagune", "wet"));
++
++    /** 4.1.1: the world as the game will make it (its two worldgen heightmaps: water counted as ground, and not; its biomes). */
++    static DryLand.Ground ground(Structure.GenerationContext context) {
++        ChunkGenerator generator = context.f_226622_();
++        net.minecraft.world.level.LevelHeightAccessor heights = context.f_226629_();
++        net.minecraft.world.level.levelgen.RandomState random = context.f_226624_();
++        net.minecraft.world.level.biome.BiomeSource biomes = context.f_226623_();
++        net.minecraft.world.level.biome.Climate.Sampler sampler = random.m_224579_();
++        return new DryLand.Ground() {
++            @Override
++            public boolean wet(int x, int y, int z) {
++                return biomes.m_203407_(x >> 2, y >> 2, z >> 2, sampler).m_203656_(WET);
++            }
++
++            @Override
++            public int surface(int x, int z) {
++                return generator.m_214096_(x, z, Heightmap.Types.WORLD_SURFACE_WG, heights, random);
++            }
++
++            @Override
++            public int floor(int x, int z) {
++                return generator.m_214096_(x, z, Heightmap.Types.OCEAN_FLOOR_WG, heights, random);
++            }
++        };
++    }
++
++    /** 4.1.1: true if a structure may stand in the biome at block ({@code x}, {@code y}, {@code z}) (the game's own test at its start). */
++    static boolean biome(Structure.GenerationContext context, int x, int y, int z) {
++        net.minecraft.core.Holder<?> biome = context.f_226623_().m_203407_(x >> 2, y >> 2, z >> 2, context.f_226624_().m_224579_());
++        return context.f_226630_().test(biome);
++    }
++
++    /**
++     * 4.1.1 (the owner: "make sure NONE of the structures spawns in water or collides with water bodies"): a vanilla jigsaw place (Anteiku,
++     * the library, Ken's tower: one template each), read from the same fields as vanilla's, started where vanilla would start it if the land
++     * there is dry; if not, moved a chunk at a time ({@link DryLand#shifts}, nearest first, as far as its start chunk reaches) to the first
++     * spot where no water lies under it or round it, in a biome it may stand in; or not built at that start.
++     */
++    public static final class DryPlace extends Structure {
++        static final Codec<DryPlace> CODEC = ((MapCodec.MapCodecCodec<JigsawStructure>)JigsawStructure.f_227604_).codec()
++            .xmap(DryPlace::new, dry -> dry.inner).codec();
++        /** The chunks either way a start may be moved. */
++        static final int MOST = 5;
++        private static final int[][] SHIFTS = DryLand.shifts(MOST);
++        final JigsawStructure inner;
++
++        DryPlace(JigsawStructure inner) {
++            super(inner.modifiableStructureInfo().getOriginalStructureInfo().structureSettings());
++            this.inner = inner;
++        }
++
++        @Override
++        public Optional<Structure.GenerationStub> m_214086_(Structure.GenerationContext context) {
++            try {
++                return this.place(context);
++            } catch (RuntimeException | LinkageError failure) {
++                Safety.caught(failure, "ControlStructures.DryPlace");
++                return Optional.empty();
++            }
++        }
++
++        private Optional<Structure.GenerationStub> place(Structure.GenerationContext context) {
++            ChunkPos home = context.f_226628_();
++            DryLand.Ground ground = ground(context);
++            for (int[] shift : SHIFTS) {
++                Structure.GenerationContext moved = shift[0] == 0 && shift[1] == 0 ? context : new Structure.GenerationContext(context.f_226621_(),
++                    context.f_226622_(), context.f_226623_(), context.f_226624_(), context.f_226625_(), context.f_226626_(), context.f_226627_(),
++                    new ChunkPos(home.f_45578_ + shift[0], home.f_45579_ + shift[1]), context.f_226629_(), context.f_226630_());
++                Optional<Structure.GenerationStub> stub = DryJigsaw.run(this.inner, moved);
++                if (stub.isEmpty()) {
++                    continue;
++                }
++                BoundingBox box = stub.get().m_226677_().m_192798_();
++                int minX = box.m_162395_();
++                int minZ = box.m_162398_();
++                int maxX = box.m_162399_();
++                int maxZ = box.m_162401_();
++                if (!DryLand.reachable(home.m_45604_(), home.m_45605_(), minX, minZ, maxX, maxZ)) {
++                    continue;
++                }
++                BlockPos at = stub.get().f_226669_();
++                if (biome(context, at.m_123341_(), at.m_123342_(), at.m_123343_())
++                    && DryLand.dry(ground, at.m_123342_(), minX, minZ, maxX - minX + 1, maxZ - minZ + 1)) {
++                    return stub;
++                }
++            }
++            return Optional.empty();
++        }
++
++        @Override
++        public StructureType<?> m_213658_() {
++            return DRY_PLACE;
++        }
++    }
+ }
+diff --git a/src/main/java/com/hex/kagune/control/network/ControlNetwork.java b/src/main/java/com/hex/kagune/control/network/ControlNetwork.java
+index b1b1e6c..d66f077 100644
+--- a/src/main/java/com/hex/kagune/control/network/ControlNetwork.java
++++ b/src/main/java/com/hex/kagune/control/network/ControlNetwork.java
+@@ -27,7 +27,7 @@ public final class ControlNetwork {
+      * abilities do out in the world (1.0.13); 35: War's M1, its blows and their effects (1.0.14); 36: the Black Sun out of the ground (1.0.15); 37: Peace playable, its blades' moves and cuts (1.0.16); 38: the transformations, nothing hurts him nor any ability while it comes (1.0.17). 39: Peace's six blades, their numbering and moves (1.0.18). 40: the marks blows leave instead of vanilla particles (1.0.19). 41: the fighting grammar: M1 flags, the heavy, the charge (1.0.20). 42: Peace's blades reach farther, its paths changed (1.0.21).
+      * 54: Eto (1.3.0): her state and surgery, her talk choices, the one-eye grant in the kakugan state. 58: genders (1.3.9). 59: pregnancy, children (1.3.10).
+      */
+-    private static final String PROTOCOL = "109"; // 109 (4.1.0): S2CUkakuFx UNLEASH (49, a player Ayato taught lifting both hands as the wings come out).   108 (4.0.9): EtoGesture SIT (appended; S2CEto may send its ordinal).   107 (4.0.3): the Crimson Hood item is gone (the registries differ); the outfits file is version 3.   106 (4.0.2): EtoGesture POSE, SLICK, SHRUG, TILT (appended; S2CEto may send their ordinals); S2CUkakuFx TILT (48, a player Noro taught tilting their head as the kagune comes out); the outfits' coat-tail bones (8, 9).   105 (4.0.0): S2CNpcWings carries an NPC's kakuja and its mend (Ayato's, Noro's); S2CCutscene AYATO_KAKUJA (4) and NORO (5); S2CGhoulNpc's identity carries a wild ghoul's rank and mask and Aogiri; S2CBikakuState is sent under an NPC's or a child's id (Noro's worms, a Bikaku parent's child's); the outfits and masks are items.   104 (3.7.3): S2CPotential (message 56), Potential Unlock's torn parts.   103 (3.6.3): S2CBikakuState carries the Bikaku mutations and Grand Devouring (and its cooldown).   102 (3.6.1): S2CBikakuState carries each worm's part of a move (held, caught, mark).   101 (3.6.0): S2CBikakuState carries the Bikaku form; C2SBikakuAction FORM.   100 (3.5.9): S2CBikakuState carries the worm's ways round blocks.   99 (3.5.8): S2CBikakuState carries the bite's and the move's reach and a wind-up; C2SBikakuAction KEY_UP, ATTACK, ATTACK_UP.   98 (3.5.7): S2CBikakuState carries a target for each kakuja tentacle (6), when Undying Abomination began, each tentacle's own bites; BikakuMove JAWS, HUNGER, CATACLYSM, UNDYING (appended).   97 (3.5.4): S2CBikakuState carries the Bikaku kakuja.   96 (3.5.3): S2CBikakuState carries when Monstrous Regeneration began.   95 (3.5.0): C2SBikakuAction (message 55), S2CBikakuState carries the worm's move, its point, targets and catch.   94 (3.4.9): KagunePath BIKAKU (appended; S2CPathState may send its ordinal), S2CBikakuState (message 54), the Bikaku path's worm.   93 (3.3.6): EtoGesture JEALOUS (appended; S2CEto may send its ordinal).   92 (3.1.8): C2SArmAction.THIRD (4), Arm.Ability SWING/FAULT/GUARD (S2CArmSwing codes 40-42; a SWING's bound packs its latch).   91 (3.1.6): S2CHurl (message 53), C2SUkakuAction HURL (11), Rinkaku's Rubble Hurl.   90 (3.1.5): S2CImpale (message 52), C2SUkakuAction IMPALE (10), Rinkaku's Impale.   89 (3.1.2): C2SArmAction.FOLD (3), dedicated briefcase key for every quinque. 88 (3.0.6): C2SArmAction (message 50) and S2CArmSwing (51), a player's kagune-made weapon.   87 (3.0.0): CcgAgent carries ARM, ARM_AT, ARM_TARGET (the higher ranks' kagune-made weapons), its SWING may send ArmRules codes (16 up: a blow of its string; 32 up: one of its moves).   86 (2.4.8-2.4.9): S2CUkakuFx CRACK (a player Ken taught cracks a finger), S2CEto may send STOKE, SEASON, TASTE and SERVE (the spouse cooking and handing food over).   85 (2.4.5): S2CThyDeath (message 49), C2SUkakuAction THY_DEATH.   84 (2.3.0): S2CChild carries its mother's size (a grown daughter her height).   83 (2.2.4): S2CEto carries the kiss's mood (MoodKiss).  82 (2.1.9): CcgAgent and GhoulNpc carry AFRAID (trembling before Peace or War).  81 (2.1.7): C2SUkakuAction REAPER_DASH (Ukaku's final kakuja dashes).  80 (2.0.49): CcgAgent FLIP may carry SOARING (the Reaper's soar).  79 (2.0.48): S2CUkakuFx DAWN_RING (the Reaper's volley).  78 (2.0.42): S2CRinkakuBlock, C2SUkakuAction BLOCK.  77 (2.0.33): CcgAgent SWING can send the Reaper's GROUND, S2CUkakuFx REAPER_MARK / REAPER_TENDRIL.  76 (2.0.25): Dawn aim and lightning FX.  75 (2.0.23): CcgAgent SWING can send the Reaper kick.  74 (2.0.22): CcgAgent LOOK can send Dawn's appended quinque ordinal.  73 (2.0.3): ChildStage ADULT (S2CChild may send its ordinal 4); 72 (1.3.68): S2CGhoulNpc carries its eyes (a wild ghoul prowling at night); 71 (1.3.62): S2CKingFx marks a hard clash's GROUND; 70 (1.3.57): S2CChild carries its talk cue; 69 (1.3.52): S2CNpcSay carries its bubble's life; 68 (1.3.43): S2CChild's genome carries the kagune (nine parts), children send S2CGhoulNpc; 61 (1.3.19): S2CNpcWings; 62 (1.3.20): S2CChild's ride and moment; 63 (1.3.21): HOME, hand, tuck, feed; 64 (1.3.29): S2CNpcApproach, ANSWER; 65 (1.3.29): S2CQuests carries the romance cards; 66 (1.3.30): S2CNpcSay; 67 (1.3.36): S2CGhoulNpc carries the arm blade (identity bit 36, its cut in move)
++    private static final String PROTOCOL = "110"; // 110 (4.1.1): the structure type hexkagune:dry_place (the registries differ); the hideout's structure set is a random spread.   109 (4.1.0): S2CUkakuFx UNLEASH (49, a player Ayato taught lifting both hands as the wings come out).   108 (4.0.9): EtoGesture SIT (appended; S2CEto may send its ordinal).   107 (4.0.3): the Crimson Hood item is gone (the registries differ); the outfits file is version 3.   106 (4.0.2): EtoGesture POSE, SLICK, SHRUG, TILT (appended; S2CEto may send their ordinals); S2CUkakuFx TILT (48, a player Noro taught tilting their head as the kagune comes out); the outfits' coat-tail bones (8, 9).   105 (4.0.0): S2CNpcWings carries an NPC's kakuja and its mend (Ayato's, Noro's); S2CCutscene AYATO_KAKUJA (4) and NORO (5); S2CGhoulNpc's identity carries a wild ghoul's rank and mask and Aogiri; S2CBikakuState is sent under an NPC's or a child's id (Noro's worms, a Bikaku parent's child's); the outfits and masks are items.   104 (3.7.3): S2CPotential (message 56), Potential Unlock's torn parts.   103 (3.6.3): S2CBikakuState carries the Bikaku mutations and Grand Devouring (and its cooldown).   102 (3.6.1): S2CBikakuState carries each worm's part of a move (held, caught, mark).   101 (3.6.0): S2CBikakuState carries the Bikaku form; C2SBikakuAction FORM.   100 (3.5.9): S2CBikakuState carries the worm's ways round blocks.   99 (3.5.8): S2CBikakuState carries the bite's and the move's reach and a wind-up; C2SBikakuAction KEY_UP, ATTACK, ATTACK_UP.   98 (3.5.7): S2CBikakuState carries a target for each kakuja tentacle (6), when Undying Abomination began, each tentacle's own bites; BikakuMove JAWS, HUNGER, CATACLYSM, UNDYING (appended).   97 (3.5.4): S2CBikakuState carries the Bikaku kakuja.   96 (3.5.3): S2CBikakuState carries when Monstrous Regeneration began.   95 (3.5.0): C2SBikakuAction (message 55), S2CBikakuState carries the worm's move, its point, targets and catch.   94 (3.4.9): KagunePath BIKAKU (appended; S2CPathState may send its ordinal), S2CBikakuState (message 54), the Bikaku path's worm.   93 (3.3.6): EtoGesture JEALOUS (appended; S2CEto may send its ordinal).   92 (3.1.8): C2SArmAction.THIRD (4), Arm.Ability SWING/FAULT/GUARD (S2CArmSwing codes 40-42; a SWING's bound packs its latch).   91 (3.1.6): S2CHurl (message 53), C2SUkakuAction HURL (11), Rinkaku's Rubble Hurl.   90 (3.1.5): S2CImpale (message 52), C2SUkakuAction IMPALE (10), Rinkaku's Impale.   89 (3.1.2): C2SArmAction.FOLD (3), dedicated briefcase key for every quinque. 88 (3.0.6): C2SArmAction (message 50) and S2CArmSwing (51), a player's kagune-made weapon.   87 (3.0.0): CcgAgent carries ARM, ARM_AT, ARM_TARGET (the higher ranks' kagune-made weapons), its SWING may send ArmRules codes (16 up: a blow of its string; 32 up: one of its moves).   86 (2.4.8-2.4.9): S2CUkakuFx CRACK (a player Ken taught cracks a finger), S2CEto may send STOKE, SEASON, TASTE and SERVE (the spouse cooking and handing food over).   85 (2.4.5): S2CThyDeath (message 49), C2SUkakuAction THY_DEATH.   84 (2.3.0): S2CChild carries its mother's size (a grown daughter her height).   83 (2.2.4): S2CEto carries the kiss's mood (MoodKiss).  82 (2.1.9): CcgAgent and GhoulNpc carry AFRAID (trembling before Peace or War).  81 (2.1.7): C2SUkakuAction REAPER_DASH (Ukaku's final kakuja dashes).  80 (2.0.49): CcgAgent FLIP may carry SOARING (the Reaper's soar).  79 (2.0.48): S2CUkakuFx DAWN_RING (the Reaper's volley).  78 (2.0.42): S2CRinkakuBlock, C2SUkakuAction BLOCK.  77 (2.0.33): CcgAgent SWING can send the Reaper's GROUND, S2CUkakuFx REAPER_MARK / REAPER_TENDRIL.  76 (2.0.25): Dawn aim and lightning FX.  75 (2.0.23): CcgAgent SWING can send the Reaper kick.  74 (2.0.22): CcgAgent LOOK can send Dawn's appended quinque ordinal.  73 (2.0.3): ChildStage ADULT (S2CChild may send its ordinal 4); 72 (1.3.68): S2CGhoulNpc carries its eyes (a wild ghoul prowling at night); 71 (1.3.62): S2CKingFx marks a hard clash's GROUND; 70 (1.3.57): S2CChild carries its talk cue; 69 (1.3.52): S2CNpcSay carries its bubble's life; 68 (1.3.43): S2CChild's genome carries the kagune (nine parts), children send S2CGhoulNpc; 61 (1.3.19): S2CNpcWings; 62 (1.3.20): S2CChild's ride and moment; 63 (1.3.21): HOME, hand, tuck, feed; 64 (1.3.29): S2CNpcApproach, ANSWER; 65 (1.3.29): S2CQuests carries the romance cards; 66 (1.3.30): S2CNpcSay; 67 (1.3.36): S2CGhoulNpc carries the arm blade (identity bit 36, its cut in move)
+     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
+         KaguneMod.id("control"), () -> PROTOCOL, PROTOCOL::equals, PROTOCOL::equals);
+     private static boolean initialized;
+diff --git a/src/main/java/com/hex/kagune/control/village/DryLand.java b/src/main/java/com/hex/kagune/control/village/DryLand.java
+new file mode 100644
+index 0000000..375c0c4
+--- /dev/null
++++ b/src/main/java/com/hex/kagune/control/village/DryLand.java
+@@ -0,0 +1,256 @@
++package com.hex.kagune.control.village;
++
++import java.util.ArrayList;
++import java.util.Arrays;
++import java.util.Comparator;
++import java.util.List;
++
++/**
++ * 4.1.1 (the owner: "bug, make sure NONE of the structures spawns in water or collides with water bodies, the mansion is currently happily
++ * resting at the very bottom of the ocean..."): where a place may stand (pure, tested). Over the place's whole footprint and
++ * {@link #MARGIN} blocks out round it there may be no water: no wet biome (a sea, a river, a beach, a swamp: data/hexkagune/tags/worldgen/
++ * biome/wet.json) at any of the columns looked at every {@link #BIOME_STEP} blocks (the biomes' own grain), and no water over the ground
++ * (a lake, a pond: the world's ground counted with water and without) at any of those every {@link #STEP} blocks. The coarse columns are
++ * looked at first, so a sea is seen at once.
++ */
++public final class DryLand {
++    /** Blocks between two columns whose ground is looked at (water over it), and between two whose biome is. */
++    public static final int STEP = 16;
++    public static final int BIOME_STEP = 4;
++    /** How far out round the footprint it must be dry too (no water at its walls). */
++    public static final int MARGIN = 8;
++    /** How far a structure's pieces may reach from its start chunk's corner (8 chunks either way: the game places no further). */
++    public static final int REACH_BACK = 128;
++    public static final int REACH_ON = 143;
++
++    /**
++     * The hideout's structure set (data/hexkagune/worldgen/structure_set/aogiri_hideout.json, a random spread): one start chunk offered in
++     * every {@link #SPACING} x {@link #SPACING} chunks, as the game picks it ({@link #spreadChunk}). Of those {@link #CHOICES} nearest the
++     * world's middle (no nearer than {@link #NEAREST} chunks), the world's one hideout is built at the first on dry land.
++     */
++    public static final int SPACING = 40;
++    public static final int SEPARATION = 20;
++    public static final int SALT = 1873602243;
++    /** Regions either way of the world's middle whose offers are weighed. */
++    public static final int REGIONS = 4;
++    public static final int NEAREST = 32;
++
++    /** The world as the game will make it: at a column, its first free height counting water as ground, and not (its two WG heightmaps). */
++    public interface Ground {
++        int surface(int x, int z);
++
++        int floor(int x, int z);
++
++        /** True if the biome at block ({@code x}, {@code y}, {@code z}) is a wet one (a sea, a river, a beach, a swamp). */
++        boolean wet(int x, int y, int z);
++    }
++
++    private DryLand() {
++    }
++
++    /**
++     * The columns ({x, z}) looked at for a footprint {@code sizeX} x {@code sizeZ} from ({@code minX}, {@code minZ}): every {@code step}
++     * blocks from {@link #MARGIN} out on one side to {@link #MARGIN} out on the other (its far edges always among them), the coarse ones
++     * first (every eighth, then every fourth, every second, then the rest).
++     */
++    public static int[][] columns(int minX, int minZ, int sizeX, int sizeZ, int step) {
++        int[] xs = line(minX, sizeX, step);
++        int[] zs = line(minZ, sizeZ, step);
++        List<int[]> out = new ArrayList<>(xs.length * zs.length);
++        boolean[][] taken = new boolean[xs.length][zs.length];
++        for (int every = 8; every >= 1; every /= 2) {
++            for (int i = 0; i < xs.length; i++) {
++                for (int j = 0; j < zs.length; j++) {
++                    boolean on = (i % every == 0 || i == xs.length - 1) && (j % every == 0 || j == zs.length - 1);
++                    if (on && !taken[i][j]) {
++                        taken[i][j] = true;
++                        out.add(new int[] {xs[i], zs[j]});
++                    }
++                }
++            }
++        }
++        return out.toArray(new int[0][]);
++    }
++
++    /** The coordinates looked at along one side: from {@link #MARGIN} before {@code min} to {@link #MARGIN} past its last block. */
++    static int[] line(int min, int size, int step) {
++        int from = min - MARGIN;
++        int to = min + Math.max(1, size) - 1 + MARGIN;
++        int n = (to - from + step - 1) / step;
++        int[] at = new int[n + 1];
++        for (int i = 0; i <= n; i++) {
++            at[i] = Math.min(to, from + i * step);
++        }
++        return at;
++    }
++
++    /**
++     * True if there is no water under the footprint or round it: no wet biome at the height {@code y} (its ground's) every
++     * {@link #BIOME_STEP} blocks, then no water over the ground every {@link #STEP} (stops at the first wet column).
++     */
++    public static boolean dry(Ground ground, int y, int minX, int minZ, int sizeX, int sizeZ) {
++        for (int[] column : columns(minX, minZ, sizeX, sizeZ, BIOME_STEP)) {
++            if (ground.wet(column[0], y, column[1])) {
++                return false;
++            }
++        }
++        for (int[] column : columns(minX, minZ, sizeX, sizeZ, STEP)) {
++            if (ground.surface(column[0], column[1]) > ground.floor(column[0], column[1])) {
++                return false;
++            }
++        }
++        return true;
++    }
++
++    /**
++     * The start chunk ({x, z}) the game offers in region ({@code rx}, {@code rz}) of a random spread (linear) with these numbers: its
++     * RandomSpreadStructurePlacement.getPotentialStructureChunk (a legacy random, java.util.Random's own, seeded by the region and the salt).
++     */
++    public static int[] spreadChunk(long seed, int rx, int rz, int spacing, int separation, int salt) {
++        java.util.Random random = new java.util.Random((long)rx * 341873128712L + (long)rz * 132897987541L + seed + (long)salt);
++        int range = spacing - separation;
++        int x = random.nextInt(range);
++        int z = random.nextInt(range);
++        return new int[] {rx * spacing + x, rz * spacing + z};
++    }
++
++    /**
++     * The hideout's offers in the order they are weighed: every region's start chunk {@link #REGIONS} regions either way of the world's
++     * middle, no nearer it than {@link #NEAREST} chunks, nearest first (then by x, then z).
++     */
++    public static int[][] hideoutOffers(long seed) {
++        List<int[]> offers = new ArrayList<>();
++        for (int rx = -REGIONS; rx < REGIONS; rx++) {
++            for (int rz = -REGIONS; rz < REGIONS; rz++) {
++                int[] chunk = spreadChunk(seed, rx, rz, SPACING, SEPARATION, SALT);
++                if ((long)chunk[0] * chunk[0] + (long)chunk[1] * chunk[1] >= (long)NEAREST * NEAREST) {
++                    offers.add(chunk);
++                }
++            }
++        }
++        offers.sort(Comparator.<int[]>comparingLong(c -> (long)c[0] * c[0] + (long)c[1] * c[1]).thenComparingInt(c -> c[0]).thenComparingInt(c -> c[1]));
++        return offers.toArray(new int[0][]);
++    }
++
++    /**
++     * Chunk offsets ({dx, dz}) a start may be moved by to find dry land, up to {@code most} either way: none first, then the nearest
++     * (then by x, then z).
++     */
++    public static int[][] shifts(int most) {
++        List<int[]> out = new ArrayList<>();
++        for (int dx = -most; dx <= most; dx++) {
++            for (int dz = -most; dz <= most; dz++) {
++                out.add(new int[] {dx, dz});
++            }
++        }
++        out.sort(Comparator.<int[]>comparingInt(d -> d[0] * d[0] + d[1] * d[1]).thenComparingInt(d -> d[0]).thenComparingInt(d -> d[1]));
++        return out.toArray(new int[0][]);
++    }
++
++    /**
++     * The least corners along one side a run of {@code size} blocks may take from a start chunk whose corner is {@code corner}, staying in
++     * its reach: {@code want} first, then every {@code step} out from it either way, nearest first.
++     */
++    public static int[] runs(int want, int corner, int size, int step) {
++        int lo = corner - REACH_BACK;
++        int hi = corner + REACH_ON - size + 1;
++        if (hi < lo) {
++            return new int[] {lo};
++        }
++        int first = Math.max(lo, Math.min(hi, want));
++        List<Integer> out = new ArrayList<>();
++        out.add(first);
++        for (int d = step; first - d >= lo || first + d <= hi; d += step) {
++            if (first - d >= lo) {
++                out.add(first - d);
++            }
++            if (first + d <= hi) {
++                out.add(first + d);
++            }
++        }
++        return out.stream().mapToInt(Integer::intValue).toArray();
++    }
++
++    /**
++     * Up to {@code most} least corners ({x, z}) to try a footprint at, from the runs along each side ({@link #runs}, each nearest its
++     * first): the first pair first, then the nearest to it (then by x, then z).
++     */
++    public static int[][] spots(int[] xs, int[] zs, int most) {
++        List<int[]> out = new ArrayList<>(xs.length * zs.length);
++        for (int x : xs) {
++            for (int z : zs) {
++                out.add(new int[] {x, z});
++            }
++        }
++        int x0 = xs[0];
++        int z0 = zs[0];
++        out.sort(Comparator.<int[]>comparingLong(c -> (long)(c[0] - x0) * (c[0] - x0) + (long)(c[1] - z0) * (c[1] - z0))
++            .thenComparingInt(c -> c[0]).thenComparingInt(c -> c[1]));
++        return out.subList(0, Math.min(most, out.size())).toArray(new int[0][]);
++    }
++
++    /** True if a footprint from ({@code minX}, {@code minZ}) to ({@code maxX}, {@code maxZ}) stays in the reach of the chunk cornered there. */
++    public static boolean reachable(int cornerX, int cornerZ, int minX, int minZ, int maxX, int maxZ) {
++        return minX >= cornerX - REACH_BACK && maxX <= cornerX + REACH_ON && minZ >= cornerZ - REACH_BACK && maxZ <= cornerZ + REACH_ON;
++    }
++
++    /** How the ground at one of the hideout's offers (its start chunk) is judged ({@link #choose}). */
++    public interface Judge {
++        /** The dry ground's heights on a 5 x 5 grid over all its start chunk reaches, or null if there is water over any of them. */
++        int[] grid(int chunkX, int chunkZ);
++
++        /** True if it may stand in the biome at its start (the middle of its start chunk, at height {@code y}). */
++        boolean biome(int chunkX, int chunkZ, int y);
++
++        /** True if there is no water under all its start chunk reaches or round it ({@link #dry}). */
++        boolean dry(int chunkX, int chunkZ, int y);
++    }
++
++    /**
++     * The first of {@code offers} ({x, z} start chunks, in order) on dry land in a biome it may stand in, its ground no more than
++     * {@code flat} blocks from highest to lowest; failing that, the first dry one however steep; as {x, z, its ground's height}, or null
++     * if there is none.
++     */
++    public static int[] choose(int[][] offers, Judge judge, int flat) {
++        List<int[]> steep = new ArrayList<>();
++        for (int[] offer : offers) {
++            int[] floor = judge.grid(offer[0], offer[1]);
++            if (floor == null || floor.length == 0) {
++                continue;
++            }
++            int middle = median(floor);
++            if (!judge.biome(offer[0], offer[1], middle)) {
++                continue;
++            }
++            if (spread(floor) > flat) {
++                steep.add(new int[] {offer[0], offer[1], middle});
++            } else if (judge.dry(offer[0], offer[1], middle)) {
++                return new int[] {offer[0], offer[1], middle};
++            }
++        }
++        for (int[] offer : steep) {
++            if (judge.dry(offer[0], offer[1], offer[2])) {
++                return offer;
++            }
++        }
++        return null;
++    }
++
++    /** How far apart {@code heights}' highest and lowest are. */
++    public static int spread(int[] heights) {
++        int lo = Integer.MAX_VALUE;
++        int hi = Integer.MIN_VALUE;
++        for (int at : heights) {
++            lo = Math.min(lo, at);
++            hi = Math.max(hi, at);
++        }
++        return heights.length == 0 ? 0 : hi - lo;
++    }
++
++    /** The middle (rounded down) of {@code heights}, sorted. */
++    public static int median(int[] heights) {
++        int[] sorted = heights.clone();
++        Arrays.sort(sorted);
++        return sorted[sorted.length / 2];
++    }
++}
+diff --git a/src/main/resources/data/hexkagune/tags/worldgen/biome/wet.json b/src/main/resources/data/hexkagune/tags/worldgen/biome/wet.json
+new file mode 100644
+index 0000000..7d058c9
+--- /dev/null
++++ b/src/main/resources/data/hexkagune/tags/worldgen/biome/wet.json
+@@ -0,0 +1,18 @@
++{
++  "replace": false,
++  "values": [
++    "#minecraft:is_ocean",
++    "#minecraft:is_river",
++    "#minecraft:is_beach",
++    "minecraft:stony_shore",
++    "minecraft:swamp",
++    "minecraft:mangrove_swamp",
++    {"id": "biomesoplenty:marsh", "required": false},
++    {"id": "biomesoplenty:bog", "required": false},
++    {"id": "biomesoplenty:wetland", "required": false},
++    {"id": "biomesoplenty:floodplain", "required": false},
++    {"id": "biomesoplenty:gravel_beach", "required": false},
++    {"id": "biomesoplenty:dune_beach", "required": false},
++    {"id": "biomesoplenty:tropics", "required": false}
++  ]
++}
+diff --git a/src/main/resources/data/hexkagune/worldgen/structure/anteiku.json b/src/main/resources/data/hexkagune/worldgen/structure/anteiku.json
+index bc99c0e..a1e71aa 100644
+--- a/src/main/resources/data/hexkagune/worldgen/structure/anteiku.json
++++ b/src/main/resources/data/hexkagune/worldgen/structure/anteiku.json
+@@ -1,5 +1,5 @@
+ {
+-  "type": "minecraft:jigsaw",
++  "type": "hexkagune:dry_place",
+   "biomes": "#hexkagune:has_structure/anteiku",
+   "step": "surface_structures",
+   "spawn_overrides": {},
+diff --git a/src/main/resources/data/hexkagune/worldgen/structure/cyber_tower.json b/src/main/resources/data/hexkagune/worldgen/structure/cyber_tower.json
+index bc67d13..739263a 100644
+--- a/src/main/resources/data/hexkagune/worldgen/structure/cyber_tower.json
++++ b/src/main/resources/data/hexkagune/worldgen/structure/cyber_tower.json
+@@ -1,5 +1,5 @@
+ {
+-  "type": "minecraft:jigsaw",
++  "type": "hexkagune:dry_place",
+   "biomes": "#hexkagune:has_structure/cyber_tower",
+   "step": "surface_structures",
+   "spawn_overrides": {},
+diff --git a/src/main/resources/data/hexkagune/worldgen/structure/library.json b/src/main/resources/data/hexkagune/worldgen/structure/library.json
+index ab3c65a..4260d57 100644
+--- a/src/main/resources/data/hexkagune/worldgen/structure/library.json
++++ b/src/main/resources/data/hexkagune/worldgen/structure/library.json
+@@ -1,5 +1,5 @@
+ {
+-  "type": "minecraft:jigsaw",
++  "type": "hexkagune:dry_place",
+   "biomes": "#hexkagune:has_structure/library",
+   "step": "surface_structures",
+   "spawn_overrides": {},
+diff --git a/src/main/resources/data/hexkagune/worldgen/structure_set/aogiri_hideout.json b/src/main/resources/data/hexkagune/worldgen/structure_set/aogiri_hideout.json
+index 8f1ec9c..68fdbe0 100644
+--- a/src/main/resources/data/hexkagune/worldgen/structure_set/aogiri_hideout.json
++++ b/src/main/resources/data/hexkagune/worldgen/structure_set/aogiri_hideout.json
+@@ -6,11 +6,9 @@
+     }
+   ],
+   "placement": {
+-    "type": "minecraft:concentric_rings",
+-    "distance": 12,
+-    "spread": 1,
+-    "count": 1,
+-    "preferred_biomes": "#hexkagune:has_structure/aogiri_hideout",
++    "type": "minecraft:random_spread",
++    "spacing": 40,
++    "separation": 20,
+     "salt": 1873602243
+   }
+ }
+diff --git a/src/test/java/com/hex/kagune/control/BikakuWormTests.java b/src/test/java/com/hex/kagune/control/BikakuWormTests.java
+index 93ec2a4..ad53f8d 100644
+--- a/src/test/java/com/hex/kagune/control/BikakuWormTests.java
++++ b/src/test/java/com/hex/kagune/control/BikakuWormTests.java
+@@ -1841,7 +1841,7 @@ public final class BikakuWormTests {
+             String moves = read("src/main/java/com/hex/kagune/control/server/BikakuMoves.java");
+             check(moves.contains("move.cost() > 0.0F && !KaguneServerController.useEnergy(player, move.cost(), true)"), "a free regeneration is never refused for an empty bar");
+             String network = read("src/main/java/com/hex/kagune/control/network/ControlNetwork.java");
+-            check(network.contains("registerMessage(56, S2CPotential.class") && network.contains("PROTOCOL = \"109\""), "every client is told (message 56, protocol 109)");
++            check(network.contains("registerMessage(56, S2CPotential.class") && network.contains("PROTOCOL = \"110\""), "every client is told (message 56, protocol 110)");
+             String client = read("src/main/java/com/hex/kagune/control/client/PotentialClient.java");
+             check(client.contains("model.f_102811_, model.f_103375_") && client.contains("model.f_102808_, model.f_102809_") && client.contains("event.setCanceled(true)"),
+                 "a part off isn't drawn on him, nor its hand in first person");
+diff --git a/src/test/java/com/hex/kagune/control/NpcTests.java b/src/test/java/com/hex/kagune/control/NpcTests.java
+index 6ca17ba..7088ba0 100644
+--- a/src/test/java/com/hex/kagune/control/NpcTests.java
++++ b/src/test/java/com/hex/kagune/control/NpcTests.java
+@@ -54,6 +54,7 @@ public final class NpcTests {
+         talk();
+         attraction();
+         mansion();
++        dryLand();
+         if (!FAILURES.isEmpty()) {
+             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
+             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
+@@ -1402,6 +1403,303 @@ public final class NpcTests {
+         check(romance, "every temper has its words for a confession (yes, doubt, no), a yes, love, and a partner's hello");
+     }
+ 
++    /**
++     * 4.1.1 (the owner: "bug, make sure NONE of the structures spawns in water or collides with water bodies, the mansion is currently happily
++     * resting at the very bottom of the ocean..."): every place on dry land, none in or beside water; the world's one hideout at the first
++     * dry offer, the same however it is asked.
++     */
++    static void dryLand() {
++        int margin = com.hex.kagune.control.village.DryLand.MARGIN;
++        int step = com.hex.kagune.control.village.DryLand.STEP;
++        int fine = com.hex.kagune.control.village.DryLand.BIOME_STEP;
++        check(step <= 16 && fine <= 4 && margin >= 8, "the ground looked at every 16 blocks, its biome every 4 (the biomes' own grain), 8 out round it");
++        // The columns looked at: all over the footprint and its margin, never further apart than their step, the coarse ones first.
++        int[][] sizes = {{1, 1}, {7, 5}, {33, 17}, {77, 130}, {272, 263}, {73, 73}};
++        for (int[] size : sizes) {
++            for (int every : new int[] {step, fine}) {
++                int minX = -37;
++                int minZ = 1201;
++                int[][] columns = com.hex.kagune.control.village.DryLand.columns(minX, minZ, size[0], size[1], every);
++                java.util.TreeSet<Integer> xs = new java.util.TreeSet<>();
++                java.util.TreeSet<Integer> zs = new java.util.TreeSet<>();
++                java.util.Set<Long> seen = new java.util.HashSet<>();
++                boolean inside = true;
++                for (int[] c : columns) {
++                    xs.add(c[0]);
++                    zs.add(c[1]);
++                    seen.add(((long)c[0] << 32) ^ (c[1] & 0xffffffffL));
++                    inside &= c[0] >= minX - margin && c[0] <= minX + size[0] - 1 + margin && c[1] >= minZ - margin && c[1] <= minZ + size[1] - 1 + margin;
++                }
++                boolean close = true;
++                for (java.util.TreeSet<Integer> line : List.of(xs, zs)) {
++                    Integer last = null;
++                    for (int at : line) {
++                        close &= last == null || at - last <= every;
++                        last = at;
++                    }
++                }
++                check(inside && close && seen.size() == columns.length && columns.length == xs.size() * zs.size()
++                    && xs.first() == minX - margin && xs.last() == minX + size[0] - 1 + margin && zs.first() == minZ - margin
++                    && zs.last() == minZ + size[1] - 1 + margin && columns[0][0] == minX - margin && columns[0][1] == minZ - margin,
++                    "every " + every + " blocks over " + size[0] + " x " + size[1] + " and 8 out round it, from a corner");
++            }
++        }
++        // A lake 16 blocks across, or a wet biome's patch (a quart, 4 x 4), anywhere under a place or at its edge: not there. Further
++        // off, it may stand.
++        int minX = 100;
++        int minZ = -50;
++        int sizeX = 37;
++        int sizeZ = 29;
++        boolean lakes = true;
++        boolean patches = true;
++        int lakeTries = 0;
++        for (int lx = minX - margin - 24; lx <= minX + sizeX + margin + 8; lx++) {
++            for (int lz = minZ - margin - 24; lz <= minZ + sizeZ + margin + 8; lz++) {
++                int ax = lx;
++                int az = lz;
++                boolean touches = ax + 15 >= minX - margin && ax <= minX + sizeX - 1 + margin && az + 15 >= minZ - margin && az <= minZ + sizeZ - 1 + margin;
++                com.hex.kagune.control.village.DryLand.Ground lake = ground((x, z) -> x >= ax && x < ax + 16 && z >= az && z < az + 16, (x, z) -> false);
++                lakes &= com.hex.kagune.control.village.DryLand.dry(lake, 70, minX, minZ, sizeX, sizeZ) == !touches;
++                // A biome's patch lies on its grain (4 x 4, from a multiple of 4).
++                int qx = Math.floorDiv(lx, 4) * 4;
++                int qz = Math.floorDiv(lz, 4) * 4;
++                boolean near = qx + 3 >= minX - margin && qx <= minX + sizeX - 1 + margin && qz + 3 >= minZ - margin && qz <= minZ + sizeZ - 1 + margin;
++                com.hex.kagune.control.village.DryLand.Ground patch = ground((x, z) -> false, (x, z) -> x >= qx && x < qx + 4 && z >= qz && z < qz + 4);
++                patches &= com.hex.kagune.control.village.DryLand.dry(patch, 70, minX, minZ, sizeX, sizeZ) == !near;
++                lakeTries++;
++            }
++        }
++        check(lakes && lakeTries > 1000, "a lake (16 across) under it or at its edge, anywhere: not there; further off: it may stand");
++        check(patches, "a sea, a river, a beach or a swamp under it or at its edge (its biome, on its 4-block grain): not there");
++        check(com.hex.kagune.control.village.DryLand.dry(ground((x, z) -> false, (x, z) -> false), 70, minX, minZ, sizeX, sizeZ),
++            "all dry: it stands");
++        // A river 4 blocks wide (its biome) through it, any way and anywhere: not there.
++        boolean rivers = true;
++        for (int at = minX - margin; at <= minX + sizeX - 1 + margin; at++) {
++            int a = Math.floorDiv(at, 4) * 4;
++            rivers &= !com.hex.kagune.control.village.DryLand.dry(ground((x, z) -> false, (x, z) -> x >= a && x < a + 4), 70, minX, minZ, sizeX, sizeZ);
++        }
++        for (int at = minZ - margin; at <= minZ + sizeZ - 1 + margin; at++) {
++            int a = Math.floorDiv(at, 4) * 4;
++            rivers &= !com.hex.kagune.control.village.DryLand.dry(ground((x, z) -> false, (x, z) -> z >= a && z < a + 4), 70, minX, minZ, sizeX, sizeZ);
++        }
++        check(rivers, "a river through it, any way: not there");
++        // The sea at once: its first column is wet, nothing more is looked at.
++        int[] looks = {0};
++        com.hex.kagune.control.village.DryLand.Ground sea = new com.hex.kagune.control.village.DryLand.Ground() {
++            @Override
++            public int surface(int x, int z) {
++                looks[0]++;
++                return 63;
++            }
++
++            @Override
++            public int floor(int x, int z) {
++                return 40;
++            }
++
++            @Override
++            public boolean wet(int x, int y, int z) {
++                looks[0]++;
++                return true;
++            }
++        };
++        check(!com.hex.kagune.control.village.DryLand.dry(sea, 63, 0, 0, 272, 272) && looks[0] == 1, "the sea is seen at its first column");
++
++        // The game's spread (RandomSpreadStructurePlacement, linear): its legacy random is java.util.Random's own.
++        long[] seeds = {0L, 1L, -1L, 42L, 1234567890123L, Long.MIN_VALUE + 7, 8675309L};
++        boolean same = true;
++        boolean within = true;
++        for (long seed : seeds) {
++            for (int rx = -6; rx <= 6; rx++) {
++                for (int rz = -6; rz <= 6; rz++) {
++                    int[] chunk = com.hex.kagune.control.village.DryLand.spreadChunk(seed, rx, rz, 40, 20, com.hex.kagune.control.village.DryLand.SALT);
++                    long[] legacy = {((long)rx * 341873128712L + (long)rz * 132897987541L + seed + (long)com.hex.kagune.control.village.DryLand.SALT
++                        ^ 0x5DEECE66DL) & ((1L << 48) - 1)};
++                    int x = legacyInt(legacy, 20);
++                    int z = legacyInt(legacy, 20);
++                    same &= chunk[0] == rx * 40 + x && chunk[1] == rz * 40 + z;
++                    within &= Math.floorDiv(chunk[0], 40) == rx && Math.floorDiv(chunk[1], 40) == rz && chunk[0] - rx * 40 < 20 && chunk[1] - rz * 40 < 20;
++                }
++            }
++        }
++        check(same, "the offers are the game's: its legacy random (seeded by the region and the salt) taken step by step");
++        check(within, "each offer in its own region, its separation kept");
++        // The hideout's offers: nearest the world's middle first, none too near it; chosen the same way however often it is asked.
++        for (long seed : seeds) {
++            int[][] offers = com.hex.kagune.control.village.DryLand.hideoutOffers(seed);
++            boolean order = offers.length > 40 && offers.length <= 4 * com.hex.kagune.control.village.DryLand.REGIONS * com.hex.kagune.control.village.DryLand.REGIONS;
++            long last = -1L;
++            for (int[] offer : offers) {
++                long d = (long)offer[0] * offer[0] + (long)offer[1] * offer[1];
++                order &= d >= last && d >= (long)com.hex.kagune.control.village.DryLand.NEAREST * com.hex.kagune.control.village.DryLand.NEAREST;
++                int[] again = com.hex.kagune.control.village.DryLand.spreadChunk(seed, Math.floorDiv(offer[0], com.hex.kagune.control.village.DryLand.SPACING),
++                    Math.floorDiv(offer[1], com.hex.kagune.control.village.DryLand.SPACING), com.hex.kagune.control.village.DryLand.SPACING,
++                    com.hex.kagune.control.village.DryLand.SEPARATION, com.hex.kagune.control.village.DryLand.SALT);
++                order &= again[0] == offer[0] && again[1] == offer[1];
++                last = d;
++            }
++            check(order && java.util.Arrays.deepEquals(offers, com.hex.kagune.control.village.DryLand.hideoutOffers(seed)),
++                "seed " + seed + ": the hideout's offers are the game's own start chunks, nearest first, none too near the middle");
++        }
++        int[][] offers = {{40, 3}, {41, 50}, {-60, 2}, {7, -80}, {90, 90}};
++        java.util.Set<Integer> wet = java.util.Set.of(0);
++        java.util.Set<Integer> steep = java.util.Set.of(1, 3);
++        java.util.Set<Integer> badBiome = java.util.Set.of(2);
++        java.util.Set<Integer> pond = new java.util.HashSet<>();
++        com.hex.kagune.control.village.DryLand.Judge judge = new com.hex.kagune.control.village.DryLand.Judge() {
++            int index(int x, int z) {
++                for (int i = 0; i < offers.length; i++) {
++                    if (offers[i][0] == x && offers[i][1] == z) {
++                        return i;
++                    }
++                }
++                return -1;
++            }
++
++            @Override
++            public int[] grid(int x, int z) {
++                int i = index(x, z);
++                if (wet.contains(i)) {
++                    return null;
++                }
++                int[] floor = new int[25];
++                java.util.Arrays.fill(floor, 70 + i);
++                if (steep.contains(i)) {
++                    floor[3] = 70 + i + com.hex.kagune.control.village.VillageGround.FLAT + 5;
++                }
++                return floor;
++            }
++
++            @Override
++            public boolean biome(int x, int z, int y) {
++                return !badBiome.contains(index(x, z));
++            }
++
++            @Override
++            public boolean dry(int x, int z, int y) {
++                return !pond.contains(index(x, z));
++            }
++        };
++        int[] chosen = com.hex.kagune.control.village.DryLand.choose(offers, judge, com.hex.kagune.control.village.VillageGround.FLAT);
++        check(chosen != null && chosen[0] == 90 && chosen[1] == 90 && chosen[2] == 74, "the first dry, fairly flat offer in a biome it may stand in: "
++            + java.util.Arrays.toString(chosen));
++        pond.add(4);
++        chosen = com.hex.kagune.control.village.DryLand.choose(offers, judge, com.hex.kagune.control.village.VillageGround.FLAT);
++        check(chosen != null && chosen[0] == 41 && chosen[1] == 50 && chosen[2] == 71, "a pond at the flat one: the first dry steep one instead");
++        pond.add(1);
++        pond.add(3);
++        check(com.hex.kagune.control.village.DryLand.choose(offers, judge, com.hex.kagune.control.village.VillageGround.FLAT) == null,
++            "no dry land among them: no hideout in the water");
++        // The spots a place may move to, and the start chunks a jigsaw place may move by: nearest first, all within reach.
++        int[][] shifts = com.hex.kagune.control.village.DryLand.shifts(5);
++        check(shifts.length == 121 && shifts[0][0] == 0 && shifts[0][1] == 0 && shifts[1][0] * shifts[1][0] + shifts[1][1] * shifts[1][1] == 1
++            && shifts[120][0] * shifts[120][0] + shifts[120][1] * shifts[120][1] == 50, "a jigsaw place moved a chunk at a time, nearest first");
++        for (int size : new int[] {1, 37, 77, 130, 183, 263, 272}) {
++            for (int corner : new int[] {-160, 0, 48, 1600}) {
++                int want = corner + 8 - size / 2;
++                int[] runs = com.hex.kagune.control.village.DryLand.runs(want, corner, size, 32);
++                boolean ok = runs.length >= 1 && runs[0] == ControlStructuresProbe.clampMin(want, corner, size);
++                for (int run : runs) {
++                    ok &= com.hex.kagune.control.village.DryLand.reachable(corner, corner, run, run, run + size - 1, run + size - 1)
++                        && Math.floorMod(run - runs[0], 32) == 0;
++                }
++                ok &= size < 272 - 32 || runs.length == 1;
++                check(ok, "a " + size + "-block place's spots from a chunk at " + corner + ": the middle first, all within its reach");
++            }
++        }
++        int[][] spots = com.hex.kagune.control.village.DryLand.spots(new int[] {10, -22, 42}, new int[] {5, -27}, 9);
++        check(spots.length == 6 && spots[0][0] == 10 && spots[0][1] == 5, "the middle spot first, then the nearest");
++        check(com.hex.kagune.control.village.DryLand.REACH_BACK == 128 && com.hex.kagune.control.village.DryLand.REACH_ON == 143,
++            "a place reaches 8 chunks either way of its start chunk, no further");
++
++        // Every structure: one of the expansion's dry-land types; their biomes never wet; the wet biomes listed.
++        try {
++            java.nio.file.Path data = java.nio.file.Path.of("src/main/resources/data/hexkagune");
++            String wetTag = new String(java.nio.file.Files.readAllBytes(data.resolve("tags/worldgen/biome/wet.json")));
++            check(wetTag.contains("\"#minecraft:is_ocean\"") && wetTag.contains("\"#minecraft:is_river\"") && wetTag.contains("\"#minecraft:is_beach\"")
++                && wetTag.contains("\"minecraft:swamp\"") && wetTag.contains("\"minecraft:mangrove_swamp\""), "the wet biomes: seas, rivers, beaches, swamps");
++            try (java.util.stream.Stream<java.nio.file.Path> files = java.nio.file.Files.list(data.resolve("worldgen/structure"))) {
++                for (java.nio.file.Path file : files.sorted().toList()) {
++                    String json = new String(java.nio.file.Files.readAllBytes(file));
++                    String name = file.getFileName().toString();
++                    check(json.contains("\"type\": \"hexkagune:dry_place\"") || json.contains("\"type\": \"hexkagune:site_")
++                        || name.equals("village.json") && json.contains("\"type\": \"hexkagune:dry_jigsaw\""), name + ": built only on dry land");
++                }
++            }
++            for (String place : List.of("anteiku", "library", "cyber_tower")) {
++                String json = new String(java.nio.file.Files.readAllBytes(data.resolve("worldgen/structure/" + place + ".json")));
++                check(json.contains("\"type\": \"hexkagune:dry_place\"") && json.contains("\"start_pool\": \"hexkagune:" + place + "/start\""),
++                    place + ": moved near its start onto dry land");
++                String pool = new String(java.nio.file.Files.readAllBytes(data.resolve("worldgen/template_pool/" + place + "/start.json")));
++                check(pool.split("\"element_type\"").length == 2 && pool.contains("minecraft:single_pool_element"),
++                    place + ": one template (its pieces come out the same each time they are looked at)");
++            }
++            try (java.util.stream.Stream<java.nio.file.Path> tags = java.nio.file.Files.list(data.resolve("tags/worldgen/biome/has_structure"))) {
++                for (java.nio.file.Path file : tags.sorted().toList()) {
++                    String json = new String(java.nio.file.Files.readAllBytes(file));
++                    boolean dryOnly = true;
++                    for (String w : List.of("ocean", "river", "beach", "swamp", "shore", "marsh", "bog", "wetland", "floodplain")) {
++                        dryOnly &= !json.contains(w);
++                    }
++                    check(dryOnly, file.getFileName() + ": no wet biome among a place's own");
++                }
++            }
++            String structures = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/ControlStructures.java")));
++            check(structures.contains("TYPES.register(\"dry_place\", () -> DRY_PLACE);")
++                && structures.contains("&& DryLand.dry(ground, middle, at[0], at[1], sizeX, sizeZ)")
++                && structures.contains("&& DryLand.dry(ground, at.m_123342_(), minX, minZ, maxX - minX + 1, maxZ - minZ + 1)")
++                && structures.contains("DryLand.reachable(home.m_45604_(), home.m_45605_(), minX, minZ, maxX, maxZ)")
++                && !structures.contains("WET_EDGE") && structures.contains("m_203656_(WET)")
++                && structures.contains("ResourceLocation.m_214293_(\"hexkagune\", \"wet\")"),
++                "every place checks the dry land under it and round it, wet biomes and water both, within its start chunk's reach");
++        } catch (java.io.IOException failure) {
++            check(false, "read the sources: " + failure);
++        }
++    }
++
++    /** The game's legacy random (LegacyRandomSource: next(bits), nextInt(bound) by BitRandomSource), written out on its own. */
++    private static int legacyInt(long[] seed, int bound) {
++        int r;
++        int v;
++        do {
++            seed[0] = seed[0] * 0x5DEECE66DL + 0xBL & ((1L << 48) - 1);
++            r = (int)(seed[0] >> 17);
++            v = r % bound;
++        } while (r - v + (bound - 1) < 0);
++        return v;
++    }
++
++    /** A world's ground for {@link #dryLand}: water over the ground where {@code lake}, a wet biome where {@code wet}. */
++    private static com.hex.kagune.control.village.DryLand.Ground ground(java.util.function.BiPredicate<Integer, Integer> lake,
++                                                                        java.util.function.BiPredicate<Integer, Integer> wet) {
++        return new com.hex.kagune.control.village.DryLand.Ground() {
++            @Override
++            public int surface(int x, int z) {
++                return lake.test(x, z) ? 72 : 70;
++            }
++
++            @Override
++            public int floor(int x, int z) {
++                return lake.test(x, z) ? 66 : 70;
++            }
++
++            @Override
++            public boolean wet(int x, int y, int z) {
++                return wet.test(x, z);
++            }
++        };
++    }
++
++    /** ControlStructures.Site.clampMin's sum, written out (the class itself needs the game). */
++    private static final class ControlStructuresProbe {
++        static int clampMin(int want, int corner, int size) {
++            int lo = corner - 128;
++            int hi = corner + 143 - size + 1;
++            return hi < lo ? lo : Math.max(lo, Math.min(hi, want));
++        }
++    }
++
+     /**
+      * 4.0.2 (the owner: "we're gonna replace the Ougiri hideout with another schematic ... While Aogiri Tree only has one hideout, there's
+      * multiple villages that can spawn, although they're as rare as a normal village ... at least two guarding the entrances, always in the
+@@ -1415,7 +1713,12 @@ public final class NpcTests {
+         try {
+             String set = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/resources/data/hexkagune/worldgen/structure_set/aogiri_hideout.json")));
+             String villages = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/resources/data/hexkagune/worldgen/structure_set/villages.json")));
+-            check(set.contains("\"minecraft:concentric_rings\"") && set.contains("\"count\": 1"), "one hideout in a world (a ring of one)");
++            // 4.1.1 (the owner: "the mansion is currently happily resting at the very bottom of the ocean"): a spread of offers, the
++            // world's one hideout at the first on dry land (DryLand.hideoutOffers reads the same numbers as the game).
++            check(set.contains("\"minecraft:random_spread\"") && set.contains("\"spacing\": " + com.hex.kagune.control.village.DryLand.SPACING + ",")
++                && set.contains("\"separation\": " + com.hex.kagune.control.village.DryLand.SEPARATION + ",")
++                && set.contains("\"salt\": " + com.hex.kagune.control.village.DryLand.SALT) && !set.contains("\"spread_type\"")
++                && !set.contains("frequency") && !set.contains("exclusion_zone"), "the hideout's offers are the game's own (a linear random spread, the same numbers)");
+             // 4.0.5 (the owner: "also game crash upon creating world", "Failed to load registries"): every structure set's placement has
+             // every field the game's codec requires (the hideout's ring had no salt: no world could be made), names structures that exist
+             // and biome tags that exist.
+@@ -1451,7 +1754,9 @@ public final class NpcTests {
+             check(brain.contains("AogiriGuard.idle(npc, mind, level, now)") && brain.contains("AogiriGuard.unwelcome(npc, player, now)"),
+                 "the members at their work, and a player kept out is gone for");
+             String structures = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/ControlStructures.java")));
+-            check(structures.contains("!unique(this.site) && !VillageGround.suitsGrid"), "the world's one hideout is built wherever its ring puts it");
++            check(structures.contains("int[] chosen = hideout(context);") && structures.contains("chosen[0] != chunk.f_45578_ || chosen[1] != chunk.f_45579_")
++                && structures.contains("DryLand.choose(DryLand.hideoutOffers(context.f_226627_())"),
++                "the world's one hideout is built only at the offer chosen for it (the same in every chunk that asks)");
+         } catch (java.io.IOException failure) {
+             check(false, "read the sources: " + failure);
+         }
+diff --git a/stubs/net/minecraft/core/Holder.java b/stubs/net/minecraft/core/Holder.java
+new file mode 100644
+index 0000000..88e1a74
+--- /dev/null
++++ b/stubs/net/minecraft/core/Holder.java
+@@ -0,0 +1,7 @@
++// Compile-only API stub (Minecraft 1.20.1 / Forge 47 / PlayerAnimator). Never packaged; see verify/api-allowlist.txt.
++package net.minecraft.core;
++
++public interface Holder<T> {
++    /** is(TagKey) (4.1.1: a wet biome) */
++    boolean m_203656_(net.minecraft.tags.TagKey<?> tag);
++}
+diff --git a/stubs/net/minecraft/core/RegistryAccess.java b/stubs/net/minecraft/core/RegistryAccess.java
+new file mode 100644
+index 0000000..2948dcd
+--- /dev/null
++++ b/stubs/net/minecraft/core/RegistryAccess.java
+@@ -0,0 +1,5 @@
++// Compile-only API stub (Minecraft 1.20.1 / Forge 47 / PlayerAnimator). Never packaged; see verify/api-allowlist.txt.
++package net.minecraft.core;
++
++public interface RegistryAccess {
++}
+diff --git a/stubs/net/minecraft/core/registries/Registries.java b/stubs/net/minecraft/core/registries/Registries.java
+index ec859f5..17433c6 100644
+--- a/stubs/net/minecraft/core/registries/Registries.java
++++ b/stubs/net/minecraft/core/registries/Registries.java
+@@ -5,4 +5,5 @@ public class Registries {
+     /** BLOCK */ public static final net.minecraft.resources.ResourceKey<net.minecraft.core.Registry<net.minecraft.world.level.block.Block>> f_256747_ = null;
+     /** CREATIVE_MODE_TAB (4.0.2) */ public static final net.minecraft.resources.ResourceKey<net.minecraft.core.Registry<net.minecraft.world.item.CreativeModeTab>> f_279569_ = null;
+     /** STRUCTURE_TYPE */ public static final net.minecraft.resources.ResourceKey<net.minecraft.core.Registry<net.minecraft.world.level.levelgen.structure.StructureType<?>>> f_256938_ = null;
++    /** BIOME (4.1.1) */ public static final net.minecraft.resources.ResourceKey<net.minecraft.core.Registry<Object>> f_256952_ = null;
+ }
+diff --git a/stubs/net/minecraft/tags/TagKey.java b/stubs/net/minecraft/tags/TagKey.java
+index 96b0567..e2bffd4 100644
+--- a/stubs/net/minecraft/tags/TagKey.java
++++ b/stubs/net/minecraft/tags/TagKey.java
+@@ -2,4 +2,7 @@
+ package net.minecraft.tags;
+ 
+ public final class TagKey<T> {
++    /** create (4.1.1: the wet biomes) */
++    public static <T> TagKey<T> m_203882_(net.minecraft.resources.ResourceKey<? extends net.minecraft.core.Registry<T>> registry,
++        net.minecraft.resources.ResourceLocation location) { throw new UnsupportedOperationException(); }
+ }
+diff --git a/stubs/net/minecraft/world/level/ChunkPos.java b/stubs/net/minecraft/world/level/ChunkPos.java
+index 63295de..5baa1a0 100644
+--- a/stubs/net/minecraft/world/level/ChunkPos.java
++++ b/stubs/net/minecraft/world/level/ChunkPos.java
+@@ -2,6 +2,9 @@
+ package net.minecraft.world.level;
+ 
+ public class ChunkPos {
++    /** x (4.1.1) */ public final int f_45578_ = 0;
++    /** z (4.1.1) */ public final int f_45579_ = 0;
++    /** 4.1.1: a start moved to find dry land */ public ChunkPos(int x, int z) { throw new UnsupportedOperationException(); }
+     /** getMinBlockX */ public int m_45604_() { throw new UnsupportedOperationException(); }
+     /** getMinBlockZ */ public int m_45605_() { throw new UnsupportedOperationException(); }
+ }
+diff --git a/stubs/net/minecraft/world/level/biome/BiomeSource.java b/stubs/net/minecraft/world/level/biome/BiomeSource.java
+new file mode 100644
+index 0000000..fe1c1b6
+--- /dev/null
++++ b/stubs/net/minecraft/world/level/biome/BiomeSource.java
+@@ -0,0 +1,7 @@
++// Compile-only API stub (Minecraft 1.20.1 / Forge 47 / PlayerAnimator). Never packaged; see verify/api-allowlist.txt.
++package net.minecraft.world.level.biome;
++
++public abstract class BiomeSource {
++    /** getNoiseBiome (quart x, y, z) */
++    public abstract net.minecraft.core.Holder<?> m_203407_(int x, int y, int z, Climate.Sampler sampler);
++}
+diff --git a/stubs/net/minecraft/world/level/biome/Climate.java b/stubs/net/minecraft/world/level/biome/Climate.java
+new file mode 100644
+index 0000000..7631bdf
+--- /dev/null
++++ b/stubs/net/minecraft/world/level/biome/Climate.java
+@@ -0,0 +1,7 @@
++// Compile-only API stub (Minecraft 1.20.1 / Forge 47 / PlayerAnimator). Never packaged; see verify/api-allowlist.txt.
++package net.minecraft.world.level.biome;
++
++public class Climate {
++    public static final class Sampler {
++    }
++}
+diff --git a/stubs/net/minecraft/world/level/levelgen/RandomState.java b/stubs/net/minecraft/world/level/levelgen/RandomState.java
+index f4c84ce..e9bec0d 100644
+--- a/stubs/net/minecraft/world/level/levelgen/RandomState.java
++++ b/stubs/net/minecraft/world/level/levelgen/RandomState.java
+@@ -2,4 +2,6 @@
+ package net.minecraft.world.level.levelgen;
+ 
+ public final class RandomState {
++    /** sampler (4.1.1: the biome at a place's start, for the dry-land search) */
++    public net.minecraft.world.level.biome.Climate.Sampler m_224579_() { throw new UnsupportedOperationException(); }
+ }
+diff --git a/stubs/net/minecraft/world/level/levelgen/structure/BoundingBox.java b/stubs/net/minecraft/world/level/levelgen/structure/BoundingBox.java
+index dea27e0..df26c25 100644
+--- a/stubs/net/minecraft/world/level/levelgen/structure/BoundingBox.java
++++ b/stubs/net/minecraft/world/level/levelgen/structure/BoundingBox.java
+@@ -2,4 +2,8 @@
+ package net.minecraft.world.level.levelgen.structure;
+ 
+ public class BoundingBox {
++    /** minX */ public int m_162395_() { throw new UnsupportedOperationException(); }
++    /** minZ */ public int m_162398_() { throw new UnsupportedOperationException(); }
++    /** maxX */ public int m_162399_() { throw new UnsupportedOperationException(); }
++    /** maxZ */ public int m_162401_() { throw new UnsupportedOperationException(); }
+ }
+diff --git a/stubs/net/minecraft/world/level/levelgen/structure/Structure.java b/stubs/net/minecraft/world/level/levelgen/structure/Structure.java
+index 9bf3bf0..10b622e 100644
+--- a/stubs/net/minecraft/world/level/levelgen/structure/Structure.java
++++ b/stubs/net/minecraft/world/level/levelgen/structure/Structure.java
+@@ -25,9 +25,24 @@ public abstract class Structure {
+             java.util.function.Consumer<net.minecraft.world.level.levelgen.structure.pieces.StructurePiecesBuilder> generator) {
+             throw new UnsupportedOperationException();
+         }
++        /** getPiecesBuilder (4.1.1: where a start's pieces lie, for the dry-land search) */
++        public net.minecraft.world.level.levelgen.structure.pieces.StructurePiecesBuilder m_226677_() { throw new UnsupportedOperationException(); }
++        /** position (record accessor) */ public net.minecraft.core.BlockPos f_226669_() { throw new UnsupportedOperationException(); }
+     }
+ 
+     public static final class GenerationContext {
++        /** 4.1.1: the record's canonical constructor (a start moved to find dry land) */
++        public GenerationContext(net.minecraft.core.RegistryAccess registryAccess, net.minecraft.world.level.chunk.ChunkGenerator chunkGenerator,
++            net.minecraft.world.level.biome.BiomeSource biomeSource, net.minecraft.world.level.levelgen.RandomState randomState,
++            net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager structureTemplateManager,
++            net.minecraft.world.level.levelgen.WorldgenRandom random, long seed, net.minecraft.world.level.ChunkPos chunkPos,
++            net.minecraft.world.level.LevelHeightAccessor heightAccessor, java.util.function.Predicate<net.minecraft.core.Holder<?>> validBiome) {
++            throw new UnsupportedOperationException();
++        }
++        /** registryAccess */ public net.minecraft.core.RegistryAccess f_226621_() { throw new UnsupportedOperationException(); }
++        /** biomeSource */ public net.minecraft.world.level.biome.BiomeSource f_226623_() { throw new UnsupportedOperationException(); }
++        /** seed */ public long f_226627_() { throw new UnsupportedOperationException(); }
++        /** validBiome */ public java.util.function.Predicate<net.minecraft.core.Holder<?>> f_226630_() { throw new UnsupportedOperationException(); }
+         /** chunkGenerator */ public net.minecraft.world.level.chunk.ChunkGenerator f_226622_() { throw new UnsupportedOperationException(); }
+         /** randomState */ public net.minecraft.world.level.levelgen.RandomState f_226624_() { throw new UnsupportedOperationException(); }
+         /** structureTemplateManager */
+diff --git a/stubs/net/minecraft/world/level/levelgen/structure/pieces/StructurePiecesBuilder.java b/stubs/net/minecraft/world/level/levelgen/structure/pieces/StructurePiecesBuilder.java
+index 373cb70..c8401be 100644
+--- a/stubs/net/minecraft/world/level/levelgen/structure/pieces/StructurePiecesBuilder.java
++++ b/stubs/net/minecraft/world/level/levelgen/structure/pieces/StructurePiecesBuilder.java
+@@ -4,4 +4,6 @@ package net.minecraft.world.level.levelgen.structure.pieces;
+ public class StructurePiecesBuilder implements StructurePieceAccessor {
+     @Override
+     public void m_142679_(net.minecraft.world.level.levelgen.structure.StructurePiece piece) { throw new UnsupportedOperationException(); }
++    /** getBoundingBox (4.1.1) */
++    public net.minecraft.world.level.levelgen.structure.BoundingBox m_192798_() { throw new UnsupportedOperationException(); }
+ }
+diff --git a/verify/api-allowlist.txt b/verify/api-allowlist.txt
+index 09bdd66..f5a801f 100644
+--- a/verify/api-allowlist.txt
++++ b/verify/api-allowlist.txt
+@@ -1166,3 +1166,30 @@ M net/minecraft/world/item/CreativeModeTab$DisplayItemsGenerator accept (Lnet/mi
+ C net/minecraft/world/item/CreativeModeTab$ItemDisplayParameters                     # [srg] cef$d (intermediary class_1761$class_8128, yarn ItemGroup.DisplayContext)
+ C net/minecraft/world/item/CreativeModeTab$Output                                    # [srg] cef$e (intermediary class_1761$class_7704, yarn ItemGroup.Entries)
+ M net/minecraft/world/item/CreativeModeTab$Output m_246342_ (Lnet/minecraft/world/item/ItemStack;)V  # [srg] accept(ItemStack): joined.tsrg cef$e m_246342_ (Lcfz;)V (yarn Entries.add(ItemStack))
++
++# --- 4.1.1 (the owner: "make sure NONE of the structures spawns in water or collides with water bodies"): the dry-land search -----------
++# (ControlStructures.Site, .DryPlace). dsa$a = Structure$GenerationContext, dsa$b = GenerationStub, dss = StructurePiecesBuilder, drs =
++# BoundingBox, cno = BiomeSource, cnt$f = Climate$Sampler, dhy = RandomState, he = Holder, hs = RegistryAccess, clt = ChunkPos (joined.tsrg;
++# intermediary-1.20.1.tiny: he class_6880, hs class_5455, cno class_1966, cnt$f class_6544$class_6552, dhy class_7138, drs class_3341).
++C net/minecraft/core/Holder                                                         # [srg] he C_203228_ (class_6880, yarn RegistryEntry), an interface: a biome as the biome source gives it
++C net/minecraft/core/RegistryAccess                                                 # [srg] hs C_4706_ (class_5455, yarn DynamicRegistryManager), an interface: passed on unchanged into a moved GenerationContext
++C net/minecraft/world/level/biome/BiomeSource                                       # [srg] cno C_1644_ (class_1966, yarn BiomeSource), an abstract class
++M net/minecraft/world/level/biome/BiomeSource m_203407_ (IIILnet/minecraft/world/level/biome/Climate$Sampler;)Lnet/minecraft/core/Holder;  # [srg] getNoiseBiome: joined.tsrg cno getNoiseBiome (IIILcnt$f;)Lhe; m_203407_ 204237 (declared on cno itself; yarn getBiome(int, int, int, MultiNoiseSampler)), quart x, y, z: the game's own biome test at a structure's start
++C net/minecraft/world/level/biome/Climate$Sampler                                   # [srg] cnt$f C_182857_$C_182866_ (class_6544$class_6552, yarn MultiNoiseUtil$MultiNoiseSampler), a record
++M net/minecraft/world/level/levelgen/RandomState m_224579_ ()Lnet/minecraft/world/level/biome/Climate$Sampler;  # [srg] sampler: joined.tsrg dhy b ()Lcnt$f; m_224579_ 224579 (yarn NoiseConfig.getMultiNoiseSampler)
++M net/minecraft/world/level/ChunkPos <init> (II)V                                   # [srg] joined.tsrg clt <init> (II)V 45581 (yarn ChunkPos(int x, int z)): a jigsaw start moved a chunk at a time
++M net/minecraft/world/level/levelgen/structure/Structure$GenerationContext <init> (Lnet/minecraft/core/RegistryAccess;Lnet/minecraft/world/level/chunk/ChunkGenerator;Lnet/minecraft/world/level/biome/BiomeSource;Lnet/minecraft/world/level/levelgen/RandomState;Lnet/minecraft/world/level/levelgen/structure/templatesystem/StructureTemplateManager;Lnet/minecraft/world/level/levelgen/WorldgenRandom;JLnet/minecraft/world/level/ChunkPos;Lnet/minecraft/world/level/LevelHeightAccessor;Ljava/util/function/Predicate;)V  # [srg] the record's canonical constructor: joined.tsrg dsa$a <init> (Lhs;Lddy;Lcno;Ldhy;Ldvu;Ldij;JLclt;Lcmo;Ljava/util/function/Predicate;)V 226641 (its 10 components, f_226621_ .. f_226630_ in order)
++M net/minecraft/world/level/levelgen/structure/Structure$GenerationContext f_226621_ ()Lnet/minecraft/core/RegistryAccess;  # [srg] record accessor registryAccess: joined.tsrg dsa$a a ()Lhs; f_226621_ 226652
++M net/minecraft/world/level/levelgen/structure/Structure$GenerationContext f_226623_ ()Lnet/minecraft/world/level/biome/BiomeSource;  # [srg] record accessor biomeSource: joined.tsrg dsa$a c ()Lcno; f_226623_ 226657
++M net/minecraft/world/level/levelgen/structure/Structure$GenerationContext f_226627_ ()J  # [srg] record accessor seed: joined.tsrg dsa$a g ()J f_226627_ 226663 (the level's seed: RandomSpreadStructurePlacement's own)
++M net/minecraft/world/level/levelgen/structure/Structure$GenerationContext f_226630_ ()Ljava/util/function/Predicate;  # [srg] record accessor validBiome: joined.tsrg dsa$a j ()Ljava/util/function/Predicate; f_226630_ 226667 (the structure's biomes)
++M net/minecraft/world/level/levelgen/structure/Structure$GenerationStub f_226669_ ()Lnet/minecraft/core/BlockPos;  # [srg] record accessor position: joined.tsrg dsa$b b ()Lgu; f_226669_ 226682 (yarn StructurePosition.position)
++M net/minecraft/world/level/levelgen/structure/Structure$GenerationStub m_226677_ ()Lnet/minecraft/world/level/levelgen/structure/pieces/StructurePiecesBuilder;  # [srg] getPiecesBuilder: joined.tsrg dsa$b a ()Ldss; m_226677_ 226677 (yarn generate(); a one-template jigsaw's pieces come out the same each time)
++M net/minecraft/world/level/levelgen/structure/pieces/StructurePiecesBuilder m_192798_ ()Lnet/minecraft/world/level/levelgen/structure/BoundingBox;  # [srg] getBoundingBox: joined.tsrg dss d ()Ldrs; m_192798_ 192798 (yarn StructurePiecesCollector.getBoundingBox)
++M net/minecraft/world/level/levelgen/structure/BoundingBox m_162395_ ()I             # [srg] minX: joined.tsrg drs g ()I m_162395_ (intermediary method_35415, yarn getMinX)
++M net/minecraft/world/level/levelgen/structure/BoundingBox m_162398_ ()I             # [srg] minZ: joined.tsrg drs i ()I m_162398_ (intermediary method_35417, yarn getMinZ)
++M net/minecraft/world/level/levelgen/structure/BoundingBox m_162399_ ()I             # [srg] maxX: joined.tsrg drs j ()I m_162399_ (intermediary method_35418, yarn getMaxX)
++M net/minecraft/world/level/levelgen/structure/BoundingBox m_162401_ ()I             # [srg] maxZ: joined.tsrg drs l ()I m_162401_ (intermediary method_35420, yarn getMaxZ)
++F net/minecraft/core/registries/Registries f_256952_ Lnet/minecraft/resources/ResourceKey;  # [srg] BIOME: joined.tsrg jc ap f_256952_ (intermediary field_41236, yarn RegistryKeys.BIOME: net_minecraft_registry_RegistryKeys.mapping)
++M net/minecraft/tags/TagKey m_203882_ (Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/resources/ResourceLocation;)Lnet/minecraft/tags/TagKey;  # [srg] create: joined.tsrg anl a (Lacp;Lacq;)Lanl; m_203882_ 203882 (yarn TagKey.of(RegistryKey, Identifier)): hexkagune:wet, the biomes no structure stands in or beside
++M net/minecraft/core/Holder m_203656_ (Lnet/minecraft/tags/TagKey;)Z                # [srg] is(TagKey): joined.tsrg he a (Lanl;)Z m_203656_ 203656 (yarn RegistryEntry.isIn): a biome in hexkagune:wet
+-- 
+2.43.0
+
