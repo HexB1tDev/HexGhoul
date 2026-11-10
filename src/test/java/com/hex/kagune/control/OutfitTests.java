@@ -238,6 +238,14 @@ public final class OutfitTests {
                 check(items.contains("TABS.register(\"" + tab + "\"") && lang.contains("\"itemGroup.hexkagune." + tab + "\""), "the " + tab + " tab, named");
             }
             check(!items.contains("CreativeModeTabs."), "nothing of ours left in Minecraft's own tabs");
+            // 4.1.9 (the owner: "Opening the inventory crashes the game instantly."): the tabs' lambdas must implement the game's own
+            // DisplayItemsGenerator.accept, which is m_257865_ at run time (joined.tsrg cef$b); compiled as "accept", every tab crashed the
+            // creative inventory with an AbstractMethodError. Read in the compiled class, not in the source.
+            try (java.io.InputStream in = OutfitTests.class.getClassLoader().getResourceAsStream("com/hex/kagune/control/ControlItems.class")) {
+                byte[] bytes = in == null ? new byte[0] : in.readAllBytes();
+                String constants = new String(bytes, java.nio.charset.StandardCharsets.ISO_8859_1);
+                check(constants.contains("m_257865_"), "the creative tabs' item lists implement DisplayItemsGenerator by its run-time name m_257865_");
+            }
         } catch (java.io.IOException failure) {
             check(false, "read the items: " + failure);
         }

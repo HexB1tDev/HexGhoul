@@ -1,6 +1,6 @@
 {
   "type": "hexkagune:dry_jigsaw",
-  "biomes": "#hexkagune:has_structure/village",
+  "biomes": "#hexkagune:overworld",
   "step": "surface_structures",
   "spawn_overrides": {},
   "terrain_adaptation": "none",

@@ -160,6 +160,18 @@ public final class ControlStructures {
             return DRY_JIGSAW;
         }
 
+        /**
+         * 4.1.9 (the owner: "it should be able to spawn literally in any biome"): the game's own test of the biome at the start (its
+         * structure's biomes, a list: a mod's biome missing from it was no place at all) is left out; this place judges its own land (any
+         * biome but a wet one: {@link ControlStructures#biome}, with the dry ground under and round it). Its structure's biomes
+         * (#hexkagune:overworld) only keep it to the overworld (a set runs only where its biomes can be made). The world's making and
+         * /locate both ask through here.
+         */
+        @Override
+        public Optional<Structure.GenerationStub> m_262864_(Structure.GenerationContext context) {
+            return this.m_214086_(context);
+        }
+
         /** Vanilla's findGenerationPoint (protected or public: called by name, as Forge maps it). */
         private static Method find() {
             Method method = find;
@@ -321,7 +333,10 @@ public final class ControlStructures {
             DryLand.Ground ground = ground(context);
             int span = DryLand.REACH_BACK + DryLand.REACH_ON + 1;
             long seed = context.f_226627_();
-            int[] chosen = DryLand.pick(DryLand.hideoutOffers(seed), DryLand.hideoutFurther(seed), new DryLand.Judge() {
+            // 4.1.9: the offers of the hideout's set as this world has it (DryLand.hideoutOffers in a world where nothing changed it).
+            DryLand.Spread spread = hideoutSpread(context);
+            int[] chosen = DryLand.pick(DryLand.offers(spread, 0, DryLand.REGIONS, new DryLand.Spread[0], 0),
+                DryLand.offers(spread, DryLand.REGIONS, DryLand.FAR, new DryLand.Spread[0], 0), new DryLand.Judge() {
                 @Override
                 public int[] grid(int chunkX, int chunkZ) {
                     return Site.grid(ground, (chunkX << 4) - DryLand.REACH_BACK, (chunkZ << 4) - DryLand.REACH_BACK, span, span);
@@ -380,7 +395,12 @@ public final class ControlStructures {
             com.hex.kagune.control.village.SiteMaps.Site site = com.hex.kagune.control.village.SiteMaps.of(CCG);
             int span = Math.max(site.width(), site.depth()) + 2 * CCG_ROUND;
             long seed = context.f_226627_();
-            int[] chosen = DryLand.pick(DryLand.ccgOffers(seed), DryLand.ccgFurther(seed), new DryLand.Judge() {
+            // 4.1.9: the offers of its set as this world has it, kept from the hideout's and the villages' as they are (DryLand.ccgOffers in a
+            // world where nothing changed them).
+            DryLand.Spread spread = spread(context, CCG, DryLand.fixed(seed, DryLand.SPACING, DryLand.SEPARATION, DryLand.CCG_SALT));
+            DryLand.Spread[] keep = {hideoutSpread(context), villageSpread(context)};
+            int[] chosen = DryLand.pick(DryLand.offers(spread, 0, DryLand.REGIONS, keep, DryLand.CCG_APART),
+                DryLand.offers(spread, DryLand.REGIONS, DryLand.FAR, keep, DryLand.CCG_APART), new DryLand.Judge() {
                 @Override
                 public int[] grid(int chunkX, int chunkZ) {
                     return Site.grid(ground, (chunkX << 4) + 8 - span / 2, (chunkZ << 4) + 8 - span / 2, span, span);
@@ -450,13 +470,14 @@ public final class ControlStructures {
          * 4.1.6 (the owner: "I cant get the aogiri hideout to spawn or the ccg building at all"): the world's one hideout's or CCG
          * building's spot, written to the log once a world (with the /locate that finds it), or that its world has none.
          */
-        private static void told(String what, String id, int[] known) {
+        static void told(String what, String id, int[] known) {
             try {
                 if (known.length == 0) {
-                    com.hex.kagune.KaguneMod.LOGGER.info("HexKagune: this world has no land for the " + what + " among its spots (all sea)");
+                    com.hex.kagune.KaguneMod.LOGGER.info("HexKagune: " + what + ": none of this world's spots for it is on dry land (all sea)."
+                        + " /place structure hexkagune:" + id + " builds one where you stand.");
                 } else {
                     com.hex.kagune.KaguneMod.LOGGER.info("HexKagune: this world's " + what + " stands at x " + ((known[0] << 4) + 8) + ", z "
-                        + ((known[1] << 4) + 8) + " (/locate structure hexkagune:" + id + "); in a world made before 4.1.6 it shows only if that"
+                        + ((known[1] << 4) + 8) + " (/locate structure hexkagune:" + id + "); in a world made before 4.1.9 it shows only if that"
                         + " ground was not made yet. /place structure hexkagune:" + id + " builds one where you stand.");
                 }
             } catch (RuntimeException | LinkageError ignored) {
@@ -541,6 +562,18 @@ public final class ControlStructures {
         public StructureType<?> m_213658_() {
             return SITES.get(this.site.id());
         }
+
+        /**
+         * 4.1.9 (the owner: "it should be able to spawn literally in any biome"): the game's own test of the biome at the start (its
+         * structure's biomes, a list: a mod's biome missing from it was no place at all) is left out; this place judges its own land (any
+         * biome but a wet one: {@link ControlStructures#biome}, with the dry ground under and round it). Its structure's biomes
+         * (#hexkagune:overworld) only keep it to the overworld (a set runs only where its biomes can be made). The world's making and
+         * /locate both ask through here.
+         */
+        @Override
+        public Optional<Structure.GenerationStub> m_262864_(Structure.GenerationContext context) {
+            return this.m_214086_(context);
+        }
     }
 
     /** 4.1.1: the biomes no structure may stand in or beside (a sea, a river, a beach, a swamp): data/hexkagune/tags/worldgen/biome/wet.json. */
@@ -572,10 +605,56 @@ public final class ControlStructures {
         };
     }
 
-    /** 4.1.1: true if a structure may stand in the biome at block ({@code x}, {@code y}, {@code z}) (the game's own test at its start). */
+    /**
+     * 4.1.9: the set hexkagune:{@code set}'s random spread as this world has it (its placement in the structure set registry: its own
+     * spacing and offers, whatever a mod made of them; Structure Essentials, in the owner's pack, can change every set's), or
+     * {@code fallback} (the set's file's numbers) if it can't be read or is not a random spread.
+     */
+    static DryLand.Spread spread(Structure.GenerationContext context, String set, DryLand.Spread fallback) {
+        try {
+            net.minecraft.world.level.levelgen.structure.StructureSet found = context.f_226621_().m_175515_(Registries.f_256998_)
+                .m_7745_(net.minecraft.resources.ResourceLocation.m_214293_("hexkagune", set));
+            if (found != null && found.f_210004_() instanceof net.minecraft.world.level.levelgen.structure.placement.RandomSpreadStructurePlacement live) {
+                long seed = context.f_226627_();
+                int spacing = live.m_205003_();
+                return new DryLand.Spread() {
+                    @Override
+                    public int spacing() {
+                        return spacing;
+                    }
+
+                    @Override
+                    public int[] chunk(int x, int z) {
+                        ChunkPos at = live.m_227008_(seed, x, z);
+                        return new int[] {at.f_45578_, at.f_45579_};
+                    }
+                };
+            }
+        } catch (RuntimeException | LinkageError failure) {
+            Safety.caught(failure, "ControlStructures.spread");
+        }
+        return fallback;
+    }
+
+    /** 4.1.9: the hideout's, the villages' and the CCG building's spreads as this world has them. */
+    static DryLand.Spread hideoutSpread(Structure.GenerationContext context) {
+        return spread(context, "aogiri_hideout", DryLand.fixed(context.f_226627_(), DryLand.SPACING, DryLand.SEPARATION, DryLand.SALT));
+    }
+
+    static DryLand.Spread villageSpread(Structure.GenerationContext context) {
+        return spread(context, "villages", DryLand.fixed(context.f_226627_(), DryLand.VILLAGE_SPACING, DryLand.VILLAGE_SEPARATION, DryLand.VILLAGE_SALT));
+    }
+
+    /**
+     * 4.1.1: true if a structure may stand in the biome at block ({@code x}, {@code y}, {@code z}). 4.1.9 (the owner: "it should be able
+     * to spawn literally in any biome ... It should also be fully compatible with Biomes of Plenty"): any biome at all, a mod's too
+     * (Biomes O' Plenty's, Regions Unexplored's, any), but a wet one (a sea, a river, a beach, a swamp: hexkagune:wet). Before, it was the
+     * structure's own short list, and every biome a mod added was no place: in a world of a biome mod's biomes the hideout, the CCG building
+     * and Ken's tower were nowhere, /locate and all.
+     */
     static boolean biome(Structure.GenerationContext context, int x, int y, int z) {
         net.minecraft.core.Holder<?> biome = context.f_226623_().m_203407_(x >> 2, y >> 2, z >> 2, context.f_226624_().m_224579_());
-        return context.f_226630_().test(biome);
+        return !biome.m_203656_(WET);
     }
 
     /**
@@ -607,7 +686,154 @@ public final class ControlStructures {
             }
         }
 
+        /**
+         * 4.1.9 (the owner: "only one of each structure aside from the villages"): Anteiku, the library and Ken's tower are built only at
+         * the offer chosen for each ({@link #chosen}: the same in every chunk that asks); /place structure builds one where it is asked.
+         */
         private Optional<Structure.GenerationStub> place(Structure.GenerationContext context) {
+            if (Site.onPurpose(context)) {
+                return this.here(context);
+            }
+            String id = this.id(context);
+            if (id == null) {
+                return Optional.empty(); // its name could not be read: never one of many where the world's one belongs (asked again later)
+            }
+            if (DryLand.placeSalt(id) < 0) {
+                return this.here(context); // a jigsaw place of someone else's on this type: wherever its own set offers it
+            }
+            int[] chosen = chosen(context, id);
+            ChunkPos chunk = context.f_226628_();
+            if (chosen == null || chosen[0] != chunk.f_45578_ || chosen[1] != chunk.f_45579_) {
+                return Optional.empty();
+            }
+            return this.here(context);
+        }
+
+        /**
+         * 4.1.9: this place's name in the structure registry (hexkagune:&lt;id&gt;: its id; "" for none of ours), looked up once; null if it
+         * could not be read (not kept: asked again next time).
+         */
+        private volatile String id;
+
+        String id(Structure.GenerationContext context) {
+            String known = this.id;
+            if (known == null) {
+                try {
+                    net.minecraft.resources.ResourceLocation key = context.f_226621_().m_175515_(Registries.f_256944_).m_7981_(this);
+                    if (key == null) {
+                        return null; // not (yet) the registry's own: never one of many where the world's one belongs
+                    }
+                    known = "hexkagune".equals(key.m_135827_()) ? key.m_135815_() : "";
+                } catch (RuntimeException | LinkageError failure) {
+                    Safety.caught(failure, "ControlStructures.DryPlace.id");
+                    return null;
+                }
+                this.id = known;
+            }
+            return known;
+        }
+
+        /** 4.1.9: the one-of-a-kind place {@code id} as the world knows it (hexkagune:&lt;id&gt; in the structure registry), or null. */
+        static DryPlace byId(Structure.GenerationContext context, String id) {
+            try {
+                Structure found = context.f_226621_().m_175515_(Registries.f_256944_).m_7745_(net.minecraft.resources.ResourceLocation.m_214293_("hexkagune", id));
+                return found instanceof DryPlace place ? place : null;
+            } catch (RuntimeException | LinkageError failure) {
+                Safety.caught(failure, "ControlStructures.DryPlace.byId");
+                return null;
+            }
+        }
+
+        /** 4.1.9: each world's (its seed, its generator) chosen offer for each place: {offer x, offer z, its middle's chunk x, z}. */
+        private static final java.util.Map<java.util.List<Object>, int[]> PLACES = new java.util.HashMap<>();
+        private static final int[] NOWHERE = new int[0];
+
+        /** 4.1.9: the world's one {@code id}'s offer and where its middle stands ({x, z, middle x, middle z} in chunks), or null if it has none. */
+        static int[] chosen(Structure.GenerationContext context, String id) {
+            java.util.List<Object> world = java.util.List.of(context.f_226627_(), context.f_226622_(), id);
+            synchronized (PLACES) {
+                int[] known = PLACES.get(world);
+                if (known == null) {
+                    known = choose(context, id);
+                    if (PLACES.size() >= 12) {
+                        PLACES.clear();
+                    }
+                    PLACES.put(world, known);
+                    Site.told(switch (id) {
+                        case "anteiku" -> "Anteiku";
+                        case "library" -> "the library";
+                        default -> "Ken's tower";
+                    }, id, known.length == 0 ? known : new int[] {known[2], known[3]});
+                }
+                return known.length == 0 ? null : known;
+            }
+        }
+
+        /**
+         * 4.1.9: the first of {@code id}'s offers ({@link DryLand#firstPlaced}) where it stands once laid out from there exactly as the world
+         * lays it (its own context for that start chunk, its random seeded from the seed and the chunk as the game seeds it, then
+         * {@link #here}), clear of the villages' offers and of the hideout, the CCG building and the places chosen before it.
+         */
+        private static int[] choose(Structure.GenerationContext context, String id) {
+            DryPlace place = byId(context, id);
+            if (place == null) {
+                return NOWHERE;
+            }
+            long seed = context.f_226627_();
+            DryLand.Ground ground = ground(context);
+            java.util.List<int[]> before = new java.util.ArrayList<>();
+            int[] hideout = Site.hideout(context);
+            if (hideout != null) {
+                before.add(new int[] {hideout[0], hideout[1]});
+            }
+            int[] building = Site.ccg(context);
+            if (building != null) {
+                before.add(new int[] {building[0], building[1]});
+            }
+            for (String earlier : DryLand.PLACES) {
+                if (earlier.equals(id)) {
+                    break;
+                }
+                int[] other = chosen(context, earlier);
+                if (other != null) {
+                    before.add(new int[] {other[2], other[3]});
+                }
+            }
+            DryLand.Spread spread = spread(context, id, DryLand.fixed(seed, DryLand.SPACING, DryLand.SEPARATION, DryLand.placeSalt(id)));
+            DryLand.Spread villages = villageSpread(context);
+            int[] found = DryLand.firstPlaced(DryLand.offers(spread, 0, DryLand.REGIONS, new DryLand.Spread[0], 0),
+                DryLand.offers(spread, DryLand.REGIONS, DryLand.FAR, new DryLand.Spread[0], 0), new DryLand.Probe() {
+                @Override
+                public boolean land(int chunkX, int chunkZ) {
+                    int x = (chunkX << 4) + 8;
+                    int z = (chunkZ << 4) + 8;
+                    int floor = ground.floor(x, z);
+                    return ground.surface(x, z) <= floor && !ground.wet(x, floor, z);
+                }
+
+                @Override
+                public int[] placed(int chunkX, int chunkZ) {
+                    Optional<Structure.GenerationStub> stub = place.here(at(context, chunkX, chunkZ));
+                    if (stub.isEmpty()) {
+                        return null;
+                    }
+                    BoundingBox box = stub.get().m_226677_().m_192798_();
+                    return new int[] {Math.floorDiv((box.m_162395_() + box.m_162399_()) >> 1, 16), Math.floorDiv((box.m_162398_() + box.m_162401_()) >> 1, 16)};
+                }
+            }, at -> DryLand.apart(at[0], at[1], before, DryLand.PLACE_APART)
+                && !DryLand.near(villages, at[0], at[1], DryLand.PLACE_APART),
+                DryLand.PLACE_TRIES);
+            return found == null ? NOWHERE : found;
+        }
+
+        /** 4.1.9: a start's context at chunk ({@code chunkX}, {@code chunkZ}) as the game makes it there (its random from the seed and the chunk). */
+        static Structure.GenerationContext at(Structure.GenerationContext context, int chunkX, int chunkZ) {
+            return new Structure.GenerationContext(context.f_226621_(), context.f_226622_(), context.f_226623_(), context.f_226624_(), context.f_226625_(),
+                context.f_226627_(), new ChunkPos(chunkX, chunkZ), context.f_226629_(), context.f_226630_());
+        }
+
+        /** 4.1.1: the place started where vanilla would start it if the land there is dry, or moved a chunk at a time onto dry land near it. */
+        Optional<Structure.GenerationStub> here(Structure.GenerationContext context) {
             ChunkPos home = context.f_226628_();
             DryLand.Ground ground = ground(context);
             for (int[] shift : SHIFTS) {
@@ -638,6 +864,18 @@ public final class ControlStructures {
         @Override
         public StructureType<?> m_213658_() {
             return DRY_PLACE;
+        }
+
+        /**
+         * 4.1.9 (the owner: "it should be able to spawn literally in any biome"): the game's own test of the biome at the start (its
+         * structure's biomes, a list: a mod's biome missing from it was no place at all) is left out; this place judges its own land (any
+         * biome but a wet one: {@link ControlStructures#biome}, with the dry ground under and round it). Its structure's biomes
+         * (#hexkagune:overworld) only keep it to the overworld (a set runs only where its biomes can be made). The world's making and
+         * /locate both ask through here.
+         */
+        @Override
+        public Optional<Structure.GenerationStub> m_262864_(Structure.GenerationContext context) {
+            return this.m_214086_(context);
         }
     }
 }

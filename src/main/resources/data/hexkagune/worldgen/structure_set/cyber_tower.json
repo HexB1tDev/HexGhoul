@@ -6,11 +6,9 @@
     }
   ],
   "placement": {
-    "type": "minecraft:concentric_rings",
-    "salt": 1324066191,
-    "distance": 18,
-    "spread": 3,
-    "count": 3,
-    "preferred_biomes": "#hexkagune:prefers/cyber_tower"
+    "type": "minecraft:random_spread",
+    "spacing": 40,
+    "separation": 20,
+    "salt": 1324066191
   }
 }

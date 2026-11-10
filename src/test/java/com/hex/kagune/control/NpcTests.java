@@ -56,6 +56,7 @@ public final class NpcTests {
         mansion();
         dryLand();
         ccgBuilding();
+        onePerWorld();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -1737,16 +1738,27 @@ public final class NpcTests {
                 check(pool.split("\"element_type\"").length == 2 && pool.contains("minecraft:single_pool_element"),
                     place + ": one template (its pieces come out the same each time they are looked at)");
             }
-            try (java.util.stream.Stream<java.nio.file.Path> tags = java.nio.file.Files.list(data.resolve("tags/worldgen/biome/has_structure"))) {
-                for (java.nio.file.Path file : tags.sorted().toList()) {
+            // 4.1.9 (the owner: "it should be able to spawn literally in any biome ... It should also be fully compatible with Biomes of
+            // Plenty"): no place has a list of biomes any more (a mod's biome missing from it was no place at all: in a world of Regions
+            // Unexplored's biomes the hideout, the CCG building and Ken's tower were nowhere, /locate and all). Every structure's biomes are
+            // #hexkagune:overworld (only the overworld's: a set runs only where its biomes can be made), and the land is judged in code.
+            String overworld = new String(java.nio.file.Files.readAllBytes(data.resolve("tags/worldgen/biome/overworld.json")));
+            check(overworld.contains("\"#minecraft:is_overworld\"") && overworld.split("\"#?[a-z_]+:[a-z_/]+\"").length == 2,
+                "#hexkagune:overworld is the overworld's biomes and nothing else");
+            try (java.util.stream.Stream<java.nio.file.Path> files = java.nio.file.Files.list(data.resolve("worldgen/structure"))) {
+                for (java.nio.file.Path file : files.sorted().toList()) {
                     String json = new String(java.nio.file.Files.readAllBytes(file));
-                    boolean dryOnly = true;
-                    for (String w : List.of("ocean", "river", "beach", "swamp", "shore", "marsh", "bog", "wetland", "floodplain")) {
-                        dryOnly &= !json.contains(w);
-                    }
-                    check(dryOnly, file.getFileName() + ": no wet biome among a place's own");
+                    check(json.contains("\"biomes\": \"#hexkagune:overworld\""), file.getFileName() + ": any biome of the overworld");
                 }
             }
+            try (java.util.stream.Stream<java.nio.file.Path> tags = java.nio.file.Files.walk(data.resolve("tags/worldgen/biome"))) {
+                java.util.List<String> left = tags.filter(java.nio.file.Files::isRegularFile).map(f -> data.resolve("tags/worldgen/biome").relativize(f).toString())
+                    .sorted().toList();
+                check(left.equals(List.of("overworld.json", "wet.json")), "no place's own biome list is left: " + left);
+            }
+            check(wetTag.contains("\"#forge:is_swamp\"") && wetTag.contains("\"#forge:is_water\"") && wetTag.contains("\"#c:is_swamp\"")
+                && wetTag.contains("\"biomesoplenty:marsh\"") && wetTag.split("\"required\": false").length > 10,
+                "a mod's swamps and waters are wet too (Forge's and the common tags, Biomes O' Plenty's own), each only if it is there");
             String structures = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/ControlStructures.java")));
             check(structures.contains("TYPES.register(\"dry_place\", () -> DRY_PLACE);")
                 && structures.contains("&& DryLand.dry(ground, middle, at[0], at[1], sizeX, sizeZ)")
@@ -1808,6 +1820,180 @@ public final class NpcTests {
      * land away from the mansion and the towns; its people at their posts, on their patrol and at their desks.
      */
     @SuppressWarnings("unchecked")
+    /**
+     * 4.1.9 (the owner: "Cant find CCG building, Aogiri Hideout or Kaneki's building AT ALL not even with locate"; "it should be able to
+     * spawn literally in any biome as long as there's only one of each structure aside from the villages, of course"): the hideout, the
+     * CCG building, Anteiku, the library and Ken's tower are the world's one each, in any land biome, a mod's too.
+     */
+    static void onePerWorld() {
+        com.hex.kagune.control.village.DryLand.Probe everywhere = new com.hex.kagune.control.village.DryLand.Probe() {
+            @Override
+            public boolean land(int chunkX, int chunkZ) {
+                return true;
+            }
+
+            @Override
+            public int[] placed(int chunkX, int chunkZ) {
+                return new int[] {chunkX + 1, chunkZ};
+            }
+        };
+        int[][] near = {{40, 3}, {-50, 7}};
+        int[][] further = {{200, 9}};
+        int[] first = com.hex.kagune.control.village.DryLand.firstPlaced(near, further, everywhere, at -> true, 24);
+        check(first != null && first[0] == 40 && first[1] == 3 && first[2] == 41 && first[3] == 3, "the first offer that stands, with where its middle stands");
+        int[] skipped = com.hex.kagune.control.village.DryLand.firstPlaced(near, further, everywhere, at -> at[0] != 41, 24);
+        check(skipped != null && skipped[0] == -50, "an offer that would stand too near another place is passed over");
+        int[] further1 = com.hex.kagune.control.village.DryLand.firstPlaced(near, further, everywhere, at -> at[0] > 100, 24);
+        check(further1 != null && further1[0] == 200, "the further offers once the near ones are all passed over");
+        int[] laid = {0};
+        com.hex.kagune.control.village.DryLand.Probe sea = new com.hex.kagune.control.village.DryLand.Probe() {
+            @Override
+            public boolean land(int chunkX, int chunkZ) {
+                return chunkX != -50;
+            }
+
+            @Override
+            public int[] placed(int chunkX, int chunkZ) {
+                laid[0]++;
+                return null;
+            }
+        };
+        check(com.hex.kagune.control.village.DryLand.firstPlaced(near, further, sea, at -> true, 24) == null && laid[0] == 2,
+            "an offer in the sea is never laid out; none that stands: none at all");
+        laid[0] = 0;
+        int[][] many = new int[100][];
+        for (int i = 0; i < many.length; i++) {
+            many[i] = new int[] {i * 40, 0};
+        }
+        check(com.hex.kagune.control.village.DryLand.firstPlaced(many, new int[0][], sea, at -> true, com.hex.kagune.control.village.DryLand.PLACE_TRIES) == null
+            && laid[0] == com.hex.kagune.control.village.DryLand.PLACE_TRIES, "no more than PLACE_TRIES offers laid out in full (a world of sea gives up quickly)");
+        check(com.hex.kagune.control.village.DryLand.apart(0, 0, List.of(new int[] {12, 0}), 12)
+            && !com.hex.kagune.control.village.DryLand.apart(0, 0, List.of(new int[] {11, 3}), 12)
+            && com.hex.kagune.control.village.DryLand.apart(5, 5, List.of(), 12), "apart: at least that many chunks from each");
+        // Their numbers, each its own salt, the same as their sets'.
+        java.util.Set<Integer> salts = new java.util.HashSet<>(List.of(com.hex.kagune.control.village.DryLand.SALT, com.hex.kagune.control.village.DryLand.CCG_SALT,
+            com.hex.kagune.control.village.DryLand.VILLAGE_SALT));
+        check(List.of(com.hex.kagune.control.village.DryLand.PLACES).equals(List.of("anteiku", "library", "cyber_tower")), "the three jigsaw places, in the order chosen");
+        // The offers are read from the set as the world has it (a mod may change every set's spacing): with the file's numbers they are
+        // exactly the hideout's and the CCG building's as before; with other numbers, that spread's own offers.
+        for (long seed : new long[] {0L, 42L, -7_000_000_000L}) {
+            com.hex.kagune.control.village.DryLand.Spread hideoutFile = com.hex.kagune.control.village.DryLand.fixed(seed, 40, 20,
+                com.hex.kagune.control.village.DryLand.SALT);
+            check(java.util.Arrays.deepEquals(com.hex.kagune.control.village.DryLand.offers(hideoutFile, 0, com.hex.kagune.control.village.DryLand.REGIONS,
+                new com.hex.kagune.control.village.DryLand.Spread[0], 0), oldOffers(seed, com.hex.kagune.control.village.DryLand.SALT, 0, 4, false)),
+                "the hideout's offers from its set's numbers are the same as 4.1.8's (seed " + seed + ")");
+            check(java.util.Arrays.deepEquals(com.hex.kagune.control.village.DryLand.ccgOffers(seed), oldOffers(seed, com.hex.kagune.control.village.DryLand.CCG_SALT, 0, 4, true))
+                && java.util.Arrays.deepEquals(com.hex.kagune.control.village.DryLand.hideoutFurther(seed), oldOffers(seed, com.hex.kagune.control.village.DryLand.SALT, 4, 8, false)),
+                "the CCG building's and the hideout's further offers are the same as 4.1.8's (seed " + seed + ")");
+            com.hex.kagune.control.village.DryLand.Spread[] keep = {hideoutFile, com.hex.kagune.control.village.DryLand.fixed(seed, 34, 20,
+                com.hex.kagune.control.village.DryLand.VILLAGE_SALT)};
+            check(java.util.Arrays.deepEquals(com.hex.kagune.control.village.DryLand.offers(com.hex.kagune.control.village.DryLand.fixed(seed, 40, 20,
+                    com.hex.kagune.control.village.DryLand.CCG_SALT), com.hex.kagune.control.village.DryLand.REGIONS, com.hex.kagune.control.village.DryLand.FAR,
+                    keep, com.hex.kagune.control.village.DryLand.CCG_APART), com.hex.kagune.control.village.DryLand.ccgFurther(seed)),
+                "the CCG building's further offers from its set's numbers are the same as 4.1.8's (seed " + seed + ")");
+            check(java.util.Arrays.deepEquals(com.hex.kagune.control.village.DryLand.ccgFurther(seed), oldOffers(seed, com.hex.kagune.control.village.DryLand.CCG_SALT, 4, 8, true)),
+                "the CCG building's further offers, against 4.1.8's own way (seed " + seed + ")");
+            // Twice the spacing (a pack that spreads every set out): every offer is the start chunk its region offers, regions twice as far.
+            com.hex.kagune.control.village.DryLand.Spread wide = com.hex.kagune.control.village.DryLand.fixed(seed, 80, 40,
+                com.hex.kagune.control.village.DryLand.SALT);
+            int[][] wideOffers = com.hex.kagune.control.village.DryLand.offers(wide, 0, com.hex.kagune.control.village.DryLand.REGIONS,
+                new com.hex.kagune.control.village.DryLand.Spread[0], 0);
+            boolean own = wideOffers.length > 0;
+            for (int[] offer : wideOffers) {
+                int[] again = wide.chunk(offer[0], offer[1]);
+                own &= again[0] == offer[0] && again[1] == offer[1];
+            }
+            check(own, "a wider spread's offers are each the start chunk the game offers in its region (seed " + seed + ")");
+        }
+        try {
+            java.nio.file.Path data = java.nio.file.Path.of("src/main/resources/data/hexkagune");
+            for (String place : com.hex.kagune.control.village.DryLand.PLACES) {
+                int salt = com.hex.kagune.control.village.DryLand.placeSalt(place);
+                check(salt >= 0 && salts.add(salt), place + ": its own salt");
+                String set = new String(java.nio.file.Files.readAllBytes(data.resolve("worldgen/structure_set/" + place + ".json")));
+                check(set.contains("\"minecraft:random_spread\"") && set.contains("\"spacing\": " + com.hex.kagune.control.village.DryLand.SPACING + ",")
+                    && set.contains("\"separation\": " + com.hex.kagune.control.village.DryLand.SEPARATION + ",") && set.contains("\"salt\": " + salt)
+                    && set.contains("\"structure\": \"hexkagune:" + place + "\"") && !set.contains("concentric") && !set.contains("\"count\"")
+                    && !set.contains("frequency") && !set.contains("exclusion_zone") && !set.contains("\"spread_type\""),
+                    place + ": one set of offers, the game's own numbers as DryLand's (no ring of three)");
+                int[][] offers = com.hex.kagune.control.village.DryLand.placeOffers(42L, place);
+                boolean sorted = offers.length > 10;
+                for (int i = 1; i < offers.length; i++) {
+                    long a = (long)offers[i - 1][0] * offers[i - 1][0] + (long)offers[i - 1][1] * offers[i - 1][1];
+                    long b = (long)offers[i][0] * offers[i][0] + (long)offers[i][1] * offers[i][1];
+                    sorted &= a <= b && b >= (long)com.hex.kagune.control.village.DryLand.NEAREST * com.hex.kagune.control.village.DryLand.NEAREST;
+                }
+                check(sorted && com.hex.kagune.control.village.DryLand.placeFurther(42L, place).length > offers.length, place + ": its offers nearest the middle first");
+            }
+            check(com.hex.kagune.control.village.DryLand.placeSalt("village_1") < 0 && com.hex.kagune.control.village.DryLand.placeSalt(null) < 0,
+                "the villages are not one of a kind");
+            try (java.util.stream.Stream<java.nio.file.Path> sets = java.nio.file.Files.list(data.resolve("worldgen/structure_set"))) {
+                for (java.nio.file.Path file : sets.sorted().toList()) {
+                    String json = new String(java.nio.file.Files.readAllBytes(file));
+                    check(!json.contains("concentric_rings") && !json.contains("\"count\""), file.getFileName() + ": no ring of several");
+                }
+            }
+            String structures = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/ControlStructures.java")));
+            int overrides = structures.split("public Optional<Structure.GenerationStub> m_262864_\\(Structure.GenerationContext context\\) \\{\n            return this.m_214086_\\(context\\);").length - 1;
+            check(overrides == 3, "the jigsaw village, every site and every jigsaw place leave the game's biome-list test out (" + overrides + ")");
+            check(structures.contains("return !biome.m_203656_(WET);") && !structures.contains("return context.f_226630_().test(biome);"),
+                "a place stands in any biome but a wet one");
+            check(structures.contains("if (Site.onPurpose(context)) {\n                return this.here(context);")
+                && structures.contains("int[] chosen = chosen(context, id);")
+                && structures.contains("chosen[0] != chunk.f_45578_ || chosen[1] != chunk.f_45579_")
+                && structures.contains("Optional<Structure.GenerationStub> stub = place.here(at(context, chunkX, chunkZ));")
+                && structures.contains("context.f_226627_(), new ChunkPos(chunkX, chunkZ), context.f_226629_(), context.f_226630_());"),
+                "a jigsaw place is built only at its chosen offer, chosen by laying it out there as the world will (/place builds it anywhere)");
+            check(structures.contains("int[] hideout = Site.hideout(context);") && structures.contains("int[] building = Site.ccg(context);")
+                && structures.contains("DryLand.apart(at[0], at[1], before, DryLand.PLACE_APART)")
+                && structures.contains("!DryLand.near(villages, at[0], at[1], DryLand.PLACE_APART)"),
+                "kept clear of the hideout, the CCG building, the places before it and the villages");
+            check(structures.contains("if (id == null) {\n                return Optional.empty();"), "a place whose name can't be read is never built many times over");
+        } catch (java.io.IOException failure) {
+            check(false, "read the sets: " + failure);
+        }
+    }
+
+    /** 4.1.8's DryLand.offers and near, kept here as they were, to hold 4.1.9's (read from a Spread) to the same offers. */
+    private static int[][] oldOffers(long seed, int salt, int inner, int outer, boolean apart) {
+        java.util.List<int[]> offers = new java.util.ArrayList<>();
+        for (int rx = -outer; rx < outer; rx++) {
+            for (int rz = -outer; rz < outer; rz++) {
+                if (rx >= -inner && rx < inner && rz >= -inner && rz < inner) {
+                    continue;
+                }
+                int[] chunk = com.hex.kagune.control.village.DryLand.spreadChunk(seed, rx, rz, 40, 20, salt);
+                if ((long)chunk[0] * chunk[0] + (long)chunk[1] * chunk[1] < 32L * 32L) {
+                    continue;
+                }
+                if (apart && (oldNear(seed, chunk[0], chunk[1], 12, 40, 20, com.hex.kagune.control.village.DryLand.SALT)
+                    || oldNear(seed, chunk[0], chunk[1], 12, 34, 20, com.hex.kagune.control.village.DryLand.VILLAGE_SALT))) {
+                    continue;
+                }
+                offers.add(chunk);
+            }
+        }
+        offers.sort(java.util.Comparator.<int[]>comparingLong(c -> (long)c[0] * c[0] + (long)c[1] * c[1]).thenComparingInt(c -> c[0]).thenComparingInt(c -> c[1]));
+        return offers.toArray(new int[0][]);
+    }
+
+    private static boolean oldNear(long seed, int x, int z, int apart, int spacing, int separation, int salt) {
+        int rx = Math.floorDiv(x, spacing);
+        int rz = Math.floorDiv(z, spacing);
+        int reach = apart / spacing + 1;
+        for (int i = rx - reach; i <= rx + reach; i++) {
+            for (int j = rz - reach; j <= rz + reach; j++) {
+                int[] other = com.hex.kagune.control.village.DryLand.spreadChunk(seed, i, j, spacing, separation, salt);
+                long dx = other[0] - x;
+                long dz = other[1] - z;
+                if (dx * dx + dz * dz < (long)apart * apart) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     static void ccgBuilding() {
         com.hex.kagune.control.village.SiteMaps.Site site = com.hex.kagune.control.village.SiteMaps.of("ccg_building");
         check(site != null && site.width() == 39 && site.depth() == 39 && site.height() == 58 && site.ground() == 0 && site.map() == 6
@@ -1883,14 +2069,12 @@ public final class NpcTests {
                 && villages.contains("\"separation\": " + com.hex.kagune.control.village.DryLand.VILLAGE_SEPARATION + ",")
                 && villages.contains("\"salt\": " + com.hex.kagune.control.village.DryLand.VILLAGE_SALT), "the towns' numbers are their set's");
             String structure = new String(java.nio.file.Files.readAllBytes(data.resolve("worldgen/structure/ccg_building.json")));
-            check(structure.contains("\"type\": \"hexkagune:site_ccg_building\"") && structure.contains("\"biomes\": \"#hexkagune:has_structure/ccg_building\"")
-                && structure.contains("\"terrain_adaptation\": \"beard_box\""), "its structure: its own type, its biomes, the ground fitted to it");
-            String biomes = new String(java.nio.file.Files.readAllBytes(data.resolve("tags/worldgen/biome/has_structure/ccg_building.json")));
-            check(biomes.contains("\"minecraft:plains\"") && biomes.contains("\"minecraft:forest\"") && !biomes.contains("ocean") && !biomes.contains("river")
-                && !biomes.contains("swamp") && !biomes.contains("beach"), "its biomes: open land and woods, none wet");
+            check(structure.contains("\"type\": \"hexkagune:site_ccg_building\"") && structure.contains("\"biomes\": \"#hexkagune:overworld\"")
+                && structure.contains("\"terrain_adaptation\": \"beard_box\""), "its structure: its own type, any biome of the overworld, the ground fitted to it");
             String structures = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/ControlStructures.java")));
             check(structures.contains("int[] where = ccg(context);") && structures.contains("where[0] != chunk.f_45578_ || where[1] != chunk.f_45579_")
-                && structures.contains("DryLand.pick(DryLand.ccgOffers(seed), DryLand.ccgFurther(seed)"),
+                && structures.contains("DryLand.Spread[] keep = {hideoutSpread(context), villageSpread(context)};")
+                && structures.contains("DryLand.pick(DryLand.offers(spread, 0, DryLand.REGIONS, keep, DryLand.CCG_APART),"),
                 "the world's one building is built only at the offer chosen for it (the same in every chunk that asks)");
             // The template itself: its people, and what each does.
             java.util.Map<String, Object> template;
@@ -2096,7 +2280,8 @@ public final class NpcTests {
                 "the members at their work, and a player kept out is gone for");
             String structures = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/ControlStructures.java")));
             check(structures.contains("int[] chosen = hideout(context);") && structures.contains("chosen[0] != chunk.f_45578_ || chosen[1] != chunk.f_45579_")
-                && structures.contains("DryLand.pick(DryLand.hideoutOffers(seed), DryLand.hideoutFurther(seed)")
+                && structures.contains("DryLand.Spread spread = hideoutSpread(context);")
+                && structures.contains("DryLand.pick(DryLand.offers(spread, 0, DryLand.REGIONS, new DryLand.Spread[0], 0),\n                DryLand.offers(spread, DryLand.REGIONS, DryLand.FAR, new DryLand.Spread[0], 0)")
                 && structures.contains("if ((CCG.equals(this.site.id()) || unique(this.site)) && onPurpose(context)) {")
                 && structures.contains("return context.f_226630_().test(null);"),
                 "the world's one hideout is built only at the offer chosen for it (the same in every chunk that asks)");

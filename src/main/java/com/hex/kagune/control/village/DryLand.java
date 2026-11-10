@@ -141,21 +141,65 @@ public final class DryLand {
      * spot of the hideout's or a village's.
      */
     static int[][] offers(long seed, int salt, int inner, int outer, boolean apart) {
+        Spread[] keep = apart ? new Spread[] {fixed(seed, SPACING, SEPARATION, SALT), fixed(seed, VILLAGE_SPACING, VILLAGE_SEPARATION, VILLAGE_SALT)}
+            : new Spread[0];
+        return offers(fixed(seed, SPACING, SEPARATION, salt), inner, outer, keep, CCG_APART);
+    }
+
+    /**
+     * 4.1.9: a structure set's random spread as the game has it: the start chunk it offers in the region holding any chunk. In the game it
+     * is the set's own placement, read from the world (RandomSpreadStructurePlacement.getPotentialStructureChunk, its spacing): a mod that
+     * changes every set's spacing (the owner's pack has Structure Essentials, which can) changes the offers here too, so the one chosen is
+     * always one the game asks about. {@link #fixed} is the set's file's numbers.
+     */
+    public interface Spread {
+        /** Chunks along a side of one of its regions. */
+        int spacing();
+
+        /** The start chunk ({x, z}) it offers in the region holding chunk ({@code x}, {@code z}). */
+        int[] chunk(int x, int z);
+    }
+
+    /** 4.1.9: a linear random spread with these numbers ({@link #spreadChunk}), as the game makes it from a set's file. */
+    public static Spread fixed(long seed, int spacing, int separation, int salt) {
+        return new Spread() {
+            @Override
+            public int spacing() {
+                return spacing;
+            }
+
+            @Override
+            public int[] chunk(int x, int z) {
+                return spreadChunk(seed, Math.floorDiv(x, spacing), Math.floorDiv(z, spacing), spacing, separation, salt);
+            }
+        };
+    }
+
+    /**
+     * The start chunks {@code spread} offers in the regions from {@code inner} out to {@code outer} either way of the world's middle (the
+     * square {@code -outer .. outer - 1} less {@code -inner .. inner - 1}), none nearer it than {@link #NEAREST} chunks, nor within
+     * {@code apart} chunks of an offer of any of {@code keep}; each once, nearest first (then by x, then z).
+     */
+    public static int[][] offers(Spread spread, int inner, int outer, Spread[] keep, int apart) {
+        int spacing = Math.max(1, spread.spacing());
         List<int[]> offers = new ArrayList<>();
+        java.util.Set<Long> seen = new java.util.HashSet<>();
         for (int rx = -outer; rx < outer; rx++) {
             for (int rz = -outer; rz < outer; rz++) {
                 if (rx >= -inner && rx < inner && rz >= -inner && rz < inner) {
                     continue;
                 }
-                int[] chunk = spreadChunk(seed, rx, rz, SPACING, SEPARATION, salt);
-                if ((long)chunk[0] * chunk[0] + (long)chunk[1] * chunk[1] < (long)NEAREST * NEAREST) {
+                int[] chunk = spread.chunk(rx * spacing, rz * spacing);
+                if ((long)chunk[0] * chunk[0] + (long)chunk[1] * chunk[1] < (long)NEAREST * NEAREST || !seen.add((long)chunk[0] << 32 ^ (chunk[1] & 0xFFFFFFFFL))) {
                     continue;
                 }
-                if (apart && (near(seed, chunk[0], chunk[1], CCG_APART, SPACING, SEPARATION, SALT)
-                    || near(seed, chunk[0], chunk[1], CCG_APART, VILLAGE_SPACING, VILLAGE_SEPARATION, VILLAGE_SALT))) {
-                    continue;
+                boolean clear = true;
+                for (Spread other : keep) {
+                    clear &= !near(other, chunk[0], chunk[1], apart);
                 }
-                offers.add(chunk);
+                if (clear) {
+                    offers.add(chunk);
+                }
             }
         }
         offers.sort(Comparator.<int[]>comparingLong(c -> (long)c[0] * c[0] + (long)c[1] * c[1]).thenComparingInt(c -> c[0]).thenComparingInt(c -> c[1]));
@@ -178,14 +222,20 @@ public final class DryLand {
 
     /** 4.1.4: true if the start chunk ({@code x}, {@code z}) is within {@code apart} chunks of an offer of the random spread with these numbers. */
     public static boolean near(long seed, int x, int z, int apart, int spacing, int separation, int salt) {
+        return near(fixed(seed, spacing, separation, salt), x, z, apart);
+    }
+
+    /** 4.1.9: true if the start chunk ({@code x}, {@code z}) is within {@code apart} chunks of an offer of {@code spread}. */
+    public static boolean near(Spread spread, int x, int z, int apart) {
+        int spacing = Math.max(1, spread.spacing());
         int rx = Math.floorDiv(x, spacing);
         int rz = Math.floorDiv(z, spacing);
         int reach = apart / spacing + 1;
         for (int i = rx - reach; i <= rx + reach; i++) {
             for (int j = rz - reach; j <= rz + reach; j++) {
-                int[] other = spreadChunk(seed, i, j, spacing, separation, salt);
-                long dx = other[0] - x;
-                long dz = other[1] - z;
+                int[] other = spread.chunk(i * spacing, j * spacing);
+                long dx = other[0] - (long)x;
+                long dz = other[1] - (long)z;
                 if (dx * dx + dz * dz < (long)apart * apart) {
                     return true;
                 }
@@ -206,6 +256,94 @@ public final class DryLand {
     /** 4.1.6: the CCG building's further offers (as {@link #hideoutFurther}), weighed only when none of the near ones is dry. */
     public static int[][] ccgFurther(long seed) {
         return offers(seed, CCG_SALT, REGIONS, FAR, true);
+    }
+
+    /**
+     * 4.1.9 (the owner: "it should be able to spawn literally in any biome as long as there's only one of each structure aside from the
+     * villages"): Anteiku, the library and Ken's tower are the world's one each too (they were three each, rings of three), chosen in this
+     * order after the hideout and the CCG building. Each has a random spread of the hideout's spacing with its own salt
+     * (data/hexkagune/worldgen/structure_set/&lt;id&gt;.json); its one is built at the first of its offers, nearest the world's middle,
+     * where the place itself stands once laid out and moved onto dry land as it always is ({@link #firstPlaced}), at least
+     * {@link #PLACE_APART} chunks from every village offer and from the middle of every one-of-a-kind place chosen before it.
+     */
+    public static final String[] PLACES = {"anteiku", "library", "cyber_tower"};
+    public static final int ANTEIKU_SALT = 1324066190;
+    public static final int LIBRARY_SALT = 1300741852;
+    public static final int TOWER_SALT = 1324066191;
+    /** 4.1.9: how far (chunks) a one-of-a-kind place's middle keeps from a village's offer and from the places chosen before it. */
+    public static final int PLACE_APART = 12;
+    /** 4.1.9: how many offers that look like land are laid out in full before a world goes without the place (none on land). */
+    public static final int PLACE_TRIES = 24;
+
+    /** 4.1.9: the salt of the one-of-a-kind jigsaw place {@code id}'s set, or -1 if it is not one of {@link #PLACES}. */
+    public static int placeSalt(String id) {
+        if (id == null) {
+            return -1;
+        }
+        return switch (id) {
+            case "anteiku" -> ANTEIKU_SALT;
+            case "library" -> LIBRARY_SALT;
+            case "cyber_tower" -> TOWER_SALT;
+            default -> -1;
+        };
+    }
+
+    /** 4.1.9: the place {@code id}'s offers in the order they are weighed (as {@link #hideoutOffers}, with its own salt). */
+    public static int[][] placeOffers(long seed, String id) {
+        return offers(seed, placeSalt(id), 0, REGIONS, false);
+    }
+
+    /** 4.1.9: the place {@code id}'s further offers (as {@link #hideoutFurther}), weighed only once the near ones are all tried. */
+    public static int[][] placeFurther(long seed, String id) {
+        return offers(seed, placeSalt(id), REGIONS, FAR, false);
+    }
+
+    /** 4.1.9: how a one-of-a-kind jigsaw place is tried at one of its offers ({@link #firstPlaced}). */
+    public interface Probe {
+        /** True if the offer's start chunk looks like land at all (no water and no wet biome at its middle): worth laying out. */
+        boolean land(int chunkX, int chunkZ);
+
+        /**
+         * The chunk ({x, z}) the place's middle stands in once laid out from this offer as the world would lay it (moved onto dry land),
+         * or null if it would not stand there.
+         */
+        int[] placed(int chunkX, int chunkZ);
+    }
+
+    /**
+     * 4.1.9: the first of {@code near}, then of {@code further} (offers, {x, z} start chunks, in order) that looks like land, stands when
+     * laid out, and stands where {@code clear} allows; as {offer x, offer z, its middle's chunk x, z}, or null. No more than {@code most}
+     * offers are laid out (each costs a whole layout), so a world of sea gives up quickly.
+     */
+    public static int[] firstPlaced(int[][] near, int[][] further, Probe probe, java.util.function.Predicate<int[]> clear, int most) {
+        int tried = 0;
+        for (int[][] offers : new int[][][] {near, further}) {
+            for (int[] offer : offers) {
+                if (!probe.land(offer[0], offer[1])) {
+                    continue;
+                }
+                int[] at = probe.placed(offer[0], offer[1]);
+                if (at != null && clear.test(at)) {
+                    return new int[] {offer[0], offer[1], at[0], at[1]};
+                }
+                if (++tried >= most) {
+                    return null;
+                }
+            }
+        }
+        return null;
+    }
+
+    /** 4.1.9: true if chunk ({@code x}, {@code z}) is at least {@code chunks} from every one of {@code others} ({x, z} chunks). */
+    public static boolean apart(int x, int z, List<int[]> others, int chunks) {
+        for (int[] other : others) {
+            long dx = other[0] - (long)x;
+            long dz = other[1] - (long)z;
+            if (dx * dx + dz * dz < (long)chunks * chunks) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**

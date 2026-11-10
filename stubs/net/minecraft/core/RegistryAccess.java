@@ -2,4 +2,6 @@
 package net.minecraft.core;
 
 public interface RegistryAccess {
+    /** registryOrThrow (4.1.9: the structure registry, to find the world's one-of-a-kind places) */
+    default <E> Registry<E> m_175515_(net.minecraft.resources.ResourceKey<? extends Registry<? extends E>> key) { throw new UnsupportedOperationException(); }
 }

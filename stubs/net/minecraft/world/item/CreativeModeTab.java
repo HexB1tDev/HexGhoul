@@ -12,7 +12,8 @@ public class CreativeModeTab {
     }
 
     public interface DisplayItemsGenerator {
-        void accept(ItemDisplayParameters parameters, Output output);
+        /** accept (4.1.9: SRG m_257865_; the old name "accept" left the creative tabs' lambdas unimplemented: the inventory crashed) */
+        void m_257865_(ItemDisplayParameters parameters, Output output);
     }
 
     public static class ItemDisplayParameters {

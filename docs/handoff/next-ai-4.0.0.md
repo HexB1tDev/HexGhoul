@@ -253,6 +253,17 @@ turns only 0.27 against the guard's fists). `PaleInput.twirls`/`fights` (the air
 speed kick twirls at full. `FightStyle.ownUse` true for Kick Master. Protocol 116. `CompanionTests.twirlKick`. Preview:
 `docs/handoff/twirl-kick-4.1.8.png` (`tools/pale-preview.sh <out> twirl-kick`, also a GIF).
 
+## 4.1.9 (released)
+
+The owner (quoted exactly): "Important top priority bugs: Cant find CCG building, Aogiri Hideout or Kaneki's building AT ALL not even with
+locate. Opening the inventory crashes the game instantly."; "it should be able to spawn literally in any biome as long as there's only one of
+each structure aside from the villages, of course. It should also be fully compatible with Biomes of Plenty". The creative tabs' lambdas
+implement `DisplayItemsGenerator` by its SRG name `m_257865_` (the stub had `accept`: an AbstractMethodError on opening the inventory).
+Every structure's biomes are `#hexkagune:overworld`; every place type overrides `findValidGenerationPoint` (`m_262864_`) and judges its own
+land (any biome but `hexkagune:wet`); the old per-place biome tags are gone. Anteiku, the library and Ken's tower are random spreads, one
+each per world (`DryPlace.chosen`, `DryLand.firstPlaced`, `PLACES`); every chooser reads its set's spread from the world
+(`ControlStructures.spread`). Protocol 116 (unchanged). `NpcTests.onePerWorld`. Details: `next-ai-4.1.9.md`.
+
 ## Next
 
 Nothing outstanding from the owner. If they report in-game problems with the outfits' fit, adjust `CLEAR`, `SNUG`, the drape

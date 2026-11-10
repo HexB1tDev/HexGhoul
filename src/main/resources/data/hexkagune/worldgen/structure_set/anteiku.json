@@ -6,11 +6,9 @@
     }
   ],
   "placement": {
-    "type": "minecraft:concentric_rings",
-    "salt": 1324066190,
-    "distance": 10,
-    "spread": 3,
-    "count": 3,
-    "preferred_biomes": "#hexkagune:prefers/anteiku"
+    "type": "minecraft:random_spread",
+    "spacing": 40,
+    "separation": 20,
+    "salt": 1324066190
   }
 }

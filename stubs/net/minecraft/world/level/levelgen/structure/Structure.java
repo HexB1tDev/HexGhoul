@@ -6,6 +6,11 @@ public abstract class Structure {
     /** findGenerationPoint (called by name through ObfuscationReflectionHelper) */
     public abstract java.util.Optional<Structure.GenerationStub> m_214086_(Structure.GenerationContext context);
     /** type */ public abstract StructureType<?> m_213658_();
+    /**
+     * findValidGenerationPoint (4.1.9: public and overridable in 1.20.1: findGenerationPoint filtered by the structure's biomes at the
+     * stub's position; world generation and StructureCheck, /locate's, both call it)
+     */
+    public java.util.Optional<Structure.GenerationStub> m_262864_(Structure.GenerationContext context) { throw new UnsupportedOperationException(); }
     /** afterPlace (per chunk, its pieces placed) */
     public void m_214110_(net.minecraft.world.level.WorldGenLevel level, net.minecraft.world.level.StructureManager structures,
         net.minecraft.world.level.chunk.ChunkGenerator generator, net.minecraft.util.RandomSource random, BoundingBox box, net.minecraft.world.level.ChunkPos chunk,
@@ -37,6 +42,14 @@ public abstract class Structure {
             net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager structureTemplateManager,
             net.minecraft.world.level.levelgen.WorldgenRandom random, long seed, net.minecraft.world.level.ChunkPos chunkPos,
             net.minecraft.world.level.LevelHeightAccessor heightAccessor, java.util.function.Predicate<net.minecraft.core.Holder<?>> validBiome) {
+            throw new UnsupportedOperationException();
+        }
+        /** 4.1.9: the constructor the game itself makes each start's context with (its random seeded from the seed and the chunk) */
+        public GenerationContext(net.minecraft.core.RegistryAccess registryAccess, net.minecraft.world.level.chunk.ChunkGenerator chunkGenerator,
+            net.minecraft.world.level.biome.BiomeSource biomeSource, net.minecraft.world.level.levelgen.RandomState randomState,
+            net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager structureTemplateManager, long seed,
+            net.minecraft.world.level.ChunkPos chunkPos, net.minecraft.world.level.LevelHeightAccessor heightAccessor,
+            java.util.function.Predicate<net.minecraft.core.Holder<?>> validBiome) {
             throw new UnsupportedOperationException();
         }
         /** registryAccess */ public net.minecraft.core.RegistryAccess f_226621_() { throw new UnsupportedOperationException(); }

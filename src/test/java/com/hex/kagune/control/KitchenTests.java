@@ -155,19 +155,12 @@ public final class KitchenTests {
         for (String banned : new String[] {"kaneki", "furuta", "takatsuki", "yoshimura"}) {
             check(!menu.contains(banned) && !lang.toLowerCase().contains(banned), "no " + banned + " in the kitchen");
         }
-        String plains = read("src/main/resources/data/hexkagune/tags/worldgen/biome/has_structure/anteiku.json");
-        String tower = read("src/main/resources/data/hexkagune/tags/worldgen/biome/has_structure/cyber_tower.json");
-        String library = read("src/main/resources/data/hexkagune/tags/worldgen/biome/has_structure/library.json");
-        // 2.0.2 (the owner: "stop limiting it to plains ... including some from biomes o plenty"): open land and woods, Biomes O' Plenty's
-        // as optional entries; never water, sand or the whole overworld.
-        String village = read("src/main/resources/data/hexkagune/tags/worldgen/biome/has_structure/village.json");
-        for (String[] tag : new String[][] {{"the cafe", plains}, {"the tower", tower}, {"the library", library}, {"the village", village}}) {
-            String t = tag[1];
-            boolean woods = !tag[0].equals("the village");
-            check(t.contains("minecraft:plains") && t.contains("minecraft:cherry_grove") && t.contains("minecraft:savanna")
-                && t.contains("minecraft:forest") == woods && t.contains("biomesoplenty:prairie") && t.contains("\"required\": false")
-                && !t.contains("ocean") && !t.contains("river") && !t.contains("beach") && !t.contains("desert") && !t.contains("is_overworld"),
-                tag[0] + " on open land" + (woods ? " and in woods" : "") + ", Biomes O' Plenty's too");
+        // 2.0.2 (the owner: "stop limiting it to plains ... including some from biomes o plenty"); 4.1.9 (the owner: "it should be able to
+        // spawn literally in any biome ... It should also be fully compatible with Biomes of Plenty"): the cafe, the tower, the library and
+        // the villages stand in any biome of the overworld, a mod's too, and never in a wet one (judged in code: NpcTests.dryLand).
+        for (String place : new String[] {"anteiku", "cyber_tower", "library", "village_1", "village_2"}) {
+            String json = read("src/main/resources/data/hexkagune/worldgen/structure/" + place + ".json");
+            check(json.contains("\"biomes\": \"#hexkagune:overworld\""), place + ": any biome of the overworld, Biomes O' Plenty's too");
         }
     }
 

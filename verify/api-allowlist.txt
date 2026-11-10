@@ -1162,7 +1162,7 @@ M net/minecraft/world/item/CreativeModeTab$Builder m_257737_ (Ljava/util/functio
 M net/minecraft/world/item/CreativeModeTab$Builder m_257501_ (Lnet/minecraft/world/item/CreativeModeTab$DisplayItemsGenerator;)Lnet/minecraft/world/item/CreativeModeTab$Builder;  # [srg] displayItems: joined.tsrg cef$a m_257501_ (Lcef$b;)Lcef$a; (yarn entries)
 M net/minecraft/world/item/CreativeModeTab$Builder m_257652_ ()Lnet/minecraft/world/item/CreativeModeTab;  # [srg] build: joined.tsrg cef$a m_257652_ ()Lcef;
 C net/minecraft/world/item/CreativeModeTab$DisplayItemsGenerator                     # [srg] cef$b (intermediary class_1761$class_7914, yarn ItemGroup.EntryCollector)
-M net/minecraft/world/item/CreativeModeTab$DisplayItemsGenerator accept (Lnet/minecraft/world/item/CreativeModeTab$ItemDisplayParameters;Lnet/minecraft/world/item/CreativeModeTab$Output;)V  # [srg] unobfuscated accept (EntryCollector.accept: no SRG id)
+M net/minecraft/world/item/CreativeModeTab$DisplayItemsGenerator m_257865_ (Lnet/minecraft/world/item/CreativeModeTab$ItemDisplayParameters;Lnet/minecraft/world/item/CreativeModeTab$Output;)V  # [srg] accept: joined.tsrg cef$b accept (Lcef$d;Lcef$e;)V m_257865_ 257865 (4.1.9: was wrongly listed as unobfuscated "accept"; the lambdas never implemented m_257865_ and opening the inventory crashed)
 C net/minecraft/world/item/CreativeModeTab$ItemDisplayParameters                     # [srg] cef$d (intermediary class_1761$class_8128, yarn ItemGroup.DisplayContext)
 C net/minecraft/world/item/CreativeModeTab$Output                                    # [srg] cef$e (intermediary class_1761$class_7704, yarn ItemGroup.Entries)
 M net/minecraft/world/item/CreativeModeTab$Output m_246342_ (Lnet/minecraft/world/item/ItemStack;)V  # [srg] accept(ItemStack): joined.tsrg cef$e m_246342_ (Lcfz;)V (yarn Entries.add(ItemStack))
@@ -1193,3 +1193,30 @@ M net/minecraft/world/level/levelgen/structure/BoundingBox m_162401_ ()I        
 F net/minecraft/core/registries/Registries f_256952_ Lnet/minecraft/resources/ResourceKey;  # [srg] BIOME: joined.tsrg jc ap f_256952_ (intermediary field_41236, yarn RegistryKeys.BIOME: net_minecraft_registry_RegistryKeys.mapping)
 M net/minecraft/tags/TagKey m_203882_ (Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/resources/ResourceLocation;)Lnet/minecraft/tags/TagKey;  # [srg] create: joined.tsrg anl a (Lacp;Lacq;)Lanl; m_203882_ 203882 (yarn TagKey.of(RegistryKey, Identifier)): hexkagune:wet, the biomes no structure stands in or beside
 M net/minecraft/core/Holder m_203656_ (Lnet/minecraft/tags/TagKey;)Z                # [srg] is(TagKey): joined.tsrg he a (Lanl;)Z m_203656_ 203656 (yarn RegistryEntry.isIn): a biome in hexkagune:wet
+
+# --- 4.1.9 (the owner: "Cant find CCG building, Aogiri Hideout or Kaneki's building AT ALL not even with locate"; "it should be able to
+# spawn literally in any biome as long as there's only one of each structure aside from the villages"): every place judges its own land
+# (any biome but a wet one), so the game's biome-list test at the start is overridden; Anteiku, the library and Ken's tower are the
+# world's one each, found through the structure registry and laid out exactly as the game lays them (its own context per start chunk).
+# hs = RegistryAccess, hr = Registry, acp = ResourceKey, acq = ResourceLocation, jc = Registries, dsa = Structure, dsa$a = its
+# GenerationContext (joined.tsrg; intermediary-1.20.1.tiny: hr class_2378, jc class_7924; decompiled 1.20.1 Structure.java:
+# "public Optional<Structure.GenerationStub> findValidGenerationPoint(Structure.GenerationContext var1)", not final, called by
+# Structure.generate and by StructureCheck.canCreateStructure).
+M net/minecraft/world/level/levelgen/structure/Structure m_262864_ (Lnet/minecraft/world/level/levelgen/structure/Structure$GenerationContext;)Ljava/util/Optional;  # [srg] findValidGenerationPoint: joined.tsrg dsa b (Ldsa$a;)Ljava/util/Optional; m_262864_ 262864 (yarn getValidStructurePosition); overridden: findGenerationPoint with no biome-list filter
+M net/minecraft/world/level/levelgen/structure/Structure$GenerationContext <init> (Lnet/minecraft/core/RegistryAccess;Lnet/minecraft/world/level/chunk/ChunkGenerator;Lnet/minecraft/world/level/biome/BiomeSource;Lnet/minecraft/world/level/levelgen/RandomState;Lnet/minecraft/world/level/levelgen/structure/templatesystem/StructureTemplateManager;JLnet/minecraft/world/level/ChunkPos;Lnet/minecraft/world/level/LevelHeightAccessor;Ljava/util/function/Predicate;)V  # [srg] joined.tsrg dsa$a <init> (Lhs;Lddy;Lcno;Ldhy;Ldvu;JLclt;Lcmo;Ljava/util/function/Predicate;)V 226631: the record's own constructor that seeds its random from the seed and the chunk, as Structure.generate and StructureCheck make it
+C net/minecraft/core/Registry                                                        # [srg] hr C_4705_ (class_2378, yarn Registry), an interface
+M net/minecraft/core/RegistryAccess m_175515_ (Lnet/minecraft/resources/ResourceKey;)Lnet/minecraft/core/Registry;  # [srg] registryOrThrow: joined.tsrg hs d (Lacp;)Lhr; m_175515_ 175515 (a default method of hs; yarn DynamicRegistryManager.get)
+M net/minecraft/core/Registry m_7745_ (Lnet/minecraft/resources/ResourceLocation;)Ljava/lang/Object;  # [srg] get(ResourceLocation): joined.tsrg hr a (Lacq;)Ljava/lang/Object; m_7745_ 7745 (yarn Registry.get(Identifier))
+M net/minecraft/core/Registry m_7981_ (Ljava/lang/Object;)Lnet/minecraft/resources/ResourceLocation;  # [srg] getKey: joined.tsrg hr b (Ljava/lang/Object;)Lacq; m_7981_ 7981 (yarn Registry.getId)
+F net/minecraft/core/registries/Registries f_256944_ Lnet/minecraft/resources/ResourceKey;  # [srg] STRUCTURE: joined.tsrg jc az f_256944_ 256944 (yarn RegistryKeys.STRUCTURE)
+# 4.1.9: each one-of-a-kind place's offers are read from its structure set as the world has it, so a mod that changes every set's spacing
+# (Structure Essentials, in the owner's pack, can) changes them here too. dsg = StructureSet, dsx = StructurePlacement, dsv =
+# RandomSpreadStructurePlacement (decompiled 1.20.1: "public ChunkPos getPotentialStructureChunk(long var1, int var3, int var4)", read by
+# its own isPlacementChunk; "public int spacing()").
+C net/minecraft/world/level/levelgen/structure/StructureSet                         # [srg] dsg C_207023_ (class_7059, yarn StructureSet), a record
+M net/minecraft/world/level/levelgen/structure/StructureSet f_210004_ ()Lnet/minecraft/world/level/levelgen/structure/placement/StructurePlacement;  # [srg] record accessor placement: joined.tsrg dsg b ()Ldsx; f_210004_ 210020 (yarn StructureSet.placement)
+C net/minecraft/world/level/levelgen/structure/placement/StructurePlacement         # [srg] dsx C_203222_ (class_6874, yarn StructurePlacement), an abstract class: only tested for being a random spread
+C net/minecraft/world/level/levelgen/structure/placement/RandomSpreadStructurePlacement  # [srg] dsv C_203219_ (class_6872, yarn RandomSpreadStructurePlacement)
+M net/minecraft/world/level/levelgen/structure/placement/RandomSpreadStructurePlacement m_205003_ ()I  # [srg] spacing: joined.tsrg dsv a ()I m_205003_ 205003 (yarn getSpacing)
+M net/minecraft/world/level/levelgen/structure/placement/RandomSpreadStructurePlacement m_227008_ (JII)Lnet/minecraft/world/level/ChunkPos;  # [srg] getPotentialStructureChunk: joined.tsrg dsv a (JII)Lclt; m_227008_ 227008 (yarn getStartChunk)
+F net/minecraft/core/registries/Registries f_256998_ Lnet/minecraft/resources/ResourceKey;  # [srg] STRUCTURE_SET: joined.tsrg jc aB f_256998_ 256998 (yarn RegistryKeys.STRUCTURE_SET)
