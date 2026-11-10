@@ -58,8 +58,8 @@ can spawn, although they're as rare as a normal village"; "give Ayato like anima
 The crack fingers animation is only Kaneki's in the players whenever he trains with Kaneki ... Noro simply like tilts his head and looks at
 the player weird ... when you train with him ... you tilt your head before the Kagune pops out"; "Whenever the mention update is released,
 just publish a release with it"; "onto the to-do list that we should have our own category in the creative menu with like the armors and
-quinques and whatever, everything separated and well organized" (NOT done yet: needs CreativeModeTab builder API allowlist entries and
-stubs; the original jar never uses it).
+quinques and whatever, everything separated and well organized" (done: `ControlItems.TABS`, four tabs; their API allowlisted and
+stubbed; the old vanilla-tab hook removed).
 
 Where: `OutfitLayer` (`Bend`, `bend`, `tails`), `BodyAnimations.bend`, `tools/outfit_models.py` (`split`, `TAIL_PARTS`, bones 8 and 9);
 `tools/exploration_structures.py` (`cut_x`, `mansion`, `site_loop`, the 1.21 swaps), `ControlStructures.Site.unique`,

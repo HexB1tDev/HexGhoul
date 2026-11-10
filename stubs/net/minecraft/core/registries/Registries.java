@@ -3,5 +3,6 @@ package net.minecraft.core.registries;
 
 public class Registries {
     /** BLOCK */ public static final net.minecraft.resources.ResourceKey<net.minecraft.core.Registry<net.minecraft.world.level.block.Block>> f_256747_ = null;
+    /** CREATIVE_MODE_TAB (4.0.2) */ public static final net.minecraft.resources.ResourceKey<net.minecraft.core.Registry<net.minecraft.world.item.CreativeModeTab>> f_279569_ = null;
     /** STRUCTURE_TYPE */ public static final net.minecraft.resources.ResourceKey<net.minecraft.core.Registry<net.minecraft.world.level.levelgen.structure.StructureType<?>>> f_256938_ = null;
 }

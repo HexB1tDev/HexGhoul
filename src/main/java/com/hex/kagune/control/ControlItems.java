@@ -1,15 +1,11 @@
 package com.hex.kagune.control;
 
 import net.minecraft.world.food.FoodProperties;
-import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.SwordItem;
 import net.minecraft.world.item.Tiers;
-import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
@@ -252,6 +248,61 @@ public final class ControlItems {
     static void register(IEventBus modBus) {
         ITEMS.register(modBus);
         EFFECTS.register(modBus);
+        TABS.register(modBus);
+    }
+
+    // ---------------------------------------------------------------- 4.0.2: the mod's own creative tabs
+
+    /**
+     * 4.0.2 (the owner: "we should have our own category in the creative menu with like the armors and quinques and whatever, everything
+     * separated and well organized"): the mod's own tabs, each kind of thing in its own: HexKagune (Ghoul Meat, the ring, the cookbook
+     * and the kitchen's dishes), Quinques (each case beside its weapon, then the investigators' kagune-made ones), Outfits (the Formal,
+     * then the Crimson, piece by piece) and Masks (the owner's 24 in their sheet's order, then the generic ones).
+     */
+    private static final DeferredRegister<net.minecraft.world.item.CreativeModeTab> TABS = DeferredRegister.create(
+        net.minecraft.core.registries.Registries.f_279569_, "hexkagune");
+
+    public static final RegistryObject<net.minecraft.world.item.CreativeModeTab> TAB_KAGUNE = TABS.register("kagune", () ->
+        tab("itemGroup.hexkagune.kagune", () -> new ItemStack(GHOUL_MEAT.get(), 1), (parameters, output) -> {
+            output.m_246342_(new ItemStack(GHOUL_MEAT.get(), 1));
+            output.m_246342_(new ItemStack(GOLD_RING.get(), 1));
+            output.m_246342_(new ItemStack(COOKBOOK.get(), 1));
+            for (RegistryObject<Item> dish : DISHES.values()) {
+                output.m_246342_(new ItemStack(dish.get(), 1));
+            }
+        }));
+    public static final RegistryObject<net.minecraft.world.item.CreativeModeTab> TAB_QUINQUES = TABS.register("quinques", () ->
+        tab("itemGroup.hexkagune.quinques", () -> new ItemStack(WEAPONS.get(com.hex.kagune.control.quinque.Quinque.values()[0]).get(), 1), (parameters, output) -> {
+            for (com.hex.kagune.control.quinque.Quinque q : com.hex.kagune.control.quinque.Quinque.values()) {
+                output.m_246342_(new ItemStack(CASES.get(q).get(), 1));
+                output.m_246342_(new ItemStack(WEAPONS.get(q).get(), 1));
+            }
+            for (com.hex.kagune.control.quinque.Arm arm : com.hex.kagune.control.quinque.Arm.values()) {
+                output.m_246342_(new ItemStack(ARM_CASES.get(arm).get(), 1));
+                output.m_246342_(new ItemStack(ARM_WEAPONS.get(arm).get(), 1));
+            }
+        }));
+    public static final RegistryObject<net.minecraft.world.item.CreativeModeTab> TAB_OUTFITS = TABS.register("outfits", () ->
+        tab("itemGroup.hexkagune.outfits", () -> outfit("formal_chestplate"), (parameters, output) -> {
+            for (com.hex.kagune.control.outfit.Outfits.Piece piece : com.hex.kagune.control.outfit.Outfits.ALL) {
+                if (!piece.mask()) {
+                    output.m_246342_(outfit(piece.id()));
+                }
+            }
+        }));
+    public static final RegistryObject<net.minecraft.world.item.CreativeModeTab> TAB_MASKS = TABS.register("masks", () ->
+        tab("itemGroup.hexkagune.masks", () -> outfit("mask_eyepatch"), (parameters, output) -> {
+            for (com.hex.kagune.control.outfit.Outfits.Piece piece : com.hex.kagune.control.outfit.Outfits.ALL) {
+                if (piece.mask()) {
+                    output.m_246342_(outfit(piece.id()));
+                }
+            }
+        }));
+
+    private static net.minecraft.world.item.CreativeModeTab tab(String title, java.util.function.Supplier<ItemStack> icon,
+                                                                net.minecraft.world.item.CreativeModeTab.DisplayItemsGenerator items) {
+        return net.minecraft.world.item.CreativeModeTab.builder().m_257941_(net.minecraft.network.chat.Component.m_237115_(title)).m_257737_(icon)
+            .m_257501_(items).m_257652_();
     }
 
     /**
@@ -275,40 +326,5 @@ public final class ControlItems {
     /** True for a stack of Ghoul Meat. */
     public static boolean ghoulMeat(ItemStack stack) {
         return stack != null && !stack.m_41619_() && stack.m_41720_() == GHOUL_MEAT.get();
-    }
-
-    @Mod.EventBusSubscriber(modid = "hexkagune", bus = Mod.EventBusSubscriber.Bus.MOD)
-    public static final class Tabs {
-        private Tabs() {
-        }
-
-        @SubscribeEvent
-        public static void tabs(BuildCreativeModeTabContentsEvent event) {
-            if (event.getTabKey() == CreativeModeTabs.f_256839_) {
-                event.accept(GHOUL_MEAT);
-                // 1.3.41: the cookbook; 1.3.40: the kitchen, in its order.
-                event.accept(COOKBOOK);
-                for (RegistryObject<Item> dish : DISHES.values()) {
-                    event.accept(dish);
-                }
-            }
-            if (event.getTabKey() == CreativeModeTabs.f_256797_) {
-                // 1.3.25: the quinques, each case and its weapon.
-                // 2.0.32: Dawn too, now that a player can wield it (its lightning on right click).
-                for (com.hex.kagune.control.quinque.Quinque q : com.hex.kagune.control.quinque.Quinque.values()) {
-                    event.accept(CASES.get(q));
-                    event.accept(WEAPONS.get(q));
-                }
-                // 3.0.6: and the investigators' kagune-made weapons, each case and its weapon.
-                for (com.hex.kagune.control.quinque.Arm arm : com.hex.kagune.control.quinque.Arm.values()) {
-                    event.accept(ARM_CASES.get(arm));
-                    event.accept(ARM_WEAPONS.get(arm));
-                }
-                // 4.0.0: the outfits and the masks.
-                for (RegistryObject<Item> outfit : OUTFITS.values()) {
-                    event.accept(outfit);
-                }
-            }
-        }
     }
 }

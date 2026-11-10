@@ -183,6 +183,18 @@ public final class OutfitTests {
                 }
             }
         }
+        // 4.0.2 (the owner: "our own category in the creative menu with like the armors and quinques and whatever, everything separated and
+        // well organized"): the mod's own tabs, named, each kind of thing in its own.
+        try {
+            String items = new String(java.nio.file.Files.readAllBytes(Path.of("src/main/java/com/hex/kagune/control/ControlItems.java")));
+            String lang = new String(java.nio.file.Files.readAllBytes(Path.of("src/main/resources/assets/hexkagune/lang/en_us.json")));
+            for (String tab : List.of("kagune", "quinques", "outfits", "masks")) {
+                check(items.contains("TABS.register(\"" + tab + "\"") && lang.contains("\"itemGroup.hexkagune." + tab + "\""), "the " + tab + " tab, named");
+            }
+            check(!items.contains("CreativeModeTabs."), "nothing of ours left in Minecraft's own tabs");
+        } catch (java.io.IOException failure) {
+            check(false, "read the items: " + failure);
+        }
         try {
             String layer = new String(java.nio.file.Files.readAllBytes(Path.of("src/main/java/com/hex/kagune/control/client/render/OutfitLayer.java")));
             check(layer.contains("BodyAnimations.bend(player, part, partial)") && layer.contains("tails(pose, bones[bone])"),

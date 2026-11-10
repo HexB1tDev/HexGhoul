@@ -45,9 +45,14 @@ Your words: "give Ayato like animations of like ambient animations of like being
 - **The finger crack stays Kaneki's:** only players Kaneki taught a kakuja crack a finger before the kagune comes out. Ayato's First Kakuja lesson never gives it.
 - **Noro's way:** once Noro has taught you the Worms and The Walker (a Bikaku player), bringing your kagune out is his way: you stand, your head tilts slowly far over, and the kagune comes out quietly.
 
-### Coming next
+### Creative menu
 
-Our own creative-menu category, with the outfits, masks, quinques and the rest separated and organised (on the to-do list).
+Your words: "we should have our own category in the creative menu with like the armors and quinques and whatever, everything separated and well organized." Everything of ours is now in four tabs of its own (out of Minecraft's Food and Combat tabs):
+
+- **HexKagune:** Ghoul Meat, the Gold Ring, the cookbook and the kitchen's dishes.
+- **HexKagune: Quinques:** each case beside its weapon, then the investigators' kagune-made weapons.
+- **HexKagune: Outfits:** the Formal Outfit, then the Crimson Outfit, piece by piece.
+- **HexKagune: Masks:** your 24 in your sheet's order, then the nine generic ones.
 
 ### My guesses
 
@@ -62,6 +67,7 @@ Our own creative-menu category, with the outfits, masks, quinques and the rest s
 
 - **Network:** protocol 106. There are new gestures, Noro's tilt and the coat-tail pieces, so clients and the server must both be on 4.0.2.
 - **OutfitTests:**
+  - the four tabs, named; nothing of ours left in Minecraft's tabs;
   - no straight piece crosses an elbow, a knee or the torso's middle;
   - the coat tails hang apart from the trousers;
   - the layer bends with PlayerAnimator.

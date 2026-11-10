@@ -602,11 +602,6 @@ M net/minecraft/world/food/FoodProperties$Builder m_38758_ (F)Lnet/minecraft/wor
 M net/minecraft/world/food/FoodProperties$Builder m_38757_ ()Lnet/minecraft/world/food/FoodProperties$Builder;  # [srg] meat: cbc$a.a() (intermediary method_19236, yarn meat)
 M net/minecraft/world/food/FoodProperties$Builder m_38765_ ()Lnet/minecraft/world/food/FoodProperties$Builder;  # [srg] alwaysEat: cbc$a.b() (intermediary method_19240, yarn alwaysEdible)
 M net/minecraft/world/food/FoodProperties$Builder m_38767_ ()Lnet/minecraft/world/food/FoodProperties;  # [srg] build: cbc$a.d() (intermediary method_19242, yarn build)
-C net/minecraft/world/item/CreativeModeTabs                                          # [srg] ceg = C_243506_ (yarn ItemGroups, intermediary class_7706)
-F net/minecraft/world/item/CreativeModeTabs f_256839_ Lnet/minecraft/resources/ResourceKey;  # [srg] FOOD_AND_DRINKS: ceg.j (intermediary field_41061, yarn FOOD_AND_DRINK)
-C net/minecraftforge/event/BuildCreativeModeTabContentsEvent                         # [forge] 1.20.1 event/BuildCreativeModeTabContentsEvent.java (mod bus)
-M net/minecraftforge/event/BuildCreativeModeTabContentsEvent getTabKey ()Lnet/minecraft/resources/ResourceKey;  # [forge] BuildCreativeModeTabContentsEvent.java:56
-M net/minecraftforge/event/BuildCreativeModeTabContentsEvent accept (Ljava/util/function/Supplier;)V  # [forge] BuildCreativeModeTabContentsEvent.java:85 accept(Supplier<? extends ItemLike>)
 C net/minecraftforge/event/entity/player/ItemTooltipEvent                             # [forge] 1.20.1 event/entity/player/ItemTooltipEvent.java
 M net/minecraftforge/event/entity/player/ItemTooltipEvent getItemStack ()Lnet/minecraft/world/item/ItemStack;  # [forge] ItemTooltipEvent.java:49
 M net/minecraftforge/event/entity/player/ItemTooltipEvent getToolTip ()Ljava/util/List;  # [forge] ItemTooltipEvent.java:57
@@ -941,7 +936,6 @@ C net/minecraft/world/item/Tier  # [srg] chm (class_1832, yarn ToolMaterial): th
 C net/minecraft/world/item/Tiers  # [srg] cho C_1429_ (class_1834, yarn ToolMaterials)
 F net/minecraft/world/item/Tiers NETHERITE Lnet/minecraft/world/item/Tiers;  # [srg] enum constant kept by name: joined.tsrg cho f NETHERITE (yarn NETHERITE, field_22033)
 M net/minecraft/world/item/SwordItem <init> (Lnet/minecraft/world/item/Tier;IFLnet/minecraft/world/item/Item$Properties;)V  # [forge] SwordItem(Tier, int, float, Properties) (yarn chk.<init>(class_1832, I, F, class_1792$class_1793))
-F net/minecraft/world/item/CreativeModeTabs f_256797_ Lnet/minecraft/resources/ResourceKey;  # [srg] COMBAT: joined.tsrg ceg i -> f_256797_ (intermediary field_40202, yarn COMBAT)
 C net/minecraft/client/renderer/item/ItemProperties  # [srg] fuc C_4463_ (class_5272, yarn ModelPredicateProviderRegistry)
 C net/minecraft/client/renderer/item/ClampedItemPropertyFunction  # [srg] fua C_141753_ (class_6395, yarn ClampedModelPredicateProvider)
 M net/minecraft/client/renderer/item/ClampedItemPropertyFunction m_142187_ (Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/client/multiplayer/ClientLevel;Lnet/minecraft/world/entity/LivingEntity;I)F  # [srg] unclampedCall: joined.tsrg fua unclampedCall (Lcfz;Lfew;Lbfz;I)F -> m_142187_ (a lambda's method)
@@ -1157,3 +1151,17 @@ F net/minecraft/world/entity/EquipmentSlot FEET Lnet/minecraft/world/entity/Equi
 M net/minecraft/client/renderer/RenderType m_110431_ (Lnet/minecraft/resources/ResourceLocation;)Lnet/minecraft/client/renderer/RenderType;  # [srg] armorCutoutNoCull: joined.tsrg fkf a (Lacq;)Lfkf; m_110431_ (yarn getArmorCutoutNoCull)
 M net/minecraft/world/entity/LivingEntity m_8061_ (Lnet/minecraft/world/entity/EquipmentSlot;Lnet/minecraft/world/item/ItemStack;)V  # [srg] setItemSlot: joined.tsrg bfz a (Lbfo;Lcfz;)V m_8061_ 21035 (abstract on LivingEntity, bgb Mob's own a (Lbfo;Lcfz;)V m_8061_; yarn equipStack): an NPC's outfit and mask
 M net/minecraft/world/entity/Mob m_21409_ (Lnet/minecraft/world/entity/EquipmentSlot;F)V  # [srg] setDropChance: joined.tsrg bgb a (Lbfo;F)V m_21409_ (yarn MobEntity.setEquipmentDropChance)
+# 4.0.2 (the owner: "we should have our own category in the creative menu with like the armors and quinques and whatever, everything separated and well organized"): the mod's own creative tabs.
+F net/minecraft/core/registries/Registries f_279569_ Lnet/minecraft/resources/ResourceKey;  # [srg] CREATIVE_MODE_TAB: joined.tsrg jc f_279569_ (intermediary class_7924, yarn RegistryKeys.ITEM_GROUP)
+C net/minecraft/world/item/CreativeModeTab                                           # [srg] cef (intermediary class_1761, yarn ItemGroup)
+M net/minecraft/world/item/CreativeModeTab builder ()Lnet/minecraft/world/item/CreativeModeTab$Builder;  # [forge] patches/minecraft/net/minecraft/world/item/CreativeModeTab.java.patch: public static CreativeModeTab.Builder builder()
+C net/minecraft/world/item/CreativeModeTab$Builder                                   # [srg] cef$a (intermediary class_1761$class_7913, yarn ItemGroup.Builder)
+M net/minecraft/world/item/CreativeModeTab$Builder m_257941_ (Lnet/minecraft/network/chat/Component;)Lnet/minecraft/world/item/CreativeModeTab$Builder;  # [srg] title: joined.tsrg cef$a m_257941_ (Lsw;)Lcef$a; (yarn displayName)
+M net/minecraft/world/item/CreativeModeTab$Builder m_257737_ (Ljava/util/function/Supplier;)Lnet/minecraft/world/item/CreativeModeTab$Builder;  # [srg] icon: joined.tsrg cef$a m_257737_ (Ljava/util/function/Supplier;)Lcef$a;
+M net/minecraft/world/item/CreativeModeTab$Builder m_257501_ (Lnet/minecraft/world/item/CreativeModeTab$DisplayItemsGenerator;)Lnet/minecraft/world/item/CreativeModeTab$Builder;  # [srg] displayItems: joined.tsrg cef$a m_257501_ (Lcef$b;)Lcef$a; (yarn entries)
+M net/minecraft/world/item/CreativeModeTab$Builder m_257652_ ()Lnet/minecraft/world/item/CreativeModeTab;  # [srg] build: joined.tsrg cef$a m_257652_ ()Lcef;
+C net/minecraft/world/item/CreativeModeTab$DisplayItemsGenerator                     # [srg] cef$b (intermediary class_1761$class_7914, yarn ItemGroup.EntryCollector)
+M net/minecraft/world/item/CreativeModeTab$DisplayItemsGenerator accept (Lnet/minecraft/world/item/CreativeModeTab$ItemDisplayParameters;Lnet/minecraft/world/item/CreativeModeTab$Output;)V  # [srg] unobfuscated accept (EntryCollector.accept: no SRG id)
+C net/minecraft/world/item/CreativeModeTab$ItemDisplayParameters                     # [srg] cef$d (intermediary class_1761$class_8128, yarn ItemGroup.DisplayContext)
+C net/minecraft/world/item/CreativeModeTab$Output                                    # [srg] cef$e (intermediary class_1761$class_7704, yarn ItemGroup.Entries)
+M net/minecraft/world/item/CreativeModeTab$Output m_246342_ (Lnet/minecraft/world/item/ItemStack;)V  # [srg] accept(ItemStack): joined.tsrg cef$e m_246342_ (Lcfz;)V (yarn Entries.add(ItemStack))
