@@ -1,5 +1,7 @@
 # Next AI: after 4.1.1
 
+> **Superseded for the state of things by `next-ai-4.1.2.md`** (4.1.1 is pushed; the 4.1.2 patch is further along). The rules and the owner's words below still hold, except the branch: see the newer file.
+
 Read this first. The full house rules and history are in `docs/handoff/next-ai-4.0.0.md` (they still hold). The short version:
 
 - Answer the owner in English and quote their words exactly.

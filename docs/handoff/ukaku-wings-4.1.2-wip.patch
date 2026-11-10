@@ -162,6 +162,19 @@ index a36cd3b..cbb5b9d 100644
              case SHARD_BURST -> WingRig.Motion.BURST;
              case ONE_WING_SLASH -> WingRig.Motion.ONE_SLASH;
              case ONE_WING_RETURN -> WingRig.Motion.ONE_RETURN;
+diff --git a/src/main/java/com/hex/kagune/control/network/ControlNetwork.java b/src/main/java/com/hex/kagune/control/network/ControlNetwork.java
+index d66f077..1ad42f1 100644
+--- a/src/main/java/com/hex/kagune/control/network/ControlNetwork.java
++++ b/src/main/java/com/hex/kagune/control/network/ControlNetwork.java
+@@ -27,7 +27,7 @@ public final class ControlNetwork {
+      * abilities do out in the world (1.0.13); 35: War's M1, its blows and their effects (1.0.14); 36: the Black Sun out of the ground (1.0.15); 37: Peace playable, its blades' moves and cuts (1.0.16); 38: the transformations, nothing hurts him nor any ability while it comes (1.0.17). 39: Peace's six blades, their numbering and moves (1.0.18). 40: the marks blows leave instead of vanilla particles (1.0.19). 41: the fighting grammar: M1 flags, the heavy, the charge (1.0.20). 42: Peace's blades reach farther, its paths changed (1.0.21).
+      * 54: Eto (1.3.0): her state and surgery, her talk choices, the one-eye grant in the kakugan state. 58: genders (1.3.9). 59: pregnancy, children (1.3.10).
+      */
+-    private static final String PROTOCOL = "110"; // 110 (4.1.1): the structure type hexkagune:dry_place (the registries differ); the hideout's structure set is a random spread.   109 (4.1.0): S2CUkakuFx UNLEASH (49, a player Ayato taught lifting both hands as the wings come out).   108 (4.0.9): EtoGesture SIT (appended; S2CEto may send its ordinal).   107 (4.0.3): the Crimson Hood item is gone (the registries differ); the outfits file is version 3.   106 (4.0.2): EtoGesture POSE, SLICK, SHRUG, TILT (appended; S2CEto may send their ordinals); S2CUkakuFx TILT (48, a player Noro taught tilting their head as the kagune comes out); the outfits' coat-tail bones (8, 9).   105 (4.0.0): S2CNpcWings carries an NPC's kakuja and its mend (Ayato's, Noro's); S2CCutscene AYATO_KAKUJA (4) and NORO (5); S2CGhoulNpc's identity carries a wild ghoul's rank and mask and Aogiri; S2CBikakuState is sent under an NPC's or a child's id (Noro's worms, a Bikaku parent's child's); the outfits and masks are items.   104 (3.7.3): S2CPotential (message 56), Potential Unlock's torn parts.   103 (3.6.3): S2CBikakuState carries the Bikaku mutations and Grand Devouring (and its cooldown).   102 (3.6.1): S2CBikakuState carries each worm's part of a move (held, caught, mark).   101 (3.6.0): S2CBikakuState carries the Bikaku form; C2SBikakuAction FORM.   100 (3.5.9): S2CBikakuState carries the worm's ways round blocks.   99 (3.5.8): S2CBikakuState carries the bite's and the move's reach and a wind-up; C2SBikakuAction KEY_UP, ATTACK, ATTACK_UP.   98 (3.5.7): S2CBikakuState carries a target for each kakuja tentacle (6), when Undying Abomination began, each tentacle's own bites; BikakuMove JAWS, HUNGER, CATACLYSM, UNDYING (appended).   97 (3.5.4): S2CBikakuState carries the Bikaku kakuja.   96 (3.5.3): S2CBikakuState carries when Monstrous Regeneration began.   95 (3.5.0): C2SBikakuAction (message 55), S2CBikakuState carries the worm's move, its point, targets and catch.   94 (3.4.9): KagunePath BIKAKU (appended; S2CPathState may send its ordinal), S2CBikakuState (message 54), the Bikaku path's worm.   93 (3.3.6): EtoGesture JEALOUS (appended; S2CEto may send its ordinal).   92 (3.1.8): C2SArmAction.THIRD (4), Arm.Ability SWING/FAULT/GUARD (S2CArmSwing codes 40-42; a SWING's bound packs its latch).   91 (3.1.6): S2CHurl (message 53), C2SUkakuAction HURL (11), Rinkaku's Rubble Hurl.   90 (3.1.5): S2CImpale (message 52), C2SUkakuAction IMPALE (10), Rinkaku's Impale.   89 (3.1.2): C2SArmAction.FOLD (3), dedicated briefcase key for every quinque. 88 (3.0.6): C2SArmAction (message 50) and S2CArmSwing (51), a player's kagune-made weapon.   87 (3.0.0): CcgAgent carries ARM, ARM_AT, ARM_TARGET (the higher ranks' kagune-made weapons), its SWING may send ArmRules codes (16 up: a blow of its string; 32 up: one of its moves).   86 (2.4.8-2.4.9): S2CUkakuFx CRACK (a player Ken taught cracks a finger), S2CEto may send STOKE, SEASON, TASTE and SERVE (the spouse cooking and handing food over).   85 (2.4.5): S2CThyDeath (message 49), C2SUkakuAction THY_DEATH.   84 (2.3.0): S2CChild carries its mother's size (a grown daughter her height).   83 (2.2.4): S2CEto carries the kiss's mood (MoodKiss).  82 (2.1.9): CcgAgent and GhoulNpc carry AFRAID (trembling before Peace or War).  81 (2.1.7): C2SUkakuAction REAPER_DASH (Ukaku's final kakuja dashes).  80 (2.0.49): CcgAgent FLIP may carry SOARING (the Reaper's soar).  79 (2.0.48): S2CUkakuFx DAWN_RING (the Reaper's volley).  78 (2.0.42): S2CRinkakuBlock, C2SUkakuAction BLOCK.  77 (2.0.33): CcgAgent SWING can send the Reaper's GROUND, S2CUkakuFx REAPER_MARK / REAPER_TENDRIL.  76 (2.0.25): Dawn aim and lightning FX.  75 (2.0.23): CcgAgent SWING can send the Reaper kick.  74 (2.0.22): CcgAgent LOOK can send Dawn's appended quinque ordinal.  73 (2.0.3): ChildStage ADULT (S2CChild may send its ordinal 4); 72 (1.3.68): S2CGhoulNpc carries its eyes (a wild ghoul prowling at night); 71 (1.3.62): S2CKingFx marks a hard clash's GROUND; 70 (1.3.57): S2CChild carries its talk cue; 69 (1.3.52): S2CNpcSay carries its bubble's life; 68 (1.3.43): S2CChild's genome carries the kagune (nine parts), children send S2CGhoulNpc; 61 (1.3.19): S2CNpcWings; 62 (1.3.20): S2CChild's ride and moment; 63 (1.3.21): HOME, hand, tuck, feed; 64 (1.3.29): S2CNpcApproach, ANSWER; 65 (1.3.29): S2CQuests carries the romance cards; 66 (1.3.30): S2CNpcSay; 67 (1.3.36): S2CGhoulNpc carries the arm blade (identity bit 36, its cut in move)
++    private static final String PROTOCOL = "111"; // 111 (4.1.2): ComboStyle UKAKU_WINGS and UKAKU_LEFT_WING after UKAKU_FIRE (S2CControlState sends its ordinal), StrikePattern WING_SLAP to TWIN_SLAM; an Ukaku's wing guard uses S2CRinkakuBlock.   110 (4.1.1): the structure type hexkagune:dry_place (the registries differ); the hideout's structure set is a random spread.   109 (4.1.0): S2CUkakuFx UNLEASH (49, a player Ayato taught lifting both hands as the wings come out).   108 (4.0.9): EtoGesture SIT (appended; S2CEto may send its ordinal).   107 (4.0.3): the Crimson Hood item is gone (the registries differ); the outfits file is version 3.   106 (4.0.2): EtoGesture POSE, SLICK, SHRUG, TILT (appended; S2CEto may send their ordinals); S2CUkakuFx TILT (48, a player Noro taught tilting their head as the kagune comes out); the outfits' coat-tail bones (8, 9).   105 (4.0.0): S2CNpcWings carries an NPC's kakuja and its mend (Ayato's, Noro's); S2CCutscene AYATO_KAKUJA (4) and NORO (5); S2CGhoulNpc's identity carries a wild ghoul's rank and mask and Aogiri; S2CBikakuState is sent under an NPC's or a child's id (Noro's worms, a Bikaku parent's child's); the outfits and masks are items.   104 (3.7.3): S2CPotential (message 56), Potential Unlock's torn parts.   103 (3.6.3): S2CBikakuState carries the Bikaku mutations and Grand Devouring (and its cooldown).   102 (3.6.1): S2CBikakuState carries each worm's part of a move (held, caught, mark).   101 (3.6.0): S2CBikakuState carries the Bikaku form; C2SBikakuAction FORM.   100 (3.5.9): S2CBikakuState carries the worm's ways round blocks.   99 (3.5.8): S2CBikakuState carries the bite's and the move's reach and a wind-up; C2SBikakuAction KEY_UP, ATTACK, ATTACK_UP.   98 (3.5.7): S2CBikakuState carries a target for each kakuja tentacle (6), when Undying Abomination began, each tentacle's own bites; BikakuMove JAWS, HUNGER, CATACLYSM, UNDYING (appended).   97 (3.5.4): S2CBikakuState carries the Bikaku kakuja.   96 (3.5.3): S2CBikakuState carries when Monstrous Regeneration began.   95 (3.5.0): C2SBikakuAction (message 55), S2CBikakuState carries the worm's move, its point, targets and catch.   94 (3.4.9): KagunePath BIKAKU (appended; S2CPathState may send its ordinal), S2CBikakuState (message 54), the Bikaku path's worm.   93 (3.3.6): EtoGesture JEALOUS (appended; S2CEto may send its ordinal).   92 (3.1.8): C2SArmAction.THIRD (4), Arm.Ability SWING/FAULT/GUARD (S2CArmSwing codes 40-42; a SWING's bound packs its latch).   91 (3.1.6): S2CHurl (message 53), C2SUkakuAction HURL (11), Rinkaku's Rubble Hurl.   90 (3.1.5): S2CImpale (message 52), C2SUkakuAction IMPALE (10), Rinkaku's Impale.   89 (3.1.2): C2SArmAction.FOLD (3), dedicated briefcase key for every quinque. 88 (3.0.6): C2SArmAction (message 50) and S2CArmSwing (51), a player's kagune-made weapon.   87 (3.0.0): CcgAgent carries ARM, ARM_AT, ARM_TARGET (the higher ranks' kagune-made weapons), its SWING may send ArmRules codes (16 up: a blow of its string; 32 up: one of its moves).   86 (2.4.8-2.4.9): S2CUkakuFx CRACK (a player Ken taught cracks a finger), S2CEto may send STOKE, SEASON, TASTE and SERVE (the spouse cooking and handing food over).   85 (2.4.5): S2CThyDeath (message 49), C2SUkakuAction THY_DEATH.   84 (2.3.0): S2CChild carries its mother's size (a grown daughter her height).   83 (2.2.4): S2CEto carries the kiss's mood (MoodKiss).  82 (2.1.9): CcgAgent and GhoulNpc carry AFRAID (trembling before Peace or War).  81 (2.1.7): C2SUkakuAction REAPER_DASH (Ukaku's final kakuja dashes).  80 (2.0.49): CcgAgent FLIP may carry SOARING (the Reaper's soar).  79 (2.0.48): S2CUkakuFx DAWN_RING (the Reaper's volley).  78 (2.0.42): S2CRinkakuBlock, C2SUkakuAction BLOCK.  77 (2.0.33): CcgAgent SWING can send the Reaper's GROUND, S2CUkakuFx REAPER_MARK / REAPER_TENDRIL.  76 (2.0.25): Dawn aim and lightning FX.  75 (2.0.23): CcgAgent SWING can send the Reaper kick.  74 (2.0.22): CcgAgent LOOK can send Dawn's appended quinque ordinal.  73 (2.0.3): ChildStage ADULT (S2CChild may send its ordinal 4); 72 (1.3.68): S2CGhoulNpc carries its eyes (a wild ghoul prowling at night); 71 (1.3.62): S2CKingFx marks a hard clash's GROUND; 70 (1.3.57): S2CChild carries its talk cue; 69 (1.3.52): S2CNpcSay carries its bubble's life; 68 (1.3.43): S2CChild's genome carries the kagune (nine parts), children send S2CGhoulNpc; 61 (1.3.19): S2CNpcWings; 62 (1.3.20): S2CChild's ride and moment; 63 (1.3.21): HOME, hand, tuck, feed; 64 (1.3.29): S2CNpcApproach, ANSWER; 65 (1.3.29): S2CQuests carries the romance cards; 66 (1.3.30): S2CNpcSay; 67 (1.3.36): S2CGhoulNpc carries the arm blade (identity bit 36, its cut in move)
+     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
+         KaguneMod.id("control"), () -> PROTOCOL, PROTOCOL::equals, PROTOCOL::equals);
+     private static boolean initialized;
 diff --git a/src/main/java/com/hex/kagune/control/server/KaguneCombat.java b/src/main/java/com/hex/kagune/control/server/KaguneCombat.java
 index 32303f8..baa0dc8 100644
 --- a/src/main/java/com/hex/kagune/control/server/KaguneCombat.java
@@ -329,7 +342,7 @@ index d90d504..db84b3f 100644
  
      /** {@link #style(int, WingForm, boolean, boolean)} with the crystal mode off. */
 diff --git a/src/main/java/com/hex/kagune/control/ukaku/WingRig.java b/src/main/java/com/hex/kagune/control/ukaku/WingRig.java
-index 33f7777..6ea0822 100644
+index 33f7777..a3e2e60 100644
 --- a/src/main/java/com/hex/kagune/control/ukaku/WingRig.java
 +++ b/src/main/java/com/hex/kagune/control/ukaku/WingRig.java
 @@ -40,7 +40,20 @@ public final class WingRig {
@@ -354,16 +367,18 @@ index 33f7777..6ea0822 100644
      }
  
      /**
-@@ -164,6 +177,37 @@ public final class WingRig {
+@@ -164,6 +177,39 @@ public final class WingRig {
          return new WingAngles(sweep, roll);
      }
  
 +    /** 4.1.2: the guard's wings, swung forward round him till they meet in front (degrees). */
 +    static final float GUARD_SWEEP = -112.0F;
 +    static final float GUARD_ROLL = 14.0F;
++    /** 4.1.2: how much longer the guarding wings grow, fully closed (a share of their length). */
++    public static final float GUARD_GROWTH = 0.3F;
 +
 +    /** 4.1.2: which wing strikes in a one-wing slam (+1 right, -1 left; 0 neither). */
-+    static int striking(Motion motion) {
++    public static int striking(Motion motion) {
 +        return switch (motion) {
 +            case SLAP_RIGHT, SWING_RIGHT, RISE_RIGHT, SLAM_RIGHT -> 1;
 +            case SLAP_LEFT, SWING_LEFT, RISE_LEFT, SLAM_LEFT -> -1;
@@ -392,7 +407,7 @@ index 33f7777..6ea0822 100644
      /** Twin-wing angles for one side (+1 right, -1 left). */
      static WingAngles twinAngles(Input in, int side) {
          float sweep = REST_SWEEP;
-@@ -222,6 +266,28 @@ public final class WingRig {
+@@ -222,6 +268,28 @@ public final class WingRig {
                  sweep = lerp(lerp(lerp(REST_SWEEP, 40.0F, ph[0]), -15.0F, ph[1]), REST_SWEEP, ph[2]);
                  roll = lerp(lerp(lerp(0.0F, 15.0F, ph[0]), -8.0F, ph[1]), 0.0F, ph[2]);
              }
@@ -421,7 +436,18 @@ index 33f7777..6ea0822 100644
              default -> {
              }
          }
-@@ -314,7 +380,8 @@ public final class WingRig {
+@@ -295,6 +363,10 @@ public final class WingRig {
+             return out;
+         }
+         float length = UkakuRules.wingLength(mastery, form);
++        if (in.motion() == Motion.GUARD) {
++            // 4.1.2 (the owner: "wings grow and protect the player"): the guarding wings grow as they close.
++            length *= 1.0F + GUARD_GROWTH * smooth(in.progress());
++        }
+         float[] ph = phases(in.progress(), in.impact());
+         float strike = ph[0] * (1.0F - ph[2]);
+         float kick = kick(in);
+@@ -314,7 +386,8 @@ public final class WingRig {
                  float c = smooth(coil);
                  angles = new WingAngles(lerp(angles.sweep(), VORTEX_SWEEP, c), lerp(angles.roll(), VORTEX_ROLL, c));
              }
@@ -431,11 +457,47 @@ index 33f7777..6ea0822 100644
              // A single wing (one small wing, Rabbit Guise) answers both hands.
              float aim = form.rightWing() ? (side > 0 ? in.aimRight() : in.aimLeft()) : Math.max(in.aimRight(), in.aimLeft());
              float shot = form.rightWing() ? (side > 0 ? in.kickRight() : in.kickLeft()) : Math.max(in.kickRight(), in.kickLeft());
+diff --git a/src/test/java/com/hex/kagune/control/BikakuWormTests.java b/src/test/java/com/hex/kagune/control/BikakuWormTests.java
+index ad53f8d..7643ad9 100644
+--- a/src/test/java/com/hex/kagune/control/BikakuWormTests.java
++++ b/src/test/java/com/hex/kagune/control/BikakuWormTests.java
+@@ -1841,7 +1841,7 @@ public final class BikakuWormTests {
+             String moves = read("src/main/java/com/hex/kagune/control/server/BikakuMoves.java");
+             check(moves.contains("move.cost() > 0.0F && !KaguneServerController.useEnergy(player, move.cost(), true)"), "a free regeneration is never refused for an empty bar");
+             String network = read("src/main/java/com/hex/kagune/control/network/ControlNetwork.java");
+-            check(network.contains("registerMessage(56, S2CPotential.class") && network.contains("PROTOCOL = \"110\""), "every client is told (message 56, protocol 110)");
++            check(network.contains("registerMessage(56, S2CPotential.class") && network.contains("PROTOCOL = \"111\""), "every client is told (message 56, protocol 111)");
+             String client = read("src/main/java/com/hex/kagune/control/client/PotentialClient.java");
+             check(client.contains("model.f_102811_, model.f_103375_") && client.contains("model.f_102808_, model.f_102809_") && client.contains("event.setCanceled(true)"),
+                 "a part off isn't drawn on him, nor its hand in first person");
 diff --git a/src/test/java/com/hex/kagune/control/UkakuTests.java b/src/test/java/com/hex/kagune/control/UkakuTests.java
-index 043d078..b372ad0 100644
+index 043d078..9c2ae03 100644
 --- a/src/test/java/com/hex/kagune/control/UkakuTests.java
 +++ b/src/test/java/com/hex/kagune/control/UkakuTests.java
-@@ -432,16 +432,19 @@ public final class UkakuTests {
+@@ -39,6 +39,14 @@ public final class UkakuTests {
+         return total;
+     }
+ 
++    private static String read(String path) {
++        try {
++            return java.nio.file.Files.readString(java.nio.file.Path.of(path));
++        } catch (java.io.IOException e) {
++            throw new java.io.UncheckedIOException(e);
++        }
++    }
++
+     private static void check(boolean condition, String description) {
+         if (condition) {
+             passed++;
+@@ -56,6 +64,7 @@ public final class UkakuTests {
+         rules();
+         combos();
+         crystalMode();
++        wingSlams();
+         sweep();
+         spikes();
+         vortex();
+@@ -432,16 +441,19 @@ public final class UkakuTests {
      }
  
      private static final ComboStyle[] UKAKU_STYLES = {ComboStyle.UKAKU_KICKS, ComboStyle.UKAKU_CRYSTAL_KICKS, ComboStyle.UKAKU_BLADES,
@@ -460,7 +522,7 @@ index 043d078..b372ad0 100644
          // The chain: five shots, right wing and hand, then left, alternating.
          check(ComboStyle.UKAKU_FIRE.stageCount() == UkakuRules.CHAIN_SHOTS && UkakuRules.CHAIN_SHOTS == 5, "five shots to a chain");
          for (int index = 0; index < 5; index++) {
-@@ -575,11 +578,11 @@ public final class UkakuTests {
+@@ -575,11 +587,11 @@ public final class UkakuTests {
      private static void crystalMode() {
          check(UkakuRules.style(UkakuRules.CRYSTAL_MASTERY, WingForm.TWIN, false, true) == ComboStyle.UKAKU_CRYSTAL
              && UkakuRules.style(1000, WingForm.RABBIT, true, true) == ComboStyle.UKAKU_CRYSTAL, "in the crystal mode the M1 is the crystal spikes");
@@ -474,3 +536,137 @@ index 043d078..b372ad0 100644
          check(UkakuRules.style(500, WingForm.TWIN, false) == UkakuRules.style(500, WingForm.TWIN, false, false), "the old call is the fire's");
          check(ComboStyle.UKAKU_CRYSTAL.stageCount() == UkakuRules.CHAIN_SHOTS, "five spikes to a chain, like the fire");
          for (int index = 0; index < 5; index++) {
+@@ -636,6 +648,133 @@ public final class UkakuTests {
+     }
+ 
+     /** The crystallization climbs the wing from the shoulder blade to the tip: crystal below the front, fire above it. */
++    /**
++     * 4.1.2 (the owner: "Ukaku kagune base firery form no longer fires projectiles, M1s are a series of different wing slams combos ...
++     * (These can now clash like Rinkaku) and has lightly less range than Rinkaku. Right click (M2) is now a protection like Rinkaku has").
++     */
++    private static void wingSlams() {
++        // The twin string: right and left in turn, then both.
++        ComboStyle twin = ComboStyle.UKAKU_WINGS;
++        check(twin.stageCount() == 7, "seven blows to the twin wings' string");
++        for (int index = 0; index < 6; index++) {
++            ComboStage blow = twin.stage(index);
++            boolean right = index % 2 == 0;
++            check(blow.limbs().length == 1 && blow.usesLimb(right ? 0 : 1) && blow.name().startsWith(right ? "Right" : "Left"),
++                "blow " + index + " is the " + (right ? "right" : "left") + " wing's: " + blow.name());
++        }
++        ComboStage last = twin.stage(6);
++        check(last.pattern() == StrikePattern.TWIN_SLAM && last.usesLimb(0) && last.usesLimb(1), "the string ends with both wings slammed down");
++        java.util.Set<StrikePattern> kinds = java.util.EnumSet.noneOf(StrikePattern.class);
++        for (int index = 0; index < twin.stageCount(); index++) {
++            kinds.add(twin.stage(index).pattern());
++            check(twin.stage(index).damageMul() >= twin.stage(Math.max(0, index - 1)).damageMul() - 0.3F, "the string grows heavier: " + index);
++        }
++        check(kinds.containsAll(java.util.List.of(StrikePattern.WING_SLAP, StrikePattern.WING_SWING, StrikePattern.WING_RISE, StrikePattern.WING_SLAM,
++            StrikePattern.TWIN_SLAM)), "slaps, a swing, a rising wing, overhead slams and the twin slam");
++        check(last.damageMul() > twin.stage(0).damageMul() * 1.5F, "the twin slam is the heaviest by far");
++        // Rabbit Guise: only the left wing.
++        ComboStyle left = ComboStyle.UKAKU_LEFT_WING;
++        check(left.stageCount() == 4, "four blows to the one wing's string");
++        for (int index = 0; index < left.stageCount(); index++) {
++            ComboStage blow = left.stage(index);
++            check(blow.limbs().length == 1 && blow.usesLimb(1) && !blow.usesLimb(0) && blow.name().startsWith("Left"), "the one wing is the left: " + blow.name());
++        }
++        // Blows, not shots: every one can clash.
++        for (ComboStyle style : new ComboStyle[] {twin, left}) {
++            check(UkakuRules.slams(style) && style.ukaku() && !style.ukakuShots() && !style.ukakuEnderSet() && !style.kakujaShots(),
++                style + " is a string of blows, with no enders");
++            for (int index = 0; index < style.stageCount(); index++) {
++                StrikePattern pattern = style.stage(index).pattern();
++                check(!pattern.shot() && !pattern.flame() && !pattern.crystal() && !pattern.finalKakuja() && !pattern.ender(),
++                    pattern + " is a blow (it clashes), not a shot");
++                check(style.stage(index).shape() == HitShape.SWEEP && style.stage(index).shapeParam() >= 60.0F, pattern + " sweeps a real arc");
++            }
++        }
++        check(!UkakuRules.slams(ComboStyle.UKAKU_FIRE) && !UkakuRules.slams(ComboStyle.UKAKU_CRYSTAL) && !UkakuRules.slams(ComboStyle.UKAKU_ONE_WING)
++            && !UkakuRules.slams(ComboStyle.UKAKU_KAKUJA), "only the fire's wings slam");
++        check(UkakuRules.SLAM_REACH >= 0.75 && UkakuRules.SLAM_REACH < 1.0, "a little less reach than Rinkaku");
++        // The guard: the fire's wings, twin or Rabbit Guise's one.
++        check(UkakuRules.wingGuard(0, WingForm.TWIN, false) && UkakuRules.wingGuard(50, WingForm.RABBIT, false)
++            && UkakuRules.wingGuard(300, WingForm.TWIN, false) && UkakuRules.wingGuard(1000, WingForm.TWIN, false)
++            && UkakuRules.wingGuard(1000, WingForm.RABBIT, false), "the fire's wings guard (twin, and Rabbit Guise's one)");
++        check(!UkakuRules.wingGuard(1000, WingForm.TWIN, true) && !UkakuRules.wingGuard(UkakuRules.CRYSTAL_MASTERY, WingForm.RABBIT, true),
++            "the crystal mode keeps its own right click");
++        check(UkakuRules.wingGuard(UkakuRules.CRYSTAL_MASTERY - 1, WingForm.TWIN, true), "a crystal mode that doesn't take leaves the guard");
++        check(!UkakuRules.wingGuard(1000, WingForm.ONE_WING, false), "the One-Winged Kagune doesn't guard");
++        for (WingForm form : WingForm.values()) {
++            if (form.kakuja()) {
++                check(!UkakuRules.wingGuard(1000, form, false), "the kakuja doesn't guard with wings: " + form);
++            }
++        }
++        // The crystal mode is as it was: five spikes, shots, with its enders.
++        check(UkakuRules.style(1000, WingForm.TWIN, false, true) == ComboStyle.UKAKU_CRYSTAL && ComboStyle.UKAKU_CRYSTAL.ukakuShots()
++            && ComboStyle.UKAKU_CRYSTAL.stage(0).pattern().shot() && ComboStyle.UKAKU_CRYSTAL.ukakuEnders() == ComboStyle.UKAKU_CRYSTAL_ENDERS,
++            "the crystal mode still shoots its spikes and keeps its enders");
++        // The rig. The guard: both wings swung forward (+z) round him, and grown.
++        float[] rest = extent(WingRig.build(input(WingForm.TWIN, 300, 0.0F, WingRig.Motion.NONE, 0.0F, 0.0F)));
++        float[] guard = extent(WingRig.build(input(WingForm.TWIN, 300, 0.0F, WingRig.Motion.GUARD, 1.0F, 0.0F)));
++        float[] half = extent(WingRig.build(input(WingForm.TWIN, 300, 0.0F, WingRig.Motion.GUARD, 0.5F, 0.0F)));
++        check(guard[5] > rest[5] + 0.8F && guard[5] > 0.8F, "the guarding wings come round in front of him (" + rest[5] + " -> " + guard[5] + ")");
++        check(half[5] > rest[5] && half[5] < guard[5], "the guard closes by degrees");
++        float[] guardRight = extent(WingRig.build(input(WingForm.TWIN, 300, 0.0F, WingRig.Motion.GUARD, 1.0F, 0.0F)), 1);
++        float[] guardLeft = extent(WingRig.build(input(WingForm.TWIN, 300, 0.0F, WingRig.Motion.GUARD, 1.0F, 0.0F)), -1);
++        check(guardRight[5] > 0.8F && guardLeft[5] > 0.8F, "both wings guard");
++        check(WingRig.GUARD_GROWTH > 0.1F && WingRig.GUARD_GROWTH <= 0.5F, "the guarding wings grow");
++        float[] oneGuard = extent(WingRig.build(input(WingForm.RABBIT, 50, 0.0F, WingRig.Motion.GUARD, 1.0F, 0.0F)));
++        float[] oneRest = extent(WingRig.build(input(WingForm.RABBIT, 50, 0.0F, WingRig.Motion.NONE, 0.0F, 0.0F)));
++        check(oneGuard[5] > oneRest[5], "Rabbit Guise's one wing guards too");
++        // Each slam is its own side's: the striking wing goes in front, the mirror of the other side's.
++        WingRig.Motion[][] pairs = {{WingRig.Motion.SLAP_RIGHT, WingRig.Motion.SLAP_LEFT}, {WingRig.Motion.SWING_RIGHT, WingRig.Motion.SWING_LEFT},
++            {WingRig.Motion.RISE_RIGHT, WingRig.Motion.RISE_LEFT}, {WingRig.Motion.SLAM_RIGHT, WingRig.Motion.SLAM_LEFT}};
++        for (WingRig.Motion[] pair : pairs) {
++            check(WingRig.striking(pair[0]) == 1 && WingRig.striking(pair[1]) == -1, pair[0] + " is the right wing's, " + pair[1] + " the left's");
++            float bestRight = -Float.MAX_VALUE;
++            float bestLeft = -Float.MAX_VALUE;
++            float idleRight = -Float.MAX_VALUE;
++            float idleLeft = -Float.MAX_VALUE;
++            for (float progress = 0.0F; progress <= 1.0F; progress += 0.05F) {
++                List<WingRig.Quad> r = WingRig.build(input(WingForm.TWIN, 300, 1.0F, pair[0], progress, 0.0F));
++                List<WingRig.Quad> l = WingRig.build(input(WingForm.TWIN, 300, 1.0F, pair[1], progress, 0.0F));
++                bestRight = Math.max(bestRight, extent(r, 1)[5]);
++                idleLeft = Math.max(idleLeft, extent(r, -1)[5]);
++                bestLeft = Math.max(bestLeft, extent(l, -1)[5]);
++                idleRight = Math.max(idleRight, extent(l, 1)[5]);
++            }
++            if (pair[0] == WingRig.Motion.SWING_RIGHT) {
++                // The wide swing carries its wing right across the front, past the middle, to the other side.
++                check(bestRight > 0.6F && idleLeft > 0.6F && idleRight > 0.6F, "the wide swing crosses the whole front (" + bestRight + ", " + idleLeft + ")");
++            } else {
++                check(bestRight > 0.6F && bestRight > idleLeft + 0.4F, pair[0] + " brings the right wing in front (" + bestRight + ", the left " + idleLeft + ")");
++                check(bestLeft > 0.6F && bestLeft > idleRight + 0.4F, pair[1] + " brings the left wing in front (" + bestLeft + ", the right " + idleRight + ")");
++            }
++            check(Math.abs(idleRight - idleLeft) < 0.05F, pair[0] + " and " + pair[1] + " mirror each other on the far side too");
++            check(Math.abs(bestRight - bestLeft) < 0.05F, pair[0] + " and " + pair[1] + " mirror each other (" + bestRight + ", " + bestLeft + ")");
++        }
++        check(WingRig.striking(WingRig.Motion.TWIN_SLAM) == 0 && WingRig.striking(WingRig.Motion.GUARD) == 0 && WingRig.striking(WingRig.Motion.SLASH_RIGHT) == 0,
++            "the twin slam and the guard are both wings'");
++        float twinFront = -Float.MAX_VALUE;
++        float twinHigh = -Float.MAX_VALUE;
++        for (float progress = 0.0F; progress <= 1.0F; progress += 0.05F) {
++            List<WingRig.Quad> both = WingRig.build(input(WingForm.TWIN, 300, 1.0F, WingRig.Motion.TWIN_SLAM, progress, 0.0F));
++            twinFront = Math.max(twinFront, Math.min(extent(both, 1)[5], extent(both, -1)[5]));
++            twinHigh = Math.max(twinHigh, extent(both)[4]);
++        }
++        check(twinFront > 0.6F && twinHigh > rest[4], "the twin slam raises both wings, then brings both down in front");
++        // The wiring.
++        String input = read("src/main/java/com/hex/kagune/control/client/UkakuInput.java");
++        check(input.contains("UkakuRules.wingGuard(view.mastery(), wings.form(), wings.crystalMode())"), "the fire's right click is left to the guard");
++        String block = read("src/main/java/com/hex/kagune/control/server/RinkakuBlockServer.java");
++        check(block.contains("static boolean ukakuGuard(ServerPlayer player)") && block.contains("UkakuRules.wingGuard(KaguneProfile.mastery(player)")
++            && block.contains("UkakuServer.crystalMode(player)") && block.contains("wings.mode == TendrilMode.IDLE"), "the server holds the wing guard by Rinkaku's rules");
++        String blockClient = read("src/main/java/com/hex/kagune/control/client/RinkakuBlockClient.java");
++        check(blockClient.contains("PathClient.get(player) == KagunePath.UKAKU") && blockClient.contains("UkakuRules.wingGuard("), "the client asks for it");
++        String client = read("src/main/java/com/hex/kagune/control/client/UkakuClient.java");
++        check(client.contains("WingRig.Motion.GUARD") && client.contains("RinkakuBlockClient.amount(player, time)"), "the wings close while the guard is up");
++        String combat = read("src/main/java/com/hex/kagune/control/server/KaguneCombat.java");
++        check(combat.contains("UkakuRules.slams(style)") && combat.contains("KaguneProfile.attackRange(player) * UkakuRules.SLAM_REACH"),
++            "the slams reach a share of Rinkaku's range");
++    }
++
+     private static void sweep() {
+         for (boolean reEra : new boolean[] {false, true}) {
+             // A full-size wing (4.3 blocks): distances below are in wing lengths.
