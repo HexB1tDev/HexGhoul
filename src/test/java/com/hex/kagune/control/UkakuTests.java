@@ -65,6 +65,8 @@ public final class UkakuTests {
         combos();
         crystalMode();
         wingSlams();
+        slamBeats();
+        slamBody();
         sweep();
         spikes();
         vortex();
@@ -723,7 +725,8 @@ public final class UkakuTests {
         float[] oneGuard = extent(WingRig.build(input(WingForm.RABBIT, 50, 0.0F, WingRig.Motion.GUARD, 1.0F, 0.0F)));
         float[] oneRest = extent(WingRig.build(input(WingForm.RABBIT, 50, 0.0F, WingRig.Motion.NONE, 0.0F, 0.0F)));
         check(oneGuard[5] > oneRest[5], "Rabbit Guise's one wing guards too");
-        // Each slam is its own side's: the striking wing goes in front, the mirror of the other side's.
+        // Each slam is its own side's: the striking wing goes in front, the mirror of the other side's. 4.1.10: each wing is measured alone
+        // (the other not drawn), not by the half of space it is in: a slap now follows through across the middle, as a slap does.
         WingRig.Motion[][] pairs = {{WingRig.Motion.SLAP_RIGHT, WingRig.Motion.SLAP_LEFT}, {WingRig.Motion.SWING_RIGHT, WingRig.Motion.SWING_LEFT},
             {WingRig.Motion.RISE_RIGHT, WingRig.Motion.RISE_LEFT}, {WingRig.Motion.SLAM_RIGHT, WingRig.Motion.SLAM_LEFT}};
         for (WingRig.Motion[] pair : pairs) {
@@ -732,20 +735,23 @@ public final class UkakuTests {
             float bestLeft = -Float.MAX_VALUE;
             float idleRight = -Float.MAX_VALUE;
             float idleLeft = -Float.MAX_VALUE;
-            for (float progress = 0.0F; progress <= 1.0F; progress += 0.05F) {
-                List<WingRig.Quad> r = WingRig.build(input(WingForm.TWIN, 300, 1.0F, pair[0], progress, 0.0F));
-                List<WingRig.Quad> l = WingRig.build(input(WingForm.TWIN, 300, 1.0F, pair[1], progress, 0.0F));
-                bestRight = Math.max(bestRight, extent(r, 1)[5]);
-                idleLeft = Math.max(idleLeft, extent(r, -1)[5]);
-                bestLeft = Math.max(bestLeft, extent(l, -1)[5]);
-                idleRight = Math.max(idleRight, extent(l, 1)[5]);
+            float acrossRight = Float.MAX_VALUE;
+            float acrossLeft = -Float.MAX_VALUE;
+            for (float progress = 0.0F; progress <= 1.0F; progress += 0.02F) {
+                float[] r = extent(WingRig.build(alone(pair[0], progress, 1)));
+                float[] l = extent(WingRig.build(alone(pair[1], progress, -1)));
+                bestRight = Math.max(bestRight, r[5]);
+                bestLeft = Math.max(bestLeft, l[5]);
+                acrossRight = Math.min(acrossRight, r[0]);
+                acrossLeft = Math.max(acrossLeft, l[3]);
+                idleLeft = Math.max(idleLeft, extent(WingRig.build(alone(pair[0], progress, -1)))[5]);
+                idleRight = Math.max(idleRight, extent(WingRig.build(alone(pair[1], progress, 1)))[5]);
             }
-            if (pair[0] == WingRig.Motion.SWING_RIGHT) {
-                // The wide swing carries its wing right across the front, past the middle, to the other side.
-                check(bestRight > 0.6F && idleLeft > 0.6F && idleRight > 0.6F, "the wide swing crosses the whole front (" + bestRight + ", " + idleLeft + ")");
-            } else {
-                check(bestRight > 0.6F && bestRight > idleLeft + 0.4F, pair[0] + " brings the right wing in front (" + bestRight + ", the left " + idleLeft + ")");
-                check(bestLeft > 0.6F && bestLeft > idleRight + 0.4F, pair[1] + " brings the left wing in front (" + bestLeft + ", the right " + idleRight + ")");
+            check(bestRight > 0.6F && bestRight > idleLeft + 0.4F, pair[0] + " brings the right wing in front (" + bestRight + ", the left " + idleLeft + ")");
+            check(bestLeft > 0.6F && bestLeft > idleRight + 0.4F, pair[1] + " brings the left wing in front (" + bestLeft + ", the right " + idleRight + ")");
+            if (pair[0] == WingRig.Motion.SWING_RIGHT || pair[0] == WingRig.Motion.SLAP_RIGHT) {
+                // The wide swing, and now the slap's follow-through, carry the wing across the middle to the other side.
+                check(acrossRight < -0.6F && acrossLeft > 0.6F, pair[0] + " follows through across the front (" + acrossRight + ", " + acrossLeft + ")");
             }
             check(Math.abs(idleRight - idleLeft) < 0.05F, pair[0] + " and " + pair[1] + " mirror each other on the far side too");
             check(Math.abs(bestRight - bestLeft) < 0.05F, pair[0] + " and " + pair[1] + " mirror each other (" + bestRight + ", " + bestLeft + ")");
@@ -1160,6 +1166,70 @@ public final class UkakuTests {
         return total;
     }
 
+    /**
+     * 4.1.10: the wing slams' body (Keys.blow), at the impacts the string really has (ComboStyle.UKAKU_WINGS): rest at both ends, never a
+     * snap between frames (the same bound as every Ukaku pose), inside the body layer's limits, mirrored; it speeds up into its hit, lands a
+     * beat before the wing (UkakuBody.BODY_LEAD) and carries on past it.
+     */
+    private static void slamBody() {
+        StrikePattern[] slams = {StrikePattern.WING_SLAP, StrikePattern.WING_SWING, StrikePattern.WING_RISE, StrikePattern.WING_SLAM, StrikePattern.TWIN_SLAM};
+        float[] impacts = {0.4F, 0.45F, 0.45F, 0.55F, 0.55F};
+        for (int i = 0; i < slams.length; i++) {
+            StrikePattern pattern = slams[i];
+            float impact = impacts[i];
+            boolean both = pattern == StrikePattern.TWIN_SLAM;
+            check(UkakuBody.slams(pattern) && UkakuBody.poses(pattern), pattern + ": a slam's body");
+            for (boolean right : new boolean[] {true, false}) {
+                float[] previous = UkakuBody.pose(pattern, right, both, 0.0F, impact).channels();
+                check(allZero(previous) && allZero(UkakuBody.pose(pattern, right, both, 1.0F, impact).channels()), pattern + ": starts and ends at rest");
+                boolean smooth = true;
+                boolean limits = true;
+                float worst = 0.0F;
+                for (int step = 1; step <= 400; step++) {
+                    UkakuBody.Pose pose = UkakuBody.pose(pattern, right, both, step / 400.0F, impact);
+                    float[] channels = pose.channels();
+                    for (int index = 0; index < channels.length; index++) {
+                        float change = Math.abs(channels[index] - previous[index]);
+                        worst = Math.max(worst, change);
+                        smooth &= change <= 0.05F;
+                    }
+                    limits &= Math.abs(pose.rightLegX) <= UkakuBody.MAX_LEG_X && Math.abs(pose.leftLegX) <= UkakuBody.MAX_LEG_X
+                        && Math.abs(pose.rightLegZ) <= UkakuBody.MAX_LEG_Z && Math.abs(pose.leftLegZ) <= UkakuBody.MAX_LEG_Z
+                        && Math.abs(pose.twist) <= 1.2F && Math.abs(pose.rightArmX) <= 3.0F && Math.abs(pose.leftArmX) <= 3.0F
+                        && Math.abs(pose.torsoX) <= 1.0F;
+                    previous = channels;
+                }
+                check(smooth, pattern + ": never snaps between frames (the most a channel moves in 1/400: " + worst + ")");
+                check(limits, pattern + ": inside the body layer's limits");
+            }
+            for (float p = 0.0F; p <= 1.0F; p += 0.05F) {
+                UkakuBody.Pose r = UkakuBody.pose(pattern, true, both, p, impact);
+                UkakuBody.Pose l = UkakuBody.pose(pattern, false, both, p, impact);
+                check(near(r.twist, -l.twist) && near(r.torsoX, l.torsoX) && near(r.rightArmX, l.leftArmX) && near(r.rightArmY, -l.leftArmY)
+                    && near(r.rightLegX, l.leftLegX), pattern + ": left mirrors right");
+            }
+            // The whole body (every channel at once): speeding up into its own impact (a beat before the wing's), still moving on past it.
+            float hit = impact - UkakuBody.BODY_LEAD;
+            float d = 0.005F;
+            float landing = moved(pattern, both, hit - d, hit, impact);
+            float early = moved(pattern, both, hit - 0.08F - d, hit - 0.08F, impact);
+            float after = moved(pattern, both, hit, hit + d, impact);
+            check(landing > early && after > 0.15F * landing, pattern + ": the body speeds up into the hit and carries on past it (" + early + ", "
+                + landing + ", " + after + ")");
+        }
+    }
+
+    /** 4.1.10: how far the whole body moves (every channel, together) from {@code a} to {@code b} of a strike. */
+    private static float moved(StrikePattern pattern, boolean both, float a, float b, float impact) {
+        float[] x = UkakuBody.pose(pattern, true, both, a, impact).channels();
+        float[] y = UkakuBody.pose(pattern, true, both, b, impact).channels();
+        double sum = 0.0;
+        for (int i = 0; i < x.length; i++) {
+            sum += (y[i] - x[i]) * (y[i] - x[i]);
+        }
+        return (float)Math.sqrt(sum);
+    }
+
     private static void body() {
         StrikePattern[] patterns = {StrikePattern.KICK, StrikePattern.WING_SLASH, StrikePattern.WING_CROSS, StrikePattern.SHARD_BURST,
             StrikePattern.ONE_WING_SLASH, StrikePattern.ONE_WING_RETURN, StrikePattern.BEHEADING, StrikePattern.FLAME_SHOT, StrikePattern.RABBIT_HOP,
@@ -1320,6 +1390,126 @@ public final class UkakuTests {
     }
 
     /** {minX, minY, minZ, maxX, maxY, maxZ} of the quads on one side of the body (x sign). */
+    /**
+     * 4.1.10 (the owner: "put all your focus into the combat rework, and kagune rework for the ukaku ... study complex fighting moves, and
+     * combos and make it look smooth and beautiful"): every slam has a chamber, a drive, an overshoot and a recoil. The drive lands at its
+     * fastest (4.1.2's slowed to a stop into the target, then held); it carries on past the impact and rebounds; the tip whips; the feathers
+     * tuck on the drive and flare on the hit; the other wing pulls back; nothing goes into the ground at any moment.
+     */
+    private static void slamBeats() {
+        WingRig.Motion[] slams = {WingRig.Motion.SLAP_RIGHT, WingRig.Motion.SWING_RIGHT, WingRig.Motion.RISE_RIGHT, WingRig.Motion.SLAM_RIGHT,
+            WingRig.Motion.TWIN_SLAM};
+        float[] impacts = {0.4F, 0.45F, 0.45F, 0.55F, 0.55F};
+        for (int m = 0; m < slams.length; m++) {
+            WingRig.Motion motion = slams[m];
+            float impact = impacts[m];
+            WingRig.Blow blow = WingRig.blow(motion);
+            float[] at = WingRig.beats(blow, impact);
+            check(at[0] > 0.0F && at[0] < at[1] && at[1] < at[2] && at[2] < at[3] && at[3] < at[4] && at[4] < 1.0F && Math.abs(at[2] - impact) < 1.0E-6F,
+                motion + ": chamber, load, impact, overshoot, recoil, in order, the impact on the server's tick");
+            WingRig.WingAngles start = WingRig.slam(motion, 0.0F, impact);
+            WingRig.WingAngles end = WingRig.slam(motion, 1.0F, impact);
+            check(Math.abs(start.sweep() - 22.0F) < 0.01F && Math.abs(start.roll()) < 0.01F && Math.abs(end.sweep() - 22.0F) < 0.01F
+                && Math.abs(end.roll()) < 0.01F, motion + ": from rest, back to rest");
+            check(close(WingRig.slam(motion, at[0], impact), blow.chamber()) && close(WingRig.slam(motion, impact, impact), blow.impact())
+                && close(WingRig.slam(motion, at[3], impact), blow.over()) && close(WingRig.slam(motion, at[4], impact), blow.recoil()),
+                motion + ": through each of its keys on its beat");
+            // Speed (degrees per share of the move), sampled finely: the fastest moment is the instant before the impact.
+            float dp = 0.0025F;
+            float fastest = 0.0F;
+            float fastestAt = -1.0F;
+            for (float p = dp; p <= 1.0F; p += dp) {
+                float v = speed(motion, p - dp, p, impact);
+                if (v > fastest) {
+                    fastest = v;
+                    fastestAt = p;
+                }
+            }
+            check(fastestAt > impact - 0.02F && fastestAt <= impact + dp, motion + ": fastest as it lands (at " + fastestAt + ", the impact " + impact + ")");
+            float landing = speed(motion, impact - dp, impact, impact);
+            float braking = speed(motion, impact - 0.06F - dp, impact - 0.06F, impact);
+            check(landing > 1.5F * braking, motion + ": still speeding up into the impact, never braking into it (" + landing + " vs " + braking + ")");
+            check(speed(motion, impact, impact + dp, impact) > 0.35F * landing, motion + ": carried on past the hit, not stopped dead on it ("
+                + speed(motion, impact, impact + dp, impact) / landing + " of its speed)");
+            // The overshoot goes beyond the impact, away from the chamber; the recoil comes back toward it.
+            float toImpact = dist(blow.impact(), blow.chamber());
+            check(dist(blow.over(), blow.chamber()) > toImpact + 5.0F && dist(blow.recoil(), blow.over()) > 4.0F
+                && dist(blow.recoil(), blow.impact()) < dist(blow.over(), blow.impact()), motion + ": overshoots, then rebounds toward the impact");
+            // The whip: the tip trails the root on the drive, then passes it after the hit.
+            WingRig.WingAngles root = WingRig.slam(motion, impact - 0.03F, impact);
+            float[] tip = WingRig.tip(motion, impact - 0.03F, impact);
+            check(dist(tip, blow.chamber()) < dist(new float[] {root.sweep(), root.roll()}, blow.chamber()) - 3.0F,
+                motion + ": the tip trails the root as it drives");
+            float past = -Float.MAX_VALUE;
+            for (float p = impact; p <= at[4]; p += 0.01F) {
+                WingRig.WingAngles r = WingRig.slam(motion, p, impact);
+                float[] tp = WingRig.tip(motion, p, impact);
+                past = Math.max(past, dist(tp, blow.chamber()) - dist(new float[] {r.sweep(), r.roll()}, blow.chamber()));
+            }
+            check(past > 2.0F, motion + ": the tip whips on past the root after the hit (" + past + ")");
+            float[] again = WingRig.tip(motion, 0.37F, impact);
+            float[] once = WingRig.tip(motion, 0.37F, impact);
+            check(again[0] == once[0] && again[1] == once[1], motion + ": the same frame from the same moment (no state)");
+            // The feathers: tucked on the drive, flared on the hit, flat at rest.
+            check(WingRig.slamFold(motion, (at[1] + at[2]) * 0.5F, impact) > 0.2F && WingRig.slamFold(motion, impact + 0.005F, impact) < -0.15F
+                && WingRig.slamFold(motion, 0.0F, impact) == 0.0F && WingRig.slamFold(motion, 1.0F, impact) == 0.0F,
+                motion + ": feathers tucked on the drive, thrown open on the hit");
+            // Never into the ground, at any moment, in any form that slams.
+            for (WingForm form : new WingForm[] {WingForm.TWIN, WingForm.RABBIT}) {
+                for (int mastery : new int[] {50, 300, 800}) {
+                    float lowest = Float.MAX_VALUE;
+                    for (float p = 0.0F; p <= 1.0F; p += 0.01F) {
+                        lowest = Math.min(lowest, extent(WingRig.build(input(form, mastery, 0.5F, motion, p, 0.0F)))[1]);
+                        lowest = Math.min(lowest, extent(WingRig.build(input(form, mastery, 0.5F, mirror(motion), p, 0.0F)))[1]);
+                    }
+                    check(lowest > -0.15F, motion + " (" + form + ", " + mastery + "): never into the ground (" + lowest + ")");
+                }
+            }
+        }
+        // The other wing pulls back as one drives, and is back by the end.
+        WingRig.Blow slap = WingRig.blow(WingRig.Motion.SLAP_RIGHT);
+        float[] slapAt = WingRig.beats(slap, 0.4F);
+        check(WingRig.counterPull(WingRig.Motion.SLAP_RIGHT, 0.4F, 0.4F)[0] > 10.0F && WingRig.counterPull(WingRig.Motion.SLAP_RIGHT, 0.0F, 0.4F)[0] == 0.0F
+            && Math.abs(WingRig.counterPull(WingRig.Motion.SLAP_RIGHT, 1.0F, 0.4F)[0]) < 1.0E-4F && slapAt[2] == 0.4F, "the other wing pulls back as one drives");
+        // The guard: flared open first, slammed shut past where it holds, eased back to it.
+        WingRig.WingAngles open = WingRig.guard(0.2F);
+        WingRig.WingAngles past = WingRig.guard(0.82F);
+        WingRig.WingAngles held = WingRig.guard(1.0F);
+        check(Math.abs(WingRig.guard(0.0F).sweep() - 22.0F) < 0.01F && open.sweep() > 30.0F && past.sweep() < held.sweep() - 5.0F
+            && Math.abs(held.sweep() - WingRig.GUARD_SWEEP) < 0.01F && Math.abs(held.roll() - WingRig.GUARD_ROLL) < 0.01F,
+            "the guard flares open, slams shut past where it holds, eases back to it");
+    }
+
+    private static WingRig.Motion mirror(WingRig.Motion motion) {
+        return switch (motion) {
+            case SLAP_RIGHT -> WingRig.Motion.SLAP_LEFT;
+            case SWING_RIGHT -> WingRig.Motion.SWING_LEFT;
+            case RISE_RIGHT -> WingRig.Motion.RISE_LEFT;
+            case SLAM_RIGHT -> WingRig.Motion.SLAM_LEFT;
+            default -> motion;
+        };
+    }
+
+    private static float speed(WingRig.Motion motion, float a, float b, float impact) {
+        WingRig.WingAngles x = WingRig.slam(motion, a, impact);
+        WingRig.WingAngles y = WingRig.slam(motion, b, impact);
+        return (float)Math.hypot(y.sweep() - x.sweep(), y.roll() - x.roll()) / (b - a);
+    }
+
+    private static float dist(float[] a, float[] b) {
+        return (float)Math.hypot(a[0] - b[0], a[1] - b[1]);
+    }
+
+    private static boolean close(WingRig.WingAngles angles, float[] key) {
+        return Math.abs(angles.sweep() - key[0]) < 0.05F && Math.abs(angles.roll() - key[1]) < 0.05F;
+    }
+
+    /** 4.1.10: the twin wings at {@code progress} through {@code motion} with only the {@code side} wing drawn (the other not grown). */
+    private static WingRig.Input alone(WingRig.Motion motion, float progress, int side) {
+        return new WingRig.Input(WingForm.TWIN, 300, 1.0F, 2.0, 1.0F, 1.0F, motion, progress, 0.4F, 0.0F, 0.0F, false, 1.0F, 1.0F, false, 0.0F, 0.0F,
+            WingRig.FORWARD, 0.0F, 0.0F, 0.0F, 0.0F, side > 0 ? 1.0F : 0.0F, side > 0 ? 0.0F : 1.0F, 0.0F);
+    }
+
     private static float[] extent(List<WingRig.Quad> quads, int side) {
         float[] box = {Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, -Float.MAX_VALUE, -Float.MAX_VALUE, -Float.MAX_VALUE};
         for (WingRig.Quad quad : quads) {

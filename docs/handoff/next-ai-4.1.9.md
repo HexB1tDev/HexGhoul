@@ -1,4 +1,4 @@
-# Next AI: after 4.1.9 (the inventory crash; every special place in any biome, one of each)
+# Next AI: after 4.1.10 (4.1.9: the inventory crash, every special place in any biome, one of each; 4.1.10: the Ukaku's wing slams)
 
 Read this first. The house rules are in `next-ai-4.1.2.md` and `next-ai-4.0.0.md` (they still hold): answer in English, quote the owner
 exactly, never claim in-game testing, the full `python3 build.py` must end with EXIT 0 on the exact commit before it is pushed, never
@@ -10,6 +10,7 @@ alter the owner's files, one version at a time, no PR.
 |---|---|---|
 | 4.1.8 | Kick Master's twirling speed kick | pushed, EXIT 0 |
 | 4.1.9 | The inventory crash; the hideout, the CCG building, Anteiku, the library and Ken's tower in any biome, one of each | pushed, EXIT 0 |
+| 4.1.10 | The Ukaku's wing slams: chamber, drive, overshoot, recoil, the whip; the guard's flare and settle | pushed, EXIT 0 |
 
 Branch: `claude/hopeful-euler-dnx1ub` (fast-forwarded from `claude/next-ai-4-1-6-handoff-sqv9e4`, which stops at 4.1.8). A new session's own
 branch usually starts at `main` (still 1.3.0): fast-forward it first (`git merge --ff-only origin/claude/hopeful-euler-dnx1ub`).
@@ -53,22 +54,34 @@ course. It should also be fully compatible with Biomes of Plenty, so that should
 ## Next, in this order
 
 1. **Ask the owner how 4.1.9 played** (the inventory, `/locate` of all five in a new world) and fix what they report.
-2. **Then the owner's ask from before the bugs, quoted exactly:** "after that please put all your focus into the combat rework, and kagune
-   rework for the ukaku, this model is very expensive and I need you to focus on what's hard, study complex fighting moves, and combos and
-   make it look smooth and beautiful." Not started in code. What this session found and planned:
-   - **The flaw:** both the wings (`WingRig.phases`: the swing is a smoothstep ending just past the impact, then `FOLLOW_HOLD`) and the body
-     (`UkakuBody.Keys.at`: smoothstep from wind-up to the impact key) slow to a stop as the blow lands and then hold still. A blow should
-     land at its fastest and slow down after contact. And the wing is rigid: `slam()` only moves two root angles (sweep, roll), so the tip is
-     locked to the root, a paddle, not a whip.
-   - **The plan per slam (SLAP, SWING, RISE, SLAM, TWIN_SLAM, GUARD):** a chamber (drawn back past the wind-up, a short loaded hold), a
-     drive that accelerates into the impact (Hermite, velocity carried through it), an overshoot past the impact pose that decelerates, a
-     recoil (a small rebound off the hit, then a damped settle). The tip whips: a spring follower on the root angles (integrated from
-     progress 0, pure, so the same frame comes out every time), bent onto the wing with the existing `UkakuModel.Bend` (as `aimFrame` does),
-     the fan folded on the drive and flared at the impact. The body leads the wing (hips, then chest, then arm, then wing: `UkakuBody` keys
-     a little earlier than the wing's), the other wing counter-pulls on the drive. GUARD's progress is the guard's amount
-     (`RinkakuBlockClient.amount`), not time: shape its curve over that.
-   - **Keep:** `UkakuTests.rig` (no wing below -0.15 at any progress: sample finer than its five points for the slams), the mirrored-pairs
-     and twin-slam checks in `UkakuTests.wingSlams`, the server's impact ticks (`ComboStage.impactFraction`, visual only otherwise).
-   - **Previews:** `tools/ArtPreview.java` has no sheet for the slams yet. Add one (`slams`: each motion key by key, the body through
-     `posed(UkakuBody.pose(...))` and `wings(...)`, plus the wing tip's path over the whole move as dots, their spacing showing the speed)
-     and a GIF of the 7-stage string (`PalePreview.writeGif` shows how).
+2. **4.1.10 did the first part of the owner's ask from before the bugs**, quoted exactly: "after that please put all your focus into the combat
+   rework, and kagune rework for the ukaku, this model is very expensive and I need you to focus on what's hard, study complex fighting moves,
+   and combos and make it look smooth and beautiful." Ask how the slams play (`docs/handoff/ukaku-slams-4.1.10.gif`, `ukaku-slams-4.1.10.png`
+   against `ukaku-slams-before-4.1.10.png`: the same camera on 4.1.9's code; `ukaku-slams-zoom-4.1.10.png`: the overhead and twin slams,
+   before over after).
+
+## 4.1.10, what and where
+
+- **The flaw it fixed:** both the wings (`WingRig.phases` then) and the body (`UkakuBody.Keys`) slowed to a stop as the blow landed and held.
+- **`WingRig`:** each slam is a `Blow` (keys CHAMBER, IMPACT, OVERSHOOT, RECOIL as {sweep, roll}; the drive's, overshoot's and recoil's
+  shares; the move's ticks), timed by `beats` (chamber, load end, impact = the server's, overshoot end, recoil end). `slam`: rest to chamber
+  (smooth), a `LOAD` further back, the drive on an ease-in (`DRIVE_SNAP` 2.4: fastest landing), the overshoot on an ease-out, the recoil,
+  back to rest. `tip`: a damped spring (`WHIP_PERIOD` 3.2 ticks, `WHIP_DAMPING` 0.42) on the root angles, integrated from progress 0 every
+  frame (pure); `slamFrame` bends the wing toward it with `UkakuModel.Bend` (at most `WHIP_MOST`), its fan folded by `slamFold` (tucked
+  `SLAM_TUCK` on the drive, flared `SLAM_FLARE` on the hit). `slamThrust` (the fire streaming back), `slamHard` (the RC hardened),
+  `counterPull` (the other wing). `guard(amount)`: flare (`GUARD_OPEN`), shut past (`GUARD_PAST`, `GUARD_OVER`), settle.
+- **`UkakuBody`:** the slam patterns (`slams`) use `Keys.blow`: their impact `BODY_LEAD` before the wing's, a drive of at most `BODY_DRIVE`
+  (0.55 of the time to it) on an ease-in (`BODY_SNAP`), a `BODY_LOAD` past the wind-up, carried `BODY_OVER` past the follow-through key.
+- **Tests:** `UkakuTests.slamBeats` (keys on their beats, fastest at the impact, still speeding up into it, carried past it, overshoot and
+  rebound, the tip trailing then passing, the feathers, the counter-pull, the guard, never below -0.15 at any 1% of any slam in TWIN or
+  RABBIT at three masteries, both sides) and `slamBody` (rest, no snap at 1/400, limits, mirrored, speeding up into the hit and on past it).
+  `wingSlams` measures each wing alone now (a slap follows through across the middle).
+- **Previews:** `tools/art-preview.sh <out> slams slams-gif` (`ArtPreview.slams`: each slam key by key and its tip's path from above, dots
+  every 1/60, blue to white to the impact, yellow to red after: their spacing is the speed; `slamsGif`: the whole string at 30 fps).
+
+## Next after that
+
+- The owner judges the look. Likely asks: more or less whip (`WHIP_PERIOD`, `WHIP_DAMPING`, `WHIP_MOST`), a longer or shorter drive per slam
+  (`Blow.drive`), bigger chambers. Then the combos themselves (the rest of their ask: "study complex fighting moves, and combos"): the string
+  is 7 fixed stages (`ComboStyle.UKAKU_WINGS`); ideas to pitch first, not build unasked: a held M1 finisher, a launcher into an air slam,
+  the chain flowing (the next stage's chamber taken from the last one's recoil instead of from rest).

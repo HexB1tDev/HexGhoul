@@ -264,6 +264,15 @@ land (any biome but `hexkagune:wet`); the old per-place biome tags are gone. Ant
 each per world (`DryPlace.chosen`, `DryLand.firstPlaced`, `PLACES`); every chooser reads its set's spread from the world
 (`ControlStructures.spread`). Protocol 116 (unchanged). `NpcTests.onePerWorld`. Details: `next-ai-4.1.9.md`.
 
+## 4.1.10 (released)
+
+The owner (quoted exactly): "put all your focus into the combat rework, and kagune rework for the ukaku, this model is very expensive and I need
+you to focus on what's hard, study complex fighting moves, and combos and make it look smooth and beautiful." The base form's wing slams
+(`WingRig.Blow`, `beats`, `slam`, `tip`, `slamFrame`, `slamFold`, `slamThrust`, `slamHard`, `counterPull`, `guard`) and their body
+(`UkakuBody.slams`, `Keys.blow`): a chamber, a drive landing at full speed, an overshoot, a recoil, the whip, the feathers, the other wing's
+pull, the body a beat ahead. Visual only; protocol 116. `UkakuTests.slamBeats`, `slamBody`. Previews `docs/handoff/ukaku-slams-*`
+(`tools/art-preview.sh <out> slams slams-gif`). Details: `next-ai-4.1.9.md`.
+
 ## Next
 
 Nothing outstanding from the owner. If they report in-game problems with the outfits' fit, adjust `CLEAR`, `SNUG`, the drape

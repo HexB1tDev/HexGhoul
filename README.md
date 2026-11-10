@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.10 (HexGhoul): the Ukaku's wing slams thrown like real blows (testing)
+
+See `.github/release-notes-4.1.10.md`. Your words: "put all your focus into the combat rework, and kagune rework for the ukaku ... make it look smooth and beautiful." Every wing slam and its body used to slow down as it landed and then hold; now each has a chamber, a drive that lands at full speed, an overshoot and a recoil, the wing whips (its tip trails, then snaps past), its feathers tuck on the drive and flare on the hit, the fire streams off it, the other wing pulls back, and the body leads the wing. The guard flares, slams shut past and settles. Previews: `docs/handoff/ukaku-slams-*`. Only how it looks changed. Protocol 116.
+
 ## 4.1.9 (HexGhoul): the inventory crash, and every special place findable in any biome (testing)
 
 See `.github/release-notes-4.1.9.md`. Your words: "Opening the inventory crashes the game instantly." Fixed: the creative tabs listed their items under the wrong 1.20.1 method name. And "Cant find CCG building, Aogiri Hideout or Kaneki's building AT ALL not even with locate": every place had a short biome list, so a mod's biomes (your Regions Unexplored ones) were no place at all. Now every place stands in any overworld biome, a mod's too (Biomes O' Plenty and the rest), only never in or by water; the hideout, the CCG building, Anteiku, the library and Ken's tower are one per world each (the last three were three each), read from the world's own structure settings. Protocol 116.

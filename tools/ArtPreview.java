@@ -43,6 +43,13 @@ public final class ArtPreview {
         if (wanted.isEmpty() || wanted.contains("moves")) {
             moves(new File(out, "ukaku-moves.png"));
         }
+        // 4.1.9: the base form's wing slams key by key, each with its wing tip's path (only when asked: slams, slams-gif).
+        if (wanted.contains("slams")) {
+            slams(new File(out, "ukaku-slams.png"));
+        }
+        if (wanted.contains("slams-gif")) {
+            slamsGif(new File(out, "ukaku-slams.gif"));
+        }
         if (wanted.isEmpty() || wanted.contains("crystal")) {
             crystal(new File(out, "ukaku-crystal.png"));
         }
@@ -2049,6 +2056,185 @@ public final class ArtPreview {
             shots.add(new Shot(f.label(), f.pose(), f.wings(), eye, target, extra));
         }
         sheetFlipped(file, "Ukaku: the M1 chain and the right-click enders (body through PlayerAnimator's real transforms)", shots, frames, 3, 420, 400);
+    }
+
+    // ------------------------------------------------------------------ 4.1.9: the wing slams
+
+    /** One slam as the string throws it: its motion, the body's pattern, which side, its impact fraction and its ticks (ComboStyle.UKAKU_WINGS). */
+    record Slam(String name, WingRig.Motion motion, com.hex.kagune.control.StrikePattern pattern, boolean right, boolean both, float impact, int ticks) {
+    }
+
+    static final Slam[] SLAMS = {
+        new Slam("1 Right Wing Slap", WingRig.Motion.SLAP_RIGHT, com.hex.kagune.control.StrikePattern.WING_SLAP, true, false, 0.4F, 9),
+        new Slam("2 Left Wing Slap", WingRig.Motion.SLAP_LEFT, com.hex.kagune.control.StrikePattern.WING_SLAP, false, false, 0.4F, 9),
+        new Slam("3 Right Wing Swing", WingRig.Motion.SWING_RIGHT, com.hex.kagune.control.StrikePattern.WING_SWING, true, false, 0.45F, 12),
+        new Slam("4 Left Rising Wing", WingRig.Motion.RISE_LEFT, com.hex.kagune.control.StrikePattern.WING_RISE, false, false, 0.45F, 12),
+        new Slam("5 Right Overhead Slam", WingRig.Motion.SLAM_RIGHT, com.hex.kagune.control.StrikePattern.WING_SLAM, true, false, 0.55F, 13),
+        new Slam("6 Left Overhead Slam", WingRig.Motion.SLAM_LEFT, com.hex.kagune.control.StrikePattern.WING_SLAM, false, false, 0.55F, 13),
+        new Slam("7 Twin Slam", WingRig.Motion.TWIN_SLAM, com.hex.kagune.control.StrikePattern.TWIN_SLAM, true, true, 0.55F, 16)};
+
+    /** The twin wings at {@code progress} through {@code motion}, only the {@code side} wing drawn if {@code only} (for its tip's path). */
+    static WingRig.Input slamWings(WingRig.Motion motion, float progress, float impact, int side, boolean only) {
+        float right = only && side < 0 ? 0.0F : 1.0F;
+        float left = only && side > 0 ? 0.0F : 1.0F;
+        return new WingRig.Input(WingForm.TWIN, 300, 1.0F, 1.3, 0.0F, 0.0F, motion, progress, impact, 0.0F, 0.0F, false, 1.0F, 1.0F, false, 0.0F, 0.0F,
+            WingRig.FORWARD, 0.0F, 0.0F, 0.0F, 0.0F, right, left, 0.0F);
+    }
+
+    /** The tip of the {@code side} wing (rig space): of that wing's corners, the one furthest from its shoulder blade. */
+    static double[] slamTip(WingRig.Motion motion, float progress, float impact, int side) {
+        double[] root = {WingRig.ROOT_X * side, WingRig.ROOT_Y, WingRig.ROOT_Z};
+        double[] best = root;
+        double far = -1.0;
+        for (WingRig.Quad q : WingRig.build(slamWings(motion, progress, impact, side, true))) {
+            if (q.alpha() < 0.5F) {
+                continue; // the soft glow round it, not the wing
+            }
+            float[] v = q.xyz();
+            for (int k = 0; k < 4; k++) {
+                double dx = v[k * 3] - root[0], dy = v[k * 3 + 1] - root[1], dz = v[k * 3 + 2] - root[2];
+                double d = dx * dx + dy * dy + dz * dz;
+                if (d > far) {
+                    far = d;
+                    best = new double[] {v[k * 3], v[k * 3 + 1], v[k * 3 + 2]};
+                }
+            }
+        }
+        return best;
+    }
+
+    /**
+     * The tip's path through a whole slam as dots, one every 1/60 of it: blue to white up to the impact, yellow to red after, so their spacing
+     * shows how fast it goes (close dots slow, far apart fast): a blow should be fastest at the impact.
+     */
+    static List<WingPreview.Tri> tipPath(WingRig.Motion motion, float impact, int side) {
+        List<WingPreview.Tri> out = new ArrayList<>();
+        int n = 60;
+        for (int i = 0; i <= n; i++) {
+            float progress = i / (float)n;
+            double[] at = slamTip(motion, progress, impact, side);
+            int colour;
+            if (progress <= impact) {
+                float k = progress / Math.max(0.01F, impact);
+                colour = 0xFF000000 | (int)(40 + 215 * k) << 16 | (int)(110 + 145 * k) << 8 | 255;
+            } else {
+                float k = (progress - impact) / Math.max(0.01F, 1.0F - impact);
+                colour = 0xFF000000 | 255 << 16 | (int)(230 - 200 * k) << 8 | (int)(40 - 30 * k);
+            }
+            boolean hit = Math.abs(progress - impact) < 0.5F / n;
+            out.addAll(dot(at, hit ? 0.09 : 0.045, hit ? 0xFFFFFFFF : colour));
+        }
+        return out;
+    }
+
+    /** A small solid diamond (an octahedron) of radius {@code r} at {@code c}. */
+    static List<WingPreview.Tri> dot(double[] c, double r, int argb) {
+        double[][] v = {{c[0] + r, c[1], c[2]}, {c[0] - r, c[1], c[2]}, {c[0], c[1] + r, c[2]}, {c[0], c[1] - r, c[2]}, {c[0], c[1], c[2] + r},
+            {c[0], c[1], c[2] - r}};
+        int[][] faces = {{0, 2, 4}, {2, 1, 4}, {1, 3, 4}, {3, 0, 4}, {2, 0, 5}, {1, 2, 5}, {3, 1, 5}, {0, 3, 5}};
+        List<WingPreview.Tri> out = new ArrayList<>();
+        for (int[] f : faces) {
+            double[] a = v[f[0]], b = v[f[1]], d = v[f[2]];
+            double[] n = {(a[0] + b[0] + d[0]) / 3 - c[0], (a[1] + b[1] + d[1]) / 3 - c[1], (a[2] + b[2] + d[2]) / 3 - c[2]};
+            double len = Math.sqrt(n[0] * n[0] + n[1] * n[1] + n[2] * n[2]);
+            out.add(new WingPreview.Tri(new double[][] {a, b, d}, new int[] {argb, argb, argb}, new double[] {n[0] / len, n[1] / len, n[2] / len}, true));
+        }
+        return out;
+    }
+
+    /**
+     * 4.1.9: the base form's wing slams (the Twin Wings' string) and the guard, key by key: the start of the wind-up, the wind-up, the blow on
+     * its way, the impact, just after it, the way back, and the striking wing tip's path through the whole of it.
+     */
+    static void slams(File file) throws Exception {
+        List<Shot> shots = new ArrayList<>();
+        double[] eye = {7.8, 4.1, 8.4};
+        double[] target = {0.0, 2.0, 0.5};
+        double[] high = {6.0, 9.5, 6.8};
+        double[] below = {0.0, 1.6, 0.6};
+        for (Slam slam : new Slam[] {SLAMS[0], SLAMS[2], SLAMS[3], SLAMS[4], SLAMS[6]}) {
+            float i = slam.impact();
+            float[] keys = {0.12F, i - 0.14F, i - 0.05F, i, i + 0.08F, i + 0.25F};
+            String[] names = {"wind-up starts", "wound up", "on its way", "IMPACT", "just after", "on the way back"};
+            int side = slam.right() ? 1 : -1;
+            for (int k = 0; k < keys.length; k++) {
+                float progress = Math.max(0.0F, Math.min(1.0F, keys[k]));
+                shots.add(new Shot(slam.name() + ": " + names[k] + String.format(" (%.2f)", progress),
+                    body(slam.pattern(), slam.right(), slam.both(), progress, i, 0.5F), slamWings(slam.motion(), progress, i, side, false), eye, target,
+                    new ArrayList<>()));
+            }
+            shots.add(new Shot(slam.name() + ": tip's path, from above (white = impact)", body(slam.pattern(), slam.right(), slam.both(), i, i, 0.5F),
+                slamWings(slam.motion(), i, i, side, false), high, below, tipPath(slam.motion(), i, side)));
+        }
+        // The guard: closing by its amount (RinkakuBlockClient.amount), 0 to 1.
+        for (float amount : new float[] {0.1F, 0.3F, 0.5F, 0.7F, 0.85F, 1.0F}) {
+            shots.add(new Shot(String.format("Guard: closing (%.2f)", amount), new RigPose(), slamWings(WingRig.Motion.GUARD, amount, 0.4F, 1, false), eye,
+                target, new ArrayList<>()));
+        }
+        shots.add(new Shot("Guard: right tip's path, from above", new RigPose(), slamWings(WingRig.Motion.GUARD, 1.0F, 0.4F, 1, false), high, below,
+            tipPath(WingRig.Motion.GUARD, 1.0F, 1)));
+        sheet(file, "Ukaku's base form: the wing slams and the guard, key by key (WingRig + UkakuBody as the game poses them)", shots, 7, 300, 300);
+    }
+
+    /** 4.1.9: the whole string (all seven slams, each as soon as the one before ends) at 30 frames a second, from three quarters in front. */
+    static void slamsGif(File file) throws Exception {
+        double[] eye = {7.0, 3.8, 7.6};
+        double[] target = {0.0, 1.9, 0.5};
+        List<BufferedImage> frames = new ArrayList<>();
+        for (Slam slam : SLAMS) {
+            int count = Math.round(slam.ticks() * 1.5F);
+            for (int f = 0; f < count; f++) {
+                float progress = f / (float)count;
+                Shot shot = new Shot(slam.name(), body(slam.pattern(), slam.right(), slam.both(), progress, slam.impact(), 0.5F),
+                    slamWings(slam.motion(), progress, slam.impact(), slam.right() ? 1 : -1, false), eye, target, new ArrayList<>());
+                BufferedImage frame = render(shot, 360, 360);
+                Graphics2D g = frame.createGraphics();
+                g.setColor(new Color(0xEDE3D6));
+                g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
+                g.drawString(slam.name(), 8, 18);
+                g.dispose();
+                frames.add(frame);
+            }
+        }
+        writeGif(file, frames, 3);
+    }
+
+    /** Frames as a looping GIF ({@code delay} hundredths of a second each). */
+    static void writeGif(File file, List<java.awt.image.BufferedImage> frames, int delay) throws Exception {
+        javax.imageio.ImageWriter writer = javax.imageio.ImageIO.getImageWritersByFormatName("gif").next();
+        try (javax.imageio.stream.ImageOutputStream out = javax.imageio.ImageIO.createImageOutputStream(file)) {
+            writer.setOutput(out);
+            writer.prepareWriteSequence(null);
+            for (int i = 0; i < frames.size(); i++) {
+                java.awt.image.BufferedImage rgb = new java.awt.image.BufferedImage(frames.get(i).getWidth(), frames.get(i).getHeight(),
+                    java.awt.image.BufferedImage.TYPE_INT_RGB);
+                rgb.getGraphics().drawImage(frames.get(i), 0, 0, null);
+                javax.imageio.ImageTypeSpecifier type = javax.imageio.ImageTypeSpecifier.createFromRenderedImage(rgb);
+                javax.imageio.metadata.IIOMetadata meta = writer.getDefaultImageMetadata(type, null);
+                String format = meta.getNativeMetadataFormatName();
+                javax.imageio.metadata.IIOMetadataNode root = (javax.imageio.metadata.IIOMetadataNode)meta.getAsTree(format);
+                javax.imageio.metadata.IIOMetadataNode control = new javax.imageio.metadata.IIOMetadataNode("GraphicControlExtension");
+                control.setAttribute("disposalMethod", "none");
+                control.setAttribute("userInputFlag", "FALSE");
+                control.setAttribute("transparentColorFlag", "FALSE");
+                control.setAttribute("delayTime", Integer.toString(delay));
+                control.setAttribute("transparentColorIndex", "0");
+                root.appendChild(control);
+                if (i == 0) {
+                    javax.imageio.metadata.IIOMetadataNode apps = new javax.imageio.metadata.IIOMetadataNode("ApplicationExtensions");
+                    javax.imageio.metadata.IIOMetadataNode app = new javax.imageio.metadata.IIOMetadataNode("ApplicationExtension");
+                    app.setAttribute("applicationID", "NETSCAPE");
+                    app.setAttribute("authenticationCode", "2.0");
+                    app.setUserObject(new byte[] {1, 0, 0});
+                    apps.appendChild(app);
+                    root.appendChild(apps);
+                }
+                meta.setFromTree(format, root);
+                writer.writeToSequence(new javax.imageio.IIOImage(rgb, null, meta), null);
+            }
+            writer.endWriteSequence();
+        }
+        System.out.println("wrote " + file + " (" + frames.size() + " frames)");
     }
 
     static List<WingPreview.Tri> shardAhead(double z, double y, double size) {
