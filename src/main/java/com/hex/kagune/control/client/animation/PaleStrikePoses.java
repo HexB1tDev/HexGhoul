@@ -64,6 +64,63 @@ final class PaleStrikePoses {
                 new PaleMotions.Key(6.60F, twinpalm4(), PaleMotions.Ease.OUT),
                 new PaleMotions.Key(9.00F, twinpalm5(), PaleMotions.Ease.SMOOTH),
                 new PaleMotions.Key(14.00F, guard(), PaleMotions.Ease.SMOOTH)};
+            case KICK_JAB -> new PaleMotions.Key[] {PaleMotions.Key.START,
+                new PaleMotions.Key(1.15F, kickjab1(), PaleMotions.Ease.SMOOTH),
+                new PaleMotions.Key(2.00F, kickjab2(), PaleMotions.Ease.IN),
+                new PaleMotions.Key(2.55F, kickjab3(), PaleMotions.Ease.OUT),
+                new PaleMotions.Key(3.60F, kickjab4(), PaleMotions.Ease.SMOOTH),
+                new PaleMotions.Key(7.00F, guard(), PaleMotions.Ease.SMOOTH)};
+            case KICK_CROSS -> new PaleMotions.Key[] {PaleMotions.Key.START,
+                new PaleMotions.Key(1.85F, kickcross1(), PaleMotions.Ease.SMOOTH),
+                new PaleMotions.Key(3.00F, kickcross2(), PaleMotions.Ease.IN),
+                new PaleMotions.Key(3.55F, kickcross3(), PaleMotions.Ease.OUT),
+                new PaleMotions.Key(4.60F, kickcross4(), PaleMotions.Ease.SMOOTH),
+                new PaleMotions.Key(8.00F, guard(), PaleMotions.Ease.SMOOTH)};
+            case ROUND_KICK -> new PaleMotions.Key[] {PaleMotions.Key.START,
+                new PaleMotions.Key(1.40F, roundkick1(), PaleMotions.Ease.SMOOTH),
+                new PaleMotions.Key(2.60F, roundkick2(), PaleMotions.Ease.SMOOTH),
+                new PaleMotions.Key(4.00F, roundkick3(), PaleMotions.Ease.IN),
+                new PaleMotions.Key(4.60F, roundkick4(), PaleMotions.Ease.OUT),
+                new PaleMotions.Key(6.30F, roundkick5(), PaleMotions.Ease.SMOOTH),
+                new PaleMotions.Key(10.00F, guard(), PaleMotions.Ease.SMOOTH)};
+            case SIDE_KICK -> new PaleMotions.Key[] {PaleMotions.Key.START,
+                new PaleMotions.Key(2.20F, sidekick1(), PaleMotions.Ease.SMOOTH),
+                new PaleMotions.Key(4.00F, sidekick2(), PaleMotions.Ease.IN),
+                new PaleMotions.Key(4.60F, sidekick3(), PaleMotions.Ease.OUT),
+                new PaleMotions.Key(5.90F, sidekick4(), PaleMotions.Ease.SMOOTH),
+                new PaleMotions.Key(7.40F, sidekick5(), PaleMotions.Ease.SMOOTH),
+                new PaleMotions.Key(10.00F, guard(), PaleMotions.Ease.SMOOTH)};
+            case BACK_KICK -> new PaleMotions.Key[] {PaleMotions.Key.START,
+                new PaleMotions.Key(1.60F, backkick1(), PaleMotions.Ease.SMOOTH),
+                new PaleMotions.Key(3.70F, backkick2(), PaleMotions.Ease.SMOOTH),
+                new PaleMotions.Key(5.00F, backkick3(), PaleMotions.Ease.IN),
+                new PaleMotions.Key(5.60F, backkick4(), PaleMotions.Ease.OUT),
+                new PaleMotions.Key(7.60F, backkick5(), PaleMotions.Ease.SMOOTH),
+                new PaleMotions.Key(11.00F, spun(guard(), -6.283185F), PaleMotions.Ease.SMOOTH)};
+            case KICK_HOOK -> new PaleMotions.Key[] {PaleMotions.Key.START,
+                new PaleMotions.Key(1.80F, kickhook1(), PaleMotions.Ease.SMOOTH),
+                new PaleMotions.Key(3.00F, kickhook2(), PaleMotions.Ease.IN),
+                new PaleMotions.Key(3.55F, kickhook3(), PaleMotions.Ease.OUT),
+                new PaleMotions.Key(4.60F, kickhook4(), PaleMotions.Ease.SMOOTH),
+                new PaleMotions.Key(8.00F, guard(), PaleMotions.Ease.SMOOTH)};
+            case HOOK_KICK -> new PaleMotions.Key[] {PaleMotions.Key.START,
+                new PaleMotions.Key(1.40F, hookkick1(), PaleMotions.Ease.SMOOTH),
+                new PaleMotions.Key(3.70F, hookkick2(), PaleMotions.Ease.SMOOTH),
+                new PaleMotions.Key(5.10F, hookkick3(), PaleMotions.Ease.SMOOTH),
+                new PaleMotions.Key(6.00F, hookkick4(), PaleMotions.Ease.IN),
+                new PaleMotions.Key(6.70F, hookkick5(), PaleMotions.Ease.OUT),
+                new PaleMotions.Key(8.80F, hookkick6(), PaleMotions.Ease.SMOOTH),
+                new PaleMotions.Key(12.00F, spun(guard(), -6.283185F), PaleMotions.Ease.SMOOTH)};
+            case TORNADO_KICK -> new PaleMotions.Key[] {PaleMotions.Key.START,
+                new PaleMotions.Key(2.20F, tornadokick1(), PaleMotions.Ease.SMOOTH),
+                new PaleMotions.Key(4.40F, tornadokick2(), PaleMotions.Ease.SMOOTH),
+                new PaleMotions.Key(5.90F, tornadokick3(), PaleMotions.Ease.SMOOTH),
+                new PaleMotions.Key(7.00F, tornadokick4(), PaleMotions.Ease.IN),
+                new PaleMotions.Key(7.70F, tornadokick5(), PaleMotions.Ease.OUT),
+                new PaleMotions.Key(9.40F, tornadokick6(), PaleMotions.Ease.SMOOTH),
+                new PaleMotions.Key(11.60F, tornadokick7(), PaleMotions.Ease.OUT),
+                new PaleMotions.Key(14.00F, tornadokick8(), PaleMotions.Ease.SMOOTH),
+                new PaleMotions.Key(16.00F, spun(guard(), 6.283185F), PaleMotions.Ease.SMOOTH)};
         };
     }
 
@@ -511,6 +568,394 @@ final class PaleStrikePoses {
         p.rightElbow = 0.426F; p.rightShoulderZ = -1.400F; p.leftArmX = -1.595F; p.leftArmY = -0.360F; p.leftArmZ = -1.402F;
         p.leftElbow = 0.426F; p.leftShoulderZ = -1.400F; p.rightLegX = 0.550F; p.rightLegZ = 0.080F; p.rightKnee = 0.100F;
         p.leftLegX = -1.000F; p.leftLegZ = -0.080F; p.leftKnee = 1.280F; p.armHold = 1.000F; p.legHold = 1.000F;
+        return p;
+    }
+
+    static RigPose kickjab1() {
+        RigPose p = new RigPose();
+        p.headX = -0.036F; p.headY = -0.186F; p.lean = 0.060F; p.twist = 0.260F; p.lunge = -0.806F; p.spin = -0.186F;
+        p.rightArmX = -0.465F; p.rightArmY = -0.345F; p.rightArmZ = 0.451F; p.rightElbow = 1.771F; p.leftArmX = -1.038F;
+        p.leftArmY = 0.128F; p.leftArmZ = -0.217F; p.leftElbow = 1.239F; p.rightLegX = -0.200F; p.rightLegZ = 0.080F;
+        p.rightKnee = 0.950F; p.leftLegX = -0.420F; p.leftLegZ = -0.080F; p.leftKnee = 0.620F; p.armHold = 1.000F;
+        p.legHold = 1.000F;
+        return p;
+    }
+
+    static RigPose kickjab2() {
+        RigPose p = new RigPose();
+        p.headX = -0.139F; p.headY = 0.248F; p.lean = 0.232F; p.twist = -0.496F; p.lunge = 2.232F; p.spin = 0.248F;
+        p.rightArmX = -1.079F; p.rightArmY = 0.478F; p.rightArmZ = 1.111F; p.rightElbow = 0.158F; p.rightShoulderY = -0.248F;
+        p.rightShoulderZ = -1.240F; p.leftArmX = -0.062F; p.leftArmY = 0.034F; p.leftArmZ = -0.370F; p.leftElbow = 1.854F;
+        p.rightLegX = 0.279F; p.rightLegZ = 0.080F; p.rightKnee = 0.050F; p.leftLegX = -0.667F; p.leftLegZ = -0.080F;
+        p.leftKnee = 0.767F; p.armHold = 1.000F; p.legHold = 1.000F;
+        return p;
+    }
+
+    static RigPose kickjab3() {
+        RigPose p = new RigPose();
+        p.headX = -0.168F; p.headY = 0.310F; p.lean = 0.280F; p.twist = -0.570F; p.lunge = 2.666F; p.spin = 0.310F;
+        p.rightArmX = -1.065F; p.rightArmY = 0.626F; p.rightArmZ = 1.167F; p.rightElbow = 0.012F; p.rightShoulderY = -0.248F;
+        p.rightShoulderZ = -1.240F; p.leftArmX = 0.021F; p.leftArmY = 0.097F; p.leftArmZ = -0.406F; p.leftElbow = 1.857F;
+        p.rightLegX = 0.310F; p.rightLegZ = 0.080F; p.rightKnee = 0.030F; p.leftLegX = -0.736F; p.leftLegZ = -0.080F;
+        p.leftKnee = 0.817F; p.armHold = 1.000F; p.legHold = 1.000F;
+        return p;
+    }
+
+    static RigPose kickjab4() {
+        RigPose p = new RigPose();
+        p.headX = -0.128F; p.headY = 0.223F; p.lean = 0.213F; p.twist = -0.459F; p.lunge = 1.860F; p.spin = 0.223F;
+        p.rightArmX = -1.079F; p.rightArmY = 0.478F; p.rightArmZ = 1.111F; p.rightElbow = 0.458F; p.rightShoulderY = -0.186F;
+        p.rightShoulderZ = -0.868F; p.leftArmX = -0.062F; p.leftArmY = 0.034F; p.leftArmZ = -0.370F; p.leftElbow = 1.854F;
+        p.rightLegX = 0.248F; p.rightLegZ = 0.080F; p.rightKnee = 0.100F; p.leftLegX = -0.636F; p.leftLegZ = -0.080F;
+        p.leftKnee = 0.748F; p.armHold = 1.000F; p.legHold = 1.000F;
+        return p;
+    }
+
+    static RigPose kickcross1() {
+        RigPose p = new RigPose();
+        p.headX = -0.036F; p.headY = -0.300F; p.lean = 0.060F; p.twist = 0.420F; p.lunge = -1.300F; p.spin = -0.300F;
+        p.rightArmX = -0.748F; p.rightArmY = -0.399F; p.rightArmZ = 0.206F; p.rightElbow = 1.457F; p.leftArmX = -0.857F;
+        p.leftArmY = -0.187F; p.leftArmZ = -0.269F; p.leftElbow = 1.437F; p.rightLegX = -0.200F; p.rightLegZ = 0.080F;
+        p.rightKnee = 0.950F; p.leftLegX = -0.420F; p.leftLegZ = -0.080F; p.leftKnee = 0.620F; p.armHold = 1.000F;
+        p.legHold = 1.000F;
+        return p;
+    }
+
+    static RigPose kickcross2() {
+        RigPose p = new RigPose();
+        p.headX = -0.180F; p.headY = 0.400F; p.lean = 0.300F; p.twist = -0.800F; p.lunge = 3.600F; p.spin = 0.400F;
+        p.rightArmX = -1.133F; p.rightArmY = 1.109F; p.rightArmZ = 0.819F; p.rightElbow = 0.152F; p.rightShoulderY = -0.400F;
+        p.rightShoulderZ = -2.000F; p.leftArmX = -0.435F; p.leftArmY = -0.018F; p.leftArmZ = -0.273F; p.leftElbow = 1.852F;
+        p.rightLegX = 0.450F; p.rightLegZ = 0.080F; p.rightKnee = 0.050F; p.leftLegX = -0.800F; p.leftLegZ = -0.080F;
+        p.leftKnee = 0.900F; p.armHold = 1.000F; p.legHold = 1.000F;
+        return p;
+    }
+
+    static RigPose kickcross3() {
+        RigPose p = new RigPose();
+        p.headX = -0.216F; p.headY = 0.500F; p.lean = 0.360F; p.twist = -0.920F; p.lunge = 4.300F; p.spin = 0.500F;
+        p.rightArmX = -0.808F; p.rightArmY = 1.309F; p.rightArmZ = 1.259F; p.rightShoulderY = -0.400F;
+        p.rightShoulderZ = -2.000F; p.leftArmX = -0.434F; p.leftArmY = -0.021F; p.leftArmZ = -0.270F; p.leftElbow = 1.853F;
+        p.rightLegX = 0.500F; p.rightLegZ = 0.080F; p.rightKnee = 0.030F; p.leftLegX = -0.880F; p.leftLegZ = -0.080F;
+        p.leftKnee = 0.950F; p.armHold = 1.000F; p.legHold = 1.000F;
+        return p;
+    }
+
+    static RigPose kickcross4() {
+        RigPose p = new RigPose();
+        p.headX = -0.162F; p.headY = 0.360F; p.lean = 0.270F; p.twist = -0.740F; p.lunge = 3.000F; p.spin = 0.360F;
+        p.rightArmX = -1.133F; p.rightArmY = 1.109F; p.rightArmZ = 0.819F; p.rightElbow = 0.452F; p.rightShoulderY = -0.300F;
+        p.rightShoulderZ = -1.400F; p.leftArmX = -0.435F; p.leftArmY = -0.018F; p.leftArmZ = -0.273F; p.leftElbow = 1.852F;
+        p.rightLegX = 0.400F; p.rightLegZ = 0.080F; p.rightKnee = 0.100F; p.leftLegX = -0.750F; p.leftLegZ = -0.080F;
+        p.leftKnee = 0.870F; p.armHold = 1.000F; p.legHold = 1.000F;
+        return p;
+    }
+
+    static RigPose roundkick1() {
+        RigPose p = new RigPose();
+        p.headX = -0.060F; p.headY = 0.300F; p.lean = 0.100F; p.twist = 0.300F; p.lunge = 1.000F; p.spin = 0.300F;
+        p.rightArmX = -0.969F; p.rightArmY = -0.350F; p.rightArmZ = 0.250F; p.rightElbow = 1.059F; p.leftArmX = -0.969F;
+        p.leftArmY = 0.350F; p.leftArmZ = -0.250F; p.leftElbow = 1.059F; p.rightLegX = 0.300F; p.rightLegZ = 0.080F;
+        p.rightKnee = 0.700F; p.leftLegX = -0.420F; p.leftLegZ = -0.080F; p.leftKnee = 0.700F; p.armHold = 1.000F;
+        p.legHold = 1.000F;
+        return p;
+    }
+
+    static RigPose roundkick2() {
+        RigPose p = new RigPose();
+        p.headY = 0.800F; p.side = 0.200F; p.twist = 0.150F; p.lunge = 3.500F; p.spin = 0.800F; p.rightArmX = -0.969F;
+        p.rightArmY = -0.350F; p.rightArmZ = 0.250F; p.rightElbow = 1.059F; p.leftArmX = -0.969F; p.leftArmY = 0.350F;
+        p.leftArmZ = -0.250F; p.leftElbow = 1.059F; p.rightLegX = -1.300F; p.rightLegZ = 0.950F; p.rightKnee = 2.300F;
+        p.leftLegX = -0.100F; p.leftKnee = 0.400F; p.rightKneeTurn = 1.250F; p.armHold = 1.000F; p.legHold = 1.000F;
+        return p;
+    }
+
+    static RigPose roundkick3() {
+        RigPose p = new RigPose();
+        p.headY = 1.250F; p.side = 0.600F; p.twist = -0.200F; p.lunge = 7.750F; p.spin = 1.250F; p.rightArmX = -0.969F;
+        p.rightArmY = -0.350F; p.rightArmZ = 0.250F; p.rightElbow = 1.059F; p.leftArmX = -0.969F; p.leftArmY = 0.350F;
+        p.leftArmZ = -0.250F; p.leftElbow = 1.059F; p.rightLegX = -0.517F; p.rightLegZ = 2.087F; p.rightKnee = 0.060F;
+        p.leftLegX = -0.040F; p.leftKnee = 0.250F; p.armHold = 1.000F; p.legHold = 1.000F;
+        return p;
+    }
+
+    static RigPose roundkick4() {
+        RigPose p = new RigPose();
+        p.headY = 1.450F; p.side = 0.660F; p.twist = -0.250F; p.lunge = 8.000F; p.spin = 1.450F; p.rightArmX = -0.969F;
+        p.rightArmY = -0.350F; p.rightArmZ = 0.250F; p.rightElbow = 1.059F; p.leftArmX = -0.969F; p.leftArmY = 0.350F;
+        p.leftArmZ = -0.250F; p.leftElbow = 1.059F; p.rightLegX = -0.613F; p.rightLegZ = 2.201F; p.rightKnee = 0.040F;
+        p.leftLegX = -0.040F; p.leftKnee = 0.240F; p.armHold = 1.000F; p.legHold = 1.000F;
+        return p;
+    }
+
+    static RigPose roundkick5() {
+        RigPose p = new RigPose();
+        p.headX = -0.030F; p.headY = 1.200F; p.lean = 0.050F; p.side = 0.200F; p.lunge = 3.500F; p.spin = 1.200F;
+        p.rightArmX = -0.969F; p.rightArmY = -0.350F; p.rightArmZ = 0.250F; p.rightElbow = 1.059F; p.leftArmX = -0.969F;
+        p.leftArmY = 0.350F; p.leftArmZ = -0.250F; p.leftElbow = 1.059F; p.rightLegX = -1.150F; p.rightLegZ = 0.800F;
+        p.rightKnee = 2.200F; p.leftLegX = -0.120F; p.leftKnee = 0.450F; p.rightKneeTurn = 1.100F; p.armHold = 1.000F;
+        p.legHold = 1.000F;
+        return p;
+    }
+
+    static RigPose sidekick1() {
+        RigPose p = new RigPose();
+        p.headX = -0.030F; p.headY = 1.150F; p.lean = 0.050F; p.side = 0.200F; p.twist = 0.100F; p.lunge = 3.000F;
+        p.spin = 1.150F; p.rightArmX = -0.969F; p.rightArmY = -0.350F; p.rightArmZ = 0.250F; p.rightElbow = 1.059F;
+        p.leftArmX = -0.969F; p.leftArmY = 0.350F; p.leftArmZ = -0.250F; p.leftElbow = 1.059F; p.rightLegX = -1.500F;
+        p.rightLegZ = 0.600F; p.rightKnee = 2.450F; p.leftLegX = -0.100F; p.leftKnee = 0.500F; p.armHold = 1.000F;
+        p.legHold = 1.000F;
+        return p;
+    }
+
+    static RigPose sidekick2() {
+        RigPose p = new RigPose();
+        p.headY = 1.570F; p.side = 0.780F; p.lunge = 7.500F; p.spin = 1.570F; p.rightArmX = -0.969F; p.rightArmY = -0.350F;
+        p.rightArmZ = 0.250F; p.rightElbow = 1.059F; p.leftArmX = -0.969F; p.leftArmY = 0.350F; p.leftArmZ = -0.250F;
+        p.leftElbow = 1.059F; p.rightLegX = -0.010F; p.rightLegZ = 2.050F; p.leftLegX = -0.020F; p.leftKnee = 0.200F;
+        p.armHold = 1.000F; p.legHold = 1.000F;
+        return p;
+    }
+
+    static RigPose sidekick3() {
+        RigPose p = new RigPose();
+        p.headY = 1.600F; p.side = 0.820F; p.lunge = 8.000F; p.spin = 1.600F; p.rightArmX = -0.969F; p.rightArmY = -0.350F;
+        p.rightArmZ = 0.250F; p.rightElbow = 1.059F; p.leftArmX = -0.969F; p.leftArmY = 0.350F; p.leftArmZ = -0.250F;
+        p.leftElbow = 1.059F; p.rightLegX = 0.022F; p.rightLegZ = 2.075F; p.leftLegX = -0.020F; p.leftKnee = 0.180F;
+        p.armHold = 1.000F; p.legHold = 1.000F;
+        return p;
+    }
+
+    static RigPose sidekick4() {
+        RigPose p = new RigPose();
+        p.headY = 1.570F; p.side = 0.760F; p.lunge = 7.250F; p.spin = 1.570F; p.rightArmX = -0.969F; p.rightArmY = -0.350F;
+        p.rightArmZ = 0.250F; p.rightElbow = 1.059F; p.leftArmX = -0.969F; p.leftArmY = 0.350F; p.leftArmZ = -0.250F;
+        p.leftElbow = 1.059F; p.rightLegX = -0.049F; p.rightLegZ = 2.048F; p.rightKnee = 0.080F; p.leftLegX = -0.020F;
+        p.leftKnee = 0.220F; p.armHold = 1.000F; p.legHold = 1.000F;
+        return p;
+    }
+
+    static RigPose sidekick5() {
+        RigPose p = new RigPose();
+        p.headX = -0.036F; p.headY = 1.300F; p.lean = 0.060F; p.side = 0.250F; p.twist = 0.050F; p.lunge = 3.000F;
+        p.spin = 1.300F; p.rightArmX = -0.969F; p.rightArmY = -0.350F; p.rightArmZ = 0.250F; p.rightElbow = 1.059F;
+        p.leftArmX = -0.969F; p.leftArmY = 0.350F; p.leftArmZ = -0.250F; p.leftElbow = 1.059F; p.rightLegX = -1.400F;
+        p.rightLegZ = 0.550F; p.rightKnee = 2.300F; p.leftLegX = -0.100F; p.leftKnee = 0.450F; p.armHold = 1.000F;
+        p.legHold = 1.000F;
+        return p;
+    }
+
+    static RigPose backkick1() {
+        RigPose p = new RigPose();
+        p.headX = -0.084F; p.headY = 1.250F; p.lean = 0.140F; p.twist = -0.250F; p.lunge = 0.500F; p.spin = -1.500F;
+        p.rightArmX = -0.969F; p.rightArmY = -0.350F; p.rightArmZ = 0.250F; p.rightElbow = 1.059F; p.leftArmX = -0.969F;
+        p.leftArmY = 0.350F; p.leftArmZ = -0.250F; p.leftElbow = 1.059F; p.rightLegX = -0.300F; p.rightLegZ = 0.080F;
+        p.rightKnee = 0.700F; p.leftLegX = -0.300F; p.leftLegZ = -0.080F; p.leftKnee = 0.700F; p.armHold = 1.000F;
+        p.legHold = 1.000F;
+        return p;
+    }
+
+    static RigPose backkick2() {
+        RigPose p = new RigPose();
+        p.headX = -0.240F; p.headY = 1.300F; p.lean = 0.400F; p.twist = -0.100F; p.lunge = 2.500F; p.spin = -2.750F;
+        p.rightArmX = -0.969F; p.rightArmY = -0.350F; p.rightArmZ = 0.250F; p.rightElbow = 1.059F; p.leftArmX = -0.969F;
+        p.leftArmY = 0.350F; p.leftArmZ = -0.250F; p.leftElbow = 1.059F; p.rightLegX = -1.250F; p.rightLegZ = 0.060F;
+        p.rightKnee = 2.400F; p.leftLegX = -0.250F; p.leftKnee = 0.500F; p.armHold = 1.000F; p.legHold = 1.000F;
+        return p;
+    }
+
+    static RigPose backkick3() {
+        RigPose p = new RigPose();
+        p.headX = -0.510F; p.headY = 1.000F; p.lean = 0.850F; p.lunge = 8.000F; p.spin = -3.142F; p.rightArmX = -0.969F;
+        p.rightArmY = -0.350F; p.rightArmZ = 0.250F; p.rightElbow = 1.059F; p.leftArmX = -0.969F; p.leftArmY = 0.350F;
+        p.leftArmZ = -0.250F; p.leftElbow = 1.059F; p.rightLegX = 1.849F; p.rightLegZ = 0.268F; p.leftLegX = -0.080F;
+        p.leftKnee = 0.300F; p.armHold = 1.000F; p.legHold = 1.000F;
+        return p;
+    }
+
+    static RigPose backkick4() {
+        RigPose p = new RigPose();
+        p.headX = -0.540F; p.headY = 1.000F; p.lean = 0.900F; p.lunge = 8.000F; p.spin = -3.192F; p.rightArmX = -0.969F;
+        p.rightArmY = -0.350F; p.rightArmZ = 0.250F; p.rightElbow = 1.059F; p.leftArmX = -0.969F; p.leftArmY = 0.350F;
+        p.leftArmZ = -0.250F; p.leftElbow = 1.059F; p.rightLegX = 1.856F; p.rightLegZ = 0.078F; p.leftLegX = -0.080F;
+        p.leftKnee = 0.280F; p.armHold = 1.000F; p.legHold = 1.000F;
+        return p;
+    }
+
+    static RigPose backkick5() {
+        RigPose p = new RigPose();
+        p.headX = -0.180F; p.headY = 0.900F; p.lean = 0.300F; p.twist = 0.100F; p.lunge = 3.000F; p.spin = -4.600F;
+        p.rightArmX = -0.969F; p.rightArmY = -0.350F; p.rightArmZ = 0.250F; p.rightElbow = 1.059F; p.leftArmX = -0.969F;
+        p.leftArmY = 0.350F; p.leftArmZ = -0.250F; p.leftElbow = 1.059F; p.rightLegX = -0.900F; p.rightLegZ = 0.200F;
+        p.rightKnee = 1.900F; p.leftLegX = -0.250F; p.leftKnee = 0.500F; p.armHold = 1.000F; p.legHold = 1.000F;
+        return p;
+    }
+
+    static RigPose kickhook1() {
+        RigPose p = new RigPose();
+        p.headX = -0.096F; p.headY = -0.420F; p.lean = 0.160F; p.twist = 0.500F; p.lunge = -0.900F; p.spin = -0.420F;
+        p.rightArmX = -1.025F; p.rightArmY = -0.364F; p.rightArmZ = 0.198F; p.rightElbow = 1.232F; p.leftArmX = -0.678F;
+        p.leftArmY = -0.611F; p.leftArmZ = -0.258F; p.leftElbow = 1.860F; p.rightLegX = -0.300F; p.rightLegZ = 0.080F;
+        p.rightKnee = 1.000F; p.leftLegX = -0.500F; p.leftLegZ = -0.080F; p.leftKnee = 0.950F; p.armHold = 1.000F;
+        p.legHold = 1.000F;
+        return p;
+    }
+
+    static RigPose kickhook2() {
+        RigPose p = new RigPose();
+        p.headX = -0.132F; p.headY = 0.320F; p.lean = 0.220F; p.twist = -0.600F; p.lunge = 2.600F; p.spin = 0.320F;
+        p.rightArmX = -0.720F; p.rightArmY = 0.976F; p.rightArmZ = 0.871F; p.rightElbow = 1.522F; p.rightShoulderY = -0.600F;
+        p.rightShoulderZ = -1.400F; p.leftArmX = -0.451F; p.leftArmY = -0.010F; p.leftArmZ = -0.292F; p.leftElbow = 1.852F;
+        p.rightLegX = 0.320F; p.rightLegZ = 0.080F; p.rightKnee = 0.220F; p.leftLegX = -0.700F; p.leftLegZ = -0.080F;
+        p.leftKnee = 0.900F; p.armHold = 1.000F; p.legHold = 1.000F;
+        return p;
+    }
+
+    static RigPose kickhook3() {
+        RigPose p = new RigPose();
+        p.headX = -0.150F; p.headY = 0.420F; p.lean = 0.250F; p.twist = -0.700F; p.lunge = 3.000F; p.spin = 0.420F;
+        p.rightArmX = -0.324F; p.rightArmY = 1.113F; p.rightArmZ = 1.362F; p.rightElbow = 1.740F; p.rightShoulderY = -0.600F;
+        p.rightShoulderZ = -1.600F; p.leftArmX = -0.322F; p.leftArmY = 0.132F; p.leftArmZ = -0.683F; p.leftElbow = 1.854F;
+        p.rightLegX = 0.360F; p.rightLegZ = 0.080F; p.rightKnee = 0.180F; p.leftLegX = -0.720F; p.leftLegZ = -0.080F;
+        p.leftKnee = 0.900F; p.armHold = 1.000F; p.legHold = 1.000F;
+        return p;
+    }
+
+    static RigPose kickhook4() {
+        RigPose p = new RigPose();
+        p.headX = -0.120F; p.headY = 0.340F; p.lean = 0.200F; p.twist = -0.600F; p.lunge = 2.400F; p.spin = 0.340F;
+        p.rightArmX = 0.072F; p.rightArmY = 0.800F; p.rightArmZ = 1.401F; p.rightElbow = 1.852F; p.rightShoulderY = -0.400F;
+        p.rightShoulderZ = -1.000F; p.leftArmX = -0.341F; p.leftArmY = 0.122F; p.leftArmZ = -0.678F; p.leftElbow = 1.844F;
+        p.rightLegX = 0.300F; p.rightLegZ = 0.080F; p.rightKnee = 0.250F; p.leftLegX = -0.660F; p.leftLegZ = -0.080F;
+        p.leftKnee = 0.880F; p.armHold = 1.000F; p.legHold = 1.000F;
+        return p;
+    }
+
+    static RigPose hookkick1() {
+        RigPose p = new RigPose();
+        p.headX = -0.060F; p.headY = 0.400F; p.lean = 0.100F; p.twist = -0.300F; p.lunge = 0.500F; p.spin = 0.400F;
+        p.rightArmX = -0.969F; p.rightArmY = -0.350F; p.rightArmZ = 0.250F; p.rightElbow = 1.059F; p.leftArmX = -0.969F;
+        p.leftArmY = 0.350F; p.leftArmZ = -0.250F; p.leftElbow = 1.059F; p.rightLegX = -0.420F; p.rightLegZ = 0.080F;
+        p.rightKnee = 0.850F; p.leftLegX = -0.420F; p.leftLegZ = -0.080F; p.leftKnee = 0.850F; p.armHold = 1.000F;
+        p.legHold = 1.000F;
+        return p;
+    }
+
+    static RigPose hookkick2() {
+        RigPose p = new RigPose();
+        p.headX = -0.090F; p.headY = 1.300F; p.lean = 0.150F; p.twist = 0.100F; p.lunge = 2.500F; p.spin = -2.900F;
+        p.rightArmX = -0.969F; p.rightArmY = -0.350F; p.rightArmZ = 0.250F; p.rightElbow = 1.059F; p.leftArmX = -0.969F;
+        p.leftArmY = 0.350F; p.leftArmZ = -0.250F; p.leftElbow = 1.059F; p.rightLegX = -1.350F; p.rightLegZ = 0.350F;
+        p.rightKnee = 2.350F; p.leftLegX = -0.200F; p.leftKnee = 0.500F; p.armHold = 1.000F; p.legHold = 1.000F;
+        return p;
+    }
+
+    static RigPose hookkick3() {
+        RigPose p = new RigPose();
+        p.headY = 2.350F; p.side = 0.700F; p.lunge = 7.500F; p.spin = -3.933F; p.rightArmX = -0.969F; p.rightArmY = -0.350F;
+        p.rightArmZ = 0.250F; p.rightElbow = 1.059F; p.leftArmX = -0.969F; p.leftArmY = 0.350F; p.leftArmZ = -0.250F;
+        p.leftElbow = 1.059F; p.rightLegX = 0.186F; p.rightLegZ = 2.119F; p.leftLegX = -0.040F; p.leftKnee = 0.260F;
+        p.armHold = 1.000F; p.legHold = 1.000F;
+        return p;
+    }
+
+    static RigPose hookkick4() {
+        RigPose p = new RigPose();
+        p.headY = 1.750F; p.side = 0.750F; p.lunge = 8.000F; p.spin = -4.533F; p.rightArmX = -0.969F; p.rightArmY = -0.350F;
+        p.rightArmZ = 0.250F; p.rightElbow = 1.059F; p.leftArmX = -0.969F; p.leftArmY = 0.350F; p.leftArmZ = -0.250F;
+        p.leftElbow = 1.059F; p.rightLegX = -0.132F; p.rightLegZ = 2.138F; p.rightKnee = 0.550F; p.leftLegX = -0.040F;
+        p.leftKnee = 0.240F; p.armHold = 1.000F; p.legHold = 1.000F;
+        return p;
+    }
+
+    static RigPose hookkick5() {
+        RigPose p = new RigPose();
+        p.headY = 1.250F; p.side = 0.600F; p.lunge = 8.000F; p.spin = -5.033F; p.rightArmX = -0.969F; p.rightArmY = -0.350F;
+        p.rightArmZ = 0.250F; p.rightElbow = 1.059F; p.leftArmX = -0.969F; p.leftArmY = 0.350F; p.leftArmZ = -0.250F;
+        p.leftElbow = 1.059F; p.rightLegX = -0.479F; p.rightLegZ = 2.126F; p.rightKnee = 1.400F; p.leftLegX = -0.060F;
+        p.leftKnee = 0.260F; p.armHold = 1.000F; p.legHold = 1.000F;
+        return p;
+    }
+
+    static RigPose hookkick6() {
+        RigPose p = new RigPose();
+        p.headX = -0.036F; p.headY = 0.350F; p.lean = 0.060F; p.side = 0.150F; p.lunge = 2.500F; p.spin = -5.933F;
+        p.rightArmX = -0.969F; p.rightArmY = -0.350F; p.rightArmZ = 0.250F; p.rightElbow = 1.059F; p.leftArmX = -0.969F;
+        p.leftArmY = 0.350F; p.leftArmZ = -0.250F; p.leftElbow = 1.059F; p.rightLegX = -0.700F; p.rightLegZ = 0.300F;
+        p.rightKnee = 1.900F; p.leftLegX = -0.200F; p.leftKnee = 0.500F; p.armHold = 1.000F; p.legHold = 1.000F;
+        return p;
+    }
+
+    static RigPose tornadokick1() {
+        RigPose p = new RigPose();
+        p.headX = -0.156F; p.headY = 0.900F; p.lean = 0.260F; p.twist = 0.350F; p.lunge = 1.000F; p.spin = 0.900F;
+        p.rightArmX = -0.969F; p.rightArmY = -0.350F; p.rightArmZ = 0.250F; p.rightElbow = 1.059F; p.leftArmX = -0.969F;
+        p.leftArmY = 0.350F; p.leftArmZ = -0.250F; p.leftElbow = 1.059F; p.rightLegX = -0.500F; p.rightLegZ = 0.080F;
+        p.rightKnee = 1.150F; p.leftLegX = -0.620F; p.leftLegZ = -0.080F; p.leftKnee = 1.200F; p.armHold = 1.000F;
+        p.legHold = 1.000F;
+        return p;
+    }
+
+    static RigPose tornadokick2() {
+        RigPose p = new RigPose();
+        p.headY = -2.783F; p.twist = -0.300F; p.lunge = 3.000F; p.spin = 3.500F; p.rightArmX = -0.969F; p.rightArmY = -0.350F;
+        p.rightArmZ = 0.250F; p.rightElbow = 1.059F; p.leftArmX = -0.969F; p.leftArmY = 0.350F; p.leftArmZ = -0.250F;
+        p.leftElbow = 1.059F; p.rightLegX = 0.100F; p.rightLegZ = 0.100F; p.rightKnee = 0.900F; p.leftLegX = -1.500F;
+        p.leftKnee = 1.900F; p.armHold = 1.000F; p.legHold = 1.000F;
+        return p;
+    }
+
+    static RigPose tornadokick3() {
+        RigPose p = new RigPose();
+        p.headY = -0.300F; p.side = 0.200F; p.twist = 0.200F; p.lunge = 5.000F; p.spin = 5.983F; p.rightArmX = -0.969F;
+        p.rightArmY = -0.350F; p.rightArmZ = 0.250F; p.rightElbow = 1.059F; p.leftArmX = -0.969F; p.leftArmY = 0.350F;
+        p.leftArmZ = -0.250F; p.leftElbow = 1.059F; p.rightLegX = -1.300F; p.rightLegZ = 0.950F; p.rightKnee = 2.300F;
+        p.leftLegX = -0.900F; p.leftKnee = 1.900F; p.rightKneeTurn = 1.250F; p.armHold = 1.000F; p.legHold = 1.000F;
+        return p;
+    }
+
+    static RigPose tornadokick4() {
+        RigPose p = new RigPose();
+        p.headY = 1.250F; p.side = 0.600F; p.twist = -0.200F; p.lunge = 8.000F; p.spin = 7.533F; p.rightArmX = -0.969F;
+        p.rightArmY = -0.350F; p.rightArmZ = 0.250F; p.rightElbow = 1.059F; p.leftArmX = -0.969F; p.leftArmY = 0.350F;
+        p.leftArmZ = -0.250F; p.leftElbow = 1.059F; p.rightLegX = -0.522F; p.rightLegZ = 2.021F; p.rightKnee = 0.050F;
+        p.leftLegX = -1.100F; p.leftKnee = 1.600F; p.armHold = 1.000F; p.legHold = 1.000F;
+        return p;
+    }
+
+    static RigPose tornadokick5() {
+        RigPose p = new RigPose();
+        p.headY = 1.500F; p.side = 0.660F; p.twist = -0.250F; p.lunge = 8.000F; p.spin = 7.783F; p.rightArmX = -0.969F;
+        p.rightArmY = -0.350F; p.rightArmZ = 0.250F; p.rightElbow = 1.059F; p.leftArmX = -0.969F; p.leftArmY = 0.350F;
+        p.leftArmZ = -0.250F; p.leftElbow = 1.059F; p.rightLegX = -0.609F; p.rightLegZ = 2.135F; p.rightKnee = 0.040F;
+        p.leftLegX = -1.100F; p.leftKnee = 1.600F; p.armHold = 1.000F; p.legHold = 1.000F;
+        return p;
+    }
+
+    static RigPose tornadokick6() {
+        RigPose p = new RigPose();
+        p.headY = 1.200F; p.side = 0.250F; p.twist = -0.100F; p.lunge = 5.000F; p.spin = 7.483F; p.rightArmX = -0.969F;
+        p.rightArmY = -0.350F; p.rightArmZ = 0.250F; p.rightElbow = 1.059F; p.leftArmX = -0.969F; p.leftArmY = 0.350F;
+        p.leftArmZ = -0.250F; p.leftElbow = 1.059F; p.rightLegX = -1.100F; p.rightLegZ = 0.600F; p.rightKnee = 2.100F;
+        p.leftLegX = -0.600F; p.leftKnee = 1.300F; p.rightKneeTurn = 1.000F; p.armHold = 1.000F; p.legHold = 1.000F;
+        return p;
+    }
+
+    static RigPose tornadokick7() {
+        RigPose p = new RigPose();
+        p.headX = -0.204F; p.headY = 0.300F; p.lean = 0.340F; p.lunge = 3.000F; p.spin = 6.583F; p.rightArmX = -0.969F;
+        p.rightArmY = -0.350F; p.rightArmZ = 0.250F; p.rightElbow = 1.059F; p.leftArmX = -0.969F; p.leftArmY = 0.350F;
+        p.leftArmZ = -0.250F; p.leftElbow = 1.059F; p.rightLegX = -0.600F; p.rightLegZ = 0.080F; p.rightKnee = 1.450F;
+        p.leftLegX = -0.850F; p.leftLegZ = -0.080F; p.leftKnee = 1.550F; p.armHold = 1.000F; p.legHold = 1.000F;
+        return p;
+    }
+
+    static RigPose tornadokick8() {
+        RigPose p = new RigPose();
+        p.headX = -0.108F; p.lean = 0.180F; p.lunge = 0.500F; p.spin = 6.283F; p.rightArmX = -0.969F; p.rightArmY = -0.350F;
+        p.rightArmZ = 0.250F; p.rightElbow = 1.059F; p.leftArmX = -0.969F; p.leftArmY = 0.350F; p.leftArmZ = -0.250F;
+        p.leftElbow = 1.059F; p.rightLegX = -0.420F; p.rightLegZ = 0.080F; p.rightKnee = 0.880F; p.leftLegX = -0.480F;
+        p.leftLegZ = -0.080F; p.leftKnee = 0.920F; p.armHold = 1.000F; p.legHold = 1.000F;
         return p;
     }
 

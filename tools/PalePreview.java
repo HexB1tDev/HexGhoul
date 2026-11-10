@@ -30,10 +30,33 @@ public final class PalePreview {
             blitzGif(new File(out, "pale-blitz.gif"), new double[] {3.0, 1.6, 2.6}, "Speed blitz, real time");
         }
         if (wanted.contains("strike-gifs")) {
-            for (com.hex.kagune.control.pale.PaleStrike strike : com.hex.kagune.control.pale.PaleStrike.values()) {
+            for (com.hex.kagune.control.pale.PaleStrike strike : com.hex.kagune.control.pale.PaleStrike.of(com.hex.kagune.control.pale.PaleStrike.Style.BLITZ)) {
                 double side = strike.right ? 1.0 : -1.0;
                 strikeGif(new File(out, "pale-" + strike.name().toLowerCase(java.util.Locale.ROOT) + ".gif"), strike, new double[] {3.2 * side, 1.55, 2.2}, 4.0);
             }
+        }
+        if (wanted.contains("kicks")) {
+            kicks(new File(out, "kick-master.png"));
+        }
+        if (wanted.contains("kicks-film")) {
+            kicksFilm(new File(out, "kick-master-film.png"), new File(out, "kick-master.gif"));
+        }
+        if (wanted.contains("kick-test")) {
+            List<ArtPreview.Shot> shots = new ArrayList<>();
+            double[][] legs = {{-0.3, 0.96, 0.6, 1.28}, {-0.3, 1.5, 0.0, 1.57}, {-0.3, 0.0, 1.5, 1.57}, {-1.5, 0.0, 0.0, 0.0}, {-0.3, 1.5, 0.0, 0.0}, {-0.3, -1.5, 0.0, 0.0}};
+            for (double[] l : legs) {
+                RigPose p = new RigPose();
+                p.armHold = 1.0F;
+                p.legHold = 1.0F;
+                p.rightLegX = (float)l[0];
+                p.rightLegZ = (float)l[1];
+                p.roll = (float)l[2];
+                p.spin = (float)l[3];
+                p.settle(1.0F);
+                shots.add(new ArtPreview.Shot(String.format(java.util.Locale.ROOT, "legX %.1f legZ %.2f roll %.1f spin %.2f", l[0], l[1], l[2], l[3]), p,
+                    ArtPreview.NO_WINGS, new double[] {3.4, 1.6, 2.6}, new double[] {0.0, 0.95, 0.75}, dummy(DUMMY_Z)));
+            }
+            ArtPreview.sheet(new File(out, "kick-test.png"), "leg conventions", shots, 6, 300, 330);
         }
         if (wanted.isEmpty() || wanted.contains("punch")) {
             punch(new File(out, "pale-big-punch.png"));
@@ -141,7 +164,7 @@ public final class PalePreview {
     static void eyes(File file) throws Exception {
         List<ArtPreview.Shot> shots = new ArrayList<>();
         double[] target = {0.0, 0.95, 0.75};
-        for (com.hex.kagune.control.pale.PaleStrike strike : com.hex.kagune.control.pale.PaleStrike.values()) {
+        for (com.hex.kagune.control.pale.PaleStrike strike : com.hex.kagune.control.pale.PaleStrike.of(com.hex.kagune.control.pale.PaleStrike.Style.BLITZ)) {
             RigPose p = com.hex.kagune.control.client.animation.PaleMotions.strike(strike, strike.impact, null);
             p.settle(1.0F);
             double side = strike.right ? 1.0 : -1.0;
@@ -1185,7 +1208,7 @@ public final class PalePreview {
     static void blitz(File file) throws Exception {
         List<ArtPreview.Shot> shots = new ArrayList<>();
         double[] target = {0.0, 0.95, 0.75};
-        for (com.hex.kagune.control.pale.PaleStrike strike : com.hex.kagune.control.pale.PaleStrike.values()) {
+        for (com.hex.kagune.control.pale.PaleStrike strike : com.hex.kagune.control.pale.PaleStrike.of(com.hex.kagune.control.pale.PaleStrike.Style.BLITZ)) {
             int i = strike.impact;
             double[] ages = {i - 1.2, i - 0.45, i, i + 0.55, i + 1.6};
             String[] names = {"coiled", "driving", "IMPACT", "overshoot", "hold"};
@@ -1203,12 +1226,82 @@ public final class PalePreview {
             300, 330);
     }
 
+    /** 4.1.7: where a kick's target stands: its front where the server stands her for a kick (PaleRules.comboKickStand), this thin dummy's middle behind it. */
+    static final double KICK_DUMMY_Z = com.hex.kagune.control.pale.PaleRules.comboKickStand(0.0) + 0.125;
+
+    /**
+     * 4.1.7: Kick Master's string, every blow key by key, seen square from the side (the only view where a kick's height and reach can be
+     * judged), then its impact three quarters in front from her open side.
+     */
+    static void kicks(File file) throws Exception {
+        List<ArtPreview.Shot> shots = new ArrayList<>();
+        for (com.hex.kagune.control.pale.PaleStrike strike : com.hex.kagune.control.pale.PaleStrike.of(com.hex.kagune.control.pale.PaleStrike.Style.KICKS)) {
+            if (!strike.kick()) {
+                continue;
+            }
+            int i = strike.impact;
+            double[] ages = {i - 2.4, i - 1.3, i - 0.5, i, i + 0.6, i + 2.4};
+            String[] names = {"winding", "chambered", "driving", "IMPACT", "through", "folding"};
+            double side = strike.right ? 1.0 : -1.0;
+            String name = strike.name().toLowerCase(java.util.Locale.ROOT).replace('_', ' ');
+            for (int k = 0; k < ages.length; k++) {
+                RigPose p = com.hex.kagune.control.client.animation.PaleMotions.strike(strike, Math.max(0.0, ages[k]), null);
+                p.settle(1.0F);
+                shots.add(new ArtPreview.Shot(name + ": " + names[k], p, ArtPreview.NO_WINGS, new double[] {-4.6 * side, 1.0, 0.7},
+                    new double[] {0.0, 0.95, 0.7}, dummy(KICK_DUMMY_Z)));
+            }
+            RigPose p = com.hex.kagune.control.client.animation.PaleMotions.strike(strike, i, null);
+            p.settle(1.0F);
+            shots.add(new ArtPreview.Shot(name + ": IMPACT, 3/4", p, ArtPreview.NO_WINGS, new double[] {3.2 * side, 1.7, 3.0},
+                new double[] {0.0, 0.95, 0.7}, dummy(KICK_DUMMY_Z)));
+        }
+        ArtPreview.sheet(file, "Kick Master: every kick from the side (winding, chambered, driving, the server's impact tick, through, folding), then 3/4",
+            shots, 7, 300, 300);
+    }
+
+    /**
+     * 4.1.7: Kick Master's whole string chained as the server chains it (each strike out of the last one's pose at its chain tick), a
+     * frame a tick from the side, to judge the blends between keys and between blows; and the same as a GIF at 30 fps from 3/4.
+     */
+    static void kicksFilm(File sheet, File gif) throws Exception {
+        List<ArtPreview.Shot> shots = new ArrayList<>();
+        List<java.awt.image.BufferedImage> frames = new ArrayList<>();
+        com.hex.kagune.control.pale.PaleStrike[] all = com.hex.kagune.control.pale.PaleStrike.of(com.hex.kagune.control.pale.PaleStrike.Style.KICKS);
+        double[] side = {-4.6, 1.0, 0.7};
+        double[] quarter = {3.4, 1.8, 3.2};
+        double[] look = {0.0, 0.95, 0.7};
+        for (int f = 0; f < 10; f++) {
+            frames.add(ArtPreview.render(new ArtPreview.Shot("Kick Master, real time", com.hex.kagune.control.client.animation.PaleMotions.guard(),
+                ArtPreview.NO_WINGS, quarter, look, dummy(KICK_DUMMY_Z)), 420, 360));
+        }
+        RigPose from = null;
+        for (int s = 0; s < all.length; s++) {
+            com.hex.kagune.control.pale.PaleStrike strike = all[s];
+            double length = s == all.length - 1 ? strike.duration + 4 : strike.chain;
+            for (double age = 0.0; age < length - 1.0E-6; age += 1.0 / 3.0) {
+                RigPose p = com.hex.kagune.control.client.animation.PaleMotions.strike(strike, Math.min(age, strike.duration), from);
+                RigPose drawn = new RigPose().add(p, 1.0F);
+                drawn.settle(1.0F);
+                frames.add(ArtPreview.render(new ArtPreview.Shot("Kick Master, real time", drawn, ArtPreview.NO_WINGS, quarter, look,
+                    dummy(KICK_DUMMY_Z)), 420, 360));
+                if (Math.abs(age - Math.rint(age)) < 1.0E-6) {
+                    String name = strike.name().toLowerCase(java.util.Locale.ROOT).replace('_', ' ');
+                    shots.add(new ArtPreview.Shot(String.format(java.util.Locale.ROOT, "%s %.0f%s", name, age, Math.rint(age) == strike.impact ? " HIT" : ""),
+                        drawn, ArtPreview.NO_WINGS, side, look, dummy(KICK_DUMMY_Z)));
+                }
+            }
+            from = com.hex.kagune.control.client.animation.PaleMotions.strike(strike, strike.chain, from);
+        }
+        ArtPreview.sheet(sheet, "Kick Master's string chained as the server chains it, a frame a tick, from the side", shots, 10, 210, 210);
+        writeGif(gif, frames, 3);
+    }
+
     /** The whole blitz chained as the server chains it (each strike from the last one's chain tick), as an animated GIF at 30 fps. */
     static void blitzGif(File file, double[] eye, String label) throws Exception {
         List<java.awt.image.BufferedImage> frames = new ArrayList<>();
         double fps = 30.0;
         RigPose shown = null;
-        com.hex.kagune.control.pale.PaleStrike[] all = com.hex.kagune.control.pale.PaleStrike.values();
+        com.hex.kagune.control.pale.PaleStrike[] all = com.hex.kagune.control.pale.PaleStrike.of(com.hex.kagune.control.pale.PaleStrike.Style.BLITZ);
         // A beat in the guard first.
         for (int f = 0; f < 10; f++) {
             frames.add(ArtPreview.render(new ArtPreview.Shot(label, com.hex.kagune.control.client.animation.PaleMotions.guard(), ArtPreview.NO_WINGS, eye,

@@ -69,7 +69,17 @@ public enum Gate {
      * ({@link com.hex.kagune.control.FightStyle#SPEEDSTER}), which Ayato teaches any ghoul after a proof ({@code Teaching}). Never
      * grandfathered: a save from before starts with its bare hands.
      */
-    STYLE_SPEEDSTER("style_speedster", null, "Speedster (fighting style)", 0, false);
+    STYLE_SPEEDSTER("style_speedster", null, "Speedster (fighting style)", 0, false),
+    /**
+     * 4.1.7 (the owner: "He teaches a new combat style mixing kicks and punches (mostly side kicks, spinning kicks etc), he only teaches the
+     * player this through quests if the player is either a human or wearing a full mask ... this combat style upon learned fully replaces
+     * the default M1 combos ... New fighting style called: "Kick Master" Make up the quests yourself"): the General's road, three watches
+     * of the night shift, each a proof ({@code Teaching}): the first two his lessons on the way (no move of their own), the third the style
+     * itself ({@link com.hex.kagune.control.FightStyle#KICK_MASTER}). Never grandfathered.
+     */
+    STYLE_KICK_STANCE("style_kick_stance", null, "Kick Master: the First Watch (the stance)", 0, false),
+    STYLE_KICK_CHAMBER("style_kick_chamber", null, "Kick Master: the Middle Watch (the chamber)", 0, false),
+    STYLE_KICK_MASTER("style_kick_master", null, "Kick Master (fighting style)", 0, false);
 
     private final String id;
     private final KagunePath path;

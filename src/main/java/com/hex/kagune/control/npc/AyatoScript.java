@@ -183,7 +183,7 @@ final class AyatoScript extends CompanionScript {
                 case WEAK -> "You? Not a chance. You'd die and I'd have to clean it up. Get stronger. (" + view.next().name() + ": mastery " + view.need() + ")";
                 case BEFORE -> "You don't even have " + (view.before() == null ? "the basics" : view.before().displayName()) + ". My sister can "
                     + "teach you that. Go bother her.";
-                case ALL_TAUGHT -> "I've got nothing left to teach you. ...Don't make it weird. Go find something stronger to fight.";
+                case ALL_TAUGHT, GHOUL -> "I've got nothing left to teach you. ...Don't make it weird. Go find something stronger to fight.";
             };
         }
     };

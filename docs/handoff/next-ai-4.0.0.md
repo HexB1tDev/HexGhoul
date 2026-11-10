@@ -222,6 +222,25 @@ land in its biomes, the least `DryLand.wetness`), near then further. `ControlStr
 null: only /place's does) builds either where asked (`standing`). `told` logs the spot once a world. Protocol 114 (unchanged).
 `NpcTests` (the chain, wetness, further offers). Not tested in game.
 
+## 4.1.7 (released)
+
+The owner (quoted exactly): "He teaches a new combat style mixing kicks and punches (mostly side kicks, spinning kicks etc), he only teaches the
+player this through quests if the player is either a human or wearing a full mask." "Do a very deep research into combat moves like I described
+make sure the corehography is perfect, this combat style upon learned fully replaces the default M1 combos." "New fighting style called:
+"Kick Master" Make up the quests yourself make sure they're creative and beautful."
+`PaleStrike.Style` KICKS: KICK_JAB, KICK_CROSS, ROUND_KICK, SIDE_KICK, BACK_KICK, KICK_HOOK, HOOK_KICK, TORNADO_KICK (`of`, `next(prev, mastery,
+style)`, `kick()`, `lift()`). The kicks are designed in `tools/PalePoseDesign.java` by where the sole goes (`Spec.sole`, `solveLeg`: the leg's two
+angles and the lunge solved together; a straight leg's sole is a leg's length from the hip) and checked from the side (`tools/pale-preview.sh <out>
+kicks kicks-film`). Measured on the rig: side-on, `roll` only bows her forward or back; the trunk is laid away by `side`. `RigPose.settle`: `side` up to
+0.85 (was 0.6), drop up to -10 (the tornado's jump; down still 4), spin up to +-4 pi (the tornado's 2 pi + 1.25). `PaleRules.comboKickStand` (1.15 +
+w/2): kicks from further out. `FightStyle.KICK_MASTER` (`strikes()`, `of` prefers the last learned, `use`: right click Speedster's flips till Kick
+Master's own). Gates `STYLE_KICK_STANCE`, `STYLE_KICK_CHAMBER`, `STYLE_KICK_MASTER` (appended). `Teaching.GENERAL`: three lessons, each a proof
+(`Deed.NIGHT_BARE` 8, `AIRBORNE` 3, `DAWN` 3; `Teaching.dawn` 22300..1500), `Refusal.GHOUL`; `view` takes what he sees (`EtoServer.context`
+`seenGhoul`). `PaleServer.bare` (a human with it, the hand empty: M1 alone), `EyeRules.HUMAN_POWER`/`HUMAN_MASTERY`; `PaleClient.bare`, `fighting`
+(a human posed while the server says a blow of theirs is under way), `useStyle`. `EtoOwl`: a human persona throws KICKS and no Big Punch. Protocol
+115. `CompanionTests.kickMaster`; `PaleTests` (the lift; the fist in view for punches only). The kicks hold the kicking guard (`KICK_GUARD`:
+counterweight arms clipped in the blends). Previews: `docs/handoff/kick-master-4.1.7.png`, `kick-master-film-4.1.7.png`.
+
 ## Next
 
 Nothing outstanding from the owner. If they report in-game problems with the outfits' fit, adjust `CLEAR`, `SNUG`, the drape

@@ -119,7 +119,7 @@ public final class PaleMenuView {
         row(c, "Stage", PaleUnlock.stageName(mastery), x, y + 61);
         row(c, "Kakugan", eyeText(model.eyes()) + " only", x, y + 79);
         row(c, "Form", model.active() ? "Base form (out)" : "Base form (Ctrl+R)", x, y + 97);
-        row(c, "Blitz", PaleStrike.count(mastery) + " of " + PaleStrike.values().length + " strikes", x, y + 115);
+        row(c, "Blitz", PaleStrike.count(mastery) + " of " + PaleStrike.of(PaleStrike.Style.BLITZ).length + " strikes", x, y + 115);
 
         c.text("MASTERY", x, y + 151, HEADER, false);
         c.text(mastery + " / 1000", x + 126, y + 151, VALUE, false);

@@ -280,6 +280,28 @@ public final class PaleClient {
         return isPale(player) && com.hex.kagune.client.KaguneClientState.get(player).active() || eyes(player);
     }
 
+    /**
+     * 4.1.7: this client's own player is a human who learned Kick Master and holds nothing in the main hand: M1 is its string (the server's
+     * {@code PaleServer.bare}; it decides anyway).
+     */
+    public static boolean bare(Player player) {
+        return player != null && !com.hex.kagune.client.KaguneClientState.get(player).unlocked() && player.m_21205_().m_41619_()
+            && style() == com.hex.kagune.control.FightStyle.KICK_MASTER;
+    }
+
+    /**
+     * 4.1.7: whether the fight poses {@code player}'s body now: the eyes alone ({@link #eyes}), or a human (no kagune) whose blow the server
+     * says is under way (Kick Master: what anyone else has learned is never known here, only what they throw).
+     */
+    public static boolean fighting(Player player) {
+        return eyes(player) || player != null && !com.hex.kagune.client.KaguneClientState.get(player).unlocked() && get(player).move() != PaleMove.NONE;
+    }
+
+    /** 4.1.7: the style whose right click this client's own player uses ({@code FightStyle.use}). */
+    public static com.hex.kagune.control.FightStyle useStyle() {
+        return com.hex.kagune.control.FightStyle.use(gate -> QuestClient.log().open(gate));
+    }
+
     @SubscribeEvent
     public static void loggingOut(ClientPlayerNetworkEvent.LoggingOut event) {
         VIEWS.clear();

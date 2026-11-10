@@ -182,19 +182,37 @@ final class GeneralScript extends CompanionScript {
         };
     }
 
-    /** How he answers someone asking to be taught: nothing yet to teach (his own way of fighting is not one he hands out lightly). */
+    /**
+     * How he answers someone asking to be taught. 4.1.7: Kick Master, after the three watches of the night shift (each a proof first:
+     * {@code Teaching.proof}): the stance, the chamber, then the whole string; never to a ghoul he can see.
+     */
     static final LessonWords LESSONS = new LessonWords() {
         @Override
         public String teach(Teaching.Lesson lesson, EtoTalk.Context c) {
-            return "Watch. Then do it until your legs give out. Then again. (" + lesson.name() + ")";
+            return switch (lesson.id()) {
+                case "general_stance" -> "The first watch, done. Then the stance. Weight on the balls of your feet, the lead foot turned in, chin "
+                    + "down behind your shoulder, hands up where they can do some good. Everything I'm going to teach you comes out of this. "
+                    + "Get the stance wrong and the best kick in the world is a shove. ...Good. Hold it. The middle watch is harder.";
+                case "general_chamber" -> "The chamber. The knee comes up first, folded tight, pointed where the foot is going: a kick's "
+                    + "height is the knee's, never the foot's. The standing heel turns to them, the hip rolls over, and the leg goes out like a "
+                    + "piston and comes straight back. Snap it back, or they catch it and you're on the floor. ...One more watch.";
+                case "general_kick_master" -> "...You held till morning. Then this is yours. The jab finds the distance, the cross turns the "
+                    + "hips, the round kick comes off the turn. Side kick, back kick, the hook, the spinning hook, and the tornado to finish it. "
+                    + "One into the next, the body never stopping. Thirty years, in one string. Empty hands, and it's what they do now. Don't "
+                    + "make me regret it. (Kick Master: M1 with nothing in your hand.)";
+                default -> "Watch. Then do it until your legs give out. Then again. (" + lesson.name() + ")";
+            };
         }
 
         @Override
         public String refuse(Teaching.Refusal refusal, Teaching.View view, EtoTalk.Context c) {
             return switch (refusal) {
-                case WEAK -> "You're not ready. Come back stronger. (" + view.next().name() + ": mastery " + view.need() + ")";
-                case BEFORE -> "First things first. You don't have " + (view.before() == null ? "the basics" : view.before().displayName()) + ".";
-                case ALL_TAUGHT -> "I've taught you what I have. The rest is ten thousand repetitions.";
+                case GHOUL -> "I can see your eyes. I've spent thirty years teaching people to survive your kind, and I'm not about to teach "
+                    + "your kind to kill mine. ...Don't look at me like that. Go.";
+                case WRONG_PATH -> "Your body already fights its own way. There's nothing in my legs it would listen to.";
+                case WEAK -> "You're not ready. Come back stronger. (" + view.next().name() + ")";
+                case BEFORE -> "First things first. One watch at a time. (" + (view.before() == null ? "the one before" : view.before().displayName()) + ")";
+                case ALL_TAUGHT -> "I've taught you everything I have. The rest is ten thousand repetitions, and nobody can do those for you.";
                 default -> "How I fight took me thirty years, and I don't hand it to people I've only just met. ...Ask me another day.";
             };
         }

@@ -189,7 +189,7 @@ final class KenScript extends CompanionScript {
                     + " first. " + (view.before() == com.hex.kagune.control.quest.Gate.UKAKU_KAKUJA ? "Touka's brother teaches that. Ayato. Be patient "
                     + "with him." : view.before() != null && view.before().path() == com.hex.kagune.control.KagunePath.UKAKU
                     ? "Touka can teach you that." : "Your tails will tell you how.");
-                case ALL_TAUGHT -> "There's nothing left I can teach you. ...I'm sorry. I wish there was less.";
+                case ALL_TAUGHT, GHOUL -> "There's nothing left I can teach you. ...I'm sorry. I wish there was less.";
             };
         }
     };

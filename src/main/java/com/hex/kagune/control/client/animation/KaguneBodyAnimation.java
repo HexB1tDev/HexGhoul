@@ -324,7 +324,7 @@ public final class KaguneBodyAnimation implements IAnimation {
             || com.hex.kagune.control.client.QuinqueClient.posing(this.player)) {
             return this.player.m_6084_() && ControlConfig.bodyAnimations();
         }
-        if (com.hex.kagune.control.client.PaleClient.eyes(this.player)) {
+        if (com.hex.kagune.control.client.PaleClient.fighting(this.player)) {
             return this.player.m_6084_() && ControlConfig.bodyAnimations(); // 7.0.1: the eyes alone fight with the body
         }
         if (this.king() > 0.0F || this.turning() >= 0.0) {
@@ -553,7 +553,7 @@ public final class KaguneBodyAnimation implements IAnimation {
             RigPose eased = p.scale(risen);
             p.clear().add(eased, 1.0F);
         }
-        if (PathClient.get(this.player) == KagunePath.PALE || com.hex.kagune.control.client.PaleClient.eyes(this.player)) {
+        if (PathClient.get(this.player) == KagunePath.PALE || com.hex.kagune.control.client.PaleClient.fighting(this.player)) {
             this.paleMoves.shown(p); // a strike or a flip starts from exactly this
         }
         TORSO.put(this.player, new double[] {p.lean, p.side, p.twist, p.drop, ControlClient.worldTime(tickDelta)});
@@ -600,7 +600,7 @@ public final class KaguneBodyAnimation implements IAnimation {
             return;
         }
         // 1.3.3: only holding Eto's hand (no kagune, no eyes, nothing turning): nothing more on the body than the arm (setupAnim's).
-        if (!view.active() && !com.hex.kagune.control.client.PaleClient.eyes(this.player) && this.king() <= 0.0F
+        if (!view.active() && !com.hex.kagune.control.client.PaleClient.fighting(this.player) && this.king() <= 0.0F
             && com.hex.kagune.control.client.TurningClient.progress(this.player, time) < 0.0
             && (com.hex.kagune.control.client.EtoClient.handHeld(this.player.m_19879_()) > 0.0F
             || com.hex.kagune.control.client.ChildClient.busy(this.player.m_19879_())
@@ -616,7 +616,7 @@ public final class KaguneBodyAnimation implements IAnimation {
             this.finish(steel, time, tickDelta);
             return;
         }
-        if (com.hex.kagune.control.client.PaleClient.eyes(this.player)) {
+        if (com.hex.kagune.control.client.PaleClient.fighting(this.player)) {
             // 7.0.1: the eyes alone (the shared eye-mode fight): her body's moves on it, nothing of any kagune's.
             this.eyeMoves(tickDelta, now);
             this.finish(steel, time, tickDelta);

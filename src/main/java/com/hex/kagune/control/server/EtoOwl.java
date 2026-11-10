@@ -117,8 +117,10 @@ final class EtoOwl {
             return;
         }
         // 1.3.14: the Owl DNA kit is Eto's alone; every other companion fights with what every ghoul's eyes give (strikes, the kick, flips).
+        // 4.1.7: a human (the General) has no ghoul's Big Punch: his blitz is Kick Master's, his kick the Speed Kick, his flips his own.
         EtoRules.Ready ready = npc.persona().owlKit() ? new EtoRules.Ready(f.punchReady, f.kickReady, f.flipReady, f.swipeReady, f.grabReady, f.hammerReady,
-            EtoWatch.out(npc) ? Long.MAX_VALUE : f.watchReady, f.armReady) : EtoRules.Ready.only(f.punchReady, f.kickReady, f.flipReady);
+            EtoWatch.out(npc) ? Long.MAX_VALUE : f.watchReady, f.armReady)
+            : EtoRules.Ready.only(npc.persona().human() ? Long.MAX_VALUE : f.punchReady, f.kickReady, f.flipReady);
         EtoRules.Act act = EtoRules.choose(distance, sees, npc.m_20096_(), share(npc), now, ready, npc.m_217043_().m_188500_());
         perform(npc, mind, target, level, now, phase, act);
     }
@@ -213,10 +215,13 @@ final class EtoOwl {
         if (f.strikeEnded != Long.MIN_VALUE && now - f.strikeEnded > PaleRules.CHAIN_WINDOW) {
             f.strike = 0;
         }
-        if (f.strike == 0 && f.strikeEnded != Long.MIN_VALUE && now - f.strikeEnded < PaleRules.FINISH_RECOVERY && f.detail == PaleStrike.TWIN_PALM.ordinal()) {
+        if (f.strike == 0 && f.strikeEnded != Long.MIN_VALUE && now - f.strikeEnded < PaleRules.FINISH_RECOVERY
+            && PaleStrike.byOrdinal(f.detail).finisher()) {
             return;
         }
-        PaleStrike strike = PaleStrike.values()[Math.floorMod(f.strike, PaleStrike.values().length)];
+        // 4.1.7 (the owner: the General "teaches a new combat style ... (and uses it in self defense)"): his string is Kick Master's.
+        PaleStrike[] string = PaleStrike.of(npc.persona().human() ? PaleStrike.Style.KICKS : PaleStrike.Style.BLITZ);
+        PaleStrike strike = string[Math.floorMod(f.strike, string.length)];
         npc.m_21573_().m_26573_();
         begin(npc, f, PaleMove.STRIKE, strike.ordinal(), target.m_19879_(), 0.0F, Vec3.f_82478_, now);
     }

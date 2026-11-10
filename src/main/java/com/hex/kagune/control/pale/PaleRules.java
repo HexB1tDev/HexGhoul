@@ -51,6 +51,14 @@ public final class PaleRules {
         return 1.05 + targetWidth * 0.5;
     }
 
+    /**
+     * 4.1.7: how far from a target's middle she stops for a kick (Kick Master): a kicker fights from further out than a boxer, at the
+     * reach of a leg (its front 1.15 blocks off: a model leg is 0.70 long from a hip 0.11 to the side, with the step in behind it).
+     */
+    public static double comboKickStand(double targetWidth) {
+        return 1.15 + targetWidth * 0.5;
+    }
+
     /** A blink needs a target this close. */
     public static final double BLINK_RANGE = 8.0;
 

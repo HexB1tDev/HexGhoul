@@ -70,8 +70,11 @@ final class PaleBlitz {
     private static void start(ServerPlayer player, PaleServer.PaleState state, Entity hint, long now) {
         int mastery = KaguneProfile.mastery(player);
         PaleStrike previous = state.lastStrike != null && now - state.strikeEndsAt <= PaleRules.CHAIN_WINDOW ? state.lastStrike : null;
-        PaleStrike strike = PaleStrike.next(previous, mastery);
-        if (!KaguneServerController.useEnergy(player, strike.cost(), true)) {
+        // 4.1.7: the string is the style's (her base form's is always the blitz); Kick Master's is all there once learned (the General's
+        // road was its proof, not mastery). A human pays no RC: there is none.
+        PaleStrike.Style string = PaleServer.isPale(player) ? PaleStrike.Style.BLITZ : PaleServer.style(player).strikes();
+        PaleStrike strike = PaleStrike.next(previous, string == PaleStrike.Style.KICKS ? Integer.MAX_VALUE : mastery, string);
+        if (!PaleServer.bare(player) && !KaguneServerController.useEnergy(player, strike.cost(), true)) {
             return;
         }
         LivingEntity target = lockOn(player, hint);
@@ -193,7 +196,8 @@ final class PaleBlitz {
     private static void stepIn(ServerPlayer player, PaleServer.PaleState state, PaleStrike strike, LivingEntity target, long age) {
         Vec3 to = target.m_20182_().m_82546_(player.m_20182_());
         double distance = Math.sqrt(to.f_82479_ * to.f_82479_ + to.f_82481_ * to.f_82481_);
-        double stop = PaleRules.strikeStand(target.m_20205_());
+        // 4.1.7: a kick is thrown from further out than a punch (a leg's reach).
+        double stop = strike.kick() ? PaleRules.comboKickStand(target.m_20205_()) : PaleRules.strikeStand(target.m_20205_());
         if (distance <= stop + 0.05) {
             return;
         }
@@ -274,7 +278,8 @@ final class PaleBlitz {
         Vec3 facing = target != null ? UkakuFire.horizontal(target.m_20182_().m_82546_(player.m_20182_())) : UkakuFire.horizontal(player.m_20154_());
         Vec3 right = new Vec3(-facing.f_82481_, 0.0, facing.f_82479_);
         Vec3 knock = facing.m_82490_(strike.back).m_82549_(right.m_82490_(strike.sideways)).m_82520_(0.0, strike.up, 0.0);
-        int mastery = KaguneProfile.mastery(player);
+        // 4.1.7: a human has no mastery: their fists are as a ghoul's half mastered (EyeRules.HUMAN_MASTERY).
+        int mastery = KaguneProfile.isUnlocked(player) ? KaguneProfile.mastery(player) : com.hex.kagune.control.pale.EyeRules.HUMAN_MASTERY;
         float damage = PaleRules.fist(mastery) * strike.damage * PaleServer.power(player);
         boolean all = strike == PaleStrike.BACKFIST;
         AABB area = player.m_20191_().m_82400_(strike.reach + 1.0);
@@ -307,7 +312,9 @@ final class PaleBlitz {
         if (landed > 0) {
             // 7.0.1: the quests count the blows (the finisher's own).
             QuestServer.signal(player, com.hex.kagune.control.quest.Signal.STRIKE, landed, strike.finisher() ? com.hex.kagune.control.quest.Tags.FINISHER : "strike");
-            KaguneProfile.addMastery(player, "Swipe", 1);
+            if (KaguneProfile.isUnlocked(player)) {
+                KaguneProfile.addMastery(player, "Swipe", 1); // 4.1.7: a human has no kagune to master
+            }
             KaguneNetwork.broadcast(player);
             PaleServer.landed(player, landed);
         } else {
@@ -323,6 +330,9 @@ final class PaleBlitz {
             case UPPERCUT -> 0.82;
             case LIVER, BLINK_PALM -> 0.42;
             case TWIN_PALM -> 0.55;
+            // 4.1.7: the round kicks into the ribs, the side and back kicks into the middle.
+            case ROUND_KICK, HOOK_KICK, TORNADO_KICK -> 0.62;
+            case SIDE_KICK, BACK_KICK -> 0.5;
             default -> 0.74;
         };
         Vec3 contact = new Vec3(centre.f_82479_ - facing.f_82479_ * target.m_20205_() * 0.5, target.m_20186_() + target.m_20206_() * height,
@@ -339,7 +349,8 @@ final class PaleBlitz {
         target.m_20256_(target.m_20184_().m_82490_(0.15).m_82549_(push));
         target.f_19864_ = true;
         target.f_19812_ = true;
-        boolean heavy = strike.finisher() || strike == PaleStrike.UPPERCUT || strike == PaleStrike.BLINK_PALM;
+        boolean heavy = strike.finisher() || strike == PaleStrike.UPPERCUT || strike == PaleStrike.BLINK_PALM || strike == PaleStrike.BACK_KICK
+            || strike == PaleStrike.HOOK_KICK;
         target.m_147207_(new MobEffectInstance(MobEffects.f_19597_, heavy ? FINISH_STAGGER_TICKS : STAGGER_TICKS, heavy ? 3 : 1, false, false, false), player);
         // 6.2.0: it can't fight back mid-combo.
         PaleStun.stun(target, player.m_9236_().m_46467_(), heavy ? StunRules.HEAVY_TICKS : StunRules.TICKS);
@@ -354,11 +365,11 @@ final class PaleBlitz {
         Vec3 at = KaguneServerController.center(target);
         float pitch = KaguneServerController.vary(player, 1.0F, 0.06F);
         switch (strike) {
-            case JAB -> {
+            case JAB, KICK_JAB -> {
                 UkakuFire.sound(level, at, "entity.player.attack.strong", 0.8F, 1.35F * pitch);
                 KaguneServerController.playAt(player, target, HexKaguneSounds.FLESH_IMPACT, 0.45F, 1.5F * pitch);
             }
-            case CROSS, HOOK -> {
+            case CROSS, HOOK, KICK_CROSS, KICK_HOOK -> {
                 UkakuFire.sound(level, at, "entity.player.attack.strong", 1.0F, 1.05F * pitch);
                 KaguneServerController.playAt(player, target, HexKaguneSounds.FLESH_IMPACT, 0.7F, 1.15F * pitch);
             }
@@ -378,6 +389,28 @@ final class PaleBlitz {
                 UkakuFire.sound(level, at, "entity.generic.explode", 0.55F, 1.55F * pitch);
                 KaguneServerController.playAt(player, target, HexKaguneSounds.KAGUNE_SLAM, 0.9F, 1.2F * pitch);
                 KaguneServerController.playAt(player, target, HexKaguneSounds.BONE_CRACK, 0.6F, 0.9F * pitch);
+            }
+            // 4.1.7: Kick Master's kicks: the shin's slap into the ribs, the heel's thud into the middle, the crack of the spinning ones.
+            case ROUND_KICK -> {
+                UkakuFire.sound(level, at, "entity.player.attack.knockback", 1.0F, 1.0F * pitch);
+                KaguneServerController.playAt(player, target, HexKaguneSounds.FLESH_IMPACT, 0.8F, 1.05F * pitch);
+            }
+            case SIDE_KICK -> {
+                UkakuFire.sound(level, at, "entity.player.attack.knockback", 1.0F, 0.75F * pitch);
+                KaguneServerController.playAt(player, target, HexKaguneSounds.FLESH_IMPACT, 0.9F, 0.85F * pitch);
+            }
+            case BACK_KICK -> {
+                UkakuFire.sound(level, at, "entity.player.attack.crit", 1.0F, 0.75F * pitch);
+                KaguneServerController.playAt(player, target, HexKaguneSounds.BONE_CRACK, 0.55F, 1.1F * pitch);
+            }
+            case HOOK_KICK -> {
+                UkakuFire.sound(level, at, "entity.player.attack.strong", 1.0F, 0.85F * pitch);
+                KaguneServerController.playAt(player, target, HexKaguneSounds.BONE_CRACK, 0.6F, 1.25F * pitch);
+            }
+            case TORNADO_KICK -> {
+                UkakuFire.sound(level, at, "entity.player.attack.crit", 1.0F, 0.7F * pitch);
+                KaguneServerController.playAt(player, target, HexKaguneSounds.KAGUNE_SLAM, 0.75F, 1.35F * pitch);
+                KaguneServerController.playAt(player, target, HexKaguneSounds.FLESH_IMPACT, 0.9F, 0.8F * pitch);
             }
         }
     }

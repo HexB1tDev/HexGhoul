@@ -53,7 +53,7 @@ public final class PaleInput {
             return;
         }
         // 4.1.3: with only the eyes open the flips are Speedster's: with no fighting style the right click is the game's own.
-        if (PaleClient.eyes(player) && !PaleClient.style().ownUse()) {
+        if (PaleClient.eyes(player) && !PaleClient.useStyle().ownUse()) {
             return;
         }
         event.setCanceled(true);
@@ -85,7 +85,8 @@ public final class PaleInput {
         }
         Minecraft minecraft = Minecraft.m_91087_();
         LocalPlayer player = minecraft.f_91074_;
-        if (player == null || minecraft.f_91080_ != null || !PaleClient.eyes(player) || QuinqueClient.armed(player)) {
+        // 4.1.7: and a human's Kick Master, the hand empty.
+        if (player == null || minecraft.f_91080_ != null || !PaleClient.eyes(player) && !PaleClient.bare(player) || QuinqueClient.armed(player)) {
             return;
         }
         // 4.1.3: the Speed Blitz is Speedster's: with no fighting style M1 is the game's own punch (and digs as ever).

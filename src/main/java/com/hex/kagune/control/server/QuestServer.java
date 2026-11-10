@@ -124,6 +124,9 @@ public final class QuestServer {
         if (gate == Gate.STYLE_SPEEDSTER) {
             return false; // 4.1.3: a fighting style is learned from Ayato, whatever the mastery
         }
+        if (gate == Gate.STYLE_KICK_STANCE || gate == Gate.STYLE_KICK_CHAMBER || gate == Gate.STYLE_KICK_MASTER) {
+            return false; // 4.1.7: Kick Master is learned from the General, whatever the mastery
+        }
         if (gate == Gate.RINKAKU_HURL || gate == Gate.RINKAKU_IMPALE) {
             return false; // 3.3.1: Ken teaches them (new this week: no save had them under the old progression)
         }

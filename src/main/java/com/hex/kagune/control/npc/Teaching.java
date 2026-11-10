@@ -43,7 +43,9 @@ public final class Teaching {
         /** The step before it isn't theirs yet (a gate another way opens: {@link View#before}). */
         BEFORE,
         /** Everything this teacher knows, they know. */
-        ALL_TAUGHT
+        ALL_TAUGHT,
+        /** 4.1.7: the General sees a ghoul (no full mask over its eyes): he won't teach one to fight his people. */
+        GHOUL
     }
 
     /** What the teacher could do for them now: the lesson to teach (null if none), why not, the mastery needed, the gate missing before. */
@@ -66,6 +68,8 @@ public final class Teaching {
     /** 4.0.0: Ayato (Ukaku: his respect, then the first kakuja) and Noro (Bikaku: everything past the worm's first bites). */
     public static final String AYATO = "ayato";
     public static final String NORO = "noro";
+    /** 4.1.7: the General (Kick Master: to a human, or a ghoul he takes for one behind a full mask). */
+    public static final String GENERAL = "general";
 
     /** Every lesson, in the order each teacher teaches them. */
     public static final List<Lesson> ALL = List.of(
@@ -95,13 +99,21 @@ public final class Teaching {
         // 4.1.3 (the owner: "The default M1 fighting style is only unlocked through a new quest with ayato"): Speedster, the eye-mode fight's
         // M1 and right click, for a ghoul of any kagune (its gate has no path). Appended (Ayato's older lessons keep their saved bits); he
         // teaches it first (it needs no mastery).
-        new Lesson("ayato_speedster", AYATO, Gate.STYLE_SPEEDSTER, Kind.TALK, "Speedster"));
+        new Lesson("ayato_speedster", AYATO, Gate.STYLE_SPEEDSTER, Kind.TALK, "Speedster"),
+        // 4.1.7 (the owner: "he only teaches the player this through quests if the player is either a human or wearing a full mask ... Make
+        // up the quests yourself make sure they're creative and beautful"): the General's road, the three watches of the CCG's night shift.
+        new Lesson("general_stance", GENERAL, Gate.STYLE_KICK_STANCE, Kind.TALK, "The First Watch"),
+        new Lesson("general_chamber", GENERAL, Gate.STYLE_KICK_CHAMBER, Kind.TALK, "The Middle Watch"),
+        new Lesson("general_kick_master", GENERAL, Gate.STYLE_KICK_MASTER, Kind.TALK, "Kick Master"));
 
     /**
      * 4.1.3: true if {@code lesson} is for a ghoul on {@code path}: its gate's path, or, for a lesson with no path of its own (a fighting
      * style), any kagune but the Owl's (her body fights that way already, with her kagune out).
      */
     public static boolean fits(Lesson lesson, KagunePath path) {
+        if (GENERAL.equals(lesson.teacher())) {
+            return path != KagunePath.PALE; // 4.1.7: a human (no kagune at all), or a ghoul of any kagune but the Owl's (her body has its own)
+        }
         return lesson.path() == null ? path != null && path.chosen() && path != KagunePath.PALE : lesson.path() == path;
     }
 
@@ -124,6 +136,8 @@ public final class Teaching {
             case RINKAKU_FULL_KAKUJA -> Gate.RINKAKU_CENTIPEDE;
             case RINKAKU_DRAGON -> Gate.RINKAKU_FULL_KAKUJA;
             case RINKAKU_IMPALE -> Gate.RINKAKU_HURL;
+            case STYLE_KICK_CHAMBER -> Gate.STYLE_KICK_STANCE;
+            case STYLE_KICK_MASTER -> Gate.STYLE_KICK_CHAMBER;
             default -> null;
         };
     }
@@ -180,7 +194,12 @@ public final class Teaching {
      * its place and throws its count away).
      */
     public static View view(String teacher, boolean ghoul, KagunePath path, int mastery, Predicate<Gate> open, long proving) {
-        if (!ghoul) {
+        if (GENERAL.equals(teacher)) {
+            // 4.1.7: the other way round: {@code ghoul} is what he sees (a full mask hides its eyes, and he takes it for a human).
+            if (ghoul) {
+                return new View(null, Refusal.GHOUL, 0, null);
+            }
+        } else if (!ghoul) {
             return new View(null, Refusal.HUMAN, 0, null);
         }
         if (proving != 0L) {
@@ -271,7 +290,22 @@ public final class Teaching {
         /** 4.0.0: bodies brought down with the Bikaku's worm out (it eats them). */
         DEVOURED,
         /** 4.1.3: hostile things killed with the bare hands, only the eyes open (the kagune put away, nothing held). */
-        BARE_HANDS
+        BARE_HANDS,
+        /**
+         * 4.1.7: the General's three watches: hostile things killed with nothing in the hand (and no kagune out) after dark; the same with
+         * the feet off the ground; the same at dawn ({@link #dawn}).
+         */
+        NIGHT_BARE, AIRBORNE, DAWN
+    }
+
+    /** 4.1.7: the dawn watch, in the day's ticks: first light (the sky greying, the night's things still about) to full morning. */
+    public static final long DAWN_FROM = 22300L;
+    public static final long DAWN_TO = 1500L;
+
+    /** 4.1.7: true if the day's time {@code dayTime} (any day) is in the dawn watch. */
+    public static boolean dawn(long dayTime) {
+        long t = Math.floorMod(dayTime, 24000L);
+        return t >= DAWN_FROM || t < DAWN_TO;
     }
 
     /**
@@ -296,6 +330,9 @@ public final class Teaching {
                 case GHOUL_RANK -> "ghouls of " + com.hex.kagune.control.npc.NpcRules.rankName(this.rank) + "-rank or above killed";
                 case DEVOURED -> "bodies brought down by your worm";
                 case BARE_HANDS -> "killed with your bare hands, eyes open";
+                case NIGHT_BARE -> "killed after dark with nothing in your hands";
+                case AIRBORNE -> "killed with your feet off the ground, nothing in your hands";
+                case DAWN -> "killed at dawn with nothing in your hands";
             };
             return teacher + "'s proof: " + Math.min(done, this.need) + " of " + this.need + " " + what + (done >= this.need ? ". Go and see him." : "");
         }
@@ -344,6 +381,22 @@ public final class Teaching {
                     + "in your hands. Kill six things that want you dead, with your fists. Slow and ugly, I don't care. Then come back, and I'll "
                     + "show you what fast is.",
                 "{n} of six. Fists. No kagune, no toys. If your knuckles aren't bleeding you're not done.");
+            // 4.1.7: the General's: the three watches of the CCG's night shift. Hands in the dark; the feet off the ground (a kick is half a
+            // flight); held till the sun comes up, when he counts his shift in from the roof.
+            case "general_stance" -> new Proof(Deed.NIGHT_BARE, 8, 0,
+                "You want to learn how I fight. Everyone does, the week after they've seen it. Fine. The bureau's night shift has three "
+                    + "watches, and so does this. The first: put down whatever you're holding. Eight things that come out after dark, with "
+                    + "nothing in your hands. No blade, no quinque. Hands, feet, and whatever nerve you've got. Then report back.",
+                "{n} of eight, after dark, empty-handed. The dark doesn't care that you're tired.");
+            case "general_chamber" -> new Proof(Deed.AIRBORNE, 3, 0,
+                "The middle watch. A kick is half a flight: the body goes first, and the leg follows where it has already gone. Three of "
+                    + "them, put down with your feet off the ground and nothing in your hands. Jump into it. Fall into it. I don't care how you "
+                    + "get up there, as long as you mean it.",
+                "{n} of three, in the air. Commit to it. Half a jump is a stumble.");
+            case "general_kick_master" -> new Proof(Deed.DAWN, 3, 0,
+                "The last watch is the one they remember. When the sun comes up I'm on the roof, counting the night shift in. Be fighting "
+                    + "when it rises. Three of them, empty-handed, between first light and full morning. Then come and find me.",
+                "{n} of three at dawn. First light to full morning. Miss it and there's always tomorrow. The night always comes back.");
             // 4.0.0: Noro's: few words. Feed the worm; then the hunt; then the strong.
             case "noro_worms" -> new Proof(Deed.EAT_GHOUL, 3, 0, "...Eat. Three. Ghoul.", "...{n}.");
             case "noro_walker" -> new Proof(Deed.GHOUL_RANK, 3, com.hex.kagune.control.npc.NpcRules.B, "...Hunt. Three. Strong ones.", "...{n}.");

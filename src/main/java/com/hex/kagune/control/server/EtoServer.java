@@ -1118,11 +1118,14 @@ public final class EtoServer {
         };
         com.hex.kagune.control.npc.Persona persona = npc.persona();
         boolean eto = persona == com.hex.kagune.control.npc.Persona.ETO;
+        // 4.1.5: a human (the General) takes a ghoul behind a full mask for a human (4.0.7: its eyes are not seen). 4.1.7: and teaches as
+        // he sees it (Kick Master, to a human or one he takes for a human).
+        boolean seenGhoul = ghoul && !(persona.human() && Sightings.masked(player));
         // 1.3.14: Eto's lessons are hers; every other companion teaches what Teaching says it does.
         EtoRules.Lesson next = eto ? EtoRules.next(bond, known) : null;
         com.hex.kagune.control.npc.Teaching.View teaching = eto ? com.hex.kagune.control.npc.Teaching.View.NONE
             // 4.1.3: a proof under way stays the next lesson.
-            : com.hex.kagune.control.npc.Teaching.view(persona.key(), ghoul, path, mastery, log::open,
+            : com.hex.kagune.control.npc.Teaching.view(persona.key(), seenGhoul, path, mastery, log::open,
                 NpcMemoryServer.of(player).get(persona.key(), NpcMemory.PROOF, 0L));
         boolean beforeDone = next == null || next.before() == null || known.test(next.before());
         long day = day(level);
@@ -1139,9 +1142,7 @@ public final class EtoServer {
         Quest trial = QuestBook.get(EtoRules.Lesson.TRIAL.quest);
         boolean trialDone = trial != null && log.state(trial, path, mastery) == QuestLog.State.DONE;
         EtoMood mood = EtoBrain.mood(npc, player, now);
-        // 4.1.5: a human (the General) takes a ghoul behind a full mask for a human (4.0.7: its eyes are not seen).
-        boolean asGhoul = ghoul && !(persona.human() && Sightings.masked(player));
-        return new EtoTalk.Context(bond.regard(), bond.flags(), EtoRules.count(bond), asGhoul, bond.chatted() == day, EtoRules.giftedOn(bond, day),
+        return new EtoTalk.Context(bond.regard(), bond.flags(), EtoRules.count(bond), seenGhoul, bond.chatted() == day, EtoRules.giftedOn(bond, day),
             holds(player, persona::errandItem), holds(player, persona::flower), next, beforeDone, KakuganServer.granted(player),
             npc.m_217043_().m_188503_(100000), stage, claimedBy, id.equals(npc.following()), level.m_46468_(), mood, Romance.days(since, day), daysAway,
             puppy == null ? null : kind(puppy), hasRing(player), ControlItems.ghoulMeat(player.m_21205_()) || ControlItems.ghoulMeat(player.m_21206_()),
@@ -1440,8 +1441,22 @@ public final class EtoServer {
             proved(killer, com.hex.kagune.control.npc.Teaching.Deed.DEVOURED, 0);
         }
         // 4.1.3: Ayato's proof before Speedster: something hostile killed with the bare hands, only the eyes open.
-        if (PaleServer.eyes(killer) && killer.m_21205_().m_41619_() && QuestServer.victim(dead).contains(com.hex.kagune.control.quest.Tags.HOSTILE)) {
+        boolean hostile = QuestServer.victim(dead).contains(com.hex.kagune.control.quest.Tags.HOSTILE);
+        if (PaleServer.eyes(killer) && killer.m_21205_().m_41619_() && hostile) {
             proved(killer, com.hex.kagune.control.npc.Teaching.Deed.BARE_HANDS, 0);
+        }
+        // 4.1.7: the General's three watches: something hostile put down with nothing in the hand and no kagune out: after dark; with the
+        // feet off the ground; at dawn.
+        if (hostile && killer.m_21205_().m_41619_() && !KaguneProfile.isActive(killer)) {
+            if (night) {
+                proved(killer, com.hex.kagune.control.npc.Teaching.Deed.NIGHT_BARE, 0);
+            }
+            if (!killer.m_20096_() && !killer.m_20069_()) {
+                proved(killer, com.hex.kagune.control.npc.Teaching.Deed.AIRBORNE, 0);
+            }
+            if (com.hex.kagune.control.npc.Teaching.dawn(killer.m_9236_().m_46468_())) {
+                proved(killer, com.hex.kagune.control.npc.Teaching.Deed.DAWN, 0);
+            }
         }
         // 2.1.2: a courtship chapter of kills counts. 2.1.5: Doves of a rank (alone or with the companion along), Pack ghouls, ghouls
         // preying on a village, as well as before (at night, at night with them along, any wild ghoul).

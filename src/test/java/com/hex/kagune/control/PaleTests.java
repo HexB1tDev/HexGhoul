@@ -123,8 +123,10 @@ public final class PaleTests {
         check(!com.hex.kagune.control.pale.EyeRules.strikesOverBlock(6.0, 1.0), "eyes: a body out of reach: the block is mined");
         for (KagunePath path : new KagunePath[] {KagunePath.RINKAKU, KagunePath.UKAKU, KagunePath.GRAFT}) {
             for (int m : new int[] {0, PaleRules.KICK_MASTERY - 1, PaleRules.KICK_MASTERY, 1000}) {
+                // 4.1.7: Speedster's panel (Kick Master, once learned, takes M1 over: CompanionTests.kickMaster).
                 AbilityGuide.Panel panel = AbilityGuide.panel(new AbilityGuide.Input(path, AbilityGuide.State.EYES, m,
-                    com.hex.kagune.gameplay.KaguneForm.RINKAKU_SEED, com.hex.kagune.control.ukaku.WingForm.TWIN, false, ControlTests.defaultKeys()));
+                    com.hex.kagune.gameplay.KaguneForm.RINKAKU_SEED, com.hex.kagune.control.ukaku.WingForm.TWIN, false, ControlTests.defaultKeys(), false,
+                    com.hex.kagune.control.graft.GraftStage.TRANSPLANT, false, java.util.Set.of(com.hex.kagune.control.quest.Gate.STYLE_KICK_MASTER)));
                 AbilityGuide.Row blitz = ControlTests.find(panel, "Speed Blitz");
                 AbilityGuide.Row kick = ControlTests.find(panel, "Speed Kick");
                 check(blitz != null && "LMB".equals(blitz.keys()) && blitz.name().contains(PaleStrike.count(m) + " strikes")
@@ -360,8 +362,10 @@ public final class PaleTests {
                         worst = clip;
                         where = " (from start " + s + ", tick " + String.format(java.util.Locale.ROOT, "%.2f", age) + ")";
                     }
-                    check(pose.drop >= 0.0F && Math.min(RigPose.legDrop(pose.rightLegX, pose.rightLegZ, pose.rightKnee),
-                        RigPose.legDrop(pose.leftLegX, pose.leftLegZ, pose.leftKnee)) - pose.drop < 0.01F, "her lower foot stays on the ground: " + strike);
+                    // 4.1.7: off the ground only by the tornado kick's jump (its lift), and then by exactly that.
+                    float lift = (float)strike.lift(age);
+                    check(pose.drop + lift >= 0.0F && Math.min(RigPose.legDrop(pose.rightLegX, pose.rightLegZ, pose.rightKnee),
+                        RigPose.legDrop(pose.leftLegX, pose.leftLegZ, pose.leftKnee)) - (pose.drop + lift) < 0.01F, "her lower foot stays on the ground: " + strike);
                 }
             }
             check(worst == 0.0, "her arms stay out of her body all through the " + strike + ": " + worst + " px" + where);
@@ -3420,7 +3424,11 @@ public final class PaleTests {
                 }
                 check(same, "her left arm is her right mirrored: " + strike + " tick " + age);
             }
-            // She sees her blow land: at impact the fist that throws it is in front of her eyes, in view.
+            // She sees her blow land: at impact the fist that throws it is in front of her eyes, in view. 4.1.7: a punch's (a kick lands
+            // with the leg; her hands stay in the guard, and in the spinning back kick she has turned her back on it).
+            if (strike.kick()) {
+                continue;
+            }
             RigPose body = PaleMotions.strike(strike, strike.impact, null);
             body.settle(1.0F);
             double[] shift = com.hex.kagune.control.client.animation.PaleOwnLeg.shift(body);

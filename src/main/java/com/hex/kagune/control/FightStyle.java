@@ -13,7 +13,14 @@ public enum FightStyle {
     /** No style learned: the game's own punch, the game's own right click. */
     NONE("none", "Bare hands", null),
     /** The Speed Blitz on M1 and the flips on the right click (the eye-mode fight as it was before 4.1.3). Ayato teaches it. */
-    SPEEDSTER("speedster", "Speedster", Gate.STYLE_SPEEDSTER);
+    SPEEDSTER("speedster", "Speedster", Gate.STYLE_SPEEDSTER),
+    /**
+     * 4.1.7 (the owner: "this combat style upon learned fully replaces the default M1 combos"): Kick Master's string on M1 (kicks and
+     * punches: {@link com.hex.kagune.control.pale.PaleStrike.Style#KICKS}). The General teaches it, to a human or a ghoul behind a full mask;
+     * a human fights with it whenever the main hand is empty. Its own right click (the charged teleport speed kick) is the next version's: till
+     * then the right click is Speedster's flips if those were learned, else the game's own ({@link #use}).
+     */
+    KICK_MASTER("kick_master", "Kick Master", Gate.STYLE_KICK_MASTER);
 
     private final String id;
     private final String displayName;
@@ -43,18 +50,36 @@ public enum FightStyle {
         return this != NONE;
     }
 
-    /** True if an empty right click is this style's own move (never the game's). */
+    /** True if an empty right click is this style's own move (never the game's). 4.1.7: Kick Master's comes in the next version. */
     public boolean ownUse() {
-        return this != NONE;
+        return this == SPEEDSTER;
     }
 
-    /** The style a ghoul fights in with only the eyes open: the one learned ({@code open}: their gates), or {@link #NONE}. */
+    /** 4.1.7: the string M1 throws in this style (the Speed Blitz, or Kick Master's kicks). */
+    public com.hex.kagune.control.pale.PaleStrike.Style strikes() {
+        return this == KICK_MASTER ? com.hex.kagune.control.pale.PaleStrike.Style.KICKS : com.hex.kagune.control.pale.PaleStrike.Style.BLITZ;
+    }
+
+    /**
+     * The style M1 fights in (with only the eyes open; 4.1.7: a human's with the hand empty): the one learned ({@code open}: their gates), or
+     * {@link #NONE}. 4.1.7: the one learned last in this list when there are more (Kick Master "fully replaces the default M1 combos").
+     */
     public static FightStyle of(Predicate<Gate> open) {
-        for (FightStyle style : values()) {
-            if (style.gate != null && open.test(style.gate)) {
-                return style;
+        FightStyle[] all = values();
+        for (int i = all.length - 1; i >= 0; i--) {
+            if (all[i].gate != null && open.test(all[i].gate)) {
+                return all[i];
             }
         }
         return NONE;
+    }
+
+    /** 4.1.7: the style whose right click is used: M1's style if it has its own, else Speedster's flips if learned, else {@link #NONE}. */
+    public static FightStyle use(Predicate<Gate> open) {
+        FightStyle m1 = of(open);
+        if (m1.ownUse()) {
+            return m1;
+        }
+        return open.test(Gate.STYLE_SPEEDSTER) ? SPEEDSTER : NONE;
     }
 }

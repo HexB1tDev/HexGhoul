@@ -377,8 +377,8 @@ public final class CompanionTests {
         Set<String> ids = new HashSet<>();
         for (Teaching.Lesson lesson : Teaching.ALL) {
             check(ids.add(lesson.id()) && Teaching.byId(lesson.id()) == lesson, lesson.id() + ": one id");
-            // 4.1.3: a fighting style's lesson has no path of its own (any kagune learns it).
-            check(Persona.known(lesson.teacher()) && (lesson.path() != null) == (lesson.gate() != Gate.STYLE_SPEEDSTER), lesson.id() + ": a teacher and a path");
+            // 4.1.3: a fighting style's lesson has no path of its own (any kagune learns it). 4.1.7: nor do the General's (Kick Master's road).
+            check(Persona.known(lesson.teacher()) && (lesson.path() != null) == !lesson.gate().id().startsWith("style_"), lesson.id() + ": a teacher and a path");
             check(QuestBook.openers(lesson.gate()).isEmpty(), lesson.gate().id() + ": no quest opens it any more, its teacher does");
             check(Teaching.taught(lesson.gate()) && Teaching.teaching(lesson.gate()) == lesson, lesson.gate().id() + ": taught by one lesson");
             check(!Teaching.gatedText(lesson.gate(), Persona.of(lesson.teacher()).name()).isBlank(), lesson.id() + ": the game says who teaches it");
@@ -411,7 +411,7 @@ public final class CompanionTests {
         check(Teaching.inOrder("ken").get(0).gate() == Gate.RINKAKU_HURL && Teaching.inOrder("ken").get(1).gate() == Gate.RINKAKU_IMPALE
             && Teaching.inOrder("ken").get(2).gate() == Gate.RINKAKU_CENTIPEDE, "Ken teaches the Rubble Hurl first, then the Impale, then the centipede");
         Gate[] gates = Gate.values();
-        check(Gate.RINKAKU_IMPALE.ordinal() == Gate.RINKAKU_HURL.ordinal() + 1 && gates[gates.length - 1] == Gate.STYLE_SPEEDSTER && Gate.STYLE_SPEEDSTER.ordinal() == Gate.BIKAKU_POTENTIAL.ordinal() + 1
+        check(Gate.RINKAKU_IMPALE.ordinal() == Gate.RINKAKU_HURL.ordinal() + 1 && gates[gates.length - 4] == Gate.STYLE_SPEEDSTER && Gate.STYLE_SPEEDSTER.ordinal() == Gate.BIKAKU_POTENTIAL.ordinal() + 1
             && Gate.UKAKU_AYATO_DOVES.ordinal() == Gate.RINKAKU_IMPALE.ordinal() + 1 && Gate.fromId("rinkaku_hurl") == Gate.RINKAKU_HURL
             && Gate.fromId("rinkaku_impale") == Gate.RINKAKU_IMPALE && Gate.RINKAKU_HURL.mastery() == com.hex.kagune.control.RinkakuUnlocks.HURL
             && Gate.RINKAKU_IMPALE.mastery() == com.hex.kagune.control.RinkakuUnlocks.IMPALE, "the two new gates appended, at their moves' own mastery");
@@ -463,6 +463,140 @@ public final class CompanionTests {
         check(dragon.ready() && dragon.next().gate() == Gate.RINKAKU_DRAGON, "and last, the Dragon");
         speedster();
         general();
+        kickMaster();
+    }
+
+    /**
+     * 4.1.7 (the owner: "He teaches a new combat style mixing kicks and punches (mostly side kicks, spinning kicks etc), he only teaches the
+     * player this through quests if the player is either a human or wearing a full mask ... this combat style upon learned fully replaces
+     * the default M1 combos ... Make up the quests yourself make sure they're creative and beautful."): the style, its gates, the General's
+     * road (three watches of the night shift), who he will and won't teach, and the string itself.
+     */
+    static void kickMaster() {
+        com.hex.kagune.control.FightStyle kicks = com.hex.kagune.control.FightStyle.KICK_MASTER;
+        Set<Gate> open = new HashSet<>(java.util.List.of(Gate.STYLE_KICK_MASTER));
+        check(com.hex.kagune.control.FightStyle.of(open::contains) == kicks && kicks.ownAttack() && !kicks.ownUse()
+            && kicks.strikes() == com.hex.kagune.control.pale.PaleStrike.Style.KICKS && kicks.displayName().equals("Kick Master")
+            && com.hex.kagune.control.FightStyle.use(open::contains) == com.hex.kagune.control.FightStyle.NONE,
+            "Kick Master learned: M1 is its string; no right click of its own yet (the game's)");
+        open.add(Gate.STYLE_SPEEDSTER);
+        check(com.hex.kagune.control.FightStyle.of(open::contains) == kicks
+            && com.hex.kagune.control.FightStyle.use(open::contains) == com.hex.kagune.control.FightStyle.SPEEDSTER,
+            "with Speedster too: Kick Master fully replaces the M1 combos; the right click stays Speedster's flips");
+        check(com.hex.kagune.control.FightStyle.SPEEDSTER.strikes() == com.hex.kagune.control.pale.PaleStrike.Style.BLITZ, "Speedster's string is the blitz");
+        for (Gate gate : new Gate[] {Gate.STYLE_KICK_STANCE, Gate.STYLE_KICK_CHAMBER, Gate.STYLE_KICK_MASTER}) {
+            check(gate.path() == null && gate.mastery() == 0 && !gate.mutation() && Gate.fromId(gate.id()) == gate && QuestBook.openers(gate).isEmpty(),
+                gate + ": no path, no mastery, no quest opens it");
+            check(read("src/main/java/com/hex/kagune/control/server/QuestServer.java").contains("gate == Gate.STYLE_KICK_STANCE || gate == Gate.STYLE_KICK_CHAMBER || gate == Gate.STYLE_KICK_MASTER) {\n            return false;"),
+                "never had from before");
+        }
+        check(Gate.values()[Gate.values().length - 1] == Gate.STYLE_KICK_MASTER && Gate.values()[Gate.values().length - 4] == Gate.STYLE_SPEEDSTER,
+            "the gates appended after Speedster");
+        // His road: three lessons, each a proof, each opening the next.
+        java.util.List<Teaching.Lesson> road = Teaching.inOrder(Teaching.GENERAL);
+        check(road.size() == 3 && road.get(0).gate() == Gate.STYLE_KICK_STANCE && road.get(1).gate() == Gate.STYLE_KICK_CHAMBER
+            && road.get(2).gate() == Gate.STYLE_KICK_MASTER && road.stream().allMatch(l -> l.kind() == Teaching.Kind.TALK),
+            "the General's road: the first watch, the middle watch, Kick Master");
+        check(Teaching.bit(road.get(0)) == 1L && Teaching.bit(road.get(1)) == 2L && Teaching.bit(road.get(2)) == 4L, "each its own saved bit");
+        check(Teaching.before(Gate.STYLE_KICK_STANCE) == null && Teaching.before(Gate.STYLE_KICK_CHAMBER) == Gate.STYLE_KICK_STANCE
+            && Teaching.before(Gate.STYLE_KICK_MASTER) == Gate.STYLE_KICK_CHAMBER, "one watch at a time");
+        Teaching.Deed[] deeds = {Teaching.Deed.NIGHT_BARE, Teaching.Deed.AIRBORNE, Teaching.Deed.DAWN};
+        int[] needs = {8, 3, 3};
+        String[] said = {"after dark", "feet off the ground", "at dawn"};
+        for (int i = 0; i < 3; i++) {
+            Teaching.Proof proof = Teaching.proof(road.get(i));
+            check(proof != null && proof.deed() == deeds[i] && proof.need() == needs[i] && proof.ask().length() > 150
+                && proof.bar("General Kuroda", 1).contains("1 of " + needs[i]) && proof.bar("General Kuroda", 1).contains(said[i])
+                && proof.bar("General Kuroda", needs[i]).endsWith("Go and see him.") && Teaching.fill(proof.progress(), proof, 2).contains("2"),
+                road.get(i).name() + ": its proof (" + deeds[i] + ")");
+        }
+        // Who he teaches: a human (no kagune at all), or one he takes for a human (a ghoul behind a full mask: the caller says what he sees).
+        Set<Gate> nothing = new HashSet<>();
+        for (KagunePath path : new KagunePath[] {KagunePath.NONE, KagunePath.RINKAKU, KagunePath.UKAKU, KagunePath.BIKAKU, KagunePath.GRAFT}) {
+            Teaching.View view = Teaching.view(Teaching.GENERAL, false, path, 0, nothing::contains);
+            check(view.ready() && view.next() == road.get(0), path + ": the General starts anyone he takes for a human on the first watch");
+            check(Teaching.view(Teaching.GENERAL, true, path, 1000, nothing::contains).refusal() == Teaching.Refusal.GHOUL,
+                path + ": a ghoul he can see: never");
+        }
+        check(Teaching.view(Teaching.GENERAL, false, KagunePath.PALE, 0, nothing::contains).refusal() == Teaching.Refusal.WRONG_PATH,
+            "the Owl's body fights its own way");
+        check(Teaching.view("ayato", false, KagunePath.NONE, 0, nothing::contains).refusal() == Teaching.Refusal.HUMAN,
+            "the ghouls still turn a human away");
+        Set<Gate> watches = new HashSet<>(java.util.List.of(Gate.STYLE_KICK_STANCE));
+        check(Teaching.view(Teaching.GENERAL, false, KagunePath.NONE, 0, watches::contains).next() == road.get(1), "then the middle watch");
+        watches.add(Gate.STYLE_KICK_CHAMBER);
+        check(Teaching.view(Teaching.GENERAL, false, KagunePath.NONE, 0, watches::contains).next() == road.get(2), "then Kick Master");
+        watches.add(Gate.STYLE_KICK_MASTER);
+        check(Teaching.view(Teaching.GENERAL, false, KagunePath.NONE, 0, watches::contains).refusal() == Teaching.Refusal.ALL_TAUGHT, "then nothing more");
+        // The dawn watch: first light to full morning, any day.
+        long[] dawn = {22300L, 23999L, 0L, 1499L, 24000L + 100L, 5L * 24000L + 23000L};
+        long[] notDawn = {1500L, 6000L, 12000L, 18000L, 22299L, 3L * 24000L + 13000L};
+        for (long t : dawn) {
+            check(Teaching.dawn(t), t + ": dawn");
+        }
+        for (long t : notDawn) {
+            check(!Teaching.dawn(t), t + ": not dawn");
+        }
+        check(com.hex.kagune.control.npc.EtoRules.night(Teaching.DAWN_FROM) && !com.hex.kagune.control.npc.EtoRules.night(Teaching.DAWN_TO),
+            "the dawn watch starts while the night's things are still out, and runs on into the morning");
+        // His words.
+        for (Teaching.Lesson lesson : road) {
+            String words = teaches("GeneralScript", lesson);
+            check(words.length() > 200 && !words.contains("(" + lesson.name() + ")"), lesson.name() + ": in his own words");
+        }
+        check(teaches("GeneralScript", road.get(2)).contains("M1") && teaches("GeneralScript", road.get(2)).contains("nothing in your hand"),
+            "and the game says what it does");
+        // The string: kicks and punches, the kicks thrown from further out, the tornado kick's jump.
+        com.hex.kagune.control.pale.PaleStrike[] string = com.hex.kagune.control.pale.PaleStrike.of(com.hex.kagune.control.pale.PaleStrike.Style.KICKS);
+        check(string.length == 8 && string[0] == com.hex.kagune.control.pale.PaleStrike.KICK_JAB && string[7] == com.hex.kagune.control.pale.PaleStrike.TORNADO_KICK
+            && string[7].finisher() && java.util.Arrays.stream(string).filter(com.hex.kagune.control.pale.PaleStrike::kick).count() == 5,
+            "eight blows, five of them kicks, the tornado kick to finish");
+        check(com.hex.kagune.control.pale.PaleStrike.count(Integer.MAX_VALUE, com.hex.kagune.control.pale.PaleStrike.Style.KICKS) == 8
+            && com.hex.kagune.control.pale.PaleStrike.next(com.hex.kagune.control.pale.PaleStrike.TORNADO_KICK, Integer.MAX_VALUE,
+                com.hex.kagune.control.pale.PaleStrike.Style.KICKS) == com.hex.kagune.control.pale.PaleStrike.KICK_JAB
+            && com.hex.kagune.control.pale.PaleStrike.next(com.hex.kagune.control.pale.PaleStrike.CROSS, Integer.MAX_VALUE,
+                com.hex.kagune.control.pale.PaleStrike.Style.KICKS) == com.hex.kagune.control.pale.PaleStrike.KICK_JAB,
+            "the string all there once learned, round again after the tornado; a blitz strike before it starts it fresh");
+        check(com.hex.kagune.control.pale.PaleRules.comboKickStand(0.6) > com.hex.kagune.control.pale.PaleRules.strikeStand(0.6), "a kick is thrown from further out");
+        double top = 0.0;
+        for (double age = 0.0; age <= string[7].duration; age += 0.25) {
+            top = Math.max(top, string[7].lift(age));
+        }
+        check(top > 8.0 && string[7].lift(string[7].impact) > 8.0 && string[7].lift(0.0) == 0.0 && string[7].lift(string[7].duration) == 0.0,
+            "the tornado kick leaves the ground and comes back down (highest " + top + ")");
+        // Where it is wired: a human's empty hand, the General's own fight.
+        String server = read("src/main/java/com/hex/kagune/control/server/PaleServer.java");
+        check(server.contains("return !KaguneProfile.isUnlocked(player) && player.m_21205_().m_41619_() && style(player) == com.hex.kagune.control.FightStyle.KICK_MASTER;")
+            && server.contains("if (!eyes && action != C2SPaleAction.STRIKE) {"), "a human with Kick Master and an empty hand: M1 alone");
+        String blitz = read("src/main/java/com/hex/kagune/control/server/PaleBlitz.java");
+        check(blitz.contains("PaleStrike.next(previous, string == PaleStrike.Style.KICKS ? Integer.MAX_VALUE : mastery, string)")
+            && blitz.contains("strike.kick() ? PaleRules.comboKickStand("), "the server throws the style's string, kicks from further out");
+        check(read("src/main/java/com/hex/kagune/control/server/EtoOwl.java").contains("PaleStrike.of(npc.persona().human() ? PaleStrike.Style.KICKS : PaleStrike.Style.BLITZ)"),
+            "the General fights with it");
+        check(read("src/main/java/com/hex/kagune/control/server/EtoServer.java").contains("boolean seenGhoul = ghoul && !(persona.human() && Sightings.masked(player));"),
+            "he teaches as he sees: a full mask hides a ghoul from him");
+        java.util.Map<com.hex.kagune.control.AbilityGuide.Key, String> keys = new java.util.EnumMap<>(com.hex.kagune.control.AbilityGuide.Key.class);
+        for (com.hex.kagune.control.AbilityGuide.Key key : com.hex.kagune.control.AbilityGuide.Key.values()) {
+            keys.put(key, key.name());
+        }
+        java.util.List<String> listed = guide(keys, new HashSet<>(java.util.List.of(Gate.STYLE_SPEEDSTER)));
+        check(listed.contains("Kick Master") && listed.stream().anyMatch(n -> n.startsWith("Kicks and punches (8")) && !listed.contains("Speedster"),
+            "the ability list with Kick Master " + listed);
+    }
+
+    /** 4.1.7: what {@code script}'s lesson words say teaching {@code lesson}. */
+    static String teaches(String script, Teaching.Lesson lesson) {
+        try {
+            java.lang.reflect.Field field = Class.forName("com.hex.kagune.control.npc." + script).getDeclaredField("LESSONS");
+            field.setAccessible(true);
+            Object words = field.get(null);
+            java.lang.reflect.Method teach = Class.forName("com.hex.kagune.control.npc.CompanionScript$LessonWords").getDeclaredMethod("teach", Teaching.Lesson.class,
+                com.hex.kagune.control.npc.EtoTalk.Context.class);
+            teach.setAccessible(true);
+            return (String)teach.invoke(words, lesson, null);
+        } catch (ReflectiveOperationException failure) {
+            throw new IllegalStateException(failure);
+        }
     }
 
     /**
@@ -528,7 +662,7 @@ public final class CompanionTests {
         } catch (ReflectiveOperationException failure) {
             check(false, "his script: " + failure);
         }
-        check(read("src/main/java/com/hex/kagune/control/server/EtoServer.java").contains("boolean asGhoul = ghoul && !(persona.human() && Sightings.masked(player));"),
+        check(read("src/main/java/com/hex/kagune/control/server/EtoServer.java").contains("boolean seenGhoul = ghoul && !(persona.human() && Sightings.masked(player));"),
             "behind a full mask a ghoul is a human to him");
         String brain = read("src/main/java/com/hex/kagune/control/server/EtoBrain.java");
         check(brain.contains("dress(npc);") && brain.contains("OutfitServer.dress(npc, pieces);") && brain.contains("armor.m_22100_(OutfitServer.armour(npc, npc.persona().armor()));")
@@ -555,7 +689,7 @@ public final class CompanionTests {
         check(com.hex.kagune.control.FightStyle.of(open::contains) == none && !none.ownAttack() && !none.ownUse() && none.gate() == null,
             "no style learned: the game's own punch and right click");
         for (Gate gate : Gate.values()) {
-            if (gate != Gate.STYLE_SPEEDSTER) {
+            if (gate != Gate.STYLE_SPEEDSTER && gate != Gate.STYLE_KICK_MASTER) {
                 open.add(gate);
             }
         }
@@ -615,27 +749,28 @@ public final class CompanionTests {
         String words = ayatoTeaches(lesson);
         check(words.length() > 120 && words.contains("Speedster") && words.contains("M1") && words.contains("right click"), "Ayato teaches it in his own words, and the game says what it does");
         String server = read("src/main/java/com/hex/kagune/control/server/PaleServer.java");
-        check(server.contains("if (style.ownAttack()) {\n                    PaleBlitz.click(") && server.contains("if (style.ownUse()) {\n                    PaleMoves.flip(")
-            && server.contains("eyes(player) && style(player).ownAttack()) {\n            event.setCanceled(true);"),
+        check(server.contains("if (style.ownAttack()) {\n                    PaleBlitz.click(")
+            && server.contains("if (com.hex.kagune.control.FightStyle.use(QuestServer.log(player)::open).ownUse()) {\n                    PaleMoves.flip(")
+            && server.contains("(eyes(player) || bare(player)) && style(player).ownAttack()) {\n            event.setCanceled(true);"),
             "the server: the eyes' blitz and flips only with the style; without it a punch stays the game's own");
         check(server.contains("case C2SPaleAction.PUNCH -> PaleMoves.punchKey(player, state, arg != 0, targetId, now);\n            case C2SPaleAction.KICK -> PaleMoves.kick(player, state, now);\n            default -> {\n            }\n        }\n    }\n\n    /**\n     * 7.0.1: with only the eyes open a vanilla punch"),
             "the keys' moves (the Big Punch, the Speed Kick) are not a style's");
         String input = read("src/main/java/com/hex/kagune/control/client/PaleInput.java");
-        check(input.contains("if (PaleClient.eyes(player) && !PaleClient.style().ownUse()) {\n            return;\n        }\n        event.setCanceled(true);")
+        check(input.contains("if (PaleClient.eyes(player) && !PaleClient.useStyle().ownUse()) {\n            return;\n        }\n        event.setCanceled(true);")
             && input.contains("if (!PaleClient.style().ownAttack()) {\n            return;\n        }\n        HitResult hit"),
             "the client: with no style the clicks are left to the game (never cancelled)");
         check(read("src/main/java/com/hex/kagune/control/server/QuestServer.java").contains("if (gate == Gate.STYLE_SPEEDSTER) {\n            return false;"),
             "never had from before: a save starts with its bare hands");
-        check(read("src/main/java/com/hex/kagune/control/server/EtoServer.java").contains("PaleServer.eyes(killer) && killer.m_21205_().m_41619_() && QuestServer.victim(dead).contains(com.hex.kagune.control.quest.Tags.HOSTILE)"),
+        check(read("src/main/java/com/hex/kagune/control/server/EtoServer.java").contains("boolean hostile = QuestServer.victim(dead).contains(com.hex.kagune.control.quest.Tags.HOSTILE);\n        if (PaleServer.eyes(killer) && killer.m_21205_().m_41619_() && hostile) {"),
             "the proof counts something hostile killed with the eyes open and nothing in the hand");
         // The ability list.
         java.util.Map<com.hex.kagune.control.AbilityGuide.Key, String> keys = new java.util.EnumMap<>(com.hex.kagune.control.AbilityGuide.Key.class);
         for (com.hex.kagune.control.AbilityGuide.Key key : com.hex.kagune.control.AbilityGuide.Key.values()) {
             keys.put(key, key.name());
         }
-        Set<Gate> shut = new HashSet<>(java.util.List.of(gate));
+        Set<Gate> shut = new HashSet<>(java.util.List.of(gate, Gate.STYLE_KICK_MASTER));
         java.util.List<String> bare = guide(keys, shut);
-        java.util.List<String> fast = guide(keys, new HashSet<>());
+        java.util.List<String> fast = guide(keys, new HashSet<>(java.util.List.of(Gate.STYLE_KICK_MASTER)));
         check(bare.contains("Punch") && bare.stream().noneMatch(n -> n.startsWith("Speed Blitz") || n.startsWith("Flips")) && bare.contains("None: ask Ayato")
             && bare.contains("Big Punch!"), "the list with no style: Punch, who to ask, the keys' moves still there " + bare);
         check(fast.stream().anyMatch(n -> n.startsWith("Speed Blitz")) && fast.stream().anyMatch(n -> n.startsWith("Flips")) && fast.contains("Speedster")
@@ -914,8 +1049,9 @@ public final class CompanionTests {
             boolean finalOne = lesson.gate() == Gate.RINKAKU_FULL_KAKUJA || lesson.gate() == Gate.RINKAKU_DRAGON || lesson.gate() == Gate.UKAKU_FINAL_KAKUJA;
             boolean kenMove = lesson.gate() == Gate.RINKAKU_HURL || lesson.gate() == Gate.RINKAKU_IMPALE; // 3.3.1
             // 4.0.0: every one of Ayato's and Noro's is earned (the owner: respect, "meaningful challenges", "progression challenges").
-            boolean earned = lesson.teacher().equals("ayato") || lesson.teacher().equals("noro");
-            check((finalOne || kenMove || earned) == (proof != null), lesson.id() + ": a proof first only for a final kakuja, Ken's Hurl and Impale, and Ayato's and Noro's");
+            // 4.1.7: and the General's (the three watches).
+            boolean earned = lesson.teacher().equals("ayato") || lesson.teacher().equals("noro") || lesson.teacher().equals("general");
+            check((finalOne || kenMove || earned) == (proof != null), lesson.id() + ": a proof first only for a final kakuja, Ken's Hurl and Impale, and Ayato's, Noro's and the General's");
             if (proof != null && earned) {
                 check(proof.need() >= 1 && !Teaching.fill(proof.ask(), proof, 0).contains("{") && !Teaching.fill(proof.progress(), proof, 0).contains("{")
                     && proof.bar(lesson.teacher(), proof.need()).contains("Go and see him") && !proof.bar(lesson.teacher(), 0).contains("Go and see"),

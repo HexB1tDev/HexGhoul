@@ -16,6 +16,12 @@ public final class EyeRules {
     public static final float POWER_MASTERED = 1.0F;
     public static final int MASTERED = 1000;
     /**
+     * 4.1.7: a human's Kick Master (no kagune behind it, the General's thirty years in it): blows as heavy as a ghoul's fists half mastered
+     * ({@link #HUMAN_MASTERY}), times {@link #HUMAN_POWER}.
+     */
+    public static final float HUMAN_POWER = 0.8F;
+    public static final int HUMAN_MASTERY = 500;
+    /**
      * A target this close to the crosshair (blocks from the eye) and within {@link #AIM_COS} of it turns an M1 on a block into a
      * strike instead of mining (a fight near the ground or a wall never starts digging).
      */

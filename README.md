@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.7 (HexGhoul): Kick Master (testing)
+
+See `.github/release-notes-4.1.7.md`. Your words: "He teaches a new combat style mixing kicks and punches (mostly side kicks, spinning kicks etc), he only teaches the player this through quests if the player is either a human or wearing a full mask." Eight blows on M1 (jab, cross, round kick, side kick, spinning back kick, hook, spinning hook kick, tornado kick), the kicks posed by where the foot goes and checked from the side. The General teaches it through three watches of the night shift (8 kills after dark, 3 in the air, 3 at dawn, all empty-handed) to a human or a ghoul behind a full mask. A human uses it whenever the hand is empty; it replaces the Speed Blitz. The General fights with it. The right click (the teleport speed kick) is next. Protocol 115.
+
 ## 4.1.6 (HexGhoul): The hideout and the CCG building, always somewhere (testing)
 
 See `.github/release-notes-4.1.6.md`. Your words: "also I cant get the aogiri hideout to spawn or the ccg building at all." Each was built only at the first of its spots that was completely dry; many worlds had none, so they had no hideout at all. Now a world always gets both if any spot is on land: the first dry near spot (unchanged where there was one), then a dry one further out, then the driest near one. `/place structure hexkagune:aogiri_hideout` and `hexkagune:ccg_building` build them where you stand (old worlds). The log names where they stand. Protocol 114.

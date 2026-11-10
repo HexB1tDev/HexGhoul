@@ -223,16 +223,19 @@ public final class RigPose {
         this.headY = clamp(this.headY * damp, 1.3F);
         this.headZ = clamp(this.headZ * damp, 0.6F);
         this.lean = clamp(this.lean * damp, 1.0F);
-        // 6.2.0: as far over as the side kick leans her, away from the leg.
-        this.side = clamp(this.side * damp, 0.6F);
+        // 6.2.0: as far over as the side kick leans her, away from the leg. 4.1.7: Kick Master's side-on kicks lay the trunk further
+        // away from the leg (the counterweight of a leg out level).
+        this.side = clamp(this.side * damp, 0.85F);
         this.twist = clamp(this.twist * damp, 1.2F);
-        this.drop = clamp(this.drop * damp, 4.0F);
+        // 4.1.7: up (a negative drop) as far as the tornado kick's jump lifts her.
+        this.drop = Float.isFinite(this.drop) ? Math.max(-10.0F, Math.min(4.0F, this.drop * damp)) : 0.0F;
         this.lunge = clamp(this.lunge * damp, 8.0F);
         // A flip is all or nothing (a partial turn would leave him lying in the air); so are a roll and a spin.
         float turn = (float)(Math.PI * 2.0);
         this.flip = damp >= 0.5F && Float.isFinite(this.flip) ? Math.max(-turn, Math.min(turn, this.flip)) : 0.0F;
         this.roll = damp >= 0.5F && Float.isFinite(this.roll) ? Math.max(-turn, Math.min(turn, this.roll)) : 0.0F;
-        this.spin = damp >= 0.5F && Float.isFinite(this.spin) ? Math.max(-turn, Math.min(turn, this.spin)) : 0.0F;
+        // 4.1.7: a spin may run on past a whole turn (the tornado kick's full turn and on into the kick).
+        this.spin = damp >= 0.5F && Float.isFinite(this.spin) ? Math.max(-2.0F * turn, Math.min(2.0F * turn, this.spin)) : 0.0F;
         this.rightArmX = clamp(this.rightArmX * damp, 3.3F);
         this.rightArmY = clamp(this.rightArmY * damp, 1.6F);
         this.rightArmZ = clamp(this.rightArmZ * damp, 1.6F);

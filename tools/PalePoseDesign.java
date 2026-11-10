@@ -43,6 +43,9 @@ public final class PalePoseDesign {
         boolean airborne;
         boolean guardArms;
         boolean fresh;
+        boolean kickArms;
+        /** 4.1.7: where her right foot's sole goes (the move's frame, blocks); the right leg is solved onto it, its knee as given. */
+        double[] rightSole;
 
         Spec(double at, String ease) {
             this.at = at;
@@ -191,6 +194,22 @@ public final class PalePoseDesign {
 
         Spec guardArms() {
             this.guardArms = true;
+            return this;
+        }
+
+        /** 4.1.7: the arms held in the kicking guard ({@link #KICK_GUARD}): as the guard, the fists further from the chin. */
+        Spec kickArms() {
+            this.kickArms = true;
+            return this;
+        }
+
+        /**
+         * 4.1.7: her right foot's sole put at ({@code x}, {@code y}, {@code z}) in the move's frame: the thigh's swing and its swing out
+         * to the side are solved for (her knee as {@link #rightLeg} gave it), from the hip wherever the body's turn, lunge and drop put it.
+         * A kick is written as where the foot goes, as a punch is written as where the fist goes.
+         */
+        Spec sole(double x, double y, double z) {
+            this.rightSole = new double[] {x, y, z};
             return this;
         }
     }
@@ -540,6 +559,157 @@ public final class PalePoseDesign {
         return List.of(cock, slam, over, down, back, guardKey(PaleRules.HAMMER_TICKS));
     }
 
+    // ------------------------------------------------------------------ 4.1.7: Kick Master's kicks
+    //
+    // What makes a kick land (the same grammar as a punch's, said with the hips): the CHAMBER (the weight taken wholly onto the standing
+    // leg, its knee soft; the kicking knee lifted and folded tight, pointed where the kick will go: a kick's line and height are decided
+    // by the knee, never the foot), the PIVOT (the standing foot turns on its ball, heel toward the target, which lets the hips turn
+    // over: with no pivot there is no hip in it), the EXTENSION (the hip driven in behind the leg as it straightens, the trunk laid away
+    // from the leg as its counterweight), an overshoot a hair past, the RE-CHAMBER (the knee folds again before the foot comes down: a
+    // kick is drawn back as fast as it was thrown, or it is a push), and the foot set down where the next blow wants it. The hands stay
+    // up in the kicking guard all through (a kickboxer's: the face covered while a leg is away), turning with the trunk.
+    //
+    // Kicks are designed with the right leg and mirrored for the left, the extended leg written as where the sole goes (Spec.sole).
+    // Measured on the rig (4.1.7): a whole-body turn of +pi/2 (to her left) puts her right side to the target; side-on, the trunk is laid
+    // away from the target by the upper body's SIDE lean (to her left: away from her right leg), never by the whole body's roll (about
+    // the line to the target, a roll only bows her forward or back there). A model leg is 0.70 blocks from a hip 0.70 up, so a straight
+    // leg reaches about chest height; the lunge (at most 8 pixels) is the step in behind it. An arm thrown about the body as a counterweight
+    // was tried: its blends between keys passed through her side as the trunk leaned (PaleTests sweeps every 0.05 tick), so the arms keep
+    // the kicking guard, and the head turns no further than lets them.
+
+    /**
+     * The kicking guard: as {@link #guard}, the fists a little lower and further out from the chin. Side-on, the head turns to keep its
+     * eyes on the target, and its corner would sweep through a fist held at the jaw; held as the arms' own angles (they turn with the
+     * torso, its lean and twist), the guard never comes near the body whatever the kick does with it.
+     */
+    static Spec kickGuard() {
+        return key(0, "SMOOTH").body(0.0, 0.0, 0.12, 0.0).legs(-0.36, 0.72, -0.36, 0.72)
+            .right(v(0.17, 1.16, 0.54), v(0.4, 1.0, 0.27)).left(v(-0.17, 1.16, 0.54), v(-0.4, 1.0, 0.27)).mirrored();
+    }
+
+    /** The kicking guard's solved arms (set in {@link #main} before the strikes are solved). */
+    static RigPose KICK_GUARD;
+
+    /** Where the target's front is in the move's frame: the server stands her this far off for a kick (PaleRules.comboKickStand). */
+    static final double FRONT = 1.15;
+
+    /**
+     * The rear round kick, into the ribs. Out of the cross (the hips already turned through, the rear heel up): the weight onto the lead
+     * leg, the rear knee up and round to the side with the shin folded level behind it; the standing foot pivots and the hips turn over;
+     * the shin whips round level into the ribs, the trunk laid away from it, the hands up; through it a
+     * hair; the knee folds again and the foot comes down.
+     */
+    static List<Spec> roundKick(PaleStrike strike) {
+        int i = strike.impact;
+        Spec load = key(i - 2.6, "SMOOTH").body(0.3, 0.3, 0.1, 1.0).legs(-0.42, 0.7, 0.3, 0.7).kickArms();
+        Spec chamber = key(i - 1.4, "SMOOTH").body(0.8, 0.15, 0.0, 3.5).side(0.2).leftLeg(-0.1, 0.0, 0.4).rightLeg(-1.3, 0.95, 2.3)
+            .kneeTurn(1.25, 0.0).kickArms();
+        Spec hit = key(i, "IN").body(1.25, -0.2, 0.0, 8.0).side(0.6).leftLeg(-0.04, 0.0, 0.25).rightLeg(0.0, 0.0, 0.06)
+            .sole(-0.1, 1.0, FRONT + 0.05).kickArms();
+        Spec over = key(i + 0.6, "OUT").body(1.45, -0.25, 0.0, 8.0).side(0.66).leftLeg(-0.04, 0.0, 0.24).rightLeg(0.0, 0.0, 0.04)
+            .sole(-0.32, 1.05, FRONT - 0.02).kickArms();
+        Spec fold = key(i + 2.3, "SMOOTH").body(1.2, 0.0, 0.05, 3.5).side(0.2).leftLeg(-0.12, 0.0, 0.45).rightLeg(-1.15, 0.8, 2.2)
+            .kneeTurn(1.1, 0.0).kickArms();
+        return List.of(load, chamber, hit, over, fold, guardKey(strike.duration));
+    }
+
+    /**
+     * The side kick. The knee drawn up high across the body (the shin level, the sole already facing the target) while the standing
+     * foot turns right round, heel to the target, and a skip carries her in; the hips turn over and the heel is driven out in a straight
+     * line, the leg locked, the trunk laid away from it, the hands up; a hair further;
+     * held a beat (a side kick pushes); the knee back to the chest; down.
+     */
+    static List<Spec> sideKick(PaleStrike strike) {
+        int i = strike.impact;
+        Spec chamber = key(i - 1.8, "SMOOTH").body(1.15, 0.1, 0.05, 3.0).side(0.2).leftLeg(-0.1, 0.0, 0.5).rightLeg(-1.5, 0.6, 2.45).kickArms();
+        Spec hit = key(i, "IN").body(1.57, 0.0, 0.0, 8.0).side(0.78).leftLeg(-0.02, 0.0, 0.2).rightLeg(0.0, 0.0, 0.0)
+            .sole(0.0, 1.02, FRONT + 0.05).kickArms();
+        Spec over = key(i + 0.6, "OUT").body(1.6, 0.0, 0.0, 8.0).side(0.82).leftLeg(-0.02, 0.0, 0.18).rightLeg(0.0, 0.0, 0.0)
+            .sole(0.0, 1.04, FRONT + 0.08).kickArms();
+        Spec hold = key(i + 1.9, "SMOOTH").body(1.57, 0.0, 0.0, 7.5).side(0.76).leftLeg(-0.02, 0.0, 0.22).rightLeg(0.0, 0.0, 0.08)
+            .sole(0.0, 1.02, FRONT + 0.04).kickArms();
+        Spec fold = key(i + 3.4, "SMOOTH").body(1.3, 0.05, 0.06, 3.0).side(0.25).leftLeg(-0.1, 0.0, 0.45).rightLeg(-1.4, 0.55, 2.3).kickArms();
+        return List.of(chamber, hit, over, hold, fold, guardKey(strike.duration));
+    }
+
+    /**
+     * The spinning back kick. She turns her back on it (to her right), the head whipping round first to find it over the right
+     * shoulder; the kicking knee brushes the standing one, folded tight, as the turn passes; then the heel is thrust straight back into
+     * its middle, the trunk pitched forward over the standing leg against it (a T on one leg), elbows in; a hair further; the knee folds
+     * and the turn carries on round to face it.
+     */
+    static List<Spec> backKick(PaleStrike strike) {
+        int i = strike.impact;
+        double turn = -Math.PI * 2.0;
+        Spec turned = key(1.6, "SMOOTH").body(-1.5, -0.25, 0.14, 0.5).looking(1.25).legs(-0.3, 0.7, -0.3, 0.7).kickArms();
+        Spec chamber = key(i - 1.3, "SMOOTH").body(-2.75, -0.1, 0.4, 2.5).looking(1.3).leftLeg(-0.25, 0.0, 0.5).rightLeg(-1.25, 0.06, 2.4).kickArms();
+        Spec hit = key(i, "IN").body(-Math.PI, 0.0, 0.85, 8.0).looking(1.0).leftLeg(-0.08, 0.0, 0.3).rightLeg(0.0, 0.0, 0.0)
+            .sole(-0.06, 0.88, FRONT + 0.03).kickArms();
+        Spec over = key(i + 0.6, "OUT").body(-Math.PI - 0.05, 0.0, 0.9, 8.0).looking(1.0).leftLeg(-0.08, 0.0, 0.28).rightLeg(0.0, 0.0, 0.0)
+            .sole(-0.06, 0.9, FRONT + 0.06).kickArms();
+        Spec fold = key(i + 2.6, "SMOOTH").body(-4.6, 0.1, 0.3, 3.0).looking(0.9).leftLeg(-0.25, 0.0, 0.5).rightLeg(-0.9, 0.2, 1.9).kickArms();
+        Spec end = guardKey(strike.duration);
+        end.body.spin = (float)turn;
+        return List.of(turned, chamber, hit, over, fold, end);
+    }
+
+    /**
+     * The spinning hook kick. A small wind to her left, then a full turn to her right: the head first, the knee chambered as her back
+     * passes; the leg thrown out straight, high, a little to the near side of the target; and as the turn comes through, the heel is
+     * hooked across it (the knee snapping shut is the blow); the folded leg carries on round and comes down.
+     */
+    static List<Spec> hookKick(PaleStrike strike) {
+        int i = strike.impact;
+        double turn = -Math.PI * 2.0;
+        Spec wind = key(1.4, "SMOOTH").body(0.4, -0.3, 0.1, 0.5).legs(-0.42, 0.85, -0.42, 0.85).kickArms();
+        Spec chamber = key(i - 2.3, "SMOOTH").body(-2.9, 0.1, 0.15, 2.5).looking(1.3).leftLeg(-0.2, 0.0, 0.5).rightLeg(-1.35, 0.35, 2.35).kickArms();
+        Spec out = key(i - 0.9, "SMOOTH").body(turn + 2.35, 0.0, 0.0, 7.0).side(0.7).leftLeg(-0.04, 0.0, 0.26).rightLeg(0.0, 0.0, 0.0)
+            .sole(-0.4, 1.06, FRONT - 0.08).kickArms();
+        Spec hit = key(i, "IN").body(turn + 1.75, 0.0, 0.0, 8.0).side(0.75).leftLeg(-0.04, 0.0, 0.24).rightLeg(0.0, 0.0, 0.55)
+            .sole(-0.02, 1.06, FRONT + 0.04).kickArms();
+        Spec over = key(i + 0.7, "OUT").body(turn + 1.25, 0.0, 0.0, 7.0).side(0.6).leftLeg(-0.06, 0.0, 0.26).rightLeg(0.0, 0.0, 1.4)
+            .sole(0.3, 0.98, FRONT - 0.15).kickArms();
+        Spec fold = key(i + 2.8, "SMOOTH").body(turn + 0.35, 0.0, 0.06, 2.5).side(0.15).leftLeg(-0.2, 0.0, 0.5).rightLeg(-0.7, 0.3, 1.9).kickArms();
+        Spec end = guardKey(strike.duration);
+        end.body.spin = (float)turn;
+        return List.of(wind, chamber, out, hit, over, fold, end);
+    }
+
+    /**
+     * The tornado kick's lift (blocks) at {@code age}: the designer poses her as the game grounds a strike (lowered till the lower foot,
+     * tucked or not, would touch: {@code PaleMotions.grounded}); the game then lifts her by this ({@link PaleStrike#lift}), the feet clear
+     * of the ground by exactly it. So its keys are written grounded, and a target in the air is given less the lift.
+     */
+    static double lifted(PaleStrike strike, double age) {
+        return strike.lift(age) / 16.0;
+    }
+
+    /**
+     * The tornado kick (a jumping turning round kick), the finisher. She sinks and steps round to her left; the lead knee drives up and
+     * round and takes her off the ground; in the air her back passes and the kicking knee comes up and
+     * out, chambered; the round kick is thrown at the top with the whole turn behind it, the other leg tucked under her, the trunk laid
+     * away; through it; and she lands low on both feet, and rises.
+     */
+    static List<Spec> tornadoKick(PaleStrike strike) {
+        int i = strike.impact;
+        double turn = Math.PI * 2.0;
+        Spec sink = key(2.2, "SMOOTH").body(0.9, 0.35, 0.26, 1.0).legs(-0.62, 1.2, -0.5, 1.15).kickArms();
+        Spec drive = key(i - 2.6, "SMOOTH").body(3.5, -0.3, 0.0, 3.0).leftLeg(-1.5, 0.0, 1.9).rightLeg(0.1, 0.1, 0.9).kickArms();
+        Spec chamber = key(i - 1.1, "SMOOTH").body(turn - 0.3, 0.2, 0.0, 5.0).side(0.2).leftLeg(-0.9, 0.0, 1.9)
+            .rightLeg(-1.3, 0.95, 2.3).kneeTurn(1.25, 0.0).kickArms();
+        Spec hit = key(i, "IN").body(turn + 1.25, -0.2, 0.0, 8.0).side(0.6).leftLeg(-1.1, 0.0, 1.6).rightLeg(0.0, 0.0, 0.05)
+            .sole(-0.1, 1.28 - lifted(strike, i), FRONT + 0.08).kickArms();
+        Spec over = key(i + 0.7, "OUT").body(turn + 1.5, -0.25, 0.0, 8.0).side(0.66).leftLeg(-1.1, 0.0, 1.6).rightLeg(0.0, 0.0, 0.04)
+            .sole(-0.34, 1.3 - lifted(strike, i + 0.7), FRONT - 0.02).kickArms();
+        Spec fold = key(i + 2.4, "SMOOTH").body(turn + 1.2, -0.1, 0.0, 5.0).side(0.25).leftLeg(-0.6, 0.0, 1.3).rightLeg(-1.1, 0.6, 2.1)
+            .kneeTurn(1.0, 0.0).kickArms();
+        Spec land = key(i + 4.6, "OUT").body(turn + 0.3, 0.0, 0.34, 3.0).legs(-0.85, 1.55, -0.6, 1.45).kickArms();
+        Spec rise = key(i + 7.0, "SMOOTH").body(turn, 0.0, 0.18, 0.5).legs(-0.48, 0.92, -0.42, 0.88).kickArms();
+        Spec end = guardKey(strike.duration);
+        end.body.spin = (float)turn;
+        return List.of(sink, drive, chamber, hit, over, fold, land, rise, end);
+    }
+
     static List<Spec> choreography(PaleStrike strike) {
         return switch (strike) {
             case JAB -> straight(strike, 0.62);
@@ -550,6 +720,15 @@ public final class PalePoseDesign {
             case BLINK_PALM -> palm(strike);
             case BACKFIST -> backfist(strike);
             case TWIN_PALM -> twinPalm(strike);
+            // 4.1.7: Kick Master's string.
+            case KICK_JAB -> straight(strike, 0.62);
+            case KICK_CROSS -> straight(strike, 1.0);
+            case KICK_HOOK -> hook(strike);
+            case ROUND_KICK -> roundKick(strike);
+            case SIDE_KICK -> sideKick(strike);
+            case BACK_KICK -> backKick(strike);
+            case HOOK_KICK -> hookKick(strike);
+            case TORNADO_KICK -> tornadoKick(strike);
         };
     }
 
@@ -578,6 +757,110 @@ public final class PalePoseDesign {
             p.leftArmZ = (float)v[2];
             p.leftElbow = (float)v[3];
         }
+    }
+
+    /** 4.1.7: the middle of her right foot's sole (the move's frame) as {@code p} poses it. */
+    static double[] sole(RigPose p) {
+        return BodyFrame.world(p, BodyFrame.model(p, "rightLeg", new double[] {0, 12, 0}));
+    }
+
+    /**
+     * 4.1.7: her right leg's thigh swing ({@code rightLegX}) and swing out ({@code rightLegZ}) solved in place so its sole is at
+     * {@code target} (the move's frame): first straight at it (the leg's own frame is the model's, the body's turn, drop and lunge
+     * undone; a leg points along (-cos x sin z, cos x cos z, sin x) there), then refined on the posed body as drawn (the knee's bend
+     * included), held near the key before's leg (so a blend never swings the leg the other way round), within what the game lets a leg
+     * do. Returns how far the sole is from the target (blocks): more than a hair, and the target is out of her reach.
+     */
+    static double solveLeg(RigPose p, double[] target, RigPose previous) {
+        double[] model = BodyFrame.unworld(p, target);
+        double[] d = {model[0] + 1.9, model[1] - 12.0, model[2] - 0.1};
+        double length = Math.sqrt(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]);
+        double a = Math.asin(Math.max(-1.0, Math.min(1.0, d[2] / length)));
+        double b = Math.atan2(-d[0], d[1]);
+        double[] start = {a, b};
+        double[] before = previous == null ? null : new double[] {previous.rightLegX, previous.rightLegZ};
+        java.util.function.ToDoubleFunction<double[]> cost = v -> {
+            p.rightLegX = (float)v[0];
+            p.rightLegZ = (float)v[1];
+            double c = d2(sole(p), target);
+            c += excess(v[1], 2.2) + excess(-v[1], 0.4) + excess(Math.abs(v[0]), 2.6);
+            if (before != null) {
+                c += 1.0E-4 * ((v[0] - before[0]) * (v[0] - before[0]) + (v[1] - before[1]) * (v[1] - before[1]));
+            }
+            return c;
+        };
+        double[] best = start;
+        double bestCost = cost.applyAsDouble(start);
+        double[] grid = start;
+        double gridCost = bestCost;
+        for (double x = -2.6; x <= 2.6; x += 0.1) {
+            for (double z = -0.4; z <= 2.2; z += 0.1) {
+                double c = cost.applyAsDouble(new double[] {x, z});
+                if (c < gridCost) {
+                    gridCost = c;
+                    grid = new double[] {x, z};
+                }
+            }
+        }
+        for (double[] from : new double[][] {start, grid, {start[0] + 0.3, start[1]}, {start[0], start[1] - 0.3}}) {
+            double[] v = nelder2(cost, from);
+            double c = cost.applyAsDouble(v);
+            if (c < bestCost) {
+                bestCost = c;
+                best = v;
+            }
+        }
+        p.rightLegX = (float)best[0];
+        p.rightLegZ = (float)best[1];
+        return Math.sqrt(d2(sole(p), target));
+    }
+
+    /** 4.1.7: Nelder-Mead in two unknowns. */
+    static double[] nelder2(java.util.function.ToDoubleFunction<double[]> cost, double[] start) {
+        double[][] s = {start.clone(), {start[0] + 0.15, start[1]}, {start[0], start[1] + 0.15}};
+        double[] f = {cost.applyAsDouble(s[0]), cost.applyAsDouble(s[1]), cost.applyAsDouble(s[2])};
+        for (int iteration = 0; iteration < 400; iteration++) {
+            for (int i = 0; i < 3; i++) {
+                for (int j = i + 1; j < 3; j++) {
+                    if (f[j] < f[i]) {
+                        double t = f[i];
+                        f[i] = f[j];
+                        f[j] = t;
+                        double[] u = s[i];
+                        s[i] = s[j];
+                        s[j] = u;
+                    }
+                }
+            }
+            if (f[2] - f[0] < 1.0E-14) {
+                break;
+            }
+            double[] c = {(s[0][0] + s[1][0]) / 2, (s[0][1] + s[1][1]) / 2};
+            double[] xr = along(c, s[2], -1.0);
+            double fr = cost.applyAsDouble(xr);
+            if (fr < f[0]) {
+                double[] xe = along(c, s[2], -2.0);
+                double fe = cost.applyAsDouble(xe);
+                s[2] = fe < fr ? xe : xr;
+                f[2] = Math.min(fe, fr);
+            } else if (fr < f[1]) {
+                s[2] = xr;
+                f[2] = fr;
+            } else {
+                double[] xc = along(c, s[2], 0.5);
+                double fc = cost.applyAsDouble(xc);
+                if (fc < f[2]) {
+                    s[2] = xc;
+                    f[2] = fc;
+                } else {
+                    for (int i = 1; i < 3; i++) {
+                        s[i] = along(s[0], s[i], 0.5);
+                        f[i] = cost.applyAsDouble(s[i]);
+                    }
+                }
+            }
+        }
+        return f[0] <= f[1] && f[0] <= f[2] ? s[0] : f[1] <= f[2] ? s[1] : s[2];
     }
 
     static double d2(double[] a, double[] b) {
@@ -749,7 +1032,45 @@ public final class PalePoseDesign {
         }
         RigPose p = new RigPose().add(spec.body, 1.0F);
         p.drop = spec.airborne ? 0.0F : drop(p);
-        if (spec.guardArms) {
+        if (spec.rightSole != null) {
+            // The step in behind the kick (the lunge, 0 to the game's 8 pixels) is solved with the leg: a straight leg's sole lies a
+            // leg's length from the hip, so the hip must be that far from where the sole goes. The lunge written is kept if it reaches.
+            float want = spec.body.lunge;
+            float bestLunge = want;
+            double bestMiss = Double.MAX_VALUE;
+            for (int step = 0; step <= 32; step++) {
+                p.lunge = step * 0.25F;
+                p.drop = spec.airborne ? 0.0F : drop(p);
+                double tried = solveLeg(p, spec.rightSole, previous);
+                boolean reaches = tried < 0.01;
+                boolean better = reaches && bestMiss < 0.01 ? Math.abs(p.lunge - want) < Math.abs(bestLunge - want) : tried < bestMiss;
+                if (better) {
+                    bestMiss = tried;
+                    bestLunge = p.lunge;
+                }
+            }
+            p.lunge = bestLunge;
+            p.drop = spec.airborne ? 0.0F : drop(p);
+            double miss = solveLeg(p, spec.rightSole, previous);
+            p.drop = spec.airborne ? 0.0F : drop(p);
+            miss = solveLeg(p, spec.rightSole, previous);
+            double[] sole = sole(p);
+            double[] hip = BodyFrame.world(p, BodyFrame.model(p, "rightLeg", new double[] {0, 0, 0}));
+            report.append(String.format(Locale.ROOT, "  %-12s sole (%5.2f %5.2f %5.2f) off %.2f%s; hip (%5.2f %5.2f %5.2f); lunge %.2f; legX %.2f legZ %.2f knee %.2f%n",
+                name, sole[0], sole[1], sole[2], miss, miss > 0.03 ? " OUT OF REACH" : "", hip[0], hip[1], hip[2], p.lunge, p.rightLegX, p.rightLegZ,
+                p.rightKnee));
+        }
+        if (spec.kickArms) {
+            RigPose k = KICK_GUARD;
+            p.rightArmX = k.rightArmX;
+            p.rightArmY = k.rightArmY;
+            p.rightArmZ = k.rightArmZ;
+            p.rightElbow = k.rightElbow;
+            p.leftArmX = k.leftArmX;
+            p.leftArmY = k.leftArmY;
+            p.leftArmZ = k.leftArmZ;
+            p.leftElbow = k.leftElbow;
+        } else if (spec.guardArms) {
             p.rightArmX = guard.rightArmX;
             p.rightArmY = guard.rightArmY;
             p.rightArmZ = guard.rightArmZ;
@@ -875,6 +1196,7 @@ public final class PalePoseDesign {
         Spec guardSpec = guard();
         RigPose guard = pose(guardSpec, null, null, report, "guard");
         StringBuilder methods = new StringBuilder(method("guard", guard));
+        KICK_GUARD = pose(kickGuard(), null, null, report, "kickGuard");
         StringBuilder table = new StringBuilder();
         for (PaleStrike strike : PaleStrike.values()) {
             table.append("            case ").append(strike.name()).append(" -> ");

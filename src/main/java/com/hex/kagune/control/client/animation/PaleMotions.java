@@ -62,6 +62,7 @@ public final class PaleMotions {
             overhead(pose, start, keys[1].pose(), (float)(age / keys[1].at()));
         }
         grounded(pose);
+        pose.drop -= (float)strike.lift(age); // 4.1.7: the tornado kick's jump
         return strike.right ? pose : mirror(pose);
     }
 

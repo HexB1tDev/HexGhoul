@@ -117,7 +117,7 @@ final class NoroScript extends CompanionScript {
                 case WRONG_PATH -> "...Not a worm.";
                 case WEAK -> "...Not yet. (" + view.next().name() + ": mastery " + view.need() + ")";
                 case BEFORE -> "... (" + (view.before() == null ? "what comes before" : view.before().displayName()) + " first)";
-                case ALL_TAUGHT -> "...Nothing left.";
+                case ALL_TAUGHT, GHOUL -> "...Nothing left.";
             };
         }
     };
