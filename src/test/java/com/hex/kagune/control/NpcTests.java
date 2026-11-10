@@ -1416,6 +1416,34 @@ public final class NpcTests {
             String set = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/resources/data/hexkagune/worldgen/structure_set/aogiri_hideout.json")));
             String villages = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/resources/data/hexkagune/worldgen/structure_set/villages.json")));
             check(set.contains("\"minecraft:concentric_rings\"") && set.contains("\"count\": 1"), "one hideout in a world (a ring of one)");
+            // 4.0.5 (the owner: "also game crash upon creating world", "Failed to load registries"): every structure set's placement has
+            // every field the game's codec requires (the hideout's ring had no salt: no world could be made), names structures that exist
+            // and biome tags that exist.
+            java.nio.file.Path data = java.nio.file.Path.of("src/main/resources/data/hexkagune");
+            try (java.util.stream.Stream<java.nio.file.Path> sets = java.nio.file.Files.list(data.resolve("worldgen/structure_set"))) {
+                for (java.nio.file.Path file : sets.sorted().toList()) {
+                    String json = new String(java.nio.file.Files.readAllBytes(file));
+                    String name = file.getFileName().toString();
+                    java.util.List<String> needs = new java.util.ArrayList<>(List.of("\"salt\":", "\"structures\":", "\"structure\":", "\"weight\":"));
+                    if (json.contains("\"minecraft:concentric_rings\"")) {
+                        needs.addAll(List.of("\"distance\":", "\"spread\":", "\"count\":", "\"preferred_biomes\":"));
+                    } else {
+                        check(json.contains("\"minecraft:random_spread\""), name + ": a placement the game knows");
+                        needs.addAll(List.of("\"spacing\":", "\"separation\":"));
+                    }
+                    for (String need : needs) {
+                        check(json.contains(need), name + ": its placement has " + need);
+                    }
+                    java.util.regex.Matcher made = java.util.regex.Pattern.compile("\"structure\": \"hexkagune:([a-z0-9_]+)\"").matcher(json);
+                    while (made.find()) {
+                        check(java.nio.file.Files.exists(data.resolve("worldgen/structure/" + made.group(1) + ".json")), name + ": its structure " + made.group(1) + " exists");
+                    }
+                    java.util.regex.Matcher tag = java.util.regex.Pattern.compile("\"#hexkagune:([a-z0-9_/]+)\"").matcher(json);
+                    while (tag.find()) {
+                        check(java.nio.file.Files.exists(data.resolve("tags/worldgen/biome/" + tag.group(1) + ".json")), name + ": its biome tag " + tag.group(1) + " exists");
+                    }
+                }
+            }
             check(villages.contains("hexkagune:village_1") && villages.contains("hexkagune:village_2") && villages.contains("\"spacing\": 34")
                 && !java.nio.file.Files.exists(java.nio.file.Path.of("src/main/resources/data/hexkagune/worldgen/structure_set/village_1.json")),
                 "the villages as rare as Minecraft's (one set, its spacing)");

@@ -15,8 +15,13 @@ public final class UniqueNpc {
     public static final long COMES_BACK = 24000L;
     /** 1.3.3: away from home (waiting somewhere, following, lost) with no one about this long (a day), she goes back home. */
     public static final long GOES_HOME = 24000L;
-    /** Unseen this long (game ticks: five days) while thought alive, a new body of hers may take her place. */
+    /** Unseen this long (game ticks: five days) while thought alive, a new body of hers may take her place (4.0.5: only before anyone has met her). */
     public static final long GONE_QUIET = 120000L;
+    /**
+     * 4.0.5: a player at her home this long (game ticks: half a minute) with her body nowhere about (not ticking), while she should be
+     * there (alive, not away), and she is made there again ({@link #missing}).
+     */
+    public static final long MISSING = 600L;
 
     public UUID body;
     public boolean alive;
@@ -49,7 +54,11 @@ public final class UniqueNpc {
             this.seen = now;
             return true;
         }
-        boolean taken = this.body != null && this.alive && (this.seen == Long.MIN_VALUE || now - this.seen < GONE_QUIET);
+        // 4.0.5 (the owner: "Official NPCS disappear from their residential areas and dont come back they should always stay there unless
+        // married to a player and set home in another place"): once someone has met her, no other body takes her place while she lives.
+        // One made with another of her places did, once hers had lain unloaded five days, and hers was sent away as it loaded again: she was
+        // gone from her home for good. A body of hers lost without dying is made again at her home instead ({@link #missing}).
+        boolean taken = this.body != null && this.alive && (this.met || this.seen == Long.MIN_VALUE || now - this.seen < GONE_QUIET);
         if (taken) {
             return false;
         }
@@ -83,7 +92,17 @@ public final class UniqueNpc {
         return this.alive && this.away && this.origined && this.company != Long.MIN_VALUE && now - this.company >= GOES_HOME;
     }
 
-    /** Where she comes back to: her origin (her home before 1.3.3 kept it). */
+    /**
+     * 4.0.5: whether she should be at her home now and is not there: alive and not away (not sent off, left waiting somewhere or out with
+     * someone), a player at her home since {@code since} ({@link #MISSING} or longer), and her body not ticking since {@code ticked}
+     * (Long.MIN_VALUE: not this run). Her body lies somewhere unloaded, or is lost: she is made at her home again.
+     */
+    public boolean missing(long now, long since, long ticked) {
+        return this.alive && !this.away && (this.origined || this.homed) && since != Long.MIN_VALUE && now - since >= MISSING
+            && (ticked == Long.MIN_VALUE || now - ticked >= MISSING);
+    }
+
+    /** Where she comes back to: her origin (her home before 1.3.3 kept it; 4.0.5: the home she shares with her spouse once they have one). */
     public int[] spawn() {
         return this.origined ? new int[] {this.originX, this.originY, this.originZ} : new int[] {this.homeX, this.homeY, this.homeZ};
     }

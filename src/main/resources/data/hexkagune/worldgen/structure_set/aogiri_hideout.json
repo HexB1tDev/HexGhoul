@@ -10,6 +10,7 @@
     "distance": 12,
     "spread": 1,
     "count": 1,
-    "preferred_biomes": "#hexkagune:has_structure/aogiri_hideout"
+    "preferred_biomes": "#hexkagune:has_structure/aogiri_hideout",
+    "salt": 1873602243
   }
 }

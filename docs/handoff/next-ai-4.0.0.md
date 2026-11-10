@@ -92,6 +92,21 @@ left as their renders show); the old fitting (`fit_mask`, `HALF_MASKS`, `MASK_EY
 Half Mask" became "Gourmet's Mask". OutfitTests: every cube their manifest counts, half masks clear of their eye zones, no mask in the head
 or its hat layer. Preview: `docs/handoff/masks-4.0.4.png`.
 
+## 4.0.5 (released)
+
+The owner (quoted exactly): "also game crash upon creating world" (their crash report: `RegistryDataLoader` "Failed to load registries"):
+`worldgen/structure_set/aogiri_hideout.json`'s `concentric_rings` placement (4.0.2) had no `salt`, which the game's codec requires (only
+`frequency`, `locate_offset`, `frequency_reduction_method`, `exclusion_zone` are optional). Fixed; `NpcTests.mansion` now checks every
+structure set's required fields, structures and biome tags. The CCG building they said they sent ("this is it") did not arrive.
+
+The owner (quoted exactly): "Official NPCS disappear from their residential areas and dont come back they should always stay there unless
+married to a player and set home in another place." Cause: `UniqueNpc.claim` let another body of hers (made with another of her
+buildings) take her slot once hers had gone unseen `GONE_QUIET` (five days); hers was sent away when it loaded. Now a met slot is never
+taken while she lives; `UniqueNpc.missing` + `UniqueNpcs.levelTick` (`WATCHED`) make her again at `spawn()` when a player has been within
+24 blocks of it half a minute and her body has not ticked; `report` keeps the record's origin up with her body's (a married one's shared
+home). Their other three reports this round (limbs taking their layers, full masks hiding kakugan, Ayato's skin, Ken's tower, fighting
+styles, the CCG building and General, Kick Master) follow as 4.0.6 onward.
+
 ## Next
 
 Nothing outstanding from the owner. If they report in-game problems with the outfits' fit, adjust `CLEAR`, `SNUG`, the drape

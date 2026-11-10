@@ -490,7 +490,24 @@ public final class EtoTests {
         java.util.UUID first = new java.util.UUID(1, 1);
         java.util.UUID second = new java.util.UUID(2, 2);
         check(eto.claim(first, 100) && !eto.claim(second, 200) && eto.claim(first, 300), "only one of her lives; the same body ticks on");
-        check(eto.claim(second, 300 + UniqueNpc.GONE_QUIET), "gone quiet for days, a new body may take her place");
+        check(eto.claim(second, 300 + UniqueNpc.GONE_QUIET), "gone quiet for days, a new body may take her place (before anyone has met her)");
+        // 4.0.5 (the owner: "Official NPCS disappear from their residential areas and dont come back they should always stay there unless
+        // married to a player and set home in another place"): once met, no other body takes her place while she lives, however long hers
+        // lies unloaded; one lost without dying is made again at her home when a player has been there half a minute and hers is nowhere.
+        UniqueNpc met = new UniqueNpc();
+        met.met = true;
+        check(met.claim(first, 100) && !met.claim(second, 100 + UniqueNpc.GONE_QUIET * 10) && met.claim(first, 100 + UniqueNpc.GONE_QUIET * 10),
+            "met: hers stays hers, never taken by another of her bodies");
+        met.originX = 1;
+        met.origined = true;
+        check(!met.missing(1000, 1000 - UniqueNpc.MISSING + 1, Long.MIN_VALUE) && met.missing(1000, 1000 - UniqueNpc.MISSING, Long.MIN_VALUE)
+            && met.missing(1000, 0, 1000 - UniqueNpc.MISSING) && !met.missing(1000, 0, 1000 - UniqueNpc.MISSING + 1) && !met.missing(1000, Long.MIN_VALUE, Long.MIN_VALUE),
+            "missing from her home: a player there half a minute, her body not ticking that long");
+        met.away = true;
+        check(!met.missing(1000, 0, Long.MIN_VALUE), "out (waiting somewhere, sent off): not missing; she goes home after a day as before");
+        met.away = false;
+        met.died(first, 50);
+        check(!met.missing(1000, 0, Long.MIN_VALUE), "dead: she comes back as the dead do");
         eto.homeX = 5;
         eto.homeY = 64;
         eto.homeZ = -7;

@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.0.5 (HexGhoul): New worlds load again; official NPCs stay at home (testing)
+
+See `.github/release-notes-4.0.5.md`. Your words: "also game crash upon creating world": since 4.0.2 the one-per-world Aogiri hideout's placement lacked the `salt` Minecraft requires, so no new world could be made; fixed, and every placement is now tested for its required fields. Your words: "Official NPCS disappear from their residential areas and dont come back they should always stay there unless married to a player and set home in another place." Once anyone has met an official character, no other body of hers takes her place while she lives (one from another of her buildings did, once hers had lain unloaded five days, and hers was sent away). If you've been at her home half a minute and she's nowhere about (not out or left waiting), she's made there again. A married character's home is the one you share. Protocol 107.
+
 ## 4.0.4 (HexGhoul): Your 24 new masks (testing)
 
 See `.github/release-notes-4.0.4.md`. Your words, with `Tokyo_Ghoul_24_Masks_1.20.1.zip`: "New masks, replace ALL the masks with these models." All 24 of your masks are your new pack's models and textures, every cube as you made it, read from your Blockbench projects with no refitting (half masks leave the eyes clear, full masks' eye holes lowered, every shell clear of the head and its hat layer); the asymmetric details on the wearer's left, as your renders have them. "Gourmet's Half Mask" is now "Gourmet's Mask". The nine generic masks are unchanged. Protocol 107.

@@ -35,6 +35,8 @@ public final class UniqueNpcs {
     private static final Map<String, Supplier<? extends EntityType<? extends Mob>>> KINDS = new LinkedHashMap<>();
     /** 1.3.3: when each last ticked (this server's run only): one ticking recently goes home herself. */
     private static final Map<String, Long> TICKING = WorldTimes.map();
+    /** 4.0.5: since when a player has been at each one's home (while one is). */
+    private static final Map<String, Long> WATCHED = WorldTimes.map();
 
     private UniqueNpcs() {
     }
@@ -225,13 +227,15 @@ public final class UniqueNpcs {
     }
 
     /**
-     * 1.3.3: how she is now: where she belongs (kept the first time it is known), whether she is away from it, and when she last had
-     * company. Saved when it matters (not every time she has company).
+     * 1.3.3: how she is now: where she belongs, whether she is away from it, and when she last had company. Saved when it matters (not
+     * every time she has company). 4.0.5: where she belongs as her body has it, kept up with (it was kept the first time only, so one
+     * married with a home of their own came back to her old one after dying).
      */
     public static void report(ServerLevel level, String key, BlockPos origin, boolean away, long company) {
         UniqueNpc npc = get(level, key);
         boolean changed = false;
-        if (!npc.origined && origin != null) {
+        if (origin != null && (!npc.origined || npc.originX != origin.m_123341_() || npc.originY != origin.m_123342_()
+            || npc.originZ != origin.m_123343_())) {
             npc.originX = origin.m_123341_();
             npc.originY = origin.m_123342_();
             npc.originZ = origin.m_123343_();
@@ -291,7 +295,11 @@ public final class UniqueNpcs {
         return out;
     }
 
-    /** Every so often: any of them dead long enough comes back to her home, if a player is near it (so it is loaded). */
+    /**
+     * Every so often: any of them dead long enough comes back to her home, if a player is near it (so it is loaded). 4.0.5: and any of the
+     * official ones (Eto, Touka, Ken, Ayato, Noro...) who should be at her home and is not, with a player there half a minute, is made there
+     * again ({@link UniqueNpc#missing}); her lost body, if it ever loads, is sent away.
+     */
     @SubscribeEvent
     public static void levelTick(TickEvent.LevelTickEvent event) {
         if (event.phase != TickEvent.Phase.END || !(event.level instanceof ServerLevel level) || level.m_46472_() != Level.f_46428_
@@ -315,14 +323,24 @@ public final class UniqueNpcs {
             Long ticked = TICKING.get(entry.getKey());
             // Dead long enough; or left away a day and her body not about to go home itself (it lies in unloaded ground).
             boolean recall = npc.dueHome(now) && (ticked == null || now - ticked > 400L);
-            if (kind == null || !npc.dueBack(now) && !recall) {
-                continue;
-            }
             int[] spawn = npc.spawn();
             BlockPos home = new BlockPos(spawn[0], spawn[1], spawn[2]);
-            if (!level.m_46805_(home) || !someoneNear(level, home)) {
+            boolean missing = false;
+            if (KINDS.containsKey(entry.getKey()) && npc.alive && !npc.away && (npc.origined || npc.homed)) {
+                if (level.m_46805_(home) && someoneNear(level, home, 24.0)) {
+                    long since = WATCHED.computeIfAbsent(entry.getKey(), any -> now);
+                    missing = npc.missing(now, since, ticked == null ? Long.MIN_VALUE : ticked);
+                } else {
+                    WATCHED.remove(entry.getKey());
+                }
+            }
+            if (kind == null || !npc.dueBack(now) && !recall && !missing) {
                 continue;
             }
+            if (!level.m_46805_(home) || !someoneNear(level, home, 96.0)) {
+                continue;
+            }
+            WATCHED.remove(entry.getKey());
             Mob body = kind.get().m_20615_(level);
             if (body == null) {
                 continue;
@@ -353,11 +371,11 @@ public final class UniqueNpcs {
         }
     }
 
-    private static boolean someoneNear(ServerLevel level, BlockPos home) {
+    private static boolean someoneNear(ServerLevel level, BlockPos home, double within) {
         for (ServerPlayer player : level.m_6907_()) {
             double dx = player.m_20185_() - home.m_123341_();
             double dz = player.m_20189_() - home.m_123343_();
-            if (dx * dx + dz * dz <= 96.0 * 96.0) {
+            if (dx * dx + dz * dz <= within * within && !player.m_5833_()) {
                 return true;
             }
         }
