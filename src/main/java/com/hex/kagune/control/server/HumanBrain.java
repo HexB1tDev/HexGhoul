@@ -528,7 +528,8 @@ public final class HumanBrain {
             }
             double distance = Math.sqrt(player.m_20280_(human));
             FinalSight sight = Sightings.seen(player);
-            boolean shown = KaguneProfile.isActive(player) || sight.any() || GhoulServer.ghoul(player)
+            // 4.0.7: kakugan behind a full mask is not seen (Sightings.masked); a kagune or a kakuja still is.
+            boolean shown = KaguneProfile.isActive(player) || sight.any() || GhoulServer.ghoul(player) && !Sightings.masked(player)
                 || Sightings.last(player) != com.hex.kagune.control.npc.Display.NONE; // 1.3.68: their eyes on is enough
             boolean noticed = distance <= HumanRules.notice(sight, shown) && (distance <= HumanRules.NOTICE || human.m_142582_(player));
             if (noticed && sight.terror()) {

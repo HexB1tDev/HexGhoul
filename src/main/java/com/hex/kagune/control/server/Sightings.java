@@ -73,7 +73,16 @@ public final class Sightings {
         boolean owl = PaleServer.peek(player) != null && PaleServer.peek(player).owl;
         boolean kakuja = owl || UkakuServer.kakuja(player) || GraftServer.kakuja(player) || active && KaguneProfile.form(player).isKakuja();
         return Display.of(sight == FinalSight.DRAGON, sight == FinalSight.WAR || sight == FinalSight.PEACE,
-            sight == FinalSight.RINKAKU || sight == FinalSight.UKAKU, kakuja, active, PaleServer.eyes(player));
+            sight == FinalSight.RINKAKU || sight == FinalSight.UKAKU, kakuja, active, PaleServer.eyes(player) && !masked(player));
+    }
+
+    /**
+     * 4.0.7 (the owner: "Full masks (only full masks not half masks) prevent CCG agents and humans to tell you're a ghoul when your eyes are
+     * in Kakugan."): {@code player} wears a mask over the whole face: their kakugan is not seen (their kagune, a kakuja, still is).
+     */
+    public static boolean masked(ServerPlayer player) {
+        return player.m_6844_(net.minecraft.world.entity.EquipmentSlot.HEAD).m_41720_() instanceof com.hex.kagune.control.outfit.OutfitItem item
+            && com.hex.kagune.control.outfit.Outfits.fullMask(item.piece().id());
     }
 
     /** 2.0: true while {@code player} is in a kakuja of any kind (rinkaku's, ukaku's, a graft's, the Owl). */

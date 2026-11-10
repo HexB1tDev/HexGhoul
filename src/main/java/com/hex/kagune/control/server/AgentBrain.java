@@ -677,7 +677,8 @@ public final class AgentBrain {
             double distance = Math.sqrt(player.m_20280_(agent));
             // 1.3.65: a final kakuja (War, Peace, the Dragon: the kagune itself in) shows what they are as much as a kagune.
             FinalSight sight = Sightings.seen(player);
-            boolean shown = KaguneProfile.isActive(player) || sight.any() || GhoulServer.ghoul(player)
+            // 4.0.7: kakugan behind a full mask is not seen (Sightings.masked); a kagune or a kakuja still is.
+            boolean shown = KaguneProfile.isActive(player) || sight.any() || GhoulServer.ghoul(player) && !Sightings.masked(player)
                 || Sightings.last(player) != com.hex.kagune.control.npc.Display.NONE; // 1.3.70: their eyes on too
             boolean seen = agent.m_142582_(player);
             if (!AgentRules.revealed(KaguneProfile.isUnlocked(player), shown, distance, seen)) {

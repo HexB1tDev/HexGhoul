@@ -71,6 +71,28 @@ public final class OutfitTests {
             }
         }
         check(Outfits.of("formal_chestplate") != null && Outfits.of("formal_chestplate").slot() == OutfitModels.CHESTPLATE, "the overcoat is a chestplate");
+        // 4.0.7 (the owner: "Full masks (only full masks not half masks) prevent CCG agents and humans to tell you're a ghoul when your eyes
+        // are in Kakugan."): the owner's sixteen full masks and eight of the generic ones hide the eyes; their eight half masks and the cloth
+        // wrap do not; nothing that is not a mask does.
+        int full = 0;
+        for (String mask : Outfits.CHARACTER_MASKS) {
+            full += Outfits.fullMask(mask) ? 1 : 0;
+        }
+        int fullGeneric = 0;
+        for (String mask : Outfits.GENERIC_MASKS) {
+            fullGeneric += Outfits.fullMask(mask) ? 1 : 0;
+        }
+        check(full == 16 && fullGeneric == 8 && !Outfits.fullMask("mask_eyepatch") && !Outfits.fullMask("mask_cloth") && Outfits.fullMask("mask_noro")
+            && Outfits.fullMask("mask_touka") && !Outfits.fullMask("formal_helmet") && !Outfits.fullMask("nothing"), "full masks hide the eyes, half masks don't: " + full + ", " + fullGeneric);
+        try {
+            String sightings = new String(Files.readAllBytes(Path.of("src/main/java/com/hex/kagune/control/server/Sightings.java")));
+            String agents = new String(Files.readAllBytes(Path.of("src/main/java/com/hex/kagune/control/server/AgentBrain.java")));
+            String humans = new String(Files.readAllBytes(Path.of("src/main/java/com/hex/kagune/control/server/HumanBrain.java")));
+            check(sightings.contains("PaleServer.eyes(player) && !masked(player)") && agents.contains("GhoulServer.ghoul(player) && !Sightings.masked(player)")
+                && humans.contains("GhoulServer.ghoul(player) && !Sightings.masked(player)"), "investigators and townsfolk don't see kakugan behind a full mask");
+        } catch (java.io.IOException failure) {
+            check(false, "read the sightings: " + failure);
+        }
         // 4.0.3 (the owner: "On the Ougiri outfit, no more hood ... give it a high collar on the sides of the head pointing outwards"): no
         // Crimson Hood; the coat's collar on the body, beside the head (clear of the skin's hat layer), flaring out as it rises.
         check(Outfits.of("crimson_helmet") == null && Outfits.CRIMSON_SET.size() == 3 && Outfits.FORMAL_SET.size() == 4, "the Crimson Outfit has no hood");

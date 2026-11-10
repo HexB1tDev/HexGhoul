@@ -48,6 +48,20 @@ public final class Outfits {
      */
     public static final List<String> AOGIRI_MASKS = List.of("mask_bin_brothers", "mask_shachi");
 
+    /**
+     * 4.0.7 (the owner: "Full masks (only full masks not half masks) prevent CCG agents and humans to tell you're a ghoul when your eyes are
+     * in Kakugan."): the masks that leave the eyes and the face's top bare, over the mouth only (the owner's eight half masks, the cloth
+     * wrap); every other mask covers the whole face.
+     */
+    public static final java.util.Set<String> HALF_MASKS = java.util.Set.of("mask_eyepatch", "mask_ayato", "mask_tatara", "mask_shachi", "mask_rize",
+        "mask_yomo", "mask_dotted", "mask_nishiki", "mask_cloth");
+
+    /** 4.0.7: whether {@code id} is a mask over the whole face (its wearer's kakugan unseen behind it). */
+    public static boolean fullMask(String id) {
+        Piece piece = of(id);
+        return piece != null && piece.mask() && !HALF_MASKS.contains(id);
+    }
+
     /** Every piece, outfits first, then every mask. */
     public static final List<Piece> ALL;
 

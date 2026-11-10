@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.0.7 (HexGhoul): A full mask hides your kakugan (testing)
+
+See `.github/release-notes-4.0.7.md`. Your words: "Full masks (only full masks not half masks) prevent CCG agents and humans to tell you're a ghoul when your eyes are in Kakugan." With a full mask on (16 of yours, 8 generic), investigators and townsfolk don't see your kakugan; your kagune or a kakuja still give you away; half masks and the Cloth Wrap don't hide the eyes. Protocol 107.
+
 ## 4.0.6 (HexGhoul): A torn-off limb takes its clothes, armour and mask with it (testing)
 
 See `.github/release-notes-4.0.6.md`. Your words: "Make sure that when limbs are removed, over layer of the skin also goes with the head and etc, coats and armors go with the limbs as well. (same with masks)". A part torn off by Potential Unlock carries its skin's outer layer (as before), its coat sleeve, trouser leg and boot, and the head its cap and mask; your body draws none of it, nor vanilla armour on that part, nor the kakuja masks on a head that's off. Coat tails stay with the body. Protocol 107.

@@ -115,6 +115,12 @@ armors go with the limbs as well. (same with masks)". `OutfitLayer` skips a bone
 part's frame); `PotentialClient` sets `ModelPart.skipDraw` (f_233556_, allowlisted) on vanilla armour models' parts while a part is off (the
 armour layer's models found by type through reflection); `KakujaArmorLayer` and `RinkakuMaskLayer` skip a hidden head.
 
+## 4.0.7 (released)
+
+The owner (quoted exactly): "Full masks (only full masks not half masks) prevent CCG agents and humans to tell you're a ghoul when your
+eyes are in Kakugan." `Outfits.HALF_MASKS`/`fullMask`; `Sightings.masked` (head slot a full mask) takes the eyes out of what a player shows
+(`Sightings.of`) and out of `AgentBrain.reveal` and `HumanBrain`'s danger check; a kagune, a kakuja and the final sights still show.
+
 ## Next
 
 Nothing outstanding from the owner. If they report in-game problems with the outfits' fit, adjust `CLEAR`, `SNUG`, the drape
