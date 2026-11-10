@@ -6,11 +6,9 @@
     }
   ],
   "placement": {
-    "type": "minecraft:concentric_rings",
-    "distance": 12,
-    "spread": 1,
-    "count": 1,
-    "preferred_biomes": "#hexkagune:has_structure/aogiri_hideout",
+    "type": "minecraft:random_spread",
+    "spacing": 40,
+    "separation": 20,
     "salt": 1873602243
   }
 }

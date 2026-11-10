@@ -1,5 +1,6 @@
 package com.hex.kagune.control;
 
+import com.hex.kagune.control.village.DryLand;
 import com.hex.kagune.control.village.VillageGround;
 import com.hex.kagune.control.village.VillageRules;
 import com.hex.kagune.control.village.VillageTops;
@@ -36,6 +37,8 @@ public final class ControlStructures {
     private static final DeferredRegister<StructureType<?>> TYPES = DeferredRegister.create(Registries.f_256938_, "hexkagune");
     /** hexkagune:dry_jigsaw. */
     public static final StructureType<DryJigsaw> DRY_JIGSAW = () -> DryJigsaw.CODEC;
+    /** 4.1.1: hexkagune:dry_place (Anteiku, the library, Ken's tower): a jigsaw place moved, near its start, onto dry land. */
+    public static final StructureType<DryPlace> DRY_PLACE = () -> DryPlace.CODEC;
 
     /**
      * 4.0.0 (The Great Exploration): the owner's three new places, each its own type ({@link Site}): hexkagune:site_village_1 (the human
@@ -45,6 +48,7 @@ public final class ControlStructures {
 
     static {
         TYPES.register("dry_jigsaw", () -> DRY_JIGSAW);
+        TYPES.register("dry_place", () -> DRY_PLACE);
         for (com.hex.kagune.control.village.SiteMaps.Site site : com.hex.kagune.control.village.SiteMaps.ALL) {
             Codec<Site> codec = Structure.m_226607_(settings -> new Site(settings, site));
             StructureType<Site> type = () -> codec;
@@ -89,13 +93,17 @@ public final class ControlStructures {
             if (!VillageGround.suits(surface, floor)) {
                 return Optional.empty();
             }
-            // 2.0.2: vanilla's own placing called straight (public in vanilla's jigsaw), by name if the game says it may not be.
+            return run(this.inner, context);
+        }
+
+        /** 2.0.2: vanilla's own placing called straight (public in vanilla's jigsaw), by name if the game says it may not be. */
+        static Optional<Structure.GenerationStub> run(JigsawStructure inner, Structure.GenerationContext context) {
             try {
-                return this.inner.m_214086_(context);
+                return inner.m_214086_(context);
             } catch (IllegalAccessError denied) {
                 try {
                     @SuppressWarnings("unchecked")
-                    Optional<Structure.GenerationStub> stub = (Optional<Structure.GenerationStub>)find().invoke(this.inner, context);
+                    Optional<Structure.GenerationStub> stub = (Optional<Structure.GenerationStub>)find().invoke(inner, context);
                     return stub;
                 } catch (ReflectiveOperationException | RuntimeException | LinkageError failure) {
                     Safety.caught(failure, "ControlStructures.DryJigsaw");
@@ -194,35 +202,46 @@ public final class ControlStructures {
         }
 
         private Optional<Structure.GenerationStub> place(Structure.GenerationContext context) {
-            ChunkGenerator generator = context.f_226622_();
             ChunkPos chunk = context.f_226628_();
             int turns = context.f_226626_().m_188503_(4);
             boolean across = (turns & 1) == 1;
             int sizeX = across ? this.site.depth() : this.site.width();
             int sizeZ = across ? this.site.width() : this.site.depth();
-            // Its footprint, turned, centred on what the start chunk reaches (never past it).
-            int minX = clampMin(chunk.m_45604_() + 8 - sizeX / 2, chunk.m_45604_(), sizeX);
-            int minZ = clampMin(chunk.m_45605_() + 8 - sizeZ / 2, chunk.m_45605_(), sizeZ);
-            // The ground under it, on a 5 x 5 grid over its footprint: dry and fairly flat, or it is not built here.
-            int n = 5;
-            int[] surface = new int[n * n];
-            int[] floor = new int[n * n];
-            for (int i = 0; i < n; i++) {
-                for (int j = 0; j < n; j++) {
-                    int x = minX + 2 + (sizeX - 5) * i / (n - 1);
-                    int z = minZ + 2 + (sizeZ - 5) * j / (n - 1);
-                    surface[i * n + j] = generator.m_214096_(x, z, Heightmap.Types.WORLD_SURFACE_WG, context.f_226629_(), context.f_226624_());
-                    floor[i * n + j] = generator.m_214096_(x, z, Heightmap.Types.OCEAN_FLOOR_WG, context.f_226629_(), context.f_226624_());
+            if (unique(this.site)) {
+                // 4.1.1 (the owner: "the mansion is currently happily resting at the very bottom of the ocean"): the world's one hideout
+                // is built only at the first of its offers on dry land (worked out once a world, the same in every chunk that asks).
+                int[] chosen = hideout(context);
+                if (chosen == null || chosen[0] != chunk.f_45578_ || chosen[1] != chunk.f_45579_) {
+                    return Optional.empty();
+                }
+                int minX = clampMin(chunk.m_45604_() + 8 - sizeX / 2, chunk.m_45604_(), sizeX);
+                int minZ = clampMin(chunk.m_45605_() + 8 - sizeZ / 2, chunk.m_45605_(), sizeZ);
+                return Optional.of(this.stub(context, turns, minX, minZ, sizeX, sizeZ, chosen[2]));
+            }
+            // 4.1.1: every other place at the first spot its start chunk reaches (from the middle out) on dry, fairly flat land, with no
+            // water under it or at its edge, in a biome it may stand in; or not here.
+            DryLand.Ground ground = ground(context);
+            int[] xs = DryLand.runs(chunk.m_45604_() + 8 - sizeX / 2, chunk.m_45604_(), sizeX, SHIFT);
+            int[] zs = DryLand.runs(chunk.m_45605_() + 8 - sizeZ / 2, chunk.m_45605_(), sizeZ, SHIFT);
+            for (int[] at : DryLand.spots(xs, zs, TRIES)) {
+                int[] floor = grid(ground, at[0], at[1], sizeX, sizeZ);
+                if (floor == null || !flat(floor)) {
+                    continue;
+                }
+                int middle = DryLand.median(floor);
+                if (biome(context, at[0] + sizeX / 2, middle, at[1] + sizeZ / 2) && DryLand.dry(ground, middle, at[0], at[1], sizeX, sizeZ)) {
+                    return Optional.of(this.stub(context, turns, at[0], at[1], sizeX, sizeZ, middle));
                 }
             }
-            // 4.0.2 (the owner: "Aogiri Tree only has one hideout"): the hideout is the world's one (its structure set's ring puts it in
-            // one place, near the ground it likes): it is built there whatever the ground, its terrain adaptation fitting the world to it.
-            if (!unique(this.site) && !VillageGround.suitsGrid(surface, floor, n)) {
-                return Optional.empty();
-            }
-            // Its ground on the world's: the middle of the dry ground's heights (the first free height: its ground block one under it).
-            int[] dry = java.util.Arrays.stream(floor).sorted().toArray();
-            int base = dry[dry.length / 2] - 1 - this.site.ground();
+            return Optional.empty();
+        }
+
+        /**
+         * The place laid with its footprint's least corner at ({@code minX}, {@code minZ}), turned {@code turns}, its ground on the world's
+         * at {@code middle} (the middle of the dry ground's heights: the first free height, its ground block one under it).
+         */
+        private Structure.GenerationStub stub(Structure.GenerationContext context, int turns, int minX, int minZ, int sizeX, int sizeZ, int middle) {
+            int base = middle - 1 - this.site.ground();
             net.minecraft.world.level.block.Rotation rotation = TURNS[turns];
             // The template's corner (its x 0, z 0) as the turn takes it: the turned footprint's least corner is (minX, minZ).
             int[] least = com.hex.kagune.control.village.SiteMaps.turnedLeast(this.site.width(), this.site.depth(), turns);
@@ -231,7 +250,7 @@ public final class ControlStructures {
             net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager templates = context.f_226625_();
             com.hex.kagune.control.village.SiteMaps.Site site = this.site;
             BlockPos start = new BlockPos(minX + sizeX / 2, base + site.ground() + 1, minZ + sizeZ / 2);
-            return Optional.of(new Structure.GenerationStub(start, builder -> {
+            return new Structure.GenerationStub(start, builder -> {
                 for (int i = 0; i < site.across(); i++) {
                     for (int j = 0; j < site.down(); j++) {
                         int[] corner = VillageRules.turn(site.xEdges()[i], site.zEdges()[j], turns);
@@ -244,7 +263,83 @@ public final class ControlStructures {
                         builder.m_142679_(new PoolElementStructurePiece(templates, element, at, site.ground() + 1, rotation, box));
                     }
                 }
-            }));
+            });
+        }
+
+        /** 4.1.1: how far apart (blocks) the spots a place may be moved to are, and how many are tried before it gives up there. */
+        static final int SHIFT = 32;
+        static final int TRIES = 9;
+        /** 4.1.1: the hideout's start chunk and ground ({x, z, height}) for each world (its seed, its generator), once worked out. */
+        private static final java.util.Map<java.util.List<Object>, int[]> HIDEOUTS = new java.util.HashMap<>();
+        private static final int[] NOWHERE = new int[0];
+
+        /** 4.1.1: the world's one hideout's start chunk and ground ({x, z, height}), or null if there is no dry land among its offers. */
+        static int[] hideout(Structure.GenerationContext context) {
+            java.util.List<Object> world = java.util.List.of(context.f_226627_(), context.f_226622_());
+            synchronized (HIDEOUTS) {
+                int[] known = HIDEOUTS.get(world);
+                if (known == null) {
+                    known = chooseHideout(context);
+                    if (HIDEOUTS.size() >= 4) {
+                        HIDEOUTS.clear();
+                    }
+                    HIDEOUTS.put(world, known);
+                }
+                return known.length == 0 ? null : known;
+            }
+        }
+
+        /**
+         * 4.1.1: the first of the hideout's offers ({@link DryLand#hideoutOffers}, nearest the world's middle first) where all its start chunk
+         * reaches (the mansion is that wide, whichever way it turns) is dry land in a biome it may stand in, fairly flat; failing that, the
+         * first dry one however steep (its terrain adaptation fits the ground to it): {@link DryLand#choose}.
+         */
+        private static int[] chooseHideout(Structure.GenerationContext context) {
+            DryLand.Ground ground = ground(context);
+            int span = DryLand.REACH_BACK + DryLand.REACH_ON + 1;
+            int[] chosen = DryLand.choose(DryLand.hideoutOffers(context.f_226627_()), new DryLand.Judge() {
+                @Override
+                public int[] grid(int chunkX, int chunkZ) {
+                    return Site.grid(ground, (chunkX << 4) - DryLand.REACH_BACK, (chunkZ << 4) - DryLand.REACH_BACK, span, span);
+                }
+
+                @Override
+                public boolean biome(int chunkX, int chunkZ, int y) {
+                    return ControlStructures.biome(context, (chunkX << 4) + 8, y, (chunkZ << 4) + 8);
+                }
+
+                @Override
+                public boolean dry(int chunkX, int chunkZ, int y) {
+                    return DryLand.dry(ground, y, (chunkX << 4) - DryLand.REACH_BACK, (chunkZ << 4) - DryLand.REACH_BACK, span, span);
+                }
+            }, VillageGround.FLAT);
+            return chosen == null ? NOWHERE : chosen;
+        }
+
+        /**
+         * The world's dry ground on a 5 x 5 grid over a footprint (sample i * 5 + j at row i, column j), or null if there is water over the
+         * ground at any of them.
+         */
+        static int[] grid(DryLand.Ground ground, int minX, int minZ, int sizeX, int sizeZ) {
+            int n = 5;
+            int[] floor = new int[n * n];
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < n; j++) {
+                    int x = minX + 2 + (sizeX - 5) * i / (n - 1);
+                    int z = minZ + 2 + (sizeZ - 5) * j / (n - 1);
+                    int at = ground.floor(x, z);
+                    if (ground.surface(x, z) > at) {
+                        return null;
+                    }
+                    floor[i * n + j] = at;
+                }
+            }
+            return floor;
+        }
+
+        /** True if the dry ground's highest and lowest are no more than {@link VillageGround#FLAT} apart. */
+        static boolean flat(int[] floor) {
+            return floor.length > 0 && DryLand.spread(floor) <= VillageGround.FLAT;
         }
 
         /** 4.0.2: true if {@code site} is the world's one of its kind (placed by a ring, never turned away): the Aogiri Tree's hideout. */
@@ -262,6 +357,104 @@ public final class ControlStructures {
         @Override
         public StructureType<?> m_213658_() {
             return SITES.get(this.site.id());
+        }
+    }
+
+    /** 4.1.1: the biomes no structure may stand in or beside (a sea, a river, a beach, a swamp): data/hexkagune/tags/worldgen/biome/wet.json. */
+    static final net.minecraft.tags.TagKey<?> WET = net.minecraft.tags.TagKey.m_203882_(Registries.f_256952_,
+        net.minecraft.resources.ResourceLocation.m_214293_("hexkagune", "wet"));
+
+    /** 4.1.1: the world as the game will make it (its two worldgen heightmaps: water counted as ground, and not; its biomes). */
+    static DryLand.Ground ground(Structure.GenerationContext context) {
+        ChunkGenerator generator = context.f_226622_();
+        net.minecraft.world.level.LevelHeightAccessor heights = context.f_226629_();
+        net.minecraft.world.level.levelgen.RandomState random = context.f_226624_();
+        net.minecraft.world.level.biome.BiomeSource biomes = context.f_226623_();
+        net.minecraft.world.level.biome.Climate.Sampler sampler = random.m_224579_();
+        return new DryLand.Ground() {
+            @Override
+            public boolean wet(int x, int y, int z) {
+                return biomes.m_203407_(x >> 2, y >> 2, z >> 2, sampler).m_203656_(WET);
+            }
+
+            @Override
+            public int surface(int x, int z) {
+                return generator.m_214096_(x, z, Heightmap.Types.WORLD_SURFACE_WG, heights, random);
+            }
+
+            @Override
+            public int floor(int x, int z) {
+                return generator.m_214096_(x, z, Heightmap.Types.OCEAN_FLOOR_WG, heights, random);
+            }
+        };
+    }
+
+    /** 4.1.1: true if a structure may stand in the biome at block ({@code x}, {@code y}, {@code z}) (the game's own test at its start). */
+    static boolean biome(Structure.GenerationContext context, int x, int y, int z) {
+        net.minecraft.core.Holder<?> biome = context.f_226623_().m_203407_(x >> 2, y >> 2, z >> 2, context.f_226624_().m_224579_());
+        return context.f_226630_().test(biome);
+    }
+
+    /**
+     * 4.1.1 (the owner: "make sure NONE of the structures spawns in water or collides with water bodies"): a vanilla jigsaw place (Anteiku,
+     * the library, Ken's tower: one template each), read from the same fields as vanilla's, started where vanilla would start it if the land
+     * there is dry; if not, moved a chunk at a time ({@link DryLand#shifts}, nearest first, as far as its start chunk reaches) to the first
+     * spot where no water lies under it or round it, in a biome it may stand in; or not built at that start.
+     */
+    public static final class DryPlace extends Structure {
+        static final Codec<DryPlace> CODEC = ((MapCodec.MapCodecCodec<JigsawStructure>)JigsawStructure.f_227604_).codec()
+            .xmap(DryPlace::new, dry -> dry.inner).codec();
+        /** The chunks either way a start may be moved. */
+        static final int MOST = 5;
+        private static final int[][] SHIFTS = DryLand.shifts(MOST);
+        final JigsawStructure inner;
+
+        DryPlace(JigsawStructure inner) {
+            super(inner.modifiableStructureInfo().getOriginalStructureInfo().structureSettings());
+            this.inner = inner;
+        }
+
+        @Override
+        public Optional<Structure.GenerationStub> m_214086_(Structure.GenerationContext context) {
+            try {
+                return this.place(context);
+            } catch (RuntimeException | LinkageError failure) {
+                Safety.caught(failure, "ControlStructures.DryPlace");
+                return Optional.empty();
+            }
+        }
+
+        private Optional<Structure.GenerationStub> place(Structure.GenerationContext context) {
+            ChunkPos home = context.f_226628_();
+            DryLand.Ground ground = ground(context);
+            for (int[] shift : SHIFTS) {
+                Structure.GenerationContext moved = shift[0] == 0 && shift[1] == 0 ? context : new Structure.GenerationContext(context.f_226621_(),
+                    context.f_226622_(), context.f_226623_(), context.f_226624_(), context.f_226625_(), context.f_226626_(), context.f_226627_(),
+                    new ChunkPos(home.f_45578_ + shift[0], home.f_45579_ + shift[1]), context.f_226629_(), context.f_226630_());
+                Optional<Structure.GenerationStub> stub = DryJigsaw.run(this.inner, moved);
+                if (stub.isEmpty()) {
+                    continue;
+                }
+                BoundingBox box = stub.get().m_226677_().m_192798_();
+                int minX = box.m_162395_();
+                int minZ = box.m_162398_();
+                int maxX = box.m_162399_();
+                int maxZ = box.m_162401_();
+                if (!DryLand.reachable(home.m_45604_(), home.m_45605_(), minX, minZ, maxX, maxZ)) {
+                    continue;
+                }
+                BlockPos at = stub.get().f_226669_();
+                if (biome(context, at.m_123341_(), at.m_123342_(), at.m_123343_())
+                    && DryLand.dry(ground, at.m_123342_(), minX, minZ, maxX - minX + 1, maxZ - minZ + 1)) {
+                    return stub;
+                }
+            }
+            return Optional.empty();
+        }
+
+        @Override
+        public StructureType<?> m_213658_() {
+            return DRY_PLACE;
         }
     }
 }

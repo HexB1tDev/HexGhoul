@@ -27,7 +27,7 @@ Read this first. The full house rules and history are in `docs/handoff/next-ai-4
 |---|---|---|
 | 4.0.9 | Ken's tower, Ken sits | pushed (7cda697) |
 | 4.1.0 | Ayato's pull-out | pushed (121a679) |
-| 4.1.1 | No structure in water | built but maybe not pushed: if no commit "HexKagune 4.1.1" is on the branch, run `git am docs/handoff/water-4.1.1.patch`, delete that patch file, run the full build to EXIT 0, then push. Its first build was still running at handoff, with no failures through OutfitTests. |
+| 4.1.1 | No structure in water | released (its full build ended with EXIT 0) |
 | 4.1.2 | Ukaku wing slams and wing guard | unfinished: `docs/handoff/ukaku-wings-4.1.2-wip.patch` |
 
 ### 4.1.1 (the owner: "bug, make sure NONE of the structures spawns in water or collides with water bodies, the mansion is currently happily resting at the very bottom of the ocean...")

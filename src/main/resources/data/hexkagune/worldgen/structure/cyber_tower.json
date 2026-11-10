@@ -1,5 +1,5 @@
 {
-  "type": "minecraft:jigsaw",
+  "type": "hexkagune:dry_place",
   "biomes": "#hexkagune:has_structure/cyber_tower",
   "step": "surface_structures",
   "spawn_overrides": {},
