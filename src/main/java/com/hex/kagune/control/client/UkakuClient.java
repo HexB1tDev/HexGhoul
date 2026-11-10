@@ -202,8 +202,17 @@ public final class UkakuClient {
         boolean rightThrown = ukaku.vortexSide() > 0;
         boolean leftThrown = ukaku.vortexSide() < 0;
         float[] gunKick = gatlingKick(ukaku, time, gun);
-        return new WingRig.Input(form, mastery, deploy, time / 20.0, smooth.crystalRight, smooth.crystalLeft, strike.motion(),
-            strike.progress(), strike.impact(), 0.0F, 0.0F, player.m_6047_(), detail, alpha,
+        // 4.1.2 (the owner: "wings grow and protect the player, they come together to protect the player"): while his guard is up and no
+        // blow is under way, both wings swing forward round him and meet in front.
+        WingRig.Motion motion = strike.motion();
+        float progress = strike.progress();
+        float guard = motion == WingRig.Motion.NONE ? RinkakuBlockClient.amount(player, time) : 0.0F;
+        if (guard > 0.0F) {
+            motion = WingRig.Motion.GUARD;
+            progress = guard;
+        }
+        return new WingRig.Input(form, mastery, deploy, time / 20.0, smooth.crystalRight, smooth.crystalLeft, motion,
+            progress, strike.impact(), 0.0F, 0.0F, player.m_6047_(), detail, alpha,
             view.mode() == TendrilMode.DISMISS, Math.max(strike.aimRight(), gun), Math.max(strike.aimLeft(), gun), aim,
             Math.max(strike.kickRight(), gunKick[0]), Math.max(strike.kickLeft(), gunKick[1]),
             rightThrown ? thrown[0] : 0.0F, leftThrown ? thrown[0] : 0.0F, rightThrown ? thrown[1] : 1.0F, leftThrown ? thrown[1] : 1.0F,

@@ -39,6 +39,14 @@ public final class UkakuTests {
         return total;
     }
 
+    private static String read(String path) {
+        try {
+            return java.nio.file.Files.readString(java.nio.file.Path.of(path));
+        } catch (java.io.IOException e) {
+            throw new java.io.UncheckedIOException(e);
+        }
+    }
+
     private static void check(boolean condition, String description) {
         if (condition) {
             passed++;
@@ -56,6 +64,7 @@ public final class UkakuTests {
         rules();
         combos();
         crystalMode();
+        wingSlams();
         sweep();
         spikes();
         vortex();
@@ -432,16 +441,19 @@ public final class UkakuTests {
     }
 
     private static final ComboStyle[] UKAKU_STYLES = {ComboStyle.UKAKU_KICKS, ComboStyle.UKAKU_CRYSTAL_KICKS, ComboStyle.UKAKU_BLADES,
-        ComboStyle.UKAKU_RABBIT, ComboStyle.UKAKU_ONE_WING, ComboStyle.UKAKU_RABBIT_BLADES, ComboStyle.UKAKU_FIRE, ComboStyle.UKAKU_ENDERS,
+        ComboStyle.UKAKU_RABBIT, ComboStyle.UKAKU_ONE_WING, ComboStyle.UKAKU_RABBIT_BLADES, ComboStyle.UKAKU_FIRE, ComboStyle.UKAKU_WINGS,
+        ComboStyle.UKAKU_LEFT_WING, ComboStyle.UKAKU_ENDERS,
         ComboStyle.UKAKU_CRYSTAL, ComboStyle.UKAKU_CRYSTAL_ENDERS, ComboStyle.UKAKU_KAKUJA, ComboStyle.UKAKU_KAKUJA_ENDERS,
         ComboStyle.UKAKU_RUSHING_DEATH, ComboStyle.UKAKU_FINAL_KAKUJA, ComboStyle.UKAKU_FINAL_ENDERS, ComboStyle.UKAKU_STEEL_BLADE};
 
     private static void combos() {
-        // M1 is the fire shots; the One-Winged Kagune stays a blade.
-        check(UkakuRules.style(0, WingForm.TWIN, false) == ComboStyle.UKAKU_FIRE && UkakuRules.style(99, WingForm.RABBIT, true)
-            == ComboStyle.UKAKU_FIRE && UkakuRules.style(1000, WingForm.TWIN, false) == ComboStyle.UKAKU_FIRE, "the M1 is the fire shots");
+        // 4.1.2 (the owner: "Ukaku kagune base firery form no longer fires projectiles, M1s are a series of different wing slams combos"):
+        // the fire's M1 is the wing slams (a new Ukaku's one wing, the left; the twin wings from 100); the One-Winged Kagune stays a blade.
+        check(UkakuRules.style(0, WingForm.TWIN, false) == ComboStyle.UKAKU_LEFT_WING && UkakuRules.style(99, WingForm.RABBIT, true)
+            == ComboStyle.UKAKU_LEFT_WING && UkakuRules.style(100, WingForm.TWIN, false) == ComboStyle.UKAKU_WINGS
+            && UkakuRules.style(1000, WingForm.TWIN, false) == ComboStyle.UKAKU_WINGS, "the M1 in the fire is the wing slams, no shots");
         check(UkakuRules.style(750, WingForm.ONE_WING, true) == ComboStyle.UKAKU_ONE_WING
-            && UkakuRules.style(500, WingForm.ONE_WING, false) == ComboStyle.UKAKU_FIRE, "the One-Wing is a blade, a locked one fires");
+            && UkakuRules.style(500, WingForm.ONE_WING, false) == ComboStyle.UKAKU_WINGS, "the One-Wing is a blade, a locked one slams");
         // The chain: five shots, right wing and hand, then left, alternating.
         check(ComboStyle.UKAKU_FIRE.stageCount() == UkakuRules.CHAIN_SHOTS && UkakuRules.CHAIN_SHOTS == 5, "five shots to a chain");
         for (int index = 0; index < 5; index++) {
@@ -575,11 +587,11 @@ public final class UkakuTests {
     private static void crystalMode() {
         check(UkakuRules.style(UkakuRules.CRYSTAL_MASTERY, WingForm.TWIN, false, true) == ComboStyle.UKAKU_CRYSTAL
             && UkakuRules.style(1000, WingForm.RABBIT, true, true) == ComboStyle.UKAKU_CRYSTAL, "in the crystal mode the M1 is the crystal spikes");
-        check(UkakuRules.style(UkakuRules.CRYSTAL_MASTERY - 1, WingForm.TWIN, false, true) == ComboStyle.UKAKU_FIRE,
+        check(UkakuRules.style(UkakuRules.CRYSTAL_MASTERY - 1, WingForm.TWIN, false, true) == ComboStyle.UKAKU_WINGS,
             "below its mastery the crystal mode doesn't take");
         check(UkakuRules.style(1000, WingForm.ONE_WING, false, true) == ComboStyle.UKAKU_ONE_WING && !UkakuRules.crystalModeAllowed(1000, WingForm.ONE_WING),
             "the One-Winged Kagune is crystal already: no crystal mode");
-        check(UkakuRules.style(1000, WingForm.TWIN, false, false) == ComboStyle.UKAKU_FIRE, "out of the crystal mode the M1 is the fire again");
+        check(UkakuRules.style(1000, WingForm.TWIN, false, false) == ComboStyle.UKAKU_WINGS, "out of the crystal mode the M1 is the wing slams again");
         check(UkakuRules.style(500, WingForm.TWIN, false) == UkakuRules.style(500, WingForm.TWIN, false, false), "the old call is the fire's");
         check(ComboStyle.UKAKU_CRYSTAL.stageCount() == UkakuRules.CHAIN_SHOTS, "five spikes to a chain, like the fire");
         for (int index = 0; index < 5; index++) {
@@ -636,6 +648,133 @@ public final class UkakuTests {
     }
 
     /** The crystallization climbs the wing from the shoulder blade to the tip: crystal below the front, fire above it. */
+    /**
+     * 4.1.2 (the owner: "Ukaku kagune base firery form no longer fires projectiles, M1s are a series of different wing slams combos ...
+     * (These can now clash like Rinkaku) and has lightly less range than Rinkaku. Right click (M2) is now a protection like Rinkaku has").
+     */
+    private static void wingSlams() {
+        // The twin string: right and left in turn, then both.
+        ComboStyle twin = ComboStyle.UKAKU_WINGS;
+        check(twin.stageCount() == 7, "seven blows to the twin wings' string");
+        for (int index = 0; index < 6; index++) {
+            ComboStage blow = twin.stage(index);
+            boolean right = index % 2 == 0;
+            check(blow.limbs().length == 1 && blow.usesLimb(right ? 0 : 1) && blow.name().startsWith(right ? "Right" : "Left"),
+                "blow " + index + " is the " + (right ? "right" : "left") + " wing's: " + blow.name());
+        }
+        ComboStage last = twin.stage(6);
+        check(last.pattern() == StrikePattern.TWIN_SLAM && last.usesLimb(0) && last.usesLimb(1), "the string ends with both wings slammed down");
+        java.util.Set<StrikePattern> kinds = java.util.EnumSet.noneOf(StrikePattern.class);
+        for (int index = 0; index < twin.stageCount(); index++) {
+            kinds.add(twin.stage(index).pattern());
+            check(twin.stage(index).damageMul() >= twin.stage(Math.max(0, index - 1)).damageMul() - 0.3F, "the string grows heavier: " + index);
+        }
+        check(kinds.containsAll(java.util.List.of(StrikePattern.WING_SLAP, StrikePattern.WING_SWING, StrikePattern.WING_RISE, StrikePattern.WING_SLAM,
+            StrikePattern.TWIN_SLAM)), "slaps, a swing, a rising wing, overhead slams and the twin slam");
+        check(last.damageMul() > twin.stage(0).damageMul() * 1.5F, "the twin slam is the heaviest by far");
+        // Rabbit Guise: only the left wing.
+        ComboStyle left = ComboStyle.UKAKU_LEFT_WING;
+        check(left.stageCount() == 4, "four blows to the one wing's string");
+        for (int index = 0; index < left.stageCount(); index++) {
+            ComboStage blow = left.stage(index);
+            check(blow.limbs().length == 1 && blow.usesLimb(1) && !blow.usesLimb(0) && blow.name().startsWith("Left"), "the one wing is the left: " + blow.name());
+        }
+        // Blows, not shots: every one can clash.
+        for (ComboStyle style : new ComboStyle[] {twin, left}) {
+            check(UkakuRules.slams(style) && style.ukaku() && !style.ukakuShots() && !style.ukakuEnderSet() && !style.kakujaShots(),
+                style + " is a string of blows, with no enders");
+            for (int index = 0; index < style.stageCount(); index++) {
+                StrikePattern pattern = style.stage(index).pattern();
+                check(!pattern.shot() && !pattern.flame() && !pattern.crystal() && !pattern.finalKakuja() && !pattern.ender(),
+                    pattern + " is a blow (it clashes), not a shot");
+                check(style.stage(index).shape() == HitShape.SWEEP && style.stage(index).shapeParam() >= 60.0F, pattern + " sweeps a real arc");
+            }
+        }
+        check(!UkakuRules.slams(ComboStyle.UKAKU_FIRE) && !UkakuRules.slams(ComboStyle.UKAKU_CRYSTAL) && !UkakuRules.slams(ComboStyle.UKAKU_ONE_WING)
+            && !UkakuRules.slams(ComboStyle.UKAKU_KAKUJA), "only the fire's wings slam");
+        check(UkakuRules.SLAM_REACH >= 0.75 && UkakuRules.SLAM_REACH < 1.0, "a little less reach than Rinkaku");
+        // The guard: the fire's wings, twin or Rabbit Guise's one.
+        check(UkakuRules.wingGuard(0, WingForm.TWIN, false) && UkakuRules.wingGuard(50, WingForm.RABBIT, false)
+            && UkakuRules.wingGuard(300, WingForm.TWIN, false) && UkakuRules.wingGuard(1000, WingForm.TWIN, false)
+            && UkakuRules.wingGuard(1000, WingForm.RABBIT, false), "the fire's wings guard (twin, and Rabbit Guise's one)");
+        check(!UkakuRules.wingGuard(1000, WingForm.TWIN, true) && !UkakuRules.wingGuard(UkakuRules.CRYSTAL_MASTERY, WingForm.RABBIT, true),
+            "the crystal mode keeps its own right click");
+        check(UkakuRules.wingGuard(UkakuRules.CRYSTAL_MASTERY - 1, WingForm.TWIN, true), "a crystal mode that doesn't take leaves the guard");
+        check(!UkakuRules.wingGuard(1000, WingForm.ONE_WING, false), "the One-Winged Kagune doesn't guard");
+        for (WingForm form : WingForm.values()) {
+            if (form.kakuja()) {
+                check(!UkakuRules.wingGuard(1000, form, false), "the kakuja doesn't guard with wings: " + form);
+            }
+        }
+        // The crystal mode is as it was: five spikes, shots, with its enders.
+        check(UkakuRules.style(1000, WingForm.TWIN, false, true) == ComboStyle.UKAKU_CRYSTAL && ComboStyle.UKAKU_CRYSTAL.ukakuShots()
+            && ComboStyle.UKAKU_CRYSTAL.stage(0).pattern().shot() && ComboStyle.UKAKU_CRYSTAL.ukakuEnders() == ComboStyle.UKAKU_CRYSTAL_ENDERS,
+            "the crystal mode still shoots its spikes and keeps its enders");
+        // The rig. The guard: both wings swung forward (+z) round him, and grown.
+        float[] rest = extent(WingRig.build(input(WingForm.TWIN, 300, 0.0F, WingRig.Motion.NONE, 0.0F, 0.0F)));
+        float[] guard = extent(WingRig.build(input(WingForm.TWIN, 300, 0.0F, WingRig.Motion.GUARD, 1.0F, 0.0F)));
+        float[] half = extent(WingRig.build(input(WingForm.TWIN, 300, 0.0F, WingRig.Motion.GUARD, 0.5F, 0.0F)));
+        check(guard[5] > rest[5] + 0.8F && guard[5] > 0.8F, "the guarding wings come round in front of him (" + rest[5] + " -> " + guard[5] + ")");
+        check(half[5] > rest[5] && half[5] < guard[5], "the guard closes by degrees");
+        float[] guardRight = extent(WingRig.build(input(WingForm.TWIN, 300, 0.0F, WingRig.Motion.GUARD, 1.0F, 0.0F)), 1);
+        float[] guardLeft = extent(WingRig.build(input(WingForm.TWIN, 300, 0.0F, WingRig.Motion.GUARD, 1.0F, 0.0F)), -1);
+        check(guardRight[5] > 0.8F && guardLeft[5] > 0.8F, "both wings guard");
+        check(WingRig.GUARD_GROWTH > 0.1F && WingRig.GUARD_GROWTH <= 0.5F, "the guarding wings grow");
+        float[] oneGuard = extent(WingRig.build(input(WingForm.RABBIT, 50, 0.0F, WingRig.Motion.GUARD, 1.0F, 0.0F)));
+        float[] oneRest = extent(WingRig.build(input(WingForm.RABBIT, 50, 0.0F, WingRig.Motion.NONE, 0.0F, 0.0F)));
+        check(oneGuard[5] > oneRest[5], "Rabbit Guise's one wing guards too");
+        // Each slam is its own side's: the striking wing goes in front, the mirror of the other side's.
+        WingRig.Motion[][] pairs = {{WingRig.Motion.SLAP_RIGHT, WingRig.Motion.SLAP_LEFT}, {WingRig.Motion.SWING_RIGHT, WingRig.Motion.SWING_LEFT},
+            {WingRig.Motion.RISE_RIGHT, WingRig.Motion.RISE_LEFT}, {WingRig.Motion.SLAM_RIGHT, WingRig.Motion.SLAM_LEFT}};
+        for (WingRig.Motion[] pair : pairs) {
+            check(WingRig.striking(pair[0]) == 1 && WingRig.striking(pair[1]) == -1, pair[0] + " is the right wing's, " + pair[1] + " the left's");
+            float bestRight = -Float.MAX_VALUE;
+            float bestLeft = -Float.MAX_VALUE;
+            float idleRight = -Float.MAX_VALUE;
+            float idleLeft = -Float.MAX_VALUE;
+            for (float progress = 0.0F; progress <= 1.0F; progress += 0.05F) {
+                List<WingRig.Quad> r = WingRig.build(input(WingForm.TWIN, 300, 1.0F, pair[0], progress, 0.0F));
+                List<WingRig.Quad> l = WingRig.build(input(WingForm.TWIN, 300, 1.0F, pair[1], progress, 0.0F));
+                bestRight = Math.max(bestRight, extent(r, 1)[5]);
+                idleLeft = Math.max(idleLeft, extent(r, -1)[5]);
+                bestLeft = Math.max(bestLeft, extent(l, -1)[5]);
+                idleRight = Math.max(idleRight, extent(l, 1)[5]);
+            }
+            if (pair[0] == WingRig.Motion.SWING_RIGHT) {
+                // The wide swing carries its wing right across the front, past the middle, to the other side.
+                check(bestRight > 0.6F && idleLeft > 0.6F && idleRight > 0.6F, "the wide swing crosses the whole front (" + bestRight + ", " + idleLeft + ")");
+            } else {
+                check(bestRight > 0.6F && bestRight > idleLeft + 0.4F, pair[0] + " brings the right wing in front (" + bestRight + ", the left " + idleLeft + ")");
+                check(bestLeft > 0.6F && bestLeft > idleRight + 0.4F, pair[1] + " brings the left wing in front (" + bestLeft + ", the right " + idleRight + ")");
+            }
+            check(Math.abs(idleRight - idleLeft) < 0.05F, pair[0] + " and " + pair[1] + " mirror each other on the far side too");
+            check(Math.abs(bestRight - bestLeft) < 0.05F, pair[0] + " and " + pair[1] + " mirror each other (" + bestRight + ", " + bestLeft + ")");
+        }
+        check(WingRig.striking(WingRig.Motion.TWIN_SLAM) == 0 && WingRig.striking(WingRig.Motion.GUARD) == 0 && WingRig.striking(WingRig.Motion.SLASH_RIGHT) == 0,
+            "the twin slam and the guard are both wings'");
+        float twinFront = -Float.MAX_VALUE;
+        float twinHigh = -Float.MAX_VALUE;
+        for (float progress = 0.0F; progress <= 1.0F; progress += 0.05F) {
+            List<WingRig.Quad> both = WingRig.build(input(WingForm.TWIN, 300, 1.0F, WingRig.Motion.TWIN_SLAM, progress, 0.0F));
+            twinFront = Math.max(twinFront, Math.min(extent(both, 1)[5], extent(both, -1)[5]));
+            twinHigh = Math.max(twinHigh, extent(both)[4]);
+        }
+        check(twinFront > 0.6F && twinHigh > rest[4], "the twin slam raises both wings, then brings both down in front");
+        // The wiring.
+        String input = read("src/main/java/com/hex/kagune/control/client/UkakuInput.java");
+        check(input.contains("UkakuRules.wingGuard(view.mastery(), wings.form(), wings.crystalMode())"), "the fire's right click is left to the guard");
+        String block = read("src/main/java/com/hex/kagune/control/server/RinkakuBlockServer.java");
+        check(block.contains("static boolean ukakuGuard(ServerPlayer player)") && block.contains("UkakuRules.wingGuard(KaguneProfile.mastery(player)")
+            && block.contains("UkakuServer.crystalMode(player)") && block.contains("wings.mode == TendrilMode.IDLE"), "the server holds the wing guard by Rinkaku's rules");
+        String blockClient = read("src/main/java/com/hex/kagune/control/client/RinkakuBlockClient.java");
+        check(blockClient.contains("PathClient.get(player) == KagunePath.UKAKU") && blockClient.contains("UkakuRules.wingGuard("), "the client asks for it");
+        String client = read("src/main/java/com/hex/kagune/control/client/UkakuClient.java");
+        check(client.contains("WingRig.Motion.GUARD") && client.contains("RinkakuBlockClient.amount(player, time)"), "the wings close while the guard is up");
+        String combat = read("src/main/java/com/hex/kagune/control/server/KaguneCombat.java");
+        check(combat.contains("UkakuRules.slams(style)") && combat.contains("KaguneProfile.attackRange(player) * UkakuRules.SLAM_REACH"),
+            "the slams reach a share of Rinkaku's range");
+    }
+
     private static void sweep() {
         for (boolean reEra : new boolean[] {false, true}) {
             // A full-size wing (4.3 blocks): distances below are in wing lengths.

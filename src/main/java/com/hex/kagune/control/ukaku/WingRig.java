@@ -40,7 +40,20 @@ public final class WingRig {
         /** Black Rabbit: the wings fold in tight through the backflip, then spread again. */
         FLIP,
         /** Rising Flame: both wings sweep up from low as the pillar erupts. */
-        RISE
+        RISE,
+        // 4.1.2: the Twin Wings' slams in the fire, and their guard.
+        /** A quick slap across the front, flat, at chest height (one wing). */
+        SLAP_RIGHT, SLAP_LEFT,
+        /** A wide swing: drawn far back and up, swung all the way across (one wing). */
+        SWING_RIGHT, SWING_LEFT,
+        /** Low and forward, then swept up high through the target (one wing). */
+        RISE_RIGHT, RISE_LEFT,
+        /** Raised high over the shoulder, then driven straight down in front (one wing). */
+        SLAM_RIGHT, SLAM_LEFT,
+        /** Both raised high together, then slammed down in front as one. */
+        TWIN_SLAM,
+        /** The guard: both wings grown out and swung forward round him, meeting in front, a little raised ({@code progress}: how far closed). */
+        GUARD
     }
 
     /**
@@ -164,6 +177,39 @@ public final class WingRig {
         return new WingAngles(sweep, roll);
     }
 
+    /** 4.1.2: the guard's wings, swung forward round him till they meet in front (degrees). */
+    static final float GUARD_SWEEP = -112.0F;
+    static final float GUARD_ROLL = 14.0F;
+    /** 4.1.2: how much longer the guarding wings grow, fully closed (a share of their length). */
+    public static final float GUARD_GROWTH = 0.3F;
+
+    /** 4.1.2: which wing strikes in a one-wing slam (+1 right, -1 left; 0 neither). */
+    public static int striking(Motion motion) {
+        return switch (motion) {
+            case SLAP_RIGHT, SWING_RIGHT, RISE_RIGHT, SLAM_RIGHT -> 1;
+            case SLAP_LEFT, SWING_LEFT, RISE_LEFT, SLAM_LEFT -> -1;
+            default -> 0;
+        };
+    }
+
+    /**
+     * 4.1.2 (the owner: "slaps, swings, upwards to downwards slams"): a striking wing's angles through one slam: wound up, a fast blow
+     * landing on the impact, a short hold, settled back (as {@link #slash}, each its own shape).
+     */
+    static WingAngles slam(Motion motion, float progress, float impact) {
+        float[] ph = phases(progress, impact);
+        float[] k = switch (motion) {
+            // {wind-up sweep, wind-up roll, strike sweep, strike roll}
+            case SLAP_RIGHT, SLAP_LEFT -> new float[] {38.0F, 8.0F, -82.0F, -4.0F};
+            case SWING_RIGHT, SWING_LEFT -> new float[] {78.0F, 32.0F, -118.0F, -14.0F};
+            case RISE_RIGHT, RISE_LEFT -> new float[] {-20.0F, -32.0F, -42.0F, 62.0F};
+            default -> new float[] {12.0F, 72.0F, -72.0F, -12.0F}; // a slam: high over the shoulder, then down in front, level with the waist
+        };
+        float sweep = lerp(lerp(lerp(REST_SWEEP, k[0], ph[0]), k[2], ph[1]), REST_SWEEP, ph[2]);
+        float roll = lerp(lerp(lerp(0.0F, k[1], ph[0]), k[3], ph[1]), 0.0F, ph[2]);
+        return new WingAngles(sweep, roll);
+    }
+
     /** Twin-wing angles for one side (+1 right, -1 left). */
     static WingAngles twinAngles(Input in, int side) {
         float sweep = REST_SWEEP;
@@ -221,6 +267,28 @@ public final class WingRig {
                 float[] ph = phases(in.progress(), in.impact());
                 sweep = lerp(lerp(lerp(REST_SWEEP, 40.0F, ph[0]), -15.0F, ph[1]), REST_SWEEP, ph[2]);
                 roll = lerp(lerp(lerp(0.0F, 15.0F, ph[0]), -8.0F, ph[1]), 0.0F, ph[2]);
+            }
+            case SLAP_RIGHT, SLAP_LEFT, SWING_RIGHT, SWING_LEFT, RISE_RIGHT, RISE_LEFT, SLAM_RIGHT, SLAM_LEFT -> {
+                if (side == striking(in.motion())) {
+                    WingAngles blow = slam(in.motion(), in.progress(), in.impact());
+                    sweep = blow.sweep();
+                    roll = blow.roll();
+                } else {
+                    // The other wing draws back a little out of the way, ready for its turn.
+                    sweep += 12.0F * window;
+                    roll += 6.0F * window;
+                }
+            }
+            case TWIN_SLAM -> {
+                WingAngles blow = slam(Motion.SLAM_RIGHT, in.progress(), in.impact());
+                sweep = blow.sweep();
+                roll = blow.roll();
+            }
+            case GUARD -> {
+                // Grown and swung forward round him till they meet in front of his chest, raised a little, overlapping.
+                float shut = smooth(in.progress());
+                sweep = lerp(REST_SWEEP, GUARD_SWEEP, shut);
+                roll = lerp(0.0F, GUARD_ROLL, shut);
             }
             default -> {
             }
@@ -295,6 +363,10 @@ public final class WingRig {
             return out;
         }
         float length = UkakuRules.wingLength(mastery, form);
+        if (in.motion() == Motion.GUARD) {
+            // 4.1.2 (the owner: "wings grow and protect the player"): the guarding wings grow as they close.
+            length *= 1.0F + GUARD_GROWTH * smooth(in.progress());
+        }
         float[] ph = phases(in.progress(), in.impact());
         float strike = ph[0] * (1.0F - ph[2]);
         float kick = kick(in);
@@ -314,7 +386,8 @@ public final class WingRig {
                 float c = smooth(coil);
                 angles = new WingAngles(lerp(angles.sweep(), VORTEX_SWEEP, c), lerp(angles.roll(), VORTEX_ROLL, c));
             }
-            boolean cutting = in.motion() == Motion.CROSS || in.motion() == (side > 0 ? Motion.SLASH_RIGHT : Motion.SLASH_LEFT);
+            boolean cutting = in.motion() == Motion.CROSS || in.motion() == (side > 0 ? Motion.SLASH_RIGHT : Motion.SLASH_LEFT)
+                || in.motion() == Motion.TWIN_SLAM || striking(in.motion()) == side; // 4.1.2: a slamming wing hardens as a blade's does
             // A single wing (one small wing, Rabbit Guise) answers both hands.
             float aim = form.rightWing() ? (side > 0 ? in.aimRight() : in.aimLeft()) : Math.max(in.aimRight(), in.aimLeft());
             float shot = form.rightWing() ? (side > 0 ? in.kickRight() : in.kickLeft()) : Math.max(in.kickRight(), in.kickLeft());

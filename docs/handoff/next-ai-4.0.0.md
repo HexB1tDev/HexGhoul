@@ -159,6 +159,16 @@ other sites try `TRIES` spots `SHIFT` apart. `ControlStructures.DryPlace` (`hexk
 vanilla jigsaw run in a `GenerationContext` moved up to 5 chunks, its pieces' box kept within the start chunk's reach. Tag
 `hexkagune:wet`. Protocol 110. Old worlds keep what they generated.
 
+## 4.1.2 (released)
+
+The owner (quoted exactly): "Another rework: Ukaku kagune base firery form no longer fires projectiles, M1s are a series of different wing slams combos. (create highly detailed moveset switching between left wing and right wing slaps, swings, upwards to downwards slams (These can now clash like Rinkaku) and has lightly less range than Rinkaku. Right click (M2) is now a protection like Rinkaku has, wings grow and protect the player , they come together to protect the player, just like rinkaku they break after a bunch of hits, perfectly timed right clicks can do the same as Rinkaku and stagger. Note: Crystal mode still has the same custom shooting crystals and right click, we're only touching the base from, everything else stays as it is."
+`StrikePattern` WING_SLAP, WING_SWING, WING_RISE, WING_SLAM, TWIN_SLAM (after BEHEADING; not shot, flame or crystal, so `KaguneCombat`
+registers them with `KaguneClash`). `ComboStyle.UKAKU_WINGS` (7 stages) and `UKAKU_LEFT_WING` (Rabbit Guise, 4), after UKAKU_FIRE (which
+no form gives any more; `UKAKU_ENDERS` is now only reached by crystal mode's Fire Dash). `UkakuRules.style`, `SLAM_REACH` 0.85, `slams`,
+`wingGuard`. `KaguneCombat.range`. `WingRig` motions SLAP/SWING/RISE/SLAM _RIGHT/_LEFT, TWIN_SLAM, GUARD (`GUARD_GROWTH` 0.3).
+`RinkakuBlockServer.ukakuGuard` and `can`; `RinkakuBlockClient.ready`; `UkakuInput.useInput` returns early when `wingGuard`.
+`UkakuMutation.FIRE_DASH`'s text says crystal mode. `ComboStyle` ordinals are sent, so protocol 111. `UkakuTests.wingSlams`.
+
 ## Next
 
 Nothing outstanding from the owner. If they report in-game problems with the outfits' fit, adjust `CLEAR`, `SNUG`, the drape

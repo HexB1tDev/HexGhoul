@@ -73,7 +73,7 @@ public final class RinkakuBlockServer {
         if (!can(player)) {
             if (block != null && block.up) {
                 lower(player, block, now, S2CRinkakuBlock.DOWN);
-            } else if (state == PRESSED && PathServer.path(player) == KagunePath.RINKAKU) {
+            } else if (state == PRESSED && (PathServer.path(player) == KagunePath.RINKAKU || ukakuGuard(player))) {
                 ControlNetwork.sendTo(player, new S2CRinkakuBlock(player.m_20148_(), S2CRinkakuBlock.REFUSED, 0));
             }
             return;
@@ -105,9 +105,29 @@ public final class RinkakuBlockServer {
         }
     }
 
-    /** True while {@code player} can hold the block up: a Rinkaku with the tails out and free. */
+    /**
+     * 4.1.2 (the owner: "Right click (M2) is now a protection like Rinkaku has, wings grow and protect the player ... just like rinkaku they
+     * break after a bunch of hits, perfectly timed right clicks can do the same as Rinkaku and stagger"): an Ukaku with the wings out
+     * in the fire (twin or Rabbit Guise's one) guards with them, by Rinkaku's rules.
+     */
+    static boolean ukakuGuard(ServerPlayer player) {
+        return PathServer.path(player) == KagunePath.UKAKU && com.hex.kagune.control.ukaku.UkakuRules.wingGuard(KaguneProfile.mastery(player),
+            UkakuServer.form(player), UkakuServer.crystalMode(player));
+    }
+
+    /** True while {@code player} can hold the block up: a Rinkaku with the tails out and free (4.1.2: or an Ukaku's wings in the fire). */
     static boolean can(ServerPlayer player) {
-        if (!player.m_6084_() || player.m_5833_() || !KaguneProfile.isActive(player) || PathServer.path(player) != KagunePath.RINKAKU) {
+        if (!player.m_6084_() || player.m_5833_() || !KaguneProfile.isActive(player)) {
+            return false;
+        }
+        if (PathServer.path(player) == KagunePath.UKAKU) {
+            if (!ukakuGuard(player) || PaleStun.stunned(player) || PaleWitness.frozen(player) || com.hex.kagune.control.DragonLock.locked(player)) {
+                return false;
+            }
+            KaguneRuntime.State wings = KaguneRuntime.get(player.m_20148_());
+            return wings != null && wings.mode == TendrilMode.IDLE;
+        }
+        if (PathServer.path(player) != KagunePath.RINKAKU) {
             return false;
         }
         KaguneForm form = KaguneProfile.form(player);

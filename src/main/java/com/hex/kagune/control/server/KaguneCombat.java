@@ -408,6 +408,10 @@ public final class KaguneCombat {
     private static double range(ServerPlayer player, ComboStyle style, ComboStage stage) {
         if (style.ukaku()) {
             // 5.0.18: the Steel Blade reaches as far as it is long.
+            if (UkakuRules.slams(style)) {
+                // 4.1.2: the wing slams reach a little less far than Rinkaku's M1 would (UkakuRules.SLAM_REACH of it).
+                return Math.min(15.0, KaguneProfile.attackRange(player) * UkakuRules.SLAM_REACH * stage.rangeMul());
+            }
             return UkakuServer.blade(player) ? com.hex.kagune.control.ukaku.SteelBlade.REACH * stage.rangeMul()
                 : UkakuRules.strikeRange(KaguneProfile.mastery(player), UkakuServer.form(player), stage);
         }

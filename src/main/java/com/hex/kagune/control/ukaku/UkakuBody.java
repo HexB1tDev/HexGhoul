@@ -81,6 +81,41 @@ public final class UkakuBody {
                     keys.at(0.7F, 0.9F, 0.85F));
             }
             case WING_SLASH -> sweep(pose, keys, side, 1.0F);
+            // 4.1.2: the wing slams. A slap, a quick turn of the shoulders into it; a swing, the whole body wound round and unwound.
+            case WING_SLAP -> sweep(pose, keys, side, 0.75F);
+            case WING_SWING -> sweep(pose, keys, side, 1.3F);
+            case WING_RISE -> {
+                // Down low into a crouch, the arm swept down and back; then up through the target, the body rising and leaning back.
+                pose.torsoX = keys.at(0.25F, -0.3F, -0.25F);
+                pose.twist = side.mirror(keys.at(-0.2F, 0.3F, 0.28F));
+                pose.headX = keys.at(0.15F, -0.2F, -0.18F);
+                side.arm(pose, true, keys.at(0.45F, -2.2F, -2.0F), keys.at(0.1F, -0.3F, -0.3F), keys.at(0.25F, 0.4F, 0.38F), keys.at(0.6F, 0.2F, 0.2F));
+                side.arm(pose, false, keys.at(-0.3F, 0.35F, 0.3F), keys.at(0.0F, 0.0F, 0.0F), keys.at(0.2F, 0.3F, 0.28F), keys.at(0.5F, 0.3F, 0.3F));
+                side.leg(pose, true, keys.at(-0.35F, 0.1F, 0.08F), keys.at(0.05F, 0.0F, 0.0F));
+                side.leg(pose, false, keys.at(0.25F, -0.1F, -0.08F), keys.at(0.0F, 0.0F, 0.0F));
+            }
+            case WING_SLAM -> {
+                // Up on the wind-up, leaning back, the arm raised high over the shoulder with the wing; then driven down into a forward
+                // bend as the wing crashes onto the target, a step in on the striking side.
+                pose.torsoX = keys.at(-0.3F, 0.45F, 0.4F);
+                pose.torsoBend = keys.at(0.0F, 0.25F, 0.2F);
+                pose.headX = keys.at(-0.25F, 0.15F, 0.12F);
+                pose.twist = side.mirror(keys.at(0.25F, -0.15F, -0.12F));
+                side.arm(pose, true, keys.at(-2.4F, -0.9F, -0.8F), keys.at(-0.2F, 0.2F, 0.2F), keys.at(0.3F, 0.1F, 0.1F), keys.at(0.4F, 0.2F, 0.2F));
+                side.arm(pose, false, keys.at(-0.3F, 0.4F, 0.35F), keys.at(0.0F, 0.0F, 0.0F), keys.at(0.2F, 0.3F, 0.3F), keys.at(0.3F, 0.4F, 0.35F));
+                side.leg(pose, true, keys.at(0.0F, -0.35F, -0.3F), keys.at(0.0F, 0.05F, 0.05F));
+                side.leg(pose, false, keys.at(0.0F, 0.25F, 0.2F), keys.at(0.0F, 0.0F, 0.0F));
+            }
+            case TWIN_SLAM -> {
+                // Both arms thrown up high as both wings rise, chest open; then everything comes down together into a deep bend.
+                pose.torsoX = keys.at(-0.35F, 0.55F, 0.5F);
+                pose.torsoBend = keys.at(0.0F, 0.3F, 0.25F);
+                pose.headX = keys.at(-0.3F, 0.2F, 0.15F);
+                for (boolean main : new boolean[] {true, false}) {
+                    side.arm(pose, main, keys.at(-2.6F, -0.7F, -0.6F), keys.at(0.0F, 0.0F, 0.0F), keys.at(0.35F, 0.25F, 0.2F), keys.at(0.3F, 0.3F, 0.25F));
+                    side.leg(pose, main, keys.at(0.1F, -0.2F, -0.18F), keys.at(0.05F, 0.12F, 0.1F));
+                }
+            }
             case ONE_WING_SLASH -> sweep(pose, keys, side, 1.35F);
             case WING_CROSS -> {
                 pose.torsoX = keys.at(0.22F, -0.12F, -0.1F);

@@ -106,6 +106,37 @@ public enum ComboStyle {
     UKAKU_FIRE(
         shot(0), shot(1), shot(2), shot(3), shot(4)
     ),
+    /**
+     * 4.1.2 (the owner: "Ukaku kagune base firery form no longer fires projectiles, M1s are a series of different wing slams combos ...
+     * switching between left wing and right wing slaps, swings, upwards to downwards slams (These can now clash like Rinkaku) and has
+     * slightly less range than Rinkaku"): the Twin Wings' M1 in the fire. Right then left, quicker blows first, heavier as the string goes
+     * on: two slaps, a wide swing, a rising wing, an overhead slam from each side, and both wings slammed down together. Their reach is
+     * {@code UkakuRules.SLAM_REACH} of Rinkaku's.
+     */
+    UKAKU_WINGS(
+        new ComboStage("Right Wing Slap", StrikePattern.WING_SLAP, HitShape.SWEEP, 100.0F, 9, 0.4F, 0.85F, 0.9F, 1.0F, 3, 0.8F, new int[] {0}, 0.3F),
+        new ComboStage("Left Wing Slap", StrikePattern.WING_SLAP, HitShape.SWEEP, 100.0F, 9, 0.4F, 0.85F, 0.9F, 1.0F, 3, 0.8F, new int[] {1}, 0.3F),
+        new ComboStage("Right Wing Swing", StrikePattern.WING_SWING, HitShape.SWEEP, 160.0F, 12, 0.45F, 1.05F, 1.25F, 1.05F, 4, 1.0F, new int[] {0},
+            0.45F),
+        new ComboStage("Left Rising Wing", StrikePattern.WING_RISE, HitShape.SWEEP, 110.0F, 12, 0.45F, 1.0F, 1.0F, 1.0F, 3, 1.0F, new int[] {1}, 0.45F),
+        new ComboStage("Right Overhead Slam", StrikePattern.WING_SLAM, HitShape.SWEEP, 70.0F, 13, 0.55F, 1.25F, 1.3F, 1.0F, 3, 1.15F, new int[] {0},
+            0.6F),
+        new ComboStage("Left Overhead Slam", StrikePattern.WING_SLAM, HitShape.SWEEP, 70.0F, 13, 0.55F, 1.25F, 1.3F, 1.0F, 3, 1.15F, new int[] {1},
+            0.6F),
+        new ComboStage("Twin Slam", StrikePattern.TWIN_SLAM, HitShape.SWEEP, 120.0F, 16, 0.55F, 1.6F, 1.7F, 1.05F, 5, 1.4F, new int[] {0, 1}, 0.85F)
+    ),
+    /**
+     * 4.1.2: the same in Rabbit Guise (a new Ukaku's one wing, the left, till the twin wings come at mastery 100): the left wing's own
+     * string, a slap, a wide swing, a rising wing and an overhead slam.
+     */
+    UKAKU_LEFT_WING(
+        new ComboStage("Left Wing Slap", StrikePattern.WING_SLAP, HitShape.SWEEP, 100.0F, 9, 0.4F, 0.85F, 0.9F, 1.0F, 3, 0.8F, new int[] {1}, 0.3F),
+        new ComboStage("Left Wing Swing", StrikePattern.WING_SWING, HitShape.SWEEP, 160.0F, 12, 0.45F, 1.05F, 1.25F, 1.05F, 4, 1.0F, new int[] {1},
+            0.45F),
+        new ComboStage("Left Rising Wing", StrikePattern.WING_RISE, HitShape.SWEEP, 110.0F, 12, 0.45F, 1.0F, 1.0F, 1.0F, 3, 1.0F, new int[] {1}, 0.45F),
+        new ComboStage("Left Overhead Slam", StrikePattern.WING_SLAM, HitShape.SWEEP, 70.0F, 14, 0.55F, 1.35F, 1.4F, 1.0F, 4, 1.2F, new int[] {1},
+            0.7F)
+    ),
     /** The right-click enders, indexed by how many shots came before (0 to 5); see {@code UkakuRules.ender}. */
     UKAKU_ENDERS(
         new ComboStage("Rabbit Hop", StrikePattern.RABBIT_HOP, HitShape.SINGLE, 0.0F, 12, 0.2F, 0.0F, 0.0F, 1.0F, 1, 0.5F, new int[] {0, 1},

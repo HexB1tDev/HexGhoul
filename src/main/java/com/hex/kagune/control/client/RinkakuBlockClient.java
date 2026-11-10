@@ -111,6 +111,12 @@ public final class RinkakuBlockClient {
 
     /** True when {@code player} (this client's) can block now: a Rinkaku, the tails out and free, not the kakuja's forms. */
     private static boolean ready(LocalPlayer player) {
+        if (PathClient.get(player) == KagunePath.UKAKU) {
+            // 4.1.2: an Ukaku's wings in the fire (twin, or Rabbit Guise's one) guard by the same right click.
+            KaguneClientState.View ukaku = KaguneClientState.self();
+            UkakuClient.UkakuView wings = UkakuClient.get(player);
+            return ukaku.unlocked() && ukaku.active() && com.hex.kagune.control.ukaku.UkakuRules.wingGuard(ukaku.mastery(), wings.form(), wings.crystalMode());
+        }
         if (PathClient.get(player) != KagunePath.RINKAKU) {
             return false;
         }

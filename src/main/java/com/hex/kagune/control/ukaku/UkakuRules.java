@@ -119,7 +119,30 @@ public final class UkakuRules {
         if (form.usable(mastery).kakuja()) {
             return ComboStyle.UKAKU_KAKUJA;
         }
-        return crystalMode && crystalModeAllowed(mastery, form) ? ComboStyle.UKAKU_CRYSTAL : ComboStyle.UKAKU_FIRE;
+        if (crystalMode && crystalModeAllowed(mastery, form)) {
+            return ComboStyle.UKAKU_CRYSTAL;
+        }
+        // 4.1.2 (the owner: "Ukaku kagune base firery form no longer fires projectiles, M1s are a series of different wing slams combos"):
+        // the fire's wings slam, the twin wings right and left in turn, Rabbit Guise (a new Ukaku's one wing) with its left.
+        return form.usable(mastery) == WingForm.RABBIT ? ComboStyle.UKAKU_LEFT_WING : ComboStyle.UKAKU_WINGS;
+    }
+
+    /** 4.1.2: the wing slams' reach, a share of Rinkaku's M1 (the owner: "has lightly less range than Rinkaku"). */
+    public static final double SLAM_REACH = 0.85;
+
+    /** 4.1.2: true for the fire's wing slams (the twin wings' string, or Rabbit Guise's left wing's). */
+    public static boolean slams(ComboStyle style) {
+        return style == ComboStyle.UKAKU_WINGS || style == ComboStyle.UKAKU_LEFT_WING;
+    }
+
+    /**
+     * 4.1.2: whether the Ukaku's right click is the wing guard (the owner: "Right click (M2) is now a protection like Rinkaku has, wings
+     * grow and protect the player, they come together to protect the player"): the wings in the fire, twin or Rabbit Guise's one (not the
+     * crystal mode, whose right click stays its own: "Crystal mode still has the same custom shooting crystals and right click"; not the
+     * One-Winged Kagune or the kakuja).
+     */
+    public static boolean wingGuard(int mastery, WingForm form, boolean crystalMode) {
+        return slams(style(mastery, form, false, crystalMode));
     }
 
     /** {@link #style(int, WingForm, boolean, boolean)} with the crystal mode off. */

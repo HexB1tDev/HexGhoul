@@ -383,6 +383,8 @@ public final class UkakuMenuView {
             case UKAKU_RABBIT -> "Kicks + one-wing shards";
             case UKAKU_RABBIT_BLADES -> "One-wing blade + kicks";
             case UKAKU_ONE_WING -> "One-Winged Kagune";
+            case UKAKU_WINGS -> "Wing slams + wing guard"; // 4.1.2
+            case UKAKU_LEFT_WING -> "Left-wing slams + wing guard";
             default -> style.name().toLowerCase();
         };
     }

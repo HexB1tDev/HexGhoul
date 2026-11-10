@@ -24,7 +24,7 @@ import net.minecraftforge.fml.common.Mod;
 
 /**
  * Ukaku's right click: with the wings out it is his M2, the ender of the M1 chain (the server picks which from the shots
- * fired so far, from the fire's enders or, in the crystal mode, the crystal's). It stays the normal use when that is clearly what is meant: crouching, holding something with a use (food,
+ * fired so far, from the crystal's enders or the kakuja's; 4.1.2: in the fire it is the wing guard, RinkakuBlockClient's). It stays the normal use when that is clearly what is meant: crouching, holding something with a use (food,
  * a bow, a shield), or pointing at a block (a door, a chest) outside a fight. One click, one ender: holding the button
  * does not repeat it. It also holds the Gatling's trigger: J (the original's Slingshot key) held down fires it, and times K
  * (the original's tendril-cycle key) on both paths: a tap is the first kakuja, holding it the final kakuja.
@@ -66,6 +66,14 @@ public final class UkakuInput {
             : view.form() == com.hex.kagune.gameplay.KaguneForm.FULL_KAKUJA;
         if (path == KagunePath.RINKAKU && !dashes) {
             return;
+        }
+        if (path == KagunePath.UKAKU && !dashes) {
+            // 4.1.2 (the owner: "Right click (M2) is now a protection like Rinkaku has"): the wings in the fire guard; the click is the
+            // wing guard's (RinkakuBlockClient, as a Rinkaku's), not an ender. The crystal mode keeps its own right click.
+            UkakuClient.UkakuView wings = UkakuClient.get(player);
+            if (com.hex.kagune.control.ukaku.UkakuRules.wingGuard(view.mastery(), wings.form(), wings.crystalMode())) {
+                return;
+            }
         }
         if (dashes) {
             // Vanilla's right click comes first. Forge asks once per hand, main hand first, and only asks for the off hand when

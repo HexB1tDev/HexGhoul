@@ -32,6 +32,18 @@ public enum StrikePattern {
     ONE_WING_RETURN,
     /** Ukaku (:re): the One-Winged Kagune rises high and cuts through at neck height (canon: it beheads). */
     BEHEADING,
+    // ---- 4.1.2: the Twin Wings' own close fight in the fire (the owner: "M1s are a series of different wing slams combos"; limb 0 the
+    //      right wing, 1 the left). Blows, not shots: they clash like Rinkaku's (KaguneClash).
+    /** A quick wing slap: the wing flicks back, then cracks flat across the front at chest height. */
+    WING_SLAP,
+    /** A wide wing swing: drawn far back and up, then swung all the way round the front, the body turning into it. */
+    WING_SWING,
+    /** A rising wing: low and forward, then swept up through the target, high over the head. */
+    WING_RISE,
+    /** An overhead wing slam: raised high over the shoulder, then driven straight down onto the target. */
+    WING_SLAM,
+    /** Both wings raised high together, then slammed down in front as one (the finisher). */
+    TWIN_SLAM,
     // ---- 5.0.19: the final kakuja's Steel Blade (C), on the right arm.
     /** The blade drawn back to his right, then swept wide across the front to his left at chest height. */
     STEEL_SWEEP,
