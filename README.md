@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.1 (HexGhoul): No structure in water (testing)
+
+See `.github/release-notes-4.1.1.md`. Your words: "bug, make sure NONE of the structures spawns in water or collides with water bodies, the mansion is currently happily resting at the very bottom of the ocean..." Every structure checks the land under it and 8 blocks round it: no wet biome (sea, river, beach, swamp) every 4 blocks, no water on the ground every 16. The mansion is built at the nearest of its world's offered spots that is dry land, still one per world; the villages try nearby spots, and Anteiku, the library and Ken's tower move up to 5 chunks to dry land. Chunks already made don't change. Protocol 110.
+
 ## 4.1.0 (HexGhoul): Ayato's way of bringing the kagune out (testing)
 
 See `.github/release-notes-4.1.0.md`. Your words: "after training with Ayato (Ukaku kakuja quest) the player gains a new pull out kagune animation sort of like Ken gives the player. the player lifts both hands god like and then they're unleashed." Once Ayato has taught you the First Kakuja, you bring the kagune out his way: up on your toes, both arms lifted out wide, palms to the sky, chin up, and the wings are unleashed. Protocol 109.

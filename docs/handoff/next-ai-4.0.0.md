@@ -147,6 +147,18 @@ picture: arms out wide and low, palms up, floating). `server/AyatoPullOut` (taug
 `client/AyatoPullOutClient.lift`, `S2CUkakuFx.UNLEASH` (49), `PathServer.toggle` (Noro, then Ayato, then Ken), `KaguneBodyAnimation`.
 Protocol 109.
 
+## 4.1.1 (released)
+
+The owner (quoted exactly): "bug, make sure NONE of the structures spawns in water or collides with water bodies, the mansion is currently
+happily resting at the very bottom of the ocean..." Cause: 4.0.2 built the one hideout at its concentric ring's spot whatever the ground;
+the villages' 5 x 5 check allowed water at the rim; the jigsaw places never checked. `village/DryLand` (pure: `columns`, `dry` (the wet
+biome tag every 4 blocks, water over the ground every 16, footprint and 8 out), `spreadChunk` (RandomSpreadStructurePlacement's linear
+offer, java.util.Random), `hideoutOffers`, `choose`, `shifts`, `runs`, `spots`, `reachable`). `ControlStructures.Site`: the hideout only
+at `hideout(context)` (cached per seed and generator; its structure set is now `random_spread` 40/20, the same numbers as `DryLand`);
+other sites try `TRIES` spots `SHIFT` apart. `ControlStructures.DryPlace` (`hexkagune:dry_place`, Anteiku, library, cyber tower): the
+vanilla jigsaw run in a `GenerationContext` moved up to 5 chunks, its pieces' box kept within the start chunk's reach. Tag
+`hexkagune:wet`. Protocol 110. Old worlds keep what they generated.
+
 ## Next
 
 Nothing outstanding from the owner. If they report in-game problems with the outfits' fit, adjust `CLEAR`, `SNUG`, the drape

@@ -25,9 +25,24 @@ public abstract class Structure {
             java.util.function.Consumer<net.minecraft.world.level.levelgen.structure.pieces.StructurePiecesBuilder> generator) {
             throw new UnsupportedOperationException();
         }
+        /** getPiecesBuilder (4.1.1: where a start's pieces lie, for the dry-land search) */
+        public net.minecraft.world.level.levelgen.structure.pieces.StructurePiecesBuilder m_226677_() { throw new UnsupportedOperationException(); }
+        /** position (record accessor) */ public net.minecraft.core.BlockPos f_226669_() { throw new UnsupportedOperationException(); }
     }
 
     public static final class GenerationContext {
+        /** 4.1.1: the record's canonical constructor (a start moved to find dry land) */
+        public GenerationContext(net.minecraft.core.RegistryAccess registryAccess, net.minecraft.world.level.chunk.ChunkGenerator chunkGenerator,
+            net.minecraft.world.level.biome.BiomeSource biomeSource, net.minecraft.world.level.levelgen.RandomState randomState,
+            net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager structureTemplateManager,
+            net.minecraft.world.level.levelgen.WorldgenRandom random, long seed, net.minecraft.world.level.ChunkPos chunkPos,
+            net.minecraft.world.level.LevelHeightAccessor heightAccessor, java.util.function.Predicate<net.minecraft.core.Holder<?>> validBiome) {
+            throw new UnsupportedOperationException();
+        }
+        /** registryAccess */ public net.minecraft.core.RegistryAccess f_226621_() { throw new UnsupportedOperationException(); }
+        /** biomeSource */ public net.minecraft.world.level.biome.BiomeSource f_226623_() { throw new UnsupportedOperationException(); }
+        /** seed */ public long f_226627_() { throw new UnsupportedOperationException(); }
+        /** validBiome */ public java.util.function.Predicate<net.minecraft.core.Holder<?>> f_226630_() { throw new UnsupportedOperationException(); }
         /** chunkGenerator */ public net.minecraft.world.level.chunk.ChunkGenerator f_226622_() { throw new UnsupportedOperationException(); }
         /** randomState */ public net.minecraft.world.level.levelgen.RandomState f_226624_() { throw new UnsupportedOperationException(); }
         /** structureTemplateManager */
