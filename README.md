@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.0.8 (HexGhoul): Ayato's new skin, a little muscular (testing)
+
+See `.github/release-notes-4.0.8.md`. Your words: "I sent you the new ayato skin, make him a little muscular but way less than the male player." Ayato wears your new skin (his kakugan, closed eyes and blush made from it, on the wide arms) and a broader chest, 30% of the White Reaper's build (a male player's is 60%). Protocol 107.
+
 ## 4.0.7 (HexGhoul): A full mask hides your kakugan (testing)
 
 See `.github/release-notes-4.0.7.md`. Your words: "Full masks (only full masks not half masks) prevent CCG agents and humans to tell you're a ghoul when your eyes are in Kakugan." With a full mask on (16 of yours, 8 generic), investigators and townsfolk don't see your kakugan; your kagune or a kakuja still give you away; half masks and the Cloth Wrap don't hide the eyes. Protocol 107.

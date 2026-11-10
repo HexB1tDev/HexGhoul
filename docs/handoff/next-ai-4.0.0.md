@@ -121,6 +121,14 @@ The owner (quoted exactly): "Full masks (only full masks not half masks) prevent
 eyes are in Kakugan." `Outfits.HALF_MASKS`/`fullMask`; `Sightings.masked` (head slot a full mask) takes the eyes out of what a player shows
 (`Sightings.of`) and out of `AgentBrain.reveal` and `HumanBrain`'s danger check; a kagune, a kakuja and the final sights still show.
 
+## 4.0.8 (released)
+
+The owner (quoted exactly): "I sent you the new ayato skin, make him a little muscular but way less than the male player." Their skin is
+`art/exploration/Ayato_skin_2.png` (copied to `art/ayato_skin.png`, the bake's source; `tools/companion_textures.py` ayato: wide arms, eyes
+rows 5-6). `Persona.muscle()` (0 but Ayato's `ReaperBuild.AYATO_SHARE` 0.3); `EtoRenderer.Build` draws `ReaperBuild.chest` of it;
+`EtoModel` sets the arms out by `ReaperBuild.armOut` (put back each frame: `settle`). Next on their list: Ayato's god-like pull-out
+(both hands lifted, then the kagune) after his Ukaku kakuja training.
+
 ## Next
 
 Nothing outstanding from the owner. If they report in-game problems with the outfits' fit, adjust `CLEAR`, `SNUG`, the drape

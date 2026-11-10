@@ -605,6 +605,14 @@ public final class CompanionTests {
             check(!java.util.Arrays.asList(Persona.AYATO.idles(mood)).contains(EtoGesture.CRACK) && !java.util.Arrays.asList(Persona.NORO.idles(mood)).contains(EtoGesture.CRACK),
                 "no finger crack for Ayato or Noro (" + mood + ")");
         }
+        // 4.0.8 (the owner: "I sent you the new ayato skin, make him a little muscular but way less than the male player."): Ayato's build a
+        // share of the White Reaper's, way less than a male player's; nobody else's changed; his skin wide-armed, as he is drawn.
+        check(Persona.AYATO.muscle() > 0.0 && Persona.AYATO.muscle() <= com.hex.kagune.control.npc.ReaperBuild.PLAYER_SHARE / 2.0
+            && Persona.KEN.muscle() == 0.0 && Persona.NORO.muscle() == 0.0 && Persona.ETO.muscle() == 0.0 && !Persona.AYATO.slim() && Persona.KEN.slim(),
+            "Ayato a little muscular, way less than a male player; Ken as he was");
+        check(com.hex.kagune.control.npc.ReaperBuild.armOut(com.hex.kagune.control.npc.ReaperBuild.PLAYER_SHARE) == com.hex.kagune.control.npc.ReaperBuild.PLAYER_ARM_OUT
+            && com.hex.kagune.control.npc.ReaperBuild.armOut(com.hex.kagune.control.npc.ReaperBuild.AYATO_SHARE) < com.hex.kagune.control.npc.ReaperBuild.PLAYER_ARM_OUT,
+            "his arms out round his chest, less than a male player's");
         check(java.util.Arrays.asList(Persona.AYATO.anyIdle()).contains(EtoGesture.POSE) && java.util.Arrays.asList(Persona.NORO.anyIdle()).contains(EtoGesture.TILT)
             && !java.util.Arrays.asList(Persona.AYATO.anyIdle()).contains(EtoGesture.CRACK) && !java.util.Arrays.asList(Persona.NORO.anyIdle()).contains(EtoGesture.CRACK),
             "Ayato poses, Noro tilts his head");

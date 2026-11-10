@@ -41,6 +41,22 @@ public final class ReaperBuild {
     /** How much further out (pixels) a male player's arms hang, clear of his chest. */
     public static final float PLAYER_ARM_OUT = 0.45F;
     /**
+     * 4.0.8 (the owner: "I sent you the new ayato skin, make him a little muscular but way less than the male player."): Ayato's build, the
+     * same shape, {@link #AYATO_SHARE} of how far the White Reaper's stands out past the torso (a male player's is {@link #PLAYER_SHARE}).
+     */
+    public static final double AYATO_SHARE = 0.3;
+    public static final double[][] AYATO = slimmer(PROFILE, AYATO_SHARE);
+
+    /** 4.0.8: a build {@code share} of the White Reaper's: its outline. */
+    public static double[][] of(double share) {
+        return share >= 1.0 ? PROFILE : share == PLAYER_SHARE ? PLAYER : share == AYATO_SHARE ? AYATO : slimmer(PROFILE, share);
+    }
+
+    /** 4.0.8: how much further out (pixels) the arms of a build {@code share} of the Reaper's hang (his 0.75; a male player's 0.45). */
+    public static float armOut(double share) {
+        return (float)(ARM_OUT * share);
+    }
+    /**
      * 2.3.3 (the owner: "Whenever you transform into any form, your chest ... vanishes ... The chest should adapt to the form and vice
      * versa"): how much a form's armour fitted to the bare torso (Ukaku's kakuja plates, Graft's hide, War's and Peace's shells) is
      * widened ({@code X}) and deepened ({@code Z}) about the torso's middle to sit over a male player's chest, jacket layer and all.

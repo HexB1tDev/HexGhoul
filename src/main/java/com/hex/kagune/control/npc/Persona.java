@@ -71,6 +71,11 @@ public abstract class Persona {
         return this.female();
     }
 
+    /** 4.0.8: a man's build: how far his chest stands out past the torso, as a share of the White Reaper's ({@link ReaperBuild}); 0: none. */
+    public double muscle() {
+        return 0.0;
+    }
+
     /** She, or he. */
     public String she() {
         return this.female() ? "she" : "he";
@@ -683,6 +688,16 @@ public abstract class Persona {
      */
     private static final class Ayato extends Persona {
         private Script script;
+
+        /**
+         * 4.0.8 (the owner: "I sent you the new ayato skin, make him a little muscular but way less than the male player."): his chest a
+         * little broader ({@link ReaperBuild#AYATO_SHARE} of the White Reaper's; a male player's is 0.6); his new skin is made for the wide
+         * arms, as he is drawn.
+         */
+        @Override
+        public double muscle() {
+            return ReaperBuild.AYATO_SHARE;
+        }
 
         @Override
         public String key() {

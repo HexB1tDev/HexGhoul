@@ -65,7 +65,7 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
     /** 1.3.14: any companion: a woman's figure on the slim arms, or a man's on the wide ones. */
     public EtoRenderer(EntityRendererProvider.Context context, com.hex.kagune.control.npc.Persona persona) {
         super(context, new EtoModel(context.m_174023_(persona.slim() ? ModelLayers.f_171166_ : ModelLayers.f_171162_), persona.slim(), persona.female(),
-            persona.legs()),
+            persona.legs(), persona.muscle()),
             0.5F * persona.size());
         this.persona = persona;
         if (persona.slim()) {
@@ -80,6 +80,53 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
         this.m_115326_(new Face(this));
         this.m_115326_(new Kakuja(this));
         this.m_115326_(new OutfitLayer<>(this)); // 4.0.0: a companion's mask (Noro's always; Ayato's in a fight) and anything worn
+        if (persona.muscle() > 0.0) {
+            this.m_115326_(new Build(this, this.skin, com.hex.kagune.control.npc.ReaperBuild.of(persona.muscle())));
+        }
+    }
+
+    /**
+     * 4.0.8 (the owner: "make him a little muscular but way less than the male player"): a man's build (Ayato's), as a male player's and the
+     * White Reaper's are drawn ({@link com.hex.kagune.control.npc.ReaperBuild}): his torso's upper part again over it, broader across the
+     * shoulders and chest, in his own skin and its jacket layer, carried by his torso as it is posed.
+     */
+    static final class Build extends RenderLayer<EtoNpc, PlayerModel<EtoNpc>> {
+        private final ResourceLocation skin;
+        private final double[][] profile;
+
+        Build(EtoRenderer parent, ResourceLocation skin, double[][] profile) {
+            super(parent);
+            this.skin = skin;
+            this.profile = profile;
+        }
+
+        @Override
+        public void m_6494_(PoseStack pose, MultiBufferSource buffers, int light, EtoNpc npc, float limbSwing, float limbSwingAmount, float partialTick,
+                            float ageInTicks, float netHeadYaw, float headPitch) {
+            if (npc.m_20145_() || !this.m_117386_().f_102810_.f_104207_) {
+                return;
+            }
+            try {
+                pose.m_85836_();
+                this.m_117386_().f_102810_.m_104299_(pose);
+                Matrix4f m = pose.m_85850_().m_252922_();
+                Matrix3f n = pose.m_85850_().m_252943_();
+                VertexConsumer out = buffers.m_6299_(RenderType.m_110473_(this.skin));
+                com.hex.kagune.control.npc.ReaperBuild.Sink sink = (corners, uv, normal) -> {
+                    for (int k = 0; k < 4; k++) {
+                        double[] c = corners[k];
+                        out.m_252986_(m, (float)(c[0] / 16.0), (float)(c[1] / 16.0), (float)(c[2] / 16.0)).m_6122_(255, 255, 255, 255)
+                            .m_7421_((float)(uv[2 * k] / 64.0), (float)(uv[2 * k + 1] / 64.0)).m_86008_(OverlayTexture.f_118083_).m_85969_(light)
+                            .m_252939_(n, (float)normal[0], (float)normal[1], (float)normal[2]).m_5752_();
+                    }
+                };
+                com.hex.kagune.control.npc.ReaperBuild.chest(this.profile, false, sink);
+                com.hex.kagune.control.npc.ReaperBuild.chest(this.profile, true, sink);
+                pose.m_85849_();
+            } catch (RuntimeException failure) {
+                PlayerLayers.failed("a companion's build", failure);
+            }
+        }
     }
 
     /** 1.3.19: a final kakuja worn (Ken's Peace) on the body's posed parts, as a player's is drawn. */

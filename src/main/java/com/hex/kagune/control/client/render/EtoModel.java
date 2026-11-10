@@ -28,14 +28,37 @@ final class EtoModel extends PlayerModel<EtoNpc> {
         this(root, true, true, 1.0F);
     }
 
+    /** 4.0.8: how far out the arms hang, clear of a man's build ({@code ReaperBuild.armOut}), and whether they are out now. */
+    private float armOut;
+    private boolean spread;
+
+    /** 4.0.8: a man of {@code build} (a share of the White Reaper's: Ayato's), his arms set out round his chest. */
+    EtoModel(ModelPart root, boolean slim, boolean female, float curves, double build) {
+        this(root, slim, female, curves);
+        this.armOut = com.hex.kagune.control.npc.ReaperBuild.armOut(build);
+    }
+
     EtoModel(ModelPart root, boolean slim, boolean female, float curves) {
         super(root, slim);
         this.female = female;
         this.curves = curves;
     }
 
+    /** 4.0.8: the arms back where vanilla put them (vanilla doesn't put an arm's place back every frame). */
+    private void settle() {
+        if (!this.spread) {
+            return;
+        }
+        this.spread = false;
+        this.f_102811_.f_104200_ += this.armOut;
+        this.f_102812_.f_104200_ -= this.armOut;
+        this.f_103375_.m_104315_(this.f_102811_);
+        this.f_103374_.m_104315_(this.f_102812_);
+    }
+
     @Override
     public void m_6973_(EtoNpc npc, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
+        this.settle();
         super.m_6973_(npc, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
         RigPose p = pose;
         if (p != null) {
@@ -53,6 +76,14 @@ final class EtoModel extends PlayerModel<EtoNpc> {
             this.f_103377_.m_104315_(this.f_102813_);
             this.f_103376_.m_104315_(this.f_102814_);
             this.f_103378_.m_104315_(this.f_102810_);
+        }
+        if (this.armOut > 0.0F) {
+            // 4.0.8: his arms a little further out, clear of his chest (their sleeves with them); put back before the next pose.
+            this.f_102811_.f_104200_ -= this.armOut;
+            this.f_102812_.f_104200_ += this.armOut;
+            this.f_103375_.m_104315_(this.f_102811_);
+            this.f_103374_.m_104315_(this.f_102812_);
+            this.spread = true;
         }
         if (!this.female) {
             return;

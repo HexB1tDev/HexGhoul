@@ -37,7 +37,7 @@ COMPANIONS = {
     "ken": {"turns": ("left",), "slim": True},
     # 4.0.0: Ayato (the owner's skin, art/exploration/Ayato_skin.png): both eyes turn; Noro (Noro_skin.webp): his face is his stitched
     # mask, its two dark eye-holes turn red.
-    "ayato": {"turns": ("right", "left"), "slim": True},
+    "ayato": {"turns": ("right", "left"), "slim": False},  # 4.0.8: the owner's new skin (art/exploration/Ayato_skin_2.png), wide arms
     "noro": {"turns": ("right", "left"), "slim": True},
 }
 # Eye pixels by hand, if detection is wrong for a skin: {key: {"right": [(x, y), ...], "left": [...], "white": [...]}} in 64px face
@@ -54,9 +54,9 @@ EYES = {
 }
 
 EYES.update({
-    # 4.0.0: Ayato's eyes are the face's row 4 and 5: the white outside, the dark iris inside.
-    "ayato": {"right": [(1, 4), (2, 4), (1, 5), (2, 5)], "left": [(5, 4), (6, 4), (5, 5), (6, 5)], "white": [(1, 4), (1, 5), (6, 4), (6, 5)],
-              "lash": []},
+    # 4.0.8: Ayato's new skin: his eyes are the face's rows 5 and 6 (the white outside on row 6, the violet iris inside), the lashes row 4.
+    "ayato": {"right": [(1, 5), (2, 5), (1, 6), (2, 6)], "left": [(5, 5), (6, 5), (5, 6), (6, 6)], "white": [(1, 6), (6, 6)],
+              "lash": [(1, 4), (2, 4), (5, 4), (6, 4)]},
     # 4.0.0: Noro's mask's eye-holes (row 5, the dark stitches' ends).
     "noro": {"right": [(1, 5), (2, 5)], "left": [(5, 5), (6, 5)], "white": [], "lash": []},
 })
