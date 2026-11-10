@@ -53,6 +53,7 @@ public final class NpcTests {
         favours();
         talk();
         attraction();
+        mansion();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -1399,5 +1400,41 @@ public final class NpcTests {
             }
         }
         check(romance, "every temper has its words for a confession (yes, doubt, no), a yes, love, and a partner's hello");
+    }
+
+    /**
+     * 4.0.2 (the owner: "we're gonna replace the Ougiri hideout with another schematic ... While Aogiri Tree only has one hideout, there's
+     * multiple villages that can spawn, although they're as rare as a normal village ... at least two guarding the entrances, always in the
+     * same spot ... a little message with multiple choices. This only appears once ... If he doesn't like it, they'll attack you ... wait
+     * let's say 5 MC days"): the mansion as the hideout, the world's one; the villages as rare as Minecraft's; the gate's question.
+     */
+    static void mansion() {
+        com.hex.kagune.control.village.SiteMaps.Site hideout = com.hex.kagune.control.village.SiteMaps.of("aogiri_hideout");
+        check(hideout != null && hideout.width() == 272 && hideout.depth() == 263 && hideout.route().length >= 40,
+            "the hideout is the owner's mansion (272 x 263, all a start chunk reaches), its patrol a loop round the house");
+        try {
+            String set = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/resources/data/hexkagune/worldgen/structure_set/aogiri_hideout.json")));
+            String villages = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/resources/data/hexkagune/worldgen/structure_set/villages.json")));
+            check(set.contains("\"minecraft:concentric_rings\"") && set.contains("\"count\": 1"), "one hideout in a world (a ring of one)");
+            check(villages.contains("hexkagune:village_1") && villages.contains("hexkagune:village_2") && villages.contains("\"spacing\": 34")
+                && !java.nio.file.Files.exists(java.nio.file.Path.of("src/main/resources/data/hexkagune/worldgen/structure_set/village_1.json")),
+                "the villages as rare as Minecraft's (one set, its spacing)");
+            String brain = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/GhoulNpcBrain.java")));
+            check(brain.contains("AogiriGuard.idle(npc, mind, level, now)") && brain.contains("AogiriGuard.unwelcome(npc, player, now)"),
+                "the members at their work, and a player kept out is gone for");
+            String structures = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/ControlStructures.java")));
+            check(structures.contains("!unique(this.site) && !VillageGround.suitsGrid"), "the world's one hideout is built wherever its ring puts it");
+        } catch (java.io.IOException failure) {
+            check(false, "read the sources: " + failure);
+        }
+        check(com.hex.kagune.control.server.AogiriGuard.BAN == 5L * 24000L, "a wrong answer keeps you out five days");
+        java.util.UUID one = new java.util.UUID(1L, 2L);
+        java.util.UUID two = new java.util.UUID(3L, 4L);
+        java.util.List<com.hex.kagune.control.npc.AogiriGate.Answer> a = com.hex.kagune.control.npc.AogiriGate.answers(one);
+        check(a.size() == 6 && a.stream().filter(com.hex.kagune.control.npc.AogiriGate.Answer::welcome).count() == 3
+            && a.equals(com.hex.kagune.control.npc.AogiriGate.answers(one)) && !a.equals(com.hex.kagune.control.npc.AogiriGate.answers(two)),
+            "at the gate: six answers, three he takes and three he doesn't, the same each time for the same player, another's in another order");
+        check(com.hex.kagune.control.npc.AogiriGate.ANSWERS.stream().allMatch(x -> !x.label().isEmpty() && !x.reply().isEmpty()),
+            "every answer has its words and his reply");
     }
 }

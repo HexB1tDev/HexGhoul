@@ -293,8 +293,9 @@ public final class CompanionTests {
         check(EtoGesture.CROSS.ordinal() == EtoGesture.HAND.ordinal() + 1 && EtoGesture.HAND.ordinal() > EtoGesture.LAUGH.ordinal()
             && EtoGesture.STEAL.ordinal() == EtoGesture.PECK.ordinal() + 1 && EtoGesture.TIDY.ordinal() == EtoGesture.COOK.ordinal() - 1
             && EtoGesture.FLINCH.ordinal() == EtoGesture.COOK.ordinal() + 1 && EtoGesture.STOKE.ordinal() == EtoGesture.AWE.ordinal() + 1
-            && EtoGesture.JEALOUS.ordinal() == EtoGesture.SERVE.ordinal() + 1 && EtoGesture.JEALOUS.ordinal() == EtoGesture.values().length - 1,
-            "new gestures only ever at the end (sent by ordinal)");
+            && EtoGesture.JEALOUS.ordinal() == EtoGesture.SERVE.ordinal() + 1 && EtoGesture.POSE.ordinal() == EtoGesture.JEALOUS.ordinal() + 1
+            && EtoGesture.TILT.ordinal() == EtoGesture.values().length - 1,
+            "new gestures only ever at the end (sent by ordinal; 4.0.2: Ayato's and Noro's after JEALOUS)");
         // 1.3.29: Touka's own ways: never round an arm; a kiss on the cheek or a kiss stolen instead; her own poses, not Eto's.
         check(Persona.ETO.clings() && Persona.KEN.clings() && !Persona.TOUKA.clings(), "Touka never winds round an arm");
         check(Persona.TOUKA.unasked(EtoGesture.CLING) == EtoGesture.PECK && Persona.TOUKA.unasked(EtoGesture.DANCE) == EtoGesture.STEAL
@@ -597,7 +598,18 @@ public final class CompanionTests {
     /** 3.3.6 (the owner: a jealous animation): EtoGesture.JEALOUS, appended last, acted out in four beats and round again. */
     static void jealous() {
         EtoGesture[] all = EtoGesture.values();
-        check(all[all.length - 1] == EtoGesture.JEALOUS && EtoGesture.JEALOUS.ticks == 140, "JEALOUS is appended (the gestures before keep their numbers)");
+        check(all[EtoGesture.POSE.ordinal() - 1] == EtoGesture.JEALOUS && EtoGesture.JEALOUS.ticks == 140, "JEALOUS is appended (the gestures before keep their numbers)");
+        // 4.0.2 (the owner: "The crack fingers animation is only Kaneki's"; Ayato "a massive poser"; Noro "tilts his head and looks at the
+        // player weird"): neither of them ever cracks a finger; Ayato poses, Noro tilts his head.
+        for (EtoMood mood : EtoMood.values()) {
+            check(!java.util.Arrays.asList(Persona.AYATO.idles(mood)).contains(EtoGesture.CRACK) && !java.util.Arrays.asList(Persona.NORO.idles(mood)).contains(EtoGesture.CRACK),
+                "no finger crack for Ayato or Noro (" + mood + ")");
+        }
+        check(java.util.Arrays.asList(Persona.AYATO.anyIdle()).contains(EtoGesture.POSE) && java.util.Arrays.asList(Persona.NORO.anyIdle()).contains(EtoGesture.TILT)
+            && !java.util.Arrays.asList(Persona.AYATO.anyIdle()).contains(EtoGesture.CRACK) && !java.util.Arrays.asList(Persona.NORO.anyIdle()).contains(EtoGesture.CRACK),
+            "Ayato poses, Noro tilts his head");
+        com.hex.kagune.control.client.animation.RigPose tilted = com.hex.kagune.control.client.animation.EtoPose.gesture(EtoGesture.TILT, 45.0);
+        check(tilted.headZ > 0.5F && Math.abs(tilted.rightArmX) < 1.0E-6F, "Noro's tilt: his head far over, nothing else moving");
         com.hex.kagune.control.client.animation.RigPose glare = com.hex.kagune.control.client.animation.EtoPose.gesture(EtoGesture.JEALOUS, 40.0);
         com.hex.kagune.control.client.animation.RigPose huff = com.hex.kagune.control.client.animation.EtoPose.gesture(EtoGesture.JEALOUS, 76.0);
         com.hex.kagune.control.client.animation.RigPose snub = com.hex.kagune.control.client.animation.EtoPose.gesture(EtoGesture.JEALOUS, 100.0);

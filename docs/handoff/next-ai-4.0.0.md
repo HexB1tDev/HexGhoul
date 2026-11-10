@@ -45,6 +45,27 @@ don't want." Done in `tools/outfit_models.py` (`layers`/`through`/`snugger`, `de
 `bikaku/WalkerLegs.java` (`update`/`step`: a true alternating stride by chance; `wobble`, `body`, the S `shape`); `WalkerPose` takes the
 body's roll and dip from `BikakuRenderer.walkerBody`.
 
+## 4.0.2 (released)
+
+The owner (quoted exactly): "Bug, the armor does not allow for animation, make it compatible with animations"; "the jacket also breaks
+when walking"; with `art/exploration/aogiri_mansion.schem` (their upload `Ougiri.schem`): "replace the Ougiri hideout with another
+schematic ... I give them a mansion because I just thought the Alligator Tree deserves it. Make sure that the guards currently patrol the
+place very often. There's at least two guarding the entrances, always in the same spot, always returning there no matter what. And first
+time when you arrive, they should give you a little message with multiple choices. This only appears once, and only one of them will ask
+you this once ... If he doesn't like it, they'll attack you. And they won't let you in, and you have to wait let's say 5 MC days. Make
+sure to put Noro and Ayato in different rooms that are comfortable"; "While gated tree only has one hideout, there's multiple villages that
+can spawn, although they're as rare as a normal village"; "give Ayato like animations of like ambient animations of like being cocky ...
+The crack fingers animation is only Kaneki's in the players whenever he trains with Kaneki ... Noro simply like tilts his head and looks at
+the player weird ... when you train with him ... you tilt your head before the Kagune pops out"; "Whenever the mention update is released,
+just publish a release with it"; "onto the to-do list that we should have our own category in the creative menu with like the armors and
+quinques and whatever, everything separated and well organized" (NOT done yet: needs CreativeModeTab builder API allowlist entries and
+stubs; the original jar never uses it).
+
+Where: `OutfitLayer` (`Bend`, `bend`, `tails`), `BodyAnimations.bend`, `tools/outfit_models.py` (`split`, `TAIL_PARTS`, bones 8 and 9);
+`tools/exploration_structures.py` (`cut_x`, `mansion`, `site_loop`, the 1.21 swaps), `ControlStructures.Site.unique`,
+`structure_set/{aogiri_hideout,villages}.json`; `server/AogiriGuard`, `npc/AogiriGate`, `GhoulNpcTalk.gate`; `EtoGesture`
+POSE/SLICK/SHRUG/TILT, `EtoPose.tilt/tiltOver`, `server/NoroPullOut`, `client/NoroPullOutClient`.
+
 ## Next
 
 Nothing outstanding from the owner. If they report in-game problems with the fit, adjust `HALF_TOP`, `MASK_EYES`, `EYE_Y`, `CLEAR`,

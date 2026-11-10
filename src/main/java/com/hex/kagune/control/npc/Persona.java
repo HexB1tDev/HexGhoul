@@ -812,16 +812,17 @@ public abstract class Persona {
                 case LONELY, BORED -> new EtoGesture[] {EtoGesture.LOOK, EtoGesture.KICKS, EtoGesture.STRETCH, EtoGesture.CROSS};
                 case CLINGY, AFFECTIONATE -> new EtoGesture[] {EtoGesture.HAIR, EtoGesture.CROSS, EtoGesture.LOOK, EtoGesture.SHY};
                 case SLEEPY -> new EtoGesture[] {EtoGesture.YAWN, EtoGesture.STRETCH, EtoGesture.CROSS};
-                case BLOODTHIRSTY -> new EtoGesture[] {EtoGesture.CRACK, EtoGesture.KICKS, EtoGesture.LOOK};
-                case CLAIMED, WARY -> new EtoGesture[] {EtoGesture.CROSS, EtoGesture.HUFF, EtoGesture.TAP, EtoGesture.SCOLD};
-                default -> new EtoGesture[] {EtoGesture.CROSS, EtoGesture.LOOK, EtoGesture.HUFF, EtoGesture.KICKS, EtoGesture.STRETCH};
+                // 4.0.2 (the owner: "he just looks edgy. He likes to pose. Just a massive poser"; the finger crack is Ken's alone).
+                case BLOODTHIRSTY -> new EtoGesture[] {EtoGesture.POSE, EtoGesture.KICKS, EtoGesture.SLICK};
+                case CLAIMED, WARY -> new EtoGesture[] {EtoGesture.CROSS, EtoGesture.POSE, EtoGesture.SHRUG, EtoGesture.SCOLD};
+                default -> new EtoGesture[] {EtoGesture.POSE, EtoGesture.SLICK, EtoGesture.CROSS, EtoGesture.SHRUG, EtoGesture.POSE, EtoGesture.KICKS};
             };
         }
 
         @Override
         public EtoGesture[] anyIdle() {
-            return new EtoGesture[] {EtoGesture.CROSS, EtoGesture.HUFF, EtoGesture.TAP, EtoGesture.KICKS, EtoGesture.LOOK, EtoGesture.STRETCH,
-                EtoGesture.CRACK, EtoGesture.SCOLD};
+            return new EtoGesture[] {EtoGesture.POSE, EtoGesture.SLICK, EtoGesture.SHRUG, EtoGesture.CROSS, EtoGesture.POSE, EtoGesture.HUFF,
+                EtoGesture.KICKS, EtoGesture.SLICK, EtoGesture.STRETCH};
         }
 
         @Override
@@ -971,19 +972,15 @@ public abstract class Persona {
             return "the hideout";
         }
 
-        /** Still. Now and then his head turns. */
+        /** Still. Now and then his head tilts, slowly, far over, and he stares (4.0.2, the owner: "he's just a weird guy"). */
         @Override
         public EtoGesture[] idles(EtoMood mood) {
-            return switch (mood) {
-                case BLOODTHIRSTY -> new EtoGesture[] {EtoGesture.LOOK, EtoGesture.CRACK};
-                case SLEEPY -> new EtoGesture[] {EtoGesture.LOOK, EtoGesture.STRETCH};
-                default -> new EtoGesture[] {EtoGesture.LOOK, EtoGesture.LOOK, EtoGesture.TAP};
-            };
+            return new EtoGesture[] {EtoGesture.TILT};
         }
 
         @Override
         public EtoGesture[] anyIdle() {
-            return new EtoGesture[] {EtoGesture.LOOK, EtoGesture.LOOK, EtoGesture.TAP, EtoGesture.CRACK, EtoGesture.STRETCH};
+            return new EtoGesture[] {EtoGesture.TILT, EtoGesture.TILT, EtoGesture.TILT, EtoGesture.TILT, EtoGesture.TILT};
         }
 
         @Override

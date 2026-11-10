@@ -109,7 +109,17 @@ public enum EtoGesture {
     /** 2.4.9: what it made held out to its spouse in both hands (the food itself put in its hand by the server), a little bob. */
     SERVE(50, false, false),
     /** 3.3.6 (the owner: a jealous animation): her back turned, a glare over her shoulder, a huff, the snub and a foot tapping. Appended. */
-    JEALOUS(140, false, false);
+    JEALOUS(140, false, false),
+    // 4.0.2 (the owner: Ayato "just looks edgy. He likes to pose. Just a massive poser"; "Noro simply like tilts his head and looks at the
+    // player weird ... He's just a weird guy"). Appended.
+    /** Ayato: weight back on one leg, hands in his pockets, chin up, looking down his nose at whoever is there; a slow roll of the head. */
+    POSE(110, false, false),
+    /** Ayato: a hand dragged back through his hair, then the arm folded behind his head, the other hand on his hip; a smirk of a tilt. */
+    SLICK(80, false, false),
+    /** Ayato: a big, lazy shrug, palms up, head rolled to one side: whatever. */
+    SHRUG(40, false, false),
+    /** Noro: his head tilts, slowly, far over to one side, and stays there, staring; then back, just as slowly. Nothing else moves. */
+    TILT(90, false, false);
 
     /** 2.5.1: when, in a finger crack ({@link #CRACK}), the finger cracks (ticks): the pose's snap and its sound, together. */
     public static final int CRACK_SNAP = 17; // 3.0.2: 22 before (the kagune came out a long second after the key)

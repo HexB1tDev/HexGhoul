@@ -157,6 +157,39 @@ public final class OutfitTests {
                 }
             }
         }
+        // 4.0.2 (the owner: "the armor does not allow for animation, make it compatible with animations"; "the jacket also breaks when
+        // walking"): the coats' tails on bones of their own (hung from the hip, swinging less than the leg), the trousers on the leg; no
+        // straight piece across an elbow (4 below the arm's pivot), a knee (6 below the leg's) or the torso's middle (6 down): each half
+        // bends as the skin's does.
+        for (String style : List.of("formal", "crimson")) {
+            OutfitModels.Model model = models.get(style);
+            check(!model.on(OutfitModels.RIGHT_LEG_COAT, OutfitModels.LEGGINGS).isEmpty() && !model.on(OutfitModels.LEFT_LEG_COAT, OutfitModels.LEGGINGS).isEmpty()
+                && !model.on(OutfitModels.RIGHT_LEG, OutfitModels.LEGGINGS).isEmpty(), style + ": the coat's tails hung apart from the trousers");
+            int[][] joints = {{OutfitModels.RIGHT_ARM, 4}, {OutfitModels.LEFT_ARM, 4}, {OutfitModels.RIGHT_ARM_SLIM, 4}, {OutfitModels.LEFT_ARM_SLIM, 4},
+                {OutfitModels.RIGHT_LEG, 6}, {OutfitModels.LEFT_LEG, 6}, {OutfitModels.BODY, 6}};
+            for (int[] joint : joints) {
+                for (OutfitModels.Cube cube : model.on(joint[0], -1)) {
+                    float lo = Float.MAX_VALUE;
+                    float hi = -Float.MAX_VALUE;
+                    boolean straight = true;
+                    for (OutfitModels.Face face : cube.faces()) {
+                        for (int k = 0; k < 4; k++) {
+                            lo = Math.min(lo, face.corners()[k * 3 + 1]);
+                            hi = Math.max(hi, face.corners()[k * 3 + 1]);
+                        }
+                        straight &= Math.abs(Math.abs(face.normal()[0]) + Math.abs(face.normal()[1]) + Math.abs(face.normal()[2]) - 1.0) < 1.0E-4;
+                    }
+                    check(!straight || !(lo < joint[1] - 0.06F && hi > joint[1] + 0.06F), style + ": a piece across a joint is cut there (" + joint[0] + ")");
+                }
+            }
+        }
+        try {
+            String layer = new String(java.nio.file.Files.readAllBytes(Path.of("src/main/java/com/hex/kagune/control/client/render/OutfitLayer.java")));
+            check(layer.contains("BodyAnimations.bend(player, part, partial)") && layer.contains("tails(pose, bones[bone])"),
+                "the outfit bends with PlayerAnimator's bends; the tails hang from the hip");
+        } catch (java.io.IOException failure) {
+            check(false, "read the layer: " + failure);
+        }
         // A half mask starts under the skin's eyes (the face's fifth row, y -4 to -3), a full one's front clears the hat layer.
         for (String half : List.of("mask_eyepatch", "mask_ayato", "mask_nishiki", "mask_shachi", "mask_tatara", "mask_yomo", "mask_rize", "mask_dotted")) {
             check(top(models.get(half)) >= -3.0F, half + ": over the mouth, below the eyes: " + top(models.get(half)));

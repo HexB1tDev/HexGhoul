@@ -3,12 +3,16 @@
     {
       "structure": "hexkagune:village_1",
       "weight": 1
+    },
+    {
+      "structure": "hexkagune:village_2",
+      "weight": 1
     }
   ],
   "placement": {
     "type": "minecraft:random_spread",
-    "spacing": 40,
-    "separation": 22,
+    "spacing": 34,
+    "separation": 20,
     "salt": 1873602241
   }
 }

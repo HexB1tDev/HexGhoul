@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.0.2 (HexGhoul): Armour that moves; the Aogiri mansion; Ayato poses, Noro tilts his head (testing)
+
+See `.github/release-notes-4.0.2.md`. Your words: "the armor does not allow for animation"; "the jacket also breaks when walking"; "replace the Ougiri hideout with another schematic ... I give them a mansion"; Ayato "a massive poser"; "Noro simply like tilts his head"; "The crack fingers animation is only Kaneki's". The outfits bend at the knees, elbows and torso with PlayerAnimator, the coat tails hang from the hip; your mansion is the world's one Aogiri hideout (guards at both gates who ask your business once, a patrol round the house, members on every floor, Noro and Ayato in rooms of their own; a wrong answer keeps you out five days); the villages as rare as Minecraft's; Ayato poses, Noro tilts his head (and his students tilt theirs as the kagune comes out); the finger crack is Kaneki's alone. Protocol 106.
+
 ## 4.0.1 (HexGhoul): Outfits thinner and finished; The Walker strides (testing)
 
 See `.github/release-notes-4.0.1.md`. Your words: "They seem a little too thick ... add more details"; "add like a color or something to the formal outfit"; on The Walker: "One leg at a time, not two in front at once ... They don't go back like further back enough or forward enough ... you can always tell where the next step is gonna be". Both outfits drawn close to the body; the Formal Outfit in navy piping, a white shirt, silver buttons and badges, a red pocket square, a belt, epaulettes, polished shoes and a visored cap; the Crimson Outfit with dark piping, a belt and buckled straps. The Walker strides one leg at a time, each foot from well ahead to well behind, every step's length, landing, height and speed random, the legs springy tentacle S-curves, your body swaying over them. Protocol 105.

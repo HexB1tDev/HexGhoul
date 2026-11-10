@@ -215,7 +215,9 @@ public final class ControlStructures {
                     floor[i * n + j] = generator.m_214096_(x, z, Heightmap.Types.OCEAN_FLOOR_WG, context.f_226629_(), context.f_226624_());
                 }
             }
-            if (!VillageGround.suitsGrid(surface, floor, n)) {
+            // 4.0.2 (the owner: "Aogiri Tree only has one hideout"): the hideout is the world's one (its structure set's ring puts it in
+            // one place, near the ground it likes): it is built there whatever the ground, its terrain adaptation fitting the world to it.
+            if (!unique(this.site) && !VillageGround.suitsGrid(surface, floor, n)) {
                 return Optional.empty();
             }
             // Its ground on the world's: the middle of the dry ground's heights (the first free height: its ground block one under it).
@@ -243,6 +245,11 @@ public final class ControlStructures {
                     }
                 }
             }));
+        }
+
+        /** 4.0.2: true if {@code site} is the world's one of its kind (placed by a ring, never turned away): the Aogiri Tree's hideout. */
+        static boolean unique(com.hex.kagune.control.village.SiteMaps.Site site) {
+            return "aogiri_hideout".equals(site.id());
         }
 
         /** The least corner of a run of {@code size} blocks centred at {@code want}, kept within what the chunk at {@code corner} reaches. */

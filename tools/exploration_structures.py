@@ -6,7 +6,9 @@ and v3), to 1.20.1 structure templates cut into tiles, with the people who live 
 
   art/exploration/village1.schem        -> hexkagune:village_1       the human town (people in their homes, two investigators walking it)
   art/exploration/village2.schem        -> hexkagune:village_2       the CCG settlement (investigators on its patrol and at their posts)
-  art/exploration/hideout_ougiri.schem  -> hexkagune:aogiri_hideout  the Aogiri Tree hideout (its members, Ayato and Noro)
+  art/exploration/aogiri_mansion.schem  -> hexkagune:aogiri_hideout  the Aogiri Tree hideout (4.0.2: the owner's mansion, replacing
+                                                                       hideout_ougiri.schem: its guards, its patrol, its members, Ayato
+                                                                       and Noro in rooms of their own)
 
 Each place is written as tiles (data/hexkagune/structures/<site>/t_<i>_<j>.nbt, at most TILE blocks a side) that the expansion's own
 structure type (ControlStructures.Site) places side by side, turned as a whole, from its start chunk; its numbers and its map are written to
@@ -45,9 +47,17 @@ SITES = [
     # The CCG settlement: investigators walk its patrol and stand at their posts.
     {"id": "village_2", "source": "village2.schem", "map": 4, "crop_x": None, "kind": "ccg", "houses": 0, "agents": 10, "ring": (14, 40),
      "loot_every": 0},
-    # The Aogiri Tree hideout: its members inside its walls; Noro in its hall, Ayato at its front.
-    {"id": "aogiri_hideout", "source": "hideout_ougiri.schem", "map": 5, "crop_x": None, "kind": "aogiri", "houses": 0, "agents": 0,
-     "members": 9, "ring": (12, 40), "loot_every": 2, "ground": 3},
+    # 4.0.2 (the owner: "we're gonna replace the Ougiri hideout with another schematic that I got ... I give them a mansion because I just
+    # thought the Aogiri Tree deserves it"): 320 x 263, its grounds walled round. 272 is all a structure's start chunk reaches, so a band of
+    # 24 columns is left out either side (the inner edge of the side wall's trees and the plain paving beside it: whole repeats of the
+    # paving's 6, so no seam); its walls, trees, building, ponds and helipad are as they are. Guards stand at its two gates (north and
+    # south, either side of the path; one at each asks a newcomer their business), a patrol walks round the building, the rest are spread
+    # through every floor and the grounds; Noro has a suite on the top floor (west), Ayato the great lounge on the first (east).
+    {"id": "aogiri_hideout", "source": "aogiri_mansion.schem", "map": 5, "crop_x": None, "cut_x": [(11, 35), (285, 309)], "kind": "aogiri",
+     "houses": 0, "agents": 0, "members": 12, "patrol": 6, "ring": (60, 130), "loot_every": 3, "ground": 0,
+     "posts": [(152, 10, True), (168, 10, False), (152, 252, True), (168, 252, False)],
+     "loop": (30, 290, 55, 195), "building": (42, 278, 72, 180), "top_floor": 27,
+     "rooms": {"hexkagune:noro": (118, 26, 88), "hexkagune:ayato": (262, 14, 105)}},
 ]
 
 # 1.20.1 has none of these (1.20.3 to 1.21.9): each one's nearest, and the properties it keeps.
@@ -71,9 +81,36 @@ SWAPS = {
     # The heavy core (1.21): a small dark weight on the floor; a polished blackstone pressure plate lies there as low and as dark.
     "minecraft:heavy_core": ("minecraft:polished_blackstone_pressure_plate", ()),
     "minecraft:bedrock": ("minecraft:stone", ()),
+    # 4.0.2, the mansion's (1.21 to 1.21.9).
+    "minecraft:stripped_pale_oak_wood": ("minecraft:stripped_birch_wood", ("axis",)),
+    "minecraft:pale_oak_planks": ("minecraft:birch_planks", ()),
+    "minecraft:pale_oak_fence": ("minecraft:birch_fence", ("east", "north", "south", "waterlogged", "west")),
+    "minecraft:pale_oak_door": ("minecraft:birch_door", ("facing", "half", "hinge", "open", "powered")),
+    "minecraft:waxed_copper_bars": ("minecraft:iron_bars", ("east", "north", "south", "waterlogged", "west")),
+    "minecraft:oxidized_copper_bars": ("minecraft:iron_bars", ("east", "north", "south", "waterlogged", "west")),
+    "minecraft:polished_tuff": ("minecraft:tuff", ()),
+    "minecraft:polished_tuff_wall": ("minecraft:andesite_wall", ("east", "north", "south", "up", "waterlogged", "west")),
+    "minecraft:polished_tuff_slab": ("minecraft:polished_andesite_slab", ("type", "waterlogged")),
+    "minecraft:resin_bricks": ("minecraft:smooth_red_sandstone", ()),
+    "minecraft:resin_brick_wall": ("minecraft:red_sandstone_wall", ("east", "north", "south", "up", "waterlogged", "west")),
+    "minecraft:waxed_copper_lantern": ("minecraft:lantern", ("hanging", "waterlogged")),
+    "minecraft:waxed_copper_trapdoor": ("minecraft:acacia_trapdoor", ("facing", "half", "open", "powered", "waterlogged")),
+    "minecraft:copper_trapdoor": ("minecraft:acacia_trapdoor", ("facing", "half", "open", "powered", "waterlogged")),
+    "minecraft:exposed_copper_trapdoor": ("minecraft:acacia_trapdoor", ("facing", "half", "open", "powered", "waterlogged")),
+    "minecraft:waxed_copper_bulb": ("minecraft:shroomlight", ()),
+    "minecraft:waxed_copper_golem_statue": ("minecraft:decorated_pot", ("facing", "waterlogged")),
+    # A shelf (1.21.9): its wood's trapdoor laid shut at the top of the block, a board on the wall.
+    "minecraft:pale_oak_shelf": ("minecraft:birch_trapdoor", ("facing", "waterlogged"), {"half": "top", "open": "false"}),
+    "minecraft:spruce_shelf": ("minecraft:spruce_trapdoor", ("facing", "waterlogged"), {"half": "top", "open": "false"}),
+    "minecraft:jungle_shelf": ("minecraft:jungle_trapdoor", ("facing", "waterlogged"), {"half": "top", "open": "false"}),
+    "minecraft:cherry_shelf": ("minecraft:cherry_trapdoor", ("facing", "waterlogged"), {"half": "top", "open": "false"}),
+    "minecraft:acacia_shelf": ("minecraft:acacia_trapdoor", ("facing", "waterlogged"), {"half": "top", "open": "false"}),
+    "minecraft:oak_shelf": ("minecraft:oak_trapdoor", ("facing", "waterlogged"), {"half": "top", "open": "false"}),
+    "minecraft:dark_oak_shelf": ("minecraft:dark_oak_trapdoor", ("facing", "waterlogged"), {"half": "top", "open": "false"}),
+    "minecraft:mangrove_shelf": ("minecraft:mangrove_trapdoor", ("facing", "waterlogged"), {"half": "top", "open": "false"}),
 }
 DROP = {"minecraft:barrier", "minecraft:structure_void", "minecraft:jigsaw", "minecraft:structure_block", "minecraft:command_block",
-        "minecraft:light"}
+        "minecraft:light", "minecraft:cactus_flower"}
 AIR = {"minecraft:air", "minecraft:cave_air", "minecraft:void_air"}
 NATURAL = {"minecraft:stone", "minecraft:dirt", "minecraft:grass_block", "minecraft:coarse_dirt", "minecraft:granite", "minecraft:andesite",
            "minecraft:diorite", "minecraft:gravel", "minecraft:sand", "minecraft:podzol", "minecraft:clay", "minecraft:rooted_dirt"}
@@ -108,8 +145,10 @@ def convert(state, registry):
     if name in AIR or name in DROP:
         return None
     if name in SWAPS:
-        new, keeps = SWAPS[name]
+        new, keeps, *fixed = SWAPS[name]
         props = {k: v for k, v in props.items() if k in keeps}
+        if fixed:
+            props.update(fixed[0])
         name = new
     if name.endswith("_leaves"):
         props["persistent"] = "true"
@@ -172,17 +211,24 @@ def block_entity(kind, inner, loot, seed):
 def build(site, registry):
     w, h, d, by_index, ids, raw_entities = load(ART / site["source"])
     x0, x1 = site["crop_x"] or (0, w)
-    width = x1 - x0
+    # 4.0.2: the columns kept (the crop's, less any bands cut out of it), and where each lands.
+    kept = [x for x in range(x0, x1) if not any(a <= x < b for a, b in site.get("cut_x", ()))]
+    at_x = {x: i for i, x in enumerate(kept)}
+    width = len(kept)
     converted = {i: convert(s, registry) for i, s in by_index.items()}
     cells = {}
     for y in range(h):
         for z in range(d):
             row = (y * d + z) * w
-            for x in range(x0, x1):
+            for x in kept:
                 c = converted[ids[row + x]]
                 if c is not None:
-                    cells[(x - x0, y, z)] = c
-    entities = {(p[0] - x0, p[1], p[2]): e for p, e in raw_entities.items() if x0 <= p[0] < x1 and (p[0] - x0, p[1], p[2]) in cells}
+                    cells[(at_x[x], y, z)] = c
+    entities = {(at_x[p[0]], p[1], p[2]): e for p, e in raw_entities.items() if p[0] in at_x and (at_x[p[0]], p[1], p[2]) in cells}
+
+    def placed(x):
+        """An x of the owner's schematic where it lands (a cut column: the nearest kept one)."""
+        return at_x[min(kept, key=lambda k: abs(k - x))]
 
     def name(p):
         c = cells.get(p)
@@ -264,7 +310,10 @@ def build(site, registry):
             # A post: a street spot well spread from the others.
             spot = spread(streets, [p[1] for p in people], middle, hi + 8)
         people.append(("hexkagune:ccg_investigator", spot, -1, {}))
-    if site["kind"] == "aogiri":
+    if site["kind"] == "aogiri" and "posts" in site:
+        people += mansion(site, cells, stands, roofed, streets, placed, width, d, h, street, middle)
+        route = site_loop(site, streets, placed, middle)
+    elif site["kind"] == "aogiri":
         inside = [p for p in streets if rel(p) <= hi + 6]
         for k in range(site["members"]):
             spot = spread(inside, [p[1] for p in people], middle, hi + 6)
@@ -312,6 +361,86 @@ def houses(cells, name, stands, roofed, width, d, h, street, middle):
                 homes.append((spot[0], y, spot[1]))
                 break
     return sorted(set(homes))
+
+
+def standing(stands, x, y, z, reach=8):
+    """The spot nearest ({@code x}, {@code y}, {@code z}) one can stand on (searching up and down, then out a little), or None."""
+    for r in range(0, reach + 1):
+        for dx in range(-r, r + 1):
+            for dz in range(-r, r + 1):
+                if max(abs(dx), abs(dz)) != r:
+                    continue
+                for dy in sorted(range(-6, 7), key=abs):
+                    if stands(x + dx, y + dy, z + dz):
+                        return (x + dx, y + dy, z + dz)
+    return None
+
+
+def mansion(site, cells, stands, roofed, streets, placed, width, d, h, street, middle):
+    """4.0.2: the mansion's people: its guards at their posts, its patrol, its members spread through it, Noro and Ayato in their rooms."""
+    people = []
+    taken = []
+    for x, z, asks in site["posts"]:
+        spot = standing(stands, placed(x), street, z)
+        tags = {"HexAogiri": L.Tag(L.BYTE, 1), "HexAogiriPost": L.Tag(L.BYTE, 1)}
+        if asks:
+            tags["HexAogiriAsks"] = L.Tag(L.BYTE, 1)
+        people.append(("hexkagune:ghoul", spot, -1, tags))
+        taken.append(spot)
+    for kind, (x, y, z) in site["rooms"].items():
+        spot = standing(stands, placed(x), y, z)
+        people.append((kind, spot, -1, {}))
+        taken.append(spot)
+    # Every spot one can stand on, every third block: inside on every floor (under a roof), outside on the ground (never on a tree or
+    # the roof); the members spread over them, each as far as can be from the rest, most of them inside.
+    def leafy(x, y, z):
+        c = cells.get((x, y - 1, z))
+        return c is not None and c[0].endswith("_leaves")
+    inside, outside = [], []
+    bx0, bx1, bz0, bz1 = site["building"]
+    bx0, bx1 = placed(bx0), placed(bx1)
+    for x in range(2, width - 2, 3):
+        for z in range(2, d - 2, 3):
+            for y in range(1, h - 2):
+                if not stands(x, y, z) or leafy(x, y, z):
+                    continue
+                if roofed(x, y, z):
+                    if bx0 <= x <= bx1 and bz0 <= z <= bz1 and y <= site["top_floor"] + 2:
+                        inside.append((x, y, z))
+                elif y <= street + 2:
+                    outside.append((x, y, z))
+
+    def far(pool):
+        return max((p for p in pool if p not in taken), key=lambda p: min((p[0] - t[0]) ** 2 + 36 * (p[1] - t[1]) ** 2 + (p[2] - t[2]) ** 2
+                                                                        for t in taken))
+    loop = site_loop(site, streets, placed, middle)
+    for k in range(site["patrol"]):
+        spot = loop[(k * len(loop)) // site["patrol"]]
+        people.append(("hexkagune:ghoul", spot, -1, {"HexAogiri": L.Tag(L.BYTE, 1), "HexAogiriPatrol": L.Tag(L.BYTE, 1)}))
+        taken.append(spot)
+    for k in range(site["members"]):
+        spot = far(inside if k % 3 != 2 else outside)
+        people.append(("hexkagune:ghoul", spot, -1, {"HexAogiri": L.Tag(L.BYTE, 1)}))
+        taken.append(spot)
+    return people
+
+
+def site_loop(site, streets, placed, middle):
+    """4.0.2: the patrol round the mansion: its loop (the owner's x, z) walked every 14 blocks, each stop the nearest open spot to it."""
+    x0, x1, z0, z1 = site["loop"]
+    x0, x1 = placed(x0), placed(x1)
+    corners = [(x0, z0), (x1, z0), (x1, z1), (x0, z1)]
+    stops = []
+    for (ax, az), (bx, bz) in zip(corners, corners[1:] + corners[:1]):
+        n = max(1, round(math.hypot(bx - ax, bz - az) / 14))
+        for k in range(n):
+            stops.append((ax + (bx - ax) * k / n, az + (bz - az) * k / n))
+    route = []
+    for sx, sz in stops:
+        near = min(streets, key=lambda p: (p[0] - sx) ** 2 + (p[2] - sz) ** 2)
+        if (near[0] - sx) ** 2 + (near[2] - sz) ** 2 <= 64 and near not in route:
+            route.append(near)
+    return route
 
 
 def floor_spots(stands, roofed, width, d, h, street):

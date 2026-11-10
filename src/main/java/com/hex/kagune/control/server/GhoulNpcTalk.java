@@ -71,6 +71,7 @@ public final class GhoulNpcTalk {
     @SubscribeEvent
     public static void loggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
         TALKS.remove(event.getEntity().m_20148_());
+        AogiriGuard.forget(event.getEntity().m_20148_());
     }
 
     /** 1.3.29: true while {@code player} has a talk with a ghoul open. */
@@ -202,9 +203,59 @@ public final class GhoulNpcTalk {
             line, ordinals, shown));
     }
 
+    // ---------------------------------------------------------------- 4.0.2: at the hideout's gate
+
+    /** 4.0.2: the guard at the gate stops {@code player} and asks their business (once: {@link AogiriGuard}). */
+    static void gate(ServerPlayer player, GhoulNpc npc) {
+        NpcIdentity who = npc.identity();
+        GhoulNpcBrain.Mind mind = npc.mind;
+        if (who == null || mind == null || talking(player)) {
+            return;
+        }
+        GhoulNpcBrain.listen(npc, mind, player, player.m_9236_().m_46467_());
+        List<com.hex.kagune.control.npc.AogiriGate.Answer> answers = com.hex.kagune.control.npc.AogiriGate.answers(player.m_20148_());
+        List<NpcTalk.Choice> choices = new java.util.ArrayList<>();
+        List<String> labels = new java.util.ArrayList<>();
+        List<String> keys = new java.util.ArrayList<>();
+        for (int i = 0; i < answers.size(); i++) {
+            choices.add(NpcTalk.Choice.SAYS[i]);
+            labels.add(answers.get(i).label());
+            keys.add("gate:" + i);
+        }
+        send(player, npc, who, context(player, npc, who), com.hex.kagune.control.npc.AogiriGate.QUESTION,
+            choices, labels, keys);
+    }
+
+    /** 4.0.2: {@code player}'s answer at the gate: let in (he goes back to his post), or kept out five days and gone for by all of them. */
+    private static void gateAnswer(ServerPlayer player, GhoulNpc npc, NpcIdentity who, int index) {
+        List<com.hex.kagune.control.npc.AogiriGate.Answer> answers = com.hex.kagune.control.npc.AogiriGate.answers(player.m_20148_());
+        if (index < 0 || index >= answers.size()) {
+            return;
+        }
+        com.hex.kagune.control.npc.AogiriGate.Answer answer = answers.get(index);
+        long now = player.m_9236_().m_46467_();
+        AogiriGuard.answered(player, answer.welcome(), now);
+        send(player, npc, who, context(player, npc, who), answer.reply(), List.of(NpcTalk.Choice.LEAVE), List.of(""), List.of());
+        GhoulNpcBrain.listen(npc, npc.mind, null, now);
+        if (!answer.welcome()) {
+            // Every member about the hideout turns on them.
+            for (GhoulNpc member : player.m_284548_().m_6443_(GhoulNpc.class, npc.m_20191_().m_82400_(160.0),
+                m -> m.m_6084_() && m.identity() != null && m.identity().aogiri() && m.mind != null)) {
+                member.mind.grudges.put(player.m_20148_(), now + AogiriGuard.BAN);
+            }
+            player.m_5661_(Component.m_237113_("Aogiri Tree won't let you in for five days."), true);
+        } else {
+            player.m_5661_(Component.m_237113_("Aogiri Tree lets you pass."), true);
+        }
+    }
+
     /** 1.3.29: a reply slot with a key behind it: a scene's answer, a topic, the topics page, back to its first page. */
     private static void keyed(ServerPlayer player, GhoulNpc npc, NpcIdentity who, String key) {
         long now = player.m_9236_().m_46467_();
+        if (key.startsWith("gate:")) {
+            gateAnswer(player, npc, who, Integer.parseInt(key.substring(5)));
+            return;
+        }
         NpcTalk.Context context = context(player, npc, who);
         if (key.equals("topics")) {
             topics(player, npc, who, context, "...");
@@ -291,6 +342,9 @@ public final class GhoulNpcTalk {
         if (choice == NpcTalk.Choice.LEAVE) {
             TALKS.remove(player.m_20148_());
             GhoulNpcBrain.listen(npc, mind, null, now);
+            if (talk.keys().stream().anyMatch(k -> k.startsWith("gate:"))) {
+                AogiriGuard.putOff(player, now); // 4.0.2: walked off unanswered: stopped again a while later
+            }
             return;
         }
         if (!GhoulNpcBrain.talks(npc, who, mind, player, now)) {

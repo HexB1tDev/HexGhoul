@@ -718,6 +718,54 @@ public final class EtoPose {
                 p.headX = 0.1F + 0.05F * (float)Math.sin(t * 0.06);
             }
             case CRACK -> crack(p, t);
+            case POSE -> {
+                // 4.0.2, Ayato: weight back on one leg, hands in his pockets, chin up, looking down his nose; a slow roll of the head.
+                float on = ease(Math.min(1.0F, t / 10.0F)) * (t > 98.0F ? 1.0F - ease(Math.min(1.0F, (t - 98.0F) / 12.0F)) : 1.0F);
+                p.rightArmX = 0.18F * on;
+                p.leftArmX = 0.18F * on;
+                p.rightArmZ = 0.22F * on;
+                p.leftArmZ = -0.22F * on;
+                p.rightElbow = 0.55F * on;
+                p.leftElbow = 0.55F * on;
+                p.headX = -0.22F * on;
+                p.headY = 0.25F * on * (float)Math.sin(t * 0.045);
+                p.headZ = 0.12F * on;
+                p.roll = -0.05F * on;
+                p.side = -0.04F * on;
+                p.rightLegZ = 0.08F * on;
+                p.legHold = Math.max(p.legHold, on);
+            }
+            case SLICK -> {
+                // 4.0.2, Ayato: a hand dragged back through his hair, then that arm folded up behind his head, the other on his hip.
+                float on = ease(Math.min(1.0F, t / 8.0F)) * (t > 68.0F ? 1.0F - ease(Math.min(1.0F, (t - 68.0F) / 12.0F)) : 1.0F);
+                float drag = t < 18.0F ? ease(Math.min(1.0F, t / 18.0F)) : 1.0F;
+                p.rightArmX = (-2.6F + 0.4F * drag) * on;
+                p.rightArmY = -0.3F * on;
+                p.rightArmZ = (0.1F + 0.35F * drag) * on;
+                p.rightElbow = (0.6F + 1.2F * drag) * on;
+                p.leftArmX = -0.2F * on;
+                p.leftArmZ = -0.55F * on;
+                p.leftElbow = 0.9F * on;
+                p.headX = (0.15F - 0.3F * drag) * on;
+                p.headZ = 0.14F * on;
+                p.twist = -0.12F * on;
+            }
+            case SHRUG -> {
+                // 4.0.2, Ayato: shoulders up, palms out and up, head rolled aside: whatever.
+                float up = (float)Math.sin(Math.min(1.0, t / (double)EtoGesture.SHRUG.ticks) * Math.PI);
+                p.rightArmX = -0.35F * up;
+                p.leftArmX = -0.35F * up;
+                p.rightArmZ = 0.45F * up;
+                p.leftArmZ = -0.45F * up;
+                p.rightElbow = 1.0F * up;
+                p.leftElbow = 1.0F * up;
+                p.rightArmY = 0.5F * up;
+                p.leftArmY = -0.5F * up;
+                p.drop = -0.6F * up;
+                p.headZ = 0.3F * up;
+                p.headX = -0.1F * up;
+            }
+            case TILT -> tilt(p, t);
             case PECK -> {
                 // In fast, up on her toes, hands behind her back; a beat; back down.
                 float close = (float)Math.sin(Math.min(1.0, t / (double)EtoGesture.PECK.ticks) * Math.PI);
@@ -907,6 +955,35 @@ public final class EtoPose {
      * 2.5.1: the crack laid over what the body is already doing (a player's stance, the kagune's), never replacing it outright: the right
      * arm drawn from wherever it was to the crack's and back again by {@link #crackWeight}, the head's tip at the crack added.
      */
+    /** 4.0.2, Noro: how far his head is tilted at {@code t} of a {@link EtoGesture#TILT} (0..1): slowly over, held, slowly back. */
+    public static float tiltShare(float t, float lasts) {
+        float over = ease(Math.min(1.0F, t / 24.0F));
+        float back = t > lasts - 22.0F ? ease(Math.min(1.0F, (t - (lasts - 22.0F)) / 22.0F)) : 0.0F;
+        return over * (1.0F - back);
+    }
+
+    /** 4.0.2, Noro's tilt: the head far over to one side and a little down, staring; nothing else moves. */
+    public static void tilt(RigPose p, float t) {
+        float w = tiltShare(t, EtoGesture.TILT.ticks);
+        p.headZ = 0.62F * w;
+        p.headX = 0.12F * w;
+        p.headY = 0.06F * w;
+    }
+
+    /**
+     * 4.0.2 (the owner: "when you train with him ... you tilt your head before the Kagune pops out ... You just stand still and then you
+     * tilt your head and the Kagune pops out"): a player Noro taught pulling the kagune out his way, laid over whatever the body was
+     * doing: the head tilted far over, held until the kagune is out, then back.
+     */
+    public static void tiltOver(RigPose p, float t, float lasts) {
+        float w = tiltShare(t, lasts);
+        if (w <= 0.0F) {
+            return;
+        }
+        p.headZ += (0.62F - p.headZ) * w;
+        p.headX += (0.12F - p.headX) * w;
+    }
+
     public static void crackOver(RigPose p, float t) {
         float w = crackWeight(t);
         if (w <= 0.0F) {

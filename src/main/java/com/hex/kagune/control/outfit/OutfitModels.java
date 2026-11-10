@@ -31,8 +31,15 @@ public final class OutfitModels {
      */
     public static final int RIGHT_ARM_SLIM = 6;
     public static final int LEFT_ARM_SLIM = 7;
+    /**
+     * 4.0.2 (the owner: "the jacket also breaks when walking"): a coat's tails, hung from each hip, going only part of the way with the
+     * leg ({@code OutfitLayer.tails}) where the trousers go all of it.
+     */
+    public static final int RIGHT_LEG_COAT = 8;
+    public static final int LEFT_LEG_COAT = 9;
     /** Each bone's pivot in the player model (sixteenths, y down). */
-    public static final float[][] PIVOTS = {{0, 0, 0}, {0, 0, 0}, {-5, 2, 0}, {5, 2, 0}, {-1.9F, 12, 0}, {1.9F, 12, 0}, {-5, 2, 0}, {5, 2, 0}};
+    public static final float[][] PIVOTS = {{0, 0, 0}, {0, 0, 0}, {-5, 2, 0}, {5, 2, 0}, {-1.9F, 12, 0}, {1.9F, 12, 0}, {-5, 2, 0}, {5, 2, 0},
+        {-1.9F, 12, 0}, {1.9F, 12, 0}};
     /** The armour slots, in the baked order: helmet, chestplate, leggings, boots. */
     public static final int HELMET = 0;
     public static final int CHESTPLATE = 1;

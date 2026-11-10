@@ -121,18 +121,32 @@ public final class OutfitLayer<T extends LivingEntity, M extends EntityModel<T>>
         }
         VertexConsumer out = buffers.m_6299_(type(modelId));
         for (int bone = 0; bone < bones.length; bone++) {
-            List<OutfitModels.Cube> cubes = model.on(arm(bone, slim), slot);
-            if (cubes.isEmpty() || bones[bone] == null) {
+            if (bones[bone] == null) {
                 continue;
             }
-            pose.m_85836_();
-            // PlayerAnimator bends a player's head, body and arms with the upper body: they ride it as the parts do.
-            if (player != null && bone <= OutfitModels.LEFT_ARM) {
-                PlayerLayers.upperBody(pose, player, partial);
+            List<OutfitModels.Cube> cubes = model.on(arm(bone, slim), slot);
+            if (!cubes.isEmpty()) {
+                pose.m_85836_();
+                // PlayerAnimator bends a player's head and arms with the upper body: they ride it as the parts do (the torso itself bends
+                // at its middle, below).
+                if (player != null && bone != OutfitModels.BODY && bone <= OutfitModels.LEFT_ARM) {
+                    PlayerLayers.upperBody(pose, player, partial);
+                }
+                bones[bone].m_104299_(pose);
+                emit(out, pose, cubes, light, bend(player, bone, partial));
+                pose.m_85849_();
             }
-            bones[bone].m_104299_(pose);
-            emit(out, pose, cubes, light);
-            pose.m_85849_();
+            // 4.0.2 (the owner: "the jacket also breaks when walking"): a coat's tails hang from the hip and go only part of the way with
+            // the leg, as cloth does (never a knee's bend).
+            if (bone == OutfitModels.RIGHT_LEG || bone == OutfitModels.LEFT_LEG) {
+                List<OutfitModels.Cube> tails = model.on(bone == OutfitModels.RIGHT_LEG ? OutfitModels.RIGHT_LEG_COAT : OutfitModels.LEFT_LEG_COAT, slot);
+                if (!tails.isEmpty()) {
+                    pose.m_85836_();
+                    tails(pose, bones[bone]);
+                    emit(out, pose, tails, light, null);
+                    pose.m_85849_();
+                }
+            }
         }
     }
 
@@ -144,17 +158,117 @@ public final class OutfitLayer<T extends LivingEntity, M extends EntityModel<T>>
         return bone == OutfitModels.RIGHT_ARM ? OutfitModels.RIGHT_ARM_SLIM : bone == OutfitModels.LEFT_ARM ? OutfitModels.LEFT_ARM_SLIM : bone;
     }
 
-    /** The cubes' faces, from where their bone's part stands (sixteenths: the pose is in blocks). */
+    /** 4.0.2: how much of a leg's swing its coat tail follows (forward and back; out to the side). */
+    static final float TAIL_SWING = 0.45F;
+    static final float TAIL_SPREAD = 0.6F;
+
+    /** 4.0.2: the pose a coat tail hangs in from the leg {@code leg}'s hip: its pivot, its swing damped ({@link #TAIL_SWING}). */
+    static void tails(PoseStack pose, ModelPart leg) {
+        pose.m_252880_(leg.f_104200_ / 16.0F, leg.f_104201_ / 16.0F, leg.f_104202_ / 16.0F);
+        // As the part turns (z, then y, then x), each damped.
+        pose.m_252781_(new org.joml.Quaternionf().rotateAxis(leg.f_104205_ * TAIL_SPREAD, 0.0F, 0.0F, 1.0F).rotateAxis(leg.f_104204_, 0.0F, 1.0F, 0.0F)
+            .rotateAxis(leg.f_104203_ * TAIL_SWING, 1.0F, 0.0F, 0.0F));
+    }
+
+    /**
+     * 4.0.2: how a part's cubes bend with the bend bendy-lib puts in it this frame ({@code BodyAnimations.bend}), or null: an arm's lower
+     * half from its elbow (the middle of its 12 pixels: 4 below its pivot), a leg's from its knee (6 below), the torso's upper half from
+     * its middle (6 below the neck).
+     */
+    static Bend bend(AbstractClientPlayer player, int bone, float partial) {
+        if (player == null) {
+            return null;
+        }
+        String part = switch (bone) {
+            case OutfitModels.BODY -> "body";
+            case OutfitModels.RIGHT_ARM -> "rightArm";
+            case OutfitModels.LEFT_ARM -> "leftArm";
+            case OutfitModels.RIGHT_LEG -> "rightLeg";
+            case OutfitModels.LEFT_LEG -> "leftLeg";
+            default -> null;
+        };
+        if (part == null) {
+            return null;
+        }
+        float[] turn = com.hex.kagune.control.client.animation.BodyAnimations.bend(player, part, partial);
+        if (turn == null) {
+            return null;
+        }
+        float middle = bone == OutfitModels.BODY ? 6.0F : bone == OutfitModels.RIGHT_ARM || bone == OutfitModels.LEFT_ARM ? 4.0F : 6.0F;
+        return new Bend(turn[0], turn[1], turn[3], middle, bone != OutfitModels.BODY);
+    }
+
+    /**
+     * 4.0.2: a bend through a part: {@code angle} about the axis ({@code ax}, 0, {@code az}) through (0, {@code middle}, 0) of the part (its
+     * pixels), turning what lies below the middle ({@code below}; else above it) the whole way and what lies on it half way, as bendy-lib
+     * turns the skin (the joint closed).
+     */
+    record Bend(float angle, float ax, float az, float middle, boolean below) {
+        /** How much of the bend a point {@code y} pixels down the part takes: 0, a half on the joint, or all of it. */
+        float share(float y) {
+            float past = this.below ? y - this.middle : this.middle - y;
+            return past > 0.01F ? 1.0F : past < -0.01F ? 0.0F : 0.5F;
+        }
+
+        /** ({@code v}: x, y, z) turned {@code share} of the bend about its axis (Rodrigues), in place; {@code about}: through its middle. */
+        void turn(float[] v, float share, boolean about) {
+            double a = this.angle * share;
+            double length = Math.sqrt(this.ax * this.ax + this.az * this.az);
+            if (length < 1.0E-6 || a == 0.0) {
+                return;
+            }
+            double kx = this.ax / length;
+            double kz = this.az / length;
+            double x = v[0];
+            double y = v[1] - (about ? this.middle : 0.0F);
+            double z = v[2];
+            double c = Math.cos(a);
+            double s = Math.sin(a);
+            double dot = kx * x + kz * z;
+            // v cos + (k x v) sin + k (k . v)(1 - cos), k = (kx, 0, kz).
+            double cx = -kz * y;
+            double cy = kz * x - kx * z;
+            double cz = kx * y;
+            v[0] = (float)(x * c + cx * s + kx * dot * (1.0 - c));
+            v[1] = (float)(y * c + cy * s) + (about ? this.middle : 0.0F);
+            v[2] = (float)(z * c + cz * s + kz * dot * (1.0 - c));
+        }
+    }
+
+    /** As {@link #emit(VertexConsumer, PoseStack, List, int, Bend)}, unbent. */
     static void emit(VertexConsumer out, PoseStack pose, List<OutfitModels.Cube> cubes, int light) {
+        emit(out, pose, cubes, light, null);
+    }
+
+    /** The cubes' faces, from where their bone's part stands (sixteenths: the pose is in blocks), bent as the part is ({@code bend}, or null). */
+    static void emit(VertexConsumer out, PoseStack pose, List<OutfitModels.Cube> cubes, int light, Bend bend) {
         Matrix4f matrix = pose.m_85850_().m_252922_();
         Matrix3f normals = pose.m_85850_().m_252943_();
+        float[] p = new float[3];
+        float[] n = new float[3];
         for (OutfitModels.Cube cube : cubes) {
             for (OutfitModels.Face face : cube.faces()) {
                 float[] c = face.corners();
                 float[] uv = face.uvs();
-                float[] n = face.normal();
+                float[] fn = face.normal();
+                n[0] = fn[0];
+                n[1] = fn[1];
+                n[2] = fn[2];
+                if (bend != null) {
+                    float faceShare = 0.0F;
+                    for (int k = 0; k < 4; k++) {
+                        faceShare += bend.share(c[k * 3 + 1]) / 4.0F;
+                    }
+                    bend.turn(n, faceShare, false);
+                }
                 for (int k = 0; k < 4; k++) {
-                    out.m_252986_(matrix, c[k * 3] / 16.0F, c[k * 3 + 1] / 16.0F, c[k * 3 + 2] / 16.0F)
+                    p[0] = c[k * 3];
+                    p[1] = c[k * 3 + 1];
+                    p[2] = c[k * 3 + 2];
+                    if (bend != null) {
+                        bend.turn(p, bend.share(p[1]), true);
+                    }
+                    out.m_252986_(matrix, p[0] / 16.0F, p[1] / 16.0F, p[2] / 16.0F)
                         .m_6122_(255, 255, 255, 255)
                         .m_7421_(uv[k * 2], uv[k * 2 + 1])
                         .m_86008_(OverlayTexture.f_118083_)

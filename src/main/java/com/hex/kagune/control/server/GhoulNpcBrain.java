@@ -350,8 +350,10 @@ public final class GhoulNpcBrain {
         }
         if (who.aogiri()) {
             // 4.0.0 (the owner: "Its members must ONLY attack CCG investigators and entities that are actively hostile toward them"): no
-            // neutral human, no peaceful NPC, no player who has not provoked them (a grudge, above, is provocation).
-            return aogiriFoe(body);
+            // neutral human, no peaceful NPC, no player who has not provoked them (a grudge, above, is provocation). 4.0.2: nor one kept
+            // out of the hideout for a wrong answer at the gate (the owner: "If he doesn't like it, they'll attack you. And they won't let
+            // you in"), for as long as they are kept out.
+            return aogiriFoe(body) || body instanceof Player player && AogiriGuard.unwelcome(npc, player, now);
         }
         ServerPlayer owner = owner(npc, mind);
         if (owner != null) {
@@ -519,6 +521,10 @@ public final class GhoulNpcBrain {
         if (mind.owner != null) {
             // Its player is away (gone, another world): it waits where it is.
             npc.m_21573_().m_26573_();
+            return;
+        }
+        // 4.0.2: an Aogiri member at the hideout at its work: at its post, asking a newcomer their business, on patrol, about its floor.
+        if (who.aogiri() && AogiriGuard.idle(npc, mind, level, now)) {
             return;
         }
         if (who.temper() == NpcTemper.ANTEIKU || who.temper() == NpcTemper.DRIFTER) {

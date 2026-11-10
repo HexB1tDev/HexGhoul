@@ -65,6 +65,31 @@ public final class BodyAnimations {
         }
     }
 
+    /**
+     * 4.0.2 (the owner: "the armor does not allow for animation, make it compatible with animations"): the bend PlayerAnimator puts in
+     * this player's {@code part} ("rightArm", "leftArm", "rightLeg", "leftLeg"; "body" its torso) this frame, as {@link #upperTurn} gives
+     * the body's: {angle, axis x, 0, axis z}, the axis lying across the part; null with no bendy-lib, no animation playing, or no bend.
+     * bendy-lib turns the half of the part past its middle by it (a limb's lower half, the torso's upper), so a layer drawing on the part
+     * bends with it ({@code OutfitLayer}).
+     */
+    public static float[] bend(AbstractClientPlayer player, String part, float partialTick) {
+        if (!bendyLib() || player == null) {
+            return null;
+        }
+        try {
+            AnimationStack stack = PlayerAnimationAccess.getPlayerAnimLayer(player);
+            if (stack == null || !stack.isActive()) {
+                return null;
+            }
+            Vec3f bend = stack.get3DTransform(part, TransformType.BEND, partialTick, new Vec3f(0.0F, 0.0F, 0.0F));
+            return RigPose.upperTurn(bend.getX(), bend.getY());
+        } catch (RuntimeException | LinkageError unreadable) {
+            bends = false;
+            KaguneMod.LOGGER.info("HexKagune could not read PlayerAnimator's bends (" + unreadable + "); outfits are drawn unbent");
+            return null;
+        }
+    }
+
     /** bendy-lib is loaded (and the bend readable). */
     private static boolean bendyLib() {
         if (bends == null) {

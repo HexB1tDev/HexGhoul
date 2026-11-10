@@ -69,11 +69,11 @@ final class NoroScript extends CompanionScript {
                 c.chattedToday() ? 0 : EtoRules.CHAT, EtoTalk.Effect.TALK);
             case BOOK -> errandItem(c, "...None.", "...Later.", "*He takes it. He eats it, mask and all, somehow.* ...Good.",
                 "*He takes it without a word.*", EtoGesture.NONE);
-            case FLOWER -> flowerGiven(c, "...", "...Enough.", "*He turns the bone over in his fingers.* ...", "*He keeps it.*", EtoGesture.LOOK);
+            case FLOWER -> flowerGiven(c, "...", "...Enough.", "*He turns the bone over in his fingers.* ...", "*He keeps it.*", EtoGesture.TILT);
             case GIFT -> c.meat() ? new EtoTalk.Reply("*He takes it.* ...More.", c.giftedToday() ? 0 : EtoRules.GIFT, EtoTalk.Effect.MEAT,
                 EtoGesture.NONE) : r("...", 0);
-            case PUPPY -> c.puppy() == null ? r("...", 0) : new EtoTalk.Reply(this.puppy(c, c.puppy(), false), 4, EtoTalk.Effect.PUPPY, EtoGesture.LOOK);
-            case LETTER -> c.letter() ? new EtoTalk.Reply(this.letter(c, false), c.giftedToday() ? 0 : 2, EtoTalk.Effect.LETTER, EtoGesture.LOOK)
+            case PUPPY -> c.puppy() == null ? r("...", 0) : new EtoTalk.Reply(this.puppy(c, c.puppy(), false), 4, EtoTalk.Effect.PUPPY, EtoGesture.TILT);
+            case LETTER -> c.letter() ? new EtoTalk.Reply(this.letter(c, false), c.giftedToday() ? 0 : 2, EtoTalk.Effect.LETTER, EtoGesture.TILT)
                 : r("...", 0);
             case LESSON -> lesson(c, LESSONS);
             case FAVOUR -> r("...No.", 0);
@@ -84,10 +84,10 @@ final class NoroScript extends CompanionScript {
             case FOLLOW -> new EtoTalk.Reply(one(seed, "*He follows.*", "..."), 0, EtoTalk.Effect.FOLLOW);
             case STAY -> new EtoTalk.Reply(one(seed, "*He stays.*", "..."), 0, EtoTalk.Effect.STAY);
             case DECLINE -> r("...", 0);
-            case TEASE -> new EtoTalk.Reply("*He looks at you for a long time.*", 0, EtoTalk.Effect.NONE, EtoGesture.LOOK);
+            case TEASE -> new EtoTalk.Reply("*He looks at you for a long time.*", 0, EtoTalk.Effect.NONE, EtoGesture.TILT);
             case INSULT -> NpcBonds.clamp(c.regard() + EtoRules.INSULT) <= NpcBonds.ENEMY
-                ? new EtoTalk.Reply("*Something moves under his coat.*", EtoRules.INSULT, EtoTalk.Effect.ANGER, EtoGesture.CRACK)
-                : new EtoTalk.Reply("*He turns away.*", EtoRules.INSULT, EtoTalk.Effect.CLOSE, EtoGesture.LOOK);
+                ? new EtoTalk.Reply("*Something moves under his coat.*", EtoRules.INSULT, EtoTalk.Effect.ANGER, EtoGesture.TILT)
+                : new EtoTalk.Reply("*He turns away.*", EtoRules.INSULT, EtoTalk.Effect.CLOSE, EtoGesture.TILT);
             case BACK -> new EtoTalk.Reply("...", 0, EtoTalk.Effect.MAIN);
             case LEAVE -> new EtoTalk.Reply("", 0, EtoTalk.Effect.CLOSE);
             default -> r("...", 0);
@@ -278,7 +278,7 @@ final class NoroScript extends CompanionScript {
 
     @Override
     public EtoGesture dreadGesture(FinalSight sight, boolean ours) {
-        return sight == FinalSight.NONE ? EtoGesture.NONE : EtoGesture.LOOK;
+        return sight == FinalSight.NONE ? EtoGesture.NONE : EtoGesture.TILT;
     }
 
     @Override
@@ -298,10 +298,10 @@ final class NoroScript extends CompanionScript {
     static final List<EtoTopics.Topic> TOPICS = List.of(
         new EtoTopics.Topic("mask", c -> true, c -> "Why the mask?",
             c -> "...",
-            List.of(new EtoTopics.Follow("Take it off?", c -> r("*He doesn't.*", 0, EtoGesture.LOOK)))),
+            List.of(new EtoTopics.Follow("Take it off?", c -> r("*He doesn't.*", 0, EtoGesture.TILT)))),
         new EtoTopics.Topic("hungry", c -> true, c -> "Are you hungry?",
             c -> "...Always.",
-            List.of(new EtoTopics.Follow("For what?", c -> r("*He looks at you. A long time.*", 0, EtoGesture.LOOK)))),
+            List.of(new EtoTopics.Follow("For what?", c -> r("*He looks at you. A long time.*", 0, EtoGesture.TILT)))),
         new EtoTopics.Topic("worms", c -> c.ghoul(), c -> "What are those, under your coat?",
             c -> "...Bikaku.",
             List.of(new EtoTopics.Follow("Teach me.", c -> r("...Ask.", 0, EtoGesture.NONE)))));

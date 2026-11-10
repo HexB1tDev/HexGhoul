@@ -525,7 +525,7 @@ final class AyatoScript extends CompanionScript {
             c -> "The Doves took him. When we were kids. He told us to hide, to live quietly, to be good. ...Look where that got him.",
             List.of(
                 new EtoTopics.Follow("Is that why you fight?", c -> r("Someone has to. If being quiet gets you killed anyway, you might as well be loud.", 3,
-                    EtoGesture.CRACK)),
+                    EtoGesture.POSE)),
                 new EtoTopics.Follow("I'm sorry.", c -> r("Don't be. Sorry doesn't bring anyone back. ...But. Thanks.", 3, EtoGesture.LOOK)),
                 new EtoTopics.Follow("Come here.", c -> together(c), c -> r("...Just for a minute. Don't look at me.", 4, EtoTalk.Effect.HUG,
                     EtoGesture.HUG)))),

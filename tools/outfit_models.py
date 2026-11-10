@@ -31,10 +31,11 @@ ROOT = Path(__file__).resolve().parent.parent
 ART = ROOT / "art" / "outfits"
 ASSETS = ROOT / "src" / "main" / "resources" / "assets" / "hexkagune"
 BIN = ASSETS / "models" / "outfits.bin"
-BONES = ["head", "body", "right_arm", "left_arm", "right_leg", "left_leg", "right_arm_slim", "left_arm_slim"]
+BONES = ["head", "body", "right_arm", "left_arm", "right_leg", "left_leg", "right_arm_slim", "left_arm_slim", "right_leg_coat", "left_leg_coat"]
 SLOTS = ["helmet", "chestplate", "leggings", "boots"]
 PIVOTS = {"head": (0, 0, 0), "body": (0, 0, 0), "right_arm": (-5, 2, 0), "left_arm": (5, 2, 0), "right_leg": (-1.9, 12, 0),
-          "left_leg": (1.9, 12, 0), "right_arm_slim": (-5, 2, 0), "left_arm_slim": (5, 2, 0)}
+          "left_leg": (1.9, 12, 0), "right_arm_slim": (-5, 2, 0), "left_arm_slim": (5, 2, 0), "right_leg_coat": (-1.9, 12, 0),
+          "left_leg_coat": (1.9, 12, 0)}
 
 # The owner's masks: (their folder, the item's id, its name in game). Kaneki's is "eyepatch" (the build keeps that name out of the jar).
 MASKS = [
@@ -768,7 +769,39 @@ def fit_outfit(style, model):
         one["bone"] = c["bone"] + "_slim"
         slim.append(one)
     model["cubes"] = model["cubes"] + slim
+    # 4.0.2 (the owner: "the jacket also breaks when walking"): the coat's tails on the legs are a bone of their own, hung from the hip and
+    # swinging less than the leg; the trousers, the shoes and the rest stay on the leg.
+    for c in model["cubes"]:
+        if c["bone"] in ("right_leg", "left_leg") and any(k in c["name"] for k in TAIL_PARTS):
+            c["bone"] = c["bone"] + "_coat"
+    # 4.0.2 (the owner: "the armor does not allow for animation, make it compatible with animations"): a cube across a joint bendy-lib
+    # bends (an elbow, a knee, the middle of the torso) is cut in two there, so its halves bend as the skin's do.
+    model["cubes"] = [half for c in model["cubes"] for half in split(c)]
     return model
+
+
+# The coat's tail pieces on a leg (the owner's names): front and back panels, their hems, gussets and edges, the pockets on them.
+TAIL_PARTS = ("coat_", "_hem", "gusset", "inner_edge", "back_seam", "pocket_")
+# Where each bone bends (the model's y): an arm's elbow 4 below its pivot, a leg's knee 6, the torso's middle 6 below the neck.
+BENDS = {"right_arm": 6.0, "left_arm": 6.0, "right_arm_slim": 6.0, "left_arm_slim": 6.0, "right_leg": 18.0, "left_leg": 18.0, "body": 6.0}
+
+
+def split(c):
+    """{@code c}, or its two halves if it crosses its bone's bend (unturned cubes; a turned one bends as a whole by its corners)."""
+    at = BENDS.get(c["bone"])
+    y0, h = c["pos"][1], c["size"][1]
+    if at is None or any(c["rot"]) or not (y0 + 0.05 < at < y0 + h - 0.05):
+        return [c]
+    upper, lower = json.loads(json.dumps(c)), json.loads(json.dumps(c))
+    upper.setdefault("net", list(c["size"]))
+    lower.setdefault("net", list(c["size"]))
+    upper["size"][1] = at - y0
+    lower["pos"][1] = at
+    lower["size"][1] = y0 + h - at
+    lower["pivot"] = list(lower["pos"])
+    upper["name"] += "_upper"
+    lower["name"] += "_lower"
+    return [upper, lower]
 
 
 # ---------------------------------------------------------------- box UV (the game's own) and the icons
