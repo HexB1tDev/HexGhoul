@@ -318,6 +318,7 @@ public final class KaguneBodyAnimation implements IAnimation {
         // 1.3.3: holding Eto's hand, the arm reaches out to her (whatever else the body is doing). 1.3.26: or a quinque (its stance, its M1s).
         if (com.hex.kagune.control.client.KenPullOutClient.age(this.player.m_19879_(), com.hex.kagune.control.client.ControlClient.worldTime(0.0F)) >= 0.0
             || com.hex.kagune.control.client.NoroPullOutClient.age(this.player.m_19879_(), com.hex.kagune.control.client.ControlClient.worldTime(0.0F)) >= 0.0
+            || com.hex.kagune.control.client.AyatoPullOutClient.age(this.player.m_19879_(), com.hex.kagune.control.client.ControlClient.worldTime(0.0F)) >= 0.0
             || com.hex.kagune.control.client.EtoClient.handHeld(this.player.m_19879_()) > 0.0F
             || com.hex.kagune.control.client.ChildClient.busy(this.player.m_19879_())
             || com.hex.kagune.control.client.QuinqueClient.posing(this.player)) {
@@ -956,6 +957,7 @@ public final class KaguneBodyAnimation implements IAnimation {
         if (damp > 0.0F) {
             com.hex.kagune.control.client.KenPullOutClient.apply(this.p, this.player.m_19879_(), time);
             com.hex.kagune.control.client.NoroPullOutClient.apply(this.p, this.player.m_19879_(), time); // 4.0.2: Noro's way: the head tilts
+            com.hex.kagune.control.client.AyatoPullOutClient.apply(this.p, this.player.m_19879_(), time); // 4.1.0: Ayato's way: the hands lifted
         }
         if (steel > 0.0F && !lying) {
             this.carry(steel * Math.min(1.0F, this.fade), steel, time, tickDelta);

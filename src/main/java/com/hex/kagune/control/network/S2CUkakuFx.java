@@ -99,6 +99,8 @@ public record S2CUkakuFx(int kind, int shooter, int id, double x, double y, doub
     public static final int CRACK = 47;
     /** 4.0.2: a player Noro taught tilting their head before the kagune comes out ({@code shooter}: the player). */
     public static final int TILT = 48;
+    /** 4.1.0: a player Ayato taught lifting both hands, god-like, before the wings are unleashed ({@code shooter}: the player). */
+    public static final int UNLEASH = 49;
 
     public static void encode(S2CUkakuFx message, FriendlyByteBuf buffer) {
         buffer.writeByte(message.kind);

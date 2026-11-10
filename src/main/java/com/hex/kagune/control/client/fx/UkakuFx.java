@@ -268,6 +268,7 @@ public final class UkakuFx {
             }
             case S2CUkakuFx.CRACK -> com.hex.kagune.control.client.KenPullOutClient.start(message.shooter()); // 2.4.8
             case S2CUkakuFx.TILT -> com.hex.kagune.control.client.NoroPullOutClient.start(message.shooter()); // 4.0.2
+            case S2CUkakuFx.UNLEASH -> com.hex.kagune.control.client.AyatoPullOutClient.start(message.shooter()); // 4.1.0
             case S2CUkakuFx.DAWN_RING -> {
                 if (DAWN_BOLTS.size() < 24) {
                     int index = message.extra() / 100;

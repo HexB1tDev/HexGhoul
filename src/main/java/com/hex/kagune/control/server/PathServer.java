@@ -131,12 +131,17 @@ public final class PathServer {
         }
         // 2.4.8: taught a kakuja by Ken, it comes out his way: a finger cracked, then it tears out of their back (KenPullOut).
         if (!KaguneProfile.isActive(player)) {
-            if (KenPullOut.pending(player) || NoroPullOut.pending(player)) {
+            if (KenPullOut.pending(player) || NoroPullOut.pending(player) || AyatoPullOut.pending(player)) {
                 return;
             }
             // 4.0.2: taught by Noro (a Bikaku player), his way: stand, the head tilts, it comes out. The finger crack is Ken's alone.
             if (NoroPullOut.taught(player)) {
                 NoroPullOut.start(player);
+                return;
+            }
+            // 4.1.0: taught by Ayato (an Ukaku player, his First Kakuja), his way: both hands lifted, god-like, then the wings unleashed.
+            if (AyatoPullOut.taught(player)) {
+                AyatoPullOut.start(player);
                 return;
             }
             if (KenPullOut.taught(player)) {

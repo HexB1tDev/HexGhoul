@@ -139,6 +139,14 @@ was made with). Previews: `docs/handoff/ken-tower-4.0.9.png`. Their later asks, 
 wing slams and wing guard; then fighting styles (Speedster), the CCG building (`art/exploration/ccg_building.schem`), the General, Kick
 Master.
 
+## 4.1.0 (released)
+
+The owner (quoted exactly): "Add to the todo list the new animation after training with Ayato (Ukaku kakuja quest) the player gains a new
+pull out kagune animation sort of like Ken gives the player. the player lifts both hands god like and then they're unleashed." (with a
+picture: arms out wide and low, palms up, floating). `server/AyatoPullOut` (taught: Ukaku path and `Gate.UKAKU_KAKUJA` open; OUT_AT 20),
+`client/AyatoPullOutClient.lift`, `S2CUkakuFx.UNLEASH` (49), `PathServer.toggle` (Noro, then Ayato, then Ken), `KaguneBodyAnimation`.
+Protocol 109.
+
 ## Next
 
 Nothing outstanding from the owner. If they report in-game problems with the outfits' fit, adjust `CLEAR`, `SNUG`, the drape

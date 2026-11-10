@@ -316,6 +316,26 @@ public final class CompanionTests {
         } catch (java.io.IOException failure) {
             check(false, "read Ken's tower: " + failure);
         }
+        // 4.1.0 (the owner: "after training with Ayato (Ukaku kakuja quest) the player gains a new pull out kagune animation sort of like Ken
+        // gives the player. the player lifts both hands god like and then they're unleashed."): both arms out wide, palms up, chin up, up on
+        // the toes, held as the wings come out, then down again; his way before Ken's, after Noro's.
+        com.hex.kagune.control.client.animation.RigPose lifted = new com.hex.kagune.control.client.animation.RigPose();
+        com.hex.kagune.control.client.AyatoPullOutClient.lift(lifted, (float)com.hex.kagune.control.server.AyatoPullOut.OUT_AT);
+        com.hex.kagune.control.client.animation.RigPose after = new com.hex.kagune.control.client.animation.RigPose();
+        com.hex.kagune.control.client.AyatoPullOutClient.lift(after, (float)com.hex.kagune.control.client.AyatoPullOutClient.LASTS);
+        check(lifted.rightArmZ > 1.0F && lifted.leftArmZ < -1.0F && lifted.rightArmY < -1.0F && lifted.leftArmY > 1.0F && lifted.headX < -0.2F && lifted.drop < 0.0F
+            && Math.abs(after.rightArmZ) < 1.0E-4F && com.hex.kagune.control.server.AyatoPullOut.OUT_AT < com.hex.kagune.control.client.AyatoPullOutClient.LASTS,
+            "Ayato's way: both hands lifted out wide, palms to the sky, the wings out while they are, then down");
+        try {
+            String path = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/PathServer.java")));
+            int noro = path.indexOf("if (NoroPullOut.taught(player))");
+            int ayato = path.indexOf("if (AyatoPullOut.taught(player))");
+            int ken = path.indexOf("if (KenPullOut.taught(player))");
+            check(noro > 0 && ayato > noro && ken > ayato && com.hex.kagune.control.network.S2CUkakuFx.UNLEASH != com.hex.kagune.control.network.S2CUkakuFx.TILT,
+                "taught by Ayato, the kagune comes out his way (Noro's first for a Bikaku player, Ken's crack after)");
+        } catch (java.io.IOException failure) {
+            check(false, "read the path's key: " + failure);
+        }
         com.hex.kagune.control.client.animation.RigPose seated = com.hex.kagune.control.client.animation.EtoPose.gesture(EtoGesture.SIT, 400.0, false);
         check(seated != null && Math.abs(seated.drop - 10.0F) < 0.01F && seated.rightLegX < -1.3F && seated.leftKnee > 1.5F && seated.legHold >= 1.0F && seated.armHold >= 1.0F,
             "seated: hips to the floor, a leg out, a knee up, still");

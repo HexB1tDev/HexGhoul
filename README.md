@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.0 (HexGhoul): Ayato's way of bringing the kagune out (testing)
+
+See `.github/release-notes-4.1.0.md`. Your words: "after training with Ayato (Ukaku kakuja quest) the player gains a new pull out kagune animation sort of like Ken gives the player. the player lifts both hands god like and then they're unleashed." Once Ayato has taught you the First Kakuja, you bring the kagune out his way: up on your toes, both arms lifted out wide, palms to the sky, chin up, and the wings are unleashed. Protocol 109.
+
 ## 4.0.9 (HexGhoul): Ken's new tower, and he sits on the top (testing)
 
 See `.github/release-notes-4.0.9.md`. Your words: "I sent you a replacement for the Ken tower as well, make sure he sits on the top." Your new tower (from `Ken_tower.litematic`), nine of the repeating floors taken out of each of its two tallest tiers so it stands under a 1.20.1 world's top (238 tall, every part kept; tuff swapped for andesite and stone bricks). Ken lives on its top deck and sits there looking out whenever nothing calls him. Protocol 108.
