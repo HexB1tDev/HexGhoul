@@ -130,6 +130,20 @@ public final class UkakuRules {
     /** 4.1.2: the wing slams' reach, a share of Rinkaku's M1 (the owner: "has lightly less range than Rinkaku"). */
     public static final double SLAM_REACH = 0.85;
 
+    /**
+     * 4.1.11: how far a wing slam hits (blocks), as the server works it out (KaguneCombat.range): Rinkaku's attack range (the original's
+     * KaguneProfile.attackRange: 7.5 and 0.0075 a mastery point, at most 15; its reach mutations left out here) times {@link #SLAM_REACH}
+     * times the stage's own range ({@code rangeMul}), at most 15. The wings are drawn stretching out to it (WingRig.stretch): before, a slam
+     * hit things 8 blocks off with a wing 3 blocks long (the owner: "it currently just feels like a little chicken wings").
+     */
+    public static double slamReach(int mastery, float rangeMul) {
+        double rinkaku = Math.min(15.0, RINKAKU_RANGE + RINKAKU_RANGE_PER_MASTERY * Math.max(0, mastery));
+        return Math.min(15.0, rinkaku * SLAM_REACH * rangeMul);
+    }
+
+    public static final double RINKAKU_RANGE = 7.5;
+    public static final double RINKAKU_RANGE_PER_MASTERY = 0.0075;
+
     /** 4.1.2: true for the fire's wing slams (the twin wings' string, or Rabbit Guise's left wing's). */
     public static boolean slams(ComboStyle style) {
         return style == ComboStyle.UKAKU_WINGS || style == ComboStyle.UKAKU_LEFT_WING;

@@ -2148,10 +2148,11 @@ public final class ArtPreview {
      */
     static void slams(File file) throws Exception {
         List<Shot> shots = new ArrayList<>();
-        double[] eye = {7.8, 4.1, 8.4};
-        double[] target = {0.0, 2.0, 0.5};
-        double[] high = {6.0, 9.5, 6.8};
-        double[] below = {0.0, 1.6, 0.6};
+        // 4.1.11: far enough back to take in a wing lashed out as far as the slam hits (8 blocks and more).
+        double[] eye = {11.5, 6.5, 13.5};
+        double[] target = {0.0, 2.2, 3.0};
+        double[] high = {7.0, 17.0, 11.0};
+        double[] below = {0.0, 1.4, 3.0};
         for (Slam slam : new Slam[] {SLAMS[0], SLAMS[2], SLAMS[3], SLAMS[4], SLAMS[6]}) {
             float i = slam.impact();
             float[] keys = {0.12F, i - 0.14F, i - 0.05F, i, i + 0.08F, i + 0.25F};
@@ -2178,8 +2179,9 @@ public final class ArtPreview {
 
     /** 4.1.9: the whole string (all seven slams, each as soon as the one before ends) at 30 frames a second, from three quarters in front. */
     static void slamsGif(File file) throws Exception {
-        double[] eye = {7.0, 3.8, 7.6};
-        double[] target = {0.0, 1.9, 0.5};
+        // 4.1.11: from his side, a little in front and above: a wing lashed out ahead reads at its full length (from in front it comes at the camera).
+        double[] eye = {-17.0, 7.0, 9.5};
+        double[] target = {0.0, 2.0, 5.0};
         List<BufferedImage> frames = new ArrayList<>();
         for (Slam slam : SLAMS) {
             int count = Math.round(slam.ticks() * 1.5F);

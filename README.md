@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.11 (HexGhoul): the wings lash out as far as they hit (testing)
+
+See `.github/release-notes-4.1.11.md`. Your words: "it currently just feels like a little chicken wings, bro. Whenever they stretch to slap something, they can stretch to be larger in size and length as well." The slams hit about 8 blocks out (12.8 at mastery 1000) with a wing drawn 3 blocks long; now the striking wing grows bigger and longer through the drive until its tip lands exactly where the hit reaches, held through the carry, drawn back in on the recoil, folded into a long tongue of fire aimed ahead at the target's height. The whip's spring now keeps pace with each blow. Protocol 116.
+
 ## 4.1.10 (HexGhoul): the Ukaku's wing slams thrown like real blows (testing)
 
 See `.github/release-notes-4.1.10.md`. Your words: "put all your focus into the combat rework, and kagune rework for the ukaku ... make it look smooth and beautiful." Every wing slam and its body used to slow down as it landed and then hold; now each has a chamber, a drive that lands at full speed, an overshoot and a recoil, the wing whips (its tip trails, then snaps past), its feathers tuck on the drive and flare on the hit, the fire streams off it, the other wing pulls back, and the body leads the wing. The guard flares, slams shut past and settles. Previews: `docs/handoff/ukaku-slams-*`. Only how it looks changed. Protocol 116.

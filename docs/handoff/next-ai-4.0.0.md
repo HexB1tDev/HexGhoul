@@ -273,6 +273,14 @@ you to focus on what's hard, study complex fighting moves, and combos and make i
 pull, the body a beat ahead. Visual only; protocol 116. `UkakuTests.slamBeats`, `slamBody`. Previews `docs/handoff/ukaku-slams-*`
 (`tools/art-preview.sh <out> slams slams-gif`). Details: `next-ai-4.1.9.md`.
 
+## 4.1.11 (released)
+
+The owner (quoted exactly): "You can make the wing stretch further forward, because it currently just feels like a little chicken wings, bro.
+Whenever they stretch to slap something, they can stretch to be larger in size and length as well." A slamming wing stretches to the slam's
+reach (`UkakuRules.slamReach`, `WingRig.lash`, `stretchMost`, `TIP_SHARE`, `STRETCH_MOST`), lashed level ahead (`slamFrame`, `lashElevation`,
+`LASH_TRAIL`), folded tight (`LASH_FOLD`); the whip's spring scaled to each blow's drive (`WHIP_PER_DRIVE`). Visual only; protocol 116.
+Details: `next-ai-4.1.9.md`.
+
 ## Next
 
 Nothing outstanding from the owner. If they report in-game problems with the outfits' fit, adjust `CLEAR`, `SNUG`, the drape

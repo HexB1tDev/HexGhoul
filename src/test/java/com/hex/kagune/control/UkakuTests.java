@@ -234,9 +234,13 @@ public final class UkakuTests {
                         }
                         check(colours, "every quad has four corners and four colours");
                         float[] e = extent(quads);
-                        // A low swing may graze the ground under the feet, never sink into it.
-                        check(e[1] > -0.15F && e[4] < 7.5F && Math.abs(e[0]) < 7.0F && Math.abs(e[3]) < 7.0F && Math.abs(e[2]) < 7.0F
-                            && Math.abs(e[5]) < 7.0F, "the kagune stays near its host: " + form + " " + motion + " " + java.util.Arrays.toString(e));
+                        // A low swing may graze the ground under the feet, never sink into it. 4.1.11: a slamming wing lashes out as far as
+                        // the slam hits (UkakuRules.slamReach), never further.
+                        boolean slam = WingRig.striking(motion) != 0 || motion == WingRig.Motion.TWIN_SLAM;
+                        float far = slam ? (float)UkakuRules.slamReach(mastery, 1.05F) + 2.0F : 7.0F;
+                        float high = slam ? far : 7.5F;
+                        check(e[1] > -0.15F && e[4] < high && Math.abs(e[0]) < far && Math.abs(e[3]) < far && Math.abs(e[2]) < far
+                            && Math.abs(e[5]) < far, "the kagune stays near its host: " + form + " " + motion + " " + java.util.Arrays.toString(e));
                     }
                 }
             }
@@ -1466,6 +1470,40 @@ public final class UkakuTests {
                 }
             }
         }
+        // 4.1.11 (the owner: "it currently just feels like a little chicken wings ... You don't have to be limited by such small range"): a
+        // slamming wing stretches out as far as the slam hits, its tip there at the impact (never past it), and is its own size again at rest.
+        for (WingRig.Motion motion : new WingRig.Motion[] {WingRig.Motion.SLAP_RIGHT, WingRig.Motion.SWING_RIGHT, WingRig.Motion.SLAM_RIGHT}) {
+            for (int mastery : new int[] {300, 500, 1000}) {
+                double reach = UkakuRules.slamReach(mastery, WingRig.blow(motion).rangeMul());
+                float length = UkakuRules.wingLength(mastery, WingForm.TWIN);
+                check(WingRig.stretchMost(motion, mastery, length) > 1.5F && WingRig.stretchMost(motion, mastery, length) <= WingRig.STRETCH_MOST,
+                    motion + " at " + mastery + ": stretched well past its own " + length + " blocks (to " + reach + ")");
+                double furthest = 0.0;
+                for (float p = 0.3F; p <= 0.6F; p += 0.01F) {
+                    furthest = Math.max(furthest, tipReach(WingRig.build(alone(motion, p, 1, mastery))));
+                }
+                check(furthest > 0.8 * reach && furthest < reach + 1.5, motion + " at " + mastery + ": the tip reaches as far as the slam hits ("
+                    + furthest + " of " + reach + ")");
+                check(Math.abs(tipReach(WingRig.build(alone(motion, 0.0F, 1, mastery))) - tipReach(WingRig.build(alone(WingRig.Motion.NONE, 0.0F, 1, mastery)))) < 0.05
+                    && Math.abs(tipReach(WingRig.build(alone(motion, 1.0F, 1, mastery))) - tipReach(WingRig.build(alone(WingRig.Motion.NONE, 0.0F, 1, mastery)))) < 0.05,
+                    motion + " at " + mastery + ": its own size before and after");
+            }
+        }
+        for (int mastery : new int[] {300, 1000}) {
+            float length = UkakuRules.wingLength(mastery, WingForm.TWIN);
+            double furthest = 0.0;
+            for (float p = 0.3F; p <= 0.6F; p += 0.01F) {
+                furthest = Math.max(furthest, tipReach(WingRig.build(alone(WingRig.Motion.SLAP_RIGHT, p, 1, mastery))));
+            }
+            double share = furthest / (length * WingRig.stretchMost(WingRig.Motion.SLAP_RIGHT, mastery, length));
+            check(Math.abs(share - WingRig.TIP_SHARE) < 0.15, "a lashed wing's furthest tip (its fire streaming) lies TIP_SHARE of its length out (" + share
+                + " at " + mastery + ")");
+        }
+        check(WingRig.stretchMost(WingRig.Motion.SLAP_RIGHT, 100, UkakuRules.wingLength(100, WingForm.TWIN)) > 2.5F
+            && WingRig.stretchMost(WingRig.Motion.SLAP_RIGHT, 0, 0.6F) == WingRig.STRETCH_MOST && WingRig.lash(WingRig.Motion.SLAP_RIGHT, 0.0F, 0.4F) == 0.0F && WingRig.lash(WingRig.Motion.SLAP_RIGHT, 0.4F, 0.4F) == 1.0F
+            && WingRig.lash(WingRig.Motion.SLAP_RIGHT, 1.0F, 0.4F) == 0.0F, "the smallest wings stretch as far as they may; the lash is out at the impact only");
+        check(Math.abs(UkakuRules.slamReach(300, 1.0F) - (7.5 + 0.0075 * 300) * UkakuRules.SLAM_REACH) < 1.0E-9 && UkakuRules.slamReach(5000, 1.05F) <= 15.0,
+            "the reach the wings stretch to is the server's (Rinkaku's range, its share, at most 15)");
         // The other wing pulls back as one drives, and is back by the end.
         WingRig.Blow slap = WingRig.blow(WingRig.Motion.SLAP_RIGHT);
         float[] slapAt = WingRig.beats(slap, 0.4F);
@@ -1502,6 +1540,30 @@ public final class UkakuTests {
 
     private static boolean close(WingRig.WingAngles angles, float[] key) {
         return Math.abs(angles.sweep() - key[0]) < 0.05F && Math.abs(angles.roll() - key[1]) < 0.05F;
+    }
+
+    /** 4.1.11: the twin wings, only {@code side}'s drawn, at a mastery. */
+    private static WingRig.Input alone(WingRig.Motion motion, float progress, int side, int mastery) {
+        return new WingRig.Input(WingForm.TWIN, mastery, 1.0F, 2.0, 1.0F, 1.0F, motion, progress, 0.4F, 0.0F, 0.0F, false, 1.0F, 1.0F, false, 0.0F, 0.0F,
+            WingRig.FORWARD, 0.0F, 0.0F, 0.0F, 0.0F, side > 0 ? 1.0F : 0.0F, side > 0 ? 0.0F : 1.0F, 0.0F);
+    }
+
+    /** 4.1.11: how far the furthest solid corner of {@code quads} is from the right shoulder blade (blocks). */
+    private static double tipReach(List<WingRig.Quad> quads) {
+        double far = 0.0;
+        for (WingRig.Quad q : quads) {
+            if (q.alpha() < 0.5F) {
+                continue;
+            }
+            float[] v = q.xyz();
+            for (int k = 0; k < 4; k++) {
+                double dx = v[k * 3] - WingRig.ROOT_X;
+                double dy = v[k * 3 + 1] - WingRig.ROOT_Y;
+                double dz = v[k * 3 + 2] - WingRig.ROOT_Z;
+                far = Math.max(far, Math.sqrt(dx * dx + dy * dy + dz * dz));
+            }
+        }
+        return far;
     }
 
     /** 4.1.10: the twin wings at {@code progress} through {@code motion} with only the {@code side} wing drawn (the other not grown). */
