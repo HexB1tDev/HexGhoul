@@ -3,6 +3,7 @@ package net.minecraft.client.model.geom;
 
 public final class ModelPart {
     /** visible */ public boolean f_104207_;
+    /** skipDraw: drawn without its own cubes (its children still are) */ public boolean f_233556_;
     /** xRot, yRot, zRot (1.0.41) */ public float f_104203_;
     public float f_104204_;
     public float f_104205_;

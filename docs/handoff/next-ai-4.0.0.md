@@ -107,6 +107,14 @@ taken while she lives; `UniqueNpc.missing` + `UniqueNpcs.levelTick` (`WATCHED`) 
 home). Their other three reports this round (limbs taking their layers, full masks hiding kakugan, Ayato's skin, Ken's tower, fighting
 styles, the CCG building and General, Kick Master) follow as 4.0.6 onward.
 
+## 4.0.6 (released)
+
+The owner (quoted exactly): "Make sure that when limbs are removed, over layer of the skin also goes with the head and etc, coats and
+armors go with the limbs as well. (same with masks)". `OutfitLayer` skips a bone whose part is not visible (tails follow the body);
+`PotentialRenderer.worn` draws the worn outfit cubes and the `EXTRA` mask on each torn part (`Reattach.point`/`way`: part pixels into the
+part's frame); `PotentialClient` sets `ModelPart.skipDraw` (f_233556_, allowlisted) on vanilla armour models' parts while a part is off (the
+armour layer's models found by type through reflection); `KakujaArmorLayer` and `RinkakuMaskLayer` skip a hidden head.
+
 ## Next
 
 Nothing outstanding from the owner. If they report in-game problems with the outfits' fit, adjust `CLEAR`, `SNUG`, the drape

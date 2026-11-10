@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.0.6 (HexGhoul): A torn-off limb takes its clothes, armour and mask with it (testing)
+
+See `.github/release-notes-4.0.6.md`. Your words: "Make sure that when limbs are removed, over layer of the skin also goes with the head and etc, coats and armors go with the limbs as well. (same with masks)". A part torn off by Potential Unlock carries its skin's outer layer (as before), its coat sleeve, trouser leg and boot, and the head its cap and mask; your body draws none of it, nor vanilla armour on that part, nor the kakuja masks on a head that's off. Coat tails stay with the body. Protocol 107.
+
 ## 4.0.5 (HexGhoul): New worlds load again; official NPCs stay at home (testing)
 
 See `.github/release-notes-4.0.5.md`. Your words: "also game crash upon creating world": since 4.0.2 the one-per-world Aogiri hideout's placement lacked the `salt` Minecraft requires, so no new world could be made; fixed, and every placement is now tested for its required fields. Your words: "Official NPCS disappear from their residential areas and dont come back they should always stay there unless married to a player and set home in another place." Once anyone has met an official character, no other body of hers takes her place while she lives (one from another of her buildings did, once hers had lain unloaded five days, and hers was sent away). If you've been at her home half a minute and she's nowhere about (not out or left waiting), she's made there again. A married character's home is the one you share. Protocol 107.

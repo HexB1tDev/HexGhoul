@@ -1746,6 +1746,36 @@ public final class BikakuWormTests {
             "energy is drawn while the strands reach and haul, not while it flies or knits");
         check(com.hex.kagune.control.bikaku.PotentialRules.WHOLE >= 90 && com.hex.kagune.control.bikaku.PotentialRules.WHOLE <= 110,
             "about 5 seconds a part (" + com.hex.kagune.control.bikaku.PotentialRules.WHOLE + " ticks)");
+        // 4.0.6 (the owner: "when limbs are removed, over layer of the skin also goes with the head and etc, coats and armors go with the limbs
+        // as well. (same with masks)"): what is worn on a part (made in its model part's own pixels, from its pivot, y down) is carried in
+        // the part's own frame: its middle at the part's middle, its up as the part's up; the body draws none of it while the part is off.
+        for (com.hex.kagune.control.bikaku.PotentialRules.Part part : parts) {
+            for (boolean slim : new boolean[] {false, true}) {
+                double[] middle = switch (part) {
+                    case HEAD -> new double[] {0.0, -4.0, 0.0};
+                    case RIGHT_ARM -> new double[] {slim ? -0.5 : -1.0, 4.0, 0.0};
+                    case LEFT_ARM -> new double[] {slim ? 0.5 : 1.0, 4.0, 0.0};
+                    case RIGHT_LEG, LEFT_LEG -> new double[] {0.0, 6.0, 0.0};
+                };
+                double[] at = com.hex.kagune.control.client.animation.Reattach.point(part, middle, slim);
+                double[] up = com.hex.kagune.control.client.animation.Reattach.way(part, new double[] {0.0, -1.0, 0.0}, slim);
+                check(Math.abs(at[0]) < 1e-6 && Math.abs(at[1]) < 1e-6 && Math.abs(at[2]) < 1e-6, part + ": what it wears sits on it, about its middle " + java.util.Arrays.toString(at));
+                check(up[1] > 0.99, part + ": its up is up");
+            }
+        }
+        try {
+            String layer = read("src/main/java/com/hex/kagune/control/client/render/OutfitLayer.java");
+            String torn = read("src/main/java/com/hex/kagune/control/client/render/PotentialRenderer.java");
+            String hide = read("src/main/java/com/hex/kagune/control/client/PotentialClient.java");
+            check(layer.contains("!cubes.isEmpty() && bones[bone].f_104207_") && torn.contains("worn(player, torn, clock, slim, frame, camera, matrix, normals, buffers, level, lights)")
+                && torn.contains("OutfitLayer.EXTRA.apply(player)") && hide.contains("skip(worn.f_102808_, worn.f_102809_)"),
+                "a part off him takes its sleeve, trouser leg, boot, cap and mask; vanilla armour on it isn't drawn on him");
+            check(read("src/main/java/com/hex/kagune/control/client/render/RinkakuMaskLayer.java").contains("!model.f_102808_.f_104207_")
+                && read("src/main/java/com/hex/kagune/control/client/render/KakujaArmorLayer.java").contains("if (model.f_102808_.f_104207_)"),
+                "the kakuja's mask goes with his head");
+        } catch (java.io.IOException failure) {
+            check(false, "read the layers: " + failure);
+        }
         for (com.hex.kagune.control.bikaku.PotentialRules.Part part : parts) {
             for (boolean slim : new boolean[] {false, true}) {
                 double[] blow = {0.8, 0.0, -0.6};

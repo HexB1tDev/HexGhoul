@@ -146,6 +146,7 @@ public final class PotentialRenderer {
             }
         }
         buffers.m_109912_(skinType);
+        worn(player, torn, clock, slim, frame, camera, matrix, normals, buffers, level, lights);
         VertexConsumer flesh = buffers.m_6299_(FLESH);
         for (PotentialClient.Torn t : torn) {
             double age = t.age(clock);
@@ -192,6 +193,72 @@ public final class PotentialRenderer {
             }
         }
         buffers.m_109912_(FLESH);
+    }
+
+    private static final net.minecraft.world.entity.EquipmentSlot[] SLOTS = {net.minecraft.world.entity.EquipmentSlot.HEAD,
+        net.minecraft.world.entity.EquipmentSlot.CHEST, net.minecraft.world.entity.EquipmentSlot.LEGS, net.minecraft.world.entity.EquipmentSlot.FEET};
+
+    /**
+     * 4.0.6 (the owner: "when limbs are removed ... coats and armors go with the limbs as well. (same with masks)"): what he wears on each
+     * part off him goes with it (his body draws none of it, {@link OutfitLayer}): its sleeve, its trouser leg and boot, the cap and the
+     * mask with his head, as they sit on the part, in their own textures.
+     */
+    static void worn(AbstractClientPlayer player, List<PotentialClient.Torn> torn, double clock, boolean slim, Frame frame, Vec3 camera, Matrix4f matrix,
+                     Matrix3f normals, MultiBufferSource.BufferSource buffers, ClientLevel level, Map<Long, Integer> lights) {
+        for (PotentialClient.Torn t : torn) {
+            double age = t.age(clock);
+            if (Reattach.onHim(age)) {
+                continue;
+            }
+            int bone = switch (t.part()) {
+                case HEAD -> com.hex.kagune.control.outfit.OutfitModels.HEAD;
+                case RIGHT_ARM -> slim ? com.hex.kagune.control.outfit.OutfitModels.RIGHT_ARM_SLIM : com.hex.kagune.control.outfit.OutfitModels.RIGHT_ARM;
+                case LEFT_ARM -> slim ? com.hex.kagune.control.outfit.OutfitModels.LEFT_ARM_SLIM : com.hex.kagune.control.outfit.OutfitModels.LEFT_ARM;
+                case RIGHT_LEG -> com.hex.kagune.control.outfit.OutfitModels.RIGHT_LEG;
+                case LEFT_LEG -> com.hex.kagune.control.outfit.OutfitModels.LEFT_LEG;
+            };
+            Remains.Placed placed = Reattach.place(t.part(), t.flight(), age, slim, frame.anchor(t.x(), t.y(), t.z(), t.yaw()));
+            int light = light(level, lights, frame, placed.at());
+            for (net.minecraft.world.entity.EquipmentSlot slot : SLOTS) {
+                if (player.m_6844_(slot).m_41720_() instanceof com.hex.kagune.control.outfit.OutfitItem item) {
+                    com.hex.kagune.control.outfit.Outfits.Piece piece = item.piece();
+                    wornPiece(piece.model(), piece.mask() ? -1 : piece.slot(), bone, t.part(), placed, slim, frame, camera, matrix, normals, buffers, light);
+                }
+            }
+            String extra = t.part() == PotentialRules.Part.HEAD ? OutfitLayer.EXTRA.apply(player) : null;
+            if (extra != null) {
+                wornPiece(extra, -1, bone, t.part(), placed, slim, frame, camera, matrix, normals, buffers, light);
+            }
+        }
+    }
+
+    /** {@code modelId}'s cubes in {@code slot} (any: -1) on {@code bone}, on the part off him where it is. */
+    private static void wornPiece(String modelId, int slot, int bone, PotentialRules.Part part, Remains.Placed placed, boolean slim, Frame frame, Vec3 camera,
+                                  Matrix4f matrix, Matrix3f normals, MultiBufferSource.BufferSource buffers, int light) {
+        com.hex.kagune.control.outfit.OutfitModels.Model model = com.hex.kagune.control.outfit.OutfitModels.get(modelId);
+        if (model == null) {
+            return;
+        }
+        List<com.hex.kagune.control.outfit.OutfitModels.Cube> cubes = model.on(bone, slot);
+        if (cubes.isEmpty()) {
+            return;
+        }
+        RenderType type = OutfitLayer.type(modelId);
+        VertexConsumer out = buffers.m_6299_(type);
+        for (com.hex.kagune.control.outfit.OutfitModels.Cube cube : cubes) {
+            for (com.hex.kagune.control.outfit.OutfitModels.Face face : cube.faces()) {
+                float[] c = face.corners();
+                float[] uv = face.uvs();
+                float[] fn = face.normal();
+                double[] n = frame.turn(Remains.rotate(placed.turn(), Reattach.way(part, new double[] {fn[0], fn[1], fn[2]}, slim)));
+                for (int k = 0; k < 4; k++) {
+                    double[] local = Reattach.point(part, new double[] {c[k * 3], c[k * 3 + 1], c[k * 3 + 2]}, slim);
+                    double[] w = frame.world(add(placed.at(), Remains.rotate(placed.turn(), local)), camera);
+                    skinVertex(out, matrix, normals, w, n, uv[k * 2], uv[k * 2 + 1], light);
+                }
+            }
+        }
+        buffers.m_109912_(type);
     }
 
     /** Every part's faces in its own frame: its pieces' skin (inner layer) and their torn ends. */

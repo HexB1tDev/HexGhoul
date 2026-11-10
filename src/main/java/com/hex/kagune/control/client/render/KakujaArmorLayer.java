@@ -79,11 +79,18 @@ public final class KakujaArmorLayer extends RenderLayer<AbstractClientPlayer, En
             double shell = KakujaModel.halfMaskShell(eyeCells, KakuganClient.covered(player), KakuganClient.skinRead(player),
                 PlayerLayers.skinLayers3d());
             KakujaModel.halfMask(collect(head), eyeCells, grow, 1.0, shell);
-            pose.m_85836_();
-            PlayerLayers.upperBody(pose, player, partialTick);
-            model.f_102808_.m_104299_(pose);
-            emit(consumer, head, packedLight, pose.m_85850_().m_252922_(), pose.m_85850_().m_252943_(), com.hex.kagune.control.client.KaguneTints.of(player));
-            pose.m_85849_();
+            // 4.0.6 (the owner: "when limbs are removed ... coats and armors go with the limbs as well. (same with masks)"): a head off him
+            // (Potential Unlock's torn parts) takes its half mask with it.
+            if (model.f_102808_.f_104207_) {
+                pose.m_85836_();
+                PlayerLayers.upperBody(pose, player, partialTick);
+                model.f_102808_.m_104299_(pose);
+                emit(consumer, head, packedLight, pose.m_85850_().m_252922_(), pose.m_85850_().m_252943_(), com.hex.kagune.control.client.KaguneTints.of(player));
+                pose.m_85849_();
+            }
+        }
+        if (!model.f_102810_.f_104207_) {
+            return;
         }
         pose.m_85836_();
         model.f_102810_.m_104299_(pose);

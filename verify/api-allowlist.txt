@@ -305,6 +305,7 @@ M net/minecraft/client/renderer/entity/player/PlayerRenderer m_117813_ (Lcom/moj
 M net/minecraft/client/renderer/entity/LivingEntityRenderer m_7200_ ()Lnet/minecraft/client/model/EntityModel;  # [srg] getModel, fpz.a()Lfbf; (from fqt; yarn FeatureRendererContext.getModel method_4038)
 F net/minecraft/client/model/HumanoidModel f_102809_ Lnet/minecraft/client/model/geom/ModelPart;  # [srg] hat, fbs.l Lfee; (yarn hat field_3394)
 F net/minecraft/client/model/geom/ModelPart f_104207_ Z                              # [srg] visible, fee.k Z (yarn visible field_3665)
+F net/minecraft/client/model/geom/ModelPart f_233556_ Z                              # [srg] skipDraw, joined.tsrg fee.l Z, intermediary field_38456 (yarn hidden): 4.0.6, vanilla armour off a torn part
 
 # --- 3.0.0 ghoul mode: R alone or with Alt ------------------------------------------------------------------------------
 M net/minecraft/client/gui/screens/Screen m_96639_ ()Z                               # [srg] hasAltDown: yarn class_437.method_25443, obf euq.r()Z, tsrg 96639

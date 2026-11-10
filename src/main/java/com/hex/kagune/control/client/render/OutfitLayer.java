@@ -133,7 +133,10 @@ public final class OutfitLayer<T extends LivingEntity, M extends EntityModel<T>>
                 continue;
             }
             List<OutfitModels.Cube> cubes = model.on(arm(bone, slim), slot);
-            if (!cubes.isEmpty()) {
+            // 4.0.6 (the owner: "when limbs are removed ... coats and armors go with the limbs as well. (same with masks)"): a part not drawn
+            // (torn off by Potential Unlock, a body cut in two) takes what is worn on it: its sleeve, its trouser leg and boot, the mask and
+            // cap with the head (drawn on the part itself where it lies: PotentialRenderer).
+            if (!cubes.isEmpty() && bones[bone].f_104207_) {
                 pose.m_85836_();
                 // PlayerAnimator bends a player's head and arms with the upper body: they ride it as the parts do (the torso itself bends
                 // at its middle, below).
@@ -146,7 +149,8 @@ public final class OutfitLayer<T extends LivingEntity, M extends EntityModel<T>>
             }
             // 4.0.2 (the owner: "the jacket also breaks when walking"): a coat's tails hang from the hip; 4.0.3: draped over both legs
             // ({@link #drape}), never parting down the middle, never with a leg through them.
-            if (bone == OutfitModels.RIGHT_LEG || bone == OutfitModels.LEFT_LEG) {
+            if ((bone == OutfitModels.RIGHT_LEG || bone == OutfitModels.LEFT_LEG) && bones[OutfitModels.BODY] != null && bones[OutfitModels.BODY].f_104207_) {
+                // The tails are the coat's: they stay with the body (hung from the hip, a leg off or not).
                 List<OutfitModels.Cube> tails = model.on(bone == OutfitModels.RIGHT_LEG ? OutfitModels.RIGHT_LEG_COAT : OutfitModels.LEFT_LEG_COAT, slot);
                 if (!tails.isEmpty()) {
                     pose.m_85836_();

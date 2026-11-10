@@ -88,6 +88,21 @@ public final class Reattach {
         return Remains.sub(Remains.add(Remains.centre(piece, slim), own), centre(part, slim));
     }
 
+    /**
+     * 4.0.6: a point of {@code part}'s model part (its own pixels from its pivot, y down: where what is worn on it is made) in {@code part}'s
+     * own frame (blocks), so a sleeve, a trouser leg and its boot, a cap or a mask go where the part goes.
+     */
+    public static double[] point(PotentialRules.Part part, double[] pixels, boolean slim) {
+        return Remains.sub(Remains.home(pieces(part)[0], pixels), centre(part, slim));
+    }
+
+    /** 4.0.6: a way (a face's normal) of {@code part}'s model part in its own frame (unit). */
+    public static double[] way(PotentialRules.Part part, double[] way, boolean slim) {
+        double[] d = Remains.sub(point(part, way, slim), point(part, new double[3], slim));
+        double length = Math.sqrt(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]);
+        return length < 1.0E-9 ? new double[] {0.0, 1.0, 0.0} : Remains.mul(d, 1.0 / length);
+    }
+
     /** Its torn end in its own frame: the middle of it and the way out of it (unit; toward him, where it belongs). */
     public static double[][] end(PotentialRules.Part part, boolean slim) {
         Remains.Piece piece = pieces(part)[0];

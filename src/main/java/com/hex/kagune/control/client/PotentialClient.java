@@ -108,6 +108,7 @@ public final class PotentialClient {
             return;
         }
         double clock = PaleClient.clock(event.getPartialTick());
+        java.util.List<net.minecraft.client.model.HumanoidModel<?>> armour = null;
         for (PotentialRules.Part part : PotentialRules.Part.values()) {
             if (missing(player, part, clock)) {
                 switch (part) {
@@ -117,6 +118,71 @@ public final class PotentialClient {
                     case RIGHT_LEG -> hide(model.f_102813_, model.f_103377_);
                     case LEFT_LEG -> hide(model.f_102814_, model.f_103376_);
                 }
+                // 4.0.6 (the owner: "when limbs are removed ... coats and armors go with the limbs as well"): vanilla's armour on the part
+                // off him isn't drawn either (the armour layer shows its pieces each time it draws: they are drawn without their cubes).
+                if (armour == null) {
+                    armour = armourModels(event.getRenderer());
+                }
+                for (net.minecraft.client.model.HumanoidModel<?> worn : armour) {
+                    switch (part) {
+                        case HEAD -> skip(worn.f_102808_, worn.f_102809_);
+                        case RIGHT_ARM -> skip(worn.f_102811_);
+                        case LEFT_ARM -> skip(worn.f_102812_);
+                        case RIGHT_LEG -> skip(worn.f_102813_);
+                        case LEFT_LEG -> skip(worn.f_102814_);
+                    }
+                }
+            }
+        }
+    }
+
+    private static final List<net.minecraft.client.model.geom.ModelPart> SKIPPED = new ArrayList<>();
+    /** 4.0.6: vanilla's armour layer's class and its models' fields, looked up once (by type: no names); null if not found. */
+    private static java.util.List<java.lang.reflect.Field> armourFields;
+    private static Class<?> armourLayer;
+    private static boolean armourLooked;
+
+    /** The armour models of every vanilla armour layer {@code renderer} draws with (none if they cannot be read). */
+    @SuppressWarnings("rawtypes")
+    private static java.util.List<net.minecraft.client.model.HumanoidModel<?>> armourModels(net.minecraft.client.renderer.entity.LivingEntityRenderer renderer) {
+        java.util.List<net.minecraft.client.model.HumanoidModel<?>> out = new ArrayList<>();
+        try {
+            if (!armourLooked) {
+                armourLooked = true;
+                armourLayer = Class.forName("net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer");
+                armourFields = new ArrayList<>();
+                for (java.lang.reflect.Field field : armourLayer.getDeclaredFields()) {
+                    if (net.minecraft.client.model.HumanoidModel.class.isAssignableFrom(field.getType())) {
+                        field.setAccessible(true);
+                        armourFields.add(field);
+                    }
+                }
+            }
+            if (armourLayer == null) {
+                return out;
+            }
+            List layers = net.minecraftforge.fml.util.ObfuscationReflectionHelper.getPrivateValue(
+                net.minecraft.client.renderer.entity.LivingEntityRenderer.class, renderer, "f_115291_");
+            for (Object layer : layers) {
+                if (armourLayer.isInstance(layer)) {
+                    for (java.lang.reflect.Field field : armourFields) {
+                        if (field.get(layer) instanceof net.minecraft.client.model.HumanoidModel<?> worn) {
+                            out.add(worn);
+                        }
+                    }
+                }
+            }
+        } catch (ReflectiveOperationException | RuntimeException | LinkageError unreadable) {
+            armourLayer = null;
+        }
+        return out;
+    }
+
+    private static void skip(net.minecraft.client.model.geom.ModelPart... parts) {
+        for (net.minecraft.client.model.geom.ModelPart part : parts) {
+            if (part != null && !part.f_233556_) {
+                part.f_233556_ = true;
+                SKIPPED.add(part);
             }
         }
     }
@@ -136,6 +202,10 @@ public final class PotentialClient {
             part.f_104207_ = true;
         }
         HIDDEN.clear();
+        for (net.minecraft.client.model.geom.ModelPart part : SKIPPED) {
+            part.f_233556_ = false;
+        }
+        SKIPPED.clear();
     }
 
     /** In first person, an arm that is off isn't there: nor is its hand (or what it holds). */
