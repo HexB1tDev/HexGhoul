@@ -60,10 +60,11 @@ public final class CompanionTests {
             if (!g.held()) {
                 timedNever &= !g.stranded(99999L, false, false);
             } else {
-                timedNever &= g.stranded(alone, false, false) || g == hand;
+                timedNever &= g.stranded(alone, false, false) || g == hand || g == EtoGesture.SIT;
             }
         }
-        check(timedNever, "only held gestures can be stranded, and every held one is let go of when nothing holds it");
+        check(timedNever, "only held gestures can be stranded, and every held one is let go of when nothing holds it (4.0.9: but Ken's sit, held until he is called up)");
+        check(EtoGesture.SIT.held() && EtoGesture.SIT.still() && !EtoGesture.SIT.stranded(99999L, false, false), "Ken sits until something calls him up, still");
         check(com.hex.kagune.control.client.animation.EtoPose.shown(blush, 0) == com.hex.kagune.control.npc.EtoGesture.SHY
             && com.hex.kagune.control.client.animation.EtoPose.shown(blush, 42) == blush
             && com.hex.kagune.control.client.animation.EtoPose.shown(kiss, 0) == com.hex.kagune.control.npc.EtoGesture.NONE
@@ -294,8 +295,30 @@ public final class CompanionTests {
             && EtoGesture.STEAL.ordinal() == EtoGesture.PECK.ordinal() + 1 && EtoGesture.TIDY.ordinal() == EtoGesture.COOK.ordinal() - 1
             && EtoGesture.FLINCH.ordinal() == EtoGesture.COOK.ordinal() + 1 && EtoGesture.STOKE.ordinal() == EtoGesture.AWE.ordinal() + 1
             && EtoGesture.JEALOUS.ordinal() == EtoGesture.SERVE.ordinal() + 1 && EtoGesture.POSE.ordinal() == EtoGesture.JEALOUS.ordinal() + 1
-            && EtoGesture.TILT.ordinal() == EtoGesture.values().length - 1,
-            "new gestures only ever at the end (sent by ordinal; 4.0.2: Ayato's and Noro's after JEALOUS)");
+            && EtoGesture.SIT.ordinal() == EtoGesture.TILT.ordinal() + 1 && EtoGesture.SIT.ordinal() == EtoGesture.values().length - 1,
+            "new gestures only ever at the end (sent by ordinal; 4.0.2: Ayato's and Noro's after JEALOUS; 4.0.9: Ken's sit after them)");
+        // 4.0.9 (the owner: "make sure he sits on the top"): only Ken sits at home; seated, his hips on the floor (a drop of 10 pixels), one
+        // leg out and the other knee up, held still.
+        check(Persona.KEN.sitsAtHome() && !Persona.ETO.sitsAtHome() && !Persona.TOUKA.sitsAtHome() && !Persona.AYATO.sitsAtHome() && !Persona.NORO.sitsAtHome(),
+            "Ken sits at home, the others as they were");
+        // 4.0.9 (the owner: "I sent you a replacement for the Ken tower as well, make sure he sits on the top."): their tower, 73 wide, its
+        // repeating floors thinned to stand under a 1.20.1 world's top from the ground (238 tall), Ken on its top deck (its floor the
+        // highest that runs across it), looking out.
+        try {
+            byte[] tower = new java.util.zip.GZIPInputStream(java.nio.file.Files.newInputStream(java.nio.file.Path.of(
+                "src/main/resources/data/hexkagune/structures/cyber_tower.nbt"))).readAllBytes();
+            int[] size = ints(tower, "size");
+            int[] ken = ints(tower, "blockPos");
+            check(size != null && size[0] == 73 && size[2] == 73 && size[1] == 238 && 63 + size[1] <= 319, "Ken's tower, the owner's, standing under the world's top: "
+                + java.util.Arrays.toString(size));
+            check(ken != null && ken[1] > size[1] - 50 && ken[1] < size[1] - 30 && new String(tower, java.nio.charset.StandardCharsets.ISO_8859_1).contains("hexkagune:ken"),
+                "Ken on its top deck: " + java.util.Arrays.toString(ken));
+        } catch (java.io.IOException failure) {
+            check(false, "read Ken's tower: " + failure);
+        }
+        com.hex.kagune.control.client.animation.RigPose seated = com.hex.kagune.control.client.animation.EtoPose.gesture(EtoGesture.SIT, 400.0, false);
+        check(seated != null && Math.abs(seated.drop - 10.0F) < 0.01F && seated.rightLegX < -1.3F && seated.leftKnee > 1.5F && seated.legHold >= 1.0F && seated.armHold >= 1.0F,
+            "seated: hips to the floor, a leg out, a knee up, still");
         // 1.3.29: Touka's own ways: never round an arm; a kiss on the cheek or a kiss stolen instead; her own poses, not Eto's.
         check(Persona.ETO.clings() && Persona.KEN.clings() && !Persona.TOUKA.clings(), "Touka never winds round an arm");
         check(Persona.TOUKA.unasked(EtoGesture.CLING) == EtoGesture.PECK && Persona.TOUKA.unasked(EtoGesture.DANCE) == EtoGesture.STEAL
@@ -928,6 +951,32 @@ public final class CompanionTests {
         check(Persona.ETO.script().greeting(wed).equals(EtoTalk.greeting(wed)) && Persona.ETO.script().kissed(3, true).equals(com.hex.kagune.control.npc.EtoLines.kissed(3, true)), "Eto's script is Eto's own words, unchanged");
     }
 
+    /** The three ints of the NBT list of ints named {@code name} in {@code nbt} (its first), or null. */
+    static int[] ints(byte[] nbt, String name) {
+        byte[] key = name.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        outer:
+        for (int i = 0; i + 3 + key.length + 5 + 12 <= nbt.length; i++) {
+            if (nbt[i] != 9 || nbt[i + 1] != 0 || nbt[i + 2] != key.length) {
+                continue;
+            }
+            for (int k = 0; k < key.length; k++) {
+                if (nbt[i + 3 + k] != key[k]) {
+                    continue outer;
+                }
+            }
+            int at = i + 3 + key.length;
+            if (nbt[at] != 3) {
+                continue;
+            }
+            java.nio.ByteBuffer b = java.nio.ByteBuffer.wrap(nbt, at + 1, 16);
+            if (b.getInt() != 3) {
+                continue;
+            }
+            return new int[] {b.getInt(), b.getInt(), b.getInt()};
+        }
+        return null;
+    }
+
     static void poses() {
         for (boolean leads : new boolean[] {false, true}) {
             for (EtoGesture gesture : EtoGesture.values()) {
@@ -935,7 +984,8 @@ public final class CompanionTests {
                 for (int t = 0; t <= length; t += 3) {
                     RigPose p = EtoPose.gesture(gesture, t, leads);
                     check(gesture == EtoGesture.NONE ? p == null : p != null && Float.isFinite(p.rightArmX) && Float.isFinite(p.lean) && Math.abs(p.flip) < 0.6F
-                        && Math.abs(p.drop) < 4.0F && Math.abs(p.lean) < 0.7F, gesture + (leads ? " (led)" : "") + " at " + t + " is a sane pose");
+                        && Math.abs(p.drop) < (gesture == EtoGesture.SIT ? 10.01F : 4.0F) && Math.abs(p.lean) < 0.7F,
+                        gesture + (leads ? " (led)" : "") + " at " + t + " is a sane pose (4.0.9: sitting, the hips down to the floor)");
                 }
             }
         }

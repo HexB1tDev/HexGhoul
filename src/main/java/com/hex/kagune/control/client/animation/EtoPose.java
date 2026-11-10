@@ -766,6 +766,27 @@ public final class EtoPose {
                 p.headX = -0.1F * up;
             }
             case TILT -> tilt(p, t);
+            case SIT -> {
+                // 4.0.9, Ken on the top of his tower: down on the deck (hips to the floor), the right leg out straight, the left knee up, his
+                // left forearm on it, leaning back a little on his right hand behind him, looking out; his head drifting slowly about.
+                float on = ease(Math.min(1.0F, t / 14.0F));
+                p.drop = 10.0F * on;
+                p.rightLegX = -1.45F * on;
+                p.rightKnee = 0.08F * on;
+                p.leftLegX = -2.05F * on;
+                p.leftKnee = 1.95F * on;
+                p.leftLegZ = -0.12F * on;
+                p.rightArmX = 0.62F * on;
+                p.rightArmZ = 0.32F * on;
+                p.leftArmX = -0.95F * on;
+                p.leftArmZ = -0.08F * on;
+                p.leftElbow = 0.65F * on;
+                p.lean = -0.14F * on;
+                p.headY = 0.28F * on * (float)Math.sin(t * 0.018);
+                p.headX = 0.06F * on * (float)Math.sin(t * 0.011 + 1.3);
+                p.armHold = Math.max(p.armHold, on);
+                p.legHold = Math.max(p.legHold, on);
+            }
             case PECK -> {
                 // In fast, up on her toes, hands behind her back; a beat; back down.
                 float close = (float)Math.sin(Math.min(1.0, t / (double)EtoGesture.PECK.ticks) * Math.PI);

@@ -119,7 +119,12 @@ public enum EtoGesture {
     /** Ayato: a big, lazy shrug, palms up, head rolled to one side: whatever. */
     SHRUG(40, false, false),
     /** Noro: his head tilts, slowly, far over to one side, and stays there, staring; then back, just as slowly. Nothing else moves. */
-    TILT(90, false, false);
+    TILT(90, false, false),
+    /**
+     * 4.0.9 (the owner: "make sure he sits on the top"): Ken, sitting on the top of his tower: down on the deck, one leg out, the other knee
+     * up with a forearm on it, leaning back on the other hand, looking out. Held until something calls him up. Appended.
+     */
+    SIT(0, false, false);
 
     /** 2.5.1: when, in a finger crack ({@link #CRACK}), the finger cracks (ticks): the pose's snap and its sound, together. */
     public static final int CRACK_SNAP = 17; // 3.0.2: 22 before (the kagune came out a long second after the key)
@@ -165,7 +170,7 @@ public enum EtoGesture {
      * such a one: held, it never ran out, and she stood frozen leaning in for a kiss nobody was giving.
      */
     public boolean stranded(long age, boolean kissing, boolean holding) {
-        return this.held() && age >= ALONE && (this == HAND ? !holding : !kissing);
+        return this.held() && this != SIT && age >= ALONE && (this == HAND ? !holding : !kissing);
     }
 
     /** True if it is over {@code age} ticks in. */
@@ -177,6 +182,6 @@ public enum EtoGesture {
     public boolean still() {
         return this.mainHand != null || this == LEAN || this == STRETCH || this == POUT || this == YAWN || this == PET || this == LOOK || this == CROSS
             || this == TAP || this == SCOLD || this == SHY || this == CHIN || this == CRACK || this == BOW || this == KICKS || this == STEAL || this == TIDY
-            || this == COOK || this == FLINCH || this == AWE || this == SERVE || this == JEALOUS;
+            || this == COOK || this == FLINCH || this == AWE || this == SERVE || this == JEALOUS || this == SIT;
     }
 }

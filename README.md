@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.0.9 (HexGhoul): Ken's new tower, and he sits on the top (testing)
+
+See `.github/release-notes-4.0.9.md`. Your words: "I sent you a replacement for the Ken tower as well, make sure he sits on the top." Your new tower (from `Ken_tower.litematic`), nine of the repeating floors taken out of each of its two tallest tiers so it stands under a 1.20.1 world's top (238 tall, every part kept; tuff swapped for andesite and stone bricks). Ken lives on its top deck and sits there looking out whenever nothing calls him. Protocol 108.
+
 ## 4.0.8 (HexGhoul): Ayato's new skin, a little muscular (testing)
 
 See `.github/release-notes-4.0.8.md`. Your words: "I sent you the new ayato skin, make him a little muscular but way less than the male player." Ayato wears your new skin (his kakugan, closed eyes and blush made from it, on the wide arms) and a broader chest, 30% of the White Reaper's build (a male player's is 60%). Protocol 107.

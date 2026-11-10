@@ -71,6 +71,11 @@ public abstract class Persona {
         return this.female();
     }
 
+    /** 4.0.9: whether, with nothing to do at home (his own place, not one shared with a spouse), he sits there (Ken, on the top of his tower). */
+    public boolean sitsAtHome() {
+        return false;
+    }
+
     /** 4.0.8: a man's build: how far his chest stands out past the torso, as a share of the White Reaper's ({@link ReaperBuild}); 0: none. */
     public double muscle() {
         return 0.0;
@@ -655,6 +660,12 @@ public abstract class Persona {
         /** The owner's skin for him is made for the slim arms (a man's body otherwise: no hips, no bust). */
         @Override
         public boolean slim() {
+            return true;
+        }
+
+        /** 4.0.9 (the owner: "make sure he sits on the top"): on the top of his tower, he sits, looking out. */
+        @Override
+        public boolean sitsAtHome() {
             return true;
         }
 

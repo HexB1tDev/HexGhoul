@@ -129,6 +129,16 @@ rows 5-6). `Persona.muscle()` (0 but Ayato's `ReaperBuild.AYATO_SHARE` 0.3); `Et
 `EtoModel` sets the arms out by `ReaperBuild.armOut` (put back each frame: `settle`). Next on their list: Ayato's god-like pull-out
 (both hands lifted, then the kagune) after his Ukaku kakuja training.
 
+## 4.0.9 (released)
+
+The owner (quoted exactly): "I sent you a replacement for the Ken tower as well, make sure he sits on the top." Their file:
+`art/exploration/Ken_tower.litematic` (1.21.4, 73x310x73). `tools/companion_structures.py` reads Litematica (`litematic`, `unpack`) and drops
+whole layers (`drop`: 108-143 and 204-239, seamless 4-layer repeats) -> `structures/cyber_tower.nbt` 73x238x73, Ken at (46, 193, 36) yaw -90.
+`EtoGesture.SIT` (held, appended; protocol 108), `EtoPose` SIT, `Persona.sitsAtHome` (Ken), `EtoBrain.sit/sitting` (`SIT_YAW`: the yaw he
+was made with). Previews: `docs/handoff/ken-tower-4.0.9.png`. Their later asks, queued: Ayato's god-like pull-out; the Ukaku base form's
+wing slams and wing guard; then fighting styles (Speedster), the CCG building (`art/exploration/ccg_building.schem`), the General, Kick
+Master.
+
 ## Next
 
 Nothing outstanding from the owner. If they report in-game problems with the outfits' fit, adjust `CLEAR`, `SNUG`, the drape

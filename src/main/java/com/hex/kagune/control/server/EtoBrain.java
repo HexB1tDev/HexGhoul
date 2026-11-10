@@ -270,9 +270,17 @@ public final class EtoBrain {
             mind.company = known.company != Long.MIN_VALUE ? known.company : now;
             npc.origin();
             npc.m_21530_();
+            // 4.0.9: the way she faced when she was made (a structure's), the way she looks out when she sits at home (Ken on his tower).
+            if (!npc.getPersistentData().m_128441_(SIT_YAW)) {
+                npc.getPersistentData().m_128405_(SIT_YAW, Math.round(npc.m_146908_() * 10.0F));
+            }
             // 1.3.3: right-handed always (a left-handed one held the pocket book in the hand that writes).
             npc.m_21559_(false);
             LIVE.add(npc);
+        }
+        // 4.0.9: up off the top of his tower when something calls him (a fight, someone to follow or hold, a kiss, a talk, a home of theirs).
+        if (mind.gesture == EtoGesture.SIT && !sitting(npc, mind, level)) {
+            gesture(mind, EtoGesture.NONE, now);
         }
         BlockPos home = npc.home();
         if (home == null) {
@@ -1020,6 +1028,9 @@ public final class EtoBrain {
             if (mind.toward != null) {
                 return;
             }
+        }
+        if (npc.persona().sitsAtHome() && sit(npc, mind, level, now)) {
+            return;
         }
         if (now >= mind.nextGestureAt && mind.gesture == EtoGesture.NONE) {
             EtoMood mood = partner != null ? mood(npc, partner, now)
@@ -2032,6 +2043,50 @@ public final class EtoBrain {
         }
         // 2.5.2 (the owner: no hearts as the kagune or a kakuja comes out): her partner's kagune makes her giggle; no hearts puffed
         // between them (with her behind them, they rose behind their back as it tore out).
+    }
+
+    /** 4.0.9: where the way she faced when made is kept (tenths of a degree). */
+    static final String SIT_YAW = "HexEtoSitYaw";
+
+    /** 4.0.9: nothing calls her from sitting at home: no fight, no one to follow, hold, kiss or talk to, not a home shared with a spouse. */
+    static boolean sitting(EtoNpc npc, Mind mind, ServerLevel level) {
+        return npc.persona().sitsAtHome() && npc.home() != null && npc.following() == null && mind.target == 0 && mind.holding == null
+            && mind.toward == null && mind.kiss == null && mind.talking == null && Households.forCompanion(level, npc) == null;
+    }
+
+    /**
+     * 4.0.9 (the owner: "I sent you a replacement for the Ken tower as well, make sure he sits on the top."): with nothing to do, Ken walks
+     * back to his spot on the top of his tower and sits there, looking out the way he was set (his head free to turn to whoever comes up).
+     * True while he does (sitting, or on his way to his spot); false if something else has him, or he is away from home.
+     */
+    static boolean sit(EtoNpc npc, Mind mind, ServerLevel level, long now) {
+        if (!sitting(npc, mind, level)) {
+            return false;
+        }
+        double[] feet = npc.homeFeet();
+        double dx = feet[0] - npc.m_20185_();
+        double dz = feet[2] - npc.m_20189_();
+        double far = dx * dx + dz * dz;
+        if (far > 12.0 * 12.0 || Math.abs(feet[1] - npc.m_20186_()) > 3.0) {
+            return false; // nowhere near his spot: as he is (he walks home as before)
+        }
+        if (far > 0.5 * 0.5 || Math.abs(feet[1] - npc.m_20186_()) > 0.6) {
+            if (mind.gesture == EtoGesture.SIT) {
+                gesture(mind, EtoGesture.NONE, now);
+            }
+            if (now % 20L == 0L || npc.m_21573_().m_26571_()) {
+                npc.m_21573_().m_26519_(feet[0], feet[1], feet[2], 0.7);
+            }
+            return true;
+        }
+        npc.m_21573_().m_26573_();
+        float yaw = npc.getPersistentData().m_128441_(SIT_YAW) ? npc.getPersistentData().m_128451_(SIT_YAW) / 10.0F : npc.f_20883_;
+        npc.m_146922_(yaw);
+        npc.f_20883_ = yaw;
+        if (mind.gesture != EtoGesture.SIT) {
+            gesture(mind, EtoGesture.SIT, now);
+        }
+        return true;
     }
 
     static void gesture(Mind mind, EtoGesture gesture, long now) {

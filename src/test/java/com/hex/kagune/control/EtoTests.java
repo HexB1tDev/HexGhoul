@@ -683,7 +683,7 @@ public final class EtoTests {
             for (int t = 0; t <= length; t += 3) {
                 RigPose p = EtoPose.gesture(gesture, t);
                 check(gesture == EtoGesture.NONE ? p == null : p != null && Float.isFinite(p.rightArmX) && Float.isFinite(p.flip) && Math.abs(p.flip) < 0.6F
-                    && Math.abs(p.drop) < 4.0F, gesture + " at " + t + " is a sane pose");
+                    && Math.abs(p.drop) < (gesture == EtoGesture.SIT ? 10.01F : 4.0F), gesture + " at " + t + " is a sane pose (4.0.9: sitting, the hips down to the floor)");
             }
         }
         RigPose kiss = EtoPose.gesture(EtoGesture.KISS, 30);
