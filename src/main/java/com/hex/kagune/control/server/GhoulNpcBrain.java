@@ -246,7 +246,7 @@ public final class GhoulNpcBrain {
 
     /**
      * Puts its rank on it (health, armor, speed), heals it whole and names it (4.0.0: with its rank). 4.0.0: its mask on its head (a wild
-     * ghoul's generic one, an Aogiri member's faction one under the Crimson Outfit's hood), each piece's drop its own small chance; their
+     * ghoul's generic one, an Aogiri member's faction one with the Crimson Outfit), each piece's drop its own small chance; their
      * protection is taken off its own, so its rank alone says how tough it is.
      */
     public static void dress(GhoulNpc npc) {

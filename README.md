@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.0.3 (HexGhoul): Coats that hang over the legs; sleeves closed; the Crimson Outfit without its hood, with a high collar (testing)
+
+See `.github/release-notes-4.0.3.md`. Your words: "Do I need to say anything about both outfit's legs and arms?"; "On the Ougiri outfit, no more hood, make it less bulky around the shoulders and head to be similar to the formal outfit, and, give it a high collar on the sides of the head pointing outwards." The coat tails hang over both legs (fronts with the leg furthest forward, backs with the one furthest back, folded at the knee, pushed clear of shins and boots, falling back slowly), so no leg comes through them; every sleeve closes over the arm's inner side; each half of a piece cut at a joint shows its own part of the texture. The Crimson Outfit has no hood (the Crimson Hood item is gone): its coat has a high collar beside the head, flaring out, and the head is free for a mask. Protocol 107.
+
 ## 4.0.2 (HexGhoul): Armour that moves; the Aogiri mansion; Ayato poses, Noro tilts his head (testing)
 
 See `.github/release-notes-4.0.2.md`. Your words: "the armor does not allow for animation"; "the jacket also breaks when walking"; "replace the Ougiri hideout with another schematic ... I give them a mansion"; Ayato "a massive poser"; "Noro simply like tilts his head"; "The crack fingers animation is only Kaneki's". The outfits bend at the knees, elbows and torso with PlayerAnimator, the coat tails hang from the hip; your mansion is the world's one Aogiri hideout (guards at both gates who ask your business once, a patrol round the house, members on every floor, Noro and Ayato in rooms of their own; a wrong answer keeps you out five days); the villages as rare as Minecraft's; Ayato poses, Noro tilts his head (and his students tilt theirs as the kagune comes out); the finger crack is Kaneki's alone; the mod's own creative tabs (HexKagune, Quinques, Outfits, Masks). Protocol 106.

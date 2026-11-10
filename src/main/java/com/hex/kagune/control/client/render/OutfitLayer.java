@@ -1,6 +1,7 @@
 package com.hex.kagune.control.client.render;
 
 import com.hex.kagune.KaguneMod;
+import com.hex.kagune.control.outfit.CoatDrape;
 import com.hex.kagune.control.outfit.OutfitItem;
 import com.hex.kagune.control.outfit.OutfitModels;
 import com.hex.kagune.control.outfit.Outfits;
@@ -31,7 +32,7 @@ import org.joml.Matrix4f;
  * 4.0.0 (The Great Exploration): the owner's outfits and masks on whoever wears them (a player, an investigator, a ghoul, Aogiri's own,
  * a companion): each piece in its slot drawn from the owner's model ({@link OutfitModels}), every cube on its bone's model part as it is
  * posed this frame (walking, running, a blow, a flip: the parts carry them), in the owner's texture. A wearer may also carry a mask drawn
- * over a hood ({@link #EXTRA}: an Aogiri member's faction mask, Noro's, Ayato's in a fight). Vanilla's armour layer draws these pieces
+ * on its face ({@link #EXTRA}: an Aogiri member's faction mask, Noro's, Ayato's in a fight). Vanilla's armour layer draws these pieces
  * clear ({@link OutfitItem#getArmorTexture}).
  */
 public final class OutfitLayer<T extends LivingEntity, M extends EntityModel<T>> extends RenderLayer<T, M> {
@@ -41,8 +42,8 @@ public final class OutfitLayer<T extends LivingEntity, M extends EntityModel<T>>
     public static Function<LivingEntity, String> EXTRA = OutfitLayer::faction;
 
     /**
-     * 4.0.0: the mask a wearer has over its hood or its face that is no item it holds: an Aogiri member's faction mask under the Crimson
-     * Hood (its identity, as every client is told it), a companion's own ({@link #COMPANION}).
+     * 4.0.0: the mask a wearer has on its face that is no item it holds: an Aogiri member's faction mask (its identity, as every client is
+     * told it; 4.0.3: the Crimson Outfit has no hood, its coat a high collar), a companion's own ({@link #COMPANION}).
      */
     static String faction(LivingEntity wearer) {
         if (wearer instanceof com.hex.kagune.control.npc.GhoulNpc) {
@@ -96,25 +97,32 @@ public final class OutfitLayer<T extends LivingEntity, M extends EntityModel<T>>
             ModelPart[] bones = {model.f_102808_, model.f_102810_, model.f_102811_, model.f_102812_, model.f_102813_, model.f_102814_};
             AbstractClientPlayer player = wearer instanceof AbstractClientPlayer p ? p : null;
             boolean slim = slim(wearer, model);
+            CoatDrape drape = null;
             for (EquipmentSlot slot : SLOTS) {
                 ItemStack stack = wearer.m_6844_(slot);
                 if (stack.m_41720_() instanceof OutfitItem item) {
                     Outfits.Piece piece = item.piece();
-                    draw(pose, buffers, light, bones, player, partialTick, piece.model(), piece.mask() ? -1 : piece.slot(), slim);
+                    if (drape == null && slot == EquipmentSlot.LEGS) {
+                        drape = drape(wearer, model.f_102813_, model.f_102814_, player, partialTick, ageInTicks);
+                    }
+                    draw(pose, buffers, light, bones, player, partialTick, piece.model(), piece.mask() ? -1 : piece.slot(), slim, drape);
                 }
             }
             String extra = EXTRA.apply(wearer);
             if (extra != null) {
-                draw(pose, buffers, light, bones, player, partialTick, extra, -1, slim);
+                draw(pose, buffers, light, bones, player, partialTick, extra, -1, slim, null);
             }
         } catch (RuntimeException failure) {
             PlayerLayers.failed("an outfit", failure);
         }
     }
 
-    /** {@code model}'s cubes in {@code slot} (any: -1) on {@code bones}, as they are posed (the sleeves for slim arms on a slim wearer). */
+    /**
+     * {@code model}'s cubes in {@code slot} (any: -1) on {@code bones}, as they are posed (the sleeves for slim arms on a slim wearer), a
+     * coat's tails hung as {@code drape} has them ({@link CoatDrape}; unturned if null).
+     */
     static void draw(PoseStack pose, MultiBufferSource buffers, int light, ModelPart[] bones, AbstractClientPlayer player, float partial, String modelId,
-                     int slot, boolean slim) {
+                     int slot, boolean slim, CoatDrape drape) {
         OutfitModels.Model model = OutfitModels.get(modelId);
         if (model == null) {
             return;
@@ -136,14 +144,14 @@ public final class OutfitLayer<T extends LivingEntity, M extends EntityModel<T>>
                 emit(out, pose, cubes, light, bend(player, bone, partial));
                 pose.m_85849_();
             }
-            // 4.0.2 (the owner: "the jacket also breaks when walking"): a coat's tails hang from the hip and go only part of the way with
-            // the leg, as cloth does (never a knee's bend).
+            // 4.0.2 (the owner: "the jacket also breaks when walking"): a coat's tails hang from the hip; 4.0.3: draped over both legs
+            // ({@link #drape}), never parting down the middle, never with a leg through them.
             if (bone == OutfitModels.RIGHT_LEG || bone == OutfitModels.LEFT_LEG) {
                 List<OutfitModels.Cube> tails = model.on(bone == OutfitModels.RIGHT_LEG ? OutfitModels.RIGHT_LEG_COAT : OutfitModels.LEFT_LEG_COAT, slot);
                 if (!tails.isEmpty()) {
                     pose.m_85836_();
                     tails(pose, bones[bone]);
-                    emit(out, pose, tails, light, null);
+                    emit(out, pose, tails, light, null, drape);
                     pose.m_85849_();
                 }
             }
@@ -158,16 +166,54 @@ public final class OutfitLayer<T extends LivingEntity, M extends EntityModel<T>>
         return bone == OutfitModels.RIGHT_ARM ? OutfitModels.RIGHT_ARM_SLIM : bone == OutfitModels.LEFT_ARM ? OutfitModels.LEFT_ARM_SLIM : bone;
     }
 
-    /** 4.0.2: how much of a leg's swing its coat tail follows (forward and back; out to the side). */
-    static final float TAIL_SWING = 0.45F;
-    static final float TAIL_SPREAD = 0.6F;
-
-    /** 4.0.2: the pose a coat tail hangs in from the leg {@code leg}'s hip: its pivot, its swing damped ({@link #TAIL_SWING}). */
+    /**
+     * 4.0.2: the pose a coat tail hangs in from the leg {@code leg}'s hip: its pivot, turned out and round with the leg (z, then y, as the
+     * part turns); 4.0.3: its swing forward and back is the drape's ({@link #drape}), each corner its own.
+     */
     static void tails(PoseStack pose, ModelPart leg) {
         pose.m_252880_(leg.f_104200_ / 16.0F, leg.f_104201_ / 16.0F, leg.f_104202_ / 16.0F);
-        // As the part turns (z, then y, then x), each damped.
-        pose.m_252781_(new org.joml.Quaternionf().rotateAxis(leg.f_104205_ * TAIL_SPREAD, 0.0F, 0.0F, 1.0F).rotateAxis(leg.f_104204_, 0.0F, 1.0F, 0.0F)
-            .rotateAxis(leg.f_104203_ * TAIL_SWING, 1.0F, 0.0F, 0.0F));
+        pose.m_252781_(new org.joml.Quaternionf().rotateAxis(leg.f_104205_, 0.0F, 0.0F, 1.0F).rotateAxis(leg.f_104204_, 0.0F, 1.0F, 0.0F));
+    }
+
+    /** 4.0.3: how fast a coat's tails fall back as the leg that pushed them swings away (radians a tick): a leg pushes them at once. */
+    static final float TAIL_FALL = 0.12F;
+    /** 4.0.3: each wearer's tails as they hung last ({front, back, when}). */
+    private static final Map<LivingEntity, float[]> HUNG = new java.util.WeakHashMap<>();
+
+    /**
+     * 4.0.3 (the owner, of the renders: "Do I need to say anything about both outfit's legs and arms?"): how a coat's tails hang over the
+     * legs ({@code right}, {@code left}) this frame. Both fronts go with the leg furthest forward and both backs with the one furthest
+     * back, so no thigh comes through them and they never part down the middle; each side spreads between the two. Below the knee's line
+     * they hang straight down unless a shin or a foot (a bent knee, a stride, a crouch, sitting) reaches them, and then just clear of it.
+     * A leg pushes them at once; they fall back slowly as it swings away ({@link #TAIL_FALL}), as cloth does.
+     */
+    static CoatDrape drape(LivingEntity wearer, ModelPart right, ModelPart left, AbstractClientPlayer player, float partial, float age) {
+        if (right == null || left == null) {
+            return null;
+        }
+        float[] thigh = {right.f_104203_, left.f_104203_};
+        float[] knee = {knee(player, "rightLeg", partial), knee(player, "leftLeg", partial)};
+        float front = Math.min(0.0F, Math.min(thigh[0], thigh[1]));
+        float back = Math.max(0.0F, Math.max(thigh[0], thigh[1]));
+        if (wearer != null) {
+            float[] last = HUNG.get(wearer);
+            if (last != null && Math.abs(age - last[2]) < 20.0F) {
+                float since = Math.max(0.0F, age - last[2]);
+                front = Math.min(front, Math.min(0.0F, last[0] + TAIL_FALL * since));
+                back = Math.max(back, Math.max(0.0F, last[1] - TAIL_FALL * since));
+            }
+            HUNG.put(wearer, new float[] {front, back, age});
+        }
+        return CoatDrape.over(front, back, thigh, knee);
+    }
+
+    /** 4.0.3: how far a player's knee is bent this frame (radians about x: the shin back), by bendy-lib; 0 for none. */
+    static float knee(AbstractClientPlayer player, String part, float partial) {
+        if (player == null) {
+            return 0.0F;
+        }
+        float[] turn = com.hex.kagune.control.client.animation.BodyAnimations.bend(player, part, partial);
+        return turn == null ? 0.0F : turn[0] * turn[1];
     }
 
     /**
@@ -235,13 +281,21 @@ public final class OutfitLayer<T extends LivingEntity, M extends EntityModel<T>>
         }
     }
 
-    /** As {@link #emit(VertexConsumer, PoseStack, List, int, Bend)}, unbent. */
+    /** As {@link #emit(VertexConsumer, PoseStack, List, int, Bend, CoatDrape)}, unbent. */
     static void emit(VertexConsumer out, PoseStack pose, List<OutfitModels.Cube> cubes, int light) {
-        emit(out, pose, cubes, light, null);
+        emit(out, pose, cubes, light, null, null);
     }
 
-    /** The cubes' faces, from where their bone's part stands (sixteenths: the pose is in blocks), bent as the part is ({@code bend}, or null). */
+    /** As {@link #emit(VertexConsumer, PoseStack, List, int, Bend, CoatDrape)}, undraped. */
     static void emit(VertexConsumer out, PoseStack pose, List<OutfitModels.Cube> cubes, int light, Bend bend) {
+        emit(out, pose, cubes, light, bend, null);
+    }
+
+    /**
+     * The cubes' faces, from where their bone's part stands (sixteenths: the pose is in blocks), bent as the part is ({@code bend}, or
+     * null), a coat's tails hung as {@code drape} has them (or null).
+     */
+    static void emit(VertexConsumer out, PoseStack pose, List<OutfitModels.Cube> cubes, int light, Bend bend, CoatDrape drape) {
         Matrix4f matrix = pose.m_85850_().m_252922_();
         Matrix3f normals = pose.m_85850_().m_252943_();
         float[] p = new float[3];
@@ -261,12 +315,24 @@ public final class OutfitLayer<T extends LivingEntity, M extends EntityModel<T>>
                     }
                     bend.turn(n, faceShare, false);
                 }
+                if (drape != null) {
+                    float faceTurn = 0.0F;
+                    for (int k = 0; k < 4; k++) {
+                        faceTurn += drape.turn(c[k * 3 + 1], CoatDrape.backward(c[k * 3 + 2])) / 4.0F;
+                    }
+                    float ny = n[1];
+                    n[1] = (float)(ny * Math.cos(faceTurn) - n[2] * Math.sin(faceTurn));
+                    n[2] = (float)(ny * Math.sin(faceTurn) + n[2] * Math.cos(faceTurn));
+                }
                 for (int k = 0; k < 4; k++) {
                     p[0] = c[k * 3];
                     p[1] = c[k * 3 + 1];
                     p[2] = c[k * 3 + 2];
                     if (bend != null) {
                         bend.turn(p, bend.share(p[1]), true);
+                    }
+                    if (drape != null) {
+                        drape.place(p);
                     }
                     out.m_252986_(matrix, p[0] / 16.0F, p[1] / 16.0F, p[2] / 16.0F)
                         .m_6122_(255, 255, 255, 255)

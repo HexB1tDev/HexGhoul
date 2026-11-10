@@ -32,8 +32,8 @@ public final class OutfitModels {
     public static final int RIGHT_ARM_SLIM = 6;
     public static final int LEFT_ARM_SLIM = 7;
     /**
-     * 4.0.2 (the owner: "the jacket also breaks when walking"): a coat's tails, hung from each hip, going only part of the way with the
-     * leg ({@code OutfitLayer.tails}) where the trousers go all of it.
+     * 4.0.2 (the owner: "the jacket also breaks when walking"): a coat's tails, hung from each hip; 4.0.3: draped over both legs
+     * ({@code OutfitLayer.drape}) where the trousers go with their own.
      */
     public static final int RIGHT_LEG_COAT = 8;
     public static final int LEFT_LEG_COAT = 9;
@@ -101,11 +101,12 @@ public final class OutfitModels {
             throw new IOException("not an outfits file");
         }
         int version = in.readUnsignedShort();
-        if (version != 1 && version != 2) {
+        if (version < 1 || version > 3) {
             throw new IOException("outfits file version " + version);
         }
         // 2: each cube's texture net after it (the size the owner made it: a cube fitted to the player keeps its texture where it was).
-        int floats = version == 2 ? 17 : 14;
+        // 3 (4.0.3): and where in the net's height its sides start (a half of a cube cut at a joint carries its own part of them).
+        int floats = version == 3 ? 18 : version == 2 ? 17 : 14;
         int count = in.readUnsignedShort();
         Map<String, Model> out = new HashMap<>();
         for (int m = 0; m < count; m++) {
@@ -119,7 +120,7 @@ public final class OutfitModels {
             for (int c = 0; c < cubes; c++) {
                 int bone = in.readUnsignedByte();
                 int slot = in.readUnsignedByte();
-                float[] v = new float[17];
+                float[] v = new float[18];
                 for (int k = 0; k < floats; k++) {
                     v[k] = in.readFloat();
                 }
@@ -136,7 +137,8 @@ public final class OutfitModels {
     /**
      * A cube's six faces as the game's {@code ModelPart.Cube} makes them, from {@code v}: its least corner (3), size (3), pivot (3), rotation
      * in degrees (3: x, y, z, turned as a model part is: x first, then y, then z), box-UV offset (2), all in the model's frame, and (if
-     * given) the size its texture's net is laid out for (3; else its own size).
+     * given) the size its texture's net is laid out for (3; else its own size; for a half cut at a joint, the height of its own part) and
+     * where in the net's height its sides start (1; else at its top).
      */
     static Cube cube(int bone, int slot, float[] v, int tw, int th) {
         float x0 = v[0];
@@ -151,6 +153,7 @@ public final class OutfitModels {
         float d = net ? v[16] : v[5];
         float u = v[12];
         float vv = v[13];
+        float start = v.length >= 18 ? v[17] : 0.0F;
         float f4 = u;
         float f5 = u + d;
         float f6 = u + d + w;
@@ -160,6 +163,8 @@ public final class OutfitModels {
         float f10 = vv;
         float f11 = vv + d;
         float f12 = vv + d + h;
+        float s0 = f11 + start;
+        float s1 = f12 + start;
         float[] p0 = {x0, y0, z0};
         float[] p1 = {x1, y0, z0};
         float[] p2 = {x1, y1, z0};
@@ -169,12 +174,12 @@ public final class OutfitModels {
         float[] p6 = {x1, y1, z1};
         float[] p7 = {x0, y1, z1};
         Face[] faces = {
-            face(new float[][] {p5, p1, p2, p6}, f6, f11, f8, f12, tw, th, 1, 0, 0),   // east
-            face(new float[][] {p0, p4, p7, p3}, f4, f11, f5, f12, tw, th, -1, 0, 0),  // west
+            face(new float[][] {p5, p1, p2, p6}, f6, s0, f8, s1, tw, th, 1, 0, 0),   // east
+            face(new float[][] {p0, p4, p7, p3}, f4, s0, f5, s1, tw, th, -1, 0, 0),  // west
             face(new float[][] {p5, p4, p0, p1}, f5, f10, f6, f11, tw, th, 0, -1, 0),  // down (toward the model's -y: up in the world)
             face(new float[][] {p2, p3, p7, p6}, f6, f11, f7, f10, tw, th, 0, 1, 0),   // up (the model's +y)
-            face(new float[][] {p1, p0, p3, p2}, f5, f11, f6, f12, tw, th, 0, 0, -1),  // north (the front)
-            face(new float[][] {p4, p5, p6, p7}, f8, f11, f9, f12, tw, th, 0, 0, 1)};  // south
+            face(new float[][] {p1, p0, p3, p2}, f5, s0, f6, s1, tw, th, 0, 0, -1),  // north (the front)
+            face(new float[][] {p4, p5, p6, p7}, f8, s0, f9, s1, tw, th, 0, 0, 1)};  // south
         float rx = (float)Math.toRadians(v[9]);
         float ry = (float)Math.toRadians(v[10]);
         float rz = (float)Math.toRadians(v[11]);

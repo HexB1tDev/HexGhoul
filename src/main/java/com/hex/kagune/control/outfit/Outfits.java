@@ -5,9 +5,9 @@ import java.util.List;
 /**
  * 4.0.0 (The Great Exploration): every outfit piece and mask there is as an item (pure, tested): its id, the model it is drawn from
  * ({@link OutfitModels}) and the slot it is worn in. The owner's two outfits (the CCG's Formal Outfit, Aogiri Tree's Crimson Outfit), four
- * pieces each, and their 24 masks; and the generic masks (made for 4.0.0: a clown's, a gas mask, a skull, a fox, an oni, a cloth wrap, a
- * cracked porcelain face, a bandage wrap, a kabuki face), the only ones a wild ghoul is ever found in. Every mask is a helmet: worn in the head slot (a hood and a mask, one at a time, as the owner's
- * own mod has it).
+ * pieces each (4.0.3: three of the Crimson, its hood gone), and their 24 masks; and the generic masks (made for 4.0.0: a clown's, a gas
+ * mask, a skull, a fox, an oni, a cloth wrap, a cracked porcelain face, a bandage wrap, a kabuki face), the only ones a wild ghoul is ever
+ * found in. Every mask is a helmet: worn in the head slot (a cap and a mask, one at a time, as the owner's own mod has it).
  */
 public final class Outfits {
     /** One item: its id, its model, its slot ({@link OutfitModels#HELMET} ...), and whether it is a mask. */
@@ -22,9 +22,13 @@ public final class Outfits {
     public static final String CRIMSON = "crimson";
 
     /** The Formal Outfit (every CCG investigator's but the White Reaper's): cap, overcoat, trousers, shoes. */
-    public static final List<Piece> FORMAL_SET = set(FORMAL);
-    /** The Crimson Outfit (every Aogiri Tree member's): hood, coat, coat tails and trousers, boots. */
-    public static final List<Piece> CRIMSON_SET = set(CRIMSON);
+    public static final List<Piece> FORMAL_SET = set(FORMAL, true);
+    /**
+     * The Crimson Outfit (every Aogiri Tree member's): coat (with its high collar), coat tails and trousers, boots. 4.0.3 (the owner: "On
+     * the Ougiri outfit, no more hood, make it less bulky around the shoulders and head to be similar to the formal outfit, and, give it a
+     * high collar on the sides of the head pointing outwards"): no hood; the head is left to a mask.
+     */
+    public static final List<Piece> CRIMSON_SET = set(CRIMSON, false);
 
     /** The owner's 24 masks, in their reference sheet's order (the first is Eyepatch's: its folder's name kept out of the mod). */
     public static final List<String> CHARACTER_MASKS = List.of("mask_eyepatch", "mask_touka", "mask_ayato", "mask_noro", "mask_yamori", "mask_eto",
@@ -39,7 +43,7 @@ public final class Outfits {
         "mask_porcelain", "mask_bandage", "mask_kabuki"); // the last three since the owner found the first "very basic": a saved ghoul's index keeps its mask
 
     /**
-     * Aogiri Tree's own masks a member wears under its hood (the owner: "the appropriate faction masks"): the Laughing Mask and the Fanged
+     * Aogiri Tree's own masks a member wears (the owner: "the appropriate faction masks"): the Laughing Mask and the Fanged
      * Mask, the faction's rank and file; never an executive's (Ayato's, Noro's, Eto's, the Hockey Mask, the Red Muzzle, the Jester).
      */
     public static final List<String> AOGIRI_MASKS = List.of("mask_bin_brothers", "mask_shachi");
@@ -62,9 +66,16 @@ public final class Outfits {
     private Outfits() {
     }
 
-    private static List<Piece> set(String style) {
-        return List.of(new Piece(style + "_helmet", style, OutfitModels.HELMET, false), new Piece(style + "_chestplate", style, OutfitModels.CHESTPLATE, false),
-            new Piece(style + "_leggings", style, OutfitModels.LEGGINGS, false), new Piece(style + "_boots", style, OutfitModels.BOOTS, false));
+    /** A style's pieces: its head's ({@code head}: the Formal Outfit's cap; the Crimson has none), its coat, its legs', its feet's. */
+    private static List<Piece> set(String style, boolean head) {
+        java.util.ArrayList<Piece> pieces = new java.util.ArrayList<>();
+        if (head) {
+            pieces.add(new Piece(style + "_helmet", style, OutfitModels.HELMET, false));
+        }
+        pieces.add(new Piece(style + "_chestplate", style, OutfitModels.CHESTPLATE, false));
+        pieces.add(new Piece(style + "_leggings", style, OutfitModels.LEGGINGS, false));
+        pieces.add(new Piece(style + "_boots", style, OutfitModels.BOOTS, false));
+        return List.copyOf(pieces);
     }
 
     /** The piece with {@code id}, or null. */

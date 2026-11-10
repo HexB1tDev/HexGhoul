@@ -53,8 +53,8 @@ MASKS = [
 OUTFITS = [
     ("formal", [("formal_helmet", "Formal Cap"), ("formal_chestplate", "Formal Overcoat"), ("formal_leggings", "Formal Trousers"),
                 ("formal_boots", "Formal Shoes")]),
-    ("crimson", [("crimson_helmet", "Crimson Hood"), ("crimson_chestplate", "Crimson Coat"), ("crimson_leggings", "Crimson Coat Tails"),
-                 ("crimson_boots", "Crimson Boots")]),
+    # 4.0.3 (the owner: "On the Ougiri outfit, no more hood"): no head piece; its coat has a high collar ({@link #collar}).
+    ("crimson", [None, ("crimson_chestplate", "Crimson Coat"), ("crimson_leggings", "Crimson Coat Tails"), ("crimson_boots", "Crimson Boots")]),
 ]
 
 # ---------------------------------------------------------------- the generic masks (a wild ghoul's), drawn here
@@ -640,7 +640,7 @@ def details(style):
         ]
     else:
         out += [
-            # A black belt with a silver buckle between the third and fourth clasps; a stitched seam down the back and the hood.
+            # A black belt with a silver buckle between the third and fourth clasps; a stitched seam down the back.
             box("belt_front", "body", "chestplate", (-4.47, 8.15, -3.1), (8.94, 0.6, 0.16), "leather"),
             box("belt_side_r", "body", "chestplate", (-4.62, 8.15, -2.94), (0.12, 0.6, 5.82), "leather"),
             box("belt_side_l", "body", "chestplate", (4.5, 8.15, -2.94), (0.12, 0.6, 5.82), "leather"),
@@ -648,7 +648,6 @@ def details(style):
             box("buckle", "body", "chestplate", (-0.55, 7.99, -3.2), (1.1, 0.92, 0.1), "silver"),
             box("buckle_tongue", "body", "chestplate", (-0.32, 8.22, -3.26), (0.64, 0.46, 0.06), "leather_light"),
             box("back_seam", "body", "chestplate", (-0.06, 0.6, 2.76), (0.12, 10.0, 0.06), "stitch"),
-            box("hood_back_seam", "head", "helmet", (-0.06, -9.0, 4.97), (0.12, 9.6, 0.06), "stitch"),
             # A strap with a silver buckle round each cuff; one round each boot below the coat.
             box("right_cuff_strap_out", "right_arm", "chestplate", (-9.07, 10.3, -2.78), (0.1, 0.32, 5.56), "strap"),
             box("right_cuff_strap_front", "right_arm", "chestplate", (-8.97, 10.3, -2.78), (5.04, 0.32, 0.1), "strap"),
@@ -724,6 +723,12 @@ def finish(style, model, texture):
 
 
 def fit_outfit(style, model):
+    hood = {}
+    if style == "crimson":
+        # 4.0.3 (the owner: "On the Ougiri outfit, no more hood, make it less bulky around the shoulders and head to be similar to the
+        # formal outfit"): the hood is left out (their file keeps it); its cloth and lining make the coat's collar ({@link #collar}).
+        hood = {c["name"]: c for c in model["cubes"] if c.get("slot") == "helmet"}
+        model = dict(model, cubes=[c for c in model["cubes"] if c.get("slot") != "helmet"])
     model = dict(model, cubes=model["cubes"] + details(style))
     recolour = RECOLOUR[style]
     for c in model["cubes"]:
@@ -746,11 +751,21 @@ def fit_outfit(style, model):
         return f
     model = refit(model, fx=along(0), fz=along(2))
     if style == "crimson":
-        # The hood's shadow over the face in front of the hat layer, so nothing of the skin's shows through it.
-        for c in model["cubes"]:
-            if c["name"] == "hood_recessed_shadow_lining":
-                c["pos"][2] = -4.6
-                c["pivot"][2] = -4.6
+        # Its collar after the fitting: it stands off the body by design, clear of the head.
+        placket = next(c for c in model["cubes"] if c["name"] == "right_placket_edge")
+        model["cubes"] = model["cubes"] + collar(hood, placket)
+    # 4.0.3 (the owner, of the renders: "Do I need to say anything about both outfit's legs and arms?"): a sleeve wrapped round the arm
+    # closes over its inner side too (the owner's stood a hair inside it, so the arm's skin showed there as it swung).
+    for c in model["cubes"]:
+        if c["bone"] not in ("right_arm", "left_arm") or any(c["rot"]):
+            continue
+        sign = -1 if c["bone"] == "right_arm" else 1
+        inner, outer = 4.0 * sign, 8.0 * sign
+        lo, hi = c["pos"][0], c["pos"][0] + c["size"][0]
+        near, far = (hi, lo) if sign < 0 else (lo, hi)
+        if (far - outer) * sign >= 0 and 0.0 <= (near - inner) * sign < SLEEVE_IN:
+            near = inner - sign * LAYER
+            c["pos"][0], c["size"][0] = (far, near - far) if sign < 0 else (near, far - near)
     slim = []
     for c in model["cubes"]:
         if c["bone"] not in ("right_arm", "left_arm"):
@@ -780,25 +795,97 @@ def fit_outfit(style, model):
     return model
 
 
+# 4.0.3 (the owner: "give it a high collar on the sides of the head pointing outwards"): the Crimson Coat's collar, on the body: a tall
+# panel beside each side of the head, from the shoulders to the cheek, flaring out as it rises; a lower one behind the neck, flaring back;
+# each the hood's own crimson cloth outside and its black lining inside, edged in the coat's dark piping, the front left open for a mask.
+# Every corner stands clear of the skin's hat layer (4.5 out from the head's middle) before it turns.
+COLLAR_FLARE, COLLAR_BACK_FLARE = 18.0, 12.0
+
+
+def collar(hood, piping):
+    """The collar's cubes: the hood's cloth ({@code hood}: its cubes by name, for their texture) and {@code piping}'s net for its edges."""
+    def cloth(name, like, pos, size, pivot, rot):
+        src = hood[like]
+        return {"name": name, "bone": "body", "slot": "chestplate", "pos": list(pos), "size": list(size), "pivot": list(pivot),
+                "rot": list(rot), "uv": list(src["uv"]), "net": list(src.get("net", src["size"]))}
+
+    def edge(name, pos, size, pivot, rot):
+        return {"name": name, "bone": "body", "slot": "chestplate", "pos": list(pos), "size": list(size), "pivot": list(pivot),
+                "rot": list(rot), "uv": list(piping["uv"]), "net": list(piping.get("net", piping["size"]))}
+
+    out = []
+    for sign, side in ((-1, "-1"), (1, "1")):
+        def at(x0, width):
+            """The span outward from {@code x0} (the head's middle out), {@code width} wide, on this side."""
+            return x0 * sign if sign > 0 else -(x0 + width)
+        pivot = (4.75 * sign, 0.4, 0.0)
+        rot = (0, 0, COLLAR_FLARE * sign)
+        out += [
+            cloth(f"collar_{side}_shell", f"hood_{side}_shell", (at(4.75, 0.4), -4.6, -2.8), (0.4, 5.0, 7.55), pivot, rot),
+            cloth(f"collar_{side}_lining", f"hood_{side}_lining", (at(4.63, 0.12), -4.45, -2.7), (0.12, 4.85, 7.3), pivot, rot),
+            edge(f"collar_{side}_top_edge", (at(4.6, 0.62), -4.78, -2.88), (0.62, 0.22, 7.7), pivot, rot),
+            edge(f"collar_{side}_front_edge", (at(4.6, 0.62), -4.6, -2.94), (0.62, 5.0, 0.16), pivot, rot),
+        ]
+    pivot = (0.0, 0.4, 4.75)
+    rot = (-COLLAR_BACK_FLARE, 0, 0)
+    out += [
+        cloth("collar_back_shell", "hood_back_center", (-5.15, -3.8, 4.75), (10.3, 4.2, 0.4), pivot, rot),
+        cloth("collar_back_lining", "hood_-1_lining", (-4.75, -3.65, 4.63), (9.5, 4.05, 0.12), pivot, rot),
+        edge("collar_back_top_edge", (-5.22, -3.98, 4.6), (10.44, 0.22, 0.62), pivot, rot),
+    ]
+    return out
+
+
 # The coat's tail pieces on a leg (the owner's names): front and back panels, their hems, gussets and edges, the pockets on them.
 TAIL_PARTS = ("coat_", "_hem", "gusset", "inner_edge", "back_seam", "pocket_")
-# Where each bone bends (the model's y): an arm's elbow 4 below its pivot, a leg's knee 6, the torso's middle 6 below the neck.
-BENDS = {"right_arm": 6.0, "left_arm": 6.0, "right_arm_slim": 6.0, "left_arm_slim": 6.0, "right_leg": 18.0, "left_leg": 18.0, "body": 6.0}
+# Where each bone bends (the model's y): an arm's elbow 4 below its pivot, a leg's knee 6, the torso's middle 6 below the neck; a coat's
+# tails fold at the knee's line (4.0.3).
+BENDS = {"right_arm": 6.0, "left_arm": 6.0, "right_arm_slim": 6.0, "left_arm_slim": 6.0, "right_leg": 18.0, "left_leg": 18.0, "body": 6.0,
+         "right_leg_coat": 18.0, "left_leg_coat": 18.0}
+# How far inside the arm a sleeve's inner side may stand and still be closed over it (4.0.3).
+SLEEVE_IN = 0.3
+
+
+def turned(c, q):
+    """A point of {@code c}'s own frame where the cube's turn about its pivot puts it (the game's order: x, then y, then z)."""
+    rx, ry, rz = (math.radians(a) for a in c["rot"])
+    p = c["pivot"]
+    x, y, z = q[0] - p[0], q[1] - p[1], q[2] - p[2]
+    y, z = y * math.cos(rx) - z * math.sin(rx), y * math.sin(rx) + z * math.cos(rx)
+    x, z = x * math.cos(ry) + z * math.sin(ry), -x * math.sin(ry) + z * math.cos(ry)
+    x, y = x * math.cos(rz) - y * math.sin(rz), x * math.sin(rz) + y * math.cos(rz)
+    return (x + p[0], y + p[1], z + p[2])
 
 
 def split(c):
-    """{@code c}, or its two halves if it crosses its bone's bend (unturned cubes; a turned one bends as a whole by its corners)."""
+    """
+    {@code c}, or its two halves if it crosses its bone's bend (a turned cube cut where its middle crosses it). 4.0.3: each half carries
+    its own part of the sides' texture ({@code cut}: where in the net's height it starts, how much of it), not all of it squeezed in.
+    """
     at = BENDS.get(c["bone"])
+    if at is None:
+        return [c]
     y0, h = c["pos"][1], c["size"][1]
-    if at is None or any(c["rot"]) or not (y0 + 0.05 < at < y0 + h - 0.05):
+    cx, cz = c["pos"][0] + c["size"][0] / 2.0, c["pos"][2] + c["size"][2] / 2.0
+    top, bottom = turned(c, (cx, y0, cz))[1], turned(c, (cx, y0 + h, cz))[1]
+    if abs(bottom - top) < 1.0E-6:
+        return [c]
+    t = y0 + h * (at - top) / (bottom - top)
+    if not (y0 + 0.05 < t < y0 + h - 0.05):
         return [c]
     upper, lower = json.loads(json.dumps(c)), json.loads(json.dumps(c))
-    upper.setdefault("net", list(c["size"]))
-    lower.setdefault("net", list(c["size"]))
-    upper["size"][1] = at - y0
-    lower["pos"][1] = at
-    lower["size"][1] = y0 + h - at
-    lower["pivot"] = list(lower["pos"])
+    net = list(c.get("net", c["size"]))
+    start, length = c.get("cut", (0.0, net[1]))
+    share = length / h
+    for half in (upper, lower):
+        half["net"] = list(net)
+    upper["size"][1] = t - y0
+    lower["pos"][1] = t
+    lower["size"][1] = y0 + h - t
+    if not any(c["rot"]):
+        lower["pivot"] = list(lower["pos"])
+    upper["cut"] = [start, (t - y0) * share]
+    lower["cut"] = [start + (t - y0) * share, (y0 + h - t) * share]
     upper["name"] += "_upper"
     lower["name"] += "_lower"
     return [upper, lower]
@@ -813,20 +900,23 @@ def faces(cube, texw, texh):
     x1, y1, z1 = x0 + w, y0 + h, z0 + d
     u, v = cube["uv"]
     w, h, d = cube.get("net", cube["size"])  # the texture's net: the cube's size as the owner made it (fitted, its texture stays put)
+    start, h = cube.get("cut", (0.0, h))  # 4.0.3: a half cut at a joint: its own part of the sides' height
     f4, f5, f6, f7, f8, f9 = u, u + d, u + d + w, u + d + w + w, u + d + w + d, u + d + w + d + w
     f10, f11, f12 = v, v + d, v + d + h
+    sides = (v + d + start, v + d + start + h)
     v0, v1, v2, v3 = (x0, y0, z0), (x1, y0, z0), (x1, y1, z0), (x0, y1, z0)
     v4, v5, v6, v7 = (x0, y0, z1), (x1, y0, z1), (x1, y1, z1), (x0, y1, z1)
 
     def poly(vs, ua, va, ub, vb, n):
         return vs, [(ub / texw, va / texh), (ua / texw, va / texh), (ua / texw, vb / texh), (ub / texw, vb / texh)], n
 
-    out = [poly([v5, v1, v2, v6], f6, f11, f8, f12, (1, 0, 0)),     # east
-           poly([v0, v4, v7, v3], f4, f11, f5, f12, (-1, 0, 0)),    # west
+    s0, s1 = sides
+    out = [poly([v5, v1, v2, v6], f6, s0, f8, s1, (1, 0, 0)),     # east
+           poly([v0, v4, v7, v3], f4, s0, f5, s1, (-1, 0, 0)),    # west
            poly([v5, v4, v0, v1], f5, f10, f6, f11, (0, -1, 0)),    # down (y up in the game's frame; the model's -y)
            poly([v2, v3, v7, v6], f6, f11, f7, f10, (0, 1, 0)),     # up
-           poly([v1, v0, v3, v2], f5, f11, f6, f12, (0, 0, -1)),    # north (the front)
-           poly([v4, v5, v6, v7], f8, f11, f9, f12, (0, 0, 1))]     # south
+           poly([v1, v0, v3, v2], f5, s0, f6, s1, (0, 0, -1)),    # north (the front)
+           poly([v4, v5, v6, v7], f8, s0, f9, s1, (0, 0, 1))]     # south
     rx, ry, rz = (math.radians(a) for a in cube["rot"])
     if rx or ry or rz:
         p = cube["pivot"]
@@ -914,14 +1004,17 @@ def icon(model, texture, slot, size=32, yaw=-28.0, pitch=0.0):
 
 def bake(models):
     out = bytearray(b"HXOF")
-    out += struct.pack(">HH", 2, len(models))
+    out += struct.pack(">HH", 3, len(models))
     for mid, model in models:
         name = mid.encode("utf-8")
         out += struct.pack(">H", len(name)) + name
         out += struct.pack(">HHH", model["texture_width"], model["texture_height"], len(model["cubes"]))
         for c in model["cubes"]:
             out += struct.pack(">BB", BONES.index(c["bone"]), SLOTS.index(c.get("slot", "helmet")))
-            out += struct.pack(">17f", *c["pos"], *c["size"], *c["pivot"], *c["rot"], *c["uv"], *c.get("net", c["size"]))
+            # 3 (4.0.3): the net's height a half cut at a joint carries, and where in the net it starts.
+            w, h, d = c.get("net", c["size"])
+            start, h = c.get("cut", (0.0, h))
+            out += struct.pack(">18f", *c["pos"], *c["size"], *c["pivot"], *c["rot"], *c["uv"], w, h, d, start)
     BIN.parent.mkdir(parents=True, exist_ok=True)
     BIN.write_bytes(bytes(out))
 
@@ -945,7 +1038,10 @@ def main():
         tex = finish(style, model, Image.open(ART / f"{style}.png"))
         tex.save(textures / f"{style}.png")
         models.append((style, model))
-        for slot, (item, label) in zip(SLOTS, pieces):
+        for slot, piece in zip(SLOTS, pieces):
+            if piece is None:
+                continue
+            item, label = piece
             names[item] = label
             img = icon(model, tex, slot, yaw=-30.0, pitch=28.0 if slot in ("helmet", "boots") else 0.0)
             img.save(items / f"{item}.png")

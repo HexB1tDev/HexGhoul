@@ -66,6 +66,20 @@ Where: `OutfitLayer` (`Bend`, `bend`, `tails`), `BodyAnimations.bend`, `tools/ou
 `structure_set/{aogiri_hideout,villages}.json`; `server/AogiriGuard`, `npc/AogiriGate`, `GhoulNpcTalk.gate`; `EtoGesture`
 POSE/SLICK/SHRUG/TILT, `EtoPose.tilt/tiltOver`, `server/NoroPullOut`, `client/NoroPullOutClient`.
 
+## 4.0.3 (released)
+
+The owner, of the 4.0.2 renders (quoted exactly): "Do I need to say anything about both outfit's legs and arms?" Then: "On the Ougiri
+outfit, no more hood, make it less bulky around the shoulders and head to be similar to the formal outfit, and, give it a high collar on
+the sides of the head pointing outwards."
+
+Where: `outfit/CoatDrape` (pure, tested: the tails' fronts with the leg furthest forward, backs with the one furthest back, folded at the
+knee on the leg's middle as bendy-lib bends the trousers, pushed clear of every point of both legs' outlines); `OutfitLayer.drape` (the
+lag: `TAIL_FALL`, `HUNG`; the knee's bend from `BodyAnimations.bend`) and `tails` (only the leg's z and y turns now); `tools/outfit_models.py`
+(`SLEEVE_IN`: a sleeve's inner side over the arm; `split` gives each half its `cut` of the net and cuts turned cubes and the tails at the
+knee; `collar` and the hood left out of the Crimson; outfits file version 3: one more float per cube, where its sides start in the net);
+`OutfitModels.read` (versions 1 to 3). The Crimson Hood item is removed (`Outfits.set(style, head)`; lang, icon, item model, the
+hideout's loot). Previews: `docs/handoff/{formal,crimson}-outfit-4.0.3.png`.
+
 ## Next
 
 Nothing outstanding from the owner. If they report in-game problems with the fit, adjust `HALF_TOP`, `MASK_EYES`, `EYE_Y`, `CLEAR`,
@@ -77,6 +91,10 @@ House rules as in `next-ai-3.6.6.md` (nothing tested in game; answer in English;
 
 - On the failing CI: "note that all the latest pushed failed!" (fixed: two name checks in the tests predated the owner allowing Ayato and
   Aogiri; the dotted mask's id; every push since builds with EXIT 0 locally first).
+- Of the 4.0.2 renders: "Do I need to say anything about both outfit's legs and arms?" (4.0.3: the coat drapes over both legs, the
+  sleeves close over the arm's inner side, each half of a cut piece shows its own part of the texture.)
+- "On the Ougiri outfit, no more hood, make it less bulky around the shoulders and head to be similar to the formal outfit, and, give it a
+  high collar on the sides of the head pointing outwards." (4.0.3: no hood, a high flaring collar on the coat.)
 - "Ayato romance should be quite similar to kaneki, animations can be the same. Noro is taller than the average player and is very brief,
   barely talks." (Ayato: Ken's style and household words; Noro: size 1.15, nearly silent.)
 - "Add to the to-do list: bugs and needed fixes: Bikaku: Sometimes the limbs break and dont regenerate cause of the lack of energy, so let me
