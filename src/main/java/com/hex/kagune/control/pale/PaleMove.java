@@ -90,7 +90,12 @@ public enum PaleMove {
     /** N let go: raised high and slammed down on the ground ahead (target: what it held). */
     OWL_GRAB_SLAM,
     /** The reach closed on nothing (point: where it clutched). */
-    OWL_GRAB_MISS;
+    OWL_GRAB_MISS,
+    /**
+     * 4.1.8, Kick Master's right click held: sunk side-on into the coil of the twirling speed kick (charge from {@code startedAt}); let go,
+     * it is a {@link #KICK} whose detail says twirl ({@code PaleRules.TWIRL}).
+     */
+    TWIRL_CHARGE;
 
     public static PaleMove byOrdinal(int ordinal) {
         PaleMove[] all = values();

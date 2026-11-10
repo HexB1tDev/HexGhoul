@@ -17,8 +17,8 @@ public enum FightStyle {
     /**
      * 4.1.7 (the owner: "this combat style upon learned fully replaces the default M1 combos"): Kick Master's string on M1 (kicks and
      * punches: {@link com.hex.kagune.control.pale.PaleStrike.Style#KICKS}). The General teaches it, to a human or a ghoul behind a full mask;
-     * a human fights with it whenever the main hand is empty. Its own right click (the charged teleport speed kick) is the next version's: till
-     * then the right click is Speedster's flips if those were learned, else the game's own ({@link #use}).
+     * a human fights with it whenever the main hand is empty. 4.1.8: its own right click, held and let go, is the twirling speed kick (the
+     * owner: "a chargeable teleport speed kick (dash to an oponent at high speed and side kick with a side twirl").
      */
     KICK_MASTER("kick_master", "Kick Master", Gate.STYLE_KICK_MASTER);
 
@@ -50,9 +50,9 @@ public enum FightStyle {
         return this != NONE;
     }
 
-    /** True if an empty right click is this style's own move (never the game's). 4.1.7: Kick Master's comes in the next version. */
+    /** True if an empty right click is this style's own move (never the game's). 4.1.8: Kick Master's, its twirling speed kick. */
     public boolean ownUse() {
-        return this == SPEEDSTER;
+        return this != NONE;
     }
 
     /** 4.1.7: the string M1 throws in this style (the Speed Blitz, or Kick Master's kicks). */
@@ -74,7 +74,7 @@ public enum FightStyle {
         return NONE;
     }
 
-    /** 4.1.7: the style whose right click is used: M1's style if it has its own, else Speedster's flips if learned, else {@link #NONE}. */
+    /** 4.1.7: the style whose right click is used: M1's style if it has its own (4.1.8: every style does), else Speedster's flips if learned, else {@link #NONE}. */
     public static FightStyle use(Predicate<Gate> open) {
         FightStyle m1 = of(open);
         if (m1.ownUse()) {

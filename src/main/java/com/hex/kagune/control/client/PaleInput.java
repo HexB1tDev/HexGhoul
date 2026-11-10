@@ -45,6 +45,16 @@ public final class PaleInput {
         }
         Minecraft minecraft = Minecraft.m_91087_();
         LocalPlayer player = minecraft.f_91074_;
+        // 4.1.8: Kick Master's right click: held, the twirling speed kick's charge (timed in keys()), let go, the kick. Only aimed at the
+        // air or something hostile: a door, a chest or someone to talk to keeps the game's own right click.
+        if (player != null && minecraft.f_91080_ == null && !player.m_6144_() && twirls(player)) {
+            if (twirlTaken || fights(minecraft.f_91077_)) {
+                event.setCanceled(true);
+                event.setSwingHand(false);
+                twirlTaken = true;
+            }
+            return;
+        }
         // 7.0.1: and every other ghoul's with only the eyes open (the shared eye-mode fight).
         if (player == null || minecraft.f_91080_ != null || !PaleClient.fighter(player) || player.m_6144_()) {
             return;
@@ -138,6 +148,45 @@ public final class PaleInput {
         return best;
     }
 
+    /** 4.1.8: Kick Master's right click, charged from the moment it goes down (taken by {@link #useInput}). */
+    private static final PaleKey TWIRL = new PaleKey(true);
+    private static boolean twirlTaken;
+
+    /** 4.1.8: this client's own player throws Kick Master's twirling kick on the right click: theirs, the hand empty, the eyes open or human. */
+    static boolean twirls(LocalPlayer player) {
+        return PaleClient.useStyle() == com.hex.kagune.control.FightStyle.KICK_MASTER && player.m_21205_().m_41619_()
+            && (PaleClient.eyes(player) || PaleClient.bare(player));
+    }
+
+    /**
+     * 4.1.8: a right click there is the kick, not a use: the crosshair on nothing (the air), or on a body no one talks to (a monster, an
+     * investigator, an animal, a player). A block (a door, a chest, a lever) keeps the game's own right click, and so does anyone one talks
+     * to (a companion, a villager, a ghoul, a child): to kick one of those, aim just past it (the kick takes what is nearest the crosshair).
+     */
+    static boolean fights(HitResult hit) {
+        if (hit == null || hit.m_6662_() == HitResult.Type.MISS) {
+            return true;
+        }
+        return hit instanceof EntityHitResult entity && entity.m_82443_() instanceof LivingEntity body && !talks(body);
+    }
+
+    /** 4.1.8: true for a body a right click talks to (the mod's people, the game's villagers). */
+    static boolean talks(LivingEntity body) {
+        return body instanceof com.hex.kagune.control.npc.EtoNpc || body instanceof com.hex.kagune.control.npc.HumanNpc
+            || body instanceof com.hex.kagune.control.npc.GhoulNpc || body instanceof com.hex.kagune.control.npc.ChildNpc
+            || body instanceof net.minecraft.world.entity.npc.AbstractVillager;
+    }
+
+    /** 4.1.8: the right click taken for the twirl: told to the server while it is held, and once let go. */
+    private static void twirlKey(Minecraft minecraft, LocalPlayer player) {
+        boolean down = twirlTaken && player != null && minecraft.f_91080_ == null && minecraft.f_91066_ != null
+            && minecraft.f_91066_.f_92095_.m_90857_() && twirls(player);
+        send(TWIRL.tick(false, down), -1, -1, C2SPaleAction.TWIRL);
+        if (!down) {
+            twirlTaken = false;
+        }
+    }
+
     /** Z (the original's Rapid Strike key): Big Punch, charged from the moment it goes down. */
     private static final PaleKey PUNCH = new PaleKey(true);
     /** J (Slingshot's key): the flesh swipes on a tap, grabs on a hold. */
@@ -160,6 +209,7 @@ public final class PaleInput {
         Minecraft minecraft = Minecraft.m_91087_();
         LocalPlayer player = minecraft.f_91074_;
         KaguneClientState.View view = KaguneClientState.self();
+        twirlKey(minecraft, player); // 4.1.8
         if (player != null && PaleClient.eyes(player)) {
             boolean open = minecraft.f_91080_ == null;
             boolean z = consume(KaguneKeys.RAPID_STRIKE);

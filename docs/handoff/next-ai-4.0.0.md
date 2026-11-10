@@ -241,6 +241,18 @@ Master's own). Gates `STYLE_KICK_STANCE`, `STYLE_KICK_CHAMBER`, `STYLE_KICK_MAST
 115. `CompanionTests.kickMaster`; `PaleTests` (the lift; the fist in view for punches only). The kicks hold the kicking guard (`KICK_GUARD`:
 counterweight arms clipped in the blends). Previews: `docs/handoff/kick-master-4.1.7.png`, `kick-master-film-4.1.7.png`.
 
+## 4.1.8 (released)
+
+The owner (quoted exactly): "Right click is a chargeable teleport speed kick (dash to an oponent at high speed and side kick with a side twirl."
+The Speed Kick (`PaleMove.KICK`), charged on the hold and twirling: `PaleMove.TWIRL_CHARGE` (appended), `C2SPaleAction.TWIRL` (13),
+`PaleMoves.twirlKey`/`tickTwirlCharge`/`releaseTwirl` (`kickPlan(player, range)`). A speed kick's detail is now its dash's ticks
+(`KICK_DASH_BITS`), `TWIRL`, and the charge in sixteenths above them (`twirlDetail`, `kickTicks`, `twirled`, `twirlCharge`); every
+`PaleRules.kick*` rule reads it so (plain kicks unchanged). `kickThere` (seen) vs `kickArrive` (the chamber, `TWIRL_SPIN` 3 later);
+`twirlLeft`; `twirlRange` 6..20, `twirlPower` 0.3..1. `PaleMotions.kick` (the twirl: the chamber turned), `twirlCharge` (the coil; the head
+turns only 0.27 against the guard's fists). `PaleInput.twirls`/`fights` (the air, or a body no one talks to: `talks`)/`twirlKey`. `EtoOwl`: a human persona's
+speed kick twirls at full. `FightStyle.ownUse` true for Kick Master. Protocol 116. `CompanionTests.twirlKick`. Preview:
+`docs/handoff/twirl-kick-4.1.8.png` (`tools/pale-preview.sh <out> twirl-kick`, also a GIF).
+
 ## Next
 
 Nothing outstanding from the owner. If they report in-game problems with the outfits' fit, adjust `CLEAR`, `SNUG`, the drape

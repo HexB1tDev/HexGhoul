@@ -464,6 +464,110 @@ public final class CompanionTests {
         speedster();
         general();
         kickMaster();
+        twirlKick();
+    }
+
+    /**
+     * 4.1.8 (the owner: "Right click is a chargeable teleport speed kick (dash to an oponent at high speed and side kick with a side
+     * twirl."): Kick Master's right click, the Speed Kick charged on the hold, there out of nowhere in a whole side twirl into the kick.
+     */
+    static void twirlKick() {
+        // Its detail: the dash's ticks, the twirl, the charge; every plain speed kick read as before.
+        for (int dash = 1; dash <= 4; dash++) {
+            check(com.hex.kagune.control.pale.PaleRules.kickTicks(dash) == dash && !com.hex.kagune.control.pale.PaleRules.twirled(dash)
+                && com.hex.kagune.control.pale.PaleRules.kickArrive(dash) == com.hex.kagune.control.pale.PaleRules.KICK_BURST + dash
+                && com.hex.kagune.control.pale.PaleRules.kickThere(dash) == com.hex.kagune.control.pale.PaleRules.kickArrive(dash),
+                "a plain speed kick of " + dash + " ticks: as it was");
+            for (float charge : new float[] {0.0F, 0.15F, 0.5F, 1.0F}) {
+                int detail = com.hex.kagune.control.pale.PaleRules.twirlDetail(dash, charge);
+                check(com.hex.kagune.control.pale.PaleRules.kickTicks(detail) == dash && com.hex.kagune.control.pale.PaleRules.twirled(detail)
+                    && Math.abs(com.hex.kagune.control.pale.PaleRules.twirlCharge(detail) - charge) <= 1.0F / 30.0F + 1.0E-6F,
+                    "twirl detail " + dash + "/" + charge + ": read back");
+                int there = com.hex.kagune.control.pale.PaleRules.kickThere(detail);
+                int arrive = com.hex.kagune.control.pale.PaleRules.kickArrive(detail);
+                check(there == com.hex.kagune.control.pale.PaleRules.KICK_BURST + dash && arrive == there + com.hex.kagune.control.pale.PaleRules.TWIRL_SPIN,
+                    "she is there after the dash, the kick starts after the twirl");
+                check(com.hex.kagune.control.pale.PaleRules.kickGone(detail, there - 0.01) && !com.hex.kagune.control.pale.PaleRules.kickGone(detail, there)
+                    && com.hex.kagune.control.pale.PaleRules.kickUntouchable(detail, arrive - 0.01)
+                    && !com.hex.kagune.control.pale.PaleRules.kickUntouchable(detail, arrive),
+                    "gone through the dash, seen through the twirl, nothing hurts her till the kick starts");
+                double[] to = {0.5, 0.0, 7.0};
+                double[] at = com.hex.kagune.control.pale.PaleRules.kickPlace(to, detail, 1.0, there + 1.0);
+                double[] kicked = com.hex.kagune.control.pale.PaleRules.kickPlace(to, detail, 1.0, arrive + 0.5);
+                check(at != null && Math.abs(at[0] - 0.5) < 1.0E-9 && Math.abs(at[2] - 7.0) < 1.0E-9 && Math.abs(at[1] - 1.0) < 1.0E-9
+                    && kicked != null && Math.abs(kicked[2] - 7.0) < 1.0E-9, "she twirls where she kicks from, up at the kick's height");
+                check(com.hex.kagune.control.pale.MoveClashRules.window(com.hex.kagune.control.pale.PaleMove.KICK, detail)
+                    == arrive + com.hex.kagune.control.pale.PaleRules.KICK_CONTACT + 1, "a clash waits for its blow");
+            }
+        }
+        // The twirl: a whole turn, fastest as she appears, none left at the chamber.
+        double last = Double.MAX_VALUE;
+        double lastStep = Double.MAX_VALUE;
+        for (double since = 0.0; since <= com.hex.kagune.control.pale.PaleRules.TWIRL_SPIN + 1.0E-9; since += 0.25) {
+            double left = com.hex.kagune.control.pale.PaleRules.twirlLeft(since);
+            if (last != Double.MAX_VALUE) {
+                check(left <= last && last - left <= lastStep + 1.0E-9, "the twirl turns on, slowing: " + since);
+                lastStep = last - left;
+            }
+            last = left;
+        }
+        check(Math.abs(com.hex.kagune.control.pale.PaleRules.twirlLeft(0.0) - Math.PI * 2.0) < 1.0E-9
+            && com.hex.kagune.control.pale.PaleRules.twirlLeft(com.hex.kagune.control.pale.PaleRules.TWIRL_SPIN) == 0.0, "a whole turn, into the chamber");
+        // The charge: a floor for a tap, full after its ticks; its reach and its power with it.
+        check(com.hex.kagune.control.pale.PaleRules.twirlChargeAt(0.0) == 0.15F
+            && com.hex.kagune.control.pale.PaleRules.twirlChargeAt(com.hex.kagune.control.pale.PaleRules.TWIRL_CHARGE_TICKS) == 1.0F
+            && com.hex.kagune.control.pale.PaleRules.twirlChargeAt(1000.0) == 1.0F, "a tap kicks at the least charge; held, it fills");
+        check(com.hex.kagune.control.pale.PaleRules.twirlRange(0.0F) == com.hex.kagune.control.pale.PaleRules.TWIRL_RANGE_MIN
+            && com.hex.kagune.control.pale.PaleRules.twirlRange(1.0F) == com.hex.kagune.control.pale.PaleRules.TWIRL_RANGE_MAX
+            && com.hex.kagune.control.pale.PaleRules.twirlRange(1.0F) <= com.hex.kagune.control.pale.PaleRules.KICK_RANGE
+            && com.hex.kagune.control.pale.PaleRules.twirlPower(1.0F) == 1.0 && com.hex.kagune.control.pale.PaleRules.twirlPower(0.0F) < 0.5
+            && com.hex.kagune.control.pale.PaleRules.twirlPower(0.5F) > com.hex.kagune.control.pale.PaleRules.twirlPower(0.2F),
+            "the longer the hold, the further it reaches and the harder it lands (full: the Speed Kick's own)");
+        check(com.hex.kagune.control.pale.PaleRules.TWIRL_MAX_HOLD > com.hex.kagune.control.pale.PaleRules.TWIRL_CHARGE_TICKS, "it waits a while full before it goes by itself");
+        check(com.hex.kagune.control.pale.PaleMove.values()[com.hex.kagune.control.pale.PaleMove.values().length - 1] == com.hex.kagune.control.pale.PaleMove.TWIRL_CHARGE
+            && com.hex.kagune.control.network.C2SPaleAction.TWIRL == 13, "its move and its action appended");
+        // Its poses: the coil sunk side-on, out of anything she was doing; the twirl into the chamber, seamless into the kick; nothing
+        // through her body.
+        int detail = com.hex.kagune.control.pale.PaleRules.twirlDetail(3, 1.0F);
+        int there = com.hex.kagune.control.pale.PaleRules.kickThere(detail);
+        int arrive = com.hex.kagune.control.pale.PaleRules.kickArrive(detail);
+        RigPose atChamber = com.hex.kagune.control.client.animation.PaleMotions.kick(arrive, detail, null);
+        RigPose before = com.hex.kagune.control.client.animation.PaleMotions.kick(arrive - 1.0E-4, detail, null);
+        check(Math.abs(atChamber.spin - before.spin) < 1.0E-3 && Math.abs(atChamber.rightLegX - before.rightLegX) < 1.0E-3,
+            "the twirl ends exactly where the kick starts");
+        RigPose appearing = com.hex.kagune.control.client.animation.PaleMotions.kick(there, detail, null);
+        check(Math.abs((atChamber.spin - appearing.spin) - Math.PI * 2.0) < 1.0E-3, "she appears a whole turn short of the chamber");
+        java.util.List<RigPose> starts = new java.util.ArrayList<>();
+        starts.add(null);
+        for (com.hex.kagune.control.pale.PaleStrike strike : com.hex.kagune.control.pale.PaleStrike.of(com.hex.kagune.control.pale.PaleStrike.Style.KICKS)) {
+            starts.add(com.hex.kagune.control.client.animation.PaleMotions.strike(strike, strike.duration, null));
+        }
+        double worst = 0.0;
+        for (RigPose start : starts) {
+            for (double age = 0.0; age <= 40.0; age += 0.25) {
+                RigPose coil = com.hex.kagune.control.client.animation.PaleMotions.twirlCharge(age, start);
+                coil.settle(1.0F);
+                worst = Math.max(worst, com.hex.kagune.control.client.animation.BodyFrame.clipping(coil, 0.25));
+            }
+        }
+        for (double age = there; age <= arrive + com.hex.kagune.control.pale.PaleRules.KICK_TICKS; age += 0.1) {
+            RigPose pose = com.hex.kagune.control.client.animation.PaleMotions.kick(age, detail, null);
+            pose.settle(1.0F);
+            worst = Math.max(worst, com.hex.kagune.control.client.animation.BodyFrame.clipping(pose, 0.25));
+        }
+        check(worst == 0.0, "the coil and the twirl keep her arms out of her body: " + worst + " px");
+        RigPose coiled = com.hex.kagune.control.client.animation.PaleMotions.twirlCharge(10.0, null);
+        check(coiled.spin > 0.5F && coiled.leftKnee > 1.0F && coiled.drop > 0.0F, "the coil: side-on, the knees bent, sunk");
+        // Where it is wired.
+        String moves = read("src/main/java/com/hex/kagune/control/server/PaleMoves.java");
+        check(moves.contains("kickPlan(player, PaleRules.twirlRange(charge))") && moves.contains("PaleRules.twirlDetail(plan.dash(), charge)")
+            && moves.contains("if (!PaleServer.bare(player) && !KaguneServerController.useEnergy(player, PaleRules.TWIRL_COST, true)) {"),
+            "let go: the Speed Kick within the charge's reach, twirling; a human pays no RC");
+        String input = read("src/main/java/com/hex/kagune/control/client/PaleInput.java");
+        check(input.contains("if (twirlTaken || fights(minecraft.f_91077_)) {") && input.contains("instanceof LivingEntity body && !talks(body)")
+            && input.contains("body instanceof com.hex.kagune.control.npc.GhoulNpc"), "the right click is the kick at the air or a body no one talks to");
+        check(read("src/main/java/com/hex/kagune/control/server/EtoOwl.java").contains("npc.persona().human() ? PaleRules.twirlDetail(dash, 1.0F) : dash"),
+            "the General throws it too");
     }
 
     /**
@@ -475,14 +579,13 @@ public final class CompanionTests {
     static void kickMaster() {
         com.hex.kagune.control.FightStyle kicks = com.hex.kagune.control.FightStyle.KICK_MASTER;
         Set<Gate> open = new HashSet<>(java.util.List.of(Gate.STYLE_KICK_MASTER));
-        check(com.hex.kagune.control.FightStyle.of(open::contains) == kicks && kicks.ownAttack() && !kicks.ownUse()
+        check(com.hex.kagune.control.FightStyle.of(open::contains) == kicks && kicks.ownAttack() && kicks.ownUse()
             && kicks.strikes() == com.hex.kagune.control.pale.PaleStrike.Style.KICKS && kicks.displayName().equals("Kick Master")
-            && com.hex.kagune.control.FightStyle.use(open::contains) == com.hex.kagune.control.FightStyle.NONE,
-            "Kick Master learned: M1 is its string; no right click of its own yet (the game's)");
+            && com.hex.kagune.control.FightStyle.use(open::contains) == kicks,
+            "Kick Master learned: M1 is its string; 4.1.8: the right click its own (the twirling speed kick)");
         open.add(Gate.STYLE_SPEEDSTER);
-        check(com.hex.kagune.control.FightStyle.of(open::contains) == kicks
-            && com.hex.kagune.control.FightStyle.use(open::contains) == com.hex.kagune.control.FightStyle.SPEEDSTER,
-            "with Speedster too: Kick Master fully replaces the M1 combos; the right click stays Speedster's flips");
+        check(com.hex.kagune.control.FightStyle.of(open::contains) == kicks && com.hex.kagune.control.FightStyle.use(open::contains) == kicks,
+            "with Speedster too: Kick Master fully replaces the M1 combos, and its right click the flips");
         check(com.hex.kagune.control.FightStyle.SPEEDSTER.strikes() == com.hex.kagune.control.pale.PaleStrike.Style.BLITZ, "Speedster's string is the blitz");
         for (Gate gate : new Gate[] {Gate.STYLE_KICK_STANCE, Gate.STYLE_KICK_CHAMBER, Gate.STYLE_KICK_MASTER}) {
             check(gate.path() == null && gate.mastery() == 0 && !gate.mutation() && Gate.fromId(gate.id()) == gate && QuestBook.openers(gate).isEmpty(),
@@ -567,7 +670,8 @@ public final class CompanionTests {
         // Where it is wired: a human's empty hand, the General's own fight.
         String server = read("src/main/java/com/hex/kagune/control/server/PaleServer.java");
         check(server.contains("return !KaguneProfile.isUnlocked(player) && player.m_21205_().m_41619_() && style(player) == com.hex.kagune.control.FightStyle.KICK_MASTER;")
-            && server.contains("if (!eyes && action != C2SPaleAction.STRIKE) {"), "a human with Kick Master and an empty hand: M1 alone");
+            && server.contains("if (!eyes && action != C2SPaleAction.STRIKE && action != C2SPaleAction.TWIRL) {"),
+            "a human with Kick Master and an empty hand: M1 and (4.1.8) its right click alone");
         String blitz = read("src/main/java/com/hex/kagune/control/server/PaleBlitz.java");
         check(blitz.contains("PaleStrike.next(previous, string == PaleStrike.Style.KICKS ? Integer.MAX_VALUE : mastery, string)")
             && blitz.contains("strike.kick() ? PaleRules.comboKickStand("), "the server throws the style's string, kicks from further out");
@@ -580,8 +684,8 @@ public final class CompanionTests {
             keys.put(key, key.name());
         }
         java.util.List<String> listed = guide(keys, new HashSet<>(java.util.List.of(Gate.STYLE_SPEEDSTER)));
-        check(listed.contains("Kick Master") && listed.stream().anyMatch(n -> n.startsWith("Kicks and punches (8")) && !listed.contains("Speedster"),
-            "the ability list with Kick Master " + listed);
+        check(listed.contains("Kick Master") && listed.stream().anyMatch(n -> n.startsWith("Kicks and punches (8")) && !listed.contains("Speedster")
+            && listed.contains("Twirling Speed Kick (hold, let go)") && !listed.contains("Flips (W A S D)"), "the ability list with Kick Master " + listed);
     }
 
     /** 4.1.7: what {@code script}'s lesson words say teaching {@code lesson}. */
@@ -750,7 +854,7 @@ public final class CompanionTests {
         check(words.length() > 120 && words.contains("Speedster") && words.contains("M1") && words.contains("right click"), "Ayato teaches it in his own words, and the game says what it does");
         String server = read("src/main/java/com/hex/kagune/control/server/PaleServer.java");
         check(server.contains("if (style.ownAttack()) {\n                    PaleBlitz.click(")
-            && server.contains("if (com.hex.kagune.control.FightStyle.use(QuestServer.log(player)::open).ownUse()) {\n                    PaleMoves.flip(")
+            && server.contains("if (com.hex.kagune.control.FightStyle.use(QuestServer.log(player)::open) == com.hex.kagune.control.FightStyle.SPEEDSTER) {\n                    PaleMoves.flip(")
             && server.contains("(eyes(player) || bare(player)) && style(player).ownAttack()) {\n            event.setCanceled(true);"),
             "the server: the eyes' blitz and flips only with the style; without it a punch stays the game's own");
         check(server.contains("case C2SPaleAction.PUNCH -> PaleMoves.punchKey(player, state, arg != 0, targetId, now);\n            case C2SPaleAction.KICK -> PaleMoves.kick(player, state, now);\n            default -> {\n            }\n        }\n    }\n\n    /**\n     * 7.0.1: with only the eyes open a vanilla punch"),

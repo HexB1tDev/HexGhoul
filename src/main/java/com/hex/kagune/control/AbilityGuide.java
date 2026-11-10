@@ -126,13 +126,13 @@ public final class AbilityGuide {
                 int m = in.mastery();
                 // 4.1.3: the blitz and the flips are a fighting style's (Speedster, from Ayato); with none, the game's own punch.
                 com.hex.kagune.control.FightStyle style = com.hex.kagune.control.FightStyle.of(gate -> !in.shut().contains(gate));
-                boolean flips = com.hex.kagune.control.FightStyle.use(gate -> !in.shut().contains(gate)).ownUse();
                 if (style == com.hex.kagune.control.FightStyle.KICK_MASTER) {
-                    // 4.1.7: Kick Master, the General's: its whole string on M1; the right click is Speedster's flips if those were learned.
+                    // 4.1.7: Kick Master, the General's: its whole string on M1. 4.1.8: its twirling speed kick on the right click.
                     rows.add(new Row("style", "Kick Master", EYES, 0));
                     rows.add(row(in, "Kicks and punches (" + com.hex.kagune.control.pale.PaleStrike.of(com.hex.kagune.control.pale.PaleStrike.Style.KICKS).length
                         + " blows)", EYES, 0, Key.ATTACK));
-                    rows.add(row(in, flips ? "Flips (W A S D)" : "Use", flips ? TEXT : DIM, 0, Key.USE));
+                    // 4.1.8: its own right click: held, then let go.
+                    rows.add(row(in, "Twirling Speed Kick (hold, let go)", EYES, 0, Key.USE));
                 } else if (style.ownAttack()) {
                     rows.add(new Row("style", "Speedster", EYES, 0));
                     rows.add(row(in, "Speed Blitz (" + com.hex.kagune.control.pale.PaleStrike.count(m) + " strikes)", EYES, 0, Key.ATTACK));

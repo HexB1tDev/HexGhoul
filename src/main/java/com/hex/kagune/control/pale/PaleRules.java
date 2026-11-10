@@ -380,14 +380,90 @@ public final class PaleRules {
         return (int)Math.max(KICK_DASH_MIN, Math.min(KICK_DASH, Math.ceil(distance / KICK_DASH_SPEED)));
     }
 
-    /** The tick she is there in front of it (the dash {@code dash} ticks): the lunge, then the dash. */
-    public static int kickArrive(int dash) {
-        return KICK_BURST + Math.max(1, dash);
+    // ------------------------------------------------------------------ 4.1.8: Kick Master's twirling speed kick (right click held)
+    //
+    // The owner (quoted exactly): "Right click is a chargeable teleport speed kick (dash to an oponent at high speed and side kick with a
+    // side twirl." It is the Speed Kick (the same dash unseen, the same flying side kick and launch) charged on the hold, and there out of
+    // nowhere she is already turning: a whole side twirl in the air, into the chamber, then the kick. A speed kick's detail carries it:
+    // the dash's ticks (KICK_DASH_BITS), TWIRL, and the charge it was let go at (in sixteenths, above them): every speed kick's rule below
+    // reads its detail so.
+
+    /** 4.1.8: the low bits of a speed kick's detail: the dash's ticks. */
+    public static final int KICK_DASH_BITS = 7;
+    /** 4.1.8: Kick Master's twirling kick (and its charge, 0..15, from bit 4). */
+    public static final int TWIRL = 8;
+    /** 4.1.8: how long (ticks) the twirl takes, from where she is there to the chamber the kick starts from. */
+    public static final int TWIRL_SPIN = 3;
+    /** 4.1.8: held this long (ticks) it is fully charged; past {@link #TWIRL_MAX_HOLD} it goes by itself. */
+    public static final int TWIRL_CHARGE_TICKS = 25;
+    public static final int TWIRL_MAX_HOLD = 80;
+    /** 4.1.8: how far (blocks) it reaches at no charge and at full; the launch's speed at no charge (of {@link #KICK_SPEED}). */
+    public static final double TWIRL_RANGE_MIN = 6.0;
+    public static final double TWIRL_RANGE_MAX = 20.0;
+    public static final double TWIRL_LAUNCH_MIN = 0.3;
+    public static final int TWIRL_COOLDOWN = 50;
+    public static final float TWIRL_COST = 6.0F;
+
+    /** 4.1.8: the dash's ticks in a speed kick's {@code detail}. */
+    public static int kickTicks(int detail) {
+        return detail & KICK_DASH_BITS;
     }
 
-    /** True while she is gone ({@code age} ticks in, the dash {@code dash} ticks): nothing of her is drawn. */
-    public static boolean kickGone(int dash, double age) {
-        return age >= KICK_BURST && age < kickArrive(dash);
+    /** 4.1.8: true for Kick Master's twirling kick. */
+    public static boolean twirled(int detail) {
+        return (detail & TWIRL) != 0;
+    }
+
+    /** 4.1.8: the charge (0..1) a twirling kick was let go at. */
+    public static float twirlCharge(int detail) {
+        return ((detail >> 4) & 15) / 15.0F;
+    }
+
+    /** 4.1.8: the detail of a twirling kick: its dash's {@code dash} ticks, let go at {@code charge} (0..1). */
+    public static int twirlDetail(int dash, float charge) {
+        return Math.max(1, Math.min(KICK_DASH_BITS, dash)) | TWIRL | Math.round(clamp01(charge) * 15.0F) << 4;
+    }
+
+    /** 4.1.8: 0..1 charge after holding the right click {@code held} ticks (a floor of 0.15 for a quick release). */
+    public static float twirlChargeAt(double held) {
+        return (float)Math.max(0.15, Math.min(1.0, held / TWIRL_CHARGE_TICKS));
+    }
+
+    /** 4.1.8: how far it reaches at {@code charge}. */
+    public static double twirlRange(float charge) {
+        return TWIRL_RANGE_MIN + (TWIRL_RANGE_MAX - TWIRL_RANGE_MIN) * clamp01(charge);
+    }
+
+    /** 4.1.8: how much (0..1 of the Speed Kick's) its blow and launch carry at {@code charge}. */
+    public static double twirlPower(float charge) {
+        return TWIRL_LAUNCH_MIN + (1.0 - TWIRL_LAUNCH_MIN) * clamp01(charge);
+    }
+
+    /**
+     * 4.1.8: how far round (radians, a whole turn to none, to her right as the kick's side) she still has to turn {@code since} ticks
+     * after she is there: fastest as she appears (the dash's speed carried into it), easing into the chamber.
+     */
+    public static double twirlLeft(double since) {
+        double u = Math.max(0.0, Math.min(1.0, since / TWIRL_SPIN));
+        return Math.PI * 2.0 * (1.0 - u) * (1.0 - u);
+    }
+
+    /** 4.1.8: the tick she is there, out of nowhere ({@code detail}: a speed kick's): the lunge, then the dash. */
+    public static int kickThere(int detail) {
+        return KICK_BURST + Math.max(1, kickTicks(detail));
+    }
+
+    /**
+     * The tick she is there in front of it, in the chamber the kick starts from ({@code detail}: a speed kick's; 4.1.8: a twirling one's
+     * after its twirl): the lunge, then the dash.
+     */
+    public static int kickArrive(int detail) {
+        return kickThere(detail) + (twirled(detail) ? TWIRL_SPIN : 0);
+    }
+
+    /** True while she is gone ({@code age} ticks in; {@code detail} a speed kick's): nothing of her is drawn. 4.1.8: her twirl is seen. */
+    public static boolean kickGone(int detail, double age) {
+        return age >= KICK_BURST && age < kickThere(detail);
     }
 
     /** True while nothing can hurt her: from the lunge until she is there. */
@@ -401,7 +477,7 @@ public final class PaleRules {
      * dropping, down by {@link #KICK_LAND} after she was there.
      */
     public static double kickRise(int dash, double age) {
-        int ticks = Math.max(1, dash);
+        int ticks = Math.max(1, kickTicks(dash));
         double since = age - kickArrive(dash);
         if (since >= KICK_LAND) {
             return 0.0;
@@ -461,15 +537,15 @@ public final class PaleRules {
      * through the blow; then the rebound's hop, coming down where she kicked from. Null once she has landed (she is her own again).
      */
     public static double[] kickPlace(double[] to, int dash, double lift, double age) {
-        int ticks = Math.max(1, dash);
+        int ticks = Math.max(1, kickTicks(dash));
         int arrive = kickArrive(dash);
         if (age >= arrive + KICK_LAND) {
             return null;
         }
         double rise = kickHeight(dash, lift, age);
         if (age < arrive) {
-            // Fastest off the mark, slowing as she gets there.
-            double s = Math.max(0.0, age - KICK_BURST) / ticks;
+            // Fastest off the mark, slowing as she gets there (4.1.8: and there through the twirl).
+            double s = Math.min(1.0, Math.max(0.0, age - KICK_BURST) / ticks);
             double u = s * (KICK_DASH_PEAK - (KICK_DASH_PEAK - 1.0) * s);
             return new double[] {to[0] * u, to[1] * u + rise, to[2] * u};
         }

@@ -38,6 +38,9 @@ public final class PalePreview {
         if (wanted.contains("kicks")) {
             kicks(new File(out, "kick-master.png"));
         }
+        if (wanted.contains("twirl-kick")) {
+            twirlKick(new File(out, "twirl-kick.png"));
+        }
         if (wanted.contains("kicks-film")) {
             kicksFilm(new File(out, "kick-master-film.png"), new File(out, "kick-master.gif"));
         }
@@ -1707,6 +1710,77 @@ public final class PalePreview {
         }
         ArtPreview.sheet(file, "Owl DNA's Speed Kick (V tapped): the lunge, gone, there in the chamber, the leg driven straight into its middle (Kizaru)",
             shots, 4, 330, 330);
+    }
+
+    /**
+     * 4.1.8: Kick Master's twirling speed kick: the coil on the hold (sinking, full, its tremor), then let go: the lunge, gone, there out
+     * of nowhere a whole twirl into the chamber, the blow, held out; side on and from her right front.
+     */
+    static void twirlKick(File file) throws Exception {
+        List<ArtPreview.Shot> shots = new ArrayList<>();
+        int detail = com.hex.kagune.control.pale.PaleRules.twirlDetail(3, 1.0F);
+        int there = com.hex.kagune.control.pale.PaleRules.kickThere(detail);
+        int arrive = com.hex.kagune.control.pale.PaleRules.kickArrive(detail);
+        double contact = arrive + com.hex.kagune.control.pale.PaleRules.KICK_CONTACT;
+        double[] coilAges = {1.0, 3.0, 30.0};
+        String[] coilNames = {"held: sinking", "held: the coil", "held: full"};
+        double[] ages = {1.0, there, there + 0.75, there + 1.5, there + 2.25, arrive, contact, arrive + com.hex.kagune.control.pale.PaleRules.KICK_HOLD};
+        String[] names = {"let go: the lunge", "THERE, turning", "the twirl", "the twirl", "the twirl", "the chamber", "THE BLOW", "held out"};
+        double lift = com.hex.kagune.control.pale.PaleRules.kickLift(1.0);
+        double[] stand = com.hex.kagune.control.pale.PaleRules.kickStand(0.25);
+        double[][] eyes = {{4.6, 1.3, 0.9}, {3.2, 2.0, 3.6}};
+        String[] views = {"side on", "her right front"};
+        for (int pass = 0; pass < eyes.length; pass++) {
+            double[] eye = eyes[pass];
+            for (int i = 0; i < coilAges.length; i++) {
+                RigPose p = com.hex.kagune.control.client.animation.PaleMotions.twirlCharge(coilAges[i], null);
+                p.settle(1.0F);
+                List<WingPreview.Tri> scene = figure(new double[] {-stand[0], 1.0, -stand[1] + 8.0});
+                box(scene, new double[] {-6.0, -0.2, -4.0}, new double[] {4.0, 0.0, 14.0}, 0xFF4E5A44);
+                shots.add(new ArtPreview.Shot(coilNames[i] + " (" + views[pass] + ")", p, ArtPreview.NO_WINGS, eye, new double[] {0.0, 0.9, 0.5}, scene));
+            }
+            for (int i = 0; i < ages.length; i++) {
+                double age = ages[i];
+                RigPose p = com.hex.kagune.control.client.animation.PaleMotions.kick(age, detail, null);
+                p.settle(1.0F);
+                double up = com.hex.kagune.control.pale.PaleRules.kickHeight(detail, lift, age);
+                double s = Math.max(0.0, Math.min(1.0, (age - com.hex.kagune.control.pale.PaleRules.KICK_BURST) / 3.0));
+                double left = age < there ? 8.0 * (1.0 - s) * (1.0 - s) : 0.0;
+                List<WingPreview.Tri> scene = figure(new double[] {-stand[0], 1.0 - up, -stand[1] + left});
+                box(scene, new double[] {-6.0, -0.2 - up, -4.0}, new double[] {4.0, -up, 14.0}, 0xFF4E5A44);
+                shots.add(new ArtPreview.Shot(names[i] + " (" + views[pass] + String.format(java.util.Locale.ROOT, ", tick %.2f)", age),
+                    com.hex.kagune.control.pale.PaleRules.kickGone(detail, age) ? null : p, ArtPreview.NO_WINGS,
+                    new double[] {eye[0], eye[1] - up * 0.3, eye[2]}, new double[] {0.0, 0.9 - up * 0.4, 0.5}, scene));
+            }
+        }
+        ArtPreview.sheet(file, "Kick Master's twirling speed kick (right click held, let go): the coil, the lunge, there in a whole twirl, the side kick",
+            shots, 11, 260, 280);
+        // The same in real time (30 fps), from her right front: held a second and a half, let go.
+        List<java.awt.image.BufferedImage> frames = new ArrayList<>();
+        double[] eye = eyes[1];
+        for (double age = 0.0; age < 30.0; age += 2.0 / 3.0) {
+            RigPose p = com.hex.kagune.control.client.animation.PaleMotions.twirlCharge(age, null);
+            p.settle(1.0F);
+            List<WingPreview.Tri> scene = figure(new double[] {-stand[0], 1.0, -stand[1] + 8.0});
+            box(scene, new double[] {-6.0, -0.2, -4.0}, new double[] {4.0, 0.0, 14.0}, 0xFF4E5A44);
+            frames.add(ArtPreview.render(new ArtPreview.Shot("Kick Master: right click held", p, ArtPreview.NO_WINGS, eye, new double[] {0.0, 0.9, 0.5}, scene),
+                420, 360));
+        }
+        RigPose from = com.hex.kagune.control.client.animation.PaleMotions.twirlCharge(30.0, null);
+        for (double age = 0.0; age < arrive + com.hex.kagune.control.pale.PaleRules.KICK_TICKS + 3.0; age += 2.0 / 3.0) {
+            RigPose p = age < arrive + com.hex.kagune.control.pale.PaleRules.KICK_TICKS
+                ? com.hex.kagune.control.client.animation.PaleMotions.kick(age, detail, from) : com.hex.kagune.control.client.animation.PaleMotions.guard();
+            p.settle(1.0F);
+            double up = com.hex.kagune.control.pale.PaleRules.kickHeight(detail, lift, age);
+            double s = Math.max(0.0, Math.min(1.0, (age - com.hex.kagune.control.pale.PaleRules.KICK_BURST) / 3.0));
+            double left = age < there ? 8.0 * (1.0 - s) * (1.0 - s) : 0.0;
+            double flown = age > contact ? Math.min(7.0, (age - contact) * 2.5) : 0.0;
+            List<WingPreview.Tri> scene = flown > 6.5 ? new ArrayList<>() : figure(new double[] {-stand[0], 1.0 - up + flown * 0.1, -stand[1] + left + flown});
+            box(scene, new double[] {-6.0, -0.2 - up, -4.0}, new double[] {4.0, -up, 14.0}, 0xFF4E5A44);
+            frames.add(ArtPreview.render(new ArtPreview.Shot("Kick Master: let go", com.hex.kagune.control.pale.PaleRules.kickGone(detail, age) ? null : p,
+                ArtPreview.NO_WINGS, new double[] {eye[0], eye[1] - up * 0.3, eye[2]}, new double[] {0.0, 0.9 - up * 0.4, 0.5}, scene), 420, 360));
+        }
+        writeGif(new File(file.getParentFile(), "twirl-kick.gif"), frames, 3);
     }
 
     /**

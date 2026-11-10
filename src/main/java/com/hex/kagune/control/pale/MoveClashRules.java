@@ -46,7 +46,7 @@ public final class MoveClashRules {
     public static int window(PaleMove move, int detail) {
         return switch (move) {
             case PUNCH, OWL_PUNCH -> PaleRules.PUNCH_IMPACT + 1;
-            case KICK -> PaleRules.KICK_BURST + Math.max(0, detail) + PaleRules.KICK_CONTACT + 1;
+            case KICK -> PaleRules.kickArrive(detail) + PaleRules.KICK_CONTACT + 1; // 4.1.8: its detail read (a twirl's turn included)
             case OWL_KICK -> Math.max(0, detail) + OwlRules.KICK_SKEWER + 1;
             case HAMMER -> PaleRules.HAMMER_IMPACT + 1;
             case OWL_FISSURE -> OwlRules.FISSURE_IMPACT + 1;

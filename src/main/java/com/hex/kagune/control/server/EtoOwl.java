@@ -516,7 +516,8 @@ final class EtoOwl {
         }
         int dash = PaleRules.kickDash(offset.m_82553_());
         npc.m_21573_().m_26573_();
-        begin(npc, f, PaleMove.KICK, dash, target.m_19879_(), (float)lift, spot, now);
+        // 4.1.8: the General's is Kick Master's twirling kick, at its full charge.
+        begin(npc, f, PaleMove.KICK, npc.persona().human() ? PaleRules.twirlDetail(dash, 1.0F) : dash, target.m_19879_(), (float)lift, spot, now);
         f.from = from;
         f.yaw = (float)Math.toDegrees(Math.atan2(-facing.f_82479_, facing.f_82481_));
         f.kickReady = now + EtoRules.cooldown(EtoRules.KICK_EVERY, phase);
@@ -526,15 +527,15 @@ final class EtoOwl {
     }
 
     private static void tickKick(EtoNpc npc, Fight f, LivingEntity target, ServerLevel level, long now, long age, EtoRules.Phase phase) {
-        int dash = f.detail;
-        int arrive = PaleRules.kickArrive(dash);
+        int dash = PaleRules.kickTicks(f.detail);
+        int arrive = PaleRules.kickArrive(f.detail);
         long contact = arrive + PaleRules.KICK_CONTACT;
         if (age < contact && target != null) {
             pin(target, now);
         }
         // Where the kick has her (the lunge, the dash, the blow held up there, the rebound's hop), relative to where she began.
         Vec3 to = f.point.m_82546_(f.from);
-        double[] place = PaleRules.kickPlace(new double[] {to.f_82479_, to.f_82480_, to.f_82481_}, dash, f.charge, age + 1.0);
+        double[] place = PaleRules.kickPlace(new double[] {to.f_82479_, to.f_82480_, to.f_82481_}, f.detail, f.charge, age + 1.0);
         if (place != null) {
             npc.m_6021_(f.from.f_82479_ + place[0], f.from.f_82480_ + place[1], f.from.f_82481_ + place[2]);
             npc.m_20256_(Vec3.f_82478_);
@@ -546,6 +547,9 @@ final class EtoOwl {
             // Gone.
             npc.m_7292_(new MobEffectInstance(MobEffects.f_19609_, Math.max(1, dash), 0, false, false, false));
             UkakuFire.sound(level, npc.m_20182_(), "entity.illusioner.mirror_move", 1.0F, 1.3F);
+        }
+        if (PaleRules.twirled(f.detail) && age == PaleRules.kickThere(f.detail)) {
+            UkakuFire.sound(level, f.point, "entity.player.attack.sweep", 1.0F, 1.3F); // 4.1.8: the twirl
         }
         if (age == arrive) {
             UkakuFire.sound(level, f.point, "entity.ender_dragon.flap", 0.8F, 1.6F);

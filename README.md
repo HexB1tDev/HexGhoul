@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.8 (HexGhoul): Kick Master's twirling speed kick (testing)
+
+See `.github/release-notes-4.1.8.md`. Your words: "Right click is a chargeable teleport speed kick (dash to an oponent at high speed and side kick with a side twirl." Hold right click (hand empty) to charge a side-on coil; let go and she is gone in the Speed Kick's dash, there out of nowhere in a whole side twirl in the air into the chamber, then the flying side kick. Reach 6 to 20 blocks and blow 30% to 100% of the Speed Kick's with the charge. The right click stays the game's on a block and a talk on anyone you talk to (aim just past them to kick them). The General throws it too. Protocol 116.
+
 ## 4.1.7 (HexGhoul): Kick Master (testing)
 
 See `.github/release-notes-4.1.7.md`. Your words: "He teaches a new combat style mixing kicks and punches (mostly side kicks, spinning kicks etc), he only teaches the player this through quests if the player is either a human or wearing a full mask." Eight blows on M1 (jab, cross, round kick, side kick, spinning back kick, hook, spinning hook kick, tornado kick), the kicks posed by where the foot goes and checked from the side. The General teaches it through three watches of the night shift (8 kills after dark, 3 in the air, 3 at dawn, all empty-handed) to a human or a ghoul behind a full mask. A human uses it whenever the hand is empty; it replaces the Speed Blitz. The General fights with it. The right click (the teleport speed kick) is next. Protocol 115.

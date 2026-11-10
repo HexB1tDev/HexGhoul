@@ -146,6 +146,8 @@ final class PaleAnimator {
             pose = PaleMotions.strike(PaleStrike.byOrdinal(this.detail), since, this.from);
         } else if (now == PaleMove.PUNCH_CHARGE) {
             pose = PaleMotions.punchCharge(since, this.from);
+        } else if (now == PaleMove.TWIRL_CHARGE) {
+            pose = PaleMotions.twirlCharge(since, this.from); // 4.1.8
         } else if (now == PaleMove.PUNCH) {
             pose = PaleMotions.punch(since, this.from);
         } else if (now == PaleMove.KICK) {

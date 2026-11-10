@@ -593,6 +593,7 @@ public final class PaleMotions {
         start.roll = wrap(start.roll);
         Key[] rush = PaleStrikePoses.kickRush();
         int arrive = PaleRules.kickArrive(dash);
+        int there = PaleRules.kickThere(dash);
         RigPose pose;
         if (age < PaleRules.KICK_BURST) {
             pose = sample(rush, (float)age, start);
@@ -604,10 +605,17 @@ public final class PaleMotions {
                 // side on its way, never through it.
                 pose.leftArmZ -= RUSH_BACK_WIDE * (float)Math.sin(Math.PI * u);
             }
-        } else if (age < arrive) {
+        } else if (age < there) {
             // Gone (nothing of her is drawn): the lunge giving way to the chamber she is in when she is there.
-            float u = smooth01((float)((age - PaleRules.KICK_BURST) / Math.max(1, dash)));
+            float u = smooth01((float)((age - PaleRules.KICK_BURST) / Math.max(1, PaleRules.kickTicks(dash))));
             pose = new RigPose().add(sample(rush, PaleRules.KICK_BURST, start), 1.0F - u).add(PaleStrikePoses.kickChamber(), u);
+        } else if (age < arrive) {
+            // 4.1.8, Kick Master's twirling kick: there out of nowhere, already in the chamber and turning, a whole side twirl in the air
+            // into it (fastest as she appears), the head coming round last onto what she kicks.
+            double left = PaleRules.twirlLeft(age - there);
+            pose = PaleStrikePoses.kickChamber();
+            pose.spin -= (float)left;
+            pose.headY += (float)(0.35 * Math.sin(left));
         } else {
             // There: out of the chamber, the kick.
             pose = sample(PaleStrikePoses.kick(), (float)(age - arrive), PaleStrikePoses.kickChamber());
@@ -617,6 +625,38 @@ public final class PaleMotions {
         pose.drop *= (float)(1.0 - PaleRules.kickAirborne(dash, age));
         return pose;
     }
+
+    /**
+     * 4.1.8, Kick Master's right click held ({@code age} ticks in, out of {@code from}, null: her guard): sunk side-on into the coil of the
+     * twirling speed kick, the lead knee in, the weight low over the back foot, hands up (the guard's own lean: more tips the turned head
+     * onto a fist); fully wound ({@link PaleRules#TWIRL_CHARGE_TICKS}), a tremor runs through her (her turn and her crouch, never her lean).
+     */
+    public static RigPose twirlCharge(double age, RigPose from) {
+        RigPose start = from == null ? PaleStrikePoses.guard() : copy(from);
+        start.spin = wrap(start.spin);
+        start.flip = wrap(start.flip);
+        start.roll = wrap(start.roll);
+        RigPose coil = PaleStrikePoses.guard();
+        coil.spin = TWIRL_COIL_SPIN;
+        coil.headY = -0.3F * TWIRL_COIL_SPIN;
+        coil.leftLegX = -0.75F;
+        coil.leftKnee = 1.35F;
+        coil.leftLegZ = -0.08F;
+        coil.rightLegX = -0.2F;
+        coil.rightKnee = 1.25F;
+        coil.rightLegZ = 0.12F;
+        float u = smooth01((float)(age / TWIRL_COIL_IN));
+        RigPose pose = new RigPose().add(start, 1.0F - u).add(coil, u);
+        double full = smooth01((float)((age - PaleRules.TWIRL_CHARGE_TICKS) / 5.0));
+        pose.spin += (float)(0.018 * full * Math.sin(age * 3.3 + 1.0));
+        grounded(pose);
+        pose.drop += (float)(0.25 * full * Math.abs(Math.sin(age * 2.6)));
+        return pose;
+    }
+
+    /** 4.1.8: the coil's turn (side-on, to her left: her right leg's side to it) and how long (ticks) she takes to sink into it. */
+    static final float TWIRL_COIL_SPIN = 0.9F;
+    static final double TWIRL_COIL_IN = 3.0;
 
     /**
      * 6.2.0: her body as {@code move} alone poses it ({@code age} ticks in; its detail and charge as sent), turned {@code turn} as

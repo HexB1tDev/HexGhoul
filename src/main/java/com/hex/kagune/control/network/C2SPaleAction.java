@@ -40,6 +40,8 @@ public record C2SPaleAction(int action, int arg, int targetId) {
     public static final int INSTANT_PUNCH = 11;
     /** 7.0.1: an M1 of the eyes alone (the shared eye-mode fight): {@code targetId} the body under the crosshair, 0 for none. */
     public static final int STRIKE = 12;
+    /** 4.1.8: Kick Master's right click: held (arg 1, reminded while held) charges the twirling speed kick; let go (arg 0) throws it. */
+    public static final int TWIRL = 13;
 
     public static void encode(C2SPaleAction message, FriendlyByteBuf buffer) {
         buffer.writeByte(message.action);

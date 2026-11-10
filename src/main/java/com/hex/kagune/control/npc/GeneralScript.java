@@ -199,7 +199,8 @@ final class GeneralScript extends CompanionScript {
                 case "general_kick_master" -> "...You held till morning. Then this is yours. The jab finds the distance, the cross turns the "
                     + "hips, the round kick comes off the turn. Side kick, back kick, the hook, the spinning hook, and the tornado to finish it. "
                     + "One into the next, the body never stopping. Thirty years, in one string. Empty hands, and it's what they do now. Don't "
-                    + "make me regret it. (Kick Master: M1 with nothing in your hand.)";
+                    + "make me regret it. And when they're out of reach: wind it up, and go. (Kick Master: M1 with nothing in your hand; hold the "
+                    + "right click and let go for the twirling speed kick.)";
                 default -> "Watch. Then do it until your legs give out. Then again. (" + lesson.name() + ")";
             };
         }

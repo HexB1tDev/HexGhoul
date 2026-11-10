@@ -284,17 +284,22 @@ final class PaleMoves {
 
     /** The body the Speed Kick goes for (closest to her crosshair), and how; null when there is none she can kick. */
     static KickPlan kickPlan(ServerPlayer player) {
+        return kickPlan(player, PaleRules.KICK_RANGE);
+    }
+
+    /** 4.1.8: the same within {@code range} blocks (Kick Master's twirling kick: as far as its charge carries it). */
+    static KickPlan kickPlan(ServerPlayer player, double range) {
         ServerLevel level = player.m_284548_();
         Vec3 eye = player.m_146892_();
         Vec3 look = player.m_20154_();
         double cone = Math.cos(Math.toRadians(PaleRules.KICK_CONE));
-        AABB area = player.m_20191_().m_82400_(PaleRules.KICK_RANGE);
+        AABB area = player.m_20191_().m_82400_(range);
         KickPlan best = null;
         double bestScore = Double.MAX_VALUE;
         for (LivingEntity candidate : level.m_6443_(LivingEntity.class, area, entity -> PaleBlitz.valid(player, entity))) {
             Vec3 to = candidate.m_146892_().m_82546_(eye);
             double distance = to.m_82553_();
-            if (distance > PaleRules.KICK_RANGE || distance < 1.0E-3) {
+            if (distance > range || distance < 1.0E-3) {
                 continue;
             }
             double facing = to.m_82526_(look) / distance;
@@ -365,8 +370,9 @@ final class PaleMoves {
      */
     private static void tickKick(ServerPlayer player, PaleServer.PaleState state, long now) {
         long age = now - state.startedAt;
-        int dash = state.detail;
-        int arrive = PaleRules.kickArrive(dash);
+        int dash = PaleRules.kickTicks(state.detail);
+        int arrive = PaleRules.kickArrive(state.detail);
+        boolean twirl = PaleRules.twirled(state.detail);
         player.f_19789_ = 0.0F;
         LivingEntity target = state.targetId == 0 ? null
             : player.m_9236_().m_6815_(state.targetId) instanceof LivingEntity living && PaleBlitz.valid(player, living) ? living : null;
@@ -382,8 +388,13 @@ final class PaleMoves {
             UkakuFire.sound(player.m_284548_(), player.m_20182_(), "entity.illusioner.mirror_move", 1.0F, KaguneServerController.vary(player, 1.3F, 0.06F));
             UkakuFire.sound(player.m_284548_(), player.m_20182_(), "item.trident.riptide_1", 0.9F, KaguneServerController.vary(player, 1.4F, 0.06F));
         }
+        if (twirl && age == PaleRules.kickThere(state.detail)) {
+            // 4.1.8: there, out of nowhere, already turning: the twirl cuts the air.
+            UkakuFire.sound(player.m_284548_(), state.point, "entity.ender_dragon.flap", 0.8F, KaguneServerController.vary(player, 1.8F, 0.06F));
+            UkakuFire.sound(player.m_284548_(), state.point, "entity.player.attack.sweep", 1.0F, KaguneServerController.vary(player, 1.3F, 0.05F));
+        }
         if (age == arrive) {
-            // There, out of nowhere: the air cracks where she is.
+            // There, out of nowhere: the air cracks where she is (4.1.8: the twirl done, into the chamber).
             UkakuFire.sound(player.m_284548_(), state.point, "entity.ender_dragon.flap", 0.8F, KaguneServerController.vary(player, 1.6F, 0.06F));
             UkakuFire.sound(player.m_284548_(), state.point, "entity.player.attack.sweep", 1.0F, KaguneServerController.vary(player, 0.55F, 0.05F));
         }
@@ -400,6 +411,65 @@ final class PaleMoves {
         if (age >= arrive + PaleRules.KICK_TICKS) {
             PaleServer.end(player, state);
         }
+    }
+
+    // ------------------------------------------------------------------ 4.1.8: Kick Master's twirling speed kick (right click held)
+
+    /**
+     * 4.1.8 (the owner: "Right click is a chargeable teleport speed kick (dash to an oponent at high speed and side kick with a side twirl"):
+     * the right click down sinks her side-on into the coil ({@link PaleMove#TWIRL_CHARGE}); let go (or held past
+     * {@link PaleRules#TWIRL_MAX_HOLD}) it is the Speed Kick at whatever is nearest her crosshair within the charge's reach, there out of
+     * nowhere in a whole side twirl into the chamber, its blow and launch as strong as the charge ({@link PaleRules#twirlPower}). A ghoul
+     * pays RC; a human, nothing.
+     */
+    static void twirlKey(ServerPlayer player, PaleServer.PaleState state, boolean held, long now) {
+        if (!held) {
+            if (state.move == PaleMove.TWIRL_CHARGE) {
+                releaseTwirl(player, state, now);
+            }
+            return;
+        }
+        state.twirlHeardAt = now;
+        if (state.move == PaleMove.TWIRL_CHARGE || now < state.twirlReadyAt || !PaleCancel.allowed(state, now)) {
+            return;
+        }
+        PaleCancel.cut(player, state, now);
+        state.queuedAt = Long.MIN_VALUE;
+        PaleServer.begin(player, state, PaleMove.TWIRL_CHARGE, 0, 0, 0.0F, null, now);
+        UkakuFire.sound(player.m_284548_(), player.m_20182_(), "entity.player.attack.sweep", 0.5F, KaguneServerController.vary(player, 0.6F, 0.05F));
+    }
+
+    /** 4.1.8: the coil held: let go by itself past its longest hold, or once the client has gone quiet about it (its hold reminders). */
+    private static void tickTwirlCharge(ServerPlayer player, PaleServer.PaleState state, long now) {
+        long age = now - state.startedAt;
+        if (age >= PaleRules.TWIRL_MAX_HOLD || now - state.twirlHeardAt > 3L * PaleRules.HOLD_RESEND_TICKS + 5L) {
+            releaseTwirl(player, state, now);
+            return;
+        }
+        if (age == PaleRules.TWIRL_CHARGE_TICKS) {
+            // Fully wound: a breath let out.
+            KaguneServerController.playSelf(player, HexKaguneSounds.KAGUNE_WHIP, 0.35F, KaguneServerController.vary(player, 0.7F, 0.05F));
+        }
+    }
+
+    /** 4.1.8: let go: the Speed Kick, twirling, as charged as it got; with nothing in reach, only "No target found". */
+    private static void releaseTwirl(ServerPlayer player, PaleServer.PaleState state, long now) {
+        float charge = PaleRules.twirlChargeAt(now - state.startedAt);
+        KickPlan plan = kickPlan(player, PaleRules.twirlRange(charge));
+        if (plan == null) {
+            PaleServer.end(player, state);
+            PaleServer.notice(player, state, Component.m_237115_("message.hexkagune.pale.kick_no_target"));
+            return;
+        }
+        if (!PaleServer.bare(player) && !KaguneServerController.useEnergy(player, PaleRules.TWIRL_COST, true)) {
+            PaleServer.end(player, state);
+            return;
+        }
+        PaleServer.begin(player, state, PaleMove.KICK, PaleRules.twirlDetail(plan.dash(), charge), plan.target().m_19879_(), (float)plan.lift(),
+            plan.spot(), now, plan.yaw());
+        state.twirlReadyAt = now + Cooldowns.of(player, PaleRules.TWIRL_COOLDOWN);
+        pin(player, plan.target());
+        UkakuFire.sound(player.m_284548_(), player.m_20182_(), "block.gravel.break", 1.0F, KaguneServerController.vary(player, 0.75F, 0.08F));
     }
 
     /** Held where it is (no going anywhere but down), slowed to nothing. */
@@ -442,12 +512,15 @@ final class PaleMoves {
             .m_82549_(facing.m_82490_(0.05));
         target.f_19802_ = 0;
         WoundHits.expect(target, com.hex.kagune.control.wound.WoundBook.Blow.BLUNT, struck, along, 0.0);
-        float damage = PaleRules.fist(KaguneProfile.mastery(player)) * PaleRules.KICK_DAMAGE * PaleServer.power(player);
+        // 4.1.8: Kick Master's twirling kick carries as much as its charge (a human's fists as EyeRules.HUMAN_MASTERY's).
+        double power = PaleRules.twirled(state.detail) ? PaleRules.twirlPower(PaleRules.twirlCharge(state.detail)) : 1.0;
+        int mastery = KaguneProfile.isUnlocked(player) ? KaguneProfile.mastery(player) : com.hex.kagune.control.pale.EyeRules.HUMAN_MASTERY;
+        float damage = (float)(PaleRules.fist(mastery) * PaleRules.KICK_DAMAGE * PaleServer.power(player) * power);
         if (!target.m_6469_(player.m_269291_().m_269075_(player), damage)) {
             return;
         }
         double resist = Math.max(0.0, Math.min(1.0, target.m_21133_(net.minecraft.world.entity.ai.attributes.Attributes.f_22278_)));
-        double speed = PaleRules.KICK_SPEED * (1.0 - PaleRules.KICK_RESIST * resist);
+        double speed = PaleRules.KICK_SPEED * (1.0 - PaleRules.KICK_RESIST * resist) * power;
         BlockSmash.kick(player, target, along, speed, PaleRules.KICK_UP, damage);
         PaleKnockdown.launched(target, now);
         Vec3 launch = along.m_82490_(speed).m_82520_(0.0, PaleRules.KICK_UP, 0.0);
@@ -457,7 +530,9 @@ final class PaleMoves {
         UkakuFire.sound(level, struck, "entity.warden.sonic_boom", 0.7F, KaguneServerController.vary(player, 1.35F, 0.05F));
         UkakuFire.sound(level, struck, "entity.generic.explode", 0.6F, KaguneServerController.vary(player, 1.5F, 0.06F));
         KaguneServerController.playAt(player, target, HexKaguneSounds.BONE_CRACK, 1.0F, KaguneServerController.vary(player, 0.7F, 0.05F));
-        KaguneProfile.addMastery(player, "Swipe", 2);
+        if (KaguneProfile.isUnlocked(player)) {
+            KaguneProfile.addMastery(player, "Swipe", 2); // 4.1.7: a human has no kagune to master
+        }
         KaguneNetwork.broadcast(player);
         PaleServer.landed(player, 1);
         QuestServer.signal(player, com.hex.kagune.control.quest.Signal.KICK, 1);
@@ -611,6 +686,7 @@ final class PaleMoves {
             case PUNCH, OWL_PUNCH -> tickPunch(player, state, now);
             case WITNESS -> PaleWitness.tick(player, state, now);
             case KICK -> tickKick(player, state, now);
+            case TWIRL_CHARGE -> tickTwirlCharge(player, state, now);
             case OWL_KICK -> PaleOwlMoves.tickKick(player, state, now);
             case OWL_SPIKES -> PaleOwlMoves.tickSpikes(player, state, now);
             case OWL_STRIKE -> PaleOwlMoves.tickRend(player, state, now);

@@ -59,6 +59,9 @@ public final class PaleServer {
         long swipeReadyAt = Long.MIN_VALUE;
         long grabReadyAt = Long.MIN_VALUE;
         long kickReadyAt = Long.MIN_VALUE;
+        /** 4.1.8: when Kick Master's twirling speed kick is back; when its hold was last heard. */
+        long twirlReadyAt = Long.MIN_VALUE;
+        long twirlHeardAt = Long.MIN_VALUE;
         long hammerReadyAt = Long.MIN_VALUE;
         /** 6.2.0: Watch This may next be called (after its tentacles are back in and its cooldown). */
         long watchReadyAt = Long.MIN_VALUE;
@@ -312,6 +315,7 @@ public final class PaleServer {
         state.swipeReadyAt = Long.MIN_VALUE;
         state.grabReadyAt = Long.MIN_VALUE;
         state.kickReadyAt = Long.MIN_VALUE;
+        state.twirlReadyAt = Long.MIN_VALUE;
         state.hammerReadyAt = Long.MIN_VALUE;
         state.watchReadyAt = Long.MIN_VALUE;
         state.armReadyAt = Long.MIN_VALUE;
@@ -546,8 +550,8 @@ public final class PaleServer {
         if (!eyes && !bare(player) || !ready(player) || PaleWitness.frozen(player)) {
             return;
         }
-        if (!eyes && action != C2SPaleAction.STRIKE) {
-            return; // 4.1.7: a human's Kick Master is M1 alone
+        if (!eyes && action != C2SPaleAction.STRIKE && action != C2SPaleAction.TWIRL) {
+            return; // 4.1.7: a human's Kick Master is M1 alone (4.1.8: and its right click)
         }
         PaleState state = state(player);
         long now = player.m_9236_().m_46467_();
@@ -561,8 +565,14 @@ public final class PaleServer {
                 }
             }
             case C2SPaleAction.FLIP -> {
-                if (com.hex.kagune.control.FightStyle.use(QuestServer.log(player)::open).ownUse()) {
+                if (com.hex.kagune.control.FightStyle.use(QuestServer.log(player)::open) == com.hex.kagune.control.FightStyle.SPEEDSTER) {
                     PaleMoves.flip(player, state, arg, now);
+                }
+            }
+            case C2SPaleAction.TWIRL -> {
+                // 4.1.8: Kick Master's own right click: the twirling speed kick, charged on the hold.
+                if (com.hex.kagune.control.FightStyle.use(QuestServer.log(player)::open) == com.hex.kagune.control.FightStyle.KICK_MASTER) {
+                    PaleMoves.twirlKey(player, state, arg != 0, now);
                 }
             }
             case C2SPaleAction.PUNCH -> PaleMoves.punchKey(player, state, arg != 0, targetId, now);

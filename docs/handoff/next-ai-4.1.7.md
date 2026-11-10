@@ -11,18 +11,14 @@ alter the owner's files, one version at a time, no PR.
 | 4.1.5 | The General | pushed, EXIT 0 |
 | 4.1.6 | The hideout and the CCG building always placed (the owner: "also I cant get the aogiri hideout to spawn or the ccg building at all") | pushed, EXIT 0 |
 | 4.1.7 | Kick Master: the string, the General's three watches, humans fight with it, the General uses it | pushed, EXIT 0 |
+| 4.1.8 | Kick Master's right click: the twirling speed kick, charged on the hold | pushed, EXIT 0 |
 
 Branch: `claude/next-ai-4-1-6-handoff-sqv9e4` (fast-forwarded from `claude/modest-volta-44ltps`, which stops at the handoff after 4.1.5).
 Each "4.1.x (released)" section in `next-ai-4.0.0.md` says what that version changed.
 
 ## Next, in this order
 
-1. **4.1.8: Kick Master's right click.** The owner (quoted exactly): "Right click is a chargeable teleport speed kick (dash to an oponent at high
-   speed and side kick with a side twirl." Today `FightStyle.KICK_MASTER.ownUse()` is false, and `FightStyle.use` gives the right click to
-   Speedster's flips (if learned) or the game. Start from the Speed Kick (`PaleMoves.kick`, `PaleRules.kick*`, `PalePoseDesign.kickRush/kick`):
-   a hold that charges (like the Big Punch's `punchCharge`), then the dash and a side kick with a twirl (a spin of about a full turn into the
-   side kick's impact key: see `sideKick` in the designer). A human gets it too (`PaleServer.bare`, `eyesAction`: today a human's actions are
-   STRIKE only). Give `PaleInput.useInput` the human route (`PaleClient.bare`). Make `ownUse()` true for KICK_MASTER then.
+1. ~~4.1.8: Kick Master's right click~~ (done: "4.1.8 (released)" in `next-ai-4.0.0.md`).
 2. **Then the owner's newest ask, quoted exactly:** "after that please put all your focus into the combat rework, and kagune rework for the
    ukaku, this model is very expensive and I need you to focus on what's hard, study complex fighting moves, and combos and make it look smooth
    and beautiful." The Ukaku wing slams (`WingRig` motions SLAP, SWING, RISE, SLAM, TWIN_SLAM, GUARD; `tools/WingPreview.java`): render each, and
