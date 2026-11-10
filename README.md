@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.4 (HexGhoul): The CCG building (testing)
+
+See `.github/release-notes-4.1.4.md`. Your words: "CCG building, tons of ccg agents guard and patrol the area, sit in their offices" and "Also I forgot to send you the CCG building, this is it, also like the others only 1 of them spawns." Your `ccg_building.schem` as a place of its own, one per world, at the nearest of its offered spots that is dry land and away from the mansion and the villages. 38 investigators: 4 guards outside, 6 on patrol round it, 21 sat at desks (three a floor) and 7 in the halls; a fight gets them up and they go back after. `/locate structure hexkagune:ccg_building`. The General and Kick Master come next. Protocol 113.
+
 ## 4.1.3 (HexGhoul): Fighting styles, and Speedster from Ayato (testing)
 
 See `.github/release-notes-4.1.3.md`. Your words: "The default M1 fighting style is only unlocked through a new quest with ayato, until a fighting style is unlocked, the player can only use default punches in kakugan mode, right click is also default, the previous M1 and M2 flips are now all part of a fighting style called Speedster." With only the kakugan open and no style learned, M1 is the game's own punch and right click the game's own. Ayato teaches Speedster (the Speed Blitz on M1, the flips on right click) to any ghoul, after his proof: six hostile things killed with your bare hands, eyes open. No save starts with it. Z and V are as they were. Protocol 112.

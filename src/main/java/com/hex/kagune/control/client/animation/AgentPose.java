@@ -318,6 +318,44 @@ public final class AgentPose {
     }
 
     /**
+     * 4.1.4: sat on a chair (put on {@code p}): the body down so its hips are just over the seat ({@code HqRules.SEAT_DROP}), the thighs
+     * out level in front and the shins hanging from the knees, a little apart; its back straight, leaning a touch to its desk; the free
+     * hand on its knee; breathing, and now and then looking up from its work to one side. {@code age}: ticks; {@code seed}: its id.
+     */
+    public static void seated(RigPose p, double age, int seed) {
+        double breath = Math.sin((age + (seed & 63) * 3.1) * (2.0 * Math.PI / IDLE_BREATH));
+        double look = Math.sin((age + (seed >> 6 & 127) * 5.3) * (2.0 * Math.PI / IDLE_GLANCE));
+        float glance = (float)(look * look * look);
+        p.drop = com.hex.kagune.control.npc.HqRules.SEAT_DROP;
+        p.lean = 0.06F + 0.012F * (float)breath;
+        p.side = 0.0F;
+        p.twist = 0.0F;
+        p.headX = 0.14F - 0.1F * Math.abs(glance);
+        p.headY = 0.42F * glance;
+        p.rightShoulderY = -0.2F * (float)breath;
+        p.leftShoulderY = -0.2F * (float)breath;
+        p.rightLegX = SEAT_THIGH;
+        p.rightKnee = SEAT_KNEE;
+        p.rightLegY = 0.0F;
+        p.rightLegZ = 0.06F;
+        p.leftLegX = SEAT_THIGH;
+        p.leftKnee = SEAT_KNEE;
+        p.leftLegY = 0.0F;
+        p.leftLegZ = -0.06F;
+        p.legHold = 1.0F;
+        // The free hand on its knee (the other carries its case, hanging by the chair).
+        p.leftArmX = -0.95F - p.lean;
+        p.leftArmY = 0.0F;
+        p.leftArmZ = -0.05F;
+        p.leftElbow = 0.55F;
+        p.leftArmHold = 1.0F;
+    }
+
+    /** 4.1.4: a sitter's thighs (out level in front) and knees (the shins hanging straight down). */
+    public static final float SEAT_THIGH = -(float)(Math.PI / 2.0);
+    public static final float SEAT_KNEE = (float)(Math.PI / 2.0);
+
+    /**
      * Standing about ({@code amount}: 0..1 of it, put on {@code p}): relaxed and a little cocky. It leans back from the hips; its weight
      * is on its right leg (the case's side), the left one loose, a little forward, out and turned out; its upper body tips a touch away
      * from the case's weight; its chest is turned a little open, its head cocked; its free arm hangs back, loose. It breathes (the

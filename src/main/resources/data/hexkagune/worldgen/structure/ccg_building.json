@@ -1,0 +1,7 @@
+{
+  "type": "hexkagune:site_ccg_building",
+  "biomes": "#hexkagune:has_structure/ccg_building",
+  "step": "surface_structures",
+  "spawn_overrides": {},
+  "terrain_adaptation": "beard_box"
+}

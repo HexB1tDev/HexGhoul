@@ -42,7 +42,8 @@ public final class ControlStructures {
 
     /**
      * 4.0.0 (The Great Exploration): the owner's three new places, each its own type ({@link Site}): hexkagune:site_village_1 (the human
-     * town), hexkagune:site_village_2 (the CCG settlement), hexkagune:site_aogiri_hideout (Aogiri Tree's hideout).
+     * town), hexkagune:site_village_2 (the CCG settlement), hexkagune:site_aogiri_hideout (Aogiri Tree's hideout). 4.1.4: and
+     * hexkagune:site_ccg_building (the CCG's building).
      */
     private static final java.util.Map<String, StructureType<Site>> SITES = new java.util.LinkedHashMap<>();
 
@@ -207,6 +208,15 @@ public final class ControlStructures {
             boolean across = (turns & 1) == 1;
             int sizeX = across ? this.site.depth() : this.site.width();
             int sizeZ = across ? this.site.width() : this.site.depth();
+            if (CCG.equals(this.site.id())) {
+                // 4.1.4 (the owner: "CCG building ... like the others only 1 of them spawns"): the world's one, at the first of its own
+                // offers on dry land (worked out once a world, as the hideout's is).
+                int[] where = ccg(context);
+                if (where == null || where[0] != chunk.f_45578_ || where[1] != chunk.f_45579_) {
+                    return Optional.empty();
+                }
+                return Optional.of(this.stub(context, turns, chunk.m_45604_() + 8 - sizeX / 2, chunk.m_45605_() + 8 - sizeZ / 2, sizeX, sizeZ, where[2]));
+            }
             if (unique(this.site)) {
                 // 4.1.1 (the owner: "the mansion is currently happily resting at the very bottom of the ocean"): the world's one hideout
                 // is built only at the first of its offers on dry land (worked out once a world, the same in every chunk that asks).
@@ -311,6 +321,54 @@ public final class ControlStructures {
                 @Override
                 public boolean dry(int chunkX, int chunkZ, int y) {
                     return DryLand.dry(ground, y, (chunkX << 4) - DryLand.REACH_BACK, (chunkZ << 4) - DryLand.REACH_BACK, span, span);
+                }
+            }, VillageGround.FLAT);
+            return chosen == null ? NOWHERE : chosen;
+        }
+
+        /** 4.1.4: the CCG building's site, and how far out round it the ground is judged too (its patrol walks there). */
+        static final String CCG = "ccg_building";
+        static final int CCG_ROUND = 8;
+        private static final java.util.Map<java.util.List<Object>, int[]> BUILDINGS = new java.util.HashMap<>();
+
+        /** 4.1.4: the world's one CCG building's start chunk and ground ({x, z, height}), or null if none of its offers is dry land. */
+        static int[] ccg(Structure.GenerationContext context) {
+            java.util.List<Object> world = java.util.List.of(context.f_226627_(), context.f_226622_());
+            synchronized (BUILDINGS) {
+                int[] known = BUILDINGS.get(world);
+                if (known == null) {
+                    known = chooseCcg(context);
+                    if (BUILDINGS.size() >= 4) {
+                        BUILDINGS.clear();
+                    }
+                    BUILDINGS.put(world, known);
+                }
+                return known.length == 0 ? null : known;
+            }
+        }
+
+        /**
+         * 4.1.4: the first of the building's offers ({@link DryLand#ccgOffers}) where its footprint (centred on its start chunk) and
+         * {@link #CCG_ROUND} blocks round it are dry land in a biome it may stand in, fairly flat; failing that, the first dry one.
+         */
+        private static int[] chooseCcg(Structure.GenerationContext context) {
+            DryLand.Ground ground = ground(context);
+            com.hex.kagune.control.village.SiteMaps.Site site = com.hex.kagune.control.village.SiteMaps.of(CCG);
+            int span = Math.max(site.width(), site.depth()) + 2 * CCG_ROUND;
+            int[] chosen = DryLand.choose(DryLand.ccgOffers(context.f_226627_()), new DryLand.Judge() {
+                @Override
+                public int[] grid(int chunkX, int chunkZ) {
+                    return Site.grid(ground, (chunkX << 4) + 8 - span / 2, (chunkZ << 4) + 8 - span / 2, span, span);
+                }
+
+                @Override
+                public boolean biome(int chunkX, int chunkZ, int y) {
+                    return ControlStructures.biome(context, (chunkX << 4) + 8, y, (chunkZ << 4) + 8);
+                }
+
+                @Override
+                public boolean dry(int chunkX, int chunkZ, int y) {
+                    return DryLand.dry(ground, y, (chunkX << 4) + 8 - span / 2, (chunkZ << 4) + 8 - span / 2, span, span);
                 }
             }, VillageGround.FLAT);
             return chosen == null ? NOWHERE : chosen;

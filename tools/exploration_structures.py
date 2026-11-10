@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""4.0.0 (The Great Exploration): the owner's three new places, from their schematics (art/exploration/, saved by newer games, Sponge v2
+"""4.0.0 (The Great Exploration): the owner's new places (4.1.4: a fourth, the CCG building), from their schematics (art/exploration/, saved by newer games, Sponge v2
 and v3), to 1.20.1 structure templates cut into tiles, with the people who live in each, and the maps the game walks them by.
 
     python3 tools/exploration_structures.py --blocks blocks.json
@@ -9,6 +9,9 @@ and v3), to 1.20.1 structure templates cut into tiles, with the people who live 
   art/exploration/aogiri_mansion.schem  -> hexkagune:aogiri_hideout  the Aogiri Tree hideout (4.0.2: the owner's mansion, replacing
                                                                        hideout_ougiri.schem: its guards, its patrol, its members, Ayato
                                                                        and Noro in rooms of their own)
+  art/exploration/ccg_building.schem    -> hexkagune:ccg_building    4.1.4: the CCG's building (guards at its door and in its yard, a
+                                                                       patrol round it, investigators at the desks and in the halls of
+                                                                       every floor)
 
 Each place is written as tiles (data/hexkagune/structures/<site>/t_<i>_<j>.nbt, at most TILE blocks a side) that the expansion's own
 structure type (ControlStructures.Site) places side by side, turned as a whole, from its start chunk; its numbers and its map are written to
@@ -58,6 +61,18 @@ SITES = [
      "posts": [(152, 10, True), (168, 10, False), (152, 252, True), (168, 252, False)],
      "loop": (30, 290, 55, 195), "building": (42, 278, 72, 180), "top_floor": 27,
      "rooms": {"hexkagune:noro": (118, 26, 88), "hexkagune:ayato": (262, 14, 105)}},
+    # 4.1.4 (the owner: "CCG building, tons of ccg agents guard and patrol the area, sit in their offices"; "this is it, also like the others
+    # only 1 of them spawns"): 39 x 39, an L of seven floors (one every 8 blocks: its floor, 5 blocks of room, a ceiling of lamps) on a
+    # stone plate, a yard in the L's arm. Its file is 68 tall with nothing above its roof (y 57): those empty layers are left off. Its door
+    # is the gap in its south wall (x 9-10). Two guards stand either side of the door and two in the yard; a patrol of six walks round the
+    # L, a block or two out from its walls (the yard's plate, and the world's ground beside the plate: its terrain adaptation levels it);
+    # on every floor three sit at desks (a chair is a quartz or dark oak stair with nothing over it) and one stands in the hall.
+    {"id": "ccg_building", "source": "ccg_building.schem", "map": 6, "crop_x": None, "kind": "ccg_hq", "houses": 0, "agents": 0,
+     "ring": (0, 0), "loot_every": 0, "ground": 0, "top": 58, "storey": 8, "floors": 7, "seats": 3,
+     "posts": [(7, 37, 0.0), (12, 37, 0.0), (22, 16, -90.0), (33, 16, 180.0)],
+     "loop": [(0, 37), (0, 26), (0, 14), (0, 2), (0, -2), (9, -2), (18, -2), (19, 8), (19, 19), (29, 19), (40, 19), (40, 28), (40, 37),
+              (30, 38), (20, 38)],
+     "patrol": [(1, 37), (1, 26), (1, 14), (19, 8), (29, 19), (30, 37)], "hall": (13, 28)},
 ]
 
 # 1.20.1 has none of these (1.20.3 to 1.21.9): each one's nearest, and the properties it keeps.
@@ -210,6 +225,11 @@ def block_entity(kind, inner, loot, seed):
 
 def build(site, registry):
     w, h, d, by_index, ids, raw_entities = load(ART / site["source"])
+    if "top" in site:
+        # 4.1.4: the layers over its roof (empty in the owner's file) left off: the file's layers are y, then z, then x.
+        assert all(by_index[i].split("[")[0] in AIR for i in ids[site["top"] * d * w:]), site["id"]
+        h = site["top"]
+        ids = ids[:h * d * w]
     x0, x1 = site["crop_x"] or (0, w)
     # 4.0.2: the columns kept (the crop's, less any bands cut out of it), and where each lands.
     kept = [x for x in range(x0, x1) if not any(a <= x < b for a, b in site.get("cut_x", ()))]
@@ -260,7 +280,7 @@ def build(site, registry):
     tops = collections.Counter(top[(x, z)] for x in range(width // m if m else 0, width - (width // m if m else 0))
                                for z in range(d // m if m else 0, d - (d // m if m else 0))
                                if (x, z) in top and name((x, top[(x, z)], z)) in GROUNDS)
-    ground = site.get("ground", tops.most_common(1)[0][0])
+    ground = site["ground"] if "ground" in site else tops.most_common(1)[0][0]
     street = ground + 1
     middle = (width // 2, street, d // 2)
 
@@ -310,7 +330,10 @@ def build(site, registry):
             # A post: a street spot well spread from the others.
             spot = spread(streets, [p[1] for p in people], middle, hi + 8)
         people.append(("hexkagune:ccg_investigator", spot, -1, {}))
-    if site["kind"] == "aogiri" and "posts" in site:
+    if site["kind"] == "ccg_hq":
+        people += headquarters(site, cells, stands, width, d, h, street)
+        route = [(x, street, z) for x, z in site["loop"]]
+    elif site["kind"] == "aogiri" and "posts" in site:
         people += mansion(site, cells, stands, roofed, streets, placed, width, d, h, street, middle)
         route = site_loop(site, streets, placed, middle)
     elif site["kind"] == "aogiri":
@@ -422,6 +445,54 @@ def mansion(site, cells, stands, roofed, streets, placed, width, d, h, street, m
         spot = far(inside if k % 3 != 2 else outside)
         people.append(("hexkagune:ghoul", spot, -1, {"HexAogiri": L.Tag(L.BYTE, 1)}))
         taken.append(spot)
+    return people
+
+
+def headquarters(site, cells, stands, width, d, h, street):
+    """4.1.4: the CCG building's people: the guards at their posts (each looking the way given), the patrol on its loop, and on every floor
+    investigators at desks (HexCcgSeat: the chair's block is where they are placed; HexCcgYaw the way they sit facing) and one in the hall."""
+    people, taken = [], []
+
+    def agent(spot, **tags):
+        people.append(("hexkagune:ccg_investigator", spot, -1, tags))
+        taken.append(spot)
+
+    for x, z, yaw in site["posts"]:
+        agent(standing(stands, x, street, z), HexCcgPost=L.Tag(L.BYTE, 1), HexCcgYaw=L.Tag(L.INT, int(yaw)))
+    for x, z in site["patrol"]:
+        # Placed on the plate, out of doors, by the loop (some of the loop's own spots lie on the world's ground beside the plate).
+        agent(standing(stands, x, street, z))
+    def back(p):
+        """Nothing over a seat, or an office chair's back: a trapdoor stood open against its tall side."""
+        c = cells.get(p)
+        return c is None or c[0].endswith("_trapdoor") and c[1].get("open") == "true"
+
+    # The way someone sat on a stair looks: away from its tall side (south is yaw 0, west 90, north 180, east -90).
+    looks = {"north": 0.0, "east": 90.0, "south": 180.0, "west": -90.0}
+    for floor in range(site["floors"]):
+        y = street + floor * site["storey"]
+        seats = []
+        for (x, yy, z), (n, props) in cells.items():
+            if yy == y and n in ("minecraft:smooth_quartz_stairs", "minecraft:dark_oak_stairs") and props.get("half") == "bottom" \
+                    and props.get("shape") == "straight" and back((x, y + 1, z)) and (x, y + 2, z) not in cells:
+                f = {"north": (0, -1), "south": (0, 1), "east": (1, 0), "west": (-1, 0)}[props["facing"]]
+                # Room for the knees: nothing solid before the seat at its own height but a table's leg (a fence) under its top.
+                front = cells.get((x - f[0], y, z - f[1]))
+                if front is None or front[0].endswith("_fence"):
+                    seats.append(((x, y, z), looks[props["facing"]]))
+        # An office chair first (dark oak: the north-west offices'), then each as far as can be from those taken.
+        seats.sort(key=lambda s: (cells[s[0]][0] != "minecraft:dark_oak_stairs", s[0][2], s[0][0]))
+        chosen = []
+        for _ in range(min(site["seats"], len(seats))):
+            free = [s for s in seats if s not in chosen]
+            pick = free[0] if not chosen else max(free, key=lambda s: min((s[0][0] - c[0][0]) ** 2 + (s[0][2] - c[0][2]) ** 2 for c in chosen))
+            chosen.append(pick)
+        for spot, yaw in chosen:
+            agent(spot, HexCcgSeat=L.Tag(L.BYTE, 1), HexCcgYaw=L.Tag(L.INT, int(yaw)))
+        # The hall: by the stairs, looking down it (south).
+        spot = standing(stands, site["hall"][0], y, site["hall"][1], 4)
+        if spot is not None and spot[1] == y:
+            agent(spot, HexCcgPost=L.Tag(L.BYTE, 1), HexCcgYaw=L.Tag(L.INT, 0))
     return people
 
 
@@ -540,7 +611,7 @@ def java(results):
     blocks = []
     for r in results:
         s, middle = r["site"], r["middle"]
-        rel = [(x - middle[0], z - middle[2]) for x, _, z in r["streets"]] or [(0, 0)]
+        rel = [(x - middle[0], z - middle[2]) for x, _, z in r["streets"] + r["route"]] or [(0, 0)]
         perimeter = max(max(abs(x) for x, _ in rel), max(abs(z) for _, z in rel)) + 2
         xs, zs = r["tiles"]
         blocks.append(f'''        new Site("{s["id"]}", {s["map"]}, {r["width"]}, {r["depth"]}, {r["height"]}, {r["ground"]}, {middle[0]}, {middle[2]},
@@ -552,8 +623,8 @@ def java(results):
     JAVA.write_text(f'''package com.hex.kagune.control.village;
 
 /**
- * 4.0.0 (The Great Exploration): the owner's three new places (pure; written by {{@code tools/exploration_structures.py}} from their
- * schematics: do not edit by hand). Each one's size and ground (the template's frame: x east, y up, z south, as it lies unturned), the
+ * 4.0.0 (The Great Exploration): the owner's new places (4.1.4: and the CCG building; pure; written by
+ * {{@code tools/exploration_structures.py}} from their schematics: do not edit by hand). Each one's size and ground (the template's frame: x east, y up, z south, as it lies unturned), the
  * edges of its tiles (data/hexkagune/structures/&lt;id&gt;/t_&lt;i&gt;_&lt;j&gt;.nbt), its middle at street level, and its map relative to that
  * middle: where its people may stand in the open (every third block), its patrol (in order round the middle), its homes (by number), and
  * how far out its perimeter is. Its people carry its {{@link Site#map}} number in their HexVillage data.

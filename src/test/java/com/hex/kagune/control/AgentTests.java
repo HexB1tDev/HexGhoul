@@ -83,12 +83,94 @@ public final class AgentTests {
         reaperTactics();
         ranks();
         tendril();
+        headquarters();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
             System.exit(1);
         }
         System.out.println("Agent tests: " + passed + " checks passed");
+    }
+
+    /**
+     * 4.1.4 (the owner: "CCG building, tons of ccg agents guard and patrol the area, sit in their offices"): the building's investigators at
+     * their posts and their desks (HqRules, AgentDesk), and how one sits.
+     */
+    static void headquarters() throws IOException {
+        // The building turns as a whole: a yaw of its own frame in the world.
+        check(com.hex.kagune.control.npc.HqRules.yaw(0, 0) == 0.0F && com.hex.kagune.control.npc.HqRules.yaw(0, 1) == 90.0F
+            && com.hex.kagune.control.npc.HqRules.yaw(0, 2) == 180.0F && com.hex.kagune.control.npc.HqRules.yaw(0, 3) == -90.0F
+            && com.hex.kagune.control.npc.HqRules.yaw(-90, 1) == 0.0F && com.hex.kagune.control.npc.HqRules.yaw(180, 2) == 0.0F
+            && com.hex.kagune.control.npc.HqRules.yaw(90, 1) == 180.0F && com.hex.kagune.control.npc.HqRules.yaw(-90, 3) == 180.0F
+            && com.hex.kagune.control.npc.HqRules.yaw(0, 5) == 90.0F, "a watch's way turned with the building, kept within half a turn");
+        for (int turns = 0; turns < 4; turns++) {
+            for (int yaw : new int[] {0, 90, 180, -90}) {
+                // The way it looks as a step ({-sin, cos}) is the template's step turned as the game turns a template's blocks.
+                int[] step = {(int)Math.round(-Math.sin(Math.toRadians(yaw))), (int)Math.round(Math.cos(Math.toRadians(yaw)))};
+                int[] turned = com.hex.kagune.control.village.VillageRules.turn(step[0], step[1], turns);
+                float world = com.hex.kagune.control.npc.HqRules.yaw(yaw, turns);
+                check((int)Math.round(-Math.sin(Math.toRadians(world))) == turned[0] && (int)Math.round(Math.cos(Math.toRadians(world))) == turned[1],
+                    "yaw " + yaw + " turned " + turns + ": the way the building's blocks turn");
+            }
+        }
+        // Where it sits: on the chair's low step, toward its open side, whichever way the chair faces.
+        for (float yaw : new float[] {0.0F, 90.0F, 180.0F, -90.0F}) {
+            double[] at = com.hex.kagune.control.npc.HqRules.seat(10, 64, -5, yaw);
+            double fx = at[0] - 10.5;
+            double fz = at[2] + 4.5;
+            check(Math.abs(at[1] - 64.5) < 1.0E-9 && Math.abs(Math.hypot(fx, fz) - com.hex.kagune.control.npc.HqRules.SEAT_FORWARD) < 1.0E-9
+                && Math.abs(fx - -Math.sin(Math.toRadians(yaw)) * 0.2) < 1.0E-9 && Math.abs(fz - Math.cos(Math.toRadians(yaw)) * 0.2) < 1.0E-9,
+                "yaw " + yaw + ": sat half a block up, a fifth of a block toward the way it faces");
+            check(com.hex.kagune.control.npc.HqRules.sits(at[0] - 10.5, at[1] - 64.0, at[2] + 4.5), "placed in its chair's block, it sits down at once");
+        }
+        check(com.hex.kagune.control.npc.HqRules.sits(1.5, 0.5, 0.0) && !com.hex.kagune.control.npc.HqRules.sits(1.7, 0.0, 0.0)
+            && !com.hex.kagune.control.npc.HqRules.sits(0.0, 1.5, 0.0) && !com.hex.kagune.control.npc.HqRules.sits(0.0, -8.0, 0.0),
+            "it sits down from beside its chair, never from across the room or another floor");
+        check(com.hex.kagune.control.npc.HqRules.posted(0.5, 0.5) && !com.hex.kagune.control.npc.HqRules.posted(1.0, 1.0), "at its post within a step of it");
+        // How one sits: thigh and shin are 6 sixteenths each; the hips just over the seat, the knees past the chair's edge, the feet off
+        // the floor but never under it (the seat is 8 sixteenths over the floor).
+        double hips = 12.0 - com.hex.kagune.control.npc.HqRules.SEAT_DROP;
+        double knees = com.hex.kagune.control.npc.HqRules.SEAT_FORWARD * 16.0 + 6.0;
+        double feet = hips - 6.0;
+        check(hips >= 1.0 && hips <= 3.0 && knees > 8.0 && feet > -8.0 && feet <= 0.0, "hips " + hips + " over the seat, knees " + knees
+            + " from the chair's middle (its edge at 8), feet " + feet + " from the seat's top (the floor at -8)");
+        float least = Float.MAX_VALUE;
+        float most = -Float.MAX_VALUE;
+        float glance = 0.0F;
+        for (double age = 0.0; age < 600.0; age += 3.0) {
+            RigPose p = new RigPose();
+            AgentPose.seated(p, age, 4242);
+            least = Math.min(least, p.lean);
+            most = Math.max(most, p.lean);
+            glance = Math.max(glance, Math.abs(p.headY));
+            check(p.drop == com.hex.kagune.control.npc.HqRules.SEAT_DROP && p.legHold == 1.0F && p.leftArmHold == 1.0F, "sat down, its legs and free arm the seat's");
+            check(Math.abs(p.rightLegX + Math.PI / 2.0) < 1.0E-6 && Math.abs(p.leftLegX + Math.PI / 2.0) < 1.0E-6
+                && Math.abs(p.rightKnee - Math.PI / 2.0) < 1.0E-6 && Math.abs(p.leftKnee - Math.PI / 2.0) < 1.0E-6,
+                "its thighs out level, its shins straight down");
+            check(p.rightLegZ > 0.0F && p.leftLegZ < 0.0F && p.lean > 0.0F && p.lean < 0.12F && p.headX >= 0.0F && p.headX < 0.2F,
+                "its knees a little apart, its back near straight, its eyes on its desk");
+        }
+        check(most - least > 0.015F && glance > 0.3F, "it breathes, and now and then looks up to one side");
+        RigPose one = new RigPose();
+        RigPose other = new RigPose();
+        AgentPose.seated(one, 100.0, 1);
+        AgentPose.seated(other, 100.0, 9001);
+        check(one.headY != other.headY || one.lean != other.lean, "two of them never as one");
+        // The sources: what keeps one sat, and what gets it up.
+        String brain = Files.readString(Path.of("src/main/java/com/hex/kagune/control/server/AgentBrain.java"));
+        check(brain.contains("mind.seatKept = false;\n        act(agent, mind, level, now);\n        if (!mind.seatKept && agent.seated()) {\n            AgentDesk.stand(agent);")
+            && brain.contains("if (!AgentDesk.idle(agent, mind, place, level, now)) {\n                village(agent, mind, place, now);"),
+            "sat only while its desk is all it does (a fight, a fright, a stun: up); the building's others walk its patrol");
+        String desk = Files.readString(Path.of("src/main/java/com/hex/kagune/control/server/AgentDesk.java"));
+        check(desk.contains("data.m_128471_(HqRules.SEAT)") && desk.contains("data.m_128471_(HqRules.POST)") && desk.contains("HqRules.yaw(data.m_128451_(HqRules.YAW), place.turns())")
+            && desk.contains("agent.seated(true);\n                mind.seatKept = true;") && desk.contains(".m_60795_()"),
+            "a seat, a post and the way to face read from its saved data; sat only on a chair still there");
+        String client = Files.readString(Path.of("src/main/java/com/hex/kagune/control/client/AgentClient.java"));
+        check(client.contains("if (agent.seated()) {") && client.contains("AgentPose.seated(p, agent.f_19797_ + partial, agent.m_19879_());"),
+            "every client draws it sat");
+        String agent = Files.readString(Path.of("src/main/java/com/hex/kagune/control/npc/CcgAgent.java"));
+        check(agent.contains("this.f_19804_.m_135372_(SEAT, 0);") && agent.indexOf("ARM_TARGET = Synched") < agent.indexOf("SEAT = Synched"),
+            "its seat rides on its entity data, after the older ones (their places kept)");
     }
 
     /** 2.0.33: the White Reaper's ground tendril: telegraphed (time to get off the mark), big, and it rises, whips and sinks. */

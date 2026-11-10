@@ -179,6 +179,21 @@ lesson). `PaleServer.style`, `eyesAction` and `punched` (the blitz and the flips
 `PaleInput.useInput` and `attackInput`. `EtoServer`: the proof's count in the kill handler. `AbilityGuide` rows. Protocol 112.
 `CompanionTests.speedster`.
 
+## 4.1.4 (released)
+
+The owner (quoted exactly): "CCG building, tons of ccg agents guard and patrol the area, sit in their offices" and "Also I forgot to send you the CCG building, this is it, also like the others only 1 of them spawns." Their file: `art/exploration/ccg_building.schem` (39x68x39; its top 10 layers
+are empty and left off: 58). `tools/exploration_structures.py`: a fourth site, `ccg_building` (map 6, kind `ccg_hq`, `top`, `headquarters`:
+posts, patrol spawns, seats per floor (a bottom straight quartz or dark oak stair, nothing over it but an open trapdoor), a hall guard per
+floor; its `loop` is the route, some of it outside the plate). Run it with `--blocks` (minecraft-data's pc/1.20/blocks.json, from the npm
+package `minecraft-data`); it rewrites every site's tiles (the same bytes) and `SiteMaps.java`. `DryLand.ccgOffers`, `near`, `CCG_SALT`,
+`CCG_APART` (12 chunks from any hideout or village offer). `ControlStructures.Site.ccg` and `chooseCcg` (cached per world like the
+hideout's; its judge looks at the footprint and `CCG_ROUND` out). Data: `worldgen/structure/ccg_building.json`,
+`structure_set/ccg_building.json`, `tags/worldgen/biome/has_structure/ccg_building.json`. `npc/HqRules` (pure: SEAT, POST, YAW in the
+entity's saved data, `yaw`, `seat`, `sits`, `posted`). `server/AgentDesk.idle` (called from `AgentBrain.patrol`; `Mind.seatKept`, and
+`tick` stands it up when not kept). `CcgAgent.SEAT` (entity data, appended). `AgentPose.seated`, `AgentClient.pose`. Protocol 113.
+`NpcTests.ccgBuilding` (reads the template back), `AgentTests.headquarters`. Next: the General goes in this building (a room on the
+top floor: add him to `headquarters` as the mansion's `rooms` are).
+
 ## Next
 
 Nothing outstanding from the owner. If they report in-game problems with the outfits' fit, adjust `CLEAR`, `SNUG`, the drape

@@ -109,7 +109,11 @@ public final class AgentClient {
         // 1.3.28: standing about with its case shut: its idle.
         boolean carried = weapon == null && (shut == null || QuinqueClient.shown(held, false) <= 0.0F);
         float still = carried ? AgentPose.still(speed) : 0.0F;
-        if (still > 0.0F) {
+        if (agent.seated()) {
+            // 4.1.4: at its desk in the CCG building: sat on its chair, its hands on its knees, looking over its work.
+            AgentPose.seated(p, agent.f_19797_ + partial, agent.m_19879_());
+            posed = true;
+        } else if (still > 0.0F) {
             if (agent.lookIndex() == com.hex.kagune.control.npc.AgentRules.REAPER_LOOK) {
                 AgentPose.reaperIdle(p, agent.f_19797_ + partial, agent.m_19879_(), still); // 2.0.43: his own, at ease
             } else {

@@ -81,6 +81,8 @@ public final class AgentBrain {
         long preySought = Long.MIN_VALUE;
         /** Who it holds something against, and until when (a revealed ghoul's mark, a blow's grudge). */
         final Map<UUID, Long> grudges = new HashMap<>();
+        /** 4.1.4: set by {@link AgentDesk} each tick it keeps its seat. */
+        boolean seatKept;
         long hurtAt = Long.MIN_VALUE;
         /** Its case: open or shut, and its last fight. */
         boolean open;
@@ -411,6 +413,15 @@ public final class AgentBrain {
         }
         long now = level.m_46467_();
         Mind mind = agent.mind == null ? wake(agent, level, now) : agent.mind;
+        // 4.1.4: one sat at its desk (AgentDesk) stays sat only while that is what it does: anything else gets it up.
+        mind.seatKept = false;
+        act(agent, mind, level, now);
+        if (!mind.seatKept && agent.seated()) {
+            AgentDesk.stand(agent);
+        }
+    }
+
+    private static void act(CcgAgent agent, Mind mind, ServerLevel level, long now) {
         if (BikakuDevour.held(agent)) {
             // 3.6.3: being devoured: whatever it was doing stops, its kagune-made weapon back in its case, nothing more.
             if (mind.armOut) {
@@ -803,7 +814,10 @@ public final class AgentBrain {
         mind.shots = 0;
         VillagePlace.Place place = VillagePlace.of(agent);
         if (place != null) {
-            village(agent, mind, place, now);
+            // 4.1.4: the CCG building's: at its post or its desk; the rest walk its patrol.
+            if (!AgentDesk.idle(agent, mind, place, level, now)) {
+                village(agent, mind, place, now);
+            }
             return;
         }
         if (!mind.leader && partner != null) {

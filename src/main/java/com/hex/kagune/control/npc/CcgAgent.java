@@ -50,6 +50,9 @@ public class CcgAgent extends PathfinderMob {
     static final EntityDataAccessor<Integer> ARM_AT = SynchedEntityData.m_135353_(CcgAgent.class, EntityDataSerializers.f_135028_);
     static final EntityDataAccessor<Integer> ARM_TARGET = SynchedEntityData.m_135353_(CcgAgent.class, EntityDataSerializers.f_135028_);
 
+    /** 4.1.4: 1 while it sits at its desk in the CCG building ({@link HqRules}), else 0. */
+    static final EntityDataAccessor<Integer> SEAT = SynchedEntityData.m_135353_(CcgAgent.class, EntityDataSerializers.f_135028_);
+
     /** The swing that meets a blow coming at it: a quick cut up across it, its weapon slapping the blow aside. */
     public static final int PARRY = 3;
     public static final int KICK = 4;
@@ -90,6 +93,16 @@ public class CcgAgent extends PathfinderMob {
         this.f_19804_.m_135372_(ARM, 0);
         this.f_19804_.m_135372_(ARM_AT, NEVER);
         this.f_19804_.m_135372_(ARM_TARGET, 0);
+        this.f_19804_.m_135372_(SEAT, 0);
+    }
+
+    /** 4.1.4: true while it sits at its desk. */
+    public boolean seated() {
+        return this.get(SEAT) != 0;
+    }
+
+    public void seated(boolean seated) {
+        this.put(SEAT, seated ? 1 : 0);
     }
 
     /** 3.0.0: its kagune-made weapon as packed ({@link ArmRules#pack}; 0 none). */

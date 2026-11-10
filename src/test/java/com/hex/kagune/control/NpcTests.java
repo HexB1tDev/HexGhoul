@@ -55,6 +55,7 @@ public final class NpcTests {
         attraction();
         mansion();
         dryLand();
+        ccgBuilding();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -1697,6 +1698,236 @@ public final class NpcTests {
             int lo = corner - 128;
             int hi = corner + 143 - size + 1;
             return hi < lo ? lo : Math.max(lo, Math.min(hi, want));
+        }
+    }
+
+    /**
+     * 4.1.4 (the owner: "CCG building, tons of ccg agents guard and patrol the area, sit in their offices"; "Also I forgot to send you the
+     * CCG building, this is it, also like the others only 1 of them spawns"): the building as a place of its own, one in a world, on dry
+     * land away from the mansion and the towns; its people at their posts, on their patrol and at their desks.
+     */
+    @SuppressWarnings("unchecked")
+    static void ccgBuilding() {
+        com.hex.kagune.control.village.SiteMaps.Site site = com.hex.kagune.control.village.SiteMaps.of("ccg_building");
+        check(site != null && site.width() == 39 && site.depth() == 39 && site.height() == 58 && site.ground() == 0 && site.map() == 6
+            && site.across() == 1 && site.down() == 1 && com.hex.kagune.control.village.SiteMaps.byMap(6) == site,
+            "the building is the owner's (39 x 39, 58 tall: the empty layers over its roof left off), one tile, its own map");
+        check(com.hex.kagune.control.village.SiteMaps.ALL.length == 4 && com.hex.kagune.control.village.SiteMaps.of("aogiri_hideout").map() == 5
+            && com.hex.kagune.control.village.SiteMaps.of("village_1").map() == 3 && com.hex.kagune.control.village.SiteMaps.of("village_2").map() == 4,
+            "the three older places keep their maps");
+        // Its patrol: a loop round the L, a block or two out from its walls, all of it within its perimeter.
+        int[][] route = site.route();
+        boolean round = route.length >= 12;
+        int west = 0;
+        int east = 0;
+        int north = 0;
+        int south = 0;
+        for (int i = 0; i < route.length; i++) {
+            int[] a = route[i];
+            int[] b = route[(i + 1) % route.length];
+            round &= Math.hypot(a[0] - b[0], a[2] - b[2]) <= 24.0 && a[1] == 0 && Math.abs(a[0]) <= site.perimeter() && Math.abs(a[2]) <= site.perimeter();
+            west += a[0] <= -19 ? 1 : 0;
+            east += a[0] >= 19 ? 1 : 0;
+            north += a[2] <= -19 ? 1 : 0;
+            south += a[2] >= 17 ? 1 : 0;
+        }
+        check(round && west >= 3 && east >= 2 && north >= 2 && south >= 3, "its patrol goes round it: stops on every side, none far from the next, at street level");
+        // Its offers: the game's own for its set, none near a spot of the mansion's or a town's; never the hideout's own offers.
+        long[] seeds = {0L, 1L, -7L, 123456789L, 8675309L, Long.MIN_VALUE + 5L, 4242424242L};
+        int fewest = Integer.MAX_VALUE;
+        for (long seed : seeds) {
+            int[][] offers = com.hex.kagune.control.village.DryLand.ccgOffers(seed);
+            fewest = Math.min(fewest, offers.length);
+            boolean ok = true;
+            long last = -1L;
+            int[][] hideouts = com.hex.kagune.control.village.DryLand.hideoutOffers(seed);
+            for (int[] offer : offers) {
+                long d = (long)offer[0] * offer[0] + (long)offer[1] * offer[1];
+                ok &= d >= last && d >= (long)com.hex.kagune.control.village.DryLand.NEAREST * com.hex.kagune.control.village.DryLand.NEAREST;
+                last = d;
+                int[] again = com.hex.kagune.control.village.DryLand.spreadChunk(seed, Math.floorDiv(offer[0], 40), Math.floorDiv(offer[1], 40), 40, 20,
+                    com.hex.kagune.control.village.DryLand.CCG_SALT);
+                ok &= again[0] == offer[0] && again[1] == offer[1];
+                for (int[] hideout : hideouts) {
+                    ok &= Math.hypot(hideout[0] - offer[0], hideout[1] - offer[1]) >= com.hex.kagune.control.village.DryLand.CCG_APART;
+                }
+                // Every town's offer anywhere near, written out: none within reach.
+                for (int rx = Math.floorDiv(offer[0], 34) - 2; rx <= Math.floorDiv(offer[0], 34) + 2; rx++) {
+                    for (int rz = Math.floorDiv(offer[1], 34) - 2; rz <= Math.floorDiv(offer[1], 34) + 2; rz++) {
+                        int[] town = com.hex.kagune.control.village.DryLand.spreadChunk(seed, rx, rz, 34, 20, 1873602241);
+                        ok &= Math.hypot(town[0] - offer[0], town[1] - offer[1]) >= com.hex.kagune.control.village.DryLand.CCG_APART;
+                    }
+                }
+            }
+            check(ok && java.util.Arrays.deepEquals(offers, com.hex.kagune.control.village.DryLand.ccgOffers(seed)),
+                "seed " + seed + ": the building's offers are the game's own, nearest first, none within " + com.hex.kagune.control.village.DryLand.CCG_APART
+                    + " chunks of a spot of the mansion's or a town's");
+        }
+        check(fewest >= 6, "every world has several spots to try (the fewest of these seeds: " + fewest + ")");
+        // 12 chunks: the mansion and the towns reach 136 blocks from their middle, the building and its patrol 28.
+        check(com.hex.kagune.control.village.DryLand.CCG_APART * 16 >= 136 + 28 + 16 && com.hex.kagune.control.village.DryLand.CCG_SALT != com.hex.kagune.control.village.DryLand.SALT
+            && com.hex.kagune.control.village.DryLand.CCG_SALT != com.hex.kagune.control.village.DryLand.VILLAGE_SALT, "far enough that they never touch; its own salt");
+        check(com.hex.kagune.control.village.DryLand.near(5L, 100, 100, 1000, 40, 20, 77) && !com.hex.kagune.control.village.DryLand.near(5L, 100, 100, 0, 40, 20, 77),
+            "near: anything within a great reach, nothing within none");
+        try {
+            java.nio.file.Path data = java.nio.file.Path.of("src/main/resources/data/hexkagune");
+            String set = new String(java.nio.file.Files.readAllBytes(data.resolve("worldgen/structure_set/ccg_building.json")));
+            check(set.contains("\"minecraft:random_spread\"") && set.contains("\"spacing\": " + com.hex.kagune.control.village.DryLand.SPACING + ",")
+                && set.contains("\"separation\": " + com.hex.kagune.control.village.DryLand.SEPARATION + ",")
+                && set.contains("\"salt\": " + com.hex.kagune.control.village.DryLand.CCG_SALT) && set.contains("\"structure\": \"hexkagune:ccg_building\"")
+                && !set.contains("\"spread_type\"") && !set.contains("frequency") && !set.contains("exclusion_zone"),
+                "its offers are the game's own (a linear random spread, the same numbers as DryLand's)");
+            String villages = new String(java.nio.file.Files.readAllBytes(data.resolve("worldgen/structure_set/villages.json")));
+            check(villages.contains("\"spacing\": " + com.hex.kagune.control.village.DryLand.VILLAGE_SPACING + ",")
+                && villages.contains("\"separation\": " + com.hex.kagune.control.village.DryLand.VILLAGE_SEPARATION + ",")
+                && villages.contains("\"salt\": " + com.hex.kagune.control.village.DryLand.VILLAGE_SALT), "the towns' numbers are their set's");
+            String structure = new String(java.nio.file.Files.readAllBytes(data.resolve("worldgen/structure/ccg_building.json")));
+            check(structure.contains("\"type\": \"hexkagune:site_ccg_building\"") && structure.contains("\"biomes\": \"#hexkagune:has_structure/ccg_building\"")
+                && structure.contains("\"terrain_adaptation\": \"beard_box\""), "its structure: its own type, its biomes, the ground fitted to it");
+            String biomes = new String(java.nio.file.Files.readAllBytes(data.resolve("tags/worldgen/biome/has_structure/ccg_building.json")));
+            check(biomes.contains("\"minecraft:plains\"") && biomes.contains("\"minecraft:forest\"") && !biomes.contains("ocean") && !biomes.contains("river")
+                && !biomes.contains("swamp") && !biomes.contains("beach"), "its biomes: open land and woods, none wet");
+            String structures = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/ControlStructures.java")));
+            check(structures.contains("int[] where = ccg(context);") && structures.contains("where[0] != chunk.f_45578_ || where[1] != chunk.f_45579_")
+                && structures.contains("DryLand.choose(DryLand.ccgOffers(context.f_226627_())"),
+                "the world's one building is built only at the offer chosen for it (the same in every chunk that asks)");
+            // The template itself: its people, and what each does.
+            java.util.Map<String, Object> template;
+            try (java.io.DataInputStream in = new java.io.DataInputStream(new java.util.zip.GZIPInputStream(
+                java.nio.file.Files.newInputStream(data.resolve("structures/ccg_building/t_0_0.nbt"))))) {
+                in.readByte();
+                in.readUTF();
+                template = (java.util.Map<String, Object>)nbt(in, 10);
+            }
+            List<Object> size = (List<Object>)template.get("size");
+            check(size.equals(List.of(39, 58, 39)), "the template's size is the site's " + size);
+            List<Object> palette = (List<Object>)template.get("palette");
+            java.util.Map<List<Object>, String> blocks = new java.util.HashMap<>();
+            for (Object block : (List<Object>)template.get("blocks")) {
+                java.util.Map<String, Object> b = (java.util.Map<String, Object>)block;
+                blocks.put((List<Object>)b.get("pos"), (String)((java.util.Map<String, Object>)palette.get((Integer)b.get("state"))).get("Name"));
+            }
+            int seats = 0;
+            int posts = 0;
+            int walkers = 0;
+            boolean sound = true;
+            java.util.Set<Integer> seatFloors = new java.util.HashSet<>();
+            java.util.Set<Integer> postFloors = new java.util.HashSet<>();
+            java.util.Set<List<Object>> spots = new java.util.HashSet<>();
+            List<Object> entities = (List<Object>)template.get("entities");
+            for (Object entity : entities) {
+                java.util.Map<String, Object> e = (java.util.Map<String, Object>)entity;
+                java.util.Map<String, Object> tag = (java.util.Map<String, Object>)e.get("nbt");
+                java.util.Map<String, Object> forge = (java.util.Map<String, Object>)tag.get("ForgeData");
+                java.util.Map<String, Object> village = (java.util.Map<String, Object>)forge.get("HexVillage");
+                List<Object> at = (List<Object>)e.get("blockPos");
+                int x = (Integer)at.get(0);
+                int y = (Integer)at.get(1);
+                int z = (Integer)at.get(2);
+                sound &= "hexkagune:ccg_investigator".equals(tag.get("id")) && Byte.valueOf((byte)1).equals(tag.get("PersistenceRequired"))
+                    && Integer.valueOf(6).equals(village.get("Map")) && spots.add(at)
+                    && (Integer)village.get("CentreX") == site.middleX() - x && (Integer)village.get("CentreZ") == site.middleZ() - z
+                    && (Integer)village.get("CentreY") == 1 - y;
+                String here = blocks.get(at);
+                String over = blocks.get(List.of(x, y + 1, z));
+                String under = blocks.get(List.of(x, y - 1, z));
+                boolean seat = forge.containsKey(com.hex.kagune.control.npc.HqRules.SEAT);
+                boolean post = forge.containsKey(com.hex.kagune.control.npc.HqRules.POST);
+                if (seat) {
+                    seats++;
+                    seatFloors.add((y - 1) / 8);
+                    int yaw = (Integer)forge.get(com.hex.kagune.control.npc.HqRules.YAW);
+                    // On a chair (a stair) with nothing over it but an office chair's back, a floor's own height; the block it looks to free
+                    // at knee height or a table's leg.
+                    double[] looks = {-Math.sin(Math.toRadians(yaw)), Math.cos(Math.toRadians(yaw))};
+                    String front = blocks.get(List.of(x + (int)Math.round(looks[0]), y, z + (int)Math.round(looks[1])));
+                    sound &= !post && here != null && here.endsWith("_stairs") && (over == null || over.endsWith("_trapdoor")) && (y - 1) % 8 == 0
+                        && yaw % 90 == 0 && (front == null || "minecraft:air".equals(front) || front.endsWith("_fence"))
+                        && blocks.get(List.of(x, y + 2, z)) == null;
+                } else {
+                    sound &= (here == null || "minecraft:air".equals(here)) && (over == null || "minecraft:air".equals(over)) && under != null
+                        && !"minecraft:air".equals(under);
+                    if (post) {
+                        posts++;
+                        postFloors.add((y - 1) / 8);
+                        sound &= forge.containsKey(com.hex.kagune.control.npc.HqRules.YAW);
+                    } else {
+                        walkers++;
+                        sound &= y <= 2; // out of doors on the plate
+                    }
+                }
+            }
+            check(sound, "every one of its people: an investigator of this building, kept, alone on its spot, a seat on a chair with room for its knees, "
+                + "the rest with a floor under them and room to stand");
+            check(entities.size() == 38 && seats == 21 && posts == 11 && walkers == 6, "38 investigators: 21 at desks, 11 at posts (4 outside, 7 in the halls), "
+                + "6 on patrol (" + entities.size() + ", " + seats + ", " + posts + ", " + walkers + ")");
+            check(seatFloors.equals(java.util.Set.of(0, 1, 2, 3, 4, 5, 6)) && postFloors.equals(java.util.Set.of(0, 1, 2, 3, 4, 5, 6)),
+                "desks and a hall guard on every one of its seven floors");
+            int signs = 0;
+            for (String name : blocks.values()) {
+                signs += name.endsWith("_sign") ? 1 : 0;
+            }
+            check(signs == 164, "the owner's file's signs are all there (its builder's credit among them): " + signs);
+        } catch (java.io.IOException failure) {
+            check(false, "read the building's files: " + failure);
+        }
+    }
+
+    /** A named binary tag's payload (type {@code type}) read as plain Java: maps, lists, numbers, strings. */
+    private static Object nbt(java.io.DataInputStream in, int type) throws java.io.IOException {
+        switch (type) {
+            case 1:
+                return in.readByte();
+            case 2:
+                return in.readShort();
+            case 3:
+                return in.readInt();
+            case 4:
+                return in.readLong();
+            case 5:
+                return in.readFloat();
+            case 6:
+                return in.readDouble();
+            case 7: {
+                byte[] bytes = new byte[in.readInt()];
+                in.readFully(bytes);
+                return bytes;
+            }
+            case 8:
+                return in.readUTF();
+            case 9: {
+                int of = in.readByte();
+                int n = in.readInt();
+                List<Object> list = new java.util.ArrayList<>(n);
+                for (int i = 0; i < n; i++) {
+                    list.add(nbt(in, of));
+                }
+                return list;
+            }
+            case 10: {
+                java.util.Map<String, Object> map = new java.util.LinkedHashMap<>();
+                for (int kind = in.readByte(); kind != 0; kind = in.readByte()) {
+                    String name = in.readUTF();
+                    map.put(name, nbt(in, kind));
+                }
+                return map;
+            }
+            case 11: {
+                List<Object> ints = new java.util.ArrayList<>();
+                for (int n = in.readInt(); n > 0; n--) {
+                    ints.add(in.readInt());
+                }
+                return ints;
+            }
+            case 12: {
+                List<Object> longs = new java.util.ArrayList<>();
+                for (int n = in.readInt(); n > 0; n--) {
+                    longs.add(in.readLong());
+                }
+                return longs;
+            }
+            default:
+                throw new java.io.IOException("tag " + type);
         }
     }
 

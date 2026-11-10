@@ -133,6 +133,59 @@ public final class DryLand {
     }
 
     /**
+     * 4.1.4 (the owner: "CCG building ... like the others only 1 of them spawns"): the CCG building's structure set
+     * (data/hexkagune/worldgen/structure_set/ccg_building.json), a random spread of the hideout's spacing with its own salt. The world's
+     * one is built at the first of its offers on dry land ({@link #choose}) that is no nearer than {@link #CCG_APART} chunks to any spot
+     * the hideout or a village may be built at (their own sets' offers: the mansion and the towns are up to 272 blocks wide), so it never
+     * stands in one of them.
+     */
+    public static final int CCG_SALT = 1873602245;
+    public static final int CCG_APART = 12;
+    /** The villages' structure set (data/hexkagune/worldgen/structure_set/villages.json). */
+    public static final int VILLAGE_SPACING = 34;
+    public static final int VILLAGE_SEPARATION = 20;
+    public static final int VILLAGE_SALT = 1873602241;
+
+    /** 4.1.4: true if the start chunk ({@code x}, {@code z}) is within {@code apart} chunks of an offer of the random spread with these numbers. */
+    public static boolean near(long seed, int x, int z, int apart, int spacing, int separation, int salt) {
+        int rx = Math.floorDiv(x, spacing);
+        int rz = Math.floorDiv(z, spacing);
+        int reach = apart / spacing + 1;
+        for (int i = rx - reach; i <= rx + reach; i++) {
+            for (int j = rz - reach; j <= rz + reach; j++) {
+                int[] other = spreadChunk(seed, i, j, spacing, separation, salt);
+                long dx = other[0] - x;
+                long dz = other[1] - z;
+                if (dx * dx + dz * dz < (long)apart * apart) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 4.1.4: the CCG building's offers in the order they are weighed: as the hideout's ({@link #hideoutOffers}: every region's start chunk
+     * {@link #REGIONS} regions either way of the world's middle, no nearer it than {@link #NEAREST} chunks, nearest first), with its own
+     * salt, less those near a spot of the hideout's or a village's.
+     */
+    public static int[][] ccgOffers(long seed) {
+        List<int[]> offers = new ArrayList<>();
+        for (int rx = -REGIONS; rx < REGIONS; rx++) {
+            for (int rz = -REGIONS; rz < REGIONS; rz++) {
+                int[] chunk = spreadChunk(seed, rx, rz, SPACING, SEPARATION, CCG_SALT);
+                if ((long)chunk[0] * chunk[0] + (long)chunk[1] * chunk[1] >= (long)NEAREST * NEAREST
+                    && !near(seed, chunk[0], chunk[1], CCG_APART, SPACING, SEPARATION, SALT)
+                    && !near(seed, chunk[0], chunk[1], CCG_APART, VILLAGE_SPACING, VILLAGE_SEPARATION, VILLAGE_SALT)) {
+                    offers.add(chunk);
+                }
+            }
+        }
+        offers.sort(Comparator.<int[]>comparingLong(c -> (long)c[0] * c[0] + (long)c[1] * c[1]).thenComparingInt(c -> c[0]).thenComparingInt(c -> c[1]));
+        return offers.toArray(new int[0][]);
+    }
+
+    /**
      * Chunk offsets ({dx, dz}) a start may be moved by to find dry land, up to {@code most} either way: none first, then the nearest
      * (then by x, then z).
      */
