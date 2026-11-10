@@ -1,0 +1,888 @@
+diff --git a/src/main/java/com/hex/kagune/control/client/PaleMenuView.java b/src/main/java/com/hex/kagune/control/client/PaleMenuView.java
+index 8c696cb..dea74d3 100644
+--- a/src/main/java/com/hex/kagune/control/client/PaleMenuView.java
++++ b/src/main/java/com/hex/kagune/control/client/PaleMenuView.java
+@@ -119,7 +119,7 @@ public final class PaleMenuView {
+         row(c, "Stage", PaleUnlock.stageName(mastery), x, y + 61);
+         row(c, "Kakugan", eyeText(model.eyes()) + " only", x, y + 79);
+         row(c, "Form", model.active() ? "Base form (out)" : "Base form (Ctrl+R)", x, y + 97);
+-        row(c, "Blitz", PaleStrike.count(mastery) + " of " + PaleStrike.values().length + " strikes", x, y + 115);
++        row(c, "Blitz", PaleStrike.count(mastery) + " of " + PaleStrike.of(PaleStrike.Style.BLITZ).length + " strikes", x, y + 115);
+ 
+         c.text("MASTERY", x, y + 151, HEADER, false);
+         c.text(mastery + " / 1000", x + 126, y + 151, VALUE, false);
+diff --git a/src/main/java/com/hex/kagune/control/client/animation/PaleMotions.java b/src/main/java/com/hex/kagune/control/client/animation/PaleMotions.java
+index dc37266..d501d6d 100644
+--- a/src/main/java/com/hex/kagune/control/client/animation/PaleMotions.java
++++ b/src/main/java/com/hex/kagune/control/client/animation/PaleMotions.java
+@@ -62,6 +62,7 @@ public final class PaleMotions {
+             overhead(pose, start, keys[1].pose(), (float)(age / keys[1].at()));
+         }
+         grounded(pose);
++        pose.drop -= (float)strike.lift(age); // 4.1.6: the tornado kick's jump
+         return strike.right ? pose : mirror(pose);
+     }
+ 
+diff --git a/src/main/java/com/hex/kagune/control/client/animation/PaleStrikePoses.java b/src/main/java/com/hex/kagune/control/client/animation/PaleStrikePoses.java
+index 97a7950..0e9774c 100644
+--- a/src/main/java/com/hex/kagune/control/client/animation/PaleStrikePoses.java
++++ b/src/main/java/com/hex/kagune/control/client/animation/PaleStrikePoses.java
+@@ -64,6 +64,62 @@ final class PaleStrikePoses {
+                 new PaleMotions.Key(6.60F, twinpalm4(), PaleMotions.Ease.OUT),
+                 new PaleMotions.Key(9.00F, twinpalm5(), PaleMotions.Ease.SMOOTH),
+                 new PaleMotions.Key(14.00F, guard(), PaleMotions.Ease.SMOOTH)};
++            case KICK_JAB -> new PaleMotions.Key[] {PaleMotions.Key.START,
++                new PaleMotions.Key(1.15F, kickjab1(), PaleMotions.Ease.SMOOTH),
++                new PaleMotions.Key(2.00F, kickjab2(), PaleMotions.Ease.IN),
++                new PaleMotions.Key(2.55F, kickjab3(), PaleMotions.Ease.OUT),
++                new PaleMotions.Key(3.60F, kickjab4(), PaleMotions.Ease.SMOOTH),
++                new PaleMotions.Key(7.00F, guard(), PaleMotions.Ease.SMOOTH)};
++            case KICK_CROSS -> new PaleMotions.Key[] {PaleMotions.Key.START,
++                new PaleMotions.Key(1.85F, kickcross1(), PaleMotions.Ease.SMOOTH),
++                new PaleMotions.Key(3.00F, kickcross2(), PaleMotions.Ease.IN),
++                new PaleMotions.Key(3.55F, kickcross3(), PaleMotions.Ease.OUT),
++                new PaleMotions.Key(4.60F, kickcross4(), PaleMotions.Ease.SMOOTH),
++                new PaleMotions.Key(8.00F, guard(), PaleMotions.Ease.SMOOTH)};
++            case ROUND_KICK -> new PaleMotions.Key[] {PaleMotions.Key.START,
++                new PaleMotions.Key(2.30F, roundkick1(), PaleMotions.Ease.SMOOTH),
++                new PaleMotions.Key(4.00F, roundkick2(), PaleMotions.Ease.IN),
++                new PaleMotions.Key(4.60F, roundkick3(), PaleMotions.Ease.OUT),
++                new PaleMotions.Key(6.40F, roundkick4(), PaleMotions.Ease.SMOOTH),
++                new PaleMotions.Key(10.00F, guard(), PaleMotions.Ease.SMOOTH)};
++            case SIDE_KICK -> new PaleMotions.Key[] {PaleMotions.Key.START,
++                new PaleMotions.Key(2.20F, sidekick1(), PaleMotions.Ease.SMOOTH),
++                new PaleMotions.Key(4.00F, sidekick2(), PaleMotions.Ease.IN),
++                new PaleMotions.Key(4.60F, sidekick3(), PaleMotions.Ease.OUT),
++                new PaleMotions.Key(5.90F, sidekick4(), PaleMotions.Ease.SMOOTH),
++                new PaleMotions.Key(7.40F, sidekick5(), PaleMotions.Ease.SMOOTH),
++                new PaleMotions.Key(10.00F, guard(), PaleMotions.Ease.SMOOTH)};
++            case BACK_KICK -> new PaleMotions.Key[] {PaleMotions.Key.START,
++                new PaleMotions.Key(1.60F, backkick1(), PaleMotions.Ease.SMOOTH),
++                new PaleMotions.Key(3.70F, backkick2(), PaleMotions.Ease.SMOOTH),
++                new PaleMotions.Key(5.00F, backkick3(), PaleMotions.Ease.IN),
++                new PaleMotions.Key(5.60F, backkick4(), PaleMotions.Ease.OUT),
++                new PaleMotions.Key(7.60F, backkick5(), PaleMotions.Ease.SMOOTH),
++                new PaleMotions.Key(11.00F, spun(guard(), -6.283185F), PaleMotions.Ease.SMOOTH)};
++            case KICK_HOOK -> new PaleMotions.Key[] {PaleMotions.Key.START,
++                new PaleMotions.Key(1.80F, kickhook1(), PaleMotions.Ease.SMOOTH),
++                new PaleMotions.Key(3.00F, kickhook2(), PaleMotions.Ease.IN),
++                new PaleMotions.Key(3.55F, kickhook3(), PaleMotions.Ease.OUT),
++                new PaleMotions.Key(4.60F, kickhook4(), PaleMotions.Ease.SMOOTH),
++                new PaleMotions.Key(8.00F, guard(), PaleMotions.Ease.SMOOTH)};
++            case HOOK_KICK -> new PaleMotions.Key[] {PaleMotions.Key.START,
++                new PaleMotions.Key(1.40F, hookkick1(), PaleMotions.Ease.SMOOTH),
++                new PaleMotions.Key(3.70F, hookkick2(), PaleMotions.Ease.SMOOTH),
++                new PaleMotions.Key(5.10F, hookkick3(), PaleMotions.Ease.SMOOTH),
++                new PaleMotions.Key(6.00F, hookkick4(), PaleMotions.Ease.IN),
++                new PaleMotions.Key(6.70F, hookkick5(), PaleMotions.Ease.OUT),
++                new PaleMotions.Key(8.80F, hookkick6(), PaleMotions.Ease.SMOOTH),
++                new PaleMotions.Key(12.00F, spun(guard(), -6.283185F), PaleMotions.Ease.SMOOTH)};
++            case TORNADO_KICK -> new PaleMotions.Key[] {PaleMotions.Key.START,
++                new PaleMotions.Key(2.20F, tornadokick1(), PaleMotions.Ease.SMOOTH),
++                new PaleMotions.Key(4.40F, tornadokick2(), PaleMotions.Ease.SMOOTH),
++                new PaleMotions.Key(5.90F, tornadokick3(), PaleMotions.Ease.SMOOTH),
++                new PaleMotions.Key(7.00F, tornadokick4(), PaleMotions.Ease.IN),
++                new PaleMotions.Key(7.70F, tornadokick5(), PaleMotions.Ease.OUT),
++                new PaleMotions.Key(9.40F, tornadokick6(), PaleMotions.Ease.SMOOTH),
++                new PaleMotions.Key(11.60F, tornadokick7(), PaleMotions.Ease.OUT),
++                new PaleMotions.Key(14.00F, tornadokick8(), PaleMotions.Ease.SMOOTH),
++                new PaleMotions.Key(16.00F, spun(guard(), 6.283185F), PaleMotions.Ease.SMOOTH)};
+         };
+     }
+ 
+@@ -514,6 +570,388 @@ final class PaleStrikePoses {
+         return p;
+     }
+ 
++    static RigPose kickjab1() {
++        RigPose p = new RigPose();
++        p.headX = -0.036F; p.headY = -0.186F; p.lean = 0.060F; p.twist = 0.260F; p.lunge = -0.806F; p.spin = -0.186F;
++        p.rightArmX = -0.465F; p.rightArmY = -0.345F; p.rightArmZ = 0.451F; p.rightElbow = 1.771F; p.leftArmX = -1.038F;
++        p.leftArmY = 0.128F; p.leftArmZ = -0.217F; p.leftElbow = 1.239F; p.rightLegX = -0.200F; p.rightLegZ = 0.080F;
++        p.rightKnee = 0.950F; p.leftLegX = -0.420F; p.leftLegZ = -0.080F; p.leftKnee = 0.620F; p.armHold = 1.000F;
++        p.legHold = 1.000F;
++        return p;
++    }
++
++    static RigPose kickjab2() {
++        RigPose p = new RigPose();
++        p.headX = -0.139F; p.headY = 0.248F; p.lean = 0.232F; p.twist = -0.496F; p.lunge = 2.232F; p.spin = 0.248F;
++        p.rightArmX = -1.079F; p.rightArmY = 0.478F; p.rightArmZ = 1.111F; p.rightElbow = 0.158F; p.rightShoulderY = -0.248F;
++        p.rightShoulderZ = -1.240F; p.leftArmX = -0.062F; p.leftArmY = 0.034F; p.leftArmZ = -0.370F; p.leftElbow = 1.854F;
++        p.rightLegX = 0.279F; p.rightLegZ = 0.080F; p.rightKnee = 0.050F; p.leftLegX = -0.667F; p.leftLegZ = -0.080F;
++        p.leftKnee = 0.767F; p.armHold = 1.000F; p.legHold = 1.000F;
++        return p;
++    }
++
++    static RigPose kickjab3() {
++        RigPose p = new RigPose();
++        p.headX = -0.168F; p.headY = 0.310F; p.lean = 0.280F; p.twist = -0.570F; p.lunge = 2.666F; p.spin = 0.310F;
++        p.rightArmX = -1.065F; p.rightArmY = 0.626F; p.rightArmZ = 1.167F; p.rightElbow = 0.012F; p.rightShoulderY = -0.248F;
++        p.rightShoulderZ = -1.240F; p.leftArmX = 0.021F; p.leftArmY = 0.097F; p.leftArmZ = -0.406F; p.leftElbow = 1.857F;
++        p.rightLegX = 0.310F; p.rightLegZ = 0.080F; p.rightKnee = 0.030F; p.leftLegX = -0.736F; p.leftLegZ = -0.080F;
++        p.leftKnee = 0.817F; p.armHold = 1.000F; p.legHold = 1.000F;
++        return p;
++    }
++
++    static RigPose kickjab4() {
++        RigPose p = new RigPose();
++        p.headX = -0.128F; p.headY = 0.223F; p.lean = 0.213F; p.twist = -0.459F; p.lunge = 1.860F; p.spin = 0.223F;
++        p.rightArmX = -1.079F; p.rightArmY = 0.478F; p.rightArmZ = 1.111F; p.rightElbow = 0.458F; p.rightShoulderY = -0.186F;
++        p.rightShoulderZ = -0.868F; p.leftArmX = -0.062F; p.leftArmY = 0.034F; p.leftArmZ = -0.370F; p.leftElbow = 1.854F;
++        p.rightLegX = 0.248F; p.rightLegZ = 0.080F; p.rightKnee = 0.100F; p.leftLegX = -0.636F; p.leftLegZ = -0.080F;
++        p.leftKnee = 0.748F; p.armHold = 1.000F; p.legHold = 1.000F;
++        return p;
++    }
++
++    static RigPose kickcross1() {
++        RigPose p = new RigPose();
++        p.headX = -0.036F; p.headY = -0.300F; p.lean = 0.060F; p.twist = 0.420F; p.lunge = -1.300F; p.spin = -0.300F;
++        p.rightArmX = -0.748F; p.rightArmY = -0.399F; p.rightArmZ = 0.206F; p.rightElbow = 1.457F; p.leftArmX = -0.857F;
++        p.leftArmY = -0.187F; p.leftArmZ = -0.269F; p.leftElbow = 1.437F; p.rightLegX = -0.200F; p.rightLegZ = 0.080F;
++        p.rightKnee = 0.950F; p.leftLegX = -0.420F; p.leftLegZ = -0.080F; p.leftKnee = 0.620F; p.armHold = 1.000F;
++        p.legHold = 1.000F;
++        return p;
++    }
++
++    static RigPose kickcross2() {
++        RigPose p = new RigPose();
++        p.headX = -0.180F; p.headY = 0.400F; p.lean = 0.300F; p.twist = -0.800F; p.lunge = 3.600F; p.spin = 0.400F;
++        p.rightArmX = -1.133F; p.rightArmY = 1.109F; p.rightArmZ = 0.819F; p.rightElbow = 0.152F; p.rightShoulderY = -0.400F;
++        p.rightShoulderZ = -2.000F; p.leftArmX = -0.435F; p.leftArmY = -0.018F; p.leftArmZ = -0.273F; p.leftElbow = 1.852F;
++        p.rightLegX = 0.450F; p.rightLegZ = 0.080F; p.rightKnee = 0.050F; p.leftLegX = -0.800F; p.leftLegZ = -0.080F;
++        p.leftKnee = 0.900F; p.armHold = 1.000F; p.legHold = 1.000F;
++        return p;
++    }
++
++    static RigPose kickcross3() {
++        RigPose p = new RigPose();
++        p.headX = -0.216F; p.headY = 0.500F; p.lean = 0.360F; p.twist = -0.920F; p.lunge = 4.300F; p.spin = 0.500F;
++        p.rightArmX = -0.808F; p.rightArmY = 1.309F; p.rightArmZ = 1.259F; p.rightShoulderY = -0.400F;
++        p.rightShoulderZ = -2.000F; p.leftArmX = -0.434F; p.leftArmY = -0.021F; p.leftArmZ = -0.270F; p.leftElbow = 1.853F;
++        p.rightLegX = 0.500F; p.rightLegZ = 0.080F; p.rightKnee = 0.030F; p.leftLegX = -0.880F; p.leftLegZ = -0.080F;
++        p.leftKnee = 0.950F; p.armHold = 1.000F; p.legHold = 1.000F;
++        return p;
++    }
++
++    static RigPose kickcross4() {
++        RigPose p = new RigPose();
++        p.headX = -0.162F; p.headY = 0.360F; p.lean = 0.270F; p.twist = -0.740F; p.lunge = 3.000F; p.spin = 0.360F;
++        p.rightArmX = -1.133F; p.rightArmY = 1.109F; p.rightArmZ = 0.819F; p.rightElbow = 0.452F; p.rightShoulderY = -0.300F;
++        p.rightShoulderZ = -1.400F; p.leftArmX = -0.435F; p.leftArmY = -0.018F; p.leftArmZ = -0.273F; p.leftElbow = 1.852F;
++        p.rightLegX = 0.400F; p.rightLegZ = 0.080F; p.rightKnee = 0.100F; p.leftLegX = -0.750F; p.leftLegZ = -0.080F;
++        p.leftKnee = 0.870F; p.armHold = 1.000F; p.legHold = 1.000F;
++        return p;
++    }
++
++    static RigPose roundkick1() {
++        RigPose p = new RigPose();
++        p.headX = 0.024F; p.headY = 0.350F; p.lean = -0.040F; p.twist = 0.300F; p.lunge = -0.400F; p.spin = 0.350F;
++        p.roll = -0.180F; p.rightArmX = -0.560F; p.rightArmY = -0.259F; p.rightArmZ = 0.489F; p.rightElbow = 1.694F;
++        p.leftArmX = -0.537F; p.leftArmY = -0.021F; p.leftArmZ = -0.112F; p.leftElbow = 1.771F; p.rightLegX = -1.500F;
++        p.rightLegZ = 0.700F; p.rightKnee = 2.350F; p.leftLegX = -0.120F; p.leftKnee = 0.420F; p.armHold = 1.000F;
++        p.legHold = 1.000F;
++        return p;
++    }
++
++    static RigPose roundkick2() {
++        RigPose p = new RigPose();
++        p.headX = 0.060F; p.headY = 1.280F; p.lean = -0.100F; p.twist = -0.380F; p.lunge = 2.200F; p.spin = 1.280F;
++        p.roll = -0.600F; p.rightArmX = 1.014F; p.rightArmY = 0.027F; p.rightArmZ = 0.946F; p.rightElbow = -0.006F;
++        p.leftArmX = 0.040F; p.leftArmY = 0.182F; p.leftArmZ = -0.211F; p.leftElbow = 1.837F; p.rightLegX = -0.280F;
++        p.rightLegZ = 0.960F; p.rightKnee = 0.040F; p.leftLegX = -0.100F; p.leftKnee = 0.300F; p.armHold = 1.000F;
++        p.legHold = 1.000F;
++        return p;
++    }
++
++    static RigPose roundkick3() {
++        RigPose p = new RigPose();
++        p.headX = 0.072F; p.headY = 1.500F; p.lean = -0.120F; p.twist = -0.460F; p.lunge = 2.600F; p.spin = 1.500F;
++        p.roll = -0.640F; p.rightArmX = 1.029F; p.rightArmY = 0.125F; p.rightArmZ = 0.965F; p.rightElbow = -0.016F;
++        p.leftArmX = 0.253F; p.leftArmY = 0.455F; p.leftArmZ = -0.444F; p.leftElbow = 1.842F; p.rightLegX = -0.360F;
++        p.rightLegZ = 1.000F; p.leftLegX = -0.100F; p.leftKnee = 0.300F; p.armHold = 1.000F; p.legHold = 1.000F;
++        return p;
++    }
++
++    static RigPose roundkick4() {
++        RigPose p = new RigPose();
++        p.headY = 1.150F; p.twist = -0.100F; p.lunge = 1.200F; p.spin = 1.150F; p.roll = -0.300F; p.rightArmX = -0.166F;
++        p.rightArmY = -0.082F; p.rightArmZ = 0.651F; p.rightElbow = 1.555F; p.leftArmX = -0.312F; p.leftArmY = 0.248F;
++        p.leftArmZ = -0.287F; p.leftElbow = 1.850F; p.rightLegX = -1.300F; p.rightLegZ = 0.600F; p.rightKnee = 2.100F;
++        p.leftLegX = -0.140F; p.leftKnee = 0.450F; p.armHold = 1.000F; p.legHold = 1.000F;
++        return p;
++    }
++
++    static RigPose sidekick1() {
++        RigPose p = new RigPose();
++        p.headX = -0.060F; p.headY = 1.000F; p.lean = 0.100F; p.twist = 0.100F; p.lunge = -0.800F; p.spin = 1.000F;
++        p.roll = -0.200F; p.rightArmX = -0.371F; p.rightArmY = 0.004F; p.rightArmZ = 0.440F; p.rightElbow = 1.690F;
++        p.leftArmX = -0.548F; p.leftArmY = 0.166F; p.leftArmZ = -0.174F; p.leftElbow = 1.816F; p.rightLegX = -1.600F;
++        p.rightLegZ = 0.340F; p.rightKnee = 2.450F; p.leftLegX = -0.100F; p.leftKnee = 0.500F; p.armHold = 1.000F;
++        p.legHold = 1.000F;
++        return p;
++    }
++
++    static RigPose sidekick2() {
++        RigPose p = new RigPose();
++        p.headY = 1.570F; p.lunge = 3.000F; p.spin = 1.570F; p.roll = -0.720F; p.rightArmX = 0.712F; p.rightArmY = -0.003F;
++        p.rightArmZ = 0.872F; p.rightElbow = 0.743F; p.leftArmX = 0.116F; p.leftArmY = 0.245F; p.leftArmZ = -0.281F;
++        p.leftElbow = 1.849F; p.rightLegX = -0.040F; p.rightLegZ = 0.850F; p.leftLegX = -0.020F; p.leftKnee = 0.220F;
++        p.armHold = 1.000F; p.legHold = 1.000F;
++        return p;
++    }
++
++    static RigPose sidekick3() {
++        RigPose p = new RigPose();
++        p.headY = 1.600F; p.lunge = 3.700F; p.spin = 1.600F; p.roll = -0.780F; p.rightArmX = 0.701F; p.rightArmY = -0.023F;
++        p.rightArmZ = 0.861F; p.rightElbow = 0.510F; p.leftArmX = 0.306F; p.leftArmY = 0.262F; p.leftArmZ = -0.243F;
++        p.leftElbow = 1.851F; p.rightLegX = -0.040F; p.rightLegZ = 0.840F; p.leftLegX = -0.020F; p.leftKnee = 0.200F;
++        p.armHold = 1.000F; p.legHold = 1.000F;
++        return p;
++    }
++
++    static RigPose sidekick4() {
++        RigPose p = new RigPose();
++        p.headY = 1.570F; p.lunge = 3.200F; p.spin = 1.570F; p.roll = -0.700F; p.rightArmX = 0.637F; p.rightArmY = -0.039F;
++        p.rightArmZ = 0.854F; p.rightElbow = 0.483F; p.leftArmX = 0.198F; p.leftArmY = 0.206F; p.leftArmZ = -0.210F;
++        p.leftElbow = 1.852F; p.rightLegX = -0.060F; p.rightLegZ = 0.840F; p.rightKnee = 0.100F; p.leftLegX = -0.020F;
++        p.leftKnee = 0.240F; p.armHold = 1.000F; p.legHold = 1.000F;
++        return p;
++    }
++
++    static RigPose sidekick5() {
++        RigPose p = new RigPose();
++        p.headX = -0.036F; p.headY = 1.250F; p.lean = 0.060F; p.twist = 0.050F; p.lunge = 1.400F; p.spin = 1.250F;
++        p.roll = -0.280F; p.rightArmX = -0.154F; p.rightArmY = -0.097F; p.rightArmZ = 0.646F; p.rightElbow = 1.673F;
++        p.leftArmX = -0.304F; p.leftArmY = 0.209F; p.leftArmZ = -0.247F; p.leftElbow = 1.852F; p.rightLegX = -1.450F;
++        p.rightLegZ = 0.340F; p.rightKnee = 2.300F; p.leftLegX = -0.100F; p.leftKnee = 0.450F; p.armHold = 1.000F;
++        p.legHold = 1.000F;
++        return p;
++    }
++
++    static RigPose backkick1() {
++        RigPose p = new RigPose();
++        p.headX = -0.084F; p.headY = 1.250F; p.lean = 0.140F; p.twist = -0.250F; p.lunge = -0.400F; p.spin = -1.500F;
++        p.rightArmX = -0.600F; p.rightArmY = 0.230F; p.rightArmZ = 0.274F; p.rightElbow = 1.751F; p.leftArmX = -0.797F;
++        p.leftArmY = 0.337F; p.leftArmZ = -0.240F; p.leftElbow = 1.708F; p.rightLegX = -0.300F; p.rightLegZ = 0.080F;
++        p.rightKnee = 0.700F; p.leftLegX = -0.300F; p.leftLegZ = -0.080F; p.leftKnee = 0.700F; p.armHold = 1.000F;
++        p.legHold = 1.000F;
++        return p;
++    }
++
++    static RigPose backkick2() {
++        RigPose p = new RigPose();
++        p.headX = -0.252F; p.headY = 1.350F; p.lean = 0.420F; p.twist = -0.100F; p.lunge = -0.200F; p.spin = -2.700F;
++        p.rightArmX = -0.650F; p.rightArmY = 0.206F; p.rightArmZ = 0.379F; p.rightElbow = 1.851F; p.leftArmX = -0.705F;
++        p.leftArmY = 0.126F; p.leftArmZ = -0.415F; p.leftElbow = 1.829F; p.rightLegX = -1.250F; p.rightLegZ = 0.060F;
++        p.rightKnee = 2.400F; p.leftLegX = -0.300F; p.leftKnee = 0.550F; p.armHold = 1.000F; p.legHold = 1.000F;
++        return p;
++    }
++
++    static RigPose backkick3() {
++        RigPose p = new RigPose();
++        p.headX = -1.060F; p.headY = 1.450F; p.lean = 0.850F; p.lunge = -2.600F; p.spin = -3.142F; p.rightArmX = -0.850F;
++        p.rightArmY = 0.245F; p.rightArmZ = 0.383F; p.rightElbow = 1.852F; p.leftArmX = -0.151F; p.leftArmY = 0.139F;
++        p.leftArmZ = -0.900F; p.leftElbow = 1.794F; p.rightLegX = 0.720F; p.rightLegZ = 0.030F; p.leftLegX = -0.620F;
++        p.leftKnee = 0.300F; p.armHold = 1.000F; p.legHold = 1.000F;
++        return p;
++    }
++
++    static RigPose backkick4() {
++        RigPose p = new RigPose();
++        p.headX = -1.090F; p.headY = 1.450F; p.lean = 0.900F; p.lunge = -3.200F; p.spin = -3.202F; p.rightArmX = -0.918F;
++        p.rightArmY = 0.262F; p.rightArmZ = 0.356F; p.rightElbow = 1.851F; p.leftArmX = -0.093F; p.leftArmY = -0.022F;
++        p.leftArmZ = -0.598F; p.leftElbow = 1.851F; p.rightLegX = 0.760F; p.rightLegZ = 0.030F; p.leftLegX = -0.660F;
++        p.leftKnee = 0.280F; p.armHold = 1.000F; p.legHold = 1.000F;
++        return p;
++    }
++
++    static RigPose backkick5() {
++        RigPose p = new RigPose();
++        p.headX = -0.180F; p.headY = 0.900F; p.lean = 0.300F; p.twist = 0.100F; p.lunge = -0.800F; p.spin = -4.700F;
++        p.rightArmX = -0.753F; p.rightArmY = 0.052F; p.rightArmZ = 0.379F; p.rightElbow = 1.851F; p.leftArmX = -0.727F;
++        p.leftArmY = 0.013F; p.leftArmZ = -0.472F; p.leftElbow = 1.852F; p.rightLegX = -0.900F; p.rightLegZ = 0.200F;
++        p.rightKnee = 1.900F; p.leftLegX = -0.300F; p.leftKnee = 0.550F; p.armHold = 1.000F; p.legHold = 1.000F;
++        return p;
++    }
++
++    static RigPose kickhook1() {
++        RigPose p = new RigPose();
++        p.headX = -0.096F; p.headY = -0.420F; p.lean = 0.160F; p.twist = 0.500F; p.lunge = -0.900F; p.spin = -0.420F;
++        p.rightArmX = -1.025F; p.rightArmY = -0.364F; p.rightArmZ = 0.198F; p.rightElbow = 1.232F; p.leftArmX = -0.678F;
++        p.leftArmY = -0.611F; p.leftArmZ = -0.258F; p.leftElbow = 1.860F; p.rightLegX = -0.300F; p.rightLegZ = 0.080F;
++        p.rightKnee = 1.000F; p.leftLegX = -0.500F; p.leftLegZ = -0.080F; p.leftKnee = 0.950F; p.armHold = 1.000F;
++        p.legHold = 1.000F;
++        return p;
++    }
++
++    static RigPose kickhook2() {
++        RigPose p = new RigPose();
++        p.headX = -0.132F; p.headY = 0.320F; p.lean = 0.220F; p.twist = -0.600F; p.lunge = 2.600F; p.spin = 0.320F;
++        p.rightArmX = -0.720F; p.rightArmY = 0.976F; p.rightArmZ = 0.871F; p.rightElbow = 1.522F; p.rightShoulderY = -0.600F;
++        p.rightShoulderZ = -1.400F; p.leftArmX = -0.451F; p.leftArmY = -0.010F; p.leftArmZ = -0.292F; p.leftElbow = 1.852F;
++        p.rightLegX = 0.320F; p.rightLegZ = 0.080F; p.rightKnee = 0.220F; p.leftLegX = -0.700F; p.leftLegZ = -0.080F;
++        p.leftKnee = 0.900F; p.armHold = 1.000F; p.legHold = 1.000F;
++        return p;
++    }
++
++    static RigPose kickhook3() {
++        RigPose p = new RigPose();
++        p.headX = -0.150F; p.headY = 0.420F; p.lean = 0.250F; p.twist = -0.700F; p.lunge = 3.000F; p.spin = 0.420F;
++        p.rightArmX = -0.324F; p.rightArmY = 1.113F; p.rightArmZ = 1.362F; p.rightElbow = 1.740F; p.rightShoulderY = -0.600F;
++        p.rightShoulderZ = -1.600F; p.leftArmX = -0.322F; p.leftArmY = 0.132F; p.leftArmZ = -0.683F; p.leftElbow = 1.854F;
++        p.rightLegX = 0.360F; p.rightLegZ = 0.080F; p.rightKnee = 0.180F; p.leftLegX = -0.720F; p.leftLegZ = -0.080F;
++        p.leftKnee = 0.900F; p.armHold = 1.000F; p.legHold = 1.000F;
++        return p;
++    }
++
++    static RigPose kickhook4() {
++        RigPose p = new RigPose();
++        p.headX = -0.120F; p.headY = 0.340F; p.lean = 0.200F; p.twist = -0.600F; p.lunge = 2.400F; p.spin = 0.340F;
++        p.rightArmX = 0.072F; p.rightArmY = 0.800F; p.rightArmZ = 1.401F; p.rightElbow = 1.852F; p.rightShoulderY = -0.400F;
++        p.rightShoulderZ = -1.000F; p.leftArmX = -0.341F; p.leftArmY = 0.122F; p.leftArmZ = -0.678F; p.leftElbow = 1.844F;
++        p.rightLegX = 0.300F; p.rightLegZ = 0.080F; p.rightKnee = 0.250F; p.leftLegX = -0.660F; p.leftLegZ = -0.080F;
++        p.leftKnee = 0.880F; p.armHold = 1.000F; p.legHold = 1.000F;
++        return p;
++    }
++
++    static RigPose hookkick1() {
++        RigPose p = new RigPose();
++        p.headX = -0.060F; p.headY = 0.400F; p.lean = 0.100F; p.twist = -0.300F; p.lunge = -0.400F; p.spin = 0.400F;
++        p.rightArmX = -0.561F; p.rightArmY = 0.262F; p.rightArmZ = 0.276F; p.rightElbow = 1.737F; p.leftArmX = -0.706F;
++        p.leftArmY = 0.366F; p.leftArmZ = -0.208F; p.leftElbow = 1.774F; p.rightLegX = -0.420F; p.rightLegZ = 0.080F;
++        p.rightKnee = 0.850F; p.leftLegX = -0.420F; p.leftLegZ = -0.080F; p.leftKnee = 0.850F; p.armHold = 1.000F;
++        p.legHold = 1.000F;
++        return p;
++    }
++
++    static RigPose hookkick2() {
++        RigPose p = new RigPose();
++        p.headX = -0.120F; p.headY = 1.300F; p.lean = 0.200F; p.twist = 0.100F; p.lunge = -0.300F; p.spin = -2.900F;
++        p.roll = -0.150F; p.rightArmX = -0.607F; p.rightArmY = 0.034F; p.rightArmZ = 0.270F; p.rightElbow = 1.851F;
++        p.leftArmX = -0.710F; p.leftArmY = 0.084F; p.leftArmZ = -0.376F; p.leftElbow = 1.851F; p.rightLegX = -1.350F;
++        p.rightLegZ = 0.300F; p.rightKnee = 2.350F; p.leftLegX = -0.200F; p.leftKnee = 0.500F; p.armHold = 1.000F;
++        p.legHold = 1.000F;
++        return p;
++    }
++
++    static RigPose hookkick3() {
++        RigPose p = new RigPose();
++        p.headY = 2.300F; p.lunge = 1.400F; p.spin = -3.983F; p.roll = -0.620F; p.rightArmX = 0.751F; p.rightArmY = 0.114F;
++        p.rightArmZ = 0.427F; p.rightElbow = 0.939F; p.leftArmX = -0.030F; p.leftArmY = 0.388F; p.leftArmZ = -0.501F;
++        p.leftElbow = 1.850F; p.rightLegX = -0.020F; p.rightLegZ = 0.920F; p.rightKnee = 0.040F; p.leftLegX = -0.040F;
++        p.leftKnee = 0.260F; p.armHold = 1.000F; p.legHold = 1.000F;
++        return p;
++    }
++
++    static RigPose hookkick4() {
++        RigPose p = new RigPose();
++        p.headY = 1.620F; p.lunge = 2.000F; p.spin = -4.663F; p.roll = -0.680F; p.rightArmX = 0.949F; p.rightArmY = -0.129F;
++        p.rightArmZ = 0.745F; p.rightElbow = 0.648F; p.leftArmX = 0.177F; p.leftArmY = 0.385F; p.leftArmZ = -0.408F;
++        p.leftElbow = 1.851F; p.rightLegX = 0.020F; p.rightLegZ = 0.900F; p.rightKnee = 0.500F; p.leftLegX = -0.040F;
++        p.leftKnee = 0.240F; p.armHold = 1.000F; p.legHold = 1.000F;
++        return p;
++    }
++
++    static RigPose hookkick5() {
++        RigPose p = new RigPose();
++        p.headY = 1.100F; p.lunge = 1.800F; p.spin = -5.183F; p.roll = -0.600F; p.rightArmX = 0.936F; p.rightArmY = -0.287F;
++        p.rightArmZ = 0.844F; p.rightElbow = 0.511F; p.leftArmX = -0.184F; p.leftArmY = 0.177F; p.leftArmZ = -0.218F;
++        p.leftElbow = 1.852F; p.rightLegX = 0.140F; p.rightLegZ = 0.860F; p.rightKnee = 1.500F; p.leftLegX = -0.060F;
++        p.leftKnee = 0.260F; p.armHold = 1.000F; p.legHold = 1.000F;
++        return p;
++    }
++
++    static RigPose hookkick6() {
++        RigPose p = new RigPose();
++        p.headX = -0.036F; p.headY = 0.350F; p.lean = 0.060F; p.lunge = 0.600F; p.spin = -5.933F; p.roll = -0.200F;
++        p.rightArmX = -0.282F; p.rightArmY = -0.079F; p.rightArmZ = 0.742F; p.rightElbow = 1.781F; p.leftArmX = -0.555F;
++        p.leftArmY = 0.209F; p.leftArmZ = -0.161F; p.leftElbow = 1.852F; p.rightLegX = -0.700F; p.rightLegZ = 0.300F;
++        p.rightKnee = 1.900F; p.leftLegX = -0.200F; p.leftKnee = 0.500F; p.armHold = 1.000F; p.legHold = 1.000F;
++        return p;
++    }
++
++    static RigPose tornadokick1() {
++        RigPose p = new RigPose();
++        p.headX = -0.156F; p.headY = 0.900F; p.lean = 0.260F; p.twist = 0.350F; p.lunge = -0.600F; p.spin = 0.900F;
++        p.rightArmX = -0.314F; p.rightArmY = 0.114F; p.rightArmZ = 0.344F; p.rightElbow = 1.400F; p.leftArmX = 0.831F;
++        p.leftArmY = 0.125F; p.leftArmZ = -0.855F; p.leftElbow = 1.006F; p.rightLegX = -0.500F; p.rightLegZ = 0.080F;
++        p.rightKnee = 1.150F; p.leftLegX = -0.620F; p.leftLegZ = -0.080F; p.leftKnee = 1.200F; p.armHold = 1.000F;
++        p.legHold = 1.000F;
++        return p;
++    }
++
++    static RigPose tornadokick2() {
++        RigPose p = new RigPose();
++        p.headY = -2.783F; p.twist = -0.300F; p.lunge = 0.400F; p.spin = 3.500F; p.rightArmX = -0.385F; p.rightArmY = 0.249F;
++        p.rightArmZ = 0.420F; p.rightElbow = 1.710F; p.leftArmX = 0.346F; p.leftArmY = -0.793F; p.leftArmZ = -0.904F;
++        p.leftElbow = 1.395F; p.rightLegX = 0.100F; p.rightLegZ = 0.100F; p.rightKnee = 0.900F; p.leftLegX = -1.500F;
++        p.leftKnee = 1.900F; p.armHold = 1.000F; p.legHold = 1.000F;
++        return p;
++    }
++
++    static RigPose tornadokick3() {
++        RigPose p = new RigPose();
++        p.headX = 0.024F; p.headY = -0.350F; p.lean = -0.040F; p.twist = 0.250F; p.lunge = 1.000F; p.spin = 5.933F;
++        p.roll = -0.250F; p.rightArmX = -0.575F; p.rightArmY = -0.116F; p.rightArmZ = 0.606F; p.rightElbow = 1.805F;
++        p.leftArmX = -0.472F; p.leftArmY = -0.111F; p.leftArmZ = -0.433F; p.leftElbow = 1.850F; p.rightLegX = -1.500F;
++        p.rightLegZ = 0.720F; p.rightKnee = 2.400F; p.leftLegX = -0.700F; p.leftKnee = 1.700F; p.armHold = 1.000F;
++        p.legHold = 1.000F;
++        return p;
++    }
++
++    static RigPose tornadokick4() {
++        RigPose p = new RigPose();
++        p.headX = 0.072F; p.headY = 1.300F; p.lean = -0.120F; p.twist = -0.400F; p.lunge = 3.200F; p.spin = 7.583F;
++        p.roll = -0.660F; p.rightArmX = 1.017F; p.rightArmY = 0.032F; p.rightArmZ = 1.244F; p.rightElbow = -0.006F;
++        p.leftArmX = 0.255F; p.leftArmY = 0.454F; p.leftArmZ = -0.442F; p.leftElbow = 1.842F; p.rightLegX = -0.260F;
++        p.rightLegZ = 0.960F; p.rightKnee = 0.030F; p.leftLegX = -0.750F; p.leftKnee = 1.900F; p.armHold = 1.000F;
++        p.legHold = 1.000F;
++        return p;
++    }
++
++    static RigPose tornadokick5() {
++        RigPose p = new RigPose();
++        p.headX = 0.084F; p.headY = 1.620F; p.lean = -0.140F; p.twist = -0.480F; p.lunge = 3.800F; p.spin = 7.903F;
++        p.roll = -0.700F; p.rightArmX = 1.034F; p.rightArmY = 0.121F; p.rightArmZ = 1.354F; p.rightElbow = -0.018F;
++        p.leftArmX = 0.321F; p.leftArmY = 0.397F; p.leftArmZ = -0.363F; p.leftElbow = 1.845F; p.rightLegX = -0.360F;
++        p.rightLegZ = 1.000F; p.leftLegX = -0.750F; p.leftKnee = 1.900F; p.armHold = 1.000F; p.legHold = 1.000F;
++        return p;
++    }
++
++    static RigPose tornadokick6() {
++        RigPose p = new RigPose();
++        p.headY = 1.200F; p.twist = -0.100F; p.lunge = 2.200F; p.spin = 7.483F; p.roll = -0.300F; p.rightArmX = -0.162F;
++        p.rightArmY = -0.126F; p.rightArmZ = 0.745F; p.rightElbow = 1.551F; p.leftArmX = -0.302F; p.leftArmY = 0.247F;
++        p.leftArmZ = -0.280F; p.leftElbow = 1.843F; p.rightLegX = -1.100F; p.rightLegZ = 0.500F; p.rightKnee = 2.000F;
++        p.leftLegX = -0.500F; p.leftKnee = 1.200F; p.armHold = 1.000F; p.legHold = 1.000F;
++        return p;
++    }
++
++    static RigPose tornadokick7() {
++        RigPose p = new RigPose();
++        p.headX = -0.204F; p.headY = 0.300F; p.lean = 0.340F; p.lunge = 0.800F; p.spin = 6.583F; p.rightArmX = -0.209F;
++        p.rightArmY = 0.054F; p.rightArmZ = 0.771F; p.rightElbow = 1.150F; p.leftArmX = -0.230F; p.leftArmY = -0.168F;
++        p.leftArmZ = -0.615F; p.leftElbow = 1.220F; p.rightLegX = -0.600F; p.rightLegZ = 0.080F; p.rightKnee = 1.450F;
++        p.leftLegX = -0.850F; p.leftLegZ = -0.080F; p.leftKnee = 1.550F; p.armHold = 1.000F; p.legHold = 1.000F;
++        return p;
++    }
++
++    static RigPose tornadokick8() {
++        RigPose p = new RigPose();
++        p.headX = -0.108F; p.lean = 0.180F; p.lunge = 0.200F; p.spin = 6.283F; p.rightArmX = -0.958F; p.rightArmY = -0.451F;
++        p.rightArmZ = 0.131F; p.rightElbow = 1.393F; p.leftArmX = -0.958F; p.leftArmY = 0.451F; p.leftArmZ = -0.131F;
++        p.leftElbow = 1.393F; p.rightLegX = -0.420F; p.rightLegZ = 0.080F; p.rightKnee = 0.880F; p.leftLegX = -0.480F;
++        p.leftLegZ = -0.080F; p.leftKnee = 0.920F; p.armHold = 1.000F; p.legHold = 1.000F;
++        return p;
++    }
++
+     static RigPose punchCoil0() {
+         RigPose p = new RigPose();
+         p.headX = -0.036F; p.headY = -0.550F; p.lean = 0.060F; p.twist = 0.500F; p.lunge = -1.200F; p.spin = -0.550F;
+diff --git a/src/main/java/com/hex/kagune/control/pale/PaleStrike.java b/src/main/java/com/hex/kagune/control/pale/PaleStrike.java
+index e283538..bde807d 100644
+--- a/src/main/java/com/hex/kagune/control/pale/PaleStrike.java
++++ b/src/main/java/com/hex/kagune/control/pale/PaleStrike.java
+@@ -26,7 +26,37 @@ public enum PaleStrike {
+     /** A full turn on the spot into a left backfist; it catches everything round her. */
+     BACKFIST(10, 5, 7, 1.35F, 0.35, 0.55, 0.1, 3.4, false, Blink.NONE, PaleRules.BLITZ_FINISH_MASTERY),
+     /** She vanishes, reappears square in front of the target and drives both palms into it. */
+-    TWIN_PALM(14, 6, 14, 1.8F, 1.55, 0.0, 0.3, 3.2, true, Blink.FRONT, PaleRules.BLITZ_FINISH_MASTERY);
++    TWIN_PALM(14, 6, 14, 1.8F, 1.55, 0.0, 0.3, 3.2, true, Blink.FRONT, PaleRules.BLITZ_FINISH_MASTERY),
++
++    // ---------------------------------------------------------------- 4.1.6: Kick Master (FightStyle.KICK_MASTER), its own string
++    // The owner: "a new combat style mixing kicks and punches (mostly side kicks, spinning kicks etc) ... Do a very deep research into
++    // combat moves like I described make sure the corehography is perfect, this combat style upon learned fully replaces the default M1
++    // combos." Written as a kicker's own combination, each blow leaving the body where the next one starts from: the jab finds the
++    // distance and the cross turns the hips through, which loads the rear leg for the round kick; the round kick lands that leg in
++    // front, side-on, which is the lead side kick's stance; the side kick's turned hip is half the turn of the back kick; the hook
++    // punch squares her up and winds her the other way for the spinning hook kick; and the hook kick's turn carries on into the jump
++    // of the tornado kick.
++    /** The lead jab: it finds the distance. */
++    KICK_JAB(7, 2, 4, 0.8F, 0.25, 0.0, 0.05, 3.2, false, Blink.NONE, 0, Style.KICKS),
++    /** The cross: the hips turned all the way through, the rear heel up (the rear leg is loaded). */
++    KICK_CROSS(8, 3, 5, 0.9F, 0.3, 0.0, 0.05, 3.3, true, Blink.NONE, 0, Style.KICKS),
++    /** A rear round kick into the ribs: the knee up and out, the standing foot pivoted, the shin whipped round level. It knocks left. */
++    ROUND_KICK(10, 4, 6, 1.15F, 0.3, -0.5, 0.08, 3.6, true, Blink.NONE, 0, Style.KICKS),
++    /** The lead side kick: the knee drawn up across the body, the hips turned over, the heel driven straight out. It drives back. */
++    SIDE_KICK(10, 4, 7, 1.25F, 0.75, 0.0, 0.1, 3.8, false, Blink.NONE, 0, Style.KICKS),
++    /** A spinning back kick: the back turned, the eyes over the shoulder, the heel thrust straight back, the trunk laid out level. */
++    BACK_KICK(11, 5, 7, 1.4F, 0.9, 0.0, 0.15, 3.7, true, Blink.NONE, PaleRules.BLITZ_BLINK_MASTERY, Style.KICKS),
++    /** A lead hook into the body on the way back round: it squares her up, and winds her for what comes. */
++    KICK_HOOK(8, 3, 5, 1.0F, 0.2, 0.42, 0.05, 3.1, false, Blink.NONE, PaleRules.BLITZ_BLINK_MASTERY, Style.KICKS),
++    /** A spinning hook kick: a full turn, the leg thrown out past it and the heel hooked back across its head. It knocks right. */
++    HOOK_KICK(12, 6, 8, 1.5F, 0.3, 0.7, 0.15, 3.7, true, Blink.NONE, PaleRules.BLITZ_FINISH_MASTERY, Style.KICKS),
++    /** The finisher, a tornado kick: a full turn into a jump, the round kick thrown from the air with the whole turn behind it. */
++    TORNADO_KICK(16, 7, 16, 1.9F, 1.5, -0.3, 0.35, 3.8, true, Blink.NONE, PaleRules.BLITZ_FINISH_MASTERY, Style.KICKS);
++
++    /** 4.1.6: which string a strike belongs to: the Speed Blitz (hers, and Speedster's), or Kick Master's. */
++    public enum Style {
++        BLITZ, KICKS
++    }
+ 
+     /** Where a blink puts her: nowhere (no blink), at the target's side, square in front of it. */
+     public enum Blink {
+@@ -46,9 +76,16 @@ public enum PaleStrike {
+     public final boolean right;
+     public final Blink blink;
+     public final int mastery;
++    public final Style style;
+ 
+     PaleStrike(int duration, int impact, int chain, float damage, double back, double sideways, double up, double reach, boolean right, Blink blink,
+               int mastery) {
++        this(duration, impact, chain, damage, back, sideways, up, reach, right, blink, mastery, Style.BLITZ);
++    }
++
++    PaleStrike(int duration, int impact, int chain, float damage, double back, double sideways, double up, double reach, boolean right, Blink blink,
++              int mastery, Style style) {
++        this.style = style;
+         this.duration = duration;
+         this.impact = impact;
+         this.chain = chain;
+@@ -67,20 +104,54 @@ public enum PaleStrike {
+ 
+     /** The finisher: a recovery follows it. */
+     public boolean finisher() {
+-        return this == TWIN_PALM;
++        return this == TWIN_PALM || this == TORNADO_KICK;
++    }
++
++    /** 4.1.6: true for a blow of a leg (its mark and its sound are a kick's). */
++    public boolean kick() {
++        return this == ROUND_KICK || this == SIDE_KICK || this == BACK_KICK || this == HOOK_KICK || this == TORNADO_KICK;
++    }
++
++    /** 4.1.6: the tornado kick leaves the ground: from this tick to this one, this high at most (sixteenths of a block). */
++    public static final double JUMP_FROM = 2.5;
++    public static final double JUMP_TO = 11.0;
++    public static final double JUMP_HEIGHT = 9.0;
++
++    /** 4.1.6: how far off the ground (sixteenths of a block) this strike has her {@code age} ticks in: an arc for the tornado kick, 0 else. */
++    public double lift(double age) {
++        if (this != TORNADO_KICK || age <= JUMP_FROM || age >= JUMP_TO) {
++            return 0.0;
++        }
++        double u = (age - JUMP_FROM) / (JUMP_TO - JUMP_FROM);
++        return JUMP_HEIGHT * 4.0 * u * (1.0 - u);
++    }
++
++    /** 4.1.6: a string's strikes, in order. */
++    public static PaleStrike[] of(Style style) {
++        return java.util.Arrays.stream(values()).filter(strike -> strike.style == style).toArray(PaleStrike[]::new);
+     }
+ 
+     /** RC a strike costs (before the original's own scaling by mastery). */
+     public float cost() {
+-        return this.finisher() ? 1.2F : 0.3F + 0.08F * this.ordinal();
++        return this.finisher() ? 1.2F : 0.3F + 0.08F * this.place();
++    }
++
++    /** 4.1.6: its place in its own string (0: the first). */
++    public int place() {
++        return this.ordinal() - of(this.style)[0].ordinal();
+     }
+ 
+     /** The strike after {@code previous} (null: the first) that {@code mastery} allows; after the last one, the first again. */
+     public static PaleStrike next(PaleStrike previous, int mastery) {
+-        int from = previous == null ? 0 : previous.ordinal() + 1;
+-        PaleStrike[] all = values();
++        return next(previous, mastery, Style.BLITZ);
++    }
++
++    /** 4.1.6: the same in {@code style}'s string (a strike of another string before it: the first). */
++    public static PaleStrike next(PaleStrike previous, int mastery, Style style) {
++        PaleStrike[] all = of(style);
++        int from = previous == null || previous.style != style ? 0 : previous.place() + 1;
+         if (from >= all.length || all[from].mastery > mastery) {
+-            return JAB;
++            return all[0];
+         }
+         return all[from];
+     }
+@@ -92,8 +163,13 @@ public enum PaleStrike {
+ 
+     /** How many strikes the blitz has at {@code mastery}. */
+     public static int count(int mastery) {
++        return count(mastery, Style.BLITZ);
++    }
++
++    /** 4.1.6: how many {@code style}'s string has at {@code mastery}. */
++    public static int count(int mastery, Style style) {
+         int count = 0;
+-        for (PaleStrike strike : values()) {
++        for (PaleStrike strike : of(style)) {
+             if (strike.mastery <= mastery) {
+                 count++;
+             }
+diff --git a/src/main/java/com/hex/kagune/control/server/EtoOwl.java b/src/main/java/com/hex/kagune/control/server/EtoOwl.java
+index d49964d..a4830f5 100644
+--- a/src/main/java/com/hex/kagune/control/server/EtoOwl.java
++++ b/src/main/java/com/hex/kagune/control/server/EtoOwl.java
+@@ -216,7 +216,7 @@ final class EtoOwl {
+         if (f.strike == 0 && f.strikeEnded != Long.MIN_VALUE && now - f.strikeEnded < PaleRules.FINISH_RECOVERY && f.detail == PaleStrike.TWIN_PALM.ordinal()) {
+             return;
+         }
+-        PaleStrike strike = PaleStrike.values()[Math.floorMod(f.strike, PaleStrike.values().length)];
++        PaleStrike strike = PaleStrike.of(PaleStrike.Style.BLITZ)[Math.floorMod(f.strike, PaleStrike.of(PaleStrike.Style.BLITZ).length)];
+         npc.m_21573_().m_26573_();
+         begin(npc, f, PaleMove.STRIKE, strike.ordinal(), target.m_19879_(), 0.0F, Vec3.f_82478_, now);
+     }
+diff --git a/tools/PalePoseDesign.java b/tools/PalePoseDesign.java
+index b4bca34..63b53dd 100644
+--- a/tools/PalePoseDesign.java
++++ b/tools/PalePoseDesign.java
+@@ -540,6 +540,145 @@ public final class PalePoseDesign {
+         return List.of(cock, slam, over, down, back, guardKey(PaleRules.HAMMER_TICKS));
+     }
+ 
++    // ------------------------------------------------------------------ 4.1.6: Kick Master's kicks
++    //
++    // What makes a kick land (the same grammar as a punch's, said with the hips): the CHAMBER (the weight taken wholly onto the standing
++    // leg, its knee soft; the kicking knee lifted high and folded tight, pointed where the kick will go: a kick's reach and its height
++    // are decided by the knee, never the foot), the PIVOT (the standing foot turns on its ball, heel toward the target, which lets the
++    // hips turn over: with no pivot there is no hip in it), the EXTENSION (the hip driven in behind the leg as it straightens, the
++    // trunk laid away along the leg's own line so that head, hip and heel make one line: that lean is what lets the hip open, and it is
++    // the counterweight), an overshoot a hair past, the RE-CHAMBER (the knee folds again before the foot comes down: a kick is drawn
++    // back as fast as it was thrown, or it is a push), and the foot set down where the next blow wants it. The arms are never idle:
++    // one stays up by the jaw, the other is thrown the opposite way to the hips (it is the turn's counterweight).
++    //
++    // Kicks are designed with the right leg and mirrored for the left. A whole-body turn of +pi/2 (to her left) puts her right side to
++    // the target; the trunk laid away from the leg is a NEGATIVE roll (a positive one tips her head at the target); a leg out to her right is level when
++    // its Z less that roll is a quarter turn.
++
++    /** A fist up by the jaw on that side, the elbow down in front of the ribs (from its own shoulder: the guard, whatever the body does). */
++    static final double[] JAW_R = {-0.08, 0.02, 0.3};
++    static final double[] JAW_R_ELBOW = {0.06, -0.24, 0.14};
++    static final double[] JAW_L = {0.08, 0.02, 0.3};
++    static final double[] JAW_L_ELBOW = {-0.06, -0.24, 0.14};
++
++    /**
++     * The rear round kick, into the ribs. Out of the cross (the hips already turned through, the rear heel up): the weight goes onto
++     * the lead leg, the rear knee comes up and out to the side, folded tight; the standing foot pivots and the hips turn over; the
++     * shin whips round level, the trunk laid back away from it, the kicking-side arm thrown down and back against the turn; through it
++     * a hair; the knee folds again and the foot comes down in front (side-on: the side kick's stance).
++     */
++    static List<Spec> roundKick(PaleStrike strike) {
++        int i = strike.impact;
++        Spec chamber = key(i - 1.7, "SMOOTH").body(0.35, 0.3, -0.04, -0.4).roll(-0.18).leftLeg(-0.12, 0.0, 0.42).rightLeg(-1.5, 0.7, 2.35)
++            .rightFrom(v(0.02, 0.0, 0.34), v(0.14, -0.2, 0.12)).leftFrom(JAW_L, JAW_L_ELBOW);
++        Spec hit = key(i, "IN").body(1.28, -0.38, -0.1, 2.2).roll(-0.6).leftLeg(-0.1, 0.0, 0.3).rightLeg(-0.28, 0.96, 0.04)
++            .rightFrom(v(0.22, -0.34, -0.3), v(0.16, -0.2, -0.1)).leftFrom(JAW_L, JAW_L_ELBOW);
++        Spec over = key(i + 0.6, "OUT").body(1.5, -0.46, -0.12, 2.6).roll(-0.64).leftLeg(-0.1, 0.0, 0.3).rightLeg(-0.36, 1.0, 0.0)
++            .rightFrom(v(0.22, -0.36, -0.32), v(0.16, -0.2, -0.12)).leftFrom(JAW_L, JAW_L_ELBOW);
++        Spec fold = key(i + 2.4, "SMOOTH").body(1.15, -0.1, 0.0, 1.2).roll(-0.3).leftLeg(-0.14, 0.0, 0.45).rightLeg(-1.3, 0.6, 2.1)
++            .rightFrom(v(0.0, 0.0, 0.32), v(0.12, -0.22, 0.12)).leftFrom(JAW_L, JAW_L_ELBOW);
++        return List.of(chamber, hit, over, fold, guardKey(strike.duration));
++    }
++
++    /**
++     * The side kick. The knee is drawn up high across the body (the shin level, the sole already facing the target) while the standing
++     * foot turns right round, heel to the target; then the hips turn over and the heel is driven out in a straight line, the leg
++     * locked, the trunk laid out along the leg's own line (head, hip and heel one line), the kicking-side arm along the leg, the other
++     * fist by the jaw; a hair further; held a beat (a side kick pushes: it stays in); the knee comes back to the chest; down.
++     */
++    static List<Spec> sideKick(PaleStrike strike) {
++        int i = strike.impact;
++        Spec chamber = key(i - 1.8, "SMOOTH").body(1.0, 0.1, 0.1, -0.8).roll(-0.2).leftLeg(-0.1, 0.0, 0.5).rightLeg(-1.6, 0.34, 2.45)
++            .rightFrom(v(0.06, -0.04, 0.3), v(0.16, -0.22, 0.1)).leftFrom(JAW_L, JAW_L_ELBOW);
++        Spec hit = key(i, "IN").body(1.57, 0.0, 0.0, 3.0).roll(-0.72).leftLeg(-0.02, 0.0, 0.22).rightLeg(-0.04, 0.85, 0.0)
++            .rightFrom(v(0.34, -0.3, 0.02), v(0.2, -0.2, -0.02)).leftFrom(v(0.12, 0.0, 0.26), v(-0.04, -0.24, 0.12));
++        Spec over = key(i + 0.6, "OUT").body(1.6, 0.0, 0.0, 3.7).roll(-0.78).leftLeg(-0.02, 0.0, 0.2).rightLeg(-0.04, 0.84, 0.0)
++            .rightFrom(v(0.34, -0.32, 0.02), v(0.2, -0.2, -0.02)).leftFrom(v(0.12, 0.0, 0.26), v(-0.04, -0.24, 0.12));
++        Spec hold = key(i + 1.9, "SMOOTH").body(1.57, 0.0, 0.0, 3.2).roll(-0.7).leftLeg(-0.02, 0.0, 0.24).rightLeg(-0.06, 0.84, 0.1)
++            .rightFrom(v(0.32, -0.3, 0.02), v(0.2, -0.2, -0.02)).leftFrom(v(0.12, 0.0, 0.26), v(-0.04, -0.24, 0.12));
++        Spec fold = key(i + 3.4, "SMOOTH").body(1.25, 0.05, 0.06, 1.4).roll(-0.28).leftLeg(-0.1, 0.0, 0.45).rightLeg(-1.45, 0.34, 2.3)
++            .rightFrom(v(0.04, -0.02, 0.3), v(0.14, -0.22, 0.1)).leftFrom(JAW_L, JAW_L_ELBOW);
++        return List.of(chamber, hit, over, hold, fold, guardKey(strike.duration));
++    }
++
++    /**
++     * The spinning back kick. She turns her back on it (to her right, the short way from side-on), the head whipping round first to
++     * find it over the right shoulder; the kicking knee brushes the standing one, folded tight, as the turn passes; then the heel is
++     * thrust straight back, the trunk pitched forward level with the leg (a T on one leg), elbows in; a hair further; the knee folds
++     * and the turn carries on round to face it.
++     */
++    static List<Spec> backKick(PaleStrike strike) {
++        int i = strike.impact;
++        double turn = -Math.PI * 2.0;
++        Spec turned = key(1.6, "SMOOTH").body(-1.5, -0.25, 0.14, -0.4).looking(1.25).legs(-0.3, 0.7, -0.3, 0.7)
++            .rightFrom(v(0.0, 0.0, 0.3), v(0.12, -0.22, 0.12)).leftFrom(JAW_L, JAW_L_ELBOW);
++        Spec chamber = key(i - 1.3, "SMOOTH").body(-2.7, -0.1, 0.42, -0.2).looking(1.35).leftLeg(-0.3, 0.0, 0.55).rightLeg(-1.25, 0.06, 2.4)
++            .rightFrom(v(0.0, -0.04, 0.28), v(0.12, -0.22, 0.1)).leftFrom(v(0.04, -0.04, 0.28), v(-0.1, -0.22, 0.1));
++        Spec hit = key(i, "IN").body(-Math.PI, 0.0, 0.85, -2.6).looking(1.45).head(-0.55).leftLeg(-0.62, 0.0, 0.3).rightLeg(0.72, 0.03, 0.0)
++            .rightFrom(v(0.02, -0.1, 0.26), v(0.12, -0.24, 0.08)).leftFrom(v(0.02, -0.1, 0.26), v(-0.12, -0.24, 0.08));
++        Spec over = key(i + 0.6, "OUT").body(-Math.PI - 0.06, 0.0, 0.9, -3.2).looking(1.45).head(-0.55).leftLeg(-0.66, 0.0, 0.28).rightLeg(0.76, 0.03, 0.0)
++            .rightFrom(v(0.02, -0.1, 0.26), v(0.12, -0.24, 0.08)).leftFrom(v(0.02, -0.1, 0.26), v(-0.12, -0.24, 0.08));
++        Spec fold = key(i + 2.6, "SMOOTH").body(-4.7, 0.1, 0.3, -0.8).looking(0.9).leftLeg(-0.3, 0.0, 0.55).rightLeg(-0.9, 0.2, 1.9)
++            .rightFrom(v(0.0, 0.0, 0.3), v(0.12, -0.22, 0.12)).leftFrom(JAW_L, JAW_L_ELBOW);
++        Spec end = guardKey(strike.duration);
++        end.body.spin = (float)turn;
++        return List.of(turned, chamber, hit, over, fold, end);
++    }
++
++    /**
++     * The spinning hook kick. A small wind to her left, then a full turn to her right: the head first, the knee chambered as her back
++     * passes; the leg is thrown out straight a little PAST the target, level, the trunk laid away; and as the turn comes through, the
++     * heel is hooked back across it (the knee snapping shut is the blow); the folded leg carries on round and comes down.
++     */
++    static List<Spec> hookKick(PaleStrike strike) {
++        int i = strike.impact;
++        double turn = -Math.PI * 2.0;
++        Spec wind = key(1.4, "SMOOTH").body(0.4, -0.3, 0.1, -0.4).legs(-0.42, 0.85, -0.42, 0.85)
++            .rightFrom(v(0.0, 0.0, 0.3), v(0.12, -0.22, 0.12)).leftFrom(JAW_L, JAW_L_ELBOW);
++        Spec chamber = key(i - 2.3, "SMOOTH").body(-2.9, 0.1, 0.2, -0.3).roll(-0.15).looking(1.3).leftLeg(-0.2, 0.0, 0.5).rightLeg(-1.35, 0.3, 2.35)
++            .rightFrom(v(0.02, -0.02, 0.3), v(0.12, -0.22, 0.1)).leftFrom(JAW_L, JAW_L_ELBOW);
++        Spec out = key(i - 0.9, "SMOOTH").body(turn + 2.3, 0.0, 0.0, 1.4).roll(-0.62).leftLeg(-0.04, 0.0, 0.26).rightLeg(-0.02, 0.92, 0.04)
++            .rightFrom(v(0.3, -0.3, 0.0), v(0.18, -0.2, -0.02)).leftFrom(v(0.12, 0.0, 0.26), v(-0.04, -0.24, 0.12));
++        Spec hit = key(i, "IN").body(turn + 1.62, 0.0, 0.0, 2.0).roll(-0.68).leftLeg(-0.04, 0.0, 0.24).rightLeg(0.02, 0.9, 0.5)
++            .rightFrom(v(0.28, -0.32, -0.08), v(0.18, -0.2, -0.06)).leftFrom(v(0.12, 0.0, 0.26), v(-0.04, -0.24, 0.12));
++        Spec over = key(i + 0.7, "OUT").body(turn + 1.1, 0.0, 0.0, 1.8).roll(-0.6).leftLeg(-0.06, 0.0, 0.26).rightLeg(0.14, 0.86, 1.5)
++            .rightFrom(v(0.24, -0.32, -0.14), v(0.16, -0.2, -0.08)).leftFrom(v(0.12, 0.0, 0.26), v(-0.04, -0.24, 0.12));
++        Spec fold = key(i + 2.8, "SMOOTH").body(turn + 0.35, 0.0, 0.06, 0.6).roll(-0.2).leftLeg(-0.2, 0.0, 0.5).rightLeg(-0.7, 0.3, 1.9)
++            .rightFrom(v(0.0, 0.0, 0.3), v(0.12, -0.22, 0.12)).leftFrom(JAW_L, JAW_L_ELBOW);
++        Spec end = guardKey(strike.duration);
++        end.body.spin = (float)turn;
++        return List.of(wind, chamber, out, hit, over, fold, end);
++    }
++
++    /**
++     * The tornado kick (a jumping turning round kick), the finisher. She sinks and steps round to her left; the lead knee drives up and
++     * round and takes her off the ground, the arms thrown round with it; in the air her back passes and the kicking knee comes up and
++     * out, chambered; the round kick is thrown at the top with the whole turn behind it, the other leg tucked under her, the trunk
++     * laid back; through it; and she lands low on both feet, and rises.
++     */
++    static List<Spec> tornadoKick(PaleStrike strike) {
++        int i = strike.impact;
++        double turn = Math.PI * 2.0;
++        Spec sink = key(2.2, "SMOOTH").body(0.9, 0.35, 0.26, -0.6).legs(-0.62, 1.2, -0.5, 1.15)
++            .rightFrom(v(0.2, -0.2, 0.2), v(0.16, -0.22, 0.02)).leftFrom(v(-0.26, -0.1, -0.1), v(-0.18, -0.2, -0.06));
++        Spec drive = key(i - 2.6, "SMOOTH").body(3.5, -0.3, 0.0, 0.4).airborne().leftLeg(-1.5, 0.0, 1.9).rightLeg(0.1, 0.1, 0.9)
++            .rightFrom(v(0.0, 0.0, 0.32), v(0.12, -0.22, 0.12)).leftFrom(v(-0.3, -0.06, -0.08), v(-0.2, -0.16, -0.06));
++        Spec chamber = key(i - 1.1, "SMOOTH").body(turn - 0.35, 0.25, -0.04, 1.0).roll(-0.25).airborne().leftLeg(-0.7, 0.0, 1.7).rightLeg(-1.5, 0.72, 2.4)
++            .rightFrom(v(0.02, 0.0, 0.34), v(0.14, -0.2, 0.12)).leftFrom(JAW_L, JAW_L_ELBOW);
++        Spec hit = key(i, "IN").body(turn + 1.3, -0.4, -0.12, 3.2).roll(-0.66).airborne().leftLeg(-0.75, 0.0, 1.9).rightLeg(-0.26, 0.96, 0.03)
++            .rightFrom(v(0.24, -0.34, -0.32), v(0.16, -0.2, -0.12)).leftFrom(JAW_L, JAW_L_ELBOW);
++        Spec over = key(i + 0.7, "OUT").body(turn + 1.62, -0.48, -0.14, 3.8).roll(-0.7).airborne().leftLeg(-0.75, 0.0, 1.9).rightLeg(-0.36, 1.0, 0.0)
++            .rightFrom(v(0.24, -0.36, -0.34), v(0.16, -0.2, -0.14)).leftFrom(JAW_L, JAW_L_ELBOW);
++        Spec fold = key(i + 2.4, "SMOOTH").body(turn + 1.2, -0.1, 0.0, 2.2).roll(-0.3).airborne().leftLeg(-0.5, 0.0, 1.2).rightLeg(-1.1, 0.5, 2.0)
++            .rightFrom(v(0.0, 0.0, 0.32), v(0.12, -0.22, 0.12)).leftFrom(JAW_L, JAW_L_ELBOW);
++        Spec land = key(i + 4.6, "OUT").body(turn + 0.3, 0.0, 0.34, 0.8).legs(-0.85, 1.55, -0.6, 1.45)
++            .rightFrom(v(0.22, -0.26, 0.26), v(0.18, -0.2, 0.06)).leftFrom(v(-0.22, -0.26, 0.26), v(-0.18, -0.2, 0.06));
++        Spec rise = key(i + 7.0, "SMOOTH").body(turn, 0.0, 0.18, 0.2).legs(-0.48, 0.92, -0.42, 0.88).guardArms();
++        Spec end = guardKey(strike.duration);
++        end.body.spin = (float)turn;
++        return List.of(sink, drive, chamber, hit, over, fold, land, rise, end);
++    }
++
+     static List<Spec> choreography(PaleStrike strike) {
+         return switch (strike) {
+             case JAB -> straight(strike, 0.62);
+@@ -550,6 +689,15 @@ public final class PalePoseDesign {
+             case BLINK_PALM -> palm(strike);
+             case BACKFIST -> backfist(strike);
+             case TWIN_PALM -> twinPalm(strike);
++            // 4.1.6: Kick Master's string.
++            case KICK_JAB -> straight(strike, 0.62);
++            case KICK_CROSS -> straight(strike, 1.0);
++            case KICK_HOOK -> hook(strike);
++            case ROUND_KICK -> roundKick(strike);
++            case SIDE_KICK -> sideKick(strike);
++            case BACK_KICK -> backKick(strike);
++            case HOOK_KICK -> hookKick(strike);
++            case TORNADO_KICK -> tornadoKick(strike);
+         };
+     }
+ 
+diff --git a/tools/PalePreview.java b/tools/PalePreview.java
+index 709270d..8ebc814 100644
+--- a/tools/PalePreview.java
++++ b/tools/PalePreview.java
+@@ -30,11 +30,31 @@ public final class PalePreview {
+             blitzGif(new File(out, "pale-blitz.gif"), new double[] {3.0, 1.6, 2.6}, "Speed blitz, real time");
+         }
+         if (wanted.contains("strike-gifs")) {
+-            for (com.hex.kagune.control.pale.PaleStrike strike : com.hex.kagune.control.pale.PaleStrike.values()) {
++            for (com.hex.kagune.control.pale.PaleStrike strike : com.hex.kagune.control.pale.PaleStrike.of(com.hex.kagune.control.pale.PaleStrike.Style.BLITZ)) {
+                 double side = strike.right ? 1.0 : -1.0;
+                 strikeGif(new File(out, "pale-" + strike.name().toLowerCase(java.util.Locale.ROOT) + ".gif"), strike, new double[] {3.2 * side, 1.55, 2.2}, 4.0);
+             }
+         }
++        if (wanted.contains("kicks")) {
++            kicks(new File(out, "kick-master.png"));
++        }
++        if (wanted.contains("kick-test")) {
++            List<ArtPreview.Shot> shots = new ArrayList<>();
++            double[][] legs = {{-0.3, 0.96, 0.6, 1.28}, {-0.3, 1.5, 0.0, 1.57}, {-0.3, 0.0, 1.5, 1.57}, {-1.5, 0.0, 0.0, 0.0}, {-0.3, 1.5, 0.0, 0.0}, {-0.3, -1.5, 0.0, 0.0}};
++            for (double[] l : legs) {
++                RigPose p = new RigPose();
++                p.armHold = 1.0F;
++                p.legHold = 1.0F;
++                p.rightLegX = (float)l[0];
++                p.rightLegZ = (float)l[1];
++                p.roll = (float)l[2];
++                p.spin = (float)l[3];
++                p.settle(1.0F);
++                shots.add(new ArtPreview.Shot(String.format(java.util.Locale.ROOT, "legX %.1f legZ %.2f roll %.1f spin %.2f", l[0], l[1], l[2], l[3]), p,
++                    ArtPreview.NO_WINGS, new double[] {3.4, 1.6, 2.6}, new double[] {0.0, 0.95, 0.75}, dummy(DUMMY_Z)));
++            }
++            ArtPreview.sheet(new File(out, "kick-test.png"), "leg conventions", shots, 6, 300, 330);
++        }
+         if (wanted.isEmpty() || wanted.contains("punch")) {
+             punch(new File(out, "pale-big-punch.png"));
+         }
+@@ -141,7 +161,7 @@ public final class PalePreview {
+     static void eyes(File file) throws Exception {
+         List<ArtPreview.Shot> shots = new ArrayList<>();
+         double[] target = {0.0, 0.95, 0.75};
+-        for (com.hex.kagune.control.pale.PaleStrike strike : com.hex.kagune.control.pale.PaleStrike.values()) {
++        for (com.hex.kagune.control.pale.PaleStrike strike : com.hex.kagune.control.pale.PaleStrike.of(com.hex.kagune.control.pale.PaleStrike.Style.BLITZ)) {
+             RigPose p = com.hex.kagune.control.client.animation.PaleMotions.strike(strike, strike.impact, null);
+             p.settle(1.0F);
+             double side = strike.right ? 1.0 : -1.0;
+@@ -1185,7 +1205,7 @@ public final class PalePreview {
+     static void blitz(File file) throws Exception {
+         List<ArtPreview.Shot> shots = new ArrayList<>();
+         double[] target = {0.0, 0.95, 0.75};
+-        for (com.hex.kagune.control.pale.PaleStrike strike : com.hex.kagune.control.pale.PaleStrike.values()) {
++        for (com.hex.kagune.control.pale.PaleStrike strike : com.hex.kagune.control.pale.PaleStrike.of(com.hex.kagune.control.pale.PaleStrike.Style.BLITZ)) {
+             int i = strike.impact;
+             double[] ages = {i - 1.2, i - 0.45, i, i + 0.55, i + 1.6};
+             String[] names = {"coiled", "driving", "IMPACT", "overshoot", "hold"};
+@@ -1203,12 +1223,36 @@ public final class PalePreview {
+             300, 330);
+     }
+ 
++    /** 4.1.6: Kick Master's string: every blow through its chamber, its drive, its landing, its overshoot, its fold and its way down. */
++    static void kicks(File file) throws Exception {
++        List<ArtPreview.Shot> shots = new ArrayList<>();
++        double[] target = {0.0, 0.95, 0.75};
++        for (com.hex.kagune.control.pale.PaleStrike strike : com.hex.kagune.control.pale.PaleStrike.of(com.hex.kagune.control.pale.PaleStrike.Style.KICKS)) {
++            int i = strike.impact;
++            if (!strike.kick()) {
++                continue;
++            }
++            double[] ages = {i - 1.7, i - 0.6, i, i + 2.4};
++            String[] names = {"chambered", "driving", "IMPACT", "folding"};
++            double side = strike.right ? 1.0 : -1.0;
++            double[] eye = {3.4 * side, 1.7, 2.6};
++            for (int k = 0; k < ages.length; k++) {
++                RigPose p = com.hex.kagune.control.client.animation.PaleMotions.strike(strike, Math.max(0.0, ages[k]), null);
++                p.settle(1.0F);
++                String name = strike.name().toLowerCase(java.util.Locale.ROOT).replace('_', ' ');
++                shots.add(new ArtPreview.Shot(name + ": " + names[k], p, ArtPreview.NO_WINGS, eye, target, dummy(DUMMY_Z)));
++            }
++        }
++        ArtPreview.sheet(file, "Kick Master: every blow winding, chambered, driving, landing (the server's impact tick), through, folding, down", shots, 4,
++            430, 400);
++    }
++
+     /** The whole blitz chained as the server chains it (each strike from the last one's chain tick), as an animated GIF at 30 fps. */
+     static void blitzGif(File file, double[] eye, String label) throws Exception {
+         List<java.awt.image.BufferedImage> frames = new ArrayList<>();
+         double fps = 30.0;
+         RigPose shown = null;
+-        com.hex.kagune.control.pale.PaleStrike[] all = com.hex.kagune.control.pale.PaleStrike.values();
++        com.hex.kagune.control.pale.PaleStrike[] all = com.hex.kagune.control.pale.PaleStrike.of(com.hex.kagune.control.pale.PaleStrike.Style.BLITZ);
+         // A beat in the guard first.
+         for (int f = 0; f < 10; f++) {
+             frames.add(ArtPreview.render(new ArtPreview.Shot(label, com.hex.kagune.control.client.animation.PaleMotions.guard(), ArtPreview.NO_WINGS, eye,
