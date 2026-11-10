@@ -81,8 +81,27 @@ public final class OutfitTests {
         check(count(models.get("formal"), OutfitModels.CHESTPLATE) > 73 && count(models.get("formal"), OutfitModels.HELMET) > 4,
             "the Formal Outfit: the owner's 73 coat cubes and 4 cap cubes, and its details");
         check(count(models.get("crimson"), OutfitModels.CHESTPLATE) > 45, "the Crimson Outfit: the owner's 45 coat cubes, and its details");
-        check(models.get("mask_ayato").cubes().size() == 128 && models.get("mask_noro").cubes().size() == 48
-            && models.get("mask_eyepatch").cubes().size() == 183, "Ayato's 128 cubes, Noro's 48, Eyepatch's 183");
+        // 4.0.4 (the owner: "New masks, replace ALL the masks with these models."): their new pack's masks, every cube of theirs (its
+        // manifest's counts: Ayato's 75, Noro's 372, Eyepatch's 97, all 24 together).
+        check(models.get("mask_ayato").cubes().size() == 75 && models.get("mask_noro").cubes().size() == 372
+            && models.get("mask_eyepatch").cubes().size() == 97, "Ayato's 75 cubes, Noro's 372, Eyepatch's 97");
+        try {
+            String manifest = new String(Files.readAllBytes(Path.of("art/outfits/masks/models_manifest.json")));
+            java.util.regex.Matcher counts = java.util.regex.Pattern.compile("\"cubes\": (\\d+)").matcher(manifest);
+            int theirs = 0;
+            int entries = 0;
+            while (counts.find()) {
+                theirs += Integer.parseInt(counts.group(1));
+                entries++;
+            }
+            int ours = 0;
+            for (String mask : Outfits.CHARACTER_MASKS) {
+                ours += models.get(mask).cubes().size();
+            }
+            check(entries == 24 && ours == theirs, "all 24 of the owner's masks, every cube: " + ours + " of " + theirs);
+        } catch (java.io.IOException failure) {
+            check(false, "read the owner's mask manifest: " + failure);
+        }
     }
 
     /** The cubes in {@code slot} as the owner made them (the slim sleeves, made from theirs, left out). */
@@ -207,9 +226,28 @@ public final class OutfitTests {
         } catch (java.io.IOException failure) {
             check(false, "read the layer: " + failure);
         }
-        // A half mask starts under the skin's eyes (the face's fifth row, y -4 to -3), a full one's front clears the hat layer.
+        // 4.0.4: the owner's masks as their pack makes them: a half mask leaves the eyes clear (their pack's zones: either side, 1 to 3.2 out
+        // from the middle, 1 to 3.8 above the chin; only a nose bridge between), and no mask comes into the head or its hat layer.
         for (String half : List.of("mask_eyepatch", "mask_ayato", "mask_nishiki", "mask_shachi", "mask_tatara", "mask_yomo", "mask_rize", "mask_dotted")) {
-            check(top(models.get(half)) >= -3.0F, half + ": over the mouth, below the eyes: " + top(models.get(half)));
+            int over = 0;
+            for (OutfitModels.Cube cube : models.get(half).cubes()) {
+                float[] b = bounds(cube);
+                for (int side = -1; side <= 1; side += 2) {
+                    float x0 = Math.min(side * 1.0F, side * 3.2F);
+                    float x1 = Math.max(side * 1.0F, side * 3.2F);
+                    over += b[0] < x1 - 1.0E-4F && b[3] > x0 + 1.0E-4F && b[1] < -1.0F - 1.0E-4F && b[4] > -3.8F + 1.0E-4F && b[2] < -4.0F ? 1 : 0;
+                }
+            }
+            check(over == 0, half + ": over the mouth, the eyes left clear (" + over + " in the way)");
+        }
+        for (String mask : Outfits.CHARACTER_MASKS) {
+            int inside = 0;
+            for (OutfitModels.Cube cube : models.get(mask).cubes()) {
+                float[] b = bounds(cube);
+                inside += b[0] < 4.5F - 1.0E-4F && b[3] > -4.5F + 1.0E-4F && b[1] < 0.5F - 1.0E-4F && b[4] > -8.5F + 1.0E-4F
+                    && b[2] < 4.5F - 1.0E-4F && b[5] > -4.5F + 1.0E-4F ? 1 : 0;
+            }
+            check(inside == 0, mask + ": clear of the head and its hat layer (" + inside + " cubes in it)");
         }
         for (String mask : Outfits.GENERIC_MASKS) {
             OutfitModels.Model model = models.get(mask);
@@ -392,21 +430,6 @@ public final class OutfitTests {
             }
         }
         return hi - lo;
-    }
-
-    /** The highest point of {@code model}'s front (y down; its straps left out: they are at its top edge's height anyway). */
-    private static float top(OutfitModels.Model model) {
-        float top = Float.MAX_VALUE;
-        for (OutfitModels.Cube cube : model.cubes()) {
-            for (OutfitModels.Face face : cube.faces()) {
-                for (int k = 0; k < 4; k++) {
-                    if (face.corners()[k * 3 + 2] < -4.0F) {
-                        top = Math.min(top, face.corners()[k * 3 + 1]);
-                    }
-                }
-            }
-        }
-        return top;
     }
 
     private static OutfitModels.Cube cubeOf(float[] v) {

@@ -1,0 +1,269 @@
+{
+  "models": [
+    {
+      "model": "Kaneki Ken",
+      "coverage": "half",
+      "positive_volume_cubes": 97,
+      "blockbench_export": "pass",
+      "geckolib_export": "pass",
+      "texture_uv_bounds": "pass",
+      "head_and_outer_skin_clearance": "pass",
+      "half_mask_eye_clearance": "pass",
+      "tested_in_minecraft": false
+    },
+    {
+      "model": "Touka Kirishima",
+      "coverage": "full",
+      "positive_volume_cubes": 89,
+      "blockbench_export": "pass",
+      "geckolib_export": "pass",
+      "texture_uv_bounds": "pass",
+      "head_and_outer_skin_clearance": "pass",
+      "half_mask_eye_clearance": "not applicable; full mask",
+      "tested_in_minecraft": false
+    },
+    {
+      "model": "Ayato Kirishima",
+      "coverage": "half",
+      "positive_volume_cubes": 75,
+      "blockbench_export": "pass",
+      "geckolib_export": "pass",
+      "texture_uv_bounds": "pass",
+      "head_and_outer_skin_clearance": "pass",
+      "half_mask_eye_clearance": "pass",
+      "tested_in_minecraft": false
+    },
+    {
+      "model": "Noro",
+      "coverage": "full",
+      "positive_volume_cubes": 372,
+      "blockbench_export": "pass",
+      "geckolib_export": "pass",
+      "texture_uv_bounds": "pass",
+      "head_and_outer_skin_clearance": "pass",
+      "half_mask_eye_clearance": "not applicable; full mask",
+      "tested_in_minecraft": false
+    },
+    {
+      "model": "Yamori Jason",
+      "coverage": "full",
+      "positive_volume_cubes": 87,
+      "blockbench_export": "pass",
+      "geckolib_export": "pass",
+      "texture_uv_bounds": "pass",
+      "head_and_outer_skin_clearance": "pass",
+      "half_mask_eye_clearance": "not applicable; full mask",
+      "tested_in_minecraft": false
+    },
+    {
+      "model": "Eto",
+      "coverage": "full",
+      "positive_volume_cubes": 595,
+      "blockbench_export": "pass",
+      "geckolib_export": "pass",
+      "texture_uv_bounds": "pass",
+      "head_and_outer_skin_clearance": "pass",
+      "half_mask_eye_clearance": "not applicable; full mask",
+      "tested_in_minecraft": false
+    },
+    {
+      "model": "Tatara",
+      "coverage": "half",
+      "positive_volume_cubes": 75,
+      "blockbench_export": "pass",
+      "geckolib_export": "pass",
+      "texture_uv_bounds": "pass",
+      "head_and_outer_skin_clearance": "pass",
+      "half_mask_eye_clearance": "pass",
+      "tested_in_minecraft": false
+    },
+    {
+      "model": "Bin Brothers",
+      "coverage": "full",
+      "positive_volume_cubes": 90,
+      "blockbench_export": "pass",
+      "geckolib_export": "pass",
+      "texture_uv_bounds": "pass",
+      "head_and_outer_skin_clearance": "pass",
+      "half_mask_eye_clearance": "not applicable; full mask",
+      "tested_in_minecraft": false
+    },
+    {
+      "model": "Roma Hoito",
+      "coverage": "full",
+      "positive_volume_cubes": 183,
+      "blockbench_export": "pass",
+      "geckolib_export": "pass",
+      "texture_uv_bounds": "pass",
+      "head_and_outer_skin_clearance": "pass",
+      "half_mask_eye_clearance": "not applicable; full mask",
+      "tested_in_minecraft": false
+    },
+    {
+      "model": "Shachi",
+      "coverage": "half",
+      "positive_volume_cubes": 95,
+      "blockbench_export": "pass",
+      "geckolib_export": "pass",
+      "texture_uv_bounds": "pass",
+      "head_and_outer_skin_clearance": "pass",
+      "half_mask_eye_clearance": "pass",
+      "tested_in_minecraft": false
+    },
+    {
+      "model": "Rize Kamishiro",
+      "coverage": "half",
+      "positive_volume_cubes": 49,
+      "blockbench_export": "pass",
+      "geckolib_export": "pass",
+      "texture_uv_bounds": "pass",
+      "head_and_outer_skin_clearance": "pass",
+      "half_mask_eye_clearance": "pass",
+      "tested_in_minecraft": false
+    },
+    {
+      "model": "Uta",
+      "coverage": "full",
+      "positive_volume_cubes": 194,
+      "blockbench_export": "pass",
+      "geckolib_export": "pass",
+      "texture_uv_bounds": "pass",
+      "head_and_outer_skin_clearance": "pass",
+      "half_mask_eye_clearance": "not applicable; full mask",
+      "tested_in_minecraft": false
+    },
+    {
+      "model": "Itori",
+      "coverage": "full",
+      "positive_volume_cubes": 208,
+      "blockbench_export": "pass",
+      "geckolib_export": "pass",
+      "texture_uv_bounds": "pass",
+      "head_and_outer_skin_clearance": "pass",
+      "half_mask_eye_clearance": "not applicable; full mask",
+      "tested_in_minecraft": false
+    },
+    {
+      "model": "Yomo Renji",
+      "coverage": "half",
+      "positive_volume_cubes": 81,
+      "blockbench_export": "pass",
+      "geckolib_export": "pass",
+      "texture_uv_bounds": "pass",
+      "head_and_outer_skin_clearance": "pass",
+      "half_mask_eye_clearance": "pass",
+      "tested_in_minecraft": false
+    },
+    {
+      "model": "Yoshimura",
+      "coverage": "half",
+      "positive_volume_cubes": 50,
+      "blockbench_export": "pass",
+      "geckolib_export": "pass",
+      "texture_uv_bounds": "pass",
+      "head_and_outer_skin_clearance": "pass",
+      "half_mask_eye_clearance": "pass",
+      "tested_in_minecraft": false
+    },
+    {
+      "model": "Nishiki Nishio",
+      "coverage": "half",
+      "positive_volume_cubes": 77,
+      "blockbench_export": "pass",
+      "geckolib_export": "pass",
+      "texture_uv_bounds": "pass",
+      "head_and_outer_skin_clearance": "pass",
+      "half_mask_eye_clearance": "pass",
+      "tested_in_minecraft": false
+    },
+    {
+      "model": "Tsukiyama Shuu",
+      "coverage": "full",
+      "positive_volume_cubes": 266,
+      "blockbench_export": "pass",
+      "geckolib_export": "pass",
+      "texture_uv_bounds": "pass",
+      "head_and_outer_skin_clearance": "pass",
+      "half_mask_eye_clearance": "not applicable; full mask",
+      "tested_in_minecraft": false
+    },
+    {
+      "model": "Kanae von Rosewald",
+      "coverage": "full",
+      "positive_volume_cubes": 270,
+      "blockbench_export": "pass",
+      "geckolib_export": "pass",
+      "texture_uv_bounds": "pass",
+      "head_and_outer_skin_clearance": "pass",
+      "half_mask_eye_clearance": "not applicable; full mask",
+      "tested_in_minecraft": false
+    },
+    {
+      "model": "Donato Porpora",
+      "coverage": "full",
+      "positive_volume_cubes": 92,
+      "blockbench_export": "pass",
+      "geckolib_export": "pass",
+      "texture_uv_bounds": "pass",
+      "head_and_outer_skin_clearance": "pass",
+      "half_mask_eye_clearance": "not applicable; full mask",
+      "tested_in_minecraft": false
+    },
+    {
+      "model": "Koori Ui",
+      "coverage": "full",
+      "positive_volume_cubes": 130,
+      "blockbench_export": "pass",
+      "geckolib_export": "pass",
+      "texture_uv_bounds": "pass",
+      "head_and_outer_skin_clearance": "pass",
+      "half_mask_eye_clearance": "not applicable; full mask",
+      "tested_in_minecraft": false
+    },
+    {
+      "model": "Koutarou Amon",
+      "coverage": "full",
+      "positive_volume_cubes": 93,
+      "blockbench_export": "pass",
+      "geckolib_export": "pass",
+      "texture_uv_bounds": "pass",
+      "head_and_outer_skin_clearance": "pass",
+      "half_mask_eye_clearance": "not applicable; full mask",
+      "tested_in_minecraft": false
+    },
+    {
+      "model": "Seidou Takizawa",
+      "coverage": "full",
+      "positive_volume_cubes": 117,
+      "blockbench_export": "pass",
+      "geckolib_export": "pass",
+      "texture_uv_bounds": "pass",
+      "head_and_outer_skin_clearance": "pass",
+      "half_mask_eye_clearance": "not applicable; full mask",
+      "tested_in_minecraft": false
+    },
+    {
+      "model": "Mado Akira",
+      "coverage": "full",
+      "positive_volume_cubes": 162,
+      "blockbench_export": "pass",
+      "geckolib_export": "pass",
+      "texture_uv_bounds": "pass",
+      "head_and_outer_skin_clearance": "pass",
+      "half_mask_eye_clearance": "not applicable; full mask",
+      "tested_in_minecraft": false
+    },
+    {
+      "model": "Arima Kishou",
+      "coverage": "full",
+      "positive_volume_cubes": 130,
+      "blockbench_export": "pass",
+      "geckolib_export": "pass",
+      "texture_uv_bounds": "pass",
+      "head_and_outer_skin_clearance": "pass",
+      "half_mask_eye_clearance": "not applicable; full mask",
+      "tested_in_minecraft": false
+    }
+  ],
+  "method": "Geometry, export round-trip checks and Blender renders; not an in-game test."
+}

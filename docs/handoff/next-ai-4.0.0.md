@@ -80,10 +80,23 @@ knee; `collar` and the hood left out of the Crimson; outfits file version 3: one
 `OutfitModels.read` (versions 1 to 3). The Crimson Hood item is removed (`Outfits.set(style, head)`; lang, icon, item model, the
 hideout's loot). Previews: `docs/handoff/{formal,crimson}-outfit-4.0.3.png`.
 
+## 4.0.4 (released)
+
+The owner (quoted exactly), with `Tokyo_Ghoul_24_Masks_1.20.1.zip`: "New masks, replace ALL the masks with these models."
+
+Their pack is `art/outfits/masks/` (Blockbench projects, 256 x 256 textures, Java ModelPart classes, manifest, README, preview sheets; its
+OBJ and GeckoLib copies left out: the same geometry). `tools/outfit_models.py` `load_mask` reads each `blockbench/<id>.bbmodel` as it is
+(y flipped from Blockbench's floor to the game's neck, x and z kept: their Java export matches cube for cube, buckles on the wearer's
+left as their renders show); the old fitting (`fit_mask`, `HALF_MASKS`, `MASK_EYES`, `MASK_GIRTH`) is gone, their masks being made to fit
+(eye holes at their reference skin's low eyes, x +-2.12, 2.15 above the chin). `MASKS` maps their ids to the same items; only "Gourmet's
+Half Mask" became "Gourmet's Mask". OutfitTests: every cube their manifest counts, half masks clear of their eye zones, no mask in the head
+or its hat layer. Preview: `docs/handoff/masks-4.0.4.png`.
+
 ## Next
 
-Nothing outstanding from the owner. If they report in-game problems with the fit, adjust `HALF_TOP`, `MASK_EYES`, `EYE_Y`, `CLEAR`,
-`SNUG` in `tools/outfit_models.py` and rebake (`python3 -I tools/outfit_models.py`), never their art files.
+Nothing outstanding from the owner. If they report in-game problems with the outfits' fit, adjust `CLEAR`, `SNUG`, the drape
+(`outfit/CoatDrape`) or the collar (`COLLAR_FLARE`) in `tools/outfit_models.py` and rebake (`python3 -I tools/outfit_models.py`), never
+their art files; their masks are drawn as their pack makes them.
 
 House rules as in `next-ai-3.6.6.md` (nothing tested in game; answer in English; quote the owner exactly).
 
@@ -95,6 +108,7 @@ House rules as in `next-ai-3.6.6.md` (nothing tested in game; answer in English;
   sleeves close over the arm's inner side, each half of a cut piece shows its own part of the texture.)
 - "On the Ougiri outfit, no more hood, make it less bulky around the shoulders and head to be similar to the formal outfit, and, give it a
   high collar on the sides of the head pointing outwards." (4.0.3: no hood, a high flaring collar on the coat.)
+- With `Tokyo_Ghoul_24_Masks_1.20.1.zip`: "New masks, replace ALL the masks with these models." (4.0.4.)
 - "Ayato romance should be quite similar to kaneki, animations can be the same. Noro is taller than the average player and is very brief,
   barely talks." (Ayato: Ken's style and household words; Noro: size 1.15, nearly silent.)
 - "Add to the to-do list: bugs and needed fixes: Bikaku: Sometimes the limbs break and dont regenerate cause of the lack of energy, so let me

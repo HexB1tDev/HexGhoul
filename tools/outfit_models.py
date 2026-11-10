@@ -3,12 +3,12 @@
 
     python3 tools/outfit_models.py [--preview <dir>]
 
-Reads the owner's canonical geometry (art/outfits/: formal.model.json and crimson.model.json, the 24 masks' masks/<name>/<name>.model.json,
-each with its 512 x 512 texture; Minecraft model units, Java Y-down, absolute positions in the player model's frame, each cube on one bone
-with its own pivot and rotation and its box-UV offset), fits them to the game's player (fit_mask, fit_outfit: the masks' eyes on the
-skin's, the half masks down over the mouth, the coats drawn in, the sleeves again for slim arms), adds the generic masks (GENERIC, drawn
-here: a clown's, a gas mask, a skull, a fox, an oni, a cloth wrap, a porcelain face, a bandage wrap, a kabuki face; no character's), and
-writes:
+Reads the owner's canonical geometry (art/outfits/: formal.model.json and crimson.model.json, each with its 512 x 512 texture; Minecraft
+model units, Java Y-down, absolute positions in the player model's frame, each cube on one bone with its own pivot and rotation and its
+box-UV offset) and fits the outfits to the game's player (fit_outfit: the coats drawn in, the sleeves again for slim arms, the coat tails
+on bones of their own); reads the owner's 24 masks (4.0.4: art/outfits/masks/blockbench/<id>.bbmodel and textures/<id>.png, 256 x 256,
+made to fit by their author: load_mask takes them as they are); adds the generic masks (GENERIC, drawn here: a clown's, a gas mask, a
+skull, a fox, an oni, a cloth wrap, a porcelain face, a bandage wrap, a kabuki face; no character's), and writes:
 
   src/main/resources/assets/hexkagune/models/outfits.bin       every model, baked (OutfitModels reads it)
   src/main/resources/assets/hexkagune/textures/outfit/<id>.png  every model's texture (the owner's as they are; the generic ones painted)
@@ -37,17 +37,19 @@ PIVOTS = {"head": (0, 0, 0), "body": (0, 0, 0), "right_arm": (-5, 2, 0), "left_a
           "left_leg": (1.9, 12, 0), "right_arm_slim": (-5, 2, 0), "left_arm_slim": (5, 2, 0), "right_leg_coat": (-1.9, 12, 0),
           "left_leg_coat": (1.9, 12, 0)}
 
-# The owner's masks: (their folder, the item's id, its name in game). Kaneki's is "eyepatch" (the build keeps that name out of the jar).
+# The owner's masks: (their model's id in their pack, the item's id, its name in game). Kaneki's item is "eyepatch" (the build keeps that
+# name out of the jar). 4.0.4 (the owner: "New masks, replace ALL the masks with these models."): their new pack's 24, the items as they were.
 MASKS = [
-    ("kaneki", "mask_eyepatch", "Eyepatch Mask"), ("touka", "mask_touka", "Touka's Mask"), ("ayato", "mask_ayato", "Ayato's Mask"),
-    ("noro", "mask_noro", "Noro's Mask"), ("yamori", "mask_yamori", "Hockey Mask"), ("eto", "mask_eto", "Eto's Mask"),
-    ("tatara", "mask_tatara", "Red Muzzle Mask"), ("bin_brothers", "mask_bin_brothers", "Laughing Mask"),
-    ("roma", "mask_roma", "Jester Mask"), ("shachi", "mask_shachi", "Fanged Mask"), ("rize", "mask_rize", "White Muzzle Mask"),
-    ("uta", "mask_uta", "Crescent Mask"), ("itori", "mask_itori", "Red Vine Mask"), ("yomo", "mask_yomo", "Black Respirator"),
-    ("yoshimura", "mask_dotted", "Dotted Mask"), ("nishiki", "mask_nishiki", "Black Grin Mask"),
-    ("tsukiyama", "mask_tsukiyama", "Gourmet's Half Mask"), ("kanae", "mask_kanae", "Rose Filigree Mask"),
-    ("donato", "mask_donato", "Priest's Mask"), ("koori", "mask_koori", "Slit Mask"), ("amon", "mask_amon", "Bolted Mask"),
-    ("seidou", "mask_seidou", "Purple Grin Mask"), ("akira", "mask_akira", "Violet Mask"), ("arima", "mask_arima", "White Line Mask"),
+    ("kaneki_ken", "mask_eyepatch", "Eyepatch Mask"), ("touka_kirishima", "mask_touka", "Touka's Mask"),
+    ("ayato_kirishima", "mask_ayato", "Ayato's Mask"), ("noro", "mask_noro", "Noro's Mask"), ("yamori_jason", "mask_yamori", "Hockey Mask"),
+    ("eto", "mask_eto", "Eto's Mask"), ("tatara", "mask_tatara", "Red Muzzle Mask"), ("bin_brothers", "mask_bin_brothers", "Laughing Mask"),
+    ("roma_hoito", "mask_roma", "Jester Mask"), ("shachi", "mask_shachi", "Fanged Mask"), ("rize_kamishiro", "mask_rize", "White Muzzle Mask"),
+    ("uta", "mask_uta", "Crescent Mask"), ("itori", "mask_itori", "Red Vine Mask"), ("yomo_renji", "mask_yomo", "Black Respirator"),
+    ("yoshimura", "mask_dotted", "Dotted Mask"), ("nishiki_nishio", "mask_nishiki", "Black Grin Mask"),
+    ("tsukiyama_shuu", "mask_tsukiyama", "Gourmet's Mask"), ("kanae_von_rosewald", "mask_kanae", "Rose Filigree Mask"),
+    ("donato_porpora", "mask_donato", "Priest's Mask"), ("koori_ui", "mask_koori", "Slit Mask"), ("koutarou_amon", "mask_amon", "Bolted Mask"),
+    ("seidou_takizawa", "mask_seidou", "Purple Grin Mask"), ("mado_akira", "mask_akira", "Violet Mask"),
+    ("arima_kishou", "mask_arima", "White Line Mask"),
 ]
 # The outfits: (their file, each slot's item id and name).
 OUTFITS = [
@@ -463,25 +465,14 @@ def paint(model, seed):
 # ---------------------------------------------------------------- fitting the owner's geometry to the game's player
 
 # The owner (after seeing them worn): "Armor is too bulky, if the player is alex model it should adapt to it as well as the male body's
-# muscle shape. Masks are... very very lack luster, half masks are covering most of the face instead of being lower, way lower ... the
-# eye position of the masks are very off." Their files stay as they are; what is baked is fitted:
+# muscle shape." Their files stay as they are; what is baked is fitted (4.0.4: the masks no longer: the owner's new ones are made to fit,
+# half masks clear of the eyes, full masks' eyes on their reference skin's, every shell clear of the hat layer; see load_mask):
 #
-#  - a full mask's eyes moved onto the skin's eyes (y -4 to -3): the band its eyes are in kept as tall as it is, the brow above stretched
-#    down to meet it, the nose and mouth below drawn up under it; the masks with no eyes (Noro's) and Touka's (already there) as they are;
-#  - a half mask (over the mouth) drawn down so it starts below the nose's row (y -2.75), not over the eyes;
-#  - every mask a little wider and deeper (5%) so it stands clear of the skin's hat layer, never through it;
 #  - the outfits' coats, sleeves and trousers drawn in to the body (4.0.1: whatever stands more than 0.27 off a part, a quarter as far,
 #    each layer still over the one under it), the Formal Cap out past the hat layer; 4.0.1: their trims, buttons and the Formal shirt and
 #    trousers in colour, and details of their own ({@link #details}: belts, badges, a pocket square, epaulettes, laces, straps);
 #  - each sleeve again for slim arms (Alex's three pixels: the outer side in by one), drawn instead on a slim-armed wearer.
 
-HALF_MASKS = {"kaneki", "ayato", "nishiki", "shachi", "tatara", "yomo", "rize", "yoshimura"}
-HALF_TOP = -2.75
-# Each full mask's eyes, where the owner's model has them (the band from their top to their bottom, y).
-MASK_EYES = {"akira": (-4.75, -4.125), "amon": (-4.875, -4.375), "arima": (-4.625, -4.125), "bin_brothers": (-5.5, -4.375),
-             "donato": (-5.25, -3.5), "eto": (-4.75, -3.5), "itori": (-4.375, -3.25), "kanae": (-4.75, -4.125), "koori": (-4.5, -4.0),
-             "roma": (-5.875, -4.125), "tsukiyama": (-5.25, -4.0), "uta": (-5.5, -2.75), "yamori": (-5.75, -3.875), "seidou": (-4.625, -4.125)}
-MASK_GIRTH = 1.05
 BASES = {"head": ((-4, -8, -4), (4, 0, 4)), "body": ((-4, 0, -2), (4, 12, 2)), "right_arm": ((-8, 0, -2), (-4, 12, 2)),
          "left_arm": ((4, 0, -2), (8, 12, 2)), "right_leg": ((-3.9, 12, -2), (0.1, 24, 2)), "left_leg": ((-0.1, 12, -2), (3.9, 24, 2))}
 # 4.0.1 (the owner: "They seem a little too thick ... not so thick in general"): what stands more than CLEAR off a part (just over the
@@ -508,28 +499,23 @@ def refit(model, fx=None, fy=None, fz=None):
     return dict(model, cubes=out)
 
 
-def piecewise(knots):
-    """The map through ({@code from}, {@code to}) knots (sorted by {@code from}), each end's piece carried on past it."""
-    def f(v, _c=None):
-        i = 0
-        while i < len(knots) - 2 and v > knots[i + 1][0]:
-            i += 1
-        (a0, b0), (a1, b1) = knots[i], knots[i + 1]
-        return b0 + (v - a0) * (b1 - b0) / (a1 - a0)
-    return f
-
-
-def fit_mask(folder, model):
-    cubes = [c for c in model["cubes"] if "strap" not in c["name"]]
-    top = min(c["pos"][1] for c in cubes)
-    bottom = max(c["pos"][1] + c["size"][1] for c in cubes)
-    if folder in HALF_MASKS:
-        model = refit(model, fy=piecewise([(top, HALF_TOP), (bottom, bottom)]))
-    elif folder in MASK_EYES:
-        e0, e1 = MASK_EYES[folder]
-        half = (e1 - e0) / 2
-        model = refit(model, fy=piecewise([(top, top), (e0, EYE_Y - half), (e1, EYE_Y + half), (bottom, bottom)]))
-    return refit(model, fx=lambda v, c: v * MASK_GIRTH, fz=lambda v, c: v * MASK_GIRTH)
+def load_mask(mid):
+    """
+    4.0.4: the owner's mask {@code mid} from their Blockbench project, as the game draws it: each cube as it is, on the head, worn in the
+    head slot. Their project stands on Blockbench's floor (y up, the neck 24 above it); the game's head is y down from the neck, so each
+    cube's top becomes its least y. x and z stay as they are (checked against their pack's own Java export, cube for cube: the buckles on
+    the wearer's left, as their renders have them). No turns, inflation or mirrored UVs (none in the pack; refused if one appears).
+    """
+    bb = json.loads((ART / "masks" / "blockbench" / f"{mid}.bbmodel").read_text())
+    cubes = []
+    for e in bb["elements"]:
+        if any(e.get("rotation", (0, 0, 0))) or e.get("inflate") or e.get("mirror_uv") or not e.get("box_uv", bb["meta"].get("box_uv")):
+            raise ValueError(f"{mid}: {e['name']} is turned, inflated, mirrored or not box-UV")
+        f, t = e["from"], e["to"]
+        pos = [f[0], 24.0 - t[1], f[2]]
+        cubes.append({"name": e["name"], "bone": "head", "slot": "helmet", "pos": pos, "size": [t[k] - f[k] for k in range(3)],
+                      "pivot": list(pos), "rot": [0, 0, 0], "uv": list(e["uv_offset"])})
+    return {"texture_width": bb["resolution"]["width"], "texture_height": bb["resolution"]["height"], "cubes": cubes}
 
 
 def layers(offsets):
@@ -1047,9 +1033,9 @@ def main():
             img.save(items / f"{item}.png")
             item_model(item)
             previews.append((item, img))
-    for folder, item, label in MASKS:
-        model = fit_mask(folder, json.loads((ART / "masks" / folder / f"{folder}.model.json").read_text()))
-        tex = Image.open(ART / "masks" / folder / f"{folder}.png")
+    for mid, item, label in MASKS:
+        model = load_mask(mid)
+        tex = Image.open(ART / "masks" / "textures" / f"{mid}.png")
         tex.save(textures / f"{item}.png")
         models.append((item, model))
         names[item] = label

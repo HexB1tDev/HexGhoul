@@ -1,0 +1,619 @@
+{
+  "target": "Minecraft Java 1.20.1 / GeckoLib 4 / Mojang mappings",
+  "head_dimensions": [
+    8,
+    8,
+    8
+  ],
+  "outer_head_clearance_dimensions": [
+    9,
+    9,
+    9
+  ],
+  "eye_centres_head_local": [
+    [
+      -2.12,
+      2.15,
+      -4
+    ],
+    [
+      2.12,
+      2.15,
+      -4
+    ]
+  ],
+  "half_mask_eye_clear_zone": {
+    "x_ranges": [
+      [
+        -3.2,
+        -1.0
+      ],
+      [
+        1.0,
+        3.2
+      ]
+    ],
+    "y_range": [
+      1.0,
+      3.8
+    ]
+  },
+  "models": [
+    {
+      "index": 1,
+      "name": "Kaneki Ken",
+      "id": "kaneki_ken",
+      "coverage": "half",
+      "cubes": 97,
+      "head_local_bounds": {
+        "min": [
+          -5.1,
+          -1.4,
+          -6.5
+        ],
+        "max": [
+          5.1,
+          1.72,
+          5.1499999999999995
+        ]
+      },
+      "texture": [
+        256,
+        256
+      ],
+      "features": "Black leather respirator; separate red gums, two rows of teeth, side filters, nose bridge."
+    },
+    {
+      "index": 2,
+      "name": "Touka Kirishima",
+      "id": "touka_kirishima",
+      "coverage": "full",
+      "cubes": 89,
+      "head_local_bounds": {
+        "min": [
+          -4.95,
+          -0.5,
+          -5.905
+        ],
+        "max": [
+          4.95,
+          13.0,
+          5.1499999999999995
+        ]
+      },
+      "texture": [
+        256,
+        256
+      ],
+      "features": "Full rabbit face, thick rounded shell, two upright segmented ears, inset pink ear panels, lowered dot eye holes."
+    },
+    {
+      "index": 3,
+      "name": "Ayato Kirishima",
+      "id": "ayato_kirishima",
+      "coverage": "half",
+      "cubes": 75,
+      "head_local_bounds": {
+        "min": [
+          -4.95,
+          -1.4,
+          -7.035
+        ],
+        "max": [
+          4.95,
+          1.77,
+          5.1499999999999995
+        ]
+      },
+      "texture": [
+        256,
+        256
+      ],
+      "features": "Layered black respirator, protruding center filter, silver studs, wrapped cheek bands."
+    },
+    {
+      "index": 4,
+      "name": "Noro",
+      "id": "noro",
+      "coverage": "full",
+      "cubes": 372,
+      "head_local_bounds": {
+        "min": [
+          -4.95,
+          -0.25,
+          -5.985
+        ],
+        "max": [
+          4.95,
+          8.5,
+          5.1499999999999995
+        ]
+      },
+      "texture": [
+        256,
+        256
+      ],
+      "features": "Closed full face mask; raised wrapped panels, thick forehead rim, recessed central seam with transverse black stitches. No eye apertures in the reference."
+    },
+    {
+      "index": 5,
+      "name": "Yamori Jason",
+      "id": "yamori_jason",
+      "coverage": "full",
+      "cubes": 87,
+      "head_local_bounds": {
+        "min": [
+          -4.95,
+          -0.25,
+          -6.55
+        ],
+        "max": [
+          4.95,
+          8.25,
+          5.1499999999999995
+        ]
+      },
+      "texture": [
+        256,
+        256
+      ],
+      "features": "Full hockey mask; genuine lowered eye sockets, drilled ventilation holes, triangular raised nose and side fasteners."
+    },
+    {
+      "index": 6,
+      "name": "Eto",
+      "id": "eto",
+      "coverage": "full",
+      "cubes": 595,
+      "head_local_bounds": {
+        "min": [
+          -4.95,
+          -0.25,
+          -6.67
+        ],
+        "max": [
+          4.95,
+          8.25,
+          5.1499999999999995
+        ]
+      },
+      "texture": [
+        256,
+        256
+      ],
+      "features": "Full asymmetrical bandaged shell, sculpted central red eye, black stitched joins and forehead scars."
+    },
+    {
+      "index": 7,
+      "name": "Tatara",
+      "id": "tatara",
+      "coverage": "half",
+      "cubes": 75,
+      "head_local_bounds": {
+        "min": [
+          -4.95,
+          -1.4,
+          -6.7
+        ],
+        "max": [
+          4.95,
+          1.7200000000000002,
+          5.1499999999999995
+        ]
+      },
+      "texture": [
+        256,
+        256
+      ],
+      "features": "Deep red face cage, actual vertical grille openings, central projecting nose crest and wrapped red band."
+    },
+    {
+      "index": 8,
+      "name": "Bin Brothers",
+      "id": "bin_brothers",
+      "coverage": "full",
+      "cubes": 90,
+      "head_local_bounds": {
+        "min": [
+          -4.95,
+          -0.25,
+          -6.43
+        ],
+        "max": [
+          4.95,
+          8.25,
+          5.1499999999999995
+        ]
+      },
+      "texture": [
+        256,
+        256
+      ],
+      "features": "Whole white smiling mask with lowered arched eye openings, raised cheeks and deep cut smile."
+    },
+    {
+      "index": 9,
+      "name": "Roma Hoito",
+      "id": "roma_hoito",
+      "coverage": "full",
+      "cubes": 183,
+      "head_local_bounds": {
+        "min": [
+          -4.95,
+          -0.25,
+          -6.8
+        ],
+        "max": [
+          4.95,
+          8.25,
+          5.1499999999999995
+        ]
+      },
+      "texture": [
+        256,
+        256
+      ],
+      "features": "Whole clown face; red diamond eye patch, black cross eye, extruded red nose and raised red smile."
+    },
+    {
+      "index": 10,
+      "name": "Shachi",
+      "id": "shachi",
+      "coverage": "half",
+      "cubes": 95,
+      "head_local_bounds": {
+        "min": [
+          -4.95,
+          -1.4,
+          -6.35
+        ],
+        "max": [
+          4.95,
+          1.77,
+          5.1499999999999995
+        ]
+      },
+      "texture": [
+        256,
+        256
+      ],
+      "features": "Black lower jaw mask, deep black mouth recess and four pairs of separate long ivory fangs."
+    },
+    {
+      "index": 11,
+      "name": "Rize Kamishiro",
+      "id": "rize_kamishiro",
+      "coverage": "half",
+      "cubes": 49,
+      "head_local_bounds": {
+        "min": [
+          -4.95,
+          -1.4,
+          -6.05
+        ],
+        "max": [
+          4.95,
+          1.67,
+          5.1499999999999995
+        ]
+      },
+      "texture": [
+        256,
+        256
+      ],
+      "features": "Porcelain lower respirator; sculpted nose, six real vent holes, shaped shell edges and white straps."
+    },
+    {
+      "index": 12,
+      "name": "Uta",
+      "id": "uta",
+      "coverage": "full",
+      "cubes": 194,
+      "head_local_bounds": {
+        "min": [
+          -4.95,
+          -0.25,
+          -5.865
+        ],
+        "max": [
+          4.95,
+          8.25,
+          5.1499999999999995
+        ]
+      },
+      "texture": [
+        256,
+        256
+      ],
+      "features": "Whole white asymmetric mask; one lowered right eye hole, raised sweeping black band and small crown crest."
+    },
+    {
+      "index": 13,
+      "name": "Itori",
+      "id": "itori",
+      "coverage": "full",
+      "cubes": 208,
+      "head_local_bounds": {
+        "min": [
+          -4.95,
+          -0.5,
+          -6.13
+        ],
+        "max": [
+          4.95,
+          8.25,
+          5.1499999999999995
+        ]
+      },
+      "texture": [
+        256,
+        256
+      ],
+      "features": "Whole oval porcelain mask; raised vermilion swirl, diagonal scar line and separate sculpted red lips."
+    },
+    {
+      "index": 14,
+      "name": "Yomo Renji",
+      "id": "yomo_renji",
+      "coverage": "half",
+      "cubes": 81,
+      "head_local_bounds": {
+        "min": [
+          -4.95,
+          -1.4,
+          -6.085
+        ],
+        "max": [
+          4.95,
+          1.27,
+          5.1499999999999995
+        ]
+      },
+      "texture": [
+        256,
+        256
+      ],
+      "features": "Three stacked charcoal face plates, dark joints, right-side silver fasteners and broad rear strap."
+    },
+    {
+      "index": 15,
+      "name": "Yoshimura",
+      "id": "yoshimura",
+      "coverage": "half",
+      "cubes": 50,
+      "head_local_bounds": {
+        "min": [
+          -4.95,
+          -1.4,
+          -5.625
+        ],
+        "max": [
+          4.95,
+          1.27,
+          5.1499999999999995
+        ]
+      },
+      "texture": [
+        256,
+        256
+      ],
+      "features": "White lower face guard, staggered real perforations and a shaped lower shell. Upper edge lowered to clear the supplied skin eyes."
+    },
+    {
+      "index": 16,
+      "name": "Nishiki Nishio",
+      "id": "nishiki_nishio",
+      "coverage": "half",
+      "cubes": 77,
+      "head_local_bounds": {
+        "min": [
+          -4.95,
+          -1.4,
+          -6.6
+        ],
+        "max": [
+          4.95,
+          1.7200000000000002,
+          5.1499999999999995
+        ]
+      },
+      "texture": [
+        256,
+        256
+      ],
+      "features": "Compact black jaw with an exposed ivory grin, separate tooth blocks and thick central nose bridge."
+    },
+    {
+      "index": 17,
+      "name": "Tsukiyama Shuu",
+      "id": "tsukiyama_shuu",
+      "coverage": "full",
+      "cubes": 266,
+      "head_local_bounds": {
+        "min": [
+          -4.95,
+          -0.25,
+          -10.75
+        ],
+        "max": [
+          4.95,
+          8.25,
+          5.1499999999999995
+        ]
+      },
+      "texture": [
+        256,
+        256
+      ],
+      "features": "Whole white gourmet mask, central sculpted red eye, asymmetric cheek planes and a long forward-projecting tapered plague-doctor beak."
+    },
+    {
+      "index": 18,
+      "name": "Kanae von Rosewald",
+      "id": "kanae_von_rosewald",
+      "coverage": "full",
+      "cubes": 270,
+      "head_local_bounds": {
+        "min": [
+          -4.95,
+          -0.5,
+          -6.25
+        ],
+        "max": [
+          4.95,
+          8.25,
+          5.1499999999999995
+        ]
+      },
+      "texture": [
+        256,
+        256
+      ],
+      "features": "Whole white pointed mask; lowered slant eye holes and raised gold filigree around brow and cheeks."
+    },
+    {
+      "index": 19,
+      "name": "Donato Porpora",
+      "id": "donato_porpora",
+      "coverage": "full",
+      "cubes": 92,
+      "head_local_bounds": {
+        "min": [
+          -4.95,
+          -0.25,
+          -5.95
+        ],
+        "max": [
+          4.95,
+          8.25,
+          5.1499999999999995
+        ]
+      },
+      "texture": [
+        256,
+        256
+      ],
+      "features": "Whole skull mask, real lowered rounded eye sockets, small nasal cuts, raised forehead cross and angular cheek planes."
+    },
+    {
+      "index": 20,
+      "name": "Koori Ui",
+      "id": "koori_ui",
+      "coverage": "full",
+      "cubes": 130,
+      "head_local_bounds": {
+        "min": [
+          -4.95,
+          -0.5,
+          -5.925
+        ],
+        "max": [
+          4.95,
+          8.25,
+          5.1499999999999995
+        ]
+      },
+      "texture": [
+        256,
+        256
+      ],
+      "features": "Whole angular white visor; lowered uninterrupted eye slit, projecting bridge and pointed jaw plate."
+    },
+    {
+      "index": 21,
+      "name": "Koutarou Amon",
+      "id": "koutarou_amon",
+      "coverage": "full",
+      "cubes": 93,
+      "head_local_bounds": {
+        "min": [
+          -5.1,
+          -1.0,
+          -6.425
+        ],
+        "max": [
+          5.1,
+          8.25,
+          5.1499999999999995
+        ]
+      },
+      "texture": [
+        256,
+        256
+      ],
+      "features": "Whole armored white face, lowered single visor slot, protruding perforated mouth guard, layered brow and silver side lugs."
+    },
+    {
+      "index": 22,
+      "name": "Seidou Takizawa",
+      "id": "seidou_takizawa",
+      "coverage": "full",
+      "cubes": 117,
+      "head_local_bounds": {
+        "min": [
+          -4.95,
+          -0.5,
+          -6.7
+        ],
+        "max": [
+          4.95,
+          8.25,
+          5.1499999999999995
+        ]
+      },
+      "texture": [
+        256,
+        256
+      ],
+      "features": "Whole purple owl grin mask; full forehead, lowered eye slits, projecting purple nose and exposed red-lipped ivory teeth."
+    },
+    {
+      "index": 23,
+      "name": "Mado Akira",
+      "id": "mado_akira",
+      "coverage": "full",
+      "cubes": 162,
+      "head_local_bounds": {
+        "min": [
+          -4.95,
+          -0.5,
+          -6.25
+        ],
+        "max": [
+          4.95,
+          8.25,
+          5.1499999999999995
+        ]
+      },
+      "texture": [
+        256,
+        256
+      ],
+      "features": "Whole white tapered mask, lowered slanted eye apertures, sharp cheek structure and raised purple forehead branches."
+    },
+    {
+      "index": 24,
+      "name": "Arima Kishou",
+      "id": "arima_kishou",
+      "coverage": "full",
+      "cubes": 130,
+      "head_local_bounds": {
+        "min": [
+          -4.95,
+          -0.5,
+          -5.95
+        ],
+        "max": [
+          4.95,
+          8.25,
+          5.1499999999999995
+        ]
+      },
+      "texture": [
+        256,
+        256
+      ],
+      "features": "Whole minimalist white face, two lowered rectangular eye apertures, central raised seam and bevelled chin."
+    }
+  ]
+}
