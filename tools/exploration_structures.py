@@ -72,7 +72,9 @@ SITES = [
      "posts": [(7, 37, 0.0), (12, 37, 0.0), (22, 16, -90.0), (33, 16, 180.0)],
      "loop": [(0, 37), (0, 26), (0, 14), (0, 2), (0, -2), (9, -2), (18, -2), (19, 8), (19, 19), (29, 19), (40, 19), (40, 28), (40, 37),
               (30, 38), (20, 38)],
-     "patrol": [(1, 37), (1, 26), (1, 14), (19, 8), (29, 19), (30, 37)], "hall": (13, 28)},
+     "patrol": [(1, 37), (1, 26), (1, 14), (19, 8), (29, 19), (30, 37)], "hall": (13, 28),
+     # 4.1.5: the General, in the north-west office of the top floor (the owner's x, floor y, z).
+     "rooms": {"hexkagune:general": (9, 49, 5)}},
 ]
 
 # 1.20.1 has none of these (1.20.3 to 1.21.9): each one's nearest, and the properties it keeps.
@@ -457,6 +459,11 @@ def headquarters(site, cells, stands, width, d, h, street):
         people.append(("hexkagune:ccg_investigator", spot, -1, tags))
         taken.append(spot)
 
+    for kind, (x, y, z) in site.get("rooms", {}).items():
+        spot = standing(stands, x, y, z, 3)
+        assert spot is not None and spot[1] == y, kind
+        people.append((kind, spot, -1, {}))
+        taken.append(spot)
     for x, z, yaw in site["posts"]:
         agent(standing(stands, x, street, z), HexCcgPost=L.Tag(L.BYTE, 1), HexCcgYaw=L.Tag(L.INT, int(yaw)))
     for x, z in site["patrol"]:

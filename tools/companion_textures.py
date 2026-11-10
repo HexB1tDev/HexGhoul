@@ -39,6 +39,9 @@ COMPANIONS = {
     # mask, its two dark eye-holes turn red.
     "ayato": {"turns": ("right", "left"), "slim": False},  # 4.0.8: the owner's new skin (art/exploration/Ayato_skin_2.png), wide arms
     "noro": {"turns": ("right", "left"), "slim": True},
+    # 4.1.5: the General (the owner's skin, sent with "use this skin for the general": art/exploration/General_skin.png, slim arms). A
+    # human: no eye of his ever turns (his kakugan textures are empty).
+    "general": {"turns": (), "slim": True},
 }
 # Eye pixels by hand, if detection is wrong for a skin: {key: {"right": [(x, y), ...], "left": [...], "white": [...]}} in 64px face
 # coordinates (0..7 across the face front, 0..7 down).
@@ -59,6 +62,8 @@ EYES.update({
               "lash": [(1, 4), (2, 4), (5, 4), (6, 4)]},
     # 4.0.0: Noro's mask's eye-holes (row 5, the dark stitches' ends).
     "noro": {"right": [(1, 5), (2, 5)], "left": [(5, 5), (6, 5)], "white": [], "lash": []},
+    # 4.1.5: the General's eyes are one row (the face's row 4: the white outside, the blue iris inside), under his brows (row 3).
+    "general": {"right": [(1, 4), (2, 4)], "left": [(5, 4), (6, 4)], "white": [(1, 4), (6, 4)], "lash": []},
 })
 
 BLACK = (12, 4, 8, 255)

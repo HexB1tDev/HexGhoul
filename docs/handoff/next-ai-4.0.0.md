@@ -194,6 +194,22 @@ entity's saved data, `yaw`, `seat`, `sits`, `posted`). `server/AgentDesk.idle` (
 `NpcTests.ccgBuilding` (reads the template back), `AgentTests.headquarters`. Next: the General goes in this building (a room on the
 top floor: add him to `headquarters` as the mansion's `rooms` are).
 
+## 4.1.5 (released)
+
+The owner (quoted exactly): "Attitude: Tough, softens up when romanced, embarrased easily, proud of the CCG, has to be convinced to love a ghoul, Only interested in woman players." and, with a skin attached in chat: "use this skin for the general and give him all the formal outfit (but the hat)" (which replaced "use one of the male skins currently available
+... and change it a bit"). Their skin: `art/exploration/General_skin.png` (recovered byte for byte from the chat; copied to
+`art/general_skin.png`, the bake's source; `tools/companion_textures.py` general: slim, no eye turns, eyes on the face's row 4).
+`Persona.GENERAL` (appended; key `general`, name "General Kuroda", `human()`, `outfit()` = the Formal Outfit less its helmet, `muscle()`
+= `ReaperBuild.GENERAL_SHARE` 0.45, size 1.0 because `CompanionTests.personas` caps it), `GeneralNpc`, `ControlEntities.GENERAL`,
+`GeneralScript` (`CONVINCED` 90, `convinced(c)`; `LESSONS` only refuses for now), `Courtship.GENERAL` (no GIVE: the tests want a GIVE's
+items to be the mod's own, and every dish has meat in it), `talk/general.txt`, his lines in `MoodActs`, `MoodKiss`, `Tolerance`, `Drowsy`.
+`EtoBrain.dress` (as the mind is made) and the CcgAgent filter after `seek`. `EtoServer.context`: `asGhoul` (a full mask hides a ghoul
+from a human persona). Placed by `tools/exploration_structures.py` (`rooms` of `ccg_building`). Protocol 114. `CompanionTests.general`.
+**Next: Kick Master** (`FightStyle.KICK_MASTER`, a gate, a `Teaching` lesson of his for a human or a ghoul in a full mask, and his own
+fight using it), then the owner's newest ask, quoted exactly: "after that please put all your focus into the combat rework, and kagune
+rework for the ukaku, this model is very expensive and I need you to focus on what's hard, study complex fighting moves, and combos and
+make it look smooth and beautiful."
+
 ## Next
 
 Nothing outstanding from the owner. If they report in-game problems with the outfits' fit, adjust `CLEAR`, `SNUG`, the drape

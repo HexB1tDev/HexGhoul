@@ -45,6 +45,11 @@ public final class ControlEntities {
         () -> EntityType.Builder.<com.hex.kagune.control.npc.AyatoNpc>m_20704_(com.hex.kagune.control.npc.AyatoNpc::new, MobCategory.CREATURE)
             .m_20699_(0.6F * com.hex.kagune.control.npc.Persona.AYATO.size(), 1.8F * com.hex.kagune.control.npc.Persona.AYATO.size()).m_20702_(10).m_20717_(1)
             .m_20712_(KaguneMod.id("ayato").toString()));
+    /** 4.1.5: the CCG's General: a creature (never despawned), his persona's size. */
+    public static final RegistryObject<EntityType<com.hex.kagune.control.npc.GeneralNpc>> GENERAL = ENTITIES.register("general",
+        () -> EntityType.Builder.<com.hex.kagune.control.npc.GeneralNpc>m_20704_(com.hex.kagune.control.npc.GeneralNpc::new, MobCategory.CREATURE)
+            .m_20699_(0.6F * com.hex.kagune.control.npc.Persona.GENERAL.size(), 1.8F * com.hex.kagune.control.npc.Persona.GENERAL.size()).m_20702_(10).m_20717_(1)
+            .m_20712_(KaguneMod.id("general").toString()));
     public static final RegistryObject<EntityType<com.hex.kagune.control.npc.NoroNpc>> NORO = ENTITIES.register("noro",
         () -> EntityType.Builder.<com.hex.kagune.control.npc.NoroNpc>m_20704_(com.hex.kagune.control.npc.NoroNpc::new, MobCategory.CREATURE)
             .m_20699_(0.6F * com.hex.kagune.control.npc.Persona.NORO.size(), 1.8F * com.hex.kagune.control.npc.Persona.NORO.size()).m_20702_(10).m_20717_(1)
@@ -87,6 +92,8 @@ public final class ControlEntities {
         // 4.0.0: Ayato and Noro: one each, back at their hideout a day after they are killed.
         com.hex.kagune.control.server.UniqueNpcs.kind(com.hex.kagune.control.npc.Persona.AYATO.key(), AYATO);
         com.hex.kagune.control.server.UniqueNpcs.kind(com.hex.kagune.control.npc.Persona.NORO.key(), NORO);
+        // 4.1.5: the General: one, back in the CCG's building a day after he is killed.
+        com.hex.kagune.control.server.UniqueNpcs.kind(com.hex.kagune.control.npc.Persona.GENERAL.key(), GENERAL);
         // 1.3.10: births make children; each one's body made again at its home a day after it dies.
         com.hex.kagune.control.server.Children.init();
     }
@@ -105,6 +112,7 @@ public final class ControlEntities {
             event.put(KEN.get(), EtoNpc.attributes(com.hex.kagune.control.npc.Persona.KEN).m_22265_());
             event.put(AYATO.get(), EtoNpc.attributes(com.hex.kagune.control.npc.Persona.AYATO).m_22265_());
             event.put(NORO.get(), EtoNpc.attributes(com.hex.kagune.control.npc.Persona.NORO).m_22265_());
+            event.put(GENERAL.get(), EtoNpc.attributes(com.hex.kagune.control.npc.Persona.GENERAL).m_22265_());
             event.put(CHILD.get(), com.hex.kagune.control.npc.ChildNpc.attributes().m_22265_());
             event.put(AGENT.get(), com.hex.kagune.control.npc.CcgAgent.attributes().m_22265_());
             event.put(HUMAN.get(), com.hex.kagune.control.npc.HumanNpc.attributes().m_22265_());

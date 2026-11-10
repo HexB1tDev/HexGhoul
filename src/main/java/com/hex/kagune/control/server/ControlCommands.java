@@ -510,7 +510,8 @@ final class ControlCommands {
                 ? com.hex.kagune.control.ControlEntities.TOUKA.get() : persona == com.hex.kagune.control.npc.Persona.KEN
                 ? com.hex.kagune.control.ControlEntities.KEN.get() : persona == com.hex.kagune.control.npc.Persona.AYATO
                 ? com.hex.kagune.control.ControlEntities.AYATO.get() : persona == com.hex.kagune.control.npc.Persona.NORO
-                ? com.hex.kagune.control.ControlEntities.NORO.get() : com.hex.kagune.control.ControlEntities.ETO.get();
+                ? com.hex.kagune.control.ControlEntities.NORO.get() : persona == com.hex.kagune.control.npc.Persona.GENERAL
+                ? com.hex.kagune.control.ControlEntities.GENERAL.get() : com.hex.kagune.control.ControlEntities.ETO.get();
             body = type.m_20615_(level);
             if (body == null) {
                 context.getSource().m_81352_(Component.m_237113_("Couldn't make " + persona.name() + " here."));

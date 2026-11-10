@@ -1028,6 +1028,7 @@ public final class SceneServer {
             case "touka" -> new String[] {"Tch. Forget it.", "...Whatever. It wasn't important.", "Fine. Ignore me. See if I care."};
             case "ken" -> new String[] {"...It's okay. Another time.", "Ah. You're busy. Sorry.", "I'll wait. I'm good at waiting."};
             case "ayato" -> new String[] {"Tch. Fine. Ignore me.", "...Whatever. I didn't want to talk anyway.", "Your loss."};
+            case "general" -> new String[] {"...As you were.", "Hm. Another time.", "Never mind. It will keep."};
             default -> new String[] {"*looks down and wanders off*", "*waits a little, then goes back to playing*", "*sighs a very small sigh*"};
         };
         return lines[Math.floorMod(seed, lines.length)];

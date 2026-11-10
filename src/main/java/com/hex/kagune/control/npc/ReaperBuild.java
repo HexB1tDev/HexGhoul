@@ -47,6 +47,11 @@ public final class ReaperBuild {
     public static final double AYATO_SHARE = 0.3;
     public static final double[][] AYATO = slimmer(PROFILE, AYATO_SHARE);
 
+    /**
+     * 4.1.5 (the owner: "give him some muscles also less than the player"): the General's build, between Ayato's and a male player's.
+     */
+    public static final double GENERAL_SHARE = 0.45;
+
     /** 4.0.8: a build {@code share} of the White Reaper's: its outline. */
     public static double[][] of(double share) {
         return share >= 1.0 ? PROFILE : share == PLAYER_SHARE ? PLAYER : share == AYATO_SHARE ? AYATO : slimmer(PROFILE, share);

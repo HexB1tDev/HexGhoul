@@ -1810,6 +1810,7 @@ public final class NpcTests {
             int seats = 0;
             int posts = 0;
             int walkers = 0;
+            int generals = 0;
             boolean sound = true;
             java.util.Set<Integer> seatFloors = new java.util.HashSet<>();
             java.util.Set<Integer> postFloors = new java.util.HashSet<>();
@@ -1824,6 +1825,13 @@ public final class NpcTests {
                 int x = (Integer)at.get(0);
                 int y = (Integer)at.get(1);
                 int z = (Integer)at.get(2);
+                if ("hexkagune:general".equals(tag.get("id"))) {
+                    // 4.1.5: the General, in his office on the top floor.
+                    generals++;
+                    sound &= y == 49 && spots.add(at) && blocks.get(at) == null && blocks.get(List.of(x, y - 1, z)) != null
+                        && !forge.containsKey(com.hex.kagune.control.npc.HqRules.SEAT) && !forge.containsKey(com.hex.kagune.control.npc.HqRules.POST);
+                    continue;
+                }
                 sound &= "hexkagune:ccg_investigator".equals(tag.get("id")) && Byte.valueOf((byte)1).equals(tag.get("PersistenceRequired"))
                     && Integer.valueOf(6).equals(village.get("Map")) && spots.add(at)
                     && (Integer)village.get("CentreX") == site.middleX() - x && (Integer)village.get("CentreZ") == site.middleZ() - z
@@ -1859,7 +1867,8 @@ public final class NpcTests {
             }
             check(sound, "every one of its people: an investigator of this building, kept, alone on its spot, a seat on a chair with room for its knees, "
                 + "the rest with a floor under them and room to stand");
-            check(entities.size() == 38 && seats == 21 && posts == 11 && walkers == 6, "38 investigators: 21 at desks, 11 at posts (4 outside, 7 in the halls), "
+            check(generals == 1, "4.1.5: the General, once, on the top floor");
+            check(entities.size() == 39 && seats == 21 && posts == 11 && walkers == 6, "38 investigators: 21 at desks, 11 at posts (4 outside, 7 in the halls), "
                 + "6 on patrol (" + entities.size() + ", " + seats + ", " + posts + ", " + walkers + ")");
             check(seatFloors.equals(java.util.Set.of(0, 1, 2, 3, 4, 5, 6)) && postFloors.equals(java.util.Set.of(0, 1, 2, 3, 4, 5, 6)),
                 "desks and a hall guard on every one of its seven floors");

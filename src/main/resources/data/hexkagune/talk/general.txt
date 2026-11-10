@@ -1,0 +1,127 @@
+# The General's scenes (4.1.5). Read by SceneBook (see its comment for the form; SceneWords for every word allowed).
+# His voice: the CCG's General, a human, thirty years in the bureau. Clipped, dry, proud of his people. The owner: "Tough, softens up when
+# romanced, embarrased easily, proud of the CCG, has to be convinced to love a ghoul". With the woman he loves he goes red to the ears at a
+# kind word and hides behind a report.
+
+# =====================================================================================================================================
+# A FEW OF HIS OWN
+# =====================================================================================================================================
+
+scene roll_call
+who: friend
+say: *He's at the window with a list, ticking names as the night shift comes in through the yard.* ...Forty-one out. Forty-one back. *He lets out a breath he's been holding since dusk.*
+> You count them every morning? | +2 -> count
+> A good night. | +1
+  - *He nods once.* The best kind. The boring kind.
+page count
+say: Every morning for thirty years. The day I stop counting is the day I stop deserving the coat.
+> They're lucky to have you. | +3 shy
+  - *He clears his throat and studies the list very hard.* ...That will do. Thank you.
+ignored: *He folds the list into his coat and goes back to his desk.*
+
+scene bad_tea
+who: friend
+say: *He pushes a cup across the desk.* Tea. I made it myself. I'm told it's terrible. Nobody will tell me to my face.
+> It's terrible. | +3 -> honest
+> It's lovely. | +1
+  - *He narrows his eyes.* You're a poor liar. I like that less than you'd think.
+page honest
+say: *He stares. Then, for the first time, he laughs, short and surprised.* Thirty years. You're the first. ...Drink it anyway.
+> *Drink it.* | +2 laugh
+  - *He watches you swallow.* ...Brave. I'll remember that.
+ignored: *He drinks both cups himself, grimacing.*
+
+# =====================================================================================================================================
+# HIS COURTSHIP'S MOMENTS
+# =====================================================================================================================================
+
+moment general_village
+say: *He already has the report: three ghouls down at a village, no civilians lost.* I read it twice. Nobody ordered you there. Nobody paid you. *He sets the page down.* Why?
+> Because they couldn't defend themselves. | +4 -> because
+> Because you asked. | +3 -> because
+ignored: *He files the report himself, in the drawer he keeps locked.*
+page because
+say: *Quietly.* I've given that answer in front of a board of inquiry. I meant it. I didn't expect to hear it from the other side of this desk. ...One more thing, and it isn't a fight. Find me one human in a village who'd call you a friend.
+> I'll find one. | +3 chin
+  - See that you do. I'd like to be wrong about a few things, and that would be a start.
+
+moment general_vouch
+say: *There's a letter on his desk, in a villager's unsteady hand. He's read it enough to crease it.* They wrote to me. About you. Three pages. *He turns it face down.* I've had commendations with less in them.
+> What did it say? | +3 -> said
+> I didn't ask them to. | +3 -> said
+ignored: *He puts the letter in his coat, on the inside, and says nothing more.*
+page said
+say: That you sat with them. That you came back. That they'd trust you with their children. *He looks up, and it's the look of a man doing a sum he's got wrong for thirty years.* ...The Pack is next. The ones who kill for sport. Three. Come back in one piece.
+> I always do. | +3 chin
+  - See that you do. ...That's the first order I've given this year that I'd mind being disobeyed.
+
+moment general_pack
+say: *He's standing when you come in, which he never is.* Three of the Pack. Do you know how many investigators I'd have had to send? *He stops.* ...You're hurt.
+> It's nothing. | +2 -> hurt
+> You were worried. | +4 -> hurt
+ignored: *He sends for the bureau's medic and waits by the door until she's done.*
+page hurt
+say: *He's found the medical kit before you've finished speaking, and he's kneeling to see to it himself, a general on the floor of his own office.* Hold still. ...I was not worried. I was informed. *His hands are very careful.* ...I was worried.
+> Thank you, Kuroda. | +4 shy
+  - *He ties it off and doesn't let go at once.* ...When that's healed, take me somewhere high. I've only ever seen my district on a map.
+
+moment general_high
+say: *He stands at the edge with his coat snapping in the wind and says nothing for a long time. The whole district lies under him, roofs and smoke and roads.* ...It's smaller than the map. And there's so much more in it.
+> Those are your people down there. | +4 -> people
+> *Stand beside him.* | +3 -> people
+ignored: *He stays until the light changes, memorising it.*
+page people
+say: Thirty years I've moved pins across a wall. *He points.* That's a bakery. I've sent patrols past it a thousand times and never known. *He glances at you and goes red above the beard.* ...You've shown me my own district. I don't know what to do with that. ...Be at my window at dawn. When I count the night shift in.
+> I'll be there. | +4 shy
+  - *He nods, and can't seem to find anything to do with his hands.* ...Good. Dawn. Don't be late. ...You're never late.
+
+moment general_dawn
+say: *The yard below is grey, then gold. He counts under his breath as they come in, coats and cases, two by two. When the last pair crosses the gate he stops counting, and doesn't move away from the window, or from you.* ...All of them. *He breathes out.* All of them.
+> You don't have to count alone any more. | +5 -> alone
+> *Stand closer.* | +4 -> alone
+ignored: *He stays at the window until the sun is all the way up.*
+page alone
+say: *He doesn't look at you. He's scarlet to the collar.* Thirty years I've stood here. I never once wanted anyone beside me. ...I want you beside me. *Finally he turns.* If there's something you mean to ask me, I think I'd say yes. Unless I'm a fool. I may be a fool.
+> You're not a fool. | +5 shy
+  - *The smallest smile, the first one.* ...Then ask. When you're ready. I'll be here. I'm always here.
+
+# =====================================================================================================================================
+# DATES
+# =====================================================================================================================================
+
+date general_roof
+prompt: The roof, after the shift change. Just us.
+who: together
+say: *He's brought two cups of his terrible tea up to the roof, and his coat, which he puts round your shoulders without asking.* The whole district from here. Every light is someone who got home.
+> You did that. | +3 -> did
+> *Lean against him.* | +3 cling
+  - *He goes rigid, then, slowly, doesn't.* ...Yes. All right. Stay there.
+page did
+say: *He shakes his head.* They did. The ones downstairs. I only sign things. *He glances at you and away.* ...It's good to hear, all the same. From you.
+> *Kiss his cheek.* | +4 shy
+  - *He's speechless for a full ten seconds.* ...I had a remark prepared. It's gone.
+
+date general_spar
+prompt: The training hall is empty. Show me what you've got.
+who: together
+say: *He's hung his coat on a peg, rolled nothing up because his arms are already bare, and set his feet.* No quinque. No kagune. Hands and feet. Try to touch me.
+> *Go for him.* | +3 -> try
+> Go easy on me. | +2 -> try
+page try
+say: *You don't touch him. You do end up on the mat, twice, each time set down more gently than you fell.* ...You telegraph with your shoulder. *He offers a hand up, and forgets to let go of it.*
+> You're enjoying this. | +3 laugh
+  - *Caught.* ...A little. A great deal. Again?
+> *Pull him down too.* | +4 laugh
+  - *He lands beside you and, to his own astonishment, laughs.* ...Nobody's done that in twenty years. Don't tell the cadets.
+
+date general_dinner
+prompt: Dinner. Somewhere that isn't the canteen.
+who: together
+say: *He's chosen a small place where nobody knows him, and he still sits with his back to the wall and counts the exits before he looks at you.* ...Forgive me. Habit. ...You look— you look very well tonight.
+> So do you. | +3 shy
+  - *He adjusts a collar that doesn't need it.* ...It's the same coat. ...Thank you.
+> Relax. You're off duty. | +3 -> off
+page off
+say: *He considers this as if it were an order from above.* ...Off duty. *He takes his hand off the table edge and, after a moment's deliberation, puts it over yours.* ...Like this?
+> Exactly like this. | +4 hand
+  - *He nods, satisfied, and doesn't move it for the rest of the evening.*

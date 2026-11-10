@@ -1139,7 +1139,9 @@ public final class EtoServer {
         Quest trial = QuestBook.get(EtoRules.Lesson.TRIAL.quest);
         boolean trialDone = trial != null && log.state(trial, path, mastery) == QuestLog.State.DONE;
         EtoMood mood = EtoBrain.mood(npc, player, now);
-        return new EtoTalk.Context(bond.regard(), bond.flags(), EtoRules.count(bond), ghoul, bond.chatted() == day, EtoRules.giftedOn(bond, day),
+        // 4.1.5: a human (the General) takes a ghoul behind a full mask for a human (4.0.7: its eyes are not seen).
+        boolean asGhoul = ghoul && !(persona.human() && Sightings.masked(player));
+        return new EtoTalk.Context(bond.regard(), bond.flags(), EtoRules.count(bond), asGhoul, bond.chatted() == day, EtoRules.giftedOn(bond, day),
             holds(player, persona::errandItem), holds(player, persona::flower), next, beforeDone, KakuganServer.granted(player),
             npc.m_217043_().m_188503_(100000), stage, claimedBy, id.equals(npc.following()), level.m_46468_(), mood, Romance.days(since, day), daysAway,
             puppy == null ? null : kind(puppy), hasRing(player), ControlItems.ghoulMeat(player.m_21205_()) || ControlItems.ghoulMeat(player.m_21206_()),

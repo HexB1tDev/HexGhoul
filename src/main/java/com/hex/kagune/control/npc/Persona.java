@@ -17,7 +17,13 @@ public abstract class Persona {
     /** 4.0.0 (The Great Exploration): Ayato Kirishima and Noro, Aogiri Tree's, after the three (the talk screen's faces go by this order). */
     public static final Persona AYATO = new Ayato();
     public static final Persona NORO = new Noro();
-    public static final List<Persona> ALL = List.of(ETO, TOUKA, KEN, AYATO, NORO);
+    /**
+     * 4.1.5 (the owner: "a new \"general\" there talks to you and can be romanced ... Like ayato, ken, touka, eto and noro, he is an official
+     * character, means he will respawn"): the CCG's General, in its building. The only human of them. After the others (the talk screen's
+     * faces go by this order).
+     */
+    public static final Persona GENERAL = new General();
+    public static final List<Persona> ALL = List.of(ETO, TOUKA, KEN, AYATO, NORO, GENERAL);
 
     /** Its key: its bond in each player's quest log, its memory, its one place in the world ({@code UniqueNpcs}), its textures. */
     public abstract String key();
@@ -81,6 +87,22 @@ public abstract class Persona {
         return 0.0;
     }
 
+    /**
+     * 4.1.5: true for a human (the General): no kakugan, no kagune to pass on, nothing of a ghoul's table; the CCG's investigators are
+     * his own (he never goes for one).
+     */
+    public boolean human() {
+        return false;
+    }
+
+    /**
+     * 4.1.5 (the owner: "give him all the formal outfit (but the hat)"): the outfit pieces it wears always (item ids,
+     * {@code outfit.Outfits}); none for most.
+     */
+    public List<String> outfit() {
+        return List.of();
+    }
+
     /** She, or he. */
     public String she() {
         return this.female() ? "she" : "he";
@@ -110,6 +132,9 @@ public abstract class Persona {
      * 1.3.43: the kagune it passes on to a child ({@code KaguneGenes} bits): Ken's Rinkaku tails, Touka's Ukaku wings, Eto's Owl kagune.
      */
     public int kagune() {
+        if (this.human()) {
+            return com.hex.kagune.control.family.KaguneGenes.NONE; // 4.1.5: a human has none to pass on
+        }
         if (this.owlKit()) {
             return com.hex.kagune.control.family.KaguneGenes.OWL;
         }
@@ -1026,6 +1051,186 @@ public abstract class Persona {
         @Override
         public boolean flower(String id) {
             return "minecraft:bone".equals(id);
+        }
+    }
+
+    // ---------------------------------------------------------------- 4.1.5: the General
+
+    /**
+     * 4.1.5 (the owner: "a new \"general\" there talks to you and can be romanced, use one of the male skins currently available (NOT
+     * CHILDREN skins) and change it a bit to make it original, give him some muscles also less than the player ... Like ayato, ken, touka, eto
+     * and noro, he is an official character, means he will respawn ... Attitude: Tough, softens up when romanced, embarrased easily, proud
+     * of the CCG, has to be convinced to love a ghoul, Only interested in woman players"; then, with a skin of their own: "use this skin
+     * for the general and give him all the formal outfit (but the hat)"): the CCG's General, a human, at home on the top floor of its
+     * building. His skin is the owner's (art/exploration/General_skin.png, slim arms); he wears the Formal Outfit's coat, trousers and
+     * shoes, never its cap.
+     */
+    private static final class General extends Persona {
+        private Script script;
+
+        @Override
+        public String key() {
+            return "general";
+        }
+
+        @Override
+        public String name() {
+            return "General Kuroda";
+        }
+
+        @Override
+        public String colour() {
+            return "\u00a76";
+        }
+
+        /** A player's height: it is his chest and his coat that make him big. */
+        @Override
+        public float size() {
+            return 1.0F;
+        }
+
+        @Override
+        public boolean female() {
+            return false;
+        }
+
+        @Override
+        public boolean human() {
+            return true;
+        }
+
+        /** The owner's skin for him is made for the slim arms (a man's body otherwise). */
+        @Override
+        public boolean slim() {
+            return true;
+        }
+
+        /** The owner: "give him some muscles also less than the player": between Ayato's (0.3) and a male player's (0.6). */
+        @Override
+        public double muscle() {
+            return ReaperBuild.GENERAL_SHARE;
+        }
+
+        /** The owner: "give him all the formal outfit (but the hat)". */
+        @Override
+        public List<String> outfit() {
+            return List.of("formal_chestplate", "formal_leggings", "formal_boots");
+        }
+
+        @Override
+        public float health() {
+            return 320.0F;
+        }
+
+        @Override
+        public double armor() {
+            return 14.0;
+        }
+
+        @Override
+        public float might() {
+            return 0.75F;
+        }
+
+        @Override
+        public int hair() {
+            return 0x44352C;
+        }
+
+        @Override
+        public int eyes() {
+            return 0x6A8099;
+        }
+
+        @Override
+        public int skin() {
+            return 0xCEA386;
+        }
+
+        @Override
+        public boolean oneEyed() {
+            return false;
+        }
+
+        /** The owner: "Only interested in woman players". */
+        @Override
+        public boolean likes(boolean woman) {
+            return woman;
+        }
+
+        /** The owner: "embarrased easily": nearly anything sweet brings the colour up over his beard. */
+        @Override
+        public boolean blushes(EtoGesture gesture) {
+            return gesture.blush || switch (gesture) {
+                case KISS, HAND, CLING, LEAN, HAIR, DANCE, HUM, PET, RING, HUG, PECK -> true;
+                default -> false;
+            };
+        }
+
+        /** He would never ask first, and when he does it comes out like an order. */
+        @Override
+        public double kissing() {
+            return 0.4;
+        }
+
+        @Override
+        public double forward() {
+            return 0.5;
+        }
+
+        @Override
+        public boolean pecks() {
+            return false;
+        }
+
+        @Override
+        public boolean clings() {
+            return false;
+        }
+
+        @Override
+        public String home() {
+            return "headquarters";
+        }
+
+        @Override
+        public EtoGesture[] idles(EtoMood mood) {
+            return switch (mood) {
+                case GIDDY -> new EtoGesture[] {EtoGesture.HUM, EtoGesture.STRETCH, EtoGesture.CROSS, EtoGesture.CHIN};
+                case SULKY, JEALOUS -> new EtoGesture[] {EtoGesture.CROSS, EtoGesture.HUFF, EtoGesture.TAP, EtoGesture.LOOK};
+                case LONELY, BORED -> new EtoGesture[] {EtoGesture.LOOK, EtoGesture.TAP, EtoGesture.STRETCH, EtoGesture.CHIN};
+                case CLINGY, AFFECTIONATE -> new EtoGesture[] {EtoGesture.SHY, EtoGesture.CROSS, EtoGesture.LOOK, EtoGesture.CHIN};
+                case SLEEPY -> new EtoGesture[] {EtoGesture.YAWN, EtoGesture.STRETCH, EtoGesture.CROSS};
+                case BLOODTHIRSTY -> new EtoGesture[] {EtoGesture.CROSS, EtoGesture.TAP, EtoGesture.STRETCH};
+                case CLAIMED, WARY -> new EtoGesture[] {EtoGesture.CROSS, EtoGesture.LOOK, EtoGesture.SCOLD, EtoGesture.CHIN};
+                default -> new EtoGesture[] {EtoGesture.CROSS, EtoGesture.LOOK, EtoGesture.CHIN, EtoGesture.STRETCH, EtoGesture.TAP};
+            };
+        }
+
+        @Override
+        public EtoGesture[] anyIdle() {
+            return new EtoGesture[] {EtoGesture.CROSS, EtoGesture.LOOK, EtoGesture.CHIN, EtoGesture.STRETCH, EtoGesture.TAP, EtoGesture.HUFF,
+                EtoGesture.WRITE, EtoGesture.READ};
+        }
+
+        @Override
+        public Script script() {
+            if (this.script == null) {
+                this.script = new GeneralScript();
+            }
+            return this.script;
+        }
+
+        /** Paper: he signs every report himself and the building never has enough of it. */
+        @Override
+        public boolean errandItem(String id) {
+            return "minecraft:paper".equals(id);
+        }
+
+        /** A cornflower: the blue of the bureau's old colours. */
+        @Override
+        public boolean flower(String id) {
+            return "minecraft:cornflower".equals(id);
         }
     }
 }

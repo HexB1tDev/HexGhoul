@@ -226,6 +226,25 @@ public final class EtoBrain {
         npc.m_21573_().m_26519_(at.m_123341_() + 0.5, at.m_123342_() - 1.0, at.m_123343_() + 0.5, 0.9);
     }
 
+    /** 4.1.5: {@code npc} in what its persona always wears ({@link com.hex.kagune.control.npc.Persona#outfit}); nothing for most. */
+    static void dress(EtoNpc npc) {
+        java.util.List<com.hex.kagune.control.outfit.Outfits.Piece> pieces = new java.util.ArrayList<>();
+        for (String id : npc.persona().outfit()) {
+            com.hex.kagune.control.outfit.Outfits.Piece piece = com.hex.kagune.control.outfit.Outfits.of(id);
+            if (piece != null) {
+                pieces.add(piece);
+            }
+        }
+        if (pieces.isEmpty()) {
+            return;
+        }
+        OutfitServer.dress(npc, pieces);
+        net.minecraft.world.entity.ai.attributes.AttributeInstance armor = npc.m_21051_(net.minecraft.world.entity.ai.attributes.Attributes.f_22284_);
+        if (armor != null) {
+            armor.m_22100_(OutfitServer.armour(npc, npc.persona().armor()));
+        }
+    }
+
     /** Every Eto ticking on this server (one, unless another has yet to be sent away). */
     private static final Set<EtoNpc> LIVE = Collections.newSetFromMap(new WeakHashMap<>());
 
@@ -276,6 +295,9 @@ public final class EtoBrain {
             }
             // 1.3.3: right-handed always (a left-handed one held the pocket book in the hand that writes).
             npc.m_21559_(false);
+            // 4.1.5 (the owner: "give him all the formal outfit (but the hat)"): what its persona always wears, put on; its protection
+            // taken off its own, so it is as hard to hurt as it was made.
+            dress(npc);
             LIVE.add(npc);
         }
         // 4.0.9: up off the top of his tower when something calls him (a fight, someone to follow or hold, a kiss, a talk, a home of theirs).
@@ -493,6 +515,10 @@ public final class EtoBrain {
         }
         if (current == null && now % 5L == 0L) {
             current = seek(npc, mind, level, home, now);
+            // 4.1.5: a human of the CCG never goes for one of its investigators (a ghoul's home has no worse a threat; his has none in them).
+            if (npc.persona().human() && current instanceof com.hex.kagune.control.npc.CcgAgent) {
+                current = null;
+            }
             if (current != null) {
                 mind.reachedAt = now; // a fresh fight: its time to get at it starts now
             }
@@ -565,6 +591,7 @@ public final class EtoBrain {
                     case "touka" -> "*gets into bed and pulls the covers up* ...You coming or what?";
                     case "ken" -> "*lies down on his side of the bed* I kept your side warm.";
                     case "ayato" -> "*drops onto the bed, arms crossed* ...You coming, or do I have to drag you?";
+                    case "general" -> "*hangs his coat on the chair, squares it, and sits on the edge of the bed* ...Lights out. Come to bed.";
                     default -> "*curls up on her side of the bed* Come to bed, love. Don't make me wait.";
                 };
                 say(npc, partner, line);

@@ -234,6 +234,38 @@ public final class Courtship {
             "Late. The hideout. When it's dead quiet. Don't make me wait.",
             "Be with Ayato at the hideout in the dead of night"));
 
+    /**
+     * 4.1.5 (the owner: "proud of the CCG, has to be convinced to love a ghoul"): the General's: the ghouls preying on a village put down; a villager who will vouch
+     * for you; the Pack's killers stopped; his district seen from somewhere high, off the map on his wall; and the sun coming up with him
+     * after the night shift. Each one is a reason to believe what he sees of you.
+     */
+    static final List<Chapter> GENERAL = List.of(
+        new Chapter("general_village", "Where the people are", Task.VILLAGE_GHOUL, 3, Set.of(), "",
+            "There are ghouls feeding on a village in my district, and my patrols keep arriving late. Three of them. Stop them where the "
+                + "people are. Show me whose side you stand on when nobody's ordering you.",
+            "{n} of three, at a village. The people there can't wait on my paperwork.",
+            "Kill three wild ghouls preying on a village: {n} of {need}"),
+        new Chapter("general_vouch", "Someone to vouch for you", Task.HUMAN_FRIEND, 1, Set.of(), "",
+            "I've read your file. I'd rather hear it from a person. Find me one human in a village who'd call you a friend. Just one who'd "
+                + "say it and mean it.",
+            "One villager who cares for you. People can tell. They always can.",
+            "Bring a village human to care for you"),
+        new Chapter("general_pack", "The ones who enjoy it", Task.GHOUL_PACK, 3, Set.of(), "",
+            "The Pack. The ones who kill for the joy of it. I've lost eleven investigators to them this year. Three. Put down three, and "
+                + "I'll sleep one night this month.",
+            "{n} of three of the Pack. Be careful. That's not an order. ...It's an order.",
+            "Kill three ghouls of the Pack: {n} of {need}"),
+        new Chapter("general_high", "The district, not the map", Task.HIGH, 1, Set.of(), "",
+            "I've run this district for ten years from a map on a wall. Take me somewhere high. I want to see it, once, the way it really "
+                + "lies. ...With you. That part isn't in the report.",
+            "Higher. Somewhere I can see all of it.",
+            "Take General Kuroda somewhere high (him following you)"),
+        new Chapter("general_dawn", "The end of the night shift", Task.DAWN, 1, Set.of(), "",
+            "Be here at dawn. When the night shift comes in and I count them. ...I've counted them alone for thirty years. I'd like, once, "
+                + "not to.",
+            "Dawn. Here. I'll be at the window, counting.",
+            "Be with General Kuroda at dawn"));
+
     /** {@code key}'s chapters, in order (none for one who has none). */
     public static List<Chapter> of(String key) {
         return switch (key == null ? "" : key) {
@@ -241,6 +273,7 @@ public final class Courtship {
             case "touka" -> TOUKA;
             case "ken" -> KEN;
             case "ayato" -> AYATO;
+            case "general" -> GENERAL;
             default -> List.of();
         };
     }
@@ -415,6 +448,8 @@ public final class Courtship {
                 "I'm not very good at dates. But I'd like to try. With you."};
             case "ayato" -> new String[] {"A date. ...Fine. Where. Somewhere without people.", "You want to go out? With me? ...Yeah. Pick. Fast.",
                 "Don't call it a date. ...Okay, it's a date. Where?"};
+            case "general" -> new String[] {"An evening off. ...I haven't taken one in years. Where shall we go?",
+                "Out. With you. ...Yes. I'll leave the coat. No, I'll keep the coat. Where?", "I'll clear my evening. Name the place."};
             default -> new String[] {"Where to?"};
         };
         return lines[Math.floorMod(seed, lines.length)];
@@ -429,6 +464,7 @@ public final class Courtship {
             case "ken" -> new String[] {"We already went out today. ...Tomorrow? I'll be looking forward to it all night.",
                 "Tomorrow. I want to have something to look forward to."};
             case "ayato" -> new String[] {"Twice in one day? Greedy. ...Tomorrow.", "Tomorrow. Don't forget. I won't."};
+            case "general" -> new String[] {"Twice in a day and the bureau will notice. ...Tomorrow.", "Tomorrow. I'll be watching the clock."};
             default -> new String[] {"Tomorrow."};
         };
         return lines[Math.floorMod(seed, lines.length)];

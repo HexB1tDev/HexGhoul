@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.5 (HexGhoul): The General (testing)
+
+See `.github/release-notes-4.1.5.md`. Your words: "Attitude: Tough, softens up when romanced, embarrased easily, proud of the CCG, has to be convinced to love a ghoul, Only interested in woman players." and "use this skin for the general and give him all the formal outfit (but the hat)" General Kuroda, a human, in the top-floor office of the CCG building: an official character (one in a world, back a day after he's killed), in the skin you sent, wearing the Formal Outfit's coat, trousers and shoes and never its cap. Women only; five courtship chapters; a ghoul has to convince him (regard 90) before he'll be asked out; a full mask hides a ghoul from him. He teaches nothing yet: Kick Master is next. Protocol 114.
+
 ## 4.1.4 (HexGhoul): The CCG building (testing)
 
 See `.github/release-notes-4.1.4.md`. Your words: "CCG building, tons of ccg agents guard and patrol the area, sit in their offices" and "Also I forgot to send you the CCG building, this is it, also like the others only 1 of them spawns." Your `ccg_building.schem` as a place of its own, one per world, at the nearest of its offered spots that is dry land and away from the mansion and the villages. 38 investigators: 4 guards outside, 6 on patrol round it, 21 sat at desks (three a floor) and 7 in the halls; a fight gets them up and they go back after. `/locate structure hexkagune:ccg_building`. The General and Kick Master come next. Protocol 113.

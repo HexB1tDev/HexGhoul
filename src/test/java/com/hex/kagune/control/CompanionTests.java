@@ -462,6 +462,85 @@ public final class CompanionTests {
         Teaching.View dragon = Teaching.view("ken", true, KagunePath.RINKAKU, 1000, tails::contains);
         check(dragon.ready() && dragon.next().gate() == Gate.RINKAKU_DRAGON, "and last, the Dragon");
         speedster();
+        general();
+    }
+
+    /**
+     * 4.1.5 (the owner: "a new \"general\" there talks to you and can be romanced ... give him some muscles also less than the player ... he
+     * is an official character ... Attitude: Tough, softens up when romanced, embarrased easily, proud of the CCG, has to be convinced to
+     * love a ghoul, Only interested in woman players"; "use this skin for the general and give him all the formal outfit (but the hat)").
+     */
+    static void general() {
+        Persona g = Persona.GENERAL;
+        check(Persona.ALL.get(Persona.ALL.size() - 1) == g && Persona.ALL.indexOf(Persona.NORO) == 4 && g.key().equals("general") && Persona.of("general") == g,
+            "the General, after the others (their places on the talk screen kept)");
+        check(g.human() && !g.female() && g.romanceable() && g.likes(true) && !g.likes(false) && !g.wings() && !g.worms() && !g.owlKit() && !g.kakuja()
+            && g.mask() == null && g.kagune() == com.hex.kagune.control.family.KaguneGenes.NONE, "a human man, for women only, with no kagune to pass on");
+        for (Persona other : Persona.ALL) {
+            check(other == g || !other.human() && other.outfit().isEmpty(), other.key() + ": the others are ghouls in their own clothes");
+        }
+        check(g.outfit().equals(java.util.List.of("formal_chestplate", "formal_leggings", "formal_boots")), "all the Formal Outfit but its cap");
+        for (String id : g.outfit()) {
+            com.hex.kagune.control.outfit.Outfits.Piece piece = com.hex.kagune.control.outfit.Outfits.of(id);
+            check(piece != null && !piece.mask() && com.hex.kagune.control.outfit.Outfits.FORMAL_SET.contains(piece)
+                && piece.slot() != com.hex.kagune.control.outfit.OutfitModels.HELMET, id + ": a piece of the Formal Outfit, never the head's");
+        }
+        check(g.muscle() > Persona.AYATO.muscle() && g.muscle() < com.hex.kagune.control.npc.ReaperBuild.PLAYER_SHARE,
+            "some muscle: more than Ayato's, less than a male player's");
+        check(g.slim() && g.blushes(EtoGesture.KISS) && g.blushes(EtoGesture.HUG) && g.blushes(EtoGesture.HAND) && g.kissing() < 0.5 && !g.pecks(),
+            "his skin's slim arms; embarrassed easily; never the one to start");
+        // His skin is the owner's own, pixel for pixel.
+        try {
+            java.awt.image.BufferedImage theirs = javax.imageio.ImageIO.read(new java.io.File("art/exploration/General_skin.png"));
+            java.awt.image.BufferedImage baked = javax.imageio.ImageIO.read(new java.io.File("src/main/resources/assets/hexkagune/textures/entity/general/general.png"));
+            boolean same = theirs.getWidth() == 64 && theirs.getHeight() == 64 && baked.getWidth() == 64 && baked.getHeight() == 64;
+            for (int x = 0; same && x < 64; x++) {
+                for (int y = 0; y < 64; y++) {
+                    int a = theirs.getRGB(x, y);
+                    int b = baked.getRGB(x, y);
+                    same &= a == b || (a >>> 24) == 0 && (b >>> 24) == 0;
+                }
+            }
+            check(same, "his texture is the owner's skin, every pixel");
+            java.awt.image.BufferedImage turned = javax.imageio.ImageIO.read(new java.io.File("src/main/resources/assets/hexkagune/textures/entity/general/general_kakugan.png"));
+            boolean none = true;
+            for (int x = 0; x < 64; x++) {
+                for (int y = 0; y < 64; y++) {
+                    none &= (turned.getRGB(x, y) >>> 24) == 0;
+                }
+            }
+            check(none, "no eye of his ever turns");
+        } catch (java.io.IOException failure) {
+            check(false, "read his skin: " + failure);
+        }
+        // Convincing him: a human needs only her courtship; a ghoul has to be thought this well of.
+        try {
+            Class<?> script = Class.forName("com.hex.kagune.control.npc.GeneralScript");
+            java.lang.reflect.Field need = script.getDeclaredField("CONVINCED");
+            need.setAccessible(true);
+            int convinced = need.getInt(null);
+            check(convinced > com.hex.kagune.control.npc.NpcBonds.FRIEND && convinced <= com.hex.kagune.control.npc.NpcBonds.MOST,
+                "a ghoul must be far past a friend (" + convinced + "), and it can be reached");
+            String source = read("src/main/java/com/hex/kagune/control/npc/GeneralScript.java");
+            check(source.contains("return !c.ghoul() || c.regard() >= CONVINCED;") && source.contains(": !convinced(c) ? r(one(seed,")
+                && source.indexOf("!convinced(c)") < source.indexOf("EtoTalk.Effect.DATE") && source.contains("return c.mixed();"),
+                "asked out by a ghoul he isn't sure of: not yet, and no date; a woman only");
+        } catch (ReflectiveOperationException failure) {
+            check(false, "his script: " + failure);
+        }
+        check(read("src/main/java/com/hex/kagune/control/server/EtoServer.java").contains("boolean asGhoul = ghoul && !(persona.human() && Sightings.masked(player));"),
+            "behind a full mask a ghoul is a human to him");
+        String brain = read("src/main/java/com/hex/kagune/control/server/EtoBrain.java");
+        check(brain.contains("dress(npc);") && brain.contains("OutfitServer.dress(npc, pieces);") && brain.contains("armor.m_22100_(OutfitServer.armour(npc, npc.persona().armor()));")
+            && brain.contains("if (npc.persona().human() && current instanceof com.hex.kagune.control.npc.CcgAgent) {\n                current = null;"),
+            "dressed as he wakes (as hard to hurt as he was made); never against one of his own investigators");
+        java.util.List<com.hex.kagune.control.npc.Courtship.Chapter> chapters = com.hex.kagune.control.npc.Courtship.of("general");
+        check(chapters.size() == com.hex.kagune.control.npc.Courtship.CHAPTERS
+            && chapters.get(0).task() == com.hex.kagune.control.npc.Courtship.Task.VILLAGE_GHOUL
+            && chapters.get(1).task() == com.hex.kagune.control.npc.Courtship.Task.HUMAN_FRIEND
+            && chapters.get(2).task() == com.hex.kagune.control.npc.Courtship.Task.GHOUL_PACK
+            && chapters.get(4).task() == com.hex.kagune.control.npc.Courtship.Task.DAWN,
+            "his courtship: the village defended, a human to vouch, the Pack, somewhere high, the dawn count");
     }
 
     /**
