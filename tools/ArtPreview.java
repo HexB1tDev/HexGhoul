@@ -47,6 +47,9 @@ public final class ArtPreview {
         if (wanted.contains("slams")) {
             slams(new File(out, "ukaku-slams.png"));
         }
+        if (wanted.contains("guard")) {
+            guardSheet(new File(out, "ukaku-guard.png"));
+        }
         if (wanted.contains("slams-gif")) {
             slamsGif(new File(out, "ukaku-slams.gif"));
         }
@@ -2243,6 +2246,22 @@ public final class ArtPreview {
             writer.endWriteSequence();
         }
         System.out.println("wrote " + file + " (" + frames.size() + " frames)");
+    }
+
+    /** 4.1.13: the wing guard closed, from in front, three quarters, the side and above, and closing by its amount from in front. */
+    static void guardSheet(File file) throws Exception {
+        List<Shot> shots = new ArrayList<>();
+        double[] target = {0.0, 1.3, 0.6};
+        double[][] eyes = {{0.0, 1.6, 7.5}, {5.0, 2.6, 5.5}, {7.5, 1.6, 0.6}, {0.6, 9.0, 1.5}};
+        String[] names = {"from in front", "three quarters", "from his side", "from above"};
+        for (int k = 0; k < eyes.length; k++) {
+            shots.add(new Shot("Guard closed, " + names[k], new RigPose(), slamWings(WingRig.Motion.GUARD, 1.0F, 0.4F, 1, false), eyes[k], target, new ArrayList<>()));
+        }
+        for (float amount : new float[] {0.2F, 0.5F, 0.8F, 1.0F}) {
+            shots.add(new Shot(String.format("Closing (%.1f), from in front", amount), new RigPose(), slamWings(WingRig.Motion.GUARD, amount, 0.4F, 1, false),
+                eyes[0], target, new ArrayList<>()));
+        }
+        sheet(file, "Ukaku's wing guard: the wings clamped together in front of him", shots, 4, 340, 340);
     }
 
     static List<WingPreview.Tri> shardAhead(double z, double y, double size) {

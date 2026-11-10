@@ -1537,9 +1537,29 @@ public final class UkakuTests {
         WingRig.WingAngles open = WingRig.guard(0.2F);
         WingRig.WingAngles past = WingRig.guard(0.82F);
         WingRig.WingAngles held = WingRig.guard(1.0F);
-        check(Math.abs(WingRig.guard(0.0F).sweep() - 22.0F) < 0.01F && open.sweep() > 30.0F && past.sweep() < held.sweep() - 5.0F
+        // 4.1.13 (the owner: "I asked for a block animation where the wings like clamp together like hands in front of the player"): flared
+        // open a moment, then closed round his front and held (no overshoot past it).
+        check(Math.abs(WingRig.guard(0.0F).sweep() - 22.0F) < 0.01F && open.sweep() > 30.0F && past.sweep() >= held.sweep() - 0.01F
             && Math.abs(held.sweep() - WingRig.GUARD_SWEEP) < 0.01F && Math.abs(held.roll() - WingRig.GUARD_ROLL) < 0.01F,
-            "the guard flares open, slams shut past where it holds, eases back to it");
+            "the guard flares open, then closes and holds");
+        // The closed guard: round his front (in front of him, both wings), from about his waist to above his head, at every moment of its
+        // closing never through his body (but where the wings grow from his back, as at rest) and never into the ground, at any size.
+        for (int mastery : new int[] {50, 300, 1000}) {
+            WingForm form = mastery < 100 ? WingForm.RABBIT : WingForm.TWIN;
+            int rest = insideBody(WingRig.build(input(form, mastery, 0.5F, WingRig.Motion.NONE, 0.0F, 0.0F)));
+            int worst = 0;
+            float lowest = Float.MAX_VALUE;
+            for (float p = 0.0F; p <= 1.0001F; p += 0.02F) {
+                List<WingRig.Quad> quads = WingRig.build(input(form, mastery, 0.5F, WingRig.Motion.GUARD, p, 0.0F));
+                worst = Math.max(worst, insideBody(quads));
+                lowest = Math.min(lowest, extent(quads)[1]);
+            }
+            check(worst <= rest && lowest > -0.15F, "the guard (" + form + ", " + mastery + ") never goes through him or into the ground (" + worst
+                + " corners in him, at rest " + rest + "; lowest " + lowest + ")");
+            float[] closed = extent(WingRig.build(input(form, mastery, 0.5F, WingRig.Motion.GUARD, 1.0F, 0.0F)));
+            check(closed[5] > 0.6F && closed[4] > 1.6F && closed[1] < 1.25F, "the guard (" + form + ", " + mastery + ") closes round his front, waist to head ("
+                + java.util.Arrays.toString(closed) + ")");
+        }
     }
 
     private static WingRig.Motion mirror(WingRig.Motion motion) {
@@ -1564,6 +1584,30 @@ public final class UkakuTests {
 
     private static boolean close(WingRig.WingAngles angles, float[] key) {
         return Math.abs(angles.sweep() - key[0]) < 0.05F && Math.abs(angles.roll() - key[1]) < 0.05F;
+    }
+
+    /** 4.1.13: how many solid corners of {@code quads} lie inside his body (torso, legs, head), but where the wings grow out of his back. */
+    private static int insideBody(List<WingRig.Quad> quads) {
+        int n = 0;
+        for (WingRig.Quad q : quads) {
+            if (q.alpha() < 0.5F) {
+                continue;
+            }
+            float[] v = q.xyz();
+            for (int k = 0; k < 4; k++) {
+                float x = v[k * 3];
+                float y = v[k * 3 + 1];
+                float z = v[k * 3 + 2];
+                double fromRoot = Math.min(Math.hypot(Math.hypot(x - WingRig.ROOT_X, y - WingRig.ROOT_Y), z - WingRig.ROOT_Z),
+                    Math.hypot(Math.hypot(x + WingRig.ROOT_X, y - WingRig.ROOT_Y), z - WingRig.ROOT_Z));
+                boolean body = Math.abs(x) < 0.25F && y > 0.0F && y < 1.45F && Math.abs(z) < 0.125F;
+                boolean head = Math.abs(x) < 0.25F && y >= 1.45F && y < 1.95F && Math.abs(z) < 0.25F;
+                if ((body || head) && fromRoot > 0.5) {
+                    n++;
+                }
+            }
+        }
+        return n;
     }
 
     /** 4.1.11: the twin wings, only {@code side}'s drawn, at a mastery. */

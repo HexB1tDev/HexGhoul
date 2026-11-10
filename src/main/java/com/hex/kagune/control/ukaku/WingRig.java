@@ -182,7 +182,7 @@ public final class WingRig {
     static final float GUARD_PAST = 0.82F;
     static final float GUARD_FLARE_SWEEP = 40.0F;
     static final float GUARD_FLARE_ROLL = -6.0F;
-    static final float GUARD_OVER = 10.0F;
+    static final float GUARD_OVER = 0.0F;
 
     /** 4.1.10: the guarding wings' angles at {@code amount} (0 at rest, 1 held closed). */
     public static WingAngles guard(float amount) {
@@ -193,17 +193,58 @@ public final class WingRig {
         }
         if (a < GUARD_PAST) {
             float k = smooth((a - GUARD_OPEN) / (GUARD_PAST - GUARD_OPEN));
-            return new WingAngles(lerp(GUARD_FLARE_SWEEP, GUARD_SWEEP - GUARD_OVER, k), lerp(GUARD_FLARE_ROLL, GUARD_ROLL + 4.0F, k));
+            return new WingAngles(lerp(GUARD_FLARE_SWEEP, GUARD_SWEEP - GUARD_OVER, k), lerp(GUARD_FLARE_ROLL, GUARD_ROLL, k));
         }
         float k = smooth((a - GUARD_PAST) / (1.0F - GUARD_PAST));
-        return new WingAngles(lerp(GUARD_SWEEP - GUARD_OVER, GUARD_SWEEP, k), lerp(GUARD_ROLL + 4.0F, GUARD_ROLL, k));
+        return new WingAngles(lerp(GUARD_SWEEP - GUARD_OVER, GUARD_SWEEP, k), GUARD_ROLL);
     }
 
+    /**
+     * 4.1.13 (the owner: "I asked for a block animation where the wings like clamp together like hands in front of the player. And I get
+     * this": 4.1.2's guard swung both wings forward and up, into a cone over his head, his body open): each wing comes forward along his
+     * side (its root angles, {@link #guard}) and is bent across the front of his body at chest height (a curl toward the other side, a
+     * little forward: {@link #GUARD_ACROSS}), its broad face out, the two meeting and overlapping in the middle as two hands close over
+     * each other. By the guard's amount, so it opens the same way back.
+     */
+    static UkakuModel.Frame guardFrame(int side, double rootX, double rootY, double rootZ, double length, WingAngles angles, float amount) {
+        float a = smooth(Math.max(0.0F, Math.min(1.0F, amount)));
+        double[][] axes = twinAxes(side, angles.sweep(), angles.roll());
+        double[] out = axes[0];
+        double[] up = axes[1];
+        double[] back = mul(cross(axes[1], axes[0]), side);
+        double[] origin = {rootX, rootY, rootZ};
+        double[] main = normalize(add(mul(out, Math.cos(FAN_CENTRE)), mul(up, Math.sin(FAN_CENTRE))));
+        // Wrapped round toward the other side, level (the curl turns about the vertical, whatever the wing's own tilt: tied to its tilt, the
+        // wrap rose over his head or dug into the ground): a curved shield round his front at the height its tilt sets, not a sail ahead.
+        double curl = Math.toRadians(GUARD_WRAP) * a;
+        double flat = Math.sqrt(main[0] * main[0] + main[2] * main[2]);
+        if (curl < 1.0E-3 || flat < 1.0E-6) {
+            return new UkakuModel.Frame(origin, out, up, back, length);
+        }
+        double[] across = rotateY(new double[] {main[0] / flat, 0.0, main[2] / flat}, -side * Math.PI * 0.5);
+        double[] toward = sub(across, mul(main, dot(across, main)));
+        if (dot(toward, toward) < 1.0E-8) {
+            return new UkakuModel.Frame(origin, out, up, back, length);
+        }
+        // Its feathers folded by its length, so the shield spans GUARD_HALF either side of its line whatever the wing's size (knee to head).
+        double spread = Math.toDegrees(Math.atan(GUARD_HALF / Math.max(0.3, length)));
+        float fold = (float)Math.max(0.0, Math.min(GUARD_FOLD_MOST, 1.0 - spread / 45.0)) * a;
+        UkakuModel.Bend bend = new UkakuModel.Bend(fold, FAN_CENTRE, main, normalize(toward), GUARD_STRAIGHT, curl, length);
+        return new UkakuModel.Frame(origin, out, up, back, length, bend);
+    }
+
+    /** 4.1.13: how far round his front a guarding wing wraps (degrees), how far it runs straight first (blocks), how tight its feathers fold. */
+    static final double GUARD_WRAP = 205.0;
+    static final double GUARD_STRAIGHT = 0.35;
+    /** 4.1.13: how far the closed shield reaches above and below its line (blocks), and the most its feathers fold. */
+    static final double GUARD_HALF = 2.0;
+    static final double GUARD_FOLD_MOST = 0.85;
+
     /** 4.1.2: the guard's wings, swung forward round him till they meet in front (degrees). */
-    public static final float GUARD_SWEEP = -112.0F;
-    public static final float GUARD_ROLL = 14.0F;
+    public static final float GUARD_SWEEP = -55.0F;
+    public static final float GUARD_ROLL = -36.0F;
     /** 4.1.2: how much longer the guarding wings grow, fully closed (a share of their length). */
-    public static final float GUARD_GROWTH = 0.3F;
+    public static final float GUARD_GROWTH = 0.12F;
 
     /** 4.1.2: which wing strikes in a one-wing slam (+1 right, -1 left; 0 neither). */
     public static int striking(Motion motion) {
@@ -703,7 +744,9 @@ public final class WingRig {
             // A single wing (one small wing, Rabbit Guise) answers both hands.
             float aim = form.rightWing() ? (side > 0 ? in.aimRight() : in.aimLeft()) : Math.max(in.aimRight(), in.aimLeft());
             float shot = form.rightWing() ? (side > 0 ? in.kickRight() : in.kickLeft()) : Math.max(in.kickRight(), in.kickLeft());
-            UkakuModel.Frame frame = aim > 0.001F && coil <= 0.0F
+            UkakuModel.Frame frame = in.motion() == Motion.GUARD && coil <= 0.0F
+                ? guardFrame(side, ROOT_X * side, rootY, rootZ, length, angles, in.progress()) // 4.1.13: clamped together in front, like hands
+                : aim > 0.001F && coil <= 0.0F
                 ? aimFrame(side, ROOT_X * side, rootY, rootZ, length, angles.sweep(), angles.roll(), in.aim(), aim, shot)
                 : slamming && coil <= 0.0F && in.volley() <= 0.0F
                 ? slamFrame(side, ROOT_X * side, rootY, rootZ, length, in.motion(), in.progress(), in.impact(), angles, mastery) // 4.1.10: the whip; 4.1.11: the lash

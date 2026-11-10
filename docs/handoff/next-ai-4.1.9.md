@@ -131,6 +131,25 @@ clothes to open like that and look good"; "How do you look at the block animatio
   (`RinkakuBlockPose`, in `KaguneBodyAnimation`): ask the owner what they want before building (a slower close with its own body pose was
   proposed to them).
 
+## Paused mid-4.1.13 (work in progress, pushed unverified at the owner's word: "time to pause and push what we have Im out of usage")
+
+- **In this push (not versioned, no release notes, the full build NOT run on it; CI's build runs the tests):** the wing guard rebuilt as the
+  owner asked ("I asked for a block animation where the wings like clamp together like hands in front of the player"; their screenshot showed
+  4.1.2's guard as a cone over his head): `WingRig.guardFrame` (each wing forward along his side, then curled level `GUARD_WRAP` 205° round his
+  front, its feathers folded by its length so the shield spans `GUARD_HALF` either side, waist to head), `GUARD_SWEEP` -55, `GUARD_ROLL` -36,
+  `GUARD_GROWTH` 0.12, no overshoot; `UkakuTests`: the guard never through his body (`insideBody`, as at rest) nor into the ground, at every
+  moment, at mastery 50/300/1000, closing round his front waist to head; `tools/art-preview.sh <out> guard` (`ArtPreview.guardSheet`: closed
+  from four sides, closing from in front). Run `python3 tools/quick_check.py UkakuTests` first thing: it was still running at the pause.
+- **The owner liked the bending shapes for the M1s too** ("You see the shapes you're making? That was the right idea that I wanted for the M1
+  attacks in the first place, that they actually bend like that, like hands ... While being perfectly aligned as well, and it doesn't like clip
+  to the body"). Tried and pulled back (NOT in this push): the striking wing cupped like a hand (`cupToward`: a slap or swing level toward the
+  far side, the overhead slams down 60°, the rise up 45°; feathers open as a palm folded by size; stretch at most 2x). A body-clip test showed
+  4.1.12's own overhead and twin slams already pass through his head in their wind-up (`Blow` chamber {8, 80} and {4, 86}: hundreds of corners
+  at 0.2 of the move), and every nudge of the keys moved the clip elsewhere. Next: design the M1 keys against that clip test from the start
+  (`insideBody` <= rest at every 0.02 of every slam, TWIN and Rabbit's left string), then cup them.
+- Still open from the owner: the structures not found (ask for `/kagune places` after a `/locate` in a new world, with the jar version);
+  the M1s ("at best mediocre"); the coat (4.1.12, not previewed).
+
 ## Next after that
 
 - The owner judges the look. Likely asks: more or less whip (`WHIP_PERIOD`, `WHIP_DAMPING`, `WHIP_MOST`), a longer or shorter drive per slam
