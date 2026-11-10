@@ -1,4 +1,4 @@
-# Next AI: 4.1.6, Kick Master (in progress)
+# Next AI: Kick Master (in progress; now 4.1.7)
 
 Read this first. The house rules are in `next-ai-4.1.2.md` and `next-ai-4.0.0.md` (they still hold): answer in English, quote the owner
 exactly, never claim in-game testing, the full `python3 build.py` must end with EXIT 0 on the exact commit before it is pushed, never
@@ -12,7 +12,8 @@ alter the owner's files, one version at a time pushed by SHA, no PR.
 | 4.1.3 | Fighting styles, Speedster from Ayato | pushed (cdf6fc4), EXIT 0 |
 | 4.1.4 | The CCG building, 38 investigators | pushed (e31bd75), EXIT 0 |
 | 4.1.5 | The General (Persona GENERAL) | pushed (7ab4526), EXIT 0 |
-| 4.1.6 | Kick Master | started: `docs/handoff/kick-master-4.1.6-wip.patch` (not built, not tested) |
+| 4.1.6 | The hideout and the CCG building always placed (the owner: "also I cant get the aogiri hideout to spawn or the ccg building at all") | pushed, EXIT 0 (see "4.1.6 (released)" in `next-ai-4.0.0.md`) |
+| 4.1.7 | Kick Master | started: `docs/handoff/kick-master-4.1.6-wip.patch` (not built, not tested; made on 4.1.5, it touches none of 4.1.6's files) |
 
 Branch: `claude/modest-volta-44ltps`. Each section "4.1.x (released)" in `next-ai-4.0.0.md` says what that version changed.
 
@@ -59,7 +60,7 @@ style called: \"Kick Master\" Make up the quests yourself make sure they're crea
 - The back kick's trunk and leg are not yet a level T; the hook kick's leg should be level and a little past the target before it hooks.
 - `kick-test` showed: `legZ` +1.5 alone puts the right leg out level to her right; with `spin` 1.57 that points at the target.
 
-## Left to do for 4.1.6
+## Left to do for Kick Master (4.1.7)
 
 1. Fix the kicks (above), and look at every frame of the `kicks` sheet until each reads as its kick.
 2. `FightStyle.KICK_MASTER` (gate `STYLE_KICK_MASTER`, appended); `FightStyle.of` prefers it once open (the owner: "fully replaces the
@@ -69,7 +70,7 @@ style called: \"Kick Master\" Make up the quests yourself make sure they're crea
 4. `Teaching`: the General's lesson (teacher `general`), for a human or a ghoul in a full mask (`Sightings.masked`), with quests of his
    own ("Make up the quests yourself make sure they're creative and beautful"). `GeneralScript.LESSONS` only refuses for now.
 5. The General fights with it (`EtoOwl` picks his strikes from `Style.KICKS`).
-6. Right click: the chargeable teleport speed kick with a side twirl (its own version is fine: 4.1.7). The Speed Kick (`PaleMoves.kick`,
+6. Right click: the chargeable teleport speed kick with a side twirl (its own version is fine: 4.1.8). The Speed Kick (`PaleMoves.kick`,
    `PalePoseDesign.kick`) is the nearest thing to start from.
 7. Version, notes, README, handoff section, protocol 115, full build, push.
 

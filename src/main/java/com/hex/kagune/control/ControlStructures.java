@@ -208,6 +208,14 @@ public final class ControlStructures {
             boolean across = (turns & 1) == 1;
             int sizeX = across ? this.site.depth() : this.site.width();
             int sizeZ = across ? this.site.width() : this.site.depth();
+            if ((CCG.equals(this.site.id()) || unique(this.site)) && onPurpose(context)) {
+                // 4.1.6 (the owner: "I cant get the aogiri hideout to spawn or the ccg building at all"): /place structure builds the
+                // world's one hideout or CCG building where it is asked (its footprint round this chunk, on the middle of its ground), as
+                // well as where the world put its own: an old world's own may lie in ground made before it could.
+                int minX = clampMin(chunk.m_45604_() + 8 - sizeX / 2, chunk.m_45604_(), sizeX);
+                int minZ = clampMin(chunk.m_45605_() + 8 - sizeZ / 2, chunk.m_45605_(), sizeZ);
+                return Optional.of(this.stub(context, turns, minX, minZ, sizeX, sizeZ, standing(ground(context), minX, minZ, sizeX, sizeZ)));
+            }
             if (CCG.equals(this.site.id())) {
                 // 4.1.4 (the owner: "CCG building ... like the others only 1 of them spawns"): the world's one, at the first of its own
                 // offers on dry land (worked out once a world, as the hideout's is).
@@ -283,7 +291,10 @@ public final class ControlStructures {
         private static final java.util.Map<java.util.List<Object>, int[]> HIDEOUTS = new java.util.HashMap<>();
         private static final int[] NOWHERE = new int[0];
 
-        /** 4.1.1: the world's one hideout's start chunk and ground ({x, z, height}), or null if there is no dry land among its offers. */
+        /**
+         * 4.1.1: the world's one hideout's start chunk and ground ({x, z, height}), or null if none of its offers stands on land. 4.1.6: the
+         * spot (or that there is none) is written to the log the first time it is worked out.
+         */
         static int[] hideout(Structure.GenerationContext context) {
             java.util.List<Object> world = java.util.List.of(context.f_226627_(), context.f_226622_());
             synchronized (HIDEOUTS) {
@@ -294,6 +305,7 @@ public final class ControlStructures {
                         HIDEOUTS.clear();
                     }
                     HIDEOUTS.put(world, known);
+                    told("Aogiri Tree's hideout", "aogiri_hideout", known);
                 }
                 return known.length == 0 ? null : known;
             }
@@ -302,12 +314,14 @@ public final class ControlStructures {
         /**
          * 4.1.1: the first of the hideout's offers ({@link DryLand#hideoutOffers}, nearest the world's middle first) where all its start chunk
          * reaches (the mansion is that wide, whichever way it turns) is dry land in a biome it may stand in, fairly flat; failing that, the
-         * first dry one however steep (its terrain adaptation fits the ground to it): {@link DryLand#choose}.
+         * first dry one however steep (its terrain adaptation fits the ground to it): {@link DryLand#choose}. 4.1.6: failing those, the
+         * further offers, then the driest of them all ({@link DryLand#pick}): a world always has one if any offer stands on land.
          */
         private static int[] chooseHideout(Structure.GenerationContext context) {
             DryLand.Ground ground = ground(context);
             int span = DryLand.REACH_BACK + DryLand.REACH_ON + 1;
-            int[] chosen = DryLand.choose(DryLand.hideoutOffers(context.f_226627_()), new DryLand.Judge() {
+            long seed = context.f_226627_();
+            int[] chosen = DryLand.pick(DryLand.hideoutOffers(seed), DryLand.hideoutFurther(seed), new DryLand.Judge() {
                 @Override
                 public int[] grid(int chunkX, int chunkZ) {
                     return Site.grid(ground, (chunkX << 4) - DryLand.REACH_BACK, (chunkZ << 4) - DryLand.REACH_BACK, span, span);
@@ -322,6 +336,11 @@ public final class ControlStructures {
                 public boolean dry(int chunkX, int chunkZ, int y) {
                     return DryLand.dry(ground, y, (chunkX << 4) - DryLand.REACH_BACK, (chunkZ << 4) - DryLand.REACH_BACK, span, span);
                 }
+
+                @Override
+                public int[] wetness(int chunkX, int chunkZ, int most) {
+                    return Site.wetness(context, ground, chunkX, chunkZ, (chunkX << 4) - DryLand.REACH_BACK, (chunkZ << 4) - DryLand.REACH_BACK, span, most);
+                }
             }, VillageGround.FLAT);
             return chosen == null ? NOWHERE : chosen;
         }
@@ -331,7 +350,10 @@ public final class ControlStructures {
         static final int CCG_ROUND = 8;
         private static final java.util.Map<java.util.List<Object>, int[]> BUILDINGS = new java.util.HashMap<>();
 
-        /** 4.1.4: the world's one CCG building's start chunk and ground ({x, z, height}), or null if none of its offers is dry land. */
+        /**
+         * 4.1.4: the world's one CCG building's start chunk and ground ({x, z, height}), or null if none of its offers stands on land.
+         * 4.1.6: the spot (or that there is none) is written to the log the first time it is worked out.
+         */
         static int[] ccg(Structure.GenerationContext context) {
             java.util.List<Object> world = java.util.List.of(context.f_226627_(), context.f_226622_());
             synchronized (BUILDINGS) {
@@ -342,6 +364,7 @@ public final class ControlStructures {
                         BUILDINGS.clear();
                     }
                     BUILDINGS.put(world, known);
+                    told("CCG building", CCG, known);
                 }
                 return known.length == 0 ? null : known;
             }
@@ -349,13 +372,15 @@ public final class ControlStructures {
 
         /**
          * 4.1.4: the first of the building's offers ({@link DryLand#ccgOffers}) where its footprint (centred on its start chunk) and
-         * {@link #CCG_ROUND} blocks round it are dry land in a biome it may stand in, fairly flat; failing that, the first dry one.
+         * {@link #CCG_ROUND} blocks round it are dry land in a biome it may stand in, fairly flat; failing that, the first dry one. 4.1.6:
+         * failing those, the further offers, then the driest of them all ({@link DryLand#pick}).
          */
         private static int[] chooseCcg(Structure.GenerationContext context) {
             DryLand.Ground ground = ground(context);
             com.hex.kagune.control.village.SiteMaps.Site site = com.hex.kagune.control.village.SiteMaps.of(CCG);
             int span = Math.max(site.width(), site.depth()) + 2 * CCG_ROUND;
-            int[] chosen = DryLand.choose(DryLand.ccgOffers(context.f_226627_()), new DryLand.Judge() {
+            long seed = context.f_226627_();
+            int[] chosen = DryLand.pick(DryLand.ccgOffers(seed), DryLand.ccgFurther(seed), new DryLand.Judge() {
                 @Override
                 public int[] grid(int chunkX, int chunkZ) {
                     return Site.grid(ground, (chunkX << 4) + 8 - span / 2, (chunkZ << 4) + 8 - span / 2, span, span);
@@ -370,8 +395,85 @@ public final class ControlStructures {
                 public boolean dry(int chunkX, int chunkZ, int y) {
                     return DryLand.dry(ground, y, (chunkX << 4) + 8 - span / 2, (chunkZ << 4) + 8 - span / 2, span, span);
                 }
+
+                @Override
+                public int[] wetness(int chunkX, int chunkZ, int most) {
+                    return Site.wetness(context, ground, chunkX, chunkZ, (chunkX << 4) + 8 - span / 2, (chunkZ << 4) + 8 - span / 2, span, most);
+                }
             }, VillageGround.FLAT);
             return chosen == null ? NOWHERE : chosen;
+        }
+
+        /**
+         * 4.1.6: for {@link DryLand#driest}: {wetness, ground height} of the {@code size} x {@code size} ground from ({@code minX},
+         * {@code minZ}) for the start chunk ({@code chunkX}, {@code chunkZ}), or null if its middle is under water, fewer than half of its
+         * 5 x 5 grid is dry ground, or it may not stand in the biome at its middle.
+         */
+        static int[] wetness(Structure.GenerationContext context, DryLand.Ground ground, int chunkX, int chunkZ, int minX, int minZ, int size, int most) {
+            int x = (chunkX << 4) + 8;
+            int z = (chunkZ << 4) + 8;
+            if (ground.surface(x, z) > ground.floor(x, z)) {
+                return null;
+            }
+            int[] dry = dryHeights(heights(ground, minX, minZ, size, size));
+            if (dry.length < 13) {
+                return null;
+            }
+            int y = DryLand.median(dry);
+            if (!ControlStructures.biome(context, x, y, z)) {
+                return null;
+            }
+            return new int[] {DryLand.wetness(ground, y, minX, minZ, size, size, most), y};
+        }
+
+        /**
+         * 4.1.6: where a place asked for on purpose stands: the middle of the dry ground of its 5 x 5 grid, or of the floor under the water
+         * if all of it is under water.
+         */
+        static int standing(DryLand.Ground ground, int minX, int minZ, int sizeX, int sizeZ) {
+            int[] all = heights(ground, minX, minZ, sizeX, sizeZ);
+            int[] dry = dryHeights(all);
+            if (dry.length > 0) {
+                return DryLand.median(dry);
+            }
+            int n = 5;
+            int[] floor = new int[n * n];
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < n; j++) {
+                    floor[i * n + j] = ground.floor(minX + 2 + (sizeX - 5) * i / (n - 1), minZ + 2 + (sizeZ - 5) * j / (n - 1));
+                }
+            }
+            return DryLand.median(floor);
+        }
+
+        /**
+         * 4.1.6 (the owner: "I cant get the aogiri hideout to spawn or the ccg building at all"): the world's one hideout's or CCG
+         * building's spot, written to the log once a world (with the /locate that finds it), or that its world has none.
+         */
+        private static void told(String what, String id, int[] known) {
+            try {
+                if (known.length == 0) {
+                    com.hex.kagune.KaguneMod.LOGGER.info("HexKagune: this world has no land for the " + what + " among its spots (all sea)");
+                } else {
+                    com.hex.kagune.KaguneMod.LOGGER.info("HexKagune: this world's " + what + " stands at x " + ((known[0] << 4) + 8) + ", z "
+                        + ((known[1] << 4) + 8) + " (/locate structure hexkagune:" + id + "); in a world made before 4.1.6 it shows only if that"
+                        + " ground was not made yet. /place structure hexkagune:" + id + " builds one where you stand.");
+                }
+            } catch (RuntimeException | LinkageError ignored) {
+                // A log line may never stop the world being made.
+            }
+        }
+
+        /**
+         * 4.1.6: true if whoever asks for the place lets it stand in any biome at all: the /place structure command does (its test takes
+         * anything); the world's own making and /locate test the place's own biomes (a tag: a missing biome is no biome of it).
+         */
+        static boolean onPurpose(Structure.GenerationContext context) {
+            try {
+                return context.f_226630_().test(null);
+            } catch (RuntimeException asked) {
+                return false;
+            }
         }
 
         /**
@@ -393,6 +495,29 @@ public final class ControlStructures {
                 }
             }
             return floor;
+        }
+
+        /** 4.1.6: a sample of {@link #heights} with water over its ground. */
+        static final int WATER = Integer.MIN_VALUE;
+
+        /** 4.1.6: the world's ground on a 5 x 5 grid over a footprint (sample i * 5 + j at row i, column j), {@link #WATER} where water is over it. */
+        static int[] heights(DryLand.Ground ground, int minX, int minZ, int sizeX, int sizeZ) {
+            int n = 5;
+            int[] floor = new int[n * n];
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < n; j++) {
+                    int x = minX + 2 + (sizeX - 5) * i / (n - 1);
+                    int z = minZ + 2 + (sizeZ - 5) * j / (n - 1);
+                    int at = ground.floor(x, z);
+                    floor[i * n + j] = ground.surface(x, z) > at ? WATER : at;
+                }
+            }
+            return floor;
+        }
+
+        /** 4.1.6: the samples of {@link #heights} that are dry ground. */
+        static int[] dryHeights(int[] heights) {
+            return java.util.Arrays.stream(heights).filter(at -> at != WATER).toArray();
         }
 
         /** True if the dry ground's highest and lowest are no more than {@link VillageGround#FLAT} apart. */

@@ -1581,6 +1581,13 @@ public final class NpcTests {
             public boolean dry(int x, int z, int y) {
                 return !pond.contains(index(x, z));
             }
+
+            @Override
+            public int[] wetness(int x, int z, int most) {
+                int i = index(x, z);
+                // Offer 0's middle is under water; offer 2 may not stand in its biome; the rest: the further out, the less water.
+                return i < 0 || i == 0 || badBiome.contains(i) ? null : new int[] {10 - 2 * i, 70 + i};
+            }
         };
         int[] chosen = com.hex.kagune.control.village.DryLand.choose(offers, judge, com.hex.kagune.control.village.VillageGround.FLAT);
         check(chosen != null && chosen[0] == 90 && chosen[1] == 90 && chosen[2] == 74, "the first dry, fairly flat offer in a biome it may stand in: "
@@ -1592,6 +1599,100 @@ public final class NpcTests {
         pond.add(3);
         check(com.hex.kagune.control.village.DryLand.choose(offers, judge, com.hex.kagune.control.village.VillageGround.FLAT) == null,
             "no dry land among them: no hideout in the water");
+        // 4.1.6 (the owner: "I cant get the aogiri hideout to spawn or the ccg building at all"): none of the near offers dry, so the
+        // further ones are weighed; none of those either, so the driest near one (its middle on dry land, in a biome it may stand in).
+        int[][] further = {{200, 3}, {-210, 40}};
+        java.util.Set<Integer> ponds = new java.util.HashSet<>(pond);
+        com.hex.kagune.control.village.DryLand.Judge wide = new com.hex.kagune.control.village.DryLand.Judge() {
+            boolean far(int x) {
+                return Math.abs(x) >= 200;
+            }
+
+            @Override
+            public int[] grid(int x, int z) {
+                return far(x) ? new int[] {80, 80, 81} : judge.grid(x, z);
+            }
+
+            @Override
+            public boolean biome(int x, int z, int y) {
+                return far(x) || judge.biome(x, z, y);
+            }
+
+            @Override
+            public boolean dry(int x, int z, int y) {
+                return far(x) ? !ponds.contains(x) : judge.dry(x, z, y);
+            }
+
+            @Override
+            public int[] wetness(int x, int z, int most) {
+                return far(x) ? new int[] {50, 80} : judge.wetness(x, z, most);
+            }
+        };
+        int[] picked = com.hex.kagune.control.village.DryLand.pick(offers, further, wide, com.hex.kagune.control.village.VillageGround.FLAT);
+        check(picked != null && picked[0] == 200 && picked[1] == 3 && picked[2] == 80, "no near offer dry: the first dry further one "
+            + java.util.Arrays.toString(picked));
+        ponds.add(200);
+        ponds.add(-210);
+        picked = com.hex.kagune.control.village.DryLand.pick(offers, further, wide, com.hex.kagune.control.village.VillageGround.FLAT);
+        check(picked != null && picked[0] == 90 && picked[1] == 90 && picked[2] == 74,
+            "nothing dry anywhere: still a hideout, at the driest near offer standing on land in its biomes " + java.util.Arrays.toString(picked));
+        pond.clear();
+        picked = com.hex.kagune.control.village.DryLand.pick(offers, further, wide, com.hex.kagune.control.village.VillageGround.FLAT);
+        check(picked != null && picked[0] == 40 + 50 && java.util.Arrays.equals(picked, com.hex.kagune.control.village.DryLand.choose(offers, judge,
+            com.hex.kagune.control.village.VillageGround.FLAT)), "a world whose near offers held a dry one keeps the same spot as before 4.1.6");
+        check(com.hex.kagune.control.village.DryLand.driest(new int[][] {{40, 3}, {-60, 2}}, judge) == null,
+            "an offer under water, or in a biome it may not stand in, is never the driest");
+        // The wetness counted: a wet biome column 1, water over the ground the 16 biome columns' worth it stands for; it stops past most.
+        com.hex.kagune.control.village.DryLand.Ground soaked = new com.hex.kagune.control.village.DryLand.Ground() {
+            public int surface(int x, int z) {
+                return x >= 50 ? 64 : 70;
+            }
+
+            public int floor(int x, int z) {
+                return x >= 50 ? 50 : 70;
+            }
+
+            public boolean wet(int x, int y, int z) {
+                return x >= 50;
+            }
+        };
+        int dryCount = com.hex.kagune.control.village.DryLand.wetness(soaked, 70, -200, 0, 60, 60, Integer.MAX_VALUE);
+        int wetAll = com.hex.kagune.control.village.DryLand.wetness(soaked, 70, 100, 0, 60, 60, Integer.MAX_VALUE);
+        int biomeColumns = com.hex.kagune.control.village.DryLand.columns(100, 0, 60, 60, com.hex.kagune.control.village.DryLand.BIOME_STEP).length;
+        int waterColumns = com.hex.kagune.control.village.DryLand.columns(100, 0, 60, 60, com.hex.kagune.control.village.DryLand.STEP).length;
+        check(dryCount == 0 && wetAll == biomeColumns + 16 * waterColumns, "the wetness of dry ground and of the sea: " + dryCount + ", " + wetAll);
+        int capped = com.hex.kagune.control.village.DryLand.wetness(soaked, 70, 100, 0, 60, 60, 5);
+        check(capped == 6, "it stops counting once past the most it is asked for: " + capped);
+        // Its further offers: the regions out to FAR, never a near one, nearest first; the building's also kept from the others' spots.
+        for (long seed : new long[] {0L, 99L, -12345L}) {
+            int[][] near = com.hex.kagune.control.village.DryLand.hideoutOffers(seed);
+            int[][] far = com.hex.kagune.control.village.DryLand.hideoutFurther(seed);
+            java.util.Set<String> nearSet = new java.util.HashSet<>();
+            for (int[] o : near) {
+                nearSet.add(o[0] + "," + o[1]);
+            }
+            boolean apart = far.length > near.length;
+            long last = -1L;
+            for (int[] o : far) {
+                long d = (long)o[0] * o[0] + (long)o[1] * o[1];
+                int rx = Math.floorDiv(o[0], com.hex.kagune.control.village.DryLand.SPACING);
+                int rz = Math.floorDiv(o[1], com.hex.kagune.control.village.DryLand.SPACING);
+                int far8 = com.hex.kagune.control.village.DryLand.FAR;
+                int in4 = com.hex.kagune.control.village.DryLand.REGIONS;
+                apart &= !nearSet.contains(o[0] + "," + o[1]) && d >= last && rx >= -far8 && rx < far8 && rz >= -far8 && rz < far8
+                    && !(rx >= -in4 && rx < in4 && rz >= -in4 && rz < in4);
+                last = d;
+            }
+            check(apart, "seed " + seed + ": the further offers lie beyond the near ones, nearest first (" + far.length + ")");
+            int[][] ccgFar = com.hex.kagune.control.village.DryLand.ccgFurther(seed);
+            boolean kept = ccgFar.length > 0;
+            for (int[] o : ccgFar) {
+                kept &= !com.hex.kagune.control.village.DryLand.near(seed, o[0], o[1], com.hex.kagune.control.village.DryLand.CCG_APART, 40, 20,
+                    com.hex.kagune.control.village.DryLand.SALT) && !com.hex.kagune.control.village.DryLand.near(seed, o[0], o[1],
+                    com.hex.kagune.control.village.DryLand.CCG_APART, 34, 20, com.hex.kagune.control.village.DryLand.VILLAGE_SALT);
+            }
+            check(kept, "seed " + seed + ": the building's further offers are kept from the mansion's and the towns' spots too");
+        }
         // The spots a place may move to, and the start chunks a jigsaw place may move by: nearest first, all within reach.
         int[][] shifts = com.hex.kagune.control.village.DryLand.shifts(5);
         check(shifts.length == 121 && shifts[0][0] == 0 && shifts[0][1] == 0 && shifts[1][0] * shifts[1][0] + shifts[1][1] * shifts[1][1] == 1
@@ -1789,7 +1890,7 @@ public final class NpcTests {
                 && !biomes.contains("swamp") && !biomes.contains("beach"), "its biomes: open land and woods, none wet");
             String structures = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/ControlStructures.java")));
             check(structures.contains("int[] where = ccg(context);") && structures.contains("where[0] != chunk.f_45578_ || where[1] != chunk.f_45579_")
-                && structures.contains("DryLand.choose(DryLand.ccgOffers(context.f_226627_())"),
+                && structures.contains("DryLand.pick(DryLand.ccgOffers(seed), DryLand.ccgFurther(seed)"),
                 "the world's one building is built only at the offer chosen for it (the same in every chunk that asks)");
             // The template itself: its people, and what each does.
             java.util.Map<String, Object> template;
@@ -1995,7 +2096,9 @@ public final class NpcTests {
                 "the members at their work, and a player kept out is gone for");
             String structures = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/ControlStructures.java")));
             check(structures.contains("int[] chosen = hideout(context);") && structures.contains("chosen[0] != chunk.f_45578_ || chosen[1] != chunk.f_45579_")
-                && structures.contains("DryLand.choose(DryLand.hideoutOffers(context.f_226627_())"),
+                && structures.contains("DryLand.pick(DryLand.hideoutOffers(seed), DryLand.hideoutFurther(seed)")
+                && structures.contains("if ((CCG.equals(this.site.id()) || unique(this.site)) && onPurpose(context)) {")
+                && structures.contains("return context.f_226630_().test(null);"),
                 "the world's one hideout is built only at the offer chosen for it (the same in every chunk that asks)");
         } catch (java.io.IOException failure) {
             check(false, "read the sources: " + failure);

@@ -210,6 +210,18 @@ fight using it), then the owner's newest ask, quoted exactly: "after that please
 rework for the ukaku, this model is very expensive and I need you to focus on what's hard, study complex fighting moves, and combos and
 make it look smooth and beautiful."
 
+## 4.1.6 (released)
+
+The owner (quoted exactly): "also I cant get the aogiri hideout to spawn or the ccg building at all."
+Cause: `DryLand.choose` built each only at the first offer that was entirely dry (no wet biome every 4 blocks, no water over the
+ground every 16, over the footprint and 8 out); the mansion's footprint is all a start chunk reaches (272 x 263), so many worlds had no
+such offer and no hideout (`choose` returned null; `/locate` found nothing). The spot is fixed per world, so an old world's may lie in
+ground made before; and `/place structure` failed everywhere else. Now `DryLand.pick`: `choose` over the near offers (unchanged where it
+found one), then over `hideoutFurther`/`ccgFurther` (regions `REGIONS` to `FAR` 8), then `driest` (`Judge.wetness`: the middle on dry
+land in its biomes, the least `DryLand.wetness`), near then further. `ControlStructures.Site.onPurpose` (the context's biome test takes
+null: only /place's does) builds either where asked (`standing`). `told` logs the spot once a world. Protocol 114 (unchanged).
+`NpcTests` (the chain, wetness, further offers). Not tested in game.
+
 ## Next
 
 Nothing outstanding from the owner. If they report in-game problems with the outfits' fit, adjust `CLEAR`, `SNUG`, the drape

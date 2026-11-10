@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.6 (HexGhoul): The hideout and the CCG building, always somewhere (testing)
+
+See `.github/release-notes-4.1.6.md`. Your words: "also I cant get the aogiri hideout to spawn or the ccg building at all." Each was built only at the first of its spots that was completely dry; many worlds had none, so they had no hideout at all. Now a world always gets both if any spot is on land: the first dry near spot (unchanged where there was one), then a dry one further out, then the driest near one. `/place structure hexkagune:aogiri_hideout` and `hexkagune:ccg_building` build them where you stand (old worlds). The log names where they stand. Protocol 114.
+
 ## 4.1.5 (HexGhoul): The General (testing)
 
 See `.github/release-notes-4.1.5.md`. Your words: "Attitude: Tough, softens up when romanced, embarrased easily, proud of the CCG, has to be convinced to love a ghoul, Only interested in woman players." and "use this skin for the general and give him all the formal outfit (but the hat)" General Kuroda, a human, in the top-floor office of the CCG building: an official character (one in a world, back a day after he's killed), in the skin you sent, wearing the Formal Outfit's coat, trousers and shoes and never its cap. Women only; five courtship chapters; a ghoul has to convince him (regard 90) before he'll be asked out; a full mask hides a ghoul from him. He teaches nothing yet: Kick Master is next. Protocol 114.

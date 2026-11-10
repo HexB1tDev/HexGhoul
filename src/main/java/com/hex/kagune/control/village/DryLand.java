@@ -119,13 +119,43 @@ public final class DryLand {
      * middle, no nearer it than {@link #NEAREST} chunks, nearest first (then by x, then z).
      */
     public static int[][] hideoutOffers(long seed) {
+        return offers(seed, SALT, 0, REGIONS, false);
+    }
+
+    /**
+     * 4.1.6 (the owner: "I cant get the aogiri hideout to spawn or the ccg building at all"): the hideout's further offers, weighed only
+     * when none of the near ones ({@link #hideoutOffers}) is dry: every region's start chunk from {@link #REGIONS} out to {@link #FAR}
+     * regions either way of the world's middle, nearest first.
+     */
+    public static int[][] hideoutFurther(long seed) {
+        return offers(seed, SALT, REGIONS, FAR, false);
+    }
+
+    /** 4.1.6: how many regions either way of the world's middle the further offers reach. */
+    public static final int FAR = 8;
+
+    /**
+     * The start chunks the game offers (a random spread of {@link #SPACING} with {@code salt}) in the regions from {@code inner} out to
+     * {@code outer} either way of the world's middle (the square {@code -outer .. outer - 1} less {@code -inner .. inner - 1}), none
+     * nearer it than {@link #NEAREST} chunks, nearest first (then by x, then z); for the CCG building ({@code apart}), less those near a
+     * spot of the hideout's or a village's.
+     */
+    static int[][] offers(long seed, int salt, int inner, int outer, boolean apart) {
         List<int[]> offers = new ArrayList<>();
-        for (int rx = -REGIONS; rx < REGIONS; rx++) {
-            for (int rz = -REGIONS; rz < REGIONS; rz++) {
-                int[] chunk = spreadChunk(seed, rx, rz, SPACING, SEPARATION, SALT);
-                if ((long)chunk[0] * chunk[0] + (long)chunk[1] * chunk[1] >= (long)NEAREST * NEAREST) {
-                    offers.add(chunk);
+        for (int rx = -outer; rx < outer; rx++) {
+            for (int rz = -outer; rz < outer; rz++) {
+                if (rx >= -inner && rx < inner && rz >= -inner && rz < inner) {
+                    continue;
                 }
+                int[] chunk = spreadChunk(seed, rx, rz, SPACING, SEPARATION, salt);
+                if ((long)chunk[0] * chunk[0] + (long)chunk[1] * chunk[1] < (long)NEAREST * NEAREST) {
+                    continue;
+                }
+                if (apart && (near(seed, chunk[0], chunk[1], CCG_APART, SPACING, SEPARATION, SALT)
+                    || near(seed, chunk[0], chunk[1], CCG_APART, VILLAGE_SPACING, VILLAGE_SEPARATION, VILLAGE_SALT))) {
+                    continue;
+                }
+                offers.add(chunk);
             }
         }
         offers.sort(Comparator.<int[]>comparingLong(c -> (long)c[0] * c[0] + (long)c[1] * c[1]).thenComparingInt(c -> c[0]).thenComparingInt(c -> c[1]));
@@ -170,19 +200,12 @@ public final class DryLand {
      * salt, less those near a spot of the hideout's or a village's.
      */
     public static int[][] ccgOffers(long seed) {
-        List<int[]> offers = new ArrayList<>();
-        for (int rx = -REGIONS; rx < REGIONS; rx++) {
-            for (int rz = -REGIONS; rz < REGIONS; rz++) {
-                int[] chunk = spreadChunk(seed, rx, rz, SPACING, SEPARATION, CCG_SALT);
-                if ((long)chunk[0] * chunk[0] + (long)chunk[1] * chunk[1] >= (long)NEAREST * NEAREST
-                    && !near(seed, chunk[0], chunk[1], CCG_APART, SPACING, SEPARATION, SALT)
-                    && !near(seed, chunk[0], chunk[1], CCG_APART, VILLAGE_SPACING, VILLAGE_SEPARATION, VILLAGE_SALT)) {
-                    offers.add(chunk);
-                }
-            }
-        }
-        offers.sort(Comparator.<int[]>comparingLong(c -> (long)c[0] * c[0] + (long)c[1] * c[1]).thenComparingInt(c -> c[0]).thenComparingInt(c -> c[1]));
-        return offers.toArray(new int[0][]);
+        return offers(seed, CCG_SALT, 0, REGIONS, true);
+    }
+
+    /** 4.1.6: the CCG building's further offers (as {@link #hideoutFurther}), weighed only when none of the near ones is dry. */
+    public static int[][] ccgFurther(long seed) {
+        return offers(seed, CCG_SALT, REGIONS, FAR, true);
     }
 
     /**
@@ -257,6 +280,12 @@ public final class DryLand {
 
         /** True if there is no water under all its start chunk reaches or round it ({@link #dry}). */
         boolean dry(int chunkX, int chunkZ, int y);
+
+        /**
+         * 4.1.6: {wetness, its ground's height} ({@link DryLand#wetness}, counted no further than {@code most}), or null if its middle is
+         * not dry land in a biome it may stand in, or too little of it is dry land to stand on.
+         */
+        int[] wetness(int chunkX, int chunkZ, int most);
     }
 
     /**
@@ -287,6 +316,72 @@ public final class DryLand {
             }
         }
         return null;
+    }
+
+    /**
+     * 4.1.6 (the owner: "I cant get the aogiri hideout to spawn or the ccg building at all"): the world's one hideout (or CCG building),
+     * always somewhere if any of its offers is land: the first near offer that is dry ({@link #choose}); failing that, the first further
+     * one that is; failing that, the driest near one ({@link #driest}: its middle on dry land, the least water under it), then the driest
+     * further one. A world whose near offers held a dry one gets the same spot as before 4.1.6; one whose had none (no hideout before)
+     * now gets one. Null only if none of them stands on land in a biome it may stand in.
+     */
+    public static int[] pick(int[][] near, int[][] further, Judge judge, int flat) {
+        int[] chosen = choose(near, judge, flat);
+        if (chosen == null) {
+            chosen = choose(further, judge, flat);
+        }
+        if (chosen == null) {
+            chosen = driest(near, judge);
+        }
+        if (chosen == null) {
+            chosen = driest(further, judge);
+        }
+        return chosen;
+    }
+
+    /**
+     * 4.1.6: of {@code offers}, the one with the least water under it ({@link Judge#wetness}: its middle on dry land in a biome it may
+     * stand in), the first of them on a tie; as {x, z, its ground's height}, or null if none stands on land.
+     */
+    public static int[] driest(int[][] offers, Judge judge) {
+        int[] best = null;
+        int least = Integer.MAX_VALUE;
+        for (int[] offer : offers) {
+            int[] wet = judge.wetness(offer[0], offer[1], least - 1);
+            if (wet == null || wet[0] >= least) {
+                continue;
+            }
+            least = wet[0];
+            best = new int[] {offer[0], offer[1], wet[1]};
+            if (least == 0) {
+                break;
+            }
+        }
+        return best;
+    }
+
+    /**
+     * 4.1.6: how much water lies under a footprint and {@link #MARGIN} round it, as {@link #dry} looks (a wet biome every
+     * {@link #BIOME_STEP} blocks counts 1, water over the ground every {@link #STEP} counts {@code (STEP / BIOME_STEP)^2}: the ground
+     * each stands for); it stops counting once past {@code most} (and says so by returning more than it).
+     */
+    public static int wetness(Ground ground, int y, int minX, int minZ, int sizeX, int sizeZ, int most) {
+        int wet = 0;
+        for (int[] column : columns(minX, minZ, sizeX, sizeZ, BIOME_STEP)) {
+            if (ground.wet(column[0], y, column[1]) && ++wet > most) {
+                return wet;
+            }
+        }
+        int weight = (STEP / BIOME_STEP) * (STEP / BIOME_STEP);
+        for (int[] column : columns(minX, minZ, sizeX, sizeZ, STEP)) {
+            if (ground.surface(column[0], column[1]) > ground.floor(column[0], column[1])) {
+                wet += weight;
+                if (wet > most) {
+                    return wet;
+                }
+            }
+        }
+        return wet;
     }
 
     /** How far apart {@code heights}' highest and lowest are. */
