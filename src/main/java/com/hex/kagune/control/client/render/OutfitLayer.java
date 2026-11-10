@@ -97,13 +97,13 @@ public final class OutfitLayer<T extends LivingEntity, M extends EntityModel<T>>
             ModelPart[] bones = {model.f_102808_, model.f_102810_, model.f_102811_, model.f_102812_, model.f_102813_, model.f_102814_};
             AbstractClientPlayer player = wearer instanceof AbstractClientPlayer p ? p : null;
             boolean slim = slim(wearer, model);
-            CoatDrape drape = null;
+            CoatDrape[] drape = null;
             for (EquipmentSlot slot : SLOTS) {
                 ItemStack stack = wearer.m_6844_(slot);
                 if (stack.m_41720_() instanceof OutfitItem item) {
                     Outfits.Piece piece = item.piece();
                     if (drape == null && slot == EquipmentSlot.LEGS) {
-                        drape = drape(wearer, model.f_102813_, model.f_102814_, player, partialTick, ageInTicks);
+                        drape = drapes(wearer, model.f_102813_, model.f_102814_, player, partialTick, ageInTicks);
                     }
                     draw(pose, buffers, light, bones, player, partialTick, piece.model(), piece.mask() ? -1 : piece.slot(), slim, drape);
                 }
@@ -119,10 +119,10 @@ public final class OutfitLayer<T extends LivingEntity, M extends EntityModel<T>>
 
     /**
      * {@code model}'s cubes in {@code slot} (any: -1) on {@code bones}, as they are posed (the sleeves for slim arms on a slim wearer), a
-     * coat's tails hung as {@code drape} has them ({@link CoatDrape}; unturned if null).
+     * coat's tails hung as {@code drape} has them ({@link CoatDrape}: the right half's, the left's; unturned if null).
      */
     static void draw(PoseStack pose, MultiBufferSource buffers, int light, ModelPart[] bones, AbstractClientPlayer player, float partial, String modelId,
-                     int slot, boolean slim, CoatDrape drape) {
+                     int slot, boolean slim, CoatDrape[] drape) {
         OutfitModels.Model model = OutfitModels.get(modelId);
         if (model == null) {
             return;
@@ -155,7 +155,7 @@ public final class OutfitLayer<T extends LivingEntity, M extends EntityModel<T>>
                 if (!tails.isEmpty()) {
                     pose.m_85836_();
                     tails(pose, bones[bone]);
-                    emit(out, pose, tails, light, null, drape);
+                    emit(out, pose, tails, light, null, drape == null ? null : drape[bone == OutfitModels.RIGHT_LEG ? 0 : 1]);
                     pose.m_85849_();
                 }
             }
@@ -181,34 +181,41 @@ public final class OutfitLayer<T extends LivingEntity, M extends EntityModel<T>>
 
     /** 4.0.3: how fast a coat's tails fall back as the leg that pushed them swings away (radians a tick): a leg pushes them at once. */
     static final float TAIL_FALL = 0.12F;
-    /** 4.0.3: each wearer's tails as they hung last ({front, back, when}). */
+    /** 4.0.3: each wearer's tails as they hung last; 4.1.12: each half's ({right front, right back, left front, left back, when}). */
     private static final Map<LivingEntity, float[]> HUNG = new java.util.WeakHashMap<>();
 
     /**
-     * 4.0.3 (the owner, of the renders: "Do I need to say anything about both outfit's legs and arms?"): how a coat's tails hang over the
-     * legs ({@code right}, {@code left}) this frame. Both fronts go with the leg furthest forward and both backs with the one furthest
-     * back, so no thigh comes through them and they never part down the middle; each side spreads between the two. Below the knee's line
-     * they hang straight down unless a shin or a foot (a bent knee, a stride, a crouch, sitting) reaches them, and then just clear of it.
-     * A leg pushes them at once; they fall back slowly as it swings away ({@link #TAIL_FALL}), as cloth does.
+     * 4.1.12 (the owner, of the Crimson Outfit in a jump and a kick: "I truly don't know how in this world you expected the clothes to open like
+     * that and look good"): each half of a coat's tails hangs from its own leg. Its front goes with its own thigh only when that thigh comes
+     * forward, its back only when it goes back, just clear of that leg (its trousers, its bent knee, its shin, its boot); otherwise it hangs
+     * straight down. So a kick or a tucked leg lifts that leg's flap, the other hangs, and the coat parts down the middle as a long coat does.
+     * (4.0.3 hung both fronts from the leg furthest forward and both backs from the one furthest back, never parted: any kick or tuck threw
+     * the whole skirt out flat, a disc.) A leg pushes its half at once; the half falls back slowly as it swings away ({@link #TAIL_FALL}).
+     * {right half, left half}, or null.
      */
-    static CoatDrape drape(LivingEntity wearer, ModelPart right, ModelPart left, AbstractClientPlayer player, float partial, float age) {
+    static CoatDrape[] drapes(LivingEntity wearer, ModelPart right, ModelPart left, AbstractClientPlayer player, float partial, float age) {
         if (right == null || left == null) {
             return null;
         }
         float[] thigh = {right.f_104203_, left.f_104203_};
         float[] knee = {knee(player, "rightLeg", partial), knee(player, "leftLeg", partial)};
-        float front = Math.min(0.0F, Math.min(thigh[0], thigh[1]));
-        float back = Math.max(0.0F, Math.max(thigh[0], thigh[1]));
+        float[] hung = {Math.min(0.0F, thigh[0]), Math.max(0.0F, thigh[0]), Math.min(0.0F, thigh[1]), Math.max(0.0F, thigh[1]), age};
         if (wearer != null) {
             float[] last = HUNG.get(wearer);
-            if (last != null && Math.abs(age - last[2]) < 20.0F) {
-                float since = Math.max(0.0F, age - last[2]);
-                front = Math.min(front, Math.min(0.0F, last[0] + TAIL_FALL * since));
-                back = Math.max(back, Math.max(0.0F, last[1] - TAIL_FALL * since));
+            if (last != null && last.length == 5 && Math.abs(age - last[4]) < 20.0F) {
+                float since = Math.max(0.0F, age - last[4]);
+                for (int leg = 0; leg < 2; leg++) {
+                    hung[leg * 2] = Math.min(hung[leg * 2], Math.min(0.0F, last[leg * 2] + TAIL_FALL * since));
+                    hung[leg * 2 + 1] = Math.max(hung[leg * 2 + 1], Math.max(0.0F, last[leg * 2 + 1] - TAIL_FALL * since));
+                }
             }
-            HUNG.put(wearer, new float[] {front, back, age});
+            HUNG.put(wearer, hung);
         }
-        return CoatDrape.over(front, back, thigh, knee);
+        CoatDrape[] out = new CoatDrape[2];
+        for (int leg = 0; leg < 2; leg++) {
+            out[leg] = CoatDrape.over(hung[leg * 2], hung[leg * 2 + 1], new float[] {thigh[leg], thigh[leg]}, new float[] {knee[leg], knee[leg]});
+        }
+        return out;
     }
 
     /** 4.0.3: how far a player's knee is bent this frame (radians about x: the shin back), by bendy-lib; 0 for none. */

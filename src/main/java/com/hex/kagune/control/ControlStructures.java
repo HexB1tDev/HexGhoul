@@ -302,6 +302,8 @@ public final class ControlStructures {
         /** 4.1.1: the hideout's start chunk and ground ({x, z, height}) for each world (its seed, its generator), once worked out. */
         private static final java.util.Map<java.util.List<Object>, int[]> HIDEOUTS = new java.util.HashMap<>();
         private static final int[] NOWHERE = new int[0];
+        /** 4.1.12: marks a spot taken with no dry land among the offers (the nearest anyway). */
+        static final int FORCED = 1;
 
         /**
          * 4.1.1: the world's one hideout's start chunk and ground ({x, z, height}), or null if none of its offers stands on land. 4.1.6: the
@@ -357,6 +359,16 @@ public final class ControlStructures {
                     return Site.wetness(context, ground, chunkX, chunkZ, (chunkX << 4) - DryLand.REACH_BACK, (chunkZ << 4) - DryLand.REACH_BACK, span, most);
                 }
             }, VillageGround.FLAT);
+            if (chosen == null) {
+                // 4.1.12 (the owner: "And I still can't. Mind you, I still fucking can't."): never nowhere. With no spot on dry land, the
+                // nearest offer anyway, on whatever ground is there (its terrain adaptation fits the ground to it).
+                int[][] near = DryLand.offers(spread, 0, DryLand.REGIONS, new DryLand.Spread[0], 0);
+                if (near.length > 0) {
+                    int minX = (near[0][0] << 4) - DryLand.REACH_BACK;
+                    int minZ = (near[0][1] << 4) - DryLand.REACH_BACK;
+                    chosen = new int[] {near[0][0], near[0][1], standing(ground, minX, minZ, span, span), FORCED};
+                }
+            }
             return chosen == null ? NOWHERE : chosen;
         }
 
@@ -421,6 +433,17 @@ public final class ControlStructures {
                     return Site.wetness(context, ground, chunkX, chunkZ, (chunkX << 4) + 8 - span / 2, (chunkZ << 4) + 8 - span / 2, span, most);
                 }
             }, VillageGround.FLAT);
+            if (chosen == null) {
+                // 4.1.12: never nowhere (as the hideout's).
+                int[][] near = DryLand.offers(spread, 0, DryLand.REGIONS, keep, DryLand.CCG_APART);
+                if (near.length == 0) {
+                    near = DryLand.offers(spread, 0, DryLand.REGIONS, new DryLand.Spread[0], 0);
+                }
+                if (near.length > 0) {
+                    chosen = new int[] {near[0][0], near[0][1], standing(ground, (near[0][0] << 4) + 8 - span / 2, (near[0][1] << 4) + 8 - span / 2, span, span),
+                        FORCED};
+                }
+            }
             return chosen == null ? NOWHERE : chosen;
         }
 
@@ -473,9 +496,12 @@ public final class ControlStructures {
         static void told(String what, String id, int[] known) {
             try {
                 if (known.length == 0) {
+                    REPORT.put(id, what + ": nowhere (no spot of its could be laid out)");
                     com.hex.kagune.KaguneMod.LOGGER.info("HexKagune: " + what + ": none of this world's spots for it is on dry land (all sea)."
                         + " /place structure hexkagune:" + id + " builds one where you stand.");
                 } else {
+                    REPORT.put(id, what + ": x " + ((known[0] << 4) + 8) + ", z " + ((known[1] << 4) + 8) + (known.length > 3 && known[3] == FORCED
+                        ? " (no dry land among its spots: built on the nearest anyway)" : ""));
                     com.hex.kagune.KaguneMod.LOGGER.info("HexKagune: this world's " + what + " stands at x " + ((known[0] << 4) + 8) + ", z "
                         + ((known[1] << 4) + 8) + " (/locate structure hexkagune:" + id + "); in a world made before 4.1.9 it shows only if that"
                         + " ground was not made yet. /place structure hexkagune:" + id + " builds one where you stand.");
@@ -574,6 +600,22 @@ public final class ControlStructures {
         public Optional<Structure.GenerationStub> m_262864_(Structure.GenerationContext context) {
             return this.m_214086_(context);
         }
+    }
+
+    /**
+     * 4.1.12 (the owner: "I still can't" find them with /locate): each one-of-a-kind place's spot as this server has worked it out (by its
+     * id, latest world last), for /kagune places; empty until the world's making or /locate has asked for one.
+     */
+    static final java.util.Map<String, String> REPORT = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /** 4.1.12: the lines /kagune places shows. */
+    public static java.util.List<String> report() {
+        java.util.List<String> lines = new java.util.ArrayList<>();
+        for (String id : java.util.List.of("aogiri_hideout", "ccg_building", "cyber_tower", "anteiku", "library")) {
+            String line = REPORT.get(id);
+            lines.add(line != null ? line : id + ": not worked out yet (run /locate structure hexkagune:" + id + ")");
+        }
+        return lines;
     }
 
     /** 4.1.1: the biomes no structure may stand in or beside (a sea, a river, a beach, a swamp): data/hexkagune/tags/worldgen/biome/wet.json. */
@@ -706,6 +748,9 @@ public final class ControlStructures {
             if (chosen == null || chosen[0] != chunk.f_45578_ || chosen[1] != chunk.f_45579_) {
                 return Optional.empty();
             }
+            if (chosen.length > 4 && chosen[4] == Site.FORCED) {
+                return DryJigsaw.run(this.inner, context); // 4.1.12: no dry land among its spots: laid at the nearest as it is
+            }
             return this.here(context);
         }
 
@@ -763,7 +808,7 @@ public final class ControlStructures {
                         case "anteiku" -> "Anteiku";
                         case "library" -> "the library";
                         default -> "Ken's tower";
-                    }, id, known.length == 0 ? known : new int[] {known[2], known[3]});
+                    }, id, known.length == 0 ? known : new int[] {known[2], known[3], 0, known.length > 4 ? known[4] : 0});
                 }
                 return known.length == 0 ? null : known;
             }
@@ -823,6 +868,13 @@ public final class ControlStructures {
             }, at -> DryLand.apart(at[0], at[1], before, DryLand.PLACE_APART)
                 && !DryLand.near(villages, at[0], at[1], DryLand.PLACE_APART),
                 DryLand.PLACE_TRIES);
+            if (found == null) {
+                // 4.1.12 (the owner: "I still fucking can't"): never nowhere: with no spot that stands on dry land, the nearest anyway.
+                int[][] near = DryLand.offers(spread, 0, DryLand.REGIONS, new DryLand.Spread[0], 0);
+                if (near.length > 0) {
+                    found = new int[] {near[0][0], near[0][1], near[0][0], near[0][1], Site.FORCED};
+                }
+            }
             return found == null ? NOWHERE : found;
         }
 

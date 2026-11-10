@@ -1949,6 +1949,15 @@ public final class NpcTests {
                 && structures.contains("!DryLand.near(villages, at[0], at[1], DryLand.PLACE_APART)"),
                 "kept clear of the hideout, the CCG building, the places before it and the villages");
             check(structures.contains("if (id == null) {\n                return Optional.empty();"), "a place whose name can't be read is never built many times over");
+            // 4.1.12 (the owner: "And I still can't. Mind you, I still fucking can't."): never nowhere, and /kagune places says where each is.
+            check(structures.split("// 4.1.12").length >= 4 && structures.contains("chosen = new int[] {near[0][0], near[0][1], standing(ground, minX, minZ, span, span), FORCED};")
+                && structures.contains("found = new int[] {near[0][0], near[0][1], near[0][0], near[0][1], Site.FORCED};")
+                && structures.contains("return DryJigsaw.run(this.inner, context);"), "with no dry spot, each one-of-a-kind place still stands at its nearest offer");
+            String commands = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/ControlCommands.java")));
+            // (Read in the source: ControlStructures registers the game's own registries as it loads, and there is no game here.)
+            check(commands.contains("Commands.m_82127_(\"places\")") && commands.contains("ControlStructures.report()")
+                && structures.contains("for (String id : java.util.List.of(\"aogiri_hideout\", \"ccg_building\", \"cyber_tower\", \"anteiku\", \"library\"))"),
+                "/kagune places lists the five places");
         } catch (java.io.IOException failure) {
             check(false, "read the sets: " + failure);
         }

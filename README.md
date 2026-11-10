@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.12 (HexGhoul): places never nowhere, /kagune places, slower slams, no slam particles, coat halves on their own legs (testing)
+
+See `.github/release-notes-4.1.12.md`. The hideout, the CCG building, Ken's tower, Anteiku and the library always get a spot (the nearest when none is on dry land); `/kagune places` lists where each stands. The wing slams spawn no particles, and run about 1.75 times as long (a slap 16 ticks) so the swing can be seen. Each half of a coat's tails hangs from its own leg (no more skirt thrown out flat in a jump or a kick). Protocol 116.
+
 ## 4.1.11 (HexGhoul): the wings lash out as far as they hit (testing)
 
 See `.github/release-notes-4.1.11.md`. Your words: "it currently just feels like a little chicken wings, bro. Whenever they stretch to slap something, they can stretch to be larger in size and length as well." The slams hit about 8 blocks out (12.8 at mastery 1000) with a wing drawn 3 blocks long; now the striking wing grows bigger and longer through the drive until its tip lands exactly where the hit reaches, held through the carry, drawn back in on the recoil, folded into a long tongue of fire aimed ahead at the target's height. The whip's spring now keeps pace with each blow. Protocol 116.

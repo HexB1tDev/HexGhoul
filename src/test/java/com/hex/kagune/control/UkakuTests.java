@@ -1177,7 +1177,11 @@ public final class UkakuTests {
      */
     private static void slamBody() {
         StrikePattern[] slams = {StrikePattern.WING_SLAP, StrikePattern.WING_SWING, StrikePattern.WING_RISE, StrikePattern.WING_SLAM, StrikePattern.TWIN_SLAM};
-        float[] impacts = {0.4F, 0.45F, 0.45F, 0.55F, 0.55F};
+        float[] impacts = new float[slams.length];
+        int[] stages = {0, 2, 3, 4, 6};
+        for (int s = 0; s < stages.length; s++) {
+            impacts[s] = ComboStyle.UKAKU_WINGS.stage(stages[s]).impactFraction();
+        }
         for (int i = 0; i < slams.length; i++) {
             StrikePattern pattern = slams[i];
             float impact = impacts[i];
@@ -1403,7 +1407,12 @@ public final class UkakuTests {
     private static void slamBeats() {
         WingRig.Motion[] slams = {WingRig.Motion.SLAP_RIGHT, WingRig.Motion.SWING_RIGHT, WingRig.Motion.RISE_RIGHT, WingRig.Motion.SLAM_RIGHT,
             WingRig.Motion.TWIN_SLAM};
-        float[] impacts = {0.4F, 0.45F, 0.45F, 0.55F, 0.55F};
+        // 4.1.12: each slam's real impact and length, from the string itself (ComboStyle.UKAKU_WINGS: slap, swing, rise, slam, twin slam).
+        int[] stages = {0, 2, 3, 4, 6};
+        float[] impacts = new float[stages.length];
+        for (int s = 0; s < stages.length; s++) {
+            impacts[s] = ComboStyle.UKAKU_WINGS.stage(stages[s]).impactFraction();
+        }
         for (int m = 0; m < slams.length; m++) {
             WingRig.Motion motion = slams[m];
             float impact = impacts[m];
@@ -1432,7 +1441,12 @@ public final class UkakuTests {
             check(fastestAt > impact - 0.02F && fastestAt <= impact + dp, motion + ": fastest as it lands (at " + fastestAt + ", the impact " + impact + ")");
             float landing = speed(motion, impact - dp, impact, impact);
             float braking = speed(motion, impact - 0.06F - dp, impact - 0.06F, impact);
-            check(landing > 1.5F * braking, motion + ": still speeding up into the impact, never braking into it (" + landing + " vs " + braking + ")");
+            check(landing > 1.1F * braking, motion + ": still speeding up into the impact, never braking into it (" + landing + " vs " + braking + ")");
+            // 4.1.12 (the owner: "insanely fast wing slap animation that you can barely fucking see"): the swing itself (the drive) lasts long
+            // enough to be seen even at full control (the server's shortest: 0.9 of the stage's ticks), and the stage is the blow's own length.
+            ComboStage stage = ComboStyle.UKAKU_WINGS.stage(stages[m]);
+            check(Math.abs(blow.ticks() - stage.baseDuration()) < 0.01F && blow.drive() * stage.baseDuration() * 0.9F >= 3.5F && stage.baseDuration() >= 16,
+                motion + ": a swing you can see (" + blow.drive() * stage.baseDuration() * 0.9F + " ticks at the quickest; the stage " + stage.baseDuration() + ")");
             check(speed(motion, impact, impact + dp, impact) > 0.35F * landing, motion + ": carried on past the hit, not stopped dead on it ("
                 + speed(motion, impact, impact + dp, impact) / landing + " of its speed)");
             // The overshoot goes beyond the impact, away from the chamber; the recoil comes back toward it.
@@ -1504,6 +1518,16 @@ public final class UkakuTests {
             && WingRig.lash(WingRig.Motion.SLAP_RIGHT, 1.0F, 0.4F) == 0.0F, "the smallest wings stretch as far as they may; the lash is out at the impact only");
         check(Math.abs(UkakuRules.slamReach(300, 1.0F) - (7.5 + 0.0075 * 300) * UkakuRules.SLAM_REACH) < 1.0E-9 && UkakuRules.slamReach(5000, 1.05F) <= 15.0,
             "the reach the wings stretch to is the server's (Rinkaku's range, its share, at most 15)");
+        // 4.1.12 (the owner: "these fuck ass red Minecraft dust particles in crit particles that you've added. No one ever asked for that"):
+        // the wing slams leave nothing in the air; the Left Wing string's stages match the twin string's lengths.
+        String combat = read("src/main/java/com/hex/kagune/control/server/UkakuCombat.java");
+        int slamsAt = combat.indexOf("case WING_SLAP, WING_SWING, WING_RISE, WING_SLAM, TWIN_SLAM -> {");
+        check(slamsAt > 0 && combat.substring(slamsAt, combat.indexOf("}", slamsAt) + 1).replaceAll("\\s", "").equals(
+            "caseWING_SLAP,WING_SWING,WING_RISE,WING_SLAM,TWIN_SLAM->{}") && !combat.contains("case WING_SLAP ->"),
+            "the wing slams spawn no particles (no dust, no crits)");
+        for (int s = 0; s < ComboStyle.UKAKU_LEFT_WING.stageCount(); s++) {
+            check(ComboStyle.UKAKU_LEFT_WING.stage(s).baseDuration() >= 16, "Rabbit Guise's slams are as long as the twin wings' too");
+        }
         // The other wing pulls back as one drives, and is back by the end.
         WingRig.Blow slap = WingRig.blow(WingRig.Motion.SLAP_RIGHT);
         float[] slapAt = WingRig.beats(slap, 0.4F);

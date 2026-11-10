@@ -2064,14 +2064,20 @@ public final class ArtPreview {
     record Slam(String name, WingRig.Motion motion, com.hex.kagune.control.StrikePattern pattern, boolean right, boolean both, float impact, int ticks) {
     }
 
+    /** 4.1.12: each slam's impact and length read from the string itself (ComboStyle.UKAKU_WINGS), never written out here again. */
     static final Slam[] SLAMS = {
-        new Slam("1 Right Wing Slap", WingRig.Motion.SLAP_RIGHT, com.hex.kagune.control.StrikePattern.WING_SLAP, true, false, 0.4F, 9),
-        new Slam("2 Left Wing Slap", WingRig.Motion.SLAP_LEFT, com.hex.kagune.control.StrikePattern.WING_SLAP, false, false, 0.4F, 9),
-        new Slam("3 Right Wing Swing", WingRig.Motion.SWING_RIGHT, com.hex.kagune.control.StrikePattern.WING_SWING, true, false, 0.45F, 12),
-        new Slam("4 Left Rising Wing", WingRig.Motion.RISE_LEFT, com.hex.kagune.control.StrikePattern.WING_RISE, false, false, 0.45F, 12),
-        new Slam("5 Right Overhead Slam", WingRig.Motion.SLAM_RIGHT, com.hex.kagune.control.StrikePattern.WING_SLAM, true, false, 0.55F, 13),
-        new Slam("6 Left Overhead Slam", WingRig.Motion.SLAM_LEFT, com.hex.kagune.control.StrikePattern.WING_SLAM, false, false, 0.55F, 13),
-        new Slam("7 Twin Slam", WingRig.Motion.TWIN_SLAM, com.hex.kagune.control.StrikePattern.TWIN_SLAM, true, true, 0.55F, 16)};
+        slam("1 Right Wing Slap", WingRig.Motion.SLAP_RIGHT, 0, true, false),
+        slam("2 Left Wing Slap", WingRig.Motion.SLAP_LEFT, 1, false, false),
+        slam("3 Right Wing Swing", WingRig.Motion.SWING_RIGHT, 2, true, false),
+        slam("4 Left Rising Wing", WingRig.Motion.RISE_LEFT, 3, false, false),
+        slam("5 Right Overhead Slam", WingRig.Motion.SLAM_RIGHT, 4, true, false),
+        slam("6 Left Overhead Slam", WingRig.Motion.SLAM_LEFT, 5, false, false),
+        slam("7 Twin Slam", WingRig.Motion.TWIN_SLAM, 6, true, true)};
+
+    static Slam slam(String name, WingRig.Motion motion, int stage, boolean right, boolean both) {
+        com.hex.kagune.control.ComboStage s = com.hex.kagune.control.ComboStyle.UKAKU_WINGS.stage(stage);
+        return new Slam(name, motion, s.pattern(), right, both, s.impactFraction(), s.baseDuration());
+    }
 
     /** The twin wings at {@code progress} through {@code motion}, only the {@code side} wing drawn if {@code only} (for its tip's path). */
     static WingRig.Input slamWings(WingRig.Motion motion, float progress, float impact, int side, boolean only) {

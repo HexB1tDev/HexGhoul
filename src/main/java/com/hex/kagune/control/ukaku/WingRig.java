@@ -231,27 +231,30 @@ public final class WingRig {
         return switch (motion) {
             // A slap: a short cock back, snapped flat across the chest, carried well past, a little rebound. Quick.
             case SLAP_RIGHT, SLAP_LEFT -> new Blow(new float[] {50.0F, 12.0F}, new float[] {-70.0F, -4.0F}, new float[] {-110.0F, -9.0F},
-                new float[] {-90.0F, -3.0F}, 0.14F, 0.10F, 0.12F, 9.0F, 1.0F);
+                new float[] {-90.0F, -3.0F}, 0.28F, 0.12F, 0.12F, 16.0F, 1.0F);
             // The wide swing: wound far back and up, unwound all the way across the front, its weight carrying it round to the far side.
             case SWING_RIGHT, SWING_LEFT -> new Blow(new float[] {88.0F, 36.0F}, new float[] {-74.0F, -10.0F}, new float[] {-134.0F, -16.0F},
-                new float[] {-116.0F, -9.0F}, 0.16F, 0.12F, 0.12F, 12.0F, 1.05F);
+                new float[] {-116.0F, -9.0F}, 0.30F, 0.14F, 0.14F, 20.0F, 1.05F);
             // The rising wing: low and forward, then up through the target and on up past the head.
             case RISE_RIGHT, RISE_LEFT -> new Blow(new float[] {-18.0F, -32.0F}, new float[] {-46.0F, 54.0F}, new float[] {-38.0F, 82.0F},
-                new float[] {-43.0F, 64.0F}, 0.15F, 0.10F, 0.12F, 12.0F, 1.0F);
+                new float[] {-43.0F, 64.0F}, 0.28F, 0.12F, 0.12F, 20.0F, 1.0F);
             // Both raised higher still and held a beat longer (the drive is the same share of a longer move), then down together.
             case TWIN_SLAM -> new Blow(new float[] {4.0F, 86.0F}, new float[] {-68.0F, -8.0F}, new float[] {-96.0F, -14.0F},
-                new float[] {-78.0F, -3.0F}, 0.14F, 0.07F, 0.15F, 16.0F, 1.05F);
+                new float[] {-78.0F, -3.0F}, 0.28F, 0.08F, 0.10F, 28.0F, 1.05F);
             // The overhead slam: high over the shoulder, then driven down in front, level with the waist (never into the ground), a short
             // carry on, the bounce off what it hit.
             default -> new Blow(new float[] {8.0F, 80.0F}, new float[] {-68.0F, -8.0F}, new float[] {-94.0F, -14.0F},
-                new float[] {-76.0F, -3.0F}, 0.15F, 0.07F, 0.13F, 13.0F, 1.0F);
+                new float[] {-76.0F, -3.0F}, 0.28F, 0.10F, 0.12F, 22.0F, 1.0F);
         };
     }
 
     /** 4.1.10: how much further than the chamber the wing is drawn while it loads (a share of the way from the impact back to the chamber). */
     static final float LOAD = 0.1F;
-    /** 4.1.10: how hard the drive accelerates into the impact (the power of its ease-in: 2 is a constant push, more a later snap). */
-    static final float DRIVE_SNAP = 2.4F;
+    /**
+     * 4.1.10: how hard the drive accelerates into the impact (the power of its ease-in: 2 is a constant push, more a later snap). 4.1.12: 1.6
+     * (4.1.10's 2.4 crammed the swing into its last instant; the owner could barely see it).
+     */
+    static final float DRIVE_SNAP = 1.6F;
 
     /**
      * 4.1.10: the slam's moments as shares of the move: {chamber reached, the load ends (the drive starts), the impact, the overshoot's end,
@@ -470,6 +473,10 @@ public final class WingRig {
                                       WingAngles root, int mastery) {
         float[] tipAngles = tip(motion, progress, impact);
         float lash = lash(motion, progress, impact);
+        // 4.1.12: the whip fades out after the recoil, so a long move ends on the wing's own shape whatever the spring is still doing.
+        float[] beat = beats(blow(motion), impact);
+        float settled = 1.0F - smooth((Math.max(0.0F, Math.min(1.0F, progress)) - beat[4]) / (1.0F - beat[4]));
+        tipAngles = new float[] {root.sweep() + (tipAngles[0] - root.sweep()) * settled, root.roll() + (tipAngles[1] - root.roll()) * settled};
         double[][] axes = twinAxes(side, root.sweep(), root.roll());
         double[] out = axes[0];
         double[] up = axes[1];

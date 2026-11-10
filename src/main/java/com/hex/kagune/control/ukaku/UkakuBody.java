@@ -426,7 +426,7 @@ public final class UkakuBody {
      * follow-through key by {@link #BODY_OVER} of its drive.
      */
     public static final float BODY_LEAD = 0.035F;
-    public static final float BODY_DRIVE = 0.24F;
+    public static final float BODY_DRIVE = 0.28F;
     public static final float BODY_SNAP = 1.5F;
     public static final float BODY_LOAD = 0.06F;
     public static final float BODY_OVER = 0.18F;
@@ -465,7 +465,7 @@ public final class UkakuBody {
             float p = Float.isFinite(progress) ? Math.max(0.0F, Math.min(1.0F, progress)) : 0.0F;
             float wing = Float.isFinite(impact) ? Math.max(0.2F, Math.min(0.85F, impact)) : 0.4F;
             float hit = wing - BODY_LEAD;
-            float load = hit - Math.min(BODY_DRIVE, 0.55F * hit);
+            float load = hit - Math.min(BODY_DRIVE, 0.5F * hit);
             return new Keys(p, 0.75F * load, load, hit, Math.min(0.92F, hit + BODY_FOLLOW));
         }
 

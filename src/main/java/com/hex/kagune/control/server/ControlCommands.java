@@ -57,6 +57,14 @@ final class ControlCommands {
                 .then(Commands.m_82129_("type", StringArgumentType.word())
                     .suggests((context, builder) -> SharedSuggestionProvider.m_82970_(List.of("glance", "step", "lunge", "strike"), builder))
                     .executes(ControlCommands::forceUrge)))));
+        // 4.1.12 (the owner: "And I still can't. Mind you, I still fucking can't."): where this world's hideout, CCG building, Ken's tower,
+        // Anteiku and library stand, as worked out (after /locate or the world's making asked for them), with the /tp to each.
+        dispatcher.register(Commands.m_82127_("kagune").then(Commands.m_82127_("places").executes(context -> {
+            for (String line : com.hex.kagune.control.ControlStructures.report()) {
+                context.getSource().m_288197_(() -> Component.m_237113_(line), false);
+            }
+            return 1;
+        })));
         // 6.2.0: cooldowns off (everything ready again the moment it is over) and back on, for yourself or a player.
         dispatcher.register(Commands.m_82127_("kagune").then(Commands.m_82127_("cooldowns").requires(source -> source.m_6761_(2))
             .executes(ControlCommands::reportCooldowns)

@@ -281,6 +281,11 @@ reach (`UkakuRules.slamReach`, `WingRig.lash`, `stretchMost`, `TIP_SHARE`, `STRE
 `LASH_TRAIL`), folded tight (`LASH_FOLD`); the whip's spring scaled to each blow's drive (`WHIP_PER_DRIVE`). Visual only; protocol 116.
 Details: `next-ai-4.1.9.md`.
 
+## 4.1.12 (released)
+
+Places never nowhere and `/kagune places`; the wing slams without particles and ~1.75x as long; each coat half on its own leg. Details and the
+owner's words: `next-ai-4.1.9.md` ("4.1.12, what and where"). The structures' failure in the owner's game is still unexplained.
+
 ## Next
 
 Nothing outstanding from the owner. If they report in-game problems with the outfits' fit, adjust `CLEAR`, `SNUG`, the drape

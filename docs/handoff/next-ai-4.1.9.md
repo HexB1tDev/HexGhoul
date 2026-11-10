@@ -1,4 +1,4 @@
-# Next AI: after 4.1.11 (4.1.9: the inventory crash, every special place in any biome, one of each; 4.1.10-4.1.11: the Ukaku's wing slams)
+# Next AI: after 4.1.12 (4.1.9: the inventory crash, the special places; 4.1.10-4.1.12: the wing slams; 4.1.12: places never nowhere, the coat)
 
 Read this first. The house rules are in `next-ai-4.1.2.md` and `next-ai-4.0.0.md` (they still hold): answer in English, quote the owner
 exactly, never claim in-game testing, the full `python3 build.py` must end with EXIT 0 on the exact commit before it is pushed, never
@@ -12,6 +12,7 @@ alter the owner's files, one version at a time, no PR.
 | 4.1.9 | The inventory crash; the hideout, the CCG building, Anteiku, the library and Ken's tower in any biome, one of each | pushed, EXIT 0 |
 | 4.1.10 | The Ukaku's wing slams: chamber, drive, overshoot, recoil, the whip; the guard's flare and settle | pushed, EXIT 0 |
 | 4.1.11 | The slamming wing stretches out as far as the slam hits, a lash of fire; the whip keeps pace with each blow | pushed, EXIT 0 |
+| 4.1.12 | Places never nowhere, `/kagune places`; slams without particles and 1.75x as long; each coat half on its own leg | pushed, EXIT 0 |
 
 Branch: `claude/hopeful-euler-dnx1ub` (fast-forwarded from `claude/next-ai-4-1-6-handoff-sqv9e4`, which stops at 4.1.8). A new session's own
 branch usually starts at `main` (still 1.3.0): fast-forward it first (`git merge --ff-only origin/claude/hopeful-euler-dnx1ub`).
@@ -102,6 +103,33 @@ don't have to be limited by such small range. I mean, it is what it is. You do y
   lashed wing in `UkakuClient.rigInput` (first person only).
 - Previews: `docs/handoff/ukaku-slams-4.1.11.png` (from in front: a lash at the camera foreshortens; the top-view tip paths show it), `.gif`
   (from his side). `tools/art-preview.sh <out> slams slams-gif`.
+
+## 4.1.12, what and where (the owner was furious; read their words)
+
+The owner (quoted exactly): "Listen, asshole, I'm seriously running out of patience. You took 40 minutes to fucking fix an issue that I couldn't
+fucking locate a structure. And I still can't." (their screenshot: "Could not find a structure of type "hexkagune:aogiri_hideout" nearby", the same
+for ccg_building); "The hits are way too fast, and I don't understand why the fuck did you add default Minecraft particles in the area that it
+swipes from? ... these fuck ass red Minecraft dust particles in crit particles that you've added. No one ever asked for that"; "insanely fast wing
+slap animation that you can barely fucking see"; of the Crimson Outfit in a jump and a kick: "I truly don't know how in this world you expected the
+clothes to open like that and look good"; "How do you look at the block animation, for example, and you call that good?"
+
+- **This machine cannot run Minecraft** (Mojang's, Forge's and Modrinth's hosts are blocked): nothing here was seen in game. The structures still
+  failed for the owner after 4.1.9 and the cause is NOT known. 4.1.12 makes every one-of-a-kind place always have a spot (`Site.FORCED`: the
+  nearest offer when none is dry; `DryPlace` lays it with `DryJigsaw.run`) and adds `/kagune places` (`ControlStructures.report`, filled by
+  `Site.told` when a chooser runs). **First thing next: ask the owner for `/kagune places` after a `/locate`, in a new world, and the jar version
+  from the mods list.** "not worked out yet" after a /locate means the game never asked our structure (the set is filtered out in that world or
+  another mod intercepts: suspects in their pack: Structure Essentials, Regions Unexplored/TerraBlender, Noisium, Canary).
+- **Slams:** `UkakuCombat.impact` spawns nothing for the five slam patterns (4.1.2 drew a red dust arc and crits). `ComboStyle.UKAKU_WINGS` and
+  `UKAKU_LEFT_WING` stages ~1.75x as long (16, 20, 20, 22/23, 28 ticks), impacts 0.5 to 0.6; `WingRig.Blow` drive 0.28 of the move,
+  `DRIVE_SNAP` 1.6, the whip fades out after the recoil; `UkakuBody.BODY_DRIVE` 0.28. `UkakuTests.slamBeats` reads each slam's timing from
+  `ComboStyle` and wants a swing of at least 3.5 ticks; no particles (source check). Previews `ukaku-slams-4.1.12.*`; `ArtPreview.SLAMS` reads
+  `ComboStyle` now. Damage per hit unchanged (so less per second): offered to the owner.
+- **The coat:** `OutfitLayer.drapes`: each half of the tails from its own leg (`CoatDrape.over(own front, own back, {thigh, thigh}, {knee, knee})`,
+  `HUNG` per half). 4.0.3 hung both fronts from the leg furthest forward (never parted): any kick or tuck threw the skirt out flat. `OutfitTests`
+  to the new rule. Not previewed (no off-game renderer for the outfit layer).
+- **The block (the wing guard):** NOT changed. It closes in `RinkakuBlock.RAISE_TICKS` (3 ticks) with Rinkaku's tail-block body pose
+  (`RinkakuBlockPose`, in `KaguneBodyAnimation`): ask the owner what they want before building (a slower close with its own body pose was
+  proposed to them).
 
 ## Next after that
 

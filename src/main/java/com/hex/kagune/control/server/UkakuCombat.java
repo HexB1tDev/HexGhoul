@@ -90,18 +90,9 @@ final class UkakuCombat {
                 arc(level, eye, forwardX, forwardZ, rightX, rightZ, radius, stage.shapeParam(), -0.35, 0.4, 9);
                 arc(level, eye, forwardX, forwardZ, rightX, rightZ, radius, stage.shapeParam(), -0.35, -0.4, 9);
             }
-            // 4.1.2: the wing slams: a slap or a swing across at the chest, a rise sweeping up, a slam crashing down low in front.
-            case WING_SLAP -> arc(level, eye, forwardX, forwardZ, rightX, rightZ, radius, stage.shapeParam(), -0.4, right ? 0.35 : -0.35, 7);
-            case WING_SWING -> arc(level, eye, forwardX, forwardZ, rightX, rightZ, radius, stage.shapeParam(), -0.45, right ? 0.45 : -0.45, 11);
-            case WING_RISE -> arc(level, eye, forwardX, forwardZ, rightX, rightZ, radius, stage.shapeParam(), 0.1, right ? 0.3 : -0.3, 9);
-            case WING_SLAM -> {
-                arc(level, eye, forwardX, forwardZ, rightX, rightZ, radius, stage.shapeParam(), -1.2, right ? 0.3 : -0.3, 9);
-                level.m_8767_(ParticleTypes.f_123797_, impactPoint.f_82479_, impactPoint.f_82480_ - 0.6, impactPoint.f_82481_, 6, 0.4, 0.05, 0.4, 0.05);
-            }
-            case TWIN_SLAM -> {
-                arc(level, eye, forwardX, forwardZ, rightX, rightZ, radius, stage.shapeParam(), -1.2, 0.45, 11);
-                arc(level, eye, forwardX, forwardZ, rightX, rightZ, radius, stage.shapeParam(), -1.2, -0.45, 11);
-                level.m_8767_(ParticleTypes.f_123797_, impactPoint.f_82479_, impactPoint.f_82480_ - 0.6, impactPoint.f_82481_, 12, 0.7, 0.05, 0.7, 0.08);
+            // 4.1.12 (the owner: "these fuck ass red Minecraft dust particles in crit particles ... No one ever asked for that ... I don't want
+            // it"): the wing slams leave nothing in the air; the wing itself shows the blow. (4.1.2 had drawn a red dust arc and crit sparks.)
+            case WING_SLAP, WING_SWING, WING_RISE, WING_SLAM, TWIN_SLAM -> {
             }
             case ONE_WING_SLASH, ONE_WING_RETURN -> arc(level, eye, forwardX, forwardZ, rightX, rightZ, radius, stage.shapeParam(), -0.3,
                 0.0, 13);
