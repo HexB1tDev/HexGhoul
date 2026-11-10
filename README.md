@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.3 (HexGhoul): Fighting styles, and Speedster from Ayato (testing)
+
+See `.github/release-notes-4.1.3.md`. Your words: "The default M1 fighting style is only unlocked through a new quest with ayato, until a fighting style is unlocked, the player can only use default punches in kakugan mode, right click is also default, the previous M1 and M2 flips are now all part of a fighting style called Speedster." With only the kakugan open and no style learned, M1 is the game's own punch and right click the game's own. Ayato teaches Speedster (the Speed Blitz on M1, the flips on right click) to any ghoul, after his proof: six hostile things killed with your bare hands, eyes open. No save starts with it. Z and V are as they were. Protocol 112.
+
 ## 4.1.2 (HexGhoul): The Ukaku's wing slams and wing guard (testing)
 
 See `.github/release-notes-4.1.2.md`. Your words: "Another rework: Ukaku kagune base firery form no longer fires projectiles, M1s are a series of different wing slams combos. (create highly detailed moveset switching between left wing and right wing slaps, swings, upwards to downwards slams (These can now clash like Rinkaku) and has lightly less range than Rinkaku. Right click (M2) is now a protection like Rinkaku has, wings grow and protect the player , they come together to protect the player, just like rinkaku they break after a bunch of hits, perfectly timed right clicks can do the same as Rinkaku and stagger. Note: Crystal mode still has the same custom shooting crystals and right click, we're only touching the base from, everything else stays as it is." The fire's M1 is a string of wing blows (twin wings: two slaps, a wide swing, a rising wing, two overhead slams and a Twin Slam; Rabbit Guise: four with the left wing), which clash like Rinkaku's and reach 85% as far. Right click is the wing guard, by Rinkaku's rules (it breaks, a perfect one staggers). The base form's fire shots, enders and Fire Dash are gone; crystal mode keeps its own. Protocol 111.

@@ -124,8 +124,15 @@ public final class AbilityGuide {
                 rows.add(new Row("eyes", "Resistance I · Strength I · drains RC", EYES, 0));
                 // 7.0.1: the shared eye-mode fight (EyeRules): Owl DNA's body, whatever the path.
                 int m = in.mastery();
-                rows.add(row(in, "Speed Blitz (" + com.hex.kagune.control.pale.PaleStrike.count(m) + " strikes)", EYES, 0, Key.ATTACK));
-                rows.add(row(in, "Flips (W A S D)", TEXT, 0, Key.USE));
+                // 4.1.3: the blitz and the flips are a fighting style's (Speedster, from Ayato); with none, the game's own punch.
+                if (com.hex.kagune.control.FightStyle.of(gate -> !in.shut().contains(gate)).ownAttack()) {
+                    rows.add(new Row("style", "Speedster", EYES, 0));
+                    rows.add(row(in, "Speed Blitz (" + com.hex.kagune.control.pale.PaleStrike.count(m) + " strikes)", EYES, 0, Key.ATTACK));
+                    rows.add(row(in, "Flips (W A S D)", TEXT, 0, Key.USE));
+                } else {
+                    rows.add(new Row("style", "None: ask Ayato", DIM, 0));
+                    rows.add(row(in, "Punch", TEXT, 0, Key.ATTACK));
+                }
                 rows.add(new Row(key(in, Key.RAPID) + " hold", "Big Punch!", EYES, 0));
                 // 7.0.1: past its mastery it may still wait for its quest.
                 boolean quest = in.shut().contains(com.hex.kagune.control.quest.Gate.EYES_KICK) && m >= com.hex.kagune.control.pale.PaleRules.KICK_MASTERY;

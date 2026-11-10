@@ -166,6 +166,11 @@ final class AyatoScript extends CompanionScript {
                     + "you what your wings really are. (Ayato's respect: the second step.)";
                 case UKAKU_KAKUJA -> "You killed an S-rank. ...Fine. You earned this. Sit down. Don't scream. Actually, scream if you want. It "
                     + "doesn't change anything. Your wings are going to eat you from the inside, and you're going to let them. Ready? Doesn't matter.";
+                // 4.1.3: Speedster.
+                case STYLE_SPEEDSTER -> "Six. With your hands. ...Your knuckles look terrible. Good. Now forget all of it. Don't plant your "
+                    + "feet. Don't wind up. Hit, and be gone before it lands. Hit again from where they aren't looking. When they swing, you're "
+                    + "already over their head. That's it. That's the whole thing. Nobody hits what they can't keep in front of them. (Speedster: "
+                    + "with your eyes open and your kagune in, M1 is the Speed Blitz and right click flips.)";
                 default -> "Watch. I'm not doing it twice. (" + lesson.name() + ")";
             };
         }

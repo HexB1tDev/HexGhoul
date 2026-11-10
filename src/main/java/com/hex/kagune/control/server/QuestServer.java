@@ -121,6 +121,9 @@ public final class QuestServer {
         if (gate == Gate.RINKAKU_DRAGON) {
             return false; // 1.0.4: the Dragon is earned by its quest, whatever the mastery
         }
+        if (gate == Gate.STYLE_SPEEDSTER) {
+            return false; // 4.1.3: a fighting style is learned from Ayato, whatever the mastery
+        }
         if (gate == Gate.RINKAKU_HURL || gate == Gate.RINKAKU_IMPALE) {
             return false; // 3.3.1: Ken teaches them (new this week: no save had them under the old progression)
         }

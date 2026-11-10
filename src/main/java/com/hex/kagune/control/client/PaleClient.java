@@ -267,6 +267,14 @@ public final class PaleClient {
         return view != null && view.on() && !view.preview();
     }
 
+    /**
+     * 4.1.3: the fighting style of the player at the keys with only the eyes open ({@link com.hex.kagune.control.FightStyle}), as the server
+     * last said their gates stand (nothing known yet: none, and the server decides anyway).
+     */
+    public static com.hex.kagune.control.FightStyle style() {
+        return com.hex.kagune.control.FightStyle.of(gate -> QuestClient.log().open(gate));
+    }
+
     /** 7.0.1: whether {@code player}'s body is hers now: Owl DNA with the base form out, or the eyes alone ({@link #eyes}). */
     public static boolean fighter(Player player) {
         return isPale(player) && com.hex.kagune.client.KaguneClientState.get(player).active() || eyes(player);

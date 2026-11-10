@@ -26,7 +26,7 @@ public final class Teaching {
             return this.gate.mastery();
         }
 
-        /** The path it is for. */
+        /** The path it is for (4.1.3: null for a fighting style, taught to any kagune: {@link Teaching#fits}). */
         public KagunePath path() {
             return this.gate.path();
         }
@@ -91,7 +91,19 @@ public final class Teaching {
         new Lesson("noro_walker", NORO, Gate.BIKAKU_WALKER, Kind.TRIAL, "The Walker"),
         new Lesson("noro_kakuja", NORO, Gate.BIKAKU_KAKUJA, Kind.TRIAL, "The Kakuja"),
         new Lesson("noro_devouring", NORO, Gate.BIKAKU_DEVOURING, Kind.TALK, "Grand Devouring"),
-        new Lesson("noro_potential", NORO, Gate.BIKAKU_POTENTIAL, Kind.TRIAL, "Potential Unlock"));
+        new Lesson("noro_potential", NORO, Gate.BIKAKU_POTENTIAL, Kind.TRIAL, "Potential Unlock"),
+        // 4.1.3 (the owner: "The default M1 fighting style is only unlocked through a new quest with ayato"): Speedster, the eye-mode fight's
+        // M1 and right click, for a ghoul of any kagune (its gate has no path). Appended (Ayato's older lessons keep their saved bits); he
+        // teaches it first (it needs no mastery).
+        new Lesson("ayato_speedster", AYATO, Gate.STYLE_SPEEDSTER, Kind.TALK, "Speedster"));
+
+    /**
+     * 4.1.3: true if {@code lesson} is for a ghoul on {@code path}: its gate's path, or, for a lesson with no path of its own (a fighting
+     * style), any kagune but the Owl's (her body fights that way already, with her kagune out).
+     */
+    public static boolean fits(Lesson lesson, KagunePath path) {
+        return lesson.path() == null ? path != null && path.chosen() && path != KagunePath.PALE : lesson.path() == path;
+    }
 
     /**
      * What has to be open before a lesson's gate can be taught (the step before it on the path, whoever opened it), or null. Ken's
@@ -159,12 +171,30 @@ public final class Teaching {
      * are theirs.
      */
     public static View view(String teacher, boolean ghoul, KagunePath path, int mastery, Predicate<Gate> open) {
+        return view(teacher, ghoul, path, mastery, open, 0L);
+    }
+
+    /**
+     * 4.1.3: the same, with the proof this teacher has already set them ({@code proving}: that lesson's {@link #bit}, 0 for none). A proof
+     * under way for a lesson that could be taught now stays the next one (a lesson added later, which would come before it, never takes
+     * its place and throws its count away).
+     */
+    public static View view(String teacher, boolean ghoul, KagunePath path, int mastery, Predicate<Gate> open, long proving) {
         if (!ghoul) {
             return new View(null, Refusal.HUMAN, 0, null);
         }
+        if (proving != 0L) {
+            for (Lesson lesson : of(teacher)) {
+                Gate before = before(lesson.gate());
+                if (bit(lesson) == proving && fits(lesson, path) && !open.test(lesson.gate()) && (before == null || open.test(before))
+                    && mastery >= lesson.mastery()) {
+                    return new View(lesson, null, lesson.mastery(), null);
+                }
+            }
+        }
         boolean knows = false;
         for (Lesson lesson : inOrder(teacher)) {
-            if (lesson.path() != path) {
+            if (!fits(lesson, path)) {
                 continue;
             }
             knows = true;
@@ -194,7 +224,7 @@ public final class Teaching {
      * them by this teacher nor told so ({@code told}: their bits): known some other way (a command, an old quest). In order.
      */
     public static List<Lesson> knownElsewhere(String teacher, KagunePath path, Predicate<Gate> open, long told) {
-        return of(teacher).stream().filter(lesson -> lesson.path() == path && open.test(lesson.gate()) && (told & bit(lesson)) == 0L).toList();
+        return of(teacher).stream().filter(lesson -> fits(lesson, path) && open.test(lesson.gate()) && (told & bit(lesson)) == 0L).toList();
     }
 
     /** 1.3.29: "A", "A and B", "A, B and C". */
@@ -239,7 +269,9 @@ public final class Teaching {
         /** 4.0.0: wild ghouls of a rank (the proof's {@code rank}: D 0 .. SS 5) killed; Aogiri's own too. */
         GHOUL_RANK,
         /** 4.0.0: bodies brought down with the Bikaku's worm out (it eats them). */
-        DEVOURED
+        DEVOURED,
+        /** 4.1.3: hostile things killed with the bare hands, only the eyes open (the kagune put away, nothing held). */
+        BARE_HANDS
     }
 
     /**
@@ -263,6 +295,7 @@ public final class Teaching {
                 case CRUSHES -> "bodies crushed in your tails";
                 case GHOUL_RANK -> "ghouls of " + com.hex.kagune.control.npc.NpcRules.rankName(this.rank) + "-rank or above killed";
                 case DEVOURED -> "bodies brought down by your worm";
+                case BARE_HANDS -> "killed with your bare hands, eyes open";
             };
             return teacher + "'s proof: " + Math.min(done, this.need) + " of " + this.need + " " + what + (done >= this.need ? ". Go and see him." : "");
         }
@@ -305,6 +338,12 @@ public final class Teaching {
                 "Fine. You're not completely useless. Last thing. Find an S-rank. Or an SS, if you've got a death wish. Kill it. Then we'll see "
                     + "if your wings have more in them.",
                 "Still nothing? An S-rank. They're out there. Hunt.");
+            // 4.1.3: Speedster. He won't teach a body to move until it has learned to fight with nothing: fists, the eyes open, the kagune in.
+            case "ayato_speedster" -> new Proof(Deed.BARE_HANDS, 6, 0,
+                "You want to know how I move? Tch. You swing like you're waiting for your kagune to save you. Put it away. Eyes open, nothing "
+                    + "in your hands. Kill six things that want you dead, with your fists. Slow and ugly, I don't care. Then come back, and I'll "
+                    + "show you what fast is.",
+                "{n} of six. Fists. No kagune, no toys. If your knuckles aren't bleeding you're not done.");
             // 4.0.0: Noro's: few words. Feed the worm; then the hunt; then the strong.
             case "noro_worms" -> new Proof(Deed.EAT_GHOUL, 3, 0, "...Eat. Three. Ghoul.", "...{n}.");
             case "noro_walker" -> new Proof(Deed.GHOUL_RANK, 3, com.hex.kagune.control.npc.NpcRules.B, "...Hunt. Three. Strong ones.", "...{n}.");
@@ -331,7 +370,7 @@ public final class Teaching {
             return "";
         }
         Gate before = before(gate);
-        return gate.displayName() + ": " + teacherName + " teaches it, at mastery " + lesson.mastery()
+        return gate.displayName() + ": " + teacherName + " teaches it" + (lesson.mastery() > 0 ? ", at mastery " + lesson.mastery() : "")
             + (before == null ? "" : ", after " + before.displayName()) + ". Find them and ask.";
     }
 }

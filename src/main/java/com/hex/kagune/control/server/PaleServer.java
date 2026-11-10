@@ -150,6 +150,14 @@ public final class PaleServer {
             && KingServer.wearing(player) == com.hex.kagune.control.king.KingForm.NONE; // 1.2.6: a final kakuja's keys are its own
     }
 
+    /**
+     * 4.1.3: the fighting style {@code player} has with only the eyes open ({@link com.hex.kagune.control.FightStyle}): the one Ayato taught,
+     * or none (the game's own punch and right click).
+     */
+    public static com.hex.kagune.control.FightStyle style(ServerPlayer player) {
+        return com.hex.kagune.control.FightStyle.of(QuestServer.log(player)::open);
+    }
+
     /** 7.0.1: how hard her body hits: all of it in her base form; the eyes alone, more the more mastered ({@link EyeRules#power}). */
     static float power(ServerPlayer player) {
         return isPale(player) ? 1.0F : EyeRules.power(KaguneProfile.mastery(player));
@@ -523,9 +531,19 @@ public final class PaleServer {
         }
         PaleState state = state(player);
         long now = player.m_9236_().m_46467_();
+        // 4.1.3: the blitz and the flips are Speedster's (a fighting style, learned from Ayato); the keys' moves are not a style's.
+        com.hex.kagune.control.FightStyle style = style(player);
         switch (action) {
-            case C2SPaleAction.STRIKE -> PaleBlitz.click(player, targetId == 0 ? null : player.m_9236_().m_6815_(targetId));
-            case C2SPaleAction.FLIP -> PaleMoves.flip(player, state, arg, now);
+            case C2SPaleAction.STRIKE -> {
+                if (style.ownAttack()) {
+                    PaleBlitz.click(player, targetId == 0 ? null : player.m_9236_().m_6815_(targetId));
+                }
+            }
+            case C2SPaleAction.FLIP -> {
+                if (style.ownUse()) {
+                    PaleMoves.flip(player, state, arg, now);
+                }
+            }
             case C2SPaleAction.PUNCH -> PaleMoves.punchKey(player, state, arg != 0, targetId, now);
             case C2SPaleAction.KICK -> PaleMoves.kick(player, state, now);
             default -> {
@@ -533,10 +551,14 @@ public final class PaleServer {
         }
     }
 
-    /** 7.0.1: with only the eyes open a vanilla punch is the Speed Blitz instead (the client sends it so; this catches the rest). */
+    /**
+     * 7.0.1: with only the eyes open a vanilla punch is the Speed Blitz instead (the client sends it so; this catches the rest). 4.1.3: once
+     * Speedster is learned.
+     */
     @SubscribeEvent
     public static void punched(net.minecraftforge.event.entity.player.AttackEntityEvent event) {
-        if (event.getEntity() instanceof ServerPlayer player && eyes(player)) {
+        // 4.1.3: with no fighting style it stays the game's own punch.
+        if (event.getEntity() instanceof ServerPlayer player && eyes(player) && style(player).ownAttack()) {
             event.setCanceled(true);
             PaleBlitz.click(player, event.getTarget());
         }

@@ -1121,7 +1121,9 @@ public final class EtoServer {
         // 1.3.14: Eto's lessons are hers; every other companion teaches what Teaching says it does.
         EtoRules.Lesson next = eto ? EtoRules.next(bond, known) : null;
         com.hex.kagune.control.npc.Teaching.View teaching = eto ? com.hex.kagune.control.npc.Teaching.View.NONE
-            : com.hex.kagune.control.npc.Teaching.view(persona.key(), ghoul, path, mastery, log::open);
+            // 4.1.3: a proof under way stays the next lesson.
+            : com.hex.kagune.control.npc.Teaching.view(persona.key(), ghoul, path, mastery, log::open,
+                NpcMemoryServer.of(player).get(persona.key(), NpcMemory.PROOF, 0L));
         boolean beforeDone = next == null || next.before() == null || known.test(next.before());
         long day = day(level);
         UniqueNpc unique = UniqueNpcs.get(level, npc.persona().key());
@@ -1434,6 +1436,10 @@ public final class EtoServer {
         }
         if (BikakuServer.isBikaku(killer) && KaguneProfile.isActive(killer)) {
             proved(killer, com.hex.kagune.control.npc.Teaching.Deed.DEVOURED, 0);
+        }
+        // 4.1.3: Ayato's proof before Speedster: something hostile killed with the bare hands, only the eyes open.
+        if (PaleServer.eyes(killer) && killer.m_21205_().m_41619_() && QuestServer.victim(dead).contains(com.hex.kagune.control.quest.Tags.HOSTILE)) {
+            proved(killer, com.hex.kagune.control.npc.Teaching.Deed.BARE_HANDS, 0);
         }
         // 2.1.2: a courtship chapter of kills counts. 2.1.5: Doves of a rank (alone or with the companion along), Pack ghouls, ghouls
         // preying on a village, as well as before (at night, at night with them along, any wild ghoul).

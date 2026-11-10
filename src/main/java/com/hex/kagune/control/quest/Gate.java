@@ -61,7 +61,15 @@ public enum Gate {
     BIKAKU_WALKER("bikaku_walker", KagunePath.BIKAKU, "Bikaku: The Walker (half kakuja)", 750, false),
     BIKAKU_KAKUJA("bikaku_kakuja", KagunePath.BIKAKU, "Bikaku: the Kakuja", 1000, false),
     BIKAKU_DEVOURING("bikaku_devouring", KagunePath.BIKAKU, "Grand Devouring (mutation)", 0, true),
-    BIKAKU_POTENTIAL("bikaku_potential", KagunePath.BIKAKU, "Potential Unlock (mutation)", 0, true);
+    BIKAKU_POTENTIAL("bikaku_potential", KagunePath.BIKAKU, "Potential Unlock (mutation)", 0, true),
+    /**
+     * 4.1.3 (the owner: "The default M1 fighting style is only unlocked through a new quest with ayato, until a fighting style is unlocked,
+     * the player can only use default punches in kakugan mode, right click is also default, the previous M1 and M2 flips are now all part
+     * of a fighting style called Speedster"): the eye-mode fight's M1 (the Speed Blitz) and right click (the flips) are a fighting style
+     * ({@link com.hex.kagune.control.FightStyle#SPEEDSTER}), which Ayato teaches any ghoul after a proof ({@code Teaching}). Never
+     * grandfathered: a save from before starts with its bare hands.
+     */
+    STYLE_SPEEDSTER("style_speedster", null, "Speedster (fighting style)", 0, false);
 
     private final String id;
     private final KagunePath path;

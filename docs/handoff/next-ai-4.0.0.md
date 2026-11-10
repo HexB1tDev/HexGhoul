@@ -169,6 +169,16 @@ no form gives any more; `UKAKU_ENDERS` is now only reached by crystal mode's Fir
 `RinkakuBlockServer.ukakuGuard` and `can`; `RinkakuBlockClient.ready`; `UkakuInput.useInput` returns early when `wingGuard`.
 `UkakuMutation.FIRE_DASH`'s text says crystal mode. `ComboStyle` ordinals are sent, so protocol 111. `UkakuTests.wingSlams`.
 
+## 4.1.3 (released)
+
+The owner (quoted exactly): "The default M1 fighting style is only unlocked through a new quest with ayato, until a fighting style is unlocked, the player can only use default punches in kakugan mode, right click is also default, the previous M1 and M2 flips are now all part of a fighting style called Speedster."
+`control/FightStyle` (pure: NONE, SPEEDSTER; `of(open)`, `ownAttack`, `ownUse`; the next style, Kick Master, goes here). `Gate.STYLE_SPEEDSTER`
+(appended; no path; never grandfathered: `QuestServer.had`). `Teaching`: lesson `ayato_speedster` (appended, bit 8), `fits(lesson, path)`
+(a lesson with no path: any chosen kagune but PALE), `Deed.BARE_HANDS` (proof: 6), `view(..., proving)` (a proof under way stays the next
+lesson). `PaleServer.style`, `eyesAction` and `punched` (the blitz and the flips only with a style; Z and V untouched). `PaleClient.style`,
+`PaleInput.useInput` and `attackInput`. `EtoServer`: the proof's count in the kill handler. `AbilityGuide` rows. Protocol 112.
+`CompanionTests.speedster`.
+
 ## Next
 
 Nothing outstanding from the owner. If they report in-game problems with the outfits' fit, adjust `CLEAR`, `SNUG`, the drape
