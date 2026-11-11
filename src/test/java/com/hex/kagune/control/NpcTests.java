@@ -57,6 +57,7 @@ public final class NpcTests {
         dryLand();
         ccgBuilding();
         smallCity();
+        cityFixes();
         onePerWorld();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
@@ -2075,6 +2076,29 @@ public final class NpcTests {
     }
 
     /** 4.1.35: the owner's Small City, cut into four 272 x 272 quarters on one ground, every tile of each on disk. */
+    /**
+     * 4.1.39: the city's ground worked out once per city (its four quarters and every place asking inCity got the same 740 heights each
+     * time); the humans a villager brings keep about its village (a homeless random walk took them off for good while its young brought more).
+     */
+    static void cityFixes() {
+        try {
+            String structures = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/ControlStructures.java"));
+            int ground = structures.indexOf("static int ground(Structure.GenerationContext context, int minX, int minZ) {");
+            check(ground > 0 && structures.indexOf("Integer known = GROUNDS.get(key);", ground) - ground < 900
+                && structures.indexOf("int found = measure(context, minX, minZ);", ground) - ground < 1100
+                && structures.contains("System.identityHashCode(context.f_226622_())") && structures.contains("context.f_226627_()"),
+                "the city's ground measured once per world and city, then known");
+            String humans = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/VillageHumans.java"));
+            String brain = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/HumanBrain.java"));
+            check(humans.contains("m_128405_(HOME + \"X\"") && humans.contains("m_128405_(HOME, 1)")
+                && brain.contains("saved.m_128441_(VillageHumans.HOME)") && brain.contains("VillageHumans.HOME_RANGE * VillageHumans.HOME_RANGE")
+                && com.hex.kagune.control.server.VillageHumans.HOME_RANGE <= com.hex.kagune.control.server.VillageHumans.CROWD,
+                "a villager's human keeps about its village, within the crowd it is counted in");
+        } catch (java.io.IOException failure) {
+            check(false, "read the sources: " + failure);
+        }
+    }
+
     static void smallCity() {
         boolean quarters = true;
         boolean tiles = true;

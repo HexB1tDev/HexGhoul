@@ -194,6 +194,27 @@ public final class ControlStructures {
          * the terrain"): a river, a beach, a swamp may run under it (its terrain adaptation fills their beds up under its streets).
          */
         static int ground(Structure.GenerationContext context, int minX, int minZ) {
+            // 4.1.38: worked out once per city: its four quarters and every place near asking inCity all get the same answer, and each time
+            // it is some 740 heights of the world's terrain (a worldgen thread's stall, four or more times over, before).
+            String key = System.identityHashCode(context.f_226622_()) + ":" + System.identityHashCode(context.f_226624_()) + ":"
+                + context.f_226627_() + ":" + minX + ":" + minZ;
+            Integer known = GROUNDS.get(key);
+            if (known != null) {
+                return known;
+            }
+            int found = measure(context, minX, minZ);
+            if (GROUNDS.size() > 1024) {
+                GROUNDS.clear();
+            }
+            GROUNDS.put(key, found);
+            return found;
+        }
+
+        /** 4.1.38: each city's ground as worked out ({@link #ground}), by the world's generator, its noise, its seed and the city's corner. */
+        private static final java.util.Map<String, Integer> GROUNDS = new java.util.concurrent.ConcurrentHashMap<>();
+
+        /** The whole city's ground, measured ({@link #ground}). */
+        private static int measure(Structure.GenerationContext context, int minX, int minZ) {
             DryLand.Ground ground = ControlStructures.ground(context);
             int n = com.hex.kagune.control.village.CityPlan.SAMPLES;
             int size = com.hex.kagune.control.village.CityPlan.SIZE;

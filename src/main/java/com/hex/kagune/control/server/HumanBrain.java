@@ -495,6 +495,16 @@ public final class HumanBrain {
             mind.nextWander = now + 120 + human.m_217043_().m_188503_(160);
             double angle = human.m_217043_().m_188500_() * Math.PI * 2.0;
             double length = 3.0 + human.m_217043_().m_188500_() * 6.0;
+            // 4.1.38: one a vanilla villager brought keeps about its village (VillageHumans.HOME): strayed too far, it heads back.
+            CompoundTag saved = human.getPersistentData();
+            if (saved.m_128441_(VillageHumans.HOME)) {
+                double dx = saved.m_128451_(VillageHumans.HOME + "X") + 0.5 - human.m_20185_();
+                double dz = saved.m_128451_(VillageHumans.HOME + "Z") + 0.5 - human.m_20189_();
+                if (dx * dx + dz * dz > VillageHumans.HOME_RANGE * VillageHumans.HOME_RANGE) {
+                    angle = Math.atan2(dz, dx) + (human.m_217043_().m_188500_() - 0.5) * 0.6;
+                    length = Math.min(12.0, Math.sqrt(dx * dx + dz * dz));
+                }
+            }
             human.m_21573_().m_26519_(human.m_20185_() + Math.cos(angle) * length, human.m_20186_(), human.m_20189_() + Math.sin(angle) * length,
                 HumanRules.WALK);
         }

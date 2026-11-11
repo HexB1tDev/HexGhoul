@@ -18,7 +18,7 @@ import net.minecraftforge.fml.common.Mod;
  * {@link #REACH} blocks of a player in the overworld that has not been looked at yet is looked at once (kept in its saved data): one in
  * {@link #ODDS} brings a human with it, at its feet, unless {@link #MOST} humans are already within {@link #CROWD} blocks. So a vanilla
  * village (a new one or one of an old world) gets a few humans living in it, and a villager farm never fills with them. A wandering trader
- * brings none. The humans wander and talk as any human out of a town does (they have no town's map).
+ * brings none. The humans wander and talk as any human out of a town does (they have no town's map), about their village ({@link #HOME}).
  */
 @Mod.EventBusSubscriber(modid = "hexkagune")
 public final class VillageHumans {
@@ -29,6 +29,13 @@ public final class VillageHumans {
     public static final double CROWD = 48.0;
     /** In a villager's saved data: it has been looked at. */
     public static final String KEY = "HexVillageHumans";
+    /**
+     * 4.1.38: in a brought human's saved data, the village it came to (1, and its x and z under HOME + "X", "Z": where its villager stood): it wanders about there, never
+     * further than {@link #HOME_RANGE} blocks (a homeless random walk took it out of the village for good, and its villagers' young brought
+     * more, never despawning: they piled up over the world).
+     */
+    public static final String HOME = "HexVillageHome";
+    public static final double HOME_RANGE = 24.0;
 
     private VillageHumans() {
     }
@@ -70,6 +77,9 @@ public final class VillageHumans {
             return null;
         }
         human.m_21530_();
+        human.getPersistentData().m_128405_(HOME + "X", (int)Math.floor(villager.m_20185_()));
+        human.getPersistentData().m_128405_(HOME + "Z", (int)Math.floor(villager.m_20189_()));
+        human.getPersistentData().m_128405_(HOME, 1);
         level.m_7967_(human);
         return human;
     }

@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.39 (HexGhoul): Small City fixes: humans stay in their village, the city's land worked out once, protocol bumped (testing)
+
+See `.github/release-notes-4.1.39.md`. "just look for bugs on your own ... That could be related to the city": `VillageHumans.HOME` (a brought human keeps within `HOME_RANGE` 24 of its villager's spot: `HumanBrain`'s homeless wander); `City.ground` cached per generator, noise, seed and corner (`GROUNDS`, `measure`); protocol 118 (the registries differ since 4.1.36).
+
 ## 4.1.38 (HexGhoul): two minutes after a fight, the Reaper puts his jacket back on (testing)
 
 See `.github/release-notes-4.1.38.md`. "after the fight ends, I should note, let's say 2 minutes without fighting, Arima puts back his jacket in his normal" (reversed, in place): `AgentBrain.dress` (`REAPER_REDRESS_CALM` 2400, `CcgAgent.DRESS` 13, untouchable and pinned), `ReaperDressPose` (the case fetched by his left hand and set at his right fist, the blade back in, the draw backwards, then the coat's taking off backwards), his first phase back and healed at `REAPER_DRESS_SWAP`. Protocol 117.
