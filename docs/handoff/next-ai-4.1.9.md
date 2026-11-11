@@ -1,4 +1,4 @@
-# Next AI: after 4.1.15 (4.1.15: reactions to who the player is with, the night's captions, more kid games and no touching teenage sons, six new kisses and smoother gestures; 4.1.14: places built at any good spot, first one kept; coats on the legs; no Ukaku M1 spam; 4.1.9: the inventory crash, the special places; 4.1.10-4.1.13: the wing slams; 4.1.12: places never nowhere, the coat; 4.1.13: slams as arms and hands clear of his body, the guard, /kagune places checks each place)
+# Next AI: after 4.1.16 (4.1.16: the kiss blush by mood, eyes fixed on Ayato, Touka, the kids' blinks and kakugan; 4.1.15: reactions to who the player is with, the night's captions, more kid games and no touching teenage sons, six new kisses and smoother gestures; 4.1.14: places built at any good spot, first one kept; coats on the legs; no Ukaku M1 spam; 4.1.9: the inventory crash, the special places; 4.1.10-4.1.13: the wing slams; 4.1.12: places never nowhere, the coat; 4.1.13: slams as arms and hands clear of his body, the guard, /kagune places checks each place)
 
 Read this first. The house rules are in `next-ai-4.1.2.md` and `next-ai-4.0.0.md` (they still hold): answer in English, quote the owner
 exactly, never claim in-game testing, the full `python3 build.py` must end with EXIT 0 on the exact commit before it is pushed, never
@@ -15,6 +15,7 @@ alter the owner's files, one version at a time, no PR.
 | 4.1.12 | Places never nowhere, `/kagune places`; slams without particles and 1.75x as long; each coat half on its own leg | pushed, EXIT 0 |
 | 4.1.13 | Every slam an arm (behind a new shoulder) and a hand, aligned on its target and clear of his posed body; the guard clamped round him clear of his raised arms; `/kagune places` makes each place's chunk and says built or stopped; coat previews | pushed, EXIT 0 |
 | 4.1.14 | One-of-a-kind places at any dry spot their set offers, the first the world builds kept with the world (`PlaceClaims`); coat tails drawn on the legs; each Ukaku wing slam plays out in full (1.3x damage) | pushed, EXIT 0 |
+| 4.1.16 | Every woman blushes through a kiss and after, as deep as its mood (`KissBlush`, `MoodKiss.blush`); Ayato's eyes repainted (`companion_textures.REPAINT`), nothing under hair (companions); kids' blinks and kakugan on both layers (`blink_skins.py`, `child_skins.py`) | pushed, EXIT 0 |
 | 4.1.15 | Scenes that know who the player is with (`relation` flags); the night's captions (`NightWords`); five kid games, a two-page play menu, no touching sons from their teens on; six new kisses (`MoodKiss.of(mood, Moment)`), the phases blended, every gesture crossfaded (`PoseFade`) | pushed, EXIT 0 |
 
 Branch: `claude/hopeful-euler-dnx1ub` (fast-forwarded from `claude/next-ai-4-1-6-handoff-sqv9e4`, which stops at 4.1.8). A new session's own
@@ -257,6 +258,32 @@ they don't like to be touched. I don't like to be touched like"
 - **Every gesture crossfaded** (`client/animation/PoseFade`, kept per companion in `EtoRenderer.FADES`): a new `gestureAt` blends from the
   last drawn pose over `TICKS`. `CompanionTests.poseFade` checks it.
 - Protocol 117.
+
+## 4.1.16, what and where
+
+The owner (quoted exactly): "Confirm that all females when kissing have a blush, sort of. Next task is to adapt all eyes to make sure that
+they all look like eyes. This also applies for kids and humans. I mean, ghouls, wild ghouls, your kids, CC. No, sorry, not CCG. Some eyes are
+clearly a little fucked on the skins." Also "Ayatollahs are fucked if I'm not" (voice to text; read as Ayato's eyes) and "So every time I
+blush, it depends on their mood." (read as: how much they blush goes by their mood).
+
+- **The blush** (`client/animation/KissBlush`, pure, per companion in `EtoRenderer.BLUSHES` and per human in `HumanRenderer.BLUSHING`):
+  - A woman blushes through KISS, BLUSH, PULL, PECK, STEAL and KISSED, then `LINGER` ticks after, fading over `FADE`.
+  - A man blushes where `Persona.blushes` says.
+  - How deep: `MoodKiss.blush(style)`, the style kept from the kiss's phases (the server resets it to SWEET at KISSED).
+  - `CompanionTests.kissBlush` checks it.
+- **The eyes:**
+  - `tools/companion_textures.py`:
+    - `REPAINT` repaints face pixels in the game's copy, never `art/` (Ayato: white outer column, blue iris inner).
+    - Overlays are cleared where the base hat pixel is opaque.
+    - Re-run it after any change; it reproduces every other file exactly.
+  - `tools/child_skins.py` and `tools/blink_skins.py`: the kakugan and the shut eye are now painted on the face layer always, plus the hat
+    where it has paint. Before, hat-only.
+  - **Pipeline order (child_skins.py wipes the folder):** run `child_skins.py`, then restore the other tools' outputs (`*_blush`, `*_vN`) or
+    re-run their tools, then `blink_skins.py`.
+  - Previews: `docs/handoff/eyes-4.1.16.png`.
+- **Not done, the owner's call:** daughters 07, 10, 11, 12, 21 and 22 have their eyes painted shut or hidden in their skins (`blink_skins.NONE`);
+  open eyes would have to be painted in.
+- Wild ghouls: `NpcLook.EYES` and `GIRL_EYES` match all 24 skins (checked on a sheet).
 
 ## Still open
 

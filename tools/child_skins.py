@@ -352,13 +352,16 @@ def build_one(path, key, girl, preview):
         turn = Image.new("RGBA", (w, w), (0, 0, 0, 0))
         glow = Image.new("RGBA", (w, w), (0, 0, 0, 0))
         colours = paint_eye(face, eye)
+        # 4.1.16 (the owner: "Some eyes are clearly a little fucked on the skins"): on the face itself always, and on the hat layer too
+        # where that has paint. Before, a pixel under the hat turned on the hat only: the game draws the hat half a pixel out and 9/8 the
+        # size, so the human eye's own pixels under it peeked out round the red.
         for (x, y), colour in colours.items():
-            on_hat = face.hat[y][x][3] >= 128
-            u = (40 if on_hat else 8) * s + x
             v = 8 * s + y
-            turn.putpixel((u, v), colour)
-            if eye[(x, y)] == "iris":
-                glow.putpixel((u, v), colour)
+            targets = [8 * s + x] + ([40 * s + x] if face.hat[y][x][3] > 0 else [])
+            for u in targets:
+                turn.putpixel((u, v), colour)
+                if eye[(x, y)] == "iris":
+                    glow.putpixel((u, v), colour)
         turn.save(OUT / (key + "_k" + side + ".png"), optimize=True)
         glow.save(OUT / (key + "_g" + side + ".png"), optimize=True)
         found[side] = (sum(1 for k in eye.values() if k == "white"), sum(1 for k in eye.values() if k == "iris"))

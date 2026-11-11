@@ -58,13 +58,24 @@ EYES = {
 
 EYES.update({
     # 4.0.8: Ayato's new skin: his eyes are the face's rows 5 and 6 (the white outside on row 6, the violet iris inside), the lashes row 4.
-    "ayato": {"right": [(1, 5), (2, 5), (1, 6), (2, 6)], "left": [(5, 5), (6, 5), (5, 6), (6, 6)], "white": [(1, 6), (6, 6)],
+    # 4.1.16: repainted (REPAINT): the white the outer column, both rows.
+    "ayato": {"right": [(1, 5), (2, 5), (1, 6), (2, 6)], "left": [(5, 5), (6, 5), (5, 6), (6, 6)], "white": [(1, 5), (1, 6), (6, 5), (6, 6)],
               "lash": [(1, 4), (2, 4), (5, 4), (6, 4)]},
     # 4.0.0: Noro's mask's eye-holes (row 5, the dark stitches' ends).
     "noro": {"right": [(1, 5), (2, 5)], "left": [(5, 5), (6, 5)], "white": [], "lash": []},
     # 4.1.5: the General's eyes are one row (the face's row 4: the white outside, the blue iris inside), under his brows (row 3).
     "general": {"right": [(1, 4), (2, 4)], "left": [(5, 4), (6, 4)], "white": [(1, 4), (6, 4)], "lash": []},
 })
+
+# 4.1.16 (the owner: "adapt all eyes to make sure that they all look like eyes ... Some eyes are clearly a little fucked on the skins", and
+# Ayato's first): face pixels repainted in the game's copy of a skin (the owner's file in art/ is never changed) so each eye reads as an
+# eye. Ayato's skin painted his iris in his hair's own violet (60579f) under a near-black lid, a single white pixel at its lower outer
+# corner: in game the eye was a black block over hair. Now each eye is a white outer column and a blue iris inner one (dark at the top,
+# light under it), under his lashes.
+REPAINT = {
+    "ayato": {(1, 5): "f5f6f7", (1, 6): "e8eaf0", (2, 5): "2a3488", (2, 6): "6a82dc",
+              (6, 5): "f5f6f7", (6, 6): "e8eaf0", (5, 5): "2a3488", (5, 6): "6a82dc"},
+}
 
 BLACK = (12, 4, 8, 255)
 LID = (14, 12, 16, 255)  # 1.3.30: the shut lid's line, black
@@ -177,6 +188,11 @@ def build(key, config, preview):
             for x in (5, 6):
                 source_face.put(day, 7 - x, y, source_face.at(x, y))
         skin = day
+    if key in REPAINT:
+        skin = skin.copy()
+        painter = Face(skin)
+        for (x, y), code in REPAINT[key].items():
+            painter.put(skin, x, y, (int(code[0:2], 16), int(code[2:4], 16), int(code[4:6], 16), 255))
     face = Face(skin)
     if key in EYES:
         eyes = {"right": EYES[key]["right"], "left": EYES[key]["left"], "white": set(EYES[key].get("white", [])), "lash": EYES[key].get("lash", [])}
@@ -220,6 +236,13 @@ def build(key, config, preview):
         cheek = min(7, bottom + 1)
         for x in sorted({x for x, y in pixels}):
             face.put(blush, x, cheek, BLUSH)
+    # 4.1.16: nothing under the hair (a face pixel its outer layer paints over, opaque): the game draws that layer half a pixel out and 9/8
+    # the size, so red or a lid line under it peeks out round the hair in slivers (Touka's eye under her fringe turned, her cheek streaked).
+    for overlay in (kakugan, glow, closed, blush):
+        for y in range(8):
+            for x in range(8):
+                if face.at(x, y, 1)[3] >= 255:
+                    face.put(overlay, x, y, (0, 0, 0, 0))
     kakugan.save(out / f"{key}_kakugan.png")
     glow.save(out / f"{key}_kakugan_glow.png")
     closed.save(out / f"{key}_closed.png")

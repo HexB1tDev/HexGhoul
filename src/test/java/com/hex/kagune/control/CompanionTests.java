@@ -156,6 +156,7 @@ public final class CompanionTests {
         moods();
         moodKisses();
         poseFade();
+        kissBlush();
         wed();
         poses();
         ken();
@@ -1174,6 +1175,67 @@ public final class CompanionTests {
         check(fade.through(null, 200L, 206.0) == null, "then none");
         com.hex.kagune.control.client.animation.PoseFade fresh = new com.hex.kagune.control.client.animation.PoseFade();
         check(fresh.through(null, 5L, 1.0) == null && fresh.through(kiss, 6L, 2.0) != null, "nothing before: nothing to blend from");
+    }
+
+    /**
+     * 4.1.16 (the owner: "Confirm that all females when kissing have a blush, sort of ... So every time [they] blush, it depends on their
+     * mood"): a woman blushes through the whole of a kiss, as deep as its mood, never flickering off between its phases, a while after,
+     * then it fades; a man only where it is his way to (Persona.blushes).
+     */
+    static void kissBlush() {
+        com.hex.kagune.control.npc.MoodKiss.Style[] styles = com.hex.kagune.control.npc.MoodKiss.Style.values();
+        for (com.hex.kagune.control.npc.MoodKiss.Style style : styles) {
+            float deep = com.hex.kagune.control.npc.MoodKiss.blush(style);
+            check(deep >= 0.25F && deep <= 1.0F, style + ": a blush, some");
+        }
+        check(com.hex.kagune.control.npc.MoodKiss.blush(com.hex.kagune.control.npc.MoodKiss.Style.SHY) > com.hex.kagune.control.npc.MoodKiss.blush(
+            com.hex.kagune.control.npc.MoodKiss.Style.SWEET) && com.hex.kagune.control.npc.MoodKiss.blush(com.hex.kagune.control.npc.MoodKiss.Style.SWEET)
+            > com.hex.kagune.control.npc.MoodKiss.blush(com.hex.kagune.control.npc.MoodKiss.Style.ANGRY), "shy deepest, sweet warm, angry only a flush");
+        for (Persona p : Persona.ALL) {
+            for (com.hex.kagune.control.npc.MoodKiss.Style style : styles) {
+                com.hex.kagune.control.client.animation.KissBlush blush = new com.hex.kagune.control.client.animation.KissBlush();
+                double clock = 1000.0;
+                float last = 0.0F;
+                // Leaning in, held, pulled in, kissed: each phase's own gesture; one frame a quarter tick.
+                EtoGesture[][] phases = {{EtoGesture.KISS}, {EtoGesture.BLUSH}, {EtoGesture.PULL}, {EtoGesture.KISSED}};
+                float peak = 0.0F;
+                for (EtoGesture[] phase : phases) {
+                    for (int frame = 0; frame < 120; frame++) {
+                        float now = blush.at(p.female(), p.blushes(phase[0]), phase[0], phase[0] == EtoGesture.KISSED
+                            ? com.hex.kagune.control.npc.MoodKiss.Style.SWEET : style, clock);
+                        check(Math.abs(now - last) <= 0.25F / (float)com.hex.kagune.control.client.animation.KissBlush.RISE + 1.0E-4F,
+                            p.key() + " " + style + " " + phase[0] + ": never jumps");
+                        if (p.female() && clock > 1000.0 + com.hex.kagune.control.client.animation.KissBlush.RISE + 1.0) {
+                            check(now > 0.2F, p.key() + " " + style + " " + phase[0] + ": a woman blushes through every part of a kiss");
+                        }
+                        peak = Math.max(peak, now);
+                        last = now;
+                        clock += 0.25;
+                    }
+                }
+                if (p.female()) {
+                    check(Math.abs(peak - com.hex.kagune.control.npc.MoodKiss.blush(style)) < 0.01F, p.key() + " " + style + ": as deep as its mood ("
+                        + peak + ")");
+                }
+                // Over: it stays a while, then fades away.
+                float after = blush.at(p.female(), false, EtoGesture.NONE, com.hex.kagune.control.npc.MoodKiss.Style.SWEET, clock + 50.0);
+                if (p.female()) {
+                    check(after > 0.2F, p.key() + " " + style + ": still pink a while after");
+                }
+                float gone = 0.0F;
+                for (double t = clock + 50.0; t < clock + 400.0; t += 1.0) {
+                    gone = blush.at(p.female(), false, EtoGesture.NONE, com.hex.kagune.control.npc.MoodKiss.Style.SWEET, t);
+                }
+                check(gone == 0.0F, p.key() + " " + style + ": then gone");
+            }
+        }
+        // A man who doesn't blush at being kissed doesn't; a shy one (his way) does.
+        com.hex.kagune.control.client.animation.KissBlush plain = new com.hex.kagune.control.client.animation.KissBlush();
+        float man = 0.0F;
+        for (double t = 0.0; t < 40.0; t += 1.0) {
+            man = plain.at(false, false, EtoGesture.KISS, com.hex.kagune.control.npc.MoodKiss.Style.SHY, t);
+        }
+        check(man == 0.0F, "a man not given to blushing doesn't");
     }
 
     /** 2.2.0: a partner lets go of a first blow or a missed kiss; only more, close together, put them out; sorry always helps. */

@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.16 (HexGhoul): every woman blushes through a kiss, as deep as her mood; eyes that read as eyes (testing)
+
+See `.github/release-notes-4.1.16.md`. Your words: "Confirm that all females when kissing have a blush, sort of ... adapt all eyes to make sure that they all look like eyes". Every woman (Eto, Touka, village women) blushes through the whole of a kiss and a few seconds after, as deep as her mood (shy to the ears, angry only a flush), rising and fading smoothly. Ayato's eyes repainted (his iris was his hair's own purple); nothing drawn under Touka's fringe; 16 kids' blinks and 9 kids' kakugan no longer let the open eye peek out (they were drawn on the outer layer only). Wild ghouls checked: all aligned. Protocol 117.
+
 ## 4.1.15 (HexGhoul): they react to who you're with, a better night together, more kid games (no touching teenage sons), six new kisses (testing)
 
 See `.github/release-notes-4.1.15.md`. Your words: "Now add more interactions, like if you're married to touka ayato will respond, and more this is just an example, improve the making love scene, add more kid interactions, add more kiss types and better the animation". Everyone who comes up to talk now knows who you're dating, married to and have children with (Ayato on his sister's marriage, Uncle Ken, Auntie Touka, the General's files...). The night together has its own captions for who it's with, their mood, the weather, a first night or a long marriage, the kids down the hall, with rain, thunder and dawn in the cutscene. Five new kid games (nuzzle, boop, fist bump, patty-cake, dance) on a two-page play menu. "stop the touching with your fucking son": from his teens on a son gets no hugs, pats, nuzzles, dances or hand held, a fist bump instead. Six new kisses (shy, the morning after, in the rain, a film's, nose to nose, a kiss on the hand), each companion their own way, and the kiss and every gesture blend smoothly into the next. Protocol 117.

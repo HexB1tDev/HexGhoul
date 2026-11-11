@@ -39,6 +39,8 @@ public final class HumanRenderer extends HumanoidMobRenderer<HumanNpc, PlayerMod
     private static final java.util.Map<Integer, java.util.Optional<ResourceLocation>> SHUT = new java.util.HashMap<>();
     /** 1.3.77: each look's blush. */
     private static final java.util.Map<Integer, java.util.Optional<ResourceLocation>> BLUSH = new java.util.HashMap<>();
+    /** 4.1.16: each human's blush (by entity id). */
+    private static final java.util.Map<Integer, com.hex.kagune.control.client.animation.KissBlush> BLUSHING = new java.util.HashMap<>();
 
     static {
         for (int i = 0; i < SKINS.length; i++) {
@@ -161,14 +163,20 @@ public final class HumanRenderer extends HumanoidMobRenderer<HumanNpc, PlayerMod
             }
             try {
                 int code = HumanGestures.code(human.gesture());
-                // 1.3.77: blushing (a kiss, a hug, shy): pink coming up over its cheeks.
-                if (!human.scared() && HumanGestures.blush(code)) {
+                // 1.3.77: blushing (a kiss, a hug, shy): pink coming up over its cheeks. 4.1.16 (the owner: "Confirm that all females when
+                // kissing have a blush, sort of"): a woman through the whole of a kiss, leaning in for it too, and a while after (KissBlush).
+                com.hex.kagune.control.npc.EtoGesture move = HumanGestures.cue(code) ? null : HumanGestures.gesture(code);
+                if (BLUSHING.size() > 512) {
+                    BLUSHING.clear();
+                }
+                float rise = human.scared() ? 0.0F : BLUSHING.computeIfAbsent(human.m_19879_(), id -> new com.hex.kagune.control.client.animation.KissBlush())
+                    .at(HumanRules.female(human.look()), HumanGestures.blush(code), move, null, ageInTicks);
+                if (rise > 0.003F) {
                     java.util.Optional<ResourceLocation> pink = BLUSH.computeIfAbsent(human.look(), l -> {
                         String path = HumanRules.blush(l);
                         return path == null ? java.util.Optional.empty() : java.util.Optional.of(Objects.requireNonNull(ResourceLocation.m_214293_("hexkagune", path)));
                     });
                     if (pink.isPresent()) {
-                        float rise = Math.min(1.0F, gestureAge(human, ageInTicks) / 8.0F);
                         this.m_117386_().m_7695_(pose, buffers.m_6299_(RenderType.m_110473_(pink.get())), light, OverlayTexture.f_118083_, 1.0F, 1.0F, 1.0F, rise);
                     }
                 }

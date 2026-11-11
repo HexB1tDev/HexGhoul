@@ -127,6 +127,25 @@ public final class MoodKiss {
         };
     }
 
+    /**
+     * 4.1.16 (the owner: "Confirm that all females when kissing have a blush, sort of ... So every time [they] blush, it depends on their
+     * mood"): how deep the colour comes up in a kiss of {@code style} (0..1): a shy one, a giddy one, to the ears; a tender or a film's,
+     * warm; an angry or a hungry one, only a flush.
+     */
+    public static float blush(Style style) {
+        return switch (style == null ? Style.SWEET : style) {
+            case SHY, GIDDY -> 1.0F;
+            case MOVIE, NOSE -> 0.9F;
+            case SWEET, TENDER, RAIN -> 0.8F;
+            case DESPERATE, GALLANT -> 0.7F;
+            case POSSESSIVE, TEASING -> 0.6F;
+            case MORNING -> 0.55F;
+            case SLEEPY -> 0.45F;
+            case ANGRY -> 0.35F;
+            case HUNGRY -> 0.3F;
+        };
+    }
+
     /** How many hearts it's worth, against the usual. */
     public static double hearts(Style style) {
         return switch (style) {

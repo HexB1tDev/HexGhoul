@@ -219,9 +219,14 @@ def main():
         found = 0
         for side in (0, 1):
             mask = eye_mask(face, tone, BOXES[key][side], KEEP.get(key))
+            # 4.1.16 (the owner: "Some eyes are clearly a little fucked on the skins"): the shut eye on the face itself always, and on the hat
+            # layer too where that has paint (a see-through hat pixel would tint it). Before, a pixel under the hat was shut on the hat
+            # only: the game draws the hat half a pixel out and 9/8 the size, so it never lies exactly over the face, and the open eye's own
+            # pixels (a catchlight, a lash) peeked out round the shut lid.
             for (x, y), colour in shut(face, tone, mask).items():
-                on_hat = face.hat[y][x][3] > 0  # a see-through hat pixel too: it would tint the shut eye
-                overlay.putpixel(((40 if on_hat else 8) * s + x, 8 * s + y), colour)
+                overlay.putpixel((8 * s + x, 8 * s + y), colour)
+                if face.hat[y][x][3] > 0:
+                    overlay.putpixel((40 * s + x, 8 * s + y), colour)
             for (x, y), colour in blush(face, tone, mask).items():
                 cheeks.putpixel(((40 if face.hat[y][x][3] > 0 else 8) * s + x, 8 * s + y), colour)
             found += bool(mask)

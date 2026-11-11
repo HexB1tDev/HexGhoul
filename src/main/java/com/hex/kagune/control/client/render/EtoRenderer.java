@@ -149,6 +149,9 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
         }
     }
 
+    /** 4.1.16: each companion's blush (by entity id). */
+    static final java.util.Map<Integer, com.hex.kagune.control.client.animation.KissBlush> BLUSHES = new java.util.HashMap<>();
+
     /** 4.1.15: each companion's pose carried from one gesture into the next (by entity id). */
     static final java.util.Map<Integer, com.hex.kagune.control.client.animation.PoseFade> FADES = new java.util.HashMap<>();
 
@@ -451,8 +454,13 @@ public final class EtoRenderer extends HumanoidMobRenderer<EtoNpc, PlayerModel<E
                 if (shut) {
                     model.m_7695_(pose, buffers.m_6299_(RenderType.m_110473_(r.closed)), light, OverlayTexture.f_118083_, 1.0F, 1.0F, 1.0F, 1.0F);
                 }
-                if (r.persona.blushes(gesture)) {
-                    float blush = (float)Math.min(1.0, (view == null ? 0.0 : view.gestureAge(clock)) / 8.0);
+                // 4.1.16: every woman blushes through a kiss and a while after, as deep as the kiss's mood has it (KissBlush).
+                if (BLUSHES.size() > 256) {
+                    BLUSHES.clear();
+                }
+                float blush = BLUSHES.computeIfAbsent(npc.m_19879_(), id -> new com.hex.kagune.control.client.animation.KissBlush()).at(r.persona.female(),
+                    r.persona.blushes(gesture), gesture, view == null ? null : view.kiss(), clock);
+                if (blush > 0.003F) {
                     model.m_7695_(pose, buffers.m_6299_(RenderType.m_110473_(r.blush)), light, OverlayTexture.f_118083_, 1.0F, 1.0F, 1.0F, blush);
                 }
             } catch (RuntimeException failure) {
