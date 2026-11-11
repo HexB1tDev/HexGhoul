@@ -1,0 +1,1306 @@
+diff --git a/.github/release-notes-4.1.21.md b/.github/release-notes-4.1.21.md
+new file mode 100644
+index 00000000..8f269e39
+--- /dev/null
++++ b/.github/release-notes-4.1.21.md
+@@ -0,0 +1,37 @@
++## 4.1.21 (HexGhoul): katana cuts with wrists, the hands always in front of you
++
++HexKagune 4.1.21 for Forge 1.20.1. Not tested in game. Previews: `docs/handoff/katana-cuts-4.1.21.png` (every cut from the front, the side,
++behind and above), `docs/handoff/katana-cuts-before-after-4.1.21.png` (your frames, before and after).
++
++Your words, of the katana's cuts: "Why the fuck is the sword behind the fucking back? That, like, both arms are reaching behind the player's
++back. What is that?"
++
++**What it was:** the katana was welded to the forearm at one angle, its chudan angle. To point the blade down and to the left (the end of
++a kesa-giri), the only arm angle that does that swings the arm up and back. The solver behind the cuts (4.1.18) cared about the blade's
++direction far more than where the hands were, so in kesa-giri's follow-through, gyaku-kesa's wind-up and yoko-giri's follow-through both
++hands went behind your back, through your body. It also asked for hand positions no straight arm can reach, and at rest in chudan the
++left fist sat a pixel inside your stomach with the hilt through it. Nothing checked any of this.
++
++**Now:**
++
++- **Wrists.** The katana turns in your grip the way a swordsman's wrists cock at the end of a cut, up to a real wrist's reach. Your hands
++  stay in front of you while the blade points down and away.
++- **Every cut re-solved** where straight arms can actually reach: kesa-giri rises into jodan before your face and cuts down across to the
++  left, gyaku-kesa rises from low left to high right, yoko-giri lays the blade out right and sweeps it flat across, the tsuki drives
++  straight out on a lunge, and the spinning finisher stays as it was. Each blade path and body motion is the same as before; only the hands
++  moved to where they can be.
++- **Chudan** is a firm, high guard: the blade at an opponent's head, both hands a fist in front of your chest.
++- **The hilt** now ends just past your left hand, with the pommel in the heel of the hand, as a katana is held. The guard is a katana's size.
++- Drawn the same way for you (third and first person) and for every investigator holding one.
++- **Checked:**
++  - At every 2% of every cut, both fists are in front of you or beside you, never behind.
++  - The blade, guard, hilt and both arms never go into your torso, head or legs.
++  - The wrists stay within a wrist's reach.
++  - The weapon drawn by the renderer turns exactly as the arm says.
++
++**Not yet:** the other quinques still swing the old way. Each one gets this treatment, a string of its own and a kagune mesh, one at a
++time, starting with the mace (its second swing winds up behind the head).
++
++### Other
++
++- Protocol 117 (unchanged).
+diff --git a/src/main/java/com/hex/kagune/control/client/AgentClient.java b/src/main/java/com/hex/kagune/control/client/AgentClient.java
+index 58a4160a..584a4e89 100644
+--- a/src/main/java/com/hex/kagune/control/client/AgentClient.java
++++ b/src/main/java/com/hex/kagune/control/client/AgentClient.java
+@@ -196,6 +196,8 @@ public final class AgentClient {
+             AgentRules.Look look = agent.look();
+             QuinqueGrip.reach(p, base, look.slim() || look.female());
+         }
++        // 4.1.21: its wrists, for the quinque drawn in its hand (QuinqueItemRenderer).
++        QuinqueWrists.posed(agent, new float[] {p.weaponX, p.weaponY, p.weaponZ});
+         return p;
+     }
+ 
+diff --git a/src/main/java/com/hex/kagune/control/client/QuinqueItemRenderer.java b/src/main/java/com/hex/kagune/control/client/QuinqueItemRenderer.java
+index f246b3f4..13f01ce4 100644
+--- a/src/main/java/com/hex/kagune/control/client/QuinqueItemRenderer.java
++++ b/src/main/java/com/hex/kagune/control/client/QuinqueItemRenderer.java
+@@ -67,6 +67,20 @@ public final class QuinqueItemRenderer extends net.minecraft.client.renderer.Blo
+             float out = QuinqueMesh.out(QuinqueClient.shown(stack, true));
+             pose.m_85836_();
+             try {
++                // 4.1.21: the wrists of whoever holds it (QuinqueWrists): the weapon turned in the fist about the right grip, as the body's
++                // swing bends them (QuinqueGrip.wristInItem: the arm's turn in the item's own frame).
++                float[] wrists = QuinqueWrists.of(stack, context);
++                if (wrists != null && (wrists[0] != 0.0F || wrists[1] != 0.0F || wrists[2] != 0.0F)) {
++                    com.hex.kagune.control.client.animation.QuinqueHolds.Hold h = com.hex.kagune.control.client.animation.QuinqueHolds.of(q);
++                    if (h != null) {
++                        float[] turn = com.hex.kagune.control.client.animation.QuinqueGrip.wristInItem(h, wrists[0], wrists[1], wrists[2]);
++                        float[] g = h.rightGrip();
++                        pose.m_85837_(g[0] / 16.0, g[1] / 16.0, g[2] / 16.0);
++                        pose.m_252781_(new org.joml.Quaternionf().rotateAxis(turn[2], 0.0F, 0.0F, 1.0F).rotateAxis(turn[1], 0.0F, 1.0F, 0.0F)
++                            .rotateAxis(turn[0], 1.0F, 0.0F, 0.0F));
++                        pose.m_85837_(-g[0] / 16.0, -g[1] / 16.0, -g[2] / 16.0);
++                    }
++                }
+                 // Turned onto the handheld diagonal about the model's middle, as the baker turns its boxes (QuinqueMesh.turned), then the
+                 // model's own pixels (ItemRenderer has already moved the model's corner to the origin).
+                 pose.m_85837_(0.5, 0.5, 0.5);
+diff --git a/src/main/java/com/hex/kagune/control/client/QuinqueWrists.java b/src/main/java/com/hex/kagune/control/client/QuinqueWrists.java
+new file mode 100644
+index 00000000..2e4af77b
+--- /dev/null
++++ b/src/main/java/com/hex/kagune/control/client/QuinqueWrists.java
+@@ -0,0 +1,68 @@
++package com.hex.kagune.control.client;
++
++import net.minecraft.world.entity.LivingEntity;
++import net.minecraft.world.item.ItemStack;
++import net.minecraftforge.api.distmarker.Dist;
++import net.minecraftforge.eventbus.api.EventPriority;
++import net.minecraftforge.eventbus.api.SubscribeEvent;
++import net.minecraftforge.fml.common.Mod;
++
++/**
++ * 4.1.21: whose wrists the quinque being drawn is in. The arms are posed by the body's animation, the item drawn after by ItemInHandLayer
++ * through {@link QuinqueItemRenderer}, which is told neither who holds it nor how: each body's weapon turn (its wrists, {@code
++ * RigPose.weaponX}, Y, Z) is kept here as it is posed (players by KaguneBodyAnimation, investigators by AgentClient), and the body being
++ * drawn is known from RenderLivingEvent. First person tells its own ({@link #firstPerson}). A body is only taken at its word for the
++ * very stack in its main hand, drawn in its right hand: anything else (an inventory slot, a frame, a left hand) is drawn straight.
++ */
++@Mod.EventBusSubscriber(modid = "hexkagune", value = Dist.CLIENT)
++public final class QuinqueWrists {
++    private QuinqueWrists() {
++    }
++
++    private static final java.util.Map<LivingEntity, float[]> POSED = new java.util.WeakHashMap<>();
++    private static LivingEntity drawing;
++    private static float[] firstPerson;
++
++    /** {@code body} posed with {@code wrists} ({x, y, z}; null: none) this frame. */
++    public static void posed(LivingEntity body, float[] wrists) {
++        if (body == null) {
++            return;
++        }
++        if (wrists == null) {
++            POSED.remove(body);
++        } else {
++            POSED.put(body, wrists);
++        }
++    }
++
++    @SubscribeEvent(priority = EventPriority.HIGHEST)
++    public static void before(net.minecraftforge.client.event.RenderLivingEvent.Pre<?, ?> event) {
++        drawing = event.getEntity();
++    }
++
++    @SubscribeEvent(priority = EventPriority.LOWEST)
++    public static void after(net.minecraftforge.client.event.RenderLivingEvent.Post<?, ?> event) {
++        drawing = null;
++    }
++
++    /** First person draws its quinque with {@code wrists} until {@link #firstPersonDone}. */
++    public static void firstPerson(float[] wrists) {
++        firstPerson = wrists;
++    }
++
++    public static void firstPersonDone() {
++        firstPerson = null;
++    }
++
++    /** The wrists {@code stack} is drawn in now in {@code context} (right hand only), or null. */
++    static float[] of(ItemStack stack, net.minecraft.world.item.ItemDisplayContext context) {
++        if (context != net.minecraft.world.item.ItemDisplayContext.THIRD_PERSON_RIGHT_HAND) {
++            return null;
++        }
++        if (firstPerson != null) {
++            return firstPerson;
++        }
++        LivingEntity body = drawing;
++        return body != null && body.m_21205_() == stack ? POSED.get(body) : null;
++    }
++}
+diff --git a/src/main/java/com/hex/kagune/control/client/animation/AgentPose.java b/src/main/java/com/hex/kagune/control/client/animation/AgentPose.java
+index fcb90081..b38b940f 100644
+--- a/src/main/java/com/hex/kagune/control/client/animation/AgentPose.java
++++ b/src/main/java/com/hex/kagune/control/client/animation/AgentPose.java
+@@ -159,7 +159,11 @@ public final class AgentPose {
+         float bob = 0.06F * (float)Math.sin(phase * 2.0) * k;
+         run.twist *= 0.4F; // the weapon steadies the shoulders
+         run.twist += h.twist() * (1.0F - 0.5F * k);
+-        QuinqueGrip.aimRight(run, h.pitch(), h.yaw(), h.roll());
++        // 4.1.21: its solved stance (its arm and wrists: the hands clear of him), as QuinquePose.hold has it.
++        QuinquePose.Key s = QuinquePose.solvedStance(q);
++        QuinqueGrip.aimRight(run, h.pitch() + s.pitch(), h.yaw() + s.yaw(), h.roll() + s.roll());
++        run.weaponX = s.wristX();
++        run.weaponZ = s.wristZ();
+         // Lowered about the level line across the chest as it now faces.
+         QuinquePose.pitchBy(run, q, STANCE_LOWER * k + bob);
+         run.leftArmX = h.left()[0];
+@@ -194,11 +198,13 @@ public final class AgentPose {
+         float k = snap(t);
+         QuinqueHolds.Hold h = QuinqueHolds.of(q);
+         RigPose p = QuinquePose.hold(q);
++        // 4.1.21: from its solved stance (its arm and wrists), as QuinquePose.hold has it, so the parry starts where the stance is.
++        QuinquePose.Key s = QuinquePose.solvedStance(q);
+         if (q.twoHanded) {
+-            QuinqueGrip.aimRight(p, h.pitch() - 0.6F * k, h.yaw() - 0.3F * k, h.roll() - 0.25F * k);
++            QuinqueGrip.aimRight(p, h.pitch() + s.pitch() - 0.6F * k, h.yaw() + s.yaw() - 0.3F * k, h.roll() + s.roll() - 0.25F * k);
+         } else {
+             // The blade up and across, its flat turned to take the blow.
+-            QuinqueGrip.aimRight(p, h.pitch() - 0.85F * k, h.yaw() - 0.5F * k, h.roll() + 1.2F * k);
++            QuinqueGrip.aimRight(p, h.pitch() + s.pitch() - 0.85F * k, h.yaw() + s.yaw() - 0.5F * k, h.roll() + s.roll() + 1.2F * k);
+         }
+         p.twist -= 0.35F * k;
+         p.lean -= 0.08F * k;
+diff --git a/src/main/java/com/hex/kagune/control/client/animation/KaguneBodyAnimation.java b/src/main/java/com/hex/kagune/control/client/animation/KaguneBodyAnimation.java
+index 49bf1155..c5d22a01 100644
+--- a/src/main/java/com/hex/kagune/control/client/animation/KaguneBodyAnimation.java
++++ b/src/main/java/com/hex/kagune/control/client/animation/KaguneBodyAnimation.java
+@@ -542,6 +542,9 @@ public final class KaguneBodyAnimation implements IAnimation {
+         if (quinque != null) {
+             ChildMomentPose.blend(p, quinque, this.fade);
+         }
++        // 4.1.21: its wrists, for the item drawn in this hand (QuinqueItemRenderer: the weapon turned in the fist as the arm is posed).
++        com.hex.kagune.control.client.QuinqueWrists.posed(this.player, quinque == null ? null
++            : new float[] {quinque.weaponX * this.fade, quinque.weaponY * this.fade, quinque.weaponZ * this.fade});
+         // 3.6.2: The Walker: its tentacles carry him: his own legs hang still, and he is lifted a little off the ground.
+         if (PathClient.get(this.player) == KagunePath.BIKAKU && com.hex.kagune.control.client.BikakuClient.walking(this.player, tickDelta)) {
+             double walkerClock = com.hex.kagune.control.client.PaleClient.clock(tickDelta);
+diff --git a/src/main/java/com/hex/kagune/control/client/animation/QuinqueAim.java b/src/main/java/com/hex/kagune/control/client/animation/QuinqueAim.java
+index 1245dd6b..30ba427d 100644
+--- a/src/main/java/com/hex/kagune/control/client/animation/QuinqueAim.java
++++ b/src/main/java/com/hex/kagune/control/client/animation/QuinqueAim.java
+@@ -33,27 +33,110 @@ public final class QuinqueAim {
+     }
+ 
+     /** How much a pixel of the fist off its place weighs against the blade off its line, and the left hand off its grip. */
+-    static final double HAND = 0.1;
++    static final double HAND = 0.6;
+     /** How much the blade off its line weighs (1 - cos: 120 is 18 at 30 degrees off). */
+     static final double BLADE = 120.0;
+     static final double LEFT = 2.0;
+     /** How much a turn away from the key before costs (radians squared): enough to choose between equal answers, no more. */
+     static final double KEEP = 4.0;
++    /**
++     * 4.1.21: the wrists (the weapon turned in the grip, {@link RigPose#weaponX} and {@link RigPose#weaponZ}): what a radian of each costs,
++     * and how far each goes (a wrist bends about 85 degrees each way, rocks about 40 side to side; the hilt's own give in the fingers
++     * included).
++     */
++    static final double WRIST = 0.8;
++    public static final double WRIST_BEND = 1.5;
++    public static final double WRIST_ROCK = 0.7;
++    /**
++     * 4.1.21: what a pixel of the fists or the weapon sunk into his torso or head costs (squared): never through him. The owner, of 4.1.18's
++     * katana: "Why the fuck is the sword behind the fucking back? That, like, both arms are reaching behind the player's back."
++     */
++    static final double CLEAR = 60.0;
+ 
+     /**
+-     * {@code q}'s keys for {@code aims}, solved: the first and last at rest in the stance; each between, the arm turned (as offsets from
+-     * the stance's) so the blade and fist are where the aim says.
++     * {@code q}'s keys for {@code aims}, solved: the first and last at rest in the stance (4.1.21: its own solved stance where it has one);
++     * each between, the arm turned (as offsets from the stance's) and the wrists bent so the blade and fist are where the aim says.
+      */
+     public static QuinquePose.Key[] keys(Quinque q, Aim[] aims) {
++        java.util.List<Aim> list = new java.util.ArrayList<>(java.util.Arrays.asList(aims));
++        QuinquePose.Key[] out = solved(q, list.toArray(new Aim[0]));
++        // 4.1.21: every key clear of him is not enough: the curve between two can still pass through him. Each stretch is looked at a
++        // quarter, a half and three quarters through, and where the worst sinks a key is put in there (its blade and fist eased between
++        // its neighbours', the body as the curve has it) and solved clear; again, a few times at most.
++        for (int round = 0; round < BETWEEN; round++) {
++            double worst = THROUGH;
++            int after = -1;
++            double at = 0.0;
++            for (int i = 0; i + 1 < out.length; i++) {
++                for (double f : new double[] {0.25, 0.5, 0.75}) {
++                    double t = out[i].t() + (out[i + 1].t() - out[i].t()) * f;
++                    RigPose p = QuinquePose.posed(q, out, t);
++                    QuinqueGrip.reach(p, q, false);
++                    double d = QuinqueReach.deepest(p, q);
++                    if (d > worst) {
++                        worst = d;
++                        after = i;
++                        at = t;
++                    }
++                }
++            }
++            if (after < 0) {
++                break;
++            }
++            Aim a = list.get(after).blade() == null ? QuinquePose.stanceAim(q) : list.get(after);
++            Aim b = list.get(after + 1).blade() == null ? QuinquePose.stanceAim(q) : list.get(after + 1);
++            if (a == null || b == null) {
++                break;
++            }
++            double f = (at - list.get(after).t()) / Math.max(1.0E-6, list.get(after + 1).t() - list.get(after).t());
++            float[] body = QuinquePose.curve(out, at);
++            double[] blade = unit(new double[] {a.blade()[0] + (b.blade()[0] - a.blade()[0]) * f, a.blade()[1] + (b.blade()[1] - a.blade()[1]) * f,
++                a.blade()[2] + (b.blade()[2] - a.blade()[2]) * f});
++            double[] hand = {a.hand()[0] + (b.hand()[0] - a.hand()[0]) * f, a.hand()[1] + (b.hand()[1] - a.hand()[1]) * f,
++                a.hand()[2] + (b.hand()[2] - a.hand()[2]) * f};
++            Aim between = new Aim(at, blade, hand, body[3], body[4], body[5], body[6], body[7]);
++            list.add(after + 1, between);
++            // Solved alone, near the key before it (the rest stand as they were solved).
++            QuinqueHolds.Hold h = QuinqueHolds.of(q);
++            QuinquePose.Key before = out[after];
++            double[] near = {h.pitch() + before.pitch(), h.yaw() + before.yaw(), h.roll() + before.roll(), before.wristX(), before.wristZ()};
++            QuinquePose.Key made = key(h, between, near, solve(q, blade, hand, near));
++            QuinquePose.Key[] grown = new QuinquePose.Key[out.length + 1];
++            System.arraycopy(out, 0, grown, 0, after + 1);
++            grown[after + 1] = made;
++            System.arraycopy(out, after + 1, grown, after + 2, out.length - after - 1);
++            out = grown;
++        }
++        return out;
++    }
++
++    /** A solved key for {@code aim}: its arm as offsets from the hold's, its roll unwound to the nearest of its turns to {@code near}'s. */
++    static QuinquePose.Key key(QuinqueHolds.Hold h, Aim aim, double[] near, double[] at) {
++        while (at[2] - near[2] > Math.PI) {
++            at[2] -= 2.0 * Math.PI;
++        }
++        while (at[2] - near[2] < -Math.PI) {
++            at[2] += 2.0 * Math.PI;
++        }
++        return new QuinquePose.Key((float)aim.t(), (float)(at[0] - h.pitch()), (float)(at[1] - h.yaw()), (float)(at[2] - h.roll()),
++            (float)aim.twist(), (float)aim.lean(), (float)aim.lunge(), (float)aim.drop(), (float)aim.spin(), (float)at[3], (float)at[4]);
++    }
++
++    /** How many keys {@link #keys} may put in between, and how deep (pixels) a sample must sink for one. */
++    static final int BETWEEN = 4;
++    static final double THROUGH = 0.1;
++
++    /** {@code aims} solved one after another (each near the one before). */
++    static QuinquePose.Key[] solved(Quinque q, Aim[] aims) {
+         QuinqueHolds.Hold h = QuinqueHolds.of(q);
+         QuinquePose.Key[] out = new QuinquePose.Key[aims.length];
+-        double[] prev = {h.pitch(), h.yaw(), h.roll()};
++        double[] base = {h.pitch(), h.yaw(), h.roll(), 0.0, 0.0};
++        Aim stanceAim = QuinquePose.stanceAim(q);
++        double[] stance = stanceAim == null ? base : solve(q, stanceAim.blade(), stanceAim.hand(), base);
++        double[] prev = stance.clone();
+         for (int i = 0; i < aims.length; i++) {
+             Aim aim = aims[i];
+-            double[] at = aim.blade() == null ? prev.clone() : solve(q, aim.blade(), aim.hand(), prev);
+-            if (aim.blade() == null) {
+-                at = new double[] {h.pitch(), h.yaw(), h.roll()};
+-            }
++            double[] at = aim.blade() == null ? stance.clone() : solve(q, aim.blade(), aim.hand(), prev);
+             // The roll unwound to the nearest of its turns to the key before (never the long way round).
+             while (at[2] - prev[2] > Math.PI) {
+                 at[2] -= 2.0 * Math.PI;
+@@ -62,12 +145,24 @@ public final class QuinqueAim {
+                 at[2] += 2.0 * Math.PI;
+             }
+             out[i] = new QuinquePose.Key((float)aim.t(), (float)(at[0] - h.pitch()), (float)(at[1] - h.yaw()), (float)(at[2] - h.roll()),
+-                (float)aim.twist(), (float)aim.lean(), (float)aim.lunge(), (float)aim.drop(), (float)aim.spin());
++                (float)aim.twist(), (float)aim.lean(), (float)aim.lunge(), (float)aim.drop(), (float)aim.spin(), (float)at[3], (float)at[4]);
+             prev = at;
+         }
+         return out;
+     }
+ 
++    /** 4.1.21: {@code q}'s stance solved (as a key: the arm's turn from the hold's, the wrists), or null where it has none by intent. */
++    public static QuinquePose.Key stance(Quinque q) {
++        Aim aim = QuinquePose.stanceAim(q);
++        if (aim == null) {
++            return null;
++        }
++        QuinqueHolds.Hold h = QuinqueHolds.of(q);
++        double[] at = solve(q, aim.blade(), aim.hand(), new double[] {h.pitch(), h.yaw(), h.roll(), 0.0, 0.0});
++        return new QuinquePose.Key(0.0F, (float)(at[0] - h.pitch()), (float)(at[1] - h.yaw()), (float)(at[2] - h.roll()), 0.0F, 0.0F, 0.0F, 0.0F, 0.0F,
++            (float)at[3], (float)at[4]);
++    }
++
+     /** The stance (a swing's first and last key). */
+     static Aim rest(double t) {
+         return new Aim(t, null, null, 0.0, 0.0, 0.0, 0.0, 0.0);
+@@ -79,42 +174,46 @@ public final class QuinqueAim {
+     }
+ 
+     /**
+-     * The right arm's pitch, yaw and roll (as {@link QuinqueGrip#aimRight} takes them) pointing {@code q}'s blade along {@code blade} with
+-     * the fist near {@code hand} (right, up, forward), the left hand able to reach its grip, near {@code near}: a search over the arm's
+-     * whole range, then narrowed.
++     * The right arm's pitch, yaw and roll (as {@link QuinqueGrip#aimRight} takes them) and 4.1.21 the wrists' bend and rock (its weapon turn
++     * x and z) pointing {@code q}'s blade along {@code blade} with the fist near {@code hand} (right, up, forward), the left hand able to reach
++     * its grip, nothing sunk into him, near {@code near} (three angles, or five with the wrists): a search over the arm's whole range and the
++     * wrists' bend, then narrowed over all five.
+      */
+     public static double[] solve(Quinque q, double[] blade, double[] hand, double[] near) {
+         double[] want = unit(new double[] {-blade[0], -blade[1], -blade[2]}); // right, up, forward to the model's (x left, y down, z back)
+         double[] place = {-hand[0], -hand[1], -hand[2]};
++        double[] close = near.length >= 5 ? near.clone() : new double[] {near[0], near[1], near[2], 0.0, 0.0};
+         // A coarse search first, the left hand's reach left out (the dearest part); the best few then narrowed with it in.
+         java.util.List<double[]> found = new java.util.ArrayList<>();
+         java.util.List<Double> scores = new java.util.ArrayList<>();
+-        for (double pitch = -3.3; pitch <= 1.2; pitch += 0.3) {
+-            for (double yaw = -1.8; yaw <= 1.8; yaw += 0.3) {
+-                for (double roll = -Math.PI; roll < Math.PI; roll += 0.35) {
+-                    double[] at = {pitch, yaw, roll};
+-                    double c = cost(q, want, place, near, at, false);
+-                    int i = 0;
+-                    while (i < scores.size() && scores.get(i) < c) {
+-                        i++;
+-                    }
+-                    if (i < SEEDS) {
+-                        found.add(i, at);
+-                        scores.add(i, c);
+-                        if (found.size() > SEEDS) {
+-                            found.remove(SEEDS);
+-                            scores.remove(SEEDS);
++        for (double bend = -1.2; bend <= 1.21; bend += 0.6) {
++            for (double pitch = -3.3; pitch <= 1.2; pitch += 0.3) {
++                for (double yaw = -1.8; yaw <= 1.8; yaw += 0.3) {
++                    for (double roll = -Math.PI; roll < Math.PI; roll += 0.35) {
++                        double[] at = {pitch, yaw, roll, bend, 0.0};
++                        double c = cost(q, want, place, close, at, false);
++                        int i = 0;
++                        while (i < scores.size() && scores.get(i) < c) {
++                            i++;
++                        }
++                        if (i < SEEDS) {
++                            found.add(i, at);
++                            scores.add(i, c);
++                            if (found.size() > SEEDS) {
++                                found.remove(SEEDS);
++                                scores.remove(SEEDS);
++                            }
+                         }
+                     }
+                 }
+             }
+         }
+-        found.add(near.clone());
+-        double[] best = near.clone();
++        found.add(close.clone());
++        double[] best = close.clone();
+         double score = Double.MAX_VALUE;
+         for (double[] seed : found) {
+-            double[] at = narrow(q, want, place, near, seed);
+-            double c = cost(q, want, place, near, at, true);
++            double[] at = narrow(q, want, place, close, seed);
++            double c = cost(q, want, place, close, at, true);
+             if (c < score) {
+                 score = c;
+                 best = at;
+@@ -134,7 +233,7 @@ public final class QuinqueAim {
+             boolean moved = true;
+             while (moved) {
+                 moved = false;
+-                for (int i = 0; i < 3; i++) {
++                for (int i = 0; i < 5; i++) {
+                     for (double sign : new double[] {-1.0, 1.0}) {
+                         double[] at = best.clone();
+                         at[i] += sign * step;
+@@ -151,10 +250,12 @@ public final class QuinqueAim {
+         return best;
+     }
+ 
+-    /** How far {@code at} is from what is wanted (see the weights). */
++    /** How far {@code at} (pitch, yaw, roll, wrist bend, wrist rock) is from what is wanted (see the weights). */
+     static double cost(Quinque q, double[] want, double[] place, double[] near, double[] at, boolean left) {
+         RigPose p = new RigPose();
+         QuinqueGrip.aimRight(p, at[0], at[1], at[2]);
++        p.weaponX = (float)at[3];
++        p.weaponZ = (float)at[4];
+         double[] dir = blade(p, q);
+         double off = 1.0 - (dir[0] * want[0] + dir[1] * want[1] + dir[2] * want[2]);
+         double[] fist = QuinqueGrip.fist(p, true, false);
+@@ -163,18 +264,26 @@ public final class QuinqueAim {
+         double dz = fist[2] - place[2];
+         double c = BLADE * off + HAND * (dx * dx + dy * dy + dz * dz);
+         if (left && q.twoHanded) {
++            p.armHold = 1.0F;
+             float miss = QuinqueGrip.reach(p, q, false);
+             c += LEFT * miss * miss;
+         }
+         double turn = 0.0;
+-        for (int i = 0; i < 3; i++) {
++        for (int i = 0; i < 5; i++) {
+             double d = at[i] - near[i];
+             if (i == 2) {
+                 d = Math.IEEEremainder(d, 2.0 * Math.PI);
+             }
+             turn += d * d;
+         }
+-        return c + KEEP * turn;
++        double wrist = WRIST * (at[3] * at[3] + at[4] * at[4]) + 400.0 * (sq(Math.max(0.0, Math.abs(at[3]) - WRIST_BEND))
++            + sq(Math.max(0.0, Math.abs(at[4]) - WRIST_ROCK)));
++        double sunk = QuinqueReach.sunk(p, q, left);
++        return c + KEEP * turn + wrist + CLEAR * sunk;
++    }
++
++    static double sq(double v) {
++        return v * v;
+     }
+ 
+     /** The way {@code q}'s blade points as drawn on {@code p} (the model's frame, a unit vector): from its left grip toward its right. */
+diff --git a/src/main/java/com/hex/kagune/control/client/animation/QuinqueGrip.java b/src/main/java/com/hex/kagune/control/client/animation/QuinqueGrip.java
+index a764c191..bcdc385f 100644
+--- a/src/main/java/com/hex/kagune/control/client/animation/QuinqueGrip.java
++++ b/src/main/java/com/hex/kagune/control/client/animation/QuinqueGrip.java
+@@ -114,6 +114,25 @@ public final class QuinqueGrip {
+         return apply(RigPose.multiply(RigPose.zyx(Math.toRadians(-90.0), 0.0, 0.0), RigPose.zyx(0.0, Math.PI, 0.0)), local);
+     }
+ 
++    /**
++     * 4.1.21: the wrists' turn of the weapon in the right fist ({@link RigPose#weaponX}, Y, Z: in the arm's own frame, about the right grip,
++     * as {@link #held} turns it) as a turn in the item's own frame (its model's pixels, about its right grip): {x, y, z} for Rz Ry Rx, the
++     * order a PoseStack takes them in. ItemInHandLayer and the item's display transform stand between the arm and the item, so the turn is
++     * theirs undone round it: what an item renderer drawing the item can apply itself.
++     */
++    public static float[] wristInItem(QuinqueHolds.Hold h, float wx, float wy, float wz) {
++        double[][] display = RigPose.multiply(RigPose.zyx(Math.toRadians(h.rotation()[0]), 0.0, 0.0),
++            RigPose.multiply(RigPose.zyx(0.0, Math.toRadians(h.rotation()[1]), 0.0), RigPose.zyx(0.0, 0.0, Math.toRadians(h.rotation()[2]))));
++        double[][] m = RigPose.multiply(RigPose.multiply(RigPose.zyx(Math.toRadians(-90.0), 0.0, 0.0), RigPose.zyx(0.0, Math.PI, 0.0)), display);
++        double[][] back = new double[3][3];
++        for (int i = 0; i < 3; i++) {
++            for (int j = 0; j < 3; j++) {
++                back[i][j] = m[j][i];
++            }
++        }
++        return angles(RigPose.multiply(back, RigPose.multiply(RigPose.zyx(wx, wy, wz), m)));
++    }
++
+     /** Where {@code q}'s left grip is drawn for {@code p} (pixels), or null (one-handed). */
+     public static double[] leftGrip(RigPose p, Quinque q, boolean slim) {
+         QuinqueHolds.Hold h = q == null ? null : QuinqueHolds.of(q);
+diff --git a/src/main/java/com/hex/kagune/control/client/animation/QuinqueKeys.java b/src/main/java/com/hex/kagune/control/client/animation/QuinqueKeys.java
+index 3b78f117..b4f6b4a1 100644
+--- a/src/main/java/com/hex/kagune/control/client/animation/QuinqueKeys.java
++++ b/src/main/java/com/hex/kagune/control/client/animation/QuinqueKeys.java
+@@ -9,55 +9,72 @@ final class QuinqueKeys {
+     }
+ 
+     private static QuinquePose.Key k(double t, double pitch, double yaw, double roll, double twist, double lean, double lunge, double drop,
+-                                     double spin) {
++                                     double spin, double wristX, double wristZ) {
+         return new QuinquePose.Key((float)t, (float)pitch, (float)yaw, (float)roll, (float)twist, (float)lean, (float)lunge, (float)drop,
+-            (float)spin);
++            (float)spin, (float)wristX, (float)wristZ);
+     }
+ 
++    /** 4.1.21: each quinque's stance by intent (QuinquePose.stanceAim), solved; null where its stance is its hold as it stands. */
++    static final QuinquePose.Key[] STANCES = {
++        null, // BLADE
++        null, // SPEAR
++        k(0.000, -0.1500, 0.0350, -0.0903, 0.000, 0.000, 0.000, 0.000, 0.00000, -0.1300, -0.0100), // KATANA
++        null, // MACE
++        null, // LAUNCHER
++        null, // DAWN
++    };
++
+     /** By quinque (its ordinal) and blow; null where a quinque's swings are still written as arm angles. */
+     static final QuinquePose.Key[][][] KEYS = {
+         null, // BLADE
+         null, // SPEAR
+         { // KATANA
+-            {k(0.000, 0.0000, 0.0000, 0.0000, 0.000, 0.000, 0.000, 0.000, 0.00000),
+-                k(0.120, -0.1900, 0.0800, -0.1200, 0.150, -0.030, 0.000, 0.000, 0.00000),
+-                k(0.300, -1.1800, 0.1450, -0.4400, 0.450, -0.050, -0.500, 0.000, 0.00000),
+-                k(0.420, -0.3300, 0.2750, 0.2747, 0.100, 0.120, 1.800, 0.400, 0.00000),
+-                k(0.500, 0.3600, -0.4250, 0.4147, -0.350, 0.220, 2.600, 0.800, 0.00000),
+-                k(0.560, 0.3600, -0.9750, 0.9197, -0.480, 0.240, 2.600, 0.900, 0.00000),
+-                k(0.620, -0.0450, -1.4100, 1.5597, -0.600, 0.250, 2.600, 1.000, 0.00000),
+-                k(0.710, 0.1050, -1.1800, 1.3297, -0.450, 0.180, 2.000, 0.750, 0.00000),
+-                k(0.800, 0.2400, -0.8250, 0.9947, -0.300, 0.120, 1.400, 0.500, 0.00000),
+-                k(1.000, 0.0000, 0.0000, 0.0000, 0.000, 0.000, 0.000, 0.000, 0.00000)},
+-            {k(0.000, 0.0000, 0.0000, 0.0000, 0.000, 0.000, 0.000, 0.000, 0.00000),
+-                k(0.150, 0.1400, -1.1800, 1.3000, -0.450, 0.120, 0.000, 0.600, 0.00000),
+-                k(0.300, -0.1150, -1.4150, 1.6297, -0.550, 0.150, 0.500, 0.700, 0.00000),
+-                k(0.400, 0.2650, -0.6500, 1.0497, -0.150, 0.080, 1.600, 0.450, 0.00000),
+-                k(0.500, -0.0600, 0.2100, 0.6247, 0.250, 0.000, 2.600, 0.200, 0.00000),
+-                k(0.620, -0.5750, 0.4800, 0.3947, 0.500, -0.080, 2.200, 0.000, 0.00000),
+-                k(0.800, -0.1650, 0.1650, 0.1447, 0.250, -0.040, 1.000, 0.000, 0.00000),
+-                k(1.000, 0.0000, 0.0000, 0.0000, 0.000, 0.000, 0.000, 0.000, 0.00000)},
+-            {k(0.000, 0.0000, 0.0000, 0.0000, 0.000, 0.000, 0.000, 0.000, 0.00000),
+-                k(0.150, 0.0300, 0.6450, 0.7897, 0.300, -0.030, 0.000, 0.200, 0.00000),
+-                k(0.300, 0.5650, 1.0900, 0.9697, 0.650, -0.050, -0.400, 0.300, 0.00000),
+-                k(0.500, 0.3150, -0.0500, 0.5297, -0.150, 0.120, 2.400, 0.400, 0.00000),
+-                k(0.660, 0.3250, -0.9650, 0.1697, -0.700, 0.150, 2.200, 0.400, 0.00000),
+-                k(0.820, 0.1650, -0.4350, 0.2797, -0.300, 0.060, 1.000, 0.200, 0.00000),
+-                k(1.000, 0.0000, 0.0000, 0.0000, 0.000, 0.000, 0.000, 0.000, 0.00000)},
+-            {k(0.000, 0.0000, 0.0000, 0.0000, 0.000, 0.000, 0.000, 0.000, 0.00000),
+-                k(0.150, 0.2850, -0.0700, 0.3650, 0.300, -0.060, -0.800, 0.300, 0.00000),
+-                k(0.320, 0.3500, -0.1050, 0.4697, 0.500, -0.100, -1.500, 0.500, 0.00000),
+-                k(0.500, 0.2250, -0.0900, 0.4997, -0.350, 0.300, 6.000, 0.600, 0.00000),
+-                k(0.620, 0.2050, -0.1000, 0.5147, -0.370, 0.310, 6.000, 0.600, 0.00000),
+-                k(0.820, 0.0900, -0.0500, 0.2197, -0.100, 0.120, 3.000, 0.300, 0.00000),
+-                k(1.000, 0.0000, 0.0000, 0.0000, 0.000, 0.000, 0.000, 0.000, 0.00000)},
+-            {k(0.000, 0.0000, 0.0000, 0.0000, 0.000, 0.000, 0.000, 0.000, 0.00000),
+-                k(0.180, 0.7550, 1.2250, 0.8700, 0.600, -0.050, -0.500, 0.700, 0.00000),
+-                k(0.400, 0.3200, 0.2050, 0.5700, 0.200, 0.080, 0.800, 0.400, 2.19911),
+-                k(0.600, 0.3300, -0.3350, 0.4750, -0.200, 0.120, 2.000, 0.300, 4.86947),
+-                k(0.750, 0.3150, -0.8700, 0.4100, -0.550, 0.120, 2.200, 0.400, 6.28319),
+-                k(0.880, 0.0950, -0.3250, 0.2397, -0.250, 0.050, 1.000, 0.200, 6.28319),
+-                k(1.000, 0.0000, 0.0000, 0.0000, 0.000, 0.000, 0.000, 0.000, 6.28319)},
++            {k(0.000, -0.1500, 0.0350, -0.0903, 0.000, 0.000, 0.000, 0.000, 0.00000, -0.1300, -0.0100),
++                k(0.120, -0.1650, 0.0600, -0.1103, 0.150, -0.030, 0.000, 0.000, 0.00000, -0.0550, -0.0100),
++                k(0.300, -0.7250, 0.1550, -0.2953, 0.300, -0.050, -0.500, 0.000, 0.00000, -0.4500, -0.0050),
++                k(0.420, -0.4050, 0.3450, 0.1697, 0.100, 0.120, 1.800, 0.400, 0.00000, 0.1400, 0.1950),
++                k(0.500, -0.2900, 0.2000, 0.0797, -0.350, 0.220, 2.600, 0.800, 0.00000, 0.9750, 0.0350),
++                k(0.560, -0.1850, 0.0350, 0.0397, -0.480, 0.240, 2.600, 0.900, 0.00000, 1.3600, 0.0000),
++                k(0.620, -0.0550, 0.0550, 0.0147, -0.600, 0.250, 2.600, 1.000, 0.00000, 1.4050, 0.0800),
++                k(0.710, -0.1850, 0.1400, -0.0053, -0.450, 0.180, 2.000, 0.750, 0.00000, 1.3400, 0.1200),
++                k(0.800, -0.2700, 0.2300, -0.0203, -0.300, 0.120, 1.400, 0.500, 0.00000, 1.1500, 0.1200),
++                k(0.900, -0.2550, 0.1950, -0.0303, -0.111, 0.044, 0.528, 0.185, 0.00000, 0.6000, 0.0050),
++                k(1.000, -0.1500, 0.0350, -0.0903, 0.000, 0.000, 0.000, 0.000, 0.00000, -0.1300, -0.0100)},
++            {k(0.000, -0.1500, 0.0350, -0.0903, 0.000, 0.000, 0.000, 0.000, 0.00000, -0.1300, -0.0100),
++                k(0.075, -0.1200, 0.1200, -0.2853, -0.191, 0.051, -0.031, 0.256, 0.00000, 0.5900, -0.0250),
++                k(0.150, 0.0300, 0.0200, -0.3453, -0.450, 0.120, 0.000, 0.600, 0.00000, 1.2250, -0.0700),
++                k(0.300, 0.0950, -0.1150, -0.4103, -0.550, 0.150, 0.500, 0.700, 0.00000, 1.2950, -0.1750),
++                k(0.400, -0.2050, 0.3350, -0.4353, -0.150, 0.080, 1.600, 0.450, 0.00000, 1.1350, 0.2400),
++                k(0.500, -0.2500, 0.3900, -0.2303, 0.250, 0.000, 2.600, 0.200, 0.00000, 0.6100, 0.7050),
++                k(0.620, -0.6000, 0.4450, -0.1553, 0.500, -0.080, 2.200, 0.000, 0.00000, 0.3500, 0.7000),
++                k(0.800, -0.2350, 0.2250, -0.2353, 0.250, -0.040, 1.000, 0.000, 0.00000, 0.2200, 0.5250),
++                k(1.000, -0.1500, 0.0350, -0.0903, 0.000, 0.000, 0.000, 0.000, 0.00000, -0.1300, -0.0100)},
++            {k(0.000, -0.1500, 0.0350, -0.0903, 0.000, 0.000, 0.000, 0.000, 0.00000, -0.1300, -0.0100),
++                k(0.150, 0.0450, 0.4500, 0.8397, 0.300, -0.030, 0.000, 0.200, 0.00000, -0.2150, 0.1450),
++                k(0.300, 0.3000, 0.4300, 1.4097, 0.650, -0.050, -0.400, 0.300, 0.00000, -0.7500, -0.0100),
++                k(0.500, -0.3750, 0.4700, 1.1047, -0.150, 0.120, 2.400, 0.400, 0.00000, 0.7850, -0.0500),
++                k(0.660, -0.3000, -0.1250, 0.9247, -0.700, 0.150, 2.200, 0.400, 0.00000, 1.4750, -0.1800),
++                k(0.820, -0.3900, 0.2600, 0.9647, -0.300, 0.060, 1.000, 0.200, 0.00000, 1.0800, -0.3150),
++                k(0.910, -0.3350, 0.2200, 0.9197, -0.104, 0.020, 0.354, 0.074, 0.00000, 0.8700, -0.6500),
++                k(0.955, -0.3200, 0.1700, 0.6797, -0.033, 0.006, 0.115, 0.024, 0.00000, 0.6000, -0.7050),
++                k(0.977, -0.2700, 0.1200, 0.4347, -0.010, 0.002, 0.035, 0.008, 0.00000, 0.3300, -0.7050),
++                k(1.000, -0.1500, 0.0350, -0.0903, 0.000, 0.000, 0.000, 0.000, 0.00000, -0.1300, -0.0100)},
++            {k(0.000, -0.1500, 0.0350, -0.0903, 0.000, 0.000, 0.000, 0.000, 0.00000, -0.1300, -0.0100),
++                k(0.150, -0.2450, 0.3500, 0.0247, 0.300, -0.060, -0.800, 0.300, 0.00000, 0.6450, 0.1500),
++                k(0.320, -0.3000, 0.4050, 0.0697, 0.500, -0.100, -1.500, 0.500, 0.00000, 0.7700, 0.1900),
++                k(0.500, -0.3350, 0.4150, 0.1047, -0.350, 0.300, 6.000, 0.600, 0.00000, 0.8200, 0.2000),
++                k(0.620, -0.3400, 0.4150, 0.1197, -0.370, 0.310, 6.000, 0.600, 0.00000, 0.8200, 0.2000),
++                k(0.820, -0.3100, 0.3000, 0.0297, -0.100, 0.120, 3.000, 0.300, 0.00000, 0.5450, 0.0450),
++                k(1.000, -0.1500, 0.0350, -0.0903, 0.000, 0.000, 0.000, 0.000, 0.00000, -0.1300, -0.0100)},
++            {k(0.000, -0.1500, 0.0350, -0.0903, 0.000, 0.000, 0.000, 0.000, 0.00000, -0.1300, -0.0100),
++                k(0.180, 0.2400, 0.3000, 1.2047, 0.600, -0.050, -0.500, 0.700, 0.00000, -1.0250, -0.4500),
++                k(0.400, -0.2200, 0.4400, 0.9647, 0.200, 0.080, 0.800, 0.400, 2.19910, 0.4250, -0.1700),
++                k(0.600, -0.3900, 0.3500, 0.8897, -0.200, 0.120, 2.000, 0.300, 4.86950, 1.0100, -0.0200),
++                k(0.750, -0.3350, 0.0400, 0.8047, -0.550, 0.120, 2.200, 0.400, 6.28320, 1.3100, -0.1350),
++                k(0.880, -0.4000, 0.2800, 0.7897, -0.250, 0.050, 1.000, 0.200, 6.28320, 0.9250, -0.3650),
++                k(0.940, -0.3300, 0.2150, 0.7147, -0.092, 0.018, 0.368, 0.076, 6.28319, 0.6800, -0.6400),
++                k(0.970, -0.2900, 0.1550, 0.5347, -0.030, 0.006, 0.122, 0.025, 6.28319, 0.4450, -0.7050),
++                k(1.000, -0.1500, 0.0350, -0.0903, 0.000, 0.000, 0.000, 0.000, 6.28319, -0.1300, -0.0100)},
+         },
+         null, // MACE
+         null, // LAUNCHER
+diff --git a/src/main/java/com/hex/kagune/control/client/animation/QuinqueKeysBaker.java b/src/main/java/com/hex/kagune/control/client/animation/QuinqueKeysBaker.java
+index b1c7857e..4c9c74b9 100644
+--- a/src/main/java/com/hex/kagune/control/client/animation/QuinqueKeysBaker.java
++++ b/src/main/java/com/hex/kagune/control/client/animation/QuinqueKeysBaker.java
+@@ -23,9 +23,16 @@ public final class QuinqueKeysBaker {
+         out.append(" * tools/QuinqueAimBake.java: do not edit by hand; QuinqueTests checks these still match their aims).\n */\n");
+         out.append("final class QuinqueKeys {\n    private QuinqueKeys() {\n    }\n\n");
+         out.append("    private static QuinquePose.Key k(double t, double pitch, double yaw, double roll, double twist, double lean, double lunge, double drop,\n");
+-        out.append("                                     double spin) {\n");
++        out.append("                                     double spin, double wristX, double wristZ) {\n");
+         out.append("        return new QuinquePose.Key((float)t, (float)pitch, (float)yaw, (float)roll, (float)twist, (float)lean, (float)lunge, (float)drop,\n");
+-        out.append("            (float)spin);\n    }\n\n");
++        out.append("            (float)spin, (float)wristX, (float)wristZ);\n    }\n\n");
++        out.append("    /** 4.1.21: each quinque's stance by intent (QuinquePose.stanceAim), solved; null where its stance is its hold as it stands. */\n");
++        out.append("    static final QuinquePose.Key[] STANCES = {\n");
++        for (Quinque q : Quinque.values()) {
++            QuinquePose.Key s = QuinqueAim.stance(q);
++            out.append("        ").append(s == null ? "null" : key(s)).append(", // ").append(q).append("\n");
++        }
++        out.append("    };\n\n");
+         out.append("    /** By quinque (its ordinal) and blow; null where a quinque's swings are still written as arm angles. */\n");
+         out.append("    static final QuinquePose.Key[][][] KEYS = {\n");
+         for (Quinque q : Quinque.values()) {
+@@ -38,10 +45,7 @@ public final class QuinqueKeysBaker {
+                 out.append("            {");
+                 QuinquePose.Key[] keys = QuinqueAim.keys(q, QuinquePose.aims(q, step));
+                 for (int i = 0; i < keys.length; i++) {
+-                    QuinquePose.Key k = keys[i];
+-                    out.append(i == 0 ? "" : ",\n                ").append(String.format(java.util.Locale.ROOT,
+-                        "k(%.3f, %.4f, %.4f, %.4f, %.3f, %.3f, %.3f, %.3f, %.5f)", k.t(), k.pitch(), k.yaw(), k.roll(), k.twist(), k.lean(),
+-                        k.lunge(), k.drop(), k.spin()));
++                    out.append(i == 0 ? "" : ",\n                ").append(key(keys[i]));
+                 }
+                 out.append("},\n");
+             }
+@@ -50,4 +54,10 @@ public final class QuinqueKeysBaker {
+         out.append("    };\n}\n");
+         return out.toString();
+     }
++
++    /** One key as the baked file writes it. */
++    static String key(QuinquePose.Key k) {
++        return String.format(java.util.Locale.ROOT, "k(%.3f, %.4f, %.4f, %.4f, %.3f, %.3f, %.3f, %.3f, %.5f, %.4f, %.4f)", k.t(), k.pitch(), k.yaw(),
++            k.roll(), k.twist(), k.lean(), k.lunge(), k.drop(), k.spin(), k.wristX(), k.wristZ());
++    }
+ }
+diff --git a/src/main/java/com/hex/kagune/control/client/animation/QuinquePose.java b/src/main/java/com/hex/kagune/control/client/animation/QuinquePose.java
+index 41b114b8..7b97982c 100644
+--- a/src/main/java/com/hex/kagune/control/client/animation/QuinquePose.java
++++ b/src/main/java/com/hex/kagune/control/client/animation/QuinquePose.java
+@@ -44,7 +44,10 @@ public final class QuinquePose {
+         }
+         RigPose p = new RigPose();
+         stance(p, h, 1.0F);
+-        QuinqueGrip.aimRight(p, h.pitch(), h.yaw(), h.roll());
++        Key s = solvedStance(q);
++        QuinqueGrip.aimRight(p, h.pitch() + s.pitch(), h.yaw() + s.yaw(), h.roll() + s.roll());
++        p.weaponX = s.wristX();
++        p.weaponZ = s.wristZ();
+         if (q.twoHanded) {
+             p.leftArmX = h.left()[0];
+             p.leftArmY = h.left()[1];
+@@ -62,6 +65,29 @@ public final class QuinquePose {
+         return p;
+     }
+ 
++    /** No change from the hold's own arm (a stance not written by intent). */
++    static final Key STILL = new Key(0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F);
++
++    /**
++     * 4.1.21: {@code q}'s stance as solved from its {@link #stanceAim} (QuinqueAim, baked in QuinqueKeys.STANCES): the arm's turn from the
++     * hold's and the wrists; {@link #STILL} for a quinque whose stance is its hold as it stands.
++     */
++    static Key solvedStance(Quinque q) {
++        Key k = QuinqueKeys.STANCES[q.ordinal()];
++        return k == null ? STILL : k;
++    }
++
++    /**
++     * 4.1.21: {@code q}'s stance by intent (where its blade points, where the right fist is), or null where it is the hold as it stands. The
++     * katana's chudan: the blade up and forward at an opponent's throat as before, the hands a fist in front of the navel (the hold had the
++     * left fist a pixel into his stomach, the pommel through it).
++     */
++    static QuinqueAim.Aim stanceAim(Quinque q) {
++        return q == Quinque.KATANA ? KATANA_STANCE : null;
++    }
++
++    static final QuinqueAim.Aim KATANA_STANCE = QuinqueAim.a(0.0, -0.05, 0.788, 0.616, 0.1, -4.8, 7.1, 0.0, 0.0, 0.0, 0.0);
++
+     /** The stance's turn on {@code p} ({@code k} of it): the body's share as a spin (the head kept on the look), the rest the chest's. */
+     static void stance(RigPose p, QuinqueHolds.Hold h, float k) {
+         float body = bodyTurn(h.twist()) * k;
+@@ -72,9 +98,13 @@ public final class QuinquePose {
+ 
+     /**
+      * One key of a swing: when (0..1), the right arm's pitch, yaw and roll from the stance's, and the body's twist, lean, lunge, drop; 4.1.17
+-     * and its spin (the whole body turned about its middle: + to its left, a spinning cut's whole turn).
++     * and its spin (the whole body turned about its middle: + to its left, a spinning cut's whole turn); 4.1.21 and its wrists (the weapon
++     * turned in the grip about the right hand: {@link RigPose#weaponX} and {@link RigPose#weaponZ}, as they are, not from the stance's).
+      */
+-    record Key(float t, float pitch, float yaw, float roll, float twist, float lean, float lunge, float drop, float spin) {
++    public record Key(float t, float pitch, float yaw, float roll, float twist, float lean, float lunge, float drop, float spin, float wristX, float wristZ) {
++        Key(float t, float pitch, float yaw, float roll, float twist, float lean, float lunge, float drop, float spin) {
++            this(t, pitch, yaw, roll, twist, lean, lunge, drop, spin, 0.0F, 0.0F);
++        }
+     }
+ 
+     private static Key k(double t, double pitch, double yaw, double roll, double twist, double lean, double lunge, double drop) {
+@@ -172,47 +202,58 @@ public final class QuinquePose {
+     }
+ 
+     static QuinqueAim.Aim[] katanaAims(int step) {
++        // 4.1.21 (the owner: "Why the fuck is the sword behind the fucking back? That, like, both arms are reaching behind the player's
++        // back."): every fist where a straight arm reaches it (nine pixels from its shoulder), the left on its grip, the hilt, the guard, the
++        // blade and both arms never in him (QuinqueReach); the wrists bend the blade onto its line (4.1.18 asked for hands nothing could
++        // reach and the solver, keeping the blade's line, put them behind his back). The blade's way and the body's turn, lean and step are
++        // 4.1.18's.
+         return switch (step) {
+-            // Kesa-giri: up into hasso by the right shoulder (the blade up and back), cut down across the body to the left hip.
+-            case 0 -> new QuinqueAim.Aim[] {QuinqueAim.rest(0),
+-                QuinqueAim.a(0.12, -0.1, 0.75, 0.65, 1.5, -4.5, 6.0, 0.15, -0.03, 0, 0),
+-                QuinqueAim.a(0.3, 0.25, 0.9, -0.35, 4.0, -1.0, 4.0, 0.45, -0.05, -0.5, 0),
+-                QuinqueAim.a(0.42, 0.35, 0.55, 0.75, 2.5, -2.5, 7.5, 0.1, 0.12, 1.8, 0.4),
+-                QuinqueAim.a(0.5, -0.45, -0.05, 0.89, 0.5, -5.5, 8.5, -0.35, 0.22, 2.6, 0.8),
+-                QuinqueAim.a(0.56, -0.6, -0.35, 0.7, -1.3, -6.8, 7.0, -0.48, 0.24, 2.6, 0.9),
+-                QuinqueAim.a(0.62, -0.7, -0.6, 0.35, -3.0, -8.0, 5.0, -0.6, 0.25, 2.6, 1.0),
+-                QuinqueAim.a(0.71, -0.55, -0.4, 0.65, -2.2, -7.5, 5.5, -0.45, 0.18, 2.0, 0.75),
+-                QuinqueAim.a(0.8, -0.4, -0.2, 0.9, -1.5, -7.0, 6.0, -0.3, 0.12, 1.4, 0.5), QuinqueAim.rest(1)};
++            // Kesa-giri: up into jodan before the face (the blade up and back over the head), cut down across to the left, the arms out
++            // in front of him all the way (4.1.21: hands where straight arms reach, never behind him).
++            case 0 -> new QuinqueAim.Aim[] {QuinqueAim.rest(0.0),
++                QuinqueAim.a(0.12, -0.10, 0.75, 0.65, 0.3, -4.6, 7.3, 0.15, -0.03, 0.0, 0.00),
++                QuinqueAim.a(0.30, 0.35, 0.92, -0.20, 1.2, 0.4, 7.3, 0.30, -0.05, -0.5, 0.00), // the blade up and back over the right shoulder, clear of his head
++                QuinqueAim.a(0.42, 0.35, 0.55, 0.75, 2.2, -2.5, 8.6, 0.10, 0.12, 1.8, 0.40),
++                QuinqueAim.a(0.50, -0.45, -0.05, 0.89, 1.3, -3.2, 8.2, -0.35, 0.22, 2.6, 0.80),
++                QuinqueAim.a(0.56, -0.68, -0.43, 0.59, 0.0, -4.3, 7.2, -0.48, 0.24, 2.6, 0.90),
++                QuinqueAim.a(0.62, -0.55, -0.60, 0.58, 0.3, -5.5, 6.9, -0.60, 0.25, 2.6, 1.00), // the point low and forward-left, past the cut
++                QuinqueAim.a(0.71, -0.50, -0.45, 0.74, 0.8, -4.3, 7.7, -0.45, 0.18, 2.0, 0.75),
++                QuinqueAim.a(0.80, -0.40, -0.20, 0.90, 1.6, -3.7, 8.2, -0.30, 0.12, 1.4, 0.50),
++                QuinqueAim.rest(1.0)};
+             // Gyaku-kesa: gathered low on the left, rising across the front to high on the right.
+-            case 1 -> new QuinqueAim.Aim[] {QuinqueAim.rest(0),
+-                QuinqueAim.a(0.15, -0.6, -0.55, 0.55, -3.0, -8.0, 4.5, -0.45, 0.12, 0, 0.6),
+-                QuinqueAim.a(0.3, -0.7, -0.6, 0.35, -3.5, -8.5, 3.5, -0.55, 0.15, 0.5, 0.7),
+-                QuinqueAim.a(0.4, -0.15, -0.2, 0.95, -1.5, -6.5, 6.5, -0.15, 0.08, 1.6, 0.45),
+-                QuinqueAim.a(0.5, 0.45, 0.25, 0.86, 0.5, -4.5, 8.5, 0.25, 0.0, 2.6, 0.2),
+-                QuinqueAim.a(0.62, 0.6, 0.65, 0.45, 3.5, -1.0, 6.0, 0.5, -0.08, 2.2, 0.0),
+-                QuinqueAim.a(0.8, 0.1, 0.6, 0.8, 1.5, -4.0, 6.5, 0.25, -0.04, 1.0, 0), QuinqueAim.rest(1)};
+-            // Yoko-giri: the blade laid out level to the right, swept flat across the chest to the left, the hips whipping round.
+-            case 2 -> new QuinqueAim.Aim[] {QuinqueAim.rest(0),
+-                QuinqueAim.a(0.15, 0.85, 0.05, 0.5, 3.5, -5.0, 4.5, 0.3, -0.03, 0, 0.2),
+-                QuinqueAim.a(0.3, 0.97, 0.0, -0.2, 5.0, -5.0, 2.5, 0.65, -0.05, -0.4, 0.3),
+-                QuinqueAim.a(0.5, 0.0, 0.0, 1.0, 0.0, -5.0, 9.0, -0.15, 0.12, 2.4, 0.4),
+-                QuinqueAim.a(0.66, -0.95, 0.0, 0.3, -4.5, -5.0, 4.5, -0.7, 0.15, 2.2, 0.4),
+-                QuinqueAim.a(0.82, -0.4, 0.3, 0.85, -2.0, -5.5, 6.5, -0.3, 0.06, 1.0, 0.2), QuinqueAim.rest(1)};
+-            // Tsuki: drawn back to the right hip on the line, then driven straight out along it with a long lunge.
+-            case 3 -> new QuinqueAim.Aim[] {QuinqueAim.rest(0),
+-                QuinqueAim.a(0.15, -0.05, 0.15, 0.99, 2.0, -6.0, 4.0, 0.3, -0.06, -0.8, 0.3),
+-                QuinqueAim.a(0.32, 0.0, 0.1, 1.0, 3.0, -6.5, 1.5, 0.5, -0.1, -1.5, 0.5),
+-                QuinqueAim.a(0.5, 0.0, 0.08, 1.0, 0.0, -4.5, 10.5, -0.35, 0.3, 6.0, 0.6),
+-                QuinqueAim.a(0.62, 0.0, 0.08, 1.0, 0.0, -4.5, 10.5, -0.37, 0.31, 6.0, 0.6),
+-                QuinqueAim.a(0.82, -0.1, 0.4, 0.9, 0.5, -5.5, 7.5, -0.1, 0.12, 3.0, 0.3), QuinqueAim.rest(1)};
++            case 1 -> new QuinqueAim.Aim[] {QuinqueAim.rest(0.0),
++                QuinqueAim.a(0.15, -0.60, -0.55, 0.55, 0.1, -5.5, 6.8, -0.45, 0.12, 0.0, 0.60),
++                QuinqueAim.a(0.30, -0.70, -0.60, 0.35, -0.5, -6.3, 5.8, -0.55, 0.15, 0.5, 0.70),
++                QuinqueAim.a(0.40, -0.15, -0.20, 0.95, 2.7, -3.7, 8.6, -0.15, 0.08, 1.6, 0.45),
++                QuinqueAim.a(0.50, 0.45, 0.25, 0.86, 1.6, -3.9, 8.2, 0.25, 0.00, 2.6, 0.20),
++                QuinqueAim.a(0.62, 0.52, 0.62, 0.59, 2.9, -0.6, 8.7, 0.50, -0.08, 2.2, 0.00),
++                QuinqueAim.a(0.80, 0.10, 0.60, 0.80, 1.2, -4.1, 8.0, 0.25, -0.04, 1.0, 0.00),
++                QuinqueAim.rest(1.0)};
++            // Yoko-giri: the blade laid out level to the right, swept flat across in front of the chest to the left, the hips whipping round.
++            case 2 -> new QuinqueAim.Aim[] {QuinqueAim.rest(0.0),
++                QuinqueAim.a(0.15, 0.85, 0.05, 0.50, 2.7, -6.9, 7.2, 0.30, -0.03, 0.0, 0.20),
++                QuinqueAim.a(0.30, 0.97, 0.00, -0.20, 2.0, -8.7, 5.3, 0.65, -0.05, -0.4, 0.30),
++                QuinqueAim.a(0.50, 0.00, 0.00, 1.00, 3.1, -2.9, 8.8, -0.15, 0.12, 2.4, 0.40),
++                QuinqueAim.a(0.66, -0.95, 0.00, 0.30, -1.9, -3.9, 5.6, -0.70, 0.15, 2.2, 0.40),
++                QuinqueAim.a(0.82, -0.40, 0.30, 0.85, 1.1, -3.4, 8.1, -0.30, 0.06, 1.0, 0.20),
++                QuinqueAim.rest(1.0)};
++            // Tsuki: drawn back on the line, then driven straight out along it with a long lunge.
++            case 3 -> new QuinqueAim.Aim[] {QuinqueAim.rest(0.0),
++                QuinqueAim.a(0.15, -0.05, 0.15, 0.99, 2.9, -3.4, 8.7, 0.30, -0.06, -0.8, 0.30),
++                QuinqueAim.a(0.32, 0.00, 0.10, 1.00, 3.1, -3.4, 8.8, 0.50, -0.10, -1.5, 0.50),
++                QuinqueAim.a(0.50, 0.00, 0.08, 1.00, 3.1, -3.2, 8.8, -0.35, 0.30, 6.0, 0.60),
++                QuinqueAim.a(0.62, 0.00, 0.08, 1.00, 3.1, -3.2, 8.8, -0.37, 0.31, 6.0, 0.60),
++                QuinqueAim.a(0.82, -0.10, 0.40, 0.90, 2.0, -3.7, 8.4, -0.10, 0.12, 3.0, 0.30),
++                QuinqueAim.rest(1.0)};
+             // Kaiten-giri, the finisher: coiled low with the blade back out to the right, then the whole body spun round once with it
+             // level out in front (the cut through everyone round him), stepping out of it into chudan.
+-            default -> new QuinqueAim.Aim[] {QuinqueAim.rest(0),
+-                QuinqueAim.a(0.18, 0.95, 0.0, -0.3, 4.5, -5.0, 2.5, 0.6, -0.05, -0.5, 0.7, 0.0),
+-                QuinqueAim.a(0.4, 0.3, 0.0, 0.95, 1.5, -5.0, 8.0, 0.2, 0.08, 0.8, 0.4, Math.PI * 0.7),
+-                QuinqueAim.a(0.6, -0.3, 0.0, 0.95, -0.5, -5.0, 8.5, -0.2, 0.12, 2.0, 0.3, Math.PI * 1.55),
+-                QuinqueAim.a(0.75, -0.8, 0.0, 0.6, -3.5, -5.0, 6.0, -0.55, 0.12, 2.2, 0.4, Math.PI * 2.0),
+-                QuinqueAim.a(0.88, -0.3, 0.4, 0.85, -1.0, -5.5, 6.5, -0.25, 0.05, 1.0, 0.2, Math.PI * 2.0), QuinqueAim.restTurned(1, Math.PI * 2.0)};
++            default -> new QuinqueAim.Aim[] {QuinqueAim.rest(0.0),
++                QuinqueAim.a(0.18, 0.95, 0.00, -0.30, 1.4, -8.7, 4.9, 0.60, -0.05, -0.5, 0.70),
++                QuinqueAim.a(0.40, 0.30, 0.00, 0.95, 2.9, -3.9, 8.6, 0.20, 0.08, 0.8, 0.40, 2.1991),
++                QuinqueAim.a(0.60, -0.30, 0.00, 0.95, 2.0, -2.9, 8.5, -0.20, 0.12, 2.0, 0.30, 4.8695),
++                QuinqueAim.a(0.75, -0.80, 0.00, 0.60, -0.6, -3.7, 6.9, -0.55, 0.12, 2.2, 0.40, 6.2832),
++                QuinqueAim.a(0.88, -0.30, 0.40, 0.85, 1.4, -3.4, 8.2, -0.25, 0.05, 1.0, 0.20, 6.2832),
++                QuinqueAim.restTurned(1, Math.PI * 2.0)};
+         };
+     }
+ 
+@@ -253,7 +294,7 @@ public final class QuinquePose {
+     }
+ 
+     private static float[] values(Key k) {
+-        return new float[] {k.pitch(), k.yaw(), k.roll(), k.twist(), k.lean(), k.lunge(), k.drop(), k.spin()};
++        return new float[] {k.pitch(), k.yaw(), k.roll(), k.twist(), k.lean(), k.lunge(), k.drop(), k.spin(), k.wristX(), k.wristZ()};
+     }
+ 
+     /** How far into its swing the impact is (0..1): where the cut lands. */
+@@ -264,8 +305,13 @@ public final class QuinquePose {
+      * its keys; for a two-handed one the left is left for QuinqueGrip.reach to put on its grip.
+      */
+     public static RigPose swing(Quinque q, int step, double t) {
++        return posed(q, keys(q, Math.floorMod(step, q.steps())), t);
++    }
++
++    /** 4.1.21: {@code q} posed {@code t} through a swing of {@code keys} (as {@link #swing}; QuinqueAim checks its own keys between them). */
++    static RigPose posed(Quinque q, Key[] keys, double t) {
+         QuinqueHolds.Hold h = QuinqueHolds.of(q);
+-        float[] v = curve(keys(q, Math.floorMod(step, q.steps())), t);
++        float[] v = curve(keys, t);
+         RigPose p = hold(q);
+         QuinqueGrip.aimRight(p, h.pitch() + v[0], h.yaw() + v[1], h.roll() + v[2]);
+         p.twist += v[3];
+@@ -273,6 +319,8 @@ public final class QuinquePose {
+         p.lunge += v[5];
+         p.drop += v[6];
+         p.spin += v[7]; // 4.1.17: the whole body turning (the head with it: it is looking along the cut)
++        p.weaponX = v[8]; // 4.1.21: the wrists (the stance's own included: the keys at rest carry it)
++        p.weaponZ = v[9];
+         step(p, q, v[5]);
+         return p;
+     }
+@@ -392,7 +440,10 @@ public final class QuinquePose {
+         float k = ease(open);
+         RigPose p = new RigPose();
+         stance(p, h, k);
+-        QuinqueGrip.aimRight(p, HELD[0] + (h.pitch() - HELD[0]) * k, h.yaw() * k, h.roll() * k);
++        Key s = solvedStance(q);
++        QuinqueGrip.aimRight(p, HELD[0] + (h.pitch() + s.pitch() - HELD[0]) * k, (h.yaw() + s.yaw()) * k, (h.roll() + s.roll()) * k);
++        p.weaponX = s.wristX() * k;
++        p.weaponZ = s.wristZ() * k;
+         p.rightArmHold = 1.0F;
+         if (q.twoHanded) {
+             p.leftArmX = h.left()[0] * k;
+diff --git a/src/main/java/com/hex/kagune/control/client/animation/QuinqueReach.java b/src/main/java/com/hex/kagune/control/client/animation/QuinqueReach.java
+new file mode 100644
+index 00000000..067ab865
+--- /dev/null
++++ b/src/main/java/com/hex/kagune/control/client/animation/QuinqueReach.java
+@@ -0,0 +1,158 @@
++package com.hex.kagune.control.client.animation;
++
++import com.hex.kagune.control.quinque.Quinque;
++
++/**
++ * 4.1.21 (pure, tested; the owner, of 4.1.18's katana: "Why the fuck is the sword behind the fucking back? That, like, both arms are
++ * reaching behind the player's back. What is that?"): how far a quinque and the arms holding it sink into the body, so a swing solved by
++ * intent ({@link QuinqueAim}) never puts them through him. Measured in the body's own frame before its twist and lean (model pixels: x to
++ * his left, y down, z back from the neck): the arms ride the chest, so the twist and the lean carry them and their torso and head together,
++ * and what is clear here is clear posed. The legs (below the hips the lean turns about) are left to the swing's tests.
++ */
++public final class QuinqueReach {
++    private QuinqueReach() {
++    }
++
++    /** A fist's reach round its middle (pixels): half an arm's width. */
++    static final double FIST = 1.9;
++    /** An arm's middle may lie against his chest (a two-handed hold lays the left forearm across it), its line never in him: a hand behind his back puts it deep inside. */
++    static final double ARM = 0.1;
++
++    /**
++     * Points of a weapon written by intent, standing (its item model's pixels: x across, y along it, z through; turned onto the handheld
++     * diagonal as it is drawn) and how far round each it reaches (pixels): the katana's hilt along its axis, its guard and collar, its blade
++     * by its back and its edge (two pixels apart, curving back toward the point). Null for the rest.
++     */
++    static double[][] points(Quinque q) {
++        return q == Quinque.KATANA ? KATANA : null;
++    }
++
++    static final double[][] KATANA = katana();
++
++    static double[][] katana() {
++        java.util.List<double[]> out = new java.util.ArrayList<>();
++        for (double y : new double[] {-2.2, 0.0, 2.0, 4.0, 5.4}) {
++            out.add(new double[] {8.0, y, 8.0, 0.8});
++        }
++        out.add(new double[] {8.0, 6.35, 8.0, 1.6});
++        out.add(new double[] {8.0, 7.2, 8.0, 1.3});
++        for (double y = 8.5; y <= 31.6; y += 2.3) {
++            double f = (y - 7.6) / 24.3;
++            double back = 7.0 - 1.15 * f * f;
++            double width = Math.max(0.3, (2.1 - 0.42 * f) * (f > 0.86 ? Math.sqrt(Math.max(0.0, 1.0 - Math.pow((f - 0.86) / 0.14, 2.0))) : 1.0));
++            out.add(new double[] {back + 0.3, y, 8.0, 0.45});
++            out.add(new double[] {back + Math.max(0.3, width - 0.3), y, 8.0, 0.45});
++        }
++        return out.toArray(new double[0][]);
++    }
++
++    /**
++     * How far (pixels, squared and summed) the right fist, the left (once on its grip: {@code left}), both arms' middles and {@code q}'s
++     * weapon sink into his torso and head as {@code p} poses them (his own twist and lean carry his torso, his arms and what they hold alike).
++     */
++    public static double sunk(RigPose p, Quinque q, boolean left) {
++        BodyFrame.Solid solid = solid(p);
++        if (!left) {
++            // The solver's coarse search (thousands a key): the right fist, its arm and a few of the weapon's points; the rest when narrowed.
++            double sum = sq(depth(solid, p, QuinqueGrip.fist(p, true, false), FIST)) + sq(depth(solid, p, middle(p, true), ARM));
++            double[][] points = points(q);
++            if (points != null) {
++                QuinqueHolds.Hold h = QuinqueHolds.of(q);
++                for (int i = 0; i < points.length; i += 4) {
++                    double[] a = points[i];
++                    float[] at = com.hex.kagune.control.quinque.QuinqueMesh.turned(new float[] {(float)a[0], (float)a[1], (float)a[2]});
++                    sum += sq(depth(solid, p, QuinqueGrip.held(p, h, false, at), a[3]));
++                }
++            }
++            return sum;
++        }
++        double sum = 0.0;
++        sum += sq(depth(solid, p, QuinqueGrip.fist(p, true, false), FIST));
++        sum += sq(depth(solid, p, middle(p, true), ARM));
++        if (left && q.twoHanded) {
++            sum += sq(depth(solid, p, QuinqueGrip.fist(p, false, false), FIST));
++            sum += sq(depth(solid, p, middle(p, false), ARM));
++        }
++        double[][] points = points(q);
++        if (points != null) {
++            QuinqueHolds.Hold h = QuinqueHolds.of(q);
++            for (double[] a : points) {
++                float[] at = com.hex.kagune.control.quinque.QuinqueMesh.turned(new float[] {(float)a[0], (float)a[1], (float)a[2]});
++                sum += sq(depth(solid, p, QuinqueGrip.held(p, h, false, at), a[3]));
++            }
++        }
++        return sum;
++    }
++
++    /** The deepest any of those sinks (pixels; 0 or less: clear), for the tests. */
++    public static double deepest(RigPose p, Quinque q) {
++        BodyFrame.Solid solid = solid(p);
++        double worst = -Double.MAX_VALUE;
++        worst = Math.max(worst, depth(solid, p, QuinqueGrip.fist(p, true, false), FIST));
++        worst = Math.max(worst, depth(solid, p, middle(p, true), ARM));
++        if (q.twoHanded) {
++            worst = Math.max(worst, depth(solid, p, QuinqueGrip.fist(p, false, false), FIST));
++            worst = Math.max(worst, depth(solid, p, middle(p, false), ARM));
++        }
++        double[][] points = points(q);
++        if (points != null) {
++            QuinqueHolds.Hold h = QuinqueHolds.of(q);
++            for (double[] a : points) {
++                float[] at = com.hex.kagune.control.quinque.QuinqueMesh.turned(new float[] {(float)a[0], (float)a[1], (float)a[2]});
++                worst = Math.max(worst, depth(solid, p, QuinqueGrip.held(p, h, false, at), a[3]));
++            }
++        }
++        return worst;
++    }
++
++    static double sq(double d) {
++        return d > 0.0 ? d * d : 0.0;
++    }
++
++    /** How deep (pixels) a ball of {@code radius} pixels at the model point {@code m} sinks into his posed torso or head (negative: clear). */
++    static double depth(BodyFrame.Solid solid, RigPose p, double[] m, double radius) {
++        if (solid == null) {
++            // An unposed body (the solver's): its torso and head as they stand.
++            return radius - Math.min(gap(m, TORSO), gap(m, HEAD));
++        }
++        double[] rig = BodyFrame.world(p, m);
++        double r = radius * BodyFrame.SCALE / 16.0;
++        return Math.max(solid.part(rig, r, 0), solid.part(rig, r, 1));
++    }
++
++    /** His torso and head standing (model pixels: min, max), for an unposed body. */
++    static final double[][] TORSO = {{-4.0, 0.0, -2.0}, {4.0, 12.0, 2.0}};
++    static final double[][] HEAD = {{-4.0, -8.0, -4.0}, {4.0, 0.0, 4.0}};
++
++    /** The distance from {@code c} to the box (negative inside: how far in). */
++    static double gap(double[] c, double[][] box) {
++        double dx = Math.max(box[0][0] - c[0], c[0] - box[1][0]);
++        double dy = Math.max(box[0][1] - c[1], c[1] - box[1][1]);
++        double dz = Math.max(box[0][2] - c[2], c[2] - box[1][2]);
++        if (dx <= 0.0 && dy <= 0.0 && dz <= 0.0) {
++            return Math.max(dx, Math.max(dy, dz));
++        }
++        double ox = Math.max(dx, 0.0);
++        double oy = Math.max(dy, 0.0);
++        double oz = Math.max(dz, 0.0);
++        return Math.sqrt(ox * ox + oy * oy + oz * oz);
++    }
++
++    /** Whether {@code p} is posed at all (turned, leaned, stepped, its head turned): if not, its torso and head stand as they do. */
++    static boolean plain(RigPose p) {
++        return p.twist == 0.0F && p.lean == 0.0F && p.side == 0.0F && p.spin == 0.0F && p.flip == 0.0F && p.roll == 0.0F && p.drop == 0.0F
++            && p.lunge == 0.0F && p.headX == 0.0F && p.headY == 0.0F && p.headZ == 0.0F && p.bulk == 0.0F;
++    }
++
++    static BodyFrame.Solid solid(RigPose p) {
++        return plain(p) ? null : new BodyFrame.Solid(p);
++    }
++
++    /** Half way down an arm, its shoulder to its fist. */
++    static double[] middle(RigPose p, boolean right) {
++        double[] o = QuinqueGrip.pivot(p, right);
++        double[] f = QuinqueGrip.fist(p, right, false);
++        return new double[] {(o[0] + f[0]) * 0.5, (o[1] + f[1]) * 0.5, (o[2] + f[2]) * 0.5};
++    }
++
++}
+diff --git a/src/main/java/com/hex/kagune/control/client/render/ArmItemLayer.java b/src/main/java/com/hex/kagune/control/client/render/ArmItemLayer.java
+index 66f67be7..3d447394 100644
+--- a/src/main/java/com/hex/kagune/control/client/render/ArmItemLayer.java
++++ b/src/main/java/com/hex/kagune/control/client/render/ArmItemLayer.java
+@@ -178,9 +178,15 @@ public final class ArmItemLayer extends RenderLayer<AbstractClientPlayer, Entity
+                     if (body != null) {
+                         pose.m_85837_(0.0, -0.6 * equip, 0.0);
+                         throughBody(pose, body, "slim".equals(player.m_108564_()));
+-                        minecraft.m_91291_().m_269128_(held, net.minecraft.world.item.ItemDisplayContext.THIRD_PERSON_RIGHT_HAND,
+-                            event.getPackedLight(), net.minecraft.client.renderer.texture.OverlayTexture.f_118083_, pose,
+-                            event.getMultiBufferSource(), player.m_9236_(), player.m_19879_());
++                        // 4.1.21: drawn in this pose's wrists (a quinque drawn by code turns itself in the fist; QuinqueWrists).
++                        com.hex.kagune.control.client.QuinqueWrists.firstPerson(new float[] {body.weaponX, body.weaponY, body.weaponZ});
++                        try {
++                            minecraft.m_91291_().m_269128_(held, net.minecraft.world.item.ItemDisplayContext.THIRD_PERSON_RIGHT_HAND,
++                                event.getPackedLight(), net.minecraft.client.renderer.texture.OverlayTexture.f_118083_, pose,
++                                event.getMultiBufferSource(), player.m_9236_(), player.m_19879_());
++                        } finally {
++                            com.hex.kagune.control.client.QuinqueWrists.firstPersonDone();
++                        }
+                         return;
+                     } else {
+                         pose.m_85837_(0.42 + motion[3], -0.43 + motion[4] - 0.6 * equip, -0.95 + motion[5]);
+diff --git a/src/main/java/com/hex/kagune/control/quinque/QuinqueMesh.java b/src/main/java/com/hex/kagune/control/quinque/QuinqueMesh.java
+index 5b76864f..7ed228ac 100644
+--- a/src/main/java/com/hex/kagune/control/quinque/QuinqueMesh.java
++++ b/src/main/java/com/hex/kagune/control/quinque/QuinqueMesh.java
+@@ -142,8 +142,11 @@ public final class QuinqueMesh {
+     /** Where the blade begins and ends along it (blocks from the guard), as the 4.1.18 katana (item pixels 7.9 .. 31.9). */
+     static final double BLADE_FROM = (7.6 - ANCHOR) / 16.0;
+     static final double BLADE_TO = (31.9 - ANCHOR) / 16.0;
+-    /** Where the hilt ends (item pixel -4.85: the 4.1.18 hilt's end, where its holds put the left hand below). */
+-    static final double HILT_END = (-4.85 - ANCHOR) / 16.0;
++    /**
++     * 4.1.21: where the hilt ends (item pixel -2.5): just past the left hand's grip (-1.3), the pommel in the heel of the hand, as a katana
++     * is held (4.1.18's box hilt ran on four pixels past the left hand, into his stomach in chudan).
++     */
++    static final double HILT_END = (-2.5 - ANCHOR) / 16.0;
+ 
+     /**
+      * A katana grown of kagune: the blade hardened kagune laid in plates like a Koukaku's (dark crimson, a seam and a ridge where each
+@@ -255,7 +258,8 @@ public final class QuinqueMesh {
+         b.orb(new double[] {collar + 0.004, 0.005, 0.046}, 0.017, ArmMesh.EYE);
+         b.orb(new double[] {collar + 0.004, 0.005, -0.046}, 0.017, ArmMesh.EYE);
+         // The tsuba: an oval disc, its rim thicker (squared a little), dark kagune lit by its veins.
+-        b.blob(new double[] {0.0, -0.012, 0.0}, new double[] {0.022, 0.16, 0.1}, 8, 30, 57, 0.12,
++        // 4.1.21: a katana's proportions (half again the hilt's width each way), clear of the fist as the wrist bends.
++        b.blob(new double[] {0.0, -0.01, 0.0}, new double[] {0.02, 0.12, 0.08}, 8, 30, 57, 0.12,
+             (along, around, lump) -> ArmMesh.mix(BLACK, KAGUNE, 0.2 + 0.55 * lump + 0.25 * Math.pow(Math.sin(Math.PI * along), 8.0)), false, 2.6, 5);
+         for (int t = 0; t < 2; t++) {
+             int n = 60;
+@@ -266,15 +270,15 @@ public final class QuinqueMesh {
+                 double s = i / (n - 1.0);
+                 // Out of the collar onto the tsuba's face, round over its rim (the tendril's own coil about the rim), and up toward the blade.
+                 double a = start + s * Math.PI * 1.25;
+-                double reach = 0.07 + 0.095 * Math.min(1.0, s / 0.3);
+-                double coil = Math.sin(s * Math.PI * 5.0 + t) * 0.022 * Math.min(1.0, s / 0.2);
+-                double across = reach * Math.cos(a) - 0.012;
+-                double through = (reach * 0.63 + 0.004) * Math.sin(a);
++                double reach = 0.06 + 0.07 * Math.min(1.0, s / 0.3);
++                double coil = Math.sin(s * Math.PI * 5.0 + t) * 0.018 * Math.min(1.0, s / 0.2);
++                double across = reach * Math.cos(a) - 0.01;
++                double through = (reach * 0.66 + 0.004) * Math.sin(a);
+                 double along = 0.012 + coil + (s > 0.78 ? 0.13 * Math.pow((s - 0.78) / 0.22, 1.7) : 0.0);
+                 path[i] = new double[] {along, across, through};
+                 // Thick at the root, swelling in scales like a Rinkaku's, tapering to a hooked point.
+                 double scale = 1.0 + 0.22 * Math.pow(Math.abs(Math.sin(s * Math.PI * 10.0)), 4.0);
+-                r[i] = Math.max(0.002, 0.03 * Math.pow(1.0 - s, 0.75) * scale);
++                r[i] = Math.max(0.002, 0.024 * Math.pow(1.0 - s, 0.75) * scale);
+             }
+             b.tube(path, r, 9, (row, side) -> ArmMesh.mix(KAGUNE_DARK, row % 6 < 2 ? RIDGE : KAGUNE_LIGHT, 0.35 + 0.5 * row / (double)n), false, true);
+             // A vein glowing along its outside.
+@@ -358,9 +362,9 @@ public final class QuinqueMesh {
+             b.tube(ring, rr, 6, (row, side) -> ArmMesh.mix(BLACK, KAGUNE, 0.3 + 0.3 * Math.cos(side)), false, false);
+         }
+         // The pommel: a knot of flesh, veined, an eye of RC at its end.
+-        double pu = from - 0.03;
+-        b.blob(new double[] {pu, 0.0, 0.0}, new double[] {0.04, 0.055, 0.05}, 10, 16, 23, 0.25,
++        double pu = from - 0.012;
++        b.blob(new double[] {pu, 0.0, 0.0}, new double[] {0.022, 0.046, 0.043}, 10, 16, 23, 0.25,
+             (along, around, lump) -> ArmMesh.mix(FLESH_DARK, FLESH, 0.2 + 0.6 * lump), false, 2.3, 2);
+-        b.orb(new double[] {pu - 0.037, 0.0, 0.0}, 0.017, ArmMesh.EYE);
++        b.orb(new double[] {pu - 0.02, 0.0, 0.0}, 0.013, ArmMesh.EYE);
+     }
+ }
+diff --git a/src/test/java/com/hex/kagune/control/QuinqueTests.java b/src/test/java/com/hex/kagune/control/QuinqueTests.java
+index 72db7ae9..a3441a34 100644
+--- a/src/test/java/com/hex/kagune/control/QuinqueTests.java
++++ b/src/test/java/com/hex/kagune/control/QuinqueTests.java
+@@ -135,6 +135,8 @@ public final class QuinqueTests {
+                     com.hex.kagune.control.client.animation.RigPose p = new com.hex.kagune.control.client.animation.RigPose();
+                     double[] at = com.hex.kagune.control.client.animation.QuinqueAim.solve(q, aim.blade(), aim.hand(), new double[] {-1.15, -0.75, 0.49});
+                     com.hex.kagune.control.client.animation.QuinqueGrip.aimRight(p, at[0], at[1], at[2]);
++                    p.weaponX = (float)at[3]; // 4.1.21: and its wrists
++                    p.weaponZ = (float)at[4];
+                     double[] dir = com.hex.kagune.control.client.animation.QuinqueAim.blade(p, q);
+                     double[] want = com.hex.kagune.control.client.animation.QuinqueAim.unit(new double[] {-aim.blade()[0], -aim.blade()[1], -aim.blade()[2]});
+                     double off = Math.toDegrees(Math.acos(Math.max(-1.0, Math.min(1.0, dir[0] * want[0] + dir[1] * want[1] + dir[2] * want[2]))));
+@@ -149,6 +151,7 @@ public final class QuinqueTests {
+         aimed();
+         firstPerson();
+         meshes();
++        cutsClear();
+         kinds();
+         files();
+         holds();
+@@ -292,8 +295,9 @@ public final class QuinqueTests {
+                 wide = Math.max(wide, Math.max(Math.abs(mesh.pos[i] - 8.0F), Math.abs(mesh.pos[i + 2] - 8.0F)));
+             }
+             check(finite, q + ": every point and normal of its mesh a number");
+-            check(low > -7.0F && low < -5.0F && high > 31.0F && high < 32.5F && wide < 4.0F,
+-                q + ": its mesh as long as its old model (" + low + " .. " + high + ", " + wide + " across)");
++            // 4.1.21: its hilt ending just past the left hand's grip (-1.3), the pommel in the heel of the hand.
++            check(low > -3.6F && low < -2.5F && high > 31.0F && high < 32.5F && wide < 4.0F,
++                q + ": its mesh a katana's length, its hilt ending past the left hand (" + low + " .. " + high + ", " + wide + " across)");
+             // Its grips: turned back off the diagonal, on the hilt's axis (x 8, z 8), between its ends.
+             com.hex.kagune.control.client.animation.QuinqueHolds.Hold h = com.hex.kagune.control.client.animation.QuinqueHolds.of(q);
+             for (float[] grip : new float[][] {h.rightGrip(), h.leftGrip()}) {
+@@ -349,6 +353,154 @@ public final class QuinqueTests {
+             .contains("RenderType.m_"), "the renderer makes its render type the first time it draws, not as the items are registered");
+     }
+ 
++    /**
++     * 4.1.21 (the owner, of 4.1.18's katana: "Why the fuck is the sword behind the fucking back? That, like, both arms are reaching behind
++     * the player's back. What is that?"): every frame of a quinque written by intent (its stance, its draw, each swing every 0.02): both
++     * fists in front of his torso or beside it, never behind it; the fists, the arms' lines and the weapon along its axis never in his torso
++     * or head (QuinqueReach, his chest's own frame); the weapon (its mesh, its blade, guard and hilt) never in his torso, head or legs as
++     * the posed body draws them; the wrists within a wrist's reach; the wrists' turn in the item's own frame (what its renderer applies)
++     * the same turn as the arm's; and the renderer and first person applying it.
++     */
++    static void cutsClear() throws IOException {
++        for (Quinque q : Quinque.values()) {
++            if (com.hex.kagune.control.client.animation.QuinqueKeysBaker.aims(q, 0) == null) {
++                continue;
++            }
++            com.hex.kagune.control.client.animation.QuinqueHolds.Hold h = com.hex.kagune.control.client.animation.QuinqueHolds.of(q);
++            List<float[]> points = corners(q);
++            List<com.hex.kagune.control.client.animation.RigPose> poses = new ArrayList<>();
++            List<String> names = new ArrayList<>();
++            com.hex.kagune.control.client.animation.RigPose stance = com.hex.kagune.control.client.animation.QuinquePose.hold(q);
++            com.hex.kagune.control.client.animation.QuinqueGrip.reach(stance, q, false);
++            poses.add(stance);
++            names.add("its stance");
++            for (int step = 0; step < q.steps(); step++) {
++                for (int i = 0; i <= 50; i++) {
++                    com.hex.kagune.control.client.animation.RigPose p = com.hex.kagune.control.client.animation.QuinquePose.swing(q, step, i / 50.0);
++                    com.hex.kagune.control.client.animation.QuinqueGrip.reach(p, q, false);
++                    poses.add(p);
++                    names.add("swing " + (step + 1) + " at " + String.format(java.util.Locale.ROOT, "%.2f", i / 50.0));
++                }
++            }
++            double worstReach = 0.0;
++            String whereReach = "";
++            double worstPosed = 0.0;
++            String wherePosed = "";
++            int behind = 0;
++            String firstBehind = "";
++            for (int n = 0; n < poses.size(); n++) {
++                com.hex.kagune.control.client.animation.RigPose p = poses.get(n);
++                double d = com.hex.kagune.control.client.animation.QuinqueReach.deepest(p, q);
++                if (d > worstReach) {
++                    worstReach = d;
++                    whereReach = names.get(n);
++                }
++                for (boolean right : new boolean[] {true, false}) {
++                    double[] fist = com.hex.kagune.control.client.animation.QuinqueGrip.fist(p, right, false);
++                    // His torso's front is z -2 (model z runs back): a fist beside him (past x 4) may be level with it.
++                    if (fist[2] > -2.0 && Math.abs(fist[0]) < 4.0) {
++                        if (behind++ == 0) {
++                            firstBehind = names.get(n) + (right ? " (right fist)" : " (left fist)");
++                        }
++                    }
++                }
++                com.hex.kagune.control.client.animation.BodyFrame.Solid solid = new com.hex.kagune.control.client.animation.BodyFrame.Solid(p);
++                for (int k = 0; k < points.size(); k += 3) {
++                    double[] m = com.hex.kagune.control.client.animation.QuinqueGrip.held(p, h, false, points.get(k));
++                    double[] w = com.hex.kagune.control.client.animation.BodyFrame.world(p, m);
++                    double torsoOrHead = Math.max(solid.part(w, 0.0, 0), solid.part(w, 0.0, 1));
++                    double posed = Math.max(torsoOrHead, Math.max(legDepth(p, "rightLeg", m), legDepth(p, "leftLeg", m)));
++                    if (posed > worstPosed) {
++                        worstPosed = posed;
++                        wherePosed = names.get(n);
++                    }
++                }
++            }
++            check(behind == 0, q + ": both fists in front of him or beside him, never behind (" + behind + " times, first at " + firstBehind + ")");
++            check(worstReach <= 0.15, q + ": fists, arms and weapon never in his torso or head (" + String.format("%.2f", worstReach) + " px at " + whereReach + ")");
++            check(worstPosed <= 0.3, q + ": its blade, guard and hilt never in his torso, head or legs as drawn (" + String.format("%.2f", worstPosed)
++                + " px at " + wherePosed + ")");
++            double bend = 0.0;
++            double rock = 0.0;
++            for (com.hex.kagune.control.client.animation.RigPose p : poses) {
++                bend = Math.max(bend, Math.abs(p.weaponX));
++                rock = Math.max(rock, Math.abs(p.weaponZ));
++            }
++            check(bend <= com.hex.kagune.control.client.animation.QuinqueAim.WRIST_BEND + 0.08
++                && rock <= com.hex.kagune.control.client.animation.QuinqueAim.WRIST_ROCK + 0.08,
++                q + ": its wrists within a wrist's reach through every swing (bent " + bend + ", rocked " + rock + ")");
++            // The wrists' turn in the item's own frame about its right grip is the arm's (what QuinqueItemRenderer draws is what held places).
++            java.util.Random random = new java.util.Random(421);
++            float[] g = h.rightGrip();
++            for (int trial = 0; trial < 40; trial++) {
++                com.hex.kagune.control.client.animation.RigPose bent = com.hex.kagune.control.client.animation.QuinquePose.hold(q);
++                bent.weaponX = (float)(random.nextGaussian() * 0.8);
++                bent.weaponY = (float)(random.nextGaussian() * 0.3);
++                bent.weaponZ = (float)(random.nextGaussian() * 0.5);
++                com.hex.kagune.control.client.animation.RigPose straight = new com.hex.kagune.control.client.animation.RigPose().add(bent, 1.0F);
++                straight.rightArmHold = bent.rightArmHold;
++                straight.weaponX = straight.weaponY = straight.weaponZ = 0.0F;
++                float[] turn = com.hex.kagune.control.client.animation.QuinqueGrip.wristInItem(h, bent.weaponX, bent.weaponY, bent.weaponZ);
++                double[][] r = zyx(turn[0], turn[1], turn[2]);
++                float[] point = points.get(random.nextInt(points.size()));
++                double[] d = {point[0] - g[0], point[1] - g[1], point[2] - g[2]};
++                float[] moved = {(float)(g[0] + r[0][0] * d[0] + r[0][1] * d[1] + r[0][2] * d[2]), (float)(g[1] + r[1][0] * d[0] + r[1][1] * d[1] + r[1][2] * d[2]),
++                    (float)(g[2] + r[2][0] * d[0] + r[2][1] * d[1] + r[2][2] * d[2])};
++                double[] a = com.hex.kagune.control.client.animation.QuinqueGrip.held(bent, h, false, point);
++                double[] b = com.hex.kagune.control.client.animation.QuinqueGrip.held(straight, h, false, moved);
++                check(Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) + Math.abs(a[2] - b[2]) < 1.0E-3,
++                    q + ": the wrists turned in the item's frame land where the arm's turn puts them (" + java.util.Arrays.toString(a) + " vs "
++                    + java.util.Arrays.toString(b) + ")");
++            }
++        }
++        String renderer = Files.readString(Path.of("src/main/java/com/hex/kagune/control/client/QuinqueItemRenderer.java"));
++        check(renderer.indexOf("QuinqueWrists.of(stack, context)") > 0 && renderer.indexOf("QuinqueGrip.wristInItem(") > 0
++            && renderer.indexOf("QuinqueGrip.wristInItem(") < renderer.indexOf("QuinqueMesh.DIAGONAL"),
++            "the quinques' renderer turns the weapon in the fist by its holder's wrists, before laying it on the diagonal");
++        String layer = Files.readString(Path.of("src/main/java/com/hex/kagune/control/client/render/ArmItemLayer.java"));
++        int set = layer.indexOf("QuinqueWrists.firstPerson(new float[] {body.weaponX, body.weaponY, body.weaponZ})");
++        check(set > 0 && layer.indexOf("finally {", set) > set && layer.indexOf("QuinqueWrists.firstPersonDone()", set) > set,
++            "first person draws its quinque in the pose's wrists, and lets go of them however the drawing ends");
++        String body = Files.readString(Path.of("src/main/java/com/hex/kagune/control/client/animation/KaguneBodyAnimation.java"));
++        String agents = Files.readString(Path.of("src/main/java/com/hex/kagune/control/client/AgentClient.java"));
++        check(body.contains("QuinqueWrists.posed(this.player") && agents.contains("QuinqueWrists.posed(agent, new float[] {p.weaponX, p.weaponY, p.weaponZ})"),
++            "players and investigators tell their wrists to the renderer as they are posed");
++    }
++
++    /** Rz Ry Rx (as QuinqueGrip.wristInItem's angles are applied). */
++    static double[][] zyx(double x, double y, double z) {
++        double cx = Math.cos(x);
++        double sx = Math.sin(x);
++        double cy = Math.cos(y);
++        double sy = Math.sin(y);
++        double cz = Math.cos(z);
++        double sz = Math.sin(z);
++        return new double[][] {{cz * cy, cz * sy * sx - sz * cx, cz * sy * cx + sz * sx}, {sz * cy, sz * sy * sx + cz * cx, sz * sy * cx - cz * sx},
++            {-sy, cy * sx, cy * cx}};
++    }
++
++    /** How deep (pixels) a model point sinks into {@code leg} as {@code p} poses it (its box, its own turn undone; 0: clear). */
++    static double legDepth(com.hex.kagune.control.client.animation.RigPose p, String leg, double[] m) {
++        float[] pos = p.transform(leg, com.hex.kagune.control.client.animation.RigPose.POSITION, leg.equals("rightLeg") ? -1.9F : 1.9F, 12.0F, 0.1F);
++        float[] r = p.transform(leg, com.hex.kagune.control.client.animation.RigPose.ROTATION, 0.0F, 0.0F, 0.0F);
++        double x = m[0] - pos[0];
++        double y = m[1] - pos[1];
++        double z = m[2] - pos[2];
++        double c = Math.cos(-r[2]);
++        double s = Math.sin(-r[2]);
++        double x1 = x * c - y * s;
++        double y1 = x * s + y * c;
++        c = Math.cos(-r[1]);
++        s = Math.sin(-r[1]);
++        double x2 = x1 * c + z * s;
++        double z2 = -x1 * s + z * c;
++        c = Math.cos(-r[0]);
++        s = Math.sin(-r[0]);
++        double y3 = y1 * c - z2 * s;
++        double z3 = y1 * s + z2 * c;
++        return Math.max(0.0, Math.min(Math.min(2.0 - Math.abs(x2), 2.0 - Math.abs(z3)), Math.min(y3, 12.0 - y3)));
++    }
++
+     /** The baker's kind of {@code q}'s models (its file names). */
+     static String kind(Quinque q) {
+         return switch (q) {
