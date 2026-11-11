@@ -17,6 +17,26 @@ public final class AgentPose {
     private AgentPose() {
     }
 
+    /**
+     * 4.1.25 (the owner: "improve the combat so you can use both styles of fighting that we got. Both the Kickmaster and the normal one"):
+     * the White Reaper's hand-to-hand, {@code age} ticks into {@code strike} of either string (the Speed Blitz or Kick Master's), thrown as
+     * a player throws it ({@link PaleMotions#strike}), from his guard; Dawn stays in his right hand, kept in its stance's hold by the arm that
+     * carries it (a lance three blocks long swung through a jab would go through him), so his left hand and his legs do the striking.
+     */
+    public static RigPose brawl(com.hex.kagune.control.pale.PaleStrike strike, double age) {
+        RigPose p = PaleMotions.strike(strike, age, null);
+        // Dawn carried as he carries it at ease (his idle's shoulder rest: its point raised out to his right), high and clear of him.
+        RigPose carry = QuinquePose.idle(Quinque.DAWN, QuinquePose.DAWN_SETTLE + (QuinquePose.UP_TO + QuinquePose.DOWN_FROM) * 0.5);
+        p.rightArmX = carry.rightArmX;
+        p.rightArmY = carry.rightArmY;
+        p.rightArmZ = carry.rightArmZ;
+        p.rightElbow = 0.0F;
+        p.rightArmHold = 1.0F;
+        // Raised as far as his trunk leans (the spinning back kick lays it out level): carried level with the world, not into the ground.
+        QuinquePose.pitchBy(p, Quinque.DAWN, -Math.max(0.0F, p.lean));
+        return p;
+    }
+
     /** Bring the tip to the target and hold it there through the windup. */
     public static RigPose aimDawn(double age, float pitch) {
         RigPose pose = QuinquePose.hold(Quinque.DAWN);

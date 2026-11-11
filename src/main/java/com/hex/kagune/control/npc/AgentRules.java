@@ -220,6 +220,24 @@ public final class AgentRules {
     public static final int REAPER_KICK_DURATION = 14;
     public static final int REAPER_KICK_COOLDOWN = 88;
     public static final float REAPER_KICK_DAMAGE = 22.0F;
+    /**
+     * 4.1.25 (the owner: "improve the combat so you can use both styles of fighting that we got. Both the Kickmaster and the normal one, along
+     * with the flips"): the White Reaper's hand-to-hand. Pressed this close (blocks, middle to middle), now and then (this share of the
+     * ticks he could), he goes in with one of the two strings, Kick Master's or the Speed Blitz, half the time each, chaining strike into
+     * strike while it is in reach, blinks and all; each blow this much times the strike's own weight; a rest after a string.
+     */
+    public static final double REAPER_BRAWL_NEAR = 2.8;
+    public static final double REAPER_BRAWL_CHANCE = 0.08;
+    /** How far past touching (blocks, edge to edge) a strike still lands, a punch and a kick. */
+    public static final double REAPER_BRAWL_LANDS = 1.4;
+    public static final double REAPER_BRAWL_KICK_LANDS = 1.9;
+    public static final float REAPER_BRAWL_DAMAGE = 7.0F;
+    public static final int REAPER_BRAWL_REST = 70;
+
+    /** 4.1.25: the string he throws for {@code roll} (0..1): Kick Master's or the Speed Blitz, half the time each. */
+    public static com.hex.kagune.control.pale.PaleStrike.Style brawlStyle(double roll) {
+        return roll < 0.5 ? com.hex.kagune.control.pale.PaleStrike.Style.KICKS : com.hex.kagune.control.pale.PaleStrike.Style.BLITZ;
+    }
     public static final double DAWN_SHOT_MIN = 6.0;
     public static final double DAWN_SHOT_RANGE = 32.0;
     public static final double DAWN_SHOT_SPEED = 1.5;

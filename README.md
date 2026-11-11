@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.25 (HexGhoul): Arima, part 3: both fighting styles (testing)
+
+See `.github/release-notes-4.1.25.md`. "Use both styles of fighting that we got. Both the Kickmaster and the normal one": up close the White Reaper sometimes throws Kick Master's string or the Speed Blitz (`AgentRules.brawlStyle`, `REAPER_BRAWL_*`; `AgentBrain.brawl`, its blinks and impacts), a player's strikes on their own ticks, synced as swing codes (`CcgAgent.STRIKE` + the strike's ordinal) and drawn whole by `AgentPose.brawl` (PaleMotions.strike) with Dawn carried clear at his right shoulder, raised as far as his trunk leans. Protocol 117.
+
 ## 4.1.24 (HexGhoul): Arima, part 2: his mansion, one per world, him in its garden (testing)
 
 See `.github/release-notes-4.1.24.md`. "A schematic where he's going to spawn in always ... outside in the garden ... doesn't spawn like in the ground": the owner's mansion (`art/reaper/arima_mansion.schem`) is `hexkagune:reaper_mansion`, a one-of-a-kind dry place (`DryLand.PLACES`, `MANSION_SALT`, `PlaceClaims`, `/kagune places`) lifted onto its footprint's highest ground, its lawn on the surface (an anchor jigsaw on it), the air under the lawn filled; the White Reaper is baked into its garden (`tools/companion_structures.py`, ForgeData flags) and keeps to it (`AgentBrain` home, `AgentRules.REAPER_HOME_*`); never in the wild (`REAPER_CHANCE` 0). Protocol 117.

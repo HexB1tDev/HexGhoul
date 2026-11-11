@@ -44,6 +44,16 @@ public final class AgentClient {
             double landed = agent.m_20096_() && flipAge > 4.0 ? flipAge - 4.0 : -1.0;
             return PaleMotions.flip(PaleRules.Flip.byOrdinal(agent.flip()), flipAge, landed);
         }
+        // 4.1.25: the White Reaper's hand-to-hand (Kick Master's string or the Speed Blitz): the whole body a player's strike, legs and all,
+        // Dawn carried clear (AgentPose.brawl).
+        int code = agent.swing() - CcgAgent.STRIKE;
+        if (code >= 0 && code < com.hex.kagune.control.pale.PaleStrike.values().length) {
+            com.hex.kagune.control.pale.PaleStrike strike = com.hex.kagune.control.pale.PaleStrike.values()[code];
+            double strikeAge = CcgAgent.since(now, agent.swingAt()) + partial;
+            if (strikeAge >= 0.0 && strikeAge < strike.duration) {
+                return AgentPose.brawl(strike, strikeAge);
+            }
+        }
         // 3.0.0: a kagune-made weapon, out of its case (its hand empty: the weapon is drawn from its entity data, WeaponLayer).
         com.hex.kagune.control.quinque.Arm arm = agent.weapon();
         if (arm != null && agent.m_21205_().m_41619_()) {

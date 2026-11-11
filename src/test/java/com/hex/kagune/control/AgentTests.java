@@ -690,6 +690,26 @@ public final class AgentTests {
             last = mastery;
         }
         check(com.hex.kagune.control.npc.AgentRules.mastery(com.hex.kagune.control.npc.AgentRules.Rank.RANK_10) == 60, "the Reaper: 60");
+        // 4.1.25 (the owner: "use both styles of fighting that we got. Both the Kickmaster and the normal one, along with the flips"): his
+        // hand-to-hand, either string half the time; drawn as a player's strike with Dawn carried clear of him (never through his legs or
+        // the ground: every strike of both strings, every tick); its swing codes clear of every other.
+        check(AgentRules.brawlStyle(0.2) == com.hex.kagune.control.pale.PaleStrike.Style.KICKS
+            && AgentRules.brawlStyle(0.7) == com.hex.kagune.control.pale.PaleStrike.Style.BLITZ, "the White Reaper: Kick Master's string or the Speed Blitz");
+        check(com.hex.kagune.control.npc.CcgAgent.STRIKE > com.hex.kagune.control.npc.CcgAgent.GROUND
+            && com.hex.kagune.control.npc.CcgAgent.STRIKE > com.hex.kagune.control.npc.CcgAgent.SOARING, "a strike's swing code is no other move's");
+        com.hex.kagune.control.client.animation.QuinqueHolds.Hold dawnHold = com.hex.kagune.control.client.animation.QuinqueHolds.of(Quinque.DAWN);
+        for (com.hex.kagune.control.pale.PaleStrike strike : com.hex.kagune.control.pale.PaleStrike.values()) {
+            double lowest = Double.MAX_VALUE;
+            for (double age = 0.0; age <= strike.duration; age += 0.5) {
+                com.hex.kagune.control.client.animation.RigPose p = com.hex.kagune.control.client.animation.AgentPose.brawl(strike, age);
+                // Dawn's point, its butt (its model's ends along its length) where the body draws them, against its feet (24 below the neck).
+                for (float[] end : new float[][] {{-5.7F, 8.0F, 8.0F}, {21.7F, 8.0F, 8.0F}, {-20.0F, 8.0F, 8.0F}}) {
+                    double[] at = com.hex.kagune.control.client.animation.QuinqueGrip.held(p, dawnHold, false, end);
+                    lowest = Math.min(lowest, 24.0 - p.drop - at[1]);
+                }
+            }
+            check(lowest > 2.0, "the White Reaper's " + strike + ": Dawn carried clear of the ground (" + Math.round(lowest) + " pixels above it at its lowest)");
+        }
         // 4.1.23 (the owner: "he drops Dawn 100% guaranteed"): every time; everyone who struck him in the last five minutes shares his fall.
         check(com.hex.kagune.control.npc.AgentRules.dawnChance(0) == 1.0 && com.hex.kagune.control.npc.AgentRules.dawnChance(3) == 1.0,
             "Dawn: every time the White Reaper falls");

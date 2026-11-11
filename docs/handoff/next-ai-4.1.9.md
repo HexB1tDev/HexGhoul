@@ -1,4 +1,4 @@
-# Next AI: after 4.1.24 (4.1.24: Arima part 2, his mansion, one per world, him in its garden; 4.1.23: Arima part 1, Dawn every time and Slain Reaper for everyone who hit him; 4.1.22: first person for the kagune-made weapons; 4.1.21: the katana's cuts hands first, with wrists; 4.1.20: the katana a smooth kagune-grown mesh drawn by its own item renderer; 4.1.19: melee quinques in first person through the third person chain, seen from behind the head; 4.1.18: the katana rebuilt, its five cuts by intent, quinques' seven-frame draw; 4.1.17: coat halves overlap, places on their highest ground and adopted when found standing, planted Ukaku spikes tinted; 4.1.16: the kiss blush by mood, eyes fixed on Ayato, Touka, the kids' blinks and kakugan; 4.1.15: reactions to who the player is with, the night's captions, more kid games and no touching teenage sons, six new kisses and smoother gestures; 4.1.14: places built at any good spot, first one kept; coats on the legs; no Ukaku M1 spam; 4.1.9: the inventory crash, the special places; 4.1.10-4.1.13: the wing slams; 4.1.12: places never nowhere, the coat; 4.1.13: slams as arms and hands clear of his body, the guard, /kagune places checks each place)
+# Next AI: after 4.1.25 (4.1.25: Arima part 3, both fighting styles; 4.1.24: Arima part 2, his mansion, one per world, him in its garden; 4.1.23: Arima part 1, Dawn every time and Slain Reaper for everyone who hit him; 4.1.22: first person for the kagune-made weapons; 4.1.21: the katana's cuts hands first, with wrists; 4.1.20: the katana a smooth kagune-grown mesh drawn by its own item renderer; 4.1.19: melee quinques in first person through the third person chain, seen from behind the head; 4.1.18: the katana rebuilt, its five cuts by intent, quinques' seven-frame draw; 4.1.17: coat halves overlap, places on their highest ground and adopted when found standing, planted Ukaku spikes tinted; 4.1.16: the kiss blush by mood, eyes fixed on Ayato, Touka, the kids' blinks and kakugan; 4.1.15: reactions to who the player is with, the night's captions, more kid games and no touching teenage sons, six new kisses and smoother gestures; 4.1.14: places built at any good spot, first one kept; coats on the legs; no Ukaku M1 spam; 4.1.9: the inventory crash, the special places; 4.1.10-4.1.13: the wing slams; 4.1.12: places never nowhere, the coat; 4.1.13: slams as arms and hands clear of his body, the guard, /kagune places checks each place)
 
 **RULE (the owner, after 4.1.16, quoted exactly): "always specify that the AI is to evaluate the renders that it generates, and it does not
 give up until it's a perfect match and it's a perfect combat system. Like, the animations always have to be top tier, no excuses
@@ -33,7 +33,7 @@ Considering the amount of stuff that we got to do, you're spending so much time 
    (`QuinqueOwn.whip`, `WeaponLayer.whip`) has to be laid from the posed arm.
 4. **Arima, part 1 is done (4.1.23):** Dawn every time, the Slain Reaper advancement and his mastery for everyone who hit him in the last
    five minutes. **4.1.24:** his mansion (the owner's schematic, `art/reaper/arima_mansion.schem`), one per world, him in its garden.
-   **Next for Arima:** both fighting styles, Dawn smooth and opening like an umbrella, the ground strike as the blade growing
+   **4.1.25:** both fighting styles (Kick Master's string and the Speed Blitz, up close). **Next for Arima:** Dawn smooth and opening like an umbrella, the ground strike as the blade growing
    up, phase 2 (jacket off: `art/reaper/Reaper_Phase2.png`; the heavy blade: `art/reaper/Reaper_Quinque1.jpg`, `Reaper_quinque2.jpg`;
    bleed, faster, dodging; the blade shattering; on his knees). Then quests, then the Small City. One version at a time, short.
 5. **Open question to the owner:** should daughters 07, 10, 11, 12, 21 and 22 get open eyes painted on? Ask before touching them.
@@ -119,6 +119,7 @@ Considering the amount of stuff that we got to do, you're spending so much time 
 | 4.1.12 | Places never nowhere, `/kagune places`; slams without particles and 1.75x as long; each coat half on its own leg | pushed, EXIT 0 |
 | 4.1.13 | Every slam an arm (behind a new shoulder) and a hand, aligned on its target and clear of his posed body; the guard clamped round him clear of his raised arms; `/kagune places` makes each place's chunk and says built or stopped; coat previews | pushed, EXIT 0 |
 | 4.1.14 | One-of-a-kind places at any dry spot their set offers, the first the world builds kept with the world (`PlaceClaims`); coat tails drawn on the legs; each Ukaku wing slam plays out in full (1.3x damage) | pushed, EXIT 0 |
+| 4.1.25 | Arima part 3: up close the Reaper throws Kick Master's string or the Speed Blitz (`AgentBrain.brawl`/`brawlBlink`/`brawlLands`, `AgentRules.REAPER_BRAWL_*`, `brawlStyle`), synced as `CcgAgent.STRIKE` + ordinal, drawn by `AgentPose.brawl` (PaleMotions.strike, Dawn carried at the shoulder and raised by the lean); `AgentTests` (Dawn above the ground through every strike) | pushed, EXIT 0 |
 | 4.1.24 | Arima part 2: `hexkagune:reaper_mansion` (the owner's schematic via `tools/companion_structures.py`: short grass as 1.20.1's grass, bottom layer cropped, under-lawn air filled, `hexkagune:mansion_anchor` on the lawn's layer, Arima baked in with ForgeData `HexCcgAgent`/`RankLevel` 10/`Mansion`); a one-of-a-kind dry place (`DryLand.PLACES`, `MANSION_SALT`, `PlaceClaims`, `ControlStructures.ONE_OF_A_KIND`); his home in the garden (`AgentBrain` HOME_X/Y/Z, `AgentRules.REAPER_HOME_STROLL/LEASH`); never in the wild (`REAPER_CHANCE` 0) | pushed, EXIT 0 |
 | 4.1.23 | Arima part 1: Dawn's case every time he falls (`AgentRules.dawnChance` 1); `hexkagune:slain_reaper` (data/hexkagune/advancements, impossible criterion awarded by `AgentBrain.reaperSlain`) and his 60 mastery for his killer and every player who hit him in the last 5 minutes (`AgentBrain.reaperStruck`, `AgentRules.REAPER_SHARE_TICKS`); advancement API allowlisted with joined.tsrg and intermediary evidence | pushed, EXIT 0 |
 | 4.1.22 | First person for the bone greatsword, flesh hammer and crystal spear through the posed body (`ArmItemLayer.throughBody(pose, posed, slim, false)`, `WeaponLayer.mesh`; `FirstPersonQuinque.arm`); launcher and whip kept theirs; `QuinqueTests.firstPersonArms` | pushed, EXIT 0 |
@@ -460,6 +461,26 @@ blush, it depends on their mood." (read as: how much they blush goes by their mo
      - the blade and the launcher, which keep the legacy motion.
   2. The blade's, spear's, mace's, launcher's and Dawn's own strings by intent (`aims`), each its own count.
   3. New kagune-born quinques (the owner: whips after different kagunes, more swords).
+
+## 4.1.25, what and where (Arima part 3: both fighting styles)
+
+The owner (quoted exactly): "We also want to improve the combat so you can use both styles of fighting that we got. Both the Kickmaster and
+the normal one, along with the flips and whatever."
+
+- **Server:** `AgentBrain.brawl` (in the Reaper's chain after the ground strike, lightning and kick): within `REAPER_BRAWL_NEAR` (2.8),
+  `REAPER_BRAWL_CHANCE` (0.08) a tick he could, a string (`AgentRules.brawlStyle`: KICKS or BLITZ) strike by strike on `PaleStrike`'s
+  ticks: `brawlBlink` at `BLINK_TICK`, `brawlLands` at `impact` (within `REAPER_BRAWL_LANDS`/`KICK_LANDS` edge to edge;
+  `REAPER_BRAWL_DAMAGE` x the strike's weight; its knock; `S2CPaleFx.IMPACT`), chained from `chain` while in reach, `REAPER_BRAWL_REST`
+  after; `cancelBrawl` wherever the kick is cancelled.
+- **Client:** the swing code `CcgAgent.STRIKE` (40) + the strike's ordinal; `AgentClient.pose` returns `AgentPose.brawl(strike, age)` whole
+  (legs and all: `take` copies only arms and some body channels). `brawl` = `PaleMotions.strike` from the guard, the right arm in Dawn's
+  idle shoulder carry, pitched up by the trunk's lean.
+- **Tried on renders and dropped:** the strike's own right arm (Dawn swung through his legs and the ground); the right arm in Dawn's stance
+  hold (it points down through a leg whenever the body turns).
+- **Tests:** `AgentTests` (both strings; codes clear of the others; Dawn's ends above the ground every half tick of every strike).
+- **Previews:** `docs/handoff/arima-brawl-front-4.1.25.png`, `arima-brawl-side-back-4.1.25.png` (a scratch sheet over
+  `QuinquePreview.item` and `PoseRender`, the Reaper's skin `art/white_reaper_skin.png`).
+- **Not tested in game.**
 
 ## 4.1.24, what and where (Arima part 2: his mansion)
 

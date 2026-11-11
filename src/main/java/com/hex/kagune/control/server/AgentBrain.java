@@ -119,6 +119,13 @@ public final class AgentBrain {
          * whether it has risen yet, and when it may again.
          */
         long groundAt = Long.MIN_VALUE;
+        /** 4.1.25: the White Reaper's hand-to-hand: the strike under way (its ordinal; -1 none), since when, at whom, its string and place. */
+        int brawlStrike = -1;
+        long brawlAt = Long.MIN_VALUE;
+        int brawlTarget;
+        com.hex.kagune.control.pale.PaleStrike.Style brawlStyle = com.hex.kagune.control.pale.PaleStrike.Style.KICKS;
+        int brawlIndex;
+        long brawlReadyAt = Long.MIN_VALUE;
         int groundTarget;
         Vec3 groundSpot;
         boolean erupted;
@@ -441,6 +448,7 @@ public final class AgentBrain {
             }
             AgentArms.cancel(agent, mind, now);
             cancelKick(agent, mind, now);
+            cancelBrawl(agent, mind, now);
             cancelLightning(agent, mind, now);
             cancelGround(agent, mind, now);
             return;
@@ -464,6 +472,7 @@ public final class AgentBrain {
         if (PaleStun.stunned(agent)) {
             AgentArms.cancel(agent, mind, now);
             cancelKick(agent, mind, now);
+            cancelBrawl(agent, mind, now);
             cancelLightning(agent, mind, now);
             cancelGround(agent, mind, now);
             return;
@@ -816,6 +825,7 @@ public final class AgentBrain {
     private static void patrol(CcgAgent agent, Mind mind, CcgAgent partner, ServerLevel level, long now) {
         end(agent, mind);
         cancelKick(agent, mind, now);
+        cancelBrawl(agent, mind, now);
         cancelLightning(agent, mind, now);
         if (mind.open && ago(now, mind.foughtAt) > AgentRules.CALM && QuinqueServer.hand(agent, level, agent.m_21205_(), mind.kind, false)) {
             mind.open = false;
@@ -953,7 +963,8 @@ public final class AgentBrain {
         if (tactics(agent, mind, prey, level, now)) {
             return; // 2.0.49: the White Reaper's read of the fight
         }
-        if (ground(agent, mind, prey, level, now) || lightning(agent, mind, prey, level, now) || kick(agent, mind, prey, level, now)) {
+        if (ground(agent, mind, prey, level, now) || lightning(agent, mind, prey, level, now) || kick(agent, mind, prey, level, now)
+            || brawl(agent, mind, prey, level, now)) {
             return;
         }
         if (mind.striking && now >= mind.landsAt) {
@@ -1344,6 +1355,15 @@ public final class AgentBrain {
         return true;
     }
 
+    /** 4.1.25: his hand-to-hand broken off (stunned, the fight over): no strike under way, his swing let go. */
+    private static void cancelBrawl(CcgAgent agent, Mind mind, long now) {
+        if (mind.brawlStrike >= 0) {
+            mind.brawlStrike = -1;
+            mind.brawlAt = Long.MIN_VALUE;
+            agent.swing(-1, now);
+        }
+    }
+
     private static void cancelKick(CcgAgent agent, Mind mind, long now) {
         if (mind.kickAt != Long.MIN_VALUE) {
             mind.kickAt = Long.MIN_VALUE;
@@ -1387,6 +1407,105 @@ public final class AgentBrain {
             return true;
         }
         return false;
+    }
+
+    /**
+     * 4.1.25 (the owner: "use both styles of fighting that we got. Both the Kickmaster and the normal one"): the White Reaper's hand-to-hand.
+     * Pressed close, now and then, he goes in with Kick Master's string or the Speed Blitz (half the time each: AgentRules.brawlStyle),
+     * strike by strike as a player throws them (PaleStrike's ticks: its blink, its impact, its chain), each chained into the next while his
+     * quarry is in reach, the finisher ending it; Dawn carried clear meanwhile (drawn by AgentPose.brawl). True while a strike is under way.
+     */
+    private static boolean brawl(CcgAgent agent, Mind mind, LivingEntity prey, ServerLevel level, long now) {
+        if (mind.rank != AgentRules.Rank.RANK_10 || mind.kind != Quinque.DAWN) {
+            return false;
+        }
+        if (mind.brawlStrike >= 0) {
+            com.hex.kagune.control.pale.PaleStrike strike = com.hex.kagune.control.pale.PaleStrike.values()[mind.brawlStrike];
+            long age = ago(now, mind.brawlAt);
+            agent.m_21573_().m_26573_();
+            Entity seen = level.m_6815_(mind.brawlTarget);
+            LivingEntity target = seen instanceof LivingEntity body && body.m_6084_() ? body : null;
+            if (target != null && age < strike.impact) {
+                face(agent, target);
+            }
+            if (age == com.hex.kagune.control.pale.PaleStrike.BLINK_TICK && strike.blink != com.hex.kagune.control.pale.PaleStrike.Blink.NONE
+                && target != null) {
+                brawlBlink(agent, target, level, strike.blink);
+            }
+            if (age == strike.impact && target != null) {
+                brawlLands(agent, target, strike, level, now);
+            }
+            com.hex.kagune.control.pale.PaleStrike[] string = com.hex.kagune.control.pale.PaleStrike.of(mind.brawlStyle);
+            boolean chain = age >= strike.chain && target != null && !strike.finisher() && mind.brawlIndex + 1 < string.length
+                && target.m_20280_(agent) <= AgentRules.REAPER_BRAWL_NEAR * AgentRules.REAPER_BRAWL_NEAR * 1.3;
+            if (chain) {
+                mind.brawlIndex++;
+                beginStrike(agent, mind, string[mind.brawlIndex], now);
+            } else if (age >= strike.duration) {
+                mind.brawlStrike = -1;
+                mind.brawlAt = Long.MIN_VALUE;
+                mind.brawlReadyAt = now + AgentRules.REAPER_BRAWL_REST;
+                agent.swing(-1, now);
+            }
+            return true;
+        }
+        if (mind.striking || mind.kickAt != Long.MIN_VALUE || mind.aimAt != Long.MIN_VALUE || mind.groundAt != Long.MIN_VALUE
+            || now < mind.brawlReadyAt || now < mind.readyAt || !agent.m_20096_()
+            || prey.m_20280_(agent) > AgentRules.REAPER_BRAWL_NEAR * AgentRules.REAPER_BRAWL_NEAR || !agent.m_142582_(prey)
+            || agent.m_217043_().m_188500_() >= AgentRules.REAPER_BRAWL_CHANCE) {
+            return false;
+        }
+        mind.brawlStyle = AgentRules.brawlStyle(agent.m_217043_().m_188500_());
+        mind.brawlIndex = 0;
+        mind.brawlTarget = prey.m_19879_();
+        beginStrike(agent, mind, com.hex.kagune.control.pale.PaleStrike.of(mind.brawlStyle)[0], now);
+        return true;
+    }
+
+    /** 4.1.25: one strike of his string begins (every client draws it from the swing's code: AgentClient, AgentPose.brawl). */
+    private static void beginStrike(CcgAgent agent, Mind mind, com.hex.kagune.control.pale.PaleStrike strike, long now) {
+        mind.brawlStrike = strike.ordinal();
+        mind.brawlAt = now;
+        agent.swing(CcgAgent.STRIKE + strike.ordinal(), now);
+    }
+
+    /** 4.1.25: he vanishes and is at its side ({@code SIDE}) or square in front of it ({@code FRONT}), already striking. */
+    private static void brawlBlink(CcgAgent agent, LivingEntity target, ServerLevel level, com.hex.kagune.control.pale.PaleStrike.Blink kind) {
+        Vec3 from = agent.m_20182_();
+        Vec3 facing = UkakuFire.horizontal(target.m_20182_().m_82546_(from));
+        Vec3 right = new Vec3(-facing.f_82481_, 0.0, facing.f_82479_);
+        double stand = (target.m_20205_() + agent.m_20205_()) * 0.5 + 0.7;
+        Vec3 to = kind == com.hex.kagune.control.pale.PaleStrike.Blink.SIDE ? target.m_20182_().m_82549_(right.m_82490_(stand))
+            : target.m_20182_().m_82546_(facing.m_82490_(stand));
+        if (!level.m_45756_(agent, agent.m_20191_().m_82386_(to.f_82479_ - from.f_82479_, to.f_82480_ - from.f_82480_, to.f_82481_ - from.f_82481_))) {
+            return;
+        }
+        PaleBlitz.fxAround(agent, agent.m_19879_(), com.hex.kagune.control.network.S2CPaleFx.BLINK, from, to.m_82546_(from), 1.0F, 0);
+        agent.m_6021_(to.f_82479_, to.f_82480_, to.f_82481_);
+        face(agent, target);
+        UkakuFire.sound(level, to, "entity.illusioner.mirror_move", 0.6F, 1.5F);
+    }
+
+    /** 4.1.25: a strike of his lands if its quarry is still in its reach: hurt, thrown back, to a side and up as the strike throws it. */
+    private static void brawlLands(CcgAgent agent, LivingEntity target, com.hex.kagune.control.pale.PaleStrike strike, ServerLevel level, long now) {
+        double gap = Math.sqrt(target.m_20280_(agent)) - (target.m_20205_() + agent.m_20205_()) * 0.5;
+        if (gap > (strike.kick() ? AgentRules.REAPER_BRAWL_KICK_LANDS : AgentRules.REAPER_BRAWL_LANDS)) {
+            UkakuFire.sound(level, agent.m_20182_(), "entity.player.attack.sweep", 0.5F, 1.3F);
+            return;
+        }
+        Vec3 facing = UkakuFire.horizontal(target.m_20182_().m_82546_(agent.m_20182_()));
+        Vec3 right = new Vec3(-facing.f_82481_, 0.0, facing.f_82479_);
+        Vec3 knock = facing.m_82490_(strike.back).m_82549_(right.m_82490_(strike.sideways)).m_82520_(0.0, strike.up, 0.0);
+        Vec3 at = GhoulNpcBrain.centre(target).m_82546_(facing.m_82490_(target.m_20205_() * 0.5));
+        WoundHits.expect(target, WoundBook.Blow.BLUNT, at, facing, 0.0);
+        target.f_19802_ = 0;
+        if (target.m_6469_(agent.m_269291_().m_269333_(agent), AgentRules.REAPER_BRAWL_DAMAGE * strike.damage)) {
+            target.m_20256_(target.m_20184_().m_82490_(0.3).m_82549_(knock));
+            target.f_19864_ = true;
+        }
+        PaleBlitz.fxAround(target, agent.m_19879_(), com.hex.kagune.control.network.S2CPaleFx.IMPACT, at, knock, strike.finisher() ? 1.6F : 1.0F,
+            strike.ordinal());
+        UkakuFire.sound(level, at, strike.finisher() ? "entity.player.attack.strong" : "entity.player.attack.knockback", 0.9F, 1.0F);
     }
 
     private static void kickLands(CcgAgent agent, LivingEntity body, Vec3 away, ServerLevel level, long now) {
