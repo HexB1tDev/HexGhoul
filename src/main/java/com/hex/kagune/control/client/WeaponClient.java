@@ -193,6 +193,35 @@ public final class WeaponClient {
         }
     }
 
+    /**
+     * 4.1.32 (the owner: "whenever using a Quinque, I think that it should be prioritized over any combat that we got in the game. So
+     * basically, if you got your Kakugan activated, but you got a Quinque activated, like your M1s are gonna be ignored ... you're gonna be
+     * using the one from the Quinques"): M1 with a CCG quinque out is the quinque's own blow, whatever else is active. The original's kagune
+     * listener cancels the game's attack while the kagune is out and swipes instead; ahead of it (as a kagune-made weapon's input is), the
+     * hit is landed here as the game lands it ({@code MultiPlayerGameMode.attack}, the hand swung by the game) and the event cancelled, so
+     * nothing after it (the kagune's swipe) runs. A block is still dug as ever.
+     */
+    @SubscribeEvent(priority = EventPriority.HIGH)
+    public static void quinqueFirst(InputEvent.InteractionKeyMappingTriggered event) {
+        if (!event.isAttack() || event.getHand() != InteractionHand.MAIN_HAND) {
+            return;
+        }
+        Minecraft minecraft = Minecraft.m_91087_();
+        LocalPlayer player = minecraft.f_91074_;
+        if (player == null || minecraft.f_91080_ != null || minecraft.f_91072_ == null || ControlItems.quinqueWeapon(player.m_21205_()) == null) {
+            return;
+        }
+        HitResult hit = minecraft.f_91077_;
+        if (hit != null && hit.m_6662_() == HitResult.Type.BLOCK) {
+            return; // dig
+        }
+        event.setCanceled(true);
+        event.setSwingHand(true);
+        if (hit instanceof EntityHitResult entityHit) {
+            minecraft.f_91072_.m_105223_(player, entityHit.m_82443_());
+        }
+    }
+
     /** True for a block a right click is meant for: one with a menu or a store (a chest, a furnace, a barrel). */
     private static boolean usable(LocalPlayer player, BlockHitResult hit) {
         return player.m_9236_().m_7702_(hit.m_82425_()) != null;

@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.32 (HexGhoul): a quinque's M1 comes first (testing)
+
+See `.github/release-notes-4.1.32.md`. "Whenever using a Quinque, I think that it should be prioritized over any combat": with a CCG quinque out, `WeaponClient.quinqueFirst` (HIGH priority) lands the hit itself (`MultiPlayerGameMode.attack`) and cancels the click, so the original's kagune listener (`KaguneKeys$ForgeBus.attackInput`, which cancels the game's attack while the kagune is out) never runs; `KaguneCombat.startSwipe` returns while a quinque or a kagune-made weapon is out. Protocol 117.
+
 ## 4.1.31 (HexGhoul): Arima, phase 2 part 4: the blade shatters, he falls to his knees (testing)
 
 See `.github/release-notes-4.1.31.md`. "The blade shatters at the end, and it's just broken ... he just falls on his knees and dies after the weapon shatters": the blow that would take him to `AgentRules.REAPER_END_HEALTH` leaves him at 1 (`endClamp`) and begins his end (`AgentBrain.ending`, `CcgAgent.END`): the blade lowered to the ground, shattered (`ReaperBladeMesh.broken`, shards `ReaperBladeRules.shard`/`ReaperBladePose.shard` drawn by `ReaperBladeLayer.shards`), on his knees, head bowed (`ReaperBladePose.end`), dead at `REAPER_END_TICKS` by that blow (Slain Reaper, mastery and Dawn as 4.1.23). Protocol 117.

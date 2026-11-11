@@ -12,6 +12,7 @@ public class Minecraft {
     /** gui */ public net.minecraft.client.gui.Gui f_91065_;
     /** gameRenderer */ public net.minecraft.client.renderer.GameRenderer f_91063_;
     /** hitResult (crosshair target) */ public net.minecraft.world.phys.HitResult f_91077_;
+    /** gameMode (4.1.32): joined.tsrg enn.r f_91072_, intermediary field_1761 (yarn interactionManager) */ public net.minecraft.client.multiplayer.MultiPlayerGameMode f_91072_;
     /** particleEngine */ public net.minecraft.client.particle.ParticleEngine f_91061_;
     /** renderBuffers */ public net.minecraft.client.renderer.RenderBuffers m_91269_() { throw new UnsupportedOperationException(); }
     /** getSoundManager */ public net.minecraft.client.sounds.SoundManager m_91106_() { throw new UnsupportedOperationException(); }

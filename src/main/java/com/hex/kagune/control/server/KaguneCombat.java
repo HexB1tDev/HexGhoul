@@ -109,6 +109,9 @@ public final class KaguneCombat {
 
     /** Replaces {@code KaguneServerController.startSwipe} (bytecode trampoline): every M1 and vanilla-attack swipe lands here. */
     public static void startSwipe(ServerPlayer player, Entity hint) {
+        if (quinqueOut(player)) {
+            return; // 4.1.32 (the owner: "whenever using a Quinque, I think that it should be prioritized over any combat"): its blow, not the kagune's
+        }
         KakujaPassive.attacked(player);
         if (PaleServer.isPale(player)) {
             PaleBlitz.click(player, hint); // 6.1.0: Pale fights with her fists (the Speed Blitz)
@@ -142,6 +145,12 @@ public final class KaguneCombat {
                 combo.queuedHintId = hint == null ? 0 : hint.m_19879_();
             }
         }
+    }
+
+    /** 4.1.32: a CCG quinque or a kagune-made weapon out in the main hand: its M1 is the weapon's, never the kagune's. */
+    static boolean quinqueOut(ServerPlayer player) {
+        return com.hex.kagune.control.ControlItems.quinqueWeapon(player.m_21205_()) != null
+            || com.hex.kagune.control.ControlItems.armWeapon(player.m_21205_()) != null;
     }
 
     /** Instinct-forced strike at {@code prey}. Returns true if the kagune actually lashed out. */

@@ -163,12 +163,35 @@ public final class QuinqueTests {
         dawnIdle();
         dawnFire();
         dawnVolley();
+        first();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
             System.exit(1);
         }
         System.out.println("Quinque tests: " + passed + " checks passed");
+    }
+
+    /**
+     * 4.1.32 (the owner: "whenever using a Quinque, I think that it should be prioritized over any combat that we got in the game ... the M1s of
+     * the Kakugan are gonna be ignored, and be you're gonna be using the one from the Quinques"): with a quinque out, M1 is always its blow.
+     */
+    static void first() throws IOException {
+        String weapon = Files.readString(Path.of("src/main/java/com/hex/kagune/control/client/WeaponClient.java"));
+        int at = weapon.indexOf("public static void quinqueFirst(InputEvent.InteractionKeyMappingTriggered event) {");
+        check(at > 0 && weapon.lastIndexOf("@SubscribeEvent(priority = EventPriority.HIGH)", at) > at - 200,
+            "a quinque's M1 heard ahead of the kagune's (the original's listener runs at normal priority and skips a cancelled click)");
+        String body = weapon.substring(at, weapon.indexOf("\n    }\n", at));
+        check(body.contains("ControlItems.quinqueWeapon(player.m_21205_()) == null") && body.contains("event.setCanceled(true);")
+            && body.contains("minecraft.f_91072_.m_105223_(player, entityHit.m_82443_());") && body.contains("return; // dig"),
+            "its blow landed as the game lands it, the click kept from the kagune, a block still dug");
+        String combat = Files.readString(Path.of("src/main/java/com/hex/kagune/control/server/KaguneCombat.java"));
+        int swipe = combat.indexOf("public static void startSwipe(ServerPlayer player, Entity hint) {");
+        check(swipe > 0 && combat.indexOf("if (quinqueOut(player)) {", swipe) - swipe < 120, "no kagune swipe from any M1 path while a quinque is out");
+        for (String input : new String[] {"PaleInput", "KingInput", "BikakuInput"}) {
+            check(Files.readString(Path.of("src/main/java/com/hex/kagune/control/client/" + input + ".java")).contains("QuinqueClient.armed("),
+                input + ": its M1 gives way to a quinque");
+        }
     }
 
     /**

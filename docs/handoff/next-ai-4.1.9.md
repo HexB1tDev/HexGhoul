@@ -147,6 +147,7 @@ the next AI now."
 | 4.1.12 | Places never nowhere, `/kagune places`; slams without particles and 1.75x as long; each coat half on its own leg | pushed, EXIT 0 |
 | 4.1.13 | Every slam an arm (behind a new shoulder) and a hand, aligned on its target and clear of his posed body; the guard clamped round him clear of his raised arms; `/kagune places` makes each place's chunk and says built or stopped; coat previews | pushed, EXIT 0 |
 | 4.1.14 | One-of-a-kind places at any dry spot their set offers, the first the world builds kept with the world (`PlaceClaims`); coat tails drawn on the legs; each Ukaku wing slam plays out in full (1.3x damage) | pushed, EXIT 0 |
+| 4.1.32 | A quinque's M1 first: `WeaponClient.quinqueFirst` (HIGH, lands the hit via `MultiPlayerGameMode.attack` m_105223_, `Minecraft.f_91072_`, cancels the click ahead of the original's kagune listener), `KaguneCombat.startSwipe`/`quinqueOut`; `QuinqueTests.first` | pushed, EXIT 0 |
 | 4.1.31 | Arima phase 2 part 4: his end at 6 HP (`REAPER_END_HEALTH`, `endClamp`, `AgentBrain.ending`, `CcgAgent.END` 12): the blade lowered, shattered (`ReaperBladeMesh.broken`, shards), on his knees (`ReaperBladePose.end`, `KNEEL`, `KNEEL_DROP`), dead by the blow that brought it | pushed, EXIT 0 |
 | 4.1.30 | Arima phase 2 part 3: the rush in, stopping at blade reach (`AgentBrain.rush`, `ReaperBladeRules.RUSH_*`), sidesteps of shots and blows (`AgentBrain.dodge`, `ReaperBladeRules.dodge`/`committed`), close combat only | pushed, EXIT 0 |
 | 4.1.29 | Arima phase 2 part 2: the change at 90 HP (`REAPER_SHED_HEALTH`), the golden case drawn from his back and split open on its hinge, the blade slid out, the case dropped and sunk (`ReaperBladePose.draw`, `ReaperBladeLayer`); his blade (`ReaperBladeMesh`, NPC only) and heavy string (`ReaperBladePose.STRING`, `ReaperBladeRules`, `AgentBrain.blade`), 2 bleed stacks a hit (`UkakuCrystalCombat.agentBleed`) | pushed, EXIT 0 |
@@ -495,6 +496,25 @@ blush, it depends on their mood." (read as: how much they blush goes by their mo
      - the blade and the launcher, which keep the legacy motion.
   2. The blade's, spear's, mace's, launcher's and Dawn's own strings by intent (`aims`), each its own count.
   3. New kagune-born quinques (the owner: whips after different kagunes, more swords).
+
+## 4.1.32, what and where (a quinque's M1 comes first)
+
+The owner (quoted exactly): "Another thing that I want you to keep in mind is that whenever using a Quinque, I think that it should be
+prioritized over any combat that we got in the game. So basically, if you got your Kakugan activated, but you got a Quinque activated, like
+your M1s are gonna be ignored. You know what I mean? Like the M1s of the Kakugan are gonna be ignored, and be you're gonna be using the one
+from the Quinques."
+
+- **Cause (in the original jar):** `com.hex.kagune.client.KaguneKeys$ForgeBus.attackInput` (normal priority) cancels the game's attack while
+  the kagune is out and sends `KaguneAction.SWIPE`, so a held quinque's vanilla hit never happened. `PaleInput`, `KingInput`, `BikakuInput`
+  already return for `QuinqueClient.armed`; `WeaponClient.input` (HIGH) already took kagune-made weapons' clicks.
+- **Fix:** `WeaponClient.quinqueFirst` (HIGH): a CCG quinque weapon in the main hand, an entity or the air: cancel (the original listener
+  does not receive cancelled events), keep the swing, and `minecraft.f_91072_.m_105223_(player, target)` (vanilla's own `startAttack` for an
+  entity); a block: untouched (dig). `KaguneCombat.startSwipe` returns first when `quinqueOut` (a quinque or kagune-made weapon in the main
+  hand), covering the server's vanilla-attack and C2S swipe paths.
+- **API:** stub `stubs/net/minecraft/client/multiplayer/MultiPlayerGameMode.java` (`m_105223_`), `Minecraft.f_91072_`; allowlist lines with
+  joined.tsrg (`ffa.a (Lbyo;Lbfj;)V`, `enn.r`) and intermediary (`method_2918`, `field_1761`) evidence (maps fetched from raw.githubusercontent.com).
+- **Tests:** `QuinqueTests.first` (source checks).
+- **Not tested in game.**
 
 ## 4.1.31, what and where (Arima phase 2 part 4: the end)
 
