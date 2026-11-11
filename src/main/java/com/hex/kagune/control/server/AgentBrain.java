@@ -261,6 +261,12 @@ public final class AgentBrain {
     }
 
     private static final String REAPER = "ccg:reaper";
+    /** 4.1.24: saved by his mansion's template (tools/companion_structures.py): the White Reaper who lives there. */
+    static final String MANSION = CcgAgent.KEY + "Mansion";
+    /** 4.1.24: where in its garden he first woke: his home. */
+    static final String HOME_X = CcgAgent.KEY + "HomeX";
+    static final String HOME_Y = CcgAgent.KEY + "HomeY";
+    static final String HOME_Z = CcgAgent.KEY + "HomeZ";
     private static final String REAPER_INITIALIZED = CcgAgent.KEY + "ReaperInitialized";
 
     static boolean claimReaper(CcgAgent agent, ServerLevel level) {
@@ -352,6 +358,12 @@ public final class AgentBrain {
         boolean reaper = mind.rank == AgentRules.Rank.RANK_10 && !fresh && mind.partner == null
             && !saved.m_128441_(VillagePlace.KEY) && claimReaper(agent, level);
         if (reaper) {
+            // 4.1.24: the mansion's (its template saves him so): his home is where he first wakes, in its garden.
+            if (saved.m_128441_(MANSION) && !saved.m_128441_(HOME_X)) {
+                saved.m_128405_(HOME_X, (int)Math.floor(agent.m_20185_()));
+                saved.m_128405_(HOME_Y, (int)Math.floor(agent.m_20186_() + 0.01));
+                saved.m_128405_(HOME_Z, (int)Math.floor(agent.m_20189_()));
+            }
             mind.look = AgentRules.REAPER_LOOK; // 2.0.28: his own skin, a Reaper saved before included
             mind.kind = Quinque.DAWN;
             agent.m_21530_();
@@ -834,6 +846,29 @@ public final class AgentBrain {
         }
         if (partner != null && partner.m_20280_(agent) > 12.0 * 12.0) {
             agent.m_21573_().m_26573_(); // the leader waits for the other
+            return;
+        }
+        CompoundTag saved = agent.getPersistentData();
+        if (saved.m_128441_(HOME_X) && reaper(agent)) {
+            // 4.1.24: the White Reaper at home: strolling his garden, never off his grounds; walked back from a chase at once.
+            double hx = saved.m_128451_(HOME_X) + 0.5;
+            double hy = saved.m_128451_(HOME_Y);
+            double hz = saved.m_128451_(HOME_Z) + 0.5;
+            double dx = agent.m_20185_() - hx;
+            double dy = agent.m_20186_() - hy;
+            double dz = agent.m_20189_() - hz;
+            double away = Math.sqrt(dx * dx + dy * dy + dz * dz);
+            if (away > AgentRules.REAPER_HOME_STROLL + 2.0 && (now % 20L == 0L || agent.m_21573_().m_26571_())) {
+                agent.m_21573_().m_26519_(hx, hy, hz, away > AgentRules.REAPER_HOME_LEASH ? 1.0 : AgentRules.PATROL_PACE);
+                return;
+            }
+            if (now < mind.wanderAt || !agent.m_21573_().m_26571_()) {
+                return;
+            }
+            mind.wanderAt = now + 140L + (long)(agent.m_217043_().m_188500_() * 220.0);
+            double angle = agent.m_217043_().m_188500_() * Math.PI * 2.0;
+            double distance = agent.m_217043_().m_188500_() * AgentRules.REAPER_HOME_STROLL;
+            agent.m_21573_().m_26519_(hx + Math.cos(angle) * distance, hy, hz + Math.sin(angle) * distance, AgentRules.PATROL_PACE * 0.8);
             return;
         }
         if (now < mind.wanderAt || !agent.m_21573_().m_26571_()) {

@@ -200,8 +200,16 @@ public final class AgentRules {
      * 2.0.29 (the owner: "overall he's just a rare guy that spawns once in a while"): the chance that an appearance of investigators (about
      * one a day near each player, {@link #SPAWN_CHANCE}) is the White Reaper alone instead: about once in a hundred days. Before, he took
      * Rank 10's weight in the rank table (0.15 in 99), about once in 660 days. Rarer than a Rank 9 still. {@code /kagune reaper} for tests.
+     * 4.1.24 (the owner: "I don't think it's fit for him to spawn in the wild like a common person. I'm going to give you a schematic where
+     * he's going to spawn in always, and there's always only one of them also in the map"): never in the wild: he is at home in his
+     * mansion's garden (data/hexkagune/structures/reaper_mansion.nbt), the world's one.
      */
-    public static final double REAPER_CHANCE = 0.01;
+    public static final double REAPER_CHANCE = 0.0;
+
+    /** 4.1.24: how far (blocks) the White Reaper strolls from where he stands in his garden while nothing is at hand. */
+    public static final double REAPER_HOME_STROLL = 7.0;
+    /** 4.1.24: how far from it he is called back as soon as a fight is over (he never follows anyone out of his grounds for long). */
+    public static final double REAPER_HOME_LEASH = 48.0;
 
     public static final float REAPER_TAKEN = 0.65F;
     public static final double REAPER_KNOCKBACK_RESISTANCE = 0.85;

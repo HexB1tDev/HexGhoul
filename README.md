@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.24 (HexGhoul): Arima, part 2: his mansion, one per world, him in its garden (testing)
+
+See `.github/release-notes-4.1.24.md`. "A schematic where he's going to spawn in always ... outside in the garden ... doesn't spawn like in the ground": the owner's mansion (`art/reaper/arima_mansion.schem`) is `hexkagune:reaper_mansion`, a one-of-a-kind dry place (`DryLand.PLACES`, `MANSION_SALT`, `PlaceClaims`, `/kagune places`) lifted onto its footprint's highest ground, its lawn on the surface (an anchor jigsaw on it), the air under the lawn filled; the White Reaper is baked into its garden (`tools/companion_structures.py`, ForgeData flags) and keeps to it (`AgentBrain` home, `AgentRules.REAPER_HOME_*`); never in the wild (`REAPER_CHANCE` 0). Protocol 117.
+
 ## 4.1.23 (HexGhoul): Arima, part 1: Dawn every time, Slain Reaper for everyone who hit him (testing)
 
 See `.github/release-notes-4.1.23.md`. "He drops Dawn 100% guaranteed ... make sure that both players get it": Dawn's case drops every time the White Reaper falls (`AgentRules.dawnChance` 1); every player who hit him in the last five minutes (`AgentRules.REAPER_SHARE_TICKS`, `AgentBrain.reaperStruck`) and his killer earn the new challenge advancement `hexkagune:slain_reaper` (Adventure tab, awarded by code on an impossible criterion: `AgentBrain.reaperSlain`) and, if a ghoul, his 60 mastery. Protocol 117.

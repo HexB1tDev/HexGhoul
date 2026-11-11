@@ -5,6 +5,7 @@
 
   art/anteiku.schem     -> src/main/resources/data/hexkagune/structures/anteiku.nbt      Touka behind the café's bar counter
   art/exploration/Ken_tower.litematic -> src/main/resources/data/hexkagune/structures/cyber_tower.nbt  Ken sitting on the top of his tower
+  art/reaper/arima_mansion.schem -> src/main/resources/data/hexkagune/structures/reaper_mansion.nbt  4.1.24: Arima in its garden
 
 4.0.9 (the owner: "I sent you a replacement for the Ken tower as well, make sure he sits on the top."): Ken's tower is their new one, a
 Litematica file (saved by 1.21.4): 73 x 310 x 73, a podium, four glass tiers stepping in, a star-shaped roof deck behind a parapet and a
@@ -34,7 +35,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from library_structure import BYTE, COMPOUND, DOUBLE, END, FLOAT, INT, LIST, STRING, Tag, _write, read, varints  # noqa: E402
+from library_structure import BYTE, COMPOUND, DOUBLE, END, FLOAT, INT, LIST, LONG, STRING, Tag, _write, read, varints  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 ART = ROOT / "art"
@@ -48,6 +49,17 @@ PLACES = {
         "who": "hexkagune:touka", "at": (17, 10, 8), "yaw": 0.0,
         "keep_air": True, "crop": None, "anchor": None,
     },
+    "reaper_mansion": {
+        "source": "reaper/arima_mansion.schem",
+        # 4.1.24 (the owner: "outside in the garden, like in this place"): Kishou Arima, the White Reaper, on the striped lawn north of the
+        # house, facing it (south). A Rank 10 investigator with Dawn and the Reaper's look, alone, at home here (AgentBrain.wake).
+        "who": "hexkagune:ccg_investigator", "at": (42, 7, 22), "yaw": 0.0,
+        "who_data": {"HexCcgAgent": ("long", 9 | 5 << 8 | 1 << 16), "HexCcgAgentRankLevel": ("int", 10), "HexCcgAgentMansion": ("byte", 1)},
+        # Its bottom layer is empty (cropped); its ground is one block thick at y 6 over nothing but its two pools' basins: what is under
+        # the lawn is filled (dirt, then stone), or the ground would be left hollow under it. The anchor (on the lawn's layer, at the
+        # middle) puts that layer on the ground and centres it on its chunk (121 blocks long).
+        "keep_air": False, "crop": (1, 28), "fill_below": 6, "anchor": (39, 6, 60), "anchor_name": "hexkagune:mansion_anchor",
+    },
     "cyber_tower": {
         "source": "exploration/Ken_tower.litematic",
         # On the roof deck (its floor y 264), at the tip of its east arm by the parapet, looking out east (source coordinates).
@@ -57,6 +69,8 @@ PLACES = {
 }
 
 RENAMED = {
+    # 4.1.24: the mansion's grass (1.20.3 renamed it).
+    "minecraft:short_grass": "minecraft:grass",
     # 4.0.9: the new tower's tuff (1.20.3's and 1.21's) as 1.20.1's nearest.
     "minecraft:chiseled_tuff_bricks": "minecraft:chiseled_stone_bricks",
     "minecraft:polished_tuff_wall": "minecraft:andesite_wall",
@@ -205,6 +219,9 @@ def build(key, place, registry):
             row = (y * length + z) * width
             for x in range(width):
                 c = converted[cells[row + x]]
+                if c is None and y < place.get("fill_below", -1):
+                    # 4.1.24: under the ground, earth, not a hollow.
+                    c = ("minecraft:dirt", {}) if y >= place["fill_below"] - 2 else ("minecraft:stone", {})
                 nbt = None
                 if anchor and (x, y, z) == anchor:
                     # The anchor: a jigsaw block that becomes what was here once the structure is placed.
@@ -230,6 +247,10 @@ def build(key, place, registry):
     wy_out = layers.index(wy)
     who = {"id": Tag(STRING, place["who"]), "PersistenceRequired": Tag(BYTE, 1), "Rotation": Tag(LIST, (FLOAT, [place["yaw"], 0.0])),
            "Motion": Tag(LIST, (DOUBLE, [0.0, 0.0, 0.0])), "OnGround": Tag(BYTE, 1)}
+    if "who_data" in place:
+        # 4.1.24: who they are, in Forge's saved data (Entity.getPersistentData: "ForgeData").
+        kinds = {"long": LONG, "int": INT, "byte": BYTE}
+        who["ForgeData"] = Tag(COMPOUND, {k: Tag(kinds[kind], v) for k, (kind, v) in place["who_data"].items()})
     figure = {"blockPos": Tag(LIST, (INT, [wx, wy_out, wz])), "pos": Tag(LIST, (DOUBLE, [wx + 0.5, float(wy_out), wz + 0.5])),
               "nbt": Tag(COMPOUND, who)}
     size = (width, len(layers), length)

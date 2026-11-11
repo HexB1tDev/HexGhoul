@@ -446,7 +446,8 @@ public final class ControlStructures {
     }
 
     /** 4.1.12: the one-of-a-kind places, as /kagune places lists them. */
-    static final java.util.List<String> ONE_OF_A_KIND = java.util.List.of("aogiri_hideout", "ccg_building", "cyber_tower", "anteiku", "library");
+    static final java.util.List<String> ONE_OF_A_KIND = java.util.List.of("aogiri_hideout", "ccg_building", "cyber_tower", "anteiku", "library",
+        "reaper_mansion");
 
     /** 4.1.14: each one-of-a-kind place's name, as /kagune places says it. */
     static String named(String id) {
@@ -455,6 +456,7 @@ public final class ControlStructures {
             case "ccg_building" -> "the CCG building";
             case "cyber_tower" -> "Ken's tower";
             case "anteiku" -> "Anteiku";
+            case "reaper_mansion" -> "the White Reaper's mansion";
             default -> "the library";
         };
     }

@@ -62,10 +62,7 @@ public final class AgentSpawner {
             if (leader == null) {
                 continue;
             }
-            if (player.m_217043_().m_188500_() < AgentRules.REAPER_CHANCE && AgentBrain.claimReaper(leader, level)) {
-                AgentBrain.prepareReaper(leader, look);
-                return true;
-            }
+            // 4.1.24: the White Reaper never turns up in the wild any more (AgentRules.REAPER_CHANCE): he is at home in his mansion.
             if (partner(leader, level, look, kind) == null) {
                 leader.m_146870_(); // never one alone
                 continue;

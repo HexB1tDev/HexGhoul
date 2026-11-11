@@ -1,4 +1,4 @@
-# Next AI: after 4.1.23 (4.1.23: Arima part 1, Dawn every time and Slain Reaper for everyone who hit him; 4.1.22: first person for the kagune-made weapons; 4.1.21: the katana's cuts hands first, with wrists; 4.1.20: the katana a smooth kagune-grown mesh drawn by its own item renderer; 4.1.19: melee quinques in first person through the third person chain, seen from behind the head; 4.1.18: the katana rebuilt, its five cuts by intent, quinques' seven-frame draw; 4.1.17: coat halves overlap, places on their highest ground and adopted when found standing, planted Ukaku spikes tinted; 4.1.16: the kiss blush by mood, eyes fixed on Ayato, Touka, the kids' blinks and kakugan; 4.1.15: reactions to who the player is with, the night's captions, more kid games and no touching teenage sons, six new kisses and smoother gestures; 4.1.14: places built at any good spot, first one kept; coats on the legs; no Ukaku M1 spam; 4.1.9: the inventory crash, the special places; 4.1.10-4.1.13: the wing slams; 4.1.12: places never nowhere, the coat; 4.1.13: slams as arms and hands clear of his body, the guard, /kagune places checks each place)
+# Next AI: after 4.1.24 (4.1.24: Arima part 2, his mansion, one per world, him in its garden; 4.1.23: Arima part 1, Dawn every time and Slain Reaper for everyone who hit him; 4.1.22: first person for the kagune-made weapons; 4.1.21: the katana's cuts hands first, with wrists; 4.1.20: the katana a smooth kagune-grown mesh drawn by its own item renderer; 4.1.19: melee quinques in first person through the third person chain, seen from behind the head; 4.1.18: the katana rebuilt, its five cuts by intent, quinques' seven-frame draw; 4.1.17: coat halves overlap, places on their highest ground and adopted when found standing, planted Ukaku spikes tinted; 4.1.16: the kiss blush by mood, eyes fixed on Ayato, Touka, the kids' blinks and kakugan; 4.1.15: reactions to who the player is with, the night's captions, more kid games and no touching teenage sons, six new kisses and smoother gestures; 4.1.14: places built at any good spot, first one kept; coats on the legs; no Ukaku M1 spam; 4.1.9: the inventory crash, the special places; 4.1.10-4.1.13: the wing slams; 4.1.12: places never nowhere, the coat; 4.1.13: slams as arms and hands clear of his body, the guard, /kagune places checks each place)
 
 **RULE (the owner, after 4.1.16, quoted exactly): "always specify that the AI is to evaluate the renders that it generates, and it does not
 give up until it's a perfect match and it's a perfect combat system. Like, the animations always have to be top tier, no excuses
@@ -32,8 +32,8 @@ Considering the amount of stuff that we got to do, you're spending so much time 
    launcher and the whip kept theirs on purpose (see "4.1.22, what and where"). If the owner wants the whip too, its tendril path
    (`QuinqueOwn.whip`, `WeaponLayer.whip`) has to be laid from the posed arm.
 4. **Arima, part 1 is done (4.1.23):** Dawn every time, the Slain Reaper advancement and his mastery for everyone who hit him in the last
-   five minutes. **Next for Arima:** his structure (one per world: the owner's schematic was asked for in 4.1.23 and has NOT arrived:
-   ask again; never invent it), both fighting styles, Dawn smooth and opening like an umbrella, the ground strike as the blade growing
+   five minutes. **4.1.24:** his mansion (the owner's schematic, `art/reaper/arima_mansion.schem`), one per world, him in its garden.
+   **Next for Arima:** both fighting styles, Dawn smooth and opening like an umbrella, the ground strike as the blade growing
    up, phase 2 (jacket off: `art/reaper/Reaper_Phase2.png`; the heavy blade: `art/reaper/Reaper_Quinque1.jpg`, `Reaper_quinque2.jpg`;
    bleed, faster, dodging; the blade shattering; on his knees). Then quests, then the Small City. One version at a time, short.
 5. **Open question to the owner:** should daughters 07, 10, 11, 12, 21 and 22 get open eyes painted on? Ask before touching them.
@@ -119,6 +119,7 @@ Considering the amount of stuff that we got to do, you're spending so much time 
 | 4.1.12 | Places never nowhere, `/kagune places`; slams without particles and 1.75x as long; each coat half on its own leg | pushed, EXIT 0 |
 | 4.1.13 | Every slam an arm (behind a new shoulder) and a hand, aligned on its target and clear of his posed body; the guard clamped round him clear of his raised arms; `/kagune places` makes each place's chunk and says built or stopped; coat previews | pushed, EXIT 0 |
 | 4.1.14 | One-of-a-kind places at any dry spot their set offers, the first the world builds kept with the world (`PlaceClaims`); coat tails drawn on the legs; each Ukaku wing slam plays out in full (1.3x damage) | pushed, EXIT 0 |
+| 4.1.24 | Arima part 2: `hexkagune:reaper_mansion` (the owner's schematic via `tools/companion_structures.py`: short grass as 1.20.1's grass, bottom layer cropped, under-lawn air filled, `hexkagune:mansion_anchor` on the lawn's layer, Arima baked in with ForgeData `HexCcgAgent`/`RankLevel` 10/`Mansion`); a one-of-a-kind dry place (`DryLand.PLACES`, `MANSION_SALT`, `PlaceClaims`, `ControlStructures.ONE_OF_A_KIND`); his home in the garden (`AgentBrain` HOME_X/Y/Z, `AgentRules.REAPER_HOME_STROLL/LEASH`); never in the wild (`REAPER_CHANCE` 0) | pushed, EXIT 0 |
 | 4.1.23 | Arima part 1: Dawn's case every time he falls (`AgentRules.dawnChance` 1); `hexkagune:slain_reaper` (data/hexkagune/advancements, impossible criterion awarded by `AgentBrain.reaperSlain`) and his 60 mastery for his killer and every player who hit him in the last 5 minutes (`AgentBrain.reaperStruck`, `AgentRules.REAPER_SHARE_TICKS`); advancement API allowlisted with joined.tsrg and intermediary evidence | pushed, EXIT 0 |
 | 4.1.22 | First person for the bone greatsword, flesh hammer and crystal spear through the posed body (`ArmItemLayer.throughBody(pose, posed, slim, false)`, `WeaponLayer.mesh`; `FirstPersonQuinque.arm`); launcher and whip kept theirs; `QuinqueTests.firstPersonArms` | pushed, EXIT 0 |
 | 4.1.21 | The katana's five cuts solved hands first (`QuinqueAim.HAND` 3 per pixel against `BLADE` 40), wrists turning the blade in the fist (`QuinquePose.Key.wristX/Z` within `QuinqueAim.WRIST_X/Z`, drawn by `QuinqueItemRenderer` via `client/QuinqueWrists`, `QuinqueGrip.wristInItem`), cuts rewritten on renders; `QuinqueTests.aimed` measures the arm's real turn | pushed, EXIT 0 |
@@ -459,6 +460,29 @@ blush, it depends on their mood." (read as: how much they blush goes by their mo
      - the blade and the launcher, which keep the legacy motion.
   2. The blade's, spear's, mace's, launcher's and Dawn's own strings by intent (`aims`), each its own count.
   3. New kagune-born quinques (the owner: whips after different kagunes, more swords).
+
+## 4.1.24, what and where (Arima part 2: his mansion)
+
+The owner (quoted exactly): "Toda uma outside in the garden, like in this place. Make sure also doesn't spawn like in the ground, like the
+tower" (voice: "Arima outside in the garden").
+
+- **The template:** `tools/companion_structures.py` `PLACES["reaper_mansion"]` (re-run it after a change: Anteiku and the tower come out
+  byte-identical). `crop` (1, 28) drops the empty bottom layer; `fill_below` 6 fills the air under the lawn (dirt two deep, stone under);
+  the anchor jigsaw (39, 6, 60) sits on the lawn's layer, so `start_height` -1 with `WORLD_SURFACE_WG` puts the lawn on the surface (the
+  pools dig in), and `DryPlace`'s lift then raises it to the footprint's highest ground. `who_data` writes Arima's ForgeData:
+  `HexCcgAgent` (look 9, Dawn, leader), `HexCcgAgentRankLevel` 10, `HexCcgAgentMansion` 1. Checked against minecraft-data 1.20 blocks
+  (`--blocks`, fetched from raw.githubusercontent.com).
+- **Worldgen:** `worldgen/structure/reaper_mansion.json` (the tower's, its own pool and anchor), `structure_set` salt 1324066192,
+  `template_pool/reaper_mansion/start.json`.
+- **Arima:** `AgentBrain.wake` makes him the Reaper as any saved Rank 10 alone (the slot claim); with `Mansion` set he saves his home where
+  he first wakes; `patrol` strolls him within `REAPER_HOME_STROLL` (7) of it and walks him back when further. `AgentSpawner` no longer makes
+  a Reaper in the wild (`REAPER_CHANCE` 0). `/kagune reaper` still summons one for tests (a mansion Arima waking after that one is
+  demoted to Rank 9, as before).
+- **Tests:** `NpcTests` (the places lists, the four jigsaw places and salts), `CompanionTests` (the template: size, Arima on the lawn with
+  his flags, the anchor, no short grass), `AgentTests` (never in the wild, the home's numbers).
+- **Previews:** `docs/handoff/reaper-mansion-4.1.24.png`, `reaper-mansion-garden-4.1.24.png` (an isometric render of the generated
+  template; the renderer was a scratch script: faces of exposed cubes, painter's order).
+- **Not tested in game.**
 
 ## 4.1.23, what and where (Arima part 1)
 

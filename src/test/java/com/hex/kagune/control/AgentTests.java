@@ -1044,8 +1044,15 @@ public final class AgentTests {
         for (AgentRules.Rank rank : AgentRules.Rank.values()) {
             weights += rank.weight;
         }
-        check(AgentRules.REAPER_CHANCE > 0.0 && AgentRules.REAPER_CHANCE < AgentRules.Rank.RANK_9.weight / weights,
-            "2.0.29: the White Reaper turns up, rarer than a Rank 9");
+        // 4.1.24: never in the wild (he is at home in his mansion, the world's one); weights still summed for the rank table's checks.
+        check(AgentRules.REAPER_CHANCE == 0.0 && weights > 0.0 && AgentRules.REAPER_HOME_STROLL > 0.0
+            && AgentRules.REAPER_HOME_LEASH > AgentRules.REAPER_HOME_STROLL, "4.1.24: the White Reaper never turns up in the wild; he keeps to his garden");
+        try {
+            String spawner = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/AgentSpawner.java"));
+            check(!spawner.contains("prepareReaper"), "4.1.24: no wild appearance makes a White Reaper");
+        } catch (java.io.IOException e) {
+            check(false, "4.1.24: AgentSpawner.java can be read");
+        }
         check(AgentRules.dawnBlastDamage(0.0) == 26.0F
             && AgentRules.dawnBlastDamage(1.25) > AgentRules.dawnBlastDamage(2.5)
             && Math.abs(AgentRules.dawnBlastDamage(2.5) - 10.4F) < 0.01F, "Dawn's blast falls off from 26 to 10.4 raw damage");

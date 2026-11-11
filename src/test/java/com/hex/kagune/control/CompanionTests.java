@@ -370,6 +370,23 @@ public final class CompanionTests {
         } catch (java.io.IOException failure) {
             check(false, "read Ken's tower: " + failure);
         }
+        // 4.1.24 (the owner: "I'm going to give you a schematic where he's going to spawn in always ... outside in the garden, like in this
+        // place. Make sure also doesn't spawn like in the ground, like the tower"): the White Reaper's mansion, the owner's, 79 by 121, its
+        // empty bottom layer cropped; Arima on its lawn (the ground layer, 5, under him), saved as the Reaper who lives there; an anchor on
+        // the ground's layer; 1.20.1's grass for the newer game's short grass.
+        try {
+            byte[] mansion = new java.util.zip.GZIPInputStream(java.nio.file.Files.newInputStream(java.nio.file.Path.of(
+                "src/main/resources/data/hexkagune/structures/reaper_mansion.nbt"))).readAllBytes();
+            String text = new String(mansion, java.nio.charset.StandardCharsets.ISO_8859_1);
+            int[] size = ints(mansion, "size");
+            int[] arima = ints(mansion, "blockPos");
+            check(size != null && size[0] == 79 && size[1] == 28 && size[2] == 121, "the mansion, the owner's: " + java.util.Arrays.toString(size));
+            check(arima != null && arima[1] == 6 && text.contains("hexkagune:ccg_investigator") && text.contains("HexCcgAgentMansion")
+                && text.contains("HexCcgAgentRankLevel") && text.contains("ForgeData"), "Arima on its lawn, the Reaper at home: " + java.util.Arrays.toString(arima));
+            check(text.contains("hexkagune:mansion_anchor") && !text.contains("minecraft:short_grass"), "anchored on its ground; only 1.20.1's blocks");
+        } catch (java.io.IOException failure) {
+            check(false, "read the White Reaper's mansion: " + failure);
+        }
         // 4.1.0 (the owner: "after training with Ayato (Ukaku kakuja quest) the player gains a new pull out kagune animation sort of like Ken
         // gives the player. the player lifts both hands god like and then they're unleashed."): both arms out wide, palms up, chin up, up on
         // the toes, held as the wings come out, then down again; his way before Ken's, after Noro's.
