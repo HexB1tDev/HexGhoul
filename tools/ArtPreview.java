@@ -53,6 +53,10 @@ public final class ArtPreview {
         if (wanted.contains("guard")) {
             guardSheet(new File(out, "ukaku-guard.png"));
         }
+        if (wanted.contains("coat-walk")) {
+            coatWalk(new File(out, "coat-walk-formal.png"), "formal");
+            coatWalk(new File(out, "coat-walk-crimson.png"), "crimson");
+        }
         if (wanted.contains("coats")) {
             coatSheet(new File(out, "coat-crimson.png"), "crimson");
             coatSheet(new File(out, "coat-formal.png"), "formal");
@@ -2300,6 +2304,35 @@ public final class ArtPreview {
             }
         }
         sheet(file, "The " + id + " coat: each half of its tails attached to its own leg (front, side, three quarters)", shots, 3, 300, 300);
+    }
+
+    /**
+     * 4.1.17 (the owner: "whenever you walk, like, it opens like a fucking, like a gap in every armor that we got"): a coat close up through a
+     * walk (vanilla's leg swing at a walk and a run, its two ends and in between), from in front and a little above (as the owner saw it),
+     * the side and three quarters.
+     */
+    static void coatWalk(File file, String id) throws Exception {
+        com.hex.kagune.control.outfit.OutfitModels.Model model;
+        try (java.io.InputStream in = new java.io.FileInputStream("src/main/resources" + com.hex.kagune.control.outfit.OutfitModels.RESOURCE)) {
+            model = com.hex.kagune.control.outfit.OutfitModels.read(in).get(id);
+        }
+        BufferedImage texture = ImageIO.read(new File("art/outfits/" + id + ".png"));
+        double[][] eyes = {{0.0, 1.35, 2.6}, {2.7, 1.0, 0.2}, {1.9, 1.3, 1.9}};
+        WingRig.Input none = new WingRig.Input(WingForm.TWIN, 300, 0.0F, 1.3, 0, 0, WingRig.Motion.NONE, 0, 0.4F, 0, 0, false, 1, 1, false);
+        List<Shot> shots = new ArrayList<>();
+        // A walk swings a leg about 0.55 radians each way (vanilla's 1.4 x cos x about 0.4); a run about 1.0.
+        float[][] legs = {{-0.55F, 0.55F}, {-0.3F, 0.3F}, {0.55F, -0.55F}, {-1.0F, 1.0F}};
+        String[] names = {"walk: right leg forward", "walk: half way", "walk: left leg forward", "run: full stride"};
+        for (int i = 0; i < legs.length; i++) {
+            RigPose p = new RigPose();
+            p.rightLegX = legs[i][0];
+            p.leftLegX = legs[i][1];
+            p.settle(1.0F);
+            for (double[] eye : eyes) {
+                shots.add(new Shot(names[i], p, none, eye, new double[] {0, 0.75, 0}, outfit(p, model, texture)));
+            }
+        }
+        sheet(file, "The " + id + " coat through a walk (front from a little above, side, three quarters)", shots, 3, 360, 360);
     }
 
     /** 4.1.13: {@code model}'s cubes on {@code pose} (rig space, as {@link #body} mirrors the body), its tails on the legs. */

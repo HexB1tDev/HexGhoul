@@ -339,7 +339,7 @@ public final class UkakuFx {
                     double length = message.extra() == NEEDLE_KIND ? com.hex.kagune.control.ukaku.KakujaNeedle.LENGTH
                         : com.hex.kagune.control.ukaku.CrystalSpike.LENGTH;
                     UkakuSpikes.plant(at.m_82549_(dir.m_82490_(UkakuSpikes.PLANTED_DEPTH * length * size)), dir, size, message.extra(), now,
-                        RANDOM.nextInt(1000));
+                        RANDOM.nextInt(1000), bolt != null && bolt.shooter() != 0 ? bolt.shooter() : message.shooter());
                 }
                 if (RcFx.near(at, VISIBLE)) {
                     crystalImpact(at, velocity, size, stuck);
@@ -922,6 +922,17 @@ public final class UkakuFx {
         }
         if (body) {
             RcFx.at(RcFx.RING, true, 6, at).bloom(0).colors(c(0xC0FF2C58), c(RcFx.clear(GEM_CRIMSON))).size(0.2F * size, 1.1F * size).spawn();
+        }
+    }
+
+    /** 4.1.17: {@link #crumble} in {@code shooter}'s kagune colour (a planted spike crumbling long after its message was handled). */
+    static void crumble(int shooter, Vec3 at, Vec3 direction, float size) {
+        int before = tint;
+        try {
+            tintFor(shooter);
+            crumble(at, direction, size);
+        } finally {
+            tint = before;
         }
     }
 

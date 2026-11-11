@@ -1954,10 +1954,47 @@ public final class NpcTests {
                 && !structures.contains("HIDEOUTS") && !structures.contains("BUILDINGS"), "no place hangs on one chunk worked out once a world");
             // Taken as the world makes the chunk (its heights are the chunk being made), never as /locate only asks; a taken spot turns every
             // other away; the first to be made wins, under one lock.
-            check(structures.contains("return context.f_226629_() instanceof net.minecraft.world.level.chunk.ChunkAccess;")
+            // 4.1.17: asking is only /locate's own (the level's heights); anything else makes (a mod's height wrapper never builds every spot).
+            check(structures.contains("return !(context.f_226629_() instanceof net.minecraft.world.level.Level);")
                 && structures.contains("if (taken != null && (taken[0] != chunk.f_45578_ || taken[1] != chunk.f_45579_)) {\n            return Optional.empty();")
                 && structures.contains("if (stub.isPresent() && making(context) && !PlaceClaims.claim(id, chunk.f_45578_, chunk.f_45579_)) {"),
                 "a spot is taken as the world makes it, and every other spot is turned away from then on");
+            // 4.1.17 (the owner: "there's multiple structures of each, which cannot happen"): a place found standing is the world's one if
+            // none is taken (a world from before the claims); a second is told in the log; every one-of-a-kind place is looked for.
+            String adopt = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/PlaceClaims.java")));
+            check(adopt.contains("if (taken == null) {\n                    claim(place, at.f_45578_, at.f_45579_);")
+                && adopt.contains("ONE_OF_A_KIND = {\"aogiri_hideout\", \"ccg_building\", \"anteiku\", \"library\", \"cyber_tower\"}"),
+                "a one-of-a-kind place already standing is the world's one");
+            // 4.1.17 (the owner: "they are spawning under the ground, which cannot happen ... always at the top max area"): every jigsaw
+            // place is lifted onto the highest ground of its footprint; the tower starts on the ground, not at y 63.
+            check(structures.contains("return Optional.of(raised(stub.get(), DryLand.lift(ground, at.m_123341_(), at.m_123343_(), minX, minZ, maxX, maxZ)));")
+                && structures.contains("made.m_192781_(lift);"), "a place stands on the highest ground of its footprint");
+            String tower = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/resources/data/hexkagune/worldgen/structure/cyber_tower.json")));
+            check(tower.contains("\"project_start_to_heightmap\": \"WORLD_SURFACE_WG\"") && !tower.contains("\"absolute\": 63"), "Ken's tower starts on the ground");
+            for (String place : new String[] {"anteiku", "library", "cyber_tower"}) {
+                String json = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/resources/data/hexkagune/worldgen/structure/" + place + ".json")));
+                check(json.contains("\"project_start_to_heightmap\": \"WORLD_SURFACE_WG\""), place + " starts on the ground's height");
+            }
+            // The lift: the highest of the footprint's ground, the edges and every LIFT_STEP between.
+            com.hex.kagune.control.village.DryLand.Ground hill = new com.hex.kagune.control.village.DryLand.Ground() {
+                @Override
+                public int surface(int x, int z) {
+                    return 64 + Math.max(0, x) / 2 + (z == 37 ? 30 : 0);
+                }
+
+                @Override
+                public int floor(int x, int z) {
+                    return this.surface(x, z);
+                }
+
+                @Override
+                public boolean wet(int x, int y, int z) {
+                    return false;
+                }
+            };
+            check(com.hex.kagune.control.village.DryLand.lift(hill, 0, 0, -20, -20, 20, 20) == 10, "lifted onto the hill's top across its footprint");
+            check(com.hex.kagune.control.village.DryLand.lift(hill, 20, 0, -20, -20, 20, 20) == 0, "already at the top: not lifted");
+            check(com.hex.kagune.control.village.DryLand.lift(hill, 0, 0, -20, 30, 0, 37) == 30, "a peak at its far edge is found");
             String claims = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/PlaceClaims.java")));
             check(claims.contains("public static void load(LevelEvent.Load event) {") && claims.contains("level.m_8895_().m_164861_(Data::load,")
                 && claims.contains("public static void chunk(ChunkEvent.Load event) {") && claims.contains("!ControlStructures.standsIn(level, chunk, id)")

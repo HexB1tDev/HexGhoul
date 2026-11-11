@@ -551,12 +551,13 @@ public final class UkakuWingRenderer {
             double left = Math.max(0.0, Math.min(1.0, (planted.until() - time) / 8.0));
             double[] at = {tip.f_82479_, tip.f_82480_, tip.f_82481_};
             double[] pointing = {planted.direction().f_82479_, planted.direction().f_82480_, planted.direction().f_82481_};
+            // 4.1.17 (the owner: "It should remain the same color as the Kagune or when it hits the mob ... This also applies for the
+            // kakuja"): in the colour of whoever shot it, as a spike stuck in a body is (it was drawn untinted: the default red).
+            RcShard.Sink sink = tinted(glowing(consumer, matrix, normals), com.hex.kagune.control.client.KaguneTints.of(planted.shooter()));
             if (planted.kind() == UkakuFx.NEEDLE_KIND) {
-                KakujaNeedle.build(glowing(consumer, matrix, normals), at, pointing, planted.size(), eye, 0.0, 0.0, time / 20.0, planted.seed(),
-                    away < DETAIL_DISTANCE_SQR, left);
+                KakujaNeedle.build(sink, at, pointing, planted.size(), eye, 0.0, 0.0, time / 20.0, planted.seed(), away < DETAIL_DISTANCE_SQR, left);
             } else {
-                CrystalSpike.build(glowing(consumer, matrix, normals), at, pointing, planted.size(), eye, 0.0, 0.0, time / 20.0, planted.seed(),
-                    away < DETAIL_DISTANCE_SQR, left);
+                CrystalSpike.build(sink, at, pointing, planted.size(), eye, 0.0, 0.0, time / 20.0, planted.seed(), away < DETAIL_DISTANCE_SQR, left);
             }
         }
         if (consumer != null) {

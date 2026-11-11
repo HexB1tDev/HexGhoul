@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.17 (HexGhoul): no gap in the coats, places on top of the ground and never twice, Ukaku spikes in their colour everywhere (testing)
+
+See `.github/release-notes-4.1.17.md`. "whenever you walk ... it opens like a gap in every armor": the two halves of a coat's tails overlap at the middle like a buttoned coat, and a strip of its cloth under the jacket's hem covers the hip as a half swings back. "they are spawning under the ground ... always at the top max area": Ken's tower is no longer fixed at y 63, and every one-of-a-kind place is lifted onto the highest ground under its footprint. "there's multiple structures of each": a place already standing becomes the world's one when its chunk loads, another mod's chunk wrapper can no longer get every spot built, and duplicates are logged. Ukaku spikes and kakuja needles stuck in blocks stay in the kagune's colour. Protocol 117.
+
 ## 4.1.16 (HexGhoul): every woman blushes through a kiss, as deep as her mood; eyes that read as eyes (testing)
 
 See `.github/release-notes-4.1.16.md`. Your words: "Confirm that all females when kissing have a blush, sort of ... adapt all eyes to make sure that they all look like eyes". Every woman (Eto, Touka, village women) blushes through the whole of a kiss and a few seconds after, as deep as her mood (shy to the ears, angry only a flush), rising and fading smoothly. Ayato's eyes repainted (his iris was his hair's own purple); nothing drawn under Touka's fringe; 16 kids' blinks and 9 kids' kakugan no longer let the open eye peek out (they were drawn on the outer layer only). Wild ghouls checked: all aligned. Protocol 117.

@@ -504,6 +504,16 @@ public final class ControlStructures {
         return lines;
     }
 
+    /** 4.1.17: true only if hexkagune:{@code id}'s start is really in {@code chunk} of {@code level} (false if it is no structure of this world). */
+    static boolean holds(net.minecraft.world.level.LevelReader level, net.minecraft.world.level.chunk.ChunkAccess chunk, String id) {
+        Structure structure = level.m_9598_().m_175515_(Registries.f_256944_).m_7745_(net.minecraft.resources.ResourceLocation.m_214293_("hexkagune", id));
+        if (structure == null) {
+            return false;
+        }
+        net.minecraft.world.level.levelgen.structure.StructureStart found = chunk.m_213652_(structure);
+        return found != null && found.m_73603_();
+    }
+
     /** 4.1.13: true if hexkagune:{@code id}'s start is in {@code chunk} of {@code level}, or it is no structure of this world (nothing to wait for). */
     static boolean standsIn(net.minecraft.world.level.LevelReader level, net.minecraft.world.level.chunk.ChunkAccess chunk, String id) {
         Structure structure = level.m_9598_().m_175515_(Registries.f_256944_).m_7745_(net.minecraft.resources.ResourceLocation.m_214293_("hexkagune", id));
@@ -537,7 +547,10 @@ public final class ControlStructures {
      * structure check behind it) only asks whether a start could be here (its heights are the level's).
      */
     static boolean making(Structure.GenerationContext context) {
-        return context.f_226629_() instanceof net.minecraft.world.level.chunk.ChunkAccess;
+        // 4.1.17 (the owner: "there's multiple structures of each, which cannot happen"): only /locate's own ask (the level's heights)
+        // counts as asking. Before, only a chunk's own heights counted as making: a mod that makes chunks through another height accessor
+        // (a wrapper) built every spot without one taking the place.
+        return !(context.f_226629_() instanceof net.minecraft.world.level.Level);
     }
 
     /** 4.1.14: true if this start chunk is one of {@code spread}'s spots (the game asks only there; a stray ask is turned away). */
@@ -751,10 +764,29 @@ public final class ControlStructures {
                 BlockPos at = stub.get().f_226669_();
                 if (biome(context, at.m_123341_(), at.m_123342_(), at.m_123343_())
                     && DryLand.dry(ground, at.m_123342_(), minX, minZ, maxX - minX + 1, maxZ - minZ + 1)) {
-                    return stub;
+                    return Optional.of(raised(stub.get(), DryLand.lift(ground, at.m_123341_(), at.m_123343_(), minX, minZ, maxX, maxZ)));
                 }
             }
             return Optional.empty();
+        }
+
+        /**
+         * 4.1.17 (the owner: "It should be always spawning above ground, always at the top max area"): {@code stub} lifted {@code lift}
+         * blocks, onto the highest ground of its footprint ({@link DryLand#lift}). A jigsaw's stub makes its pieces afresh each time they
+         * are asked for, so the lifted one makes them and moves them up every time.
+         */
+        static Structure.GenerationStub raised(Structure.GenerationStub stub, int lift) {
+            if (lift <= 0) {
+                return stub;
+            }
+            BlockPos at = stub.f_226669_();
+            return new Structure.GenerationStub(new BlockPos(at.m_123341_(), at.m_123342_() + lift, at.m_123343_()), builder -> {
+                net.minecraft.world.level.levelgen.structure.pieces.StructurePiecesBuilder made = stub.m_226677_();
+                made.m_192781_(lift);
+                for (StructurePiece piece : made.m_192780_().f_192741_()) {
+                    builder.m_142679_(piece);
+                }
+            });
         }
 
         @Override

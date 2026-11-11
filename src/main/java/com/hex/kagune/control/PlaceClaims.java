@@ -61,6 +61,9 @@ public final class PlaceClaims {
         }
     }
 
+    /** 4.1.17: the one-of-a-kind places (their structure ids). */
+    static final String[] ONE_OF_A_KIND = {"aogiri_hideout", "ccg_building", "anteiku", "library", "cyber_tower"};
+
     @SubscribeEvent
     public static void stopped(ServerStoppedEvent event) {
         current = null;
@@ -84,6 +87,23 @@ public final class PlaceClaims {
                 release(id, at.f_45578_, at.f_45579_);
                 com.hex.kagune.KaguneMod.LOGGER.info("HexKagune: " + id + " was stopped at chunk " + at.f_45578_ + ", " + at.f_45579_
                     + " (another mod's structure rules?); the next spot the world makes will hold it.");
+            }
+            // 4.1.17 (the owner: "there's multiple structures of each, which cannot happen"): a place found standing here is the world's one
+            // if none is taken yet (a world begun before 4.1.14, or carried across the versions whose rules each built their own: from now on
+            // no other is built); one standing where another spot holds the place is a second, told in the log.
+            for (String place : ONE_OF_A_KIND) {
+                if (place.equals(id) || !ControlStructures.holds(level, chunk, place)) {
+                    continue;
+                }
+                int[] taken = data.taken.at(place);
+                if (taken == null) {
+                    claim(place, at.f_45578_, at.f_45579_);
+                    com.hex.kagune.KaguneMod.LOGGER.info("HexKagune: " + place + " already stands at chunk " + at.f_45578_ + ", " + at.f_45579_
+                        + ": it is this world's one, and no other will be built.");
+                } else if (taken[0] != at.f_45578_ || taken[1] != at.f_45579_) {
+                    com.hex.kagune.KaguneMod.LOGGER.info("HexKagune: WARNING: a second " + place + " stands at chunk " + at.f_45578_ + ", " + at.f_45579_
+                        + " (the world's one is at chunk " + taken[0] + ", " + taken[1] + "): made by an older version, before its claim.");
+                }
             }
         } catch (RuntimeException | LinkageError failure) {
             Safety.caught(failure, "PlaceClaims.chunk");

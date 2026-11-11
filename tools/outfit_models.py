@@ -775,6 +775,7 @@ def fit_outfit(style, model):
     for c in model["cubes"]:
         if c["bone"] in ("right_leg", "left_leg") and any(k in c["name"] for k in TAIL_PARTS):
             c["bone"] = c["bone"] + "_coat"
+    overlap(model["cubes"])
     # 4.0.2 (the owner: "the armor does not allow for animation, make it compatible with animations"): a cube across a joint bendy-lib
     # bends (an elbow, a knee, the middle of the torso) is cut in two there, so its halves bend as the skin's do.
     model["cubes"] = [half for c in model["cubes"] for half in split(c)]
@@ -820,6 +821,63 @@ def collar(hood, piping):
         edge("collar_back_top_edge", (-5.22, -3.98, 4.6), (10.44, 0.22, 0.62), pivot, rot),
     ]
     return out
+
+
+# 4.1.17: how far each half of a coat's tails reaches past the middle (front, back), and how far the right half stands out over the left.
+OVERLAP_FRONT, OVERLAP_BACK, OVER = 1.3, 1.0, 0.06
+
+
+def overlap(cubes):
+    """
+    4.1.17 (the owner: "whenever you walk, like, it opens like a fucking, like a gap in every armor that we got. Like the two, they open
+    like a gap. And that gap is what I don't like about the armor."): the two halves of a coat's tails overlap at the middle, as a coat's
+    fronts do, front and back. Each half rides its own leg (4.1.14), so as one goes forward and the other back the slit between them (half
+    a pixel at the hip, a pixel and a half at the hem, each half flaring 3 degrees) opened onto the forward leg's own trouser. Now each half
+    reaches OVERLAP past the middle (still half a pixel past it at the flared hem), the right one OVER outside the left so the two never
+    fight where they meet: whichever leg is forward, its half covers its own leg all the way across. The edge trims and the back seam move
+    to the new edges; the texture nets stay as they were (the cloth a touch wider).
+    """
+    named = {c["name"]: c for c in cubes}
+
+    def widen(name, by, out):
+        c = named.get(name)
+        if c is None:
+            return
+        if by > 0:
+            c["size"][0] += by          # a right half: its inner edge further right
+        else:
+            c["pos"][0] += by           # a left half: its inner edge further left
+            c["size"][0] -= by
+        c["pos"][2] += out
+
+    def move(name, by, out):
+        c = named.get(name)
+        if c is None:
+            return
+        c["pos"][0] += by
+        c["pos"][2] += out
+        if "pivot" in c:
+            c["pivot"][0] += by
+            c["pivot"][2] += out
+
+    for name in ("right_coat_front", "right_front_hem"):
+        widen(name, OVERLAP_FRONT, -OVER)
+    for name in ("left_coat_front", "left_front_hem"):
+        widen(name, -OVERLAP_FRONT, 0.0)
+    move("right_front_inner_edge", OVERLAP_FRONT, -OVER)
+    move("left_front_inner_edge", -OVERLAP_FRONT, 0.0)
+    for name in ("right_coat_back", "right_back_hem"):
+        widen(name, OVERLAP_BACK, OVER)
+    for name in ("left_coat_back", "left_back_hem"):
+        widen(name, -OVERLAP_BACK, 0.0)
+    move("right_back_seam", OVERLAP_BACK, OVER)
+    # Under the jacket's hem, behind the fronts: a strip of the coat's own cloth across the hip, on the body. A half riding a leg that goes
+    # back drops its top a pixel and a half below the jacket (it hangs three in front of the hip it turns on), and the trousers showed
+    # there, dark, under the hem (the owner's circle): now the cloth does. Hidden behind the fronts while they hang together.
+    front = named.get("right_coat_front")
+    if front is not None:
+        cubes.append({"name": "hip_lining", "bone": "body", "slot": front["slot"], "pos": [-4.45, 11.4, -2.36], "size": [8.9, 3.2, 0.24],
+                      "pivot": [0.0, 11.4, -2.36], "rot": [0, 0, 0], "uv": list(front["uv"]), "net": list(front.get("net", front["size"]))})
 
 
 # The coat's tail pieces on a leg (the owner's names): front and back panels, their hems, gussets and edges, the pockets on them.

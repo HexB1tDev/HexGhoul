@@ -1,4 +1,9 @@
-# Next AI: after 4.1.16 (4.1.16: the kiss blush by mood, eyes fixed on Ayato, Touka, the kids' blinks and kakugan; 4.1.15: reactions to who the player is with, the night's captions, more kid games and no touching teenage sons, six new kisses and smoother gestures; 4.1.14: places built at any good spot, first one kept; coats on the legs; no Ukaku M1 spam; 4.1.9: the inventory crash, the special places; 4.1.10-4.1.13: the wing slams; 4.1.12: places never nowhere, the coat; 4.1.13: slams as arms and hands clear of his body, the guard, /kagune places checks each place)
+# Next AI: after 4.1.17 (4.1.17: coat halves overlap, places on their highest ground and adopted when found standing, planted Ukaku spikes tinted; 4.1.16: the kiss blush by mood, eyes fixed on Ayato, Touka, the kids' blinks and kakugan; 4.1.15: reactions to who the player is with, the night's captions, more kid games and no touching teenage sons, six new kisses and smoother gestures; 4.1.14: places built at any good spot, first one kept; coats on the legs; no Ukaku M1 spam; 4.1.9: the inventory crash, the special places; 4.1.10-4.1.13: the wing slams; 4.1.12: places never nowhere, the coat; 4.1.13: slams as arms and hands clear of his body, the guard, /kagune places checks each place)
+
+**RULE (the owner, after 4.1.16, quoted exactly): "always specify that the AI is to evaluate the renders that it generates, and it does not
+give up until it's a perfect match and it's a perfect combat system. Like, the animations always have to be top tier, no excuses
+whatsoever."** Render everything you change (front, side, first person), judge it yourself, fix and re-render until it is right; tests
+passing is not the bar. It is also in `CLAUDE.md`.
 
 Read this first. The house rules are in `next-ai-4.1.2.md` and `next-ai-4.0.0.md` (they still hold): answer in English, quote the owner
 exactly, never claim in-game testing, the full `python3 build.py` must end with EXIT 0 on the exact commit before it is pushed, never
@@ -15,6 +20,7 @@ alter the owner's files, one version at a time, no PR.
 | 4.1.12 | Places never nowhere, `/kagune places`; slams without particles and 1.75x as long; each coat half on its own leg | pushed, EXIT 0 |
 | 4.1.13 | Every slam an arm (behind a new shoulder) and a hand, aligned on its target and clear of his posed body; the guard clamped round him clear of his raised arms; `/kagune places` makes each place's chunk and says built or stopped; coat previews | pushed, EXIT 0 |
 | 4.1.14 | One-of-a-kind places at any dry spot their set offers, the first the world builds kept with the world (`PlaceClaims`); coat tails drawn on the legs; each Ukaku wing slam plays out in full (1.3x damage) | pushed, EXIT 0 |
+| 4.1.17 | Coat tails overlap at the middle and a hip lining (`outfit_models.overlap`); Ken's tower on the ground and every jigsaw place lifted onto its footprint's highest ground (`DryLand.lift`, `DryPlace.raised`); a standing place adopted as the world's one, duplicates logged, `making` only false for /locate (`PlaceClaims`); planted Ukaku spikes keep their shooter's colour | pushed, EXIT 0 |
 | 4.1.16 | Every woman blushes through a kiss and after, as deep as its mood (`KissBlush`, `MoodKiss.blush`); Ayato's eyes repainted (`companion_textures.REPAINT`), nothing under hair (companions); kids' blinks and kakugan on both layers (`blink_skins.py`, `child_skins.py`) | pushed, EXIT 0 |
 | 4.1.15 | Scenes that know who the player is with (`relation` flags); the night's captions (`NightWords`); five kid games, a two-page play menu, no touching sons from their teens on; six new kisses (`MoodKiss.of(mood, Moment)`), the phases blended, every gesture crossfaded (`PoseFade`) | pushed, EXIT 0 |
 
@@ -284,6 +290,101 @@ blush, it depends on their mood." (read as: how much they blush goes by their mo
 - **Not done, the owner's call:** daughters 07, 10, 11, 12, 21 and 22 have their eyes painted shut or hidden in their skins (`blink_skins.NONE`);
   open eyes would have to be painted in.
 - Wild ghouls: `NpcLook.EYES` and `GIRL_EYES` match all 24 skins (checked on a sheet).
+
+## 4.1.17, what and where
+
+- **The coat gap** (`tools/outfit_models.py`: `overlap`, called in `fit_outfit`; rebake with `python3 tools/outfit_models.py`; it reproduces the bin
+  exactly):
+  - Each half's front and back panels (and hems) reach `OVERLAP_FRONT` / `OVERLAP_BACK` past the middle; the right one sits `OVER` outside.
+  - The edge trims and the back seam moved with them.
+  - `hip_lining`: on the body, leggings slot, behind the fronts.
+  - A centre panel on its own bone (the legs' average) was tried and dropped: the forward leg swings through it.
+  - Preview: `ArtPreview <dir> coat-walk` (and `coats`).
+- **Places on the ground:**
+  - `cyber_tower.json` now projects to `WORLD_SURFACE_WG`, absolute -1 (its anchor is the template's bottom layer, 36,0,36).
+  - `DryPlace.here` returns `raised(stub, DryLand.lift(...))`. The lift samples the footprint every `LIFT_STEP` and at its edges, then
+    rebuilds and shifts the pieces each time they are asked for (`StructurePiecesBuilder.m_192781_`, `m_192780_`, newly allowlisted).
+  - The sites (hideout, CCG, villages) already sit on their 5x5 ground with a steepness limit; they were not changed.
+- **Duplicates** (`PlaceClaims.chunk`):
+  - A loaded chunk holding a one-of-a-kind start (`ONE_OF_A_KIND`) claims it if nothing is claimed yet; a second one is logged.
+  - `ControlStructures.making` is `!(heights instanceof Level)`.
+  - The owner saw two or three Anteikus and two towers: most likely a world carried across 4.1.9 to 4.1.14 (each with its own rules).
+    If they report one in a fresh 4.1.17 world, ask for the `HexKagune:` log lines.
+- **Ukaku planted spikes:** `UkakuSpikes.Planted.shooter`, set from the bolt at SPIKE_IMPACT; `UkakuWingRenderer` tints it;
+  `UkakuFx.crumble(shooter, ...)`. `UkakuTests.plantedColour` checks it.
+
+## The owner's big list (after 4.1.16), in their order: do it all, one version at a time
+
+Their files (never alter them): `art/coat-gap-walking.png` (the gap circled), `art/reaper/Reaper_Phase2.png` (Arima without his jacket),
+`art/reaper/Reaper_Quinque1.jpg` and `Reaper_quinque2.jpg` (the phase-2 blade), `art/city/small-city.zip` (a world save in the new
+`dimensions/minecraft/overworld` layout, with the city in it: find its extent, cut it out as a 1.20.1 structure, map any block 1.20.1 lacks).
+Arima's own schematic has NOT been sent yet: ask for it if it is still missing when that step comes.
+
+The owner (quoted exactly):
+
+> Okay, this is a big one. Make sure to add to the to-do list that I don't want whenever, like, the walking is fine with the armor. And don't
+> get me wrong, now it's fine. But whenever you walk, like, it opens like a fucking, like a gap in every armor that we got. Like the two, they
+> open like a gap. And that gap is what I don't like about the armor. It's just that. And after that is fixed, we gotta add the M1s. Like,
+> we need to improve, like, every Kagune's M1. And, I mean, not Kagune, sorry, the Quinkei, the CCG weapons. We need to improve every single
+> M1 of every single weapon. They're bad. I mean, you keep passing them, but they're just the most basic garbage you can have, which I don't
+> approve of. And I think if you look at the renders, we should make this a rule for every AI. So on the AI, on the next handoff, always
+> specify that the AI is to evaluate the renders that it generates, and it does not give up until it's a perfect match and it's a perfect
+> combat system. Like, the animations always have to be top tier, no excuses whatsoever. So upgrade the Quinkays, add better pull-out
+> animations to the Quinkays so that they are more realistic when they're returning to the case. Make sure to add more Quinkays based on
+> other, like, you can add Quinkays based off the war on Kagune, like, I don't know, different types of whips based on different Kagunes,
+> custom ones, like more different swords, improve the ones that are already in here, like the katana looks like shit. Just keep improving
+> what we already got, and don't forget the the first person animation, like first person view to match the animation that they got,
+> because they currently don't have that.
+>
+> After that push is done:
+> After that is done, we're going to improve Arima, the Reaper. I think we need a structure for him. I don't think it's fit for him to spawn
+> in the wild like a common person. I'm going to give you a schematic where he's going to spawn in always, and there's always only one of
+> them also in the map. When both players are kill him, they get like a special achievement from our mod called like Slain Reaper or
+> something like that. And he drops Dawn 100% guaranteed. Since there's only one of them in the map, that's gonna be new. We also want to
+> improve the combat so you can use both styles of fighting that we got. Both the Kickmaster and the normal one, along with the flips and
+> whatever. His Quinque, Dawn, needs a major rework in look so it's smooth and not cubic. We need it to open properly when shooting
+> projectiles. Like, actually make it spread open like a fucking umbrella. I don't know how to explain. The thing that he does when he
+> shoves the Quinque on the ground and emerges like a tentacle, it shouldn't be a tentacle. It should be like a smooth part of the blade, as
+> if the blade grew out of the ground. And I think that we need to create a new weapon for the Reaper based on the images that I'm going to
+> also send you. This is kind of a big rework. And I need to create that weapon that I'll show you exactly how it is. It is a heavy weapon,
+> dual-handed, that deals massive damage and, yeah, just causes bleed whenever hit. Arima can be super fast while using it. He does not drop
+> this weapon though. After the fight is done, he breaks the weapon. The blade shatters at the end, and it's just broken. And he accepts his
+> death a little before he dies actually, and then he just falls on his knees and dies after the weapon shatters. During like this next
+> blade that he gets it during the second phase, which is gonna have a second phase. Which is like he pulls out his jacket, he just removes
+> his jacket, revealing a new skin that I'm gonna send you. Which is basically gonna serve as it's him, but like without the jacket. That's
+> the skin I'm gonna send you. During this next phase, he gets way faster. He can dash more precisely. He's way more precise. His entire
+> moveset changes because he no longer has the Dawn weapon. So he's more into a melee close combat type. Since the weapon is massive, the
+> one he gets is meant to be massive. He will always try to, get into range and kill you. He'll dodge moves. He will be a fucking monster
+> basically. Whenever like this is not meant to be a player, like a solo mission. Whenever you kill him, you get the achievement and make
+> sure that both players get it. If like two players hit him within like let's say 5 minutes, then you just need to hit him once. And if the
+> other player kills him, then you also get the achievement in mastery. And yeah, that should be it. Another and then we get to a few
+> problems that I'm going to list below.
+>
+> Bugs:
+>
+> Quests should only be done once. You can spam /kagune quest complete all over and like, I mean, it's not that you can spam it. It's just
+> once you did all of them /quest complete, all of them should be finished. Even if you pick another kagune, this should still be finished
+> because you finished all of them. You don't need to be typing it again. We also need to better the looks of the quest menu. It looks very
+> bad. Very, very. I don't know. I just don't even feel like opening it half the time. I don't feel like opening it. It's just really dull,
+> really bad looking, not interactive at all. It's just bad, bro. We need to better that.
+>
+> I'll be sending new structures to replace:
+>
+> ALl villages get replaced with the city in my minecraft world that I sent named "Small-City".
+> Delete all ids hexkagune:village_x ( and anything related)
+> add Hexkagune:small_city.
+>
+> This big structure is relatively rare (a bit rarer than a normal village), Humans can now however spawn in normal minecraft villages.
+
+Order:
+1. The coat gap while walking (`art/coat-gap-walking.png`).
+2. Every quinque's M1, draw and return to the case, first person; more quinques; the katana.
+3. Push.
+4. Arima: his structure (one per world), the "Slain Reaper" advancement and mastery for every player who hit him in the last 5 minutes,
+   Dawn always dropped, both fighting styles, Dawn smooth and opening like an umbrella, the ground strike as the blade growing up,
+   phase 2 (jacket off, the heavy two-handed bleeding blade, faster, dodging, close-range), the blade shattering, him on his knees.
+5. Quests completed for good (across kagunes); a better quest menu.
+6. The Small City in place of every hexkagune village; humans in vanilla villages.
 
 ## Still open
 

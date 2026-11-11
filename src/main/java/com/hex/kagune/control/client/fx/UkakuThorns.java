@@ -146,7 +146,7 @@ public final class UkakuThorns {
             }
             Vec3 middle = world(body, CrystalThorns.tip(thorn, out * 0.5), 1.0F, false);
             Vec3 way = world(body, thorn.direction(), 1.0F, true);
-            UkakuFx.crumble(middle, way, 0.5F);
+            UkakuFx.crumble(body.m_19879_(), middle, way, 0.5F); // 4.1.17: in its kagune's colour
         }
     }
 

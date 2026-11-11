@@ -48,6 +48,33 @@ public final class DryLand {
     private DryLand() {
     }
 
+    /** 4.1.17: how far apart (blocks) the ground is sampled under a place's footprint for {@link #lift}. */
+    public static final int LIFT_STEP = 4;
+
+    /**
+     * 4.1.17 (the owner: "they are spawning under the ground, which cannot happen, bro. This is causing major fucking chunks to be missing. It
+     * should be always spawning above ground, always at the top max area"): how many blocks a place started over ({@code x}, {@code z}) must
+     * rise so it stands on the highest ground of its footprint ({@code minX}..{@code maxX}, {@code minZ}..{@code maxZ}, sampled every
+     * {@link #LIFT_STEP} and at its edges), never cut into a hillside under it (its terrain adaptation then builds up under its low side
+     * instead of carving the hill out round it). 0 if the ground there is already the highest.
+     */
+    public static int lift(Ground ground, int x, int z, int minX, int minZ, int maxX, int maxZ) {
+        int here = ground.surface(x, z);
+        int top = here;
+        for (int sx = minX; ; sx = Math.min(maxX, sx + LIFT_STEP)) {
+            for (int sz = minZ; ; sz = Math.min(maxZ, sz + LIFT_STEP)) {
+                top = Math.max(top, ground.surface(sx, sz));
+                if (sz >= maxZ) {
+                    break;
+                }
+            }
+            if (sx >= maxX) {
+                break;
+            }
+        }
+        return Math.max(0, top - here);
+    }
+
     /**
      * The columns ({x, z}) looked at for a footprint {@code sizeX} x {@code sizeZ} from ({@code minX}, {@code minZ}): every {@code step}
      * blocks from {@link #MARGIN} out on one side to {@link #MARGIN} out on the other (its far edges always among them), the coarse ones

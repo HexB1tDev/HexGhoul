@@ -57,6 +57,23 @@ public final class UkakuTests {
         }
     }
 
+    /**
+     * 4.1.17 (the owner: "when it hits like a tree or a block or whatever, instead of being green, it turns back to the default color, which
+     * is red. It should remain the same color as the Kagune or when it hits the mob ... This also applies for the kakuja"): a spike or a
+     * kakuja's needle planted in a block keeps whoever shot it, is drawn in their colour, and crumbles in it.
+     */
+    static void plantedColour() {
+        String renderer = read("src/main/java/com/hex/kagune/control/client/render/UkakuWingRenderer.java");
+        String planted = renderer.substring(renderer.indexOf("for (UkakuSpikes.Planted planted : UkakuSpikes.planted())"));
+        planted = planted.substring(0, planted.indexOf("if (consumer != null) {\n            buffers.m_109912_(TYPE);"));
+        check(planted.contains("tinted(glowing(consumer, matrix, normals), com.hex.kagune.control.client.KaguneTints.of(planted.shooter()))")
+            && !planted.contains("Spike.build(glowing(") && !planted.contains("Needle.build(glowing("), "a planted spike or needle is drawn in its shooter's colour");
+        String fx = read("src/main/java/com/hex/kagune/control/client/fx/UkakuFx.java");
+        check(fx.contains("bolt != null && bolt.shooter() != 0 ? bolt.shooter() : message.shooter());"), "a planted spike keeps who shot it");
+        String spikes = read("src/main/java/com/hex/kagune/control/client/fx/UkakuSpikes.java");
+        check(spikes.contains("UkakuFx.crumble(planted.shooter(), "), "it crumbles in their colour");
+    }
+
     public static void main(String[] args) {
         wingGeometry();
         oneWingGeometry();
@@ -80,6 +97,7 @@ public final class UkakuTests {
         kakuja();
         mutations();
         unlocks();
+        plantedColour();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
