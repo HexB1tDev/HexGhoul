@@ -1,4 +1,4 @@
-# Next AI: after 4.1.27 (4.1.27: Arima part 5, the ground strike grows Dawn's blades; 4.1.26: Arima part 4, Dawn smooth and opening like a reverse umbrella; 4.1.25: Arima part 3, both fighting styles; 4.1.24: Arima part 2, his mansion, one per world, him in its garden; 4.1.23: Arima part 1, Dawn every time and Slain Reaper for everyone who hit him; 4.1.22: first person for the kagune-made weapons; 4.1.21: the katana's cuts hands first, with wrists; 4.1.20: the katana a smooth kagune-grown mesh drawn by its own item renderer; 4.1.19: melee quinques in first person through the third person chain, seen from behind the head; 4.1.18: the katana rebuilt, its five cuts by intent, quinques' seven-frame draw; 4.1.17: coat halves overlap, places on their highest ground and adopted when found standing, planted Ukaku spikes tinted; 4.1.16: the kiss blush by mood, eyes fixed on Ayato, Touka, the kids' blinks and kakugan; 4.1.15: reactions to who the player is with, the night's captions, more kid games and no touching teenage sons, six new kisses and smoother gestures; 4.1.14: places built at any good spot, first one kept; coats on the legs; no Ukaku M1 spam; 4.1.9: the inventory crash, the special places; 4.1.10-4.1.13: the wing slams; 4.1.12: places never nowhere, the coat; 4.1.13: slams as arms and hands clear of his body, the guard, /kagune places checks each place)
+# Next AI: after 4.1.34 (4.1.28-4.1.31: Arima phase 2 done; 4.1.32: a quinque's M1 first; 4.1.33: quests finished for good; 4.1.34: the quest menu a compact box; next: the Small City, its WIP patch ready). Older: (4.1.27: Arima part 5, the ground strike grows Dawn's blades; 4.1.26: Arima part 4, Dawn smooth and opening like a reverse umbrella; 4.1.25: Arima part 3, both fighting styles; 4.1.24: Arima part 2, his mansion, one per world, him in its garden; 4.1.23: Arima part 1, Dawn every time and Slain Reaper for everyone who hit him; 4.1.22: first person for the kagune-made weapons; 4.1.21: the katana's cuts hands first, with wrists; 4.1.20: the katana a smooth kagune-grown mesh drawn by its own item renderer; 4.1.19: melee quinques in first person through the third person chain, seen from behind the head; 4.1.18: the katana rebuilt, its five cuts by intent, quinques' seven-frame draw; 4.1.17: coat halves overlap, places on their highest ground and adopted when found standing, planted Ukaku spikes tinted; 4.1.16: the kiss blush by mood, eyes fixed on Ayato, Touka, the kids' blinks and kakugan; 4.1.15: reactions to who the player is with, the night's captions, more kid games and no touching teenage sons, six new kisses and smoother gestures; 4.1.14: places built at any good spot, first one kept; coats on the legs; no Ukaku M1 spam; 4.1.9: the inventory crash, the special places; 4.1.10-4.1.13: the wing slams; 4.1.12: places never nowhere, the coat; 4.1.13: slams as arms and hands clear of his body, the guard, /kagune places checks each place)
 
 **RULE (the owner, after 4.1.16, quoted exactly): "always specify that the AI is to evaluate the renders that it generates, and it does not
 give up until it's a perfect match and it's a perfect combat system. Like, the animations always have to be top tier, no excuses
@@ -9,7 +9,45 @@ Read this first. The house rules are in `next-ai-4.1.2.md` and `next-ai-4.0.0.md
 exactly, never claim in-game testing, the full `python3 build.py` must end with EXIT 0 on the exact commit before it is pushed, never
 alter the owner's files, one version at a time, no PR.
 
-## START HERE: HURRY
+## START HERE (after 4.1.34): the Small City
+
+**The owner stopped the session (quoted exactly): "Okay, enough. Stop now. Given me a prompt in the end of the next AI to pick up now."
+Then: "Handoff and prompt, now".** Still: hurry, one short version at a time, renders in chat before calling anything done.
+
+1. **Branch:** `claude/sleepy-knuth-5jlwby` holds 4.1.28 .. 4.1.34 and this handoff (each pushed after a full build with EXIT 0 on its exact
+   commit). A new session's branch usually starts at `main`: fast-forward onto it first.
+2. **Done this session:** Arima's phase 2 entirely (4.1.28-4.1.31: see their sections below), quinque M1s winning over the kagune's
+   (4.1.32), quests finished for good (4.1.33), the new quest menu (4.1.34). Every render is in `docs/handoff/*-4.1.2[89].png`,
+   `*-4.1.3[01].png`, `quests-*-4.1.34.png`.
+3. **Next: the Small City (the owner chose, asked: "Whole city").** Their words (big list, below): "ALl villages get replaced with the city
+   in my minecraft world that I sent named "Small-City". Delete all ids hexkagune:village_x ( and anything related) add
+   Hexkagune:small_city. This big structure is relatively rare (a bit rarer than a normal village), Humans can now however spawn in normal
+   minecraft villages."
+   - **What the save is:** `art/city/small-city.zip` (never alter it), DataVersion 4790, new layout (`dimensions/minecraft/overworld/
+     region`). The city is chunks (-17, -17) .. (16, 16): **544 x 544 blocks**, on a thin built platform (a flat/void world: nothing under
+     y 61), ground y 64, highest block y 195, ~2M blocks; a full street grid, a central park, a pool, towers. Top-down render of it was made
+     with a scratch script (not kept); `tools/city_structure.py --map` is a good place to add one.
+   - **The limit:** one structure places only within 8 chunks of its start (272 x 272: `ControlStructures.Site` REACH_BACK/REACH_ON). The
+     owner chose the whole city: **four 272 x 272 quarters** (0 NW, 1 NE, 2 SW, 3 SE) that always spawn together side by side at **one
+     shared ground height** and **one shared turn**.
+   - **WIP patch:** `docs/handoff/small-city-4.1.35-wip.patch` (`git apply` it, delete it in the commit): `tools/city_structure.py` (reads
+     the zip's region files into a compact grid, finds the ground, writes `build/city/small_city_<k>.schem`, Sponge v3: ran in 38 s,
+     ~500k blocks and 560-800 states per quarter), `tools/library_structure.py` (writes byte/int/long arrays), `tools/exploration_structures.py`
+     (four sites `small_city_0..3`, maps 7-10, kind "human", 12 homes and 2 agents each, ground 6 = y 64). **Not yet run to the end**: run
+     `python3 tools/exploration_structures.py --blocks <1.20 blocks.json>` (PrismarineJS minecraft-data `data/pc/1.20/blocks.json` from
+     raw.githubusercontent.com); it will stop on every 1.21.x block 1.20.1 lacks: add each to `SWAPS`. Expect it to be slow (a quarter is
+     272 x 138 x 272) and check the other sites come out byte-identical (`git diff --stat`).
+   - **Then (4.1.36):** worldgen for the four quarters: a custom placement so quarter k starts at the cell's chunk + its offset (17 chunks
+     apart, turned with the city), all four sampling the whole city's footprint for one ground height (deterministic, from the chunk
+     generator, like `DryLand.lift`/`dryGround`), rarer than a vanilla village; remove `village_1`, `village_2` (their structures,
+     structure_set `villages.json`, SiteMaps entries, tests, anything related; `village/` structures too if only they use them); humans in
+     vanilla villages (spawn a few `hexkagune:human` when a vanilla village's meeting point generates or by a spawn rule near villagers).
+     Render the placed city (an isometric of the four quarters together) before pushing.
+4. **Open to the owner:** after `complete all`, hunts and favours still come (told them; they may want those off too). Daughters' open eyes
+   (07, 10, 11, 12, 21, 22) still unasked.
+5. **Watch out:** the owner wants everything compact ("why not just a cute box?") and hates full-screen menus; renders in chat early.
+
+## START HERE (before, kept): HURRY
 
 **The owner is out of patience. Their words (quoted exactly):** "I don't understand what's so hard. Why do you keep making the same fucking
 issue over and over again? I'm out of usage. You spent your entire session in that fucking same animation of one quinque. Bro, this is a

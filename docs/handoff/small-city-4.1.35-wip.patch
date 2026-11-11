@@ -1,0 +1,293 @@
+diff --git a/tools/city_structure.py b/tools/city_structure.py
+new file mode 100644
+index 00000000..d61e1af1
+--- /dev/null
++++ b/tools/city_structure.py
+@@ -0,0 +1,235 @@
++#!/usr/bin/env python3
++"""4.1.35 (the owner: "ALl villages get replaced with the city in my minecraft world that I sent named "Small-City""): the owner's city, cut
++out of their world save (art/city/small-city.zip, saved by a newer game in its dimensions/minecraft/overworld layout), as four quarter
++schematics the place pipeline (tools/exploration_structures.py, sites small_city_0 .. small_city_3) turns into 1.20.1 tiles.
++
++    python3 tools/city_structure.py [--map out.png]
++
++The city is the 34 x 34 chunks from (-17, -17) to (16, 16): 544 x 544 blocks, four times what one structure can place (a structure's pieces
++reach 8 chunks from its start), so it is cut into four 272 x 272 quarters (0: north-west, 1: north-east, 2: south-west, 3: south-east) that
++the game places side by side (ControlStructures). Every quarter keeps the city's one ground (the commonest top of its natural ground over the
++whole city) and the same layers, from GROUND_DEPTH under it to the city's highest block. Each is written to build/city/small_city_<k>.schem
++(Sponge v3, gzipped); the owner's file is only read.
++"""
++import gzip
++import io
++import os
++import struct
++import sys
++import zipfile
++import zlib
++from collections import Counter
++from pathlib import Path
++
++sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
++import library_structure as L  # noqa: E402
++
++ROOT = Path(__file__).resolve().parent.parent
++ZIP = ROOT / "art" / "city" / "small-city.zip"
++OUT = ROOT / "build" / "city"
++REGION = "dimensions/minecraft/overworld/region/"
++CHUNK_MIN = -17
++CHUNKS = 34
++QUARTER = CHUNKS // 2 * 16
++SIZE = CHUNKS * 16
++#: Layers kept under the city's ground (its cellars, the kerbs' footings): the rest of the world's ground is the world's own.
++GROUND_DEPTH = 6
++NATURAL = {"minecraft:stone", "minecraft:dirt", "minecraft:grass_block", "minecraft:coarse_dirt", "minecraft:granite", "minecraft:andesite",
++           "minecraft:diorite", "minecraft:gravel", "minecraft:sand", "minecraft:podzol", "minecraft:clay", "minecraft:deepslate",
++           "minecraft:tuff", "minecraft:water", "minecraft:bedrock"}
++GROUNDS = {"minecraft:grass_block", "minecraft:dirt", "minecraft:coarse_dirt", "minecraft:podzol", "minecraft:dirt_path", "minecraft:gravel",
++           "minecraft:sand"}
++AIR = {"minecraft:air", "minecraft:cave_air", "minecraft:void_air"}
++
++
++def nbt(data):
++    f = io.BytesIO(data)
++    f.read(1)
++    f.read(struct.unpack(">H", f.read(2))[0])
++    return L._payload(f, L.COMPOUND)
++
++
++def val(t):
++    return t.value if isinstance(t, L.Tag) else t
++
++
++def state(entry):
++    name = val(entry["Name"])
++    props = {k: val(v) for k, v in val(entry["Properties"]).items()} if "Properties" in entry else {}
++    return name + ("[" + ",".join(f"{k}={v}" for k, v in sorted(props.items())) + "]" if props else "")
++
++
++def chunks(archive):
++    """Every chunk of the city's 34 x 34: (chunk x, chunk z, its NBT)."""
++    want = range(CHUNK_MIN, CHUNK_MIN + CHUNKS)
++    regions = sorted({(cx >> 5, cz >> 5) for cx in want for cz in want})
++    for rx, rz in regions:
++        raw = archive.read(f"{REGION}r.{rx}.{rz}.mca")
++        for i in range(1024):
++            offset = int.from_bytes(raw[i * 4:i * 4 + 3], "big")
++            if offset == 0:
++                continue
++            start = offset * 4096
++            length = int.from_bytes(raw[start:start + 4], "big")
++            kind = raw[start + 4]
++            data = raw[start + 5:start + 4 + length]
++            data = zlib.decompress(data) if kind == 2 else gzip.decompress(data) if kind == 1 else data
++            chunk = nbt(data)
++            cx, cz = val(chunk["xPos"]), val(chunk["zPos"])
++            if cx in want and cz in want:
++                yield cx, cz, chunk
++
++
++#: The layers read (the world's y): well under the city's ground to over its highest roof.
++Y_MIN = 40
++Y_MAX = 207
++
++
++def read_city():
++    """
++    The city as a grid of palette indices (x fastest, then z, then y from {@link Y_MIN}; 0 air), the palette (block state strings), and its
++    block entities {(x, y, z): tag} (x, z from 0 at its north-west corner; y the world's).
++    """
++    from array import array
++    height = Y_MAX - Y_MIN + 1
++    grid = array("H", bytes(2 * SIZE * SIZE * height))
++    palette = ["minecraft:air"]
++    index = {"minecraft:air": 0}
++    entities = {}
++    with zipfile.ZipFile(ZIP) as archive:
++        for cx, cz, chunk in chunks(archive):
++            ox = (cx - CHUNK_MIN) * 16
++            oz = (cz - CHUNK_MIN) * 16
++            for section in val(chunk["sections"])[1]:
++                sy = val(section["Y"]) * 16
++                if sy + 15 < Y_MIN or sy > Y_MAX or "block_states" not in section:
++                    continue
++                states = val(section["block_states"])
++                local = []
++                for p in val(states["palette"])[1]:
++                    s = state(p)
++                    if s.split("[")[0] in AIR:
++                        s = "minecraft:air"
++                    if s not in index:
++                        index[s] = len(palette)
++                        palette.append(s)
++                    local.append(index[s])
++                if local == [0]:
++                    continue
++                single = len(local) == 1
++                if not single:
++                    bits = max(4, (len(local) - 1).bit_length())
++                    per = 64 // bits
++                    mask = (1 << bits) - 1
++                    longs = [v & ((1 << 64) - 1) for v in val(states["data"])]
++                i = 0
++                for y in range(16):
++                    wy = sy + y
++                    if wy < Y_MIN or wy > Y_MAX:
++                        i += 256
++                        continue
++                    row = (wy - Y_MIN) * SIZE * SIZE
++                    for z in range(16):
++                        base = row + (oz + z) * SIZE + ox
++                        for x in range(16):
++                            if single:
++                                grid[base + x] = local[0]
++                            else:
++                                grid[base + x] = local[(longs[i // per] >> ((i % per) * bits)) & mask]
++                            i += 1
++            for be in val(chunk.get("block_entities", L.Tag(L.LIST, (L.COMPOUND, []))))[1]:
++                be = dict(be)
++                x, y, z = val(be["x"]), val(be["y"]), val(be["z"])
++                entities[(x - CHUNK_MIN * 16, y, z - CHUNK_MIN * 16)] = be
++    return grid, palette, entities
++
++
++def at(grid, x, y, z):
++    return grid[(y - Y_MIN) * SIZE * SIZE + z * SIZE + x]
++
++
++def ground_of(grid, palette):
++    """The city's ground: the commonest top of its natural ground (a street's footing, a park's grass) over all of it; its highest block."""
++    tops = Counter()
++    highest = Y_MIN
++    grounds = {i for i, s in enumerate(palette) if s.split("[")[0] in GROUNDS}
++    for z in range(SIZE):
++        for x in range(SIZE):
++            for y in range(Y_MAX, Y_MIN - 1, -1):
++                i = at(grid, x, y, z)
++                if i != 0:
++                    highest = max(highest, y)
++                    if i in grounds:
++                        tops[y] += 1
++                    break
++    return tops.most_common(1)[0][0], highest
++
++
++def varint(value):
++    out = bytearray()
++    while True:
++        byte = value & 0x7F
++        value >>= 7
++        if value:
++            out.append(byte | 0x80)
++        else:
++            out.append(byte)
++            return bytes(out)
++
++
++def write_quarter(k, grid, palette, entities, y0, y1):
++    qx, qz = (k % 2) * QUARTER, (k // 2) * QUARTER
++    width = length = QUARTER
++    height = y1 - y0 + 1
++    used = {"minecraft:air": 0}
++    data = bytearray()
++    count = 0
++    for y in range(y0, y1 + 1):
++        for z in range(qz, qz + length):
++            for x in range(qx, qx + width):
++                s = palette[at(grid, x, y, z)]
++                if s not in used:
++                    used[s] = len(used)
++                if s != "minecraft:air":
++                    count += 1
++                data += varint(used[s])
++    ents = []
++    for (x, y, z), be in entities.items():
++        if qx <= x < qx + width and qz <= z < qz + length and y0 <= y <= y1:
++            inner = {key: tag for key, tag in be.items() if key not in ("x", "y", "z", "id", "keepPacked")}
++            ents.append({"Id": L.s(val(be["id"])), "Pos": L.Tag(L.INTS, [x - qx, y - y0, z - qz]), "Data": L.compound(**inner)})
++    OUT.mkdir(parents=True, exist_ok=True)
++    root = {
++        "Version": L.Tag(L.INT, 3),
++        "DataVersion": L.Tag(L.INT, 4790),
++        "Width": L.Tag(L.SHORT, width),
++        "Height": L.Tag(L.SHORT, height),
++        "Length": L.Tag(L.SHORT, length),
++        "Blocks": L.compound(Palette=L.compound(**{s: L.Tag(L.INT, i) for s, i in used.items()}),
++                             Data=L.Tag(L.BYTES, bytearray(data)), BlockEntities=L.Tag(L.LIST, (L.COMPOUND, ents))),
++    }
++    path = OUT / f"small_city_{k}.schem"
++    L.write(path, {"Schematic": L.compound(**root)})
++    return path, len(used), count
++
++
++def make():
++    """The four quarter schematics (once: kept until the owner's file changes); the city's ground and its layers' range."""
++    stamp = OUT / "stamp.txt"
++    mark = f"{ZIP.stat().st_size}:{int(ZIP.stat().st_mtime)}:{GROUND_DEPTH}"
++    if stamp.exists() and stamp.read_text().startswith(mark) and all((OUT / f"small_city_{k}.schem").exists() for k in range(4)):
++        ground, y0 = (int(v) for v in stamp.read_text().split("|")[1].split(","))
++        return ground, y0
++    grid, palette, entities = read_city()
++    ground, y1 = ground_of(grid, palette)
++    y0 = ground - GROUND_DEPTH
++    for k in range(4):
++        path, kinds, count = write_quarter(k, grid, palette, entities, y0, y1)
++        print(f"{path.name}: {QUARTER} x {y1 - y0 + 1} x {QUARTER}, {kinds} block states, {count} blocks")
++    stamp.write_text(f"{mark}|{ground},{y0}")
++    return ground, y0
++
++
++if __name__ == "__main__":
++    g, y = make()
++    print(f"the city's ground: y {g}; its layers from y {y}")
+diff --git a/tools/exploration_structures.py b/tools/exploration_structures.py
+index 956f2379..0983c956 100644
+--- a/tools/exploration_structures.py
++++ b/tools/exploration_structures.py
+@@ -77,6 +77,17 @@ SITES = [
+      "rooms": {"hexkagune:general": (9, 49, 5)}},
+ ]
+ 
++# 4.1.35 (the owner: "ALl villages get replaced with the city in my minecraft world that I sent named "Small-City""): the city, 544 x 544,
++# cut by tools/city_structure.py into four 272 x 272 quarters (0 north-west, 1 north-east, 2 south-west, 3 south-east: what one structure can
++# place) on the city's one ground (its schematics' layer 6, the world's y 64), placed side by side by ControlStructures. Its people: humans
++# at home and investigators on patrol in every quarter.
++import city_structure  # noqa: E402
++
++CITY_GROUND = 6
++for _k in range(4):
++    SITES.append({"id": f"small_city_{_k}", "source": str(city_structure.OUT / f"small_city_{_k}.schem"), "map": 7 + _k, "crop_x": None,
++                  "kind": "human", "houses": 12, "agents": 2, "ring": (24, 110), "loot_every": 7, "ground": CITY_GROUND, "city": True})
++
+ # 1.20.1 has none of these (1.20.3 to 1.21.9): each one's nearest, and the properties it keeps.
+ SWAPS = {
+     "minecraft:short_grass": ("minecraft:grass", ()),
+@@ -749,6 +760,8 @@ def main():
+     registry = None
+     if "--blocks" in sys.argv:
+         registry = Registry(sys.argv[sys.argv.index("--blocks") + 1])
++    ground, y0 = city_structure.make()
++    assert ground - y0 == CITY_GROUND, (ground, y0)
+     results = [build(site, registry) for site in SITES]
+     java(results)
+     for r in results:
+diff --git a/tools/library_structure.py b/tools/library_structure.py
+index f7f5443c..98b701ca 100644
+--- a/tools/library_structure.py
++++ b/tools/library_structure.py
+@@ -98,6 +98,16 @@ def _write(f, kind, value):
+         f.write(struct.pack(">i", len(items)))
+         for item in items:
+             _write(f, inner, item)
++    elif kind == BYTES:
++        # 4.1.35: a byte array (a Sponge schematic's block data).
++        f.write(struct.pack(">i", len(value)))
++        f.write(bytes(value))
++    elif kind == INTS:
++        f.write(struct.pack(">i", len(value)))
++        f.write(struct.pack(">%di" % len(value), *value))
++    elif kind == LONGS:
++        f.write(struct.pack(">i", len(value)))
++        f.write(struct.pack(">%dq" % len(value), *value))
+     elif kind == COMPOUND:
+         for name, tag in value.items():
+             f.write(bytes([tag.kind]))
