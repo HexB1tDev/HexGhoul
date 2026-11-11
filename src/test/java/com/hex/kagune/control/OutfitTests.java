@@ -1,6 +1,5 @@
 package com.hex.kagune.control;
 
-import com.hex.kagune.control.outfit.CoatDrape;
 import com.hex.kagune.control.outfit.OutfitModels;
 import com.hex.kagune.control.outfit.Outfits;
 import java.io.InputStream;
@@ -251,8 +250,7 @@ public final class OutfitTests {
         }
         try {
             String layer = new String(java.nio.file.Files.readAllBytes(Path.of("src/main/java/com/hex/kagune/control/client/render/OutfitLayer.java")));
-            check(layer.contains("BodyAnimations.bend(player, part, partial)") && layer.contains("tails(pose, bones[bone])"),
-                "the outfit bends with PlayerAnimator's bends; the tails hang from the hip");
+            check(layer.contains("BodyAnimations.bend(player, part, partial)"), "the outfit bends with PlayerAnimator's bends");
         } catch (java.io.IOException failure) {
             check(false, "read the layer: " + failure);
         }
@@ -335,93 +333,39 @@ public final class OutfitTests {
                 }
             }
         }
-        // 4.1.12 (the owner, of the Crimson Outfit in a jump and a kick: "I truly don't know how in this world you expected the clothes to open
-        // like that and look good"): each half of the tails hangs from its own leg (OutfitLayer.drapes). No point of that leg (its trousers cut
-        // at the knee, bent as bendy-lib bends them, its boot) comes through its half, in any of these (right thigh, left thigh, right knee,
-        // left knee); a leg that hangs straight leaves its half hanging straight, however the other moves (no more skirt thrown out flat).
-        float[][] poses = {{0, 0, 0, 0}, {-0.3F, 0.3F, 0, 0}, {-0.6F, 0.6F, 0, 0}, {-1.0F, 1.0F, 0, 0}, {-1.4F, 1.4F, 0, 0}, {0.6F, -0.6F, 0, 0},
-            {-0.55F, 0.55F, 0.25F, 0.6F}, {-0.8F, 0.4F, 0.1F, 1.0F}, {0.5F, -0.9F, 1.3F, 0.2F}, {-1.15F, -1.15F, 1.9F, 1.9F}, {-1.4F, -1.4F, 2.3F, 2.3F},
-            {-1.0F, -0.6F, 1.6F, 1.2F}, {-1.41F, -1.41F, 0, 0}, {-1.4F, -1.4F, 1.4F, 1.4F}, {-1.2F, 0.3F, 0, 0.8F}, {-1.5F, -1.5F, 2.4F, 2.4F},
-            {0.8F, 0.8F, 1.2F, 1.2F}, {0.2F, 0.2F, 1.8F, 1.8F}, {0.55F, -0.2F, 1.2F, 0.3F}, {-1.5F, 0.0F, 0.2F, 0.0F}, {0.0F, -1.5F, 0.0F, 0.3F}};
-        float hem = 9.42F;
-        for (float[] pose : poses) {
-            String at = java.util.Arrays.toString(pose);
-            for (int leg = 0; leg < 2; leg++) {
-                float thigh = pose[leg];
-                float knee = pose[leg + 2];
-                CoatDrape drape = CoatDrape.over(Math.min(0.0F, thigh), Math.max(0.0F, thigh), new float[] {thigh, thigh}, new float[] {knee, knee});
-                float[][] front = {hung(drape, -0.3F, 0.0F, -2.46F), hung(drape, -0.3F, CoatDrape.KNEE, -2.46F), hung(drape, -0.3F, hem, -2.46F)};
-                float[][] back = {hung(drape, -0.3F, 0.0F, 2.43F), hung(drape, -0.3F, CoatDrape.KNEE, 2.43F), hung(drape, -0.3F, hem, 2.43F)};
-                int through = 0;
-                for (int side = -1; side <= 1; side += 2) {
-                    for (float[][] line : CoatDrape.outline(thigh, knee, side, 0.0F)) {
-                        for (int k = 0; k <= 20; k++) {
-                            float t = k / 20.0F;
-                            float[] q = {line[0][0] + (line[1][0] - line[0][0]) * t, line[0][1] + (line[1][1] - line[0][1]) * t};
-                            through += through(front, back, q) ? 1 : 0;
+        // 4.1.14 (the owner: "Change the armors so they dont open like skirts, simply attach to the leg properly."): each half of a coat's
+        // tails is drawn on its own leg as the trousers are (the leg's own turn and its knee's bend), so it goes wherever the leg goes and never
+        // opens away from it. Around each leg from the hip to below the knee: in front of it, behind it and at its outer side.
+        for (String style : List.of("formal", "crimson")) {
+            OutfitModels.Model model = models.get(style);
+            for (int bone : new int[] {OutfitModels.RIGHT_LEG_COAT, OutfitModels.LEFT_LEG_COAT}) {
+                float[] lo = {Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE};
+                float[] hi = {-Float.MAX_VALUE, -Float.MAX_VALUE, -Float.MAX_VALUE};
+                for (OutfitModels.Cube cube : model.on(bone, -1)) {
+                    for (OutfitModels.Face face : cube.faces()) {
+                        for (int k = 0; k < 4; k++) {
+                            for (int d = 0; d < 3; d++) {
+                                lo[d] = Math.min(lo[d], face.corners()[k * 3 + d]);
+                                hi[d] = Math.max(hi[d], face.corners()[k * 3 + d]);
+                            }
                         }
                     }
                 }
-                check(through == 0, "no leg through its own half of the coat: " + at + " leg " + leg + " (" + through + " points)");
-                if (thigh == 0.0F && knee == 0.0F) {
-                    // Standing's own drape (just clear of its boot's toe below the knee), whatever the other leg does.
-                    CoatDrape standing = CoatDrape.over(0.0F, 0.0F, new float[] {0.0F, 0.0F}, new float[] {0.0F, 0.0F});
-                    check(drape.equals(standing) && Math.abs(drape.front()) < 0.2F && Math.abs(drape.back()) < 0.2F,
-                        "a leg hanging straight leaves its half hanging as it does standing, whatever the other does: " + at + " " + drape);
-                }
+                float outer = bone == OutfitModels.RIGHT_LEG_COAT ? -lo[0] : hi[0];
+                check(lo[1] <= 0.0F && hi[1] >= 9.0F && lo[2] <= -2.3F && hi[2] >= 2.1F && outer >= 3.0F,
+                    style + ": its tails round the leg (front, back, outer side), hip to below the knee (" + java.util.Arrays.toString(lo) + " "
+                        + java.util.Arrays.toString(hi) + ")");
             }
         }
         try {
             String layer = new String(java.nio.file.Files.readAllBytes(Path.of("src/main/java/com/hex/kagune/control/client/render/OutfitLayer.java")));
-            check(layer.contains("CoatDrape.over(hung[leg * 2], hung[leg * 2 + 1], new float[] {thigh[leg], thigh[leg]}, new float[] {knee[leg], knee[leg]})")
-                && layer.contains("last[leg * 2] + TAIL_FALL * since") && layer.contains("drape[bone == OutfitModels.RIGHT_LEG ? 0 : 1]")
-                && layer.contains("drape.place(p)"), "each half of the tails hangs from its own leg, falling back slowly as cloth does");
+            check(layer.contains("List<OutfitModels.Cube> tails = model.on(bone == OutfitModels.RIGHT_LEG ? OutfitModels.RIGHT_LEG_COAT : OutfitModels.LEFT_LEG_COAT, slot);")
+                && layer.contains("bones[bone].m_104299_(pose);\n                    emit(out, pose, tails, light, bend(player, bone, partial));")
+                && !layer.contains("CoatDrape") && !layer.contains("drape"), "each half of the tails is drawn on its own leg, as the trousers are");
+            check(!java.nio.file.Files.exists(Path.of("src/main/java/com/hex/kagune/control/outfit/CoatDrape.java")), "no drape hangs them apart from the legs");
         } catch (java.io.IOException failure) {
             check(false, "read the layer: " + failure);
         }
-    }
-
-    /** ({@code y}, {@code z}) where {@code drape} hangs a tail's corner ({@code x}, {@code y}, {@code z}). */
-    private static float[] hung(CoatDrape drape, float x, float y, float z) {
-        float[] v = {x, y, z};
-        drape.place(v);
-        return new float[] {v[1], v[2]};
-    }
-
-    /**
-     * Whether {@code q} comes through the coat: outside its outline (the fronts' line, the hem, the backs' line, the top at the hip) and
-     * nearest to its front or its back, part way along (not below its hem, nor above the hip), by more than a tenth of a texel.
-     */
-    private static boolean through(float[][] front, float[][] back, float[] q) {
-        float[][] outline = {front[0], front[1], front[2], back[2], back[1], back[0]};
-        boolean inside = false;
-        for (int i = 0; i < outline.length; i++) {
-            float[] a = outline[i];
-            float[] b = outline[(i + 1) % outline.length];
-            if ((a[1] > q[1]) != (b[1] > q[1]) && q[0] < a[0] + (q[1] - a[1]) * (b[0] - a[0]) / (b[1] - a[1])) {
-                inside = !inside;
-            }
-        }
-        if (inside) {
-            return false;
-        }
-        float nearest = Float.MAX_VALUE;
-        boolean side = false;
-        for (int i = 0; i < outline.length; i++) {
-            float[] a = outline[i];
-            float[] b = outline[(i + 1) % outline.length];
-            float dy = b[0] - a[0];
-            float dz = b[1] - a[1];
-            float length = dy * dy + dz * dz;
-            float t = length < 1.0E-12F ? 0.0F : Math.max(0.0F, Math.min(1.0F, ((q[0] - a[0]) * dy + (q[1] - a[1]) * dz) / length));
-            float d = (float)Math.hypot(q[0] - (a[0] + dy * t), q[1] - (a[1] + dz * t));
-            if (d < nearest) {
-                nearest = d;
-                // The fronts' two lines (0, 1) and the backs' two (3, 4), part way along; the hem (2) and the top (5) are not through.
-                side = (i == 0 || i == 1 || i == 3 || i == 4) && t > 0.0F && t < 1.0F;
-            }
-        }
-        return side && nearest > 0.08F;
     }
 
     /** {@code cube}'s least and greatest corner (x, y, z, then x, y, z). */

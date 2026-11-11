@@ -1,7 +1,6 @@
 package com.hex.kagune.control.client.render;
 
 import com.hex.kagune.KaguneMod;
-import com.hex.kagune.control.outfit.CoatDrape;
 import com.hex.kagune.control.outfit.OutfitItem;
 import com.hex.kagune.control.outfit.OutfitModels;
 import com.hex.kagune.control.outfit.Outfits;
@@ -97,20 +96,16 @@ public final class OutfitLayer<T extends LivingEntity, M extends EntityModel<T>>
             ModelPart[] bones = {model.f_102808_, model.f_102810_, model.f_102811_, model.f_102812_, model.f_102813_, model.f_102814_};
             AbstractClientPlayer player = wearer instanceof AbstractClientPlayer p ? p : null;
             boolean slim = slim(wearer, model);
-            CoatDrape[] drape = null;
             for (EquipmentSlot slot : SLOTS) {
                 ItemStack stack = wearer.m_6844_(slot);
                 if (stack.m_41720_() instanceof OutfitItem item) {
                     Outfits.Piece piece = item.piece();
-                    if (drape == null && slot == EquipmentSlot.LEGS) {
-                        drape = drapes(wearer, model.f_102813_, model.f_102814_, player, partialTick, ageInTicks);
-                    }
-                    draw(pose, buffers, light, bones, player, partialTick, piece.model(), piece.mask() ? -1 : piece.slot(), slim, drape);
+                    draw(pose, buffers, light, bones, player, partialTick, piece.model(), piece.mask() ? -1 : piece.slot(), slim);
                 }
             }
             String extra = EXTRA.apply(wearer);
             if (extra != null) {
-                draw(pose, buffers, light, bones, player, partialTick, extra, -1, slim, null);
+                draw(pose, buffers, light, bones, player, partialTick, extra, -1, slim);
             }
         } catch (RuntimeException failure) {
             PlayerLayers.failed("an outfit", failure);
@@ -119,10 +114,10 @@ public final class OutfitLayer<T extends LivingEntity, M extends EntityModel<T>>
 
     /**
      * {@code model}'s cubes in {@code slot} (any: -1) on {@code bones}, as they are posed (the sleeves for slim arms on a slim wearer), a
-     * coat's tails hung as {@code drape} has them ({@link CoatDrape}: the right half's, the left's; unturned if null).
+     * coat's tails on the legs.
      */
     static void draw(PoseStack pose, MultiBufferSource buffers, int light, ModelPart[] bones, AbstractClientPlayer player, float partial, String modelId,
-                     int slot, boolean slim, CoatDrape[] drape) {
+                     int slot, boolean slim) {
         OutfitModels.Model model = OutfitModels.get(modelId);
         if (model == null) {
             return;
@@ -147,15 +142,15 @@ public final class OutfitLayer<T extends LivingEntity, M extends EntityModel<T>>
                 emit(out, pose, cubes, light, bend(player, bone, partial));
                 pose.m_85849_();
             }
-            // 4.0.2 (the owner: "the jacket also breaks when walking"): a coat's tails hang from the hip; 4.0.3: draped over both legs
-            // ({@link #drape}), never parting down the middle, never with a leg through them.
-            if ((bone == OutfitModels.RIGHT_LEG || bone == OutfitModels.LEFT_LEG) && bones[OutfitModels.BODY] != null && bones[OutfitModels.BODY].f_104207_) {
-                // The tails are the coat's: they stay with the body (hung from the hip, a leg off or not).
+            // 4.0.2 (the owner: "the jacket also breaks when walking"): a coat's tails, from the hip. 4.1.14 (the owner: "Change the armors so
+            // they dont open like skirts, simply attach to the leg properly."): each half is on its own leg, as the trousers are: it swings,
+            // turns and bends at the knee with it (4.0.3 to 4.1.13 hung the tails apart from the legs, and they opened like a skirt).
+            if ((bone == OutfitModels.RIGHT_LEG || bone == OutfitModels.LEFT_LEG) && bones[bone].f_104207_) {
                 List<OutfitModels.Cube> tails = model.on(bone == OutfitModels.RIGHT_LEG ? OutfitModels.RIGHT_LEG_COAT : OutfitModels.LEFT_LEG_COAT, slot);
                 if (!tails.isEmpty()) {
                     pose.m_85836_();
-                    tails(pose, bones[bone]);
-                    emit(out, pose, tails, light, null, drape == null ? null : drape[bone == OutfitModels.RIGHT_LEG ? 0 : 1]);
+                    bones[bone].m_104299_(pose);
+                    emit(out, pose, tails, light, bend(player, bone, partial));
                     pose.m_85849_();
                 }
             }
@@ -168,63 +163,6 @@ public final class OutfitLayer<T extends LivingEntity, M extends EntityModel<T>>
             return bone;
         }
         return bone == OutfitModels.RIGHT_ARM ? OutfitModels.RIGHT_ARM_SLIM : bone == OutfitModels.LEFT_ARM ? OutfitModels.LEFT_ARM_SLIM : bone;
-    }
-
-    /**
-     * 4.0.2: the pose a coat tail hangs in from the leg {@code leg}'s hip: its pivot, turned out and round with the leg (z, then y, as the
-     * part turns); 4.0.3: its swing forward and back is the drape's ({@link #drape}), each corner its own.
-     */
-    static void tails(PoseStack pose, ModelPart leg) {
-        pose.m_252880_(leg.f_104200_ / 16.0F, leg.f_104201_ / 16.0F, leg.f_104202_ / 16.0F);
-        pose.m_252781_(new org.joml.Quaternionf().rotateAxis(leg.f_104205_, 0.0F, 0.0F, 1.0F).rotateAxis(leg.f_104204_, 0.0F, 1.0F, 0.0F));
-    }
-
-    /** 4.0.3: how fast a coat's tails fall back as the leg that pushed them swings away (radians a tick): a leg pushes them at once. */
-    static final float TAIL_FALL = 0.12F;
-    /** 4.0.3: each wearer's tails as they hung last; 4.1.12: each half's ({right front, right back, left front, left back, when}). */
-    private static final Map<LivingEntity, float[]> HUNG = new java.util.WeakHashMap<>();
-
-    /**
-     * 4.1.12 (the owner, of the Crimson Outfit in a jump and a kick: "I truly don't know how in this world you expected the clothes to open like
-     * that and look good"): each half of a coat's tails hangs from its own leg. Its front goes with its own thigh only when that thigh comes
-     * forward, its back only when it goes back, just clear of that leg (its trousers, its bent knee, its shin, its boot); otherwise it hangs
-     * straight down. So a kick or a tucked leg lifts that leg's flap, the other hangs, and the coat parts down the middle as a long coat does.
-     * (4.0.3 hung both fronts from the leg furthest forward and both backs from the one furthest back, never parted: any kick or tuck threw
-     * the whole skirt out flat, a disc.) A leg pushes its half at once; the half falls back slowly as it swings away ({@link #TAIL_FALL}).
-     * {right half, left half}, or null.
-     */
-    static CoatDrape[] drapes(LivingEntity wearer, ModelPart right, ModelPart left, AbstractClientPlayer player, float partial, float age) {
-        if (right == null || left == null) {
-            return null;
-        }
-        float[] thigh = {right.f_104203_, left.f_104203_};
-        float[] knee = {knee(player, "rightLeg", partial), knee(player, "leftLeg", partial)};
-        float[] hung = {Math.min(0.0F, thigh[0]), Math.max(0.0F, thigh[0]), Math.min(0.0F, thigh[1]), Math.max(0.0F, thigh[1]), age};
-        if (wearer != null) {
-            float[] last = HUNG.get(wearer);
-            if (last != null && last.length == 5 && Math.abs(age - last[4]) < 20.0F) {
-                float since = Math.max(0.0F, age - last[4]);
-                for (int leg = 0; leg < 2; leg++) {
-                    hung[leg * 2] = Math.min(hung[leg * 2], Math.min(0.0F, last[leg * 2] + TAIL_FALL * since));
-                    hung[leg * 2 + 1] = Math.max(hung[leg * 2 + 1], Math.max(0.0F, last[leg * 2 + 1] - TAIL_FALL * since));
-                }
-            }
-            HUNG.put(wearer, hung);
-        }
-        CoatDrape[] out = new CoatDrape[2];
-        for (int leg = 0; leg < 2; leg++) {
-            out[leg] = CoatDrape.over(hung[leg * 2], hung[leg * 2 + 1], new float[] {thigh[leg], thigh[leg]}, new float[] {knee[leg], knee[leg]});
-        }
-        return out;
-    }
-
-    /** 4.0.3: how far a player's knee is bent this frame (radians about x: the shin back), by bendy-lib; 0 for none. */
-    static float knee(AbstractClientPlayer player, String part, float partial) {
-        if (player == null) {
-            return 0.0F;
-        }
-        float[] turn = com.hex.kagune.control.client.animation.BodyAnimations.bend(player, part, partial);
-        return turn == null ? 0.0F : turn[0] * turn[1];
     }
 
     /**
@@ -292,21 +230,13 @@ public final class OutfitLayer<T extends LivingEntity, M extends EntityModel<T>>
         }
     }
 
-    /** As {@link #emit(VertexConsumer, PoseStack, List, int, Bend, CoatDrape)}, unbent. */
+    /** As {@link #emit(VertexConsumer, PoseStack, List, int, Bend)}, unbent. */
     static void emit(VertexConsumer out, PoseStack pose, List<OutfitModels.Cube> cubes, int light) {
-        emit(out, pose, cubes, light, null, null);
+        emit(out, pose, cubes, light, null);
     }
 
-    /** As {@link #emit(VertexConsumer, PoseStack, List, int, Bend, CoatDrape)}, undraped. */
+    /** The cubes' faces, from where their bone's part stands (sixteenths: the pose is in blocks), bent as the part is ({@code bend}, or null). */
     static void emit(VertexConsumer out, PoseStack pose, List<OutfitModels.Cube> cubes, int light, Bend bend) {
-        emit(out, pose, cubes, light, bend, null);
-    }
-
-    /**
-     * The cubes' faces, from where their bone's part stands (sixteenths: the pose is in blocks), bent as the part is ({@code bend}, or
-     * null), a coat's tails hung as {@code drape} has them (or null).
-     */
-    static void emit(VertexConsumer out, PoseStack pose, List<OutfitModels.Cube> cubes, int light, Bend bend, CoatDrape drape) {
         Matrix4f matrix = pose.m_85850_().m_252922_();
         Matrix3f normals = pose.m_85850_().m_252943_();
         float[] p = new float[3];
@@ -326,24 +256,12 @@ public final class OutfitLayer<T extends LivingEntity, M extends EntityModel<T>>
                     }
                     bend.turn(n, faceShare, false);
                 }
-                if (drape != null) {
-                    float faceTurn = 0.0F;
-                    for (int k = 0; k < 4; k++) {
-                        faceTurn += drape.turn(c[k * 3 + 1], CoatDrape.backward(c[k * 3 + 2])) / 4.0F;
-                    }
-                    float ny = n[1];
-                    n[1] = (float)(ny * Math.cos(faceTurn) - n[2] * Math.sin(faceTurn));
-                    n[2] = (float)(ny * Math.sin(faceTurn) + n[2] * Math.cos(faceTurn));
-                }
                 for (int k = 0; k < 4; k++) {
                     p[0] = c[k * 3];
                     p[1] = c[k * 3 + 1];
                     p[2] = c[k * 3 + 2];
                     if (bend != null) {
                         bend.turn(p, bend.share(p[1]), true);
-                    }
-                    if (drape != null) {
-                        drape.place(p);
                     }
                     out.m_252986_(matrix, p[0] / 16.0F, p[1] / 16.0F, p[2] / 16.0F)
                         .m_6122_(255, 255, 255, 255)

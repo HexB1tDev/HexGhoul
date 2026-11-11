@@ -5,4 +5,5 @@ package net.minecraft.world.level.chunk;
 public abstract class ChunkAccess {
     /** getStartForStructure(structure) (4.1.13) */ public net.minecraft.world.level.levelgen.structure.StructureStart m_213652_(
         net.minecraft.world.level.levelgen.structure.Structure structure) { throw new UnsupportedOperationException(); }
+    /** getPos (4.1.14) */ public net.minecraft.world.level.ChunkPos m_7697_() { throw new UnsupportedOperationException(); }
 }

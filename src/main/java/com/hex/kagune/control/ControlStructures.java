@@ -229,24 +229,33 @@ public final class ControlStructures {
                 return Optional.of(this.stub(context, turns, minX, minZ, sizeX, sizeZ, standing(ground(context), minX, minZ, sizeX, sizeZ)));
             }
             if (CCG.equals(this.site.id())) {
-                // 4.1.4 (the owner: "CCG building ... like the others only 1 of them spawns"): the world's one, at the first of its own
-                // offers on dry land (worked out once a world, as the hideout's is).
-                int[] where = ccg(context);
-                if (where == null || where[0] != chunk.f_45578_ || where[1] != chunk.f_45579_) {
-                    return Optional.empty();
-                }
-                return Optional.of(this.stub(context, turns, chunk.m_45604_() + 8 - sizeX / 2, chunk.m_45605_() + 8 - sizeZ / 2, sizeX, sizeZ, where[2]));
+                // 4.1.4 (the owner: "CCG building ... like the others only 1 of them spawns"): the world's one. 4.1.14: at whichever of its
+                // set's spots on dry land the world makes first (PlaceClaims), clear of the hideout's and the villages' spots.
+                return claimed(CCG, context, () -> {
+                    if (!offered(context, spread(context, CCG, DryLand.fixed(context.f_226627_(), DryLand.SPACING, DryLand.SEPARATION, DryLand.CCG_SALT)))
+                        || DryLand.near(hideoutSpread(context), chunk.f_45578_, chunk.f_45579_, DryLand.CCG_APART)
+                        || DryLand.near(villageSpread(context), chunk.f_45578_, chunk.f_45579_, DryLand.CCG_APART)) {
+                        return Optional.empty();
+                    }
+                    int span = Math.max(sizeX, sizeZ) + 2 * CCG_ROUND;
+                    int middle = dryGround(context, ground(context), chunk.m_45604_() + 8 - span / 2, chunk.m_45605_() + 8 - span / 2, span);
+                    return middle == NO_GROUND ? Optional.empty()
+                        : Optional.of(this.stub(context, turns, chunk.m_45604_() + 8 - sizeX / 2, chunk.m_45605_() + 8 - sizeZ / 2, sizeX, sizeZ, middle));
+                });
             }
             if (unique(this.site)) {
-                // 4.1.1 (the owner: "the mansion is currently happily resting at the very bottom of the ocean"): the world's one hideout
-                // is built only at the first of its offers on dry land (worked out once a world, the same in every chunk that asks).
-                int[] chosen = hideout(context);
-                if (chosen == null || chosen[0] != chunk.f_45578_ || chosen[1] != chunk.f_45579_) {
-                    return Optional.empty();
-                }
-                int minX = clampMin(chunk.m_45604_() + 8 - sizeX / 2, chunk.m_45604_(), sizeX);
-                int minZ = clampMin(chunk.m_45605_() + 8 - sizeZ / 2, chunk.m_45605_(), sizeZ);
-                return Optional.of(this.stub(context, turns, minX, minZ, sizeX, sizeZ, chosen[2]));
+                // 4.1.1 (the owner: "the mansion is currently happily resting at the very bottom of the ocean"): the world's one hideout,
+                // only ever on dry land. 4.1.14: at whichever of its set's spots on dry land the world makes first (PlaceClaims).
+                return claimed(HIDEOUT, context, () -> {
+                    if (!offered(context, hideoutSpread(context))) {
+                        return Optional.empty();
+                    }
+                    int minX = clampMin(chunk.m_45604_() + 8 - sizeX / 2, chunk.m_45604_(), sizeX);
+                    int minZ = clampMin(chunk.m_45605_() + 8 - sizeZ / 2, chunk.m_45605_(), sizeZ);
+                    int span = Math.max(sizeX, sizeZ) + 2 * CCG_ROUND;
+                    int middle = dryGround(context, ground(context), minX + sizeX / 2 - span / 2, minZ + sizeZ / 2 - span / 2, span);
+                    return middle == NO_GROUND ? Optional.empty() : Optional.of(this.stub(context, turns, minX, minZ, sizeX, sizeZ, middle));
+                });
             }
             // 4.1.1: every other place at the first spot its start chunk reaches (from the middle out) on dry, fairly flat land, with no
             // water under it or at its edge, in a biome it may stand in; or not here.
@@ -299,175 +308,31 @@ public final class ControlStructures {
         /** 4.1.1: how far apart (blocks) the spots a place may be moved to are, and how many are tried before it gives up there. */
         static final int SHIFT = 32;
         static final int TRIES = 9;
-        /** 4.1.1: the hideout's start chunk and ground ({x, z, height}) for each world (its seed, its generator), once worked out. */
-        private static final java.util.Map<java.util.List<Object>, int[]> HIDEOUTS = new java.util.HashMap<>();
-        private static final int[] NOWHERE = new int[0];
-        /** 4.1.12: marks a spot taken with no dry land among the offers (the nearest anyway). */
-        static final int FORCED = 1;
-
-        /**
-         * 4.1.1: the world's one hideout's start chunk and ground ({x, z, height}), or null if none of its offers stands on land. 4.1.6: the
-         * spot (or that there is none) is written to the log the first time it is worked out.
-         */
-        static int[] hideout(Structure.GenerationContext context) {
-            java.util.List<Object> world = java.util.List.of(context.f_226627_(), context.f_226622_());
-            synchronized (HIDEOUTS) {
-                int[] known = HIDEOUTS.get(world);
-                if (known == null) {
-                    known = chooseHideout(context);
-                    if (HIDEOUTS.size() >= 4) {
-                        HIDEOUTS.clear();
-                    }
-                    HIDEOUTS.put(world, known);
-                    told("Aogiri Tree's hideout", "aogiri_hideout", known);
-                }
-                return known.length == 0 ? null : known;
-            }
-        }
-
-        /**
-         * 4.1.1: the first of the hideout's offers ({@link DryLand#hideoutOffers}, nearest the world's middle first) where all its start chunk
-         * reaches (the mansion is that wide, whichever way it turns) is dry land in a biome it may stand in, fairly flat; failing that, the
-         * first dry one however steep (its terrain adaptation fits the ground to it): {@link DryLand#choose}. 4.1.6: failing those, the
-         * further offers, then the driest of them all ({@link DryLand#pick}): a world always has one if any offer stands on land.
-         */
-        private static int[] chooseHideout(Structure.GenerationContext context) {
-            DryLand.Ground ground = ground(context);
-            int span = DryLand.REACH_BACK + DryLand.REACH_ON + 1;
-            long seed = context.f_226627_();
-            // 4.1.9: the offers of the hideout's set as this world has it (DryLand.hideoutOffers in a world where nothing changed it).
-            DryLand.Spread spread = hideoutSpread(context);
-            int[] chosen = DryLand.pick(DryLand.offers(spread, 0, DryLand.REGIONS, new DryLand.Spread[0], 0),
-                DryLand.offers(spread, DryLand.REGIONS, DryLand.FAR, new DryLand.Spread[0], 0), new DryLand.Judge() {
-                @Override
-                public int[] grid(int chunkX, int chunkZ) {
-                    return Site.grid(ground, (chunkX << 4) - DryLand.REACH_BACK, (chunkZ << 4) - DryLand.REACH_BACK, span, span);
-                }
-
-                @Override
-                public boolean biome(int chunkX, int chunkZ, int y) {
-                    return ControlStructures.biome(context, (chunkX << 4) + 8, y, (chunkZ << 4) + 8);
-                }
-
-                @Override
-                public boolean dry(int chunkX, int chunkZ, int y) {
-                    return DryLand.dry(ground, y, (chunkX << 4) - DryLand.REACH_BACK, (chunkZ << 4) - DryLand.REACH_BACK, span, span);
-                }
-
-                @Override
-                public int[] wetness(int chunkX, int chunkZ, int most) {
-                    return Site.wetness(context, ground, chunkX, chunkZ, (chunkX << 4) - DryLand.REACH_BACK, (chunkZ << 4) - DryLand.REACH_BACK, span, most);
-                }
-            }, VillageGround.FLAT);
-            if (chosen == null) {
-                // 4.1.12 (the owner: "And I still can't. Mind you, I still fucking can't."): never nowhere. With no spot on dry land, the
-                // nearest offer anyway, on whatever ground is there (its terrain adaptation fits the ground to it).
-                int[][] near = DryLand.offers(spread, 0, DryLand.REGIONS, new DryLand.Spread[0], 0);
-                if (near.length > 0) {
-                    int minX = (near[0][0] << 4) - DryLand.REACH_BACK;
-                    int minZ = (near[0][1] << 4) - DryLand.REACH_BACK;
-                    chosen = new int[] {near[0][0], near[0][1], standing(ground, minX, minZ, span, span), FORCED};
-                }
-            }
-            return chosen == null ? NOWHERE : chosen;
-        }
-
-        /** 4.1.4: the CCG building's site, and how far out round it the ground is judged too (its patrol walks there). */
+        /** 4.1.4: the CCG building's site, and how far out round it the ground is judged too (its patrol walks there). 4.1.14: the hideout's too. */
         static final String CCG = "ccg_building";
+        static final String HIDEOUT = "aogiri_hideout";
         static final int CCG_ROUND = 8;
-        private static final java.util.Map<java.util.List<Object>, int[]> BUILDINGS = new java.util.HashMap<>();
+
+        /** 4.1.14: a 5 x 5 grid's ground with water over it, or too steep, or not to be stood on: no ground. */
+        static final int NO_GROUND = Integer.MIN_VALUE;
 
         /**
-         * 4.1.4: the world's one CCG building's start chunk and ground ({x, z, height}), or null if none of its offers stands on land.
-         * 4.1.6: the spot (or that there is none) is written to the log the first time it is worked out.
+         * 4.1.14: where a one-of-a-kind place stands on the {@code size} x {@code size} ground from ({@code minX}, {@code minZ}): the middle of
+         * its 5 x 5 grid's heights if none is under water, it is no steeper than {@link #STEEPEST}, the biome at its middle may hold it and no
+         * water is in it or at its edge; else {@link #NO_GROUND}.
          */
-        static int[] ccg(Structure.GenerationContext context) {
-            java.util.List<Object> world = java.util.List.of(context.f_226627_(), context.f_226622_());
-            synchronized (BUILDINGS) {
-                int[] known = BUILDINGS.get(world);
-                if (known == null) {
-                    known = chooseCcg(context);
-                    if (BUILDINGS.size() >= 4) {
-                        BUILDINGS.clear();
-                    }
-                    BUILDINGS.put(world, known);
-                    told("CCG building", CCG, known);
-                }
-                return known.length == 0 ? null : known;
+        static int dryGround(Structure.GenerationContext context, DryLand.Ground ground, int minX, int minZ, int size) {
+            int[] floor = grid(ground, minX, minZ, size, size);
+            if (floor == null || DryLand.spread(floor) > STEEPEST) {
+                return NO_GROUND;
             }
+            int middle = DryLand.median(floor);
+            return ControlStructures.biome(context, minX + size / 2, middle, minZ + size / 2) && DryLand.dry(ground, middle, minX, minZ, size, size)
+                ? middle : NO_GROUND;
         }
 
-        /**
-         * 4.1.4: the first of the building's offers ({@link DryLand#ccgOffers}) where its footprint (centred on its start chunk) and
-         * {@link #CCG_ROUND} blocks round it are dry land in a biome it may stand in, fairly flat; failing that, the first dry one. 4.1.6:
-         * failing those, the further offers, then the driest of them all ({@link DryLand#pick}).
-         */
-        private static int[] chooseCcg(Structure.GenerationContext context) {
-            DryLand.Ground ground = ground(context);
-            com.hex.kagune.control.village.SiteMaps.Site site = com.hex.kagune.control.village.SiteMaps.of(CCG);
-            int span = Math.max(site.width(), site.depth()) + 2 * CCG_ROUND;
-            long seed = context.f_226627_();
-            // 4.1.9: the offers of its set as this world has it, kept from the hideout's and the villages' as they are (DryLand.ccgOffers in a
-            // world where nothing changed them).
-            DryLand.Spread spread = spread(context, CCG, DryLand.fixed(seed, DryLand.SPACING, DryLand.SEPARATION, DryLand.CCG_SALT));
-            DryLand.Spread[] keep = {hideoutSpread(context), villageSpread(context)};
-            int[] chosen = DryLand.pick(DryLand.offers(spread, 0, DryLand.REGIONS, keep, DryLand.CCG_APART),
-                DryLand.offers(spread, DryLand.REGIONS, DryLand.FAR, keep, DryLand.CCG_APART), new DryLand.Judge() {
-                @Override
-                public int[] grid(int chunkX, int chunkZ) {
-                    return Site.grid(ground, (chunkX << 4) + 8 - span / 2, (chunkZ << 4) + 8 - span / 2, span, span);
-                }
-
-                @Override
-                public boolean biome(int chunkX, int chunkZ, int y) {
-                    return ControlStructures.biome(context, (chunkX << 4) + 8, y, (chunkZ << 4) + 8);
-                }
-
-                @Override
-                public boolean dry(int chunkX, int chunkZ, int y) {
-                    return DryLand.dry(ground, y, (chunkX << 4) + 8 - span / 2, (chunkZ << 4) + 8 - span / 2, span, span);
-                }
-
-                @Override
-                public int[] wetness(int chunkX, int chunkZ, int most) {
-                    return Site.wetness(context, ground, chunkX, chunkZ, (chunkX << 4) + 8 - span / 2, (chunkZ << 4) + 8 - span / 2, span, most);
-                }
-            }, VillageGround.FLAT);
-            if (chosen == null) {
-                // 4.1.12: never nowhere (as the hideout's).
-                int[][] near = DryLand.offers(spread, 0, DryLand.REGIONS, keep, DryLand.CCG_APART);
-                if (near.length == 0) {
-                    near = DryLand.offers(spread, 0, DryLand.REGIONS, new DryLand.Spread[0], 0);
-                }
-                if (near.length > 0) {
-                    chosen = new int[] {near[0][0], near[0][1], standing(ground, (near[0][0] << 4) + 8 - span / 2, (near[0][1] << 4) + 8 - span / 2, span, span),
-                        FORCED};
-                }
-            }
-            return chosen == null ? NOWHERE : chosen;
-        }
-
-        /**
-         * 4.1.6: for {@link DryLand#driest}: {wetness, ground height} of the {@code size} x {@code size} ground from ({@code minX},
-         * {@code minZ}) for the start chunk ({@code chunkX}, {@code chunkZ}), or null if its middle is under water, fewer than half of its
-         * 5 x 5 grid is dry ground, or it may not stand in the biome at its middle.
-         */
-        static int[] wetness(Structure.GenerationContext context, DryLand.Ground ground, int chunkX, int chunkZ, int minX, int minZ, int size, int most) {
-            int x = (chunkX << 4) + 8;
-            int z = (chunkZ << 4) + 8;
-            if (ground.surface(x, z) > ground.floor(x, z)) {
-                return null;
-            }
-            int[] dry = dryHeights(heights(ground, minX, minZ, size, size));
-            if (dry.length < 13) {
-                return null;
-            }
-            int y = DryLand.median(dry);
-            if (!ControlStructures.biome(context, x, y, z)) {
-                return null;
-            }
-            return new int[] {DryLand.wetness(ground, y, minX, minZ, size, size, most), y};
-        }
+        /** 4.1.14: the steepest ground (blocks between its lowest and highest of a 5 x 5 grid) a one-of-a-kind place is built on. */
+        static final int STEEPEST = 2 * VillageGround.FLAT;
 
         /**
          * 4.1.6: where a place asked for on purpose stands: the middle of the dry ground of its 5 x 5 grid, or of the floor under the water
@@ -487,29 +352,6 @@ public final class ControlStructures {
                 }
             }
             return DryLand.median(floor);
-        }
-
-        /**
-         * 4.1.6 (the owner: "I cant get the aogiri hideout to spawn or the ccg building at all"): the world's one hideout's or CCG
-         * building's spot, written to the log once a world (with the /locate that finds it), or that its world has none.
-         */
-        static void told(String what, String id, int[] known) {
-            try {
-                if (known.length == 0) {
-                    REPORT.put(id, what + ": nowhere (no spot of its could be laid out)");
-                    com.hex.kagune.KaguneMod.LOGGER.info("HexKagune: " + what + ": none of this world's spots for it is on dry land (all sea)."
-                        + " /place structure hexkagune:" + id + " builds one where you stand.");
-                } else {
-                    STARTS.put(id, new int[] {known[0], known[1]});
-                    REPORT.put(id, what + ": x " + ((known[0] << 4) + 8) + ", z " + ((known[1] << 4) + 8) + (known.length > 3 && known[3] == FORCED
-                        ? " (no dry land among its spots: built on the nearest anyway)" : ""));
-                    com.hex.kagune.KaguneMod.LOGGER.info("HexKagune: this world's " + what + " stands at x " + ((known[0] << 4) + 8) + ", z "
-                        + ((known[1] << 4) + 8) + " (/locate structure hexkagune:" + id + "); in a world made before 4.1.9 it shows only if that"
-                        + " ground was not made yet. /place structure hexkagune:" + id + " builds one where you stand.");
-                }
-            } catch (RuntimeException | LinkageError ignored) {
-                // A log line may never stop the world being made.
-            }
         }
 
         /**
@@ -603,65 +445,106 @@ public final class ControlStructures {
         }
     }
 
-    /**
-     * 4.1.12 (the owner: "I still can't" find them with /locate): each one-of-a-kind place's spot as this server has worked it out (by its
-     * id, latest world last), for /kagune places; empty until the world's making or /locate has asked for one.
-     */
-    static final java.util.Map<String, String> REPORT = new java.util.concurrent.ConcurrentHashMap<>();
-
-    /** 4.1.13: each one-of-a-kind place's start chunk ({x, z}) by its id, as this server worked it out: the one chunk its start is made in. */
-    static final java.util.Map<String, int[]> STARTS = new java.util.concurrent.ConcurrentHashMap<>();
     /** 4.1.12: the one-of-a-kind places, as /kagune places lists them. */
     static final java.util.List<String> ONE_OF_A_KIND = java.util.List.of("aogiri_hideout", "ccg_building", "cyber_tower", "anteiku", "library");
 
-    /** 4.1.12: the lines /kagune places shows. */
+    /** 4.1.14: each one-of-a-kind place's name, as /kagune places says it. */
+    static String named(String id) {
+        return switch (id) {
+            case "aogiri_hideout" -> "Aogiri Tree's hideout";
+            case "ccg_building" -> "the CCG building";
+            case "cyber_tower" -> "Ken's tower";
+            case "anteiku" -> "Anteiku";
+            default -> "the library";
+        };
+    }
+
+    /** 4.1.12: the lines /kagune places shows (4.1.14: where each was built in the world being made, or that it is not yet). */
     public static java.util.List<String> report() {
         java.util.List<String> lines = new java.util.ArrayList<>();
         for (String id : ONE_OF_A_KIND) {
-            String line = REPORT.get(id);
-            lines.add(line != null ? line : id + ": not worked out yet (run /locate structure hexkagune:" + id + ")");
+            int[] at = PlaceClaims.claimed(id);
+            lines.add(at == null ? notYet(id) : named(id) + ": x " + ((at[0] << 4) + 8) + ", z " + ((at[1] << 4) + 8));
         }
         return lines;
     }
 
+    /** 4.1.14: a place not built yet. */
+    static String notYet(String id) {
+        return named(id) + ": not built yet. /locate structure hexkagune:" + id + " finds the nearest spot that will hold it (it is built there).";
+    }
+
     /**
-     * 4.1.13 (the owner: "And I still can't" find them with /locate): as {@link #report()}, and each worked-out place's start chunk made in
-     * full in {@code level} and looked in. Each place may stand in that one chunk only (one a world), so anything that stops it there (another
-     * mod's structure rules: Structure Essentials, in the owner's pack, can keep every structure a set distance from the others) leaves the
-     * world without it, and /locate finds nothing: this says which.
+     * 4.1.13 (the owner: "And I still can't" find them with /locate): as {@link #report()}, and each built place's start chunk made in full in
+     * {@code level} and looked in: built there; or, if something stopped it after its spot was taken (another mod's structure rules), the spot
+     * given up (PlaceClaims), so the next one the world makes holds it.
      */
     public static java.util.List<String> report(net.minecraft.world.level.LevelReader level) {
         java.util.List<String> lines = new java.util.ArrayList<>();
         for (String id : ONE_OF_A_KIND) {
-            String line = REPORT.get(id);
-            int[] start = STARTS.get(id);
-            if (line == null) {
-                lines.add(id + ": not worked out yet (run /locate structure hexkagune:" + id + ", then this again)");
-            } else {
-                lines.add(start == null ? line : line + " - " + built(level, id, start));
+            int[] at = PlaceClaims.claimed(id);
+            if (at == null) {
+                lines.add(notYet(id));
+                continue;
+            }
+            String where = named(id) + ": x " + ((at[0] << 4) + 8) + ", z " + ((at[1] << 4) + 8);
+            try {
+                if (standsIn(level, level.m_6325_(at[0], at[1]), id)) {
+                    lines.add(where + " (built there)");
+                } else {
+                    PlaceClaims.release(id, at[0], at[1]);
+                    lines.add(where + ": NOT built there, something stopped it (another mod's structure rules). Given up: /locate structure hexkagune:"
+                        + id + " finds the next spot.");
+                }
+            } catch (RuntimeException | LinkageError failure) {
+                Safety.caught(failure, "ControlStructures.report");
+                lines.add(where + " (could not be checked)");
             }
         }
         return lines;
     }
 
-    /** 4.1.13: whether hexkagune:{@code id} stands in its start chunk {@code start} of {@code level} (made in full to look). */
-    static String built(net.minecraft.world.level.LevelReader level, String id, int[] start) {
-        try {
-            Structure structure = level.m_9598_().m_175515_(Registries.f_256944_).m_7745_(net.minecraft.resources.ResourceLocation.m_214293_("hexkagune", id));
-            if (structure == null) {
-                return "missing from this world's structures (a datapack or a mod took it out)";
-            }
-            net.minecraft.world.level.levelgen.structure.StructureStart found = level.m_6325_(start[0], start[1]).m_213652_(structure);
-            if (found != null && found.m_73603_()) {
-                return "built there";
-            }
-            return "NOT built there: its chunk is made but it isn't in it. Something stopped it (another mod's structure rules: Structure Essentials'"
-                + " minimum distance between structures can; or that ground was made by an older version). /place structure hexkagune:" + id
-                + " builds one where you stand.";
-        } catch (RuntimeException | LinkageError failure) {
-            Safety.caught(failure, "ControlStructures.built");
-            return "could not be checked";
+    /** 4.1.13: true if hexkagune:{@code id}'s start is in {@code chunk} of {@code level}, or it is no structure of this world (nothing to wait for). */
+    static boolean standsIn(net.minecraft.world.level.LevelReader level, net.minecraft.world.level.chunk.ChunkAccess chunk, String id) {
+        Structure structure = level.m_9598_().m_175515_(Registries.f_256944_).m_7745_(net.minecraft.resources.ResourceLocation.m_214293_("hexkagune", id));
+        if (structure == null) {
+            return true;
         }
+        net.minecraft.world.level.levelgen.structure.StructureStart found = chunk.m_213652_(structure);
+        return found != null && found.m_73603_();
+    }
+
+    /**
+     * 4.1.14: a one-of-a-kind place asked for at this start chunk: turned away if another spot of the world already holds it
+     * ({@link PlaceClaims}); else laid out here ({@code here}: empty if this spot won't do), and, as the world makes this chunk (not as
+     * /locate only asks), the spot taken: the first the world makes holds it, and no other ever does.
+     */
+    static Optional<Structure.GenerationStub> claimed(String id, Structure.GenerationContext context, java.util.function.Supplier<Optional<Structure.GenerationStub>> here) {
+        ChunkPos chunk = context.f_226628_();
+        int[] taken = PlaceClaims.claimed(id);
+        if (taken != null && (taken[0] != chunk.f_45578_ || taken[1] != chunk.f_45579_)) {
+            return Optional.empty();
+        }
+        Optional<Structure.GenerationStub> stub = here.get();
+        if (stub.isPresent() && making(context) && !PlaceClaims.claim(id, chunk.f_45578_, chunk.f_45579_)) {
+            return Optional.empty(); // another spot was taken while this one was laid out
+        }
+        return stub;
+    }
+
+    /**
+     * 4.1.14: true if the world is making this start chunk (its context's heights are the chunk being made), false if /locate (or the
+     * structure check behind it) only asks whether a start could be here (its heights are the level's).
+     */
+    static boolean making(Structure.GenerationContext context) {
+        return context.f_226629_() instanceof net.minecraft.world.level.chunk.ChunkAccess;
+    }
+
+    /** 4.1.14: true if this start chunk is one of {@code spread}'s spots (the game asks only there; a stray ask is turned away). */
+    static boolean offered(Structure.GenerationContext context, DryLand.Spread spread) {
+        ChunkPos chunk = context.f_226628_();
+        int[] offer = spread.chunk(chunk.f_45578_, chunk.f_45579_);
+        return offer[0] == chunk.f_45578_ && offer[1] == chunk.f_45579_;
     }
 
     /** 4.1.1: the biomes no structure may stand in or beside (a sea, a river, a beach, a swamp): data/hexkagune/tags/worldgen/biome/wet.json. */
@@ -775,8 +658,10 @@ public final class ControlStructures {
         }
 
         /**
-         * 4.1.9 (the owner: "only one of each structure aside from the villages"): Anteiku, the library and Ken's tower are built only at
-         * the offer chosen for each ({@link #chosen}: the same in every chunk that asks); /place structure builds one where it is asked.
+         * 4.1.9 (the owner: "only one of each structure aside from the villages"): one Anteiku, one library and one Ken's tower a world.
+         * 4.1.14: each at whichever of its set's spots the world makes first where it stands on dry land ({@link #here}) clear of the
+         * villages', the hideout's, the CCG building's and the other places' spots (PlaceClaims); /place structure builds one where it is
+         * asked.
          */
         private Optional<Structure.GenerationStub> place(Structure.GenerationContext context) {
             if (Site.onPurpose(context)) {
@@ -789,15 +674,34 @@ public final class ControlStructures {
             if (DryLand.placeSalt(id) < 0) {
                 return this.here(context); // a jigsaw place of someone else's on this type: wherever its own set offers it
             }
-            int[] chosen = chosen(context, id);
-            ChunkPos chunk = context.f_226628_();
-            if (chosen == null || chosen[0] != chunk.f_45578_ || chosen[1] != chunk.f_45579_) {
-                return Optional.empty();
-            }
-            if (chosen.length > 4 && chosen[4] == Site.FORCED) {
-                return DryJigsaw.run(this.inner, context); // 4.1.12: no dry land among its spots: laid at the nearest as it is
-            }
-            return this.here(context);
+            return claimed(id, context, () -> {
+                if (!offered(context, placeSpread(context, id))) {
+                    return Optional.empty();
+                }
+                Optional<Structure.GenerationStub> stub = this.here(context);
+                if (stub.isEmpty()) {
+                    return stub;
+                }
+                BoundingBox box = stub.get().m_226677_().m_192798_();
+                int x = Math.floorDiv((box.m_162395_() + box.m_162399_()) >> 1, 16);
+                int z = Math.floorDiv((box.m_162398_() + box.m_162401_()) >> 1, 16);
+                if (DryLand.near(villageSpread(context), x, z, DryLand.PLACE_APART) || DryLand.near(hideoutSpread(context), x, z, DryLand.PLACE_APART)
+                    || DryLand.near(spread(context, Site.CCG, DryLand.fixed(context.f_226627_(), DryLand.SPACING, DryLand.SEPARATION, DryLand.CCG_SALT)),
+                        x, z, DryLand.PLACE_APART)) {
+                    return Optional.empty();
+                }
+                for (String other : DryLand.PLACES) {
+                    if (!other.equals(id) && DryLand.near(placeSpread(context, other), x, z, DryLand.PLACE_APART)) {
+                        return Optional.empty();
+                    }
+                }
+                return stub;
+            });
+        }
+
+        /** 4.1.9: the one-of-a-kind jigsaw place {@code id}'s set's spread as this world has it. */
+        static DryLand.Spread placeSpread(Structure.GenerationContext context, String id) {
+            return spread(context, id, DryLand.fixed(context.f_226627_(), DryLand.SPACING, DryLand.SEPARATION, DryLand.placeSalt(id)));
         }
 
         /**
@@ -822,115 +726,6 @@ public final class ControlStructures {
                 this.id = known;
             }
             return known;
-        }
-
-        /** 4.1.9: the one-of-a-kind place {@code id} as the world knows it (hexkagune:&lt;id&gt; in the structure registry), or null. */
-        static DryPlace byId(Structure.GenerationContext context, String id) {
-            try {
-                Structure found = context.f_226621_().m_175515_(Registries.f_256944_).m_7745_(net.minecraft.resources.ResourceLocation.m_214293_("hexkagune", id));
-                return found instanceof DryPlace place ? place : null;
-            } catch (RuntimeException | LinkageError failure) {
-                Safety.caught(failure, "ControlStructures.DryPlace.byId");
-                return null;
-            }
-        }
-
-        /** 4.1.9: each world's (its seed, its generator) chosen offer for each place: {offer x, offer z, its middle's chunk x, z}. */
-        private static final java.util.Map<java.util.List<Object>, int[]> PLACES = new java.util.HashMap<>();
-        private static final int[] NOWHERE = new int[0];
-
-        /** 4.1.9: the world's one {@code id}'s offer and where its middle stands ({x, z, middle x, middle z} in chunks), or null if it has none. */
-        static int[] chosen(Structure.GenerationContext context, String id) {
-            java.util.List<Object> world = java.util.List.of(context.f_226627_(), context.f_226622_(), id);
-            synchronized (PLACES) {
-                int[] known = PLACES.get(world);
-                if (known == null) {
-                    known = choose(context, id);
-                    if (PLACES.size() >= 12) {
-                        PLACES.clear();
-                    }
-                    PLACES.put(world, known);
-                    Site.told(switch (id) {
-                        case "anteiku" -> "Anteiku";
-                        case "library" -> "the library";
-                        default -> "Ken's tower";
-                    }, id, known.length == 0 ? known : new int[] {known[2], known[3], 0, known.length > 4 ? known[4] : 0});
-                    if (known.length > 1) {
-                        STARTS.put(id, new int[] {known[0], known[1]}); // 4.1.13: its start's chunk (it may stand a little off it)
-                    }
-                }
-                return known.length == 0 ? null : known;
-            }
-        }
-
-        /**
-         * 4.1.9: the first of {@code id}'s offers ({@link DryLand#firstPlaced}) where it stands once laid out from there exactly as the world
-         * lays it (its own context for that start chunk, its random seeded from the seed and the chunk as the game seeds it, then
-         * {@link #here}), clear of the villages' offers and of the hideout, the CCG building and the places chosen before it.
-         */
-        private static int[] choose(Structure.GenerationContext context, String id) {
-            DryPlace place = byId(context, id);
-            if (place == null) {
-                return NOWHERE;
-            }
-            long seed = context.f_226627_();
-            DryLand.Ground ground = ground(context);
-            java.util.List<int[]> before = new java.util.ArrayList<>();
-            int[] hideout = Site.hideout(context);
-            if (hideout != null) {
-                before.add(new int[] {hideout[0], hideout[1]});
-            }
-            int[] building = Site.ccg(context);
-            if (building != null) {
-                before.add(new int[] {building[0], building[1]});
-            }
-            for (String earlier : DryLand.PLACES) {
-                if (earlier.equals(id)) {
-                    break;
-                }
-                int[] other = chosen(context, earlier);
-                if (other != null) {
-                    before.add(new int[] {other[2], other[3]});
-                }
-            }
-            DryLand.Spread spread = spread(context, id, DryLand.fixed(seed, DryLand.SPACING, DryLand.SEPARATION, DryLand.placeSalt(id)));
-            DryLand.Spread villages = villageSpread(context);
-            int[] found = DryLand.firstPlaced(DryLand.offers(spread, 0, DryLand.REGIONS, new DryLand.Spread[0], 0),
-                DryLand.offers(spread, DryLand.REGIONS, DryLand.FAR, new DryLand.Spread[0], 0), new DryLand.Probe() {
-                @Override
-                public boolean land(int chunkX, int chunkZ) {
-                    int x = (chunkX << 4) + 8;
-                    int z = (chunkZ << 4) + 8;
-                    int floor = ground.floor(x, z);
-                    return ground.surface(x, z) <= floor && !ground.wet(x, floor, z);
-                }
-
-                @Override
-                public int[] placed(int chunkX, int chunkZ) {
-                    Optional<Structure.GenerationStub> stub = place.here(at(context, chunkX, chunkZ));
-                    if (stub.isEmpty()) {
-                        return null;
-                    }
-                    BoundingBox box = stub.get().m_226677_().m_192798_();
-                    return new int[] {Math.floorDiv((box.m_162395_() + box.m_162399_()) >> 1, 16), Math.floorDiv((box.m_162398_() + box.m_162401_()) >> 1, 16)};
-                }
-            }, at -> DryLand.apart(at[0], at[1], before, DryLand.PLACE_APART)
-                && !DryLand.near(villages, at[0], at[1], DryLand.PLACE_APART),
-                DryLand.PLACE_TRIES);
-            if (found == null) {
-                // 4.1.12 (the owner: "I still fucking can't"): never nowhere: with no spot that stands on dry land, the nearest anyway.
-                int[][] near = DryLand.offers(spread, 0, DryLand.REGIONS, new DryLand.Spread[0], 0);
-                if (near.length > 0) {
-                    found = new int[] {near[0][0], near[0][1], near[0][0], near[0][1], Site.FORCED};
-                }
-            }
-            return found == null ? NOWHERE : found;
-        }
-
-        /** 4.1.9: a start's context at chunk ({@code chunkX}, {@code chunkZ}) as the game makes it there (its random from the seed and the chunk). */
-        static Structure.GenerationContext at(Structure.GenerationContext context, int chunkX, int chunkZ) {
-            return new Structure.GenerationContext(context.f_226621_(), context.f_226622_(), context.f_226623_(), context.f_226624_(), context.f_226625_(),
-                context.f_226627_(), new ChunkPos(chunkX, chunkZ), context.f_226629_(), context.f_226630_());
         }
 
         /** 4.1.1: the place started where vanilla would start it if the land there is dry, or moved a chunk at a time onto dry land near it. */

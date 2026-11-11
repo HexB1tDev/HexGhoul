@@ -33,7 +33,7 @@ public final class OutfitModels {
     public static final int LEFT_ARM_SLIM = 7;
     /**
      * 4.0.2 (the owner: "the jacket also breaks when walking"): a coat's tails, hung from each hip; 4.0.3: draped over both legs
-     * ({@code OutfitLayer.drape}) where the trousers go with their own.
+     * where the trousers go with their own; 4.1.14: drawn on the legs as the trousers are (OutfitLayer).
      */
     public static final int RIGHT_LEG_COAT = 8;
     public static final int LEFT_LEG_COAT = 9;

@@ -1,4 +1,4 @@
-# Next AI: after 4.1.13 (4.1.9: the inventory crash, the special places; 4.1.10-4.1.13: the wing slams; 4.1.12: places never nowhere, the coat; 4.1.13: slams as arms and hands clear of his body, the guard, /kagune places checks each place)
+# Next AI: after 4.1.14 (4.1.14: places built at any good spot, first one kept; coats on the legs; no Ukaku M1 spam; 4.1.9: the inventory crash, the special places; 4.1.10-4.1.13: the wing slams; 4.1.12: places never nowhere, the coat; 4.1.13: slams as arms and hands clear of his body, the guard, /kagune places checks each place)
 
 Read this first. The house rules are in `next-ai-4.1.2.md` and `next-ai-4.0.0.md` (they still hold): answer in English, quote the owner
 exactly, never claim in-game testing, the full `python3 build.py` must end with EXIT 0 on the exact commit before it is pushed, never
@@ -14,6 +14,7 @@ alter the owner's files, one version at a time, no PR.
 | 4.1.11 | The slamming wing stretches out as far as the slam hits, a lash of fire; the whip keeps pace with each blow | pushed, EXIT 0 |
 | 4.1.12 | Places never nowhere, `/kagune places`; slams without particles and 1.75x as long; each coat half on its own leg | pushed, EXIT 0 |
 | 4.1.13 | Every slam an arm (behind a new shoulder) and a hand, aligned on its target and clear of his posed body; the guard clamped round him clear of his raised arms; `/kagune places` makes each place's chunk and says built or stopped; coat previews | pushed, EXIT 0 |
+| 4.1.14 | One-of-a-kind places at any dry spot their set offers, the first the world builds kept with the world (`PlaceClaims`); coat tails drawn on the legs; each Ukaku wing slam plays out in full (1.3x damage) | pushed, EXIT 0 |
 
 Branch: `claude/hopeful-euler-dnx1ub` (fast-forwarded from `claude/next-ai-4-1-6-handoff-sqv9e4`, which stops at 4.1.8). A new session's own
 branch usually starts at `main` (still 1.3.0): fast-forward it first (`git merge --ff-only origin/claude/hopeful-euler-dnx1ub`).
@@ -180,13 +181,42 @@ doesn't like clip to the body." Then: "Continue and do not stop at any point til
   - New API (allowlisted with joined.tsrg evidence): `LevelReader.m_9598_`, `m_6325_`, `ChunkAccess.m_213652_`, `StructureStart.m_73603_`.
 - Previews in the repo: `docs/handoff/ukaku-impacts-4.1.13.png`, `ukaku-guard-4.1.13.png`, `coat-crimson-4.1.13.png`, `coat-formal-4.1.13.png`.
 
+## 4.1.14, what and where
+
+The owner (quoted exactly): "Things to fix and improve: Prevent m1 spam with ukaku. Change the armors so they dont open like skirts, simply
+attach to the leg properly. Fix structures still not spawning at all or able to be located (still not spawning)"
+
+- **The places** (`ControlStructures`: `claimed`, `making`, `offered`, `dryGround`; `PlaceClaims`; `village/TakenPlaces`):
+  - **Before:** the hideout, the CCG building, Anteiku, the library and Ken's tower were each allowed in ONE start chunk per world, worked
+    out in advance (4.1.1 to 4.1.13). Anything that stopped them there left the world without them, and `/locate` found nothing.
+  - **Now:** any spot their set's live spread offers can hold one, if it stands there:
+    - hideout and CCG: `dryGround` over the footprint plus `CCG_ROUND` (dry, steepness at most `STEEPEST`, biome);
+    - the jigsaw places: `here`;
+    - all clear of the other sets' spots (`DryLand.near`).
+  - **The claim:** the first spot the world MAKES takes the place (`making`: the context's heights are a `ChunkAccess`; `/locate`'s
+    structure check only asks). `PlaceClaims.claim` takes it under one lock and saves it on the overworld (`hexkagune_places`, loaded on
+    `LevelEvent.Load`, or from `ServerLifecycleHooks.getCurrentServer()` if ground is made first). With nowhere to keep a claim it refuses,
+    never risking a second one. Every other spot is refused from then on.
+  - **Releasing:** a taken spot whose chunk loads in full without the start is given up (`ChunkEvent.Load`), and the next one made takes it.
+  - `/kagune places` lists the taken spots, looks in each, and gives up any that was stopped.
+  - The 4.1.6 to 4.1.13 world-wide choice (`hideout()`, `ccg()`, `chosen()`, FORCED) is gone; `DryLand.pick`, `choose` and `offers` remain
+    (tested, unused by the game).
+  - **Risk:** if some mod made `making` always false, every spot would be built (none would ever be taken). If the owner reports several of
+    one place, look there first.
+- **Coats** (`OutfitLayer.draw`):
+  - The tails (`RIGHT_LEG_COAT`, `LEFT_LEG_COAT`) are emitted on the leg part with its bend, exactly as the trousers.
+  - `CoatDrape` and the per-wearer drape are deleted.
+  - `ArtPreview`'s `coats` sheet draws them the same way.
+- **No M1 spam** (`ComboStyle.chainOpen`, used by `KaguneCombat.tryBegin`):
+  - An Ukaku wing slam's next stage opens at `max(duration, chainOpenOffset)`, never mid-move. Before, it opened about 60% in, right after
+    the hit, and snapped the wing.
+  - Wing slam `damageMul` is 1.3x 4.1.13's, so `ControlTests`' pace window (0.7 to 1.5 of the original swipe) holds.
+  - `UkakuTests` checks every stage at every duration.
+
 ## Still open
 
-- **The places:** waiting on the owner's `/kagune places` output from a new world, after a `/locate` of each.
-  - If it says "NOT built there": the veto theory holds. Ask them to set Structure Essentials' minimum distance to 0, or build a rescue:
-    record a vetoed start chunk once its chunk is made without the start, and choose the next offer whose ground is not made yet.
-    Beware building two.
-  - If it says "not worked out yet" after a `/locate`: the game never asks for the set (its biome check, or a mod removed the set).
+- **The places:** 4.1.14 builds them at any good spot and keeps the first. If the owner still finds none in a NEW world after a `/locate`,
+  ask for the log lines `HexKagune: <id> is built at ...` and `... was stopped at chunk ...`, and for what `/kagune places` says.
 - **The look:** the owner judges the new slams in game. Likely asks:
   - how far the hand curls (`blow` curl keys);
   - the shoulder's size (`SHOULDER_*`);

@@ -1938,21 +1938,42 @@ public final class NpcTests {
             check(overrides == 3, "the jigsaw village, every site and every jigsaw place leave the game's biome-list test out (" + overrides + ")");
             check(structures.contains("return !biome.m_203656_(WET);") && !structures.contains("return context.f_226630_().test(biome);"),
                 "a place stands in any biome but a wet one");
+            // 4.1.14 (the owner: "Fix structures still not spawning at all or able to be located (still not spawning)"): no one chunk a world
+            // any more: every spot of its set where it lays out on dry land may hold it, until the world makes one (PlaceClaims).
             check(structures.contains("if (Site.onPurpose(context)) {\n                return this.here(context);")
-                && structures.contains("int[] chosen = chosen(context, id);")
-                && structures.contains("chosen[0] != chunk.f_45578_ || chosen[1] != chunk.f_45579_")
-                && structures.contains("Optional<Structure.GenerationStub> stub = place.here(at(context, chunkX, chunkZ));")
-                && structures.contains("context.f_226627_(), new ChunkPos(chunkX, chunkZ), context.f_226629_(), context.f_226630_());"),
-                "a jigsaw place is built only at its chosen offer, chosen by laying it out there as the world will (/place builds it anywhere)");
-            check(structures.contains("int[] hideout = Site.hideout(context);") && structures.contains("int[] building = Site.ccg(context);")
-                && structures.contains("DryLand.apart(at[0], at[1], before, DryLand.PLACE_APART)")
-                && structures.contains("!DryLand.near(villages, at[0], at[1], DryLand.PLACE_APART)"),
-                "kept clear of the hideout, the CCG building, the places before it and the villages");
+                && structures.contains("return claimed(id, context, () -> {")
+                && structures.contains("if (!offered(context, placeSpread(context, id))) {")
+                && structures.contains("Optional<Structure.GenerationStub> stub = this.here(context);"),
+                "a jigsaw place stands at any spot of its set where it lays out on dry land, until one is built (/place builds it anywhere)");
+            check(structures.contains("DryLand.near(villageSpread(context), x, z, DryLand.PLACE_APART) || DryLand.near(hideoutSpread(context), x, z, DryLand.PLACE_APART)")
+                && structures.contains("x, z, DryLand.PLACE_APART)) {") && structures.contains("if (!other.equals(id) && DryLand.near(placeSpread(context, other), x, z, DryLand.PLACE_APART)) {"),
+                "kept clear of the hideout's, the CCG building's, the other places' and the villages' spots");
             check(structures.contains("if (id == null) {\n                return Optional.empty();"), "a place whose name can't be read is never built many times over");
-            // 4.1.12 (the owner: "And I still can't. Mind you, I still fucking can't."): never nowhere, and /kagune places says where each is.
-            check(structures.split("// 4.1.12").length >= 4 && structures.contains("chosen = new int[] {near[0][0], near[0][1], standing(ground, minX, minZ, span, span), FORCED};")
-                && structures.contains("found = new int[] {near[0][0], near[0][1], near[0][0], near[0][1], Site.FORCED};")
-                && structures.contains("return DryJigsaw.run(this.inner, context);"), "with no dry spot, each one-of-a-kind place still stands at its nearest offer");
+            // 4.1.14: nothing worked out once a world any more (whatever stopped the world's one chunk left the world without it).
+            check(!structures.contains("chosen(context, id)") && !structures.contains("= hideout(context)") && !structures.contains("= ccg(context)")
+                && !structures.contains("HIDEOUTS") && !structures.contains("BUILDINGS"), "no place hangs on one chunk worked out once a world");
+            // Taken as the world makes the chunk (its heights are the chunk being made), never as /locate only asks; a taken spot turns every
+            // other away; the first to be made wins, under one lock.
+            check(structures.contains("return context.f_226629_() instanceof net.minecraft.world.level.chunk.ChunkAccess;")
+                && structures.contains("if (taken != null && (taken[0] != chunk.f_45578_ || taken[1] != chunk.f_45579_)) {\n            return Optional.empty();")
+                && structures.contains("if (stub.isPresent() && making(context) && !PlaceClaims.claim(id, chunk.f_45578_, chunk.f_45579_)) {"),
+                "a spot is taken as the world makes it, and every other spot is turned away from then on");
+            String claims = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/PlaceClaims.java")));
+            check(claims.contains("public static void load(LevelEvent.Load event) {") && claims.contains("level.m_8895_().m_164861_(Data::load,")
+                && claims.contains("public static void chunk(ChunkEvent.Load event) {") && claims.contains("!ControlStructures.standsIn(level, chunk, id)")
+                && claims.contains("@Mod.EventBusSubscriber(modid = \"hexkagune\")"),
+                "the taken spots are kept with the world, ready before its ground is made; a taken spot whose chunk holds nothing is given up");
+            com.hex.kagune.control.village.TakenPlaces taken = new com.hex.kagune.control.village.TakenPlaces();
+            check(taken.at("aogiri_hideout") == null && taken.take("aogiri_hideout", 40, -12) && !taken.take("aogiri_hideout", 80, 3)
+                && taken.take("aogiri_hideout", 40, -12) && taken.take("ccg_building", 80, 3) && "ccg_building".equals(taken.whose(80, 3)),
+                "the first spot made takes a place; any other is refused; the same spot again is still its own; each place its own");
+            check(!taken.release("aogiri_hideout", 80, 3) && taken.release("aogiri_hideout", 40, -12) && taken.take("aogiri_hideout", 80, 3),
+                "a spot given up lets the next made take it (and only its own spot gives it up)");
+            com.hex.kagune.control.village.TakenPlaces back = com.hex.kagune.control.village.TakenPlaces.read(taken.write());
+            check(java.util.Arrays.equals(back.at("aogiri_hideout"), new int[] {80, 3}) && java.util.Arrays.equals(back.at("ccg_building"), new int[] {80, 3})
+                && com.hex.kagune.control.village.TakenPlaces.read("anteiku:1,x;library:-5,7;junk;").at("anteiku") == null
+                && java.util.Arrays.equals(com.hex.kagune.control.village.TakenPlaces.read("anteiku:1,x;library:-5,7;junk;").at("library"), new int[] {-5, 7})
+                && com.hex.kagune.control.village.TakenPlaces.read(null).at("library") == null, "kept and read back as saved; a broken entry is as if not built");
             String commands = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/ControlCommands.java")));
             // (Read in the source: ControlStructures registers the game's own registries as it loads, and there is no game here.)
             check(commands.contains("Commands.m_82127_(\"places\")") && commands.contains("ControlStructures.report()")
@@ -1960,9 +1981,9 @@ public final class NpcTests {
                 "/kagune places lists the five places");
             // 4.1.13: from a player it makes each place's start chunk and looks in it: built there, or stopped (one chunk a world: anything that
             // stops it there leaves the world without it).
-            check(commands.contains("ControlStructures.report(player.m_284548_())") && structures.contains("level.m_6325_(start[0], start[1]).m_213652_(structure)")
-                && structures.contains("found != null && found.m_73603_()") && structures.contains("STARTS.put(id, new int[] {known[0], known[1]});")
-                && structures.split("STARTS.put\\(id").length == 3, "/kagune places says whether each place was built in its chunk, or what stopped it");
+            check(commands.contains("ControlStructures.report(player.m_284548_())") && structures.contains("if (standsIn(level, level.m_6325_(at[0], at[1]), id)) {")
+                && structures.contains("found != null && found.m_73603_()") && structures.contains("PlaceClaims.release(id, at[0], at[1]);"),
+                "/kagune places says where each place was built and looks in its chunk; one stopped there is given up for the next spot");
         } catch (java.io.IOException failure) {
             check(false, "read the sets: " + failure);
         }
@@ -2086,10 +2107,10 @@ public final class NpcTests {
             check(structure.contains("\"type\": \"hexkagune:site_ccg_building\"") && structure.contains("\"biomes\": \"#hexkagune:overworld\"")
                 && structure.contains("\"terrain_adaptation\": \"beard_box\""), "its structure: its own type, any biome of the overworld, the ground fitted to it");
             String structures = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/ControlStructures.java")));
-            check(structures.contains("int[] where = ccg(context);") && structures.contains("where[0] != chunk.f_45578_ || where[1] != chunk.f_45579_")
-                && structures.contains("DryLand.Spread[] keep = {hideoutSpread(context), villageSpread(context)};")
-                && structures.contains("DryLand.pick(DryLand.offers(spread, 0, DryLand.REGIONS, keep, DryLand.CCG_APART),"),
-                "the world's one building is built only at the offer chosen for it (the same in every chunk that asks)");
+            check(structures.contains("return claimed(CCG, context, () -> {")
+                && structures.contains("DryLand.near(hideoutSpread(context), chunk.f_45578_, chunk.f_45579_, DryLand.CCG_APART)")
+                && structures.contains("DryLand.near(villageSpread(context), chunk.f_45578_, chunk.f_45579_, DryLand.CCG_APART)"),
+                "the world's one building, at the first of its set's spots on dry land the world makes, clear of the hideout's and the villages'");
             // The template itself: its people, and what each does.
             java.util.Map<String, Object> template;
             try (java.io.DataInputStream in = new java.io.DataInputStream(new java.util.zip.GZIPInputStream(
@@ -2293,12 +2314,11 @@ public final class NpcTests {
             check(brain.contains("AogiriGuard.idle(npc, mind, level, now)") && brain.contains("AogiriGuard.unwelcome(npc, player, now)"),
                 "the members at their work, and a player kept out is gone for");
             String structures = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/ControlStructures.java")));
-            check(structures.contains("int[] chosen = hideout(context);") && structures.contains("chosen[0] != chunk.f_45578_ || chosen[1] != chunk.f_45579_")
-                && structures.contains("DryLand.Spread spread = hideoutSpread(context);")
-                && structures.contains("DryLand.pick(DryLand.offers(spread, 0, DryLand.REGIONS, new DryLand.Spread[0], 0),\n                DryLand.offers(spread, DryLand.REGIONS, DryLand.FAR, new DryLand.Spread[0], 0)")
+            check(structures.contains("return claimed(HIDEOUT, context, () -> {") && structures.contains("if (!offered(context, hideoutSpread(context))) {")
+                && structures.contains("int middle = dryGround(context, ground(context), minX + sizeX / 2 - span / 2, minZ + sizeZ / 2 - span / 2, span);")
                 && structures.contains("if ((CCG.equals(this.site.id()) || unique(this.site)) && onPurpose(context)) {")
                 && structures.contains("return context.f_226630_().test(null);"),
-                "the world's one hideout is built only at the offer chosen for it (the same in every chunk that asks)");
+                "the world's one hideout, at the first of its set's spots on dry land the world makes (/place builds it anywhere)");
         } catch (java.io.IOException failure) {
             check(false, "read the sources: " + failure);
         }

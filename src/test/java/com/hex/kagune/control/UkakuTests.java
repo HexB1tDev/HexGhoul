@@ -1513,6 +1513,26 @@ public final class UkakuTests {
         }
         check(WingRig.lash(WingRig.Motion.SLAP_RIGHT, 0.0F, 0.4F) == 0.0F && WingRig.lash(WingRig.Motion.SLAP_RIGHT, 0.4F, 0.4F) == 1.0F
             && WingRig.lash(WingRig.Motion.SLAP_RIGHT, 1.0F, 0.4F) == 0.0F, "the hand is grown at the impact only");
+        // 4.1.14 (the owner: "Prevent m1 spam with ukaku."): however fast M1 is pressed, each wing slam of either string plays out in full (its
+        // follow-through, its rebound, back to rest) before the next may begin, and the next hit still never lands in the target's hurt
+        // immunity; the server chains by that rule (4.1.13 opened the next about 60% through, the wing snapping into the next wind-up).
+        for (ComboStyle style : new ComboStyle[] {ComboStyle.UKAKU_WINGS, ComboStyle.UKAKU_LEFT_WING}) {
+            for (int s = 0; s < style.stageCount(); s++) {
+                ComboStage stage = style.stage(s);
+                ComboStage next = style.stage(s + 1);
+                for (int duration = 8; duration <= stage.baseDuration(); duration++) {
+                    int impact = stage.impactTick(duration);
+                    int open = ComboStyle.chainOpen(stage, duration, impact, next.impactTick(duration));
+                    check(open >= duration && open + next.impactTick(duration) - impact >= 10,
+                        style + " " + stage.name() + " (" + duration + " ticks): plays out in full before the next (" + open + ")");
+                }
+            }
+        }
+        check(ComboStyle.chainOpen(ComboStyle.WHIP.stage(0), 20, 8, 8)
+            == ComboStyle.chainOpenOffset(8, 8), "every other string chains as before");
+        String chaining = read("src/main/java/com/hex/kagune/control/server/KaguneCombat.java");
+        check(chaining.contains(": ComboStyle.chainOpen(stage, duration, impact, followingImpact));") && chaining.contains("state.inputCooldownUntil = combo.chainOpenAt;"),
+            "the server opens the next strike by that rule, and no click starts one sooner");
         check(Math.abs(UkakuRules.slamReach(300, 1.0F) - (7.5 + 0.0075 * 300) * UkakuRules.SLAM_REACH) < 1.0E-9 && UkakuRules.slamReach(5000, 1.05F) <= 15.0,
             "the reach the wings stretch to is the server's (Rinkaku's range, its share, at most 15)");
         // 4.1.12 (the owner: "these fuck ass red Minecraft dust particles in crit particles that you've added. No one ever asked for that"):

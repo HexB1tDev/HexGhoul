@@ -2272,8 +2272,7 @@ public final class ArtPreview {
 
     /**
      * 4.1.13: an outfit's coat on legs in a stride, a tucked jump and three kicks, from in front, the side and three quarters: its cubes on
-     * the posed body as OutfitLayer draws them (each bone's own turn and bend), and each half of its tails hung from its own leg by
-     * {@link com.hex.kagune.control.outfit.CoatDrape} as {@code OutfitLayer.drapes} hangs it (fresh: no tail falling back yet). Flat colour
+     * the posed body as OutfitLayer draws them (each bone's own turn and bend; 4.1.14: each half of its tails on its own leg). Flat colour
      * from the outfit's own texture at each face's middle.
      */
     static void coatSheet(File file, String id) throws Exception {
@@ -2300,10 +2299,10 @@ public final class ArtPreview {
                 shots.add(new Shot(names[i], p, none, eye, new double[] {0, 0.9, 0}, outfit(p, model, texture)));
             }
         }
-        sheet(file, "The " + id + " coat: each half of its tails on its own leg (front, side, three quarters)", shots, 3, 300, 300);
+        sheet(file, "The " + id + " coat: each half of its tails attached to its own leg (front, side, three quarters)", shots, 3, 300, 300);
     }
 
-    /** 4.1.13: {@code model}'s cubes on {@code pose} (rig space, as {@link #body} mirrors the body), its tails draped. */
+    /** 4.1.13: {@code model}'s cubes on {@code pose} (rig space, as {@link #body} mirrors the body), its tails on the legs. */
     static List<WingPreview.Tri> outfit(RigPose pose, com.hex.kagune.control.outfit.OutfitModels.Model model, BufferedImage texture) {
         List<WingPreview.Tri> out = new ArrayList<>();
         PoseRender.Part body = PoseRender.part(pose, "body", 0, 0, 0, 0, 0, 0);
@@ -2325,7 +2324,9 @@ public final class ArtPreview {
             {com.hex.kagune.control.outfit.OutfitModels.BODY, torso, new PoseRender.Cube(new double[] {-4, 0, -2}, new double[] {4, 12, 2}, -1, null), false},
             {com.hex.kagune.control.outfit.OutfitModels.RIGHT_ARM, rightArm, new PoseRender.Cube(new double[] {-3, -2, -2}, new double[] {1, 10, 2}, 1, null), true},
             {com.hex.kagune.control.outfit.OutfitModels.LEFT_ARM, leftArm, new PoseRender.Cube(new double[] {-1, -2, -2}, new double[] {3, 10, 2}, 1, null), true},
-            {com.hex.kagune.control.outfit.OutfitModels.RIGHT_LEG, rightLeg, leg, false}, {com.hex.kagune.control.outfit.OutfitModels.LEFT_LEG, leftLeg, leg, false}};
+            {com.hex.kagune.control.outfit.OutfitModels.RIGHT_LEG, rightLeg, leg, false}, {com.hex.kagune.control.outfit.OutfitModels.LEFT_LEG, leftLeg, leg, false},
+            // 4.1.14: the coat's tails on the legs, as OutfitLayer draws them (each half its own leg's turn and bend).
+            {com.hex.kagune.control.outfit.OutfitModels.RIGHT_LEG_COAT, rightLeg, leg, false}, {com.hex.kagune.control.outfit.OutfitModels.LEFT_LEG_COAT, leftLeg, leg, false}};
         for (Object[] b : bones) {
             PoseRender.Part part = (PoseRender.Part)b[1];
             for (com.hex.kagune.control.outfit.OutfitModels.Cube cube : model.on((Integer)b[0], -1)) {
@@ -2338,32 +2339,6 @@ public final class ArtPreview {
                             q = upper.apply(q);
                         }
                         double[] at = PoseRender.world(pose, q);
-                        w[k] = new double[] {-at[0], at[1], at[2]};
-                    }
-                    outfitFace(out, w, face, texture);
-                }
-            }
-        }
-        PoseRender.Part[] legs = {rightLeg, leftLeg};
-        int[] tails = {com.hex.kagune.control.outfit.OutfitModels.RIGHT_LEG_COAT, com.hex.kagune.control.outfit.OutfitModels.LEFT_LEG_COAT};
-        for (int side = 0; side < 2; side++) {
-            PoseRender.Part part = legs[side];
-            float thigh = (float)part.rx;
-            float knee = (float)part.bend;
-            com.hex.kagune.control.outfit.CoatDrape drape = com.hex.kagune.control.outfit.CoatDrape.over(Math.min(0.0F, thigh), Math.max(0.0F, thigh),
-                new float[] {thigh, thigh}, new float[] {knee, knee});
-            for (com.hex.kagune.control.outfit.OutfitModels.Cube cube : model.on(tails[side], -1)) {
-                for (com.hex.kagune.control.outfit.OutfitModels.Face face : cube.faces()) {
-                    double[][] w = new double[4][];
-                    for (int k = 0; k < 4; k++) {
-                        float[] v = {face.corners()[k * 3], face.corners()[k * 3 + 1], face.corners()[k * 3 + 2]};
-                        drape.place(v);
-                        // OutfitLayer.tails: from the hip, turned out and round with the leg (z, then y); the drape is its swing.
-                        double x1 = v[0] * Math.cos(part.rz) - v[1] * Math.sin(part.rz);
-                        double y1 = v[0] * Math.sin(part.rz) + v[1] * Math.cos(part.rz);
-                        double x2 = x1 * Math.cos(part.ry) + v[2] * Math.sin(part.ry);
-                        double z2 = -x1 * Math.sin(part.ry) + v[2] * Math.cos(part.ry);
-                        double[] at = PoseRender.world(pose, new double[] {part.px + x2, part.py + y1, part.pz + z2});
                         w[k] = new double[] {-at[0], at[1], at[2]};
                     }
                     outfitFace(out, w, face, texture);

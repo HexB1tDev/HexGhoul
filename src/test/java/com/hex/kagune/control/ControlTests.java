@@ -1744,7 +1744,7 @@ public final class ControlTests {
                         previousImpact = impactTime;
                         damage += stage.damageMul();
                         ComboStage next = style.stage(index + 1);
-                        time += ComboStyle.chainOpenOffset(impact, next.impactTick(duration(next, control, multiplier)));
+                        time += ComboStyle.chainOpen(stage, duration, impact, next.impactTick(duration(next, control, multiplier)));
                     }
                     // The original swipe: 1.0x damage every max(8, cooldown(12)) ticks.
                     double original = 1.0 / Math.max(8, Math.max(2, Math.round(12 * multiplier)));

@@ -349,9 +349,10 @@ public final class KaguneCombat {
         int followingImpact = following.impactTick(scaledDuration(player, following, control));
         // Never let chained impacts land inside the target's 10-tick hurt immunity: no wasted (or exploitable) hits.
         // Shots are bolts and spikes, not blows: their own fast cadence (each ignores hurt immunity); an ender plays out first.
+        // 4.1.14 (the owner: "Prevent m1 spam with ukaku."): an Ukaku wing slam plays out in full before the next (ComboStyle.chainOpen).
         combo.chainOpenAt = now + (stage.pattern().ender() ? Math.max(impact + 1, duration - 2)
             : stage.pattern().flame() ? Math.max(impact + 1, UkakuRules.shotCadence(stage.pattern(), KaguneProfile.mastery(player)))
-            : ComboStyle.chainOpenOffset(impact, followingImpact));
+            : ComboStyle.chainOpen(stage, duration, impact, followingImpact));
         state.inputCooldownUntil = combo.chainOpenAt;
         state.guarding = false;
 

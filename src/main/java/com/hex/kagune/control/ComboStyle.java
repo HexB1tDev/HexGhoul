@@ -116,28 +116,30 @@ public enum ComboStyle {
     // 4.1.12 (the owner: "The hits are way too fast ... fuck-ass fucking insanely fast wing slap animation that you can barely fucking see"):
     // every slam about 1.75 times as long (a slap 16 ticks, the twin slam 28), each landing a little later in it, so the wing's wind-up and its
     // swing can be seen (its drive about a quarter of a second, not 4.1.11's tick and a bit).
+    // 4.1.14: each wing slam's damage 1.3 times 4.1.13's: they now play out in full (ComboStyle.chainOpen), not cut short after the hit, so
+    // the string's damage over time stays where it was (the same pace as the original swipe, as every string's).
     UKAKU_WINGS(
-        new ComboStage("Right Wing Slap", StrikePattern.WING_SLAP, HitShape.SWEEP, 100.0F, 16, 0.5F, 0.85F, 0.9F, 1.0F, 3, 0.8F, new int[] {0}, 0.3F),
-        new ComboStage("Left Wing Slap", StrikePattern.WING_SLAP, HitShape.SWEEP, 100.0F, 16, 0.5F, 0.85F, 0.9F, 1.0F, 3, 0.8F, new int[] {1}, 0.3F),
-        new ComboStage("Right Wing Swing", StrikePattern.WING_SWING, HitShape.SWEEP, 160.0F, 20, 0.5F, 1.05F, 1.25F, 1.05F, 4, 1.0F, new int[] {0},
+        new ComboStage("Right Wing Slap", StrikePattern.WING_SLAP, HitShape.SWEEP, 100.0F, 16, 0.5F, 1.1F, 0.9F, 1.0F, 3, 0.8F, new int[] {0}, 0.3F),
+        new ComboStage("Left Wing Slap", StrikePattern.WING_SLAP, HitShape.SWEEP, 100.0F, 16, 0.5F, 1.1F, 0.9F, 1.0F, 3, 0.8F, new int[] {1}, 0.3F),
+        new ComboStage("Right Wing Swing", StrikePattern.WING_SWING, HitShape.SWEEP, 160.0F, 20, 0.5F, 1.35F, 1.25F, 1.05F, 4, 1.0F, new int[] {0},
             0.45F),
-        new ComboStage("Left Rising Wing", StrikePattern.WING_RISE, HitShape.SWEEP, 110.0F, 20, 0.5F, 1.0F, 1.0F, 1.0F, 3, 1.0F, new int[] {1}, 0.45F),
-        new ComboStage("Right Overhead Slam", StrikePattern.WING_SLAM, HitShape.SWEEP, 70.0F, 22, 0.56F, 1.25F, 1.3F, 1.0F, 3, 1.15F, new int[] {0},
+        new ComboStage("Left Rising Wing", StrikePattern.WING_RISE, HitShape.SWEEP, 110.0F, 20, 0.5F, 1.3F, 1.0F, 1.0F, 3, 1.0F, new int[] {1}, 0.45F),
+        new ComboStage("Right Overhead Slam", StrikePattern.WING_SLAM, HitShape.SWEEP, 70.0F, 22, 0.56F, 1.6F, 1.3F, 1.0F, 3, 1.15F, new int[] {0},
             0.6F),
-        new ComboStage("Left Overhead Slam", StrikePattern.WING_SLAM, HitShape.SWEEP, 70.0F, 22, 0.56F, 1.25F, 1.3F, 1.0F, 3, 1.15F, new int[] {1},
+        new ComboStage("Left Overhead Slam", StrikePattern.WING_SLAM, HitShape.SWEEP, 70.0F, 22, 0.56F, 1.6F, 1.3F, 1.0F, 3, 1.15F, new int[] {1},
             0.6F),
-        new ComboStage("Twin Slam", StrikePattern.TWIN_SLAM, HitShape.SWEEP, 120.0F, 28, 0.6F, 1.6F, 1.7F, 1.05F, 5, 1.4F, new int[] {0, 1}, 0.85F)
+        new ComboStage("Twin Slam", StrikePattern.TWIN_SLAM, HitShape.SWEEP, 120.0F, 28, 0.6F, 2.1F, 1.7F, 1.05F, 5, 1.4F, new int[] {0, 1}, 0.85F)
     ),
     /**
      * 4.1.2: the same in Rabbit Guise (a new Ukaku's one wing, the left, till the twin wings come at mastery 100): the left wing's own
      * string, a slap, a wide swing, a rising wing and an overhead slam.
      */
     UKAKU_LEFT_WING(
-        new ComboStage("Left Wing Slap", StrikePattern.WING_SLAP, HitShape.SWEEP, 100.0F, 16, 0.5F, 0.85F, 0.9F, 1.0F, 3, 0.8F, new int[] {1}, 0.3F),
-        new ComboStage("Left Wing Swing", StrikePattern.WING_SWING, HitShape.SWEEP, 160.0F, 20, 0.5F, 1.05F, 1.25F, 1.05F, 4, 1.0F, new int[] {1},
+        new ComboStage("Left Wing Slap", StrikePattern.WING_SLAP, HitShape.SWEEP, 100.0F, 16, 0.5F, 1.1F, 0.9F, 1.0F, 3, 0.8F, new int[] {1}, 0.3F),
+        new ComboStage("Left Wing Swing", StrikePattern.WING_SWING, HitShape.SWEEP, 160.0F, 20, 0.5F, 1.35F, 1.25F, 1.05F, 4, 1.0F, new int[] {1},
             0.45F),
-        new ComboStage("Left Rising Wing", StrikePattern.WING_RISE, HitShape.SWEEP, 110.0F, 20, 0.5F, 1.0F, 1.0F, 1.0F, 3, 1.0F, new int[] {1}, 0.45F),
-        new ComboStage("Left Overhead Slam", StrikePattern.WING_SLAM, HitShape.SWEEP, 70.0F, 23, 0.56F, 1.35F, 1.4F, 1.0F, 4, 1.2F, new int[] {1},
+        new ComboStage("Left Rising Wing", StrikePattern.WING_RISE, HitShape.SWEEP, 110.0F, 20, 0.5F, 1.3F, 1.0F, 1.0F, 3, 1.0F, new int[] {1}, 0.45F),
+        new ComboStage("Left Overhead Slam", StrikePattern.WING_SLAM, HitShape.SWEEP, 70.0F, 23, 0.56F, 1.75F, 1.4F, 1.0F, 4, 1.2F, new int[] {1},
             0.7F)
     ),
     /** The right-click enders, indexed by how many shots came before (0 to 5); see {@code UkakuRules.ender}. */
@@ -346,6 +348,16 @@ public enum ComboStyle {
      */
     public static int chainOpenOffset(int impactTick, int nextImpactTick) {
         return impactTick + Math.max(2, 10 - nextImpactTick);
+    }
+
+    /**
+     * 4.1.14 (the owner: "Prevent m1 spam with ukaku."): how long into {@code stage} (ticks from its start, {@code duration} long, its hit at
+     * {@code impactTick}) the next stage may begin: an Ukaku wing slam when it is over (it plays out in full however fast M1 is pressed: cut
+     * short after its hit, the wing snapped from its follow-through straight into the next wind-up); any other blow as {@link #chainOpenOffset}.
+     */
+    public static int chainOpen(ComboStage stage, int duration, int impactTick, int nextImpactTick) {
+        int offset = chainOpenOffset(impactTick, nextImpactTick); // never sooner: the next hit stays out of the target's hurt immunity
+        return com.hex.kagune.control.ukaku.UkakuBody.slams(stage.pattern()) ? Math.max(duration, offset) : offset;
     }
 
     public static int firstLimb(int mask) {

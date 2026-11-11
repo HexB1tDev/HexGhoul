@@ -435,7 +435,6 @@ M net/minecraftforge/client/event/RenderHandEvent getPackedLight ()I            
 M net/minecraftforge/client/event/RenderHandEvent getPartialTick ()F                 # [forge] RenderHandEvent.getPartialTick
 M net/minecraftforge/client/event/RenderHandEvent getInterpolatedPitch ()F          # [forge] RenderHandEvent.getInterpolatedPitch (the camera's pitch, degrees)
 M net/minecraftforge/client/event/RenderHandEvent getItemStack ()Lnet/minecraft/world/item/ItemStack;  # [forge] RenderHandEvent.getItemStack
-M net/minecraftforge/client/event/RenderHandEvent setCanceled (Z)V                   # [forge] eventbus Event.setCanceled; RenderHandEvent is @Cancelable
 C net/minecraft/world/entity/HumanoidArm                                            # [srg] bft (yarn class_1306 Arm; joined.tsrg C_520_): LEFT, RIGHT, RenderArmEvent.getArm's type (read only as an Enum's ordinal)
 C net/minecraftforge/client/event/RenderArmEvent                                    # [forge] 1.20.1 client/event/RenderArmEvent.java (@Cancelable; posted by ForgeHooksClient.renderSpecificFirstPersonArm from ItemInHandRenderer.renderPlayerArm, before an empty hand's arm)
 M net/minecraftforge/client/event/RenderArmEvent getArm ()Lnet/minecraft/world/entity/HumanoidArm;  # [forge] RenderArmEvent.getArm
@@ -771,7 +770,6 @@ M net/minecraft/resources/ResourceLocation <init> (Ljava/lang/String;Ljava/lang/
 M net/minecraft/server/level/ServerLevel m_141937_ ()I                                                                                          # [srg] getMinBuildHeight (yarn getBottomY; awakening/mappings.srg, tools/check_mappings.py)
 M net/minecraft/server/level/ServerLevel m_151558_ ()I                                                                                          # [srg] getMaxBuildHeight (yarn getTopY; awakening/mappings.srg, tools/check_mappings.py)
 M net/minecraft/server/level/ServerLevel m_5898_ (Lnet/minecraft/world/entity/player/Player;ILnet/minecraft/core/BlockPos;I)V                   # [srg] levelEvent (yarn syncWorldEvent; awakening/mappings.srg, tools/check_mappings.py)
-M net/minecraft/server/level/ServerPlayer m_5796_ ()V                                                                                           # [srg] stopSleeping (yarn wakeUp; awakening/mappings.srg, tools/check_mappings.py)
 M net/minecraft/server/level/ServerPlayer m_8127_ ()V                                                                                           # [srg] stopRiding (yarn stopRiding; awakening/mappings.srg, tools/check_mappings.py)
 M net/minecraft/world/entity/Entity m_146922_ (F)V                                                                                              # [srg] setYRot (yarn setYaw; awakening/mappings.srg, tools/check_mappings.py)
 M net/minecraft/world/entity/Entity m_6034_ (DDD)V                                                                                              # [srg] setPos (yarn setPosition; awakening/mappings.srg, tools/check_mappings.py)
@@ -1203,7 +1201,6 @@ M net/minecraft/core/Holder m_203656_ (Lnet/minecraft/tags/TagKey;)Z            
 # "public Optional<Structure.GenerationStub> findValidGenerationPoint(Structure.GenerationContext var1)", not final, called by
 # Structure.generate and by StructureCheck.canCreateStructure).
 M net/minecraft/world/level/levelgen/structure/Structure m_262864_ (Lnet/minecraft/world/level/levelgen/structure/Structure$GenerationContext;)Ljava/util/Optional;  # [srg] findValidGenerationPoint: joined.tsrg dsa b (Ldsa$a;)Ljava/util/Optional; m_262864_ 262864 (yarn getValidStructurePosition); overridden: findGenerationPoint with no biome-list filter
-M net/minecraft/world/level/levelgen/structure/Structure$GenerationContext <init> (Lnet/minecraft/core/RegistryAccess;Lnet/minecraft/world/level/chunk/ChunkGenerator;Lnet/minecraft/world/level/biome/BiomeSource;Lnet/minecraft/world/level/levelgen/RandomState;Lnet/minecraft/world/level/levelgen/structure/templatesystem/StructureTemplateManager;JLnet/minecraft/world/level/ChunkPos;Lnet/minecraft/world/level/LevelHeightAccessor;Ljava/util/function/Predicate;)V  # [srg] joined.tsrg dsa$a <init> (Lhs;Lddy;Lcno;Ldhy;Ldvu;JLclt;Lcmo;Ljava/util/function/Predicate;)V 226631: the record's own constructor that seeds its random from the seed and the chunk, as Structure.generate and StructureCheck make it
 C net/minecraft/core/Registry                                                        # [srg] hr C_4705_ (class_2378, yarn Registry), an interface
 M net/minecraft/core/RegistryAccess m_175515_ (Lnet/minecraft/resources/ResourceKey;)Lnet/minecraft/core/Registry;  # [srg] registryOrThrow: joined.tsrg hs d (Lacp;)Lhr; m_175515_ 175515 (a default method of hs; yarn DynamicRegistryManager.get)
 M net/minecraft/core/Registry m_7745_ (Lnet/minecraft/resources/ResourceLocation;)Ljava/lang/Object;  # [srg] get(ResourceLocation): joined.tsrg hr a (Lacq;)Ljava/lang/Object; m_7745_ 7745 (yarn Registry.get(Identifier))
@@ -1230,3 +1227,14 @@ C net/minecraft/world/level/chunk/ChunkAccess                                   
 M net/minecraft/world/level/chunk/ChunkAccess m_213652_ (Lnet/minecraft/world/level/levelgen/structure/Structure;)Lnet/minecraft/world/level/levelgen/structure/StructureStart;  # [srg] getStartForStructure: joined.tsrg ddx a (Ldsa;)Ldsi; m_213652_ 223004 (declared on ddx, from deu = StructureAccess; yarn StructureHolder.getStructureStart method_12181)
 C net/minecraft/world/level/levelgen/structure/StructureStart                       # [srg] dsi C_2588_ (class_3449, yarn StructureStart)
 M net/minecraft/world/level/levelgen/structure/StructureStart m_73603_ ()Z           # [srg] isValid: joined.tsrg dsi b ()Z m_73603_ (yarn StructureStart.hasChildren method_16657)
+# 4.1.14 (the owner: "Fix structures still not spawning at all or able to be located (still not spawning)"): each one-of-a-kind place is
+# built at whichever spot the world makes first, kept with the world (PlaceClaims: saved data on the overworld's storage, loaded as the level
+# loads, before its ground is made); a taken spot whose chunk loads in full without the place is given up. dei = LevelChunk.
+C net/minecraftforge/event/level/LevelEvent$Load                                    # [forge] event/level/LevelEvent.java (Load extends LevelEvent; posted by MinecraftServer.createLevels as each level is made, before setInitialSpawn and the spawn's chunks)
+M net/minecraftforge/event/level/LevelEvent getLevel ()Lnet/minecraft/world/level/LevelAccessor;  # [forge] LevelEvent.getLevel
+C net/minecraftforge/event/level/ChunkEvent$Load                                    # [forge] event/level/ChunkEvent.java (Load extends ChunkEvent extends LevelEvent; posted as a chunk is loaded or made)
+M net/minecraftforge/event/level/ChunkEvent getChunk ()Lnet/minecraft/world/level/chunk/ChunkAccess;  # [forge] ChunkEvent.getChunk
+C net/minecraft/world/level/chunk/LevelChunk                                        # [srg] dei C_2137_ (class_2818, yarn WorldChunk)
+M net/minecraft/world/level/chunk/ChunkAccess m_7697_ ()Lnet/minecraft/world/level/ChunkPos;  # [srg] getPos: joined.tsrg ddx f ()Lclt; m_7697_ 7697 (yarn Chunk.getPos method_12004)
+C net/minecraftforge/server/ServerLifecycleHooks                                    # [forge] server/ServerLifecycleHooks.java: the current server, set by handleServerAboutToStart before createLevels makes any ground (PlaceClaims reads the overworld's claims from it if the ground is made before LevelEvent.Load)
+M net/minecraftforge/server/ServerLifecycleHooks getCurrentServer ()Lnet/minecraft/server/MinecraftServer;  # [forge] ServerLifecycleHooks.getCurrentServer (static)
