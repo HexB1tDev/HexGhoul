@@ -89,6 +89,43 @@ public final class DryLand {
     }
 
     /**
+     * 4.1.44: a big place's ground (its streets' or floor's first free height) over {@code sizeX} x {@code sizeZ} from ({@code minX},
+     * {@code minZ}), as the Small City judges its own (CityPlan.land): {@code n} x {@code n} levels (the top of the ground or of the water over
+     * it) rising and falling no more than {@code flat}, their middle (never under the sea's level, 64); water no deeper than {@code deep} at
+     * any of them or at any column every 32 blocks; no sea's or steep biome at any column every 16. {@link Integer#MIN_VALUE} if not.
+     */
+    public static int land(Ground ground, int minX, int minZ, int sizeX, int sizeZ, int n, int flat, int deep) {
+        int[] levels = new int[n * n];
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                int x = minX + 2 + (sizeX - 5) * i / (n - 1);
+                int z = minZ + 2 + (sizeZ - 5) * j / (n - 1);
+                int floor = ground.floor(x, z);
+                int surface = ground.surface(x, z);
+                if (surface - floor > deep) {
+                    return Integer.MIN_VALUE;
+                }
+                levels[i * n + j] = Math.max(surface, floor);
+            }
+        }
+        if (spread(levels) > flat) {
+            return Integer.MIN_VALUE;
+        }
+        int middle = Math.max(64, median(levels));
+        for (int[] column : columns(minX, minZ, sizeX, sizeZ, 16)) {
+            if (ground.sea(column[0], middle, column[1]) || ground.steep(column[0], middle, column[1])) {
+                return Integer.MIN_VALUE;
+            }
+        }
+        for (int[] column : columns(minX, minZ, sizeX, sizeZ, 32)) {
+            if (ground.surface(column[0], column[1]) - ground.floor(column[0], column[1]) > deep) {
+                return Integer.MIN_VALUE;
+            }
+        }
+        return middle;
+    }
+
+    /**
      * 4.1.42: how far the ground rises and falls (blocks) over a footprint, its highest less its lowest, sampled every {@code step} blocks
      * and along its far edges (the water's surface counted as ground).
      */

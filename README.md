@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.44 (HexGhoul): the Aogiri hideout and the CCG building spawn again (testing)
+
+See `.github/release-notes-4.1.44.md`. "Im 99% sure the Aogiri place IS not spawning at all, same with the CCG building": the hideout judged by `DryLand.land` (`HIDEOUT_FLAT` 14, shallow water allowed), the CCG building the flattest of 25 spots, `offered` no longer required (a mod moving the spots made every place never). Protocol 118.
+
 ## 4.1.43 (HexGhoul): one of each, really: the claim taken as a place is built; never two Etos (testing)
 
 See `.github/release-notes-4.1.43.md`. "Structures are still spawning doubles"; "eto spawned 2 of them": `ControlStructures.onlyIfClaimed` (the claim in the pieces' making; `making` gone), `/place` through `claimed`; `EtoBrain`: a second body leaves while hers answered in the last 400 ticks. Protocol 118.

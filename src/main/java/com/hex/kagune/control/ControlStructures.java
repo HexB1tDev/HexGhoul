@@ -515,30 +515,53 @@ public final class ControlStructures {
             if (CCG.equals(this.site.id())) {
                 // 4.1.4 (the owner: "CCG building ... like the others only 1 of them spawns"): the world's one. 4.1.14: at whichever of its
                 // set's spots on dry land the world makes first (PlaceClaims), clear of the hideout's and the villages' spots.
+                // 4.1.44 (the owner: "Im 99% sure the Aogiri place IS not spawning at all, same with the CCG building"): no longer only if the
+                // game's spot is the one our own numbers expect (a mod that moves the spots made it never), and no longer only on the one
+                // spot: the flattest dry spot within two chunks of it (the claim keeps it to one: onlyIfClaimed).
                 return claimed(CCG, context, () -> {
-                    if (!offered(context, spread(context, CCG, DryLand.fixed(context.f_226627_(), DryLand.SPACING, DryLand.SEPARATION, DryLand.CCG_SALT)))
-                        || DryLand.near(hideoutSpread(context), chunk.f_45578_, chunk.f_45579_, DryLand.CCG_APART)
-                        || inCity(context, chunk.f_45578_, chunk.f_45579_)) {
+                    if (DryLand.near(hideoutSpread(context), chunk.f_45578_, chunk.f_45579_, DryLand.CCG_APART) || inCity(context, chunk.f_45578_, chunk.f_45579_)) {
                         return Optional.empty();
                     }
                     int span = Math.max(sizeX, sizeZ) + 2 * CCG_ROUND;
-                    int middle = dryGround(context, ground(context), chunk.m_45604_() + 8 - span / 2, chunk.m_45605_() + 8 - span / 2, span);
-                    return middle == NO_GROUND ? Optional.empty()
-                        : Optional.of(this.stub(context, turns, chunk.m_45604_() + 8 - sizeX / 2, chunk.m_45605_() + 8 - sizeZ / 2, sizeX, sizeZ, middle));
+                    DryLand.Ground ground = ground(context);
+                    int bestRough = Integer.MAX_VALUE;
+                    int[] best = null;
+                    for (int dx = -2; dx <= 2; dx++) {
+                        for (int dz = -2; dz <= 2; dz++) {
+                            int cx = chunk.m_45604_() + 8 + dx * 16;
+                            int cz = chunk.m_45605_() + 8 + dz * 16;
+                            int middle = dryGround(context, ground, cx - span / 2, cz - span / 2, span);
+                            if (middle == NO_GROUND) {
+                                continue;
+                            }
+                            int rough = roughness(ground, cx - span / 2, cz - span / 2, span, span);
+                            if (rough < bestRough) {
+                                bestRough = rough;
+                                best = new int[] {cx, cz, middle};
+                            }
+                        }
+                    }
+                    return best == null ? Optional.empty()
+                        : Optional.of(this.stub(context, turns, best[0] - sizeX / 2, best[1] - sizeZ / 2, sizeX, sizeZ, best[2]));
                 });
             }
             if (unique(this.site)) {
                 // 4.1.1 (the owner: "the mansion is currently happily resting at the very bottom of the ocean"): the world's one hideout,
                 // only ever on dry land. 4.1.14: at whichever of its set's spots on dry land the world makes first (PlaceClaims).
+                // 4.1.44: no longer only at the spot our own numbers expect, and judged as the Small City is (it is as big: 272 x 263): land
+                // that rises and falls no more than HIDEOUT_FLAT, a stream or a pond under it allowed (its foundation fills them), never a sea,
+                // a lake or a steep biome (DryLand.land). Before, one pond anywhere under it, or 10 blocks of rise (4.1.42), and no hideout.
                 return claimed(HIDEOUT, context, () -> {
-                    if (!offered(context, hideoutSpread(context)) || inCity(context, chunk.f_45578_, chunk.f_45579_)) {
+                    if (inCity(context, chunk.f_45578_, chunk.f_45579_)) {
                         return Optional.empty();
                     }
                     int minX = clampMin(chunk.m_45604_() + 8 - sizeX / 2, chunk.m_45604_(), sizeX);
                     int minZ = clampMin(chunk.m_45605_() + 8 - sizeZ / 2, chunk.m_45605_(), sizeZ);
-                    int span = Math.max(sizeX, sizeZ) + 2 * CCG_ROUND;
-                    int middle = dryGround(context, ground(context), minX + sizeX / 2 - span / 2, minZ + sizeZ / 2 - span / 2, span);
-                    return middle == NO_GROUND ? Optional.empty() : Optional.of(this.stub(context, turns, minX, minZ, sizeX, sizeZ, middle));
+                    int middle = DryLand.land(ground(context), minX, minZ, sizeX, sizeZ, 9, HIDEOUT_FLAT, com.hex.kagune.control.village.CityPlan.DEEP);
+                    if (middle == Integer.MIN_VALUE || !biome(context, minX + sizeX / 2, middle, minZ + sizeZ / 2)) {
+                        return Optional.empty();
+                    }
+                    return Optional.of(this.stub(context, turns, minX, minZ, sizeX, sizeZ, middle));
                 });
             }
             // 4.1.1: every other place at the first spot its start chunk reaches (from the middle out) on dry, fairly flat land, with no
@@ -895,6 +918,8 @@ public final class ControlStructures {
     static final int PLACE_FLAT = 6;
     static final int BIG_PLACE_FLAT = 10;
     static final int FLAT_ENOUGH = 2;
+    /** 4.1.44: the most the hideout's ground (272 x 263) may rise and fall: as the Small City's, and its foundation and terrain fit meet the rest. */
+    static final int HIDEOUT_FLAT = 14;
 
     /**
      * 4.1.42 (the owner: "research the ... biomes of plenty mods in the basic Minecraft mods and separate them ... instead just spawns on a
@@ -1046,9 +1071,8 @@ public final class ControlStructures {
                 return claimed(id, context, () -> this.here(context));
             }
             return claimed(id, context, () -> {
-                if (!offered(context, placeSpread(context, id))) {
-                    return Optional.empty();
-                }
+                // 4.1.44: wherever the game asks (no longer only if its spot is the one our own numbers expect: a mod that moves the spots made
+                // it never); the claim keeps it to one (onlyIfClaimed).
                 Optional<Structure.GenerationStub> stub = this.flattest(context);
                 if (stub.isEmpty()) {
                     return stub;

@@ -1946,7 +1946,7 @@ public final class NpcTests {
             check(structures.contains("if (Site.onPurpose(context)) {\n                // /place: where it is asked, but (4.1.43) only while the world has none yet")
                 && structures.contains("return claimed(id, context, () -> this.here(context));")
                 && structures.contains("return claimed(id, context, () -> {")
-                && structures.contains("if (!offered(context, placeSpread(context, id))) {")
+                && !structures.contains("if (!offered(context, placeSpread(context, id))) {")
                 && structures.contains("Optional<Structure.GenerationStub> stub = this.flattest(context);"),
                 "a jigsaw place stands at any spot of its set where it lays out on dry, flat land (4.1.42: the flattest), until one is built (4.1.43: /place too, never a second)");
             check(structures.contains("if (inCity(context, x, z) || DryLand.near(hideoutSpread(context), x, z, DryLand.PLACE_APART)")
@@ -2153,6 +2153,17 @@ public final class NpcTests {
         check(com.hex.kagune.control.village.DryLand.roughness(flat, 0, 0, 40, 40, 6) == 0
             && com.hex.kagune.control.village.DryLand.roughness(Land.of((x, z) -> 60 + x), 0, 0, 40, 40, 6) == 39,
             "a place's ground: its rise and fall over its footprint, edges and all");
+        // 4.1.44 (the owner: "Im 99% sure the Aogiri place IS not spawning at all"): the hideout's ground (272 x 263) judged as the city's:
+        // a stream through it and a rise of 12 hold it (its foundation and terrain fit meet them); a hillside of 30 or a lake don't.
+        java.util.function.IntBinaryOperator rolling = (x, z) -> 66 + (x - minX) * 12 / 272;
+        com.hex.kagune.control.village.DryLand.Ground stream = new Land(rolling, (x, z) -> z >= minZ + 100 && z < minZ + 104 ? 70 + 3 : Integer.MIN_VALUE,
+            (x, z) -> false, (x, z) -> false);
+        int hide = com.hex.kagune.control.village.DryLand.land(stream, minX, minZ, 272, 263, 9, 14, 8);
+        check(hide >= 66 && hide <= 78, "the hideout on rolling land with a stream through it: built, on its middle (" + hide + ")");
+        check(com.hex.kagune.control.village.DryLand.land(Land.of((x, z) -> 66 + (x - minX) * 30 / 272), minX, minZ, 272, 263, 9, 14, 8) == Integer.MIN_VALUE,
+            "a hillside of 30 under it: no hideout there");
+        check(com.hex.kagune.control.village.DryLand.land(new Land((x, z) -> 50, (x, z) -> 63, (x, z) -> false, (x, z) -> false), minX, minZ, 272, 263, 9, 14, 8)
+            == Integer.MIN_VALUE, "a lake under it: no hideout there");
         // The foundation's column: 2 solid, 1 a plant, 0 air.
         java.util.function.IntUnaryOperator floating = y -> y == 80 ? 2 : y <= 60 ? 2 : y == 61 ? 1 : 0;
         int[] fill = com.hex.kagune.control.village.DryLand.footing(floating, 80, 1, 16);
@@ -2330,7 +2341,7 @@ public final class NpcTests {
         check(plan.contains("if (ground.sea(column[0], middle, column[1]) || ground.steep(column[0], middle, column[1])) {") && plan.contains("if (surface - floor > DEEP) {")
             && structures.contains("\"minecraft\", \"is_ocean\""), "never over a sea or a lake deeper than a river (4.1.42: nor a steep biome; CityPlan.land)");
         check(structures.contains("|| inCity(context, chunk.f_45578_, chunk.f_45579_)) {") && structures.contains("if (inCity(context, x, z) ||")
-            && structures.contains("if (!offered(context, hideoutSpread(context)) || inCity(context, chunk.f_45578_, chunk.f_45579_)) {")
+            && structures.contains("if (inCity(context, chunk.f_45578_, chunk.f_45579_)) {")
             && structures.contains("if (City.ground(context, corner[0], corner[1]) != Site.NO_GROUND && !City.holdsPlace(b[0], b[1])) {")
             && structures.contains("if (holdsPlace(at[1], at[2])) {"),
             "the hideout, the CCG building and every jigsaw place stay out of a city that is built; a city is never built over an older world's place");
@@ -2626,12 +2637,12 @@ public final class NpcTests {
             check(brain.contains("AogiriGuard.idle(npc, mind, level, now)") && brain.contains("AogiriGuard.unwelcome(npc, player, now)"),
                 "the members at their work, and a player kept out is gone for");
             String structures = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/ControlStructures.java")));
-            check(structures.contains("return claimed(HIDEOUT, context, () -> {") && structures.contains("if (!offered(context, hideoutSpread(context)) || inCity(context, chunk.f_45578_, chunk.f_45579_)) {")
-                && structures.contains("int middle = dryGround(context, ground(context), minX + sizeX / 2 - span / 2, minZ + sizeZ / 2 - span / 2, span);")
+            check(structures.contains("return claimed(HIDEOUT, context, () -> {") && structures.contains("if (inCity(context, chunk.f_45578_, chunk.f_45579_)) {")
+                && structures.contains("int middle = DryLand.land(ground(context), minX, minZ, sizeX, sizeZ, 9, HIDEOUT_FLAT, com.hex.kagune.control.village.CityPlan.DEEP);")
                 && structures.contains("if ((CCG.equals(this.site.id()) || unique(this.site)) && onPurpose(context)) {")
                 && structures.contains("return claimed(CCG.equals(this.site.id()) ? CCG : HIDEOUT, context, () -> Optional.of(this.stub(")
                 && structures.contains("return context.f_226630_().test(null);"),
-                "the world's one hideout, at the first of its set's spots on dry land the world makes (4.1.43: /place only while there is none)");
+                "the world's one hideout, at the first spot the world makes where its land holds it (4.1.44: judged as the city's; 4.1.43: /place only while there is none)");
         } catch (java.io.IOException failure) {
             check(false, "read the sources: " + failure);
         }
