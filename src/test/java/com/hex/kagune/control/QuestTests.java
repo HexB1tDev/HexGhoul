@@ -41,12 +41,94 @@ public final class QuestTests {
         taughtAlready();
         romance();
         forGood();
+        journal();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
             System.exit(1);
         }
         System.out.println("Quest tests: " + passed + " checks passed");
+    }
+
+    /**
+     * 4.1.34 (the owner: "We also need to better the looks of the quest menu ... It's just really dull, really bad looking, not interactive at
+     * all"; "the background and all, they're also super ugly"; "why not just a cute box?"): a compact box (the world seen round it); every tab,
+     * card and node of the road something to click, inside the box; the road holds every quest of the path; the organic board, its veins and
+     * the full-screen overlay gone.
+     */
+    static void journal() {
+        com.hex.kagune.control.client.ui.UiCanvas none = new com.hex.kagune.control.client.ui.UiCanvas() {
+            public void fill(int x0, int y0, int x1, int y1, int argb) {
+            }
+
+            public void gradient(int x0, int y0, int x1, int y1, int top, int bottom) {
+            }
+
+            public void text(String text, int x, int y, int argb, boolean shadow) {
+            }
+
+            public void centered(String text, int centerX, int y, int argb) {
+            }
+
+            public int width(String text) {
+                return text.length() * 6;
+            }
+
+            public void face(int x, int y, int size) {
+            }
+
+            public void hat(int x, int y, int size, int[] hole) {
+            }
+
+            public void push() {
+            }
+
+            public void translate(float x, float y) {
+            }
+
+            public void scale(float factor) {
+            }
+
+            public void pop() {
+            }
+
+            public void batch(Runnable draw) {
+                draw.run();
+            }
+        };
+        check(com.hex.kagune.control.client.QuestJournalView.UI_WIDTH <= 680 && com.hex.kagune.control.client.QuestJournalView.UI_HEIGHT <= 400,
+            "a compact box, not the whole screen");
+        QuestLog log = new QuestLog();
+        for (com.hex.kagune.control.client.QuestJournalView.Tab tab : com.hex.kagune.control.client.QuestJournalView.Tab.values()) {
+            for (double time : new double[] {0.0, 0.1, 2.0}) {
+                java.util.Map<String, com.hex.kagune.control.client.UkakuMenuView.Rect> hits = com.hex.kagune.control.client.QuestJournalView.draw(none,
+                    new com.hex.kagune.control.client.QuestJournalView.Model(com.hex.kagune.control.KagunePath.RINKAKU, 300, log, 0L, tab, null), 300, 200, time);
+                for (com.hex.kagune.control.client.QuestJournalView.Tab each : com.hex.kagune.control.client.QuestJournalView.Tab.values()) {
+                    check(hits.containsKey("tab:" + each.name()), tab + ": the " + each + " tab is there to click");
+                }
+                for (com.hex.kagune.control.client.UkakuMenuView.Rect rect : hits.values()) {
+                    check(rect.x() >= 0 && rect.y() >= 0 && rect.x() + rect.width() <= com.hex.kagune.control.client.QuestJournalView.UI_WIDTH
+                        && rect.y() + rect.height() <= com.hex.kagune.control.client.QuestJournalView.UI_HEIGHT, tab + ": everything to click inside the box");
+                }
+                if (tab == com.hex.kagune.control.client.QuestJournalView.Tab.PATH) {
+                    for (Quest quest : QuestBook.all()) {
+                        if (quest.line() == Quest.Line.PATH && quest.path() == com.hex.kagune.control.KagunePath.RINKAKU) {
+                            check(hits.containsKey("quest:" + quest.id()), "the road: " + quest.id() + " is on it, to click");
+                        }
+                    }
+                }
+            }
+        }
+        try {
+            String view = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/client/QuestJournalView.java"));
+            String screen = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/client/QuestScreen.java"));
+            check(!view.contains("organicPanel") && !view.contains("drawVein") && view.contains("QuestStyle.backdrop("),
+                "the organic board and its veins gone: the clean plate");
+            check(!screen.contains("this.m_280273_(graphics)") && !screen.contains("graphics.m_280024_(0, 0, this.f_96543_, this.f_96544_"),
+                "no full-screen overlay: the world seen round the box");
+        } catch (java.io.IOException failure) {
+            check(false, "the journal's source: " + failure);
+        }
     }
 
     /**

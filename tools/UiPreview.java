@@ -331,11 +331,16 @@ public class UiPreview {
         BufferedImage image = new BufferedImage(w * 2, h * 2, BufferedImage.TYPE_INT_RGB);
         Graphics2D g = graphics(image, 2);
         ImageCanvas c = new ImageCanvas(g, false);
-        c.gradient(0, 0, w, h, 0xE8080506, 0xF0180608);
+        // 4.1.34: the journal is a box over the world: a stand-in daylit scene behind it (sky, hills, grass).
+        c.gradient(0, 0, w, h * 6 / 10, 0xFF79A6FF, 0xFFBCD6FF);
+        c.fill(0, h * 6 / 10, w, h, 0xFF5C9A3C);
+        for (int i = 0; i < w; i += 40) {
+            c.fill(i, h * 6 / 10 - 20 - (i * 37 % 60), i + 40, h * 6 / 10, 0xFF4E8834);
+        }
         c.push();
-        c.translate(0, 10);
+        c.translate((w - com.hex.kagune.control.client.QuestJournalView.UI_WIDTH) / 2.0F, (h - com.hex.kagune.control.client.QuestJournalView.UI_HEIGHT) / 2.0F);
         com.hex.kagune.control.client.QuestJournalView.draw(c, new com.hex.kagune.control.client.QuestJournalView.Model(path, mastery, log, time, tab, picked,
-            cards), 0, 0, 1.0);
+            cards), Double.parseDouble(System.getProperty("mx", "0")), Double.parseDouble(System.getProperty("my", "0")), 1.0);
         c.pop();
         ImageIO.write(image, "png", out);
         System.out.println("wrote " + out);

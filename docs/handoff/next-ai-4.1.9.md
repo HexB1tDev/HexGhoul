@@ -147,6 +147,7 @@ the next AI now."
 | 4.1.12 | Places never nowhere, `/kagune places`; slams without particles and 1.75x as long; each coat half on its own leg | pushed, EXIT 0 |
 | 4.1.13 | Every slam an arm (behind a new shoulder) and a hand, aligned on its target and clear of his posed body; the guard clamped round him clear of his raised arms; `/kagune places` makes each place's chunk and says built or stopped; coat previews | pushed, EXIT 0 |
 | 4.1.14 | One-of-a-kind places at any dry spot their set offers, the first the world builds kept with the world (`PlaceClaims`); coat tails drawn on the legs; each Ukaku wing slam plays out in full (1.3x damage) | pushed, EXIT 0 |
+| 4.1.34 | The quest menu a compact box over the world: `QuestJournalView` (640 x 380, cards, checklist, badges, mastery bar, `roadmap`), `QuestStyle`, `QuestScreen` without the overlay; `tools/UiPreview` draws it over a stand-in world (`-Dmx -Dmy` for hover); `QuestTests.journal` | pushed, EXIT 0 |
 | 4.1.33 | Quests finished for good: `QuestLog.finishAll`/`finished` (saved `all=1`, `state` DONE for every PATH/GHOUL quest), called by `QuestServer.completeOpen`; hunts and favours unchanged; `QuestTests.forGood` | pushed, EXIT 0 |
 | 4.1.32 | A quinque's M1 first: `WeaponClient.quinqueFirst` (HIGH, lands the hit via `MultiPlayerGameMode.attack` m_105223_, `Minecraft.f_91072_`, cancels the click ahead of the original's kagune listener), `KaguneCombat.startSwipe`/`quinqueOut`; `QuinqueTests.first` | pushed, EXIT 0 |
 | 4.1.31 | Arima phase 2 part 4: his end at 6 HP (`REAPER_END_HEALTH`, `endClamp`, `AgentBrain.ending`, `CcgAgent.END` 12): the blade lowered, shattered (`ReaperBladeMesh.broken`, shards), on his knees (`ReaperBladePose.end`, `KNEEL`, `KNEEL_DROP`), dead by the blow that brought it | pushed, EXIT 0 |
@@ -497,6 +498,27 @@ blush, it depends on their mood." (read as: how much they blush goes by their mo
      - the blade and the launcher, which keep the legacy motion.
   2. The blade's, spear's, mace's, launcher's and Dawn's own strings by intent (`aims`), each its own count.
   3. New kagune-born quinques (the owner: whips after different kagunes, more swords).
+
+## 4.1.34, what and where (the quest menu, a cute box)
+
+The owner (quoted exactly): "We also need to better the looks of the quest menu. It looks very bad. Very, very. I don't know. I just don't
+even feel like opening it half the time. I don't feel like opening it. It's just really dull, really bad looking, not interactive at all.
+It's just bad, bro. We need to better that." Then: "Fair warning is also the background and all, they're also super ugly." And: "Where does
+the menu have to fill the entire screen? Why not just like a cute like thing that still allows you to see the background? Like why not just
+a cute box? Why does everything have to be a full screen thing? Like I don't understand".
+
+- **`QuestJournalView`:** its own 640 x 380 space (`UI_WIDTH`, `UI_HEIGHT`; `LIST_X/WIDTH`, `DETAIL_X/WIDTH`, `CONTENT_Y`), `QuestScreen`
+  scales it to fit (at most 1) and centres it with nothing drawn behind (no `renderBackground`, no gradient). `header` (title, path and
+  mastery, the bar to the next PATH quest by mastery, points/side chips on the tabs' row), `tabs`, `list` (cards: glyph tile, chip, %, bar;
+  hover shifts, nearly done glows, slide in on open), `detail` (title x1.25, quote, checklist with segmented bars, reward badges via
+  `rewards`, rival/side chips, a stamp), `roadmap` (PATH tab: the path's quests by mastery as nodes, rivals as a fork, hover tooltip,
+  `quest:ID` hits). `romance` re-fitted to the columns. The old `gates` text dump is gone.
+- **`QuestStyle`:** colours, `line`/`circle`/`ring`/`box`/`chip`/`check`/`lock`/`cross`, `glyph` per line and state, `rewardGlyph`,
+  `backdrop` (shadow, cut-corner plate, header glow, honeycomb, corner brackets), `honeycomb`, `hexagon`, `polygonDiamond`.
+- **Preview:** `tools/UiPreview.java quests` (over a stand-in sky and grass; `-Dmx= -Dmy=` put the mouse somewhere to see hovers).
+- **Tests:** `QuestTests.journal` (a compact box; every tab, card and road node clickable and inside it; the road holds the path's quests;
+  no organic board, no full-screen overlay).
+- **Not tested in game.**
 
 ## 4.1.33, what and where (quests finished once, for good)
 

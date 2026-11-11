@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.34 (HexGhoul): the quest menu, a cute box (testing)
+
+See `.github/release-notes-4.1.34.md`. "It's just really dull, really bad looking, not interactive at all", "the background and all, they're also super ugly", "why not just a cute box?": `QuestJournalView` laid out as a 640 x 380 box (`UI_WIDTH`/`UI_HEIGHT`) with `QuestStyle` (plate, brackets, honeycomb, icons, chips, checks, badges), cards with hover, a mastery bar to the next quest, a clickable road (`roadmap`); `QuestScreen` draws no full-screen overlay. Protocol 117.
+
 ## 4.1.33 (HexGhoul): quests finished once, for good (testing)
 
 See `.github/release-notes-4.1.33.md`. "Once you did all of them /quest complete, all of them should be finished. Even if you pick another kagune": `/kagune quest complete all` now also calls `QuestLog.finishAll` (every PATH and GHOUL quest of `QuestBook` done, a saved `all=1` flag that `state` honours for any quest, later ones included); hunts and favours still come; `reset` clears it. Protocol 117.

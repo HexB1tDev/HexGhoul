@@ -38,10 +38,10 @@ public final class QuestScreen extends Screen {
 
     @Override
     public void m_88315_(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        this.m_280273_(graphics);
-        graphics.m_280024_(0, 0, this.f_96543_, this.f_96544_, 0xE8080506, 0xF0180608);
-        this.scale = Math.max(0.25F, Math.min(1.0F, Math.min((this.f_96543_ - 12.0F) / QuestJournalView.UI_WIDTH,
-            (this.f_96544_ - 12.0F) / QuestJournalView.UI_HEIGHT)));
+        // 4.1.34 (the owner: "Why not just like a cute like thing that still allows you to see the background?"): no overlay over the
+        // world: only the box, its shadow round it.
+        this.scale = Math.max(0.25F, Math.min(1.0F, Math.min((this.f_96543_ - 24.0F) / QuestJournalView.UI_WIDTH,
+            (this.f_96544_ - 24.0F) / QuestJournalView.UI_HEIGHT)));
         this.originX = (this.f_96543_ - QuestJournalView.UI_WIDTH * this.scale) * 0.5F;
         this.originY = (this.f_96544_ - QuestJournalView.UI_HEIGHT * this.scale) * 0.5F;
         Minecraft minecraft = Minecraft.m_91087_();
