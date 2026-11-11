@@ -1956,8 +1956,13 @@ public final class NpcTests {
             String commands = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/com/hex/kagune/control/server/ControlCommands.java")));
             // (Read in the source: ControlStructures registers the game's own registries as it loads, and there is no game here.)
             check(commands.contains("Commands.m_82127_(\"places\")") && commands.contains("ControlStructures.report()")
-                && structures.contains("for (String id : java.util.List.of(\"aogiri_hideout\", \"ccg_building\", \"cyber_tower\", \"anteiku\", \"library\"))"),
+                && structures.contains("ONE_OF_A_KIND = java.util.List.of(\"aogiri_hideout\", \"ccg_building\", \"cyber_tower\", \"anteiku\", \"library\")"),
                 "/kagune places lists the five places");
+            // 4.1.13: from a player it makes each place's start chunk and looks in it: built there, or stopped (one chunk a world: anything that
+            // stops it there leaves the world without it).
+            check(commands.contains("ControlStructures.report(player.m_284548_())") && structures.contains("level.m_6325_(start[0], start[1]).m_213652_(structure)")
+                && structures.contains("found != null && found.m_73603_()") && structures.contains("STARTS.put(id, new int[] {known[0], known[1]});")
+                && structures.split("STARTS.put\\(id").length == 3, "/kagune places says whether each place was built in its chunk, or what stopped it");
         } catch (java.io.IOException failure) {
             check(false, "read the sets: " + failure);
         }

@@ -60,7 +60,16 @@ final class ControlCommands {
         // 4.1.12 (the owner: "And I still can't. Mind you, I still fucking can't."): where this world's hideout, CCG building, Ken's tower,
         // Anteiku and library stand, as worked out (after /locate or the world's making asked for them), with the /tp to each.
         dispatcher.register(Commands.m_82127_("kagune").then(Commands.m_82127_("places").executes(context -> {
-            for (String line : com.hex.kagune.control.ControlStructures.report()) {
+            // 4.1.13: from a player, each place's chunk is made and looked in (built there, or what stopped it); from the console, the spots.
+            ServerPlayer player;
+            try {
+                player = context.getSource().m_81375_();
+            } catch (CommandSyntaxException console) {
+                player = null;
+            }
+            java.util.List<String> lines = player != null ? com.hex.kagune.control.ControlStructures.report(player.m_284548_())
+                : com.hex.kagune.control.ControlStructures.report();
+            for (String line : lines) {
                 context.getSource().m_288197_(() -> Component.m_237113_(line), false);
             }
             return 1;

@@ -1220,3 +1220,13 @@ C net/minecraft/world/level/levelgen/structure/placement/RandomSpreadStructurePl
 M net/minecraft/world/level/levelgen/structure/placement/RandomSpreadStructurePlacement m_205003_ ()I  # [srg] spacing: joined.tsrg dsv a ()I m_205003_ 205003 (yarn getSpacing)
 M net/minecraft/world/level/levelgen/structure/placement/RandomSpreadStructurePlacement m_227008_ (JII)Lnet/minecraft/world/level/ChunkPos;  # [srg] getPotentialStructureChunk: joined.tsrg dsv a (JII)Lclt; m_227008_ 227008 (yarn getStartChunk)
 F net/minecraft/core/registries/Registries f_256998_ Lnet/minecraft/resources/ResourceKey;  # [srg] STRUCTURE_SET: joined.tsrg jc aB f_256998_ 256998 (yarn RegistryKeys.STRUCTURE_SET)
+# 4.1.13 (the owner: "And I still can't" find them with /locate): /kagune places makes each one-of-a-kind place's chosen chunk in full and
+# says whether the place stands in it, or whether something stopped it being built there (another mod's structure rules: Structure
+# Essentials, in the owner's pack, can keep structures a set distance apart). cmp = LevelReader, ddx = ChunkAccess, dsi = StructureStart.
+C net/minecraft/world/level/LevelReader                                            # [srg] cmp C_1599_ (class_4538, yarn WorldView): the server's level passed as one
+M net/minecraft/world/level/LevelReader m_9598_ ()Lnet/minecraft/core/RegistryAccess;  # [srg] registryAccess: joined.tsrg cmp B_ ()Lhs; m_9598_ 246437 (yarn WorldView.getRegistryManager method_30349)
+M net/minecraft/world/level/LevelReader m_6325_ (II)Lnet/minecraft/world/level/chunk/ChunkAccess;  # [srg] getChunk(x, z): joined.tsrg cmp a (II)Lddx; m_6325_ 6325 (yarn WorldView.getChunk method_8392)
+C net/minecraft/world/level/chunk/ChunkAccess                                       # [srg] ddx C_2116_ (class_2791, yarn Chunk)
+M net/minecraft/world/level/chunk/ChunkAccess m_213652_ (Lnet/minecraft/world/level/levelgen/structure/Structure;)Lnet/minecraft/world/level/levelgen/structure/StructureStart;  # [srg] getStartForStructure: joined.tsrg ddx a (Ldsa;)Ldsi; m_213652_ 223004 (declared on ddx, from deu = StructureAccess; yarn StructureHolder.getStructureStart method_12181)
+C net/minecraft/world/level/levelgen/structure/StructureStart                       # [srg] dsi C_2588_ (class_3449, yarn StructureStart)
+M net/minecraft/world/level/levelgen/structure/StructureStart m_73603_ ()Z           # [srg] isValid: joined.tsrg dsi b ()Z m_73603_ (yarn StructureStart.hasChildren method_16657)

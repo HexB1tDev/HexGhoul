@@ -500,6 +500,7 @@ public final class ControlStructures {
                     com.hex.kagune.KaguneMod.LOGGER.info("HexKagune: " + what + ": none of this world's spots for it is on dry land (all sea)."
                         + " /place structure hexkagune:" + id + " builds one where you stand.");
                 } else {
+                    STARTS.put(id, new int[] {known[0], known[1]});
                     REPORT.put(id, what + ": x " + ((known[0] << 4) + 8) + ", z " + ((known[1] << 4) + 8) + (known.length > 3 && known[3] == FORCED
                         ? " (no dry land among its spots: built on the nearest anyway)" : ""));
                     com.hex.kagune.KaguneMod.LOGGER.info("HexKagune: this world's " + what + " stands at x " + ((known[0] << 4) + 8) + ", z "
@@ -608,14 +609,59 @@ public final class ControlStructures {
      */
     static final java.util.Map<String, String> REPORT = new java.util.concurrent.ConcurrentHashMap<>();
 
+    /** 4.1.13: each one-of-a-kind place's start chunk ({x, z}) by its id, as this server worked it out: the one chunk its start is made in. */
+    static final java.util.Map<String, int[]> STARTS = new java.util.concurrent.ConcurrentHashMap<>();
+    /** 4.1.12: the one-of-a-kind places, as /kagune places lists them. */
+    static final java.util.List<String> ONE_OF_A_KIND = java.util.List.of("aogiri_hideout", "ccg_building", "cyber_tower", "anteiku", "library");
+
     /** 4.1.12: the lines /kagune places shows. */
     public static java.util.List<String> report() {
         java.util.List<String> lines = new java.util.ArrayList<>();
-        for (String id : java.util.List.of("aogiri_hideout", "ccg_building", "cyber_tower", "anteiku", "library")) {
+        for (String id : ONE_OF_A_KIND) {
             String line = REPORT.get(id);
             lines.add(line != null ? line : id + ": not worked out yet (run /locate structure hexkagune:" + id + ")");
         }
         return lines;
+    }
+
+    /**
+     * 4.1.13 (the owner: "And I still can't" find them with /locate): as {@link #report()}, and each worked-out place's start chunk made in
+     * full in {@code level} and looked in. Each place may stand in that one chunk only (one a world), so anything that stops it there (another
+     * mod's structure rules: Structure Essentials, in the owner's pack, can keep every structure a set distance from the others) leaves the
+     * world without it, and /locate finds nothing: this says which.
+     */
+    public static java.util.List<String> report(net.minecraft.world.level.LevelReader level) {
+        java.util.List<String> lines = new java.util.ArrayList<>();
+        for (String id : ONE_OF_A_KIND) {
+            String line = REPORT.get(id);
+            int[] start = STARTS.get(id);
+            if (line == null) {
+                lines.add(id + ": not worked out yet (run /locate structure hexkagune:" + id + ", then this again)");
+            } else {
+                lines.add(start == null ? line : line + " - " + built(level, id, start));
+            }
+        }
+        return lines;
+    }
+
+    /** 4.1.13: whether hexkagune:{@code id} stands in its start chunk {@code start} of {@code level} (made in full to look). */
+    static String built(net.minecraft.world.level.LevelReader level, String id, int[] start) {
+        try {
+            Structure structure = level.m_9598_().m_175515_(Registries.f_256944_).m_7745_(net.minecraft.resources.ResourceLocation.m_214293_("hexkagune", id));
+            if (structure == null) {
+                return "missing from this world's structures (a datapack or a mod took it out)";
+            }
+            net.minecraft.world.level.levelgen.structure.StructureStart found = level.m_6325_(start[0], start[1]).m_213652_(structure);
+            if (found != null && found.m_73603_()) {
+                return "built there";
+            }
+            return "NOT built there: its chunk is made but it isn't in it. Something stopped it (another mod's structure rules: Structure Essentials'"
+                + " minimum distance between structures can; or that ground was made by an older version). /place structure hexkagune:" + id
+                + " builds one where you stand.";
+        } catch (RuntimeException | LinkageError failure) {
+            Safety.caught(failure, "ControlStructures.built");
+            return "could not be checked";
+        }
     }
 
     /** 4.1.1: the biomes no structure may stand in or beside (a sea, a river, a beach, a swamp): data/hexkagune/tags/worldgen/biome/wet.json. */
@@ -809,6 +855,9 @@ public final class ControlStructures {
                         case "library" -> "the library";
                         default -> "Ken's tower";
                     }, id, known.length == 0 ? known : new int[] {known[2], known[3], 0, known.length > 4 ? known[4] : 0});
+                    if (known.length > 1) {
+                        STARTS.put(id, new int[] {known[0], known[1]}); // 4.1.13: its start's chunk (it may stand a little off it)
+                    }
                 }
                 return known.length == 0 ? null : known;
             }

@@ -7,4 +7,6 @@ public interface LevelReader extends BlockGetter, CollisionGetter {
     /** holderLookup(registry) */ default <T> net.minecraft.core.HolderLookup<T> m_246945_(
         net.minecraft.resources.ResourceKey<? extends net.minecraft.core.Registry<? extends T>> registry) { throw new UnsupportedOperationException(); }
     /** hasChunkAt(pos) */ default boolean m_46805_(net.minecraft.core.BlockPos pos) { throw new UnsupportedOperationException(); }
+    /** registryAccess (4.1.13) */ default net.minecraft.core.RegistryAccess m_9598_() { throw new UnsupportedOperationException(); }
+    /** getChunk(x, z): the chunk made in full (4.1.13) */ default net.minecraft.world.level.chunk.ChunkAccess m_6325_(int x, int z) { throw new UnsupportedOperationException(); }
 }

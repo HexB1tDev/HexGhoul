@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.13 (HexGhoul): the wing slams bend like hands and stay off his body, the guard clamps round him, /kagune places checks each place (testing)
+
+See `.github/release-notes-4.1.13.md`. Your words: "that they actually bend like that, like hands ... While being perfectly aligned as well, and it doesn't like clip to the body." Every Ukaku M1 slam is now an arm and a hand. The wing's base comes out of his back behind his shoulder, then the arm swings forward and the hand curls onto the target. The slap and swing whip across his front, the rising wing ends high in front, the overhead slams come down on the ground in front, and the twin slam's two hands meet in front. Every move and the guard were tuned against his posed body, fire and crystal, so no wing goes through his head, chest or arms. `/kagune places` now makes each one-of-a-kind place's chunk and says whether it was built there or what stopped it (Structure Essentials' minimum distance can). Coat previews: `docs/handoff/coat-*-4.1.13.png`. Protocol 116.
+
 ## 4.1.12 (HexGhoul): places never nowhere, /kagune places, slower slams, no slam particles, coat halves on their own legs (testing)
 
 See `.github/release-notes-4.1.12.md`. The hideout, the CCG building, Ken's tower, Anteiku and the library always get a spot (the nearest when none is on dry land); `/kagune places` lists where each stands. The wing slams spawn no particles, and run about 1.75 times as long (a slap 16 ticks) so the swing can be seen. Each half of a coat's tails hangs from its own leg (no more skirt thrown out flat in a jump or a kick). Protocol 116.

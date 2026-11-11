@@ -1,4 +1,4 @@
-# Next AI: after 4.1.12 (4.1.9: the inventory crash, the special places; 4.1.10-4.1.12: the wing slams; 4.1.12: places never nowhere, the coat)
+# Next AI: after 4.1.13 (4.1.9: the inventory crash, the special places; 4.1.10-4.1.13: the wing slams; 4.1.12: places never nowhere, the coat; 4.1.13: slams as arms and hands clear of his body, the guard, /kagune places checks each place)
 
 Read this first. The house rules are in `next-ai-4.1.2.md` and `next-ai-4.0.0.md` (they still hold): answer in English, quote the owner
 exactly, never claim in-game testing, the full `python3 build.py` must end with EXIT 0 on the exact commit before it is pushed, never
@@ -13,6 +13,7 @@ alter the owner's files, one version at a time, no PR.
 | 4.1.10 | The Ukaku's wing slams: chamber, drive, overshoot, recoil, the whip; the guard's flare and settle | pushed, EXIT 0 |
 | 4.1.11 | The slamming wing stretches out as far as the slam hits, a lash of fire; the whip keeps pace with each blow | pushed, EXIT 0 |
 | 4.1.12 | Places never nowhere, `/kagune places`; slams without particles and 1.75x as long; each coat half on its own leg | pushed, EXIT 0 |
+| 4.1.13 | Every slam an arm (behind a new shoulder) and a hand, aligned on its target and clear of his posed body; the guard clamped round him clear of his raised arms; `/kagune places` makes each place's chunk and says built or stopped; coat previews | pushed, EXIT 0 |
 
 Branch: `claude/hopeful-euler-dnx1ub` (fast-forwarded from `claude/next-ai-4-1-6-handoff-sqv9e4`, which stops at 4.1.8). A new session's own
 branch usually starts at `main` (still 1.3.0): fast-forward it first (`git merge --ff-only origin/claude/hopeful-euler-dnx1ub`).
@@ -131,28 +132,70 @@ clothes to open like that and look good"; "How do you look at the block animatio
   (`RinkakuBlockPose`, in `KaguneBodyAnimation`): ask the owner what they want before building (a slower close with its own body pose was
   proposed to them).
 
-## Paused mid-4.1.13 (work in progress, pushed unverified at the owner's word: "time to pause and push what we have Im out of usage")
+## 4.1.13, what and where
 
-- **In this push (not versioned, no release notes, the full build NOT run on it; CI's build runs the tests):** the wing guard rebuilt as the
-  owner asked ("I asked for a block animation where the wings like clamp together like hands in front of the player"; their screenshot showed
-  4.1.2's guard as a cone over his head): `WingRig.guardFrame` (each wing forward along his side, then curled level `GUARD_WRAP` 205° round his
-  front, its feathers folded by its length so the shield spans `GUARD_HALF` either side, waist to head), `GUARD_SWEEP` -55, `GUARD_ROLL` -36,
-  `GUARD_GROWTH` 0.12, no overshoot; `UkakuTests`: the guard never through his body (`insideBody`, as at rest) nor into the ground, at every
-  moment, at mastery 50/300/1000, closing round his front waist to head; `tools/art-preview.sh <out> guard` (`ArtPreview.guardSheet`: closed
-  from four sides, closing from in front). Run `python3 tools/quick_check.py UkakuTests` first thing: it was still running at the pause.
-- **The owner liked the bending shapes for the M1s too** ("You see the shapes you're making? That was the right idea that I wanted for the M1
-  attacks in the first place, that they actually bend like that, like hands ... While being perfectly aligned as well, and it doesn't like clip
-  to the body"). Tried and pulled back (NOT in this push): the striking wing cupped like a hand (`cupToward`: a slap or swing level toward the
-  far side, the overhead slams down 60°, the rise up 45°; feathers open as a palm folded by size; stretch at most 2x). A body-clip test showed
-  4.1.12's own overhead and twin slams already pass through his head in their wind-up (`Blow` chamber {8, 80} and {4, 86}: hundreds of corners
-  at 0.2 of the move), and every nudge of the keys moved the clip elsewhere. Next: design the M1 keys against that clip test from the start
-  (`insideBody` <= rest at every 0.02 of every slam, TWIN and Rabbit's left string), then cup them.
-- Still open from the owner: the structures not found (ask for `/kagune places` after a `/locate` in a new world, with the jar version);
-  the M1s ("at best mediocre"); the coat (4.1.12, not previewed).
+The owner (quoted exactly): "You see the shapes you're making? That was the right idea that I wanted for the M1 attacks in the first place,
+that they actually bend like that, like hands. That's what I fucking wanted. That's it. While being perfectly aligned as well, and it
+doesn't like clip to the body." Then: "Continue and do not stop at any point till all tasks are deemed perfect by you".
+
+- **The wing is an arm and a hand** (`WingRig.slamFrame`, `UkakuModel.Bend`'s new shoulder fields `base`, `shoulderStart`, `shoulderEnd`):
+  - **Shoulder:** the first `SHOULDER_START` blocks run along `base` (out of his back at `shoulderSweep`: drawn back by
+    `SHOULDER_DRAW` of the arm's swing past rest, to `SHOULDER_SWEEP` 40 at most; never higher than `SHOULDER_ROLL` 0). The wing then
+    turns onto the arm's axis on an arc by `SHOULDER_END`.
+  - **Arm and hand:** past the turn it is the old frame, moved. The hand curls past `handStraight` (overhead `SLAM_FOREARM` 0.5, twin
+    `TWIN_FOREARM` 0.4 of the wing; at least past the shoulder) toward `cupToward`:
+    - slap and swing: level across;
+    - overhead: world `{-side*SLAM_IN, -1, SLAM_ON}`;
+    - twin: `{-side*TWIN_IN, -1, TWIN_ON}`;
+    - rise: up.
+  - **Timing:** the arm leads by `ARM_LEAD` of the drive; the hand lands on the server's tick.
+  - **No pop:** at rest the shoulder has no turn, so nothing jumps as a blow starts.
+  - The guard (`guardFrame`) has the same shoulder; its wrap is never tighter than `GUARD_RADIUS` (small wings hooked into the head).
+- **The keys (`WingRig.blow`) were found by search, not by hand**, against his body as the game draws it:
+  - The body is `UkakuBody` mapped as `KaguneBodyAnimation.addUkaku` does. The wings are carried by `BodyFrame.carry(pose, "torso")` as
+    `UkakuWingRenderer` does, and sunk-in points are counted with `BodyFrame.Solid.depth`.
+  - The idle wing rolls out (`COUNTER_ROLL` -12) and `UkakuBody`'s twin wind-up keeps the head on the target (`headX` 0.15). Both were head
+    clips.
+  - Targets are the hand's centre line (`WingRig.slamTip`), carried:
+    - overhead hand at about (0.6, 0.8, 3.3) at mastery 300;
+    - twin hands at about (±0.4, 0.7, 3.2);
+    - rise at about (0.8 to its side, 3.2, 2.0).
+  - The probes and the optimizer are scratch code, not in the repo. Re-derive them from the tests: `UkakuTests.sunkIn` / `posed` / `carried`.
+- **Tests** (`UkakuTests`):
+  - `slamsClearOfHim`: every slam of the string, Rabbit Guise's left string and the guard (with the arms raised as `guarding` raises them),
+    fire and crystal, mastery 50/150/300/1000, every 0.02. At most `GRAZE` (30) more sunk points than at rest; today's worst is about 26.
+  - `slamsAligned`: each hand lands where it aims.
+  - `slamBeats`: rewritten for arm and hand (the hand through its keys on its beats, the arm a beat ahead, the hand fastest as it lands and
+    never braking, the hand trailing the arm through the drive, growth up to `GROW_MOST` / `GROW_MOST_DOWN`).
+- **The preview now carries the wings with the torso** (`ArtPreview.render`: `BodyFrame.carry`), as the game does. Before 4.1.13 every
+  leaning pose's preview put the wings in the wrong place.
+  - Sheets: `impacts` (each slam at its hit, front/side/above), `guard`, `coats` (both coats in six leg poses through `CoatDrape` as
+    `OutfitLayer` hangs them), `slams-gif`.
+  - Run: `bash tools/art-preview.sh <out> impacts guard coats` after a `quick_check` build.
+- **`/kagune places`** (`ControlStructures.report(LevelReader)`, `built`, `STARTS`):
+  - From a player, it makes each one-of-a-kind place's start chunk in full and looks for its start: "built there", or "NOT built there"
+    (something stopped it).
+  - Why: each such place may stand in one chunk a world only, so a veto there (Structure Essentials' "minimum distance to other
+    structures", in the owner's pack) leaves the world without it and `/locate` finds nothing.
+  - New API (allowlisted with joined.tsrg evidence): `LevelReader.m_9598_`, `m_6325_`, `ChunkAccess.m_213652_`, `StructureStart.m_73603_`.
+- Previews in the repo: `docs/handoff/ukaku-impacts-4.1.13.png`, `ukaku-guard-4.1.13.png`, `coat-crimson-4.1.13.png`, `coat-formal-4.1.13.png`.
+
+## Still open
+
+- **The places:** waiting on the owner's `/kagune places` output from a new world, after a `/locate` of each.
+  - If it says "NOT built there": the veto theory holds. Ask them to set Structure Essentials' minimum distance to 0, or build a rescue:
+    record a vetoed start chunk once its chunk is made without the start, and choose the next offer whose ground is not made yet.
+    Beware building two.
+  - If it says "not worked out yet" after a `/locate`: the game never asks for the set (its biome check, or a mod removed the set).
+- **The look:** the owner judges the new slams in game. Likely asks:
+  - how far the hand curls (`blow` curl keys);
+  - the shoulder's size (`SHOULDER_*`);
+  - the drive's speed (`Blow.drive`, `DRIVE_SNAP`).
+
+  Any change must pass `slamsClearOfHim` and `slamsAligned`; re-tune against them, not by eye alone.
 
 ## Next after that
 
-- The owner judges the look. Likely asks: more or less whip (`WHIP_PERIOD`, `WHIP_DAMPING`, `WHIP_MOST`), a longer or shorter drive per slam
-  (`Blow.drive`), bigger chambers. Then the combos themselves (the rest of their ask: "study complex fighting moves, and combos"): the string
+- Then the combos themselves (the rest of their ask: "study complex fighting moves, and combos"): the string
   is 7 fixed stages (`ComboStyle.UKAKU_WINGS`); ideas to pitch first, not build unasked: a held M1 finisher, a launcher into an air slam,
   the chain flowing (the next stage's chamber taken from the last one's recoil instead of from rest).

@@ -110,20 +110,18 @@ public final class UkakuModel {
          * onto the axis on an arc to {@link #shoulderEnd}, and the rest carried on unturned from the arc's end.
          */
         private double[] shoulder(double[] r, double s) {
-            double[] a = this.axis;
-            double[] d = this.base;
-            double cos = Math.max(-1.0, Math.min(1.0, d[0] * a[0] + d[1] * a[1] + d[2] * a[2]));
-            double phi = Math.acos(cos);
-            double span = this.shoulderEnd - this.shoulderStart;
-            if (phi < 1.0E-4 || span <= 1.0E-6) {
+            double[] turning = this.turning();
+            if (turning == null) {
                 return r;
             }
-            double[] t = {a[0] - d[0] * cos, a[1] - d[1] * cos, a[2] - d[2] * cos};
-            double tl = Math.sqrt(t[0] * t[0] + t[1] * t[1] + t[2] * t[2]);
-            t = new double[] {t[0] / tl, t[1] / tl, t[2] / tl};
-            double[] c = {d[1] * t[2] - d[2] * t[1], d[2] * t[0] - d[0] * t[2], d[0] * t[1] - d[1] * t[0]};
+            double[] a = this.axis;
+            double[] d = this.base;
+            double[] t = {turning[0], turning[1], turning[2]};
+            double[] c = {turning[3], turning[4], turning[5]};
+            double phi = turning[6];
+            double span = this.shoulderEnd - this.shoulderStart;
             if (s <= this.shoulderStart) {
-                return turn(r, c, -phi);
+                return turn(r, c, turning[7], turning[8]);
             }
             double k = phi / span;
             if (s < this.shoulderEnd) {
@@ -133,16 +131,49 @@ public final class UkakuModel {
                 double across = (1.0 - Math.cos(theta)) / k;
                 return new double[] {along * d[0] + across * t[0] + q[0], along * d[1] + across * t[1] + q[1], along * d[2] + across * t[2] + q[2]};
             }
-            double along = this.shoulderStart + Math.sin(phi) / k;
-            double across = (1.0 - Math.cos(phi)) / k;
-            return new double[] {along * d[0] + across * t[0] + r[0] - this.shoulderEnd * a[0], along * d[1] + across * t[1] + r[1] - this.shoulderEnd * a[1],
-                along * d[2] + across * t[2] + r[2] - this.shoulderEnd * a[2]};
+            return new double[] {r[0] + turning[9], r[1] + turning[10], r[2] + turning[11]};
         }
+
+        /**
+         * The shoulder's turn, worked out once for this bend (every corner of a wing asks; the last bend asked is kept on each thread): {the
+         * way it turns toward (3), its axis (3), how far (radians), the cosine and sine of turning back that far, how far past the turn the
+         * wing moves (3)}; null for no turn.
+         */
+        private double[] turning() {
+            Object[] last = TURNING.get();
+            if (last != null && last[0] == this) {
+                return (double[])last[1];
+            }
+            double[] a = this.axis;
+            double[] d = this.base;
+            double cos = Math.max(-1.0, Math.min(1.0, d[0] * a[0] + d[1] * a[1] + d[2] * a[2]));
+            double phi = Math.acos(cos);
+            double[] out = null;
+            if (phi >= 1.0E-4 && this.shoulderEnd - this.shoulderStart > 1.0E-6) {
+                double[] t = {a[0] - d[0] * cos, a[1] - d[1] * cos, a[2] - d[2] * cos};
+                double tl = Math.sqrt(t[0] * t[0] + t[1] * t[1] + t[2] * t[2]);
+                t = new double[] {t[0] / tl, t[1] / tl, t[2] / tl};
+                // Past the turn, the straight wing moved from its own place at shoulderEnd to the arc's end.
+                double k = phi / (this.shoulderEnd - this.shoulderStart);
+                double along = this.shoulderStart + Math.sin(phi) / k;
+                double across = (1.0 - Math.cos(phi)) / k;
+                out = new double[] {t[0], t[1], t[2], d[1] * t[2] - d[2] * t[1], d[2] * t[0] - d[0] * t[2], d[0] * t[1] - d[1] * t[0], phi,
+                    Math.cos(-phi), Math.sin(-phi), along * d[0] + across * t[0] - this.shoulderEnd * a[0],
+                    along * d[1] + across * t[1] - this.shoulderEnd * a[1], along * d[2] + across * t[2] - this.shoulderEnd * a[2]};
+            }
+            TURNING.set(new Object[] {this, out});
+            return out;
+        }
+
+        private static final ThreadLocal<Object[]> TURNING = new ThreadLocal<>();
 
         /** {@code v} turned {@code angle} radians about the unit axis {@code k} (Rodrigues). */
         private static double[] turn(double[] v, double[] k, double angle) {
-            double cos = Math.cos(angle);
-            double sin = Math.sin(angle);
+            return turn(v, k, Math.cos(angle), Math.sin(angle));
+        }
+
+        /** {@code v} turned about the unit axis {@code k} by the angle whose cosine and sine these are (Rodrigues). */
+        private static double[] turn(double[] v, double[] k, double cos, double sin) {
             double kv = k[0] * v[0] + k[1] * v[1] + k[2] * v[2];
             double[] kx = {k[1] * v[2] - k[2] * v[1], k[2] * v[0] - k[0] * v[2], k[0] * v[1] - k[1] * v[0]};
             return new double[] {v[0] * cos + kx[0] * sin + k[0] * kv * (1.0 - cos), v[1] * cos + kx[1] * sin + k[1] * kv * (1.0 - cos),
