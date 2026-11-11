@@ -60,21 +60,50 @@ public final class AgentRules {
         return index == REAPER_LOOK || index == REAPER_BARE_LOOK;
     }
 
-    /** 4.1.28: the share of his health at which the jacket comes off (once: kept with him). */
-    public static final float REAPER_SHED_AT = 0.5F;
+    /**
+     * 4.1.28: the health at which the jacket comes off (once: kept with him); 4.1.29 (the owner: "this phase should trigger when he reaches
+     * about 90 HP"): 90 of his 280, no longer half.
+     */
+    public static final float REAPER_SHED_HEALTH = 90.0F;
     /** 4.1.28: the shedding move (ticks), and the tick it is off his shoulders (his look switched there). */
     public static final int REAPER_SHED_TICKS = 34;
     public static final int REAPER_SHED_SWAP = 15;
     /** 4.1.28 (the owner: "During this next phase, he gets way faster"): his speed and the rest between blows, the jacket off. */
     public static final double REAPER_BARE_SPEED = 1.3;
     public static final double REAPER_BARE_PACE = 0.7;
+    /**
+     * 4.1.29 (the owner: "becomes immortal, takes the jacket off, pulls out a random briefcase from his back like a golden looking briefcase"):
+     * after the jacket, the golden case drawn from behind his back and opened into his blade (ticks from the jacket's end): his hand behind
+     * him, the case in it, swung out to his side and up before him, opened (the case gone into the grip, the blade grown out), in his guard.
+     */
+    public static final int REAPER_DRAW_TICKS = 36;
+    public static final int REAPER_CASE_FROM = 7;
+    public static final int REAPER_CASE_OPENS = 18;
+    /** 4.1.29: the empty case dropped from his hand (ticks after the jacket), and how long it falls and lies before it sinks away. */
+    public static final int REAPER_CASE_DROPS = 25;
+    /** 4.1.28 + 4.1.29: the whole change, nothing landing on him through it. */
+    public static final int REAPER_CHANGE_TICKS = REAPER_SHED_TICKS + REAPER_DRAW_TICKS;
 
     /**
-     * 4.1.28: a blow of {@code amount} on him at {@code health} of {@code max}, his jacket still on: never past the half where it comes off
-     * (so the second phase always comes, however big the blow).
+     * 4.1.29 (the owner: "It is a heavy weapon, dual-handed, that deals massive damage and ... causes bleed whenever hit"): his blade's blows
+     * (before his rank's power): how hard, how far they reach (blocks, edge to edge), how wide their arc (cosine of half of it), how many
+     * stacks of bleeding each lands, the rest after his string.
      */
-    public static float shedClamp(float health, float max, float amount) {
-        return Math.max(0.0F, Math.min(amount, health - max * REAPER_SHED_AT));
+    public static final float REAPER_BLADE_DAMAGE = 15.0F;
+    public static final double REAPER_BLADE_REACH = 3.2;
+    public static final double REAPER_BLADE_ARC = 0.2;
+    public static final int REAPER_BLADE_BLEED = 2;
+    public static final int REAPER_BLADE_REST = 10;
+    /** 4.1.29: how hard each blow of his string lands (the thrust the hardest), and how far it throws. */
+    public static final float[] REAPER_BLADE_WEIGHT = {1.0F, 0.9F, 0.95F, 1.3F};
+    public static final double[] REAPER_BLADE_KNOCK = {0.35, 0.45, 0.6, 0.9};
+
+    /**
+     * 4.1.28: a blow of {@code amount} on him at {@code health}, his jacket still on: never past the health where it comes off (so the second
+     * phase always comes, however big the blow).
+     */
+    public static float shedClamp(float health, float amount) {
+        return Math.max(0.0F, Math.min(amount, health - REAPER_SHED_HEALTH));
     }
 
     /** 2.0.28: an ordinary investigator's look for a roll {@code r} in 0..1 (never the White Reaper's). */

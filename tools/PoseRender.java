@@ -287,8 +287,8 @@ public final class PoseRender {
         Part part;
         Cube cube;
         switch (name) {
-            case "rightArm" -> { part = part(pose, name, -5, 2, 0, 0, 0, BOB); cube = new Cube(new double[] {-3, -2, -2}, new double[] {1, 10, 2}, 1, PoseRender::arm); upperPart = true; }
-            case "leftArm" -> { part = part(pose, name, 5, 2, 0, 0, 0, -BOB); cube = new Cube(new double[] {-1, -2, -2}, new double[] {3, 10, 2}, 1, PoseRender::arm); upperPart = true; }
+            case "rightArm" -> { part = part(pose, name, -5 - armOut, 2, 0, 0, 0, BOB); cube = new Cube(new double[] {-3, -2, -2}, new double[] {1, 10, 2}, 1, PoseRender::arm); upperPart = true; }
+            case "leftArm" -> { part = part(pose, name, 5 + armOut, 2, 0, 0, 0, -BOB); cube = new Cube(new double[] {-1, -2, -2}, new double[] {3, 10, 2}, 1, PoseRender::arm); upperPart = true; }
             case "rightLeg" -> { part = part(pose, name, -1.9, 12, 0.1, 0, 0, 0); cube = new Cube(new double[] {-2, 0, -2}, new double[] {2, 12, 2}, 1, PoseRender::leg); upperPart = false; }
             case "leftLeg" -> { part = part(pose, name, 1.9, 12, 0.1, 0, 0, 0); cube = new Cube(new double[] {-2, 0, -2}, new double[] {2, 12, 2}, 1, PoseRender::leg); upperPart = false; }
             case "torso" -> {

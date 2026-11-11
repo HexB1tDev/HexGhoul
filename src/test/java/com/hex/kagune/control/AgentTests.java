@@ -85,6 +85,7 @@ public final class AgentTests {
         tendril();
         headquarters();
         shedding();
+        reaperBlade();
         if (!FAILURES.isEmpty()) {
             FAILURES.stream().limit(40).forEach(failure -> System.err.println("FAILED: " + failure));
             System.err.println(FAILURES.size() + " of " + (passed + FAILURES.size()) + " checks failed");
@@ -94,16 +95,128 @@ public final class AgentTests {
     }
 
     /**
+     * 4.1.29 (the owner: "a heavy weapon, dual-handed, that deals massive damage and, yeah, just causes bleed whenever hit", "pulls out a
+     * random briefcase from his back like a golden looking briefcase", "Just keep it only for himself"): his blade, drawn from the golden case
+     * after the jacket; both hands on its grip through every frame of his guard and his string, never through him or into the ground.
+     */
+    static void reaperBlade() throws IOException {
+        com.hex.kagune.control.quinque.ArmMesh.Mesh mesh = com.hex.kagune.control.quinque.ReaperBladeMesh.of();
+        double least = Double.MAX_VALUE;
+        double most = -Double.MAX_VALUE;
+        for (int i = 0; i < mesh.pos.length; i += 3) {
+            least = Math.min(least, mesh.pos[i]);
+            most = Math.max(most, mesh.pos[i]);
+        }
+        check(mesh.quads > 2000 && least <= com.hex.kagune.control.quinque.ReaperBladeMesh.BUTT + 0.5
+            && most >= com.hex.kagune.control.quinque.ReaperBladeMesh.TIP - 0.5, "a smooth mesh from its red tip to its point: " + least + " .. " + most);
+        check(com.hex.kagune.control.quinque.ReaperBladeMesh.TIP - com.hex.kagune.control.quinque.ReaperBladeMesh.BUTT > 40.0, "massive: longer than he is tall");
+        check(com.hex.kagune.control.quinque.ReaperBladeMesh.goldHalf(1).quads > 100 && com.hex.kagune.control.quinque.ReaperBladeMesh.goldHalf(-1).quads > 100
+            && com.hex.kagune.control.quinque.ReaperBladeMesh.goldHandle().quads > 10, "the golden case: two halves and its handle");
+        // Split open on its hinge (its bottom edge stays put, its halves swing apart) and the blade slid out of it: nothing shrinks.
+        double[] corner = {1.85, com.hex.kagune.control.quinque.ReaperBladeMesh.CASE_TOP, 0.0};
+        double[] swung = com.hex.kagune.control.quinque.ReaperBladeMesh.opened(corner, 1, com.hex.kagune.control.client.animation.ReaperBladePose.CASE_OPEN);
+        double[] hinge = com.hex.kagune.control.quinque.ReaperBladeMesh.opened(new double[] {0.0, com.hex.kagune.control.quinque.ReaperBladeMesh.CASE_BOTTOM, 3.0}, 1, 1.0);
+        double[] other = com.hex.kagune.control.quinque.ReaperBladeMesh.opened(new double[] {-1.85, com.hex.kagune.control.quinque.ReaperBladeMesh.CASE_TOP, 0.0}, -1,
+            com.hex.kagune.control.client.animation.ReaperBladePose.CASE_OPEN);
+        check(swung[0] > 7.0 && other[0] < -7.0 && Math.abs(hinge[0]) < 1.0E-9 && Math.abs(hinge[1] - com.hex.kagune.control.quinque.ReaperBladeMesh.CASE_BOTTOM) < 1.0E-9
+            && Math.abs(Math.hypot(swung[0], swung[1] - com.hex.kagune.control.quinque.ReaperBladeMesh.CASE_BOTTOM)
+            - Math.hypot(1.85, com.hex.kagune.control.quinque.ReaperBladeMesh.CASE_TOP - com.hex.kagune.control.quinque.ReaperBladeMesh.CASE_BOTTOM)) < 1.0E-9,
+            "its halves swing apart on the hinge, each its own size");
+        check(com.hex.kagune.control.quinque.ReaperBladeMesh.slid(5.0, 0.0) == 5.0 && com.hex.kagune.control.quinque.ReaperBladeMesh.slid(30.0, 0.0) < 10.0
+            && com.hex.kagune.control.quinque.ReaperBladeMesh.slid(30.0, 1.0) == 30.0 && com.hex.kagune.control.quinque.ReaperBladeMesh.slid(-12.0, 1.0) == -12.0,
+            "the blade slides out of the case: its guard as it is, its blade and rod drawn out to their length");
+        // Every frame of his guard, his string and the draw once the blade is out: the fists on the grip, the blade clear of him.
+        java.util.List<double[]> frames = new java.util.ArrayList<>();
+        frames.add(new double[] {-1, 0});
+        for (int step = 0; step < com.hex.kagune.control.npc.ReaperBladeRules.STEPS; step++) {
+            for (double age = 0.0; age <= com.hex.kagune.control.npc.ReaperBladeRules.blow(step).total(); age += 0.5) {
+                frames.add(new double[] {step, age});
+            }
+        }
+        for (double[] f : frames) {
+            RigPose p = f[0] < 0 ? com.hex.kagune.control.client.animation.ReaperBladePose.guard(0.0F)
+                : com.hex.kagune.control.client.animation.ReaperBladePose.strike((int)f[0], f[1]);
+            String at = f[0] < 0 ? "guard" : "blow " + ((int)f[0] + 1) + " tick " + f[1];
+            double[][] d = com.hex.kagune.control.client.animation.ReaperBladePose.drawn(p);
+            double[] left = com.hex.kagune.control.client.animation.ReaperBladePose.leftFist(p);
+            double[] grip = {d[0][0] + d[1][0] * com.hex.kagune.control.quinque.ReaperBladeMesh.LEFT_HAND,
+                d[0][1] + d[1][1] * com.hex.kagune.control.quinque.ReaperBladeMesh.LEFT_HAND, d[0][2] + d[1][2] * com.hex.kagune.control.quinque.ReaperBladeMesh.LEFT_HAND};
+            double miss = Math.sqrt(Math.pow(left[0] - grip[0], 2) + Math.pow(left[1] - grip[1], 2) + Math.pow(left[2] - grip[2], 2));
+            check(miss < 0.6, at + ": his left hand on the grip (" + miss + " px off)");
+            check(d[0][2] < -1.5, at + ": his hands before him (" + d[0][2] + ")");
+            for (double u = 9.6; u <= com.hex.kagune.control.quinque.ReaperBladeMesh.TIP; u += 0.5) {
+                double[] c = {d[0][0] + d[1][0] * u, d[0][1] + d[1][1] * u, d[0][2] + d[1][2] * u};
+                boolean torso = Math.abs(c[0]) < 4.6 && c[1] > 0.0 && c[1] < 12.0 && c[2] > -2.6 && c[2] < 2.2;
+                boolean head = Math.abs(c[0]) < 4.2 && c[1] > -8.4 && c[1] < 0.0 && Math.abs(c[2]) < 4.2;
+                check(!torso && !head, at + ": the blade clear of his body and head at " + u + ": " + java.util.Arrays.toString(c));
+                double[] model = com.hex.kagune.control.client.animation.ReaperBladePose.toModel(p, c);
+                check(model[1] < 24.0 - p.drop + 1.0, at + ": the blade never into the ground at " + u + " (" + model[1] + ")");
+            }
+        }
+        // The draw: his hand behind his back as the case comes into it, the case gone and the blade out by the end, in his guard.
+        RigPose behind = com.hex.kagune.control.client.animation.ReaperBladePose.draw(AgentRules.REAPER_CASE_FROM);
+        double[] hand = com.hex.kagune.control.client.animation.QuinqueGrip.fist(behind, true, false);
+        check(hand[2] > 1.5, "the case taken from behind his back: " + java.util.Arrays.toString(hand));
+        check(!com.hex.kagune.control.client.animation.ReaperBladePose.caseHeld(AgentRules.REAPER_CASE_FROM - 0.5)
+            && com.hex.kagune.control.client.animation.ReaperBladePose.caseHeld(AgentRules.REAPER_CASE_OPENS)
+            && !com.hex.kagune.control.client.animation.ReaperBladePose.caseHeld(AgentRules.REAPER_CASE_DROPS)
+            && com.hex.kagune.control.client.animation.ReaperBladePose.caseOpen(AgentRules.REAPER_CASE_OPENS) == 0.0
+            && com.hex.kagune.control.client.animation.ReaperBladePose.extended(AgentRules.REAPER_CASE_OPENS + 1.0) == 0.0F
+            && com.hex.kagune.control.client.animation.ReaperBladePose.extended(AgentRules.REAPER_CASE_DROPS) == 1.0F
+            && com.hex.kagune.control.client.animation.ReaperBladePose.caseOpen(AgentRules.REAPER_CASE_DROPS)
+            == com.hex.kagune.control.client.animation.ReaperBladePose.CASE_OPEN, "the case in his hand, split open, the blade slid out, then dropped");
+        // The dropped case falls to his feet and is gone (sunk) by the time the draw ends.
+        double landed = 20.0;
+        check(com.hex.kagune.control.client.animation.ReaperBladePose.sunk(AgentRules.REAPER_DRAW_TICKS - AgentRules.REAPER_CASE_DROPS, landed) > 4.0
+            && com.hex.kagune.control.client.animation.ReaperBladePose.sunk(2.0, landed) == 0.0, "the empty case lies a moment at his feet, then sinks away");
+        check(AgentRules.REAPER_CASE_FROM < AgentRules.REAPER_CASE_OPENS && AgentRules.REAPER_CASE_DROPS < AgentRules.REAPER_DRAW_TICKS
+            && AgentRules.REAPER_CHANGE_TICKS == AgentRules.REAPER_SHED_TICKS + AgentRules.REAPER_DRAW_TICKS, "the draw's times in order");
+        RigPose end = com.hex.kagune.control.client.animation.ReaperBladePose.draw(AgentRules.REAPER_DRAW_TICKS);
+        RigPose guard = com.hex.kagune.control.client.animation.ReaperBladePose.guard(0.0F);
+        check(Math.abs(end.rightArmX - guard.rightArmX) < 1.0E-4 && Math.abs(end.leftArmX - guard.leftArmX) < 1.0E-4
+            && Math.abs(end.weaponX - guard.weaponX) < 1.0E-4, "the draw ends in his guard (no jump into his fight)");
+        // The string's timing is the server's; codes clear of the others.
+        check(com.hex.kagune.control.client.animation.ReaperBladePose.STRING.length == com.hex.kagune.control.npc.ReaperBladeRules.STEPS
+            && AgentRules.REAPER_BLADE_WEIGHT.length == com.hex.kagune.control.npc.ReaperBladeRules.STEPS
+            && AgentRules.REAPER_BLADE_KNOCK.length == com.hex.kagune.control.npc.ReaperBladeRules.STEPS, "one key set, weight and throw per blow");
+        for (int step = 0; step < com.hex.kagune.control.npc.ReaperBladeRules.STEPS; step++) {
+            float[][] keys = com.hex.kagune.control.client.animation.ReaperBladePose.STRING[step];
+            com.hex.kagune.control.npc.ReaperBladeRules.Blow blow = com.hex.kagune.control.npc.ReaperBladeRules.blow(step);
+            check(keys[keys.length - 1][0] == blow.total() && blow.impact() > 4 && blow.impact() < blow.total() - 4,
+                "blow " + (step + 1) + ": its keys as long as the blow, its impact after a chamber and before its recovery");
+        }
+        check(com.hex.kagune.control.npc.CcgAgent.BLADE > com.hex.kagune.control.npc.CcgAgent.SHED
+            && com.hex.kagune.control.npc.CcgAgent.BLADE + com.hex.kagune.control.npc.ReaperBladeRules.STEPS <= com.hex.kagune.control.npc.ArmRules.STEP,
+            "his blade's codes clear of every other");
+        check(AgentRules.REAPER_BLADE_DAMAGE * AgentRules.power(AgentRules.Rank.RANK_10, false) > AgentRules.damage(Quinque.DAWN, 0)
+            * AgentRules.power(AgentRules.Rank.RANK_10, false) && AgentRules.REAPER_BLADE_BLEED >= 1, "massive damage, and bleed on every hit");
+        // The server and the client wired: his blade alone in his second phase, his hand empty (no item: never dropped), the layer drawn.
+        String brain = Files.readString(Path.of("src/main/java/com/hex/kagune/control/server/AgentBrain.java"));
+        int fight = brain.indexOf("private static void fight(");
+        check(brain.indexOf("blade(agent, mind, prey, level, now);", fight) > 0
+            && brain.indexOf("blade(agent, mind, prey, level, now);", fight) < brain.indexOf("tactics(agent, mind, prey, level, now)", fight),
+            "his blade before any of Dawn's moves");
+        check(brain.contains("if (mind.shedAt != Long.MIN_VALUE || mind.bare) {") && brain.contains("UkakuCrystalCombat.agentBleed(body, agent, AgentRules.REAPER_BLADE_BLEED, now);"),
+            "his hand empty in his second phase; every hit bleeds");
+        check(brain.contains("if (age >= AgentRules.REAPER_CHANGE_TICKS || age < 0L) {"), "nothing lands on him through the jacket and the draw");
+        String renderer = Files.readString(Path.of("src/main/java/com/hex/kagune/control/client/render/AgentRenderer.java"));
+        String client = Files.readString(Path.of("src/main/java/com/hex/kagune/control/client/AgentClient.java"));
+        check(renderer.contains("new ReaperBladeLayer(this)") && client.contains("ReaperBladePose.draw(shedAge - AgentRules.REAPER_SHED_TICKS)")
+            && client.contains("return bladed(agent, limbSwing, partial, now);"), "drawn: the draw, his string, his guard");
+    }
+
+    /**
      * 4.1.28 (the owner: "he pulls out his jacket, he just removes his jacket, revealing a new skin ... During this next phase, he gets way
      * faster"): at half health the White Reaper takes his jacket off, once, nothing landing on him while he does, and is faster after.
      */
     static void shedding() throws IOException {
         check(AgentRules.reaperLook(AgentRules.REAPER_LOOK) && AgentRules.reaperLook(AgentRules.REAPER_BARE_LOOK) && !AgentRules.reaperLook(0)
             && !AgentRules.reaperLook(AgentRules.REGULAR_LOOKS - 1), "both of his looks are his, no investigator's");
-        check(AgentRules.REAPER_SHED_AT == 0.5F, "the jacket comes off at half health");
-        check(AgentRules.shedClamp(200.0F, 200.0F, 500.0F) == 100.0F && AgentRules.shedClamp(150.0F, 200.0F, 20.0F) == 20.0F
-            && AgentRules.shedClamp(100.0F, 200.0F, 30.0F) == 0.0F && AgentRules.shedClamp(120.0F, 200.0F, 30.0F) == 20.0F,
-            "with the jacket on no blow takes him past half, however big (the second phase always comes)");
+        check(AgentRules.REAPER_SHED_HEALTH == 90.0F && AgentRules.Rank.RANK_10.health > 200.0,
+            "4.1.29 (the owner: \"trigger when he reaches about 90 HP\"): the jacket comes off at 90 of his health");
+        check(AgentRules.shedClamp(280.0F, 500.0F) == 190.0F && AgentRules.shedClamp(150.0F, 20.0F) == 20.0F
+            && AgentRules.shedClamp(90.0F, 30.0F) == 0.0F && AgentRules.shedClamp(110.0F, 30.0F) == 20.0F,
+            "with the jacket on no blow takes him past 90, however big (the second phase always comes)");
         check(AgentRules.REAPER_BARE_SPEED > 1.2 && AgentRules.REAPER_BARE_PACE < 0.8, "faster with it off: his speed and the rest between blows");
         check(AgentRules.REAPER_SHED_SWAP > 10 && AgentRules.REAPER_SHED_SWAP < AgentRules.REAPER_SHED_TICKS - 10,
             "the look switches mid-move, with time to grip it before and to roll his neck after");
@@ -133,7 +246,7 @@ public final class AgentTests {
         String brain = Files.readString(Path.of("src/main/java/com/hex/kagune/control/server/AgentBrain.java"));
         int act = brain.indexOf("private static void act(CcgAgent agent, Mind mind, ServerLevel level, long now) {");
         check(act > 0 && brain.indexOf("if (shed(agent, mind, level, now)) {", act) - act < 200, "the shed comes before anything else he does");
-        check(brain.contains("event.setCanceled(true); // 4.1.28") && brain.contains("AgentRules.shedClamp(health, max, event.getAmount())")
+        check(brain.contains("event.setCanceled(true); // 4.1.28") && brain.contains("AgentRules.shedClamp(health, event.getAmount())")
             && brain.contains("agent.mind.shedPending = true;"), "struck to half it starts; struck while it plays, nothing lands");
         check(brain.contains("agent.getPersistentData().m_128405_(BARE, 1);") && brain.contains("mind.bare = saved.m_128441_(BARE);")
             && brain.contains("mind.look = mind.bare ? AgentRules.REAPER_BARE_LOOK : AgentRules.REAPER_LOOK;"), "the jacket stays off, saved with him");

@@ -858,6 +858,28 @@ final class UkakuCrystalCombat {
     }
 
     /**
+     * 4.1.29: a cut of the White Reaper's blade (the owner: "causes bleed whenever hit"): {@code stacks} of the same bleeding a spike leaves,
+     * stacked as a spike's are, from {@code source} (no player's form to scorch it), every client near the body told at once.
+     */
+    public static void agentBleed(LivingEntity target, LivingEntity source, int stacks, long now) {
+        if (target == null || !target.m_6084_() || !(target.m_9236_() instanceof ServerLevel level)) {
+            return;
+        }
+        MobEffect effect = KaguneEffects.BLEEDING.get();
+        Bleed bleed = BLEEDS.computeIfAbsent(target.m_20148_(), ignored -> new Bleed());
+        if (!target.m_21023_(effect) && now - bleed.lastHit > BLEED_RESET_TICKS || now >= bleed.until + BLEED_RESET_TICKS) {
+            bleed.stacks = 0;
+        }
+        bleed.stacks = Math.min(UkakuRules.MAX_BLEED_STACKS, bleed.stacks + stacks);
+        bleed.lastHit = now;
+        int duration = UkakuRules.bleedDuration(bleed.stacks);
+        bleed.until = Math.max(bleed.until, now + duration);
+        target.m_147207_(new MobEffectInstance(effect, duration, UkakuRules.bleedAmplifier(bleed.stacks), false, false, true), source);
+        dirty(level, target.m_19879_());
+        flushChanged(level, now);
+    }
+
+    /**
      * 3.1.0: a hit from Rinkaku's centipede legs bleeds {@code target} exactly as a spike does (one stack), and the clients near it
      * are told at once (a Rinkaku has no Ukaku tick to flush it; {@link RinkakuBleed}).
      */
@@ -1128,6 +1150,11 @@ final class UkakuCrystalCombat {
                 }
             }
         }
+        flushChanged(level, now);
+    }
+
+    /** Tells every client near each body in {@code level} whose spikes or bleeding changed. */
+    private static void flushChanged(ServerLevel level, long now) {
         Set<Integer> changed = DIRTY.remove(level);
         if (changed == null) {
             return;

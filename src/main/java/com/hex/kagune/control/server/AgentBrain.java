@@ -199,6 +199,10 @@ public final class AgentBrain {
         boolean bare;
         long shedAt = Long.MIN_VALUE;
         boolean shedPending;
+        /** 4.1.29: his blade: the blow of his string under way (when it began, which, whether it has landed). */
+        long bladeAt = Long.MIN_VALUE;
+        int bladeStep;
+        boolean bladeLanded;
     }
 
     /** Its partner's id in its saved data (who it is: {@link CcgAgent#KEY}, packed). */
@@ -530,7 +534,7 @@ public final class AgentBrain {
             return false;
         }
         if (mind.shedAt == Long.MIN_VALUE) {
-            if (!mind.shedPending && agent.m_21223_() > agent.m_21233_() * AgentRules.REAPER_SHED_AT) {
+            if (!mind.shedPending && agent.m_21223_() > AgentRules.REAPER_SHED_HEALTH) {
                 return false;
             }
             mind.shedPending = true;
@@ -566,7 +570,7 @@ public final class AgentBrain {
             agent.m_21051_(net.minecraft.world.entity.ai.attributes.Attributes.f_22279_).m_22100_(speed(mind));
             UkakuFire.sound(level, agent.m_20182_(), "hexkagune:sfx.whoosh", 0.9F, 0.75F);
         }
-        if (age >= AgentRules.REAPER_SHED_TICKS || age < 0L) {
+        if (age >= AgentRules.REAPER_CHANGE_TICKS || age < 0L) {
             mind.shedAt = Long.MIN_VALUE;
             mind.readyAt = Math.max(mind.readyAt, now + 4L);
             agent.swing(-1, now);
@@ -576,13 +580,105 @@ public final class AgentBrain {
     }
 
     /**
+     * 4.1.29 (the owner: "a heavy weapon, dual-handed, that deals massive damage and, yeah, just causes bleed whenever hit. Arima can be super
+     * fast while using it"): the White Reaper with his blade: he closes on his prey and, in reach, throws his string (ReaperBladePose.STRING:
+     * a cleave, a rising cut, a sweep, a thrust), each blow landing at its impact on everything in its arc and reach (hurt by its weight,
+     * thrown back, two stacks of bleeding), the next chained while his prey stays in reach, a rest after the last.
+     */
+    private static void blade(CcgAgent agent, Mind mind, LivingEntity prey, ServerLevel level, long now) {
+        if (mind.bladeAt != Long.MIN_VALUE) {
+            long age = ago(now, mind.bladeAt);
+            com.hex.kagune.control.npc.ReaperBladeRules.Blow blow = com.hex.kagune.control.npc.ReaperBladeRules.blow(mind.bladeStep);
+            agent.m_21573_().m_26573_();
+            Vec3 velocity = agent.m_20184_();
+            if (age >= blow.impact() - 2 && age <= blow.impact() && agent.m_20096_()) {
+                // His step in as it drives.
+                Vec3 ahead = UkakuFire.horizontal(prey.m_20182_().m_82546_(agent.m_20182_())).m_82490_(0.22);
+                agent.m_20256_(new Vec3(ahead.f_82479_, velocity.f_82480_, ahead.f_82481_));
+            } else {
+                agent.m_20256_(new Vec3(velocity.f_82479_ * 0.4, velocity.f_82480_, velocity.f_82481_ * 0.4));
+            }
+            if (!mind.bladeLanded && age >= blow.impact()) {
+                mind.bladeLanded = true;
+                bladeLands(agent, mind, level, now);
+            }
+            if (age >= blow.total() || age < 0L) {
+                mind.bladeAt = Long.MIN_VALUE;
+                agent.swing(-1, now);
+                boolean last = mind.bladeStep >= com.hex.kagune.control.npc.ReaperBladeRules.STEPS - 1;
+                double gap = Math.sqrt(prey.m_20280_(agent)) - (prey.m_20205_() + agent.m_20205_()) * 0.5;
+                if (!last && gap <= AgentRules.REAPER_BLADE_REACH) {
+                    startBlade(agent, mind, level, now, mind.bladeStep + 1);
+                } else {
+                    mind.bladeStep = 0;
+                    mind.readyAt = now + Math.round(AgentRules.REAPER_BLADE_REST * AgentRules.REAPER_BARE_PACE);
+                }
+            }
+            return;
+        }
+        double gap = Math.sqrt(prey.m_20280_(agent)) - (prey.m_20205_() + agent.m_20205_()) * 0.5;
+        if (gap > AgentRules.REAPER_BLADE_REACH - 0.4 || now < mind.readyAt) {
+            if (gap > 1.2) {
+                agent.m_21573_().m_26519_(prey.m_20185_(), prey.m_20186_(), prey.m_20189_(), 1.35);
+            } else {
+                agent.m_21573_().m_26573_();
+            }
+            return;
+        }
+        startBlade(agent, mind, level, now, 0);
+    }
+
+    /** 4.1.29: blow {@code step} of his string begins. */
+    private static void startBlade(CcgAgent agent, Mind mind, ServerLevel level, long now, int step) {
+        mind.bladeAt = now;
+        mind.bladeStep = step;
+        mind.bladeLanded = false;
+        agent.m_21573_().m_26573_();
+        agent.swing(CcgAgent.BLADE + step, now);
+        UkakuFire.sound(level, agent.m_20182_(), "hexkagune:sfx.whoosh", 0.9F, 0.55F + 0.05F * step);
+    }
+
+    /** 4.1.29: a blow of his blade lands on everything before him in its arc and reach: hurt, thrown, left bleeding. */
+    private static void bladeLands(CcgAgent agent, Mind mind, ServerLevel level, long now) {
+        int step = mind.bladeStep;
+        double yaw = Math.toRadians(agent.f_20883_);
+        Vec3 facing = new Vec3(-Math.sin(yaw), 0.0, Math.cos(yaw));
+        float damage = AgentRules.REAPER_BLADE_DAMAGE * AgentRules.REAPER_BLADE_WEIGHT[step] * AgentRules.power(mind.rank, mind.superior);
+        boolean hit = false;
+        for (LivingEntity body : level.m_6443_(LivingEntity.class, agent.m_20191_().m_82400_(AgentRules.REAPER_BLADE_REACH + 1.0),
+            b -> b != agent && b.m_6084_() && !(b instanceof CcgAgent))) {
+            Vec3 to = body.m_20182_().m_82546_(agent.m_20182_());
+            double gap = Math.sqrt(body.m_20280_(agent)) - (body.m_20205_() + agent.m_20205_()) * 0.5;
+            Vec3 flat = UkakuFire.horizontal(to);
+            if (gap > AgentRules.REAPER_BLADE_REACH || flat.m_82526_(facing) < AgentRules.REAPER_BLADE_ARC || Math.abs(to.f_82480_) > 3.0) {
+                continue;
+            }
+            if (body instanceof Player player && player.m_7500_()) {
+                continue;
+            }
+            Vec3 at = GhoulNpcBrain.centre(body).m_82546_(flat.m_82490_(body.m_20205_() * 0.5));
+            WoundHits.expect(body, step == 3 ? WoundBook.Blow.STAB : WoundBook.Blow.SLASH, at, flat, 0.0);
+            body.f_19802_ = 0;
+            if (body.m_6469_(agent.m_269291_().m_269333_(agent), damage)) {
+                Vec3 knock = flat.m_82490_(AgentRules.REAPER_BLADE_KNOCK[step]).m_82520_(0.0, 0.12, 0.0);
+                body.m_20256_(body.m_20184_().m_82490_(0.3).m_82549_(knock));
+                body.f_19864_ = true;
+                UkakuCrystalCombat.agentBleed(body, agent, AgentRules.REAPER_BLADE_BLEED, now);
+                hit = true;
+            }
+        }
+        UkakuFire.sound(level, agent.m_20182_(), hit ? "hexkagune:sfx.blade_heavy" : "entity.player.attack.sweep", 1.0F, hit ? 0.7F : 0.8F);
+    }
+
+    /**
      * The stack in its hand is its quinque: its case shut, or its weapon while it is open (put back if anything took it). 3.0.0: a
      * kagune-made weapon is no item: its hand is empty while it is out (and while it goes back into its case), the case in it at peace.
      */
     private static void arm(CcgAgent agent, Mind mind, long now) {
         ItemStack held = agent.m_21205_();
-        if (mind.shedAt != Long.MIN_VALUE) {
-            // 4.1.28: both hands on his jacket: Dawn put by while he takes it off.
+        if (mind.shedAt != Long.MIN_VALUE || mind.bare) {
+            // 4.1.28: both hands on his jacket: Dawn put by while he takes it off; 4.1.29: and for good after (his blade is no item: drawn
+            // by ReaperBladeLayer, never dropped). Dawn's case still falls with him (drop).
             if (!held.m_41619_()) {
                 agent.m_21008_(InteractionHand.MAIN_HAND, ItemStack.f_41583_);
             }
@@ -1028,6 +1124,10 @@ public final class AgentBrain {
         agent.m_21563_().m_24960_(prey, 30.0F, 30.0F);
         if (mind.arm != null) {
             AgentArms.fight(agent, mind, partner, prey, level, now); // 3.0.0: its kagune-made weapon
+            return;
+        }
+        if (mind.bare && mind.rank == AgentRules.Rank.RANK_10) {
+            blade(agent, mind, prey, level, now); // 4.1.29: the White Reaper's second phase: his blade, nothing of Dawn's
             return;
         }
         if (!mind.open) {
@@ -2266,9 +2366,8 @@ public final class AgentBrain {
             if (!agent.mind.bare) {
                 // 4.1.28: never past half while the jacket is on (the blow that gets there starts his second phase).
                 float health = agent.m_21223_();
-                float max = agent.m_21233_();
-                event.setAmount(AgentRules.shedClamp(health, max, event.getAmount()));
-                if (health - event.getAmount() <= max * AgentRules.REAPER_SHED_AT + 1.0E-3F) {
+                event.setAmount(AgentRules.shedClamp(health, event.getAmount()));
+                if (health - event.getAmount() <= AgentRules.REAPER_SHED_HEALTH + 1.0E-3F) {
                     agent.mind.shedPending = true;
                 }
             }

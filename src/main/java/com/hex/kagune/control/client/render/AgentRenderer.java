@@ -60,6 +60,7 @@ public final class AgentRenderer extends HumanoidMobRenderer<CcgAgent, PlayerMod
         this.m_115326_(new Figure(this));
         this.m_115326_(new Build(this));
         this.m_115326_(new WeaponLayer(this)); // 3.0.0: a higher rank's kagune-made weapon
+        this.m_115326_(new ReaperBladeLayer(this)); // 4.1.29: the White Reaper's second-phase blade
         this.m_115326_(new OutfitLayer<>(this)); // 4.0.0: the Formal Outfit
     }
 

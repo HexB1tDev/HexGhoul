@@ -38,7 +38,8 @@ the next AI now."
 4. **Arima, part 1 is done (4.1.23):** Dawn every time, the Slain Reaper advancement and his mastery for everyone who hit him in the last
    five minutes. **4.1.24:** his mansion (the owner's schematic, `art/reaper/arima_mansion.schem`), one per world, him in its garden.
    **4.1.25:** both fighting styles (Kick Master's string and the Speed Blitz, up close). **4.1.26:** Dawn smooth, opening like a reverse
-   umbrella. **4.1.27:** the ground strike grows Dawn's blades, not a tentacle. **4.1.28:** the jacket comes off (part 1 below is done). **Next for Arima: phase 2**, one version each, renders judged before
+   umbrella. **4.1.27:** the ground strike grows Dawn's blades, not a tentacle. **4.1.28:** the jacket comes off (part 1 below is done). **4.1.29:** at 90 HP (not half), the golden case and the blade (part 2 done;
+   the owner: keep it his alone, no player version). **Next for Arima: phase 2**, one version each, renders judged before
    each push:
    1. **The jacket comes off** at half health (once): a shedding move (both hands to the collar, the coat swept off the shoulders, a new
       swing code), his look switched to a new appended look `ccg_reaper_bare` (from `art/reaper/Reaper_Phase2.png`, copied; slim arms
@@ -146,6 +147,7 @@ the next AI now."
 | 4.1.12 | Places never nowhere, `/kagune places`; slams without particles and 1.75x as long; each coat half on its own leg | pushed, EXIT 0 |
 | 4.1.13 | Every slam an arm (behind a new shoulder) and a hand, aligned on its target and clear of his posed body; the guard clamped round him clear of his raised arms; `/kagune places` makes each place's chunk and says built or stopped; coat previews | pushed, EXIT 0 |
 | 4.1.14 | One-of-a-kind places at any dry spot their set offers, the first the world builds kept with the world (`PlaceClaims`); coat tails drawn on the legs; each Ukaku wing slam plays out in full (1.3x damage) | pushed, EXIT 0 |
+| 4.1.29 | Arima phase 2 part 2: the change at 90 HP (`REAPER_SHED_HEALTH`), the golden case drawn from his back and split open on its hinge, the blade slid out, the case dropped and sunk (`ReaperBladePose.draw`, `ReaperBladeLayer`); his blade (`ReaperBladeMesh`, NPC only) and heavy string (`ReaperBladePose.STRING`, `ReaperBladeRules`, `AgentBrain.blade`), 2 bleed stacks a hit (`UkakuCrystalCombat.agentBleed`) | pushed, EXIT 0 |
 | 4.1.28 | Arima phase 2 part 1: the jacket off at half health, once (`AgentBrain.shed`, `CcgAgent.SHED` 7, `AgentPose.shed` keyed by `SHED_KEYS`), the look `ccg_reaper_bare` (`AgentRules.REAPER_BARE_LOOK` 10, `reaperLook(index)`), faster; `shedClamp`; invulnerable while shedding; saved as `HexCcgAgentBare` | pushed, EXIT 0 |
 | 4.1.27 | Arima part 5: the ground strike's tendril replaced by Dawn's blades growing out of the mark (`ReaperTendril.blades`, `QuinqueDawnMesh.risingBlade`, `client/render/ReaperTendrils` draws them leaned and grown by `out(age - delay)`); gameplay unchanged | pushed, EXIT 0 |
 | 4.1.26 | Arima part 4: Dawn a smooth mesh (`quinque/QuinqueDawnMesh`: guard panels, spike, shaft, built in item pixels along x, `STEPS` cached open steps); its guard turned inside out into a forward cup as it fires (`REVERSE`), lightning at the point; `QuinqueMesh` per-quinque turn/telescope/case/open; `Quinque.dawnOpening`/`QuinqueClient.dawnOpening` from the stack's shot tags; tools/quinque_models.py `MESHES` += dawn | pushed, EXIT 0 |
@@ -491,6 +493,41 @@ blush, it depends on their mood." (read as: how much they blush goes by their mo
      - the blade and the launcher, which keep the legacy motion.
   2. The blade's, spear's, mace's, launcher's and Dawn's own strings by intent (`aims`), each its own count.
   3. New kagune-born quinques (the owner: whips after different kagunes, more swords).
+
+## 4.1.29, what and where (Arima phase 2 part 2: the golden case and his blade)
+
+The owner (quoted exactly): "this phase should trigger when he reaches about 90 HP, in which case he becomes immortal, takes the jacket off,
+pulls out a random briefcase from his back like a golden looking briefcase, um and then he becomes, well, this with the weapon." Of the
+first draw (the case shrinking as the blade grew): "Oh, come on, bro. That cannot be the fucking blade emerging fucking animation, bro. It
+looks like shit. What the fuck? That's not even turning into the blade, bro. Why can't the blade just, like the briefcase just splits apart
+open like a normal fucking briefcase and releases the weapon? Like, why? What the fuck? Why does it shrink, bro? What". And: "Do not make the
+last quinque of Arima droppable. It's not needed. Just keep it only for himself. Like, there's no need to be making more move sets in first
+person".
+
+- **Trigger:** `AgentRules.REAPER_SHED_HEALTH` 90 (his max is 280); `shedClamp(health, amount)`. The server's `shed` runs
+  `REAPER_CHANGE_TICKS` (jacket 34 + draw 36), `hurt` cancelled all through.
+- **The draw** (`ReaperBladePose.draw(age after the jacket)`): hand behind his back (`DRAW_KEYS`), the case in it at `REAPER_CASE_FROM` (7),
+  out to his side, lifted into his guard's right arm by `LIFTED` (17) while the case turns end on along the blade (`caseTurn`: hanging plumb,
+  then the blade's frame, `blendTurn`); split open from `REAPER_CASE_OPENS` (18) (`caseOpen`, `ReaperBladeMesh.opened`: each half about the
+  hinge, its bottom edge), the blade slid out (`extended`, `ReaperBladeMesh.slid`: the blade and rod drawn out from the guard and fist), his
+  left hand onto the grip (22..26), dropped at `REAPER_CASE_DROPS` (25): it falls, tips over, lands and sinks (`dropped`, cached `Release`;
+  `sunk`), gone by the draw's end (36). Nothing scales.
+- **The blade** (`quinque/ReaperBladeMesh`, its own frame: u along from the right fist, v to its edge, w through): `blade` (veins: `walk`
+  strips), `guard` (a leaf profile, gems, spines, ribs, horn), `grip` (ribbed grip, ring, rod, red tip, claw); `goldHalf(side)`,
+  `goldHandle`. Drawn by `client/render/ReaperBladeLayer` (bare look only) in the right arm's frame: `ReaperBladePose.inArm` (the wrist's
+  weapon channels times `HELD`).
+- **The string** (`ReaperBladePose.STRING`, keys per blow: body twist/lean/lunge/sink, the hands' height and side, the blade's pitch/yaw/roll,
+  legs, head; `hands` solves both straight arms onto the grip with a two-unknown Newton step, the right wrist turning the blade):
+  cleave, rising cut, sweep, thrust; timing in `npc/ReaperBladeRules` (shared with the server). `AgentClient.bladed`: a blow whole, or his
+  guard on his run.
+- **Server:** `AgentBrain.fight` hands the bare Reaper to `blade` (closes at a run, chains the string while in reach, a rest after);
+  `bladeLands` (arc `REAPER_BLADE_ARC`, reach `REAPER_BLADE_REACH`, `REAPER_BLADE_DAMAGE` x weight x his power, a throw, wounds, 2 stacks of
+  `hexkagune:bleeding` via `UkakuCrystalCombat.agentBleed`). His hand stays empty in his second phase; Dawn's case still drops.
+- **Tests:** `AgentTests.reaperBlade` (both fists on the grip every half tick, the blade clear of his body and head and never more than a
+  pixel into the ground, the case's hinge and slide, the draw's times and its end in his guard, the wiring).
+- **Previews:** `docs/handoff/arima-case-draw-4.1.29.png`, `arima-blade-string-4.1.29.png`, `arima-blade-4.1.29.png` (scratch
+  `BladePosePreview`/`BladeMeshPreview` over `PoseRender`, `ReaperPreview.chest`, `QuinqueMeshPreview.add`).
+- **Not tested in game.**
 
 ## 4.1.28, what and where (Arima phase 2 part 1: the jacket comes off)
 

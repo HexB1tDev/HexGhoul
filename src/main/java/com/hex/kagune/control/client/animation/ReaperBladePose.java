@@ -1,0 +1,450 @@
+package com.hex.kagune.control.client.animation;
+
+import com.hex.kagune.control.npc.AgentRules;
+import com.hex.kagune.control.quinque.ReaperBladeMesh;
+
+/**
+ * 4.1.29 (the owner: "a heavy weapon, dual-handed, that deals massive damage ... Arima can be super fast while using it"): the White Reaper
+ * with his second-phase blade (pure): its guard, and its own heavy string, each blow by intent, hands first. Every key says where both hands
+ * are (together on the grip, in front of his chest: how high, how far round to a side), where the blade points from them (its pitch, its
+ * yaw, its edge's roll) and what his body does (twist, lean, step, sink); each frame his straight arms (a mob: no elbows) are aimed so his
+ * fists are on the grip, the right at the guard and the left {@link ReaperBladeMesh#LEFT_HAND} behind it, and his right wrist turns the
+ * blade to where the key points it (RigPose's weapon channels, drawn by {@code client.render.ReaperBladeLayer}). Nothing is solved by
+ * search: each frame is a few turns.
+ *
+ * <p>Frames: model pixels in the chest's own frame (x to his left, y down, z to his back), as {@link QuinqueGrip}.
+ */
+public final class ReaperBladePose {
+    private ReaperBladePose() {
+    }
+
+    /** A wide arm's fist (its own frame, pixels): the middle of the hand a pixel above the arm's end. */
+    static final double[] FIST_RIGHT = {-1.0, 9.0, 0.0};
+    static final double[] FIST_LEFT = {1.0, 9.0, 0.0};
+    static final double ARM = Math.sqrt(1.0 + 81.0);
+    /** Between the two hands along the grip (pixels). */
+    static final double GAP = -ReaperBladeMesh.LEFT_HAND;
+    /** The blade's frame in the right arm's own at rest (columns: along it, toward its edge, through it): forward of the fist, edge down. */
+    public static final double[][] HELD = {{0, 0, 1}, {0, 1, 0}, {-1, 0, 0}};
+    /** Where both hands' middle circles round (between the shoulders). */
+    static final double[] CENTRE = {0.0, 2.0, 0.0};
+
+    /**
+     * The keys' channels: tick; body twist (+ to his right), lean (+ forward), lunge (pixels), sink (pixels); the hands' height (radians, +
+     * up from his shoulders' level) and how far round to his left (radians); the blade's pitch (+ up), yaw (+ to his left), its edge's roll
+     * (0: down); his right leg's and left leg's swing (- forward); his head's pitch (+ down).
+     */
+    static final int T = 0;
+    static final int TWIST = 1;
+    static final int LEAN = 2;
+    static final int LUNGE = 3;
+    static final int SINK = 4;
+    static final int HIGH = 5;
+    static final int ROUND = 6;
+    static final int PITCH = 7;
+    static final int YAW = 8;
+    static final int ROLL = 9;
+    static final int RIGHT_LEG = 10;
+    static final int LEFT_LEG = 11;
+    static final int HEAD = 12;
+
+    /** His guard: both hands low before him, the blade up at an angle ahead, the right foot forward (the hand at the guard's side). */
+    static final float[] GUARD = {0, 0.0F, 0.08F, 0.0F, 0.6F, -0.45F, -0.22F, 0.55F, -0.3F, 0.0F, -0.22F, 0.26F, 0.06F};
+
+    /** {@code key} at tick {@code t}. */
+    static float[] at(float[] key, float t) {
+        float[] k = key.clone();
+        k[T] = t;
+        return k;
+    }
+
+    /**
+     * His string's keys (each blow's length and impact: npc.ReaperBladeRules): a cleave from over his head; a rising cut from low on his left;
+     * a sweep across; a thrust, all his weight behind it.
+     */
+    public static final float[][][] STRING = {
+        {
+            GUARD,
+            {5, 0.0F, -0.14F, -0.5F, 0.0F, 0.72F, 0.0F, 2.3F, 0.0F, 0.0F, -0.1F, 0.3F, -0.12F},
+            {8, 0.0F, 0.34F, 3.0F, 1.6F, -0.4F, 0.0F, 0.05F, 0.0F, 0.0F, -0.6F, 0.48F, 0.22F},
+            {10, 0.0F, 0.4F, 3.2F, 2.0F, -0.46F, 0.0F, 0.1F, 0.0F, 0.0F, -0.62F, 0.5F, 0.26F},
+            at(GUARD, 16)},
+        {
+            GUARD,
+            {4, -0.6F, 0.16F, 0.0F, 1.6F, -0.72F, 0.32F, -0.55F, 2.2F, 3.1416F, -0.1F, 0.4F, 0.15F},
+            {7, 0.5F, -0.08F, 2.2F, 0.4F, 0.36F, -0.25F, 0.45F, -0.65F, 3.1416F, -0.5F, 0.3F, -0.1F},
+            {9, 0.66F, -0.12F, 2.4F, 0.2F, 0.58F, -0.3F, 1.05F, -1.15F, 3.1416F, -0.5F, 0.3F, -0.14F},
+            at(GUARD, 15)},
+        {
+            GUARD,
+            {5, 0.95F, 0.06F, -0.4F, 1.8F, -0.18F, -0.2F, 0.05F, -1.9F, 1.5708F, -0.05F, 0.35F, 0.05F},
+            {8, -0.5F, 0.12F, 2.6F, 1.4F, -0.18F, 0.1F, 0.0F, 0.6F, 1.5708F, -0.55F, 0.3F, 0.08F},
+            {10, -0.85F, 0.14F, 2.8F, 1.4F, -0.2F, 0.15F, -0.02F, 1.35F, 1.5708F, -0.55F, 0.3F, 0.08F},
+            at(GUARD, 17)},
+        {
+            GUARD,
+            {5, 0.5F, -0.16F, -1.5F, 1.2F, -0.3F, -0.12F, -0.1F, -0.12F, 1.5708F, 0.12F, 0.42F, 0.0F},
+            {8, -0.15F, 0.3F, 6.0F, 2.0F, 0.0F, 0.0F, 0.26F, 0.0F, 1.5708F, -0.75F, 0.55F, 0.12F},
+            {11, -0.15F, 0.3F, 6.0F, 2.0F, -0.04F, 0.0F, 0.22F, 0.0F, 1.5708F, -0.75F, 0.55F, 0.12F},
+            at(GUARD, 18)}};
+
+    /** Blow {@code step} of his string, {@code age} ticks in. */
+    public static RigPose strike(int step, double age) {
+        return pose(AgentPose.keyed(STRING[Math.floorMod(step, STRING.length)], age), 1.0F);
+    }
+
+    /** His guard (standing, or on top of his run: {@code run} 0..1 lowers the blade a little and leaves his legs to the run). */
+    public static RigPose guard(float run) {
+        float[] k = GUARD.clone();
+        k[HIGH] -= 0.12F * run;
+        k[PITCH] -= 0.25F * run;
+        return pose(k, 1.0F - run);
+    }
+
+    /** {@code k}'s pose: his body, then his arms on the grip and his wrist; his legs {@code legs} of the key's. */
+    static RigPose pose(float[] k, float legs) {
+        RigPose p = new RigPose();
+        p.twist = k[TWIST];
+        p.lean = k[LEAN];
+        p.lunge = k[LUNGE];
+        p.drop = k[SINK];
+        p.headX = k[HEAD] - 0.6F * k[LEAN];
+        p.headY = -k[TWIST] * 0.7F;
+        p.headHold = 0.5F;
+        p.rightLegX = k[RIGHT_LEG] * legs;
+        p.leftLegX = k[LEFT_LEG] * legs;
+        p.rightLegZ = 0.06F * legs;
+        p.leftLegZ = -0.06F * legs;
+        p.legHold = legs;
+        hands(p, k[HIGH], k[ROUND], k[PITCH], k[YAW], k[ROLL]);
+        return p;
+    }
+
+    /** The blade's way along (pitch + up, yaw + to his left): a unit vector in the chest's frame. */
+    public static double[] along(double pitch, double yaw) {
+        return new double[] {Math.cos(pitch) * Math.sin(yaw), -Math.sin(pitch), -Math.cos(pitch) * Math.cos(yaw)};
+    }
+
+    /**
+     * Both hands on the grip at {@code high} and {@code round}, the blade along {@code pitch} and {@code yaw}, its edge rolled {@code roll}
+     * from down: his arms and his right wrist set on {@code p} (held: nothing of vanilla's own swing left in them).
+     */
+    public static void hands(RigPose p, double high, double round, double pitch, double yaw, double roll) {
+        double out = com.hex.kagune.control.npc.ReaperBuild.ARM_OUT;
+        double[] right = {-5.0 - out, 2.0, 0.0};
+        double[] left = {5.0 + out, 2.0, 0.0};
+        double[] u = along(pitch, yaw);
+        // Its edge: square to it, as near straight down as it can be (forward when it points straight up or down), rolled about it.
+        double[] down = {0.0, 1.0, 0.0};
+        if (Math.abs(u[1]) > 0.97) {
+            down = new double[] {0.0, 0.0, -Math.signum(u[1])};
+        }
+        double[] v = norm(sub(down, scale(u, dot(down, u))));
+        v = norm(add(scale(v, Math.cos(roll)), scale(cross(u, v), Math.sin(roll))));
+        double[] w = cross(u, v);
+        double[] mid = {Math.sin(round) * Math.cos(high), -Math.sin(high), -Math.cos(round) * Math.cos(high)};
+        // Where the hands go: their middle out along {@code mid} and shifted across, as far as puts each fist at the end of its own
+        // straight arm (a few Newton steps on the two misses; where both can't, as near as they get).
+        double r = 7.0;
+        double across = 0.0;
+        for (int i = 0; i < 8; i++) {
+            double[] f = misses(mid, u, r, across, right, left);
+            if (Math.abs(f[0]) + Math.abs(f[1]) < 1.0E-4) {
+                break;
+            }
+            double h = 1.0E-3;
+            double[] fr = misses(mid, u, r + h, across, right, left);
+            double[] fa = misses(mid, u, r, across + h, right, left);
+            double a11 = (fr[0] - f[0]) / h;
+            double a12 = (fa[0] - f[0]) / h;
+            double a21 = (fr[1] - f[1]) / h;
+            double a22 = (fa[1] - f[1]) / h;
+            double det = a11 * a22 - a12 * a21;
+            if (Math.abs(det) < 1.0E-9) {
+                break;
+            }
+            double dr = (a22 * f[0] - a12 * f[1]) / det;
+            double da = (a11 * f[1] - a21 * f[0]) / det;
+            r = Math.max(2.0, Math.min(14.0, r - Math.max(-3.0, Math.min(3.0, dr))));
+            across = Math.max(-4.0, Math.min(4.0, across - Math.max(-2.0, Math.min(2.0, da))));
+        }
+        double[] target = fistAt(mid, u, r, across);
+        double[][] armR = QuinqueGrip.between(norm(FIST_RIGHT), norm(sub(target, right)));
+        double[] fist = add(right, QuinqueGrip.apply(armR, FIST_RIGHT));
+        double[][] blade = {{u[0], v[0], w[0]}, {u[1], v[1], w[1]}, {u[2], v[2], w[2]}};
+        double[][] wrist = RigPose.multiply(QuinqueGrip.transpose(armR), RigPose.multiply(blade, QuinqueGrip.transpose(HELD)));
+        double[] grip = sub(fist, scale(u, GAP));
+        double[][] armL = QuinqueGrip.between(norm(FIST_LEFT), norm(sub(grip, left)));
+        float[] ra = QuinqueGrip.angles(armR);
+        float[] l = QuinqueGrip.angles(armL);
+        float[] wr = QuinqueGrip.angles(wrist);
+        p.rightArmX = ra[0];
+        p.rightArmY = ra[1];
+        p.rightArmZ = ra[2];
+        p.leftArmX = l[0];
+        p.leftArmY = l[1];
+        p.leftArmZ = l[2];
+        p.weaponX = wr[0];
+        p.weaponY = wr[1];
+        p.weaponZ = wr[2];
+        p.armHold = 1.0F;
+        p.rightArmHold = 1.0F;
+        p.leftArmHold = 1.0F;
+    }
+
+    /** The right fist for the hands' middle {@code r} out along {@code mid}, {@code across} to his left. */
+    static double[] fistAt(double[] mid, double[] u, double r, double across) {
+        return add(add(add(CENTRE, scale(mid, r)), new double[] {across, 0.0, 0.0}), scale(u, GAP * 0.5));
+    }
+
+    /** How far each fist would be from the end of its arm (pixels: + beyond it). */
+    static double[] misses(double[] mid, double[] u, double r, double across, double[] right, double[] left) {
+        double[] fist = fistAt(mid, u, r, across);
+        double[] grip = sub(fist, scale(u, GAP));
+        return new double[] {length(sub(fist, right)) - ARM, length(sub(grip, left)) - ARM};
+    }
+
+    /**
+     * The blade's frame as drawn for {@code p} (the chest's frame, pixels): {fist, along, toward its edge} from the right arm's turn and the
+     * wrist, as the renderer draws it (tests, previews).
+     */
+    public static double[][] drawn(RigPose p) {
+        double out = com.hex.kagune.control.npc.ReaperBuild.ARM_OUT;
+        double[][] arm = RigPose.zyx(p.rightArmX, p.rightArmY, p.rightArmZ);
+        double[][] wrist = RigPose.zyx(p.weaponX, p.weaponY, p.weaponZ);
+        double[][] m = RigPose.multiply(arm, RigPose.multiply(wrist, HELD));
+        double[] fist = add(new double[] {-5.0 - out, 2.0, 0.0}, QuinqueGrip.apply(arm, FIST_RIGHT));
+        return new double[][] {fist, {m[0][0], m[1][0], m[2][0]}, {m[0][1], m[1][1], m[2][1]}};
+    }
+
+    /** The blade's frame in the right arm's own (columns: along, toward its edge, through), the wrist's turn in it. */
+    public static double[][] inArm(RigPose p) {
+        return RigPose.multiply(RigPose.zyx(p.weaponX, p.weaponY, p.weaponZ), HELD);
+    }
+
+    /** A point of the chest's frame in the model's (pixels): turned by his twist, then leaned about his hips (tests). */
+    public static double[] toModel(RigPose p, double[] chest) {
+        double c = Math.cos(p.twist);
+        double sn = Math.sin(p.twist);
+        double x = c * chest[0] + sn * chest[2];
+        double z = -sn * chest[0] + c * chest[2];
+        float[] at = p.leanPosition((float)x, (float)chest[1], (float)z);
+        return new double[] {at[0], at[1], at[2]};
+    }
+
+    /** The left fist as drawn for {@code p} (the chest's frame, pixels). */
+    public static double[] leftFist(RigPose p) {
+        double out = com.hex.kagune.control.npc.ReaperBuild.ARM_OUT;
+        return add(new double[] {5.0 + out, 2.0, 0.0}, QuinqueGrip.apply(RigPose.zyx(p.leftArmX, p.leftArmY, p.leftArmZ), FIST_LEFT));
+    }
+
+    static double[] add(double[] a, double[] b) {
+        return new double[] {a[0] + b[0], a[1] + b[1], a[2] + b[2]};
+    }
+
+    static double[] sub(double[] a, double[] b) {
+        return new double[] {a[0] - b[0], a[1] - b[1], a[2] - b[2]};
+    }
+
+    static double[] scale(double[] a, double k) {
+        return new double[] {a[0] * k, a[1] * k, a[2] * k};
+    }
+
+    static double dot(double[] a, double[] b) {
+        return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+    }
+
+    static double[] cross(double[] a, double[] b) {
+        return new double[] {a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]};
+    }
+
+    static double length(double[] a) {
+        return Math.sqrt(dot(a, a));
+    }
+
+    static double[] norm(double[] a) {
+        double l = length(a);
+        return l < 1.0E-12 ? new double[] {0.0, 1.0, 0.0} : scale(a, 1.0 / l);
+    }
+
+    /**
+     * 4.1.29 (the owner: "pulls out a random briefcase from his back like a golden looking briefcase"; of the first try: "Why can't the blade
+     * just, like the briefcase just splits apart open like a normal fucking briefcase and releases the weapon?"): {@code age} ticks after the
+     * jacket is off: his right hand behind his back, the golden case in it ({@link AgentRules#REAPER_CASE_FROM}), swung out to his side, then
+     * lifted before him, turning end on to where the blade will point ({@link #LIFTED}); it splits open on its hinge
+     * ({@link AgentRules#REAPER_CASE_OPENS}), the blade slides out of it ({@link #extended}), his left hand comes onto the grip, the empty case
+     * drops from his hand ({@link AgentRules#REAPER_CASE_DROPS}) to the ground.
+     */
+    public static RigPose draw(double age) {
+        float[] k = AgentPose.keyed(DRAW_KEYS, Math.min(age, LIFT_FROM));
+        RigPose p = new RigPose();
+        p.twist = k[1];
+        p.lean = k[2];
+        p.rightArmX = k[3];
+        p.rightArmY = k[4];
+        p.rightArmZ = k[5];
+        p.headY = k[6];
+        p.headX = k[7];
+        p.leftArmX = 0.05F;
+        p.leftArmZ = -0.06F;
+        p.rightArmHold = 1.0F;
+        p.leftArmHold = 1.0F;
+        p.armHold = 1.0F;
+        p.headHold = 0.5F;
+        float lift = smooth((age - LIFT_FROM) / (LIFTED - LIFT_FROM));
+        float grip = smooth((age - GRIP_FROM) / (GRIP_AT - GRIP_FROM));
+        if (lift <= 0.0F) {
+            return p;
+        }
+        RigPose guard = guard(0.0F);
+        RigPose out = new RigPose().add(p, 1.0F - lift).add(guard, lift);
+        // His right arm and the turn in his fist his guard's once lifted; his left hand onto the grip once the blade is out.
+        float[] right = QuinqueGrip.blendTurn(p.rightArmX, p.rightArmY, p.rightArmZ, guard.rightArmX, guard.rightArmY, guard.rightArmZ, lift);
+        out.rightArmX = right[0];
+        out.rightArmY = right[1];
+        out.rightArmZ = right[2];
+        out.weaponX = guard.weaponX;
+        out.weaponY = guard.weaponY;
+        out.weaponZ = guard.weaponZ;
+        float[] left = QuinqueGrip.blendTurn(p.leftArmX, p.leftArmY, p.leftArmZ, guard.leftArmX, guard.leftArmY, guard.leftArmZ, grip);
+        out.leftArmX = left[0];
+        out.leftArmY = left[1];
+        out.leftArmZ = left[2];
+        out.rightArmHold = 1.0F;
+        out.leftArmHold = 1.0F;
+        out.armHold = 1.0F;
+        return out;
+    }
+
+    /** 4.1.29: the draw's own times (ticks after the jacket): the lift before him begins, ends; his left hand onto the grip. */
+    public static final double LIFT_FROM = 13.0;
+    public static final double LIFTED = 17.0;
+    static final double GRIP_FROM = 22.0;
+    static final double GRIP_AT = 26.0;
+    /** 4.1.29: how far the case's halves swing open on their hinge (radians), how far the blade slides out over (ticks from the opening). */
+    public static final double CASE_OPEN = Math.toRadians(112.0);
+    static final double SPLITS = 3.0;
+    static final double SLIDE_FROM = 2.0;
+    static final double SLIDES = 5.0;
+
+    static float smooth(double t) {
+        t = Math.max(0.0, Math.min(1.0, t));
+        return (float)(t * t * (3.0 - 2.0 * t));
+    }
+
+    /** 4.1.29: how far the case's halves have swung open on their hinge (radians), {@code age} ticks after the jacket. */
+    public static double caseOpen(double age) {
+        return CASE_OPEN * smooth((age - AgentRules.REAPER_CASE_OPENS) / SPLITS);
+    }
+
+    /** 4.1.29: how far the blade has slid out of the case (0 inside .. 1 all out), {@code age} ticks after the jacket. */
+    public static float extended(double age) {
+        return smooth((age - AgentRules.REAPER_CASE_OPENS - SLIDE_FROM) / SLIDES);
+    }
+
+    /** 4.1.29: whether the case is in his hand ({@code age} ticks after the jacket): from when it comes into it until it drops. */
+    public static boolean caseHeld(double age) {
+        return age >= AgentRules.REAPER_CASE_FROM && age < AgentRules.REAPER_CASE_DROPS;
+    }
+
+    /**
+     * 4.1.29: the case's turn in his right arm's frame (its own: x across, y down from the handle, z along): hanging plumb from his fist
+     * until the lift, then turned end on along the blade (its depth along the blade, its length across the blade's flat, its thickness
+     * through it: the blade's guard lies in it), the shortest way.
+     */
+    public static double[][] caseTurn(RigPose p, double age) {
+        double[][] hanging = QuinqueGrip.transpose(RigPose.zyx(p.rightArmX, p.rightArmY, p.rightArmZ));
+        double[][] along = RigPose.multiply(inArm(p), new double[][] {{0, 1, 0}, {0, 0, 1}, {1, 0, 0}});
+        float lift = smooth((age - LIFT_FROM) / (LIFTED - LIFT_FROM));
+        if (lift <= 0.0F) {
+            return hanging;
+        }
+        if (lift >= 1.0F) {
+            return along;
+        }
+        float[] a = QuinqueGrip.angles(hanging);
+        float[] b = QuinqueGrip.angles(along);
+        float[] m = QuinqueGrip.blendTurn(a[0], a[1], a[2], b[0], b[1], b[2], lift);
+        return RigPose.zyx(m[0], m[1], m[2]);
+    }
+
+    /** 4.1.29: the dropped case's fall (pixels a tick, each tick), how long it lies before it sinks, how fast it sinks (pixels a tick). */
+    public static final double CASE_FALL = 2.4;
+    static final double LIES = 2.0;
+    static final double SINKS = 2.2;
+
+    /** 4.1.29: how far the dropped case has sunk into the ground, {@code dt} ticks after it dropped ({@code landed}: how far it fell). */
+    public static double sunk(double dt, double landed) {
+        double down = Math.sqrt(2.0 * Math.max(0.0, landed) / CASE_FALL);
+        return Math.max(0.0, dt - down - LIES) * SINKS;
+    }
+
+    /**
+     * 4.1.29: a point (or a way, {@code way}) of a half of the dropped case ({@code side}), {@code dt} ticks after it left his fist, in the model's
+     * frame (pixels): open as it was, placed as his fist held it at the drop, tipped over as it falls (about its middle, forward), before its
+     * fall down (the renderer's, to the ground).
+     */
+    public static double[] dropped(double[] v, int side, double dt, boolean way) {
+        Release r = release();
+        double[] p;
+        if (way) {
+            double[] o = ReaperBladeMesh.opened(new double[] {0.0, 0.0, 0.0}, side, CASE_OPEN);
+            double[] t = ReaperBladeMesh.opened(v, side, CASE_OPEN);
+            p = QuinqueGrip.apply(r.arm, QuinqueGrip.apply(r.turn, sub(t, o)));
+            p = new double[] {r.cos * p[0] + r.sin * p[2], p[1], -r.sin * p[0] + r.cos * p[2]};
+        } else {
+            p = r.place(ReaperBladeMesh.opened(v, side, CASE_OPEN));
+        }
+        double tip = Math.min(1.0, Math.max(0.0, dt) / 4.0) * 1.35;
+        double[] centre = way ? new double[] {0.0, 0.0, 0.0} : r.centre;
+        double dy = p[1] - centre[1];
+        double dz = p[2] - centre[2];
+        return new double[] {p[0], centre[1] + Math.cos(tip) * dy - Math.sin(tip) * dz, centre[2] + Math.sin(tip) * dy + Math.cos(tip) * dz};
+    }
+
+    /** 4.1.29: his pose as the case leaves his fist, worked out once: the case's turn in his arm, his arm's, his twist, the case's middle. */
+    static final class Release {
+        final RigPose at;
+        final double[][] turn;
+        final double[][] arm;
+        final double cos;
+        final double sin;
+        final double[] centre;
+
+        Release() {
+            double drop = AgentRules.REAPER_CASE_DROPS;
+            this.at = draw(drop);
+            this.turn = caseTurn(this.at, drop);
+            this.arm = RigPose.zyx(this.at.rightArmX, this.at.rightArmY, this.at.rightArmZ);
+            this.cos = Math.cos(this.at.twist);
+            this.sin = Math.sin(this.at.twist);
+            this.centre = this.place(new double[] {0.0, (ReaperBladeMesh.CASE_TOP + ReaperBladeMesh.CASE_BOTTOM) * 0.5, 0.0});
+        }
+
+        /** A point of the case's own frame in the model's (pixels), as his fist held it then. */
+        double[] place(double[] c) {
+            double out = com.hex.kagune.control.npc.ReaperBuild.ARM_OUT;
+            double[] a = add(FIST_RIGHT, QuinqueGrip.apply(this.turn, c));
+            return toModel(this.at, add(new double[] {-5.0 - out, 2.0, 0.0}, QuinqueGrip.apply(this.arm, a)));
+        }
+    }
+
+    private static Release released;
+
+    static synchronized Release release() {
+        if (released == null) {
+            released = new Release();
+        }
+        return released;
+    }
+
+    /**
+     * The draw's keys: tick; twist (+ to his right), lean; the right arm's x (- forward), y, z (+ out); the head's turn and pitch. His hand
+     * goes round behind his back at his waist and comes out at his side with the case.
+     */
+    static final float[][] DRAW_KEYS = {
+        {0, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F},
+        {6, 0.32F, 0.08F, 0.72F, 0.0F, -0.42F, -0.25F, 0.05F},
+        {8, 0.32F, 0.08F, 0.72F, 0.0F, -0.42F, -0.25F, 0.05F},
+        {13, -0.08F, 0.0F, -0.2F, 0.0F, 0.62F, 0.15F, 0.0F}};
+}

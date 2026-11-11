@@ -44,12 +44,20 @@ public final class AgentClient {
             double landed = agent.m_20096_() && flipAge > 4.0 ? flipAge - 4.0 : -1.0;
             return PaleMotions.flip(PaleRules.Flip.byOrdinal(agent.flip()), flipAge, landed);
         }
-        // 4.1.28: the White Reaper taking his jacket off (AgentPose.shed), his hands empty.
+        // 4.1.28: the White Reaper taking his jacket off (AgentPose.shed), his hands empty; 4.1.29: then drawing the golden case from behind
+        // his back and opening it into his blade (ReaperBladePose.draw).
         if (agent.swing() == CcgAgent.SHED) {
             double shedAge = CcgAgent.since(now, agent.swingAt()) + partial;
             if (shedAge >= 0.0 && shedAge < AgentRules.REAPER_SHED_TICKS) {
                 return AgentPose.shed(shedAge);
             }
+            if (shedAge >= AgentRules.REAPER_SHED_TICKS && shedAge < AgentRules.REAPER_CHANGE_TICKS) {
+                return com.hex.kagune.control.client.animation.ReaperBladePose.draw(shedAge - AgentRules.REAPER_SHED_TICKS);
+            }
+        }
+        // 4.1.29: his second phase: his blade's string, or his guard (on his run).
+        if (agent.lookIndex() == AgentRules.REAPER_BARE_LOOK) {
+            return bladed(agent, limbSwing, partial, now);
         }
         // 4.1.25: the White Reaper's hand-to-hand (Kick Master's string or the Speed Blitz): the whole body a player's strike, legs and all,
         // Dawn carried clear (AgentPose.brawl).
@@ -168,6 +176,37 @@ public final class AgentClient {
             QuinqueGrip.reach(p, weapon, look.slim() || look.female());
         }
         return posed ? p : null;
+    }
+
+    /**
+     * 4.1.29: the White Reaper with his blade (ReaperBladePose): a blow of his string whole (legs and all), or his guard, standing or on his
+     * run (its legs, his arms in the guard, a little lowered); a dash on top.
+     */
+    private static RigPose bladed(CcgAgent agent, float limbSwing, float partial, long now) {
+        int step = agent.swing() - CcgAgent.BLADE;
+        double age = CcgAgent.since(now, agent.swingAt()) + partial;
+        if (step >= 0 && step < com.hex.kagune.control.npc.ReaperBladeRules.STEPS && age >= 0.0
+            && age < com.hex.kagune.control.npc.ReaperBladeRules.blow(step).total()) {
+            return com.hex.kagune.control.client.animation.ReaperBladePose.strike(step, age);
+        }
+        double speed = Math.hypot(agent.m_20185_() - agent.f_19790_, agent.m_20189_() - agent.f_19792_);
+        float run = AgentPose.running(speed);
+        RigPose guard = com.hex.kagune.control.client.animation.ReaperBladePose.guard(run);
+        RigPose p;
+        if (run <= 0.0F && speed < 0.02) {
+            p = guard;
+        } else {
+            p = AgentPose.run(limbSwing * 0.6662, run, AgentPose.Carry.STANCE);
+            guard.legHold = 0.0F;
+            take(p, guard);
+            p.leftArmHold = 1.0F;
+            p.rightArmHold = 1.0F;
+        }
+        double dashAge = CcgAgent.since(now, agent.dashAt()) + partial;
+        if (dashAge >= 0.0 && dashAge < AgentPose.DASH_TICKS) {
+            AgentPose.dash(p, agent.dash(), dashAge / AgentPose.DASH_TICKS);
+        }
+        return p;
     }
 
     /**

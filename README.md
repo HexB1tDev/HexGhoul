@@ -9,6 +9,10 @@ Mixins), and every existing kagune system (forms, mutations, rendering, grapple/
 autonomy, projectile deflection, particles, sounds, saves, networking) keeps working as before.
 
 
+## 4.1.29 (HexGhoul): Arima, phase 2 part 2: the golden case and his heavy blade (testing)
+
+See `.github/release-notes-4.1.29.md`. "Trigger when he reaches about 90 HP ... pulls out a random briefcase from his back like a golden looking briefcase", "the briefcase just splits apart open like a normal fucking briefcase and releases the weapon", "keep it only for himself": the change starts at 90 HP (`AgentRules.REAPER_SHED_HEALTH`, `shedClamp`), immortal through the jacket and the draw (`REAPER_CHANGE_TICKS`); the golden case (`ReaperBladeMesh.goldHalf`/`goldHandle`, split on its hinge by `opened`, the blade slid out by `slid`) drawn by `ReaperBladePose.draw`/`caseTurn`/`dropped` and `client/render/ReaperBladeLayer`; his blade (`quinque/ReaperBladeMesh`, NPC only, no item) and its string (`ReaperBladePose.STRING`, hands first: both straight arms solved onto the grip, the wrist turning the blade; `npc/ReaperBladeRules` timing; `AgentBrain.blade`/`bladeLands`, bleeding via `UkakuCrystalCombat.agentBleed`). Protocol 117.
+
 ## 4.1.28 (HexGhoul): Arima, phase 2 part 1: the jacket comes off (testing)
 
 See `.github/release-notes-4.1.28.md`. "He just removes his jacket, revealing a new skin ... he gets way faster": at half health (once, saved as `HexCcgAgentBare`) the White Reaper takes his jacket off (`AgentBrain.shed`, swing code `CcgAgent.SHED`, drawn by `AgentPose.shed`), his look switched to the appended `ccg_reaper_bare` (`AgentRules.REAPER_BARE_LOOK`, the owner's `art/reaper/Reaper_Phase2.png`, wide arms), faster (`REAPER_BARE_SPEED`, `REAPER_BARE_PACE`); no blow takes him past half with it on (`AgentRules.shedClamp`), none lands while he does it. Protocol 117.
