@@ -9,6 +9,21 @@ Read this first. The house rules are in `next-ai-4.1.2.md` and `next-ai-4.0.0.md
 exactly, never claim in-game testing, the full `python3 build.py` must end with EXIT 0 on the exact commit before it is pushed, never
 alter the owner's files, one version at a time, no PR.
 
+## START HERE (after 4.1.40): the Reaper's change, then bugs
+
+1. **Branch:** `claude/admiring-johnson-8df58h` holds 4.1.37 .. 4.1.40 (each pushed after a full build with EXIT 0 on its exact commit), on
+   top of 4.1.36 (`claude/keen-hypatia-3ztwk7`). A new session's branch usually starts at `main` (1.3.0): fast-forward onto this one first.
+2. **Done this session (see each "what and where"):** 4.1.37 the Reaper untouchable through his change (the attack event cancelled, nobody's
+   target, freed and pinned), a real coat taken off (the formal overcoat in white), a slower draw (62 ticks), the blade held point-down in
+   one hand (the owner's picture), his blade and brawl blows clashable; 4.1.38 two minutes after a fight he puts the jacket back on (the
+   owner chose "reverse it in place"); 4.1.39 city fixes (village humans kept home, the city's ground cached, protocol 118); 4.1.40 old
+   towns' maps kept for their people, "complete all" reopens later gates at login.
+3. **Open to the owner:** "for some reason, you can clash with this form" was read as "can't" (fixed so his blows are on the clash board):
+   confirm. The coat appears from nowhere behind him when he puts it back on (their choice). The change is long (5.4 s untouchable).
+4. **Not checked (needs the game):** the city in a real world (`/locate` time in hilly worlds), the coat layer's "kept where it fell" turn
+   sign (`ReaperCoatLayer.FELL`: if the coat swings round with him as he turns while it lies there, flip the sign of `turn`).
+5. **Next:** ask the owner. Their list in "The owner's big list" below; daughters' open eyes still unasked.
+
 ## START HERE (after 4.1.34): the Small City
 
 **The owner stopped the session (quoted exactly): "Okay, enough. Stop now. Given me a prompt in the end of the next AI to pick up now."
